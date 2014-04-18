@@ -85,6 +85,22 @@ foldrWithKey f acc img = Map.foldrWithKey f acc $ view channels img
 foldlWithKey :: (ChannelAcc ix a -> Channel.Name -> ChannelAcc ix b -> ChannelAcc ix a) -> ChannelAcc ix a -> ImageAcc ix b -> ChannelAcc ix a
 foldlWithKey f acc img = Map.foldlWithKey f acc $ view channels img
 
+-- ==== Conversion
+
+elems :: ImageAcc ix a -> [ChannelAcc ix a]
+elems img = Map.elems $ view channels img
+
+keys :: ImageAcc ix a -> [Channel.Name]
+keys img = Map.keys $ view channels img
+
+assocs :: ImageAcc ix a -> [(Channel.Name, ChannelAcc ix a)]
+assocs img = Map.assocs $ view channels img
+
+-- == Lists
+
+fromList :: [(Channel.Name, ChannelAcc ix a)] -> ImageAcc ix a
+fromList list = Image $ Map.fromList list
+
 -- ==== Accessors
 
 -- == Getters
@@ -150,13 +166,37 @@ channelIntersectionWithKey f imgA imgB = Image $ Map.intersectionWithKey f (imgA
 -- ==== Filter
 
 -- TODO: filter, filterWithKey/filterWithName : naive implementation using Map.toAscList and Map.fromAscList
--- and implement filterByname using filterWithName
+-- and implement filterByName using filterWithName
+
 filterByName :: [Channel.Name] -> ImageAcc ix a -> ImageAcc ix a
 filterByName names img = img & channels %~ (Map.filterWithKey nameMatches)
     where nameMatches cname _ = cname `elem` names
 
+filterByName' :: [Channel.Name] -> ImageAcc ix a -> Result (ImageAcc ix a)
+filterByName' names img = do
+    channelList <- sequence $ fmap makePair names
+    return $ fromList channelList
+    where makePair name = do
+              chan <- get name img
+              return (name, chan)
+
+-- TODO: elemsByName, keysByName, assocsByName -- without ' - returns list not in a monad
+
+elemsByName' :: [Channel.Name] -> ImageAcc ix a -> Result ([ChannelAcc ix a])
+elemsByName' names img = sequence $ fmap (flip get img) names
+
+-- TODO: does keysByName make any sense?
+--keysByName' :: [Channel.Name] -> ImageAcc ix a -> Result ([Channel.Name])
+
+assocsByName' :: [Channel.Name] -> ImageAcc ix a -> Result ([(Channel.Name, ChannelAcc ix a)])
+assocsByName' names img = do
+    sequence $ fmap makePair names
+    where makePair name = do
+              chan <- get name img
+              return (name, chan)
+
 selectChannels :: Channel.Select -> ImageAcc ix a -> ImageAcc ix a
-selectChannels channels img = case channels of
+selectChannels channelList img = case channelList of
     Channel.AllChannels      -> img
     Channel.ChannelList list -> filterByName list img
 

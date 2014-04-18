@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
 
 module Flowbox.Graphics.Image.Color where
 
@@ -79,9 +80,9 @@ math :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => (Exp a -> Exp a -> Exp a) -> ImageAcc ix a -> Map Channel.Name (Exp a)
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a -- TODO: add to wiki why this line is separated from others
     -> Image.Result (ImageAcc ix a)
-math f img values maskInfo premultiply mixValue = do
-    unpremultiplied <- Comp.unpremultiply img premultiply
-    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultiply
+math f img values maskInfo premultInfo mixValue = do
+    unpremultiplied <- Comp.unpremultiply img premultInfo
+    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultInfo
     resultMixed     <- Merge.mix' img result mixValue
     Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name values of
@@ -112,9 +113,9 @@ clamp :: (A.Shape ix, A.Elt a, A.IsFloating a)
     => ImageAcc ix a -> Map Channel.Name (Clamp (Exp a))
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
     -> Image.Result (ImageAcc ix a)
-clamp img ranges maskInfo premultiply mixValue = do
-    unpremultiplied <- Comp.unpremultiply img premultiply
-    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultiply
+clamp img ranges maskInfo premultInfo mixValue = do
+    unpremultiplied <- Comp.unpremultiply img premultInfo
+    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultInfo
     resultMixed     <- Merge.mix' img result mixValue
     Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name ranges of
@@ -123,14 +124,14 @@ clamp img ranges maskInfo premultiply mixValue = do
                             in Channel.map (\x -> U.clamp thresholds clampTo x) chan
 
 -- INFO: in Nuke this does not have the OR relation between channels, it has something pretty weird
--- soooooo....... either fuck it and do it our way or... focus on it later on
+-- soooooo....... either fuck it and do it o//ur way or... focus on it later on
 clipTest :: (A.Shape ix, A.Elt a, A.IsFloating a)
     => ImageAcc ix a -> Map Channel.Name (Range (Exp a))
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
     -> Image.Result (ImageAcc ix a)
-clipTest img ranges maskInfo premultiply mixValue = do
-    unpremultiplied <- Comp.unpremultiply img premultiply
-    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultiply
+clipTest img ranges maskInfo premultInfo mixValue = do
+    unpremultiplied <- Comp.unpremultiply img premultInfo
+    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultInfo
     resultMixed     <- Merge.mix' img result mixValue
     Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name ranges of
@@ -149,9 +150,9 @@ invert :: (A.Shape ix, A.Elt a, A.IsFloating a)
     => ImageAcc ix a -> Channel.Select -> Maybe (Clamp (Exp a))
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
     -> Image.Result (ImageAcc ix a)
-invert img channels clampVal maskInfo premultiply mixValue = do
-    unpremultiplied <- Comp.unpremultiply img premultiply
-    result          <- Comp.premultiply (handleInvert unpremultiplied) premultiply
+invert img channels clampVal maskInfo premultInfo mixValue = do
+    unpremultiplied <- Comp.unpremultiply img premultInfo
+    result          <- Comp.premultiply (handleInvert unpremultiplied) premultInfo
     resultMixed     <- Merge.mix' img result mixValue
     Merge.mask resultMixed img maskInfo
     where handleInvert img' = case channels of
@@ -163,3 +164,30 @@ invert img channels clampVal maskInfo premultiply mixValue = do
           invertAndClamp x = case clampVal of
               Nothing                         -> U.invert x
               Just (clampThresholds, clampTo) -> U.clamp clampThresholds clampTo $ U.invert $ x
+
+-- TODO: should it really take a matrix as an input? it doesn't really speed up anything or anything
+--       and can only make things harder to debug (channel names are separated from the actual values used to calculate everything)
+--       I would strongly suggest using some kind of a data type for channelsOut, channelsIn and values to be put together
+-- INFO: for now this only works for 2D images since I'm using lift2Dto3D
+colorMatrix :: (A.Elt a, A.IsFloating a)
+    => ImageAcc A.DIM2 a -> [Channel.Name] -> [Channel.Name] -> A.Acc (A.Array A.DIM2 a) -- -> Exp Bool -- for inverting the matrix itself (?)
+    -> Maybe (Mask A.DIM2 a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (ImageAcc A.DIM2 a)
+colorMatrix img channelsOut channelsIn values maskInfo premultInfo mixValue = do
+  unpremultiplied <- Comp.unpremultiply img premultInfo
+  channelsIn'     <- fmap glue $ Image.elemsByName' channelsIn unpremultiplied
+  result          <- Comp.premultiply (handleColorMatrix unpremultiplied channelsIn') premultInfo
+  resultMixed     <- Merge.mix' img result mixValue
+  Merge.mask resultMixed img maskInfo
+  where handleColorMatrix img' channelsIn' = Image.channelUnion (Image.fromList $ calculateChannels channelsIn') img'
+  -- INFO: probably faster than the above line but less readable
+  --where handleColorMatrix img' channelsIn' = foldr insertChan img' (calculateChannels img' channelsIn')
+        --insertChan chanInfo imgAcc = Image.insert (fst chanInfo) (snd chanInfo) imgAcc
+        calculateChannels channelsIn' = zipWith (calculateChannel channelsIn') channelsOut (iterate succ (0 :: Int))
+        calculateChannel  channelsIn' name ix = (name, makeChannel channelsIn' ix)
+        makeChannel channelsIn' ix = let
+                (A.Z A.:. h A.:. w A.:. _) = A.unlift $ Channel.shape channelsIn' :: A.Z A.:. Exp Int A.:. Exp Int A.:. Exp Int
+                values' = A.slice values $ A.lift (A.Z A.:. (ix) A.:. A.All)
+                repl    = Channel.Acc $ A.replicate (A.lift $ A.Z A.:. h A.:. w A.:. A.All) values'
+            in Channel.fold1 (+) $ Channel.zipWith (*) channelsIn' repl
+        glue channels = foldr1 (Channel.++) (fmap Channel.lift2Dto3D channels)

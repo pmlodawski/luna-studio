@@ -26,7 +26,6 @@ import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Prelude                as P
 
 rasterize :: (MonadIO m, Elt a, IsFloating a, Eq a) => Int -> Int -> Double -> Double -> SizeSpec2D -> Diagram Cairo R2 -> m (ImageAcc A.DIM2 a)
---rasterize :: (MonadIO m) => Int -> Int -> Double -> Double -> SizeSpec2D -> Diagram Cairo R2 -> m (ImageAcc A.DIM2 Word32)
 rasterize w h x y size diagram = do
     pixels <- liftIO makeElements
 

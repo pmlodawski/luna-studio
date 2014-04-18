@@ -47,7 +47,6 @@ import           Flowbox.Graphics.Utils                 (Range(..))
 import qualified Flowbox.Graphics.Utils                 as U
 import           Flowbox.Prelude                        as P
 
-import Control.Lens as L
 --diag = square 1 Diag.# fcA (goldenrod `withOpacity` 0.5)
 z1 = p2 (0,1)
 z2 = p2 (1,1)
@@ -77,6 +76,11 @@ imgtest img frames mask = do
                                  , ("rgba.g", Range 0.19 1)
                                  , ("rgba.b", Range 0.19 1) ]
         selection = ChannelList  [ "rgba.r", "rgba.g", "rgba.b" ]
+        channelsOut = [ "rgba.r", "rgba.g" ]
+        channelsIn  = [ "rgba.r", "rgba.g", "rgba.b" ]
+        colorMatrix' = [ 0,   1,   0
+                       , 0.5, 0.5, 0.5 ]
+        colorMatrix = A.use $ (A.fromList (A.Z A.:. 2 A.:. 3) colorMatrix' :: A.Array A.DIM2 Double)
 
     imageRGBA <- getDouble img
     framesRGBA <- getDouble frames
@@ -97,8 +101,9 @@ imgtest img frames mask = do
     imageClamp    <- Img.clamp    imageRGBAwithMask clampMap Nothing Nothing 1
     imageClipTest <- Img.clipTest imageRGBAwithMask clipMap (Just imageMask) (Just premultiply) 1
     imageInvert   <- Img.invert   imageRGBAwithMask selection Nothing Nothing Nothing 1
+    imageColorMatrix <- Img.colorMatrix imageRGBAwithMask channelsOut channelsIn colorMatrix Nothing Nothing 1
 
-    let imageOut = imageGamma
+    let imageOut = imageColorMatrix
 
     Repr.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
 

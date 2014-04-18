@@ -9,6 +9,7 @@
 
 module Flowbox.Graphics.Image.Channel where
 
+import           Data.Array.Accelerate (Shape, Elt, Exp)
 import qualified Data.Array.Accelerate as A
 
 import Flowbox.Prelude hiding (use, zipWith)
@@ -26,6 +27,7 @@ type Backend ix a = A.Acc (A.Array ix a) -> (A.Array ix a)
 type ChannelAcc ix a = Channel (A.Array ix a)
 type Channel2 a = Channel (RawData2 a)
 type Channel3 a = Channel (RawData3 a)
+--type ChannelSegments a = Channel (A.Segments a)
 
 type Name = String
 
@@ -35,10 +37,10 @@ data Select = AllChannels
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 -- FIXME[PM] Fix these instances
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-instance A.Elt a => Eq (Channel a) where
+instance Elt a => Eq (Channel a) where
     _ == _ = undefined
 
-instance A.Elt a => Ord (Channel a) where
+instance Elt a => Ord (Channel a) where
     compare _ _ = undefined
 
 accMatrix :: A.Arrays a => Channel a -> A.Acc a
@@ -55,29 +57,29 @@ compute backend chan = Raw $ case chan of
 
 -- = Indexing =
 
-(!) :: (A.Shape ix, A.Elt e) => ChannelAcc ix e -> A.Exp ix -> A.Exp e
+(!) :: (Shape ix, Elt e) => ChannelAcc ix e -> Exp ix -> Exp e
 (!) channel = (A.!) $ accMatrix channel
 
-(!!) :: (A.Shape ix, A.Elt e) => ChannelAcc ix e -> A.Exp Int -> A.Exp e
+(!!) :: (Shape ix, Elt e) => ChannelAcc ix e -> Exp Int -> Exp e
 (!!) channel = (A.!!) $ accMatrix channel
 
 -- Shape Information --
 
-empty :: (A.Shape ix, A.Elt e) => ChannelAcc ix e -> A.Exp Bool
+empty :: (Shape ix, Elt e) => ChannelAcc ix e -> Exp Bool
 empty channel = A.null $ accMatrix channel
 
-shape :: (A.Shape ix, A.Elt e) => ChannelAcc ix e -> A.Exp ix
+shape :: (Shape ix, Elt e) => ChannelAcc ix e -> Exp ix
 shape channel = A.shape $ accMatrix channel
 
-size :: (A.Shape ix, A.Elt e) => ChannelAcc ix e -> A.Exp Int
+size :: (Shape ix, Elt e) => ChannelAcc ix e -> Exp Int
 size channel = A.size $ accMatrix channel
 
-shapeSize :: A.Shape ix => A.Exp ix -> A.Exp Int
+shapeSize :: Shape ix => Exp ix -> Exp Int
 shapeSize = A.shapeSize
 
 -- = Extracting sub-arrays =
 
-slice :: (A.Slice slix, A.Elt e) => ChannelAcc (A.FullShape slix) e -> A.Exp slix -> ChannelAcc (A.SliceShape slix) e
+slice :: (A.Slice slix, Elt e) => ChannelAcc (A.FullShape slix) e -> Exp slix -> ChannelAcc (A.SliceShape slix) e
 slice channel parts = Acc $ A.slice (accMatrix channel) parts
 
 -- == Construction ==
@@ -89,33 +91,33 @@ use chan = case chan of
     Raw m -> Acc $ A.use m
     Acc m -> Acc m
 
-unit :: A.Elt e => A.Exp e -> Channel (A.Scalar e)
+unit :: Elt e => Exp e -> Channel (A.Scalar e)
 unit e = Acc $ A.unit e
 
 -- = Initialisation =
 
-generate :: (A.Shape ix, A.Elt e) => A.Exp ix -> (A.Exp ix -> A.Exp e) -> ChannelAcc ix e
+generate :: (Shape ix, Elt e) => Exp ix -> (Exp ix -> Exp e) -> ChannelAcc ix e
 generate sh f = Acc $ A.generate sh f
 
-replicate :: (A.Slice slix, A.Elt e)
-    => A.Exp slix -> ChannelAcc (A.SliceShape slix) e -> ChannelAcc (A.FullShape slix) e
+replicate :: (A.Slice slix, Elt e)
+    => Exp slix -> ChannelAcc (A.SliceShape slix) e -> ChannelAcc (A.FullShape slix) e
 replicate sh m = Acc $ A.replicate sh $ accMatrix m
 
-fill :: (A.Shape ix, A.Elt e) => A.Exp ix -> A.Exp e -> ChannelAcc ix e
+fill :: (Shape ix, Elt e) => Exp ix -> Exp e -> ChannelAcc ix e
 fill sh x = Acc $ A.fill sh x
 
 -- = Enumeration =
 
-enumFromN :: (A.Shape ix, A.Elt e, A.IsNum e) => A.Exp ix -> A.Exp e -> ChannelAcc ix e
+enumFromN :: (Shape ix, Elt e, A.IsNum e) => Exp ix -> Exp e -> ChannelAcc ix e
 enumFromN sh n = Acc $ A.enumFromN sh n
 
-enumFromStepN :: (A.Shape ix, A.Elt e, A.IsNum e)
-    => A.Exp ix -> A.Exp e -> A.Exp e -> ChannelAcc ix e
+enumFromStepN :: (Shape ix, Elt e, A.IsNum e)
+    => Exp ix -> Exp e -> Exp e -> ChannelAcc ix e
 enumFromStepN sh n s = Acc $ A.enumFromStepN sh n s
 
 -- = Concatenation =
 
-(++) :: (A.Slice ix, A.Shape ix, A.Elt e) => ChannelAcc (ix A.:. Int) e -> ChannelAcc (ix A.:. Int) e -> ChannelAcc (ix A.:. Int) e
+(++) :: (A.Slice ix, Shape ix, Elt e) => ChannelAcc (ix A.:. Int) e -> ChannelAcc (ix A.:. Int) e -> ChannelAcc (ix A.:. Int) e
 (++) chan1 chan2 = Acc $ (accMatrix chan1) A.++ (accMatrix chan2)
 
 
@@ -123,12 +125,12 @@ enumFromStepN sh n s = Acc $ A.enumFromStepN sh n s
 
 -- = Shape manipulation =
 
-reshape :: (A.Shape ix, A.Shape ix', A.Elt e) => A.Exp ix -> ChannelAcc ix' e -> ChannelAcc ix e
+reshape :: (Shape ix, Shape ix', Elt e) => Exp ix -> ChannelAcc ix' e -> ChannelAcc ix e
 reshape sh chan = Acc $ A.reshape sh (accMatrix chan)
 
 -- = Specialised permutations =
 
-transpose :: A.Elt e => Channel2 e -> Channel2 e
+transpose :: Elt e => Channel2 e -> Channel2 e
 transpose chan = Acc $ accMatrix chan
 
 
@@ -136,29 +138,29 @@ transpose chan = Acc $ accMatrix chan
 
 -- = Mapping =
 
-map :: (A.Shape ix, A.Elt a, A.Elt b)
-    => (A.Exp a -> A.Exp b) -> ChannelAcc ix a -> ChannelAcc ix b
+map :: (Shape ix, Elt a, Elt b)
+    => (Exp a -> Exp b) -> ChannelAcc ix a -> ChannelAcc ix b
 map f channel = Acc $ A.map f (accMatrix channel)
 
 -- = Zipping =
 
-zipWith :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c)
-    => (A.Exp a -> A.Exp b -> A.Exp c)
+zipWith :: (Shape ix, Elt a, Elt b, Elt c)
+    => (Exp a -> Exp b -> Exp c)
     -> ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
 zipWith  f ch1 ch2 = Acc $ A.zipWith f (accMatrix ch1) (accMatrix ch2)
 
-zipWith3 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d)
-    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d)
+zipWith3 :: (Shape ix, Elt a, Elt b, Elt c, Elt d)
+    => (Exp a -> Exp b -> Exp c -> Exp d)
     -> ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
     -> ChannelAcc ix d
 zipWith3 f ch1 ch2 ch3 = Acc $ A.zipWith3 f (accMatrix ch1) (accMatrix ch2) (accMatrix ch3)
 
-zipWith4 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e)
-    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e)
+zipWith4 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e)
+    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e)
     -> ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -166,8 +168,8 @@ zipWith4 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e)
     -> ChannelAcc ix e
 zipWith4 f ch1 ch2 ch3 ch4 = Acc $ A.zipWith4 f (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4)
 
-zipWith5 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f)
-    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f)
+zipWith5 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f)
+    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f)
     -> ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -176,8 +178,8 @@ zipWith5 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f)
     -> ChannelAcc ix f
 zipWith5 f ch1 ch2 ch3 ch4 ch5 = Acc $ A.zipWith5 f (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5)
 
-zipWith6 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g)
-    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f -> A.Exp g)
+zipWith6 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g)
+    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g)
     -> ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -187,8 +189,8 @@ zipWith6 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A
     -> ChannelAcc ix g
 zipWith6 f ch1 ch2 ch3 ch4 ch5 ch6 = Acc $ A.zipWith6 f (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6)
 
-zipWith7 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h)
-    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f -> A.Exp g -> A.Exp h)
+zipWith7 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h)
+    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g -> Exp h)
     -> ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -199,8 +201,8 @@ zipWith7 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A
     -> ChannelAcc ix h
 zipWith7 f ch1 ch2 ch3 ch4 ch5 ch6 ch7 = Acc $ A.zipWith7 f (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7)
 
-zipWith8 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h, A.Elt i)
-    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f -> A.Exp g -> A.Exp h -> A.Exp i)
+zipWith8 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i)
+    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g -> Exp h -> Exp i)
     -> ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -212,8 +214,8 @@ zipWith8 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A
     -> ChannelAcc ix i
 zipWith8 f ch1 ch2 ch3 ch4 ch5 ch6 ch7 ch8 = Acc $ A.zipWith8 f (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7) (accMatrix ch8)
 
-zipWith9 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h, A.Elt i, A.Elt j)
-    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f -> A.Exp g -> A.Exp h -> A.Exp i -> A.Exp j)
+zipWith9 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i, Elt j)
+    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g -> Exp h -> Exp i -> Exp j)
     -> ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -227,20 +229,20 @@ zipWith9 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A
 zipWith9 f ch1 ch2 ch3 ch4 ch5 ch6 ch7 ch8 ch9 = Acc $ A.zipWith9 f (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7) (accMatrix ch8) (accMatrix ch9)
 
 
-zip :: (A.Shape ix, A.Elt a, A.Elt b)
+zip :: (Shape ix, Elt a, Elt b)
     => ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix (a, b)
 zip  ch1 ch2 = Acc $ A.zip (accMatrix ch1) (accMatrix ch2)
 
-zip3 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c)
+zip3 :: (Shape ix, Elt a, Elt b, Elt c)
     => ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
     -> ChannelAcc ix (a, b, c)
 zip3 ch1 ch2 ch3 = Acc $ A.zip3 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3)
 
-zip4 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d)
+zip4 :: (Shape ix, Elt a, Elt b, Elt c, Elt d)
     => ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -248,7 +250,7 @@ zip4 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d)
     -> ChannelAcc ix (a, b, c, d)
 zip4 ch1 ch2 ch3 ch4 = Acc $ A.zip4 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4)
 
-zip5 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e)
+zip5 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e)
     => ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -257,7 +259,7 @@ zip5 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e)
     -> ChannelAcc ix (a, b, c, d, e)
 zip5 ch1 ch2 ch3 ch4 ch5 = Acc $ A.zip5 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5)
 
-zip6 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f)
+zip6 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f)
     => ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -267,7 +269,7 @@ zip6 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f)
     -> ChannelAcc ix (a, b, c, d, e, f)
 zip6 ch1 ch2 ch3 ch4 ch5 ch6 = Acc $ A.zip6 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6)
 
-zip7 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g)
+zip7 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g)
     => ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -278,7 +280,7 @@ zip7 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt
     -> ChannelAcc ix (a, b, c, d, e, f, g)
 zip7 ch1 ch2 ch3 ch4 ch5 ch6 ch7 = Acc $ A.zip7 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7)
 
-zip8 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h)
+zip8 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h)
     => ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -290,7 +292,7 @@ zip8 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt
     -> ChannelAcc ix (a, b, c, d, e, f, g, h)
 zip8 ch1 ch2 ch3 ch4 ch5 ch6 ch7 ch8 = Acc $ A.zip8 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7) (accMatrix ch8)
 
-zip9 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h, A.Elt i)
+zip9 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i)
     => ChannelAcc ix a
     -> ChannelAcc ix b
     -> ChannelAcc ix c
@@ -304,56 +306,72 @@ zip9 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt
 zip9 ch1 ch2 ch3 ch4 ch5 ch6 ch7 ch8 ch9 = Acc $ A.zip9 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7) (accMatrix ch8) (accMatrix ch9)
 
 
-unzip ::  (A.Shape ix, A.Elt a)
+unzip ::  (Shape ix, Elt a)
     => ChannelAcc ix (a, a)
     -> (ChannelAcc ix a, ChannelAcc ix a)
 unzip chan = over each Acc $ A.unzip (accMatrix chan)
 --unzip chan = over each Acc $ A.unzip  (accMatrix chan)
 
-unzip3 :: (A.Shape ix, A.Elt a)
+unzip3 :: (Shape ix, Elt a)
     => ChannelAcc ix (a, a, a)
     -> (ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a)
 unzip3 chan = over each Acc $ A.unzip3 (accMatrix chan)
 
-unzip4 :: (A.Shape ix, A.Elt a)
+unzip4 :: (Shape ix, Elt a)
     => ChannelAcc ix (a, a, a, a)
     -> (ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a)
 unzip4 chan = over each Acc $ A.unzip4 (accMatrix chan)
 
-unzip5 :: (A.Shape ix, A.Elt a)
+unzip5 :: (Shape ix, Elt a)
     => ChannelAcc ix (a, a, a, a, a)
     -> (ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a)
 unzip5 chan = over each Acc $ A.unzip5 (accMatrix chan)
 
-unzip6 :: (A.Shape ix, A.Elt a)
+unzip6 :: (Shape ix, Elt a)
     => ChannelAcc ix (a, a, a, a, a, a)
     -> (ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a)
 unzip6 chan = over each Acc $ A.unzip6 (accMatrix chan)
 
-unzip7 :: (A.Shape ix, A.Elt a)
+unzip7 :: (Shape ix, Elt a)
     => ChannelAcc ix (a, a, a, a, a, a, a)
     -> (ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a)
 unzip7 chan = over each Acc $ A.unzip7 (accMatrix chan)
 
-unzip8 :: (A.Shape ix, A.Elt a)
+unzip8 :: (Shape ix, Elt a)
     => ChannelAcc ix (a, a, a, a, a, a, a, a)
     -> (ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a)
 unzip8 chan = over each Acc $ A.unzip8 (accMatrix chan)
 
-unzip9 :: (A.Shape ix, A.Elt a)
+unzip9 :: (Shape ix, Elt a)
     => ChannelAcc ix (a, a, a, a, a, a, a, a, a)
     -> (ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a)
 unzip9 chan = over each Acc $ A.unzip9 (accMatrix chan)
 
+-- == Folding ==
 
--- == Stencil ==
+fold :: (Shape ix, Elt a) => (Exp a -> Exp a -> Exp a) -> Exp a -> ChannelAcc (ix A.:. Int) a -> ChannelAcc ix a
+fold f acc chan = Acc $ A.fold f acc $ accMatrix chan
 
-stencil :: (A.Shape ix, A.Elt a, A.Elt b, A.Stencil ix a stencil)
-    => (stencil -> A.Exp b) -> A.Boundary a -> ChannelAcc ix a -> ChannelAcc ix b
+fold1 :: (Shape ix, Elt a) => (Exp a -> Exp a -> Exp a) -> ChannelAcc (ix A.:. Int) a -> ChannelAcc ix a
+fold1 f chan = Acc $ A.fold1 f $ accMatrix chan
+
+--foldAll :: (Shape sh, Elt a) => (Exp a -> Exp a -> Exp a) -> Exp a -> Acc (Array sh a) -> Acc (Scalar a)
+--fold1All :: (Shape sh, Elt a) => (Exp a -> Exp a -> Exp a) -> Acc (Array sh a) -> Acc (Scalar a)
+
+foldSeg :: (Shape ix, Elt a, Elt i, A.IsIntegral i) => (Exp a -> Exp a -> Exp a) -> Exp a -> ChannelAcc (ix A.:. Int) a -> A.Acc (A.Segments i) -> ChannelAcc (ix A.:. Int) a
+foldSeg f acc chan segments = Acc $ A.foldSeg f acc (accMatrix chan) segments
+
+fold1Seg :: (Shape ix, Elt a, Elt i, A.IsIntegral i) => (Exp a -> Exp a -> Exp a) -> ChannelAcc (ix A.:. Int) a -> A.Acc (A.Segments i) -> ChannelAcc (ix A.:. Int) a
+fold1Seg f chan segments = Acc $ A.fold1Seg f (accMatrix chan) segments
+
+-- = Stencil =
+
+stencil :: (Shape ix, Elt a, Elt b, A.Stencil ix a stencil)
+    => (stencil -> Exp b) -> A.Boundary a -> ChannelAcc ix a -> ChannelAcc ix b
 stencil f b ch = Acc $ A.stencil f b (accMatrix ch)
 
-stencil2 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Stencil ix a stencil1, A.Stencil ix b stencil2)
-    => (stencil1 -> stencil2 -> A.Exp c) -> A.Boundary a -> ChannelAcc ix a -> A.Boundary b -> ChannelAcc ix b -> ChannelAcc ix c
+stencil2 :: (Shape ix, Elt a, Elt b, Elt c, A.Stencil ix a stencil1, A.Stencil ix b stencil2)
+    => (stencil1 -> stencil2 -> Exp c) -> A.Boundary a -> ChannelAcc ix a -> A.Boundary b -> ChannelAcc ix b -> ChannelAcc ix c
 stencil2 f b1 ch1 b2 ch2 = Acc $ A.stencil2 f b1 (accMatrix ch1) b2 (accMatrix ch2)
 
 
@@ -361,6 +379,10 @@ stencil2 f b1 ch1 b2 ch2 = Acc $ A.stencil2 f b1 (accMatrix ch1) b2 (accMatrix c
 
 -- = Shape manipulation =
 
-index3 :: (A.Elt i, A.Slice (A.Z A.:. i), A.Slice (A.Z A.:. i A.:. i))
-    => A.Exp i -> A.Exp i -> A.Exp i -> A.Exp (A.Z A.:. i A.:. i A.:. i)
+index3 :: (Elt i, A.Slice (A.Z A.:. i), A.Slice (A.Z A.:. i A.:. i))
+    => Exp i -> Exp i -> Exp i -> Exp (A.Z A.:. i A.:. i A.:. i)
 index3 i j k = A.lift (A.Z A.:. i A.:. j A.:. k)
+
+lift2Dto3D :: (Elt a) => ChannelAcc A.DIM2 a -> ChannelAcc A.DIM3 a
+lift2Dto3D channel = reshape (index3 a b 1) channel
+    where (A.Z A.:. a A.:. b) = A.unlift $ shape channel
