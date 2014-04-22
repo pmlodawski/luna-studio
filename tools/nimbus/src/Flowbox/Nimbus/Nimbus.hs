@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.InstanceManager.InstanceManager where
+module Flowbox.Nimbus.Nimbus where
 
 import qualified AWS           as AWS
 import qualified AWS.EC2.Types as Types
@@ -15,7 +15,7 @@ import qualified Flowbox.AWS.EC2               as EC2
 import qualified Flowbox.AWS.Instance.Instance as Instance
 import qualified Flowbox.AWS.Instance.Request  as Request
 import           Flowbox.AWS.Region            (Region)
-import qualified Flowbox.InstanceManager.Cmd   as Cmd
+import qualified Flowbox.Nimbus.Cmd            as Cmd
 import           Flowbox.Prelude
 
 

@@ -8,14 +8,14 @@
 import           Options.Applicative (argument, command, command, fullDesc, help, hidden, long, metavar, prefs, progDesc, short, str, strOption, subparser, switch, value, (<>))
 import qualified Options.Applicative as Opt
 
-import qualified Flowbox.AWS.Region                      as Region
+import qualified Flowbox.AWS.Region          as Region
 import           Flowbox.Control.Applicative
-import qualified Flowbox.InstanceManager.Cmd             as Cmd
-import qualified Flowbox.InstanceManager.Config          as Config
-import qualified Flowbox.InstanceManager.InstanceManager as InstanceManager
-import qualified Flowbox.InstanceManager.Version         as Version
-import           Flowbox.Options.Applicative             (optIntFlag)
-import           Flowbox.Prelude                         hiding (argument, op)
+import qualified Flowbox.Nimbus.Cmd          as Cmd
+import qualified Flowbox.Nimbus.Config       as Config
+import qualified Flowbox.Nimbus.Nimbus       as Nimbus
+import qualified Flowbox.Nimbus.Version      as Version
+import           Flowbox.Options.Applicative (optIntFlag)
+import           Flowbox.Prelude             hiding (argument, op)
 import           Flowbox.System.Log.Logger
 
 
@@ -60,11 +60,11 @@ parser = Cmd.Prog <$> subparser ( command "start"   (Opt.info startParser   (pro
 
 
 credOption :: Opt.Parser String
-credOption = strOption ( long "cred" <> short 'c' <> value "aws.config" <> metavar "path" <> help "Path to a file with AWS credentials")
+credOption = strOption ( long "cred" <> short 'c' <> value Config.defaultCredentialFilePath <> metavar "path" <> help ("Path to a file with AWS credentials, default is " ++ Config.defaultCredentialFilePath))
 
 
 opts :: Opt.ParserInfo Cmd.Prog
-opts = Opt.info parser (fullDesc <> Opt.progDesc "Flowbox AWS EC2 instance manager")
+opts = Opt.info parser (fullDesc <> Opt.progDesc "Flowbox Nimbus - Amazon Elastic Compute Cloud instance manager")
 
 
 helper :: Opt.Parser (a -> a)
@@ -83,7 +83,7 @@ run prog = do
     let region = Region.mk $ Cmd.region prog
     case Cmd.cmd prog of
       Cmd.Version op -> putStrLn $ Version.full (Cmd.numeric op)
-      Cmd.Start   op -> InstanceManager.start region op
-      Cmd.Get     op -> InstanceManager.get  region op
-      Cmd.Stop    op -> InstanceManager.stop region op
+      Cmd.Start   op -> Nimbus.start region op
+      Cmd.Get     op -> Nimbus.get  region op
+      Cmd.Stop    op -> Nimbus.stop region op
 

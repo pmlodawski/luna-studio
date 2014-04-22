@@ -5,15 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.InstanceManager.Config (
-    module Paths_flowbox_instance_manager,
+module Flowbox.Nimbus.Config (
+    module Paths_flowbox_nimbus,
     defaultAmi,
     defaultMachine,
     defaultRegion,
+    defaultCredentialFilePath,
 ) where
 
 import Flowbox.Prelude
-import Paths_flowbox_instance_manager (version)
+import Paths_flowbox_nimbus (version)
 
 
 
@@ -27,3 +28,7 @@ defaultMachine = "t1.micro"
 
 defaultRegion :: String
 defaultRegion = "eu-west-1"
+
+
+defaultCredentialFilePath :: FilePath
+defaultCredentialFilePath = "aws.config"

@@ -5,18 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.InstanceManager.Version where
+module Flowbox.Nimbus.Version where
 
 import qualified Data.Version as Version
 
-import qualified Flowbox.InstanceManager.Config as Config
+import qualified Flowbox.Nimbus.Config as Config
 import           Flowbox.Prelude
 
 
 
 full :: Bool -> String
-full = instanceManager
+full = nimbus
 
 
-instanceManager :: Bool -> String
-instanceManager numeric = (if numeric then "" else "Flowbox instance manager version ") ++ Version.showVersion Config.version
+nimbus :: Bool -> String
+nimbus numeric = (if numeric then "" else "Flowbox Nimbus version ") ++ Version.showVersion Config.version
