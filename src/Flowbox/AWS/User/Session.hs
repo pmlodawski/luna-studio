@@ -45,7 +45,7 @@ login userName password database = do
     case users of
         [User _ hash] -> if Password.verify hash password
                             then do logger info $ "Login successful, username=" ++ (show userName)
-                                    inst <- Instance.get userName Request.mk
+                                    inst <- Instance.getOrStart userName Request.mk
                                     Right <$> (fromJust $ Types.instanceIpAddress inst)
                             else return $ Left "Login failed."
         _             -> return $ Left "Login failed."

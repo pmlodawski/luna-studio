@@ -48,7 +48,7 @@ getInstance = do
     credential <- AWS.loadCredential
     let userName = "zenon"
     ip <- EC2.runEC2InRegion credential region
-          $ Types.instanceIpAddress <$> Instance.get userName Request.mk
+          $ Types.instanceIpAddress <$> Instance.getOrStart userName Request.mk
     print ip
 
 
