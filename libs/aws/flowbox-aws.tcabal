@@ -45,7 +45,7 @@ Library
 
 Executable aws-test
     Main-Is:        Main.hs
-    Hs-Source-Dirs: tests
+    Hs-Source-Dirs: test
 
     Extensions:     NoImplicitPrelude
 
