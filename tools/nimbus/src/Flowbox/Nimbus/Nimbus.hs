@@ -43,7 +43,7 @@ start region options = do
         let request = Request.mk { Types.runInstancesRequestImageId      = Text.pack        $ Cmd.ami options
                                  , Types.runInstancesRequestInstanceType = Just $ Text.pack $ Cmd.machine options
                                  }
-        Instance.get userName request
+        Instance.getOrStart userName request
     printInstance inst
 
 

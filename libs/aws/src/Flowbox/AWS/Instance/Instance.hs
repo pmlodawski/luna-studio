@@ -20,13 +20,13 @@ import qualified Control.Monad.Loops          as Loops
 import qualified Control.Monad.Trans.Resource as Resource
 import           Data.Text                    (Text)
 import qualified Data.Text                    as Text
+import qualified System.IO                    as IO
 
 import           Flowbox.AWS.Instance.WaitTime (WaitTimes)
 import qualified Flowbox.AWS.Instance.WaitTime as WaitTime
 import qualified Flowbox.AWS.User.User         as User
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-
 
 
 logger :: LoggerIO
@@ -45,6 +45,7 @@ userTagKey = Text.pack "user"
 find :: EC2Resource m
      => User.Name -> EC2 m [Types.Instance]
 find userName = do
+    logger debug "Looking for instances..."
     let userFilter = [(Text.append (Text.pack "tag:") userTagKey, [Text.pack userName])]
     concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [] userFilter)
 
@@ -78,20 +79,22 @@ ready inst = Types.InstanceStateRunning == Types.instanceState inst
 waitForStart :: EC2Resource m
              => [InstanceID] -> WaitTimes -> EC2 m [Types.Instance]
 waitForStart instanceIDs waitTimes = do
-    logger info "Waiting for instance start"
+    logger info "Waiting for instance start. Please wait."
     liftIO $ Concurrent.threadDelay $ WaitTime.initial waitTimes
     userInstances <- Loops.iterateUntil (all ready) $ do
         userInstances <- concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances instanceIDs [])
-        logger info "Still waiting for instance start"
+        liftIO $ putStr "."
+        liftIO $ IO.hFlush IO.stdout
         liftIO $ Concurrent.threadDelay $ WaitTime.next waitTimes
         return userInstances
+    liftIO $ putStrLn ""
     logger info "Instance is ready!"
     return userInstances
 
 
-get :: EC2Resource m
-    => User.Name -> Types.RunInstancesRequest -> EC2 m Types.Instance
-get userName instanceRequest = do
+getOrStart :: EC2Resource m
+           => User.Name -> Types.RunInstancesRequest -> EC2 m Types.Instance
+getOrStart userName instanceRequest = do
     let usable inst = state /= Types.InstanceStateTerminated && state /= Types.InstanceStateShuttingDown where state = Types.instanceState inst
     userInstances <- filter usable <$> find userName
     case map Types.instanceState userInstances of
