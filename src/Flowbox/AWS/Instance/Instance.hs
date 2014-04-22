@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Flowbox.AWS.Instance where
+module Flowbox.AWS.Instance.Instance where
 
 import           AWS.EC2                      (EC2)
 import qualified AWS.EC2                      as EC2
@@ -21,7 +21,9 @@ import qualified Control.Monad.Trans.Resource as Resource
 import           Data.Text                    (Text)
 import qualified Data.Text                    as Text
 
-import qualified Flowbox.AWS.User.User     as User
+import           Flowbox.AWS.Instance.WaitTime (WaitTimes)
+import qualified Flowbox.AWS.Instance.WaitTime as WaitTime
+import qualified Flowbox.AWS.User.User         as User
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -32,60 +34,12 @@ logger = getLoggerIO "Flowbox.AWS.Instance"
 
 
 type InstanceID = Text
-type ImageId    = Text
-type Type       = Text
 
 type EC2Resource m = (MonadIO m, Resource.MonadResource m, Resource.MonadBaseControl IO m)
 
 
 userTagKey :: Text
 userTagKey = Text.pack "user"
-
-imageID :: ImageId
-imageID = Text.pack "ami-a921dfde"
-
-instanceType :: Type
-instanceType = Text.pack "t1.micro"
-
-requestSecurityGroups :: [Text]
-requestSecurityGroups = [Text.pack "launch-wizard-1"]
-
-
-defaultInstanceRequest :: Types.RunInstancesRequest
-defaultInstanceRequest = Types.RunInstancesRequest
-    imageID -- ImageId :: Text
-    1 -- MinCount :: Int
-    1 -- MaxCount :: Int
-    Nothing -- KeyName :: Maybe Text
-    [] -- SecurityGroupIds :: [Text]
-    requestSecurityGroups -- SecurityGroups :: [Text]
-    Nothing -- UserData :: Maybe ByteString
-    (Just instanceType) -- InstanceType :: Maybe Text
-    Nothing -- AvailabilityZone :: Maybe Text
-    Nothing -- PlacementGroup :: Maybe Text
-    Nothing -- Tenancy :: Maybe Text
-    Nothing -- KernelId :: Maybe Text
-    Nothing -- RamdiskId :: Maybe Text
-    [] -- BlockDeviceMappings :: [BlockDeviceMappingParam]
-    Nothing -- MonitoringEnabled :: Maybe Bool
-    Nothing -- SubnetId :: Maybe Text
-    Nothing -- DisableApiTermination :: Maybe Bool
-    Nothing -- ShutdownBehavior :: Maybe ShutdownBehavior
-    Nothing -- PrivateIpAddress :: Maybe IPv4
-    Nothing -- ClientToken :: Maybe Text
-    [] -- NetworkInterfaces :: [NetworkInterfaceParam]
-    Nothing -- IamInstanceProfile :: Maybe IamInstanceProfile
-    Nothing -- runInstancesRequestEbsOptimized :: Maybe Bool
-
-
-data WaitTimes = WaitTimes { initialWaitTime :: Int
-                           , nextWaitTime    :: Int
-                           , repeatCount     :: Int
-                           } deriving (Show, Read, Eq, Ord)
-
-
-defaultWaitTime :: WaitTimes
-defaultWaitTime = WaitTimes 10000000 10000000 100
 
 
 find :: EC2Resource m
@@ -103,7 +57,7 @@ startNew userName instanceRequest = do
     let instanceIDs = map Types.instanceId $ Types.reservationInstanceSet reservation
     True <- EC2.createTags instanceIDs [(userTagKey, Text.pack userName)]
     logger info "Starting new instance succeeded."
-    [userInstance] <- waitForStart instanceIDs defaultWaitTime
+    [userInstance] <- waitForStart instanceIDs WaitTime.def
     return userInstance
 
 
@@ -113,7 +67,7 @@ startExisting instanceID = do
     logger info "Starting existing instance..."
     _ <- EC2.startInstances [instanceID]
     logger info "Starting existing succeeded."
-    [userInstance] <- waitForStart [instanceID] defaultWaitTime
+    [userInstance] <- waitForStart [instanceID] WaitTime.def
     return userInstance
 
 
@@ -125,11 +79,11 @@ waitForStart :: EC2Resource m
              => [InstanceID] -> WaitTimes -> EC2 m [Types.Instance]
 waitForStart instanceIDs waitTimes = do
     logger info "Waiting for instance start"
-    liftIO $ Concurrent.threadDelay $ initialWaitTime waitTimes
+    liftIO $ Concurrent.threadDelay $ WaitTime.initial waitTimes
     userInstances <- Loops.iterateUntil (all ready) $ do
         userInstances <- concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances instanceIDs [])
         logger info "Still waiting for instance start"
-        liftIO $ Concurrent.threadDelay $ nextWaitTime waitTimes
+        liftIO $ Concurrent.threadDelay $ WaitTime.next waitTimes
         return userInstances
     logger info "Instance is ready!"
     return userInstances
@@ -142,7 +96,7 @@ get userName instanceRequest = do
     userInstances <- filter usable <$> find userName
     case map Types.instanceState userInstances of
             []                           -> startNew userName instanceRequest
-            [Types.InstanceStatePending] -> head <$> waitForStart (map Types.instanceId userInstances) defaultWaitTime
+            [Types.InstanceStatePending] -> head <$> waitForStart (map Types.instanceId userInstances) WaitTime.def
             [Types.InstanceStateRunning] -> return $ head userInstances
             [Types.InstanceStateStopped] -> startExisting $ Types.instanceId $ head userInstances
             [_]                          -> startNew userName instanceRequest

@@ -24,14 +24,14 @@ import qualified Data.Text                    as Text
 import           Database.PostgreSQL.Simple   as PSQL
 import           Text.Show.Pretty             (ppShow)
 
-import qualified Flowbox.AWS.EC2           as EC2
-import qualified Flowbox.AWS.Instance      as Instance
-import           Flowbox.AWS.Region        (Region)
-import qualified Flowbox.AWS.Region        as Region
-import qualified Flowbox.AWS.User.Database as Database
-import           Flowbox.AWS.User.User     (User (User))
+import qualified Flowbox.AWS.EC2               as EC2
+import qualified Flowbox.AWS.Instance.Instance as Instance
+import qualified Flowbox.AWS.Instance.Request  as Request
+import           Flowbox.AWS.Region            (Region)
+import qualified Flowbox.AWS.Region            as Region
+import qualified Flowbox.AWS.User.Database     as Database
+import           Flowbox.AWS.User.User         (User (User))
 import           Flowbox.Prelude
-
 
 
 type Tag = Text
@@ -47,8 +47,8 @@ getInstance :: IO ()
 getInstance = do
     credential <- AWS.loadCredential
     let userName = "zenon"
-    ip <- EC2.runEC2inRegion credential region
-          $ Types.instanceIpAddress <$> Instance.get userName Instance.defaultInstanceRequest
+    ip <- EC2.runEC2InRegion credential region
+          $ Types.instanceIpAddress <$> Instance.get userName Request.mk
     print ip
 
 

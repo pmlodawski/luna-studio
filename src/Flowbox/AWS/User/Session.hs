@@ -7,23 +7,23 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.AWS.Session where
+module Flowbox.AWS.User.Session where
 
 import           AWS.EC2                (EC2)
 import qualified AWS.EC2                as EC2
 import qualified AWS.EC2.Types          as Types
 import           Control.Monad.IO.Class
 
-import           Data.IP                   (IPv4)
-import qualified Flowbox.AWS.Instance      as Instance
-import           Flowbox.AWS.User.Database (Database)
-import qualified Flowbox.AWS.User.Database as Database
-import qualified Flowbox.AWS.User.Password as Password
-import           Flowbox.AWS.User.User     (User (User))
-import qualified Flowbox.AWS.User.User     as User
+import           Data.IP                       (IPv4)
+import qualified Flowbox.AWS.Instance.Instance as Instance
+import qualified Flowbox.AWS.Instance.Request  as Request
+import           Flowbox.AWS.User.Database     (Database)
+import qualified Flowbox.AWS.User.Database     as Database
+import qualified Flowbox.AWS.User.Password     as Password
+import           Flowbox.AWS.User.User         (User (User))
+import qualified Flowbox.AWS.User.User         as User
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-
 
 
 logger :: LoggerIO
@@ -45,7 +45,7 @@ login userName password database = do
     case users of
         [User _ hash] -> if Password.verify hash password
                             then do logger info $ "Login successful, username=" ++ (show userName)
-                                    inst <- Instance.get userName Instance.defaultInstanceRequest
+                                    inst <- Instance.get userName Request.mk
                                     Right <$> (fromJust $ Types.instanceIpAddress inst)
                             else return $ Left "Login failed."
         _             -> return $ Left "Login failed."
