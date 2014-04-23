@@ -29,11 +29,13 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
 
+
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.AWS.Instance"
 
 
 type InstanceID = Text
+
 
 type EC2Resource m = (MonadIO m, Resource.MonadResource m, Resource.MonadBaseControl IO m)
 
