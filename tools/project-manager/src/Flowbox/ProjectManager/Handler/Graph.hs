@@ -9,6 +9,7 @@ module Flowbox.ProjectManager.Handler.Graph where
 
 import qualified Data.IORef                                                                                   as IORef
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                                          ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.GraphView                                      ()
 import           Flowbox.Prelude
 import           Flowbox.ProjectManager.Context                                                               (ContextRef)

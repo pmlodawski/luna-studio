@@ -151,9 +151,10 @@ message Project {
                 }
                 message Status {
                     required generated.proto.focus.Focus focus = 1;
-                    required generated.proto.crumb.Breadcrumbs bc = 2;
-                    required int32 libraryID = 3;
-                    required int32 projectID = 4;
+                    optional int32 maxDepth  = 2;
+                    required generated.proto.crumb.Breadcrumbs bc = 3;
+                    required int32 libraryID = 4;
+                    required int32 projectID = 5;
                 }
             }
             message Module {

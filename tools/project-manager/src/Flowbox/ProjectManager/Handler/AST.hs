@@ -69,7 +69,7 @@ get ctxRef (Definitions.Request mtmaxDepth tbc tlibID tprojectID) = do
         projectID = decodeP tprojectID
     batch <- IORef.readIORef ctxRef
     focus <- BatchAST.definitions mmaxDepth bc libID projectID batch
-    return $ Definitions.Status (encode focus) tbc tlibID tprojectID
+    return $ Definitions.Status (encode focus) mtmaxDepth tbc tlibID tprojectID
 
 
 moduleAdd :: ContextRef -> AddModule.Request -> IO AddModule.Update
