@@ -28,12 +28,12 @@ import qualified Generated.Proto.ProjectManager.Project.List.Request      as Lis
 import qualified Generated.Proto.ProjectManager.Project.List.Status       as List
 import qualified Generated.Proto.ProjectManager.Project.Lookup.Request    as Lookup
 import qualified Generated.Proto.ProjectManager.Project.Lookup.Status     as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Modify.Request    as Modify
+import qualified Generated.Proto.ProjectManager.Project.Modify.Update     as Modify
 import qualified Generated.Proto.ProjectManager.Project.Open.Request      as Open
 import qualified Generated.Proto.ProjectManager.Project.Open.Update       as Open
 import qualified Generated.Proto.ProjectManager.Project.Store.Request     as Store
 import qualified Generated.Proto.ProjectManager.Project.Store.Status      as Store
-import qualified Generated.Proto.ProjectManager.Project.Modify.Request    as Modify
-import qualified Generated.Proto.ProjectManager.Project.Modify.Update     as Modify
 
 
 

@@ -6,13 +6,13 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.AccountManager.Config (
-    module Paths_flowbox_account_manager,
+    module Paths_flowbox_account_manager_mock,
 
     Config(..),
 ) where
 
 import Flowbox.Prelude
-import Paths_flowbox_account_manager (version)
+import Paths_flowbox_account_manager_mock (version)
 
 
 

@@ -4,25 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.AWS.User.Password where
 
-import           Data.ByteString.Lazy.Char8 (pack)
-import qualified Data.Digest.Pure.SHA       as SHA
+module Flowbox.Nimbus.Version where
 
-import Flowbox.Prelude
+import qualified Data.Version as Version
 
-
-
-type Password = String
+import qualified Flowbox.Nimbus.Config as Config
+import           Flowbox.Prelude
 
 
-type Plain = String
+
+full :: Bool -> String
+full = nimbus
 
 
-mk :: Plain -> Password
-mk = SHA.showDigest . SHA.sha256 . pack
-
-
-verify :: Password -> Plain -> Bool
-verify password plain = password == mk plain
-
+nimbus :: Bool -> String
+nimbus numeric = (if numeric then "" else "Flowbox Nimbus version ") ++ Version.showVersion Config.version

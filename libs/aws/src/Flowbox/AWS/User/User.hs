@@ -14,6 +14,14 @@ import Flowbox.Prelude
 type Name = String
 
 
-data Data = Data { password :: Password
-                 } deriving (Show, Eq, Ord)
+data User = User { name     :: Name
+                 , password :: Password
+                 } deriving (Show, Read)
 
+
+fromDB :: (Name, Password) -> User
+fromDB (name', password') = User name' password'
+
+
+toDB :: User -> (Name, Password)
+toDB (User name' password') = (name', password')

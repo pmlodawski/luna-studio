@@ -8,8 +8,6 @@
 module Flowbox.AccountManager.Context where
 
 import qualified AWS                        as AWS
-import           Data.IORef                 (IORef)
-import qualified Data.IORef                 as IORef
 import qualified Database.PostgreSQL.Simple as PSQL
 
 import           Flowbox.AWS.Region        (Region)

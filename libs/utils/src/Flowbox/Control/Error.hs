@@ -9,11 +9,17 @@ module Flowbox.Control.Error (
     runScript,
     (<?>),
     assert,
+    safeLiftIO,
+    safeLiftIO',
 ) where
 
-import Control.Error hiding (runScript)
+import           Control.Error          hiding (runScript)
+import           Control.Exception      (Exception)
+import qualified Control.Exception      as Exc
+import           Control.Monad.IO.Class (liftIO)
 
 import Flowbox.Prelude
+
 
 
 runScript :: Script a -> IO a
@@ -31,7 +37,18 @@ val <?> m = case val of
 
 
 assert :: Monad m => Bool -> String -> m ()
-assert bool msg = if bool
+assert condition msg = if condition
     then return ()
     else fail msg
 
+
+safeLiftIO :: IO b -> EitherT String IO b
+safeLiftIO operation = do
+    result <- liftIO $ (Exc.try :: IO a -> IO (Either Exc.SomeException a)) operation
+    hoistEither $ fmapL show result
+
+
+safeLiftIO' :: (Exception e, Show e) => (e -> a) -> IO b -> EitherT a IO b
+safeLiftIO' excMap operation  = do
+    result <- liftIO $ Exc.try operation
+    hoistEither $ fmapL excMap result

@@ -14,9 +14,9 @@ import "rpc.proto";
 message Request {
     required Method method = 1;
     enum Method {
-        User_Register = 2001;
-        User_Login    = 2002;
-        User_Logout   = 2003;
+        User_Register = 1001;
+        User_Login    = 1002;
+        User_Logout   = 1003;
     }
 
     extensions 1000 to max;
@@ -25,26 +25,26 @@ message Request {
 
 message User {
     message Register {
-        message Args   { extend Request  { optional Args req = 2001; }
+        message Args   { extend Request  { optional Args req = 1001; }
             required string userName = 1;
             required string password = 2;
         }
-        message Result { extend generated.proto.rpc.Response { optional Result rsp = 2001; } }
+        message Result { extend generated.proto.rpc.Response { optional Result rsp = 1001; } }
     }
     message Login {
-        message Args   { extend Request  { optional Args req = 2002; }
+        message Args   { extend Request  { optional Args req = 1002; }
             required string userName = 1;
             required string password = 2;
         }
-        message Result { extend generated.proto.rpc.Response { optional Result rsp = 2002; }
+        message Result { extend generated.proto.rpc.Response { optional Result rsp = 1002; }
             required string batchAddress = 1;
         }
     }
     message Logout {
-        message Args   { extend Request  { optional Args req = 2003; }
+        message Args   { extend Request  { optional Args req = 1003; }
             required string userName = 1;
             required string password = 2;
         }
-        message Result { extend generated.proto.rpc.Response { optional Result rsp = 2003; } }
+        message Result { extend generated.proto.rpc.Response { optional Result rsp = 1003; } }
     }
 }
