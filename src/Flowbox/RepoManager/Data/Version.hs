@@ -6,25 +6,24 @@
 ---------------------------------------------------------------------------
 module Flowbox.RepoManager.Data.Version (
     module Data.Version,
-    Range(..),
+    Strictness(..),
     Constraint(..),
+    parseVersion
 ) where
 
-import Data.Version
+import 			 Flowbox.Prelude
+import 			 Data.Version                 hiding (parseVersion)
+import qualified Data.Version                 as Version (parseVersion)
+import qualified Text.ParserCombinators.ReadP as ReadP
 
-import Flowbox.Prelude
-
-
-
-data Range = Range { min :: Maybe Version
-                   , max :: Maybe Version
-                   } deriving (Show)
-
-
-data Constraint = Include Range
-                | Exclude Range
+data Strictness = Strict | NotStrict
                 deriving (Show)
 
+data Constraint = Minimum Strictness Version
+                | Exactly            Version
+                | Maximum Strictness Version
+                | Any
+                deriving (Show)
 
-
-
+parseVersion :: String -> Version
+parseVersion = fst . last . ReadP.readP_to_S Version.parseVersion

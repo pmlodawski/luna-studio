@@ -5,9 +5,9 @@ import           Flowbox.Prelude
 import qualified Network.URI     as URI
 
 class VCS a where
-  name       :: a -> String
-  localPath  :: a -> URI.URI
+  localPath  :: a -> FilePath
   remotePath :: a -> URI.URI
-  clone      :: a -> IO a
-  sync       :: a -> IO a
+  clone      :: a -> IO ()
+  pull       :: a -> IO ()
+  push       :: a -> IO ()
   remove     :: a -> IO ()
