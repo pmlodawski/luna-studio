@@ -18,6 +18,6 @@ data WaitTimes = WaitTimes { initial     :: Int
 
 instance Default WaitTimes where
     def = WaitTimes { initial = 10000000
-                    , next    = 10000000 
+                    , next    = 10000000
                     , repeatCount = 100
                     }

@@ -15,6 +15,7 @@ import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers as Proto
 
 
+
 type BusRPCHandler = (forall args result. (Proto.Serializable args, Proto.Serializable result)
                        => String -> (args -> IO [result]) -> IO [Message])
                    -> Topic -> IO [Message]

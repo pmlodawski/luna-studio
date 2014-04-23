@@ -55,10 +55,10 @@ start region options = do
 stop :: Region -> Cmd.Options -> IO ()
 stop region options = do
     credential <- getCredential options
-    EC2.runEC2InRegion credential region $ do 
+    EC2.runEC2InRegion credential region $ do
         instances <- filter Instance.ready <$> Instance.find userName
         let instanceIDs = map Types.instanceId instances
-        if length instances == 0 
+        if length instances == 0
             then logger info $ "No instances to stop."
             else do logger info $ "Stopping " ++ (show $ length instances) ++ " instances."
                     _ <- EC2.stopInstances instanceIDs $ Cmd.force options

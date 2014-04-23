@@ -6,12 +6,8 @@
 ---------------------------------------------------------------------------
 module Flowbox.AccountManager.Handler.User where
 
-import Control.Monad.IO.Class     (liftIO)
-import Control.Monad.Trans.Either
-
 import           Flowbox.AccountManager.Context                      (Context)
 import qualified Flowbox.AccountManager.Context                      as Context
-import qualified Flowbox.AWS.EC2                                     as EC2
 import qualified Flowbox.AWS.User.Session                            as Session
 import           Flowbox.Prelude                                     hiding (Context, error)
 import           Flowbox.System.Log.Logger
@@ -45,9 +41,8 @@ login ctx (User_Login.Args tuserName tpassword) = do
     logger info "called User::login"
     let userName = decodeP tuserName
         password = decodeP tpassword
-    ip  <- EitherT $ EC2.runEC2InRegion (Context.credential ctx) (Context.region ctx)
-                   $ Session.login userName password $ Context.database ctx
-    return $ User_Login.Result $ encodeP $ show ip
+    Session.authenticate userName password $ Context.database ctx
+    return $ User_Login.Result $ encodeP $ "127.0.0.1"
 
 
 logout :: Context -> User_Logout.Args -> RPC User_Logout.Result
@@ -55,6 +50,5 @@ logout ctx (User_Logout.Args tuserName tpassword) = do
     logger info "called User::logout"
     let userName = decodeP tuserName
         password = decodeP tpassword
-    EitherT $ liftIO $ EC2.runEC2InRegion (Context.credential ctx) (Context.region ctx)
-                     $ Session.logout userName password $ Context.database ctx
+    Session.authenticate userName password $ Context.database ctx
     return $ User_Logout.Result

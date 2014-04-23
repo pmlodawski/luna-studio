@@ -15,7 +15,7 @@ import Paths_flowbox_nimbus (version)
 
 
 
-data Config = Config { ami            :: String 
+data Config = Config { ami            :: String
                      , machine        :: String
                      , region         :: String
                      , credentialPath :: FilePath

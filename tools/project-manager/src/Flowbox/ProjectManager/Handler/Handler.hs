@@ -129,7 +129,7 @@ handler ctx callback topic = case topic of
     "project.library.ast.function.graph.node.default.get.request"    -> callback P.status $ P.singleResult $ NodeDefaultHandler.get ctx
     "project.library.ast.function.graph.node.default.remove.request" -> callback P.update $ P.singleResult $ NodeDefaultHandler.remove ctx
     "project.library.ast.function.graph.node.default.set.request"    -> callback P.update $ P.singleResult $ NodeDefaultHandler.set ctx
-    "project.library.ast.function.graph.node.properties.get.request" -> callback P.status $ P.singleResult $ PropertiesHandler.getNodeProperties ctx 
+    "project.library.ast.function.graph.node.properties.get.request" -> callback P.status $ P.singleResult $ PropertiesHandler.getNodeProperties ctx
     "project.library.ast.function.graph.node.properties.set.request" -> callback P.update $ P.singleResult $ PropertiesHandler.setNodeProperties ctx
     "project.library.ast.properties.get.request"                     -> callback P.status $ P.singleResult $ PropertiesHandler.getASTProperties ctx
     "project.library.ast.properties.set.request"                     -> callback P.update $ P.singleResult $ PropertiesHandler.setASTProperties ctx

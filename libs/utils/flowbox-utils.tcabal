@@ -27,7 +27,7 @@ Library
                   data-default,
                   directory,
                   dlist,
-                  --either,
+                  either,
                   errors,
                   fgl,
                   filepath,

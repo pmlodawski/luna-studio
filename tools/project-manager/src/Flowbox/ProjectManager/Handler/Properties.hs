@@ -6,21 +6,21 @@
 ---------------------------------------------------------------------------
 module Flowbox.ProjectManager.Handler.Properties where
 
-import qualified Data.IORef                                                                as IORef
-import qualified Flowbox.Batch.Handler.Properties                                          as BatchP
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes                  ()
+import qualified Data.IORef                                                                                    as IORef
+import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes                                      ()
 import           Flowbox.Prelude
-import           Flowbox.ProjectManager.Context                                            (ContextRef)
+import           Flowbox.ProjectManager.Context                                                                (ContextRef)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Get.Request as GetASTProperties
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Get.Status  as GetASTProperties
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Request as SetASTProperties
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Update  as SetASTProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Request as GetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Status  as GetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request as SetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Update  as SetNodeProperties
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Get.Request                     as GetASTProperties
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Get.Status                      as GetASTProperties
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Request                     as SetASTProperties
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Update                      as SetASTProperties
 
 
 loggerIO :: LoggerIO
