@@ -7,8 +7,6 @@
 
 package generated.proto.batch;
 
-import "google/protobuf/descriptor.proto";
-
 import "attributes.proto";
 import "crumb.proto";
 import "expr.proto";
