@@ -7,17 +7,17 @@
 module Main where
 
 import Flowbox.Prelude
-import qualified Flowbox.RepoManager.VCS.Git.Git as Git
-import qualified Flowbox.RepoManager.VCS.VCS     as VCS
+--import qualified Flowbox.RepoManager.VCS.Git.Git as Git --import qualified Flowbox.RepoManager.VCS.VCS     as VCS
 --import qualified Flowbox.RepoManager.VCS.VCS  as VCS
-import qualified Flowbox.RepoManager.Data.Item.Config as Config
+--import qualified Flowbox.RepoManager.Data.Item.Config as Config
 --import qualified           System.Environment              as Environment
-import qualified Flowbox.RepoManager.Data.Repository as Repository
+--import qualified Flowbox.RepoManager.Data.Repository as Repository
 
 main :: IO ()
 main = do
+     return ()
      --print =<< Config.loadItem "repo/packages/games-action/pacman/pacman-0.1.1.config"
-     print =<< Config.loadItem "test/test.config"
+     --print =<< Config.loadItem "test/test.config"
      
      --let vcs = Git.createVCS VCS.Git "repo/packages" "git@github.com:dobry/packages.git" 
      ----print =<< Repository.buildRepository vcs

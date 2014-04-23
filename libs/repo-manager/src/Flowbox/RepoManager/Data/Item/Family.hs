@@ -9,12 +9,12 @@ module Flowbox.RepoManager.Data.Item.Family where
 import Data.Map (Map)
 
 import           Flowbox.Prelude
-import           Flowbox.RepoManager.Data.Item.Item    (Item)
+import           Flowbox.RepoManager.Data.Item.Item    (Package)
 import           Flowbox.RepoManager.Data.Version (Version)
 
 type Family a = Map Version a
 type NamedFamily a = (String, a)
-type AvailableFamilies = Family Item
+type AvailableFamilies = Family Package
 
 type Hash = String
-type InstalledFamilies = Family (Map Hash Item)
+type InstalledFamilies = Family (Map Hash Package)

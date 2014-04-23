@@ -7,10 +7,8 @@
 module Flowbox.RepoManager.Data.Dependency where
 
 import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.Data.Version   as Version
+import qualified Flowbox.RepoManager.Data.Version as Version
 
-
-
-data Dependency = Dependency { name        :: String
+data Dependency = Dependency { depName     :: String
                              , constraints :: [Version.Constraint]
                              } deriving (Show)

@@ -7,7 +7,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Flowbox.RepoManager.Data.Item.Config (
-    loadItem
+    --loadItem
 ) where
 
 import           Control.Applicative
@@ -27,6 +27,7 @@ import           Flowbox.System.Log.Logger
 import qualified Prelude
 import qualified Text.ParserCombinators.ReadP         as ReadP
 import qualified System.FilePath                      as FilePath
+import qualified Network.URI                          as URI
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
@@ -37,44 +38,44 @@ fromString (Configurator.String a) = a
 fromList :: Value -> [Value]
 fromList (Configurator.List a) = a
 
-loadItem :: FilePath -> IO Item.Item
-loadItem file = do cfgFile <- Configurator.load [Configurator.Required file]
+--loadItem :: FilePath -> IO Item.Item
+--loadItem file = do cfgFile <- Configurator.load [Configurator.Required file]
 
-                   let readConf fieldName = Exception.onException (fromJust =<< (Configurator.lookup cfgFile fieldName :: IO (Maybe Value)))
-                                     $ logger error ("Error reading config variable '" ++ show fieldName)
+--                   let readConf fieldName = Exception.onException (fromJust =<< (Configurator.lookup cfgFile fieldName :: IO (Maybe Value)))
+--                                     $ logger error ("Error reading config variable '" ++ show fieldName)
 
-                   Item.Item <$> (getItemName     <$> readConf "name")
-                             <*> (getVersion      <$> readConf "version")
-                             <*> (getSources      <$> readConf "source")
-                             <*> (getScript       <$> readConf "install")
-                             <*> (getScript       <$> readConf "uninstall")
-                             <*> (getDependencies <$> readConf "dependencies")
+--                   Item.Item <$> (getItemName     <$> readConf "name")
+--                             <*> (getVersion      <$> readConf "version")
+--                             <*> (getSources      <$> readConf "source")
+--                             <*> (getScript       <$> readConf "install")
+--                             <*> (getScript       <$> readConf "uninstall")
+--                             <*> (getDependencies <$> readConf "dependencies")
                                  
 
 getItemName :: Value -> String
 getItemName nameString = Text.unpack $ fromString nameString
 
-getVersion :: Value -> Version.Version
-getVersion versionString = Prelude.head [x | (x,"") <- ReadP.readP_to_S Version.parseVersion $ Text.unpack $ fromString versionString]
+--getVersion :: Value -> Version.Version
+--getVersion versionString = Prelude.head [x | (x,"") <- ReadP.readP_to_S Version.parseVersion $ Text.unpack $ fromString versionString]
 
-getSources :: Value -> Map.Map String Environment.URI
-getSources sourcesValue = Map.fromList $ fmap (getArchitecture.fromList) (fromList sourcesValue)
-    where getArchitecture (architecture:uri:[]) = (Text.unpack $ fromString architecture, uriKind $ fromString uri)
-          uriKind uriString = furi $ Text.unpack uriString
-              where furi = if Text.isPrefixOf "http" uriString
-                              then Environment.Remote
-                              else Environment.Local
+--getSources :: Value -> Map.Map String URI.URI
+--getSources sourcesValue = Map.fromList $ fmap (getArchitecture.fromList) (fromList sourcesValue)
+--    where getArchitecture (architecture:uri:[]) = (Text.unpack $ fromString architecture, uriKind $ fromString uri)
+--          uriKind uriString = furi $ Text.unpack uriString
+--              where furi = if Text.isPrefixOf "http" uriString
+--                              then Environment.Remote
+--                              else Environment.Local
 
 getScript :: Value -> [String]
 getScript scriptValue = fmap (Text.unpack . fromString) (fromList scriptValue)
 
-getDependencies :: Value -> [Dependency]
-getDependencies dependenciesValue = fmap (getDependency . fromList) (fromList dependenciesValue)
-    where getDependency (package:deps) = Dependency.Dependency (Text.unpack $ fromString package) (constraint deps)
-          constraint deps = case deps of
-                                  []                 -> []
-                                  (_cons:[])         -> [Version.Exclude (Version.Range Nothing Nothing)]
-                                  (_cons1:_cons2:[]) -> [Version.Exclude (Version.Range Nothing Nothing)]
+--getDependencies :: Value -> [Dependency]
+--getDependencies dependenciesValue = fmap (getDependency . fromList) (fromList dependenciesValue)
+--    where getDependency (package:deps) = Dependency.Dependency (Text.unpack $ fromString package) (constraint deps)
+--          constraint deps = case deps of
+--                                  []                 -> []
+--                                  (_cons:[])         -> [Version.Exclude (Version.Range Nothing Nothing)]
+--                                  (_cons1:_cons2:[]) -> [Version.Exclude (Version.Range Nothing Nothing)]
 
 
 --loadConfig :: FilePath -> IO (Either String Item.Item)
