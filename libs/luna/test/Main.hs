@@ -37,9 +37,9 @@ import           Flowbox.Luna.Data.Pass.Source                                  
 import qualified Flowbox.Luna.Data.Pass.Source                                           as Source
 import qualified Flowbox.Luna.Data.PropertyMap                                           as PropertyMap
 import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                                as Analysis.Alias
+import qualified Flowbox.Luna.Passes.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool                          as FuncPool
 import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                                   as MaxID
-import qualified Flowbox.Luna.Passes.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                                     as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                                   as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                                  as FileReader
@@ -110,12 +110,12 @@ example = Source.Source ["Main"] $
                         , "    ```print' #{msg}```"
 
 
-                    
+
 
                     , "def main:"
                     , "    print $ test2 1"
 
-                    
+
 
                     , "def test2 a:"
                     , "    test1 a"
@@ -235,7 +235,7 @@ main_inner = Luna.run $ do
     logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
 
 
-    
+
 
 
     --logger info "\n-------- FuncPool --------"

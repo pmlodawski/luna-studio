@@ -10,15 +10,15 @@ module Flowbox.Broker.Proxy where
 import           System.ZMQ4.Monadic (ZMQ)
 import qualified System.ZMQ4.Monadic as ZMQ
 
+import Flowbox.Bus.EndPoint (EndPoint)
 import Flowbox.Prelude
 
 
-
-run :: String -> String -> IO ()
+run :: EndPoint -> EndPoint -> IO ()
 run pullAddr pubAddr = ZMQ.runZMQ $ serve pullAddr pubAddr
 
 
-serve :: String -> String -> ZMQ z ()
+serve :: EndPoint -> EndPoint -> ZMQ z ()
 serve pullAddr pubAddr = do
     pull <- ZMQ.socket ZMQ.Pull
     pub  <- ZMQ.socket ZMQ.Pub

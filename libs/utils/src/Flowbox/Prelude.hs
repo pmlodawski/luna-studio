@@ -89,18 +89,6 @@ fromJust Nothing  = fail "Maybe.fromJust: Nothing"
 fromJust (Just x) = return x
 
 
-either2M :: (MonadIO m, Show a) => Either a b -> m b
-either2M f = case f of
-    Right r -> return r
-    Left  e -> fail (show e)
-
-
-eitherString2M :: MonadIO m => Either String b -> m b
-eitherString2M f = case f of
-    Right r -> return r
-    Left  e -> fail e
-
-
 whenLeft :: (Monad m) => Either a b -> (a -> m ()) -> m ()
 whenLeft e f = case e of
     Left  v -> f v

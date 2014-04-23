@@ -11,12 +11,14 @@ module Flowbox.Control.Error (
     assert,
     safeLiftIO,
     safeLiftIO',
+    eitherToM,
+    eitherStringToM,
 ) where
 
 import           Control.Error          hiding (runScript)
 import           Control.Exception      (Exception)
 import qualified Control.Exception      as Exc
-import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 
 import Flowbox.Prelude
 
@@ -52,3 +54,13 @@ safeLiftIO' :: (Exception e, Show e) => (e -> a) -> IO b -> EitherT a IO b
 safeLiftIO' excMap operation  = do
     result <- liftIO $ Exc.try operation
     hoistEither $ fmapL excMap result
+
+
+eitherToM :: (MonadIO m, Show a) => Either a b -> m b
+eitherToM f = case f of
+    Right r -> return r
+    Left  e -> fail (show e)
+
+
+eitherStringToM :: MonadIO m => Either String b -> m b
+eitherStringToM f = eitherToM $ fmapL show f
