@@ -20,6 +20,7 @@ message Parse {
         }
         message Status {
             required generated.proto.expr.Expr expr = 1;
+            required string str = 2;
         }   
     }
     message Pat {
@@ -28,6 +29,7 @@ message Parse {
         }
         message Status {
             required generated.proto.pat.Pat pat = 1;
+            required string str = 2;
         }   
     }
     message Type {
@@ -36,6 +38,7 @@ message Parse {
         }
         message Status {
             required generated.proto.type.Type type = 1;
+            required string str = 2;
         }   
     }
     message NodeExpr {
@@ -44,6 +47,7 @@ message Parse {
         }
         message Status {
             required generated.proto.expr.Expr expr = 1;
+            required string str = 2;
         }   
     }
 }
