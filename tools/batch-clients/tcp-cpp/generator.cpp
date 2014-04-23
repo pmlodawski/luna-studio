@@ -780,26 +780,34 @@ void generateDispatcher()
 #include "../bus/BusLibrary.h"
 
 
-	void MessageDispatcher::dispatch(const BusMessage &message, IDispatchee &dispatchee)
+void MessageDispatcher::dispatch(const BusMessage &message, IDispatchee &dispatchee)
+{
+	static const std::map<std::string, std::function<void(const BusMessage &, IDispatchee &dispatchee)>> deserializers =
 	{
-		static const std::map<std::string, std::function<void(const BusMessage &, IDispatchee &dispatchee)>> deserializers =
-		{
-%elements%
-		};
+		%elements%
+	};
 
-		auto deserializerItr = deserializers.find(message.topic);
-		if(deserializerItr != deserializers.end())
-		{
-			deserializerItr->second(message, dispatchee);
-			return;
-		}
-
-		logWarning("Not dispatching message %s.", message.topic);
+	auto deserializerItr = deserializers.find(message.topic);
+	if(deserializerItr != deserializers.end())
+	{
+		deserializerItr->second(message, dispatchee);
+		return;
 	}
+
+	logWarning("Not dispatching message %s.", message.topic);
+}
+
+void IBusMessagesReceiver::handle(const BusMessage &message)
+{
+	MessageDispatcher::dispatch(message, *this);
+}
+
 )";
 
 	std::string header = R"(
 #pragma once
+
+#include "../bus/BusListener.h"
 
 struct BusMessage;
 
@@ -809,6 +817,12 @@ struct MessageDispatcher
 {
 	static void dispatch(const BusMessage &message, IDispatchee &dispatchee);
 };
+
+struct IBusMessagesReceiver : IBusListener, IDispatchee
+{
+	virtual void handle(const BusMessage &message);
+};
+
 )";
 	std::string entry = R"(
 			{ 
