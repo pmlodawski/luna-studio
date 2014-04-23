@@ -58,7 +58,7 @@ startNew userName instanceRequest = do
     let instanceIDs = map Types.instanceId $ Types.reservationInstanceSet reservation
     True <- EC2.createTags instanceIDs [(userTagKey, Text.pack userName)]
     logger info "Starting new instance succeeded."
-    [userInstance] <- waitForStart instanceIDs WaitTime.def
+    [userInstance] <- waitForStart instanceIDs def
     return userInstance
 
 
@@ -68,7 +68,7 @@ startExisting instanceID = do
     logger info "Starting existing instance..."
     _ <- EC2.startInstances [instanceID]
     logger info "Starting existing succeeded."
-    [userInstance] <- waitForStart [instanceID] WaitTime.def
+    [userInstance] <- waitForStart [instanceID] def
     return userInstance
 
 
@@ -99,7 +99,7 @@ getOrStart userName instanceRequest = do
     userInstances <- filter usable <$> find userName
     case map Types.instanceState userInstances of
             []                           -> startNew userName instanceRequest
-            [Types.InstanceStatePending] -> head <$> waitForStart (map Types.instanceId userInstances) WaitTime.def
+            [Types.InstanceStatePending] -> head <$> waitForStart (map Types.instanceId userInstances) def
             [Types.InstanceStateRunning] -> return $ head userInstances
             [Types.InstanceStateStopped] -> startExisting $ Types.instanceId $ head userInstances
             [_]                          -> startNew userName instanceRequest
