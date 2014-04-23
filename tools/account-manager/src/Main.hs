@@ -34,9 +34,9 @@ logger = getLoggerIO "Flowbox.AccountManager"
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Serve
-           <$> strOption  (long "address" <> short 'a' <> value Config.defaultAddress <> metavar "address" <> help ("Server address (default is " ++ Config.defaultAddress ++ ")"))
+           <$> strOption  (long "address" <> short 'a' <> value (def Config.address) <> metavar "address" <> help ("Server address (default is " ++ (def Config.address) ++ ")"))
 
-           <*> strOption  (long "region"  <> short 'r' <> value Config.defaultRegion  <> metavar "region"  <> help "Database connect address")
+           <*> strOption  (long "region"  <> short 'r' <> value (def Config.region)  <> metavar "region"  <> help "Database connect address")
 
            <*> strOption  (long "dbAddress"  <> metavar "address"  <> help "Database connect address")
            <*> option     (long "dbPort"     <> metavar "port"     <> help "Database connect port")

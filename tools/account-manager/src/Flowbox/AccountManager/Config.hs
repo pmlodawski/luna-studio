@@ -8,8 +8,7 @@
 module Flowbox.AccountManager.Config (
     module Paths_flowbox_account_manager,
 
-    defaultAddress,
-    defaultRegion,
+    Config(..),
 ) where
 
 import Flowbox.Prelude
@@ -17,9 +16,12 @@ import Paths_flowbox_account_manager (version)
 
 
 
-defaultAddress :: String
-defaultAddress = "tcp://*:30530"
+data Config = Config { address :: String
+                     , region  :: String
+                     }
 
 
-defaultRegion :: String
-defaultRegion = "eu-west-1"
+instance Default Config where
+    def = Config { address = "tcp://*:30530"
+                 , region  = "eu-west-1"
+                 }

@@ -21,6 +21,7 @@ data Config = Config { ami            :: String
                      , credentialPath :: FilePath
                      }
 
+
 instance Default Config where
     def = Config { ami            = "ami-a921dfde"
                  , machine        = "t1.micro"

@@ -16,5 +16,8 @@ data WaitTimes = WaitTimes { initial     :: Int
                            } deriving (Show, Read, Eq, Ord)
 
 
-def :: WaitTimes
-def = WaitTimes 10000000 10000000 100
+instance Default WaitTimes where
+    def = WaitTimes { initial = 10000000
+                    , next    = 10000000 
+                    , repeatCount = 100
+                    }
