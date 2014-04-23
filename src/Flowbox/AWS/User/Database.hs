@@ -29,7 +29,7 @@ addUser connection user = PSQL.withTransaction connection $ do
     exising <- getUser connection $ User.name user
     if null exising
         then do _ <- PSQL.execute connection
-                        "insert into Users (Username, Password) values (?, ?)"
+                        "insert into Users (UserName, Password) values (?, ?)"
                         $ User.toDB user
                 return $ Right ()
         else return $ Left "User already exists"
@@ -38,3 +38,8 @@ addUser connection user = PSQL.withTransaction connection $ do
 getUser :: PSQL.Connection -> User.Name -> IO [User]
 getUser connection userName = map User.fromDB <$> PSQL.query connection
     "select * from Users where Username=?" (PSQL.Only userName)
+
+
+create :: PSQL.Connection -> IO ()
+create connection = void $ PSQL.execute connection 
+    "create table Users ( UserName char(20) PRIMARY KEY, Password char(40) NOT NULL )" ()
