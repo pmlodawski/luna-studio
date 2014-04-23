@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-import           Options.Applicative (argument, command, command, fullDesc, help, hidden, long, metavar, prefs, progDesc, short, str, strOption, subparser, switch, value, (<>))
+import           Options.Applicative (command, command, fullDesc, help, hidden, long, metavar, prefs, progDesc, short, strOption, subparser, switch, value, (<>))
 import qualified Options.Applicative as Opt
 
 import qualified Flowbox.AWS.Region          as Region
@@ -25,15 +25,14 @@ rootLogger = getLogger "Flowbox"
 
 
 startParser :: Opt.Parser Cmd.Command
-startParser = Cmd.Start <$> ( Cmd.StartOptions <$> strOption ( long "ami"     <> short 'a' <> value Config.defaultAmi     <> metavar "ami-id"       <> help ("Specify AMI to run, default is " ++ Config.defaultAmi))
-                                               <*> strOption ( long "machine" <> short 'm' <> value Config.defaultMachine <> metavar "machine-type" <> help ("Specify machine type to run, default is " ++ Config.defaultMachine))
+startParser = Cmd.Start <$> ( Cmd.StartOptions <$> strOption ( long "ami"     <> short 'a' <> value (Config.ami     def) <> metavar "ami-id"       <> help ("Specify AMI to run, default is " ++ (Config.ami def)))
+                                               <*> strOption ( long "machine" <> short 'm' <> value (Config.machine def) <> metavar "machine-type" <> help ("Specify machine type to run, default is " ++ (Config.machine def)))
                                                <*> credOption
                           )
 
 
 stopParser :: Opt.Parser Cmd.Command
-stopParser = Cmd.Stop <$> ( Cmd.StopOptions <$> argument str ( metavar "ami-id" <> help "Specify instance instance-id")
-                                            <*> switch       ( long "force"    <> short 'f' <> help "Force instance stop" )
+stopParser = Cmd.Stop <$> ( Cmd.StopOptions <$> switch ( long "force" <> short 'f' <> help "Force instance stop" )
                                             <*> credOption
                           )
 
@@ -53,14 +52,14 @@ parser = Cmd.Prog <$> subparser ( command "start"   (Opt.info startParser   (pro
                                <> command "get"     (Opt.info getParser     (progDesc "Get EC2 instance ID and IP"))
                                <> command "version" (Opt.info versionParser (progDesc "Print instance-manager version"))
                                 )
-                  <*> strOption ( long "region" <> short 'r' <> value Config.defaultRegion <> metavar "region" <> help ("Specify AWS region, default is " ++ Config.defaultRegion))
+                  <*> strOption ( long "region" <> short 'r' <> value (Config.region def) <> metavar "region" <> help ("Specify AWS region, default is " ++ (Config.region def)))
                   <*> switch    ( long "no-color" <> hidden <> help "disable color output" )
                   <*> optIntFlag Nothing 'v' 3 2 "verbose level [0-5], default 3"
                   <**> helper
 
 
 credOption :: Opt.Parser String
-credOption = strOption ( long "cred" <> short 'c' <> value Config.defaultCredentialFilePath <> metavar "path" <> help ("Path to a file with AWS credentials, default is " ++ Config.defaultCredentialFilePath))
+credOption = strOption ( long "cred" <> short 'c' <> value (Config.credentialPath def) <> metavar "path" <> help ("Path to a file with AWS credentials, default is " ++ (Config.credentialPath def)))
 
 
 opts :: Opt.ParserInfo Cmd.Prog

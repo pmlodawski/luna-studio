@@ -30,8 +30,7 @@ data Options = StartOptions   { ami            :: String
                               , machine        :: String
                               , credentialPath :: String
                               }
-             | StopOptions    { instanceID     :: String
-                              , force          :: Bool
+             | StopOptions    { force          :: Bool
                               , credentialPath :: String
                               }
              | GetOptions     { credentialPath :: String

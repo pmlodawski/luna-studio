@@ -32,7 +32,7 @@ import qualified Flowbox.AWS.Region            as Region
 import qualified Flowbox.AWS.User.Database     as Database
 import           Flowbox.AWS.User.User         (User (User))
 import           Flowbox.Prelude
-
+import qualified Flowbox.System.Console.ASCIISpinner as Spinner
 
 type Tag = Text
 type UserName = Text
@@ -54,13 +54,14 @@ getInstance = do
 
 queryDB :: IO ()
 queryDB = do
-    putStrLn "Connecting..."
-    db <- Database.mk $ PSQL.ConnectInfo "mydbinstance.cn1bxyb5bfdl.eu-west-1.rds.amazonaws.com"
-                                         5432
-                                         "test"
-                                         "************"
-                                         "flowbox"
-    putStrLn "Connected"
+    putStr "Connecting "
+    db <- Spinner.runWithSpinner $ Database.mk 
+            $ PSQL.ConnectInfo "mydbinstance.cn1bxyb5bfdl.eu-west-1.rds.amazonaws.com"
+                               5432
+                               "test"
+                               "kozatest123"
+                               "flowbox"
+    --Database.create db
     Database.addUser db $ User "stefan" "ala123"
     Database.addUser db $ User "zenon"  "ala123"
     u1 <- Database.getUser db "stefan"

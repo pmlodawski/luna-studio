@@ -1,6 +1,8 @@
 module Flowbox.System.Console.ASCIISpinner where
 
-import qualified System.IO as IO
+import qualified Control.Concurrent as C
+import           Control.Monad
+import qualified System.IO          as IO
 
 import Flowbox.Prelude hiding (elements)
 
@@ -15,6 +17,15 @@ progress i = do
 
 
 finish :: IO ()
-finish = do
-    putStr "\b \b"
-    IO.hFlush IO.stdout
+finish = putStrLn "\b \b"
+
+
+runWithSpinner :: IO a -> IO a
+runWithSpinner fun = do
+    putStr " "
+    thread <- C.forkIO $ forM_ [0..] $ \i -> do progress i
+                                                C.threadDelay 50000
+    result <- fun
+    C.killThread thread
+    finish
+    return result

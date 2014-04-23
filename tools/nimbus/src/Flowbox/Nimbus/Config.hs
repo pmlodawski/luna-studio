@@ -7,10 +7,7 @@
 
 module Flowbox.Nimbus.Config (
     module Paths_flowbox_nimbus,
-    defaultAmi,
-    defaultMachine,
-    defaultRegion,
-    defaultCredentialFilePath,
+    Config(..),
 ) where
 
 import Flowbox.Prelude
@@ -18,17 +15,15 @@ import Paths_flowbox_nimbus (version)
 
 
 
-defaultAmi :: String
-defaultAmi = "ami-a921dfde"
+data Config = Config { ami            :: String 
+                     , machine        :: String
+                     , region         :: String
+                     , credentialPath :: FilePath
+                     }
 
-
-defaultMachine :: String
-defaultMachine = "t1.micro"
-
-
-defaultRegion :: String
-defaultRegion = "eu-west-1"
-
-
-defaultCredentialFilePath :: FilePath
-defaultCredentialFilePath = "aws.config"
+instance Default Config where
+    def = Config { ami            = "ami-a921dfde"
+                 , machine        = "t1.micro"
+                 , region         = "eu-west-1"
+                 , credentialPath = "aws.config"
+                 }

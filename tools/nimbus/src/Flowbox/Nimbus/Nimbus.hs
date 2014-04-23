@@ -17,7 +17,12 @@ import qualified Flowbox.AWS.Instance.Request  as Request
 import           Flowbox.AWS.Region            (Region)
 import qualified Flowbox.Nimbus.Cmd            as Cmd
 import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Nimbus.Nimbus"
 
 
 getCredential :: Cmd.Options -> IO AWS.Credential
@@ -50,9 +55,14 @@ start region options = do
 stop :: Region -> Cmd.Options -> IO ()
 stop region options = do
     credential <- getCredential options
-    let instanceID = Text.pack $ Cmd.instanceID options
-    _ <- EC2.runEC2InRegion credential region $ EC2.stopInstances [instanceID] $ Cmd.force options
-    return ()
+    EC2.runEC2InRegion credential region $ do 
+        instances <- filter Instance.ready <$> Instance.find userName
+        let instanceIDs = map Types.instanceId instances
+        if length instances == 0 
+            then logger info $ "No instances to stop."
+            else do logger info $ "Stopping " ++ (show $ length instances) ++ " instances."
+                    _ <- EC2.stopInstances instanceIDs $ Cmd.force options
+                    return ()
 
 
 get :: Region -> Cmd.Options -> IO ()
