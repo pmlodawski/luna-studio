@@ -6,14 +6,15 @@
 ---------------------------------------------------------------------------
 module Flowbox.Bus.Control.Handler.ID where
 
-import qualified Data.IORef as IORef
+import           Control.Monad.IO.Class (liftIO)
+import qualified Data.IORef             as IORef
 
 import           Flowbox.Bus.Control.BusCtx                     (BusCtx)
 import qualified Flowbox.Bus.Control.BusCtx                     as BusCtx
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import           Flowbox.ZMQ.RPC.RPC                            (RPC, liftIO)
+import           Flowbox.ZMQ.RPC.RPC                            (RPC)
 import qualified Generated.Proto.Bus.ID.Create.Args             as ID_Create
 import qualified Generated.Proto.Bus.ID.Create.Result           as ID_Create
 
