@@ -11,7 +11,9 @@ import qualified Flowbox.Config.Config as Config
 import           Flowbox.Prelude
 
 
+
 type EndPoint = String
+
 
 data BusEndPoints = BusEndPoints { controlEndPoint :: EndPoint
                                  , pullEndPoint    :: EndPoint

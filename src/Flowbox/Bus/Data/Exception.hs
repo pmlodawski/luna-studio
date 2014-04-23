@@ -19,6 +19,7 @@ import qualified Generated.Proto.Bus.Exception                  as Gen
 
 data Exception = Exception { msg :: Maybe String }
 
+
 instance ConvertPure Exception Gen.Exception where
     encodeP (Exception msg')     = Gen.Exception $ fmap encodeP msg'
     decodeP (Gen.Exception msg') = Exception     $ fmap decodeP msg'
