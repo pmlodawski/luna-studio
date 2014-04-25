@@ -128,3 +128,8 @@ withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
 withJust = forM_
 
 lift2 = lift . lift
+
+
+ifM :: (Monad m) => m Bool -> m a -> m a -> m a
+ifM predicate a b = do bool <- predicate
+                       if bool then a else b
