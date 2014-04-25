@@ -16,6 +16,9 @@ import qualified Data.Map              as Map
 
 --import qualified Debug.Trace as Dbg
 
+import           Diagrams.Prelude                (R2, Diagram)
+import           Diagrams.Backend.Cairo.Internal (Cairo)
+
 import qualified Flowbox.Graphics.Color             as Color
 import           Flowbox.Graphics.Image             (ImageAcc)
 import qualified Flowbox.Graphics.Image             as Image
@@ -191,3 +194,69 @@ colorMatrix img channelsOut channelsIn values maskInfo premultInfo mixValue = do
                 repl    = Channel.Acc $ A.replicate (A.lift $ A.Z A.:. h A.:. w A.:. A.All) values'
             in Channel.fold1 (+) $ Channel.zipWith (*) channelsIn' repl
         glue channels = foldr1 (Channel.++) (fmap Channel.lift2Dto3D channels)
+
+-- TODO: rewrite this to filter out the required channels into images, then map over those images and union the result with the target image
+--       instead of doing all the calculations separately for all channels
+colorTransfer :: (A.Shape ix, A.Shape jx, A.Elt a, A.IsFloating a)
+    => ImageAcc ix a -> ImageAcc jx a -- -> Diagram Cairo R2
+    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a -- do we need this part or not? afair nuke doesn't have those, but why shouldn't we?
+    -> Image.Result (ImageAcc ix a)
+colorTransfer target source maskInfo premultInfo mixValue = do
+    unpremultiplied <- Comp.unpremultiply target premultInfo
+
+    targetR         <- Image.get "rgba.r" unpremultiplied
+    targetG         <- Image.get "rgba.g" unpremultiplied
+    targetB         <- Image.get "rgba.b" unpremultiplied
+    sourceR         <- Image.get "rgba.r" source
+    sourceG         <- Image.get "rgba.g" source
+    sourceB         <- Image.get "rgba.b" source
+
+    let targetL = Channel.map log $ Channel.zipWith3 calculateL targetR targetG targetB
+        targetM = Channel.map log $ Channel.zipWith3 calculateM targetR targetG targetB
+        targetS = Channel.map log $ Channel.zipWith3 calculateS targetR targetG targetB
+        sourceL = Channel.map log $ Channel.zipWith3 calculateL sourceR sourceG sourceB
+        sourceM = Channel.map log $ Channel.zipWith3 calculateM sourceR sourceG sourceB
+        sourceS = Channel.map log $ Channel.zipWith3 calculateS sourceR sourceG sourceB
+        targetl = Channel.zipWith3 calculatel targetL targetM targetS
+        targeta = Channel.zipWith3 calculatel targetL targetM targetS
+        targetb = Channel.zipWith  calculateb targetL targetM
+        sourcel = Channel.zipWith3 calculatel sourceL sourceM sourceS
+        sourcea = Channel.zipWith3 calculatel sourceL sourceM sourceS
+        sourceb = Channel.zipWith  calculateb sourceL sourceM
+        finall  = calculate targetl sourcel
+        finala  = calculate targeta sourcea
+        finalb  = calculate targetb sourceb
+        finalL  = Channel.map exp $ Channel.zipWith3 calculateL' finall finala finalb
+        finalM  = Channel.map exp $ Channel.zipWith3 calculateM' finall finala finalb
+        finalS  = Channel.map exp $ Channel.zipWith  calculateS' finall finala
+        target' = Image.insert "rgba.r" (Channel.zipWith3 calculateR' finalL finalM finalS)
+                $ Image.insert "rgba.g" (Channel.zipWith3 calculateG' finalL finalM finalS)
+                $ Image.insert "rgba.b" (Channel.zipWith3 calculateB' finalL finalM finalS)
+                $ unpremultiplied
+
+    result          <- Comp.premultiply target' premultInfo
+    resultMixed     <- Merge.mix' target result mixValue
+    Merge.mask resultMixed target maskInfo
+
+    where calculate target source = Channel.map calculations target
+              where calculations x = (x - (meanDev target)) * ratio + (meanDev source)
+                    ratio = (standardDev target) / (standardDev source)
+          meanDev chan = (Channel.the (Channel.foldAll (+) 0 $ Channel.map (\x -> abs $ x - (mean chan)) chan)) / (A.fromIntegral $ Channel.size chan)
+          standardDev chan = sqrt $  (Channel.the (Channel.foldAll (+) 0 $ Channel.map (\x -> (x - (mean chan)) ^^ 2) chan)) / (A.fromIntegral $ Channel.size chan)
+          mean chan = (Channel.the (Channel.foldAll (+) 0 chan)) / (A.fromIntegral $ Channel.size chan)
+          --
+          calculateL r g b  = 0.3811 * r + 0.5783 * g + 0.0402 * b
+          calculateM r g b  = 0.1967 * r + 0.7244 * g + 0.0782 * b
+          calculateS r g b  = 0.0241 * r + 0.1288 * g + 0.8444 * b
+          --
+          calculatel l m s  = (1/sqrt(3)) * l + (1/sqrt(3)) * m + (1/sqrt(3)) * s
+          calculatea l m s  = (1/sqrt(6)) * l + (1/sqrt(6)) * m - (2/sqrt(6)) * s
+          calculateb l m    = (1/sqrt(2)) * l - (1/sqrt(2)) * m
+          --
+          calculateL' l a b = (sqrt(3)/3) * l +   (sqrt(6)/6) * a + (sqrt(2)/2) * b
+          calculateM' l a b = (sqrt(3)/3) * l +   (sqrt(6)/6) * a - (sqrt(2)/2) * b
+          calculateS' l a   = (sqrt(3)/3) * l - (2*sqrt(6)/6) * a
+          --
+          calculateR' l m s =   4.4679  * l - 3.5873 * m + 0.1193 * s
+          calculateG' l m s = (-1.2186) * l + 2.3809 * m - 0.1624 * s
+          calculateB' l m s =   0.0497  * l - 0.2439 * m + 1.2045 * s

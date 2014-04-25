@@ -128,7 +128,7 @@ mask imgA _ Nothing = Right imgA
 mask imgA imgB (Just theMask) = do
     maskChan <- Image.get name maskImg
     let applyMask chanA chanB = Channel.zipWith3 calculateMask maskChan chanA chanB
-        calculateMask alpha = U.mix (Comp.invert invertFlag alpha)
+        calculateMask alpha = flip (U.mix (Comp.invert invertFlag alpha))
     return $ Comp.inject injection maskChan
            $ Image.channelUnion (Image.channelIntersectionWith applyMask imgA imgB) imgA
     where (name, injection, invertFlag, maskImg) = case theMask of

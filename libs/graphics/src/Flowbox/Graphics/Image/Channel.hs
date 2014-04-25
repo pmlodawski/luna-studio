@@ -63,6 +63,9 @@ compute backend chan = Raw $ case chan of
 (!!) :: (Shape ix, Elt e) => ChannelAcc ix e -> Exp Int -> Exp e
 (!!) channel = (A.!!) $ accMatrix channel
 
+the :: Elt e => Channel (A.Scalar e) -> Exp e
+the channel = A.the $ accMatrix channel
+
 -- Shape Information --
 
 empty :: (Shape ix, Elt e) => ChannelAcc ix e -> Exp Bool
@@ -355,8 +358,11 @@ fold f acc chan = Acc $ A.fold f acc $ accMatrix chan
 fold1 :: (Shape ix, Elt a) => (Exp a -> Exp a -> Exp a) -> ChannelAcc (ix A.:. Int) a -> ChannelAcc ix a
 fold1 f chan = Acc $ A.fold1 f $ accMatrix chan
 
---foldAll :: (Shape sh, Elt a) => (Exp a -> Exp a -> Exp a) -> Exp a -> Acc (Array sh a) -> Acc (Scalar a)
---fold1All :: (Shape sh, Elt a) => (Exp a -> Exp a -> Exp a) -> Acc (Array sh a) -> Acc (Scalar a)
+foldAll :: (Shape sh, Elt a) => (Exp a -> Exp a -> Exp a) -> Exp a -> ChannelAcc sh a -> Channel (A.Scalar a)
+foldAll f acc chan = Acc $ A.foldAll f acc $ accMatrix chan
+
+fold1All :: (Shape sh, Elt a) => (Exp a -> Exp a -> Exp a) -> ChannelAcc sh a -> Channel (A.Scalar a)
+fold1All f chan = Acc $ A.fold1All f $ accMatrix chan
 
 foldSeg :: (Shape ix, Elt a, Elt i, A.IsIntegral i) => (Exp a -> Exp a -> Exp a) -> Exp a -> ChannelAcc (ix A.:. Int) a -> A.Acc (A.Segments i) -> ChannelAcc (ix A.:. Int) a
 foldSeg f acc chan segments = Acc $ A.foldSeg f acc (accMatrix chan) segments
