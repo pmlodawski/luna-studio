@@ -4,12 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.RepoManager.Data.Item.Family where
+module Flowbox.RepoManager.Data.Package.Family where
 
 import Data.Map (Map)
 
 import           Flowbox.Prelude
-import           Flowbox.RepoManager.Data.Item.Item    (Package)
+import           Flowbox.RepoManager.Data.Package.Package    (Package)
 import           Flowbox.RepoManager.Data.Version (Version)
 
 type Family a = Map Version a

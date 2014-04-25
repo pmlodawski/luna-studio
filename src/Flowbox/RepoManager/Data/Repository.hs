@@ -14,9 +14,9 @@ import qualified Data.Map as Map
 import qualified Data.List                            as List
 import qualified Flowbox.RepoManager.Data.Version     as Version
 import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.Data.Item.Config as Item
-import           Flowbox.RepoManager.Data.Item.Family            (AvailableFamilies, InstalledFamilies)
-import qualified Flowbox.RepoManager.Data.Item.Item   as Item
+import qualified Flowbox.RepoManager.Data.Package.Config  as Package
+import           Flowbox.RepoManager.Data.Package.Family         (AvailableFamilies, InstalledFamilies)
+import qualified Flowbox.RepoManager.Data.Package.Package as Package
 import qualified System.Directory                     as Files
 import qualified System.FilePath                      as Files
 import qualified Flowbox.RepoManager.Utils.Utils      as Utils   (concatPath)
@@ -24,8 +24,8 @@ import qualified Flowbox.RepoManager.VCS.VCS          as VCS
 import qualified Text.Regex.Posix                     as Regex
 import qualified Network.URI                          as URI
 
-data Repository a = Repository { items :: Map String AvailableFamilies
-                               , getVCS :: a
+data Repository a = Repository { packages :: Map String AvailableFamilies
+                               , getVCS   :: a
                                } deriving (Show)
 
 
@@ -42,7 +42,7 @@ getRelevant files = files List.\\ [".git", "README.md", "..", "."]
 --buildRepository vcs = do let repoPath = VCS.localPath vcs
 --                         contents <- Files.getDirectoryContents $ show repoPath
 --                         categories <- mapM (readCategory Map.empty (show repoPath)) (getRelevant contents)
---                         return Repository { items = List.foldl' Map.union Map.empty categories
+--                         return Repository { Packages = List.foldl' Map.union Map.empty categories
 --                                           , getVCS = vcs
 --                                           }
 
@@ -62,9 +62,9 @@ getRelevant files = files List.\\ [".git", "README.md", "..", "."]
 --readPackageFamily packageFiles directoryPath = do versionsList  <- mapM (readVersion directoryPath) packageFiles
 --                                                  return (Map.fromList versionsList)
 
---readVersion :: FilePath ->  FilePath ->  IO (Version.Version, Item.Item)
---readVersion directoryPath file = do item <- Item.loadItem $ Utils.concatPath [directoryPath, file]
---                                    return (Item.version item, item)
+--readVersion :: FilePath ->  FilePath ->  IO (Version.Version, Package.Package)
+--readVersion directoryPath file = do Package <- Package.loadPackage $ Utils.concatPath [directoryPath, file]
+--                                    return (Package.version Package, Package)
 
 --initRepository :: VCS.VCS a => a -> IO (Repository a)
 --initRepository vcs = do let localPath = VCS.localPath vcs
@@ -77,9 +77,9 @@ getRelevant files = files List.\\ [".git", "README.md", "..", "."]
 --updateRepository vcs = VCS.pull vcs >> buildRepository vcs
 
 searchRepository :: Repository a -> String -> [String]
-searchRepository repo expression = Map.keys $ Map.filterWithKey match repoItems
+searchRepository repo expression = Map.keys $ Map.filterWithKey match repoPackages
     where match key _value = key Regex.=~ expression :: Bool
-          repoItems = items repo
+          repoPackages = packages repo
 
 --installPackage :: String
 --installPackage name = 
