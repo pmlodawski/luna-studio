@@ -23,6 +23,7 @@ import qualified Flowbox.AWS.EC2.Instance.Instance   as Instance
 import qualified Flowbox.AWS.EC2.Instance.Request    as Request
 import           Flowbox.AWS.Region                  (Region)
 import qualified Flowbox.AWS.Region                  as Region
+import qualified Flowbox.AWS.S3.Directory            as Directory
 import qualified Flowbox.AWS.S3.File                 as File
 import qualified Flowbox.AWS.User.Database           as Database
 import           Flowbox.AWS.User.User               (User (User))
@@ -78,7 +79,7 @@ s3Test = Spinner.runWithSpinner $ do
         File.touch  "images3.jpeg"
         File.exists "images2.jpeg" >>= liftIO . print
         File.rename "images2.jpeg" "images4.jpeg"
-
+        Directory.getContents ""   >>= liftIO . print
     return ()
 
 
