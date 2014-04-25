@@ -21,7 +21,7 @@ import qualified Control.Exception.Base as Exception
 import qualified Data.Text as Text
 import qualified System.Process as Process
 import qualified System.Exit as Exit
-import           Flowbox.RepoManager.Data.Item.Item
+import           Flowbox.RepoManager.Data.Package.Package
 import           Flowbox.RepoManager.Data.Version
 import           Control.Monad (when)
 import           GHC.Generics (Generic)

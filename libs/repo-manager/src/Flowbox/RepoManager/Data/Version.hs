@@ -25,5 +25,7 @@ data Constraint = Minimum Strictness Version
                 | Any
                 deriving (Show)
 
+type TupConstraint = (Version, Version)
+
 parseVersion :: String -> Version
 parseVersion = fst . last . ReadP.readP_to_S Version.parseVersion

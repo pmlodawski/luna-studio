@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 
-module Flowbox.RepoManager.Data.Item.Config (
-    --loadItem
+module Flowbox.RepoManager.Data.Package.Config (
+    --loadPackage
 ) where
 
 import           Control.Applicative
@@ -21,7 +21,7 @@ import qualified Data.Map                             as Map
 import           Flowbox.Prelude                      hiding (error)
 import           Flowbox.RepoManager.Data.Dependency  as Dependency
 import qualified Flowbox.RepoManager.Data.Environment as Environment
-import qualified Flowbox.RepoManager.Data.Item.Item   as Item
+import qualified Flowbox.RepoManager.Data.Package.Package   as Package
 import qualified Flowbox.RepoManager.Data.Version     as Version
 import           Flowbox.System.Log.Logger
 import qualified Prelude
@@ -38,13 +38,13 @@ fromString (Configurator.String a) = a
 fromList :: Value -> [Value]
 fromList (Configurator.List a) = a
 
---loadItem :: FilePath -> IO Item.Item
---loadItem file = do cfgFile <- Configurator.load [Configurator.Required file]
+--loadPackage :: FilePath -> IO Package.Package
+--loadPackage file = do cfgFile <- Configurator.load [Configurator.Required file]
 
 --                   let readConf fieldName = Exception.onException (fromJust =<< (Configurator.lookup cfgFile fieldName :: IO (Maybe Value)))
 --                                     $ logger error ("Error reading config variable '" ++ show fieldName)
 
---                   Item.Item <$> (getItemName     <$> readConf "name")
+--                   Package.Package <$> (getPackageName     <$> readConf "name")
 --                             <*> (getVersion      <$> readConf "version")
 --                             <*> (getSources      <$> readConf "source")
 --                             <*> (getScript       <$> readConf "install")
@@ -52,8 +52,8 @@ fromList (Configurator.List a) = a
 --                             <*> (getDependencies <$> readConf "dependencies")
                                  
 
-getItemName :: Value -> String
-getItemName nameString = Text.unpack $ fromString nameString
+getPackageName :: Value -> String
+getPackageName nameString = Text.unpack $ fromString nameString
 
 --getVersion :: Value -> Version.Version
 --getVersion versionString = Prelude.head [x | (x,"") <- ReadP.readP_to_S Version.parseVersion $ Text.unpack $ fromString versionString]
@@ -78,7 +78,7 @@ getScript scriptValue = fmap (Text.unpack . fromString) (fromList scriptValue)
 --                                  (_cons1:_cons2:[]) -> [Version.Exclude (Version.Range Nothing Nothing)]
 
 
---loadConfig :: FilePath -> IO (Either String Item.Item)
+--loadConfig :: FilePath -> IO (Either String Package.Package)
 --loadConfig file = do config <- Configurator.load [Configurator.Required file]
                      
 --                     let fileBaseName = FilePath.takeBaseName file
@@ -90,4 +90,4 @@ getScript scriptValue = fmap (Text.unpack . fromString) (fromList scriptValue)
 --                     uninstall <- Configurator.require config "uninstall"
 --                     dependencies <- Configurator.require config "dependencies"
 
---                     return $ Right $ Item.Item name version sources install
+--                     return $ Right $ Package.Package name version sources install

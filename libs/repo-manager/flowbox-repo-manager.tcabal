@@ -46,7 +46,8 @@ Library
                   split,
                   binary,
                   http-conduit,
-                  SHA
+                  SHA,
+                  directory-tree
 
 
 Executable repo-manager-test
@@ -81,4 +82,5 @@ Executable repo-manager-test
                   split,
                   binary,
                   http-conduit,
-                  SHA
+                  SHA,
+                  directory-tree
