@@ -16,16 +16,17 @@ import qualified AWS.EC2.Types          as Types
 import           Control.Monad.IO.Class
 import           Data.IP                (IPv4)
 
-import qualified Flowbox.AWS.Instance.Instance as Instance
-import qualified Flowbox.AWS.Instance.Request  as Request
-import           Flowbox.AWS.User.Database     (Database)
-import qualified Flowbox.AWS.User.Database     as Database
-import qualified Flowbox.AWS.User.Password     as Password
-import           Flowbox.AWS.User.User         (User (User))
-import qualified Flowbox.AWS.User.User         as User
+import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
+import qualified Flowbox.AWS.EC2.Instance.Request  as Request
+import           Flowbox.AWS.User.Database         (Database)
+import qualified Flowbox.AWS.User.Database         as Database
+import qualified Flowbox.AWS.User.Password         as Password
+import           Flowbox.AWS.User.User             (User (User))
+import qualified Flowbox.AWS.User.User             as User
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: LoggerIO

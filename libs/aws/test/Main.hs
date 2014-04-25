@@ -24,9 +24,9 @@ import qualified Data.Text                    as Text
 import           Database.PostgreSQL.Simple   as PSQL
 import           Text.Show.Pretty             (ppShow)
 
-import qualified Flowbox.AWS.EC2                     as EC2
-import qualified Flowbox.AWS.Instance.Instance       as Instance
-import qualified Flowbox.AWS.Instance.Request        as Request
+import qualified Flowbox.AWS.EC2.EC2                 as EC2
+import qualified Flowbox.AWS.EC2.Instance.Instance   as Instance
+import qualified Flowbox.AWS.EC2.Instance.Request    as Request
 import           Flowbox.AWS.Region                  (Region)
 import qualified Flowbox.AWS.Region                  as Region
 import qualified Flowbox.AWS.User.Database           as Database

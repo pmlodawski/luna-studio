@@ -11,7 +11,7 @@ import Control.Monad.Trans.Either
 
 import           Flowbox.AccountManager.Context                      (Context)
 import qualified Flowbox.AccountManager.Context                      as Context
-import qualified Flowbox.AWS.EC2                                     as EC2
+import qualified Flowbox.AWS.EC2.EC2                                 as EC2
 import qualified Flowbox.AWS.User.Session                            as Session
 import           Flowbox.Prelude                                     hiding (Context, error)
 import           Flowbox.System.Log.Logger

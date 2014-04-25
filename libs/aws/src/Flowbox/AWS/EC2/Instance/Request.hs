@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.AWS.Instance.Request where
+module Flowbox.AWS.EC2.Instance.Request where
 
 import qualified AWS.EC2.Types as Types
 import           Data.Text     (Text)

@@ -7,7 +7,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Flowbox.AWS.EC2 (
+module Flowbox.AWS.EC2.EC2 (
     module EC2,
     runEC2,
     runEC2InRegion,
