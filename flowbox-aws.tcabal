@@ -27,13 +27,16 @@ Library
                     bytestring,
                     containers,
                     conduit >= 1.1.0,
+                    conduit-extra >= 1.1.0,
                     either,
                     errors,
                     exceptions,
                     flowbox-rpc,
                     flowbox-utils,
+                    http-conduit,
                     iproute,
                     monad-loops,
+                    mtl,
                     network,
                     optparse-applicative,
                     postgresql-simple,
@@ -47,6 +50,8 @@ Executable aws-test
     Main-Is:        Main.hs
     Hs-Source-Dirs: test
 
+    GHC-Options:    -Wall -O2 -threaded
+    
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  aws,
@@ -55,18 +60,20 @@ Executable aws-test
                     bytestring,
                     containers,
                     conduit >= 1.1.0,
-                    resourcet >= 1.1.0,
+                    conduit-extra >= 1.1.0,
                     exceptions,
                     errors,
                     flowbox-aws,
                     flowbox-rpc,
                     flowbox-utils,
+                    http-conduit,
                     mtl,
                     network,
                     optparse-applicative,
                     postgresql-simple,
                     pretty-show,
                     protocol-buffers,
+                    resourcet >= 1.1.0,
                     monad-loops,
                     text,
                     transformers

@@ -10,31 +10,25 @@
 
 module Main where
 
-import qualified AWS                          as AWS
-import           AWS.EC2                      (EC2)
-import qualified AWS.EC2.Types                as Types
-import qualified AWS.EC2.Util                 as Util
-import qualified Control.Concurrent           as Concurrent
-import           Control.Monad                (forM)
-import           Control.Monad.IO.Class       (MonadIO, liftIO)
-import qualified Control.Monad.Loops          as Loops
-import qualified Control.Monad.Trans.Resource as Resource
-import           Data.Text                    (Text)
-import qualified Data.Text                    as Text
-import           Database.PostgreSQL.Simple   as PSQL
-import           Text.Show.Pretty             (ppShow)
+import qualified AWS                        as AWS
+import qualified Aws                        as Aws
+import qualified AWS.EC2.Types              as Types
+import           Control.Monad.Reader
+import           Data.Text                  (Text)
+import           Database.PostgreSQL.Simple as PSQL
+import qualified Flowbox.AWS.S3.S3          as S3
 
 import qualified Flowbox.AWS.EC2.EC2                 as EC2
 import qualified Flowbox.AWS.EC2.Instance.Instance   as Instance
 import qualified Flowbox.AWS.EC2.Instance.Request    as Request
 import           Flowbox.AWS.Region                  (Region)
 import qualified Flowbox.AWS.Region                  as Region
+import qualified Flowbox.AWS.S3.File                 as File
 import qualified Flowbox.AWS.User.Database           as Database
 import           Flowbox.AWS.User.User               (User (User))
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.System.Console.ASCIISpinner as Spinner
-
 
 
 type Tag = Text
@@ -73,8 +67,24 @@ queryDB = runEitherT $ do
     print u2
 
 
+
+s3Test :: IO ()
+s3Test = Spinner.runWithSpinner $ do
+    cfg <- Aws.baseConfiguration
+
+    S3.runS3 cfg "flowbox-test1" $ do
+        File.fetch  "images.jpeg"
+        File.upload "images2.jpeg"
+        File.touch  "images3.jpeg"
+        File.exists "images2.jpeg" >>= liftIO . print
+        File.rename "images2.jpeg" "images4.jpeg"
+
+    return ()
+
+
 main :: IO ()
-main = do r <- queryDB
-          print r
+main = do s3Test
+          --r <- queryDB
+          --print r
           putStrLn "quiting"
 
