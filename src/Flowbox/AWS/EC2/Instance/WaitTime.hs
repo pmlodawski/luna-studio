@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.AWS.Instance.WaitTime where
+module Flowbox.AWS.EC2.Instance.WaitTime where
 
 import Flowbox.Prelude
 

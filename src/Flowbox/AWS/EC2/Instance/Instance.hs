@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Flowbox.AWS.Instance.Instance where
+module Flowbox.AWS.EC2.Instance.Instance where
 
 import           AWS.EC2                      (EC2)
 import qualified AWS.EC2                      as EC2
@@ -22,9 +22,9 @@ import           Data.Text                    (Text)
 import qualified Data.Text                    as Text
 import qualified System.IO                    as IO
 
-import           Flowbox.AWS.Instance.WaitTime (WaitTimes)
-import qualified Flowbox.AWS.Instance.WaitTime as WaitTime
-import qualified Flowbox.AWS.User.User         as User
+import           Flowbox.AWS.EC2.Instance.WaitTime (WaitTimes)
+import qualified Flowbox.AWS.EC2.Instance.WaitTime as WaitTime
+import qualified Flowbox.AWS.User.User             as User
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
