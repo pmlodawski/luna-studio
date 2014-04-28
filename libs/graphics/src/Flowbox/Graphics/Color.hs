@@ -22,6 +22,7 @@ data Color a = RGB  { r :: a, g :: a, b :: a         }
              | HSL  { h :: a, s :: a, v :: a         }
              | CMY  { c :: a, m :: a, y :: a         }
              | CMYK { c :: a, m :: a, y :: a, k :: a }
+             | YUV  { y :: a, u :: a, v :: a }
              deriving (Show)
 
 
@@ -65,6 +66,11 @@ toRGB (CMYK c' m' y' k') = RGB r' g' b'
           g' = (1 - m') * k''
           b' = (1 - y') * k''
           k'' = (1 - k')
+-- INFO: the internet said something about clamping the values, but I guess it's enough to clamp them just before displaying the image
+toRGB (YUV y' u' v') = RGB r' g' b'
+    where r' = 1.164 * (y' - 0.0625) + 1.596 * (v' - 0.5)
+          g' = 1.164 * (y' - 0.0625) - 0.813 * (v' - 0.5) - 0.391 * (u' - 0.5)
+          b' = 1.164 * (y' - 0.0625) + 2.018 * (u' - 0.5)
 
 
 toRGBA :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
@@ -125,3 +131,11 @@ toCMYK (RGB r' g' b') = CMYK c' m' y' k'
           k'' = 1 - k'
           maxRGB = max r' $ max g' b'
 toCMYK color = toCMYK . toRGB $ color
+
+toYUV :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
+toYUV color@(YUV{}) = color
+toYUV (RGB r' g' b') = YUV y' u' v'
+    where y' = 0.257 * r' + 0.504 * g' + 0.098 * b' + 0.0625
+          u' = 0.148 * r' - 0.291 * g' + 0.439 * b' + 0.5
+          v' = 0.439 * r' - 0.368 * g' - 0.071 * b' + 0.5
+toYUV color = toYUV . toRGB $ color

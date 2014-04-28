@@ -104,6 +104,12 @@ multiply :: (A.Elt a, A.IsFloating a, A.Shape ix)
     -> Image.Result (ImageAcc ix a)
 multiply = math (*)
 
+contrast :: (A.Shape ix, A.Elt a, A.IsFloating a)
+    => ImageAcc ix a -> Map Channel.Name (Exp a)
+    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (ImageAcc ix a)
+contrast = math (\v x -> (x - 0.5) * v + 0.5)
+
 gamma :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
@@ -187,16 +193,17 @@ colorMatrix img channelsOut channelsIn values maskInfo premultInfo mixValue = do
   --where handleColorMatrix img' channelsIn' = foldr insertChan img' (calculateChannels img' channelsIn')
         --insertChan chanInfo imgAcc = Image.insert (fst chanInfo) (snd chanInfo) imgAcc
         calculateChannels channelsIn' = zipWith (calculateChannel channelsIn') channelsOut (iterate succ (0 :: Int))
-        calculateChannel  channelsIn' name ix = (name, makeChannel channelsIn' ix)
-        makeChannel channelsIn' ix = let
+        calculateChannel  channelsIn' name idx = (name, makeChannel channelsIn' idx)
+        makeChannel channelsIn' idx = let
                 (A.Z A.:. h A.:. w A.:. _) = A.unlift $ Channel.shape channelsIn' :: A.Z A.:. Exp Int A.:. Exp Int A.:. Exp Int
-                values' = A.slice values $ A.lift (A.Z A.:. (ix) A.:. A.All)
+                values' = A.slice values $ A.lift (A.Z A.:. (idx) A.:. A.All)
                 repl    = Channel.Acc $ A.replicate (A.lift $ A.Z A.:. h A.:. w A.:. A.All) values'
             in Channel.fold1 (+) $ Channel.zipWith (*) channelsIn' repl
         glue channels = foldr1 (Channel.++) (fmap Channel.lift2Dto3D channels)
 
 -- TODO: rewrite this to filter out the required channels into images, then map over those images and union the result with the target image
 --       instead of doing all the calculations separately for all channels
+-- FIXME: this doesn't seem to generate the desired results =/
 colorTransfer :: (A.Shape ix, A.Shape jx, A.Elt a, A.IsFloating a)
     => ImageAcc ix a -> ImageAcc jx a -- -> Diagram Cairo R2
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a -- do we need this part or not? afair nuke doesn't have those, but why shouldn't we?
@@ -218,10 +225,10 @@ colorTransfer target source maskInfo premultInfo mixValue = do
         sourceM = Channel.map log $ Channel.zipWith3 calculateM sourceR sourceG sourceB
         sourceS = Channel.map log $ Channel.zipWith3 calculateS sourceR sourceG sourceB
         targetl = Channel.zipWith3 calculatel targetL targetM targetS
-        targeta = Channel.zipWith3 calculatel targetL targetM targetS
+        targeta = Channel.zipWith3 calculatea targetL targetM targetS
         targetb = Channel.zipWith  calculateb targetL targetM
         sourcel = Channel.zipWith3 calculatel sourceL sourceM sourceS
-        sourcea = Channel.zipWith3 calculatel sourceL sourceM sourceS
+        sourcea = Channel.zipWith3 calculatea sourceL sourceM sourceS
         sourceb = Channel.zipWith  calculateb sourceL sourceM
         finall  = calculate targetl sourcel
         finala  = calculate targeta sourcea
@@ -238,11 +245,11 @@ colorTransfer target source maskInfo premultInfo mixValue = do
     resultMixed     <- Merge.mix' target result mixValue
     Merge.mask resultMixed target maskInfo
 
-    where calculate target source = Channel.map calculations target
-              where calculations x = (x - (meanDev target)) * ratio + (meanDev source)
-                    ratio = (standardDev target) / (standardDev source)
+    where calculate target' source' = Channel.map calculations target'
+              where calculations x = (x - (meanDev target')) * ratio + (meanDev source')
+                    ratio = (standardDev target') / (standardDev source')
           meanDev chan = (Channel.the (Channel.foldAll (+) 0 $ Channel.map (\x -> abs $ x - (mean chan)) chan)) / (A.fromIntegral $ Channel.size chan)
-          standardDev chan = sqrt $  (Channel.the (Channel.foldAll (+) 0 $ Channel.map (\x -> (x - (mean chan)) ^^ 2) chan)) / (A.fromIntegral $ Channel.size chan)
+          standardDev chan = sqrt $ (Channel.the (Channel.foldAll (+) 0 $ Channel.map (\x -> (x - (mean chan)) ** 2) chan)) / (A.fromIntegral $ Channel.size chan)
           mean chan = (Channel.the (Channel.foldAll (+) 0 chan)) / (A.fromIntegral $ Channel.size chan)
           --
           calculateL r g b  = 0.3811 * r + 0.5783 * g + 0.0402 * b
