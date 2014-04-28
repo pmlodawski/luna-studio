@@ -66,11 +66,10 @@ toRGB (CMYK c' m' y' k') = RGB r' g' b'
           g' = (1 - m') * k''
           b' = (1 - y') * k''
           k'' = (1 - k')
--- INFO: the internet said something about clamping the values, but I guess it's enough to clamp them just before displaying the image
 toRGB (YUV y' u' v') = RGB r' g' b'
-    where r' = 1.164 * (y' - 0.0625) + 1.596 * (v' - 0.5)
-          g' = 1.164 * (y' - 0.0625) - 0.813 * (v' - 0.5) - 0.391 * (u' - 0.5)
-          b' = 1.164 * (y' - 0.0625) + 2.018 * (u' - 0.5)
+    where r' = y' + 1.13983 * v'
+          g' = y' - 0.39465 * u' - 0.58060 * v'
+          b' = y' + 2.03211 * u'
 
 
 toRGBA :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
@@ -135,7 +134,26 @@ toCMYK color = toCMYK . toRGB $ color
 toYUV :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
 toYUV color@(YUV{}) = color
 toYUV (RGB r' g' b') = YUV y' u' v'
-    where y' = 0.257 * r' + 0.504 * g' + 0.098 * b' + 0.0625
-          u' = 0.148 * r' - 0.291 * g' + 0.439 * b' + 0.5
-          v' = 0.439 * r' - 0.368 * g' - 0.071 * b' + 0.5
+    where y' = 0.299 * r' + 0.587 * g' + 0.114 * b'
+          u' = (-0.14713) * r' - 0.28886 * g' + 0.436 * b'
+          v' = 0.615 * r' - 0.51499 * g' - 0.10001 * b'
 toYUV color = toYUV . toRGB $ color
+
+-- YUV conversions for HDTV according to wikipedia
+-- \begin{bmatrix} Y' \\ U \\ V \end{bmatrix}
+-- =
+-- \begin{bmatrix}
+--   0.2126  &  0.7152  &  0.0722 \\
+--  -0.09991 & -0.33609 &  0.436 \\
+--   0.615   & -0.55861 & -0.05639
+-- \end{bmatrix}
+-- \begin{bmatrix} R \\ G \\ B \end{bmatrix}
+
+-- \begin{bmatrix} R \\ G \\ B \end{bmatrix}
+-- =
+-- \begin{bmatrix}
+--  1 &  0       &  1.28033 \\
+--  1 & -0.21482 & -0.38059 \\
+--  1 &  2.12798 &  0
+-- \end{bmatrix}
+-- \begin{bmatrix} Y' \\ U \\ V \end{bmatrix}
