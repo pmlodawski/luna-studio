@@ -12,17 +12,19 @@ import           Flowbox.RepoManager.Data.Environment   (Command)
 import qualified Flowbox.RepoManager.Data.Version       as Version
 import qualified Network.URI as URI
 
-type SHA1 = String
+type SHA256 = String
 
 data InstalledPackage = InstalledPackage { name         :: String
                                          , category     :: [String]
                                          , version      :: Version.Version
                                          , flags        :: [Flag]
+                                         , defaultFlags :: [Flag]
+                                         , enabledFlags :: [Flag]
                                          , directory    :: FilePath
                                          , dependencies :: [InstalledPackage]
                                          , description  :: String
                                          , source       :: URI.URI
                                          , install      :: [Command]
                                          , uninstall    :: [Command]
-                                         , hash         :: SHA1
+                                         , hash         :: SHA256
                                          }

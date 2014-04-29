@@ -10,5 +10,4 @@ import Flowbox.Prelude
 
 data Flag = Flag { name        :: String
                  , description :: String
-                 , isSet       :: Bool
                  } deriving Show

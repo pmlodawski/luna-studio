@@ -28,6 +28,7 @@ data Package = Package { _name         :: String
                        , _category     :: [String]
                        , _description  :: String
                        , _flags        :: [Flag.Flag]
+                       , _defaultFlags :: [Flag.Flag]
                        , _version      :: Version.Version
                        , _source       :: URI.URI
                        , _dependencies :: [Dependency.Dependency]
@@ -46,11 +47,12 @@ readBuildFile file = do buildFile <- Configurator.load [Configurator.Required fi
                         category'     <- return ["dummy"]
                         description'  <- Configurator.require buildFile "description" :: IO String
                         flags'        <- return []
+                        defaultFlags' <- return []
                         dependencies' <- readDependencies buildFile
                         install'      <- readScript buildFile "install"
                         uninstall'    <- readScript buildFile "uninstall"
 
-                        return $ Package name' category' description' flags' version' source' dependencies' install' uninstall'
+                        return $ Package name' category' description' flags' defaultFlags' version' source' dependencies' install' uninstall'
 
 readSource :: Configurator.Config -> IO URI.URI
 readSource conf = do stringSource <- Configurator.require conf "source" :: IO String
@@ -79,11 +81,14 @@ toString _          = Nothing
 
 parseDependency :: String -> Dependency.Dependency
 parseDependency str = case splitted of
-    [package]                     -> Dependency.Dependency package [Version.Any]
-    [package, relation, version'] -> Dependency.Dependency package [(toRange relation $ Version.parseVersion version')]
+        [package]                     -> Dependency.Dependency (pkgName package) (cat package) [Version.Any] []
+        [package, relation, version'] -> Dependency.Dependency (pkgName package) (cat package) [(toRange relation $ Version.parseVersion version')] []
     where splitted = Split.splitOn " " str
           toRange "<=" = Version.Maximum Version.NotStrict
           toRange "<"  = Version.Maximum Version.Strict
           toRange "==" = Version.Exactly
           toRange ">"  = Version.Minimum Version.Strict
           toRange ">=" = Version.Minimum Version.NotStrict
+
+          pkgName str = last $ Split.splitOn "/" str
+          cat str     = init $ Split.splitOn "/" str

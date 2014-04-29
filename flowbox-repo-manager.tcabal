@@ -47,7 +47,8 @@ Library
                   binary,
                   http-conduit,
                   SHA,
-                  directory-tree
+                  directory-tree,
+                  fgl
 
 
 Executable repo-manager-test
@@ -83,4 +84,5 @@ Executable repo-manager-test
                   binary,
                   http-conduit,
                   SHA,
-                  directory-tree
+                  directory-tree,
+                  fgl

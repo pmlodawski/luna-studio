@@ -6,15 +6,14 @@
 ---------------------------------------------------------------------------
 module Flowbox.RepoManager.Data.Package.Family where
 
-import Data.Map (Map)
-
 import           Flowbox.Prelude
-import           Flowbox.RepoManager.Data.Package.Package    (Package)
-import           Flowbox.RepoManager.Data.Version (Version)
+import qualified Flowbox.RepoManager.Data.Package.Flag    as Flag
+import qualified Flowbox.RepoManager.Data.Package.Package as Package
+import qualified Flowbox.RepoManager.Data.Version         as Version
+import qualified Data.Map                                 as Map
 
-type Family a = Map Version a
-type NamedFamily a = (String, a)
-type AvailableFamilies = Family Package
-
-type Hash = String
-type InstalledFamilies = Family (Map Hash Package)
+data PackageFamily = PackageFamily { name       :: String
+                                   , versions   :: Map.Map Version.Version Package.Package
+                                   , flagsSet   :: [Flag.Flag]
+                                   , flagsUnset :: [Flag.Flag]
+                                   }
