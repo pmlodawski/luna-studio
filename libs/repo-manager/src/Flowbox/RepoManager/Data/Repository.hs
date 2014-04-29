@@ -15,28 +15,40 @@ import qualified Data.List                            as List
 import qualified Flowbox.RepoManager.Data.Version     as Version
 import           Flowbox.Prelude
 import qualified Flowbox.RepoManager.Data.Package.Config  as Package
-import           Flowbox.RepoManager.Data.Package.Family         (AvailableFamilies, InstalledFamilies)
+import qualified Flowbox.RepoManager.Data.Package.Family  as Family
 import qualified Flowbox.RepoManager.Data.Package.Package as Package
-import qualified System.Directory                     as Files
-import qualified System.FilePath                      as Files
+import qualified Flowbox.RepoManager.Utils.Utils      as Utils
+import qualified System.Directory                     as Directory
+import qualified System.FilePath                      as FilePath
 import qualified Flowbox.RepoManager.Utils.Utils      as Utils   (concatPath)
 import qualified Flowbox.RepoManager.VCS.VCS          as VCS
 import qualified Text.Regex.Posix                     as Regex
 import qualified Network.URI                          as URI
 
-data Repository a = Repository { packages :: Map String AvailableFamilies
+data Repository a = Repository { packages :: Map String PackageFamily
                                , getVCS   :: a
                                } deriving (Show)
 
 
-data World = World { installed :: Map String InstalledFamilies
-                   , selected  :: Map String InstalledFamilies
-                   } deriving (Show)
+buildRepository :: VCS.VCS a => a -> IO (Repository a)
+buildRepository vcs = do let repoPath = VCS.localPath vcs
+                         packagesNames <- Utils.withDirectory repoPath $
+                             Utils.listLocalAvailablePackages "."
+                         packages <- mapM (readPackage repoPath) packagesNames
+                         return $ Repository (Map.fromList $ zip packagesNames packages) vcs
 
-type FileName = String
+readPackage :: FilePath -> String -> IO [Package.Package]
+readPackage repoPath qualifiedPkgName = Utils.withDirectory repoPath $ do
+    buildFiles <- Utils.listPackageScripts qualifiedPkgName
+    mapM Package.readBuildFile $ map (\x -> FilePath.joinPath [qualifiedPkgName, x]) buildFiles
 
-getRelevant :: [FilePath] -> [FilePath]
-getRelevant files = files List.\\ [".git", "README.md", "..", "."]
+
+readPackageFamily :: FilePath -> String -> IO Family.PackageFamily
+readPackageFamily repoPath qualifiedPkgName = Family.PackageFamily <$> pure qualifiedPkgName <*> versionMap <*> pure [] <*> pure []
+    where tupWithVersion package = (Package._version package, package)
+          versionMap = do packageList <- readPackage repoPath qualifiedPkgName
+                          return $ Map.fromList $ map tupWithVersion packageList
+
 
 --buildRepository :: VCS.VCS a => a -> IO (Repository a)
 --buildRepository vcs = do let repoPath = VCS.localPath vcs
@@ -80,16 +92,3 @@ searchRepository :: Repository a -> String -> [String]
 searchRepository repo expression = Map.keys $ Map.filterWithKey match repoPackages
     where match key _value = key Regex.=~ expression :: Bool
           repoPackages = packages repo
-
---installPackage :: String
---installPackage name = 
-
-listAvailablePackageVersions :: FilePath -> IO [Version.Version]
-listAvailablePackageVersions dir = do scripts <- listPackageScripts dir
-                                      return $ map fileNameToVersion scripts
-    where fileNameToVersion = read . tail . dropWhile (/= '-') . Files.dropExtension
-
-listPackageScripts :: FilePath -> IO [FilePath]
-listPackageScripts dir = do files <- Files.getDirectoryContents dir
-                            let scripts = filter (\x -> Files.takeExtension x == ".config") files
-                            return scripts

@@ -7,8 +7,17 @@
 module Flowbox.RepoManager.Data.Dependency where
 
 import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.Data.Version as Version
+import qualified Flowbox.RepoManager.Data.Package.Flag as Flag
+import qualified Flowbox.RepoManager.Data.Version      as Version
 
-data Dependency = Dependency { depName     :: String
-                             , constraints :: [Version.Constraint]
+data Dependency = Dependency { depName       :: String
+							 , depCategory   :: [String]
+                             , constraints   :: [Version.Constraint]
+                             , flagsRequired :: [Flag.Flag]
                              } deriving (Show)
+
+data FixedDependency = FixedDependency { fixedName :: String
+									   , fixedCategory :: [String]
+									   , fixedVersion :: Version.Version
+									   , fixedFlags   :: [Flag.Flag]
+									   } deriving Show
