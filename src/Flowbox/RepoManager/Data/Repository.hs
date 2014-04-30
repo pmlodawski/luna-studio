@@ -25,7 +25,7 @@ import qualified Flowbox.RepoManager.VCS.VCS          as VCS
 import qualified Text.Regex.Posix                     as Regex
 import qualified Network.URI                          as URI
 
-data Repository a = Repository { packages :: Map String PackageFamily
+data Repository a = Repository { packages :: Map String [Package.Package]
                                , getVCS   :: a
                                } deriving (Show)
 

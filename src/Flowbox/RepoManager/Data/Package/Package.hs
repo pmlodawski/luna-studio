@@ -20,9 +20,10 @@ import qualified Data.Maybe                           as Maybe
 import qualified Data.Configurator                    as Configurator
 import qualified Data.Configurator.Types              as Configurator
 import qualified Data.Text                            as Text
+import           Data.Text.Lens                       (packed)
+import qualified Distribution.Version                 as CabalVersion
 import qualified Control.Exception                    as Exception
 import qualified System.FilePath                      as FilePath
-import           Data.Text.Lens                       (packed)
 
 data Package = Package { _name         :: String
                        , _category     :: [String]
@@ -37,6 +38,13 @@ data Package = Package { _name         :: String
                        } deriving (Show)
 
 makeLenses ''Package
+
+instance Eq Package where
+    p1 == p2 = (p1 ^. name == p2 ^. name) && (p1 ^. version == p2 ^. version)
+
+instance Ord Package where
+    compare p1 p2 = compare (p1 ^. name) (p2 ^. name) ++ compare (p1 ^. version) (p2 ^. version)
+
 
 readBuildFile :: FilePath -> IO Package
 readBuildFile file = do buildFile <- Configurator.load [Configurator.Required file]
@@ -60,6 +68,7 @@ readSource conf = do stringSource <- Configurator.require conf "source" :: IO St
                          Just uri -> return uri
                          _        -> Exception.throwIO $ Configurator.KeyError "source"
 
+-- FIXME[MM]: Intersect version ranges of same package
 readDependencies :: Configurator.Config -> IO [Dependency.Dependency]
 readDependencies conf = do depends <- Configurator.require conf "dependencies" :: IO Configurator.Value
                            case depends of
@@ -81,14 +90,12 @@ toString _          = Nothing
 
 parseDependency :: String -> Dependency.Dependency
 parseDependency str = case splitted of
-        [package]                     -> Dependency.Dependency (pkgName package) (cat package) [Version.Any] []
-        [package, relation, version'] -> Dependency.Dependency (pkgName package) (cat package) [(toRange relation $ Version.parseVersion version')] []
+        [package]                     -> Dependency.Dependency (pkgName package) (cat package) CabalVersion.anyVersion []
+        [package, relation, version'] -> Dependency.Dependency (pkgName package) (cat package) (toRange relation $ Version.parseVersion version') []
     where splitted = Split.splitOn " " str
-          toRange "<=" = Version.Maximum Version.NotStrict
-          toRange "<"  = Version.Maximum Version.Strict
-          toRange "==" = Version.Exactly
-          toRange ">"  = Version.Minimum Version.Strict
-          toRange ">=" = Version.Minimum Version.NotStrict
+          toRange "<"  = CabalVersion.earlierVersion
+          toRange "==" = CabalVersion.thisVersion
+          toRange ">"  = CabalVersion.laterVersion
 
           pkgName str = last $ Split.splitOn "/" str
           cat str     = init $ Split.splitOn "/" str

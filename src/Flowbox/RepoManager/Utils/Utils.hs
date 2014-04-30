@@ -9,6 +9,7 @@ import qualified System.Directory      as Directory
 import qualified System.Directory.Tree as DirTree
 import qualified Data.Foldable         as Foldable
 import qualified Data.Maybe            as Maybe
+import qualified Flowbox.RepoManager.Data.Version as Version
 
 concatPath :: [String] -> String
 concatPath directories = List.intercalate [FilePath.pathSeparator] directories
@@ -40,15 +41,34 @@ getName :: DirTree.DirTree String -> Maybe String
 getName (DirTree.File _ name) = Just name
 getName _                     = Nothing
 
--- example file path "cata/catb/catc/pkga/pkga-1.2.3.build"
+-- example file path "portagetree/cata/catb/catc/pkga/pkga-1.2.3.build"
 relativePathToPackageFile :: FilePath -> PackageFile
-relativePathToPackageFile path = (reverse category, packageName, buildFileName)
+relativePathToPackageFile path = (tail . reverse $ category, packageName, buildFileName)
     where reversedSplitUpPath             = reverse $ Split.splitOn "/" path
           buildFileName : pkgCategoryPath = reversedSplitUpPath
           packageName : category          = pkgCategoryPath
 
 listLocalAvailablePackages :: FilePath -> IO [String]
 listLocalAvailablePackages path = do files <- listFilesInPath path
-                                     let packages         = map relativePathToPackageFile files
-                                         (_, pkgNames, _) = unzip3 packages
+                                     let packages  = map relativePathToPackageFile files
+                                         packages' = map (_1 %~ FilePath.joinPath) packages
+                                         pkgNames  = map (\(c,n,_) -> c ++ "/" ++ n) packages'
                                      return pkgNames
+
+listAvailablePackageVersions :: FilePath -> IO [Version.Version]
+listAvailablePackageVersions dir = do scripts <- listPackageScripts dir
+                                      return $ map fileNameToVersion scripts
+    where fileNameToVersion = Version.parseVersion . tail . dropWhile (/= '-') . FilePath.dropExtension
+
+listPackageScripts :: FilePath -> IO [FilePath]
+listPackageScripts dir = do files <- Directory.getDirectoryContents dir
+                            let scripts = filter (\x -> FilePath.takeExtension x == ".config") files
+                            return scripts
+
+
+withDirectory :: FilePath -> IO a -> IO a
+withDirectory dir action = do currentDir <- Directory.getCurrentDirectory
+                              Directory.setCurrentDirectory dir
+                              result <- action
+                              Directory.setCurrentDirectory currentDir
+                              return result
