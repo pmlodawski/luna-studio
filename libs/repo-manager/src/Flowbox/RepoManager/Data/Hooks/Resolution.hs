@@ -106,6 +106,12 @@ listPackageVersions config dep = --do filesInDir <- Utils.listPackageVersions
 --          (===) :: Pkg -> Dep -> Bool
 --          pkg === dep = pkg ^. _1 == dep ^. _1 && (pkg ^. _3) `elem` (dep ^. _2)
 
+
+allPossibilities :: [[Package.Package]] -> [[Package.Package]]
+allPossibilities []         = return []
+allPossibilities (pkg:pkgs) = do pkg' <- pkg
+                                 map (pkg':) $ allPossibilities pkgs
+
 recursivelyAddDeps :: FilePath -> [Package.Package] -> IO [Package.Package]
 recursivelyAddDeps config a = go config a Set.empty
     where go :: FilePath -> [Package.Package] -> Set.Set Package.Package -> IO [Package.Package]
@@ -133,5 +139,17 @@ consistent pkgs = and $ map (depsSatisfied pkgs) pkgs
           depSatisfied pkgs' dep = or $ map (=== dep) pkgs'
 
           (===) :: Package.Package -> Dependency.Dependency -> Bool
-          p1 === p2 = p1 ^. Package.name == Dependency.depName p2 &&
+          p1 === p2 = p1 ^. Package.name == Dependency.depName p2 && p1 ^. Package.category == Dependency.depCategory p2 &&
                       CabalVersion.withinRange (p1 ^. Package.version) (Dependency.constraints p2)
+
+possibleSolutions :: [[Package.Package]] -> [[Package.Package]]
+possibleSolutions = filter consistent
+
+resolveDependencies :: FilePath -> [Package.Package] -> IO (Maybe [Package.Package])
+resolveDependencies repoPath explicitPackages = do graphToResolve <- recursivelyAddDeps repoPath explicitPackages
+                                                   let groupedFamilies        = groupByName graphToResolve
+                                                       searchSpace            = allPossibilities groupedFamilies
+                                                       sortedFromNewest       = newestFirst searchSpace
+                                                   return $ case possibleSolutions sortedFromNewest of
+                                                       []           -> Nothing
+                                                       (solution:_) -> Just solution
