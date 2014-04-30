@@ -16,4 +16,4 @@ data PackageFamily = PackageFamily { name       :: String
                                    , versions   :: Map.Map Version.Version Package.Package
                                    , flagsSet   :: [Flag.Flag]
                                    , flagsUnset :: [Flag.Flag]
-                                   }
+                                   } deriving Show

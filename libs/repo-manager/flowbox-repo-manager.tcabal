@@ -48,7 +48,7 @@ Library
                   http-conduit,
                   SHA,
                   directory-tree,
-                  fgl
+                  Cabal
 
 
 Executable repo-manager-test
@@ -85,4 +85,4 @@ Executable repo-manager-test
                   http-conduit,
                   SHA,
                   directory-tree,
-                  fgl
+                  Cabal
