@@ -19,6 +19,7 @@ import qualified Data.List.Split                      as Split
 import qualified Data.Maybe                           as Maybe
 import qualified Data.Configurator                    as Configurator
 import qualified Data.Configurator.Types              as Configurator
+import qualified Data.List                            as List
 import qualified Data.Text                            as Text
 import           Data.Text.Lens                       (packed)
 import qualified Distribution.Version                 as CabalVersion
@@ -74,6 +75,13 @@ readDependencies conf = do depends <- Configurator.require conf "dependencies" :
                            case depends of
                                Configurator.List vals -> return $ map parseDependency $ Maybe.mapMaybe toString vals
                                _                      -> Exception.throwIO $ Configurator.KeyError "dependencies"
+    where groupByName deps  = List.groupBy (\x y -> Dependency.dependencyQualifiedName x == Dependency.dependencyQualifiedName y)
+          foldVersionRanges versionRanges = List.foldl1' CabalVersion.intersectVersionRanges versionRanges
+
+          collapseSamePackageDependency deps = exampleDep { Dependency.constraints = unifiedVersionRange }
+              where exampleDep = head deps
+                    unifiedVersionRange = CabalVersion.simplifyVersionRange $ foldVersionRanges $ map Dependency.constraints deps
+
 readScript :: Configurator.Config -> Text.Text -> IO [String]
 readScript conf field = do commands <- Configurator.require conf field :: IO Configurator.Value
                            case commands of
