@@ -74,7 +74,7 @@ def checkInitialized(path):
 
 def markInitialized(path):
     initPath = os.path.join(path,".init")
-    open(initPath,'w').close()
+    open(initPath,'a').close()
 
 def handleInitialized(path):
     if os.path.exists(path):
@@ -117,6 +117,8 @@ def workon(name):
                 register(pname)
             markInitialized(sbox)
 
+    os.chdir(rootPath)
+    markInitialized('dist')
 
     if not '--no-shell' in sys.argv:
         fdevWorkon  = os.environ.get("FDEV_WORKON", "")
@@ -192,7 +194,7 @@ def workon(name):
         else:
             print_info("NOT executing flowbox shell")
 
-    markInitialized('dist')
+    
 
 def register(name):
     print_info("Registering %s" % name)
