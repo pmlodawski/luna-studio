@@ -101,9 +101,11 @@ parseDependency str = case splitted of
         [package]                     -> Dependency.Dependency (pkgName package) (cat package) CabalVersion.anyVersion []
         [package, relation, version'] -> Dependency.Dependency (pkgName package) (cat package) (toRange relation $ Version.parseVersion version') []
     where splitted = Split.splitOn " " str
+          toRange "<=" = CabalVersion.orEarlierVersion
           toRange "<"  = CabalVersion.earlierVersion
           toRange "==" = CabalVersion.thisVersion
           toRange ">"  = CabalVersion.laterVersion
+          toRange ">=" = CabalVersion.orLaterVersion
 
           pkgName str = last $ Split.splitOn "/" str
           cat str     = init $ Split.splitOn "/" str
