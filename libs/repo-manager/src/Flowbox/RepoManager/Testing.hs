@@ -53,18 +53,8 @@ logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO "Flowbox.Config.Config"
 
 installPackage :: Package -> IO ()
-installPackage package = do --downloadSource package
-                            runScript (package ^. install) `Exception.catch` \(e :: Exit.ExitCode) -> putStrLn "installation failed"
-
-runScript :: [Command] -> IO ()
-runScript []     = return ()
-runScript (c:cs) = do returnCode <- Process.system c
-                      when (isFailure returnCode) $ Exception.throwIO returnCode
-                      runScript cs
-
-isFailure :: Exit.ExitCode -> Bool
-isFailure (Exit.ExitFailure _) = True
-isFailure _                    = False
+installPackage package = undefined --do --downloadSource package
+                            --runScript (package ^. install) `Exception.catch` \(e :: Exit.ExitCode) -> putStrLn "installation failed"
 
 --createDB :: FilePath -> Set.Set Package
 --createDB path = undefined
