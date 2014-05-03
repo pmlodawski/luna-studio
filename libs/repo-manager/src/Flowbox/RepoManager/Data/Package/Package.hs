@@ -13,6 +13,7 @@ import           Flowbox.Prelude
 import qualified Flowbox.RepoManager.Data.Dependency  as Dependency
 import           Flowbox.RepoManager.Data.Environment (Command)
 import qualified Flowbox.RepoManager.Data.Package.Flag as Flag
+import qualified Flowbox.RepoManager.Data.Types       as Types
 import qualified Flowbox.RepoManager.Data.Version     as Version
 import qualified Network.URI                          as URI
 import qualified Data.List.Split                      as Split
@@ -26,8 +27,7 @@ import qualified Distribution.Version                 as CabalVersion
 import qualified Control.Exception                    as Exception
 import qualified System.FilePath                      as FilePath
 
-data Package = Package { _name         :: String
-                       , _category     :: [String]
+data Package = Package { _pkgName      :: Types.QualifiedPackageName
                        , _description  :: String
                        , _flags        :: [Flag.Flag]
                        , _defaultFlags :: [Flag.Flag]
@@ -41,10 +41,10 @@ data Package = Package { _name         :: String
 makeLenses ''Package
 
 instance Eq Package where
-    p1 == p2 = (p1 ^. name == p2 ^. name) && (p1 ^. version == p2 ^. version)
+    p1 == p2 = (p1 ^. pkgName == p2 ^. pkgName) && (p1 ^. version == p2 ^. version)
 
 instance Ord Package where
-    compare p1 p2 = compare (p1 ^. name) (p2 ^. name) ++ compare (p1 ^. version) (p2 ^. version)
+    compare p1 p2 = compare (p1 ^. pkgName) (p2 ^. pkgName) ++ compare (p1 ^. version) (p2 ^. version)
 
 
 readBuildFile :: FilePath -> IO Package
@@ -54,6 +54,7 @@ readBuildFile file = do buildFile <- Configurator.load [Configurator.Required fi
 
                         source'       <- readSource buildFile
                         category'     <- return ["dummy"]
+                        let qualpkgname = Types.QualifiedPackageName name' category'
                         description'  <- Configurator.require buildFile "description" :: IO String
                         flags'        <- return []
                         defaultFlags' <- return []
@@ -61,7 +62,7 @@ readBuildFile file = do buildFile <- Configurator.load [Configurator.Required fi
                         install'      <- readScript buildFile "install"
                         uninstall'    <- readScript buildFile "uninstall"
 
-                        return $ Package name' category' description' flags' defaultFlags' version' source' dependencies' install' uninstall'
+                        return $ Package qualpkgname description' flags' defaultFlags' version' source' dependencies' install' uninstall'
 
 readSource :: Configurator.Config -> IO URI.URI
 readSource conf = do stringSource <- Configurator.require conf "source" :: IO String
@@ -75,7 +76,7 @@ readDependencies conf = do depends <- Configurator.require conf "dependencies" :
                            case depends of
                                Configurator.List vals -> return $ map parseDependency $ Maybe.mapMaybe toString vals
                                _                      -> Exception.throwIO $ Configurator.KeyError "dependencies"
-    where groupByName deps  = List.groupBy (\x y -> Dependency.dependencyQualifiedName x == Dependency.dependencyQualifiedName y)
+    where groupByName deps  = List.groupBy (\x y -> Dependency.qualDepName x == Dependency.qualDepName y)
           foldVersionRanges versionRanges = List.foldl1' CabalVersion.intersectVersionRanges versionRanges
 
           collapseSamePackageDependency deps = exampleDep { Dependency.constraints = unifiedVersionRange }
@@ -98,8 +99,8 @@ toString _          = Nothing
 
 parseDependency :: String -> Dependency.Dependency
 parseDependency str = case splitted of
-        [package]                     -> Dependency.Dependency (pkgName package) (cat package) CabalVersion.anyVersion []
-        [package, relation, version'] -> Dependency.Dependency (pkgName package) (cat package) (toRange relation $ Version.parseVersion version') []
+        [package]                     -> Dependency.Dependency (toQualified package) CabalVersion.anyVersion []
+        [package, relation, version'] -> Dependency.Dependency (toQualified package) (toRange relation $ Version.parseVersion version') []
     where splitted = Split.splitOn " " str
           toRange "<=" = CabalVersion.orEarlierVersion
           toRange "<"  = CabalVersion.earlierVersion
@@ -109,3 +110,5 @@ parseDependency str = case splitted of
 
           pkgName str = last $ Split.splitOn "/" str
           cat str     = init $ Split.splitOn "/" str
+
+          toQualified str = Types.QualifiedPackageName (pkgName str) (cat str)

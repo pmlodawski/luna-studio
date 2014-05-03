@@ -17,6 +17,7 @@ import           Flowbox.Prelude
 import qualified Flowbox.RepoManager.Data.Package.Config  as Package
 import qualified Flowbox.RepoManager.Data.Package.Family  as Family
 import qualified Flowbox.RepoManager.Data.Package.Package as Package
+import qualified Flowbox.RepoManager.Data.RepoConfig  as RepoConfig
 import qualified Flowbox.RepoManager.Utils.Utils      as Utils
 import qualified System.Directory                     as Directory
 import qualified System.FilePath                      as FilePath
@@ -25,17 +26,19 @@ import qualified Flowbox.RepoManager.VCS.VCS          as VCS
 import qualified Text.Regex.Posix                     as Regex
 import qualified Network.URI                          as URI
 
-data Repository a = Repository { packages :: Map String [Package.Package]
+data Repository a = Repository { config   :: RepoConfig.RepoConfig
+                               , packages :: Map String [Package.Package]
                                , getVCS   :: a
                                } deriving (Show)
 
+localRepoPath :: VCS.VCS a => Repository a -> FilePath
+localRepoPath = VCS.localPath . getVCS
 
-buildRepository :: VCS.VCS a => a -> IO (Repository a)
-buildRepository vcs = do let repoPath = VCS.localPath vcs
-                         packagesNames <- Utils.withDirectory repoPath $
-                             Utils.listLocalAvailablePackages "."
-                         packages <- mapM (readPackage repoPath) packagesNames
-                         return $ Repository (Map.fromList $ zip packagesNames packages) vcs
+buildRepository :: VCS.VCS a => a -> RepoConfig.RepoConfig -> IO (Repository a)
+buildRepository vcs conf = do let repoPath = VCS.localPath vcs
+                              packagesNames <- Utils.withDirectory repoPath $ Utils.listLocalAvailablePackages "."
+                              packages <- mapM (readPackage repoPath) packagesNames
+                              return $ Repository conf (Map.fromList $ zip packagesNames packages) vcs
 
 readPackage :: FilePath -> String -> IO [Package.Package]
 readPackage repoPath qualifiedPkgName = Utils.withDirectory repoPath $ do
@@ -44,7 +47,7 @@ readPackage repoPath qualifiedPkgName = Utils.withDirectory repoPath $ do
 
 
 readPackageFamily :: FilePath -> String -> IO Family.PackageFamily
-readPackageFamily repoPath qualifiedPkgName = Family.PackageFamily <$> pure qualifiedPkgName <*> versionMap <*> pure [] <*> pure []
+readPackageFamily repoPath qualifiedPkgName = Family.PackageFamily <$> pure qualifiedPkgName <*> versionMap
     where tupWithVersion package = (Package._version package, package)
           versionMap = do packageList <- readPackage repoPath qualifiedPkgName
                           return $ Map.fromList $ map tupWithVersion packageList

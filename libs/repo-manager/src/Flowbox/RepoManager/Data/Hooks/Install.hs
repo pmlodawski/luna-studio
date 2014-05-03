@@ -14,13 +14,13 @@ import qualified System.FilePath                                   as FilePath
 import qualified System.Directory                                  as Directory
 
 
-installPackage :: RepoConfig.RepoConfig a -> ConfiguredPackage.ConfiguredPackage -> [Flag.Flag] -> IO InstalledPackage.InstalledPackage
-installPackage config package flags = undefined
+--installPackage :: RepoConfig.RepoConfig a -> ConfiguredPackage.ConfiguredPackage -> [Flag.Flag] -> IO InstalledPackage.InstalledPackage
+--installPackage config package flags = undefined
                                          
 
-topoSortDependencies :: [Dependency.FixedDependency] -> [Dependency.FixedDependency]
-topoSortDependencies deps = undefined
+--topoSortDependencies :: [Dependency.FixedDependency] -> [Dependency.FixedDependency]
+--topoSortDependencies deps = undefined
                                          
 
-resolveDependencies :: RepoConfig.RepoConfig a -> Package.Package -> [Flag.Flag] -> IO (Either String [Package.Package])
-resolveDependencies config package = undefined
+--resolveDependencies :: RepoConfig.RepoConfig a -> Package.Package -> [Flag.Flag] -> IO (Either String [Package.Package])
+--resolveDependencies config package = undefined
