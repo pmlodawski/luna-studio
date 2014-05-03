@@ -53,7 +53,7 @@ logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO "Flowbox.Config.Config"
 
 installPackage :: Package -> IO ()
-installPackage package = do downloadSource package
+installPackage package = do --downloadSource package
                             runScript (package ^. install) `Exception.catch` \(e :: Exit.ExitCode) -> putStrLn "installation failed"
 
 runScript :: [Command] -> IO ()
@@ -65,11 +65,6 @@ runScript (c:cs) = do returnCode <- Process.system c
 isFailure :: Exit.ExitCode -> Bool
 isFailure (Exit.ExitFailure _) = True
 isFailure _                    = False
-
-downloadSource :: Package -> IO ()
-downloadSource package = do let url = show $ package ^. source
-                            downloaded <- Conduit.simpleHttp url
-                            BSL.writeFile (FilePath.joinPath ["tmp", FilePath.takeFileName url]) downloaded
 
 --createDB :: FilePath -> Set.Set Package
 --createDB path = undefined
