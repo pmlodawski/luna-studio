@@ -8,9 +8,10 @@ module Flowbox.RepoManager.Data.Package.Family where
 
 import           Flowbox.Prelude
 import qualified Flowbox.RepoManager.Data.Package.Package as Package
+import qualified Flowbox.RepoManager.Data.Types           as Types
 import qualified Flowbox.RepoManager.Data.Version         as Version
 import qualified Data.Map                                 as Map
 
-data PackageFamily = PackageFamily { name     :: String
+data PackageFamily = PackageFamily { name     :: Types.QualifiedPackageName
                                    , versions :: Map.Map Version.Version Package.Package
                                    } deriving Show
