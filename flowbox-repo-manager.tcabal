@@ -25,16 +25,16 @@ Library
   Build-Depends:  base,
                   bytestring,
                   containers,
-                  either,
+                  --either,
                   flowbox-config,
-                  flowbox-rpc,
+                  --flowbox-rpc,
                   flowbox-utils,
-                  MissingH,
+                  --MissingH,
                   mtl,
-                  protocol-buffers,
-                  protocol-buffers-descriptor,
+                  --protocol-buffers,
+                  --protocol-buffers-descriptor,
                   transformers,
-                  zeromq4-haskell >= 0.4,
+                  --zeromq4-haskell >= 0.4,
                   directory,
                   process,
                   filepath,
@@ -48,7 +48,8 @@ Library
                   http-conduit,
                   SHA,
                   directory-tree,
-                  Cabal
+                  Cabal,
+                  unix
 
 
 Executable repo-manager-test
@@ -85,4 +86,5 @@ Executable repo-manager-test
                   http-conduit,
                   SHA,
                   directory-tree,
-                  Cabal
+                  Cabal,
+                  unix
