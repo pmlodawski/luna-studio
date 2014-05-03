@@ -1,3 +1,10 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.RepoManager.Data.Hooks.Resolution where
 
 import           Flowbox.Prelude
@@ -8,7 +15,8 @@ import qualified Flowbox.RepoManager.Data.Repository      as Repository
 import qualified Flowbox.RepoManager.Data.Types           as Types
 import qualified Flowbox.RepoManager.Data.Version         as Version
 import qualified Flowbox.RepoManager.VCS.VCS              as VCS
-import           Data.Function                            (on)                                     
+import           Data.Function                            (on)
+import qualified Data.Graph                               as Graph
 import qualified Data.List                                as List
 import qualified Data.Map                                 as Map
 import qualified Data.Maybe                               as Maybe
@@ -33,8 +41,6 @@ recursivelyAddDeps repo pkgs = go (Repository.packages repo) pkgs Set.empty
                                  aDepsPackages = concat $ map Map.elems aDepsMaps
                              in
                                  go db (aDepsPackages ++ as) (acc `Set.union` Set.fromList (a : aDepsPackages))
-                                --aDependencies <- concat <$> mapM readPackageFromPath (map (Dependency.qualDepName) $ a ^. Package.dependencies)
-                                --go config (aDependencies ++ as) (acc `Set.union` Set.fromList (a : aDependencies))
 
 groupByName :: [Package.Package] -> [[Package.Package]]
 groupByName = List.groupBy (\x y -> Package._pkgName x == Package._pkgName y)
@@ -61,11 +67,35 @@ consistent pkgs = and $ map (depsSatisfied pkgs) pkgs
 possibleSolutions :: [[Package.Package]] -> [[Package.Package]]
 possibleSolutions = filter consistent
 
-resolveDependencies :: VCS.VCS a => Repository.Repository a -> [Package.Package] -> Maybe [Package.Package]
+resolveDependencies :: VCS.VCS a => Repository.Repository a -> [Package.Package] -> Maybe ([Package.Package], [Package.Package])
 resolveDependencies repo explicitPackages = let graphToResolve   = recursivelyAddDeps repo explicitPackages
                                                 groupedFamilies  = groupByName graphToResolve
                                                 searchSpace      = allPossibilities groupedFamilies
                                                 sortedFromNewest = newestFirst searchSpace
                                             in  case possibleSolutions sortedFromNewest of
                                                    []           -> Nothing
-                                                   (solution:_) -> Just solution
+                                                   (solution:_) -> Just (explicitPackages, solution)
+
+data DependencyGraph = DependencyGraph { _graph   :: Graph.Graph
+                                       , _getNode :: Graph.Vertex -> (Package.Package, Types.QualifiedPackageName, [Types.QualifiedPackageName])
+                                       , _getKey  :: Types.QualifiedPackageName -> Maybe Graph.Vertex
+                                       }
+
+makeLenses ''DependencyGraph
+
+-- FIXME[MM]: there's a possibility that some packages are not reachable from explicitly
+--            installed packages in a dependency graph. It should remove those packages
+--            from the graph so they aren't needlessly installed. Unfortunately, Data.Graph
+--            doesn't permit deleting nodes in an already created graph.
+makeGraph :: [Package.Package] -> DependencyGraph
+makeGraph packages = toDepGraph $ Graph.graphFromEdges $ map prepareNode packages
+    where prepareNode package = (package, package ^. Package.pkgName, deps package)
+          deps        package = map Dependency.qualDepName $ package ^. Package.dependencies
+
+          toDepGraph (gr, vertex2node, key2vertex) = DependencyGraph gr vertex2node key2vertex
+
+topoSortDependencies :: [Package.Package] -> [Package.Package]
+topoSortDependencies packages = map (^. _1) $ map getNode' $ reverse $ Graph.topSort $ graph'
+    where dependencyGraph = makeGraph packages
+          graph'          = dependencyGraph ^. graph
+          getNode'        = dependencyGraph ^. getNode
