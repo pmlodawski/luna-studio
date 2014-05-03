@@ -7,13 +7,10 @@
 module Flowbox.RepoManager.Data.Package.Family where
 
 import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.Data.Package.Flag    as Flag
 import qualified Flowbox.RepoManager.Data.Package.Package as Package
 import qualified Flowbox.RepoManager.Data.Version         as Version
 import qualified Data.Map                                 as Map
 
-data PackageFamily = PackageFamily { name       :: String
-                                   , versions   :: Map.Map Version.Version Package.Package
-                                   , flagsSet   :: [Flag.Flag]
-                                   , flagsUnset :: [Flag.Flag]
+data PackageFamily = PackageFamily { name     :: String
+                                   , versions :: Map.Map Version.Version Package.Package
                                    } deriving Show
