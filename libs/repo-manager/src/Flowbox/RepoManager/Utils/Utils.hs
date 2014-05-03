@@ -9,7 +9,9 @@ import qualified System.Directory      as Directory
 import qualified System.Directory.Tree as DirTree
 import qualified Data.Foldable         as Foldable
 import qualified Data.Maybe            as Maybe
+import qualified Data.Set              as Set
 import qualified Flowbox.RepoManager.Data.Version as Version
+import qualified Flowbox.RepoManager.Data.Types   as Types
 
 concatPath :: [String] -> String
 concatPath directories = List.intercalate [FilePath.pathSeparator] directories
@@ -48,12 +50,14 @@ relativePathToPackageFile path = (tail . reverse $ category, packageName, buildF
           buildFileName : pkgCategoryPath = reversedSplitUpPath
           packageName : category          = pkgCategoryPath
 
-listLocalAvailablePackages :: FilePath -> IO [String]
+listLocalAvailablePackages :: FilePath -> IO [Types.QualifiedPackageName]
 listLocalAvailablePackages path = do files <- listFilesInPath path
                                      let packages  = map relativePathToPackageFile files
                                          packages' = map (_1 %~ FilePath.joinPath) packages
                                          pkgNames  = map (\(c,n,_) -> c ++ "/" ++ n) packages'
-                                     return pkgNames
+                                         uniquePkgNames = Set.toList $ Set.fromList pkgNames
+                                         qualPkgNames   = Maybe.mapMaybe Types.makeQualified uniquePkgNames
+                                     return qualPkgNames
 
 listAvailablePackageVersions :: FilePath -> IO [Version.Version]
 listAvailablePackageVersions dir = do scripts <- listPackageScripts dir
@@ -64,7 +68,6 @@ listPackageScripts :: FilePath -> IO [FilePath]
 listPackageScripts dir = do files <- Directory.getDirectoryContents dir
                             let scripts = filter (\x -> FilePath.takeExtension x == ".config") files
                             return scripts
-
 
 withDirectory :: FilePath -> IO a -> IO a
 withDirectory dir action = do currentDir <- Directory.getCurrentDirectory

@@ -18,6 +18,7 @@ import qualified Flowbox.RepoManager.Data.Package.Config  as Package
 import qualified Flowbox.RepoManager.Data.Package.Family  as Family
 import qualified Flowbox.RepoManager.Data.Package.Package as Package
 import qualified Flowbox.RepoManager.Data.RepoConfig  as RepoConfig
+import qualified Flowbox.RepoManager.Data.Types       as Types
 import qualified Flowbox.RepoManager.Utils.Utils      as Utils
 import qualified System.Directory                     as Directory
 import qualified System.FilePath                      as FilePath
@@ -27,7 +28,7 @@ import qualified Text.Regex.Posix                     as Regex
 import qualified Network.URI                          as URI
 
 data Repository a = Repository { config   :: RepoConfig.RepoConfig
-                               , packages :: Map String [Package.Package]
+                               , packages :: Map Types.QualifiedPackageName Family.PackageFamily
                                , getVCS   :: a
                                } deriving (Show)
 
@@ -37,16 +38,16 @@ localRepoPath = VCS.localPath . getVCS
 buildRepository :: VCS.VCS a => a -> RepoConfig.RepoConfig -> IO (Repository a)
 buildRepository vcs conf = do let repoPath = VCS.localPath vcs
                               packagesNames <- Utils.withDirectory repoPath $ Utils.listLocalAvailablePackages "."
-                              packages <- mapM (readPackage repoPath) packagesNames
+                              packages <- mapM (readPackageFamily repoPath) packagesNames
                               return $ Repository conf (Map.fromList $ zip packagesNames packages) vcs
 
-readPackage :: FilePath -> String -> IO [Package.Package]
+readPackage :: FilePath -> Types.QualifiedPackageName -> IO [Package.Package]
 readPackage repoPath qualifiedPkgName = Utils.withDirectory repoPath $ do
-    buildFiles <- Utils.listPackageScripts qualifiedPkgName
-    mapM Package.readBuildFile $ map (\x -> FilePath.joinPath [qualifiedPkgName, x]) buildFiles
+    buildFiles <- Utils.listPackageScripts $ show qualifiedPkgName
+    mapM Package.readBuildFile $ map (\x -> FilePath.joinPath [show qualifiedPkgName, x]) buildFiles
 
 
-readPackageFamily :: FilePath -> String -> IO Family.PackageFamily
+readPackageFamily :: FilePath -> Types.QualifiedPackageName -> IO Family.PackageFamily
 readPackageFamily repoPath qualifiedPkgName = Family.PackageFamily <$> pure qualifiedPkgName <*> versionMap
     where tupWithVersion package = (Package._version package, package)
           versionMap = do packageList <- readPackage repoPath qualifiedPkgName
@@ -91,7 +92,7 @@ readPackageFamily repoPath qualifiedPkgName = Family.PackageFamily <$> pure qual
 --updateRepository :: VCS.VCS a => a -> IO (Repository a)
 --updateRepository vcs = VCS.pull vcs >> buildRepository vcs
 
-searchRepository :: Repository a -> String -> [String]
-searchRepository repo expression = Map.keys $ Map.filterWithKey match repoPackages
-    where match key _value = key Regex.=~ expression :: Bool
-          repoPackages = packages repo
+--searchRepository :: Repository a -> String -> [String]
+--searchRepository repo expression = Map.keys $ Map.filterWithKey match repoPackages
+--    where match key _value = key Regex.=~ expression :: Bool
+--          repoPackages = packages repo
