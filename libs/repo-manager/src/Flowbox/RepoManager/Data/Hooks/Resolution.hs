@@ -15,6 +15,7 @@ import qualified Flowbox.RepoManager.Data.Repository      as Repository
 import qualified Flowbox.RepoManager.Data.Types           as Types
 import qualified Flowbox.RepoManager.Data.Version         as Version
 import qualified Flowbox.RepoManager.VCS.VCS              as VCS
+import qualified Data.Array                               as Array
 import           Data.Function                            (on)
 import qualified Data.Graph                               as Graph
 import qualified Data.List                                as List
@@ -76,6 +77,7 @@ resolveDependencies repo explicitPackages = let graphToResolve   = recursivelyAd
                                                    []           -> Nothing
                                                    (solution:_) -> Just (explicitPackages, solution)
 
+
 data DependencyGraph = DependencyGraph { _graph   :: Graph.Graph
                                        , _getNode :: Graph.Vertex -> (Package.Package, Types.QualifiedPackageName, [Types.QualifiedPackageName])
                                        , _getKey  :: Types.QualifiedPackageName -> Maybe Graph.Vertex
@@ -95,7 +97,21 @@ makeGraph packages = toDepGraph $ Graph.graphFromEdges $ map prepareNode package
           toDepGraph (gr, vertex2node, key2vertex) = DependencyGraph gr vertex2node key2vertex
 
 topoSortDependencies :: [Package.Package] -> [Package.Package]
-topoSortDependencies packages = map (^. _1) $ map getNode' $ reverse $ Graph.topSort $ graph'
+topoSortDependencies packages = topoSortDependencies' dependencyGraph
     where dependencyGraph = makeGraph packages
-          graph'          = dependencyGraph ^. graph
-          getNode'        = dependencyGraph ^. getNode
+
+topoSortDependencies' :: DependencyGraph -> [Package.Package]
+topoSortDependencies' depGraph = map (^. _1) $ map getNode' $ reverse $ Graph.topSort $ graph'
+    where graph'          = depGraph ^. graph
+          getNode'        = depGraph ^. getNode
+
+getPackageDependencies :: DependencyGraph -> Package.Package -> [Graph.Vertex]
+getPackageDependencies depGraph package = graph' Array.! packageVertex
+    where Just packageVertex = depGraph ^. getKey $ package ^. Package.pkgName
+          graph'             = depGraph ^. graph
+
+getPackageVertex :: DependencyGraph -> Package.Package -> Graph.Vertex
+getPackageVertex depGraph package = vertex
+    where pkgQualName = package ^. Package.pkgName
+          pkg2Vertex  = depGraph ^. getKey
+          Just vertex = pkg2Vertex pkgQualName
