@@ -4,6 +4,7 @@ import           Flowbox.Prelude
 import qualified Control.Exception                                 as Exception
 import           Control.Monad                                     (when)
 import           Flowbox.RepoManager.Data.Environment              (Command)
+import qualified Flowbox.RepoManager.Data.Hooks.Resolution         as Resolution
 import qualified Flowbox.RepoManager.Data.Package.Package          as Package
 import qualified Flowbox.RepoManager.Data.Package.Flag             as Flag
 import qualified Flowbox.RepoManager.Data.Package.InstalledPackage as InstalledPackage
@@ -12,6 +13,10 @@ import qualified Flowbox.RepoManager.Data.Repository               as Repository
 import qualified Flowbox.RepoManager.Data.Version                  as Version
 import qualified Flowbox.RepoManager.Utils.Utils                   as Utils
 import qualified Data.Digest.Pure.SHA                              as SHA
+import qualified Data.Graph                                        as Graph
+import qualified Data.List                                         as List
+import qualified Data.Map                                          as Map
+import qualified Data.Maybe                                        as Maybe
 import qualified System.Directory                                  as Directory
 import qualified System.Exit                                       as Exit
 import qualified System.FilePath                                   as FilePath
@@ -46,6 +51,37 @@ installPackage repo package flags deps = let hash           = InstalledPackage.h
                                                             return $ case installExitStatus of
                                                                 Left exitCode -> Left $ "Installation script exited with " ++ show exitCode
                                                                 _             -> Right resultingPackage
+
+type PackageFlagsMapping = [(Package.Package, [Flag.Flag])]
+
+installDependencyGraph :: Repository.Repository a
+                          -> Resolution.DependencyGraph
+                          -> PackageFlagsMapping
+                          -> IO (Either String [InstalledPackage.InstalledPackage])
+installDependencyGraph repo depGraph explicitPkgs = installDependencyGraph' repo depGraph explicitPkgs topoSortedPackages Map.empty
+    where topoSortedPackages = Resolution.topoSortDependencies' depGraph
+
+installDependencyGraph' :: Repository.Repository a
+                           -> Resolution.DependencyGraph
+                           -> PackageFlagsMapping
+                           -> [Package.Package]
+                           -> Map.Map Graph.Vertex InstalledPackage.InstalledPackage
+                           -> IO (Either String [InstalledPackage.InstalledPackage])
+installDependencyGraph' _    _        _             []         alreadyInstalled = return $ Right $ Map.elems alreadyInstalled
+installDependencyGraph' repo depGraph package2flags (pkg:pkgs) alreadyInstalled =
+    let pkgDependenciesAsVertices = Resolution.getPackageDependencies depGraph pkg
+        pkgInstalledDependencies  = sequence $ map (flip Map.lookup alreadyInstalled) pkgDependenciesAsVertices
+        allDependenciesInstalled  = Maybe.isJust $ pkgInstalledDependencies
+        pkgFlags                  = Maybe.fromMaybe [] $ List.lookup pkg package2flags
+    in  if allDependenciesInstalled then do
+            installResult <- installPackage repo pkg pkgFlags (Maybe.fromJust pkgInstalledDependencies)
+            case installResult of
+                Left s            -> return $ Left s
+                Right installedid -> do let installedPackageVertex = Resolution.getPackageVertex depGraph pkg
+                                            newInstalledMap        = Map.insert installedPackageVertex installedid alreadyInstalled
+                                        installDependencyGraph' repo depGraph package2flags pkgs newInstalledMap
+        else do
+            return $ Left "Internal error: package dependencies should be installed but aren't. Probably toposort is broken."
 
 tryExitCode :: IO a -> IO (Either Exit.ExitCode a)
 tryExitCode = Exception.try
