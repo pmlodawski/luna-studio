@@ -43,7 +43,7 @@ getContentsRecurisively filePath = S3.withBucket $ \bucket -> do
 
 create :: FilePath -> S3 ()
 create filePath = let normFilePath = FilePath.normalise' filePath
-    in File.touch (normFilePath ++ "/")
+    in File.create (normFilePath ++ "/")
 
 
 exists :: FilePath -> S3 Bool

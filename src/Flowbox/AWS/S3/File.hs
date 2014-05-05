@@ -73,8 +73,8 @@ copy srcFilePath dstFilePath = S3.withBucket $ \bucket -> do
     return ()
 
 
-touch :: FilePath -> S3 ()
-touch filePath = S3.withBucket $ \bucket -> do
+create :: FilePath -> S3 ()
+create filePath = S3.withBucket $ \bucket -> do
     let normFilePath = FilePath.normalise' filePath
         file         = HTTP.RequestBodyBS $ ByteString.empty
     _ <- S3.query $ S3.putObject bucket (Text.pack normFilePath) file
