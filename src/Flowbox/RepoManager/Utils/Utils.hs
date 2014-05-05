@@ -18,11 +18,11 @@ concatPath directories = List.intercalate [FilePath.pathSeparator] directories
 
 getDirectories :: FilePath -> IO [FilePath]
 getDirectories path = filterPath isDirectory path
-    where isDirectory d = Directory.doesDirectoryExist $ FilePath.joinPath [path, d]
+    where isDirectory d = Directory.doesDirectoryExist $ path FilePath.</> d
 
 getFiles :: FilePath -> IO [FilePath]
 getFiles path = filterPath isFile path
-    where isFile f = Directory.doesFileExist $ FilePath.joinPath [path, f]
+    where isFile f = Directory.doesFileExist $ path FilePath.</> f
 
 filterPath :: (FilePath -> IO Bool) -> FilePath -> IO [FilePath]
 filterPath f path = do contents <- Directory.getDirectoryContents path
@@ -39,25 +39,27 @@ listFilesInPath :: FilePath -> IO [FilePath]
 listFilesInPath path = do _ DirTree.:/ tree <- DirTree.readDirectoryWith return path
                           return $ Maybe.mapMaybe getName $ DirTree.flattenDir tree
 
+filterBuildFiles :: [FilePath] -> [FilePath]
+filterBuildFiles = filter (\p -> FilePath.takeExtension p == ".build")
+
 getName :: DirTree.DirTree String -> Maybe String
 getName (DirTree.File _ name) = Just name
 getName _                     = Nothing
 
--- example file path "portagetree/cata/catb/catc/pkga/pkga-1.2.3.build"
-relativePathToPackageFile :: FilePath -> PackageFile
-relativePathToPackageFile path = (tail . reverse $ category, packageName, buildFileName)
-    where reversedSplitUpPath             = reverse $ Split.splitOn "/" path
-          buildFileName : pkgCategoryPath = reversedSplitUpPath
-          packageName : category          = pkgCategoryPath
-
+-- FIXME[MM]: requires that current directory is set to tree directory,
+--            better solution would be to pass portage tree path to this function
+--            and use withDirectory combinator
 listLocalAvailablePackages :: FilePath -> IO [Types.QualifiedPackageName]
 listLocalAvailablePackages path = do files <- listFilesInPath path
-                                     let packages  = map relativePathToPackageFile files
-                                         packages' = map (_1 %~ FilePath.joinPath) packages
-                                         pkgNames  = map (\(c,n,_) -> c ++ "/" ++ n) packages'
-                                         uniquePkgNames = Set.toList $ Set.fromList pkgNames
-                                         qualPkgNames   = Maybe.mapMaybe Types.makeQualified uniquePkgNames
-                                     return qualPkgNames
+                                     let buildFiles            = filterBuildFiles files
+                                         normalizedPaths       = map FilePath.normalise files -- removes leading './'
+                                         qualifiedPackagesName = Maybe.mapMaybe packageFilePathToQualifiedName normalizedPaths
+                                         uniquePackageNames    = Set.toList $ Set.fromList qualifiedPackagesName
+                                     return uniquePackageNames
+
+packageFilePathToQualifiedName :: FilePath -> Maybe Types.QualifiedPackageName
+packageFilePathToQualifiedName path = Types.makeQualified directory
+    where directory = FilePath.takeDirectory path
 
 listAvailablePackageVersions :: FilePath -> IO [Version.Version]
 listAvailablePackageVersions dir = do scripts <- listPackageScripts dir
