@@ -29,17 +29,14 @@ installPackage :: Repository.Repository a
                   -> [Flag.Flag]
                   -> InstalledDependencies
                   -> IO (Either String InstalledPackage.InstalledPackage)
-installPackage repo package flags deps = let hash       = InstalledPackage.hashPackage package flags deps
-                                             installDir = Repository.config repo ^. RepoConfig.installPath
+installPackage repo package flags deps = let hash           = InstalledPackage.hashPackage package flags deps
                                              nameAndVersion = show (package ^. Package.pkgName)
                                                             ++ "-"
                                                             ++ Version.showVersion (package ^. Package.version)
-                                             thisPackageDir = installDir FilePath.</> nameAndVersion
-                                                            ++ "[" ++ SHA.showDigest hash ++ "]"
+                                             thisPackageDir = nameAndVersion ++ "[" ++ SHA.showDigest hash ++ "]"
                                              resultingPackage = InstalledPackage.makeInstalled package thisPackageDir flags deps hash
                                          in Utils.withDirectory (Repository.config repo ^. RepoConfig.downloadPath) $
-                                                -- FIXME[MM]: set installpath to installPath </> qualPkgName-hash
-                                                withEnv (prepareEnv repo flags) $ do
+                                                withEnv (prepareEnv repo thisPackageDir flags) $ do
                                                     dirExists <- Directory.doesDirectoryExist thisPackageDir
                                                     if dirExists then
                                                             return $ Left "Directory already exists. Probably this package was installed before" 
@@ -63,11 +60,11 @@ isFailure :: Exit.ExitCode -> Bool
 isFailure (Exit.ExitFailure _) = True
 isFailure _                    = False
 
-prepareEnv :: Repository.Repository a -> [Flag.Flag] -> [(String, String)]
-prepareEnv repo flags = paths ++ map (\f -> (Flag.name f, "1")) flags
+prepareEnv :: Repository.Repository a -> FilePath -> [Flag.Flag] -> [(String, String)]
+prepareEnv repo packageDir flags = paths ++ map (\f -> (Flag.name f, "1")) flags
     where paths = [("DOWNLOAD_PATH", repoConfig ^. RepoConfig.downloadPath),
                    ("MAKE_PATH",     repoConfig ^. RepoConfig.makePath),
-                   ("INSTALL_PATH",  repoConfig ^. RepoConfig.installPath)]
+                   ("INSTALL_PATH",  repoConfig ^. RepoConfig.installPath FilePath.</> packageDir)]
           repoConfig = Repository.config repo
 
 unexportEnvs :: [(String, String)] -> IO ()
@@ -81,11 +78,3 @@ withEnv vars action = do exportEnvs vars
                          result <- action
                          unexportEnvs vars
                          return result
-                                         
-
---topoSortDependencies :: [Dependency.FixedDependency] -> [Dependency.FixedDependency]
---topoSortDependencies deps = undefined
-                                         
-
---resolveDependencies :: RepoConfig.RepoConfig a -> Package.Package -> [Flag.Flag] -> IO (Either String [Package.Package])
---resolveDependencies config package = undefined
