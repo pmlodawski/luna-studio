@@ -14,9 +14,10 @@ import qualified Data.Conduit.Binary  as Binary
 import qualified Data.Text            as Text
 import qualified Network.HTTP.Conduit as HTTP
 
-import           Flowbox.AWS.S3.S3 (S3)
-import qualified Flowbox.AWS.S3.S3 as S3
+import           Flowbox.AWS.S3.S3       (S3)
+import qualified Flowbox.AWS.S3.S3       as S3
 import           Flowbox.Prelude
+import qualified Flowbox.System.FilePath as FilePath
 
 
 
@@ -29,8 +30,9 @@ fetch filePath = S3.withBucket $ \bucket -> do
 
 upload :: FilePath -> S3 ()
 upload filePath = S3.withBucket $ \bucket -> do
-    file <- liftIO $ HTTP.RequestBodyBS <$> ByteString.readFile filePath
-    _ <- S3.query $ S3.putObject bucket (Text.pack filePath) file
+    let normFilePath = FilePath.normalise' filePath
+    file <- liftIO $ HTTP.RequestBodyBS <$> (ByteString.readFile normFilePath)
+    _ <- S3.query $ S3.putObject bucket (Text.pack normFilePath) file
     return ()
 
 
@@ -48,21 +50,32 @@ remove filePath = S3.withBucket $ \bucket -> do
     return ()
 
 
+removeMany :: [FilePath] -> S3 ()
+removeMany filePaths = case filePaths of
+    [] -> return ()
+    _  -> S3.withBucket $ \bucket -> do
+            _ <- S3.query $ S3.deleteObjects bucket (map Text.pack filePaths)
+            return ()
+
+
 rename :: FilePath -> FilePath -> S3 ()
 rename srcFilePath dstFilePath = do
-    copy srcFilePath dstFilePath
+    let normDstFilePath = FilePath.normalise' dstFilePath
+    copy srcFilePath normDstFilePath
     remove srcFilePath
 
 
 copy :: FilePath -> FilePath -> S3 ()
 copy srcFilePath dstFilePath = S3.withBucket $ \bucket -> do
-    let src = S3.ObjectId bucket (Text.pack srcFilePath) Nothing
-    _ <- S3.query $ S3.copyObject bucket (Text.pack dstFilePath) src S3.CopyMetadata
+    let normDstFilePath = FilePath.normalise' dstFilePath
+        src = S3.ObjectId bucket (Text.pack srcFilePath) Nothing
+    _ <- S3.query $ S3.copyObject bucket (Text.pack normDstFilePath) src S3.CopyMetadata
     return ()
 
 
 touch :: FilePath -> S3 ()
 touch filePath = S3.withBucket $ \bucket -> do
-    let file = HTTP.RequestBodyBS $ ByteString.empty
-    _ <- S3.query $ S3.putObject bucket (Text.pack filePath) file
+    let normFilePath = FilePath.normalise' filePath
+        file         = HTTP.RequestBodyBS $ ByteString.empty
+    _ <- S3.query $ S3.putObject bucket (Text.pack normFilePath) file
     return ()
