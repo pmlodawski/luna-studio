@@ -10,6 +10,8 @@ module Flowbox.System.UniPath where
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.List              as List
 import qualified Data.String.Utils      as StringUtils
+import           Data.Text              (Text)
+import qualified Data.Text              as Text
 import qualified System.Directory       as Directory
 import qualified System.FilePath        as FilePath
 
