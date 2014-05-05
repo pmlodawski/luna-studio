@@ -79,13 +79,13 @@ s3Test = Spinner.runWithSpinner $ do
         Directory.remove "."
         File.upload "images.jpeg"
         File.fetch  "images.jpeg"
-        File.touch  "emptydir1/../images3.jpeg"
+        File.create "emptydir1/../images3.jpeg"
         File.exists "images.jpeg" >>= liftIO . print
         File.rename "images.jpeg" "images2.jpeg"
         Directory.create "emptydir1/"
         Directory.rename "emptydir1" "dir1"
-        File.touch  "test/bla.txt"
-        File.touch  "test/inner/bla.txt"
+        File.create "test/bla.txt"
+        File.create "test/inner/bla.txt"
         Directory.create "test/inner2"
         Directory.getContents ("test/") >>= liftIO . print
         Directory.getContentsRecurisively (".") >>= liftIO . print
