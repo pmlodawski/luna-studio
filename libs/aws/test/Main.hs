@@ -32,6 +32,7 @@ import           Flowbox.Prelude
 import qualified Flowbox.System.Console.ASCIISpinner as Spinner
 
 
+
 type Tag = Text
 type UserName = Text
 type InstanceID = Text
@@ -74,12 +75,20 @@ s3Test = Spinner.runWithSpinner $ do
     cfg <- Aws.baseConfiguration
 
     S3.runS3 cfg "flowbox-test1" $ do
+        Directory.getContentsRecurisively (".") >>= liftIO . print
+        Directory.remove "."
+        File.upload "images.jpeg"
         File.fetch  "images.jpeg"
-        File.upload "images2.jpeg"
-        File.touch  "images3.jpeg"
-        File.exists "images2.jpeg" >>= liftIO . print
-        File.rename "images2.jpeg" "images4.jpeg"
-        Directory.getContents ""   >>= liftIO . print
+        File.touch  "emptydir1/../images3.jpeg"
+        File.exists "images.jpeg" >>= liftIO . print
+        File.rename "images.jpeg" "images2.jpeg"
+        Directory.create "emptydir1/"
+        Directory.rename "emptydir1" "dir1"
+        File.touch  "test/bla.txt"
+        File.touch  "test/inner/bla.txt"
+        Directory.create "test/inner2"
+        Directory.getContents ("test/") >>= liftIO . print
+        Directory.getContentsRecurisively (".") >>= liftIO . print
     return ()
 
 

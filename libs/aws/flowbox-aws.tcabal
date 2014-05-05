@@ -35,6 +35,7 @@ Library
                     flowbox-utils,
                     http-conduit,
                     iproute,
+                    MissingH,
                     monad-loops,
                     mtl,
                     network,
