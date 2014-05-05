@@ -11,7 +11,6 @@ module Flowbox.RepoManager.Data.Repository where
 import           Data.Map (Map)
 import qualified Data.Map as Map
 
-import qualified Data.List                            as List
 import qualified Flowbox.RepoManager.Data.Version     as Version
 import           Flowbox.Prelude
 import qualified Flowbox.RepoManager.Data.Package.Config  as Package
@@ -20,6 +19,8 @@ import qualified Flowbox.RepoManager.Data.Package.Package as Package
 import qualified Flowbox.RepoManager.Data.RepoConfig  as RepoConfig
 import qualified Flowbox.RepoManager.Data.Types       as Types
 import qualified Flowbox.RepoManager.Utils.Utils      as Utils
+import qualified Data.Either                          as Either
+import qualified Data.List                            as List
 import qualified System.Directory                     as Directory
 import qualified System.FilePath                      as FilePath
 import qualified Flowbox.RepoManager.Utils.Utils      as Utils   (concatPath)
@@ -44,8 +45,9 @@ buildRepository vcs conf = do let repoPath = VCS.localPath vcs
 readPackage :: FilePath -> Types.QualifiedPackageName -> IO [Package.Package]
 readPackage repoPath qualifiedPkgName = Utils.withDirectory repoPath $ do
     buildFiles <- Utils.listPackageScripts $ show qualifiedPkgName
-    mapM Package.readBuildFile $ map (\x -> FilePath.joinPath [show qualifiedPkgName, x]) buildFiles
-
+    packagesOrErrors <- mapM Package.readBuildFile $ map (\x -> show qualifiedPkgName FilePath.</> x) buildFiles
+    let (failures, packages) = Either.partitionEithers packagesOrErrors
+    return packages
 
 readPackageFamily :: FilePath -> Types.QualifiedPackageName -> IO Family.PackageFamily
 readPackageFamily repoPath qualifiedPkgName = Family.PackageFamily <$> pure qualifiedPkgName <*> versionMap

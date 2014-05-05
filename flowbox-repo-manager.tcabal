@@ -49,7 +49,9 @@ Library
                   SHA,
                   directory-tree,
                   Cabal,
-                  unix
+                  unix,
+                  array,
+                  errors
 
 
 Executable repo-manager-test
