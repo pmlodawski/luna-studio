@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+
 module Flowbox.AccountManager.Handler.User where
 
 import Control.Monad.IO.Class     (liftIO)

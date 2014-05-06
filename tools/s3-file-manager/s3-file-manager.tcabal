@@ -21,19 +21,21 @@ Executable s3-file-manager
 
     Extensions:     NoImplicitPrelude
 
-    Build-Depends:  base,
+    Build-Depends:  aws,
+                    base,
                     bytestring,
                     containers,
                     either,
                     errors,
                     flowbox-aws,
-                    flowbox-batch,
                     flowbox-bus,
                     flowbox-config,
                     flowbox-utils,
+                    http-conduit,
                     MissingH,
                     mtl,
                     optparse-applicative,
                     protocol-buffers,
+                    text,
                     transformers,
                     zeromq4-haskell >= 0.4

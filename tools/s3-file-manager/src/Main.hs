@@ -6,18 +6,21 @@
 ---------------------------------------------------------------------------
 module Main where
 
+import qualified Aws       as Aws
+import qualified Data.Text as Text
+
 import qualified Flowbox.Bus.EndPoint                as EP
 import qualified Flowbox.Bus.RPC.Client              as Client
 import qualified Flowbox.Config.Config               as Config
 import           Flowbox.FileManager.Cmd             (Cmd)
 import qualified Flowbox.FileManager.Cmd             as Cmd
+import qualified Flowbox.FileManager.Context         as Context
 import qualified Flowbox.FileManager.Handler.Handler as Handler
 import qualified Flowbox.FileManager.Version         as Version
 import           Flowbox.Options.Applicative         hiding (info)
 import qualified Flowbox.Options.Applicative         as Opt
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-
 
 
 rootLogger :: Logger
@@ -27,7 +30,8 @@ rootLogger = getLogger "Flowbox"
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Run
-           <$> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
+           <$> strOption  (long "bucket"  <> short 'b' <> metavar "BUCKET"  <> help "Amazon S3 bucket name")
+           <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"          <> help "Disable color output" )
 
 
@@ -46,6 +50,8 @@ run cmd = case cmd of
     Cmd.Run {}  -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         endPoints <- EP.clientFromConfig <$> Config.load
-        r <- Client.run endPoints Handler.topics Handler.handler
+        cfg <- Aws.baseConfiguration
+        ctx <- Context.mk cfg $ Text.pack $ Cmd.bucket cmd
+        r <- Client.run endPoints Handler.topics $ Handler.handler ctx
         print r
 

@@ -7,7 +7,6 @@
 
 package generated.proto.fileManager;
 
-import "file-system.proto";
 
 
 message FileSystem {
@@ -36,12 +35,21 @@ message FileSystem {
                 required string path = 1;
             }
         }
+        message Exists {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required bool exists = 1;
+                required string path = 2;
+            }
+        }
         message List {
             message Request {
                 required string path = 1;
             }
             message Status {
-                repeated generated.proto.filesystem.Item items = 1;
+                repeated string items = 1;
                 required string path = 2;
             }
         }
@@ -89,6 +97,15 @@ message FileSystem {
             }
             message Status {
                 required string path = 1;
+            }
+        }
+        message Exists {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required bool exists = 1;
+                required string path = 2;
             }
         }
         message Remove {

@@ -11,7 +11,9 @@ import Flowbox.Prelude
 
 
 
-data Cmd = Run { verbose :: Int
+data Cmd = Run { bucket  :: String
+
+               , verbose :: Int
                , noColor :: Bool
                }
          | Version
