@@ -31,4 +31,7 @@ Library
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   transformers,
+                  exceptions == 0.5,
                   zeromq4-haskell
+-- FIXME [PM] : exceptions == 0.5 is a temporal fix, 
+--              until https://github.com/twittner/zeromq-haskell/issues/50 is resolved
