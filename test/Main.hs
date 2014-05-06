@@ -89,9 +89,12 @@ s3Test = Spinner.runWithSpinner $ do
         Directory.create "test/inner2"
         Directory.getContents ("test/") >>= liftIO . print
         Directory.getContentsRecurisively (".") >>= liftIO . print
-        --Directory.remove "."
-        --Directory.upload "tmp" "."
-        --Directory.fetch "tmp2" "."
+        Directory.remove "."
+        Directory.upload "tmp" "."
+        Directory.fetch "tmp2" "."
+        Directory.copy "." "copy"
+        Directory.rename "copy" "copy3"
+        Directory.getContentsRecurisively (".") >>= liftIO . print
     return ()
 
 

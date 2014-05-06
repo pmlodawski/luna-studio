@@ -14,8 +14,9 @@ module Flowbox.AWS.S3.S3 (
     S3Env(..),
     S3,
     runS3,
+    runS3env,
     query,
-    withBucket
+    withBucket,
 ) where
 
 import qualified Aws                          as Aws
@@ -43,6 +44,9 @@ runS3 cfg b f = Conduit.withManager $ \mgr -> do
     let s3env = S3Env cfg Aws.defServiceConfig mgr b
     runReaderT f s3env
 
+
+runS3env :: S3Env -> S3 a -> IO a
+runS3env env f = Resource.runResourceT $ runReaderT f env
 
 query :: (Aws.Transaction r b, Aws.ServiceConfiguration r ~ S3Configuration)
       => r -> S3 b

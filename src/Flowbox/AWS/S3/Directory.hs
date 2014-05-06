@@ -81,11 +81,19 @@ exists filePath = S3.withBucket $ \bucket -> do
     return $ length matching > 0
 
 
+copy :: FilePath -> FilePath -> S3 ()
+copy srcFilePath dstFilePath = do
+    let normDstFilePath = (FilePath.normalise' dstFilePath) ++ "/"
+    contents <- getContentsRecurisively srcFilePath
+    let copies = zip contents $ map (replacePathBase srcFilePath normDstFilePath) contents
+    mapM_ (uncurry File.copy) copies
+
+
 rename :: FilePath -> FilePath -> S3 ()
 rename srcFilePath dstFilePath = do
     let normDstFilePath = (FilePath.normalise' dstFilePath) ++ "/"
     contents <- getContentsRecurisively srcFilePath
-    let renames = zip contents $ map (String.replace srcFilePath normDstFilePath) contents
+    let renames = zip contents $ map (replacePathBase srcFilePath normDstFilePath) contents
     mapM_ (uncurry File.rename) renames
 
 
@@ -95,3 +103,9 @@ remove filePath = do
     File.removeMany contents
 
 --removeRecursive :: FilePath -> S3 ()
+
+replacePathBase :: FilePath -> FilePath -> FilePath -> FilePath
+replacePathBase old new l = case (old, new) of
+    (".", _) -> new </> l
+    (_, ".") -> String.replace old ""  l
+    _        -> String.replace old new l
