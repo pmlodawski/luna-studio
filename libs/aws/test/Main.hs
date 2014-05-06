@@ -76,9 +76,9 @@ s3Test = Spinner.runWithSpinner $ do
 
     S3.runS3 cfg "flowbox-test1" $ do
         Directory.getContentsRecurisively (".") >>= liftIO . print
-        Directory.remove "."
-        File.upload "images.jpeg"
-        File.fetch  "images.jpeg"
+        Directory.fetch "tmp" "."
+        File.upload "." "images.jpeg"
+        File.fetch  "." "images.jpeg"
         File.create "emptydir1/../images3.jpeg"
         File.exists "images.jpeg" >>= liftIO . print
         File.rename "images.jpeg" "images2.jpeg"
@@ -89,6 +89,9 @@ s3Test = Spinner.runWithSpinner $ do
         Directory.create "test/inner2"
         Directory.getContents ("test/") >>= liftIO . print
         Directory.getContentsRecurisively (".") >>= liftIO . print
+        --Directory.remove "."
+        --Directory.upload "tmp" "."
+        --Directory.fetch "tmp2" "."
     return ()
 
 
