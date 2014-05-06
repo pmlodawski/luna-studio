@@ -7,9 +7,13 @@
 
 module Flowbox.AWS.S3.Directory where
 
-import qualified Data.String.Utils as String
-import           Data.Text         (Text)
-import qualified Data.Text         as Text
+import           Control.Monad.IO.Class (liftIO)
+import qualified Data.String.Utils      as String
+import           Data.Text              (Text)
+import qualified Data.Text              as Text
+import qualified System.Directory       as Directory
+import           System.FilePath        ((</>))
+import qualified System.FilePath        as FilePath
 
 import qualified Flowbox.AWS.S3.File     as File
 import           Flowbox.AWS.S3.S3       (S3)
@@ -17,6 +21,29 @@ import qualified Flowbox.AWS.S3.S3       as S3
 import           Flowbox.Prelude
 import qualified Flowbox.System.FilePath as FilePath
 
+
+
+fetch :: FilePath -> FilePath -> S3 ()
+fetch basePath filePath = do
+    contents <- getContentsRecurisively filePath
+    mapM_ fetchItem contents
+    where
+        fetchItem path = if last path == '/'
+            then liftIO $ Directory.createDirectoryIfMissing True (basePath </> path)
+            else File.fetch basePath path
+
+
+upload :: FilePath -> FilePath -> S3 ()
+upload basePath filePath = do
+    contents <- filter (`notElem` [".", ".."]) <$> (liftIO $ Directory.getDirectoryContents $ basePath </> filePath)
+    mapM_ uploadItem $ map (FilePath.combine filePath) contents
+    where
+        uploadItem path = do
+            isDir <- liftIO $ Directory.doesDirectoryExist $ basePath </> path
+            if isDir
+                then do create path
+                        upload basePath path
+                else File.upload  basePath path
 
 
 directoryPrefix :: FilePath -> Maybe Text
