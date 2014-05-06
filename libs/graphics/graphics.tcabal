@@ -72,7 +72,8 @@ Library
                   diagrams-core,
                   diagrams-lib,
                   diagrams-contrib,
-                  diagrams-cairo
+                  diagrams-cairo,
+                  cubicbezier
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -137,4 +138,5 @@ Executable test
                       diagrams-core,
                       diagrams-lib,
                       diagrams-contrib,
-                      diagrams-cairo
+                      diagrams-cairo,
+                      cubicbezier

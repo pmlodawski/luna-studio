@@ -25,6 +25,8 @@ import qualified System.Environment as Env
 import qualified System.Exit        as Exit
 import qualified System.IO.Unsafe   as Unsafe
 
+import           Geom2D                      (Point(..))
+import           Geom2D.CubicBezier.Basic    (CubicBezier(..), PathJoin(..), Path(..))
 import           Diagrams.Prelude            as Diag
 import           Diagrams.TwoD.Path.Metafont
 
@@ -43,6 +45,7 @@ import qualified Flowbox.Graphics.Image.Color           as Img
 import qualified Flowbox.Graphics.Image.IO              as Img
 import qualified Flowbox.Graphics.Image.Raster          as Img
 import qualified Flowbox.Graphics.Image.Repr            as Repr
+import qualified Flowbox.Graphics.Diagrams.Shape        as DShape
 import qualified Flowbox.Graphics.Shape                 as Shape
 import           Flowbox.Graphics.Utils                 (Range(..))
 import qualified Flowbox.Graphics.Utils                 as U
@@ -63,7 +66,7 @@ diag = (strokeLoop meta) Diag.# fcA color
 imgtest img frames mask source target = do
     let getDouble image = Img.toDouble <$> Repr.decompose image
         --Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ Unsafe.unsafePerformIO $ Shape.rasterize 512 512 100 100 (Diag.Width 256) diag
-        Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ Shape.rasterize 512 512 100 100 (Diag.Width 256) diag
+        Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
         red       = RGB (A.constant 1) (A.constant 0) (A.constant 0)
         green     = RGB (A.constant 0) (A.constant 1) (A.constant 0)
         blue      = RGB (A.constant 0) (A.constant 0) (A.constant 1)
@@ -111,7 +114,7 @@ imgtest img frames mask source target = do
     imageContrast <- Img.contrast imageRGBA contrastMap Nothing Nothing 1
     imageTransfered <- Img.colorTransfer targetRGBA sourceRGBA Nothing Nothing 1
 
-    let imageOut = imageTransfered
+    let imageOut = imageGamma
 
     Repr.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
 
@@ -150,8 +153,8 @@ main
         sourceImage <- getImage "sea-picture.bmp"
         targetImage <- getImage "sea-rendered.bmp"
 
-        --diagram       <- Shape.rasterize 512 512 100 100 (Diag.Width 256) diag
-        let diagram = Shape.rasterize 512 512 100 100 (Diag.Width 256) diag
+        --diagram       <- DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
+        let diagram = DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
         let dupa =  Img.toWord8 $ Img.map G.clipValues diagram
 
         let rasterizedDiagram = case Repr.compose dupa of
@@ -166,6 +169,30 @@ main
             --Right val -> do Img.writeToBMP (ParseArgs.run backend) fileOut val
             Right val -> do Img.writeToBMP (backendRun) fileOut val
                             return ()
+
+        -- BEZIER TESTS
+
+        let p0 = Point 30 70
+            p1 = Point 0 270
+            p2 = Point 290 110
+            p3 = Point 200 100
+            curve = CubicBezier p0 p1 p2 p3
+            curvePath = OpenPath [(p0, JoinCurve p1 p2)] p3
+            bb = Shape.bezierBoundingBox curve 0.001
+            curveRaster = Shape.rasterizeMask 512 512 10 10 (Shape.Width 380) curvePath
+            Right alpha = Img.get "rgba.a" curveRaster
+            curveRaster' = Img.insert "rgba.r" alpha
+                         $ Img.insert "rgba.g" alpha
+                         $ Img.insert "rgba.b" alpha
+                         $ curveRaster
+            curveOut = Repr.compose $ Img.toWord8 $ Img.map G.clipValues curveRaster'
+
+        print bb
+
+        --case curveOut of
+        --    Left err  -> print err
+        --    Right val -> do Img.writeToBMP (backendRun) "curve.bmp" val
+        --                    return ()
 
 
         -- COLOR TESTS
