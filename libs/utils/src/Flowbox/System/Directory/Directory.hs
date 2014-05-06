@@ -71,7 +71,7 @@ copyFile usrc udst = do
     Directory.copyFile src dst
 
 
-createDirectory :: UniPath -> IO()
+createDirectory :: UniPath -> IO ()
 createDirectory upath = do
     path <- UniPath.toUnixString <$> UniPath.expand upath
     Directory.createDirectory path

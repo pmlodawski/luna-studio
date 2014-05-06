@@ -7,9 +7,8 @@
 
 module Flowbox.FileManager.Handler.File where
 
-import qualified Flowbox.AWS.S3.File                                        as File
-import qualified Flowbox.AWS.S3.S3                                          as S3
-import           Flowbox.FileManager.Context                                (Context)
+import qualified System.Directory as Directory
+
 import           Flowbox.Prelude                                            hiding (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -34,45 +33,41 @@ loggerIO = getLoggerIO "Flowbox.FileManager.Handler.File"
 ------ public api -------------------------------------------------
 
 
-upload :: Context -> Upload.Request -> IO Upload.Status
-upload ctx (Upload.Request tpath) = do
-    let path = decodeP tpath
-    S3.runS3env ctx $ File.upload "." path
+upload :: Upload.Request -> IO Upload.Status
+upload (Upload.Request tpath) = do
     return $ Upload.Status tpath
 
 
-fetch :: Context -> Fetch.Request -> IO Fetch.Status
-fetch ctx (Fetch.Request tpath) = do
-    let path = decodeP tpath
-    S3.runS3env ctx $ File.fetch "." path
+fetch :: Fetch.Request -> IO Fetch.Status
+fetch (Fetch.Request tpath) = do
     return $ Fetch.Status tpath
 
 
-exists :: Context -> Exists.Request -> IO Exists.Status
-exists ctx (Exists.Request tpath) = do
+exists :: Exists.Request -> IO Exists.Status
+exists (Exists.Request tpath) = do
     let path = decodeP tpath
-    e <- S3.runS3env ctx $ File.exists path
+    e <- Directory.doesFileExist path
     return $ Exists.Status e tpath
 
 
-remove :: Context -> Remove.Request -> IO Remove.Update
-remove ctx (Remove.Request tpath) = do
+remove :: Remove.Request -> IO Remove.Update
+remove (Remove.Request tpath) = do
     let path = decodeP tpath
-    S3.runS3env ctx $ File.remove path
+    Directory.removeFile path
     return $ Remove.Update tpath
 
 
-copy :: Context -> Copy.Request -> IO Copy.Update
-copy ctx (Copy.Request tsrc tdst) = do
+copy :: Copy.Request -> IO Copy.Update
+copy (Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    S3.runS3env ctx $ File.copy src dst
+    Directory.copyFile src dst
     return $ Copy.Update tsrc tdst
 
 
-move :: Context -> Move.Request -> IO Move.Update
-move ctx (Move.Request tsrc tdst) = do
+move :: Move.Request -> IO Move.Update
+move (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    S3.runS3env ctx $ File.move src dst
+    Directory.renameFile src dst
     return $ Move.Update tsrc tdst
