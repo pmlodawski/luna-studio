@@ -85,7 +85,7 @@ imgtest img frames mask source target = do
         selection = ChannelList  [ "rgba.r", "rgba.g", "rgba.b" ]
         channelsOut = [ "rgba.r", "rgba.g" ]
         channelsIn  = [ "rgba.r", "rgba.g", "rgba.b" ]
-        colorMatrix' = [ 0,   1,   0
+        colorMatrix' = [ 0,   0.8,   0
                        , 0.5, 0.5, 0.5 ]
         colorMatrix = A.use $ (A.fromList (A.Z A.:. 2 A.:. 3) colorMatrix' :: A.Array A.DIM2 Double)
 

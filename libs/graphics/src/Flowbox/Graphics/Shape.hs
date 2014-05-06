@@ -52,7 +52,7 @@ distanceFromPath :: Path -> Point -> Double -> Double
 distanceFromPath path point eps = foldr1 min closestPerSegment
     where closestPerSegment = fmap getClosest $ segments path
           getClosest (SegLine line) = G.lineDistance line point
-          getClosest (SegCurve curve) = foldr min minToEnd distances
+          getClosest (SegCurve curve) = foldr min minToEnd distances -- FIXME: change this after the `cubicbezier` package gets updated with the fix for `Bezier.closest` returning no results
                 where minToEnd = min (distance start) (distance end)
                       distance = G.vectorDistance point
                       CubicBezier start _ _ end = curve

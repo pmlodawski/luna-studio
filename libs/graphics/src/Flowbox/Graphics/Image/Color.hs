@@ -85,8 +85,9 @@ math :: (A.Elt a, A.IsFloating a, A.Shape ix)
     -> Image.Result (ImageAcc ix a)
 math f img values maskInfo premultInfo mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultInfo
-    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultInfo
-    resultMixed     <- Merge.mix' img result mixValue
+    let result      =  Image.mapWithKey handleChan unpremultiplied
+    premultiplied   <- Comp.premultiply result  premultInfo
+    resultMixed     <- Merge.mix' img premultiplied mixValue
     Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name values of
               Nothing    -> chan
@@ -124,8 +125,9 @@ clamp :: (A.Shape ix, A.Elt a, A.IsFloating a)
     -> Image.Result (ImageAcc ix a)
 clamp img ranges maskInfo premultInfo mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultInfo
-    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultInfo
-    resultMixed     <- Merge.mix' img result mixValue
+    let result      =  Image.mapWithKey handleChan unpremultiplied
+    premultiplied   <- Comp.premultiply result premultInfo
+    resultMixed     <- Merge.mix' img premultiplied mixValue
     Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name ranges of
               Nothing    -> chan
@@ -140,8 +142,9 @@ clipTest :: (A.Shape ix, A.Elt a, A.IsFloating a)
     -> Image.Result (ImageAcc ix a)
 clipTest img ranges maskInfo premultInfo mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultInfo
-    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultInfo
-    resultMixed     <- Merge.mix' img result mixValue
+    let result      =  Image.mapWithKey handleChan unpremultiplied
+    premultiplied   <- Comp.premultiply result premultInfo
+    resultMixed     <- Merge.mix' img premultiplied mixValue
     Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name ranges of
               Nothing -> chan
@@ -161,8 +164,9 @@ invert :: (A.Shape ix, A.Elt a, A.IsFloating a)
     -> Image.Result (ImageAcc ix a)
 invert img channels clampVal maskInfo premultInfo mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultInfo
-    result          <- Comp.premultiply (handleInvert unpremultiplied) premultInfo
-    resultMixed     <- Merge.mix' img result mixValue
+    let result      =  handleInvert unpremultiplied
+    premultiplied   <- Comp.premultiply result premultInfo
+    resultMixed     <- Merge.mix' img premultiplied mixValue
     Merge.mask resultMixed img maskInfo
     where handleInvert img' = case channels of
               Channel.AllChannels      -> Image.mapChannels invertAndClamp img'
@@ -185,8 +189,9 @@ colorMatrix :: (A.Elt a, A.IsFloating a)
 colorMatrix img channelsOut channelsIn values maskInfo premultInfo mixValue = do
   unpremultiplied <- Comp.unpremultiply img premultInfo
   channelsIn'     <- fmap glue $ Image.elemsByName' channelsIn unpremultiplied
-  result          <- Comp.premultiply (handleColorMatrix unpremultiplied channelsIn') premultInfo
-  resultMixed     <- Merge.mix' img result mixValue
+  let result      =  handleColorMatrix unpremultiplied channelsIn'
+  premultiplied   <- Comp.premultiply result premultInfo
+  resultMixed     <- Merge.mix' img premultiplied mixValue
   Merge.mask resultMixed img maskInfo
   where handleColorMatrix img' channelsIn' = Image.channelUnion (Image.fromList $ calculateChannels channelsIn') img'
   -- INFO: probably faster than the above line but less readable

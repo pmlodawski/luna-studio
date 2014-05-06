@@ -19,16 +19,36 @@ import qualified Data.Array.Repa                   as R
 import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
 
-import           Flowbox.Graphics.Image.Channel (ChannelAcc, Channel2, RawData2)
+import           Flowbox.Graphics.Image.Channel (ChannelAcc, Channel, Channel2, RawData2)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Error   (Error (ChannelLookupError), Result)
 import           Flowbox.Graphics.Transform     (Transformation(..), Transformed(..))
 import           Flowbox.Prelude                hiding (lookup, map)
 
 
-data Image a = Image { _channels :: Map Channel.Name (Channel.Channel a)
+data Image a = Image { _channels :: Map Channel.Name (Channel a)
                      }
              deriving (Show, Eq, Ord)
+
+--data X = X {_a :: Int}
+--makeLenses ''X
+
+--class CTest a b where
+--    ctest :: Lens' a b
+
+--instance CTest X Int where
+--    ctest = a
+
+--class Image img where
+--    channels :: img a -> Map Channel.Name (Channel a)
+
+--class ImageConversion where
+--    toRGB :: img a -> RGBImage a
+--    toHSV :: img a -> HSVImage a
+--    toHSL :: img a -> HSLImage a
+
+--instance ImageConversion RGBImage where
+--    toRGB = id
 
 type ImageAcc ix a = Image (A.Array ix a)
 
