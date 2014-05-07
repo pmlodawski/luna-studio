@@ -9,10 +9,11 @@ module Flowbox.PluginManager.Context where
 import           Data.IORef (IORef)
 import qualified Data.IORef as IORef
 
-import           Flowbox.Config.Config                (Config)
-import           Flowbox.PluginManager.Data.PluginMap (PluginMap)
-import qualified Flowbox.PluginManager.Data.PluginMap as PluginMap
-import           Flowbox.Prelude                      hiding (Context)
+import           Flowbox.Config.Config                   (Config)
+import           Flowbox.PluginManager.Data.PluginHandle (PluginHandle)
+import           Flowbox.PluginManager.Data.PluginMap    (PluginMap)
+import qualified Flowbox.PluginManager.Data.PluginMap    as PluginMap
+import           Flowbox.Prelude                         hiding (Context)
 
 
 
@@ -24,6 +25,6 @@ data Context = Context { config  :: Config
                        }
 
 
-mk :: Config -> IO ContextRef
-mk cfg = IORef.newIORef $ Context cfg PluginMap.empty
+mk :: Config -> [PluginHandle] -> IO ContextRef
+mk cfg pluginHandles = IORef.newIORef $ Context cfg $ PluginMap.fromList $ zip [0..] pluginHandles
 

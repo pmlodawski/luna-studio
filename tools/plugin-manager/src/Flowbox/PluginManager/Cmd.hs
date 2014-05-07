@@ -11,8 +11,10 @@ import Flowbox.Prelude
 
 
 
-data Cmd = Run { verbose :: Int
-               , noColor :: Bool
+data Cmd = Run { initConfig :: String
+
+               , verbose    :: Int
+               , noColor    :: Bool
                }
          | Version
          deriving Show

@@ -23,6 +23,7 @@ Executable plugin-manager
 
     Build-Depends:  base,
                     bytestring,
+                    configurator,
                     containers,
                     either,
                     errors,
@@ -33,6 +34,8 @@ Executable plugin-manager
                     mtl,
                     optparse-applicative,
                     protocol-buffers,
-                    process,
+                    process >= 1.2,
+                    text,
                     transformers,
+                    unordered-containers,
                     zeromq4-haskell

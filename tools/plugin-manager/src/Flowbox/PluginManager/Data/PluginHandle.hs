@@ -15,7 +15,12 @@ import qualified Flowbox.PluginManager.Data.Plugin     as Plugin
 import           Flowbox.PluginManager.Data.PluginInfo (PluginInfo (PluginInfo))
 import qualified Flowbox.PluginManager.Data.PluginInfo as PluginInfo
 import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger             as L
 
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.PluginManager.Data.PluginHandle"
 
 
 data PluginHandle = PluginHandle { plugin :: Plugin
@@ -36,12 +41,16 @@ info ph = PluginInfo (plugin ph) <$> case handle ph of
 
 
 start :: Plugin -> IO PluginHandle
-start p = do h <- Process.runCommand (Plugin.command p)
+start p = do logger L.info $ "Starting plugin " ++ (show $ Plugin.name p) ++ " (" ++ Plugin.command p ++ ")"
+             h <- Process.spawnCommand $ Plugin.command p
              return $ PluginHandle p $ Just h
 
 
 stop :: PluginHandle -> IO PluginHandle
-stop ph = do case handle ph of
-                Just h  -> Process.terminateProcess h
-                Nothing -> return ()
+stop ph = do logger L.info $ "Stopping plugin " ++ (show $ Plugin.name $ plugin ph)
+             case handle ph of
+                Just h  -> do Process.terminateProcess h
+                              _ <- Process.waitForProcess h
+                              logger L.info "Plugin stopped"
+                Nothing -> logger L.info "No need to stop. Plugin already stopped"
              return $ ph { handle = Nothing }
