@@ -13,6 +13,7 @@ module Flowbox.Control.Error (
     safeLiftIO',
     eitherToM,
     eitherStringToM,
+    liftIO,
 ) where
 
 import           Control.Error          hiding (runScript)
@@ -57,10 +58,8 @@ safeLiftIO' excMap operation  = do
 
 
 eitherToM :: (MonadIO m, Show a) => Either a b -> m b
-eitherToM f = case f of
-    Right r -> return r
-    Left  e -> fail (show e)
+eitherToM = either (fail . show) return
 
 
 eitherStringToM :: MonadIO m => Either String b -> m b
-eitherStringToM f = eitherToM $ fmapL show f
+eitherStringToM = either fail return
