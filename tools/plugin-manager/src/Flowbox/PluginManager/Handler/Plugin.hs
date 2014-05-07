@@ -31,6 +31,8 @@ import qualified Generated.Proto.PluginManager.Plugin.Start.Request  as Start
 import qualified Generated.Proto.PluginManager.Plugin.Start.Update   as Start
 import qualified Generated.Proto.PluginManager.Plugin.Stop.Request   as Stop
 import qualified Generated.Proto.PluginManager.Plugin.Stop.Update    as Stop
+import qualified Generated.Proto.PluginManager.Plugin.Restart.Request   as Restart
+import qualified Generated.Proto.PluginManager.Plugin.Restart.Update    as Restart
 
 
 
@@ -89,6 +91,12 @@ stop ctxRef (Stop.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id PluginHandle.stop
     return $ Stop.Update tid
+
+restart :: ContextRef -> Restart.Request -> IO Restart.Update
+restart ctxRef (Restart.Request tid) = do
+    let id = decodeP tid
+    _ <- withPluginHandle ctxRef id PluginHandle.restart
+    return $ Restart.Update tid
 
 
 withPluginHandle :: ContextRef -> Plugin.ID -> (PluginHandle -> IO PluginHandle) -> IO PluginHandle

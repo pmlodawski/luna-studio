@@ -54,3 +54,7 @@ stop ph = do logger L.info $ "Stopping plugin " ++ (show $ Plugin.name $ plugin 
                               logger L.info "Plugin stopped"
                 Nothing -> logger L.info "No need to stop. Plugin already stopped"
              return $ ph { handle = Nothing }
+
+
+restart :: PluginHandle -> IO PluginHandle
+restart ph = plugin <$> stop ph >>= start

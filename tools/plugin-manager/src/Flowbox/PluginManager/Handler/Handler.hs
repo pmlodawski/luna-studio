@@ -30,17 +30,19 @@ topics = [ "plugin.add.request"
          , "plugin.lookup.request"
          , "plugin.start.request"
          , "plugin.stop.request"
+         , "plugin.restart.request"
          ]
 
 
 handler :: ContextRef -> BusRPCHandler
 handler ctx callback topic = case topic of
-    "plugin.add.request"    -> callback P.update $ P.singleResult $ PluginHandler.add    ctx
-    "plugin.remove.request" -> callback P.update $ P.singleResult $ PluginHandler.remove ctx
-    "plugin.list.request"   -> callback P.status $ P.singleResult $ PluginHandler.list   ctx
-    "plugin.lookup.request" -> callback P.status $ P.singleResult $ PluginHandler.lookup ctx
-    "plugin.start.request"  -> callback P.update $ P.singleResult $ PluginHandler.start  ctx
-    "plugin.stop.request"   -> callback P.update $ P.singleResult $ PluginHandler.stop   ctx
-    unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
-                                  logger error errMsg
-                                  return $ P.respondError topic errMsg
+    "plugin.add.request"     -> callback P.update $ P.singleResult $ PluginHandler.add     ctx
+    "plugin.remove.request"  -> callback P.update $ P.singleResult $ PluginHandler.remove  ctx
+    "plugin.list.request"    -> callback P.status $ P.singleResult $ PluginHandler.list    ctx
+    "plugin.lookup.request"  -> callback P.status $ P.singleResult $ PluginHandler.lookup  ctx
+    "plugin.start.request"   -> callback P.update $ P.singleResult $ PluginHandler.start   ctx
+    "plugin.stop.request"    -> callback P.update $ P.singleResult $ PluginHandler.stop    ctx
+    "plugin.restart.request" -> callback P.update $ P.singleResult $ PluginHandler.restart ctx
+    unsupported              -> do let errMsg = "Unknown topic: " ++ show unsupported
+                                   logger error errMsg
+                                   return $ P.respondError topic errMsg

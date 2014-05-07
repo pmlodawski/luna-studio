@@ -45,6 +45,14 @@ message Plugin {
             required int32 id = 1;
         }
     }
+    message Restart {
+        message Request { 
+            required int32 id = 1;
+        }
+        message Update { 
+            required int32 id = 1;
+        }
+    }
     message Lookup {
         message Request { 
             required int32 id = 1;

@@ -56,11 +56,12 @@ run cmd = case cmd of
     Cmd.Run {}  -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
 
+        cfg <- Config.load
+
         pluginHandles <- case Cmd.initConfig cmd of
             ""       -> return []
             confPath -> eitherStringToM =<< (runEitherT $ Init.init confPath)
 
-        cfg <- Config.load
         ctx <- Context.mk cfg pluginHandles
 
         logger info "Starting rpc server"

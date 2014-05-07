@@ -34,7 +34,6 @@ readPlugin (name, value) = case value of
     _                           -> Left  $ "Cannot parse command for " ++ show name ++ " in config file."
 
 
-
 init :: FilePath -> EitherT String IO [PluginHandle]
 init filePath = do
     plugins <- readPlugins filePath
