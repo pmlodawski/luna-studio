@@ -75,7 +75,13 @@ startExisting instanceID = do
 
 
 ready :: Types.Instance -> Bool
-ready inst = Types.InstanceStateRunning == Types.instanceState inst
+ready inst = Types.instanceState inst == Types.InstanceStateRunning 
+
+
+resumable :: Types.Instance -> Bool
+resumable inst = Types.instanceState inst == Types.InstanceStateRunning
+              || Types.instanceState inst == Types.InstanceStateStopped
+              || Types.instanceState inst == Types.InstanceStateStopping
 
 
 waitForStart :: EC2Resource m
