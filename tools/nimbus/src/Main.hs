@@ -38,6 +38,10 @@ stopParser = Cmd.Stop <$> ( Cmd.StopOptions <$> switch ( long "force" <> short '
                           )
 
 
+terminateParser :: Opt.Parser Cmd.Command
+terminateParser = Cmd.Terminate <$> ( Cmd.TerminateOptions <$> credOption )
+
+
 getParser :: Opt.Parser Cmd.Command
 getParser = Cmd.Get <$> ( Cmd.GetOptions <$> credOption )
 
@@ -48,10 +52,11 @@ versionParser = Cmd.Version <$> (Cmd.VersionOptions <$> switch ( long "numeric" 
 
 
 parser :: Opt.Parser Cmd.Prog
-parser = Cmd.Prog <$> subparser ( command "start"   (Opt.info startParser   (progDesc "Start EC2 instance"))
-                               <> command "stop"    (Opt.info stopParser    (progDesc "Stop EC2 instance"))
-                               <> command "get"     (Opt.info getParser     (progDesc "Get EC2 instance ID and IP"))
-                               <> command "version" (Opt.info versionParser (progDesc "Print instance-manager version"))
+parser = Cmd.Prog <$> subparser ( command "start"     (Opt.info startParser     (progDesc "Start EC2 instance"))
+                               <> command "stop"      (Opt.info stopParser      (progDesc "Stop EC2 instance"))
+                               <> command "get"       (Opt.info getParser       (progDesc "Get EC2 instance ID and IP"))
+                               <> command "terminate" (Opt.info terminateParser (progDesc "Terminate EC2 instance and lose all saved data on its local storage"))
+                               <> command "version"   (Opt.info versionParser   (progDesc "Print instance-manager version"))
                                 )
                   <*> strOption ( long "region" <> short 'r' <> value (Config.region def) <> metavar "region" <> help ("Specify AWS region, default is " ++ (Config.region def)))
                   <*> switch    ( long "no-color" <> hidden <> help "disable color output" )
@@ -82,8 +87,9 @@ run prog = do
     rootLogger setIntLevel $ Cmd.verbose prog
     let region = Region.mk $ Cmd.region prog
     case Cmd.cmd prog of
-      Cmd.Version op -> putStrLn $ Version.full (Cmd.numeric op)
-      Cmd.Start   op -> Nimbus.start region op
-      Cmd.Get     op -> Nimbus.get  region op
-      Cmd.Stop    op -> Nimbus.stop region op
+      Cmd.Version   op -> putStrLn $ Version.full (Cmd.numeric op)
+      Cmd.Start     op -> Nimbus.start     region op
+      Cmd.Get       op -> Nimbus.get       region op
+      Cmd.Stop      op -> Nimbus.stop      region op
+      Cmd.Terminate op -> Nimbus.terminate region op
 

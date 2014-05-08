@@ -19,23 +19,26 @@ data Prog    = Prog { cmd      :: Command
              deriving Show
 
 
-data Command = Start   Options
-             | Stop    Options
-             | Get     Options
-             | Version Options
+data Command = Start     Options
+             | Stop      Options
+             | Get       Options
+             | Terminate Options
+             | Version   Options
              deriving Show
 
 
-data Options = StartOptions   { ami            :: String
-                              , machine        :: String
-                              , credentialPath :: String
-                              , keyName        :: String
-                              }
-             | StopOptions    { force          :: Bool
-                              , credentialPath :: String
-                              }
-             | GetOptions     { credentialPath :: String
-                              }
-             | VersionOptions { numeric :: Bool
-                              }
+data Options = StartOptions     { ami            :: String
+                                , machine        :: String
+                                , credentialPath :: String
+                                , keyName        :: String
+                                }
+             | StopOptions      { force          :: Bool
+                                , credentialPath :: String
+                                }
+             | GetOptions       { credentialPath :: String
+                                }
+             | TerminateOptions { credentialPath :: String
+                                }
+             | VersionOptions   { numeric :: Bool
+                                }
              deriving Show

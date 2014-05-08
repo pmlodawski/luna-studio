@@ -77,3 +77,16 @@ get region options = do
     credential <- getCredential options
     instances <- EC2.runEC2InRegion credential region $ Instance.find userName
     mapM_ printInstance $ filter Instance.ready instances
+
+
+terminate :: Region -> Cmd.Options -> IO ()
+terminate region options = do
+    credential <- getCredential options
+    EC2.runEC2InRegion credential region $ do
+        instances <- filter Instance.resumable <$> Instance.find userName
+        let instanceIDs = map Types.instanceId instances
+        if length instances == 0
+            then logger info $ "No instances to terminate."
+            else do logger info $ "Terminating " ++ (show $ length instances) ++ " instances."
+                    _ <- EC2.terminateInstances instanceIDs
+                    return ()
