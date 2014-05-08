@@ -28,6 +28,7 @@ startParser :: Opt.Parser Cmd.Command
 startParser = Cmd.Start <$> ( Cmd.StartOptions <$> strOption ( long "ami"     <> short 'a' <> value (Config.ami     def) <> metavar "ami-id"       <> help ("Specify AMI to run, default is " ++ (Config.ami def)))
                                                <*> strOption ( long "machine" <> short 'm' <> value (Config.machine def) <> metavar "machine-type" <> help ("Specify machine type to run, default is " ++ (Config.machine def)))
                                                <*> credOption
+                                               <*> strOption ( long "key"     <> short 'k' <> value (Config.keyName def) <> metavar "key-pair-name" <> help ("Specify key pair name for a created machine, default is " ++ (Config.keyName def)))
                           )
 
 

@@ -29,6 +29,7 @@ data Command = Start   Options
 data Options = StartOptions   { ami            :: String
                               , machine        :: String
                               , credentialPath :: String
+                              , keyName        :: String
                               }
              | StopOptions    { force          :: Bool
                               , credentialPath :: String

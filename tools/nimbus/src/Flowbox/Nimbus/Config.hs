@@ -19,6 +19,7 @@ data Config = Config { ami            :: String
                      , machine        :: String
                      , region         :: String
                      , credentialPath :: FilePath
+                     , keyName        :: String
                      }
 
 
@@ -27,4 +28,5 @@ instance Default Config where
                  , machine        = "t1.micro"
                  , region         = "eu-west-1"
                  , credentialPath = "aws.config"
+                 , keyName        = "nimbus"
                  }

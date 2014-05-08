@@ -11,11 +11,11 @@ import qualified AWS           as AWS
 import qualified AWS.EC2.Types as Types
 import qualified Data.Text     as Text
 
-import qualified Flowbox.AWS.EC2               as EC2
-import qualified Flowbox.AWS.Instance.Instance as Instance
-import qualified Flowbox.AWS.Instance.Request  as Request
-import           Flowbox.AWS.Region            (Region)
-import qualified Flowbox.Nimbus.Cmd            as Cmd
+import qualified Flowbox.AWS.EC2.EC2               as EC2
+import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
+import qualified Flowbox.AWS.EC2.Instance.Request  as Request
+import           Flowbox.AWS.Region                (Region)
+import qualified Flowbox.Nimbus.Cmd                as Cmd
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -33,12 +33,16 @@ userName :: String
 userName = "flowbox"
 
 
+instanceIP :: Types.Instance -> String
+instanceIP inst = case Types.instanceIpAddress inst of
+    Just ip -> show ip
+    Nothing -> "(no ip)"
+
+
 printInstance :: Types.Instance -> IO ()
 printInstance inst = putStrLn $ (Text.unpack $ Types.instanceId inst)
                              ++ " "
-                             ++ (case Types.instanceIpAddress inst of
-                                    Just ip -> show ip
-                                    Nothing -> "(no ip)")
+                             ++ instanceIP inst
 
 
 start :: Region -> Cmd.Options -> IO ()
@@ -47,8 +51,11 @@ start region options = do
     inst <- EC2.runEC2InRegion credential region $ do
         let request = Request.mk { Types.runInstancesRequestImageId      = Text.pack        $ Cmd.ami options
                                  , Types.runInstancesRequestInstanceType = Just $ Text.pack $ Cmd.machine options
+                                 , Types.runInstancesRequestKeyName      = Just $ Text.pack $ Cmd.keyName options
                                  }
         Instance.getOrStart userName request
+    let command = "ssh -i " ++ Cmd.keyName options ++ " ec2-user@" ++ instanceIP inst
+    logger info $ "You can login using command " ++ show command
     printInstance inst
 
 
