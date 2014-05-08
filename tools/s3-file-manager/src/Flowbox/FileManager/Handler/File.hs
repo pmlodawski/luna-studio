@@ -74,5 +74,5 @@ move :: Context -> Move.Request -> IO Move.Update
 move ctx (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    S3.runS3env ctx $ File.move src dst
+    S3.runS3env ctx $ File.rename src dst
     return $ Move.Update tsrc tdst
