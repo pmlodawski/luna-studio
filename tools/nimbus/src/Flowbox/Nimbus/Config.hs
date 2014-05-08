@@ -24,8 +24,8 @@ data Config = Config { ami            :: String
 
 
 instance Default Config where
-    def = Config { ami            = "ami-a921dfde"
-                 , machine        = "t1.micro"
+    def = Config { ami            = "ami-735da304"
+                 , machine        = "g2.2xlarge"
                  , region         = "eu-west-1"
                  , credentialPath = "aws.config"
                  , keyName        = "nimbus"
