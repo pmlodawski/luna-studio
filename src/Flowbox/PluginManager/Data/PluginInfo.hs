@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.PluginManager.Data.PluginInfo where
 
@@ -20,3 +21,4 @@ data Status = Running
 data PluginInfo = PluginInfo { plugin :: Plugin
                              , status :: Status
                              } deriving (Read, Show)
+makeLenses (''PluginInfo)
