@@ -54,3 +54,7 @@ fromText text = case text of
 
 fromString :: String -> Region
 fromString = fromText . Text.pack
+
+
+toString :: Region -> String
+toString = Text.unpack . toText

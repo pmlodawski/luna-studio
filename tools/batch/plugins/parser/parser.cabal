@@ -20,7 +20,7 @@ Flag Debug
 Executable parser
     Hs-Source-Dirs: dist/gen
                     src
-    Other-Modules:  Paths_flowbox_text2ast
+    Other-Modules:  Paths_flowbox_parser
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded

@@ -10,29 +10,29 @@ import qualified Data.IORef                           as IORef
 import qualified Flowbox.PluginManager.Data.PluginMap as PluginMap
 
 import           Flowbox.Control.Error
-import           Flowbox.PluginManager.Context                       (ContextRef)
-import qualified Flowbox.PluginManager.Context                       as Context
-import qualified Flowbox.PluginManager.Data.Plugin                   as Plugin
-import           Flowbox.PluginManager.Data.PluginHandle             (PluginHandle)
-import qualified Flowbox.PluginManager.Data.PluginHandle             as PluginHandle
-import           Flowbox.PluginManager.Proto.Plugin                  ()
-import           Flowbox.Prelude                                     hiding (error, id)
+import           Flowbox.PluginManager.Context                        (ContextRef)
+import qualified Flowbox.PluginManager.Context                        as Context
+import qualified Flowbox.PluginManager.Data.Plugin                    as Plugin
+import           Flowbox.PluginManager.Data.PluginHandle              (PluginHandle)
+import qualified Flowbox.PluginManager.Data.PluginHandle              as PluginHandle
+import           Flowbox.PluginManager.Proto.Plugin                   ()
+import           Flowbox.Prelude                                      hiding (error, id)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.PluginManager.Plugin.Add.Request    as Add
-import qualified Generated.Proto.PluginManager.Plugin.Add.Update     as Add
-import qualified Generated.Proto.PluginManager.Plugin.List.Request   as List
-import qualified Generated.Proto.PluginManager.Plugin.List.Status    as List
-import qualified Generated.Proto.PluginManager.Plugin.Lookup.Request as Lookup
-import qualified Generated.Proto.PluginManager.Plugin.Lookup.Status  as Lookup
-import qualified Generated.Proto.PluginManager.Plugin.Remove.Request as Remove
-import qualified Generated.Proto.PluginManager.Plugin.Remove.Update  as Remove
-import qualified Generated.Proto.PluginManager.Plugin.Start.Request  as Start
-import qualified Generated.Proto.PluginManager.Plugin.Start.Update   as Start
-import qualified Generated.Proto.PluginManager.Plugin.Stop.Request   as Stop
-import qualified Generated.Proto.PluginManager.Plugin.Stop.Update    as Stop
-import qualified Generated.Proto.PluginManager.Plugin.Restart.Request   as Restart
-import qualified Generated.Proto.PluginManager.Plugin.Restart.Update    as Restart
+import qualified Generated.Proto.PluginManager.Plugin.Add.Request     as Add
+import qualified Generated.Proto.PluginManager.Plugin.Add.Update      as Add
+import qualified Generated.Proto.PluginManager.Plugin.List.Request    as List
+import qualified Generated.Proto.PluginManager.Plugin.List.Status     as List
+import qualified Generated.Proto.PluginManager.Plugin.Lookup.Request  as Lookup
+import qualified Generated.Proto.PluginManager.Plugin.Lookup.Status   as Lookup
+import qualified Generated.Proto.PluginManager.Plugin.Remove.Request  as Remove
+import qualified Generated.Proto.PluginManager.Plugin.Remove.Update   as Remove
+import qualified Generated.Proto.PluginManager.Plugin.Restart.Request as Restart
+import qualified Generated.Proto.PluginManager.Plugin.Restart.Update  as Restart
+import qualified Generated.Proto.PluginManager.Plugin.Start.Request   as Start
+import qualified Generated.Proto.PluginManager.Plugin.Start.Update    as Start
+import qualified Generated.Proto.PluginManager.Plugin.Stop.Request    as Stop
+import qualified Generated.Proto.PluginManager.Plugin.Stop.Update     as Stop
 
 
 

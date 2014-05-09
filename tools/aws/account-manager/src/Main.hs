@@ -68,6 +68,6 @@ run cmd = case cmd of
                                               (Cmd.dbUser     cmd)
                                               (Cmd.dbPassword cmd)
                                               (Cmd.database   cmd)
-            region = Region.mk $ Cmd.region cmd
+            region = Region.fromString $ Cmd.region cmd
         ctx <- Context.mk region connectionInfo
         RPC.run (Cmd.address cmd) (Handler.handler ctx)
