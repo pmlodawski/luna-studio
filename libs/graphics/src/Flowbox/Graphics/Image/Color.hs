@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE FlexibleContexts    #-}
 
 module Flowbox.Graphics.Image.Color where
 
@@ -16,12 +17,13 @@ import qualified Data.Map              as Map
 
 --import qualified Debug.Trace as Dbg
 
-import           Diagrams.Prelude                (R2, Diagram)
-import           Diagrams.Backend.Cairo.Internal (Cairo)
+--import           Diagrams.Prelude                (R2, Diagram)
+--import           Diagrams.Backend.Cairo.Internal (Cairo)
 
 import qualified Flowbox.Graphics.Color             as Color
-import           Flowbox.Graphics.Image             (ImageAcc)
+import           Flowbox.Graphics.Image             (Image)
 import qualified Flowbox.Graphics.Image             as Image
+import           Flowbox.Graphics.Image.Channel     (ChannelAcc, Channel2)
 import qualified Flowbox.Graphics.Image.Channel     as Channel
 import           Flowbox.Graphics.Image.Composition (Premultiply(..), Mask(..), Clamp)
 import qualified Flowbox.Graphics.Image.Composition as Comp
@@ -39,7 +41,8 @@ import           Flowbox.Prelude                    as P
 -- img.rgb.r
 -- should those functions encapsulate the Image type in something holding the info about the color space, so u can use the line above?
 
-hsv :: (A.Elt a, A.IsFloating a, A.Shape ix) => ImageAcc ix a -> Image.Result (ImageAcc ix a)
+hsv :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Image.Result (img (ChannelAcc ix a))
 hsv img = do
     r <- Image.get "rgba.r" img
     g <- Image.get "rgba.g" img
@@ -59,7 +62,8 @@ hsv img = do
                 Color.HSV h s v = Color.toHSV $ Color.RGB r' g' b'
     return outimg
 
-hsl :: (A.Elt a, A.IsFloating a, A.Shape ix) => ImageAcc ix a -> Image.Result (ImageAcc ix a)
+hsl :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Image.Result (img (ChannelAcc ix a))
 hsl img = do
     r <- Image.get "rgba.r" img
     g <- Image.get "rgba.g" img
@@ -79,10 +83,10 @@ hsl img = do
     return outimg
 
 
-math :: (A.Elt a, A.IsFloating a, A.Shape ix)
-    => (Exp a -> Exp a -> Exp a) -> ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a -- TODO: add to wiki why this line is separated from others
-    -> Image.Result (ImageAcc ix a)
+math :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
+    => (Exp a -> Exp a -> Exp a) -> img (ChannelAcc ix a) -> Map Channel.Name (Exp a)
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a -- TODO: add to wiki why this line is separated from others
+    -> Image.Result (img (ChannelAcc ix a))
 math f img values maskInfo premultInfo mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultInfo
     let result      =  Image.mapWithKey handleChan unpremultiplied
@@ -93,36 +97,36 @@ math f img values maskInfo premultInfo mixValue = do
               Nothing    -> chan
               Just value -> Channel.map (\x -> f value x) chan
 
-offset :: (A.Elt a, A.IsFloating a, A.Shape ix)
-    => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
-    -> Image.Result (ImageAcc ix a)
+offset :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Map Channel.Name (Exp a)
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
 offset = math (+)
 
-multiply :: (A.Elt a, A.IsFloating a, A.Shape ix)
-    => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
-    -> Image.Result (ImageAcc ix a)
+multiply :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Map Channel.Name (Exp a)
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
 multiply = math (*)
 
-contrast :: (A.Shape ix, A.Elt a, A.IsFloating a)
-    => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
-    -> Image.Result (ImageAcc ix a)
+contrast :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Map Channel.Name (Exp a)
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
 contrast = math (\v x -> (x - 0.5) * v + 0.5)
 
-gamma :: (A.Elt a, A.IsFloating a, A.Shape ix)
-    => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
-    -> Image.Result (ImageAcc ix a)
+gamma :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Map Channel.Name (Exp a)
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
 gamma = math (\v -> (**(1/v)))
 
 -- TODO: test this comparing to nuke, there are some differences atm
 -- probably the result in nuke is being calculated based on an AND|OR relation between all input channels
-clamp :: (A.Shape ix, A.Elt a, A.IsFloating a)
-    => ImageAcc ix a -> Map Channel.Name (Clamp (Exp a))
-    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
-    -> Image.Result (ImageAcc ix a)
+clamp :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Map Channel.Name (Clamp (Exp a))
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
 clamp img ranges maskInfo premultInfo mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultInfo
     let result      =  Image.mapWithKey handleChan unpremultiplied
@@ -136,10 +140,10 @@ clamp img ranges maskInfo premultInfo mixValue = do
 
 -- INFO: in Nuke this does not have the OR relation between channels, it has something pretty weird
 -- soooooo....... either fuck it and do it o//ur way or... focus on it later on
-clipTest :: (A.Shape ix, A.Elt a, A.IsFloating a)
-    => ImageAcc ix a -> Map Channel.Name (Range (Exp a))
-    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
-    -> Image.Result (ImageAcc ix a)
+clipTest :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Map Channel.Name (Range (Exp a))
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
 clipTest img ranges maskInfo premultInfo mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultInfo
     let result      =  Image.mapWithKey handleChan unpremultiplied
@@ -158,10 +162,10 @@ clipTest img ranges maskInfo premultInfo mixValue = do
           shape = Channel.shape $ snd $ Image.elementAt 0 filteredChans
           filteredChans         = Image.filterByName (Map.keys ranges) img
 
-invert :: (A.Shape ix, A.Elt a, A.IsFloating a)
-    => ImageAcc ix a -> Channel.Select -> Maybe (Clamp (Exp a))
-    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
-    -> Image.Result (ImageAcc ix a)
+invert :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Channel.Select -> Maybe (Clamp (Exp a))
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
 invert img channels clampVal maskInfo premultInfo mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultInfo
     let result      =  handleInvert unpremultiplied
@@ -182,10 +186,10 @@ invert img channels clampVal maskInfo premultInfo mixValue = do
 --       and can only make things harder to debug (channel names are separated from the actual values used to calculate everything)
 --       I would strongly suggest using some kind of a data type for channelsOut, channelsIn and values to be put together
 -- INFO: for now this only works for 2D images since I'm using lift2Dto3D
-colorMatrix :: (A.Elt a, A.IsFloating a)
-    => ImageAcc A.DIM2 a -> [Channel.Name] -> [Channel.Name] -> A.Acc (A.Array A.DIM2 a) -- -> Exp Bool -- for inverting the matrix itself (?)
-    -> Maybe (Mask A.DIM2 a) -> Maybe Premultiply -> Exp a
-    -> Image.Result (ImageAcc A.DIM2 a)
+colorMatrix :: (A.Elt a, A.IsFloating a, Image img (Channel2 a))
+    => img (Channel2 a) -> [Channel.Name] -> [Channel.Name] -> A.Acc (A.Array A.DIM2 a) -- -> Exp Bool -- for inverting the matrix itself (?)
+    -> Maybe (Mask img A.DIM2 a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (Channel2 a))
 colorMatrix img channelsOut channelsIn values maskInfo premultInfo mixValue = do
   unpremultiplied <- Comp.unpremultiply img premultInfo
   channelsIn'     <- fmap glue $ Image.elemsByName' channelsIn unpremultiplied
@@ -193,7 +197,7 @@ colorMatrix img channelsOut channelsIn values maskInfo premultInfo mixValue = do
   premultiplied   <- Comp.premultiply result premultInfo
   resultMixed     <- Merge.mix' img premultiplied mixValue
   Merge.mask resultMixed img maskInfo
-  where handleColorMatrix img' channelsIn' = Image.channelUnion (Image.fromList $ calculateChannels channelsIn') img'
+  where handleColorMatrix img' channelsIn' = Image.channelUnion (Image.fromList img' $ calculateChannels channelsIn') img'
   -- INFO: probably faster than the above line but less readable
   --where handleColorMatrix img' channelsIn' = foldr insertChan img' (calculateChannels img' channelsIn')
         --insertChan chanInfo imgAcc = Image.insert (fst chanInfo) (snd chanInfo) imgAcc
@@ -209,10 +213,10 @@ colorMatrix img channelsOut channelsIn values maskInfo premultInfo mixValue = do
 -- TODO: rewrite this to filter out the required channels into images, then map over those images and union the result with the target image
 --       instead of doing all the calculations separately for all channels
 -- FIXME: this doesn't seem to generate the desired results =/
-colorTransfer :: (A.Shape ix, A.Shape jx, A.Elt a, A.IsFloating a)
-    => ImageAcc ix a -> ImageAcc jx a -- -> Diagram Cairo R2
-    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a -- do we need this part or not? afair nuke doesn't have those, but why shouldn't we?
-    -> Image.Result (ImageAcc ix a)
+colorTransfer :: (A.Shape ix, A.Shape jx, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a), Image img (ChannelAcc jx a))
+    => img (ChannelAcc ix a) -> img (ChannelAcc jx a) -- -> Diagram Cairo R2 -- TODO: use a shape to define a ROI
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a -- do we need this part or not? afair nuke doesn't have those, but why shouldn't we?
+    -> Image.Result (img (ChannelAcc ix a))
 colorTransfer target source maskInfo premultInfo mixValue = do
     unpremultiplied <- Comp.unpremultiply target premultInfo
 

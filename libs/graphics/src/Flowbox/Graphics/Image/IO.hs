@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns     #-}
 
 module Flowbox.Graphics.Image.IO where
@@ -15,19 +16,22 @@ import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as A
 
+import           Flowbox.Graphics.ImageRGBA     (ImageRGBA)
 import           Flowbox.Graphics.Image         (Image)
 import qualified Flowbox.Graphics.Image         as Image
-import           Flowbox.Graphics.Image.Channel (RawData2, RawData3)
+import           Flowbox.Graphics.Image.Channel (Channel2, Channel3)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 
 import Control.Monad.Trans.Either
 
 
-readFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image (RawData2 A.Word32)))
+--readFromBMP :: (MonadIO m, Image img (Channel2 A.Word32)) => FilePath -> m (Either BMP.Error (img (Channel2 A.Word32)))
+readFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (ImageRGBA (Channel2 A.Word32)))
 readFromBMP file = liftIO(fmap mkChan <$> A.readImageFromBMP file) where
     mkChan chdata = Image.insert "rgba" (Channel.Raw chdata) mempty
 
-readSequenceFromBMP :: MonadIO m => [FilePath] -> m (Either BMP.Error (Image (RawData3 A.Word32)))
+--readSequenceFromBMP ::(MonadIO m, Image img (Channel3 A.Word32)) => [FilePath] -> m (Either BMP.Error (img (Channel3 A.Word32)))
+readSequenceFromBMP ::MonadIO m => [FilePath] -> m (Either BMP.Error (ImageRGBA (Channel3 A.Word32)))
 readSequenceFromBMP paths = liftIO (fmap mkChanSequence <$> prepareSequence paths) where
     mkChanSequence chsdata = Image.insert "rgba" (Channel.Acc chsdata) mempty
     prepareSequence [] = return $ Right $ A.use $ A.fromList (A.Z A.:. 0 A.:. 0 A.:. 0) []
@@ -54,7 +58,7 @@ readSequenceFromBMP paths = liftIO (fmap mkChanSequence <$> prepareSequence path
 
 
 
-writeToBMP :: MonadIO m => Channel.Backend A.DIM2 A.Word32 -> FilePath -> Image (RawData2 A.Word32) -> m (Image.Result ())
+writeToBMP :: (MonadIO m, Image img (Channel2 A.Word32)) => Channel.Backend A.DIM2 A.Word32 -> FilePath -> img (Channel2 A.Word32) -> m (Image.Result ())
 writeToBMP backend file img = runEitherT $ do
     chan <- hoistEither $ Image.get "rgba" img
     let Channel.Raw mdata = Channel.compute backend chan

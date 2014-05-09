@@ -19,6 +19,10 @@ data Channel a = Raw (a)
                | Acc (A.Acc (a))
                deriving (Show)
 
+--instance Functor Channel where
+    --fmap f (Raw a) = Raw $ f a
+    --fmap f (Acc a) = Acc $ A.map f a
+
 type RawData2 a = A.Array A.DIM2 a
 type RawData3 a = A.Array A.DIM3 a
 

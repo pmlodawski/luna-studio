@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts #-}
+
 module Flowbox.Graphics.Image.Repr where
 
 import           Data.Array.Accelerate    (Exp)
@@ -13,11 +15,13 @@ import           Data.Bits                ((.&.))
 
 import           Flowbox.Graphics.Image         (Image)
 import qualified Flowbox.Graphics.Image         as Image
+import           Flowbox.Graphics.Image.Channel (ChannelAcc)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Prelude                hiding (map)
 
 
-decompose :: (A.Shape ix) => Image (A.Array ix A.Word32) -> Image.Result (Image (A.Array ix A.Word8))
+decompose :: (A.Shape ix, Image img (ChannelAcc ix A.Word32), Image img (ChannelAcc ix A.Word8))
+    => img (ChannelAcc ix A.Word32) -> Image.Result (img (ChannelAcc ix A.Word8))
 decompose img = do chan <- Image.get "rgba" img
                    let dchan = Channel.map unpack32 chan
                        (r,g,b,a) = Channel.unzip4 dchan
@@ -28,7 +32,8 @@ decompose img = do chan <- Image.get "rgba" img
                                  $ mempty
                    return outimg
 
-compose :: (A.Shape ix) => Image (A.Array ix A.Word8) -> Image.Result (Image (A.Array ix A.Word32))
+compose :: (A.Shape ix, Image img (ChannelAcc ix A.Word8), Image img (ChannelAcc ix A.Word32))
+    => img (ChannelAcc ix A.Word8) -> Image.Result (img (ChannelAcc ix A.Word32))
 compose img = do r <- Image.get "rgba.r" img
                  g <- Image.get "rgba.g" img
                  b <- Image.get "rgba.b" img

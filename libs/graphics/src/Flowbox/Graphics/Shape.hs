@@ -5,12 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleContexts     #-}
 
 module Flowbox.Graphics.Shape where
 
-import           Data.Array.Accelerate (Exp, Z(..))
+import           Data.Array.Accelerate (Z(..))
 import qualified Data.Array.Accelerate as A
-import qualified Data.Array.IArray     as IA
+--import qualified Data.Array.IArray     as IA
 import           Data.Monoid           as Monoid
 
 import qualified Math.BernsteinPoly              as Bernstein
@@ -21,8 +22,9 @@ import qualified Geom2D.CubicBezier.Basic        as Bezier
 import qualified Geom2D.CubicBezier.Intersection as Bezier
 
 import           Flowbox.Prelude                as P
-import           Flowbox.Graphics.Image         (ImageAcc)
+import           Flowbox.Graphics.Image         (Image)
 import qualified Flowbox.Graphics.Image         as Image
+import           Flowbox.Graphics.Image.Channel (Channel2)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 
 --import qualified Debug.Trace as Dbg
@@ -96,10 +98,10 @@ bezierBoundingBox curve eps = Rectangle pointMin pointMax
           points   = pointA:pointB:roots
           CubicBezier pointA _ _ pointB = curve
           roots    = fmap (Bezier.evalBezier curve) $ findDerivRoots curve 0 1 eps
-          foo = mempty `mappend` (Rectangle (Point 1 1) (Point 2 2))
 
-rasterizeMask :: Int -> Int -> Double -> Double -> Size2 -> Path -> ImageAcc A.DIM2 Double
-rasterizeMask width height x y size path = Image.insert "rgba.a" alpha mempty
+rasterizeMask :: (Image img (Channel2 Double))
+    => Int -> Int -> Double -> Double -> Size2 -> Path -> img (Channel2 Double)
+rasterizeMask width height x y size path = Image.insert "rgba.a" alpha mempty -- TODO: make a use of x and y
     where alpha     = Channel.Acc $ A.use $ A.fromList (Z A.:. height A.:. width) makeMask
           --alpha     = Channel.Acc $ A.use $ A.fromIArray makeMask
           --makeMask  = IA.array (0, num) [(i, makeElement i) | i <- [0..num]]

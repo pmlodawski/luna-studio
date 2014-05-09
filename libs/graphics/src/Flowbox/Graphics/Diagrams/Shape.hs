@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts #-}
+
 module Flowbox.Graphics.Diagrams.Shape where
 
 import           Control.Monad.IO.Class (MonadIO, liftIO)
@@ -24,12 +26,16 @@ import qualified Graphics.Rendering.Cairo        as Cairo
 --import           Flowbox.Graphics.Rendering.Cairo (Format(..), SurfaceData)
 --import qualified Flowbox.Graphics.Rendering.Cairo as Cairo
 
-import           Flowbox.Graphics.Image         (ImageAcc)
+import           Flowbox.Graphics.Image         (Image)
 import qualified Flowbox.Graphics.Image         as Image
+import           Flowbox.Graphics.Image.Channel (Channel2)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Prelude                as P
 
-rasterize :: (Elt a, IsFloating a, Eq a) => Int -> Int -> Double -> Double -> SizeSpec2D -> Diagram Cairo R2 -> ImageAcc A.DIM2 a
+
+
+rasterize :: (Elt a, IsFloating a, Eq a, Image img (Channel2 a))
+    => Int -> Int -> Double -> Double -> SizeSpec2D -> Diagram Cairo R2 -> img (Channel2 a)
 -- INFO: monadic version
 rasterize w h x y size diagram = Unsafe.unsafePerformIO $ do
     pixels <- liftIO makeElements

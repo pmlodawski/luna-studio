@@ -35,11 +35,11 @@ import           Diagrams.TwoD.Path.Metafont
 import           Flowbox.Graphics.Color                 (Color (..))
 import qualified Flowbox.Graphics.Color                 as C
 import qualified Flowbox.Graphics.Deprecated.Algorithms as G
-import           Flowbox.Graphics.Image                 (ImageAcc)
+import           Flowbox.Graphics.Image                 (Image)
 import qualified Flowbox.Graphics.Image                 as Img
 import           Flowbox.Graphics.Image.Channel         (Select(..))
 import qualified Flowbox.Graphics.Image.Channel         as Channel
-import           Flowbox.Graphics.Image.Composition     (Mask (..), Premultiply (..))
+import           Flowbox.Graphics.Image.Composition     (Mask (..), MaskSource(..), Premultiply (..))
 import qualified Flowbox.Graphics.Image.Composition     as Comp
 import qualified Flowbox.Graphics.Image.Color           as Img
 import qualified Flowbox.Graphics.Image.IO              as Img
@@ -63,58 +63,58 @@ meta = metafont $ z4.--.z1.--.z2.--.z6.- tension 1.5 -.cyclePath
 color = white `withOpacity` 1
 diag = (strokeLoop meta) Diag.# fcA color
 
-imgtest img frames mask source target = do
+imgtest img frames source target = do
     let getDouble image = Img.toDouble <$> Repr.decompose image
         --Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ Unsafe.unsafePerformIO $ Shape.rasterize 512 512 100 100 (Diag.Width 256) diag
-        Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
-        red       = RGB (A.constant 1) (A.constant 0) (A.constant 0)
-        green     = RGB (A.constant 0) (A.constant 1) (A.constant 0)
-        blue      = RGB (A.constant 0) (A.constant 0) (A.constant 1)
-        white     = RGB (A.constant 1) (A.constant 1) (A.constant 1)
-        black     = RGB (A.constant 0) (A.constant 0) (A.constant 0)
-        gray      = RGB (A.constant 0.5) (A.constant 0.5) (A.constant 0.5)
-        yellow    = RGB (A.constant 1) (A.constant 1) (A.constant 0)
-        gammaMap  = Map.fromList [ ("rgba.r", 2.5), ("rgba.g", 2.5), ("rgba.b", 2.5) ]
-        contrastMap = Map.fromList [ ("rgba.r", 2), ("rgba.g", 2), ("rgba.b", 2) ]
-        clampMap  = Map.fromList [ ("rgba.r", (Range 0.25 0.75, Just (Range 1 0)))
-                                 , ("rgba.g", (Range 0.25 0.75, Just (Range 0 1)))
-                                 , ("rgba.b", (Range 0.25 0.75, Just (Range 0 0))) ]
-        clipMap   = Map.fromList [ ("rgba.r", Range 0.19 1)
-                                 , ("rgba.g", Range 0.19 1)
-                                 , ("rgba.b", Range 0.19 1) ]
-        selection = ChannelList  [ "rgba.r", "rgba.g", "rgba.b" ]
-        channelsOut = [ "rgba.r", "rgba.g" ]
-        channelsIn  = [ "rgba.r", "rgba.g", "rgba.b" ]
-        colorMatrix' = [ 0,   0.8,   0
-                       , 0.5, 0.5, 0.5 ]
-        colorMatrix = A.use $ (A.fromList (A.Z A.:. 2 A.:. 3) colorMatrix' :: A.Array A.DIM2 Double)
+        --Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
+        --red       = RGB (A.constant 1) (A.constant 0) (A.constant 0)
+        --green     = RGB (A.constant 0) (A.constant 1) (A.constant 0)
+        --blue      = RGB (A.constant 0) (A.constant 0) (A.constant 1)
+        --white     = RGB (A.constant 1) (A.constant 1) (A.constant 1)
+        --black     = RGB (A.constant 0) (A.constant 0) (A.constant 0)
+        --gray      = RGB (A.constant 0.5) (A.constant 0.5) (A.constant 0.5)
+        --yellow    = RGB (A.constant 1) (A.constant 1) (A.constant 0)
+        --gammaMap  = Map.fromList [ ("rgba.r", 2.5), ("rgba.g", 2.5), ("rgba.b", 2.5) ]
+        --contrastMap = Map.fromList [ ("rgba.r", 2), ("rgba.g", 2), ("rgba.b", 2) ]
+        --clampMap  = Map.fromList [ ("rgba.r", (Range 0.25 0.75, Just (Range 1 0)))
+        --                         , ("rgba.g", (Range 0.25 0.75, Just (Range 0 1)))
+        --                         , ("rgba.b", (Range 0.25 0.75, Just (Range 0 0))) ]
+        --clipMap   = Map.fromList [ ("rgba.r", Range 0.19 1)
+        --                         , ("rgba.g", Range 0.19 1)
+        --                         , ("rgba.b", Range 0.19 1) ]
+        --selection = ChannelList  [ "rgba.r", "rgba.g", "rgba.b" ]
+        --channelsOut = [ "rgba.r", "rgba.g" ]
+        --channelsIn  = [ "rgba.r", "rgba.g", "rgba.b" ]
+        --colorMatrix' = [ 0,   0.8,   0
+        --               , 0.5, 0.5, 0.5 ]
+        --colorMatrix = A.use $ (A.fromList (A.Z A.:. 2 A.:. 3) colorMatrix' :: A.Array A.DIM2 Double)
 
-    imageRGBA <- getDouble img
-    framesRGBA <- getDouble frames
-    maskDouble <- getDouble mask2
-    sourceRGBA <- getDouble source
-    targetRGBA <- getDouble target
+    imageRGBA  <- getDouble img
+    --framesRGBA <- getDouble frames
+    --maskDouble <- getDouble mask2
+    --sourceRGBA <- getDouble source
+    --targetRGBA <- getDouble target
 
     --imageBackground <- G.extractBackground rgb framesRGBA
-    let imageConstant     = Img.constant (A.index2 (512::Exp Int) (512::Exp Int)) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
-        imageCheckerboard = Img.checkerboard (A.index2 (512::Exp Int) (512::Exp Int)) (A.constant 32) (black, white, black, white) (red, A.constant 0) (yellow, A.constant 0)
-        --imageMask         = ImageMask "rgba.r" Nothing (A.constant False) imageCheckerboard
-        imageMask         = ImageMask "rgba.r" Nothing (A.constant False) maskDouble
+    --let imageConstant     = Img.constant (A.index2 (512::Exp Int) (512::Exp Int)) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
+    --    imageCheckerboard = Img.checkerboard (A.index2 (512::Exp Int) (512::Exp Int)) (A.constant 32) (black, white, black, white) (red, A.constant 0) (yellow, A.constant 0)
+    --    --imageMask         = Mask "rgba.r" Nothing (A.constant False) imageCheckerboard
+    --    imageMask         = Mask "rgba.r" Nothing (A.constant False) maskDouble
 
-    maskChannel <- Img.get "rgba.r" imageCheckerboard
+    --maskChannel <- Img.get "rgba.r" imageCheckerboard
 
-    let imageRGBAwithMask = Img.insert "mask.a" maskChannel imageRGBA
-        premultiply = Premultiply "mask.a" (A.constant False)
+    --let imageRGBAwithMask = Img.insert "mask.a" maskChannel imageRGBA
+    --    premultiply = Premultiply "mask.a" (A.constant False)
 
-    imageGamma    <- Img.gamma    imageRGBAwithMask gammaMap Nothing Nothing 1
-    imageClamp    <- Img.clamp    imageRGBAwithMask clampMap Nothing Nothing 1
-    imageClipTest <- Img.clipTest imageRGBAwithMask clipMap (Just imageMask) (Just premultiply) 1
-    imageInvert   <- Img.invert   imageRGBAwithMask selection Nothing (Just imageMask) Nothing 1
-    imageColorMatrix <- Img.colorMatrix imageRGBAwithMask channelsOut channelsIn colorMatrix (Just imageMask) Nothing 1
-    imageContrast <- Img.contrast imageRGBA contrastMap Nothing Nothing 1
-    imageTransfered <- Img.colorTransfer targetRGBA sourceRGBA Nothing Nothing 1
+    --imageGamma       <- Img.gamma    imageRGBAwithMask gammaMap Nothing Nothing 1
+    --imageClamp       <- Img.clamp    imageRGBAwithMask clampMap Nothing Nothing 1
+    --imageClipTest    <- Img.clipTest imageRGBAwithMask clipMap (Just imageMask) (Just premultiply) 1
+    --imageInvert      <- Img.invert   imageRGBAwithMask selection Nothing (Just imageMask) Nothing 1
+    --imageColorMatrix <- Img.colorMatrix imageRGBAwithMask channelsOut channelsIn colorMatrix (Just imageMask) Nothing 1
+    --imageContrast    <- Img.contrast imageRGBA contrastMap Nothing Nothing 1
+    --imageTransfered  <- Img.colorTransfer targetRGBA sourceRGBA Nothing Nothing 1
 
-    let imageOut = imageGamma
+    let imageOut = imageRGBA
 
     Repr.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
 
@@ -155,14 +155,14 @@ main
 
         --diagram       <- DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
         let diagram = DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
-        let dupa =  Img.toWord8 $ Img.map G.clipValues diagram
+        --let dupa =  Img.toWord8 $ Img.map G.clipValues diagram
 
-        let rasterizedDiagram = case Repr.compose dupa of
-                Left err  -> mempty
-                Right val -> val
+        --let rasterizedDiagram = case Repr.compose dupa of
+        --        Left err  -> mempty
+        --        Right val -> val
             --imageOut = Right rasterizedDiagram
 
-        let imageOut = imgtest imageIn framesIn rasterizedDiagram sourceImage targetImage
+        let imageOut = imgtest imageIn framesIn sourceImage targetImage
 
         case imageOut of
             Left err  -> print err
@@ -172,22 +172,22 @@ main
 
         -- BEZIER TESTS
 
-        let p0 = Point 30 70
-            p1 = Point 0 270
-            p2 = Point 290 110
-            p3 = Point 200 100
-            curve = CubicBezier p0 p1 p2 p3
-            curvePath = OpenPath [(p0, JoinCurve p1 p2)] p3
-            bb = Shape.bezierBoundingBox curve 0.001
-            curveRaster = Shape.rasterizeMask 512 512 10 10 (Shape.Width 380) curvePath
-            Right alpha = Img.get "rgba.a" curveRaster
-            curveRaster' = Img.insert "rgba.r" alpha
-                         $ Img.insert "rgba.g" alpha
-                         $ Img.insert "rgba.b" alpha
-                         $ curveRaster
-            curveOut = Repr.compose $ Img.toWord8 $ Img.map G.clipValues curveRaster'
+        --let p0 = Point 30 70
+        --    p1 = Point 0 270
+        --    p2 = Point 290 110
+        --    p3 = Point 200 100
+        --    curve = CubicBezier p0 p1 p2 p3
+        --    curvePath = OpenPath [(p0, JoinCurve p1 p2)] p3
+        --    bb = Shape.bezierBoundingBox curve 0.001
+        --    curveRaster = Shape.rasterizeMask 512 512 10 10 (Shape.Width 380) curvePath
+        --    Right alpha = Img.get "rgba.a" curveRaster
+        --    curveRaster' = Img.insert "rgba.r" alpha
+        --                 $ Img.insert "rgba.g" alpha
+        --                 $ Img.insert "rgba.b" alpha
+        --                 $ curveRaster
+        --    curveOut = Repr.compose $ Img.toWord8 $ Img.map G.clipValues curveRaster'
 
-        print bb
+        --print bb
 
         --case curveOut of
         --    Left err  -> print err

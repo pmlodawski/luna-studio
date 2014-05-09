@@ -5,6 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LiberalTypeSynonyms #-}
+{-# LANGUAGE ImpredicativeTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Flowbox.Graphics.Image (
     module Flowbox.Graphics.Image,
@@ -26,135 +33,142 @@ import           Flowbox.Graphics.Transform     (Transformation(..), Transformed
 import           Flowbox.Prelude                hiding (lookup, map)
 
 
-data Image a = Image { _channels :: Map Channel.Name (Channel a)
-                     }
-             deriving (Show, Eq, Ord)
+--data Image a = Image { _channels :: Map Channel.Name (Channel a)
+--                     }
+--             deriving (Show, Eq, Ord)
 
---data X = X {_a :: Int}
---makeLenses ''X
-
---class CTest a b where
---    ctest :: Lens' a b
-
---instance CTest X Int where
---    ctest = a
-
---class Image img where
---    channels :: img a -> Map Channel.Name (Channel a)
+class (Monoid (img a), Functor img) => Image img a where
+    channels :: Lens (img a) (img b) (Map Channel.Name a) (Map Channel.Name b)
 
 --class ImageConversion where
---    toRGB :: img a -> RGBImage a
---    toHSV :: img a -> HSVImage a
---    toHSL :: img a -> HSLImage a
+    --toRGB :: img a -> RGBImage a
+    --toHSV :: img a -> HSVImage a
+    --toHSL :: img a -> HSLImage a
 
 --instance ImageConversion RGBImage where
 --    toRGB = id
 
-type ImageAcc ix a = Image (A.Array ix a)
+--type ImageAcc img ix a = Image img (A.Array ix a)
+--type ImageAlias img b a = (Image img a, a ~ b)
+--type ImageAcc img t ix a = ImageAlias img (A.Array ix a) t
 
 type Stencil3x1 a = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
 type Stencil1x3 a = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
 
 
-makeLenses ''Image
+--makeLenses ''Image
 
 
 -- ==== Computation
 
-compute :: Channel.Backend ix a -> ImageAcc ix a -> ImageAcc ix a
-compute backend img = Image $ Map.map (Channel.compute backend) $ view channels img
+--compute :: (Image img (A.Array ix a), myimg~img (A.Array ix a)) => Channel.Backend ix a -> myimg -> myimg
+--compute :: (ImageAcc img t ix a) => Channel.Backend ix a -> img t -> img t
+compute :: (Image img (ChannelAcc ix a)) => Channel.Backend ix a -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
+compute backend img = img & channels %~ (Map.map $ Channel.compute backend)
 
 -- ==== Traversal
 
 -- == Map
 
-map :: (ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
-map f img = Image $ Map.map f $ view channels img
+--map :: (Image imgA (A.Array ix a), Image imgB (A.Array ix b)) => (ChannelAcc ix a -> ChannelAcc ix b) -> imgA (A.Array ix a) -> imgB (A.Array ix b)
+map :: (Image img (ChannelAcc ix a), Image img (ChannelAcc ix b))
+    => (ChannelAcc ix a -> ChannelAcc ix b) -> img (ChannelAcc ix a) -> img (ChannelAcc ix b)
+map f img = img & channels %~ (Map.map f)
 
-mapChannels :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> ImageAcc ix a -> ImageAcc ix b
-mapChannels f img = Image $ Map.map (Channel.map f) $ view channels img
+mapChannels :: (Image img (ChannelAcc ix a), Image img (ChannelAcc ix b), A.Shape ix, A.Elt a, A.Elt b)
+    => (Exp a -> Exp b) -> img (ChannelAcc ix a) -> img (ChannelAcc ix b)
+mapChannels f img = img & channels %~ (Map.map $ Channel.map f)
 
-mapWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
-mapWithKey f img = Image $ Map.mapWithKey f $ view channels img
+mapWithKey :: (Image img (ChannelAcc ix a), Image img (ChannelAcc ix b))
+    => (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b) -> img (ChannelAcc ix a) -> img (ChannelAcc ix b)
+mapWithKey f img = img & channels %~ (Map.mapWithKey f)
 
 -- TODO: think about how to make this function work in regard to mapWithKey in a similar way map' works in reagard to map
---mapWithKey' :: (A.Shape ix, A.Elt a, A.Elt b) => (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
+--mapWithKey' :: (A.Shape ix, A.Elt a, A.Elt b) => (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b) -> img (A.Array ix a) -> img (A.Array ix b)
 --mapWithKey' f img = Image $ Map.mapWithKey f $ view channels img
 
---mapAccum :: (a -> b -> (a, c)) -> a -> Map k b -> (a, Map k c)
-mapAccum :: (a -> ChannelAcc ix b -> (a, ChannelAcc ix c)) -> a -> ImageAcc ix b -> (a, ImageAcc ix c)
-mapAccum f acc img = (fst result, Image $ snd result)
-    where result = Map.mapAccum f acc (img ^. channels)
+-- TODO: make mapAccum using lenses (without the `Image` constructor)
+--mapAccum :: (a -> ChannelAcc ix b -> (a, ChannelAcc ix c)) -> a -> img (A.Array ix b) -> (a, img (A.Array ix c))
+--mapAccum f acc img = (fst result, Image $ snd result)
+    --where result = Map.mapAccum f acc (img ^. channels)
 
---mapAccumWithKey :: (a -> k -> b -> (a, c)) -> a -> Map k b -> (a, Map k c)
-mapAccumWithKey :: (a -> Channel.Name -> ChannelAcc ix b -> (a, ChannelAcc ix c)) -> a -> ImageAcc ix b -> (a, ImageAcc ix c)
-mapAccumWithKey f acc img = (fst result, Image $ snd result)
-    where result = Map.mapAccumWithKey f acc (img ^. channels)
+-- TODO: make mapAccumWithKey using lenses (without the `Image` constructor)
+--mapAccumWithKey :: (a -> Channel.Name -> ChannelAcc ix b -> (a, ChannelAcc ix c)) -> a -> img (A.Array ix b) -> (a, img (A.Array ix c))
+--mapAccumWithKey f acc img = (fst result, Image $ snd result)
+--    where result = Map.mapAccumWithKey f acc (img ^. channels)
 
 -- == Folds
 
-foldr :: (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix b) -> ChannelAcc ix b -> ImageAcc ix a -> ChannelAcc ix b
+--foldr :: (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix b) -> ChannelAcc ix b -> img (A.Array ix a) -> ChannelAcc ix b
+foldr :: Image img (ChannelAcc ix a)
+    => (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix b) -> ChannelAcc ix b -> img (ChannelAcc ix a) -> ChannelAcc ix b
 foldr f acc img = Map.foldr f acc $ view channels img
 
-foldl :: (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix a) -> ChannelAcc ix a -> ImageAcc ix b -> ChannelAcc ix a
+--foldl :: (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix a) -> ChannelAcc ix a -> img (A.Array ix b) -> ChannelAcc ix a
+foldl :: Image img (ChannelAcc ix b)
+    => (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix a) -> ChannelAcc ix a -> img (ChannelAcc ix b) -> ChannelAcc ix a
 foldl f acc img = Map.foldl f acc $ view channels img
 
-foldrWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix b) -> ChannelAcc ix b -> ImageAcc ix a -> ChannelAcc ix b
+--foldrWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix b) -> ChannelAcc ix b -> img (A.Array ix a) -> ChannelAcc ix b
+foldrWithKey :: Image img (ChannelAcc ix a)
+    => (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix b) -> ChannelAcc ix b -> img (ChannelAcc ix a) -> ChannelAcc ix b
 foldrWithKey f acc img = Map.foldrWithKey f acc $ view channels img
 
-foldlWithKey :: (ChannelAcc ix a -> Channel.Name -> ChannelAcc ix b -> ChannelAcc ix a) -> ChannelAcc ix a -> ImageAcc ix b -> ChannelAcc ix a
+foldlWithKey :: Image img (ChannelAcc ix b)
+    => (ChannelAcc ix a -> Channel.Name -> ChannelAcc ix b -> ChannelAcc ix a) -> ChannelAcc ix a -> img (ChannelAcc ix b) -> ChannelAcc ix a
 foldlWithKey f acc img = Map.foldlWithKey f acc $ view channels img
 
 -- ==== Conversion
 
-elems :: ImageAcc ix a -> [ChannelAcc ix a]
+elems :: Image img (ChannelAcc ix a) => img (ChannelAcc ix a) -> [ChannelAcc ix a]
 elems img = Map.elems $ view channels img
 
-keys :: ImageAcc ix a -> [Channel.Name]
+keys :: Image img (ChannelAcc ix a) => img (ChannelAcc ix a) -> [Channel.Name]
 keys img = Map.keys $ view channels img
 
-assocs :: ImageAcc ix a -> [(Channel.Name, ChannelAcc ix a)]
+assocs :: Image img (ChannelAcc ix a) => img (ChannelAcc ix a) -> [(Channel.Name, ChannelAcc ix a)]
 assocs img = Map.assocs $ view channels img
 
 -- == Lists
 
-fromList :: [(Channel.Name, ChannelAcc ix a)] -> ImageAcc ix a
-fromList list = Image $ Map.fromList list
+-- TODO: think of a better way to get the info about the required image type (ie. ImageRGBA) than by passing an object of a similar type to the function
+fromList :: Image img (ChannelAcc ix a) => img (ChannelAcc ix a) -> [(Channel.Name, ChannelAcc ix a)] -> img (ChannelAcc ix a)
+fromList img list = img & channels .~ Map.fromList list --Image $ Map.fromList list
 
 -- ==== Accessors
 
 -- == Getters
 
-elementAt :: Int -> ImageAcc ix a -> (Channel.Name, ChannelAcc ix a)
+elementAt :: Image img (ChannelAcc ix a) => Int -> img (ChannelAcc ix a) -> (Channel.Name, ChannelAcc ix a)
 elementAt pos img = Map.elemAt pos $ view channels img
 
-get :: Channel.Name -> ImageAcc ix a -> Result (ChannelAcc ix a)
+get :: Image img (ChannelAcc ix a) => Channel.Name -> img (ChannelAcc ix a) -> Result (ChannelAcc ix a)
 get cname img = justErr (ChannelLookupError cname) $ Map.lookup cname (view channels img)
 
 -- == Setters
 
-insert :: Channel.Name -> ChannelAcc ix a -> ImageAcc ix a -> ImageAcc ix a
+insert :: Image img (ChannelAcc ix a) => Channel.Name -> ChannelAcc ix a -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 insert cname chan img = img & channels %~ (Map.insert cname chan)
 
-remove :: Channel.Name -> ImageAcc ix a -> ImageAcc ix a
+remove :: Image img (ChannelAcc ix a) => Channel.Name -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 remove cname img = img & channels %~ (Map.delete cname)
 
-adjust :: (ChannelAcc ix a -> ChannelAcc ix a) -> String -> ImageAcc ix a -> ImageAcc ix a
+adjust :: Image img (ChannelAcc ix a) => (ChannelAcc ix a -> ChannelAcc ix a) -> String -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 adjust f cname img = img & channels %~ (Map.adjust f cname)
 
-adjustWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix a) -> String -> ImageAcc ix a -> ImageAcc ix a
+adjustWithKey :: Image img (ChannelAcc ix a) => (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix a) -> String -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 adjustWithKey f cname img = img & channels %~ (Map.adjustWithKey f cname)
 
-update :: (ChannelAcc ix a -> Maybe (ChannelAcc ix a)) -> Channel.Name -> ImageAcc ix a -> ImageAcc ix a
+update :: Image img (ChannelAcc ix a) => (ChannelAcc ix a -> Maybe (ChannelAcc ix a)) -> Channel.Name -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 update f cname img = img & channels %~ (Map.update f cname)
 
-updateWithKey :: (Channel.Name -> ChannelAcc ix a -> Maybe (ChannelAcc ix a)) -> String -> ImageAcc ix a -> ImageAcc ix a
+updateWithKey :: Image img (ChannelAcc ix a) => (Channel.Name -> ChannelAcc ix a -> Maybe (ChannelAcc ix a)) -> String -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 updateWithKey f cname img = img & channels %~ (Map.updateWithKey f cname)
 
-alter :: (Maybe (ChannelAcc ix a) -> Maybe (ChannelAcc ix a)) -> Channel.Name -> ImageAcc ix a -> ImageAcc ix a
+alter :: Image img (ChannelAcc ix a) => (Maybe (ChannelAcc ix a) -> Maybe (ChannelAcc ix a)) -> Channel.Name -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 alter f cname img = img & channels %~ (Map.alter f cname)
 
-cpChannel :: Channel.Name -> Channel.Name -> ImageAcc ix a -> Result (ImageAcc ix a)
+cpChannel :: Image img (ChannelAcc ix a) => Channel.Name -> Channel.Name -> img (ChannelAcc ix a) -> Result (img (ChannelAcc ix a))
 cpChannel source destination img = do
     chan <- get source img
     return $ img & channels %~ (Map.insert destination chan)
@@ -163,75 +177,88 @@ cpChannel source destination img = do
 
 -- == Union
 
-channelUnion :: ImageAcc ix a -> ImageAcc ix a -> ImageAcc ix a
-channelUnion imgA imgB = Image $ Map.union (imgA ^. channels) (imgB ^. channels)
+channelUnion :: Image img (ChannelAcc ix a) => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
+channelUnion imgA imgB = imgA & channels .~ Map.union (imgA ^. channels) (imgB ^. channels)
+--channelUnion imgA imgB = Image $ Map.union (imgA ^. channels) (imgB ^. channels)
 
-channelUnionWith :: (ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a) -> ImageAcc ix a -> ImageAcc ix a -> ImageAcc ix a
-channelUnionWith f imgA imgB = Image $ Map.unionWith f (imgA ^. channels) (imgB ^. channels)
+channelUnionWith :: Image img (ChannelAcc ix a) => (ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a) -> img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
+channelUnionWith f imgA imgB = imgA & channels .~ Map.unionWith f (imgA ^. channels) (imgB ^. channels)
+--channelUnionWith f imgA imgB = Image $ Map.unionWith f (imgA ^. channels) (imgB ^. channels)
 
-channelUnionWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a) -> ImageAcc ix a -> ImageAcc ix a -> ImageAcc ix a
-channelUnionWithKey f imgA imgB = Image $ Map.unionWithKey f (imgA ^. channels) (imgB ^. channels)
+channelUnionWithKey :: Image img (ChannelAcc ix a) => (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a) -> img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
+channelUnionWithKey f imgA imgB = imgA & channels .~ Map.unionWithKey f (imgA ^. channels) (imgB ^. channels)
+--channelUnionWithKey f imgA imgB = Image $ Map.unionWithKey f (imgA ^. channels) (imgB ^. channels)
 
 -- == Intersection
 
-channelIntersection :: ImageAcc ix a -> ImageAcc ix b -> ImageAcc ix a
-channelIntersection imgA imgB = Image $ Map.intersection (imgA ^. channels) (imgB ^. channels)
+channelIntersection :: (Image img (ChannelAcc ix a), Image img (ChannelAcc ix b))
+    => img (ChannelAcc ix a) -> img (ChannelAcc ix b) -> img (ChannelAcc ix a)
+channelIntersection imgA imgB = imgA & channels .~ Map.intersection (imgA ^. channels) (imgB ^. channels)
+--channelIntersection imgA imgB = Image $ Map.intersection (imgA ^. channels) (imgB ^. channels)
 
-channelIntersectionWith :: (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix c) -> ImageAcc ix a -> ImageAcc ix b -> ImageAcc ix c
-channelIntersectionWith f imgA imgB = Image $ Map.intersectionWith f (imgA ^. channels) (imgB ^. channels)
+channelIntersectionWith :: (Image img (ChannelAcc ix a), Image img (ChannelAcc ix b), Image img (ChannelAcc ix c))
+    => (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix c) -> img (ChannelAcc ix a) -> img (ChannelAcc ix b) -> img (ChannelAcc ix c)
+channelIntersectionWith f imgA imgB = imgA & channels .~ Map.intersectionWith f (imgA ^. channels) (imgB ^. channels)
+--channelIntersectionWith f imgA imgB = Image $ Map.intersectionWith f (imgA ^. channels) (imgB ^. channels)
 
-channelIntersectionWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix c) -> ImageAcc ix a -> ImageAcc ix b -> ImageAcc ix c
-channelIntersectionWithKey f imgA imgB = Image $ Map.intersectionWithKey f (imgA ^. channels) (imgB ^. channels)
+channelIntersectionWithKey :: (Image img (ChannelAcc ix a), Image img (ChannelAcc ix b), Image img (ChannelAcc ix c))
+    => (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix c) -> img (ChannelAcc ix a) -> img (ChannelAcc ix b) -> img (ChannelAcc ix c)
+channelIntersectionWithKey f imgA imgB = imgA & channels .~ Map.intersectionWithKey f (imgA ^. channels) (imgB ^. channels)
+--channelIntersectionWithKey f imgA imgB = Image $ Map.intersectionWithKey f (imgA ^. channels) (imgB ^. channels)
 
 -- ==== Filter
 
 -- TODO: filter, filterWithKey/filterWithName : naive implementation using Map.toAscList and Map.fromAscList
 -- and implement filterByName using filterWithName
 
-filterByName :: [Channel.Name] -> ImageAcc ix a -> ImageAcc ix a
+filterByName :: Image img (ChannelAcc ix a) => [Channel.Name] -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 filterByName names img = img & channels %~ (Map.filterWithKey nameMatches)
     where nameMatches cname _ = cname `elem` names
 
-filterByName' :: [Channel.Name] -> ImageAcc ix a -> Result (ImageAcc ix a)
+filterByName' :: Image img (ChannelAcc ix a) => [Channel.Name] -> img (ChannelAcc ix a) -> Result (img (ChannelAcc ix a))
 filterByName' names img = do
     channelList <- sequence $ fmap makePair names
-    return $ fromList channelList
+    return $ fromList img channelList
     where makePair name = do
               chan <- get name img
               return (name, chan)
 
 -- TODO: elemsByName, keysByName, assocsByName -- without ' - returns list not in a monad
 
-elemsByName' :: [Channel.Name] -> ImageAcc ix a -> Result ([ChannelAcc ix a])
+elemsByName' :: Image img (ChannelAcc ix a) => [Channel.Name] -> img (ChannelAcc ix a) -> Result ([ChannelAcc ix a])
 elemsByName' names img = sequence $ fmap (flip get img) names
 
 -- TODO: does keysByName make any sense?
---keysByName' :: [Channel.Name] -> ImageAcc ix a -> Result ([Channel.Name])
+--keysByName' :: [Channel.Name] -> img (A.Array ix a) -> Result ([Channel.Name])
 
-assocsByName' :: [Channel.Name] -> ImageAcc ix a -> Result ([(Channel.Name, ChannelAcc ix a)])
+assocsByName' :: Image img (ChannelAcc ix a) => [Channel.Name] -> img (ChannelAcc ix a) -> Result ([(Channel.Name, ChannelAcc ix a)])
 assocsByName' names img = do
     sequence $ fmap makePair names
     where makePair name = do
               chan <- get name img
               return (name, chan)
 
-selectChannels :: Channel.Select -> ImageAcc ix a -> ImageAcc ix a
+selectChannels :: Image img (ChannelAcc ix a) => Channel.Select -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 selectChannels channelList img = case channelList of
     Channel.AllChannels      -> img
     Channel.ChannelList list -> filterByName list img
 
 -- ==== Conversion between numeric types
 
-toFloat :: A.Shape ix => ImageAcc ix A.Word8 -> ImageAcc ix A.Float
+toFloat :: (A.Shape ix, Image img (ChannelAcc ix A.Word8), Image img (ChannelAcc ix Float))
+    => img (ChannelAcc ix A.Word8) -> img (ChannelAcc ix A.Float)
 toFloat img = mapChannels (\c -> A.fromIntegral c / 255) img
 
-toDouble :: A.Shape ix => ImageAcc ix A.Word8 -> ImageAcc ix A.Double
+toDouble :: (A.Shape ix, Image img (ChannelAcc ix A.Word8), Image img (ChannelAcc ix Double))
+    => img (ChannelAcc ix A.Word8) -> img (ChannelAcc ix A.Double)
 toDouble img = mapChannels (\c -> A.fromIntegral c / 255) img
 
-toFloating :: (A.Shape ix, A.Elt a) => A.IsFloating a => ImageAcc ix A.Word8 -> ImageAcc ix a
+toFloating :: (A.Shape ix, A.Elt a, Image img (ChannelAcc ix A.Word8), Image img (ChannelAcc ix a))
+    => A.IsFloating a => img (ChannelAcc ix A.Word8) -> img (ChannelAcc ix a)
 toFloating img = mapChannels (\c -> A.fromIntegral c / 255) img
 
-toWord8 :: (A.Shape ix, A.Elt a, A.IsFloating a) => ImageAcc ix a -> ImageAcc ix A.Word8
+toWord8 :: (Image img (ChannelAcc ix a), Image img (ChannelAcc ix A.Word8))
+    => (A.Shape ix, A.Elt a, A.IsFloating a) => img (ChannelAcc ix a) -> img (ChannelAcc ix A.Word8)
 toWord8 img = mapChannels (\c -> A.truncate $ c * 255) img
 
 
@@ -274,14 +301,16 @@ rasterizeChannel (Transformation t) ch =
                     (inShape (A.round jt) (A.round it)) A.? (ch Channel.! (A.index2 (A.round jt) (A.round it)), 0)
                     --ch Channel.!! 0
 
-rasterize :: (A.Elt a, A.IsFloating a) => Transformed (Image (RawData2 a)) -> Image (RawData2 a)
-rasterize (Transformed img t) = Image $ Map.map (rasterizeChannel t) $ view channels img
+--rasterize :: (A.Elt a, A.IsFloating a) => Transformed (Image (RawData2 a)) -> Image (RawData2 a)
+rasterize :: (A.Elt a, A.IsFloating a, Image img (Channel2 a))
+    => Transformed (img (Channel2 a)) -> img (Channel2 a)
+rasterize (Transformed img t) = img & channels %~ Map.map (rasterizeChannel t)
 
 
 --------------------------------------------------------------------------
 ---- INSTANCES
 --------------------------------------------------------------------------
 
-instance Monoid (Image a) where
-    mempty        = Image mempty
-    a `mappend` b = Image $ (view channels a) `mappend` (view channels b)
+--instance Monoid (Image a) where
+--    mempty        = Image mempty
+--    a `mappend` b = Image $ (view channels a) `mappend` (view channels b)

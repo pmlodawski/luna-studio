@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE FlexibleContexts    #-}
 
 module Flowbox.Graphics.Image.Raster where
 
@@ -14,14 +15,15 @@ import qualified Data.Array.Accelerate as A
 
 import           Flowbox.Graphics.Color         (ColorAcc)
 import qualified Flowbox.Graphics.Color         as Color
-import           Flowbox.Graphics.Image         (ImageAcc)
+import           Flowbox.Graphics.Image         (Image)
 import qualified Flowbox.Graphics.Image         as Img
+import           Flowbox.Graphics.Image.Channel (ChannelAcc, Channel2)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import qualified Flowbox.Graphics.Utils         as U
 import           Flowbox.Prelude                as P
 
 
-constant :: (A.Elt a, A.IsFloating a, A.Shape ix) => Exp ix -> [(Channel.Name, Exp a)] -> ImageAcc ix a
+constant :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a)) => Exp ix -> [(Channel.Name, Exp a)] -> img (ChannelAcc ix a)
 constant sh = foldr appendChannel mempty
     where appendChannel (name, value) img = Img.insert name (Channel.fill sh value) img
 
@@ -30,8 +32,8 @@ constant sh = foldr appendChannel mempty
 type CheckerboardColors a = (ColorAcc a, ColorAcc a, ColorAcc a, ColorAcc a)
 type CheckerboardLine a = (ColorAcc a, Exp Double)
 
-checkerboard :: (A.Elt a, A.IsFloating a)
-     => Exp A.DIM2 -> Exp Double -> CheckerboardColors a -> CheckerboardLine a -> CheckerboardLine a -> ImageAcc A.DIM2 a
+checkerboard :: (A.Elt a, A.IsFloating a, Image img (Channel2 a))
+     => Exp A.DIM2 -> Exp Double -> CheckerboardColors a -> CheckerboardLine a -> CheckerboardLine a -> img (Channel2 a)
 checkerboard sh size (color1, color2, color3, color4) (lineColor, lineWidth) (lineColorCenter, lineWidthCenter)
     = foldr appendChannel mempty ["rgba.r", "rgba.g", "rgba.b", "rgba.a"]
     where

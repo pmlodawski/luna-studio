@@ -4,17 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts #-}
+
 module Flowbox.Graphics.Image.Merge where
 
 import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
 
-import           Flowbox.Graphics.Image             (ImageAcc)
+import           Flowbox.Graphics.Image             (Image)
 import qualified Flowbox.Graphics.Image             as Image
---import           Flowbox.Graphics.Image.Channel     (ChannelAcc)
+import           Flowbox.Graphics.Image.Channel     (ChannelAcc)
 import qualified Flowbox.Graphics.Image.Channel     as Channel
 --import           Flowbox.Graphics.Image.Composition (Premultiply(..), Mask(..), Clamp)
-import           Flowbox.Graphics.Image.Composition (Mask(..))
+import           Flowbox.Graphics.Image.Composition (Mask(..), MaskSource(..))
 import qualified Flowbox.Graphics.Image.Composition as Comp
 import qualified Flowbox.Graphics.Utils             as U
 import           Flowbox.Prelude                    as P
@@ -36,7 +38,7 @@ data MergeOperation ix a = ATop         Channel.Name Channel.Name
                          | HardLight
                          | Hypot
                          | In           Channel.Name
-                         | Mask         Channel.Name
+                         | WithMask     Channel.Name
                          | Matte        Channel.Name
                          | Max
                          | Min
@@ -55,9 +57,9 @@ data MergeOperation ix a = ATop         Channel.Name Channel.Name
                          | Under        Channel.Name
                          | XOR          Channel.Name Channel.Name
 --               | AddMix (Map ChannelName (Curve, Curve))
-                         | Custom (ImageAcc ix a -> ImageAcc ix a -> Image.Result (ImageAcc ix a))
+--                         | Custom (ImageAcc ix a -> ImageAcc ix a -> Image.Result (ImageAcc ix a))
 
-applyMerge :: (A.Shape ix, A.Elt a, A.IsFloating a) => MergeOperation ix a -> ImageAcc ix a -> ImageAcc ix a -> Image.Result (ImageAcc ix a)
+applyMerge :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a)) => MergeOperation ix a -> img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> Image.Result (img (ChannelAcc ix a))
 applyMerge mergeType overlay background = case mergeType of
     ATop alphaNameOv alphaNameBg -> do alphaChanOv <- Image.get alphaNameOv overlay
                                        alphaChanBg <- Image.get alphaNameBg background
@@ -86,8 +88,8 @@ applyMerge mergeType overlay background = case mergeType of
     Hypot             -> mergeWith (\ov bg -> sqrt $ bg ^ 2 + ov ^ 2)
     In alphaName      -> do alphaChan <- Image.get alphaName overlay
                             mergeWith3 alphaChan (\alpha _ bg -> bg * alpha)
-    Mask alphaName    -> do alphaChan <- Image.get alphaName background
-                            mergeWith3 alphaChan (\alpha ov _ -> ov * alpha)
+    WithMask alphaName -> do alphaChan <- Image.get alphaName background
+                             mergeWith3 alphaChan (\alpha ov _ -> ov * alpha)
     Matte alphaName   -> do alphaChan <- Image.get alphaName background
                             mergeWith3 alphaChan (\alpha ov bg -> bg * alpha + ov * (U.invert alpha))
     Max               -> mergeWith max
@@ -112,7 +114,7 @@ applyMerge mergeType overlay background = case mergeType of
                                       mergeWith4 alphaChanOv alphaChanBg $
                                           (\alphaOv alphaBg ov bg -> bg * (U.invert alphaOv) + ov * (U.invert alphaBg))
 --  AddMix (Map ChannelName (Curve, Curve))
-    Custom f          -> f overlay background
+--    Custom f          -> f overlay background
     where mergeWith f              = return $ Image.channelUnionWith (Channel.zipWith f)              overlay background
           mergeWith3 chan f        = return $ Image.channelUnionWith (Channel.zipWith3 f chan)        overlay background
           mergeWith4 chanA chanB f = return $ Image.channelUnionWith (Channel.zipWith4 f chanA chanB) overlay background
@@ -123,7 +125,7 @@ applyMerge mergeType overlay background = case mergeType of
           softLightFunc ov bg      = A.cond (bg A.<=* 0.5) (2 * bg * (ov / 2 + 0.25)) (U.invert $ 2 * (U.invert bg) * (U.invert $ ov / 2 + 0.25)) -- INFO: photoshop (?) version, nuke does this in a slightly different way and might produce different results
 
 
-mask :: (A.Shape ix, A.Elt a, A.IsNum a) => ImageAcc ix a -> ImageAcc ix a -> Maybe (Mask ix a) -> Image.Result (ImageAcc ix a)
+mask :: (A.Shape ix, A.Elt a, A.IsNum a, Image img (ChannelAcc ix a)) => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> Maybe (Mask img ix a) -> Image.Result (img (ChannelAcc ix a))
 mask imgA _ Nothing = Right imgA
 mask imgA imgB (Just theMask) = do
     maskChan <- Image.get name maskImg
@@ -131,31 +133,35 @@ mask imgA imgB (Just theMask) = do
         calculateMask alpha = flip (U.mix (Comp.invert invertFlag alpha))
     return $ Comp.inject injection maskChan
            $ Image.channelUnion (Image.channelIntersectionWith applyMask imgA imgB) imgA
-    where (name, injection, invertFlag, maskImg) = case theMask of
-              ChannelMask name' injection' invertFlag'          -> (name', injection', invertFlag', imgA)
-              ImageMask   name' injection' invertFlag' maskImg' -> (name', injection', invertFlag', maskImg')
+    where Mask name injection invertFlag maskImg' = theMask --case theMask of
+          maskImg = case maskImg' of
+              Local        -> imgA
+              External img -> img
+              --ChannelMask name' injection' invertFlag'          -> (name', injection', invertFlag', imgA)
+              --ImageMask   name' injection' invertFlag' maskImg' -> (name', injection', invertFlag', maskImg')
 
 
-mix :: (A.Shape ix, A.Elt a, A.IsFloating a)
-    => ImageAcc ix a -> ImageAcc ix a -> Exp a
-    -> Maybe (Mask ix a)
-    -> Image.Result (ImageAcc ix a)
+mix :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> Exp a
+    -> Maybe (Mask img ix a)
+    -> Image.Result (img (ChannelAcc ix a))
 mix imgA imgB val maskInfo = do
     let result = Image.channelUnion (Image.channelIntersectionWith (Channel.zipWith (U.mix val)) imgA imgB) imgA
     mask result imgA maskInfo
 
 -- INFO: `mix` but without using a mask (quite an often scenario, since the functions using `mix` apply the mask on their own)
-mix' :: (A.Shape ix, A.Elt a, A.IsFloating a) => ImageAcc ix a -> ImageAcc ix a -> Exp a -> Image.Result (ImageAcc ix a)
+mix' :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> Exp a -> Image.Result (img (ChannelAcc ix a))
 mix' imgA imgB val = mix imgA imgB val Nothing
 
 
 -- TODO: add alpha masking, bounding boxes, metadata, etc. (check confluence)
 -- TODO: should there be a third Channel.Select for outgoing channels?
 --       same thing can be achieved by not selecting channels from the image we're merging with
-merge :: (A.Shape ix, A.Elt a, A.IsFloating a)
-    => ImageAcc ix a -> ImageAcc ix a -> MergeOperation ix a -> Channel.Select -> Channel.Select
-    -> Maybe (Mask ix a) -> Exp a
-    -> Image.Result (ImageAcc ix a)
+merge :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> MergeOperation ix a -> Channel.Select -> Channel.Select
+    -> Maybe (Mask img ix a) -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
 merge overlay background mergeType channelsOv channelsBg maskInfo mixValue = do
     result      <- applyMerge mergeType overlay' background'
     resultMixed <- mix' overlay result mixValue

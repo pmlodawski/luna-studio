@@ -4,6 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE GADTs            #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 module Flowbox.Graphics.Image.Composition where
 
 import           Data.Array.Accelerate (Exp)
@@ -11,7 +14,7 @@ import qualified Data.Array.Accelerate as A
 
 --import qualified Debug.Trace as Dbg
 
-import           Flowbox.Graphics.Image         (ImageAcc)
+import           Flowbox.Graphics.Image         (Image)
 import qualified Flowbox.Graphics.Image         as Image
 import           Flowbox.Graphics.Image.Channel (ChannelAcc)
 import qualified Flowbox.Graphics.Image.Channel as Channel
@@ -27,27 +30,36 @@ data Premultiply = Premultiply   { premultChanName :: Channel.Name
 
 type Inject = Maybe Channel.Name
 
-data Mask ix a = ChannelMask { maskChanName :: Channel.Name, injectMask :: Inject, invertMask :: Exp Bool }
-               | ImageMask   { maskChanName :: Channel.Name, injectMask :: Inject, invertMask :: Exp Bool, maskImage :: ImageAcc ix a }
-               deriving (Show)
+--data Mask img ix a = ChannelMask { maskChanName :: Channel.Name, injectMask :: Inject, invertMask :: Exp Bool }
+--                   | ImageMask   { maskChanName :: Channel.Name, injectMask :: Inject, invertMask :: Exp Bool, maskImage :: img (ChannelAcc ix a) }
+--                   deriving (Show)
+
+data Mask img ix a  = Mask { maskChanName :: Channel.Name, injectMask :: Inject, invertMask :: Exp Bool, sourceImg :: MaskSource img ix a }
+
+data MaskSource img ix a = Image img (ChannelAcc ix a) => Local
+                         | External (img (ChannelAcc ix a))
+
 
 type Clamp a = (Range a, Maybe (Range a))
 
 invert :: (A.Elt a, A.IsNum a) => Exp Bool -> Exp a -> Exp a
 invert p x = p A.? (U.invert x, x)
 
-inject :: Inject -> ChannelAcc ix a -> ImageAcc ix a -> ImageAcc ix a
+inject :: Image img (ChannelAcc ix a)
+    => Inject -> ChannelAcc ix a -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 inject injection chan img = case injection of
     Nothing   -> img
     Just name -> Image.insert name chan img
 
-premultiply :: (A.Elt a, A.IsFloating a, A.Shape ix) => ImageAcc ix a -> Maybe Premultiply -> Image.Result (ImageAcc ix a)
+premultiply :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Maybe Premultiply -> Image.Result (img (ChannelAcc ix a))
 premultiply img Nothing = Right img
 premultiply img (Just (Premultiply name invertFlag)) = do
     alphaChan <- Image.get name img
     return $ Image.map (Channel.zipWith (\a x -> x * (invert invertFlag a)) alphaChan) img
 
-unpremultiply :: (A.Elt a, A.IsFloating a, A.Shape ix) => ImageAcc ix a -> Maybe Premultiply -> Image.Result (ImageAcc ix a)
+unpremultiply :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> Maybe Premultiply -> Image.Result (img (ChannelAcc ix a))
 unpremultiply img Nothing = Right img
 unpremultiply img (Just (Premultiply name invertFlag)) = do
     alphaChan <- Image.get name img
