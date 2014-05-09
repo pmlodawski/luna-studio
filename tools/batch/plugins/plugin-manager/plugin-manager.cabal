@@ -1,0 +1,47 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+Name:               flowbox-plugin-manager
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Executable plugin-manager
+    Hs-Source-Dirs: dist/gen
+                    src
+    Other-Modules:  Paths_flowbox_plugin_manager
+    Main-Is:        Main.hs
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  base,
+                    bytestring,
+                    configurator,
+                    containers,
+                    either,
+                    errors,
+                    flowbox-bus,
+                    flowbox-config,
+                    flowbox-utils,
+                    MissingH,
+                    mtl,
+                    optparse-applicative,
+                    protocol-buffers,
+                    process >= 1.2,
+                    text,
+                    transformers,
+                    unordered-containers,
+                    zeromq4-haskell
