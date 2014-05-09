@@ -45,6 +45,7 @@ assert condition msg = if condition
     else fail msg
 
 
+-- FIXME [PM] : find better name
 safeLiftIO :: IO b -> EitherT String IO b
 safeLiftIO operation = do
     result <- liftIO $ (Exc.try :: IO a -> IO (Either Exc.SomeException a)) operation
