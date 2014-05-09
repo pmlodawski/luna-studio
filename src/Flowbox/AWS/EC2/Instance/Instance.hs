@@ -25,6 +25,7 @@ import qualified System.IO                    as IO
 import           Flowbox.AWS.EC2.Instance.WaitTime (WaitTimes)
 import qualified Flowbox.AWS.EC2.Instance.WaitTime as WaitTime
 import qualified Flowbox.AWS.User.User             as User
+import           Flowbox.Control.Error             (assert)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -58,7 +59,7 @@ startNew userName instanceRequest = do
     logger info "Starting new instance..."
     reservation <- EC2.runInstances instanceRequest
     let instanceIDs = map Types.instanceId $ Types.reservationInstanceSet reservation
-    True <- EC2.createTags instanceIDs [(userTagKey, Text.pack userName)]
+    EC2.createTags instanceIDs [(userTagKey, Text.pack userName)] >>= (`assert` "Failed to create tag")
     logger info "Starting new instance succeeded."
     [userInstance] <- waitForStart instanceIDs def
     return userInstance
@@ -70,12 +71,14 @@ startExisting instanceID = do
     logger info "Starting existing instance..."
     _ <- EC2.startInstances [instanceID]
     logger info "Starting existing succeeded."
-    [userInstance] <- waitForStart [instanceID] def
-    return userInstance
+    userInstances <- waitForStart [instanceID] def
+    case userInstances of
+        [userInstance] -> return userInstance
+        _              -> fail "Something wrong happened : multiple instances started"
 
 
 ready :: Types.Instance -> Bool
-ready inst = Types.instanceState inst == Types.InstanceStateRunning 
+ready inst = Types.instanceState inst == Types.InstanceStateRunning
 
 
 resumable :: Types.Instance -> Bool
@@ -91,9 +94,9 @@ waitForStart instanceIDs waitTimes = do
     liftIO $ Concurrent.threadDelay $ WaitTime.initial waitTimes
     userInstances <- Loops.iterateUntil (all ready) $ do
         userInstances <- concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances instanceIDs [])
-        liftIO $ putStr "."
-        liftIO $ IO.hFlush IO.stdout
-        liftIO $ Concurrent.threadDelay $ WaitTime.next waitTimes
+        liftIO $ do putStr "."
+                    IO.hFlush IO.stdout
+                    Concurrent.threadDelay $ WaitTime.next waitTimes
         return userInstances
     liftIO $ putStrLn ""
     logger info "Instance is ready!"

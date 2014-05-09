@@ -26,6 +26,7 @@ import qualified Flowbox.AWS.Region                  as Region
 import qualified Flowbox.AWS.S3.Directory            as Directory
 import qualified Flowbox.AWS.S3.File                 as File
 import qualified Flowbox.AWS.User.Database           as Database
+import qualified Flowbox.AWS.User.Password           as Password
 import           Flowbox.AWS.User.User               (User (User))
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -39,7 +40,7 @@ type InstanceID = Text
 
 
 region :: Region
-region = Region.mk "eu-west-1"
+region = Region.fromText "eu-west-1"
 
 
 getInstance :: IO ()
@@ -61,8 +62,8 @@ queryDB = runEitherT $ do
                                "kozatest123"
                                "flowbox"
     --Database.create db
-    Database.addUser db $ User "stefan" "ala123"
-    Database.addUser db $ User "zenon"  "ala123"
+    Database.addUser db $ User "stefan" $ Password.mk "ala123"
+    Database.addUser db $ User "zenon"  $ Password.mk "ala123"
     u1 <- liftIO $ Database.getUser db "stefan"
     u2 <- liftIO $ Database.getUser db "zenon"
     print u1
