@@ -10,18 +10,17 @@
 
 module Flowbox.AWS.EC2.Instance.Instance where
 
-import           AWS.EC2                      (EC2)
-import qualified AWS.EC2                      as EC2
-import qualified AWS.EC2.Types                as Types
-import qualified AWS.EC2.Util                 as Util
-import qualified Control.Concurrent           as Concurrent
-import           Control.Monad.IO.Class       (MonadIO, liftIO)
-import qualified Control.Monad.Loops          as Loops
-import qualified Control.Monad.Trans.Resource as Resource
-import           Data.Text                    (Text)
-import qualified Data.Text                    as Text
-import qualified System.IO                    as IO
+import qualified AWS.EC2.Types          as Types
+import qualified AWS.EC2.Util           as Util
+import qualified Control.Concurrent     as Concurrent
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import qualified Control.Monad.Loops    as Loops
+import           Data.Text              (Text)
+import qualified Data.Text              as Text
+import qualified System.IO              as IO
 
+import           Flowbox.AWS.EC2.EC2               (EC2, EC2Resource)
+import qualified Flowbox.AWS.EC2.EC2               as EC2
 import           Flowbox.AWS.EC2.Instance.WaitTime (WaitTimes)
 import qualified Flowbox.AWS.EC2.Instance.WaitTime as WaitTime
 import qualified Flowbox.AWS.User.User             as User
@@ -32,13 +31,10 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.Instance"
+logger = getLoggerIO "Flowbox.AWS.Instance.Instance"
 
 
-type InstanceID = Text
-
-
-type EC2Resource m = (MonadIO m, Resource.MonadResource m, Resource.MonadBaseControl IO m)
+type ID = Text
 
 
 userTagKey :: Text
@@ -66,7 +62,7 @@ startNew userName instanceRequest = do
 
 
 startExisting :: EC2Resource m
-              => InstanceID -> EC2 m Types.Instance
+              => ID -> EC2 m Types.Instance
 startExisting instanceID = do
     logger info "Starting existing instance..."
     _ <- EC2.startInstances [instanceID]
@@ -88,7 +84,7 @@ resumable inst = Types.instanceState inst == Types.InstanceStateRunning
 
 
 waitForStart :: EC2Resource m
-             => [InstanceID] -> WaitTimes -> EC2 m [Types.Instance]
+             => [ID] -> WaitTimes -> EC2 m [Types.Instance]
 waitForStart instanceIDs waitTimes = do
     logger info "Waiting for instance start. Please wait."
     liftIO $ Concurrent.threadDelay $ WaitTime.initial waitTimes

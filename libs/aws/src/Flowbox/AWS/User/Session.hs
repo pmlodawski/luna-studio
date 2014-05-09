@@ -16,6 +16,7 @@ import qualified AWS.EC2.Types          as Types
 import           Control.Monad.IO.Class
 import           Data.IP                (IPv4)
 
+import           Flowbox.AWS.EC2.EC2               (EC2Resource)
 import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
 import qualified Flowbox.AWS.EC2.Instance.Request  as Request
 import           Flowbox.AWS.User.Database         (Database)
@@ -50,7 +51,7 @@ authenticate userName password database = do
                             else left "Authentication failed"
         _             -> left "Authentication failed"
 
-login :: Instance.EC2Resource m
+login :: EC2Resource m
       => User.Name -> Password.Plain -> Database -> EC2 m (Either Error IPv4)
 login userName password database = do
     auth <- liftIO $ runEitherT $ authenticate userName password database
@@ -59,7 +60,7 @@ login userName password database = do
         Left msg -> return $ Left msg
 
 
-logout :: Instance.EC2Resource m => User.Name -> Password.Plain -> Database -> EC2 m (Either Error ())
+logout :: EC2Resource m => User.Name -> Password.Plain -> Database -> EC2 m (Either Error ())
 logout userName password database = do
     auth <- liftIO $ runEitherT $ authenticate userName password database
     case auth of
@@ -67,14 +68,14 @@ logout userName password database = do
         Left msg -> return $ Left msg
 
 
-start :: Instance.EC2Resource m => User.Name -> EC2 m IPv4
+start :: EC2Resource m => User.Name -> EC2 m IPv4
 start userName = do
     logger info $ "Starting session for, username=" ++ (show userName)
     inst <- Instance.getOrStart userName Request.mk
     fromJust $ Types.instanceIpAddress inst
 
 
-end :: Instance.EC2Resource m => User.Name -> EC2 m ()
+end :: EC2Resource m => User.Name -> EC2 m ()
 end userName = do
     logger info $ "Ending session for, username=" ++ (show userName)
     userInstances <- Instance.find userName
