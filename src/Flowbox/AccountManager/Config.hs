@@ -11,8 +11,9 @@ module Flowbox.AccountManager.Config (
     Config(..),
 ) where
 
-import Flowbox.Prelude
-import Paths_flowbox_account_manager (version)
+import qualified Flowbox.AWS.Region            as Region
+import           Flowbox.Prelude
+import           Paths_flowbox_account_manager (version)
 
 
 
@@ -23,5 +24,5 @@ data Config = Config { address :: String
 
 instance Default Config where
     def = Config { address = "tcp://*:30530"
-                 , region  = "eu-west-1"
+                 , region  = Region.toString $ Region.EU_Ireland
                  }
