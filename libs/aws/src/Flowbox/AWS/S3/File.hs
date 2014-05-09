@@ -29,57 +29,49 @@ fetch basePath filePath = S3.withBucket $ \bucket -> do
     rsp <- S3.query $ S3.getObject bucket $ Text.pack filePath
     liftIO $ Directory.createDirectoryIfMissing True $ FilePath.takeDirectory (basePath </> filePath)
     lift $ HTTP.responseBody (S3.gorResponse rsp) $$+- Binary.sinkFile (basePath </> filePath)
-    return ()
 
 
 upload :: FilePath -> FilePath -> S3 ()
 upload basePath filePath = S3.withBucket $ \bucket -> do
     let normFilePath = FilePath.normalise' filePath
     file <- liftIO $ HTTP.RequestBodyBS <$> (ByteString.readFile $ basePath </> normFilePath)
-    _ <- S3.query $ S3.putObject bucket (Text.pack normFilePath) file
-    return ()
+    void $ S3.query $ S3.putObject bucket (Text.pack normFilePath) file
 
 
 exists :: FilePath -> S3 Bool
 exists filePath = S3.withBucket $ \bucket -> do
     rsp <- S3.query $ (S3.getBucket bucket) { S3.gbPrefix = Just $ Text.pack filePath }
     let contents = S3.gbrContents rsp
-        matching = filter ((==) (Text.pack filePath)) $ map S3.objectKey contents
-    return $ length matching == 1
+    return $ Text.pack filePath `elem` map S3.objectKey contents
 
 
 remove :: FilePath -> S3 ()
-remove filePath = S3.withBucket $ \bucket -> do
-    _ <- S3.query $ S3.DeleteObject (Text.pack filePath) bucket
-    return ()
+remove filePath = S3.withBucket $ \bucket ->
+    void $ S3.query $ S3.DeleteObject (Text.pack filePath) bucket
 
 
 removeMany :: [FilePath] -> S3 ()
 removeMany filePaths = case filePaths of
     [] -> return ()
-    _  -> S3.withBucket $ \bucket -> do
-            _ <- S3.query $ S3.deleteObjects bucket (map Text.pack filePaths)
-            return ()
+    _  -> S3.withBucket $ \bucket -> void $ S3.query $ S3.deleteObjects bucket (map Text.pack filePaths)
 
 
 rename :: FilePath -> FilePath -> S3 ()
 rename srcFilePath dstFilePath = do
     let normDstFilePath = FilePath.normalise' dstFilePath
-    copy srcFilePath normDstFilePath
+    copy   srcFilePath normDstFilePath
     remove srcFilePath
 
 
 copy :: FilePath -> FilePath -> S3 ()
 copy srcFilePath dstFilePath = S3.withBucket $ \bucket -> do
     let normDstFilePath = FilePath.normalise' dstFilePath
-        src = S3.ObjectId bucket (Text.pack srcFilePath) Nothing
-    _ <- S3.query $ S3.copyObject bucket (Text.pack normDstFilePath) src S3.CopyMetadata
-    return ()
+        src             = S3.ObjectId bucket (Text.pack srcFilePath) Nothing
+    void $ S3.query $ S3.copyObject bucket (Text.pack normDstFilePath) src S3.CopyMetadata
 
 
 create :: FilePath -> S3 ()
 create filePath = S3.withBucket $ \bucket -> do
     let normFilePath = FilePath.normalise' filePath
         file         = HTTP.RequestBodyBS $ ByteString.empty
-    _ <- S3.query $ S3.putObject bucket (Text.pack normFilePath) file
-    return ()
+    void $ S3.query $ S3.putObject bucket (Text.pack normFilePath) file

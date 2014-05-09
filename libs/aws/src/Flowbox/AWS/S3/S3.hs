@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 
 module Flowbox.AWS.S3.S3 (
@@ -35,6 +36,8 @@ data S3Env = S3Env { config   :: Aws.Configuration
                    , bucket   :: S3.Bucket
                    }
 
+makeLenses (''S3Env)
+
 
 type S3 a = ReaderT S3Env (Resource.ResourceT IO) a
 
@@ -56,5 +59,5 @@ query request = do
 
 
 withBucket :: (S3.Bucket -> S3 a) -> S3 a
-withBucket = (>>=) (bucket <$> ask)
+withBucket = ((bucket <$> ask) >>=)
 

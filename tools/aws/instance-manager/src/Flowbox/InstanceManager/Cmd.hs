@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Nimbus.Cmd where
+module Flowbox.InstanceManager.Cmd where
 
 import Flowbox.Prelude
 

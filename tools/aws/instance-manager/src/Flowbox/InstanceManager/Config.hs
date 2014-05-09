@@ -5,13 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Nimbus.Config (
-    module Paths_flowbox_nimbus,
+module Flowbox.InstanceManager.Config (
+    module Paths_flowbox_instance_manager,
     Config(..),
 ) where
 
 import Flowbox.Prelude
-import Paths_flowbox_nimbus (version)
+import Paths_flowbox_instance_manager (version)
 
 
 

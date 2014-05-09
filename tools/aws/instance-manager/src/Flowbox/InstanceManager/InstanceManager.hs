@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Nimbus.Nimbus where
+module Flowbox.InstanceManager.InstanceManager where
 
 import qualified AWS           as AWS
 import qualified AWS.EC2.Types as Types
@@ -15,14 +15,14 @@ import qualified Flowbox.AWS.EC2.EC2               as EC2
 import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
 import qualified Flowbox.AWS.EC2.Instance.Request  as Request
 import           Flowbox.AWS.Region                (Region)
-import qualified Flowbox.Nimbus.Cmd                as Cmd
+import qualified Flowbox.InstanceManager.Cmd       as Cmd
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Nimbus.Nimbus"
+logger = getLoggerIO "Flowbox.InstanceManager.InstanceManager"
 
 
 getCredential :: Cmd.Options -> IO AWS.Credential

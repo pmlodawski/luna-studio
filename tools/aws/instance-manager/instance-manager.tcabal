@@ -1,4 +1,4 @@
-Name:               flowbox-parser
+Name:               flowbox-instance-manager
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -11,29 +11,29 @@ Flag Debug
     Default:        False
 
 
-Executable parser
-    Hs-Source-Dirs: dist/gen
-                    src
-    Other-Modules:  Paths_flowbox_text2ast
+Executable instance-manager
+    Hs-Source-Dirs: src
+    Other-Modules:  Paths_flowbox_instance_manager
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
 
     Extensions:     NoImplicitPrelude
 
-    Build-Depends:  base,
+    Build-Depends:  aws,
+                    aws-sdk >= 0.12.4,
+                    base,
                     bytestring,
                     containers,
+                    conduit >= 1.1.0,
                     either,
                     errors,
-                    flowbox-batch,
-                    flowbox-bus,
-                    flowbox-config,
-                    flowbox-luna,
+                    exceptions,
+                    flowbox-aws,
+                    flowbox-rpc,
                     flowbox-utils,
-                    MissingH,
-                    mtl,
+                    network,
                     optparse-applicative,
                     protocol-buffers,
-                    transformers,
-                    zeromq4-haskell >= 0.4
+                    text,
+                    transformers

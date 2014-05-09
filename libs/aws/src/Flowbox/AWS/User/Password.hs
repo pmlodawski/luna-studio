@@ -13,14 +13,19 @@ import Flowbox.Prelude
 
 
 
-type Password = String
+newtype Password = Password {fromPassword :: String}
+                   deriving (Eq)
+
+
+instance Show Password where
+    show = show . fromPassword
 
 
 type Plain = String
 
 
 mk :: Plain -> Password
-mk = SHA.showDigest . SHA.sha256 . pack
+mk = Password . SHA.showDigest . SHA.sha256 . pack
 
 
 verify :: Password -> Plain -> Bool

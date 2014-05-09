@@ -42,6 +42,7 @@ info ph = PluginInfo (plugin ph) <$> case handle ph of
 
 start :: Plugin -> IO PluginHandle
 start p = do logger L.info $ "Starting plugin " ++ (show $ Plugin.name p) ++ " (" ++ Plugin.command p ++ ")"
+             -- FIXME [PM] : handle fail to start
              h <- Process.spawnCommand $ Plugin.command p
              return $ PluginHandle p $ Just h
 
