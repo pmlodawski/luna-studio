@@ -19,7 +19,7 @@ Library
 
     Extensions:     NoImplicitPrelude
 
-    Exposed-modules: `findmodules('src', '.*\.hs')`
+    Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*hs-boot.*')`
                      
     Build-Depends:  aws,
                     aws-sdk >= 0.12.4,
@@ -47,6 +47,7 @@ Library
                     resourcet >= 1.1.0,
                     SHA,
                     text,
+                    time,
                     transformers
 
 Executable aws-test
