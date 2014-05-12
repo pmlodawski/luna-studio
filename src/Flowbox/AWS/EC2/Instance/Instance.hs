@@ -41,6 +41,19 @@ userTagKey :: Text
 userTagKey = Text.pack "user"
 
 
+tagWithUser :: EC2Resource m => Maybe User.Name -> [ID] -> EC2 m ()
+tagWithUser userName instanceIDs = do
+    let userTagValue = Text.pack $ case userName of
+                                     Just name -> name
+                                     Nothing   -> "_"
+    EC2.createTags instanceIDs [(userTagKey, userTagValue)] >>= (`assert` "Failed to create tag")
+
+
+prepareForNewUser :: EC2Resource m => User.Name -> ID -> EC2 m ()
+prepareForNewUser userName instanceID =
+    logger warning "Prepare instance - not implemented"
+
+
 find :: EC2Resource m
      => User.Name -> EC2 m [Types.Instance]
 find userName = do
@@ -55,7 +68,7 @@ startNew userName instanceRequest = do
     logger info "Starting new instance..."
     reservation <- EC2.runInstances instanceRequest
     let instanceIDs = map Types.instanceId $ Types.reservationInstanceSet reservation
-    EC2.createTags instanceIDs [(userTagKey, Text.pack userName)] >>= (`assert` "Failed to create tag")
+    tagWithUser (Just userName) instanceIDs
     logger info "Starting new instance succeeded."
     [userInstance] <- waitForStart instanceIDs def
     return userInstance
