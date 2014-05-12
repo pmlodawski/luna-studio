@@ -52,14 +52,18 @@ tagWithUser userName instanceIDs = do
     let userTagValue = Text.pack $ case userName of
                                      Just name -> name
                                      Nothing   -> "_"
-    EC2.createTags instanceIDs [(userTagKey, userTagValue)] >>= (`assert` "Failed to create tag")
+    tag userTagKey userTagValue instanceIDs
 
 
 tagWithCurrentTime :: EC2Resource m => [Instance.ID] -> EC2 m ()
 tagWithCurrentTime instanceIDs = do
     currentTime <- liftIO $ Time.getCurrentTime
-    EC2.createTags instanceIDs [(startTimeTagKey, Text.pack $ show currentTime)] >>= (`assert` "Failed to create tag")
+    tag startTimeTagKey (Text.pack $ show currentTime) instanceIDs
 
+
+tag :: EC2Resource m => Text -> Text -> [Instance.ID] -> EC2 m ()
+tag key value instanceIDs = do
+    EC2.createTags instanceIDs [(key, value)] >>= (`assert` "Failed to create tag")
 
 userFilter :: User.Name -> [(Text, [Text])]
 userFilter userName = [(Text.append (Text.pack "tag:") userTagKey, [Text.pack userName])]
