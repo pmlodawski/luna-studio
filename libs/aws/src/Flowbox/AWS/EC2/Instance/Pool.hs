@@ -6,23 +6,27 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.AWS.EC2.Instance.Pool where
 
+import qualified AWS.EC2.Types           as Types
 import           Control.Concurrent.MVar (MVar)
 import qualified Control.Concurrent.MVar as MVar
 import           Control.Monad.IO.Class  (liftIO)
 import           Data.Map                (Map)
 import qualified Data.Map                as Map
-import           Data.Set                (Set)
-import qualified Data.Set                as Set
-import qualified Data.Tuple as Tuple
+import qualified Control.Concurrent as Concurrent
 
 import           Flowbox.AWS.EC2.EC2               (EC2, EC2Resource)
+import qualified Flowbox.AWS.EC2.EC2               as EC2
+import qualified Flowbox.AWS.EC2.Instance.ID       as Instance
 import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
+import qualified Flowbox.AWS.EC2.Instance.Tag      as Tag
 import qualified Flowbox.AWS.User.User             as User
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
+import qualified Flowbox.Data.Time                 as Time
+import           Flowbox.Prelude                   hiding (use)
+import           Flowbox.System.Log.Logger         hiding (info)
 
 
 
@@ -30,42 +34,55 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.AWS.Instance.Pool"
 
 
+data InstanceState = Free
+                   | Used User.Name
+                   deriving (Eq, Ord, Show, Read)
 
-data Pool = Pool { used :: Map Instance.ID User.Name
-                 , free :: Set Instance.ID
-                 } deriving (Show, Read)
+
+data InstanceInfo = InstanceInfo { _started :: Time.UTCTime
+                                 , _state   :: InstanceState
+                                 } deriving (Eq, Ord, Show, Read)
+
+
+makeLenses(''InstanceInfo)
+
+
+type Pool = Map Instance.ID InstanceInfo
+
+
+type PoolEntry = (Instance.ID, InstanceInfo)
 
 
 type MPool = MVar Pool
 
+----------------------------------------------------------
+
+getUsed :: User.Name -> Pool -> [PoolEntry]
+getUsed userName = Map.toList . Map.filter (\info -> info ^. state == Used userName)
 
 
-getUsed :: User.Name -> Pool -> Maybe Instance.ID
-getUsed userName pool = Map.lookup userName $ Map.fromList $ map Tuple.swap $ Map.toList $ used pool
+free :: Instance.ID -> Pool -> Pool
+free = Map.adjust (set state Free)
 
 
-takeFree :: Pool -> (Pool, Maybe Instance.ID)
-takeFree pool = let
-    f = free pool
-    in if Set.null f
-            then (pool, Nothing)
-            else -- FIXME [PM] : ugly method, because of dependency containers==0.5.0.0
-                 --let newpool = pool { free = Set.deleteAt 0 f}
-                 --in (newpool, Just $ Set.elemAt 0 f)
-                 let freeElem = head $ Set.toList f
-                     newpool = pool { free = Set.delete freeElem f}
-                 in (newpool, Just freeElem)
+getFree :: Pool -> [PoolEntry]
+getFree = Map.toList . Map.filter (\info -> info ^. state == Free)
 
 
-makeFree :: Instance.ID -> Pool -> Pool
-makeFree instanceID pool =
-    pool { used = Map.delete instanceID $ used pool
-         , free = Set.insert instanceID $ free pool
-         }
+use :: User.Name -> Instance.ID -> Pool -> Pool
+use userName = Map.adjust (set state $ Used userName)
 
 
+shutDownDiff :: Int
+shutDownDiff = 55*60 -- 55 min
 
 
+getCandidatesToShutdown :: Time.UTCTime -> Pool -> [PoolEntry]
+getCandidatesToShutdown currentTime = Map.toList . Map.filter isCandidateToShutdown where
+    isCandidateToShutdown info =
+        (Time.toSeconds $ Time.diffUTCTime currentTime $ info ^. started) `mod` 3600 > shutDownDiff
+
+----------------------------------------------------------
 
 initialize :: EC2Resource m => EC2 m ()
 initialize = undefined
@@ -73,26 +90,46 @@ initialize = undefined
 
 release :: EC2Resource m => Instance.ID -> MPool -> EC2 m ()
 release instanceID mpool = do
-    liftIO $ MVar.modifyMVar_ mpool (return . makeFree instanceID)
-    Instance.tagWithUser Nothing [instanceID]
+    liftIO $ MVar.modifyMVar_ mpool (return . free instanceID)
+    Tag.tagWithUser Nothing [instanceID]
     freeUnused mpool
 
 
---data Status = Used Instance.ID
---            | Free Instance.ID
---            | 
+retrieve :: EC2Resource m => User.Name -> Types.RunInstancesRequest -> MPool -> EC2 m Instance.ID
+retrieve userName instanceRequest mpool = do
+    poolEntry <- liftIO $ MVar.modifyMVar mpool (\pool ->
+        case getUsed userName pool of
+            used:_ -> return (pool, Just used)
+            []     -> case getFree pool of
+                           f:_ -> return (use userName (fst f) pool, Just f)
+                           []  -> return (pool, Nothing))
+    case poolEntry of
+        Just (instanceID, InstanceInfo _ Free) -> do
+            Tag.tagWithUser (Just userName) [instanceID]
+            Instance.prepareForNewUser userName instanceID
+            return instanceID
+        Just (instanceID, InstanceInfo _ (Used _)) -> do
+            return instanceID
+        Nothing -> do
+            inst <- Instance.startNew userName instanceRequest
+            time <- fromJust $ Tag.getStartTime inst
+            let instanceID = Types.instanceId inst
+            liftIO $ MVar.modifyMVar_ mpool (return . Map.insert instanceID (InstanceInfo time $ Used userName))
+            return instanceID
 
-retrieve :: EC2Resource m => User.Name -> MPool -> EC2 m Instance.ID
-retrieve userName mpool = do
-    minstanceID <- liftIO $ MVar.modifyMVar mpool (return . takeFree)
-    case minstanceID of
-        Just instanceID -> do Instance.tagWithUser (Just userName) [instanceID]
-                              Instance.prepareForNewUser userName instanceID
-                              return instanceID
 
 freeUnused :: EC2Resource m => MPool -> EC2 m ()
-freeUnused = undefined
+freeUnused mpool = do
+    candidates <- liftIO $ MVar.modifyMVar mpool (\pool -> do
+        currentTime <- Time.getCurrentTime
+        let candidates = map fst $ getCandidatesToShutdown currentTime pool
+            newPool    = foldr Map.delete pool candidates
+        return (newPool, candidates))
+    void $ EC2.terminateInstances candidates
+
 
 
 monitor :: EC2Resource m => MPool -> EC2 m ()
-monitor = undefined
+monitor mpool = do 
+    liftIO $ Concurrent.threadDelay (60*1000*1000) -- 1min
+    freeUnused mpool

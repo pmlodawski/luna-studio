@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds       #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Flowbox.AWS.EC2.Instance.Instance where
 
@@ -15,16 +16,15 @@ import qualified AWS.EC2.Util           as Util
 import qualified Control.Concurrent     as Concurrent
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Control.Monad.Loops    as Loops
-import           Data.Text              (Text)
-import qualified Data.Text              as Text
 import qualified System.IO              as IO
 
 import           Flowbox.AWS.EC2.EC2               (EC2, EC2Resource)
 import qualified Flowbox.AWS.EC2.EC2               as EC2
+import qualified Flowbox.AWS.EC2.Instance.ID       as Instance
+import qualified Flowbox.AWS.EC2.Instance.Tag      as Tag
 import           Flowbox.AWS.EC2.Instance.WaitTime (WaitTimes)
 import qualified Flowbox.AWS.EC2.Instance.WaitTime as WaitTime
 import qualified Flowbox.AWS.User.User             as User
-import           Flowbox.Control.Error             (assert)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -34,22 +34,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.AWS.Instance.Instance"
 
 
-type ID = Text
-
-
-userTagKey :: Text
-userTagKey = Text.pack "user"
-
-
-tagWithUser :: EC2Resource m => Maybe User.Name -> [ID] -> EC2 m ()
-tagWithUser userName instanceIDs = do
-    let userTagValue = Text.pack $ case userName of
-                                     Just name -> name
-                                     Nothing   -> "_"
-    EC2.createTags instanceIDs [(userTagKey, userTagValue)] >>= (`assert` "Failed to create tag")
-
-
-prepareForNewUser :: EC2Resource m => User.Name -> ID -> EC2 m ()
+prepareForNewUser :: EC2Resource m => User.Name -> Instance.ID -> EC2 m ()
 prepareForNewUser userName instanceID =
     logger warning "Prepare instance - not implemented"
 
@@ -58,8 +43,7 @@ find :: EC2Resource m
      => User.Name -> EC2 m [Types.Instance]
 find userName = do
     logger debug "Looking for instances..."
-    let userFilter = [(Text.append (Text.pack "tag:") userTagKey, [Text.pack userName])]
-    concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [] userFilter)
+    concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [] $ Tag.userFilter userName)
 
 
 startNew :: EC2Resource m
@@ -68,14 +52,15 @@ startNew userName instanceRequest = do
     logger info "Starting new instance..."
     reservation <- EC2.runInstances instanceRequest
     let instanceIDs = map Types.instanceId $ Types.reservationInstanceSet reservation
-    tagWithUser (Just userName) instanceIDs
+    Tag.tagWithCurrentTime instanceIDs
+    Tag.tagWithUser (Just userName) instanceIDs
     logger info "Starting new instance succeeded."
     [userInstance] <- waitForStart instanceIDs def
     return userInstance
 
 
 startExisting :: EC2Resource m
-              => ID -> EC2 m Types.Instance
+              => Instance.ID -> EC2 m Types.Instance
 startExisting instanceID = do
     logger info "Starting existing instance..."
     _ <- EC2.startInstances [instanceID]
@@ -97,7 +82,7 @@ resumable inst = Types.instanceState inst == Types.InstanceStateRunning
 
 
 waitForStart :: EC2Resource m
-             => [ID] -> WaitTimes -> EC2 m [Types.Instance]
+             => [Instance.ID] -> WaitTimes -> EC2 m [Types.Instance]
 waitForStart instanceIDs waitTimes = do
     logger info "Waiting for instance start. Please wait."
     liftIO $ Concurrent.threadDelay $ WaitTime.initial waitTimes
