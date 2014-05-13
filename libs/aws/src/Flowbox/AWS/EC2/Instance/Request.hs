@@ -17,8 +17,10 @@ import Flowbox.Prelude
 imageID :: Text
 imageID = Text.pack "ami-a921dfde"
 
+
 instanceType :: Text
 instanceType = Text.pack "t1.micro"
+
 
 requestSecurityGroups :: [Text]
 requestSecurityGroups = [Text.pack "launch-wizard-1"]

@@ -11,7 +11,6 @@ module Flowbox.AWS.EC2.Pool.Instance.Info where
 import           Flowbox.AWS.EC2.Pool.Instance.State (InstanceState)
 import qualified Flowbox.Data.Time                   as Time
 import           Flowbox.Prelude                     hiding (error, use)
-import           Flowbox.System.Log.Logger
 
 
 
@@ -21,7 +20,3 @@ data InstanceInfo = InstanceInfo { _started :: Time.UTCTime
 
 
 makeLenses(''InstanceInfo)
-
-
-logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.Pool.Instance.Instance"

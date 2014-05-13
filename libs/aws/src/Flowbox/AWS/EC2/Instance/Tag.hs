@@ -25,6 +25,7 @@ import           Flowbox.Prelude             hiding (filter)
 
 
 
+
 userTagKey :: Tag.Key
 userTagKey = "user"
 
@@ -56,18 +57,18 @@ tagWithUser userName instanceIDs = do
 
 
 tagWithStartTime :: EC2Resource m => Time.UTCTime -> [Instance.ID] -> EC2 m ()
-tagWithStartTime startTime instanceIDs = do
+tagWithStartTime startTime instanceIDs =
     tag startTimeTagKey (Tag.pack $ show startTime) instanceIDs
 
 
 tag :: EC2Resource m => Tag.Key -> Tag.Value -> [Instance.ID] -> EC2 m ()
-tag key value instanceIDs = do
+tag key value instanceIDs =
     EC2.createTags instanceIDs [(key, value)] >>= (`assert` "Failed to create tag")
 
 
-userFilter :: User.Name -> [(Tag.Key, [Tag.Value])]
+userFilter :: User.Name -> [Types.Filter]
 userFilter userName = filter userTagKey [Tag.pack userName]
 
 
-filter :: Tag.Key -> [Tag.Value] -> [(Tag.Key, [Tag.Value])]
+filter :: Tag.Key -> [Tag.Value] -> [Types.Filter]
 filter tagKey tagValues = [(Tag.append (Tag.pack "tag:") tagKey, tagValues)]
