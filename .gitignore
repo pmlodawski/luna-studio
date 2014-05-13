@@ -46,6 +46,8 @@ tools/batch/batch-clients/dumper/generated
 # cabal configs - they should be generated from tcabal files
 libs/*/*.cabal
 tools/*/*.cabal
+tools/*/*/*.cabal
+tools/*/*/*/*.cabal
 
 #general builds
 dist
