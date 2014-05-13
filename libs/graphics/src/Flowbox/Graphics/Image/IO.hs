@@ -16,11 +16,11 @@ import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as A
 
-import           Flowbox.Graphics.ImageRGBA     (ImageRGBA)
-import           Flowbox.Graphics.Image         (Image)
-import qualified Flowbox.Graphics.Image         as Image
-import           Flowbox.Graphics.Image.Channel (Channel2, Channel3)
-import qualified Flowbox.Graphics.Image.Channel as Channel
+import           Flowbox.Graphics.Image.ImageRGBA (ImageRGBA)
+import           Flowbox.Graphics.Image           (Image)
+import qualified Flowbox.Graphics.Image           as Image
+import           Flowbox.Graphics.Image.Channel   (Channel2, Channel3)
+import qualified Flowbox.Graphics.Image.Channel   as Channel
 
 import Control.Monad.Trans.Either
 

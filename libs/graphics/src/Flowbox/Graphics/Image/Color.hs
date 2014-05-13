@@ -20,7 +20,7 @@ import qualified Data.Map              as Map
 --import           Diagrams.Prelude                (R2, Diagram)
 --import           Diagrams.Backend.Cairo.Internal (Cairo)
 
-import qualified Flowbox.Graphics.Color             as Color
+--import qualified Flowbox.Graphics.Color             as Color
 import           Flowbox.Graphics.Image             (Image)
 import qualified Flowbox.Graphics.Image             as Image
 import           Flowbox.Graphics.Image.Channel     (ChannelAcc, Channel2)
@@ -33,54 +33,10 @@ import qualified Flowbox.Graphics.Utils             as U
 import           Flowbox.Prelude                    as P
 
 
--- TODO: discuss whether those functions should require rgb color space or should it look
--- for other color spaces too
-
 -- TODO: discuss:
 -- img = open "ala.png"
 -- img.rgb.r
 -- should those functions encapsulate the Image type in something holding the info about the color space, so u can use the line above?
-
-hsv :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
-    => img (ChannelAcc ix a) -> Image.Result (img (ChannelAcc ix a))
-hsv img = do
-    r <- Image.get "rgba.r" img
-    g <- Image.get "rgba.g" img
-    b <- Image.get "rgba.b" img
-    let outimg = Image.insert "hsv.h" hue
-               $ Image.insert "hsv.s" saturation
-               $ Image.insert "hsv.v" value
-               $ img
-        hue        = Channel.Acc $ A.map U.fstTrio hsv'
-        saturation = Channel.Acc $ A.map U.sndTrio hsv'
-        value      = Channel.Acc $ A.map U.trdTrio hsv'
-        rgb = A.zip3 (Channel.accMatrix r) (Channel.accMatrix g) (Channel.accMatrix b)
-        hsv' = A.map convertToHSV rgb
-        convertToHSV rgb' = A.lift (h, s, v)
-            where
-                (r',g',b') = A.unlift rgb'
-                Color.HSV h s v = Color.toHSV $ Color.RGB r' g' b'
-    return outimg
-
-hsl :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
-    => img (ChannelAcc ix a) -> Image.Result (img (ChannelAcc ix a))
-hsl img = do
-    r <- Image.get "rgba.r" img
-    g <- Image.get "rgba.g" img
-    b <- Image.get "rgba.b" img
-    let outimg = Image.insert "hsl.h" hue
-               $ Image.insert "hsl.s" saturation
-               $ Image.insert "hsl.l" value
-               $ img
-        hue        = Channel.Acc $ A.map U.fstTrio hsl'
-        saturation = Channel.Acc $ A.map U.sndTrio hsl'
-        value      = Channel.Acc $ A.map U.trdTrio hsl'
-        rgb = A.zip3 (Channel.accMatrix r) (Channel.accMatrix g) (Channel.accMatrix b)
-        hsl' = A.map convertToHSL rgb
-        convertToHSL rgb' = A.lift (h, s, l)
-            where (r',g',b')      = A.unlift rgb'
-                  Color.HSL h s l = Color.toHSL $ Color.RGB r' g' b'
-    return outimg
 
 
 math :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
@@ -139,7 +95,8 @@ clamp img ranges maskInfo premultInfo mixValue = do
                             in Channel.map (\x -> U.clamp thresholds clampTo x) chan
 
 -- INFO: in Nuke this does not have the OR relation between channels, it has something pretty weird
--- soooooo....... either fuck it and do it o//ur way or... focus on it later on
+-- soooooo....... either fuck it and do it our way or... focus on it later on
+-- TODO: this might have to be rewritten to avoid using filterByName
 clipTest :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
     => img (ChannelAcc ix a) -> Map Channel.Name (Range (Exp a))
     -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a

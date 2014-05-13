@@ -8,27 +8,21 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Flowbox.Graphics.ImageRGBA where
+module Flowbox.Graphics.Image.ImageRGB where
 
 import           Data.Map (Map)
---import qualified Data.Map as Map
 
 import           Flowbox.Graphics.Image
-import           Flowbox.Graphics.Image.Channel (Channel)
+import			 Flowbox.Graphics.Image.Channel (ChannelAcc)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Prelude                hiding (lookup, map)
 
 
 
-newtype ImageRGBA a = ImageRGBA { _channels' :: Map Channel.Name a } deriving (Monoid, Show)
-makeLenses ''ImageRGBA
+newtype ImageRGB a = ImageRGB { _channels' :: Map Channel.Name a } deriving (Monoid, Functor, Show)
+makeLenses ''ImageRGB
 
-instance Functor ImageRGBA where
-    fmap f (ImageRGBA channelMap) = ImageRGBA $ fmap f channelMap
-
-instance Image ImageRGBA a where
+instance Image ImageRGB a where
     channels = channels'
 
---instance Monoid (ImageRGBA a) where
---    mempty        = ImageRGBA mempty
---    a `mappend` b = ImageRGBA $ (view channels' a) `mappend` (view channels' b)
+type ImageAccRGB ix a = ImageRGB (ChannelAcc ix a)

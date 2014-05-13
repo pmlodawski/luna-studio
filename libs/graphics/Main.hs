@@ -74,7 +74,7 @@ imgtest img frames source target = do
         --black     = RGB (A.constant 0) (A.constant 0) (A.constant 0)
         --gray      = RGB (A.constant 0.5) (A.constant 0.5) (A.constant 0.5)
         --yellow    = RGB (A.constant 1) (A.constant 1) (A.constant 0)
-        --gammaMap  = Map.fromList [ ("rgba.r", 2.5), ("rgba.g", 2.5), ("rgba.b", 2.5) ]
+        gammaMap  = Map.fromList [ ("rgba.r", 2.5), ("rgba.g", 2.5), ("rgba.b", 2.5) ]
         --contrastMap = Map.fromList [ ("rgba.r", 2), ("rgba.g", 2), ("rgba.b", 2) ]
         --clampMap  = Map.fromList [ ("rgba.r", (Range 0.25 0.75, Just (Range 1 0)))
         --                         , ("rgba.g", (Range 0.25 0.75, Just (Range 0 1)))
@@ -106,7 +106,7 @@ imgtest img frames source target = do
     --let imageRGBAwithMask = Img.insert "mask.a" maskChannel imageRGBA
     --    premultiply = Premultiply "mask.a" (A.constant False)
 
-    --imageGamma       <- Img.gamma    imageRGBAwithMask gammaMap Nothing Nothing 1
+    imageGamma       <- Img.gamma    imageRGBA gammaMap Nothing Nothing 1
     --imageClamp       <- Img.clamp    imageRGBAwithMask clampMap Nothing Nothing 1
     --imageClipTest    <- Img.clipTest imageRGBAwithMask clipMap (Just imageMask) (Just premultiply) 1
     --imageInvert      <- Img.invert   imageRGBAwithMask selection Nothing (Just imageMask) Nothing 1
@@ -114,7 +114,7 @@ imgtest img frames source target = do
     --imageContrast    <- Img.contrast imageRGBA contrastMap Nothing Nothing 1
     --imageTransfered  <- Img.colorTransfer targetRGBA sourceRGBA Nothing Nothing 1
 
-    let imageOut = imageRGBA
+    let imageOut = imageGamma
 
     Repr.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
 

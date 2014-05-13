@@ -211,6 +211,9 @@ channelIntersectionWithKey f imgA imgB = imgA & channels .~ Map.intersectionWith
 -- TODO: filter, filterWithKey/filterWithName : naive implementation using Map.toAscList and Map.fromAscList
 -- and implement filterByName using filterWithName
 
+-- TODO: filterByName and filterByName' should most likely return an asoc list / a map of channels instead of an image
+--       in order to avoid problems with images of a specific color space not containing the channels native for them
+
 filterByName :: Image img (ChannelAcc ix a) => [Channel.Name] -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 filterByName names img = img & channels %~ (Map.filterWithKey nameMatches)
     where nameMatches cname _ = cname `elem` names
@@ -238,6 +241,7 @@ assocsByName' names img = do
               chan <- get name img
               return (name, chan)
 
+-- TODO: selectChannels should most likely return a list of channels instead of an image, see: filterByName explanation
 selectChannels :: Image img (ChannelAcc ix a) => Channel.Select -> img (ChannelAcc ix a) -> img (ChannelAcc ix a)
 selectChannels channelList img = case channelList of
     Channel.AllChannels      -> img

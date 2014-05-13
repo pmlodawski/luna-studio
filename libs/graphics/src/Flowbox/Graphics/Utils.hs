@@ -68,6 +68,7 @@ nonIntDiv :: (A.Elt e, A.IsFloating e) => Exp e -> Exp e -> Exp e
 nonIntDiv x y = A.fromIntegral (A.truncate (x / y) :: Exp Int)
 
 
+-- = TUPLES :D
 
 fstTrio :: forall f a b c. A.Unlift f (f a, f b, f c) => f (A.Plain (f a), A.Plain (f b), A.Plain (f c)) -> f a
 fstTrio e = let (x, _:: f b, _:: f c) = A.unlift e in x
@@ -77,3 +78,17 @@ sndTrio e = let (_:: f a, x, _:: f c) = A.unlift e in x
 
 trdTrio :: forall f a b c. A.Unlift f (f a, f b, f c) => f (A.Plain (f a), A.Plain (f b), A.Plain (f c)) -> f c
 trdTrio e = let (_:: f a, _:: f b, x) = A.unlift e in x
+
+-- = MORE TUPLES :D
+
+fstQuad :: forall f a b c d. A.Unlift f (f a, f b, f c, f d) => f (A.Plain (f a), A.Plain (f b), A.Plain (f c), A.Plain (f d)) -> f a
+fstQuad e = let (x, _:: f b, _:: f c, _:: f d) = A.unlift e in x
+
+sndQuad :: forall f a b c d. A.Unlift f (f a, f b, f c, f d) => f (A.Plain (f a), A.Plain (f b), A.Plain (f c), A.Plain (f d)) -> f b
+sndQuad e = let (_:: f a, x, _:: f c, _:: f d) = A.unlift e in x
+
+trdQuad :: forall f a b c d. A.Unlift f (f a, f b, f c, f d) => f (A.Plain (f a), A.Plain (f b), A.Plain (f c), A.Plain (f d)) -> f c
+trdQuad e = let (_:: f a, _:: f b, x, _:: f d) = A.unlift e in x
+
+frthQuad :: forall f a b c d. A.Unlift f (f a, f b, f c, f d) => f (A.Plain (f a), A.Plain (f b), A.Plain (f c), A.Plain (f d)) -> f d
+frthQuad e = let (_:: f a, _:: f b, _:: f c, x) = A.unlift e in x

@@ -15,8 +15,8 @@ import qualified Data.Array.Accelerate as A
 import Flowbox.Prelude hiding (use, zipWith)
 
 
-data Channel a = Raw (a)
-               | Acc (A.Acc (a))
+data Channel a = Raw a
+               | Acc (A.Acc a)
                deriving (Show)
 
 --instance Functor Channel where
