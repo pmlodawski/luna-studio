@@ -76,7 +76,7 @@ readInstanceInfo inst = do
         Just time -> return time
         Nothing   -> do logger error $ "Failed to read instance " ++ show instanceID ++ " start time"
                         currentTime <- liftIO $ Time.getCurrentTime
-                        Tag.tagWithStartTime currentTime [instanceID]
+                        Tag.tag [Tag.startTimeTag currentTime] [instanceID]
                         return currentTime
     let instanceState = case Tag.getUser inst of
             Just userName -> InstanceState.Used userName

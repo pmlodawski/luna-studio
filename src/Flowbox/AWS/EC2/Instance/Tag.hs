@@ -18,6 +18,7 @@ import qualified Data.Time     as Time
 import           Flowbox.AWS.EC2.EC2         (EC2, EC2Resource)
 import qualified Flowbox.AWS.EC2.EC2         as EC2
 import qualified Flowbox.AWS.EC2.Instance.ID as Instance
+import           Flowbox.AWS.Tag             (Tag)
 import qualified Flowbox.AWS.Tag             as Tag
 import qualified Flowbox.AWS.User.User       as User
 import           Flowbox.Control.Error       (assert)
@@ -34,6 +35,10 @@ startTimeTagKey :: Tag.Key
 startTimeTagKey = "start-time"
 
 
+noUser :: Tag.Value
+noUser = "_"
+
+
 getStartTime :: Types.Instance -> Maybe Time.UTCTime
 getStartTime inst = do
     let findStartTimeTag = List.find (\tag' -> Types.resourceTagKey tag' == startTimeTagKey)
@@ -45,25 +50,26 @@ getUser :: Types.Instance -> Maybe User.Name
 getUser inst = do
     let findUserTag = List.find (\tag' -> Types.resourceTagKey tag' == userTagKey)
     tagVal <- Types.resourceTagValue <$> (findUserTag $ Types.instanceTagSet inst)
-    Tag.unpack <$> tagVal
+    userName <- tagVal
+    if userName == noUser
+        then Nothing
+        else return $ Tag.unpack userName 
 
 
-tagWithUser :: EC2Resource m => Maybe User.Name -> [Instance.ID] -> EC2 m ()
-tagWithUser userName instanceIDs = do
-    let userTagValue = Tag.pack $ case userName of
-                                     Just name -> name
-                                     Nothing   -> "_"
-    tag userTagKey userTagValue instanceIDs
+userTag :: Maybe User.Name -> Tag
+userTag userName = (userTagKey, userTagValue) where
+    userTagValue = case userName of
+                     Just name -> Tag.pack $ name
+                     Nothing   -> noUser
 
 
-tagWithStartTime :: EC2Resource m => Time.UTCTime -> [Instance.ID] -> EC2 m ()
-tagWithStartTime startTime instanceIDs =
-    tag startTimeTagKey (Tag.pack $ show startTime) instanceIDs
+startTimeTag :: Time.UTCTime -> Tag
+startTimeTag startTime = (startTimeTagKey, Tag.pack $ show startTime)
 
 
-tag :: EC2Resource m => Tag.Key -> Tag.Value -> [Instance.ID] -> EC2 m ()
-tag key value instanceIDs =
-    EC2.createTags instanceIDs [(key, value)] >>= (`assert` "Failed to create tag")
+tag :: EC2Resource m => [Tag] -> [Instance.ID] -> EC2 m ()
+tag tags instanceIDs =
+    EC2.createTags instanceIDs tags >>= (`assert` "Failed to create tag")
 
 
 userFilter :: User.Name -> [Types.Filter]

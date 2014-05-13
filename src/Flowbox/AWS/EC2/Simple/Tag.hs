@@ -13,9 +13,9 @@ import qualified Flowbox.AWS.Tag as Tag
 
 
 simpleKey :: Tag.Key
-simpleKey = "nimbus"
+simpleKey = "control"
 
 
 simpleValue :: Tag.Value
-simpleValue = "1.0"
+simpleValue = "simple-1.0"
 

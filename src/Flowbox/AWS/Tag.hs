@@ -17,8 +17,10 @@ import qualified Data.Text as Text
 
 
 
-type Tag = Text.Text
+type Key = Text.Text
 
-type Key = Tag
 
-type Value = Tag
+type Value = Text.Text
+
+
+type Tag = (Key, Value)
