@@ -36,8 +36,13 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.Pool.Instance.Instance"
+logger = getLoggerIO "Flowbox.AWS.EC2.Pool.Instance.Instance"
 
+
+releaseUser :: EC2Resource m => User.Name -> MPool -> EC2 m ()
+releaseUser userName mpool = do
+    instances <- Pool.findInstances (Just userName)
+    mapM_ (flip release mpool) (map Types.instanceId instances)
 
 
 release :: EC2Resource m => Instance.ID -> MPool -> EC2 m ()
@@ -45,10 +50,9 @@ release instanceID mpool = do
     logger info $ "Releasing instance " ++ show instanceID
     liftIO $ MVar.modifyMVar_ mpool (return . Pool.free instanceID)
     Tag.tagWithUser Nothing [instanceID]
-    freeUnused mpool
 
 
-retrieve :: EC2Resource m => User.Name -> Types.RunInstancesRequest -> MPool -> EC2 m Instance.ID
+retrieve :: EC2Resource m => User.Name -> Types.RunInstancesRequest -> MPool -> EC2 m Types.Instance
 retrieve userName instanceRequest mpool = do
     logger info $ "Retreiving instance for user " ++ show userName
     poolEntry <- liftIO $ MVar.modifyMVar mpool (\pool ->
@@ -57,11 +61,11 @@ retrieve userName instanceRequest mpool = do
             []     -> case Pool.getFree pool of
                            f:_ -> return (Pool.use userName (fst f) pool, Just f)
                            []  -> return (pool, Nothing))
-    case poolEntry of
+    instanceID <- case poolEntry of
         Just (instanceID, InstanceInfo _ InstanceState.Free) -> do
             logger info $ "Reusing instance " ++ show instanceID
             Tag.tagWithUser (Just userName) [instanceID]
-            Instance.prepareForNewUser userName instanceID
+            prepareForNewUser userName instanceID
             return instanceID
         Just (instanceID, InstanceInfo _ (InstanceState.Used _)) -> do
             logger info $ "User instance already started " ++ show instanceID
@@ -69,11 +73,17 @@ retrieve userName instanceRequest mpool = do
         Nothing -> do
             logger info $ "Starting new instance"
             inst <- Instance.startNew userName instanceRequest
-            Tag.tag Tag.poolTagKey Tag.poolTagValue [Types.instanceId inst]
+            Tag.tag Tag.poolKey Tag.poolValue [Types.instanceId inst]
             time <- fromJust $ Tag.getStartTime inst
             let instanceID = Types.instanceId inst
             liftIO $ MVar.modifyMVar_ mpool (return . Map.insert instanceID (InstanceInfo time $ InstanceState.Used userName))
             return instanceID
+    Instance.byID instanceID
+
+
+prepareForNewUser :: EC2Resource m => User.Name -> Instance.ID -> EC2 m ()
+prepareForNewUser userName instanceID =
+    logger warning "Prepare instance - not implemented"
 
 
 getCandidatesToShutdown :: Time.UTCTime -> Pool -> [Pool.PoolEntry]

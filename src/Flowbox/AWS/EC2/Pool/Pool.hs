@@ -10,7 +10,6 @@
 module Flowbox.AWS.EC2.Pool.Pool where
 
 import qualified AWS.EC2.Types           as Types
-import qualified AWS.EC2.Util            as Util
 import           Control.Concurrent.MVar (MVar)
 import qualified Control.Concurrent.MVar as MVar
 import           Control.Monad.IO.Class  (liftIO)
@@ -18,8 +17,8 @@ import           Data.Map                (Map)
 import qualified Data.Map                as Map
 
 import           Flowbox.AWS.EC2.EC2                 (EC2, EC2Resource)
-import qualified Flowbox.AWS.EC2.EC2                 as EC2
 import qualified Flowbox.AWS.EC2.Instance.ID         as Instance
+import qualified Flowbox.AWS.EC2.Instance.Instance   as Instance
 import qualified Flowbox.AWS.EC2.Instance.Tag        as Tag
 import           Flowbox.AWS.EC2.Pool.Instance.Info  (InstanceInfo (InstanceInfo))
 import qualified Flowbox.AWS.EC2.Pool.Instance.Info  as InstanceInfo
@@ -32,7 +31,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.Pool.Pool"
+logger = getLoggerIO "Flowbox.AWS.EC2.Pool.Pool"
 
 
 type Pool = Map Instance.ID InstanceInfo
@@ -60,12 +59,12 @@ getFree = Map.toList . Map.filter (\info' -> info' ^. InstanceInfo.state == Inst
 use :: User.Name -> Instance.ID -> Pool -> Pool
 use userName = Map.adjust (set InstanceInfo.state $ InstanceState.Used userName)
 
-
+----------------------------------------------------------
 
 initialize :: EC2Resource m => EC2 m MPool
 initialize = do
     logger info $ "Initializing instance pool"
-    instances <- findPoolInstances
+    instances <- findInstances Nothing
     entries <- mapM readInstanceInfo instances
     liftIO $ MVar.newMVar $ Map.fromList entries
 
@@ -85,9 +84,12 @@ readInstanceInfo inst = do
     return $ (instanceID, InstanceInfo startTime instanceState)
 
 
-findPoolInstances :: EC2Resource m => EC2 m [Types.Instance]
-findPoolInstances =
-    concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [] $ Tag.filter Tag.poolTagKey [Tag.poolTagValue])
+findInstances :: EC2Resource m => Maybe User.Name -> EC2 m [Types.Instance]
+findInstances userName = do
+    let f = (Tag.filter Tag.poolKey [Tag.poolValue]) ++ case userName of
+                                                         Just user -> Tag.userFilter user
+                                                         Nothing   -> []
+    Instance.findInstances f
 
 
 shutDownDiff :: Int

@@ -4,21 +4,18 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.AWS.Tag (
-    Tag,
-    Key,
-    Value,
+{-# LANGUAGE OverloadedStrings #-}
 
-    module X,
-) where
+module Flowbox.AWS.EC2.Simple.Tag where
 
-import           Data.Text as X hiding (Text, filter)
-import qualified Data.Text as Text
+import qualified Flowbox.AWS.Tag as Tag
 
 
 
-type Tag = Text.Text
+simpleKey :: Tag.Key
+simpleKey = "nimbus"
 
-type Key = Tag
 
-type Value = Tag
+simpleValue :: Tag.Value
+simpleValue = "1.0"
+

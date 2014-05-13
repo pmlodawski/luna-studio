@@ -19,8 +19,8 @@ import           Database.PostgreSQL.Simple as PSQL
 import qualified Flowbox.AWS.S3.S3          as S3
 
 import qualified Flowbox.AWS.EC2.EC2                 as EC2
-import qualified Flowbox.AWS.EC2.Instance.Instance   as Instance
 import qualified Flowbox.AWS.EC2.Instance.Request    as Request
+import qualified Flowbox.AWS.EC2.Simple.Instance     as Simple
 import           Flowbox.AWS.Region                  (Region)
 import qualified Flowbox.AWS.Region                  as Region
 import qualified Flowbox.AWS.S3.Directory            as Directory
@@ -48,7 +48,7 @@ getInstance = do
     credential <- AWS.loadCredential
     let userName = "zenon"
     ip <- EC2.runEC2InRegion credential region
-          $ Types.instanceIpAddress <$> Instance.getOrStart userName Request.mk
+          $ Types.instanceIpAddress <$> Simple.getOrStart userName Request.mk
     print ip
 
 

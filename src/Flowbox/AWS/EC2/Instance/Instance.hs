@@ -32,19 +32,17 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.Instance.Instance"
+logger = getLoggerIO "Flowbox.AWS.EC2.Instance.Instance"
 
 
-prepareForNewUser :: EC2Resource m => User.Name -> Instance.ID -> EC2 m ()
-prepareForNewUser userName instanceID =
-    logger warning "Prepare instance - not implemented"
+ready :: Types.Instance -> Bool
+ready inst = Types.instanceState inst == Types.InstanceStateRunning
 
 
-find :: EC2Resource m
-     => User.Name -> EC2 m [Types.Instance]
-find userName = do
-    logger debug "Looking for instances..."
-    concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [] $ Tag.userFilter userName)
+resumable :: Types.Instance -> Bool
+resumable inst = Types.instanceState inst == Types.InstanceStateRunning
+              || Types.instanceState inst == Types.InstanceStateStopped
+              || Types.instanceState inst == Types.InstanceStateStopping
 
 
 startNew :: EC2Resource m
@@ -75,16 +73,6 @@ startExisting instanceID = do
         _              -> fail "Something wrong happened : multiple instances started"
 
 
-ready :: Types.Instance -> Bool
-ready inst = Types.instanceState inst == Types.InstanceStateRunning
-
-
-resumable :: Types.Instance -> Bool
-resumable inst = Types.instanceState inst == Types.InstanceStateRunning
-              || Types.instanceState inst == Types.InstanceStateStopped
-              || Types.instanceState inst == Types.InstanceStateStopping
-
-
 waitForStart :: EC2Resource m
              => [Instance.ID] -> WaitTimes -> EC2 m [Types.Instance]
 waitForStart instanceIDs waitTimes = do
@@ -101,16 +89,16 @@ waitForStart instanceIDs waitTimes = do
     return userInstances
 
 
-getOrStart :: EC2Resource m
-           => User.Name -> Types.RunInstancesRequest -> EC2 m Types.Instance
-getOrStart userName instanceRequest = do
-    let usable inst = state /= Types.InstanceStateTerminated && state /= Types.InstanceStateShuttingDown where state = Types.instanceState inst
-    userInstances <- filter usable <$> find userName
-    case map Types.instanceState userInstances of
-            []                           -> startNew userName instanceRequest
-            [Types.InstanceStatePending] -> head <$> waitForStart (map Types.instanceId userInstances) def
-            [Types.InstanceStateRunning] -> return $ head userInstances
-            [Types.InstanceStateStopped] -> startExisting $ Types.instanceId $ head userInstances
-            [_]                          -> startNew userName instanceRequest
-            _                            -> undefined
+findInstances :: EC2Resource m => [Types.Filter] ->  EC2 m [Types.Instance]
+findInstances filter' = do
+    logger debug "Looking for instances..."
+    concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [] filter')
+
+
+byID :: EC2Resource m => Instance.ID -> EC2 m Types.Instance
+byID instanceID = do
+    instances <- concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [instanceID] [])
+    case instances of
+        [inst] -> return inst
+        _      -> fail "Something went wrong on Instance.byID"
 
