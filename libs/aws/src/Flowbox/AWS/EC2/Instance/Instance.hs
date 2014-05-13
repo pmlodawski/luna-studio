@@ -62,7 +62,7 @@ startExisting instanceID tags = do
     logger info "Starting existing instance..."
     _ <- EC2.startInstances [instanceID]
     Tag.tag tags [instanceID]
-    logger info "Starting existing succeeded."
+    logger info "Starting existing instance succeeded."
     userInstances <- waitForStart [instanceID] def
     case userInstances of
         [userInstance] -> return userInstance

@@ -13,14 +13,15 @@ import qualified Flowbox.AccountManager.Cmd             as Cmd
 import qualified Flowbox.AccountManager.Config          as Config
 import qualified Flowbox.AccountManager.Context         as Context
 import qualified Flowbox.AccountManager.Handler.Handler as Handler
+import qualified Flowbox.AccountManager.InstanceMonitor as InstanceMonitor
 import qualified Flowbox.AccountManager.Version         as Version
 import qualified Flowbox.AWS.Region                     as Region
+import qualified Flowbox.Control.Concurrent             as Concurrent
 import           Flowbox.Options.Applicative            hiding (info)
 import qualified Flowbox.Options.Applicative            as Opt
 import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.ZMQ.RPC.Server                 as RPC
-
 
 
 rootLogger :: Logger
@@ -70,4 +71,5 @@ run cmd = case cmd of
                                               (Cmd.database   cmd)
             region = Region.fromString $ Cmd.region cmd
         ctx <- Context.mk region connectionInfo
+        _ <- Concurrent.forkIO $ InstanceMonitor.run ctx
         RPC.run (Cmd.address cmd) (Handler.handler ctx)
