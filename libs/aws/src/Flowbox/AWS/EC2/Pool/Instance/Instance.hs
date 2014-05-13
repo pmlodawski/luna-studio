@@ -95,7 +95,7 @@ getCandidatesToShutdown currentTime = Map.toList . Map.filter isCandidateToShutd
 
 freeUnused :: EC2Resource m => MPool -> EC2 m ()
 freeUnused mpool = do
-    logger debug $ "Releasing unused instances..."
+    logger debug $ "Terminating unused instances..."
     candidates <- liftIO $ MVar.modifyMVar mpool (\pool -> do
         currentTime <- Time.getCurrentTime
         let candidates = map fst $ getCandidatesToShutdown currentTime pool
@@ -103,8 +103,8 @@ freeUnused mpool = do
         return (newPool, candidates))
     if length candidates > 0
         then do void $ EC2.terminateInstances candidates
-                logger info $ "Releasing unused instances - terminated " ++ (show $ length candidates)
-        else logger debug "Releasing unused instances - nothing to do"
+                logger info $ "Terminating unused instances - terminated " ++ (show $ length candidates)
+        else logger debug "Terminating unused instances - nothing to do"
 
 
 monitor :: EC2Resource m => MPool -> EC2 m ()
