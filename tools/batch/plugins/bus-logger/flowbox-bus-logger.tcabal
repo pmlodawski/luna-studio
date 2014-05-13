@@ -32,4 +32,6 @@ Executable bus-logger
                     optparse-applicative,
                     protocol-buffers,
                     transformers,
-                    zeromq4-haskell >= 0.4
+                    zeromq4-haskell >= 0.4,
+                    -- Dependencies that cabal 1.19.2 complains on
+                    HTTP == 4000.2.11
