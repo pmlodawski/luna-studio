@@ -47,7 +47,7 @@ login ctx (User_Login.Args tuserName tpassword) = do
     let userName = decodeP tuserName
         password = decodeP tpassword
     ip  <- EitherT $ EC2.runEC2InRegion (Context.credential ctx) (Context.region ctx)
-                   $ Session.login userName password $ Context.database ctx
+                   $ Session.login userName password (Context.pool ctx) (Context.database ctx)
     return $ User_Login.Result $ encodeP $ show ip
 
 
@@ -57,5 +57,5 @@ logout ctx (User_Logout.Args tuserName tpassword) = do
     let userName = decodeP tuserName
         password = decodeP tpassword
     EitherT $ liftIO $ EC2.runEC2InRegion (Context.credential ctx) (Context.region ctx)
-                     $ Session.logout userName password $ Context.database ctx
+                     $ Session.logout userName password (Context.pool ctx) (Context.database ctx)
     return $ User_Logout.Result
