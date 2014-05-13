@@ -11,38 +11,44 @@
 
 module Flowbox.AWS.EC2.Instance.Tag where
 
-import qualified AWS.EC2.Types          as Types
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import qualified Data.List              as List
-import           Data.Text              (Text)
-import qualified Data.Text              as Text
-import qualified Data.Time              as Time
+import qualified AWS.EC2.Types as Types
+import qualified Data.List     as List
+import           Data.Text     (Text)
+import qualified Data.Text     as Text
+import qualified Data.Time     as Time
 
 import           Flowbox.AWS.EC2.EC2         (EC2, EC2Resource)
 import qualified Flowbox.AWS.EC2.EC2         as EC2
 import qualified Flowbox.AWS.EC2.Instance.ID as Instance
 import qualified Flowbox.AWS.User.User       as User
 import           Flowbox.Control.Error       (assert)
-import           Flowbox.Prelude
+import           Flowbox.Prelude             hiding (filter)
 
 
 
-userTagKey :: Text
+type TagKey = Text
+
+type TagValue = Text
+
+
+userTagKey :: TagKey
 userTagKey = "user"
 
-startTimeTagKey :: Text
+
+startTimeTagKey :: TagKey
 startTimeTagKey = "start-time"
 
 
 getStartTime :: Types.Instance -> Maybe Time.UTCTime
 getStartTime inst = do
-    let findStartTimeTag = List.find (\tag -> Types.resourceTagKey tag == startTimeTagKey)
+    let findStartTimeTag = List.find (\tag' -> Types.resourceTagKey tag' == startTimeTagKey)
     tagVal <- Types.resourceTagValue <$> (findStartTimeTag $ Types.instanceTagSet inst)
     read . Text.unpack <$> tagVal
 
+
 getUser :: Types.Instance -> Maybe User.Name
 getUser inst = do
-    let findUserTag = List.find (\tag -> Types.resourceTagKey tag == userTagKey)
+    let findUserTag = List.find (\tag' -> Types.resourceTagKey tag' == userTagKey)
     tagVal <- Types.resourceTagValue <$> (findUserTag $ Types.instanceTagSet inst)
     Text.unpack <$> tagVal
 
@@ -55,15 +61,19 @@ tagWithUser userName instanceIDs = do
     tag userTagKey userTagValue instanceIDs
 
 
-tagWithCurrentTime :: EC2Resource m => [Instance.ID] -> EC2 m ()
-tagWithCurrentTime instanceIDs = do
-    currentTime <- liftIO $ Time.getCurrentTime
-    tag startTimeTagKey (Text.pack $ show currentTime) instanceIDs
+tagWithStartTime :: EC2Resource m => Time.UTCTime -> [Instance.ID] -> EC2 m ()
+tagWithStartTime startTime instanceIDs = do
+    tag startTimeTagKey (Text.pack $ show startTime) instanceIDs
 
 
-tag :: EC2Resource m => Text -> Text -> [Instance.ID] -> EC2 m ()
+tag :: EC2Resource m => TagKey -> TagValue -> [Instance.ID] -> EC2 m ()
 tag key value instanceIDs = do
     EC2.createTags instanceIDs [(key, value)] >>= (`assert` "Failed to create tag")
 
-userFilter :: User.Name -> [(Text, [Text])]
-userFilter userName = [(Text.append (Text.pack "tag:") userTagKey, [Text.pack userName])]
+
+userFilter :: User.Name -> [(TagKey, [TagValue])]
+userFilter userName = filter userTagKey [Text.pack userName]
+
+
+filter :: TagKey -> [TagValue] -> [(TagKey, [TagValue])]
+filter tagKey tagValues = [(Text.append (Text.pack "tag:") tagKey, tagValues)]

@@ -4,19 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE ConstraintKinds   #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Flowbox.AWS.EC2.Instance.Pool where
 
 import qualified AWS.EC2.Types           as Types
+import qualified AWS.EC2.Util            as Util
+import qualified Control.Concurrent      as Concurrent
 import           Control.Concurrent.MVar (MVar)
 import qualified Control.Concurrent.MVar as MVar
 import           Control.Monad.IO.Class  (liftIO)
 import           Data.Map                (Map)
 import qualified Data.Map                as Map
-import qualified Control.Concurrent as Concurrent
 
 import           Flowbox.AWS.EC2.EC2               (EC2, EC2Resource)
 import qualified Flowbox.AWS.EC2.EC2               as EC2
@@ -25,7 +27,7 @@ import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
 import qualified Flowbox.AWS.EC2.Instance.Tag      as Tag
 import qualified Flowbox.AWS.User.User             as User
 import qualified Flowbox.Data.Time                 as Time
-import           Flowbox.Prelude                   hiding (use)
+import           Flowbox.Prelude                   hiding (use, error)
 import           Flowbox.System.Log.Logger         hiding (info)
 
 
@@ -84,8 +86,40 @@ getCandidatesToShutdown currentTime = Map.toList . Map.filter isCandidateToShutd
 
 ----------------------------------------------------------
 
-initialize :: EC2Resource m => EC2 m ()
-initialize = undefined
+poolTagKey :: Tag.TagKey
+poolTagKey = "pool"
+
+
+poolTagValue :: Tag.TagValue
+poolTagValue = "1.0"
+
+
+findPoolInstances :: EC2Resource m => EC2 m [Types.Instance]
+findPoolInstances =
+    concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [] $ Tag.filter poolTagKey [poolTagValue])
+
+
+readInstanceInfo :: EC2Resource m => Types.Instance -> EC2 m PoolEntry
+readInstanceInfo inst = do 
+    let instanceID = Types.instanceId inst
+    startTime <- case Tag.getStartTime inst of
+        Just time -> return time
+        Nothing   -> do logger error $ "Failed to read instance " ++ show instanceID ++ " start time"
+                        currentTime <- liftIO $ Time.getCurrentTime
+                        Tag.tagWithStartTime currentTime [instanceID]
+                        return currentTime
+    let instanceState = case Tag.getUser inst of
+            Just userName -> Used userName
+            Nothing       -> Free
+    return $ (instanceID, InstanceInfo startTime instanceState)
+
+----------------------------------------------------------
+
+initialize :: EC2Resource m => EC2 m MPool
+initialize = do 
+    instances <- findPoolInstances
+    entries <- mapM readInstanceInfo instances
+    liftIO $ MVar.newMVar $ Map.fromList entries
 
 
 release :: EC2Resource m => Instance.ID -> MPool -> EC2 m ()
@@ -112,6 +146,7 @@ retrieve userName instanceRequest mpool = do
             return instanceID
         Nothing -> do
             inst <- Instance.startNew userName instanceRequest
+            Tag.tag poolTagKey poolTagValue [Types.instanceId inst]
             time <- fromJust $ Tag.getStartTime inst
             let instanceID = Types.instanceId inst
             liftIO $ MVar.modifyMVar_ mpool (return . Map.insert instanceID (InstanceInfo time $ Used userName))
@@ -128,8 +163,7 @@ freeUnused mpool = do
     void $ EC2.terminateInstances candidates
 
 
-
 monitor :: EC2Resource m => MPool -> EC2 m ()
-monitor mpool = do 
+monitor mpool = do
     liftIO $ Concurrent.threadDelay (60*1000*1000) -- 1min
     freeUnused mpool
