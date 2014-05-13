@@ -24,7 +24,7 @@ import qualified Flowbox.AWS.Region                     as Region
 import qualified Flowbox.AWS.User.User                  as User
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-
+import qualified Flowbox.Control.Concurrent as Concurrent
 
 
 rootLogger :: Logger
@@ -48,11 +48,11 @@ main = do
     let userName = "zenon" :: User.Name
     EC2.runEC2InRegion credential region $ do
         mpool <- Pool.initialize
+        thread <- liftIO $ Concurrent.forkIO' $ EC2.runEC2InRegion credential region $ Instance.monitor mpool
+
         ip    <- Types.instanceIpAddress <$> Instance.retrieve userName Request.mk mpool
         liftIO $ print ip
 
         Instance.releaseUser userName mpool
 
-        Instance.monitor mpool
-        return ()
-
+        liftIO $ Concurrent.waitThread thread
