@@ -13,6 +13,7 @@ module Flowbox.AWS.EC2.Pool.Instance.Instance where
 import qualified AWS.EC2.Types           as Types
 import qualified Control.Concurrent      as Concurrent
 import qualified Control.Concurrent.MVar as MVar
+import           Control.Monad           (forever)
 import           Control.Monad.IO.Class  (liftIO)
 import qualified Data.Map                as Map
 
@@ -34,7 +35,6 @@ import           Flowbox.System.Log.Logger
 
 
 
-
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.AWS.EC2.Pool.Instance.Instance"
 
@@ -49,7 +49,7 @@ release :: EC2Resource m => Instance.ID -> MPool -> EC2 m ()
 release instanceID mpool = do
     logger info $ "Releasing instance " ++ show instanceID
     liftIO $ MVar.modifyMVar_ mpool (return . Pool.free instanceID)
-    Tag.tagWithUser Nothing [instanceID]
+    Tag.tag [Tag.userTag Nothing] [instanceID]
 
 
 retrieve :: EC2Resource m => User.Name -> Types.RunInstancesRequest -> MPool -> EC2 m Types.Instance
@@ -64,19 +64,20 @@ retrieve userName instanceRequest mpool = do
     instanceID <- case poolEntry of
         Just (instanceID, InstanceInfo _ InstanceState.Free) -> do
             logger info $ "Reusing instance " ++ show instanceID
-            Tag.tagWithUser (Just userName) [instanceID]
+            Tag.tag [Tag.userTag $ Just userName] [instanceID]
             prepareForNewUser userName instanceID
             return instanceID
         Just (instanceID, InstanceInfo _ (InstanceState.Used _)) -> do
             logger info $ "User instance already started " ++ show instanceID
             return instanceID
         Nothing -> do
-            logger info $ "Starting new instance"
-            inst <- Instance.startNew userName instanceRequest
-            Tag.tag Tag.poolKey Tag.poolValue [Types.instanceId inst]
-            time <- fromJust $ Tag.getStartTime inst
+            currentTime <- liftIO $ Time.getCurrentTime
+            let tags = (Tag.poolKey, Tag.poolValue)
+                     : Tag.startTimeTag currentTime
+                     : [Tag.userTag $ Just userName]
+            inst <- Instance.startNew instanceRequest tags
             let instanceID = Types.instanceId inst
-            liftIO $ MVar.modifyMVar_ mpool (return . Map.insert instanceID (InstanceInfo time $ InstanceState.Used userName))
+            liftIO $ MVar.modifyMVar_ mpool (return . Map.insert instanceID (InstanceInfo currentTime $ InstanceState.Used userName))
             return instanceID
     Instance.byID instanceID
 
@@ -101,15 +102,16 @@ freeUnused mpool = do
             newPool    = foldr Map.delete pool candidates
         return (newPool, candidates))
     if length candidates > 0
-        then do logger info $ "Releasing unused instances - found " ++ (show $ length candidates)
-                void $ EC2.terminateInstances candidates
+        then do void $ EC2.terminateInstances candidates
                 logger info $ "Releasing unused instances - terminated " ++ (show $ length candidates)
         else logger debug "Releasing unused instances - nothing to do"
 
 
 monitor :: EC2Resource m => MPool -> EC2 m ()
-monitor mpool = do
-    let seconds = 60
-    logger debug $ "Instance monitoring - sleeping " ++ show seconds ++ " seconds"
-    liftIO $ Concurrent.threadDelay (seconds*1000*1000)
-    freeUnused mpool
+monitor mpool = do 
+    logger info "Instance monitoring started"
+    forever $ do
+        let seconds = 30
+        freeUnused mpool
+        logger debug $ "Instance monitoring - sleeping " ++ show seconds ++ " seconds"
+        liftIO $ Concurrent.threadDelay (seconds*1000*1000)

@@ -50,8 +50,8 @@ Library
                     time,
                     transformers
 
-Executable aws-test
-    Main-Is:        Main.hs
+Executable aws-test-pool
+    Main-Is:        Pool.hs
     Hs-Source-Dirs: test
 
     GHC-Options:    -Wall -O2 -threaded
@@ -82,3 +82,100 @@ Executable aws-test
                     text,
                     transformers
 
+Executable aws-test-simple
+    Main-Is:        Simple.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+    
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws,
+                    aws-sdk >= 0.12.4,
+                    base,
+                    bytestring,
+                    containers,
+                    conduit >= 1.1.0,
+                    conduit-extra >= 1.1.0,
+                    exceptions,
+                    errors,
+                    flowbox-aws,
+                    flowbox-rpc,
+                    flowbox-utils,
+                    http-conduit,
+                    mtl,
+                    network,
+                    optparse-applicative,
+                    postgresql-simple,
+                    pretty-show,
+                    protocol-buffers,
+                    resourcet >= 1.1.0,
+                    monad-loops,
+                    text,
+                    transformers
+
+
+Executable aws-test-querydb
+    Main-Is:        QueryDB.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+    
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws,
+                    aws-sdk >= 0.12.4,
+                    base,
+                    bytestring,
+                    containers,
+                    conduit >= 1.1.0,
+                    conduit-extra >= 1.1.0,
+                    exceptions,
+                    errors,
+                    flowbox-aws,
+                    flowbox-rpc,
+                    flowbox-utils,
+                    http-conduit,
+                    mtl,
+                    network,
+                    optparse-applicative,
+                    postgresql-simple,
+                    pretty-show,
+                    protocol-buffers,
+                    resourcet >= 1.1.0,
+                    monad-loops,
+                    text,
+                    transformers
+
+
+Executable aws-test-s3
+    Main-Is:        S3.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+    
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws,
+                    aws-sdk >= 0.12.4,
+                    base,
+                    bytestring,
+                    containers,
+                    conduit >= 1.1.0,
+                    conduit-extra >= 1.1.0,
+                    exceptions,
+                    errors,
+                    flowbox-aws,
+                    flowbox-rpc,
+                    flowbox-utils,
+                    http-conduit,
+                    mtl,
+                    network,
+                    optparse-applicative,
+                    postgresql-simple,
+                    pretty-show,
+                    protocol-buffers,
+                    resourcet >= 1.1.0,
+                    monad-loops,
+                    text,
+                    transformers

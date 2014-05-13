@@ -13,9 +13,9 @@ import qualified Flowbox.AWS.Tag as Tag
 
 
 poolKey :: Tag.Key
-poolKey = "pool"
+poolKey = "control"
 
 
 poolValue :: Tag.Value
-poolValue = "1.0"
+poolValue = "pool-1.0"
 
