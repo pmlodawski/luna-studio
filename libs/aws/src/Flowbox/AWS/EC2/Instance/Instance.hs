@@ -16,6 +16,7 @@ import qualified AWS.EC2.Util           as Util
 import qualified Control.Concurrent     as Concurrent
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Control.Monad.Loops    as Loops
+import qualified Data.Time              as Time
 import qualified System.IO              as IO
 
 import           Flowbox.AWS.EC2.EC2               (EC2, EC2Resource)
@@ -52,7 +53,8 @@ startNew userName instanceRequest = do
     logger info "Starting new instance..."
     reservation <- EC2.runInstances instanceRequest
     let instanceIDs = map Types.instanceId $ Types.reservationInstanceSet reservation
-    Tag.tagWithCurrentTime instanceIDs
+    currentTime <- liftIO $ Time.getCurrentTime
+    Tag.tagWithStartTime currentTime instanceIDs
     Tag.tagWithUser (Just userName) instanceIDs
     logger info "Starting new instance succeeded."
     [userInstance] <- waitForStart instanceIDs def
@@ -64,6 +66,8 @@ startExisting :: EC2Resource m
 startExisting instanceID = do
     logger info "Starting existing instance..."
     _ <- EC2.startInstances [instanceID]
+    currentTime <- liftIO $ Time.getCurrentTime
+    Tag.tagWithStartTime currentTime [instanceID]
     logger info "Starting existing succeeded."
     userInstances <- waitForStart [instanceID] def
     case userInstances of
