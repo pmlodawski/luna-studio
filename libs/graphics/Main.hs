@@ -63,7 +63,7 @@ meta = metafont $ z4.--.z1.--.z2.--.z6.- tension 1.5 -.cyclePath
 color = white `withOpacity` 1
 diag = (strokeLoop meta) Diag.# fcA color
 
-imgtest img frames source target = do
+imgtest img = do
     let getDouble image = Img.toDouble <$> Repr.decompose image
         --Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ Unsafe.unsafePerformIO $ Shape.rasterize 512 512 100 100 (Diag.Width 256) diag
         --Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
@@ -148,13 +148,13 @@ main
 
         -- Read in the image file
         imageIn <- getImage fileIn
-        framesIn <- getImages frameNames
+        --framesIn <- getImages frameNames
 
-        sourceImage <- getImage "sea-picture.bmp"
-        targetImage <- getImage "sea-rendered.bmp"
+        --sourceImage <- getImage "sea-picture.bmp"
+        --targetImage <- getImage "sea-rendered.bmp"
 
         --diagram       <- DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
-        let diagram = DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
+        --let diagram = DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
         --let dupa =  Img.toWord8 $ Img.map G.clipValues diagram
 
         --let rasterizedDiagram = case Repr.compose dupa of
@@ -162,7 +162,7 @@ main
         --        Right val -> val
             --imageOut = Right rasterizedDiagram
 
-        let imageOut = imgtest imageIn framesIn sourceImage targetImage
+        let imageOut = imgtest imageIn
 
         case imageOut of
             Left err  -> print err
