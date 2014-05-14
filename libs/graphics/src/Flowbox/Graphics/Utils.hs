@@ -35,7 +35,7 @@ parametrize :: Num a => a -> a -> a -> a
 parametrize lo hi x = lo + x * (hi - lo)
 
 bias :: (A.Elt t, A.Elt t1, A.IsNum t, A.IsIntegral t1, A.IsFloating t1) => Exp t1 -> Exp t -> Exp t
-bias b x = (b A.>* 0) A.? (x ^ (log(b) / log(0.5)) , 0)
+bias b x = (b A.>* 0) A.? (x ^ logBase 0.5 b, 0)
 
 gain :: (A.Elt t, A.Elt t1, A.IsIntegral t1, A.IsFloating t, A.IsFloating t1) => Exp t -> Exp t1 -> Exp t
 gain g x = 0.5 * (x A.<* 0.5 A.? (bias (2 * x) (1 - g) , 2 - bias (2 - 2 * x) (1 - g)))
@@ -58,11 +58,11 @@ clamp (Range thresholdLo thresholdHi) clampTo v = (v A.<* thresholdLo A.?) $ cas
     Just (Range clampLo clampHi) -> (clampLo,     v A.>* thresholdHi A.? (clampHi,     v))
 
 mix :: (A.Elt a, A.IsNum a) => Exp a -> Exp a -> Exp a -> Exp a
-mix amount oldValue newValue = (invert amount) * oldValue + amount * newValue
+mix amount oldValue newValue = invert amount * oldValue + amount * newValue
 
 
 nonIntRem :: (A.Elt e, A.IsFloating e) => Exp e -> Exp e -> Exp e
-nonIntRem x y = x - (y * (A.fromIntegral (A.truncate (x / y) :: Exp Int)))
+nonIntRem x y = x - y * A.fromIntegral (A.truncate (x / y) :: Exp Int)
 
 nonIntDiv :: (A.Elt e, A.IsFloating e) => Exp e -> Exp e -> Exp e
 nonIntDiv x y = A.fromIntegral (A.truncate (x / y) :: Exp Int)
