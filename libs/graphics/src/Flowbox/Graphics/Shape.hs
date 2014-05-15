@@ -11,7 +11,6 @@ module Flowbox.Graphics.Shape where
 
 import           Data.Array.Accelerate (Z(..))
 import qualified Data.Array.Accelerate as A
---import qualified Data.Array.IArray     as IA
 import           Data.Monoid           as Monoid
 
 import qualified Math.BernsteinPoly              as Bernstein
@@ -21,13 +20,13 @@ import           Geom2D.CubicBezier.Basic        (CubicBezier(..), PathJoin(..),
 import qualified Geom2D.CubicBezier.Basic        as Bezier
 import qualified Geom2D.CubicBezier.Intersection as Bezier
 
-import           Flowbox.Prelude                as P
+import           Flowbox.Prelude                as P hiding(ix)
 import           Flowbox.Graphics.Image         (Image)
 import qualified Flowbox.Graphics.Image         as Image
 import           Flowbox.Graphics.Image.Channel (Channel2)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 
---import qualified Debug.Trace as Dbg
+
 
 data Segment = SegLine Line
              | SegCurve CubicBezier
@@ -98,13 +97,12 @@ bezierBoundingBox curve eps = Rectangle pointMin pointMax
           CubicBezier pointA _ _ pointB = curve
           roots    = Bezier.evalBezier curve <$> findDerivRoots curve 0 1 eps
 
+-- FIXME: Use Size type instead of width,height
 rasterizeMask :: (Image img (Channel2 Double))
     => Int -> Int -> Double -> Double -> Size2 -> Path -> img (Channel2 Double)
 rasterizeMask width height x y size path = Image.insert "rgba.a" alpha mempty -- TODO: make a use of x and y
     where alpha     = Channel.Acc $ A.use $ A.fromList (Z A.:. height A.:. width) makeMask
-          --alpha     = Channel.Acc $ A.use $ A.fromIArray makeMask
-          --makeMask  = IA.array (0, num) [(i, makeElement i) | i <- [0..num]]
-          makeMask  = [makeElement i | i <- [0..num]]
+          makeMask  = map makeElement [0..num]
           makeElement i = let iy = i `div` width
                               ix = i - iy * width
                               y' = fromIntegral iy
@@ -113,7 +111,7 @@ rasterizeMask width height x y size path = Image.insert "rgba.a" alpha mempty --
           num        = width * height
           pathScaled = scale path scaleRatio
           scaleRatio = case size of
-              Width  w -> let ratio = w / boundingBoxW  in (ratio, ratio)
+              Width  w -> let ratio = w / boundingBoxW in (ratio, ratio)
               Height h -> let ratio = h / boundingBoxH in (ratio, ratio)
               Dims w h -> (w / boundingBoxW, h / boundingBoxH)
           boundingBoxW = boundingBoxWidth  boundingBox
@@ -121,6 +119,6 @@ rasterizeMask width height x y size path = Image.insert "rgba.a" alpha mempty --
           boundingBox  = Monoid.mconcat $ fmap bb segs
           bb segment   = case segment of
               SegLine (Line (Point xA yA) (Point xB yB)) -> Rectangle (Point (min xA xB) (min yA yB)) (Point (max xA xB) (max yA yB))
-              SegCurve curve -> bezierBoundingBox curve eps
+              SegCurve curve                             -> bezierBoundingBox curve eps
           segs = segments path
           eps  = 0.001

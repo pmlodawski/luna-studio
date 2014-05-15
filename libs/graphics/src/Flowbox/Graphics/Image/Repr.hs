@@ -6,7 +6,10 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Graphics.Image.Repr where
+module Flowbox.Graphics.Image.Repr (
+    decompose,
+    compose
+) where
 
 import           Data.Array.Accelerate    (Exp)
 import qualified Data.Array.Accelerate    as A
@@ -18,6 +21,7 @@ import qualified Flowbox.Graphics.Image         as Image
 import           Flowbox.Graphics.Image.Channel (ChannelAcc)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Prelude                hiding (map)
+
 
 
 decompose :: (A.Shape ix, Image img (ChannelAcc ix A.Word32), Image img (ChannelAcc ix A.Word8))

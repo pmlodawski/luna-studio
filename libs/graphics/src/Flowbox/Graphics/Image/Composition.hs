@@ -12,8 +12,6 @@ module Flowbox.Graphics.Image.Composition where
 import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
 
---import qualified Debug.Trace as Dbg
-
 import           Flowbox.Graphics.Image         (Image)
 import qualified Flowbox.Graphics.Image         as Image
 import           Flowbox.Graphics.Image.Channel (ChannelAcc)
@@ -24,21 +22,20 @@ import           Flowbox.Prelude                as P
 
 
 
-data Premultiply = Premultiply   { premultChanName :: Channel.Name
-                                 , invertPremult   :: Exp Bool
-                                 } deriving (Show)
+data Premultiply = Premultiply { premultChanName :: Channel.Name
+                               , invertPremult   :: Exp Bool
+                               } deriving (Show)
 
 type Inject = Maybe Channel.Name
 
---data Mask img ix a = ChannelMask { maskChanName :: Channel.Name, injectMask :: Inject, invertMask :: Exp Bool }
---                   | ImageMask   { maskChanName :: Channel.Name, injectMask :: Inject, invertMask :: Exp Bool, maskImage :: img (ChannelAcc ix a) }
---                   deriving (Show)
+data Mask img ix a  = Mask { maskChanName :: Channel.Name
+                           , injectMask   :: Inject
+                           , invertMask   :: Exp Bool
+                           , sourceImg    :: MaskSource img ix a
+                           }
 
-data Mask img ix a  = Mask { maskChanName :: Channel.Name, injectMask :: Inject, invertMask :: Exp Bool, sourceImg :: MaskSource img ix a }
-
-data MaskSource img ix a = Image img (ChannelAcc ix a) => Local
-                         | External (img (ChannelAcc ix a))
-
+data Image img (ChannelAcc ix a) => MaskSource img ix a = Local
+                                                        | External (img (ChannelAcc ix a))
 
 type Clamp a = (Range a, Maybe (Range a))
 

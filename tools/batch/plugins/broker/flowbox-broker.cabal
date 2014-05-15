@@ -1,0 +1,40 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+Name:               flowbox-broker
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Executable broker
+    Hs-Source-Dirs: src
+    Other-Modules:  Paths_flowbox_broker
+    Main-Is:        Main.hs
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  base,
+                    bytestring,
+                    containers,
+                    flowbox-bus,
+                    flowbox-rpc,
+                    flowbox-config,
+                    flowbox-utils,
+                    transformers,
+                    protocol-buffers,
+                    zeromq4-haskell >= 0.4,
+                    -- Dependencies that cabal 1.19.2 complains on
+                    HTTP == 4000.2.11

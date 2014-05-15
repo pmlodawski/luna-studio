@@ -4,19 +4,23 @@
 *.chs.h
 .virthualenv
 *~
+*.swp
 *.imports
-tools/batch-clients/performance/tcp/main
-tools/batch-clients/performance/zmq/main
-tools/batch-clients/tcp-cpp/main
-tools/batch-clients/dumper/main
+tools/batch/batch-clients/performance/tcp/main
+tools/batch/batch-clients/performance/zmq/main
+tools/batch/batch-clients/tcp-cpp/main
+tools/batch/batch-clients/dumper/main
 out
 
 #generated files
 gen
-tools/batch-clients/performance/tcp/generated
-tools/batch-clients/performance/zmq/generated
-tools/batch-clients/tcp-cpp/generated
-tools/batch-clients/dumper/generated
+tools/batch/batch-clients/performance/tcp/generated
+tools/batch/batch-clients/performance/zmq/generated
+tools/batch/batch-clients/tcp-cpp/generated
+tools/batch/batch-clients/dumper/generated
+
+# OS X temp
+.DS_Store
 
 # emacs backup files
 .\#*
@@ -50,6 +54,10 @@ dist
 cabal.sandbox.config
 .cabal-sandbox
 .build.config
+
+# aws credentials
+aws.config
+
 
 ### DEPRECATED ###
 # cabal-dev

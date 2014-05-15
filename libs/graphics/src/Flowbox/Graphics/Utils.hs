@@ -4,7 +4,6 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes 		 #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts    #-}
 
@@ -70,6 +69,7 @@ nonIntDiv x y = A.fromIntegral (A.truncate (x / y) :: Exp Int)
 
 -- = TUPLES :D
 
+-- TODO: Try to make accelerate tuples instances of Field1,2,3,4... from lens
 fstTrio :: forall f a b c. A.Unlift f (f a, f b, f c) => f (A.Plain (f a), A.Plain (f b), A.Plain (f c)) -> f a
 fstTrio e = let (x, _:: f b, _:: f c) = A.unlift e in x
 

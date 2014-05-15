@@ -24,6 +24,10 @@ def make_dirs_if_needed(path):
     if not os.path.exists(os.path.dirname(path)):
         os.makedirs(path)
 
+def remove_if_present(path):
+    if os.path.exists(path):
+        os.remove(path)
+
 
 def extract(rootdir, path):
     tar = tarfile.open(path)

@@ -39,6 +39,7 @@ helperHsvHsl i x z = A.cond (i A.==* 0) (A.lift (x,   z,   x*0))
                    $ A.cond (i A.==* 5) (A.lift (x,   x*0, z))
                    $ A.lift (x,   z,   x*0)
 
+-- FIXME: zrobić to na type clasach
 toRGB :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
 toRGB color@(RGB{}) = color
 toRGB (RGBA r' g' b' _) = RGB r' g' b'
@@ -140,16 +141,18 @@ toCMYK color = toCMYK . toRGB $ color
 toYUV :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
 toYUV color@(YUV{}) = color
 toYUV (RGB r' g' b') = YUV y' u' v'
-    where y' = 0.299 * r' + 0.587 * g' + 0.114 * b'
-          u' = (-0.14713) * r' - 0.28886 * g' + 0.436 * b'
-          v' = 0.615 * r' - 0.51499 * g' - 0.10001 * b'
+    where y' = 0.299      * r' + 0.587   * g' + 0.114   * b'
+          u' = (-0.14713) * r' - 0.28886 * g' + 0.436   * b'
+          v' = 0.615      * r' - 0.51499 * g' - 0.10001 * b'
 toYUV color = toYUV . toRGB $ color
 
 -- For HD video
 toYUV_HD :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
 toYUV_HD color@(YUV_HD{}) = color
 toYUV_HD (RGB r' g' b') = YUV_HD y' u' v'
-    where y' = 0.2126 * r' + 0.7152 * g' + 0.0722 * b'
-          u' = (-0.09991) * r' - 0.33609 * g' + 0.436 * b'
-          v' = 0.615 * r' - 0.55861 * g' - 0.05639 * b'
+    where y' = 0.2126     * r' + 0.7152  * g' + 0.0722  * b'
+          u' = (-0.09991) * r' - 0.33609 * g' + 0.436   * b'
+          v' = 0.615      * r' - 0.55861 * g' - 0.05639 * b'
 toYUV_HD color = toYUV_HD . toRGB $ color
+
+-- TODO: LAB color space
