@@ -10,12 +10,8 @@
 
 module Main where
 
-import qualified AWS                        as AWS
-import qualified Aws                        as Aws
-import qualified AWS.EC2.Types              as Types
-import           Control.Monad.Reader
-import           Data.Text                  (Text)
-import           Database.PostgreSQL.Simple as PSQL
+import Control.Monad.Reader
+import Database.PostgreSQL.Simple as PSQL
 
 import qualified Flowbox.AWS.User.Database           as Database
 import qualified Flowbox.AWS.User.Password           as Password

@@ -20,3 +20,8 @@ data InstanceInfo = InstanceInfo { _started :: Time.UTCTime
 
 
 makeLenses(''InstanceInfo)
+
+
+spareSeconds :: InstanceInfo -> Time.UTCTime -> Int
+spareSeconds info currentTime =
+    (Time.toSeconds $ Time.diffUTCTime currentTime $ info ^. started) `mod` 3600
