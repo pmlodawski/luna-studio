@@ -20,8 +20,9 @@ import           Flowbox.AWS.EC2.EC2                (EC2, EC2Resource)
 import qualified Flowbox.AWS.EC2.Instance.Instance  as Instance
 import qualified Flowbox.AWS.EC2.Instance.Tag       as Tag
 import qualified Flowbox.AWS.User.User              as User
-import           Flowbox.Prelude
+import           Flowbox.Prelude                    hiding (error)
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: LoggerIO
@@ -41,10 +42,15 @@ getOrStart userName instanceRequest = do
              : Tag.startTimeTag currentTime
              : [Tag.userTag $ Just userName]
     userInstances <- filter usable <$> findInstances
-    case map Types.instanceState userInstances of
-            []                           -> Instance.startNew instanceRequest tags
-            [Types.InstanceStatePending] -> head <$> Instance.waitForStart (map Types.instanceId userInstances) def
-            [Types.InstanceStateRunning] -> return $ head userInstances
-            [Types.InstanceStateStopped] -> Instance.startExisting (Types.instanceId $ head userInstances) tags
-            [_]                          -> Instance.startNew instanceRequest tags
-            _                            -> undefined
+    let instancesCount = length userInstances
+    if instancesCount == 0
+        then Instance.startNew instanceRequest tags
+        else do if instancesCount > 1
+                    then logger error "Too many instances are started, but continuing anyway"
+                    else return ()
+                case head $ map Types.instanceState userInstances of
+                    Types.InstanceStatePending   -> head <$> Instance.waitForStart (map Types.instanceId userInstances) def
+                    Types.InstanceStateRunning   -> return $ head userInstances
+                    Types.InstanceStateStopped   -> Instance.startExisting (Types.instanceId $ head userInstances) tags
+                    Types.InstanceStateStopping  -> fail "Instance is stopping, wait a moment and retry"
+                    _                            -> fail "Unknown instance state"
