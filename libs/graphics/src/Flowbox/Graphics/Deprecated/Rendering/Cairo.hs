@@ -1,7 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Flowbox.Graphics.Rendering.Cairo (
-    module Flowbox.Graphics.Rendering.Cairo,
+module Flowbox.Graphics.Deprecated.Rendering.Cairo (
+    module Flowbox.Graphics.Deprecated.Rendering.Cairo,
     module X
 ) where
 

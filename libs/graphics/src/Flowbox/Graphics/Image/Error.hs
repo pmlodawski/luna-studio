@@ -9,6 +9,7 @@ module Flowbox.Graphics.Image.Error where
 import Flowbox.Prelude hiding (lookup, map)
 
 
+
 data Error = ChannelLookupError { name :: String }
 
 ------------------------------------------------------------------------

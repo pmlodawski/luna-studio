@@ -45,7 +45,6 @@ import qualified Flowbox.Graphics.Image.Color           as Img
 import qualified Flowbox.Graphics.Image.IO              as Img
 import qualified Flowbox.Graphics.Image.Raster          as Img
 import qualified Flowbox.Graphics.Image.Repr            as Repr
-import qualified Flowbox.Graphics.Diagrams.Shape        as DShape
 import qualified Flowbox.Graphics.Shape                 as Shape
 import           Flowbox.Graphics.Utils                 (Range(..))
 import qualified Flowbox.Graphics.Utils                 as U

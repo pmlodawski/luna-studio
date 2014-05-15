@@ -15,11 +15,12 @@ import           Flowbox.Graphics.Image             (Image)
 import qualified Flowbox.Graphics.Image             as Image
 import           Flowbox.Graphics.Image.Channel     (ChannelAcc)
 import qualified Flowbox.Graphics.Image.Channel     as Channel
---import           Flowbox.Graphics.Image.Composition (Premultiply(..), Mask(..), Clamp)
 import           Flowbox.Graphics.Image.Composition (Mask(..), MaskSource(..))
 import qualified Flowbox.Graphics.Image.Composition as Comp
 import qualified Flowbox.Graphics.Utils             as U
-import           Flowbox.Prelude                    as P
+import           Flowbox.Prelude
+
+
 
 data MergeOperation ix a = ATop         Channel.Name Channel.Name
                          | Average

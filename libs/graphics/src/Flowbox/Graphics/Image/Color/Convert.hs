@@ -11,10 +11,8 @@
 module Flowbox.Graphics.Image.Color.Convert where
 
 import           Data.Map                          (Map)
---import qualified Data.Map                          as Map
 import qualified Data.Array.Accelerate as A
 
---import           Flowbox.Graphics.Color           (Color(..))
 import qualified Flowbox.Graphics.Color           as Color
 import           Flowbox.Graphics.Image           (Image)
 import qualified Flowbox.Graphics.Image           as Image
@@ -28,57 +26,12 @@ import           Flowbox.Graphics.Image.ImageCMY  (ImageCMY(..))
 import           Flowbox.Graphics.Image.ImageCMYK (ImageCMYK(..))
 import           Flowbox.Graphics.Image.ImageYUV  (ImageYUV(..))
 import qualified Flowbox.Graphics.Utils           as U
-import           Flowbox.Prelude as P
---import qualified Flowbox
-
--- TODO: discuss whether those functions should require rgb color space or should it look
--- for other color spaces too
-
---hsv :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
---    => img (ChannelAcc ix a) -> Image.Result (img (ChannelAcc ix a))
---hsv img = do
---    r <- Image.get "rgba.r" img
---    g <- Image.get "rgba.g" img
---    b <- Image.get "rgba.b" img
---    let outimg = Image.insert "hsv.h" hue
---               $ Image.insert "hsv.s" saturation
---               $ Image.insert "hsv.v" value
---               $ img
---        hue        = Channel.Acc $ A.map U.fstTrio hsv'
---        saturation = Channel.Acc $ A.map U.sndTrio hsv'
---        value      = Channel.Acc $ A.map U.trdTrio hsv'
---        rgb = A.zip3 (Channel.accMatrix r) (Channel.accMatrix g) (Channel.accMatrix b)
---        hsv' = A.map convertToHSV rgb
---        convertToHSV rgb' = A.lift (h, s, v)
---            where
---                (r',g',b') = A.unlift rgb'
---                Color.HSV h s v = Color.toHSV $ Color.RGB r' g' b'
---    return outimg
-
---hsl :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
---    => img (ChannelAcc ix a) -> Image.Result (img (ChannelAcc ix a))
---hsl img = do
---    r <- Image.get "rgba.r" img
---    g <- Image.get "rgba.g" img
---    b <- Image.get "rgba.b" img
---    let outimg = Image.insert "hsl.h" hue
---               $ Image.insert "hsl.s" saturation
---               $ Image.insert "hsl.l" value
---               $ img
---        hue        = Channel.Acc $ A.map U.fstTrio hsl'
---        saturation = Channel.Acc $ A.map U.sndTrio hsl'
---        value      = Channel.Acc $ A.map U.trdTrio hsl'
---        rgb = A.zip3 (Channel.accMatrix r) (Channel.accMatrix g) (Channel.accMatrix b)
---        hsl' = A.map convertToHSL rgb
---        convertToHSL rgb' = A.lift (h, s, l)
---            where (r',g',b')      = A.unlift rgb'
---                  Color.HSL h s l = Color.toHSL $ Color.RGB r' g' b'
---    return outimg
+import           Flowbox.Prelude
 
 --class ColorSpaceRGB img where
-    --toRGB :: img a -> Image.Result (ImageRGB a)
+--    toRGB :: img a -> Image.Result (ImageRGB a)
 
--- INFO: hide this (and som other shitty stuff) from exports
+-- TODO: hide this (and som other shitty stuff) from exports
 
 threeWayConvert :: (A.Shape ix, A.Elt a, A.Elt b, Image imgA (ChannelAcc ix a), Image imgB (ChannelAcc ix b))
     => (Channel.Name, Channel.Name, Channel.Name) -> (Channel.Name, Channel.Name, Channel.Name)
@@ -119,6 +72,7 @@ convertFromFour (nameOutA, nameOutB, nameOutC) (nameInA, nameInB, nameInC, nameI
            $ Image.insert nameOutC chanOutC
            $ convertTo chans
 
+
 -- = Conversion to RGB
 
 convertToRGB :: (A.Elt a, A.IsFloating a, A.Unlift b (x, y, z), A.Lift c (A.Exp a, A.Exp a, A.Exp a))
@@ -156,6 +110,7 @@ instance ColorSpaceAccRGB ImageCMYK where
 
 instance ColorSpaceAccRGB ImageYUV where
     toRGB img@(ImageYUV chans) = threeWayConvert ("rgb.r", "rgb.g", "rgb.b") ("yuv.y", "yuv.u", "yuv.v") (convertToRGB Color.YUV) ImageRGB img chans
+
 
 -- = Conversion to RGBA
 
@@ -205,6 +160,7 @@ instance ColorSpaceAccRGBA ImageCMYK where
 instance ColorSpaceAccRGBA ImageYUV where
     toRGBA img@(ImageYUV chans) = convertToRGBA ("yuv.y", "yuv.u", "yuv.v") (convertToRGB Color.YUV) img chans
 
+
 -- = Conversion to HSV
 
 convertToHSV :: (A.Elt a, A.IsFloating a, A.Unlift b (x, y, z), A.Lift c (A.Exp a, A.Exp a, A.Exp a))
@@ -245,6 +201,7 @@ instance ColorSpaceAccHSV ImageCMYK where
 instance ColorSpaceAccHSV ImageYUV where
     toHSV img@(ImageYUV chans) = threeWayConvert ("hsv.h", "hsv.s", "hsv.v") ("yuv.y", "yuv.u", "yuv.v") (convertToHSV Color.YUV) ImageHSV img chans
 
+
 -- = Conversion to HSL
 
 convertToHSL :: (A.Elt a, A.IsFloating a, A.Unlift b (x, y, z), A.Lift c (A.Exp a, A.Exp a, A.Exp a))
@@ -284,6 +241,7 @@ instance ColorSpaceAccHSL ImageCMYK where
 instance ColorSpaceAccHSL ImageYUV where
     toHSL img@(ImageYUV chans) = threeWayConvert ("hsl.h", "hsl.s", "hsl.l") ("yuv.y", "yuv.u", "yuv.v") (convertToHSL Color.YUV) ImageHSL img chans
 
+
 -- = Conversion to CMY
 
 convertToCMY :: (A.Elt a, A.IsFloating a, A.Unlift b (x, y, z), A.Lift c (A.Exp a, A.Exp a, A.Exp a))
@@ -322,6 +280,7 @@ instance ColorSpaceAccCMY ImageCMYK where
 
 instance ColorSpaceAccCMY ImageYUV where
     toCMY img@(ImageYUV chans) = threeWayConvert ("cmy.c", "cmy.m", "cmy.y") ("yuv.y", "yuv.u", "yuv.v") (convertToCMY Color.YUV) ImageCMY img chans
+
 
 -- = Conversion to CMYK
 

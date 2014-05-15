@@ -20,17 +20,16 @@ import qualified Flowbox.Graphics.Image         as Img
 import           Flowbox.Graphics.Image.Channel (ChannelAcc, Channel2)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import qualified Flowbox.Graphics.Utils         as U
-import           Flowbox.Prelude                as P
+import           Flowbox.Prelude
+
 
 
 constant :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a)) => Exp ix -> [(Channel.Name, Exp a)] -> img (ChannelAcc ix a)
 constant sh = foldr appendChannel mempty
     where appendChannel (name, value) = Img.insert name (Channel.fill sh value)
 
-
-
 type CheckerboardColors a = (ColorAcc a, ColorAcc a, ColorAcc a, ColorAcc a)
-type CheckerboardLine a = (ColorAcc a, Exp Double)
+type CheckerboardLine a   = (ColorAcc a, Exp Double)
 
 checkerboard :: (A.Elt a, A.IsFloating a, Image img (Channel2 a))
      => Exp A.DIM2 -> Exp Double -> CheckerboardColors a -> CheckerboardLine a -> CheckerboardLine a -> img (Channel2 a)

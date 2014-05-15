@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Graphics.Diagrams.Shape where
+module Flowbox.Graphics.Deprecated.Diagrams.Shape where
 
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.Array.MArray      as MA

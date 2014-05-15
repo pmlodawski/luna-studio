@@ -4,11 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveFunctor #-}
+
 module Flowbox.Graphics.Transform where
 
 import qualified Data.Array.Repa                   as R
 import qualified Data.Array.Repa.Algorithms.Matrix as M
 import           Flowbox.Prelude                   hiding (lookup, map)
+
+
 
 type RepaMatrix2 a = R.Array R.U R.DIM2 a
 data Transformation = Transformation (RepaMatrix2 Double)
@@ -17,10 +21,7 @@ data Transformation = Transformation (RepaMatrix2 Double)
 data Transformed a = Transformed { src   :: a
                                  , trans :: Transformation
                                  }
-           deriving (Show)
-
-instance Functor Transformed where
-    fmap f (Transformed s t) = Transformed (f s) t
+           deriving (Show, Functor)
 
 transform :: a -> Transformed a
 transform x = Transformed x mempty
@@ -37,7 +38,7 @@ rotate theta (Transformed img transposition) = Transformed img transposition'
     where transposition' = mappend t transposition
           t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [   cos (-theta) , sin (-theta), 0
                                                                     , -(sin (-theta)), cos (-theta), 0
-                                                                    , 0           , 0        , 1])
+                                                                    , 0              , 0           , 1])
 
 rotateAt :: Double -> Double -> Double -> Transformed a -> Transformed a
 rotateAt theta x y = translate (-x) (-y) . rotate theta . translate x y

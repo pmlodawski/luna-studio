@@ -12,16 +12,13 @@ module Flowbox.Graphics.Image.Channel where
 import           Data.Array.Accelerate (Shape, Elt, Exp)
 import qualified Data.Array.Accelerate as A
 
-import Flowbox.Prelude hiding (use, zipWith)
+import           Flowbox.Prelude hiding (use, zipWith)
+
 
 
 data Channel a = Raw a
                | Acc (A.Acc a)
                deriving (Show)
-
---instance Functor Channel where
-    --fmap f (Raw a) = Raw $ f a
-    --fmap f (Acc a) = Acc $ A.map f a
 
 type RawData2 a = A.Array A.DIM2 a
 type RawData3 a = A.Array A.DIM3 a
@@ -31,7 +28,6 @@ type Backend ix a = A.Acc (A.Array ix a) -> A.Array ix a
 type ChannelAcc ix a = Channel (A.Array ix a)
 type Channel2 a = Channel (RawData2 a)
 type Channel3 a = Channel (RawData3 a)
---type ChannelSegments a = Channel (A.Segments a)
 
 type Name = String
 
@@ -70,6 +66,7 @@ compute backend chan = Raw $ case chan of
 the :: Elt e => Channel (A.Scalar e) -> Exp e
 the channel = A.the $ accMatrix channel
 
+
 -- Shape Information --
 
 empty :: (Shape ix, Elt e) => ChannelAcc ix e -> Exp Bool
@@ -84,10 +81,12 @@ size channel = A.size $ accMatrix channel
 shapeSize :: Shape ix => Exp ix -> Exp Int
 shapeSize = A.shapeSize
 
+
 -- = Extracting sub-arrays =
 
 slice :: (A.Slice slix, Elt e) => ChannelAcc (A.FullShape slix) e -> Exp slix -> ChannelAcc (A.SliceShape slix) e
 slice channel parts = Acc $ A.slice (accMatrix channel) parts
+
 
 -- == Construction ==
 
@@ -101,6 +100,7 @@ use chan = case chan of
 unit :: Elt e => Exp e -> Channel (A.Scalar e)
 unit e = Acc $ A.unit e
 
+
 -- = Initialisation =
 
 generate :: (Shape ix, Elt e) => Exp ix -> (Exp ix -> Exp e) -> ChannelAcc ix e
@@ -113,6 +113,7 @@ replicate sh m = Acc $ A.replicate sh $ accMatrix m
 fill :: (Shape ix, Elt e) => Exp ix -> Exp e -> ChannelAcc ix e
 fill sh x = Acc $ A.fill sh x
 
+
 -- = Enumeration =
 
 enumFromN :: (Shape ix, Elt e, A.IsNum e) => Exp ix -> Exp e -> ChannelAcc ix e
@@ -121,6 +122,7 @@ enumFromN sh n = Acc $ A.enumFromN sh n
 enumFromStepN :: (Shape ix, Elt e, A.IsNum e)
     => Exp ix -> Exp e -> Exp e -> ChannelAcc ix e
 enumFromStepN sh n s = Acc $ A.enumFromStepN sh n s
+
 
 -- = Concatenation =
 
@@ -135,10 +137,11 @@ enumFromStepN sh n s = Acc $ A.enumFromStepN sh n s
 reshape :: (Shape ix, Shape ix', Elt e) => Exp ix -> ChannelAcc ix' e -> ChannelAcc ix e
 reshape sh chan = Acc $ A.reshape sh (accMatrix chan)
 
+
 -- = Specialised permutations =
 
 transpose :: Elt e => Channel2 e -> Channel2 e
-transpose chan = Acc $ accMatrix chan
+transpose chan = Acc $ A.transpose $ accMatrix chan
 
 
 -- = Element-wise operations =
@@ -148,6 +151,7 @@ transpose chan = Acc $ accMatrix chan
 map :: (Shape ix, Elt a, Elt b)
     => (Exp a -> Exp b) -> ChannelAcc ix a -> ChannelAcc ix b
 map f channel = Acc $ A.map f (accMatrix channel)
+
 
 -- = Zipping =
 
@@ -313,11 +317,12 @@ zip9 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i
 zip9 ch1 ch2 ch3 ch4 ch5 ch6 ch7 ch8 ch9 = Acc $ A.zip9 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7) (accMatrix ch8) (accMatrix ch9)
 
 
+-- == Unzipping ==
+
 unzip ::  (Shape ix, Elt a)
     => ChannelAcc ix (a, a)
     -> (ChannelAcc ix a, ChannelAcc ix a)
 unzip chan = over each Acc $ A.unzip (accMatrix chan)
---unzip chan = over each Acc $ A.unzip  (accMatrix chan)
 
 unzip3 :: (Shape ix, Elt a)
     => ChannelAcc ix (a, a, a)
@@ -354,6 +359,7 @@ unzip9 :: (Shape ix, Elt a)
     -> (ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a, ChannelAcc ix a)
 unzip9 chan = over each Acc $ A.unzip9 (accMatrix chan)
 
+
 -- == Folding ==
 
 fold :: (Shape ix, Elt a) => (Exp a -> Exp a -> Exp a) -> Exp a -> ChannelAcc (ix A.:. Int) a -> ChannelAcc ix a
@@ -373,6 +379,7 @@ foldSeg f acc chan segments = Acc $ A.foldSeg f acc (accMatrix chan) segments
 
 fold1Seg :: (Shape ix, Elt a, Elt i, A.IsIntegral i) => (Exp a -> Exp a -> Exp a) -> ChannelAcc (ix A.:. Int) a -> A.Acc (A.Segments i) -> ChannelAcc (ix A.:. Int) a
 fold1Seg f chan segments = Acc $ A.fold1Seg f (accMatrix chan) segments
+
 
 -- = Stencil =
 

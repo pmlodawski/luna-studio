@@ -15,12 +15,7 @@ import qualified Data.Array.Accelerate as A
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
 
---import qualified Debug.Trace as Dbg
 
---import           Diagrams.Prelude                (R2, Diagram)
---import           Diagrams.Backend.Cairo.Internal (Cairo)
-
---import qualified Flowbox.Graphics.Color             as Color
 import           Flowbox.Graphics.Image             (Image)
 import qualified Flowbox.Graphics.Image             as Image
 import           Flowbox.Graphics.Image.Channel     (ChannelAcc, Channel2)
