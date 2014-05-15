@@ -42,9 +42,7 @@ getOrStart userName instanceRequest = do
              : Tag.startTimeTag currentTime
              : [Tag.userTag $ Just userName]
     userInstances <- filter usable <$> findInstances
-
     let instancesCount = length userInstances
-        startExisting = Instance.startExisting (Types.instanceId $ head userInstances) tags
     if instancesCount == 0
         then Instance.startNew instanceRequest tags
         else do if instancesCount > 1
@@ -53,6 +51,6 @@ getOrStart userName instanceRequest = do
                 case head $ map Types.instanceState userInstances of
                     Types.InstanceStatePending   -> head <$> Instance.waitForStart (map Types.instanceId userInstances) def
                     Types.InstanceStateRunning   -> return $ head userInstances
-                    Types.InstanceStateStopping  -> startExisting
-                    Types.InstanceStateStopped   -> startExisting
+                    Types.InstanceStateStopped   -> Instance.startExisting (Types.instanceId $ head userInstances) tags
+                    Types.InstanceStateStopping  -> fail "Instance is stopping, wait a moment and retry"
                     _                            -> fail "Unknown instance state"
