@@ -22,9 +22,9 @@ import qualified Flowbox.AWS.EC2.Pool.Pool              as Pool
 import           Flowbox.AWS.Region                     (Region)
 import qualified Flowbox.AWS.Region                     as Region
 import qualified Flowbox.AWS.User.User                  as User
+import qualified Flowbox.Control.Concurrent             as Concurrent
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Control.Concurrent as Concurrent
 
 
 rootLogger :: Logger
@@ -52,6 +52,8 @@ main = do
 
         ip    <- Types.instanceIpAddress <$> Instance.retrieve userName Request.mk mpool
         liftIO $ print ip
+
+        liftIO $ Concurrent.threadDelay 5000000
 
         Instance.releaseUser userName mpool
 

@@ -13,6 +13,7 @@ import qualified AWS.EC2.Types           as Types
 import           Control.Concurrent.MVar (MVar)
 import qualified Control.Concurrent.MVar as MVar
 import           Control.Monad.IO.Class  (liftIO)
+import qualified Data.List               as List
 import           Data.Map                (Map)
 import qualified Data.Map                as Map
 
@@ -59,6 +60,12 @@ getFree = Map.toList . Map.filter (\info' -> info' ^. InstanceInfo.state == Inst
 use :: User.Name -> Instance.ID -> Pool -> Pool
 use userName = Map.adjust (set InstanceInfo.state $ InstanceState.Used userName)
 
+
+sortBySpareSeconds :: Time.UTCTime -> [PoolEntry] -> [PoolEntry]
+sortBySpareSeconds currentTime = List.sortBy (\a b ->
+    compare (InstanceInfo.spareSeconds (snd a) currentTime)
+            (InstanceInfo.spareSeconds (snd b) currentTime))
+
 ----------------------------------------------------------
 
 initialize :: EC2Resource m => EC2 m MPool
@@ -66,7 +73,9 @@ initialize = do
     logger info $ "Initializing instance pool"
     instances <- findInstances Nothing
     entries <- mapM readInstanceInfo instances
-    liftIO $ MVar.newMVar $ Map.fromList entries
+    let pool = Map.fromList entries
+    logger trace $ "Pool: " ++ show pool
+    liftIO $ MVar.newMVar pool
 
 
 readInstanceInfo :: EC2Resource m => Types.Instance -> EC2 m PoolEntry

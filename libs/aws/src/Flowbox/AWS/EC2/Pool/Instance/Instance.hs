@@ -41,6 +41,7 @@ logger = getLoggerIO "Flowbox.AWS.EC2.Pool.Instance.Instance"
 
 releaseUser :: EC2Resource m => User.Name -> MPool -> EC2 m ()
 releaseUser userName mpool = do
+    logger info $ "Releasing instances of user " ++ show userName
     instances <- Pool.findInstances (Just userName)
     mapM_ (flip release mpool) (map Types.instanceId instances)
 
@@ -48,17 +49,21 @@ releaseUser userName mpool = do
 release :: EC2Resource m => Instance.ID -> MPool -> EC2 m ()
 release instanceID mpool = do
     logger info $ "Releasing instance " ++ show instanceID
-    liftIO $ MVar.modifyMVar_ mpool (return . Pool.free instanceID)
-    Tag.tag [Tag.userTag Nothing] [instanceID]
+    liftIO $ MVar.modifyMVar_ mpool (\pool -> do
+        logger trace $ "Pool: " ++ show pool
+        return $ Pool.free instanceID pool)
+    Tag.tag [Tag.userTag Nothing] [instanceID] -- TODO [PM] : noUser = Nothing
 
 
 retrieve :: EC2Resource m => User.Name -> Types.RunInstancesRequest -> MPool -> EC2 m Types.Instance
 retrieve userName instanceRequest mpool = do
     logger info $ "Retreiving instance for user " ++ show userName
-    poolEntry <- liftIO $ MVar.modifyMVar mpool (\pool ->
+    poolEntry <- liftIO $ MVar.modifyMVar mpool (\pool -> do
+        logger trace $ "Pool: " ++ show pool
+        currentTime <- Time.getCurrentTime
         case Pool.getUsed userName pool of
             used:_ -> return (pool, Just used)
-            []     -> case Pool.getFree pool of
+            []     -> case Pool.sortBySpareSeconds currentTime $ Pool.getFree pool of
                            f:_ -> return (Pool.use userName (fst f) pool, Just f)
                            []  -> return (pool, Nothing))
     instanceID <- case poolEntry of
@@ -77,7 +82,9 @@ retrieve userName instanceRequest mpool = do
                      : [Tag.userTag $ Just userName]
             inst <- Instance.startNew instanceRequest tags
             let instanceID = Types.instanceId inst
-            liftIO $ MVar.modifyMVar_ mpool (return . Map.insert instanceID (InstanceInfo currentTime $ InstanceState.Used userName))
+            liftIO $ MVar.modifyMVar_ mpool (\pool -> do
+                logger trace $ "Pool: " ++ show pool
+                return $ Map.insert instanceID (InstanceInfo currentTime $ InstanceState.Used userName) pool)
             return instanceID
     Instance.byID instanceID
 
@@ -89,14 +96,15 @@ prepareForNewUser userName instanceID =
 
 getCandidatesToShutdown :: Time.UTCTime -> Pool -> [Pool.PoolEntry]
 getCandidatesToShutdown currentTime = Map.toList . Map.filter isCandidateToShutdown where
-    isCandidateToShutdown info' =
-        (Time.toSeconds $ Time.diffUTCTime currentTime $ info' ^. InstanceInfo.started) `mod` 3600 > Pool.shutDownDiff
+    isCandidateToShutdown info' = (info' ^. InstanceInfo.state == InstanceState.Free)
+                               && (InstanceInfo.spareSeconds info' currentTime > Pool.shutDownDiff)
 
 
 freeUnused :: EC2Resource m => MPool -> EC2 m ()
 freeUnused mpool = do
     logger debug $ "Terminating unused instances..."
     candidates <- liftIO $ MVar.modifyMVar mpool (\pool -> do
+        logger trace $ "Pool: " ++ show pool
         currentTime <- Time.getCurrentTime
         let candidates = map fst $ getCandidatesToShutdown currentTime pool
             newPool    = foldr Map.delete pool candidates
@@ -108,7 +116,7 @@ freeUnused mpool = do
 
 
 monitor :: EC2Resource m => MPool -> EC2 m ()
-monitor mpool = do 
+monitor mpool = do
     logger info "Instance monitoring started"
     forever $ do
         let seconds = 30
