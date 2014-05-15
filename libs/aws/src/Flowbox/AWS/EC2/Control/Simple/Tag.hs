@@ -6,16 +6,16 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 
-module Flowbox.AWS.EC2.Pool.Tag where
+module Flowbox.AWS.EC2.Control.Simple.Tag where
 
 import qualified Flowbox.AWS.Tag as Tag
 
 
 
-poolKey :: Tag.Key
-poolKey = "control"
+simpleKey :: Tag.Key
+simpleKey = "control"
 
 
-poolValue :: Tag.Value
-poolValue = "pool-1.0"
+simpleValue :: Tag.Value
+simpleValue = "simple-1.0"
 

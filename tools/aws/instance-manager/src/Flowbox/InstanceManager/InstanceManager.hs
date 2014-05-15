@@ -11,13 +11,13 @@ import qualified AWS           as AWS
 import qualified AWS.EC2.Types as Types
 import qualified Data.Text     as Text
 
-import qualified Flowbox.AWS.EC2.EC2               as EC2
-import qualified Flowbox.AWS.EC2.Instance.Instance as Instance (ready)
-import qualified Flowbox.AWS.EC2.Instance.Request  as Request
-import qualified Flowbox.AWS.EC2.Simple.Instance   as Instance
-import           Flowbox.AWS.Region                (Region)
-import qualified Flowbox.AWS.User.User             as User
-import qualified Flowbox.InstanceManager.Cmd       as Cmd
+import qualified Flowbox.AWS.EC2.Control.Simple.Instance as Instance
+import qualified Flowbox.AWS.EC2.EC2                     as EC2
+import qualified Flowbox.AWS.EC2.Instance.Instance       as Instance (ready)
+import qualified Flowbox.AWS.EC2.Instance.Request        as Request
+import           Flowbox.AWS.Region                      (Region)
+import qualified Flowbox.AWS.User.User                   as User
+import qualified Flowbox.InstanceManager.Cmd             as Cmd
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 

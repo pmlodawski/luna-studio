@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.AWS.EC2.Pool.Instance.State where
+module Flowbox.AWS.EC2.Control.Pool.Instance.State where
 
 import qualified Flowbox.AWS.User.User as User
 import           Flowbox.Prelude

@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.AWS.EC2.Pool.Instance.Info where
+module Flowbox.AWS.EC2.Control.Pool.Instance.Info where
 
-import           Flowbox.AWS.EC2.Pool.Instance.State (InstanceState)
-import qualified Flowbox.Data.Time                   as Time
-import           Flowbox.Prelude                     hiding (error, use)
+import           Flowbox.AWS.EC2.Control.Pool.Instance.State (InstanceState)
+import qualified Flowbox.Data.Time                           as Time
+import           Flowbox.Prelude                             hiding (error, use)
 
 
 
