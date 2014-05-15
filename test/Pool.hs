@@ -15,14 +15,14 @@ import qualified AWS.EC2.Types        as Types
 import           Control.Monad.Reader
 import           Data.Text            (Text)
 
-import qualified Flowbox.AWS.EC2.EC2                    as EC2
-import qualified Flowbox.AWS.EC2.Instance.Request       as Request
-import qualified Flowbox.AWS.EC2.Pool.Instance.Instance as Instance
-import qualified Flowbox.AWS.EC2.Pool.Pool              as Pool
-import           Flowbox.AWS.Region                     (Region)
-import qualified Flowbox.AWS.Region                     as Region
-import qualified Flowbox.AWS.User.User                  as User
-import qualified Flowbox.Control.Concurrent             as Concurrent
+import qualified Flowbox.AWS.EC2.Control.Pool.Instance.Instance as Instance
+import qualified Flowbox.AWS.EC2.Control.Pool.Pool              as Pool
+import qualified Flowbox.AWS.EC2.EC2                            as EC2
+import qualified Flowbox.AWS.EC2.Instance.Request               as Request
+import           Flowbox.AWS.Region                             (Region)
+import qualified Flowbox.AWS.Region                             as Region
+import qualified Flowbox.AWS.User.User                          as User
+import qualified Flowbox.Control.Concurrent                     as Concurrent
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 

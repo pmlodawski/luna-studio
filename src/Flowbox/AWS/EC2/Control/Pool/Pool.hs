@@ -7,7 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.AWS.EC2.Pool.Pool where
+module Flowbox.AWS.EC2.Control.Pool.Pool where
 
 import qualified AWS.EC2.Types           as Types
 import           Control.Concurrent.MVar (MVar)
@@ -17,22 +17,22 @@ import qualified Data.List               as List
 import           Data.Map                (Map)
 import qualified Data.Map                as Map
 
-import           Flowbox.AWS.EC2.EC2                 (EC2, EC2Resource)
-import qualified Flowbox.AWS.EC2.Instance.ID         as Instance
-import qualified Flowbox.AWS.EC2.Instance.Instance   as Instance
-import qualified Flowbox.AWS.EC2.Instance.Tag        as Tag
-import           Flowbox.AWS.EC2.Pool.Instance.Info  (InstanceInfo (InstanceInfo))
-import qualified Flowbox.AWS.EC2.Pool.Instance.Info  as InstanceInfo
-import qualified Flowbox.AWS.EC2.Pool.Instance.State as InstanceState
-import qualified Flowbox.AWS.EC2.Pool.Tag            as Tag
-import qualified Flowbox.AWS.User.User               as User
-import qualified Flowbox.Data.Time                   as Time
-import           Flowbox.Prelude                     hiding (error)
+import           Flowbox.AWS.EC2.Control.Pool.Instance.Info  (InstanceInfo (InstanceInfo))
+import qualified Flowbox.AWS.EC2.Control.Pool.Instance.Info  as InstanceInfo
+import qualified Flowbox.AWS.EC2.Control.Pool.Instance.State as InstanceState
+import qualified Flowbox.AWS.EC2.Control.Pool.Tag            as Tag
+import           Flowbox.AWS.EC2.EC2                         (EC2, EC2Resource)
+import qualified Flowbox.AWS.EC2.Instance.ID                 as Instance
+import qualified Flowbox.AWS.EC2.Instance.Instance           as Instance
+import qualified Flowbox.AWS.EC2.Instance.Tag                as Tag
+import qualified Flowbox.AWS.User.User                       as User
+import qualified Flowbox.Data.Time                           as Time
+import           Flowbox.Prelude                             hiding (error)
 import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.EC2.Pool.Pool"
+logger = getLoggerIO "Flowbox.AWS.EC2.Control.Pool.Pool"
 
 
 type Pool = Map Instance.ID InstanceInfo
