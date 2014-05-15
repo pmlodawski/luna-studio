@@ -64,20 +64,20 @@ applyMerge mergeType overlay background = case mergeType of
     ATop alphaNameOv alphaNameBg -> do alphaChanOv <- Image.get alphaNameOv overlay
                                        alphaChanBg <- Image.get alphaNameBg background
                                        mergeWith4 alphaChanOv alphaChanBg $
-                                           (\alphaOv alphaBg ov bg -> bg * alphaOv + ov * (U.invert alphaBg)) -- TODO: nuke version, gotta check this later and make sure it works as intended, kinda feels like imagemagick explains it a bit differently
-    Average           -> mergeWith (\ov bg -> (bg + ov) / 2)
-    ColorBurn         -> mergeWith (\ov bg -> U.invert $ (U.invert bg) / ov)
-    ColorDodge        -> mergeWith (\ov bg -> bg / (U.invert ov))
+                                           \alphaOv alphaBg ov bg -> bg * alphaOv + ov * U.invert alphaBg -- TODO: nuke version, gotta check this later and make sure it works as intended, kinda feels like imagemagick explains it a bit differently
+    Average           -> mergeWith $ \ov bg -> (bg + ov) / 2
+    ColorBurn         -> mergeWith $ \ov bg -> U.invert $ U.invert bg / ov
+    ColorDodge        -> mergeWith $ \ov bg -> bg / U.invert ov
     ConjointOver alphaNameOv alphaNameBg -> do alphaChanOv <- Image.get alphaNameOv overlay
                                                alphaChanBg <- Image.get alphaNameBg background
-                                               mergeWith4 alphaChanOv alphaChanBg $
-                                                   (\alphaOv alphaBg ov bg -> A.cond (alphaBg A.>* alphaOv) bg $ bg + ov * (U.invert alphaBg) / alphaOv)
+                                               mergeWith4 alphaChanOv alphaChanBg $ 
+                                                   \alphaOv alphaBg ov bg -> A.cond (alphaBg A.>* alphaOv) bg $ bg + ov * U.invert alphaBg / alphaOv
     Copy              -> mergeWith (\_ bg -> bg)
     Difference        -> mergeWith (\ov bg -> abs $ bg - ov)
     DisjointOver alphaNameOv alphaNameBg -> do alphaChanOv <- Image.get alphaNameOv overlay
                                                alphaChanBg <- Image.get alphaNameBg background
                                                mergeWith4 alphaChanOv alphaChanBg $
-                                                   (\alphaOv alphaBg ov bg -> A.cond (alphaBg + alphaOv A.<* 1) (bg + ov) $ bg + ov * (U.invert alphaBg) / alphaOv)
+                                                   \alphaOv alphaBg ov bg -> A.cond (alphaBg + alphaOv A.<* 1) (bg + ov) $ bg + ov * U.invert alphaBg / alphaOv
     DivideByDst       -> mergeWith divideWithCheck
     DivideBySrc       -> mergeWith $ flip divideWithCheck
     Divide            -> mergeWith divideWithCheck
@@ -87,32 +87,32 @@ applyMerge mergeType overlay background = case mergeType of
     HardLight         -> mergeWith $ flip overlayFun
     Hypot             -> mergeWith (\ov bg -> sqrt $ bg ^ 2 + ov ^ 2)
     In alphaName      -> do alphaChan <- Image.get alphaName overlay
-                            mergeWith3 alphaChan (\alpha _ bg -> bg * alpha)
+                            mergeWith3 alphaChan $ \alpha _ bg -> bg * alpha
     WithMask alphaName -> do alphaChan <- Image.get alphaName background
-                             mergeWith3 alphaChan (\alpha ov _ -> ov * alpha)
+                             mergeWith3 alphaChan $ \alpha ov _ -> ov * alpha
     Matte alphaName   -> do alphaChan <- Image.get alphaName background
-                            mergeWith3 alphaChan (\alpha ov bg -> bg * alpha + ov * (U.invert alpha))
+                            mergeWith3 alphaChan $ \alpha ov bg -> bg * alpha + ov * U.invert alpha
     Max               -> mergeWith max
     Min               -> mergeWith min
     Minus             -> mergeWith $ flip (-)
     --Mix val           -> mergeWith (\ov bg -> bg * val + ov * (U.invert val)) -- INFO: commented out because: check the datatype
     Multiply          -> mergeWith multiplyWithCheck
     Out alphaName     -> do alphaChan <- Image.get alphaName overlay
-                            mergeWith3 alphaChan (\alpha _ bg -> bg * (U.invert alpha))
+                            mergeWith3 alphaChan $ \alpha _ bg -> bg * U.invert alpha
     Over alphaName    -> do alphaChan <- Image.get alphaName background
-                            mergeWith3 alphaChan (\alpha ov bg -> bg + ov * (U.invert alpha))
+                            mergeWith3 alphaChan $ \alpha ov bg -> bg + ov * U.invert alpha
     Overlay           -> mergeWith overlayFun
     Plus              -> mergeWith (+)
-    Screen            -> mergeWith (\ov bg -> U.invert $ (U.invert ov) * (U.invert bg)) -- INFO: imagemagick version, nuke does this in a slightly different way but the result might be the same
+    Screen            -> mergeWith $ \ov bg -> U.invert $ U.invert ov * U.invert bg -- INFO: imagemagick version, nuke does this in a slightly different way but the result might be the same
     SoftLight         -> mergeWith softLightFunc
     Stencil alphaName -> do alphaChan <- Image.get alphaName background
-                            mergeWith3 alphaChan (\alpha ov _ -> ov * (U.invert alpha))
+                            mergeWith3 alphaChan $ \alpha ov _ -> ov * U.invert alpha
     Under alphaName   -> do alphaChan <- Image.get alphaName overlay
-                            mergeWith3 alphaChan (\alpha ov bg -> bg * (U.invert alpha) + ov)
+                            mergeWith3 alphaChan $ \alpha ov bg -> bg * U.invert alpha + ov
     XOR alphaNameOv alphaNameBg -> do alphaChanOv <- Image.get alphaNameOv overlay
                                       alphaChanBg <- Image.get alphaNameBg background
                                       mergeWith4 alphaChanOv alphaChanBg $
-                                          (\alphaOv alphaBg ov bg -> bg * (U.invert alphaOv) + ov * (U.invert alphaBg))
+                                          \alphaOv alphaBg ov bg -> bg * U.invert alphaOv + ov * U.invert alphaBg
 --  AddMix (Map ChannelName (Curve, Curve))
 --    Custom f          -> f overlay background
     where mergeWith f              = return $ Image.channelUnionWith (Channel.zipWith f)              overlay background
@@ -120,16 +120,16 @@ applyMerge mergeType overlay background = case mergeType of
           mergeWith4 chanA chanB f = return $ Image.channelUnionWith (Channel.zipWith4 f chanA chanB) overlay background
           divideWithCheck a b      = checkForNegatives a b (a / b)
           multiplyWithCheck a b    = checkForNegatives a b (a * b)
-          checkForNegatives a b c  = A.cond (a A.<* 0 A.&&* b A.<* 0) 0 c
+          checkForNegatives a b    = A.cond (a A.<* 0 A.&&* b A.<* 0) 0
           overlayFun ov bg         = A.cond (bg A.<=* 0.5) (2 * bg * ov) (1 - 2 * (1 - ov) * (1 - bg))
-          softLightFunc ov bg      = A.cond (bg A.<=* 0.5) (2 * bg * (ov / 2 + 0.25)) (U.invert $ 2 * (U.invert bg) * (U.invert $ ov / 2 + 0.25)) -- INFO: photoshop (?) version, nuke does this in a slightly different way and might produce different results
+          softLightFunc ov bg      = A.cond (bg A.<=* 0.5) (2 * bg * (ov / 2 + 0.25)) (U.invert $ 2 * U.invert bg * U.invert (ov / 2 + 0.25)) -- INFO: photoshop (?) version, nuke does this in a slightly different way and might produce different results
 
 
 mask :: (A.Shape ix, A.Elt a, A.IsNum a, Image img (ChannelAcc ix a)) => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> Maybe (Mask img ix a) -> Image.Result (img (ChannelAcc ix a))
 mask imgA _ Nothing = Right imgA
 mask imgA imgB (Just theMask) = do
     maskChan <- Image.get name maskImg
-    let applyMask chanA chanB = Channel.zipWith3 calculateMask maskChan chanA chanB
+    let applyMask = Channel.zipWith3 calculateMask maskChan
         calculateMask alpha = flip (U.mix (Comp.invert invertFlag alpha))
     return $ Comp.inject injection maskChan
            $ Image.channelUnion (Image.channelIntersectionWith applyMask imgA imgB) imgA

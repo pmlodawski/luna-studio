@@ -50,7 +50,7 @@ rasterize w h x y size diagram = Unsafe.unsafePerformIO $ do
            $ Image.insert "rgba.g" green
            $ Image.insert "rgba.b" blue
            $ Image.insert "rgba.a" alpha
-           $ mempty
+           mempty
     where makeElements = do
               let (_, render) = Diag.renderDia Diag.Cairo (Diag.CairoOptions "" size RenderOnly False) diagram
               surface <- Cairo.createImageSurface FormatARGB32 w h
@@ -59,11 +59,11 @@ rasterize w h x y size diagram = Unsafe.unsafePerformIO $ do
               pixels <- Cairo.imageSurfaceGetPixels surface :: IO (SurfaceData Int Word32)
               MA.getElems pixels
           convert rgba = (r, g, b, a)
-              where b = handleAlpha ((fromIntegral $ rgba .&. 0xFF) / 255)
+              where b = handleAlpha (fromIntegral (rgba .&. 0xFF) / 255)
                     g = handleAlpha (calculate 0x100)
                     r = handleAlpha (calculate 0x10000)
                     a = calculate 0x1000000
-                    calculate val = (fromIntegral $ (rgba `div` val) .&. 0xFF) / 255
+                    calculate val = fromIntegral ((rgba `div` val) .&. 0xFF) / 255
                     handleAlpha val = case a of
                         0  -> val
                         a' -> val / a'

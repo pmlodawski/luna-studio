@@ -40,7 +40,7 @@ rotate theta (Transformed img transposition) = Transformed img transposition'
                                                                     , 0           , 0        , 1])
 
 rotateAt :: Double -> Double -> Double -> Transformed a -> Transformed a
-rotateAt theta x y = (translate (-x) (-y)) . (rotate theta) . (translate x y)
+rotateAt theta x y = translate (-x) (-y) . rotate theta . translate x y
 
 scale :: Double -> Double -> Transformed a -> Transformed a
 scale x y (Transformed img transposition) = Transformed img transposition'
@@ -50,7 +50,7 @@ scale x y (Transformed img transposition) = Transformed img transposition'
                                                                     , 0  , 0  , 1])
 
 scaleAt :: Double -> Double -> Double -> Double -> Transformed a -> Transformed a
-scaleAt sx sy x y = (translate (-x) (-y)) . (scale sx sy) . (translate x y)
+scaleAt sx sy x y = translate (-x) (-y) . scale sx sy . translate x y
 
 
 -- = Instances =

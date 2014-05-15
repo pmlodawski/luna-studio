@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Graphics.Curves where
+module Flowbox.Graphics.Deprecated.Curves where
 
 import Flowbox.Prelude as P
 

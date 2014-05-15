@@ -26,7 +26,7 @@ data Channel a = Raw a
 type RawData2 a = A.Array A.DIM2 a
 type RawData3 a = A.Array A.DIM3 a
 
-type Backend ix a = A.Acc (A.Array ix a) -> (A.Array ix a)
+type Backend ix a = A.Acc (A.Array ix a) -> A.Array ix a
 
 type ChannelAcc ix a = Channel (A.Array ix a)
 type Channel2 a = Channel (RawData2 a)
@@ -125,7 +125,7 @@ enumFromStepN sh n s = Acc $ A.enumFromStepN sh n s
 -- = Concatenation =
 
 (++) :: (A.Slice ix, Shape ix, Elt e) => ChannelAcc (ix A.:. Int) e -> ChannelAcc (ix A.:. Int) e -> ChannelAcc (ix A.:. Int) e
-(++) chan1 chan2 = Acc $ (accMatrix chan1) A.++ (accMatrix chan2)
+(++) chan1 chan2 = Acc $ accMatrix chan1 A.++ accMatrix chan2
 
 
 -- == Modifying arrays ==

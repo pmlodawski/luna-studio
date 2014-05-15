@@ -29,7 +29,7 @@ decompose img = do chan <- Image.get "rgba" img
                                  $ Image.insert "rgba.g" g
                                  $ Image.insert "rgba.b" b
                                  $ Image.insert "rgba.a" a
-                                 $ mempty
+                                 mempty
                    return outimg
 
 compose :: (A.Shape ix, Image img (ChannelAcc ix A.Word8), Image img (ChannelAcc ix A.Word32))
@@ -47,9 +47,9 @@ pack32 :: Exp (A.Word8, A.Word8, A.Word8, A.Word8) -> Exp A.RGBA32
 pack32 rgba = r + g + b + a
     where (r', g', b', a')  = A.unlift rgba
           r                 = A.fromIntegral r'
-          g                 = (A.fromIntegral g') * 0x100
-          b                 = (A.fromIntegral b') * 0x10000
-          a                 = (A.fromIntegral a') * 0x1000000
+          g                 = A.fromIntegral g' * 0x100
+          b                 = A.fromIntegral b' * 0x10000
+          a                 = A.fromIntegral a' * 0x1000000
 
 
 unpack32 :: Exp A.RGBA32 -> Exp (A.Word8, A.Word8, A.Word8, A.Word8)

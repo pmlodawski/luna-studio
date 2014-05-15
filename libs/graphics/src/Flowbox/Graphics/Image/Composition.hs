@@ -56,11 +56,11 @@ premultiply :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a)
 premultiply img Nothing = Right img
 premultiply img (Just (Premultiply name invertFlag)) = do
     alphaChan <- Image.get name img
-    return $ Image.map (Channel.zipWith (\a x -> x * (invert invertFlag a)) alphaChan) img
+    return $ Image.map (Channel.zipWith (\a x -> x * invert invertFlag a) alphaChan) img
 
 unpremultiply :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
     => img (ChannelAcc ix a) -> Maybe Premultiply -> Image.Result (img (ChannelAcc ix a))
 unpremultiply img Nothing = Right img
 unpremultiply img (Just (Premultiply name invertFlag)) = do
     alphaChan <- Image.get name img
-    return $ Image.map (Channel.zipWith (\a x -> x / (invert invertFlag a)) alphaChan) img
+    return $ Image.map (Channel.zipWith (\a x -> x / invert invertFlag a) alphaChan) img

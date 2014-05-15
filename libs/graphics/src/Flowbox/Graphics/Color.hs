@@ -16,13 +16,14 @@ import           Flowbox.Prelude        as P
 
 
 
-data Color a = RGB  { r :: a, g :: a, b :: a         }
-             | RGBA { r :: a, g :: a, b :: a, a :: a }
-             | HSV  { h :: a, s :: a, v :: a         }
-             | HSL  { h :: a, s :: a, v :: a         }
-             | CMY  { c :: a, m :: a, y :: a         }
-             | CMYK { c :: a, m :: a, y :: a, k :: a }
-             | YUV  { y :: a, u :: a, v :: a }
+data Color a = RGB    { r :: a, g :: a, b :: a         }
+             | RGBA   { r :: a, g :: a, b :: a, a :: a }
+             | HSV    { h :: a, s :: a, v :: a         }
+             | HSL    { h :: a, s :: a, v :: a         }
+             | CMY    { c :: a, m :: a, y :: a         }
+             | CMYK   { c :: a, m :: a, y :: a, k :: a }
+             | YUV    { y :: a, u :: a, v :: a }
+             | YUV_HD { y :: a, u :: a, v :: a }
              deriving (Show)
 
 
@@ -45,7 +46,7 @@ toRGB (HSV  h' s' v') = RGB (r'+m') (g'+m') (b'+m')
     where (r', g', b') = A.unlift res
           res = helperHsvHsl i c' x
           h'' = h' * 6
-          i = (A.floor h'') `mod` 6 :: Exp (A.Plain Int)
+          i = A.floor h'' `mod` 6 :: Exp (A.Plain Int)
           x = c' * (1 - abs(h'' `nonIntRem` 2 - 1))
           c' = v' * s'
           m' = v' - c'
@@ -53,7 +54,7 @@ toRGB (HSL h' s' l') = RGB (r'+m') (g'+m') (b'+m')
     where (r', g', b') = A.unlift res
           res = helperHsvHsl i c' x
           h'' = h' * 6
-          i = (A.floor h'') `mod` 6 :: Exp (A.Plain Int)
+          i = A.floor h'' `mod` 6 :: Exp (A.Plain Int)
           x = c' * (1 - abs(h'' `nonIntRem` 2 - 1))
           c' = (1 - abs(2 * l' - 1)) * s'
           m' = l' - c' / 2
@@ -65,12 +66,15 @@ toRGB (CMYK c' m' y' k') = RGB r' g' b'
     where r' = (1 - c') * k''
           g' = (1 - m') * k''
           b' = (1 - y') * k''
-          k'' = (1 - k')
+          k'' = 1 - k'
 toRGB (YUV y' u' v') = RGB r' g' b'
     where r' = y' + 1.13983 * v'
           g' = y' - 0.39465 * u' - 0.58060 * v'
           b' = y' + 2.03211 * u'
-
+toRGB (YUV_HD y' u' v') = RGB r' g' b'
+    where r' = y' + 1.28033 * v'
+          g' = y' - 0.21482 * u' - 0.38059 * v'
+          b' = y' + 2.12798 * u'
 
 toRGBA :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
 toRGBA color@(RGBA{}) = color
@@ -131,6 +135,8 @@ toCMYK (RGB r' g' b') = CMYK c' m' y' k'
           maxRGB = max r' $ max g' b'
 toCMYK color = toCMYK . toRGB $ color
 
+-- According to wikipedia, there are two different methods of YUV conversion
+-- For standard video
 toYUV :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
 toYUV color@(YUV{}) = color
 toYUV (RGB r' g' b') = YUV y' u' v'
@@ -139,21 +145,11 @@ toYUV (RGB r' g' b') = YUV y' u' v'
           v' = 0.615 * r' - 0.51499 * g' - 0.10001 * b'
 toYUV color = toYUV . toRGB $ color
 
--- YUV conversions for HDTV according to wikipedia
--- \begin{bmatrix} Y' \\ U \\ V \end{bmatrix}
--- =
--- \begin{bmatrix}
---   0.2126  &  0.7152  &  0.0722 \\
---  -0.09991 & -0.33609 &  0.436 \\
---   0.615   & -0.55861 & -0.05639
--- \end{bmatrix}
--- \begin{bmatrix} R \\ G \\ B \end{bmatrix}
-
--- \begin{bmatrix} R \\ G \\ B \end{bmatrix}
--- =
--- \begin{bmatrix}
---  1 &  0       &  1.28033 \\
---  1 & -0.21482 & -0.38059 \\
---  1 &  2.12798 &  0
--- \end{bmatrix}
--- \begin{bmatrix} Y' \\ U \\ V \end{bmatrix}
+-- For HD video
+toYUV_HD :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
+toYUV_HD color@(YUV_HD{}) = color
+toYUV_HD (RGB r' g' b') = YUV_HD y' u' v'
+    where y' = 0.2126 * r' + 0.7152 * g' + 0.0722 * b'
+          u' = (-0.09991) * r' - 0.33609 * g' + 0.436 * b'
+          v' = 0.615 * r' - 0.55861 * g' - 0.05639 * b'
+toYUV_HD color = toYUV_HD . toRGB $ color
