@@ -45,7 +45,7 @@ type GBPass result = Pass GBState result
 
 
 run :: AliasInfo -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
-run info pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make info pm) . expr2graph
+run aliasInfo pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make aliasInfo pm) . expr2graph
 
 
 expr2graph :: Expr -> GBPass (Graph, PropertyMap)

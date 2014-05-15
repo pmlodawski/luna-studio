@@ -1,0 +1,39 @@
+Name:               flowbox-project-manager
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Executable project-manager
+    Hs-Source-Dirs: dist/gen
+                    src
+    Other-Modules:  Paths_flowbox_project_manager
+    Main-Is:        Main.hs
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  base,
+                    bytestring,
+                    containers,
+                    either,
+                    errors,
+                    flowbox-batch,
+                    flowbox-bus,
+                    flowbox-config,
+                    flowbox-luna,
+                    flowbox-utils,
+                    MissingH,
+                    mtl,
+                    optparse-applicative,
+                    protocol-buffers,
+                    transformers,
+                    zeromq4-haskell >= 0.4

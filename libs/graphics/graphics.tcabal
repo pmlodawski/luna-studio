@@ -42,15 +42,12 @@ Library
                   TemplateHaskell,
                   OverloadedStrings
 
-  CPP-options:    -DACCELERATE_CUDA_BACKEND
-
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  containers,
                   lens             ,
                   accelerate       == 0.14.*,
                   accelerate-io    == 0.14.*,
-                  accelerate-cuda  == 0.14.*,
                   bmp,
                   --ekg,
                   repa-devil,
@@ -73,11 +70,14 @@ Library
                   diagrams-lib,
                   diagrams-contrib,
                   diagrams-cairo,
-                  cubicbezier
+                  cubicbezier,
+                  -- Dependencies that cabal 1.19.2 complains on
+                  network == 2.4.2.2,
+                  HTTP == 4000.2.11
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    build-depends:      accelerate-cuda
+    build-depends:      accelerate-cuda  == 0.14.*
 
   if flag(opencl)
     CPP-options:        -DACCELERATE_OPENCL_BACKEND
@@ -86,8 +86,6 @@ Library
 
 Executable test
   Main-is:              Main.hs
-
-  CPP-options:        -DACCELERATE_CUDA_BACKEND
 
   ghc-options:          -Wall -threaded -Odph -optlo-O3
   ghc-prof-options:     -auto-all
@@ -102,7 +100,7 @@ Executable test
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    build-depends:      accelerate-cuda
+    build-depends:      accelerate-cuda  == 0.14.*
 
   if flag(opencl)
     CPP-options:        -DACCELERATE_OPENCL_BACKEND
@@ -117,7 +115,6 @@ Executable test
                       lens             ,
                       accelerate       == 0.14.*,
                       accelerate-io    == 0.14.*,
-                      accelerate-cuda  == 0.14.*,
                       bmp,
                       repa-devil,
                       base                    == 4.6.*,

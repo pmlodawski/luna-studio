@@ -62,7 +62,7 @@ Library
 
 Executable luna-lib
   Main-Is:        Main.hs
-  Hs-Source-Dirs: tests
+  Hs-Source-Dirs: test
 
   if flag(debug)
     GHC-Options:  -csacc
@@ -91,7 +91,7 @@ Executable luna-lib
 Test-Suite tests
   Type:           exitcode-stdio-1.0
   Main-Is:        Spec.hs
-  Hs-Source-Dirs: tests
+  Hs-Source-Dirs: test
   GHC-Options:    -Wall -threaded -O2
   Build-Depends:  base,
                   flowbox-luna,

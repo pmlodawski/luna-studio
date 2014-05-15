@@ -56,7 +56,7 @@ def main():
         print_info('Styling only changed files in git repository. To style all files use "all" option.')
         (paths, err) = Popen('git status --porcelain', stdout=PIPE, stderr=PIPE, shell=True).communicate()
         paths = paths.split('\n')
-        paths = [file[3:] for file in paths]
+        paths = [file[3:] for file in paths if (len(file) > 0 and file[0] != 'D')]
         paths = [path.split(' -> ')[-1] for path in paths]
 
     paths = [file for file in paths if file[-3:] == '.hs']

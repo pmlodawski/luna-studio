@@ -1,0 +1,18 @@
+BUILD_DIR=/tmp/integrate
+
+BRANCH1="develop"
+BRANCH2="develop"
+if (( "$#" == 2 ))
+then
+    BRANCH1=$1
+    BRANCH2=$2
+fi
+
+rm $BUILD_DIR -Rf 
+mkdir $BUILD_DIR
+cd $BUILD_DIR && \
+git clone git@github.com:wdanilo/flowbox.git && \
+git clone git@github.com:wdanilo/flowbox-env.git && \
+cd flowbox     && git checkout $BRANCH1 && cd .. && \
+cd flowbox-env && git checkout $BRANCH2 && \
+time ./bootstrap.py ../flowbox
