@@ -5,7 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ViewPatterns     #-}
 
 module Flowbox.Graphics.Image.IO where
 
