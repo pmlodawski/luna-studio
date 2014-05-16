@@ -10,18 +10,20 @@
 module Flowbox.Prelude(
     module Flowbox.Prelude,
     module Prelude,
-    module X
+    module X,
+    void
 ) where
 
 import           Control.Applicative    as X
 import           Control.Lens           as X
+import           Control.Monad          (void)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Control.Monad.Trans    (lift)
 import           Data.Default           as X
+import           Data.Foldable          (forM_)
 import           Data.Monoid            as X (Monoid, mappend, mempty)
 import qualified Data.Traversable       as Traversable
---import           Data.Typeable
-import           Control.Monad.Trans (lift)
-import           Data.Foldable       (forM_)
+
 import           Flowbox.Debug.Debug as X
 import           Prelude             hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude

@@ -11,14 +11,19 @@ import qualified AWS           as AWS
 import qualified AWS.EC2.Types as Types
 import qualified Data.Text     as Text
 
-import qualified Flowbox.AWS.EC2.EC2               as EC2
-import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
-import qualified Flowbox.AWS.EC2.Instance.Request  as Request
-import           Flowbox.AWS.Region                (Region)
-import qualified Flowbox.InstanceManager.Cmd       as Cmd
+import qualified Flowbox.AWS.EC2.Control.Simple.Instance as Instance
+import qualified Flowbox.AWS.EC2.EC2                     as EC2
+import qualified Flowbox.AWS.EC2.Instance.Instance       as Instance (ready)
+import qualified Flowbox.AWS.EC2.Instance.Request        as Request
+import           Flowbox.AWS.Region                      (Region)
+import qualified Flowbox.AWS.User.User                   as User
+import qualified Flowbox.InstanceManager.Cmd             as Cmd
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
+
+userName :: User.Name
+userName = "flowbox"
 
 
 logger :: LoggerIO
@@ -27,10 +32,6 @@ logger = getLoggerIO "Flowbox.InstanceManager.InstanceManager"
 
 getCredential :: Cmd.Options -> IO AWS.Credential
 getCredential = AWS.loadCredentialFromFile . Cmd.credentialPath
-
-
-userName :: String
-userName = "flowbox"
 
 
 instanceIP :: Types.Instance -> String
@@ -63,7 +64,7 @@ stop :: Region -> Cmd.Options -> IO ()
 stop region options = do
     credential <- getCredential options
     EC2.runEC2InRegion credential region $ do
-        instances <- filter Instance.ready <$> Instance.find userName
+        instances <- filter Instance.ready <$> Instance.findInstances
         let instanceIDs = map Types.instanceId instances
         if length instances == 0
             then logger info $ "No instances to stop."
@@ -75,7 +76,7 @@ stop region options = do
 get :: Region -> Cmd.Options -> IO ()
 get region options = do
     credential <- getCredential options
-    instances <- EC2.runEC2InRegion credential region $ Instance.find userName
+    instances <- EC2.runEC2InRegion credential region $ Instance.findInstances
     mapM_ printInstance $ filter Instance.ready instances
 
 
@@ -83,7 +84,7 @@ terminate :: Region -> Cmd.Options -> IO ()
 terminate region options = do
     credential <- getCredential options
     EC2.runEC2InRegion credential region $ do
-        instances <- filter Instance.resumable <$> Instance.find userName
+        instances <- Instance.findInstances
         let instanceIDs = map Types.instanceId instances
         if length instances == 0
             then logger info $ "No instances to terminate."

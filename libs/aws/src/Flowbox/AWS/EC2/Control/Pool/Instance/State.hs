@@ -5,14 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.FileManager.Cmd where
+module Flowbox.AWS.EC2.Control.Pool.Instance.State where
 
-import Flowbox.Prelude
+import qualified Flowbox.AWS.User.User as User
+import           Flowbox.Prelude
 
 
 
-data Cmd = Run { verbose :: Int
-               , noColor :: Bool
-               }
-         | Version
-         deriving Show
+data InstanceState = Free
+                   | Used User.Name
+                   deriving (Eq, Ord, Show, Read)

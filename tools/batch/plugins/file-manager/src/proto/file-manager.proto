@@ -7,70 +7,134 @@
 
 package generated.proto.fileManager;
 
-import "file-system.proto";
 
 
 message FileSystem {
-    message LS {
-        message Request {
-            required string path = 1;
+    message Directory {
+        message Fetch {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required string path = 1;
+            }
         }
-        message Status {
-            repeated generated.proto.filesystem.Item items = 1;
-            required string path = 2;
+        message Upload {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required string path = 1;
+            }
+        }
+        message Create {
+            message Request {
+                required string path = 1;
+            }
+            message Update {
+                required string path = 1;
+            }
+        }
+        message Exists {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required bool exists = 1;
+                required string path = 2;
+            }
+        }
+        message List {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                repeated string items = 1;
+                required string path = 2;
+            }
+        }
+        message Remove {
+            message Request {
+                required string path = 1;
+            }
+            message Update {
+                required string path = 1;
+            }
+        }
+        message Copy {
+            message Request {
+                required string src = 1;
+                required string dst = 2;
+            }
+            message Update { 
+                required string src = 1;
+                required string dst = 2;
+            }
+        }
+        message Move {
+            message Request {
+                required string src = 1;
+                required string dst = 2;
+            }
+            message Update { 
+                required string src = 1;
+                required string dst = 2;
+            }
         }
     }
-    message Stat {
-        message Request {
-            required string path = 1;
+    message File {
+        message Fetch {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required string path = 1;
+            }
         }
-        message Status {
-            required generated.proto.filesystem.Item item = 1;
-            required string path = 2;
+        message Upload {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required string path = 1;
+            }
         }
-    }
-    message MkDir {
-        message Request {
-            required string path = 1;
+        message Exists {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required bool exists = 1;
+                required string path = 2;
+            }
         }
-        message Update { 
-            required string path = 1;
+        message Remove {
+            message Request {
+                required string path = 1;
+            }
+            message Update {
+                required string path = 1;
+            }
         }
-    }
-    message Touch {
-        message Request {
-            required string path = 1;
+        message Copy {
+            message Request {
+                required string src = 1;
+                required string dst = 2;
+            }
+            message Update { 
+                required string src = 1;
+                required string dst = 2;
+            }
         }
-        message Update { 
-            required string path = 1;
-        }
-    }
-    message RM {
-        message Request { 
-            required string path = 1;
-        }
-        message Update { 
-            required string path = 1;
-        }
-    }
-    message CP {
-        message Request {
-            required string src = 1;
-            required string dst = 2;
-        }
-        message Update { 
-            required string src = 1;
-            required string dst = 2;
-        }
-    }
-    message MV {
-        message Request {
-            required string src = 1;
-            required string dst = 2;
-        }
-        message Update { 
-            required string src = 1;
-            required string dst = 2;
+        message Move {
+            message Request {
+                required string src = 1;
+                required string dst = 2;
+            }
+            message Update { 
+                required string src = 1;
+                required string dst = 2;
+            }
         }
     }
 }

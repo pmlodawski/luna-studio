@@ -11,7 +11,7 @@ Flag Debug
     Default:        False
 
 
-Executable file-manager
+Executable file-manager-new
     Hs-Source-Dirs: dist/gen
                     src
     Other-Modules:  Paths_flowbox_file_manager
@@ -22,19 +22,12 @@ Executable file-manager
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
-                    bytestring,
-                    containers,
-                    either,
-                    errors,
-                    flowbox-batch,
+                    directory,
                     flowbox-bus,
                     flowbox-config,
                     flowbox-utils,
-                    MissingH,
                     mtl,
                     optparse-applicative,
                     protocol-buffers,
-                    transformers,
-                    zeromq4-haskell >= 0.4,
-                    -- Dependencies that cabal 1.19.2 complains on
-                    HTTP == 4000.2.11
+                    text,
+                    zeromq4-haskell >= 0.4

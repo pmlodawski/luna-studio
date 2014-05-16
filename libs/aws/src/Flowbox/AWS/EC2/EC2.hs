@@ -4,11 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE ConstraintKinds       #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Flowbox.AWS.EC2.EC2 (
     module EC2,
+    EC2Resource,
     runEC2,
     runEC2InRegion,
 ) where
@@ -23,6 +25,9 @@ import           Flowbox.AWS.Region (Region)
 import qualified Flowbox.AWS.Region as Region
 import           Flowbox.Prelude
 
+
+
+type EC2Resource m = (MonadIO m, Resource.MonadResource m, Resource.MonadBaseControl IO m)
 
 
 runEC2 :: (MonadIO m, Resource.MonadBaseControl IO m)

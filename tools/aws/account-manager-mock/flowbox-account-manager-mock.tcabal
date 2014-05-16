@@ -38,7 +38,4 @@ Executable account-manager-mock
                     postgresql-simple,
                     protocol-buffers,
                     text,
-                    transformers,
-                    -- Dependencies that cabal 1.19.2 complains on
-                    network == 2.4.2.2,
-                    HTTP == 4000.2.11
+                    transformers
