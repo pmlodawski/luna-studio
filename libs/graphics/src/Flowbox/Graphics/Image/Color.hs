@@ -23,6 +23,8 @@ import qualified Flowbox.Graphics.Image.Channel     as Channel
 import           Flowbox.Graphics.Image.Composition (Premultiply(..), Mask(..), Clamp)
 import qualified Flowbox.Graphics.Image.Composition as Comp
 import qualified Flowbox.Graphics.Image.Merge       as Merge
+import           Flowbox.Graphics.Shape             (Path)
+--import qualified Flowbox.Graphics.Shape             as Shape
 import           Flowbox.Graphics.Utils             (Range(..))
 import qualified Flowbox.Graphics.Utils             as U
 import           Flowbox.Prelude                    as P
@@ -228,3 +230,16 @@ colorTransfer target source maskInfo premultInfo mixValue = do
           calculateR' l m s =   4.4679  * l - 3.5873 * m + 0.1193 * s
           calculateG' l m s = (-1.2186) * l + 2.3809 * m - 0.1624 * s
           calculateB' l m s =   0.0497  * l - 0.2439 * m + 1.2045 * s
+
+
+crosstalk :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> [(Channel.Name, Channel.Name, Path)]
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
+crosstalk img curves maskInfo premultInfo mixValue = do
+    unpremultiplied <- Comp.unpremultiply img premultInfo
+    let result      =  handleCrosstalk unpremultiplied
+    premultiplied   <- Comp.premultiply result premultInfo
+    resultMixed     <- Merge.mix' img premultiplied mixValue
+    Merge.mask resultMixed img maskInfo
+    where handleCrosstalk img' = id img'

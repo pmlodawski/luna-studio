@@ -7,7 +7,14 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleContexts     #-}
 
-module Flowbox.Graphics.Shape where
+module Flowbox.Graphics.Shape (
+  module Flowbox.Graphics.Shape,
+  Point,
+  Line,
+  CubicBezier,
+  PathJoin,
+  Path
+) where
 
 import           Data.Array.Accelerate (Z(..))
 import qualified Data.Array.Accelerate as A
