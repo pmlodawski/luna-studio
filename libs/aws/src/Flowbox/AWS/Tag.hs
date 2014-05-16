@@ -4,19 +4,23 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+module Flowbox.AWS.Tag (
+    Tag,
+    Key,
+    Value,
 
-module Flowbox.FileManager.Version where
+    module X,
+) where
 
-import qualified Data.Version as Version
-
-import qualified Flowbox.FileManager.Config as Config
-import           Flowbox.Prelude
-
-
-
-full :: Bool -> String
-full = fileManager
+import           Data.Text as X hiding (Text, filter)
+import qualified Data.Text as Text
 
 
-fileManager :: Bool -> String
-fileManager numeric = (if numeric then "" else "Flowbox file manager version ") ++ Version.showVersion Config.version
+
+type Key = Text.Text
+
+
+type Value = Text.Text
+
+
+type Tag = (Key, Value)

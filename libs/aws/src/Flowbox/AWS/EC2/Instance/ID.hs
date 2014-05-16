@@ -4,11 +4,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+module Flowbox.AWS.EC2.Instance.ID where
 
-module Flowbox.FileManager.Config (
-    module Paths_flowbox_file_manager,
-) where
+import Data.Text (Text)
 
-import Paths_flowbox_file_manager (version)
 
+
+type ID = Text
 

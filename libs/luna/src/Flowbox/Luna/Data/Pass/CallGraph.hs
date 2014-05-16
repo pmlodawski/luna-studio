@@ -5,17 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances      #-}
 
 module Flowbox.Luna.Data.Pass.CallGraph where
 
-import Data.Graph.Inductive hiding(Node)
-import Data.Graph.Inductive.Tree
+import Data.Graph.Inductive               hiding (Node)
 import Data.Graph.Inductive.Monad
 import Data.Graph.Inductive.Monad.IOArray
 import Data.Graph.Inductive.Query.DFS
+import Data.Graph.Inductive.Tree          hiding (Gr)
 
 import Flowbox.Prelude
 
