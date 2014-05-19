@@ -30,7 +30,7 @@ import           Flowbox.Luna.Lib.LibManager             (LibManager)
 import qualified Flowbox.Luna.Lib.LibManager             as LibManager
 import           Flowbox.Luna.Lib.Library                (Library)
 import qualified Flowbox.Luna.Lib.Library                as Library
-import           Flowbox.Prelude                         hiding (elements, mod)
+import           Flowbox.Prelude                         hiding (elements, mod, Zipper)
 import           Flowbox.System.Log.Logger
 
 
