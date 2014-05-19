@@ -35,6 +35,9 @@ data Segment = SegLine Line
 data Rectangle = Rectangle Point Point deriving (Show)
 type BoundingBox = Rectangle
 
+type PointAcc a = (A.Exp a, A.Exp a)
+type RectangleAcc a = (PointAcc a, PointAcc a)
+
 data Size2 = Width Double
            | Height Double
            | Dims Double Double
