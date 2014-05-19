@@ -6,7 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Graphics.Image.Color.Convert.YUV_HD where
+module Flowbox.Graphics.Image.Color.Convert.YUV_HD (
+    ColorSpaceAccYUV_HD
+) where
 
 import           Data.Array.Accelerate
 import           Data.Map              (Map)

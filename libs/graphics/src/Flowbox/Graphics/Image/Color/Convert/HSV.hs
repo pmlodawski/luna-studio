@@ -6,7 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Graphics.Image.Color.Convert.HSV where
+module Flowbox.Graphics.Image.Color.Convert.HSV (
+    ColorSpaceAccHSV
+) where
 
 import           Data.Array.Accelerate
 import           Data.Map              (Map)

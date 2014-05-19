@@ -6,7 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Graphics.Image.Color.Convert.CMY where
+module Flowbox.Graphics.Image.Color.Convert.CMY (
+    ColorSpaceAccCMY
+) where
 
 import           Data.Array.Accelerate
 import           Data.Map              (Map)

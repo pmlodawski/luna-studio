@@ -6,7 +6,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Graphics.Image.Color.Convert.RGB where
+module Flowbox.Graphics.Image.Color.Convert.RGB (
+    ColorSpaceAccRGB,
+    convertToRGB,
+    convertCMYKtoRGB
+) where
 
 import           Data.Array.Accelerate
 import           Data.Map              (Map)

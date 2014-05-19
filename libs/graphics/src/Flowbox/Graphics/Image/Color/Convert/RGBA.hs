@@ -6,7 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Graphics.Image.Color.Convert.RGBA where
+module Flowbox.Graphics.Image.Color.Convert.RGBA (
+    ColorSpaceAccRGBA
+) where
 
 import           Data.Array.Accelerate
 import           Data.Map              (Map)

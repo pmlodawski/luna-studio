@@ -17,10 +17,17 @@ import           Data.Map                          (Map)
 import qualified Data.Array.Accelerate as A
 
 --import           Flowbox.Graphics.Color           (Color)
-import qualified Flowbox.Graphics.Color                    as Color
-import           Flowbox.Graphics.Image                    (Image)
-import qualified Flowbox.Graphics.Image                    as Image
-import qualified Flowbox.Graphics.Image.Channel            as Channel
-import           Flowbox.Graphics.Image.Color.Convert.RGB  as X
-import qualified Flowbox.Graphics.Utils                    as U
+import qualified Flowbox.Graphics.Color                      as Color
+import           Flowbox.Graphics.Image                      (Image)
+import qualified Flowbox.Graphics.Image                      as Image
+import qualified Flowbox.Graphics.Image.Channel              as Channel
+import           Flowbox.Graphics.Image.Color.Convert.RGB    as X
+import           Flowbox.Graphics.Image.Color.Convert.RGBA   as X
+import           Flowbox.Graphics.Image.Color.Convert.HSV    as X
+import           Flowbox.Graphics.Image.Color.Convert.HSL    as X
+import           Flowbox.Graphics.Image.Color.Convert.CMY    as X
+import           Flowbox.Graphics.Image.Color.Convert.CMYK   as X
+import           Flowbox.Graphics.Image.Color.Convert.YUV    as X
+import           Flowbox.Graphics.Image.Color.Convert.YUV_HD as X
+import qualified Flowbox.Graphics.Utils                      as U
 import           Flowbox.Prelude
