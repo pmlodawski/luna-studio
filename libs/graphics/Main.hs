@@ -32,8 +32,6 @@ import           Diagrams.TwoD.Path.Metafont
 
 --import qualified Debug.Trace           as Dbg
 
-import           Flowbox.Graphics.Color                 (Color (..))
-import qualified Flowbox.Graphics.Color                 as C
 import qualified Flowbox.Graphics.Deprecated.Algorithms as G
 import           Flowbox.Graphics.Image                 (Image)
 import qualified Flowbox.Graphics.Image                 as Img
@@ -193,20 +191,6 @@ main
         --    Right val -> do Img.writeToBMP (backendRun) "curve.bmp" val
         --                    return ()
 
-
-        -- COLOR TESTS
-
-        --let x = 0.5 :: A.Exp Double
-        --    y = 0.3 :: A.Exp Double
-        --    z = 0.2 :: A.Exp Double
-        --    rgb  = RGB x y z
-        --    rgba = C.toRGBA rgb
-        --    hsv  = C.toHSV rgba
-        --    hsl  = C.toHSL hsv
-        --    cmy  = C.toCMY hsl
-        --    cmyk = C.toCMYK cmy
-        --    rgb' = C.toRGB cmyk
-        --    (RGB r g b) = rgb'
 
         --print $ Interp.run $ A.unit $ A.lift (r, g, b)
 
