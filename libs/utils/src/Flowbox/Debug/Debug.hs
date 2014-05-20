@@ -11,8 +11,14 @@ import qualified Debug.Trace as Debug
 
 import Prelude
 
+
+traceShowM :: (Monad m, Show a) => a -> m ()
+traceShowM s = Debug.traceShow s $ return ()
+
+
 dtrace :: Show a => a -> b -> b
-dtrace  = Debug.trace . show
+dtrace = Debug.traceShow
+
 
 dtraceM :: (Monad m, Show a) => a -> m ()
-dtraceM s = Debug.trace (show s) (return ())
+dtraceM = traceShowM

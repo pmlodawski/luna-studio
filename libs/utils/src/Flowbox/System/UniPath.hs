@@ -5,6 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+-- FIXME OR DELETEME [WD]
+-- moze stworzyc ogolna klase FS (isDirectory path -> Bool) etc, dla ktorego instancje beda dla amazona etc.
+
 module Flowbox.System.UniPath where
 
 import           Control.Monad.IO.Class (MonadIO, liftIO)

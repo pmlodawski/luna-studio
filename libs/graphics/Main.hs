@@ -32,8 +32,6 @@ import           Diagrams.TwoD.Path.Metafont
 
 --import qualified Debug.Trace           as Dbg
 
-import           Flowbox.Graphics.Color                 (Color (..))
-import qualified Flowbox.Graphics.Color                 as C
 import qualified Flowbox.Graphics.Deprecated.Algorithms as G
 import           Flowbox.Graphics.Image                 (Image)
 import qualified Flowbox.Graphics.Image                 as Img
@@ -45,7 +43,6 @@ import qualified Flowbox.Graphics.Image.Color           as Img
 import qualified Flowbox.Graphics.Image.IO              as Img
 import qualified Flowbox.Graphics.Image.Raster          as Img
 import qualified Flowbox.Graphics.Image.Repr            as Repr
-import qualified Flowbox.Graphics.Diagrams.Shape        as DShape
 import qualified Flowbox.Graphics.Shape                 as Shape
 import           Flowbox.Graphics.Utils                 (Range(..))
 import qualified Flowbox.Graphics.Utils                 as U
@@ -63,7 +60,7 @@ meta = metafont $ z4.--.z1.--.z2.--.z6.- tension 1.5 -.cyclePath
 color = white `withOpacity` 1
 diag = (strokeLoop meta) Diag.# fcA color
 
-imgtest img frames source target = do
+imgtest img = do
     let getDouble image = Img.toDouble <$> Repr.decompose image
         --Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ Unsafe.unsafePerformIO $ Shape.rasterize 512 512 100 100 (Diag.Width 256) diag
         --Right mask2     = Repr.compose $ Img.toWord8 $ Img.map G.clipValues $ DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
@@ -148,13 +145,13 @@ main
 
         -- Read in the image file
         imageIn <- getImage fileIn
-        framesIn <- getImages frameNames
+        --framesIn <- getImages frameNames
 
-        sourceImage <- getImage "sea-picture.bmp"
-        targetImage <- getImage "sea-rendered.bmp"
+        --sourceImage <- getImage "sea-picture.bmp"
+        --targetImage <- getImage "sea-rendered.bmp"
 
         --diagram       <- DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
-        let diagram = DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
+        --let diagram = DShape.rasterize 512 512 100 100 (Diag.Width 256) diag
         --let dupa =  Img.toWord8 $ Img.map G.clipValues diagram
 
         --let rasterizedDiagram = case Repr.compose dupa of
@@ -162,7 +159,7 @@ main
         --        Right val -> val
             --imageOut = Right rasterizedDiagram
 
-        let imageOut = imgtest imageIn framesIn sourceImage targetImage
+        let imageOut = imgtest imageIn
 
         case imageOut of
             Left err  -> print err
@@ -194,20 +191,6 @@ main
         --    Right val -> do Img.writeToBMP (backendRun) "curve.bmp" val
         --                    return ()
 
-
-        -- COLOR TESTS
-
-        --let x = 0.5 :: A.Exp Double
-        --    y = 0.3 :: A.Exp Double
-        --    z = 0.2 :: A.Exp Double
-        --    rgb  = RGB x y z
-        --    rgba = C.toRGBA rgb
-        --    hsv  = C.toHSV rgba
-        --    hsl  = C.toHSL hsv
-        --    cmy  = C.toCMY hsl
-        --    cmyk = C.toCMYK cmy
-        --    rgb' = C.toRGB cmyk
-        --    (RGB r g b) = rgb'
 
         --print $ Interp.run $ A.unit $ A.lift (r, g, b)
 

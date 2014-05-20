@@ -15,12 +15,7 @@ import qualified Data.Array.Accelerate as A
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
 
---import qualified Debug.Trace as Dbg
 
---import           Diagrams.Prelude                (R2, Diagram)
---import           Diagrams.Backend.Cairo.Internal (Cairo)
-
---import qualified Flowbox.Graphics.Color             as Color
 import           Flowbox.Graphics.Image             (Image)
 import qualified Flowbox.Graphics.Image             as Image
 import           Flowbox.Graphics.Image.Channel     (ChannelAcc, Channel2)
@@ -28,6 +23,8 @@ import qualified Flowbox.Graphics.Image.Channel     as Channel
 import           Flowbox.Graphics.Image.Composition (Premultiply(..), Mask(..), Clamp)
 import qualified Flowbox.Graphics.Image.Composition as Comp
 import qualified Flowbox.Graphics.Image.Merge       as Merge
+import           Flowbox.Graphics.Shape             (Path)
+--import qualified Flowbox.Graphics.Shape             as Shape
 import           Flowbox.Graphics.Utils             (Range(..))
 import qualified Flowbox.Graphics.Utils             as U
 import           Flowbox.Prelude                    as P
@@ -51,7 +48,7 @@ math f img values maskInfo premultInfo mixValue = do
     Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name values of
               Nothing    -> chan
-              Just value -> Channel.map (\x -> f value x) chan
+              Just value -> Channel.map (f value) chan
 
 offset :: (A.Elt a, A.IsFloating a, A.Shape ix, Image img (ChannelAcc ix a))
     => img (ChannelAcc ix a) -> Map Channel.Name (Exp a)
@@ -92,7 +89,7 @@ clamp img ranges maskInfo premultInfo mixValue = do
     where handleChan name chan = case Map.lookup name ranges of
               Nothing    -> chan
               Just value -> let (thresholds, clampTo) = value
-                            in Channel.map (\x -> U.clamp thresholds clampTo x) chan
+                            in Channel.map (U.clamp thresholds clampTo) chan
 
 -- INFO: in Nuke this does not have the OR relation between channels, it has something pretty weird
 -- soooooo....... either fuck it and do it our way or... focus on it later on
@@ -137,7 +134,7 @@ invert img channels clampVal maskInfo premultInfo mixValue = do
                                           else chan
           invertAndClamp x = case clampVal of
               Nothing                         -> U.invert x
-              Just (clampThresholds, clampTo) -> U.clamp clampThresholds clampTo $ U.invert $ x
+              Just (clampThresholds, clampTo) -> U.clamp clampThresholds clampTo $ U.invert x
 
 -- TODO: should it really take a matrix as an input? it doesn't really speed up anything or anything
 --       and can only make things harder to debug (channel names are separated from the actual values used to calculate everything)
@@ -149,7 +146,7 @@ colorMatrix :: (A.Elt a, A.IsFloating a, Image img (Channel2 a))
     -> Image.Result (img (Channel2 a))
 colorMatrix img channelsOut channelsIn values maskInfo premultInfo mixValue = do
   unpremultiplied <- Comp.unpremultiply img premultInfo
-  channelsIn'     <- fmap glue $ Image.elemsByName' channelsIn unpremultiplied
+  channelsIn'     <- glue <$> Image.elemsByName' channelsIn unpremultiplied
   let result      =  handleColorMatrix unpremultiplied channelsIn'
   premultiplied   <- Comp.premultiply result premultInfo
   resultMixed     <- Merge.mix' img premultiplied mixValue
@@ -162,7 +159,7 @@ colorMatrix img channelsOut channelsIn values maskInfo premultInfo mixValue = do
         calculateChannel  channelsIn' name idx = (name, makeChannel channelsIn' idx)
         makeChannel channelsIn' idx = let
                 (A.Z A.:. h A.:. w A.:. _) = A.unlift $ Channel.shape channelsIn' :: A.Z A.:. Exp Int A.:. Exp Int A.:. Exp Int
-                values' = A.slice values $ A.lift (A.Z A.:. (idx) A.:. A.All)
+                values' = A.slice values $ A.lift (A.Z A.:. idx A.:. A.All)
                 repl    = Channel.Acc $ A.replicate (A.lift $ A.Z A.:. h A.:. w A.:. A.All) values'
             in Channel.fold1 (+) $ Channel.zipWith (*) channelsIn' repl
         glue channels = foldr1 (Channel.++) (fmap Channel.lift2Dto3D channels)
@@ -205,31 +202,44 @@ colorTransfer target source maskInfo premultInfo mixValue = do
         target' = Image.insert "rgba.r" (Channel.zipWith3 calculateR' finalL finalM finalS)
                 $ Image.insert "rgba.g" (Channel.zipWith3 calculateG' finalL finalM finalS)
                 $ Image.insert "rgba.b" (Channel.zipWith3 calculateB' finalL finalM finalS)
-                $ unpremultiplied
+                unpremultiplied
 
     result          <- Comp.premultiply target' premultInfo
     resultMixed     <- Merge.mix' target result mixValue
     Merge.mask resultMixed target maskInfo
 
     where calculate target' source' = Channel.map calculations target'
-              where calculations x = (x - (meanDev target')) * ratio + (meanDev source')
-                    ratio = (standardDev target') / (standardDev source')
-          meanDev chan = (Channel.the (Channel.foldAll (+) 0 $ Channel.map (\x -> abs $ x - (mean chan)) chan)) / (A.fromIntegral $ Channel.size chan)
-          standardDev chan = sqrt $ (Channel.the (Channel.foldAll (+) 0 $ Channel.map (\x -> (x - (mean chan)) ** 2) chan)) / (A.fromIntegral $ Channel.size chan)
-          mean chan = (Channel.the (Channel.foldAll (+) 0 chan)) / (A.fromIntegral $ Channel.size chan)
+              where calculations x = (x - meanDev target') * ratio + meanDev source'
+                    ratio = standardDev target' / standardDev source'
+          meanDev chan = Channel.the (Channel.foldAll (+) 0 $ Channel.map (\x -> abs $ x - mean chan) chan) / A.fromIntegral (Channel.size chan)
+          standardDev chan = sqrt $ Channel.the (Channel.foldAll (+) 0 $ Channel.map (\x -> (x - mean chan) ** 2) chan) / A.fromIntegral (Channel.size chan)
+          mean chan = Channel.the (Channel.foldAll (+) 0 chan) / A.fromIntegral (Channel.size chan)
           --
           calculateL r g b  = 0.3811 * r + 0.5783 * g + 0.0402 * b
           calculateM r g b  = 0.1967 * r + 0.7244 * g + 0.0782 * b
           calculateS r g b  = 0.0241 * r + 0.1288 * g + 0.8444 * b
           --
-          calculatel l m s  = (1/sqrt(3)) * l + (1/sqrt(3)) * m + (1/sqrt(3)) * s
-          calculatea l m s  = (1/sqrt(6)) * l + (1/sqrt(6)) * m - (2/sqrt(6)) * s
-          calculateb l m    = (1/sqrt(2)) * l - (1/sqrt(2)) * m
+          calculatel l m s  = (1 / sqrt 3) * l + (1 / sqrt 3) * m + (1 / sqrt 3) * s
+          calculatea l m s  = (1 / sqrt 6) * l + (1 / sqrt 6) * m - (2 / sqrt 6) * s
+          calculateb l m    = (1 / sqrt 2) * l - (1 / sqrt 2) * m
           --
-          calculateL' l a b = (sqrt(3)/3) * l +   (sqrt(6)/6) * a + (sqrt(2)/2) * b
-          calculateM' l a b = (sqrt(3)/3) * l +   (sqrt(6)/6) * a - (sqrt(2)/2) * b
-          calculateS' l a   = (sqrt(3)/3) * l - (2*sqrt(6)/6) * a
+          calculateL' l a b = (sqrt 3 / 3) * l +   (sqrt 6 / 6) * a + (sqrt 2 / 2) * b
+          calculateM' l a b = (sqrt 3 / 3) * l +   (sqrt 6 / 6) * a - (sqrt 2 / 2) * b
+          calculateS' l a   = (sqrt 3 / 3) * l - (2*sqrt 6 / 6) * a
           --
           calculateR' l m s =   4.4679  * l - 3.5873 * m + 0.1193 * s
           calculateG' l m s = (-1.2186) * l + 2.3809 * m - 0.1624 * s
           calculateB' l m s =   0.0497  * l - 0.2439 * m + 1.2045 * s
+
+
+crosstalk :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
+    => img (ChannelAcc ix a) -> [(Channel.Name, Channel.Name, Path)]
+    -> Maybe (Mask img ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (img (ChannelAcc ix a))
+crosstalk img curves maskInfo premultInfo mixValue = do
+    unpremultiplied <- Comp.unpremultiply img premultInfo
+    let result      =  handleCrosstalk unpremultiplied
+    premultiplied   <- Comp.premultiply result premultInfo
+    resultMixed     <- Merge.mix' img premultiplied mixValue
+    Merge.mask resultMixed img maskInfo
+    where handleCrosstalk img' = id img'

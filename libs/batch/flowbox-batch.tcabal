@@ -46,7 +46,7 @@ Library
 
 Executable lib-importer
   Main-Is:        Main.hs
-  Hs-Source-Dirs: tests
+  Hs-Source-Dirs: test
 
   if flag(debug)
     GHC-Options:  -csacc

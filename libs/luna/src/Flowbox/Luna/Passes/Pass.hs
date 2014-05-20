@@ -17,9 +17,9 @@ import Control.Monad.State        hiding (fail, state)
 import Control.Monad.Trans.Either
 
 
+import Flowbox.Control.Error     (eitherToM)
 import Flowbox.Prelude           hiding (error, fail)
 import Flowbox.System.Log.Logger
-
 
 --type PassError              = String
 
@@ -76,7 +76,7 @@ runHoist_ env state pass = fst <$> runHoist env state pass
 
 -- Please do not use unless you really have to
 runIO :: Show err => env -> state -> ESRT err env state IO result -> IO (result, state)
-runIO env state pass = either2M =<< run env state pass
+runIO env state pass = eitherToM =<< run env state pass
 
 -- Please do not use unless you really have to
 runIO_ :: Show err => env -> state -> ESRT err env state IO result -> IO result
