@@ -10,8 +10,8 @@
 module Flowbox.ProjectManager.Handler.Handler where
 
 import           Flowbox.Bus.Data.Topic                     (Topic)
-import           Flowbox.Bus.RPC.BusRPCHandler              (BusRPCHandler)
-import qualified Flowbox.Bus.RPC.Processor                  as P
+import           Flowbox.Bus.RPC.Handler                    (BusRPCHandler)
+import qualified Flowbox.Bus.RPC.Server.Processor           as P
 import           Flowbox.Prelude                            hiding (error)
 import           Flowbox.ProjectManager.Context             (ContextRef)
 import qualified Flowbox.ProjectManager.Handler.AST         as ASTHandler
