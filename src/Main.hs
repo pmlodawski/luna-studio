@@ -7,7 +7,7 @@
 module Main where
 
 import qualified Flowbox.Bus.EndPoint                as EP
-import qualified Flowbox.Bus.RPC.Client              as Client
+import qualified Flowbox.Bus.RPC.Server.Server       as Server
 import qualified Flowbox.Config.Config               as Config
 import           Flowbox.FileManager.Cmd             (Cmd)
 import qualified Flowbox.FileManager.Cmd             as Cmd
@@ -46,6 +46,6 @@ run cmd = case cmd of
     Cmd.Run {}  -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         endPoints <- EP.clientFromConfig <$> Config.load
-        r <- Client.run endPoints Handler.topics Handler.handler
+        r <- Server.run endPoints Handler.topics Handler.handler
         print r
 
