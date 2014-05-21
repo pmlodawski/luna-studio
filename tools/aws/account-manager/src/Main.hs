@@ -72,4 +72,4 @@ run cmd = case cmd of
             region = Region.fromString $ Cmd.region cmd
         ctx <- Context.mk region connectionInfo
         _ <- Concurrent.forkIO $ InstanceMonitor.run ctx
-        RPC.run (Cmd.address cmd) (Handler.handler ctx)
+        RPC.run 16 (Cmd.address cmd) (Handler.handler ctx) -- TODO [PM] hardcoded number of workers

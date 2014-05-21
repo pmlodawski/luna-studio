@@ -59,4 +59,4 @@ run cmd = case cmd of
         _ <- Concurrent.forkIO $ Proxy.run (EP.pullEndPoint endPoints) (EP.pubEndPoint endPoints)
         logger info "Starting control service"
         ctx <- BusCtx.empty
-        RPC.run (EP.controlEndPoint endPoints) (Handler.handler ctx)
+        RPC.run 16 (EP.controlEndPoint endPoints) (Handler.handler ctx) -- TODO [PM] hardcoded number of workers

@@ -22,27 +22,19 @@ import           Flowbox.ZMQ.RPC.Handler                        (RPCHandler)
 import qualified Flowbox.ZMQ.RPC.Server.Processor               as Processor
 
 
-
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.ZMQ.RPC.Server"
 
 
 run :: Proto.Serializable request
-    => String -> RPCHandler request -> IO ()
-run endpoint handler = ZMQ.runZMQ $ serve endpoint handler
+    => Int -> String -> RPCHandler request -> IO ()
+run workerCount endpoint handler = ZMQ.runZMQ $ serve workerCount endpoint handler
 
 
-serve :: Proto.Serializable request
-      => String -> RPCHandler request -> ZMQ z ()
-serve endpoint handler = do
-    rep <- ZMQ.socket ZMQ.Rep
-    ZMQ.bind rep endpoint
-    acceptAndHandle rep handler
 
-
-acceptAndHandle :: (ZMQ.Receiver t, ZMQ.Sender t, Proto.Serializable request)
+handleCalls :: (ZMQ.Receiver t, ZMQ.Sender t, Proto.Serializable request)
                 => ZMQ.Socket z t -> RPCHandler request -> ZMQ z ()
-acceptAndHandle socket handler = forM_ [0..] $ handleCall socket handler
+handleCalls socket handler = forM_ [1..] $ handleCall socket handler
 
 
 handleCall :: (ZMQ.Receiver t, ZMQ.Sender t, Proto.Serializable request)
@@ -51,3 +43,18 @@ handleCall socket handler requestID = do
     encoded_request  <- ZMQ.receive socket
     encoded_response <- Processor.process handler encoded_request $ encodeP requestID
     ZMQ.send socket [] encoded_response
+
+
+serve :: Proto.Serializable request
+      => Int -> String -> RPCHandler request -> ZMQ z ()
+serve workerCount endpoint  handler = do
+    router <- ZMQ.socket ZMQ.Router
+    dealer <- ZMQ.socket ZMQ.Dealer
+    let internalEndpoint = "inproc://rpcworker"
+    ZMQ.bind router endpoint
+    ZMQ.bind dealer internalEndpoint
+    forM_ [0..workerCount] $ \_ -> ZMQ.async $ do 
+        rep <- ZMQ.socket ZMQ.Rep
+        ZMQ.connect rep internalEndpoint
+        handleCalls rep handler
+    ZMQ.proxy router dealer Nothing
