@@ -7,7 +7,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
 
-module Flowbox.Bus.RPC.BusRPCHandler where
+module Flowbox.Bus.RPC.Handler where
 
 import           Flowbox.Bus.Data.Message     (Message)
 import           Flowbox.Bus.Data.Topic       (Topic)
