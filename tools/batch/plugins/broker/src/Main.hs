@@ -21,7 +21,7 @@ import           Flowbox.Options.Applicative         hiding (info)
 import qualified Flowbox.Options.Applicative         as Opt
 import           Flowbox.Prelude                     hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.ZMQ.RPC.Server              as RPC
+import qualified Flowbox.ZMQ.RPC.Server.Server       as RPC
 
 
 

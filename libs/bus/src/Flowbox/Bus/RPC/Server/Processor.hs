@@ -7,7 +7,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
 
-module Flowbox.Bus.RPC.Processor where
+module Flowbox.Bus.RPC.Server.Processor where
 
 import qualified Data.List         as List
 import qualified Data.String.Utils as Utils
@@ -16,7 +16,7 @@ import           Flowbox.Bus.Data.Exception                     (Exception (Exce
 import           Flowbox.Bus.Data.Message                       (Message (Message))
 import qualified Flowbox.Bus.Data.Message                       as Message
 import           Flowbox.Bus.Data.Topic                         (Topic)
-import           Flowbox.Bus.RPC.BusRPCHandler                  (BusRPCHandler)
+import           Flowbox.Bus.RPC.Handler                        (BusRPCHandler)
 import           Flowbox.Control.Error                          hiding (err)
 import           Flowbox.Prelude                                hiding (error)
 import           Flowbox.System.Log.Logger
@@ -26,7 +26,7 @@ import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.RPC.Processor"
+logger = getLoggerIO "Flowbox.Bus.RPC.Server.Processor"
 
 
 status :: String

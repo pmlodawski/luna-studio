@@ -8,7 +8,7 @@
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.ZMQ.RPC.Server where
+module Flowbox.ZMQ.RPC.Server.Server where
 
 import           Control.Monad       (forM_)
 import           System.ZMQ4.Monadic (ZMQ)
@@ -18,8 +18,8 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Flowbox.ZMQ.RPC.Processor                      as Processor
-import           Flowbox.ZMQ.RPC.RPCHandler                     (RPCHandler)
+import           Flowbox.ZMQ.RPC.Handler                        (RPCHandler)
+import qualified Flowbox.ZMQ.RPC.Server.Processor               as Processor
 
 
 
