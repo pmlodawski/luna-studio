@@ -34,8 +34,8 @@ data Mask img ix a  = Mask { maskChanName :: Channel.Name
                            , sourceImg    :: MaskSource img ix a
                            }
 
-data Image img (ChannelAcc ix a) => MaskSource img ix a = Local
-                                                        | External (img (ChannelAcc ix a))
+data MaskSource img ix a = Local
+                         | External (img (ChannelAcc ix a))
 
 type Clamp a = (Range a, Maybe (Range a))
 

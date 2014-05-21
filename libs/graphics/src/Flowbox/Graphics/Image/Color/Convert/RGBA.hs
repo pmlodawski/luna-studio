@@ -24,14 +24,14 @@ import qualified Flowbox.Graphics.Image                 as Image
 import           Flowbox.Graphics.Image.Color.Helpers
 import           Flowbox.Graphics.Image.Channel         (ChannelAcc)
 import qualified Flowbox.Graphics.Image.Channel         as Channel
-import           Flowbox.Graphics.Image.ImageRGB        (ImageRGB(..))
-import           Flowbox.Graphics.Image.ImageRGBA       (ImageRGBA(..))
-import           Flowbox.Graphics.Image.ImageHSV        (ImageHSV(..))
-import           Flowbox.Graphics.Image.ImageHSL        (ImageHSL(..))
-import           Flowbox.Graphics.Image.ImageCMY        (ImageCMY(..))
-import           Flowbox.Graphics.Image.ImageCMYK       (ImageCMYK(..))
-import           Flowbox.Graphics.Image.ImageYUV        (ImageYUV(..))
-import           Flowbox.Graphics.Image.ImageYUV_HD     (ImageYUV_HD(..))
+import           Flowbox.Graphics.Image.Color.RGB      (ImageRGB(..))
+import           Flowbox.Graphics.Image.Color.RGBA     (ImageRGBA(..))
+import           Flowbox.Graphics.Image.Color.HSV      (ImageHSV(..))
+import           Flowbox.Graphics.Image.Color.HSL      (ImageHSL(..))
+import           Flowbox.Graphics.Image.Color.CMY      (ImageCMY(..))
+import           Flowbox.Graphics.Image.Color.CMYK     (ImageCMYK(..))
+import           Flowbox.Graphics.Image.Color.YUV      (ImageYUV(..))
+import           Flowbox.Graphics.Image.Color.YUV_HD   (ImageYUV_HD(..))
 import           Flowbox.Prelude
 
 
