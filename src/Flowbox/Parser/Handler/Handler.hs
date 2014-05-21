@@ -9,11 +9,11 @@
 
 module Flowbox.Parser.Handler.Handler where
 
-import           Flowbox.Bus.Data.Topic        (Topic)
-import           Flowbox.Bus.RPC.BusRPCHandler (BusRPCHandler)
-import qualified Flowbox.Bus.RPC.Processor     as P
-import qualified Flowbox.Parser.Handler.Parser as ParserHandler
-import           Flowbox.Prelude               hiding (error)
+import           Flowbox.Bus.Data.Topic           (Topic)
+import           Flowbox.Bus.RPC.Handler          (BusRPCHandler)
+import qualified Flowbox.Bus.RPC.Server.Processor as P
+import qualified Flowbox.Parser.Handler.Parser    as ParserHandler
+import           Flowbox.Prelude                  hiding (error)
 import           Flowbox.System.Log.Logger
 
 
