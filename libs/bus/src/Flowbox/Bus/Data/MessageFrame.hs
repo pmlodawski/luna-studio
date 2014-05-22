@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Flowbox.Bus.Data.MessageFrame where
 
 import qualified Data.ByteString.Char8 as Char8
@@ -18,11 +20,13 @@ import           Flowbox.Prelude
 
 
 
-data MessageFrame = MessageFrame { message     :: Message
-                                 , correlation :: M.CorrelationID
-                                 , senderID    :: M.ClientID
-                                 , lastFrame   :: Flag
+data MessageFrame = MessageFrame { _message     :: Message
+                                 , _correlation :: M.CorrelationID
+                                 , _senderID    :: M.ClientID
+                                 , _lastFrame   :: Flag
                                  } deriving (Read, Show, Eq)
+
+makeLenses(''MessageFrame)
 
 
 separator :: Char
