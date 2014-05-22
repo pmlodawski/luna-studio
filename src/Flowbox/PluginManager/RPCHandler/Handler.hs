@@ -7,20 +7,20 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
 
-module Flowbox.PluginManager.Handler.Handler where
+module Flowbox.PluginManager.RPCHandler.Handler where
 
-import           Flowbox.Bus.Data.Topic               (Topic)
-import           Flowbox.Bus.RPC.Handler              (BusRPCHandler)
-import qualified Flowbox.Bus.RPC.Server.Processor     as P
-import           Flowbox.PluginManager.Context        (ContextRef)
-import qualified Flowbox.PluginManager.Handler.Plugin as PluginHandler
-import           Flowbox.Prelude                      hiding (error)
+import           Flowbox.Bus.Data.Topic                  (Topic)
+import           Flowbox.Bus.RPC.Handler                 (BusRPCHandler)
+import qualified Flowbox.Bus.RPC.Server.Processor        as P
+import           Flowbox.PluginManager.Context           (ContextRef)
+import qualified Flowbox.PluginManager.RPCHandler.Plugin as PluginHandler
+import           Flowbox.Prelude                         hiding (error)
 import           Flowbox.System.Log.Logger
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.Handler"
+logger = getLoggerIO "Flowbox.PluginManager.RPCHandler.Handler"
 
 
 topics :: [Topic]

@@ -15,11 +15,11 @@ import qualified Data.Configurator.Types    as Configurator
 import qualified Data.HashMap.Strict        as HashMap
 import qualified Data.Text                  as Text
 
-import           Control.Arrow                           (first)
-import           Flowbox.Control.Error                   (safeLiftIO)
-import           Flowbox.PluginManager.Data.Plugin       (Plugin (Plugin))
-import           Flowbox.PluginManager.Data.PluginHandle (PluginHandle)
-import qualified Flowbox.PluginManager.Data.PluginHandle as PluginHandle
+import           Control.Arrow                       (first)
+import           Flowbox.Control.Error               (safeLiftIO)
+import           Flowbox.PluginManager.Plugin.Handle (PluginHandle)
+import qualified Flowbox.PluginManager.Plugin.Handle as PluginHandle
+import           Flowbox.PluginManager.Plugin.Plugin (Plugin (Plugin))
 import           Flowbox.Prelude
 
 
