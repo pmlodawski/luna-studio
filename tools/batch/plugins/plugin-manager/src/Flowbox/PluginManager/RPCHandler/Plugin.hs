@@ -4,17 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.PluginManager.Handler.Plugin where
+module Flowbox.PluginManager.RPCHandler.Plugin where
 
-import qualified Data.IORef                           as IORef
-import qualified Flowbox.PluginManager.Data.PluginMap as PluginMap
+import qualified Data.IORef as IORef
 
 import           Flowbox.Control.Error
 import           Flowbox.PluginManager.Context                        (ContextRef)
 import qualified Flowbox.PluginManager.Context                        as Context
-import qualified Flowbox.PluginManager.Data.Plugin                    as Plugin
-import           Flowbox.PluginManager.Data.PluginHandle              (PluginHandle)
-import qualified Flowbox.PluginManager.Data.PluginHandle              as PluginHandle
+import           Flowbox.PluginManager.Plugin.Handle                  (PluginHandle)
+import qualified Flowbox.PluginManager.Plugin.Handle                  as PluginHandle
+import qualified Flowbox.PluginManager.Plugin.Map                     as PluginMap
+import qualified Flowbox.PluginManager.Plugin.Plugin                  as Plugin
 import           Flowbox.PluginManager.Proto.Plugin                   ()
 import           Flowbox.Prelude                                      hiding (error, id)
 import           Flowbox.System.Log.Logger
@@ -37,7 +37,7 @@ import qualified Generated.Proto.PluginManager.Plugin.Stop.Update     as Stop
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.Handler.Plugin"
+logger = getLoggerIO "Flowbox.PluginManager.RPCHandler.Plugin"
 
 -------- public api -------------------------------------------------
 

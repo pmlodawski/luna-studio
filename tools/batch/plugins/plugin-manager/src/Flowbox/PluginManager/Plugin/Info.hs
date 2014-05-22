@@ -6,16 +6,19 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.PluginManager.Data.Plugin where
+module Flowbox.PluginManager.Plugin.Info where
 
+import Flowbox.PluginManager.Plugin.Plugin (Plugin)
 import Flowbox.Prelude
 
 
 
-type ID = Int
+data Status = Running
+            | Stopped
+            deriving (Read, Show)
 
-data Plugin = Plugin { name    :: String
-                     , command :: String
-                     } deriving (Read, Show)
 
-makeLenses (''Plugin)
+data PluginInfo = PluginInfo { plugin :: Plugin
+                             , status :: Status
+                             } deriving (Read, Show)
+makeLenses (''PluginInfo)

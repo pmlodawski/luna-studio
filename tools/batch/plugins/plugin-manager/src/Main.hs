@@ -8,18 +8,18 @@ module Main where
 
 import Control.Monad.Trans.Either
 
-import qualified Flowbox.Bus.EndPoint                  as EP
-import qualified Flowbox.Bus.RPC.Server.Server         as Server
-import qualified Flowbox.Config.Config                 as Config
-import           Flowbox.Control.Error                 (eitherStringToM)
-import           Flowbox.Options.Applicative           hiding (info)
-import qualified Flowbox.Options.Applicative           as Opt
-import           Flowbox.PluginManager.Cmd             (Cmd)
-import qualified Flowbox.PluginManager.Cmd             as Cmd
-import qualified Flowbox.PluginManager.Context         as Context
-import qualified Flowbox.PluginManager.Handler.Handler as Handler
-import qualified Flowbox.PluginManager.Init            as Init
-import qualified Flowbox.PluginManager.Version         as Version
+import qualified Flowbox.Bus.EndPoint                     as EP
+import qualified Flowbox.Bus.RPC.Server.Server            as Server
+import qualified Flowbox.Config.Config                    as Config
+import           Flowbox.Control.Error                    (eitherStringToM)
+import           Flowbox.Options.Applicative              hiding (info)
+import qualified Flowbox.Options.Applicative              as Opt
+import           Flowbox.PluginManager.Cmd                (Cmd)
+import qualified Flowbox.PluginManager.Cmd                as Cmd
+import qualified Flowbox.PluginManager.Context            as Context
+import qualified Flowbox.PluginManager.Init               as Init
+import qualified Flowbox.PluginManager.RPCHandler.Handler as Handler
+import qualified Flowbox.PluginManager.Version            as Version
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 

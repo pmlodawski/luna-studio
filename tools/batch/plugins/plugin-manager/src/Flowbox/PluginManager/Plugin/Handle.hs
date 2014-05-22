@@ -5,17 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.PluginManager.Data.PluginHandle where
+module Flowbox.PluginManager.Plugin.Handle where
 
 import           System.Process (ProcessHandle)
 import qualified System.Process as Process
 
-import           Flowbox.PluginManager.Data.Plugin     (Plugin)
-import qualified Flowbox.PluginManager.Data.Plugin     as Plugin
-import           Flowbox.PluginManager.Data.PluginInfo (PluginInfo (PluginInfo))
-import qualified Flowbox.PluginManager.Data.PluginInfo as PluginInfo
+import           Flowbox.PluginManager.Plugin.Info   (PluginInfo (PluginInfo))
+import qualified Flowbox.PluginManager.Plugin.Info   as PluginInfo
+import           Flowbox.PluginManager.Plugin.Plugin (Plugin)
+import qualified Flowbox.PluginManager.Plugin.Plugin as Plugin
 import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger             as L
+import           Flowbox.System.Log.Logger           as L
 
 
 
