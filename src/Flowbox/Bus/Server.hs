@@ -44,7 +44,7 @@ handle :: (Message -> IO [Message]) -> Bus ()
 handle process = do
     request <- Bus.receive
     (MessageFrame msg crlID _ _) <- lift $ hoistEither request
-    liftIO $ logger debug $ "Received request: " ++ Message.topic msg
+    liftIO $ logger debug $ "Received request: " ++ (msg ^. Message.topic)
     response <- liftIO $ process msg
     if not $ null response
         then do mapM_ (Bus.reply crlID Flag.Disable) (init response)

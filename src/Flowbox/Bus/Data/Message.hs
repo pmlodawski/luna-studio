@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Flowbox.Bus.Data.Message where
 
 import           Data.ByteString              (ByteString)
@@ -20,11 +22,15 @@ type RequestID = ID
 type ClientID  = ID
 
 
-data CorrelationID = CorrelationID { clientID  :: ClientID
-                                   , messageID :: RequestID
+data CorrelationID = CorrelationID { _clientID  :: ClientID
+                                   , _messageID :: RequestID
                                    } deriving (Read, Show, Eq)
 
 
-data Message = Message { topic   :: Topic
-                       , message :: ByteString
+data Message = Message { _topic   :: Topic
+                       , _message :: ByteString
                        } deriving (Read, Show, Eq)
+
+
+makeLenses(''CorrelationID)
+makeLenses(''Message)

@@ -43,7 +43,7 @@ singleResult f a = mkList <$> f a
 
 process :: BusRPCHandler -> Message -> IO [Message]
 process handler msg = handler call topic where
-    call type_ method = case Proto.messageGet' $ Message.message msg of
+    call type_ method = case Proto.messageGet' $ msg ^. Message.message of
         Left err   -> do logger error err
                          return $ respondError topic err
         Right args -> do results <- runEitherT $ scriptIO $ method args
@@ -51,7 +51,7 @@ process handler msg = handler call topic where
                             Left err -> respondError topic $ "Unhandled error: " ++ err
                             Right ok -> map (respond type_) ok
 
-    topic = Message.topic msg
+    topic = msg ^. Message.topic
 
     respond :: Proto.Serializable msg => String -> msg -> Message
     respond = constructMessage topic
