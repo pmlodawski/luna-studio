@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 
-module Flowbox.PluginManager.Init where
+module Flowbox.PluginManager.Init.Local where
 
 import           Control.Monad.Trans.Either
 import qualified Data.Configurator          as Configurator
@@ -29,7 +29,7 @@ pluginPrefix = "plugins."
 
 
 isPluginRecord :: (Name, Value) -> Bool
-isPluginRecord (name, _) = Text.isPrefixOf "plugins." name
+isPluginRecord (name, _) = Text.isPrefixOf pluginPrefix name
 
 
 dropPluginPrefix :: Name -> Name

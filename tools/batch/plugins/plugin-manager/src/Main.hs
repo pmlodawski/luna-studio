@@ -17,13 +17,12 @@ import qualified Flowbox.Options.Applicative               as Opt
 import           Flowbox.PluginManager.Cmd                 (Cmd)
 import qualified Flowbox.PluginManager.Cmd                 as Cmd
 import qualified Flowbox.PluginManager.Context             as Context
-import qualified Flowbox.PluginManager.Init                as Init
+import qualified Flowbox.PluginManager.Init.Local          as InitLocal
+import qualified Flowbox.PluginManager.Init.Remote         as InitRemote
 import qualified Flowbox.PluginManager.RPC.Handler.Handler as Handler
 import qualified Flowbox.PluginManager.Version             as Version
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-
-import qualified Flowbox.PluginManager.RPC.Client as RemoveMe
 
 
 
@@ -61,12 +60,14 @@ run cmd = case cmd of
 
         cfg <- Config.load
 
-        pluginHandles <- case Cmd.initConfig cmd of
-            ""       -> return []
-            confPath -> eitherStringToM =<< (runEitherT $ Init.init confPath)
+        let confPath = Cmd.initConfig cmd
+
+        pluginHandles <- if null confPath
+            then return []
+            else (runEitherT $ InitLocal.init confPath) >>= eitherStringToM
 
         ctx <- Context.mk cfg pluginHandles
 
         logger info "Starting rpc server"
-        eitherStringToM =<< (Server.run (EP.clientFromConfig cfg) $ Handler.handlerMap (Cmd.prefix cmd) ctx)
+        (Server.run (EP.clientFromConfig cfg) $ Handler.handlerMap (Cmd.prefix cmd) ctx) >>= eitherStringToM
 
