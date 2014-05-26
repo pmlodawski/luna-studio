@@ -7,7 +7,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes       #-}
 
-module Flowbox.ZMQ.RPC.RPCHandler where
+module Flowbox.ZMQ.RPC.Handler where
 
 import           Data.ByteString                 (ByteString)
 import           System.ZMQ4.Monadic             (ZMQ)

@@ -10,7 +10,7 @@ module Flowbox.AccountManager.Handler.Handler where
 
 import Flowbox.AccountManager.Context      (Context)
 import Flowbox.AccountManager.Handler.User as HandlerUser
-import Flowbox.ZMQ.RPC.RPCHandler          (RPCHandler)
+import Flowbox.ZMQ.RPC.Handler             (RPCHandler)
 
 import           Generated.Proto.AccountManager.Request              (Request)
 import qualified Generated.Proto.AccountManager.Request              as Request

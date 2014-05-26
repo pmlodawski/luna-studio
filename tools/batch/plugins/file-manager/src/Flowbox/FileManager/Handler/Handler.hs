@@ -10,8 +10,8 @@
 module Flowbox.FileManager.Handler.Handler where
 
 import           Flowbox.Bus.Data.Topic                (Topic)
-import           Flowbox.Bus.RPC.BusRPCHandler         (BusRPCHandler)
-import qualified Flowbox.Bus.RPC.Processor             as P
+import           Flowbox.Bus.RPC.Handler               (BusRPCHandler)
+import qualified Flowbox.Bus.RPC.Server.Processor      as P
 import qualified Flowbox.FileManager.Handler.Directory as DirectoryHandler
 import qualified Flowbox.FileManager.Handler.File      as FileHandler
 import           Flowbox.Prelude                       hiding (Context, error)

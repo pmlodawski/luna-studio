@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE RankNTypes #-}
 
-module Flowbox.Bus.Client where
+module Flowbox.Bus.Server where
 
 import Control.Monad       (forever)
 import Control.Monad.Trans
@@ -26,7 +26,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.Client"
+logger = getLoggerIO "Flowbox.Bus.Server"
 
 
 run :: BusEndPoints -> [Topic] -> (Message -> IO [Message]) -> IO (Either String ())
