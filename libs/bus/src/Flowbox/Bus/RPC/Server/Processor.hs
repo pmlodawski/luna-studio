@@ -9,8 +9,9 @@
 
 module Flowbox.Bus.RPC.Server.Processor where
 
-import qualified Data.List         as List
-import qualified Data.String.Utils as Utils
+import           Control.Monad.IO.Class (MonadIO)
+import qualified Data.List              as List
+import qualified Data.String.Utils      as Utils
 
 import           Flowbox.Bus.Data.Exception                     (Exception (Exception))
 import           Flowbox.Bus.Data.Message                       (Message (Message))
@@ -37,16 +38,21 @@ update :: String
 update = "update"
 
 
-singleResult :: (a -> IO b) -> a -> IO [b]
-singleResult f a = mkList <$> f a
+singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
+singleResult f a = f a >>= return . mkList
+
+
+type Callback = (Proto.Serializable args, Proto.Serializable result)
+              => String -> (args -> IO [result]) -> IO [Message]
 
 
 process :: BusRPCHandler -> Message -> IO [Message]
 process handler msg = handler call topic where
+    call :: Callback
     call type_ method = case Proto.messageGet' $ msg ^. Message.message of
         Left err   -> do logger error err
                          return $ respondError topic err
-        Right args -> do results <- runEitherT $ scriptIO $ method args
+        Right args -> do results <- runEitherT $ safeLiftIO $ method args
                          return $ case results of
                             Left err -> respondError topic $ "Unhandled error: " ++ err
                             Right ok -> map (respond type_) ok
