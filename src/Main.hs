@@ -65,5 +65,5 @@ run cmd = case cmd of
         ctx <- Context.mk cfg pluginHandles
 
         logger info "Starting rpc server"
-        eitherStringToM =<< (Server.run (EP.clientFromConfig cfg) Handler.topics $ Handler.handler ctx)
+        eitherStringToM =<< (Server.run (EP.clientFromConfig cfg) $ Handler.handlerMap ctx)
 
