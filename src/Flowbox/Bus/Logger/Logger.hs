@@ -16,6 +16,7 @@ import           Flowbox.Bus.Data.Topic        (Topic)
 import           Flowbox.Bus.EndPoint          (BusEndPoints)
 import           Flowbox.Prelude               hiding (error)
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Bus.Data.Topic                as Topic
 
 
 
@@ -34,7 +35,7 @@ logMessage = do msgFrame <- Bus.receive
                 case msgFrame of
                     Left err -> logger error $ "Unparseable message: " ++ err
                     Right (MessageFrame msg crlID senderID lastFrame) -> do
-                        let topic  = Message.topic msg
+                        let topic  = msg ^. Message.topic
                             logMsg = show senderID
                                    ++ " -> "
                                    ++ show crlID
@@ -43,7 +44,7 @@ logMessage = do msgFrame <- Bus.receive
                                    ++ ")"
                                    ++ "\t:: "
                                    ++ topic
-                        if List.isSuffixOf "error" topic
+                        if List.isSuffixOf Topic.error topic
                             then logger error logMsg
                             else logger info  logMsg
 
