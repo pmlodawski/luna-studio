@@ -22,3 +22,15 @@ toByteString = pack
 
 fromByteString :: ByteString -> Topic
 fromByteString = unpack
+
+
+error :: Topic
+error = "error"
+
+
+status :: Topic
+status = "status"
+
+
+update :: Topic
+update = "update"

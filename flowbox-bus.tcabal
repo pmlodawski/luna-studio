@@ -25,6 +25,7 @@ Library
                    
   Build-Depends:  base,
                   bytestring,
+                  containers,
                   either,
                   flowbox-config,
                   flowbox-rpc,
