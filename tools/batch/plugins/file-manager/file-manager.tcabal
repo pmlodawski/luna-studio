@@ -11,7 +11,7 @@ Flag Debug
     Default:        False
 
 
-Executable file-manager-new
+Executable file-manager
     Hs-Source-Dirs: dist/gen
                     src
     Other-Modules:  Paths_flowbox_file_manager

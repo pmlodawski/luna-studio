@@ -9,7 +9,7 @@ module Main where
 import Control.Monad.Trans.Either
 
 import qualified Flowbox.Bus.EndPoint                  as EP
-import qualified Flowbox.Bus.RPC.Client                as Client
+import qualified Flowbox.Bus.RPC.Server.Server         as Server
 import qualified Flowbox.Config.Config                 as Config
 import           Flowbox.Control.Error                 (eitherStringToM)
 import           Flowbox.Options.Applicative           hiding (info)
@@ -65,5 +65,5 @@ run cmd = case cmd of
         ctx <- Context.mk cfg pluginHandles
 
         logger info "Starting rpc server"
-        eitherStringToM =<< (Client.run (EP.clientFromConfig cfg) Handler.topics $ Handler.handler ctx)
+        eitherStringToM =<< (Server.run (EP.clientFromConfig cfg) Handler.topics $ Handler.handler ctx)
 

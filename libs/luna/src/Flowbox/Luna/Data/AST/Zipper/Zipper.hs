@@ -19,7 +19,7 @@ import           Flowbox.Luna.Data.AST.Module            (Module)
 import qualified Flowbox.Luna.Data.AST.Module            as Module
 import qualified Flowbox.Luna.Data.AST.Type              as Type
 import           Flowbox.Luna.Data.AST.Zipper.Focus      (Focus (ModuleFocus, ClassFocus, FunctionFocus), FocusPath)
-import           Flowbox.Prelude                         hiding (drop, id, mod)
+import           Flowbox.Prelude                         hiding (drop, id, mod, Zipper)
 
 
 type Zipper = (Focus, FocusPath)

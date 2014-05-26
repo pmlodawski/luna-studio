@@ -7,7 +7,7 @@
 module Main where
 
 import qualified Flowbox.Bus.EndPoint                   as EP
-import qualified Flowbox.Bus.RPC.Client                 as Client
+import qualified Flowbox.Bus.RPC.Server.Server          as Server
 import qualified Flowbox.Config.Config                  as Config
 import           Flowbox.Options.Applicative            hiding (info)
 import qualified Flowbox.Options.Applicative            as Opt
@@ -48,6 +48,6 @@ run cmd = case cmd of
         rootLogger setIntLevel $ Cmd.verbose cmd
         cfg <- Config.load
         ctx <- Context.mk cfg
-        r <- Client.run (EP.clientFromConfig cfg) Handler.topics $ Handler.handler ctx
+        r <- Server.run (EP.clientFromConfig cfg) Handler.topics $ Handler.handler ctx
         print r
 

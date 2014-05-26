@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes       #-}
 
-module Flowbox.ZMQ.RPC.Processor where
+module Flowbox.ZMQ.RPC.Server.Processor where
 
 import           Control.Exception               (SomeException, try)
 import           Control.Monad                   (join)
@@ -24,9 +24,9 @@ import           Flowbox.System.Log.Logger
 import           Flowbox.Text.ProtocolBuffers                   (Int32, Serializable)
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import           Flowbox.ZMQ.RPC.Handler                        (RPCHandler)
 import           Flowbox.ZMQ.RPC.RPC                            (RPC)
 import qualified Flowbox.ZMQ.RPC.RPC                            as RPC
-import           Flowbox.ZMQ.RPC.RPCHandler                     (RPCHandler)
 import           Generated.Proto.Rpc.Exception                  (Exception (Exception))
 import qualified Generated.Proto.Rpc.Exception                  as Exception
 import           Generated.Proto.Rpc.Response                   (Response (Response))

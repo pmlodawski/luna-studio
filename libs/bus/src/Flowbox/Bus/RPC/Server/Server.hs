@@ -7,21 +7,21 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
 
-module Flowbox.Bus.RPC.Client where
+module Flowbox.Bus.RPC.Server.Server where
 
-import qualified Flowbox.Bus.Client            as Client
-import           Flowbox.Bus.Data.Topic        (Topic)
-import           Flowbox.Bus.EndPoint          (BusEndPoints)
-import           Flowbox.Bus.RPC.BusRPCHandler (BusRPCHandler)
-import qualified Flowbox.Bus.RPC.Processor     as Processor
-import           Flowbox.Prelude               hiding (error)
+import           Flowbox.Bus.Data.Topic           (Topic)
+import           Flowbox.Bus.EndPoint             (BusEndPoints)
+import           Flowbox.Bus.RPC.Handler          (BusRPCHandler)
+import qualified Flowbox.Bus.RPC.Server.Processor as Processor
+import qualified Flowbox.Bus.Server               as Server
+import           Flowbox.Prelude                  hiding (error)
 import           Flowbox.System.Log.Logger
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.RPC.Client"
+logger = getLoggerIO "Flowbox.Bus.RPC.Server.Server"
 
 
 run :: BusEndPoints -> [Topic] -> BusRPCHandler -> IO (Either String ())
-run endPoints topics handler = Client.run endPoints topics $ Processor.process handler
+run endPoints topics handler = Server.run endPoints topics $ Processor.process handler

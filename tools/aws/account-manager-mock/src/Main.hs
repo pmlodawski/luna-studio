@@ -19,7 +19,7 @@ import           Flowbox.Options.Applicative            hiding (info)
 import qualified Flowbox.Options.Applicative            as Opt
 import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.ZMQ.RPC.Server                 as RPC
+import qualified Flowbox.ZMQ.RPC.Server.Server          as RPC
 
 
 
@@ -70,4 +70,4 @@ run cmd = case cmd of
                                               (Cmd.database   cmd)
             region = Region.fromString $ Cmd.region cmd
         ctx <- Context.mk region connectionInfo
-        RPC.run (Cmd.address cmd) (Handler.handler ctx)
+        RPC.run 16 (Cmd.address cmd) (Handler.handler ctx) -- TODO [PM] hardcoded number of workers

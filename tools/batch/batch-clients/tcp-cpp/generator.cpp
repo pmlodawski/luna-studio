@@ -65,20 +65,7 @@ public:
 	std::function<generated::proto::crumb::Breadcrumbs(DefinitionId defID)> crumbifyMethod;
 
 
-	generated::proto::crumb::Breadcrumbs crumbify(DefinitionId defID) 
-	{
-		try
-		{
-			if(!crumbifyMethod) 
-				throw std::runtime_error("No crumbifyMethod provided!");
-		
-			return crumbifyMethod(defID);
-		}
-		catch(std::exception &e)
-		{
-			THROW("Failed to translate id %s to BreadCrumbs: %s.", defID, e);
-		}
-	}
+	generated::proto::crumb::Breadcrumbs crumbify(DefinitionId defID);
 
 	%wrapper_name%(shared_ptr<BusHandler> bh) : bh(bh) {}
 	%method_decls%
@@ -99,6 +86,21 @@ const std::string sourceFile = R"(
 void %wrapper_name%::sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback)
 {
 	bh->request(std::move(baseTopic), std::move(requestTopic), msg.SerializeAsString(), callback);
+}
+
+generated::proto::crumb::Breadcrumbs %wrapper_name%::crumbify(DefinitionId defID)
+{
+	try
+	{
+		if(!crumbifyMethod)
+			throw std::runtime_error("No crumbifyMethod provided!");
+
+		return crumbifyMethod(defID);
+	}
+	catch(std::exception &e)
+	{
+		THROW("Failed to translate id %s to BreadCrumbs: %s.", defID, e);
+	}
 }
 
 %method_impls%
@@ -735,6 +737,9 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 		return std::move(ret);
 	}
 
+	if(/*boost::ends_with(message.topic, "request") || */boost::starts_with(message.topic, "builder."))
+		// No action needed for our packs
+		return nullptr;
 
 	THROW("Error: I don't know how to deserialize message with topic %s.", message.topic);
 }
@@ -794,7 +799,9 @@ void MessageDispatcher::dispatch(const BusMessage &message, IDispatchee &dispatc
 		return;
 	}
 
-	logWarning("Not dispatching message %s.", message.topic);
+
+	if(!boost::ends_with(message.topic, ".request"))
+		logWarning("Not dispatching message %s.", message.topic);;
 }
 
 void IBusMessagesReceiver::handle(const BusMessage &message)
