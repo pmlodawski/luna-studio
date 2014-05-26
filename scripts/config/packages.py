@@ -22,13 +22,14 @@ def handle_error(e):
         fatal()
 
 class Project(object):
-    def __init__(self, name='', path='', binpath='', deps=None):
+    def __init__(self, name='', path='', binpath='', deps=None, flags=''):
         if deps == None: deps = []
         self.name    = name
         self.path    = path
         self.binpath = binpath
         self.sbox    = os.path.join(rootPath, 'dist', self.path)
         self.deps    = set(deps)
+        self.flags   = flags
 
     def install(self):   pass
 
