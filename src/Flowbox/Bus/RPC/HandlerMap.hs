@@ -7,9 +7,15 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
 
-module Flowbox.Bus.RPC.HandlerMap where
+module Flowbox.Bus.RPC.HandlerMap (
+    module X,
+    Callback,
+    HandlerMap,
+    topics,
+    lookupAndCall,
+) where
 
-import           Data.Map (Map)
+import           Data.Map as X
 import qualified Data.Map as Map
 
 import           Flowbox.Bus.Data.Message     (Message)
