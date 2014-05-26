@@ -14,8 +14,8 @@ import Flowbox.Prelude
 
 type ID = Int
 
-data Plugin = Plugin { name    :: String
-                     , command :: String
+data Plugin = Plugin { _name    :: String
+                     , _command :: String
                      } deriving (Read, Show)
 
 makeLenses (''Plugin)

@@ -5,19 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.PluginManager.Cmd where
+module Flowbox.PluginManager.Prefix where
 
-import Flowbox.PluginManager.Prefix (Prefix)
+import Flowbox.Bus.Data.Topic (Topic)
 import Flowbox.Prelude
 
 
 
-data Cmd = Run { initConfig :: FilePath
+type Prefix = String
 
-               , prefix     :: Prefix
 
-               , verbose    :: Int
-               , noColor    :: Bool
-               }
-         | Version
-         deriving Show
+prefixify :: Prefix -> Topic -> Topic
+prefixify prefix topic = if null prefix
+    then topic
+    else prefix ++ "." ++ topic
