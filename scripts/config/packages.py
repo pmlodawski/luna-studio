@@ -22,8 +22,9 @@ def handle_error(e):
         fatal()
 
 class Project(object):
-    def __init__(self, name='', path='', binpath='', deps=None, flags=''):
-        if deps == None: deps = []
+    def __init__(self, name='', path='', binpath='', deps=None, flags=None):
+        if deps  == None: deps = []
+        if flags == None: flags = []
         self.name    = name
         self.path    = path
         self.binpath = binpath
