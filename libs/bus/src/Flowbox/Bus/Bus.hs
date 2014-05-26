@@ -4,9 +4,10 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds    #-}
-{-# LANGUAGE FlexibleContexts   #-}
-{-# LANGUAGE RankNTypes         #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
 
 module Flowbox.Bus.Bus where
 
@@ -17,23 +18,23 @@ import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Flowbox.Bus.Data.Flag              (Flag)
-import           Flowbox.Bus.Data.Message           (Message)
-import qualified Flowbox.Bus.Data.Message           as Message
-import           Flowbox.Bus.Data.MessageFrame      (MessageFrame (MessageFrame))
-import qualified Flowbox.Bus.Data.MessageFrame      as MessageFrame
-import           Flowbox.Bus.Data.Topic             (Topic)
-import qualified Flowbox.Bus.Data.Topic             as Topic
-import qualified Flowbox.Bus.EndPoint               as EP
-import           Flowbox.Bus.Env                    (BusEnv (BusEnv))
-import qualified Flowbox.Bus.Env                    as Env
+import           Flowbox.Bus.Data.Flag                (Flag)
+import           Flowbox.Bus.Data.Message             (Message)
+import qualified Flowbox.Bus.Data.Message             as Message
+import           Flowbox.Bus.Data.MessageFrame        (MessageFrame (MessageFrame))
+import qualified Flowbox.Bus.Data.MessageFrame        as MessageFrame
+import           Flowbox.Bus.Data.Topic               (Topic)
+import qualified Flowbox.Bus.Data.Topic               as Topic
+import qualified Flowbox.Bus.EndPoint                 as EP
+import           Flowbox.Bus.Env                      (BusEnv (BusEnv))
+import qualified Flowbox.Bus.Env                      as Env
 import           Flowbox.Prelude
-import qualified Flowbox.Text.ProtocolBuffers       as Proto
-import qualified Flowbox.ZMQ.RPC.Client             as Client
-import qualified Generated.Proto.Bus.ID.Create.Args    as ID_Create
-import qualified Generated.Proto.Bus.ID.Create.Result  as ID_Create
-import           Generated.Proto.Bus.Request        (Request (Request))
-import qualified Generated.Proto.Bus.Request.Method as Method
+import qualified Flowbox.Text.ProtocolBuffers         as Proto
+import qualified Flowbox.ZMQ.RPC.Client               as Client
+import qualified Generated.Proto.Bus.ID.Create.Args   as ID_Create
+import qualified Generated.Proto.Bus.ID.Create.Result as ID_Create
+import           Generated.Proto.Bus.Request          (Request (Request))
+import qualified Generated.Proto.Bus.Request.Method   as Method
 
 
 
@@ -96,8 +97,12 @@ send lastFrame msg = do
     return correlationID
 
 
-receive :: Bus (Either String MessageFrame)
+receive :: Bus (Either Error MessageFrame)
 receive = MessageFrame.fromByteString <$> receiveByteString
+
+
+receive' :: Bus MessageFrame
+receive' = receive >>= lift . hoistEither
 
 
 sendByteString :: ByteString -> Bus ()

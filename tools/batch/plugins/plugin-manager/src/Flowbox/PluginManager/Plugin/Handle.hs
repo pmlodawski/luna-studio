@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.PluginManager.Plugin.Handle where
 
@@ -23,16 +24,19 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.PluginManager.Data.PluginHandle"
 
 
-data PluginHandle = PluginHandle { plugin :: Plugin
-                                 , handle :: Maybe ProcessHandle
+data PluginHandle = PluginHandle { _plugin :: Plugin
+                                 , _handle :: Maybe ProcessHandle
                                  }
+
+makeLenses (''PluginHandle)
+
 
 mk :: Plugin -> PluginHandle
 mk = flip PluginHandle Nothing
 
 
 info :: PluginHandle -> IO PluginInfo
-info ph = PluginInfo (plugin ph) <$> case handle ph of
+info ph = PluginInfo (ph ^. plugin) <$> case ph ^. handle of
     Nothing -> return PluginInfo.Stopped
     Just h  -> do exitCode <- Process.getProcessExitCode h
                   case exitCode of
@@ -41,21 +45,23 @@ info ph = PluginInfo (plugin ph) <$> case handle ph of
 
 
 start :: Plugin -> IO PluginHandle
-start p = do logger L.info $ "Starting plugin " ++ (show $ Plugin.name p) ++ " (" ++ Plugin.command p ++ ")"
+start p = do logger L.info $ "Starting plugin "
+                          ++ (show $ p ^. Plugin.name)
+                          ++ " (" ++ (p ^. Plugin.command) ++ ")"
              -- FIXME [PM] : handle fail to start
-             h <- Process.spawnCommand $ Plugin.command p
+             h <- Process.spawnCommand $ p ^. Plugin.command
              return $ PluginHandle p $ Just h
 
 
 stop :: PluginHandle -> IO PluginHandle
-stop ph = do logger L.info $ "Stopping plugin " ++ (show $ Plugin.name $ plugin ph)
-             case handle ph of
+stop ph = do logger L.info $ "Stopping plugin " ++ (show $ ph ^. plugin . Plugin.name)
+             case ph ^. handle of
                 Just h  -> do Process.terminateProcess h
                               _ <- Process.waitForProcess h
                               logger L.info "Plugin stopped"
                 Nothing -> logger L.info "No need to stop. Plugin already stopped"
-             return $ ph { handle = Nothing }
+             return $ ph & handle .~ Nothing
 
 
 restart :: PluginHandle -> IO PluginHandle
-restart ph = plugin <$> stop ph >>= start
+restart ph = view plugin <$> stop ph >>= start

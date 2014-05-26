@@ -8,20 +8,22 @@ module Main where
 
 import Control.Monad.Trans.Either
 
-import qualified Flowbox.Bus.EndPoint                     as EP
-import qualified Flowbox.Bus.RPC.Server.Server            as Server
-import qualified Flowbox.Config.Config                    as Config
-import           Flowbox.Control.Error                    (eitherStringToM)
-import           Flowbox.Options.Applicative              hiding (info)
-import qualified Flowbox.Options.Applicative              as Opt
-import           Flowbox.PluginManager.Cmd                (Cmd)
-import qualified Flowbox.PluginManager.Cmd                as Cmd
-import qualified Flowbox.PluginManager.Context            as Context
-import qualified Flowbox.PluginManager.Init               as Init
-import qualified Flowbox.PluginManager.RPCHandler.Handler as Handler
-import qualified Flowbox.PluginManager.Version            as Version
+import qualified Flowbox.Bus.EndPoint                      as EP
+import qualified Flowbox.Bus.RPC.Server.Server             as Server
+import qualified Flowbox.Config.Config                     as Config
+import           Flowbox.Control.Error                     (eitherStringToM)
+import           Flowbox.Options.Applicative               hiding (info)
+import qualified Flowbox.Options.Applicative               as Opt
+import           Flowbox.PluginManager.Cmd                 (Cmd)
+import qualified Flowbox.PluginManager.Cmd                 as Cmd
+import qualified Flowbox.PluginManager.Context             as Context
+import qualified Flowbox.PluginManager.Init                as Init
+import qualified Flowbox.PluginManager.RPC.Handler.Handler as Handler
+import qualified Flowbox.PluginManager.Version             as Version
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+
+import qualified Flowbox.PluginManager.RPC.Client as RemoveMe
 
 
 
@@ -36,7 +38,8 @@ rootLogger = getLogger "Flowbox"
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Run
-           <$> strOption  (long "init"  <> short 'i' <> metavar "PATH" <> value "" <> help "Configuration file with plugins that needs to be run on init")
+           <$> strOption  (long "init"   <> short 'i' <> metavar "PATH"   <> value "" <> help "Configuration file with plugins that needs to be run on init")
+           <*> strOption  (long "prefix" <> short 'p' <> metavar "PREFIX" <> value "" <> help "Prefix used by this plugin manager (e.g. client, main, etc.")
            <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"          <> help "Disable color output" )
 
@@ -65,5 +68,5 @@ run cmd = case cmd of
         ctx <- Context.mk cfg pluginHandles
 
         logger info "Starting rpc server"
-        eitherStringToM =<< (Server.run (EP.clientFromConfig cfg) $ Handler.handlerMap ctx)
+        eitherStringToM =<< (Server.run (EP.clientFromConfig cfg) $ Handler.handlerMap (Cmd.prefix cmd) ctx)
 

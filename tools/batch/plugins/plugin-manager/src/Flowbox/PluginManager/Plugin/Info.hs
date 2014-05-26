@@ -18,7 +18,8 @@ data Status = Running
             deriving (Read, Show)
 
 
-data PluginInfo = PluginInfo { plugin :: Plugin
-                             , status :: Status
+data PluginInfo = PluginInfo { _plugin :: Plugin
+                             , _status :: Status
                              } deriving (Read, Show)
+
 makeLenses (''PluginInfo)

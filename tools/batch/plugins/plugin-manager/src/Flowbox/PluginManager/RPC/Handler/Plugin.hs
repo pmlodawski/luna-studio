@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.PluginManager.RPCHandler.Plugin where
+module Flowbox.PluginManager.RPC.Handler.Plugin where
 
 import qualified Data.IORef as IORef
 
@@ -37,7 +37,7 @@ import qualified Generated.Proto.PluginManager.Plugin.Stop.Update     as Stop
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.RPCHandler.Plugin"
+logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
 
 -------- public api -------------------------------------------------
 
@@ -82,7 +82,7 @@ lookup ctxRef (Lookup.Request tid) = do
 start :: ContextRef -> Start.Request -> IO Start.Update
 start ctxRef (Start.Request tid) = do
     let id = decodeP tid
-    _ <- withPluginHandle ctxRef id (PluginHandle.start . PluginHandle.plugin)
+    _ <- withPluginHandle ctxRef id (PluginHandle.start . view PluginHandle.plugin)
     return $ Start.Update tid
 
 
@@ -91,6 +91,7 @@ stop ctxRef (Stop.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id PluginHandle.stop
     return $ Stop.Update tid
+
 
 restart :: ContextRef -> Restart.Request -> IO Restart.Update
 restart ctxRef (Restart.Request tid) = do

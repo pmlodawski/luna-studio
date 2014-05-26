@@ -97,8 +97,7 @@ def main():
         shutil.copy(cabalConfigSrc, dstConfigCopy)
 
         instPath = os.path.join(dist_dir, 'bin', pkg.binpath)
-        ret = call('cabal install --solver=topdown --force-reinstalls --reinstall --bindir=%s %s %s' % (instPath, pkg.name, ' '.join(args)), shell=True)
-        # FIXME [PM] : --solver=topdown --force-reinstalls is added to solve problem described here: http://www.reddit.com/r/haskell/comments/26045a/if_youre_finding_cabal_cant_build_your_project/
+        ret = call('cabal install --reinstall --bindir=%s %s %s' % (instPath, pkg.name, ' '.join(args)), shell=True)
         handle_ret(ret)
 
 

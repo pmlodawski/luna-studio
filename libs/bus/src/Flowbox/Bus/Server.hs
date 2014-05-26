@@ -11,7 +11,6 @@ module Flowbox.Bus.Server where
 import Control.Monad       (forever)
 import Control.Monad.Trans
 
-import           Control.Monad.Trans.Either
 import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus
 import qualified Flowbox.Bus.Data.Flag         as Flag
@@ -42,8 +41,7 @@ handleLoop topics process = do
 
 handle :: (Message -> IO [Message]) -> Bus ()
 handle process = do
-    request <- Bus.receive
-    (MessageFrame msg crlID _ _) <- lift $ hoistEither request
+    (MessageFrame msg crlID _ _) <- Bus.receive'
     liftIO $ logger debug $ "Received request: " ++ (msg ^. Message.topic)
     response <- liftIO $ process msg
     if not $ null response

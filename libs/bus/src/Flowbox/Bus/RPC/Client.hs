@@ -10,23 +10,21 @@
 
 module Flowbox.Bus.RPC.Client where
 
-import qualified Control.Monad.Loops as Loops
-import           Control.Monad.State
+import qualified Control.Monad.Loops        as Loops
+import           Control.Monad.Trans.Class  (lift)
+import           Control.Monad.Trans.Either
 
 import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus
 import qualified Flowbox.Bus.Data.Flag         as Flag
-import           Flowbox.Bus.Data.Message      (Message)
+import           Flowbox.Bus.Data.Message      (Message (Message))
 import qualified Flowbox.Bus.Data.Message      as Message
 import           Flowbox.Bus.Data.MessageFrame (MessageFrame)
 import qualified Flowbox.Bus.Data.MessageFrame as MessageFrame
-import           Flowbox.Control.Error         (eitherToM)
+import           Flowbox.Bus.Data.Topic        (Topic)
 import           Flowbox.Prelude
+import qualified Flowbox.Text.ProtocolBuffers  as Proto
 
-
-
-receive :: Bus MessageFrame
-receive = Bus.receive >>= eitherToM
 
 
 isCorrelationIDValid :: Message.CorrelationID -> MessageFrame -> Bool
@@ -40,10 +38,15 @@ allFramesReceived correlationID frame =
      && frame ^. MessageFrame.lastFrame == Flag.Enable
 
 
-query :: Message -> Bus [Message]
-query message = do
+query :: (Proto.Serializable args, Proto.Serializable result)
+      => Topic -> args -> Bus [result]
+query topic args = do
+    results <- query_raw $ Message topic $ Proto.messagePut' args
+    mapM (lift . hoistEither . Proto.messageGet' . view Message.message) results
+
+
+query_raw :: Message -> Bus [Message]
+query_raw message = do
     correlationID <- Bus.send Flag.Enable message
-    frames <- Loops.unfoldWhileM (allFramesReceived correlationID) receive
+    frames <- Loops.unfoldWhileM (allFramesReceived correlationID) Bus.receive'
     return $ map (view MessageFrame.message) $ filter (isCorrelationIDValid correlationID) frames
-
-
