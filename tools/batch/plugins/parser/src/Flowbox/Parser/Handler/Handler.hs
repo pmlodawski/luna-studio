@@ -9,33 +9,30 @@
 
 module Flowbox.Parser.Handler.Handler where
 
-import           Flowbox.Bus.Data.Topic           (Topic)
-import           Flowbox.Bus.RPC.Handler          (BusRPCHandler)
-import qualified Flowbox.Bus.RPC.Server.Processor as P
+import           Flowbox.Bus.Data.Message         (Message)
+import qualified Flowbox.Bus.Data.Topic           as Topic
+import           Flowbox.Bus.RPC.HandlerMap       (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap       as HandlerMap
+import qualified Flowbox.Bus.RPC.Server.Processor as Processor
 import qualified Flowbox.Parser.Handler.Parser    as ParserHandler
 import           Flowbox.Prelude                  hiding (error)
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Text.ProtocolBuffers     as Proto
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Parser.Handler"
+logger = getLoggerIO "Flowbox.Parser.Handler.Handler"
 
 
-topics :: [Topic]
-topics = [ "parse.expr.request"
-         , "parse.pat.request"
-         , "parse.type.request"
-         , "parse.nodeexpr.request"
-         ]
-
-
-handler :: BusRPCHandler
-handler  callback topic = case topic of
-    "parse.expr.request"     -> callback P.status $ P.singleResult ParserHandler.parseExpr
-    "parse.pat.request"      -> callback P.status $ P.singleResult ParserHandler.parsePat
-    "parse.type.request"     -> callback P.status $ P.singleResult ParserHandler.parseType
-    "parse.nodeexpr.request" -> callback P.status $ P.singleResult ParserHandler.parseNodeExpr
-    unsupported -> do let errMsg = "Unknown topic: " ++ show unsupported
-                      logger error errMsg
-                      return $ P.respondError topic errMsg
+handlerMap :: HandlerMap
+handlerMap callback = HandlerMap.fromList $
+    [ ("parse.expr.request"    , call Topic.status $ ParserHandler.parseExpr    )
+    , ("parse.pat.request"     , call Topic.status $ ParserHandler.parsePat     )
+    , ("parse.type.request"    , call Topic.status $ ParserHandler.parseType    )
+    , ("parse.nodeexpr.request", call Topic.status $ ParserHandler.parseNodeExpr)
+    ]
+    where
+        call :: (Proto.Serializable args, Proto.Serializable result)
+             => String -> (args -> IO result) -> IO [Message]
+        call type_ = callback type_ . Processor.singleResult

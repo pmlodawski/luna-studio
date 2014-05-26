@@ -53,7 +53,7 @@ getUser inst = do
     userName <- tagVal
     if userName == noUser
         then Nothing
-        else return $ Tag.unpack userName 
+        else return $ Tag.unpack userName
 
 
 userTag :: Maybe User.Name -> Tag

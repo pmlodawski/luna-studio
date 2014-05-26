@@ -9,13 +9,16 @@
 
 module Flowbox.FileManager.Handler.Handler where
 
-import           Flowbox.Bus.Data.Topic                (Topic)
-import           Flowbox.Bus.RPC.Handler               (BusRPCHandler)
-import qualified Flowbox.Bus.RPC.Server.Processor      as P
+import           Flowbox.Bus.Data.Message              (Message)
+import qualified Flowbox.Bus.Data.Topic                as Topic
+import           Flowbox.Bus.RPC.HandlerMap            (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap            as HandlerMap
+import qualified Flowbox.Bus.RPC.Server.Processor      as Processor
 import qualified Flowbox.FileManager.Handler.Directory as DirectoryHandler
 import qualified Flowbox.FileManager.Handler.File      as FileHandler
-import           Flowbox.Prelude                       hiding (Context, error)
+import           Flowbox.Prelude                       hiding (error)
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Text.ProtocolBuffers          as Proto
 
 
 
@@ -23,40 +26,24 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.FileManager.Handler"
 
 
-topics :: [Topic]
-topics = [ "filesystem.directory.fetch.request"
-         , "filesystem.directory.upload.request"
-         , "filesystem.directory.exists.request"
-         , "filesystem.directory.create.request"
-         , "filesystem.directory.list.request"
-         , "filesystem.directory.remove.request"
-         , "filesystem.directory.copy.request"
-         , "filesystem.directory.move.request"
-         , "filesystem.file.fetch.request"
-         , "filesystem.file.upload.request"
-         , "filesystem.file.exists.request"
-         , "filesystem.file.remove.request"
-         , "filesystem.file.copy.request"
-         , "filesystem.file.move.request"
-         ]
-
-
-handler :: BusRPCHandler
-handler callback topic = case topic of
-    "filesystem.directory.fetch.request"  -> callback P.status $ P.singleResult DirectoryHandler.fetch
-    "filesystem.directory.upload.request" -> callback P.status $ P.singleResult DirectoryHandler.upload
-    "filesystem.directory.exists.request" -> callback P.update $ P.singleResult DirectoryHandler.exists
-    "filesystem.directory.create.request" -> callback P.update $ P.singleResult DirectoryHandler.create
-    "filesystem.directory.list.request"   -> callback P.status $ P.singleResult DirectoryHandler.list
-    "filesystem.directory.remove.request" -> callback P.update $ P.singleResult DirectoryHandler.remove
-    "filesystem.directory.copy.request"   -> callback P.update $ P.singleResult DirectoryHandler.copy
-    "filesystem.directory.move.request"   -> callback P.update $ P.singleResult DirectoryHandler.move
-    "filesystem.file.fetch.request"  -> callback P.status $ P.singleResult FileHandler.fetch
-    "filesystem.file.upload.request" -> callback P.status $ P.singleResult FileHandler.upload
-    "filesystem.file.exists.request" -> callback P.update $ P.singleResult FileHandler.exists
-    "filesystem.file.remove.request" -> callback P.update $ P.singleResult FileHandler.remove
-    "filesystem.file.copy.request"   -> callback P.update $ P.singleResult FileHandler.copy
-    "filesystem.file.move.request"   -> callback P.update $ P.singleResult FileHandler.move
-    unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
-                                  logger error errMsg
-                                  return $ P.respondError topic errMsg
+handlerMap ::  HandlerMap
+handlerMap callback = HandlerMap.fromList $
+    [ ("filesystem.directory.fetch.request" , call Topic.status $ DirectoryHandler.fetch)
+    , ("filesystem.directory.upload.request", call Topic.status $ DirectoryHandler.upload)
+    , ("filesystem.directory.exists.request", call Topic.update $ DirectoryHandler.exists)
+    , ("filesystem.directory.create.request", call Topic.update $ DirectoryHandler.create)
+    , ("filesystem.directory.list.request"  , call Topic.status $ DirectoryHandler.list)
+    , ("filesystem.directory.remove.request", call Topic.update $ DirectoryHandler.remove)
+    , ("filesystem.directory.copy.request"  , call Topic.update $ DirectoryHandler.copy)
+    , ("filesystem.directory.move.request"  , call Topic.update $ DirectoryHandler.move)
+    , ("filesystem.file.fetch.request" , call Topic.status $ FileHandler.fetch)
+    , ("filesystem.file.upload.request", call Topic.status $ FileHandler.upload)
+    , ("filesystem.file.exists.request", call Topic.update $ FileHandler.exists)
+    , ("filesystem.file.remove.request", call Topic.update $ FileHandler.remove)
+    , ("filesystem.file.copy.request"  , call Topic.update $ FileHandler.copy)
+    , ("filesystem.file.move.request"  , call Topic.update $ FileHandler.move)
+    ]
+    where
+        call :: (Proto.Serializable args, Proto.Serializable result)
+             => String -> (args -> IO result) -> IO [Message]
+        call type_ = callback type_ . Processor.singleResult

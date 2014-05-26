@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.AWS.User.User where
 
@@ -21,7 +21,7 @@ data User = User { name     :: Name
                  , password :: Password
                  } deriving (Show)
 
-                 
+
 makeLenses (''User)
 
 
