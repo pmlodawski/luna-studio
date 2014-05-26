@@ -9,11 +9,10 @@
 
 module Flowbox.PluginManager.RPCHandler.Handler where
 
-import qualified Data.Map as Map
-
 import           Flowbox.Bus.Data.Message                (Message)
 import qualified Flowbox.Bus.Data.Topic                  as Topic
 import           Flowbox.Bus.RPC.HandlerMap              (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap              as HandlerMap
 import qualified Flowbox.Bus.RPC.Server.Processor        as Processor
 import           Flowbox.PluginManager.Context           (ContextRef)
 import qualified Flowbox.PluginManager.RPCHandler.Plugin as PluginHandler
@@ -27,7 +26,7 @@ logger = getLoggerIO "Flowbox.PluginManager.RPCHandler.Handler"
 
 
 handlerMap :: ContextRef -> HandlerMap
-handlerMap ctx callback = Map.fromList $
+handlerMap ctx callback = HandlerMap.fromList $
     [ ("plugin.add.request"    , call Topic.update $ PluginHandler.add     ctx)
     , ("plugin.remove.request" , call Topic.update $ PluginHandler.remove  ctx)
     , ("plugin.list.request"   , call Topic.status $ PluginHandler.list    ctx)
