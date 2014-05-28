@@ -68,4 +68,8 @@ message Plugin {
             repeated generated.proto.plugin.PluginInfo list = 1;
         }
     }
+    message Ping {
+        message Request { }
+        message Status  { }
+    }
 }
