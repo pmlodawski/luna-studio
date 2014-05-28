@@ -6,8 +6,10 @@
 ---------------------------------------------------------------------------
 module Flowbox.Bus.Data.Topic where
 
-import Data.ByteString       (ByteString)
-import Data.ByteString.Char8 (pack, unpack)
+import           Data.ByteString       (ByteString)
+import           Data.ByteString.Char8 (pack, unpack)
+import qualified Data.List             as List
+import qualified Data.String.Utils     as Utils
 
 import Flowbox.Prelude
 
@@ -24,6 +26,10 @@ fromByteString :: ByteString -> Topic
 fromByteString = unpack
 
 
+separator :: Topic
+separator = "."
+
+
 error :: Topic
 error = "error"
 
@@ -34,3 +40,20 @@ status = "status"
 
 update :: Topic
 update = "update"
+
+
+request :: Topic
+request = "request"
+
+
+base :: Topic -> Topic
+base = List.intercalate separator . init . Utils.split separator
+
+
+respond :: Topic -> Topic -> Topic
+respond topic type_ =
+    (List.intercalate separator . flip (++) [type_] . init . Utils.split separator) topic
+
+
+isRequest :: Topic -> Bool
+isRequest = List.isSuffixOf request

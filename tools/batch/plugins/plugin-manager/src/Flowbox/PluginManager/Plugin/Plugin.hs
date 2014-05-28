@@ -16,6 +16,6 @@ type ID = Int
 
 data Plugin = Plugin { _name    :: String
                      , _command :: String
-                     } deriving (Read, Show)
+                     } deriving (Read, Show, Eq, Ord)
 
 makeLenses (''Plugin)

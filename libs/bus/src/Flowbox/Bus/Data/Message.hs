@@ -9,9 +9,7 @@
 
 module Flowbox.Bus.Data.Message where
 
-import           Data.ByteString   (ByteString)
-import qualified Data.List         as List
-import qualified Data.String.Utils as Utils
+import Data.ByteString (ByteString)
 
 import           Flowbox.Bus.Data.Exception                     (Exception (Exception))
 import           Flowbox.Bus.Data.Topic                         (Topic)
@@ -45,7 +43,7 @@ makeLenses(''Message)
 
 mkResponse :: Proto.Serializable msg => Topic -> String -> msg -> Message
 mkResponse topic' type_  data_ = Message newTopic $ Proto.messagePut' data_ where
-    newTopic = (List.intercalate "." . flip (++) [type_] . init . Utils.split ".") topic'
+    newTopic = Topic.respond topic' type_
 
 
 mkError :: Topic -> String -> [Message]

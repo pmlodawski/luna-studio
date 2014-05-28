@@ -131,6 +131,7 @@ withJust = forM_
 
 lift2 = lift . lift
 
+lift3 = lift . lift2
 
 ifM :: (Monad m) => m Bool -> m a -> m a -> m a
 ifM predicate a b = do bool <- predicate

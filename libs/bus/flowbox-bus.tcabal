@@ -23,7 +23,8 @@ Library
   Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
                    `findmodules('src', '.*\.hs')`
                    
-  Build-Depends:  base,
+  Build-Depends:  async,
+                  base,
                   bytestring,
                   containers,
                   either,

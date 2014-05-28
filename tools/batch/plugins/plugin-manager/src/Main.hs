@@ -11,6 +11,7 @@ import Control.Monad.Trans.Either
 import qualified Flowbox.Bus.EndPoint                      as EP
 import qualified Flowbox.Bus.RPC.Server.Server             as Server
 import qualified Flowbox.Config.Config                     as Config
+import qualified Flowbox.Control.Concurrent                as Concurrent
 import           Flowbox.Control.Error                     (eitherStringToM)
 import           Flowbox.Options.Applicative               hiding (info)
 import qualified Flowbox.Options.Applicative               as Opt
@@ -23,7 +24,6 @@ import qualified Flowbox.PluginManager.RPC.Handler.Handler as Handler
 import qualified Flowbox.PluginManager.Version             as Version
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-
 
 
 logger :: LoggerIO
@@ -60,14 +60,16 @@ run cmd = case cmd of
 
         cfg <- Config.load
 
-        let confPath = Cmd.initConfig cmd
+        let confPath  = Cmd.initConfig cmd
+            busConfig = EP.clientFromConfig cfg
 
         pluginHandles <- if null confPath
             then return []
-            else (runEitherT $ InitLocal.init confPath) >>= eitherStringToM
+            else do Concurrent.forkIO_ $ (runEitherT $ InitRemote.init confPath busConfig) >>= eitherStringToM
+                    (runEitherT $ InitLocal.init confPath) >>= eitherStringToM
 
         ctx <- Context.mk cfg pluginHandles
 
         logger info "Starting rpc server"
-        (Server.run (EP.clientFromConfig cfg) $ Handler.handlerMap (Cmd.prefix cmd) ctx) >>= eitherStringToM
+        (Server.run busConfig $ Handler.handlerMap (Cmd.prefix cmd) ctx) >>= eitherStringToM
 
