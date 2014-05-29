@@ -19,13 +19,13 @@ import qualified Flowbox.AWS.EC2.Control.Pool.Instance.Instance as Instance
 import           Flowbox.AWS.EC2.Control.Pool.Pool              (MPool)
 import           Flowbox.AWS.EC2.EC2                            (EC2Resource)
 import qualified Flowbox.AWS.EC2.Instance.Request               as Request
-import           Flowbox.AWS.User.Database                      (Database)
-import qualified Flowbox.AWS.User.Database                      as Database
+import           Flowbox.AWS.User.Database.Database             (Database)
+import qualified Flowbox.AWS.User.Database.Database             as Database
 import qualified Flowbox.AWS.User.Password                      as Password
 import           Flowbox.AWS.User.User                          (User (User))
 import qualified Flowbox.AWS.User.User                          as User
 import           Flowbox.Control.Error
-import           Flowbox.Prelude
+import           Flowbox.Prelude                                hiding (id)
 import           Flowbox.System.Log.Logger
 
 
@@ -38,31 +38,40 @@ type Error = String
 
 
 register :: User.Name -> Password.Plain -> Database -> EitherT Error IO ()
-register userName password database =
-    Database.addUser database $ User userName $ Password.mk password
+register userName plain database = safeLiftIO $
+    Database.addUser database $ User id userName (Password.mk salt plain) credit
+    where
+        --FIXME [PM] : id!
+        id = 0
+        --FIXME [PM] : salt!
+        salt = "000"
+        --FIXME [PM] : credit!
+        credit = 100
+
 
 
 authenticate :: User.Name -> Password.Plain -> Database -> EitherT Error IO ()
-authenticate userName password database = do
+authenticate userName plain database = do
     users <- safeLiftIO $ Database.getUser database userName
     case users of
-        [User _ hash] -> if Password.verify hash password
+        Just user -> if Password.verify (user ^. User.password) plain
                             then right ()
                             else left "Authentication failed"
-        _             -> left "Authentication failed"
+        _         -> left "Authentication failed"
+
 
 login :: EC2Resource m
       => User.Name -> Password.Plain -> MPool -> Database -> EC2 m (Either Error IPv4)
-login userName password mpool database = do
-    auth <- liftIO $ runEitherT $ authenticate userName password database
+login userName plain mpool database = do
+    auth <- liftIO $ runEitherT $ authenticate userName plain database
     case auth of
         Right () -> Right <$> start userName mpool
         Left msg -> return $ Left msg
 
 
 logout :: EC2Resource m => User.Name -> Password.Plain -> MPool -> Database -> EC2 m (Either Error ())
-logout userName password mpool database = do
-    auth <- liftIO $ runEitherT $ authenticate userName password database
+logout userName plain mpool database = do
+    auth <- liftIO $ runEitherT $ authenticate userName plain database
     case auth of
         Right () -> Right <$> end userName mpool
         Left msg -> return $ Left msg

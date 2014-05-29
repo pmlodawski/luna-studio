@@ -4,7 +4,7 @@ Cabal-Version:      >= 1.8
 --License-file:       LICENSE
 Author:             Flowbox <contact@flowbox.io>
 Maintainer:         Flowbox <contact@flowbox.io>
-Build-Type:         Simple
+Build-Type:         Custom
 
 Flag Debug
     Description:      Enable debug support
@@ -19,7 +19,7 @@ Library
 
     Extensions:     NoImplicitPrelude
 
-    Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*hs-boot.*')`
+    Exposed-modules: `findmodules('src', '.*\.(hs|sql)', exclude='.*hs-boot.*')`
                      
     Build-Depends:  aws,
                     aws-sdk >= 0.12.4,

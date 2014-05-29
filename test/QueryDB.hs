@@ -10,32 +10,34 @@
 
 module Main where
 
-import Control.Monad.Reader
 import Database.PostgreSQL.Simple as PSQL
 
-import qualified Flowbox.AWS.User.Database           as Database
+import qualified Flowbox.AWS.User.Database.Database  as Database
 import qualified Flowbox.AWS.User.Password           as Password
 import           Flowbox.AWS.User.User               (User (User))
-import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.System.Console.ASCIISpinner as Spinner
 
 
 
-main :: IO (Either String ())
-main = runEitherT $ do
-    putStr "Connecting "
-    db <- liftIO $ Spinner.runWithSpinner $ Database.mk
-            $ PSQL.ConnectInfo "mydbinstance.cn1bxyb5bfdl.eu-west-1.rds.amazonaws.com"
+main :: IO ()
+main = do
+    putStr "connecting "
+    db <- Spinner.runWithSpinner $ Database.mk
+            $ PSQL.ConnectInfo "mydbinstance2.cn1bxyb5bfdl.eu-west-1.rds.amazonaws.com"
                                5432
                                "test"
                                "kozatest123"
                                "flowbox"
-    --Database.create db
-    Database.addUser db $ User "stefan" $ Password.mk "ala123"
-    Database.addUser db $ User "zenon"  $ Password.mk "ala123"
-    u1 <- liftIO $ Database.getUser db "stefan"
-    u2 <- liftIO $ Database.getUser db "zenon"
+    putStrLn "creating "
+    Database.create db
+    putStrLn "adding users "
+    Database.addUser db $ User 0 "stefan" (Password.mk "000" "ala123") 100
+    Database.addUser db $ User 0 "zenon"  (Password.mk "111" "ala123") 200
+    putStrLn "getting users "
+    (Just u1) <- Database.getUser db "stefan"
+    (Just u2) <- Database.getUser db "zenon"
+    Nothing   <- Database.getUser db "mietek"
     print u1
     print u2
 
