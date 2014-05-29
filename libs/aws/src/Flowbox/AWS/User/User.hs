@@ -17,7 +17,7 @@ import           Flowbox.Prelude
 type Name = String
 
 
-data User = User { _id       :: Int
+data User = User { _key      :: Int
                  , _name     :: Name
                  , _password :: Password
                  , _credit   :: Int
@@ -28,8 +28,8 @@ makeLenses (''User)
 
 
 fromDB :: (Int, String, String, String, Int) -> User
-fromDB (id', name', salt', hash', credit') =
-    User id' name' (Password salt' hash') credit'
+fromDB (key', name', salt', hash', credit') =
+    User key' name' (Password salt' hash') credit'
 
 
 toDB :: User -> (String, String, String, Int)
