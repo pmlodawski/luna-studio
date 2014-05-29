@@ -13,11 +13,11 @@ import qualified Data.Maybe                 as Maybe
 import           Data.String                (fromString)
 import qualified Database.PostgreSQL.Simple as PSQL
 
-import qualified Flowbox.AWS.User.Database.AddUser as AddUser
-import qualified Flowbox.AWS.User.Database.GetUser as GetUser
-import qualified Flowbox.AWS.User.Database.Schema  as Schema
-import           Flowbox.AWS.User.User             (User)
-import qualified Flowbox.AWS.User.User             as User
+import qualified Flowbox.AWS.User.Database.Schema   as Schema
+import qualified Flowbox.AWS.User.Database.User.Add as UserAdd
+import qualified Flowbox.AWS.User.Database.User.Find as UserFind
+import           Flowbox.AWS.User.User              (User)
+import qualified Flowbox.AWS.User.User              as User
 import           Flowbox.Prelude
 
 
@@ -36,13 +36,13 @@ addUser connection user = PSQL.withTransaction connection $ do
     exising <- getUser connection $ user ^. User.name
     if Maybe.isJust exising
         then fail "User already exists"
-        else void $ PSQL.execute connection (fromString AddUser.query)
+        else void $ PSQL.execute connection (fromString UserAdd.query)
                         $ User.toDB user
 
 
 getUser :: PSQL.Connection -> User.Name -> IO (Maybe User)
 getUser connection userName = fmap User.fromDB . Maybe.listToMaybe <$> PSQL.query connection
-    (fromString GetUser.query) (PSQL.Only userName)
+    (fromString UserFind.query) (PSQL.Only userName)
 
 
 create :: PSQL.Connection -> IO ()
