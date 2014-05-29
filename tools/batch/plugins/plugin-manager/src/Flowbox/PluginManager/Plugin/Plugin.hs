@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.PluginManager.Data.Plugin where
+module Flowbox.PluginManager.Plugin.Plugin where
 
 import Flowbox.Prelude
 
@@ -14,8 +14,8 @@ import Flowbox.Prelude
 
 type ID = Int
 
-data Plugin = Plugin { name    :: String
-                     , command :: String
-                     } deriving (Read, Show)
+data Plugin = Plugin { _name    :: String
+                     , _command :: String
+                     } deriving (Read, Show, Eq, Ord)
 
 makeLenses (''Plugin)

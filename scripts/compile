@@ -22,10 +22,6 @@ from config.packages import pkgDb
 from utils.system import platformFix
 
 
-rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sboxName = 'dist'
-cabalConf = "cabal.config"
-os.chdir(rootPath)
 
 def handle_ret(ret):
     if ret != 0:
@@ -50,8 +46,6 @@ def getHaskellPlatformRoot():
     path = os.path.dirname(val)
     return path
 
-sboxEnv = "FDEV_TARGETS"
-
 class Target:
     def __init__(self, name, sbox):
         self.name = name
@@ -61,6 +55,12 @@ class Target:
         return "Target %s (%s)" % (self.name, self.sbox)
 
 def main():
+    rootPath  = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    sboxName  = 'dist'
+    sboxEnv   = "FDEV_TARGETS"
+    cabalConf = "cabal.config"
+    os.chdir(rootPath)
+
     platformFix(sboxName)
     pkgNames = []
     args = []

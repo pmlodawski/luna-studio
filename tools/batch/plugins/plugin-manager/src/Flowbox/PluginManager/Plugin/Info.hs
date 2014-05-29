@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.PluginManager.Data.PluginInfo where
+module Flowbox.PluginManager.Plugin.Info where
 
-import Flowbox.PluginManager.Data.Plugin (Plugin)
+import Flowbox.PluginManager.Plugin.Plugin (Plugin)
 import Flowbox.Prelude
 
 
@@ -18,7 +18,8 @@ data Status = Running
             deriving (Read, Show)
 
 
-data PluginInfo = PluginInfo { plugin :: Plugin
-                             , status :: Status
+data PluginInfo = PluginInfo { _plugin :: Plugin
+                             , _status :: Status
                              } deriving (Read, Show)
+
 makeLenses (''PluginInfo)

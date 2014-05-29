@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.PluginManager.Data.PluginMap (
+module Flowbox.PluginManager.Plugin.Map (
     module Data.IntMap,
     PluginMap,
     uniqueID,
@@ -13,8 +13,8 @@ module Flowbox.PluginManager.Data.PluginMap (
 import           Data.IntMap
 import qualified Data.IntMap as IntMap
 
-import qualified Flowbox.PluginManager.Data.Plugin       as Plugin
-import           Flowbox.PluginManager.Data.PluginHandle (PluginHandle)
+import           Flowbox.PluginManager.Plugin.Handle (PluginHandle)
+import qualified Flowbox.PluginManager.Plugin.Plugin as Plugin
 import           Flowbox.Prelude
 
 

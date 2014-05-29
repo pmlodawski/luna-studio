@@ -6,8 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 
-module Flowbox.PluginManager.Init where
+module Flowbox.PluginManager.Init.Local where
 
+import           Control.Arrow              (first)
 import           Control.Monad.Trans.Either
 import qualified Data.Configurator          as Configurator
 import           Data.Configurator.Types    (Name, Value)
@@ -15,25 +16,24 @@ import qualified Data.Configurator.Types    as Configurator
 import qualified Data.HashMap.Strict        as HashMap
 import qualified Data.Text                  as Text
 
-import           Control.Arrow                           (first)
-import           Flowbox.Control.Error                   (safeLiftIO)
-import           Flowbox.PluginManager.Data.Plugin       (Plugin (Plugin))
-import           Flowbox.PluginManager.Data.PluginHandle (PluginHandle)
-import qualified Flowbox.PluginManager.Data.PluginHandle as PluginHandle
+import           Flowbox.Control.Error               (safeLiftIO)
+import           Flowbox.PluginManager.Plugin.Handle (PluginHandle)
+import qualified Flowbox.PluginManager.Plugin.Handle as PluginHandle
+import           Flowbox.PluginManager.Plugin.Plugin (Plugin (Plugin))
 import           Flowbox.Prelude
 
 
 
-pluginPrefix :: Name
-pluginPrefix = "plugins."
+localSection :: Name
+localSection = "plugins."
 
 
 isPluginRecord :: (Name, Value) -> Bool
-isPluginRecord (name, _) = Text.isPrefixOf "plugins." name
+isPluginRecord (name, _) = Text.isPrefixOf localSection name
 
 
 dropPluginPrefix :: Name -> Name
-dropPluginPrefix = Text.drop $ Text.length pluginPrefix
+dropPluginPrefix = Text.drop $ Text.length localSection
 
 
 readPlugins :: FilePath -> EitherT String IO [Plugin]

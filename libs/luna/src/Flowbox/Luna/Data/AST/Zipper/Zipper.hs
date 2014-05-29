@@ -9,7 +9,7 @@
 
 module Flowbox.Luna.Data.AST.Zipper.Zipper where
 
-import           Data.List                               (find, filter)
+import           Data.List                               (find)
 import           Flowbox.Control.Error                   (assert)
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
 import           Flowbox.Luna.Data.AST.Crumb.Crumb       (Crumb)
@@ -19,7 +19,7 @@ import           Flowbox.Luna.Data.AST.Module            (Module)
 import qualified Flowbox.Luna.Data.AST.Module            as Module
 import qualified Flowbox.Luna.Data.AST.Type              as Type
 import           Flowbox.Luna.Data.AST.Zipper.Focus      (Focus (ModuleFocus, ClassFocus, FunctionFocus), FocusPath)
-import           Flowbox.Prelude                         hiding (drop, id, mod, Zipper)
+import           Flowbox.Prelude                         hiding (drop, id, mod)
 
 
 type Zipper = (Focus, FocusPath)
