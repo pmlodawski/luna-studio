@@ -34,7 +34,6 @@ import           Flowbox.Prelude                             hiding (error, use)
 import           Flowbox.System.Log.Logger
 
 
-
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.AWS.EC2.Control.Pool.Instance.Instance"
 

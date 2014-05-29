@@ -1,0 +1,1 @@
+insert into users (username, salt, password, credit) values (?, ?, ?, ?)

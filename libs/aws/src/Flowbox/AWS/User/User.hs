@@ -17,17 +17,21 @@ import           Flowbox.Prelude
 type Name = String
 
 
-data User = User { name     :: Name
-                 , password :: Password
+data User = User { _id       :: Int
+                 , _name     :: Name
+                 , _password :: Password
+                 , _credit   :: Int
                  } deriving (Show)
 
 
 makeLenses (''User)
 
 
-fromDB :: (Name, String) -> User
-fromDB (name', password') = User name' (Password password')
+fromDB :: (Int, String, String, String, Int) -> User
+fromDB (id', name', salt', hash', credit') =
+    User id' name' (Password salt' hash') credit'
 
 
-toDB :: User -> (Name, String)
-toDB (User name' password') = (name', Password.fromPassword password')
+toDB :: User -> (String, String, String, Int)
+toDB (User _ name' password' credit') =
+    (name', password' ^. Password.salt, password' ^. Password.hash, credit')

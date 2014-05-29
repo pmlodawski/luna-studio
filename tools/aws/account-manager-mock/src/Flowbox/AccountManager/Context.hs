@@ -10,10 +10,10 @@ module Flowbox.AccountManager.Context where
 import qualified AWS                        as AWS
 import qualified Database.PostgreSQL.Simple as PSQL
 
-import           Flowbox.AWS.Region        (Region)
-import           Flowbox.AWS.User.Database (Database)
-import qualified Flowbox.AWS.User.Database as Database
-import           Flowbox.Prelude           hiding (Context)
+import           Flowbox.AWS.Region                 (Region)
+import           Flowbox.AWS.User.Database.Database (Database)
+import qualified Flowbox.AWS.User.Database.Database as Database
+import           Flowbox.Prelude                    hiding (Context)
 
 
 

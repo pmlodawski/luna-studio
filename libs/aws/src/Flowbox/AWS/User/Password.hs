@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Flowbox.AWS.User.Password where
 
 import           Data.ByteString.Lazy.Char8 (pack)
@@ -13,21 +15,20 @@ import Flowbox.Prelude
 
 
 
-newtype Password = Password {fromPassword :: String}
-                   deriving (Eq)
-
-
-instance Show Password where
-    show = show . fromPassword
-
-
+type Salt  = String
 type Plain = String
 
+data Password = Password { _salt :: Salt
+                         , _hash :: String
+                         } deriving (Eq, Show)
 
-mk :: Plain -> Password
-mk = Password . SHA.showDigest . SHA.sha256 . pack
+
+makeLenses (''Password)
+
+
+mk :: Salt -> Plain -> Password
+mk salt' plain = Password salt' $ SHA.showDigest $ SHA.sha256 $ pack $ plain ++ salt'
 
 
 verify :: Password -> Plain -> Bool
-verify password plain = password == mk plain
-
+verify password plain = password == (mk plain $ password ^. salt)
