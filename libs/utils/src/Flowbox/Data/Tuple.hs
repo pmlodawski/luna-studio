@@ -4,23 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+module Flowbox.Data.Tuple (
+    module X,
+    add4to1,
+) where
 
-module Flowbox.AWS.User.User where
-
-import Flowbox.AWS.User.Password (Password)
-import Flowbox.Prelude
-
-
-
-type Name = String
+import Data.Tuple as X
 
 
-data User = User { _name     :: Name
-                 , _password :: Password
-                 , _credit   :: Int
-                 } deriving (Show)
 
-
-makeLenses (''User)
-
+add4to1 :: (a, b, c, d) -> e -> (a, b, c, d, e)
+add4to1 (a, b, c, d) e = (a, b, c, d, e)
