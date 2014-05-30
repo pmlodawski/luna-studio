@@ -15,14 +15,14 @@ import qualified AWS.EC2.Types as Types
 import qualified Data.List     as List
 import qualified Data.Time     as Time
 
-import           Flowbox.AWS.EC2.EC2         (EC2, EC2Resource)
-import qualified Flowbox.AWS.EC2.EC2         as EC2
-import qualified Flowbox.AWS.EC2.Instance.ID as Instance
-import           Flowbox.AWS.Tag             (Tag)
-import qualified Flowbox.AWS.Tag             as Tag
-import qualified Flowbox.AWS.User.User       as User
-import           Flowbox.Control.Error       (assert)
-import           Flowbox.Prelude             hiding (filter)
+import           Flowbox.AWS.EC2.EC2               (EC2, EC2Resource)
+import qualified Flowbox.AWS.EC2.EC2               as EC2
+import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
+import           Flowbox.AWS.Tag                   (Tag)
+import qualified Flowbox.AWS.Tag                   as Tag
+import qualified Flowbox.AWS.User.User             as User
+import           Flowbox.Control.Error             (assert)
+import           Flowbox.Prelude                   hiding (filter)
 
 
 

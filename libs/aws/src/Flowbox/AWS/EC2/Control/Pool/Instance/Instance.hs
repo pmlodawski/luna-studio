@@ -25,8 +25,8 @@ import qualified Flowbox.AWS.EC2.Control.Pool.Pool           as Pool
 import qualified Flowbox.AWS.EC2.Control.Pool.Tag            as Tag
 import           Flowbox.AWS.EC2.EC2                         (EC2, EC2Resource)
 import qualified Flowbox.AWS.EC2.EC2                         as EC2
-import qualified Flowbox.AWS.EC2.Instance.ID                 as Instance
 import qualified Flowbox.AWS.EC2.Instance.Instance           as Instance
+import qualified Flowbox.AWS.EC2.Instance.Management         as Management
 import qualified Flowbox.AWS.EC2.Instance.Tag                as Tag
 import qualified Flowbox.AWS.User.User                       as User
 import qualified Flowbox.Data.Time                           as Time
@@ -79,13 +79,13 @@ retrieve userName instanceRequest mpool = do
             let tags = (Tag.poolKey, Tag.poolValue)
                      : Tag.startTimeTag currentTime
                      : [Tag.userTag $ Just userName]
-            inst <- Instance.startNew instanceRequest tags
+            inst <- Management.startNew instanceRequest tags
             let instanceID = Types.instanceId inst
             liftIO $ MVar.modifyMVar_ mpool (\pool -> do
                 logger trace $ "Pool: " ++ show pool
                 return $ Map.insert instanceID (InstanceInfo currentTime $ InstanceState.Used userName) pool)
             return instanceID
-    Instance.byID instanceID
+    Management.byID instanceID
 
 
 prepareForNewUser :: EC2Resource m => User.Name -> Instance.ID -> EC2 m ()

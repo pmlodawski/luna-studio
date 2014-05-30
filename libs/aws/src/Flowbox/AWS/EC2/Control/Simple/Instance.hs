@@ -15,12 +15,12 @@ import qualified AWS.EC2.Types          as Types
 import           Control.Monad.IO.Class (liftIO)
 import qualified Data.Time              as Time
 
-import qualified Flowbox.AWS.EC2.Control.Simple.Tag as Tag
-import           Flowbox.AWS.EC2.EC2                (EC2, EC2Resource)
-import qualified Flowbox.AWS.EC2.Instance.Instance  as Instance
-import qualified Flowbox.AWS.EC2.Instance.Tag       as Tag
-import qualified Flowbox.AWS.User.User              as User
-import           Flowbox.Prelude                    hiding (error)
+import qualified Flowbox.AWS.EC2.Control.Simple.Tag  as Tag
+import           Flowbox.AWS.EC2.EC2                 (EC2, EC2Resource)
+import qualified Flowbox.AWS.EC2.Instance.Management as Instance
+import qualified Flowbox.AWS.EC2.Instance.Tag        as Tag
+import qualified Flowbox.AWS.User.User               as User
+import           Flowbox.Prelude                     hiding (error)
 import           Flowbox.System.Log.Logger
 
 

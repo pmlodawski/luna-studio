@@ -22,8 +22,8 @@ import qualified Flowbox.AWS.EC2.Control.Pool.Instance.Info  as InstanceInfo
 import qualified Flowbox.AWS.EC2.Control.Pool.Instance.State as InstanceState
 import qualified Flowbox.AWS.EC2.Control.Pool.Tag            as Tag
 import           Flowbox.AWS.EC2.EC2                         (EC2, EC2Resource)
-import qualified Flowbox.AWS.EC2.Instance.ID                 as Instance
 import qualified Flowbox.AWS.EC2.Instance.Instance           as Instance
+import qualified Flowbox.AWS.EC2.Instance.Management         as Management
 import qualified Flowbox.AWS.EC2.Instance.Tag                as Tag
 import qualified Flowbox.AWS.User.User                       as User
 import qualified Flowbox.Data.Time                           as Time
@@ -98,7 +98,7 @@ findInstances userName = do
     let f = (Tag.filter Tag.poolKey [Tag.poolValue]) ++ case userName of
                                                          Just user -> Tag.userFilter user
                                                          Nothing   -> []
-    Instance.findInstances f
+    Management.findInstances f
 
 
 shutDownDiff :: Int

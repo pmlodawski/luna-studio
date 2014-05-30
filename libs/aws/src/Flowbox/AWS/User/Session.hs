@@ -15,12 +15,12 @@ import qualified AWS.EC2.Types          as Types
 import           Control.Monad.IO.Class
 import           Data.IP                (IPv4)
 
+import           Flowbox.AWS.Database.Database                  (Database)
+import qualified Flowbox.AWS.Database.User                      as DBUser
 import qualified Flowbox.AWS.EC2.Control.Pool.Instance.Instance as Instance
 import           Flowbox.AWS.EC2.Control.Pool.Pool              (MPool)
 import           Flowbox.AWS.EC2.EC2                            (EC2Resource)
 import qualified Flowbox.AWS.EC2.Instance.Request               as Request
-import           Flowbox.AWS.User.Database.Database             (Database)
-import qualified Flowbox.AWS.User.Database.Database             as Database
 import qualified Flowbox.AWS.User.Password                      as Password
 import           Flowbox.AWS.User.User                          (User (User))
 import qualified Flowbox.AWS.User.User                          as User
@@ -39,7 +39,7 @@ type Error = String
 
 register :: User.Name -> Password.Plain -> Database -> EitherT Error IO ()
 register userName plain database = safeLiftIO $
-    Database.addUser database $ User id userName (Password.mk salt plain) credit
+    DBUser.add database $ User id userName (Password.mk salt plain) credit
     where
         --FIXME [PM] : id!
         id = 0
@@ -52,7 +52,7 @@ register userName plain database = safeLiftIO $
 
 authenticate :: User.Name -> Password.Plain -> Database -> EitherT Error IO ()
 authenticate userName plain database = do
-    users <- safeLiftIO $ Database.getUser database userName
+    users <- safeLiftIO $ DBUser.get database userName
     case users of
         Just user -> if Password.verify (user ^. User.password) plain
                             then right ()
