@@ -7,10 +7,14 @@
 #include "ImfFrameBuffer.h"
 #include "ImfDeepFrameBuffer.h"
 #include "ImfInputPart.h"
+#include "ImfTiledInputPart.h"
+#include "Iex.h"
 
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include <stdio.h>
+#include <iostream>
 
 namespace IMF = OPENEXR_IMF_NAMESPACE;
 
@@ -48,7 +52,6 @@ int version(void* fileHandle) {
 // will segfault if part is not present in file
 void displayWindowUnsafe(void* fileHandle, int part, int* minx, int* miny, int* maxx, int* maxy) {
     auto exrFile = static_cast<Imf::MultiPartInputFile*>(fileHandle);
-    printf("reading part %d\n", part);
 
     *minx = exrFile->header(part).displayWindow().min.x;
     *miny = exrFile->header(part).displayWindow().min.y;
@@ -125,6 +128,105 @@ float* readScanlineChannelUnsafe(void* fileHandle, int part, const char* chanNam
     inputPart.readPixels(dataWindow.min.y, dataWindow.max.y);
 
     return buffer;
+}
+
+float* readTileFromChannelUnsafe(void* fileHandle, int part, const char* chanName, int xTilePosition, int yTilePosition, int* height, int* width) {
+    auto exrFile = static_cast<Imf::MultiPartInputFile*>(fileHandle);
+
+    Imf::TiledInputPart tiledInputPart {*exrFile, part};
+
+    auto channel = tiledInputPart.header().channels().findChannel(chanName);
+    if (channel == 0)
+        return nullptr;
+
+    auto tileDescription = tiledInputPart.header().tileDescription();
+    *width = tileDescription.xSize;
+    *height = tileDescription.ySize;
+
+    auto buffer = static_cast<float*>(calloc(*width * *height, sizeof(float)));
+    printf("foobar\n");
+    Imf::FrameBuffer frameBuffer;
+
+    frameBuffer.insert(
+        chanName,
+        Imf::Slice(
+            IMF::FLOAT,
+            (char*)buffer,
+            sizeof(float) * channel->xSampling,
+            sizeof(float) * channel->ySampling * *width,
+            channel->xSampling,
+            channel->ySampling));
+
+    tiledInputPart.setFrameBuffer(frameBuffer);
+
+    try {
+        tiledInputPart.readTile(0, 0, 0, 0);
+    }
+    catch (const Iex::BaseExc &e) {
+        // FIXME[mm]: log exception
+    }
+
+    return buffer;   
+}
+
+float* readTiledScanlineChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width) {
+    printf("bar\n");
+    auto exrFile = static_cast<Imf::MultiPartInputFile*>(fileHandle);
+
+    Imf::TiledInputPart tiledInputPart {*exrFile, part};
+
+    auto channel = tiledInputPart.header().channels().findChannel(chanName);
+    if (channel == 0)
+        return nullptr;
+
+    auto dataWindow = tiledInputPart.dataWindowForLevel(0, 0);
+    *width = dataWindow.max.x - dataWindow.min.x + 1;
+    *height = dataWindow.max.y - dataWindow.min.y + 1;
+
+    auto dx = dataWindow.min.x;
+    auto dy = dataWindow.min.y;
+
+    auto buffer = static_cast<float*>(calloc(*width * *height, sizeof(float)));
+
+    Imf::FrameBuffer frameBuffer;
+
+    frameBuffer.insert(
+        chanName,
+        Imf::Slice(
+            IMF::FLOAT,
+            (char*)&buffer[-dx - dy * *width],
+            sizeof(float) * channel->xSampling,
+            sizeof(float) * channel->ySampling * *width,
+            channel->xSampling,
+            channel->ySampling));
+
+    tiledInputPart.setFrameBuffer(frameBuffer);
+
+    try {
+        auto tx = tiledInputPart.numXTiles(0);
+        auto ty = tiledInputPart.numYTiles(0);
+
+        if (tiledInputPart.header().lineOrder() == IMF::INCREASING_Y) {
+            for (auto y = 0; y < ty; ++y)
+                for (auto x = 0; x < tx; ++x)
+                    tiledInputPart.readTile(x, y, 0, 0);
+        }
+        else {
+            for (auto y = ty - 1; y >= 0; --y)
+                for (auto x = 0; x < tx; ++x)
+                    tiledInputPart.readTile(x, y, 0, 0);
+        }
+    }
+    catch (const Iex::BaseExc &e) {
+        // FIXME[mm]: log these errors or something, returning damaged image should be
+        //            acceptable
+    }
+
+    return buffer;
+}
+
+float* foobar(void*, int, const char*, int, int, int*, int*) {
+    return nullptr;
 }
 
 
@@ -310,8 +412,19 @@ void dumpImageInfo(void* fileHandle) {
         try {
             printf("view: %s\n", header.view().c_str());
         } catch (std::exception &e) {}
-        if (header.hasTileDescription())
-            printf("has tile description\n");
+        try {
+            auto tileDescription = header.tileDescription();
+            printf("Tile description:\n");
+            printf("Size: %d x %d (x, y)\n", tileDescription.xSize, tileDescription.ySize);
+            printf("Level mode: %d\n", tileDescription.mode);
+            printf("Level rounding mode: %d\n", tileDescription.roundingMode);
+
+            Imf::TiledInputPart tiledInputPart {*exrFile, 0};
+
+            printf("X tiles: %d\n", tiledInputPart.numXTiles());
+            printf("Y tiles: %d\n", tiledInputPart.numYTiles());
+            printf("Level (0,0) is valid: %s\n", std::to_string(tiledInputPart.isValidLevel(0, 0)).c_str());
+        } catch (std::exception &e) {}
         if (header.hasPreviewImage())
             printf("has preview image\n");
     }

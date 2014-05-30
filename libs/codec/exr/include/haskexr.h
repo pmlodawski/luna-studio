@@ -17,7 +17,9 @@ char* channels(void* fileHandle, int part, int* channelsNamesLength);
 
 float* readScanlineChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width);
 // float* readDeepScanlineChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width);
-
+float* readTileFromChannelUnsafe(void* fileHandle, int part, const char* chanName, int xTilePosition, int yTilePosition, int* height, int* width);
+// float* readTileFromChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width);
+float* readTiledScanlineChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width);
 
 char* getPartType(void* fileHandle, int part);
 char* getPartName(void* fileHandle, int part);

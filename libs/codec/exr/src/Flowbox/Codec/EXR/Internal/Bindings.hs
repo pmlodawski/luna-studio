@@ -15,8 +15,8 @@ import Flowbox.Codec.EXR.Internal.Types
 
 
 -- File I/O
-foreign import ccall "haskexr.h openFile"   openFile  :: CString -> IO (Ptr EXR)
-foreign import ccall "haskexr.h &closeFile" closeFile :: FunPtr (Ptr EXR -> IO ())
+foreign import ccall unsafe "haskexr.h openFile"   openFile  :: CString -> IO (Ptr EXR)
+foreign import ccall unsafe "haskexr.h &closeFile" closeFile :: FunPtr (Ptr EXR -> IO ())
 
 -- Multi-part file properties
 foreign import ccall "haskexr.h parts"   parts   :: Ptr EXR -> IO CInt
@@ -40,6 +40,15 @@ foreign import ccall "haskexr.h getScreenWindowCenter" getScreenWindowCenter :: 
 
 foreign import ccall "haskexr.h readScanlineChannelUnsafe" readScanlineChannel ::
     Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
+
+foreign import ccall unsafe "haskexr.h readTileFromChannelUnsafe" readTileFromChannel ::
+	Ptr EXR -> CInt -> CString -> CInt -> CInt -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
+	--Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
+foreign import ccall "haskexr.h readTiledScanlineChannelUnsafe" readTiledScanlineChannel ::
+	Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
+
+foreign import ccall "haskexr.h foobar" foobar ::
+	Ptr EXR -> CInt -> CString -> CInt -> CInt -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
 
 -- not supported
 --foreign import ccall "haskexr.h readDeepScanlineChannelUnsafe" readDeepScanlineChannel ::
