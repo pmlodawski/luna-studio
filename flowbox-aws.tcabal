@@ -145,6 +145,7 @@ Executable aws-test-querydb
                     resourcet >= 1.1.0,
                     monad-loops,
                     text,
+                    time,
                     transformers
 
 

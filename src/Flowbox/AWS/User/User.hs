@@ -8,17 +8,15 @@
 
 module Flowbox.AWS.User.User where
 
-import           Flowbox.AWS.User.Password (Password (Password))
-import qualified Flowbox.AWS.User.Password as Password
-import           Flowbox.Prelude
+import Flowbox.AWS.User.Password (Password)
+import Flowbox.Prelude
 
 
 
 type Name = String
 
 
-data User = User { _key      :: Int
-                 , _name     :: Name
+data User = User { _name     :: Name
                  , _password :: Password
                  , _credit   :: Int
                  } deriving (Show)
@@ -26,12 +24,3 @@ data User = User { _key      :: Int
 
 makeLenses (''User)
 
-
-fromDB :: (Int, String, String, String, Int) -> User
-fromDB (key', name', salt', hash', credit') =
-    User key' name' (Password salt' hash') credit'
-
-
-toDB :: User -> (String, String, String, Int)
-toDB (User _ name' password' credit') =
-    (name', password' ^. Password.salt, password' ^. Password.hash, credit')

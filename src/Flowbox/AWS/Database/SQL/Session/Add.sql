@@ -1,2 +1,3 @@
-insert into sessions (user_key, instance_key, expires, policy) 
+insert into sessions (user_name, instance_id, expires, policy) 
        values (?, ?, ?, ?)
+       returning id
