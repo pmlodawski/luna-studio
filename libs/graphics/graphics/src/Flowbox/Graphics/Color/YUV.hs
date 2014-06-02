@@ -4,17 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TypeFamilies #-}
 
-module Flowbox.Graphics.Image.Image where
+module Flowbox.Graphics.Color.YUV where
 
-import Data.Map
+import Data.Typeable.Internal
 
-import qualified Flowbox.Graphics.Image.View as View
+--import           Flowbox.Graphics.Color.Internal
 import           Flowbox.Prelude
 
 
 
-data Image view = Image { _views       :: Map View.Name view
-                        , _defaultView :: View.Name
-                        }
-makeLenses ''Image
+data YUV a = YUV { yuvY :: a, yuvU :: a, yuvV :: a } deriving (Show,Typeable)

@@ -8,11 +8,14 @@
 module Flowbox.Data.Channel where
 
 import Data.Map
+import Data.List.Split
 
-import Flowbox.Prelude
+import qualified Flowbox.Graphics.Image.Error as Image
+import 			 Flowbox.Prelude
 
 
 
-data ChannelTree name value = ChannelTree  { children :: Map name (ChannelTree name value)
-                                           , channel  :: Maybe value
+data ChannelTree name value = ChannelTree  { _children :: Map name (ChannelTree name value)
+                                           , _channel  :: Maybe value
                                            }
+makeLenses ''ChannelTree

@@ -4,17 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TypeFamilies #-}
 
-module Flowbox.Graphics.Image.Image where
-
-import Data.Map
-
-import qualified Flowbox.Graphics.Image.View as View
-import           Flowbox.Prelude
+module Flowbox.Graphics.Color.Internal where
 
 
 
-data Image view = Image { _views       :: Map View.Name view
-                        , _defaultView :: View.Name
-                        }
-makeLenses ''Image
+--type family Color c :: *

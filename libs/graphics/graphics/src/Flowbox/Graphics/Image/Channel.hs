@@ -7,8 +7,6 @@
 
 module Flowbox.Graphics.Image.Channel where
 
-import Data.Array.Accelerate (DIM2)
-
 import Flowbox.Math.Matrix
 import Flowbox.Prelude
 
@@ -21,7 +19,8 @@ data Channel = ChannelFloat (ChannelData Double)
              | ChannelBit   (ChannelData Bool)
              deriving (Show)
 
-data ChannelData a = FlatData { matrix     :: Matrix DIM2 a
+data ChannelData a = FlatData { _matrix     :: Matrix2 a
                               --, dataBounds :: Bounds
                               }
                               deriving (Show)
+makeLenses ''ChannelData

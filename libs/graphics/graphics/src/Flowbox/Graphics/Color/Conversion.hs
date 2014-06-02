@@ -4,17 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE MultiParamTypeClasses #-}
 
-module Flowbox.Graphics.Image.Image where
+module Flowbox.Graphics.Color.Conversion where
 
-import Data.Map
-
-import qualified Flowbox.Graphics.Image.View as View
-import           Flowbox.Prelude
+import Data.Array.Accelerate
 
 
 
-data Image view = Image { _views       :: Map View.Name view
-                        , _defaultView :: View.Name
-                        }
-makeLenses ''Image
+class ColorConvert a b where
+    convertColor :: (Elt t, IsFloating t) => a (Exp t) -> b (Exp t)

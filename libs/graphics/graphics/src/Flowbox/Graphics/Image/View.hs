@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Graphics.Image.View (
-    module Flowbox.Graphics.Image.View,
+    --module Flowbox.Graphics.Image.View,
     module X
 ) where
 
