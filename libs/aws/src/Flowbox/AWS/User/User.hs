@@ -18,7 +18,7 @@ type Name = String
 
 data User = User { _name     :: Name
                  , _password :: Password
-                 , _credit   :: Int
+                 , _credit   :: Int     -- 1000 = 1$
                  } deriving (Show)
 
 

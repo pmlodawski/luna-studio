@@ -14,6 +14,7 @@ import qualified Database.PostgreSQL.Simple as PSQL
 
 import qualified Flowbox.AWS.Database.SQL.Session.Add            as SessionAdd
 import qualified Flowbox.AWS.Database.SQL.Session.Delete         as SessionDelete
+import qualified Flowbox.AWS.Database.SQL.Session.DeleteByID     as SessionDeleteByID
 import qualified Flowbox.AWS.Database.SQL.Session.FindByInstance as SessionFindByInstance
 import qualified Flowbox.AWS.Database.SQL.Session.FindByUser     as SessionFindByUser
 import qualified Flowbox.AWS.Database.SQL.Session.Update         as SessionUpdate
@@ -42,9 +43,14 @@ findByUser connection userName = map fromDB <$> PSQL.query connection
     (fromString SessionFindByUser.query) (PSQL.Only userName)
 
 
-delete :: PSQL.Connection -> Session.ID -> IO ()
-delete connection sessionID =
-    void $ PSQL.execute connection (fromString SessionDelete.query) (PSQL.Only sessionID)
+deleteByID :: PSQL.Connection -> Session.ID -> IO ()
+deleteByID connection sessionID =
+    void $ PSQL.execute connection (fromString SessionDeleteByID.query) (PSQL.Only sessionID)
+
+
+delete :: PSQL.Connection -> User.Name -> Instance.ID -> IO ()
+delete connection userName instanceID =
+    void $ PSQL.execute connection (fromString SessionDelete.query) (userName, instanceID)
 
 
 update :: PSQL.Connection -> Session -> IO ()

@@ -4,14 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Data.Tuple (
-    module X,
-    add4and1,
-) where
+{-# LANGUAGE OverloadedStrings #-}
 
-import Data.Tuple as X
+module Flowbox.AWS.EC2.Control.DBPool.Tag where
 
 
+import qualified Flowbox.AWS.Tag as Tag
 
-add4and1 :: (a, b, c, d) -> e -> (a, b, c, d, e)
-add4and1 (a, b, c, d) e = (a, b, c, d, e)
+
+
+poolKey :: Tag.Key
+poolKey = "control"
+
+
+poolValue :: Tag.Value
+poolValue = "dbpool-1.0"
+

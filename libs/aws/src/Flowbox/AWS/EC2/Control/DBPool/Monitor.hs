@@ -4,14 +4,5 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Data.Tuple (
-    module X,
-    add4and1,
-) where
 
-import Data.Tuple as X
-
-
-
-add4and1 :: (a, b, c, d) -> e -> (a, b, c, d, e)
-add4and1 (a, b, c, d) e = (a, b, c, d, e)
+module Flowbox.AWS.EC2.Control.DBPool.Monitor where

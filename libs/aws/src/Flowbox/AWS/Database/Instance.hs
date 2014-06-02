@@ -13,16 +13,22 @@ import           Data.Text                  (Text)
 import qualified Data.Time                  as Time
 import qualified Database.PostgreSQL.Simple as PSQL
 
-import qualified Flowbox.AWS.Database.SQL.Instance.Add    as InstanceAdd
-import qualified Flowbox.AWS.Database.SQL.Instance.Delete as InstanceDelete
-import qualified Flowbox.AWS.Database.SQL.Instance.Find   as InstanceFind
-import qualified Flowbox.AWS.Database.SQL.Instance.Update as InstanceUpdate
-import           Flowbox.AWS.EC2.Instance.Instance        (Instance (Instance))
-import qualified Flowbox.AWS.EC2.Instance.Instance        as Instance
-import qualified Flowbox.Data.Tuple                       as Tuple
+import qualified Flowbox.AWS.Database.SQL.Instance.Add      as InstanceAdd
+import qualified Flowbox.AWS.Database.SQL.Instance.Delete   as InstanceDelete
+import qualified Flowbox.AWS.Database.SQL.Instance.Find     as InstanceFind
+import qualified Flowbox.AWS.Database.SQL.Instance.FindFree as InstanceFindFree
+import qualified Flowbox.AWS.Database.SQL.Instance.Update   as InstanceUpdate
+import           Flowbox.AWS.EC2.Instance.Instance          (Instance (Instance))
+import qualified Flowbox.AWS.EC2.Instance.Instance          as Instance
+import qualified Flowbox.Data.Tuple                         as Tuple
 import           Flowbox.Prelude
 
 
+
+maxSessions :: Int
+maxSessions = 2
+
+-----------------------------------------------------------------------------
 
 add :: PSQL.Connection -> Instance -> IO ()
 add connection inst =
@@ -42,8 +48,15 @@ delete connection instanceID =
 update :: PSQL.Connection -> Instance -> IO ()
 update connection inst = do
     void $ PSQL.execute connection (fromString InstanceUpdate.query)
-         $ Tuple.add4to1 (toDB inst) (inst ^. Instance.id)
+         $ Tuple.add4and1 (toDB inst) (inst ^. Instance.id)
 
+
+findFree :: PSQL.Connection -> IO [Instance]
+findFree connection = map fromDB
+    <$> PSQL.query connection (fromString InstanceFindFree.query) (PSQL.Only maxSessions)
+
+
+-----------------------------------------------------------------------------
 
 fromDB :: (Text, String, Time.UTCTime, String) -> Instance
 fromDB (id', ip_addr', started', status') =
@@ -53,3 +66,4 @@ fromDB (id', ip_addr', started', status') =
 toDB :: Instance -> (Text, String, Time.UTCTime, String)
 toDB (Instance id' ip_addr' started' status') =
     (id', show ip_addr', started', show status')
+

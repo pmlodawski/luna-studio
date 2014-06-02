@@ -11,12 +11,14 @@ import qualified Data.Maybe                 as Maybe
 import           Data.String                (fromString)
 import qualified Database.PostgreSQL.Simple as PSQL
 
-import qualified Flowbox.AWS.Database.SQL.User.Add  as UserAdd
-import qualified Flowbox.AWS.Database.SQL.User.Find as UserFind
-import           Flowbox.AWS.User.Password          (Password (Password))
-import qualified Flowbox.AWS.User.Password          as Password
-import           Flowbox.AWS.User.User              (User (User))
-import qualified Flowbox.AWS.User.User              as User
+import qualified Flowbox.AWS.Database.SQL.User.Add    as UserAdd
+import qualified Flowbox.AWS.Database.SQL.User.Find   as UserFind
+import qualified Flowbox.AWS.Database.SQL.User.Update as UserUpdate
+import           Flowbox.AWS.User.Password            (Password (Password))
+import qualified Flowbox.AWS.User.Password            as Password
+import           Flowbox.AWS.User.User                (User (User))
+import qualified Flowbox.AWS.User.User                as User
+import qualified Flowbox.Data.Tuple                   as Tuple
 import           Flowbox.Prelude
 
 
@@ -29,6 +31,12 @@ add connection user =
 find :: PSQL.Connection -> User.Name -> IO (Maybe User)
 find connection userName = fmap fromDB . Maybe.listToMaybe
     <$> PSQL.query connection (fromString UserFind.query) (PSQL.Only userName)
+
+
+update :: PSQL.Connection -> User -> IO ()
+update connection user =
+    void $ PSQL.execute connection (fromString UserUpdate.query)
+         $ Tuple.add4and1 (toDB user) (user ^. User.name)
 
 
 fromDB :: (String, String, String, Int) -> User

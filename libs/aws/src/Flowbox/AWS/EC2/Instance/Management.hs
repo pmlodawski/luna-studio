@@ -45,28 +45,39 @@ resumable inst = Types.instanceState inst == Types.InstanceStateRunning
 
 
 startNew :: EC2Resource m
-         => Types.RunInstancesRequest -> [Tag] -> EC2 m Types.Instance
+         => Types.RunInstancesRequest -> [Tag] -> EC2 m [Types.Instance]
 startNew instanceRequest tags = do
     logger info "Starting new instance..."
     reservation <- EC2.runInstances instanceRequest
-    let instanceIDs = map Types.instanceId $ Types.reservationInstanceSet reservation
+    let instances   = Types.reservationInstanceSet reservation
+        instanceIDs = map Types.instanceId instances
     Tag.tag tags instanceIDs
     logger info "Starting new instance succeeded."
-    [userInstance] <- waitForStart instanceIDs def
-    return userInstance
+    return instances
+
+
+startNewWait :: EC2Resource m
+             => Types.RunInstancesRequest -> [Tag] -> EC2 m [Types.Instance]
+startNewWait instanceRequest tags = do
+    instances <- startNew instanceRequest tags
+    let instanceIDs = map Types.instanceId instances
+    waitForStart instanceIDs def
 
 
 startExisting :: EC2Resource m
-              => Instance.ID -> [Tag] -> EC2 m Types.Instance
-startExisting instanceID tags = do
+              => [Instance.ID] -> [Tag] -> EC2 m ()
+startExisting instanceIDs tags = do
     logger info "Starting existing instance..."
-    _ <- EC2.startInstances [instanceID]
-    Tag.tag tags [instanceID]
+    _ <- EC2.startInstances instanceIDs
+    Tag.tag tags instanceIDs
     logger info "Starting existing instance succeeded."
-    userInstances <- waitForStart [instanceID] def
-    case userInstances of
-        [userInstance] -> return userInstance
-        _              -> fail "Something wrong happened : multiple instances started"
+
+
+startExistingWait :: EC2Resource m
+                  => [Instance.ID] -> [Tag] -> EC2 m [Types.Instance]
+startExistingWait instanceIDs tags = do
+    startExisting instanceIDs tags
+    waitForStart instanceIDs def
 
 
 waitForStart :: EC2Resource m

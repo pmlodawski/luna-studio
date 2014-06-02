@@ -1,2 +1,2 @@
 delete from sessions 
-       where id = ?
+       where user_name = ? and instance_id = ?

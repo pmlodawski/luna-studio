@@ -51,3 +51,10 @@ mk = Types.RunInstancesRequest
     [] -- NetworkInterfaces :: [NetworkInterfaceParam]
     Nothing -- IamInstanceProfile :: Maybe IamInstanceProfile
     Nothing -- runInstancesRequestEbsOptimized :: Maybe Bool
+
+
+setAmount :: Int -> Types.RunInstancesRequest -> Types.RunInstancesRequest
+setAmount amount request = request
+    { Types.runInstancesRequestMinCount = amount
+    , Types.runInstancesRequestMaxCount = amount
+    }

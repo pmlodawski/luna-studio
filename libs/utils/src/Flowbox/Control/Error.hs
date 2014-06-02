@@ -8,6 +8,7 @@ module Flowbox.Control.Error (
     module Control.Error,
     runScript,
     (<?>),
+    (<??>),
     assert,
     safeLiftIO,
     safeLiftIO',
@@ -37,6 +38,16 @@ infixl 4 <?>
 val <?> m = case val of
     Just v  -> return v
     Nothing -> fail m
+
+infixl 4 <??>
+(<??>) :: Monad m => m (Maybe b) -> String -> m b
+action <??> m = do
+    val <- action
+    case val of
+        Just v  -> return v
+        Nothing -> fail m
+
+
 
 
 assert :: Monad m => Bool -> String -> m ()

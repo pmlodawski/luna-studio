@@ -4,14 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Data.Tuple (
-    module X,
-    add4and1,
-) where
 
-import Data.Tuple as X
+module Flowbox.AWS.EC2.Control.DBPool.Cost where
+
+import           Flowbox.AWS.User.User (User)
+import qualified Flowbox.AWS.User.User as User
+import           Flowbox.Prelude
 
 
-
-add4and1 :: (a, b, c, d) -> e -> (a, b, c, d, e)
-add4and1 (a, b, c, d) e = (a, b, c, d, e)
+instanceHour :: Int
+instanceHour = 650
