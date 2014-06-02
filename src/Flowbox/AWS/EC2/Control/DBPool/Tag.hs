@@ -4,23 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-module Flowbox.AWS.User.User where
-
-import Flowbox.AWS.User.Password (Password)
-import Flowbox.Prelude
+module Flowbox.AWS.EC2.Control.DBPool.Tag where
 
 
-
-type Name = String
-
-
-data User = User { _name     :: Name
-                 , _password :: Password
-                 , _credit   :: Int     -- 1000 = 1$
-                 } deriving (Show)
+import qualified Flowbox.AWS.Tag as Tag
 
 
-makeLenses (''User)
+
+poolKey :: Tag.Key
+poolKey = "control"
+
+
+poolValue :: Tag.Value
+poolValue = "dbpool-1.0"
 

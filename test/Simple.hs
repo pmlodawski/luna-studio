@@ -38,6 +38,6 @@ main = do
     credential <- AWS.loadCredential
     let userName = "zenon" :: User.Name
     ip <- EC2.runEC2InRegion credential region
-          $ Types.instanceIpAddress <$> Simple.getOrStart userName Request.mk
+          $ map Types.instanceIpAddress <$> Simple.getOrStartWait userName Request.mk
     print ip
 

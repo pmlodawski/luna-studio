@@ -79,7 +79,7 @@ retrieve userName instanceRequest mpool = do
             let tags = (Tag.poolKey, Tag.poolValue)
                      : Tag.startTimeTag currentTime
                      : [Tag.userTag $ Just userName]
-            inst <- Management.startNew instanceRequest tags
+            [inst] <- Management.startNewWait instanceRequest tags
             let instanceID = Types.instanceId inst
             liftIO $ MVar.modifyMVar_ mpool (\pool -> do
                 logger trace $ "Pool: " ++ show pool

@@ -75,11 +75,15 @@ main = do
     print $ userSessions == [session1, session2]
 
     putStrLn "deleting sessions"
-    DBSession.delete db (session1 ^. Session.id)
+    DBSession.deleteByID db (session1 ^. Session.id)
 
     putStrLn "finding sessions"
     userSessions2 <- DBSession.findByUser db "stefan"
     print $ userSessions2 == [session2]
+
+    putStrLn "finding free instances"
+    a <- DBInstance.findFree db
+    print a
 
     putStrLn "quitting"
 

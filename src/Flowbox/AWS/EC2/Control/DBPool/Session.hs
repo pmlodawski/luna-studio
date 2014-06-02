@@ -4,23 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.AWS.User.User where
+module Flowbox.AWS.EC2.Control.DBPool.Session where
 
-import Flowbox.AWS.User.Password (Password)
-import Flowbox.Prelude
-
-
-
-type Name = String
-
-
-data User = User { _name     :: Name
-                 , _password :: Password
-                 , _credit   :: Int     -- 1000 = 1$
-                 } deriving (Show)
-
-
-makeLenses (''User)
 
