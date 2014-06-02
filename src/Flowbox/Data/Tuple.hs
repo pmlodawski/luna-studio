@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 module Flowbox.Data.Tuple (
     module X,
-    add4to1,
+    add4and1,
 ) where
 
 import Data.Tuple as X
 
 
 
-add4to1 :: (a, b, c, d) -> e -> (a, b, c, d, e)
-add4to1 (a, b, c, d) e = (a, b, c, d, e)
+add4and1 :: (a, b, c, d) -> e -> (a, b, c, d, e)
+add4and1 (a, b, c, d) e = (a, b, c, d, e)
