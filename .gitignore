@@ -37,6 +37,7 @@ gen
 
 # cabal configs - they should be generated from tcabal files
 libs/*/*.cabal
+libs/*/*/*.cabal
 tools/*/*.cabal
 tools/*/*/*.cabal
 tools/*/*/*/*.cabal
