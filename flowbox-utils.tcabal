@@ -62,10 +62,5 @@ Executable utils
                   TypeSynonymInstances
                   
   Build-Depends:  base,
-                  --dlist,
-                  --ansi-terminal,
-                  --either,
-                  --hslogger,
-                  --mtl,
                   flowbox-utils,
                   ghc-prim
