@@ -7,7 +7,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.AWS.EC2.Instance.Instance where
 
-import qualified Data.IP                              as IP
 import           Data.Text                            (Text)
 import           Database.PostgreSQL.Simple.FromField (FromField, fromField)
 import           Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
@@ -26,7 +25,6 @@ data Status = Running
 
 
 data Instance = Instance { _id      :: ID
-                         , _ip_addr :: IP.IPv4
                          , _started :: Time.UTCTime
                          , _status  :: Status
                          } deriving (Show, Ord, Eq, Read)
@@ -40,15 +38,9 @@ instance FromField Status where
 instance ToField Status where
     toField = toField . show
 
-instance FromField IP.IPv4 where
-    fromField f dat = read <$> fromField f dat
-
-instance ToField IP.IPv4 where
-    toField = toField . show
-
 instance FromRow Instance where
-    fromRow = Instance <$> field <*> field <*> field <*> field
+    fromRow = Instance <$> field <*> field <*> field
 
 instance ToRow Instance where
-    toRow (Instance id' ip_addr' started' status') =
-        [toField id', toField ip_addr', toField started', toField status']
+    toRow (Instance id' started' status') =
+        [toField id', toField started', toField status']

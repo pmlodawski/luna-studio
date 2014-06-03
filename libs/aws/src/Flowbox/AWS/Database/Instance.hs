@@ -11,6 +11,7 @@ import           Database.PostgreSQL.Simple ((:.) ((:.)))
 import qualified Database.PostgreSQL.Simple as PSQL
 
 import qualified Flowbox.AWS.Database.SQL.Instance.Add      as InstanceAdd
+import qualified Flowbox.AWS.Database.SQL.Instance.All      as InstanceAll
 import qualified Flowbox.AWS.Database.SQL.Instance.Delete   as InstanceDelete
 import qualified Flowbox.AWS.Database.SQL.Instance.Find     as InstanceFind
 import qualified Flowbox.AWS.Database.SQL.Instance.FindFree as InstanceFindFree
@@ -54,3 +55,7 @@ findWithAtMostUsers conn count =
 
 findFree :: PSQL.Connection -> IO [Instance]
 findFree conn = findWithAtMostUsers conn maxSessions
+
+
+all :: PSQL.Connection -> IO [Instance]
+all conn = PSQL.query conn InstanceAll.query ()
