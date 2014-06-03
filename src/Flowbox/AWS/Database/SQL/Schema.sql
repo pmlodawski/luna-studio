@@ -17,7 +17,6 @@ create table if not exists users (
 create table if not exists instances (
     -- key         serial          not null       primary key,
     id          varchar( 10)  not null  primary key,
-    ip_addr     varchar( 15)  not null  unique, -- inet
     started_at  timestamptz   not null  default current_timestamp,
     status      varchar( 10)  not null  -- instance_status
 );

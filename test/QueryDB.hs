@@ -14,9 +14,9 @@ import qualified Data.Time                  as Time
 import           Database.PostgreSQL.Simple as PSQL
 
 import qualified Flowbox.AWS.Database.Database       as Database
-import qualified Flowbox.AWS.Database.Instance       as DBInstance
-import qualified Flowbox.AWS.Database.Session        as DBSession
-import qualified Flowbox.AWS.Database.User           as DBUser
+import qualified Flowbox.AWS.Database.Instance       as InstanceDB
+import qualified Flowbox.AWS.Database.Session        as SessionDB
+import qualified Flowbox.AWS.Database.User           as UserDB
 import           Flowbox.AWS.EC2.Instance.Instance   (Instance (Instance))
 import qualified Flowbox.AWS.EC2.Instance.Instance   as Instance
 import qualified Flowbox.AWS.User.Password           as Password
@@ -35,54 +35,54 @@ main = do
                                "test"
                                "kozatest123"
                                "flowbox"
-    putStrLn "creating"
+    putStrLn "creating db"
     Database.create db
 
     putStrLn "adding users"
-    DBUser.add db $ User "stefan" (Password.mk "000" "ala123") 100
-    DBUser.add db $ User "zenon"  (Password.mk "111" "ala123") 200
+    UserDB.add db $ User "stefan" (Password.mk "000" "ala123") 100
+    UserDB.add db $ User "zenon"  (Password.mk "111" "ala123") 200
     putStrLn "getting users"
-    Just u1 <- DBUser.find db "stefan"
-    Just u2 <- DBUser.find db "zenon"
-    Nothing <- DBUser.find db "mietek"
+    Just u1 <- UserDB.find db "stefan"
+    Just u2 <- UserDB.find db "zenon"
+    Nothing <- UserDB.find db "mietek"
     print u1
     print u2
 
     putStrLn "adding instances"
     time <- Time.getCurrentTime
-    DBInstance.add db $ Instance "a1234567" (read "1.2.3.4") time Instance.Running
-    DBInstance.add db $ Instance "b2345678" (read "2.3.4.5") time Instance.Running
-    DBInstance.add db $ Instance "c3456789" (read "3.4.5.6") time Instance.Running
+    InstanceDB.add db $ Instance "a1234567" time Instance.Running
+    InstanceDB.add db $ Instance "b2345678" time Instance.Running
+    InstanceDB.add db $ Instance "c3456789" time Instance.Running
     putStrLn "getting instances"
-    Just i1 <- DBInstance.find db "a1234567"
-    Just i2 <- DBInstance.find db "b2345678"
-    Nothing <- DBInstance.find db "00000000"
+    Just i1 <- InstanceDB.find db "a1234567"
+    Just i2 <- InstanceDB.find db "b2345678"
+    Nothing <- InstanceDB.find db "00000000"
     print i1
     print i2
     putStrLn "deleting instances"
-    DBInstance.delete db ["a1234567"]
-    Nothing <- DBInstance.find db "a1234567"
+    InstanceDB.delete db ["a1234567"]
+    Nothing <- InstanceDB.find db "a1234567"
 
     let expires = Time.addUTCTime 3600 time
 
     putStrLn "adding sessions"
-    session1 <- DBSession.create db "stefan" "b2345678" expires Session.Autocharge
-    session2 <- DBSession.create db "stefan" "c3456789" expires Session.Autocharge
+    session1 <- SessionDB.create db "stefan" "b2345678" expires Session.Autocharge
+    session2 <- SessionDB.create db "stefan" "c3456789" expires Session.Autocharge
     print (session1, session2)
 
     putStrLn "finding sessions"
-    userSessions <- DBSession.findByUser db "stefan"
+    userSessions <- SessionDB.findByUser db "stefan"
     print $ userSessions == [session1, session2]
 
     putStrLn "deleting sessions"
-    DBSession.deleteByID db (session1 ^. Session.id)
+    SessionDB.deleteByID db (session1 ^. Session.id)
 
     putStrLn "finding sessions"
-    userSessions2 <- DBSession.findByUser db "stefan"
+    userSessions2 <- SessionDB.findByUser db "stefan"
     print $ userSessions2 == [session2]
 
     putStrLn "finding free instances"
-    a <- DBInstance.findFree db
+    a <- InstanceDB.findFree db
     print a
 
     putStrLn "quitting"

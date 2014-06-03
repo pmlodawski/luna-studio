@@ -22,6 +22,7 @@ import qualified Flowbox.AWS.EC2.Control.DBPool.Cost   as Cost
 import qualified Flowbox.AWS.EC2.Control.DBPool.Credit as Credit
 import qualified Flowbox.AWS.EC2.Control.DBPool.Tag    as Tag
 import qualified Flowbox.AWS.EC2.EC2                   as EC2
+import           Flowbox.AWS.EC2.Instance.Instance     (Instance (Instance))
 import qualified Flowbox.AWS.EC2.Instance.Instance     as Instance
 import qualified Flowbox.AWS.EC2.Instance.Management   as Management
 import qualified Flowbox.AWS.EC2.Instance.Request      as Request
@@ -36,15 +37,15 @@ import           Flowbox.Prelude
 
 retrieve :: PSQL.Connection -> AWS.Credential -> Region
          -> User.Name -> Types.RunInstancesRequest -> IO [Types.Instance]
-retrieve connection credential region userName instancesRequest = do
+retrieve conn credential region userName instancesRequest = do
     let amount = Types.runInstancesRequestMinCount instancesRequest
     assert (amount == Types.runInstancesRequestMaxCount instancesRequest) "runInstancesRequestMinCount must be equal to runInstancesRequestMaxCount"
 
-    instanceIDs <- Transaction.withTransaction connection $ do
-        user        <- UserDB.find connection userName <??> "Cannot find user " ++ show userName ++ " in database."
+    instanceIDs <- Transaction.withTransaction conn $ do
+        user        <- UserDB.find conn userName <??> "Cannot find user " ++ show userName ++ " in database."
         updatedUser <- eitherStringToM $ Credit.charge user $ Cost.instanceHour region
-        UserDB.update connection updatedUser
-        free        <- InstanceDB.findFree connection
+        UserDB.update conn updatedUser
+        free        <- InstanceDB.findFree conn
         currentTime <- Time.getCurrentTime
         let amountLeft = amount - length free
             request    = Request.setAmount amountLeft instancesRequest
@@ -54,18 +55,21 @@ retrieve connection credential region userName instancesRequest = do
             policy     = Session.Autocharge
         justStarted <- EC2.runEC2inRegion credential region
                         $ Management.startNew request tags
+        let justStartedIDs = map Types.instanceId justStarted
+            instanceIDs = map (view Instance.id) free ++ justStartedIDs
 
-        let instanceIDs = map (view Instance.id) free
-                       ++ map Types.instanceId   justStarted
-        mapM_ (\instanceID -> SessionDB.create connection userName instanceID expires policy)
-              instanceIDs
+            addInstance instanceID = InstanceDB.add conn $ Instance instanceID currentTime Instance.Running
+            addSession  instanceID = SessionDB.create conn userName instanceID expires policy
+
+        mapM_ addInstance justStartedIDs
+        mapM_ addSession instanceIDs
         return instanceIDs
 
     EC2.runEC2inRegion credential region $ Management.waitForStart instanceIDs def
 
 
 release :: PSQL.Connection -> User.Name -> Instance.ID -> IO ()
-release connection userName instanceID =
-    SessionDB.delete connection userName instanceID
+release conn userName instanceID =
+    SessionDB.delete conn userName instanceID
 
 

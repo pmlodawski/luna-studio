@@ -1,2 +1,2 @@
-insert into instances (id, ip_addr, started_at, status) 
-       values (?, ?, ?, ?)
+insert into instances (id, started_at, status) 
+       values (?, ?, ?)

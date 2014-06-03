@@ -29,7 +29,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.EC2.Instance.Instance"
+logger = getLoggerIO "Flowbox.AWS.EC2.Control.DBPool.Monitor"
 
 
 nearEndGapTime :: Time.NominalDiffTime
@@ -80,7 +80,10 @@ freeUnusedInstances credential region conn = do
         let freeIDs = map (view Instance.id) free
         InstanceDB.delete conn freeIDs
         return freeIDs
-    void $ EC2.runEC2inRegion credential region $ EC2.stopInstances instancesToStop True
+    if null instancesToStop
+        then logger trace "Monitor : nothing to stop"
+        else do logger info $ "Monitor : stopping " ++ (show $ length instancesToStop) ++ " instances"
+                void $ EC2.runEC2inRegion credential region $ EC2.stopInstances instancesToStop True
 
 
 run :: AWS.Credential -> Region -> PSQL.Connection -> IO ()

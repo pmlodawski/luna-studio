@@ -58,9 +58,13 @@ Executable aws-test-dbpool
     
     Extensions:     NoImplicitPrelude
 
-    Build-Depends:  base,
+    Build-Depends:  aws-sdk,
+                    base,
+                    containers,
                     flowbox-aws,
-                    flowbox-utils
+                    flowbox-utils,
+                    postgresql-simple,
+                    text
 
 
 Executable aws-test-pool

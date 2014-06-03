@@ -12,6 +12,7 @@ import           Database.PostgreSQL.Simple ((:.) ((:.)))
 import qualified Database.PostgreSQL.Simple as PSQL
 
 import qualified Flowbox.AWS.Database.SQL.User.Add    as UserAdd
+import qualified Flowbox.AWS.Database.SQL.User.All    as UserAll
 import qualified Flowbox.AWS.Database.SQL.User.Find   as UserFind
 import qualified Flowbox.AWS.Database.SQL.User.Update as UserUpdate
 import           Flowbox.AWS.User.User                (User)
@@ -34,3 +35,6 @@ update :: PSQL.Connection -> User -> IO ()
 update conn user =
     void $ PSQL.execute conn UserUpdate.query
          $ user :. (PSQL.Only $ user ^. User.name)
+
+all :: PSQL.Connection -> IO [User]
+all conn = PSQL.query conn UserAll.query ()
