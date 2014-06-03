@@ -7,7 +7,6 @@
 module Flowbox.AWS.Database.Database where
 
 import           Control.Monad
-import           Data.String                (fromString)
 import qualified Database.PostgreSQL.Simple as PSQL
 
 import qualified Flowbox.AWS.Database.SQL.Schema as Schema
@@ -25,4 +24,4 @@ mk = PSQL.connect
 
 
 create :: PSQL.Connection -> IO ()
-create connection = void $ PSQL.execute connection (fromString Schema.query) ()
+create conn = void $ PSQL.execute conn Schema.query ()

@@ -42,7 +42,7 @@ retrieve connection credential region userName instancesRequest = do
 
     instanceIDs <- Transaction.withTransaction connection $ do
         user        <- UserDB.find connection userName <??> "Cannot find user " ++ show userName ++ " in database."
-        updatedUser <- eitherStringToM $ Credit.charge user Cost.instanceHour
+        updatedUser <- eitherStringToM $ Credit.charge user $ Cost.instanceHour region
         UserDB.update connection updatedUser
         free        <- InstanceDB.findFree connection
         currentTime <- Time.getCurrentTime
@@ -52,7 +52,7 @@ retrieve connection credential region userName instancesRequest = do
                        : [Tag.startTimeTag currentTime]
             expires    = Time.addUTCTime 3600 currentTime
             policy     = Session.Autocharge
-        justStarted <- EC2.runEC2InRegion credential region
+        justStarted <- EC2.runEC2inRegion credential region
                         $ Management.startNew request tags
 
         let instanceIDs = map (view Instance.id) free
@@ -61,7 +61,7 @@ retrieve connection credential region userName instancesRequest = do
               instanceIDs
         return instanceIDs
 
-    EC2.runEC2InRegion credential region $ Management.waitForStart instanceIDs def
+    EC2.runEC2inRegion credential region $ Management.waitForStart instanceIDs def
 
 
 release :: PSQL.Connection -> User.Name -> Instance.ID -> IO ()

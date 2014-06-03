@@ -4,14 +4,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Data.Tuple (
-    module X,
-    add4and1,
-) where
 
-import Data.Tuple as X
+module Main where
+
+import Flowbox.Prelude
 
 
-
-add4and1 :: (a, b, c, d) -> e -> (a, b, c, d, e)
-add4and1 (a, b, c, d) e = (a, b, c, d, e)
+main :: IO ()
+main = putStrLn "Hello World"

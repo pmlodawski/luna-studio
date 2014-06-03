@@ -7,12 +7,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.AWS.EC2.Instance.Instance where
 
-import qualified Data.IP   as IP
-import           Data.Text (Text)
-
-import qualified Flowbox.Data.Time as Time
-import           Flowbox.Prelude   hiding (id)
-
+import qualified Data.IP                              as IP
+import           Data.Text                            (Text)
+import           Database.PostgreSQL.Simple.FromField (FromField, fromField)
+import           Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
+import           Database.PostgreSQL.Simple.ToField   (ToField, toField)
+import           Database.PostgreSQL.Simple.ToRow     (ToRow, toRow)
+import qualified Flowbox.Data.Time                    as Time
+import           Flowbox.Prelude                      hiding (id)
 
 
 type ID = Text
@@ -30,3 +32,23 @@ data Instance = Instance { _id      :: ID
                          } deriving (Show, Ord, Eq, Read)
 
 makeLenses (''Instance)
+
+
+instance FromField Status where
+    fromField f dat = read <$> fromField f dat
+
+instance ToField Status where
+    toField = toField . show
+
+instance FromField IP.IPv4 where
+    fromField f dat = read <$> fromField f dat
+
+instance ToField IP.IPv4 where
+    toField = toField . show
+
+instance FromRow Instance where
+    fromRow = Instance <$> field <*> field <*> field <*> field
+
+instance ToRow Instance where
+    toRow (Instance id' ip_addr' started' status') =
+        [toField id', toField ip_addr', toField started', toField status']

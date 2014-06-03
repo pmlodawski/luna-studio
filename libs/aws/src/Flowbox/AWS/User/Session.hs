@@ -11,11 +11,13 @@
 
 module Flowbox.AWS.User.Session where
 
-import           AWS.EC2                (EC2)
-import qualified AWS.EC2.Types          as Types
+import           AWS.EC2                              (EC2)
+import qualified AWS.EC2.Types                        as Types
 import           Control.Monad.IO.Class
-import           Data.IP                (IPv4)
-import qualified Data.Time              as Time
+import           Data.IP                              (IPv4)
+import qualified Data.Time                            as Time
+import           Database.PostgreSQL.Simple.FromField (FromField, fromField)
+import           Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
 
 import           Flowbox.AWS.Database.Database                  (Database)
 import qualified Flowbox.AWS.Database.User                      as DBUser
@@ -44,6 +46,10 @@ data Policy = Autocharge
             | Halt
             deriving (Show, Read, Eq, Ord)
 
+instance FromField Policy where
+    fromField f dat = read <$> fromField f dat
+
+
 data Session = Session { _id         :: ID
                        , _userName   :: User.Name
                        , _instanceID :: Instance.ID
@@ -52,6 +58,10 @@ data Session = Session { _id         :: ID
                        } deriving (Show, Read, Eq, Ord)
 
 makeLenses (''Session)
+
+
+instance FromRow Session where
+    fromRow = Session <$> field <*> field <*> field <*> field <*> field
 
 
 -- TODO [PM] : Move below code somewhere else

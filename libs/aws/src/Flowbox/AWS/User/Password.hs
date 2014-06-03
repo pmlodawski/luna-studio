@@ -8,8 +8,11 @@
 
 module Flowbox.AWS.User.Password where
 
-import           Data.ByteString.Lazy.Char8 (pack)
-import qualified Data.Digest.Pure.SHA       as SHA
+import           Data.ByteString.Lazy.Char8         (pack)
+import qualified Data.Digest.Pure.SHA               as SHA
+import           Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
+import           Database.PostgreSQL.Simple.ToField (toField)
+import           Database.PostgreSQL.Simple.ToRow   (ToRow, toRow)
 
 import Flowbox.Prelude
 
@@ -32,3 +35,12 @@ mk salt' plain = Password salt' $ SHA.showDigest $ SHA.sha256 $ pack $ plain ++ 
 
 verify :: Password -> Plain -> Bool
 verify password plain = password == (mk plain $ password ^. salt)
+
+
+
+instance FromRow Password where
+    fromRow = Password <$> field <*> field
+
+instance ToRow Password where
+    toRow (Password salt' hash') =
+        [toField salt', toField hash']

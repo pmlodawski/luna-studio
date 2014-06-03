@@ -60,7 +60,7 @@ main = do
     print i1
     print i2
     putStrLn "deleting instances"
-    DBInstance.delete db "a1234567"
+    DBInstance.delete db ["a1234567"]
     Nothing <- DBInstance.find db "a1234567"
 
     let expires = Time.addUTCTime 3600 time

@@ -6,11 +6,8 @@
 ---------------------------------------------------------------------------
 module Flowbox.AWS.Database.Instance where
 
-import           Control.Monad
 import qualified Data.Maybe                 as Maybe
-import           Data.String                (fromString)
-import           Data.Text                  (Text)
-import qualified Data.Time                  as Time
+import           Database.PostgreSQL.Simple ((:.) ((:.)))
 import qualified Database.PostgreSQL.Simple as PSQL
 
 import qualified Flowbox.AWS.Database.SQL.Instance.Add      as InstanceAdd
@@ -18,9 +15,8 @@ import qualified Flowbox.AWS.Database.SQL.Instance.Delete   as InstanceDelete
 import qualified Flowbox.AWS.Database.SQL.Instance.Find     as InstanceFind
 import qualified Flowbox.AWS.Database.SQL.Instance.FindFree as InstanceFindFree
 import qualified Flowbox.AWS.Database.SQL.Instance.Update   as InstanceUpdate
-import           Flowbox.AWS.EC2.Instance.Instance          (Instance (Instance))
+import           Flowbox.AWS.EC2.Instance.Instance          (Instance)
 import qualified Flowbox.AWS.EC2.Instance.Instance          as Instance
-import qualified Flowbox.Data.Tuple                         as Tuple
 import           Flowbox.Prelude
 
 
@@ -31,39 +27,30 @@ maxSessions = 2
 -----------------------------------------------------------------------------
 
 add :: PSQL.Connection -> Instance -> IO ()
-add connection inst =
-    void $ PSQL.execute connection (fromString InstanceAdd.query) $ toDB inst
+add conn inst =
+    void $ PSQL.execute conn InstanceAdd.query inst
 
 
 find :: PSQL.Connection -> Instance.ID -> IO (Maybe Instance)
-find connection instanceID = fmap fromDB . Maybe.listToMaybe
-    <$> PSQL.query connection (fromString InstanceFind.query) (PSQL.Only instanceID)
+find conn instanceID = Maybe.listToMaybe
+    <$> PSQL.query conn InstanceFind.query (PSQL.Only instanceID)
 
 
-delete :: PSQL.Connection -> Instance.ID -> IO ()
-delete connection instanceID =
-    void $ PSQL.execute connection (fromString InstanceDelete.query) (PSQL.Only instanceID)
+delete :: PSQL.Connection -> [Instance.ID] -> IO ()
+delete conn instanceIDs =
+    void $ PSQL.execute conn InstanceDelete.query $ PSQL.Only $ PSQL.In instanceIDs
 
 
 update :: PSQL.Connection -> Instance -> IO ()
-update connection inst = do
-    void $ PSQL.execute connection (fromString InstanceUpdate.query)
-         $ Tuple.add4and1 (toDB inst) (inst ^. Instance.id)
+update conn inst = do
+    void $ PSQL.execute conn InstanceUpdate.query
+         $ inst :. (PSQL.Only $ inst ^. Instance.id)
+
+
+findWithAtMostUsers :: PSQL.Connection -> Int -> IO [Instance]
+findWithAtMostUsers conn count =
+    PSQL.query conn InstanceFindFree.query (PSQL.Only count)
 
 
 findFree :: PSQL.Connection -> IO [Instance]
-findFree connection = map fromDB
-    <$> PSQL.query connection (fromString InstanceFindFree.query) (PSQL.Only maxSessions)
-
-
------------------------------------------------------------------------------
-
-fromDB :: (Text, String, Time.UTCTime, String) -> Instance
-fromDB (id', ip_addr', started', status') =
-    Instance id' (read ip_addr') started' (read status')
-
-
-toDB :: Instance -> (Text, String, Time.UTCTime, String)
-toDB (Instance id' ip_addr' started' status') =
-    (id', show ip_addr', started', show status')
-
+findFree conn = findWithAtMostUsers conn maxSessions
