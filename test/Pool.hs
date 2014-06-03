@@ -46,9 +46,9 @@ main = do
     rootLogger setIntLevel 5
     credential <- AWS.loadCredential
     let userName = "zenon" :: User.Name
-    EC2.runEC2InRegion credential region $ do
+    EC2.runEC2inRegion credential region $ do
         mpool <- Pool.initialize
-        thread <- liftIO $ Concurrent.forkIO' $ EC2.runEC2InRegion credential region $ Instance.monitor mpool
+        thread <- liftIO $ Concurrent.forkIO' $ EC2.runEC2inRegion credential region $ Instance.monitor mpool
 
         ip    <- Types.instanceIpAddress <$> Instance.retrieve userName Request.mk mpool
         liftIO $ print ip

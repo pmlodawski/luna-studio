@@ -12,7 +12,7 @@ module Flowbox.AWS.EC2.EC2 (
     module EC2,
     EC2Resource,
     runEC2,
-    runEC2InRegion,
+    runEC2inRegion,
 ) where
 
 import qualified AWS                          as AWS
@@ -35,7 +35,7 @@ runEC2 :: (MonadIO m, Resource.MonadBaseControl IO m)
 runEC2 credential = Resource.runResourceT . EC2.runEC2 credential
 
 
-runEC2InRegion :: (MonadIO m, Resource.MonadBaseControl IO m, Resource.MonadThrow m)
+runEC2inRegion :: (MonadIO m, Resource.MonadBaseControl IO m, Resource.MonadThrow m)
                => AWS.Credential -> Region -> EC2 (Resource.ResourceT m) a -> m a
-runEC2InRegion credential region fun = runEC2 credential $ do EC2.setRegion $ Region.toText region
+runEC2inRegion credential region fun = runEC2 credential $ do EC2.setRegion $ Region.toText region
                                                               fun

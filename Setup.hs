@@ -27,10 +27,14 @@ sql _ _ = PreProcessor
         source <- readFile inFile
         let moduleName = concat $ List.intersperse "." $ tail $ FilePath.splitDirectories $ FilePath.dropExtension inFile
             contents = unlines
-                ["module " ++ moduleName ++ " where"
-                ,"import Prelude"
-                ,"query :: String"
-                ,"query = unlines [\"" ++ (concat $ List.intersperse "\"\n    , \"" $ lines source) ++ "\"]"
+                [ "{-# LANGUAGE OverloadedStrings #-}"
+                , "module " ++ moduleName ++ " where"
+                , "import Database.PostgreSQL.Simple"
+                , "import Data.String (fromString)"
+                , "import Prelude"
+                , "query :: Query"
+                , "query = fromString $ unlines "
+                , "    [\"" ++ (concat $ List.intersperse "\"\n    , \"" $ lines source) ++ "\"]"
                 ]
         if verbosity == Verbosity.silent
             then return ()

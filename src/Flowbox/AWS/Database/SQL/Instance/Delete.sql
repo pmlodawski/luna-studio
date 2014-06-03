@@ -1,2 +1,2 @@
 delete from instances 
-       where id = ?
+       where id in ?

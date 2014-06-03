@@ -5,6 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.AWS.EC2.Control.DBPool.Session where
+module Main where
+
+import Flowbox.Prelude
 
 
+main :: IO ()
+main = putStrLn "Hello World"

@@ -1,3 +1,3 @@
 select * from instances
-         where ? > (select count (*) from sessions
-                                     where sessions.instance_id = instances.id)
+         where ? >= (select count (*) from sessions
+                                      where sessions.instance_id = instances.id)

@@ -8,42 +8,29 @@ module Flowbox.AWS.Database.User where
 
 import           Control.Monad
 import qualified Data.Maybe                 as Maybe
-import           Data.String                (fromString)
+import           Database.PostgreSQL.Simple ((:.) ((:.)))
 import qualified Database.PostgreSQL.Simple as PSQL
 
 import qualified Flowbox.AWS.Database.SQL.User.Add    as UserAdd
 import qualified Flowbox.AWS.Database.SQL.User.Find   as UserFind
 import qualified Flowbox.AWS.Database.SQL.User.Update as UserUpdate
-import           Flowbox.AWS.User.Password            (Password (Password))
-import qualified Flowbox.AWS.User.Password            as Password
-import           Flowbox.AWS.User.User                (User (User))
+import           Flowbox.AWS.User.User                (User)
 import qualified Flowbox.AWS.User.User                as User
-import qualified Flowbox.Data.Tuple                   as Tuple
 import           Flowbox.Prelude
 
 
 
 add :: PSQL.Connection -> User -> IO ()
-add connection user =
-    void $ PSQL.execute connection (fromString UserAdd.query) $ toDB user
+add conn user =
+    void $ PSQL.execute conn UserAdd.query user
 
 
 find :: PSQL.Connection -> User.Name -> IO (Maybe User)
-find connection userName = fmap fromDB . Maybe.listToMaybe
-    <$> PSQL.query connection (fromString UserFind.query) (PSQL.Only userName)
+find conn userName = Maybe.listToMaybe
+    <$> PSQL.query conn UserFind.query (PSQL.Only userName)
 
 
 update :: PSQL.Connection -> User -> IO ()
-update connection user =
-    void $ PSQL.execute connection (fromString UserUpdate.query)
-         $ Tuple.add4and1 (toDB user) (user ^. User.name)
-
-
-fromDB :: (String, String, String, Int) -> User
-fromDB (name, salt, hash, credit) =
-    User name (Password salt hash) credit
-
-
-toDB :: User -> (String, String, String, Int)
-toDB (User name password credit) =
-    (name, password ^. Password.salt, password ^. Password.hash, credit)
+update conn user =
+    void $ PSQL.execute conn UserUpdate.query
+         $ user :. (PSQL.Only $ user ^. User.name)

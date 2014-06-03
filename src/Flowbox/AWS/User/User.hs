@@ -8,7 +8,11 @@
 
 module Flowbox.AWS.User.User where
 
-import Flowbox.AWS.User.Password (Password)
+import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
+import Database.PostgreSQL.Simple.ToField (ToField, toField)
+import Database.PostgreSQL.Simple.ToRow   (ToRow, toRow)
+
+import Flowbox.AWS.User.Password (Password (Password))
 import Flowbox.Prelude
 
 
@@ -24,3 +28,10 @@ data User = User { _name     :: Name
 
 makeLenses (''User)
 
+
+instance FromRow User where
+    fromRow = User <$> field <*> (Password  <$> field <*> field) <*> field
+
+instance ToRow User where
+    toRow (User name' password' credit') =
+        toField name' : toRow password' ++ [toField credit']
