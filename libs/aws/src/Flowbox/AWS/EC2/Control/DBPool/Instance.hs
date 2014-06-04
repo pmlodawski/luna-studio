@@ -62,7 +62,8 @@ retrieve conn credential region userName instancesRequest = do
 
         -- instaces from database ------
 
-        available <- InstanceDB.findAvailable conn userName
+        available <- Instance.sortByStatusAndTime currentTime 
+                     <$> InstanceDB.findAvailable conn userName
         let (running, stopped') = List.partition Instance.isRunning $ take amount available
             stopped = map (set Instance.status  Instance.Running)
                     $ map (set Instance.started currentTime) stopped'
