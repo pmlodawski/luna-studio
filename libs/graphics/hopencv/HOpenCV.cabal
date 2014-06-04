@@ -1,0 +1,99 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+name: HOpenCV
+version: 0.4.0
+license: BSD3
+author: Noam Lewis <jones.noamle@gmail.com>
+maintainer: Anthony Cowley <acowley@gmail.com>
+stability: experimental
+category: AI, Graphics
+synopsis: A binding for the OpenCV computer vision library.
+Tested-With:   GHC==7.6.1
+description:
+   Limited bindings to OpenCV 2.4. (See: <http://opencv.willowgarage.com/wiki/Welcome>)
+   .
+   /Installation/
+   .
+   You must install OpenCV (development packages) prior to installing this package. Currently tested on Mac OS 10.7.
+   .
+   /Usage/
+   .
+   The "OpenCV.HighCV" module exposes the most commonly used functionality. The @Core@ modules contain to low-level OpenCV interfaces, while modules not in the @Core@ directory provide specific types of operations.
+   .
+   See @src\/Examples\/VideoFunhouse@ for an example application.
+build-type:         Custom
+cabal-version:      >= 1.8
+extra-source-files: src/OpenCV/Core/HOpenCV_wrap.h 
+                    src/Examples/VideoFunhouse/Makefile 
+                    src/Examples/VideoFunhouse/Rate.hs
+                    src/Examples/VideoFunhouse/VideoFunhouse.hs
+                    src/Examples/Closing/Closing.hs
+source-repository head
+  type: git
+  location: git://github.com/acowley/HOpenCV.git
+
+Flag OpenCV21
+  Description: Link against OpenCV 2.1
+  Default:     False
+
+Flag MotionAnalysis
+  Description: Export optical flow bindings. Doesn't work with GHCi.
+  Default:     False
+
+library
+   exposed-modules:
+      OpenCV.Core.CV
+      OpenCV.Core.CVOp 
+      OpenCV.Core.CxCore
+      OpenCV.Core.HighGui
+      OpenCV.Core.Image
+      OpenCV.Core.ImageUtil
+      OpenCV.Core.ColorConversion
+      OpenCV.HighCV
+      OpenCV.GUI
+      OpenCV.Video
+      OpenCV.FloodFill
+      OpenCV.PixelUtils
+      OpenCV.ColorConversion
+      OpenCV.Drawing
+      OpenCV.Contours
+      OpenCV.Threshold
+      OpenCV.ArrayOps
+      OpenCV.Filtering
+      OpenCV.FeatureDetection
+      OpenCV.Histograms
+      OpenCV.Color
+   c-sources:
+      src/OpenCV/Core/HOpenCV_wrap.c
+      src/OpenCV/ArrayOps_hsc.c
+      src/OpenCV/FloodFill_hsc.c
+      src/OpenCV/Drawing_hsc.c
+   other-modules: OpenCV.Core.StorableUtil
+   hs-Source-Dirs: src
+   if flag(MotionAnalysis)
+     exposed-modules:   OpenCV.Motion
+   if os(windows)
+     include-dirs:	C:\\OpenCV2.2\\include
+     extra-lib-dirs:	C:\\OpenCV2.2\\bin
+     extra-libraries: 	opencv_core220,opencv_imgproc220,opencv_highgui220,opencv_video220
+   else
+     if flag(OpenCV21)
+       CC-Options:      "-DOCV21"
+       extra-libraries: cv highgui
+     else
+       extra-libraries: opencv_core,opencv_imgproc,opencv_highgui,opencv_video
+
+   -- needed to load in ghci-7.8 
+   cc-options: -fPIC
+
+   build-depends: base >= 4.6 && <5, 
+                  template-haskell,
+                  vector-space >= 0.7.2,
+                  directory >= 1.0.1.0 && < 2,
+                  vector >= 0.7,
+                  singletons, tagged
+   ghc-options: -Wall -fno-warn-name-shadowing -O2 -funbox-strict-fields

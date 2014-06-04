@@ -75,7 +75,7 @@ def main():
             sys.exit(1)
 
         pkgNames = os.environ[sboxEnv].split(":")
-    
+
     pkgs = [pkgDb[name] for name in pkgNames]
 
     print_info("Running gencabal")
@@ -92,7 +92,7 @@ def main():
 
         os.chdir(pkg.sbox)
 
-        cabalConfigSrc = os.path.join(rootPath, cabalConf) 
+        cabalConfigSrc = os.path.join(rootPath, cabalConf)
         dstConfigCopy = pkg.sbox
         shutil.copy(cabalConfigSrc, dstConfigCopy)
 
