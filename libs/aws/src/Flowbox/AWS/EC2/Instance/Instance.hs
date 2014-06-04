@@ -7,13 +7,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.AWS.EC2.Instance.Instance where
 
-import           Data.Text                            (Text)
-import           Database.PostgreSQL.Simple.FromField (FromField, fromField)
-import           Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
-import           Database.PostgreSQL.Simple.ToField   (ToField, toField)
-import           Database.PostgreSQL.Simple.ToRow     (ToRow, toRow)
-import qualified Flowbox.Data.Time                    as Time
-import           Flowbox.Prelude                      hiding (id)
+import Data.Text                            (Text)
+import Database.PostgreSQL.Simple.FromField (FromField, fromField)
+import Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
+import Database.PostgreSQL.Simple.ToField   (ToField, toField)
+import Database.PostgreSQL.Simple.ToRow     (ToRow, toRow)
+
+import qualified Flowbox.Data.Time as Time
+import           Flowbox.Prelude   hiding (id)
+
 
 
 type ID = Text
@@ -31,6 +33,7 @@ data Instance = Instance { _id      :: ID
 
 makeLenses (''Instance)
 
+---- instances ------------------------------------------------------------
 
 instance FromField Status where
     fromField f dat = read <$> fromField f dat
@@ -44,3 +47,13 @@ instance FromRow Instance where
 instance ToRow Instance where
     toRow (Instance id' started' status') =
         [toField id', toField started', toField status']
+
+---- methods --------------------------------------------------------------
+
+isRunning :: Instance -> Bool
+isRunning inst = inst ^. status == Running
+
+
+spareSeconds :: Time.UTCTime -> Instance -> Int
+spareSeconds currentTime inst =
+    (Time.toSeconds $ Time.diffUTCTime currentTime $ inst ^. started) `mod` 3600

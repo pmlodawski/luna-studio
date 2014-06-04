@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.AWS.EC2.Control.Pool.Instance.Instance where
 
@@ -32,6 +31,7 @@ import qualified Flowbox.AWS.User.User                       as User
 import qualified Flowbox.Data.Time                           as Time
 import           Flowbox.Prelude                             hiding (error, use)
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: LoggerIO
