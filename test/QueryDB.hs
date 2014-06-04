@@ -82,7 +82,7 @@ main = do
     print $ userSessions2 == [session2]
 
     putStrLn "finding free instances"
-    a <- InstanceDB.findFree db
+    a <- InstanceDB.findAvailable db "stefan"
     print a
 
     putStrLn "quitting"

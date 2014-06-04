@@ -10,14 +10,16 @@ import qualified Data.Maybe                 as Maybe
 import           Database.PostgreSQL.Simple ((:.) ((:.)))
 import qualified Database.PostgreSQL.Simple as PSQL
 
-import qualified Flowbox.AWS.Database.SQL.Instance.Add      as InstanceAdd
-import qualified Flowbox.AWS.Database.SQL.Instance.All      as InstanceAll
-import qualified Flowbox.AWS.Database.SQL.Instance.Delete   as InstanceDelete
-import qualified Flowbox.AWS.Database.SQL.Instance.Find     as InstanceFind
-import qualified Flowbox.AWS.Database.SQL.Instance.FindFree as InstanceFindFree
-import qualified Flowbox.AWS.Database.SQL.Instance.Update   as InstanceUpdate
-import           Flowbox.AWS.EC2.Instance.Instance          (Instance)
-import qualified Flowbox.AWS.EC2.Instance.Instance          as Instance
+import qualified Flowbox.AWS.Database.SQL.Instance.Add           as InstanceAdd
+import qualified Flowbox.AWS.Database.SQL.Instance.All           as InstanceAll
+import qualified Flowbox.AWS.Database.SQL.Instance.Delete        as InstanceDelete
+import qualified Flowbox.AWS.Database.SQL.Instance.Find          as InstanceFind
+import qualified Flowbox.AWS.Database.SQL.Instance.FindAvailable as InstanceFindAvailable
+import qualified Flowbox.AWS.Database.SQL.Instance.FindFree      as InstanceFindFree
+import qualified Flowbox.AWS.Database.SQL.Instance.Update        as InstanceUpdate
+import           Flowbox.AWS.EC2.Instance.Instance               (Instance)
+import qualified Flowbox.AWS.EC2.Instance.Instance               as Instance
+import qualified Flowbox.AWS.User.User                           as User
 import           Flowbox.Prelude
 
 
@@ -25,7 +27,7 @@ import           Flowbox.Prelude
 maxSessions :: Int
 maxSessions = 2
 
------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 add :: PSQL.Connection -> Instance -> IO ()
 add conn inst =
@@ -53,8 +55,9 @@ findWithAtMostUsers conn count =
     PSQL.query conn InstanceFindFree.query (PSQL.Only count)
 
 
-findFree :: PSQL.Connection -> IO [Instance]
-findFree conn = findWithAtMostUsers conn maxSessions
+findAvailable :: PSQL.Connection -> User.Name ->  IO [Instance]
+findAvailable conn userName = 
+    PSQL.query conn InstanceFindAvailable.query (maxSessions - 1, userName)
 
 
 all :: PSQL.Connection -> IO [Instance]

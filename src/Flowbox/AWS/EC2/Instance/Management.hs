@@ -104,8 +104,13 @@ findInstances filter' = do
 
 byID :: EC2Resource m => Instance.ID -> EC2 m Types.Instance
 byID instanceID = do
-    instances <- concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [instanceID] [])
+    instances <- byIDs [instanceID]
     case instances of
         [inst] -> return inst
         _      -> fail "Something went wrong on Instance.byID"
+
+
+byIDs :: EC2Resource m => [Instance.ID] -> EC2 m [Types.Instance]
+byIDs instanceIDs = concatMap Types.reservationInstanceSet
+    <$> (Util.list $ EC2.describeInstances instanceIDs [])
 
