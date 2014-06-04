@@ -13,17 +13,10 @@
 
 
 import qualified Config                            as Cfg
-import           Control.Applicative
-import           Data.Array.Accelerate             (Exp)
-import qualified Data.Array.Accelerate             as A
-import qualified Data.Array.Accelerate.Interpreter as Interp
-import qualified Data.Array.Accelerate.CUDA        as CUDA
-import qualified Data.Map                          as Map
 import qualified Monitoring         as Monitoring
 import qualified ParseArgs          as ParseArgs
 import qualified System.Environment as Env
 import qualified System.Exit        as Exit
-import qualified System.IO.Unsafe   as Unsafe
 
 --import           Geom2D                      (Point(..))
 --import           Geom2D.CubicBezier.Basic    (CubicBezier(..), PathJoin(..), Path(..))

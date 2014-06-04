@@ -9,7 +9,7 @@ module Flowbox.Graphics.Image.View.Internal where
 
 import           Data.Set
 import           Data.List.Split
-import qualified Data.Map as Map
+--import qualified Data.Map as Map
 
 import           Flowbox.Data.Channel           as ChanTree
 import           Flowbox.Graphics.Image.Error   (Error(..))
@@ -40,11 +40,11 @@ get :: View v => v -> Channel.Name -> Image.Result (Maybe Channel)
 get v descriptor = case result of
     Left _    -> Left $ ChannelLookupError descriptor
     Right val -> Right val
-    where result  = ChanTree.get $ P.foldr f z parts
+    where result  = ChanTree.get $ P.foldr f z nodes
           f p acc = acc >>= goTo p
           z       = zipper t
           t       = v ^. channels
-          parts   = splitOn "." descriptor
+          nodes   = splitOn "." descriptor
 
 --insert :: View v => v -> String -> Channel -> Image.Result v
 --insert v descriptor val = rec parts ()

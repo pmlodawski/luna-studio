@@ -46,6 +46,7 @@ zipper :: ChannelTree name value -> ZipperResult name value
 zipper t = return (t, [])
 
 goTo :: Ord name => name -> Zipper name value -> ZipperResult name value
+goTo _ (EmptyNode, _) = Left UnreachableError
 goTo name (ChannelTree tree chan, bs) = case Map.lookup name tree of
     Nothing    -> Left UnreachableError
     Just tree' -> Right (tree', Crumb name chan rest:bs)

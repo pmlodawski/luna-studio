@@ -91,7 +91,7 @@ shapeSize = A.shapeSize
 -- = Extracting sub-arrays =
 
 slice :: (Slice slix, Elt e) => Matrix (FullShape slix) e -> Exp slix -> Matrix (SliceShape slix) e
-slice mat parts = Delayed $ A.slice (accMatrix mat) parts
+slice mat fragments = Delayed $ A.slice (accMatrix mat) fragments
 
 
 -- == Construction ==
