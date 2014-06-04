@@ -28,7 +28,8 @@ import qualified Flowbox.AWS.User.Password               as Password
 import           Flowbox.AWS.User.User                   (User (User))
 import qualified Flowbox.AWS.User.User                   as User
 import qualified Flowbox.Control.Concurrent              as Concurrent
-import           Flowbox.Prelude
+import qualified Flowbox.Control.Guard                   as Guard
+import           Flowbox.Prelude                         hiding (error)
 import qualified Flowbox.System.Console.ASCIISpinner     as Spinner
 import           Flowbox.System.Log.Logger
 
@@ -36,6 +37,10 @@ import           Flowbox.System.Log.Logger
 
 rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.DBPool"
 
 
 region :: Region
@@ -64,10 +69,10 @@ main = do
                                "kozatest123"
                                "flowbox"
 
-    Concurrent.forkIO_ $ Monitor.run credential region db
+    Concurrent.forkIO_ $ Guard.protect (Monitor.run credential region db) (logger error . show)
 
     putStrLn "enter command"
-    handleCmd db credential
+    Guard.protect (handleCmd db credential) (logger error . show)
 
 
 handleCmd :: PSQL.Connection -> AWS.Credential -> IO ()
