@@ -89,7 +89,8 @@ updateSessions region conn = PSQL.withTransaction conn
 
 isShutDownCandidate :: Time.UTCTime -> Instance -> Bool
 isShutDownCandidate currentTime inst =
-    Instance.spareSeconds currentTime inst > shutDownDiff
+    inst ^. Instance.status == Instance.Running
+    && Instance.spareSeconds currentTime inst > shutDownDiff
 
 
 freeUnusedInstances :: AWS.Credential -> Region -> PSQL.Connection -> IO ()
@@ -117,13 +118,13 @@ detectOrphans credential region conn = do
         let orphanInstances   = detectedInstances \\ existingInstances
             unsyncedInstances = existingInstances \\ detectedInstances
 
-        when (not $ null orphanInstances) $ do
-            logger warning $ "Monitor : Detected " ++ (show $ length orphanInstances) ++ " orpan instances"
-            mapM_ (InstanceDB.add conn) orphanInstances
-
         when (not $ null unsyncedInstances) $ do
             logger warning $ "Monitor : Detected " ++ (show $ length unsyncedInstances) ++ " unsynced instances"
             InstanceDB.delete conn $ map (view Instance.id) unsyncedInstances
+
+        when (not $ null orphanInstances) $ do
+            logger warning $ "Monitor : Detected " ++ (show $ length orphanInstances) ++ " orpan instances"
+            mapM_ (InstanceDB.add conn) orphanInstances
 
 
 

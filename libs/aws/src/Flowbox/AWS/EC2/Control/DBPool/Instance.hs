@@ -47,9 +47,9 @@ retrieve conn credential region userName instancesRequest = do
     assert (amount == Types.runInstancesRequestMaxCount instancesRequest) "runInstancesRequestMinCount must be equal to runInstancesRequestMaxCount"
 
     (runningIDs, stoppedIDs, startingIDs, tags) <- Transaction.withTransaction conn $ do
-        
+
         -- user credit -----------------
-        
+
         user        <- UserDB.find conn userName <??> "Cannot find user " ++ show userName ++ " in database."
         chargedUser <- eitherStringToM $ Credit.charge user $ Cost.instanceHour region
         UserDB.update conn chargedUser
@@ -59,11 +59,11 @@ retrieve conn credential region userName instancesRequest = do
         currentTime <- Time.getCurrentTime
         let tags = (Tag.poolKey, Tag.poolValue)
                  : [Tag.startTimeTag currentTime]
-        
+
         -- instaces from database ------
 
         available <- InstanceDB.findAvailable conn userName
-        let (running, stopped') = List.partition Instance.isRunning available
+        let (running, stopped') = List.partition Instance.isRunning $ take amount available
             stopped = map (set Instance.status  Instance.Running)
                     $ map (set Instance.started currentTime) stopped'
         mapM_ (InstanceDB.update conn) stopped
