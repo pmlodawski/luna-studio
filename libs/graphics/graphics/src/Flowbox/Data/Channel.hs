@@ -9,7 +9,6 @@ module Flowbox.Data.Channel where
 
 import Data.Map as Map
 
-import qualified Flowbox.Graphics.Image.Error as Image
 import           Flowbox.Prelude
 
 
@@ -82,26 +81,27 @@ append name v = attach name (ChannelTree mempty v)
 
 delete :: Zipper name value -> ZipperResult name value
 delete (t, bs) = case t of
-    EmptyNode -> Left RemoveEmptyError
-    ChannelTree tree chan -> Right (EmptyNode, bs)
+    EmptyNode       -> Left RemoveEmptyError
+    ChannelTree _ _ -> Right (EmptyNode, bs)
 
 -- = Value =
 
 clear :: Zipper name value -> ZipperResult name value
 clear (t, bs) = case t of
-    EmptyNode             -> Left AlterEmptyError
-    ChannelTree tree chan -> Right (ChannelTree tree $ Nothing, bs)
+    EmptyNode          -> Left AlterEmptyError
+    ChannelTree tree _ -> Right (ChannelTree tree $ Nothing, bs)
 
 set :: value -> Zipper name value -> ZipperResult name value
 set v (t, bs) = case t of
-    EmptyNode             -> Left AlterEmptyError
-    ChannelTree tree chan -> Right (ChannelTree tree $ Just v, bs)
+    EmptyNode          -> Left AlterEmptyError
+    ChannelTree tree _ -> Right (ChannelTree tree $ Just v, bs)
 
 modify :: (value -> value) -> Zipper name value -> ZipperResult name value
 modify f (t, bs) = case t of
     EmptyNode             -> Left AlterEmptyError
     ChannelTree tree chan -> Right (ChannelTree tree $ fmap f chan, bs)
 
-value :: ZipperResult name value -> Either ZipperError (Maybe value)
-value (Left _) = Left GetNonExistant
-value (Right (ChannelTree _ val, _)) = Right val
+get :: ZipperResult name value -> Either ZipperError (Maybe value)
+get (Left _) = Left GetNonExistant
+get (Right (EmptyNode, _)) = Left GetNonExistant
+get (Right (ChannelTree _ val, _)) = Right val

@@ -11,11 +11,12 @@ import           Data.Set
 import           Data.List.Split
 import qualified Data.Map as Map
 
-import           Flowbox.Data.Channel
+import           Flowbox.Data.Channel           as ChanTree
+import           Flowbox.Graphics.Image.Error   (Error(..))
 import qualified Flowbox.Graphics.Image.Error   as Image
 import           Flowbox.Graphics.Image.Channel (Channel)
 import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Prelude
+import           Flowbox.Prelude                as P
 
 
 
@@ -33,16 +34,17 @@ class View v where
     --pixelAspectRatio :: AspectRatio
 
 
---get :: View v => v -> String -> Image.Result (Maybe Channel)
---get v descriptor = rec parts (v ^. channels)
---    where parts = splitOn "." descriptor
---          rec [] _ = Left $ Image.ChannelLookupError descriptor
---          rec (x:[]) (ChannelTree children _) = case Map.lookup x children of
---              Nothing                -> Left $ Image.ChannelLookupError descriptor
---              Just (ChannelTree _ n) -> Right n
---          rec (x:xs) (ChannelTree children _) = case Map.lookup x children of
---              Nothing   -> Left $ Image.ChannelLookupError descriptor
---              Just node -> rec xs node
+-- TODO: ukryć konstruktory
+
+get :: View v => v -> Channel.Name -> Image.Result (Maybe Channel)
+get v descriptor = case result of
+    Left _    -> Left $ ChannelLookupError descriptor
+    Right val -> Right val
+    where result  = ChanTree.get $ P.foldr f z parts
+          f p acc = acc >>= goTo p
+          z       = zipper t
+          t       = v ^. channels
+          parts   = splitOn "." descriptor
 
 --insert :: View v => v -> String -> Channel -> Image.Result v
 --insert v descriptor val = rec parts ()
