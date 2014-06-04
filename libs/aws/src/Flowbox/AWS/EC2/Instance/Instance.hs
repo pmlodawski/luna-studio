@@ -7,12 +7,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.AWS.EC2.Instance.Instance where
 
-import Data.Text                            (Text)
-import Database.PostgreSQL.Simple.FromField (FromField, fromField)
-import Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
-import Database.PostgreSQL.Simple.ToField   (ToField, toField)
-import Database.PostgreSQL.Simple.ToRow     (ToRow, toRow)
-import qualified Data.List as List
+import qualified Data.List                            as List
+import           Data.Text                            (Text)
+import           Database.PostgreSQL.Simple.FromField (FromField, fromField)
+import           Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
+import           Database.PostgreSQL.Simple.ToField   (ToField, toField)
+import           Database.PostgreSQL.Simple.ToRow     (ToRow, toRow)
 
 import qualified Flowbox.Data.Time as Time
 import           Flowbox.Prelude   hiding (id)
@@ -24,6 +24,7 @@ type ID = Text
 
 data Status = Running
             | Stopped
+            | Other
             deriving (Show, Ord, Eq, Read)
 
 
@@ -62,11 +63,8 @@ spareSeconds currentTime inst =
 
 sortByStatusAndTime :: Time.UTCTime -> [Instance] -> [Instance]
 sortByStatusAndTime currentTime = List.sortBy comp where
-    comp inst1 inst2 = if inst1 ^. status == Running
-        then LT
-        else if inst2 ^. status == Running
-            then GT
-            else case compare (spareSeconds currentTime inst1) (spareSeconds currentTime inst2) of
+    comp inst1 inst2 = case compare (inst1 ^. status) (inst2 ^. status) of
+        EQ  -> case compare (spareSeconds currentTime inst1) (spareSeconds currentTime inst2) of
                 EQ  -> compare inst1 inst2
                 cmp -> cmp
-        
+        cmp -> cmp

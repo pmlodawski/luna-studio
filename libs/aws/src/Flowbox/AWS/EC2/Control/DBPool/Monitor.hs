@@ -11,13 +11,13 @@ module Flowbox.AWS.EC2.Control.DBPool.Monitor where
 
 import qualified AWS                        as AWS
 import qualified AWS.EC2.Types              as Types
-import qualified Control.Concurrent         as Concurrent
 import           Control.Monad              (forever, when)
 import           Control.Monad.IO.Class     (liftIO)
 import           Data.List                  ((\\))
 import qualified Data.Time                  as Time
 import qualified Database.PostgreSQL.Simple as PSQL
 
+import qualified Flowbox.Control.Concurrent         as Concurrent
 import qualified Flowbox.AWS.Database.Instance         as InstanceDB
 import qualified Flowbox.AWS.Database.Session          as SessionDB
 import qualified Flowbox.AWS.Database.User             as UserDB
@@ -86,7 +86,6 @@ updateSessions region conn = PSQL.withTransaction conn
     (mapM_ (updateSession region conn) =<< SessionDB.all conn)
 
 
-
 isShutDownCandidate :: Time.UTCTime -> Instance -> Bool
 isShutDownCandidate currentTime inst =
     inst ^. Instance.status == Instance.Running
@@ -95,16 +94,21 @@ isShutDownCandidate currentTime inst =
 
 freeUnusedInstances :: AWS.Credential -> Region -> PSQL.Connection -> IO ()
 freeUnusedInstances credential region conn = do
-    instancesToStop <- PSQL.withTransaction conn $ do
+    free <- PSQL.withTransaction conn $ do
         currentTime <- Time.getCurrentTime
         free <- filter (isShutDownCandidate currentTime)
                 <$> InstanceDB.findWithAtMostUsers conn 0
-        mapM_ (InstanceDB.update conn) $ map (set Instance.status Instance.Stopped) free
-        return $ map (view Instance.id) free
-    if null instancesToStop
+        mapM_ (InstanceDB.update conn) $ map (set Instance.status Instance.Other) free
+        return free
+    let freeIDs = map (view Instance.id) free
+    if null free
         then logger debug "Monitor : nothing to stop"
-        else do logger info $ "Monitor : stopping " ++ (show $ length instancesToStop) ++ " instances"
-                void $ EC2.runEC2inRegion credential region $ EC2.stopInstances instancesToStop True
+        else Concurrent.forkIO_ $ do 
+                logger info $ "Monitor : stopping " ++ (show $ length free) ++ " instances"
+                EC2.runEC2inRegion credential region $ do
+                    void $ EC2.stopInstances       freeIDs True
+                    void $ Management.waitForState freeIDs Types.InstanceStateStopped def
+                mapM_ (InstanceDB.update conn) $ map (set Instance.status Instance.Stopped) free
 
 
 detectOrphans :: AWS.Credential -> Region -> PSQL.Connection -> IO ()
@@ -123,9 +127,8 @@ detectOrphans credential region conn = do
             InstanceDB.delete conn $ map (view Instance.id) unsyncedInstances
 
         when (not $ null orphanInstances) $ do
-            logger warning $ "Monitor : Detected " ++ (show $ length orphanInstances) ++ " orpan instances"
+            logger warning $ "Monitor : Detected " ++ (show $ length orphanInstances) ++ " orphan instances"
             mapM_ (InstanceDB.add conn) orphanInstances
-
 
 
 readInstanceData :: EC2Resource m => Types.Instance -> EC2 m Instance
@@ -140,6 +143,7 @@ readInstanceData inst = do
     let status = case Types.instanceState inst of
             Types.InstanceStateRunning -> Instance.Running
             Types.InstanceStateStopped -> Instance.Stopped
+            _                          -> Instance.Other
     return $ Instance instanceID startTime status
 
 
@@ -149,4 +153,3 @@ run credential region conn = forever $ do
     updateSessions                 region conn
     freeUnusedInstances credential region conn
     Concurrent.threadDelay (60 * 1000 * 1000) -- sleep one minute
-

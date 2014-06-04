@@ -35,13 +35,17 @@ logger = getLoggerIO "Flowbox.AWS.EC2.Instance.Instance"
 
 
 ready :: Types.Instance -> Bool
-ready inst = Types.instanceState inst == Types.InstanceStateRunning
+ready = hasState Types.InstanceStateRunning
 
 
 resumable :: Types.Instance -> Bool
-resumable inst = Types.instanceState inst == Types.InstanceStateRunning
-              || Types.instanceState inst == Types.InstanceStateStopped
-              || Types.instanceState inst == Types.InstanceStateStopping
+resumable inst = hasState Types.InstanceStateRunning  inst
+              || hasState Types.InstanceStateStopped  inst
+              || hasState Types.InstanceStateStopping inst
+
+
+hasState :: Types.InstanceState -> Types.Instance -> Bool
+hasState state inst = Types.instanceState inst == state
 
 
 startNew :: EC2Resource m
@@ -82,24 +86,30 @@ startExistingWait instanceIDs tags = do
 
 waitForStart :: EC2Resource m
              => [Instance.ID] -> WaitTimes -> EC2 m [Types.Instance]
-waitForStart instanceIDs waitTimes = do
-    logger info "Waiting for instance start. Please wait."
+waitForStart instanceIDs waitTimes =
+    waitForState instanceIDs Types.InstanceStateRunning waitTimes
+
+
+waitForState :: EC2Resource m
+             => [Instance.ID] -> Types.InstanceState -> WaitTimes -> EC2 m [Types.Instance]
+waitForState instanceIDs state waitTimes = do
+    logger info $ "Waiting for instance to change state to " ++ show state ++ ". Please wait."
     liftIO $ Concurrent.threadDelay $ WaitTime.initial waitTimes
-    userInstances <- Loops.iterateUntil (all ready) $ do
-        userInstances <- concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances instanceIDs [])
+    userInstances <- Loops.iterateUntil (all $ hasState state) $ do
+        userInstances <- byIDs instanceIDs
         liftIO $ do putStr "."
                     IO.hFlush IO.stdout
                     Concurrent.threadDelay $ WaitTime.next waitTimes
         return userInstances
     liftIO $ putStrLn ""
-    logger info "Instance is ready!"
+    logger info "Instance state successfully changed!"
     return userInstances
 
 
 findInstances :: EC2Resource m => [Types.Filter] ->  EC2 m [Types.Instance]
 findInstances filter' = do
     logger debug "Looking for instances..."
-    filter resumable <$> concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [] filter')
+    filter resumable <$> describeInstances [] filter'
 
 
 byID :: EC2Resource m => Instance.ID -> EC2 m Types.Instance
@@ -111,6 +121,9 @@ byID instanceID = do
 
 
 byIDs :: EC2Resource m => [Instance.ID] -> EC2 m [Types.Instance]
-byIDs instanceIDs = concatMap Types.reservationInstanceSet
-    <$> (Util.list $ EC2.describeInstances instanceIDs [])
+byIDs instanceIDs = describeInstances instanceIDs []
 
+
+describeInstances :: EC2Resource m => [Instance.ID] -> [Types.Filter] -> EC2 m [Types.Instance]
+describeInstances instanceIDs filter' =
+    concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances instanceIDs filter')
