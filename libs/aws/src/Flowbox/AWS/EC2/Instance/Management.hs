@@ -94,13 +94,11 @@ waitForState :: EC2Resource m
              => [Instance.ID] -> Types.InstanceState -> WaitTimes -> EC2 m [Types.Instance]
 waitForState instanceIDs state waitTimes = do
     logger info $ "Waiting for instance to change state to " ++ show state ++ ". Please wait."
-    liftIO $ Concurrent.threadDelay $ WaitTime.initial waitTimes
     userInstances <- Loops.iterateUntil (all $ hasState state) $ do
-        userInstances <- byIDs instanceIDs
-        liftIO $ do putStr "."
+        liftIO $ do Concurrent.threadDelay $ WaitTime.next waitTimes
+                    putStr "."
                     IO.hFlush IO.stdout
-                    Concurrent.threadDelay $ WaitTime.next waitTimes
-        return userInstances
+        byIDs instanceIDs
     liftIO $ putStrLn ""
     logger info "Instance state successfully changed!"
     return userInstances
