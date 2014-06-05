@@ -14,6 +14,7 @@ import qualified Flowbox.AWS.Database.SQL.Session.Add            as SessionAdd
 import qualified Flowbox.AWS.Database.SQL.Session.All            as SessionAll
 import qualified Flowbox.AWS.Database.SQL.Session.Delete         as SessionDelete
 import qualified Flowbox.AWS.Database.SQL.Session.DeleteByID     as SessionDeleteByID
+import qualified Flowbox.AWS.Database.SQL.Session.DeleteByUser   as SessionDeleteByUser
 import qualified Flowbox.AWS.Database.SQL.Session.FindByInstance as SessionFindByInstance
 import qualified Flowbox.AWS.Database.SQL.Session.FindByUser     as SessionFindByUser
 import qualified Flowbox.AWS.Database.SQL.Session.Update         as SessionUpdate
@@ -45,6 +46,11 @@ findByUser conn userName = PSQL.query conn
 deleteByID :: PSQL.Connection -> Session.ID -> IO ()
 deleteByID conn sessionID =
     void $ PSQL.execute conn SessionDeleteByID.query (PSQL.Only sessionID)
+
+
+deleteByUser :: PSQL.Connection -> User.Name -> IO ()
+deleteByUser conn userName =
+    void $ PSQL.execute conn SessionDeleteByUser.query (PSQL.Only userName)
 
 
 delete :: PSQL.Connection -> User.Name -> Instance.ID -> IO ()

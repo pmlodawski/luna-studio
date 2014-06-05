@@ -7,13 +7,14 @@
 
 module Flowbox.AccountManager.InstanceMonitor where
 
-import           Flowbox.AccountManager.Context                 (Context)
-import qualified Flowbox.AccountManager.Context                 as Context
-import qualified Flowbox.AWS.EC2.Control.Pool.Instance.Instance as Instance
-import qualified Flowbox.AWS.EC2.EC2                            as EC2
-import           Flowbox.Prelude                                hiding (Context)
+import           Flowbox.AccountManager.Context         (Context)
+import qualified Flowbox.AccountManager.Context         as Context
+import qualified Flowbox.AWS.EC2.Control.DBPool.Monitor as Monitor
+import           Flowbox.Prelude                        hiding (Context)
+
 
 
 run :: Context -> IO ()
-run ctx = EC2.runEC2InRegion (Context.credential ctx) (Context.region ctx)
-            $ Instance.monitor (Context.pool ctx)
+run ctx = Monitor.run (ctx ^. Context.credential)
+                      (ctx ^. Context.region)
+                      (ctx ^. Context.database)
