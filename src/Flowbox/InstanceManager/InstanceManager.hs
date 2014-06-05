@@ -13,7 +13,7 @@ import qualified Data.Text     as Text
 
 import qualified Flowbox.AWS.EC2.Control.Simple.Instance as Instance
 import qualified Flowbox.AWS.EC2.EC2                     as EC2
-import qualified Flowbox.AWS.EC2.Instance.Instance       as Instance (ready)
+import qualified Flowbox.AWS.EC2.Instance.Management     as Management
 import qualified Flowbox.AWS.EC2.Instance.Request        as Request
 import           Flowbox.AWS.Region                      (Region)
 import qualified Flowbox.AWS.User.User                   as User
@@ -49,12 +49,12 @@ printInstance inst = putStrLn $ (Text.unpack $ Types.instanceId inst)
 start :: Region -> Cmd.Options -> IO ()
 start region options = do
     credential <- getCredential options
-    inst <- EC2.runEC2InRegion credential region $ do
+    [inst] <- EC2.runEC2inRegion credential region $ do
         let request = Request.mk { Types.runInstancesRequestImageId      = Text.pack        $ Cmd.ami options
                                  , Types.runInstancesRequestInstanceType = Just $ Text.pack $ Cmd.machine options
                                  , Types.runInstancesRequestKeyName      = Just $ Text.pack $ Cmd.keyName options
                                  }
-        Instance.getOrStart userName request
+        Instance.getOrStartWait userName request
     let command = "ssh -i " ++ Cmd.keyName options ++ " ec2-user@" ++ instanceIP inst
     logger info $ "You can login using command " ++ show command
     printInstance inst
@@ -63,8 +63,8 @@ start region options = do
 stop :: Region -> Cmd.Options -> IO ()
 stop region options = do
     credential <- getCredential options
-    EC2.runEC2InRegion credential region $ do
-        instances <- filter Instance.ready <$> Instance.findInstances
+    EC2.runEC2inRegion credential region $ do
+        instances <- filter Management.ready <$> Instance.findInstances
         let instanceIDs = map Types.instanceId instances
         if length instances == 0
             then logger info $ "No instances to stop."
@@ -76,14 +76,14 @@ stop region options = do
 get :: Region -> Cmd.Options -> IO ()
 get region options = do
     credential <- getCredential options
-    instances <- EC2.runEC2InRegion credential region $ Instance.findInstances
-    mapM_ printInstance $ filter Instance.ready instances
+    instances <- EC2.runEC2inRegion credential region $ Instance.findInstances
+    mapM_ printInstance $ filter Management.ready instances
 
 
 terminate :: Region -> Cmd.Options -> IO ()
 terminate region options = do
     credential <- getCredential options
-    EC2.runEC2InRegion credential region $ do
+    EC2.runEC2inRegion credential region $ do
         instances <- Instance.findInstances
         let instanceIDs = map Types.instanceId instances
         if length instances == 0
