@@ -67,22 +67,6 @@ Executable aws-test-dbpool
                     text
 
 
-Executable aws-test-pool
-    Main-Is:        Pool.hs
-    Hs-Source-Dirs: test
-
-    GHC-Options:    -Wall -O2 -threaded
-    
-    Extensions:     NoImplicitPrelude
-
-    Build-Depends:  aws-sdk >= 0.12.4,
-                    base,
-                    flowbox-aws,
-                    flowbox-utils,
-                    mtl,
-                    text
-
-
 Executable aws-test-querydb
     Main-Is:        QueryDB.hs
     Hs-Source-Dirs: test

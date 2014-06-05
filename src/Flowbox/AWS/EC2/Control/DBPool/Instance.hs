@@ -62,7 +62,7 @@ retrieve conn credential region userName instancesRequest = do
 
         -- instaces from database ------
 
-        available <- Instance.sortByStatusAndTime currentTime 
+        available <- Instance.sortByStatusAndTime currentTime
                      <$> InstanceDB.findAvailable conn userName
         let (running, stopped') = List.partition Instance.isRunning $ take amount available
             stopped = map (set Instance.status  Instance.Running)
@@ -114,4 +114,7 @@ release :: PSQL.Connection -> User.Name -> Instance.ID -> IO ()
 release conn userName instanceID =
     SessionDB.delete conn userName instanceID
 
+
+releaseUser :: PSQL.Connection -> User.Name -> IO ()
+releaseUser conn userName = SessionDB.deleteByUser conn userName
 
