@@ -10,11 +10,12 @@ module Flowbox.Data.Channel where
 import Data.Map as Map
 
 import           Flowbox.Prelude
+import Debug.Trace as Dbg
 
 
 
-data ChannelTree name value = ChannelTree  { _children :: Map name (ChannelTree name value)
-                                           , _channel  :: Maybe value
+data ChannelTree name value = ChannelTree  { _channel  :: Maybe value
+                                           , _children :: Map name (ChannelTree name value)
                                            }
                             | EmptyNode
                             deriving (Show)
@@ -38,16 +39,19 @@ data ZipperError = UnreachableError
 -- == Tree ==
 
 empty :: Ord name => ChannelTree name value
-empty = ChannelTree mempty Nothing
+empty = ChannelTree Nothing mempty
 
 -- == Traversing ==
 
 zipper :: ChannelTree name value -> ZipperResult name value
 zipper t = return (t, [])
 
-goTo :: Ord name => name -> Zipper name value -> ZipperResult name value
-goTo _ (EmptyNode, _) = Left UnreachableError
-goTo name (ChannelTree tree chan, bs) = case Map.lookup name tree of
+tree :: Zipper name value -> ChannelTree name value
+tree (t, _) = t
+
+lookup :: (Show name , Ord name) => name -> Zipper name value -> ZipperResult name value
+lookup _ (EmptyNode, _) = Dbg.trace "UnreachableError" $ Left UnreachableError
+lookup name (ChannelTree chan tree, bs) = Dbg.trace ("lookup: " ++ show name) $ case Map.lookup name tree of
     Nothing    -> Left UnreachableError
     Just tree' -> Right (tree', Crumb name chan rest:bs)
     where rest = Map.delete name tree
@@ -55,8 +59,8 @@ goTo name (ChannelTree tree chan, bs) = case Map.lookup name tree of
 up :: Ord name => Zipper name value -> ZipperResult name value
 up (_, []) = Left UpUnreachableError
 up (t, Crumb name chan rest:bs) = case t of
-    EmptyNode -> Right (ChannelTree rest chan, bs)
-    node      -> Right (ChannelTree (Map.insert name node rest) chan, bs)
+    EmptyNode -> Right (ChannelTree chan rest, bs)
+    node      -> Right (ChannelTree chan (Map.insert name node rest), bs)
 
 top :: Ord name => Zipper name value -> ZipperResult name value
 top z = case up z of
@@ -70,15 +74,15 @@ top z = case up z of
 attach :: Ord name => name -> ChannelTree name value -> Zipper name value -> ZipperResult name value
 attach name new (t, bs) = case t of
     EmptyNode             -> Left AttachToEmpty
-    ChannelTree tree chan -> Right (ChannelTree (Map.insert name new tree) chan, bs)
+    ChannelTree chan tree -> Right (ChannelTree chan (Map.insert name new tree), bs)
 
 insert :: Ord name => Maybe value -> Zipper name value -> ZipperResult name value
 insert v (t, bs) = case t of
-    EmptyNode -> Right (ChannelTree mempty v, bs)
+    EmptyNode -> Right (ChannelTree v mempty, bs)
     _         -> Left InsertToExisting
 
 append :: Ord name => name -> Maybe value -> Zipper name value -> ZipperResult name value
-append name v = attach name (ChannelTree mempty v)
+append name v = attach name (ChannelTree v mempty)
 
 delete :: Zipper name value -> ZipperResult name value
 delete (t, bs) = case t of
@@ -90,19 +94,18 @@ delete (t, bs) = case t of
 clear :: Zipper name value -> ZipperResult name value
 clear (t, bs) = case t of
     EmptyNode          -> Left AlterEmptyError
-    ChannelTree tree _ -> Right (ChannelTree tree $ Nothing, bs)
+    ChannelTree _ tree -> Right (ChannelTree Nothing tree, bs)
 
 set :: value -> Zipper name value -> ZipperResult name value
 set v (t, bs) = case t of
     EmptyNode          -> Left AlterEmptyError
-    ChannelTree tree _ -> Right (ChannelTree tree $ Just v, bs)
+    ChannelTree _ tree -> Right (ChannelTree (Just v) tree, bs)
 
 modify :: (value -> value) -> Zipper name value -> ZipperResult name value
 modify f (t, bs) = case t of
     EmptyNode             -> Left AlterEmptyError
-    ChannelTree tree chan -> Right (ChannelTree tree $ fmap f chan, bs)
+    ChannelTree chan tree -> Right (ChannelTree (fmap f chan) tree, bs)
 
-get :: ZipperResult name value -> Either ZipperError (Maybe value)
-get (Left _) = Left GetNonExistant
-get (Right (EmptyNode, _)) = Left GetNonExistant
-get (Right (ChannelTree _ val, _)) = Right val
+get :: Zipper name value -> Either ZipperError (Maybe value)
+get (EmptyNode, _)         = Left GetNonExistant
+get (ChannelTree val _, _) = Right val

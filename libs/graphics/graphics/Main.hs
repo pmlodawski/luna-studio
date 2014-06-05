@@ -18,28 +18,15 @@ import qualified ParseArgs          as ParseArgs
 import qualified System.Environment as Env
 import qualified System.Exit        as Exit
 
---import           Geom2D                      (Point(..))
---import           Geom2D.CubicBezier.Basic    (CubicBezier(..), PathJoin(..), Path(..))
---import           Diagrams.Prelude            as Diag
---import           Diagrams.TwoD.Path.Metafont
-
 --import qualified Debug.Trace           as Dbg
 
---import qualified Flowbox.Graphics.Deprecated.Algorithms as G
---import           Flowbox.Graphics.Image                 (Image)
---import qualified Flowbox.Graphics.Image                 as Img
---import           Flowbox.Graphics.Image.Channel         (Select(..))
---import qualified Flowbox.Graphics.Image.Channel         as Channel
---import           Flowbox.Graphics.Image.Composition     (Mask (..), MaskSource(..), Premultiply (..))
---import qualified Flowbox.Graphics.Image.Composition     as Comp
---import qualified Flowbox.Graphics.Image.Color           as Img
---import qualified Flowbox.Graphics.Image.IO              as Img
---import qualified Flowbox.Graphics.Image.Raster          as Img
---import qualified Flowbox.Graphics.Image.Repr            as Repr
---import qualified Flowbox.Graphics.Shape                 as Shape
---import           Flowbox.Graphics.Utils                 (Range(..))
---import qualified Flowbox.Graphics.Utils                 as U
-import           Flowbox.Prelude                        as P
+import Data.Array.Accelerate as A
+
+import           Flowbox.Data.Channel                 as DC
+import           Flowbox.Math.Matrix                  as M
+import           Flowbox.Graphics.Image.Channel       as C
+import           Flowbox.Graphics.Image.View          as V
+import           Flowbox.Prelude                      as P
 
 --imgtest img = do
 --    let getDouble image = Img.toDouble <$> Repr.decompose image
@@ -147,6 +134,16 @@ main
         --    --Right val -> do Img.writeToBMP (ParseArgs.run backend) fileOut val
         --    Right val -> do Img.writeToBMP (backendRun) fileOut val
         --                    return ()
+
+        let testArray = A.use $ A.fromList (Z :. 2 :. 2) [1,2,3,4] :: Acc (Array DIM2 Int)
+            testMatrix = Delayed testArray
+            testChanData = FlatData testMatrix
+            testChan = ChannelInt testChanData
+            testView = RGB "rgbImageMadafaka" EmptyNode
+            testView' = V.insert testView "layer1" testChan
+
+        print testView'
+
         return ()
 
         -- BEZIER TESTS

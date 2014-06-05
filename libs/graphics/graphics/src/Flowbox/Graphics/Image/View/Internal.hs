@@ -40,11 +40,16 @@ get :: View v => v -> Channel.Name -> Image.Result (Maybe Channel)
 get v descriptor = case result of
     Left _    -> Left $ ChannelLookupError descriptor
     Right val -> Right val
-    where result  = ChanTree.get $ P.foldr f z nodes
-          f p acc = acc >>= goTo p
-          z       = zipper t
-          t       = v ^. channels
+    where result  = P.foldr f z nodes >>= ChanTree.get
+          f p acc = acc >>= ChanTree.lookup p
+          z       = zipper $ v ^. channels
           nodes   = splitOn "." descriptor
 
---insert :: View v => v -> String -> Channel -> Image.Result v
---insert v descriptor val = rec parts ()
+insert :: View v => v -> Channel.Name -> Channel -> Image.Result v
+insert v descriptor val = case result of
+    Left _    -> Left $ ChannelLookupError descriptor
+    Right val -> return $ v & channels .~ ChanTree.tree val
+    where result  = P.foldr f z (init nodes) >>= ChanTree.append (last nodes) (Just val)
+          f p acc = acc >>= ChanTree.lookup p
+          z       = zipper $ v ^. channels
+          nodes   = splitOn "." descriptor

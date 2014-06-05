@@ -19,6 +19,7 @@ import           Flowbox.Prelude
 data RGB = RGB { _name'     :: View.Name
                , _channels' :: ChannelTree Channel.Name Channel
                }
+         deriving (Show)
 makeLenses ''RGB
 
 instance View RGB where
