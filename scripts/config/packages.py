@@ -102,7 +102,7 @@ pkgDb = PathDict(
        , 'tools/batch/plugins/plugin-manager'  : HProject   ('flowbox-plugin-manager'       , os.path.join ('tools' , 'batch', 'plugins', 'plugin-manager')  , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'tools/batch/plugins/project-manager' : HProject   ('flowbox-project-manager'      , os.path.join ('tools' , 'batch', 'plugins', 'project-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna', 'libs/batch'])
        , 'tools/batch/plugins/s3-file-manager' : HProject   ('flowbox-s3-file-manager'      , os.path.join ('tools' , 'batch', 'plugins', 's3-file-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna', 'libs/batch', 'libs/aws'])
-       , 'tools/initializer'                   : HProject   ('flowbox-initializer'          , os.path.join ('tools' , 'initializer')                         , 'tools'   , ['libs/utils', 'libs/config'])
+       , 'tools/initializer'                   : HProject   ('flowbox-initializer'          , os.path.join ('tools' , 'initializer')                         , 'tools'   , ['libs/utils', 'libs/config'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
        , 'tools/lunac'                         : HProject   ('flowbox-lunac'                , os.path.join ('tools' , 'lunac')                               , 'tools'   , ['libs/utils', 'libs/config', 'tools/initializer', 'libs/luna'])
        , 'tools/wrappers'                      : HProject   ('flowbox-wrappers'             , os.path.join ('tools' , 'wrappers')                            , 'wrappers', ['libs/config'])
        })
