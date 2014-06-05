@@ -7,13 +7,9 @@
 
 module Flowbox.AccountManager.Handler.User where
 
-import Control.Monad.IO.Class     (liftIO)
-import Control.Monad.Trans.Either
-
 import           Flowbox.AccountManager.Context                      (Context)
 import qualified Flowbox.AccountManager.Context                      as Context
-import qualified Flowbox.AWS.EC2.EC2                                 as EC2
-import qualified Flowbox.AWS.User.Session                            as Session
+import qualified Flowbox.AWS.AccountManager                          as AccountManager
 import           Flowbox.Prelude                                     hiding (Context, error)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -37,7 +33,7 @@ register ctx (User_Register.Args tuserName tpassword) = do
     logger info "called User::register"
     let userName = decodeP tuserName
         password = decodeP tpassword
-    Session.register userName password $ Context.database ctx
+    AccountManager.register (ctx ^. Context.database) userName password
     return User_Register.Result
 
 
@@ -46,8 +42,10 @@ login ctx (User_Login.Args tuserName tpassword) = do
     logger info "called User::login"
     let userName = decodeP tuserName
         password = decodeP tpassword
-    ip  <- EitherT $ EC2.runEC2InRegion (Context.credential ctx) (Context.region ctx)
-                   $ Session.login userName password (Context.pool ctx) (Context.database ctx)
+    ip <- AccountManager.login (ctx ^. Context.database)
+                               (ctx ^. Context.credential)
+                               (ctx ^. Context.region)
+                                userName password
     return $ User_Login.Result $ encodeP $ show ip
 
 
@@ -56,6 +54,5 @@ logout ctx (User_Logout.Args tuserName tpassword) = do
     logger info "called User::logout"
     let userName = decodeP tuserName
         password = decodeP tpassword
-    EitherT $ liftIO $ EC2.runEC2InRegion (Context.credential ctx) (Context.region ctx)
-                     $ Session.logout userName password (Context.pool ctx) (Context.database ctx)
+    AccountManager.logout (ctx ^. Context.database) userName password
     return $ User_Logout.Result
