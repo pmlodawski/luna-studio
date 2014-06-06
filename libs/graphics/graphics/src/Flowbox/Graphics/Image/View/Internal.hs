@@ -36,6 +36,9 @@ class View v where
 
 -- TODO: ukryć konstruktory
 
+empty :: (View view, Ord name) => (name -> ChannelTree name value -> view) -> name -> view
+empty v name = v name ChanTree.empty
+
 get :: View v => v -> Channel.Name -> Image.Result (Maybe Channel)
 get v descriptor = case result of
     Left _    -> Left $ ChannelLookupError descriptor
@@ -45,11 +48,11 @@ get v descriptor = case result of
           z       = zipper $ v ^. channels
           nodes   = splitOn "." descriptor
 
-insert :: View v => v -> Channel.Name -> Channel -> Image.Result v
-insert v descriptor val = case result of
+insert :: View view => Channel.Name -> Maybe Channel -> view -> Image.Result view
+insert descriptor val v = case result of
     Left _    -> Left $ ChannelLookupError descriptor
-    Right val -> return $ v & channels .~ ChanTree.tree val
-    where result  = P.foldr f z (init nodes) >>= ChanTree.append (last nodes) (Just val)
+    Right v'  -> return $ v & channels .~ ChanTree.tree v'
+    where result  = P.foldr f z (init nodes) >>= ChanTree.append (last nodes) val
           f p acc = acc >>= ChanTree.lookup p
           z       = zipper $ v ^. channels
           nodes   = splitOn "." descriptor

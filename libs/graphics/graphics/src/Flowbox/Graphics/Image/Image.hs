@@ -15,6 +15,6 @@ import           Flowbox.Prelude
 
 
 data Image view = Image { _views       :: Map View.Name view
-                        , _defaultView :: View.Name
+                        , _defaultView :: View.Select
                         }
 makeLenses ''Image

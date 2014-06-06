@@ -18,4 +18,4 @@ class View view => ViewRGB view where
     toRGB :: view -> Image.Result RGB
 
 instance ViewRGB RGB where
-    toRGB = return . id
+    toRGB = return

@@ -139,8 +139,8 @@ main
             testMatrix = Delayed testArray
             testChanData = FlatData testMatrix
             testChan = ChannelInt testChanData
-            testView = RGB "rgbImageMadafaka" EmptyNode
-            testView' = V.insert testView "layer1" testChan
+            testView = V.empty RGB "rgbImageMadafaka"
+            testView' = V.insert "layer1" Nothing testView >>= V.insert "layer1.rgba" (Just testChan)
 
         print testView'
 
