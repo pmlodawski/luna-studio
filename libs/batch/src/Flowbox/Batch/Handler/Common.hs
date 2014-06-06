@@ -231,13 +231,13 @@ setGraph (newGraph, newPM) bc libraryID projectID batch = do
     ast  <- Luna.runIO $ GraphParser.run newGraph newPM expr
 
     newMaxID <- Luna.runIO $ MaxID.runExpr ast
-    fixedAst <- Luna.runIO $ IDFixer.runExpr newMaxID False ast
+    fixedAst <- Luna.runIO $ IDFixer.runExpr newMaxID Nothing False ast
 
     loggerIO debug $ show newGraph
     loggerIO debug $ show newPM
     loggerIO debug $ ppShow fixedAst
-    batch <- setFunctionFocus fixedAst bc libraryID projectID batch
-    setPropertyMap newPM libraryID projectID batch
+    newBatch <- setFunctionFocus fixedAst bc libraryID projectID batch
+    setPropertyMap newPM libraryID projectID newBatch
 
 
 getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (GraphView, PropertyMap)
@@ -414,7 +414,7 @@ graphOp bc libID projectID operation = astOp libID projectID (\batch ast propert
     ast' <- Luna.runIO $ GraphParser.run newGraph newPM expr
 
     newMaxID <- Luna.runIO $ MaxID.runExpr ast'
-    fixedAst <- Luna.runIO $ IDFixer.runExpr newMaxID False ast'
+    fixedAst <- Luna.runIO $ IDFixer.runExpr newMaxID Nothing False ast'
 
     loggerIO debug $ show newGraph
     loggerIO debug $ show newPM

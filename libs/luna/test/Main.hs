@@ -9,7 +9,6 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 import           Control.Applicative
-import           Control.Lens               hiding (Zipper)
 import           Control.Monad.RWS          hiding (join)
 import           Control.Monad.State        hiding (join)
 import           Control.Monad.Trans.Either
@@ -51,6 +50,7 @@ import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt  
 import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash                             as Hash
 import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                               as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser                      as Parser
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser                      as Parser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder                     as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser                       as GraphParser
@@ -65,12 +65,7 @@ import qualified Flowbox.System.UniPath                                         
 import           Flowbox.Text.Show.Hs                                                    (hsShow)
 import qualified Flowbox.Text.Show.Pretty                                                as PP
 
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb as ASTCrumb
 
-import Control.Lens hiding (Zipper)
-
-
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
 
 genProject :: String -> Config.Config
 genProject name = let
