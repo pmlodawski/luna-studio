@@ -45,9 +45,10 @@ class View v where
     modify   :: v -> ChanTree -> Image.Result v
     name     :: v -> Name -- Lens' v Name
     channels :: v -> ChanTree -- Lens' v (ChannelTree Channel.Name Channel)
+    map      :: (Channel -> Channel) -> v -> Image.Result v
+    map f v = modify v $ fmap f (channels v)
     --viewBounds :: Bounds
     --pixelAspectRatio :: AspectRatio
-
 
 -- TODO: ukryć konstruktory
 

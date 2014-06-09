@@ -35,6 +35,12 @@ data ZipperError = UnreachableError
                  | GetNonExistant
                  deriving (Show, Eq)
 
+-- == Instances ==
+
+instance Functor (ChannelTree name) where
+    fmap _ EmptyNode = EmptyNode
+    fmap f (ChannelTree chan children) = ChannelTree (fmap f chan) $ (fmap . fmap) f children
+
 -- == Tree ==
 
 empty :: Ord name => ChannelTree name value
