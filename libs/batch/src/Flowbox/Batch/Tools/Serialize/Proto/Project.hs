@@ -37,7 +37,7 @@ projectFile = "project.flowbox"
 
 saveProject :: Project -> Handle -> IO ()
 saveProject project h =
-    ByteString.hPut h $ Proto.messagePut $ (encode (-1::Project.ID, project) ) ^. _1
+    ByteString.hPut h $ Proto.messagePut $ encode (-1::Project.ID, project) ^. _1
 
 
 getProject :: Handle -> IO Project

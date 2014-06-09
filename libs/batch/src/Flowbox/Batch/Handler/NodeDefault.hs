@@ -22,7 +22,7 @@ import           Flowbox.Prelude
 
 
 nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO DefaultsMap
-nodeDefaults nodeID bc libID projectID  = readonly . graphViewOp bc libID projectID (\_ graph propertyMap _ -> do
+nodeDefaults nodeID bc libID projectID  = readonly . graphViewOp bc libID projectID (\_ graph propertyMap _ ->
     return ((graph, propertyMap), DefaultsMap.getDefaultsMap nodeID propertyMap))
 
 

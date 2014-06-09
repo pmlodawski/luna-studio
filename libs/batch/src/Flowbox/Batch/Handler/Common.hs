@@ -7,12 +7,12 @@
 
 module Flowbox.Batch.Handler.Common where
 
-import Control.Monad.RWS
-import Text.Show.Pretty
+import           Control.Exception  (IOException)
+import qualified Control.Exception  as Exception
+import           Control.Monad.RWS
+import qualified System.Environment as Environment
+import           Text.Show.Pretty
 
-import qualified Control.Concurrent                                        as Concurrent
-import           Control.Exception                                         (IOException)
-import qualified Control.Exception                                         as Exception
 import           Flowbox.Batch.Batch                                       (Batch)
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Process.Map                                 (ProcessMap)
@@ -20,6 +20,7 @@ import           Flowbox.Batch.Project.Project                             (Proj
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.ProjectManager                      (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                      as ProjectManager
+import qualified Flowbox.Control.Concurrent                                as Concurrent
 import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Data.AST.Common                              as AST
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs                   (Breadcrumbs)
@@ -53,7 +54,7 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as Gr
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import           Flowbox.Prelude                                           hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified System.Environment                                        as Environment
+
 
 
 loggerIO :: LoggerIO
@@ -63,12 +64,10 @@ loggerIO = getLoggerIO "Flowbox.Batch.Handler.Common"
 safeInterpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
 safeInterpretLibrary libID projectID batch = do
     args <- Environment.getArgs
-    if "--no-auto-interpreter" `elem` args
-        then return ()
-        else do _ <- Concurrent.forkIO $ Exception.catch
+    unless ("--no-auto-interpreter" `elem` args) $
+            Concurrent.forkIO_ $ Exception.catch
                                  (interpretLibrary libID projectID batch)
                                  (\e -> loggerIO error $ "Interpret failed: " ++ show (e :: IOException))
-                return ()
 
 
 interpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
@@ -79,7 +78,7 @@ interpretLibrary libID projectID batch = do
         imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
     maxID <- Luna.runIO $ MaxID.run ast
     [hsc] <- Luna.runIO $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
-    let code = unlines $ snd $ break (=="-- body --") $ lines $ Source.code hsc
+    let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ Source.code hsc)
     Interpreter.runSource cfg imports code "main"
 
 
@@ -172,7 +171,7 @@ setFocus :: (Applicative m, Monad m) => Focus -> Breadcrumbs -> Library.ID -> Pr
 setFocus newFocus bc libraryID projectID batch = do
     m      <- getAST libraryID projectID batch
     zipper <- Zipper.focusBreadcrumbs' bc m
-    newM   <- Zipper.modify (\_ -> newFocus) zipper >>= Zipper.close
+    newM   <- Zipper.modify (const newFocus) zipper >>= Zipper.close
     setAST newM libraryID projectID batch
 
 
@@ -185,9 +184,7 @@ getModuleFocus bc libraryID projectID batch = do
 
 
 setModuleFocus :: (Applicative m, Monad m) => Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
-setModuleFocus newModule bc libraryID projectID batch =
-    setFocus (Focus.ModuleFocus newModule) bc libraryID projectID batch
-
+setModuleFocus newModule = setFocus (Focus.ModuleFocus newModule)
 
 
 getFunctionFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Expr
@@ -199,8 +196,7 @@ getFunctionFocus bc libraryID projectID batch = do
 
 
 setFunctionFocus :: (Applicative m, Monad m) => Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
-setFunctionFocus newFunction bc libraryID projectID batch =
-    setFocus (Focus.FunctionFocus newFunction) bc libraryID projectID batch
+setFunctionFocus newFunction = setFocus (Focus.FunctionFocus newFunction)
 
 
 getClassFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Expr
@@ -212,8 +208,7 @@ getClassFocus bc libraryID projectID batch = do
 
 
 setClassFocus :: (Applicative m, Monad m) => Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
-setClassFocus newClass bc libraryID projectID batch =
-    setFocus (Focus.ClassFocus newClass) bc libraryID projectID batch
+setClassFocus newClass = setFocus (Focus.ClassFocus newClass)
 
 
 getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Graph, PropertyMap)
@@ -350,7 +345,7 @@ astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast pm -
     maxID <- Luna.runIO $ MaxID.run ast
     (newFocus, r) <- operation batch focus maxID
 
-    newAst <- Zipper.modify (\_ -> newFocus) zipper >>= Zipper.close
+    newAst <- Zipper.modify (const newFocus) zipper >>= Zipper.close
     return ((newAst, pm), r))
 
 

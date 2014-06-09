@@ -35,7 +35,7 @@ projects batch = ProjectManager.labNodes (Batch.projectManager batch)
 
 
 projectByID :: (Applicative m, Monad m) => Project.ID -> Batch -> m Project
-projectByID projectID = readonly . projectOp projectID (\_ project -> do
+projectByID projectID = readonly . projectOp projectID (\_ project ->
     return (project, project))
 
 

@@ -7,8 +7,10 @@
 
 module Flowbox.Batch.Handler.Graph where
 
+import Control.Monad (unless)
+
 import           Flowbox.Batch.Batch                                 (Batch)
-import           Flowbox.Batch.Handler.Common                        (graphViewOp, noresult, readonly, readonlyNodeOp)
+import           Flowbox.Batch.Handler.Common                        (readonlyNodeOp)
 import qualified Flowbox.Batch.Handler.Common                        as Common
 import qualified Flowbox.Batch.Project.Project                       as Project
 import           Flowbox.Control.Error                               (assert)
@@ -38,7 +40,7 @@ nodesGraph bc libID projectID batch = fst <$> Common.getGraphView bc libID proje
 
 
 nodeByID :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Node
-nodeByID nodeID bc libID projectID = readonlyNodeOp nodeID bc libID projectID (\_ node -> do
+nodeByID nodeID bc libID projectID = readonlyNodeOp nodeID bc libID projectID (\_ node ->
     return node)
 
 
@@ -51,11 +53,9 @@ addNode node bc libID projectID batch = do
     let newID     = maxID + 1
         fixedNode = OutputName.fixEmpty node newID
         newGraph  = GraphView.insNode (newID, fixedNode) graph
-    batch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
-    if node ^. Node.expr == "displayP"
-        then return ()
-        else Common.safeInterpretLibrary libID projectID batch
-    return (batch, newID)
+    newBatch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    unless (node ^. Node.expr == "displayP") $ Common.safeInterpretLibrary libID projectID newBatch
+    return (newBatch, newID)
 
 
 updateNode :: (Node.ID, Node)
@@ -68,10 +68,9 @@ updateNode (nodeID, newNode) bc libID projectID batch = do
         fixedNode = OutputName.fixEmpty newNode newID
         newGraph  = GraphView.replaceNode (newID, fixedNode) nodeID graph
         newPropertyMap = PropertyMap.move nodeID newID propertyMap
-    batch <- Common.setGraphView (newGraph, newPropertyMap) bc libID projectID batch
-    Common.safeInterpretLibrary libID projectID batch
-    return (batch, newID)
-
+    newBatch <- Common.setGraphView (newGraph, newPropertyMap) bc libID projectID batch
+    Common.safeInterpretLibrary libID projectID newBatch
+    return (newBatch, newID)
 
 
 updateNodeInPlace :: (Node.ID, Node)
@@ -90,9 +89,9 @@ removeNode nodeID bc libID projectID batch = do
     GraphView.gelem nodeID graph `assert` ("Wrong 'nodeID' = " ++ show nodeID)
     let newGraph = GraphView.delNode nodeID graph
         newPropertyMap = PropertyMap.delete nodeID propertyMap
-    batch <- Common.setGraphView (newGraph, newPropertyMap) bc libID projectID batch
-    Common.safeInterpretLibrary libID projectID batch
-    return batch
+    newBatch <- Common.setGraphView (newGraph, newPropertyMap) bc libID projectID batch
+    Common.safeInterpretLibrary libID projectID newBatch
+    return newBatch
 
 
 connect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
@@ -103,9 +102,9 @@ connect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch = do
     GraphView.gelem dstNodeID graph `assert` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
     GraphView.isNotAlreadyConnected graph dstNodeID dstPort `assert` "Unable to connect: Port is already connected"
     let newGraph = GraphView.insEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) graph
-    batch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
-    Common.safeInterpretLibrary libID projectID batch
-    return batch
+    newBatch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    Common.safeInterpretLibrary libID projectID newBatch
+    return newBatch
 
 
 disconnect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
@@ -115,6 +114,6 @@ disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch = do
     GraphView.gelem srcNodeID graph `assert` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
     GraphView.gelem dstNodeID graph `assert` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
     let newGraph = GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) graph
-    batch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
-    Common.safeInterpretLibrary libID projectID batch
-    return batch
+    newBatch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    Common.safeInterpretLibrary libID projectID newBatch
+    return newBatch

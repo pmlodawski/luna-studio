@@ -16,5 +16,4 @@ import           Flowbox.Prelude
 
 
 initialize :: Batch -> IO ()
-initialize batch = do
-    Initializer.initializeIfNeeded $ Batch.config batch
+initialize batch = Initializer.initializeIfNeeded $ Batch.config batch

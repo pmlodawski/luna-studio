@@ -50,7 +50,7 @@ libraries projectID = readonly . libManagerOp projectID (\_ libManager ->
 
 
 libraryByID :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m Library
-libraryByID libID projectID = readonly . libraryOp libID projectID (\_ library -> do
+libraryByID libID projectID = readonly . libraryOp libID projectID (\_ library ->
     return (library, library))
 
 
@@ -62,7 +62,7 @@ createLibrary name path projectID = libManagerOp projectID (\_ libManager -> do
 
 
 loadLibrary :: UniPath -> Project.ID -> Batch -> IO (Batch, (Library.ID, Library))
-loadLibrary path projectID = libManagerOp projectID (\_ libManager -> do
+loadLibrary path projectID = libManagerOp projectID (\_ libManager ->
     LibManager.loadLibrary path libManager)
 
 
@@ -111,8 +111,8 @@ runLibrary libID projectID = projectOp projectID (\_ project -> do
     let projectPath = Project.path project
         libs        = Project.libs project
         processMap  = Project.processMap project
-    library <- LibManager.lab libs libID <?> "Wrong libID=" ++ (show libID)
-    name    <- UniPath.toUnixString <$> (UniPath.expand $ UniPath.append (Library.name library) projectPath)
+    library <- LibManager.lab libs libID <?> "Wrong libID=" ++ show libID
+    name    <- UniPath.toUnixString <$> UniPath.expand (UniPath.append (Library.name library) projectPath)
     let command = Platform.dependent name (name ++ ".exe") name
     --    noStandardInput = ""
     --    noArguments     = [] --TODO [PM] : reimplement all this method to support real programs
