@@ -16,7 +16,7 @@ import Flowbox.Prelude
 
 
 toSeconds :: NominalDiffTime -> Int
-toSeconds nominalDiffTime = (fromEnum nominalDiffTime) `div` e12
+toSeconds nominalDiffTime = fromEnum nominalDiffTime `div` e12
 
 
 e12 :: Int

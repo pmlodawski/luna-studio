@@ -20,6 +20,7 @@ module Flowbox.Control.Error (
 import           Control.Error          hiding (runScript)
 import           Control.Exception      (Exception)
 import qualified Control.Exception      as Exc
+import           Control.Monad          (unless)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 
 import Flowbox.Prelude
@@ -48,12 +49,8 @@ action <??> m = do
         Nothing -> fail m
 
 
-
-
 assert :: Monad m => Bool -> String -> m ()
-assert condition msg = if condition
-    then return ()
-    else fail msg
+assert condition msg = unless condition $ fail msg
 
 
 -- FIXME [PM] : find better name

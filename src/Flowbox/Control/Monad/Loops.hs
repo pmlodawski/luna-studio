@@ -10,6 +10,7 @@ module Flowbox.Control.Monad.Loops (
     untilRight,
 ) where
 
+import Control.Monad       (liftM)
 import Control.Monad.Loops as X
 
 import Flowbox.Prelude
@@ -20,8 +21,9 @@ repeatUntil :: Monad m => m a -> (a -> Bool) -> m [a]
 repeatUntil action predicate = do
     result <- action
     if predicate result
-        then repeatUntil action predicate >>= return . (:) result
+        then liftM ((:) result) (repeatUntil action predicate)
         else return [result]
+
 
 untilRight :: Monad m => m (Either a b) -> (a -> m ()) -> m b
 untilRight action errorHandler = do

@@ -56,7 +56,7 @@ copyDirectoryRecursive usrc udst = do
                     isFile <- doesFileExist sname
                     if isFile
                         then copyFile sname dname
-                        else fail $ "Failed to copy '" ++ (UniPath.toUnixString sname) ++  "' not implmented record type."
+                        else fail $ "Failed to copy '" ++ UniPath.toUnixString sname ++  "' not implmented record type."
 
     src <- UniPath.expand usrc
     dst <- UniPath.expand udst
