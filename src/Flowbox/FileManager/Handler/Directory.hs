@@ -40,12 +40,12 @@ loggerIO = getLoggerIO "Flowbox.FileManager.Handler.Directory"
 
 
 upload :: Upload.Request -> IO Upload.Status
-upload (Upload.Request tpath) = do
+upload (Upload.Request tpath) =
     return $ Upload.Status tpath
 
 
 fetch :: Fetch.Request -> IO Fetch.Status
-fetch (Fetch.Request tpath) = do
+fetch (Fetch.Request tpath) =
     return $ Fetch.Status tpath
 
 
