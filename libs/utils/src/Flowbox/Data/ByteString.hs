@@ -18,6 +18,6 @@ import           Flowbox.Prelude
 splitFirsts :: Int -> Char -> ByteString -> [ByteString]
 splitFirsts count' sep list =
     if count' > 1
-        then a : (splitFirsts (count' - 1) sep $ Char8.tail b)
+        then a : splitFirsts (count' - 1) sep (Char8.tail b)
         else [list]
     where (a, b) = Char8.break (== sep) list

@@ -32,7 +32,7 @@ logger = getLoggerIO "Flowbox.ProjectManager.Handler"
 
 
 handlerMap :: ContextRef -> HandlerMap
-handlerMap ctx callback = HandlerMap.fromList $
+handlerMap ctx callback = HandlerMap.fromList
     [ ("project.list.request"          , call Topic.status $ ProjectHandler.list ctx)
     , ("project.lookup.request"        , call Topic.status $ ProjectHandler.lookup ctx)
     , ("project.create.request"        , call Topic.update $ ProjectHandler.create ctx)

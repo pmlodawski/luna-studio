@@ -9,6 +9,7 @@
 
 module Flowbox.Bus.RPC.Server.Processor where
 
+import Control.Monad          (liftM)
 import Control.Monad.IO.Class (MonadIO)
 
 import           Flowbox.Bus.Data.Message     (Message)
@@ -27,7 +28,7 @@ logger = getLoggerIO "Flowbox.Bus.RPC.Server.Processor"
 
 
 singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
-singleResult f a = f a >>= return . mkList
+singleResult f a = liftM mkList $ f a
 
 
 process :: HandlerMap -> Message -> IO [Message]

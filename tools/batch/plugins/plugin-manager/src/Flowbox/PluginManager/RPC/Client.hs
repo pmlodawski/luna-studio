@@ -22,7 +22,6 @@ import qualified Flowbox.PluginManager.Plugin.Plugin                  as Plugin
 import           Flowbox.PluginManager.Prefix                         (Prefix)
 import qualified Flowbox.PluginManager.Prefix                         as Prefix
 import           Flowbox.PluginManager.Proto.Plugin                   ()
-import           Flowbox.PluginManager.Proto.Plugin                   ()
 import qualified Flowbox.PluginManager.RPC.Topic                      as Topic
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -117,5 +116,5 @@ ping prefix = do
 
 
 waitForPingReply :: Prefix -> Bus ()
-waitForPingReply prefix = do
+waitForPingReply prefix =
     Loops.untilRight (Bus.withTimeout (ping prefix) 1000000) (logger debug)

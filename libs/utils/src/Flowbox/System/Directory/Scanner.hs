@@ -22,4 +22,4 @@ scan rootPath predicate = filter predicate <$> Directory.getDirectoryRecursive r
 
 scanByExts :: UniPath -> String -> IO [UniPath]
 scanByExts rootPath extension = scan rootPath hasExtension where
-    hasExtension path = (UniPath.extension path) == extension
+    hasExtension path = UniPath.extension path == extension

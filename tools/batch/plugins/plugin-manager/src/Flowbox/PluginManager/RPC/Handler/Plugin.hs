@@ -48,7 +48,7 @@ add ctxRef (Add.Request tplugin) = do
         id      = PluginMap.uniqueID plugins
     plugin <- decode tplugin
     IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.insert id (PluginHandle.mk plugin) plugins}
-    return $ Add.Update (tplugin) (encodeP id)
+    return $ Add.Update tplugin (encodeP id)
 
 
 remove :: ContextRef -> Remove.Request -> IO Remove.Update

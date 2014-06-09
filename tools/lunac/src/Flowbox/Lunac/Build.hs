@@ -34,7 +34,7 @@ logger = getLogger "Flowbox.Lunac.Build"
 
 run :: Config -> Cmd.Options -> IO ()
 run cfg op = do
-    let diag = Diagnostics 
+    let diag = Diagnostics
                          ( Cmd.dump_ast  op || Cmd.dump_all op )
                          ( Cmd.dump_aa   op || Cmd.dump_all op )
                          ( Cmd.dump_ssa  op || Cmd.dump_all op )
@@ -69,7 +69,7 @@ build cfg op diag filePath = do
         -- FIXME[pm]: Why it BLOWS UP when we enable -Wall?
         ghcFlags = ["-threaded", "-Odph", "-optlo-O3"] ++ (if Cmd.ddebug op
                          then ["-DDEBUG"]
-                         else [] 
+                         else []
                    )
         cabalFlags = case Cmd.global op of
                         True  -> ["--global"]

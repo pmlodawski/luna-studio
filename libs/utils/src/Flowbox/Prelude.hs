@@ -108,7 +108,7 @@ whenRight e f = case e of
 
 
 whenRight' :: (Monad m) => Either a b -> m () -> m ()
-whenRight' e f = whenRight e (\_ -> f)
+whenRight' e f = whenRight e $ const f
 
 -- trenary operator
 data Cond a = a :? a

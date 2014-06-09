@@ -81,8 +81,8 @@ open ctx (Open.Request tpath) = do
 
 
 modify :: ContextRef -> Modify.Request -> IO Modify.Update
-modify ctx  (Modify.Request tproject) = do
-    projectWithID <- (decode (tproject, LibManager.empty, ProcessMap.empty) :: IO (Project.ID, Project))
+modify ctx (Modify.Request tproject) = do
+    projectWithID <- decode (tproject, LibManager.empty, ProcessMap.empty) :: IO (Project.ID, Project)
     batch         <- IORef.readIORef ctx
     newBatch      <-  BatchP.updateProject projectWithID batch
     IORef.writeIORef ctx newBatch

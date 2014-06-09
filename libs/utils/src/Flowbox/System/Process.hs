@@ -18,6 +18,7 @@ module Flowbox.System.Process (
 
 import           Control.Applicative
 import qualified Control.Exception   as Exception
+import           Data.Foldable       (forM_)
 import qualified System.Exit         as Exit
 import qualified System.IO           as IO
 import           System.Process      hiding (readProcess, readProcessWithExitCode, runProcess)
@@ -42,7 +43,7 @@ runProcess' = Process.runProcess
 
 runProcess :: Maybe UniPath -> String -> [String] -> IO ()
 runProcess upath command args = do
-    let commandName = command ++ " " ++ (join " " args)
+    let commandName = command ++ " " ++ join " " args
     workingDir <- case upath of
         Nothing -> pure Nothing
         Just p  -> Just . UniPath.toUnixString <$> UniPath.expand p
@@ -53,7 +54,7 @@ runProcess upath command args = do
     (_, e)   <- readOutput out err
     exitCode <- Process.waitForProcess pid
     if exitCode /= Exit.ExitSuccess
-        then fail $ "'" ++ commandName ++ "' returned with exit code: " ++ (show exitCode) ++ "\n" ++ e
+        then fail $ "'" ++ commandName ++ "' returned with exit code: " ++ show exitCode ++ "\n" ++ e
         else pure ()
 
 
@@ -83,9 +84,7 @@ readProcessWithExitCode mpath command args input = do
 
 
 conditionalChDir :: Maybe UniPath -> IO ()
-conditionalChDir mpath = case mpath of
-    Nothing   -> return ()
-    Just path -> Directory.setCurrentDirectory path
+conditionalChDir mpath = forM_ mpath Directory.setCurrentDirectory
 
 
 readOutput :: IO.Handle -> IO.Handle -> IO (String, String)

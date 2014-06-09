@@ -27,4 +27,4 @@ data Style = Style { layer     :: ConsoleLayer
 toSGR :: Style -> [SGR]
 toSGR s = case s of
         Style l i c -> pure $ ANSI.SetColor l i c
-        Reset       -> pure $ ANSI.Reset
+        Reset       -> pure   ANSI.Reset

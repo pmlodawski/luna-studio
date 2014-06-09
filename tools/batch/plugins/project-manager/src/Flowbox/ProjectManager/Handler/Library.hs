@@ -45,7 +45,7 @@ list ctx (List.Request tprojectID) = do
     let projectID = decodeP tprojectID
     batch <- IORef.readIORef ctx
     libs <- BatchL.libraries projectID batch
-    return $ List.Status (fmap shrinkLibrary $ encodeList libs) tprojectID
+    return $ List.Status (shrinkLibrary <$> encodeList libs) tprojectID
 
 
 lookup :: ContextRef -> Lookup.Request -> IO Lookup.Status

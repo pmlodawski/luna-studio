@@ -51,4 +51,4 @@ instance Convert (Plugin.ID, PluginInfo) Gen.PluginInfo where
         id     <- decodeP <$> mtid     <?> "Failed to decode PluginInfo: 'id' field is missing"
         plugin <- decode  =<< mtplugin <?> "Failed to decode PluginInfo: 'plugin' field is missing"
         status <- decodeP <$> mtstatus <?> "Failed to decode PluginInfo: 'status' field is missing"
-        return $ (id, PluginInfo plugin status)
+        return (id, PluginInfo plugin status)

@@ -27,21 +27,21 @@ logger = getLoggerIO "Flowbox.FileManager.Handler"
 
 
 handlerMap ::  HandlerMap
-handlerMap callback = HandlerMap.fromList $
-    [ ("filesystem.directory.fetch.request" , call Topic.status $ DirectoryHandler.fetch)
-    , ("filesystem.directory.upload.request", call Topic.status $ DirectoryHandler.upload)
-    , ("filesystem.directory.exists.request", call Topic.update $ DirectoryHandler.exists)
-    , ("filesystem.directory.create.request", call Topic.update $ DirectoryHandler.create)
-    , ("filesystem.directory.list.request"  , call Topic.status $ DirectoryHandler.list)
-    , ("filesystem.directory.remove.request", call Topic.update $ DirectoryHandler.remove)
-    , ("filesystem.directory.copy.request"  , call Topic.update $ DirectoryHandler.copy)
-    , ("filesystem.directory.move.request"  , call Topic.update $ DirectoryHandler.move)
-    , ("filesystem.file.fetch.request" , call Topic.status $ FileHandler.fetch)
-    , ("filesystem.file.upload.request", call Topic.status $ FileHandler.upload)
-    , ("filesystem.file.exists.request", call Topic.update $ FileHandler.exists)
-    , ("filesystem.file.remove.request", call Topic.update $ FileHandler.remove)
-    , ("filesystem.file.copy.request"  , call Topic.update $ FileHandler.copy)
-    , ("filesystem.file.move.request"  , call Topic.update $ FileHandler.move)
+handlerMap callback = HandlerMap.fromList
+    [ ("filesystem.directory.fetch.request" , call Topic.status DirectoryHandler.fetch)
+    , ("filesystem.directory.upload.request", call Topic.status DirectoryHandler.upload)
+    , ("filesystem.directory.exists.request", call Topic.update DirectoryHandler.exists)
+    , ("filesystem.directory.create.request", call Topic.update DirectoryHandler.create)
+    , ("filesystem.directory.list.request"  , call Topic.status DirectoryHandler.list)
+    , ("filesystem.directory.remove.request", call Topic.update DirectoryHandler.remove)
+    , ("filesystem.directory.copy.request"  , call Topic.update DirectoryHandler.copy)
+    , ("filesystem.directory.move.request"  , call Topic.update DirectoryHandler.move)
+    , ("filesystem.file.fetch.request" , call Topic.status FileHandler.fetch)
+    , ("filesystem.file.upload.request", call Topic.status FileHandler.upload)
+    , ("filesystem.file.exists.request", call Topic.update FileHandler.exists)
+    , ("filesystem.file.remove.request", call Topic.update FileHandler.remove)
+    , ("filesystem.file.copy.request"  , call Topic.update FileHandler.copy)
+    , ("filesystem.file.move.request"  , call Topic.update FileHandler.move)
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)

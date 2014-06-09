@@ -13,4 +13,4 @@ import Flowbox.Prelude
 
 
 toUpper :: String -> String
-toUpper n = (Char.toUpper $ head n) : (tail n)
+toUpper n = Char.toUpper (head n) : tail n

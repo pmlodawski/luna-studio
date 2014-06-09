@@ -44,7 +44,7 @@ type LVertex a = DG.LNode a
 
 
 labs :: Graph a b -> [Vertex] -> Maybe [a]
-labs g vtxs = mapM (lab g) vtxs
+labs g = mapM (lab g)
 
 
 labVtx :: Graph a b -> Vertex -> Maybe (LVertex a)
@@ -52,7 +52,7 @@ labVtx g vtx = (,) vtx <$> lab g vtx
 
 
 labVtxs :: Graph a b -> [Vertex] -> Maybe [LVertex a]
-labVtxs g vtxs = mapM (labVtx g) vtxs
+labVtxs g = mapM (labVtx g)
 
 
 out_ :: Graph a b -> Vertex -> [b]
@@ -68,19 +68,19 @@ innvtx g vtx = [pvtx | (pvtx,_,_) <- inn g vtx]
 
 
 suc_ :: Graph a b -> Vertex -> [a]
-suc_ g vtx = map (fromJust . (lab g)) $ suc g vtx
+suc_ g vtx = map (fromJust . lab g) $ suc g vtx
 
 
 sucl :: Graph a b -> Vertex -> [LVertex a]
-sucl g vtx = map (fromJust . (labVtx g)) $ suc g vtx
+sucl g vtx = map (fromJust . labVtx g) $ suc g vtx
 
 
 pre_ :: Graph a b -> Vertex -> [a]
-pre_ g vtx = map (fromJust . (lab g)) $ pre g vtx
+pre_ g vtx = map (fromJust . lab g) $ pre g vtx
 
 
 prel :: Graph a b -> Vertex -> [LVertex a]
-prel g vtx = map (fromJust . (labVtx g)) $ pre g vtx
+prel g vtx = map (fromJust . labVtx g) $ pre g vtx
 
 
 lprel :: Graph a b -> Vertex -> [(Vertex, a, b)]

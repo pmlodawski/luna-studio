@@ -9,15 +9,14 @@
 
 module Flowbox.AWS.EC2.Control.DBPool.Monitor where
 
-import qualified AWS                        as AWS
+import qualified AWS
 import qualified AWS.EC2.Types              as Types
-import           Control.Monad              (forever, when)
+import           Control.Monad              (forever, unless, when)
 import           Control.Monad.IO.Class     (liftIO)
 import           Data.List                  ((\\))
 import qualified Data.Time                  as Time
 import qualified Database.PostgreSQL.Simple as PSQL
 
-import qualified Flowbox.Control.Concurrent         as Concurrent
 import qualified Flowbox.AWS.Database.Instance         as InstanceDB
 import qualified Flowbox.AWS.Database.Session          as SessionDB
 import qualified Flowbox.AWS.Database.User             as UserDB
@@ -33,6 +32,7 @@ import qualified Flowbox.AWS.EC2.Instance.Tag          as Tag
 import           Flowbox.AWS.Region                    (Region)
 import           Flowbox.AWS.User.Session              (Session)
 import qualified Flowbox.AWS.User.Session              as Session
+import qualified Flowbox.Control.Concurrent            as Concurrent
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger             hiding (error)
 
@@ -65,19 +65,18 @@ updateSession region conn session = do
     currentTime <- Time.getCurrentTime
     case user of
         Nothing -> removeSession $ "User " ++ show userName ++ " no longer exists"
-        Just u  -> if nearToEnd currentTime expires
-            then case Credit.charge u $ Cost.instanceHour region of
+        Just u  -> when (nearToEnd currentTime expires) $
+            case Credit.charge u $ Cost.instanceHour region of
                 Left  msg         -> removeSession msg
                 Right chargedUser -> do UserDB.update conn chargedUser
                                         extendSession
-            else return ()
     where
         removeSession reason = do
-            logger info $ "Removing session " ++ (show $ session ^. id) ++ " : " ++ reason
+            logger info $ "Removing session " ++ show (session ^. id) ++ " : " ++ reason
             SessionDB.deleteByID conn $ session ^. Session.id
 
         extendSession = do
-            logger info $ "Extending session " ++ (show $ session ^. id)
+            logger info $ "Extending session " ++ show (session ^. id)
             SessionDB.update conn $ session & Session.expires %~ Time.addUTCTime extendByTime
 
 
@@ -98,17 +97,17 @@ freeUnusedInstances credential region conn = do
         currentTime <- Time.getCurrentTime
         free <- filter (isShutDownCandidate currentTime)
                 <$> InstanceDB.findWithAtMostUsers conn 0
-        mapM_ (InstanceDB.update conn) $ map (set Instance.status Instance.Other) free
+        mapM_ (InstanceDB.update conn . set Instance.status Instance.Other) free
         return free
     let freeIDs = map (view Instance.id) free
     if null free
         then logger debug "Monitor : nothing to stop"
-        else Concurrent.forkIO_ $ do 
-                logger info $ "Monitor : stopping " ++ (show $ length free) ++ " instances"
+        else Concurrent.forkIO_ $ do
+                logger info $ "Monitor : stopping " ++ show (length free) ++ " instances"
                 EC2.runEC2inRegion credential region $ do
                     void $ EC2.stopInstances       freeIDs True
                     void $ Management.waitForState freeIDs Types.InstanceStateStopped def
-                mapM_ (InstanceDB.update conn) $ map (set Instance.status Instance.Stopped) free
+                mapM_ (InstanceDB.update conn . set Instance.status Instance.Stopped) free
 
 
 detectOrphans :: AWS.Credential -> Region -> PSQL.Connection -> IO ()
@@ -122,12 +121,12 @@ detectOrphans credential region conn = do
         let orphanInstances   = detectedInstances \\ existingInstances
             unsyncedInstances = existingInstances \\ detectedInstances
 
-        when (not $ null unsyncedInstances) $ do
-            logger warning $ "Monitor : Detected " ++ (show $ length unsyncedInstances) ++ " unsynced instances"
+        unless (null unsyncedInstances) $ do
+            logger warning $ "Monitor : Detected " ++ show (length unsyncedInstances) ++ " unsynced instances"
             InstanceDB.delete conn $ map (view Instance.id) unsyncedInstances
 
-        when (not $ null orphanInstances) $ do
-            logger warning $ "Monitor : Detected " ++ (show $ length orphanInstances) ++ " orphan instances"
+        unless (null orphanInstances) $ do
+            logger warning $ "Monitor : Detected " ++ show (length orphanInstances) ++ " orphan instances"
             mapM_ (InstanceDB.add conn) orphanInstances
 
 
@@ -137,7 +136,7 @@ readInstanceData inst = do
     startTime <- case Tag.getStartTime inst of
         Just time -> return time
         Nothing   -> do logger error $ "Failed to read instance " ++ show instanceID ++ " start time"
-                        currentTime <- liftIO $ Time.getCurrentTime
+                        currentTime <- liftIO Time.getCurrentTime
                         Tag.tag [Tag.startTimeTag currentTime] [instanceID]
                         return currentTime
     let status = case Types.instanceState inst of

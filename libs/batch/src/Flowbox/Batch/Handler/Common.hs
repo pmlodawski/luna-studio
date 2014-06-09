@@ -268,9 +268,9 @@ projectManagerOp :: (Applicative m, Monad m)
                  -> Batch
                  -> m (Batch, r)
 projectManagerOp operation batch = do
-    let aprojectManager = Batch.projectManager batch
-    (newProjectManager, r) <- operation batch aprojectManager
-    let newBatch = batch { Batch.projectManager = newProjectManager }
+    let projectManager = getProjectManager batch
+    (newProjectManager, r) <- operation batch projectManager
+    let newBatch = setProjectManager newProjectManager batch
     return (newBatch, r)
 
 
@@ -279,11 +279,11 @@ projectOp :: (Applicative m, Monad m)
           -> (Batch -> Project -> m (Project, r))
           -> Batch
           -> m (Batch, r)
-projectOp projectID operation = projectManagerOp (\batch aprojectManager -> do
-    project         <- ProjectManager.lab aprojectManager projectID <?> ("Wrong 'projectID' = " ++ show projectID)
+projectOp projectID operation batch = do
+    project         <- getProject projectID batch
     (newProject, r) <- operation batch project
-    let newProjectManager = ProjectManager.updateNode (projectID, newProject) aprojectManager
-    return (newProjectManager, r))
+    let newBatch = setProject newProject projectID batch
+    return (newBatch, r)
 
 
 processMapOp :: (Applicative m, Monad m)
@@ -291,11 +291,11 @@ processMapOp :: (Applicative m, Monad m)
              -> (Batch -> ProcessMap -> m (ProcessMap, r))
              -> Batch
              -> m (Batch, r)
-processMapOp projectID operation = projectOp projectID (\batch project -> do
-    let processMap = Project.processMap $ project
+processMapOp projectID operation batch = do
+    processMap <- getProcessMap projectID batch
     (newProcessMap, r) <- operation batch processMap
-    let newProject = project { Project.processMap = newProcessMap }
-    return (newProject, r))
+    newBatch <- setProcessMap newProcessMap projectID batch
+    return (newBatch, r)
 
 
 libManagerOp :: (Applicative m, Monad m)
@@ -303,11 +303,11 @@ libManagerOp :: (Applicative m, Monad m)
              -> (Batch -> LibManager -> m (LibManager, r))
              -> Batch
              -> m (Batch, r)
-libManagerOp projectID operation = projectOp projectID (\batch project -> do
-    let libManager = Project.libs $ project
+libManagerOp projectID operation batch = do
+    libManager <- getLibManager projectID batch
     (newLibManager, r) <- operation batch libManager
-    let newProject = project { Project.libs = newLibManager }
-    return (newProject, r))
+    newBatch   <- setLibManager newLibManager projectID batch
+    return (newBatch, r)
 
 
 libraryOp :: (Applicative m, Monad m)
@@ -316,11 +316,11 @@ libraryOp :: (Applicative m, Monad m)
           -> (Batch -> Library -> m (Library, r))
           -> Batch
           -> m (Batch, r)
-libraryOp libID projectID operation = libManagerOp projectID (\batch libManager -> do
-    library        <- LibManager.lab libManager libID <?> ("Wrong 'libID' = " ++ show libID)
+libraryOp libID projectID operation batch = do
+    library        <- getLibrary libID projectID batch
     (newLibary, r) <- operation batch library
-    let newLibManager = LibManager.updateNode (libID, newLibary) libManager
-    return (newLibManager, r))
+    newBatch       <- setLibrary newLibary libID projectID batch
+    return (newBatch, r)
 
 
 astOp :: Library.ID
@@ -328,12 +328,13 @@ astOp :: Library.ID
       -> (Batch -> Module -> PropertyMap -> IO ((Module, PropertyMap), r))
       -> Batch
       -> IO (Batch, r)
-astOp libID projectID operation = libraryOp libID projectID (\batch library -> do
-    let ast         = Library.ast library
-        propertyMap = Library.propertyMap library
+astOp libID projectID operation batch = do
+    ast         <- getAST         libID projectID batch
+    propertyMap <- getPropertyMap libID projectID batch
     ((newAst, newPM), r) <- operation batch ast propertyMap
-    let newLibrary = library { Library.ast = newAst, Library.propertyMap = newPM }
-    return (newLibrary, r))
+    newBatch    <-  setAST         newAst libID projectID
+                =<< setPropertyMap newPM  libID projectID batch
+    return (newBatch, r)
 
 
 astFocusOp :: Breadcrumbs
@@ -432,7 +433,7 @@ graphViewOp :: Breadcrumbs
             -> IO (Batch, r)
 graphViewOp bc libID projectID operation = graphOp bc libID projectID (\batch graph propertyMap maxID -> do
     let graphView = GraphView.fromGraph graph
-    let (graphView', propertyMap') = Defaults.removeDefaults graphView propertyMap
+        (graphView', propertyMap') = Defaults.removeDefaults graphView propertyMap
     ((newGraphView', newPM'), r) <- operation batch graphView' propertyMap' maxID
     let (newGraphView, newPM) = Defaults.addDefaults newGraphView' newPM'
     newGraph <- GraphView.toGraph newGraphView

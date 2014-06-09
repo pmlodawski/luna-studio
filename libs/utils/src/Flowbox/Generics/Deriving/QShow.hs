@@ -59,16 +59,15 @@ instance (QShow' a, Constructor c) => QShow' (M1 C c a) where
     case fixity of
       Prefix    -> showParen (n > appPrec && not (isNullary x)) 
                     ( showString (conName c) 
-                    . if (isNullary x) then id else showChar ' '
+                    . if isNullary x then id else showChar ' '
                     . showBraces t (qshowsPrec' t appPrec x))
       Infix _ m -> showParen (n > m) (showBraces t (qshowsPrec' t m x))
       where fixity = conFixity c
-            t = if (conIsRecord c) then Rec else
-                  case (conIsTuple c) of
-                    True -> Tup
-                    False -> case fixity of
-                                Prefix    -> Pref
-                                Infix _ _ -> Inf (show (conName c))
+            t | conIsRecord c = Rec
+              | conIsTuple  c = Tup
+              | otherwise     = case fixity of
+                                    Prefix    -> Pref
+                                    Infix _ _ -> Inf (show (conName c))
             showBraces :: Type -> ShowS -> ShowS
             showBraces Rec     p = showChar '{' . p . showChar '}'
             showBraces Tup     p = showChar '(' . p . showChar ')'
@@ -142,7 +141,7 @@ instance QShow Bool   where qshowsPrec = showsPrec
 intersperse :: a -> [a] -> [a]
 intersperse _ []    = []
 intersperse _ [h]   = [h]
-intersperse x (h:t) = h : x : (intersperse x t)
+intersperse x (h:t) = h : x : intersperse x t
 
 instance (QShow a) => QShow [a] where
   qshowsPrec _ l =   showChar '['

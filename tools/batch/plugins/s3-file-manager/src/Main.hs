@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import qualified Aws       as Aws
+import qualified Aws
 import qualified Data.Text as Text
 
 import qualified Flowbox.Bus.EndPoint                as EP
