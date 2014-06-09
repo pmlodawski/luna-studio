@@ -26,11 +26,11 @@ logger = getLoggerIO "Flowbox.Parser.Handler.Handler"
 
 
 handlerMap :: HandlerMap
-handlerMap callback = HandlerMap.fromList $
-    [ ("parse.expr.request"    , call Topic.status $ ParserHandler.parseExpr    )
-    , ("parse.pat.request"     , call Topic.status $ ParserHandler.parsePat     )
-    , ("parse.type.request"    , call Topic.status $ ParserHandler.parseType    )
-    , ("parse.nodeexpr.request", call Topic.status $ ParserHandler.parseNodeExpr)
+handlerMap callback = HandlerMap.fromList
+    [ ("parse.expr.request"    , call Topic.status ParserHandler.parseExpr    )
+    , ("parse.pat.request"     , call Topic.status ParserHandler.parsePat     )
+    , ("parse.type.request"    , call Topic.status ParserHandler.parseType    )
+    , ("parse.nodeexpr.request", call Topic.status ParserHandler.parseNodeExpr)
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
