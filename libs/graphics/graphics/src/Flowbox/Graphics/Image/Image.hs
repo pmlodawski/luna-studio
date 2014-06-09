@@ -29,12 +29,12 @@ image imgviews defaultview = case defaultview of
                             then newimg
                             else Nothing
     _                 -> newimg
-    where keysMatchingNames = Map.foldrWithKey (\k v acc -> acc && v ^. View.name == k) True imgviews
+    where keysMatchingNames = Map.foldrWithKey (\k v acc -> acc && View.name v == k) True imgviews
           newimg = if keysMatchingNames then Just $ Image imgviews defaultview
                                         else Nothing
 
 insert :: View.View v => View.Name -> v -> Image v -> Maybe (Image v)
-insert key value image = if value ^. View.name == key
+insert key value image = if View.name value == key
                              then Just $ over views (Map.insert key value) image
                              else Nothing
 

@@ -9,7 +9,7 @@ module Flowbox.Graphics.Image.View.Internal (
     View (..),
     Name,
     ChanTree,
-    Select,
+    Select (..),
     create',
     clean',
     modify'
@@ -74,6 +74,9 @@ append descriptor val v = case val of
           z        = ChanTree.zipper $ channels v
           nodes    = splitOn "." descriptor
 
+--map :: View view => f -> view -> Image.Result view
+--map f v =
+
 check :: ChanTree -> Bool
 check EmptyNode = True
 check (ChannelTree _ treeNodes) = Map.foldrWithKey check' True treeNodes
@@ -96,6 +99,8 @@ clean' constructor v = constructor (name v) ChanTree.empty
 
 modify' :: View view => (Name -> ChanTree -> view) -> view -> ChanTree -> Image.Result view
 modify' constructor v tree = validate tree >>= return . constructor (name v)
+
+--mapWithWhitelist :: View view => ()
 
 --set :: View view => view -> ChanTree -> Image.Result view
 --set v t =
