@@ -1,17 +1,24 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+
 module Main where
 
-import Control.Lens ((^.))
-import Data.Default
-import qualified Data.Array.Accelerate as A
-import Data.Array.Accelerate.CUDA
-import qualified Data.Thyme as Thyme
-import Data.AffineSpace ((.-.))
+import           Control.Lens               ((^.))
+import           Data.AffineSpace           ((.-.))
+import qualified Data.Array.Accelerate      as A
+import           Data.Array.Accelerate.CUDA
+import           Data.Default
+import qualified Data.Thyme                 as Thyme
 
 import Particle
-import Particle.PointEmitter
-import Particle.PointAttractor
 import Particle.Conversions
 import Particle.PerlinNoise
+import Particle.PointAttractor
+import Particle.PointEmitter
 
 main :: IO ()
 main = go def =<< Thyme.getCurrentTime

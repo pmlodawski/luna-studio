@@ -88,6 +88,7 @@ pkgDb = PathDict(
        , 'libs/markup'                         : HProject   ('doc-markup'                   , os.path.join ('libs'  , 'markup')                              , 'libs'    , [])
        , 'libs/num-conversion'                 : HProject   ('num-conversion'               , os.path.join ('libs'  , 'num-conversion')                      , 'libs'    , [])
        , 'libs/rpc'                            : HProject   ('flowbox-rpc'                  , os.path.join ('libs'  , 'rpc')                                 , 'libs'    , ['libs/utils'])
+       , 'libs/dynamics/particles'             : HProject   ('particle'                     , os.path.join ('libs'  , 'dynamics', 'particles')               , 'libs'    , [])
        , 'libs/repo-manager'                   : HProject   ('flowbox-repo-manager'         , os.path.join ('libs'  , 'repo-manager')                        , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'libs/target-hs'                      : HProject   ('luna-target-hs'               , os.path.join ('libs'  , 'target-hs')                           , 'libs'    , [])
        , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs'  , 'utils')                               , 'libs'    , [])
