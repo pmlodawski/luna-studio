@@ -13,12 +13,12 @@ import           Flowbox.Prelude
 
 
 
-data ChannelTree name value = ChannelTree  { _channel  :: Maybe value
-                                           , _children :: Map name (ChannelTree name value)
+data ChannelTree name value = ChannelTree  { channel  :: Maybe value
+                                           , children :: Map name (ChannelTree name value)
                                            }
                             | EmptyNode
                             deriving (Show)
-makeLenses ''ChannelTree
+--makeLenses ''ChannelTree
 
 data Crumb name value = Crumb name (Maybe value) (Map name (ChannelTree name value)) deriving (Show)
 type Breadcrumbs name value = [Crumb name value]
@@ -50,10 +50,10 @@ tree (t, _) = t
 
 lookup :: (Show name, Show value, Ord name) => name -> Zipper name value -> ZipperResult name value
 lookup _ (EmptyNode, _) = Left UnreachableError
-lookup name t@(ChannelTree chan tree, bs) = case Map.lookup name tree of
-    Nothing    -> Left UnreachableError
-    Just tree' -> Right (tree', Crumb name chan rest:bs)
-    where rest = Map.delete name tree
+lookup name (ChannelTree chan t, bs) = case Map.lookup name t of
+    Nothing -> Left UnreachableError
+    Just t' -> Right (t', Crumb name chan rest:bs)
+    where rest = Map.delete name t
 
 up :: Ord name => Zipper name value -> ZipperResult name value
 up (_, []) = Left UpUnreachableError
@@ -72,8 +72,8 @@ top z = case up z of
 
 attach :: Ord name => name -> ChannelTree name value -> Zipper name value -> ZipperResult name value
 attach name new (t, bs) = case t of
-    EmptyNode             -> Left AttachToEmpty
-    ChannelTree chan tree -> Right (ChannelTree chan (Map.insert name new tree), bs)
+    EmptyNode           -> Left AttachToEmpty
+    ChannelTree chan t' -> Right (ChannelTree chan (Map.insert name new t'), bs)
 
 insert :: Ord name => Maybe value -> Zipper name value -> ZipperResult name value
 insert v (t, bs) = case t of
@@ -92,18 +92,18 @@ delete (t, bs) = case t of
 
 clear :: Zipper name value -> ZipperResult name value
 clear (t, bs) = case t of
-    EmptyNode          -> Left AlterEmptyError
-    ChannelTree _ tree -> Right (ChannelTree Nothing tree, bs)
+    EmptyNode        -> Left AlterEmptyError
+    ChannelTree _ t' -> Right (ChannelTree Nothing t', bs)
 
 set :: value -> Zipper name value -> ZipperResult name value
 set v (t, bs) = case t of
-    EmptyNode          -> Left AlterEmptyError
-    ChannelTree _ tree -> Right (ChannelTree (Just v) tree, bs)
+    EmptyNode        -> Left AlterEmptyError
+    ChannelTree _ t' -> Right (ChannelTree (Just v) t', bs)
 
 modify :: (value -> value) -> Zipper name value -> ZipperResult name value
 modify f (t, bs) = case t of
-    EmptyNode             -> Left AlterEmptyError
-    ChannelTree chan tree -> Right (ChannelTree (fmap f chan) tree, bs)
+    EmptyNode           -> Left AlterEmptyError
+    ChannelTree chan t' -> Right (ChannelTree (fmap f chan) t', bs)
 
 get :: Zipper name value -> Either ZipperError (Maybe value)
 get (EmptyNode, _)         = Left GetNonExistant

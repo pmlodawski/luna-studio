@@ -11,12 +11,14 @@ import			 Flowbox.Prelude
 
 
 
-data Error = ChannelLookupError { name :: Channel.Name }
-		   | ChannelNameError { descriptor :: Channel.Name, name :: Channel.Name }
+data Error = ChannelLookupError { chanName :: Channel.Name }
+		   | ChannelNameError { chanDescriptor :: Channel.Name, chanName :: Channel.Name }
+		   | InvalidMap
 
 instance Show Error where
     show err = case err of
-        ChannelLookupError chanName -> "Channel lookup error: channel '" ++ chanName ++ "' not found"
-        ChannelNameError descriptorVal chanName -> "Channel naming error: last part of the descriptor '" ++ descriptorVal ++ "' does not match '" ++ chanName ++ "'"
+        ChannelLookupError name -> "Channel lookup error: channel '" ++ name ++ "' not found"
+        ChannelNameError descriptor name -> "Channel naming error: last part of the descriptor '" ++ descriptor ++ "' does not match '" ++ name ++ "'"
+        InvalidMap -> "Map contains values with names not matching their associated keys"
 
 type Result a = Either Error a
