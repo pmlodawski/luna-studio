@@ -29,5 +29,3 @@ name :: Channel -> Name
 name (ChannelFloat n _) = n
 name (ChannelInt   n _) = n
 name (ChannelBit   n _) = n
-
---value :: Channel ->
