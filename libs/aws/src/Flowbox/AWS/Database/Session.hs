@@ -9,12 +9,14 @@ module Flowbox.AWS.Database.Session where
 import           Control.Monad
 import qualified Data.Time                  as Time
 import qualified Database.PostgreSQL.Simple as PSQL
+import qualified Data.Maybe as Maybe
 
 import qualified Flowbox.AWS.Database.SQL.Session.Add            as SessionAdd
 import qualified Flowbox.AWS.Database.SQL.Session.All            as SessionAll
 import qualified Flowbox.AWS.Database.SQL.Session.Delete         as SessionDelete
 import qualified Flowbox.AWS.Database.SQL.Session.DeleteByID     as SessionDeleteByID
 import qualified Flowbox.AWS.Database.SQL.Session.DeleteByUser   as SessionDeleteByUser
+import qualified Flowbox.AWS.Database.SQL.Session.Find           as SessionFind
 import qualified Flowbox.AWS.Database.SQL.Session.FindByInstance as SessionFindByInstance
 import qualified Flowbox.AWS.Database.SQL.Session.FindByUser     as SessionFindByUser
 import qualified Flowbox.AWS.Database.SQL.Session.Update         as SessionUpdate
@@ -31,6 +33,11 @@ create :: PSQL.Connection -> User.Name -> Instance.ID -> Time.UTCTime -> Session
 create conn userName instanceID expires policy = do
     PSQL.Only id <- head <$> PSQL.query conn SessionAdd.query (userName, instanceID, expires, show policy)
     return $ Session id userName instanceID expires policy
+
+
+find :: PSQL.Connection -> User.Name -> Instance.ID -> IO (Maybe Session)
+find conn userName instanceID = Maybe.listToMaybe <$>
+    PSQL.query conn SessionFind.query (userName, instanceID)
 
 
 findByInstance :: PSQL.Connection -> Instance.ID -> IO [Session]
