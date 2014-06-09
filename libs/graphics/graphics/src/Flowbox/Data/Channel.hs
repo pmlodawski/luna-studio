@@ -48,9 +48,9 @@ zipper t = return (t, [])
 tree :: Zipper name value -> ChannelTree name value
 tree (t, _) = t
 
-lookup :: Ord name => name -> Zipper name value -> ZipperResult name value
+lookup :: (Show name, Show value, Ord name) => name -> Zipper name value -> ZipperResult name value
 lookup _ (EmptyNode, _) = Left UnreachableError
-lookup name (ChannelTree chan tree, bs) = case Map.lookup name tree of
+lookup name t@(ChannelTree chan tree, bs) = case Map.lookup name tree of
     Nothing    -> Left UnreachableError
     Just tree' -> Right (tree', Crumb name chan rest:bs)
     where rest = Map.delete name tree

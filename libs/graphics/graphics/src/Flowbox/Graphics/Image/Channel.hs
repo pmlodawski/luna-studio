@@ -14,9 +14,9 @@ import Flowbox.Prelude
 
 type Name = String
 
-data Channel = ChannelFloat (ChannelData Double)
-             | ChannelInt   (ChannelData Int)
-             | ChannelBit   (ChannelData Bool)
+data Channel = ChannelFloat Name (ChannelData Double)
+             | ChannelInt   Name (ChannelData Int)
+             | ChannelBit   Name (ChannelData Bool)
              deriving (Show)
 
 data ChannelData a = FlatData { _matrix     :: Matrix2 a
@@ -24,3 +24,8 @@ data ChannelData a = FlatData { _matrix     :: Matrix2 a
                               }
                               deriving (Show)
 makeLenses ''ChannelData
+
+name :: Channel -> Name
+name (ChannelFloat n _) = n
+name (ChannelInt   n _) = n
+name (ChannelBit   n _) = n

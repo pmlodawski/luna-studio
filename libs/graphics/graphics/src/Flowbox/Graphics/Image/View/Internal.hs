@@ -14,7 +14,7 @@ import           Data.List.Split
 import           Flowbox.Data.Channel           as ChanTree
 import           Flowbox.Graphics.Image.Error   (Error(..))
 import qualified Flowbox.Graphics.Image.Error   as Image
-import           Flowbox.Graphics.Image.Channel (Channel)
+import           Flowbox.Graphics.Image.Channel (Channel(..))
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Prelude                as P
 
@@ -48,11 +48,16 @@ get v descriptor = case result of
           z       = zipper $ v ^. channels
           nodes   = splitOn "." descriptor
 
-insert :: View view => Channel.Name -> Maybe Channel -> view -> Image.Result view
-insert descriptor val v = case result of
-    Left _    -> Left $ ChannelLookupError descriptor
-    Right v'  -> return $ v & channels .~ ChanTree.tree v'
-    where result  = P.foldr f z (init nodes) >>= ChanTree.append (last nodes) val
-          f p acc = acc >>= ChanTree.lookup p
-          z       = zipper $ v ^. channels
-          nodes   = splitOn "." descriptor
+append :: View view => Channel.Name -> Maybe Channel -> view -> Image.Result view
+append descriptor val v = case val of
+    Nothing   -> append'
+    Just chan -> if last nodes == Channel.name chan
+        then append'
+        else Left $ ChannelNameError descriptor $ Channel.name chan
+    where append' = case result of
+              Left _   -> Left $ ChannelLookupError descriptor
+              Right v' -> return $ v & channels .~ ChanTree.tree v'
+          result   = P.foldl go z (init nodes) >>= ChanTree.append (last nodes) val >>= ChanTree.top
+          go acc p = acc >>= ChanTree.lookup p
+          z        = zipper $ v ^. channels
+          nodes    = splitOn "." descriptor
