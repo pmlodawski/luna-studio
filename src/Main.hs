@@ -65,11 +65,11 @@ run cmd = case cmd of
 
         pluginHandles <- if null confPath
             then return []
-            else do Concurrent.forkIO_ $ (runEitherT $ InitRemote.init confPath busConfig) >>= eitherStringToM
-                    (runEitherT $ InitLocal.init confPath) >>= eitherStringToM
+            else do Concurrent.forkIO_ $ runEitherT (InitRemote.init confPath busConfig) >>= eitherStringToM
+                    runEitherT (InitLocal.init confPath) >>= eitherStringToM
 
         ctx <- Context.mk cfg pluginHandles
 
         logger info "Starting rpc server"
-        (Server.run busConfig $ Handler.handlerMap (Cmd.prefix cmd) ctx) >>= eitherStringToM
+        Server.run busConfig (Handler.handlerMap (Cmd.prefix cmd) ctx) >>= eitherStringToM
 

@@ -46,7 +46,7 @@ info ph = PluginInfo (ph ^. plugin) <$> case ph ^. handle of
 
 start :: Plugin -> IO PluginHandle
 start p = do logger L.info $ "Starting plugin "
-                          ++ (show $ p ^. Plugin.name)
+                          ++ show (p ^. Plugin.name)
                           ++ " (" ++ (p ^. Plugin.command) ++ ")"
              -- FIXME [PM] : handle fail to start
              h <- Process.spawnCommand $ p ^. Plugin.command
@@ -54,7 +54,7 @@ start p = do logger L.info $ "Starting plugin "
 
 
 stop :: PluginHandle -> IO PluginHandle
-stop ph = do logger L.info $ "Stopping plugin " ++ (show $ ph ^. plugin . Plugin.name)
+stop ph = do logger L.info $ "Stopping plugin " ++ show (ph ^. plugin . Plugin.name)
              case ph ^. handle of
                 Just h  -> do Process.terminateProcess h
                               _ <- Process.waitForProcess h
