@@ -10,7 +10,7 @@
 
 module Flowbox.AWS.AccountManager where
 
-import qualified AWS           as AWS
+import qualified AWS
 import qualified AWS.EC2.Types as Types
 import           Data.IP       (IPv4)
 
@@ -76,5 +76,5 @@ start database credential region userName = do
 
 end :: Database -> User.Name -> IO ()
 end database userName = do
-    logger info $ "Ending session for, username=" ++ (show userName)
+    logger info $ "Ending session for, username=" ++ show userName
     Instance.releaseUser database userName

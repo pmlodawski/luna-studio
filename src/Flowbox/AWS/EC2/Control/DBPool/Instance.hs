@@ -9,9 +9,9 @@
 
 module Flowbox.AWS.EC2.Control.DBPool.Instance where
 
-import qualified AWS                                    as AWS
+import qualified AWS
 import qualified AWS.EC2.Types                          as Types
-import           Control.Monad                          (when)
+import           Control.Monad                          (unless)
 import qualified Data.List                              as List
 import qualified Data.Time                              as Time
 import qualified Database.PostgreSQL.Simple             as PSQL
@@ -65,8 +65,8 @@ retrieve conn credential region userName instancesRequest = do
         available <- Instance.sortByStatusAndTime currentTime
                      <$> InstanceDB.findAvailable conn userName
         let (running, stopped') = List.partition Instance.isRunning $ take amount available
-            stopped = map (set Instance.status  Instance.Running)
-                    $ map (set Instance.started currentTime) stopped'
+            stopped = map ( set Instance.status  Instance.Running
+                          . set Instance.started currentTime) stopped'
         mapM_ (InstanceDB.update conn) stopped
 
         -- new instances ---------------
@@ -101,7 +101,7 @@ retrieve conn credential region userName instancesRequest = do
                             then return []
                             else Management.byIDs runningIDs
 
-        when (not $ null stoppedIDs) $ Management.startExisting stoppedIDs tags
+        unless (null stoppedIDs) $ Management.startExisting stoppedIDs tags
 
         startedInfo <- if null $ startingIDs ++ stoppedIDs
                             then return []
@@ -111,10 +111,9 @@ retrieve conn credential region userName instancesRequest = do
 
 
 release :: PSQL.Connection -> User.Name -> Instance.ID -> IO ()
-release conn userName instanceID =
-    SessionDB.delete conn userName instanceID
+release = SessionDB.delete
 
 
 releaseUser :: PSQL.Connection -> User.Name -> IO ()
-releaseUser conn userName = SessionDB.deleteByUser conn userName
+releaseUser = SessionDB.deleteByUser
 

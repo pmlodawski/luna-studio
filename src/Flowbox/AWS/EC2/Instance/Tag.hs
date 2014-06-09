@@ -42,14 +42,14 @@ noUser = "_"
 getStartTime :: Types.Instance -> Maybe Time.UTCTime
 getStartTime inst = do
     let findStartTimeTag = List.find (\tag' -> Types.resourceTagKey tag' == startTimeTagKey)
-    tagVal <- Types.resourceTagValue <$> (findStartTimeTag $ Types.instanceTagSet inst)
+    tagVal <- Types.resourceTagValue <$> findStartTimeTag (Types.instanceTagSet inst)
     read . Tag.unpack <$> tagVal
 
 
 getUser :: Types.Instance -> Maybe User.Name
 getUser inst = do
     let findUserTag = List.find (\tag' -> Types.resourceTagKey tag' == userTagKey)
-    tagVal <- Types.resourceTagValue <$> (findUserTag $ Types.instanceTagSet inst)
+    tagVal <- Types.resourceTagValue <$> findUserTag (Types.instanceTagSet inst)
     userName <- tagVal
     if userName == noUser
         then Nothing
@@ -59,7 +59,7 @@ getUser inst = do
 userTag :: Maybe User.Name -> Tag
 userTag userName = (userTagKey, userTagValue) where
     userTagValue = case userName of
-                     Just name -> Tag.pack $ name
+                     Just name -> Tag.pack name
                      Nothing   -> noUser
 
 

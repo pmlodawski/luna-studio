@@ -86,8 +86,8 @@ startExistingWait instanceIDs tags = do
 
 waitForStart :: EC2Resource m
              => [Instance.ID] -> WaitTimes -> EC2 m [Types.Instance]
-waitForStart instanceIDs waitTimes =
-    waitForState instanceIDs Types.InstanceStateRunning waitTimes
+waitForStart instanceIDs =
+    waitForState instanceIDs Types.InstanceStateRunning
 
 
 waitForState :: EC2Resource m
@@ -124,4 +124,4 @@ byIDs instanceIDs = describeInstances instanceIDs []
 
 describeInstances :: EC2Resource m => [Instance.ID] -> [Types.Filter] -> EC2 m [Types.Instance]
 describeInstances instanceIDs filter' =
-    concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances instanceIDs filter')
+    concatMap Types.reservationInstanceSet <$> Util.list (EC2.describeInstances instanceIDs filter')

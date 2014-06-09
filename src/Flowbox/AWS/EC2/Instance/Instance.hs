@@ -58,7 +58,7 @@ isRunning inst = inst ^. status == Running
 
 spareSeconds :: Time.UTCTime -> Instance -> Int
 spareSeconds currentTime inst =
-    (Time.toSeconds $ Time.diffUTCTime currentTime $ inst ^. started) `mod` 3600
+    Time.toSeconds (Time.diffUTCTime currentTime $ inst ^. started) `mod` 3600
 
 
 sortByStatusAndTime :: Time.UTCTime -> [Instance] -> [Instance]
