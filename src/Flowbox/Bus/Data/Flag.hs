@@ -25,6 +25,6 @@ instance Show Flag where
 instance Read Flag where
     readPrec = do n <- readPrec
                   case n :: Int of
-                      1 -> return $ Enable
-                      0 -> return $ Disable
+                      1 -> return Enable
+                      0 -> return Disable
                       _ -> R.pfail
