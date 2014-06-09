@@ -7,7 +7,7 @@
 
 module Flowbox.FileManager.Context where
 
-import qualified Aws                  as Aws
+import qualified Aws
 import qualified Network.HTTP.Conduit as Conduit
 
 import qualified Flowbox.AWS.S3.S3 as S3

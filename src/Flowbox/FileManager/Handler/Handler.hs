@@ -28,7 +28,7 @@ logger = getLoggerIO "Flowbox.FileManager.Handler"
 
 
 handlerMap :: Context -> HandlerMap
-handlerMap ctx callback = HandlerMap.fromList $
+handlerMap ctx callback = HandlerMap.fromList
     [ ("filesystem.directory.fetch.request" , call Topic.status $ DirectoryHandler.fetch  ctx)
     , ("filesystem.directory.upload.request", call Topic.status $ DirectoryHandler.upload ctx)
     , ("filesystem.directory.exists.request", call Topic.update $ DirectoryHandler.exists ctx)
