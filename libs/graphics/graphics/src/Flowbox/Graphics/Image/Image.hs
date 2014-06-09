@@ -7,36 +7,41 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Flowbox.Graphics.Image.Image ( insert
-                                    , delete
-                                    , lookup
-                                    , update
-                                    ) where
+module Flowbox.Graphics.Image.Image ( 
+    Image,
+    insert,
+    delete,
+    lookup,
+    update,
+    map,
+) where
 
 import qualified Data.Map                    as Map
 import qualified Data.Set                    as Set
+import           Data.Traversable            (sequence)
 import qualified Flowbox.Graphics.Image.View as View
-import           Flowbox.Prelude             hiding (views, lookup)
+import           Flowbox.Graphics.Image.Error
+import           Flowbox.Prelude             hiding (views, lookup, sequence, map)
 
 data Image view = Image { _views       :: Map.Map View.Name view
                         , _defaultView :: View.Select
                         }
 makeLenses ''Image
 
-image :: View.View v => Map.Map View.Name v -> View.Select -> Maybe (Image v)
+image :: View.View v => Map.Map View.Name v -> View.Select -> Either Error (Image v)
 image imgviews defaultview = case defaultview of
     View.Group names -> if names `Set.isSubsetOf` Map.keysSet imgviews
                             then newimg
-                            else Nothing
+                            else Left InvalidMap
     _                 -> newimg
     where keysMatchingNames = Map.foldrWithKey (\k v acc -> acc && View.name v == k) True imgviews
-          newimg = if keysMatchingNames then Just $ Image imgviews defaultview
-                                        else Nothing
+          newimg = if keysMatchingNames then return $ Image imgviews defaultview
+                                        else Left InvalidMap
 
-insert :: View.View v => View.Name -> v -> Image v -> Maybe (Image v)
+insert :: View.View v => View.Name -> v -> Image v -> Either Error (Image v)
 insert key value image = if View.name value == key
-                             then Just $ over views (Map.insert key value) image
-                             else Nothing
+                             then return $ over views (Map.insert key value) image
+                             else Left InvalidMap
 
 delete :: View.View v => View.Name -> Image v -> Image v
 delete key image = Image (Map.delete key $ image ^. views) $ case default_view of
@@ -47,8 +52,10 @@ delete key image = Image (Map.delete key $ image ^. views) $ case default_view o
 lookup :: View.View v => View.Name -> Image v -> Maybe v
 lookup key image = Map.lookup key (image ^. views)
 
-update :: View.View v => (v -> Maybe v) -> View.Name -> Image v -> Maybe (Image v)
+update :: View.View v => (v -> Maybe v) -> View.Name -> Image v -> Either Error (Image v)
 update f key image = case lookup key image >>= f of
     Just newval -> insert key newval image
-    Nothing     -> Just $ delete key image
+    Nothing     -> return $ delete key image
 
+map :: View.View v => (v -> v) -> Image v -> Either Error (Image v)
+map lambda img = image (Map.map lambda $ img ^.views) (img ^. defaultView)

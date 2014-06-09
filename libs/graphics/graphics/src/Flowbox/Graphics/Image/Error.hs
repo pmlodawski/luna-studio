@@ -19,6 +19,6 @@ instance Show Error where
     show err = case err of
         ChannelLookupError name -> "Channel lookup error: channel '" ++ name ++ "' not found"
         ChannelNameError descriptor name -> "Channel naming error: last part of the descriptor '" ++ descriptor ++ "' does not match '" ++ name ++ "'"
-        InvalidMap -> "Map contains values with names not matching their associated keys"
+        InvalidMap -> "Map inconsistency error: the map contains values with names not matching their associated keys"
 
 type Result a = Either Error a
