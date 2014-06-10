@@ -12,12 +12,12 @@ module Flowbox.Lunac.Build where
 import Control.Applicative
 
 import           Flowbox.Config.Config                 (Config)
+import           Flowbox.Control.Error
 import qualified Flowbox.Initializer.Initializer       as Initializer
 import qualified Flowbox.Luna.Passes.Build.Build       as Build
 import           Flowbox.Luna.Passes.Build.BuildConfig (BuildConfig (BuildConfig))
 import qualified Flowbox.Luna.Passes.Build.BuildConfig as BuildConfig
 import           Flowbox.Luna.Passes.Build.Diagnostics (Diagnostics (Diagnostics))
-import qualified Flowbox.Luna.Passes.General.Luna.Luna as Luna
 import qualified Flowbox.Lunac.Cmd                     as Cmd
 import           Flowbox.Prelude                       hiding (op)
 import           Flowbox.System.Log.Logger
@@ -63,17 +63,11 @@ build cfg op diag filePath = do
                     1 -> pure ["-O1"]
                     2 -> pure ["-O2"]
                     _ -> fail "Unsupported optimisation level"
-    let ccFlags  = if Cmd.ddebug op
-                         then ["\"-DDEBUG\""]
-                         else []
+    let ccFlags  = ["\"-DDEBUG\"" | Cmd.ddebug op]
         -- FIXME[pm]: Why it BLOWS UP when we enable -Wall?
-        ghcFlags = ["-threaded", "-Odph", "-optlo-O3"] ++ (if Cmd.ddebug op
-                         then ["-DDEBUG"]
-                         else []
-                   )
-        cabalFlags = case Cmd.global op of
-                        True  -> ["--global"]
-                        False -> []
+        ghcFlags = ["-threaded", "-Odph", "-optlo-O3"] ++ ["-DDEBUG" | Cmd.ddebug op]
+
+        cabalFlags = ["--global" | Cmd.global op ]
         outputPath = Platform.addExeOnWindows $ UniPath.fromUnixString $ Cmd.output op
         buildType  = if Cmd.library op
                         then BuildConfig.Library
@@ -82,5 +76,5 @@ build cfg op diag filePath = do
                         "" -> Nothing
                         d  -> Just $ UniPath.fromUnixString d
         bldCfg = BuildConfig name version libs ghcFlags ccFlags cabalFlags buildType cfg diag buildDir
-    (ast, _, astInfo) <- Luna.runIO $ Build.parseFile rootPath filePath
-    Luna.runIO $ Build.run bldCfg ast astInfo True
+    (ast, _, astInfo) <- eitherStringToM =<< Build.parseFile rootPath filePath
+    eitherStringToM =<< Build.run bldCfg ast astInfo True

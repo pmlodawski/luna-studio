@@ -95,7 +95,7 @@ opts = Opt.info parser (fullDesc <> Opt.progDesc "Luna compiler & package manage
 
 
 helper :: Opt.Parser (a -> a)
-helper = Opt.abortOption Opt.ShowHelpText $ (long "help" <> short 'h' <> help "show this help text")
+helper = Opt.abortOption Opt.ShowHelpText (long "help" <> short 'h' <> help "show this help text")
 
 
 main :: IO ()
