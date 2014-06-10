@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 module Flowbox.ProjectManager.Handler.AST where
 
-import qualified Data.IORef                                                                        as IORef
 import qualified Flowbox.Batch.Handler.AST                                                         as BatchAST
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                                 as Crumb
 import qualified Flowbox.Luna.Data.AST.Expr                                                        as Expr
@@ -18,6 +17,7 @@ import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Focus            
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Module                              ()
 import           Flowbox.Prelude                                                                   hiding (cons)
 import           Flowbox.ProjectManager.Context                                                    (ContextRef)
+import qualified Flowbox.ProjectManager.Context                                                    as Context
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request               as AddData
@@ -56,6 +56,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Requ
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                 as ResolveDefinition
 
 
+
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.ProjectManager.Handler.AST"
 
@@ -67,8 +68,7 @@ get ctxRef (Definitions.Request mtmaxDepth tbc tlibID tprojectID) = do
     let mmaxDepth = fmap decodeP mtmaxDepth
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    focus <- BatchAST.definitions mmaxDepth bc libID projectID batch
+    focus <- Context.run ctxRef $ BatchAST.definitions mmaxDepth bc libID projectID
     return $ Definitions.Status (encode focus) mtmaxDepth tbc tlibID tprojectID
 
 
@@ -78,9 +78,7 @@ moduleAdd ctxRef (AddModule.Request tnewModule tbcParent tlibID tprojectID) = do
     bcParent  <- decode tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    (newBatch, addedModule) <- BatchAST.addModule newModule bcParent libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    addedModule <- Context.run ctxRef $ BatchAST.addModule newModule bcParent libID projectID
     let newBC = bcParent ++ [Crumb.ModuleCrumb $ addedModule ^. Module.cls . Type.name]
     return $ AddModule.Update (encode addedModule) (encode newBC) tlibID tprojectID
 
@@ -91,9 +89,7 @@ dataAdd ctxRef (AddData.Request tnewData tbcParent tlibID tprojectID) = do
     bcParent <- decode tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    (newBatch, addedData) <- BatchAST.addClass newData bcParent libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    addedData <- Context.run ctxRef $ BatchAST.addClass newData bcParent libID projectID
     let newBC = bcParent ++ [Crumb.ClassCrumb $ addedData ^. Expr.cls . Type.name]
     return $ AddData.Update (encode addedData) (encode newBC) tlibID tprojectID
 
@@ -104,9 +100,7 @@ functionAdd ctxRef (AddFunction.Request tnewFunction tbcParent tlibID tprojectID
     bcParent    <- decode tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    (newBatch, addedFunction) <- BatchAST.addFunction newFunction bcParent libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    addedFunction <- Context.run ctxRef $ BatchAST.addFunction newFunction bcParent libID projectID
     let newBC = bcParent ++ [Crumb.FunctionCrumb (addedFunction ^. Expr.name) (addedFunction ^. Expr.path)]
     return $ AddFunction.Update (encode addedFunction) (encode newBC) tlibID tprojectID
 
@@ -116,9 +110,7 @@ remove ctxRef (Remove.Request tbc tlibID tprojectID) = do
     bc  <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.remove bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.remove bc libID projectID
     return $ Remove.Update tbc tlibID tprojectID
 
 
@@ -128,8 +120,7 @@ resolve ctxRef (ResolveDefinition.Request tname tbc tlibID tprojectID) = do
     let name      = decodeP tname
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    results <- BatchAST.resolveDefinition name bc libID projectID batch
+    results <- Context.run ctxRef $ BatchAST.resolveDefinition name bc libID projectID
     return $ ResolveDefinition.Status (encodeList results) tbc tlibID tprojectID
 
 
@@ -139,9 +130,7 @@ moduleClsModify ctxRef (ModifyModuleCls.Request tcls tbc tlibID tprojectID) = do
     bc  <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateModuleCls cls bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateModuleCls cls bc libID projectID
     return $ ModifyModuleCls.Update tcls tbc tlibID tprojectID
 
 
@@ -151,9 +140,7 @@ moduleImportsModify ctxRef (ModifyModuleImports.Request timports tbc tlibID tpro
     bc      <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateModuleImports imports bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateModuleImports imports bc libID projectID
     return $ ModifyModuleImports.Update timports tbc tlibID tprojectID
 
 
@@ -163,9 +150,7 @@ moduleFieldsModify ctxRef (ModifyModuleFields.Request tfields tbc tlibID tprojec
     bc     <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateModuleFields fields bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateModuleFields fields bc libID projectID
     return $ ModifyModuleFields.Update tfields tbc tlibID tprojectID
 
 
@@ -175,9 +160,7 @@ dataClsModify ctxRef (ModifyDataCls.Request tcls tbc tlibID tprojectID) = do
     bc  <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateDataCls cls bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateDataCls cls bc libID projectID
     return $ ModifyDataCls.Update tcls tbc tlibID tprojectID
 
 
@@ -187,9 +170,7 @@ dataConsModify ctxRef (ModifyDataCons.Request tcons tbc tlibID tprojectID) = do
     bc   <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateDataCons cons bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateDataCons cons bc libID projectID
     return $ ModifyDataCons.Update tcons tbc tlibID tprojectID
 
 
@@ -199,9 +180,7 @@ dataClassesModify ctxRef (ModifyDataClasses.Request tclasses tbc tlibID tproject
     bc      <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateDataClasses classes bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateDataClasses classes bc libID projectID
     return $ ModifyDataClasses.Update tclasses tbc tlibID tprojectID
 
 
@@ -211,9 +190,7 @@ dataMethodsModify ctxRef (ModifyDataMethods.Request tmethods tbc tlibID tproject
     bc      <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateDataMethods methods bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateDataMethods methods bc libID projectID
     return $ ModifyDataMethods.Update tmethods tbc tlibID tprojectID
 
 
@@ -223,9 +200,7 @@ functionNameModify ctxRef (ModifyFunctionName.Request tname tbc tlibID tprojectI
     let name      = decodeP tname
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateFunctionName name bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $  BatchAST.updateFunctionName name bc libID projectID
     return $ ModifyFunctionName.Update tname tbc tlibID tprojectID
 
 
@@ -235,9 +210,7 @@ functionPathModify ctxRef (ModifyFunctionPath.Request tpath tbc tlibID tprojectI
     let path      = decodeListP tpath
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateFunctionPath path bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateFunctionPath path bc libID projectID
     return $ ModifyFunctionPath.Update tpath tbc tlibID tprojectID
 
 
@@ -247,9 +220,7 @@ functionInputsModify ctxRef (ModifyFunctionInputs.Request tinputs tbc tlibID tpr
     bc     <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateFunctionInputs inputs bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateFunctionInputs inputs bc libID projectID
     return $ ModifyFunctionInputs.Update tinputs tbc tlibID tprojectID
 
 
@@ -259,7 +230,5 @@ functionOutputModify ctxRef (ModifyFunctionOutput.Request toutput tbc tlibID tpr
     bc     <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchAST.updateFunctionOutput output bc libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchAST.updateFunctionOutput output bc libID projectID
     return $ ModifyFunctionOutput.Update toutput tbc tlibID tprojectID
