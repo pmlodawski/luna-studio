@@ -21,6 +21,8 @@ import Flowbox.Control.Error     (eitherToM)
 import Flowbox.Prelude           hiding (error, fail)
 import Flowbox.System.Log.Logger
 
+
+
 --type PassError              = String
 
 --type PassMonad    s m       = (Functor m, MonadRWS Info LogList s m)
@@ -32,13 +34,14 @@ import Flowbox.System.Log.Logger
 
 --data NoState = NoState deriving (Show)
 
+
 data Info = Info { name :: String
                  } deriving (Show)
 
 
-
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Pass"
+
 
 type PassError = String
 
@@ -54,8 +57,10 @@ type ESRT err env state m = EitherT err (StateT state (ReaderT env m))
 
 data NoState = NoState deriving Show
 
+
 runRaw :: ESRT err env state m result -> env -> state -> m (Either err result, state)
 runRaw pass env state = flip runReaderT env $ flip runStateT state $ (runEitherT) pass
+
 
 run :: Monad m => env -> state -> ESRT err env state m result -> m (Either err (result, state))
 run env state pass = do
@@ -74,13 +79,6 @@ runHoist env state pass = hoistEither =<< run env state pass
 runHoist_ :: Monad m => env -> state -> ESRT err env state (EitherT err m) result -> EitherT err m result
 runHoist_ env state pass = fst <$> runHoist env state pass
 
--- Please do not use unless you really have to
-runIO :: Show err => env -> state -> ESRT err env state IO result -> IO (result, state)
-runIO env state pass = eitherToM =<< run env state pass
-
--- Please do not use unless you really have to
-runIO_ :: Show err => env -> state -> ESRT err env state IO result -> IO result
-runIO_ env state pass = fst <$> runIO env state pass
 
 fail :: Monad m => e -> EitherT e m a
 fail = left

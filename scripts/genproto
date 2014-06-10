@@ -19,9 +19,7 @@ from utils.errors import fatal
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-cpp_gen_dirs = [os.path.join(rootPath, 'tools/batch/batch-clients/performance/tcp/generated')
-               ,os.path.join(rootPath, 'tools/batch/batch-clients/dumper/generated')
-               ,os.path.join(rootPath, 'tools/batch/batch-clients/tcp-cpp/generated')]
+cpp_gen_dirs = [os.path.join(rootPath, 'tools/batch/batch-clients/tcp-cpp/generated')]
 
 
 importPaths = [ '/usr/include'

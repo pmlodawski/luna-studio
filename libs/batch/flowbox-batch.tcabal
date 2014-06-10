@@ -27,6 +27,7 @@ Library
                   bytestring,
                   containers,
                   directory,
+                  either,
                   flowbox-config,
                   flowbox-initializer,
                   flowbox-luna,
@@ -41,7 +42,8 @@ Library
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   text,
-                  timeit
+                  timeit,
+                  transformers
 
 
 Executable lib-importer

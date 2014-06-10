@@ -4,33 +4,30 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE RankNTypes #-}
 
 module Flowbox.Batch.Handler.Library where
 
---import qualified Data.Maybe   as Maybe
 import           Data.Version   (Version (Version))
 import qualified System.Process as Process
 
-import           Flowbox.Batch.Batch                        (Batch)
+import           Flowbox.Batch.Batch                        (Batch, get)
 import qualified Flowbox.Batch.Batch                        as Batch
-import           Flowbox.Batch.Handler.Common               (libManagerOp, libraryOp, noresult, projectOp, readonly)
-import qualified Flowbox.Batch.Handler.Common               as Common
+import           Flowbox.Batch.Handler.Common               (libManagerOp, projectOp)
+import qualified Flowbox.Batch.Handler.Common               as Batch
 import           Flowbox.Batch.Process.Handle               (Handle (Handle))
 import qualified Flowbox.Batch.Process.Map                  as ProcessMap
 import qualified Flowbox.Batch.Process.Process              as Process
 import qualified Flowbox.Batch.Project.Project              as Project
-import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Data.Pass.ASTInfo             as ASTInfo
 import qualified Flowbox.Luna.Lib.LibManager                as LibManager
 import           Flowbox.Luna.Lib.Library                   (Library)
 import qualified Flowbox.Luna.Lib.Library                   as Library
-import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID      as MaxID
 import qualified Flowbox.Luna.Passes.Build.Build            as Build
 import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
 import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
 import qualified Flowbox.Luna.Passes.Build.Diagnostics      as Diagnostics
-import qualified Flowbox.Luna.Passes.General.Luna.Luna      as Luna
 import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -44,51 +41,46 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Handler.Library"
 
 
-libraries :: (Applicative m, Monad m) => Project.ID -> Batch -> m [(Library.ID, Library)]
-libraries projectID = readonly . libManagerOp projectID (\_ libManager ->
-    return (libManager, LibManager.labNodes libManager))
+libraries :: Project.ID -> Batch [(Library.ID, Library)]
+libraries projectID = LibManager.labNodes <$> Batch.getLibManager projectID
 
 
-libraryByID :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m Library
-libraryByID libID projectID = readonly . libraryOp libID projectID (\_ library ->
-    return (library, library))
+libraryByID :: Library.ID -> Project.ID -> Batch Library
+libraryByID = Batch.getLibrary
 
 
-createLibrary :: (Applicative m, Monad m) => String -> UniPath -> Project.ID -> Batch -> m (Batch, (Library.ID, Library))
-createLibrary name path projectID = libManagerOp projectID (\_ libManager -> do
+createLibrary :: String -> UniPath -> Project.ID -> Batch (Library.ID, Library)
+createLibrary name path projectID = libManagerOp projectID (\libManager -> do
     let library                = Library.make name path [name]
-        (newLibManager, libID) = LibManager.insNewNode library libManager
-    return (newLibManager, (libID, library)))
+        (newLibManager, libraryID) = LibManager.insNewNode library libManager
+    return (newLibManager, (libraryID, library)))
 
 
-loadLibrary :: UniPath -> Project.ID -> Batch -> IO (Batch, (Library.ID, Library))
-loadLibrary path projectID = libManagerOp projectID (\_ libManager ->
-    LibManager.loadLibrary path libManager)
+loadLibrary :: UniPath -> Project.ID -> Batch (Library.ID, Library)
+loadLibrary path projectID = libManagerOp projectID
+    (liftIO . LibManager.loadLibrary path)
 
 
-unloadLibrary :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m Batch
-unloadLibrary libID projectID = noresult . libManagerOp projectID (\_ libManager ->
-    return (LibManager.delNode libID libManager, ()))
+unloadLibrary :: Library.ID -> Project.ID -> Batch ()
+unloadLibrary libraryID projectID = libManagerOp projectID (\libManager ->
+    return (LibManager.delNode libraryID libManager, ()))
 
 
-storeLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-storeLibrary libID projectID = readonly . libraryOp libID projectID (\_ library -> do
-    LibSerialization.storeLibrary library
-    return (library, ()))
+storeLibrary :: Library.ID -> Project.ID -> Batch ()
+storeLibrary libraryID projectID = do
+    library <- Batch.getLibrary libraryID projectID
+    liftIO $ LibSerialization.storeLibrary library
 
 
 -- TODO [PM] : More remote arguments needed
-buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch library -> do
-    let projManager = Batch.projectManager batch
-        (Just proj) = ProjectManager.lab projManager projectID
-        projectPath = Project.path proj
-
-        ast         = Library.ast library
-
+buildLibrary :: Library.ID -> Project.ID -> Batch ()
+buildLibrary libraryID projectID = do
+    cfg         <- Batch.config <$> get
+    projectPath <- Project.path <$> Batch.getProject projectID
+    library     <- Batch.getLibrary projectID libraryID
+    let ast         = Library.ast library
         name        = Library.name library
         version     = Version [1][]      -- TODO [PM] : hardcoded version
-        cfg         = Batch.config batch
         diag        = Diagnostics.all   -- TODO [PM] : hardcoded diagnostics
         outputPath  = Platform.addExeOnWindows $ UniPath.append name projectPath
         libs        = []                 -- TODO [PM] : hardcoded libs
@@ -100,18 +92,17 @@ buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch libr
         buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
         bldCfg      = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
 
-    maxID <- Luna.runIO $ MaxID.run ast
-    Luna.runIO $ Build.run bldCfg ast (ASTInfo.mk maxID) False
-    return (library, ()))
+    maxID <- Batch.getMaxID projectID libraryID
+    EitherT $ Build.run bldCfg ast (ASTInfo.mk maxID) False
 
 
 -- TODO [PM] : Needs architecture change
-runLibrary ::  Library.ID -> Project.ID -> Batch -> IO (Batch, Process.ID)
-runLibrary libID projectID = projectOp projectID (\_ project -> do
+runLibrary ::  Library.ID -> Project.ID -> Batch Process.ID
+runLibrary libraryID projectID = projectOp projectID (\project -> do
     let projectPath = Project.path project
         libs        = Project.libs project
         processMap  = Project.processMap project
-    library <- LibManager.lab libs libID <?> "Wrong libID=" ++ show libID
+    library <- LibManager.lab libs libraryID <?> "Wrong libraryID=" ++ show libraryID
     name    <- UniPath.toUnixString <$> UniPath.expand (UniPath.append (Library.name library) projectPath)
     let command = Platform.dependent name (name ++ ".exe") name
     --    noStandardInput = ""
@@ -121,12 +112,12 @@ runLibrary libID projectID = projectOp projectID (\_ project -> do
     --let exitMsg = "Program exited with " ++ (show errorCode) ++ " code"
     --loggerIO debug exitMsg
     --return (library, stdOut ++ stdErr ++ "\n" ++ "Program exited with " ++ (show errorCode) ++ " code"))
-    handle <- Process.runCommand command
+    handle <- liftIO $ Process.runCommand command
     let processID     = ProcessMap.size processMap + 1
         newProcessMap = ProcessMap.insert processID (Handle handle) processMap
         newProject    = project { Project.processMap = newProcessMap}
     return (newProject, processID))
 
 
-interpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-interpretLibrary = Common.interpretLibrary
+interpretLibrary :: Library.ID -> Project.ID -> Batch ()
+interpretLibrary = Batch.interpretLibrary

@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE RankNTypes #-}
 
 module Flowbox.Batch.Handler.Common where
 
@@ -47,7 +48,6 @@ import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                  as Al
 import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
 import qualified Flowbox.Luna.Passes.Build.Build                           as Build
 import qualified Flowbox.Luna.Passes.Build.Diagnostics                     as Diagnostics
-import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer         as IDFixer
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as GraphParser
@@ -57,392 +57,330 @@ import           Flowbox.System.Log.Logger
 
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Handler.Common"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Batch.Handler.Common"
 
 
-safeInterpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-safeInterpretLibrary libID projectID batch = do
-    args <- Environment.getArgs
+safeInterpretLibrary :: Library.ID -> Project.ID -> Batch ()
+safeInterpretLibrary libraryID projectID = do
+    args <- liftIO Environment.getArgs
+    batch  <- get
     unless ("--no-auto-interpreter" `elem` args) $
-            Concurrent.forkIO_ $ Exception.catch
-                                 (interpretLibrary libID projectID batch)
-                                 (\e -> loggerIO error $ "Interpret failed: " ++ show (e :: IOException))
+            liftIO $ Concurrent.forkIO_ $ Exception.catch
+                                 (eitherStringToM =<< Batch.runBatch batch (interpretLibrary libraryID projectID))
+                                 (\e -> logger error $ "Interpret failed: " ++ show (e :: IOException))
 
 
-interpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-interpretLibrary libID projectID batch = do
-    ast <- getAST libID projectID batch
+interpretLibrary :: Library.ID -> Project.ID -> Batch ()
+interpretLibrary libraryID projectID = do
     let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
-        cfg     = Batch.config batch
         imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
-    maxID <- Luna.runIO $ MaxID.run ast
-    [hsc] <- Luna.runIO $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
+    ast <- getAST libraryID projectID
+    cfg <- Batch.config <$> get
+    maxID <- EitherT $ MaxID.run ast
+    [hsc] <- EitherT $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
     let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ Source.code hsc)
-    Interpreter.runSource cfg imports code "main"
+    liftIO $ Interpreter.runSource cfg imports code "main"
 
 
-getProjectManager :: Batch -> ProjectManager
-getProjectManager = Batch.projectManager
+getProjectManager :: Batch ProjectManager
+getProjectManager = Batch.projectManager <$> get
 
 
-setProjectManager :: ProjectManager -> Batch -> Batch
-setProjectManager newProjectManager batch = batch { Batch.projectManager = newProjectManager }
+setProjectManager :: ProjectManager -> Batch ()
+setProjectManager projectManager = do
+    batch <- get
+    put $ batch { Batch.projectManager = projectManager }
 
 
-getProject :: (Applicative m, Monad m) => Project.ID -> Batch -> m Project
-getProject projectID batch  =
-    ProjectManager.lab (getProjectManager batch) projectID <?> ("Wrong 'projectID' = " ++ show projectID)
+getProject :: Project.ID -> Batch Project
+getProject projectID = do
+    projectManager <- getProjectManager
+    ProjectManager.lab projectManager projectID <?> ("Wrong 'projectID' = " ++ show projectID)
 
 
-setProject :: Project -> Project.ID -> Batch -> Batch
-setProject newProject projectID batch = newBatch where
-    projectManager    = getProjectManager batch
-    newProjectManager = ProjectManager.updateNode (projectID, newProject) projectManager
-    newBatch          = setProjectManager newProjectManager batch
+setProject :: Project -> Project.ID -> Batch ()
+setProject newProject projectID = do
+    pm <- getProjectManager
+    setProjectManager (ProjectManager.updateNode (projectID, newProject) pm)
 
 
-getProcessMap :: (Applicative m, Monad m) => Project.ID -> Batch -> m ProcessMap
-getProcessMap projectID batch = Project.processMap <$> getProject projectID batch
+getProcessMap :: Project.ID -> Batch ProcessMap
+getProcessMap projectID = Project.processMap <$> getProject projectID
 
 
-setProcessMap :: (Applicative m, Monad m) => ProcessMap -> Project.ID -> Batch -> m Batch
-setProcessMap newProcessMap projectID batch = do
-    project <- getProject projectID batch
-    let newProject = project { Project.processMap = newProcessMap }
-    return $ setProject newProject projectID batch
+setProcessMap :: ProcessMap -> Project.ID -> Batch ()
+setProcessMap newProcessMap projectID = do
+    project <- getProject projectID
+    setProject (project { Project.processMap = newProcessMap }) projectID
 
 
-getLibManager :: (Applicative m, Monad m) => Project.ID -> Batch -> m LibManager
-getLibManager projectID batch = Project.libs <$> getProject projectID batch
+getLibManager :: Project.ID -> Batch LibManager
+getLibManager projectID = Project.libs <$> getProject projectID
 
 
-setLibManager :: (Applicative m, Monad m) => LibManager -> Project.ID -> Batch -> m Batch
-setLibManager newLibManager projectID batch = do
-    project <- getProject projectID batch
-    let newProject = project { Project.libs = newLibManager }
-    return $ setProject newProject projectID batch
+setLibManager :: LibManager -> Project.ID -> Batch ()
+setLibManager newLibManager projectID = do
+    project <- getProject projectID
+    setProject (project { Project.libs = newLibManager }) projectID
 
 
-getLibrary :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m Library
-getLibrary libraryID projectID batch = do
-    libManager <- getLibManager projectID batch
+getLibrary :: Library.ID -> Project.ID -> Batch Library
+getLibrary libraryID projectID = do
+    libManager <- getLibManager projectID
     LibManager.lab libManager libraryID <?> ("Wrong 'libraryID' = " ++ show libraryID)
 
 
-setLibrary :: (Applicative m, Monad m) => Library -> Library.ID -> Project.ID -> Batch -> m Batch
-setLibrary newLibary libraryID projectID batch = do
-    libManager <- getLibManager projectID batch
-    let newLibManager = LibManager.updateNode (libraryID, newLibary) libManager
-    setLibManager newLibManager projectID batch
+setLibrary :: Library -> Library.ID -> Project.ID -> Batch ()
+setLibrary newLibary libraryID projectID = do
+    libManager <- getLibManager projectID
+    setLibManager (LibManager.updateNode (libraryID, newLibary) libManager) projectID
 
 
-getPropertyMap :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m PropertyMap
-getPropertyMap libraryID projectID batch =
-    Library.propertyMap <$> getLibrary libraryID projectID batch
+getPropertyMap :: Library.ID -> Project.ID -> Batch PropertyMap
+getPropertyMap libraryID projectID =
+    Library.propertyMap <$> getLibrary libraryID projectID
 
 
-setPropertyMap :: (Applicative m, Monad m) => PropertyMap -> Library.ID -> Project.ID -> Batch -> m Batch
-setPropertyMap newPropertyMap libraryID projectID batch = do
-    library <- getLibrary libraryID projectID batch
-    let newLibrary = library { Library.propertyMap = newPropertyMap }
-    setLibrary newLibrary libraryID projectID batch
+setPropertyMap :: PropertyMap -> Library.ID -> Project.ID -> Batch ()
+setPropertyMap newPropertyMap libraryID projectID = do
+    library <- getLibrary libraryID projectID
+    setLibrary (library { Library.propertyMap = newPropertyMap }) libraryID projectID
 
 
-getAST :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m Module
-getAST libraryID projectID batch =
-    Library.ast <$> getLibrary libraryID projectID batch
+getAST :: Library.ID -> Project.ID -> Batch  Module
+getAST libraryID projectID =
+    Library.ast <$> getLibrary libraryID projectID
 
 
-setAST :: (Applicative m, Monad m) => Module -> Library.ID -> Project.ID -> Batch -> m Batch
-setAST newModule libraryID projectID batch = do
-    library <- getLibrary libraryID projectID batch
-    let newLibrary = library { Library.ast = newModule }
-    setLibrary newLibrary libraryID projectID batch
+setAST :: Module -> Library.ID -> Project.ID -> Batch ()
+setAST newModule libraryID projectID = do
+    library <- getLibrary libraryID projectID
+    setLibrary (library { Library.ast = newModule }) libraryID projectID
 
 
-getFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Focus
-getFocus bc libraryID projectID batch = do
-    m <- getAST libraryID projectID batch
+getFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Focus
+getFocus bc libraryID projectID = do
+    m <- getAST libraryID projectID
     Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc m
 
 
-setFocus :: (Applicative m, Monad m) => Focus -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
-setFocus newFocus bc libraryID projectID batch = do
-    m      <- getAST libraryID projectID batch
+setFocus :: Focus -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+setFocus newFocus bc libraryID projectID = do
+    m      <- getAST libraryID projectID
     zipper <- Zipper.focusBreadcrumbs' bc m
     newM   <- Zipper.modify (const newFocus) zipper >>= Zipper.close
-    setAST newM libraryID projectID batch
+    setAST newM libraryID projectID
 
 
-getModuleFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Module
-getModuleFocus bc libraryID projectID batch = do
-    focus <- getFocus bc libraryID projectID batch
+getModuleFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Module
+getModuleFocus bc libraryID projectID = do
+    focus <- getFocus bc libraryID projectID
     case focus of
         Focus.ModuleFocus m -> return m
-        _                   -> fail "Target is not a module"
+        _                   -> left "Target is not a module"
 
 
-setModuleFocus :: (Applicative m, Monad m) => Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+setModuleFocus :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setModuleFocus newModule = setFocus (Focus.ModuleFocus newModule)
 
 
-getFunctionFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Expr
-getFunctionFocus bc libraryID projectID batch = do
-    focus <- getFocus bc libraryID projectID batch
+getFunctionFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
+getFunctionFocus bc libraryID projectID = do
+    focus <- getFocus bc libraryID projectID
     case focus of
         Focus.FunctionFocus f -> return f
-        _                     -> fail "Target is not a function"
+        _                     -> left "Target is not a function"
 
 
-setFunctionFocus :: (Applicative m, Monad m) => Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+setFunctionFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setFunctionFocus newFunction = setFocus (Focus.FunctionFocus newFunction)
 
 
-getClassFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Expr
-getClassFocus bc libraryID projectID batch = do
-    focus <- getFocus bc libraryID projectID batch
+getClassFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
+getClassFocus bc libraryID projectID = do
+    focus <- getFocus bc libraryID projectID
     case focus of
         Focus.ClassFocus c -> return c
-        _                  -> fail "Target is not a class"
+        _                  -> left "Target is not a class"
 
 
-setClassFocus :: (Applicative m, Monad m) => Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+setClassFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setClassFocus newClass = setFocus (Focus.ClassFocus newClass)
 
 
-getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Graph, PropertyMap)
-getGraph bc libraryID projectID batch = do
-    ast         <- getAST libraryID projectID batch
-    propertyMap <- getPropertyMap libraryID projectID batch
-    expr        <- getFunctionFocus bc libraryID projectID batch
-    aa          <- Luna.runIO $ Alias.run ast
-    Luna.runIO $ GraphBuilder.run aa propertyMap expr
+getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (Graph, PropertyMap)
+getGraph bc libraryID projectID = do
+    ast         <- getAST libraryID projectID
+    propertyMap <- getPropertyMap libraryID projectID
+    expr        <- getFunctionFocus bc libraryID projectID
+    aa          <- EitherT $ Alias.run ast
+    EitherT $ GraphBuilder.run aa propertyMap expr
 
 
-setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-setGraph (newGraph, newPM) bc libraryID projectID batch = do
-    expr <- getFunctionFocus bc libraryID projectID batch
-    ast  <- Luna.runIO $ GraphParser.run newGraph newPM expr
+setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+setGraph (newGraph, newPM) bc libraryID projectID = do
+    expr <- getFunctionFocus bc libraryID projectID
+    ast  <- EitherT $ GraphParser.run newGraph newPM expr
 
-    newMaxID <- Luna.runIO $ MaxID.runExpr ast
-    fixedAst <- Luna.runIO $ IDFixer.runExpr newMaxID Nothing False ast
+    newMaxID <- EitherT $ MaxID.runExpr ast
+    fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
 
-    loggerIO debug $ show newGraph
-    loggerIO debug $ show newPM
-    loggerIO debug $ ppShow fixedAst
-    newBatch <- setFunctionFocus fixedAst bc libraryID projectID batch
-    setPropertyMap newPM libraryID projectID newBatch
+    logger debug $ show newGraph
+    logger debug $ show newPM
+    logger debug $ ppShow fixedAst
+    setFunctionFocus fixedAst bc libraryID projectID
+    setPropertyMap newPM libraryID projectID
 
 
-getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (GraphView, PropertyMap)
-getGraphView bc libraryID projectID batch = do
-    (graph, propertyMap) <- getGraph bc libraryID projectID batch
+getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (GraphView, PropertyMap)
+getGraphView bc libraryID projectID = do
+    (graph, propertyMap) <- getGraph bc libraryID projectID
     let graphView = GraphView.fromGraph graph
     return $ Defaults.removeDefaults graphView propertyMap
 
 
-setGraphView :: (GraphView, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-setGraphView (newGraphView', newPM') bc libraryID projectID batch = do
+setGraphView :: (GraphView, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+setGraphView (newGraphView', newPM') bc libraryID projectID = do
     let (newGraphView, newPM) = Defaults.addDefaults newGraphView' newPM'
     newGraph <- GraphView.toGraph newGraphView
-    setGraph (newGraph, newPM) bc libraryID projectID batch
-
--- DEPRECATED ---------------------------------------------------------------
-
-readonly :: (Applicative m, Monad m) => m (a, r) -> m r
-readonly operation = snd <$> operation
+    setGraph (newGraph, newPM) bc libraryID projectID
 
 
-noresult :: (Applicative m, Monad m) => m (a, r) -> m a
-noresult operation = fst <$> operation
+getNode :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node
+getNode nodeID bc libraryID projectID = do
+    (graphView, _) <- getGraphView bc libraryID projectID
+    Graph.lab graphView nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
+
+---------------------------------------------------------------------------
+
+getMaxID :: Library.ID -> Project.ID -> Batch AST.ID
+getMaxID libraryID projectID = do
+    ast <- getAST libraryID projectID
+    EitherT $ MaxID.run ast
+
+---------------------------------------------------------------------------
+
+projectManagerOp :: (ProjectManager -> Batch (ProjectManager, r)) -> Batch r
+projectManagerOp operation = do
+    projectManager <- getProjectManager
+    (newProjectManager, r) <- operation projectManager
+    setProjectManager newProjectManager
+    return r
 
 
-projectManagerOp :: (Applicative m, Monad m)
-                 => (Batch -> ProjectManager -> m (ProjectManager, r))
-                 -> Batch
-                 -> m (Batch, r)
-projectManagerOp operation batch = do
-    let projectManager = getProjectManager batch
-    (newProjectManager, r) <- operation batch projectManager
-    let newBatch = setProjectManager newProjectManager batch
-    return (newBatch, r)
+projectOp :: Project.ID -> (Project -> Batch (Project, r)) -> Batch r
+projectOp projectID operation = do
+    project         <- getProject projectID
+    (newProject, r) <- operation project
+    setProject newProject projectID
+    return r
 
 
-projectOp :: (Applicative m, Monad m)
-          => Project.ID
-          -> (Batch -> Project -> m (Project, r))
-          -> Batch
-          -> m (Batch, r)
-projectOp projectID operation batch = do
-    project         <- getProject projectID batch
-    (newProject, r) <- operation batch project
-    let newBatch = setProject newProject projectID batch
-    return (newBatch, r)
+processMapOp :: Project.ID -> (ProcessMap -> Batch (ProcessMap, r)) -> Batch r
+processMapOp projectID operation = do
+    processMap <- getProcessMap projectID
+    (newProcessMap, r) <- operation processMap
+    setProcessMap newProcessMap projectID
+    return r
 
 
-processMapOp :: (Applicative m, Monad m)
-             => Project.ID
-             -> (Batch -> ProcessMap -> m (ProcessMap, r))
-             -> Batch
-             -> m (Batch, r)
-processMapOp projectID operation batch = do
-    processMap <- getProcessMap projectID batch
-    (newProcessMap, r) <- operation batch processMap
-    newBatch <- setProcessMap newProcessMap projectID batch
-    return (newBatch, r)
+libManagerOp :: Project.ID -> (LibManager -> Batch (LibManager, r)) -> Batch r
+libManagerOp projectID operation = do
+    libManager <- getLibManager projectID
+    (newLibManager, r) <- operation libManager
+    setLibManager newLibManager projectID
+    return r
 
 
-libManagerOp :: (Applicative m, Monad m)
-             => Project.ID
-             -> (Batch -> LibManager -> m (LibManager, r))
-             -> Batch
-             -> m (Batch, r)
-libManagerOp projectID operation batch = do
-    libManager <- getLibManager projectID batch
-    (newLibManager, r) <- operation batch libManager
-    newBatch   <- setLibManager newLibManager projectID batch
-    return (newBatch, r)
+libraryOp :: Library.ID -> Project.ID
+          -> (Library -> Batch (Library, r))
+          -> Batch r
+libraryOp libraryID projectID operation = do
+    library        <- getLibrary libraryID projectID
+    (newLibary, r) <- operation library
+    setLibrary newLibary libraryID projectID
+    return r
 
 
-libraryOp :: (Applicative m, Monad m)
-          => Library.ID
-          -> Project.ID
-          -> (Batch -> Library -> m (Library, r))
-          -> Batch
-          -> m (Batch, r)
-libraryOp libID projectID operation batch = do
-    library        <- getLibrary libID projectID batch
-    (newLibary, r) <- operation batch library
-    newBatch       <- setLibrary newLibary libID projectID batch
-    return (newBatch, r)
+propertyMapOp :: Library.ID -> Project.ID
+              -> (PropertyMap -> Batch (PropertyMap, r))
+              -> Batch r
+propertyMapOp libraryID projectID operation = do
+    propertyMap <- getPropertyMap libraryID projectID
+    (newPropertyMap, r) <- operation propertyMap
+    setPropertyMap newPropertyMap libraryID projectID
+    return r
 
 
-astOp :: Library.ID
-      -> Project.ID
-      -> (Batch -> Module -> PropertyMap -> IO ((Module, PropertyMap), r))
-      -> Batch
-      -> IO (Batch, r)
-astOp libID projectID operation batch = do
-    ast         <- getAST         libID projectID batch
-    propertyMap <- getPropertyMap libID projectID batch
-    ((newAst, newPM), r) <- operation batch ast propertyMap
-    newBatch    <-  setAST         newAst libID projectID
-                =<< setPropertyMap newPM  libID projectID batch
-    return (newBatch, r)
+astOp :: Library.ID -> Project.ID
+      -> (Module -> PropertyMap -> Batch ((Module, PropertyMap), r))
+      -> Batch r
+astOp libraryID projectID operation = do
+    ast         <- getAST         libraryID projectID
+    propertyMap <- getPropertyMap libraryID projectID
+    ((newAst, newPM), r) <- operation ast propertyMap
+    setAST         newAst libraryID projectID
+    setPropertyMap newPM  libraryID projectID
+    return r
 
 
-astFocusOp :: Breadcrumbs
-           -> Library.ID
-           -> Project.ID
-           -> (Batch -> Focus -> AST.ID -> IO (Focus, r))
-           -> Batch
-           -> IO (Batch, r)
-astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast pm -> do
-    zipper <- Zipper.focusBreadcrumbs' bc ast
-    let focus = Zipper.getFocus zipper
-
-    maxID <- Luna.runIO $ MaxID.run ast
-    (newFocus, r) <- operation batch focus maxID
-
-    newAst <- Zipper.modify (const newFocus) zipper >>= Zipper.close
-    return ((newAst, pm), r))
+astFocusOp :: Breadcrumbs -> Library.ID -> Project.ID
+           -> (Focus -> Batch (Focus, r))
+           -> Batch r
+astFocusOp bc libraryID projectID operation = do
+    focus <- getFocus bc libraryID projectID
+    (newFocus, r) <- operation focus
+    setFocus newFocus bc libraryID projectID
+    return r
 
 
-astModuleFocusOp :: Breadcrumbs
-                 -> Library.ID
-                 -> Project.ID
-                 -> (Batch -> Module -> AST.ID -> IO (Module, r))
-                 -> Batch
-                 -> IO (Batch, r)
-astModuleFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus maxID -> do
-    (m, r) <- case focus of
-        Focus.ModuleFocus m -> operation batch m maxID
-        _                   -> fail "Target is not a module"
-    return (Focus.ModuleFocus m, r))
+astModuleFocusOp :: Breadcrumbs -> Library.ID -> Project.ID
+                 -> (Module -> Batch (Module, r))
+                 -> Batch r
+astModuleFocusOp bc libraryID projectID operation = do
+    m <- getModuleFocus bc libraryID projectID
+    (newM, r) <- operation m
+    setModuleFocus newM bc libraryID projectID
+    return r
 
 
-astFunctionFocusOp :: Breadcrumbs
-                   -> Library.ID
-                   -> Project.ID
-                   -> (Batch -> Expr -> AST.ID -> IO (Expr, r))
-                   -> Batch
-                   -> IO (Batch, r)
-astFunctionFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus maxID -> do
-    (f, r) <- case focus of
-        Focus.FunctionFocus f -> operation batch f maxID
-        _                     -> fail "Target is not a function"
-    return (Focus.FunctionFocus f, r))
+astFunctionFocusOp :: Breadcrumbs -> Library.ID -> Project.ID
+                   -> (Expr -> Batch (Expr, r))
+                   -> Batch r
+astFunctionFocusOp bc libraryID projectID operation = do
+    f <- getFunctionFocus bc libraryID projectID
+    (newF, r) <- operation f
+    setFunctionFocus newF bc libraryID projectID
+    return r
 
 
-astClassFocusOp :: Breadcrumbs
-                -> Library.ID
-                -> Project.ID
-                -> (Batch -> Expr -> AST.ID -> IO (Expr, r))
-                -> Batch
-                -> IO (Batch, r)
-astClassFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus maxID -> do
-    (c, r) <- case focus of
-        Focus.ClassFocus c -> operation batch c maxID
-        _                  -> fail "Target is not a class"
-    return (Focus.ClassFocus c, r))
+astClassFocusOp :: Breadcrumbs -> Library.ID -> Project.ID
+                -> (Expr -> Batch (Expr, r))
+                -> Batch r
+astClassFocusOp bc libraryID projectID operation = do
+    c <- getClassFocus bc libraryID projectID
+    (newC, r) <- operation c
+    setClassFocus newC bc libraryID projectID
+    return r
 
 
-graphOp :: Breadcrumbs
-         -> Library.ID
-         -> Project.ID
-         -> (Batch -> Graph -> PropertyMap -> AST.ID -> IO ((Graph, PropertyMap), r))
-         -> Batch
-         -> IO (Batch, r)
-graphOp bc libID projectID operation = astOp libID projectID (\batch ast propertyMap -> do
-    zipper <- Zipper.focusBreadcrumbs' bc ast
-    let focus = Zipper.getFocus zipper
-    expr <- case focus of
-        Focus.FunctionFocus expr -> return expr
-        _                        -> fail "Breadcrumbs are not focusing on function."
-    aa    <- Luna.runIO $ Alias.run ast
-    maxID <- Luna.runIO $ MaxID.run ast
-
-    (graph, pm) <- Luna.runIO $ GraphBuilder.run aa propertyMap expr
-
-    ((newGraph, newPM), r) <- liftIO $ operation batch graph pm maxID
-
-    ast' <- Luna.runIO $ GraphParser.run newGraph newPM expr
-
-    newMaxID <- Luna.runIO $ MaxID.runExpr ast'
-    fixedAst <- Luna.runIO $ IDFixer.runExpr newMaxID Nothing False ast'
-
-    loggerIO debug $ show newGraph
-    loggerIO debug $ show newPM
-    loggerIO debug $ ppShow fixedAst
-
-    newAst <- Zipper.modify (\_ -> Focus.FunctionFocus fixedAst) zipper >>= Zipper.close
-    return ((newAst, newPM), r))
+graphOp :: Breadcrumbs -> Library.ID -> Project.ID
+        -> (Graph -> PropertyMap -> Batch ((Graph, PropertyMap), r))
+        -> Batch r
+graphOp bc libraryID projectID operation = do
+    (graph, pm)            <- getGraph bc libraryID projectID
+    ((newGraph, newPM), r) <- operation graph pm
+    setGraph (newGraph, newPM) bc libraryID projectID
+    return r
 
 
-graphViewOp :: Breadcrumbs
-            -> Library.ID
-            -> Project.ID
-            -> (Batch -> GraphView -> PropertyMap -> AST.ID -> IO ((GraphView, PropertyMap), r))
-            -> Batch
-            -> IO (Batch, r)
-graphViewOp bc libID projectID operation = graphOp bc libID projectID (\batch graph propertyMap maxID -> do
-    let graphView = GraphView.fromGraph graph
-        (graphView', propertyMap') = Defaults.removeDefaults graphView propertyMap
-    ((newGraphView', newPM'), r) <- operation batch graphView' propertyMap' maxID
-    let (newGraphView, newPM) = Defaults.addDefaults newGraphView' newPM'
-    newGraph <- GraphView.toGraph newGraphView
-    return ((newGraph, newPM), r))
+graphViewOp :: Breadcrumbs -> Library.ID -> Project.ID
+            -> (GraphView -> PropertyMap -> Batch ((GraphView, PropertyMap), r))
+            -> Batch r
+graphViewOp bc libraryID projectID operation = do
+    (graphView, propertyMap) <- getGraphView bc libraryID projectID
+    ((newGraphView, newPM), r) <- operation graphView propertyMap
+    setGraphView (newGraphView, newPM) bc libraryID projectID
+    return r
 
-
-readonlyNodeOp :: Node.ID
-               -> Breadcrumbs
-               -> Library.ID
-               -> Project.ID
-               -> (Batch -> Node -> IO r)
-               -> Batch
-               -> IO r
-readonlyNodeOp nodeID bc libID projectID operation = readonly . graphViewOp bc libID projectID (\batch graph propertyMap _ -> do
-    node <- Graph.lab graph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
-    r <- operation batch node
-    return ((graph, propertyMap), r))

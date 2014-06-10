@@ -95,7 +95,6 @@ pkgDb = PathDict(
        , 'tools/aws/account-manager'           : HProject   ('flowbox-account-manager'      , os.path.join ('tools' , 'aws', 'account-manager')              , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'])
        , 'tools/aws/account-manager-mock'      : HProject   ('flowbox-account-manager-mock' , os.path.join ('tools' , 'aws', 'account-manager-mock')         , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'])
        , 'tools/aws/instance-manager'          : HProject   ('flowbox-instance-manager'     , os.path.join ('tools' , 'aws', 'instance-manager')             , 'tools'   , ['libs/utils', 'libs/aws'])
-       , 'tools/batch/batch-srv'               : HProject   ('flowbox-batch-srv'            , os.path.join ('tools' , 'batch', 'batch-srv')                  , 'tools'   , ['libs/utils', 'libs/config', 'tools/initializer', 'libs/luna', 'libs/batch'])
        , 'tools/batch/plugins/broker'          : HProject   ('flowbox-broker'               , os.path.join ('tools' , 'batch', 'plugins', 'broker')          , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'tools/batch/plugins/bus-logger'      : HProject   ('flowbox-bus-logger'           , os.path.join ('tools' , 'batch', 'plugins', 'bus-logger')      , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'tools/batch/plugins/file-manager'    : HProject   ('flowbox-file-manager'         , os.path.join ('tools' , 'batch', 'plugins', 'file-manager')    , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])

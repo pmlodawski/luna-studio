@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.ProjectManager.Handler.Properties where
 
-import qualified Data.IORef                                                                                    as IORef
 import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes                                      ()
 import           Flowbox.Prelude
 import           Flowbox.ProjectManager.Context                                                                (ContextRef)
+import qualified Flowbox.ProjectManager.Context                                                                as Context
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Request as GetNodeProperties
@@ -23,6 +23,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.S
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Update                      as SetASTProperties
 
 
+
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Properties"
 
@@ -32,8 +33,7 @@ getASTProperties ctxRef (GetASTProperties.Request tnodeID tlibID tprojectID) = d
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    properties <- BatchP.getProperties nodeID libID projectID batch
+    properties <- Context.run ctxRef $ BatchP.getProperties nodeID libID projectID
     return $ GetASTProperties.Status (encode properties) tnodeID tlibID tprojectID
 
 
@@ -43,9 +43,7 @@ setASTProperties ctxRef (SetASTProperties.Request tproperties tnodeID tlibID tpr
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchP.setProperties properties nodeID libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchP.setProperties properties nodeID libID projectID
     return $ SetASTProperties.Update tproperties tnodeID tlibID tprojectID
 
 
@@ -54,8 +52,7 @@ getNodeProperties ctxRef (GetNodeProperties.Request tnodeID tbc tlibID tprojectI
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    properties <- BatchP.getProperties nodeID libID projectID batch
+    properties <- Context.run ctxRef $ BatchP.getProperties nodeID libID projectID
     return $ GetNodeProperties.Status (encode properties) tnodeID tbc tlibID tprojectID
 
 
@@ -65,7 +62,5 @@ setNodeProperties ctxRef (SetNodeProperties.Request tproperties tnodeID tbc tlib
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchP.setProperties properties nodeID libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchP.setProperties properties nodeID libID projectID
     return $ SetNodeProperties.Update tproperties tnodeID tbc tlibID tprojectID

@@ -4,21 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE RankNTypes #-}
 
-module Flowbox.Batch.Handler.Project (
-    projects,
+module Flowbox.Batch.Handler.Project where
 
-    projectByID,
-    createProject,
-    openProject,
-    updateProject,
-    closeProject,
-    storeProject,
-) where
-
-import           Flowbox.Batch.Batch                         (Batch)
-import qualified Flowbox.Batch.Batch                         as Batch
-import           Flowbox.Batch.Handler.Common                (noresult, projectOp, readonly)
+import           Flowbox.Batch.Batch                         (Batch, liftIO)
+import qualified Flowbox.Batch.Handler.Common                as Batch
 import           Flowbox.Batch.Project.Project               (Project)
 import qualified Flowbox.Batch.Project.Project               as Project
 import qualified Flowbox.Batch.Project.ProjectManager        as ProjectManager
@@ -30,50 +21,42 @@ import qualified Flowbox.System.UniPath                      as UniPath
 
 
 
-projects :: Batch -> [(Project.ID, Project)]
-projects batch = ProjectManager.labNodes (Batch.projectManager batch)
+projects :: Batch [(Project.ID, Project)]
+projects = ProjectManager.labNodes <$> Batch.getProjectManager
 
 
-projectByID :: (Applicative m, Monad m) => Project.ID -> Batch -> m Project
-projectByID projectID = readonly . projectOp projectID (\_ project ->
-    return (project, project))
+projectByID :: Project.ID -> Batch Project
+projectByID = Batch.getProject
 
 
-createProject :: String -> UniPath -> Attributes -> Batch -> IO (Batch, (Project.ID, Project))
-createProject name path attributes batch = do
+createProject :: String -> UniPath -> Attributes -> Batch (Project.ID, Project)
+createProject name path attributes = Batch.projectManagerOp (\projectManager -> do
     expandedPath <- UniPath.expand path
     let project            = Project.make name expandedPath attributes
-        pm                 = Batch.projectManager batch
-        (newpm, projectID) = ProjectManager.insNewNode project pm
-        newBatch           = batch { Batch.projectManager = newpm }
-    return (newBatch, (projectID, project))
+        (newpm, projectID) = ProjectManager.insNewNode project projectManager
+    return (newpm, (projectID, project)))
 
 
-openProject :: UniPath -> Batch -> IO (Batch, (Project.ID, Project))
-openProject path batch = do
-    let aprojectManager = Batch.projectManager batch
-    expandedPath              <- UniPath.expand path
-    (newProjectManager, newP) <- ProjectManager.openProject aprojectManager expandedPath
-    let newBatch = batch {Batch.projectManager = newProjectManager}
-    return (newBatch, newP)
+openProject :: UniPath -> Batch (Project.ID, Project)
+openProject path = Batch.projectManagerOp (\projectManager -> do
+    expandedPath <- UniPath.expand path
+    liftIO $ ProjectManager.openProject projectManager expandedPath)
 
 
-updateProject :: (Applicative m, Monad m) => (Project.ID, Project) -> Batch -> m Batch
-updateProject (projectID, project) = noresult . projectOp projectID (\_ oldProject -> do
+updateProject :: (Project.ID, Project) -> Batch ()
+updateProject (projectID, project) = Batch.projectOp projectID (\oldProject -> do
     let libs = Project.libs oldProject
         newProject = project { Project.libs = libs }
     return (newProject, ()))
 
 
-closeProject :: Project.ID -> Batch -> Batch
-closeProject projectID batch = newBatch where
-    projectManager    = Batch.projectManager batch
-    newProjectManager = ProjectManager.delNode projectID projectManager
-    newBatch          = batch {Batch.projectManager = newProjectManager}
+closeProject :: Project.ID -> Batch ()
+closeProject projectID = Batch.projectManagerOp (\projectManager ->
+    return (ProjectManager.delNode projectID projectManager, ()))
 
 
-storeProject :: Project.ID -> Batch -> IO ()
-storeProject projectID = readonly . projectOp projectID (\_ project -> do
-    ProjectSerialization.storeProject project
-    return (project, ()))
+storeProject :: Project.ID -> Batch ()
+storeProject projectID = do
+    project <- Batch.getProject projectID
+    liftIO $ ProjectSerialization.storeProject project
 
