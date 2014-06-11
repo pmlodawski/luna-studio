@@ -8,8 +8,9 @@
 module Flowbox.FileManager.Handler.File where
 
 import qualified Flowbox.AWS.S3.File                                        as File
-import qualified Flowbox.AWS.S3.S3                                          as S3
+import           Flowbox.Bus.RPC.RPC                                        (RPC)
 import           Flowbox.FileManager.Context                                (Context)
+import qualified Flowbox.FileManager.Context                                as Context
 import           Flowbox.Prelude                                            hiding (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -34,45 +35,45 @@ loggerIO = getLoggerIO "Flowbox.FileManager.Handler.File"
 ------ public api -------------------------------------------------
 
 
-upload :: Context -> Upload.Request -> IO Upload.Status
+upload :: Context -> Upload.Request -> RPC Upload.Status
 upload ctx (Upload.Request tpath) = do
     let path = decodeP tpath
-    S3.runS3env ctx $ File.upload "." path
+    Context.run ctx $ File.upload "." path
     return $ Upload.Status tpath
 
 
-fetch :: Context -> Fetch.Request -> IO Fetch.Status
+fetch :: Context -> Fetch.Request -> RPC Fetch.Status
 fetch ctx (Fetch.Request tpath) = do
     let path = decodeP tpath
-    S3.runS3env ctx $ File.fetch "." path
+    Context.run ctx $ File.fetch "." path
     return $ Fetch.Status tpath
 
 
-exists :: Context -> Exists.Request -> IO Exists.Status
+exists :: Context -> Exists.Request -> RPC Exists.Status
 exists ctx (Exists.Request tpath) = do
     let path = decodeP tpath
-    e <- S3.runS3env ctx $ File.exists path
+    e <- Context.run ctx $ File.exists path
     return $ Exists.Status e tpath
 
 
-remove :: Context -> Remove.Request -> IO Remove.Update
+remove :: Context -> Remove.Request -> RPC Remove.Update
 remove ctx (Remove.Request tpath) = do
     let path = decodeP tpath
-    S3.runS3env ctx $ File.remove path
+    Context.run ctx $ File.remove path
     return $ Remove.Update tpath
 
 
-copy :: Context -> Copy.Request -> IO Copy.Update
+copy :: Context -> Copy.Request -> RPC Copy.Update
 copy ctx (Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    S3.runS3env ctx $ File.copy src dst
+    Context.run ctx $ File.copy src dst
     return $ Copy.Update tsrc tdst
 
 
-move :: Context -> Move.Request -> IO Move.Update
+move :: Context -> Move.Request -> RPC Move.Update
 move ctx (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    S3.runS3env ctx $ File.rename src dst
+    Context.run ctx $ File.rename src dst
     return $ Move.Update tsrc tdst
