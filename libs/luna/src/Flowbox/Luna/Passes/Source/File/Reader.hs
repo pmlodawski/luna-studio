@@ -7,7 +7,6 @@
 
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
 module Flowbox.Luna.Passes.Source.File.Reader where

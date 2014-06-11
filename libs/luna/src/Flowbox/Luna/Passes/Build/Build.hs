@@ -11,7 +11,6 @@
 
 module Flowbox.Luna.Passes.Build.Build where
 
-import Control.Applicative
 import Control.Monad.RWS   hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either

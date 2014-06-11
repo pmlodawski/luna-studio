@@ -90,7 +90,7 @@ remove bc libID projectID = astOp libID projectID (\ast propertyMap -> do
 
 resolveDefinition :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(Breadcrumbs, Library.ID)]
 resolveDefinition name bc libID projectID = libManagerOp projectID (\libManager -> do
-    results <- NameResolver.resolve name bc libID libManager
+    results <- EitherT $ NameResolver.run name bc libID libManager
     return (libManager, results))
 
 
