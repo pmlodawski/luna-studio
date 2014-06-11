@@ -11,6 +11,7 @@ module Flowbox.Graphics.Image.View.Internal (
     ChanTree,
     Select (..),
     get,
+    append
 ) where
 
 import           Data.Set        hiding (map)
@@ -57,13 +58,20 @@ get v descriptor = case result of
 
 append :: View view => Channel -> view -> view
 append chan v = set (ChanTree.tree result') v
-    where result = P.foldl go z (init nodes) >>= ChanTree.append (last nodes) (Just chan) >>= ChanTree.top
+    where result = P.foldl go z (init nodes) >>= insert (last nodes) (Just chan) >>= ChanTree.top
           result' = case result of
               Right res -> res
               Left err  -> errorShitWentWrong $ "append (" ++ show err ++ ") "
+
           go acc p   = let res = acc >>= ChanTree.lookup p in case res of
               Right _ -> res
-              Left  _ -> acc >>= ChanTree.append p Nothing
+              Left  _ -> acc >>= ChanTree.append p Nothing >>= ChanTree.lookup p
+
+          insert :: String -> Maybe Channel -> ChanTree.Zipper String Channel -> ChanTree.ZipperResult String Channel
+          insert p v zipper = let res = ChanTree.lookup p zipper in case res of
+              Right (ChannelTree _ oldmap, _) -> ChanTree.attach p (ChannelTree v oldmap) zipper
+              Left _ -> ChanTree.append p v zipper
+
           z          = ChanTree.zipper $ channels v
           nodes      = splitOn "." descriptor
           descriptor = Channel.name chan

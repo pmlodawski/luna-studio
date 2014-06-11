@@ -4,23 +4,27 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE ViewPatterns #-}
 
 module Flowbox.Data.Channel where
 
-import Data.Map as Map
+import qualified Data.Map as Map
 
 import           Flowbox.Prelude
 
 
 
 data ChannelTree name value = ChannelTree  { channel  :: Maybe value
-                                           , children :: Map name (ChannelTree name value)
+                                           , children :: Map.Map name (ChannelTree name value)
                                            }
                             | EmptyNode
                             deriving (Show)
 --makeLenses ''ChannelTree
 
-data Crumb name value = Crumb name (Maybe value) (Map name (ChannelTree name value)) deriving (Show)
+data Crumb name value = Crumb name (Maybe value) (Map.Map name (ChannelTree name value)) 
+                      | Snapshot (ChannelTree name value)
+                      deriving (Show)
+
 type Breadcrumbs name value = [Crumb name value]
 type Zipper name value = (ChannelTree name value, Breadcrumbs name value)
 type ZipperResult name value = Either ZipperError (Zipper name value)
@@ -33,6 +37,9 @@ data ZipperError = UnreachableError
                  | AlterEmptyError
                  | RemoveEmptyError
                  | GetNonExistant
+                 | SnapshotEmptyError
+                 | PasteToExisting
+                 | PasteWithoutCopy
                  deriving (Show, Eq)
 
 -- == Instances ==
@@ -62,7 +69,8 @@ lookup name (ChannelTree chan t, bs) = case Map.lookup name t of
     where rest = Map.delete name t
 
 up :: Ord name => Zipper name value -> ZipperResult name value
-up (_, []) = Left UpUnreachableError
+up (_, [])             = Left UpUnreachableError
+up (_, Snapshot _ : _) = Left UpUnreachableError
 up (t, Crumb name chan rest:bs) = case t of
     EmptyNode -> Right (ChannelTree chan rest, bs)
     node      -> Right (ChannelTree chan (Map.insert name node rest), bs)
@@ -96,6 +104,21 @@ delete :: Zipper name value -> ZipperResult name value
 delete (t, bs) = case t of
     EmptyNode       -> Left RemoveEmptyError
     ChannelTree _ _ -> Right (EmptyNode, bs)
+
+-- = Copy Cut Paste =
+
+copy :: Zipper name value -> ZipperResult name value
+copy (EmptyNode, _) = Left SnapshotEmptyError
+copy (t, bs)        = Right (t, bs ++ [Snapshot t]) -- order is important here
+
+cut :: Zipper name value -> ZipperResult name value
+cut x = copy x >>= delete
+
+paste :: Zipper name value -> ZipperResult name value
+paste (_, [])                               = Left PasteWithoutCopy
+paste (EmptyNode, bs@(last -> Snapshot st)) = Right (st, init bs)
+paste (EmptyNode, _)                        = Left PasteWithoutCopy
+paste (_, _)                                = Left PasteToExisting 
 
 -- = Value =
 
