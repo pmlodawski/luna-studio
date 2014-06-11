@@ -7,8 +7,9 @@
 
 package generated.proto.accountManager;
 
-
 import "rpc.proto";
+import "session.proto";
+
 
 
 message Request {
@@ -17,6 +18,7 @@ message Request {
         User_Register = 2001;
         User_Login    = 2002;
         User_Logout   = 2003;
+        User_Session  = 2004;
     }
 
     extensions 1000 to max;
@@ -38,6 +40,7 @@ message User {
         }
         message Result { extend generated.proto.rpc.Response { optional Result rsp = 2002; }
             required string batchAddress = 1;
+            required string instanceID   = 2;
         }
     }
     message Logout {
@@ -46,5 +49,15 @@ message User {
             required string password = 2;
         }
         message Result { extend generated.proto.rpc.Response { optional Result rsp = 2003; } }
+    }
+    message Session {
+        message Args   { extend Request { optional Args req = 2004; }
+            required string userName   = 1;
+            required string instanceID = 2;
+        }
+        message Result { extend generated.proto.rpc.Response { optional Result rsp = 2004; }
+            required bool valid = 1;
+            optional generated.proto.session.Session session = 2;
+        }
     }
 }
