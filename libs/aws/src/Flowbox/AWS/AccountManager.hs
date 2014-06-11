@@ -15,11 +15,14 @@ import qualified AWS.EC2.Types as Types
 import           Data.IP       (IPv4)
 
 import           Flowbox.AWS.Database.Database           (Database)
+import qualified Flowbox.AWS.Database.Session            as DBSession
 import qualified Flowbox.AWS.Database.User               as DBUser
 import qualified Flowbox.AWS.EC2.Control.DBPool.Instance as Instance
+import qualified Flowbox.AWS.EC2.Instance.Instance       as Instance
 import qualified Flowbox.AWS.EC2.Instance.Request        as Request
 import           Flowbox.AWS.Region                      (Region)
 import qualified Flowbox.AWS.User.Password               as Password
+import           Flowbox.AWS.User.Session                (Session)
 import           Flowbox.AWS.User.User                   (User (User))
 import qualified Flowbox.AWS.User.User                   as User
 import           Flowbox.Control.Error
@@ -55,7 +58,8 @@ authenticate database userName plain = do
         _         -> left "Authentication failed"
 
 
-login :: Database -> AWS.Credential -> Region -> User.Name -> Password.Plain -> EitherT Error IO IPv4
+login :: Database -> AWS.Credential -> Region -> User.Name -> Password.Plain
+      -> EitherT Error IO (IPv4, Instance.ID)
 login database credential region userName plain = do
     authenticate database userName plain
     safeLiftIO $ start database credential region userName
@@ -67,14 +71,19 @@ logout database userName plain  = do
     safeLiftIO $ end database userName
 
 
-start :: Database -> AWS.Credential -> Region -> User.Name -> IO IPv4
+start :: Database -> AWS.Credential -> Region -> User.Name -> IO (IPv4, Instance.ID)
 start database credential region userName = do
-    logger info $ "Starting session for, username=" ++ show userName
+    logger info $ "Starting session for username=" ++ show userName
     [inst] <- Instance.retrieve database credential region userName Request.mk
-    fromJust $ Types.instanceIpAddress inst
+    ip <- fromJust $ Types.instanceIpAddress inst
+    return (ip, Types.instanceId inst)
 
 
 end :: Database -> User.Name -> IO ()
 end database userName = do
-    logger info $ "Ending session for, username=" ++ show userName
+    logger info $ "Ending session for username=" ++ show userName
     Instance.releaseUser database userName
+
+
+session :: Database -> User.Name -> Instance.ID -> IO (Maybe Session)
+session = DBSession.find

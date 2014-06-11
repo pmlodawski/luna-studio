@@ -12,14 +12,16 @@ Flag Debug
 
 
 Library
-    Hs-Source-Dirs: src
+    Hs-Source-Dirs: src,
+                    dist/gen
     Other-Modules:  Paths_flowbox_aws
 
     GHC-Options:    -Wall -O2 -threaded
 
     Extensions:     NoImplicitPrelude
 
-    Exposed-modules: `findmodules('src', '.*\.(hs|sql)', exclude='.*hs-boot.*')`
+    Exposed-modules: `findmodules('src', '.*\.(hs|sql)', exclude='.*hs-boot.*')`,
+                     `findmodules('dist/gen', '.*\.(hs|sql)', exclude='.*hs-boot.*')`
                      
     Build-Depends:  aws,
                     aws-sdk >= 0.12.4,
@@ -43,6 +45,7 @@ Library
                     network,
                     postgresql-simple,
                     protocol-buffers,
+                    protocol-buffers-descriptor,
                     resourcet >= 1.1.0,
                     SHA,
                     text,

@@ -21,6 +21,8 @@ import qualified Generated.Proto.AccountManager.User.Logout.Args     as User_Log
 import qualified Generated.Proto.AccountManager.User.Logout.Result   as User_Logout
 import qualified Generated.Proto.AccountManager.User.Register.Args   as User_Register
 import qualified Generated.Proto.AccountManager.User.Register.Result as User_Register
+import qualified Generated.Proto.AccountManager.User.Session.Args    as User_Session
+import qualified Generated.Proto.AccountManager.User.Session.Result  as User_Session
 
 
 
@@ -29,4 +31,5 @@ handler ctx callback request = case Request.method request of
     Method.User_Register -> callback (HandlerUser.register ctx) User_Register.req User_Register.rsp
     Method.User_Login    -> callback (HandlerUser.login    ctx) User_Login.req    User_Login.rsp
     Method.User_Logout   -> callback (HandlerUser.logout   ctx) User_Logout.req   User_Logout.rsp
+    Method.User_Session  -> callback (HandlerUser.session  ctx) User_Session.req  User_Session.rsp
 
