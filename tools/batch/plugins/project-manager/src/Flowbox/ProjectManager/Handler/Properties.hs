@@ -6,11 +6,12 @@
 ---------------------------------------------------------------------------
 module Flowbox.ProjectManager.Handler.Properties where
 
-import qualified Data.IORef                                                                                    as IORef
 import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
+import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes                                      ()
 import           Flowbox.Prelude
 import           Flowbox.ProjectManager.Context                                                                (ContextRef)
+import qualified Flowbox.ProjectManager.Context                                                                as Context
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Request as GetNodeProperties
@@ -23,49 +24,44 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.S
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Update                      as SetASTProperties
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Properties"
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Properties"
 
 
-getASTProperties :: ContextRef -> GetASTProperties.Request -> IO GetASTProperties.Status
+getASTProperties :: ContextRef -> GetASTProperties.Request -> RPC GetASTProperties.Status
 getASTProperties ctxRef (GetASTProperties.Request tnodeID tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    properties <- BatchP.getProperties nodeID libID projectID batch
+    properties <- Context.run ctxRef $ BatchP.getProperties nodeID libID projectID
     return $ GetASTProperties.Status (encode properties) tnodeID tlibID tprojectID
 
 
-setASTProperties :: ContextRef -> SetASTProperties.Request -> IO SetASTProperties.Update
+setASTProperties :: ContextRef -> SetASTProperties.Request -> RPC SetASTProperties.Update
 setASTProperties ctxRef (SetASTProperties.Request tproperties tnodeID tlibID tprojectID) = do
     properties <- decode tproperties
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchP.setProperties properties nodeID libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchP.setProperties properties nodeID libID projectID
     return $ SetASTProperties.Update tproperties tnodeID tlibID tprojectID
 
 
-getNodeProperties :: ContextRef -> GetNodeProperties.Request -> IO GetNodeProperties.Status
+getNodeProperties :: ContextRef -> GetNodeProperties.Request -> RPC GetNodeProperties.Status
 getNodeProperties ctxRef (GetNodeProperties.Request tnodeID tbc tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    properties <- BatchP.getProperties nodeID libID projectID batch
+    properties <- Context.run ctxRef $ BatchP.getProperties nodeID libID projectID
     return $ GetNodeProperties.Status (encode properties) tnodeID tbc tlibID tprojectID
 
 
-setNodeProperties :: ContextRef -> SetNodeProperties.Request -> IO SetNodeProperties.Update
+setNodeProperties :: ContextRef -> SetNodeProperties.Request -> RPC SetNodeProperties.Update
 setNodeProperties ctxRef (SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID) = do
     properties <- decode tproperties
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef ctxRef
-    newBatch <- BatchP.setProperties properties nodeID libID projectID batch
-    IORef.writeIORef ctxRef newBatch
+    Context.run ctxRef $ BatchP.setProperties properties nodeID libID projectID
     return $ SetNodeProperties.Update tproperties tnodeID tbc tlibID tprojectID

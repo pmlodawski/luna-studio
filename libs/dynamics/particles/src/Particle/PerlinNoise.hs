@@ -1,5 +1,12 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE RankNTypes #-}
 
 module Particle.PerlinNoise (
     PerlinNoise(..)
@@ -19,13 +26,13 @@ module Particle.PerlinNoise (
   , positionToPerlinNoise
 ) where
 
-import Control.Lens
-import Data.Default
+import           Control.Lens
 import qualified Data.Array.Accelerate        as A
+import qualified Data.Bits                    as Bits
+import           Data.Default
+import qualified GHC.Float                    as Float
 import qualified Math.Noise                   as Noise
 import qualified Math.Noise.Modules.ScaleBias as Noise
-import qualified GHC.Float                    as Float
-import qualified Data.Bits                    as Bits
 
 import Particle
 import Particle.Algebra
@@ -63,7 +70,7 @@ instance Default PerlinNoise where
 
 --noiseTest :: (Noise.NoiseModule, Noise.NoiseModule, Noise.NoiseModule) -> A.Exp Position ->
 --              A.Exp Vec3
---noiseTest (pX, pY, pZ) pos = undefined 
+--noiseTest (pX, pY, pZ) pos = undefined
 --  where
 --    val = getValue' pX pos
 --    (x,y,z) = A.unlift pos :: (A.Exp Float, A.Exp Float, A.Exp Float)

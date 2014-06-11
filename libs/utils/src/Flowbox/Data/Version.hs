@@ -21,7 +21,7 @@ data Version = Version { branch :: [Int]
 
 
 partition :: Int -> [Version] -> Map [Int] [Version]
-partition i x = foldl (\m xs -> Map.insertWith (++) (take i $ branch xs) [xs] m) mempty x
+partition i = foldl (\m xs -> Map.insertWith (++) (take i $ branch xs) [xs] m) mempty
 
 readable :: Version -> String
 readable v = readableBranch (branch v) ++ join "" (map ("-"++) $ tags v)

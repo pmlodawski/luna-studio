@@ -13,6 +13,7 @@ import           Flowbox.Bus.Data.Message                   (Message)
 import qualified Flowbox.Bus.Data.Topic                     as Topic
 import           Flowbox.Bus.RPC.HandlerMap                 (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                 as HandlerMap
+import           Flowbox.Bus.RPC.RPC                        (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor           as Processor
 import           Flowbox.Prelude                            hiding (error)
 import           Flowbox.ProjectManager.Context             (ContextRef)
@@ -32,7 +33,7 @@ logger = getLoggerIO "Flowbox.ProjectManager.Handler"
 
 
 handlerMap :: ContextRef -> HandlerMap
-handlerMap ctx callback = HandlerMap.fromList $
+handlerMap ctx callback = HandlerMap.fromList
     [ ("project.list.request"          , call Topic.status $ ProjectHandler.list ctx)
     , ("project.lookup.request"        , call Topic.status $ ProjectHandler.lookup ctx)
     , ("project.create.request"        , call Topic.update $ ProjectHandler.create ctx)
@@ -81,7 +82,7 @@ handlerMap ctx callback = HandlerMap.fromList $
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> IO result) -> IO [Message]
+             => String -> (args -> RPC result) -> IO [Message]
         call type_ = callback type_ . Processor.singleResult
 
 

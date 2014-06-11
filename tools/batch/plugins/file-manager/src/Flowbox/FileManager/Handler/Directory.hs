@@ -9,6 +9,8 @@ module Flowbox.FileManager.Handler.Directory where
 
 import qualified System.Directory as Directory
 
+import           Flowbox.Bus.RPC.RPC                                             (RPC)
+import           Flowbox.Control.Error
 import           Flowbox.Prelude                                                 hiding (Context)
 import qualified Flowbox.System.Directory.Directory                              as FDirectory
 import           Flowbox.System.Log.Logger
@@ -32,62 +34,61 @@ import qualified Generated.Proto.FileManager.FileSystem.Directory.Upload.Request
 import qualified Generated.Proto.FileManager.FileSystem.Directory.Upload.Status  as Upload
 
 
-
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.FileManager.Handler.Directory"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.FileManager.Handler.Directory"
 
 ------ public api -------------------------------------------------
 
 
-upload :: Upload.Request -> IO Upload.Status
-upload (Upload.Request tpath) = do
+upload :: Upload.Request -> RPC Upload.Status
+upload (Upload.Request tpath) =
     return $ Upload.Status tpath
 
 
-fetch :: Fetch.Request -> IO Fetch.Status
-fetch (Fetch.Request tpath) = do
+fetch :: Fetch.Request -> RPC Fetch.Status
+fetch (Fetch.Request tpath) =
     return $ Fetch.Status tpath
 
 
-create :: Create.Request -> IO Create.Update
+create :: Create.Request -> RPC Create.Update
 create (Create.Request tpath) = do
     let path = decodeP tpath
-    Directory.createDirectory path
+    safeLiftIO $ Directory.createDirectory path
     return $ Create.Update tpath
 
 
-exists :: Exists.Request -> IO Exists.Status
+exists :: Exists.Request -> RPC Exists.Status
 exists (Exists.Request tpath) = do
     let path = decodeP tpath
-    e <- Directory.doesDirectoryExist path
+    e <- safeLiftIO $ Directory.doesDirectoryExist path
     return $ Exists.Status e tpath
 
 
-list :: List.Request -> IO List.Status
+list :: List.Request -> RPC List.Status
 list (List.Request tpath) = do
     let path = decodeP tpath
-    contents <- Directory.getDirectoryContents path
+    contents <- safeLiftIO $ Directory.getDirectoryContents path
     return $ List.Status (encodeListP contents) tpath
 
 
-remove :: Remove.Request -> IO Remove.Update
+remove :: Remove.Request -> RPC Remove.Update
 remove (Remove.Request tpath) = do
     let path = decodeP tpath
-    Directory.removeDirectory path
+    safeLiftIO $ Directory.removeDirectory path
     return $ Remove.Update tpath
 
 
-copy :: Copy.Request -> IO Copy.Update
+copy :: Copy.Request -> RPC Copy.Update
 copy (Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    FDirectory.copyDirectoryRecursive (UniPath.fromUnixString src) (UniPath.fromUnixString dst)
+    safeLiftIO $ FDirectory.copyDirectoryRecursive (UniPath.fromUnixString src) (UniPath.fromUnixString dst)
     return $ Copy.Update tsrc tdst
 
 
-move :: Move.Request -> IO Move.Update
+move :: Move.Request -> RPC Move.Update
 move (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    Directory.renameDirectory src dst
+    safeLiftIO $ Directory.renameDirectory src dst
     return $ Move.Update tsrc tdst

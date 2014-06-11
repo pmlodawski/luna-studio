@@ -40,9 +40,9 @@ readPlugins :: FilePath -> EitherT String IO [Plugin]
 readPlugins filePath = do
     cfg    <- safeLiftIO $ Configurator.load [Configurator.Required filePath]
     cfgMap <- safeLiftIO $ Configurator.getMap cfg
-    mapM (hoistEither . readPlugin) $ map (first dropPluginPrefix)
-                                    $ filter isPluginRecord
-                                    $ HashMap.toList cfgMap
+    mapM ((hoistEither . readPlugin ). first dropPluginPrefix)
+                                     $ filter isPluginRecord
+                                     $ HashMap.toList cfgMap
 
 
 readPlugin :: (Name, Value) -> Either String Plugin

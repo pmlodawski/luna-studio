@@ -16,6 +16,7 @@ import           Flowbox.Bus.Data.Topic                          (Topic)
 import qualified Flowbox.Bus.Data.Topic                          as Topic
 import           Flowbox.Bus.RPC.HandlerMap                      (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                      as HandlerMap
+import           Flowbox.Bus.RPC.RPC                             (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor                as Processor
 import           Flowbox.PluginManager.Context                   (ContextRef)
 import           Flowbox.PluginManager.Prefix                    (Prefix)
@@ -38,7 +39,7 @@ prefixifyTopics prefix = map (first $ Prefix.prefixify prefix)
 
 
 handlerMap :: Prefix -> ContextRef -> HandlerMap
-handlerMap prefix ctx callback = HandlerMap.fromList $ prefixifyTopics prefix $
+handlerMap prefix ctx callback = HandlerMap.fromList $ prefixifyTopics prefix
     [ (Topic.pluginAddRequest        , call Topic.update $ PluginHandler.add     ctx)
     , (Topic.pluginRemoveRequest     , call Topic.update $ PluginHandler.remove  ctx)
     , (Topic.pluginListRequest       , call Topic.status $ PluginHandler.list    ctx)
@@ -46,9 +47,9 @@ handlerMap prefix ctx callback = HandlerMap.fromList $ prefixifyTopics prefix $
     , (Topic.pluginStartRequest      , call Topic.update $ PluginHandler.start   ctx)
     , (Topic.pluginStopRequest       , call Topic.update $ PluginHandler.stop    ctx)
     , (Topic.pluginRestartRequest    , call Topic.update $ PluginHandler.restart ctx)
-    , (Topic.pluginManagerPingRequest, call Topic.status $ PluginManagerHandler.ping)
+    , (Topic.pluginManagerPingRequest, call Topic.status PluginManagerHandler.ping)
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> IO result) -> IO [Message]
+             => String -> (args -> RPC result) -> IO [Message]
         call type_ = callback type_ . Processor.singleResult

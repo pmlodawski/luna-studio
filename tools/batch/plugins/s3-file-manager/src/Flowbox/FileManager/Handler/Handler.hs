@@ -13,6 +13,7 @@ import           Flowbox.Bus.Data.Message              (Message)
 import qualified Flowbox.Bus.Data.Topic                as Topic
 import           Flowbox.Bus.RPC.HandlerMap            (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap            as HandlerMap
+import           Flowbox.Bus.RPC.RPC                   (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor      as Processor
 import           Flowbox.FileManager.Context           (Context)
 import qualified Flowbox.FileManager.Handler.Directory as DirectoryHandler
@@ -28,7 +29,7 @@ logger = getLoggerIO "Flowbox.FileManager.Handler"
 
 
 handlerMap :: Context -> HandlerMap
-handlerMap ctx callback = HandlerMap.fromList $
+handlerMap ctx callback = HandlerMap.fromList
     [ ("filesystem.directory.fetch.request" , call Topic.status $ DirectoryHandler.fetch  ctx)
     , ("filesystem.directory.upload.request", call Topic.status $ DirectoryHandler.upload ctx)
     , ("filesystem.directory.exists.request", call Topic.update $ DirectoryHandler.exists ctx)
@@ -46,5 +47,5 @@ handlerMap ctx callback = HandlerMap.fromList $
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> IO result) -> IO [Message]
+             => String -> (args -> RPC result) -> IO [Message]
         call type_ = callback type_ . Processor.singleResult

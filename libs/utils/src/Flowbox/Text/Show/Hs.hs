@@ -38,7 +38,7 @@ pushState st = do
 popState :: MonadState [b] m => m ()
 popState = do
     (_:sx) <- get
-    put $ sx
+    put sx
 
 topState :: MonadState [b] m => m b
 topState = do
@@ -57,9 +57,9 @@ _hsShow i s = case s of
                                 (x :) <$> _hsShow i xs
                       '{' -> do pushState Struct
                                 ((x : newline (i+1)) ++) <$> _hsShow (i+1) xs
-                      ';' -> ((x : newline (i)) ++) <$> _hsShow i xs
+                      ';' -> ((x : newline i) ++) <$> _hsShow i xs
                       ',' -> do st <- topState
-                                if st == Struct then ((x : newline (i)) ++) <$> _hsShow i xs
+                                if st == Struct then ((x : newline i) ++) <$> _hsShow i xs
                                                 else (x:) <$> _hsShow i xs
                       '}' -> do popState
                                 (newline (i-1) ++) <$> ((x:) <$> _hsShow (i-1) xs) -- fixme st

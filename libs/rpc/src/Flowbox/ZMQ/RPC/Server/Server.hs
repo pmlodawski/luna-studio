@@ -53,7 +53,7 @@ serve workerCount endpoint  handler = do
     let internalEndpoint = "inproc://rpcworker"
     ZMQ.bind router endpoint
     ZMQ.bind dealer internalEndpoint
-    forM_ [0..workerCount] $ \_ -> ZMQ.async $ do 
+    forM_ [0..workerCount] $ \_ -> ZMQ.async $ do
         rep <- ZMQ.socket ZMQ.Rep
         ZMQ.connect rep internalEndpoint
         handleCalls rep handler

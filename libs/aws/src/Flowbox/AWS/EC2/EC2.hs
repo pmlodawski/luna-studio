@@ -15,7 +15,7 @@ module Flowbox.AWS.EC2.EC2 (
     runEC2inRegion,
 ) where
 
-import qualified AWS                          as AWS
+import qualified AWS
 import           AWS.EC2                      hiding (runEC2)
 import qualified AWS.EC2                      as EC2
 import           Control.Monad.IO.Class       (MonadIO)

@@ -38,8 +38,7 @@ ls upath = do
 
     paths <- Directory.getDirectoryContents path
     let upaths = List.sort $ map (\u -> UniPath.append u upath) paths
-    items <- mapM stat upaths
-    return items
+    mapM stat upaths
 
 
 stat :: UniPath -> IO Item

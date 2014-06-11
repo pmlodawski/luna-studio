@@ -70,7 +70,7 @@ runBus endPoints fun = ZMQ.runZMQ $ runEitherT $ do
     lift $ ZMQ.connect subSocket  $ EP.pubEndPoint  endPoints
     lift $ ZMQ.connect pushSocket $ EP.pullEndPoint endPoints
     logger trace "Connected to bus"
-    fst <$> (runStateT fun $ BusEnv subSocket pushSocket clientID 0)
+    fst <$> runStateT fun (BusEnv subSocket pushSocket clientID 0)
 
 
 getClientID :: Bus Message.ClientID

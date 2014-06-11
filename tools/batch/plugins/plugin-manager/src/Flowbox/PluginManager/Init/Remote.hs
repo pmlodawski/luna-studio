@@ -76,5 +76,5 @@ installPlugin pluginKey = do
 init :: FilePath -> BusEndPoints -> EitherT Error IO ()
 init filePath endPoints = do
     plugins <- readPlugins filePath
-    logger info $ "Loaded " ++ (show $ length plugins) ++ " remote plugins to install."
+    logger info $ "Loaded " ++ show (length plugins) ++ " remote plugins to install."
     EitherT $ Bus.runBus endPoints $ mapM_ installPlugin plugins

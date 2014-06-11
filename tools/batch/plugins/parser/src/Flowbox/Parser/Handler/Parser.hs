@@ -7,6 +7,7 @@
 module Flowbox.Parser.Handler.Parser where
 
 import qualified Flowbox.Batch.Handler.Parser                        as BatchP
+import           Flowbox.Bus.RPC.RPC                                 (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr  ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Pat   ()
@@ -24,38 +25,38 @@ import qualified Generated.Proto.Parser.Parse.Type.Status            as ParseTyp
 
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Parser"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Parser"
 
 -------- public api -------------------------------------------------
 
-parseExpr :: ParseExpr.Request -> IO ParseExpr.Status
+parseExpr :: ParseExpr.Request -> RPC ParseExpr.Status
 parseExpr (ParseExpr.Request tstr) = do
-    loggerIO info "called parseExpr"
+    logger info "called parseExpr"
     let str = decodeP tstr
     expr <- BatchP.parseExpr str
     return $ ParseExpr.Status (encode expr) tstr
 
 
-parsePat :: ParsePat.Request -> IO ParsePat.Status
+parsePat :: ParsePat.Request -> RPC ParsePat.Status
 parsePat (ParsePat.Request tstr) = do
-    loggerIO info "called parsePat"
+    logger info "called parsePat"
     let str = decodeP tstr
     pat <- BatchP.parsePat str
     return $ ParsePat.Status (encode pat) tstr
 
 
-parseType :: ParseType.Request -> IO ParseType.Status
+parseType :: ParseType.Request -> RPC ParseType.Status
 parseType (ParseType.Request tstr) = do
-    loggerIO info "called parseType"
+    logger info "called parseType"
     let str = decodeP tstr
     pat <- BatchP.parseType str
     return $ ParseType.Status (encode pat) tstr
 
 
-parseNodeExpr :: ParseNodeExpr.Request -> IO ParseNodeExpr.Status
+parseNodeExpr :: ParseNodeExpr.Request -> RPC ParseNodeExpr.Status
 parseNodeExpr (ParseNodeExpr.Request tstr) = do
-    loggerIO info "called parseExpr"
+    logger info "called parseExpr"
     let str = decodeP tstr
     expr <- BatchP.parseNodeExpr str
     return $ ParseNodeExpr.Status (encode expr) tstr

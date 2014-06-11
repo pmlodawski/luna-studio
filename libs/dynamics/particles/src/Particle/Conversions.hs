@@ -1,13 +1,20 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+
 {-# LANGUAGE RankNTypes #-}
 
 module Particle.Conversions (
     toPositionVector
 ) where
 
-import Control.Lens hiding (ix)
-import qualified Data.Array.Accelerate as A
+import           Control.Lens             hiding (ix)
+import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as AIO
-import qualified Data.Vector.Storable as VectorS
+import qualified Data.Vector.Storable     as VectorS
 
 import Particle
 import Particle.Algebra

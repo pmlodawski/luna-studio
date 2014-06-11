@@ -8,6 +8,8 @@ module Flowbox.System.Platform where
 
 import qualified System.Info as Info
 
+import Control.Monad (when)
+
 import           Flowbox.Prelude        hiding (error)
 import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath
@@ -28,9 +30,7 @@ os = case Info.os of
 
 
 onPlatform :: Monad m => Platform -> m () -> m ()
-onPlatform platform f = if os == platform
-                            then f
-                            else return ()
+onPlatform platform = when (os == platform)
 
 
 onLinux :: Monad m => m () -> m ()

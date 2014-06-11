@@ -10,12 +10,9 @@
 
 module Flowbox.ZMQ.RPC.Server.Processor where
 
-import           Control.Exception               (SomeException, try)
-import           Control.Monad                   (join)
-import           Control.Monad.IO.Class          (MonadIO, liftIO)
+import           Control.Monad.IO.Class          (MonadIO)
 import           Control.Monad.Trans.Either
 import           Data.ByteString                 (ByteString)
-import           Data.EitherR                    (fmapL)
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
@@ -25,7 +22,6 @@ import           Flowbox.Text.ProtocolBuffers                   (Int32, Serializ
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import           Flowbox.ZMQ.RPC.Handler                        (RPCHandler)
-import           Flowbox.ZMQ.RPC.RPC                            (RPC)
 import qualified Flowbox.ZMQ.RPC.RPC                            as RPC
 import           Generated.Proto.Rpc.Exception                  (Exception (Exception))
 import qualified Generated.Proto.Rpc.Exception                  as Exception
@@ -50,9 +46,9 @@ process handler encodedRequest requestID = case Proto.messageGet' encodedRequest
     Left  err     -> responseError requestID err
     Right request -> handler call request where
         call method reqKey rspKey = do
-            result <- handleError $ do args <- hoistEither $ Proto.getExt' reqKey request
-                                       loggerIO debug $ show args
-                                       method args
+            result <- RPC.run $ do args <- hoistEither $ Proto.getExt' reqKey request
+                                   loggerIO debug $ show args
+                                   method args
             either (responseError requestID) (responseResult requestID rspKey) result
 
 
@@ -68,8 +64,3 @@ responseError requestID err = do
     let exc = Exception $ encodePJ err
     return $ responseExt ResponseType.Exception (Just requestID) exc Exception.rsp
 
-
-handleError :: MonadIO m => RPC r -> m (Either RPC.Error r)
-handleError fun = do
-    result <- liftIO $ (try :: IO a -> IO (Either SomeException a)) $ runEitherT fun
-    return $ join $ fmapL (\exception -> "Unhandled exception: " ++ show exception) result

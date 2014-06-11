@@ -4,11 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE RankNTypes #-}
 
 module Flowbox.Batch.Handler.Process  where
 
 import           Flowbox.Batch.Batch           (Batch)
-import           Flowbox.Batch.Handler.Common  (noresult, processMapOp, readonly)
+import           Flowbox.Batch.Handler.Common  (processMapOp)
+import qualified Flowbox.Batch.Handler.Common  as Batch
 import qualified Flowbox.Batch.Process.Handle  as Handle
 import qualified Flowbox.Batch.Process.Map     as ProcessMap
 import qualified Flowbox.Batch.Process.Process as Process
@@ -25,17 +27,16 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Handler.Process"
 
 
-processes :: (Applicative m, Monad m) => Project.ID -> Batch -> m [Process.ID]
-processes projectID = readonly . processMapOp projectID (\_ processMap ->
-    return (processMap, ProcessMap.keys processMap))
+processes :: Project.ID -> Batch [Process.ID]
+processes projectID = ProcessMap.keys <$> Batch.getProcessMap projectID
 
 
-terminate :: Process.ID -> Project.ID -> Batch -> IO Batch
-terminate processID projectID = noresult . processMapOp projectID (\_ processMap -> do
+terminate :: Process.ID -> Project.ID -> Batch ()
+terminate processID projectID = processMapOp projectID (\processMap -> do
     handle <- ProcessMap.lookup processID processMap <?> ("No process with ID=" ++ show processID)
-    Process.terminateProcess $ Handle.processHandle handle
+    liftIO $ Process.terminateProcess $ Handle.processHandle handle
     return (ProcessMap.delete processID processMap, ()))
 
 
-status :: Process.ID -> Project.ID -> Batch -> m Process.State
+status :: Process.ID -> Project.ID -> Batch Process.State
 status = undefined

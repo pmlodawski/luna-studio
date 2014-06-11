@@ -38,7 +38,7 @@ getOrStartWait :: EC2Resource m
                => User.Name -> Types.RunInstancesRequest -> EC2 m [Types.Instance]
 getOrStartWait userName instanceRequest = do
     let usable inst = state /= Types.InstanceStateTerminated && state /= Types.InstanceStateShuttingDown where state = Types.instanceState inst
-    currentTime <- liftIO $ Time.getCurrentTime
+    currentTime <- liftIO Time.getCurrentTime
     let tags = (Tag.simpleKey, Tag.simpleValue)
              : Tag.startTimeTag currentTime
              : [Tag.userTag $ Just userName]

@@ -21,7 +21,7 @@ encodeList = Sequence.fromList . map encode
 
 
 decodeList :: (Convert a b, Applicative m, Monad m) => Seq b -> m [a]
-decodeList = sequence . map decode . Foldable.toList
+decodeList = mapM decode . Foldable.toList
 
 
 encodeListP :: ConvertPure a b => [a] -> Seq b

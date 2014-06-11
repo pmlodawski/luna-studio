@@ -1,5 +1,12 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE RankNTypes #-}
 
 module Particle (
     ParticleSystem()
@@ -21,11 +28,11 @@ module Particle (
   , Backend
 ) where
 
+import           Control.Applicative   ((<$>), (<*>))
+import           Control.Lens
 import qualified Data.Array.Accelerate as A
-import qualified Data.Maybe as Maybe
-import Data.Default (Default, def)
-import Control.Applicative ((<$>), (<*>))
-import Control.Lens
+import           Data.Default          (Default, def)
+import qualified Data.Maybe            as Maybe
 
 import Particle.Algebra
 
@@ -103,7 +110,7 @@ pipelinedToSim (_, pos, vel, acc, age) = ParticleSystem {
 
 simulate :: PipelinedSystem -> A.Scalar TimeDiff -> Backend -> ParticleSystem -> ParticleSystem
 simulate pipe time backend ps = pipelinedToSim $ backend pipe $ simToPipelined time ps
- 
+
 step :: A.Acc (A.Scalar TimeDiff, Array Position, Array Velocity, Array Acceleration, Array Int) ->
         A.Acc (A.Scalar TimeDiff, Array Position, Array Velocity, Array Acceleration, Array Int)
 step arg = A.lift (time, updatedPositions, updatedVelocities, updatedAccelerations, updatedAges)

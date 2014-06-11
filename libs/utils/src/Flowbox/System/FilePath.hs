@@ -16,5 +16,5 @@ normalise' :: FilePath -> FilePath
 normalise' filePath = let
     norm = UniPath.toUnixString . UniPath.normalise . UniPath.fromUnixString
     in if last filePath == '/'
-        then (norm filePath) ++ "/"
+        then norm filePath ++ "/"
         else norm filePath

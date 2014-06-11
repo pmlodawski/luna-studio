@@ -37,7 +37,7 @@ fetch basePath filePath = do
 upload :: FilePath -> FilePath -> S3 ()
 upload basePath filePath = do
     contents <- liftIO $ FDirectory.listDirectory $ basePath </> filePath
-    mapM_ uploadItem $ map (FilePath.combine filePath) contents
+    mapM_ (uploadItem . FilePath.combine filePath) contents
     where
         uploadItem path = do
             isDir <- liftIO $ Directory.doesDirectoryExist $ basePath </> path
@@ -50,16 +50,16 @@ upload basePath filePath = do
 directoryPrefix :: FilePath -> Maybe Text
 directoryPrefix filePath = case filePath of
     "." -> Nothing
-    p   -> if Utils.isDirectory p
-        then Just $ Text.pack p
-        else Just $ Text.pack (p ++ "/")
+    p   -> Just $ Text.pack $ if Utils.isDirectory p
+                                then p
+                                else p ++ "/"
 
 
 getContents :: FilePath -> S3 [FilePath]
 getContents filePath = S3.withBucket $ \bucket -> do
     let prefix = directoryPrefix filePath
     rsp <- S3.query $ (S3.getBucket bucket) { S3.gbPrefix = prefix, S3.gbDelimiter = Just $ Text.pack Utils.dirMarker }
-    return $ map Text.unpack $ (S3.gbrCommonPrefixes rsp) ++ (map S3.objectKey $ S3.gbrContents rsp)
+    return $ map Text.unpack $ S3.gbrCommonPrefixes rsp ++ map S3.objectKey (S3.gbrContents rsp)
 
 
 getContentsRecurisively :: FilePath -> S3 [FilePath]

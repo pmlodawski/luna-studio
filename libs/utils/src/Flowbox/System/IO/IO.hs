@@ -11,7 +11,7 @@ module Flowbox.System.IO.IO(
 import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath
 import           Prelude                (IO, String)
-import qualified Prelude                as Prelude
+import qualified Prelude
 
 
 writeFile :: UniPath -> String -> IO ()

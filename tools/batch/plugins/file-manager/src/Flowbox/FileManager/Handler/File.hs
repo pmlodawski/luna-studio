@@ -9,6 +9,8 @@ module Flowbox.FileManager.Handler.File where
 
 import qualified System.Directory as Directory
 
+import           Flowbox.Bus.RPC.RPC                                        (RPC)
+import           Flowbox.Control.Error
 import           Flowbox.Prelude                                            hiding (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -27,47 +29,47 @@ import qualified Generated.Proto.FileManager.FileSystem.File.Upload.Status  as U
 
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.FileManager.Handler.File"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.FileManager.Handler.File"
 
 ------ public api -------------------------------------------------
 
 
-upload :: Upload.Request -> IO Upload.Status
-upload (Upload.Request tpath) = do
+upload :: Upload.Request -> RPC Upload.Status
+upload (Upload.Request tpath) =
     return $ Upload.Status tpath
 
 
-fetch :: Fetch.Request -> IO Fetch.Status
-fetch (Fetch.Request tpath) = do
+fetch :: Fetch.Request -> RPC Fetch.Status
+fetch (Fetch.Request tpath) =
     return $ Fetch.Status tpath
 
 
-exists :: Exists.Request -> IO Exists.Status
+exists :: Exists.Request -> RPC Exists.Status
 exists (Exists.Request tpath) = do
     let path = decodeP tpath
-    e <- Directory.doesFileExist path
+    e <- safeLiftIO $ Directory.doesFileExist path
     return $ Exists.Status e tpath
 
 
-remove :: Remove.Request -> IO Remove.Update
+remove :: Remove.Request -> RPC Remove.Update
 remove (Remove.Request tpath) = do
     let path = decodeP tpath
-    Directory.removeFile path
+    safeLiftIO $ Directory.removeFile path
     return $ Remove.Update tpath
 
 
-copy :: Copy.Request -> IO Copy.Update
+copy :: Copy.Request -> RPC Copy.Update
 copy (Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    Directory.copyFile src dst
+    safeLiftIO $ Directory.copyFile src dst
     return $ Copy.Update tsrc tdst
 
 
-move :: Move.Request -> IO Move.Update
+move :: Move.Request -> RPC Move.Update
 move (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    Directory.renameFile src dst
+    safeLiftIO $ Directory.renameFile src dst
     return $ Move.Update tsrc tdst
