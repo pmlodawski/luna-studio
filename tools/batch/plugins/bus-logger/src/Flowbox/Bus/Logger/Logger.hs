@@ -8,6 +8,7 @@ module Flowbox.Bus.Logger.Logger where
 
 import           Control.Monad                 (forever)
 import           Data.List                     (isSuffixOf)
+
 import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus
 import qualified Flowbox.Bus.Data.Message      as Message
@@ -17,6 +18,9 @@ import qualified Flowbox.Bus.Data.Topic        as Topic
 import           Flowbox.Bus.EndPoint          (BusEndPoints)
 import           Flowbox.Prelude               hiding (error)
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Bus.Data.Exception as Exception
+import qualified Flowbox.Text.ProtocolBuffers as Proto
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
 
@@ -43,9 +47,16 @@ logMessage = do msgFrame <- Bus.receive
                                    ++ show lastFrame
                                    ++ ")"
                                    ++ "\t:: "
-                                   ++ topic
+                                   ++ topic 
+                            content = msg ^. Message.message
+                            errorMsg = case Proto.messageGet' content of 
+                                Left err        -> "(cannot parse error message: " ++ err ++ ")"
+                                Right exception -> case (decodeP exception) ^. Exception.msg of
+                                    Nothing           -> "(exception without message)"
+                                    Just exceptionMsg -> exceptionMsg
                         if Topic.error `isSuffixOf` topic
-                            then logger error logMsg
+                            then do logger error logMsg
+                                    logger error errorMsg
                             else logger info  logMsg
 
 
