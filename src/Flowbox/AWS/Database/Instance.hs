@@ -45,7 +45,7 @@ delete conn instanceIDs =
 
 
 update :: PSQL.Connection -> Instance -> IO ()
-update conn inst = do
+update conn inst =
     void $ PSQL.execute conn InstanceUpdate.query
          $ inst :. (PSQL.Only $ inst ^. Instance.id)
 
@@ -56,7 +56,7 @@ findWithAtMostUsers conn count =
 
 
 findAvailable :: PSQL.Connection -> User.Name ->  IO [Instance]
-findAvailable conn userName = 
+findAvailable conn userName =
     PSQL.query conn InstanceFindAvailable.query (maxSessions - 1, userName)
 
 

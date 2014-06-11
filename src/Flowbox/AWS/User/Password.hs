@@ -34,7 +34,7 @@ mk salt' plain = Password salt' $ SHA.showDigest $ SHA.sha256 $ pack $ plain ++ 
 
 
 verify :: Password -> Plain -> Bool
-verify password plain = password == (mk plain $ password ^. salt)
+verify password plain = password == mk plain (password ^. salt)
 
 
 
