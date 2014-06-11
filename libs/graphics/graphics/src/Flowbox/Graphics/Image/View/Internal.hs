@@ -10,14 +10,12 @@ module Flowbox.Graphics.Image.View.Internal (
     Name,
     ChanTree,
     Select (..),
-    create',
-    clean',
-    modify'
+    get,
 ) where
 
-import           Data.Set
+import           Data.Set        hiding (map)
 import           Data.List.Split
-import qualified Data.Map as Map
+import qualified Data.Map        as Map hiding (map)
 
 import           Flowbox.Data.Channel           (ChannelTree(..))
 import qualified Flowbox.Data.Channel           as ChanTree
@@ -25,7 +23,7 @@ import           Flowbox.Graphics.Image.Error   (Error(..))
 import qualified Flowbox.Graphics.Image.Error   as Image
 import           Flowbox.Graphics.Image.Channel (Channel(..))
 import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Prelude                as P
+import           Flowbox.Prelude                as P hiding (set, map)
 
 
 
@@ -38,19 +36,15 @@ data Select = All
             deriving (Show)
 
 class View v where
-    create   :: Name -> ChanTree -> Image.Result v
-    empty    :: Name -> Image.Result v
-    empty = flip create ChanTree.empty
-    clean    :: v -> v
-    modify   :: v -> ChanTree -> Image.Result v
     name     :: v -> Name -- Lens' v Name
     channels :: v -> ChanTree -- Lens' v (ChannelTree Channel.Name Channel)
-    map      :: (Channel -> Channel) -> v -> Image.Result v
-    map f v = modify v $ fmap f (channels v)
     --viewBounds :: Bounds
     --pixelAspectRatio :: AspectRatio
-
--- TODO: ukryć konstruktory
+    --
+    empty    :: Name -> v
+    set      :: ChanTree -> v -> v
+    map      :: (Channel -> Channel) -> v -> v
+    map f v = set (fmap f (channels v)) v
 
 get :: View v => v -> Channel.Name -> Image.Result (Maybe Channel)
 get v descriptor = case result of
@@ -61,47 +55,30 @@ get v descriptor = case result of
           z       = ChanTree.zipper $ channels v
           nodes   = splitOn "." descriptor
 
-append :: View view => Channel.Name -> Maybe Channel -> view -> Image.Result view
-append descriptor val v = case val of
-    Nothing   -> append'
-    Just chan -> if last nodes == Channel.name chan
-        then append'
-        else Left $ ChannelNameError descriptor $ Channel.name chan
-    where append' = case result of
-              Left _   -> Left $ ChannelLookupError descriptor
-              Right v' -> modify v $ ChanTree.tree v' -- v & channels .~ ChanTree.tree v'
-          result   = P.foldl go z (init nodes) >>= ChanTree.append (last nodes) val >>= ChanTree.top
-          go acc p = acc >>= ChanTree.lookup p
-          z        = ChanTree.zipper $ channels v
-          nodes    = splitOn "." descriptor
+append :: View view => Channel -> view -> view
+append chan v = set (ChanTree.tree result') v
+    where result = P.foldl go z (init nodes) >>= ChanTree.append (last nodes) (Just chan) >>= ChanTree.top
+          result' = case result of
+              Right res -> res
+              Left err  -> errorShitWentWrong $ "append (" ++ show err ++ ") "
+          go acc p   = let res = acc >>= ChanTree.lookup p in case res of
+              Right _ -> res
+              Left  _ -> acc >>= ChanTree.append p Nothing
+          z          = ChanTree.zipper $ channels v
+          nodes      = splitOn "." descriptor
+          descriptor = Channel.name chan
 
---map :: View view => f -> view -> Image.Result view
---map f v =
+mapWithWhitelist :: View view => (Channel -> Channel) -> Channel.Select -> view -> view
+mapWithWhitelist f whitelist = map lambda
+    where lambda chan = if Channel.name chan `elem` whitelist
+                            then f chan
+                            else chan
 
-check :: ChanTree -> Bool
-check EmptyNode = True
-check (ChannelTree _ treeNodes) = Map.foldrWithKey check' True treeNodes
-    where check' _ EmptyNode acc = acc
-          check' key t@(ChannelTree chan _) acc = acc && comp key chan && check t
-          comp key chan = case chan of
-              Nothing    -> True
-              Just chan' -> key == Channel.name chan'
+-- == HELPERS == for error reporting
 
-validate :: ChanTree -> Image.Result ChanTree
-validate t = if check t
-             then return t
-             else Left InvalidMap
+errorShitWentWrong :: String -> a
+errorShitWentWrong fun =
+  error (this_module ++ fun ++ ": cosmic radiation caused this function to utterly fail. Blame the monkeys and send us an error report.")
 
-create' :: View view => (Name -> ChanTree -> view) -> Name -> ChanTree -> Image.Result view
-create' constructor viewName tree = validate tree >>= return . constructor viewName
-
-clean' :: View view => (Name -> ChanTree -> view) -> view -> view
-clean' constructor v = constructor (name v) ChanTree.empty
-
-modify' :: View view => (Name -> ChanTree -> view) -> view -> ChanTree -> Image.Result view
-modify' constructor v tree = validate tree >>= return . constructor (name v)
-
---mapWithWhitelist :: View view => ()
-
---set :: View view => view -> ChanTree -> Image.Result view
---set v t =
+this_module :: String
+this_module = "Flowbox.Graphics.Image.View."

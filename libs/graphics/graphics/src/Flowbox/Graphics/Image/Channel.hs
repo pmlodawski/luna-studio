@@ -13,6 +13,7 @@ import Flowbox.Prelude
 
 
 type Name = String
+type Select = [Name]
 
 data Channel = ChannelFloat Name (ChannelData Double)
              | ChannelInt   Name (ChannelData Int)

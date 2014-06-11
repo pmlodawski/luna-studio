@@ -7,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Flowbox.Graphics.Image.Image ( 
+module Flowbox.Graphics.Image.Image (
     Image,
     insert,
     delete,
@@ -39,23 +39,23 @@ image imgviews defaultview = case defaultview of
                                         else Left InvalidMap
 
 insert :: View.View v => View.Name -> v -> Image v -> Either Error (Image v)
-insert key value image = if View.name value == key
-                             then return $ over views (Map.insert key value) image
+insert key value img = if View.name value == key
+                             then return $ over views (Map.insert key value) img
                              else Left InvalidMap
 
 delete :: View.View v => View.Name -> Image v -> Image v
-delete key image = Image (Map.delete key $ image ^. views) $ case default_view of
+delete key img = Image (Map.delete key $ img ^. views) $ case default_view of
     View.Group names -> View.Group $ Set.delete key names
     _                -> default_view
-    where default_view = image ^. defaultView
+    where default_view = img ^. defaultView
 
 lookup :: View.View v => View.Name -> Image v -> Maybe v
-lookup key image = Map.lookup key (image ^. views)
+lookup key img = Map.lookup key (img ^. views)
 
 update :: View.View v => (v -> Maybe v) -> View.Name -> Image v -> Either Error (Image v)
-update f key image = case lookup key image >>= f of
-    Just newval -> insert key newval image
-    Nothing     -> return $ delete key image
+update f key img = case lookup key img >>= f of
+    Just newval -> insert key newval img
+    Nothing     -> return $ delete key img
 
 map :: View.View v => (v -> v) -> Image v -> Either Error (Image v)
 map lambda img = image (Map.map lambda $ img ^.views) (img ^. defaultView)

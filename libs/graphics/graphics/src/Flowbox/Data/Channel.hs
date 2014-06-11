@@ -39,7 +39,7 @@ data ZipperError = UnreachableError
 
 instance Functor (ChannelTree name) where
     fmap _ EmptyNode = EmptyNode
-    fmap f (ChannelTree chan children) = ChannelTree (fmap f chan) $ (fmap . fmap) f children
+    fmap f (ChannelTree chan nodes) = ChannelTree (fmap f chan) $ (fmap . fmap) f nodes
 
 -- == Tree ==
 
@@ -68,9 +68,12 @@ up (t, Crumb name chan rest:bs) = case t of
     node      -> Right (ChannelTree chan (Map.insert name node rest), bs)
 
 top :: Ord name => Zipper name value -> ZipperResult name value
-top z = case up z of
-    Left  _ -> Right z
-    Right u -> top u
+top z = return $ top' z
+
+top' :: Ord name => Zipper name value -> Zipper name value
+top' z = case up z of
+    Left  _ -> z
+    Right u -> top' u
 
 -- == Modifications ==
 

@@ -138,8 +138,8 @@ main
         let testArray = A.use $ A.fromList (Z :. 2 :. 2) [1,2,3,4] :: Acc (Array DIM2 Int)
             testMatrix = Delayed testArray
             testChanData = FlatData testMatrix
-            testChan = ChannelInt "r" testChanData
-            --testView = V.empty RGB "rgbImageMadafaka"
+            --testChan = ChannelInt "r" testChanData
+            --testView = View.empty "rgbImageMadafaka" :: RGB
             --testView' = V.append "layer1" Nothing testView >>= V.append "layer1.rgb" Nothing >>= V.append "layer1.rgb.r" (Just testChan)
 
         --print testView'
