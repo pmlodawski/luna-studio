@@ -8,8 +8,9 @@
 module Flowbox.FileManager.Handler.Directory where
 
 import qualified Flowbox.AWS.S3.Directory                                        as Directory
-import qualified Flowbox.AWS.S3.S3                                               as S3
+import           Flowbox.Bus.RPC.RPC                                             (RPC)
 import           Flowbox.FileManager.Context                                     (Context)
+import qualified Flowbox.FileManager.Context                                     as Context
 import           Flowbox.Prelude                                                 hiding (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -38,59 +39,59 @@ loggerIO = getLoggerIO "Flowbox.FileManager.Handler.Directory"
 ------ public api -------------------------------------------------
 
 
-upload :: Context -> Upload.Request -> IO Upload.Status
+upload :: Context -> Upload.Request -> RPC Upload.Status
 upload ctx (Upload.Request tpath) = do
     let path = decodeP tpath
-    S3.runS3env ctx $ Directory.upload "." path
+    Context.run ctx $ Directory.upload "." path
     return $ Upload.Status tpath
 
 
-fetch :: Context -> Fetch.Request -> IO Fetch.Status
+fetch :: Context -> Fetch.Request -> RPC Fetch.Status
 fetch ctx (Fetch.Request tpath) = do
     let path = decodeP tpath
-    S3.runS3env ctx $ Directory.fetch "." path
+    Context.run ctx $ Directory.fetch "." path
     return $ Fetch.Status tpath
 
 
-create :: Context -> Create.Request -> IO Create.Update
+create :: Context -> Create.Request -> RPC Create.Update
 create ctx (Create.Request tpath) = do
     let path = decodeP tpath
-    S3.runS3env ctx $ Directory.create path
+    Context.run ctx $ Directory.create path
     return $ Create.Update tpath
 
 
-exists :: Context -> Exists.Request -> IO Exists.Status
+exists :: Context -> Exists.Request -> RPC Exists.Status
 exists ctx (Exists.Request tpath) = do
     let path = decodeP tpath
-    e <- S3.runS3env ctx $ Directory.exists path
+    e <- Context.run ctx $ Directory.exists path
     return $ Exists.Status e tpath
 
 
-list :: Context -> List.Request -> IO List.Status
+list :: Context -> List.Request -> RPC List.Status
 list ctx (List.Request tpath) = do
     let path = decodeP tpath
-    contents <- S3.runS3env ctx $ Directory.getContents path
+    contents <- Context.run ctx $ Directory.getContents path
     return $ List.Status (encodeListP contents) tpath
 
 
-remove :: Context -> Remove.Request -> IO Remove.Update
+remove :: Context -> Remove.Request -> RPC Remove.Update
 remove ctx (Remove.Request tpath) = do
     let path = decodeP tpath
-    S3.runS3env ctx $ Directory.remove path
+    Context.run ctx $ Directory.remove path
     return $ Remove.Update tpath
 
 
-copy :: Context -> Copy.Request -> IO Copy.Update
+copy :: Context -> Copy.Request -> RPC Copy.Update
 copy ctx (Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    S3.runS3env ctx $ Directory.copy src dst
+    Context.run ctx $ Directory.copy src dst
     return $ Copy.Update tsrc tdst
 
 
-move :: Context -> Move.Request -> IO Move.Update
+move :: Context -> Move.Request -> RPC Move.Update
 move ctx (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    S3.runS3env ctx $ Directory.copy src dst
+    Context.run ctx $ Directory.copy src dst
     return $ Move.Update tsrc tdst

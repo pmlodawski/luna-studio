@@ -7,6 +7,7 @@
 module Flowbox.ProjectManager.Handler.Properties where
 
 import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
+import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes                                      ()
 import           Flowbox.Prelude
 import           Flowbox.ProjectManager.Context                                                                (ContextRef)
@@ -24,11 +25,11 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.S
 
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Properties"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Properties"
 
 
-getASTProperties :: ContextRef -> GetASTProperties.Request -> IO GetASTProperties.Status
+getASTProperties :: ContextRef -> GetASTProperties.Request -> RPC GetASTProperties.Status
 getASTProperties ctxRef (GetASTProperties.Request tnodeID tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
@@ -37,7 +38,7 @@ getASTProperties ctxRef (GetASTProperties.Request tnodeID tlibID tprojectID) = d
     return $ GetASTProperties.Status (encode properties) tnodeID tlibID tprojectID
 
 
-setASTProperties :: ContextRef -> SetASTProperties.Request -> IO SetASTProperties.Update
+setASTProperties :: ContextRef -> SetASTProperties.Request -> RPC SetASTProperties.Update
 setASTProperties ctxRef (SetASTProperties.Request tproperties tnodeID tlibID tprojectID) = do
     properties <- decode tproperties
     let nodeID    = decodeP tnodeID
@@ -47,7 +48,7 @@ setASTProperties ctxRef (SetASTProperties.Request tproperties tnodeID tlibID tpr
     return $ SetASTProperties.Update tproperties tnodeID tlibID tprojectID
 
 
-getNodeProperties :: ContextRef -> GetNodeProperties.Request -> IO GetNodeProperties.Status
+getNodeProperties :: ContextRef -> GetNodeProperties.Request -> RPC GetNodeProperties.Status
 getNodeProperties ctxRef (GetNodeProperties.Request tnodeID tbc tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
@@ -56,7 +57,7 @@ getNodeProperties ctxRef (GetNodeProperties.Request tnodeID tbc tlibID tprojectI
     return $ GetNodeProperties.Status (encode properties) tnodeID tbc tlibID tprojectID
 
 
-setNodeProperties :: ContextRef -> SetNodeProperties.Request -> IO SetNodeProperties.Update
+setNodeProperties :: ContextRef -> SetNodeProperties.Request -> RPC SetNodeProperties.Update
 setNodeProperties ctxRef (SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID) = do
     properties <- decode tproperties
     let nodeID    = decodeP tnodeID

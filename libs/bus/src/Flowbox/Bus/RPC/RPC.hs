@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.ZMQ.RPC.RPC where
+module Flowbox.Bus.RPC.RPC where
 
 import Control.Exception          (SomeException, try)
 import Control.Monad              (join)

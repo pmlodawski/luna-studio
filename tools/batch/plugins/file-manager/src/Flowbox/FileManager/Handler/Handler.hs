@@ -13,13 +13,13 @@ import           Flowbox.Bus.Data.Message              (Message)
 import qualified Flowbox.Bus.Data.Topic                as Topic
 import           Flowbox.Bus.RPC.HandlerMap            (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap            as HandlerMap
+import           Flowbox.Bus.RPC.RPC                   (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor      as Processor
 import qualified Flowbox.FileManager.Handler.Directory as DirectoryHandler
 import qualified Flowbox.FileManager.Handler.File      as FileHandler
 import           Flowbox.Prelude                       hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers          as Proto
-
 
 
 logger :: LoggerIO
@@ -45,5 +45,5 @@ handlerMap callback = HandlerMap.fromList
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> IO result) -> IO [Message]
+             => String -> (args -> RPC result) -> IO [Message]
         call type_ = callback type_ . Processor.singleResult

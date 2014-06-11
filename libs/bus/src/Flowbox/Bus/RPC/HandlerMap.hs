@@ -21,6 +21,7 @@ import qualified Data.Map as Map
 import           Flowbox.Bus.Data.Message     (Message)
 import qualified Flowbox.Bus.Data.Message     as Message
 import           Flowbox.Bus.Data.Topic       (Topic)
+import           Flowbox.Bus.RPC.RPC          (RPC)
 import           Flowbox.Prelude              hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers as Proto
@@ -32,7 +33,7 @@ logger = getLoggerIO "Flowbox.Bus.RPC.HandlerMap"
 
 
 type Callback = (Proto.Serializable args, Proto.Serializable result)
-              => String -> (args -> IO [result]) -> IO [Message]
+              => String -> (args -> RPC [result]) -> IO [Message]
 
 
 type HandlerMap = Callback -> Map Topic (IO [Message])

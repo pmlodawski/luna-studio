@@ -8,6 +8,7 @@ module Flowbox.PluginManager.RPC.Handler.Plugin where
 
 import qualified Data.IORef as IORef
 
+import           Flowbox.Bus.RPC.RPC                                  (RPC)
 import           Flowbox.Control.Error
 import           Flowbox.PluginManager.Context                        (ContextRef)
 import qualified Flowbox.PluginManager.Context                        as Context
@@ -41,8 +42,8 @@ logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
 
 -------- public api -------------------------------------------------
 
-add :: ContextRef -> Add.Request -> IO Add.Update
-add ctxRef (Add.Request tplugin) = do
+add :: ContextRef -> Add.Request -> RPC Add.Update
+add ctxRef (Add.Request tplugin) = safeLiftIO $ do
     ctx <- IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
         id      = PluginMap.uniqueID plugins
@@ -51,8 +52,8 @@ add ctxRef (Add.Request tplugin) = do
     return $ Add.Update tplugin (encodeP id)
 
 
-remove :: ContextRef -> Remove.Request -> IO Remove.Update
-remove ctxRef (Remove.Request tid) = do
+remove :: ContextRef -> Remove.Request -> RPC Remove.Update
+remove ctxRef (Remove.Request tid) = safeLiftIO $ do
     ctx <- IORef.readIORef ctxRef
     let id      = decodeP tid
         plugins = Context.plugins ctx
@@ -60,8 +61,8 @@ remove ctxRef (Remove.Request tid) = do
     return $ Remove.Update tid
 
 
-list :: ContextRef -> List.Request -> IO List.Status
-list ctxRef List.Request = do
+list :: ContextRef -> List.Request -> RPC List.Status
+list ctxRef List.Request = safeLiftIO $ do
     ctx <- IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
     pluginInfos <- mapM PluginHandle.info $ PluginMap.elems plugins
@@ -69,8 +70,8 @@ list ctxRef List.Request = do
 
 
 -- TODO [PM] : Duplikacja kodu
-lookup :: ContextRef -> Lookup.Request -> IO Lookup.Status
-lookup ctxRef (Lookup.Request tid) = do
+lookup :: ContextRef -> Lookup.Request -> RPC Lookup.Status
+lookup ctxRef (Lookup.Request tid) = safeLiftIO $ do
     ctx <- IORef.readIORef ctxRef
     let id      = decodeP tid
         plugins = Context.plugins ctx
@@ -79,29 +80,29 @@ lookup ctxRef (Lookup.Request tid) = do
     return $ Lookup.Status (encode (id, pluginInfo)) tid
 
 
-start :: ContextRef -> Start.Request -> IO Start.Update
+start :: ContextRef -> Start.Request -> RPC Start.Update
 start ctxRef (Start.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id (PluginHandle.start . view PluginHandle.plugin)
     return $ Start.Update tid
 
 
-stop :: ContextRef -> Stop.Request -> IO Stop.Update
+stop :: ContextRef -> Stop.Request -> RPC Stop.Update
 stop ctxRef (Stop.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id PluginHandle.stop
     return $ Stop.Update tid
 
 
-restart :: ContextRef -> Restart.Request -> IO Restart.Update
+restart :: ContextRef -> Restart.Request -> RPC Restart.Update
 restart ctxRef (Restart.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id PluginHandle.restart
     return $ Restart.Update tid
 
 
-withPluginHandle :: ContextRef -> Plugin.ID -> (PluginHandle -> IO PluginHandle) -> IO PluginHandle
-withPluginHandle ctxRef id operation = do
+withPluginHandle :: ContextRef -> Plugin.ID -> (PluginHandle -> IO PluginHandle) -> RPC PluginHandle
+withPluginHandle ctxRef id operation = safeLiftIO $ do
     ctx <- IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
     pluginHandle    <- PluginMap.lookup id plugins <?> "Cannot find plugin with id=" ++ show id
