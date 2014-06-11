@@ -7,6 +7,7 @@
 module Flowbox.ProjectManager.Handler.NodeDefault where
 
 import qualified Flowbox.Batch.Handler.NodeDefault                                                             as BatchND
+import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                                           ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.NodeDefault                                     ()
 import           Flowbox.Prelude
@@ -27,7 +28,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.ProjectManager.Handler.NodeDefault"
 
 
-get :: ContextRef -> NodeDefaultGet.Request -> IO NodeDefaultGet.Status
+get :: ContextRef -> NodeDefaultGet.Request -> RPC NodeDefaultGet.Status
 get ctxRef (NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
     bc <- decode tbc
     let nodeID    = decodeP tnodeID
@@ -37,7 +38,7 @@ get ctxRef (NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
     return $ NodeDefaultGet.Status (encode nodeDefaults) tnodeID tbc tlibID tprojectID
 
 
-set :: ContextRef -> NodeDefaultSet.Request -> IO NodeDefaultSet.Update
+set :: ContextRef -> NodeDefaultSet.Request -> RPC NodeDefaultSet.Update
 set ctxRef (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
     bc <- decode tbc
     let dstPort   = decodeListP tdstPort
@@ -49,7 +50,7 @@ set ctxRef (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID
     return $ NodeDefaultSet.Update tdstPort tvalue tnodeID tbc tlibID tprojectID
 
 
-remove :: ContextRef -> NodeDefaultRemove.Request -> IO NodeDefaultRemove.Update
+remove :: ContextRef -> NodeDefaultRemove.Request -> RPC NodeDefaultRemove.Update
 remove ctxRef (NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID) = do
     bc <- decode tbc
     let dstPort   = decodeListP tdstPort
