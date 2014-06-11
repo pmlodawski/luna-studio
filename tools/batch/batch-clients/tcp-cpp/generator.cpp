@@ -55,7 +55,7 @@ class %wrapper_name%
 public:
 	shared_ptr<BusHandler> bh;
 
-	void sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback);
+	CorrelationId sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback);
 
 	std::function<void(const std::string&)> before;
 	std::function<void(const std::string&)> success;
@@ -83,9 +83,9 @@ const std::string sourceFile = R"(
 #include <google/protobuf/io/coded_stream.h>
 
 
-void %wrapper_name%::sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback)
+CorrelationId %wrapper_name%::sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback)
 {
-	bh->request(std::move(baseTopic), std::move(requestTopic), msg.SerializeAsString(), callback);
+	return bh->request(std::move(baseTopic), std::move(requestTopic), msg.SerializeAsString(), callback);
 }
 
 generated::proto::crumb::Breadcrumbs %wrapper_name%::crumbify(DefinitionId defID)
@@ -108,7 +108,7 @@ generated::proto::crumb::Breadcrumbs %wrapper_name%::crumbify(DefinitionId defID
 )";
 
 const std::string methodDeclaration = "%rettype% %method%(%args_list%);";
-const std::string methodDeclarationAsync = "void %method%_Async(%args_list_comma% ConversationDoneCb callback);";
+const std::string methodDeclarationAsync = "CorrelationId %method%_Async(%args_list_comma% ConversationDoneCb callback);";
 
 const std::string methodDefinition = R"(
 %rettype% %wrapper_name%::%method%(%args_list%)
@@ -125,7 +125,8 @@ const std::string methodDefinition = R"(
 	std::string topicAnswer = "%topic%.status";
 	typedef %namespace%::%method%_Status AnswerType;
 #endif
-	typedef %rettype% ReturnType;
+
+	%define_ret%
 
 	auto retrieveAnswer = [](const BusMessage &bm)
 	{
@@ -135,7 +136,6 @@ const std::string methodDefinition = R"(
 	};
 
 	CondSh<bool> isDone;
-	ReturnType ret;
 	std::string errorMessage;
 
 	// Because we are synchronous, we can use [&] -- we won't leave block until everything is done
@@ -188,12 +188,12 @@ const std::string methodDefinition = R"(
 		}
 	}; //Callback end
 
-	%method%_Async(%args_names_list_comma% callback);
+	auto correlation = %method%_Async(%args_names_list_comma% callback);
 
 	if(threadManager->getThreadName(boost::this_thread::get_id()) == threads::LISTENER)
 	{
 		while(!isDone.get())
-			bh->processMessage();
+			bh->processMessageFor(correlation);
 	}
 	isDone.waitWhile(false);
 
@@ -202,13 +202,12 @@ const std::string methodDefinition = R"(
 		THROW("Request %s failed: %s", topic, errorMessage);
 	}
 
-	return ret;
+	%return_ret%
 
 #undef USES_%answerType%
 }
 
-
-void %wrapper_name%::%method%_Async(%args_list_comma% ConversationDoneCb callback)
+CorrelationId %wrapper_name%::%method%_Async(%args_list_comma% ConversationDoneCb callback)
 {
 	std::string topic = "%topic%";
 	std::string topicRequest = "%topic%.request";
@@ -220,7 +219,7 @@ void %wrapper_name%::%method%_Async(%args_list_comma% ConversationDoneCb callbac
 
 	RequestType requestMsg;
 	fillWithArgs(requestMsg);
-	sendRequest(std::move(topic), std::move(topicRequest), requestMsg, callback);
+	return sendRequest(std::move(topic), std::move(topicRequest), requestMsg, callback);
 }
 
 )";
@@ -327,7 +326,7 @@ struct MethodWrapper
 	std::string topic, name;
 
 	std::string returnedType, returnedTypeAsync, epilogue, arguments, argumentsNames, setters;
-	std::string prepareRet, returnRet, useRet, useRetAsync;
+	std::string prepareRet, returnRet, useRet, useRetAsync, defineRet;
 
 	std::vector<int> collapsedArgs;
 	std::string collapsedName; 
@@ -366,6 +365,8 @@ struct MethodWrapper
 		boost::replace_all(ret, "%prepare_ret%", prepareRet);
 		boost::replace_all(ret, "%use_ret%", useRet);
 		boost::replace_all(ret, "%async_use_ret%", useRetAsync);
+		boost::replace_all(ret, "%define_ret%", defineRet);
+		boost::replace_all(ret, "%return_ret%", returnRet);
 
 		//boost::replace_all(ret, "%rettype%", returnedType);
 		return ret;
@@ -565,6 +566,11 @@ struct MethodWrapper
 			useRetAsync = useRet;
 
 		epilogue = prepareRet + "\n" + returnRet;
+
+		if(returnedType != "void")
+			defineRet = "typedef " + returnedType + " ReturnType;\nReturnType ret;";
+		else
+			defineRet = "";
 	}
 };
 
@@ -737,7 +743,7 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 		return std::move(ret);
 	}
 
-	if(/*boost::ends_with(message.topic, "request") || */boost::starts_with(message.topic, "builder."))
+	if(/*boost::ends_with(message.topic, "request") || */boost::starts_with(message.topic, "builder.")  ||  boost::starts_with(message.topic, "test."))
 		// No action needed for our packs
 		return nullptr;
 
