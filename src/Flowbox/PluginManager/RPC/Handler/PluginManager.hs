@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.PluginManager.RPC.Handler.PluginManager where
 
+import           Flowbox.Bus.RPC.RPC                               (RPC)
 import           Flowbox.Prelude                                   hiding (error, id)
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.PluginManager.Plugin.Ping.Request as Ping
@@ -18,7 +19,7 @@ logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
 
 -------- public api -------------------------------------------------
 
-ping :: Ping.Request -> IO Ping.Status
+ping :: Ping.Request -> RPC Ping.Status
 ping Ping.Request = do
     logger info "Ping received"
     return Ping.Status
