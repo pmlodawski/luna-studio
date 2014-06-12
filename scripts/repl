@@ -41,11 +41,7 @@ def main():
     for pkg in pkgs:
         print_info ("Compiling %s" % pkg.name)
 
-        print(pkg.sbox)
-        os.chdir(pkg.sbox)
-
-        ret = call("cabal exec ghci -- -XNoImplicitPrelude", shell=True)
-        errors.handle_err(ret)
+        call("cabal --sandbox=%s/cabal.sandbox.config exec ghci -- -XNoImplicitPrelude "% pkg.sbox, shell=True)
 
 
 main()
