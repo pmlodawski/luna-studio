@@ -8,6 +8,7 @@ module Flowbox.Control.Error (
     module Control.Error,
     runScript,
     (<?>),
+    (<??>),
     assert,
     safeLiftIO,
     safeLiftIO',
@@ -19,6 +20,7 @@ module Flowbox.Control.Error (
 import           Control.Error          hiding (runScript)
 import           Control.Exception      (Exception)
 import qualified Control.Exception      as Exc
+import           Control.Monad          (unless)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 
 import Flowbox.Prelude
@@ -38,11 +40,17 @@ val <?> m = case val of
     Just v  -> return v
     Nothing -> fail m
 
+infixl 4 <??>
+(<??>) :: Monad m => m (Maybe b) -> String -> m b
+action <??> m = do
+    val <- action
+    case val of
+        Just v  -> return v
+        Nothing -> fail m
+
 
 assert :: Monad m => Bool -> String -> m ()
-assert condition msg = if condition
-    then return ()
-    else fail msg
+assert condition msg = unless condition $ fail msg
 
 
 -- FIXME [PM] : find better name

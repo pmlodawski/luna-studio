@@ -4,11 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE RankNTypes #-}
 
 module Flowbox.Batch.Handler.NodeDefault where
 
 import           Flowbox.Batch.Batch                             (Batch)
-import           Flowbox.Batch.Handler.Common                    (graphViewOp, noresult, readonly)
+import qualified Flowbox.Batch.Handler.Common                    as Batch
 import qualified Flowbox.Batch.Project.Project                   as Project
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs         (Breadcrumbs)
 import qualified Flowbox.Luna.Data.Graph.Node                    as Node
@@ -21,18 +22,20 @@ import           Flowbox.Prelude
 
 
 
-nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO DefaultsMap
-nodeDefaults nodeID bc libID projectID  = readonly . graphViewOp bc libID projectID (\_ graph propertyMap _ -> do
-    return ((graph, propertyMap), DefaultsMap.getDefaultsMap nodeID propertyMap))
+nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch DefaultsMap
+nodeDefaults nodeID _ libID projectID =
+    DefaultsMap.getDefaultsMap nodeID <$> Batch.getPropertyMap libID projectID
 
 
 setNodeDefault :: PortDescriptor -> Value
-               -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-setNodeDefault dstPort value nodeID bc libID projectID = noresult . graphViewOp bc libID projectID (\_ graph propertyMap maxID ->
-    return ((graph, DefaultsMap.addDefault dstPort (maxID, value) nodeID propertyMap), ()))
+               -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+setNodeDefault dstPort value nodeID _ libID projectID = Batch.propertyMapOp libID projectID (\propertyMap -> do
+    maxID <- Batch.getMaxID libID projectID
+    return (DefaultsMap.addDefault dstPort (maxID, value) nodeID propertyMap, ()))
 
 
 removeNodeDefault :: PortDescriptor
-                  -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-removeNodeDefault dstPort nodeID bc libID projectID = noresult . graphViewOp bc libID projectID (\_ graph propertyMap _ ->
-    return ((graph, DefaultsMap.removeDefault dstPort nodeID propertyMap), ()))
+                  -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+removeNodeDefault dstPort nodeID _ libID projectID = Batch.propertyMapOp libID projectID (\propertyMap ->
+    return (DefaultsMap.removeDefault dstPort nodeID propertyMap, ()))
+

@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types       #-}
 {-# LANGUAGE TupleSections    #-}
 
 module Flowbox.Luna.Passes.Analysis.NameResolver where
@@ -30,16 +31,26 @@ import           Flowbox.Luna.Lib.LibManager             (LibManager)
 import qualified Flowbox.Luna.Lib.LibManager             as LibManager
 import           Flowbox.Luna.Lib.Library                (Library)
 import qualified Flowbox.Luna.Lib.Library                as Library
-import           Flowbox.Prelude                         hiding (elements, mod, Zipper)
+import           Flowbox.Luna.Passes.Pass                (Pass)
+import qualified Flowbox.Luna.Passes.Pass                as Pass
+import           Flowbox.Prelude                         hiding (elements, mod)
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Analysis.NameResolver"
 
 
-resolve :: (Applicative m, Monad m)
-        => String -> Breadcrumbs -> Library.ID -> LibManager -> m [(Breadcrumbs, Library.ID)]
+type NRPass result = Pass Pass.NoState result
+
+
+run :: String -> Breadcrumbs -> Library.ID -> LibManager -> Pass.Result [(Breadcrumbs, Library.ID)]
+run = (Pass.run_ (Pass.Info "NameResolver") Pass.NoState) .:: resolve
+
+
+
+resolve :: String -> Breadcrumbs -> Library.ID -> LibManager -> NRPass [(Breadcrumbs, Library.ID)]
 resolve name bc libID libManager = do
     library <- LibManager.lab libManager libID <?> "NameResolver: Cannot find library with id=" ++ show libID
     zipper  <- Zipper.focusCrumb' (head bc) $ Library.ast $ library
@@ -50,7 +61,7 @@ resolve name bc libID libManager = do
                       : (mapMaybe (possiblePath elements) imports)
     return $ List.concat $ map (flip searchLibManager libManager) possiblePaths
 
-getImports :: (Applicative m, Monad m) => Zipper -> Breadcrumbs -> m [Expr]
+getImports :: Zipper -> Breadcrumbs -> NRPass [Expr]
 getImports z@(Focus.ModuleFocus m, _) (h:t) = do newZ <- Zipper.focusCrumb h z
                                                  imports <- getImports newZ t
                                                  pure $ (m ^. Module.imports) ++ imports

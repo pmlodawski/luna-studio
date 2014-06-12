@@ -23,14 +23,17 @@ Library
   Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
                    `findmodules('src', '.*\.hs')`
                    
-  Build-Depends:  base,
+  Build-Depends:  async,
+                  base,
                   bytestring,
+                  containers,
                   either,
                   flowbox-config,
                   flowbox-rpc,
                   flowbox-utils,
                   MissingH,
                   mtl,
+                  monad-loops,
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   transformers,

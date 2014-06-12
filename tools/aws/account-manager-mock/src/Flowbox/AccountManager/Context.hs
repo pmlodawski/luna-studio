@@ -4,27 +4,30 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.AccountManager.Context where
 
 import qualified AWS                        as AWS
 import qualified Database.PostgreSQL.Simple as PSQL
 
-import           Flowbox.AWS.Region        (Region)
-import           Flowbox.AWS.User.Database (Database)
-import qualified Flowbox.AWS.User.Database as Database
-import           Flowbox.Prelude           hiding (Context)
+import           Flowbox.AWS.Database.Database (Database)
+import qualified Flowbox.AWS.Database.Database as Database
+import           Flowbox.AWS.Region            (Region)
+import           Flowbox.Prelude               hiding (Context)
 
 
 
-data Context = Context { database   :: Database
-                       , credential :: AWS.Credential
-                       , region     :: Region
+data Context = Context { _database   :: Database
+                       , _credential :: AWS.Credential
+                       , _region     :: Region
                        }
+
+makeLenses (''Context)
 
 
 mk :: Region -> PSQL.ConnectInfo -> IO Context
-mk region' dbConnectionInfo = do
-    credential' <- AWS.loadCredential
-    database'   <- Database.mk dbConnectionInfo
-    return $ Context database' credential' region'
+mk region' dbConnectionInfo =
+    Context <$> Database.mk dbConnectionInfo
+            <*> AWS.loadCredential
+            <*> pure region'

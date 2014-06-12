@@ -34,7 +34,7 @@ fetch basePath filePath = S3.withBucket $ \bucket -> do
 upload :: FilePath -> FilePath -> S3 ()
 upload basePath filePath = S3.withBucket $ \bucket -> do
     let normFilePath = FilePath.normalise' filePath
-    file <- liftIO $ HTTP.RequestBodyBS <$> (ByteString.readFile $ basePath </> normFilePath)
+    file <- liftIO $ HTTP.RequestBodyBS <$> ByteString.readFile (basePath </> normFilePath)
     void $ S3.query $ S3.putObject bucket (Text.pack normFilePath) file
 
 
@@ -73,5 +73,5 @@ copy srcFilePath dstFilePath = S3.withBucket $ \bucket -> do
 create :: FilePath -> S3 ()
 create filePath = S3.withBucket $ \bucket -> do
     let normFilePath = FilePath.normalise' filePath
-        file         = HTTP.RequestBodyBS $ ByteString.empty
+        file         = HTTP.RequestBodyBS ByteString.empty
     void $ S3.query $ S3.putObject bucket (Text.pack normFilePath) file

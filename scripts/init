@@ -70,12 +70,12 @@ def checkInstall(name, installCmd, chckf):
 
 def checkPythonPkg(package, version=None):
     if version:
-        install_cmd = "python -m pip install --user {package}=={version}".format(**locals())
+        install_cmd = "python2.7 -m pip install --user {package}=={version}".format(**locals())
     else:
-        install_cmd = "python -m pip install --user {package}".format(**locals())
+        install_cmd = "python2.7 -m pip install --user {package}".format(**locals())
 
     try:
-        res = subprocess.check_output("python -m pip freeze", shell=True)
+        res = subprocess.check_output("python2.7 -m pip freeze", shell=True)
         if version:
             version = [int(x) for x in version.split('.')]
         for line in res.splitlines():

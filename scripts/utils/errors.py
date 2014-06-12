@@ -8,6 +8,18 @@
 import sys
 from utils.colors import print_error
 
+
+
 def fatal():
     print_error ("ERROR")
     sys.exit(1)
+
+
+def handle_out(code):
+    if code:
+        print_error("ERROR")
+        sys.exit(code)
+
+def handle_err(code):
+    if code:
+        sys.exit(code)

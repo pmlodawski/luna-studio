@@ -5,7 +5,6 @@ Cabal-Version:  >= 1.8
 Author:         Flowbox <contact@flowbox.io>
 Maintainer:     Flowbox <contact@flowbox.io>
 Build-Type:     Simple
-Description:    jest źle parsowany rpzez Wojtkowy skrypt
 
 Flag Debug
   Description: Enable debug support

@@ -42,7 +42,7 @@ fromUnixString spath@(x:xs) = let
         '/' -> fromList $ "/" : split xs
         '~' -> case xs of
                   []     -> [Var "~"]
-                  '/':ys -> Var "~" : (fromUnixString ys)
+                  '/':ys -> Var "~" : fromUnixString ys
                   _      -> fromList $ split xs
         '$' -> var : rest where
                splitted = split spath
@@ -54,7 +54,7 @@ fromUnixString spath@(x:xs) = let
 toUnixString :: UniPath -> String
 toUnixString []   = ""
 toUnixString path = case head l of
-        "/" -> "/" ++ (join $ tail l)
+        "/" -> "/" ++ join (tail l)
         _   -> join l
     where l    = toList path
           join = StringUtils.join "/"
@@ -65,19 +65,19 @@ expand [] = return empty
 expand (x:xs) = liftIO $ case x of
         Var "~"        -> do home <- Directory.getHomeDirectory
                              rest <- expand xs
-                             return $ (fromUnixString home) ++ rest
+                             return $ fromUnixString home ++ rest
         Var "$APPDATA" -> do home <- Directory.getAppUserDataDirectory "flowbox"
                              rest <- expand xs
-                             return $ (fromUnixString home) ++ rest
+                             return $ fromUnixString home ++ rest
         _       -> (:) x <$> expand xs
 
 
 fromList :: [String] -> UniPath
-fromList path = foldr prepend empty path
+fromList = foldr prepend empty
 
 
 toList :: UniPath -> [String]
-toList path = fmap str path where
+toList = fmap str where
     str item = case item of
             Node txt -> txt
             Root txt -> txt
@@ -92,11 +92,11 @@ append snode path = path ++ [toPathItem snode]
 
 
 prepend :: String -> UniPath -> UniPath
-prepend snode path = (toPathItem snode):path
+prepend snode path = toPathItem snode : path
 
 
 dirOf :: UniPath -> UniPath
-dirOf path = init path
+dirOf = init
 
 
 toPathItem :: String -> PathItem
@@ -109,7 +109,7 @@ toPathItem snode = case snode of
 
 
 normalise :: UniPath -> UniPath
-normalise path = case reverse (normalise_r (reverse path) $ 0) of
+normalise path = case reverse (normalise_r (reverse path) 0) of
         [] -> [Current]
         p  -> p
 
@@ -124,7 +124,7 @@ normalise_r path undo = case path of
                 Empty         -> normalise_r xs undo
                 _             -> if undo>0 then
                                          normalise_r xs (undo-1)
-                                     else x:normalise_r xs (undo)
+                                     else x:normalise_r xs undo
 
 
 fileName :: UniPath -> String
@@ -145,7 +145,7 @@ extension path = FilePath.takeExtension (toUnixString path)
 
 setExtension :: String -> UniPath -> UniPath
 setExtension ext path =
-    normalise $ path ++ [Up] ++ [Node $ (fileName path) ++ ext]
+    normalise $ path ++ [Up] ++ [Node $ fileName path ++ ext]
 
 
 dropExtension :: UniPath -> UniPath

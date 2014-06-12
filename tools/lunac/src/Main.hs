@@ -9,15 +9,15 @@ import           Data.Version        (Version (Version))
 import           Options.Applicative (argument, command, command, fullDesc, help, hidden, long, metavar, option, prefs, progDesc, short, str, strOption, subparser, switch, value, (<>))
 import qualified Options.Applicative as Opt
 
-import qualified Flowbox.Config.Config            as Config
+import qualified Flowbox.Config.Config       as Config
 import           Flowbox.Control.Applicative
 --FIXME[pm]: re-enable Flowbox.Distribution
 --import qualified Flowbox.Distribution.Client.List as DistList
-import qualified Flowbox.Lunac.Build              as Build
-import qualified Flowbox.Lunac.Cmd                as Cmd
-import qualified Flowbox.Lunac.Version            as Version
-import           Flowbox.Options.Applicative      (optIntFlag)
-import           Flowbox.Prelude                  hiding (argument, op)
+import qualified Flowbox.Lunac.Build         as Build
+import qualified Flowbox.Lunac.Cmd           as Cmd
+import qualified Flowbox.Lunac.Version       as Version
+import           Flowbox.Options.Applicative (optIntFlag)
+import           Flowbox.Prelude             hiding (argument, op)
 import           Flowbox.System.Log.Logger
 
 
@@ -95,7 +95,7 @@ opts = Opt.info parser (fullDesc <> Opt.progDesc "Luna compiler & package manage
 
 
 helper :: Opt.Parser (a -> a)
-helper = Opt.abortOption Opt.ShowHelpText $ (long "help" <> short 'h' <> help "show this help text")
+helper = Opt.abortOption Opt.ShowHelpText (long "help" <> short 'h' <> help "show this help text")
 
 
 main :: IO ()

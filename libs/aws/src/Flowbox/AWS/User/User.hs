@@ -4,30 +4,34 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.AWS.User.User where
 
-import           Flowbox.AWS.User.Password (Password (Password))
-import qualified Flowbox.AWS.User.Password as Password
-import           Flowbox.Prelude
+import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
+import Database.PostgreSQL.Simple.ToField (ToField, toField)
+import Database.PostgreSQL.Simple.ToRow   (ToRow, toRow)
+
+import Flowbox.AWS.User.Password (Password (Password))
+import Flowbox.Prelude
 
 
 
 type Name = String
 
 
-data User = User { name     :: Name
-                 , password :: Password
+data User = User { _name     :: Name
+                 , _password :: Password
+                 , _credit   :: Int     -- 1000 = 1$
                  } deriving (Show)
 
-                 
+
 makeLenses (''User)
 
 
-fromDB :: (Name, String) -> User
-fromDB (name', password') = User name' (Password password')
+instance FromRow User where
+    fromRow = User <$> field <*> (Password  <$> field <*> field) <*> field
 
-
-toDB :: User -> (Name, String)
-toDB (User name' password') = (name', Password.fromPassword password')
+instance ToRow User where
+    toRow (User name' password' credit') =
+        toField name' : toRow password' ++ [toField credit']

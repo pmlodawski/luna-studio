@@ -38,6 +38,7 @@ gen
 # cabal configs - they should be generated from tcabal files
 libs/*/*.cabal
 libs/*/*/*.cabal
+libs/*/*/*/*.cabal
 tools/*/*.cabal
 tools/*/*/*.cabal
 tools/*/*/*/*.cabal
@@ -62,3 +63,4 @@ aws.config
 *.jpg
 
 test.html
+report.html

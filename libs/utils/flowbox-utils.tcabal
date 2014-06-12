@@ -35,6 +35,7 @@ Library
                   hslogger,
                   lens,
                   MissingH,
+                  monad-loops,
                   mtl,
                   optparse-applicative,
                   pretty,
@@ -50,7 +51,7 @@ Library
 
 Executable utils 
   Main-Is:        Main.hs
-  Hs-Source-Dirs: tests
+  Hs-Source-Dirs: test
 
   GHC-Options:    -Wall -O2
 
@@ -61,10 +62,5 @@ Executable utils
                   TypeSynonymInstances
                   
   Build-Depends:  base,
-                  --dlist,
-                  --ansi-terminal,
-                  --either,
-                  --hslogger,
-                  --mtl,
                   flowbox-utils,
                   ghc-prim

@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import qualified Aws       as Aws
+import qualified Aws
 import qualified Data.Text as Text
 
 import qualified Flowbox.Bus.EndPoint                as EP
@@ -52,6 +52,6 @@ run cmd = case cmd of
         endPoints <- EP.clientFromConfig <$> Config.load
         cfg <- Aws.baseConfiguration
         ctx <- Context.mk cfg $ Text.pack $ Cmd.bucket cmd
-        r <- Server.run endPoints Handler.topics $ Handler.handler ctx
+        r <- Server.run endPoints $ Handler.handlerMap ctx
         print r
 

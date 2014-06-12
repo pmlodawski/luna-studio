@@ -23,6 +23,7 @@ import           Data.Default           as X
 import           Data.Foldable          (forM_)
 import           Data.Monoid            as X (Monoid, mappend, mempty)
 import qualified Data.Traversable       as Traversable
+import Control.Monad.Trans.Class (MonadTrans)
 
 import           Flowbox.Debug.Debug as X
 import           Prelude             hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
@@ -108,7 +109,7 @@ whenRight e f = case e of
 
 
 whenRight' :: (Monad m) => Either a b -> m () -> m ()
-whenRight' e f = whenRight e (\_ -> f)
+whenRight' e f = whenRight e $ const f
 
 -- trenary operator
 data Cond a = a :? a
@@ -129,7 +130,17 @@ False ? (_ :? y) = y
 withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
 withJust = forM_
 
+
+lift2 :: (Monad (t1 m), Monad m,
+          MonadTrans t, MonadTrans t1) 
+      => m a -> t (t1 m) a
 lift2 = lift . lift
+
+
+lift3 :: (Monad (t1 (t2 m)), Monad (t2 m), Monad m,
+          MonadTrans t, MonadTrans t1, MonadTrans t2)
+      => m a -> t (t1 (t2 m)) a
+lift3 = lift . lift2
 
 
 ifM :: (Monad m) => m Bool -> m a -> m a -> m a

@@ -7,39 +7,26 @@
 ## Flowbox Team <contact@flowbox.io>, 2014
 ###########################################################################
 
-import sys
-import os.path
-import os
-import shutil
-import sys
-import platform
-from subprocess import call, Popen, PIPE
-from utils.colors import print_info, print_error, print_warning
-from itertools import chain
-from collections import deque
+from   config.packages import pkgDb
 import ConfigParser
-from config.packages import pkgDb
-from utils.system import platformFix
+from   collections     import deque
+from   itertools       import chain
+import sys
+import os
+import os.path
+import platform
+import shutil
+from   subprocess      import call, Popen, PIPE
+import utils.errors    as     errors
+from   utils.colors    import print_info, print_error, print_warning
+from   utils.system    import platformFix
 
 
-rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sboxName = 'dist'
-cabalConf = "cabal.config"
-os.chdir(rootPath)
-
-def handle_ret(ret):
-    if ret != 0:
-        sys.exit(ret)
-
-def handle_out(code):
-    if code:
-        print_error("ERROR")
-        sys.exit(code)
 
 def getHaskellPlatformRoot():
     cmd = 'ghc --info'
     (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-    handle_out(err)
+    errors.handle_out(err)
 
     cfglines = [line for line in out.split('\n') if 'LibDir' in line]
     if len(cfglines) != 1:
@@ -50,8 +37,6 @@ def getHaskellPlatformRoot():
     path = os.path.dirname(val)
     return path
 
-sboxEnv = "FDEV_TARGETS"
-
 class Target:
     def __init__(self, name, sbox):
         self.name = name
@@ -61,6 +46,12 @@ class Target:
         return "Target %s (%s)" % (self.name, self.sbox)
 
 def main():
+    rootPath  = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    sboxName  = 'dist'
+    sboxEnv   = "FDEV_TARGETS"
+    cabalConf = "cabal.config"
+    os.chdir(rootPath)
+
     platformFix(sboxName)
     pkgNames = []
     args = []
@@ -80,7 +71,7 @@ def main():
 
     print_info("Running gencabal")
     ret = call('python2.7 scripts/gencabal', shell=True)
-    handle_ret(ret)
+    errors.handle_err(ret)
 
     cwd = os.getcwd()
 
@@ -97,9 +88,8 @@ def main():
         shutil.copy(cabalConfigSrc, dstConfigCopy)
 
         instPath = os.path.join(dist_dir, 'bin', pkg.binpath)
-        ret = call('cabal install --solver=topdown --force-reinstalls --reinstall --bindir=%s %s %s' % (instPath, pkg.name, ' '.join(args + pkg.flags)), shell=True)
-        # FIXME [PM] : --solver=topdown --force-reinstalls is added to solve problem described here: http://www.reddit.com/r/haskell/comments/26045a/if_youre_finding_cabal_cant_build_your_project/
-        handle_ret(ret)
+        ret = call('cabal install --reinstall --bindir=%s %s %s' % (instPath, pkg.name, ' '.join(args + pkg.flags)), shell=True)
+        errors.handle_err(ret)
 
 
 main()

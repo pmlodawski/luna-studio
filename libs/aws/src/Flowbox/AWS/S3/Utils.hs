@@ -24,13 +24,13 @@ dirMarker = "/"
 
 
 normaliseDir :: FilePath -> FilePath
-normaliseDir dirPath = (FilePath.normalise' dirPath) ++ dirMarker
+normaliseDir dirPath = FilePath.normalise' dirPath ++ dirMarker
 
 
 
 directoryPrefix :: FilePath -> Maybe Text
 directoryPrefix filePath = case filePath of
     "." -> Nothing
-    p   -> if isDirectory p
-        then Just $ Text.pack p
-        else Just $ Text.pack (p ++ "/")
+    p   -> Just $ Text.pack $ if isDirectory p
+        then p
+        else p ++ "/"

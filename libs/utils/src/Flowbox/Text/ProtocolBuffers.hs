@@ -31,7 +31,7 @@ type Serializable msg = (Proto.ReflectDescriptor msg, Proto.Wire msg)
 getExt' :: Extensions.Key Maybe msg val -> msg -> Either String val
 getExt' key msg = case Extensions.getExt key msg of
     Right (Just args) -> return args
-    Right Nothing     -> fail $ "Error while getting extension"
+    Right Nothing     -> fail   "Error while getting extension"
     Left   e          -> fail $ "Error while getting extension: " ++ e
 
 

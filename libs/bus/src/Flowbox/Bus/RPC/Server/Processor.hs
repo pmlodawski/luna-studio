@@ -9,19 +9,17 @@
 
 module Flowbox.Bus.RPC.Server.Processor where
 
-import qualified Data.List         as List
-import qualified Data.String.Utils as Utils
+import Control.Monad          (liftM)
+import Control.Monad.IO.Class (MonadIO)
 
-import           Flowbox.Bus.Data.Exception                     (Exception (Exception))
-import           Flowbox.Bus.Data.Message                       (Message (Message))
-import qualified Flowbox.Bus.Data.Message                       as Message
-import           Flowbox.Bus.Data.Topic                         (Topic)
-import           Flowbox.Bus.RPC.Handler                        (BusRPCHandler)
-import           Flowbox.Control.Error                          hiding (err)
-import           Flowbox.Prelude                                hiding (error)
+import           Flowbox.Bus.Data.Message     (Message)
+import qualified Flowbox.Bus.Data.Message     as Message
+import           Flowbox.Bus.RPC.HandlerMap   (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap   as HandlerMap
+import qualified Flowbox.Bus.RPC.RPC          as RPC
+import           Flowbox.Prelude              hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Flowbox.Text.ProtocolBuffers as Proto
 
 
 
@@ -29,39 +27,23 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Bus.RPC.Server.Processor"
 
 
-status :: String
-status = "status"
+singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
+singleResult f a = liftM mkList $ f a
 
 
-update :: String
-update = "update"
-
-
-singleResult :: (a -> IO b) -> a -> IO [b]
-singleResult f a = mkList <$> f a
-
-
-process :: BusRPCHandler -> Message -> IO [Message]
-process handler msg = handler call topic where
-    call type_ method = case Proto.messageGet' $ Message.message msg of
+process :: HandlerMap -> Message -> IO [Message]
+process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
+    call :: HandlerMap.Callback
+    call type_ method = case Proto.messageGet' $ msg ^. Message.message of
         Left err   -> do logger error err
-                         return $ respondError topic err
-        Right args -> do results <- runEitherT $ scriptIO $ method args
+                         return $ Message.mkError topic err
+        Right args -> do results <- RPC.run $ method args
                          return $ case results of
-                            Left err -> respondError topic $ "Unhandled error: " ++ err
+                            Left err -> Message.mkError topic err
                             Right ok -> map (respond type_) ok
 
-    topic = Message.topic msg
+    topic = msg ^. Message.topic
 
     respond :: Proto.Serializable msg => String -> msg -> Message
-    respond = constructMessage topic
-
-
-respondError :: Topic -> String -> [Message]
-respondError topic = mkList . constructMessage topic "error" . encodeP . Exception . Just
-
-
-constructMessage :: Proto.Serializable msg => Topic -> String ->  msg -> Message
-constructMessage topic type_  data_ = Message newTopic $ Proto.messagePut' data_ where
-    newTopic = (List.intercalate "." . flip (++) [type_] . init . Utils.split ".") topic
+    respond = Message.mkResponse topic
 
