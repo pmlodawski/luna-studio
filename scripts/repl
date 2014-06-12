@@ -20,6 +20,7 @@ from   utils.colors    import print_info, print_error
 def main():
     rootPath  = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     sboxEnv   = "FDEV_TARGETS"
+    currentPath = os.getcwd()
     os.chdir(rootPath)
 
     pkgNames = []
@@ -40,8 +41,13 @@ def main():
 
     for pkg in pkgs:
         print_info ("Compiling %s" % pkg.name)
+        os.chdir(currentPath)
+        try:
+            call("cabal --sandbox=%s/cabal.sandbox.config exec ghci -- -XNoImplicitPrelude "% pkg.sbox, shell=True)
+        except KeyboardInterrupt:
+            print "\nNext time please use ^D instead of ^C"
 
-        call("cabal --sandbox=%s/cabal.sandbox.config exec ghci -- -XNoImplicitPrelude "% pkg.sbox, shell=True)
+        os.chdir(rootPath)
 
 
 main()
