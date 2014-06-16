@@ -79,7 +79,8 @@ Library
                   -- Dependencies that cabal 1.19.2 complains on
                   network == 2.4.2.2,
                   HTTP == 4000.2.11,
-                  HOpenCV >= 0.4
+                  HOpenCV >= 0.4,
+                  openexr
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -144,4 +145,5 @@ Executable test
                       diagrams-cairo,
                       cubicbezier,
                       split,
-                      HOpenCV >= 0.4
+                      HOpenCV >= 0.4,
+                      openexr

@@ -15,7 +15,7 @@ main = do
 
     readHeader ret >>= print
 
-    (buf,_,_) <- readTileFromChannel' ret 0 "R"  (0, 0)
+    --(buf,_,_) <- readTileFromChannel' ret 0 "R"  (0, 0)
     --buf <- readTiledScanlineChannelR ret 0 "R"
     --forM_ [0..9] $ \index -> print $ buf `R.linearIndex` index
 

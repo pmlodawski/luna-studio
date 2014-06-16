@@ -4,7 +4,6 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Flowbox.Codec.EXR.Channels (
@@ -12,13 +11,17 @@ module Flowbox.Codec.EXR.Channels (
     , readScanlineChannelA
     , readTiledScanlineChannelR
     , readTileFromChannel'
+    , saveTest
+    , saveChannels
     ) where
 
 import           Control.Applicative
+import           Control.Monad                   (forM, forM_)
 import qualified Data.Array.Accelerate           as A   
 import qualified Data.Array.Accelerate.IO        as A
 import qualified Data.Array.Repa                 as R
-import qualified Data.Array.Repa.Repr.ForeignPtr as R 
+import qualified Data.Array.Repa.Repr.ForeignPtr as R
+import qualified Data.Vector.Storable            as SV
 import           Foreign
 import           Foreign.C.String
 import           Foreign.C.Types
@@ -127,3 +130,58 @@ readTileFromChannelR exrFile part chanName coords = do
 --    (ptr, height, width) <- readDeepScanlineChannel' exrFile part chanName
 --    let shape = Repa.Z Repa.:. height Repa.:. width
 --    return $ Repa.fromForeignPtr shape ptr
+
+saveTest :: String -> String -> A.Array A.DIM2 Float -> IO ()
+saveTest fileName chanName arr = withCString fileName $ \f ->
+    withCString chanName $ \c ->
+    mallocBytes size >>= \ptr ->
+    A.toPtr arr ((), castPtr ptr) >>
+    Bindings.saveTest f c h' w' ptr >>
+    free ptr
+
+    where A.Z A.:. h A.:. w = A.arrayShape arr
+          w' = fromIntegral w
+          h' = fromIntegral h
+          size = h * w * sizeOf (undefined :: Float)
+
+foreign import ccall "haskexr.h saveChannelsToFile" saveChannelsC ::
+    CString -> Ptr CString -> Ptr (Ptr Float) -> CInt -> CInt -> CInt -> IO ()
+
+saveChannels :: String -> [(String, A.Array A.DIM2 Float)] -> IO ()
+saveChannels fileName channels = do
+    let A.Z A.:. height A.:. width = A.arrayShape $ snd $ head channels
+        (names, chans) = unzip channels
+        len = fromIntegral $ length channels
+    withCStringList names $ \cstrs ->
+        withCString fileName $ \file ->
+        withAccArrays chans $ \bufs ->
+            saveChannelsC file cstrs bufs len (fromIntegral height) (fromIntegral width)
+
+-- FIXME[mm]: really unsafe, use Mutable Vector instead of modifying Storable Vector in place
+withAccArrays :: [A.Array A.DIM2 Float] -> (Ptr (Ptr Float) -> IO a) -> IO a
+withAccArrays arrays f = do
+    let len = length arrays
+    allocaArray len $ \ptr -> do
+        foreigns <- forM (zip [0..] arrays) $ \(i, a) -> do
+            let ((), vector) = A.toVectors a
+                (buf, _, _) = SV.unsafeToForeignPtr vector
+                bufPtr = unsafeForeignPtrToPtr buf
+            pokeElemOff ptr i bufPtr
+            return buf
+        ret <- f ptr
+        forM_ foreigns $ \fptr -> do
+            touchForeignPtr fptr
+        return ret
+
+withCStringList :: [String] -> (Ptr CString -> IO a) -> IO a
+withCStringList strs f = do
+    let len = length strs
+    allocaArray len $ \ptr -> do
+        forM_ (zip [0..] strs) $ \(i, s) -> do
+            cstr <- newCString s
+            pokeElemOff ptr i cstr
+        ret <- f ptr
+        forM_ [0..len-1] $ \i -> do
+            cstr <- peekElemOff ptr i
+            free cstr
+        return ret

@@ -21,6 +21,9 @@ float* readTileFromChannelUnsafe(void* fileHandle, int part, const char* chanNam
 // float* readTileFromChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width);
 float* readTiledScanlineChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width);
 
+void saveTest(const char* fileName, const char* chanName, int height, int width, float* buffer);
+void saveChannelsToFile(const char* fileName, const char** chanNames, float** buffers, int channels, int height, int width);
+
 char* getPartType(void* fileHandle, int part);
 char* getPartName(void* fileHandle, int part);
 int   getPartVersion(void* fileHandle, int part, int* version);

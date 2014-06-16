@@ -42,13 +42,10 @@ foreign import ccall "haskexr.h readScanlineChannelUnsafe" readScanlineChannel :
     Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
 
 foreign import ccall unsafe "haskexr.h readTileFromChannelUnsafe" readTileFromChannel ::
-	Ptr EXR -> CInt -> CString -> CInt -> CInt -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
-	--Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
+    Ptr EXR -> CInt -> CString -> CInt -> CInt -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
+    --Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
 foreign import ccall "haskexr.h readTiledScanlineChannelUnsafe" readTiledScanlineChannel ::
-	Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
-
-foreign import ccall "haskexr.h foobar" foobar ::
-	Ptr EXR -> CInt -> CString -> CInt -> CInt -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
+    Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
 
 -- not supported
 --foreign import ccall "haskexr.h readDeepScanlineChannelUnsafe" readDeepScanlineChannel ::
@@ -57,3 +54,6 @@ foreign import ccall "haskexr.h foobar" foobar ::
 
 -- |Debug function useful for showing info about particular OpenEXR file
 foreign import ccall "haskexr.h dumpImageInfo" dumpImageInfo :: Ptr EXR -> IO ()
+
+foreign import ccall "haskexr.h saveTest" saveTest ::
+    CString -> CString -> CInt -> CInt -> Ptr CFloat -> IO ()

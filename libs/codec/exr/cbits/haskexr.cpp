@@ -8,6 +8,7 @@
 #include "ImfDeepFrameBuffer.h"
 #include "ImfInputPart.h"
 #include "ImfTiledInputPart.h"
+#include "ImfOutputFile.h"
 #include "Iex.h"
 
 #include <algorithm>
@@ -225,11 +226,6 @@ float* readTiledScanlineChannelUnsafe(void* fileHandle, int part, const char* ch
     return buffer;
 }
 
-float* foobar(void*, int, const char*, int, int, int*, int*) {
-    return nullptr;
-}
-
-
 // float* readDeepScanlineChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width) {
 //     auto exrFile = static_cast<Imf::MultiPartInputFile*>(fileHandle);
 
@@ -353,6 +349,37 @@ void getScreenWindowCenter(void* fileHandle, int part, float* x, float* y) {
 
     *x = exrFile->header(part).screenWindowCenter().x;
     *y = exrFile->header(part).screenWindowCenter().y;
+}
+
+void saveTest(const char* fileName, const char* chanName, int height, int width, float* buffer) {
+    Imf::Header header {width, height};
+    header.channels().insert(chanName, Imf::Channel(Imf::FLOAT));
+
+    Imf::FrameBuffer fb;
+
+    fb.insert(chanName,
+        Imf::Slice(Imf::FLOAT, (char*)buffer, sizeof(float), sizeof(float) * width, 1, 1, 0.0));
+
+    Imf::OutputFile out {fileName, header};
+    out.setFrameBuffer(fb);
+    out.writePixels(height);
+}
+
+void saveChannelsToFile(const char* fileName, const char** chanNames, float** buffers, int channels, int height, int width) {
+    Imf::Header header {width, height};
+
+    for (auto i = 0; i < channels; ++i)
+        header.channels().insert(chanNames[i], Imf::Channel(Imf::FLOAT));
+
+    Imf::FrameBuffer fb;
+
+    for (auto i = 0; i < channels; ++i)
+        fb.insert(chanNames[i],
+            Imf::Slice(Imf::FLOAT, (char*)buffers[i], sizeof(float), sizeof(float) * width, 1, 1, 0.0));
+
+    Imf::OutputFile out {fileName, header};
+    out.setFrameBuffer(fb);
+    out.writePixels(height);
 }
 
 void dumpImageInfo(void* fileHandle) {
