@@ -8,25 +8,24 @@ module Flowbox.Graphics.Image.IO.BMP where
 
 import qualified Codec.BMP                  as BMP
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import           Control.Monad.Trans.Either
 import qualified Data.Array.Accelerate      as A
 import qualified Data.Array.Accelerate.IO   as A
 import           Data.Bits                  ((.&.))
 
 import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Graphics.Ima
+import           Flowbox.Graphics.Image.Image   (Image)
 import qualified Flowbox.Graphics.Image.Image   as Image
 import qualified Flowbox.Graphics.Image.View    as View
 import qualified Flowbox.Math.Matrix            as Matrix
 import           Flowbox.Prelude
 
 
-readFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image.Image View.RGBA))
+readFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image View.RGBA))
 readFromBMP file = liftIO $ do
     rawData <- A.readImageFromBMP file
     return $ makeRGBA <$> rawData
 
-makeRGBA :: A.Array A.DIM2 A.Word32 -> Image.Image View.RGBA
+makeRGBA :: A.Array A.DIM2 A.Word32 -> Image View.RGBA
 makeRGBA array = image
     where word32Matrix   = Matrix.Raw array
           unpackedMatrix = Matrix.map unpack32 word32Matrix
