@@ -4,14 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE RankNTypes #-}
 
-module Flowbox.Batch.Handler.Properties (
-    getProperties,
-    setProperties,
-) where
+module Flowbox.Batch.Handler.Properties where
 
 import           Flowbox.Batch.Batch                (Batch)
-import           Flowbox.Batch.Handler.Common       (astOp, noresult, readonly)
+import           Flowbox.Batch.Handler.Common       (astOp)
+import qualified Flowbox.Batch.Handler.Common       as Batch
 import qualified Flowbox.Batch.Project.Project      as Project
 import qualified Flowbox.Luna.Data.AST.Common       as AST
 import           Flowbox.Luna.Data.Graph.Properties (Properties)
@@ -22,15 +21,13 @@ import           Flowbox.Prelude
 
 
 
-getProperties :: AST.ID -> Library.ID -> Project.ID -> Batch -> IO Properties
-getProperties nodeID libID projectID  = readonly . astOp libID projectID (\_ ast propertyMap -> do
-    let properties = PropertyMap.findWithDefault Properties.empty nodeID propertyMap
-    return ((ast, propertyMap), properties))
+getProperties :: AST.ID -> Library.ID -> Project.ID -> Batch Properties
+getProperties nodeID libID projectID = do
+    propertyMap <- Batch.getPropertyMap libID projectID
+    return $ PropertyMap.findWithDefault Properties.empty nodeID propertyMap
 
 
-
-setProperties :: Properties -> AST.ID -> Library.ID -> Project.ID -> Batch -> IO Batch
-setProperties properties nodeID libID projectID  = noresult . astOp libID projectID (\_ ast propertyMap -> do
+setProperties :: Properties -> AST.ID -> Library.ID -> Project.ID -> Batch ()
+setProperties properties nodeID libID projectID = astOp libID projectID (\ast propertyMap -> do
     let newPropertyMap = PropertyMap.insert nodeID properties propertyMap
     return ((ast, newPropertyMap), ()))
-

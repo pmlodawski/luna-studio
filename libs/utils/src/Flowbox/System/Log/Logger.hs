@@ -39,11 +39,14 @@ type LogAction b = LogWriter m => String -> String -> m b
 type Logger      = forall t t1. (t1 -> String -> t) -> t1 -> t
 type LoggerIO    = MonadIO m => forall t. (t -> String -> Writer LogList ()) -> t -> m ()
 
+
 getLogger :: String -> Logger
-getLogger name = \action msg -> action msg name
+getLogger name action msg = action msg name
+
 
 getLoggerIO :: String -> LoggerIO
-getLoggerIO name = \action msg -> runLogger $ action msg name
+getLoggerIO name action msg = runLogger $ action msg name
+
 
 runLogger :: MonadIO m => Writer LogList a -> m a
 runLogger m = do
@@ -51,14 +54,18 @@ runLogger m = do
     mapM_ logIO $ DList.toList entries
     return out
 
+
 log :: LogWriter m => Priority -> String -> String -> m()
 log pri msg name = tell $ DList.singleton (LogEntry name pri msg)
+
 
 append :: MonadWriter w m => w -> m ()
 append = tell
 
+
 logsIO :: LogList -> IO ()
 logsIO entries = mapM_ logIO $ DList.toList entries
+
 
 logIO :: MonadIO m => LogEntry.LogEntry -> m ()
 logIO entry = liftIO $ do
@@ -66,7 +73,7 @@ logIO entry = liftIO $ do
         msg   = LogEntry.msg      entry
         pri   = LogEntry.priority entry
         sgr   = case pri of
-                   TRACE       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan]
+                   TRACE       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan   ]
                    DEBUG       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Magenta]
                    INFO        -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Green  ]
                    WARNING     -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Yellow ]
@@ -97,50 +104,55 @@ logIO entry = liftIO $ do
         getLoggerPriority n =
             do l <- HSLogger.getLogger n
                pl <- parentLoggers n
-               case Maybe.catMaybes . map HSLogger.getLevel $ (l : pl) of
+               case Maybe.mapMaybe HSLogger.getLevel (l : pl) of
                  [] -> return HSLogger.DEBUG
                  (x:_) -> return x
 
     lpri <- hspri2pri <$> getLoggerPriority name
     
-    if pri >= lpri
-        then ANSI.hSetSGR stderr sgr
-        else return ()
+    when (pri >= lpri) $ ANSI.hSetSGR stderr sgr
 
-    HSLogger.logM name (pri2hspri pri) (msg)
+    HSLogger.logM name (pri2hspri pri) msg
 
-    if pri >= lpri
-        then ANSI.hSetSGR stderr []
-        else return ()
+    when (pri >= lpri) $ ANSI.hSetSGR stderr []
+
 
 trace :: LogAction ()
 trace = log TRACE
 
+
 debug :: LogAction ()
 debug = log DEBUG
+
 
 info :: LogAction ()
 info = log INFO
 
+
 warning :: LogAction ()
 warning = log WARNING
+
 
 error :: LogAction ()
 error = log ERROR
 
+
 critical :: LogAction ()
 critical = log CRITICAL
+
 
 criticalFail :: LogAction b
 criticalFail msg name = do
     log CRITICAL msg name
     fail msg
 
+
 setLevel :: MonadIO m => Priority -> String -> m ()
 setLevel lvl name = liftIO $ HSLogger.updateGlobalLogger name (HSLogger.setLevel $ pri2hspri lvl)
 
+
 setIntLevel :: Int -> String -> IO ()
-setIntLevel lvl name = setLevel nlvl name where 
+setIntLevel lvl = setLevel nlvl where 
     nlvl = case lvl of
         0 -> CRITICAL 
         1 -> ERROR

@@ -7,35 +7,26 @@
 ## Flowbox Team <contact@flowbox.io>, 2014
 ###########################################################################
 
-import sys
-import os.path
-import sys
-import platform
-from subprocess import call, Popen, PIPE
-from utils.colors import print_info, print_error, print_warning
-from itertools import chain
-from collections import deque
+from   config.packages import pkgDb
 import ConfigParser
+from   collections     import deque
+from   itertools       import chain
+import sys
+import os
 import os.path
-from config.packages import pkgDb
+import platform
+import shutil
+from   subprocess      import call, Popen, PIPE
+import utils.errors    as     errors
+from   utils.colors    import print_info, print_error, print_warning
+from   utils.system    import platformFix
 
 
-rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-os.chdir(rootPath)
-
-def handle_ret(ret):
-    if ret != 0:
-        sys.exit(ret)
-
-def handle_out(code):
-    if code:
-        print_error("ERROR")
-        sys.exit(code)
 
 def getHaskellPlatformRoot():
     cmd = 'ghc --info'
     (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-    handle_out(err)
+    errors.handle_out(err)
 
     cfglines = [line for line in out.split('\n') if 'LibDir' in line]
     if len(cfglines) != 1:
@@ -46,8 +37,6 @@ def getHaskellPlatformRoot():
     path = os.path.dirname(val)
     return path
 
-sboxEnv = "FDEV_TARGETS"
-
 class Target:
     def __init__(self, name, sbox):
         self.name = name
@@ -57,6 +46,13 @@ class Target:
         return "Target %s (%s)" % (self.name, self.sbox)
 
 def main():
+    rootPath  = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    sboxName  = 'dist'
+    sboxEnv   = "FDEV_TARGETS"
+    cabalConf = "cabal.config"
+    os.chdir(rootPath)
+
+    platformFix(sboxName)
     pkgNames = []
     args = []
     for arg in sys.argv[1:]:
@@ -70,12 +66,12 @@ def main():
             sys.exit(1)
 
         pkgNames = os.environ[sboxEnv].split(":")
-    
+
     pkgs = [pkgDb[name] for name in pkgNames]
 
     print_info("Running gencabal")
     ret = call('python2.7 scripts/gencabal', shell=True)
-    handle_ret(ret)
+    errors.handle_err(ret)
 
     cwd = os.getcwd()
 
@@ -84,10 +80,16 @@ def main():
 
     for pkg in pkgs:
         print_info ("Compiling %s" % pkg.name)
+
         os.chdir(pkg.sbox)
+
+        cabalConfigSrc = os.path.join(rootPath, cabalConf)
+        dstConfigCopy = pkg.sbox
+        shutil.copy(cabalConfigSrc, dstConfigCopy)
+
         instPath = os.path.join(dist_dir, 'bin', pkg.binpath)
-        ret = call('cabal install --reinstall --bindir=%s %s %s' % (instPath, pkg.name, ' '.join(args)), shell=True)
-        handle_ret(ret)
+        ret = call('cabal install --reinstall --bindir=%s %s %s' % (instPath, pkg.name, ' '.join(args + pkg.flags)), shell=True)
+        errors.handle_err(ret)
 
 
 main()

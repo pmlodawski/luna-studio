@@ -19,16 +19,16 @@ from utils.errors import fatal
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-cpp_gen_dirs = [os.path.join(rootPath, 'tools/batch-clients/performance/tcp/generated')
-               ,os.path.join(rootPath, 'tools/batch-clients/dumper/generated')
-               ,os.path.join(rootPath, 'tools/batch-clients/tcp-cpp/generated')]
+cpp_gen_dirs = [os.path.join(rootPath, 'tools/batch/batch-clients/tcp-cpp/generated')]
 
 
 importPaths = [ '/usr/include'
               , '/usr/local/include'
-              , os.path.join(rootPath, 'libs/luna/src/proto')
+              , os.path.join(rootPath, 'dist', 'proto')
+              , os.path.join(rootPath, 'libs/luna/base/src/proto')
               , os.path.join(rootPath, 'libs/batch/src/proto')
               , os.path.join(rootPath, 'libs/rpc/src/proto')
+              , os.path.join(rootPath, 'libs/aws/src/proto')
               ]
 imports = "-I " + ' -I '.join(importPaths)
 

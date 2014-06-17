@@ -9,6 +9,16 @@ import sys
 from utils.colorama import Fore, init
 init()
 
+
+def disable(self):
+        self.HEADER = ''
+        self.BLUE = ''
+        self.INFO = ''
+        self.WARNING = ''
+        self.ERROR = ''
+        self.RESET = ''
+
+
 class bcolors:
     INFO     = Fore.GREEN
     WARNING  = Fore.YELLOW

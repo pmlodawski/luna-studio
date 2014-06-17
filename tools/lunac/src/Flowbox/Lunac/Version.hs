@@ -16,8 +16,8 @@ import           Flowbox.Prelude
 
 
 full :: Bool -> Bool -> Bool -> String
-full numeric comp lib =  (if (not comp && lib) then "" else (compiler numeric ++ "\n"))
-                      ++ (if (not lib && comp) then "" else (library numeric ++ "\n"))
+full numeric comp lib =  (if not comp && lib then "" else compiler numeric ++ "\n")
+                      ++ (if not lib && comp then "" else library numeric ++ "\n")
 
 
 compiler :: Bool -> String

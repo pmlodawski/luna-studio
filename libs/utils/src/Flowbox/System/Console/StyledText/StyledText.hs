@@ -27,10 +27,10 @@ type StyledText = [Element]
 
 
 print :: StyledText -> IO ()
-print txt = hPrintStack stdout [] txt
+print = hPrintStack stdout []
 
 printErr :: StyledText -> IO ()
-printErr txt = hPrintStack stderr [] txt
+printErr = hPrintStack stderr []
 
 hPrintStack :: Handle -> [Style] -> StyledText -> IO ()
 hPrintStack _ _ []     = putStrLn ""

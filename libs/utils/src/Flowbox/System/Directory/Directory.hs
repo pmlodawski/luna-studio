@@ -15,6 +15,7 @@ module Flowbox.System.Directory.Directory (
     getDirectoryRecursive,
     getTemporaryDirectory,
     getTmpDirectoryWithPrefix,
+    listDirectory,
     removeDirectoryRecursive,
     removeFile,
     renameDirectory,
@@ -49,13 +50,13 @@ copyDirectoryRecursive usrc udst = do
             isDir <- doesDirectoryExist sname
             if isDir
                 then do createDirectory dname
-                        contents <- filter (`notElem` [".", ".."]) <$> Directory.getDirectoryContents (UniPath.toUnixString sname)
+                        contents <- listDirectory (UniPath.toUnixString sname)
                         mapM_ (copyContent sname dname) contents
                 else do
                     isFile <- doesFileExist sname
                     if isFile
                         then copyFile sname dname
-                        else fail $ "Failed to copy '" ++ (UniPath.toUnixString sname) ++  "' not implmented record type."
+                        else fail $ "Failed to copy '" ++ UniPath.toUnixString sname ++  "' not implmented record type."
 
     src <- UniPath.expand usrc
     dst <- UniPath.expand udst
@@ -71,7 +72,7 @@ copyFile usrc udst = do
     Directory.copyFile src dst
 
 
-createDirectory :: UniPath -> IO()
+createDirectory :: UniPath -> IO ()
 createDirectory upath = do
     path <- UniPath.toUnixString <$> UniPath.expand upath
     Directory.createDirectory path
@@ -104,9 +105,8 @@ getDirectoryRecursive upath = do
     path  <- UniPath.expand upath
     isDir <- doesDirectoryExist path
     if isDir
-        then do paths <- Directory.getDirectoryContents $ UniPath.toUnixString path
-                let filteredPaths = filter (/= ".") $ filter (/= "..") paths
-                    upaths = map (\a -> UniPath.append a path) filteredPaths
+        then do paths <- listDirectory $ UniPath.toUnixString path
+                let upaths = map (\a -> UniPath.append a path) paths
                 children <- mapM getDirectoryRecursive upaths
                 return $ List.concat children
         else return [path]
@@ -121,6 +121,10 @@ getTmpDirectoryWithPrefix prefix = do
     systemTmp <- getTemporaryDirectory
     guid      <- Random.newGUID
     return $ UniPath.append guid $ UniPath.append prefix systemTmp
+
+
+listDirectory :: FilePath -> IO [FilePath]
+listDirectory dirName = filter (`notElem` [".", ".."]) <$> Directory.getDirectoryContents dirName
 
 
 removeDirectoryRecursive :: UniPath -> IO ()

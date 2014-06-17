@@ -8,13 +8,14 @@
 module Flowbox.Batch.Handler.Maintenance where
 
 
-import           Flowbox.Batch.Batch             (Batch)
+import           Flowbox.Batch.Batch             (Batch, get, liftIO)
 import qualified Flowbox.Batch.Batch             as Batch
 import qualified Flowbox.Initializer.Initializer as Initializer
 import           Flowbox.Prelude
 
 
 
-initialize :: Batch -> IO ()
-initialize batch = do
-    Initializer.initializeIfNeeded $ Batch.config batch
+initialize :: Batch ()
+initialize = do config <- Batch.config <$> get
+                liftIO $ Initializer.initializeIfNeeded config
+

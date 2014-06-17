@@ -13,7 +13,7 @@ import "rpc.proto";
 message Request {
     required Method method = 1;
     enum Method {
-        ID_New  = 1001;
+        ID_Create  = 1001;
     }
     // optional bool async = 2 [default = false];
 
@@ -22,7 +22,7 @@ message Request {
 
 
 message ID {
-    message New {
+    message Create {
         message Args   { extend Request  { optional Args   req = 1001; } }
         message Result { extend generated.proto.rpc.Response { optional Result rsp = 1001; }
             required int32 id = 1;

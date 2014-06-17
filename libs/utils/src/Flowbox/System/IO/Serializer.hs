@@ -30,7 +30,7 @@ data Deserializable a = Deserializable UniPath (IO.Handle -> IO a)
 
 serializeMany :: [Serializable] -> IO()
 serializeMany serializables = do
-    sequence_ $ map (\s -> serialize s) serializables
+    mapM_ serialize serializables
     return ()
 
 

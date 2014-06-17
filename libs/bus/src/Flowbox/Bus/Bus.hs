@@ -4,13 +4,15 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds    #-}
-{-# LANGUAGE FlexibleContexts   #-}
-{-# LANGUAGE ImpredicativeTypes #-}
-{-# LANGUAGE RankNTypes         #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
 
 module Flowbox.Bus.Bus where
 
+import qualified Control.Concurrent              as Concurrent
+import qualified Control.Concurrent.Async        as Async
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import           Data.ByteString                 (ByteString)
@@ -18,22 +20,30 @@ import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Flowbox.Bus.Env                    (BusEnv (BusEnv))
-import qualified Flowbox.Bus.Env                    as Env
-import           Flowbox.Bus.Message                (Message)
-import qualified Flowbox.Bus.Message                as Message
-import           Flowbox.Bus.MessageFrame           (MessageFrame (MessageFrame))
-import qualified Flowbox.Bus.MessageFrame           as MessageFrame
-import           Flowbox.Bus.Topic                  (Topic)
-import qualified Flowbox.Bus.Topic                  as Topic
+import           Flowbox.Bus.Data.Flag                (Flag)
+import           Flowbox.Bus.Data.Message             (Message)
+import qualified Flowbox.Bus.Data.Message             as Message
+import           Flowbox.Bus.Data.MessageFrame        (MessageFrame (MessageFrame))
+import qualified Flowbox.Bus.Data.MessageFrame        as MessageFrame
+import           Flowbox.Bus.Data.Topic               (Topic)
+import qualified Flowbox.Bus.Data.Topic               as Topic
+import qualified Flowbox.Bus.EndPoint                 as EP
+import           Flowbox.Bus.Env                      (BusEnv (BusEnv))
+import qualified Flowbox.Bus.Env                      as Env
 import           Flowbox.Prelude
-import qualified Flowbox.Text.ProtocolBuffers       as Proto
-import qualified Flowbox.ZMQ.RPC.Client             as Client
-import qualified Generated.Proto.Bus.ID.New.Args    as ID_New
-import qualified Generated.Proto.Bus.ID.New.Result  as ID_New
-import           Generated.Proto.Bus.Request        (Request (Request))
-import qualified Generated.Proto.Bus.Request.Method as Method
-import qualified Flowbox.Bus.EndPoint as EP
+import           Flowbox.System.Log.Logger
+import qualified Flowbox.Text.ProtocolBuffers         as Proto
+import qualified Flowbox.ZMQ.RPC.Client               as Client
+import qualified Generated.Proto.Bus.ID.Create.Args   as ID_Create
+import qualified Generated.Proto.Bus.ID.Create.Result as ID_Create
+import           Generated.Proto.Bus.Request          (Request (Request))
+import qualified Generated.Proto.Bus.Request.Method   as Method
+
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Bus.Bus"
+
 
 type Error = String
 
@@ -44,21 +54,23 @@ requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
 requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
     lift $ ZMQ.connect socket addr
-    let request = Extensions.putExt ID_New.req (Just ID_New.Args)
-                $ Request Method.ID_New Proto.mkExtField
-    response <- Client.query socket request ID_New.rsp
+    let request = Extensions.putExt ID_Create.req (Just ID_Create.Args)
+                $ Request Method.ID_Create Proto.mkExtField
+    response <- Client.query socket request ID_Create.rsp
     lift $ ZMQ.close socket
-    return $ ID_New.id response
+    return $ ID_Create.id response
 
 
 runBus :: MonadIO m => EP.BusEndPoints -> Bus a -> m (Either Error a)
 runBus endPoints fun = ZMQ.runZMQ $ runEitherT $ do
+    logger trace "Connecting to bus..."
     clientID   <- requestClientID $ EP.controlEndPoint endPoints
     subSocket  <- lift $ ZMQ.socket ZMQ.Sub
     pushSocket <- lift $ ZMQ.socket ZMQ.Push
     lift $ ZMQ.connect subSocket  $ EP.pubEndPoint  endPoints
     lift $ ZMQ.connect pushSocket $ EP.pullEndPoint endPoints
-    fst <$> (runStateT fun $ BusEnv subSocket pushSocket clientID 0)
+    logger trace "Connected to bus"
+    fst <$> runStateT fun (BusEnv subSocket pushSocket clientID 0)
 
 
 getClientID :: Bus Message.ClientID
@@ -70,7 +82,7 @@ getPushSocket = Env.pushSocket <$> get
 
 
 getSubSocket :: (Functor f, MonadState (BusEnv z) f) => f (ZMQ.Socket z ZMQ.Sub)
-getSubSocket  = Env.subSocket <$> get
+getSubSocket = Env.subSocket <$> get
 
 
 getNewRequestID :: Bus Message.RequestID
@@ -81,33 +93,54 @@ getNewRequestID = do
     return requestID
 
 
-reply :: Message.CorrelationID -> Message -> Bus ()
-reply crlID msg = sendByteString . MessageFrame.toByteString . MessageFrame msg crlID =<< getClientID
+reply :: Message.CorrelationID -> Flag -> Message -> Bus ()
+reply crlID lastFrame msg = do
+    clientID <- getClientID
+    sendByteString $ MessageFrame.toByteString $ MessageFrame msg crlID clientID lastFrame
 
 
-send :: Message -> Bus Message.CorrelationID
-send msg = do
-    requestID <- getNewRequestID
-    clientID  <- getClientID
-    let correlationID = Message.CorrelationID clientID requestID
-    reply correlationID msg
+send :: Flag -> Message -> Bus Message.CorrelationID
+send lastFrame msg = do
+    correlationID <- Message.CorrelationID <$> getClientID <*> getNewRequestID
+    reply correlationID lastFrame msg
     return correlationID
 
 
-receive :: Bus (Either String MessageFrame)
+receive :: Bus (Either Error MessageFrame)
 receive = MessageFrame.fromByteString <$> receiveByteString
+
+
+receive' :: Bus MessageFrame
+receive' = receive >>= lift . hoistEither
+
+
+withTimeout :: Bus a -> Int -> Bus (Either Error a)
+withTimeout action timeout = runEitherT $ do
+    state' <- get
+    task <- lift3 $ ZMQ.async $ runEitherT $ runStateT action state'
+    wait <- liftIO $ Async.async $ do Concurrent.threadDelay timeout
+                                      return "Timeout reached"
+    r <- liftIO $ Async.waitEitherCancel wait task
+    (result, newState) <- hoistEither $ join r
+    put newState
+    return result
 
 
 sendByteString :: ByteString -> Bus ()
 sendByteString msg = do
     push <- getPushSocket
+    logger trace "Sending message..."
     lift2 $ ZMQ.send push [] msg
+    logger trace "Message sent"
 
 
 receiveByteString :: Bus ByteString
 receiveByteString = do
     sub <- getSubSocket
-    lift2 $ ZMQ.receive sub
+    logger trace "Waiting for a message..."
+    bs <- lift2 $ ZMQ.receive sub
+    logger trace "Message received"
+    return bs
 
 
 subscribe :: Topic -> Bus ()
@@ -116,8 +149,8 @@ subscribe topic = do
     lift2 $ ZMQ.subscribe sub $ Topic.toByteString topic
 
 
-unsubscribe :: ByteString -> Bus ()
+unsubscribe :: Topic -> Bus ()
 unsubscribe topic = do
     sub <- getSubSocket
-    lift2 $ ZMQ.unsubscribe sub topic
+    lift2 $ ZMQ.unsubscribe sub $ Topic.toByteString topic
 

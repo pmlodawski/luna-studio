@@ -1,0 +1,117 @@
+Name:               flowbox-aws
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Custom
+
+Flag Debug
+    Description:      Enable debug support
+    Default:          False
+
+
+Library
+    Hs-Source-Dirs: src,
+                    dist/gen
+    Other-Modules:  Paths_flowbox_aws
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Exposed-modules: `findmodules('src', '.*\.(hs|sql)', exclude='.*hs-boot.*')`,
+                     `findmodules('dist/gen', '.*\.(hs|sql)', exclude='.*hs-boot.*')`
+                     
+    Build-Depends:  aws,
+                    aws-sdk >= 0.12.4,
+                    base,
+                    bytestring,
+                    containers,
+                    conduit >= 1.1.0,
+                    conduit-extra >= 1.1.0,
+                    directory,
+                    either,
+                    errors,
+                    exceptions,
+                    filepath,
+                    flowbox-rpc,
+                    flowbox-utils,
+                    http-conduit,
+                    iproute,
+                    MissingH,
+                    monad-loops,
+                    mtl,
+                    network,
+                    postgresql-simple,
+                    protocol-buffers,
+                    protocol-buffers-descriptor,
+                    resourcet >= 1.1.0,
+                    SHA,
+                    text,
+                    time,
+                    transformers
+
+
+Executable aws-test-dbpool
+    Main-Is:        DBPool.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+    
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws-sdk,
+                    base,
+                    containers,
+                    flowbox-aws,
+                    flowbox-utils,
+                    postgresql-simple,
+                    text
+
+
+Executable aws-test-querydb
+    Main-Is:        QueryDB.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+    
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws-sdk >= 0.12.4,
+                    base,
+                    flowbox-aws,
+                    flowbox-utils,
+                    postgresql-simple,
+                    time
+
+
+Executable aws-test-s3
+    Main-Is:        S3.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+    
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws,
+                    base,
+                    flowbox-aws,
+                    flowbox-utils,
+                    transformers
+
+
+Executable aws-test-simple
+    Main-Is:        Simple.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+    
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws-sdk >= 0.12.4,
+                    base,
+                    flowbox-aws,
+                    flowbox-utils,
+                    text
+

@@ -27,9 +27,10 @@ Library
                   bytestring,
                   containers,
                   directory,
+                  either,
                   flowbox-config,
                   flowbox-initializer,
-                  flowbox-luna,
+                  flowbox-luna-base,
                   flowbox-utils,
                   lens,
                   MissingH,
@@ -41,12 +42,13 @@ Library
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   text,
-                  timeit
+                  timeit,
+                  transformers
 
 
 Executable lib-importer
   Main-Is:        Main.hs
-  Hs-Source-Dirs: tests
+  Hs-Source-Dirs: test
 
   if flag(debug)
     GHC-Options:  -csacc
@@ -59,7 +61,7 @@ Executable lib-importer
                   concatenative,
                   dlist,
                   either,
-                  flowbox-luna,
+                  flowbox-luna-base,
                   flowbox-utils,
                   lens,
                   luna-target-hs,

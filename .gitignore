@@ -4,19 +4,15 @@
 *.chs.h
 .virthualenv
 *~
+*.swp
 *.imports
-tools/batch-clients/performance/tcp/main
-tools/batch-clients/performance/zmq/main
-tools/batch-clients/tcp-cpp/main
-tools/batch-clients/dumper/main
 out
 
 #generated files
 gen
-tools/batch-clients/performance/tcp/generated
-tools/batch-clients/performance/zmq/generated
-tools/batch-clients/tcp-cpp/generated
-tools/batch-clients/dumper/generated
+
+# OS X temp
+.DS_Store
 
 # emacs backup files
 .\#*
@@ -41,7 +37,11 @@ tools/batch-clients/dumper/generated
 
 # cabal configs - they should be generated from tcabal files
 libs/*/*.cabal
+libs/*/*/*.cabal
+libs/*/*/*/*.cabal
 tools/*/*.cabal
+tools/*/*/*.cabal
+tools/*/*/*/*.cabal
 
 #general builds
 dist
@@ -51,6 +51,10 @@ cabal.sandbox.config
 .cabal-sandbox
 .build.config
 
+# aws credentials
+aws.config
+
+
 ### DEPRECATED ###
 # cabal-dev
 
@@ -58,3 +62,5 @@ cabal.sandbox.config
 *.bmp
 *.jpg
 
+test.html
+report.html

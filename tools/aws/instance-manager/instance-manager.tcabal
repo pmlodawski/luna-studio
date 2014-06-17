@@ -1,0 +1,39 @@
+Name:               flowbox-instance-manager
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Executable instance-manager
+    Hs-Source-Dirs: src
+    Other-Modules:  Paths_flowbox_instance_manager
+    Main-Is:        Main.hs
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws,
+                    aws-sdk >= 0.12.4,
+                    base,
+                    bytestring,
+                    containers,
+                    conduit >= 1.1.0,
+                    either,
+                    errors,
+                    exceptions,
+                    flowbox-aws,
+                    flowbox-rpc,
+                    flowbox-utils,
+                    network,
+                    optparse-applicative,
+                    protocol-buffers,
+                    text,
+                    transformers

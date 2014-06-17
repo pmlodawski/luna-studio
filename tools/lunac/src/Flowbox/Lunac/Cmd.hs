@@ -13,9 +13,9 @@ import Flowbox.Prelude
 
 
 
-data Prog    = Prog { cmd      :: Command
-                    , no_color :: Bool
-                    , verbose  :: Int
+data Prog    = Prog { cmd     :: Command
+                    , noColor :: Bool
+                    , verbose :: Int
                     }
              deriving Show
 

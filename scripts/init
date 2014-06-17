@@ -12,24 +12,18 @@ import sys
 import shutil
 import platform
 import subprocess
-from subprocess        import call, Popen, PIPE
+from subprocess        import call, Popen, PIPE, check_output, CalledProcessError
 from distutils.version import LooseVersion
 from utils.colors      import print_info, print_error, putInfo, formatQuestion
 from utils.errors      import fatal
-
+from utils.net         import download
+from utils.system      import platformFix
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-third_party = os.path.join(dir, 'third-party')
-p_cabal    = os.path.join(third_party,  'Cabal-1.19.1')
-p_missingh = os.path.join(third_party,  'MissingH-1.2.0.0-winpatch')
-p_acc      = os.path.join(third_party,  'accelerate-0.15')
-p_acc_cuda = os.path.join(third_party,  'accelerate-cuda-0.15')
-p_acc_io   = os.path.join(third_party,  'accelerate-io-0.15')
-
 sboxName = "dist"
 
+os.chdir(rootPath)
 
 def assertInstall(name):
     if not checkAvailable(name):
@@ -55,7 +49,7 @@ def checkCabalPkg(name, version=""):
         else: fatal ()
 
 def checkCabalVersion():
-    minv = '1.19.2'
+    minv = '1.19.1'
     print_info ("Checking cabal version (>= %s)" % minv)
     (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
     out = out.lstrip().rstrip()
@@ -68,12 +62,42 @@ def checkInstall(name, installCmd, chckf):
         print_error (err)
         if ask("Should I install it? (%s)" % installCmd):
             try_call(installCmd)
+            (ok, err) = chckf()
+            if not ok:
+                print_error("Running install command didn't fix the issue!")
+                fatal()
         else: fatal()
+
+def checkPythonPkg(package, version=None):
+    if version:
+        install_cmd = "python2.7 -m pip install --user {package}=={version}".format(**locals())
+    else:
+        install_cmd = "python2.7 -m pip install --user {package}".format(**locals())
+
+    try:
+        res = subprocess.check_output("python2.7 -m pip freeze", shell=True)
+        if version:
+            version = [int(x) for x in version.split('.')]
+        for line in res.splitlines():
+            if package in line:
+                _, installed_ver = line.split('==')
+                installed_ver = [int(x) for x in installed_ver.split('.')]
+                if version and installed_ver <= version:
+                    ask("Python package '{package}' too old: {installed_ver} available, {version} required. "\
+                        "Should I upgrade it?".format(**locals())) or fatal()
+                    try_call(install_cmd)
+                break
+        else:
+            ask("Python package '{package}' not installed. Should I install it?".format(**locals())) or fatal()
+            try_call(install_cmd)
+    except CalledProcessError, e:
+        retcode = e.returncode
+        print_error("Sorry, but `pip freeze` returned code {retcode}".format(**locals()))
+        fatal()
 
 def try_call(cmd):
     print_info ("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
-
 
 def ask(question):
     answer = None
@@ -87,17 +111,26 @@ def ask(question):
     else:                       return False
 
 
+def removeIfExists(pathToRemove):
+    if os.path.exists(pathToRemove):
+        os.remove(pathToRemove)
+
 if os.path.exists(sboxName):
     if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?"):
         shutil.rmtree(sboxName)
-        os.remove("cabal.sandbox.config")
+        removeIfExists("cabal.sandbox.config")
+
+if not os.path.exists(sboxName):
+    os.mkdir(sboxName)
+
+platformFix(sboxName)
 
 assertInstall("cabal")
 
 print_info ("Updating cabal package cache")
 try_call('cd && cabal update')
 
-checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install && cd ../cabal-install && cabal install", checkCabalVersion)
+checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", checkCabalVersion)
 
 checkCabalPkg("hprotoc")
 checkCabalPkg("c2hs", version="0.16.5")
@@ -111,9 +144,7 @@ print_info ("Generating cabal configs using gencabal")
 path = os.path.join(rootPath, 'scripts', 'gencabal')
 try_call ('python2.7 %s' % path)
 
-distPath = os.path.join(rootPath,"dist")
-if not os.path.exists(distPath):
-    os.mkdir(distPath)
+checkPythonPkg("psutil")
 
 
 print_info ("Success")
