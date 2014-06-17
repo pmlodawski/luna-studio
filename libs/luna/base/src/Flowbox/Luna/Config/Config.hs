@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Config.Config (
-        module Paths_flowbox_luna
+        module Paths_flowbox_luna_base
 ) where
 
-import Paths_flowbox_luna (version)
+import Paths_flowbox_luna_base (version)

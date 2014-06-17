@@ -29,7 +29,7 @@ Executable project-manager
                     flowbox-batch,
                     flowbox-bus,
                     flowbox-config,
-                    flowbox-luna,
+                    flowbox-luna-base,
                     flowbox-utils,
                     MissingH,
                     mtl,

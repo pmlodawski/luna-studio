@@ -1,4 +1,4 @@
-Name:           flowbox-luna
+Name:           flowbox-luna-base
 Version:        0.1
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
@@ -14,7 +14,7 @@ Flag Debug
 Library
   Hs-Source-Dirs: dist/gen,
                   src
-  Other-Modules:  Paths_flowbox_luna
+  Other-Modules:  Paths_flowbox_luna_base
   if flag(debug)
     GHC-Options:  -csacc
   GHC-Options:    -Wall -O2 -threaded
@@ -59,7 +59,7 @@ Library
                   uu-parsinglib
 
 
-Executable luna-lib
+Executable luna-base-test
   Main-Is:        Main.hs
   Hs-Source-Dirs: test
 
@@ -77,7 +77,7 @@ Executable luna-lib
                   concatenative,
                   dlist,
                   either,
-                  flowbox-luna,
+                  flowbox-luna-base,
                   flowbox-utils,
                   lens,
                   luna-target-hs,
@@ -93,6 +93,6 @@ Test-Suite tests
   Hs-Source-Dirs: test
   GHC-Options:    -Wall -threaded -O2
   Build-Depends:  base,
-                  flowbox-luna,
+                  flowbox-luna-base,
                   hspec,
                   MissingH
