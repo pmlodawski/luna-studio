@@ -39,9 +39,8 @@ colorMapper vector ticks ftrans shapeGenerator pspace pixel = sfoldl findColor (
           vec         = variable vector
 
           grad_pos = shapeGenerator vec pspace pixel
-          mag = min (grad_pos A.>* 1.0 ? (grad_pos - 1.0, grad_pos)) 1.0
 
-          findColor acc positions = (mag >=* aPos &&* mag A.<* nPos) ? (newColor, acc)
+          findColor acc positions = (grad_pos >=* aPos &&* grad_pos A.<* nPos) ? (newColor, acc)
               where (actualPos, nextPos) = unlift positions :: (Exp (Tick Double), Exp (Tick Double))
                     aPos = unlift actualPos ^. position 
                     aVal = unlift actualPos ^. value
@@ -51,7 +50,7 @@ colorMapper vector ticks ftrans shapeGenerator pspace pixel = sfoldl findColor (
                     nVal = unlift nextPos ^. value
                     nWei = unlift nextPos ^. weight
 
-                    prop = ftrans aWei nWei $ (mag - aPos) / (nPos - aPos)
+                    prop = ftrans aWei nWei $ (grad_pos - aPos) / (nPos - aPos)
                     newColor = mix prop aVal nVal
 
 
@@ -73,15 +72,16 @@ squareShape :: Exp GradientVector -> Generator
 squareShape  = radialShape Chebyshev
 
 conicalShape :: Exp GradientVector -> Generator
-conicalShape vector space pixel = 1.0 - (a2 + a1) / (2.0 * pi)
+conicalShape vector space pixel = min (res A.>* 1.0 ? (res - 1.0, res)) 1.0
     where V2 begin end = over each unlift $ unlift vector :: V2 (Cartesian.Point2 (Exp Double))
           a1 = Cartesian.uncurry atan2 $ end - begin
           a2 = Cartesian.uncurry atan2 $ begin - pixel
+          res = 1.0 - (a2 + a1) / (2.0 * pi)
 
 linearShape :: Exp GradientVector -> Generator
 linearShape vector space pixel = dsum * (1.0 / dmod)
     where V2 begin end = over each unlift $ unlift vector :: V2 (Cartesian.Point2 (Exp Double))
           deltav = end - begin
-          deltap = Cartesian.Point2 (Cartesian.x pixel) (height space - Cartesian.y pixel) - begin
+          deltap = pixel - begin
           dsum = Cartesian.uncurry (+) $ deltap * deltav -- dot product of free vectors TODO: integrate with linear library
           dmod = Cartesian.uncurry (+) $ deltav * deltav

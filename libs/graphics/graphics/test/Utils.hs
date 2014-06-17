@@ -8,19 +8,18 @@
 module Utils where
 
 import           Flowbox.Prelude                      as P
-import           Data.Array.Accelerate                as A
+import           Flowbox.Math.Matrix                  as M
+
+import           Data.Array.Accelerate                as A (truncate)
 import           Data.Array.Accelerate.IO
 import           Data.Array.Accelerate.CUDA
 
+testSaveRGBA :: FilePath -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> IO ()
+testSaveRGBA filename r g b a = writeImageToBMP filename $ compute' run $ M.map packRGBA32 $ zip4 rChan gChan bChan aChan
+    where rChan = M.map (A.truncate . (* 255.0)) r
+          gChan = M.map (A.truncate . (* 255.0)) g
+          bChan = M.map (A.truncate . (* 255.0)) b
+          aChan = M.map (A.truncate . (* 255.0)) a
 
-
-testSaveAccRGB :: FilePath -> Acc (Array DIM2 Double) -> Acc (Array DIM2 Double) -> Acc (Array DIM2 Double) -> Acc (Array DIM2 Double) -> IO ()
-testSaveAccRGB filename r g b a = writeImageToBMP filename $ run $ A.map packRGBA32 $ zip4 rChan gChan bChan aChan
-    where
-        rChan = A.map (A.truncate . (* 255.0)) r
-        gChan = A.map (A.truncate . (* 255.0)) g
-        bChan = A.map (A.truncate . (* 255.0)) b
-        aChan = A.map (A.truncate . (* 255.0)) a
-
-testSaveAccChan :: FilePath -> Acc (Array DIM2 Double) -> IO ()
-testSaveAccChan filename a = testSaveAccRGB filename a a a a
+testSaveChan :: FilePath -> Matrix2 Double -> IO ()
+testSaveChan filename a = testSaveRGBA filename a a a a

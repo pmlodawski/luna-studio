@@ -62,7 +62,10 @@ accMatrix mat = case mat of
     Delayed m -> m
 
 compute :: Backend ix a -> Matrix ix a -> Matrix ix a
-compute backend mat = Raw $ case mat of
+compute backend mat = Raw $ compute' backend mat
+
+compute' :: Backend ix a -> Matrix ix a -> Array ix a
+compute' backend mat = case mat of
     Raw     m -> m
     Delayed m -> backend m
 

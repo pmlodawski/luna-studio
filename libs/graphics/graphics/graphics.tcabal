@@ -60,7 +60,7 @@ Library
                   diagrams-cairo,
                   cubicbezier,
                   split,
-                  algebraic, 
+                  algebraic >= 0.1.0.2, 
                   linear,
                   linear-accelerate,
                  -- Dependencies that cabal 1.19.2 complains on
@@ -99,7 +99,9 @@ Executable generator_test
     CPP-options:        -DACCELERATE_OPENCL_BACKEND
     build-depends:      accelerate-opencl       == 0.1.*
 
-  Build-Depends:  accelerate,
+  Build-Depends:  algebraic,
+                  linear,
+                  accelerate,
                   accelerate-io,
                   accelerate-cuda,
                   flowbox-utils,
