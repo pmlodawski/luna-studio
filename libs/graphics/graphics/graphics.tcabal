@@ -60,7 +60,10 @@ Library
                   diagrams-cairo,
                   cubicbezier,
                   split,
-                  -- Dependencies that cabal 1.19.2 complains on
+                  algebraic, 
+                  linear,
+                  linear-accelerate,
+                 -- Dependencies that cabal 1.19.2 complains on
                   network == 2.4.2.2,
                   HTTP == 4000.2.11,
                   HOpenCV >= 0.4

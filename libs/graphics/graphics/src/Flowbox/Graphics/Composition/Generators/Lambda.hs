@@ -1,0 +1,30 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+{-# LANGUAGE TypeOperators #-}
+
+module Flowbox.Graphics.Composition.Generators.Lambda where
+
+import Flowbox.Prelude                                    as P
+import Flowbox.Graphics.Composition.Generators.Structures
+import Flowbox.Math.Matrix                                as M
+import Flowbox.Graphics.Utils
+
+import qualified Data.Array.Accelerate as A
+import           Math.Space.Space
+import           Math.Coordinate.Cartesian (Point2(..))
+
+
+
+-- lambdaGenerator a. k. a rasterizer
+lambdaGenerator :: Grid Int -> Generator -> Matrix2 Double
+lambdaGenerator space lambda = generate (A.index2 h w) wrapper
+    where w = variable $ width space
+          h = variable $ height space
+          dspace = Grid (A.fromIntegral w) (A.fromIntegral h)
+          wrapper i = lambda dspace pixel
+              where Z :. y :. x = A.unlift i :: EDIM2
+                    pixel = Point2 (A.fromIntegral x) (A.fromIntegral y)

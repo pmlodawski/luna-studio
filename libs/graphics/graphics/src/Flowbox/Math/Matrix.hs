@@ -13,6 +13,7 @@ module Flowbox.Math.Matrix (
     A.IsFloating,
     A.Shape,
     A.Slice,
+    A.Z(..),
     A.DIM0,
     A.DIM1,
     A.DIM2,
@@ -29,10 +30,10 @@ module Flowbox.Math.Matrix (
     A.Segments,
     A.Stencil,
     A.Boundary,
-    (:.)
+    (A.:.)(..)
 ) where
 
-import Data.Array.Accelerate as A hiding (Scalar)
+import Data.Array.Accelerate as A hiding (Scalar, Vector)
 
 import Flowbox.Prelude hiding (use)
 
@@ -50,6 +51,11 @@ type Backend ix a = Acc (Array ix a) -> Array ix a
 
 -- == Helpers ==
 
+type EDIM1 =  DIM0 :. Exp Int
+type EDIM2 = EDIM1 :. Exp Int
+type EDIM3 = EDIM2 :. Exp Int
+type EDIM4 = EDIM3 :. Exp Int
+
 accMatrix :: (Elt a, Shape ix) => Matrix ix a -> Acc (Array ix a)
 accMatrix mat = case mat of
     Raw     m -> A.use m
@@ -60,8 +66,11 @@ compute backend mat = Raw $ case mat of
     Raw     m -> m
     Delayed m -> backend m
 
-
 -- == Accessors ==
+
+-- = Scalar reduction =
+sfoldl :: (Slice sh, Shape sh, Elt a, Elt b) => (Exp a -> Exp b -> Exp a) -> Exp a -> Exp sh -> Matrix (sh :. Int) b -> Exp a
+sfoldl f z ix mat = A.sfoldl f z ix (accMatrix mat)
 
 -- = Indexing =
 
@@ -140,6 +149,9 @@ enumFromStepN sh n s = Delayed $ A.enumFromStepN sh n s
 
 reshape :: (Shape ix, Shape ix', Elt e) => Exp ix -> Matrix ix' e -> Matrix ix e
 reshape sh mat = Delayed $ A.reshape sh (accMatrix mat)
+
+flatten :: (Elt a, Shape ix) => Matrix ix a -> Vector a
+flatten mat = Delayed $ A.flatten (accMatrix mat)
 
 -- = Specialised permutations =
 
@@ -381,6 +393,25 @@ foldSeg f acc mat segments = Delayed $ A.foldSeg f acc (accMatrix mat) segments
 fold1Seg :: (Shape ix, Elt a, Elt i, IsIntegral i) => (Exp a -> Exp a -> Exp a) -> Matrix (ix :. Int) a -> Acc (Segments i) -> Matrix (ix :. Int) a
 fold1Seg f mat segments = Delayed $ A.fold1Seg f (accMatrix mat) segments
 
+-- == Specialised folds ==
+
+all :: (Shape sh, Elt e) => (Exp e -> Exp Bool) -> Matrix sh e -> Scalar Bool
+all pred mat = Delayed $ A.all pred (accMatrix mat)
+
+any :: (Shape sh, Elt e) => (Exp e -> Exp Bool) -> Matrix sh e -> Scalar Bool
+any pred mat = Delayed $ A.any pred (accMatrix mat)
+
+sum :: (IsNum a, Shape sh, Elt a) => Matrix sh a -> Scalar a
+sum mat = Delayed $ A.sum (accMatrix mat)
+
+product :: (IsNum a, Shape sh, Elt a) => Matrix sh a -> Scalar a
+product mat = Delayed $ A.product (accMatrix mat)
+
+minimum :: (IsNum a, Shape sh, Elt a) => Matrix sh a -> Scalar a
+minimum mat = Delayed $ A.minimum (accMatrix mat)
+
+maximum :: (IsNum a, Shape sh, Elt a) => Matrix sh a -> Scalar a
+maximum mat = Delayed $ A.maximum (accMatrix mat)
 
 -- == Stencil ==
 

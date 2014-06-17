@@ -24,8 +24,8 @@ data Range a = Range {rangeLo :: a, rangeHi :: a}
 invert :: Num a => a -> a
 invert x = 1 - x
 
-invert' :: Num a => a -> a
-invert' x = -x
+negate :: Num a => a -> a
+negate x = -x
 
 sign :: Num a => a -> a
 sign x = (2 * x) - 1
@@ -92,3 +92,8 @@ trdQuad e = let (_:: f a, _:: f b, x, _:: f d) = unlift e in x
 
 frthQuad :: forall f a b c d. Unlift f (f a, f b, f c, f d) => f (Plain (f a), Plain (f b), Plain (f c), Plain (f d)) -> f d
 frthQuad e = let (_:: f a, _:: f b, _:: f c, x) = unlift e in x
+
+-- = Accelerate utils
+
+variable :: (Lift Exp e, Elt (Plain e)) => e -> Exp (Plain e)
+variable a = the $ unit $ lift a
