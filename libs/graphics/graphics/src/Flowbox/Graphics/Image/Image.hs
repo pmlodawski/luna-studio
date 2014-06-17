@@ -14,6 +14,7 @@ module Flowbox.Graphics.Image.Image (
     lookup,
     update,
     map,
+    singleton
 ) where
 
 import qualified Data.Map                    as Map
@@ -37,6 +38,9 @@ image imgviews defaultview = case defaultview of
     where keysMatchingNames = Map.foldrWithKey (\k v acc -> acc && View.name v == k) True imgviews
           newimg = if keysMatchingNames then return $ Image imgviews defaultview
                                         else Left InvalidMap
+
+singleton :: View.View v => v -> Image v
+singleton view = Image (Map.singleton (View.name view) view) View.Default
 
 insert :: View.View v => View.Name -> v -> Image v -> Either Error (Image v)
 insert key value img = if View.name value == key
