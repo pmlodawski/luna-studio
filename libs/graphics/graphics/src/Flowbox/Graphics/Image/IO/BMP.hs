@@ -20,6 +20,7 @@ import qualified Flowbox.Math.Matrix            as Matrix
 import           Flowbox.Prelude
 
 
+
 readFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image View.RGBA))
 readFromBMP file = liftIO $ do
     rawData <- A.readImageFromBMP file
