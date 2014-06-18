@@ -30,7 +30,7 @@ colorMapper :: GradientVector -> [Tick Double]
             -> (Exp Double -> Exp Double -> Exp Double -> Exp Double)
             -> (Exp GradientVector -> Generator)
             -> Generator
-colorMapper vector ticks ftrans shapeGenerator pspace pixel = sfoldl findColor (0.0 :: Exp Double) index0 zippedTicks
+colorMapper vector ticks ftrans shapeGenerator pixel pspace = sfoldl findColor (0.0 :: Exp Double) index0 zippedTicks
     where zippedTicks = A.zip accticks $ A.tail accticks
           accticks    = A.use $ fromList (Z :. length ticksNorm) ticksNorm
           ticksNorm   = firstElem : sort ticks P.++ [lastElem]
@@ -38,7 +38,7 @@ colorMapper vector ticks ftrans shapeGenerator pspace pixel = sfoldl findColor (
           lastElem    = last ticks & position .~ 1e20
           vec         = variable vector
 
-          grad_pos = shapeGenerator vec pspace pixel
+          grad_pos = shapeGenerator vec pixel pspace
 
           findColor acc positions = (grad_pos >=* aPos &&* grad_pos A.<* nPos) ? (newColor, acc)
               where (actualPos, nextPos) = unlift positions :: (Exp (Tick Double), Exp (Tick Double))
@@ -56,7 +56,7 @@ colorMapper vector ticks ftrans shapeGenerator pspace pixel = sfoldl findColor (
 
 radialShape :: (MetricCoord a Cartesian, Metric a (Cartesian.Point2 (Exp Double)) (Exp Double)) 
             => a -> Exp GradientVector -> Generator
-radialShape metric vector space pixel = distance ms ubegin upixel / distance ms ubegin uend
+radialShape metric vector pixel space = distance ms ubegin upixel / distance ms ubegin uend
     where ms = MetricSpace metric space
           vec = over each unlift $ unlift vector :: V2 (Cartesian.Point2 (Exp Double))
           V2 ubegin uend = over each (toUV space) vec
@@ -72,14 +72,14 @@ squareShape :: Exp GradientVector -> Generator
 squareShape  = radialShape Chebyshev
 
 conicalShape :: Exp GradientVector -> Generator
-conicalShape vector space pixel = min (res A.>* 1.0 ? (res - 1.0, res)) 1.0
+conicalShape vector pixel space = min (res A.>* 1.0 ? (res - 1.0, res)) 1.0
     where V2 begin end = over each unlift $ unlift vector :: V2 (Cartesian.Point2 (Exp Double))
           a1 = Cartesian.uncurry atan2 $ end - begin
           a2 = Cartesian.uncurry atan2 $ begin - pixel
           res = 1.0 - (a2 + a1) / (2.0 * pi)
 
 linearShape :: Exp GradientVector -> Generator
-linearShape vector space pixel = dsum * (1.0 / dmod)
+linearShape vector pixel space = dsum * (1.0 / dmod)
     where V2 begin end = over each unlift $ unlift vector :: V2 (Cartesian.Point2 (Exp Double))
           deltav = end - begin
           deltap = pixel - begin

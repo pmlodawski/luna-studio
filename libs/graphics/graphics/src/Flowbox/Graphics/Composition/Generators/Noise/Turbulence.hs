@@ -6,30 +6,34 @@
 ---------------------------------------------------------------------------
 module Flowbox.Graphics.Composition.Generators.Noise.Turbulence where
 
-import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate     as A
+import qualified Math.Coordinate.Cartesian as Cartesian
 
+import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Prelude
 
 
 
-turbulence :: (A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float) ->
-              (A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float) ->
-              (A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float) ->
-              (A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float) ->
-              A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float
-turbulence xFun yFun zFun sourceFun power x y z = sourceFun xDistort yDistort zDistort
-    where x0 = x + (12414.0 / 65536.0)
-          y0 = y + (65124.0 / 65536.0)
-          z0 = z + (31337.0 / 65536.0)
+turbulence :: (A.Exp Double -> Generator) ->
+              (A.Exp Double -> Generator) ->
+              (A.Exp Double -> Generator) ->
+              (A.Exp Double -> Generator) ->
+              A.Exp Double ->
+              A.Exp Double ->
+              Generator
+turbulence xFun yFun zFun sourceFun power z point grid = sourceFun zDistort (Cartesian.Point2 xDistort yDistort) grid
+    where x0 = Cartesian.x point + (12414.0 / 65536.0)
+          y0 = Cartesian.y point + (65124.0 / 65536.0)
+          z0 = z                 + (31337.0 / 65536.0)
 
-          x1 = x + (26519.0 / 65536.0)
-          y1 = y + (18128.0 / 65536.0)
-          z1 = z + (60493.0 / 65536.0)
+          x1 = Cartesian.x point + (26519.0 / 65536.0)
+          y1 = Cartesian.y point + (18128.0 / 65536.0)
+          z1 = z                 + (60493.0 / 65536.0)
 
-          x2 = x + (53820.0 / 65536.0)
-          y2 = y + (11213.0 / 65536.0)
-          z2 = z + (44845.0 / 65536.0)
+          x2 = Cartesian.x point + (53820.0 / 65536.0)
+          y2 = Cartesian.y point + (11213.0 / 65536.0)
+          z2 = z                 + (44845.0 / 65536.0)
 
-          xDistort = x + (xFun x0 y0 z0 * power)
-          yDistort = y + (yFun x1 y1 z1 * power)
-          zDistort = z + (zFun x2 y2 z2 * power)
+          xDistort = Cartesian.x point + (xFun z0 (Cartesian.Point2 x0 y0) grid * power)
+          yDistort = Cartesian.y point + (yFun z1 (Cartesian.Point2 x1 y1) grid * power)
+          zDistort = z                 + (zFun z2 (Cartesian.Point2 x2 y2) grid * power)

@@ -25,6 +25,6 @@ lambdaGenerator space lambda = generate (A.index2 h w) wrapper
     where w = variable $ width space
           h = variable $ height space
           dspace = Grid (A.fromIntegral $ w - 1) (A.fromIntegral $ h - 1)
-          wrapper i = lambda dspace pixel
+          wrapper i = lambda pixel dspace
               where Z :. y :. x = A.unlift i :: EDIM2
                     pixel = Point2 (A.fromIntegral x) (A.fromIntegral y)

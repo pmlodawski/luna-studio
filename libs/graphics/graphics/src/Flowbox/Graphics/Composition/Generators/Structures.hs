@@ -16,12 +16,10 @@ module Flowbox.Graphics.Composition.Generators.Structures where
 
 import Flowbox.Prelude
 
-import Control.Lens
 import Data.Array.Accelerate
 import Data.Array.Accelerate.Array.Sugar
 import Data.Array.Accelerate.Smart
 import Data.Array.Accelerate.Tuple
-import Data.Ord                          (Ord(..))
 import Data.Typeable                     (Typeable)
 import Math.Coordinate.Cartesian         (Point2(..))
 import Math.Space.Space                  (Grid(..))
@@ -30,7 +28,7 @@ import Math.Space.Space                  (Grid(..))
 
 -- == Generator type ==
 
-type Generator = Grid (Exp Double) -> Point2 (Exp Double) -> Exp Double
+type Generator = Point2 (Exp Double) -> Grid (Exp Double) -> Exp Double
 
 -- == Gradient tick type ==
 

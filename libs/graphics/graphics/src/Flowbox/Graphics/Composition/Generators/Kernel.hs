@@ -21,5 +21,5 @@ bilinear :: Generator
 bilinear _ _ = 1.0
 
 gaussian :: Generator
-gaussian space pixel = exp $ (-(x ** 2 + y ** 2) * (exp pi))
+gaussian pixel space = exp $ (-(x ** 2 + y ** 2) * (exp pi))
     where Point2 x y = toUV space pixel - Point2 0.5 0.5
