@@ -6,36 +6,39 @@
 ---------------------------------------------------------------------------
 module Flowbox.Graphics.Composition.Generators.Noise.Perlin where
 
-import qualified Data.Array.Accelerate as A
-import           Data.Bits             ((.&.))
+import qualified Data.Array.Accelerate      as A
+import           Data.Bits                  ((.&.))
+import qualified Math.Coordinate.Cartesian  as Cartesian
 
 import Flowbox.Graphics.Composition.Generators.Noise.Internal
+import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Prelude
 
 
 
-perlinNoise :: A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float
-perlinNoise x y z = perlinGen Standard 1.0 2.0 6 0.5 0 x y z
+perlinNoise :: A.Exp Double -> Generator
+perlinNoise z point = perlinGen Standard 1.0 2.0 6 0.5 0 z point
 
-perlinGen :: Quality -> A.Exp Float -> A.Exp Float ->
-             A.Exp Int -> A.Exp Float -> A.Exp Int ->
-             A.Exp Float -> A.Exp Float -> A.Exp Float ->
-             A.Exp Float
-perlinGen quality freq lac octaveCount persistence seed x y z =
-    value $ A.iterate octaveCount octaveFunc (A.lift ((0.0 :: Float), (1.0 :: Float), x*freq, y*freq, z*freq, (0 :: Int)))
+perlinGen :: Quality -> A.Exp Double -> A.Exp Double ->
+             A.Exp Int -> A.Exp Double -> A.Exp Int ->
+             A.Exp Double ->
+             Generator
+perlinGen quality freq lac octaveCount persistence seed z point _grid =
+    value $ A.iterate octaveCount octaveFunc (A.lift ((0.0 :: Double), (1.0 :: Double), point * pure freq, z*freq, (0 :: Int)))
     where value args = val
-              where (val, _, _, _, _, _) =
-                        A.unlift args :: (A.Exp Float, A.Exp Float, A.Exp Float, A.Exp Float, A.Exp Float, A.Exp Int)
+              where (val, _, _, _, _) =
+                        A.unlift args :: (A.Exp Double, A.Exp Double, A.Exp (Cartesian.Point2 Double), A.Exp Double, A.Exp Int)
 
-          signal sx sy sz octv = gradientCoherentNoise quality ((seed + octv) .&. 0xffffffff) sx sy sz
-    
+          signal (Cartesian.Point2 sx sy) sz octv = gradientCoherentNoise quality newSeed sx sy sz
+              where newSeed = (seed + octv) .&. 0xffffffff
+
           octaveFunc args =
               A.lift (
-                  val + (signal ox oy oz (curOctave) * curPersistence)
+                  val + (signal unliftedPoint' oz (curOctave) * curPersistence)
                 , curPersistence * persistence
-                , ox * lac
-                , oy * lac
+                , unliftedPoint' * pure lac
                 , oz * lac
                 , curOctave + 1)
-              where (val, curPersistence, ox, oy, oz, curOctave) =
-                        A.unlift args :: (A.Exp Float, A.Exp Float, A.Exp Float, A.Exp Float, A.Exp Float, A.Exp Int)
+              where (val, curPersistence, point', oz, curOctave) =
+                        A.unlift args :: (A.Exp Double, A.Exp Double, A.Exp (Cartesian.Point2 Double), A.Exp Double, A.Exp Int)
+                    unliftedPoint' = A.unlift point' :: Cartesian.Point2 (A.Exp Double)
