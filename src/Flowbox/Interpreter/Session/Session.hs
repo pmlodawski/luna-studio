@@ -11,47 +11,65 @@ module Flowbox.Interpreter.Session.Session
 , setFlags
 , unsetFlags
 , setHardodedExtensions
+, runStmt
+, runDecls
 ) where
 
+import           Control.Monad.Trans.State
 import qualified DynFlags                     as F
 import qualified GHC
 import           Language.Haskell.Interpreter as I
 
+import           Flowbox.Interpreter.Session.Env     (Env)
+import qualified Flowbox.Interpreter.Session.Env     as Env
 import qualified Flowbox.Interpreter.Session.Helpers as Helpers
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.Session.Session"
 
 
-type Session a = I.Interpreter a
+
+type Session a = StateT Env I.Interpreter a
 
 
 run :: Session a -> IO (Either I.InterpreterError a)
-run session = I.runInterpreter $ initialize >> session
+run session = I.runInterpreter $ fst <$> runStateT (initialize >> session) Env.empty
 
 
 initialize :: Session ()
 initialize = do
-    I.reset
+    lift I.reset
     setHardodedExtensions
-    I.setImportsQ [("Prelude", Nothing)]
-    void $ I.runGhc $ GHC.runDecls Helpers.helpers
+    lift $ I.setImportsQ [("Prelude", Nothing)]
+    runDecls Helpers.helpers
 
 
 setFlags :: [F.ExtensionFlag] -> Session ()
-setFlags flags = I.runGhc $ do
+setFlags flags = lift $ I.runGhc $ do
     current <- GHC.getSessionDynFlags
     void $ GHC.setSessionDynFlags $ foldl F.xopt_set current flags
 
 
 unsetFlags :: [F.ExtensionFlag] -> Session ()
-unsetFlags flags = I.runGhc $ do
+unsetFlags flags = lift $ I.runGhc $ do
     current <- GHC.getSessionDynFlags
     void $ GHC.setSessionDynFlags $ foldl F.xopt_unset current flags
 
+
+runStmt :: String -> Session ()
+runStmt stmt = do
+    lift $ I.runGhc $ GHC.runStmt stmt GHC.RunToCompletion
+    return ()
+
+
+runDecls :: String -> Session ()
+runDecls decls = do
+    lift $ I.runGhc $ GHC.runDecls decls
+    return ()
 
 setHardodedExtensions :: Session ()
 setHardodedExtensions = do
