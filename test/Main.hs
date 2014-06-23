@@ -32,19 +32,23 @@ main = do
     let graph = Graph.mkGraph
                     [ (0, "(15 :: Int)")
                     , (1, "(12 :: Int)")
-                    , (2, "((+) :: Int -> Int -> Int)")
-                    , (3, "(print :: Int -> IO ())")
+                    , (2, "(94 :: Int)")
+                    , (3, "((+) :: Int -> Int -> Int)")
+                    , (4, "((*) :: Int -> Int -> Int)")
                     ]
-                    [ (0, 2, Graph.Dependency)
-                    , (1, 2, Graph.Dependency)
-                    , (2, 3, Graph.Dependency)
+                    [ (0, 3, Graph.Dependency)
+                    , (1, 3, Graph.Dependency)
+                    , (2, 4, Graph.Dependency)
+                    , (3, 4, Graph.Dependency)
                     ]
     result <- Session.run $ do
         Cache.runNode 0 graph
         Cache.runNode 1 graph
         Cache.runNode 2 graph
-        Cache.dump 2
-        Cache.invalidate 2
-        Cache.dump 2
         Cache.runNode 3 graph
+        Cache.runNode 4 graph
+        Cache.dump 3
+        Cache.dump 4
+        Cache.invalidate 3
+        Cache.dump 3
     eitherStringToM $ fmapL Error.format result
