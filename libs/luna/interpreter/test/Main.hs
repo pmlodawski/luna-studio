@@ -47,8 +47,9 @@ main = do
         Cache.runNode 2 graph
         Cache.runNode 3 graph
         Cache.runNode 4 graph
+        Cache.runNode 4 graph
+        Cache.invalidate 3
+        Cache.runNode 4 graph
         Cache.dump 3
         Cache.dump 4
-        Cache.invalidate 3
-        Cache.dump 3
     eitherStringToM $ fmapL Error.format result

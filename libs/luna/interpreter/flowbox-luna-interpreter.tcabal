@@ -22,10 +22,12 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  containers,
                   flowbox-luna-base,
                   flowbox-utils,
                   ghc,
-                  hint
+                  hint,
+                  transformers
 
 
 Executable luna-interpreter-test
