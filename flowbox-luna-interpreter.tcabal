@@ -22,5 +22,23 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  flowbox-luna-base,
                   flowbox-utils,
-                  ghc
+                  ghc,
+                  hint
+
+
+Executable luna-interpreter-test
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: test
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2
+
+  Extensions:     NoImplicitPrelude
+
+  Build-Depends:  base,
+                  errors,
+                  flowbox-luna-interpreter,
+                  flowbox-utils
