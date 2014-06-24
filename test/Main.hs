@@ -42,14 +42,14 @@ main = do
                     , (3, 4, Graph.Dependency)
                     ]
     result <- Session.run $ do
-        Cache.runNode 0 graph
-        Cache.runNode 1 graph
-        Cache.runNode 2 graph
-        Cache.runNode 3 graph
-        Cache.runNode 4 graph
-        Cache.runNode 4 graph
-        Cache.invalidate 3
-        Cache.runNode 4 graph
+        Cache.runNode graph 0
+        Cache.runNode graph 1
+        Cache.runNode graph 2
+        Cache.runNode graph 3
+        Cache.runNode graph 4
+        Cache.runNode graph 4
+        Cache.invalidate graph 0
+        Cache.runNode graph 4
         Cache.dump 3
         Cache.dump 4
     eitherStringToM $ fmapL Error.format result
