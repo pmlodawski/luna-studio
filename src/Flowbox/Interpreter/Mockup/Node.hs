@@ -5,18 +5,25 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Mockup.Graph
-( module Flowbox.Interpreter.Mockup.Graph
+{-# LANGUAGE TemplateHaskell #-}
+
+module Flowbox.Interpreter.Mockup.Node
+( module Flowbox.Interpreter.Mockup.Node
 , module X
 )
 where
 
 import Flowbox.Data.Graph              as X
-import Flowbox.Interpreter.Mockup.Node (Node)
+import Flowbox.Interpreter.Mockup.Type (Type)
 import Flowbox.Prelude
 
 
-data Dependency = Dependency deriving (Read, Show)
+type ID   = Int
 
 
-type CodeGraph = Graph Node Dependency
+data Node = Node { _code :: String
+                 , _cls  :: Type
+                 } deriving (Show, Read)
+
+
+makeLenses(''Node)
