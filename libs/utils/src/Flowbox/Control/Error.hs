@@ -20,7 +20,6 @@ module Flowbox.Control.Error (
 import           Control.Error          hiding (runScript)
 import           Control.Exception      (Exception)
 import qualified Control.Exception      as Exc
-import           Control.Monad          (unless)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 
 import Flowbox.Prelude
