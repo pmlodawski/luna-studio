@@ -10,7 +10,6 @@
 
 module Flowbox.Luna.Passes.Build.Diagnostics where
 
-import Control.Monad          (when)
 import Control.Monad.IO.Class
 import Data.String.Utils      (join)
 
