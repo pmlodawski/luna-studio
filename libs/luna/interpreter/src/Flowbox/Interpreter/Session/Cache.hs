@@ -11,7 +11,8 @@ import qualified Data.List                           as List
 import qualified Data.Set                            as Set
 import           Flowbox.Control.Error
 import           Flowbox.Interpreter.Mockup.Graph    (CodeGraph)
-import qualified Flowbox.Interpreter.Mockup.Graph    as Graph
+import qualified Flowbox.Interpreter.Mockup.Node     as Node
+import qualified Flowbox.Interpreter.Mockup.Type     as Type
 import qualified Flowbox.Interpreter.Session.Env     as Env
 import           Flowbox.Interpreter.Session.Session (Session)
 import qualified Flowbox.Interpreter.Session.Session as Session
@@ -23,44 +24,49 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.Session.Cache"
 
 
-dump :: Graph.ID -> Session ()
+dump :: Node.ID -> Session ()
 dump nodeID = do
     logger trace $ "Dumping " ++ show nodeID
     Session.runStmt ("print " ++ argPrefix ++ show nodeID)
 
 
-invalidate :: CodeGraph -> Graph.ID -> Session ()
+invalidate :: CodeGraph -> Node.ID -> Session ()
 invalidate graph nodeID = do
     modify (Env.cached %~ Set.delete nodeID)
     logger trace $ "Invalidating " ++ show nodeID
     Session.runStmt (argPrefix ++ show nodeID ++ " <- return ()")
-    mapM_ (invalidate graph) $ Graph.suc graph nodeID
+    mapM_ (invalidate graph) $ Node.suc graph nodeID
 
 
-runNodeIfNeeded :: CodeGraph -> Graph.ID -> Session ()
+runNodeIfNeeded :: CodeGraph -> Node.ID -> Session ()
 runNodeIfNeeded graph nodeID = unlessM (isCached nodeID) (runNode graph nodeID)
 
 
-runNode :: CodeGraph -> Graph.ID -> Session ()
+runNode :: CodeGraph -> Node.ID -> Session ()
 runNode graph nodeID = do
-    node <- Graph.lab graph nodeID <?> "No node with id=" ++ show nodeID
-    let predecessors = Graph.pre graph nodeID
+    node <- Node.lab graph nodeID <?> "No node with id=" ++ show nodeID
+    let predecessors = Node.pre graph nodeID
 
     mapM_ (runNodeIfNeeded graph) predecessors
 
-    let args         = map (\i -> argPrefix ++ show i) predecessors
-        functionMod  = "return $ extract $ "
-        function     = functionMod ++ " (Operation " ++ node ++ ")"
+    let functionName = node ^. Node.code
+        functionType = node ^. Node.cls . Type.repr
+        args         = map (\i -> argPrefix ++ show i) predecessors
+        functionMod  = case node ^. Node.cls . Type.result of
+            Type.IO      -> "extract $ "
+            Type.Pure    -> "return $ extract $ "
+            Type.Monadic -> "return $ join . extract $ "
+        function     = functionMod ++ "(Operation (" ++ functionName ++ " :: " ++ functionType ++ "))"
         argSeparator = " `call` "
         operation    = List.intercalate argSeparator (function : args)
         expression   = argPrefix ++ show nodeID ++ " <- " ++ operation
     logger trace expression
     Session.runStmt expression
     modify (Env.cached %~ Set.insert nodeID)
-    print =<< get
+    logger trace =<< show <$> get
 
 
-isCached :: Graph.ID -> Session Bool
+isCached :: Node.ID -> Session Bool
 isCached nodeID = Set.member nodeID <$> gets (view Env.cached)
 
 

@@ -12,12 +12,12 @@ module Flowbox.Interpreter.Session.Env where
 import           Data.Set (Set)
 import qualified Data.Set as Set
 
-import qualified Flowbox.Interpreter.Mockup.Graph as Graph
+import qualified Flowbox.Interpreter.Mockup.Node as Node
 import           Flowbox.Prelude
 
 
 
-data Env = Env { _cached :: Set Graph.ID
+data Env = Env { _cached :: Set Node.ID
                } deriving (Read, Show)
 
 

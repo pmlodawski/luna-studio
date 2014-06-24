@@ -5,14 +5,8 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.Session
-( module I
-, Session
-, run
-, setFlags
-, unsetFlags
-, setHardodedExtensions
-, runStmt
-, runDecls
+( module Flowbox.Interpreter.Session.Session
+, module I
 ) where
 
 import           Control.Monad.Trans.State
@@ -62,14 +56,15 @@ unsetFlags flags = lift $ I.runGhc $ do
 
 runStmt :: String -> Session ()
 runStmt stmt = do
-    lift $ I.runGhc $ GHC.runStmt stmt GHC.RunToCompletion
-    return ()
+    result <- lift $ I.runGhc $ GHC.runStmt stmt GHC.RunToCompletion
+    case result of
+        GHC.RunOk _         -> return ()
+        GHC.RunException ex -> fail $ show ex
+        GHC.RunBreak {}     -> fail "Run break"
 
 
 runDecls :: String -> Session ()
-runDecls decls = do
-    lift $ I.runGhc $ GHC.runDecls decls
-    return ()
+runDecls decls = void $ lift $ I.runGhc $ GHC.runDecls decls
 
 setHardodedExtensions :: Session ()
 setHardodedExtensions = do
