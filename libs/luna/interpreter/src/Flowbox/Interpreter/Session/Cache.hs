@@ -7,9 +7,8 @@
 module Flowbox.Interpreter.Session.Cache where
 
 import           Control.Monad.Trans.State
-import qualified Data.List                 as List
-import qualified Data.Set                  as Set
-import Control.Monad (filterM)
+import qualified Data.List                           as List
+import qualified Data.Set                            as Set
 import           Flowbox.Control.Error
 import           Flowbox.Interpreter.Mockup.Graph    (CodeGraph)
 import qualified Flowbox.Interpreter.Mockup.Graph    as Graph
@@ -30,20 +29,24 @@ dump nodeID = do
     Session.runStmt ("print " ++ argPrefix ++ show nodeID)
 
 
-invalidate :: Graph.ID -> Session ()
-invalidate nodeID = do
+invalidate :: CodeGraph -> Graph.ID -> Session ()
+invalidate graph nodeID = do
     modify (Env.cached %~ Set.delete nodeID)
     logger trace $ "Invalidating " ++ show nodeID
     Session.runStmt (argPrefix ++ show nodeID ++ " <- return ()")
+    mapM_ (invalidate graph) $ Graph.suc graph nodeID
 
 
-runNode :: Graph.ID -> CodeGraph -> Session ()
-runNode nodeID graph = do
+runNodeIfNeeded :: CodeGraph -> Graph.ID -> Session ()
+runNodeIfNeeded graph nodeID = unlessM (isCached nodeID) (runNode graph nodeID)
+
+
+runNode :: CodeGraph -> Graph.ID -> Session ()
+runNode graph nodeID = do
     node <- Graph.lab graph nodeID <?> "No node with id=" ++ show nodeID
     let predecessors = Graph.pre graph nodeID
-    
-    needsRecache <- filterM (fmap not . isCached) predecessors
-    mapM_ (flip runNode graph) needsRecache
+
+    mapM_ (runNodeIfNeeded graph) predecessors
 
     let args         = map (\i -> argPrefix ++ show i) predecessors
         functionMod  = "return $ extract $ "
