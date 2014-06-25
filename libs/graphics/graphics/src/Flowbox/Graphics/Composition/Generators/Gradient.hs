@@ -30,7 +30,7 @@ colorMapper :: GradientVector -> [Tick Double]
             -> (Exp Double -> Exp Double -> Exp Double -> Exp Double)
             -> (Exp GradientVector -> Generator)
             -> Generator
-colorMapper vector ticks ftrans shapeGenerator pspace pixel = sfoldl findColor (0.0 :: Exp Double) index0 zippedTicks
+colorMapper vector ticks ftrans shapeGenerator pixel pspace = sfoldl findColor (0.0 :: Exp Double) index0 zippedTicks
     where zippedTicks = A.zip accticks $ A.tail accticks
           accticks    = A.use $ fromList (Z :. length ticksNorm) ticksNorm
           ticksNorm   = firstElem : sort ticks P.++ [lastElem]
@@ -38,7 +38,7 @@ colorMapper vector ticks ftrans shapeGenerator pspace pixel = sfoldl findColor (
           lastElem    = last ticks & position .~ 1e20
           vec         = variable vector
 
-          grad_pos = shapeGenerator vec pspace pixel
+          grad_pos = shapeGenerator vec pixel pspace
 
           findColor acc positions = (grad_pos >=* aPos &&* grad_pos A.<* nPos) ? (newColor, acc)
               where (actualPos, nextPos) = unlift positions :: (Exp (Tick Double), Exp (Tick Double))

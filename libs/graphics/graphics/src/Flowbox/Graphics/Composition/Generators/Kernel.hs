@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TypeOperators #-}
 
-module Flowbox.Graphics.Composition.Generators.Lambda where
+module Flowbox.Graphics.Composition.Generators.Kernel where
 
 import Flowbox.Prelude                                    as P
 import Flowbox.Graphics.Composition.Generators.Structures
@@ -15,16 +15,11 @@ import Flowbox.Graphics.Utils
 
 import qualified Data.Array.Accelerate as A
 import           Math.Space.Space
-import           Math.Coordinate.Cartesian (Point2(..))
+import           Math.Coordinate.UV
 
+bilinear :: Generator
+bilinear _ _ = 1.0
 
-
--- lambdaGenerator a. k. a rasterizer
-lambdaGenerator :: Grid Int -> Generator -> Matrix2 Double
-lambdaGenerator space lambda = generate (A.index2 h w) wrapper
-    where w = variable $ width space
-          h = variable $ height space
-          dspace = Grid (A.fromIntegral $ w - 1) (A.fromIntegral $ h - 1)
-          wrapper i = lambda pixel dspace
-              where Z :. y :. x = A.unlift i :: EDIM2
-                    pixel = Point2 (A.fromIntegral x) (A.fromIntegral y)
+gaussian :: Generator
+gaussian pixel space = exp $ (-(x ** 2 + y ** 2) * (exp pi))
+    where Point2 x y = toUV space pixel - Point2 0.5 0.5
