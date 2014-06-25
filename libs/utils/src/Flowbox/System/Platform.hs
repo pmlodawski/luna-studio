@@ -8,8 +8,6 @@ module Flowbox.System.Platform where
 
 import qualified System.Info as Info
 
-import Control.Monad (when)
-
 import           Flowbox.Prelude        hiding (error)
 import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath
