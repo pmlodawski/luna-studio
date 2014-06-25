@@ -21,6 +21,10 @@ type MapForest a = Map a (MapTree a)
 
 
 
+empty :: MapForest a
+empty = Map.empty
+
+
 insert :: Ord a => [a] -> MapForest a -> MapForest a
 insert []    forest = forest
 insert [a]   forest = if Map.member a forest
