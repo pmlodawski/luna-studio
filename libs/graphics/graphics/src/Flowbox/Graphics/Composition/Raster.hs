@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE FlexibleContexts   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
 
@@ -32,11 +32,11 @@ type CheckerboardColors f a = (f a, f a, f a, f a)
 type CheckerboardLine f a = (f a, Exp Double)
 
 checkerboard :: (View.View v, Color.ColorConvert c Color.RGB)
-             => Exp A.DIM2 -> Exp Double -> CheckerboardColors c (Exp a)
-             -> CheckerboardLine c (Exp a) -> CheckerboardLine c (Exp a)
+             => Exp A.DIM2 -> Exp Double -> CheckerboardColors c (Exp Double)
+             -> CheckerboardLine c (Exp Double) -> CheckerboardLine c (Exp Double)
              -> Image v
 checkerboard sh size (color1, color2, color3, color4) (lineColor, lineWidth) (lineColorCenter, lineWidthCenter) =
-    Image.singleton . foldr appendChannel (View.empty "rgba") ["rgba.r", "rgba.g", "rgba.b", "rgba.a"]
+    Image.singleton $ foldr appendChannel (View.empty "rgba") ["rgba.r", "rgba.g", "rgba.b", "rgba.a"]
     where appendChannel name = View.append (Channel.ChannelFloat name . Channel.FlatData $ Matrix.generate sh (calculateValue name))
           
           A.Z A.:. h A.:. w = A.unlift sh :: Matrix.EDIM2
