@@ -57,7 +57,7 @@ draw = unlines . map (unlines . drawTree) . Map.toList where
     shift first other = zipWith (++) (first : repeat other)
 
     drawTree (a, Leaf            ) = [show a]
-    drawTree (a, SubForest forest) = show a : (drawSubTrees $ Map.toList forest)
+    drawTree (a, SubForest forest) = show a : drawSubTrees (Map.toList forest)
 
     drawSubTrees [] = []
     drawSubTrees [t] =
