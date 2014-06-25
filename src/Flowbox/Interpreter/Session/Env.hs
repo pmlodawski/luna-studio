@@ -12,13 +12,14 @@ module Flowbox.Interpreter.Session.Env where
 import           Data.Set (Set)
 import qualified Data.Set as Set
 
+import           Flowbox.Data.MapTree            (MapForest)
+import qualified Flowbox.Data.MapTree            as MapTree
 import qualified Flowbox.Interpreter.Mockup.Node as Node
 import           Flowbox.Prelude
 
 
-
-data Env = Env { _cached      :: Set Node.ID
-               --, _debugPoints :: Set [Node.ID]
+data Env = Env { _cached      :: Set       Node.ID
+               , _watchPoints :: MapForest Node.ID
                } deriving (Read, Show)
 
 
@@ -26,4 +27,4 @@ makeLenses(''Env)
 
 
 empty :: Env
-empty = Env Set.empty
+empty = Env Set.empty MapTree.empty
