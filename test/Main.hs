@@ -15,10 +15,11 @@ import qualified Flowbox.Interpreter.Mockup.Graph    as Graph
 import           Flowbox.Interpreter.Mockup.Node     (Node (Node))
 import           Flowbox.Interpreter.Mockup.Type     (Type (Type))
 import qualified Flowbox.Interpreter.Session.Cache   as Cache
+import qualified Flowbox.Interpreter.Session.Env     as Env
 import qualified Flowbox.Interpreter.Session.Session as Session
+import qualified Flowbox.Luna.Lib.LibManager         as LibManager
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-
 
 rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
@@ -45,7 +46,10 @@ main = do
                     , (3, 4, Graph.Dependency)
                     , (4, 5, Graph.Dependency)
                     ]
-    result <- Session.run $ do
+
+        env = Env.mk LibManager.empty
+
+    result <- Session.run env $ do
         --mapM_ (const $ Cache.runNode graph 4) [0..10000]
         --mapM_ (const $ Cache.runNodeIfNeeded graph 4) [0..1000000]
         Cache.runNodeIfNeeded graph 5

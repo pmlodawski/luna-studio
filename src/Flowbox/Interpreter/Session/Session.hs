@@ -17,6 +17,7 @@ import           Language.Haskell.Interpreter as I
 import           Flowbox.Interpreter.Session.Env     (Env)
 import qualified Flowbox.Interpreter.Session.Env     as Env
 import qualified Flowbox.Interpreter.Session.Helpers as Helpers
+import           Flowbox.Luna.Lib.LibManager         (LibManager)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -30,8 +31,9 @@ logger = getLoggerIO "Flowbox.Interpreter.Session.Session"
 type Session a = StateT Env I.Interpreter a
 
 
-run :: Session a -> IO (Either I.InterpreterError a)
-run session = I.runInterpreter $ fst <$> runStateT (initialize >> session) Env.empty
+run :: Env -> Session a -> IO (Either I.InterpreterError a)
+run env session =
+    I.runInterpreter $ fst <$> runStateT (initialize >> session) env
 
 
 initialize :: Session ()
@@ -67,6 +69,7 @@ runStmt stmt = do
 runDecls :: String -> Session ()
 runDecls decls = void $ lift $ I.runGhc $ GHC.runDecls decls
 
+
 setHardodedExtensions :: Session ()
 setHardodedExtensions = do
     setFlags [ F.Opt_MultiParamTypeClasses
@@ -81,3 +84,8 @@ setHardodedExtensions = do
     unsetFlags []
 
 
+setLibManager :: LibManager -> Session ()
+setLibManager libManager = modify (Env.libManager %~ const libManager)
+
+getLibManager :: Session LibManager
+getLibManager = gets (view Env.libManager)

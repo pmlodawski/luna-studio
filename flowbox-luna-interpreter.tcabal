@@ -42,5 +42,6 @@ Executable luna-interpreter-test
 
   Build-Depends:  base,
                   errors,
+                  flowbox-luna-base,
                   flowbox-luna-interpreter,
                   flowbox-utils

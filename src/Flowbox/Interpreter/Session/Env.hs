@@ -15,16 +15,18 @@ import qualified Data.Set as Set
 import           Flowbox.Data.MapTree            (MapForest)
 import qualified Flowbox.Data.MapTree            as MapTree
 import qualified Flowbox.Interpreter.Mockup.Node as Node
+import           Flowbox.Luna.Lib.LibManager     (LibManager)
 import           Flowbox.Prelude
 
 
 data Env = Env { _cached      :: Set       Node.ID
                , _watchPoints :: MapForest Node.ID
-               } deriving (Read, Show)
+               , _libManager  :: LibManager
+               } deriving (Show)
 
 
 makeLenses(''Env)
 
 
-empty :: Env
-empty = Env Set.empty MapTree.empty
+mk :: LibManager -> Env
+mk = Env Set.empty MapTree.empty
