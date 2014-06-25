@@ -8,6 +8,7 @@
 
 module Flowbox.Math.Matrix (
     module Flowbox.Math.Matrix,
+    A.Boundary,
     A.Elt,
     A.IsNum,
     A.IsFloating,
@@ -33,9 +34,10 @@ module Flowbox.Math.Matrix (
     (A.:.)(..)
 ) where
 
-import Data.Array.Accelerate as A hiding (Scalar, Vector)
+import qualified Data.Array.Accelerate as A
+import           Data.Array.Accelerate hiding (Scalar, Vector, (!), shape)
 
-import Flowbox.Prelude hiding (use)
+import Flowbox.Prelude hiding (use, (<*), (?))
 
 
 
@@ -85,6 +87,17 @@ sfoldl f z ix mat = A.sfoldl f z ix (accMatrix mat)
 
 the :: Elt e => Scalar e -> Exp e
 the mat = A.the $ accMatrix mat
+
+boundedIndex :: Elt e => Boundary (Exp e) -> Matrix2 e -> Exp DIM2 -> Exp e
+boundedIndex b mat i = case b of
+    Clamp      -> mat ! index2 ((y `min` h1) `max` 0) ((x `min` w1) `max` 0)
+    Mirror     -> mat ! index2 (abs $ -abs (y `mod` (2 * height) - h1) + h1) (abs $ -abs (x `mod` (2 * width) - w1) + w1)
+    Wrap       -> mat ! index2 (y `mod` height) (x `mod` width)
+    Constant a -> (x >=* width ||* y >=* height ||* x <* 0 ||* y <*0) ? (a, mat ! i)
+    where Z :. height :. width = unlift $ shape mat
+          Z :. y      :. x     = unlift i
+          h1 = height - 1
+          w1 = width - 1
 
 -- = Shape Information =
 
@@ -139,6 +152,14 @@ enumFromStepN :: (Shape ix, Elt e, IsNum e)
     => Exp ix -> Exp e -> Exp e -> Matrix ix e
 enumFromStepN sh n s = Delayed $ A.enumFromStepN sh n s
 
+-- = Pipelining =
+infixl 1 >->
+(>->) :: (Shape ixa, Shape ixb, Shape ixc, Elt a, Elt b, Elt c)
+      => (Matrix ixa a -> Matrix ixb b) -> (Matrix ixb b -> Matrix ixc c) -> (Matrix ixa a -> Matrix ixc c)
+(>->) a b mat = Delayed $ (ftrans a A.>-> ftrans b) (accMatrix mat)
+
+ftrans :: (Shape ixa, Shape ixb, Elt a, Elt b) => (Matrix ixa a -> Matrix ixb b) -> (Acc (Array ixa a) -> Acc (Array ixb b))
+ftrans f a = accMatrix $ f (Delayed a)
 
 -- = Concatenation =
 

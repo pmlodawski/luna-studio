@@ -69,6 +69,8 @@ nonIntRem x y = x - y * A.fromIntegral (A.truncate (x / y) :: Exp Int)
 nonIntDiv :: (Elt e, IsFloating e) => Exp e -> Exp e -> Exp e
 nonIntDiv x y = A.fromIntegral (A.truncate (x / y) :: Exp Int)
 
+frac :: (Elt a, IsFloating a) => Exp a -> Exp a
+frac x = x - A.fromIntegral (A.floor x :: Exp Int)
 
 -- = TUPLES :D
 

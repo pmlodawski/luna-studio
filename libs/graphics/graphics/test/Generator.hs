@@ -12,13 +12,14 @@ import Flowbox.Graphics.Composition.Generators.Gradient
 import Flowbox.Graphics.Composition.Generators.Lambda
 import Flowbox.Graphics.Composition.Generators.Multisampler
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Kernel
+import Flowbox.Graphics.Composition.Generators.Filter
+import Flowbox.Graphics.Composition.Generators.Sampler
 
 import Linear.V2
 import Math.Space.Space
 import Math.Metric
 import Math.Coordinate.Cartesian
-import Data.Array.Accelerate (index2)
+import Data.Array.Accelerate (index2, Boundary(..))
 
 import Utils
 
@@ -30,16 +31,21 @@ gradient (w, h) (x1, y1, x2, y2) shape = do
     let myftrans pw nw prop = prop ** (pw / nw)
     
     let vec = V2 (Point2 x1 y1) (Point2 x2 y2)
-    let mykernel = lambdaGenerator (Grid 10 10) bilinear
-    let gradient ticks = lambdaGenerator (Grid w h) $ multisampler mykernel $ colorMapper vec ticks myftrans shape
+    let gradient ticks = lambdaGenerator (Grid w h) $ colorMapper vec ticks myftrans shape
 
-    testSaveRGBA "out.bmp" (gradient reds) (gradient greens) (gradient blues) (gradient alphas)
-    --testSaveChan "out.bmp" (gradient alphas)
+    testSaveRGBA "out.bmp" (gradient alphas) (gradient alphas) (gradient alphas) (gradient alphas)
 
-gauss w h sigma = do
-    let gauss = lambdaGenerator (Grid w h) gaussian
-    testSaveChan "out.bmp" gauss
+--gauss w h sigma = do
+--    let gauss = lambdaGenerator (Grid w h) gaussian
+--    testSaveChan "out.bmp" gauss
+
+scaling f = do
+    (r, g, b, a) <- testLoadRGBA "rings.bmp"
+    let process x = lambdaGenerator (Grid 1520 280) $ bicubic f Clamp x
+
+    testSaveRGBA "out.bmp" (process r) (process g) (process b) (process a)
 
 main :: IO ()
 main = do
-    putStrLn "Testuję gradient"
+    putStrLn "Testuję skalowanie"
+    scaling triangle

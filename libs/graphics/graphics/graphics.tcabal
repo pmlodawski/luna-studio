@@ -83,7 +83,7 @@ Executable generator_test
 
   if flag(debug)
     GHC-Options:  -ddump-gc -ddump-cc -ddump-exec -fflush-cache
-  GHC-Options:    -Wall -O2 -package ghc
+  GHC-Options:    -threaded -Wall -O2 -package ghc
 
   Extensions:     NoImplicitPrelude,
                   DoAndIfThenElse,

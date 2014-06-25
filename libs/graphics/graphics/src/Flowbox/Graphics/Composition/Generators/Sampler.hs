@@ -4,12 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Composition.Generators.Sampler where
 
 import Flowbox.Prelude                                    as P
 import Flowbox.Graphics.Composition.Generators.Structures
+import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Math.Matrix                                as M
 import Flowbox.Graphics.Utils
 
@@ -18,9 +21,35 @@ import           Math.Space.Space
 import           Math.Coordinate.Cartesian                (Point2(..), toCartesian)
 import           Math.Coordinate.UV                       (toUV)
 
+import           Linear.V4
+import           Linear.Metric                             (dot)
+import           Linear.Accelerate
 
-sampler :: Matrix2 Double -> Generator
-sampler mat pixel pspace = mat M.! A.index2 (A.round y) (A.round x)
-    where Z :. h :. w = A.unlift $ shape mat :: EDIM2
-          nspace = Grid (A.fromIntegral w) (A.fromIntegral h)
-          Point2 x y = toCartesian nspace $ toUV pspace pixel
+
+nearest :: Boundary (Exp Double) -> Matrix2 Double -> Generator
+nearest = bicubic box
+
+bilinear :: Boundary (Exp Double) -> Matrix2 Double -> Generator
+bilinear = bicubic triangle
+
+bicubic :: Filter -> Boundary (Exp Double) -> Matrix2 Double -> Generator
+bicubic filter b mat pixel newSpace = A.uncurry (/) result
+    where Z :. oldHeight :. oldWidth = A.unlift $ shape mat :: EDIM2
+          oldSpace = Grid (A.fromIntegral oldHeight) (A.fromIntegral oldWidth)
+          Point2 x' y' = toCartesian oldSpace $ toUV newSpace pixel
+
+          fs = 6 -- Should be: A.floor $ 2 * window filter -- TODO: conditional based on the scale ratio
+          dxs = generate (A.index2 fs fs) $ \(A.unlift -> Z :. _ :. x :: EDIM2) -> x - 2
+          dys = generate (A.index2 fs fs) $ \(A.unlift -> Z :. y :. _ :: EDIM2) -> y - 2
+
+          start = A.lift (0.0 :: Exp Double, 0.0 :: Exp Double) :: Exp (Double, Double)
+          result = sfoldl calc start A.index0 (flatten $ M.zip dxs dys)
+
+          xs  = let xs' = width newSpace / width oldSpace   in A.cond (xs' A.<* 1.0) xs' 1.0
+          ys  = let ys' = height newSpace / height oldSpace in A.cond (ys' A.<* 1.0) ys' 1.0
+
+          calc (A.unlift -> (valSum, weightSum)) (A.unlift -> (dx, dy)) = A.lift (valSum + value * weight, weightSum + weight)
+              where value  = boundedIndex b mat $ A.index2 (A.floor y' + dy) (A.floor x' + dx)
+                    wx = apply filter $ (A.fromIntegral dx - frac x') * xs
+                    wy = apply filter $ (A.fromIntegral dy - frac y') * ys
+                    weight = wx * wy

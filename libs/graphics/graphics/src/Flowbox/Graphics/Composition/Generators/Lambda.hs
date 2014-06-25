@@ -4,7 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Composition.Generators.Lambda where
 
@@ -24,7 +26,6 @@ lambdaGenerator :: Grid Int -> Generator -> Matrix2 Double
 lambdaGenerator space lambda = generate (A.index2 h w) wrapper
     where w = variable $ width space
           h = variable $ height space
-          dspace = Grid (A.fromIntegral $ w - 1) (A.fromIntegral $ h - 1)
-          wrapper i = lambda pixel dspace
-              where Z :. y :. x = A.unlift i :: EDIM2
-                    pixel = Point2 (A.fromIntegral x) (A.fromIntegral y)
+          dspace = Grid (A.fromIntegral w) (A.fromIntegral h)
+          wrapper (A.unlift -> Z :. y :. x :: EDIM2) = lambda pixel dspace
+              where pixel = (Point2 (A.fromIntegral x) (A.fromIntegral y))
