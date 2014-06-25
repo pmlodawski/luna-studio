@@ -5,15 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TypeFamilies #-}
 
 module Flowbox.Graphics.Color.CMY where
 
-import Data.Typeable.Internal
+import Data.Typeable
 
---import           Flowbox.Graphics.Color.Internal
-import           Flowbox.Prelude
-
+import Flowbox.Prelude
 
 
-data CMY a = CMY { cmyC :: a, cmyM :: a, cmyY :: a } deriving (Show,Typeable)
+
+data CMY a = CMY { cmyC :: a, cmyM :: a, cmyY :: a } deriving (Show, Typeable)

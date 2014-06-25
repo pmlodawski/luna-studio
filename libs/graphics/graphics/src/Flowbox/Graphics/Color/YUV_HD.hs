@@ -5,14 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TypeFamilies #-}
 
 module Flowbox.Graphics.Color.YUV_HD where
 
-import Data.Typeable.Internal
+import Data.Typeable
 
---import           Flowbox.Graphics.Color.Internal
-import           Flowbox.Prelude
+import Flowbox.Prelude
 
 
 
