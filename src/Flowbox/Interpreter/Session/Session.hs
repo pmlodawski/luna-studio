@@ -38,7 +38,8 @@ initialize :: Session ()
 initialize = do
     lift I.reset
     setHardodedExtensions
-    lift $ I.setImportsQ [("Prelude", Nothing)]
+    lift $ I.setImportsQ [("Prelude", Nothing)
+                         ,("Control.Monad", Nothing)]
     runDecls Helpers.helpers
 
 
@@ -68,11 +69,15 @@ runDecls decls = void $ lift $ I.runGhc $ GHC.runDecls decls
 
 setHardodedExtensions :: Session ()
 setHardodedExtensions = do
-    setFlags [ F.Opt_MultiParamTypeClasses,
-               F.Opt_FunctionalDependencies,
-               F.Opt_FlexibleContexts,
-               F.Opt_FlexibleInstances,
-               F.Opt_GADTs,
-               F.Opt_OverlappingInstances,
-               F.Opt_UndecidableInstances]
+    setFlags [ F.Opt_MultiParamTypeClasses
+             , F.Opt_FunctionalDependencies
+             , F.Opt_FlexibleContexts
+             , F.Opt_FlexibleInstances
+             , F.Opt_GADTs
+             , F.Opt_OverlappingInstances
+             --, F.Opt_UndecidableInstances
+             --, F.Opt_IncoherentInstances
+             ]
     unsetFlags []
+
+

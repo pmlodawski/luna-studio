@@ -14,14 +14,6 @@ import Flowbox.Prelude
 
 
 data Type = Type { _repr   :: String
-                 , _result :: ResultType
                  } deriving (Show, Read)
-
-
-data ResultType = Monadic
-                | IO
-                | Pure
-                deriving (Show, Read)
-
 
 makeLenses(''Type)
