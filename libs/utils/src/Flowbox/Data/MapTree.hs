@@ -60,4 +60,3 @@ draw = unlines . map (unlines . drawTree) . Map.toList where
         "|" : shift "`- " "   " (drawTree t)
     drawSubTrees (t:ts) =
         "|" : shift "+- " "|  " (drawTree t) ++ drawSubTrees ts
-

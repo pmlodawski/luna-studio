@@ -17,7 +17,8 @@ import           Flowbox.Prelude
 
 
 
-data Env = Env { _cached :: Set Node.ID
+data Env = Env { _cached      :: Set Node.ID
+               --, _debugPoints :: Set [Node.ID]
                } deriving (Read, Show)
 
 

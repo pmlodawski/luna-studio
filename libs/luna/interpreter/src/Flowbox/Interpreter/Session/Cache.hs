@@ -52,11 +52,7 @@ runNode graph nodeID = do
     let functionName = node ^. Node.code
         functionType = node ^. Node.cls . Type.repr
         args         = map (\i -> argPrefix ++ show i) predecessors
-        functionMod  = case node ^. Node.cls . Type.result of
-            Type.IO      -> "extract $ "
-            Type.Pure    -> "return $ extract $ "
-            Type.Monadic -> "return $ join . extract $ "
-        function     = functionMod ++ "(Operation (" ++ functionName ++ " :: " ++ functionType ++ "))"
+        function     = "toIO $ extract $ (Operation (" ++ functionName ++ " :: " ++ functionType ++ "))"
         argSeparator = " `call` "
         operation    = List.intercalate argSeparator (function : args)
         expression   = argPrefix ++ show nodeID ++ " <- " ++ operation
