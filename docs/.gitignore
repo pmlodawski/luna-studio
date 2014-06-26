@@ -2,3 +2,4 @@ python-env
 pygments-main
 lang-spec/*
 !lang-spec/*.rst
+!lang-spec/*.dot
