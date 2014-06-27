@@ -17,7 +17,7 @@ digraph "G" {
 
     //
     // '\n'.join(["Expr:{x} -> {y};".format(**locals()) for x, y in re.findall("<([a-zA-Z_]*)>[a-zA-Z_]* :: [[]?([a-zA-Z_]*)[]]?",  text)])
-    
+
     rankdir = "LR";
     node [shape=none; fontname="Menlo-Regular" ];
     edge [penwidth=0.5; style=dashed; arrowsize=2; arrowhead="empty"];
@@ -31,7 +31,7 @@ digraph "G" {
          <tr><td ALIGN="left"  bgcolor="grey"><font FACE="Futura-Medium">Type</font></td>   <td ALIGN="left">{</td> <td ALIGN="left" PORT="AST_Type">fromType :: Type</td></tr>
      </table>>
     ];
-    AST:AST_Module -> Module [weight=0.1];
+    AST:AST_Module -> Module [weight=0.1; constraint=false];
     AST:AST_Expr -> Expr;
     AST:AST_Lit -> Lit;
     AST:AST_Pat -> Pat;
@@ -100,12 +100,12 @@ digraph "G" {
 // (for clarity)    Pat:Typed_id -> ID;  
 // (for clarity)    Pat:Wildcard_id -> ID;  
 // (for clarity)    Pat:RecWildcard_id -> ID;
-    Pat:Lit_value -> Lit;
+    Pat:Lit_value -> Lit [constraint=false];
 // (for clarity)    Pat:Tuple_items -> Pat;
 // (for clarity)    Pat:App_src -> Pat;
 // (for clarity)    Pat:Typed_pat -> Pat;
 // (for clarity)    Pat:App_args -> Pat;
-    Pat:Typed_cls -> Type;
+    Pat:Typed_cls -> Type [constraint=false];
 
     Expr [ shape = none; label = < <table>
          <tr><td ALIGN="center" bgcolor="black" colspan="8" PORT="Expr"><font color="white" POINT-SIZE="36.0" FACE="Futura-Medium"><b>Expr</b></font></td></tr>
