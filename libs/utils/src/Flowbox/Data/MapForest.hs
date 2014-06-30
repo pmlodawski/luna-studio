@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Data.MapTree where
+module Flowbox.Data.MapForest where
 
 import Flowbox.Prelude
 

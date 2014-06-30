@@ -18,10 +18,10 @@ import           Flowbox.System.UniPath        (UniPath)
 
 
 
-data Library = Library { name        :: String
-                       , path        :: UniPath
-                       , ast         :: Module
-                       , propertyMap :: PropertyMap
+data Library = Library { _name        :: String
+                       , _path        :: UniPath
+                       , _ast         :: Module
+                       , _propertyMap :: PropertyMap
                        } deriving (Show)
 
 makeLenses (''Library)

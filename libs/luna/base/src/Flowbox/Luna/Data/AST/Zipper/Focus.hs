@@ -10,7 +10,7 @@ module Flowbox.Luna.Data.AST.Zipper.Focus where
 
 import Flowbox.Luna.Data.AST.Expr   (Expr)
 import Flowbox.Luna.Data.AST.Module (Module)
-import Flowbox.Prelude              hiding (Traversal, focus)
+import Flowbox.Prelude              hiding (Traversal)
 
 
 
@@ -39,3 +39,18 @@ traverseM_ fmod fexp focus = case focus of
     FunctionFocus f -> fexp f
     ClassFocus    c -> fexp c
     ModuleFocus   m -> fmod m
+
+
+getFunction :: Focus -> Maybe Expr
+getFunction (FunctionFocus expr) = Just expr
+getFunction _                    = Nothing
+
+
+getClass :: Focus -> Maybe Expr
+getClass (ClassFocus expr) = Just expr
+getClass _                 = Nothing
+
+
+getModule :: Focus -> Maybe Module
+getModule (ModuleFocus m) = Just m
+getModule _               = Nothing

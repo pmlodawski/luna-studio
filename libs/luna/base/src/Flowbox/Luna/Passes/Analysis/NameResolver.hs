@@ -52,8 +52,8 @@ run = (Pass.run_ (Pass.Info "NameResolver") Pass.NoState) .:: resolve
 
 resolve :: String -> Breadcrumbs -> Library.ID -> LibManager -> NRPass [(Breadcrumbs, Library.ID)]
 resolve name bc libID libManager = do
-    library <- LibManager.lab libManager libID <?> "NameResolver: Cannot find library with id=" ++ show libID
-    zipper  <- Zipper.focusCrumb' (head bc) $ Library.ast $ library
+    library <- LibManager.lab libManager libID <??> "NameResolver: Cannot find library with id=" ++ show libID
+    zipper  <- Zipper.focusCrumb' (head bc) $ library ^. Library.ast
     imports <- getImports zipper $ tail bc
     let elements = splitOn "." name
         possiblePaths = elements
@@ -95,8 +95,8 @@ searchLib path library =
     if libName == head path
         then searchModule path [] ast
         else []
-    where libName = Library.name library
-          ast     = Library.ast  library
+    where libName = library ^. Library.name
+          ast     = library ^. Library.ast
 
 
 -- FIXME: added typeAliases

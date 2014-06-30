@@ -38,11 +38,13 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
 type NodeMap = Map AST.ID (Node.ID, OutPort)
 
 
-data GBState = GBState { graph       :: Graph
-                       , nodeMap     :: NodeMap
-                       , aa          :: AliasInfo
-                       , propertyMap :: PropertyMap
+data GBState = GBState { _graph       :: Graph
+                       , _nodeMap     :: NodeMap
+                       , _aa          :: AliasInfo
+                       , _propertyMap :: PropertyMap
                        } deriving (Show)
+
+makeLenses(''GBState)
 
 
 type GBStateM m = MonadState GBState m
@@ -66,12 +68,8 @@ insNode node = do
 insNodeWithFlags :: GBStateM m => (Node.ID, Node) -> Bool -> Bool -> m ()
 insNodeWithFlags n@(nodeID, _) isFolded noAssignment = do
     insNode n
-    if isFolded
-        then setProperty Attributes.astFolded
-        else return ()
-    if noAssignment
-        then setProperty Attributes.astNoAssignment
-        else return ()
+    when isFolded     $ setProperty Attributes.astFolded
+    when noAssignment $ setProperty Attributes.astNoAssignment
     where setProperty key = getPropertyMap >>= setPropertyMap . PropertyMap.set nodeID Attributes.luna key Attributes.true
 
 
@@ -94,39 +92,35 @@ connect srcID dstNID dstPort = do
 
 
 getGraph :: GBStateM m => m Graph
-getGraph = get >>= return . graph
+getGraph = gets (view graph)
 
 
 setGraph :: GBStateM m => Graph -> m ()
-setGraph gr = do s <- get
-                 put s { graph = gr }
+setGraph gr = modify (set graph gr)
 
 
 getNodeMap :: GBStateM m => m NodeMap
-getNodeMap = get >>= return . nodeMap
+getNodeMap = gets (view nodeMap)
 
 
 setNodeMap :: GBStateM m => NodeMap -> m ()
-setNodeMap nm = do s <- get
-                   put s { nodeMap = nm }
+setNodeMap nm = modify (set nodeMap nm)
 
 
 getAAMap :: GBStateM m => m AliasInfo
-getAAMap = get >>= return . aa
+getAAMap = gets (view aa)
 
 
 setAAMap :: GBStateM m => AliasInfo -> m ()
-setAAMap aa' = do s <- get
-                  put s { aa = aa' }
+setAAMap aa' = modify (set aa aa')
 
 
 getPropertyMap :: GBStateM m => m PropertyMap
-getPropertyMap = get >>= return . propertyMap
+getPropertyMap = gets (view propertyMap)
 
 
 setPropertyMap :: GBStateM m => PropertyMap -> m ()
-setPropertyMap pm = do s <- get
-                       put s { propertyMap = pm }
+setPropertyMap pm = modify (set propertyMap pm)
 
 
 aaLookUp :: GBStateM m => AST.ID -> m AST.ID

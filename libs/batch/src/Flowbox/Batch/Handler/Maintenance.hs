@@ -16,6 +16,6 @@ import           Flowbox.Prelude
 
 
 initialize :: Batch ()
-initialize = do config <- Batch.config <$> get
+initialize = do config <- view Batch.config <$> get
                 liftIO $ Initializer.initializeIfNeeded config
 

@@ -36,13 +36,14 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
 type NodeMap = Map (Node.ID, OutPort) Expr
 
 
-data GPState = GPState { body        :: [Expr]
-                       , output      :: Maybe Expr
-                       , nodeMap     :: NodeMap
-                       , graph       :: Graph
-                       , propertyMap :: PropertyMap
+data GPState = GPState { _body        :: [Expr]
+                       , _output      :: Maybe Expr
+                       , _nodeMap     :: NodeMap
+                       , _graph       :: Graph
+                       , _propertyMap :: PropertyMap
                        } deriving (Show)
 
+makeLenses(''GPState)
 
 type GPStateM m = MonadState GPState m
 
@@ -52,40 +53,35 @@ make = GPState [] Nothing Map.empty
 
 
 getBody :: GPStateM m => m [Expr]
-getBody = get >>= return . body
+getBody = gets (view body)
 
 
 setBody :: GPStateM m => [Expr] -> m ()
-setBody b = do s <- get
-               put s { body = b }
+setBody b = modify (set body b)
 
 
 getOutput :: GPStateM m => m Expr
-getOutput = do s <- get
-               case output s of
-                   Nothing -> fail "GraphParser: getOutput: Output not defined!"
-                   Just o  -> return o
+getOutput = gets (view output) <??&.> "GraphParser: getOutput: Output not defined!"
+
 
 setOutput :: GPStateM m => Expr -> m ()
-setOutput o = do s <- get
-                 put s { output = Just o }
+setOutput o = modify (set output $ Just o)
 
 
 getNodeMap :: GPStateM m => m NodeMap
-getNodeMap = get >>= return . nodeMap
+getNodeMap = gets (view nodeMap)
 
 
 setNodeMap :: GPStateM m => NodeMap -> m ()
-setNodeMap nm = do gm <- get
-                   put gm { nodeMap = nm }
+setNodeMap nm =  modify (set nodeMap nm)
 
 
 getGraph :: GPStateM m => m Graph
-getGraph = get >>= return . graph
+getGraph = gets (view graph)
 
 
 getPropertyMap :: GPStateM m => m PropertyMap
-getPropertyMap = get >>= return . propertyMap
+getPropertyMap = gets (view propertyMap)
 
 
 addToBody :: GPStateM m => Expr -> m ()
@@ -99,7 +95,7 @@ addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
 
 nodeMapLookUp :: GPStateM m => (Node.ID, OutPort) -> m Expr
 nodeMapLookUp key = do nm <- getNodeMap
-                       Map.lookup key nm <?> ("GraphParser: nodeMapLookUp: Cannot find " ++ (show key) ++ " in nodeMap")
+                       Map.lookup key nm <?.> ("GraphParser: nodeMapLookUp: Cannot find " ++ (show key) ++ " in nodeMap")
 
 
 
@@ -123,7 +119,7 @@ getNodeSrc (Just a) = nodeMapLookUp a
 
 getNode :: GPStateM m => Node.ID -> m Node
 getNode nodeID = do gr <- getGraph
-                    Graph.lab gr nodeID <?> ("GraphParser: getNodeOutputName: Cannot find nodeID=" ++ (show nodeID) ++ " in graph")
+                    Graph.lab gr nodeID <?.> ("GraphParser: getNodeOutputName: Cannot find nodeID=" ++ (show nodeID) ++ " in graph")
 
 
 getNodeOutputName :: GPStateM m => Node.ID -> m String

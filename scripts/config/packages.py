@@ -77,7 +77,7 @@ class AllProject(Project):
 pkgDb = PathDict(
        { '@all'                                : AllProject ('@all', deps = [])
        , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/utils', 'libs/rpc'])
-       , 'libs/batch'                          : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch')                               , 'libs'    , ['libs/utils', 'libs/config', 'tools/initializer', 'libs/luna/base'])
+       , 'libs/batch'                          : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch')                               , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/initializer', 'libs/luna/base'])
        , 'libs/bus'                            : HProject   ('flowbox-bus'                  , os.path.join ('libs' , 'bus')                                 , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc'])
        , 'libs/cabal-install'                  : HProject   ('cabal-install'                , os.path.join ('libs' , 'cabal-install')                       , 'libs'    , [])
        , 'libs/codec/exr'                      : HProject   ('openexr'                      , os.path.join ('libs' , 'codec', 'exr')                        , 'libs'    , [], ['--with-gcc=g++'])
@@ -86,6 +86,7 @@ pkgDb = PathDict(
        , 'libs/graphics/graphics'              : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'graphics', 'graphics')                , 'libs'    , ['libs/target-hs', 'libs/utils', 'libs/num-conversion', 'libs/codec/exr', 'libs/graphics/hopencv'])
        , 'libs/graphics/hopencv'               : HProject   ('HOpenCV'                      , os.path.join ('libs' , 'graphics', 'hopencv')                 , 'libs'    , [])
        , 'libs/luna/base'                      : HProject   ('flowbox-luna-base'            , os.path.join ('libs' , 'luna', 'base')                        , 'libs'    , ['libs/target-hs', 'libs/utils', 'libs/config', 'libs/cabal-install', 'libs/markup'])
+       , 'libs/luna/initializer'               : HProject   ('flowbox-luna-initializer'     , os.path.join ('libs' , 'luna', 'initializer')                 , 'libs'    , ['libs/utils', 'libs/config'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
        , 'libs/luna/interpreter'               : HProject   ('flowbox-luna-interpreter'     , os.path.join ('libs' , 'luna', 'interpreter')                 , 'libs'    , ['libs/utils', 'libs/luna/base'])
        , 'libs/markup'                         : HProject   ('doc-markup'                   , os.path.join ('libs' , 'markup')                              , 'libs'    , [])
        , 'libs/num-conversion'                 : HProject   ('num-conversion'               , os.path.join ('libs' , 'num-conversion')                      , 'libs'    , [])
@@ -104,7 +105,7 @@ pkgDb = PathDict(
        , 'tools/batch/plugins/plugin-manager'  : HProject   ('flowbox-plugin-manager'       , os.path.join ('tools', 'batch', 'plugins', 'plugin-manager')  , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'tools/batch/plugins/project-manager' : HProject   ('flowbox-project-manager'      , os.path.join ('tools', 'batch', 'plugins', 'project-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/batch'])
        , 'tools/batch/plugins/s3-file-manager' : HProject   ('flowbox-s3-file-manager'      , os.path.join ('tools', 'batch', 'plugins', 's3-file-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/batch', 'libs/aws'])
-       , 'tools/initializer'                   : HProject   ('flowbox-initializer'          , os.path.join ('tools', 'initializer')                         , 'tools'   , ['libs/utils', 'libs/config'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
-       , 'tools/lunac'                         : HProject   ('flowbox-lunac'                , os.path.join ('tools', 'lunac')                               , 'tools'   , ['libs/utils', 'libs/config', 'tools/initializer', 'libs/luna/base'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
+       , 'tools/initializer'                   : HProject   ('flowbox-initializer-cli'      , os.path.join ('tools', 'initializer')                         , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/initializer'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
+       , 'tools/lunac'                         : HProject   ('flowbox-lunac'                , os.path.join ('tools', 'lunac')                               , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/base', 'libs/luna/initializer'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
        , 'tools/wrappers'                      : HProject   ('flowbox-wrappers'             , os.path.join ('tools', 'wrappers')                            , 'wrappers', ['libs/config'])
        })

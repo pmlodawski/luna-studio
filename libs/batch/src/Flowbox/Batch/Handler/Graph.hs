@@ -8,8 +8,6 @@
 
 module Flowbox.Batch.Handler.Graph where
 
-import Control.Monad (unless)
-
 import           Flowbox.Batch.Batch                                 (Batch)
 import qualified Flowbox.Batch.Handler.Common                        as Batch
 import qualified Flowbox.Batch.Project.Project                       as Project

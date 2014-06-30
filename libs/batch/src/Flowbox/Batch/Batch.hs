@@ -4,16 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Batch.Batch (
-      module X
-    , Error
-    , Batch
-    , BatchEnv(..)
-    , runBatch
-    , make
-    , attributeKey
+  module X
+, module Flowbox.Batch.Batch
 ) where
 
 import Control.Monad.State        as X
@@ -30,10 +26,12 @@ type Error = String
 
 type Batch a = (Functor m, MonadIO m) => EitherT Error (StateT BatchEnv m) a
 
-data BatchEnv = BatchEnv { config         :: Config
-                         , projectManager :: ProjectManager
+data BatchEnv = BatchEnv { _config         :: Config
+                         , _projectManager :: ProjectManager
                          } deriving (Show)
 
+
+makeLenses(''BatchEnv)
 
 
 runBatch :: BatchEnv -> Batch a -> IO (Either Error a)
