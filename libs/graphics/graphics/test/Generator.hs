@@ -14,6 +14,7 @@ import Flowbox.Graphics.Composition.Generators.Multisampler
 import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Sampler
+import Flowbox.Graphics.Composition.Generators.Transform
 
 import Linear.V2
 import Math.Space.Space
@@ -40,12 +41,16 @@ gradient (w, h) (x1, y1, x2, y2) shape = do
 --    testSaveChan "out.bmp" gauss
 
 scaling f = do
-    (r, g, b, a) <- testLoadRGBA "rings.bmp"
-    let process x = lambdaGenerator (Grid 1520 280) $ bicubic f Clamp x
+    (r, g, b, a) <- testLoadRGBA "lena.bmp"
+    let process x = lambdaGenerator (Grid 500 500) $ translate (V2 1.5 1.5) $ bicubic f (Constant 1.0) x
+    testSaveRGBA "out.bmp" (process r) (process g) (process b) (process a)
 
+disortion strength zoom = do
+    (r, g, b, a) <- testLoadRGBA "disorted.bmp"
+    let process x = lambdaGenerator (Grid 600 400) $ lensDisort (Point2 300 200) strength zoom $ bicubic lanczos3 (Constant 0.0) x
     testSaveRGBA "out.bmp" (process r) (process g) (process b) (process a)
 
 main :: IO ()
 main = do
     putStrLn "Testuję skalowanie"
-    scaling triangle
+    scaling lanczos3

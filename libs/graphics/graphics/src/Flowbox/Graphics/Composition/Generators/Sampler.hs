@@ -35,7 +35,7 @@ bilinear = bicubic triangle
 bicubic :: Filter -> Boundary (Exp Double) -> Matrix2 Double -> Generator
 bicubic filter b mat pixel newSpace = A.uncurry (/) result
     where Z :. oldHeight :. oldWidth = A.unlift $ shape mat :: EDIM2
-          oldSpace = Grid (A.fromIntegral oldHeight) (A.fromIntegral oldWidth)
+          oldSpace = Grid (A.fromIntegral oldWidth) (A.fromIntegral oldHeight)
           Point2 x' y' = toCartesian oldSpace $ toUV newSpace pixel
 
           fs = 6 -- Should be: A.floor $ 2 * window filter -- TODO: conditional based on the scale ratio
