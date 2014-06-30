@@ -8,7 +8,7 @@
 
 module Flowbox.Bus.Server where
 
-import Control.Monad       (forever, unless)
+import Control.Monad       (forever)
 import Control.Monad.Trans
 
 import           Flowbox.Bus.Bus               (Bus)
