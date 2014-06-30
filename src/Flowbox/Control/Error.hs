@@ -5,19 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 module Flowbox.Control.Error (
-    module Control.Error,
-    runScript,
-    (<?>),
-    (<??>),
-    assert,
-    safeLiftIO,
-    safeLiftIO',
-    eitherToM,
-    eitherStringToM,
-    liftIO,
+  module Flowbox.Control.Error
+, module X
+, MonadIO
+, liftIO
 ) where
 
-import           Control.Error          hiding (runScript)
+import           Control.Error          as X hiding (runScript)
 import           Control.Exception      (Exception)
 import qualified Control.Exception      as Exc
 import           Control.Monad.IO.Class (MonadIO, liftIO)
@@ -33,19 +27,39 @@ runScript s = do
         Left  m -> fail m
         Right a -> return a
 
-infixl 4 <?>
-(<?>) :: Monad m => Maybe b -> String -> m b
-val <?> m = case val of
+infixl 4 <?.>
+(<?.>) :: Monad m => Maybe b -> String -> m b
+val <?.> m = case val of
     Just v  -> return v
     Nothing -> fail m
 
-infixl 4 <??>
-(<??>) :: Monad m => m (Maybe b) -> String -> m b
-action <??> m = do
+infixl 4 <??&.>
+(<??&.>) :: Monad m => m (Maybe b) -> String -> m b
+action <??&.> m = do
     val <- action
     case val of
         Just v  -> return v
         Nothing -> fail m
+
+infixl 4 <?>
+(<?>) :: Maybe b -> a -> Either a b
+val <?> m = case val of
+    Just v  -> Right v
+    Nothing -> Left  m
+
+infixl 4 <??>
+(<??>) :: Monad m => Maybe b -> a -> EitherT a m b
+val <??> m = case val of
+    Just v  -> return v
+    Nothing -> left   m
+
+infixl 4 <??&>
+(<??&>) :: Monad m => EitherT a m (Maybe b) -> a -> EitherT a m b
+action <??&> m = do
+    val <- action
+    case val of
+        Just v  -> return v
+        Nothing -> left m
 
 
 assert :: Monad m => Bool -> String -> m ()
