@@ -30,7 +30,7 @@ logger = getLoggerIO "Flowbox.ProjectManager.Handler.NodeDefault"
 
 get :: ContextRef -> NodeDefaultGet.Request -> RPC NodeDefaultGet.Status
 get ctxRef (NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
-    bc <- decode tbc
+    bc <- decodeE tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -40,7 +40,7 @@ get ctxRef (NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
 
 set :: ContextRef -> NodeDefaultSet.Request -> RPC NodeDefaultSet.Update
 set ctxRef (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
-    bc <- decode tbc
+    bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort
         value     = decodeP tvalue
         nodeID    = decodeP tnodeID
@@ -52,7 +52,7 @@ set ctxRef (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID
 
 remove :: ContextRef -> NodeDefaultRemove.Request -> RPC NodeDefaultRemove.Update
 remove ctxRef (NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID) = do
-    bc <- decode tbc
+    bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
