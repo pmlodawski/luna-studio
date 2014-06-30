@@ -8,10 +8,9 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
-module Flowbox.Tools.Conversion.Proto (
-    Convert(..),
-    ConvertPure(..),
-) where
+module Flowbox.Tools.Conversion.Proto where
+
+import Control.Monad.Trans.Either
 
 import Flowbox.Prelude
 
@@ -19,10 +18,13 @@ import Flowbox.Prelude
 
 class Convert a b | a -> b where
     encode :: a -> b
-    decode :: (Applicative m, Monad m) => b -> m a
+    decode :: b -> Either String a
+
+    decodeE :: Monad m => b -> EitherT String m a
+    decodeE = hoistEither . decode
 
     encodeJ :: a -> Maybe b
-    encodeJ a = Just $ encode a
+    encodeJ = Just . encode
 
 
 class ConvertPure a b | a -> b where
@@ -30,4 +32,4 @@ class ConvertPure a b | a -> b where
     decodeP :: b -> a
 
     encodePJ :: a -> Maybe b
-    encodePJ a = Just $ encodeP a
+    encodePJ = Just . encodeP

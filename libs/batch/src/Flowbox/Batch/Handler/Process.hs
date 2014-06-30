@@ -33,7 +33,7 @@ processes projectID = ProcessMap.keys <$> Batch.getProcessMap projectID
 
 terminate :: Process.ID -> Project.ID -> Batch ()
 terminate processID projectID = processMapOp projectID (\processMap -> do
-    handle <- ProcessMap.lookup processID processMap <?> ("No process with ID=" ++ show processID)
+    handle <- ProcessMap.lookup processID processMap <??> ("No process with ID=" ++ show processID)
     liftIO $ Process.terminateProcess $ Handle.processHandle handle
     return (ProcessMap.delete processID processMap, ()))
 

@@ -49,7 +49,7 @@ getLib h = runScript $ do
 
 storeLibrary :: Library -> IO ()
 storeLibrary lib = do
-    let libpath = Library.path lib
+    let libpath = lib ^. Library.path
         slib    = Serializable libpath (saveLib lib)
     Serializer.serialize slib
     loggerIO debug "Library saved succesfully"
@@ -61,7 +61,7 @@ restoreLibrary path = do
     let dlib = Deserializable path getLib
     library <- Serializer.deserialize dlib
     loggerIO debug "Library restored succesfully"
-    return $ library{Library.path = path}
+    return $ library & Library.path .~ path
 
 
 

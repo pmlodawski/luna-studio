@@ -1,4 +1,4 @@
-Name:           flowbox-initializer
+Name:           flowbox-initializer-cli
 Version:        0.1
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
@@ -9,21 +9,6 @@ Build-Type:     Simple
 Flag Debug
   Description: Enable debug support
   Default:     False
-
-Library
-  Hs-Source-Dirs: src
-  if flag(debug)
-    GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2
-  Extensions:     DoAndIfThenElse,
-                  NoImplicitPrelude
-  
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Main\.hs)')`
-                   
-  Build-Depends:  base,
-                  flowbox-config,
-                  flowbox-utils,
-                  MissingH
 
 
 Executable initializer 
@@ -39,5 +24,6 @@ Executable initializer
   Build-Depends:  base,
                   flowbox-config,
                   flowbox-utils,
+                  flowbox-luna-initializer,
                   MissingH,
                   optparse-applicative

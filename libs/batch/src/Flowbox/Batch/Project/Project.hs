@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Batch.Project.Project where
 
@@ -19,15 +20,16 @@ import qualified Flowbox.System.UniPath       as UniPath
 
 
 
-data Project = Project { name       :: String
-                       , path       :: UniPath
-                       , libPaths   :: [UniPath]
-                       , libs       :: LibManager
-                       , attrs      :: Attributes
+data Project = Project { _name       :: String
+                       , _path       :: UniPath
+                       , _libPaths   :: [UniPath]
+                       , _libs       :: LibManager
+                       , _attrs      :: Attributes
 
-                       , processMap :: ProcessMap
+                       , _processMap :: ProcessMap
                        } deriving(Show)
 
+makeLenses(''Project)
 
 type ID = Int
 
@@ -37,7 +39,6 @@ empty = Project "" UniPath.empty [] LibManager.empty Attributes.empty ProcessMap
 
 
 make :: String -> UniPath -> Attributes -> Project
-make name' path' attrs' = empty { name = name'
-                                , path = path'
-                                , attrs = attrs'
-                                }
+make name' path' attrs' = empty & name  .~ name'
+                                & path  .~ path'
+                                & attrs .~ attrs'

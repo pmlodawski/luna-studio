@@ -45,8 +45,8 @@ openProject path = Batch.projectManagerOp (\projectManager -> do
 
 updateProject :: (Project.ID, Project) -> Batch ()
 updateProject (projectID, project) = Batch.projectOp projectID (\oldProject -> do
-    let libs = Project.libs oldProject
-        newProject = project { Project.libs = libs }
+    let libs = oldProject ^. Project.libs
+        newProject = project & Project.libs .~ libs
     return (newProject, ()))
 
 

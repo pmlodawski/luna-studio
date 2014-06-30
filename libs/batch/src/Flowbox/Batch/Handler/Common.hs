@@ -76,7 +76,7 @@ interpretLibrary libraryID projectID = do
     let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
         imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
     ast <- getAST libraryID projectID
-    cfg <- Batch.config <$> get
+    cfg <- gets (view Batch.config)
     maxID <- EitherT $ MaxID.run ast
     [hsc] <- EitherT $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
     let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ Source.code hsc)
@@ -84,19 +84,17 @@ interpretLibrary libraryID projectID = do
 
 
 getProjectManager :: Batch ProjectManager
-getProjectManager = Batch.projectManager <$> get
+getProjectManager = gets (view Batch.projectManager)
 
 
 setProjectManager :: ProjectManager -> Batch ()
-setProjectManager projectManager = do
-    batch <- get
-    put $ batch { Batch.projectManager = projectManager }
+setProjectManager projectManager = modify (set Batch.projectManager projectManager)
 
 
 getProject :: Project.ID -> Batch Project
 getProject projectID = do
     projectManager <- getProjectManager
-    ProjectManager.lab projectManager projectID <?> ("Wrong 'projectID' = " ++ show projectID)
+    ProjectManager.lab projectManager projectID <??> ("Wrong 'projectID' = " ++ show projectID)
 
 
 setProject :: Project -> Project.ID -> Batch ()
@@ -106,29 +104,29 @@ setProject newProject projectID = do
 
 
 getProcessMap :: Project.ID -> Batch ProcessMap
-getProcessMap projectID = Project.processMap <$> getProject projectID
+getProcessMap projectID = view Project.processMap <$> getProject projectID
 
 
 setProcessMap :: ProcessMap -> Project.ID -> Batch ()
 setProcessMap newProcessMap projectID = do
     project <- getProject projectID
-    setProject (project { Project.processMap = newProcessMap }) projectID
+    setProject (project & Project.processMap .~ newProcessMap) projectID
 
 
 getLibManager :: Project.ID -> Batch LibManager
-getLibManager projectID = Project.libs <$> getProject projectID
+getLibManager projectID = view Project.libs <$> getProject projectID
 
 
 setLibManager :: LibManager -> Project.ID -> Batch ()
 setLibManager newLibManager projectID = do
     project <- getProject projectID
-    setProject (project { Project.libs = newLibManager }) projectID
+    setProject (project & Project.libs .~ newLibManager) projectID
 
 
 getLibrary :: Library.ID -> Project.ID -> Batch Library
 getLibrary libraryID projectID = do
     libManager <- getLibManager projectID
-    LibManager.lab libManager libraryID <?> ("Wrong 'libraryID' = " ++ show libraryID)
+    LibManager.lab libManager libraryID <??> ("Wrong 'libraryID' = " ++ show libraryID)
 
 
 setLibrary :: Library -> Library.ID -> Project.ID -> Batch ()
@@ -139,24 +137,24 @@ setLibrary newLibary libraryID projectID = do
 
 getPropertyMap :: Library.ID -> Project.ID -> Batch PropertyMap
 getPropertyMap libraryID projectID =
-    Library.propertyMap <$> getLibrary libraryID projectID
+    view Library.propertyMap <$> getLibrary libraryID projectID
 
 
 setPropertyMap :: PropertyMap -> Library.ID -> Project.ID -> Batch ()
 setPropertyMap newPropertyMap libraryID projectID = do
     library <- getLibrary libraryID projectID
-    setLibrary (library { Library.propertyMap = newPropertyMap }) libraryID projectID
+    setLibrary (library & Library.propertyMap .~ newPropertyMap) libraryID projectID
 
 
 getAST :: Library.ID -> Project.ID -> Batch  Module
 getAST libraryID projectID =
-    Library.ast <$> getLibrary libraryID projectID
+    view Library.ast <$> getLibrary libraryID projectID
 
 
 setAST :: Module -> Library.ID -> Project.ID -> Batch ()
 setAST newModule libraryID projectID = do
     library <- getLibrary libraryID projectID
-    setLibrary (library { Library.ast = newModule }) libraryID projectID
+    setLibrary (library & Library.ast .~ newModule) libraryID projectID
 
 
 getFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Focus
@@ -250,7 +248,7 @@ setGraphView (newGraphView', newPM') bc libraryID projectID = do
 getNode :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node
 getNode nodeID bc libraryID projectID = do
     (graphView, _) <- getGraphView bc libraryID projectID
-    Graph.lab graphView nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
+    Graph.lab graphView nodeID <??> ("Wrong 'nodeID' = " ++ show nodeID)
 
 ---------------------------------------------------------------------------
 

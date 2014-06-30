@@ -11,7 +11,7 @@ module Flowbox.Batch.Handler.Library where
 import           Data.Version   (Version (Version))
 import qualified System.Process as Process
 
-import           Flowbox.Batch.Batch                        (Batch, get)
+import           Flowbox.Batch.Batch                        (Batch, gets)
 import qualified Flowbox.Batch.Batch                        as Batch
 import           Flowbox.Batch.Handler.Common               (libManagerOp, projectOp)
 import qualified Flowbox.Batch.Handler.Common               as Batch
@@ -75,11 +75,11 @@ storeLibrary libraryID projectID = do
 -- TODO [PM] : More remote arguments needed
 buildLibrary :: Library.ID -> Project.ID -> Batch ()
 buildLibrary libraryID projectID = do
-    cfg         <- Batch.config <$> get
-    projectPath <- Project.path <$> Batch.getProject projectID
+    cfg         <- gets (view Batch.config)
+    projectPath <- view Project.path <$> Batch.getProject projectID
     library     <- Batch.getLibrary projectID libraryID
-    let ast         = Library.ast library
-        name        = Library.name library
+    let ast         = library ^. Library.ast
+        name        = library ^. Library.name
         version     = Version [1][]      -- TODO [PM] : hardcoded version
         diag        = Diagnostics.all   -- TODO [PM] : hardcoded diagnostics
         outputPath  = Platform.addExeOnWindows $ UniPath.append name projectPath
@@ -99,11 +99,11 @@ buildLibrary libraryID projectID = do
 -- TODO [PM] : Needs architecture change
 runLibrary ::  Library.ID -> Project.ID -> Batch Process.ID
 runLibrary libraryID projectID = projectOp projectID (\project -> do
-    let projectPath = Project.path project
-        libs        = Project.libs project
-        processMap  = Project.processMap project
-    library <- LibManager.lab libs libraryID <?> "Wrong libraryID=" ++ show libraryID
-    name    <- UniPath.toUnixString <$> UniPath.expand (UniPath.append (Library.name library) projectPath)
+    let projectPath = project ^. Project.path
+        libs        = project ^. Project.libs
+        processMap  = project ^. Project.processMap
+    library <- LibManager.lab libs libraryID <??> "Wrong libraryID=" ++ show libraryID
+    name    <- UniPath.toUnixString <$> UniPath.expand (UniPath.append (library ^. Library.name) projectPath)
     let command = Platform.dependent name (name ++ ".exe") name
     --    noStandardInput = ""
     --    noArguments     = [] --TODO [PM] : reimplement all this method to support real programs
@@ -115,7 +115,7 @@ runLibrary libraryID projectID = projectOp projectID (\project -> do
     handle <- liftIO $ Process.runCommand command
     let processID     = ProcessMap.size processMap + 1
         newProcessMap = ProcessMap.insert processID (Handle handle) processMap
-        newProject    = project { Project.processMap = newProcessMap}
+        newProject    = project & Project.processMap .~ newProcessMap
     return (newProject, processID))
 
 
