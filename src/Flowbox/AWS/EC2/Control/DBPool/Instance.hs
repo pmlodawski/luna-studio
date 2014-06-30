@@ -11,7 +11,6 @@ module Flowbox.AWS.EC2.Control.DBPool.Instance where
 
 import qualified AWS
 import qualified AWS.EC2.Types                          as Types
-import           Control.Monad                          (unless)
 import qualified Data.List                              as List
 import qualified Data.Time                              as Time
 import qualified Database.PostgreSQL.Simple             as PSQL
@@ -32,7 +31,7 @@ import qualified Flowbox.AWS.EC2.Instance.Tag          as Tag
 import           Flowbox.AWS.Region                    (Region)
 import qualified Flowbox.AWS.User.Session              as Session
 import qualified Flowbox.AWS.User.User                 as User
-import           Flowbox.Control.Error                 (assert, eitherStringToM, (<??>))
+import           Flowbox.Control.Error                 (assert, eitherStringToM, (<??&.>))
 import           Flowbox.Prelude
 
 
@@ -50,7 +49,7 @@ retrieve conn credential region userName instancesRequest = do
 
         -- user credit -----------------
 
-        user        <- UserDB.find conn userName <??> "Cannot find user " ++ show userName ++ " in database."
+        user        <- UserDB.find conn userName <??&.> "Cannot find user " ++ show userName ++ " in database."
         chargedUser <- eitherStringToM $ Credit.charge user $ Cost.instanceHour region
         UserDB.update conn chargedUser
 
