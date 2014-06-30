@@ -77,7 +77,7 @@ open ctxRef (Open.Request tpath) = do
 
 modify :: ContextRef -> Modify.Request -> RPC Modify.Update
 modify ctxRef (Modify.Request tproject) = do
-    projectWithID <- decode (tproject, LibManager.empty, ProcessMap.empty) :: RPC (Project.ID, Project)
+    projectWithID <- decodeE (tproject, LibManager.empty, ProcessMap.empty) :: RPC (Project.ID, Project)
     Context.run ctxRef $ BatchP.updateProject projectWithID
     return $ Modify.Update tproject
 
