@@ -28,10 +28,9 @@ Executable luna
   Build-Depends:  base,
                   containers,
                   flowbox-config,
-                  flowbox-initializer,
                   flowbox-luna-base,
+                  flowbox-luna-initializer,
                   flowbox-utils,
                   MissingH,
-                  mtl,
                   optparse-applicative,
                   timeit
