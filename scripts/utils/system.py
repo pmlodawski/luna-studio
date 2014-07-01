@@ -50,15 +50,5 @@ def platformFix(sboxPath):
         if not os.path.exists(descriptorDstPath):
             download(descriptorUrl, descriptorDstPath)
 
-class PathDict:
-    def __init__(self, baseDict):
-        self.baseDict = baseDict
-
-    def __getitem__(self, key):
-        return self.baseDict[normalizePath(key)]
-
-    def __contains__(   self, item):
-        return item in self.baseDict
-
 def normalizePath(name):
     return name.replace(os.sep, '/')
