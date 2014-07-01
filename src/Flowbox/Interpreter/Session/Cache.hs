@@ -7,64 +7,106 @@
 module Flowbox.Interpreter.Session.Cache where
 
 import           Control.Monad.Trans.State
-import qualified Data.List                           as List
-import qualified Data.Set                            as Set
+import qualified Data.List                 as List
+
 import           Flowbox.Control.Error
-import           Flowbox.Interpreter.Mockup.Graph    (CodeGraph)
-import qualified Flowbox.Interpreter.Mockup.Node     as Node
-import qualified Flowbox.Interpreter.Mockup.Type     as Type
-import qualified Flowbox.Interpreter.Session.Env     as Env
-import           Flowbox.Interpreter.Session.Session (Session)
-import qualified Flowbox.Interpreter.Session.Session as Session
+import qualified Flowbox.Data.MapForest                as MapForest
+import           Flowbox.Interpreter.Mockup.Graph      (CodeGraph)
+import qualified Flowbox.Interpreter.Mockup.Node       as Node
+import qualified Flowbox.Interpreter.Mockup.Type       as Type
+import           Flowbox.Interpreter.Session.CallPath  (CallPath)
+import qualified Flowbox.Interpreter.Session.CallPath  as CallPath
+import           Flowbox.Interpreter.Session.CallPoint (CallPoint)
+import qualified Flowbox.Interpreter.Session.Env       as Env
+import           Flowbox.Interpreter.Session.Session   (Session)
+import qualified Flowbox.Interpreter.Session.Session   as Session
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus    as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper   as Zipper
+import qualified Flowbox.Luna.Lib.LibManager           as LibManager
+import qualified Flowbox.Luna.Lib.Library              as Library
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.Session.Cache"
 
 
-dump :: Node.ID -> Session ()
-dump nodeID = do
-    logger trace $ "Dumping " ++ show nodeID
-    Session.runStmt ("print " ++ argPrefix ++ show nodeID)
 
 
-invalidate :: CodeGraph -> Node.ID -> Session ()
-invalidate graph nodeID = do
-    modify (Env.cached %~ Set.delete nodeID)
-    logger trace $ "Invalidating " ++ show nodeID
-    Session.runStmt (argPrefix ++ show nodeID ++ " <- return ()")
-    mapM_ (invalidate graph) $ Node.suc graph nodeID
+
+dump :: CallPath -> Session ()
+dump callPath = do
+    logger debug $ "Dumping " ++ show callPath
+    Session.runStmt ("print " ++ argPrefix ++ show callPath)
 
 
-runNodeIfNeeded :: CodeGraph -> Node.ID -> Session ()
-runNodeIfNeeded graph nodeID = unlessM (isCached nodeID) (runNode graph nodeID)
+invalidate :: CodeGraph -> CallPath -> Session ()
+invalidate graph callPath = do
+    modify (Env.cached %~ MapForest.delete callPath)
+    logger debug $ "Invalidating " ++ show callPath
+    Session.runStmt (CallPath.toVarName callPath ++ " <- return ()")
+    --mapM_ (invalidate graph) $ Node.suc graph nodeID
 
 
-runNode :: CodeGraph -> Node.ID -> Session ()
-runNode graph nodeID = do
-    node <- Node.lab graph nodeID <?> "No node with id=" ++ show nodeID
-    let predecessors = Node.pre graph nodeID
-
-    mapM_ (runNodeIfNeeded graph) predecessors
-
-    let functionName = node ^. Node.code
-        functionType = node ^. Node.cls . Type.repr
-        args         = map (\i -> argPrefix ++ show i) predecessors
-        function     = "toIO $ extract $ (Operation (" ++ functionName ++ " :: " ++ functionType ++ "))"
-        argSeparator = " `call` "
-        operation    = List.intercalate argSeparator (function : args)
-        expression   = argPrefix ++ show nodeID ++ " <- " ++ operation
-    logger trace expression
-    Session.runStmt expression
-    modify (Env.cached %~ Set.insert nodeID)
-    logger trace =<< show <$> get
 
 
-isCached :: Node.ID -> Session Bool
-isCached nodeID = Set.member nodeID <$> gets (view Env.cached)
+--runNodeIfNeeded :: CodeGraph -> CallPath -> Session ()
+--runNodeIfNeeded graph callPath = unlessM (isCached nodeID) (runNode graph nodeID)
+
+
+--runNode :: CodeGraph -> CallPath -> Session ()
+--runNode graph callPath = do
+--    node <- Node.lab graph nodeID <?> "No node with id=" ++ show nodeID
+--    let predecessors = Node.pre graph nodeID
+
+--    mapM_ (runNodeIfNeeded graph) predecessors
+
+--    let functionName = node ^. Node.code
+--        functionType = node ^. Node.cls . Type.repr
+--        args         = map (\i -> argPrefix ++ show i) predecessors
+--        function     = "toIO $ extract $ (Operation (" ++ functionName ++ " :: " ++ functionType ++ "))"
+--        argSeparator = " `call` "
+--        operation    = List.intercalate argSeparator (function : args)
+--        expression   = argPrefix ++ show nodeID ++ " <- " ++ operation
+--    Session.runStmt expression
+--    modify (Env.cached %~ MapForest.insert nodeID)
+--    logger trace =<< show <$> gets (view Env.cached)
+
+
+isCached :: CallPath -> Session Bool
+isCached callPath = MapForest.member callPath <$> gets (view Env.cached)
 
 
 argPrefix :: String
 argPrefix = "_"
+
+
+previous :: CallPath -> Session [CallPath]
+previous callPath = do
+    undefined
+
+next :: CallPath -> Session [CallPath]
+next callPath = do
+    undefined
+
+execute :: CallPath -> Session ()
+execute callPath = do
+    undefined
+
+
+findMain :: Session CallPath
+findMain = do
+    libManager              <- gets (view Env.libManager)
+    (mainLibraryID, mainBC) <- gets (view Env.mainPtr)
+    mainLibrary             <- LibManager.lab libManager mainLibraryID
+                            <??> "Main library not found"
+
+    let ast   = mainLibrary ^. Library.ast
+
+    mainFocus <- Zipper.getFocus <$> Zipper.focusBreadcrumbs' mainBC ast
+    mainExpr  <- Focus.getFunction mainFocus <??> "Cannot find main"
+
+    print mainExpr
+    return undefined
