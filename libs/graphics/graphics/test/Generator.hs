@@ -15,6 +15,8 @@ import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Sampler
 import Flowbox.Graphics.Composition.Generators.Transform
+import Flowbox.Graphics.Utils
+import Data.Array.Accelerate as A
 
 import Linear.V2
 import Math.Space.Space
@@ -24,31 +26,36 @@ import Data.Array.Accelerate (index2, Boundary(..))
 
 import Utils
 
-gradient (w, h) (x1, y1, x2, y2) shape = do
-    let reds   = [Tick 0.0 1.0 1.0, Tick 0.25 0.0 1.0, Tick 1.0 1.0 1.0]
-    let greens = [Tick 0.0 1.0 1.0, Tick 0.50 0.0 1.0, Tick 1.0 1.0 1.0]
-    let blues  = [Tick 0.0 1.0 1.0, Tick 0.75 0.0 1.0, Tick 1.0 1.0 1.0]
-    let alphas = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0]
-    let myftrans pw nw prop = prop ** (pw / nw)
-    
-    let vec = V2 (Point2 x1 y1) (Point2 x2 y2)
-    let gradient ticks = lambdaGenerator (Grid w h) $ colorMapper vec ticks myftrans shape
-
-    testSaveRGBA "out.bmp" (gradient alphas) (gradient alphas) (gradient alphas) (gradient alphas)
-
---gauss w h sigma = do
---    let gauss = lambdaGenerator (Grid w h) gaussian
---    testSaveChan "out.bmp" gauss
+saveGen :: Generator -> IO ()
+saveGen gen = do
+    let res = lambdaGenerator (Grid 640 480) gen
+    testSaveRGBA "out.bmp" res res res res
 
 scaling f = do
     (r, g, b, a) <- testLoadRGBA "lena.bmp"
     let process x = lambdaGenerator (Grid 500 500) $ translate (V2 1.5 1.5) $ bicubic f (Constant 1.0) x
     testSaveRGBA "out.bmp" (process r) (process g) (process b) (process a)
 
-disortion strength zoom = do
-    (r, g, b, a) <- testLoadRGBA "disorted.bmp"
-    let process x = lambdaGenerator (Grid 600 400) $ lensDisort (Point2 300 200) strength zoom $ bicubic lanczos3 (Constant 0.0) x
+disortion :: (Exp Double, Exp Double, Exp Double, Exp Double) -> IO ()
+disortion (x1, y1, x2, y2) = do
+    (r, g, b, a) <- testLoadRGBA "lena.bmp"
+
+    let vec = variable $ V2 (Point2 x1 y1) (Point2 x2 y2) 
+                -- pozycja, wartość, waga
+    let ticks = [Tick 0.0 1 1.0, Tick 0.5 (-0.5) 1.0, Tick 1.0 2 1.0]
+    let myftrans pw nw prop = prop ** (pw / nw)
+
+    let tv = V2 x1 y2
+    let sampler    = bicubic triangle Wrap
+    let grad       = colorMapper ticks myftrans $ radialShape (Chebyshev)
+    let effect     = disort (Point2 0 0) grad . translate (tv) 
+    let rasterizer = lambdaGenerator (Grid 512 512)
+    let process    = rasterizer . effect . sampler
+
+    let gradient ticks = rasterizer grad
+
     testSaveRGBA "out.bmp" (process r) (process g) (process b) (process a)
+    testSaveRGBA "out_grad.bmp" (gradient ticks) (gradient ticks) (gradient ticks) (gradient ticks)
 
 main :: IO ()
 main = do

@@ -25,20 +25,17 @@ import Math.Space.Space
 
 
 
-type GradientVector = V2 (Cartesian.Point2 Double)
-colorMapper :: GradientVector -> [Tick Double]
+colorMapper :: [Tick Double]
             -> (Exp Double -> Exp Double -> Exp Double -> Exp Double)
-            -> (Exp GradientVector -> Generator)
-            -> Generator
-colorMapper vector ticks ftrans shapeGenerator pixel pspace = sfoldl findColor (0.0 :: Exp Double) index0 zippedTicks
+            -> Generator -> Generator
+colorMapper ticks ftrans shapeGenerator pixel pspace = sfoldl findColor (0.0 :: Exp Double) index0 zippedTicks
     where zippedTicks = A.zip accticks $ A.tail accticks
           accticks    = A.use $ fromList (Z :. length ticksNorm) ticksNorm
           ticksNorm   = firstElem : sort ticks P.++ [lastElem]
           firstElem   = head ticks & position .~ -1e20
           lastElem    = last ticks & position .~ 1e20
-          vec         = variable vector
 
-          grad_pos = shapeGenerator vec pixel pspace
+          grad_pos = shapeGenerator pixel pspace
 
           findColor acc positions = (grad_pos >=* aPos &&* grad_pos A.<* nPos) ? (newColor, acc)
               where (actualPos, nextPos) = unlift positions :: (Exp (Tick Double), Exp (Tick Double))
@@ -53,35 +50,22 @@ colorMapper vector ticks ftrans shapeGenerator pixel pspace = sfoldl findColor (
                     prop = ftrans aWei nWei $ (grad_pos - aPos) / (nPos - aPos)
                     newColor = mix prop aVal nVal
 
-
-radialShape :: (MetricCoord a Cartesian, Metric a (Cartesian.Point2 (Exp Double)) (Exp Double)) 
-            => a -> Exp GradientVector -> Generator
-radialShape metric vector pixel space = distance ms ubegin upixel / distance ms ubegin uend
+radialShape :: (MetricCoord a Cartesian, Metric a (Cartesian.Point2 (Exp Double)) (Exp Double)) => a -> Generator
+radialShape metric pixel space@(Grid w h) = distance ms (Cartesian.Point2 0 0) pixel
     where ms = MetricSpace metric space
-          vec = over each unlift $ unlift vector :: V2 (Cartesian.Point2 (Exp Double))
-          V2 ubegin uend = over each (toUV space) vec
-          upixel = toUV space pixel
 
-circularShape :: Exp GradientVector -> Generator
+circularShape :: Generator
 circularShape = radialShape Euclidean
 
-diamondShape :: Exp GradientVector -> Generator
+diamondShape :: Generator
 diamondShape = radialShape Taxicab
 
-squareShape :: Exp GradientVector -> Generator
+squareShape :: Generator
 squareShape  = radialShape Chebyshev
 
-conicalShape :: Exp GradientVector -> Generator
-conicalShape vector pixel space = min (res A.>* 1.0 ? (res - 1.0, res)) 1.0
-    where V2 begin end = over each unlift $ unlift vector :: V2 (Cartesian.Point2 (Exp Double))
-          a1 = Cartesian.uncurry atan2 $ end - begin
-          a2 = Cartesian.uncurry atan2 $ begin - pixel
-          res = 1.0 - (a2 + a1) / (2.0 * pi)
+conicalShape :: Generator
+conicalShape pixel space = min (res A.>* 1.0 ? (res - 1.0, res)) 1.0
+    where res = 1.0 - Cartesian.uncurry atan2 pixel / (2.0 * pi)
 
-linearShape :: Exp GradientVector -> Generator
-linearShape vector pixel space = dsum * (1.0 / dmod)
-    where V2 begin end = over each unlift $ unlift vector :: V2 (Cartesian.Point2 (Exp Double))
-          deltav = end - begin
-          deltap = pixel - begin
-          dsum = Cartesian.uncurry (+) $ deltap * deltav -- dot product of free vectors TODO: integrate with linear library
-          dmod = Cartesian.uncurry (+) $ deltav * deltav
+linearShape :: Generator
+linearShape (Cartesian.Point2 x _) (Grid w _) = x / w

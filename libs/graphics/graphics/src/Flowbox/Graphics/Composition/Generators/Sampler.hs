@@ -21,13 +21,12 @@ import           Math.Space.Space
 import           Math.Coordinate.Cartesian                (Point2(..), toCartesian)
 import           Math.Coordinate.UV                       (toUV)
 
-import           Linear.V4
-import           Linear.Metric                             (dot)
-import           Linear.Accelerate
-
 
 nearest :: Boundary (Exp Double) -> Matrix2 Double -> Generator
-nearest = bicubic box
+nearest b mat (Point2 x y) _ = boundedIndex b mat $ A.index2 (A.truncate y) (A.truncate x)
+
+--nearest :: Boundary (Exp Double) -> Matrix2 Double -> Generator
+--nearest = bicubic box
 
 bilinear :: Boundary (Exp Double) -> Matrix2 Double -> Generator
 bilinear = bicubic triangle

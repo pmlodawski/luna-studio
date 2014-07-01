@@ -4,17 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators    #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Flowbox.Math.Matrix (
     module Flowbox.Math.Matrix,
+    (A.:.)(..),
     A.Boundary,
-    A.Elt,
-    A.IsNum,
-    A.IsFloating,
-    A.Shape,
-    A.Slice,
-    A.Z(..),
     A.DIM0,
     A.DIM1,
     A.DIM2,
@@ -25,17 +20,21 @@ module Flowbox.Math.Matrix (
     A.DIM7,
     A.DIM8,
     A.DIM9,
+    A.Elt,
     A.Exp,
     A.FullShape,
-    A.SliceShape,
+    A.IsFloating,
+    A.IsNum,
     A.Segments,
+    A.Shape,
+    A.Slice,
+    A.SliceShape,
     A.Stencil,
-    A.Boundary,
-    (A.:.)(..)
+    A.Z(..)
 ) where
 
 import qualified Data.Array.Accelerate as A
-import           Data.Array.Accelerate hiding (Scalar, Vector, (!), shape)
+import           Data.Array.Accelerate hiding (Scalar, Vector, (!), shape, fromList, toList)
 
 import Flowbox.Prelude hiding (use, (<*), (?))
 
@@ -93,7 +92,7 @@ boundedIndex b mat i = case b of
     Clamp      -> mat ! index2 ((y `min` h1) `max` 0) ((x `min` w1) `max` 0)
     Mirror     -> mat ! index2 (abs $ -abs (y `mod` (2 * height) - h1) + h1) (abs $ -abs (x `mod` (2 * width) - w1) + w1)
     Wrap       -> mat ! index2 (y `mod` height) (x `mod` width)
-    Constant a -> (x >=* width ||* y >=* height ||* x <* 0 ||* y <*0) ? (a, mat ! i)
+    Constant a -> (x >=* width ||* y >=* height ||* x <* 0 ||* y <* 0) ? (a, mat ! i)
     where Z :. height :. width = unlift $ shape mat
           Z :. y      :. x     = unlift i
           h1 = height - 1
@@ -459,3 +458,11 @@ stencil2 f b1 mat1 b2 mat2 = Delayed $ A.stencil2 f b1 (accMatrix mat1) b2 (accM
 --lift2Dto3D :: (Elt a) => Matrix A.DIM2 a -> Matrix A.DIM3 a
 --lift2Dto3D channel = reshape (index3 a b 1) channel
 --    where (A.Z A.:. a A.:. b) = A.unlift $ shape channel
+
+-- == Conversions ==
+
+fromList :: (Shape sh, Elt e) => sh -> [e] -> Matrix sh e
+fromList sh mat = Raw $ A.fromList sh mat
+
+toList :: Backend sh e -> Matrix sh e -> [e]
+toList b mat = A.toList $ compute' b mat

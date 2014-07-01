@@ -9,6 +9,7 @@ module Utils where
 
 import           Flowbox.Prelude                      as P
 import           Flowbox.Math.Matrix                  as M
+import           Flowbox.Graphics.Utils
 
 import qualified Data.Array.Accelerate                as A
 import           Data.Array.Accelerate.IO
@@ -25,10 +26,10 @@ testLoadRGBA filename = do
 
 testSaveRGBA :: FilePath -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> IO ()
 testSaveRGBA filename r g b a = writeImageToBMP filename $ compute' run $ M.map packRGBA32 $ zip4 rChan gChan bChan aChan
-    where rChan = M.map (A.truncate . (* 255.0)) r
-          gChan = M.map (A.truncate . (* 255.0)) g
-          bChan = M.map (A.truncate . (* 255.0)) b
-          aChan = M.map (A.truncate . (* 255.0)) a
+    where rChan = M.map (A.truncate . (* 255.0) . clamp' 0 1) r
+          gChan = M.map (A.truncate . (* 255.0) . clamp' 0 1) g
+          bChan = M.map (A.truncate . (* 255.0) . clamp' 0 1) b
+          aChan = M.map (A.truncate . (* 255.0) . clamp' 0 1) a
 
 testSaveChan :: FilePath -> Matrix2 Double -> IO ()
 testSaveChan filename a = testSaveRGBA filename a a a a
