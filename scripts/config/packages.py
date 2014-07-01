@@ -71,7 +71,7 @@ class HProject(Project):
 class AllProject(Project):
     def targets(self):
         # It is needed to omit non-project entries with no path (like @all)
-        return [project for project in pkgDb.baseDict.values() if project.path]  
+        return [project for project in pkgDb.values() if project.path]  
 
 pkgDb = \
        { '@all'                                : AllProject ('@all', deps = [])
