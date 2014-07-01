@@ -8,25 +8,25 @@
 
 module Flowbox.Interpreter.Session.Env where
 
-
-import           Data.Set (Set)
-import qualified Data.Set as Set
-
-import           Flowbox.Data.MapTree            (MapForest)
-import qualified Flowbox.Data.MapTree            as MapTree
-import qualified Flowbox.Interpreter.Mockup.Node as Node
-import           Flowbox.Luna.Lib.LibManager     (LibManager)
+import           Flowbox.Data.MapForest                  (MapForest)
+import qualified Flowbox.Data.MapForest                  as MapForest
+import           Flowbox.Interpreter.Session.CallPoint   (CallPoint)
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
+import           Flowbox.Luna.Lib.LibManager             (LibManager)
+import qualified Flowbox.Luna.Lib.Library                as Library
 import           Flowbox.Prelude
 
 
-data Env = Env { _cached      :: Set       Node.ID
-               , _watchPoints :: MapForest Node.ID
+
+data Env = Env { _cached      :: MapForest CallPoint
+               , _watchPoints :: MapForest CallPoint
                , _libManager  :: LibManager
+               , _mainPtr     :: (Library.ID, Breadcrumbs)
                } deriving (Show)
 
 
 makeLenses(''Env)
 
 
-mk :: LibManager -> Env
-mk = Env Set.empty MapTree.empty
+mk :: LibManager -> (Library.ID, Breadcrumbs) -> Env
+mk = Env MapForest.empty MapForest.empty

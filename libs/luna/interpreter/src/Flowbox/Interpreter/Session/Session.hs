@@ -59,6 +59,7 @@ unsetFlags flags = lift $ I.runGhc $ do
 
 runStmt :: String -> Session ()
 runStmt stmt = do
+    logger trace stmt
     result <- lift $ I.runGhc $ GHC.runStmt stmt GHC.RunToCompletion
     case result of
         GHC.RunOk _         -> return ()
@@ -67,7 +68,9 @@ runStmt stmt = do
 
 
 runDecls :: String -> Session ()
-runDecls decls = void $ lift $ I.runGhc $ GHC.runDecls decls
+runDecls decls = do
+    logger trace decls
+    void $ lift $ I.runGhc $ GHC.runDecls decls
 
 
 setHardodedExtensions :: Session ()
