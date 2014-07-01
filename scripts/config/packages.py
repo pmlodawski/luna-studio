@@ -9,7 +9,6 @@ import os
 from subprocess import call, Popen, PIPE
 from utils.colors import print_error
 from utils.errors import fatal
-from utils.system import PathDict
 import sys
 
 
@@ -74,7 +73,7 @@ class AllProject(Project):
         # It is needed to omit non-project entries with no path (like @all)
         return [project for project in pkgDb.baseDict.values() if project.path]  
 
-pkgDb = PathDict(
+pkgDb = \
        { '@all'                                : AllProject ('@all', deps = [])
        , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/utils', 'libs/rpc'])
        , 'libs/batch'                          : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch')                               , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/initializer', 'libs/luna/base'])
@@ -108,4 +107,4 @@ pkgDb = PathDict(
        , 'tools/initializer'                   : HProject   ('flowbox-initializer-cli'      , os.path.join ('tools', 'initializer')                         , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/initializer'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
        , 'tools/lunac'                         : HProject   ('flowbox-lunac'                , os.path.join ('tools', 'lunac')                               , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/base', 'libs/luna/initializer'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
        , 'tools/wrappers'                      : HProject   ('flowbox-wrappers'             , os.path.join ('tools', 'wrappers')                            , 'wrappers', ['libs/config'])
-       })
+       }
