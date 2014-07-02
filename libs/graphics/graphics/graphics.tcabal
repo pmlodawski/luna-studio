@@ -38,6 +38,32 @@ Library
                   split                    ,
                   system-filepath          ,
                   transformers             
+
+Executable generator_test
+  Main-Is:        Generator.hs
+  Hs-Source-Dirs: test
+
+  if flag(debug)
+    GHC-Options:  -ddump-gc -ddump-cc -ddump-exec -fflush-cache
+  GHC-Options:    -threaded -Wall -O2 -package ghc
+
+  Extensions:     NoImplicitPrelude,
+                  DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    build-depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  lens
                   
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
