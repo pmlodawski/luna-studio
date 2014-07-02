@@ -10,25 +10,26 @@ import           Control.Monad.State hiding (mapM_)
 import qualified Data.List           as List
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Data.MapForest                as MapForest
-import           Flowbox.Interpreter.Session.CallPath  (CallPath)
-import qualified Flowbox.Interpreter.Session.CallPath  as CallPath
-import           Flowbox.Interpreter.Session.CallPoint (CallPoint)
-import           Flowbox.Interpreter.Session.DefPath   (DefPath)
-import           Flowbox.Interpreter.Session.DefPoint  (DefPoint)
-import qualified Flowbox.Interpreter.Session.Env       as Env
-import           Flowbox.Interpreter.Session.Session   (Session)
-import qualified Flowbox.Interpreter.Session.Session   as Session
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus    as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper   as Zipper
-import           Flowbox.Luna.Data.Graph.Graph         (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph         as Graph
-import           Flowbox.Luna.Data.Graph.Node          (Node)
-import qualified Flowbox.Luna.Data.Graph.Node          as Node
-import qualified Flowbox.Luna.Lib.LibManager           as LibManager
-import qualified Flowbox.Luna.Lib.Library              as Library
+import qualified Flowbox.Data.MapForest                    as MapForest
+import           Flowbox.Interpreter.Session.CallPath      (CallPath)
+import qualified Flowbox.Interpreter.Session.CallPath      as CallPath
+import           Flowbox.Interpreter.Session.DefPath       (DefPath)
+import           Flowbox.Interpreter.Session.DefPoint      (DefPoint)
+import qualified Flowbox.Interpreter.Session.Env           as Env
+import           Flowbox.Interpreter.Session.Session       (Session)
+import qualified Flowbox.Interpreter.Session.Session       as Session
+import qualified Flowbox.Luna.Data.AST.Expr                as Expr
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus        as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper       as Zipper
+import           Flowbox.Luna.Data.Graph.Graph             (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph             as Graph
+import           Flowbox.Luna.Data.Graph.Node              (Node)
+import qualified Flowbox.Luna.Data.Graph.Node              as Node
+import qualified Flowbox.Luna.Lib.Library                  as Library
+import qualified Flowbox.Luna.Passes.Analysis.NameResolver as NameResolver
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: LoggerIO
@@ -69,28 +70,44 @@ findMain :: Session DefPoint
 findMain = gets $ view Env.mainPtr
 
 
-executeMain :: Session ()
-executeMain = findMain >>= executeGraph []
+processMain :: Session ()
+processMain = do
+    mainPtr <- gets $ view Env.mainPtr
+    mainFun <- Session.getFunction mainPtr
+    processGraph [(fst mainPtr, mainFun ^. Expr.id)] mainPtr
 
 
-executeGraph :: CallPath -> DefPoint -> Session ()
-executeGraph callPath defPoint = do
+processGraph :: CallPath -> DefPoint -> Session ()
+processGraph callPath defPoint = do
+    print defPoint
     graph <- Session.getGraph defPoint
-    mapM_ (runNodeIfNeeded callPath (fst defPoint) graph) $ Graph.labNodes graph
+    print graph
+    mapM_ (processNodeIfNeeded callPath defPoint graph) $ Graph.labNodes graph
 
 
-runNodeIfNeeded ::  CallPath -> Library.ID -> Graph -> (Node.ID, Node) -> Session ()
-runNodeIfNeeded callPath libraryID graph n =
-    unlessM (isCached $ callPath ++ [(libraryID, fst n)])
-            (runNode  callPath libraryID graph n)
+processNodeIfNeeded ::  CallPath -> DefPoint -> Graph -> (Node.ID, Node) -> Session ()
+processNodeIfNeeded callPath defPoint graph n =
+    unlessM (isCached (callPath ++ [(fst defPoint, fst n)]))
+            (processNode callPath defPoint graph n)
 
 
-runNode :: CallPath -> Library.ID -> Graph -> (Node.ID, Node) -> Session ()
-runNode callPath libraryID graph (nodeID, node) = do
+processNode :: CallPath -> DefPoint -> Graph -> (Node.ID, Node) -> Session ()
+processNode callPath defPoint@(libraryID, bc) graph (nodeID, node) = do
     let predecessors = Graph.prel graph nodeID
-    mapM_ (runNodeIfNeeded callPath libraryID graph) predecessors
+        newCallPath = callPath ++ [(libraryID, nodeID)]
+    mapM_ (processNodeIfNeeded callPath defPoint graph) predecessors
+    libManager <- Session.getLibManager
+    results <- EitherT $ NameResolver.run (node ^. Node.expr) bc libraryID libManager
+    case results of
+        []       -> do logger debug $ "Just run " ++ show node
+                       modify (Env.cached %~ MapForest.insert newCallPath)
+                       logger trace =<< MapForest.draw <$> gets (view Env.cached)
 
-    logger debug $ show node
+        [result] -> do logger debug $ "Prepare args " ++ show node
+                       processGraph newCallPath result
+        _        -> left "Name resolver returned multiple results"
+
+--executeNode
     ----let functionName = node ^. Node.code
     ----    functionType = node ^. Node.cls . Type.repr
     ----    args         = map (\i -> argPrefix ++ show i) predecessors
@@ -99,8 +116,8 @@ runNode callPath libraryID graph (nodeID, node) = do
     ----    operation    = List.intercalate argSeparator (function : args)
     ----    expression   = argPrefix ++ show nodeID ++ " <- " ++ operation
     ----Session.runStmt expression
-    modify (Env.cached %~ MapForest.insert (callPath ++ [(libraryID, nodeID)]))
-    logger trace =<< show <$> gets (view Env.cached)
+
+    --logger trace =<< MapForest.draw <$> gets (view Env.cached)
 
 
 isCached :: CallPath -> Session Bool
