@@ -10,12 +10,12 @@ module Main where
 import Data.EitherR (fmapL)
 
 import           Flowbox.Control.Error                                 (eitherStringToM)
-import qualified Flowbox.Interpreter.Error                             as Error
 import qualified Flowbox.Interpreter.Mockup.Graph                      as Graph
 import           Flowbox.Interpreter.Mockup.Node                       (Node (Node))
 import           Flowbox.Interpreter.Mockup.Type                       (Type (Type))
 import qualified Flowbox.Interpreter.Session.Cache                     as Cache
 import qualified Flowbox.Interpreter.Session.Env                       as Env
+import qualified Flowbox.Interpreter.Session.Error                     as Error
 import qualified Flowbox.Interpreter.Session.Session                   as Session
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as Crumb
 import           Flowbox.Luna.Data.Pass.Source                         (Source (Source))

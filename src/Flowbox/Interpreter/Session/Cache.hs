@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.Cache where
 
-import           Control.Monad.Trans.State
-import qualified Data.List                 as List
+import           Control.Monad.State
+import qualified Data.List           as List
 
 import           Flowbox.Control.Error
 import qualified Flowbox.Data.MapForest                as MapForest
