@@ -43,12 +43,12 @@ logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
 -------- public api -------------------------------------------------
 
 add :: ContextRef -> Add.Request -> RPC Add.Update
-add ctxRef (Add.Request tplugin) = safeLiftIO $ do
-    ctx <- IORef.readIORef ctxRef
+add ctxRef (Add.Request tplugin) = do
+    ctx <- liftIO $ IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
         id      = PluginMap.uniqueID plugins
-    plugin <- decode tplugin
-    IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.insert id (PluginHandle.mk plugin) plugins}
+    plugin <- decodeE tplugin
+    liftIO $ IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.insert id (PluginHandle.mk plugin) plugins}
     return $ Add.Update tplugin (encodeP id)
 
 
@@ -71,12 +71,12 @@ list ctxRef List.Request = safeLiftIO $ do
 
 -- TODO [PM] : Duplikacja kodu
 lookup :: ContextRef -> Lookup.Request -> RPC Lookup.Status
-lookup ctxRef (Lookup.Request tid) = safeLiftIO $ do
-    ctx <- IORef.readIORef ctxRef
+lookup ctxRef (Lookup.Request tid) = do
+    ctx <- liftIO $ IORef.readIORef ctxRef
     let id      = decodeP tid
         plugins = Context.plugins ctx
-    pluginHandle <- PluginMap.lookup id plugins <?> "Cannot find plugin with id=" ++ show id
-    pluginInfo   <- PluginHandle.info pluginHandle
+    pluginHandle <- PluginMap.lookup id plugins <??> "Cannot find plugin with id=" ++ show id
+    pluginInfo   <- safeLiftIO $ PluginHandle.info pluginHandle
     return $ Lookup.Status (encode (id, pluginInfo)) tid
 
 
@@ -102,10 +102,10 @@ restart ctxRef (Restart.Request tid) = do
 
 
 withPluginHandle :: ContextRef -> Plugin.ID -> (PluginHandle -> IO PluginHandle) -> RPC PluginHandle
-withPluginHandle ctxRef id operation = safeLiftIO $ do
-    ctx <- IORef.readIORef ctxRef
+withPluginHandle ctxRef id operation = do
+    ctx <- liftIO $ IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
-    pluginHandle    <- PluginMap.lookup id plugins <?> "Cannot find plugin with id=" ++ show id
-    newPluginHandle <- operation pluginHandle
-    IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.insert id newPluginHandle plugins}
+    pluginHandle    <- PluginMap.lookup id plugins <??> "Cannot find plugin with id=" ++ show id
+    newPluginHandle <- safeLiftIO $ operation pluginHandle
+    liftIO $ IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.insert id newPluginHandle plugins}
     return newPluginHandle

@@ -11,31 +11,6 @@ Flag Debug
   Description: Enable debug support
   Default:     False
 
-Library
-  Hs-Source-Dirs: src
-  if flag(debug)
-    GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2
-                  -- -F -pgmF ./util/preprocessors/imports.py
-  Extensions:     DoAndIfThenElse,
-                  NoImplicitPrelude,
-                  OverloadedStrings,
-                  TemplateHaskell
-  
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Main\.hs)')`
-                   
- Build-Depends:   base,
-                  containers,
-                  flowbox-config,
-                  flowbox-initializer,
-                  flowbox-luna,
-                  flowbox-utils,
-                  MissingH,
-                  mtl,
-                  pretty-show,
-                  timeit
-
-
 
 Executable luna
   Main-Is:        Main.hs
@@ -53,10 +28,9 @@ Executable luna
   Build-Depends:  base,
                   containers,
                   flowbox-config,
-                  flowbox-initializer,
-                  flowbox-luna,
+                  flowbox-luna-base,
+                  flowbox-luna-initializer,
                   flowbox-utils,
                   MissingH,
-                  mtl,
                   optparse-applicative,
                   timeit

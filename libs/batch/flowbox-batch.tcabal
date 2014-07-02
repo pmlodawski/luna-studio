@@ -21,7 +21,7 @@ Library
   Extensions:     NoImplicitPrelude
 
   Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
-                   `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Batch/Main\.hs)')`
+                   `findmodules('src', '.*\.hs')`
                    
   Build-Depends:  base,
                   bytestring,
@@ -29,8 +29,8 @@ Library
                   directory,
                   either,
                   flowbox-config,
-                  flowbox-initializer,
-                  flowbox-luna,
+                  flowbox-luna-base,
+                  flowbox-luna-initializer,
                   flowbox-utils,
                   lens,
                   MissingH,
@@ -61,7 +61,8 @@ Executable lib-importer
                   concatenative,
                   dlist,
                   either,
-                  flowbox-luna,
+                  flowbox-luna-initializer,
+                  flowbox-luna-base,
                   flowbox-utils,
                   lens,
                   luna-target-hs,

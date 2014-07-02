@@ -11,12 +11,14 @@ module Flowbox.Prelude(
     module Flowbox.Prelude,
     module Prelude,
     module X,
-    void
+    void,
+    when,
+    unless,
 ) where
 
 import           Control.Applicative    as X
 import           Control.Lens           as X
-import           Control.Monad          (void)
+import           Control.Monad          (void, when, unless)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Trans    (lift)
 import           Data.Default           as X
@@ -143,6 +145,17 @@ lift3 :: (Monad (t1 (t2 m)), Monad (t2 m), Monad m,
 lift3 = lift . lift2
 
 
-ifM :: (Monad m) => m Bool -> m a -> m a -> m a
+ifM :: Monad m => m Bool -> m a -> m a -> m a
 ifM predicate a b = do bool <- predicate
                        if bool then a else b
+
+whenM :: Monad m => m Bool -> m () -> m ()
+whenM predicate a = do
+    bool <- predicate
+    when bool a
+
+
+unlessM :: Monad m => m Bool -> m () -> m ()
+unlessM predicate a = do
+    bool <- predicate
+    unless bool a

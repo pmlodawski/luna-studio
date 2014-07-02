@@ -50,7 +50,7 @@ getProject h = runScript $ do
 
 storeProject :: Project -> IO ()
 storeProject project = do
-    let filepath = UniPath.append projectFile $ Project.path project
+    let filepath = UniPath.append projectFile $ project ^. Project.path
         sproject = Serializable filepath (saveProject project)
     Serializer.serialize sproject
 
@@ -60,5 +60,5 @@ restoreProject upath = do
     let filepath = UniPath.append projectFile upath
         dproject = Deserializable filepath getProject
     project <- Serializer.deserialize dproject
-    return $ project{Project.path = upath}
+    return $ project & Project.path .~ upath
 
