@@ -12,13 +12,13 @@ module Flowbox.Graphics.Color.RGB.Conversion where
 
 import           Data.Array.Accelerate as A
 
-import           Flowbox.Graphics.Color.Conversion
-import           Flowbox.Graphics.Color.RGB
-import           Flowbox.Graphics.Color.RGBA
-import           Flowbox.Graphics.Color.HSV
-import           Flowbox.Graphics.Color.HSL
 import           Flowbox.Graphics.Color.CMY
 import           Flowbox.Graphics.Color.CMYK
+import           Flowbox.Graphics.Color.Conversion
+import           Flowbox.Graphics.Color.HSL
+import           Flowbox.Graphics.Color.HSV
+import           Flowbox.Graphics.Color.RGB
+import           Flowbox.Graphics.Color.RGBA
 import           Flowbox.Graphics.Color.YUV
 import           Flowbox.Graphics.Color.YUV_HD
 import           Flowbox.Graphics.Utils

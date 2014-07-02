@@ -17,14 +17,14 @@ import Flowbox.Prelude
 
 
 billowNoise :: A.Exp Double -> Generator
-billowNoise z point = billowGen Standard 1.0 2.0 6 0.5 0 z point
+billowNoise = billowGen Standard 1.0 2.0 6 0.5 0
 
 billowGen :: Quality -> A.Exp Double -> A.Exp Double ->
              A.Exp Int -> A.Exp Double -> A.Exp Int ->
              A.Exp Double ->
              Generator
 billowGen quality freq lac octaveCount persistence seed z point _grid =
-    0.5 + value (A.iterate octaveCount octaveFunc (A.lift ((0.0 :: Double), (1.0 :: Double), point * pure freq, z*freq, (0 :: Int))))
+    0.5 + value (A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int)))
     where value args = val
               where (val, _, _, _, _) =
                         A.unlift args :: (A.Exp Double, A.Exp Double, A.Exp (Cartesian.Point2 Double), A.Exp Double, A.Exp Int)
@@ -34,7 +34,7 @@ billowGen quality freq lac octaveCount persistence seed z point _grid =
 
           octaveFunc args =
               A.lift (
-                  val + ((signal unliftedPoint' oz curOctave) * curPersistence)
+                  val + (signal unliftedPoint' oz curOctave * curPersistence)
                 , curPersistence * persistence
                 , unliftedPoint' * pure freq
                 , oz * lac

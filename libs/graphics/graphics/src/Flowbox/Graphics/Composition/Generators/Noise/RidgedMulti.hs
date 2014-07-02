@@ -19,7 +19,7 @@ import Flowbox.Prelude                                        hiding (ix)
 
 
 ridgedMultiNoise :: A.Exp Double -> Generator
-ridgedMultiNoise z point = ridgedMultiGen Standard 1.0 2.0 6 30 0 1.0 1.0 2.0 z point
+ridgedMultiNoise = ridgedMultiGen Standard 1.0 2.0 6 30 0 1.0 1.0 2.0
 
 ridgedMultiGen :: Quality -> A.Exp Double -> A.Exp Double ->
                   A.Exp Int -> A.Exp Int -> A.Exp Int ->
@@ -29,7 +29,7 @@ ridgedMultiGen :: Quality -> A.Exp Double -> A.Exp Double ->
 ridgedMultiGen quality freq lac octaveCount maxOctave seed exponent' offset gain z point _grid =
     (finalValue * 1.25) - 1.0
     where finalValue = value $
-              A.iterate octaveCount octaveFunc (A.lift ((0.0 :: Double), (1.0 :: Double), point * pure freq, z*freq, (0 :: Int)))
+              A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
 
           value args = val
               where (val, _, _, _, _) =
@@ -53,4 +53,4 @@ ridgedMultiGen quality freq lac octaveCount maxOctave seed exponent' offset gain
 
           spectralWeights = A.generate (A.index1 maxOctave) $ \ix ->
               let A.Z A.:. i = A.unlift ix :: A.Z A.:. A.Exp Int
-              in (lac ** (A.fromIntegral i)) ** (-exponent')
+              in (lac ** A.fromIntegral i) ** (-exponent')

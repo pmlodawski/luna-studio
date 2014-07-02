@@ -73,8 +73,7 @@ toImageMagick input = A.lift (A.generate (A.index1 newlen) $ \i' ->
         newlen = A.shapeSize oldsize * 4
         imagick i = let item_x = i `div` 4
                         item_y = (4 * ((height + 1) * width + item_x) + offset - i) `div` (4 * width)
-                        item = input A.! (A.index2 item_y item_x)
-
+                        item = input A.! A.index2 item_y item_x
                         offset = 8 * (i `mod` 4)
                     in A.fromIntegral $ (item `A.shiftR` offset) .&. 255
 

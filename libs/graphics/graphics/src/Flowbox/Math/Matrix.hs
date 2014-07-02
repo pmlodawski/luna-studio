@@ -154,10 +154,10 @@ enumFromStepN sh n s = Delayed $ A.enumFromStepN sh n s
 -- = Pipelining =
 infixl 1 >->
 (>->) :: (Shape ixa, Shape ixb, Shape ixc, Elt a, Elt b, Elt c)
-      => (Matrix ixa a -> Matrix ixb b) -> (Matrix ixb b -> Matrix ixc c) -> (Matrix ixa a -> Matrix ixc c)
+      => (Matrix ixa a -> Matrix ixb b) -> (Matrix ixb b -> Matrix ixc c) -> Matrix ixa a -> Matrix ixc c
 (>->) a b mat = Delayed $ (ftrans a A.>-> ftrans b) (accMatrix mat)
 
-ftrans :: (Shape ixa, Shape ixb, Elt a, Elt b) => (Matrix ixa a -> Matrix ixb b) -> (Acc (Array ixa a) -> Acc (Array ixb b))
+ftrans :: (Shape ixa, Shape ixb, Elt a, Elt b) => (Matrix ixa a -> Matrix ixb b) -> Acc (Array ixa a) -> Acc (Array ixb b)
 ftrans f a = accMatrix $ f (Delayed a)
 
 -- = Concatenation =

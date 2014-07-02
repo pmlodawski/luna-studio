@@ -28,4 +28,4 @@ lambdaGenerator space lambda = generate (A.index2 h w) wrapper
           h = variable $ height space
           dspace = Grid (A.fromIntegral w) (A.fromIntegral h)
           wrapper (A.unlift -> Z :. y :. x :: EDIM2) = lambda pixel dspace
-              where pixel = (Point2 (A.fromIntegral x) (A.fromIntegral y))
+              where pixel = Point2 (A.fromIntegral x) (A.fromIntegral y)

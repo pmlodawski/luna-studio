@@ -86,7 +86,7 @@ mapWithWhitelist f whitelist = map lambda
 
 errorShitWentWrong :: String -> a
 errorShitWentWrong fun =
-  error (this_module ++ fun ++ ": cosmic radiation caused this function to utterly fail. Blame the monkeys and send us an error report.")
+  error (thisModule ++ fun ++ ": cosmic radiation caused this function to utterly fail. Blame the monkeys and send us an error report.")
 
-this_module :: String
-this_module = "Flowbox.Graphics.Image.View."
+thisModule :: String
+thisModule = "Flowbox.Graphics.Image.View."

@@ -17,14 +17,14 @@ import Flowbox.Prelude
 
 
 perlinNoise :: A.Exp Double -> Generator
-perlinNoise z point = perlinGen Standard 1.0 2.0 6 0.5 0 z point
+perlinNoise = perlinGen Standard 1.0 2.0 6 0.5 0
 
 perlinGen :: Quality -> A.Exp Double -> A.Exp Double ->
              A.Exp Int -> A.Exp Double -> A.Exp Int ->
              A.Exp Double ->
              Generator
 perlinGen quality freq lac octaveCount persistence seed z point _grid =
-    value $ A.iterate octaveCount octaveFunc (A.lift ((0.0 :: Double), (1.0 :: Double), point * pure freq, z*freq, (0 :: Int)))
+    value $ A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
     where value args = val
               where (val, _, _, _, _) =
                         A.unlift args :: (A.Exp Double, A.Exp Double, A.Exp (Cartesian.Point2 Double), A.Exp Double, A.Exp Int)
@@ -34,7 +34,7 @@ perlinGen quality freq lac octaveCount persistence seed z point _grid =
 
           octaveFunc args =
               A.lift (
-                  val + (signal unliftedPoint' oz (curOctave) * curPersistence)
+                  val + signal unliftedPoint' oz curOctave * curPersistence
                 , curPersistence * persistence
                 , unliftedPoint' * pure lac
                 , oz * lac
