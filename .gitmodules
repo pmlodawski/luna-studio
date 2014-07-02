@@ -1,0 +1,9 @@
+[submodule "third-party/accelerate"]
+	path = third-party/accelerate
+	url = git@github.com:AccelerateHS/accelerate.git
+[submodule "third-party/accelerate-cuda"]
+	path = third-party/accelerate-cuda
+	url = git@github.com:AccelerateHS/accelerate-cuda.git
+[submodule "third-party/accelerate-io"]
+	path = third-party/accelerate-io
+	url = git@github.com:AccelerateHS/accelerate-io.git
