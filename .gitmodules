@@ -7,3 +7,12 @@
 [submodule "third-party/accelerate-io"]
 	path = third-party/accelerate-io
 	url = git@github.com:AccelerateHS/accelerate-io.git
+[submodule "third-party/algebraic"]
+	path = third-party/algebraic
+	url = git@github.com:wdanilo/algebraic.git
+[submodule "third-party/protocol-buffers"]
+	path = third-party/protocol-buffers
+	url = git@github.com:korrix/protocol-buffers.git
+[submodule "third-party/linear-accelerate"]
+	path = third-party/linear-accelerate
+	url = git@github.com:korrix/linear-accelerate.git

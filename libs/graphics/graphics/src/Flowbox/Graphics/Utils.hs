@@ -75,28 +75,28 @@ frac x = x - A.fromIntegral (A.floor x :: Exp Int)
 -- = TUPLES :D
 
 -- TODO: Try to make accelerate tuples instances of Field1,2,3,4... from lens
-fstTrio :: forall f a b c. Unlift f (f a, f b, f c) => f (Plain (f a), Plain (f b), Plain (f c)) -> f a
-fstTrio e = let (x, _:: f b, _:: f c) = unlift e in x
+--fstTrio :: forall f a b c. Unlift f (f a, f b, f c) => f (Plain (f a), Plain (f b), Plain (f c)) -> f a
+--fstTrio e = let (x, _:: f b, _:: f c) = unlift e in x
 
-sndTrio :: forall f a b c. Unlift f (f a, f b, f c) => f (Plain (f a), Plain (f b), Plain (f c)) -> f b
-sndTrio e = let (_:: f a, x, _:: f c) = unlift e in x
+--sndTrio :: forall f a b c. Unlift f (f a, f b, f c) => f (Plain (f a), Plain (f b), Plain (f c)) -> f b
+--sndTrio e = let (_:: f a, x, _:: f c) = unlift e in x
 
-trdTrio :: forall f a b c. Unlift f (f a, f b, f c) => f (Plain (f a), Plain (f b), Plain (f c)) -> f c
-trdTrio e = let (_:: f a, _:: f b, x) = unlift e in x
+--trdTrio :: forall f a b c. Unlift f (f a, f b, f c) => f (Plain (f a), Plain (f b), Plain (f c)) -> f c
+--trdTrio e = let (_:: f a, _:: f b, x) = unlift e in x
 
 -- = MORE TUPLES :D
 
-fstQuad :: forall f a b c d. Unlift f (f a, f b, f c, f d) => f (Plain (f a), Plain (f b), Plain (f c), Plain (f d)) -> f a
-fstQuad e = let (x, _:: f b, _:: f c, _:: f d) = unlift e in x
+--fstQuad :: forall f a b c d. Unlift f (f a, f b, f c, f d) => f (Plain (f a), Plain (f b), Plain (f c), Plain (f d)) -> f a
+--fstQuad e = let (x, _:: f b, _:: f c, _:: f d) = unlift e in x
 
-sndQuad :: forall f a b c d. Unlift f (f a, f b, f c, f d) => f (Plain (f a), Plain (f b), Plain (f c), Plain (f d)) -> f b
-sndQuad e = let (_:: f a, x, _:: f c, _:: f d) = unlift e in x
+--sndQuad :: forall f a b c d. Unlift f (f a, f b, f c, f d) => f (Plain (f a), Plain (f b), Plain (f c), Plain (f d)) -> f b
+--sndQuad e = let (_:: f a, x, _:: f c, _:: f d) = unlift e in x
 
-trdQuad :: forall f a b c d. Unlift f (f a, f b, f c, f d) => f (Plain (f a), Plain (f b), Plain (f c), Plain (f d)) -> f c
-trdQuad e = let (_:: f a, _:: f b, x, _:: f d) = unlift e in x
+--trdQuad :: forall f a b c d. Unlift f (f a, f b, f c, f d) => f (Plain (f a), Plain (f b), Plain (f c), Plain (f d)) -> f c
+--trdQuad e = let (_:: f a, _:: f b, x, _:: f d) = unlift e in x
 
-frthQuad :: forall f a b c d. Unlift f (f a, f b, f c, f d) => f (Plain (f a), Plain (f b), Plain (f c), Plain (f d)) -> f d
-frthQuad e = let (_:: f a, _:: f b, _:: f c, x) = unlift e in x
+--frthQuad :: forall f a b c d. Unlift f (f a, f b, f c, f d) => f (Plain (f a), Plain (f b), Plain (f c), Plain (f d)) -> f d
+--frthQuad e = let (_:: f a, _:: f b, _:: f c, x) = unlift e in x
 
 -- = Accelerate utils
 

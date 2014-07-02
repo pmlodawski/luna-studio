@@ -30,7 +30,7 @@ colorMapper :: [Tick Double]
             -> Generator -> Generator
 colorMapper ticks ftrans shapeGenerator pixel pspace = sfoldl findColor (0.0 :: Exp Double) index0 zippedTicks
     where zippedTicks = A.zip accticks $ A.tail accticks
-          accticks    = A.use $ fromList (Z :. length ticksNorm) ticksNorm
+          accticks    = A.use $ fromList (Z :. P.length ticksNorm) ticksNorm
           ticksNorm   = firstElem : sort ticks P.++ [lastElem]
           firstElem   = head ticks & position .~ -1e20
           lastElem    = last ticks & position .~ 1e20
