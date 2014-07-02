@@ -8,8 +8,8 @@
 
 module Flowbox.Interpreter.Session.CallPoint where
 
-import qualified Flowbox.Interpreter.Mockup.Node as Node
-import qualified Flowbox.Luna.Lib.Library        as Library
+import qualified Flowbox.Luna.Data.Graph.Node as Node
+import qualified Flowbox.Luna.Lib.Library     as Library
 
 
 

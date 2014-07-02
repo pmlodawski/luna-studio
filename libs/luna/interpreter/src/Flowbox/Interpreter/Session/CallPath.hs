@@ -8,6 +8,8 @@
 
 module Flowbox.Interpreter.Session.CallPath where
 
+import qualified Data.List as List
+
 import Flowbox.Interpreter.Session.CallPoint (CallPoint)
 import Flowbox.Prelude
 
@@ -17,7 +19,5 @@ type CallPath  = [CallPoint]
 
 
 toVarName :: CallPath -> String
-toVarName callPath = '_' : toVarName' callPath where
-    toVarName' []        = ""
-    toVarName' ((a,b):t) = show a ++ "_" ++ show b ++ toVarName' t
-
+toVarName = List.concat . map gen where
+    gen (libraryID, nodeID) = "_" ++ show libraryID ++ "_" ++ show nodeID

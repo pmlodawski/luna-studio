@@ -4,16 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.AST.Crumb.Crumb where
+module Flowbox.Interpreter.Session.DefPath where
 
-import Flowbox.Prelude
+import Flowbox.Interpreter.Session.DefPoint (DefPoint)
 
 
 
-data Crumb = FunctionCrumb { name :: String
-                           , path :: [String]
-                           }
-           | ClassCrumb    { name :: String }
-           | ModuleCrumb   { name :: String }
-           deriving (Show, Ord, Eq)
+type DefPath  = [DefPoint]
+

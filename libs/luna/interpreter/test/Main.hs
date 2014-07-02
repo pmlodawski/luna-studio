@@ -10,9 +10,6 @@ module Main where
 import Data.EitherR (fmapL)
 
 import           Flowbox.Control.Error                                 (eitherStringToM)
-import qualified Flowbox.Interpreter.Mockup.Graph                      as Graph
-import           Flowbox.Interpreter.Mockup.Node                       (Node (Node))
-import           Flowbox.Interpreter.Mockup.Type                       (Type (Type))
 import qualified Flowbox.Interpreter.Session.Cache                     as Cache
 import qualified Flowbox.Interpreter.Session.Env                       as Env
 import qualified Flowbox.Interpreter.Session.Error                     as Error
@@ -40,22 +37,7 @@ logger = getLoggerIO "Flowbox.Interpreter.Test"
 main :: IO ()
 main = do
     rootLogger setIntLevel 5
-    let graph = Graph.mkGraph
-                    [ (0, Node "15"    $ Type "Int")
-                    , (1, Node "12"    $ Type "Int")
-                    , (2, Node "94"    $ Type "Int")
-                    , (3, Node "(+)"   $ Type "Int -> Int -> Int")
-                    , (4, Node "(*)"   $ Type "Int -> Int -> Int")
-                    , (5, Node "print" $ Type "Int -> IO ()")
-                    ]
-                    [ (0, 3, Graph.Dependency)
-                    , (1, 3, Graph.Dependency)
-                    , (2, 4, Graph.Dependency)
-                    , (3, 4, Graph.Dependency)
-                    , (4, 5, Graph.Dependency)
-                    ]
-
-        code = Source ["Main"] $ unlines
+    let code = Source ["Main"] $ unlines
              [ "def foo:"
              , "    print \"foo\""
              , ""
@@ -80,13 +62,19 @@ main = do
     print env
 
     result <- Session.run env $ do
-        Cache.findMain
+        Cache.executeMain
         --mapM_ (const $ Cache.runNode graph 4) [0..10000]
         --mapM_ (const $ Cache.runNodeIfNeeded graph 4) [0..1000000]
         --Cache.runNodeIfNeeded graph 5
         --Cache.dump 3
         --Cache.dump 4
-        Cache.invalidate      graph [(libID, 0)]
+        --Cache.invalidate [  (libID, [ Crumb.ModuleCrumb "Main"
+        --                            , Crumb.FunctionCrumb "main" []
+        --                            ]
+        --                  ),(libID, [ Crumb.ModuleCrumb "Main"
+        --                            , Crumb.FunctionCrumb "foo"  []
+        --                            ]
+        --                  )]
         --Cache.runNodeIfNeeded graph 5
         --Cache.runNodeIfNeeded graph 5
     eitherStringToM $ fmapL Error.format result
