@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.WatchPoint where
 
-import           Control.Monad.Trans.State
+import           Control.Monad.State
 import           Flowbox.Data.MapForest                (MapForest)
 import qualified Flowbox.Data.MapForest                as MapForest
 import           Flowbox.Interpreter.Session.CallPath  (CallPath)

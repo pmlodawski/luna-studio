@@ -23,10 +23,12 @@ Library
 
   Build-Depends:  base,
                   containers,
+                  either,
                   flowbox-luna-base,
                   flowbox-utils,
                   ghc,
                   hint,
+                  mtl,
                   transformers
 
 
