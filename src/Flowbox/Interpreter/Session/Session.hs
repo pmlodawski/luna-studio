@@ -12,12 +12,24 @@ import qualified DynFlags                     as F
 import qualified GHC
 import qualified Language.Haskell.Interpreter as I
 
-import           Flowbox.Interpreter.Session.Env     (Env)
-import qualified Flowbox.Interpreter.Session.Env     as Env
-import           Flowbox.Interpreter.Session.Error   (Error)
-import qualified Flowbox.Interpreter.Session.Error   as Error
-import qualified Flowbox.Interpreter.Session.Helpers as Helpers
-import           Flowbox.Luna.Lib.LibManager         (LibManager)
+import           Flowbox.Control.Error
+import           Flowbox.Interpreter.Session.CallPoint               (CallPoint)
+import           Flowbox.Interpreter.Session.DefPoint                (DefPoint)
+import           Flowbox.Interpreter.Session.Env                     (Env)
+import qualified Flowbox.Interpreter.Session.Env                     as Env
+import           Flowbox.Interpreter.Session.Error                   (Error)
+import qualified Flowbox.Interpreter.Session.Error                   as Error
+import qualified Flowbox.Interpreter.Session.Helpers                 as Helpers
+import           Flowbox.Luna.Data.AST.Expr                          (Expr)
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus                  as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                 as Zipper
+import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
+import           Flowbox.Luna.Lib.LibManager                         (LibManager)
+import qualified Flowbox.Luna.Lib.LibManager                         as LibManager
+import           Flowbox.Luna.Lib.Library                            (Library)
+import qualified Flowbox.Luna.Lib.Library                            as Library
+import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias            as Alias
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder as GraphBuilder
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -95,5 +107,30 @@ setHardodedExtensions = do
 setLibManager :: LibManager -> Session ()
 setLibManager libManager = lift $ modify (Env.libManager %~ const libManager)
 
+
 getLibManager :: Session LibManager
 getLibManager = gets $ view Env.libManager
+
+
+getLibrary :: Library.ID -> Session Library
+getLibrary libraryID = do
+    libManager <- getLibManager
+    LibManager.lab libManager libraryID <??> "Cannot find library with id=" ++ show libraryID
+
+
+getFunction :: DefPoint -> Session Expr
+getFunction (libraryID, bc) = do
+    ast <- view Library.ast <$> getLibrary libraryID
+    focus <- Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
+    Focus.getFunction focus <??> "Target is not a function"
+
+
+getGraph :: DefPoint -> Session Graph
+getGraph defPoint@(libraryID, _) = do
+    library     <- getLibrary libraryID
+    let propertyMap = library ^. Library.propertyMap
+        ast         = library ^. Library.ast
+    expr        <- getFunction defPoint
+    aa          <- EitherT $ Alias.run ast
+    fst <$> (EitherT $ GraphBuilder.run aa propertyMap expr)
+

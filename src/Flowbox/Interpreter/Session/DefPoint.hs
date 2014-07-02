@@ -1,19 +1,17 @@
-
 ---------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
--- Flowbox Team <contact@flowbox.io>, 2014
--- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Interpreter.Mockup.Type where
+module Flowbox.Interpreter.Session.DefPoint where
 
-import Flowbox.Prelude
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
+import qualified Flowbox.Luna.Lib.Library                as Library
 
 
 
-data Type = Type { _repr   :: String
-                 } deriving (Show, Read)
+type DefPoint = (Library.ID, Breadcrumbs)
 
-makeLenses(''Type)

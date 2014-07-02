@@ -6,18 +6,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Interpreter.Session.CallPath where
+module Flowbox.Interpreter.Session.DefPath where
 
-import qualified Data.List as List
-
-import Flowbox.Interpreter.Session.CallPoint (CallPoint)
-import Flowbox.Prelude
+import Flowbox.Interpreter.Session.DefPoint (DefPoint)
 
 
 
-type CallPath  = [CallPoint]
+type DefPath  = [DefPoint]
 
-
-toVarName :: CallPath -> String
-toVarName = List.concat . map gen where
-    gen (libraryID, nodeID) = "_" ++ show libraryID ++ "_" ++ show nodeID
