@@ -23,7 +23,7 @@ import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtPar
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                as UniPath
-
+import           Text.Show.Pretty
 
 
 rootLogger :: Logger
@@ -38,31 +38,36 @@ main :: IO ()
 main = do
     rootLogger setIntLevel 5
     let code = Source ["Main"] $ unlines
-             [ "def foo:"
+             [ "def foo self:"
              , "    print \"foo\""
+             , "    0"
              , ""
-             , "def bar:"
+             , "def bar self:"
+             , "    self.foo"
              , "    print \"bar\""
+             , "    0"
              , ""
-             , "def main:"
+             , "def main self:"
              , "    print \"hello\""
-             , "    foo"
+             , "    self.foo"
+             , "    self.bar"
              , "    print \"world\""
+             , "    0"
              ]
         path = UniPath.fromUnixString "."
 
     (source, _, _) <- eitherStringToM =<< TxtParser.run code
 
     let (libManager, libID)
-            = LibManager.insNewNode (Library "main" path source PropertyMap.empty)
+            = LibManager.insNewNode (Library "Main" path source PropertyMap.empty)
             $ LibManager.empty
 
         env = Env.mk libManager (libID, [Crumb.ModuleCrumb "Main", Crumb.FunctionCrumb "main" []])
 
-    print env
+    putStrLn $ ppShow $ LibManager.lab libManager libID
 
     result <- Session.run env $ do
-        Cache.executeMain
+        Cache.processMain
         --mapM_ (const $ Cache.runNode graph 4) [0..10000]
         --mapM_ (const $ Cache.runNodeIfNeeded graph 4) [0..1000000]
         --Cache.runNodeIfNeeded graph 5
