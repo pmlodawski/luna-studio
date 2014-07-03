@@ -6,18 +6,17 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Interpreter.Session.CallPath where
+module Flowbox.Interpreter.Session.Data.CallPoint where
 
-import qualified Data.List as List
-
-import Flowbox.Interpreter.Session.CallPoint (CallPoint)
-import Flowbox.Prelude
-
+import qualified Flowbox.Luna.Data.Graph.Node as Node
+import qualified Flowbox.Luna.Lib.Library     as Library
+import           Flowbox.Prelude
 
 
-type CallPath  = [CallPoint]
 
+data CallPoint = CallPoint { _libraryID :: Library.ID
+                           , _nodeID    :: Node.ID
+                           } deriving (Show, Ord, Eq)
 
-toVarName :: CallPath -> String
-toVarName = List.concat . map gen where
-    gen (libraryID, nodeID) = "_" ++ show libraryID ++ "_" ++ show nodeID
+makeLenses (''CallPoint)
+

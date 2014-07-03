@@ -6,12 +6,16 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Interpreter.Session.DefPoint where
+module Flowbox.Interpreter.Session.Data.DefPoint where
 
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
 import qualified Flowbox.Luna.Lib.Library                as Library
+import           Flowbox.Prelude
 
 
 
-type DefPoint = (Library.ID, Breadcrumbs)
+data DefPoint = DefPoint { _libraryID   :: Library.ID
+                         , _breadcrumbs :: Breadcrumbs
+                         } deriving (Show, Ord, Eq)
 
+makeLenses(''DefPoint)

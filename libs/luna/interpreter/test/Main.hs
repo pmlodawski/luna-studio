@@ -10,9 +10,10 @@ module Main where
 import Data.EitherR (fmapL)
 
 import           Flowbox.Control.Error                                 (eitherStringToM)
-import qualified Flowbox.Interpreter.Session.Cache                     as Cache
+import           Flowbox.Interpreter.Session.Data.DefPoint             (DefPoint (DefPoint))
 import qualified Flowbox.Interpreter.Session.Env                       as Env
 import qualified Flowbox.Interpreter.Session.Error                     as Error
+import qualified Flowbox.Interpreter.Session.Executor                  as Executor
 import qualified Flowbox.Interpreter.Session.Session                   as Session
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as Crumb
 import           Flowbox.Luna.Data.Pass.Source                         (Source (Source))
@@ -38,20 +39,28 @@ main :: IO ()
 main = do
     rootLogger setIntLevel 5
     let code = Source ["Main"] $ unlines
-             [ "def foo self:"
-             , "    print \"foo\""
+             --[ "def foo self:"
+             --, "    print \"foo\""
+             --, "    2"
+             --, ""
+             --, "def bar self:"
+             --, "    self.foo"
+             --, "    print \"bar\""
+             --, "    3"
+             --, ""
+             --, "def main self:"
+             --, "    print \"hello\""
+             --, "    self.foo"
+             --, "    self.bar"
+             --, "    print \"world\""
+             --, "    1"
+             --]
+             [ "def test self arg arg2:"
+             , "    bla arg arg2"
              , "    2"
              , ""
-             , "def bar self:"
-             , "    self.foo"
-             , "    print \"bar\""
-             , "    3"
-             , ""
              , "def main self:"
-             , "    print \"hello\""
-             , "    self.foo"
-             , "    self.bar"
-             , "    print \"world\""
+             , "    self.test 700 900"
              , "    1"
              ]
         path = UniPath.fromUnixString "."
@@ -62,14 +71,14 @@ main = do
             = LibManager.insNewNode (Library "Main" path source PropertyMap.empty)
             $ LibManager.empty
 
-        env = Env.mk libManager (libID, [Crumb.ModuleCrumb "Main", Crumb.FunctionCrumb "main" []])
+        env = Env.mk libManager (DefPoint libID [Crumb.ModuleCrumb "Main", Crumb.FunctionCrumb "main" []])
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
 
     result <- Session.run env $ do
-        Cache.processMain
+        Executor.processMain
         putStrLn "---------"
-        Cache.processMain
+        Executor.processMain
         --mapM_ (const $ Cache.runNode graph 4) [0..10000]
         --mapM_ (const $ Cache.runNodeIfNeeded graph 4) [0..1000000]
         --Cache.runNodeIfNeeded graph 5

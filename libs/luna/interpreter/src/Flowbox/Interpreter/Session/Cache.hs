@@ -6,27 +6,12 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.Cache where
 
-import           Control.Monad.State hiding (mapM_)
-import qualified Data.List           as List
+import Control.Monad.State hiding (mapM, mapM_)
 
-import           Flowbox.Control.Error
-import qualified Flowbox.Data.MapForest                    as MapForest
-import           Flowbox.Interpreter.Session.CallPath      (CallPath)
-import qualified Flowbox.Interpreter.Session.CallPath      as CallPath
-import           Flowbox.Interpreter.Session.DefPath       (DefPath)
-import           Flowbox.Interpreter.Session.DefPoint      (DefPoint)
-import qualified Flowbox.Interpreter.Session.Env           as Env
-import           Flowbox.Interpreter.Session.Session       (Session)
-import qualified Flowbox.Interpreter.Session.Session       as Session
-import qualified Flowbox.Luna.Data.AST.Expr                as Expr
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus        as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper       as Zipper
-import           Flowbox.Luna.Data.Graph.Graph             (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph             as Graph
-import           Flowbox.Luna.Data.Graph.Node              (Node)
-import qualified Flowbox.Luna.Data.Graph.Node              as Node
-import qualified Flowbox.Luna.Lib.Library                  as Library
-import qualified Flowbox.Luna.Passes.Analysis.NameResolver as NameResolver
+import qualified Flowbox.Data.MapForest                         as MapForest
+import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import qualified Flowbox.Interpreter.Session.Env                as Env
+import           Flowbox.Interpreter.Session.Session            (Session)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -43,88 +28,14 @@ logger = getLoggerIO "Flowbox.Interpreter.Session.Cache"
 --    Session.runStmt ("print " ++ argPrefix ++ show callPath)
 
 
-invalidate :: CallPath -> Session ()
-invalidate callPath = do
-    modify (Env.cached %~ MapForest.delete callPath)
-    let varName = CallPath.toVarName callPath
-    logger debug $ "Invalidating " ++ show varName
-    Session.runStmt (varName ++ " <- return ()")
-    --mapM_ (invalidate graph) $ Node.suc graph nodeID
+exists :: CallPointPath -> Session Bool
+exists callPointPath = MapForest.member callPointPath <$> gets (view Env.cached)
 
 
-previous :: CallPath -> Session [CallPath]
-previous callPath = do
-    undefined
-
-next :: CallPath -> Session [CallPath]
-next callPath = do
-    undefined
+put :: CallPointPath -> Session ()
+put callPointPath = modify $ Env.cached %~ MapForest.insert callPointPath
 
 
-
-findMain :: Session DefPoint
-findMain = gets $ view Env.mainPtr
-
-
-processMain :: Session ()
-processMain = do
-    mainPtr <- gets $ view Env.mainPtr
-    mainFun <- Session.getFunction mainPtr
-    processGraph [(fst mainPtr, mainFun ^. Expr.id)] mainPtr
-
-
-processGraph :: CallPath -> DefPoint -> Session ()
-processGraph callPath defPoint = do
-    print defPoint
-    graph <- Session.getGraph defPoint
-    print graph
-    mapM_ (processNodeIfNeeded callPath defPoint graph) $ Graph.labNodes graph
-
-
-processNodeIfNeeded ::  CallPath -> DefPoint -> Graph -> (Node.ID, Node) -> Session ()
-processNodeIfNeeded callPath defPoint graph n =
-    unlessM (isCached (callPath ++ [(fst defPoint, fst n)]))
-            (processNode callPath defPoint graph n)
-
-
-processNode :: CallPath -> DefPoint -> Graph -> (Node.ID, Node) -> Session ()
-processNode callPath defPoint@(libraryID, bc) graph (nodeID, node) = do
-    let predecessors = Graph.prel graph nodeID
-        newCallPath = callPath ++ [(libraryID, nodeID)]
-    mapM_ (processNodeIfNeeded callPath defPoint graph) predecessors
-    libManager <- Session.getLibManager
-    results <- EitherT $ NameResolver.run (node ^. Node.expr) bc libraryID libManager
-    case results of
-        []       -> case node of
-                        Node.Inputs  -> return ()
-                        Node.Outputs -> return ()
-                        Node.Expr {} -> executeNode callPath defPoint graph (nodeID, node)
-
-
-        [result] -> do logger debug $ "Prepare args " ++ show node
-                       processGraph newCallPath result
-        _        -> left "Name resolver returned multiple results"
-
-
-executeNode :: CallPath -> DefPoint -> Graph -> (Node.ID, Node) -> Session ()
-executeNode callPath (libraryID, _) graph (nodeID, node) = do
-    logger debug $ "Just run " ++ show node
-    let predecessors  = Graph.pre graph nodeID
-        functionName  = node ^. Node.expr
-        getCallPath i = callPath ++ [(libraryID, i)]
-        newCallPath   = getCallPath nodeID
-        varName       = CallPath.toVarName newCallPath
-        --functionType = node ^. Node.cls . Type.repr
-        args          = map (CallPath.toVarName . getCallPath) predecessors
-        function      = "toIO $ extract $ (Operation (" ++ functionName ++ "))"
-        argSeparator  = " `call` "
-        operation     = List.intercalate argSeparator (function : args)
-        expression    = varName ++ " <- " ++ operation
-    logger info expression
-    --Session.runStmt expression
-    modify (Env.cached %~ MapForest.insert newCallPath)
-    logger trace =<< MapForest.draw <$> gets (view Env.cached)
-
-
-isCached :: CallPath -> Session Bool
-isCached callPath = MapForest.member callPath <$> gets (view Env.cached)
+-- TODO [PM] delete chilren from GhcMonad
+--delete :: CallPointPath -> Session ()
+--delete callPointPath = modify $ Env.cached %~ MapForest.delete callPointPath
