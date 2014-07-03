@@ -57,12 +57,13 @@ Executable generator_test
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     build-depends:      accelerate-cuda  == 0.15.*
 
-  Build-Depends:  linear,
-                  accelerate,
-                  accelerate-io,
-                  algebraic,
-                  flowbox-utils,
-                  flowbox-graphics,
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
                   lens
                   
   if flag(cuda)

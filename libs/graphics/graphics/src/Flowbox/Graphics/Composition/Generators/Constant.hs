@@ -7,11 +7,11 @@
 
 module Flowbox.Graphics.Composition.Generators.Constant where
 
-import Flowbox.Prelude                                    (Double)
-import Flowbox.Graphics.Composition.Generators.Structures (Generator)
-import Flowbox.Math.Matrix                                (Exp)
+import Flowbox.Prelude
+import Flowbox.Graphics.Composition.Generators.Structures
+import Flowbox.Math.Matrix
 
 
 
 constant :: Exp Double -> Generator
-constant value _ _ = value
+constant value = Generator $ \_ _ -> value

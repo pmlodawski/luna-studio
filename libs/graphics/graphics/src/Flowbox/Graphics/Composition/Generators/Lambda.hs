@@ -22,10 +22,10 @@ import           Math.Coordinate.Cartesian (Point2(..))
 
 
 -- lambdaGenerator a. k. a rasterizer
-lambdaGenerator :: Grid Int -> Generator -> Matrix2 Double
-lambdaGenerator space lambda = generate (A.index2 h w) wrapper
-    where w = variable $ width space
-          h = variable $ height space
+lambdaGenerator :: Grid (Exp Int) -> Generator -> Matrix2 Double
+lambdaGenerator space (Generator gen) = generate (A.index2 h w) wrapper
+    where h = height space
+          w = width space
           dspace = Grid (A.fromIntegral w) (A.fromIntegral h)
-          wrapper (A.unlift -> Z :. y :. x :: EDIM2) = lambda pixel dspace
+          wrapper (A.unlift -> Z :. y :. x :: EDIM2) = gen pixel dspace
               where pixel = Point2 (A.fromIntegral x) (A.fromIntegral y)

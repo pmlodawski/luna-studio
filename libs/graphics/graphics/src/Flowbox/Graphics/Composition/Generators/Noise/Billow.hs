@@ -17,13 +17,13 @@ import Flowbox.Prelude
 
 
 billowNoise :: A.Exp Double -> Generator
-billowNoise = billowGen Standard 1.0 2.0 6 0.5 0
+billowNoise z = Generator $ runGenerator $ billowGen Standard 1.0 2.0 6 0.5 0 z
 
 billowGen :: Quality -> A.Exp Double -> A.Exp Double ->
              A.Exp Int -> A.Exp Double -> A.Exp Int ->
              A.Exp Double ->
              Generator
-billowGen quality freq lac octaveCount persistence seed z point _grid =
+billowGen quality freq lac octaveCount persistence seed z = Generator $ \point _grid ->
     0.5 + value (A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int)))
     where value args = val
               where (val, _, _, _, _) =

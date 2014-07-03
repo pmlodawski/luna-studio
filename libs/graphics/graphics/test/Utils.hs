@@ -25,11 +25,9 @@ testLoadRGBA filename = do
                       in A.lift (A.fromIntegral r / 255, A.fromIntegral g / 255, A.fromIntegral b / 255, A.fromIntegral a / 255)
 
 testSaveRGBA :: FilePath -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> IO ()
-testSaveRGBA filename r g b a = writeImageToBMP filename $ compute' run $ M.map packRGBA32 $ zip4 rChan gChan bChan aChan
-    where rChan = M.map (A.truncate . (* 255.0) . clamp' 0 1) r
-          gChan = M.map (A.truncate . (* 255.0) . clamp' 0 1) g
-          bChan = M.map (A.truncate . (* 255.0) . clamp' 0 1) b
-          aChan = M.map (A.truncate . (* 255.0) . clamp' 0 1) a
+testSaveRGBA filename r g b a = writeImageToBMP filename $ compute' run $ M.map packRGBA32 $ zip4 (conv r) (conv g) (conv b) (conv a)
+    where conv = id >-> M.map (A.truncate . (* 255.0) . clamp' 0 1)
+
 
 testSaveChan :: FilePath -> Matrix2 Double -> IO ()
 testSaveChan filename a = testSaveRGBA filename a a a a

@@ -17,4 +17,4 @@ import           Math.Space.Space
 import           Math.Coordinate.Cartesian (Point2(..))
 
 grid4 :: Exp Double -> Generator -> Generator -> Generator -> Generator -> Generator
-grid4 size g0 g1 g2 g3 point space = undefined
+grid4 size g0 g1 g2 g3 = Generator $ \point space -> undefined

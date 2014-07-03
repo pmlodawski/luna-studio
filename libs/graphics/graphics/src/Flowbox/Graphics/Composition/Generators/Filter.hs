@@ -10,13 +10,11 @@
 module Flowbox.Graphics.Composition.Generators.Filter where
 
 import Flowbox.Prelude                                    as P hiding ((<*))
-import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Math.Matrix                                as M
 import Flowbox.Graphics.Utils
 
 import Data.Array.Accelerate     as A
 import Math.Space.Space
-import Math.Coordinate.UV        as UV
 import Math.Coordinate.Cartesian as Cartesian
 
 data Filter = Filter { window :: Exp Double
