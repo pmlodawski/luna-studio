@@ -37,10 +37,10 @@ logger = getLoggerIO "Flowbox.Interpreter.Session.Cache"
 
 
 
-dump :: CallPath -> Session ()
-dump callPath = do
-    logger debug $ "Dumping " ++ show callPath
-    Session.runStmt ("print " ++ argPrefix ++ show callPath)
+--dump :: CallPath -> Session ()
+--dump callPath = do
+--    logger debug $ "Dumping " ++ show callPath
+--    Session.runStmt ("print " ++ argPrefix ++ show callPath)
 
 
 invalidate :: CallPath -> Session ()
@@ -50,10 +50,6 @@ invalidate callPath = do
     logger debug $ "Invalidating " ++ show varName
     Session.runStmt (varName ++ " <- return ()")
     --mapM_ (invalidate graph) $ Node.suc graph nodeID
-
-
-argPrefix :: String
-argPrefix = "_"
 
 
 previous :: CallPath -> Session [CallPath]
@@ -99,25 +95,35 @@ processNode callPath defPoint@(libraryID, bc) graph (nodeID, node) = do
     libManager <- Session.getLibManager
     results <- EitherT $ NameResolver.run (node ^. Node.expr) bc libraryID libManager
     case results of
-        []       -> do logger debug $ "Just run " ++ show node
-                       modify (Env.cached %~ MapForest.insert newCallPath)
-                       logger trace =<< MapForest.draw <$> gets (view Env.cached)
+        []       -> case node of
+                        Node.Inputs  -> return ()
+                        Node.Outputs -> return ()
+                        Node.Expr {} -> executeNode callPath defPoint graph (nodeID, node)
+
 
         [result] -> do logger debug $ "Prepare args " ++ show node
                        processGraph newCallPath result
         _        -> left "Name resolver returned multiple results"
 
---executeNode
-    ----let functionName = node ^. Node.code
-    ----    functionType = node ^. Node.cls . Type.repr
-    ----    args         = map (\i -> argPrefix ++ show i) predecessors
-    ----    function     = "toIO $ extract $ (Operation (" ++ functionName ++ " :: " ++ functionType ++ "))"
-    ----    argSeparator = " `call` "
-    ----    operation    = List.intercalate argSeparator (function : args)
-    ----    expression   = argPrefix ++ show nodeID ++ " <- " ++ operation
-    ----Session.runStmt expression
 
-    --logger trace =<< MapForest.draw <$> gets (view Env.cached)
+executeNode :: CallPath -> DefPoint -> Graph -> (Node.ID, Node) -> Session ()
+executeNode callPath (libraryID, _) graph (nodeID, node) = do
+    logger debug $ "Just run " ++ show node
+    let predecessors  = Graph.pre graph nodeID
+        functionName  = node ^. Node.expr
+        getCallPath i = callPath ++ [(libraryID, i)]
+        newCallPath   = getCallPath nodeID
+        varName       = CallPath.toVarName newCallPath
+        --functionType = node ^. Node.cls . Type.repr
+        args          = map (CallPath.toVarName . getCallPath) predecessors
+        function      = "toIO $ extract $ (Operation (" ++ functionName ++ "))"
+        argSeparator  = " `call` "
+        operation     = List.intercalate argSeparator (function : args)
+        expression    = varName ++ " <- " ++ operation
+    logger info expression
+    --Session.runStmt expression
+    modify (Env.cached %~ MapForest.insert newCallPath)
+    logger trace =<< MapForest.draw <$> gets (view Env.cached)
 
 
 isCached :: CallPath -> Session Bool
