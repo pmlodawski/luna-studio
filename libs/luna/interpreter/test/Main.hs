@@ -40,19 +40,19 @@ main = do
     let code = Source ["Main"] $ unlines
              [ "def foo self:"
              , "    print \"foo\""
-             , "    0"
+             , "    2"
              , ""
              , "def bar self:"
              , "    self.foo"
              , "    print \"bar\""
-             , "    0"
+             , "    3"
              , ""
              , "def main self:"
              , "    print \"hello\""
              , "    self.foo"
              , "    self.bar"
              , "    print \"world\""
-             , "    0"
+             , "    1"
              ]
         path = UniPath.fromUnixString "."
 
@@ -67,6 +67,8 @@ main = do
     putStrLn $ ppShow $ LibManager.lab libManager libID
 
     result <- Session.run env $ do
+        Cache.processMain
+        putStrLn "---------"
         Cache.processMain
         --mapM_ (const $ Cache.runNode graph 4) [0..10000]
         --mapM_ (const $ Cache.runNodeIfNeeded graph 4) [0..1000000]
