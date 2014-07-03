@@ -13,8 +13,8 @@ import qualified GHC
 import qualified Language.Haskell.Interpreter as I
 
 import           Flowbox.Control.Error
-import           Flowbox.Interpreter.Session.CallPoint               (CallPoint)
-import           Flowbox.Interpreter.Session.DefPoint                (DefPoint)
+import           Flowbox.Interpreter.Session.Data.DefPoint           (DefPoint (DefPoint))
+import qualified Flowbox.Interpreter.Session.Data.DefPoint           as DefPoint
 import           Flowbox.Interpreter.Session.Env                     (Env)
 import qualified Flowbox.Interpreter.Session.Env                     as Env
 import           Flowbox.Interpreter.Session.Error                   (Error)
@@ -119,15 +119,15 @@ getLibrary libraryID = do
 
 
 getFunction :: DefPoint -> Session Expr
-getFunction (libraryID, bc) = do
+getFunction (DefPoint libraryID bc) = do
     ast <- view Library.ast <$> getLibrary libraryID
     focus <- Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
     Focus.getFunction focus <??> "Target is not a function"
 
 
 getGraph :: DefPoint -> Session Graph
-getGraph defPoint@(libraryID, _) = do
-    library     <- getLibrary libraryID
+getGraph defPoint = do
+    library     <- getLibrary $ defPoint ^. DefPoint.libraryID
     let propertyMap = library ^. Library.propertyMap
         ast         = library ^. Library.ast
     expr        <- getFunction defPoint

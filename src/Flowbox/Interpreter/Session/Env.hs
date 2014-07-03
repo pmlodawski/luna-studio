@@ -8,11 +8,11 @@
 
 module Flowbox.Interpreter.Session.Env where
 
-import           Flowbox.Data.MapForest                (MapForest)
-import qualified Flowbox.Data.MapForest                as MapForest
-import           Flowbox.Interpreter.Session.CallPoint (CallPoint)
-import           Flowbox.Interpreter.Session.DefPoint  (DefPoint)
-import           Flowbox.Luna.Lib.LibManager           (LibManager)
+import           Flowbox.Data.MapForest                     (MapForest)
+import qualified Flowbox.Data.MapForest                     as MapForest
+import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint)
+import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint)
+import           Flowbox.Luna.Lib.LibManager                (LibManager)
 import           Flowbox.Prelude
 
 
