@@ -4,11 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Interpreter.Session.Data.CallPointPath where
-
-import qualified Data.List as List
 
 import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint)
 import qualified Flowbox.Interpreter.Session.Data.CallPoint as CallPoint
@@ -20,7 +17,7 @@ type CallPointPath  = [CallPoint]
 
 
 toVarName :: CallPointPath -> String
-toVarName = List.concat . map gen where
+toVarName = concatMap gen where
     gen callPoint = "_" ++ show (callPoint ^. CallPoint.libraryID)
                  ++ "_" ++ show (callPoint ^. CallPoint.nodeID)
 

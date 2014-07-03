@@ -119,7 +119,7 @@ processNode callDataPath = do
                         Node.Outputs -> return ()
                         Node.Expr {} -> executeNode callDataPath $ map CallDataPath.toCallPointPath predecessors
         [result] -> do logger debug $ "Prepare args " ++ show node
-                       processGraph callDataPath (DefPoint (fst result) (snd result))
+                       processGraph callDataPath (uncurry DefPoint result)
         _        -> left "Name resolver returned multiple results"
 
 
@@ -130,7 +130,7 @@ executeNode callDataPath predecessors = do
         callPointPath = CallDataPath.toCallPointPath callDataPath
         varName       = CallPointPath.toVarName callPointPath
         --functionType = node ^. Node.cls . Type.repr
-        args          = map (CallPointPath.toVarName) predecessors
+        args          = map CallPointPath.toVarName predecessors
         function      = "toIO $ extract $ (Operation (" ++ functionName ++ "))"
         argSeparator  = " `call` "
         operation     = List.intercalate argSeparator (function : args)
