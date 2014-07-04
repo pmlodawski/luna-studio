@@ -8,6 +8,9 @@
 *.imports
 out
 
+#tags file
+tags
+
 #generated files
 gen
 
