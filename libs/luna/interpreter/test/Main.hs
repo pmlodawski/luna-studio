@@ -37,7 +37,7 @@ logger = getLoggerIO "Flowbox.Interpreter.Test"
 
 main :: IO ()
 main = do
-    rootLogger setIntLevel 4
+    rootLogger setIntLevel 5
     let code = Source ["Main"] $ unlines
              --[ "def foo self:"
              --, "    print \"foo\""
@@ -62,7 +62,7 @@ main = do
              , ""
              , "def bla self arg arg2:"
              , "    b = zupah arg arg2"
-             , "    b"
+             , "    {b,1,b, arg}"
              , ""
              , "def main self:"
              , "    a = self.test 700 900"
