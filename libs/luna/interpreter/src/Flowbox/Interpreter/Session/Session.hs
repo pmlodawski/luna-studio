@@ -134,3 +134,6 @@ getGraph defPoint = do
     aa          <- EitherT $ Alias.run ast
     fst <$> (EitherT $ GraphBuilder.run aa propertyMap expr)
 
+
+findMain :: Session DefPoint
+findMain = gets $ view Env.mainPtr

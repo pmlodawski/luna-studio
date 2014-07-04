@@ -11,6 +11,8 @@ import Data.EitherR (fmapL)
 
 import           Flowbox.Control.Error                                 (eitherStringToM)
 import qualified Flowbox.Interpreter.Session.AST.Executor              as Executor
+import qualified Flowbox.Interpreter.Session.Cache                     as Cache
+import           Flowbox.Interpreter.Session.Data.CallPoint            (CallPoint (CallPoint))
 import           Flowbox.Interpreter.Session.Data.DefPoint             (DefPoint (DefPoint))
 import qualified Flowbox.Interpreter.Session.Env                       as Env
 import qualified Flowbox.Interpreter.Session.Error                     as Error
@@ -84,6 +86,8 @@ main = do
     result <- Session.run env $ do
         Executor.processMain
         putStrLn "---------"
+        Executor.processMain
+        Cache.invalidate [CallPoint libID 47]
         Executor.processMain
         --mapM_ (const $ Cache.runNode graph 4) [0..10000]
         --mapM_ (const $ Cache.runNodeIfNeeded graph 4) [0..1000000]
