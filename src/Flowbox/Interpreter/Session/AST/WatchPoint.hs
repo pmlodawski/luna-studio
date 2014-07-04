@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.WatchPoint where
+module Flowbox.Interpreter.Session.AST.WatchPoint where
 
 import           Control.Monad.State
 import           Flowbox.Data.MapForest                         (MapForest)

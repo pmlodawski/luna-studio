@@ -10,10 +10,10 @@ module Main where
 import Data.EitherR (fmapL)
 
 import           Flowbox.Control.Error                                 (eitherStringToM)
+import qualified Flowbox.Interpreter.Session.AST.Executor              as Executor
 import           Flowbox.Interpreter.Session.Data.DefPoint             (DefPoint (DefPoint))
 import qualified Flowbox.Interpreter.Session.Env                       as Env
 import qualified Flowbox.Interpreter.Session.Error                     as Error
-import qualified Flowbox.Interpreter.Session.Executor                  as Executor
 import qualified Flowbox.Interpreter.Session.Session                   as Session
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as Crumb
 import           Flowbox.Luna.Data.Pass.Source                         (Source (Source))
@@ -37,7 +37,7 @@ logger = getLoggerIO "Flowbox.Interpreter.Test"
 
 main :: IO ()
 main = do
-    rootLogger setIntLevel 5
+    rootLogger setIntLevel 4
     let code = Source ["Main"] $ unlines
              --[ "def foo self:"
              --, "    print \"foo\""
@@ -55,12 +55,18 @@ main = do
              --, "    print \"world\""
              --, "    1"
              --]
-             [ "def test self arg arg2:"
-             , "    bla arg arg2"
+             [ ""
+             , "def test self arg arg2:"
+             , "    self.bla arg arg2"
              , "    2"
              , ""
+             , "def bla self arg arg2:"
+             , "    zupah arg arg2"
+             , "    3"
+             , ""
              , "def main self:"
-             , "    self.test 700 900"
+             , "    a = self.test 700 900"
+             , "    print a"
              , "    1"
              ]
         path = UniPath.fromUnixString "."
