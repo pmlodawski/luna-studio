@@ -18,13 +18,11 @@ import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import qualified Flowbox.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import qualified Flowbox.Interpreter.Session.Data.CallPointPath as CallPointPath
-import           Flowbox.Interpreter.Session.Data.DefPoint      (DefPoint)
 import qualified Flowbox.Interpreter.Session.Env                as Env
 import           Flowbox.Interpreter.Session.Session            (Session)
-import qualified Flowbox.Interpreter.Session.Session            as Session
 import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                   as Node
-import           Flowbox.Prelude                                hiding (inside)
+import           Flowbox.Prelude                                hiding (children, inside)
 import           Flowbox.System.Log.Logger
 
 
@@ -33,32 +31,11 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.Session.Executor"
 
 
---invalidate :: CallPath -> Session ()
---invalidate callPath = do
---    modify (Env.cached %~ MapForest.delete callPath)
---    let varName = CallPath.toVarName callPath
---    logger debug $ "Invalidating " ++ show varName
---    Session.runStmt (varName ++ " <- return ()")
-    --mapM_ (invalidate graph) $ Node.suc graph nodeID
-
-
-findMain :: Session DefPoint
-findMain = gets $ view Env.mainPtr
-
-
 processMain :: Session ()
 processMain = do
     mainPtr <- gets $ view Env.mainPtr
-    processGraph [] mainPtr
-
-
-processGraph :: CallDataPath -> DefPoint -> Session ()
-processGraph callDataPath defPoint = do
-    graph <- Session.getGraph defPoint
-    print defPoint
-    print graph
-    let createDataPath = CallDataPath.append callDataPath defPoint graph
-    mapM_ (processNodeIfNeeded . createDataPath) $ Graph.labNodes graph
+    children <- CallDataPath.addLevel [] mainPtr
+    mapM_ processNodeIfNeeded children
 
 
 processNodeIfNeeded :: CallDataPath -> Session ()
@@ -74,13 +51,13 @@ processNode callDataPath = do
     let callData  = last callDataPath
         node      = callData ^. CallData.node
         predecessorsPointPaths = map CallDataPath.toCallPointPath predecessors
-    inside <- Traverse.into callDataPath
-    case inside of
-        Nothing       -> case node of
+    children <- Traverse.into callDataPath
+    if null children
+        then case node of
             Node.Inputs  -> return ()
             Node.Outputs -> executeOutputs callDataPath predecessorsPointPaths
             Node.Expr {} -> executeNode    callDataPath predecessorsPointPaths
-        Just defPoint -> processGraph callDataPath defPoint
+        else mapM_ processNodeIfNeeded children
 
 
 executeOutputs :: CallDataPath -> [CallPointPath] -> Session ()
@@ -114,3 +91,5 @@ executeFunction functionName callPointPath predecessors = do
     --Session.runStmt expression
     Cache.put callPointPath
     logger trace =<< MapForest.draw <$> gets (view Env.cached)
+
+

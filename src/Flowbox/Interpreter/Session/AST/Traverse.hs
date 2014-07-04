@@ -16,19 +16,18 @@ import qualified Data.Maybe          as Maybe
 import qualified GHC.Exts            as Exts
 
 import           Flowbox.Control.Error
+import qualified Flowbox.Interpreter.Session.AST.Inspect       as Inspect
 import qualified Flowbox.Interpreter.Session.Data.CallData     as CallData
 import           Flowbox.Interpreter.Session.Data.CallDataPath (CallDataPath)
+import qualified Flowbox.Interpreter.Session.Data.CallDataPath as CallDataPath
 import qualified Flowbox.Interpreter.Session.Data.CallPoint    as CallPoint
-import           Flowbox.Interpreter.Session.Data.DefPoint     (DefPoint (DefPoint))
 import           Flowbox.Interpreter.Session.Session           (Session)
-import qualified Flowbox.Interpreter.Session.Session           as Session
 import           Flowbox.Luna.Data.Graph.Edge                  (Edge)
 import qualified Flowbox.Luna.Data.Graph.Edge                  as Edge
 import qualified Flowbox.Luna.Data.Graph.Graph                 as Graph
 import           Flowbox.Luna.Data.Graph.Node                  (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                  as Node
 import qualified Flowbox.Luna.Data.Graph.Port                  as Port
-import qualified Flowbox.Luna.Passes.Analysis.NameResolver     as NameResolver
 import           Flowbox.Prelude                               hiding (inside)
 import           Flowbox.System.Log.Logger
 
@@ -74,20 +73,16 @@ matchPredecessor callDataPath (Port.Num portNo) = do
     List.find matching (localPredecessors callDataPath) <??> "Incorrectly connected graph (2)"
 
 
-
-into :: CallDataPath -> Session (Maybe DefPoint)
+into :: CallDataPath -> Session [CallDataPath]
 into callDataPath = do
     let callData  = last callDataPath
         libraryID = callData ^. CallData.callPoint . CallPoint.libraryID
         parentBC  = callData ^. CallData.parentBC
         node      = callData ^. CallData.node
-    libManager <- Session.getLibManager
-    results <- EitherT $ NameResolver.run (node ^. Node.expr) parentBC libraryID libManager
-    case results of
-        []       -> return   Nothing
-        [result] -> return $ Just $ uncurry DefPoint result
-        _        -> left "Name resolver returned multiple results"
-
+    mdefPoint <- Inspect.fromName (node ^. Node.expr) parentBC libraryID
+    case mdefPoint of
+        Nothing       -> return []
+        Just defPoint -> CallDataPath.addLevel callDataPath defPoint
 
 
 next :: CallDataPath -> Session [CallDataPath]

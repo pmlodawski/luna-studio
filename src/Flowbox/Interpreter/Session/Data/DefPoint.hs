@@ -8,6 +8,7 @@
 
 module Flowbox.Interpreter.Session.Data.DefPoint where
 
+import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
 import qualified Flowbox.Luna.Lib.Library                as Library
 import           Flowbox.Prelude
@@ -19,3 +20,4 @@ data DefPoint = DefPoint { _libraryID   :: Library.ID
                          } deriving (Show, Ord, Eq)
 
 makeLenses(''DefPoint)
+
