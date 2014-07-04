@@ -8,11 +8,14 @@
 
 module Flowbox.Interpreter.Session.Data.CallData where
 
-import Flowbox.Interpreter.Session.Data.CallPoint   (CallPoint)
-import Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
-import Flowbox.Luna.Data.Graph.Graph           (Graph)
-import Flowbox.Luna.Data.Graph.Node            (Node)
-import Flowbox.Prelude
+import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
+import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint)
+import qualified Flowbox.Interpreter.Session.Data.DefPoint  as DefPoint
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs    (Breadcrumbs)
+import           Flowbox.Luna.Data.Graph.Graph              (Graph)
+import           Flowbox.Luna.Data.Graph.Node               (Node)
+import qualified Flowbox.Luna.Data.Graph.Node               as Node
+import           Flowbox.Prelude
 
 
 
@@ -24,3 +27,12 @@ data CallData = CallData { _callPoint   :: CallPoint
 
 makeLenses (''CallData)
 
+
+mk :: DefPoint -> Graph -> (Node.ID, Node) -> CallData
+mk defPoint parentGraph' (nodeID, node') =
+    CallData ( CallPoint (defPoint ^. DefPoint.libraryID)
+                          nodeID
+             )
+             ( defPoint ^. DefPoint.breadcrumbs )
+             parentGraph'
+             node'

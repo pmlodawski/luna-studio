@@ -28,7 +28,7 @@ import           Flowbox.Luna.Data.Graph.Node                  (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                  as Node
 import qualified Flowbox.Luna.Data.Graph.Port                  as Port
 import qualified Flowbox.Luna.Passes.Analysis.NameResolver     as NameResolver
-import           Flowbox.Prelude
+import           Flowbox.Prelude                               hiding (inside)
 import           Flowbox.System.Log.Logger
 
 
@@ -53,11 +53,12 @@ localPredecessors callDataPath = localPreds where
 
 globalPredecesors :: CallDataPath -> (Node.ID, Node, Edge) -> Session (Maybe CallDataPath)
 globalPredecesors callDataPath (nodeID, node, edge) = case node of
-    Node.Inputs -> do print (">>>>>>>>", nodeID, "prev")
-                      matchPredecessor (init callDataPath) $ edge ^. Edge.src
-    _        -> do print (">>>>>>>>", nodeID)
-                   return $ Just $ init callDataPath ++ [last callDataPath & CallData.callPoint . CallPoint.nodeID .~ nodeID
-                                                                           & CallData.node .~ node]
+    Node.Inputs -> matchPredecessor (init callDataPath) $ edge ^. Edge.src
+    _           -> return $ Just $ init callDataPath
+                    ++ [last callDataPath
+                       & CallData.callPoint . CallPoint.nodeID .~ nodeID
+                       & CallData.node .~ node]
+
 
 matchPredecessor :: CallDataPath -> Port.OutPort -> Session (Maybe CallDataPath)
 matchPredecessor []            _                = return Nothing
