@@ -5,8 +5,9 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.AST.Traverse (
-  previous
-, into
+  into
+, next
+, previous
 ) where
 
 import           Control.Monad.State hiding (mapM, mapM_)
@@ -52,21 +53,26 @@ localPredecessors callDataPath = localPreds where
 
 
 globalPredecesors :: CallDataPath -> (Node.ID, Node, Edge) -> Session (Maybe CallDataPath)
-globalPredecesors callDataPath (nodeID, node, edge) = case node of
-    Node.Inputs -> matchPredecessor (init callDataPath) $ edge ^. Edge.src
-    _           -> return $ Just $ init callDataPath
-                    ++ [last callDataPath
-                       & CallData.callPoint . CallPoint.nodeID .~ nodeID
-                       & CallData.node .~ node]
+globalPredecesors []           _                    = return Nothing
+globalPredecesors callDataPath (nodeID, node, edge) = do
+    let upperLevel = (init callDataPath)
+        thisLevel  = (last callDataPath)
+    case node of
+        Node.Inputs -> if null upperLevel
+                        then return Nothing
+                        else do found <- matchPredecessor upperLevel $ edge ^. Edge.src
+                                globalPredecesors upperLevel found
+        _           -> return $ Just $ upperLevel ++ [thisLevel
+                           & CallData.callPoint . CallPoint.nodeID .~ nodeID
+                           & CallData.node .~ node]
 
 
-matchPredecessor :: CallDataPath -> Port.OutPort -> Session (Maybe CallDataPath)
-matchPredecessor []            _                = return Nothing
+matchPredecessor :: CallDataPath -> Port.OutPort -> Session (Node.ID, Node, Edge)
 matchPredecessor _             Port.All         = left "Incorrectly connected graph (1)"
 matchPredecessor callDataPath (Port.Num portNo) = do
     let matching (_, _, edge) = edge ^. Edge.dst == portNo
-    found <- List.find matching (localPredecessors callDataPath) <??> "Incorrectly connected graph (2)"
-    globalPredecesors callDataPath found
+    List.find matching (localPredecessors callDataPath) <??> "Incorrectly connected graph (2)"
+
 
 
 into :: CallDataPath -> Session (Maybe DefPoint)
@@ -83,9 +89,30 @@ into callDataPath = do
         _        -> left "Name resolver returned multiple results"
 
 
---next :: CallDataPath -> Session [CallDataPath]
---next []           = return []
---next callDataPath = do
---    let graph = last callDataPath ^. CallData.parentGraph
---        successors = Graph.sucl graph $ last callDataPath ^. CallData.callPoint . CallPoint.nodeID
---    List.concat
+
+next :: CallDataPath -> Session [CallDataPath]
+next []           = return []
+next callDataPath = Maybe.catMaybes
+    <$> mapM (globalSuccessors callDataPath)
+             (localSuccessors callDataPath)
+
+localSuccessors :: CallDataPath -> [(Node.ID, Node)]
+localSuccessors callDataPath = localSuccs where
+    graph      = last callDataPath ^. CallData.parentGraph
+    localSuccs = Graph.sucl graph $ last callDataPath ^. CallData.callPoint . CallPoint.nodeID
+
+
+globalSuccessors :: CallDataPath -> (Node.ID, Node) -> Session (Maybe CallDataPath)
+globalSuccessors []           _              = return Nothing
+globalSuccessors callDataPath (nodeID, node) = do
+    let upperLevel = init callDataPath
+        thisLevel  = last callDataPath
+    case node of
+        Node.Outputs -> if null callDataPath
+            then return Nothing
+            else do let parentNode = ( thisLevel ^. CallData.callPoint . CallPoint.nodeID
+                                     , thisLevel ^. CallData.node)
+                    globalSuccessors upperLevel parentNode
+        _            -> return $ Just $ upperLevel ++ [thisLevel
+                            & CallData.callPoint . CallPoint.nodeID .~ nodeID
+                            & CallData.node .~ node]
