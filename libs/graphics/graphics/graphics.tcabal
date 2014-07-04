@@ -43,9 +43,8 @@ Executable generator_test
   Main-Is:        Generator.hs
   Hs-Source-Dirs: test
 
-  if flag(debug)
-    GHC-Options:  -ddump-gc -ddump-cc -ddump-exec -fflush-cache
-  GHC-Options:    -threaded -Wall -O2 -package ghc
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
 
   Extensions:     NoImplicitPrelude,
                   DoAndIfThenElse,
