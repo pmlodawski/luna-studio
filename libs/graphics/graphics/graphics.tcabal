@@ -87,6 +87,9 @@ Library
 
 
 Executable test
+  if !flag(cuda)
+    buildable: False
+
   Main-is:              Main.hs
 
   ghc-options:          -Wall -threaded -Odph -optlo-O3
