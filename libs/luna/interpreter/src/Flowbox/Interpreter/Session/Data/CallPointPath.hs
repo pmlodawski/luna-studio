@@ -18,6 +18,6 @@ type CallPointPath  = [CallPoint]
 
 toVarName :: CallPointPath -> String
 toVarName = concatMap gen where
-    gen callPoint = "_" ++ show (callPoint ^. CallPoint.libraryID)
-                 ++ "_" ++ show (callPoint ^. CallPoint.nodeID)
+    gen callPoint = "_" ++ (show $ abs (callPoint ^. CallPoint.libraryID))
+                 ++ "_" ++ (show $ abs (callPoint ^. CallPoint.nodeID))
 
