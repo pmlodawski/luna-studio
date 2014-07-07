@@ -10,38 +10,26 @@ Flag Debug
   Description: Enable debug support
   Default:     False
 
-executable typechecker
-  main-is:            Typechecker.hs
+
+
+Library
+  Hs-Source-Dirs:     src
+  Build-Depends:      base,
+                      flowbox-luna-base
+  Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
+
+
+Executable flowbox-luna-typechecker-tests
+  Hs-Source-Dirs:     test
+  Main-Is:            Spec.hs
+  GHC-Options:        -threaded -Wall -O2
   -- other-modules:       
   -- other-extensions:    
-  build-depends:      base,
-                      flowbox-luna-base
-  hs-source-dirs:     src
-
-
-test-suite spec
-  type:               exitcode-stdio-1.0
-  main-is:            Spec.hs
-  ghc-options:        -threaded
-  -- other-modules:       
-  -- other-extensions:    
-  build-depends:      base,
-                      flowbox-luna-base
-  hs-source-dirs:     src
-
-
--- Library
---   Hs-Source-Dirs: src
---   if flag(debug)
---     GHC-Options:  -csacc
---   GHC-Options:    -Wall -O2
---   Other-Modules:  Paths_flowbox_luna_initializer
---   Extensions:     DoAndIfThenElse,
---                   NoImplicitPrelude
---   
---   Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Main\.hs)')`
---                    
---   Build-Depends:  base,
---                   flowbox-config,
---                   flowbox-utils,
---                   MissingH
+  Build-Depends:      base,
+                      hspec,
+                      mtl,
+                      raw-strings-qq,
+                      transformers,
+                      flowbox-luna-base,
+                      flowbox-luna-typechecker,
+                      flowbox-utils
