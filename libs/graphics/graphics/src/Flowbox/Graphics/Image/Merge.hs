@@ -9,21 +9,20 @@ module Flowbox.Graphics.Image.Merge where
 import qualified Data.Array.Accelerate as A
 
 import           Flowbox.Graphics.Composition.Generators.Structures
-import qualified Flowbox.Graphics.Image.Channel                     as Channel
 import qualified Flowbox.Graphics.Utils                             as U
 import           Flowbox.Prelude                                    hiding (min, max)
 import qualified Flowbox.Prelude                                    as P
 
 
 
-type Overlay         = A.Exp Double
-type OverlayAlpha    = A.Exp Double
-type Background      = A.Exp Double
-type BackgroundAlpha = A.Exp Double
+type Overlay a         = A.Exp a
+type OverlayAlpha a    = A.Exp a
+type Background a      = A.Exp a
+type BackgroundAlpha a = A.Exp a
 
-type BlendMode = Overlay -> Background -> A.Exp Double
+type BlendMode a = Overlay a -> Background a -> A.Exp a
 
-type ComplicatedBlendMode = Overlay -> OverlayAlpha -> Background -> BackgroundAlpha -> A.Exp Double
+type ComplicatedBlendMode a = Overlay a -> OverlayAlpha a -> Background a -> BackgroundAlpha a -> A.Exp a
 
 data AlphaBlend = Adobe
                 | Custom
@@ -31,65 +30,74 @@ data AlphaBlend = Adobe
 union :: Num a => a -> a -> a
 union a b = a + b - (a * b)
 
-basicColorCompositingFormula :: Generator  -- ^ Overlay / Source / Foreground / A
-                             -> Generator  -- ^ Overlay alpha
-                             -> Generator  -- ^ Background / Destination / B
-                             -> Generator  -- ^ Background alpha
-                             -> AlphaBlend -- ^ Specifies if the same blending method is used on alpha channels
-                             -> BlendMode  -- ^ Function used for blending
-                             -> Generator  -- ^ Merge result
-basicColorCompositingFormula overlay alphaOverlay background alphaBackground alphaBlend blend = \p s ->
+basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
+                             => Generator a -- ^ Overlay / Source / Foreground / A
+                             -> Generator a -- ^ Overlay alpha
+                             -> Generator a -- ^ Background / Destination / B
+                             -> Generator a -- ^ Background alpha
+                             -> AlphaBlend  -- ^ Specifies if the same blending method is used on alpha channels
+                             -> BlendMode a -- ^ Function used for blending
+                             -> Generator a -- ^ Merge result
+basicColorCompositingFormula (Generator overlay) (Generator alphaOverlay) (Generator background) (Generator alphaBackground) alphaBlend blend =
+    Generator $ \p s ->
     let alphaResult = \p' s' -> case alphaBlend of
             Adobe  -> union (alphaOverlay p' s') (alphaBackground p' s')
             Custom -> blend (alphaOverlay p' s') (alphaBackground p' s')
     in (1 - (alphaOverlay p s / alphaResult p s)) * background p s + (alphaOverlay p s / alphaResult p s) *
         (U.invert (alphaBackground p s) * overlay p s + alphaBackground p s * blend (overlay p s) (background p s))
 
-complicatedColorCompositingFormula :: Generator -> Generator -> Generator -> Generator -> ComplicatedBlendMode -> Generator
-complicatedColorCompositingFormula overlay alphaOverlay background alphaBackground blend = \p s ->
+complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
+                                   => Generator a
+                                   -> Generator a
+                                   -> Generator a
+                                   -> Generator a
+                                   -> ComplicatedBlendMode a
+                                   -> Generator a
+complicatedColorCompositingFormula (Generator overlay) (Generator alphaOverlay) (Generator background) (Generator alphaBackground) blend =
+    Generator $ \p s ->
     blend (overlay p s) (alphaOverlay p s) (background p s) (alphaBackground p s)
 
-liftBlend :: BlendMode -> ComplicatedBlendMode
+liftBlend :: (A.Elt a, A.IsFloating a) => BlendMode a -> ComplicatedBlendMode a
 liftBlend blend = \overlay _ background _ -> blend overlay background
 
 
 -- | A*b + B*(1-a)
-atop :: ComplicatedBlendMode
+atop :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 atop overlay alphaOverlay background alphaBackground = overlay * alphaBackground + background * U.invert alphaOverlay
 
 -- | (A+B)/2
-average :: BlendMode
+average :: (A.Elt a, A.IsFloating a) => BlendMode a
 average overlay background = (overlay + background) / 2
 
 -- | min(1, A / (1-B)), 1 if B = 1
 -- Imagemagick says: A / (1-B)
-colorDodge :: BlendMode
+colorDodge :: (A.Elt a, A.IsFloating a) => BlendMode a
 colorDodge overlay background = (background A.==* 1.0) A.? (1, min 1 (overlay / U.invert background))
 
 -- | 1 - min (1, (1-A)/B), 0 if A = 0
 -- Imagemagick says: 1 - ((1-A) / B)
-colorBurn :: BlendMode
+colorBurn :: (A.Elt a, A.IsFloating a) => BlendMode a
 colorBurn overlay background = (overlay A.==* 0.0) A.? (0, U.invert $ min 1 $ U.invert overlay / background)
 
 -- | A + B(1-a)/b, A if a > b
 -- Dividing by zero avoided due to implementing a >= b condition. That way, if a = b = 0,
 -- it takes a pixel from A. Nuke does the same thing.
-conjointOver :: ComplicatedBlendMode
+conjointOver :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 conjointOver overlay alphaOverlay background alphaBackground =
     (alphaOverlay A.>=* alphaBackground) A.? 
         (overlay,
         overlay + background * U.invert alphaOverlay / alphaBackground)
 
 -- | B
-copy :: BlendMode
+copy :: (A.Elt a, A.IsFloating a) => BlendMode a
 copy _ background = background
 
 -- | |A-B|
-difference :: BlendMode
+difference :: (A.Elt a, A.IsFloating a) => BlendMode a
 difference overlay background = abs (overlay - background)
 
 -- | A + B(1-a)/b, A + B if a + b < 1
-disjointOver :: ComplicatedBlendMode
+disjointOver :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 disjointOver overlay alphaOverlay background alphaBackground =
     (alphaOverlay + alphaBackground A.<* 1) A.?
         (overlay + background,
@@ -101,24 +109,24 @@ disjointOver overlay alphaOverlay background alphaBackground =
 --  all zeroed values it produced a zero valued channel, while for channel
 --  having a value of 0.00001, it divided as expected, producing huge values
 --  in the result.
-divideBySrc :: BlendMode
+divideBySrc :: (A.Elt a, A.IsFloating a) => BlendMode a
 divideBySrc overlay background = (background A.==* 0.0 A.||* (overlay A.<* 0.0 A.&&* background A.<* 0.0)) A.? (0, overlay / background)
 
 -- | B / A
 -- See docs for @divideBySrc
-divideByDst :: BlendMode
+divideByDst :: (A.Elt a, A.IsFloating a) => BlendMode a
 divideByDst = flip divideBySrc
 
 -- | A + B - 2AB
-exclusion :: BlendMode
+exclusion :: (A.Elt a, A.IsFloating a) => BlendMode a
 exclusion overlay background = overlay + background - 2 * overlay * background
 
 -- | B - A
-from :: BlendMode
+from :: (A.Elt a, A.IsFloating a) => BlendMode a
 from overlay background = background - overlay
 
 -- | 2AB / (A+B)
-geometric :: BlendMode
+geometric :: (A.Elt a, A.IsFloating a) => BlendMode a
 geometric overlay background = 2 * overlay * background / (overlay + background)
 
 -- | if A <= 0.5 then 2 * @multiply else 1 - 2*(1-A)*(1-B)
@@ -127,71 +135,71 @@ geometric overlay background = 2 * overlay * background / (overlay + background)
 --
 -- Nuke says the condition is A < 0.5, Imagemagick says it's A <= 0.5
 -- Since we have no idea why 0.5 would be special, we use Imagemagick version.
-hardLight :: BlendMode
+hardLight :: (A.Elt a, A.IsFloating a) => BlendMode a
 hardLight overlay background =
     (overlay A.<=* 0.5) A.?
         (2 * multiply overlay background,
         U.invert $ 2 * U.invert overlay * U.invert background)
 
 -- | sqrt(A^2 + B^2)
-hypot :: BlendMode
+hypot :: (A.Elt a, A.IsFloating a) => BlendMode a
 hypot overlay background = sqrt $ overlay ** 2 + background ** 2
 
 -- | A*b
-inBlend :: ComplicatedBlendMode
+inBlend :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 inBlend overlay _ _ alphaBackground = overlay * alphaBackground
 
 -- | B*a
-withMask :: ComplicatedBlendMode
+withMask :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 withMask _ alphaOverlay background _ = background * alphaOverlay
 
 -- | A*a + B(1-a)
-matte :: ComplicatedBlendMode
+matte :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 matte overlay alphaOverlay background _ = overlay * alphaOverlay + background * U.invert alphaOverlay
 
 -- | max(A,B)
-max :: BlendMode
+max :: (A.Elt a, A.IsFloating a) => BlendMode a
 max overlay background = P.max overlay background
 
 -- | min(A,B)
-min :: BlendMode
+min :: (A.Elt a, A.IsFloating a) => BlendMode a
 min overlay background = P.min overlay background
 
 -- | A - B
-minus :: BlendMode
+minus :: (A.Elt a, A.IsFloating a) => BlendMode a
 minus overlay background = overlay - background
 
 -- | A*B, A if A < 0 and B < 0
 -- Nuke says that when A and B are negative, we should return left value to prevent
 -- creating a positive value.
-multiply :: BlendMode
+multiply :: (A.Elt a, A.IsFloating a) => BlendMode a
 multiply overlay background = (overlay A.<* 0.0 A.&&* background A.<* 0.0) A.? (overlay, overlay * background)
 
 -- | A(1-b)
-out :: ComplicatedBlendMode
+out :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 out overlay _ _ alphaBackground = overlay * U.invert alphaBackground
 
 -- | A + B(1-a)
-over :: ComplicatedBlendMode
+over :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 over overlay alphaOverlay background _ = overlay + background * U.invert alphaOverlay
 
 -- | A + B
-plus :: BlendMode
+plus :: (A.Elt a, A.IsFloating a) => BlendMode a
 plus = (+)
 
 -- | A + B - A * B
-screen :: BlendMode
+screen :: (A.Elt a, A.IsFloating a) => BlendMode a
 screen overlay background = union overlay background
 
 -- | if A <= 0.5 then 1 - 2*(1-A)*(1-B) else 2 * @multiply
 -- See @hardLight
-overlay :: BlendMode
-overlay overlay background = hardLight background overlay
+overlayFun :: (A.Elt a, A.IsFloating a) => BlendMode a
+overlayFun overlay background = hardLight background overlay
 
 -- | if A <= 0.5 then B - (1 - 2*A) * B * (1-B) else B + (2 * A - 1) * (d(B) - B)
 -- where d(B) = if B <= 0.25 then ((16 * B - 12) * B + 4) * B else sqrt(B)
 -- Formula from W3C Compositing and Blending
-softLight :: BlendMode
+softLight :: (A.Elt a, A.IsFloating a) => BlendMode a
 softLight overlay background =
     (overlay A.<=* 0.5) A.?
         (background - (U.invert $ 2 * overlay) * background * U.invert background
@@ -200,14 +208,14 @@ softLight overlay background =
                                   , sqrt x)
 
 -- | B(1-a)
-stencil :: ComplicatedBlendMode
+stencil :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 stencil _ alphaOverlay background _ = background * U.invert alphaOverlay
 
 -- | A(1-b) + B
-under :: ComplicatedBlendMode
+under :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 under overlay _ background alphaBackground = overlay * U.invert alphaBackground + background
 
 -- | A(1-b) + B(1-a)
-xor :: ComplicatedBlendMode
+xor :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 xor overlay alphaOverlay background alphaBackground =
     overlay * U.invert alphaBackground + background * U.invert alphaOverlay
