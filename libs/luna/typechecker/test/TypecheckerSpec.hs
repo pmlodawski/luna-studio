@@ -2,16 +2,15 @@
 
 module TypecheckerSpec (main, spec) where
 
+
+import Test.Hspec
+
 import Flowbox.Typechecker.Basic
 
---import qualified Data.Maybe as Maybe
 import           Data.Maybe                                            (isJust,isNothing)
 import           Text.RawString.QQ
 import           Control.Monad.IO.Class                                (MonadIO)
 import           Control.Monad.Trans                                   (lift)
-
-
-import Test.Hspec
 
 import qualified Flowbox.Luna.Data.AST.AST                             as AST
 import qualified Flowbox.Luna.Data.AST.Common                          as Common

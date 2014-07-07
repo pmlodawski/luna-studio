@@ -15,6 +15,7 @@ Flag Debug
 Library
   Hs-Source-Dirs:     src
   Build-Depends:      base,
+                      containers,
                       flowbox-luna-base
   Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
 
@@ -26,10 +27,11 @@ Executable flowbox-luna-typechecker-tests
   -- other-modules:       
   -- other-extensions:    
   Build-Depends:      base,
-                      hspec,
                       mtl,
                       raw-strings-qq,
                       transformers,
+                      hspec,
+                      QuickCheck,
                       flowbox-luna-base,
                       flowbox-luna-typechecker,
                       flowbox-utils
