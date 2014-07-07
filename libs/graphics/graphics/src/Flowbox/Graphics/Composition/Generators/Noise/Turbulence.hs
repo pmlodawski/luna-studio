@@ -14,13 +14,13 @@ import Flowbox.Prelude
 
 
 
-turbulence :: (A.Exp Double -> Generator) ->
-              (A.Exp Double -> Generator) ->
-              (A.Exp Double -> Generator) ->
-              (A.Exp Double -> Generator) ->
+turbulence :: (A.Exp Double -> Generator Double) ->
+              (A.Exp Double -> Generator Double) ->
+              (A.Exp Double -> Generator Double) ->
+              (A.Exp Double -> Generator Double) ->
               A.Exp Double ->
               A.Exp Double ->
-              Generator
+              Generator Double
 turbulence xFun yFun zFun sourceFun power z = Generator $ \point grid ->
     let x0 = Cartesian.x point + (12414.0 / 65536.0)
         y0 = Cartesian.y point + (65124.0 / 65536.0)

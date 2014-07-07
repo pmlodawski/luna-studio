@@ -21,7 +21,7 @@ import Math.Coordinate.Cartesian                          (Point2(..))
 
 -- FIXME: General debug required
 
-multisampler :: Filter -> Generator -> Generator
+multisampler :: Filter f -> Generator a -> Generator a
 multisampler filter generator = Generator $ \point space -> undefined -- A.uncurry (/) result
 --    where fs = 6 -- Should be: A.floor $ 2 * window filter
 --          dxs = generate (A.index2 fs fs) $ \(A.unlift -> Z :. _ :. x :: EDIM2) -> A.fromIntegral $ x - (fs `div` 2)

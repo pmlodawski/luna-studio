@@ -27,6 +27,7 @@ module Flowbox.Math.Matrix (
     A.FullShape,
     A.IsFloating,
     A.IsNum,
+    A.IsScalar,
     A.Segments,
     A.Shape,
     A.Slice,

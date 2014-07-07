@@ -13,5 +13,5 @@ import Flowbox.Math.Matrix
 
 
 
-constant :: Exp Double -> Generator
+constant :: Exp a -> Generator a
 constant value = Generator $ \_ _ -> value

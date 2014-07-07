@@ -28,8 +28,8 @@ import Math.Space.Space                  (Grid(..))
 
 -- == Generator type ==
 
-newtype Generator = Generator {
-    runGenerator :: Point2 (Exp Double) -> Grid (Exp Double) -> Exp Double
+newtype Generator a = Generator {
+    runGenerator :: Point2 (Exp Double) -> Grid (Exp Double) -> Exp a
 }
 
 -- == Gradient tick type ==

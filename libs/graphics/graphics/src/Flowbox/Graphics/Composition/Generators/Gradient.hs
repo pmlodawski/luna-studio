@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Composition.Generators.Gradient where
 
@@ -22,9 +23,7 @@ import Math.Space.Space
 
 
 
-colorMapper :: [Tick Double]
-            -> (Exp Double -> Exp Double -> Exp Double -> Exp Double)
-            -> Generator -> Generator
+colorMapper :: forall a . (Elt a, IsScalar a, IsFloating a, Ord a) => [Tick a] -> (Exp a -> Exp a -> Exp a -> Exp a) -> Generator a -> Generator a
 colorMapper ticks ftrans shapeGenerator = Generator $ \pixel pspace -> 
     let zippedTicks = A.zip accticks $ A.tail accticks
         accticks    = A.use $ fromList (Z :. P.length ticksNorm) ticksNorm
@@ -35,7 +34,7 @@ colorMapper ticks ftrans shapeGenerator = Generator $ \pixel pspace ->
         grad_pos = runGenerator shapeGenerator pixel pspace
 
         findColor acc positions = (grad_pos >=* aPos &&* grad_pos A.<* nPos) ? (newColor, acc)
-            where (actualPos, nextPos) = unlift positions :: (Exp (Tick Double), Exp (Tick Double))
+            where (actualPos, nextPos) = unlift positions :: (Exp (Tick a), Exp (Tick a))
                   aPos = unlift actualPos ^. position 
                   aVal = unlift actualPos ^. value
                   aWei = unlift actualPos ^. weight
@@ -46,24 +45,24 @@ colorMapper ticks ftrans shapeGenerator = Generator $ \pixel pspace ->
 
                   prop = ftrans aWei nWei $ (grad_pos - aPos) / (nPos - aPos)
                   newColor = mix prop aVal nVal
-    in sfoldl findColor (0.0 :: Exp Double) index0 zippedTicks
+    in sfoldl findColor 0 index0 zippedTicks
 
-radialShape :: (MetricCoord a Cartesian, Metric a (Point2 (Exp Double)) (Exp Double)) => a -> Generator
+radialShape :: (MetricCoord a Cartesian, Metric a (Point2 (Exp Double)) (Exp Double)) => a -> Generator Double
 radialShape metric = Generator $ \pixel space -> let ms = MetricSpace metric space
                                                  in distance ms (Point2 0 0) pixel
 
-circularShape :: Generator
+circularShape :: Generator Double
 circularShape = radialShape Euclidean
 
-diamondShape :: Generator
+diamondShape :: Generator Double
 diamondShape = radialShape Taxicab
 
-squareShape :: Generator
+squareShape :: Generator Double
 squareShape  = radialShape Chebyshev
 
-conicalShape :: Generator
+conicalShape :: Generator Double
 conicalShape = Generator $ \pixel _ -> let res = 1.0 - Cartesian.uncurry atan2 pixel / (2.0 * pi)
                                         in min (res A.>* 1.0 ? (res - 1.0, res)) 1.0
 
-linearShape :: Generator
+linearShape :: Generator Double
 linearShape = Generator $ \(Point2 x _) (Grid w _) -> x / w

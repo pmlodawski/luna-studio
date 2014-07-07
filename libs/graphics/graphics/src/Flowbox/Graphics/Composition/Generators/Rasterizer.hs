@@ -21,15 +21,15 @@ import           Math.Coordinate.Cartesian (Point2(..))
 import           Data.Monoid
 
 
-rasterizer :: Grid (Exp Int) -> Generator -> Matrix2 Double
+rasterizer :: Elt e => Grid (Exp Int) -> Generator e -> Matrix2 e
 rasterizer space (Generator gen) = generate (A.index2 (height space) (width space)) wrapper
     where wrapper (A.unlift -> Z :. y :. x :: EDIM2) = let pixel = Point2 (A.fromIntegral x) (A.fromIntegral y)
                                                        in gen pixel $ A.fromIntegral <$> space
 
-gridRasterizer :: Grid (Exp Int) -> Grid (Exp Int) -> [Generator] -> Matrix2 Double
+gridRasterizer :: forall e . Elt e => Grid (Exp Int) -> Grid (Exp Int) -> [Generator e] -> Matrix2 e
 gridRasterizer space grid generators = generate (A.index2 (height space) (width space)) wrapper
     where cell = div <$> space <*> grid
-          rasterized = mconcat $ P.map (flatten . (rasterizer cell)) generators :: Vector Double
+          rasterized = mconcat $ P.map (flatten . (rasterizer cell)) generators :: Vector e
           wrapper (A.unlift -> Z :. y :. x :: EDIM2) = rasterized M.!! (i `mod` size rasterized)
               where i = (cw * ch) * gridi + celli
                     Grid cw ch = cell
