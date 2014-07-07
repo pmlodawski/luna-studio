@@ -87,7 +87,10 @@ main = do
         Executor.processMain
         putStrLn "---------"
         Executor.processMain
-        Cache.invalidate [CallPoint libID 47]
+        Cache.invalidate [CallPoint libID 52]
+        putStrLn "---------"
+        Cache.invalidate [CallPoint libID 49]
+        --Cache.invalidate [CallPoint libID 47]
         Executor.processMain
         --mapM_ (const $ Cache.runNode graph 4) [0..10000]
         --mapM_ (const $ Cache.runNodeIfNeeded graph 4) [0..1000000]

@@ -38,21 +38,23 @@ addLevel callDataPath defPoint = do
     return $ map createDataPath $ Graph.labNodes graph
 
 
+
 append :: CallDataPath -> DefPoint -> Graph -> (Node.ID, Node) -> CallDataPath
 append callDataPath defPoint parentGraph n =
     callDataPath ++ [CallData.mk defPoint parentGraph n]
 
 
 fromCallPointPath :: CallPointPath -> DefPoint -> Session CallDataPath
-fromCallPointPath []            _        = return []
+fromCallPointPath []            _              = return []
 fromCallPointPath (callPoint:t) parentDefPoint = do
-    graph      <- Session.getGraph parentDefPoint
-    print graph
+    graph <- Session.getGraph parentDefPoint
     let nodeID    = callPoint ^. CallPoint.nodeID
         libraryID = callPoint ^. CallPoint.libraryID
     node <- Graph.lab graph nodeID <??> "No node with id = " ++ show nodeID
     let parentBC = parentDefPoint  ^. DefPoint.breadcrumbs
+        callData = CallData callPoint parentBC graph node
     mdefPoint <- Inspect.fromName (node ^. Node.expr) parentBC libraryID
-    defPoint  <- mdefPoint <??> "Cannot find node with id = " ++ show nodeID
-    let callData = CallData callPoint parentBC graph node
-    ((:) callData) <$> fromCallPointPath t defPoint
+    ((:) callData) <$> case mdefPoint of
+        Just defPoint -> fromCallPointPath t defPoint
+        Nothing       -> return []
+

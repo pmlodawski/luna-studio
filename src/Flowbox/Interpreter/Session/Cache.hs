@@ -44,18 +44,21 @@ put callPointPath = modify $ Env.cached %~ MapForest.insert callPointPath
 
 invalidate' :: CallDataPath -> Session ()
 invalidate' callDataPath = do
-    next <- Traverse.next callDataPath
-    into <- Traverse.into callDataPath
-    mapM_ invalidate' $ next ++ into
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-        varName       = CallPointPath.toVarName callPointPath
-        expression    = varName ++ " <- return ()"
-    modify $ Env.cached %~ MapForest.delete callPointPath
-    Session.runStmt expression
-    logger trace =<< MapForest.draw <$> gets (view Env.cached)
+    whenM (exists callPointPath) $ do
+        let varName       = CallPointPath.toVarName callPointPath
+            expression    = varName ++ " <- return ()"
+        next <- Traverse.next callDataPath
+        into <- Traverse.into callDataPath
+        mapM_ invalidate' $ next ++ into
+        logger debug $ "Invalidating " ++ varName
+        modify $ Env.cached %~ MapForest.delete callPointPath
+        Session.runStmt expression
+        logger trace =<< MapForest.draw <$> gets (view Env.cached)
 
 
 invalidate :: CallPointPath -> Session ()
 invalidate callPointPath = do
     main <- Session.findMain
-    CallDataPath.fromCallPointPath callPointPath main >>= invalidate'
+    cdp <- CallDataPath.fromCallPointPath callPointPath main
+    invalidate' cdp

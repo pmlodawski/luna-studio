@@ -87,27 +87,17 @@ into callDataPath = do
 
 next :: CallDataPath -> Session [CallDataPath]
 next []           = return []
-next callDataPath = Maybe.catMaybes
-    <$> mapM (globalSuccessors callDataPath)
-             (localSuccessors callDataPath)
+next callDataPath = return $ localSuccessors callDataPath
 
-localSuccessors :: CallDataPath -> [(Node.ID, Node)]
+
+localSuccessors :: CallDataPath -> [CallDataPath]
 localSuccessors callDataPath = localSuccs where
     graph      = last callDataPath ^. CallData.parentGraph
-    localSuccs = Graph.sucl graph $ last callDataPath ^. CallData.callPoint . CallPoint.nodeID
+    nodeID     = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
+    succNodes  = Graph.sucl graph nodeID
+    upperLevel = (init callDataPath)
+    thisLevel  = (last callDataPath)
+    localSuccs = map (\(nodeID, node) -> upperLevel ++ [thisLevel
+                                        & CallData.callPoint . CallPoint.nodeID .~ nodeID
+                                        & CallData.node .~ node]) succNodes
 
-
-globalSuccessors :: CallDataPath -> (Node.ID, Node) -> Session (Maybe CallDataPath)
-globalSuccessors []           _              = return Nothing
-globalSuccessors callDataPath (nodeID, node) = do
-    let upperLevel = init callDataPath
-        thisLevel  = last callDataPath
-    case node of
-        Node.Outputs -> if null callDataPath
-            then return Nothing
-            else do let parentNode = ( thisLevel ^. CallData.callPoint . CallPoint.nodeID
-                                     , thisLevel ^. CallData.node)
-                    globalSuccessors upperLevel parentNode
-        _            -> return $ Just $ upperLevel ++ [thisLevel
-                            & CallData.callPoint . CallPoint.nodeID .~ nodeID
-                            & CallData.node .~ node]
