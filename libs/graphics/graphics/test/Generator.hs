@@ -26,7 +26,7 @@ import Math.Metric
 import Math.Coordinate.Cartesian
 import Data.Array.Accelerate (index2, Boundary(..))
 
-import Utils
+--import Utils
 
 gradients = do
     let reds   = [Tick 0.0 1.0 1.0, Tick 0.25 0.0 1.0, Tick 1.0 1.0 1.0]

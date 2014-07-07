@@ -1,0 +1,123 @@
+#!/usr/bin/env python2.7
+
+###########################################################################
+## Copyright (C) Flowbox, Inc / All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2014
+###########################################################################
+
+import sys
+import os.path
+import shutil
+from subprocess        import Popen, PIPE, call
+
+from utils.colors      import print_info, print_error, print_warning#, formatQuestion
+from utils.errors      import fatal
+from distutils.version import LooseVersion
+
+
+myPath = os.path.dirname(os.path.realpath(__file__))
+rootPath = os.path.dirname(myPath)
+distGraphicsPath = os.path.join(rootPath,'dist/libs/graphics/graphics')
+
+submodulesDirName = 'third-party'
+submodulesDir = os.path.join(rootPath, submodulesDirName)
+# (submodule, debuggable)
+submodules = ['accelerate', 'accelerate-io', 'accelerate-cuda', 'linear-accelerate', 'algebraic', 'protocol-buffers']
+submodulesDirs = map(lambda x: os.path.join(submodulesDir, x), submodules)
+
+cwd = os.getcwd()
+
+debugAccelerate = '--debug-accelerate' in sys.argv
+
+def checkPath(path):
+    if os.path.exists(path):
+        print_warning("The path '%s' exists. " % path)
+        # shutil.rmtree(path)
+        return True
+    return False
+
+def ask(question):
+    answer = None
+    while True:
+        ansRaw = raw_input(formatQuestion(question) + " [Y/n] ")
+        ans = ansRaw.lower()
+        if ans not in ["", "y", "yes", "n", "no"]:
+            print_error("'%s' is not a valid answer, please choose beetween YES or NO." % ansRaw)
+        else: break
+    if ans in ["", "y", "yes"]: return True
+    else:                       return False
+
+def checkVersion(what, minv):
+    print_info ("Checking %s version (>= %s)" % (what, minv))
+    (out, err) = Popen(what + " --numeric-version", stdout=PIPE, shell=True).communicate()
+    out = out.lstrip().rstrip()
+    if not LooseVersion(out) >= LooseVersion(minv): return (False, "Your %s version is too old (%s)" % (what, out))
+    else: return (True, None)
+
+def try_call(cmd):
+    print_info ("Running '%s'" % cmd)
+    if call(cmd, shell=True): fatal()
+
+def cabalInstall(pkg):
+	print_info("installing cabal pakcage(s): %s" % pkg)
+	try_call("cabal install %s" % pkg)
+
+# def installThirdParty((package,dbg)):
+# 	cabalInstall("%s %s" % (os.path.join(submodulesDir, "%s/%s.cabal" % (package, package)), '-fdebug' if dbg and debugAccelerate else ''))
+
+# - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+# check if everything is set up correctly
+# - - - - - - - - - - - - - - - - - - - -
+
+result,error = checkVersion("ghc", "7.8.2")
+if not result:
+	print_error(error)
+	fatal()
+
+result,error = checkVersion("cabal", "1.20")
+if not result:
+	print_error(error)
+	fatal()
+
+# - - - - - - - - - - - - - - - - - - - -
+# go to the root path
+# - - - - - - - - - - - - - - - - - - - -
+
+os.chdir(rootPath)
+
+# - - - - - - - - - - - - - - - - - - - -
+# handle submodules
+# - - - - - - - - - - - - - - - - - - - -
+
+# print ' '.join(submodulesDirs)
+print "initialising submodules in `%s`: " % submodulesDirName, submodules
+try_call("git submodule init %s" % (' '.join(submodulesDirs)))
+try_call("git submodule update")
+
+# - - - - - - - - - - - - - - - - - - - -
+# install dependencies
+# - - - - - - - - - - - - - - - - - - - -
+
+os.chdir(distGraphicsPath)
+cabalInstall("happy alex c2hs")
+
+print_info("installing accelerate %s" % '(with debug)' if debugAccelerate else '')
+cabalInstall("%s %s %s %s" % ('-fdebug' if debugAccelerate else ''
+							 , os.path.join(submodulesDir,'accelerate/accelerate.cabal')
+							 , os.path.join(submodulesDir,'accelerate-io/accelerate-io.cabal')
+							 , os.path.join(submodulesDir,'accelerate-cuda/accelerate-cuda.cabal')
+							 ))
+print_info("installing other dependencies")
+cabalInstall("%s %s %s" % (os.path.join(submodulesDir,'linear-accelerate/linear-accelerate.cabal')
+	                    , os.path.join(submodulesDir,'algebraic/algebraic.cabal')
+	                    , os.path.join(submodulesDir,'protocol-buffers/protocol-buffers.cabal')
+	                    ))
+# map(installThirdParty, submodules)
+
+print_info ("- - - END - - -")
