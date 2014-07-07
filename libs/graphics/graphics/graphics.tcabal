@@ -43,9 +43,8 @@ Executable generator_test
   Main-Is:        Generator.hs
   Hs-Source-Dirs: test
 
-  if flag(debug)
-    GHC-Options:  -ddump-gc -ddump-cc -ddump-exec -fflush-cache
-  GHC-Options:    -threaded -Wall -O2 -package ghc
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
 
   Extensions:     NoImplicitPrelude,
                   DoAndIfThenElse,
@@ -57,12 +56,13 @@ Executable generator_test
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     build-depends:      accelerate-cuda  == 0.15.*
 
-  Build-Depends:  linear,
-                  accelerate,
-                  accelerate-io,
-                  algebraic,
-                  flowbox-utils,
-                  flowbox-graphics,
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
                   lens
                   
   if flag(cuda)

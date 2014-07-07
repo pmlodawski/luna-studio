@@ -4,7 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances    #-}
 
 module Flowbox.Math.Matrix (
     module Flowbox.Math.Matrix,
@@ -25,6 +27,7 @@ module Flowbox.Math.Matrix (
     A.FullShape,
     A.IsFloating,
     A.IsNum,
+    A.IsScalar,
     A.Segments,
     A.Shape,
     A.Slice,
@@ -34,9 +37,9 @@ module Flowbox.Math.Matrix (
 ) where
 
 import qualified Data.Array.Accelerate as A
-import           Data.Array.Accelerate hiding (Scalar, Vector, (!), shape, fromList, toList)
+import           Data.Array.Accelerate hiding (Scalar, Vector, (!), shape, fromList, toList, (++))
 
-import Flowbox.Prelude hiding (use, (<*), (?))
+import Flowbox.Prelude hiding (use, (<*), (?), (++))
 
 
 
@@ -49,6 +52,11 @@ type Vector  a = Matrix DIM1 a
 type Matrix2 a = Matrix DIM2 a
 
 type Backend ix a = Acc (Array ix a) -> Array ix a
+
+-- == Instances ==
+instance (Elt e) => Monoid (Vector e) where
+    mempty = fromList (Z :. 0) []
+    mappend a b = a ++ b
 
 -- == Helpers ==
 

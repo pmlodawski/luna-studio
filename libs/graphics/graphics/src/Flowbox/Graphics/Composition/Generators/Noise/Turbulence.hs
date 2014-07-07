@@ -14,26 +14,27 @@ import Flowbox.Prelude
 
 
 
-turbulence :: (A.Exp Double -> Generator) ->
-              (A.Exp Double -> Generator) ->
-              (A.Exp Double -> Generator) ->
-              (A.Exp Double -> Generator) ->
+turbulence :: (A.Exp Double -> Generator Double) ->
+              (A.Exp Double -> Generator Double) ->
+              (A.Exp Double -> Generator Double) ->
+              (A.Exp Double -> Generator Double) ->
               A.Exp Double ->
               A.Exp Double ->
-              Generator
-turbulence xFun yFun zFun sourceFun power z point grid = sourceFun zDistort (Cartesian.Point2 xDistort yDistort) grid
-    where x0 = Cartesian.x point + (12414.0 / 65536.0)
-          y0 = Cartesian.y point + (65124.0 / 65536.0)
-          z0 = z                 + (31337.0 / 65536.0)
+              Generator Double
+turbulence xFun yFun zFun sourceFun power z = Generator $ \point grid ->
+    let x0 = Cartesian.x point + (12414.0 / 65536.0)
+        y0 = Cartesian.y point + (65124.0 / 65536.0)
+        z0 = z                 + (31337.0 / 65536.0)
 
-          x1 = Cartesian.x point + (26519.0 / 65536.0)
-          y1 = Cartesian.y point + (18128.0 / 65536.0)
-          z1 = z                 + (60493.0 / 65536.0)
+        x1 = Cartesian.x point + (26519.0 / 65536.0)
+        y1 = Cartesian.y point + (18128.0 / 65536.0)
+        z1 = z                 + (60493.0 / 65536.0)
 
-          x2 = Cartesian.x point + (53820.0 / 65536.0)
-          y2 = Cartesian.y point + (11213.0 / 65536.0)
-          z2 = z                 + (44845.0 / 65536.0)
+        x2 = Cartesian.x point + (53820.0 / 65536.0)
+        y2 = Cartesian.y point + (11213.0 / 65536.0)
+        z2 = z                 + (44845.0 / 65536.0)
 
-          xDistort = Cartesian.x point + (xFun z0 (Cartesian.Point2 x0 y0) grid * power)
-          yDistort = Cartesian.y point + (yFun z1 (Cartesian.Point2 x1 y1) grid * power)
-          zDistort = z                 + (zFun z2 (Cartesian.Point2 x2 y2) grid * power)
+        xDistort = Cartesian.x point + runGenerator (xFun z0) (Cartesian.Point2 x0 y0) grid * power
+        yDistort = Cartesian.y point + runGenerator (yFun z1) (Cartesian.Point2 x1 y1) grid * power
+        zDistort = z                 + runGenerator (zFun z2) (Cartesian.Point2 x2 y2) grid * power
+    in  runGenerator (sourceFun zDistort) (Cartesian.Point2 xDistort yDistort) grid
