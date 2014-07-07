@@ -26,5 +26,5 @@ rotate phi (Generator gen) = Generator $ \(Point2 x y) ->
 translate :: V2 (Exp Double) -> Generator -> Generator
 translate (V2 dx dy) (Generator gen) = Generator $ \(Point2 x y) -> gen $ Point2 (x - dx) (y - dy)
 
-zoom :: V2 (Exp Double) -> Generator -> Generator
-zoom (V2 sx sy) (Generator gen) = Generator $ \(Point2 x y) -> gen $ Point2 (x / sx) (y / sy)
+scale :: V2 (Exp Double) -> Generator -> Generator
+scale (V2 sx sy) (Generator gen) = Generator $ \(Point2 x y) -> gen $ Point2 (x / sx) (y / sy)

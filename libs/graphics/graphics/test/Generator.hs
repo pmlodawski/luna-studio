@@ -38,7 +38,7 @@ gradients = do
 
     let myftrans pw nw prop = prop ** (pw / nw)
     let mapper = flip colorMapper myftrans
-    let center = translate (V2 90 120) . zoom (V2 90 90)
+    let center = translate (V2 90 120) . scale (V2 90 90)
     let grad1 t = center $ mapper t circularShape
     let grad2 t = center $ mapper t diamondShape
     let grad3 t = center $ mapper t squareShape

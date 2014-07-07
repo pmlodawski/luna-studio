@@ -12,7 +12,7 @@ module Flowbox.Graphics.Image.Color where
 import qualified Data.Array.Accelerate as A
 import           Data.Maybe            (fromMaybe)
 
-import           Flowbox.Graphics.Composition.Generators.Structures (Generator)
+import           Flowbox.Graphics.Composition.Generators.Structures (Generator(..))
 import           Flowbox.Graphics.Image.Channel                     (Channel)
 import qualified Flowbox.Graphics.Image.Channel                     as Channel
 import qualified Flowbox.Graphics.Utils                             as U
@@ -42,7 +42,7 @@ offset v chan | Channel.ChannelInt{}   <- chan = mapInt (+ (A.truncate v)) chan
               | otherwise                      = crash "offset" "Bool"
 
 offset' :: A.Exp Double -> Generator -> Generator
-offset' v gen = \p s -> gen p s + v
+offset' v gen = Generator $ \p s -> runGenerator gen p s + v
 
 multiply :: A.Exp Double -> Channel -> Channel
 multiply v chan | Channel.ChannelInt{}   <- chan = mapInt (* (A.truncate v)) chan
@@ -50,7 +50,7 @@ multiply v chan | Channel.ChannelInt{}   <- chan = mapInt (* (A.truncate v)) cha
                 | otherwise                      = crash "multiply" "Bool"
 
 multiply' :: A.Exp Double -> Generator -> Generator
-multiply' v gen = \p s -> gen p s * v
+multiply' v gen = Generator $ \p s -> runGenerator gen p s * v
 
 not :: Channel -> Channel
 not chan | Channel.ChannelBit{} <- chan = mapBool (A.not) chan
@@ -62,7 +62,7 @@ contrast v chan | Channel.ChannelInt{}   <- chan = mapInt (\x -> A.truncate $ (A
                 | otherwise                      = crash "contrast" "Bool"
 
 contrast' :: A.Exp Double -> Generator -> Generator
-contrast' v gen = \p s -> (gen p s - 0.5) * v + 0.5
+contrast' v gen = Generator $ \p s -> (runGenerator gen p s - 0.5) * v + 0.5
 
 gamma :: A.Exp Double -> Channel -> Channel
 gamma v chan | Channel.ChannelInt{}   <- chan = mapInt (\x -> A.truncate $ A.fromIntegral x ** (1/v)) chan
@@ -70,11 +70,11 @@ gamma v chan | Channel.ChannelInt{}   <- chan = mapInt (\x -> A.truncate $ A.fro
              | otherwise                      = crash "gamma" "Bool"
 
 gamma' :: A.Exp Double -> Generator -> Generator
-gamma' v gen = \p s -> gen p s ** (1/v)
+gamma' v gen = Generator $ \p s -> runGenerator gen p s ** (1/v)
 
 clamp :: A.Exp Double -> A.Exp Double -> Maybe (A.Exp Double) -> Maybe (A.Exp Double) -> Generator -> Generator
-clamp min' max' minClampTo maxClampTo gen = \p s -> 
-    let pixel = gen p s
+clamp min' max' minClampTo maxClampTo gen = Generator $ \p s -> 
+    let pixel = runGenerator gen p s
     in (pixel A.<* min') A.? (minClampToVal, (pixel A.>* max') A.? (maxClampToVal, pixel))
     
     where minClampToVal = fromMaybe min' minClampTo
@@ -83,20 +83,20 @@ clamp min' max' minClampTo maxClampTo gen = \p s ->
 clamp' :: Maybe (A.Exp Double) -> Maybe (A.Exp Double) -> Maybe (A.Exp Double) -> Maybe (A.Exp Double) -> Generator -> Generator
 clamp' min' max' minClampTo maxClampTo gen
     | Just min'' <- min', Just max'' <- max' = clamp min'' max'' minClampTo maxClampTo gen
-    | Just min'' <- min'                     = \p s -> let pixel = gen p s in (pixel A.<* min'') A.? (fromMaybe min'' minClampTo, pixel)
-    | Just max'' <- max'                     = \p s -> let pixel = gen p s in (pixel A.>* max'') A.? (fromMaybe max'' maxClampTo, pixel)
+    | Just min'' <- min'                     = Generator $ \p s -> let pixel = runGenerator gen p s in (pixel A.<* min'') A.? (fromMaybe min'' minClampTo, pixel)
+    | Just max'' <- max'                     = Generator $ \p s -> let pixel = runGenerator gen p s in (pixel A.>* max'') A.? (fromMaybe max'' maxClampTo, pixel)
 clamp' _ _ _ _ gen = gen
 
 clipTest :: Generator -> Generator
-clipTest gen = \p s ->
-    let pixel = gen p s
-    in (pixel A.>* 1.0) A.? (stripes p s, (pixel A.<* 0.0) A.? (stripes p s, pixel))
+clipTest gen = Generator $ \p s ->
+    let pixel = runGenerator gen p s
+    in (pixel A.>* 1.0) A.? (runGenerator stripes p s, (pixel A.<* 0.0) A.? (runGenerator stripes p s, pixel))
 
 stripes :: Generator
 stripes = undefined
 
 invert :: Generator -> Generator
-invert gen = \p s -> U.invert $ gen p s
+invert gen = Generator $ \p s -> U.invert $ runGenerator gen p s
 
 crash :: String -> String -> a
 crash f t = error $ "Function \"" ++ f ++ "\" could not be applied to Channel of type \"" ++ t ++ "\""
