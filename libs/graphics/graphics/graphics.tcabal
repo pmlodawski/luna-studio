@@ -13,12 +13,13 @@ Flag debug
   Default:              False  
 
 Library
-  Hs-Source-Dirs: src
-  GHC-Options:    -Wall -O2
-  Extensions:     DoAndIfThenElse,
-                  NoImplicitPrelude,
-                  TemplateHaskell,
-                  OverloadedStrings
+  Hs-Source-Dirs:         src
+  GHC-Options:            -Wall -O2
+  Default-Extensions:     DoAndIfThenElse,
+                          NoImplicitPrelude,
+                          TemplateHaskell,
+                          OverloadedStrings
+  Default-Language:       Haskell2010
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
@@ -37,7 +38,9 @@ Library
                   resourcet                ,
                   split                    ,
                   system-filepath          ,
-                  transformers             
+                  transformers             ,
+                  errors                   ,
+                  either
 
 Executable generator_test
   Main-Is:        Generator.hs
@@ -46,11 +49,12 @@ Executable generator_test
   Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
   Ghc-prof-options:     -auto-all
 
-  Extensions:     NoImplicitPrelude,
-                  DoAndIfThenElse,
-                  NoImplicitPrelude,
-                  TemplateHaskell,
-                  OverloadedStrings
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          NoImplicitPrelude,
+                          TemplateHaskell,
+                          OverloadedStrings
+  Default-Language:       Haskell2010
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -63,8 +67,9 @@ Executable generator_test
                   algebraic                ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
-                  lens
-                  
+                  lens,
+                  base
+
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     build-depends:      accelerate-cuda  == 0.15.*
