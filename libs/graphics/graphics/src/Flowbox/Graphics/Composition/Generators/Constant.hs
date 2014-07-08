@@ -13,5 +13,5 @@ import Flowbox.Math.Matrix
 
 
 
-constant :: Exp a -> Generator a
-constant value = Generator $ \_ _ -> value
+constant :: Exp a -> Generator (Exp a)
+constant = pure

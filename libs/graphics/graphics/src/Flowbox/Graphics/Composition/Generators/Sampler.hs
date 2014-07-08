@@ -31,7 +31,7 @@ import           Math.Coordinate.UV                       (toUV)
 --bilinear :: Boundary (Exp Double) -> Matrix2 Double -> Generator
 --bilinear = bicubic triangle
 
-bicubic :: Filter Double -> Boundary (Exp Double) -> Matrix2 Double -> Generator Double
+bicubic :: Filter Double -> Boundary (Exp Double) -> Matrix2 Double -> Generator (Exp Double)
 bicubic filter b mat = Generator $ \pixel newSpace ->
     let Z :. oldHeight :. oldWidth = A.unlift $ shape mat :: EDIM2
         oldSpace = Grid (A.fromIntegral oldWidth) (A.fromIntegral oldHeight)

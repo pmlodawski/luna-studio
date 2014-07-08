@@ -16,13 +16,13 @@ import Flowbox.Prelude
 
 
 
-perlinNoise :: A.Exp Double -> Generator Double
+perlinNoise :: A.Exp Double -> Generator (A.Exp Double)
 perlinNoise z = Generator $ runGenerator $ perlinGen Standard 1.0 2.0 6 0.5 0 z
 
 perlinGen :: Quality -> A.Exp Double -> A.Exp Double ->
              A.Exp Int -> A.Exp Double -> A.Exp Int ->
              A.Exp Double ->
-             Generator Double
+             Generator (A.Exp Double)
 perlinGen quality freq lac octaveCount persistence seed z = Generator $ \point _grid ->
     value $ A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
     where value args = val

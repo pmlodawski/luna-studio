@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -29,8 +30,12 @@ import Math.Space.Space                  (Grid(..))
 -- == Generator type ==
 
 newtype Generator a = Generator {
-    runGenerator :: Point2 (Exp Double) -> Grid (Exp Double) -> Exp a
-}
+    runGenerator :: Point2 (Exp Double) -> Grid (Exp Double) -> a
+} deriving Functor
+
+instance Applicative Generator where
+    pure v = Generator $ \_ _ -> v
+    Generator f <*> Generator gen = Generator $ \pixel space -> f pixel space (gen pixel space)
 
 -- == Gradient tick type ==
 
