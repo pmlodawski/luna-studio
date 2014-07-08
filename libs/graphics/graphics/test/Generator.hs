@@ -36,8 +36,8 @@ import Flowbox.Prelude hiding (zoom, constant)
 --    let alphas = [Tick 0.0 1.0 1.0, Tick 1.0 1.0 1.0]
 --    let gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0]
 
---    let myftrans pw nw prop = prop ** (pw / nw)
---    let mapper = flip colorMapper myftrans
+--    let weightFun tickPos val1 weight1 val2 weight2 = ???
+--    let mapper = flip colorMapper weightFun
 --    let center = translate (V2 90 120) . scale (V2 90 90)
 --    let grad1 t = center $ mapper t circularShape
 --    let grad2 t = center $ mapper t diamondShape

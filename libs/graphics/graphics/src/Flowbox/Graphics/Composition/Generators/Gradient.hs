@@ -23,18 +23,18 @@ import Math.Space.Space
 
 
 
-colorMapper :: forall a . (Elt a, IsScalar a, IsFloating a, Ord a) => [Tick a] -> (Exp a -> Exp a -> Exp a -> Exp a) 
+colorMapper :: forall a . (Elt a, IsScalar a, IsFloating a, Ord a) => [Tick a] -> (Exp a -> Exp a -> Exp a -> Exp a -> Exp a -> Exp a)
             -> Generator (Exp a) -> Generator (Exp a)
-colorMapper ticks ftrans shapeGenerator = Generator $ \pixel pspace -> 
+colorMapper ticks weightFun shapeGenerator = Generator $ \pixel pspace ->
     let zippedTicks = A.zip accticks $ A.tail accticks
         accticks    = A.use $ fromList (Z :. P.length ticksNorm) ticksNorm
         ticksNorm   = firstElem : sort ticks P.++ [lastElem]
         firstElem   = head ticks & position .~ -1e20
         lastElem    = last ticks & position .~ 1e20
 
-        grad_pos = runGenerator shapeGenerator pixel pspace
+        gradPos = runGenerator shapeGenerator pixel pspace
 
-        findColor acc positions = (grad_pos >=* aPos &&* grad_pos A.<* nPos) ? (newColor, acc)
+        findColor acc positions = (gradPos >=* aPos &&* gradPos A.<* nPos) ? (newColor, acc)
             where (actualPos, nextPos) = unlift positions :: (Exp (Tick a), Exp (Tick a))
                   aPos = unlift actualPos ^. position 
                   aVal = unlift actualPos ^. value
@@ -44,8 +44,9 @@ colorMapper ticks ftrans shapeGenerator = Generator $ \pixel pspace ->
                   nVal = unlift nextPos ^. value
                   nWei = unlift nextPos ^. weight
 
-                  prop = ftrans aWei nWei $ (grad_pos - aPos) / (nPos - aPos)
-                  newColor = mix prop aVal nVal
+                  tickPos = (gradPos - aPos) / (nPos - aPos)
+                  newColor = weightFun tickPos aVal aWei nVal nWei
+
     in sfoldl findColor 0 index0 zippedTicks
 
 radialShape :: (MetricCoord a Cartesian, Metric a (Point2 (Exp Double)) (Exp Double)) => a -> Generator (Exp Double)
