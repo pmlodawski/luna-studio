@@ -64,6 +64,7 @@ main = do
              , ""
              , "def bla self arg arg2:"
              , "    b = zupah arg arg2"
+             , "    c = fooooo"
              , "    {b,1,b, arg}"
              , ""
              , "def main self:"
@@ -88,10 +89,12 @@ main = do
         Executor.processMain
         putStrLn "---------"
         Executor.processMain
-        Cache.invalidate [CallPoint libID 47, CallPoint libID 13, CallPoint libID 36]
+        Cache.invalidate [CallPoint libID 50, CallPoint libID 13, CallPoint libID 36]
         --putStrLn "---------"
-        --Cache.invalidate [CallPoint libID 49]
+        --Cache.invalidate [CallPoint libID 57]
         --Cache.invalidate [CallPoint libID 47]
+        Executor.processMain
+        Executor.processMain
         Executor.processMain
         --mapM_ (const $ Cache.runNode graph 4) [0..10000]
         --mapM_ (const $ Cache.runNodeIfNeeded graph 4) [0..1000000]
