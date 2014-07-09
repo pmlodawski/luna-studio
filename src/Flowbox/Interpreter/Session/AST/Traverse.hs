@@ -35,7 +35,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.Traverse"
+logger = getLoggerIO "Flowbox.Interpreter.Session.AST.Traverse"
 
 
 
@@ -90,8 +90,8 @@ nextLocal :: CallDataPath -> [CallDataPath]
 nextLocal []           = []
 nextLocal callDataPath = localSuccs where
     graph      = last callDataPath ^. CallData.parentGraph
-    nodeID     = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
-    succNodes  = Graph.sucl graph nodeID
+    nodeID'    = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
+    succNodes  = Graph.sucl graph nodeID'
     upperLevel = (init callDataPath)
     thisLevel  = (last callDataPath)
     localSuccs = map (\(nodeID, node) -> upperLevel ++ [thisLevel

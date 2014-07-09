@@ -7,8 +7,8 @@
 module Flowbox.Interpreter.Session.AST.WatchPoint where
 
 import           Control.Monad.State
-import           Flowbox.Data.MapForest                         (MapForest)
-import qualified Flowbox.Data.MapForest                         as MapForest
+import           Flowbox.Data.SetForest                         (SetForest)
+import qualified Flowbox.Data.SetForest                         as SetForest
 import           Flowbox.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import qualified Flowbox.Interpreter.Session.Env                as Env
@@ -19,16 +19,16 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.WatchPoint"
+logger = getLoggerIO "Flowbox.Interpreter.Session.AST.WatchPoint"
 
 
 add :: CallPointPath -> Session ()
-add callPath = modify (Env.watchPoints %~ MapForest.insert callPath)
+add callPath = modify (Env.watchPoints %~ SetForest.insert callPath)
 
 
 delete :: CallPointPath -> Session ()
-delete callPath = modify (Env.watchPoints %~ MapForest.delete callPath)
+delete callPath = modify (Env.watchPoints %~ SetForest.delete callPath)
 
 
-all :: Session (MapForest CallPoint)
+all :: Session (SetForest CallPoint)
 all = gets (view Env.watchPoints)
