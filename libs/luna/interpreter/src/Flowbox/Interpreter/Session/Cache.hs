@@ -42,23 +42,41 @@ put :: CallPointPath -> Session ()
 put callPointPath = modify $ Env.cached %~ MapForest.insert callPointPath
 
 
-invalidate' :: CallDataPath -> Session ()
-invalidate' callDataPath = do
+invalidateForward :: CallDataPath -> Session ()
+invalidateForward callDataPath = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-    whenM (exists callPointPath) $ do
-        let varName       = CallPointPath.toVarName callPointPath
-            expression    = varName ++ " <- return ()"
-        next <- Traverse.next callDataPath
-        into <- Traverse.into callDataPath
-        mapM_ invalidate' $ next ++ into
-        logger debug $ "Invalidating " ++ varName
-        modify $ Env.cached %~ MapForest.delete callPointPath
-        Session.runStmt expression
-        logger trace =<< MapForest.draw <$> gets (view Env.cached)
+    into    <- Traverse.into callDataPath
+    let next = Traverse.nextLocal callDataPath
+    mapM_ invalidateForward $ next ++ into
+    invalidateCache callPointPath
+
+
+invalidateUpper :: CallDataPath -> Session ()
+invalidateUpper [] = return ()
+invalidateUpper callDataPath = do
+    let upper = init callDataPath
+    invalidateCache $ CallDataPath.toCallPointPath callDataPath
+    invalidateUpper upper
+    let next = Traverse.nextLocal callDataPath
+    mapM_ invalidateForward next
+
 
 
 invalidate :: CallPointPath -> Session ()
 invalidate callPointPath = do
-    main <- Session.findMain
-    cdp <- CallDataPath.fromCallPointPath callPointPath main
-    invalidate' cdp
+    main         <- Session.findMain
+    callDataPath <- CallDataPath.fromCallPointPath callPointPath main
+    invalidateForward callDataPath
+    invalidateUpper   callDataPath
+
+
+
+invalidateCache :: CallPointPath -> Session ()
+invalidateCache callPointPath =
+    whenM (exists callPointPath) $ do
+        let varName       = CallPointPath.toVarName callPointPath
+            expression    = varName ++ " <- return ()"
+        logger debug $ "Invalidating " ++ varName
+        modify $ Env.cached %~ MapForest.delete callPointPath
+        Session.runStmt expression
+        logger trace =<< MapForest.draw <$> gets (view Env.cached)
