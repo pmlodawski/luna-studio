@@ -68,6 +68,7 @@ main = do
              , ""
              , "def main self:"
              , "    a = self.test 700 900"
+             --, "    b = self.test a a"
              , "    print a"
              , "    1"
              ]
@@ -87,9 +88,9 @@ main = do
         Executor.processMain
         putStrLn "---------"
         Executor.processMain
-        Cache.invalidate [CallPoint libID 52]
-        putStrLn "---------"
-        Cache.invalidate [CallPoint libID 49]
+        Cache.invalidate [CallPoint libID 47, CallPoint libID 13, CallPoint libID 36]
+        --putStrLn "---------"
+        --Cache.invalidate [CallPoint libID 49]
         --Cache.invalidate [CallPoint libID 47]
         Executor.processMain
         --mapM_ (const $ Cache.runNode graph 4) [0..10000]

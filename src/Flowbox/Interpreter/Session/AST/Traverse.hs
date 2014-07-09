@@ -6,8 +6,9 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.AST.Traverse (
   into
-, next
+, nextLocal
 , previous
+, up
 ) where
 
 import           Control.Monad.State hiding (mapM, mapM_)
@@ -85,13 +86,9 @@ into callDataPath = do
         Just defPoint -> CallDataPath.addLevel callDataPath defPoint
 
 
-next :: CallDataPath -> Session [CallDataPath]
-next []           = return []
-next callDataPath = return $ localSuccessors callDataPath
-
-
-localSuccessors :: CallDataPath -> [CallDataPath]
-localSuccessors callDataPath = localSuccs where
+nextLocal :: CallDataPath -> [CallDataPath]
+nextLocal []           = []
+nextLocal callDataPath = localSuccs where
     graph      = last callDataPath ^. CallData.parentGraph
     nodeID     = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
     succNodes  = Graph.sucl graph nodeID
@@ -101,3 +98,5 @@ localSuccessors callDataPath = localSuccs where
                                         & CallData.callPoint . CallPoint.nodeID .~ nodeID
                                         & CallData.node .~ node]) succNodes
 
+up :: CallDataPath -> CallDataPath
+up = init
