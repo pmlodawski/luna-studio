@@ -10,8 +10,8 @@ import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.List           as List
 
 import qualified Flowbox.Data.MapForest                         as MapForest
+import qualified Flowbox.Interpreter.Session.AST.Cache          as Cache
 import qualified Flowbox.Interpreter.Session.AST.Traverse       as Traverse
-import qualified Flowbox.Interpreter.Session.Cache              as Cache
 import qualified Flowbox.Interpreter.Session.Data.CallData      as CallData
 import           Flowbox.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath

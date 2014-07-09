@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.Cache where
+module Flowbox.Interpreter.Session.AST.Cache where
 
 import Control.Monad.State hiding (mapM, mapM_)
 
@@ -23,7 +23,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.Cache"
+logger = getLoggerIO "Flowbox.Interpreter.Session.AST.Cache"
 
 
 
