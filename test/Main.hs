@@ -90,6 +90,8 @@ main = do
         putStrLn "---------"
         Executor.processMain
         Cache.invalidate [CallPoint libID 50, CallPoint libID 13, CallPoint libID 36]
+        --Cache.invalidate [CallPoint libID 60]
+        --Cache.invalidate [CallPoint libID 52]
         --putStrLn "---------"
         --Cache.invalidate [CallPoint libID 57]
         --Cache.invalidate [CallPoint libID 47]

@@ -10,6 +10,7 @@ import Control.Monad.State hiding (mapM, mapM_)
 
 import qualified Flowbox.Data.MapForest                         as MapForest
 import qualified Flowbox.Interpreter.Session.AST.Traverse       as Traverse
+import qualified Flowbox.Interpreter.Session.Data.CallData      as CallData
 import           Flowbox.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
@@ -18,6 +19,7 @@ import           Flowbox.Interpreter.Session.Env                (Cached (Cached)
 import qualified Flowbox.Interpreter.Session.Env                as Env
 import           Flowbox.Interpreter.Session.Session            (Session)
 import qualified Flowbox.Interpreter.Session.Session            as Session
+import qualified Flowbox.Luna.Data.Graph.Node                   as Node
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -47,23 +49,30 @@ delete :: CallPointPath -> Session ()
 delete callPointPath = modify $ Env.cached %~ MapForest.delete callPointPath
 
 
-invalidateForward :: CallDataPath -> Session ()
-invalidateForward callDataPath = do
+invalidateInside :: CallDataPath -> Session ()
+invalidateInside callDataPath = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     into    <- Traverse.into callDataPath
     let next = Traverse.nextLocal callDataPath
-    mapM_ invalidateForward $ next ++ into
+    mapM_ invalidateInside $ next ++ into
     invalidateCache callPointPath
 
 
-invalidateUpper :: CallDataPath -> Session ()
-invalidateUpper [] = return ()
-invalidateUpper callDataPath = do
-    let upper = init callDataPath
-    invalidateCache $ CallDataPath.toCallPointPath callDataPath
-    invalidateUpper upper
-    let next = Traverse.nextLocal callDataPath
-    mapM_ invalidateForward next
+invalidate' :: CallDataPath -> Session ()
+invalidate' callDataPath = do
+    invalidateCache' callDataPath
+    let node = last callDataPath ^. CallData.node
+    case node of
+        Node.Outputs -> do let upper = Traverse.up callDataPath
+                               next  = Traverse.nextLocal upper
+                           invalidateCache' upper
+                           mapM_ invalidate' next
+        _            -> do into <- Traverse.into callDataPath
+                           mapM_ invalidateInside into
+                           let next = Traverse.nextLocal callDataPath
+                           mapM_ invalidate' next
+
+
 
 
 
@@ -71,9 +80,12 @@ invalidate :: CallPointPath -> Session ()
 invalidate callPointPath = do
     main         <- Session.findMain
     callDataPath <- CallDataPath.fromCallPointPath callPointPath main
-    invalidateForward callDataPath
-    invalidateUpper   callDataPath
+    invalidate' callDataPath
 
+
+
+invalidateCache' :: CallDataPath -> Session ()
+invalidateCache' = invalidateCache . CallDataPath.toCallPointPath
 
 
 invalidateCache :: CallPointPath -> Session ()
