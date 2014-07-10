@@ -1,0 +1,36 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Flowbox Team <contact@flowbox.io>, 2014
+-- Proprietary and confidential
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+---------------------------------------------------------------------------
+module Flowbox.Interpreter.Session.TypeCheck where
+
+import qualified Data.List as List
+
+import           Flowbox.Interpreter.Session.Session (Session)
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import qualified Language.Haskell.Interpreter        as Interpreter
+
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Interpreter.Session.Session"
+
+
+function :: String -> [String] -> Session String
+function funName args = do
+    let expr = List.intercalate " " $ funName : args
+    typedArgs   <- lift2 $ mapM Interpreter.typeOf args
+    typedResult <- lift2 $ Interpreter.typeOf expr
+    let funType =  List.intercalate " -> " $ typedArgs ++ [typedResult]
+    return $ funName ++ " :: " ++ funType
+
+
+variable :: String -> Session String
+variable expr = do
+    t <- lift2 $ Interpreter.typeOf expr
+    return $ "(" ++ expr ++ " :: " ++ t ++ ")"
+
+

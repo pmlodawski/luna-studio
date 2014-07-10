@@ -41,37 +41,21 @@ main :: IO ()
 main = do
     rootLogger setIntLevel 5
     let code = Source ["Main"] $ unlines
-             --[ "def foo self:"
-             --, "    print \"foo\""
-             --, "    2"
-             --, ""
-             --, "def bar self:"
-             --, "    self.foo"
-             --, "    print \"bar\""
-             --, "    3"
-             --, ""
-             --, "def main self:"
-             --, "    print \"hello\""
-             --, "    self.foo"
-             --, "    self.bar"
-             --, "    print \"world\""
-             --, "    1"
-             --]
              [ ""
              , "def test self arg arg2:"
-             , "    a = self.bla arg arg2"
-             , "    a"
+             , "    print arg"
+             , "    print arg2"
+             , "    self.bla \"kota\" \"albo nie\""
              , ""
              , "def bla self arg arg2:"
-             , "    b = zupah arg arg2"
-             , "    c = fooooo"
-             , "    {b,1,b, arg}"
+             , "    a = \"grubego\""
+             , "    b = print a"
+             , "    {arg, arg2, b}"
              , ""
              , "def main self:"
-             , "    a = self.test 700 900"
-             --, "    b = self.test a a"
+             , "    a = self.test \"ala\" \"ma\""
              , "    print a"
-             , "    1"
+             , "    \"dummy\""
              ]
         path = UniPath.fromUnixString "."
 
@@ -89,27 +73,7 @@ main = do
         Executor.processMain
         putStrLn "---------"
         Executor.processMain
-        Cache.invalidate [CallPoint libID 50, CallPoint libID 13, CallPoint libID 36]
-        --Cache.invalidate [CallPoint libID 60]
-        --Cache.invalidate [CallPoint libID 52]
-        --putStrLn "---------"
-        --Cache.invalidate [CallPoint libID 57]
-        --Cache.invalidate [CallPoint libID 47]
+        Cache.invalidate [CallPoint libID 52, CallPoint libID 17, CallPoint libID 38]
         Executor.processMain
         Executor.processMain
-        Executor.processMain
-        --mapM_ (const $ Cache.runNode graph 4) [0..10000]
-        --mapM_ (const $ Cache.runNodeIfNeeded graph 4) [0..1000000]
-        --Cache.runNodeIfNeeded graph 5
-        --Cache.dump 3
-        --Cache.dump 4
-        --Cache.invalidate [  (libID, [ Crumb.ModuleCrumb "Main"
-        --                            , Crumb.FunctionCrumb "main" []
-        --                            ]
-        --                  ),(libID, [ Crumb.ModuleCrumb "Main"
-        --                            , Crumb.FunctionCrumb "foo"  []
-        --                            ]
-        --                  )]
-        --Cache.runNodeIfNeeded graph 5
-        --Cache.runNodeIfNeeded graph 5
     eitherStringToM $ fmapL Error.format result
