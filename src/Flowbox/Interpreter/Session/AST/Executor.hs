@@ -9,7 +9,7 @@ module Flowbox.Interpreter.Session.AST.Executor where
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.List           as List
 
-import qualified Flowbox.Data.SetForest                         as SetForest
+import qualified Flowbox.Data.MapForest                         as MapForest
 import qualified Flowbox.Interpreter.Session.AST.Cache          as Cache
 import qualified Flowbox.Interpreter.Session.AST.Traverse       as Traverse
 import qualified Flowbox.Interpreter.Session.Data.CallData      as CallData
@@ -91,6 +91,6 @@ executeFunction functionName callPointPath predecessors = do
     Cache.exists callPointPath >>= logger debug . show
     --Session.runStmt expression
     Cache.put callPointPath
-    logger trace =<< SetForest.draw <$> gets (view Env.cached)
+    logger trace =<< MapForest.draw <$> gets (view Env.cached)
 
 

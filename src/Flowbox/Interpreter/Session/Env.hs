@@ -8,6 +8,8 @@
 
 module Flowbox.Interpreter.Session.Env where
 
+import           Flowbox.Data.MapForest                     (MapForest)
+import qualified Flowbox.Data.MapForest                     as MapForest
 import           Flowbox.Data.SetForest                     (SetForest)
 import qualified Flowbox.Data.SetForest                     as SetForest
 import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint)
@@ -17,7 +19,11 @@ import           Flowbox.Prelude
 
 
 
-data Env = Env { _cached      :: SetForest CallPoint
+data Cached = Cached
+            deriving (Show)
+
+
+data Env = Env { _cached      :: MapForest CallPoint Cached
                , _watchPoints :: SetForest CallPoint
                , _libManager  :: LibManager
                , _mainPtr     :: DefPoint
@@ -28,4 +34,4 @@ makeLenses(''Env)
 
 
 mk :: LibManager -> DefPoint -> Env
-mk = Env SetForest.empty SetForest.empty
+mk = Env MapForest.empty SetForest.empty
