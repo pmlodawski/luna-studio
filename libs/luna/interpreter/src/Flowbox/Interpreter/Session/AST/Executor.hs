@@ -20,6 +20,8 @@ import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import qualified Flowbox.Interpreter.Session.Data.CallPointPath as CallPointPath
 import qualified Flowbox.Interpreter.Session.Env                as Env
 import           Flowbox.Interpreter.Session.Session            (Session)
+import qualified Flowbox.Interpreter.Session.Session            as Session
+import qualified Flowbox.Interpreter.Session.TypeCheck          as TypeCheck
 import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                   as Node
 import           Flowbox.Prelude                                hiding (children, inside)
@@ -79,16 +81,17 @@ executeNode callDataPath predecessors = do
 
 
 executeFunction :: String -> CallPointPath -> [CallPointPath] -> Session ()
-executeFunction functionName callPointPath predecessors = do
+executeFunction funName callPointPath predecessors = do
     let varName       = CallPointPath.toVarName callPointPath
-        --functionType = node ^. Node.cls . Type.repr
         args          = map CallPointPath.toVarName predecessors
-        function      = "toIO $ extract $ (Operation (" ++ functionName ++ "))"
+    typedFun  <- TypeCheck.function funName args
+    typedArgs <- mapM TypeCheck.variable args
+    let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
         argSeparator  = " `call` "
-        operation     = List.intercalate argSeparator (function : args)
+        operation     = List.intercalate argSeparator (function : typedArgs)
         expression    = varName ++ " <- " ++ operation
-    logger info expression
-    --Session.runStmt expression
+    --logger info expression
+    Session.runStmt expression
     Cache.put callPointPath
     logger trace =<< MapForest.draw <$> gets (view Env.cached)
 
