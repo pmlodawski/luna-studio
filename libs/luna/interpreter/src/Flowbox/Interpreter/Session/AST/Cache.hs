@@ -8,12 +8,13 @@ module Flowbox.Interpreter.Session.AST.Cache where
 
 import Control.Monad.State hiding (mapM, mapM_)
 
-import qualified Flowbox.Data.SetForest                         as SetForest
+import qualified Flowbox.Data.MapForest                         as MapForest
 import qualified Flowbox.Interpreter.Session.AST.Traverse       as Traverse
 import           Flowbox.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import qualified Flowbox.Interpreter.Session.Data.CallPointPath as CallPointPath
+import           Flowbox.Interpreter.Session.Env                (Cached (Cached))
 import qualified Flowbox.Interpreter.Session.Env                as Env
 import           Flowbox.Interpreter.Session.Session            (Session)
 import qualified Flowbox.Interpreter.Session.Session            as Session
@@ -35,15 +36,15 @@ dump callPointPath = do
 
 
 exists :: CallPointPath -> Session Bool
-exists callPointPath = SetForest.member callPointPath <$> gets (view Env.cached)
+exists callPointPath = MapForest.contains callPointPath <$> gets (view Env.cached)
 
 
 put :: CallPointPath -> Session ()
-put callPointPath = modify $ Env.cached %~ SetForest.insert callPointPath
+put callPointPath = modify $ Env.cached %~ MapForest.insert callPointPath Cached
 
 
 delete :: CallPointPath -> Session ()
-delete callPointPath = modify $ Env.cached %~ SetForest.delete callPointPath
+delete callPointPath = modify $ Env.cached %~ MapForest.delete callPointPath
 
 
 invalidateForward :: CallDataPath -> Session ()
@@ -83,4 +84,4 @@ invalidateCache callPointPath =
         logger debug $ "Invalidating " ++ varName
         delete callPointPath
         Session.runStmt expression
-        logger trace =<< SetForest.draw <$> gets (view Env.cached)
+        logger trace =<< MapForest.draw <$> gets (view Env.cached)
