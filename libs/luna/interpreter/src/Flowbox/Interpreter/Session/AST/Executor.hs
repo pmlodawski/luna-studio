@@ -88,7 +88,6 @@ executeFunction functionName callPointPath predecessors = do
         operation     = List.intercalate argSeparator (function : args)
         expression    = varName ++ " <- " ++ operation
     logger info expression
-    Cache.exists callPointPath >>= logger debug . show
     --Session.runStmt expression
     Cache.put callPointPath
     logger trace =<< MapForest.draw <$> gets (view Env.cached)
