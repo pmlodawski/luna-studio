@@ -12,13 +12,12 @@ module Flowbox.Graphics.Utils where
 import           Data.Array.Accelerate as A
 --import qualified Data.Array.Accelerate as A
 
-import Flowbox.Prelude
+import Flowbox.Prelude as P
 
 
 
 data Size a = Size {sizeW :: a, sizeH :: a}
 data Range a = Range {rangeLo :: a, rangeHi :: a}
-
 
 -- THINK[2]: about invert and invert' and their names
 invert :: Num a => a -> a

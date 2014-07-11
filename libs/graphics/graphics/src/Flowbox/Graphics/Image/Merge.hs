@@ -31,31 +31,30 @@ union :: Num a => a -> a -> a
 union a b = a + b - (a * b)
 
 basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
-                             => Generator (A.Exp a) -- ^ Overlay / Source / Foreground / A
-                             -> Generator (A.Exp a) -- ^ Overlay alpha
-                             -> Generator (A.Exp a) -- ^ Background / Destination / B
-                             -> Generator (A.Exp a) -- ^ Background alpha
+                             => ContinousGenerator (A.Exp a) -- ^ Overlay / Source / Foreground / A
+                             -> ContinousGenerator (A.Exp a) -- ^ Overlay alpha
+                             -> ContinousGenerator (A.Exp a) -- ^ Background / Destination / B
+                             -> ContinousGenerator (A.Exp a) -- ^ Background alpha
                              -> AlphaBlend  -- ^ Specifies if the same blending method is used on alpha channels
                              -> BlendMode a -- ^ Function used for blending
-                             -> Generator (A.Exp a) -- ^ Merge result
+                             -> ContinousGenerator (A.Exp a) -- ^ Merge result
 basicColorCompositingFormula (Generator overlay) (Generator alphaOverlay) (Generator background) (Generator alphaBackground) alphaBlend blend =
-    Generator $ \p s ->
-    let alphaResult = \p' s' -> case alphaBlend of
-            Adobe  -> union (alphaOverlay p' s') (alphaBackground p' s')
-            Custom -> blend (alphaOverlay p' s') (alphaBackground p' s')
-    in (1 - (alphaOverlay p s / alphaResult p s)) * background p s + (alphaOverlay p s / alphaResult p s) *
-        (U.invert (alphaBackground p s) * overlay p s + alphaBackground p s * blend (overlay p s) (background p s))
+    Generator $ \p ->
+    let alphaResult = \p' -> case alphaBlend of
+            Adobe  -> union (alphaOverlay p') (alphaBackground p')
+            Custom -> blend (alphaOverlay p') (alphaBackground p')
+    in (1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
+        (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (overlay p) (background p))
 
 complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
-                                   => Generator (A.Exp a)
-                                   -> Generator (A.Exp a)
-                                   -> Generator (A.Exp a)
-                                   -> Generator (A.Exp a)
+                                   => ContinousGenerator (A.Exp a)
+                                   -> ContinousGenerator (A.Exp a)
+                                   -> ContinousGenerator (A.Exp a)
+                                   -> ContinousGenerator (A.Exp a)
                                    -> ComplicatedBlendMode a
-                                   -> Generator (A.Exp a)
+                                   -> ContinousGenerator (A.Exp a)
 complicatedColorCompositingFormula (Generator overlay) (Generator alphaOverlay) (Generator background) (Generator alphaBackground) blend =
-    Generator $ \p s ->
-    blend (overlay p s) (alphaOverlay p s) (background p s) (alphaBackground p s)
+    Generator $ \p -> blend (overlay p) (alphaOverlay p) (background p) (alphaBackground p)
 
 liftBlend :: (A.Elt a, A.IsFloating a) => BlendMode a -> ComplicatedBlendMode a
 liftBlend blend = \overlay _ background _ -> blend overlay background
