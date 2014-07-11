@@ -14,14 +14,14 @@ import Flowbox.Prelude
 
 
 
-turbulence :: (A.Exp Double -> Generator Double) ->
-              (A.Exp Double -> Generator Double) ->
-              (A.Exp Double -> Generator Double) ->
-              (A.Exp Double -> Generator Double) ->
+turbulence :: (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
+              (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
+              (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
+              (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
               A.Exp Double ->
               A.Exp Double ->
-              Generator Double
-turbulence xFun yFun zFun sourceFun power z = Generator $ \point grid ->
+              ContinousGenerator (A.Exp Double)
+turbulence xFun yFun zFun sourceFun power z = Generator $ \point ->
     let x0 = Cartesian.x point + (12414.0 / 65536.0)
         y0 = Cartesian.y point + (65124.0 / 65536.0)
         z0 = z                 + (31337.0 / 65536.0)
@@ -34,7 +34,7 @@ turbulence xFun yFun zFun sourceFun power z = Generator $ \point grid ->
         y2 = Cartesian.y point + (11213.0 / 65536.0)
         z2 = z                 + (44845.0 / 65536.0)
 
-        xDistort = Cartesian.x point + runGenerator (xFun z0) (Cartesian.Point2 x0 y0) grid * power
-        yDistort = Cartesian.y point + runGenerator (yFun z1) (Cartesian.Point2 x1 y1) grid * power
-        zDistort = z                 + runGenerator (zFun z2) (Cartesian.Point2 x2 y2) grid * power
-    in  runGenerator (sourceFun zDistort) (Cartesian.Point2 xDistort yDistort) grid
+        xDistort = Cartesian.x point + runGenerator (xFun z0) (Cartesian.Point2 x0 y0) * power
+        yDistort = Cartesian.y point + runGenerator (yFun z1) (Cartesian.Point2 x1 y1) * power
+        zDistort = z                 + runGenerator (zFun z2) (Cartesian.Point2 x2 y2) * power
+    in  runGenerator (sourceFun zDistort) (Cartesian.Point2 xDistort yDistort)

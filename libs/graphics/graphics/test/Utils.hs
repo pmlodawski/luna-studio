@@ -15,7 +15,7 @@ import qualified Data.Array.Accelerate                as A
 import           Data.Array.Accelerate.IO
 import           Data.Array.Accelerate.CUDA
 
-testLoadRGBA :: FilePath -> IO (Matrix2 Double, Matrix2 Double, Matrix2 Double, Matrix2 Double)
+testLoadRGBA :: (Elt a, IsFloating a) => FilePath -> IO (Matrix2 a, Matrix2 a, Matrix2 a, Matrix2 a)
 testLoadRGBA filename = do
     file <- readImageFromBMP filename
     case file of
@@ -24,10 +24,10 @@ testLoadRGBA filename = do
     where convert t = let (r, g, b, a) = A.unlift t :: (Exp A.Word8, Exp A.Word8, Exp A.Word8, Exp A.Word8)
                       in A.lift (A.fromIntegral r / 255, A.fromIntegral g / 255, A.fromIntegral b / 255, A.fromIntegral a / 255)
 
-testSaveRGBA :: FilePath -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> IO ()
+testSaveRGBA :: (Elt a, IsFloating a) => FilePath -> Matrix2 a -> Matrix2 a -> Matrix2 a -> Matrix2 a -> IO ()
 testSaveRGBA filename r g b a = writeImageToBMP filename $ compute' run $ M.map packRGBA32 $ zip4 (conv r) (conv g) (conv b) (conv a)
     where conv = id >-> M.map (A.truncate . (* 255.0) . clamp' 0 1)
 
 
-testSaveChan :: FilePath -> Matrix2 Double -> IO ()
+testSaveChan :: (Elt a, IsFloating a) => FilePath -> Matrix2 a -> IO ()
 testSaveChan filename a = testSaveRGBA filename a a a a

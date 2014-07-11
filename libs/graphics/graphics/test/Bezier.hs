@@ -4,12 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+module Main where
 
-module Flowbox.Graphics.Composition.Generators.Constant where
+import Data.Array.Accelerate as A
+import Data.Array.Accelerate.CUDA as C
 
 import Flowbox.Prelude
-import Flowbox.Graphics.Composition.Generators.Structures
 
+main :: IO ()
+main = do
+    putStrLn "- - - = = =   Bezier Test   = = = - - -"
 
-constant :: b -> Generator a b
-constant = pure
+    let a = A.use $ fromList (Z :. 3) [1,2,3] :: Acc (Vector Int)
+
+    print $ run a
+
+    return ()
