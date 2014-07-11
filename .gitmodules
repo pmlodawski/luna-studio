@@ -16,3 +16,6 @@
 [submodule "third-party/linear-accelerate"]
 	path = third-party/linear-accelerate
 	url = git@github.com:korrix/linear-accelerate.git
+[submodule "third-party/cuda"]
+	path = third-party/cuda
+	url = git@github.com:tmcdonell/cuda.git

@@ -12,7 +12,7 @@ import os.path
 import shutil
 from subprocess        import Popen, PIPE, call
 
-from utils.colors      import print_info, print_error, print_warning#, formatQuestion
+from utils.colors      import print_info, print_error, print_warning, formatQuestion
 from utils.errors      import fatal
 from distutils.version import LooseVersion
 
@@ -20,11 +20,13 @@ from distutils.version import LooseVersion
 myPath = os.path.dirname(os.path.realpath(__file__))
 rootPath = os.path.dirname(myPath)
 distGraphicsPath = os.path.join(rootPath,'dist/libs/graphics/graphics')
+# sandboxPath = os.path.join(distGraphicsPath,'.cabal-sandbox')
+sandboxPath = distGraphicsPath
 
 submodulesDirName = 'third-party'
 submodulesDir = os.path.join(rootPath, submodulesDirName)
-# (submodule, debuggable)
-submodules = ['accelerate', 'accelerate-io', 'accelerate-cuda', 'linear-accelerate', 'algebraic', 'protocol-buffers']
+# changing the following list does not automatically install the packages, just handles the initiation of git submodules
+submodules = ['cuda', 'accelerate', 'accelerate-io', 'accelerate-cuda', 'linear-accelerate', 'algebraic', 'protocol-buffers']
 submodulesDirs = map(lambda x: os.path.join(submodulesDir, x), submodules)
 
 cwd = os.getcwd()
@@ -61,11 +63,20 @@ def try_call(cmd):
     if call(cmd, shell=True): fatal()
 
 def cabalInstall(pkg):
-	print_info("installing cabal pakcage(s): %s" % pkg)
-	try_call("cabal install %s" % pkg)
+    print_info("installing cabal pakcage(s): %s" % pkg)
+    try_call("cabal install %s" % pkg)
 
-# def installThirdParty((package,dbg)):
-# 	cabalInstall("%s %s" % (os.path.join(submodulesDir, "%s/%s.cabal" % (package, package)), '-fdebug' if dbg and debugAccelerate else ''))
+def installThirdParty(pkg,flags=''):
+    tmp = os.getcwd()
+    print_info("Configuring and installing %s" % pkg)
+
+    os.chdir(os.path.join(submodulesDir,pkg))
+    try_call("cabal sandbox init --sandbox=%s" % sandboxPath)
+    try_call("cabal install --only-dependencies") # if this won't work, check with the -w option
+    try_call("cabal configure %s" % flags)
+    try_call("cabal install %s" % flags) # why install? (copied from Gadek's script), shouldn't it be just build, since we did the configuration part in the previous line?
+
+    os.chdir(tmp)
 
 # - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - -
@@ -75,15 +86,18 @@ def cabalInstall(pkg):
 # check if everything is set up correctly
 # - - - - - - - - - - - - - - - - - - - -
 
+if not debugAccelerate and not ask("Accelerate will not be installed in debug mode! Would you still like to continue?"):
+    exit(0)
+
 result,error = checkVersion("ghc", "7.8.2")
 if not result:
-	print_error(error)
-	fatal()
+    print_error(error)
+    fatal()
 
 result,error = checkVersion("cabal", "1.20")
 if not result:
-	print_error(error)
-	fatal()
+    print_error(error)
+    fatal()
 
 # - - - - - - - - - - - - - - - - - - - -
 # go to the root path
@@ -105,19 +119,42 @@ try_call("git submodule update")
 # - - - - - - - - - - - - - - - - - - - -
 
 os.chdir(distGraphicsPath)
-cabalInstall("happy alex c2hs")
 
-print_info("installing accelerate %s" % '(with debug)' if debugAccelerate else '')
-cabalInstall("%s %s %s %s" % ('-fdebug' if debugAccelerate else ''
-							 , os.path.join(submodulesDir,'accelerate/accelerate.cabal')
-							 , os.path.join(submodulesDir,'accelerate-io/accelerate-io.cabal')
-							 , os.path.join(submodulesDir,'accelerate-cuda/accelerate-cuda.cabal')
-							 ))
-print_info("installing other dependencies")
-cabalInstall("%s %s %s" % (os.path.join(submodulesDir,'linear-accelerate/linear-accelerate.cabal')
-	                    , os.path.join(submodulesDir,'algebraic/algebraic.cabal')
-	                    , os.path.join(submodulesDir,'protocol-buffers/protocol-buffers.cabal')
-	                    ))
-# map(installThirdParty, submodules)
+cabalInstall("c2hs")
+installThirdParty('cuda', "--enable-executable-dynamic %s" % '-fdebug' if debugAccelerate else '')
+installThirdParty('accelerate', '-fdebug' if debugAccelerate else '')
+cabalInstall("imagemagick") # it's here so accelerate's io dependency (QuickCheck) can resolve a correct version of transformers (imagemagick uses a very fucking old version of those) # at least I think this should fix the problem with dependencies
+installThirdParty('accelerate-io', '-fdebug' if debugAccelerate else '')
+installThirdParty('accelerate-cuda', '-fdebug' if debugAccelerate else '')
+# print_info("installing accelerate %s" % '(with debug)' if debugAccelerate else '')
+# cabalInstall("--enable-executable-dynamic %s %s %s %s" % ('-fdebug' if debugAccelerate else ''
+#                            , os.path.join(submodulesDir,'accelerate/accelerate.cabal')
+#                            , os.path.join(submodulesDir,'accelerate-io/accelerate-io.cabal')
+#                            , os.path.join(submodulesDir,'accelerate-cuda/accelerate-cuda.cabal')
+#                            ))
+
+installThirdParty('linear-accelerate')
+installThirdParty('algebraic')
+installThirdParty('protocol-buffers')
+
+cabalInstall("happy alex")
+
+# print_info("installing other dependencies")
+# cabalInstall("%s %s %s" % (os.path.join(submodulesDir,'linear-accelerate/linear-accelerate.cabal')
+#                           , os.path.join(submodulesDir,'algebraic/algebraic.cabal')
+#                           , os.path.join(submodulesDir,'protocol-buffers/protocol-buffers.cabal')
+#                           ))
+
+# print_info("installing accelerate %s" % '(with debug)' if debugAccelerate else '')
+# cabalInstall("%s %s %s %s" % ('-fdebug' if debugAccelerate else ''
+#                            , os.path.join(submodulesDir,'accelerate/accelerate.cabal')
+#                            , os.path.join(submodulesDir,'accelerate-io/accelerate-io.cabal')
+#                            , os.path.join(submodulesDir,'accelerate-cuda/accelerate-cuda.cabal')
+#                            ))
+# print_info("installing other dependencies")
+# cabalInstall("%s %s %s" % (os.path.join(submodulesDir,'linear-accelerate/linear-accelerate.cabal')
+#                       , os.path.join(submodulesDir,'algebraic/algebraic.cabal')
+#                       , os.path.join(submodulesDir,'protocol-buffers/protocol-buffers.cabal')
+#                       ))
 
 print_info ("- - - END - - -")
