@@ -26,7 +26,7 @@ importPaths = [ '/usr/include'
               , '/usr/local/include'
               , os.path.join(rootPath, 'dist', 'proto')
               , os.path.join(rootPath, 'libs/luna/base/src/proto')
-              , os.path.join(rootPath, 'libs/batch/src/proto')
+              , os.path.join(rootPath, 'libs/batch/batch/src/proto')
               , os.path.join(rootPath, 'libs/rpc/src/proto')
               , os.path.join(rootPath, 'libs/aws/src/proto')
               ]
