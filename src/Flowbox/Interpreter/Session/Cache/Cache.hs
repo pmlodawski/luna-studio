@@ -8,11 +8,13 @@ module Flowbox.Interpreter.Session.Cache.Cache where
 
 import Control.Monad.State hiding (mapM, mapM_)
 
+import           Flowbox.Data.MapForest                         (MapForest)
 import qualified Flowbox.Data.MapForest                         as MapForest
 import           Flowbox.Interpreter.Session.Data.CacheInfo     (CacheInfo (CacheInfo))
 import qualified Flowbox.Interpreter.Session.Data.CallData      as CallData
 import           Flowbox.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
+import           Flowbox.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import qualified Flowbox.Interpreter.Session.Data.CallPointPath as CallPointPath
 import qualified Flowbox.Interpreter.Session.Env                as Env
@@ -47,3 +49,7 @@ put callDataPath = do
 
 delete :: CallPointPath -> Session ()
 delete callPointPath = modify $ Env.cached %~ MapForest.delete callPointPath
+
+
+cached :: Session (MapForest CallPoint CacheInfo)
+cached = gets (view Env.cached)
