@@ -8,7 +8,6 @@
 
 module Flowbox.Interpreter.Session.Data.DefPoint where
 
-import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
 import qualified Flowbox.Luna.Lib.Library                as Library
 import           Flowbox.Prelude
