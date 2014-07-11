@@ -9,9 +9,7 @@ module Flowbox.Graphics.Composition.Generators.Constant where
 
 import Flowbox.Prelude
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Math.Matrix
 
 
-
-constant :: Exp a -> Generator (Exp a)
+constant :: b -> Generator a b
 constant = pure
