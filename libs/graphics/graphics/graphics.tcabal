@@ -30,6 +30,7 @@ Library
                   containers               ,
                   flowbox-utils            ,
                   imagemagick              ,
+                  lifted-base              ,
                   linear                   ,
                   linear-accelerate        ,
                   monad-control            ,
