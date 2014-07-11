@@ -124,7 +124,7 @@ ommitedAnySubmodule = False
 print_info("adding submodules to `%s`: " % submodulesDirName)
 print map(lambda t: t[0], submodules)
 for t in submodules:
-    path = os.path.join(submodulesDir, t[0])
+    path = os.path.join(submodulesDirName, t[0])
     if os.path.exists(path):
         print_warning("ommiting submodule `%s` - already has it's direcoty: %s" % (t[0], path))
         ommitedAnySubmodule = True
@@ -139,6 +139,12 @@ print map(lambda t: t[0], submodules)
 try_call("git submodule init %s" % (' '.join(submodulesDirs)))
 try_call("git submodule update")
 
+print_info("ignoring untracked files in submodules:")
+print map(lambda t: t[0], submodules)
+for t in submodules:
+    path = os.path.join(submodulesDirName, t[0])
+    try_call("git config submodule.%s.ignore untracked" % path)
+
 # - - - - - - - - - - - - - - - - - - - -
 # install dependencies
 # - - - - - - - - - - - - - - - - - - - -
@@ -151,13 +157,6 @@ installThirdParty('accelerate', '-fdebug' if debugAccelerate else '')
 cabalInstall("imagemagick") # it's here so accelerate's io dependency (QuickCheck) can resolve a correct version of transformers (imagemagick uses a very fucking old version of those) # at least I think this should fix the problem with dependencies
 installThirdParty('accelerate-io', '-fdebug' if debugAccelerate else '')
 installThirdParty('accelerate-cuda', '-fdebug' if debugAccelerate else '')
-# print_info("installing accelerate %s" % '(with debug)' if debugAccelerate else '')
-# cabalInstall("--enable-executable-dynamic %s %s %s %s" % ('-fdebug' if debugAccelerate else ''
-#                            , os.path.join(submodulesDir,'accelerate/accelerate.cabal')
-#                            , os.path.join(submodulesDir,'accelerate-io/accelerate-io.cabal')
-#                            , os.path.join(submodulesDir,'accelerate-cuda/accelerate-cuda.cabal')
-#                            ))
-
 installThirdParty('linear-accelerate')
 installThirdParty('algebraic')
 installThirdParty('protocol-buffers')
