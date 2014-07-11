@@ -35,17 +35,19 @@ insert k v forest = insert' k (Just v) forest
 
 
 toList :: MapForest k v -> [([k], v)]
-toList = find (const True)
+toList = find (const . const True)
 
 
-find :: (v -> Bool) -> MapForest k v -> [([k], v)]
+find :: ([k] -> v -> Bool) -> MapForest k v -> [([k], v)]
 find predicate = concatMap (find' []) . Map.toList where
     find' key (k, level) = case level ^. value of
-        Just v -> if predicate v
-            then (key++[k], v) : others
+        Just v -> if predicate newKey v
+            then (newKey, v) : others
             else others
         Nothing -> others
-        where others = concatMap (find' (key ++ [k])) $ Map.toList $ level ^. subForest
+        where
+            newKey = key ++ [k]
+            others = concatMap (find' newKey) $ Map.toList $ level ^. subForest
 
 
 insert' :: Ord k => [k] -> Maybe v -> MapForest k v -> MapForest k v

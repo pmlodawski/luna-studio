@@ -73,7 +73,9 @@ main = do
         Executor.processMain
         putStrLn "---------"
         Executor.processMain
-        Invalidate.invalidate [CallPoint libID 52, CallPoint libID 17, CallPoint libID 38]
+        --Invalidate.invalidateDef  libID 2
+        Invalidate.invalidateNode libID 10
+        --Invalidate.invalidate [CallPoint libID 52, CallPoint libID 17, CallPoint libID 38]
         Executor.processMain
         Executor.processMain
     eitherStringToM $ fmapL Error.format result
