@@ -12,6 +12,7 @@ import           Flowbox.Data.MapForest                     (MapForest)
 import qualified Flowbox.Data.MapForest                     as MapForest
 import           Flowbox.Data.SetForest                     (SetForest)
 import qualified Flowbox.Data.SetForest                     as SetForest
+import           Flowbox.Interpreter.Session.Data.CacheInfo (CacheInfo)
 import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint)
 import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint)
 import           Flowbox.Luna.Lib.LibManager                (LibManager)
@@ -19,11 +20,7 @@ import           Flowbox.Prelude
 
 
 
-data Cached = Cached
-            deriving (Show)
-
-
-data Env = Env { _cached      :: MapForest CallPoint Cached
+data Env = Env { _cached      :: MapForest CallPoint CacheInfo
                , _watchPoints :: SetForest CallPoint
                , _libManager  :: LibManager
                , _mainPtr     :: DefPoint

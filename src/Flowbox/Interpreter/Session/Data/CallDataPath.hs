@@ -17,11 +17,13 @@ import           Flowbox.Interpreter.Session.Data.DefPoint      (DefPoint)
 import qualified Flowbox.Interpreter.Session.Data.DefPoint      as DefPoint
 import           Flowbox.Interpreter.Session.Session            (Session)
 import qualified Flowbox.Interpreter.Session.Session            as Session
+import qualified Flowbox.Luna.Data.AST.Common                   as AST
 import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
 import           Flowbox.Luna.Data.Graph.Node                   (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                   as Node
 import           Flowbox.Prelude
+
 
 
 type CallDataPath  = [CallData]
@@ -33,26 +35,25 @@ toCallPointPath = map (view CallData.callPoint)
 
 addLevel :: CallDataPath -> DefPoint -> Session [CallDataPath]
 addLevel callDataPath defPoint = do
-    graph <- Session.getGraph defPoint
-    let createDataPath = append callDataPath defPoint graph
+    (graph, defID) <- Session.getGraph defPoint
+    let createDataPath = append callDataPath defPoint defID graph
     return $ map createDataPath $ Graph.labNodes graph
 
 
-
-append :: CallDataPath -> DefPoint -> Graph -> (Node.ID, Node) -> CallDataPath
-append callDataPath defPoint parentGraph n =
-    callDataPath ++ [CallData.mk defPoint parentGraph n]
+append :: CallDataPath -> DefPoint -> AST.ID -> Graph -> (Node.ID, Node) -> CallDataPath
+append callDataPath defPoint parentDefID parentGraph n =
+    callDataPath ++ [CallData.mk defPoint parentDefID parentGraph n]
 
 
 fromCallPointPath :: CallPointPath -> DefPoint -> Session CallDataPath
 fromCallPointPath []            _              = return []
 fromCallPointPath (callPoint:t) parentDefPoint = do
-    graph <- Session.getGraph parentDefPoint
+    (graph, defID) <- Session.getGraph parentDefPoint
     let nodeID    = callPoint ^. CallPoint.nodeID
         libraryID = callPoint ^. CallPoint.libraryID
     node <- Graph.lab graph nodeID <??> "No node with id = " ++ show nodeID
     let parentBC = parentDefPoint  ^. DefPoint.breadcrumbs
-        callData = CallData callPoint parentBC graph node
+        callData = CallData callPoint parentBC defID graph node
     mdefPoint <- Inspect.fromName (node ^. Node.expr) parentBC libraryID
     ((:) callData) <$> case mdefPoint of
         Just defPoint -> fromCallPointPath t defPoint
