@@ -26,8 +26,18 @@ sandboxPath = distGraphicsPath
 submodulesDirName = 'third-party'
 submodulesDir = os.path.join(rootPath, submodulesDirName)
 # changing the following list does not automatically install the packages, just handles the initiation of git submodules
-submodules = ['cuda', 'accelerate', 'accelerate-io', 'accelerate-cuda', 'linear-accelerate', 'algebraic', 'protocol-buffers']
-submodulesDirs = map(lambda x: os.path.join(submodulesDir, x), submodules)
+repositories = [ ''
+               , ''
+               ]
+submodules = [ ('cuda', 'git@github.com:tmcdonell/cuda.git')
+             , ('accelerate', 'git@github.com:AccelerateHS/accelerate.git')
+             , ('accelerate-io', 'git@github.com:AccelerateHS/accelerate-io.git')
+             , ('accelerate-cuda', 'git@github.com:AccelerateHS/accelerate-cuda.git')
+             , ('linear-accelerate', 'git@github.com:ekmett/linear-accelerate.git')
+             , ('algebraic', 'git@github.com:wdanilo/algebraic.git')
+             , ('protocol-buffers', 'git@github.com:korrix/protocol-buffers.git')
+             ]
+submodulesDirs = map(lambda t: os.path.join(submodulesDir, t[0]), submodules)
 
 cwd = os.getcwd()
 
@@ -110,7 +120,22 @@ os.chdir(rootPath)
 # - - - - - - - - - - - - - - - - - - - -
 
 # print ' '.join(submodulesDirs)
-print "initialising submodules in `%s`: " % submodulesDirName, submodules
+ommitedAnySubmodule = False
+print_info("adding submodules to `%s`: " % submodulesDirName)
+print map(lambda t: t[0], submodules)
+for t in submodules:
+    path = os.path.join(submodulesDir, t[0])
+    if os.path.exists(path):
+        print_warning("ommiting submodule `%s` - already has it's direcoty: %s" % (t[0], path))
+        ommitedAnySubmodule = True
+    else:
+        try_call("git submodule add %s %s" % (t[1], path))
+
+if ommitedAnySubmodule and not ask("Some submodules have been ommited in the `git submodule add` phase, do you still want to continue?"):
+    exit(0)
+
+print_info("initialising submodules in `%s`: " % submodulesDirName)
+print map(lambda t: t[0], submodules)
 try_call("git submodule init %s" % (' '.join(submodulesDirs)))
 try_call("git submodule update")
 
