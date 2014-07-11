@@ -10,8 +10,8 @@ module Main where
 import Data.EitherR (fmapL)
 
 import           Flowbox.Control.Error                                 (eitherStringToM)
-import qualified Flowbox.Interpreter.Session.AST.Cache                 as Cache
 import qualified Flowbox.Interpreter.Session.AST.Executor              as Executor
+import qualified Flowbox.Interpreter.Session.Cache.Invalidate          as Invalidate
 import           Flowbox.Interpreter.Session.Data.CallPoint            (CallPoint (CallPoint))
 import           Flowbox.Interpreter.Session.Data.DefPoint             (DefPoint (DefPoint))
 import qualified Flowbox.Interpreter.Session.Env                       as Env
@@ -73,7 +73,7 @@ main = do
         Executor.processMain
         putStrLn "---------"
         Executor.processMain
-        Cache.invalidate [CallPoint libID 52, CallPoint libID 17, CallPoint libID 38]
+        Invalidate.invalidate [CallPoint libID 52, CallPoint libID 17, CallPoint libID 38]
         Executor.processMain
         Executor.processMain
     eitherStringToM $ fmapL Error.format result

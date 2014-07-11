@@ -10,8 +10,8 @@ import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.List           as List
 
 import qualified Flowbox.Data.MapForest                         as MapForest
-import qualified Flowbox.Interpreter.Session.AST.Cache          as Cache
 import qualified Flowbox.Interpreter.Session.AST.Traverse       as Traverse
+import qualified Flowbox.Interpreter.Session.Cache.Cache        as Cache
 import qualified Flowbox.Interpreter.Session.Data.CallData      as CallData
 import           Flowbox.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
@@ -69,7 +69,7 @@ executeOutputs callDataPath predecessors = do
         inDegree      = Graph.indeg parentGraph nodeID
         functionName  = if inDegree == 1 then "id" else '(' : replicate (inDegree-1) ',' ++ ")"
     if length callDataPath > 1
-        then executeFunction functionName (CallDataPath.toCallPointPath $ init callDataPath) predecessors
+        then executeFunction functionName (init callDataPath) predecessors
         else return () -- main don't need to return anything
 
 
@@ -77,12 +77,13 @@ executeNode :: CallDataPath -> [CallPointPath] -> Session ()
 executeNode callDataPath predecessors = do
     let node          = last callDataPath ^. CallData.node
         functionName  = node ^. Node.expr
-    executeFunction functionName (CallDataPath.toCallPointPath callDataPath) predecessors
+    executeFunction functionName (callDataPath) predecessors
 
 
-executeFunction :: String -> CallPointPath -> [CallPointPath] -> Session ()
-executeFunction funName callPointPath predecessors = do
-    let varName       = CallPointPath.toVarName callPointPath
+executeFunction :: String -> CallDataPath -> [CallPointPath] -> Session ()
+executeFunction funName callDataPath predecessors = do
+    let callPointPath = CallDataPath.toCallPointPath callDataPath
+        varName       = CallPointPath.toVarName callPointPath
         args          = map CallPointPath.toVarName predecessors
     typedFun  <- TypeCheck.function funName args
     typedArgs <- mapM TypeCheck.variable args
@@ -92,7 +93,7 @@ executeFunction funName callPointPath predecessors = do
         expression    = varName ++ " <- " ++ operation
     --logger info expression
     Session.runStmt expression
-    Cache.put callPointPath
+    Cache.put callDataPath
     logger trace =<< MapForest.draw <$> gets (view Env.cached)
 
 

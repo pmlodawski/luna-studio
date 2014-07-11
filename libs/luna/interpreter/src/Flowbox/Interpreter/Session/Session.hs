@@ -20,7 +20,9 @@ import qualified Flowbox.Interpreter.Session.Env                     as Env
 import           Flowbox.Interpreter.Session.Error                   (Error)
 import qualified Flowbox.Interpreter.Session.Error                   as Error
 import qualified Flowbox.Interpreter.Session.Helpers                 as Helpers
+import qualified Flowbox.Luna.Data.AST.Common                        as AST
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
+import qualified Flowbox.Luna.Data.AST.Expr                          as Expr
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus                  as Focus
 import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                 as Zipper
 import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
@@ -125,14 +127,15 @@ getFunction (DefPoint libraryID bc) = do
     Focus.getFunction focus <??> "Target is not a function"
 
 
-getGraph :: DefPoint -> Session Graph
+getGraph :: DefPoint -> Session (Graph, AST.ID)
 getGraph defPoint = do
     library     <- getLibrary $ defPoint ^. DefPoint.libraryID
     let propertyMap = library ^. Library.propertyMap
         ast         = library ^. Library.ast
-    expr        <- getFunction defPoint
-    aa          <- EitherT $ Alias.run ast
-    fst <$> (EitherT $ GraphBuilder.run aa propertyMap expr)
+    expr  <- getFunction defPoint
+    aa    <- EitherT $ Alias.run ast
+    graph <- fst <$> (EitherT $ GraphBuilder.run aa propertyMap expr)
+    return (graph, expr ^. Expr.id)
 
 
 findMain :: Session DefPoint
