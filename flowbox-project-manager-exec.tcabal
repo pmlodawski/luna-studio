@@ -1,4 +1,4 @@
-Name:               flowbox-project-manager
+Name:               flowbox-project-manager-exec
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -12,9 +12,7 @@ Flag Debug
 
 
 Executable project-manager
-    Hs-Source-Dirs: dist/gen
-                    src
-    Other-Modules:  Paths_flowbox_project_manager
+    Hs-Source-Dirs: src
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
@@ -22,18 +20,8 @@ Executable project-manager
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
-                    bytestring,
-                    containers,
-                    either,
-                    errors,
-                    flowbox-batch,
                     flowbox-bus,
                     flowbox-config,
-                    flowbox-luna-base,
+                    flowbox-project-manager,
                     flowbox-utils,
-                    MissingH,
-                    mtl,
-                    optparse-applicative,
-                    protocol-buffers,
-                    transformers,
-                    zeromq4-haskell >= 0.4
+                    optparse-applicative
