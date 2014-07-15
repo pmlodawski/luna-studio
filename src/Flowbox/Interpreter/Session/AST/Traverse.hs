@@ -30,12 +30,6 @@ import           Flowbox.Luna.Data.Graph.Node                  (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                  as Node
 import qualified Flowbox.Luna.Data.Graph.Port                  as Port
 import           Flowbox.Prelude                               hiding (inside)
-import           Flowbox.System.Log.Logger
-
-
-
-logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.AST.Traverse"
 
 
 
