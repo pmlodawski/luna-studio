@@ -28,7 +28,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Bus.Server"
 
 
-run :: BusEndPoints -> [Topic] -> (Message -> IO [Message]) -> IO (Either String ())
+run :: BusEndPoints -> [Topic] -> (Message -> IO [Message]) -> IO (Either Bus.Error ())
 run endPoints topics process = Bus.runBus endPoints $ handleLoop topics process
 
 
@@ -41,7 +41,7 @@ handleLoop topics process = do
 
 handle :: (Message -> IO [Message]) -> Bus ()
 handle process = do
-    (MessageFrame msg crlID _ _) <- Bus.receive'
+    (MessageFrame msg crlID _ _) <- Bus.receive
     liftIO $ logger debug $ "Received request: " ++ (msg ^. Message.topic)
     response <- liftIO $ process msg
     unless (null response) $ do

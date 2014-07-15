@@ -33,6 +33,7 @@ Executable interpreter
                     MissingH,
                     mtl,
                     optparse-applicative,
+                    pipes-concurrency,
                     protocol-buffers,
                     transformers,
                     zeromq4-haskell >= 0.4

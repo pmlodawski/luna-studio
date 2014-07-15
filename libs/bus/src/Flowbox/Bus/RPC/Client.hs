@@ -65,7 +65,7 @@ query_raw message = do
     logger debug "Query : sending..."
     correlationID <- Bus.send Flag.Enable message
     logger debug "Query : receiving responses..."
-    frames <- Loops.repeatUntil Bus.receive' (not . allFramesReceived correlationID)
+    frames <- Loops.repeatUntil Bus.receive (not . allFramesReceived correlationID)
     Bus.unsubscribe topicBase
     logger debug "Query : complete"
     return $ map (view MessageFrame.message)
