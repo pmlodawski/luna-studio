@@ -1,0 +1,81 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.interpreter;
+
+
+
+message CallPoint {
+    required int32 libraryID = 1;
+    required int32 nodeID    = 2;
+}
+
+message CallPath {
+    repeated CallPath calls = 1;
+}
+
+message DefPoint {
+    required int32 libraryID = 1;
+    required int32 defID     = 2;
+}
+
+message Interpreter {
+    message WatchPoint {
+        message Add {
+            message Request {
+                required CallPath watchPoint = 1;
+            }
+            message Update {
+                required CallPath watchPoint = 1;
+            }
+        }
+        message Remove {
+            message Request {
+                required CallPath watchPoint = 1;
+            }
+            message Update {
+                required CallPath watchPoint = 1;
+            }
+        }
+        message List {
+            message Request { }
+            message Status {
+                repeated CallPath watchPoints = 1;
+            }
+        }
+    }
+    message Invalidate {
+        message Call {
+            message Request {
+                required CallPath call = 1;
+            }
+            message Update {
+                required CallPath call = 1;
+            }
+        }
+        message Def {
+            message Request {
+                required DefPoint def = 1;
+            }
+            message Update {
+                required DefPoint def = 1;
+            }
+        }
+        message Node {
+            message Request {
+                required CallPoint node = 1;
+            }
+            message Update {
+                required CallPoint node = 1;
+            }
+        }
+    }
+    message Run {
+        message Request { }
+        message Update  { }
+    }
+}

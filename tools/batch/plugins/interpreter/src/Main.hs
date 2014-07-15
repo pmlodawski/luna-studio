@@ -6,15 +6,15 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import qualified Flowbox.Bus.EndPoint    as EP
-import qualified Flowbox.Bus.RPC.Client  as Client
-import qualified Flowbox.Config.Config   as Config
-import           Flowbox.Interpreter.Cmd (Cmd)
-import qualified Flowbox.Interpreter.Cmd as Cmd
---import qualified Flowbox.Interpreter.Handler.Handler as Handler
-import qualified Flowbox.Interpreter.Version as Version
-import           Flowbox.Options.Applicative hiding (info)
-import qualified Flowbox.Options.Applicative as Opt
+import qualified Flowbox.Bus.EndPoint                    as EP
+import qualified Flowbox.Bus.RPC.Server.Server           as Server
+import qualified Flowbox.Config.Config                   as Config
+import           Flowbox.Interpreter.Cmd                 (Cmd)
+import qualified Flowbox.Interpreter.Cmd                 as Cmd
+import qualified Flowbox.Interpreter.RPC.Handler.Handler as Handler
+import qualified Flowbox.Interpreter.Version             as Version
+import           Flowbox.Options.Applicative             hiding (info)
+import qualified Flowbox.Options.Applicative             as Opt
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -45,7 +45,10 @@ run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run {}  -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
-        endPoints <- EP.clientFromConfig <$> Config.load
-        --r <- Client.run endPoints Handler.topics Handler.handler
-        print "Not implemented. Sorry"
+        busConfig <- EP.clientFromConfig <$> Config.load
+
+        let ctx = Context.mk
+
+        logger info "Starting rpc server"
+        Server.run busConfig (Handler.handlerMap ctx) >>= eitherStringToM
 
