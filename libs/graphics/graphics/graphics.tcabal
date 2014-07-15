@@ -68,8 +68,9 @@ Executable generator_test
                   algebraic                ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
-                  lens,
-                  base
+                  JuicyPixels              ,
+                  lens                     ,
+                  vector
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -100,8 +101,7 @@ Executable test_bezier
                   algebraic                ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
-                  lens,
-                  base
+                  lens
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
