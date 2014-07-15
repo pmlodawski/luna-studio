@@ -41,7 +41,8 @@ Library
                   system-filepath          ,
                   transformers             ,
                   errors                   ,
-                  either
+                  either                   ,
+                  cubicbezier
 
 Executable generator_test
   Main-Is:        Generator.hs
@@ -100,8 +101,9 @@ Executable test_bezier
                   algebraic                ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
-                  lens,
-                  base
+                  lens                     ,
+                  base                     ,
+                  cubicbezier
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
