@@ -47,7 +47,16 @@ logger = getLoggerIO "Flowbox.Bus.Bus"
 
 type Error = String
 
+
 type Bus a = forall z. StateT (BusEnv z) (EitherT Error (ZMQ z)) a
+
+
+newtype BusT a = BusT { runBusT :: Bus a}
+
+
+instance Monad BusT where
+    return a = BusT $ return a
+    (BusT a) >>= f = BusT $ a >>= runBusT . f
 
 
 requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
@@ -96,7 +105,7 @@ getNewRequestID = do
 reply :: Message.CorrelationID -> Flag -> Message -> Bus ()
 reply crlID lastFrame msg = do
     clientID <- getClientID
-    sendByteString $ MessageFrame.toByteString $ MessageFrame msg crlID clientID lastFrame
+    sendFrame $ MessageFrame msg crlID clientID lastFrame
 
 
 send :: Flag -> Message -> Bus Message.CorrelationID
@@ -106,12 +115,13 @@ send lastFrame msg = do
     return correlationID
 
 
-receive :: Bus (Either Error MessageFrame)
-receive = MessageFrame.fromByteString <$> receiveByteString
+sendFrame :: MessageFrame -> Bus ()
+sendFrame = sendByteString . MessageFrame.toByteString
 
 
-receive' :: Bus MessageFrame
-receive' = receive >>= lift . hoistEither
+
+receive :: Bus MessageFrame
+receive = receiveByteString >>= lift . hoistEither . MessageFrame.fromByteString
 
 
 withTimeout :: Bus a -> Int -> Bus (Either Error a)
