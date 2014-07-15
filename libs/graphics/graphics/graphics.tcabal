@@ -47,7 +47,7 @@ Executable generator_test
   Main-Is:        Generator.hs
   Hs-Source-Dirs: test
 
-  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-options:          -O2 -Wall -threaded -fno-full-laziness
   Ghc-prof-options:     -auto-all
 
   Default-Extensions:     NoImplicitPrelude,

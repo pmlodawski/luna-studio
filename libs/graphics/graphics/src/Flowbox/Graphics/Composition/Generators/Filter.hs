@@ -4,18 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE ViewPatterns  #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Composition.Generators.Filter where
 
-import Flowbox.Prelude                                    as P hiding ((<*))
-import Flowbox.Math.Matrix                                as M
-import Flowbox.Graphics.Utils
+import Flowbox.Prelude        as P hiding ((<*))
+import Flowbox.Math.Matrix    as M
+import Data.Array.Accelerate  as A
 
-import Data.Array.Accelerate     as A
 import Math.Space.Space
-import Math.Coordinate.Cartesian as Cartesian
 
 data Filter a = Filter { window :: Exp a
                        , apply :: Exp a -> Exp a
@@ -67,4 +66,14 @@ catmulRom = polynomial 0.0 0.5
 gauss :: (Elt a, IsFloating a) => Exp a -> Filter a
 gauss sigma = Filter ((10.0 / 3.0) * sigma) $ \t -> exp (-(t ** 2) / (2 * sigma * sigma)) / (sigma * sqrt (2 * pi))
 
--- TODO: "kernelizing" function
+toMatrix :: (Elt a, IsFloating a) => Grid (Exp Int) -> Filter a -> Matrix2 a
+toMatrix (Grid sizex sizey) filter = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
+    let sx = 2 * window filter / A.fromIntegral sizex
+        sy = 2 * window filter / A.fromIntegral sizey
+        vx = apply filter $ A.fromIntegral (x - sizex `div` 2) * sx
+        vy = apply filter $ A.fromIntegral (y - sizey `div` 2) * sy
+    in vx * vy
+
+normalize :: (Elt a, IsFloating a) => Matrix2 a -> Matrix2 a
+normalize kern = M.map (/ksum) kern
+    where ksum = M.the $ M.sum kern

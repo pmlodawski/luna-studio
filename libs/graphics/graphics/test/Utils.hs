@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-
+{-# LANGUAGE ViewPatterns #-}
 module Utils where
 
 import           Flowbox.Prelude                      as P
@@ -26,8 +26,10 @@ testLoadRGBA filename = do
 
 testSaveRGBA :: (Elt a, IsFloating a) => FilePath -> Matrix2 a -> Matrix2 a -> Matrix2 a -> Matrix2 a -> IO ()
 testSaveRGBA filename r g b a = writeImageToBMP filename $ compute' run $ M.map packRGBA32 $ zip4 (conv r) (conv g) (conv b) (conv a)
-    where conv = id >-> M.map (A.truncate . (* 255.0) . clamp' 0 1)
+    where conv = M.map (A.truncate . (* 255.0) . clamp' 0 1)
 
 
 testSaveChan :: (Elt a, IsFloating a) => FilePath -> Matrix2 a -> IO ()
-testSaveChan filename a = testSaveRGBA filename a a a a
+testSaveChan filename pre = writeImageToBMP filename $ compute' run $ M.map rgba32OfFloat output
+    where output = M.map conv pre
+          conv (clamp' 0 1 -> x) = A.lift (x, x, x, x)
