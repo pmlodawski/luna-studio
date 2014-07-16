@@ -114,7 +114,7 @@ pkgDb = \
        , 'libs/repo-manager'                   : HProject   ('flowbox-repo-manager'         , os.path.join ('libs' , 'repo-manager')                        , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'libs/rpc'                            : HProject   ('flowbox-rpc'                  , os.path.join ('libs' , 'rpc')                                 , 'libs'    , ['libs/utils'])
        , 'libs/target-hs'                      : HProject   ('luna-target-hs'               , os.path.join ('libs' , 'target-hs')                           , 'libs'    , [])
-       , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , [])
+       , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , ['third-party/protocol-buffers'])
        , 'tools/aws/account-manager'           : HProject   ('flowbox-account-manager'      , os.path.join ('tools', 'aws', 'account-manager')              , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls flag resolves problem with HTTP and network
        , 'tools/aws/account-manager-mock'      : HProject   ('flowbox-account-manager-mock' , os.path.join ('tools', 'aws', 'account-manager-mock')         , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls flag resolves problem with HTTP and network
        , 'tools/aws/instance-manager'          : HProject   ('flowbox-instance-manager'     , os.path.join ('tools', 'aws', 'instance-manager')             , 'tools'   , ['libs/utils', 'libs/aws'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
@@ -129,6 +129,7 @@ pkgDb = \
        , 'tools/initializer'                   : HProject   ('flowbox-initializer-cli'      , os.path.join ('tools', 'initializer')                         , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/initializer'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls flag resolves problem with HTTP and network
        , 'tools/lunac'                         : HProject   ('flowbox-lunac'                , os.path.join ('tools', 'lunac')                               , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/base', 'libs/luna/initializer'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls flag resolves problem with HTTP and network
        , 'tools/wrappers'                      : HProject   ('flowbox-wrappers'             , os.path.join ('tools', 'wrappers')                            , 'wrappers', ['libs/config'])
+       , 'third-party/protocol-buffers'        : HProject   ('protocol-buffers'             , os.path.join ('third-party', 'protocol-buffers')              , 'third-party', []) # [PM] temporary fix until protocol-buffers is fixed
        }
 
 
