@@ -44,6 +44,9 @@ logger = getLoggerIO "Flowbox.Interpreter.Session.Session"
 type Session a = EitherT Error.ErrorStr (StateT Env I.Interpreter) a
 
 
+newtype SessionT a = SessionT { fromSessionT :: Session a}
+
+
 run :: Env -> Session a -> IO (Either Error a)
 run env session = do
     result <- I.runInterpreter
