@@ -6,16 +6,16 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import qualified Flowbox.Bus.EndPoint          as EP
-import qualified Flowbox.Bus.RPC.Server.Server as Server
-import qualified Flowbox.Config.Config         as Config
-import           Flowbox.Interpreter.Cmd       (Cmd)
-import qualified Flowbox.Interpreter.Cmd       as Cmd
---import qualified Flowbox.Interpreter.RPC.Handler.Handler as Handler
-import qualified Flowbox.Interpreter.Context as Context
-import qualified Flowbox.Interpreter.Version as Version
-import           Flowbox.Options.Applicative hiding (info)
-import qualified Flowbox.Options.Applicative as Opt
+import qualified Flowbox.Bus.EndPoint                    as EP
+import qualified Flowbox.Bus.RPC.Server.Server           as Server
+import qualified Flowbox.Config.Config                   as Config
+import           Flowbox.Interpreter.Cmd                 (Cmd)
+import qualified Flowbox.Interpreter.Cmd                 as Cmd
+import qualified Flowbox.Interpreter.Context             as Context
+import qualified Flowbox.Interpreter.RPC.Handler.Handler as Handler
+import qualified Flowbox.Interpreter.Version             as Version
+import           Flowbox.Options.Applicative             hiding (info)
+import qualified Flowbox.Options.Applicative             as Opt
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
