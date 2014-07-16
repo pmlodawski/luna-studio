@@ -21,6 +21,8 @@ import           Math.Space.Space
 import           Math.Coordinate.Cartesian (Point2(..))
 import           Data.Monoid
 
+
+
 rasterizer :: Elt e => Grid (Exp Int) -> DiscreteGenerator (Exp e) -> Matrix2 e
 rasterizer space (Generator gen) = generate (A.index2 (height space) (width space)) wrapper
     where wrapper (A.unlift -> Z :. y :. x :: EDIM2) = gen (Point2 x y)

@@ -22,6 +22,7 @@ import Flowbox.Graphics.Composition.Generators.Gradient
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 import Flowbox.Graphics.Composition.Generators.Structures as S
 import Flowbox.Graphics.Composition.Generators.Transform
+import Flowbox.Graphics.Composition.Generators.Pipe
 import Flowbox.Graphics.Composition.Generators.Convolution as Conv
 
 import Flowbox.Math.Matrix   as M
@@ -76,10 +77,11 @@ scaling = do
 
 filters x = do
     (r, g, b, a) <- testLoadRGBA "moonbow.bmp"
-    let hmat = normalize $ toMatrix (Grid 1 (variable x)) $ gauss 1.0
-    let vmat = normalize $ toMatrix (Grid (variable x) 1) $ gauss 1.0
-    let process x = rasterizer (Grid 4096 2304) $ Conv.filter 1 vmat $ Conv.filter 1 hmat $ fromMatrix (Clamp :: Boundary (Exp Float)) x
-    testSaveChan "out.bmp" (process r) -- (process g) (process b) (process a)
+    let hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable x)) $ gauss 1.0
+    let vmat = id M.>-> normalize $ toMatrix (Grid (variable x) 1) $ gauss 1.0
+    let p = pipe (Grid 4096 2304) Clamp
+    let process x = rasterizer (Grid 4096 2304) $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix (Clamp :: Boundary (Exp Float)) x
+    testSaveRGBA "out.bmp" (process r) (process g) (process b) (process a)
 
 main :: IO ()
 main = do
