@@ -23,6 +23,7 @@ import qualified Flowbox.Bus.RPC.HandlerMap                  as HandlerMap
 import qualified Flowbox.Bus.RPC.Pipes                       as RPC
 import           Flowbox.Bus.RPC.RPC                         (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor            as Processor
+import           Flowbox.Control.Error
 import           Flowbox.Interpreter.Context                 (Context)
 import qualified Flowbox.Interpreter.Context                 as Context
 import qualified Flowbox.Interpreter.RPC.Handler.Interpreter as InterpreterHandler
@@ -33,6 +34,8 @@ import qualified Flowbox.Interpreter.Session.Session         as Session
 import           Flowbox.Prelude                             hiding (Context, error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                as Proto
+
+
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.Handler"
@@ -66,7 +69,7 @@ handle :: Pipe (Message, Message.CorrelationID) (Message, Message.CorrelationID)
 handle = do
     let env = Env.mk undefined undefined
 
-    lift $ BusT $ liftIO $ Session.run env $ handle2
+    hoist (\a -> liftIO $ eitherToM =<< (Session.run env $ Session.runSessionT a)) handle2
     (message, crl) <- await
     undefined
 
