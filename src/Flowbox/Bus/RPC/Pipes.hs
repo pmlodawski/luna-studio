@@ -31,14 +31,9 @@ consume = do
     void $ lift $ Bus.BusT $ Bus.reply crl Flag.Enable msg
 
 
-run :: BusEndPoints
+run :: MonadIO m
+    => BusEndPoints
     -> Pipe (Message, Message.CorrelationID) (Message, Message.CorrelationID) BusT ()
-    -> IO (Either Bus.Error ())
-run busEndPoints action = Bus.runBus busEndPoints $ Bus.runBusT $ runEffect
-    $ produce >-> action >-> consume
---f :: Producer MessageFrame.MessageFrame a ()
---f = lift $ Bus.receive
-
-
---a :: Bus.Bus ()
---a = Bus.runBusT $ runEffect $ produce >-> consume
+    -> m (Either Bus.Error ())
+run busEndPoints handler = Bus.runBus busEndPoints $ Bus.runBusT $ runEffect
+    $ produce >-> handler >-> consume
