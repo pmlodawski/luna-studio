@@ -59,6 +59,11 @@ instance Monad BusT where
     (BusT a) >>= f = BusT $ a >>= runBusT . f
 
 
+instance MonadIO BusT where
+    liftIO a = BusT $ liftIO a
+
+
+
 requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
 requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
