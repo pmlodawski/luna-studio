@@ -197,12 +197,14 @@ def workon(name):
     
 
 def register(name):
+    name = name.replace('\\', '/')
     print_info("Registering %s" % name)
     pkg = pkgDb[name]
     pkg.install()
 
 
 def unregister(name):
+    name = name.replace('\\', '/')
     print_info("Unregistering %s" % name)
     pkg = pkgDb[name]
     pkg.uninstall()
