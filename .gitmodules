@@ -1,0 +1,3 @@
+[submodule "third-party/protocol-buffers"]
+	path = third-party/protocol-buffers
+	url = https://github.com/korrix/protocol-buffers.git
