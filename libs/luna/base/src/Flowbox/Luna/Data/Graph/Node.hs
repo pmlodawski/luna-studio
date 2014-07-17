@@ -17,7 +17,7 @@ data Node = Expr     { _expr       :: String
                      }
           | Inputs
           | Outputs
-          deriving (Show)
+          deriving (Show, Eq)
 
 
 makeLenses (''Node)

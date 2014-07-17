@@ -88,7 +88,7 @@ def main():
         shutil.copy(cabalConfigSrc, dstConfigCopy)
 
         instPath = os.path.join(dist_dir, 'bin', pkg.binpath)
-        ret = call('cabal install --reinstall --bindir=%s %s %s' % (instPath, pkg.name, ' '.join(args + pkg.flags)), shell=True)
+        ret = call('cabal install --reinstall --bindir=%s %s %s' % (instPath, pkg.name, ' '.join(args + pkg.flags.get())), shell=True)
         errors.handle_err(ret)
 
 

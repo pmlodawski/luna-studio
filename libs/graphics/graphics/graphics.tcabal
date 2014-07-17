@@ -44,7 +44,7 @@ Library
                   either                   ,
                   cubicbezier
 
-Executable generator_test
+Executable test_generator
   Main-Is:        Generator.hs
   Hs-Source-Dirs: test
 
@@ -71,10 +71,6 @@ Executable generator_test
                   flowbox-graphics         ,
                   lens,
                   base
-
-  if flag(cuda)
-    CPP-options:        -DACCELERATE_CUDA_BACKEND
-    build-depends:      accelerate-cuda  == 0.15.*
 
 Executable test_bezier
   Main-Is:        Bezier.hs

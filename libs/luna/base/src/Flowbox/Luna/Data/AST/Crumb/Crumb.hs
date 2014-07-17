@@ -16,4 +16,4 @@ data Crumb = FunctionCrumb { name :: String
                            }
            | ClassCrumb    { name :: String }
            | ModuleCrumb   { name :: String }
-           deriving (Show)
+           deriving (Show, Ord, Eq)

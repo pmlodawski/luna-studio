@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Luna.Data.GraphView.EdgeView where
 
@@ -14,10 +15,12 @@ import           Flowbox.Prelude
 
 
 
-data EdgeView = EdgeView { src :: PortDescriptor
-                         , dst :: PortDescriptor
+data EdgeView = EdgeView { _src :: PortDescriptor
+                         , _dst :: PortDescriptor
                          } deriving (Show, Read, Ord, Eq)
 
+
+makeLenses(''EdgeView)
 
 fromEdge :: Edge -> EdgeView
 fromEdge (Edge (Port.Num s) d) = EdgeView [s] [d]

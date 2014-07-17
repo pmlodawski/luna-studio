@@ -42,7 +42,7 @@ toGraph gv = do let n = labNodes gv
 
 portMatches :: PortDescriptor -> LEdge EdgeView -> Bool
 portMatches adstPort (_, _, connectedPort) = matches where
-    connectedDstPort = EdgeView.dst connectedPort
+    connectedDstPort = connectedPort ^. EdgeView.dst
     matches = List.isPrefixOf connectedDstPort adstPort
            || List.isPrefixOf adstPort connectedDstPort
 
