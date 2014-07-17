@@ -9,7 +9,6 @@ module Flowbox.Bus.RPC.RPC where
 
 import Control.Exception          (SomeException, try)
 import Control.Monad              (join)
-import Control.Monad.IO.Class     (MonadIO)
 import Control.Monad.Trans.Either
 
 import Flowbox.Control.Error hiding (err)
