@@ -13,7 +13,7 @@ import qualified Data.Map as Map
 import           Pipes
 
 
-import           Flowbox.Bus.Bus                             (BusT (BusT))
+import           Flowbox.Bus.BusT                            (BusT (BusT))
 import           Flowbox.Bus.Data.Message                    (Message)
 import qualified Flowbox.Bus.Data.Message                    as Message
 import           Flowbox.Bus.Data.Topic                      (Topic)
@@ -29,8 +29,9 @@ import qualified Flowbox.Interpreter.Context                 as Context
 import qualified Flowbox.Interpreter.RPC.Handler.Interpreter as InterpreterHandler
 import qualified Flowbox.Interpreter.RPC.Topic               as Topic
 import qualified Flowbox.Interpreter.Session.Env             as Env
-import           Flowbox.Interpreter.Session.Session         (SessionT)
 import qualified Flowbox.Interpreter.Session.Session         as Session
+import           Flowbox.Interpreter.Session.SessionT        (SessionT)
+import qualified Flowbox.Interpreter.Session.SessionT        as SessionT
 import           Flowbox.Prelude                             hiding (Context, error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                as Proto
@@ -62,18 +63,25 @@ logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.Handler"
 --    undefined
 
 
-handle2 :: Pipe (Message, Message.CorrelationID) (Message, Message.CorrelationID) SessionT ()
-handle2 = undefined
 
-handle :: Pipe (Message, Message.CorrelationID) (Message, Message.CorrelationID) BusT ()
-handle = do
+busHandle :: Pipe (Message, Message.CorrelationID) (Message, Message.CorrelationID) BusT ()
+busHandle = do
     let env = Env.mk undefined undefined
+    hoist (\a -> liftIO $ eitherToM =<< (Session.run env $ SessionT.runSessionT a)) interpreterHandle
 
-    hoist (\a -> liftIO $ eitherToM =<< (Session.run env $ Session.runSessionT a)) handle2
+
+interpreterHandle :: Pipe (Message, Message.CorrelationID) (Message, Message.CorrelationID) SessionT ()
+interpreterHandle = do
     (message, crl) <- await
+    --let topic = message ^. Message.topic
+    --result <- safeLiftIO $ do
+    --        undefined
+    --response <- case result of
+    --    Left err               -> do logger error err
+    --                                 return $ Just $ Message.mkError topic err
+    --    Right (type_, content) -> map Message.mkResponse topic type_ content
+    --mapM_ (\r -> yield (r, crl)) response
     undefined
-
-
 
 --parseRequest :: Pipe (Message, Message.CorrelationID) (Context.Request, Message.CorrelationID) BusT ()
 --parseRequest = do
