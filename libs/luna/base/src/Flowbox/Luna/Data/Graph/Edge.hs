@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Luna.Data.Graph.Edge where
 
@@ -12,6 +13,8 @@ import Flowbox.Prelude
 
 
 
-data Edge = Edge { src :: OutPort
-                 , dst :: InPort
+data Edge = Edge { _src :: OutPort
+                 , _dst :: InPort
                  } deriving (Show, Read, Ord, Eq)
+
+makeLenses(''Edge)

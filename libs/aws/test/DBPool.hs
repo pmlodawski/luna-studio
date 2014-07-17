@@ -9,7 +9,6 @@
 module Main where
 
 import qualified AWS                        as AWS
-import           Control.Monad              (when)
 import qualified Data.Map                   as Map
 import qualified Data.Text                  as Text
 import           Database.PostgreSQL.Simple as PSQL

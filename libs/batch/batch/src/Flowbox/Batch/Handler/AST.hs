@@ -9,6 +9,7 @@
 module Flowbox.Batch.Handler.AST where
 
 import qualified Data.IntSet as IntSet
+import qualified Data.Tuple  as Tuple
 
 import           Flowbox.Batch.Batch                               (Batch)
 import           Flowbox.Batch.Handler.Common                      (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, libManagerOp)
@@ -91,7 +92,7 @@ remove bc libID projectID = astOp libID projectID (\ast propertyMap -> do
 resolveDefinition :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(Breadcrumbs, Library.ID)]
 resolveDefinition name bc libID projectID = libManagerOp projectID (\libManager -> do
     results <- EitherT $ NameResolver.run name bc libID libManager
-    return (libManager, results))
+    return (libManager, map Tuple.swap results))
 
 
 updateModuleCls :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()

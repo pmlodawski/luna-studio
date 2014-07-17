@@ -11,15 +11,17 @@ Flag Debug
     Default:        False
 
 
-Executable project-manager
+Library
     Hs-Source-Dirs: dist/gen
                     src
     Other-Modules:  Paths_flowbox_project_manager
-    Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
 
     Extensions:     NoImplicitPrelude
+
+    Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
+                     `findmodules('src', '.*\.hs')`
 
     Build-Depends:  base,
                     bytestring,
@@ -33,7 +35,7 @@ Executable project-manager
                     flowbox-utils,
                     MissingH,
                     mtl,
-                    optparse-applicative,
                     protocol-buffers,
+                    protocol-buffers-descriptor,
                     transformers,
                     zeromq4-haskell >= 0.4

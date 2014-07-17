@@ -4,148 +4,86 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Main where
 
-import Flowbox.Prelude hiding (zoom, constant, transform, from, min, max, over, under)
---import Flowbox.Graphics.Composition.Generators.Constant
-import Flowbox.Graphics.Composition.Generators.Filter
---import Flowbox.Graphics.Composition.Generators.Gradient
---import Flowbox.Graphics.Composition.Generators.Multisampler
-import Flowbox.Graphics.Composition.Generators.Rasterizer
-import Flowbox.Graphics.Composition.Generators.Sampler
-import Flowbox.Graphics.Composition.Generators.Structures
---import Flowbox.Graphics.Composition.Generators.Transform
-import Flowbox.Graphics.Image.IO.ImageMagick
-import Flowbox.Graphics.Image.Merge
---import Flowbox.Graphics.Utils
-import Flowbox.Math.Matrix as M hiding ((++), stencil, zip)
---import Data.Array.Accelerate as A hiding (rotate, constant)
---import Data.Array.Accelerate.CUDA
+import Flowbox.Prelude as P hiding (zoom, constant)
 
---import Linear.V2
-import Math.Space.Space
---import Math.Metric
---import Math.Coordinate.Cartesian
-import qualified Data.Array.Accelerate as A
+import Data.Array.Accelerate as A hiding (rotate, constant)
 import Data.Array.Accelerate.CUDA
-import qualified Data.Array.Accelerate.IO as AIO
-import Data.Foldable
+
+import Flowbox.Graphics.Composition.Generators.Sampler
+import Flowbox.Graphics.Composition.Generators.Filter
+
+import Flowbox.Graphics.Composition.Generators.Constant
+import Flowbox.Graphics.Composition.Generators.Filter
+import Flowbox.Graphics.Composition.Generators.Gradient
+import Flowbox.Graphics.Composition.Generators.Rasterizer
+import Flowbox.Graphics.Composition.Generators.Structures as S
+import Flowbox.Graphics.Composition.Generators.Transform
+import Flowbox.Graphics.Composition.Generators.Pipe
+import Flowbox.Graphics.Composition.Generators.Convolution as Conv
+
+import Flowbox.Math.Matrix as M
+import Flowbox.Graphics.Utils
+
+import Linear.V2
+import Math.Space.Space
+import Math.Metric
+import Math.Coordinate.Cartesian
+import Data.Array.Accelerate (index2, Boundary(..))
 
 import Utils
 
-merge file mode alphaBlending = do
-    (r1, g1, b1, a1) <- map4 (nearest A.Wrap) <$> testLoadRGBA' "lena_premult.png"
-    (r2, g2, b2, a2) <- map4 (nearest A.Wrap) <$> testLoadRGBA' "checker_premult_constalpha.png"
-    let merge' ov bg = rasterizer (Grid 512 512) $ transform (fmap A.fromIntegral) $ basicColorCompositingFormula ov a1 bg a2 alphaBlending mode
-    testSaveRGBA'' file (merge' r1 r2) (merge' g1 g2) (merge' b1 b2) (merge' a1 a2)
+gradients x = do
+    let reds   = [Tick 0.0 1.0 1.0, Tick 0.25 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+    let greens = [Tick 0.0 1.0 1.0, Tick 0.50 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+    let blues  = [Tick 0.0 1.0 1.0, Tick 0.75 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
 
-merge' file mode = do
-    (r1, g1, b1, a1) <- map4 (nearest A.Wrap) <$> testLoadRGBA' "lena_premult.png"
-    (r2, g2, b2, a2) <- map4 (nearest A.Wrap) <$> testLoadRGBA' "checker_premult_constalpha.png"
-    let merge' ov bg = rasterizer (Grid 512 512) $ transform (fmap A.fromIntegral) $ complicatedColorCompositingFormula ov a1 bg a2 mode
-    testSaveRGBA'' file (merge' r1 r2) (merge' g1 g2) (merge' b1 b2) (merge' a1 a2)
+    let alphas = [Tick 0.0 1.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+    let gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
 
-map4 :: (a -> b) -> (a, a, a, a) -> (b, b, b, b)
-map4 f (a, b, c, d) = (f a, f b, f c, f d)
+    let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
+    let mapper = flip colorMapper weightFun
+    let center = translate (V2 90 120) . scale (V2 (variable x) (variable x))
+    let grad1 t = monosampler $ center $ mapper t circularShape
+    let grad2 t = monosampler $ center $ mapper t diamondShape
+    let grad3 t = monosampler $ center $ mapper t squareShape
+    let grad4 t = monosampler $ center $ mapper t conicalShape
+    let grad5 t = monosampler $ center $ mapper t $ radialShape (Minkowski 0.6)
+    let grad6 t = monosampler $ center $ mapper t $ radialShape (Minkowski 3)
+    let grad7 t = monosampler $ mapper t $ scale (V2 180 1) $ linearShape
 
-simpleMerges :: [BlendMode Double]
-simpleMerges = [
-      average
-    , colorDodge
-    , colorBurn
-    , copy
-    , difference
-    , divideByDst
-    , exclusion
-    , from
-    , geometric
-    , hardLight
-    , hypot
-    , max
-    , min
-    , minus
-    , multiply
-    , plus
-    , screen
-    , overlayFun
-    , softLight
-    ]
+    let mysampler = multisampler (normalize $ toMatrix 10 box)
+    let grad8     = mysampler $ center $ rotate (84/180 * pi) $ mapper gray conicalShape
+    
+    let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
 
+    testSaveRGBA' "out.bmp" (raster reds) (raster greens) (raster blues) (raster alphas)
 
-simpleMergesNames :: [String]
-simpleMergesNames = [
-      "average"
-    , "colorDodge"
-    , "colorBurn"
-    , "copy"
-    , "difference"
-    , "divideByDst"
-    , "exclusion"
-    , "from"
-    , "geometric"
-    , "hardLight"
-    , "hypot"
-    , "max"
-    , "min"
-    , "minus"
-    , "multiply"
-    , "plus"
-    , "screen"
-    , "overlayFun"
-    , "softLight"
-    ]
+gradient = do
+    let gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+    let mysampler = multisampler (normalize $ toMatrix 10 box)
+    let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
+    let mapper = flip colorMapper weightFun
+    let grad8     = rasterizer (Grid 720 480) $ mysampler $ translate (V2 (720/2) (480/2)) $ rotate (84/180 * pi) $ mapper gray conicalShape
+    testSaveChan' "out.bmp" grad8
 
-advancedMerges :: [ComplicatedBlendMode Double]
-advancedMerges = [
-      atop
-    , conjointOver
-    , disjointOver
-    , inBlend
-    , withMask
-    , matte
-    , out
-    , over
-    , stencil
-    , under
-    , xor
-    ]
+scaling = do
+    (r, g, b, a) <- testLoadRGBA' "lena.bmp"
+    let process x = rasterizer (Grid 1024 1024) $ monosampler $ interpolator (toMatrix 2 lanczos3) $ fromMatrix (Clamp :: Boundary (Exp Float)) x
+    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
-advancedMergesNames :: [String]
-advancedMergesNames = [
-      "atop"
-    , "conjointOver"
-    , "disjointOver"
-    , "inBlend"
-    , "withMask"
-    , "matte"
-    , "out"
-    , "over"
-    , "stencil"
-    , "under"
-    , "xor"
-    ]
+filters x = do
+    (r, g, b, a) <- testLoadRGBA' "moonbow.bmp"
+    let hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable x)) $ gauss 1.0
+    let vmat = id M.>-> normalize $ toMatrix (Grid (variable x) 1) $ gauss 1.0
+    let p = pipe (Grid 4096 2304) Clamp
+    let process x = rasterizer (Grid 4096 2304) $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix (Clamp :: Boundary (Exp Float)) x
+    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
 main :: IO ()
 main = do
-    putStrLn "Merge test"
-    --putStrLn "Simple merges with Adobe"
-    --forM_ (zip simpleMergesNames simpleMerges) $ \(m, n) -> do
-    --    !a <- return $ run $ A.generate (A.index2 (512::A.Exp Int) 512) (\_ -> 1.0 :: A.Exp Float)
-    --    merge (m ++ ".png") n Adobe
-
-    --putStrLn "Simple merges with Custom"
-    --forM_ (zip simpleMergesNames simpleMerges) $ \(m, n) -> do
-    --    !a <- return $ run $ A.generate (A.index2 (512::A.Exp Int) 512) (\_ -> 0.0 :: A.Exp Float)
-    --    merge (m ++ "_alphablend.png") n Custom
-
-    --putStrLn "Complicated merges"
-    --forM_ (zip advancedMergesNames advancedMerges) $ \(m, n) -> do
-    --    !a <- return $ run $ A.generate (A.index2 (512::A.Exp Int) 512) (\_ -> 0.5 :: A.Exp Float)
-    --    merge' (m ++ ".png") n
-
-    let softlights = [softLight, softLightPegtop, softLightIllusions, softLightPhotoshop]
-        softlightsNames = ["softLight", "softLight_prim", "softLight_bis", "softLight_tetr"]
-
-    forM_ (zip softlightsNames softlights) $ \(m, n) -> do
-        merge (m ++ ".png") n Adobe
+    putStrLn "Gradient test"
+    filters (50 :: Exp Int)

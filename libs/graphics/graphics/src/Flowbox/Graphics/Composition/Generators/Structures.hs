@@ -12,11 +12,12 @@
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
-{-# LANGUAGE ConstraintKinds       #-}
-{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE FlexibleContexts      #-}
 
-module Flowbox.Graphics.Composition.Generators.Structures where
+module Flowbox.Graphics.Composition.Generators.Structures (
+    module Flowbox.Graphics.Composition.Generators.Structures,
+    Point2
+) where
 
 import Flowbox.Prelude
 
@@ -25,10 +26,7 @@ import Data.Array.Accelerate.Array.Sugar
 import Data.Array.Accelerate.Smart
 import Data.Array.Accelerate.Tuple
 import Data.Typeable                     (Typeable)
-import Math.Coordinate
 import Math.Coordinate.Cartesian
-import Math.Coordinate.Coordinate
-import Math.Space.Space                  (Grid(..))
 
 -- == Generator type ==
 

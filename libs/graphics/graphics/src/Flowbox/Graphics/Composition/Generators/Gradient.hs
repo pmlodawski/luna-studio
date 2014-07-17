@@ -12,15 +12,12 @@ module Flowbox.Graphics.Composition.Generators.Gradient where
 
 import Flowbox.Prelude                                    as P hiding ((?))
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Utils
 
 import Data.Array.Accelerate                              as A
 import Data.List                                          (sort)
 import Math.Coordinate
 import Math.Coordinate.Cartesian                          as Cartesian hiding (x, y, w)
-import Math.Metric                                        hiding (metric, space)
-import Math.Space.Space
-import Math.Metric.Metric (Metric(..))
+import Math.Metric
 
 
 colorMapper :: forall a b c x . (Elt a, Elt b, Elt c, IsFloating a, Num a, Ord a) 

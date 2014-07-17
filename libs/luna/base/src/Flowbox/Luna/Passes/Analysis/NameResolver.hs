@@ -14,8 +14,8 @@ module Flowbox.Luna.Passes.Analysis.NameResolver where
 import           Control.Applicative
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.List           as List
+import           Data.List.Split     (splitOn)
 
-import           Data.List.Split                         (splitOn)
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb       as Crumb
@@ -34,7 +34,7 @@ import qualified Flowbox.Luna.Lib.Library                as Library
 import           Flowbox.Luna.Passes.Pass                (Pass)
 import qualified Flowbox.Luna.Passes.Pass                as Pass
 import           Flowbox.Prelude                         hiding (elements, mod)
-import           Flowbox.System.Log.Logger
+import           Flowbox.System.Log.Logger               hiding (trace)
 
 
 
@@ -45,12 +45,12 @@ logger = getLogger "Flowbox.Luna.Passes.Analysis.NameResolver"
 type NRPass result = Pass Pass.NoState result
 
 
-run :: String -> Breadcrumbs -> Library.ID -> LibManager -> Pass.Result [(Breadcrumbs, Library.ID)]
+run :: String -> Breadcrumbs -> Library.ID -> LibManager -> Pass.Result [(Library.ID, Breadcrumbs)]
 run = (Pass.run_ (Pass.Info "NameResolver") Pass.NoState) .:: resolve
 
 
 
-resolve :: String -> Breadcrumbs -> Library.ID -> LibManager -> NRPass [(Breadcrumbs, Library.ID)]
+resolve :: String -> Breadcrumbs -> Library.ID -> LibManager -> NRPass [(Library.ID, Breadcrumbs)]
 resolve name bc libID libManager = do
     library <- LibManager.lab libManager libID <??> "NameResolver: Cannot find library with id=" ++ show libID
     zipper  <- Zipper.focusCrumb' (head bc) $ library ^. Library.ast
@@ -85,9 +85,9 @@ currentScope ((Crumb.FunctionCrumb _ _):_) = []
 currentScope []                            = []
 
 
-searchLibManager :: [String] -> LibManager -> [(Breadcrumbs, Library.ID)]
+searchLibManager :: [String] -> LibManager -> [(Library.ID, Breadcrumbs)]
 searchLibManager path libManager = do
-    List.concat $ map (\(libID, library) -> (,libID) <$> searchLib path library) $ LibManager.labNodes libManager
+    List.concat $ map (\(libID, library) -> (libID,) <$> searchLib path library) $ LibManager.labNodes libManager
 
 
 searchLib :: [String] -> Library -> [Breadcrumbs]
@@ -114,11 +114,12 @@ searchModule path bc (Module.Module _ (Type.Module _ name _) _ classes _typeAlia
 
 searchExpr :: [String] -> Breadcrumbs -> Expr -> [Breadcrumbs]
 searchExpr path bc expr = case expr of
-    Expr.Function _ path name _ _ _        -> if length path == 1 && head path == name
-                                              then [bc ++ [Crumb.FunctionCrumb name path]]
-                                              else []
-    Expr.Data _ (Type.Data _ name _) _ _ _ -> if length path == 1 && head path == name
-                                              then [bc ++ [Crumb.ClassCrumb name]]
-                                              else []
-    _                                   -> []
+    -- TODO [PM] : Add search for functions with path set!
+    Expr.Function _ [] name _ _ _           -> if length path == 1 && head path == name
+                                               then [bc ++ [Crumb.FunctionCrumb name []]]
+                                               else []
+    Expr.Data _ (Type.Data _ name _) _ _ _  -> if length path == 1 && head path == name
+                                               then [bc ++ [Crumb.ClassCrumb name]]
+                                               else []
+    _                                       -> []
 

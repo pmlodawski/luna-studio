@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE BangPatterns #-}
+
 module Main where
 
 import Flowbox.Prelude hiding (zoom, constant, transform, from, min, max, over, under)
@@ -17,6 +18,7 @@ import Flowbox.Graphics.Image.Merge
 import qualified Data.Array.Accelerate as A
 import Data.Array.Accelerate.CUDA
 import Data.Foldable
+import Math.Space.Space
 
 import Utils
 

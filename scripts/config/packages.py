@@ -9,6 +9,7 @@ import os
 from subprocess import call, Popen, PIPE
 from utils.colors import print_error
 from utils.errors import fatal
+from utils.system import system, systems
 import sys
 
 
@@ -20,10 +21,30 @@ def handle_error(e):
         print_error(e)
         fatal()
 
+
+class Flag(object):
+    def __init__(self, content, systems=None):
+        self.content   = content
+        self.systems = systems
+
+class Flags(object):
+    def __init__(self, flags=None):
+        if flags     == None: flags = []
+        self.flags   = flags
+
+    def get(self):
+        fs = []
+        for flag in self.flags:
+            if flag.systems == None or system in flag.systems:
+                fs.append(flag.content)
+        return fs
+
+
+
 class Project(object):
     def __init__(self, name='', path='', binpath='', deps=None, flags=None):
         if deps  == None: deps = []
-        if flags == None: flags = []
+        if flags == None: flags = Flags()
         self.name    = name
         self.path    = path
         self.binpath = binpath
@@ -76,33 +97,44 @@ class AllProject(Project):
 pkgDb = \
        { '@all'                                : AllProject ('@all', deps = [])
        , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/utils', 'libs/rpc'])
-       , 'libs/batch'                          : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch')                               , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/initializer', 'libs/luna/base'])
+       , 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/initializer', 'libs/luna/base'])
+       , 'libs/batch/plugins/project-manager'  : HProject   ('flowbox-project-manager'      , os.path.join ('libs' , 'batch', 'plugins', 'project-manager') , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/batch/batch'])
        , 'libs/bus'                            : HProject   ('flowbox-bus'                  , os.path.join ('libs' , 'bus')                                 , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc'])
        , 'libs/cabal-install'                  : HProject   ('cabal-install'                , os.path.join ('libs' , 'cabal-install')                       , 'libs'    , [])
-       , 'libs/codec/exr'                      : HProject   ('openexr'                      , os.path.join ('libs' , 'codec', 'exr')                        , 'libs'    , [], ['--with-gcc=g++'])
+       , 'libs/codec/exr'                      : HProject   ('openexr'                      , os.path.join ('libs' , 'codec', 'exr')                        , 'libs'    , [], flags=Flags([Flag('--with-gcc=g++')]))
        , 'libs/config'                         : HProject   ('flowbox-config'               , os.path.join ('libs' , 'config')                              , 'libs'    , ['libs/utils'])
        , 'libs/dynamics/particles'             : HProject   ('particle'                     , os.path.join ('libs' , 'dynamics', 'particles')               , 'libs'    , [])
-       , 'libs/graphics/graphics'              : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'graphics', 'graphics')                , 'libs'    , ['libs/target-hs', 'libs/utils', 'libs/num-conversion', 'libs/codec/exr', 'libs/graphics/hopencv'])
+       , 'libs/graphics/graphics'              : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'graphics', 'graphics')                , 'libs'    , ['third-party/algebraic', 'third-party/cuda', 'third-party/accelerate', 'third-party/accelerate-cuda', 'third-party/accelerate-io', 'third-party/linear-accelerate', 'libs/target-hs', 'libs/utils', 'libs/num-conversion', 'libs/codec/exr', 'libs/graphics/hopencv'], flags=Flags([Flag("--with-gcc=gcc-4.9", [systems.DARWIN])]))
        , 'libs/graphics/hopencv'               : HProject   ('HOpenCV'                      , os.path.join ('libs' , 'graphics', 'hopencv')                 , 'libs'    , [])
        , 'libs/luna/base'                      : HProject   ('flowbox-luna-base'            , os.path.join ('libs' , 'luna', 'base')                        , 'libs'    , ['libs/target-hs', 'libs/utils', 'libs/config', 'libs/cabal-install', 'libs/markup'])
-       , 'libs/luna/initializer'               : HProject   ('flowbox-luna-initializer'     , os.path.join ('libs' , 'luna', 'initializer')                 , 'libs'    , ['libs/utils', 'libs/config'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
+       , 'libs/luna/interpreter'               : HProject   ('flowbox-luna-interpreter'     , os.path.join ('libs' , 'luna', 'interpreter')                 , 'libs'    , ['libs/utils', 'libs/luna/base'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
+       , 'libs/luna/initializer'               : HProject   ('flowbox-luna-initializer'     , os.path.join ('libs' , 'luna', 'initializer')                 , 'libs'    , ['libs/utils', 'libs/config'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
        , 'libs/markup'                         : HProject   ('doc-markup'                   , os.path.join ('libs' , 'markup')                              , 'libs'    , [])
        , 'libs/num-conversion'                 : HProject   ('num-conversion'               , os.path.join ('libs' , 'num-conversion')                      , 'libs'    , [])
        , 'libs/repo-manager'                   : HProject   ('flowbox-repo-manager'         , os.path.join ('libs' , 'repo-manager')                        , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'libs/rpc'                            : HProject   ('flowbox-rpc'                  , os.path.join ('libs' , 'rpc')                                 , 'libs'    , ['libs/utils'])
        , 'libs/target-hs'                      : HProject   ('luna-target-hs'               , os.path.join ('libs' , 'target-hs')                           , 'libs'    , [])
-       , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , [])
-       , 'tools/aws/account-manager'           : HProject   ('flowbox-account-manager'      , os.path.join ('tools', 'aws', 'account-manager')              , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'])
-       , 'tools/aws/account-manager-mock'      : HProject   ('flowbox-account-manager-mock' , os.path.join ('tools', 'aws', 'account-manager-mock')         , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'])
-       , 'tools/aws/instance-manager'          : HProject   ('flowbox-instance-manager'     , os.path.join ('tools', 'aws', 'instance-manager')             , 'tools'   , ['libs/utils', 'libs/aws'])
+       , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , ['third-party/protocol-buffers'])
+       , 'tools/aws/account-manager'           : HProject   ('flowbox-account-manager'      , os.path.join ('tools', 'aws', 'account-manager')              , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls flag resolves problem with HTTP and network
+       , 'tools/aws/account-manager-mock'      : HProject   ('flowbox-account-manager-mock' , os.path.join ('tools', 'aws', 'account-manager-mock')         , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls flag resolves problem with HTTP and network
+       , 'tools/aws/instance-manager'          : HProject   ('flowbox-instance-manager'     , os.path.join ('tools', 'aws', 'instance-manager')             , 'tools'   , ['libs/utils', 'libs/aws'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
        , 'tools/batch/plugins/broker'          : HProject   ('flowbox-broker'               , os.path.join ('tools', 'batch', 'plugins', 'broker')          , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'tools/batch/plugins/bus-logger'      : HProject   ('flowbox-bus-logger'           , os.path.join ('tools', 'batch', 'plugins', 'bus-logger')      , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
+       , 'tools/batch/plugins/interpreter'     : HProject   ('flowbox-interpreter'          , os.path.join ('tools', 'batch', 'plugins', 'interpreter')     , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/luna/interpreter'])
        , 'tools/batch/plugins/file-manager'    : HProject   ('flowbox-file-manager'         , os.path.join ('tools', 'batch', 'plugins', 'file-manager')    , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
-       , 'tools/batch/plugins/parser'          : HProject   ('flowbox-parser'               , os.path.join ('tools', 'batch', 'plugins', 'parser')          , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/batch'])
+       , 'tools/batch/plugins/parser'          : HProject   ('flowbox-parser'               , os.path.join ('tools', 'batch', 'plugins', 'parser')          , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/batch/batch'])
        , 'tools/batch/plugins/plugin-manager'  : HProject   ('flowbox-plugin-manager'       , os.path.join ('tools', 'batch', 'plugins', 'plugin-manager')  , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
-       , 'tools/batch/plugins/project-manager' : HProject   ('flowbox-project-manager'      , os.path.join ('tools', 'batch', 'plugins', 'project-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/batch'])
-       , 'tools/batch/plugins/s3-file-manager' : HProject   ('flowbox-s3-file-manager'      , os.path.join ('tools', 'batch', 'plugins', 's3-file-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/batch', 'libs/aws'])
-       , 'tools/initializer'                   : HProject   ('flowbox-initializer-cli'      , os.path.join ('tools', 'initializer')                         , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/initializer'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
-       , 'tools/lunac'                         : HProject   ('flowbox-lunac'                , os.path.join ('tools', 'lunac')                               , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/base', 'libs/luna/initializer'], ['--force-reinstalls']) # FIXME [PM] force reinstalls-flag  resolves problem with HTTP and network
+       , 'tools/batch/plugins/project-manager' : HProject   ('flowbox-project-manager-exec' , os.path.join ('tools', 'batch', 'plugins', 'project-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/batch/batch', 'libs/batch/plugins/project-manager'])
+       , 'tools/batch/plugins/s3-file-manager' : HProject   ('flowbox-s3-file-manager'      , os.path.join ('tools', 'batch', 'plugins', 's3-file-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/base', 'libs/batch/batch', 'libs/aws'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls flag resolves problem with HTTP and network
+       , 'tools/initializer'                   : HProject   ('flowbox-initializer-cli'      , os.path.join ('tools', 'initializer')                         , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/initializer'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls flag resolves problem with HTTP and network
+       , 'tools/lunac'                         : HProject   ('flowbox-lunac'                , os.path.join ('tools', 'lunac')                               , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/base', 'libs/luna/initializer'], flags=Flags([Flag('--force-reinstalls')])) # FIXME [PM] force reinstalls flag resolves problem with HTTP and network
        , 'tools/wrappers'                      : HProject   ('flowbox-wrappers'             , os.path.join ('tools', 'wrappers')                            , 'wrappers', ['libs/config'])
+       
+       , 'third-party/protocol-buffers'        : HProject   ('protocol-buffers'             , os.path.join ('third-party', 'protocol-buffers')              , 'third-party', []) # [PM] temporary fix until protocol-buffers is fixed
+       , 'third-party/algebraic'               : HProject   ('algebraic'                    , os.path.join ('third-party', 'algebraic')                     , 'third-party', [])
+       , 'third-party/cuda'                    : HProject   ('cuda'                         , os.path.join ('third-party', 'cuda')                          , 'third-party', [], flags=Flags([Flag('--enable-executable-dynamic')]))
+       , 'third-party/accelerate'              : HProject   ('accelerate'                   , os.path.join ('third-party', 'accelerate')                    , 'third-party', [], flags=Flags([Flag('-fdebug')])) # [KL] accelerate debug flag is necessary to dump generated CUDA kernels
+       , 'third-party/accelerate-cuda'         : HProject   ('accelerate-cuda'              , os.path.join ('third-party', 'accelerate-cuda')               , 'third-party', [], flags=Flags([Flag('-fdebug')]))
+       , 'third-party/accelerate-io'           : HProject   ('accelerate-io'                , os.path.join ('third-party', 'accelerate-io')                 , 'third-party', [], flags=Flags([Flag('-fdebug')]))
+       , 'third-party/linear-accelerate'       : HProject   ('linear-accelerate'            , os.path.join ('third-party', 'linear-accelerate')             , 'third-party', [])
        }

@@ -59,7 +59,7 @@ threeWayMerge :: (A.Elt a, A.IsFloating a)
               -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
 threeWayMerge ar ag ab br bg bb aa ba blend =
     (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, ba)
-    where merge ov aov bg abg = complicatedColorCompositingFormula ov aov bg abg blend
+    where merge ov aov bgnd abgnd = complicatedColorCompositingFormula ov aov bgnd abgnd blend
 
 threeWayMerge' :: (A.Elt a, A.IsFloating a)
               => ContinousGenerator (A.Exp a) -- ^ A.R
@@ -75,7 +75,7 @@ threeWayMerge' :: (A.Elt a, A.IsFloating a)
               -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
 threeWayMerge' ar ag ab br bg bb aa ba alphaBlend blend =
   (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, mergeAlpha aa ba)
-  where merge ov aov bg abg = basicColorCompositingFormula ov aov bg abg alphaBlend blend
+  where merge ov aov bgnd abgnd = basicColorCompositingFormula ov aov bgnd abgnd alphaBlend blend
         mergeAlpha (Generator aa') (Generator ba') = Generator $ \p -> case alphaBlend of
             Adobe  -> union (aa' p) (ba' p)
             Custom -> blend (aa' p) (ba' p)
@@ -244,14 +244,17 @@ softLight overlay background =
                                   , sqrt x)
 
 -- | 2AB + B^2 - 2 * B^2 * A
+softLightPegtop :: (A.Elt a, A.IsFloating a) => BlendMode a
 softLightPegtop overlay background =
     2 * overlay * background + background ** 2 - 2 * (background ** 2) * overlay
 
 -- | B^(2^(2 * (0.5 - A)))
+softLightIllusions :: (A.Elt a, A.IsFloating a) => BlendMode a
 softLightIllusions overlay background =
     background ** (2 ** (2 * (0.5 - overlay)))
 
 -- | if A <= 0.5 then 2 * A * B + B^2 * (1 - 2 * A) else sqrt(B) * (2 * A - 1) + 2 * B * (1-A)
+softLightPhotoshop :: (A.Elt a, A.IsFloating a) => BlendMode a
 softLightPhotoshop overlay background =
     (overlay A.<=* 0.5) A.?
         (2 * background * overlay + background ** 2 * (U.invert $ 2 * overlay)

@@ -132,13 +132,17 @@ try_call('cd && cabal update')
 
 checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", checkCabalVersion)
 
-checkCabalPkg("hprotoc")
 checkCabalPkg("c2hs", version="0.16.5")
 
+print_info ("Initializing git submodules")
+try_call ('git submodule init')
+try_call ('git submodule update')
 
-print_info ("Generating Protocol Buffers files using genproto")
-path = os.path.join(rootPath, 'scripts', 'genproto')
-try_call ('python2.7 %s' % path)
+if ask("Do you want to generate Protocol Buffers?"):
+    checkCabalPkg("hprotoc")
+    print_info ("Generating Protocol Buffers files using genproto")
+    path = os.path.join(rootPath, 'scripts', 'genproto')
+    try_call ('python2.7 %s' % path)
 
 print_info ("Generating cabal configs using gencabal")
 path = os.path.join(rootPath, 'scripts', 'gencabal')

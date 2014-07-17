@@ -11,7 +11,6 @@ module Flowbox.Graphics.Composition.Generators.Transform where
 
 import Flowbox.Prelude                                    as P
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Math.Matrix                                as M
 
 import           Math.Coordinate.Cartesian                (Point2(..))
 import           Linear.V2

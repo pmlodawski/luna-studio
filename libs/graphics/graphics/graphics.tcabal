@@ -41,18 +41,18 @@ Library
                   system-filepath          ,
                   transformers             ,
                   errors                   ,
-                  either
+                  either                   ,
+                  cubicbezier
 
-Executable generator_test
+Executable test_generator
   Main-Is:        Generator.hs
   Hs-Source-Dirs: test
 
-  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-options:          -O2 -Wall -threaded -fno-full-laziness
   Ghc-prof-options:     -auto-all
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          NoImplicitPrelude,
                           TemplateHaskell,
                           OverloadedStrings
   Default-Language:       Haskell2010
@@ -72,10 +72,6 @@ Executable generator_test
                   lens                     ,
                   vector
 
-  if flag(cuda)
-    CPP-options:        -DACCELERATE_CUDA_BACKEND
-    build-depends:      accelerate-cuda  == 0.15.*
-
 Executable test_bezier
   Main-Is:        Bezier.hs
   Hs-Source-Dirs: test
@@ -85,7 +81,6 @@ Executable test_bezier
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          NoImplicitPrelude,
                           TemplateHaskell,
                           OverloadedStrings
   Default-Language:       Haskell2010
@@ -101,7 +96,37 @@ Executable test_bezier
                   algebraic                ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
-                  lens
+                  lens                     ,
+                  cubicbezier
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    build-depends:      accelerate-cuda  == 0.15.*
+
+Executable test_merge
+  Main-Is:        Merge.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    build-depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  vector
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND

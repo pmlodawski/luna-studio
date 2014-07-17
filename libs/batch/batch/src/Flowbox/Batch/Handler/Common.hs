@@ -174,9 +174,7 @@ setFocus newFocus bc libraryID projectID = do
 getModuleFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Module
 getModuleFocus bc libraryID projectID = do
     focus <- getFocus bc libraryID projectID
-    case focus of
-        Focus.ModuleFocus m -> return m
-        _                   -> left "Target is not a module"
+    Focus.getModule focus <??> "Target is not a module"
 
 
 setModuleFocus :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
@@ -186,9 +184,7 @@ setModuleFocus newModule = setFocus (Focus.ModuleFocus newModule)
 getFunctionFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
 getFunctionFocus bc libraryID projectID = do
     focus <- getFocus bc libraryID projectID
-    case focus of
-        Focus.FunctionFocus f -> return f
-        _                     -> left "Target is not a function"
+    Focus.getFunction focus <??> "Target is not a function"
 
 
 setFunctionFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
@@ -198,9 +194,7 @@ setFunctionFocus newFunction = setFocus (Focus.FunctionFocus newFunction)
 getClassFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
 getClassFocus bc libraryID projectID = do
     focus <- getFocus bc libraryID projectID
-    case focus of
-        Focus.ClassFocus c -> return c
-        _                  -> left "Target is not a class"
+    Focus.getClass focus <??> "Target is not a class"
 
 
 setClassFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()

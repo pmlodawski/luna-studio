@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-
+{-# LANGUAGE ViewPatterns #-}
 module Utils where
 
 import           Flowbox.Prelude                      as P
@@ -23,9 +23,6 @@ import qualified Data.Vector.Storable       as SV
 type IOLoadBackend a = FilePath -> IO (Either a (A.Array A.DIM2 RGBA32))
 type IOSaveBackend   = FilePath -> A.Array A.DIM2 RGBA32 -> IO ()
 
-testLoadRGBA' :: (Elt b, IsFloating b) => FilePath -> IO (Matrix2 b, Matrix2 b, Matrix2 b, Matrix2 b)
-testLoadRGBA' = testLoadRGBA loadImage
-
 testLoadRGBA :: (Show a, Elt b, IsFloating b) => IOLoadBackend a -> FilePath -> IO (Matrix2 b, Matrix2 b, Matrix2 b, Matrix2 b)
 testLoadRGBA backend filename = do
     file <- backend filename
@@ -35,22 +32,31 @@ testLoadRGBA backend filename = do
     where convert t = let (r, g, b, a) = A.unlift t :: (Exp A.Word8, Exp A.Word8, Exp A.Word8, Exp A.Word8)
                       in A.lift (A.fromIntegral r / 255, A.fromIntegral g / 255, A.fromIntegral b / 255, A.fromIntegral a / 255)
 
+testLoadRGBA' :: (Elt b, IsFloating b) => FilePath -> IO (Matrix2 b, Matrix2 b, Matrix2 b, Matrix2 b)
+testLoadRGBA' = testLoadRGBA loadImage
+
+
+testSaveRGBA :: (Elt a, IsFloating a) => IOSaveBackend -> FilePath -> Matrix2 a -> Matrix2 a -> Matrix2 a -> Matrix2 a -> IO ()
+testSaveRGBA backend filename r g b a = backend filename $ compute' run $ M.map packRGBA32 $ zip4 (conv r) (conv g) (conv b) (conv a)
+    where conv = M.map (A.truncate . (* 255.0) . clamp' 0 1)
+
 testSaveRGBA' :: (Elt a, IsFloating a) => FilePath -> Matrix2 a -> Matrix2 a -> Matrix2 a -> Matrix2 a -> IO ()
 testSaveRGBA' = testSaveRGBA saveImage
 
 testSaveRGBA'' :: (Elt a, IsFloating a) => FilePath -> Matrix2 a -> Matrix2 a -> Matrix2 a -> Matrix2 a -> IO ()
 testSaveRGBA'' = testSaveRGBA saveImageJuicy
 
-testSaveRGBA :: (Elt a, IsFloating a) => IOSaveBackend -> FilePath -> Matrix2 a -> Matrix2 a -> Matrix2 a -> Matrix2 a -> IO ()
-testSaveRGBA backend filename r g b a = backend filename $ compute' run $ M.map packRGBA32 $ zip4 (conv r) (conv g) (conv b) (conv a)
-    where conv = id >-> M.map (A.truncate . (* 255.0) . clamp' 0 1)
-
-
-testSaveChan :: (Elt a, IsFloating a) => IOSaveBackend -> FilePath -> Matrix2 a -> IO ()
-testSaveChan backend filename a = testSaveRGBA backend filename a a a a
-
 saveImageJuicy :: IOSaveBackend
 saveImageJuicy file matrix = do
     let ((), vec) = toVectors matrix
         A.Z A.:. h A.:. w = A.arrayShape matrix
     Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8) 
+
+
+testSaveChan :: (Elt a, IsFloating a) => IOSaveBackend -> FilePath -> Matrix2 a -> IO ()
+testSaveChan backend filename pre = backend filename $ compute' run $ M.map rgba32OfFloat output
+    where output = M.map conv pre
+          conv (clamp' 0 1 -> x) = A.lift (x, x, x, x)
+
+testSaveChan' :: (Elt a, IsFloating a) => FilePath -> Matrix2 a -> IO ()
+testSaveChan' = testSaveChan saveImage

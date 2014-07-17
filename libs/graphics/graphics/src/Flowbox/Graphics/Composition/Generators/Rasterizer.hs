@@ -7,6 +7,7 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module Flowbox.Graphics.Composition.Generators.Rasterizer where
 
@@ -19,6 +20,8 @@ import qualified Data.Array.Accelerate as A
 import           Math.Space.Space
 import           Math.Coordinate.Cartesian (Point2(..))
 import           Data.Monoid
+
+
 
 rasterizer :: Elt e => Grid (Exp Int) -> DiscreteGenerator (Exp e) -> Matrix2 e
 rasterizer space (Generator gen) = generate (A.index2 (height space) (width space)) wrapper
