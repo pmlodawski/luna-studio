@@ -46,6 +46,40 @@ basicColorCompositingFormula (Generator overlay) (Generator alphaOverlay) (Gener
     in (1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
         (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (overlay p) (background p))
 
+threeWayMerge :: (A.Elt a, A.IsFloating a)
+              => ContinousGenerator (A.Exp a) -- ^ A.R
+              -> ContinousGenerator (A.Exp a) -- ^ A.G
+              -> ContinousGenerator (A.Exp a) -- ^ A.B
+              -> ContinousGenerator (A.Exp a) -- ^ B.R
+              -> ContinousGenerator (A.Exp a) -- ^ B.G
+              -> ContinousGenerator (A.Exp a) -- ^ B.B
+              -> ContinousGenerator (A.Exp a) -- ^ A.A
+              -> ContinousGenerator (A.Exp a) -- ^ B.A
+              -> ComplicatedBlendMode a
+              -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
+threeWayMerge ar ag ab br bg bb aa ba blend =
+    (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, ba)
+    where merge ov aov bg abg = complicatedColorCompositingFormula ov aov bg abg blend
+
+threeWayMerge' :: (A.Elt a, A.IsFloating a)
+              => ContinousGenerator (A.Exp a) -- ^ A.R
+              -> ContinousGenerator (A.Exp a) -- ^ A.G
+              -> ContinousGenerator (A.Exp a) -- ^ A.B
+              -> ContinousGenerator (A.Exp a) -- ^ B.R
+              -> ContinousGenerator (A.Exp a) -- ^ B.G
+              -> ContinousGenerator (A.Exp a) -- ^ B.B
+              -> ContinousGenerator (A.Exp a) -- ^ A.A
+              -> ContinousGenerator (A.Exp a) -- ^ B.A
+              -> AlphaBlend
+              -> BlendMode a
+              -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
+threeWayMerge' ar ag ab br bg bb aa ba alphaBlend blend =
+  (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, mergeAlpha aa ba)
+  where merge ov aov bg abg = basicColorCompositingFormula ov aov bg abg alphaBlend blend
+        mergeAlpha (Generator aa') (Generator ba') = Generator $ \p -> case alphaBlend of
+            Adobe  -> union (aa' p) (ba' p)
+            Custom -> blend (aa' p) (ba' p)
+
 complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                                    => ContinousGenerator (A.Exp a)
                                    -> ContinousGenerator (A.Exp a)
