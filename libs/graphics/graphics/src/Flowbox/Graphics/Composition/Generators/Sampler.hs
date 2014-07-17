@@ -22,6 +22,8 @@ import           Math.Coordinate.Cartesian                (Point2(..))
 import           Linear.V2
 import           Math.Space.Space
 
+
+
 unsafeFromMatrix :: Elt e => Matrix2 e -> DiscreteGenerator (Exp e)
 unsafeFromMatrix mat = Generator $ \(Point2 x y) -> mat M.! A.index2 y x
 
@@ -37,6 +39,9 @@ multisampler kernel = convolve msampler kernel
           msampler point offset = fi point + subpixel * fi offset 
           Z :. h :. w = A.unlift $ shape kernel
           subpixel = Point2 (1 / A.fromIntegral (w - 1)) (1 / A.fromIntegral (h - 1))
+
+nearest :: (Elt e, IsFloating e) => DiscreteGenerator (Exp e) -> Generator (Exp e) (Exp e)
+nearest = transform $ fmap A.floor
 
 interpolator :: forall e .(Elt e, IsFloating e) => Filter e -> DiscreteGenerator (Exp e) -> Generator (Exp e) (Exp e)
 interpolator filter (Generator input) = Generator $ \pos@(Point2 x y) ->

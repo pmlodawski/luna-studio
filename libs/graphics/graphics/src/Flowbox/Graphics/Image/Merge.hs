@@ -35,8 +35,8 @@ basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                              -> ContinousGenerator (A.Exp a) -- ^ Overlay alpha
                              -> ContinousGenerator (A.Exp a) -- ^ Background / Destination / B
                              -> ContinousGenerator (A.Exp a) -- ^ Background alpha
-                             -> AlphaBlend  -- ^ Specifies if the same blending method is used on alpha channels
-                             -> BlendMode a -- ^ Function used for blending
+                             -> AlphaBlend                   -- ^ Specifies if the same blending method is used on alpha channels
+                             -> BlendMode a                  -- ^ Function used for blending
                              -> ContinousGenerator (A.Exp a) -- ^ Merge result
 basicColorCompositingFormula (Generator overlay) (Generator alphaOverlay) (Generator background) (Generator alphaBackground) alphaBlend blend =
     Generator $ \p ->
@@ -45,6 +45,40 @@ basicColorCompositingFormula (Generator overlay) (Generator alphaOverlay) (Gener
             Custom -> blend (alphaOverlay p') (alphaBackground p')
     in (1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
         (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (overlay p) (background p))
+
+threeWayMerge :: (A.Elt a, A.IsFloating a)
+              => ContinousGenerator (A.Exp a) -- ^ A.R
+              -> ContinousGenerator (A.Exp a) -- ^ A.G
+              -> ContinousGenerator (A.Exp a) -- ^ A.B
+              -> ContinousGenerator (A.Exp a) -- ^ B.R
+              -> ContinousGenerator (A.Exp a) -- ^ B.G
+              -> ContinousGenerator (A.Exp a) -- ^ B.B
+              -> ContinousGenerator (A.Exp a) -- ^ A.A
+              -> ContinousGenerator (A.Exp a) -- ^ B.A
+              -> ComplicatedBlendMode a
+              -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
+threeWayMerge ar ag ab br bg bb aa ba blend =
+    (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, ba)
+    where merge ov aov bgnd abgnd = complicatedColorCompositingFormula ov aov bgnd abgnd blend
+
+threeWayMerge' :: (A.Elt a, A.IsFloating a)
+              => ContinousGenerator (A.Exp a) -- ^ A.R
+              -> ContinousGenerator (A.Exp a) -- ^ A.G
+              -> ContinousGenerator (A.Exp a) -- ^ A.B
+              -> ContinousGenerator (A.Exp a) -- ^ B.R
+              -> ContinousGenerator (A.Exp a) -- ^ B.G
+              -> ContinousGenerator (A.Exp a) -- ^ B.B
+              -> ContinousGenerator (A.Exp a) -- ^ A.A
+              -> ContinousGenerator (A.Exp a) -- ^ B.A
+              -> AlphaBlend
+              -> BlendMode a
+              -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
+threeWayMerge' ar ag ab br bg bb aa ba alphaBlend blend =
+  (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, mergeAlpha aa ba)
+  where merge ov aov bgnd abgnd = basicColorCompositingFormula ov aov bgnd abgnd alphaBlend blend
+        mergeAlpha (Generator aa') (Generator ba') = Generator $ \p -> case alphaBlend of
+            Adobe  -> union (aa' p) (ba' p)
+            Custom -> blend (aa' p) (ba' p)
 
 complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                                    => ContinousGenerator (A.Exp a)
@@ -63,20 +97,21 @@ liftBlend blend = \overlay _ background _ -> blend overlay background
 -- | A*b + B*(1-a)
 atop :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 atop overlay alphaOverlay background alphaBackground = overlay * alphaBackground + background * U.invert alphaOverlay
+--atop overlay alphaOverlay background alphaBackground = background * alphaOverlay + overlay * U.invert alphaBackground
 
 -- | (A+B)/2
 average :: (A.Elt a, A.IsFloating a) => BlendMode a
 average overlay background = (overlay + background) / 2
 
--- | min(1, A / (1-B)), 1 if B = 1
--- Imagemagick says: A / (1-B)
-colorDodge :: (A.Elt a, A.IsFloating a) => BlendMode a
-colorDodge overlay background = (background A.==* 1.0) A.? (1, min 1 (overlay / U.invert background))
-
--- | 1 - min (1, (1-A)/B), 0 if A = 0
--- Imagemagick says: 1 - ((1-A) / B)
+-- | 1 - min (1, (1-B)/A), 0 if A = 0
+-- Imagemagick says: 1 - ((1-B) / A)
 colorBurn :: (A.Elt a, A.IsFloating a) => BlendMode a
-colorBurn overlay background = (overlay A.==* 0.0) A.? (0, U.invert $ min 1 $ U.invert overlay / background)
+colorBurn overlay background = (overlay A.==* 0.0) A.? (0, U.invert $ min 1 $ U.invert background / overlay)
+
+-- | min(1, B / (1-A)), 1 if A = 1
+-- Imagemagick says: B / (1-A)
+colorDodge :: (A.Elt a, A.IsFloating a) => BlendMode a
+colorDodge overlay background = (overlay A.==* 1.0) A.? (1, min 1 (background / U.invert overlay))
 
 -- | A + B(1-a)/b, A if a > b
 -- Dividing by zero avoided due to implementing a >= b condition. That way, if a = b = 0,
@@ -87,9 +122,9 @@ conjointOver overlay alphaOverlay background alphaBackground =
         (overlay,
         overlay + background * U.invert alphaOverlay / alphaBackground)
 
--- | B
+-- | A
 copy :: (A.Elt a, A.IsFloating a) => BlendMode a
-copy _ background = background
+copy overlay _ = overlay
 
 -- | |A-B|
 difference :: (A.Elt a, A.IsFloating a) => BlendMode a
@@ -134,6 +169,8 @@ geometric overlay background = 2 * overlay * background / (overlay + background)
 --
 -- Nuke says the condition is A < 0.5, Imagemagick says it's A <= 0.5
 -- Since we have no idea why 0.5 would be special, we use Imagemagick version.
+--
+-- TODO[mm]: It seems that Nuke takes a max of 1 and result - investigate further.
 hardLight :: (A.Elt a, A.IsFloating a) => BlendMode a
 hardLight overlay background =
     (overlay A.<=* 0.5) A.?
@@ -205,6 +242,23 @@ softLight overlay background =
         , background + (2 * overlay - 1) * (d background - background))
     where d x = (x A.<=* 0.25) A.? (((16 * x - 12) * x + 4) * x
                                   , sqrt x)
+
+-- | 2AB + B^2 - 2 * B^2 * A
+softLightPegtop :: (A.Elt a, A.IsFloating a) => BlendMode a
+softLightPegtop overlay background =
+    2 * overlay * background + background ** 2 - 2 * (background ** 2) * overlay
+
+-- | B^(2^(2 * (0.5 - A)))
+softLightIllusions :: (A.Elt a, A.IsFloating a) => BlendMode a
+softLightIllusions overlay background =
+    background ** (2 ** (2 * (0.5 - overlay)))
+
+-- | if A <= 0.5 then 2 * A * B + B^2 * (1 - 2 * A) else sqrt(B) * (2 * A - 1) + 2 * B * (1-A)
+softLightPhotoshop :: (A.Elt a, A.IsFloating a) => BlendMode a
+softLightPhotoshop overlay background =
+    (overlay A.<=* 0.5) A.?
+        (2 * background * overlay + background ** 2 * (U.invert $ 2 * overlay)
+        , sqrt background * (2 * overlay - 1) + 2 * background * U.invert overlay)
 
 -- | B(1-a)
 stencil :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a

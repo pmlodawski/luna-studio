@@ -9,9 +9,9 @@
 
 module Main where
 
-import Flowbox.Prelude            as P hiding (zoom, constant)
+import Flowbox.Prelude as P hiding (zoom, constant)
 
-import Data.Array.Accelerate      as A hiding (rotate, constant)
+import Data.Array.Accelerate as A hiding (rotate, constant)
 import Data.Array.Accelerate.CUDA
 
 import Flowbox.Graphics.Composition.Generators.Constant
@@ -24,7 +24,7 @@ import Flowbox.Graphics.Composition.Generators.Sampler
 import Flowbox.Graphics.Composition.Generators.Structures as S
 import Flowbox.Graphics.Composition.Generators.Transform
 
-import Flowbox.Math.Matrix   as M
+import Flowbox.Math.Matrix as M
 import Flowbox.Graphics.Utils
 
 import Linear.V2
@@ -35,8 +35,7 @@ import Data.Array.Accelerate (index2, Boundary(..))
 
 import Utils
 
-nearest :: (Elt e, IsFloating e) => DiscreteGenerator (Exp e) -> Generator (Exp e) (Exp e)
-nearest = S.transform $ fmap A.floor
+
 
 gradients x = do
     let reds   = [Tick 0.0 1.0 1.0, Tick 0.25 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
@@ -62,7 +61,7 @@ gradients x = do
     
     let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
 
-    testSaveRGBA "out.bmp" (raster reds) (raster greens) (raster blues) (raster alphas)
+    testSaveRGBA' "out.bmp" (raster reds) (raster greens) (raster blues) (raster alphas)
 
 gradient = do
     let gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
@@ -70,30 +69,30 @@ gradient = do
     let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
     let mapper = flip colorMapper weightFun
     let grad8     = rasterizer (Grid 720 480) $ mysampler $ translate (V2 (720/2) (480/2)) $ rotate (84/180 * pi) $ mapper gray conicalShape
-    testSaveChan "out.bmp" grad8
+    testSaveChan' "out.bmp" grad8
 
 scaling flt ang = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA "rings.bmp"
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "rings.bmp"
     let mysampler = multisampler (normalize $ toMatrix 100 triangle)
     let process x = rasterizer 1000 $ mysampler $ scale (pure $ variable ang) $ (nearest $ fromMatrix Clamp x :: Generator (Exp Float) (Exp Float))
-    testSaveRGBA "out.bmp" (process r) (process g) (process b) (process a)
+    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
 small :: Exp Int -> Exp Float -> Exp Float -> IO ()
 small x y z = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA "lena.bmp"
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
     let flt = laplacian (variable y) (variable z) (pure $ variable x)
     let p = pipe 512 Clamp
     let process x = rasterizer 512 $ id `p` Conv.filter 1 flt `p` id $ fromMatrix Clamp x
-    testSaveRGBA "out.bmp" (process r) (process g) (process b) (process a)
+    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
 filters :: Exp Int -> IO ()
 filters x = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA "moonbow.bmp"
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "moonbow.bmp"
     let hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable x)) $ gauss 1.0
     let vmat = id M.>-> normalize $ toMatrix (Grid (variable x) 1) $ gauss 1.0
     let p = pipe (Grid 4096 2304) Clamp
     let process x = rasterizer (Grid 4096 2304) $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix Clamp x
-    testSaveRGBA "out.bmp" (process r) (process g) (process b) (process a)
+    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
 main :: IO ()
 main = do
