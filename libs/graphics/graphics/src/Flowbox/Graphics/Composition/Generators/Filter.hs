@@ -10,18 +10,43 @@
 
 module Flowbox.Graphics.Composition.Generators.Filter where
 
-import Flowbox.Prelude        as P hiding ((<*))
-import Flowbox.Math.Matrix    as M
-import Data.Array.Accelerate  as A
+import Flowbox.Graphics.Composition.Generators.Structures
+
+import Flowbox.Prelude       as P hiding ((<*), filter)
+import Flowbox.Math.Matrix   as M
+import Data.Array.Accelerate as A hiding (filter)
 
 import Math.Space.Space
+import Math.Coordinate.Cartesian                (Point2(..))
+
+
+
+-- == Filter datatype ==
 
 data Filter a = Filter { window :: Exp a
                        , apply :: Exp a -> Exp a
                        }
 
+
+-- == Helper functions ==
+
+toMatrix :: (Elt a, IsFloating a) => Grid (Exp Int) -> Filter a -> Matrix2 a
+toMatrix (Grid sizex sizey) filter = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
+    let sx = 2 * window filter / A.fromIntegral sizex
+        sy = 2 * window filter / A.fromIntegral sizey
+        vx = apply filter $ A.fromIntegral (x - sizex `div` 2) * sx
+        vy = apply filter $ A.fromIntegral (y - sizey `div` 2) * sy
+    in vx * vy
+
+normalize :: (Elt a, IsFloating a) => Matrix2 a -> Matrix2 a
+normalize kern = M.map (/ksum) kern
+    where ksum = M.the $ M.sum kern
+
+
+-- == Windowed filters ==
+
 box :: (Elt a, IsFloating a) => Filter a
-box = Filter 0.5 $ \t -> A.cond (t >* -0.5 &&* t <=*  0.5) 1.0 0.0
+box = Filter 1.0 $ \t -> A.cond (t >* -0.5 &&* t <=*  0.5) 1.0 0.0
 
 -- TODO: Find the name
 basic :: (Elt a, IsFloating a) => Filter a
@@ -66,14 +91,12 @@ catmulRom = polynomial 0.0 0.5
 gauss :: (Elt a, IsFloating a) => Exp a -> Filter a
 gauss sigma = Filter ((10.0 / 3.0) * sigma) $ \t -> exp (-(t ** 2) / (2 * sigma * sigma)) / (sigma * sqrt (2 * pi))
 
-toMatrix :: (Elt a, IsFloating a) => Grid (Exp Int) -> Filter a -> Matrix2 a
-toMatrix (Grid sizex sizey) filter = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
-    let sx = 2 * window filter / A.fromIntegral sizex
-        sy = 2 * window filter / A.fromIntegral sizey
-        vx = apply filter $ A.fromIntegral (x - sizex `div` 2) * sx
-        vy = apply filter $ A.fromIntegral (y - sizey `div` 2) * sy
-    in vx * vy
 
-normalize :: (Elt a, IsFloating a) => Matrix2 a -> Matrix2 a
-normalize kern = M.map (/ksum) kern
-    where ksum = M.the $ M.sum kern
+-- == Non separable filters ==
+
+laplacian :: (Elt a, IsFloating a) => Exp a -> Exp a -> Grid (Exp Int) -> Matrix2 a
+laplacian cross side (fmap (1+).(2*) -> Grid sizex sizey) = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
+    let center = (A.fromIntegral $ sizex + sizey - 2) * cross + (A.fromIntegral $ (sizex - 1)*(sizey - 1)) * side
+    in  A.cond (x A.==* sizex `div` 2) 
+            (A.cond (y A.==* sizey `div` 2) (-center) cross) 
+            (A.cond (y A.==* sizey `div` 2) cross     side)

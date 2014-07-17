@@ -10,7 +10,7 @@
 
 module Flowbox.Graphics.Composition.Generators.Convolution where
 
-import Flowbox.Prelude                                    as P hiding (transform, filter)
+import Flowbox.Prelude                                    as P hiding (filter)
 import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Math.Matrix                                as M
 

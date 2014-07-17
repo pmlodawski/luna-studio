@@ -63,4 +63,4 @@ conicalShape = Generator $ \pixel -> let res = 1 - Cartesian.uncurry atan2 pixel
                                       in min (res A.>* 1 ? (res - 1, res)) 1
 
 linearShape :: Fractional a => Generator a a
-linearShape = Generator $ \(Point2 x _) -> x -- TODO [KL]: Test this with scaling
+linearShape = Generator $ \(Point2 x _) -> x
