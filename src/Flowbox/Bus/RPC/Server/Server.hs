@@ -23,6 +23,6 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Bus.RPC.Server.Server"
 
 
-run :: BusEndPoints -> HandlerMap -> IO (Either String ())
+run :: BusEndPoints -> HandlerMap IO -> IO (Either String ())
 run endPoints handlerMap = Server.run endPoints (HandlerMap.topics handlerMap) $ Processor.process handlerMap
 

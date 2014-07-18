@@ -51,19 +51,6 @@ type Error = String
 type Bus a = forall z. StateT (BusEnv z) (EitherT Error (ZMQ z)) a
 
 
-newtype BusT a = BusT { runBusT :: Bus a}
-
-
-instance Monad BusT where
-    return a = BusT $ return a
-    (BusT a) >>= f = BusT $ a >>= runBusT . f
-
-
-instance MonadIO BusT where
-    liftIO a = BusT $ liftIO a
-
-
-
 requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
 requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
@@ -126,7 +113,11 @@ sendFrame = sendByteString . MessageFrame.toByteString
 
 
 receive :: Bus MessageFrame
-receive = receiveByteString >>= lift . hoistEither . MessageFrame.fromByteString
+receive = receive' >>= lift . hoistEither
+
+
+receive' :: Bus (Either Error MessageFrame)
+receive' = MessageFrame.fromByteString <$> receiveByteString
 
 
 withTimeout :: Bus a -> Int -> Bus (Either Error a)
