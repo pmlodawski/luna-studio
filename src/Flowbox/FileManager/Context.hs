@@ -27,5 +27,5 @@ mk cfg bucket = do
     return $ S3.S3Env cfg Aws.defServiceConfig manager bucket
 
 
-run :: Context => S3 a -> RPC a
+run :: Context -> S3 a -> RPC IO a
 run ctx s3 = safeLiftIO $ S3.runS3env ctx s3

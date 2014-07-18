@@ -39,49 +39,49 @@ loggerIO = getLoggerIO "Flowbox.FileManager.Handler.Directory"
 ------ public api -------------------------------------------------
 
 
-upload :: Context -> Upload.Request -> RPC Upload.Status
+upload :: Context -> Upload.Request -> RPC IO Upload.Status
 upload ctx (Upload.Request tpath) = do
     let path = decodeP tpath
     Context.run ctx $ Directory.upload "." path
     return $ Upload.Status tpath
 
 
-fetch :: Context -> Fetch.Request -> RPC Fetch.Status
+fetch :: Context -> Fetch.Request -> RPC IO Fetch.Status
 fetch ctx (Fetch.Request tpath) = do
     let path = decodeP tpath
     Context.run ctx $ Directory.fetch "." path
     return $ Fetch.Status tpath
 
 
-create :: Context -> Create.Request -> RPC Create.Update
+create :: Context -> Create.Request -> RPC IO Create.Update
 create ctx (Create.Request tpath) = do
     let path = decodeP tpath
     Context.run ctx $ Directory.create path
     return $ Create.Update tpath
 
 
-exists :: Context -> Exists.Request -> RPC Exists.Status
+exists :: Context -> Exists.Request -> RPC IO Exists.Status
 exists ctx (Exists.Request tpath) = do
     let path = decodeP tpath
     e <- Context.run ctx $ Directory.exists path
     return $ Exists.Status e tpath
 
 
-list :: Context -> List.Request -> RPC List.Status
+list :: Context -> List.Request -> RPC IO List.Status
 list ctx (List.Request tpath) = do
     let path = decodeP tpath
     contents <- Context.run ctx $ Directory.getContents path
     return $ List.Status (encodeListP contents) tpath
 
 
-remove :: Context -> Remove.Request -> RPC Remove.Update
+remove :: Context -> Remove.Request -> RPC IO Remove.Update
 remove ctx (Remove.Request tpath) = do
     let path = decodeP tpath
     Context.run ctx $ Directory.remove path
     return $ Remove.Update tpath
 
 
-copy :: Context -> Copy.Request -> RPC Copy.Update
+copy :: Context -> Copy.Request -> RPC IO Copy.Update
 copy ctx (Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
@@ -89,7 +89,7 @@ copy ctx (Copy.Request tsrc tdst) = do
     return $ Copy.Update tsrc tdst
 
 
-move :: Context -> Move.Request -> RPC Move.Update
+move :: Context -> Move.Request -> RPC IO Move.Update
 move ctx (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
