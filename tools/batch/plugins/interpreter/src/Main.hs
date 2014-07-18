@@ -7,11 +7,11 @@
 module Main where
 
 import qualified Flowbox.Bus.EndPoint                    as EP
-import qualified Flowbox.Bus.RPC.Server.Server           as Server
+import qualified Flowbox.Bus.RPC.Pipes                   as Pipes
 import qualified Flowbox.Config.Config                   as Config
+import           Flowbox.Control.Error
 import           Flowbox.Interpreter.Cmd                 (Cmd)
 import qualified Flowbox.Interpreter.Cmd                 as Cmd
-import qualified Flowbox.Interpreter.Context             as Context
 import qualified Flowbox.Interpreter.RPC.Handler.Handler as Handler
 import qualified Flowbox.Interpreter.Version             as Version
 import           Flowbox.Options.Applicative             hiding (info)
@@ -23,7 +23,6 @@ import           Flowbox.System.Log.Logger
 
 rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
-
 
 
 logger :: LoggerIO
@@ -53,8 +52,6 @@ run cmd = case cmd of
         rootLogger setIntLevel $ Cmd.verbose cmd
         busConfig <- EP.clientFromConfig <$> Config.load
 
-        ctx <- Context.mk
-
         logger info "Starting rpc server"
-        --Server.run busConfig (Handler.handlerMap ctx) >>= eitherStringToM
+        Pipes.run busConfig Handler.handlerMap Handler.handle >>= eitherStringToM
 

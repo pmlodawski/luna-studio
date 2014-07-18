@@ -29,7 +29,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Properties"
 
 
-getASTProperties :: ContextRef -> GetASTProperties.Request -> RPC GetASTProperties.Status
+getASTProperties :: ContextRef -> GetASTProperties.Request -> RPC IO GetASTProperties.Status
 getASTProperties ctxRef (GetASTProperties.Request tnodeID tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
@@ -38,7 +38,7 @@ getASTProperties ctxRef (GetASTProperties.Request tnodeID tlibID tprojectID) = d
     return $ GetASTProperties.Status (encode properties) tnodeID tlibID tprojectID
 
 
-setASTProperties :: ContextRef -> SetASTProperties.Request -> RPC SetASTProperties.Update
+setASTProperties :: ContextRef -> SetASTProperties.Request -> RPC IO SetASTProperties.Update
 setASTProperties ctxRef (SetASTProperties.Request tproperties tnodeID tlibID tprojectID) = do
     properties <- decodeE tproperties
     let nodeID    = decodeP tnodeID
@@ -48,7 +48,7 @@ setASTProperties ctxRef (SetASTProperties.Request tproperties tnodeID tlibID tpr
     return $ SetASTProperties.Update tproperties tnodeID tlibID tprojectID
 
 
-getNodeProperties :: ContextRef -> GetNodeProperties.Request -> RPC GetNodeProperties.Status
+getNodeProperties :: ContextRef -> GetNodeProperties.Request -> RPC IO GetNodeProperties.Status
 getNodeProperties ctxRef (GetNodeProperties.Request tnodeID tbc tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
@@ -57,7 +57,7 @@ getNodeProperties ctxRef (GetNodeProperties.Request tnodeID tbc tlibID tprojectI
     return $ GetNodeProperties.Status (encode properties) tnodeID tbc tlibID tprojectID
 
 
-setNodeProperties :: ContextRef -> SetNodeProperties.Request -> RPC SetNodeProperties.Update
+setNodeProperties :: ContextRef -> SetNodeProperties.Request -> RPC IO SetNodeProperties.Update
 setNodeProperties ctxRef (SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID) = do
     properties <- decodeE tproperties
     let nodeID    = decodeP tnodeID

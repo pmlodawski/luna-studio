@@ -38,7 +38,7 @@ prefixifyTopics :: Prefix -> [(Topic, a)] -> [(Topic, a)]
 prefixifyTopics prefix = map (first $ Prefix.prefixify prefix)
 
 
-handlerMap :: Prefix -> ContextRef -> HandlerMap
+handlerMap :: Prefix -> ContextRef -> HandlerMap IO
 handlerMap prefix ctx callback = HandlerMap.fromList $ prefixifyTopics prefix
     [ (Topic.pluginAddRequest        , call Topic.update $ PluginHandler.add     ctx)
     , (Topic.pluginRemoveRequest     , call Topic.update $ PluginHandler.remove  ctx)
@@ -51,5 +51,5 @@ handlerMap prefix ctx callback = HandlerMap.fromList $ prefixifyTopics prefix
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> RPC result) -> IO [Message]
+             => String -> (args -> RPC IO result) -> IO [Message]
         call type_ = callback type_ . Processor.singleResult

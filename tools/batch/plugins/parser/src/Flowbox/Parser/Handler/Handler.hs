@@ -26,7 +26,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Parser.Handler.Handler"
 
 
-handlerMap :: HandlerMap
+handlerMap :: HandlerMap IO
 handlerMap callback = HandlerMap.fromList
     [ ("parse.expr.request"    , call Topic.status ParserHandler.parseExpr    )
     , ("parse.pat.request"     , call Topic.status ParserHandler.parsePat     )
@@ -35,5 +35,5 @@ handlerMap callback = HandlerMap.fromList
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> RPC result) -> IO [Message]
+             => String -> (args -> RPC IO result) -> IO [Message]
         call type_ = callback type_ . Processor.singleResult

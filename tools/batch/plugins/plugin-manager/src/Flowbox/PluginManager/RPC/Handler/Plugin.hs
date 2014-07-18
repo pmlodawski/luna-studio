@@ -42,7 +42,7 @@ logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
 
 -------- public api -------------------------------------------------
 
-add :: ContextRef -> Add.Request -> RPC Add.Update
+add :: ContextRef -> Add.Request -> RPC IO Add.Update
 add ctxRef (Add.Request tplugin) = do
     ctx <- liftIO $ IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
@@ -52,7 +52,7 @@ add ctxRef (Add.Request tplugin) = do
     return $ Add.Update tplugin (encodeP id)
 
 
-remove :: ContextRef -> Remove.Request -> RPC Remove.Update
+remove :: ContextRef -> Remove.Request -> RPC IO Remove.Update
 remove ctxRef (Remove.Request tid) = safeLiftIO $ do
     ctx <- IORef.readIORef ctxRef
     let id      = decodeP tid
@@ -61,7 +61,7 @@ remove ctxRef (Remove.Request tid) = safeLiftIO $ do
     return $ Remove.Update tid
 
 
-list :: ContextRef -> List.Request -> RPC List.Status
+list :: ContextRef -> List.Request -> RPC IO List.Status
 list ctxRef List.Request = safeLiftIO $ do
     ctx <- IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
@@ -70,7 +70,7 @@ list ctxRef List.Request = safeLiftIO $ do
 
 
 -- TODO [PM] : Duplikacja kodu
-lookup :: ContextRef -> Lookup.Request -> RPC Lookup.Status
+lookup :: ContextRef -> Lookup.Request -> RPC IO Lookup.Status
 lookup ctxRef (Lookup.Request tid) = do
     ctx <- liftIO $ IORef.readIORef ctxRef
     let id      = decodeP tid
@@ -80,28 +80,28 @@ lookup ctxRef (Lookup.Request tid) = do
     return $ Lookup.Status (encode (id, pluginInfo)) tid
 
 
-start :: ContextRef -> Start.Request -> RPC Start.Update
+start :: ContextRef -> Start.Request -> RPC IO Start.Update
 start ctxRef (Start.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id (PluginHandle.start . view PluginHandle.plugin)
     return $ Start.Update tid
 
 
-stop :: ContextRef -> Stop.Request -> RPC Stop.Update
+stop :: ContextRef -> Stop.Request -> RPC IO Stop.Update
 stop ctxRef (Stop.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id PluginHandle.stop
     return $ Stop.Update tid
 
 
-restart :: ContextRef -> Restart.Request -> RPC Restart.Update
+restart :: ContextRef -> Restart.Request -> RPC IO Restart.Update
 restart ctxRef (Restart.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id PluginHandle.restart
     return $ Restart.Update tid
 
 
-withPluginHandle :: ContextRef -> Plugin.ID -> (PluginHandle -> IO PluginHandle) -> RPC PluginHandle
+withPluginHandle :: ContextRef -> Plugin.ID -> (PluginHandle -> IO PluginHandle) -> RPC IO PluginHandle
 withPluginHandle ctxRef id operation = do
     ctx <- liftIO $ IORef.readIORef ctxRef
     let plugins = Context.plugins ctx

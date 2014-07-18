@@ -15,7 +15,10 @@ import qualified Flowbox.Data.SetForest                     as SetForest
 import           Flowbox.Interpreter.Session.Data.CacheInfo (CacheInfo)
 import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint)
 import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint)
+import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint (DefPoint))
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb          as Crumb
 import           Flowbox.Luna.Lib.LibManager                (LibManager)
+import qualified Flowbox.Luna.Lib.LibManager                as LibManager
 import           Flowbox.Prelude
 
 
@@ -32,3 +35,8 @@ makeLenses(''Env)
 
 mk :: LibManager -> DefPoint -> Env
 mk = Env MapForest.empty SetForest.empty
+
+
+instance Default Env where
+    def = mk LibManager.empty
+             (DefPoint 0 [Crumb.ModuleCrumb "Main", Crumb.FunctionCrumb "main" []])

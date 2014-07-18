@@ -28,7 +28,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.ProjectManager.Handler.NodeDefault"
 
 
-get :: ContextRef -> NodeDefaultGet.Request -> RPC NodeDefaultGet.Status
+get :: ContextRef -> NodeDefaultGet.Request -> RPC IO NodeDefaultGet.Status
 get ctxRef (NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let nodeID    = decodeP tnodeID
@@ -38,7 +38,7 @@ get ctxRef (NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
     return $ NodeDefaultGet.Status (encode nodeDefaults) tnodeID tbc tlibID tprojectID
 
 
-set :: ContextRef -> NodeDefaultSet.Request -> RPC NodeDefaultSet.Update
+set :: ContextRef -> NodeDefaultSet.Request -> RPC IO NodeDefaultSet.Update
 set ctxRef (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort
@@ -50,7 +50,7 @@ set ctxRef (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID
     return $ NodeDefaultSet.Update tdstPort tvalue tnodeID tbc tlibID tprojectID
 
 
-remove :: ContextRef -> NodeDefaultRemove.Request -> RPC NodeDefaultRemove.Update
+remove :: ContextRef -> NodeDefaultRemove.Request -> RPC IO NodeDefaultRemove.Update
 remove ctxRef (NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort

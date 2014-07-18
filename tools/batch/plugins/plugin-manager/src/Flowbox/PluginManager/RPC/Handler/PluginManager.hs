@@ -19,7 +19,7 @@ logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
 
 -------- public api -------------------------------------------------
 
-ping :: Ping.Request -> RPC Ping.Status
+ping :: Ping.Request -> RPC IO Ping.Status
 ping Ping.Request = do
     logger info "Ping received"
     return Ping.Status

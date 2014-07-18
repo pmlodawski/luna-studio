@@ -31,13 +31,31 @@ singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
 singleResult f a = liftM mkList $ f a
 
 
-process :: HandlerMap -> Message -> IO [Message]
+-- FIXME [PM] : Code duplication
+
+
+process :: HandlerMap IO -> Message -> IO [Message]
 process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
-    call :: HandlerMap.Callback
     call type_ method = case Proto.messageGet' $ msg ^. Message.message of
         Left err   -> do logger error err
                          return $ Message.mkError topic err
         Right args -> do results <- RPC.run $ method args
+                         return $ case results of
+                            Left err -> Message.mkError topic err
+                            Right ok -> map (respond type_) ok
+
+    topic = msg ^. Message.topic
+
+    respond :: Proto.Serializable msg => String -> msg -> Message
+    respond = Message.mkResponse topic
+
+
+processLifted :: MonadIO m => HandlerMap m -> Message -> m [Message]
+processLifted handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
+    call type_ method = case Proto.messageGet' $ msg ^. Message.message of
+        Left err   -> do logger error err
+                         return $ Message.mkError topic err
+        Right args -> do results <- RPC.runLifted $ method args
                          return $ case results of
                             Left err -> Message.mkError topic err
                             Right ok -> map (respond type_) ok
