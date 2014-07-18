@@ -6,20 +6,20 @@
 ---------------------------------------------------------------------------
 module Flowbox.Bus.Logger.Logger where
 
-import           Control.Monad                 (forever)
-import           Data.List                     (isSuffixOf)
+import Control.Monad (forever)
+import Data.List     (isSuffixOf)
 
-import           Flowbox.Bus.Bus               (Bus)
-import qualified Flowbox.Bus.Bus               as Bus
-import qualified Flowbox.Bus.Data.Message      as Message
-import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic        (Topic)
-import qualified Flowbox.Bus.Data.Topic        as Topic
-import           Flowbox.Bus.EndPoint          (BusEndPoints)
-import           Flowbox.Prelude               hiding (error)
+import           Flowbox.Bus.Bus                                (Bus)
+import qualified Flowbox.Bus.Bus                                as Bus
+import qualified Flowbox.Bus.Data.Exception                     as Exception
+import qualified Flowbox.Bus.Data.Message                       as Message
+import           Flowbox.Bus.Data.MessageFrame                  (MessageFrame (MessageFrame))
+import           Flowbox.Bus.Data.Topic                         (Topic)
+import qualified Flowbox.Bus.Data.Topic                         as Topic
+import           Flowbox.Bus.EndPoint                           (BusEndPoints)
+import           Flowbox.Prelude                                hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Bus.Data.Exception as Exception
-import qualified Flowbox.Text.ProtocolBuffers as Proto
+import qualified Flowbox.Text.ProtocolBuffers                   as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
@@ -35,7 +35,7 @@ run ep topics = Bus.runBus ep $ do logger info $ "Subscribing to topics: " ++ sh
 
 
 logMessage :: Bus ()
-logMessage = do msgFrame <- Bus.receive
+logMessage = do msgFrame <- Bus.receive'
                 case msgFrame of
                     Left err -> logger error $ "Unparseable message: " ++ err
                     Right (MessageFrame msg crlID senderID lastFrame) -> do
@@ -47,9 +47,9 @@ logMessage = do msgFrame <- Bus.receive
                                    ++ show lastFrame
                                    ++ ")"
                                    ++ "\t:: "
-                                   ++ topic 
+                                   ++ topic
                             content = msg ^. Message.message
-                            errorMsg = case Proto.messageGet' content of 
+                            errorMsg = case Proto.messageGet' content of
                                 Left err        -> "(cannot parse error message: " ++ err ++ ")"
                                 Right exception -> case (decodeP exception) ^. Exception.msg of
                                     Nothing           -> "(exception without message)"
