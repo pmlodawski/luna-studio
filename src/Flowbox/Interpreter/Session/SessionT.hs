@@ -6,13 +6,10 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.SessionT where
 
-import Control.Monad.State
+import Control.Monad.IO.Class
 
 import Flowbox.Interpreter.Session.Session (Session)
 import Flowbox.Prelude
-
-
-
 
 
 newtype SessionT a = SessionT { runSessionT :: Session a}
@@ -21,3 +18,8 @@ newtype SessionT a = SessionT { runSessionT :: Session a}
 instance Monad SessionT where
     return a = SessionT $ return a
     (SessionT a) >>= f = SessionT $ a >>= runSessionT . f
+
+
+instance MonadIO SessionT where
+    liftIO a = SessionT $ liftIO a
+
