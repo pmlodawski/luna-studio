@@ -35,31 +35,31 @@ logger = getLoggerIO "Flowbox.FileManager.Handler.File"
 ------ public api -------------------------------------------------
 
 
-upload :: Upload.Request -> RPC Upload.Status
+upload :: Upload.Request -> RPC IO Upload.Status
 upload (Upload.Request tpath) =
     return $ Upload.Status tpath
 
 
-fetch :: Fetch.Request -> RPC Fetch.Status
+fetch :: Fetch.Request -> RPC IO Fetch.Status
 fetch (Fetch.Request tpath) =
     return $ Fetch.Status tpath
 
 
-exists :: Exists.Request -> RPC Exists.Status
+exists :: Exists.Request -> RPC IO Exists.Status
 exists (Exists.Request tpath) = do
     let path = decodeP tpath
     e <- safeLiftIO $ Directory.doesFileExist path
     return $ Exists.Status e tpath
 
 
-remove :: Remove.Request -> RPC Remove.Update
+remove :: Remove.Request -> RPC IO Remove.Update
 remove (Remove.Request tpath) = do
     let path = decodeP tpath
     safeLiftIO $ Directory.removeFile path
     return $ Remove.Update tpath
 
 
-copy :: Copy.Request -> RPC Copy.Update
+copy :: Copy.Request -> RPC IO Copy.Update
 copy (Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
@@ -67,7 +67,7 @@ copy (Copy.Request tsrc tdst) = do
     return $ Copy.Update tsrc tdst
 
 
-move :: Move.Request -> RPC Move.Update
+move :: Move.Request -> RPC IO Move.Update
 move (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst

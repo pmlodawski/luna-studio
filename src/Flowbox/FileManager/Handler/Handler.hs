@@ -26,7 +26,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.FileManager.Handler"
 
 
-handlerMap ::  HandlerMap
+handlerMap :: HandlerMap IO
 handlerMap callback = HandlerMap.fromList
     [ ("filesystem.directory.fetch.request" , call Topic.status DirectoryHandler.fetch)
     , ("filesystem.directory.upload.request", call Topic.status DirectoryHandler.upload)
@@ -45,5 +45,5 @@ handlerMap callback = HandlerMap.fromList
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> RPC result) -> IO [Message]
+             => String -> (args -> RPC IO result) -> IO [Message]
         call type_ = callback type_ . Processor.singleResult
