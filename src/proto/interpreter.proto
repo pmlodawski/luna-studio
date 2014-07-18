@@ -10,59 +10,56 @@ package generated.proto.interpreter;
 
 
 message CallPoint {
-    required int32 libraryID = 1;
-    required int32 nodeID    = 2;
+    optional int32 libraryID = 1;
+    optional int32 nodeID    = 2;
 }
 
-message CallPath {
-    repeated CallPath calls = 1;
-}
-
-message DefPoint {
-    required int32 libraryID = 1;
-    required int32 defID     = 2;
+message CallPointPath {
+    repeated CallPoint calls = 1;
 }
 
 message Interpreter {
     message WatchPoint {
         message Add {
             message Request {
-                required CallPath watchPoint = 1;
+                required CallPointPath watchPoint = 1;
             }
             message Update {
-                required CallPath watchPoint = 1;
+                required Request request = 1;
             }
         }
         message Remove {
             message Request {
-                required CallPath watchPoint = 1;
+                required CallPointPath watchPoint = 1;
             }
             message Update {
-                required CallPath watchPoint = 1;
+                required Request request = 1;
             }
         }
         message List {
             message Request { }
             message Status {
-                repeated CallPath watchPoints = 1;
+                required Request request = 1;
+                repeated CallPointPath watchPoints = 2;
             }
         }
     }
     message Invalidate {
         message Call {
             message Request {
-                required CallPath call = 1;
+                required CallPointPath call = 1;
             }
             message Update {
-                required CallPath call = 1;
+                required Request request = 1;
             }
         }
         message Def {
             message Request {
-                required DefPoint def = 1;
+                required int32 libraryID = 1;
+                required int32 defID     = 2;
             }
             message Update {
-                required DefPoint def = 1;
+                required Request request = 1;
             }
         }
         message Node {
@@ -70,12 +67,14 @@ message Interpreter {
                 required CallPoint node = 1;
             }
             message Update {
-                required CallPoint node = 1;
+                required Request request = 1;
             }
         }
     }
     message Run {
         message Request { }
-        message Update  { }
+        message Update  { 
+            required Request request = 1;
+        }
     }
 }
