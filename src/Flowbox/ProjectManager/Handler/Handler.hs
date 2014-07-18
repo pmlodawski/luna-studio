@@ -32,7 +32,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.ProjectManager.Handler"
 
 
-handlerMap :: ContextRef -> HandlerMap
+handlerMap :: ContextRef -> HandlerMap IO
 handlerMap ctx callback = HandlerMap.fromList
     [ ("project.list.request"          , call Topic.status $ ProjectHandler.list ctx)
     , ("project.lookup.request"        , call Topic.status $ ProjectHandler.lookup ctx)
@@ -82,7 +82,7 @@ handlerMap ctx callback = HandlerMap.fromList
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> RPC result) -> IO [Message]
+             => String -> (args -> RPC IO result) -> IO [Message]
         call type_ = callback type_ . Processor.singleResult
 
 

@@ -28,7 +28,7 @@ mk :: Config -> IO ContextRef
 mk cfg = IORef.newIORef $ Batch.make cfg
 
 
-run :: ContextRef -> Batch a -> RPC a
+run :: ContextRef -> Batch a -> RPC IO a
 run ctxRef batch = do
     ctx <- liftIO $ IORef.readIORef ctxRef
     (result, newCtx) <- runStateT (runEitherT batch) ctx
