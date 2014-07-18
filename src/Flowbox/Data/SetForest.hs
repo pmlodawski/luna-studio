@@ -25,6 +25,13 @@ empty :: SetForest a
 empty = Map.empty
 
 
+toList :: SetForest a -> [[a]]
+toList = concatMap (toList' []) .  Map.toList where
+    toList' :: [a]  -> (a, SetTree a) -> [[a]]
+    toList' a (k, Leaf)        = [a ++ [k]]
+    toList' a (k, SubForest s) = concatMap (toList' (a ++ [k])) $ Map.toList s
+
+
 insert :: Ord a => [a] -> SetForest a -> SetForest a
 insert []    forest = forest
 insert [a]   forest = if Map.member a forest
