@@ -12,12 +12,12 @@
 
 module Flowbox.Interpreter.Proto.CallPointPath where
 
-import           Flowbox.Control.Error
 import           Flowbox.Interpreter.Proto.CallPoint            ()
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Interpreter.CallPointPath      as Gen
+
 
 
 instance Convert CallPointPath Gen.CallPointPath where
