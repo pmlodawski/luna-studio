@@ -34,9 +34,6 @@ merge' file mode = do
     let (r, g, b, a) = map4 (rasterizer (Grid 512 512) . transform (fmap A.fromIntegral)) $ threeWayMerge r1 g1 b1 r2 g2 b2 a1 a2 mode
     testSaveRGBA'' file r g b a
 
-map4 :: (a -> b) -> (a, a, a, a) -> (b, b, b, b)
-map4 f (a, b, c, d) = (f a, f b, f c, f d)
-
 simpleMerges :: [BlendMode Double]
 simpleMerges = [
       average

@@ -38,8 +38,8 @@ bias b x = (b A.>* 0) A.? (x ^ logBase 0.5 b, 0)
 gain :: (Elt t, Elt t1, IsIntegral t1, IsFloating t, IsFloating t1) => Exp t -> Exp t1 -> Exp t
 gain g x = 0.5 * (x A.<* 0.5 A.? (bias (2 * x) (1 - g) , 2 - bias (2 - 2 * x) (1 - g)))
 
-gamma :: (Fractional b, Integral b, Num a) => b -> a -> a
-gamma g x = x ^ (1 / g)
+gamma :: Floating a => a -> a -> a
+gamma g x = x ** (1 / g)
 
 compress :: Num a => a -> a -> a -> a
 compress lo hi x = (hi - lo) * x + lo

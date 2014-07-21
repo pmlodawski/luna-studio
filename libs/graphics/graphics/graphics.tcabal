@@ -131,3 +131,33 @@ Executable test_merge
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     build-depends:      accelerate-cuda  == 0.15.*
+
+Executable test_color
+  Main-Is:        Color.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    build-depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  QuickCheck               ,
+                  vector
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    build-depends:      accelerate-cuda  == 0.15.*
