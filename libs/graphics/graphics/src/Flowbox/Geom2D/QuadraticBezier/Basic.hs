@@ -4,13 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TypeOperators #-}
+
 module Flowbox.Geom2D.QuadraticBezier.Basic where
 
-import Data.List
-import Geom2D
-import Geom2D.CubicBezier.Basic
---import Geom2D.CubicBezier.Intersection
---import Geom2D.CubicBezier.Curvature
+import           Data.Array.Accelerate (Z(..), (:.)(..), Acc, Array)
+import qualified Data.Array.Accelerate as A
+import           Data.List
+import           Geom2D
+import           Geom2D.CubicBezier.Basic
 
 import Flowbox.Geom2D.CubicBezier.Basic
 import Flowbox.Prelude hiding ((++))
@@ -24,7 +26,7 @@ approximateCubicWithQuadratic :: Int -> Double -> CubicBezier -> [QuadraticBezie
 approximateCubicWithQuadratic = approximateCubicWithQuadraticStep 0
     where approximateCubicWithQuadraticStep :: Int -> Int -> Double -> CubicBezier-> [QuadraticBezier]
           approximateCubicWithQuadraticStep step limit eps curve@(CubicBezier pA pB pC pD) =
-              if error < eps || step > limit
+              if err < eps || step > limit
                   then [approxCruve]
                   else if hasInflections
                       then getSubresults subcurvesInf
@@ -48,5 +50,15 @@ approximateCubicWithQuadratic = approximateCubicWithQuadraticStep 0
                   approx a b c      = QuadraticBezier a (approxControl a b) (approxEnd a b c)
                   approxControl a b = (3 *^ b ^-^ a) ^/ 2
                   approxEnd a b c   = a ^-^ 3 *^ b ^+^ 3 *^ c
-                  error = ((sqrt 3) / 18) * d
-                  d     = vectorDistance c0 c1
+                  err = ((sqrt 3) / 18) * d
+                  d   = vectorDistance c0 c1
+
+convertCubicsToQuadratics :: [CubicBezier] -> Int -> Double -> Acc (Array (Z :. Int) ((Double, Double), (Double, Double), (Double, Double)))
+convertCubicsToQuadratics cubics steps eps = curves'
+    where curves' = A.use $ A.fromList (Z :. (length curves)) $ fmap convert curves
+          curves  = foldr (++) [] $ fmap (approximateCubicWithQuadratic steps eps) cubics
+          convert (QuadraticBezier p0 p1 p2) = let
+                  Point p0x p0y = p0
+                  Point p1x p1y = p1
+                  Point p2x p2y = p2
+              in ((p0x, p0y), (p1x, p1y), (p2x, p2y))
