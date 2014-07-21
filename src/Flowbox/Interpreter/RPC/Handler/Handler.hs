@@ -19,6 +19,7 @@ import qualified Flowbox.Bus.Data.Message                    as Message
 import qualified Flowbox.Bus.Data.Topic                      as Topic
 import           Flowbox.Bus.RPC.HandlerMap                  (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                  as HandlerMap
+import           Flowbox.Bus.RPC.RPC                         (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor            as Processor
 import qualified Flowbox.Interpreter.RPC.Handler.ASTWatch    as ASTWatch
 import qualified Flowbox.Interpreter.RPC.Handler.Interpreter as Interpreter
@@ -30,6 +31,7 @@ import qualified Flowbox.Interpreter.Session.SessionT        as SessionT
 import           Flowbox.Prelude                             hiding (Context, error)
 import qualified Flowbox.ProjectManager.Topic                as Topic
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Text.ProtocolBuffers                as Proto
 
 
 
@@ -46,12 +48,13 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.interpreterWatchPointAdd    , call1 Topic.update $ Interpreter.watchPointAdd)
     , (Topic.interpreterWatchPointRemove , call1 Topic.update $ Interpreter.watchPointRemove)
     , (Topic.interpreterWatchPointList   , call1 Topic.status $ Interpreter.watchPointList)
-    --, (Topic.projectLibraryAstGetRequest , call0 ASTWatch.test)
+    , (Topic.projectLibraryAstGetRequest , call0 ASTWatch.test)
     , ("project.store.status"            , call0 ASTWatch.test2)
     , ("dummy"                           , call0 ASTWatch.test2)
     ]
     where
         call1 type_ = callback type_ . Processor.singleResult
+        call0 :: Proto.Serializable a => (a -> RPC SessionT ()) -> SessionT [Message]
         call0       = callback ""    . Processor.noResult
 
 
