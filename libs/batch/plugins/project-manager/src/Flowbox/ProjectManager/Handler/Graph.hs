@@ -40,67 +40,67 @@ logger = getLoggerIO "Flowbox.ProjectManager.Handlers.Graph"
 
 
 get :: ContextRef -> GetGraph.Request -> RPC GetGraph.Status
-get ctxRef (GetGraph.Request tbc tlibID tprojectID) = do
+get ctxRef request@(GetGraph.Request tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
 
     graph <- Context.run ctxRef $ BatchG.nodesGraph bc libID projectID
-    return $ GetGraph.Status (encode graph) tbc tlibID tprojectID
+    return $ GetGraph.Status request (encode graph)
 
 
 lookup :: ContextRef -> Lookup.Request -> RPC Lookup.Status
-lookup ctxRef (Lookup.Request tnodeID tbc tlibID tprojectID) = do
+lookup ctxRef request@(Lookup.Request tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     node  <- Context.run ctxRef $ BatchG.nodeByID nodeID bc libID projectID
-    return $ Lookup.Status (encode (nodeID, node)) tbc tlibID tprojectID
+    return $ Lookup.Status request (encode (nodeID, node))
 
 
 nodeAdd :: ContextRef -> NodeAdd.Request -> RPC NodeAdd.Update
-nodeAdd ctxRef (NodeAdd.Request tnode tbc tlibID tprojectID) = do
+nodeAdd ctxRef request@(NodeAdd.Request tnode tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     (_ :: Int, node) <- decodeE tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     newNodeID <- Context.run ctxRef $ BatchG.addNode node bc libID projectID
-    return $ NodeAdd.Update (encode (newNodeID, node)) tbc tlibID tprojectID
+    return $ NodeAdd.Update request (encode (newNodeID, node))
 
 
 nodeModify :: ContextRef -> NodeModify.Request -> RPC NodeModify.Update
-nodeModify ctxRef (NodeModify.Request tnode tbc tlibID tprojectID) = do
+nodeModify ctxRef request@(NodeModify.Request tnode tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     (nodeID, node) <- decodeE tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     newNodeID <- Context.run ctxRef $ BatchG.updateNode (nodeID, node) bc libID projectID
-    return $ NodeModify.Update (encodeP nodeID) (encode (newNodeID, node)) tbc tlibID tprojectID
+    return $ NodeModify.Update request (encode (newNodeID, node))
 
 
 nodeModifyInPlace :: ContextRef -> NodeModifyInPlace.Request -> RPC NodeModifyInPlace.Update
-nodeModifyInPlace ctxRef (NodeModifyInPlace.Request tnode tbc tlibID tprojectID) = do
+nodeModifyInPlace ctxRef request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     nodeWithId <- decodeE tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $ BatchG.updateNodeInPlace nodeWithId bc libID projectID
-    return $ NodeModifyInPlace.Update tnode tbc tlibID tprojectID
+    return $ NodeModifyInPlace.Update request
 
 
 nodeRemove :: ContextRef -> NodeRemove.Request -> RPC NodeRemove.Update
-nodeRemove ctxRef (NodeRemove.Request tnodeID tbc tlibID tprojectID) = do
+nodeRemove ctxRef request@(NodeRemove.Request tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $ BatchG.removeNode nodeID bc libID projectID
-    return $ NodeRemove.Update tnodeID tbc tlibID tprojectID
+    return $ NodeRemove.Update request
 
 
 connect :: ContextRef -> Connect.Request -> RPC Connect.Update
-connect ctxRef (Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
+connect ctxRef request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = decodeListP tsrcPort
@@ -109,11 +109,11 @@ connect ctxRef (Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlib
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $ BatchG.connect srcNodeID srcPort dstNodeID dstPort bc libID projectID
-    return $ Connect.Update tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID
+    return $ Connect.Update request
 
 
 disconnect :: ContextRef -> Disconnect.Request -> RPC Disconnect.Update
-disconnect ctxRef (Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
+disconnect ctxRef request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = decodeListP tsrcPort
@@ -122,4 +122,4 @@ disconnect ctxRef (Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tb
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $  BatchG.disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID
-    return $ Disconnect.Update tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID
+    return $ Disconnect.Update request
