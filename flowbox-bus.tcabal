@@ -35,6 +35,7 @@ Library
                   mtl,
                   monad-loops,
                   pipes,
+                  pipes-concurrency,
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   transformers,
