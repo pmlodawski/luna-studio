@@ -20,7 +20,7 @@ import Flowbox.Prelude
 forkIO_ :: IO () -> IO ()
 forkIO_ a = void $ forkIO a
 
-
+-- [PM] deprecated - use async
 forkIO' :: IO a -> IO (MVar ())
 forkIO' io = do
     mvar <- newEmptyMVar
