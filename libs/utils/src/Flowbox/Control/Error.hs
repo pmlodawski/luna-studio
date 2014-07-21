@@ -83,5 +83,13 @@ eitherToM :: (MonadIO m, Show a) => Either a b -> m b
 eitherToM = either (fail . show) return
 
 
+eitherToM' :: (MonadIO m, Show a) => m (Either a b) -> m b
+eitherToM' action = action >>= eitherToM
+
+
 eitherStringToM :: MonadIO m => Either String b -> m b
 eitherStringToM = either fail return
+
+
+eitherStringToM' :: MonadIO m => m (Either String b) -> m b
+eitherStringToM' action = action >>= eitherStringToM

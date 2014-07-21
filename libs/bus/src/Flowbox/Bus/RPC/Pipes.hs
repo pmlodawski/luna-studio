@@ -8,8 +8,11 @@
 
 module Flowbox.Bus.RPC.Pipes where
 
-import Pipes
+import           Pipes            (lift, (>->))
+import qualified Pipes
+import qualified Pipes.Concurrent as Pipes
 
+import           Control.Monad                 (forever)
 import qualified Flowbox.Bus.Bus               as Bus
 import           Flowbox.Bus.BusT              (BusT (BusT))
 import qualified Flowbox.Bus.BusT              as BusT
@@ -20,25 +23,34 @@ import qualified Flowbox.Bus.Data.MessageFrame as MessageFrame
 import           Flowbox.Bus.EndPoint          (BusEndPoints)
 import           Flowbox.Bus.RPC.HandlerMap    (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap    as HandlerMap
+import           Flowbox.Control.Concurrent    (forkIO_)
+import           Flowbox.Control.Error
 import           Flowbox.Prelude               hiding (error)
 
 
 
-produce :: Producer (Message, Message.CorrelationID) BusT ()
-produce = do
+produce :: Pipes.Producer (Message, Message.CorrelationID) BusT ()
+produce = forever $ do
     frame <- lift $ BusT $ Bus.receive
-    yield (frame ^. MessageFrame.message, frame ^. MessageFrame.correlation)
+    Pipes.yield (frame ^. MessageFrame.message, frame ^. MessageFrame.correlation)
 
 
-consume :: Consumer (Message, Message.CorrelationID) BusT ()
-consume = do
-    (msg, crl) <- await
+consume :: Pipes.Consumer (Message, Message.CorrelationID) BusT ()
+consume = forever $ do
+    (msg, crl) <- Pipes.await
     void $ lift $ BusT $ Bus.reply crl Flag.Enable msg
 
 
-run :: MonadIO m => BusEndPoints -> HandlerMap n
-    -> Pipe (Message, Message.CorrelationID) (Message, Message.CorrelationID) BusT ()
-    -> m (Either Bus.Error ())
-run endPoints handlerMap handler = Bus.runBus endPoints $ do
-    mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
-    BusT.runBusT $ runEffect $ produce >-> handler >-> consume
+run :: BusEndPoints -> HandlerMap n
+    -> IO (Pipes.Input  (Message, Message.CorrelationID),
+           Pipes.Output (Message, Message.CorrelationID))
+run endPoints handlerMap = do
+    (output1, input1) <- Pipes.spawn Pipes.Single
+    (output2, input2) <- Pipes.spawn Pipes.Single
+    forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
+        mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
+        BusT.runBusT $ Pipes.runEffect $ produce >-> Pipes.toOutput output1
+    forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
+        mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
+        BusT.runBusT $ Pipes.runEffect $ Pipes.fromInput input2 >-> consume
+    return (input1, output2)

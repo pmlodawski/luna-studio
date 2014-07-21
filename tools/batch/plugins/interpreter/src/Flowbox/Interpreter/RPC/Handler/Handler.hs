@@ -9,26 +9,28 @@
 
 module Flowbox.Interpreter.RPC.Handler.Handler where
 
-import Control.Monad (forever)
-import Pipes
+import           Control.Monad    (forever)
+import           Pipes            (lift, (>->))
+import qualified Pipes
+import qualified Pipes.Concurrent as Pipes
 
-import           Flowbox.Bus.BusT                            (BusT)
 import           Flowbox.Bus.Data.Message                    (Message)
 import qualified Flowbox.Bus.Data.Message                    as Message
 import qualified Flowbox.Bus.Data.Topic                      as Topic
 import           Flowbox.Bus.RPC.HandlerMap                  (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                  as HandlerMap
 import qualified Flowbox.Bus.RPC.Server.Processor            as Processor
-import           Flowbox.Control.Error
 import qualified Flowbox.Interpreter.RPC.Handler.ASTWatch    as ASTWatch
 import qualified Flowbox.Interpreter.RPC.Handler.Interpreter as Interpreter
 import qualified Flowbox.Interpreter.RPC.Topic               as Topic
+import           Flowbox.Interpreter.Session.Error           (Error)
 import qualified Flowbox.Interpreter.Session.Session         as Session
 import           Flowbox.Interpreter.Session.SessionT        (SessionT)
 import qualified Flowbox.Interpreter.Session.SessionT        as SessionT
 import           Flowbox.Prelude                             hiding (Context, error)
 import qualified Flowbox.ProjectManager.Topic                as Topic
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: LoggerIO
@@ -44,26 +46,29 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.interpreterWatchPointAdd    , call1 Topic.update $ Interpreter.watchPointAdd)
     , (Topic.interpreterWatchPointRemove , call1 Topic.update $ Interpreter.watchPointRemove)
     , (Topic.interpreterWatchPointList   , call1 Topic.status $ Interpreter.watchPointList)
-    , (Topic.projectLibraryAstGetRequest , call0 ASTWatch.test)
-    --, (Topic.projectStoreRequest         , call0 ASTWatch.test)
+    --, (Topic.projectLibraryAstGetRequest , call0 ASTWatch.test)
+    , ("project.store.status"            , call0 ASTWatch.test2)
+    , ("dummy"                           , call0 ASTWatch.test2)
     ]
     where
         call1 type_ = callback type_ . Processor.singleResult
         call0       = callback ""    . Processor.noResult
 
 
-handle :: Pipe (Message, Message.CorrelationID)
-               (Message, Message.CorrelationID)
-               BusT ()
-handle = hoist
-    (\a -> liftIO $ eitherToM =<< (Session.run def $ SessionT.runSessionT a))
-    interpreterHandle
-
-
-interpreterHandle :: Pipe (Message, Message.CorrelationID)
-                          (Message, Message.CorrelationID)
-                          SessionT ()
-interpreterHandle = forever $ do
-    (message, crl) <- await
+interpret :: Pipes.Pipe (Message, Message.CorrelationID)
+                        (Message, Message.CorrelationID)
+                        SessionT ()
+interpret = forever $ do
+    (message, crl) <- Pipes.await
     results <- lift $ Processor.processLifted handlerMap message
-    mapM_ (\r -> yield (r, crl)) results
+    mapM_ (\r -> Pipes.yield (r, crl)) results
+
+
+
+run :: (Pipes.Input  (Message, Message.CorrelationID),
+        Pipes.Output (Message, Message.CorrelationID))
+    -> IO (Either Error ())
+run (input, output) = Session.run def $ SessionT.runSessionT $ do
+    Pipes.runEffect $ Pipes.fromInput input
+                  >-> interpret
+                  >-> Pipes.toOutput output
