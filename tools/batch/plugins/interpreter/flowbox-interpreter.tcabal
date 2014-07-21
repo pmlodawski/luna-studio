@@ -29,6 +29,7 @@ Executable interpreter
                     flowbox-bus,
                     flowbox-config,
                     flowbox-luna-interpreter,
+                    flowbox-project-manager,
                     flowbox-utils,
                     MissingH,
                     mtl,

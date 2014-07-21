@@ -20,7 +20,7 @@ import qualified Flowbox.Bus.RPC.RPC          as RPC
 import           Flowbox.Prelude              hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers as Proto
-
+import           Generated.Proto.Rpc.Response (Response)
 
 
 logger :: LoggerIO
@@ -30,6 +30,9 @@ logger = getLoggerIO "Flowbox.Bus.RPC.Server.Processor"
 singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
 singleResult f a = liftM mkList $ f a
 
+
+noResult :: MonadIO m => (a -> m ()) -> a -> m [Response]
+noResult f a = f a >> return []
 
 -- FIXME [PM] : Code duplication
 
