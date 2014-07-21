@@ -53,5 +53,5 @@ run cmd = case cmd of
         busConfig <- EP.clientFromConfig <$> Config.load
 
         logger info "Starting rpc server"
-        Pipes.run busConfig Handler.handlerMap Handler.handle >>= eitherStringToM
+        Pipes.run busConfig Handler.handlerMap >>= Handler.run >>= eitherToM
 

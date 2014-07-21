@@ -55,6 +55,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Reque
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Update                  as Remove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                as ResolveDefinition
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                 as ResolveDefinition
+import qualified Generated.Proto.ProjectManager.Project.Store.Status                               as Store
 
 
 
@@ -66,3 +67,13 @@ logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.ASTWatch"
 test :: Definitions.Status -> RPC SessionT ()
 test (Definitions.Status tfocus mtmaxDepth tbc tlibID tprojectID) = do
     print "!!!"
+
+
+test2 :: Store.Status -> RPC SessionT ()
+test2 _ = do
+    print "!!!222"
+
+test3 :: Store.Status -> RPC SessionT Store.Status
+test3 r = do
+    print "!!!333"
+    return r
