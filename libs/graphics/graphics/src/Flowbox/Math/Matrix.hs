@@ -125,6 +125,8 @@ shapeSize = A.shapeSize
 slice :: (Slice slix, Elt e) => Matrix (FullShape slix) e -> Exp slix -> Matrix (SliceShape slix) e
 slice mat fragments = Delayed $ A.slice (accMatrix mat) fragments
 
+take :: (Elt e) => Exp Int -> Vector e -> Vector e
+take elems mat = Delayed $ A.take elems (accMatrix mat)
 
 -- == Construction ==
 

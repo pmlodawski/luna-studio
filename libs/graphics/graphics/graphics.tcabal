@@ -53,7 +53,6 @@ Executable test_generator
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          NoImplicitPrelude,
                           TemplateHaskell,
                           OverloadedStrings
   Default-Language:       Haskell2010
@@ -69,8 +68,9 @@ Executable test_generator
                   algebraic                ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
-                  lens,
-                  base
+                  JuicyPixels              ,
+                  lens                     ,
+                  vector
 
 Executable test_bezier
   Main-Is:        Bezier.hs
@@ -81,7 +81,6 @@ Executable test_bezier
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          NoImplicitPrelude,
                           TemplateHaskell,
                           OverloadedStrings
   Default-Language:       Haskell2010
@@ -98,8 +97,36 @@ Executable test_bezier
                   flowbox-utils            ,
                   flowbox-graphics         ,
                   lens                     ,
-                  base                     ,
                   cubicbezier
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    build-depends:      accelerate-cuda  == 0.15.*
+
+Executable test_merge
+  Main-Is:        Merge.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    build-depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  vector
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
