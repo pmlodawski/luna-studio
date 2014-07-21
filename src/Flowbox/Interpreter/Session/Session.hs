@@ -58,7 +58,7 @@ run env session = do
 initialize :: Session ()
 initialize = do
     lift2 I.reset
-    setHardodedExtensions
+    setHardcodedExtensions
     lift2 $ I.setImportsQ [("Prelude", Nothing)
                           ,("Control.Monad", Nothing)]
     runDecls Helpers.helpers
@@ -92,8 +92,8 @@ runDecls decls = do
     void $ lift2 $ I.runGhc $ GHC.runDecls decls
 
 
-setHardodedExtensions :: Session ()
-setHardodedExtensions = do
+setHardcodedExtensions :: Session ()
+setHardcodedExtensions = do
     setFlags [ F.Opt_MultiParamTypeClasses
              , F.Opt_FunctionalDependencies
              , F.Opt_FlexibleContexts
