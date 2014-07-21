@@ -64,7 +64,7 @@ logger = getLoggerIO "Flowbox.ProjectManager.Handler.AST"
 -------- public api -------------------------------------------------
 
 get :: ContextRef -> Definitions.Request -> RPC Definitions.Status
-get ctxRef request@(Definitions.Request mtmaxDepth tbc tlibID tprojectID) = do
+get ctxRef request@(Definitions.Request mtmaxDepth tbc tlibID tprojectID _) = do
     bc  <- decodeE tbc
     let mmaxDepth = fmap decodeP mtmaxDepth
         libID     = decodeP tlibID
@@ -74,7 +74,7 @@ get ctxRef request@(Definitions.Request mtmaxDepth tbc tlibID tprojectID) = do
 
 
 moduleAdd :: ContextRef -> AddModule.Request -> RPC AddModule.Update
-moduleAdd ctxRef request@(AddModule.Request tnewModule tbcParent tlibID tprojectID) = do
+moduleAdd ctxRef request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) = do
     newModule <- decodeE tnewModule
     bcParent  <- decodeE tbcParent
     let libID     = decodeP tlibID
@@ -85,7 +85,7 @@ moduleAdd ctxRef request@(AddModule.Request tnewModule tbcParent tlibID tproject
 
 
 dataAdd :: ContextRef -> AddData.Request -> RPC AddData.Update
-dataAdd ctxRef request@(AddData.Request tnewData tbcParent tlibID tprojectID) = do
+dataAdd ctxRef request@(AddData.Request tnewData tbcParent tlibID tprojectID _) = do
     newData  <- decodeE tnewData
     bcParent <- decodeE tbcParent
     let libID     = decodeP tlibID
@@ -96,7 +96,7 @@ dataAdd ctxRef request@(AddData.Request tnewData tbcParent tlibID tprojectID) = 
 
 
 functionAdd :: ContextRef -> AddFunction.Request -> RPC AddFunction.Update
-functionAdd ctxRef request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectID) = do
+functionAdd ctxRef request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectID _) = do
     newFunction <- decodeE tnewFunction
     bcParent    <- decodeE tbcParent
     let libID     = decodeP tlibID
@@ -107,7 +107,7 @@ functionAdd ctxRef request@(AddFunction.Request tnewFunction tbcParent tlibID tp
 
 
 remove :: ContextRef -> Remove.Request -> RPC Remove.Update
-remove ctxRef request@(Remove.Request tbc tlibID tprojectID) = do
+remove ctxRef request@(Remove.Request tbc tlibID tprojectID _) = do
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -126,7 +126,7 @@ resolve ctxRef request@(ResolveDefinition.Request tname tbc tlibID tprojectID) =
 
 
 moduleClsModify :: ContextRef -> ModifyModuleCls.Request -> RPC ModifyModuleCls.Update
-moduleClsModify ctxRef request@(ModifyModuleCls.Request tcls tbc tlibID tprojectID) = do
+moduleClsModify ctxRef request@(ModifyModuleCls.Request tcls tbc tlibID tprojectID _) = do
     cls <- decodeE tcls
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
@@ -136,7 +136,7 @@ moduleClsModify ctxRef request@(ModifyModuleCls.Request tcls tbc tlibID tproject
 
 
 moduleImportsModify :: ContextRef -> ModifyModuleImports.Request -> RPC ModifyModuleImports.Update
-moduleImportsModify ctxRef request@(ModifyModuleImports.Request timports tbc tlibID tprojectID) = do
+moduleImportsModify ctxRef request@(ModifyModuleImports.Request timports tbc tlibID tprojectID _) = do
     imports <- decodeListE timports
     bc      <- decodeE tbc
     let libID     = decodeP tlibID
@@ -146,7 +146,7 @@ moduleImportsModify ctxRef request@(ModifyModuleImports.Request timports tbc tli
 
 
 moduleFieldsModify :: ContextRef -> ModifyModuleFields.Request -> RPC ModifyModuleFields.Update
-moduleFieldsModify ctxRef request@(ModifyModuleFields.Request tfields tbc tlibID tprojectID) = do
+moduleFieldsModify ctxRef request@(ModifyModuleFields.Request tfields tbc tlibID tprojectID _) = do
     fields <- decodeListE tfields
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
@@ -156,7 +156,7 @@ moduleFieldsModify ctxRef request@(ModifyModuleFields.Request tfields tbc tlibID
 
 
 dataClsModify :: ContextRef -> ModifyDataCls.Request -> RPC ModifyDataCls.Update
-dataClsModify ctxRef request@(ModifyDataCls.Request tcls tbc tlibID tprojectID) = do
+dataClsModify ctxRef request@(ModifyDataCls.Request tcls tbc tlibID tprojectID _) = do
     cls <- decodeE tcls
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
@@ -166,7 +166,7 @@ dataClsModify ctxRef request@(ModifyDataCls.Request tcls tbc tlibID tprojectID) 
 
 
 dataConsModify :: ContextRef -> ModifyDataCons.Request -> RPC ModifyDataCons.Update
-dataConsModify ctxRef request@(ModifyDataCons.Request tcons tbc tlibID tprojectID) = do
+dataConsModify ctxRef request@(ModifyDataCons.Request tcons tbc tlibID tprojectID _) = do
     cons <- decodeListE tcons
     bc   <- decodeE tbc
     let libID     = decodeP tlibID
@@ -176,7 +176,7 @@ dataConsModify ctxRef request@(ModifyDataCons.Request tcons tbc tlibID tprojectI
 
 
 dataClassesModify :: ContextRef -> ModifyDataClasses.Request -> RPC ModifyDataClasses.Update
-dataClassesModify ctxRef request@(ModifyDataClasses.Request tclasses tbc tlibID tprojectID) = do
+dataClassesModify ctxRef request@(ModifyDataClasses.Request tclasses tbc tlibID tprojectID _) = do
     classes <- decodeListE tclasses
     bc      <- decodeE tbc
     let libID     = decodeP tlibID
@@ -186,7 +186,7 @@ dataClassesModify ctxRef request@(ModifyDataClasses.Request tclasses tbc tlibID 
 
 
 dataMethodsModify :: ContextRef -> ModifyDataMethods.Request -> RPC ModifyDataMethods.Update
-dataMethodsModify ctxRef request@(ModifyDataMethods.Request tmethods tbc tlibID tprojectID) = do
+dataMethodsModify ctxRef request@(ModifyDataMethods.Request tmethods tbc tlibID tprojectID _) = do
     methods <- decodeListE tmethods
     bc      <- decodeE tbc
     let libID     = decodeP tlibID
@@ -196,7 +196,7 @@ dataMethodsModify ctxRef request@(ModifyDataMethods.Request tmethods tbc tlibID 
 
 
 functionNameModify :: ContextRef -> ModifyFunctionName.Request -> RPC ModifyFunctionName.Update
-functionNameModify ctxRef request@(ModifyFunctionName.Request tname tbc tlibID tprojectID) = do
+functionNameModify ctxRef request@(ModifyFunctionName.Request tname tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let name      = decodeP tname
         libID     = decodeP tlibID
@@ -206,7 +206,7 @@ functionNameModify ctxRef request@(ModifyFunctionName.Request tname tbc tlibID t
 
 
 functionPathModify :: ContextRef -> ModifyFunctionPath.Request -> RPC ModifyFunctionPath.Update
-functionPathModify ctxRef request@(ModifyFunctionPath.Request tpath tbc tlibID tprojectID) = do
+functionPathModify ctxRef request@(ModifyFunctionPath.Request tpath tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let path      = decodeListP tpath
         libID     = decodeP tlibID
@@ -216,7 +216,7 @@ functionPathModify ctxRef request@(ModifyFunctionPath.Request tpath tbc tlibID t
 
 
 functionInputsModify :: ContextRef -> ModifyFunctionInputs.Request -> RPC ModifyFunctionInputs.Update
-functionInputsModify ctxRef request@(ModifyFunctionInputs.Request tinputs tbc tlibID tprojectID) = do
+functionInputsModify ctxRef request@(ModifyFunctionInputs.Request tinputs tbc tlibID tprojectID _) = do
     inputs <- decodeListE tinputs
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
@@ -226,7 +226,7 @@ functionInputsModify ctxRef request@(ModifyFunctionInputs.Request tinputs tbc tl
 
 
 functionOutputModify :: ContextRef -> ModifyFunctionOutput.Request -> RPC ModifyFunctionOutput.Update
-functionOutputModify ctxRef request@(ModifyFunctionOutput.Request toutput tbc tlibID tprojectID) = do
+functionOutputModify ctxRef request@(ModifyFunctionOutput.Request toutput tbc tlibID tprojectID _) = do
     output <- decodeE toutput
     bc     <- decodeE tbc
     let libID     = decodeP tlibID

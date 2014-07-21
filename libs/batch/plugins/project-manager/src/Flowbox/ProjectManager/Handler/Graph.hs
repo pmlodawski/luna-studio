@@ -40,7 +40,7 @@ logger = getLoggerIO "Flowbox.ProjectManager.Handlers.Graph"
 
 
 get :: ContextRef -> GetGraph.Request -> RPC GetGraph.Status
-get ctxRef request@(GetGraph.Request tbc tlibID tprojectID) = do
+get ctxRef request@(GetGraph.Request tbc tlibID tprojectID _)  = do
     bc <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -50,7 +50,7 @@ get ctxRef request@(GetGraph.Request tbc tlibID tprojectID) = do
 
 
 lookup :: ContextRef -> Lookup.Request -> RPC Lookup.Status
-lookup ctxRef request@(Lookup.Request tnodeID tbc tlibID tprojectID) = do
+lookup ctxRef request@(Lookup.Request tnodeID tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
@@ -60,7 +60,7 @@ lookup ctxRef request@(Lookup.Request tnodeID tbc tlibID tprojectID) = do
 
 
 nodeAdd :: ContextRef -> NodeAdd.Request -> RPC NodeAdd.Update
-nodeAdd ctxRef request@(NodeAdd.Request tnode tbc tlibID tprojectID) = do
+nodeAdd ctxRef request@(NodeAdd.Request tnode tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     (_ :: Int, node) <- decodeE tnode
     let libID     = decodeP tlibID
@@ -70,7 +70,7 @@ nodeAdd ctxRef request@(NodeAdd.Request tnode tbc tlibID tprojectID) = do
 
 
 nodeModify :: ContextRef -> NodeModify.Request -> RPC NodeModify.Update
-nodeModify ctxRef request@(NodeModify.Request tnode tbc tlibID tprojectID) = do
+nodeModify ctxRef request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     (nodeID, node) <- decodeE tnode
     let libID     = decodeP tlibID
@@ -80,7 +80,7 @@ nodeModify ctxRef request@(NodeModify.Request tnode tbc tlibID tprojectID) = do
 
 
 nodeModifyInPlace :: ContextRef -> NodeModifyInPlace.Request -> RPC NodeModifyInPlace.Update
-nodeModifyInPlace ctxRef request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID) = do
+nodeModifyInPlace ctxRef request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     nodeWithId <- decodeE tnode
     let libID     = decodeP tlibID
@@ -90,7 +90,7 @@ nodeModifyInPlace ctxRef request@(NodeModifyInPlace.Request tnode tbc tlibID tpr
 
 
 nodeRemove :: ContextRef -> NodeRemove.Request -> RPC NodeRemove.Update
-nodeRemove ctxRef request@(NodeRemove.Request tnodeID tbc tlibID tprojectID) = do
+nodeRemove ctxRef request@(NodeRemove.Request tnodeID tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
@@ -100,7 +100,7 @@ nodeRemove ctxRef request@(NodeRemove.Request tnodeID tbc tlibID tprojectID) = d
 
 
 connect :: ContextRef -> Connect.Request -> RPC Connect.Update
-connect ctxRef request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
+connect ctxRef request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = decodeListP tsrcPort
@@ -113,7 +113,7 @@ connect ctxRef request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort 
 
 
 disconnect :: ContextRef -> Disconnect.Request -> RPC Disconnect.Update
-disconnect ctxRef request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
+disconnect ctxRef request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = decodeListP tsrcPort
