@@ -50,8 +50,7 @@ Library
                     SHA,
                     text,
                     time,
-                    transformers < 0.4 
-    -- [PM] transformers < 0.4  is temporary constraint until https://github.com/aristidb/aws/issues/102 is fixed
+                    transformers > 0.4 
 
 
 Executable aws-test-dbpool
