@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.FileManager.Handler.Directory where
+module Flowbox.FileManager.RPC.Handler.Directory where
 
 import qualified Flowbox.AWS.S3.Directory                                        as Directory
 import           Flowbox.Bus.RPC.RPC                                             (RPC)
@@ -34,7 +34,7 @@ import qualified Generated.Proto.FileManager.FileSystem.Directory.Upload.Status 
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.FileManager.Handler.Directory"
+loggerIO = getLoggerIO "Flowbox.FileManager.RPC.Handler.Directory"
 
 ------ public api -------------------------------------------------
 

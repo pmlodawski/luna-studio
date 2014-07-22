@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.FileManager.Handler.File where
+module Flowbox.FileManager.RPC.Handler.File where
 
-import qualified Flowbox.AWS.S3.File                                        as File
+import qualified System.Directory as Directory
+
 import           Flowbox.Bus.RPC.RPC                                        (RPC)
-import           Flowbox.FileManager.Context                                (Context)
-import qualified Flowbox.FileManager.Context                                as Context
+import           Flowbox.Control.Error
 import           Flowbox.Prelude                                            hiding (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -29,51 +29,47 @@ import qualified Generated.Proto.FileManager.FileSystem.File.Upload.Status  as U
 
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.FileManager.Handler.File"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.FileManager.RPC.Handler.File"
 
 ------ public api -------------------------------------------------
 
 
-upload :: Context -> Upload.Request -> RPC IO Upload.Status
-upload ctx (Upload.Request tpath) = do
-    let path = decodeP tpath
-    Context.run ctx $ File.upload "." path
+upload :: Upload.Request -> RPC IO Upload.Status
+upload (Upload.Request tpath) =
     return $ Upload.Status tpath
 
 
-fetch :: Context -> Fetch.Request -> RPC IO Fetch.Status
-fetch ctx (Fetch.Request tpath) = do
-    let path = decodeP tpath
-    Context.run ctx $ File.fetch "." path
+fetch :: Fetch.Request -> RPC IO Fetch.Status
+fetch (Fetch.Request tpath) =
     return $ Fetch.Status tpath
 
 
-exists :: Context -> Exists.Request -> RPC IO Exists.Status
-exists ctx (Exists.Request tpath) = do
+exists :: Exists.Request -> RPC IO Exists.Status
+exists (Exists.Request tpath) = do
     let path = decodeP tpath
-    e <- Context.run ctx $ File.exists path
+    e <- safeLiftIO $ Directory.doesFileExist path
     return $ Exists.Status e tpath
 
 
-remove :: Context -> Remove.Request -> RPC IO Remove.Update
-remove ctx (Remove.Request tpath) = do
+remove :: Remove.Request -> RPC IO Remove.Update
+remove (Remove.Request tpath) = do
     let path = decodeP tpath
-    Context.run ctx $ File.remove path
+    safeLiftIO $ Directory.removeFile path
     return $ Remove.Update tpath
 
 
-copy :: Context -> Copy.Request -> RPC IO Copy.Update
-copy ctx (Copy.Request tsrc tdst) = do
+copy :: Copy.Request -> RPC IO Copy.Update
+copy (Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    Context.run ctx $ File.copy src dst
+    safeLiftIO $ Directory.copyFile src dst
     return $ Copy.Update tsrc tdst
 
 
-move :: Context -> Move.Request -> RPC IO Move.Update
-move ctx (Move.Request tsrc tdst) = do
+move :: Move.Request -> RPC IO Move.Update
+move (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    Context.run ctx $ File.rename src dst
+    safeLiftIO $ Directory.renameFile src dst
     return $ Move.Update tsrc tdst
