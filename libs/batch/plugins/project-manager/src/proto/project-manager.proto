@@ -569,3 +569,15 @@ message Project {
         }
     }
 }
+
+message ProjectManager {
+    message Sync {
+        message Get {
+            message Request { }
+            message Status {
+                required Request request = 1;
+                required string data = 2;
+            }
+        }
+    }
+}

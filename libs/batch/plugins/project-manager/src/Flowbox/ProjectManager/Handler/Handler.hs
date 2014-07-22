@@ -24,6 +24,7 @@ import qualified Flowbox.ProjectManager.Handler.Library     as LibraryHandler
 import qualified Flowbox.ProjectManager.Handler.NodeDefault as NodeDefaultHandler
 import qualified Flowbox.ProjectManager.Handler.Project     as ProjectHandler
 import qualified Flowbox.ProjectManager.Handler.Properties  as PropertiesHandler
+import qualified Flowbox.ProjectManager.Handler.Sync        as SyncHandler
 import qualified Flowbox.ProjectManager.Topic               as Topic
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers               as Proto
@@ -80,11 +81,9 @@ handlerMap ctx callback = HandlerMap.fromList
     , (Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest , call Topic.update $ PropertiesHandler.setNodeProperties ctx)
     , (Topic.projectLibraryAstPropertiesGetRequest                  , call Topic.status $ PropertiesHandler.getASTProperties ctx)
     , (Topic.projectLibraryAstPropertiesSetRequest                  , call Topic.update $ PropertiesHandler.setASTProperties ctx)
+    , (Topic.projectmanagerSyncGetRequest                           , call Topic.status $ SyncHandler.syncGet ctx)
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
              => String -> (args -> RPC IO result) -> IO [Message]
         call type_ = callback ((/+) type_) . Processor.singleResult
-
-
-
