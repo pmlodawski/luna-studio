@@ -10,6 +10,7 @@
 module Flowbox.ProjectManager.Handler.Handler where
 
 import           Flowbox.Bus.Data.Message                   (Message)
+import           Flowbox.Bus.Data.Topic                     ((/+))
 import qualified Flowbox.Bus.Data.Topic                     as Topic
 import           Flowbox.Bus.RPC.HandlerMap                 (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                 as HandlerMap
@@ -83,7 +84,7 @@ handlerMap ctx callback = HandlerMap.fromList
     where
         call :: (Proto.Serializable args, Proto.Serializable result)
              => String -> (args -> RPC IO result) -> IO [Message]
-        call type_ = callback type_ . Processor.singleResult
+        call type_ = callback ((/+) type_) . Processor.singleResult
 
 
 
