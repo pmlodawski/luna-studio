@@ -41,48 +41,48 @@ shrinkLibrary library = library { Gen.ast = Nothing, Gen.propertyMap = Nothing}
 
 
 list :: ContextRef -> List.Request -> RPC IO List.Status
-list ctxRef (List.Request tprojectID) = do
+list ctxRef request@(List.Request tprojectID) = do
     let projectID = decodeP tprojectID
     libs <- Context.run ctxRef $ BatchL.libraries projectID
-    return $ List.Status (shrinkLibrary <$> encodeList libs) tprojectID
+    return $ List.Status request (shrinkLibrary <$> encodeList libs)
 
 
 lookup :: ContextRef -> Lookup.Request -> RPC IO Lookup.Status
-lookup ctxRef (Lookup.Request tlibID tprojectID) = do
+lookup ctxRef request@(Lookup.Request tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     library <- Context.run ctxRef $ BatchL.libraryByID libID projectID
-    return $ Lookup.Status (shrinkLibrary $ encode (libID, library)) tprojectID
+    return $ Lookup.Status request (shrinkLibrary $ encode (libID, library))
 
 
 create :: ContextRef -> Create.Request -> RPC IO Create.Update
-create ctxRef (Create.Request tname tpath tprojectID) = do
+create ctxRef request@(Create.Request tname tpath tprojectID) = do
     let projectID = decodeP tprojectID
         name      = decodeP tname
         path      = decodeP tpath
     newLibrary <- Context.run ctxRef $ BatchL.createLibrary name path projectID
-    return $ Create.Update (encode newLibrary) tprojectID
+    return $ Create.Update request (encode newLibrary)
 
 
 load :: ContextRef -> Load.Request -> RPC IO Load.Update
-load ctxRef (Load.Request tpath tprojectID) = do
+load ctxRef request@(Load.Request tpath tprojectID) = do
     let path      = decodeP tpath
         projectID = decodeP tprojectID
     (newLibID, newLibrary) <- Context.run ctxRef $ BatchL.loadLibrary path projectID
-    return $ Load.Update (encode (newLibID, newLibrary)) tprojectID
+    return $ Load.Update request (encode (newLibID, newLibrary))
 
 
 unload :: ContextRef -> Unload.Request -> RPC IO Unload.Update
-unload ctxRef (Unload.Request tlibID tprojectID) = do
+unload ctxRef request@(Unload.Request tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $ BatchL.unloadLibrary libID projectID
-    return $ Unload.Update tlibID tprojectID
+    return $ Unload.Update request
 
 
 store :: ContextRef -> Store.Request -> RPC IO Store.Status
-store ctxRef (Store.Request tlibID tprojectID) = do
+store ctxRef request@(Store.Request tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $ BatchL.storeLibrary libID projectID
-    return $ Store.Status tlibID tprojectID
+    return $ Store.Status request

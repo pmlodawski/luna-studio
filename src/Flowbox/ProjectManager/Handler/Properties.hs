@@ -30,38 +30,38 @@ logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Properties"
 
 
 getASTProperties :: ContextRef -> GetASTProperties.Request -> RPC IO GetASTProperties.Status
-getASTProperties ctxRef (GetASTProperties.Request tnodeID tlibID tprojectID) = do
+getASTProperties ctxRef request@(GetASTProperties.Request tnodeID tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     properties <- Context.run ctxRef $ BatchP.getProperties nodeID libID projectID
-    return $ GetASTProperties.Status (encode properties) tnodeID tlibID tprojectID
+    return $ GetASTProperties.Status request $ encode properties
 
 
 setASTProperties :: ContextRef -> SetASTProperties.Request -> RPC IO SetASTProperties.Update
-setASTProperties ctxRef (SetASTProperties.Request tproperties tnodeID tlibID tprojectID) = do
+setASTProperties ctxRef request@(SetASTProperties.Request tproperties tnodeID tlibID tprojectID) = do
     properties <- decodeE tproperties
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $ BatchP.setProperties properties nodeID libID projectID
-    return $ SetASTProperties.Update tproperties tnodeID tlibID tprojectID
+    return $ SetASTProperties.Update request
 
 
 getNodeProperties :: ContextRef -> GetNodeProperties.Request -> RPC IO GetNodeProperties.Status
-getNodeProperties ctxRef (GetNodeProperties.Request tnodeID tbc tlibID tprojectID) = do
+getNodeProperties ctxRef request@(GetNodeProperties.Request tnodeID tbc tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     properties <- Context.run ctxRef $ BatchP.getProperties nodeID libID projectID
-    return $ GetNodeProperties.Status (encode properties) tnodeID tbc tlibID tprojectID
+    return $ GetNodeProperties.Status request (encode properties)
 
 
 setNodeProperties :: ContextRef -> SetNodeProperties.Request -> RPC IO SetNodeProperties.Update
-setNodeProperties ctxRef (SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID) = do
+setNodeProperties ctxRef request@(SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID) = do
     properties <- decodeE tproperties
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $ BatchP.setProperties properties nodeID libID projectID
-    return $ SetNodeProperties.Update tproperties tnodeID tbc tlibID tprojectID
+    return $ SetNodeProperties.Update request

@@ -25,7 +25,8 @@ message Project {
     message List {
         message Request { }
         message Status {
-            repeated generated.proto.project.Project projects = 1;
+            required Request request = 1;
+            repeated generated.proto.project.Project projects = 2;
         }
     }
     message Lookup {
@@ -33,7 +34,8 @@ message Project {
             required int32 projectID = 1;
         }
         message Status {
-            required generated.proto.project.Project project = 1;
+            required Request request = 1;
+            required generated.proto.project.Project project = 2;
         }
     }
     message Create {
@@ -43,7 +45,8 @@ message Project {
             required generated.proto.attributes.Attributes attributes = 3;
         }
         message Update {
-            required generated.proto.project.Project project = 1;
+            required Request request = 1;
+            required generated.proto.project.Project project = 2;
         }
     }
     message Open {
@@ -51,15 +54,16 @@ message Project {
             required string path = 1;
         }
         message Update {
-            required generated.proto.project.Project project = 1;
+            required Request request = 1;
+            required generated.proto.project.Project project = 2;
         }
     }
     message Modify {
         message Request {
             required generated.proto.project.Project project = 1;
         }
-        message Update { 
-            required generated.proto.project.Project project = 1;
+        message Update {
+            required Request request = 1;
         }
     }
     message Close {
@@ -67,7 +71,7 @@ message Project {
             required int32 projectID = 1;
         }
         message Update {
-            required int32 projectID = 1;
+            required Request request = 1;
         }
     }
     message Store {
@@ -75,7 +79,7 @@ message Project {
             required int32 projectID = 1;
         }
         message Status {
-            required int32 projectID = 1;
+            required Request request = 1;
         }
     }
 
@@ -85,8 +89,8 @@ message Project {
                 required int32 projectID = 1;
             }
             message Status {
-                repeated generated.proto.library.Library libraries = 1;
-                required int32 projectID = 2;
+                required Request request = 1;
+                repeated generated.proto.library.Library libraries = 2;
             }
         }
         message Lookup {
@@ -95,8 +99,8 @@ message Project {
                 required int32 projectID = 2;
             }
             message Status {
-                required generated.proto.library.Library library = 1;
-                required int32 projectID = 2;
+                required Request request = 1;
+                required generated.proto.library.Library library = 2;
             }
         }
         message Create {
@@ -106,8 +110,8 @@ message Project {
                 required int32  projectID = 3;
             }
             message Update {
-                required generated.proto.library.Library library = 1;
-                required int32  projectID = 2;
+                required Request request = 1;
+                required generated.proto.library.Library library = 2;
             }
         }
         message Load {
@@ -116,8 +120,8 @@ message Project {
                 required int32  projectID = 2;
             }
             message Update {
-                required generated.proto.library.Library library = 1;
-                required int32  projectID = 2;
+                required Request request = 1;
+                required generated.proto.library.Library library = 2;
             }
         }
         message Unload {
@@ -125,9 +129,8 @@ message Project {
                 required int32 libraryID = 1;
                 required int32 projectID = 2;
             }
-            message Update { 
-                required int32 libraryID = 1;
-                required int32 projectID = 2;
+            message Update {
+                required Request request = 1;
             }
         }
         message Store {
@@ -135,9 +138,8 @@ message Project {
                 required int32 libraryID = 1;
                 required int32 projectID = 2;
             }
-            message Status { 
-                required int32 libraryID = 1;
-                required int32 projectID = 2;
+            message Status {
+                required Request request = 1;
             }
         }
 
@@ -148,13 +150,11 @@ message Project {
                     required generated.proto.crumb.Breadcrumbs bc = 2;
                     required int32 libraryID = 3;
                     required int32 projectID = 4;
+                    required int32 _astID    = 5;
                 }
                 message Status {
-                    required generated.proto.focus.Focus focus = 1;
-                    optional int32 maxDepth  = 2;
-                    required generated.proto.crumb.Breadcrumbs bc = 3;
-                    required int32 libraryID = 4;
-                    required int32 projectID = 5;
+                    required Request request = 1;
+                    required generated.proto.focus.Focus focus = 2;
                 }
             }
             message Module {
@@ -164,12 +164,12 @@ message Project {
                         required generated.proto.crumb.Breadcrumbs parentbc = 2;
                         required int32 libraryID = 3;
                         required int32 projectID = 4;
+                        required int32 _astID    = 5;
                     }
                     message Update {
-                        required generated.proto.module.Module module = 1;
-                        required generated.proto.crumb.Breadcrumbs bc = 2;
-                        required int32 libraryID = 3;
-                        required int32 projectID = 4;
+                        required Request request = 1;
+                        required generated.proto.module.Module module = 2;
+                        required generated.proto.crumb.Breadcrumbs bc = 3;
                     }
                 }
                 message Modify {
@@ -179,12 +179,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
-                        message Update { 
-                            required generated.proto.type.Type cls        = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
                     message Imports {
@@ -193,12 +191,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
-                        message Update { 
-                            repeated generated.proto.expr.Expr imports    = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
                     message Fields {
@@ -207,16 +203,13 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
-                        message Update { 
-                            repeated generated.proto.expr.Expr fields     = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
                 }
-
             }
             message Data {
                 message Add {
@@ -225,12 +218,12 @@ message Project {
                         required generated.proto.crumb.Breadcrumbs parentbc = 2;
                         required int32 libraryID = 3;
                         required int32 projectID = 4;
+                        required int32 _astID    = 5;
                     }
                     message Update {
-                        required generated.proto.expr.Expr data_     = 1;
-                        required generated.proto.crumb.Breadcrumbs bc = 2;
-                        required int32 libraryID = 3;
-                        required int32 projectID = 4;
+                        required Request request = 1;
+                        required generated.proto.expr.Expr data_      = 2;
+                        required generated.proto.crumb.Breadcrumbs bc = 3;
                     }
                 }
                 message Modify {
@@ -240,12 +233,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
-                        message Update { 
-                            required generated.proto.type.Type cls        = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
                     message Cons {
@@ -254,12 +245,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
                         message Update {
-                            repeated generated.proto.expr.Expr cons       = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                            required Request request = 1;
                         }
                     }
                     message Classes {
@@ -268,12 +257,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
                         message Update {
-                            repeated generated.proto.expr.Expr classes    = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                            required Request request = 1;
                         }
                     }
                     message Methods {
@@ -282,12 +269,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
-                        message Update { 
-                            repeated generated.proto.expr.Expr methods    = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
 
@@ -300,12 +285,12 @@ message Project {
                         required generated.proto.crumb.Breadcrumbs parentbc = 2;
                         required int32 libraryID = 3;
                         required int32 projectID = 4;
+                        required int32 _astID    = 5;
                     }
                     message Update {
-                        required generated.proto.expr.Expr function   = 1;
-                        required generated.proto.crumb.Breadcrumbs bc = 2;
-                        required int32 libraryID = 3;
-                        required int32 projectID = 4;
+                        required Request request = 1;
+                        required generated.proto.expr.Expr function   = 2;
+                        required generated.proto.crumb.Breadcrumbs bc = 3;
                     }
                 }
                 message Modify {
@@ -315,12 +300,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
-                        message Update { 
-                            required string name     = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
                     message Path {
@@ -329,12 +312,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
                         message Update {
-                            repeated string path     = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                            required Request request = 1;
                         }
                     }
                     message Inputs {
@@ -343,12 +324,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
-                        message Update { 
-                            repeated generated.proto.expr.Expr inputs     = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
                     message Output {
@@ -357,12 +336,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
-                        message Update { 
-                            required generated.proto.type.Type output     = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
                 }
@@ -372,12 +349,11 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 1;
                             required int32 libraryID = 2;
                             required int32 projectID = 3;
+                            required int32 _astID    = 4;
                         }
                         message Status {
-                            required generated.proto.graphview.GraphView graph = 1;
-                            required generated.proto.crumb.Breadcrumbs bc      = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                            required Request request = 1;
+                            required generated.proto.graphview.GraphView graph = 2;
                         }
                     }
                     message Lookup {
@@ -386,12 +362,11 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
+                            required int32 _astID    = 5;
                         }
                         message Status {
-                            required generated.proto.graph.Node node = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
-                            required int32 libraryID = 3;
-                            required int32 projectID = 4;
+                            required Request request = 1;
+                            required generated.proto.graph.Node node = 2;
                         }
                     }
                     message Node {
@@ -401,12 +376,11 @@ message Project {
                                 required generated.proto.crumb.Breadcrumbs bc = 2;
                                 required int32 libraryID = 3;
                                 required int32 projectID = 4;
+                                required int32 _astID    = 5;
                             }
                             message Update {
-                                required generated.proto.graph.Node node      = 1;
-                                required generated.proto.crumb.Breadcrumbs bc = 2;
-                                required int32 libraryID = 3;
-                                required int32 projectID = 4;
+                                required Request request = 1;
+                                required generated.proto.graph.Node node = 2;
                             }
                         }
                         message Modify {
@@ -415,13 +389,11 @@ message Project {
                                 required generated.proto.crumb.Breadcrumbs bc = 2;
                                 required int32 libraryID = 3;
                                 required int32 projectID = 4;
+                                required int32 _astID    = 5;
                             }
                             message Update {
-                                required int32 oldNodeID = 1;
-                                required generated.proto.graph.Node node      = 2;
-                                required generated.proto.crumb.Breadcrumbs bc = 3;
-                                required int32 libraryID = 4;
-                                required int32 projectID = 5;
+                                required Request request = 1;
+                                required generated.proto.graph.Node node = 2;
                             }
                         }
                         message ModifyInPlace {
@@ -430,12 +402,10 @@ message Project {
                                 required generated.proto.crumb.Breadcrumbs bc = 2;
                                 required int32 libraryID = 3;
                                 required int32 projectID = 4;
+                                required int32 _astID    = 5;
                             }
                             message Update {
-                                required generated.proto.graph.Node node      = 1;
-                                required generated.proto.crumb.Breadcrumbs bc = 2;
-                                required int32 libraryID = 3;
-                                required int32 projectID = 4;
+                                required Request request = 1;
                             }
                         }
                         message Remove {
@@ -444,12 +414,10 @@ message Project {
                                 required generated.proto.crumb.Breadcrumbs bc = 2;
                                 required int32 libraryID = 3;
                                 required int32 projectID = 4;
+                                required int32 _astID    = 5;
                             }
-                            message Update { 
-                                required int32 nodeID    = 1;
-                                required generated.proto.crumb.Breadcrumbs bc = 2;
-                                required int32 libraryID = 3;
-                                required int32 projectID = 4;
+                            message Update {
+                                required Request request = 1;
                             }
                         }
                         message Default {
@@ -461,11 +429,8 @@ message Project {
                                     required int32 projectID = 4;
                                 }
                                 message Status {
-                                    required generated.proto.nodedefault.DefaultsMap defaultsMap = 1;
-                                    required int32 nodeID    = 2;
-                                    required generated.proto.crumb.Breadcrumbs bc = 3;
-                                    required int32 libraryID = 4;
-                                    required int32 projectID = 5;
+                                    required Request request = 1;
+                                    required generated.proto.nodedefault.DefaultsMap defaultsMap = 2;
                                 }
                             }
                             message Set {
@@ -477,13 +442,8 @@ message Project {
                                     required int32 libraryID = 5;
                                     required int32 projectID = 6;
                                 }
-                                message Update { 
-                                    repeated int32 inPort    = 1;
-                                    required string value    = 2;
-                                    required int32 nodeID    = 3;
-                                    required generated.proto.crumb.Breadcrumbs bc = 4;
-                                    required int32 libraryID = 5;
-                                    required int32 projectID = 6;
+                                message Update {
+                                    required Request request = 1;
                                 }
                             }
                             message Remove {
@@ -494,45 +454,34 @@ message Project {
                                     required int32 libraryID = 4;
                                     required int32 projectID = 5;
                                 }
-                                message Update { 
-                                    repeated int32 inPort    = 1;
-                                    required int32 nodeID    = 2;
-                                    required generated.proto.crumb.Breadcrumbs bc = 3;
-                                    required int32 libraryID = 4;
-                                    required int32 projectID = 5;
+                                message Update {
+                                    required Request request = 1;
                                 }
                             }
                         }
                         message Properties {
                             message Get {
-                                message Request   { 
+                                message Request   {
                                     required int32 nodeID    = 1;
                                     required generated.proto.crumb.Breadcrumbs bc = 2;
                                     required int32 libraryID = 3;
                                     required int32 projectID = 4;
                                 }
-                                message Status { 
-                                    required generated.proto.attributes.Properties properties = 1;
-                                    required int32 nodeID    = 2;
-                                    required generated.proto.crumb.Breadcrumbs bc = 3;
-                                    required int32 libraryID = 4;
-                                    required int32 projectID = 5;
-                                }   
+                                message Status {
+                                    required Request request = 1;
+                                    required generated.proto.attributes.Properties properties = 2;
+                                }
                             }
                             message Set {
-                                message Request   { 
+                                message Request   {
                                     required generated.proto.attributes.Properties properties = 1;
                                     required int32 nodeID    = 2;
                                     required generated.proto.crumb.Breadcrumbs bc = 3;
                                     required int32 libraryID = 4;
                                     required int32 projectID = 5;
                                 }
-                                message Update { 
-                                    required generated.proto.attributes.Properties properties = 1;
-                                    required int32 nodeID    = 2;
-                                    required generated.proto.crumb.Breadcrumbs bc = 3;
-                                    required int32 libraryID = 4;
-                                    required int32 projectID = 5;
+                                message Update {
+                                    required Request request = 1;
                                 }
                             }
                         }
@@ -546,15 +495,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 5;
                             required int32 libraryID = 6;
                             required int32 projectID = 7;
+                            required int32 _astID    = 8;
                         }
-                        message Update { 
-                            required int32 srcNodeID = 1;
-                            repeated int32 srcPort   = 2;
-                            required int32 dstNodeID = 3;
-                            repeated int32 dstPort   = 4;
-                            required generated.proto.crumb.Breadcrumbs bc = 5;
-                            required int32 libraryID = 6;
-                            required int32 projectID = 7;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
                     message Disconnect {
@@ -566,15 +510,10 @@ message Project {
                             required generated.proto.crumb.Breadcrumbs bc = 5;
                             required int32 libraryID = 6;
                             required int32 projectID = 7;
+                            required int32 _astID    = 8;
                         }
-                        message Update { 
-                            required int32 srcNodeID = 1;
-                            repeated int32 srcPort   = 2;
-                            required int32 dstNodeID = 3;
-                            repeated int32 dstPort   = 4;
-                            required generated.proto.crumb.Breadcrumbs bc = 5;
-                            required int32 libraryID = 6;
-                            required int32 projectID = 7;
+                        message Update {
+                            required Request request = 1;
                         }
                     }
                 }
@@ -584,11 +523,10 @@ message Project {
                     required generated.proto.crumb.Breadcrumbs bc = 1;
                     required int32 libraryID = 2;
                     required int32 projectID = 3;
+                    required int32 _astID    = 4;
                 }
-                message Update { 
-                    required generated.proto.crumb.Breadcrumbs bc = 1;
-                    required int32 libraryID = 2;
-                    required int32 projectID = 3;
+                message Update {
+                    required Request request = 1;
                 }
             }
             message Resolve {
@@ -599,43 +537,35 @@ message Project {
                     required int32 projectID = 4;
                 }
                 message Status {
-                    repeated generated.proto.crumb.ASTPtr astptr = 1;
-                    required generated.proto.crumb.Breadcrumbs parentbc = 2;
-                    required int32 libraryID = 3;
-                    required int32 projectID = 4;
+                    required Request request = 1;
+                    repeated generated.proto.crumb.ASTPtr astptr = 2;
                 }
             }
 
             message Properties {
                 message Get {
-                    message Request   { 
+                    message Request   {
                         required int32 nodeID    = 1;
                         required int32 libraryID = 2;
                         required int32 projectID = 3;
                     }
-                    message Status { 
-                        required generated.proto.attributes.Properties properties = 1;
-                        required int32 nodeID    = 2;
-                        required int32 libraryID = 3;
-                        required int32 projectID = 4;
-                    }   
+                    message Status {
+                        required Request request = 1;
+                        required generated.proto.attributes.Properties properties = 2;
+                    }
                 }
                 message Set {
-                    message Request   { 
+                    message Request   {
                         required generated.proto.attributes.Properties properties = 1;
                         required int32 nodeID    = 2;
                         required int32 libraryID = 3;
                         required int32 projectID = 4;
                     }
-                    message Update { 
-                        required generated.proto.attributes.Properties properties = 1;
-                        required int32 nodeID    = 2;
-                        required int32 libraryID = 3;
-                        required int32 projectID = 4;
+                    message Update {
+                        required Request request = 1;
                     }
                 }
             }
-
         }
     }
 }
