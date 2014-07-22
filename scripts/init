@@ -87,7 +87,7 @@ def checkPythonPkg(package, version=None):
                 installed_ver = [int(x) for x in installed_ver.split('.')]
                 if version and installed_ver <= version:
                     if ask("Python package '{package}' too old: {installed_ver} available, {version} required. "\
-                           "Should I upgrade it?".format(**locals()))
+                           "Should I upgrade it?".format(**locals())):
                         try_call(install_cmd)
                     else:
                         fatal()
