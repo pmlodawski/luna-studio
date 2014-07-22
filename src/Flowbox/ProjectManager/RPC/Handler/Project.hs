@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.ProjectManager.Handler.Project where
+module Flowbox.ProjectManager.RPC.Handler.Project where
 
 import qualified Data.Sequence as Sequence
 
@@ -39,7 +39,7 @@ import qualified Generated.Proto.ProjectManager.Project.Store.Status      as Sto
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.Handler.Project"
+logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Project"
 
 ------ public api -------------------------------------------------
 

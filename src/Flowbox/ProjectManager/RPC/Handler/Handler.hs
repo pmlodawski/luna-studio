@@ -7,31 +7,31 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
 
-module Flowbox.ProjectManager.Handler.Handler where
+module Flowbox.ProjectManager.RPC.Handler.Handler where
 
-import           Flowbox.Bus.Data.Message                   (Message)
-import           Flowbox.Bus.Data.Topic                     ((/+))
-import qualified Flowbox.Bus.Data.Topic                     as Topic
-import           Flowbox.Bus.RPC.HandlerMap                 (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap                 as HandlerMap
-import           Flowbox.Bus.RPC.RPC                        (RPC)
-import qualified Flowbox.Bus.RPC.Server.Processor           as Processor
-import           Flowbox.Prelude                            hiding (error)
-import           Flowbox.ProjectManager.Context             (ContextRef)
-import qualified Flowbox.ProjectManager.Handler.AST         as ASTHandler
-import qualified Flowbox.ProjectManager.Handler.Graph       as GraphHandler
-import qualified Flowbox.ProjectManager.Handler.Library     as LibraryHandler
-import qualified Flowbox.ProjectManager.Handler.NodeDefault as NodeDefaultHandler
-import qualified Flowbox.ProjectManager.Handler.Project     as ProjectHandler
-import qualified Flowbox.ProjectManager.Handler.Properties  as PropertiesHandler
-import qualified Flowbox.ProjectManager.Handler.Sync        as SyncHandler
-import qualified Flowbox.ProjectManager.Topic               as Topic
+import           Flowbox.Bus.Data.Message                       (Message)
+import           Flowbox.Bus.Data.Topic                         ((/+))
+import qualified Flowbox.Bus.Data.Topic                         as Topic
+import           Flowbox.Bus.RPC.HandlerMap                     (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap                     as HandlerMap
+import           Flowbox.Bus.RPC.RPC                            (RPC)
+import qualified Flowbox.Bus.RPC.Server.Processor               as Processor
+import           Flowbox.Prelude                                hiding (error)
+import           Flowbox.ProjectManager.Context                 (ContextRef)
+import qualified Flowbox.ProjectManager.RPC.Handler.AST         as ASTHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Graph       as GraphHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Library     as LibraryHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault as NodeDefaultHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Project     as ProjectHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Properties  as PropertiesHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Sync        as SyncHandler
+import qualified Flowbox.ProjectManager.RPC.Topic               as Topic
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers               as Proto
+import qualified Flowbox.Text.ProtocolBuffers                   as Proto
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.Handler"
+logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Handler"
 
 
 handlerMap :: ContextRef -> HandlerMap IO

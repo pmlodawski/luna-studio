@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.ProjectManager.Handler.NodeDefault where
+module Flowbox.ProjectManager.RPC.Handler.NodeDefault where
 
 import qualified Flowbox.Batch.Handler.NodeDefault                                                             as BatchND
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
@@ -25,7 +25,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.Handler.NodeDefault"
+logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.NodeDefault"
 
 
 get :: ContextRef -> NodeDefaultGet.Request -> RPC IO NodeDefaultGet.Status

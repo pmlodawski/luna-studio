@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.ProjectManager.Handler.AST where
+module Flowbox.ProjectManager.RPC.Handler.AST where
 
 import qualified Flowbox.Batch.Handler.AST                                                         as BatchAST
 import           Flowbox.Bus.RPC.RPC                                                               (RPC)
@@ -59,7 +59,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Stat
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.Handler.AST"
+logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.AST"
 
 -------- public api -------------------------------------------------
 

@@ -4,9 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.ProjectManager.Handler.Sync where
+module Flowbox.ProjectManager.RPC.Handler.Sync where
 
-import qualified Flowbox.Batch.Batch                                            as Batch
 import qualified Flowbox.Batch.Handler.Common                                   as Batch
 import           Flowbox.Bus.RPC.RPC                                            (RPC)
 import           Flowbox.Prelude
@@ -19,7 +18,7 @@ import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.Handler.Sync"
+logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Sync"
 
 ------ public api -------------------------------------------------
 

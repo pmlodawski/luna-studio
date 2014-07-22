@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
-module Flowbox.ProjectManager.Handler.Graph where
+module Flowbox.ProjectManager.RPC.Handler.Graph where
 
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
@@ -36,7 +36,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.Handlers.Graph"
+logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Graph"
 
 
 get :: ContextRef -> GetGraph.Request -> RPC IO GetGraph.Status
