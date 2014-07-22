@@ -108,7 +108,8 @@ def try_call(cmd):
 
 def ask(question):
     if SILENTINSTALL:
-        print(formatQuestion("Question override:" + question))
+        print(formatQuestion("Question override: " + question))
+        return True
     else:
         answer = None
         while True:
@@ -125,16 +126,16 @@ def removeIfExists(pathToRemove):
     if os.path.exists(pathToRemove):
         os.remove(pathToRemove)
 
-if os.path.exists(sboxName):
-    if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?"):
-        shutil.rmtree(sboxName)
-        removeIfExists("cabal.sandbox.config")
-
-if not os.path.exists(sboxName):
-    os.mkdir(sboxName)
-
 
 def main():
+    if os.path.exists(sboxName):
+        if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?"):
+            shutil.rmtree(sboxName)
+            removeIfExists("cabal.sandbox.config")
+
+    if not os.path.exists(sboxName):
+        os.mkdir(sboxName)
+
     parser = argparse.ArgumentParser(description='Flowbox Development Environment Initializer')
     parser.add_argument('-y', dest='SILENTINSTALL', action='store_true' , help = 'Install all needed stuff without asking')
     args = parser.parse_args()

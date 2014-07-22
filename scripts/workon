@@ -49,7 +49,7 @@ def print_usage():
 
 def main():
     global SILENTINSTALL
-    if '-y' in sys.argv[1:]:
+    if '-y' in sys.argv:
         SILENTINSTALL = True
 
     args = sys.argv
@@ -97,9 +97,9 @@ def workon(name):
     if not checkAndHandleInitialized('dist'):
         print_info ("It seems that sandbox is not initialized. Running scripts/init first.")
         if SILENTINSTALL:
-            try_call('python2.7 scripts/init')
-        else:
             try_call('python2.7 scripts/init -y')
+        else:
+            try_call('python2.7 scripts/init')
 
     print_info("Running gencabal")
     try_call('python2.7 scripts/gencabal')
