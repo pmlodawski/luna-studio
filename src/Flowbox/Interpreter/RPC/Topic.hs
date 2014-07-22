@@ -10,10 +10,10 @@ module Flowbox.Interpreter.RPC.Topic where
 
 
 
-interpreterWatchPointAdd    = "interpreter.watchpoint.add"
-interpreterWatchPointRemove = "interpreter.watchpoint.remove"
-interpreterWatchPointList   = "interpreter.watchpoint.list"
-interpreterInvalidateCall   = "interpreter.invalidate.call"
-interpreterInvalidateDef    = "interpreter.invalidate.def"
-interpreterInvalidateNode   = "interpreter.invalidate.node"
-interpreterRun              = "interpreter.run"
+interpreterWatchPointAddRequest    = "interpreter.watchpoint.add.request"
+interpreterWatchPointRemoveRequest = "interpreter.watchpoint.remove.request"
+interpreterWatchPointListRequest   = "interpreter.watchpoint.list.request"
+interpreterInvalidateCallRequest   = "interpreter.invalidate.call.request"
+interpreterInvalidateDefRequest    = "interpreter.invalidate.def.request"
+interpreterInvalidateNodeRequest   = "interpreter.invalidate.node.request"
+interpreterRunRequest              = "interpreter.run.request"

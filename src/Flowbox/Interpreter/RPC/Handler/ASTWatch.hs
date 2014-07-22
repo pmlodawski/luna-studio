@@ -77,3 +77,4 @@ test3 :: Store.Status -> RPC SessionT Store.Status
 test3 r = do
     print "!!!333"
     return r
+

@@ -16,6 +16,7 @@ import qualified Pipes.Concurrent as Pipes
 
 import           Flowbox.Bus.Data.Message                    (Message)
 import qualified Flowbox.Bus.Data.Message                    as Message
+import           Flowbox.Bus.Data.Topic                      (status, update, (/+))
 import qualified Flowbox.Bus.Data.Topic                      as Topic
 import           Flowbox.Bus.RPC.HandlerMap                  (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                  as HandlerMap
@@ -41,21 +42,46 @@ logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.Handler"
 
 handlerMap :: HandlerMap SessionT
 handlerMap callback = HandlerMap.fromList
-    [ (Topic.interpreterInvalidateCall   , call1 Topic.update $ Interpreter.invalidateCall)
-    , (Topic.interpreterInvalidateDef    , call1 Topic.update $ Interpreter.invalidateDef)
-    , (Topic.interpreterInvalidateNode   , call1 Topic.update $ Interpreter.invalidateNode)
-    , (Topic.interpreterRun              , call1 Topic.update $ Interpreter.run)
-    , (Topic.interpreterWatchPointAdd    , call1 Topic.update $ Interpreter.watchPointAdd)
-    , (Topic.interpreterWatchPointRemove , call1 Topic.update $ Interpreter.watchPointRemove)
-    , (Topic.interpreterWatchPointList   , call1 Topic.status $ Interpreter.watchPointList)
-    , (Topic.projectLibraryAstGetRequest , call0 ASTWatch.test)
-    , ("project.store.status"            , call0 ASTWatch.test2)
-    , ("dummy"                           , call0 ASTWatch.test2)
+    [ (Topic.interpreterInvalidateCallRequest  , respond Topic.update $ Interpreter.invalidateCall   )
+    , (Topic.interpreterInvalidateDefRequest   , respond Topic.update $ Interpreter.invalidateDef    )
+    , (Topic.interpreterInvalidateNodeRequest  , respond Topic.update $ Interpreter.invalidateNode   )
+    , (Topic.interpreterRunRequest             , respond Topic.update $ Interpreter.run              )
+    , (Topic.interpreterWatchPointAddRequest   , respond Topic.update $ Interpreter.watchPointAdd    )
+    , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update $ Interpreter.watchPointRemove )
+    , (Topic.interpreterWatchPointListRequest  , respond Topic.status $ Interpreter.watchPointList   )
+
+    , (Topic.projectCreateRequest                                   /+ update , query "" ASTWatch.test3)
+    , (Topic.projectOpenRequest                                     /+ update , query "" ASTWatch.test3)
+    , (Topic.projectCloseRequest                                    /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryCreateRequest                            /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryLoadRequest                              /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryUnloadRequest                            /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstRemoveRequest                         /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstModuleAddRequest                      /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstModuleModifyClsRequest                /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstModuleModifyFieldsRequest             /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstModuleModifyImportsRequest            /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstDataAddRequest                        /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionModifyInputsRequest           /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionModifyNameRequest             /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionModifyOutputRequest           /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionModifyPathRequest             /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionGraphConnectRequest           /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionGraphDisconnectRequest        /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionGraphNodeAddRequest           /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest /+ update , query "" ASTWatch.test3)
+    , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    /+ update , query "" ASTWatch.test3)
     ]
     where
-        call1 type_ = callback type_ . Processor.singleResult
+        respond type_ = callback ((/+) type_) . Processor.singleResult
+
+        query topic = callback (const topic) . Processor.singleResult
+
         call0 :: Proto.Serializable a => (a -> RPC SessionT ()) -> SessionT [Message]
-        call0       = callback ""    . Processor.noResult
+        call0 = callback id . Processor.noResult
 
 
 interpret :: Pipes.Pipe (Message, Message.CorrelationID)
