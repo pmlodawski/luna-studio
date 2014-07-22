@@ -139,7 +139,8 @@ def main():
     parser.add_argument('-y', dest='SILENTINSTALL', action='store_true' , help = 'Install all needed stuff without asking')
     args = parser.parse_args()
 
-    global SILENTINSTALL = args.SILENTINSTALL
+    global SILENTINSTALL
+    SILENTINSTALL = args.SILENTINSTALL
 
 
     platformFix(sboxName)
