@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Parser.Handler.Parser where
+module Flowbox.Parser.RPC.Handler.Parser where
 
 import qualified Flowbox.Batch.Handler.Parser                        as BatchP
 import           Flowbox.Bus.RPC.RPC                                 (RPC)
@@ -26,7 +26,7 @@ import qualified Generated.Proto.Parser.Parse.Type.Status            as ParseTyp
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Parser"
+logger = getLoggerIO "Flowbox.Parser.RPC.Handler.Parser"
 
 -------- public api -------------------------------------------------
 
