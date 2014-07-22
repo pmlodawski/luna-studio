@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Flowbox.ProjectManager.Topic where
+module Flowbox.ProjectManager.RPC.Topic where
 
 
 

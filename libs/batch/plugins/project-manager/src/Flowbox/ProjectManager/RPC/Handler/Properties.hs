@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.ProjectManager.Handler.Properties where
+module Flowbox.ProjectManager.RPC.Handler.Properties where
 
 import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
@@ -26,7 +26,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.S
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Properties"
+logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Properties"
 
 
 getASTProperties :: ContextRef -> GetASTProperties.Request -> RPC IO GetASTProperties.Status

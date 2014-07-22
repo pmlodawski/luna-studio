@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.ProjectManager.Handler.Library where
+module Flowbox.ProjectManager.RPC.Handler.Library where
 
 import qualified Flowbox.Batch.Handler.Library                                 as BatchL
 import           Flowbox.Bus.RPC.RPC                                           (RPC)
@@ -31,7 +31,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Update  a
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.Handlers.Library"
+logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Library"
 
 -------- public api -------------------------------------------------
 
