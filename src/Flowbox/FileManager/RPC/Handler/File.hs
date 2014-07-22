@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.FileManager.Handler.File where
+module Flowbox.FileManager.RPC.Handler.File where
 
 import qualified System.Directory as Directory
 
@@ -30,7 +30,7 @@ import qualified Generated.Proto.FileManager.FileSystem.File.Upload.Status  as U
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.FileManager.Handler.File"
+logger = getLoggerIO "Flowbox.FileManager.RPC.Handler.File"
 
 ------ public api -------------------------------------------------
 
