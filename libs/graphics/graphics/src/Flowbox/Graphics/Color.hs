@@ -12,28 +12,20 @@ module Flowbox.Graphics.Color (
 import           Flowbox.Graphics.Color.Conversion        as X
 import           Flowbox.Graphics.Color.Internal          as X
 import           Flowbox.Graphics.Color.CMY               as X
-import           Flowbox.Graphics.Color.CMY.Accelerate    as X
 import           Flowbox.Graphics.Color.CMY.Conversion    as X
 import           Flowbox.Graphics.Color.CMYK              as X
-import           Flowbox.Graphics.Color.CMYK.Accelerate   as X
 import           Flowbox.Graphics.Color.CMYK.Conversion   as X
 import           Flowbox.Graphics.Color.HSL               as X
-import           Flowbox.Graphics.Color.HSL.Accelerate    as X
 import           Flowbox.Graphics.Color.HSL.Conversion    as X
 import           Flowbox.Graphics.Color.HSV               as X
-import           Flowbox.Graphics.Color.HSV.Accelerate    as X
 import           Flowbox.Graphics.Color.HSV.Conversion    as X
 import           Flowbox.Graphics.Color.RGB               as X
-import           Flowbox.Graphics.Color.RGB.Accelerate    as X
 import           Flowbox.Graphics.Color.RGB.Conversion    as X
 import           Flowbox.Graphics.Color.RGBA              as X
-import           Flowbox.Graphics.Color.RGBA.Accelerate   as X
 import           Flowbox.Graphics.Color.RGBA.Conversion   as X
 import           Flowbox.Graphics.Color.YUV               as X
-import           Flowbox.Graphics.Color.YUV.Accelerate    as X
 import           Flowbox.Graphics.Color.YUV.Conversion    as X
 import           Flowbox.Graphics.Color.YUV_HD            as X
-import           Flowbox.Graphics.Color.YUV_HD.Accelerate as X
 import           Flowbox.Graphics.Color.YUV_HD.Conversion as X
 
 
