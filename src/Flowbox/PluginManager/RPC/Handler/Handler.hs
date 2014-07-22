@@ -12,8 +12,7 @@ module Flowbox.PluginManager.RPC.Handler.Handler where
 import Control.Arrow (first)
 
 import           Flowbox.Bus.Data.Message                        (Message)
-import           Flowbox.Bus.Data.Topic                          (Topic)
-import qualified Flowbox.Bus.Data.Topic                          as Topic
+import           Flowbox.Bus.Data.Topic                          (Topic, status, update, (/+))
 import           Flowbox.Bus.RPC.HandlerMap                      (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                      as HandlerMap
 import           Flowbox.Bus.RPC.RPC                             (RPC)
@@ -40,16 +39,16 @@ prefixifyTopics prefix = map (first $ Prefix.prefixify prefix)
 
 handlerMap :: Prefix -> ContextRef -> HandlerMap IO
 handlerMap prefix ctx callback = HandlerMap.fromList $ prefixifyTopics prefix
-    [ (Topic.pluginAddRequest        , call Topic.update $ PluginHandler.add     ctx)
-    , (Topic.pluginRemoveRequest     , call Topic.update $ PluginHandler.remove  ctx)
-    , (Topic.pluginListRequest       , call Topic.status $ PluginHandler.list    ctx)
-    , (Topic.pluginLookupRequest     , call Topic.status $ PluginHandler.lookup  ctx)
-    , (Topic.pluginStartRequest      , call Topic.update $ PluginHandler.start   ctx)
-    , (Topic.pluginStopRequest       , call Topic.update $ PluginHandler.stop    ctx)
-    , (Topic.pluginRestartRequest    , call Topic.update $ PluginHandler.restart ctx)
-    , (Topic.pluginManagerPingRequest, call Topic.status PluginManagerHandler.ping)
+    [ (Topic.pluginAddRequest        , respond update $ PluginHandler.add     ctx)
+    , (Topic.pluginRemoveRequest     , respond update $ PluginHandler.remove  ctx)
+    , (Topic.pluginListRequest       , respond status $ PluginHandler.list    ctx)
+    , (Topic.pluginLookupRequest     , respond status $ PluginHandler.lookup  ctx)
+    , (Topic.pluginStartRequest      , respond update $ PluginHandler.start   ctx)
+    , (Topic.pluginStopRequest       , respond update $ PluginHandler.stop    ctx)
+    , (Topic.pluginRestartRequest    , respond update $ PluginHandler.restart ctx)
+    , (Topic.pluginManagerPingRequest, respond status PluginManagerHandler.ping)
     ]
     where
-        call :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> RPC IO result) -> IO [Message]
-        call type_ = callback type_ . Processor.singleResult
+        respond :: (Proto.Serializable args, Proto.Serializable result)
+                => String -> (args -> RPC IO result) -> IO [Message]
+        respond type_ = callback ((/+) type_) . Processor.singleResult
