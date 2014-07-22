@@ -18,6 +18,9 @@ from utils.colors      import print_info, print_error, putInfo, formatQuestion
 from utils.errors      import fatal
 from utils.net         import download
 from utils.system      import platformFix
+import argparse
+
+SILENTINSTALL = False
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -83,13 +86,17 @@ def checkPythonPkg(package, version=None):
                 _, installed_ver = line.split('==')
                 installed_ver = [int(x) for x in installed_ver.split('.')]
                 if version and installed_ver <= version:
-                    ask("Python package '{package}' too old: {installed_ver} available, {version} required. "\
-                        "Should I upgrade it?".format(**locals())) or fatal()
-                    try_call(install_cmd)
+                    if ask("Python package '{package}' too old: {installed_ver} available, {version} required. "\
+                           "Should I upgrade it?".format(**locals()))
+                        try_call(install_cmd)
+                    else:
+                        fatal()
                 break
         else:
-            ask("Python package '{package}' not installed. Should I install it?".format(**locals())) or fatal()
-            try_call(install_cmd)
+            if ask("Python package '{package}' not installed. Should I install it?".format(**locals())):
+                try_call(install_cmd)
+            else:
+                fatal()
     except CalledProcessError, e:
         retcode = e.returncode
         print_error("Sorry, but `pip freeze` returned code {retcode}".format(**locals()))
@@ -100,15 +107,18 @@ def try_call(cmd):
     if call(cmd, shell=True): fatal()
 
 def ask(question):
-    answer = None
-    while True:
-        ansRaw = raw_input(formatQuestion(question) + " [Y/n] ")
-        ans = ansRaw.lower()
-        if ans not in ["", "y", "yes", "n", "no"]:
-            print_error("'%s' is not a valid answer, please choose beetween YES or NO." % ansRaw)
-        else: break
-    if ans in ["", "y", "yes"]: return True
-    else:                       return False
+    if SILENTINSTALL:
+        print(formatQuestion("Question override:" + question))
+    else:
+        answer = None
+        while True:
+            ansRaw = raw_input(formatQuestion(question) + " [Y/n] ")
+            ans = ansRaw.lower()
+            if ans not in ["", "y", "yes", "n", "no"]:
+                print_error("'%s' is not a valid answer, please choose beetween YES or NO." % ansRaw)
+            else: break
+        if ans in ["", "y", "yes"]: return True
+        else:                       return False
 
 
 def removeIfExists(pathToRemove):
@@ -123,31 +133,46 @@ if os.path.exists(sboxName):
 if not os.path.exists(sboxName):
     os.mkdir(sboxName)
 
-platformFix(sboxName)
 
-assertInstall("cabal")
+def main():
+    parser = argparse.ArgumentParser(description='Flowbox Development Environment Initializer')
+    parser.add_argument('-y', dest='SILENTINSTALL', action='store_true' , help = 'Install all needed stuff without asking')
+    args = parser.parse_args()
 
-print_info ("Updating cabal package cache")
-try_call('cd && cabal update')
-
-checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", checkCabalVersion)
-
-checkCabalPkg("hprotoc")
-checkCabalPkg("c2hs", version="0.16.5")
-
-try_call ('git submodule init')
-try_call ('git submodule update')
-
-print_info ("Generating Protocol Buffers files using genproto")
-path = os.path.join(rootPath, 'scripts', 'genproto')
-try_call ('python2.7 %s' % path)
-
-print_info ("Generating cabal configs using gencabal")
-path = os.path.join(rootPath, 'scripts', 'gencabal')
-try_call ('python2.7 %s' % path)
-
-checkPythonPkg("psutil")
+    global SILENTINSTALL = args.SILENTINSTALL
 
 
-print_info ("Success")
-sys.exit(0)
+    platformFix(sboxName)
+
+    assertInstall("cabal")
+
+    print_info ("Updating cabal package cache")
+    try_call('cd && cabal update')
+
+    checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", checkCabalVersion)
+
+    checkCabalPkg("hprotoc")
+    checkCabalPkg("c2hs", version="0.16.5")
+
+
+    print_info ("Generating Protocol Buffers files using genproto")
+    path = os.path.join(rootPath, 'scripts', 'genproto')
+    try_call ('python2.7 %s' % path)
+
+
+    try_call ('git submodule init')
+    try_call ('git submodule update')
+
+    print_info ("Generating cabal configs using gencabal")
+    path = os.path.join(rootPath, 'scripts', 'gencabal')
+    try_call ('python2.7 %s' % path)
+
+    checkPythonPkg("psutil")
+
+
+    print_info ("Success")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

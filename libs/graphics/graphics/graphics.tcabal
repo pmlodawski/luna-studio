@@ -15,8 +15,8 @@ Flag ekg
 
 Flag cuda
   Description:          Enable the CUDA parallel backend for NVIDIA GPUs
-  Default:              True
-  --Default:              False
+  --Default:              True
+  Default:              False
 
 Flag opencl
   Description:          Enable the OpenCL parallel backend
