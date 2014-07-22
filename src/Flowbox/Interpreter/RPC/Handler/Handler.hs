@@ -30,7 +30,7 @@ import qualified Flowbox.Interpreter.Session.Session         as Session
 import           Flowbox.Interpreter.Session.SessionT        (SessionT)
 import qualified Flowbox.Interpreter.Session.SessionT        as SessionT
 import           Flowbox.Prelude                             hiding (Context, error)
-import qualified Flowbox.ProjectManager.Topic                as Topic
+import qualified Flowbox.ProjectManager.RPC.Topic            as Topic
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                as Proto
 
