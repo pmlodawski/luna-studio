@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.FileManager.Handler.File where
+module Flowbox.FileManager.RPC.Handler.File where
 
 import qualified Flowbox.AWS.S3.File                                        as File
 import           Flowbox.Bus.RPC.RPC                                        (RPC)
@@ -30,7 +30,7 @@ import qualified Generated.Proto.FileManager.FileSystem.File.Upload.Status  as U
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.FileManager.Handler.File"
+loggerIO = getLoggerIO "Flowbox.FileManager.RPC.Handler.File"
 
 ------ public api -------------------------------------------------
 
