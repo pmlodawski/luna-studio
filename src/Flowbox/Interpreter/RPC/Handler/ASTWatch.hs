@@ -64,8 +64,8 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.ASTWatch"
 
 
-test :: Definitions.Status -> RPC SessionT ()
-test (Definitions.Status {}) = do
+test0 :: Definitions.Status -> RPC SessionT ()
+test0 (Definitions.Status {}) = do
     print "!!!"
 
 
