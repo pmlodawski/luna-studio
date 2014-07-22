@@ -34,7 +34,7 @@ logger = getLoggerIO "Flowbox.Bus.RPC.HandlerMap"
 
 
 type Callback m = (Proto.Serializable args, Proto.Serializable result)
-                => String -> (args -> RPC m [result]) -> m [Message]
+                => (Topic -> Topic) -> (args -> RPC m [result]) -> m [Message]
 
 
 type HandlerMap m = Callback m -> Map Topic (m [Message])
