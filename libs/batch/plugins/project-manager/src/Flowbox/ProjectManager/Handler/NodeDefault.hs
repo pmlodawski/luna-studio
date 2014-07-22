@@ -29,17 +29,17 @@ logger = getLoggerIO "Flowbox.ProjectManager.Handler.NodeDefault"
 
 
 get :: ContextRef -> NodeDefaultGet.Request -> RPC IO NodeDefaultGet.Status
-get ctxRef (NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
+get ctxRef request@(NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     nodeDefaults <- Context.run ctxRef $ BatchND.nodeDefaults nodeID bc libID projectID
-    return $ NodeDefaultGet.Status (encode nodeDefaults) tnodeID tbc tlibID tprojectID
+    return $ NodeDefaultGet.Status request (encode nodeDefaults)
 
 
 set :: ContextRef -> NodeDefaultSet.Request -> RPC IO NodeDefaultSet.Update
-set ctxRef (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
+set ctxRef request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort
         value     = decodeP tvalue
@@ -47,15 +47,15 @@ set ctxRef (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $ BatchND.setNodeDefault dstPort value nodeID bc libID projectID
-    return $ NodeDefaultSet.Update tdstPort tvalue tnodeID tbc tlibID tprojectID
+    return $ NodeDefaultSet.Update request
 
 
 remove :: ContextRef -> NodeDefaultRemove.Request -> RPC IO NodeDefaultRemove.Update
-remove ctxRef (NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID) = do
+remove ctxRef request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     Context.run ctxRef $ BatchND.removeNodeDefault dstPort nodeID bc libID projectID
-    return $ NodeDefaultRemove.Update tdstPort tnodeID tbc tlibID tprojectID
+    return $ NodeDefaultRemove.Update request
