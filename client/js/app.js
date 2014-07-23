@@ -20,7 +20,7 @@ $.fn.consolize = function() {
 			var result = JSON.parse(msg.data)
 			if('error' == result.topic) {
 				printError(result.data);
-			} else if('ghci_output' == result.topic) {
+			} else if('shell_output' == result.topic) {
 				terminal.echo(clearOutputFromGHCI(result.data));
 			} else if('inotify' == result.topic) {
 				printInfo(JSON.stringify(result.data));
@@ -42,11 +42,11 @@ $.fn.consolize = function() {
 			socketSend(JSON.stringify({topic: cmd_split[1], data: cmd_split[2]}));
 			return;
 		}
-		ghciExecuteCommand(cmd);
+		shellExecuteCommand(cmd);
 	}
 
-	function ghciExecuteCommand(cmd) {
-		socketSend(JSON.stringify({topic:'ghci_input', data: cmd+'\n'}));
+	function shellExecuteCommand(cmd) {
+		socketSend(JSON.stringify({topic:'shell_input', data: cmd+'\n'}));
 	}
 
 	// --- utils

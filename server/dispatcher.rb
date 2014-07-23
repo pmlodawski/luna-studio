@@ -3,8 +3,10 @@ require 'json'
 class Dispatcher
     def self.dispatch(user, message)
         case
-        when message.topic == "ghci_input"
-            user.ghci.push(message.data)
+        when message.topic == "shell_input"
+            user.shell.push(message.data)
+        when message.topic == "spawn_shell"
+            user.spawn_shell(message.data)
         when message.topic == "inotify_subscribe"
             user.inotify_subscribe(message.data)
         when message.topic == "ping"
