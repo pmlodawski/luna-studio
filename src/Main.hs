@@ -68,8 +68,8 @@ run cmd = case cmd of
             else do Concurrent.forkIO_ $ runEitherT (InitRemote.init confPath busConfig) >>= eitherStringToM
                     runEitherT (InitLocal.init confPath) >>= eitherStringToM
 
-        ctx <- Context.mk cfg pluginHandles
+        let ctx Context.mk cfg pluginHandles
 
         logger info "Starting rpc server"
-        Server.run busConfig (Handler.handlerMap (Cmd.prefix cmd) ctx) >>= eitherStringToM
+        Server.run busConfig ctx (Handler.handlerMap $ Cmd.prefix cmd) >>= eitherStringToM
 
