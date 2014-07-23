@@ -6,6 +6,8 @@ require 'em-websocket'
 require 'json'
 require 'ostruct'
 
+require_relative 'http.rb'
+require_relative 'logger.rb'
 require_relative 'dispatcher.rb'
 require_relative 'user.rb'
 
@@ -15,7 +17,7 @@ puts "ReactiveServer is starting up ..."
 
 EM.run do
     @clients = {}
-
+    EM::start_server("127.0.0.1", 8000, HTTPHandler)
     EM::WebSocket.run(:host => "127.0.0.1", :port => 8080) do |ws|
         include Logging
 
