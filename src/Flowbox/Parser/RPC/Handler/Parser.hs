@@ -30,7 +30,7 @@ logger = getLoggerIO "Flowbox.Parser.RPC.Handler.Parser"
 
 -------- public api -------------------------------------------------
 
-parseExpr :: ParseExpr.Request -> RPC IO ParseExpr.Status
+parseExpr :: ParseExpr.Request -> RPC () IO ParseExpr.Status
 parseExpr (ParseExpr.Request tstr) = do
     logger info "called parseExpr"
     let str = decodeP tstr
@@ -38,7 +38,7 @@ parseExpr (ParseExpr.Request tstr) = do
     return $ ParseExpr.Status (encode expr) tstr
 
 
-parsePat :: ParsePat.Request -> RPC IO ParsePat.Status
+parsePat :: ParsePat.Request -> RPC () IO ParsePat.Status
 parsePat (ParsePat.Request tstr) = do
     logger info "called parsePat"
     let str = decodeP tstr
@@ -46,7 +46,7 @@ parsePat (ParsePat.Request tstr) = do
     return $ ParsePat.Status (encode pat) tstr
 
 
-parseType :: ParseType.Request -> RPC IO ParseType.Status
+parseType :: ParseType.Request -> RPC () IO ParseType.Status
 parseType (ParseType.Request tstr) = do
     logger info "called parseType"
     let str = decodeP tstr
@@ -54,7 +54,7 @@ parseType (ParseType.Request tstr) = do
     return $ ParseType.Status (encode pat) tstr
 
 
-parseNodeExpr :: ParseNodeExpr.Request -> RPC IO ParseNodeExpr.Status
+parseNodeExpr :: ParseNodeExpr.Request -> RPC () IO ParseNodeExpr.Status
 parseNodeExpr (ParseNodeExpr.Request tstr) = do
     logger info "called parseExpr"
     let str = decodeP tstr
