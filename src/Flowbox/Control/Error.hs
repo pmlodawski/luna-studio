@@ -67,7 +67,7 @@ assert condition msg = unless condition $ fail msg
 
 
 -- FIXME [PM] : find better name
-safeLiftIO :: IO b -> EitherT String IO b
+safeLiftIO :: MonadIO m => IO b -> EitherT String m b
 safeLiftIO operation = do
     result <- liftIO $ (Exc.try :: IO a -> IO (Either Exc.SomeException a)) operation
     hoistEither $ fmapL show result

@@ -14,6 +14,7 @@ module Flowbox.Prelude(
     void,
     when,
     unless,
+    lift
 ) where
 
 import           Control.Applicative    as X
