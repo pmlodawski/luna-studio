@@ -9,10 +9,11 @@
 
 module Flowbox.Interpreter.RPC.Handler.Handler where
 
-import           Control.Monad    (forever)
-import           Pipes            (lift, (>->))
+import           Control.Monad             (forever)
+import           Control.Monad.Trans.State
+import           Pipes                     (lift, (>->))
 import qualified Pipes
-import qualified Pipes.Concurrent as Pipes
+import qualified Pipes.Concurrent          as Pipes
 
 import           Flowbox.Bus.Data.Message                    (Message)
 import qualified Flowbox.Bus.Data.Message                    as Message
@@ -40,7 +41,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.Handler"
 
 
-handlerMap :: HandlerMap SessionT
+handlerMap :: HandlerMap () SessionT
 handlerMap callback = HandlerMap.fromList
     [ (Topic.interpreterInvalidateCallRequest  , respond Topic.update $ Interpreter.invalidateCall   )
     , (Topic.interpreterInvalidateDefRequest   , respond Topic.update $ Interpreter.invalidateDef    )
@@ -82,24 +83,28 @@ handlerMap callback = HandlerMap.fromList
 
         query topic = callback (const topic) . Processor.singleResult
 
-        call0 :: Proto.Serializable a => (a -> RPC SessionT ()) -> SessionT [Message]
+        call0 :: Proto.Serializable a => (a -> RPC () SessionT ()) -> StateT () SessionT [Message]
         call0 = callback id . Processor.noResult
 
 
 interpret :: Pipes.Pipe (Message, Message.CorrelationID)
                         (Message, Message.CorrelationID)
-                        SessionT ()
+                        (StateT () SessionT) ()
 interpret = forever $ do
     (message, crl) <- Pipes.await
     results <- lift $ Processor.processLifted handlerMap message
     mapM_ (\r -> Pipes.yield (r, crl)) results
 
 
-
 run :: (Pipes.Input  (Message, Message.CorrelationID),
         Pipes.Output (Message, Message.CorrelationID))
     -> IO (Either Error ())
-run (input, output) = Session.run def $ SessionT.runSessionT $ do
+run (input, output) = Session.run def $ SessionT.runSessionT $ runNoState $
     Pipes.runEffect $ Pipes.fromInput input
                   >-> interpret
                   >-> Pipes.toOutput output
+    where
+        runNoState :: Monad m => StateT () m a -> m a
+        runNoState s = (flip runStateT) () s >>= return . fst
+
+

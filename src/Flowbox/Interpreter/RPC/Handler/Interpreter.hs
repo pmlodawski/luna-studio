@@ -42,50 +42,50 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.Interpreter"
 
 
-invalidateCall :: InvalidateCall.Request -> RPC SessionT InvalidateCall.Update
+invalidateCall :: InvalidateCall.Request -> RPC () SessionT InvalidateCall.Update
 invalidateCall request@(InvalidateCall.Request tcallPointPath) = do
     callPointPath <- decodeE tcallPointPath
-    lift $ SessionT $ Invalidate.invalidate callPointPath
+    lift2 $ SessionT $ Invalidate.invalidate callPointPath
     return $ InvalidateCall.Update request
 
 
-invalidateDef :: InvalidateDef.Request -> RPC SessionT InvalidateDef.Update
+invalidateDef :: InvalidateDef.Request -> RPC () SessionT InvalidateDef.Update
 invalidateDef request@(InvalidateDef.Request tlibraryID tdefID) = do
     let libraryID = decodeP tlibraryID
         defID     = decodeP tdefID
-    lift $ SessionT $ Invalidate.invalidateDef libraryID defID
+    lift2 $ SessionT $ Invalidate.invalidateDef libraryID defID
     return $ InvalidateDef.Update request
 
 
-invalidateNode :: InvalidateNode.Request -> RPC SessionT InvalidateNode.Update
+invalidateNode :: InvalidateNode.Request -> RPC () SessionT InvalidateNode.Update
 invalidateNode request@(InvalidateNode.Request tcallPoint) = do
     callPoint <- decodeE tcallPoint
-    lift $ SessionT $ Invalidate.invalidateNode (callPoint ^. CallPoint.libraryID) (callPoint ^. CallPoint.nodeID)
+    lift2 $ SessionT $ Invalidate.invalidateNode (callPoint ^. CallPoint.libraryID) (callPoint ^. CallPoint.nodeID)
     return $ InvalidateNode.Update request
 
 
-run :: Run.Request -> RPC SessionT Run.Update
+run :: Run.Request -> RPC () SessionT Run.Update
 run request = do
-    lift $ SessionT Executor.processMain
+    lift2 $ SessionT Executor.processMain
     return $ Run.Update request
 
 
-watchPointAdd :: WatchPointAdd.Request -> RPC SessionT WatchPointAdd.Update
+watchPointAdd :: WatchPointAdd.Request -> RPC () SessionT WatchPointAdd.Update
 watchPointAdd request@(WatchPointAdd.Request tcallPointPath) = do
     callPointPath <- decodeE tcallPointPath
-    lift $ SessionT $ WatchPoint.add callPointPath
+    lift2 $ SessionT $ WatchPoint.add callPointPath
     return $ WatchPointAdd.Update request
 
 
-watchPointRemove :: WatchPointRemove.Request -> RPC SessionT WatchPointRemove.Update
+watchPointRemove :: WatchPointRemove.Request -> RPC () SessionT WatchPointRemove.Update
 watchPointRemove request@(WatchPointRemove.Request tcallPointPath) = do
     callPointPath <- decodeE tcallPointPath
-    lift $ SessionT $ WatchPoint.delete callPointPath
+    lift2 $ SessionT $ WatchPoint.delete callPointPath
     return $ WatchPointRemove.Update request
 
 
-watchPointList :: WatchPointList.Request -> RPC SessionT WatchPointList.Status
+watchPointList :: WatchPointList.Request -> RPC () SessionT WatchPointList.Status
 watchPointList request = do
-    list <- lift $ SessionT $ SetForest.toList <$> WatchPoint.all
+    list <- lift2 $ SessionT $ SetForest.toList <$> WatchPoint.all
     return $ WatchPointList.Status request $ encodeList list
 
