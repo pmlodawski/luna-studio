@@ -46,6 +46,6 @@ run cmd = case cmd of
     Cmd.Run {}  -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         endPoints <- EP.clientFromConfig <$> Config.load
-        r <- Server.run endPoints Handler.handlerMap
+        r <- Server.run endPoints () Handler.handlerMap
         print r
 

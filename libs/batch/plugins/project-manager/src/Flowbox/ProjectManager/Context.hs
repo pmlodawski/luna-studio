@@ -17,20 +17,20 @@ import           Flowbox.Batch.Batch   (Batch, BatchEnv)
 import qualified Flowbox.Batch.Batch   as Batch
 import           Flowbox.Bus.RPC.RPC   (RPC)
 import           Flowbox.Config.Config (Config)
-import           Flowbox.Prelude
+import           Flowbox.Prelude       hiding (Context)
 
 
 
-type ContextRef = IORef BatchEnv
+type Context = BatchEnv
 
 
-mk :: Config -> IO ContextRef
-mk cfg = IORef.newIORef $ Batch.make cfg
+mk :: Config -> Context
+mk = Batch.make
 
 
-run :: ContextRef -> Batch a -> RPC IO a
-run ctxRef batch = do
-    ctx <- liftIO $ IORef.readIORef ctxRef
-    (result, newCtx) <- runStateT (runEitherT batch) ctx
-    liftIO $ IORef.writeIORef ctxRef newCtx
-    hoistEither result
+--run :: ContextRef -> Batch a -> RPC IO a
+--run ctxRef batch = do
+--    ctx <- liftIO $ IORef.readIORef ctxRef
+--    (result, newCtx) <- runStateT (runEitherT batch) ctx
+--    liftIO $ IORef.writeIORef ctxRef newCtx
+--    hoistEither result

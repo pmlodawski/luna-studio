@@ -8,11 +8,15 @@
 
 module Flowbox.Bus.Server where
 
-import Control.Monad       (forever)
+import Control.Monad             (forever)
+import Control.Monad.Morph
 import Control.Monad.Trans
+import Control.Monad.Trans.State
 
 import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus
+import           Flowbox.Bus.BusT              (BusT (BusT))
+import qualified Flowbox.Bus.BusT              as BusT
 import qualified Flowbox.Bus.Data.Flag         as Flag
 import           Flowbox.Bus.Data.Message      (Message)
 import qualified Flowbox.Bus.Data.Message      as Message
@@ -45,5 +49,26 @@ handle process = do
     liftIO $ logger debug $ "Received request: " ++ (msg ^. Message.topic)
     response <- liftIO $ process msg
     unless (null response) $ do
+        mapM_ (Bus.reply crlID Flag.Disable) (init response)
+        Bus.reply crlID Flag.Enable $ last response
+
+
+runState :: BusEndPoints -> [Topic] -> s -> (Message -> StateT s IO [Message]) -> IO (Either Bus.Error ())
+runState endPoints topics s process = Bus.runBus endPoints $ handleLoopState topics s process
+
+
+handleLoopState :: [Topic] -> s -> (Message -> StateT s IO [Message]) -> Bus ()
+handleLoopState topics s process = do
+    mapM_ Bus.subscribe topics
+    _ <- BusT.runBusT $ runStateT (forever $ handleState process) s
+    return ()
+
+
+handleState :: (Message -> StateT s IO [Message]) -> StateT s BusT ()
+handleState process = do
+    (MessageFrame msg crlID _ _) <- lift $ BusT $ Bus.receive
+    liftIO $ logger debug $ "Received request: " ++ (msg ^. Message.topic)
+    response <- hoist liftIO $ process msg
+    lift $ BusT $ unless (null response) $ do
         mapM_ (Bus.reply crlID Flag.Disable) (init response)
         Bus.reply crlID Flag.Enable $ last response

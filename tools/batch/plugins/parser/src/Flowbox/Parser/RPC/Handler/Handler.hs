@@ -9,6 +9,8 @@
 
 module Flowbox.Parser.RPC.Handler.Handler where
 
+import Control.Monad.Trans.State
+
 import           Flowbox.Bus.Data.Message          (Message)
 import           Flowbox.Bus.Data.Topic            (status, (/+))
 import           Flowbox.Bus.RPC.HandlerMap        (HandlerMap)
@@ -26,7 +28,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Parser.RPC.Handler.Handler"
 
 
-handlerMap :: HandlerMap IO
+handlerMap :: HandlerMap () IO
 handlerMap callback = HandlerMap.fromList
     [ ("parse.expr.request"    , respond status ParserHandler.parseExpr    )
     , ("parse.pat.request"     , respond status ParserHandler.parsePat     )
@@ -35,5 +37,5 @@ handlerMap callback = HandlerMap.fromList
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
-                => String -> (args -> RPC IO result) -> IO [Message]
+                => String -> (args -> RPC () IO result) -> StateT () IO [Message]
         respond type_ = callback ((/+) type_) . Processor.singleResult

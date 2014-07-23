@@ -41,7 +41,7 @@ consume = forever $ do
     void $ lift $ BusT $ Bus.reply crl Flag.Enable msg
 
 
-run :: BusEndPoints -> HandlerMap n
+run :: BusEndPoints -> HandlerMap s m
     -> IO (Pipes.Input  (Message, Message.CorrelationID),
            Pipes.Output (Message, Message.CorrelationID))
 run endPoints handlerMap = do

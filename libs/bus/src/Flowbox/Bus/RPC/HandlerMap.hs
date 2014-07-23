@@ -15,9 +15,10 @@ module Flowbox.Bus.RPC.HandlerMap (
     lookupAndCall,
 ) where
 
-import           Control.Monad.IO.Class (MonadIO)
-import           Data.Map               as X
-import qualified Data.Map               as Map
+import           Control.Monad.IO.Class    (MonadIO)
+import           Control.Monad.Trans.State
+import           Data.Map                  as X
+import qualified Data.Map                  as Map
 
 import           Flowbox.Bus.Data.Message     (Message)
 import qualified Flowbox.Bus.Data.Message     as Message
@@ -33,18 +34,18 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Bus.RPC.HandlerMap"
 
 
-type Callback m = (Proto.Serializable args, Proto.Serializable result)
-                => (Topic -> Topic) -> (args -> RPC m [result]) -> m [Message]
+type Callback s m = (Proto.Serializable args, Proto.Serializable result)
+                  => (Topic -> Topic) -> (args -> RPC s m [result]) -> StateT s m [Message]
 
 
-type HandlerMap m = Callback m -> Map Topic (m [Message])
+type HandlerMap s m = Callback s m -> Map Topic (StateT s m [Message])
 
 
-topics :: HandlerMap m -> [Topic]
+topics :: HandlerMap s m -> [Topic]
 topics handlerMap = Map.keys $ handlerMap undefined
 
 
-lookupAndCall :: MonadIO m => HandlerMap m -> Callback m -> Topic -> m [Message]
+lookupAndCall :: MonadIO m => HandlerMap s m -> Callback s m -> Topic -> StateT s m [Message]
 lookupAndCall handlerMap callback topic = case Map.lookup topic $ handlerMap callback of
     Just action -> action
     Nothing     -> do let errMsg = "Unknown topic: " ++ show topic

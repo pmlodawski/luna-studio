@@ -11,22 +11,26 @@ import           Control.Monad.Trans.Class (lift)
 import           Flowbox.Control.Error
 import qualified Text.Read                 as Read
 
-import qualified Flowbox.Batch.Project.Project                                                     as Project
-import           Flowbox.Batch.Project.ProjectManager                                              (ProjectManager)
-import qualified Flowbox.Batch.Project.ProjectManager                                              as ProjectManager
-import           Flowbox.Bus.RPC.RPC                                                               (RPC)
-import qualified Flowbox.Data.SetForest                                                            as SetForest
-import           Flowbox.Interpreter.Proto.CallPoint                                               ()
-import           Flowbox.Interpreter.Proto.CallPointPath                                           ()
-import qualified Flowbox.Interpreter.Session.AST.Executor                                          as Executor
-import qualified Flowbox.Interpreter.Session.AST.WatchPoint                                        as WatchPoint
-import qualified Flowbox.Interpreter.Session.Cache.Invalidate                                      as Invalidate
-import qualified Flowbox.Interpreter.Session.Data.CallPoint                                        as CallPoint
-import qualified Flowbox.Interpreter.Session.Session                                               as Session
-import           Flowbox.Interpreter.Session.SessionT                                              (SessionT (SessionT))
+import qualified Flowbox.Batch.Project.Project                                  as Project
+import           Flowbox.Batch.Project.ProjectManager                           (ProjectManager)
+import qualified Flowbox.Batch.Project.ProjectManager                           as ProjectManager
+import           Flowbox.Bus.RPC.RPC                                            (RPC)
+import qualified Flowbox.Data.SetForest                                         as SetForest
+import           Flowbox.Interpreter.Proto.CallPoint                            ()
+import           Flowbox.Interpreter.Proto.CallPointPath                        ()
+import qualified Flowbox.Interpreter.Session.AST.Executor                       as Executor
+import qualified Flowbox.Interpreter.Session.AST.WatchPoint                     as WatchPoint
+import qualified Flowbox.Interpreter.Session.Cache.Invalidate                   as Invalidate
+import qualified Flowbox.Interpreter.Session.Data.CallPoint                     as CallPoint
+import qualified Flowbox.Interpreter.Session.Session                            as Session
+import           Flowbox.Interpreter.Session.SessionT                           (SessionT (SessionT))
 import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger                                                         hiding (error)
+import           Flowbox.System.Log.Logger                                      hiding (error)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.ProjectManager.Project.Create.Update           as ProjectCreate
+import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request as ProjectManagerSyncGet
+import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  as ProjectManagerSyncGet
+
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request               as AddData
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                as AddData
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request    as ModifyDataClasses
@@ -62,8 +66,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Updat
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                as ResolveDefinition
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                 as ResolveDefinition
 import qualified Generated.Proto.ProjectManager.Project.Store.Status                               as Store
-import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request                    as ProjectManagerSyncGet
-import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status                     as ProjectManagerSyncGet
+
 
 
 
@@ -71,24 +74,39 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.ASTWatch"
 
 
-projectmanagerSyncGet :: ProjectManagerSyncGet.Status -> RPC SessionT ()
+projectmanagerSyncGet :: ProjectManagerSyncGet.Status -> RPC () SessionT ()
 projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata) = do
     (projectManager :: ProjectManager) <- hoistEither $ Read.readEither $ decodeP tdata
     -- TODO [PM] hardcoded project number!
     project <- ProjectManager.lab projectManager 0 <??> "Project 0 not found"
-    lift $ SessionT $ Session.setLibManager $ project ^. Project.libs
+    lift2 $ SessionT $ Session.setLibManager $ project ^. Project.libs
 
 
-test0 :: Definitions.Status -> RPC SessionT ()
+projectCreate :: ProjectCreate.Update -> RPC () SessionT ()
+projectCreate (ProjectCreate.Update request projectID) = do
+    undefined
+
+
+
+
+
+
+
+
+
+
+
+test0 :: Definitions.Status -> RPC () SessionT ()
 test0 (Definitions.Status {}) = do
     print "!!!"
 
 
-test2 :: Store.Status -> RPC SessionT ()
+test2 :: Store.Status -> RPC () SessionT ()
 test2 _ = do
     print "!!!222"
 
-test3 :: Store.Status -> RPC SessionT Store.Status
+test3 :: Store.Status -> RPC () SessionT Store.Status
 test3 r = do
     print "!!!333"
     return r
+

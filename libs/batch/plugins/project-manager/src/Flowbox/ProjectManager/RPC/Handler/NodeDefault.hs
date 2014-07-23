@@ -10,9 +10,8 @@ import qualified Flowbox.Batch.Handler.NodeDefault                              
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                                           ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.NodeDefault                                     ()
-import           Flowbox.Prelude
-import           Flowbox.ProjectManager.Context                                                                (ContextRef)
-import qualified Flowbox.ProjectManager.Context                                                                as Context
+import           Flowbox.Prelude                                                                               hiding (Context)
+import           Flowbox.ProjectManager.Context                                                                (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Request    as NodeDefaultGet
@@ -28,34 +27,34 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.NodeDefault"
 
 
-get :: ContextRef -> NodeDefaultGet.Request -> RPC IO NodeDefaultGet.Status
-get ctxRef request@(NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
+get :: NodeDefaultGet.Request -> RPC Context IO NodeDefaultGet.Status
+get request@(NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    nodeDefaults <- Context.run ctxRef $ BatchND.nodeDefaults nodeID bc libID projectID
+    nodeDefaults <- BatchND.nodeDefaults nodeID bc libID projectID
     return $ NodeDefaultGet.Status request (encode nodeDefaults)
 
 
-set :: ContextRef -> NodeDefaultSet.Request -> RPC IO NodeDefaultSet.Update
-set ctxRef request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
+set :: NodeDefaultSet.Request -> RPC Context IO NodeDefaultSet.Update
+set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort
         value     = decodeP tvalue
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    Context.run ctxRef $ BatchND.setNodeDefault dstPort value nodeID bc libID projectID
+    BatchND.setNodeDefault dstPort value nodeID bc libID projectID
     return $ NodeDefaultSet.Update request
 
 
-remove :: ContextRef -> NodeDefaultRemove.Request -> RPC IO NodeDefaultRemove.Update
-remove ctxRef request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID) = do
+remove :: NodeDefaultRemove.Request -> RPC Context IO NodeDefaultRemove.Update
+remove request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID) = do
     bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    Context.run ctxRef $ BatchND.removeNodeDefault dstPort nodeID bc libID projectID
+    BatchND.removeNodeDefault dstPort nodeID bc libID projectID
     return $ NodeDefaultRemove.Update request

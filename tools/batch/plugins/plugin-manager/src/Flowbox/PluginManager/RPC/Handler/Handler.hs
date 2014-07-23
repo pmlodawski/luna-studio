@@ -9,6 +9,7 @@
 
 module Flowbox.PluginManager.RPC.Handler.Handler where
 
+import Control.Monad.Trans.State
 import Control.Arrow (first)
 
 import           Flowbox.Bus.Data.Message                        (Message)
@@ -17,13 +18,13 @@ import           Flowbox.Bus.RPC.HandlerMap                      (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                      as HandlerMap
 import           Flowbox.Bus.RPC.RPC                             (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor                as Processor
-import           Flowbox.PluginManager.Context                   (ContextRef)
+import           Flowbox.PluginManager.Context                   (Context)
 import           Flowbox.PluginManager.Prefix                    (Prefix)
 import qualified Flowbox.PluginManager.Prefix                    as Prefix
 import qualified Flowbox.PluginManager.RPC.Handler.Plugin        as PluginHandler
 import qualified Flowbox.PluginManager.RPC.Handler.PluginManager as PluginManagerHandler
 import qualified Flowbox.PluginManager.RPC.Topic                 as Topic
-import           Flowbox.Prelude                                 hiding (error)
+import           Flowbox.Prelude                                 hiding (error, Context)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                    as Proto
 
@@ -37,18 +38,18 @@ prefixifyTopics :: Prefix -> [(Topic, a)] -> [(Topic, a)]
 prefixifyTopics prefix = map (first $ Prefix.prefixify prefix)
 
 
-handlerMap :: Prefix -> ContextRef -> HandlerMap IO
-handlerMap prefix ctx callback = HandlerMap.fromList $ prefixifyTopics prefix
-    [ (Topic.pluginAddRequest        , respond update $ PluginHandler.add     ctx)
-    , (Topic.pluginRemoveRequest     , respond update $ PluginHandler.remove  ctx)
-    , (Topic.pluginListRequest       , respond status $ PluginHandler.list    ctx)
-    , (Topic.pluginLookupRequest     , respond status $ PluginHandler.lookup  ctx)
-    , (Topic.pluginStartRequest      , respond update $ PluginHandler.start   ctx)
-    , (Topic.pluginStopRequest       , respond update $ PluginHandler.stop    ctx)
-    , (Topic.pluginRestartRequest    , respond update $ PluginHandler.restart ctx)
+handlerMap :: Prefix -> HandlerMap Context IO
+handlerMap prefix callback = HandlerMap.fromList $ prefixifyTopics prefix
+    [ (Topic.pluginAddRequest        , respond update PluginHandler.add    )
+    , (Topic.pluginRemoveRequest     , respond update PluginHandler.remove )
+    , (Topic.pluginListRequest       , respond status PluginHandler.list   )
+    , (Topic.pluginLookupRequest     , respond status PluginHandler.lookup )
+    , (Topic.pluginStartRequest      , respond update PluginHandler.start  )
+    , (Topic.pluginStopRequest       , respond update PluginHandler.stop   )
+    , (Topic.pluginRestartRequest    , respond update PluginHandler.restart)
     , (Topic.pluginManagerPingRequest, respond status PluginManagerHandler.ping)
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
-                => String -> (args -> RPC IO result) -> IO [Message]
+                => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
         respond type_ = callback ((/+) type_) . Processor.singleResult
