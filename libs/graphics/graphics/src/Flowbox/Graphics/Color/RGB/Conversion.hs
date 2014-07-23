@@ -36,7 +36,7 @@ instance ColorConvert RGBA RGB where
     convertColor (RGBA r' g' b' _) = RGB r' g' b'
 
 instance ColorConvert HSV RGB where
-    convertColor (HSV  h' s' v') = RGB (r'+m') (g'+m') (b'+m')
+    convertColor (HSV h' s' v') = RGB (r'+m') (g'+m') (b'+m')
         where (r', g', b') = unlift res
               res = helperHsvHsl i c' x
               h'' = h' * 6
@@ -46,6 +46,8 @@ instance ColorConvert HSV RGB where
               m' = v' - c'
 
 instance ColorConvert HSL RGB where
+    -- NOTE[mm]: There are slight differences between Nuke and this formula. Probably Nuke uses another way
+    --           of computing HSL that gives different values for particular colors.
     convertColor (HSL h' s' l') = RGB (r'+m') (g'+m') (b'+m')
         where (r', g', b') = unlift res
               res = helperHsvHsl i c' x

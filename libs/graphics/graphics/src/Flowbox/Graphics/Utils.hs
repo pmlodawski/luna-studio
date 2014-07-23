@@ -32,10 +32,10 @@ sign x = (2 * x) - 1
 parametrize :: Num a => a -> a -> a -> a
 parametrize lo hi x = lo + x * (hi - lo)
 
-bias :: (Elt t, Elt t1, IsNum t, IsIntegral t1, IsFloating t1) => Exp t1 -> Exp t -> Exp t
-bias b x = (b A.>* 0) A.? (x ^ logBase 0.5 b, 0)
+bias :: (Elt t, IsFloating t) => Exp t -> Exp t -> Exp t
+bias b x = (b A.>* 0) A.? (x ** logBase 0.5 b, 0)
 
-gain :: (Elt t, Elt t1, IsIntegral t1, IsFloating t, IsFloating t1) => Exp t -> Exp t1 -> Exp t
+gain :: (Elt t, IsFloating t) => Exp t -> Exp t -> Exp t
 gain g x = 0.5 * (x A.<* 0.5 A.? (bias (2 * x) (1 - g) , 2 - bias (2 - 2 * x) (1 - g)))
 
 gamma :: Floating a => a -> a -> a

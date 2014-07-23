@@ -5,16 +5,21 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Main where
 
+import Flowbox.Graphics.Color
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 import Flowbox.Graphics.Composition.Generators.Sampler
 import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Graphics.Image.Color
+import Flowbox.Math.Matrix as M
 import Flowbox.Prelude hiding (transform)
 
+import qualified Data.Array.Accelerate as A
 import Test.QuickCheck (quickCheck, (==>))
 import Utils
 
@@ -29,6 +34,10 @@ bp black = testFunction (blackpointConvert black) input output
 
 invertible black lift = testFunction (inverseBlackpointConvert lift . blackpointConvert black) input output
 invertibleWhite white gain = testFunction (inverseWhitepointConvert gain . whitepointConvert white) input output
+
+saturation v = testColor (saturate v) input output
+
+correct s c g g' o = testColor (colorCorrect s c g g' o) input output
 
 main = do
     --putStrLn "Testing invertibility"

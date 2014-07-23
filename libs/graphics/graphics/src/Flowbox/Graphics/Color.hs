@@ -4,8 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 
 module Flowbox.Graphics.Color (
+    module Flowbox.Graphics.Color,
     module X
 ) where
 	
@@ -28,6 +32,16 @@ import           Flowbox.Graphics.Color.YUV.Conversion    as X
 import           Flowbox.Graphics.Color.YUV_HD            as X
 import           Flowbox.Graphics.Color.YUV_HD.Conversion as X
 
+import Flowbox.Prelude
+
+makeFields ''CMY
+makeFields ''CMYK
+makeFields ''HSV
+makeFields ''HSL
+makeFields ''RGB
+makeFields ''RGBA
+makeFields ''YUV
+makeFields ''YUV_HD
 
 
 -- TODO: LAB color space

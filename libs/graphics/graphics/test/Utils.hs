@@ -4,12 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Utils where
 
 import           Flowbox.Prelude                      as P
 import           Flowbox.Math.Matrix                  as M
+import           Flowbox.Graphics.Color
 import           Flowbox.Graphics.Composition.Generators.Rasterizer
 import           Flowbox.Graphics.Composition.Generators.Sampler
 import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage, saveImage)
@@ -27,6 +29,17 @@ import           Math.Space.Space
 
 type IOLoadBackend a = FilePath -> IO (Either a (A.Array A.DIM2 RGBA32))
 type IOSaveBackend   = FilePath -> A.Array A.DIM2 RGBA32 -> IO ()
+
+testColor :: (RGB (A.Exp Float) -> RGB (A.Exp Float))
+          -> FilePath
+          -> FilePath
+          -> IO ()
+testColor f input output = do
+    (r, g, b, a) <- testLoadRGBA' input
+    rgb  <- return $ M.zipWith3 (\x y z -> A.lift (RGB x y z)) r g b
+    rgb' <- return $ M.map (\x -> A.lift $ f (A.unlift x :: RGB (Exp Float))) rgb
+    (r', g', b') <- return $ M.unzip3 $ M.map (\(A.unlift -> RGB r g b :: RGB (Exp Float)) -> A.lift (r, g, b)) rgb'
+    testSaveRGBA' output r' g' b' a
 
 testFunction :: (A.Exp Float -> A.Exp Float)
              -> FilePath

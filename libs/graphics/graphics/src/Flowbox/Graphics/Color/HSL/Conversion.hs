@@ -34,6 +34,8 @@ instance ColorConvert HSL HSL where
     convertColor = id
 
 instance ColorConvert RGB HSL where
+    -- NOTE[mm]: There are slight differences between Nuke and this formula. Probably Nuke uses another way
+    --           of computing HSL that gives different values for particular colors.
     convertColor (RGB r' g' b') = HSL h'' s' l'
         where h'' = (h' >* 0 A.? (h' , h' + 6)) / 6
               h' = delta ==* 0 A.? (0,
