@@ -50,7 +50,7 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update $ Interpreter.watchPointRemove )
     , (Topic.interpreterWatchPointListRequest  , respond Topic.status $ Interpreter.watchPointList   )
 
-    , (Topic.projectmanagerSyncGetRequest                           /+ status , call0 ASTWatch.test0)
+    , (Topic.projectmanagerSyncGetRequest                           /+ status , call0 ASTWatch.projectmanagerSyncGet)
 
     , (Topic.projectCreateRequest                                   /+ update , query Topic.projectmanagerSyncGetRequest ASTWatch.test3)
     , (Topic.projectOpenRequest                                     /+ update , query Topic.projectmanagerSyncGetRequest ASTWatch.test3)
