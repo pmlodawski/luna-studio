@@ -32,6 +32,7 @@ Library
                   flowbox-rpc,
                   flowbox-utils,
                   MissingH,
+                  mmorph,
                   mtl,
                   monad-loops,
                   pipes,

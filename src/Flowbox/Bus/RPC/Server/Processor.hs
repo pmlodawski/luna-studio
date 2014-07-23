@@ -9,8 +9,9 @@
 
 module Flowbox.Bus.RPC.Server.Processor where
 
-import Control.Monad          (liftM)
-import Control.Monad.IO.Class (MonadIO)
+import Control.Monad             (liftM)
+import Control.Monad.IO.Class    (MonadIO)
+import Control.Monad.Trans.State
 
 import           Flowbox.Bus.Data.Message     (Message)
 import qualified Flowbox.Bus.Data.Message     as Message
@@ -38,7 +39,7 @@ noResult f a = f a >> return []
 
 -- FIXME [PM] : Code duplication
 
-process :: HandlerMap IO -> Message -> IO [Message]
+process :: HandlerMap s IO -> Message -> StateT s IO [Message]
 process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
     call mkTopic method = case Proto.messageGet' $ msg ^. Message.message of
         Left err   -> do logger error err
@@ -54,7 +55,7 @@ process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
     respond mkTopic = Message.mk (mkTopic topic)
 
 
-processLifted :: MonadIO m => HandlerMap m -> Message -> m [Message]
+processLifted :: MonadIO m => HandlerMap s m -> Message -> StateT s m [Message]
 processLifted handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
     call mkTopic method = case Proto.messageGet' $ msg ^. Message.message of
         Left err   -> do logger error err
