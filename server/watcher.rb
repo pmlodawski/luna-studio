@@ -31,7 +31,8 @@ class GlobWatcher < EventMachine::FileGlobWatch
         logger.info("Establishing inotify watches on \"#{pathglob}\"")
         @chan = EM::Channel.new
         @pathglob = pathglob
-        Dir[pathglob].each do |file|
+        
+        @inotify_watches = Dir[pathglob].map do |file|
             EM.watch_file(file, Handler, @chan)
         end
 
@@ -50,6 +51,16 @@ class GlobWatcher < EventMachine::FileGlobWatch
     end
 
     def subscribe(&block)
-        @chan.subscribe(block)
+        @sid = @chan.subscribe(block)
+    end
+
+    def uninitialize
+        logger.info("Canceling inotify watches on \"#{@pathglob}\"")
+        @inotify_watches.each do |watch| 
+            watch.stop_watching
+            puts "Szatan"
+            @chan << {:event => "delete", :path => watch.path}
+        end
+        @chan.unsubscribe @sid unless @sid.nil?
     end
 end

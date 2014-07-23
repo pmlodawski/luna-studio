@@ -18,10 +18,14 @@ $.fn.consolize = function() {
 
 		socket.onmessage = function(msg) {
 			var result = JSON.parse(msg.data)
-			if('ghci_output' == result.topic) {
-				terminal.echo(clearOutputFromGHCI(result.data))
+			if('error' == result.topic) {
+				printError(result.data);
+			} else if('ghci_output' == result.topic) {
+				terminal.echo(clearOutputFromGHCI(result.data));
 			} else if('inotify' == result.topic) {
-				printInfo(JSON.stringify(result.data))
+				printInfo(JSON.stringify(result.data));
+			} else {
+				printDebug(msg.data);
 			}
 		}
 	}
@@ -32,6 +36,12 @@ $.fn.consolize = function() {
 	// --- command stuff
 
 	function handleCommand(cmd, term) {
+		var cmd_split = cmd.split(" ");
+		if(cmd_split[0].toLowerCase() == 'wssend') {
+			debugger
+			socketSend(JSON.stringify({topic: cmd_split[1], data: cmd_split[2]}));
+			return;
+		}
 		ghciExecuteCommand(cmd);
 	}
 
@@ -48,8 +58,16 @@ $.fn.consolize = function() {
 		return str
 	}
 
+	function printError(str) {
+		terminal.echo('[[;red;]'+str+']')
+	}
+
 	function printInfo(str) {
 		terminal.echo('[[;purple;]'+str+']')
+	}
+
+	function printDebug(str) {
+		terminal.echo('[[;cyan;]'+str+']')
 	}
 
 	// --- initialize everything
