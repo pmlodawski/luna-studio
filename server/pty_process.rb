@@ -16,8 +16,13 @@ class PtyProcess
         end
 
         def notify_readable
-            data = @io.readpartial(1000)
-            @queue << data.force_encoding('utf-8').encode
+            begin
+                data = @io.readpartial(1000)
+                @queue << data.force_encoding('utf-8').encode
+            rescue
+                logger.info("Smells like dead")
+                self.notify_readable = false
+            end
         end
     end
 

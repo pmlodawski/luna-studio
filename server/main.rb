@@ -15,6 +15,9 @@ $stdout.sync = true
 
 puts "ReactiveServer is starting up ..."
 
+EM.kqueue if EM.kqueue?
+EM.epoll  if EM.epoll?
+
 EM.run do
     @clients = {}
     EM::start_server("127.0.0.1", 8000, HTTPHandler)
