@@ -9,7 +9,6 @@ module Flowbox.ProjectManager.RPC.Handler.Project where
 import qualified Data.Sequence as Sequence
 
 import qualified Flowbox.Batch.Handler.Project                            as BatchP
-import qualified Flowbox.Batch.Process.Map                                as ProcessMap
 import           Flowbox.Batch.Project.Project                            (Project)
 import qualified Flowbox.Batch.Project.Project                            as Project
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project   ()
@@ -77,7 +76,7 @@ open ctxRef request@(Open.Request tpath) = do
 
 modify :: ContextRef -> Modify.Request -> RPC IO Modify.Update
 modify ctxRef request@(Modify.Request tproject) = do
-    projectWithID <- decodeE (tproject, LibManager.empty, ProcessMap.empty) :: RPC IO (Project.ID, Project)
+    projectWithID <- decodeE (tproject, LibManager.empty) :: RPC IO (Project.ID, Project)
     Context.run ctxRef $ BatchP.updateProject projectWithID
     return $ Modify.Update request
 

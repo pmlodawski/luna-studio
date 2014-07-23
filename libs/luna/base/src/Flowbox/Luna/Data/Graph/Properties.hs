@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Luna.Data.Graph.Properties where
 
@@ -17,7 +18,7 @@ import           Flowbox.Prelude
 
 data Properties = Properties { _flags :: Flags
                              , _attrs :: Attributes
-                             } deriving (Show)
+                             } deriving (Show, Read)
 
 makeLenses (''Properties)
 

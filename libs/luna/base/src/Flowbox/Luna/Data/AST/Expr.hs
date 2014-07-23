@@ -65,7 +65,7 @@ data Expr  = NOP          { _id :: ID                                           
            | RefType      { _id :: ID, _typeName  :: String   , _name      :: String                                             }
            | Case         { _id :: ID, _expr      :: Expr     , _match     :: [Expr]                                             }
            | Match        { _id :: ID, _pat       :: Pat      , _body      :: [Expr]                                             }
-           deriving (Show, Eq, Generic)
+           deriving (Show, Eq, Generic, Read)
 
 
 instance QShow Expr
@@ -126,7 +126,7 @@ traverseM fexp ftype fpat flit e = case e of
     Con          {}                                -> pure e
     Cond         id' cond' success' failure'       -> Cond         id'       <$> fexp cond' <*> fexpMap success' <*> (mapM fexpMap) failure'
     Field        id' name' cls' value'             -> Field        id' name' <$> ftype cls' <*> fexpMap value'
-    Function     id' path' name' inputs' output'   
+    Function     id' path' name' inputs' output'
                  body'                             -> Function     id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Lambda       id' inputs' output' body'         -> Lambda       id'             <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Grouped      id' expr'                         -> Grouped      id'       <$> fexp expr'

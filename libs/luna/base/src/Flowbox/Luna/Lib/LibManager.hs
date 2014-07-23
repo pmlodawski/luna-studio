@@ -13,8 +13,8 @@ module Flowbox.Luna.Lib.LibManager (
     loadLibrary,
 ) where
 
-import           Flowbox.Data.Graph                         hiding (Edge, Graph, empty)
-import qualified Flowbox.Data.Graph                         as DG
+import           Flowbox.Data.Graph                         hiding (Edge, empty)
+import qualified Flowbox.Data.Graph                         as Graph
 import           Flowbox.Luna.Lib.Edge                      (Edge)
 import           Flowbox.Luna.Lib.Library                   (Library)
 import qualified Flowbox.Luna.Lib.Library                   as Library
@@ -24,11 +24,11 @@ import           Flowbox.System.UniPath                     (UniPath)
 
 
 
-type LibManager = DG.Graph Library Edge
+type LibManager = Graph Library Edge
 
 
 empty :: LibManager
-empty = DG.empty
+empty = Graph.empty
 
 
 loadLibrary :: UniPath -> LibManager -> IO (LibManager, (Library.ID, Library))

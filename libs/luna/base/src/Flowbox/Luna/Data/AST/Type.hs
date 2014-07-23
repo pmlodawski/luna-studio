@@ -4,16 +4,18 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Luna.Data.AST.Type where
 
-import qualified Data.List as List
-import           GHC.Generics                      
+import qualified Data.List    as List
+import           GHC.Generics
 
-import           Flowbox.Prelude                 hiding (id, drop, Traversal)
-import           Flowbox.Generics.Deriving.QShow   
-import           Flowbox.Luna.Data.AST.Common    (ID)
+import Flowbox.Generics.Deriving.QShow
+import Flowbox.Luna.Data.AST.Common    (ID)
+import Flowbox.Prelude                 hiding (Traversal, drop, id)
 
 data Type = Unknown { _id :: ID                                               }
           | Var     { _id :: ID, _name     :: String                          }
@@ -23,7 +25,7 @@ data Type = Unknown { _id :: ID                                               }
           | Lambda  { _id :: ID, _inputs   :: [Type]   , _output  :: Type     }
           | Con     { _id :: ID, _segments :: [String]                        }
           | App     { _id :: ID, _src      :: Type     , _args    :: [Type]   }
-          deriving (Show, Eq, Generic)
+          deriving (Show, Eq, Generic, Read)
 
 
 instance QShow Type
@@ -67,3 +69,7 @@ lunaShow t = case t of
     --Class   _ name' params' -> name' ++ " " ++ (List.intercalate " " params')
     --Module  _ path'         -> List.intercalate "." path'
     Con     _ segments'     -> List.intercalate "." segments'
+
+
+mkModule :: ID -> [String] -> Type
+mkModule id' modulePath' = Module id' (head modulePath') (init modulePath')

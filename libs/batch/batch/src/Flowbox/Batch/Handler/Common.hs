@@ -16,7 +16,6 @@ import           Text.Show.Pretty
 
 import           Flowbox.Batch.Batch                                       (Batch)
 import qualified Flowbox.Batch.Batch                                       as Batch
-import           Flowbox.Batch.Process.Map                                 (ProcessMap)
 import           Flowbox.Batch.Project.Project                             (Project)
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.ProjectManager                      (ProjectManager)
@@ -101,16 +100,6 @@ setProject :: Project -> Project.ID -> Batch ()
 setProject newProject projectID = do
     pm <- getProjectManager
     setProjectManager (ProjectManager.updateNode (projectID, newProject) pm)
-
-
-getProcessMap :: Project.ID -> Batch ProcessMap
-getProcessMap projectID = view Project.processMap <$> getProject projectID
-
-
-setProcessMap :: ProcessMap -> Project.ID -> Batch ()
-setProcessMap newProcessMap projectID = do
-    project <- getProject projectID
-    setProject (project & Project.processMap .~ newProcessMap) projectID
 
 
 getLibManager :: Project.ID -> Batch LibManager
@@ -266,14 +255,6 @@ projectOp projectID operation = do
     project         <- getProject projectID
     (newProject, r) <- operation project
     setProject newProject projectID
-    return r
-
-
-processMapOp :: Project.ID -> (ProcessMap -> Batch (ProcessMap, r)) -> Batch r
-processMapOp projectID operation = do
-    processMap <- getProcessMap projectID
-    (newProcessMap, r) <- operation processMap
-    setProcessMap newProcessMap projectID
     return r
 
 

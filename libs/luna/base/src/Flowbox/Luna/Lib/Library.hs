@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell    #-}
 
 module Flowbox.Luna.Lib.Library where
 
@@ -22,15 +23,14 @@ data Library = Library { _name        :: String
                        , _path        :: UniPath
                        , _ast         :: Module
                        , _propertyMap :: PropertyMap
-                       } deriving (Show)
+                       } deriving (Show, Read)
 
 makeLenses (''Library)
 
-
 type ID  = Int
 
---FIXME[pm]: moduleName ma zla nazwe bo zawiera path, pozatym warto to rozbic na 2 czesci jezeli jest sens w API
+
 make :: String -> UniPath -> [String] -> Library
-make name' path' moduleName = Library name' path' emptyModule PropertyMap.empty where
-    emptyModule = Module.mk 0 $ Type.Module 1 (head moduleName) (init moduleName)
+make name' path' modulePath = Library name' path' emptyModule PropertyMap.empty where
+    emptyModule = Module.mk 0 $ Type.mkModule 1 modulePath
 

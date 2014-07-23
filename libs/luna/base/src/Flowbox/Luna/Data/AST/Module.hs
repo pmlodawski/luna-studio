@@ -33,7 +33,7 @@ data Module = Module { _id          :: ID
                      , _fields      :: [Expr]
                      , _methods     :: [Expr]
                      , _modules     :: [Module]
-                     } deriving (Show, Generic)
+                     } deriving (Show, Generic, Read)
 
 instance QShow Module
 makeLenses (''Module)

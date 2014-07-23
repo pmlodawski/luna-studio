@@ -26,6 +26,7 @@ Executable interpreter
                     containers,
                     either,
                     errors,
+                    flowbox-batch,
                     flowbox-bus,
                     flowbox-config,
                     flowbox-luna-interpreter,

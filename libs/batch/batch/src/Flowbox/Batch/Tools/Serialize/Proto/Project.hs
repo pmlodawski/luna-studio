@@ -15,7 +15,6 @@ import qualified Data.ByteString.Lazy as ByteString
 import           System.IO
 import qualified Text.ProtocolBuffers as Proto
 
-import qualified Flowbox.Batch.Process.Map                              as ProcessMap
 import           Flowbox.Batch.Project.Project                          (Project)
 import qualified Flowbox.Batch.Project.Project                          as Project
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
@@ -44,7 +43,7 @@ getProject :: Handle -> IO Project
 getProject h = runScript $ do
     bytes                        <- scriptIO $ ByteString.hGetContents h
     (tproject :: Gen.Project, _) <- tryRight $ Proto.messageGet bytes
-    (_ :: Project.ID, project)   <- tryRight $ decode (tproject, LibManager.empty, ProcessMap.empty)
+    (_ :: Project.ID, project)   <- tryRight $ decode (tproject, LibManager.empty)
     return project
 
 

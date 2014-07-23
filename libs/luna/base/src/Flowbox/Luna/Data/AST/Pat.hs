@@ -33,7 +33,7 @@ data Pat = Var             { _id :: ID, _name      :: String                    
          | Typed           { _id :: ID, _pat       :: Pat       , _cls       :: Type  }
          | Wildcard        { _id :: ID                                                }
          | RecWildcard     { _id :: ID                                                }
-         deriving (Show, Eq, Generic)
+         deriving (Show, Eq, Generic, Read)
 
 instance QShow Pat
 makeLenses (''Pat)

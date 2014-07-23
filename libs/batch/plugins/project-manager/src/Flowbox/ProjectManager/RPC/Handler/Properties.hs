@@ -49,7 +49,7 @@ setASTProperties ctxRef request@(SetASTProperties.Request tproperties tnodeID tl
 
 
 getNodeProperties :: ContextRef -> GetNodeProperties.Request -> RPC IO GetNodeProperties.Status
-getNodeProperties ctxRef request@(GetNodeProperties.Request tnodeID tbc tlibID tprojectID) = do
+getNodeProperties ctxRef request@(GetNodeProperties.Request tnodeID _ tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -58,7 +58,7 @@ getNodeProperties ctxRef request@(GetNodeProperties.Request tnodeID tbc tlibID t
 
 
 setNodeProperties :: ContextRef -> SetNodeProperties.Request -> RPC IO SetNodeProperties.Update
-setNodeProperties ctxRef request@(SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID) = do
+setNodeProperties ctxRef request@(SetNodeProperties.Request tproperties tnodeID _ tlibID tprojectID) = do
     properties <- decodeE tproperties
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
