@@ -25,7 +25,7 @@ data PathItem = Node String
               | Var String
               | Up
               | Current
-              | Empty deriving (Eq,Ord,Show)
+              | Empty deriving (Eq, Ord, Show, Read)
 
 type UniPath = [PathItem]
 
