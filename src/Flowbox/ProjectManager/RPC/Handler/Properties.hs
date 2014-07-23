@@ -9,9 +9,8 @@ module Flowbox.ProjectManager.RPC.Handler.Properties where
 import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes                                      ()
-import           Flowbox.Prelude
-import           Flowbox.ProjectManager.Context                                                                (ContextRef)
-import qualified Flowbox.ProjectManager.Context                                                                as Context
+import           Flowbox.Prelude                                                                               hiding (Context)
+import           Flowbox.ProjectManager.Context                                                                (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Request as GetNodeProperties
@@ -29,39 +28,39 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Properties"
 
 
-getASTProperties :: ContextRef -> GetASTProperties.Request -> RPC IO GetASTProperties.Status
-getASTProperties ctxRef request@(GetASTProperties.Request tnodeID tlibID tprojectID) = do
+getASTProperties :: GetASTProperties.Request -> RPC Context IO GetASTProperties.Status
+getASTProperties request@(GetASTProperties.Request tnodeID tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    properties <- Context.run ctxRef $ BatchP.getProperties nodeID libID projectID
+    properties <- BatchP.getProperties nodeID libID projectID
     return $ GetASTProperties.Status request $ encode properties
 
 
-setASTProperties :: ContextRef -> SetASTProperties.Request -> RPC IO SetASTProperties.Update
-setASTProperties ctxRef request@(SetASTProperties.Request tproperties tnodeID tlibID tprojectID) = do
+setASTProperties :: SetASTProperties.Request -> RPC Context IO SetASTProperties.Update
+setASTProperties request@(SetASTProperties.Request tproperties tnodeID tlibID tprojectID) = do
     properties <- decodeE tproperties
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    Context.run ctxRef $ BatchP.setProperties properties nodeID libID projectID
+    BatchP.setProperties properties nodeID libID projectID
     return $ SetASTProperties.Update request
 
 
-getNodeProperties :: ContextRef -> GetNodeProperties.Request -> RPC IO GetNodeProperties.Status
-getNodeProperties ctxRef request@(GetNodeProperties.Request tnodeID _ tlibID tprojectID) = do
+getNodeProperties :: GetNodeProperties.Request -> RPC Context IO GetNodeProperties.Status
+getNodeProperties request@(GetNodeProperties.Request tnodeID _ tlibID tprojectID) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    properties <- Context.run ctxRef $ BatchP.getProperties nodeID libID projectID
+    properties <- BatchP.getProperties nodeID libID projectID
     return $ GetNodeProperties.Status request (encode properties)
 
 
-setNodeProperties :: ContextRef -> SetNodeProperties.Request -> RPC IO SetNodeProperties.Update
-setNodeProperties ctxRef request@(SetNodeProperties.Request tproperties tnodeID _ tlibID tprojectID) = do
+setNodeProperties :: SetNodeProperties.Request -> RPC Context IO SetNodeProperties.Update
+setNodeProperties request@(SetNodeProperties.Request tproperties tnodeID _ tlibID tprojectID) = do
     properties <- decodeE tproperties
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    Context.run ctxRef $ BatchP.setProperties properties nodeID libID projectID
+    BatchP.setProperties properties nodeID libID projectID
     return $ SetNodeProperties.Update request

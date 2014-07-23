@@ -9,9 +9,8 @@ module Flowbox.ProjectManager.RPC.Handler.Library where
 import qualified Flowbox.Batch.Handler.Library                                 as BatchL
 import           Flowbox.Bus.RPC.RPC                                           (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Library         ()
-import           Flowbox.Prelude
-import           Flowbox.ProjectManager.Context                                (ContextRef)
-import qualified Flowbox.ProjectManager.Context                                as Context
+import           Flowbox.Prelude                                               hiding (Context)
+import           Flowbox.ProjectManager.Context                                (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Library.Library                               as Gen
@@ -40,49 +39,49 @@ shrinkLibrary :: Gen.Library -> Gen.Library
 shrinkLibrary library = library { Gen.ast = Nothing, Gen.propertyMap = Nothing}
 
 
-list :: ContextRef -> List.Request -> RPC IO List.Status
-list ctxRef request@(List.Request tprojectID) = do
+list :: List.Request -> RPC Context IO List.Status
+list request@(List.Request tprojectID) = do
     let projectID = decodeP tprojectID
-    libs <- Context.run ctxRef $ BatchL.libraries projectID
+    libs <- BatchL.libraries projectID
     return $ List.Status request (shrinkLibrary <$> encodeList libs)
 
 
-lookup :: ContextRef -> Lookup.Request -> RPC IO Lookup.Status
-lookup ctxRef request@(Lookup.Request tlibID tprojectID) = do
+lookup :: Lookup.Request -> RPC Context IO Lookup.Status
+lookup request@(Lookup.Request tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    library <- Context.run ctxRef $ BatchL.libraryByID libID projectID
+    library <- BatchL.libraryByID libID projectID
     return $ Lookup.Status request (shrinkLibrary $ encode (libID, library))
 
 
-create :: ContextRef -> Create.Request -> RPC IO Create.Update
-create ctxRef request@(Create.Request tname tpath tprojectID) = do
+create :: Create.Request -> RPC Context IO Create.Update
+create request@(Create.Request tname tpath tprojectID) = do
     let projectID = decodeP tprojectID
         name      = decodeP tname
         path      = decodeP tpath
-    newLibrary <- Context.run ctxRef $ BatchL.createLibrary name path projectID
+    newLibrary <- BatchL.createLibrary name path projectID
     return $ Create.Update request (encode newLibrary)
 
 
-load :: ContextRef -> Load.Request -> RPC IO Load.Update
-load ctxRef request@(Load.Request tpath tprojectID) = do
+load :: Load.Request -> RPC Context IO Load.Update
+load request@(Load.Request tpath tprojectID) = do
     let path      = decodeP tpath
         projectID = decodeP tprojectID
-    (newLibID, newLibrary) <- Context.run ctxRef $ BatchL.loadLibrary path projectID
+    (newLibID, newLibrary) <- BatchL.loadLibrary path projectID
     return $ Load.Update request (encode (newLibID, newLibrary))
 
 
-unload :: ContextRef -> Unload.Request -> RPC IO Unload.Update
-unload ctxRef request@(Unload.Request tlibID tprojectID) = do
+unload :: Unload.Request -> RPC Context IO Unload.Update
+unload request@(Unload.Request tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    Context.run ctxRef $ BatchL.unloadLibrary libID projectID
+    BatchL.unloadLibrary libID projectID
     return $ Unload.Update request
 
 
-store :: ContextRef -> Store.Request -> RPC IO Store.Status
-store ctxRef request@(Store.Request tlibID tprojectID) = do
+store :: Store.Request -> RPC Context IO Store.Status
+store request@(Store.Request tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    Context.run ctxRef $ BatchL.storeLibrary libID projectID
+    BatchL.storeLibrary libID projectID
     return $ Store.Status request

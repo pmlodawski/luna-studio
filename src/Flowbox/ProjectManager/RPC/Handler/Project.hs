@@ -15,9 +15,8 @@ import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project   ()
 import           Flowbox.Bus.RPC.RPC                                      (RPC)
 import qualified Flowbox.Luna.Lib.LibManager                              as LibManager
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes ()
-import           Flowbox.Prelude
-import           Flowbox.ProjectManager.Context                           (ContextRef)
-import qualified Flowbox.ProjectManager.Context                           as Context
+import           Flowbox.Prelude                                          hiding (Context)
+import           Flowbox.ProjectManager.Context                           (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Close.Request     as Close
@@ -42,54 +41,53 @@ logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Project"
 
 ------ public api -------------------------------------------------
 
-
-list :: ContextRef -> List.Request -> RPC IO List.Status
-list ctxRef request = do
-    projects <- Context.run ctxRef BatchP.projects
+list :: List.Request -> RPC Context IO List.Status
+list request = do
+    projects <- BatchP.projects
     let tprojects       = map (\a -> encode a ^. _1) projects
         tprojectsVector = Sequence.fromList tprojects
     return $ List.Status request tprojectsVector
 
 
-lookup :: ContextRef -> Lookup.Request -> RPC IO Lookup.Status
-lookup ctxRef request@(Lookup.Request tprojectID) = do
+lookup :: Lookup.Request -> RPC Context IO Lookup.Status
+lookup request@(Lookup.Request tprojectID) = do
     let projectID = decodeP tprojectID
-    project <- Context.run ctxRef $ BatchP.projectByID projectID
+    project <- BatchP.projectByID projectID
     return $ Lookup.Status request $ encode (projectID, project) ^. _1
 
 
-create :: ContextRef -> Create.Request -> RPC IO Create.Update
-create ctxRef request@(Create.Request tname tpath tattributes) = do
+create :: Create.Request -> RPC Context IO Create.Update
+create request@(Create.Request tname tpath tattributes) = do
     let name = decodeP tname
         path = decodeP tpath
         attributes = decodeP tattributes
-    newProject <- Context.run ctxRef $ BatchP.createProject name path attributes
+    newProject <- BatchP.createProject name path attributes
     return $ Create.Update request $ encode newProject ^. _1
 
 
-open :: ContextRef -> Open.Request -> RPC IO Open.Update
-open ctxRef request@(Open.Request tpath) = do
+open :: Open.Request -> RPC Context IO Open.Update
+open request@(Open.Request tpath) = do
     let upath = decodeP tpath
-    (projectID, project) <- Context.run ctxRef $ BatchP.openProject upath
+    (projectID, project) <- BatchP.openProject upath
     return $ Open.Update request $ encode (projectID, project) ^. _1
 
 
-modify :: ContextRef -> Modify.Request -> RPC IO Modify.Update
-modify ctxRef request@(Modify.Request tproject) = do
-    projectWithID <- decodeE (tproject, LibManager.empty) :: RPC IO (Project.ID, Project)
-    Context.run ctxRef $ BatchP.updateProject projectWithID
+modify :: Modify.Request -> RPC Context IO Modify.Update
+modify request@(Modify.Request tproject) = do
+    projectWithID <- decodeE (tproject, LibManager.empty) :: RPC Context IO (Project.ID, Project)
+    BatchP.updateProject projectWithID
     return $ Modify.Update request
 
 
-close :: ContextRef -> Close.Request -> RPC IO Close.Update
-close ctxRef request@(Close.Request tprojectID) = do
+close :: Close.Request -> RPC Context IO Close.Update
+close request@(Close.Request tprojectID) = do
     let projectID = decodeP tprojectID
-    Context.run ctxRef $ BatchP.closeProject projectID
+    BatchP.closeProject projectID
     return $ Close.Update request
 
 
-store :: ContextRef -> Store.Request -> RPC IO Store.Status
-store ctxRef request@(Store.Request tprojectID) = do
+store :: Store.Request -> RPC Context IO Store.Status
+store request@(Store.Request tprojectID) = do
     let projectID = decodeP tprojectID
-    Context.run ctxRef $ BatchP.storeProject projectID
+    BatchP.storeProject projectID
     return $ Store.Status request
