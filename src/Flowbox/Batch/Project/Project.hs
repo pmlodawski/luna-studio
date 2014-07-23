@@ -8,8 +8,6 @@
 
 module Flowbox.Batch.Project.Project where
 
-import           Flowbox.Batch.Process.Map    (ProcessMap)
-import qualified Flowbox.Batch.Process.Map    as ProcessMap
 import           Flowbox.Luna.Data.Attributes (Attributes)
 import qualified Flowbox.Luna.Data.Attributes as Attributes
 import           Flowbox.Luna.Lib.LibManager  (LibManager)
@@ -20,14 +18,12 @@ import qualified Flowbox.System.UniPath       as UniPath
 
 
 
-data Project = Project { _name       :: String
-                       , _path       :: UniPath
-                       , _libPaths   :: [UniPath]
-                       , _libs       :: LibManager
-                       , _attrs      :: Attributes
-
-                       , _processMap :: ProcessMap
-                       } deriving(Show)
+data Project = Project { _name     :: String
+                       , _path     :: UniPath
+                       , _libPaths :: [UniPath]
+                       , _libs     :: LibManager
+                       , _attrs    :: Attributes
+                       } deriving (Show, Read)
 
 makeLenses(''Project)
 
@@ -35,7 +31,7 @@ type ID = Int
 
 
 empty :: Project
-empty = Project "" UniPath.empty [] LibManager.empty Attributes.empty ProcessMap.empty
+empty = Project "" UniPath.empty [] LibManager.empty Attributes.empty
 
 
 make :: String -> UniPath -> Attributes -> Project

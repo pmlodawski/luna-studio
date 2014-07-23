@@ -13,11 +13,8 @@ import qualified System.Process as Process
 
 import           Flowbox.Batch.Batch                        (Batch, gets)
 import qualified Flowbox.Batch.Batch                        as Batch
-import           Flowbox.Batch.Handler.Common               (libManagerOp, projectOp)
+import           Flowbox.Batch.Handler.Common               (libManagerOp)
 import qualified Flowbox.Batch.Handler.Common               as Batch
-import           Flowbox.Batch.Process.Handle               (Handle (Handle))
-import qualified Flowbox.Batch.Process.Map                  as ProcessMap
-import qualified Flowbox.Batch.Process.Process              as Process
 import qualified Flowbox.Batch.Project.Project              as Project
 import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Data.Pass.ASTInfo             as ASTInfo
@@ -97,11 +94,11 @@ buildLibrary libraryID projectID = do
 
 
 -- TODO [PM] : Needs architecture change
-runLibrary ::  Library.ID -> Project.ID -> Batch Process.ID
-runLibrary libraryID projectID = projectOp projectID (\project -> do
+runLibrary ::  Library.ID -> Project.ID -> Batch ()
+runLibrary libraryID projectID = do
+    project <- Batch.getProject projectID
     let projectPath = project ^. Project.path
         libs        = project ^. Project.libs
-        processMap  = project ^. Project.processMap
     library <- LibManager.lab libs libraryID <??> "Wrong libraryID=" ++ show libraryID
     name    <- UniPath.toUnixString <$> UniPath.expand (UniPath.append (library ^. Library.name) projectPath)
     let command = Platform.dependent name (name ++ ".exe") name
@@ -112,11 +109,7 @@ runLibrary libraryID projectID = projectOp projectID (\project -> do
     --let exitMsg = "Program exited with " ++ (show errorCode) ++ " code"
     --loggerIO debug exitMsg
     --return (library, stdOut ++ stdErr ++ "\n" ++ "Program exited with " ++ (show errorCode) ++ " code"))
-    handle <- liftIO $ Process.runCommand command
-    let processID     = ProcessMap.size processMap + 1
-        newProcessMap = ProcessMap.insert processID (Handle handle) processMap
-        newProject    = project & Project.processMap .~ newProcessMap
-    return (newProject, processID))
+    void $ liftIO $ Process.runCommand command
 
 
 interpretLibrary :: Library.ID -> Project.ID -> Batch ()
