@@ -30,4 +30,5 @@ Executable file-manager
                     optparse-applicative,
                     protocol-buffers,
                     text,
+                    transformers,
                     zeromq4-haskell >= 0.4

@@ -9,9 +9,10 @@
 
 module Flowbox.FileManager.RPC.Handler.Handler where
 
+import           Control.Monad.Trans.State
+
 import           Flowbox.Bus.Data.Message                  (Message)
 import           Flowbox.Bus.Data.Topic                    (status, update, (/+))
-import qualified Flowbox.Bus.Data.Topic                    as Topic
 import           Flowbox.Bus.RPC.HandlerMap                (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                as HandlerMap
 import           Flowbox.Bus.RPC.RPC                       (RPC)
@@ -27,7 +28,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.FileManager.RPC.Handler.Handler"
 
 
-handlerMap :: HandlerMap IO
+handlerMap :: HandlerMap () IO
 handlerMap callback = HandlerMap.fromList
     [ ("filesystem.directory.fetch.request" , respond status DirectoryHandler.fetch)
     , ("filesystem.directory.upload.request", respond status DirectoryHandler.upload)
@@ -46,5 +47,5 @@ handlerMap callback = HandlerMap.fromList
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> RPC IO result) -> IO [Message]
+             => String -> (args -> RPC () IO result) -> StateT () IO [Message]
         respond type_ = callback ((/+) type_) . Processor.singleResult
