@@ -23,12 +23,14 @@ import qualified Data.Array.Accelerate      as A
 import           Data.Array.Accelerate.IO
 import           Data.Array.Accelerate.CUDA
 import qualified Data.Vector.Storable       as SV
+
 import           Math.Space.Space
-
-
+import           Data.List.Split            (chunksOf)
+import           Text.Printf
 
 type IOLoadBackend a = FilePath -> IO (Either a (A.Array A.DIM2 RGBA32))
 type IOSaveBackend   = FilePath -> A.Array A.DIM2 RGBA32 -> IO ()
+
 
 testColor :: (RGB (A.Exp Float) -> RGB (A.Exp Float))
           -> FilePath
@@ -49,6 +51,16 @@ testFunction f input output = do
     img <- map4 (fromMatrix A.Wrap) <$> testLoadRGBA' input
     let (r', g', b', a') = img & each %~ (rasterizer (Grid 512 512) . (fmap f) . monosampler)
     testSaveRGBA' output r' g' b' a'
+
+printMat :: forall a . (Elt a, Show a, PrintfArg a) => Matrix2 a -> IO ()
+printMat mat = mapM_ printRow mat2d
+    where computed = compute' run mat
+          mat2d = chunksOf w $ (A.toList computed :: [a])
+          Z :. h :. w = A.arrayShape computed
+          printRow row = do
+              mapM_ (\a -> printf "%6.3f\t" a :: IO ()) row
+              printf "\n"
+
 
 testLoadRGBA :: (Show a, Elt b, IsFloating b) => IOLoadBackend a -> FilePath -> IO (Matrix2 b, Matrix2 b, Matrix2 b, Matrix2 b)
 testLoadRGBA backend filename = do
@@ -80,13 +92,14 @@ saveImageJuicy file matrix = do
     Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8) 
 
 
-testSaveChan :: (Elt a, IsFloating a) => IOSaveBackend -> FilePath -> Matrix2 a -> IO ()
-testSaveChan backend filename pre = backend filename $ compute' run $ M.map rgba32OfFloat output
+testSaveChan :: forall a . (Elt a, IsFloating a) => IOSaveBackend -> FilePath -> Matrix2 a -> IO ()
+testSaveChan backend filename pre = backend filename $ compute' run $ M.map packRGBA32 output
     where output = M.map conv pre
-          conv (clamp' 0 1 -> x) = A.lift (x, x, x, x)
+          conv (A.truncate . (* 255.0) . clamp' 0 1 -> x) = A.lift (x, x, x, 255 :: A.Word8)
 
 testSaveChan' :: (Elt a, IsFloating a) => FilePath -> Matrix2 a -> IO ()
 testSaveChan' = testSaveChan saveImage
+
 
 map4 :: (a -> b) -> (a, a, a, a) -> (b, b, b, b)
 map4 f (a, b, c, d) = (f a, f b, f c, f d)

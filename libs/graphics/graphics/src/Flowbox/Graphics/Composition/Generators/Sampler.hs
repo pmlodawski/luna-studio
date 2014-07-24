@@ -38,7 +38,7 @@ multisampler kernel = convolve msampler kernel
     where fi = fmap A.fromIntegral
           msampler point offset = fi point + subpixel * fi offset 
           Z :. h :. w = A.unlift $ shape kernel
-          subpixel = Point2 (1 / A.fromIntegral (w - 1)) (1 / A.fromIntegral (h - 1))
+          subpixel = Point2 (1 / A.fromIntegral w) (1 / A.fromIntegral h)
 
 nearest :: (Elt e, IsFloating e) => DiscreteGenerator (Exp e) -> Generator (Exp e) (Exp e)
 nearest = transform $ fmap A.floor
