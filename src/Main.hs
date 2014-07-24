@@ -47,7 +47,7 @@ run cmd = case cmd of
     Cmd.Run {} -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         cfg <- Config.load
-        ctx <- Context.mk cfg
-        r <- Server.run (EP.clientFromConfig cfg) $ Handler.handlerMap ctx
+        let ctx = Context.mk cfg
+        r <- Server.run (EP.clientFromConfig cfg) ctx Handler.handlerMap
         print r
 
