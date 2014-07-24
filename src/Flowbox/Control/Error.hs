@@ -62,8 +62,15 @@ action <??&> m = do
         Nothing -> left m
 
 
-assert :: Monad m => Bool -> String -> m ()
-assert condition msg = unless condition $ fail msg
+assertIO :: Monad m => Bool -> String -> m ()
+assertIO condition msg = unless condition $ fail msg
+
+
+assert :: Bool -> a -> Either a ()
+assert condition msg = unless condition $ Left msg
+
+assertE :: Monad m => Bool -> a -> EitherT a m ()
+assertE condition msg = unless condition $ left msg
 
 
 -- FIXME [PM] : find better name
