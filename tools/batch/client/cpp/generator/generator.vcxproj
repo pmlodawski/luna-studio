@@ -74,8 +74,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="generator.cpp" />
-    <ClCompile Include="generated\*.cc" />
-    <ClInclude Include="generated\*.h" />
+    <ClCompile Include="..\generated\*.cc" />
+    <ClInclude Include="..\generated\*.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
