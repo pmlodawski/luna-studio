@@ -44,7 +44,7 @@ logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
 
 add :: Add.Request -> RPC Context IO Add.Update
 add (Add.Request tplugin) = do
-    ctx <- lift $ get
+    ctx <- lift get
     let plugins = Context.plugins ctx
         id      = PluginMap.uniqueID plugins
     plugin <- decodeE tplugin
@@ -54,7 +54,7 @@ add (Add.Request tplugin) = do
 
 remove :: Remove.Request -> RPC Context IO Remove.Update
 remove (Remove.Request tid) = do
-    ctx <- lift $ get
+    ctx <- lift get
     let id      = decodeP tid
         plugins = Context.plugins ctx
     lift $ put $ ctx { Context.plugins = PluginMap.delete id plugins}
@@ -63,7 +63,7 @@ remove (Remove.Request tid) = do
 
 list :: List.Request -> RPC Context IO List.Status
 list List.Request = do
-    ctx <- lift $ get
+    ctx <- lift get
     let plugins = Context.plugins ctx
     pluginInfos <- safeLiftIO $ mapM PluginHandle.info $ PluginMap.elems plugins
     return $ List.Status (encodeList $ zip (PluginMap.keys plugins) pluginInfos)
@@ -72,7 +72,7 @@ list List.Request = do
 -- TODO [PM] : Duplikacja kodu
 lookup :: Lookup.Request -> RPC Context IO Lookup.Status
 lookup (Lookup.Request tid) = do
-    ctx <- lift $ get
+    ctx <- lift get
     let id      = decodeP tid
         plugins = Context.plugins ctx
     pluginHandle <- PluginMap.lookup id plugins <??> "Cannot find plugin with id=" ++ show id
@@ -103,7 +103,7 @@ restart (Restart.Request tid) = do
 
 withPluginHandle :: Plugin.ID -> (PluginHandle -> IO PluginHandle) -> RPC Context IO PluginHandle
 withPluginHandle id operation = do
-    ctx <- lift $ get
+    ctx <- lift get
     let plugins = Context.plugins ctx
     pluginHandle    <- PluginMap.lookup id plugins <??> "Cannot find plugin with id=" ++ show id
     newPluginHandle <- safeLiftIO $ operation pluginHandle
