@@ -5,26 +5,46 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Composition.Generators.Transform where
 
-import Flowbox.Prelude                                    as P
+import Flowbox.Prelude                                    as P hiding (transform)
 import Flowbox.Graphics.Composition.Generators.Structures
 
-import           Math.Coordinate.Cartesian                (Point2(..))
-import           Linear.V2
+import Math.Coordinate.Cartesian (Point2(..))
+import Math.Space.Space
+import Linear.V2
 
 
+
+rotate' :: (Num a, Floating a) => a -> Point2 a -> Point2 a
+rotate' phi (Point2 x y) = Point2 x' y'
+    where x' = cos phi * x - sin phi * y
+          y' = sin phi * x + cos phi * y
 
 rotate :: (Num a, Floating a) => a -> Generator a b -> Generator a b
-rotate phi (Generator gen) = Generator $ \(Point2 x y) -> 
-    let x' = cos phi * x - sin phi * y
-        y' = sin phi * x + cos phi * y
-    in gen (Point2 x' y')
+rotate = transform . rotate'
+
+translate' :: Num a => V2 a -> Point2 a -> Point2 a
+translate' (V2 dx dy) (Point2 x y) = Point2 (x - dx) (y - dy)
 
 translate :: Num a => V2 a -> Generator a b -> Generator a b
-translate (V2 dx dy) (Generator gen) = Generator $ \(Point2 x y) -> gen $ Point2 (x - dx) (y - dy)
+translate = transform . translate'
+
+scale' :: (Num a, Fractional a) => V2 a -> Point2 a -> Point2 a
+scale' (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
 
 scale :: (Num a, Fractional a) => V2 a -> Generator a b -> Generator a b
-scale (V2 sx sy) (Generator gen) = Generator $ \(Point2 x y) -> gen $ Point2 (x / sx) (y / sy)
+scale = transform . scale'
+
+bbox :: (Ord a, Floating a) => a -> Grid a -> Grid a
+bbox theta (fmap (/2) -> Grid gw gh) = Grid gw' gh'
+    where pmax = Point2 (px1 `max` px2 `max` px3 `max` px4) (py1 `max` py2 `max` py3 `max` py4) 
+          pmin = Point2 (px1 `min` px2 `min` px3 `min` px4) (py1 `min` py2 `min` py3 `min` py4) 
+          Point2 gw' gh' = pmax - pmin
+          Point2 px1 py1 = rotate' theta $ Point2 (-gw) (-gh)
+          Point2 px2 py2 = rotate' theta $ Point2 ( gw) (-gh)
+          Point2 px3 py3 = rotate' theta $ Point2 ( gw) ( gh)
+          Point2 px4 py4 = rotate' theta $ Point2 (-gw) ( gh)

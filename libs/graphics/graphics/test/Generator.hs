@@ -16,7 +16,7 @@ import Data.Array.Accelerate.CUDA
 
 import Flowbox.Graphics.Composition.Generators.Constant
 import Flowbox.Graphics.Composition.Generators.Convolution as Conv
-import Flowbox.Graphics.Composition.Generators.Filter hiding (toGenerator)
+import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Gradient
 import Flowbox.Graphics.Composition.Generators.Pipe
 import Flowbox.Graphics.Composition.Generators.Rasterizer
@@ -94,7 +94,42 @@ filters x = do
     let process x = rasterizer (Grid 4096 2304) $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix Clamp x
     testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
+--rotational :: Exp Float -> Matrix2 Float -> IO (DiscreteGenerator (Exp Float))
+rotational phi mat = id `p` Conv.filter 1 edgeKern `p` id $ fromMatrix Clamp mat
+    where size' = Grid 3 (3 :: Exp Int)
+          size = fmap A.fromIntegral size'
+          Grid tx ty = fmap (/ (-2)) size
+          nsize = bbox phi size
+          nsize' = fmap A.round nsize
+          Grid rx ry = fmap (/ (2)) nsize
+
+          flt = scharr
+
+          edgeKern = rasterizer nsize' $ monosampler 
+                                       $ translate (V2 rx ry) 
+                                       $ rotate phi 
+                                       $ translate (V2 tx ty) 
+                                       $ interpolator triangle 
+                                       $ fromMatrix (Constant 0) $ flt
+          p = pipe (Grid 512 512) Clamp
+
+mytest = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"  
+
+    let mat1 = rotational (  0 * pi / 180) r
+    let mat2 = rotational ( 45 * pi / 180) r
+    let mat3 = rotational ( 90 * pi / 180) r
+    let mat4 = rotational (135 * pi / 180) r
+    let mat5 = rotational (180 * pi / 180) r
+    let mat6 = rotational (225 * pi / 180) r
+    let mat7 = rotational (270 * pi / 180) r
+    let mat8 = rotational (315 * pi / 180) r
+    let max8 a b c d e f g h = a `min` b `min` c `min` d `min` e `min` f `min` g `min` h
+
+    let res = rasterizer (Grid 512 512) $ max8 <$> mat1 <*> mat2 <*> mat3 <*> mat4 <*> mat5 <*> mat6 <*> mat7 <*> mat8
+    testSaveChan' "out.bmp" res
+
 main :: IO ()
 main = do
     putStrLn "Gradient test"
-    filters 50
+    filters (90 :: Exp Int)

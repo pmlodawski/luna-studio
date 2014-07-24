@@ -10,7 +10,9 @@
 
 module Flowbox.Graphics.Composition.Generators.Filter where
 
+import Flowbox.Graphics.Composition.Generators.Rasterizer
 import Flowbox.Graphics.Composition.Generators.Structures
+import Flowbox.Graphics.Composition.Generators.Transform
 
 import Flowbox.Prelude       as P hiding ((<*), filter)
 import Flowbox.Math.Matrix   as M
@@ -18,7 +20,7 @@ import Data.Array.Accelerate as A hiding (filter)
 
 import Math.Space.Space
 import Math.Coordinate.Cartesian                (Point2(..))
-
+import Linear.V2
 
 
 -- == Filter datatype ==
@@ -42,11 +44,10 @@ normalize :: (Elt a, IsFloating a) => Matrix2 a -> Matrix2 a
 normalize kern = M.map (/ksum) kern
     where ksum = M.the $ M.sum kern
 
-
 -- == Windowed filters ==
 
 box :: (Elt a, IsFloating a) => Filter a
-box = Filter 1.0 $ \t -> A.cond (t >* -0.5 &&* t <=*  0.5) 1.0 0.0
+box = Filter 0.5 $ \t -> A.cond (t >* -0.5 &&* t <=*  0.5) 1.0 0.0
 
 -- TODO: Find the name
 basic :: (Elt a, IsFloating a) => Filter a
@@ -100,3 +101,23 @@ laplacian cross side (fmap (1+).(2*) -> Grid sizex sizey) = M.generate (A.index2
     in  A.cond (x A.==* sizex `div` 2) 
             (A.cond (y A.==* sizey `div` 2) (-center) cross) 
             (A.cond (y A.==* sizey `div` 2) cross     side)
+
+-- == Constant sized kernels ==
+
+prewitt :: (Elt a, IsFloating a) => Matrix2 a
+prewitt = M.fromList (Z :. 3 :. 3) [ -1, 0, 1
+                                   , -1, 0, 1
+                                   , -1, 0, 1
+                                   ]
+
+sobel :: (Elt a, IsFloating a) => Matrix2 a
+sobel = M.fromList (Z :. 3 :. 3) [ -1, 0, 1
+                                 , -2, 0, 2
+                                 , -1, 0, 1
+                                 ]
+
+scharr :: (Elt a, IsFloating a) => Matrix2 a
+scharr = M.fromList (Z :. 3 :. 3) [  -3, 0, 3
+                                  , -10, 0, 10
+                                  ,  -3, 0, 3
+                                  ]

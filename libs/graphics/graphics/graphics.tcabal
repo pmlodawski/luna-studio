@@ -70,6 +70,7 @@ Executable test_generator
                   flowbox-graphics         ,
                   JuicyPixels              ,
                   lens                     ,
+                  split                    ,
                   vector
 
 Executable test_bezier
@@ -97,6 +98,7 @@ Executable test_bezier
                   flowbox-utils            ,
                   flowbox-graphics         ,
                   lens                     ,
+                  split                    ,
                   cubicbezier
 
   if flag(cuda)
@@ -126,6 +128,7 @@ Executable test_merge
                   flowbox-graphics         ,
                   JuicyPixels              ,
                   lens                     ,
+                  split                    ,
                   vector
 
   if flag(cuda)
@@ -156,6 +159,7 @@ Executable test_color
                   JuicyPixels              ,
                   lens                     ,
                   QuickCheck               ,
+                  split                    ,
                   vector
 
   if flag(cuda)
