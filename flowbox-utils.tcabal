@@ -35,6 +35,7 @@ Library
                   hslogger,
                   lens,
                   MissingH,
+                  mmorph,
                   monad-loops,
                   mtl,
                   optparse-applicative,
