@@ -5,9 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Image.Color (
     module Flowbox.Graphics.Image.Color,
+    U.Range(..),
     U.bias,
     U.clamp',
     U.clamp,
@@ -16,6 +18,8 @@ module Flowbox.Graphics.Image.Color (
     U.invert,
     U.mix
 ) where
+
+import qualified Data.Array.Accelerate as A
 
 import           Flowbox.Graphics.Color
 import qualified Flowbox.Graphics.Utils as U
@@ -70,3 +74,36 @@ colorCorrect saturation' contrast' gamma' gain' offset' pix =
 --           but operating on HSV looks unalike to Nuke.
 saturate :: (Elt t, IsFloating t, ColorConvert a HSL, ColorConvert HSL a) => Exp t -> a (Exp t) -> a (Exp t)
 saturate saturation pix = toHSL pix & s %~ (*saturation) & convertColor
+
+hsvTool :: forall a t. (Elt t, IsFloating t, ColorConvert a HSV, ColorConvert HSV a,
+                        A.Lift Exp (a (Exp t)), A.Unlift Exp (a (Exp t)), Elt (A.Plain (a (Exp t))))
+        => U.Range (Exp t) -> Exp t
+        -> U.Range (Exp t) -> Exp t
+        -> U.Range (Exp t) -> Exp t
+        -> a (Exp t)
+        -> a (Exp t)
+hsvTool hueRange hueRotation saturationRange saturationAdjustment brightnessRange brightnessAdjustment pix =
+    A.unlift (conditionsFulfilled A.? (
+        A.lift (hsv & h %~ rotation hueRotation
+            & s %~ (+ saturationAdjustment)
+            & v %~ (+ brightnessAdjustment)
+            & convertColor :: a (Exp t))
+        ,
+        A.lift pix))
+    where hsv = toHSV pix
+          rotation r hue = A.cond (hue' A.<* 0) (hue' + 1)
+                         $ A.cond (hue' A.>* 1) (hue' - 1)
+                         $ hue'
+              where hue' = hue + r / 360
+
+          conditionsFulfilled = (hsv ^. h) `inRange` hueRange
+                                A.&&*
+                                (hsv ^. s) `inRange` saturationRange
+                                A.&&*
+                                (hsv ^. v) `inRange` brightnessRange
+
+inRange :: (IsScalar t, Elt t) => Exp t -> U.Range (Exp t) -> Exp Bool
+inRange val (U.Range low high) = val A.>=* low A.&&* val A.<=* high
+
+conditionally :: (Elt a, IsScalar a) => U.Range (Exp a) -> (Exp a -> Exp a) -> Exp a -> Exp a
+conditionally (U.Range low high) f val = val A.>=* low A.&&* val A.<=* high A.? (f val, val)
