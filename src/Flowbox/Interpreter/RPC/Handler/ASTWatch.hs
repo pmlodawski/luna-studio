@@ -14,7 +14,7 @@ import qualified Flowbox.Batch.Project.Project                                  
 import           Flowbox.Batch.Project.ProjectManager                                                         (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                                                         as ProjectManager
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
-import           Flowbox.Control.Error
+import           Flowbox.Control.Error                                                                        hiding (err)
 import           Flowbox.Control.Monad.Morph
 import           Flowbox.Interpreter.Proto.CallPoint                                                          ()
 import           Flowbox.Interpreter.Proto.CallPointPath                                                      ()
@@ -58,6 +58,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Create.Update   
 import qualified Generated.Proto.ProjectManager.Project.Library.Load.Update                                   as LibraryLoad
 import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Update                                 as LibraryUnload
 import qualified Generated.Proto.ProjectManager.Project.Open.Update                                           as ProjectOpen
+import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request                               as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status                                as ProjectManagerSyncGet
 
 
@@ -85,6 +86,15 @@ projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata) = do
     (projectManager :: ProjectManager) <- hoistEither $ Read.readEither $ decodeP tdata
     Batch.setProjectManager projectManager
     syncLibManager
+
+
+syncIfNeeded :: RPC Context SessionT () -> RPC Context SessionT (Maybe ProjectManagerSyncGet.Request)
+syncIfNeeded rpc = do
+    result <- lift $ runEitherT rpc
+    case result of
+        Right () -> return Nothing
+        Left err -> do logger error $ "Not syncing : " ++ err
+                       return $ Just ProjectManagerSyncGet.Request
 
 
 projectCreate :: ProjectCreate.Update -> RPC Context SessionT ()
