@@ -1,7 +1,90 @@
 @color-black: #000;
 @color-white: #fff;
+@color-gray-dark: #666;
+@color-red: #f00;
 
 body {
 	background-color: @color-black;
 	color: @color-white;
+	font-family: Arial;
+	font-size: 14px;
+}
+
+.wghci-terminals {
+	display: block;
+	position: fixed;
+	left: 0; right: 400px;
+	top: 0; bottom: 0;
+	overflow: auto;
+}
+
+.wghci-controls {
+	display: block;
+	position: fixed;
+	right: 0;
+	top: 0; bottom: 50%;
+	width: 400px;
+	background-color: rgba(255,255,255,0.1);
+
+	overflow: auto;
+
+	.wghci-controls-list {
+		display: block;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+
+		& > li {
+			display: block;
+			padding: 5px;
+			border-bottom: 1px dashed @color-gray-dark;
+
+			&:first-child {
+				border-top: 1px dashed @color-gray-dark;
+			}
+		}
+	}
+}
+
+.control-slider {
+	.control-slider-number {
+		width: 60px;
+	}
+}
+
+.wghci-snippets {
+	display: block;
+	position: fixed;
+	right: 0;
+	top: 50%; bottom: 0;
+	width: 400px;
+	background-color: rgba(255,255,255,0.1);
+	border-top: 1px solid @color-white;
+
+	overflow: auto;
+
+	.wghci-snippet-list {
+		display: block;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+
+		& > li {
+			display: block;
+			padding: 5px;
+			border-bottom: 1px dashed @color-gray-dark;
+
+			&:first-child {
+				border-top: 1px dashed @color-gray-dark;
+			}
+
+			&.error {
+				border: 1px solid @color-red;
+			}
+
+			.snippet-errors {
+				color: @color-red;
+			}
+		}
+	}
 }

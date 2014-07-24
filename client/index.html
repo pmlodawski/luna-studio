@@ -9,13 +9,51 @@
 
 	<script type="text/javascript" src="js/jquery-2.1.1.js"></script>
 	<script type="text/javascript" src="js/jquery.terminal-0.8.8.js"></script>
+	<script type="text/javascript" src="js/knockout-3.1.0.js"></script>
 	<script type="text/javascript" src="js/app.js"></script>
 </head>
 
 <body>
 
-<div class="terminal-container">
-	<div id="terminal" class="terminal"></div>
+<div class="wghci-terminals" data-bind="foreach: terminals">
+	<div data-bind="ghciTerminal: {handler: $root.terminalHandler, obj: $data}"></div>
+	<!-- <div id="terminal" class="terminal"></div> -->
+</div>
+
+<div class="wghci-controls">
+	<div>
+		<select data-bind="options: controlTypes, value: selectedControl"></select>
+		<button type="button" data-bind="click: appendControl">add</button>
+	</div>
+	<ul class="wghci-controls-list" data-bind="foreach: controls">
+		<li>
+			<div data-bind="if: 'slider' == type" class="control-slider">
+				<input type="text" data-bind="value: name">
+				<input type="number" data-bind="value: value" class="control-slider-number">
+				<input type="number" data-bind="value: step" class="control-slider-number">
+				<br>
+				<input type="number" data-bind="value: min" class="control-slider-number">
+				<input type="range" data-bind="value: value, attr: {max: max, min: min, step: step}">
+				<input type="number" data-bind="value: max" class="control-slider-number">
+			</div>
+		</li>
+	</ul>
+</div>
+<div class="wghci-snippets">
+	<div>
+		<button type="button" data-bind="click: appendSnippet">add snippet</button>
+	</div>
+	<ul class="wghci-snippet-list" data-bind="foreach: snippets">
+		<li data-bind="css: { error: runFailure() }">
+			<!-- <span data-bind="text: name"></span><br> -->
+			<button type="button" data-bind="click: $root.snippetRebind">rebind</button>
+			<br>
+			<textarea data-bind="value: code"></textarea>
+			<ul data-bind="foreach: errors" class="snippet-errors">
+				<li data-bind="text: $data"></li>
+			</ul>
+		</li>
+	</ul>
 </div>
 
 </body>
