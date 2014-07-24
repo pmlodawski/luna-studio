@@ -9,6 +9,8 @@
 
 module Flowbox.FileManager.RPC.Handler.Handler where
 
+import Control.Monad.Trans.State
+
 import           Flowbox.Bus.Data.Message                  (Message)
 import           Flowbox.Bus.Data.Topic                    (Topic, status, update, (/+))
 import           Flowbox.Bus.RPC.HandlerMap                (HandlerMap)
@@ -28,24 +30,24 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.FileManager.Handler"
 
 
-handlerMap :: Context -> HandlerMap IO
-handlerMap ctx callback = HandlerMap.fromList
-    [ ("filesystem.directory.fetch.request" , respond status $ DirectoryHandler.fetch  ctx)
-    , ("filesystem.directory.upload.request", respond status $ DirectoryHandler.upload ctx)
-    , ("filesystem.directory.exists.request", respond update $ DirectoryHandler.exists ctx)
-    , ("filesystem.directory.create.request", respond update $ DirectoryHandler.create ctx)
-    , ("filesystem.directory.list.request"  , respond status $ DirectoryHandler.list   ctx)
-    , ("filesystem.directory.remove.request", respond update $ DirectoryHandler.remove ctx)
-    , ("filesystem.directory.copy.request"  , respond update $ DirectoryHandler.copy   ctx)
-    , ("filesystem.directory.move.request"  , respond update $ DirectoryHandler.move   ctx)
-    , ("filesystem.file.fetch.request" , respond status $ FileHandler.fetch  ctx)
-    , ("filesystem.file.upload.request", respond status $ FileHandler.upload ctx)
-    , ("filesystem.file.exists.request", respond update $ FileHandler.exists ctx)
-    , ("filesystem.file.remove.request", respond update $ FileHandler.remove ctx)
-    , ("filesystem.file.copy.request"  , respond update $ FileHandler.copy   ctx)
-    , ("filesystem.file.move.request"  , respond update $ FileHandler.move   ctx)
+handlerMap :: HandlerMap Context IO
+handlerMap callback = HandlerMap.fromList
+    [ ("filesystem.directory.fetch.request" , respond status $ DirectoryHandler.fetch )
+    , ("filesystem.directory.upload.request", respond status $ DirectoryHandler.upload)
+    , ("filesystem.directory.exists.request", respond update $ DirectoryHandler.exists)
+    , ("filesystem.directory.create.request", respond update $ DirectoryHandler.create)
+    , ("filesystem.directory.list.request"  , respond status $ DirectoryHandler.list  )
+    , ("filesystem.directory.remove.request", respond update $ DirectoryHandler.remove)
+    , ("filesystem.directory.copy.request"  , respond update $ DirectoryHandler.copy  )
+    , ("filesystem.directory.move.request"  , respond update $ DirectoryHandler.move  )
+    , ("filesystem.file.fetch.request" , respond status $ FileHandler.fetch )
+    , ("filesystem.file.upload.request", respond status $ FileHandler.upload)
+    , ("filesystem.file.exists.request", respond update $ FileHandler.exists)
+    , ("filesystem.file.remove.request", respond update $ FileHandler.remove)
+    , ("filesystem.file.copy.request"  , respond update $ FileHandler.copy  )
+    , ("filesystem.file.move.request"  , respond update $ FileHandler.move  )
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> RPC IO result) -> IO [Message]
+             => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
         respond type_ = callback ((/+) type_) . Processor.singleResult

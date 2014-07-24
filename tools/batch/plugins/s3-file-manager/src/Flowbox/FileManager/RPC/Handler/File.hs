@@ -35,45 +35,45 @@ loggerIO = getLoggerIO "Flowbox.FileManager.RPC.Handler.File"
 ------ public api -------------------------------------------------
 
 
-upload :: Context -> Upload.Request -> RPC IO Upload.Status
-upload ctx (Upload.Request tpath) = do
+upload :: Upload.Request -> RPC Context IO Upload.Status
+upload (Upload.Request tpath) = do
     let path = decodeP tpath
-    Context.run ctx $ File.upload "." path
+    Context.run $ File.upload "." path
     return $ Upload.Status tpath
 
 
-fetch :: Context -> Fetch.Request -> RPC IO Fetch.Status
-fetch ctx (Fetch.Request tpath) = do
+fetch :: Fetch.Request -> RPC Context IO Fetch.Status
+fetch (Fetch.Request tpath) = do
     let path = decodeP tpath
-    Context.run ctx $ File.fetch "." path
+    Context.run $ File.fetch "." path
     return $ Fetch.Status tpath
 
 
-exists :: Context -> Exists.Request -> RPC IO Exists.Status
-exists ctx (Exists.Request tpath) = do
+exists :: Exists.Request -> RPC Context IO Exists.Status
+exists (Exists.Request tpath) = do
     let path = decodeP tpath
-    e <- Context.run ctx $ File.exists path
+    e <- Context.run $ File.exists path
     return $ Exists.Status e tpath
 
 
-remove :: Context -> Remove.Request -> RPC IO Remove.Update
-remove ctx (Remove.Request tpath) = do
+remove :: Remove.Request -> RPC Context IO Remove.Update
+remove (Remove.Request tpath) = do
     let path = decodeP tpath
-    Context.run ctx $ File.remove path
+    Context.run $ File.remove path
     return $ Remove.Update tpath
 
 
-copy :: Context -> Copy.Request -> RPC IO Copy.Update
-copy ctx (Copy.Request tsrc tdst) = do
+copy :: Copy.Request -> RPC Context IO Copy.Update
+copy (Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    Context.run ctx $ File.copy src dst
+    Context.run $ File.copy src dst
     return $ Copy.Update tsrc tdst
 
 
-move :: Context -> Move.Request -> RPC IO Move.Update
-move ctx (Move.Request tsrc tdst) = do
+move :: Move.Request -> RPC Context IO Move.Update
+move (Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    Context.run ctx $ File.rename src dst
+    Context.run $ File.rename src dst
     return $ Move.Update tsrc tdst
