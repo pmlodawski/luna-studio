@@ -82,10 +82,10 @@ addFunction newFunction bcParent libID projectID = astFocusOp bcParent libID pro
 
 remove :: Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 remove bc libID projectID = astOp libID projectID (\ast propertyMap -> do
-    focus <- Zipper.focusBreadcrumbs' bc ast
+    focus <- hoistEither $ Zipper.focusBreadcrumbs' bc ast
     ids   <- EitherT $ ExtractIDs.run $ Zipper.getFocus focus
     let newPropertyMap = foldr PropertyMap.delete propertyMap $ IntSet.toList ids
-    newAst <- Zipper.close $ Zipper.defocusDrop focus
+        newAst         = Zipper.close $ Zipper.defocusDrop focus
     return ((newAst, newPropertyMap), ()))
 
 

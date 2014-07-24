@@ -11,6 +11,7 @@ module Flowbox.Batch.Handler.Common where
 import           Control.Exception  (IOException)
 import qualified Control.Exception  as Exception
 import           Control.Monad.RWS
+import           Data.Int           (Int32)
 import qualified System.Environment as Environment
 import           Text.Show.Pretty
 
@@ -82,12 +83,25 @@ interpretLibrary libraryID projectID = do
     liftIO $ Interpreter.runSource cfg imports code "main"
 
 
+increaseUpdateNo :: Batch ()
+increaseUpdateNo = modify (Batch.updateNo %~ (+1))
+
+
+getUpdateNo :: Batch Int32
+getUpdateNo = gets (view Batch.updateNo)
+
+
+setUpdateNo :: Int32 -> Batch ()
+setUpdateNo updateNo = modify (set Batch.updateNo updateNo)
+
+
 getProjectManager :: Batch ProjectManager
 getProjectManager = gets (view Batch.projectManager)
 
 
 setProjectManager :: ProjectManager -> Batch ()
-setProjectManager projectManager = modify (set Batch.projectManager projectManager)
+setProjectManager projectManager =
+    increaseUpdateNo >> modify (set Batch.projectManager projectManager)
 
 
 getProject :: Project.ID -> Batch Project
@@ -149,14 +163,14 @@ setAST newModule libraryID projectID = do
 getFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Focus
 getFocus bc libraryID projectID = do
     m <- getAST libraryID projectID
-    Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc m
+    hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc m
 
 
 setFocus :: Focus -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setFocus newFocus bc libraryID projectID = do
     m      <- getAST libraryID projectID
-    zipper <- Zipper.focusBreadcrumbs' bc m
-    newM   <- Zipper.modify (const newFocus) zipper >>= Zipper.close
+    zipper <- hoistEither $ Zipper.focusBreadcrumbs' bc m
+    let newM = Zipper.close $ Zipper.modify (const newFocus) zipper
     setAST newM libraryID projectID
 
 

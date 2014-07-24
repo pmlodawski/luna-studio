@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.ProjectManager.RPC.Handler.NodeDefault where
 
+import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
 import qualified Flowbox.Batch.Handler.NodeDefault                                                             as BatchND
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                                           ()
@@ -28,7 +29,7 @@ logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.NodeDefault"
 
 
 get :: NodeDefaultGet.Request -> RPC Context IO NodeDefaultGet.Status
-get request@(NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
+get request@(NodeDefaultGet.Request tnodeID tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
@@ -38,7 +39,7 @@ get request@(NodeDefaultGet.Request tnodeID tbc tlibID tprojectID) = do
 
 
 set :: NodeDefaultSet.Request -> RPC Context IO NodeDefaultSet.Update
-set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
+set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort
         value     = decodeP tvalue
@@ -46,15 +47,17 @@ set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectI
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchND.setNodeDefault dstPort value nodeID bc libID projectID
-    return $ NodeDefaultSet.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ NodeDefaultSet.Update request updateNo
 
 
 remove :: NodeDefaultRemove.Request -> RPC Context IO NodeDefaultRemove.Update
-remove request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID) = do
+remove request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let dstPort   = decodeListP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchND.removeNodeDefault dstPort nodeID bc libID projectID
-    return $ NodeDefaultRemove.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ NodeDefaultRemove.Update request updateNo

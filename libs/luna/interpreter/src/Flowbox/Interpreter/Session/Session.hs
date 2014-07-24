@@ -123,7 +123,7 @@ getLibrary libraryID = do
 getFunction :: DefPoint -> Session Expr
 getFunction (DefPoint libraryID bc) = do
     ast <- view Library.ast <$> getLibrary libraryID
-    focus <- Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
+    focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
     Focus.getFunction focus <??> "Target is not a function"
 
 

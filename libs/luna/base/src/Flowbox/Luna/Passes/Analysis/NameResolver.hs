@@ -53,7 +53,7 @@ run = (Pass.run_ (Pass.Info "NameResolver") Pass.NoState) .:: resolve
 resolve :: String -> Breadcrumbs -> Library.ID -> LibManager -> NRPass [(Library.ID, Breadcrumbs)]
 resolve name bc libID libManager = do
     library <- LibManager.lab libManager libID <??> "NameResolver: Cannot find library with id=" ++ show libID
-    zipper  <- Zipper.focusCrumb' (head bc) $ library ^. Library.ast
+    zipper  <- hoistEither $ Zipper.focusCrumb' (head bc) $ library ^. Library.ast
     imports <- getImports zipper $ tail bc
     let elements = splitOn "." name
         possiblePaths = elements
@@ -62,7 +62,7 @@ resolve name bc libID libManager = do
     return $ List.concat $ map (flip searchLibManager libManager) possiblePaths
 
 getImports :: Zipper -> Breadcrumbs -> NRPass [Expr]
-getImports z@(Focus.ModuleFocus m, _) (h:t) = do newZ <- Zipper.focusCrumb h z
+getImports z@(Focus.ModuleFocus m, _) (h:t) = do newZ <- hoistEither $ Zipper.focusCrumb h z
                                                  imports <- getImports newZ t
                                                  pure $ (m ^. Module.imports) ++ imports
 getImports _                           _    = pure []

@@ -8,6 +8,7 @@ module Flowbox.ProjectManager.RPC.Handler.Project where
 
 import qualified Data.Sequence as Sequence
 
+import qualified Flowbox.Batch.Handler.Common                             as Batch
 import qualified Flowbox.Batch.Handler.Project                            as BatchP
 import           Flowbox.Batch.Project.Project                            (Project)
 import qualified Flowbox.Batch.Project.Project                            as Project
@@ -62,28 +63,32 @@ create request@(Create.Request tname tpath tattributes) = do
         path = decodeP tpath
         attributes = decodeP tattributes
     newProject <- BatchP.createProject name path attributes
-    return $ Create.Update request $ encode newProject ^. _1
+    updateNo <- Batch.getUpdateNo
+    return $ Create.Update request (encode newProject ^. _1) updateNo
 
 
 open :: Open.Request -> RPC Context IO Open.Update
 open request@(Open.Request tpath) = do
     let upath = decodeP tpath
     (projectID, project) <- BatchP.openProject upath
-    return $ Open.Update request $ encode (projectID, project) ^. _1
+    updateNo <- Batch.getUpdateNo
+    return $ Open.Update request (encode (projectID, project) ^. _1) updateNo
 
 
 modify :: Modify.Request -> RPC Context IO Modify.Update
 modify request@(Modify.Request tproject) = do
     projectWithID <- decodeE (tproject, LibManager.empty) :: RPC Context IO (Project.ID, Project)
     BatchP.updateProject projectWithID
-    return $ Modify.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ Modify.Update request updateNo
 
 
 close :: Close.Request -> RPC Context IO Close.Update
 close request@(Close.Request tprojectID) = do
     let projectID = decodeP tprojectID
     BatchP.closeProject projectID
-    return $ Close.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ Close.Update request updateNo
 
 
 store :: Store.Request -> RPC Context IO Store.Status

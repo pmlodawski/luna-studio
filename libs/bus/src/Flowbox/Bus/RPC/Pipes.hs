@@ -8,7 +8,7 @@
 
 module Flowbox.Bus.RPC.Pipes where
 
-import           Pipes            (lift, (>->))
+import           Pipes            ((>->))
 import qualified Pipes
 import qualified Pipes.Concurrent as Pipes
 
