@@ -7,6 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Flowbox.ProjectManager.RPC.Handler.Graph where
 
+import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                                          ()
@@ -65,7 +66,8 @@ nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID _) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     newNodeID <- BatchG.addNode node bc libID projectID
-    return $ NodeAdd.Update request (encode (newNodeID, node))
+    updateNo <- Batch.getUpdateNo
+    return $ NodeAdd.Update request (encode (newNodeID, node)) updateNo
 
 
 nodeModify :: NodeModify.Request -> RPC Context IO NodeModify.Update
@@ -75,7 +77,8 @@ nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     newNodeID <- BatchG.updateNode (nodeID, node) bc libID projectID
-    return $ NodeModify.Update request (encode (newNodeID, node))
+    updateNo <- Batch.getUpdateNo
+    return $ NodeModify.Update request (encode (newNodeID, node)) updateNo
 
 
 nodeModifyInPlace :: NodeModifyInPlace.Request -> RPC Context IO NodeModifyInPlace.Update
@@ -85,7 +88,8 @@ nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchG.updateNodeInPlace nodeWithId bc libID projectID
-    return $ NodeModifyInPlace.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ NodeModifyInPlace.Update request updateNo
 
 
 nodeRemove :: NodeRemove.Request -> RPC Context IO NodeRemove.Update
@@ -95,7 +99,8 @@ nodeRemove request@(NodeRemove.Request tnodeID tbc tlibID tprojectID _) = do
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchG.removeNode nodeID bc libID projectID
-    return $ NodeRemove.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ NodeRemove.Update request updateNo
 
 
 connect :: Connect.Request -> RPC Context IO Connect.Update
@@ -108,7 +113,8 @@ connect request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tli
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchG.connect srcNodeID srcPort dstNodeID dstPort bc libID projectID
-    return $ Connect.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ Connect.Update request updateNo
 
 
 disconnect :: Disconnect.Request -> RPC Context IO Disconnect.Update
@@ -121,4 +127,5 @@ disconnect request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort t
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchG.disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID
-    return $ Disconnect.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ Disconnect.Update request updateNo

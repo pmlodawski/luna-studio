@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.ProjectManager.RPC.Handler.Properties where
 
+import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
 import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes                                      ()
@@ -44,11 +45,12 @@ setASTProperties request@(SetASTProperties.Request tproperties tnodeID tlibID tp
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchP.setProperties properties nodeID libID projectID
-    return $ SetASTProperties.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ SetASTProperties.Update request updateNo
 
 
 getNodeProperties :: GetNodeProperties.Request -> RPC Context IO GetNodeProperties.Status
-getNodeProperties request@(GetNodeProperties.Request tnodeID _ tlibID tprojectID) = do
+getNodeProperties request@(GetNodeProperties.Request tnodeID _ tlibID tprojectID _) = do
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -57,10 +59,11 @@ getNodeProperties request@(GetNodeProperties.Request tnodeID _ tlibID tprojectID
 
 
 setNodeProperties :: SetNodeProperties.Request -> RPC Context IO SetNodeProperties.Update
-setNodeProperties request@(SetNodeProperties.Request tproperties tnodeID _ tlibID tprojectID) = do
+setNodeProperties request@(SetNodeProperties.Request tproperties tnodeID _ tlibID tprojectID _) = do
     properties <- decodeE tproperties
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchP.setProperties properties nodeID libID projectID
-    return $ SetNodeProperties.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ SetNodeProperties.Update request updateNo
