@@ -7,8 +7,6 @@
 
 module Flowbox.Interpreter.RPC.Handler.Interpreter where
 
-import Control.Monad.Trans.Class (lift)
-
 import           Flowbox.Bus.RPC.RPC                                               (RPC)
 import qualified Flowbox.Data.SetForest                                            as SetForest
 import           Flowbox.Interpreter.Proto.CallPoint                               ()
@@ -18,7 +16,8 @@ import qualified Flowbox.Interpreter.Session.AST.WatchPoint                     
 import qualified Flowbox.Interpreter.Session.Cache.Invalidate                      as Invalidate
 import qualified Flowbox.Interpreter.Session.Data.CallPoint                        as CallPoint
 import           Flowbox.Interpreter.Session.SessionT                              (SessionT (SessionT))
-import           Flowbox.Prelude
+import           Flowbox.Prelude                                                   hiding (Context)
+import           Flowbox.ProjectManager.Context                                    (Context)
 import           Flowbox.System.Log.Logger                                         hiding (error)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Interpreter.Interpreter.Invalidate.Call.Request   as InvalidateCall
@@ -42,14 +41,14 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.Interpreter"
 
 
-invalidateCall :: InvalidateCall.Request -> RPC () SessionT InvalidateCall.Update
+invalidateCall :: InvalidateCall.Request -> RPC Context SessionT InvalidateCall.Update
 invalidateCall request@(InvalidateCall.Request tcallPointPath) = do
     callPointPath <- decodeE tcallPointPath
     lift2 $ SessionT $ Invalidate.invalidate callPointPath
     return $ InvalidateCall.Update request
 
 
-invalidateDef :: InvalidateDef.Request -> RPC () SessionT InvalidateDef.Update
+invalidateDef :: InvalidateDef.Request -> RPC Context SessionT InvalidateDef.Update
 invalidateDef request@(InvalidateDef.Request tlibraryID tdefID) = do
     let libraryID = decodeP tlibraryID
         defID     = decodeP tdefID
@@ -57,34 +56,34 @@ invalidateDef request@(InvalidateDef.Request tlibraryID tdefID) = do
     return $ InvalidateDef.Update request
 
 
-invalidateNode :: InvalidateNode.Request -> RPC () SessionT InvalidateNode.Update
+invalidateNode :: InvalidateNode.Request -> RPC Context SessionT InvalidateNode.Update
 invalidateNode request@(InvalidateNode.Request tcallPoint) = do
     callPoint <- decodeE tcallPoint
     lift2 $ SessionT $ Invalidate.invalidateNode (callPoint ^. CallPoint.libraryID) (callPoint ^. CallPoint.nodeID)
     return $ InvalidateNode.Update request
 
 
-run :: Run.Request -> RPC () SessionT Run.Update
+run :: Run.Request -> RPC Context SessionT Run.Update
 run request = do
     lift2 $ SessionT Executor.processMain
     return $ Run.Update request
 
 
-watchPointAdd :: WatchPointAdd.Request -> RPC () SessionT WatchPointAdd.Update
+watchPointAdd :: WatchPointAdd.Request -> RPC Context SessionT WatchPointAdd.Update
 watchPointAdd request@(WatchPointAdd.Request tcallPointPath) = do
     callPointPath <- decodeE tcallPointPath
     lift2 $ SessionT $ WatchPoint.add callPointPath
     return $ WatchPointAdd.Update request
 
 
-watchPointRemove :: WatchPointRemove.Request -> RPC () SessionT WatchPointRemove.Update
+watchPointRemove :: WatchPointRemove.Request -> RPC Context SessionT WatchPointRemove.Update
 watchPointRemove request@(WatchPointRemove.Request tcallPointPath) = do
     callPointPath <- decodeE tcallPointPath
     lift2 $ SessionT $ WatchPoint.delete callPointPath
     return $ WatchPointRemove.Update request
 
 
-watchPointList :: WatchPointList.Request -> RPC () SessionT WatchPointList.Status
+watchPointList :: WatchPointList.Request -> RPC Context SessionT WatchPointList.Status
 watchPointList request = do
     list <- lift2 $ SessionT $ SetForest.toList <$> WatchPoint.all
     return $ WatchPointList.Status request $ encodeList list

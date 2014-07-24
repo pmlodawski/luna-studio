@@ -17,6 +17,7 @@ import qualified Flowbox.Interpreter.Version             as Version
 import           Flowbox.Options.Applicative             hiding (info)
 import qualified Flowbox.Options.Applicative             as Opt
 import           Flowbox.Prelude
+import qualified Flowbox.ProjectManager.Context          as Context
 import           Flowbox.System.Log.Logger
 
 
@@ -50,8 +51,9 @@ run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run {}  -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
-        busConfig <- EP.clientFromConfig <$> Config.load
-
+        cfg       <- Config.load
+        let busConfig = EP.clientFromConfig cfg
+            ctx       = Context.mk cfg
         logger info "Starting rpc server"
-        Pipes.run busConfig Handler.handlerMap >>= Handler.run >>= eitherToM
+        Pipes.run busConfig Handler.handlerMap >>= Handler.run ctx >>= eitherToM
 

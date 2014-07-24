@@ -12,6 +12,7 @@ import Flowbox.Interpreter.Session.Session (Session)
 import Flowbox.Prelude
 
 
+
 newtype SessionT a = SessionT { runSessionT :: Session a}
 
 
@@ -23,3 +24,6 @@ instance Monad SessionT where
 instance MonadIO SessionT where
     liftIO a = SessionT $ liftIO a
 
+
+instance Functor SessionT where
+    fmap f = SessionT . fmap f . runSessionT
