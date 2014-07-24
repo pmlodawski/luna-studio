@@ -12,6 +12,7 @@ $.fn.consolize = function(commandParser) {
 
 		socket.onopen = function() {
 			console.debug('socket open', arguments);
+			self.socketSend(JSON.stringify({topic: 'spawn_shell', data: 'ghci'}));
 		}
 
 		socket.onclose = function() {
@@ -37,7 +38,6 @@ $.fn.consolize = function(commandParser) {
 	function handleCommand(cmd, term) {
 		var cmd_split = cmd.split(" ");
 		if(cmd_split[0].toLowerCase() == 'wssend') {
-			debugger
 			self.socketSend(JSON.stringify({topic: cmd_split[1], data: cmd_split[2]}));
 			return;
 		}
