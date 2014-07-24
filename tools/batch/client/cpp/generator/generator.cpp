@@ -1,10 +1,10 @@
 #include <fstream>
 
-#include "generated/server-api.pb.h"
-#include "generated/project-manager.pb.h"
-#include "generated/file-manager.pb.h"
-#include "generated/parser.pb.h"
-#include "generated/plugin-manager.pb.h"
+//#include "../generated/server-api.pb.h"
+#include "../generated/project-manager.pb.h"
+#include "../generated/file-manager.pb.h"
+#include "../generated/parser.pb.h"
+#include "../generated/plugin-manager.pb.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -13,10 +13,9 @@
 #pragma comment(lib, "libprotobuf.lib")
 #endif
 
-
-using namespace generated::proto::batch;
+using namespace generated::proto::type;
+//using namespace generated::proto::batch;
 using namespace google::protobuf;
-
 
 void formatOutput(std::ostream &out, std::string contents)
 {
@@ -580,7 +579,7 @@ std::string extToClsCovnersions()
 	std::string ret;
 
 	std::vector<std::string> toHandle = { "Expr", "Pat", "Type" };
-	auto d = AST::descriptor();
+	auto d = generated::proto::projectManager::Project::descriptor();
 	auto f = d->file();
 	for(int i = 0; i < f->dependency_count(); i++)
 	{
@@ -602,6 +601,7 @@ std::string extToClsCovnersions()
 
 					auto hlp = clsGetterMethod;
 
+					std::cout << "\t\t" << enumVal->name() << std::endl;
 					boost::replace_all(hlp, "%fname%", fname);
 					boost::replace_all(hlp, "%msg%", msg->name());
 					boost::replace_all(hlp, "%ext%", enumVal->name());
@@ -707,6 +707,7 @@ void generate(const std::string &outputFile)
 
 void generateDeserializers()
 {
+	std::cout << "Generating deserializers..." << std::endl;
 	static const std::string header = R"(
 #pragma once 
 
@@ -786,6 +787,7 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 
 void generateDispatcher()
 {
+	std::cout << "Generating dispatcher..." << std::endl;
 	std::string source = R"(
 #include "MessageDispatcher.h"
 #include "../bus/BusLibrary.h"
