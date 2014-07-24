@@ -21,7 +21,7 @@ import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
 import           Flowbox.AWS.Tag                   (Tag)
 import qualified Flowbox.AWS.Tag                   as Tag
 import qualified Flowbox.AWS.User.User             as User
-import           Flowbox.Control.Error             (assert)
+import           Flowbox.Control.Error             (assertIO)
 import           Flowbox.Prelude                   hiding (filter)
 
 
@@ -69,7 +69,7 @@ startTimeTag startTime = (startTimeTagKey, Tag.pack $ show startTime)
 
 tag :: EC2Resource m => [Tag] -> [Instance.ID] -> EC2 m ()
 tag tags instanceIDs =
-    EC2.createTags instanceIDs tags >>= (`assert` "Failed to create tag")
+    EC2.createTags instanceIDs tags >>= (`assertIO` "Failed to create tag")
 
 
 userFilter :: User.Name -> [Types.Filter]

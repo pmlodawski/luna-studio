@@ -14,6 +14,7 @@ module Flowbox.Batch.Batch (
 
 import Control.Monad.State        as X
 import Control.Monad.Trans.Either as X
+import Data.Int                   (Int32)
 
 import           Flowbox.Batch.Project.ProjectManager (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
@@ -28,6 +29,7 @@ type Batch a = (Functor m, MonadIO m) => EitherT Error (StateT BatchEnv m) a
 
 data BatchEnv = BatchEnv { _config         :: Config
                          , _projectManager :: ProjectManager
+                         , _updateNo       :: Int32
                          } deriving (Show)
 
 
@@ -38,7 +40,7 @@ runBatch :: BatchEnv -> Batch a -> IO (Either Error a)
 runBatch env batch = fst <$> runStateT (runEitherT batch) env
 
 make :: Config -> BatchEnv
-make config' = BatchEnv config' ProjectManager.empty
+make config' = BatchEnv config' ProjectManager.empty 0
 
 
 attributeKey :: String

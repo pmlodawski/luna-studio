@@ -22,11 +22,14 @@ import           Flowbox.Luna.Data.AST.Zipper.Focus      (Focus (ModuleFocus, Cl
 import           Flowbox.Prelude                         hiding (drop, id, mod)
 
 
+
 type Zipper = (Focus, FocusPath)
 
+type Error = String
 
-mk :: (Applicative m, Monad m) => Module -> m Zipper
-mk rootmod = return (ModuleFocus rootmod, [])
+
+mk :: Module -> Zipper
+mk rootmod = (ModuleFocus rootmod, [])
 
 
 defocus :: Zipper -> Zipper
@@ -47,82 +50,79 @@ defocusDrop zipper@(_, [])   = zipper
 defocusDrop (_, parent:path) = (parent, path)
 
 
-modify :: (Applicative m, Monad m) => (Focus -> Focus) -> Zipper -> m Zipper
-modify f (env, path) = return (f env, path)
+modify :: (Focus -> Focus) -> Zipper -> Zipper
+modify f (env, path) = (f env, path)
 
 
-close :: (Applicative m, Monad m) => Zipper -> m Module
-close (env, []) = return mod where ModuleFocus mod = env
+close :: Zipper -> Module
+close (env, []) = mod where ModuleFocus mod = env
 close zipper    = close $ defocus zipper
 
 
-focusClass :: (Applicative m, Monad m) => String -> Zipper -> m Zipper
+focusClass :: String -> Zipper -> Either Error Zipper
 focusClass name zipper@(env, _) = case env of
     ModuleFocus mod -> focusListElem Module.classes classComp
                        ClassFocus ModuleFocus mod zipper
     ClassFocus  cls -> focusListElem Expr.classes classComp
                        ClassFocus ClassFocus  cls zipper
-    _               -> fail $ "Cannot focus on " ++ (show name)
+    _               -> Left $ "Cannot focus on " ++ (show name)
     where classComp f = f ^. (Expr.cls . Type.name) == name
 
 
-focusFunction :: (Applicative m, Monad m) => String -> [String] -> Zipper -> m Zipper
+focusFunction :: String -> [String] -> Zipper -> Either Error Zipper
 focusFunction name path zipper@(env, _) = case env of
     ModuleFocus mod -> focusListElem Module.methods funComp
                        FunctionFocus ModuleFocus mod zipper
     ClassFocus  cls -> focusListElem Expr.methods funComp
                        FunctionFocus ClassFocus cls zipper
-    _               -> fail $ "Cannot focus on " ++ (show name)
+    _               -> Left $ "Cannot focus on " ++ (show name)
     where funComp f = f ^. Expr.name == name && f ^. Expr.path == path
 
 
-focusModule :: (Applicative m, Monad m) => String -> Zipper -> m Zipper
+focusModule :: String -> Zipper -> Either Error Zipper
 focusModule name zipper@(env, _) = case env of
     ModuleFocus mod -> focusListElem Module.modules modComp
                        ModuleFocus ModuleFocus mod zipper
-    _               -> fail $ "Cannot focus on " ++ (show name)
+    _               -> Left $ "Cannot focus on " ++ (show name)
     where modComp f = f ^. (Module.cls . Type.name) == name
 
 
-focusCrumb :: (Applicative m, Monad m) => Crumb -> Zipper -> m Zipper
+focusCrumb :: Crumb -> Zipper -> Either Error Zipper
 focusCrumb c = case c of
     Crumb.ClassCrumb    name      -> focusClass    name
     Crumb.FunctionCrumb name path -> focusFunction name path
     Crumb.ModuleCrumb   name      -> focusModule   name
 
 
-focusBreadcrumbs :: (Applicative m, Monad m) => Breadcrumbs -> Zipper -> m Zipper
+focusBreadcrumbs :: Breadcrumbs -> Zipper -> Either Error Zipper
 focusBreadcrumbs bc zipper = case bc of
     []  -> return zipper
     h:t -> focusCrumb h zipper >>= focusBreadcrumbs t
 
 
-focusModule' :: (Applicative m, Monad m) => String -> Module -> m Zipper
+focusModule' :: String -> Module -> Either Error Zipper
 focusModule' name m = do
     assert (m ^. Module.cls . Type.name == name) $ "Cannot focus on " ++ (show name)
-    mk m
+    return $ mk m
 
 
-focusCrumb' :: (Applicative m, Monad m) => Crumb -> Module -> m Zipper
+focusCrumb' :: Crumb -> Module -> Either Error Zipper
 focusCrumb' c m = case c of
     Crumb.ModuleCrumb name -> focusModule' name m
-    _                      -> fail $ "Cannot focus on " ++ (show c)
+    _                      -> Left $ "Cannot focus on " ++ (show c)
 
 
-focusBreadcrumbs' :: (Applicative m, Monad m) => Breadcrumbs -> Module -> m Zipper
+focusBreadcrumbs' :: Breadcrumbs -> Module -> Either Error Zipper
 focusBreadcrumbs' bc m = case bc of
     h:t -> focusCrumb' h m >>= focusBreadcrumbs t
-    _   -> fail $ "Cannot focus on " ++ (show bc)
+    _   -> Left $ "Cannot focus on " ++ (show bc)
 
 
 getFocus :: Zipper -> Focus
 getFocus = fst
 
---f = (\f -> f ^. (Expr.cls . Type.name) == name)
---focusListElem Module.classes (Expr.cls . Type.name)  ClassFocus ModuleFocus mod name zipper
 
-
-focusListElem :: (Applicative m, Monad m) => Traversal' a [b] -> (b -> Bool) -> (b -> Focus) -> (a -> Focus) -> a -> Zipper -> m Zipper
+focusListElem :: Traversal' a [b] -> (b -> Bool) -> (b -> Focus) -> (a -> Focus) -> a -> Zipper -> Either Error Zipper
 focusListElem flens match elemFocus crumbFocus el (_, path) = do
     let funcs    = el ^. flens
         mfunc    = find match funcs
@@ -130,5 +130,5 @@ focusListElem flens match elemFocus crumbFocus el (_, path) = do
         newelem  = el & flens .~ newfuncs
     func <- case mfunc of
                 Just func -> return func
-                Nothing   -> fail $ "Cannot find element in AST."
+                Nothing   -> Left $ "Cannot find element in AST."
     return $ (elemFocus func, (crumbFocus newelem) : path)

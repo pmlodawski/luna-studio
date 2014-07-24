@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.ProjectManager.RPC.Handler.Library where
 
+import qualified Flowbox.Batch.Handler.Common                                  as Batch
 import qualified Flowbox.Batch.Handler.Library                                 as BatchL
 import           Flowbox.Bus.RPC.RPC                                           (RPC)
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Library         ()
@@ -60,7 +61,8 @@ create request@(Create.Request tname tpath tprojectID) = do
         name      = decodeP tname
         path      = decodeP tpath
     newLibrary <- BatchL.createLibrary name path projectID
-    return $ Create.Update request (encode newLibrary)
+    updateNo <- Batch.getUpdateNo
+    return $ Create.Update request (encode newLibrary) updateNo
 
 
 load :: Load.Request -> RPC Context IO Load.Update
@@ -68,7 +70,8 @@ load request@(Load.Request tpath tprojectID) = do
     let path      = decodeP tpath
         projectID = decodeP tprojectID
     (newLibID, newLibrary) <- BatchL.loadLibrary path projectID
-    return $ Load.Update request (encode (newLibID, newLibrary))
+    updateNo <- Batch.getUpdateNo
+    return $ Load.Update request (encode (newLibID, newLibrary)) updateNo
 
 
 unload :: Unload.Request -> RPC Context IO Unload.Update
@@ -76,7 +79,8 @@ unload request@(Unload.Request tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchL.unloadLibrary libID projectID
-    return $ Unload.Update request
+    updateNo <- Batch.getUpdateNo
+    return $ Unload.Update request updateNo
 
 
 store :: Store.Request -> RPC Context IO Store.Status

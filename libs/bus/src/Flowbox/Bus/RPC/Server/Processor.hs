@@ -9,9 +9,10 @@
 
 module Flowbox.Bus.RPC.Server.Processor where
 
-import Control.Monad             (liftM)
-import Control.Monad.IO.Class    (MonadIO)
-import Control.Monad.Trans.State
+import           Control.Monad             (liftM)
+import           Control.Monad.IO.Class    (MonadIO)
+import           Control.Monad.Trans.State
+import qualified Data.Maybe                as Maybe
 
 import           Flowbox.Bus.Data.Message     (Message)
 import qualified Flowbox.Bus.Data.Message     as Message
@@ -25,6 +26,7 @@ import qualified Flowbox.Text.ProtocolBuffers as Proto
 import           Generated.Proto.Rpc.Response (Response)
 
 
+
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Bus.RPC.Server.Processor"
 
@@ -35,6 +37,10 @@ singleResult f a = liftM mkList $ f a
 
 noResult :: MonadIO m => (a -> m ()) -> a -> m [Response]
 noResult f a = f a >> return []
+
+
+optResult :: MonadIO m => (a -> m (Maybe b)) -> a -> m [b]
+optResult f a = liftM Maybe.maybeToList $ f a
 
 
 -- FIXME [PM] : Code duplication

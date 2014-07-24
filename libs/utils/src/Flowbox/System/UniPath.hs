@@ -109,22 +109,22 @@ toPathItem snode = case snode of
 
 
 normalise :: UniPath -> UniPath
-normalise path = case reverse (normalise_r (reverse path) 0) of
+normalise path = case reverse (normaliseR (reverse path) 0) of
         [] -> [Current]
         p  -> p
 
 
-normalise_r :: UniPath -> Int -> UniPath
-normalise_r path undo = case path of
+normaliseR :: UniPath -> Int -> UniPath
+normaliseR path undo = case path of
         [] -> replicate undo Up
         x:xs -> case x of
                 root@(Root _) -> [root]
-                Up            -> normalise_r xs (undo+1)
-                Current       -> normalise_r xs undo
-                Empty         -> normalise_r xs undo
+                Up            -> normaliseR xs (undo+1)
+                Current       -> normaliseR xs undo
+                Empty         -> normaliseR xs undo
                 _             -> if undo>0 then
-                                         normalise_r xs (undo-1)
-                                     else x:normalise_r xs undo
+                                         normaliseR xs (undo-1)
+                                     else x:normaliseR xs undo
 
 
 fileName :: UniPath -> String

@@ -25,4 +25,5 @@ logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Sync"
 syncGet :: SyncGet.Request -> RPC Context IO SyncGet.Status
 syncGet request = do
     projectManager <- Batch.getProjectManager
-    return $ SyncGet.Status request $ encodeP $ show projectManager
+    updateNo <- Batch.getUpdateNo
+    return $ SyncGet.Status request (encodeP $ show projectManager) updateNo

@@ -47,6 +47,7 @@ message Project {
         message Update {
             required Request request = 1;
             required generated.proto.project.Project project = 2;
+            required int32 updateNo = 3;
         }
     }
     message Open {
@@ -56,6 +57,7 @@ message Project {
         message Update {
             required Request request = 1;
             required generated.proto.project.Project project = 2;
+            required int32 updateNo = 3;
         }
     }
     message Modify {
@@ -64,6 +66,7 @@ message Project {
         }
         message Update {
             required Request request = 1;
+            required int32 updateNo = 2;
         }
     }
     message Close {
@@ -72,6 +75,7 @@ message Project {
         }
         message Update {
             required Request request = 1;
+            required int32 updateNo = 2;
         }
     }
     message Store {
@@ -112,6 +116,7 @@ message Project {
             message Update {
                 required Request request = 1;
                 required generated.proto.library.Library library = 2;
+                required int32 updateNo = 3;
             }
         }
         message Load {
@@ -122,6 +127,7 @@ message Project {
             message Update {
                 required Request request = 1;
                 required generated.proto.library.Library library = 2;
+                required int32 updateNo = 3;
             }
         }
         message Unload {
@@ -131,6 +137,7 @@ message Project {
             }
             message Update {
                 required Request request = 1;
+                required int32 updateNo = 2;
             }
         }
         message Store {
@@ -170,6 +177,7 @@ message Project {
                         required Request request = 1;
                         required generated.proto.module.Module module = 2;
                         required generated.proto.crumb.Breadcrumbs bc = 3;
+                        required int32 updateNo = 4;
                     }
                 }
                 message Modify {
@@ -183,6 +191,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                     message Imports {
@@ -195,6 +204,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                     message Fields {
@@ -207,6 +217,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                 }
@@ -224,6 +235,7 @@ message Project {
                         required Request request = 1;
                         required generated.proto.expr.Expr data_      = 2;
                         required generated.proto.crumb.Breadcrumbs bc = 3;
+                        required int32 updateNo = 4;
                     }
                 }
                 message Modify {
@@ -237,6 +249,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                     message Cons {
@@ -249,6 +262,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                     message Classes {
@@ -261,6 +275,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                     message Methods {
@@ -273,6 +288,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
 
@@ -291,6 +307,7 @@ message Project {
                         required Request request = 1;
                         required generated.proto.expr.Expr function   = 2;
                         required generated.proto.crumb.Breadcrumbs bc = 3;
+                        required int32 updateNo = 4;
                     }
                 }
                 message Modify {
@@ -304,6 +321,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                     message Path {
@@ -316,6 +334,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                     message Inputs {
@@ -328,6 +347,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                     message Output {
@@ -340,6 +360,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                 }
@@ -381,6 +402,7 @@ message Project {
                             message Update {
                                 required Request request = 1;
                                 required generated.proto.graph.Node node = 2;
+                                required int32 updateNo = 3;
                             }
                         }
                         message Modify {
@@ -394,6 +416,7 @@ message Project {
                             message Update {
                                 required Request request = 1;
                                 required generated.proto.graph.Node node = 2;
+                                required int32 updateNo = 3;
                             }
                         }
                         message ModifyInPlace {
@@ -406,6 +429,7 @@ message Project {
                             }
                             message Update {
                                 required Request request = 1;
+                                required int32 updateNo = 2;
                             }
                         }
                         message Remove {
@@ -418,6 +442,7 @@ message Project {
                             }
                             message Update {
                                 required Request request = 1;
+                                required int32 updateNo = 2;
                             }
                         }
                         message Default {
@@ -427,6 +452,7 @@ message Project {
                                     required generated.proto.crumb.Breadcrumbs bc = 2;
                                     required int32 libraryID = 3;
                                     required int32 projectID = 4;
+                                    required int32 _astID    = 5;
                                 }
                                 message Status {
                                     required Request request = 1;
@@ -441,9 +467,11 @@ message Project {
                                     required generated.proto.crumb.Breadcrumbs bc = 4;
                                     required int32 libraryID = 5;
                                     required int32 projectID = 6;
+                                    required int32 _astID    = 7;
                                 }
                                 message Update {
                                     required Request request = 1;
+                                    required int32 updateNo = 2;
                                 }
                             }
                             message Remove {
@@ -453,9 +481,11 @@ message Project {
                                     required generated.proto.crumb.Breadcrumbs bc = 3;
                                     required int32 libraryID = 4;
                                     required int32 projectID = 5;
+                                    required int32 _astID    = 6;
                                 }
                                 message Update {
                                     required Request request = 1;
+                                    required int32 updateNo = 2;
                                 }
                             }
                         }
@@ -466,6 +496,7 @@ message Project {
                                     required generated.proto.crumb.Breadcrumbs bc = 2;
                                     required int32 libraryID = 3;
                                     required int32 projectID = 4;
+                                    required int32 _astID    = 5;
                                 }
                                 message Status {
                                     required Request request = 1;
@@ -479,9 +510,11 @@ message Project {
                                     required generated.proto.crumb.Breadcrumbs bc = 3;
                                     required int32 libraryID = 4;
                                     required int32 projectID = 5;
+                                    required int32 _astID    = 6;
                                 }
                                 message Update {
                                     required Request request = 1;
+                                    required int32 updateNo = 2;
                                 }
                             }
                         }
@@ -499,6 +532,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                     message Disconnect {
@@ -514,6 +548,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 updateNo = 2;
                         }
                     }
                 }
@@ -527,6 +562,7 @@ message Project {
                 }
                 message Update {
                     required Request request = 1;
+                    required int32 updateNo = 2;
                 }
             }
             message Resolve {
@@ -563,6 +599,7 @@ message Project {
                     }
                     message Update {
                         required Request request = 1;
+                        required int32 updateNo = 2;
                     }
                 }
             }
@@ -577,6 +614,7 @@ message ProjectManager {
             message Status {
                 required Request request = 1;
                 required string data = 2;
+                required int32 updateNo = 3;
             }
         }
     }
