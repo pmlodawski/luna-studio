@@ -33,6 +33,7 @@ Executable interpreter
                     flowbox-project-manager,
                     flowbox-utils,
                     MissingH,
+                    mmorph,
                     mtl,
                     optparse-applicative,
                     pipes,
