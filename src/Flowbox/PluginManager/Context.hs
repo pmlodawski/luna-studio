@@ -6,9 +6,6 @@
 ---------------------------------------------------------------------------
 module Flowbox.PluginManager.Context where
 
-import           Data.IORef (IORef)
-import qualified Data.IORef as IORef
-
 import           Flowbox.Config.Config               (Config)
 import           Flowbox.PluginManager.Plugin.Handle (PluginHandle)
 import           Flowbox.PluginManager.Plugin.Map    (PluginMap)
