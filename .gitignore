@@ -34,3 +34,5 @@ build/
 .rvmrc
 server/.bundle/
 server/vendor/
+server/Gemfile.lock
+
