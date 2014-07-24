@@ -1,3 +1,8 @@
+String.prototype.trimChars = function(chars) {
+	var regexp = new RegExp('^['+chars+']+|['+chars+']+$', 'gm');
+	return this.replace(regexp, '');
+}
+
 $.fn.consolize = function(commandParser) {
 	var self     = this,
 		terminal = self.terminal(handleCommand),
@@ -12,7 +17,8 @@ $.fn.consolize = function(commandParser) {
 
 		socket.onopen = function() {
 			console.debug('socket open', arguments);
-			self.socketSend(JSON.stringify({topic: 'spawn_shell', data: 'ghci'}));
+			self.socketSend({topic: 'spawn_shell', data: 'cd ../projects && bash'});
+			// self.shellExecuteCommand('cd ../projects');
 		}
 
 		socket.onclose = function() {
@@ -26,7 +32,12 @@ $.fn.consolize = function(commandParser) {
 			} else if('shell_output' == result.topic) {
 				self.print(clearOutputFromGHCI(result.data));
 			} else if('inotify' == result.topic) {
-				self.printInfo(JSON.stringify(result.data));
+				var data = result.data,
+					regexpImg = /.+\.(bmp|jpe?g|gif|png)$/i;
+				self.printInfo(JSON.stringify(data));
+				if(regexpImg.test(data.path)) {
+
+				}
 			} else {
 				self.printDebug(msg.data);
 			}
@@ -37,8 +48,11 @@ $.fn.consolize = function(commandParser) {
 
 	function handleCommand(cmd, term) {
 		var cmd_split = cmd.split(" ");
-		if(cmd_split[0].toLowerCase() == 'wssend') {
-			self.socketSend(JSON.stringify({topic: cmd_split[1], data: cmd_split[2]}));
+		if(cmd_split[0] == 'wssend') {
+			self.socketSend({topic: cmd_split[1], data: cmd_split[2]});
+			return;
+		} else if(cmd_split[0] == 'watch') {
+			self.socketSend({topic: 'inotify_subscribe', data: 'projects/' + cmd_split[1]})
 			return;
 		}
 		self.shellExecuteCommand(cmd);
@@ -47,6 +61,8 @@ $.fn.consolize = function(commandParser) {
 	// --- utils
 
 	function clearOutputFromGHCI(str) {
+		console.debug('- - - - - clearing - - - - -')
+		// console.debug(str)
 		var filterOut = ['\u001b[?1h\u001b=','\u001b[?1l\u001b>']
 		for(var i in filterOut)
 			str = str.replace(filterOut[i],'')
@@ -55,25 +71,25 @@ $.fn.consolize = function(commandParser) {
 
 	$.extend(self, {
 		socketSend: function(data) {
-			socket.send(data);
+			socket.send(JSON.stringify(data));
 		},
 		shellExecuteCommand: function(cmd) {
 			cmd = commandParser(cmd);
 			if(cmd)
-				self.socketSend(JSON.stringify({topic:'shell_input', data: cmd+'\n'}));
+				self.socketSend({topic:'shell_input', data: cmd+'\n'});
 		},
 		print: function(str) {
-			terminal.echo(str)
+			terminal.echo(str);
+			self.parent().scrollTop(self.outerHeight());
 		},
 		printError: function(str) {
-			// terminal.echo('[[;red;]'+str+']')
-			terminal.error(str)
+			self.print('[[;red;]'+str+']')
 		},
 		printInfo: function(str) {
-			terminal.echo('[[;purple;]'+str+']')
+			self.print('[[;purple;]'+str+']')
 		},
 		printDebug: function(str) {
-			terminal.echo('[[;cyan;]'+str+']')
+			self.print('[[;cyan;]'+str+']')
 		}
 	})
 
@@ -196,6 +212,32 @@ function WebGHCI() {
 		});
 	}
 
+	// files
+	app.files = ko.observableArray([]);
+	app.fileCounter = 0;
+	app.appendFile = function(path, type) {
+		var segments = path.trimChars('/').split('/'),
+			lastFile = app,
+			lastPath = '',
+			remaining = 0,
+			tmp = null;
+
+		while((remaining = segments.length) > 0) {
+			tmp = segments.shift();
+			var exists = ko.utils.arrayFirst(lastFile.files(), function(file) {
+				return file.name() == tmp;
+			});
+			if(exists) {
+				tmp = exists;
+			} else {
+				tmp = remaining > 1 ? new FileNode(lastPath + '/' + tmp, 'dir') : new FileNode(path, type);
+				lastFile.files.push(tmp);
+			}
+			lastFile = tmp;
+			lastPath = lastFile.path();
+		}
+	}
+
 	// objects
 	function ControlSlider() {
 		var self = this;
@@ -220,16 +262,32 @@ function WebGHCI() {
 
 		self.run = function() {
 			self.runFailure(self.hasErrors())
-			// console.debug('running: ',self.name(), self.hasErrors(), self.runFailure())
 			app.terminalEach(function(term) {term.shellExecuteCommand(self.code())})
 		}
+	}
+
+	function FileNode(path, type) {
+		var self = this;
+
+		self.path = ko.observable(path ? path : '');
+		self.name = ko.computed(function() {
+			var result = self.path().match(/([^\/]+)[\/]?$/);
+			return result ? result[1] : result;
+		});
+		self.ext = ko.computed(function() {
+			var result = self.path().match(/(([\/])|([\.]([^\.\/]+)))$/);
+			return result ? result[0] : result;
+		});
+		self.type = ko.observable(type);
+
+		self.files = ko.observableArray([]);
 	}
 
 	// init
 	app.appendTerminal();
 }
-
+var datApp = null;
 $(document).ready(function() {
 	// $('#terminal').consolize()
-	ko.applyBindings(new WebGHCI());
+	ko.applyBindings(datApp = new WebGHCI());
 })
