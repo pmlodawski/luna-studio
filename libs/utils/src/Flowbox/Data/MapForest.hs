@@ -31,7 +31,7 @@ empty = Map.empty
 
 
 insert :: Ord k => [k] -> v -> MapForest k v -> MapForest k v
-insert k v forest = insert' k (Just v) forest
+insert k v = insert' k (Just v)
 
 
 toList :: MapForest k v -> [([k], v)]
@@ -92,8 +92,7 @@ fixEntry (k, level) = let
 
 fixForest :: Ord k => MapForest k v -> MapForest k v
 fixForest = Map.fromList
-          . Maybe.catMaybes
-          . map fixEntry
+          . Maybe.mapMaybe fixEntry
           . Map.toList
 
 

@@ -81,8 +81,8 @@ instance (FShow' a, Constructor c) => FShow' (M1 C c a) where
               tupleName _           = False
 
 instance (Selector s, FShow' a) => FShow' (M1 S s a) where
-  fshowsPrec' t n f s@(M1 x) | selName s == "" = --showParen (n > appPrec)
-                                                 (fshowsPrec' t n f x)
+  fshowsPrec' t n f s@(M1 x) | selName s == "" = --showParen (n > appPrec) $
+                                                 fshowsPrec' t n f x
                              | otherwise       = showString (selName s)
                                                . showString " = "
                                                . fshowsPrec' t 0 f x
