@@ -393,8 +393,9 @@ struct MethodWrapper
 				assert(argsFields.at(i + 1)->name() == "bc");
 				assert(argsFields.at(i + 2)->name() == "libraryID");
 				assert(argsFields.at(i + 3)->name() == "projectID");
-				collapsedArgs.resize(4, i);
-				i += 3;
+				assert(argsFields.at(i + 4)->name() == "_astID");
+				collapsedArgs.resize(5, i);
+				i += 4;
 				argsTxt.push_back("const NodeId &nodeID");
 				collapsedName = "nodeID";
 			}
@@ -402,13 +403,24 @@ struct MethodWrapper
 			{
 				assert(argsFields.at(i + 1)->name() == "libraryID");
 				assert(argsFields.at(i + 2)->name() == "projectID");
-				collapsedArgs.resize(3, i);
-				i += 2;
 
 				if(arg->name() == "bc")
+				{
+					assert(argsFields.at(i + 3)->name() == "_astID");
+					collapsedArgs.resize(4, i);
+					i += 3;
 					collapsedName = "defID";
+				}
 				else
+				{
+					assert(argsFields.at(i + 3)->name() == "_astID");
+					collapsedArgs.resize(4, i);
+					i += 3;
+// 					collapsedArgs.resize(3, i);
+// 					i += 2;
 					collapsedName = "parent";
+				}
+
 				argsTxt.push_back("const DefinitionId &" + collapsedName);
 			}
 			else if(arg->name() == "libraryID")
