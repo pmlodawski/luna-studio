@@ -22,7 +22,7 @@ $.fn.consolize = function(commandParser) {
 			var result = JSON.parse(msg.data)
 			if('error' == result.topic) {
 				self.printError(result.data);
-			} else if('ghci_output' == result.topic) {
+			} else if('shell_output' == result.topic) {
 				self.print(clearOutputFromGHCI(result.data));
 			} else if('inotify' == result.topic) {
 				self.printInfo(JSON.stringify(result.data));
@@ -41,7 +41,7 @@ $.fn.consolize = function(commandParser) {
 			self.socketSend(JSON.stringify({topic: cmd_split[1], data: cmd_split[2]}));
 			return;
 		}
-		self.ghciExecuteCommand(cmd);
+		self.shellExecuteCommand(cmd);
 	}
 
 	// --- utils
@@ -57,10 +57,10 @@ $.fn.consolize = function(commandParser) {
 		socketSend: function(data) {
 			socket.send(data);
 		},
-		ghciExecuteCommand: function(cmd) {
+		shellExecuteCommand: function(cmd) {
 			cmd = commandParser(cmd);
 			if(cmd)
-				self.socketSend(JSON.stringify({topic:'ghci_input', data: cmd+'\n'}));
+				self.socketSend(JSON.stringify({topic:'shell_input', data: cmd+'\n'}));
 		},
 		print: function(str) {
 			terminal.echo(str)
@@ -221,7 +221,7 @@ function WebGHCI() {
 		self.run = function() {
 			self.runFailure(self.hasErrors())
 			// console.debug('running: ',self.name(), self.hasErrors(), self.runFailure())
-			app.terminalEach(function(term) {term.ghciExecuteCommand(self.code())})
+			app.terminalEach(function(term) {term.shellExecuteCommand(self.code())})
 		}
 	}
 
