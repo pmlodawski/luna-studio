@@ -31,7 +31,7 @@ import qualified Flowbox.AWS.EC2.Instance.Tag          as Tag
 import           Flowbox.AWS.Region                    (Region)
 import qualified Flowbox.AWS.User.Session              as Session
 import qualified Flowbox.AWS.User.User                 as User
-import           Flowbox.Control.Error                 (assert, eitherStringToM, (<??&.>))
+import           Flowbox.Control.Error                 (assertIO, eitherStringToM, (<??&.>))
 import           Flowbox.Prelude
 
 
@@ -43,7 +43,7 @@ retrieve :: PSQL.Connection -> AWS.Credential -> Region
 retrieve conn credential region userName instancesRequest = do
     let amount = Types.runInstancesRequestMinCount instancesRequest
         runEC2 = EC2.runEC2inRegion credential region
-    assert (amount == Types.runInstancesRequestMaxCount instancesRequest) "runInstancesRequestMinCount must be equal to runInstancesRequestMaxCount"
+    assertIO (amount == Types.runInstancesRequestMaxCount instancesRequest) "runInstancesRequestMinCount must be equal to runInstancesRequestMaxCount"
 
     (runningIDs, stoppedIDs, startingIDs, tags) <- Transaction.withTransaction conn $ do
 
