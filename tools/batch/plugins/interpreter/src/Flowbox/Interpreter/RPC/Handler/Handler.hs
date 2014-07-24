@@ -79,7 +79,7 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    /+ update , query Topic.projectmanagerSyncGetRequest ASTWatch.test3)
     ]
     where
-        respond type_ = callback ((/+) type_) . Processor.singleResult
+        respond type_ = callback (/+ type_) . Processor.singleResult
 
         query topic = callback (const topic) . Processor.singleResult
 

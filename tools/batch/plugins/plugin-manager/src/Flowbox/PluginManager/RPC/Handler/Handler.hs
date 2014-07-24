@@ -9,8 +9,8 @@
 
 module Flowbox.PluginManager.RPC.Handler.Handler where
 
+import Control.Arrow             (first)
 import Control.Monad.Trans.State
-import Control.Arrow (first)
 
 import           Flowbox.Bus.Data.Message                        (Message)
 import           Flowbox.Bus.Data.Topic                          (Topic, status, update, (/+))
@@ -24,7 +24,7 @@ import qualified Flowbox.PluginManager.Prefix                    as Prefix
 import qualified Flowbox.PluginManager.RPC.Handler.Plugin        as PluginHandler
 import qualified Flowbox.PluginManager.RPC.Handler.PluginManager as PluginManagerHandler
 import qualified Flowbox.PluginManager.RPC.Topic                 as Topic
-import           Flowbox.Prelude                                 hiding (error, Context)
+import           Flowbox.Prelude                                 hiding (Context, error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                    as Proto
 
@@ -52,4 +52,4 @@ handlerMap prefix callback = HandlerMap.fromList $ prefixifyTopics prefix
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
                 => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
-        respond type_ = callback ((/+) type_) . Processor.singleResult
+        respond type_ = callback (/+ type_) . Processor.singleResult

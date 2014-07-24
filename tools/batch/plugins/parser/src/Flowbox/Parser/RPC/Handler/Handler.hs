@@ -38,4 +38,4 @@ handlerMap callback = HandlerMap.fromList
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
                 => String -> (args -> RPC () IO result) -> StateT () IO [Message]
-        respond type_ = callback ((/+) type_) . Processor.singleResult
+        respond type_ = callback (/+ type_) . Processor.singleResult
