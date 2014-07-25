@@ -23,6 +23,7 @@ Library
 
   Build-Depends:  base,
                   containers,
+                  data-hash,
                   either,
                   flowbox-batch,
                   flowbox-luna-base,
@@ -30,6 +31,7 @@ Library
                   ghc,
                   hint,
                   mtl,
+                  raw-strings-qq,
                   transformers
 
 

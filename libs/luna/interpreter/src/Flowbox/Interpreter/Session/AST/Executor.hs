@@ -42,14 +42,14 @@ processMain = do
 
 processNodeIfNeeded :: CallDataPath -> Session ()
 processNodeIfNeeded callDataPath =
-    unlessM (Cache.exists $ CallDataPath.toCallPointPath callDataPath)
-            (processNode callDataPath)
+    whenM (Cache.isDirty $ CallDataPath.toCallPointPath callDataPath)
+          (processNode callDataPath)
 
 
 processNode :: CallDataPath -> Session ()
 processNode callDataPath = do
     predecessors <- Traverse.previous callDataPath
-    mapM_ processNodeIfNeeded predecessors
+    --mapM_ processNodeIfNeeded predecessors
     let callData  = last callDataPath
         node      = callData ^. CallData.node
         predecessorsPointPaths = map CallDataPath.toCallPointPath predecessors
