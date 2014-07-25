@@ -24,7 +24,7 @@ class User
     def inotify_subscribe(path)
         Dir.chdir(path)
         Dir["**/*"].each do |file|
-            ev = { :name => file,
+            ev = { :name => File.join(path, file),
                    :mime => MimeMagic.by_path(file),
                    :size => File.size?(file),
                    :flags => [:create]
@@ -50,7 +50,7 @@ class User
         
         Dir.chdir(path)
         Dir["**/*"].each do |file|
-            ev = { :name => file,
+            ev = { :name => File.join(path, file),
                    :mime => MimeMagic.by_path(file),
                    :size => File.size?(file),
                    :flags => [:delete]
