@@ -35,7 +35,7 @@ instance ColorConvert HSV HSV where
 
 instance ColorConvert RGB HSV where
     convertColor (RGB r' g' b') = HSV h'' s' v'
-        where h'' = (h' >* 0 A.? (h' , h' + 6)) / 6
+        where h'' = (h' >=* 0 A.? (h' , h' + 6)) / 6
               h' = cond (delta ==* 0) 0
                  $ cond (r' ==* maxRGB) (((g' - b') / delta) `nonIntRem` 6)
                  $ cond (g' ==* maxRGB) ((b' - r') / delta + 2)
