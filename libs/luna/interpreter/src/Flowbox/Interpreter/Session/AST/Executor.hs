@@ -19,6 +19,7 @@ import qualified Flowbox.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import qualified Flowbox.Interpreter.Session.Data.CallPointPath as CallPointPath
 import qualified Flowbox.Interpreter.Session.Env                as Env
+import qualified Flowbox.Interpreter.Session.Hash               as Hash
 import           Flowbox.Interpreter.Session.Session            (Session)
 import qualified Flowbox.Interpreter.Session.Session            as Session
 import qualified Flowbox.Interpreter.Session.TypeCheck          as TypeCheck
@@ -26,7 +27,6 @@ import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                   as Node
 import           Flowbox.Prelude                                hiding (children, inside)
 import           Flowbox.System.Log.Logger
-
 
 
 logger :: LoggerIO
@@ -82,17 +82,19 @@ executeNode callDataPath predecessors = do
 executeFunction :: String -> CallDataPath -> [CallPointPath] -> Session ()
 executeFunction funName callDataPath predecessors = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-        varName       = CallPointPath.toVarName callPointPath
-        args          = map CallPointPath.toVarName predecessors
+        args          = map (Cache.getVarName Nothing) predecessors
+        tmpVarName    = "_tmp"
     typedFun  <- TypeCheck.function funName args
     typedArgs <- mapM TypeCheck.variable args
     let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
         argSeparator  = " `call` "
         operation     = List.intercalate argSeparator (function : typedArgs)
-        expression    = varName ++ " <- " ++ operation
+        expression    = tmpVarName ++ " <- " ++ operation
     --logger info expression
     Session.runStmt expression
-    let hash = (-1)
+    hash <- Hash.compute tmpVarName
+    let varName = Cache.getVarName hash callPointPath
+    Session.runAssignment varName tmpVarName
     Cache.put callDataPath hash
     logger trace =<< MapForest.draw <$> gets (view Env.cached)
 

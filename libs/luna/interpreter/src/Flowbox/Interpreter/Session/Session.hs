@@ -95,6 +95,11 @@ runDecls decls = do
     void $ lift2 $ I.runGhc $ GHC.runDecls decls
 
 
+runAssignment :: String -> String -> Session ()
+runAssignment asigned asignee =
+    runStmt $ asigned ++ " <- return " ++ asignee
+
+
 setHardcodedExtensions :: Session ()
 setHardcodedExtensions = do
     setFlags [ F.Opt_EmptyDataDecls

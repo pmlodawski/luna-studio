@@ -7,6 +7,9 @@
 module Flowbox.Interpreter.Session.Cache.Cache where
 
 import           Control.Monad.State hiding (mapM, mapM_)
+import           Data.Hash           (Hash)
+import qualified Data.Hash           as Hash
+import qualified Data.Maybe          as Maybe
 import qualified Data.Set            as Set
 
 import           Flowbox.Data.MapForest                         (MapForest)
@@ -17,8 +20,8 @@ import qualified Flowbox.Interpreter.Session.Data.CallData      as CallData
 import           Flowbox.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Flowbox.Interpreter.Session.Data.CallPoint     (CallPoint)
+import qualified Flowbox.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import qualified Flowbox.Interpreter.Session.Data.CallPointPath as CallPointPath
 import qualified Flowbox.Interpreter.Session.Env                as Env
 import           Flowbox.Interpreter.Session.Session            (Session)
 import qualified Flowbox.Interpreter.Session.Session            as Session
@@ -31,9 +34,9 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.Session.Cache.Cache"
 
 
-dump :: CallPointPath -> Session ()
-dump callPointPath = do
-    let varName = CallPointPath.toVarName callPointPath
+dump :: CallPointPath -> Maybe Hash -> Session ()
+dump callPointPath mhash = do
+    let varName = getVarName mhash callPointPath
     logger debug $ "Dumping " ++ varName
     Session.runStmt $ "print " ++ varName
 
@@ -48,8 +51,8 @@ isDirty = onCacheInfo
     (return True)
 
 
-hasHash :: CacheInfo.Hash -> CallPointPath -> Session Bool
-hasHash hash = onCacheInfo
+containsHash :: Hash -> CallPointPath -> Session Bool
+containsHash hash = onCacheInfo
     (\cacheInfo -> return $ Set.member hash $ cacheInfo ^. CacheInfo.hashes)
     (return False)
 
@@ -70,22 +73,21 @@ modifyCacheInfo f callPointPath = onCacheInfo
 
 
 onCacheInfo :: (CacheInfo -> Session a) -> Session a -> CallPointPath -> Session a
-onCacheInfo f alternative callPointPath = do
-    mapForest <- cached
-    case MapForest.lookup callPointPath mapForest of
-        Just cacheInfo -> f cacheInfo
-        Nothing        -> alternative
+onCacheInfo f alternative callPointPath =
+    Maybe.maybe alternative f . MapForest.lookup callPointPath =<< cached
 
 
-put :: CallDataPath -> CacheInfo.Hash -> Session ()
-put callDataPath hash = do
+put :: CallDataPath -> Maybe Hash -> Session ()
+put callDataPath mhash = do
     mapForest <- gets $ view Env.cached
 
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-        existingHashes   = case MapForest.lookup callPointPath mapForest of
-                Just existing  -> Set.insert hash $ existing ^. CacheInfo.hashes
-                Nothing        -> Set.singleton hash
-        cacheInfo = CacheInfo (last callDataPath ^. CallData.parentDefID) False False existingHashes
+        hash           = Maybe.maybe Set.empty Set.singleton mhash
+        existingHashes = Maybe.maybe Set.empty (view CacheInfo.hashes)
+                       $ MapForest.lookup callPointPath mapForest
+        hashes = Set.union existingHashes hash
+        cacheInfo = CacheInfo (last callDataPath ^. CallData.parentDefID)
+                              False False hashes
 
     modify (Env.cached %~ MapForest.insert callPointPath cacheInfo)
 
@@ -96,3 +98,10 @@ delete callPointPath = modify $ Env.cached %~ MapForest.delete callPointPath
 
 cached :: Session (MapForest CallPoint CacheInfo)
 cached = gets (view Env.cached)
+
+
+getVarName :: Maybe Hash -> CallPointPath -> String
+getVarName mhash callPointPath = concatMap gen callPointPath ++ hash where
+    gen callPoint = "_" ++ (show $ abs (callPoint ^. CallPoint.libraryID))
+                 ++ "_" ++ (show $ abs (callPoint ^. CallPoint.nodeID))
+    hash = '_' : Maybe.maybe "" (show . Hash.asWord64)  mhash
