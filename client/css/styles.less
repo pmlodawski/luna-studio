@@ -20,6 +20,26 @@ body {
 		height: 100%;
 		width: 300px;
 		overflow: auto;
+
+		.wghci-file-list {
+			list-style: none;
+			padding-left: 15px;
+		}
+		.wghci-file-list > li {
+			position: relative;
+		}
+		.wghci-file-list > li:before {
+			position: absolute;
+			content: "";
+			display: block;
+			width: 0;
+			height: 0;
+			border-style: solid;
+			border-width: 4px 0 4px 8px;
+			border-color: transparent transparent transparent @color-white;
+			left: -10px;
+			top: 4px;
+		}
 	}
 }
 

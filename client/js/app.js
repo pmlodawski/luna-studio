@@ -18,7 +18,6 @@ $.fn.consolize = function(commandParser) {
 		socket.onopen = function() {
 			console.debug('socket open', arguments);
 			self.socketSend({topic: 'spawn_shell', data: 'cd ../projects && bash'});
-			// self.shellExecuteCommand('cd ../projects');
 		}
 
 		socket.onclose = function() {
@@ -121,10 +120,8 @@ function WebGHCI() {
 		app.terminals.push({})
 	}
 	app.terminalHandler = function(cmd) {
-		console.debug(cmd);
 		var vars = app.snippetMatchVar(cmd),
 			errors = app.findMissingVars(vars);
-		console.debug(vars, errors)
 		if(errors.length > 0) {
 			app.terminalEach(function(term) {term.printError('Missing identifiers: ' + errors.join(', '))})
 			return false;
