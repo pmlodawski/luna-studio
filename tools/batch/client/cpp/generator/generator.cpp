@@ -465,12 +465,14 @@ struct MethodWrapper
 				{
 					auto &argInner = argsFields.at(i+j);
 
-					static const std::string names[] = { "nodeID", "defID", "libID", "projID" };
+					static const std::vector<std::string> names = { "nodeID", "defID", "libID", "projID", "defID" };
 					int index = 5-collapsedArgs.size()+j;
 					auto derefedArg = collapsedName + "." + names[index];
 					if(index == 1)
 					{
-						ret += "request.mutable_" + argInner->lowercase_name() + "()->CopyFrom(crumbify(" + collapsedName + "));\n";
+						auto argLowerName = argInner->lowercase_name();
+						assert(argLowerName == "bc" || argLowerName == "parentbc");
+						ret += "request.mutable_" + argLowerName + "()->CopyFrom(crumbify(" + collapsedName + "));\n";
 					}
 					else
 						ret += "request.set_" + argInner->lowercase_name() + "(" + derefedArg + ");\n";
@@ -709,14 +711,18 @@ void generate(path outputFile)
 		return ret;
 	};
 
+	auto formatAndWrite = [&](const path &outfile, const std::string &preformattedFile)
 	{
-		boost::filesystem::ofstream out(outputFile.string() + ".cpp");
-		formatOutput(out, formatFile(sourceFile));
-	}
-	{
-		boost::filesystem::ofstream out(outputFile.string() + ".h");
-		formatOutput(out, formatFile(headerFile));
-	}
+		std::cout << "Formatting " << outfile << std::endl;
+		auto formattedText = formatFile(preformattedFile);
+		std::cout << "Formatting output " << outfile << std::endl;
+		boost::filesystem::ofstream out(outfile);
+		assert(out);
+		formatOutput(out, formattedText);
+	};
+
+	formatAndWrite(outputFile.string() + ".cpp", sourceFile);
+	formatAndWrite(outputFile.string() + ".h", headerFile);
 }
 
 void generateDeserializers()
