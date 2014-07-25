@@ -1,6 +1,4 @@
-#include <fstream>
 
-//#include "../generated/server-api.pb.h"
 #include "../generated/project-manager.pb.h"
 #include "../generated/file-manager.pb.h"
 #include "../generated/parser.pb.h"
@@ -8,14 +6,18 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #ifdef _WIN32
 #pragma comment(lib, "libprotobuf.lib")
 #endif
 
+
+using namespace boost::filesystem;
 using namespace generated::proto::type;
-//using namespace generated::proto::batch;
 using namespace google::protobuf;
+
+const path outputDirectory = path("..") / "generated";
 
 void formatOutput(std::ostream &out, std::string contents)
 {
@@ -464,7 +466,7 @@ struct MethodWrapper
 					auto &argInner = argsFields.at(i+j);
 
 					static const std::string names[] = { "nodeID", "defID", "libID", "projID" };
-					int index = 4-collapsedArgs.size()+j;
+					int index = 5-collapsedArgs.size()+j;
 					auto derefedArg = collapsedName + "." + names[index];
 					if(index == 1)
 					{
@@ -682,7 +684,7 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 	return methods;
 }
 
-void generate(const std::string &outputFile)
+void generate(path outputFile)
 {
 	std::string methodImpls;
 	std::string methodDecls;
@@ -702,17 +704,17 @@ void generate(const std::string &outputFile)
 		auto ret = input;
 		boost::replace_all(ret, "%method_decls%", methodDecls);
 		boost::replace_all(ret, "%method_impls%", methodImpls);
-		boost::replace_all(ret, "%wrapper_name%", outputFile.substr(outputFile.find_last_of('/') + 1));
+		boost::replace_all(ret, "%wrapper_name%", outputFile.string().substr(outputFile.string().find_last_of('/') + 1));
 		boost::replace_all(ret, "%ext_to_enum%", extToClsCovnersions());
 		return ret;
 	};
 
 	{
-		std::ofstream out(outputFile + ".cpp");
+		boost::filesystem::ofstream out(outputFile.string() + ".cpp");
 		formatOutput(out, formatFile(sourceFile));
 	}
 	{
-		std::ofstream out(outputFile + ".h");
+		boost::filesystem::ofstream out(outputFile.string() + ".h");
 		formatOutput(out, formatFile(headerFile));
 	}
 }
@@ -791,8 +793,8 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 	std::string output = body;
 	boost::replace_all(output, "%deserializers%", entries);
 
-	std::ofstream outcpp("generated/Deserializer.cpp");
-	std::ofstream outh("generated/Deserializer.h");
+	boost::filesystem::ofstream outcpp(outputDirectory / "Deserializer.cpp");
+	boost::filesystem::ofstream outh(outputDirectory / "Deserializer.h");
 	formatOutput(outh, header);
 	formatOutput(outcpp, output);
 }
@@ -881,8 +883,8 @@ struct IBusMessagesReceiver : IBusListener, IDispatchee
 	boost::replace_all(header, "%dispatchee%", dispatchee);
 	boost::replace_all(source, "%elements%", entries);
 
-	std::ofstream outcpp("generated/MessageDispatcher.cpp");
-	std::ofstream outh("generated/MessageDispatcher.h");
+	boost::filesystem::ofstream outcpp(outputDirectory / "MessageDispatcher.cpp");
+	boost::filesystem::ofstream outh(outputDirectory /"MessageDispatcher.h");
 	formatOutput(outh, header);
 	formatOutput(outcpp, source);
 	//topic project.library.ast.properties.set.update
@@ -893,7 +895,7 @@ struct IBusMessagesReceiver : IBusListener, IDispatchee
 int main()
 {
 //	extToClsCovnersions();
-	generate("generated/ProjectManager");
+	generate(outputDirectory / "ProjectManager");
 	generateDeserializers();
 	generateDispatcher();
 	return EXIT_SUCCESS;
