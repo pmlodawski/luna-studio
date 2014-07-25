@@ -107,7 +107,7 @@ setHardcodedExtensions = do
 
 
 setLibManager :: LibManager -> Session ()
-setLibManager libManager = lift $ modify (Env.libManager %~ const libManager)
+setLibManager libManager = modify (Env.libManager .~ libManager)
 
 
 getLibManager :: Session LibManager
