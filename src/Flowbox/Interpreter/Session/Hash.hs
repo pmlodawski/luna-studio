@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.Hash where
 
-import           Data.Hash                    (Hash)
+import           Data.Hash                    (Hash, hash)
 import           Language.Haskell.Interpreter (as)
 import qualified Language.Haskell.Interpreter as Interpreter
 
@@ -23,5 +23,6 @@ logger = getLoggerIO "Flowbox.Interpreter.Session.Hash"
 compute :: String -> Session (Maybe Hash)
 compute varName = do
     let expr = "hash " ++ varName
+    -- FIXME [PM] !!!!!!
     --lift2 $ Interpreter.interpret expr (as :: Maybe Hash)
-    undefined
+    return $ Just $ hash varName

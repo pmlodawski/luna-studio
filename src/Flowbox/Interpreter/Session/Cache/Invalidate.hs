@@ -86,7 +86,7 @@ invalidateInside callDataPath = do
 invalidateCache :: CallPointPath -> Session ()
 invalidateCache callPointPath =
     whenM (Cache.exists callPointPath) $ do
-        let varName       = CallPointPath.toVarName callPointPath
+        let varName       = undefined --CallPointPath.toVarName callPointPath
             expression    = varName ++ " <- return ()"
         logger debug $ "Invalidating " ++ varName
         Cache.delete callPointPath
