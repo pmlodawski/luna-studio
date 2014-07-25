@@ -60,8 +60,11 @@ initialize = do
     lift2 I.reset
     setHardcodedExtensions
     lift2 $ I.setImportsQ [("Prelude", Nothing)
-                          ,("Control.Monad", Nothing)]
-    runDecls Helpers.helpers
+                          ,("Control.Monad", Nothing)
+                          ,("Data.Hash", Just "Data.Hash")
+                          ]
+    runDecls Helpers.operation
+    runDecls Helpers.hash
 
 
 setFlags :: [F.ExtensionFlag] -> Session ()
@@ -94,12 +97,15 @@ runDecls decls = do
 
 setHardcodedExtensions :: Session ()
 setHardcodedExtensions = do
-    setFlags [ F.Opt_MultiParamTypeClasses
-             , F.Opt_FunctionalDependencies
+    setFlags [ F.Opt_EmptyDataDecls
              , F.Opt_FlexibleContexts
              , F.Opt_FlexibleInstances
+             , F.Opt_FunctionalDependencies
              , F.Opt_GADTs
+             , F.Opt_MultiParamTypeClasses
              , F.Opt_OverlappingInstances
+             , F.Opt_ScopedTypeVariables
+             , F.Opt_UndecidableInstances
              --, F.Opt_UndecidableInstances
              --, F.Opt_IncoherentInstances
              ]

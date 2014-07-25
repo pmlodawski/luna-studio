@@ -37,7 +37,7 @@ addLevel :: CallDataPath -> DefPoint -> Session [CallDataPath]
 addLevel callDataPath defPoint = do
     (graph, defID) <- Session.getGraph defPoint
     let createDataPath = append callDataPath defPoint defID graph
-    return $ map createDataPath $ Graph.labNodes graph
+    return $ map createDataPath $ Graph.topsortl graph
 
 
 append :: CallDataPath -> DefPoint -> AST.ID -> Graph -> (Node.ID, Node) -> CallDataPath
