@@ -1,66 +1,42 @@
-require 'eventmachine-tail'
+require 'rb-inotify'
 require 'eventmachine'
 
 require_relative 'logger.rb'
 
-class Handler < EventMachine::FileWatch
+class Watcher
     include Logging
 
-    def initialize(chan)
-        @chan = chan
-    end
+    def initialize
+        @notifier = INotify::Notifier.new
 
-    def file_modified
-        logger.debug("#{path} file modified")
-        @chan << {:event => "modify", :path => self.path}
-    end
+        @watch = EM.watch @notifier.to_io do |conn|
+            class << conn
+                attr_accessor :notifier
 
-    def file_moved
-        logger.debug("#{path} file moved")
-        @chan << {:event => "move", :path => self.path}
-    end
-
-    def file_deleted
-    end
-end
-
-class GlobWatcher < EventMachine::FileGlobWatch
-    include Logging
-
-    def initialize(pathglob, interval=1)
-        logger.info("Establishing inotify watches on \"#{pathglob}\"")
-        @chan = EM::Channel.new
-        @pathglob = pathglob
-        
-        @inotify_watches = Dir[pathglob].map do |file|
-            EM.watch_file(file, Handler, @chan)
+                def notify_readable
+                    @notifier.process
+                end
+            end
+            conn.notifier = @notifier
+            conn.notify_readable = true
         end
-
-        super(pathglob, interval)
     end
 
-    def file_deleted(path)
-        logger.debug("#{path} file deleted")
-        @chan << {:event => "delete", :path => path}
+    def subscribe(path, &block)
+        logger.info("Establishing inotify watches on \"#{path}\"")
+        @notifier.watch(path, :all_events, :recursive, &block)
     end
 
-    def file_found(path)
-        logger.debug("#{path} file created")
-        @chan << {:event => "create", :path => path}
-        EM.watch_file(path, Handler, @chan)
+    def cancel(path)
+        logger.info("Canceling inotify watches on \"#{path}\"")
+        raise "Not implemented yet"
     end
 
-    def subscribe(&block)
-        @sid = @chan.subscribe(block)
-    end
-
-    def uninitialize
-        logger.info("Canceling inotify watches on \"#{@pathglob}\"")
-        @inotify_watches.each do |watch| 
-            watch.stop_watching
-            puts "Szatan"
-            @chan << {:event => "delete", :path => watch.path}
-        end
-        @chan.unsubscribe @sid unless @sid.nil?
+    def kill
+        logger.info("Killing inotify")
+        @notifier.stop
+        @notifier.close
+        @watch.detach
+        rescue SystemCallError
     end
 end

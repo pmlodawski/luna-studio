@@ -1,4 +1,5 @@
 require 'json'
+require 'mimemagic'
 
 require_relative 'watcher.rb'
 require_relative 'pty_process.rb'
@@ -8,6 +9,7 @@ class User
 
     def initialize(ws)
         @ws = ws
+        @inotify = Watcher.new
     end
 
     def spawn_shell(command)
@@ -20,16 +22,48 @@ class User
     end
 
     def inotify_subscribe(path)
-        @inotify.uninitialize unless @inotify.nil?
+        Dir.chdir(path)
+        Dir["**/*"].each do |file|
+            ev = { :name => file,
+                   :mime => MimeMagic.by_path(file),
+                   :size => File.size?(file),
+                   :flags => [:create]
+                 }
+            ev[:flags] << :isdir if File.directory?(file)
 
-        @inotify = GlobWatcher.new(path) 
-        @inotify.subscribe do |event|
-            @ws.send({:topic => "inotify", :data => event}.to_json)
+            @ws.send({:topic => "inotify", :data => ev}.to_json)
         end
+        Dir.chdir(File.dirname(__FILE__))
+
+        @inotify.subscribe(path) do |event|
+            ev = { :name => event.absolute_name,
+                   :mime => MimeMagic.by_path(event.absolute_name),
+                   :size => event.size, # or File.size(event.absolute_name)
+                   :flags => event.flags
+                }
+            @ws.send({:topic => "inotify", :data => ev}.to_json)
+        end
+    end
+
+    def inotify_cancel(path)
+        @inotify.cancel(path)
+        
+        Dir.chdir(path)
+        Dir["**/*"].each do |file|
+            ev = { :name => file,
+                   :mime => MimeMagic.by_path(file),
+                   :size => File.size?(file),
+                   :flags => [:delete]
+                 }
+            ev[:flags] << :isdir if File.directory?(file)
+
+            @ws.send({:topic => "inotify", :data => ev}.to_json)
+        end
+        Dir.chdir(File.dirname(__FILE__))
     end
 
     def uninitialize
         @shell.kill unless @shell.nil?
-        @inotify.uninitialize unless @inotify.nil?
+        @inotify.kill unless @inotify.nil?
     end
 end

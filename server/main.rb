@@ -19,6 +19,9 @@ EM.kqueue if EM.kqueue?
 EM.epoll  if EM.epoll?
 
 EM.run do
+    Signal.trap("INT")  { EventMachine.stop }
+    Signal.trap("TERM") { EventMachine.stop }
+    
     @clients = {}
     EM::start_server("127.0.0.1", 8000, HTTPHandler)
     EM::WebSocket.run(:host => "127.0.0.1", :port => 8080) do |ws|

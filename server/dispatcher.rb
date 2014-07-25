@@ -9,6 +9,8 @@ class Dispatcher
             user.spawn_shell(message.data)
         when message.topic == "inotify_subscribe"
             user.inotify_subscribe(message.data)
+        when message.topic == "inotify_cancel"
+            user.inotify_cancel(message.data)
         when message.topic == "ping"
             user.ws.send({:topic => "pong"}.to_json)
         else
