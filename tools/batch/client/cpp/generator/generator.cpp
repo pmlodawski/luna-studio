@@ -458,16 +458,18 @@ struct MethodWrapper
 		std::string ret;
 		for(int i = 0; i < (int)argsFields.size(); i++)
 		{
+			const bool packContainsAstId = collapsedArgs.size() >= 3u;
 			auto &arg = argsFields.at(i);
 			if(collapsedArgs.size() && collapsedArgs.front() == i)
 			{
 				for(int j = 0; j < (int)collapsedArgs.size(); j++)
 				{
-					auto &argInner = argsFields.at(i+j);
+					const auto &argInner = argsFields.at(i+j);
 
+					const int index = 4 + packContainsAstId - collapsedArgs.size() + j;
 					static const std::vector<std::string> names = { "nodeID", "defID", "libID", "projID", "defID" };
-					int index = 5-collapsedArgs.size()+j;
-					auto derefedArg = collapsedName + "." + names[index];
+					const auto derefedArg = collapsedName + "." + names[index];
+
 					if(index == 1)
 					{
 						auto argLowerName = argInner->lowercase_name();
@@ -706,7 +708,7 @@ void generate(path outputFile)
 		auto ret = input;
 		boost::replace_all(ret, "%method_decls%", methodDecls);
 		boost::replace_all(ret, "%method_impls%", methodImpls);
-		boost::replace_all(ret, "%wrapper_name%", outputFile.string().substr(outputFile.string().find_last_of('/') + 1));
+		boost::replace_all(ret, "%wrapper_name%", outputFile.leaf().string());
 		boost::replace_all(ret, "%ext_to_enum%", extToClsCovnersions());
 		return ret;
 	};
