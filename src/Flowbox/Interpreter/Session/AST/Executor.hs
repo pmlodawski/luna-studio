@@ -68,9 +68,8 @@ executeOutputs callDataPath predecessors = do
         parentGraph   = last callDataPath ^. CallData.parentGraph
         inDegree      = Graph.indeg parentGraph nodeID
         functionName  = if inDegree == 1 then "id" else '(' : replicate (inDegree-1) ',' ++ ")"
-    if length callDataPath > 1
-        then executeFunction functionName (init callDataPath) predecessors
-        else return () -- main don't need to return anything
+    when (length callDataPath > 1)
+       $ executeFunction functionName (init callDataPath) predecessors
 
 
 executeNode :: CallDataPath -> [CallPointPath] -> Session ()

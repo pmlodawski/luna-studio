@@ -8,12 +8,19 @@
 
 module Flowbox.Interpreter.Session.Data.CacheInfo where
 
+import Data.Set (Set)
+
 import qualified Flowbox.Luna.Data.AST.Common as AST
 import           Flowbox.Prelude
 
 
 
+type Hash = Int
+
 data CacheInfo = CacheInfo { _defID :: AST.ID
+                           --, _modified  :: Bool
+                           --, _cacheable :: Bool
+                           --, _hashes    :: Set Hash
                            } deriving (Show)
 
 makeLenses (''CacheInfo)
