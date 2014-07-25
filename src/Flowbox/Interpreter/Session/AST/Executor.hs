@@ -92,7 +92,8 @@ executeFunction funName callDataPath predecessors = do
         expression    = varName ++ " <- " ++ operation
     --logger info expression
     Session.runStmt expression
-    Cache.put callDataPath
+    let hash = (-1)
+    Cache.put callDataPath hash
     logger trace =<< MapForest.draw <$> gets (view Env.cached)
 
 

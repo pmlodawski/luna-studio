@@ -17,12 +17,14 @@ import           Flowbox.Prelude
 
 type Hash = Int
 
-data CacheInfo = CacheInfo { _defID :: AST.ID
-                           --, _modified  :: Bool
-                           --, _cacheable :: Bool
-                           --, _hashes    :: Set Hash
+data CacheInfo = CacheInfo { _defID        :: AST.ID
+                           , _modified     :: Bool
+                           , _nonCacheable :: Bool
+                           , _hashes       :: Set Hash
                            } deriving (Show)
 
 makeLenses (''CacheInfo)
 
 
+mk :: AST.ID -> CacheInfo
+mk defID' = CacheInfo defID' False False def

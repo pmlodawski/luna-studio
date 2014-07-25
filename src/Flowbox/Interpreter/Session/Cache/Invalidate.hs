@@ -26,7 +26,7 @@ import qualified Flowbox.Interpreter.Session.Session            as Session
 import qualified Flowbox.Luna.Data.AST.Common                   as AST
 import qualified Flowbox.Luna.Data.Graph.Node                   as Node
 import qualified Flowbox.Luna.Lib.Library                       as Library
-import           Flowbox.Prelude
+import           Flowbox.Prelude                                hiding (matching)
 import           Flowbox.System.Log.Logger
 
 
