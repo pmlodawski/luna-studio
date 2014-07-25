@@ -121,7 +121,7 @@ remove request@(Remove.Request tbc tlibID tprojectID _) = do
 
 
 resolve :: ResolveDefinition.Request -> RPC Context IO ResolveDefinition.Status
-resolve request@(ResolveDefinition.Request tname tbc tlibID tprojectID) = do
+resolve request@(ResolveDefinition.Request tname tbc tlibID tprojectID _) = do
     bc  <- decodeE tbc
     let name      = decodeP tname
         libID     = decodeP tlibID
