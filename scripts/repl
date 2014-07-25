@@ -14,7 +14,7 @@ import os.path
 from   subprocess      import call
 import utils.errors    as     errors
 from   utils.colors    import print_info, print_error
-
+import signal
 
 
 def main():
@@ -39,10 +39,11 @@ def main():
     pkgs = [pkgDb[name] for name in pkgNames]
 
     for pkg in pkgs:
-        print_info ("Compiling %s" % pkg.name)
-
+        print_info ("Starting ghci for %s" % pkg.name)
+        
+        old_action = signal.signal(signal.SIGINT, signal.SIG_IGN)
         call("cabal --sandbox=%s/cabal.sandbox.config exec ghci -- -XNoImplicitPrelude "% pkg.sbox, shell=True)
-
+        signal.signal(signal.SIGINT, old_action)         # restore original signal handler
 
 main()
 
