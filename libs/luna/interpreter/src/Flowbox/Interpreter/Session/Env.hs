@@ -8,6 +8,7 @@
 
 module Flowbox.Interpreter.Session.Env where
 
+import qualified Flowbox.Batch.Project.Project              as Project
 import           Flowbox.Data.MapForest                     (MapForest)
 import qualified Flowbox.Data.MapForest                     as MapForest
 import           Flowbox.Data.SetForest                     (SetForest)
@@ -26,6 +27,7 @@ import           Flowbox.Prelude
 data Env = Env { _cached      :: MapForest CallPoint CacheInfo
                , _watchPoints :: SetForest CallPoint
                , _libManager  :: LibManager
+               , _projectID   :: Project.ID
                , _mainPtr     :: DefPoint
                } deriving (Show)
 
@@ -33,10 +35,11 @@ data Env = Env { _cached      :: MapForest CallPoint CacheInfo
 makeLenses(''Env)
 
 
-mk :: LibManager -> DefPoint -> Env
+mk :: LibManager -> Project.ID -> DefPoint -> Env
 mk = Env MapForest.empty SetForest.empty
 
 
 instance Default Env where
     def = mk LibManager.empty
+             0
              (DefPoint 0 [Crumb.ModuleCrumb "Main", Crumb.FunctionCrumb "main" []])

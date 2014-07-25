@@ -24,6 +24,7 @@ Library
   Build-Depends:  base,
                   containers,
                   either,
+                  flowbox-batch,
                   flowbox-luna-base,
                   flowbox-utils,
                   ghc,
@@ -47,4 +48,5 @@ Executable luna-interpreter-test
                   flowbox-luna-base,
                   flowbox-luna-interpreter,
                   flowbox-utils,
-                  pretty-show
+                  pretty-show,
+                  raw-strings-qq

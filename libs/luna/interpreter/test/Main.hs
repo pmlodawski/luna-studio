@@ -4,10 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE QuasiQuotes #-}
 
 module Main where
 
-import Data.EitherR (fmapL)
+import Data.EitherR      (fmapL)
+import Text.RawString.QQ
+import Text.Show.Pretty
 
 import           Flowbox.Control.Error                        (eitherStringToM)
 import qualified Flowbox.Interpreter.Session.AST.Executor     as Executor
@@ -26,7 +29,6 @@ import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtPar
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                as UniPath
-import           Text.Show.Pretty
 
 
 rootLogger :: Logger
@@ -40,23 +42,23 @@ logger = getLoggerIO "Flowbox.Interpreter.Test"
 main :: IO ()
 main = do
     rootLogger setIntLevel 5
-    let code = Source ["Main"] $ unlines
-             [ ""
-             , "def test self arg arg2:"
-             , "    print arg"
-             , "    print arg2"
-             , "    self.bla \"kota\" \"albo nie\""
-             , ""
-             , "def bla self arg arg2:"
-             , "    a = \"grubego\""
-             , "    b = print a"
-             , "    {arg, arg2, b}"
-             , ""
-             , "def main self:"
-             , "    a = self.test \"ala\" \"ma\""
-             , "    print a"
-             , "    \"dummy\""
-             ]
+    let code = Source ["Main"] $ [r|
+
+def test self arg arg2:
+    print arg
+    print arg2
+    self.bla "kota" "albo nie"
+
+def bla self arg arg2:
+    a = "grubego"
+    b = print a
+    {arg, arg2, b}
+
+def main self:
+    a = self.test "ala" "ma"
+    print a
+    "dummy"
+|]
         path = UniPath.fromUnixString "."
 
     (source, _, _) <- eitherStringToM =<< TxtParser.run code
@@ -65,7 +67,7 @@ main = do
             = LibManager.insNewNode (Library "Main" path source PropertyMap.empty)
             $ LibManager.empty
 
-        env = Env.mk libManager (DefPoint libID [Crumb.ModuleCrumb "Main", Crumb.FunctionCrumb "main" []])
+        env = Env.mk libManager 0 (DefPoint libID [Crumb.ModuleCrumb "Main", Crumb.FunctionCrumb "main" []])
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
 
