@@ -64,8 +64,8 @@ lookup :: Ord k => [k] -> MapForest k v -> Maybe v
 lookup k forest = sub k forest >>= view value
 
 
-contains :: Ord k => [k] -> MapForest k v -> Bool
-contains = Maybe.isJust .: lookup
+member :: Ord k => [k] -> MapForest k v -> Bool
+member = Maybe.isJust .: lookup
 
 
 sub :: Ord k => [k] -> MapForest k v -> Maybe (Level k v)
