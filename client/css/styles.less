@@ -20,6 +20,7 @@ body {
 		height: 100%;
 		width: 300px;
 		overflow: auto;
+		float: left;
 
 		.wghci-file-list {
 			list-style: none;
@@ -27,6 +28,13 @@ body {
 		}
 		.wghci-file-list > li {
 			position: relative;
+
+			.file-name {
+				cursor: pointer;
+			}
+			.file-name:hover {
+				text-decoration: underline;
+			}
 		}
 		.wghci-file-list > li:before {
 			position: absolute;
@@ -40,6 +48,11 @@ body {
 			left: -10px;
 			top: 4px;
 		}
+	}
+
+	.wghci-viewers {
+		height: 100%;
+		overflow: auto;
 	}
 }
 

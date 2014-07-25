@@ -17,20 +17,24 @@
 
 <script type="text/html" id="file-node-template">
 <li>
-	<span data-bind="text: name"></span>
+	<span data-bind="text: name, click: $root.fileClicked" class="file-name"></span>
 	<ul data-bind="template: {name: 'file-node-template', foreach: $data.files}" class="wghci-file-list"></ul>
 </li>
 </script>
 
 <div class="wghci-files">
 	<div class="wghci-files-tree">
-		<ul data-bind="template: {name: 'file-node-template', foreach: files}" class="wghci-file-list"></
-	ul>
+		<ul data-bind="template: {name: 'file-node-template', foreach: files}" class="wghci-file-list"></ul>
+	</div>
+	<div data-bind="foreach: viewers" class="wghci-viewers">
+		<!-- ko if: type() == 'image' -->
+		<img data-bind="attr: {src: $root.freshFileURL($root.www + '/' + path())}">
+		<!-- /ko -->
 	</div>
 </div>
 
 <div class="wghci-terminals" data-bind="foreach: terminals">
-	<div data-bind="ghciTerminal: {handler: $root.terminalHandler, obj: $data}"></div>
+	<div data-bind="ghciTerminal: {handler: $root.commandHandler, obj: $data}"></div>
 </div>
 
 <div class="wghci-controls">

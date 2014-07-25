@@ -3,80 +3,11 @@ String.prototype.trimChars = function(chars) {
 	return this.replace(regexp, '');
 }
 
-$.fn.consolize = function(commandParser) {
+$.fn.consolize = function(commandHandler) {
 	var self     = this,
-		terminal = self.terminal(handleCommand),
-		socket   = null,
-		host     = 'ws://127.0.0.1:8080';
-	// host     = 'ws://10.0.6.169:8080';
-
-	// --- socket stuff
-
-	function socketInit() {
-		socket = new WebSocket(host);
-
-		socket.onopen = function() {
-			console.debug('socket open', arguments);
-			self.socketSend({topic: 'spawn_shell', data: 'cd ../projects && bash'});
-		}
-
-		socket.onclose = function() {
-			console.debug('socket closed', arguments);
-		}
-
-		socket.onmessage = function(msg) {
-			var result = JSON.parse(msg.data)
-			if('error' == result.topic) {
-				self.printError(result.data);
-			} else if('shell_output' == result.topic) {
-				self.print(clearOutputFromGHCI(result.data));
-			} else if('inotify' == result.topic) {
-				var data = result.data,
-					regexpImg = /.+\.(bmp|jpe?g|gif|png)$/i;
-				self.printInfo(JSON.stringify(data));
-				if(regexpImg.test(data.path)) {
-
-				}
-			} else {
-				self.printDebug(msg.data);
-			}
-		}
-	}
-
-	// --- command stuff
-
-	function handleCommand(cmd, term) {
-		var cmd_split = cmd.split(" ");
-		if(cmd_split[0] == 'wssend') {
-			self.socketSend({topic: cmd_split[1], data: cmd_split[2]});
-			return;
-		} else if(cmd_split[0] == 'watch') {
-			self.socketSend({topic: 'inotify_subscribe', data: 'projects/' + cmd_split[1]})
-			return;
-		}
-		self.shellExecuteCommand(cmd);
-	}
-
-	// --- utils
-
-	function clearOutputFromGHCI(str) {
-		console.debug('- - - - - clearing - - - - -')
-		// console.debug(str)
-		var filterOut = ['\u001b[?1h\u001b=','\u001b[?1l\u001b>']
-		for(var i in filterOut)
-			str = str.replace(filterOut[i],'')
-		return str
-	}
+		terminal = self.terminal(commandHandler);
 
 	$.extend(self, {
-		socketSend: function(data) {
-			socket.send(JSON.stringify(data));
-		},
-		shellExecuteCommand: function(cmd) {
-			cmd = commandParser(cmd);
-			if(cmd)
-				self.socketSend({topic:'shell_input', data: cmd+'\n'});
-		},
 		print: function(str) {
 			terminal.echo(str);
 			self.parent().scrollTop(self.outerHeight());
@@ -92,10 +23,6 @@ $.fn.consolize = function(commandParser) {
 		}
 	})
 
-	// --- initialize everything
-
-	socketInit();
-
 	return this;
 }
 
@@ -106,10 +33,12 @@ ko.bindingHandlers.ghciTerminal = {
 	}
 };
 
-function WebGHCI() {
+function WebGHCI(host) {
 	var app = this;
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// terminals
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	app.terminals = ko.observableArray([]);
 	app.terminalEach = function(f) {
 		var terms = app.terminals();
@@ -119,7 +48,8 @@ function WebGHCI() {
 	app.appendTerminal = function() {
 		app.terminals.push({})
 	}
-	app.terminalHandler = function(cmd) {
+
+	function commandParser(cmd) {
 		var vars = app.snippetMatchVar(cmd),
 			errors = app.findMissingVars(vars);
 		if(errors.length > 0) {
@@ -137,7 +67,37 @@ function WebGHCI() {
 		return cmd;
 	}
 
+	app.shellExecuteCommand = function(cmd) {
+		cmd = commandParser(cmd);
+		console.debug(cmd)
+		if(cmd)
+			app.socketSend({topic:'shell_input', data: cmd+'\n'});
+	}
+
+	app.commandHandler = function(cmd, term) {
+		var cmd_split = cmd.split(" ");
+		if(cmd_split[0] == 'wssend') {
+			app.socketSend({topic: cmd_split[1], data: cmd_split[2]});
+			return;
+		} else if(cmd_split[0] == 'watch') {
+			app.socketSend({topic: 'inotify_subscribe', data: 'projects' + (cmd_split[1] ? cmd_split[1] : '')})
+			return;
+		}
+		app.shellExecuteCommand(cmd);
+	}
+
+	function clearOutputFromGHCI(str) {
+		console.debug('- - - - - clearing - - - - -')
+		// console.debug(str)
+		var filterOut = ['\u001b[?1h\u001b=','\u001b[?1l\u001b>']
+		for(var i in filterOut)
+			str = str.replace(filterOut[i],'')
+		return str
+	}
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// controls
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	app.controlTypes = ['slider'];
 	app.selectedControl = ko.observable(app.controlTypes[0]);
 	app.controls  = ko.observableArray([]);
@@ -148,7 +108,9 @@ function WebGHCI() {
 		}
 	}
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// snippets
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	app.snippets = ko.observableArray([]);
 	app.snippetCounter = 0;
 	app.appendSnippet = function() {
@@ -209,11 +171,13 @@ function WebGHCI() {
 		});
 	}
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// files
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	app.files = ko.observableArray([]);
 	app.fileCounter = 0;
 	app.appendFile = function(path, type) {
-		var segments = path.trimChars('/').split('/'),
+		var segments = segmentizePath(path),
 			lastFile = app,
 			lastPath = '',
 			remaining = 0,
@@ -234,8 +198,106 @@ function WebGHCI() {
 			lastPath = lastFile.path();
 		}
 	}
+	// app.removeFile = function(path) {
+	// 	var segments = segmentizePath(path),
+	// 		lastFile = app,
+	// 		remaining = 0,
+	// 		tmp = null;
 
-	// objects
+	// 	while((remaining = segments.length) > 1) {
+	// 		tmp = segments.shift();
+
+	// 		var exists = ko.utils.arrayFirst(lastFile.files(), function(file) {
+	// 			return file.name() == tmp;
+	// 		});
+
+	// 		if(!exists) break;
+
+	// 		lastFile = exists;
+	// 	}
+
+	// 	lastFile.files.remove(function(file) {
+	// 		return file.name() == segments[0];
+	// 	}) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// }
+
+	app.fileClicked = function(file,e) {
+		e.stopPropagation();
+		console.debug(file.type())
+		if(file.type() == 'image')
+			app.appendViewer(file)
+	}
+
+	function segmentizePath(path) {
+		return path.trimChars('/').split('/');
+	}
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// viewers
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	app.viewers = ko.observableArray([]);
+	app.appendViewer = function(file) {
+		// app.viewers.push(file);
+		app.viewers.removeAll();
+		if('image' == file.type())
+			app.viewers([file]);
+	}
+
+	app.freshFileURL = function(url) {
+		return url + '?' + new Date().getTime();
+	}
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// suckIt
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	app.www    = host  ? 'http://'+host+':8000' : 'http://127.0.0.1:8000';
+	app.host   = host ? 'ws://'+host+':8080' : 'ws://127.0.0.1:8080';
+	app.socket = null;
+
+	function socketInit() {
+		app.socket = new WebSocket(app.host);
+
+		app.socket.onopen = function() {
+			console.debug('socket open', arguments);
+			app.socketSend({topic: 'spawn_shell', data: 'cd ../projects && bash'});
+		}
+
+		app.socket.onclose = function() {
+			console.debug('socket closed', arguments);
+		}
+
+		app.socket.onmessage = function(msg) {
+			var result = JSON.parse(msg.data)
+			if('error' == result.topic) {
+				app.terminalEach(function(term) {term.printError(result.data)});
+			} else if('shell_output' == result.topic) {
+				app.terminalEach(function(term) {term.print(clearOutputFromGHCI(result.data))});
+			} else if('inotify' == result.topic) {
+				var data = result.data,
+					type = 'undefined',
+					hasFlag = function(flag) {return $.inArray(flag, data.flags) >= 0};
+				console.debug(data.name, data.mime, data.size, data.flags)
+
+				if(hasFlag('isdir'))
+					type = 'dir';
+				else if($.inArray(data.mime, ['image/bmp','image/jpeg','image/png','image/gif']) >= 0)
+					type = 'image';
+
+				if(hasFlag('create'))
+					app.appendFile(data.name, type);
+			} else {
+				app.terminalEach(function(term) {term.printDebug(msg.data)});
+			}
+		}
+	}
+
+	app.socketSend = function(data) {
+		app.socket.send(JSON.stringify(data));
+	};
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// 'classes'
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	function ControlSlider() {
 		var self = this;
 		self.type  = 'slider';
@@ -280,11 +342,14 @@ function WebGHCI() {
 		self.files = ko.observableArray([]);
 	}
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// init
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	socketInit();
 	app.appendTerminal();
 }
+
 var datApp = null;
 $(document).ready(function() {
-	// $('#terminal').consolize()
 	ko.applyBindings(datApp = new WebGHCI());
 })
