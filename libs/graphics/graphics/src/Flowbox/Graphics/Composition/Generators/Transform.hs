@@ -11,11 +11,17 @@
 module Flowbox.Graphics.Composition.Generators.Transform where
 
 import Flowbox.Prelude                                    as P hiding (transform)
+import Flowbox.Math.Matrix                                as M
+import Flowbox.Graphics.Composition.Generators.Filter
+import Flowbox.Graphics.Composition.Generators.Matrix
+import Flowbox.Graphics.Composition.Generators.Rasterizer
+import Flowbox.Graphics.Composition.Generators.Sampler
 import Flowbox.Graphics.Composition.Generators.Structures
 
-import Math.Coordinate.Cartesian (Point2(..))
-import Math.Space.Space
-import Linear.V2
+import qualified Data.Array.Accelerate     as A
+import           Math.Coordinate.Cartesian (Point2(..))
+import           Math.Space.Space
+import           Linear.V2
 
 
 
@@ -48,3 +54,17 @@ bbox theta (fmap (/2) -> Grid gw gh) = Grid gw' gh'
           Point2 px2 py2 = rotate' theta $ Point2 ( gw) (-gh)
           Point2 px3 py3 = rotate' theta $ Point2 ( gw) ( gh)
           Point2 px4 py4 = rotate' theta $ Point2 (-gw) ( gh)
+
+rotateMat :: (Elt e, IsFloating e) => Exp e -> Boundary (Exp e) -> Matrix2 e -> Matrix2 e
+rotateMat phi b mat = rasterizer nsize' $ monosampler 
+                                        $ translate (V2 rx ry) 
+                                        $ rotate phi 
+                                        $ translate (V2 tx ty) 
+                                        $ interpolator triangle 
+                                        $ fromMatrix b $ mat
+    where A.Z A.:. height A.:. width = A.unlift $ M.shape mat
+          size = fmap A.fromIntegral $ Grid width height
+          Grid tx ty = fmap (/ (-2)) size
+          nsize = bbox phi size
+          nsize' = fmap A.round nsize
+          Grid rx ry = fmap (/ (2)) nsize

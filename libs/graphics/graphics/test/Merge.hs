@@ -10,6 +10,7 @@ module Main where
 
 import Flowbox.Prelude hiding (zoom, constant, transform, from, min, max, over, under)
 import Flowbox.Graphics.Composition.Generators.Filter
+import Flowbox.Graphics.Composition.Generators.Matrix
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 import Flowbox.Graphics.Composition.Generators.Sampler
 import Flowbox.Graphics.Composition.Generators.Structures

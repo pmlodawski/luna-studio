@@ -14,6 +14,7 @@ import           Flowbox.Math.Matrix                  as M
 import           Flowbox.Graphics.Color
 import           Flowbox.Graphics.Composition.Generators.Rasterizer
 import           Flowbox.Graphics.Composition.Generators.Sampler
+import           Flowbox.Graphics.Composition.Generators.Matrix
 import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage, saveImage)
 import           Flowbox.Graphics.Utils
 
