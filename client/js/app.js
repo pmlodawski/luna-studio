@@ -80,7 +80,7 @@ function WebGHCI(host) {
 			app.socketSend({topic: cmd_split[1], data: cmd_split[2]});
 			return;
 		} else if(cmd_split[0] == 'watch') {
-			app.socketSend({topic: 'inotify_subscribe', data: 'projects' + (cmd_split[1] ? cmd_split[1] : '')})
+			app.socketSend({topic: 'inotify_subscribe', data: (cmd_split[1] ? cmd_split[1] : 'projects')})
 			return;
 		}
 		app.shellExecuteCommand(cmd);
