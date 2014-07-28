@@ -6,27 +6,30 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.AST.Executor where
 
-import           Control.Monad.State hiding (mapM, mapM_)
-import qualified Data.List           as List
+import           Control.Monad.State        hiding (mapM, mapM_)
+import           Control.Monad.Trans.Either
+import qualified Data.List                  as List
 
-import qualified Flowbox.Data.MapForest                         as MapForest
-import qualified Flowbox.Interpreter.Session.AST.Traverse       as Traverse
-import qualified Flowbox.Interpreter.Session.Cache.Cache        as Cache
-import qualified Flowbox.Interpreter.Session.Data.CallData      as CallData
-import           Flowbox.Interpreter.Session.Data.CallDataPath  (CallDataPath)
-import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
-import qualified Flowbox.Interpreter.Session.Data.CallPoint     as CallPoint
-import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import qualified Flowbox.Interpreter.Session.Data.CallPointPath as CallPointPath
-import qualified Flowbox.Interpreter.Session.Env                as Env
-import qualified Flowbox.Interpreter.Session.Hash               as Hash
-import           Flowbox.Interpreter.Session.Session            (Session)
-import qualified Flowbox.Interpreter.Session.Session            as Session
-import qualified Flowbox.Interpreter.Session.TypeCheck          as TypeCheck
-import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
-import qualified Flowbox.Luna.Data.Graph.Node                   as Node
-import           Flowbox.Prelude                                hiding (children, inside)
+import qualified Flowbox.Interpreter.Session.AST.Traverse      as Traverse
+import qualified Flowbox.Interpreter.Session.Cache.Cache       as Cache
+import qualified Flowbox.Interpreter.Session.Cache.Invalidate  as Invalidate
+import qualified Flowbox.Interpreter.Session.Cache.Status      as CacheStatus
+import qualified Flowbox.Interpreter.Session.Data.CallData     as CallData
+import           Flowbox.Interpreter.Session.Data.CallDataPath (CallDataPath)
+import qualified Flowbox.Interpreter.Session.Data.CallDataPath as CallDataPath
+import qualified Flowbox.Interpreter.Session.Data.CallPoint    as CallPoint
+import           Flowbox.Interpreter.Session.Data.VarName      (VarName)
+import qualified Flowbox.Interpreter.Session.Data.VarName      as VarName
+import qualified Flowbox.Interpreter.Session.Env               as Env
+import qualified Flowbox.Interpreter.Session.Hash              as Hash
+import           Flowbox.Interpreter.Session.Session           (Session)
+import qualified Flowbox.Interpreter.Session.Session           as Session
+import qualified Flowbox.Interpreter.Session.TypeCheck         as TypeCheck
+import qualified Flowbox.Luna.Data.Graph.Graph                 as Graph
+import qualified Flowbox.Luna.Data.Graph.Node                  as Node
+import           Flowbox.Prelude                               hiding (children, inside)
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: LoggerIO
@@ -49,43 +52,73 @@ processNodeIfNeeded callDataPath =
 processNode :: CallDataPath -> Session ()
 processNode callDataPath = do
     predecessors <- Traverse.previous callDataPath
-    --mapM_ processNodeIfNeeded predecessors
     let callData  = last callDataPath
         node      = callData ^. CallData.node
         predecessorsPointPaths = map CallDataPath.toCallPointPath predecessors
+    predVarNames <- mapM Cache.recentVarName predecessorsPointPaths
     children <- Traverse.into callDataPath
     if null children
         then case node of
             Node.Inputs  -> return ()
-            Node.Outputs -> executeOutputs callDataPath predecessorsPointPaths
-            Node.Expr {} -> executeNode    callDataPath predecessorsPointPaths
+            Node.Outputs -> executeOutputs callDataPath predVarNames
+            Node.Expr {} -> executeNode    callDataPath predVarNames
         else mapM_ processNodeIfNeeded children
 
 
-executeOutputs :: CallDataPath -> [CallPointPath] -> Session ()
-executeOutputs callDataPath predecessors = do
+executeOutputs :: CallDataPath -> [VarName] -> Session ()
+executeOutputs callDataPath predVarNames = do
     let nodeID        = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
         parentGraph   = last callDataPath ^. CallData.parentGraph
         inDegree      = Graph.indeg parentGraph nodeID
         functionName  = if inDegree == 1 then "id" else '(' : replicate (inDegree-1) ',' ++ ")"
-    when (length callDataPath > 1)
-       $ executeFunction functionName (init callDataPath) predecessors
+        callPointPath = CallDataPath.toCallPointPath callDataPath
+    when (length callDataPath > 1) $ do
+
+        prevVarName  <- Cache.recentVarName callPointPath
+        varName <- executeFunction functionName (init callDataPath) predVarNames
+        when (varName /= prevVarName) $
+            freeVarName varName
 
 
-executeNode :: CallDataPath -> [CallPointPath] -> Session ()
-executeNode callDataPath predecessors = do
-    let node          = last callDataPath ^. CallData.node
-        functionName  = node ^. Node.expr
-    executeFunction functionName (callDataPath) predecessors
-
-
-executeFunction :: String -> CallDataPath -> [CallPointPath] -> Session ()
-executeFunction funName callDataPath predecessors = do
+executeNode :: CallDataPath -> [VarName] -> Session ()
+executeNode callDataPath predVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-        args          = map (Cache.getVarName Nothing) predecessors
+    status       <- Cache.status        callPointPath
+    prevVarName  <- Cache.recentVarName callPointPath
+    boundVarName <- Cache.dependency predVarNames callPointPath
+    let node         = last callDataPath ^. CallData.node
+        functionName = node ^. Node.expr
+        execFunction = executeFunction functionName callDataPath predVarNames
+
+        executeModified = do
+            varName <- execFunction
+            when (varName /= prevVarName) $ do
+                if boundVarName /= Just varName
+                    then do mapM_ freeVarName boundVarName
+                            Invalidate.markSuccessors callDataPath CacheStatus.Modified
+                    else Invalidate.markSuccessors callDataPath CacheStatus.Affected
+
+        executeAffected = case boundVarName of
+            Nothing    -> do
+                _ <- execFunction
+                Invalidate.markSuccessors callDataPath CacheStatus.Modified
+            Just bound -> do
+                Cache.setRecentVarName bound callPointPath
+                Invalidate.markSuccessors callDataPath CacheStatus.Affected
+
+    case status of
+        CacheStatus.Affected     -> executeAffected
+        CacheStatus.Modified     -> executeModified
+        CacheStatus.NonCacheable -> executeModified
+        CacheStatus.Ready    -> left "executeNode (Ready) : somethong went wrong"
+
+
+executeFunction :: String -> CallDataPath -> [VarName] -> Session VarName
+executeFunction funName callDataPath predVarNames = do
+    let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-    typedFun  <- TypeCheck.function funName args
-    typedArgs <- mapM TypeCheck.variable args
+    typedFun  <- TypeCheck.function funName predVarNames
+    typedArgs <- mapM TypeCheck.variable predVarNames
     let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
         argSeparator  = " `call` "
         operation     = List.intercalate argSeparator (function : typedArgs)
@@ -93,9 +126,12 @@ executeFunction funName callDataPath predecessors = do
     --logger info expression
     Session.runStmt expression
     hash <- Hash.compute tmpVarName
-    let varName = Cache.getVarName hash callPointPath
+    let varName = VarName.mk hash callPointPath
     Session.runAssignment varName tmpVarName
-    Cache.put callDataPath hash
-    logger trace =<< MapForest.draw <$> gets (view Env.cached)
+    Cache.put callDataPath predVarNames varName
+    Cache.dumpAll
+    return varName
 
 
+freeVarName :: VarName -> Session ()
+freeVarName varName = Session.runAssignment varName "()"

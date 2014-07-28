@@ -75,8 +75,9 @@ def main self:
         Executor.processMain
         putStrLn "---------"
         Executor.processMain
+        putStrLn "---------"
         --Invalidate.invalidateDef  libID 2
-        Invalidate.invalidateNode libID 10
+        Invalidate.modifyNode libID 10
         --Invalidate.invalidate [CallPoint libID 52, CallPoint libID 17, CallPoint libID 38]
         Executor.processMain
         Executor.processMain

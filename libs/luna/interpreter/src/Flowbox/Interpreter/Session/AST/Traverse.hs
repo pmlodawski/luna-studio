@@ -9,6 +9,7 @@ module Flowbox.Interpreter.Session.AST.Traverse (
 , nextLocal
 , previous
 , up
+, next
 ) where
 
 import           Control.Monad.State hiding (mapM, mapM_)
@@ -96,3 +97,5 @@ up :: CallDataPath -> CallDataPath
 up = init
 
 
+next :: CallDataPath -> Session [CallDataPath]
+next _ = return []
