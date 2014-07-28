@@ -259,7 +259,7 @@ function WebGHCI(host) {
 
 		app.socket.onopen = function() {
 			console.debug('socket open', arguments);
-			app.socketSend({topic: 'spawn_shell', data: 'cd ../projects && bash'});
+			app.socketSend({topic: 'spawn_shell', data: 'bash'});
 		}
 
 		app.socket.onclose = function() {
