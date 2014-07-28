@@ -25,6 +25,7 @@ Library
                      
     Build-Depends:  aws,
                     aws-sdk >= 0.12.4,
+                    aeson < 0.8, 
                     base,
                     bytestring,
                     containers,
@@ -50,8 +51,8 @@ Library
                     SHA,
                     text,
                     time,
-                    transformers > 0.4 
-
+                    transformers >= 0.4 
+-- [PM] : aeson < 0.8 is a temporary fix until https://github.com/aristidb/aws/issues/108 is fixed.
 
 Executable aws-test-dbpool
     Main-Is:        DBPool.hs
