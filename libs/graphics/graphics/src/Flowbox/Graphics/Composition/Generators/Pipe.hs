@@ -12,7 +12,7 @@ module Flowbox.Graphics.Composition.Generators.Pipe ( pipe ) where
 
 import Flowbox.Prelude                                    as P hiding (transform)
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Sampler
+import Flowbox.Graphics.Composition.Generators.Matrix 
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 
 import Flowbox.Math.Matrix                                as M hiding (ftrans)

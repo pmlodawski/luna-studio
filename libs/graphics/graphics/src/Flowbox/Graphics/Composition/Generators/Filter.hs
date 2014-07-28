@@ -10,13 +10,15 @@
 
 module Flowbox.Graphics.Composition.Generators.Filter where
 
+import Flowbox.Graphics.Composition.Generators.Constant
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Transform
+import Flowbox.Graphics.Composition.Generators.Stencil
+import Flowbox.Graphics.Composition.Generators.Matrix
 
 import Flowbox.Prelude       as P hiding ((<*), filter)
-import Flowbox.Math.Matrix   as M
-import Data.Array.Accelerate as A hiding (filter)
+import Flowbox.Math.Matrix   as M hiding (stencil)
+import Data.Array.Accelerate as A hiding (filter, stencil, constant)
 
 import Math.Space.Space
 import Math.Coordinate.Cartesian                (Point2(..))
@@ -47,7 +49,7 @@ normalize kern = M.map (/ksum) kern
 -- == Windowed filters ==
 
 box :: (Elt a, IsFloating a) => Filter a
-box = Filter 0.5 $ \t -> A.cond (t >* -0.5 &&* t <=*  0.5) 1.0 0.0
+box = Filter 1 $ \(abs -> t) -> A.cond (t <=* 1.0) 1.0 0.0
 
 -- TODO: Find the name
 basic :: (Elt a, IsFloating a) => Filter a
@@ -121,3 +123,29 @@ scharr = M.fromList (Z :. 3 :. 3) [  -3, 0, 3
                                   , -10, 0, 10
                                   ,  -3, 0, 3
                                   ]
+
+
+-- == General convolutions ==
+
+convolve :: (IsNum a, Elt a) => (Point2 c -> Point2 (Exp Int) -> Point2 b)
+         -> Matrix2 a -> Generator b (Exp a) -> Generator c (Exp a)
+convolve mode kernel = stencil mode (Grid width height) (unsafeFromMatrix kernel) (+) 0
+    where Z :. height :. width = A.unlift $ M.shape kernel
+
+filter :: (Elt a, IsNum a) => Exp Int -> Matrix2 a -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+filter scatter = convolve $ \point offset -> point + pure scatter * offset
+
+-- == Morphological filters
+
+dilate :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+dilate size = stencil (\point offset -> point + offset) size (constant 1) max (-1e20)
+
+erode :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+erode size = stencil (\point offset -> point + offset) size (constant 1) min 1e20
+
+opening :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+opening size = erode size . dilate size
+
+closing :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+closing size = dilate size . erode size
+

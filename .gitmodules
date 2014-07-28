@@ -19,3 +19,6 @@
 [submodule "third-party/cuda"]
 	path = third-party/cuda
 	url = git@github.com:tmcdonell/cuda.git
+[submodule "tools/graphics/webghci"]
+	path = tools/graphics/webghci
+	url = git@github.com:korrix/WebGHCI.git

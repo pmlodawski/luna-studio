@@ -12,8 +12,8 @@ module Flowbox.Graphics.Composition.Generators.Sampler where
 
 import Flowbox.Prelude                                      as P hiding (transform)
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Convolution
-import Flowbox.Graphics.Composition.Generators.Filter      (Filter(..))
+import Flowbox.Graphics.Composition.Generators.Stencil
+import Flowbox.Graphics.Composition.Generators.Filter      (Filter(..), convolve)
 import Flowbox.Graphics.Utils
 import Flowbox.Math.Matrix                                as M
 
@@ -24,12 +24,6 @@ import           Math.Space.Space
 
 
 
-unsafeFromMatrix :: Elt e => Matrix2 e -> DiscreteGenerator (Exp e)
-unsafeFromMatrix mat = Generator $ \(Point2 x y) -> mat M.! A.index2 y x
-
-fromMatrix :: Elt e => Boundary (Exp e) -> Matrix2 e -> DiscreteGenerator (Exp e)
-fromMatrix b mat = Generator $ \(Point2 x y) -> boundedIndex b mat $ A.index2 y x
-
 monosampler :: (Elt a, IsNum a) => Generator (Exp a) e -> DiscreteGenerator e
 monosampler = transform $ fmap A.fromIntegral
 
@@ -38,7 +32,7 @@ multisampler kernel = convolve msampler kernel
     where fi = fmap A.fromIntegral
           msampler point offset = fi point + subpixel * fi offset 
           Z :. h :. w = A.unlift $ shape kernel
-          subpixel = Point2 (1 / A.fromIntegral w) (1 / A.fromIntegral h)
+          subpixel = Point2 (1 / (A.fromIntegral w - 1)) (1 / (A.fromIntegral h - 1))
 
 nearest :: (Elt e, IsFloating e) => DiscreteGenerator (Exp e) -> Generator (Exp e) (Exp e)
 nearest = transform $ fmap A.floor
