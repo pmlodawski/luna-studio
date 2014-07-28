@@ -13,7 +13,7 @@ import           Flowbox.Data.MapForest                     (MapForest)
 import qualified Flowbox.Data.MapForest                     as MapForest
 import           Flowbox.Data.SetForest                     (SetForest)
 import qualified Flowbox.Data.SetForest                     as SetForest
-import           Flowbox.Interpreter.Session.Data.CacheInfo (CacheInfo)
+import           Flowbox.Interpreter.Session.Cache.Info     (CacheInfo)
 import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint)
 import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint)
 import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint (DefPoint))
