@@ -240,11 +240,11 @@ function WebGHCI(host) {
 		// app.viewers.push(file);
 		app.viewers.removeAll();
 		if('image' == file.type())
-			app.viewers([file]);
+			app.viewers([new ViewerImage(file)]);
 	}
 
 	app.freshFileURL = function(url) {
-		return url + '?' + new Date().getTime();
+		return url + '?' + new Date().getTime();7
 	}
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -274,17 +274,33 @@ function WebGHCI(host) {
 				app.terminalEach(function(term) {term.print(clearOutputFromGHCI(result.data))});
 			} else if('inotify' == result.topic) {
 				var data = result.data,
-					type = 'undefined',
-					hasFlag = function(flag) {return $.inArray(flag, data.flags) >= 0};
-				console.debug(data.name, data.mime, data.size, data.flags)
+					hasFlag = function(flag) {return $.inArray(flag, data.flags) >= 0},
+					type = 'undefined';
 
 				if(hasFlag('isdir'))
 					type = 'dir';
 				else if($.inArray(data.mime, ['image/bmp','image/jpeg','image/png','image/gif']) >= 0)
-					type = 'image';
+					type = 'image';;
 
-				if(hasFlag('create'))
+				console.debug(data.name, data.mime, data.size, data.flags)
+
+				if(hasFlag('create')) {
 					app.appendFile(data.name, type);
+				} else if(hasFlag('close_write')) {
+					console.debug('MODIFIED')
+					var viewersModified = ko.utils.arrayFilter(app.viewers(), function(view) {
+							return data.name == view.file.path();
+						});
+
+					console.debug(viewersModified)
+
+					if('image' == type)
+						var view = null;
+						for(var i in viewersModified) {
+							view = viewersModified[i];
+							view.url(app.freshFileURL(app.www + '/' + view.file.path()))
+						}
+				}
 			} else {
 				app.terminalEach(function(term) {term.printDebug(msg.data)});
 			}
@@ -340,6 +356,13 @@ function WebGHCI(host) {
 		self.type = ko.observable(type);
 
 		self.files = ko.observableArray([]);
+	}
+
+	function ViewerImage(file) {
+		var self = this;
+
+		self.file = file;
+		self.url  = ko.observable(app.freshFileURL(app.www + '/' + self.file.path()));
 	}
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

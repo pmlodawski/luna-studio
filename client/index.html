@@ -27,8 +27,8 @@
 		<ul data-bind="template: {name: 'file-node-template', foreach: files}" class="wghci-file-list"></ul>
 	</div>
 	<div data-bind="foreach: viewers" class="wghci-viewers">
-		<!-- ko if: type() == 'image' -->
-		<img data-bind="attr: {src: $root.freshFileURL($root.www + '/' + path())}">
+		<!-- ko if: file.type() == 'image' -->
+		<img data-bind="attr: {src: url()}">
 		<!-- /ko -->
 	</div>
 </div>
