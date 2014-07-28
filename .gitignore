@@ -35,5 +35,4 @@ build/
 server/.bundle/
 server/vendor/
 server/Gemfile.lock
-projects/*
 
