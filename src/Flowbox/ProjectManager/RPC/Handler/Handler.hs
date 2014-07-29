@@ -23,6 +23,7 @@ import           Flowbox.ProjectManager.Context                 (Context)
 import qualified Flowbox.ProjectManager.RPC.Handler.AST         as ASTHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.Graph       as GraphHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.Library     as LibraryHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Maintenance as MaintenanceHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault as NodeDefaultHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.Project     as ProjectHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.Properties  as PropertiesHandler
@@ -30,6 +31,7 @@ import qualified Flowbox.ProjectManager.RPC.Handler.Sync        as SyncHandler
 import qualified Flowbox.ProjectManager.RPC.Topic               as Topic
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
+
 
 
 logger :: LoggerIO
@@ -84,6 +86,7 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryAstPropertiesGetRequest                  , call Topic.status PropertiesHandler.getASTProperties)
     , (Topic.projectLibraryAstPropertiesSetRequest                  , call Topic.update PropertiesHandler.setASTProperties)
     , (Topic.projectmanagerSyncGetRequest                           , call Topic.status SyncHandler.syncGet)
+    , (Topic.projectmanagerPingRequest                              , call Topic.status MaintenanceHandler.ping)
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)

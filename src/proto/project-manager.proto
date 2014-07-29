@@ -609,6 +609,13 @@ message Project {
 }
 
 message ProjectManager {
+    message Ping {
+        message Request {}
+        message Status {
+            required Request request = 1;
+        }
+    }
+
     message Sync {
         message Get {
             message Request { }
