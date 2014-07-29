@@ -15,7 +15,6 @@ import           Flowbox.Data.SetForest                     (SetForest)
 import qualified Flowbox.Data.SetForest                     as SetForest
 import           Flowbox.Interpreter.Session.Cache.Info     (CacheInfo)
 import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint)
-import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint)
 import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint (DefPoint))
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb          as Crumb
 import           Flowbox.Luna.Lib.LibManager                (LibManager)

@@ -76,14 +76,15 @@ instance (out~(IO a)) => ToIO a out where
 --
 -- import Prelude
 -- import qualified Data.Hash
+-- import  Data.Word
 hash :: String
 hash = [r|
 class Hash a where
-    hash :: a -> Maybe Data.Hash.Hash
+    hash :: a -> Maybe Word64
 
 
 class Hash' flag a where
-    hash' :: flag -> a -> Maybe Data.Hash.Hash
+    hash' :: flag -> a -> Maybe Word64
 
 instance (HashablePred a flag, Hash' flag a) => Hash a where
     hash = hash' (undefined::flag)
@@ -96,8 +97,10 @@ class HashablePred a flag | a->flag where {}
                                   -- instances don't apply
 instance TypeCast flag HFalse => HashablePred a flag
 
-instance HashablePred Int  HTrue   -- These instances should be
-instance HashablePred Bool HTrue   -- the same as Hashable's
+instance HashablePred Int    HTrue   -- These instances should be
+instance HashablePred Bool   HTrue   -- the same as Hashable's
+instance HashablePred Char   HTrue   -- ...
+instance HashablePred [Char] HTrue   -- ...
 instance HashablePred a flag => HashablePred [a] flag
 --  ...etc...
 
@@ -106,7 +109,7 @@ data HTrue    -- Just two
 data HFalse   -- distinct types
 
 instance Data.Hash.Hashable a => Hash' HTrue a where
-   hash' _ x = Just (Data.Hash.hash x)
+   hash' _ x = Just $ Data.Hash.asWord64 $ Data.Hash.hash x
 instance Hash' HFalse a where
    hash' _ x = Nothing
 

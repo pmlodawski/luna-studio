@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.Hash where
 
-import           Data.Hash                    (Hash, hash)
 import           Language.Haskell.Interpreter (as)
 import qualified Language.Haskell.Interpreter as Interpreter
 
-import Flowbox.Interpreter.Session.Session (Session)
+import Flowbox.Interpreter.Session.Data.Hash (Hash)
+import Flowbox.Interpreter.Session.Session   (Session)
 import Flowbox.Prelude
 import Flowbox.System.Log.Logger
 
@@ -24,5 +24,5 @@ compute :: String -> Session (Maybe Hash)
 compute varName = do
     let expr = "hash " ++ varName
     -- FIXME [PM] !!!!!!
-    --lift2 $ Interpreter.interpret expr (as :: Maybe Hash)
-    return $ Just $ hash varName
+    lift2 $ Interpreter.interpret expr (as :: Maybe Hash)
+    --return $ Just $ hash varName

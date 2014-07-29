@@ -7,7 +7,6 @@
 module Flowbox.Interpreter.Session.Cache.Cache where
 
 import           Control.Monad.State hiding (mapM, mapM_)
-import           Data.Hash           (Hash)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
 
@@ -22,6 +21,7 @@ import           Flowbox.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Flowbox.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Flowbox.Interpreter.Session.Data.Hash          (Hash)
 import           Flowbox.Interpreter.Session.Data.VarName       (VarName)
 import qualified Flowbox.Interpreter.Session.Data.VarName       as VarName
 import qualified Flowbox.Interpreter.Session.Env                as Env
