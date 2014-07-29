@@ -7,35 +7,16 @@
 
 module Flowbox.Data.Graph (
     module Data.Graph.Inductive,
-    Graph,
-    Vertex,
-    LVertex,
-
-    updateNode,
-    replaceNode,
-    labs,
-    labVtx,
-    labVtxs,
-    out_,
-    inn_,
-    innvtx,
-    suc_,
-    sucl,
-    pre_,
-    prel,
-    lprel,
-    path,
-    newVtxs,
-    newVtx,
-    insNewNode,
-    topsortl,
+    module Flowbox.Data.Graph,
 ) where
 
 import Flowbox.Prelude hiding (fromJust, pre, (&))
 
 import           Data.Graph.Inductive hiding (Graph, Node)
 import qualified Data.Graph.Inductive as DG
+import qualified Data.List            as List
 import           Data.Maybe           (fromJust)
+
 
 
 type Graph a b = DG.Gr a b
@@ -74,6 +55,9 @@ suc_ g vtx = map (fromJust . lab g) $ suc g vtx
 sucl :: Graph a b -> Vertex -> [LVertex a]
 sucl g vtx = map (fromJust . labVtx g) $ suc g vtx
 
+
+lsucl :: Graph a b -> Vertex -> [(Vertex, a, b)]
+lsucl g vtx = map (\((v, b)) -> (v, fromJust $ lab g v, b)) $ lsuc g vtx
 
 pre_ :: Graph a b -> Vertex -> [a]
 pre_ g vtx = map (fromJust . lab g) $ pre g vtx
@@ -124,3 +108,7 @@ insNewNode node graph = (newGraph, nodeID) where
 
 topsortl :: Graph a b -> [LVertex a]
 topsortl graph = map (fromJust . labVtx graph) $ topsort graph
+
+
+findNode :: (a -> Bool) -> Graph a b -> Maybe Vertex
+findNode predicate = fmap fst . List.find (predicate . snd) . labNodes
