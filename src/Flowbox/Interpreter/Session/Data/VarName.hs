@@ -6,12 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.Data.VarName where
 
-import           Data.Hash  (Hash)
-import qualified Data.Hash  as Hash
 import qualified Data.Maybe as Maybe
 
 import qualified Flowbox.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Flowbox.Interpreter.Session.Data.Hash          (Hash)
 import           Flowbox.Prelude
 
 
@@ -21,6 +20,6 @@ type VarName = String
 
 mk :: Maybe Hash -> CallPointPath -> VarName
 mk mhash callPointPath = concatMap gen callPointPath ++ hash where
-    gen callPoint = "_" ++ (show $ abs (callPoint ^. CallPoint.libraryID))
-                 ++ "_" ++ (show $ abs (callPoint ^. CallPoint.nodeID))
-    hash = '_' : Maybe.maybe "" (show . Hash.asWord64)  mhash
+    gen callPoint = "_" ++ show (abs (callPoint ^. CallPoint.libraryID))
+                 ++ "_" ++ show (abs (callPoint ^. CallPoint.nodeID))
+    hash = '_' : Maybe.maybe "nohash" show  mhash

@@ -50,8 +50,8 @@ localPredecessors callDataPath = localPreds where
 globalPredecesors :: CallDataPath -> (Node.ID, Node, Edge) -> Session (Maybe CallDataPath)
 globalPredecesors []           _                    = return Nothing
 globalPredecesors callDataPath (nodeID, node, edge) = do
-    let upperLevel = (init callDataPath)
-        thisLevel  = (last callDataPath)
+    let upperLevel = init callDataPath
+        thisLevel  = last callDataPath
     case node of
         Node.Inputs -> if null upperLevel
                         then return Nothing
@@ -87,8 +87,8 @@ nextLocal callDataPath = localSuccs where
     graph      = last callDataPath ^. CallData.parentGraph
     nodeID'    = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
     succNodes  = Graph.sucl graph nodeID'
-    upperLevel = (init callDataPath)
-    thisLevel  = (last callDataPath)
+    upperLevel = init callDataPath
+    thisLevel  = last callDataPath
     localSuccs = map (\(nodeID, node) -> upperLevel ++ [thisLevel
                                         & CallData.callPoint . CallPoint.nodeID .~ nodeID
                                         & CallData.node .~ node]) succNodes
@@ -114,9 +114,9 @@ globalSuccessors :: CallDataPath -> (Node.ID, Node)  -> Session [CallDataPath]
 globalSuccessors callDataPath (nodeID, node) = do
     let callData  = last callDataPath
     inner <- into callDataPath
-    if not $ null inner
-        then return inner
-        else return [init callDataPath
-                    ++ [callData & (CallData.callPoint . CallPoint.nodeID .~ nodeID)
-                                 & (CallData.node .~ node)]]
+    return $ if not $ null inner
+        then inner
+        else [init callDataPath
+             ++ [callData & (CallData.callPoint . CallPoint.nodeID .~ nodeID)
+                          & (CallData.node .~ node)]]
 

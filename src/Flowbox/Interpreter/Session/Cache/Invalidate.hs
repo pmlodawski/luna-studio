@@ -54,7 +54,7 @@ modifyMatching predicate = do
 modifyParents :: CallPointPath -> Session ()
 modifyParents [] = return ()
 modifyParents callPointPath = do
-    (Cache.setStatus CacheStatus.Modified) callPointPath
+    Cache.setStatus CacheStatus.Modified callPointPath
     modifyParents $ init callPointPath
 
 

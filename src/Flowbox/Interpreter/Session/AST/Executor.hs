@@ -92,7 +92,7 @@ execute callDataPath functionName predVarNames = do
 
         executeModified = do
             varName <- execFunction
-            when (varName /= prevVarName) $ do
+            when (varName /= prevVarName) $
                 if boundVarName /= Just varName
                     then do mapM_ freeVarName boundVarName
                             Invalidate.markSuccessors callDataPath CacheStatus.Modified

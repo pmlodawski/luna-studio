@@ -55,7 +55,7 @@ fromCallPointPath (callPoint:t) parentDefPoint = do
     let parentBC = parentDefPoint  ^. DefPoint.breadcrumbs
         callData = CallData callPoint parentBC defID graph node
     mdefPoint <- Inspect.fromName (node ^. Node.expr) parentBC libraryID
-    ((:) callData) <$> case mdefPoint of
+    (:) callData <$> case mdefPoint of
         Just defPoint -> fromCallPointPath t defPoint
         Nothing       -> return []
 

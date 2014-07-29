@@ -24,6 +24,6 @@ fromName name parentBC libraryID = do
     libManager <- Session.getLibManager
     results <- EitherT $ NameResolver.run name parentBC libraryID libManager
     case results of
-        []       -> return $ Nothing
+        []       -> return   Nothing
         [result] -> return $ Just $ uncurry DefPoint result
         _        -> left "Name resolver returned multiple results"

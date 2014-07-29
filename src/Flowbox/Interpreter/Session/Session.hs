@@ -62,6 +62,7 @@ initialize = do
     lift2 $ I.setImportsQ [("Prelude", Nothing)
                           ,("Control.Monad", Nothing)
                           ,("Data.Hash", Just "Data.Hash")
+                          ,("Data.Word", Nothing)
                           ]
     runDecls Helpers.operation
     runDecls Helpers.hash
