@@ -42,6 +42,8 @@ ex black ev = testFunction (exposure black ev) input output
 
 --idHSL = testColor (toRGB . toHSL)
 
+posterization v = testFunction (posterize v) input output
+
 hsvT = testColor (hsvTool (Range (358/360) (359/360)) (180 / 360) (90/360) (Range 0 1) 0 0 (Range 0 1) (0) 0) input output
 
 --inRange :: (IsScalar t, Elt t) => Exp t -> U.Range (Exp t) -> Exp Bool

@@ -176,3 +176,10 @@ check (U.frac -> x) (a,b) =
 
 conditionally :: (Elt a, IsScalar a) => U.Range (Exp a) -> (Exp a -> Exp a) -> Exp a -> Exp a
 conditionally (U.Range low high) f val = val A.>=* low A.&&* val A.<=* high A.? (f val, val)
+
+posterize :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
+posterize colors val = A.cond (colors A.==* 0) 0
+                     $ A.cond (colors A.==* 1) 1
+                     $ s * A.fromIntegral (A.floor $ val / t :: Exp Int)
+    where s = 1 / (colors - 1)
+          t = 1 / colors
