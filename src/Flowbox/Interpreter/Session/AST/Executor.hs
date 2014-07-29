@@ -71,24 +71,24 @@ executeOutputs callDataPath predVarNames = do
         parentGraph   = last callDataPath ^. CallData.parentGraph
         inDegree      = Graph.indeg parentGraph nodeID
         functionName  = if inDegree == 1 then "id" else '(' : replicate (inDegree-1) ',' ++ ")"
-        callPointPath = CallDataPath.toCallPointPath callDataPath
-    when (length callDataPath > 1) $ do
-
-        prevVarName  <- Cache.recentVarName callPointPath
-        varName <- executeFunction functionName (init callDataPath) predVarNames
-        when (varName /= prevVarName) $
-            freeVarName varName
+    when (length callDataPath > 1) $
+        execute (init callDataPath) functionName  predVarNames
 
 
 executeNode :: CallDataPath -> [VarName] -> Session ()
 executeNode callDataPath predVarNames = do
+    let node         = last callDataPath ^. CallData.node
+        functionName = node ^. Node.expr
+    execute callDataPath functionName predVarNames
+
+
+execute :: CallDataPath -> String -> [VarName] -> Session ()
+execute callDataPath functionName predVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
     prevVarName  <- Cache.recentVarName callPointPath
     boundVarName <- Cache.dependency predVarNames callPointPath
-    let node         = last callDataPath ^. CallData.node
-        functionName = node ^. Node.expr
-        execFunction = executeFunction functionName callDataPath predVarNames
+    let execFunction = evalFunction functionName callDataPath predVarNames
 
         executeModified = do
             varName <- execFunction
@@ -110,11 +110,11 @@ executeNode callDataPath predVarNames = do
         CacheStatus.Affected     -> executeAffected
         CacheStatus.Modified     -> executeModified
         CacheStatus.NonCacheable -> executeModified
-        CacheStatus.Ready    -> left "executeNode (Ready) : somethong went wrong"
+        CacheStatus.Ready        -> left "executeNode (Ready) : something went wrong"
 
 
-executeFunction :: String -> CallDataPath -> [VarName] -> Session VarName
-executeFunction funName callDataPath predVarNames = do
+evalFunction :: String -> CallDataPath -> [VarName] -> Session VarName
+evalFunction funName callDataPath predVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
     typedFun  <- TypeCheck.function funName predVarNames

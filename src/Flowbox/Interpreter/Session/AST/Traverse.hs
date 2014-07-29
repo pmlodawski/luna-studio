@@ -98,4 +98,25 @@ up = init
 
 
 next :: CallDataPath -> Session [CallDataPath]
-next _ = return []
+next []           = return []
+next callDataPath = do
+    let callData  = last callDataPath
+        graph  = callData ^. CallData.parentGraph
+        nodeID = callData ^. CallData.callPoint . CallPoint.nodeID
+        node   = callData ^. CallData.node
+        sucl   = Graph.sucl graph nodeID
+    case node of
+        Node.Outputs -> next $ init callDataPath
+        _            -> concat <$> mapM (globalSuccessors callDataPath) sucl
+
+
+globalSuccessors :: CallDataPath -> (Node.ID, Node)  -> Session [CallDataPath]
+globalSuccessors callDataPath (nodeID, node) = do
+    let callData  = last callDataPath
+    inner <- into callDataPath
+    if not $ null inner
+        then return inner
+        else return [init callDataPath
+                    ++ [callData & (CallData.callPoint . CallPoint.nodeID .~ nodeID)
+                                 & (CallData.node .~ node)]]
+

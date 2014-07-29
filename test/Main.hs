@@ -15,7 +15,7 @@ import Text.Show.Pretty
 import           Flowbox.Control.Error                        (eitherStringToM)
 import qualified Flowbox.Interpreter.Session.AST.Executor     as Executor
 import qualified Flowbox.Interpreter.Session.Cache.Invalidate as Invalidate
---import           Flowbox.Interpreter.Session.Data.CallPoint            (CallPoint (CallPoint))
+import qualified Flowbox.Interpreter.Session.Cache.Cache               as Cache
 import           Flowbox.Interpreter.Session.Data.DefPoint             (DefPoint (DefPoint))
 import qualified Flowbox.Interpreter.Session.Env                       as Env
 import qualified Flowbox.Interpreter.Session.Error                     as Error
@@ -29,6 +29,7 @@ import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtPar
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                as UniPath
+
 
 
 rootLogger :: Logger
@@ -76,8 +77,12 @@ def main self:
         putStrLn "---------"
         Executor.processMain
         putStrLn "---------"
+
         --Invalidate.invalidateDef  libID 2
+        Cache.dumpAll
         Invalidate.modifyNode libID 10
+        Cache.dumpAll
+
         --Invalidate.invalidate [CallPoint libID 52, CallPoint libID 17, CallPoint libID 38]
         Executor.processMain
         Executor.processMain
