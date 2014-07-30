@@ -33,6 +33,27 @@ ko.bindingHandlers.ghciTerminal = {
 	}
 };
 
+ko.bindingHandlers.vectorscope = {
+	init: function(element, valueAccessor) {
+		var $element = $(element),
+			canvas   = document.createElement('CANVAS'),
+			$canvas  = $(canvas),
+			vectorscope;
+
+		canvas.width  = 512;
+		canvas.height = 512;
+		console.debug('vectorscope:',valueAccessor(), $canvas.get(0));
+		vectorscope = new Vectorscope(canvas);
+
+		element.addEventListener('load', function() {
+			vectorscope.setImage(element);
+			vectorscope.refresh();
+		}, false);
+
+		$element.after($canvas);
+	}
+};
+
 function WebGHCI(host) {
 	var app = this;
 
@@ -78,9 +99,6 @@ function WebGHCI(host) {
 		var cmd_split = cmd.split(" ");
 		if(cmd_split[0] == 'wssend') {
 			app.socketSend({topic: cmd_split[1], data: cmd_split[2]});
-			return;
-		} else if(cmd_split[0] == 'watch') {
-			app.socketSend({topic: 'inotify_subscribe', data: (cmd_split[1] ? cmd_split[1] : 'projects')})
 			return;
 		}
 		app.shellExecuteCommand(cmd);
@@ -230,6 +248,15 @@ function WebGHCI(host) {
 
 	function segmentizePath(path) {
 		return path.trimChars('/').split('/');
+	}
+
+	function notify(path) {
+		app.socketSend({topic: 'inotify_subscribe', data: path})
+	}
+
+	app.watch = function(form) {
+		var path = form['path'].value;
+		notify(path);
 	}
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

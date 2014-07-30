@@ -13,12 +13,12 @@ body {
 .wghci-files {
 	display: block;
 	position: fixed;
-	left: 0; right: 400px;
-	top: 0; bottom: 40%;
+	left: 0; right: 300px;
+	top: 0; bottom: 35%;
 
 	.wghci-files-tree {
 		height: 100%;
-		width: 300px;
+		width: 200px;
 		overflow: auto;
 		float: left;
 
@@ -36,7 +36,7 @@ body {
 				text-decoration: underline;
 			}
 		}
-		.wghci-file-list > li:before {
+		.wghci-file-list > li.file-directory:before {
 			position: absolute;
 			content: "";
 			display: block;
@@ -59,8 +59,8 @@ body {
 .wghci-terminals {
 	display: block;
 	position: fixed;
-	left: 0; right: 400px;
-	top: 60%; bottom: 0;
+	left: 0; right: 300px;
+	top: 65%; bottom: 0;
 	overflow: auto;
 	border-top: 1px solid @color-white;
 }
@@ -70,7 +70,7 @@ body {
 	position: fixed;
 	right: 0;
 	top: 0; bottom: 50%;
-	width: 400px;
+	width: 300px;
 	background-color: rgba(255,255,255,0.1);
 
 	overflow: auto;
@@ -104,7 +104,7 @@ body {
 	position: fixed;
 	right: 0;
 	top: 50%; bottom: 0;
-	width: 400px;
+	width: 300px;
 	background-color: rgba(255,255,255,0.1);
 	border-top: 1px solid @color-white;
 
@@ -133,5 +133,10 @@ body {
 				color: @color-red;
 			}
 		}
+	}
+
+	textarea {
+		width: 95%;
+		height: 150px;
 	}
 }

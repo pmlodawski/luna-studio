@@ -10,6 +10,7 @@
 	<script type="text/javascript" src="js/jquery-2.1.1.js"></script>
 	<script type="text/javascript" src="js/jquery.terminal-0.8.8.js"></script>
 	<script type="text/javascript" src="js/knockout-3.1.0.js"></script>
+	<script type="text/javascript" src="js/vectorscope.js"></script>
 	<script type="text/javascript" src="js/app-config.js"></script>
 	<script type="text/javascript" src="js/app.js"></script>
 </head>
@@ -17,7 +18,7 @@
 <body>
 
 <script type="text/html" id="file-node-template">
-<li>
+<li data-bind="css: {'file-directory': type() == 'dir'}">
 	<span data-bind="text: name, click: $root.fileClicked" class="file-name"></span>
 	<ul data-bind="template: {name: 'file-node-template', foreach: $data.files}" class="wghci-file-list"></ul>
 </li>
@@ -25,11 +26,17 @@
 
 <div class="wghci-files">
 	<div class="wghci-files-tree">
+		<div>
+			<form data-bind="submit: watch">
+				<input type="text" name="path" value="projects">
+				<button type="submit">watch</button>
+			</form>
+		</div>
 		<ul data-bind="template: {name: 'file-node-template', foreach: files}" class="wghci-file-list"></ul>
 	</div>
 	<div data-bind="foreach: viewers" class="wghci-viewers">
 		<!-- ko if: file.type() == 'image' -->
-		<img data-bind="attr: {src: url()}">
+		<img data-bind="vectorscope: true, attr: {src: url()}">
 		<!-- /ko -->
 	</div>
 </div>
