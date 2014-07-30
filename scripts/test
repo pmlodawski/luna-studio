@@ -24,7 +24,7 @@ def main():
     os.chdir(rootPath)
 
     pkgNames = []
-    args = []
+    args = ["--show-details=streaming"]
     for arg in sys.argv[1:]:
         if arg.startswith('--pkgs='):
             pkgNames = arg[7:].split(',')
@@ -47,7 +47,7 @@ def main():
         os.chdir(pkg.path)
         if not os.path.isfile("cabal.sandbox.config"):
             handle_out(call("cabal sandbox init --sandbox %s" % pkg.sbox, shell=True))
-        handle_out(call("cabal test --show-details=streaming", shell=True))
+        handle_out(call("cabal test %s" % ' '.join(args), shell=True))
 
 main()
 

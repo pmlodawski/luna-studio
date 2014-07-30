@@ -9,7 +9,8 @@ module MathSpec where
 
 import Test.Hspec
 
-absolute x = x
+absolute = abs
+--absolute = id
 
 main :: IO ()
 main = hspec spec
