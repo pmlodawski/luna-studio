@@ -4,9 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Image.Color (
     module Flowbox.Graphics.Image.Color,
@@ -20,7 +21,9 @@ module Flowbox.Graphics.Image.Color (
     U.mix
 ) where
 
-import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate       as A
+import           Data.Array.Accelerate.Tuple (IsTuple, TupleRepr, fromTuple, toTuple)
+import           Data.Array.Accelerate.Type  (IsScalar)
 
 import           Flowbox.Graphics.Color
 import qualified Flowbox.Graphics.Utils as U
@@ -183,3 +186,68 @@ posterize colors val = A.cond (colors A.==* 0) 0
                      $ s * A.fromIntegral (A.floor $ val / t :: Exp Int)
     where s = 1 / (colors - 1)
           t = 1 / colors
+
+
+type Vec3 a   = (Exp  a, Exp  a, Exp  a)
+type Mat3x3 a = (Vec3 a, Vec3 a, Vec3 a)
+
+type Vec4 a   = (Exp  a, Exp  a, Exp  a, Exp  a)
+type Mat4x4 a = (Vec4 a, Vec4 a, Vec4 a, Vec4 a)
+
+type family ColorMatrix (colorspace :: * -> *) t :: *
+
+type instance ColorMatrix CMY    t = Mat3x3 t
+type instance ColorMatrix CMYK   t = Mat4x4 t
+type instance ColorMatrix HSL    t = Mat3x3 t
+type instance ColorMatrix HSV    t = Mat3x3 t
+type instance ColorMatrix RGB    t = Mat3x3 t
+type instance ColorMatrix RGBA   t = Mat4x4 t
+type instance ColorMatrix YUV    t = Mat3x3 t
+type instance ColorMatrix YUV_HD t = Mat3x3 t
+
+
+colorMatrix :: (Elt t, IsFloating t, MatrixMultiplication a) => ColorMatrix a t -> a (Exp t) -> a (Exp t)
+colorMatrix matrix colour = mmult matrix colour
+
+class MatrixMultiplication colorspace where
+    mmult :: (Elt t, IsNum t) => ColorMatrix colorspace t -> colorspace (Exp t) -> colorspace (Exp t)
+
+instance MatrixMultiplication CMY where
+    mmult = mul3x3
+
+instance MatrixMultiplication CMYK where
+    mmult = mul4x4
+
+instance MatrixMultiplication HSL where
+    mmult = mul3x3
+
+instance MatrixMultiplication HSV where
+    mmult = mul3x3
+
+instance MatrixMultiplication RGB where
+    mmult = mul3x3
+
+instance MatrixMultiplication RGBA where
+    mmult = mul4x4
+
+instance MatrixMultiplication YUV where
+    mmult = mul3x3
+
+instance MatrixMultiplication YUV_HD where
+    mmult = mul3x3
+
+mul3x3 :: (IsTuple (a (Exp t)), Elt t, IsNum t, TupleRepr (a (Exp t)) ~ TupleRepr (Vec3 t)) => Mat3x3 t -> a (Exp t) -> a (Exp t)
+mul3x3 ((a, b, c), (d, e, f), (g, h, i)) pix = toTuple ((((), x'), y'), z')
+    where ((((), x), y), z) = fromTuple pix
+          x' = a * x + b * y + c * z
+          y' = d * x + e * y + f * z
+          z' = g * x + h * y + i * z
+
+mul4x4 :: (IsTuple (a (Exp t)), Elt t, IsNum t, TupleRepr (a (Exp t)) ~ TupleRepr (Vec4 t))
+       => Mat4x4 t -> a (Exp t) -> a (Exp t)
+mul4x4 ((a, b, c, d), (e, f, g, h), (i, j, k, l), (m, n, o, p)) pix = toTuple (((((), x'), y'), z'), w')
+    where (((((), x), y), z), w) = fromTuple pix
+          x' = a * x + b * y + c * z + d * w
+          y' = e * x + f * y + g * z + h * w
+          z' = i * x + j * y + k * z + l * w
+          w' = m * x + n * y + o * z + p * w
