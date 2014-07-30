@@ -364,7 +364,7 @@ function WebGHCI(host) {
 
 		self.run = function() {
 			self.runFailure(self.hasErrors())
-			app.terminalEach(function(term) {term.shellExecuteCommand(self.code())})
+			app.terminalEach(function(term) {app.shellExecuteCommand(self.code())})
 		}
 	}
 
