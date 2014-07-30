@@ -34,7 +34,7 @@ fromGraph :: Graph -> GraphView
 fromGraph = DG.emap EdgeView.fromEdge
 
 
-toGraph :: (Applicative m, Monad m) => GraphView -> m Graph
+toGraph :: GraphView -> Either String Graph
 toGraph gv = do let n = labNodes gv
                 ev <- mapM EdgeView.toLEdge $ labEdges gv
                 return $ mkGraph n ev

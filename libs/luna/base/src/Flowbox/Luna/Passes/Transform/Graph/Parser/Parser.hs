@@ -11,6 +11,7 @@
 module Flowbox.Luna.Passes.Transform.Graph.Parser.Parser where
 
 import Control.Monad.State
+import Control.Monad.Trans.Either
 
 import           Flowbox.Luna.Data.AST.Expr                                (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                                as Expr
@@ -83,7 +84,7 @@ parseArg :: Node.ID -> (Int, Expr) -> GPPass ()
 parseArg nodeID (num, input) = case input of
     Expr.Arg _              (Pat.Var _ name)    _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
     Expr.Arg _ (Pat.Typed _ (Pat.Var _ name) _) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
-    _                                             -> fail "parseArg: Wrong Arg type"
+    _                                             -> left "parseArg: Wrong Arg type"
 
 
 parseOutputsNode :: Node.ID -> GPPass ()
@@ -100,12 +101,12 @@ parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
         [s] -> do p <- case Parser.parsePattern pat $ ASTInfo.mk IDFixer.unknownID of
-                            Left  er     -> fail $ show er
+                            Left  er     -> left $ show er
                             Right (p, _) -> return p
                   let e = Expr.Assignment nodeID p s
                   State.addToNodeMap (nodeID, Port.All) e
                   State.addToBody e
-        _      -> fail "parsePatNode: Wrong Pat arguments"
+        _      -> left "parsePatNode: Wrong Pat arguments"
 
 
 --parseInfixNode :: Node.ID -> String -> GPPass ()
@@ -116,7 +117,7 @@ parsePatNode nodeID pat = do
 --                    [a, b] -> return (a, b)
 --                    [a]    -> return (a, u)
 --                    []     -> return (u, u)
---                    _      -> fail "parseInfixNode: Wrong Infix arguments"
+--                    _      -> left "parseInfixNode: Wrong Infix arguments"
 --    addExpr nodeID $ Expr.Infix nodeID inf a b
 
 
@@ -125,9 +126,9 @@ parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
         []  -> if length app == 1 && head app `elem` Lexer.operators
-                 then addExpr nodeID $ Expr.Var nodeID app 
+                 then addExpr nodeID $ Expr.Var nodeID app
                  else case Parser.parseExpr app $ ASTInfo.mk nodeID of
-                    Left  er     -> fail $ show er
+                    Left  er     -> left $ show er
                     Right (e, _) -> addExpr nodeID e
         [f] -> do let e   = Expr.Accessor nodeID app f
                   addExpr nodeID e

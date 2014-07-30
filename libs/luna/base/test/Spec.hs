@@ -5,4 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE ImplicitPrelude #-}
 {-# OPTIONS_GHC -F -pgmF hspec-discover #-}
+

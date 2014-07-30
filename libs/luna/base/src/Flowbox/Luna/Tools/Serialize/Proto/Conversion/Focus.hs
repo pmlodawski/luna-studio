@@ -33,9 +33,9 @@ import qualified Generated.Proto.Focus.ModuleFocus                    as GenModu
 
 instance Convert Focus Gen.Focus where
     encode t = case t of
-        Focus.FunctionFocus f -> genFocus GenCls.FunctionFocus GenFunction.ext $ GenFunction.FunctionFocus $ encodeJ f
-        Focus.ClassFocus    c -> genFocus GenCls.ClassFocus    GenClass.ext    $ GenClass.ClassFocus       $ encodeJ c
-        Focus.ModuleFocus   m -> genFocus GenCls.ModuleFocus   GenModule.ext   $ GenModule.ModuleFocus     $ encodeJ m
+        Focus.Function f -> genFocus GenCls.FunctionFocus GenFunction.ext $ GenFunction.FunctionFocus $ encodeJ f
+        Focus.Class    c -> genFocus GenCls.ClassFocus    GenClass.ext    $ GenClass.ClassFocus       $ encodeJ c
+        Focus.Module   m -> genFocus GenCls.ModuleFocus   GenModule.ext   $ GenModule.ModuleFocus     $ encodeJ m
         where
             genFocus :: GenCls.Cls -> Extensions.Key Maybe Gen.Focus v -> v -> Gen.Focus
             genFocus cls key ext = Extensions.putExt key (Just ext)
@@ -46,17 +46,15 @@ instance Convert Focus Gen.Focus where
             ext <- getExt GenFunction.ext
             (GenFunction.FunctionFocus mtf) <- ext <?> "Failed to decode Focus.FunctionFocus: extension is missing"
             tf  <- mtf <?> "Failed to decode Focus.FunctionFocus: 'f' field is missing"
-            Focus.FunctionFocus <$> decode tf
+            Focus.Function <$> decode tf
         GenCls.ClassFocus -> do
             ext <- getExt GenClass.ext
             (GenClass.ClassFocus mtf) <- ext <?> "Failed to decode Focus.ClassFocus: extension is missing"
             tf  <- mtf <?> "Failed to decode Focus.ClassFocus: 'c' field is missing"
-            Focus.ClassFocus <$> decode tf
+            Focus.Class <$> decode tf
         GenCls.ModuleFocus -> do
             ext <- getExt GenModule.ext
             (GenModule.ModuleFocus mtf) <- ext <?> "Failed to decode Focus.ModuleFocus: extension is missing"
             tf  <- mtf <?> "Failed to decode Focus.ModuleFocus: 'm' field is missing"
-            Focus.ModuleFocus <$> decode tf
-       where getExt k = case Extensions.getExt k t of
-                                Right a -> return a
-                                Left m  -> fail m
+            Focus.Module <$> decode tf
+       where getExt = flip Extensions.getExt t

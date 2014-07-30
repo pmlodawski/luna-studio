@@ -12,7 +12,8 @@ module Flowbox.Luna.Passes.Transform.Graph.Builder.Builder where
 
 import           Control.Applicative
 import           Control.Monad.State
-import qualified Data.List           as List
+import           Control.Monad.Trans.Either
+import qualified Data.List                  as List
 
 import qualified Flowbox.Luna.Data.AST.Common                        as AST
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
@@ -57,7 +58,7 @@ expr2graph (Expr.Function i _ _ inputs output body) = do
                  mapM_ (buildNode False Nothing) $ init body
                  buildOutput outputID $ last body
     finalize
-expr2graph _ = fail "expr2graph: Unsupported Expr type"
+expr2graph _ = left "expr2graph: Unsupported Expr type"
 
 
 prepareInputsOutputs :: AST.ID -> AST.ID -> GBPass (Node.ID, Node.ID)
@@ -85,7 +86,7 @@ parseArg :: Node.ID -> (Expr, Int) -> GBPass ()
 parseArg inputsID (input, no) = case input of
     Expr.Arg _ pat _ -> do [p] <- buildPat pat
                            State.addToNodeMap p (inputsID, Port.Num no)
-    _                -> fail "parseArg: Wrong Expr type"
+    _                -> left "parseArg: Wrong Expr type"
 
 
 buildOutput :: Node.ID -> Expr -> GBPass ()
@@ -144,7 +145,7 @@ buildNode astFolded outName expr = case expr of
     --                                 State.addNode i Port.All node astFolded noAssignment
     --                                 connectArgs True Nothing i items 0
     --                                 return i
-    Expr.Wildcard   i          -> fail $ "GraphBuilder: Unexpected Expr.Wildcard with id=" ++ show i
+    Expr.Wildcard   i          -> left $ "GraphBuilder: Unexpected Expr.Wildcard with id=" ++ show i
     _                          -> do let i = expr ^. Expr.id
                                          name = showExpr expr
                                          node = Node.Expr name (genName name i)

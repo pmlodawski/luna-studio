@@ -9,6 +9,11 @@ module MathSpec where
 
 import Test.Hspec
 
+import Flowbox.Prelude
+
+
+
+absolute :: Integer -> Integer
 absolute = abs
 --absolute = id
 
