@@ -80,7 +80,7 @@ moduleAdd request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) =
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     addedModule <- BatchAST.addModule newModule bcParent libID projectID
-    let newBC = bcParent ++ [Crumb.ModuleCrumb $ addedModule ^. Module.cls . Type.name]
+    let newBC = bcParent ++ [Crumb.Module $ addedModule ^. Module.cls . Type.name]
     updateNo <- Batch.getUpdateNo
     return $ AddModule.Update request (encode addedModule) (encode newBC) updateNo
 
@@ -92,7 +92,7 @@ dataAdd request@(AddData.Request tnewData tbcParent tlibID tprojectID _) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     addedData <- BatchAST.addClass newData bcParent libID projectID
-    let newBC = bcParent ++ [Crumb.ClassCrumb $ addedData ^. Expr.cls . Type.name]
+    let newBC = bcParent ++ [Crumb.Class $ addedData ^. Expr.cls . Type.name]
     updateNo <- Batch.getUpdateNo
     return $ AddData.Update request (encode addedData) (encode newBC) updateNo
 
@@ -104,7 +104,7 @@ functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectI
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     addedFunction <- BatchAST.addFunction newFunction bcParent libID projectID
-    let newBC = bcParent ++ [Crumb.FunctionCrumb (addedFunction ^. Expr.name) (addedFunction ^. Expr.path)]
+    let newBC = bcParent ++ [Crumb.Function (addedFunction ^. Expr.name) (addedFunction ^. Expr.path)]
     updateNo <- Batch.getUpdateNo
     return $ AddFunction.Update request (encode addedFunction) (encode newBC) updateNo
 
