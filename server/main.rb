@@ -3,6 +3,7 @@
 require 'bundler/setup'
 
 require 'em-websocket'
+require 'rubygems'
 require 'json'
 require 'ostruct'
 
