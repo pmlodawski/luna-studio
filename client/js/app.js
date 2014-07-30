@@ -401,5 +401,5 @@ function WebGHCI(host) {
 
 var datApp = null;
 $(document).ready(function() {
-	ko.applyBindings(datApp = new WebGHCI());
+	ko.applyBindings(datApp = new WebGHCI(wghciConfig && wghciConfig.host));
 })
