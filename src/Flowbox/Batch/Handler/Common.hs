@@ -181,7 +181,7 @@ getModuleFocus bc libraryID projectID = do
 
 
 setModuleFocus :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setModuleFocus newModule = setFocus (Focus.ModuleFocus newModule)
+setModuleFocus newModule = setFocus (Focus.Module newModule)
 
 
 getFunctionFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
@@ -191,7 +191,7 @@ getFunctionFocus bc libraryID projectID = do
 
 
 setFunctionFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setFunctionFocus newFunction = setFocus (Focus.FunctionFocus newFunction)
+setFunctionFocus newFunction = setFocus (Focus.Function newFunction)
 
 
 getClassFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
@@ -201,7 +201,7 @@ getClassFocus bc libraryID projectID = do
 
 
 setClassFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setClassFocus newClass = setFocus (Focus.ClassFocus newClass)
+setClassFocus newClass = setFocus (Focus.Class newClass)
 
 
 getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (Graph, PropertyMap)
@@ -238,7 +238,7 @@ getGraphView bc libraryID projectID = do
 setGraphView :: (GraphView, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setGraphView (newGraphView', newPM') bc libraryID projectID = do
     let (newGraphView, newPM) = Defaults.addDefaults newGraphView' newPM'
-    newGraph <- GraphView.toGraph newGraphView
+    newGraph <- hoistEither $ GraphView.toGraph newGraphView
     setGraph (newGraph, newPM) bc libraryID projectID
 
 
