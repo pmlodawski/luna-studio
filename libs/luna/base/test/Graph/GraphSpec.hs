@@ -22,6 +22,7 @@ import           Flowbox.Luna.Data.Pass.AliasInfo                      (AliasInf
 import           Flowbox.Luna.Data.Pass.Source                         (Source (Source))
 import           Flowbox.Luna.Data.PropertyMap                         (PropertyMap)
 import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias              as Alias
+import           Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer     (clearIDs)
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
@@ -49,10 +50,17 @@ getExpr = eitherStringToM' .:. GraphParser.run
 
 backAndForth :: String -> IO ()
 backAndForth code = do
-    (expr, aa)  <- getAST code
-    (graph, pm) <- getGraph aa def expr
-    expr2       <- getExpr graph pm expr
-    expr2 `shouldBe` expr
+    (expr, aa)    <- getAST code
+    (graph, pm)   <- getGraph aa def expr
+    printLn
+    print graph
+    print pm
+    printLn
+    expr2         <- getExpr graph pm expr
+    (graph2, pm2) <- getGraph aa def expr
+    (clearIDs expr2) `shouldBe` (clearIDs expr)
+    graph2 `shouldBe` graph
+    pm2    `shouldBe` pm
 
 
 named :: a -> b -> (a, b)
@@ -65,14 +73,22 @@ def main:
     1
 |], named "test2" [r|
 def main:
-    2 + 2
+    1 + 2
 |], named "test3" [r|
 def main:
-    2 + 2
+    1 + 2
     foo
 |], named "test4" [r|
 def main:
     foo
+    2
+|], named "test5" [r|
+def main:
+    foo.bar.baz
+    2
+|], named "test6" [r|
+def main arg:
+    foo.bar arg
     2
 |]]
 

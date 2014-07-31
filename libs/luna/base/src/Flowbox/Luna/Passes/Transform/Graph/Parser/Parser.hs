@@ -55,9 +55,11 @@ graph2expr expr = do
     let inputs = expr ^. Expr.inputs
     graph <- State.getGraph
     mapM_ (parseNode inputs) $ Graph.topsortl graph
-    b <- State.getBody
-    o <- State.getOutput
-    let body = reverse $ o : b
+    b  <- State.getBody
+    mo <- State.getOutput
+    let body = case mo of
+                Nothing -> b
+                Just o  -> reverse $ o : b
     return (Expr.body .~ body $ expr)
 
 
@@ -90,10 +92,8 @@ parseArg nodeID (num, input) = case input of
 parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
-    let e = case srcs of
-                [s] -> s
-                _   -> Expr.Tuple IDFixer.unknownID srcs
-    State.setOutput e
+    when (length srcs /= 1) $
+        State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
 
 
 parsePatNode :: Node.ID -> String -> GPPass ()
@@ -150,10 +150,12 @@ addExpr nodeID e = do
     folded         <- hasFlag nodeID Attributes.astFolded
     noAssignement  <- hasFlag nodeID Attributes.astNoAssignment
     defaultNodeGen <- hasFlag nodeID Attributes.defaultNodeGenerated
+
     if (folded || defaultNodeGen) && (Graph.outdeg gr nodeID <= 1)
         then State.addToNodeMap (nodeID, Port.All) e
-        else if noAssignement && (Graph.outdeg gr nodeID == 0)
-            then do State.addToBody e
+        else if noAssignement || (Graph.outdeg gr nodeID == 0)
+            then do State.addToNodeMap (nodeID, Port.All) e
+                    State.addToBody e
             else do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName

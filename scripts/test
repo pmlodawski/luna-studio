@@ -11,7 +11,7 @@ from   config.packages import pkgDb
 import os
 import os.path
 import sys
-from   utils.colors import print_warning, print_error
+from   utils.colors import print_error, print_info, print_warning
 from   utils.errors import handle_out
 from   subprocess   import call
 
@@ -38,6 +38,9 @@ def main():
         pkgNames = os.environ[sboxEnv].split(":")
 
     pkgs = [pkgDb[name] for name in pkgNames]
+
+    print_info("Running gencabal")
+    handle_out(call('python2.7 scripts/gencabal', shell=True))
 
     cwd = os.getcwd()
 

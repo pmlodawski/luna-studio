@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Parser.State where
 
@@ -60,8 +61,8 @@ setBody :: GPStateM m => [Expr] -> m ()
 setBody b = modify (set body b)
 
 
-getOutput :: GPStateM m => m Expr
-getOutput = gets (view output) <??&.> "GraphParser: getOutput: Output not defined!"
+getOutput :: GPStateM m => m (Maybe Expr)
+getOutput = gets (view output)
 
 
 setOutput :: GPStateM m => Expr -> m ()

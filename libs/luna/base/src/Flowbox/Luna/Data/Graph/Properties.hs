@@ -18,7 +18,7 @@ import           Flowbox.Prelude
 
 data Properties = Properties { _flags :: Flags
                              , _attrs :: Attributes
-                             } deriving (Show, Read)
+                             } deriving (Show, Read, Eq)
 
 makeLenses (''Properties)
 
