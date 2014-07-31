@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Builder.State where
 
@@ -13,6 +14,7 @@ import           Control.Monad.State
 import qualified Data.IntMap         as IntMap
 import           Data.Map            (Map)
 import qualified Data.Map            as Map
+import qualified Data.Maybe          as Maybe
 
 import qualified Flowbox.Luna.Data.AST.Common                   as AST
 import qualified Flowbox.Luna.Data.Attributes                   as Attributes
@@ -123,11 +125,9 @@ setPropertyMap :: GBStateM m => PropertyMap -> m ()
 setPropertyMap pm = modify (set propertyMap pm)
 
 
-aaLookUp :: GBStateM m => AST.ID -> m AST.ID
+aaLookUp :: GBStateM m => AST.ID -> m (Maybe AST.ID)
 aaLookUp astID = do aa' <- getAAMap
-                    case IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap of
-                        Just a -> return a
-                        _      -> return astID
+                    return $ IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap
 
 
 nodeMapLookUp :: GBStateM m => AST.ID -> m (Maybe (Node.ID, OutPort))
@@ -136,4 +136,6 @@ nodeMapLookUp astID = do nm <- getNodeMap
 
 
 gvmNodeMapLookUp :: GBStateM m => AST.ID -> m (Maybe (Node.ID, OutPort))
-gvmNodeMapLookUp astID = aaLookUp astID >>= nodeMapLookUp
+gvmNodeMapLookUp astID = aaLookUp astID
+                     >>= return . Maybe.fromMaybe astID
+                     >>= nodeMapLookUp

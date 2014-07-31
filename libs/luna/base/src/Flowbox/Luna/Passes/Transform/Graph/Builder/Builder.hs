@@ -14,6 +14,7 @@ import           Control.Applicative
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import qualified Data.List                  as List
+import qualified Data.Maybe                 as Maybe
 
 import qualified Flowbox.Luna.Data.AST.Common                        as AST
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
@@ -92,7 +93,7 @@ parseArg inputsID (input, no) = case input of
 buildOutput :: Node.ID -> Expr -> GBPass ()
 buildOutput outputID expr = do
     case expr of
-        Expr.Assignment {} -> return ()
+        Expr.Assignment {} -> void $ buildNode False True Nothing expr
         Expr.Tuple _ items -> connectArgs True  True Nothing outputID items 0
         _                  -> connectArg  False True Nothing outputID (expr, 0)
 
@@ -118,8 +119,8 @@ buildNode astFolded noAssignment outName expr = case expr of
                                                  j <- buildNode False False (Just patStr) dst
                                                  State.addToNodeMap p (j, Port.All)
                                                  return dummyValue
-    Expr.App        _ src args -> do srcID       <- buildNode astFolded True Nothing src
-                                     s <- State.gvmNodeMapLookUp srcID
+    Expr.App        _ src args -> do srcID <- buildNode astFolded noAssignment outName src
+                                     s     <- State.gvmNodeMapLookUp srcID
                                      case s of
                                         Just (srcNID, _) -> connectArgs True True Nothing srcNID args 1
                                         Nothing          -> return ()
@@ -129,11 +130,12 @@ buildNode astFolded noAssignment outName expr = case expr of
                                      connectArg True True Nothing i (src, 0)
                                      connectArg True True Nothing i (dst, 1)
                                      return i
-    Expr.Var        i name     -> if astFolded && noAssignment
-                                     then return i
-                                     else do let node = Node.Expr name (genName name i)
-                                             State.addNode i Port.All node astFolded noAssignment
-                                             return i
+    Expr.Var        i name     -> do isBound <- Maybe.isJust <$> State.aaLookUp i
+                                     if astFolded && isBound
+                                         then return i
+                                         else do let node = Node.Expr name (genName name i)
+                                                 State.addNode i Port.All node astFolded noAssignment
+                                                 return i
     Expr.Con        i name     -> do let node = Node.Expr name (genName name i)
                                      State.addNode i Port.All node astFolded noAssignment
                                      return i

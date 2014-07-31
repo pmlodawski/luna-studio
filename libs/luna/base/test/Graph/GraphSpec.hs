@@ -58,7 +58,7 @@ backAndForth code = do
     printLn
     expr2         <- getExpr graph pm expr
     (graph2, pm2) <- getGraph aa def expr
-    (clearIDs expr2) `shouldBe` (clearIDs expr)
+    (clearIDs 0 expr2) `shouldBe` (clearIDs 0 expr)
     graph2 `shouldBe` graph
     pm2    `shouldBe` pm
 
@@ -76,20 +76,45 @@ def main:
     1 + 2
 |], named "test3" [r|
 def main:
+    x = 0
+|], named "test4" [r|
+def main:
     1 + 2
     foo
-|], named "test4" [r|
+|], named "test5" [r|
 def main:
     foo
     2
-|], named "test5" [r|
+|], named "test6" [r|
 def main:
     foo.bar.baz
     2
-|], named "test6" [r|
+|], named "test7" [r|
+def main arg:
+    arg.bar.baz
+    2
+|], named "test8" [r|
+def main:
+    x = foo.bar.baz
+    2
+|], named "test9" [r|
 def main arg:
     foo.bar arg
     2
+|], named "test10" [r|
+def main arg:
+    foo.bar arg 2
+|], named "test11" [r|
+def main arg:
+    x = foo.bar(arg).baz arg 2
+|], named "test12" [r|
+def main arg:
+    x = 4
+    x.zooo 43
+|], named "test13" [r|
+def main arg:
+    x.zooo 43
+    -2
 |]]
 
 

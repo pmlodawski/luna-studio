@@ -142,7 +142,7 @@ traverseM fexp ftype fpat flit e = case e of
     RangeFrom    id' start'                        -> RangeFrom    id'       <$> fexp start'
     Case         id' expr' match'                  -> Case         id'       <$> fexp expr' <*> fexpMap match'
     Match        id' pat' body'                    -> Match        id'       <$> fpat pat' <*> fexpMap body'
-    ImportNative {}                                -> pure e
+    ImportNative id' segments'                     -> ImportNative id'       <$> fexpMap segments'
     NativeCode   {}                                -> pure e
     NativeVar    {}                                -> pure e
     Ref          id' dst'                          -> Ref          id'       <$> fexp dst'
@@ -182,7 +182,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     RangeFrom    _ start'                          -> drop <* fexp start'
     Case         _ expr' match'                    -> drop <* fexp expr' <* fexpMap match'
     Match        _ pat' body'                      -> drop <* fpat pat'  <* fexpMap body'
-    ImportNative {}                                -> drop
+    ImportNative _ segments'                       -> drop <* fexpMap segments'
     NativeCode   {}                                -> drop
     NativeVar    {}                                -> drop
     Ref          _ dst'                            -> drop <* fexp dst'
@@ -202,3 +202,10 @@ traverseM' fexp e = traverseM fexp pure pure pure e
 
 traverseM'_ :: Traversal m => (Expr -> m ()) -> Expr -> m ()
 traverseM'_ fexp e = traverseM_ fexp pure pure pure e
+
+
+traverseMR :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
+traverseMR fexp ftype fpat flit = tfexp where
+    tfexp e = fexp  =<< traverseM tfexp tftype tfpat flit e
+    tfpat   = Pat.traverseMR fpat tftype flit
+    tftype  = Type.traverseMR ftype

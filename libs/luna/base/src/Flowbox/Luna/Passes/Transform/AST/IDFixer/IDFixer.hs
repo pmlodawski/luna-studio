@@ -101,9 +101,9 @@ fixLit l = do n <- State.fixID $ l ^. Lit.id
               return $ l & Lit.id .~ n
 
 
-clearIDs :: Expr -> Expr
-clearIDs x = runIdentity (Expr.traverseM (return . set Expr.id newID)
-                                         (return . set Type.id newID)
-                                         (return . set  Pat.id newID)
-                                         (return . set  Lit.id newID) x)
-    where newID = (-1)
+clearIDs :: AST.ID -> Expr -> Expr
+clearIDs zero x = runIdentity (Expr.traverseMR (return . set Expr.id zero)
+                                               (return . set Type.id zero)
+                                               (return . set  Pat.id zero)
+                                               (return . set  Lit.id zero) x)
+

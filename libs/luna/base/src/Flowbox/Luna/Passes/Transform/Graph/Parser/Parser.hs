@@ -92,7 +92,7 @@ parseArg nodeID (num, input) = case input of
 parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
-    when (length srcs /= 1) $
+    when (length srcs > 1) $
         State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
 
 
@@ -146,14 +146,14 @@ parseTupleNode nodeID = do
 
 addExpr :: Node.ID -> Expr -> GPPass ()
 addExpr nodeID e = do
-    gr <- State.getGraph
+    --gr <- State.getGraph
     folded         <- hasFlag nodeID Attributes.astFolded
     noAssignement  <- hasFlag nodeID Attributes.astNoAssignment
     defaultNodeGen <- hasFlag nodeID Attributes.defaultNodeGenerated
 
-    if (folded || defaultNodeGen) && (Graph.outdeg gr nodeID <= 1)
+    if (folded || defaultNodeGen) -- && (Graph.outdeg gr nodeID <= 1)
         then State.addToNodeMap (nodeID, Port.All) e
-        else if noAssignement || (Graph.outdeg gr nodeID == 0)
+        else if noAssignement -- && (Graph.outdeg gr nodeID == 0)
             then do State.addToNodeMap (nodeID, Port.All) e
                     State.addToBody e
             else do outName <- State.getNodeOutputName nodeID
