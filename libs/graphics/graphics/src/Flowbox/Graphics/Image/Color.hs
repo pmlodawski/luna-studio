@@ -4,9 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Image.Color (
     module Flowbox.Graphics.Image.Color,
@@ -20,7 +21,10 @@ module Flowbox.Graphics.Image.Color (
     U.mix
 ) where
 
-import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate       as A
+import           Data.Array.Accelerate.Tuple (IsTuple, TupleRepr, fromTuple, toTuple)
+import           Data.Array.Accelerate.Type  (IsScalar)
+import qualified Linear
 
 import           Flowbox.Graphics.Color
 import qualified Flowbox.Graphics.Utils as U
@@ -91,49 +95,33 @@ hsvTool hueRange hueRotation hueRolloff
         --    & s %~ (\saturation -> saturation + saturationAdjustment * rolloff saturationRange saturationRolloff saturation)
         --    & v %~ (\value -> value + brightnessAdjustment * rolloff brightnessRange brightnessRolloff value)
         --    & convertColor :: a (Exp t))
-        A.lift (hsv & h %~ (\hue -> power hueRange hueRolloff hue) -- rotation (hueRotation * power hueRange hueRolloff hue) hue) -- hue
+        A.lift (hsv & h %~ (\hue -> rotation (hueRotation * power hueRange hueRolloff hue) hue) -- hue
             -- & s %~ (\saturation -> saturation + saturationAdjustment * power saturationRange saturationRolloff saturation)
             -- & v %~ (\value -> value + brightnessAdjustment * power brightnessRange brightnessRolloff value)
             & convertColor :: a (Exp t))
         ,
         A.lift pix))
     where hsv = toHSV pix
+          rotation r hue = U.frac $ hue + r
 
           --conditionsFulfilled = rolloff hueRange        hueRolloff        (hsv ^. h) A.>* 0
           --                      A.&&*
           --                      rolloff saturationRange saturationRolloff (hsv ^. s) A.>* 0
           --                      A.&&*
           --                      rolloff brightnessRange brightnessRolloff (hsv ^. v) A.>* 0
-          --conditionsFulfilled = power hueRange        hueRolloff        (hsv ^. h) A.>* 0
+          conditionsFulfilled = power hueRange        hueRolloff        (hsv ^. h) A.>* 0
           --                      A.&&*
           --                      power saturationRange saturationRolloff (hsv ^. s) A.>* 0
           --                      A.&&*
           --                      power brightnessRange brightnessRolloff (hsv ^. v) A.>* 0
-          conditionsFulfilled = 1 A.>* (0::Exp Int)
-
-rotation r hue = A.cond (hue' A.<* 0) (hue' + 1)
-               $ A.cond (hue' A.>* 1) (hue' - 1)
-               $ hue'
-    where hue' = hue + r
-
-inRange :: (IsScalar t, Elt t) => Exp t -> U.Range (Exp t) -> Exp Bool
-inRange val (U.Range low high) = val A.>=* low A.&&* val A.<=* high
-
-rolloff :: (Elt a, IsFloating a) => U.Range (Exp a) -> Exp a -> Exp a -> Exp a
-rolloff range@(U.Range lo hi) roll val' = A.cond (val `inRange` range)   1
-                                        $ A.cond (roll A.==* 0)          0
-                                        $ A.cond (val A.<=* (lo - roll)) 0
-                                        $ A.cond (val A.>=* (hi + roll)) 1
-                                        $ A.cond (val A.<*  lo)          ((1 / roll) * val + 1 - (lo / roll))
-                                        $ (((-1) / roll) * val + 1 + (hi / roll)) -- covers val > hi
-    where val = val' + hi
+          --conditionsFulfilled = 1 A.>* (0::Exp Int)
 
 
 power :: forall a. (Elt a, IsFloating a) => U.Range (Exp a) -> Exp a -> Exp a -> Exp a
-power (U.Range a b) r x =
-    let (correct, pp) = intersection a b r :: (Exp Bool, Exp a)
+power (U.Range a b) rolloff x =
+    let (correct, pp) = intersection a b rolloff :: (Exp Bool, Exp a)
         (rLeft, rRight) = A.unlift (correct A.? (A.lift ((pp-1,a), (b,pp))
-                                     , A.lift ((a-r, a), (b, b+r)))) :: (A.Exp (a, a), A.Exp (a, a))
+                                     , A.lift ((a-rolloff, a), (b, b+rolloff)))) :: (A.Exp (a, a), A.Exp (a, a))
         rLeftEquation val = A.cond (frL A./=* 0) (fxL val / frL) 1
         rRightEquation val = A.cond (frR A./=* 0) (1 - fxR val / frR) 1
 
@@ -141,13 +129,13 @@ power (U.Range a b) r x =
         frL = U.frac $ a - tL
 
         fxR val = U.frac $ val - tR
-        frR = U.frac $ r -- == b+r - tR == b+r - b == r
+        frR = U.frac $ rolloff -- == b+r - tR == b+r - b == r
 
-        tL = U.frac $ a - r
+        tL = U.frac $ a - rolloff
         tR = U.frac $ b
     in check x (a,b) A.? (1,
        check x (A.unlift rLeft) A.? (rLeftEquation x,
-       check x (A.unlift rRight) A.? (rRightEquation x, 0.6666)))
+       check x (A.unlift rRight) A.? (rRightEquation x, 0)))
 
 intersection :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> (Exp Bool, Exp a)
 intersection a b r = (y A.>* 0 A.&&* y A.<* 1, x)
@@ -177,9 +165,85 @@ check (U.frac -> x) (a,b) =
 conditionally :: (Elt a, IsScalar a) => U.Range (Exp a) -> (Exp a -> Exp a) -> Exp a -> Exp a
 conditionally (U.Range low high) f val = val A.>=* low A.&&* val A.<=* high A.? (f val, val)
 
+-- | Lowers number of colours in a picture to 2^colors
 posterize :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
 posterize colors val = A.cond (colors A.==* 0) 0
                      $ A.cond (colors A.==* 1) 1
                      $ s * A.fromIntegral (A.floor $ val / t :: Exp Int)
     where s = 1 / (colors - 1)
           t = 1 / colors
+
+
+type Vec3 a   = (Exp  a, Exp  a, Exp  a)
+type Mat3x3 a = (Vec3 a, Vec3 a, Vec3 a)
+
+type Vec4 a   = (Exp  a, Exp  a, Exp  a, Exp  a)
+type Mat4x4 a = (Vec4 a, Vec4 a, Vec4 a, Vec4 a)
+
+-- | Dispatches colorspace to required color matrix
+
+type family ColorMatrix (colorspace :: * -> *) t :: *
+
+type instance ColorMatrix CMY    t = Mat3x3 t
+type instance ColorMatrix CMYK   t = Mat4x4 t
+type instance ColorMatrix HSL    t = Mat3x3 t
+type instance ColorMatrix HSV    t = Mat3x3 t
+type instance ColorMatrix RGB    t = Mat3x3 t
+type instance ColorMatrix RGBA   t = Mat4x4 t
+type instance ColorMatrix YUV    t = Mat3x3 t
+type instance ColorMatrix YUV_HD t = Mat3x3 t
+
+-- | Multiplies given matrix by colour.
+--   Matrix needs to be in a row major order and n x n size, where n is a number
+--   of components in a colour.
+--
+--   Example:
+--   ((1, 0, 0),     (0.5,     (0.5,
+--    (0, 1, 1),  *   0.6,  =   1.6,
+--    (0, 0, 1))      1.0)      1.0)
+
+colorMatrix :: (Elt t, IsFloating t, MatrixMultiplication a) => ColorMatrix a t -> a (Exp t) -> a (Exp t)
+colorMatrix matrix colour = mmult matrix colour
+
+class MatrixMultiplication colorspace where
+    mmult :: (Elt t, IsNum t) => ColorMatrix colorspace t -> colorspace (Exp t) -> colorspace (Exp t)
+
+instance MatrixMultiplication CMY where
+    mmult = mul3x3
+
+instance MatrixMultiplication CMYK where
+    mmult = mul4x4
+
+instance MatrixMultiplication HSL where
+    mmult = mul3x3
+
+instance MatrixMultiplication HSV where
+    mmult = mul3x3
+
+instance MatrixMultiplication RGB where
+    mmult = mul3x3
+
+instance MatrixMultiplication RGBA where
+    mmult = mul4x4
+
+instance MatrixMultiplication YUV where
+    mmult = mul3x3
+
+instance MatrixMultiplication YUV_HD where
+    mmult = mul3x3
+
+mul3x3 :: (IsTuple (a (Exp t)), Elt t, IsNum t, TupleRepr (a (Exp t)) ~ TupleRepr (Vec3 t)) => Mat3x3 t -> a (Exp t) -> a (Exp t)
+mul3x3 ((a, b, c), (d, e, f), (g, h, i)) pix = toTuple ((((), x'), y'), z')
+    where ((((), x), y), z) = fromTuple pix
+          x' = a * x + b * y + c * z
+          y' = d * x + e * y + f * z
+          z' = g * x + h * y + i * z
+
+mul4x4 :: (IsTuple (a (Exp t)), Elt t, IsNum t, TupleRepr (a (Exp t)) ~ TupleRepr (Vec4 t))
+       => Mat4x4 t -> a (Exp t) -> a (Exp t)
+mul4x4 ((a, b, c, d), (e, f, g, h), (i, j, k, l), (m, n, o, p)) pix = toTuple (((((), x'), y'), z'), w')
+    where (((((), x), y), z), w) = fromTuple pix
+          x' = a * x + b * y + c * z + d * w
+          y' = e * x + f * y + g * z + h * w
+          z' = i * x + j * y + k * z + l * w
+          w' = m * x + n * y + o * z + p * w
