@@ -13,13 +13,13 @@ class HTTPHandler < EM::HttpServer::Server
         filename = File.join(".", @http_request_uri)
 
         if File.exists?(filename)
-            
+
             response.status = 200
             if File.directory?(filename)
                 response.content_type "text/html"
 
                 index_loop = Dir[File.join(filename, "*")].map do |file|
-                    %Q[<a href="#{file}">#{file}</a>]
+                    %Q[<a href="/#{file}">#{file}</a>]
                 end
 
                 response.content = <<-INDEX
