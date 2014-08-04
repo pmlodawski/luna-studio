@@ -106,16 +106,22 @@ def main arg:
     foo.bar arg 2
 |], named "test11" [r|
 def main arg:
-    x = foo.bar(arg).baz arg 2
+    x = foo.bar(arg, 15, arg).baz arg 2
 |], named "test12" [r|
-def main arg:
-    x = 4
-    x.zooo 43
-|], named "test13" [r|
 def main arg:
     x.zooo 43
     -2
+|], named "test13" [r|
+def main arg:
+    x
+    x.y
+    x.z
 |]]
+-- |], named "test14" [r|
+--def main arg:
+    --x = 4
+    --x.zooo 43
+-- |]]
 
 
 
