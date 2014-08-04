@@ -28,6 +28,9 @@ data Size a = Size {sizeW :: a, sizeH :: a}
 data Range a = Range {rangeLo :: a, rangeHi :: a}
              deriving (Show, Typeable)
 
+range :: Float -> Float -> Exp (Range Float)
+range lo hi = A.lift $ Range (variable lo) (variable hi)
+
 invert :: Num a => a -> a
 invert x = 1 - x
 

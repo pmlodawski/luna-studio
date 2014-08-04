@@ -44,22 +44,22 @@ ex black ev = testFunction (exposure black ev) input output
 
 posterization v = testFunction (posterize v) input output
 
-hsvT = testColor (hsvTool (Range (358/360) (359/360)) (180 / 360) (90/360) (Range 0 1) 0 0 (Range 0 1) (0) 0) input output
+hsvT = testColor (hsvTool (range (358/360) (359/360)) (180 / 360) (90/360) (range 0 1) 0 0 (range 0 1) (0) 0) input output
 
-colorMat = testColor (colorMatrix ((1, 0, 0), (0, 0, 1), (0.5, 0, 1))) input output
+--colorMat = testColor (colorMatrix ((1, 0, 0), (0, 0, 1), (0.5, 0, 1))) input output
 
 --inRange :: (IsScalar t, Elt t) => Exp t -> U.Range (Exp t) -> Exp Bool
 inRange val (Range low high) = val >= low && val <= high
 
 --rolloff :: (Elt a, IsFloating a) => U.Range (Exp a) -> Exp a -> Exp a -> Exp a
-rolloff :: Range Float -> Float -> Float -> Float
-rolloff range@(Range lo hi) roll val' = if' (val `Main.inRange` range)   1
-                                        $ if' (roll == 0)          0
-                                        $ if' (val <= (lo - roll)) 0
-                                        $ if' (val >= (hi + roll)) 1
-                                        $ if' (val <  lo)          ((1 / roll) * val + 1 - (lo / roll))
-                                        $ (((-1) / roll) * val + 1 + (hi / roll)) -- covers val > hi
-    where val = if val' > hi && hi + roll > 1 then (-1) * (val' - 1) else val'
+--rolloff :: Range Float -> Float -> Float -> Float
+--rolloff range@(Range lo hi) roll val' = if' (val `Main.inRange` range)   1
+--                                        $ if' (roll == 0)          0
+--                                        $ if' (val <= (lo - roll)) 0
+--                                        $ if' (val >= (hi + roll)) 1
+--                                        $ if' (val <  lo)          ((1 / roll) * val + 1 - (lo / roll))
+--                                        $ (((-1) / roll) * val + 1 + (hi / roll)) -- covers val > hi
+--    where val = if val' > hi && hi + roll > 1 then (-1) * (val' - 1) else val'
 
 --power x (a, b) r =
 --    let (correct, pp) = intersection a b r :: (Exp Bool, Exp Float)
@@ -136,15 +136,15 @@ rolloff range@(Range lo hi) roll val' = if' (val `Main.inRange` range)   1
 --           A.||*
 --           (x A.<=* a' A.&&* x A.<=* b')))
 
-frac' x = x - fromIntegral (floor x)
-check' (frac' -> x) (a, b) = 
-    let a' = frac' a
-        b' = frac' b
-    in  (b-a >= 1) || (x >= a' && x <= b') || (b' < a' && ((x >= a' && x >= b') || (x <= a' && x <= b')))
+--frac' x = x - fromIntegral (floor x)
+--check' (frac' -> x) (a, b) = 
+--    let a' = frac' a
+--        b' = frac' b
+--    in  (b-a >= 1) || (x >= a' && x <= b') || (b' < a' && ((x >= a' && x >= b') || (x <= a' && x <= b')))
 
 
-if' True  a _ = a
-if' False _ b = b
+--if' True  a _ = a
+--if' False _ b = b
 
 main = do
     --putStrLn "Testing invertibility"

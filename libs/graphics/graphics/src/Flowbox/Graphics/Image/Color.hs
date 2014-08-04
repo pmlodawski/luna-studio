@@ -81,14 +81,14 @@ saturate saturation pix = toHSL pix & s %~ (*saturation) & convertColor
 
 hsvTool :: forall a t. (Elt t, IsFloating t, ColorConvert a HSV, ColorConvert HSV a,
                         A.Lift Exp (a (Exp t)), A.Unlift Exp (a (Exp t)), Elt (A.Plain (a (Exp t))))
-        => U.Range (Exp t) -> Exp t -> Exp t
-        -> U.Range (Exp t) -> Exp t -> Exp t
-        -> U.Range (Exp t) -> Exp t -> Exp t
+        => Exp (U.Range t) -> Exp t -> Exp t
+        -> Exp (U.Range t) -> Exp t -> Exp t
+        -> Exp (U.Range t) -> Exp t -> Exp t
         -> a (Exp t)
         -> a (Exp t)
-hsvTool hueRange (U.variable -> hueRotation) (U.variable -> hueRolloff)
-        saturationRange (U.variable -> saturationAdjustment) (U.variable -> saturationRolloff)
-        brightnessRange (U.variable -> brightnessAdjustment) (U.variable -> brightnessRolloff) pix =
+hsvTool (A.unlift . U.variable -> hueRange) (U.variable -> hueRotation) (U.variable -> hueRolloff)
+        (A.unlift . U.variable -> saturationRange) (U.variable -> saturationAdjustment) (U.variable -> saturationRolloff)
+        (A.unlift . U.variable -> brightnessRange) (U.variable -> brightnessAdjustment) (U.variable -> brightnessRolloff) pix =
     A.unlift (conditionsFulfilled A.? (
         A.lift (hsv & h %~ (\hue -> rotation (hueRotation * cyclicPower hueRange hueRolloff hue) hue) -- hue
             & s %~ (\saturation -> saturation + saturationAdjustment * power saturationRange saturationRolloff saturation)
@@ -180,7 +180,7 @@ check (U.frac -> x) (a,b) =
 conditionally :: (Elt a, IsScalar a) => U.Range (Exp a) -> (Exp a -> Exp a) -> Exp a -> Exp a
 conditionally (U.Range low high) f val = val A.>=* low A.&&* val A.<=* high A.? (f val, val)
 
--- | Lowers number of colours in a picture to 2^colors
+-- | Lowers number of colors in a picture to 2^colors
 posterize :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
 posterize colors val = A.cond (colors A.==* 0) 0
                      $ A.cond (colors A.==* 1) 1
