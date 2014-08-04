@@ -57,10 +57,10 @@ graph2expr expr = do
     mapM_ (parseNode inputs) $ Graph.topsortl graph
     b  <- State.getBody
     mo <- State.getOutput
-    let body = case mo of
+    let body = reverse $ case mo of
                 Nothing -> b
-                Just o  -> reverse $ o : b
-    return (Expr.body .~ body $ expr)
+                Just o  -> o : b
+    return (expr & Expr.body .~ body)
 
 
 parseNode :: [Expr] ->  (Node.ID, Node) -> GPPass ()

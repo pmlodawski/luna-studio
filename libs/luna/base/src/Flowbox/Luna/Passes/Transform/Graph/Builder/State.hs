@@ -41,19 +41,20 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
 type NodeMap = Map AST.ID (Node.ID, OutPort)
 
 
-data GBState = GBState { _graph       :: Graph
-                       , _nodeMap     :: NodeMap
-                       , _aa          :: AliasInfo
-                       , _propertyMap :: PropertyMap
+data GBState = GBState { _graph        :: Graph
+                       , _nodeMap      :: NodeMap
+                       , _aa           :: AliasInfo
+                       , _propertyMap  :: PropertyMap
+                       , _prevoiusNode :: Node.ID
                        } deriving (Show)
 
 makeLenses(''GBState)
 
 
-type GBStateM m = MonadState GBState m
+type GBStateM m = (MonadState GBState m, MonadIO m)
 
 
-make :: AliasInfo -> PropertyMap -> GBState
+make :: AliasInfo -> PropertyMap -> Node.ID -> GBState
 make = GBState Graph.empty Map.empty
 
 
@@ -92,6 +93,12 @@ connect srcID dstNID dstPort = do
     case src of
         Just (srcNID, srcPort) -> connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
         Nothing                -> return ()
+
+connectMonadic :: GBStateM m => Node.ID -> m ()
+connectMonadic nodeID = do
+    prevID <- getPrevoiusNode
+    setPrevoiusNode nodeID
+    connectNodes prevID nodeID Edge.Monadic
 
 
 getGraph :: GBStateM m => m Graph
@@ -140,3 +147,11 @@ gvmNodeMapLookUp :: GBStateM m => AST.ID -> m (Maybe (Node.ID, OutPort))
 gvmNodeMapLookUp astID = aaLookUp astID
                      >>= return . Maybe.fromMaybe astID
                      >>= nodeMapLookUp
+
+
+getPrevoiusNode :: GBStateM m => m Node.ID
+getPrevoiusNode = gets (view prevoiusNode)
+
+
+setPrevoiusNode :: GBStateM m => Node.ID -> m ()
+setPrevoiusNode nodeID = modify (set prevoiusNode nodeID)

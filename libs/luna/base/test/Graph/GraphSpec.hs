@@ -52,10 +52,11 @@ backAndForth :: String -> IO ()
 backAndForth code = do
     (expr, aa)    <- getAST code
     (graph, pm)   <- getGraph aa def expr
-    printLn
-    print graph
-    print pm
-    printLn
+    --printLn
+    --print expr
+    --print graph
+    --print pm
+    --printLn
     expr2         <- getExpr graph pm expr
     (graph2, pm2) <- getGraph aa def expr
     (clearIDs 0 expr2) `shouldBe` (clearIDs 0 expr)
@@ -81,6 +82,7 @@ def main:
 def main:
     1 + 2
     foo
+    bar
 |], named "test5" [r|
 def main:
     foo
@@ -116,12 +118,14 @@ def main arg:
     x
     x.y
     x.z
+|], named "test14" [r|
+def main arg:
+    x = 4
+    x.zooo 43
+|], named "test15" [r|
+def main arg:
+    foo.bar
 |]]
--- |], named "test14" [r|
---def main arg:
-    --x = 4
-    --x.zooo 43
--- |]]
 
 
 
