@@ -344,7 +344,5 @@ instance Convert Expr Gen.Expr where
                 (GenMatch.Match mtpat tbody) <- ext <?> "Failed to decode Expr.Match: extension is missing"
                 tpat <- mtpat <?> "Failed to decode Expr.Match: 'pat' field is missing"
                 Expr.Match i <$> decode tpat <*> decodeList tbody
-       where getExt k = case Extensions.getExt k t of
-                                Right a -> return a
-                                Left m  -> fail m
+       where getExt = flip Extensions.getExt t
 

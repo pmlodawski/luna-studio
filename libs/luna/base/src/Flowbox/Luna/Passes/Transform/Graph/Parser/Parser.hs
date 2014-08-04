@@ -11,6 +11,7 @@
 module Flowbox.Luna.Passes.Transform.Graph.Parser.Parser where
 
 import Control.Monad.State
+import Control.Monad.Trans.Either
 
 import           Flowbox.Luna.Data.AST.Expr                                (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                                as Expr
@@ -54,10 +55,12 @@ graph2expr expr = do
     let inputs = expr ^. Expr.inputs
     graph <- State.getGraph
     mapM_ (parseNode inputs) $ Graph.topsortl graph
-    b <- State.getBody
-    o <- State.getOutput
-    let body = reverse $ o : b
-    return (Expr.body .~ body $ expr)
+    b  <- State.getBody
+    mo <- State.getOutput
+    let body = reverse $ case mo of
+                Nothing -> b
+                Just o  -> o : b
+    return (expr & Expr.body .~ body)
 
 
 parseNode :: [Expr] ->  (Node.ID, Node) -> GPPass ()
@@ -83,16 +86,14 @@ parseArg :: Node.ID -> (Int, Expr) -> GPPass ()
 parseArg nodeID (num, input) = case input of
     Expr.Arg _              (Pat.Var _ name)    _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
     Expr.Arg _ (Pat.Typed _ (Pat.Var _ name) _) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
-    _                                             -> fail "parseArg: Wrong Arg type"
+    _                                             -> left "parseArg: Wrong Arg type"
 
 
 parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
-    let e = case srcs of
-                [s] -> s
-                _   -> Expr.Tuple IDFixer.unknownID srcs
-    State.setOutput e
+    when (length srcs > 1) $
+        State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
 
 
 parsePatNode :: Node.ID -> String -> GPPass ()
@@ -100,12 +101,12 @@ parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
         [s] -> do p <- case Parser.parsePattern pat $ ASTInfo.mk IDFixer.unknownID of
-                            Left  er     -> fail $ show er
+                            Left  er     -> left $ show er
                             Right (p, _) -> return p
                   let e = Expr.Assignment nodeID p s
                   State.addToNodeMap (nodeID, Port.All) e
                   State.addToBody e
-        _      -> fail "parsePatNode: Wrong Pat arguments"
+        _      -> left "parsePatNode: Wrong Pat arguments"
 
 
 --parseInfixNode :: Node.ID -> String -> GPPass ()
@@ -116,7 +117,7 @@ parsePatNode nodeID pat = do
 --                    [a, b] -> return (a, b)
 --                    [a]    -> return (a, u)
 --                    []     -> return (u, u)
---                    _      -> fail "parseInfixNode: Wrong Infix arguments"
+--                    _      -> left "parseInfixNode: Wrong Infix arguments"
 --    addExpr nodeID $ Expr.Infix nodeID inf a b
 
 
@@ -125,9 +126,9 @@ parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
         []  -> if length app == 1 && head app `elem` Lexer.operators
-                 then addExpr nodeID $ Expr.Var nodeID app 
+                 then addExpr nodeID $ Expr.Var nodeID app
                  else case Parser.parseExpr app $ ASTInfo.mk nodeID of
-                    Left  er     -> fail $ show er
+                    Left  er     -> left $ show er
                     Right (e, _) -> addExpr nodeID e
         [f] -> do let e   = Expr.Accessor nodeID app f
                   addExpr nodeID e
@@ -145,14 +146,16 @@ parseTupleNode nodeID = do
 
 addExpr :: Node.ID -> Expr -> GPPass ()
 addExpr nodeID e = do
-    gr <- State.getGraph
+    --gr <- State.getGraph
     folded         <- hasFlag nodeID Attributes.astFolded
     noAssignement  <- hasFlag nodeID Attributes.astNoAssignment
     defaultNodeGen <- hasFlag nodeID Attributes.defaultNodeGenerated
-    if (folded || defaultNodeGen) && (Graph.outdeg gr nodeID <= 1)
+
+    if (folded || defaultNodeGen) -- && (Graph.outdeg gr nodeID <= 1)
         then State.addToNodeMap (nodeID, Port.All) e
-        else if noAssignement && (Graph.outdeg gr nodeID == 0)
-            then do State.addToBody e
+        else if noAssignement -- && (Graph.outdeg gr nodeID == 0)
+            then do State.addToNodeMap (nodeID, Port.All) e
+                    State.addToBody e
             else do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName

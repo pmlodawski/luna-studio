@@ -13,8 +13,11 @@ import Flowbox.Prelude
 
 
 
-data Edge = Edge { _src :: OutPort
+data Edge = Data { _src :: OutPort
                  , _dst :: InPort
-                 } deriving (Show, Read, Ord, Eq)
+                 }
+          | Monadic
+          deriving (Show, Read, Ord, Eq)
+
 
 makeLenses(''Edge)

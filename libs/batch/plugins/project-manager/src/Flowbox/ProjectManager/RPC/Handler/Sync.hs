@@ -16,11 +16,11 @@ import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request 
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  as SyncGet
 
 
+
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Sync"
 
 ------ public api -------------------------------------------------
-
 
 syncGet :: SyncGet.Request -> RPC Context IO SyncGet.Status
 syncGet request = do

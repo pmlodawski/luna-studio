@@ -7,19 +7,13 @@
 
 module Flowbox.Luna.Data.Graph.Graph(
     module Flowbox.Data.Graph,
-    Graph,
-    connect,
-    --inputsID,
-    --outputID,
-    --make,
-
-    portMatches,
-    isNotAlreadyConnected
+    module Flowbox.Luna.Data.Graph.Graph,
 ) where
 
 import           Flowbox.Data.Graph           hiding (Edge, Graph)
 import qualified Flowbox.Data.Graph           as DG
 import           Flowbox.Luna.Data.Graph.Edge (Edge (Edge))
+import qualified Flowbox.Luna.Data.Graph.Edge as Edge
 import           Flowbox.Luna.Data.Graph.Node (Node)
 import qualified Flowbox.Luna.Data.Graph.Node as Node
 import           Flowbox.Luna.Data.Graph.Port (InPort)
@@ -49,7 +43,8 @@ connect srcID dstID edge = insEdge (srcID, dstID, edge)
 
 
 portMatches :: InPort -> LEdge Edge -> Bool
-portMatches newDstPort (_, _, Edge _ connectedDstPort) = newDstPort == connectedDstPort
+portMatches newDstPort (_, _, Edge.Data _ connectedDstPort) =
+    newDstPort == connectedDstPort
 
 
 isNotAlreadyConnected :: Graph -> Node.ID -> InPort -> Bool

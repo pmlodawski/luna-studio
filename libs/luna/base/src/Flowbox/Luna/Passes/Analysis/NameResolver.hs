@@ -62,10 +62,10 @@ resolve name bc libID libManager = do
     return $ List.concat $ map (flip searchLibManager libManager) possiblePaths
 
 getImports :: Zipper -> Breadcrumbs -> NRPass [Expr]
-getImports z@(Focus.ModuleFocus m, _) (h:t) = do newZ <- hoistEither $ Zipper.focusCrumb h z
-                                                 imports <- getImports newZ t
-                                                 pure $ (m ^. Module.imports) ++ imports
-getImports _                           _    = pure []
+getImports z@(Focus.Module m, _) (h:t) = do newZ <- hoistEither $ Zipper.focusCrumb h z
+                                            imports <- getImports newZ t
+                                            pure $ (m ^. Module.imports) ++ imports
+getImports _                      _    = pure []
 
 
 possiblePath :: [String] -> Expr -> Maybe [String]
@@ -79,10 +79,10 @@ possiblePath elements (Expr.Import _ path (Expr.Con _ name) rename) =
 
 
 currentScope :: Breadcrumbs -> [String]
-currentScope ((Crumb.ModuleCrumb   m  ):t) = m:(currentScope t)
-currentScope ((Crumb.ClassCrumb    c  ):t) = c:(currentScope t)
-currentScope ((Crumb.FunctionCrumb _ _):_) = []
-currentScope []                            = []
+currentScope ((Crumb.Module   m  ):t) = m:(currentScope t)
+currentScope ((Crumb.Class    c  ):t) = c:(currentScope t)
+currentScope ((Crumb.Function _ _):_) = []
+currentScope []                       = []
 
 
 searchLibManager :: [String] -> LibManager -> [(Library.ID, Breadcrumbs)]
@@ -109,17 +109,17 @@ searchModule path bc (Module.Module _ (Type.Module _ name _) _ classes _typeAlia
                 else (List.concat $ map (searchExpr   (tail path) currentBc) $ classes ++ methods)
                   ++ (List.concat $ map (searchModule (tail path) currentBc) modules)
         else []
-    where currentBc = bc ++ [Crumb.ModuleCrumb $ head path]
+    where currentBc = bc ++ [Crumb.Module $ head path]
 
 
 searchExpr :: [String] -> Breadcrumbs -> Expr -> [Breadcrumbs]
 searchExpr path bc expr = case expr of
     -- TODO [PM] : Add search for functions with path set!
     Expr.Function _ [] name _ _ _           -> if length path == 1 && head path == name
-                                               then [bc ++ [Crumb.FunctionCrumb name []]]
+                                               then [bc ++ [Crumb.Function name []]]
                                                else []
     Expr.Data _ (Type.Data _ name _) _ _ _  -> if length path == 1 && head path == name
-                                               then [bc ++ [Crumb.ClassCrumb name]]
+                                               then [bc ++ [Crumb.Class name]]
                                                else []
     _                                       -> []
 

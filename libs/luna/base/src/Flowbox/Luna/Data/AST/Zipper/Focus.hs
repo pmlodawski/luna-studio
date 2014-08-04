@@ -14,9 +14,9 @@ import Flowbox.Prelude              hiding (Traversal)
 
 
 
-data Focus  = FunctionFocus Expr
-            | ClassFocus    Expr
-            | ModuleFocus Module
+data Focus  = Function Expr
+            | Class    Expr
+            | Module Module
             deriving (Show)
 
 
@@ -29,28 +29,28 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 traverseM :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> Focus -> m Focus
 traverseM fmod fexp focus = case focus of
-    FunctionFocus f -> FunctionFocus <$> fexp f
-    ClassFocus    c -> ClassFocus    <$> fexp c
-    ModuleFocus   m -> ModuleFocus   <$> fmod m
+    Function f -> Function <$> fexp f
+    Class    c -> Class    <$> fexp c
+    Module   m -> Module   <$> fmod m
 
 
 traverseM_ :: Traversal m => (Module -> m r) -> (Expr -> m r) -> Focus -> m r
 traverseM_ fmod fexp focus = case focus of
-    FunctionFocus f -> fexp f
-    ClassFocus    c -> fexp c
-    ModuleFocus   m -> fmod m
+    Function f -> fexp f
+    Class    c -> fexp c
+    Module   m -> fmod m
 
 
 getFunction :: Focus -> Maybe Expr
-getFunction (FunctionFocus expr) = Just expr
-getFunction _                    = Nothing
+getFunction (Function expr) = Just expr
+getFunction _               = Nothing
 
 
 getClass :: Focus -> Maybe Expr
-getClass (ClassFocus expr) = Just expr
-getClass _                 = Nothing
+getClass (Class expr) = Just expr
+getClass _            = Nothing
 
 
 getModule :: Focus -> Maybe Module
-getModule (ModuleFocus m) = Just m
-getModule _               = Nothing
+getModule (Module m) = Just m
+getModule _          = Nothing

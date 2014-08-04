@@ -46,6 +46,7 @@ traverseM ftype t = case t of
     Unknown    {}                            -> pure t
     where ftypeMap = mapM ftype
 
+
 traverseM_ :: Traversal m => (Type -> m b) -> Type -> m ()
 traverseM_ ftype t = case t of
     Tuple      _  items'                     -> drop <* ftypeMap items'
@@ -58,6 +59,10 @@ traverseM_ ftype t = case t of
     Unknown    {}                            -> drop
     where drop     = pure ()
           ftypeMap = mapM_ ftype
+
+
+traverseMR :: Traversal m => (Type -> m Type) -> Type -> m Type
+traverseMR ftype t = traverseM (traverseMR ftype) t >>= ftype
 
 
 lunaShow :: Type -> String

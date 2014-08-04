@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Builder.State where
 
@@ -13,10 +14,12 @@ import           Control.Monad.State
 import qualified Data.IntMap         as IntMap
 import           Data.Map            (Map)
 import qualified Data.Map            as Map
+import qualified Data.Maybe          as Maybe
 
 import qualified Flowbox.Luna.Data.AST.Common                   as AST
 import qualified Flowbox.Luna.Data.Attributes                   as Attributes
-import           Flowbox.Luna.Data.Graph.Edge                   (Edge (Edge))
+import           Flowbox.Luna.Data.Graph.Edge                   (Edge)
+import qualified Flowbox.Luna.Data.Graph.Edge                   as Edge
 import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
 import           Flowbox.Luna.Data.Graph.Node                   (Node)
@@ -38,19 +41,20 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
 type NodeMap = Map AST.ID (Node.ID, OutPort)
 
 
-data GBState = GBState { _graph       :: Graph
-                       , _nodeMap     :: NodeMap
-                       , _aa          :: AliasInfo
-                       , _propertyMap :: PropertyMap
+data GBState = GBState { _graph        :: Graph
+                       , _nodeMap      :: NodeMap
+                       , _aa           :: AliasInfo
+                       , _propertyMap  :: PropertyMap
+                       , _prevoiusNode :: Node.ID
                        } deriving (Show)
 
 makeLenses(''GBState)
 
 
-type GBStateM m = MonadState GBState m
+type GBStateM m = (MonadState GBState m, MonadIO m)
 
 
-make :: AliasInfo -> PropertyMap -> GBState
+make :: AliasInfo -> PropertyMap -> Node.ID -> GBState
 make = GBState Graph.empty Map.empty
 
 
@@ -87,8 +91,14 @@ connect :: GBStateM m => AST.ID -> Node.ID -> InPort -> m ()
 connect srcID dstNID dstPort = do
     src <- gvmNodeMapLookUp srcID
     case src of
-        Just (srcNID, srcPort) -> connectNodes srcNID dstNID $ Edge srcPort dstPort
+        Just (srcNID, srcPort) -> connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
         Nothing                -> return ()
+
+connectMonadic :: GBStateM m => Node.ID -> m ()
+connectMonadic nodeID = do
+    prevID <- getPrevoiusNode
+    setPrevoiusNode nodeID
+    connectNodes prevID nodeID Edge.Monadic
 
 
 getGraph :: GBStateM m => m Graph
@@ -123,11 +133,9 @@ setPropertyMap :: GBStateM m => PropertyMap -> m ()
 setPropertyMap pm = modify (set propertyMap pm)
 
 
-aaLookUp :: GBStateM m => AST.ID -> m AST.ID
+aaLookUp :: GBStateM m => AST.ID -> m (Maybe AST.ID)
 aaLookUp astID = do aa' <- getAAMap
-                    case IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap of
-                        Just a -> return a
-                        _      -> return astID
+                    return $ IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap
 
 
 nodeMapLookUp :: GBStateM m => AST.ID -> m (Maybe (Node.ID, OutPort))
@@ -136,4 +144,14 @@ nodeMapLookUp astID = do nm <- getNodeMap
 
 
 gvmNodeMapLookUp :: GBStateM m => AST.ID -> m (Maybe (Node.ID, OutPort))
-gvmNodeMapLookUp astID = aaLookUp astID >>= nodeMapLookUp
+gvmNodeMapLookUp astID = aaLookUp astID
+                     >>= return . Maybe.fromMaybe astID
+                     >>= nodeMapLookUp
+
+
+getPrevoiusNode :: GBStateM m => m Node.ID
+getPrevoiusNode = gets (view prevoiusNode)
+
+
+setPrevoiusNode :: GBStateM m => Node.ID -> m ()
+setPrevoiusNode nodeID = modify (set prevoiusNode nodeID)
