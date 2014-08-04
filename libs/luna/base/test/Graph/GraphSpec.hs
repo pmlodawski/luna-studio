@@ -108,7 +108,7 @@ def main arg:
     foo.bar arg 2
 |], named "test11" [r|
 def main arg:
-    x = foo.bar(arg, 15, arg).baz arg 2
+    x = foo.bar(arg, 15, arg, [19..]).baz arg 2
 |], named "test12" [r|
 def main arg:
     x.zooo 43
@@ -125,8 +125,15 @@ def main arg:
 |], named "test15" [r|
 def main arg:
     foo.bar
+|], named "test16" [r|
+def main arg:
+    x = {1, [1..10], [9..]}
 |]]
-
+-- |], named "test17" [r|
+-- def main arg:
+--     x = 4
+--     y = {1, x}
+-- |]]
 
 
 main :: IO ()

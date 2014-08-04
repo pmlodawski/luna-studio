@@ -231,8 +231,8 @@ showExpr expr = case expr of
     --Expr.Typed        _ cls      expr
     --Expr.Var          _ name         -> name
     Expr.Wildcard     _              -> "_"
-    Expr.RangeFromTo  _ start    end -> "[" ++ showExpr start ++ ".." ++ showExpr end ++ "]"
-    Expr.RangeFrom    _ start        -> "[" ++ showExpr start ++ "..]"
+    Expr.RangeFromTo  _ start    end -> showExpr start ++ ".." ++ showExpr end
+    Expr.RangeFrom    _ start        -> showExpr start ++ ".."
     --Expr.Field        _ name     cls       value
     --Expr.Arg          _ pat      value
     --Expr.Native       _ segments
