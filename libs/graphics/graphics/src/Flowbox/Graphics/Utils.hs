@@ -4,13 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module Flowbox.Graphics.Utils where
 
-import           Data.Array.Accelerate as A
---import qualified Data.Array.Accelerate as A
+import Data.Array.Accelerate as A
+import Data.Array.Accelerate.Smart
+import Data.Array.Accelerate.Tuple
+import Data.Array.Accelerate.Array.Sugar
+import Data.Typeable
 
 import Flowbox.Prelude as P
 
@@ -18,8 +26,8 @@ import Flowbox.Prelude as P
 
 data Size a = Size {sizeW :: a, sizeH :: a}
 data Range a = Range {rangeLo :: a, rangeHi :: a}
+             deriving (Show, Typeable)
 
--- THINK[2]: about invert and invert' and their names
 invert :: Num a => a -> a
 invert x = 1 - x
 
@@ -101,3 +109,34 @@ frthQuad e = let (_:: Exp a, _:: Exp b, _:: Exp c, x) = unlift e in x
 
 variable :: (Lift Exp e, Elt (Plain e)) => e -> Exp (Plain e)
 variable a = the $ unit $ lift a
+
+
+-- = Accelerate instances
+
+type instance EltRepr  (Range a) = EltRepr  (a, a)
+type instance EltRepr' (Range a) = EltRepr' (a, a)
+
+instance Elt a => Elt (Range a) where
+    eltType _ = eltType (undefined :: (a, a))
+    toElt p = case toElt p of
+        (lo, hi) -> Range lo hi
+    fromElt (Range lo hi) = fromElt (lo, hi)
+
+    eltType' _ = eltType' (undefined :: (a, a))
+    toElt' p = case toElt' p of
+        (lo, hi) -> Range lo hi
+    fromElt' (Range lo hi) = fromElt' (lo, hi)
+
+instance IsTuple (Range a) where
+    type TupleRepr (Range a) = TupleRepr (a, a)
+    fromTuple (Range lo hi) = fromTuple (lo, hi)
+    toTuple t = case toTuple t of
+        (lo, hi) -> Range lo hi
+
+instance (Lift Exp a, Elt (Plain a)) => Lift Exp (Range a) where
+    type Plain (Range a) = Range (Plain a)
+    lift (Range lo hi) = Exp $ Tuple $ NilTup `SnocTup` lift lo `SnocTup` lift hi
+
+instance (Elt a, e ~ Exp a) => Unlift Exp (Range e) where
+    unlift t = Range (Exp $ SuccTupIdx ZeroTupIdx `Prj` t)
+                     (Exp $ ZeroTupIdx `Prj` t)
