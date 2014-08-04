@@ -18,7 +18,8 @@ import qualified Data.Maybe          as Maybe
 
 import qualified Flowbox.Luna.Data.AST.Common                   as AST
 import qualified Flowbox.Luna.Data.Attributes                   as Attributes
-import           Flowbox.Luna.Data.Graph.Edge                   (Edge (Edge))
+import           Flowbox.Luna.Data.Graph.Edge                   (Edge)
+import qualified Flowbox.Luna.Data.Graph.Edge                   as Edge
 import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
 import           Flowbox.Luna.Data.Graph.Node                   (Node)
@@ -89,7 +90,7 @@ connect :: GBStateM m => AST.ID -> Node.ID -> InPort -> m ()
 connect srcID dstNID dstPort = do
     src <- gvmNodeMapLookUp srcID
     case src of
-        Just (srcNID, srcPort) -> connectNodes srcNID dstNID $ Edge srcPort dstPort
+        Just (srcNID, srcPort) -> connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
         Nothing                -> return ()
 
 

@@ -17,7 +17,7 @@ import qualified Data.Map            as Map
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Expr                      (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                      as Expr
-import           Flowbox.Luna.Data.Graph.Edge                    (Edge (Edge))
+import qualified Flowbox.Luna.Data.Graph.Edge                    as Edge
 import           Flowbox.Luna.Data.Graph.Graph                   (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                   as Graph
 import           Flowbox.Luna.Data.Graph.Node                    (Node)
@@ -104,7 +104,7 @@ getNodeSrcs :: GPStateM m => Node.ID -> m [Expr]
 getNodeSrcs nodeID = do
     g <- getGraph
     let connectedMap = Map.fromList
-                     $ map (\(pNID, _, Edge s d) -> (d, (pNID, s)))
+                     $ map (\(pNID, _, Edge.Data s d) -> (d, (pNID, s)))
                      $ Graph.lprel g nodeID
     case Map.size connectedMap of
         0 -> return []
