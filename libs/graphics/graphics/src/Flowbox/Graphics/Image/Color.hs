@@ -24,7 +24,6 @@ module Flowbox.Graphics.Image.Color (
 import qualified Data.Array.Accelerate       as A
 import           Data.Array.Accelerate.Tuple (IsTuple, TupleRepr, fromTuple, toTuple)
 import           Data.Array.Accelerate.Type  (IsScalar)
-import qualified Linear
 
 import           Flowbox.Graphics.Color
 import qualified Flowbox.Graphics.Utils as U
@@ -87,39 +86,55 @@ hsvTool :: forall a t. (Elt t, IsFloating t, ColorConvert a HSV, ColorConvert HS
         -> U.Range (Exp t) -> Exp t -> Exp t
         -> a (Exp t)
         -> a (Exp t)
-hsvTool hueRange hueRotation hueRolloff
-        saturationRange saturationAdjustment saturationRolloff
-        brightnessRange brightnessAdjustment brightnessRolloff pix =
+hsvTool hueRange (U.variable -> hueRotation) (U.variable -> hueRolloff)
+        saturationRange (U.variable -> saturationAdjustment) (U.variable -> saturationRolloff)
+        brightnessRange (U.variable -> brightnessAdjustment) (U.variable -> brightnessRolloff) pix =
     A.unlift (conditionsFulfilled A.? (
-        --A.lift (hsv & h %~ (\hue -> rotation (hueRotation * rolloff hueRange hueRolloff hue) hue) -- hue
-        --    & s %~ (\saturation -> saturation + saturationAdjustment * rolloff saturationRange saturationRolloff saturation)
-        --    & v %~ (\value -> value + brightnessAdjustment * rolloff brightnessRange brightnessRolloff value)
-        --    & convertColor :: a (Exp t))
-        A.lift (hsv & h %~ (\hue -> rotation (hueRotation * power hueRange hueRolloff hue) hue) -- hue
-            -- & s %~ (\saturation -> saturation + saturationAdjustment * power saturationRange saturationRolloff saturation)
-            -- & v %~ (\value -> value + brightnessAdjustment * power brightnessRange brightnessRolloff value)
+        A.lift (hsv & h %~ (\hue -> rotation (hueRotation * cyclicPower hueRange hueRolloff hue) hue) -- hue
+            & s %~ (\saturation -> saturation + saturationAdjustment * power saturationRange saturationRolloff saturation)
+            & v %~ (\value -> value + brightnessAdjustment * power brightnessRange brightnessRolloff value)
             & convertColor :: a (Exp t))
         ,
         A.lift pix))
     where hsv = toHSV pix
           rotation r hue = U.frac $ hue + r
 
-          --conditionsFulfilled = rolloff hueRange        hueRolloff        (hsv ^. h) A.>* 0
-          --                      A.&&*
-          --                      rolloff saturationRange saturationRolloff (hsv ^. s) A.>* 0
-          --                      A.&&*
-          --                      rolloff brightnessRange brightnessRolloff (hsv ^. v) A.>* 0
-          conditionsFulfilled = power hueRange        hueRolloff        (hsv ^. h) A.>* 0
-          --                      A.&&*
-          --                      power saturationRange saturationRolloff (hsv ^. s) A.>* 0
-          --                      A.&&*
-          --                      power brightnessRange brightnessRolloff (hsv ^. v) A.>* 0
-          --conditionsFulfilled = 1 A.>* (0::Exp Int)
-
+          conditionsFulfilled = cyclicPower hueRange        hueRolloff        (hsv ^. h) A.>* 0
+                                A.&&*
+                                power       saturationRange saturationRolloff (hsv ^. s) A.>* 0
+                                A.&&*
+                                power       brightnessRange brightnessRolloff (hsv ^. v) A.>* 0
 
 power :: forall a. (Elt a, IsFloating a) => U.Range (Exp a) -> Exp a -> Exp a -> Exp a
-power (U.Range a b) rolloff x =
-    let (correct, pp) = intersection a b rolloff :: (Exp Bool, Exp a)
+power range@(U.Range a' b') rolloff x =
+    let a = U.variable a'
+        b = U.variable b'
+
+        rLeft  = U.Range (a - rolloff) a
+        rRight = U.Range b (b + rolloff)
+
+        rLeftEquation val = aLinear * val + bLinear
+            where (aLinear, bLinear) = rise a rolloff
+
+        rRightEquation val = aLinear * val + bLinear
+            where (aLinear, bLinear) = fall b rolloff
+    in A.cond (x `inRange` range) 1
+       $ A.cond (x `inRange` rLeft) (rLeftEquation x)
+       $ A.cond (x `inRange` rRight) (rRightEquation x)
+       $ 0
+
+inRange :: (Elt a, IsScalar a) => Exp a -> U.Range (Exp a) -> Exp Bool
+inRange val (U.Range a b) = val A.>=* a A.&&* val A.<=* b
+
+
+-- | Used to compute power of hue rotation effect. It properly cycles on multiplies
+--   of 360 degrees in both directions.
+cyclicPower :: forall a. (Elt a, IsFloating a) => U.Range (Exp a) -> Exp a -> Exp a -> Exp a
+cyclicPower (U.Range a' b') rolloff x =
+    let a = U.variable a'
+        b = U.variable b'
+        (correct, pp') = intersection a b rolloff :: (Exp Bool, Exp a)
+        pp = U.variable pp'
         (rLeft, rRight) = A.unlift (correct A.? (A.lift ((pp-1,a), (b,pp))
                                      , A.lift ((a-rolloff, a), (b, b+rolloff)))) :: (A.Exp (a, a), A.Exp (a, a))
         rLeftEquation val = A.cond (frL A./=* 0) (fxL val / frL) 1
