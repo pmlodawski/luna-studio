@@ -75,7 +75,5 @@ spec = do
     describe "ast <-> graph conversion" $ do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth code) sampleCodes
-        --it "returns the same when converting back and forth" $ do
-        --    mapM_ backAndForth sampleCodes
 
 

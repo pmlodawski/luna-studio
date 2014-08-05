@@ -20,7 +20,6 @@ import           Flowbox.Luna.Data.Pass.AliasInfo                      (AliasInf
 import           Flowbox.Luna.Data.Pass.Source                         (Source (Source))
 import           Flowbox.Luna.Data.PropertyMap                         (PropertyMap)
 import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias              as Alias
-import           Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer     (clearIDs)
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
@@ -48,13 +47,13 @@ getExpr = eitherStringToM' .:. GraphParser.run
 
 backAndForth :: String -> IO ()
 backAndForth code = do
-    (expr, aa)   <- getAST code
-    (graph, _pm) <- getGraph aa def expr
+    (expr, aa)  <- getAST code
+    (graph, pm) <- getGraph aa def expr
 
-    let graphview = GraphView.fromGraph graph
-        egraph    = GraphView.toGraph graphview
+    let graphview   = GraphView.fromGraph graph
+        graphWithPm = GraphView.toGraph graphview pm
 
-    Right graph `shouldBe` egraph
+    Right (graph, pm) `shouldBe` graphWithPm
 
 
 named :: a -> b -> (a, b)
@@ -70,7 +69,4 @@ spec = do
     describe "graph <-> graphview conversion" $ do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth code) sampleCodes
-        --it "returns the same when converting back and forth" $ do
-        --    mapM_ backAndForth sampleCodes
-
 

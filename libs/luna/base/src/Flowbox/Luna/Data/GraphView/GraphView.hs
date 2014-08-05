@@ -13,17 +13,21 @@ module Flowbox.Luna.Data.GraphView.GraphView (
     isNotAlreadyConnected,
 ) where
 
-import qualified Data.List  as List
-import qualified Data.Maybe as Maybe
+import           Data.Foldable (foldlM)
+import qualified Data.List     as List
+import qualified Data.Maybe    as Maybe
 
 import           Flowbox.Data.Graph                         hiding (Edge, Graph, fromGraph)
 import qualified Flowbox.Data.Graph                         as DG
+import qualified Flowbox.Luna.Data.Graph.Edge               as Edge
 import           Flowbox.Luna.Data.Graph.Graph              (Graph)
 import           Flowbox.Luna.Data.Graph.Node               (Node)
 import qualified Flowbox.Luna.Data.Graph.Node               as Node
-import           Flowbox.Luna.Data.GraphView.EdgeView       (EdgeView)
+import qualified Flowbox.Luna.Data.Graph.Port               as Port
+import           Flowbox.Luna.Data.GraphView.EdgeView       (EdgeView (EdgeView))
 import qualified Flowbox.Luna.Data.GraphView.EdgeView       as EdgeView
 import           Flowbox.Luna.Data.GraphView.PortDescriptor (PortDescriptor)
+import           Flowbox.Luna.Data.PropertyMap              (PropertyMap)
 import           Flowbox.Prelude
 
 
@@ -39,13 +43,6 @@ fromGraph graph = mkGraph nodes' edgeviews where
                                $ labEdges graph
 
 
-toGraph :: GraphView -> Either String Graph
-toGraph gv = do
-    let n = labNodes gv
-    ev <- mapM EdgeView.toLEdge (labEdges gv)
-    return $ mkGraph n ev
-
-
 portMatches :: PortDescriptor -> LEdge EdgeView -> Bool
 portMatches adstPort (_, _, connectedPort) = matches where
     connectedDstPort = connectedPort ^. EdgeView.dst
@@ -56,4 +53,21 @@ portMatches adstPort (_, _, connectedPort) = matches where
 isNotAlreadyConnected :: GraphView -> Node.ID -> PortDescriptor -> Bool
 isNotAlreadyConnected graphview nodeID adstPort = not connected where
     connected = any (portMatches adstPort) (inn graphview nodeID)
+
+---------------------------------------------------------------------------
+
+toGraph :: GraphView -> PropertyMap -> Either String (Graph, PropertyMap)
+toGraph gv pm = do
+    let n = DG.labNodes gv
+    foldlM applyEdgeView (DG.mkGraph n [], pm) (DG.labEdges gv)
+
+
+
+applyEdgeView :: (Graph, PropertyMap) -> LEdge EdgeView -> Either String (Graph, PropertyMap)
+applyEdgeView (graph, pm) (src, dst, edgeview) = case edgeview of
+    EdgeView _   []  -> Left "Destination port descriptor should have at leas one element"
+    EdgeView []  [d] -> do let newGraph = DG.insEdge (src, dst, Edge.Data  Port.All    d) graph
+                           Right (newGraph, pm)
+    EdgeView [s] [d] -> do let newGraph = DG.insEdge (src, dst, Edge.Data (Port.Num s) d) graph
+                           Right (newGraph, pm)
 
