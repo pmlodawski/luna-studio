@@ -51,3 +51,4 @@ projectLibraryAstPropertiesGetRequest                  = "project.library.ast.pr
 projectLibraryAstPropertiesSetRequest                  = "project.library.ast.properties.set.request"
 
 projectmanagerSyncGetRequest = "projectmanager.sync.get.request"
+projectmanagerPingRequest    = "projectmanager.ping.request"

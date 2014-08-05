@@ -9,7 +9,13 @@ module MathSpec where
 
 import Test.Hspec
 
-absolute x = x
+import Flowbox.Prelude
+
+
+
+absolute :: Integer -> Integer
+absolute = abs
+--absolute = id
 
 main :: IO ()
 main = hspec spec

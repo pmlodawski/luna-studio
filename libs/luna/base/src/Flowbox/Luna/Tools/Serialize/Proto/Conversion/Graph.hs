@@ -16,7 +16,8 @@ import Control.Applicative
 import Data.Int            (Int32)
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.Graph.Edge                   (Edge (Edge))
+import           Flowbox.Luna.Data.Graph.Edge                   (Edge)
+import qualified Flowbox.Luna.Data.Graph.Edge                   as Edge
 import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
 import           Flowbox.Luna.Data.Graph.Node                   (Node)
@@ -33,13 +34,13 @@ import qualified Generated.Proto.Graph.Node.Cls                 as GenNode
 
 
 instance Convert (Int, Int, Edge) Gen.Edge where
-    encode (nodeSrc, nodeDst, Edge portSrc portDst) =
+    encode (nodeSrc, nodeDst, Edge.Data portSrc portDst) =
         Gen.Edge (encodePJ nodeSrc) (encodePJ nodeDst) (encodeP portSrc) (encodePJ portDst)
     decode (Gen.Edge mtnodeSrc mtnodeDst mtportSrc mtportDst) = do
         tnodeSrc <- mtnodeSrc <?> "Failed to decode Edge: 'srcNode' field is missing"
         tnodeDst <- mtnodeDst <?> "Failed to decode Edge: 'dstNode' field is missing"
         tportDst <- mtportDst <?> "Failed to decode Edge: 'dstPort' field is missing"
-        return $ (decodeP tnodeSrc, decodeP tnodeDst, Edge (decodeP mtportSrc) (decodeP tportDst))
+        return $ (decodeP tnodeSrc, decodeP tnodeDst, Edge.Data (decodeP mtportSrc) (decodeP tportDst))
 
 
 instance Convert (Int, Node) Gen.Node where

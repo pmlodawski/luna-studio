@@ -29,11 +29,11 @@ import qualified Generated.Proto.Pat.Con_                           as GenCon_
 import qualified Generated.Proto.Pat.Lit                            as GenLit
 import qualified Generated.Proto.Pat.Pat                            as Gen
 import qualified Generated.Proto.Pat.Pat.Cls                        as GenCls
+import qualified Generated.Proto.Pat.RecWildcard                    as GenRecWildcard
 import qualified Generated.Proto.Pat.Tuple                          as GenTuple
 import qualified Generated.Proto.Pat.Typed                          as GenTyped
 import qualified Generated.Proto.Pat.Var                            as GenVar
 import qualified Generated.Proto.Pat.Wildcard                       as GenWildcard
-import qualified Generated.Proto.Pat.RecWildcard                       as GenRecWildcard
 
 
 
@@ -82,10 +82,8 @@ instance Convert Pat Gen.Pat where
            GenCls.Wildcard -> do ext <- getExt GenWildcard.ext
                                  GenWildcard.Wildcard <- ext <?> "Failed to decode Pat.Wildcard: extension is missing"
                                  pure $ Pat.Wildcard i
-           GenCls.RecWildcard -> do 
+           GenCls.RecWildcard -> do
                                  ext <- getExt GenRecWildcard.ext
                                  GenRecWildcard.RecWildcard <- ext <?> "Failed to decode Pat.RecWildcard: extension is missing"
                                  pure $ Pat.RecWildcard i
-       where getExt k = case Extensions.getExt k p of
-                                Right a -> return a
-                                Left m  -> fail m
+       where getExt = flip Extensions.getExt p

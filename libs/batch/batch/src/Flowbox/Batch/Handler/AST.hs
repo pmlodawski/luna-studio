@@ -52,9 +52,9 @@ addModule newModule bcParent libID projectID = astFocusOp bcParent libID project
     maxID       <- Batch.getMaxID libID projectID
     fixedModule <- EitherT $ IDFixer.runModule maxID Nothing True newModule
     newFocus    <- case focus of
-        Focus.ClassFocus    _ -> fail "Cannot add module to a class"
-        Focus.FunctionFocus _ -> fail "Cannot add module to a function"
-        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addModule fixedModule m
+        Focus.Class    _ -> left "Cannot add module to a class"
+        Focus.Function _ -> left "Cannot add module to a function"
+        Focus.Module   m -> return $ Focus.Module $ Module.addModule fixedModule m
     return (newFocus, fixedModule))
 
 
@@ -63,9 +63,9 @@ addClass newClass bcParent libID projectID = astFocusOp bcParent libID projectID
     maxID       <- Batch.getMaxID libID projectID
     fixedClass <- EitherT $ IDFixer.runExpr maxID Nothing True newClass
     newFocus <- case focus of
-        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addClass fixedClass c
-        Focus.FunctionFocus _ -> fail "Cannot add class to a function"
-        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addClass fixedClass m
+        Focus.Class    c -> return $ Focus.Class $ Expr.addClass fixedClass c
+        Focus.Function _ -> left "Cannot add class to a function"
+        Focus.Module   m -> return $ Focus.Module $ Module.addClass fixedClass m
     return (newFocus, fixedClass))
 
 
@@ -74,9 +74,9 @@ addFunction newFunction bcParent libID projectID = astFocusOp bcParent libID pro
     maxID       <- Batch.getMaxID libID projectID
     fixedFunction <- EitherT $ IDFixer.runExpr maxID Nothing True newFunction
     newFocus <- case focus of
-        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addMethod fixedFunction c
-        Focus.FunctionFocus _ -> fail "Cannot add function to a function"
-        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addMethod fixedFunction m
+        Focus.Class    c -> return $ Focus.Class $ Expr.addMethod fixedFunction c
+        Focus.Function _ -> left "Cannot add function to a function"
+        Focus.Module   m -> return $ Focus.Module $ Module.addMethod fixedFunction m
     return (newFocus, fixedFunction))
 
 

@@ -14,7 +14,7 @@ import Flowbox.Prelude
 
 data Flags = Flags { _io   :: Bool
                    , _omit :: Bool
-                   } deriving (Show, Read)
+                   } deriving (Show, Read, Eq)
 
 
 makeLenses (''Flags)

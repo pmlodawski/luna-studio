@@ -11,9 +11,9 @@ import Flowbox.Prelude
 
 
 
-data Crumb = FunctionCrumb { name :: String
-                           , path :: [String]
-                           }
-           | ClassCrumb    { name :: String }
-           | ModuleCrumb   { name :: String }
+data Crumb = Function { name :: String
+                      , path :: [String]
+                      }
+           | Class    { name :: String }
+           | Module   { name :: String }
            deriving (Show, Ord, Eq)

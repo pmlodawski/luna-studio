@@ -75,6 +75,12 @@ traverseM'_ :: Traversal m => (Pat -> m ()) -> Pat -> m ()
 traverseM'_ fpat p = traverseM_ fpat pure pure p
 
 
+traverseMR :: Traversal m => (Pat -> m Pat) -> (Type -> m Type) -> (Lit -> m Lit) -> Pat -> m Pat
+traverseMR fpat ftype flit = tfpat where
+    tfpat p = fpat =<< traverseM tfpat tftype flit p
+    tftype  = Type.traverseMR ftype
+
+
 lunaShow :: Pat -> String
 lunaShow p = case p of
     Var      _ name'      -> name'
