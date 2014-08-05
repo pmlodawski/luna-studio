@@ -40,7 +40,7 @@ instance Convert (Int, Int, Edge) Gen.Edge where
         tnodeSrc <- mtnodeSrc <?> "Failed to decode Edge: 'srcNode' field is missing"
         tnodeDst <- mtnodeDst <?> "Failed to decode Edge: 'dstNode' field is missing"
         tportDst <- mtportDst <?> "Failed to decode Edge: 'dstPort' field is missing"
-        return $ (decodeP tnodeSrc, decodeP tnodeDst, Edge.Data (decodeP mtportSrc) (decodeP tportDst))
+        return (decodeP tnodeSrc, decodeP tnodeDst, Edge.Data (decodeP mtportSrc) (decodeP tportDst))
 
 
 instance Convert (Int, Node) Gen.Node where

@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Graph.GraphSpec where
+module Graph.GraphViewSpec where
 
 import Test.Hspec
 
@@ -15,6 +15,7 @@ import           Flowbox.Luna.Data.AST.Expr                            (Expr)
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus                    as Focus
 import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                   as Zipper
 import           Flowbox.Luna.Data.Graph.Graph                         (Graph)
+import qualified Flowbox.Luna.Data.GraphView.GraphView                 as GraphView
 import           Flowbox.Luna.Data.Pass.AliasInfo                      (AliasInfo)
 import           Flowbox.Luna.Data.Pass.Source                         (Source (Source))
 import           Flowbox.Luna.Data.PropertyMap                         (PropertyMap)
@@ -25,7 +26,6 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphB
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
 import           Flowbox.Prelude
 import           Graph.SampleCodes                                     (sampleCodes)
-
 
 
 getAST :: String -> IO (Expr, AliasInfo)
@@ -48,18 +48,13 @@ getExpr = eitherStringToM' .:. GraphParser.run
 
 backAndForth :: String -> IO ()
 backAndForth code = do
-    (expr, aa)    <- getAST code
-    (graph, pm)   <- getGraph aa def expr
-    --printLn
-    --print expr
-    --print graph
-    --print pm
-    --printLn
-    expr2         <- getExpr graph pm expr
-    (graph2, pm2) <- getGraph aa def expr
-    (clearIDs 0 expr2) `shouldBe` (clearIDs 0 expr)
-    graph2 `shouldBe` graph
-    pm2    `shouldBe` pm
+    (expr, aa)   <- getAST code
+    (graph, _pm) <- getGraph aa def expr
+
+    let graphview = GraphView.fromGraph graph
+        egraph    = GraphView.toGraph graphview
+
+    Right graph `shouldBe` egraph
 
 
 named :: a -> b -> (a, b)
@@ -72,7 +67,7 @@ main = hspec spec
 
 spec :: Spec
 spec = do
-    describe "graph conversion" $ do
+    describe "graphview conversion" $ do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth code) sampleCodes
         --it "returns the same when converting back and forth" $ do

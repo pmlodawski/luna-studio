@@ -47,9 +47,9 @@ type GBPass result = Pass GBState result
 
 
 run :: AliasInfo -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
-run aliasInfo pm expr = (Pass.run_ (Pass.Info "GraphBuilder")
-                        $ State.make aliasInfo pm inputsID)
-                      $ expr2graph expr
+run aliasInfo pm expr = Pass.run_ (Pass.Info "GraphBuilder")
+                                  (State.make aliasInfo pm inputsID)
+                                  (expr2graph expr)
     where inputsID = - expr ^. Expr.id
 
 
@@ -164,11 +164,8 @@ buildNode astFolded monadicBind outName expr = case expr of
                                      State.connectMonadic i
                                      return i
     where
-        noAssignment = Maybe.isNothing outName
-
-        genName base num = case outName of
-            Nothing   -> OutputName.generate base num
-            Just name -> name
+        noAssignment     = Maybe.isNothing outName
+        genName base num = Maybe.fromMaybe (OutputName.generate base num) outName
 
 
 buildArg :: Bool -> Bool -> Maybe String -> Expr -> GBPass (Maybe AST.ID)

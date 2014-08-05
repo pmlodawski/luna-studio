@@ -99,7 +99,7 @@ addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
 
 nodeMapLookUp :: (Node.ID, OutPort) -> GPStateM m Expr
 nodeMapLookUp key = do nm <- getNodeMap
-                       Map.lookup key nm <??> ("GraphParser: nodeMapLookUp: Cannot find " ++ (show key) ++ " in nodeMap")
+                       Map.lookup key nm <??> "GraphParser: nodeMapLookUp: Cannot find " ++ show key ++ " in nodeMap"
 
 
 
@@ -126,7 +126,7 @@ getNodeSrc (Just a) = nodeMapLookUp a
 
 getNode :: Node.ID -> GPStateM m Node
 getNode nodeID = do gr <- getGraph
-                    Graph.lab gr nodeID <??> ("GraphParser: getNodeOutputName: Cannot find nodeID=" ++ (show nodeID) ++ " in graph")
+                    Graph.lab gr nodeID <??> "GraphParser: getNodeOutputName: Cannot find nodeID=" ++ show nodeID ++ " in graph"
 
 
 getNodeOutputName :: Node.ID -> GPStateM m String

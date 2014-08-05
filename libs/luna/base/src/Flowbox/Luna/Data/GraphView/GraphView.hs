@@ -13,7 +13,8 @@ module Flowbox.Luna.Data.GraphView.GraphView (
     isNotAlreadyConnected,
 ) where
 
-import qualified Data.List as List
+import qualified Data.List  as List
+import qualified Data.Maybe as Maybe
 
 import           Flowbox.Data.Graph                         hiding (Edge, Graph, fromGraph)
 import qualified Flowbox.Data.Graph                         as DG
@@ -31,13 +32,18 @@ type GraphView = DG.Graph Node EdgeView
 
 
 fromGraph :: Graph -> GraphView
-fromGraph = DG.emap EdgeView.fromEdge
+fromGraph graph = mkGraph nodes' edgeviews where
+    nodes'    = labNodes graph
+    edgeviews = Maybe.mapMaybe (\(s, d, e) -> do ev <- EdgeView.fromEdge e
+                                                 return (s, d, ev))
+                               $ labEdges graph
 
 
 toGraph :: GraphView -> Either String Graph
-toGraph gv = do let n = labNodes gv
-                ev <- mapM EdgeView.toLEdge $ labEdges gv
-                return $ mkGraph n ev
+toGraph gv = do
+    let n = labNodes gv
+    ev <- mapM EdgeView.toLEdge (labEdges gv)
+    return $ mkGraph n ev
 
 
 portMatches :: PortDescriptor -> LEdge EdgeView -> Bool

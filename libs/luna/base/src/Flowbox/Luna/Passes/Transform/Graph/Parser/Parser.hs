@@ -64,11 +64,10 @@ graph2expr expr = do
 
 
 parseNode :: [Expr] ->  (Node.ID, Node) -> GPPass ()
-parseNode inputs (nodeID, node) = do
-    case node of
-        Node.Expr expr _  -> parseExprNode    nodeID expr
-        Node.Inputs       -> parseInputsNode  nodeID inputs
-        Node.Outputs      -> parseOutputsNode nodeID
+parseNode inputs (nodeID, node) = case node of
+    Node.Expr expr _  -> parseExprNode    nodeID expr
+    Node.Inputs       -> parseInputsNode  nodeID inputs
+    Node.Outputs      -> parseOutputsNode nodeID
 
 
 parseExprNode :: Node.ID -> String -> GPPass ()

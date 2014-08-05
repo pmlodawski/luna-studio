@@ -15,6 +15,7 @@ import           Control.Applicative
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.List           as List
 import           Data.List.Split     (splitOn)
+import qualified Data.Maybe          as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
@@ -46,8 +47,7 @@ type NRPass result = Pass Pass.NoState result
 
 
 run :: String -> Breadcrumbs -> Library.ID -> LibManager -> Pass.Result [(Library.ID, Breadcrumbs)]
-run = (Pass.run_ (Pass.Info "NameResolver") Pass.NoState) .:: resolve
-
+run = Pass.run_ (Pass.Info "NameResolver") Pass.NoState .:: resolve
 
 
 resolve :: String -> Breadcrumbs -> Library.ID -> LibManager -> NRPass [(Library.ID, Breadcrumbs)]
@@ -58,8 +58,8 @@ resolve name bc libID libManager = do
     let elements = splitOn "." name
         possiblePaths = elements
                       : (currentScope bc ++ elements)
-                      : (mapMaybe (possiblePath elements) imports)
-    return $ List.concat $ map (flip searchLibManager libManager) possiblePaths
+                      : mapMaybe (possiblePath elements) imports
+    return $ List.concatMap (`searchLibManager` libManager) possiblePaths
 
 getImports :: Zipper -> Breadcrumbs -> NRPass [Expr]
 getImports z@(Focus.Module m, _) (h:t) = do newZ <- hoistEither $ Zipper.focusCrumb h z
@@ -73,21 +73,19 @@ possiblePath elements (Expr.Import _ path (Expr.Con _ name) rename) =
     if imported == head elements
         then Just $ path ++ tail elements
         else Nothing
-    where imported = case rename of
-                        Nothing -> name
-                        Just r  -> r
+    where imported = Maybe.fromMaybe name rename
 
 
 currentScope :: Breadcrumbs -> [String]
-currentScope ((Crumb.Module   m  ):t) = m:(currentScope t)
-currentScope ((Crumb.Class    c  ):t) = c:(currentScope t)
-currentScope ((Crumb.Function _ _):_) = []
+currentScope (Crumb.Module   m   : t) = m : currentScope t
+currentScope (Crumb.Class    c   : t) = c : currentScope t
+currentScope (Crumb.Function _ _ : _) = []
 currentScope []                       = []
 
 
 searchLibManager :: [String] -> LibManager -> [(Library.ID, Breadcrumbs)]
-searchLibManager path libManager = do
-    List.concat $ map (\(libID, library) -> (libID,) <$> searchLib path library) $ LibManager.labNodes libManager
+searchLibManager path libManager =
+    List.concatMap (\(libID, library) -> (libID,) <$> searchLib path library) $ LibManager.labNodes libManager
 
 
 searchLib :: [String] -> Library -> [Breadcrumbs]
@@ -103,11 +101,11 @@ searchLib path library =
 -- FIXME: added typeDefs
 searchModule :: [String] -> Breadcrumbs -> Module -> [Breadcrumbs]
 searchModule path bc (Module.Module _ (Type.Module _ name _) _ classes _typeAliases _typeDefs _ methods modules) =
-    if length path > 0 && name == head path
+    if not (null path) && name == head path
         then if length path == 1
                 then [currentBc]
-                else (List.concat $ map (searchExpr   (tail path) currentBc) $ classes ++ methods)
-                  ++ (List.concat $ map (searchModule (tail path) currentBc) modules)
+                else List.concatMap (searchExpr   (tail path) currentBc) (classes ++ methods)
+                  ++ List.concatMap (searchModule (tail path) currentBc) modules
         else []
     where currentBc = bc ++ [Crumb.Module $ head path]
 

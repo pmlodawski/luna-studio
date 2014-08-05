@@ -125,7 +125,7 @@ traverseM fexp ftype fpat flit e = case e of
     Data         id' cls' cons' classes' methods'  -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
     ConD         id' name' fields'                 -> ConD         id' name' <$> fexpMap fields'
     Con          {}                                -> pure e
-    Cond         id' cond' success' failure'       -> Cond         id'       <$> fexp cond' <*> fexpMap success' <*> (mapM fexpMap) failure'
+    Cond         id' cond' success' failure'       -> Cond         id'       <$> fexp cond' <*> fexpMap success' <*> mapM fexpMap failure'
     Field        id' name' cls' value'             -> Field        id' name' <$> ftype cls' <*> fexpMap value'
     Function     id' path' name' inputs' output'
                  body'                             -> Function     id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
@@ -165,7 +165,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     RecordUpdate _ src' _ expr'                    -> drop <* fexp src'  <* fexp expr'
     Data         _ cls' cons'  classes' methods'   -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
     ConD         _ _ fields'                       -> drop <* fexpMap fields'
-    Cond         _ cond' success' failure'         -> drop <* fexp cond' <* fexpMap success' <* (mapM fexpMap) failure'
+    Cond         _ cond' success' failure'         -> drop <* fexp cond' <* fexpMap success' <* mapM fexpMap failure'
     Con          {}                                -> drop
     Field        _ _ cls' value'                   -> drop <* ftype cls' <* fexpMap value'
     Function     _ _ _ inputs' output' body'       -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
@@ -197,11 +197,11 @@ traverseM_ fexp ftype fpat flit e = case e of
 
 
 traverseM' :: Traversal m => (Expr -> m Expr) -> Expr -> m Expr
-traverseM' fexp e = traverseM fexp pure pure pure e
+traverseM' fexp = traverseM fexp pure pure pure
 
 
 traverseM'_ :: Traversal m => (Expr -> m ()) -> Expr -> m ()
-traverseM'_ fexp e = traverseM_ fexp pure pure pure e
+traverseM'_ fexp = traverseM_ fexp pure pure pure
 
 
 traverseMR :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr

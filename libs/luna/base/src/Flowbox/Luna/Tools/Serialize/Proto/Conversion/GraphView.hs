@@ -32,7 +32,7 @@ instance Convert (Int, Int, EdgeView) Gen.EdgeView where
     decode (Gen.EdgeView mtnodeSrc mtnodeDst tportSrc tportDst) = do
         tnodeSrc <- mtnodeSrc <?> "Failed to decode EdgeView: 'srcNode' field is missing"
         tnodeDst <- mtnodeDst <?> "Failed to decode EdgeView: 'dstNode' field is missing"
-        return $ (decodeP tnodeSrc, decodeP tnodeDst, EdgeView (decodeListP tportSrc) (decodeListP tportDst))
+        return (decodeP tnodeSrc, decodeP tnodeDst, EdgeView (decodeListP tportSrc) (decodeListP tportDst))
 
 
 instance Convert GraphView Gen.GraphView where

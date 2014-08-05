@@ -35,7 +35,7 @@ make = IDFixerState
 
 
 getMaxID :: IDFixerStateM m => m AST.ID
-getMaxID = get >>= return . maxID
+getMaxID = liftM maxID get
 
 
 setMaxID :: IDFixerStateM m => AST.ID -> m ()
@@ -44,7 +44,7 @@ setMaxID i = do s <- get
 
 
 getFixAll :: IDFixerStateM m => m Bool
-getFixAll = get >>= return . fixAll
+getFixAll = liftM fixAll get
 
 
 getRootIDOnce :: IDFixerStateM m => m (Maybe AST.ID)
@@ -72,4 +72,4 @@ fixID i = do
 
 
 unknownID :: AST.ID
-unknownID = (-1)
+unknownID = -1

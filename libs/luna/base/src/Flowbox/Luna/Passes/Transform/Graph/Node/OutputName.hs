@@ -21,7 +21,7 @@ import           Flowbox.Prelude
 
 
 generate :: String -> Int -> String
-generate base num = (mangle base) ++ "Result" ++ (show num)
+generate base num = mangle base ++ "Result" ++ show num
 
 
 fixEmpty :: Node -> Node.ID -> Node
@@ -37,8 +37,8 @@ fix node nodeID = newNode where
 
 
 mangle :: String -> String
-mangle name = case (List.takeWhile Char.isAlphaNum) name of
+mangle name = case List.takeWhile Char.isAlphaNum name of
     f:alphaNum -> if Char.isDigit f
                      then 'r' : f : alphaNum
-                     else (Char.toLower f) : alphaNum
+                     else Char.toLower f : alphaNum
     []         -> "node"
