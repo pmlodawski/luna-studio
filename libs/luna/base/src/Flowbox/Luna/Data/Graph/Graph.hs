@@ -43,6 +43,7 @@ connect srcID dstID edge = insEdge (srcID, dstID, edge)
 
 
 portMatches :: InPort -> LEdge Edge -> Bool
+portMatches _          (_, _, Edge.Monadic) = False
 portMatches newDstPort (_, _, Edge.Data _ connectedDstPort) =
     newDstPort == connectedDstPort
 

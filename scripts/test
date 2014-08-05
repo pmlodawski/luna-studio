@@ -42,15 +42,13 @@ def main():
     print_info("Running gencabal")
     handle_out(call('python2.7 scripts/gencabal', shell=True))
 
-    cwd = os.getcwd()
-
     print_warning('If tests are not enabled, run "./scripts/compile -j --enable-tests"')
 
     for pkg in pkgs:
         os.chdir(pkg.path)
         if not os.path.isfile("cabal.sandbox.config"):
             handle_out(call("cabal sandbox init --sandbox %s" % pkg.sbox, shell=True))
-        handle_out(call("cabal test %s" % ' '.join(args), shell=True))
+        handle_out(call("cabal test --builddir=%s %s" % (pkg.sbox, ' '.join(args)), shell=True))
 
 main()
 
