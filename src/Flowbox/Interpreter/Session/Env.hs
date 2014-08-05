@@ -42,4 +42,4 @@ mk = Env MapForest.empty SetForest.empty
 instance Default Env where
     def = mk LibManager.empty
              0
-             (DefPoint 0 [Crumb.ModuleCrumb "Main", Crumb.FunctionCrumb "main" []])
+             (DefPoint 0 [Crumb.Module "Main", Crumb.Function "main" []])
