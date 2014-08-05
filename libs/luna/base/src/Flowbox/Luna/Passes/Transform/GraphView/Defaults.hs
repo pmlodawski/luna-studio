@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults (
+module Flowbox.Luna.Passes.Transform.GraphView.Defaults (
     addDefaults,
     removeDefaults,
     isGenerated,
@@ -65,9 +65,8 @@ addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, property
 
 
 isGenerated :: Node.ID -> PropertyMap -> Bool
-isGenerated nodeID propertyMap = case PropertyMap.get nodeID Attributes.luna Attributes.defaultNodeGenerated propertyMap of
-    Just "True" -> True
-    _           -> False
+isGenerated nodeID propertyMap =
+    PropertyMap.get nodeID Attributes.luna Attributes.defaultNodeGenerated propertyMap == Just "True"
 
 
 delGenerated :: Node.ID -> (GraphView, PropertyMap) -> (GraphView, PropertyMap)

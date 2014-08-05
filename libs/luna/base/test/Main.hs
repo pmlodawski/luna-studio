@@ -54,8 +54,6 @@ import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser             
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder                     as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser                       as GraphParser
-import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults               as Defaults
-import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults               as Defaults
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen                      as HASTGen
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.LogEntry                                             as LogEntry
