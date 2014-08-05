@@ -44,20 +44,25 @@ instance Convert (Int, Int, Edge) Gen.Edge where
 
 
 instance Convert (Int, Node) Gen.Node where
-    encode (nodeID, node) = case node of
-        Node.Expr expr outName
-                     -> Gen.Node GenNode.Expr    (encodePJ nodeID) (encodePJ expr) (encodePJ outName)
-        Node.Inputs  -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing Nothing
-        Node.Outputs -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing Nothing
-    decode (Gen.Node tcls mtnodeID mtexpr mtoutputName) = do
+    encode (nodeID, node) = tnode where
+        tnodeID = encodePJ nodeID
+        tnodeWithoutPos = case node of
+            Node.Expr    {} -> Gen.Node GenNode.Expr    tnodeID (encodePJ $ node ^. Node.expr)
+                                                                (encodePJ $ node ^. Node.outputName)
+            Node.Inputs  {} -> Gen.Node GenNode.Inputs  tnodeID Nothing Nothing
+            Node.Outputs {} -> Gen.Node GenNode.Outputs tnodeID Nothing Nothing
+        tnode = tnodeWithoutPos (Just $ node ^. Node.x) (Just $ node ^. Node.y)
+    decode (Gen.Node tcls mtnodeID mtexpr mtoutputName mx my) = do
         nodeID <- decodeP <$> mtnodeID <?> "Failed to decode Node: 'id' field is missing"
+        x <- mx <?> "Failed to decode Node: 'x' field is missing"
+        y <- my <?> "Failed to decode Node: 'y' field is missing"
         node <- case tcls of
             GenNode.Expr -> do expr       <- decodeP <$> mtexpr       <?> "Failed to decode Node: 'expr' field is missing"
                                outputName <- decodeP <$> mtoutputName <?> "Failed to decode Node: 'outputName' field is missing"
                                return $ Node.Expr expr outputName
             GenNode.Inputs  -> return Node.Inputs
             GenNode.Outputs -> return Node.Outputs
-        return (nodeID, node)
+        return (nodeID, node x y)
 
 
 instance Convert Graph Gen.Graph where

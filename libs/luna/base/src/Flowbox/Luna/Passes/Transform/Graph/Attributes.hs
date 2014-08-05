@@ -25,3 +25,7 @@ astFolded = "AST-folded"
 
 astNoAssignment :: String
 astNoAssignment = "AST-no-assignment"
+
+
+nodePosition :: String
+nodePosition = "Node-position"

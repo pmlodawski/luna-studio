@@ -29,9 +29,8 @@ import           Flowbox.Luna.Data.Graph.Port                        (InPort)
 import qualified Flowbox.Luna.Data.Graph.Port                        as Port
 import           Flowbox.Luna.Data.Pass.AliasInfo                    (AliasInfo)
 import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
-import           Flowbox.Luna.Passes.Pass                            (Pass)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
-import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBState)
+import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBPass)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State   as State
 import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
 import           Flowbox.Prelude                                     hiding (error, mapM, mapM_)
@@ -43,7 +42,6 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 
 
-type GBPass result = Pass GBState result
 
 
 run :: AliasInfo -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)

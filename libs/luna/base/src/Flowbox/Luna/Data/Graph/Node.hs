@@ -12,11 +12,9 @@ import Flowbox.Prelude
 
 
 
-data Node = Expr     { _expr       :: String
-                     , _outputName :: String
-                     }
-          | Inputs
-          | Outputs
+data Node = Expr     { _expr :: String, _outputName :: String, _x :: Float, _y :: Float }
+          | Inputs   {                                         _x :: Float, _y :: Float }
+          | Outputs  {                                         _x :: Float, _y :: Float }
           deriving (Show, Eq)
 
 
@@ -24,16 +22,4 @@ makeLenses (''Node)
 
 
 type ID = Int
-
-
-mkExpr :: String -> String -> Node
-mkExpr name outName = Expr name outName
-
-
-mkInputs :: Node
-mkInputs = Inputs
-
-
-mkOutputs :: Node
-mkOutputs = Outputs
 

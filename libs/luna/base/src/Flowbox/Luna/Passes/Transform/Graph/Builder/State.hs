@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes       #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Builder.State where
@@ -15,7 +16,9 @@ import qualified Data.IntMap         as IntMap
 import           Data.Map            (Map)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
+import qualified Text.Read           as Read
 
+import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Data.AST.Common                   as AST
 import qualified Flowbox.Luna.Data.Attributes                   as Attributes
 import           Flowbox.Luna.Data.Graph.Edge                   (Edge)
@@ -29,9 +32,11 @@ import           Flowbox.Luna.Data.Pass.AliasInfo               (AliasInfo)
 import qualified Flowbox.Luna.Data.Pass.AliasInfo               as AliasInfo
 import           Flowbox.Luna.Data.PropertyMap                  (PropertyMap)
 import qualified Flowbox.Luna.Data.PropertyMap                  as PropertyMap
+import           Flowbox.Luna.Passes.Pass                       (Pass)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes as Attributes
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+
 
 
 logger :: Logger
@@ -51,107 +56,130 @@ data GBState = GBState { _graph        :: Graph
 makeLenses(''GBState)
 
 
-type GBStateM m = (MonadState GBState m, MonadIO m)
+type GBPass result = Pass GBState result
 
 
 make :: AliasInfo -> PropertyMap -> Node.ID -> GBState
 make = GBState Graph.empty Map.empty
 
 
-addToNodeMap :: GBStateM m => AST.ID -> (Node.ID, OutPort) -> m ()
+addToNodeMap :: AST.ID -> (Node.ID, OutPort) -> GBPass ()
 addToNodeMap k v = do nm <- getNodeMap
                       setNodeMap $ Map.insert k v nm
 
 
-insNode :: GBStateM m => (Node.ID, Node) -> m ()
-insNode node = do
-    g <- getGraph
-    setGraph $ Graph.insNode node g
+insNode :: (Node.ID, Float -> Float -> Node) -> GBPass ()
+insNode (nodeID, node) = do
+    g      <- getGraph
+    (x, y) <- getPosition nodeID
+    setGraph $ Graph.insNode (nodeID, node x y) g
 
 
-insNodeWithFlags :: GBStateM m => (Node.ID, Node) -> Bool -> Bool -> m ()
+insNodeWithFlags :: (Node.ID, Float -> Float -> Node) -> Bool -> Bool -> GBPass ()
 insNodeWithFlags n@(nodeID, _) isFolded noAssignment = do
     insNode n
-    when isFolded     $ setProperty Attributes.astFolded
-    when noAssignment $ setProperty Attributes.astNoAssignment
-    where setProperty key = getPropertyMap >>= setPropertyMap . PropertyMap.set nodeID Attributes.luna key Attributes.true
+    when isFolded     $ setFlag nodeID Attributes.astFolded
+    when noAssignment $ setFlag nodeID Attributes.astNoAssignment
 
 
-addNode :: GBStateM m => AST.ID -> OutPort -> Node -> Bool -> Bool -> m ()
+addNode :: AST.ID -> OutPort -> (Float -> Float -> Node) -> Bool -> Bool -> GBPass ()
 addNode astID outPort node isFolded noAssignment = do
     insNodeWithFlags (astID, node) isFolded noAssignment
     addToNodeMap astID (astID, outPort)
 
 
-connectNodes :: GBStateM m => Node.ID -> Node.ID -> Edge -> m ()
+connectNodes :: Node.ID -> Node.ID -> Edge -> GBPass ()
 connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
 
 
-connect :: GBStateM m => AST.ID -> Node.ID -> InPort -> m ()
+connect :: AST.ID -> Node.ID -> InPort -> GBPass ()
 connect srcID dstNID dstPort = do
     src <- gvmNodeMapLookUp srcID
     case src of
         Just (srcNID, srcPort) -> connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
         Nothing                -> return ()
 
-connectMonadic :: GBStateM m => Node.ID -> m ()
+connectMonadic :: Node.ID -> GBPass ()
 connectMonadic nodeID = do
     prevID <- getPrevoiusNode
     setPrevoiusNode nodeID
     connectNodes prevID nodeID Edge.Monadic
 
 
-getGraph :: GBStateM m => m Graph
+getGraph :: GBPass Graph
 getGraph = gets (view graph)
 
 
-setGraph :: GBStateM m => Graph -> m ()
+setGraph :: Graph -> GBPass ()
 setGraph gr = modify (set graph gr)
 
 
-getNodeMap :: GBStateM m => m NodeMap
+getNodeMap :: GBPass NodeMap
 getNodeMap = gets (view nodeMap)
 
 
-setNodeMap :: GBStateM m => NodeMap -> m ()
+setNodeMap :: NodeMap -> GBPass ()
 setNodeMap nm = modify (set nodeMap nm)
 
 
-getAAMap :: GBStateM m => m AliasInfo
+getAAMap :: GBPass AliasInfo
 getAAMap = gets (view aa)
 
 
-setAAMap :: GBStateM m => AliasInfo -> m ()
+setAAMap :: AliasInfo -> GBPass ()
 setAAMap aa' = modify (set aa aa')
 
 
-getPropertyMap :: GBStateM m => m PropertyMap
+getPropertyMap :: GBPass PropertyMap
 getPropertyMap = gets (view propertyMap)
 
 
-setPropertyMap :: GBStateM m => PropertyMap -> m ()
+setPropertyMap :: PropertyMap -> GBPass ()
 setPropertyMap pm = modify (set propertyMap pm)
 
 
-aaLookUp :: GBStateM m => AST.ID -> m (Maybe AST.ID)
+aaLookUp :: AST.ID -> GBPass (Maybe AST.ID)
 aaLookUp astID = do aa' <- getAAMap
                     return $ IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap
 
 
-nodeMapLookUp :: GBStateM m => AST.ID -> m (Maybe (Node.ID, OutPort))
+nodeMapLookUp :: AST.ID -> GBPass (Maybe (Node.ID, OutPort))
 nodeMapLookUp astID = do nm <- getNodeMap
                          return $ Map.lookup astID nm
 
 
-gvmNodeMapLookUp :: GBStateM m => AST.ID -> m (Maybe (Node.ID, OutPort))
+gvmNodeMapLookUp :: AST.ID -> GBPass (Maybe (Node.ID, OutPort))
 gvmNodeMapLookUp astID = aaLookUp astID
                      >>= return . Maybe.fromMaybe astID
                      >>= nodeMapLookUp
 
 
-getPrevoiusNode :: GBStateM m => m Node.ID
+getPrevoiusNode :: GBPass Node.ID
 getPrevoiusNode = gets (view prevoiusNode)
 
 
-setPrevoiusNode :: GBStateM m => Node.ID -> m ()
+setPrevoiusNode :: Node.ID -> GBPass ()
 setPrevoiusNode nodeID = modify (set prevoiusNode nodeID)
+
+
+setFlag :: Node.ID -> String -> GBPass ()
+setFlag nodeID key = setProperty nodeID key Attributes.true
+
+
+setProperty :: Node.ID -> String -> String -> GBPass ()
+setProperty nodeID key value =
+    getPropertyMap >>=
+    setPropertyMap . PropertyMap.set nodeID Attributes.luna key value
+
+
+getProperty :: Node.ID -> String -> GBPass (Maybe String)
+getProperty nodeID key =
+    PropertyMap.get nodeID Attributes.luna key <$> getPropertyMap
+
+
+getPosition :: Node.ID -> GBPass (Float, Float)
+getPosition nodeID = do
+    mprop <- getProperty nodeID Attributes.nodePosition
+    case mprop of
+        Nothing   -> return (0, 0)
+        Just prop -> Read.readMaybe prop <??> "BuilderState.getPosition : cannot parse position for node " ++ show nodeID

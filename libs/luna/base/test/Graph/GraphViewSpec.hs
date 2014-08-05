@@ -22,9 +22,9 @@ import           Flowbox.Luna.Data.PropertyMap                         (Property
 import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias              as Alias
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
 import           Flowbox.Prelude
 import           Graph.SampleCodes                                     (sampleCodes)
+
 
 
 getAST :: String -> IO (Expr, AliasInfo)
@@ -41,19 +41,16 @@ getGraph :: AliasInfo -> PropertyMap -> Expr -> IO (Graph, PropertyMap)
 getGraph = eitherStringToM' .:. GraphBuilder.run
 
 
-getExpr :: Graph -> PropertyMap -> Expr -> IO Expr
-getExpr = eitherStringToM' .:. GraphParser.run
-
-
 backAndForth :: String -> IO ()
 backAndForth code = do
     (expr, aa)  <- getAST code
     (graph, pm) <- getGraph aa def expr
 
-    let graphview   = GraphView.fromGraph graph
-        graphWithPm = GraphView.toGraph graphview pm
+    let graphview = GraphView.fromGraph graph
+    (graph2, pm2) <- eitherStringToM $ GraphView.toGraph graphview pm
 
-    Right (graph, pm) `shouldBe` graphWithPm
+    graph `shouldBe` graph2
+    pm    `shouldBe` pm2
 
 
 named :: a -> b -> (a, b)
