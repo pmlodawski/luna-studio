@@ -238,8 +238,8 @@ getGraphView bc libraryID projectID = do
 setGraphView :: (GraphView, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setGraphView (newGraphView', newPM') bc libraryID projectID = do
     let (newGraphView, newPM) = Defaults.addDefaults newGraphView' newPM'
-    newGraph <- hoistEither $ GraphView.toGraph newGraphView
-    setGraph (newGraph, newPM) bc libraryID projectID
+    graphWithPm <- hoistEither $ GraphView.toGraph newGraphView newPM
+    setGraph graphWithPm bc libraryID projectID
 
 
 getNode :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node
