@@ -31,5 +31,5 @@ count predicate = length . List.filter predicate
 
 merge :: (a -> a -> b) -> [a] -> [b]
 merge _   []    = []
-merge _   [a]   = []
+merge _   [_]   = []
 merge fun (h:t) = fun h (head t) : merge fun t
