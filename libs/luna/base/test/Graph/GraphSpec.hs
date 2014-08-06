@@ -80,14 +80,14 @@ spec = do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth code) sampleCodes
 
-    describe "graph sort algoritm" $ do
+    describe "graph sort alghorithm" $ do
         it "sorts graph correctly" $ do
-            let n1 = (1, Node.Expr "" "" 1 0)
-                n2 = (2, Node.Expr "" "" 2 0)
-                n3 = (3, Node.Expr "" "" 2 0)
-                n4 = (4, Node.Expr "" "" 3 0)
-                n5 = (5, Node.Expr "" "" 4 0)
-                n6 = (6, Node.Expr "" "" 5 0)
+            let n1 = (1, Node.Expr "" "" (1, 0))
+                n2 = (2, Node.Expr "" "" (2, 0))
+                n3 = (3, Node.Expr "" "" (2, 0))
+                n4 = (4, Node.Expr "" "" (3, 0))
+                n5 = (5, Node.Expr "" "" (4, 0))
+                n6 = (6, Node.Expr "" "" (5, 0))
                 properOrder = [n1, n2, n4, n5, n3, n6]
                 testOrder   = [n2, n3, n5, n6, n4, n1]
                 edges  = [(1, 2, Edge.Data Port.All 0)

@@ -12,11 +12,13 @@ import Flowbox.Prelude
 
 
 
-data Node = Expr     { _expr :: String, _outputName :: String, _x :: Float, _y :: Float }
-          | Inputs   {                                         _x :: Float, _y :: Float }
-          | Outputs  {                                         _x :: Float, _y :: Float }
+data Node = Expr     { _expr :: String, _outputName :: String, _pos :: Position }
+          | Inputs   {                                         _pos :: Position }
+          | Outputs  {                                         _pos :: Position }
           deriving (Show, Eq)
 
+
+type Position = (Float, Float)
 
 makeLenses (''Node)
 
@@ -24,11 +26,8 @@ makeLenses (''Node)
 type ID = Int
 
 
-position :: Node -> (Float, Float)
-position node = (node ^. x, node ^. y)
-
 
 position' :: (ID, Node) -> (Float, Float)
-position' = position . snd
+position' = view pos . snd
 
 

@@ -51,7 +51,7 @@ instance Convert (Int, Node) Gen.Node where
                                                                 (encodePJ $ node ^. Node.outputName)
             Node.Inputs  {} -> Gen.Node GenNode.Inputs  tnodeID Nothing Nothing
             Node.Outputs {} -> Gen.Node GenNode.Outputs tnodeID Nothing Nothing
-        tnode = tnodeWithoutPos (Just $ node ^. Node.x) (Just $ node ^. Node.y)
+        tnode = tnodeWithoutPos (Just $ node ^. Node.pos . _1) (Just $ node ^. Node.pos . _2)
     decode (Gen.Node tcls mtnodeID mtexpr mtoutputName mx my) = do
         nodeID <- decodeP <$> mtnodeID <?> "Failed to decode Node: 'id' field is missing"
         x <- mx <?> "Failed to decode Node: 'x' field is missing"
@@ -62,7 +62,7 @@ instance Convert (Int, Node) Gen.Node where
                                return $ Node.Expr expr outputName
             GenNode.Inputs  -> return Node.Inputs
             GenNode.Outputs -> return Node.Outputs
-        return (nodeID, node x y)
+        return (nodeID, node (x, y ))
 
 
 instance Convert Graph Gen.Graph where

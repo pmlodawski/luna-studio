@@ -47,7 +47,7 @@ graph2expr :: Expr -> GPPass Expr
 graph2expr expr = do
     let inputs = expr ^. Expr.inputs
     graph <- State.getGraph
-    mapM_ (parseNode inputs) $ Graph.topsortl graph
+    mapM_ (parseNode inputs) $ Graph.sort graph
     b  <- State.getBody
     mo <- State.getOutput
     let body = reverse $ case mo of
@@ -62,7 +62,7 @@ parseNode inputs (nodeID, node) = do
         Node.Expr    {} -> parseExprNode    nodeID $ node ^. Node.expr
         Node.Inputs  {} -> parseInputsNode  nodeID inputs
         Node.Outputs {} -> parseOutputsNode nodeID
-    State.setPosition nodeID (node ^. Node.x, node ^. Node.y)
+    State.setPosition nodeID $ node ^. Node.pos
 
 
 parseExprNode :: Node.ID -> String -> GPPass ()

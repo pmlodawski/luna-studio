@@ -68,21 +68,21 @@ addToNodeMap k v = do nm <- getNodeMap
                       setNodeMap $ Map.insert k v nm
 
 
-insNode :: (Node.ID, Float -> Float -> Node) -> GBPass ()
+insNode :: (Node.ID, Node.Position -> Node) -> GBPass ()
 insNode (nodeID, node) = do
-    g      <- getGraph
-    (x, y) <- getPosition nodeID
-    setGraph $ Graph.insNode (nodeID, node x y) g
+    g   <- getGraph
+    pos <- getPosition nodeID
+    setGraph $ Graph.insNode (nodeID, node pos) g
 
 
-insNodeWithFlags :: (Node.ID, Float -> Float -> Node) -> Bool -> Bool -> GBPass ()
+insNodeWithFlags :: (Node.ID, Node.Position -> Node) -> Bool -> Bool -> GBPass ()
 insNodeWithFlags n@(nodeID, _) isFolded noAssignment = do
     insNode n
     when isFolded     $ setFlag nodeID Attributes.astFolded
     when noAssignment $ setFlag nodeID Attributes.astNoAssignment
 
 
-addNode :: AST.ID -> OutPort -> (Float -> Float -> Node) -> Bool -> Bool -> GBPass ()
+addNode :: AST.ID -> OutPort -> (Node.Position -> Node) -> Bool -> Bool -> GBPass ()
 addNode astID outPort node isFolded noAssignment = do
     insNodeWithFlags (astID, node) isFolded noAssignment
     addToNodeMap astID (astID, outPort)
@@ -99,10 +99,15 @@ connect srcID dstNID dstPort = do
         Just (srcNID, srcPort) -> connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
         Nothing                -> return ()
 
+
 connectMonadic :: Node.ID -> GBPass ()
 connectMonadic nodeID = do
     prevID <- getPrevoiusNode
     setPrevoiusNode nodeID
+    prevPos <- getPosition prevID
+    currPos <- getPosition nodeID
+    unless (prevPos < currPos) $
+        setPosition nodeID (fst prevPos + 1, snd currPos)
     connectNodes prevID nodeID Edge.Monadic
 
 
@@ -177,9 +182,17 @@ getProperty nodeID key =
     PropertyMap.get nodeID Attributes.luna key <$> getPropertyMap
 
 
-getPosition :: Node.ID -> GBPass (Float, Float)
+getPosition :: Node.ID -> GBPass Node.Position
 getPosition nodeID = do
     mprop <- getProperty nodeID Attributes.nodePosition
     case mprop of
         Nothing   -> return (0, 0)
         Just prop -> Read.readMaybe prop <??> "BuilderState.getPosition : cannot parse position for node " ++ show nodeID
+
+
+setPosition :: Node.ID -> Node.Position -> GBPass ()
+setPosition nodeID pos = do
+    setProperty nodeID Attributes.nodePosition $ show pos
+    graph' <- getGraph
+    node   <- Graph.lab graph' nodeID <??> "BuilderState.setPosition : cannot find node with id = " ++ show nodeID
+    setGraph $ Graph.updateNode (nodeID, node & Node.pos .~ pos) graph'
