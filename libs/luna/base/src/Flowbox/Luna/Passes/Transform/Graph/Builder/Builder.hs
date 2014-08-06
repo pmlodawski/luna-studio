@@ -29,9 +29,8 @@ import           Flowbox.Luna.Data.Graph.Port                        (InPort)
 import qualified Flowbox.Luna.Data.Graph.Port                        as Port
 import           Flowbox.Luna.Data.Pass.AliasInfo                    (AliasInfo)
 import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
-import           Flowbox.Luna.Passes.Pass                            (Pass)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
-import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBState)
+import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBPass)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State   as State
 import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
 import           Flowbox.Prelude                                     hiding (error, mapM, mapM_)
@@ -43,13 +42,12 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 
 
-type GBPass result = Pass GBState result
 
 
 run :: AliasInfo -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
-run aliasInfo pm expr = (Pass.run_ (Pass.Info "GraphBuilder")
-                        $ State.make aliasInfo pm inputsID)
-                      $ expr2graph expr
+run aliasInfo pm expr = Pass.run_ (Pass.Info "GraphBuilder")
+                                  (State.make aliasInfo pm inputsID)
+                                  (expr2graph expr)
     where inputsID = - expr ^. Expr.id
 
 
@@ -164,11 +162,8 @@ buildNode astFolded monadicBind outName expr = case expr of
                                      State.connectMonadic i
                                      return i
     where
-        noAssignment = Maybe.isNothing outName
-
-        genName base num = case outName of
-            Nothing   -> OutputName.generate base num
-            Just name -> name
+        noAssignment     = Maybe.isNothing outName
+        genName base num = Maybe.fromMaybe (OutputName.generate base num) outName
 
 
 buildArg :: Bool -> Bool -> Maybe String -> Expr -> GBPass (Maybe AST.ID)

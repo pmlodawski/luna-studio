@@ -19,6 +19,8 @@ message Node {
     optional int32  id   = 2 [default = -1];
     optional string expr = 3;
     optional string outputName = 5 [default = ""];
+    optional float  x = 6;
+    optional float  y = 7;
 }
 
 message Edge {

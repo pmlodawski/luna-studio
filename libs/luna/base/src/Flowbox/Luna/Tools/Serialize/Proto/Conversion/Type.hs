@@ -36,7 +36,7 @@ import qualified Text.ProtocolBuffers.Extensions                as Extensions
 --FIXME[pm]: Type.Module has changed signature
 instance Convert Type Gen.Type where
     encode t = case t of
-        Type.Unknown i               -> genType GenCls.Unknown i GenUnknown.ext $ GenUnknown.Unknown
+        Type.Unknown i               -> genType GenCls.Unknown i GenUnknown.ext   GenUnknown.Unknown
         Type.Var     i name          -> genType GenCls.Var     i GenVar.ext     $ GenVar.Var       (encodePJ name)
         Type.Tuple   i items         -> genType GenCls.Tuple   i GenTuple.ext   $ GenTuple.Tuple   (encodeList items)
         Type.Data    i name params   -> genType GenCls.Data    i GenData.ext    $ GenData.Data     (encodePJ name) (encodeListP params)
@@ -73,13 +73,13 @@ instance Convert Type Gen.Type where
             GenCls.Lambda  -> do ext <- getExt GenLambda.ext
                                  (GenLambda.Lambda tinputs mtoutput) <- ext <?> "Failed to decode Type.Lambda: extension is missing"
                                  toutput <- mtoutput <?> "Failed to decode Type.Lambda: 'output' field is missing"
-                                 Type.Lambda i <$> (decodeList tinputs) <*> decode toutput
+                                 Type.Lambda i <$> decodeList tinputs <*> decode toutput
             GenCls.Con_    -> do ext <- getExt GenCon_.ext
                                  (GenCon_.Con_ tsegments) <- ext <?> "Failed to decode Type.Con: extension is missing"
                                  pure $ Type.Con i (decodeListP tsegments)
             GenCls.App     -> do ext <- getExt GenApp.ext
                                  (GenApp.App mtsrc targs) <- ext <?> "Failed to decode Type.App: extension is missing"
                                  tsrc <- mtsrc <?> "Failed to decode Type.App: 'src' field is missing"
-                                 Type.App i <$> (decode tsrc) <*> (decodeList targs)
+                                 Type.App i <$> decode tsrc <*> decodeList targs
         where getExt = flip Extensions.getExt t
 

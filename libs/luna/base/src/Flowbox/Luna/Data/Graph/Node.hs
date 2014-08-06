@@ -12,13 +12,13 @@ import Flowbox.Prelude
 
 
 
-data Node = Expr     { _expr       :: String
-                     , _outputName :: String
-                     }
-          | Inputs
-          | Outputs
+data Node = Expr     { _expr :: String, _outputName :: String, _pos :: Position }
+          | Inputs   {                                         _pos :: Position }
+          | Outputs  {                                         _pos :: Position }
           deriving (Show, Eq)
 
+
+type Position = (Float, Float)
 
 makeLenses (''Node)
 
@@ -26,14 +26,8 @@ makeLenses (''Node)
 type ID = Int
 
 
-mkExpr :: String -> String -> Node
-mkExpr name outName = Expr name outName
 
+position' :: (ID, Node) -> (Float, Float)
+position' = view pos . snd
 
-mkInputs :: Node
-mkInputs = Inputs
-
-
-mkOutputs :: Node
-mkOutputs = Outputs
 

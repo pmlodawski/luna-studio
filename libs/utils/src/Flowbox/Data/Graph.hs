@@ -7,15 +7,40 @@
 
 module Flowbox.Data.Graph (
     module Data.Graph.Inductive,
-    module Flowbox.Data.Graph,
-) where
+    Graph,
+    Vertex,
+    LVertex,
 
-import Flowbox.Prelude hiding (fromJust, pre, (&))
+    updateNode,
+    replaceNode,
+    labs,
+    labVtx,
+    labVtxs,
+    out_,
+    inn_,
+    innvtx,
+    suc_,
+    sucl,
+    lsucl,
+    pre_,
+    prel,
+    lprel,
+    path,
+    newVtxs,
+    newVtx,
+    insNewNode,
+    findNode,
+    topsortl,
+    topsortStable,
+) where
 
 import           Data.Graph.Inductive hiding (Graph, Node)
 import qualified Data.Graph.Inductive as DG
 import qualified Data.List            as List
 import           Data.Maybe           (fromJust)
+
+import Flowbox.Prelude hiding (fromJust, pre, (&))
+
 
 
 
@@ -106,9 +131,33 @@ insNewNode node graph = (newGraph, nodeID) where
     newGraph = insNode (nodeID, node) graph
 
 
+findNode :: (a -> Bool) -> Graph a b -> Maybe Vertex
+findNode predicate = fmap fst . List.find (predicate . snd) . labNodes
+
+
 topsortl :: Graph a b -> [LVertex a]
 topsortl graph = map (fromJust . labVtx graph) $ topsort graph
 
 
-findNode :: (a -> Bool) -> Graph a b -> Maybe Vertex
-findNode predicate = fmap fst . List.find (predicate . snd) . labNodes
+topsortStable :: Eq a => Graph a b -> [LVertex a] -> [LVertex a]
+topsortStable graph pending = topsortStable' graph [] pending
+
+
+topsortStable' :: Eq a => Graph a b -> [LVertex a] -> [LVertex a] -> [LVertex a]
+topsortStable' _     []            []            = []
+topsortStable' graph pending1 pending2 =
+    case findReady pending1 of
+        (Just n1, rest1) -> n1 : topsortStable' (delNode' n1) rest1 pending2
+        (Nothing, _    ) -> case findReady pending2 of
+            (Just n2, rest2) -> n2 : topsortStable' (delNode' n2) pending1 rest2
+            (Nothing, _    ) -> if null pending2
+                then error "topsortStable : Graph contains cycle"
+                else topsortStable' graph (pending1 ++ [head pending2]) (tail pending2)
+    where
+        indegIs0  item  = DG.indeg graph (fst item) == 0
+        delNode'  item  = DG.delNode (fst item) graph
+        findReady queue = (found, rest) where
+            found = List.find indegIs0 queue
+            rest  = case found of
+                Just f  -> List.delete f queue
+                Nothing -> queue

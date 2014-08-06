@@ -23,22 +23,8 @@ data EdgeView = EdgeView { _src :: PortDescriptor
 
 makeLenses(''EdgeView)
 
-fromEdge :: Edge -> EdgeView
-fromEdge (Edge.Data (Port.Num s) d) = EdgeView [s] [d]
-fromEdge (Edge.Data  Port.All    d) = EdgeView []  [d]
+fromEdge :: Edge -> Maybe EdgeView
+fromEdge (Edge.Monadic            ) = Nothing
+fromEdge (Edge.Data (Port.Num s) d) = Just $ EdgeView [s] [d]
+fromEdge (Edge.Data  Port.All    d) = Just $ EdgeView []  [d]
 
-
-toEdge :: EdgeView -> Either String Edge
-toEdge (EdgeView src' dst') = do s <- case src' of
-                                        [s] -> return $ Port.Num s
-                                        []  -> return Port.All
-                                        _   -> Left "Source ports with size greater than 1 are not supported"
-                                 d <- case dst' of
-                                        [d] -> return d
-                                        _   -> Left "Destination ports with size other than 1 are not supported"
-                                 return $ Edge.Data s d
-
-
-toLEdge :: (s, d, EdgeView) -> Either String (s, d, Edge)
-toLEdge (s, d, ev) = do e <- toEdge ev
-                        return (s, d, e)

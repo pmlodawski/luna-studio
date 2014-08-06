@@ -45,31 +45,31 @@ runPass maxID rootID fixAll = Pass.run_ (Pass.Info "IDFixer") $ State.make maxID
 
 
 run :: AST.ID -> Maybe AST.ID -> Bool -> Focus -> Pass.Result Focus
-run maxID rootID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID rootID fixAll) . fixFocus
+run maxID rootID fixAll = Pass.run_ (Pass.Info "IDFixer") (State.make maxID rootID fixAll) . fixFocus
 
 
 runModule :: AST.ID -> Maybe AST.ID -> Bool -> Module -> Pass.Result Module
-runModule maxID rootID fixAll = (runPass maxID rootID fixAll) . fixModule
+runModule maxID rootID fixAll = runPass maxID rootID fixAll . fixModule
 
 
 runExpr :: AST.ID -> Maybe AST.ID -> Bool -> Expr -> Pass.Result Expr
-runExpr maxID rootID fixAll = (runPass maxID rootID fixAll) . fixExpr
+runExpr maxID rootID fixAll = runPass maxID rootID fixAll . fixExpr
 
 
 runExpr' :: AST.ID -> Maybe AST.ID -> Bool -> Expr -> Pass.Result (Expr, AST.ID)
-runExpr' maxID rootID fixAll = (runPass maxID rootID fixAll) . fixExpr'
+runExpr' maxID rootID fixAll = runPass maxID rootID fixAll . fixExpr'
 
 
 runExprs :: AST.ID -> Maybe AST.ID -> Bool -> [Expr] -> Pass.Result [Expr]
-runExprs maxID rootID fixAll = (runPass maxID rootID fixAll) . (mapM fixExpr)
+runExprs maxID rootID fixAll = runPass maxID rootID fixAll . mapM fixExpr
 
 
 runType :: AST.ID -> Maybe AST.ID -> Bool -> Type -> Pass.Result Type
-runType maxID rootID fixAll = (runPass maxID rootID fixAll) . fixType
+runType maxID rootID fixAll = runPass maxID rootID fixAll . fixType
 
 
 fixFocus :: Focus -> IDFixerPass Focus
-fixFocus f = Focus.traverseM fixModule fixExpr f
+fixFocus = Focus.traverseM fixModule fixExpr
 
 
 fixModule :: Module -> IDFixerPass Module

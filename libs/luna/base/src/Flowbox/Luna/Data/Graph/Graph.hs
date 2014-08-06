@@ -10,8 +10,11 @@ module Flowbox.Luna.Data.Graph.Graph(
     module Flowbox.Luna.Data.Graph.Graph,
 ) where
 
+import qualified GHC.Exts as Exts
+
 import           Flowbox.Data.Graph           hiding (Edge, Graph)
 import qualified Flowbox.Data.Graph           as DG
+import qualified Flowbox.Data.List            as List
 import           Flowbox.Luna.Data.Graph.Edge (Edge (Edge))
 import qualified Flowbox.Luna.Data.Graph.Edge as Edge
 import           Flowbox.Luna.Data.Graph.Node (Node)
@@ -27,22 +30,8 @@ connect :: Node.ID -> Node.ID -> Edge -> Graph -> Graph
 connect srcID dstID edge = insEdge (srcID, dstID, edge)
 
 
---inputsID :: Node.ID
---inputsID = 0
-
-
---outputID :: Node.ID
---outputID = 1
-
-
---make :: Graph
---make = insNode (inputsID, Node.mkInputs)
---     $ insNode (outputID, Node.mkOutputs)
---     $ empty
-
-
-
 portMatches :: InPort -> LEdge Edge -> Bool
+portMatches _          (_, _, Edge.Monadic) = False
 portMatches newDstPort (_, _, Edge.Data _ connectedDstPort) =
     newDstPort == connectedDstPort
 
@@ -51,3 +40,11 @@ isNotAlreadyConnected :: Graph -> Node.ID -> InPort -> Bool
 isNotAlreadyConnected graph nodeID adstPort = not connected where
     connected = any (portMatches adstPort) (inn graph nodeID)
 
+
+sort :: Graph -> [(Node.ID, Node)]
+sort graph = DG.topsortStable graph $ Exts.sortWith Node.position' $ DG.labNodes graph
+
+
+createMonadicEdges :: Graph -> [LEdge Edge]
+createMonadicEdges = List.merge mkMonEdge . map fst . sort where
+    mkMonEdge a b = (a, b, Edge.Monadic)

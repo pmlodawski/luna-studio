@@ -59,4 +59,4 @@ instance Convert Properties Gen.Properties where
     decode (Gen.Properties mflags mattributes) = do
         flags      <- mflags      <?> "Failed to decode Properties: 'flags' field is missing"
         attributes <- mattributes <?> "Failed to decode Properties: 'attributes' field is missing"
-        Properties <$> decode flags <*> (pure $ decodeP attributes)
+        Properties <$> decode flags <*> pure (decodeP attributes)

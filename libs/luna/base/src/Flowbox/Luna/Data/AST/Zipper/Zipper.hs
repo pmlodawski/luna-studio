@@ -66,7 +66,7 @@ focusClass name zipper@(env, _) = case env of
                        Focus.Class Focus.Module mod zipper
     Focus.Class  cls -> focusListElem Expr.classes classComp
                        Focus.Class Focus.Class  cls zipper
-    _               -> Left $ "Cannot focus on " ++ (show name)
+    _               -> Left $ "Cannot focus on " ++ show name
     where classComp f = f ^. (Expr.cls . Type.name) == name
 
 
@@ -76,7 +76,7 @@ focusFunction name path zipper@(env, _) = case env of
                        Focus.Function Focus.Module mod zipper
     Focus.Class  cls -> focusListElem Expr.methods funComp
                        Focus.Function Focus.Class cls zipper
-    _               -> Left $ "Cannot focus on " ++ (show name)
+    _               -> Left $ "Cannot focus on " ++ show name
     where funComp f = f ^. Expr.name == name && f ^. Expr.path == path
 
 
@@ -84,7 +84,7 @@ focusModule :: String -> Zipper -> Either Error Zipper
 focusModule name zipper@(env, _) = case env of
     Focus.Module mod -> focusListElem Module.modules modComp
                        Focus.Module Focus.Module mod zipper
-    _               -> Left $ "Cannot focus on " ++ (show name)
+    _               -> Left $ "Cannot focus on " ++ show name
     where modComp f = f ^. (Module.cls . Type.name) == name
 
 
@@ -103,20 +103,20 @@ focusBreadcrumbs bc zipper = case bc of
 
 focusModule' :: String -> Module -> Either Error Zipper
 focusModule' name m = do
-    assert (m ^. Module.cls . Type.name == name) $ "Cannot focus on " ++ (show name)
+    assert (m ^. Module.cls . Type.name == name) $ "Cannot focus on " ++ show name
     return $ mk m
 
 
 focusCrumb' :: Crumb -> Module -> Either Error Zipper
 focusCrumb' c m = case c of
     Crumb.Module name -> focusModule' name m
-    _                 -> Left $ "Cannot focus on " ++ (show c)
+    _                 -> Left $ "Cannot focus on " ++ show c
 
 
 focusBreadcrumbs' :: Breadcrumbs -> Module -> Either Error Zipper
 focusBreadcrumbs' bc m = case bc of
     h:t -> focusCrumb' h m >>= focusBreadcrumbs t
-    _   -> Left $ "Cannot focus on " ++ (show bc)
+    _   -> Left $ "Cannot focus on " ++ show bc
 
 
 getFocus :: Zipper -> Focus
@@ -127,9 +127,9 @@ focusListElem :: Traversal' a [b] -> (b -> Bool) -> (b -> Focus) -> (a -> Focus)
 focusListElem flens match elemFocus crumbFocus el (_, path) = do
     let funcs    = el ^. flens
         mfunc    = find match funcs
-        newfuncs = filter (\a -> not $ match a) funcs
+        newfuncs = filter (not . match) funcs
         newelem  = el & flens .~ newfuncs
     func <- case mfunc of
                 Just func -> return func
-                Nothing   -> Left $ "Cannot find element in AST."
-    return $ (elemFocus func, (crumbFocus newelem) : path)
+                Nothing   -> Left "Cannot find element in AST."
+    return (elemFocus func, crumbFocus newelem : path)

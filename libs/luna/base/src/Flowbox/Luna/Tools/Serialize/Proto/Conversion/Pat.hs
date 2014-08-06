@@ -45,8 +45,8 @@ instance Convert Pat Gen.Pat where
         Pat.Con   i name     -> genPat GenCls.Con_  i GenCon_.ext  $ GenCon_.Con_   (encodePJ name)
         Pat.App   i src args -> genPat GenCls.App   i GenApp.ext   $ GenApp.App     (encodeJ src) (encodeList args)
         Pat.Typed i pat cls  -> genPat GenCls.Typed i GenTyped.ext $ GenTyped.Typed (encodeJ pat) (encodeJ cls)
-        Pat.Wildcard i       -> genPat GenCls.Wildcard    i GenWildcard.ext    $ GenWildcard.Wildcard
-        Pat.RecWildcard i    -> genPat GenCls.RecWildcard i GenRecWildcard.ext $ GenRecWildcard.RecWildcard
+        Pat.Wildcard i       -> genPat GenCls.Wildcard    i GenWildcard.ext    GenWildcard.Wildcard
+        Pat.RecWildcard i    -> genPat GenCls.RecWildcard i GenRecWildcard.ext GenRecWildcard.RecWildcard
         where
             genPat :: GenCls.Cls -> AST.ID -> Extensions.Key Maybe Gen.Pat v -> v -> Gen.Pat
             genPat cls i key ext = Extensions.putExt key (Just ext)
@@ -62,10 +62,10 @@ instance Convert Pat Gen.Pat where
            GenCls.Lit      -> do ext <- getExt GenLit.ext
                                  (GenLit.Lit mtvalue) <- ext <?> "Failed to decode Pat.Lit: extension is missing"
                                  tvalue <- mtvalue <?> "Failed to decode Pat.Lit: 'value' field is missing"
-                                 Pat.Lit i <$> (decode tvalue)
+                                 Pat.Lit i <$> decode tvalue
            GenCls.Tuple    -> do ext <- getExt GenTuple.ext
                                  (GenTuple.Tuple titems) <- ext <?> "Failed to decode Pat.Tuple: extension is missing"
-                                 Pat.Tuple i <$> (decodeList titems)
+                                 Pat.Tuple i <$> decodeList titems
            GenCls.Con_     -> do ext <- getExt GenCon_.ext
                                  (GenCon_.Con_ mtname) <- ext <?> "Failed to decode Pat.Con: extension is missing"
                                  tname <- mtname <?> "Failed to decode Pat.Con: 'name' field is missing"
@@ -73,12 +73,12 @@ instance Convert Pat Gen.Pat where
            GenCls.App      -> do ext <- getExt GenApp.ext
                                  (GenApp.App mtsrc targs) <- ext <?> "Failed to decode Pat.App: extension is missing"
                                  tsrc <- mtsrc <?> "Failed to decode Pat.App: 'src' field is missing"
-                                 Pat.App i <$> (decode tsrc) <*> decodeList targs
+                                 Pat.App i <$> decode tsrc <*> decodeList targs
            GenCls.Typed    -> do ext <- getExt GenTyped.ext
                                  (GenTyped.Typed mtpat mttype) <- ext <?> "Failed to decode Pat.Typed: extension is missing"
                                  tpat  <- mtpat  <?> "Failed to decode Pat.Typed: 'pat' field is missing"
                                  ttype <- mttype <?> "Failed to decode Pat.Typed: 'type' field is missing"
-                                 Pat.Typed i <$> (decode tpat) <*> decode ttype
+                                 Pat.Typed i <$> decode tpat <*> decode ttype
            GenCls.Wildcard -> do ext <- getExt GenWildcard.ext
                                  GenWildcard.Wildcard <- ext <?> "Failed to decode Pat.Wildcard: extension is missing"
                                  pure $ Pat.Wildcard i

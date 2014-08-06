@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults (
+module Flowbox.Luna.Passes.Transform.GraphView.Defaults (
     addDefaults,
     removeDefaults,
     isGenerated,
@@ -58,16 +58,15 @@ addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, property
         then (newGraph2, newPropertyMap)
         else (graph, propertyMap)
     where
-      node      = Node.Expr defaultValue $ OutputName.generate defaultValue nodeID
+      node      = Node.Expr defaultValue (OutputName.generate defaultValue nodeID) (0, 0)
       newGraph  = GraphView.insNode (defaultNodeID, node) graph
       newGraph2 = GraphView.insEdge (defaultNodeID, nodeID, EdgeView [] adstPort) newGraph
       newPropertyMap = PropertyMap.insert defaultNodeID generatedProperties propertyMap
 
 
 isGenerated :: Node.ID -> PropertyMap -> Bool
-isGenerated nodeID propertyMap = case PropertyMap.get nodeID Attributes.luna Attributes.defaultNodeGenerated propertyMap of
-    Just "True" -> True
-    _           -> False
+isGenerated nodeID propertyMap =
+    PropertyMap.get nodeID Attributes.luna Attributes.defaultNodeGenerated propertyMap == Just "True"
 
 
 delGenerated :: Node.ID -> (GraphView, PropertyMap) -> (GraphView, PropertyMap)

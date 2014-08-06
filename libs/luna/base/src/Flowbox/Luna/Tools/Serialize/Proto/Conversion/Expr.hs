@@ -66,7 +66,7 @@ import qualified Text.ProtocolBuffers.Extensions                   as Extensions
 
 instance Convert Expr Gen.Expr where
     encode t = case t of
-        Expr.NOP        i          -> genExpr GenCls.NOP i GenNOP.ext $ GenNOP.NOP
+        Expr.NOP        i          -> genExpr GenCls.NOP i GenNOP.ext GenNOP.NOP
         Expr.Accessor   i name dst -> genExpr GenCls.Accessor i GenAccessor.ext $ GenAccessor.Accessor
                                       (encodePJ name) (encodeJ dst)
         Expr.TypeAlias  i srcType dstType
@@ -122,7 +122,7 @@ instance Convert Expr Gen.Expr where
                                       (encodeJ cls) (encodeJ expr)
         Expr.Var        i name     -> genExpr GenCls.Var i GenVar.ext $ GenVar.Var
                                       (encodePJ name)
-        Expr.Wildcard   i          -> genExpr GenCls.Wildcard i GenWildcard.ext $ GenWildcard.Wildcard
+        Expr.Wildcard   i          -> genExpr GenCls.Wildcard i GenWildcard.ext GenWildcard.Wildcard
         Expr.RangeFromTo i start end
                                    -> genExpr GenCls.RangeFromTo i GenRangeFromTo.ext $ GenRangeFromTo.RangeFromTo
                                       (encodeJ start) (encodeJ end)
@@ -166,19 +166,19 @@ instance Convert Expr Gen.Expr where
                 (GenAccessor.Accessor mtname mtdst) <- ext <?> "Failed to decode Expr.Accessor: extension is missing"
                 tname <- mtname <?> "Failed to decode Expr.Accessor: 'name' field is missing"
                 tdst  <- mtdst  <?> "Failed to decode Expr.Accessor: 'dst' field is missing"
-                Expr.Accessor i (decodeP tname) <$> (decode tdst)
+                Expr.Accessor i (decodeP tname) <$> decode tdst
             GenCls.TypeAlias -> do
                 ext <- getExt GenTypeAlias.ext
                 (GenTypeAlias.TypeAlias mtsrcType mtdstType) <- ext <?> "Failed to decode Expr.TypeAlias: extension is missing"
                 tsrcType <- mtsrcType  <?> "Failed to decode Expr.TypeAlias: 'srcType' field is missing"
                 tdstType  <- mtdstType <?> "Failed to decode Expr.TypeAlias: 'dstType' field is missing"
-                Expr.TypeAlias i <$> (decode tsrcType) <*> (decode tdstType)
+                Expr.TypeAlias i <$> decode tsrcType <*> decode tdstType
             GenCls.TypeDef -> do
                 ext <- getExt GenTypeDef.ext
                 (GenTypeDef.TypeDef mtsrcType mtdstType) <- ext <?> "Failed to decode Expr.TypeDef: extension is missing"
                 tsrcType <- mtsrcType  <?> "Failed to decode Expr.TypeDef: 'srcType' field is missing"
                 tdstType  <- mtdstType <?> "Failed to decode Expr.TypeDef: 'dstType' field is missing"
-                Expr.TypeDef i <$> (decode tsrcType) <*> (decode tdstType)
+                Expr.TypeDef i <$> decode tsrcType <*> decode tdstType
             GenCls.App -> do
                 ext <- getExt GenApp.ext
                 (GenApp.App mtsrc targs) <- ext <?> "Failed to decode Expr.App: extension is missing"
@@ -199,7 +199,7 @@ instance Convert Expr Gen.Expr where
                 (GenRecordUpdate.RecordUpdate mtsrc tselectors mtexpr) <- ext <?> "Failed to decode Expr.RecordUpdate: extension is missing"
                 tsrc  <- mtsrc  <?> "Failed to decode Expr.RecordUpdate: 'src' field is missing"
                 texpr <- mtexpr <?> "Failed to decode Expr.RecordUpdate: 'expr' field is missing"
-                Expr.RecordUpdate i <$> decode tsrc <*> (pure $ decodeListP tselectors) <*> decode texpr
+                Expr.RecordUpdate i <$> decode tsrc <*> pure (decodeListP tselectors) <*> decode texpr
             GenCls.Data -> do
                 ext <- getExt GenData.ext
                 (GenData.Data mtcls tcons tclasses tmethods) <- ext <?> "Failed to decode Expr.Data: extension is missing"
@@ -243,7 +243,7 @@ instance Convert Expr Gen.Expr where
                 (GenImport.Import tpath mttarget mtrename) <- ext <?> "Failed to decode Expr.Import: extension is missing"
                 ttarget <- mttarget <?> "Failed to decode Expr.Import: 'target' field is missing"
                 Expr.Import i (decodeListP tpath) <$> decode ttarget
-                                                              <*> (pure $ fmap decodeP mtrename)
+                                                              <*> pure (fmap decodeP mtrename)
             GenCls.ImportNative -> do
                 ext <- getExt GenImportNative.ext
                 (GenImportNative.ImportNative tsegments) <- ext <?> "Failed to decode Expr.ImportNative: extension is missing"
@@ -306,7 +306,7 @@ instance Convert Expr Gen.Expr where
                 ext <- getExt GenArg.ext
                 (GenArg.Arg mtpat mtvalue) <- ext <?> "Failed to decode Expr.Arg: extension is missing"
                 tpat <- mtpat <?> "Failed to decode Expr.Arg: 'pat' field is missing"
-                Expr.Arg i <$> (decode tpat) <*> case mtvalue of
+                Expr.Arg i <$> decode tpat <*> case mtvalue of
                                                     Nothing     -> pure Nothing
                                                     Just tvalue -> Just <$> decode tvalue
             GenCls.Native -> do
