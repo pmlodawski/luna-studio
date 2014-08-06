@@ -11,20 +11,17 @@ module Flowbox.Luna.Data.GraphView.GraphView (
     fromGraph,
     toGraph,
     isNotAlreadyConnected,
-    sort,
 ) where
 
 import           Data.Foldable (foldlM)
 import qualified Data.List     as List
 import qualified Data.Maybe    as Maybe
-import qualified GHC.Exts      as Exts
 
 import           Flowbox.Data.Graph                         hiding (Edge, Graph, fromGraph)
 import qualified Flowbox.Data.Graph                         as DG
-import qualified Flowbox.Data.List                          as List
-import           Flowbox.Luna.Data.Graph.Edge               (Edge)
 import qualified Flowbox.Luna.Data.Graph.Edge               as Edge
 import           Flowbox.Luna.Data.Graph.Graph              (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph              as Graph
 import           Flowbox.Luna.Data.Graph.Node               (Node)
 import qualified Flowbox.Luna.Data.Graph.Node               as Node
 import qualified Flowbox.Luna.Data.Graph.Port               as Port
@@ -63,24 +60,15 @@ isNotAlreadyConnected graphview nodeID adstPort = not connected where
 toGraph :: GraphView -> PropertyMap -> Either String (Graph, PropertyMap)
 toGraph gv pm = do
     let n = DG.labNodes gv
-    (graph, newPm) <- foldlM applyEdgeView (DG.mkGraph n [], pm) (DG.labEdges gv)
-    return (DG.insEdges (createMonadicEdges graph) graph, newPm)
-
+    (graph, newPm) <- foldlM applyEdgeView (Graph.mkGraph n [], pm) (DG.labEdges gv)
+    return (DG.insEdges (Graph.createMonadicEdges graph) graph, newPm)
 
 
 applyEdgeView :: (Graph, PropertyMap) -> LEdge EdgeView -> Either String (Graph, PropertyMap)
 applyEdgeView (graph, pm) (src, dst, edgeview) = case edgeview of
-    EdgeView _   []  -> Left "Destination port descriptor should have at leas one element"
-    EdgeView []  [d] -> do let newGraph = DG.insEdge (src, dst, Edge.Data  Port.All    d) graph
-                           Right (newGraph, pm)
-    EdgeView [s] [d] -> do let newGraph = DG.insEdge (src, dst, Edge.Data (Port.Num s) d) graph
-                           Right (newGraph, pm)
+    EdgeView _   []  -> Left "Destination port descriptor should have at least one element"
+    EdgeView []  [d] -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All    d) graph, pm)
+    EdgeView [s] [d] -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s) d) graph, pm)
 
 
-createMonadicEdges :: Graph -> [LEdge Edge]
-createMonadicEdges = List.merge mkMonEdge . map fst . sort where
-    mkMonEdge a b = (a, b, Edge.Monadic)
 
-
-sort :: Graph -> [(Node.ID, Node)]
-sort graph = DG.topsortStable graph $ Exts.sortWith Node.position' $ DG.labNodes graph

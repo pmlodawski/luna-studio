@@ -30,3 +30,5 @@ position node = (node ^. x, node ^. y)
 
 position' :: (ID, Node) -> (Float, Float)
 position' = position . snd
+
+

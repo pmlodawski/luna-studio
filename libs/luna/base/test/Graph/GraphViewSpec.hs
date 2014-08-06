@@ -14,11 +14,7 @@ import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as Crumb
 import           Flowbox.Luna.Data.AST.Expr                            (Expr)
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus                    as Focus
 import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                   as Zipper
-import qualified Flowbox.Luna.Data.Graph.Edge                          as Edge
 import           Flowbox.Luna.Data.Graph.Graph                         (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                         as Graph
-import qualified Flowbox.Luna.Data.Graph.Node                          as Node
-import qualified Flowbox.Luna.Data.Graph.Port                          as Port
 import qualified Flowbox.Luna.Data.GraphView.GraphView                 as GraphView
 import           Flowbox.Luna.Data.Pass.AliasInfo                      (AliasInfo)
 import           Flowbox.Luna.Data.Pass.Source                         (Source (Source))
@@ -69,22 +65,5 @@ spec =
     describe "graph <-> graphview conversion" $ do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth code) sampleCodes
-
-        it "sorts graph correctly" $ do
-            let n1 = (1, Node.Expr "" "" 1 0)
-                n2 = (2, Node.Expr "" "" 2 0)
-                n3 = (3, Node.Expr "" "" 2 0)
-                n4 = (4, Node.Expr "" "" 3 0)
-                n5 = (5, Node.Expr "" "" 4 0)
-                n6 = (6, Node.Expr "" "" 5 0)
-                properOrder = [n1, n2, n4, n5, n3, n6]
-                testOrder   = [n2, n3, n5, n6, n4, n1]
-                edges  = [(1, 2, Edge.Data Port.All 0)
-                         ,(5, 3, Edge.Data Port.All 0)]
-                graph  = Graph.mkGraph testOrder edges
-                sorted = GraphView.sort graph
-            --sorted `shouldBe` map fst properOrder
-            map fst sorted `shouldBe` map fst properOrder
-            sorted         `shouldBe` properOrder
 
 
