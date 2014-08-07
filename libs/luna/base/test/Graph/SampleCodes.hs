@@ -78,6 +78,11 @@ def main arg:
 |], named "test16" [r|
 def main arg:
     x = {1, [1..10], [9..]}
+|], named "test17" [r|
+def main arg arg2:
+    print arg
+    print arg2
+    self.bla "kota" "albo nie"
 |]]
 -- |], named "test17" [r|
 -- def main arg:

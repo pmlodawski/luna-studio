@@ -82,7 +82,7 @@ getNodeMap = gets (view nodeMap)
 
 
 setNodeMap :: NodeMap -> GPPass ()
-setNodeMap nm =  modify (set nodeMap nm)
+setNodeMap nm = modify (set nodeMap nm)
 
 
 getGraph :: GPPass Graph
@@ -139,8 +139,8 @@ getNode nodeID = do gr <- getGraph
 
 
 getNodeOutputName :: Node.ID -> GPPass String
-getNodeOutputName nodeID = do node <- getNode nodeID
-                              return $ node ^. Node.outputName
+getNodeOutputName nodeID = view Node.outputName <$> getNode nodeID
+
 
 getProperty :: Node.ID -> String -> GPPass (Maybe String)
 getProperty nodeID propertyName =

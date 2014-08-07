@@ -43,7 +43,6 @@ import Flowbox.Prelude hiding (fromJust, pre, (&))
 
 
 
-
 type Graph a b = DG.Gr a b
 type Vertex    = DG.Node
 type LVertex a = DG.LNode a

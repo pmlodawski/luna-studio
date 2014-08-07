@@ -10,50 +10,30 @@ module Graph.GraphViewSpec where
 import Test.Hspec
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as Crumb
-import           Flowbox.Luna.Data.AST.Expr                            (Expr)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                    as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                   as Zipper
-import           Flowbox.Luna.Data.Graph.Graph                         (Graph)
-import qualified Flowbox.Luna.Data.GraphView.GraphView                 as GraphView
-import           Flowbox.Luna.Data.Pass.AliasInfo                      (AliasInfo)
-import           Flowbox.Luna.Data.Pass.Source                         (Source (Source))
-import           Flowbox.Luna.Data.PropertyMap                         (PropertyMap)
-import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias              as Alias
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb     as Crumb
+import           Flowbox.Luna.Data.AST.Expr            (Expr)
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus    as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper   as Zipper
+import           Flowbox.Luna.Data.Graph.Graph         (Graph)
+import qualified Flowbox.Luna.Data.GraphView.GraphView as GraphView
+import           Flowbox.Luna.Data.Pass.AliasInfo      (AliasInfo)
+import           Flowbox.Luna.Data.Pass.Source         (Source (Source))
+import           Flowbox.Luna.Data.PropertyMap         (PropertyMap)
 import           Flowbox.Prelude
-import           Graph.SampleCodes                                     (sampleCodes)
+import qualified Graph.Common                          as Common
+import           Graph.SampleCodes                     (sampleCodes)
 
-
-
-getAST :: String -> IO (Expr, AliasInfo)
-getAST code = eitherStringToM' $ runEitherT $ do
-    (ast, _, _) <- EitherT $ TxtParser.run $ Source ["Main"] code
-    let bc = [Crumb.Module "Main", Crumb.Function "main" []]
-    focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
-    aa    <- EitherT $ Alias.run ast
-    expr  <- Focus.getFunction focus <??> "Target is not a function"
-    return (expr, aa)
-
-
-getGraph :: AliasInfo -> PropertyMap -> Expr -> IO (Graph, PropertyMap)
-getGraph = eitherStringToM' .:. GraphBuilder.run
 
 
 backAndForth :: String -> IO ()
 backAndForth code = do
-    (expr, aa)  <- getAST code
-    (graph, pm) <- getGraph aa def expr
+    (expr, aa)  <- Common.getAST code
+    (graph, pm) <- Common.getGraph aa def expr
     let graphview = GraphView.fromGraph graph
     (graph2, pm2) <- eitherStringToM $ GraphView.toGraph graphview pm
 
     graph `shouldBe` graph2
     pm    `shouldBe` pm2
-
-
-named :: a -> b -> (a, b)
-named = (,)
 
 
 main :: IO ()

@@ -7,6 +7,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 import           Control.Applicative
 import           Control.Monad.RWS          hiding (join)
@@ -28,7 +29,6 @@ import qualified Flowbox.Luna.Data.AST.Zipper.Focus                             
 import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                                     as Zipper
 import qualified Flowbox.Luna.Data.Cabal.Config                                          as Config
 import qualified Flowbox.Luna.Data.Cabal.Section                                         as Section
-import qualified Flowbox.Luna.Data.GraphView.GraphView                                   as GraphView
 import qualified Flowbox.Luna.Data.HAST.Expr                                             as HExpr
 import qualified Flowbox.Luna.Data.HAST.Module                                           as Module
 import qualified Flowbox.Luna.Data.Pass.AliasInfo                                        as AliasInfo
@@ -52,8 +52,6 @@ import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                      
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser                      as Parser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser                      as Parser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser                   as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder                     as GraphBuilder
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser                       as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen                      as HASTGen
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.LogEntry                                             as LogEntry
@@ -250,57 +248,6 @@ main_inner = Luna.run $ do
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast
     logger info $ join "\n\n" (map printSrc hsc)
-
-
-    return ()
-
-
-main_graph :: IO (Either String ())
-main_graph = Luna.run $ do
-    --let source  = example
-    --    emptyPM = PropertyMap.empty
-
-    --logger info "\n-------- TxtParser --------"
-    --(ast, _) <- hoistEither =<< TxtParser.run source
-    --logger info $ PP.ppqShow ast
-
-    --logger info "\n-------- VarAlias --------"
-    --va <- hoistEither =<< VarAlias.runGather ast
-    --logger info $ PP.ppShow va
-
-    --(Focus.FunctionFocus expr) <- Zipper.mk ast
-    --                          >>= Zipper.focusFunction "test"
-    --                          >>= return . Zipper.getFocus
-
-    --logger info $ PP.ppShow expr
-    --(graph, pm) <- hoistEither =<< GraphBuilder.run va emptyPM expr
-    --let graphView = GraphView.fromGraph graph
-    --    (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graphView pm
-    --logger warning $ show graph
-    --logger warning $ PP.ppShow pm
-    ----logger info $ show graphWithDefaults
-    --let (newGraphView, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
-    --newGraph <- GraphView.toGraph newGraphView
-    ----logger warning $ show newGraph
-    --expr' <- hoistEither =<< GraphParser.run newGraph newPM expr
-    --logger info $ PP.ppShow expr'
-    --logger warning $ PP.ppShow newPM
-
-    --logger info "\n-------- FuncPool --------"
-    --fp <- FuncPool.run ast
-    --logger info $ PP.ppShow fp
-
-    --logger info "\n-------- SSA --------"
-    --ssa <- SSA.run va ast
-    ----logger info $ PP.ppqShow ssa
-
-    --logger info "\n-------- HASTGen --------"
-    --hast <- HASTGen.run ssa fp
-    --logger info $ PP.ppShow hast
-
-    --logger info "\n-------- HSC --------"
-    --hsc <- HSC.run  hast
-    --logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()

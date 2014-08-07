@@ -124,7 +124,11 @@ parseAppNode nodeID app = do
                  else case Parser.parseExpr app $ ASTInfo.mk nodeID of
                     Left  er     -> left $ show er
                     Right (e, _) -> addExpr nodeID e
-        [f] -> do let e   = Expr.Accessor nodeID app f
+        --[f] -> do let e   = Expr.Accessor nodeID app f
+        --          addExpr nodeID e
+        (Expr.Wildcard {}):t
+            -> do let acc = Expr.Var nodeID app
+                      e   = Expr.App      IDFixer.unknownID acc t
                   addExpr nodeID e
         f:t -> do let acc = Expr.Accessor nodeID app f
                       e   = Expr.App      IDFixer.unknownID acc t
