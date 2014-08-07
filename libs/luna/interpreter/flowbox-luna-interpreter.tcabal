@@ -53,3 +53,20 @@ Executable luna-interpreter-test
                   pretty-show,
                   raw-strings-qq,
                   transformers
+
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  errors,
+                  flowbox-luna-base,
+                  flowbox-luna-interpreter,
+                  flowbox-utils,
+                  pretty-show,
+                  hspec,
+                  raw-strings-qq,
+                  transformers
