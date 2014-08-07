@@ -24,7 +24,3 @@ data CacheInfo = CacheInfo { _defID         :: AST.ID
                            } deriving (Show)
 
 makeLenses (''CacheInfo)
-
-
---mk :: AST.ID -> VarName -> CacheInfo
---mk defID' recentVarName' = CacheInfo defID' CacheStatus. recentVarName' def

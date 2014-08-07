@@ -88,17 +88,23 @@ execute callDataPath functionName argsVarNames = do
 
         executeModified = do
             varName <- execFunction
-            when (varName /= prevVarName) $
-                if boundVarName /= Just varName
-                    then do mapM_ freeVarName boundVarName
-                            Invalidate.markSuccessors callDataPath CacheStatus.Modified
-                    else Invalidate.markSuccessors callDataPath CacheStatus.Affected
+            if varName /= prevVarName
+                then if boundVarName /= Just varName
+                        then do logger debug "processing modified node - result value differs"
+                                mapM_ freeVarName boundVarName
+                                Invalidate.markSuccessors callDataPath CacheStatus.Modified
+
+                        else do logger debug "processing modified node - result value differs but is cached"
+                                Invalidate.markSuccessors callDataPath CacheStatus.Affected
+                else logger debug "processing modified node - result value is same"
 
         executeAffected = case boundVarName of
             Nothing    -> do
+                logger debug "processing affected node - result never bound"
                 _ <- execFunction
                 Invalidate.markSuccessors callDataPath CacheStatus.Modified
             Just bound -> do
+                logger debug "processing affected node - result rebound"
                 Cache.setRecentVarName bound callPointPath
                 Invalidate.markSuccessors callDataPath CacheStatus.Affected
 
@@ -119,13 +125,11 @@ evalFunction funName callDataPath argsVarNames = do
         argSeparator  = " `call` "
         operation     = List.intercalate argSeparator (function : typedArgs)
         expression    = tmpVarName ++ " <- " ++ operation
-    --logger info expression
     Session.runStmt expression
     hash <- Hash.compute tmpVarName
     let varName = VarName.mk hash callPointPath
     Session.runAssignment varName tmpVarName
     Cache.put callDataPath argsVarNames varName
-    Cache.dumpAll
     return varName
 
 

@@ -46,9 +46,9 @@ arguments callDataPath =
 inDataConnections :: CallDataPath -> [(Node.ID, Node, Edge)]
 inDataConnections callDataPath = localPreds where
     graph           = last callDataPath ^. CallData.parentGraph
-    isDataEdge edge = Edge.isData $ edge ^. _3 
-    localPreds      = List.filter isDataEdge 
-                    $ Graph.lprel graph 
+    isDataEdge edge = Edge.isData $ edge ^. _3
+    localPreds      = List.filter isDataEdge
+                    $ Graph.lprel graph
                     $ last callDataPath ^. CallData.callPoint . CallPoint.nodeID
 
 
@@ -94,16 +94,12 @@ next callDataPath = do
     let callData  = last callDataPath
         graph  = callData ^. CallData.parentGraph
         nodeID = callData ^. CallData.callPoint . CallPoint.nodeID
-        node   = callData ^. CallData.node
         sucl   = Graph.sucl graph nodeID
-    case node of
-        Node.Outputs {} -> next $ init callDataPath
-        _               -> concat <$> mapM (globalSuccessors callDataPath) sucl
+    concat <$> mapM (globalSuccessors callDataPath) sucl
 
 
 globalSuccessors :: CallDataPath -> (Node.ID, Node)  -> Session [CallDataPath]
-globalSuccessors callDataPath (nodeID, node) = do
+globalSuccessors prevCallDataPath (nodeID, node) = do
+    let callDataPath = CallDataPath.updateNode prevCallDataPath node nodeID
     inner <- into callDataPath
-    return $ if not $ null inner
-        then inner
-        else [CallDataPath.updateNode callDataPath node nodeID]
+    return $ callDataPath : inner

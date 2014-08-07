@@ -7,9 +7,7 @@
 
 module Flowbox.Interpreter.Session.Data.CallPointPath where
 
-import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint)
-import qualified Flowbox.Interpreter.Session.Data.CallPoint as CallPoint
-import           Flowbox.Prelude
+import Flowbox.Interpreter.Session.Data.CallPoint (CallPoint)
 
 
 

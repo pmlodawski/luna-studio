@@ -37,7 +37,7 @@ addLevel :: CallDataPath -> DefPoint -> Session [CallDataPath]
 addLevel callDataPath defPoint = do
     (graph, defID) <- Session.getGraph defPoint
     let createDataPath = append callDataPath defPoint defID graph
-    return $ map createDataPath $ Graph.topsortl graph
+    return $ map createDataPath $ Graph.sort graph
 
 
 append :: CallDataPath -> DefPoint -> AST.ID -> Graph -> (Node.ID, Node) -> CallDataPath
@@ -63,7 +63,7 @@ fromCallPointPath (callPoint:t) parentDefPoint = do
 updateNode :: CallDataPath -> Node -> Node.ID -> CallDataPath
 updateNode callDataPath node nodeID = updated where
     upperLevel = init callDataPath
-    thisLevel  = last callDataPath 
+    thisLevel  = last callDataPath
     updated    = upperLevel
               ++ [thisLevel & (CallData.callPoint . CallPoint.nodeID .~ nodeID)
                             & (CallData.node .~ node)]

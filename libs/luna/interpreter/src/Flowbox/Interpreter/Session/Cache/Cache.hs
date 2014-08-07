@@ -44,7 +44,7 @@ dump callPointPath mhash = do
 
 
 dumpAll :: Session ()
-dumpAll = return () --logger trace =<< MapForest.draw <$> cached
+dumpAll = logger trace =<< MapForest.draw <$> cached
 
 
 isDirty :: CallPointPath -> Session Bool

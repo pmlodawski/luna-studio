@@ -33,7 +33,6 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.Session.Cache.Invalidate"
 
 
-
 modifyDef :: Library.ID -> AST.ID -> Session ()
 modifyDef libraryID defID = modifyMatching matchDef where
     matchDef k v = last k ^. CallPoint.libraryID == libraryID
@@ -58,70 +57,8 @@ modifyParents callPointPath = do
     modifyParents $ init callPointPath
 
 
-
 markSuccessors :: CallDataPath -> CacheStatus -> Session ()
 markSuccessors callDataPath status =
     Traverse.next callDataPath >>=
     mapM_ (Cache.setStatus status . CallDataPath.toCallPointPath)
 
---invalidateDef :: Library.ID -> AST.ID -> Session ()
---invalidateDef libraryID defID = invalidateMatching matchDef where
---    matchDef k v = last k ^. CallPoint.libraryID == libraryID
---                     && v ^. CacheInfo.defID == defID
-
-
---invalidateNode :: Library.ID -> Node.ID -> Session ()
---invalidateNode libraryID nodeID = invalidateMatching matchNode where
---    matchNode k _ = last k == CallPoint libraryID nodeID
-
-
---invalidateMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session ()
---invalidateMatching predicate = do
---    matching <- MapForest.find predicate <$> Cache.cached
---    mapM_ (invalidate . fst) matching
-
-
---invalidate :: CallPointPath -> Session ()
---invalidate callPointPath = do
---    main         <- Session.findMain
---    callDataPath <- CallDataPath.fromCallPointPath callPointPath main
---    invalidate' callDataPath
-
-
---invalidate' :: CallDataPath -> Session ()
---invalidate' callDataPath = do
---    invalidateCache' callDataPath
---    let node = last callDataPath ^. CallData.node
---    case node of
---        Node.Outputs -> do let upper = Traverse.up callDataPath
---                               next  = Traverse.nextLocal upper
---                           invalidateCache' upper
---                           mapM_ invalidate' next
---        _            -> do into <- Traverse.into callDataPath
---                           mapM_ invalidateInside into
---                           let next = Traverse.nextLocal callDataPath
---                           mapM_ invalidate' next
-
-
---invalidateInside :: CallDataPath -> Session ()
---invalidateInside callDataPath = do
---    let callPointPath = CallDataPath.toCallPointPath callDataPath
---    into    <- Traverse.into callDataPath
---    let next = Traverse.nextLocal callDataPath
---    mapM_ invalidateInside $ next ++ into
---    invalidateCache callPointPath
-
-
---invalidateCache :: CallPointPath -> Session ()
---invalidateCache callPointPath =
---    whenM (Cache.exists callPointPath) $ do
---        let varName       = undefined --CallPointPath.toVarName callPointPath
---            expression    = varName ++ " <- return ()"
---        logger debug $ "Invalidating " ++ varName
---        Cache.delete callPointPath
---        Session.runStmt expression
---        logger trace =<< MapForest.draw <$> gets (view Env.cached)
-
-
---invalidateCache' :: CallDataPath -> Session ()
---invalidateCache' = invalidateCache . CallDataPath.toCallPointPath
