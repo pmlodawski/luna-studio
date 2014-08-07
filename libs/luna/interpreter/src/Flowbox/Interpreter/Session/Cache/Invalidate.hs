@@ -33,6 +33,15 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.Session.Cache.Invalidate"
 
 
+modifyAll :: Session ()
+modifyAll = modifyMatching $ const . const True
+
+
+modifyLibrary :: Library.ID -> Session ()
+modifyLibrary libraryID = modifyMatching matchLib where
+    matchLib k v = last k ^. CallPoint.libraryID == libraryID
+
+
 modifyDef :: Library.ID -> AST.ID -> Session ()
 modifyDef libraryID defID = modifyMatching matchDef where
     matchDef k v = last k ^. CallPoint.libraryID == libraryID
