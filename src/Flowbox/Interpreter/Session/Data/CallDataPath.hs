@@ -59,3 +59,11 @@ fromCallPointPath (callPoint:t) parentDefPoint = do
         Just defPoint -> fromCallPointPath t defPoint
         Nothing       -> return []
 
+
+updateNode :: CallDataPath -> Node -> Node.ID -> CallDataPath
+updateNode callDataPath node nodeID = updated where
+    upperLevel = init callDataPath
+    thisLevel  = last callDataPath 
+    updated    = upperLevel
+              ++ [thisLevel & (CallData.callPoint . CallPoint.nodeID .~ nodeID)
+                            & (CallData.node .~ node)]

@@ -17,7 +17,6 @@ import qualified Flowbox.Interpreter.Session.Cache.Status      as CacheStatus
 import qualified Flowbox.Interpreter.Session.Data.CallData     as CallData
 import           Flowbox.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Flowbox.Interpreter.Session.Data.CallDataPath as CallDataPath
-import qualified Flowbox.Interpreter.Session.Data.CallPoint    as CallPoint
 import           Flowbox.Interpreter.Session.Data.VarName      (VarName)
 import qualified Flowbox.Interpreter.Session.Data.VarName      as VarName
 import qualified Flowbox.Interpreter.Session.Env               as Env
@@ -25,7 +24,6 @@ import qualified Flowbox.Interpreter.Session.Hash              as Hash
 import           Flowbox.Interpreter.Session.Session           (Session)
 import qualified Flowbox.Interpreter.Session.Session           as Session
 import qualified Flowbox.Interpreter.Session.TypeCheck         as TypeCheck
-import qualified Flowbox.Luna.Data.Graph.Graph                 as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                  as Node
 import           Flowbox.Prelude                               hiding (children, inside)
 import           Flowbox.System.Log.Logger
@@ -51,44 +49,42 @@ processNodeIfNeeded callDataPath =
 
 processNode :: CallDataPath -> Session ()
 processNode callDataPath = do
-    predecessors <- Traverse.previous callDataPath
+    arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
         node      = callData ^. CallData.node
-        predecessorsPointPaths = map CallDataPath.toCallPointPath predecessors
-    predVarNames <- mapM Cache.recentVarName predecessorsPointPaths
+        argumentsPointPaths = map CallDataPath.toCallPointPath arguments
+    argsVarNames <- mapM Cache.recentVarName argumentsPointPaths
     children <- Traverse.into callDataPath
     if null children
         then case node of
-            Node.Inputs  -> return ()
-            Node.Outputs -> executeOutputs callDataPath predVarNames
-            Node.Expr {} -> executeNode    callDataPath predVarNames
+            Node.Inputs  {} -> return ()
+            Node.Outputs {} -> executeOutputs callDataPath argsVarNames
+            Node.Expr    {} -> executeNode    callDataPath argsVarNames
         else mapM_ processNodeIfNeeded children
 
 
 executeOutputs :: CallDataPath -> [VarName] -> Session ()
-executeOutputs callDataPath predVarNames = do
-    let nodeID        = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
-        parentGraph   = last callDataPath ^. CallData.parentGraph
-        inDegree      = Graph.indeg parentGraph nodeID
-        functionName  = if inDegree == 1 then "id" else '(' : replicate (inDegree-1) ',' ++ ")"
+executeOutputs callDataPath argsVarNames = do
+    let argsCount     = length $ Traverse.inDataConnections callDataPath
+        functionName  = if argsCount == 1 then "id" else '(' : replicate (argsCount-1) ',' ++ ")"
     when (length callDataPath > 1) $
-        execute (init callDataPath) functionName  predVarNames
+        execute (init callDataPath) functionName  argsVarNames
 
 
 executeNode :: CallDataPath -> [VarName] -> Session ()
-executeNode callDataPath predVarNames = do
+executeNode callDataPath argsVarNames = do
     let node         = last callDataPath ^. CallData.node
         functionName = node ^. Node.expr
-    execute callDataPath functionName predVarNames
+    execute callDataPath functionName argsVarNames
 
 
 execute :: CallDataPath -> String -> [VarName] -> Session ()
-execute callDataPath functionName predVarNames = do
+execute callDataPath functionName argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
     prevVarName  <- Cache.recentVarName callPointPath
-    boundVarName <- Cache.dependency predVarNames callPointPath
-    let execFunction = evalFunction functionName callDataPath predVarNames
+    boundVarName <- Cache.dependency argsVarNames callPointPath
+    let execFunction = evalFunction functionName callDataPath argsVarNames
 
         executeModified = do
             varName <- execFunction
@@ -114,11 +110,11 @@ execute callDataPath functionName predVarNames = do
 
 
 evalFunction :: String -> CallDataPath -> [VarName] -> Session VarName
-evalFunction funName callDataPath predVarNames = do
+evalFunction funName callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-    typedFun  <- TypeCheck.function funName predVarNames
-    typedArgs <- mapM TypeCheck.variable predVarNames
+    typedFun  <- TypeCheck.function funName argsVarNames
+    typedArgs <- mapM TypeCheck.variable argsVarNames
     let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
         argSeparator  = " `call` "
         operation     = List.intercalate argSeparator (function : typedArgs)
@@ -128,7 +124,7 @@ evalFunction funName callDataPath predVarNames = do
     hash <- Hash.compute tmpVarName
     let varName = VarName.mk hash callPointPath
     Session.runAssignment varName tmpVarName
-    Cache.put callDataPath predVarNames varName
+    Cache.put callDataPath argsVarNames varName
     Cache.dumpAll
     return varName
 
