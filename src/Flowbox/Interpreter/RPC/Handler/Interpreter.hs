@@ -13,19 +13,12 @@ import           Flowbox.Interpreter.Proto.CallPoint                            
 import           Flowbox.Interpreter.Proto.CallPointPath                           ()
 import qualified Flowbox.Interpreter.Session.AST.Executor                          as Executor
 import qualified Flowbox.Interpreter.Session.AST.WatchPoint                        as WatchPoint
-import qualified Flowbox.Interpreter.Session.Cache.Invalidate                      as Invalidate
 import qualified Flowbox.Interpreter.Session.Data.CallPoint                        as CallPoint
 import           Flowbox.Interpreter.Session.SessionT                              (SessionT (SessionT))
 import           Flowbox.Prelude                                                   hiding (Context)
 import           Flowbox.ProjectManager.Context                                    (Context)
 import           Flowbox.System.Log.Logger                                         hiding (error)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Interpreter.Interpreter.Invalidate.Call.Request   as InvalidateCall
-import qualified Generated.Proto.Interpreter.Interpreter.Invalidate.Call.Update    as InvalidateCall
-import qualified Generated.Proto.Interpreter.Interpreter.Invalidate.Def.Request    as InvalidateDef
-import qualified Generated.Proto.Interpreter.Interpreter.Invalidate.Def.Update     as InvalidateDef
-import qualified Generated.Proto.Interpreter.Interpreter.Invalidate.Node.Request   as InvalidateNode
-import qualified Generated.Proto.Interpreter.Interpreter.Invalidate.Node.Update    as InvalidateNode
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Request               as Run
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Update                as Run
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Request    as WatchPointAdd
@@ -39,28 +32,6 @@ import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Updat
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.Interpreter"
-
-
-invalidateCall :: InvalidateCall.Request -> RPC Context SessionT InvalidateCall.Update
-invalidateCall request@(InvalidateCall.Request tcallPointPath) = do
-    callPointPath <- decodeE tcallPointPath
-    lift2 $ SessionT $ Invalidate.invalidate callPointPath
-    return $ InvalidateCall.Update request
-
-
-invalidateDef :: InvalidateDef.Request -> RPC Context SessionT InvalidateDef.Update
-invalidateDef request@(InvalidateDef.Request tlibraryID tdefID) = do
-    let libraryID = decodeP tlibraryID
-        defID     = decodeP tdefID
-    lift2 $ SessionT $ Invalidate.invalidateDef libraryID defID
-    return $ InvalidateDef.Update request
-
-
-invalidateNode :: InvalidateNode.Request -> RPC Context SessionT InvalidateNode.Update
-invalidateNode request@(InvalidateNode.Request tcallPoint) = do
-    callPoint <- decodeE tcallPoint
-    lift2 $ SessionT $ Invalidate.invalidateNode (callPoint ^. CallPoint.libraryID) (callPoint ^. CallPoint.nodeID)
-    return $ InvalidateNode.Update request
 
 
 run :: Run.Request -> RPC Context SessionT Run.Update

@@ -44,10 +44,7 @@ logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.Handler"
 
 handlerMap :: HandlerMap Context SessionT
 handlerMap callback = HandlerMap.fromList
-    [ (Topic.interpreterInvalidateCallRequest  , respond Topic.update Interpreter.invalidateCall   )
-    , (Topic.interpreterInvalidateDefRequest   , respond Topic.update Interpreter.invalidateDef    )
-    , (Topic.interpreterInvalidateNodeRequest  , respond Topic.update Interpreter.invalidateNode   )
-    , (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run              )
+    [ (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run              )
     , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd    )
     , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove )
     , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList   )

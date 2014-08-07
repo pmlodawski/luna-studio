@@ -44,33 +44,6 @@ message Interpreter {
             }
         }
     }
-    message Invalidate {
-        message Call {
-            message Request {
-                required CallPointPath call = 1;
-            }
-            message Update {
-                required Request request = 1;
-            }
-        }
-        message Def {
-            message Request {
-                required int32 libraryID = 1;
-                required int32 defID     = 2;
-            }
-            message Update {
-                required Request request = 1;
-            }
-        }
-        message Node {
-            message Request {
-                required CallPoint node = 1;
-            }
-            message Update {
-                required Request request = 1;
-            }
-        }
-    }
     message Run {
         message Request { }
         message Update  { 

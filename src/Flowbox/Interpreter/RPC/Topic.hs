@@ -13,7 +13,4 @@ module Flowbox.Interpreter.RPC.Topic where
 interpreterWatchPointAddRequest    = "interpreter.watchpoint.add.request"
 interpreterWatchPointRemoveRequest = "interpreter.watchpoint.remove.request"
 interpreterWatchPointListRequest   = "interpreter.watchpoint.list.request"
-interpreterInvalidateCallRequest   = "interpreter.invalidate.call.request"
-interpreterInvalidateDefRequest    = "interpreter.invalidate.def.request"
-interpreterInvalidateNodeRequest   = "interpreter.invalidate.node.request"
 interpreterRunRequest              = "interpreter.run.request"
