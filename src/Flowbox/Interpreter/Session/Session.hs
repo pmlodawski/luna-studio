@@ -112,7 +112,6 @@ setHardcodedExtensions = do
              , F.Opt_OverlappingInstances
              , F.Opt_ScopedTypeVariables
              , F.Opt_UndecidableInstances
-             --, F.Opt_UndecidableInstances
              --, F.Opt_IncoherentInstances
              ]
     unsetFlags []

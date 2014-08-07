@@ -51,4 +51,5 @@ Executable luna-interpreter-test
                   flowbox-luna-interpreter,
                   flowbox-utils,
                   pretty-show,
-                  raw-strings-qq
+                  raw-strings-qq,
+                  transformers
