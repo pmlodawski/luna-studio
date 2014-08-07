@@ -121,4 +121,5 @@ main = do
         Invalidate.modifyNode libID 51
         Cache.dumpAll
         Executor.processMain
+        Cache.dumpAll
     eitherStringToM $ fmapL Error.format result
