@@ -21,3 +21,13 @@ data Edge = Data { _src :: OutPort
 
 
 makeLenses(''Edge)
+
+
+isData :: Edge -> Bool
+isData (Data {}) = True
+isData _         = False
+
+
+isMonadic :: Edge -> Bool
+isMonadic Monadic = True
+isMonadic _       = False

@@ -5,9 +5,10 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.AST.Traverse (
-  into
-, nextLocal
-, previous
+  arguments
+, inDataConnections
+, into
+-- , nextLocal
 , up
 , next
 ) where
@@ -34,39 +35,41 @@ import           Flowbox.Prelude                               hiding (inside, m
 
 
 
-previous :: CallDataPath -> Session [CallDataPath]
-previous []           = return []
-previous callDataPath =
-    Maybe.catMaybes <$> mapM (globalPredecesors callDataPath)
-                             (Exts.sortWith (view $ _3 . Edge.dst)
-                                            (localPredecessors callDataPath))
-
-localPredecessors :: CallDataPath -> [(Node.ID, Node, Edge)]
-localPredecessors callDataPath = localPreds where
-    graph      = last callDataPath ^. CallData.parentGraph
-    localPreds = Graph.lprel graph $ last callDataPath ^. CallData.callPoint . CallPoint.nodeID
+arguments :: CallDataPath -> Session [CallDataPath]
+arguments []           = return []
+arguments callDataPath =
+    Maybe.catMaybes <$> mapM (globalPredecesor callDataPath)
+                             (Exts.sortWith (\edge -> edge ^. _3 ^? Edge.dst)
+                                            (inDataConnections callDataPath))
 
 
-globalPredecesors :: CallDataPath -> (Node.ID, Node, Edge) -> Session (Maybe CallDataPath)
-globalPredecesors []           _                    = return Nothing
-globalPredecesors callDataPath (nodeID, node, edge) = do
+inDataConnections :: CallDataPath -> [(Node.ID, Node, Edge)]
+inDataConnections callDataPath = localPreds where
+    graph           = last callDataPath ^. CallData.parentGraph
+    isDataEdge edge = Edge.isData $ edge ^. _3 
+    localPreds      = List.filter isDataEdge 
+                    $ Graph.lprel graph 
+                    $ last callDataPath ^. CallData.callPoint . CallPoint.nodeID
+
+
+globalPredecesor :: CallDataPath -> (Node.ID, Node, Edge) -> Session (Maybe CallDataPath)
+globalPredecesor []           _                    = return Nothing
+globalPredecesor callDataPath (nodeID, node, edge) = do
     let upperLevel = init callDataPath
-        thisLevel  = last callDataPath
     case node of
-        Node.Inputs -> if null upperLevel
-                        then return Nothing
-                        else do found <- matchPredecessor upperLevel $ edge ^. Edge.src
-                                globalPredecesors upperLevel found
-        _           -> return $ Just $ upperLevel ++ [thisLevel
-                           & CallData.callPoint . CallPoint.nodeID .~ nodeID
-                           & CallData.node .~ node]
+        Node.Inputs {} -> if null upperLevel
+                            then return Nothing
+                            else do found <- matchPredecessor upperLevel edge
+                                    globalPredecesor upperLevel found
+        _           -> return $ Just $ CallDataPath.updateNode callDataPath node nodeID
 
 
-matchPredecessor :: CallDataPath -> Port.OutPort -> Session (Node.ID, Node, Edge)
-matchPredecessor _             Port.All         = left "Incorrectly connected graph (1)"
-matchPredecessor callDataPath (Port.Num portNo) = do
-    let matching (_, _, edge) = edge ^. Edge.dst == portNo
-    List.find matching (localPredecessors callDataPath) <??> "Incorrectly connected graph (2)"
+matchPredecessor :: CallDataPath -> Edge -> Session (Node.ID, Node, Edge)
+matchPredecessor callDataPath edge = do
+    let matching (Edge.Data src _) (_, _, Edge.Data _ dst) = src == Port.Num dst
+        --matching  Edge.Monadic     (_, _, Edge.Monadic   ) = True
+        matching  _                 _                      = False
+    List.find (matching edge) (inDataConnections callDataPath) <??> "Incorrectly connected graph"
 
 
 into :: CallDataPath -> Session [CallDataPath]
@@ -81,18 +84,6 @@ into callDataPath = do
         Just defPoint -> CallDataPath.addLevel callDataPath defPoint
 
 
-nextLocal :: CallDataPath -> [CallDataPath]
-nextLocal []           = []
-nextLocal callDataPath = localSuccs where
-    graph      = last callDataPath ^. CallData.parentGraph
-    nodeID'    = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
-    succNodes  = Graph.sucl graph nodeID'
-    upperLevel = init callDataPath
-    thisLevel  = last callDataPath
-    localSuccs = map (\(nodeID, node) -> upperLevel ++ [thisLevel
-                                        & CallData.callPoint . CallPoint.nodeID .~ nodeID
-                                        & CallData.node .~ node]) succNodes
-
 up :: CallDataPath -> CallDataPath
 up = init
 
@@ -106,17 +97,13 @@ next callDataPath = do
         node   = callData ^. CallData.node
         sucl   = Graph.sucl graph nodeID
     case node of
-        Node.Outputs -> next $ init callDataPath
-        _            -> concat <$> mapM (globalSuccessors callDataPath) sucl
+        Node.Outputs {} -> next $ init callDataPath
+        _               -> concat <$> mapM (globalSuccessors callDataPath) sucl
 
 
 globalSuccessors :: CallDataPath -> (Node.ID, Node)  -> Session [CallDataPath]
 globalSuccessors callDataPath (nodeID, node) = do
-    let callData  = last callDataPath
     inner <- into callDataPath
     return $ if not $ null inner
         then inner
-        else [init callDataPath
-             ++ [callData & (CallData.callPoint . CallPoint.nodeID .~ nodeID)
-                          & (CallData.node .~ node)]]
-
+        else [CallDataPath.updateNode callDataPath node nodeID]

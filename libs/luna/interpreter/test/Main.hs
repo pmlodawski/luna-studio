@@ -40,11 +40,8 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Interpreter.Test"
 
 
-main :: IO ()
-main = do
-    rootLogger setIntLevel 5
-    let code = Source ["Main"] $ [r|
-
+code :: Source
+code = Source ["Main"] $ [r|
 def test self arg arg2:
     print arg
     print arg2
@@ -60,7 +57,12 @@ def main self:
     print a
     "dummy"
 |]
-        path = UniPath.fromUnixString "."
+
+
+main :: IO ()
+main = do
+    rootLogger setIntLevel 5
+    let path = UniPath.fromUnixString "."
 
     (source, _, _) <- eitherStringToM =<< TxtParser.run code
 
@@ -68,7 +70,7 @@ def main self:
             = LibManager.insNewNode (Library "Main" path source PropertyMap.empty)
             $ LibManager.empty
 
-        env = Env.mk libManager 0 (DefPoint libID [Crumb.ModuleCrumb "Main", Crumb.FunctionCrumb "main" []])
+        env = Env.mk libManager 0 (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
 
