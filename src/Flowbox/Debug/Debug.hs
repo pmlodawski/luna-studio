@@ -22,3 +22,7 @@ dtrace = Debug.traceShow
 
 dtraceM :: (Monad m, Show a) => a -> m ()
 dtraceM = traceShowM
+
+
+ddump :: Show a => a -> a
+ddump a = Debug.traceShow a a
