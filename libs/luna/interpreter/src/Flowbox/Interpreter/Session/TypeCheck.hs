@@ -22,15 +22,21 @@ logger = getLoggerIO "Flowbox.Interpreter.Session.Session"
 function :: String -> [String] -> Session String
 function funName args = do
     let expr = unwords $ funName : args
-    typedArgs   <- lift2 $ mapM Interpreter.typeOf args
-    typedResult <- lift2 $ Interpreter.typeOf expr
+    typedArgs   <- mapM typeOf args
+    typedResult <- typeOf expr
     let funType =  List.intercalate " -> " $ typedArgs ++ [typedResult]
     return $ funName ++ " :: " ++ funType
 
 
 variable :: String -> Session String
 variable expr = do
-    t <- lift2 $ Interpreter.typeOf expr
+    t <- typeOf expr
     return $ "(" ++ expr ++ " :: " ++ t ++ ")"
 
 
+typeOf :: String -> Session String
+typeOf arg = do
+    logger trace $ "Checking type of: " ++ show arg
+    t <- lift2 $ Interpreter.typeOf arg
+    logger trace $ "Result: " ++ show t
+    return t

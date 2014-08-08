@@ -128,14 +128,14 @@ getLibManager = gets $ view Env.libManager
 getLibrary :: Library.ID -> Session Library
 getLibrary libraryID = do
     libManager <- getLibManager
-    LibManager.lab libManager libraryID <??> "Cannot find library with id=" ++ show libraryID
+    LibManager.lab libManager libraryID <??> "Session.getLibrary : Cannot find library with id=" ++ show libraryID
 
 
 getFunction :: DefPoint -> Session Expr
 getFunction (DefPoint libraryID bc) = do
     ast <- view Library.ast <$> getLibrary libraryID
     focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
-    Focus.getFunction focus <??> "Target is not a function"
+    Focus.getFunction focus <??> "Session.getFunction : Target is not a function"
 
 
 getGraph :: DefPoint -> Session (Graph, AST.ID)

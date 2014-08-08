@@ -5,20 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# LANGUAGE QuasiQuotes #-}
-
-module Main where
-
-import Text.RawString.QQ
-import Text.Show.Pretty
+module Common where
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Interpreter.Session.AST.Executor                                as Executor
-import qualified Flowbox.Interpreter.Session.Cache.Cache                                 as Cache
-import qualified Flowbox.Interpreter.Session.Cache.Invalidate                            as Invalidate
 import           Flowbox.Interpreter.Session.Data.DefPoint                               (DefPoint (DefPoint))
+import           Flowbox.Interpreter.Session.Env                                         (Env)
 import qualified Flowbox.Interpreter.Session.Env                                         as Env
 import qualified Flowbox.Interpreter.Session.Error                                       as Error
+import           Flowbox.Interpreter.Session.Session                                     (Session)
 import qualified Flowbox.Interpreter.Session.Session                                     as Session
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                       as Crumb
 import           Flowbox.Luna.Data.Pass.Source                                           (Source (Source))
@@ -36,59 +30,13 @@ import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitSelf.Implicit
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                                  as UniPath
 
 
 
-rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
-
-
-logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Test"
-
-
-code :: Source
-code = Source ["Main"] $ [r|
-def test arg arg2:
-    print arg
-    print arg2
-    self.bla "kota" "albo nie"
-
-def bla arg arg2:
-    a = "grubego"
-
-    {arg, arg2, print a}
-
-def main:
-    a = self.test "ala" "ma"
-    print a
-    "dummy"
-|]
-
-code2 :: Source
-code2 = Source ["Main"] $ [r|
-def test arg arg2:
-    print arg
-    print arg2
-    self.bla "kota" "albo nie"
-
-def bla arg arg2:
-    a = "grubego"
-
-    {arg, arg2, print a}
-
-def main:
-    a = self.test "ala2" "ma"
-    print a
-    "dummy"
-|]
-
-
-readSource :: Source -> IO (LibManager, Library.ID)
-readSource source = eitherStringToM' $ runEitherT $ do
-    (ast, _, astInfo) <- EitherT $ TxtParser.run source
+readCode :: String -> IO (LibManager, Library.ID)
+readCode code = eitherStringToM' $ runEitherT $ do
+    (ast, _, astInfo) <- EitherT $ TxtParser.run $ Source ["Main"] code
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitSelf.run astInfo ast
     (ast, astInfo)    <- EitherT $ Desugar.TLRecUpdt.run astInfo ast
     aliasInfo         <- EitherT $ Analysis.Alias.run ast
@@ -102,37 +50,18 @@ readSource source = eitherStringToM' $ runEitherT $ do
     return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty)
            $ LibManager.empty
 
+mkEnv :: String -> IO Env
+mkEnv code = do
+    (libManager, libID) <- readCode code
 
-main :: IO ()
-main = do
-    rootLogger setIntLevel 5
+    let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
+    return $ Env.mk libManager 0 defPoint
 
-    (libManager , libID) <- readSource code
-    (libManager2, _    ) <- readSource code2
 
-    let env = Env.mk libManager 0 (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
 
-    putStrLn $ ppShow $ LibManager.lab libManager libID
 
-    result <- Session.run env $ do
-        Executor.processMain
-        putStrLn "--------- 1"
-        Executor.processMain
-        putStrLn "========= 1"
-
-        Cache.dumpAll
-        Invalidate.modifyNode libID 45
-        Cache.dumpAll
-
-        Executor.processMain
-        putStrLn "--------- 2"
-        Executor.processMain
-
-        putStrLn "========= 2"
-        Cache.dumpAll
-        Session.setLibManager libManager2
-        Invalidate.modifyNode libID 45
-        Cache.dumpAll
-        Executor.processMain
-        Cache.dumpAll
+runSession :: String -> Session () -> IO ()
+runSession code session = do
+    env <- mkEnv code
+    result <- Session.run env session
     eitherStringToM $ fmapL Error.format result

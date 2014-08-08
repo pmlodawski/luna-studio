@@ -51,7 +51,7 @@ fromCallPointPath (callPoint:t) parentDefPoint = do
     (graph, defID) <- Session.getGraph parentDefPoint
     let nodeID    = callPoint ^. CallPoint.nodeID
         libraryID = callPoint ^. CallPoint.libraryID
-    node <- Graph.lab graph nodeID <??> "No node with id = " ++ show nodeID
+    node <- Graph.lab graph nodeID <??> "CallDataPath.fromCallPointPath : No node with id = " ++ show nodeID
     let parentBC = parentDefPoint  ^. DefPoint.breadcrumbs
         callData = CallData callPoint parentBC defID graph node
     mdefPoint <- Inspect.fromName (node ^. Node.expr) parentBC libraryID

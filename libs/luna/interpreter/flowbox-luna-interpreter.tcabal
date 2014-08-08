@@ -68,5 +68,6 @@ Test-Suite tests
                   flowbox-utils,
                   pretty-show,
                   hspec,
+                  mtl,
                   raw-strings-qq,
                   transformers
