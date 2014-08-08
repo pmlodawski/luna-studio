@@ -19,16 +19,16 @@ named :: a -> b -> (a, b)
 named = (,)
 
 sampleCodes :: [(String,String)]
-sampleCodes = [named "test1" [r|
+sampleCodes = [named "simple return" [r|
 def main:
     1
-|], named "test2" [r|
+|], named "simple infix" [r|
 def main:
     1 + 2
-|], named "test3" [r|
+|], named "simple assignment" [r|
 def main:
     x = 0
-|], named "test4" [r|
+|], named "following calls" [r|
 def foo
 def bar
 
@@ -36,94 +36,96 @@ def main:
     1 + 2
     foo
     bar
-|], named "test5" [r|
+|], named "following calls 2" [r|
 def foo
 
 def main:
     foo
     2
-|], named "test6" [r|
+|], named "accessors 1" [r|
 def foo
 
 def main:
     foo.bar.baz
     2
-|], named "test7" [r|
+|], named "accessors 2" [r|
 def main arg:
     arg.bar.baz
     2
-|], named "test8" [r|
-def foo
-
-def main:
-    x = foo.bar.baz
-    2
-|], named "test9" [r|
-def foo
-
-def main arg:
-    foo.bar arg
-    2
-|], named "test10" [r|
-def foo
-
-def main arg:
-    foo.bar arg 2
-|], named "test11" [r|
-def foo
-
-def main arg:
-    x = foo.bar(arg, 15, arg, [19..]).baz arg 2
-|], named "test12" [r|
+|], named "accessors 3" [r|
 def x
 
 def main arg:
     x.zooo 43
     -2
-|], named "test13" [r|
+|], named "accessors 4" [r|
 def x
 
 def main arg:
     x
     x.y
     x.z
-|], named "test14" [r|
+|], named "accessors 5" [r|
 def main arg:
     x = 4
     x.zooo 43
-|], named "test15" [r|
+|], named "accessors 6" [r|
 def foo
 
 def main arg:
     foo.bar
-|], named "test16" [r|
+|], named "accessors and assignment" [r|
+def foo
+
+def main:
+    x = foo.bar.baz
+    2
+|], named "accessors and apps 1" [r|
+def foo
+
+def main arg:
+    foo.bar arg
+    2
+|], named "accessors and apps 2" [r|
+def foo
+
+def main arg:
+    foo.bar arg 2
+|], named "complicated inline calls" [r|
+def foo
+
+def main arg:
+    x = foo.bar(arg, 15, arg, [19..]).baz arg 2
+|], named "ranges" [r|
 def main arg:
     x = {1, [1..10], [9..]}
-|], named "test17" [r|
+|], named "prints" [r|
 def print
 
 def main arg arg2:
     print arg
     print arg2
     self.bla "kota" "albo nie"
-|], named "test18" [r|
+|], named "constructors 1" [r|
 def main arg:
     Main.foo 1 2 3
-|], named "test19" [r|
+|], named "constructors 2" [r|
 def main arg:
     Foo 1 2 3
-|], named "test20" [r|
+|], named "constructors 3" [r|
 def main arg:
     Foo arg.boo 1
-|], named "test21" [r|
+|], named "constructors 4" [r|
 def gap
 
 def main arg:
     Foo arg.boo My gap
+|], named "tuples" [r|
+def main arg:
+    x = 4
+    y = {1, x}
+|], named "lists" [r|
+def main arg:
+    x = 4
+    y = [1, x]
 |]]
--- |], named "test17" [r|
--- def main arg:
---     x = 4
---     y = {1, x}
--- |]]
-

@@ -67,6 +67,7 @@ parseNode inputs (nodeID, node) = do
 
 parseExprNode :: Node.ID -> String -> GPPass ()
 parseExprNode nodeID expr = case expr of
+    "List"  -> parseListNode  nodeID
     "Tuple" -> parseTupleNode nodeID
     '=':pat -> parsePatNode   nodeID pat
     _       -> parseAppNode   nodeID expr
@@ -103,18 +104,6 @@ parsePatNode nodeID pat = do
         _      -> left "parsePatNode: Wrong Pat arguments"
 
 
---parseInfixNode :: Node.ID -> String -> GPPass ()
---parseInfixNode nodeID inf = do
---    srcs   <- State.getNodeSrcs nodeID
---    let u = Expr.Wildcard IDFixer.unknownID
---    (a, b) <- case srcs of
---                    [a, b] -> return (a, b)
---                    [a]    -> return (a, u)
---                    []     -> return (u, u)
---                    _      -> left "parseInfixNode: Wrong Infix arguments"
---    addExpr nodeID $ Expr.Infix nodeID inf a b
-
-
 parseAppNode :: Node.ID -> String -> GPPass ()
 parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
@@ -139,6 +128,13 @@ parseTupleNode :: Node.ID -> GPPass ()
 parseTupleNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = Expr.Tuple nodeID srcs
+    addExpr nodeID e
+
+
+parseListNode :: Node.ID -> GPPass ()
+parseListNode nodeID = do
+    srcs <- State.getNodeSrcs nodeID
+    let e = Expr.List nodeID srcs
     addExpr nodeID e
 
 

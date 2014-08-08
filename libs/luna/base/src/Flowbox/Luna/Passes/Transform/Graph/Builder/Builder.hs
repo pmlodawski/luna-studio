@@ -126,8 +126,6 @@ buildNode astFolded monadicBind outName expr = case expr of
                                      case s of
                                         Just (srcNID, _) -> connectArgs True True Nothing srcNID args 1
                                         Nothing          -> return ()
-                                     --connectArgs True True Nothing srcNID args 1
-                                     --connectArgs True True Nothing i (src:args) 0
                                      connectMonadic srcID
                                      return srcID
     Expr.Infix  i name src dst -> do let node = Node.Expr name (genName name i)
@@ -152,21 +150,31 @@ buildNode astFolded monadicBind outName expr = case expr of
                                      State.addNode i Port.All node astFolded noAssignment
                                      connectMonadic i
                                      return i
-    --Expr.Tuple      i items    -> do let node = Node.Expr "Tuple" (genName "tuple" i)
-    --                                 State.addNode i Port.All node astFolded noAssignment
-    --                                 connectArgs True Nothing i items 0
-    --                                 return i
-    Expr.Wildcard   i          -> left $ "GraphBuilder: Unexpected Expr.Wildcard with id=" ++ show i
-    _                          -> do let i = expr ^. Expr.id
-                                         name = showExpr expr
-                                         node = Node.Expr name (genName name i)
+    Expr.Tuple      i items    -> do let node = Node.Expr "Tuple" (genName "tuple" i)
                                      State.addNode i Port.All node astFolded noAssignment
+                                     connectArgs True True Nothing i items 0
                                      connectMonadic i
                                      return i
+    Expr.List _ [Expr.RangeFromTo {}] -> showAndAddNode
+    Expr.List _ [Expr.RangeFrom   {}] -> showAndAddNode
+    Expr.List       i items    -> do let node = Node.Expr "List" (genName "list" i)
+                                     State.addNode i Port.All node astFolded noAssignment
+                                     connectArgs True True Nothing i items 0
+                                     connectMonadic i
+                                     return i
+    Expr.Wildcard   i          -> left $ "GraphBuilder: Unexpected Expr.Wildcard with id=" ++ show i
+    _                          -> showAndAddNode
     where
         connectMonadic i = when monadicBind $ State.connectMonadic i
         noAssignment     = Maybe.isNothing outName
         genName base num = Maybe.fromMaybe (OutputName.generate base num) outName
+
+        showAndAddNode   = do let i = expr ^. Expr.id
+                                  name = showExpr expr
+                                  node = Node.Expr name (genName name i)
+                              State.addNode i Port.All node astFolded noAssignment
+                              connectMonadic i
+                              return i
 
 
 buildArg :: Bool -> Bool -> Maybe String -> Expr -> GBPass (Maybe AST.ID)
@@ -205,11 +213,6 @@ buildPat p = case p of
     Pat.Wildcard i        -> return [i]
 
 
--- REMOVE ME --
-dummyValue :: Int
-dummyValue = (-1)
---------------
-
 showExpr :: Expr -> String
 showExpr expr = case expr of
     --Expr.Accessor     _ name     dst
@@ -225,7 +228,7 @@ showExpr expr = case expr of
     --Expr.Infix        _ name     src       dst
     Expr.List         _ items        -> "[" ++ List.intercalate ", " (map showExpr items) ++ "]"
     Expr.Lit          _ lvalue       -> Lit.lunaShow lvalue
-    Expr.Tuple        _ items        -> "{" ++ List.intercalate ", " (map showExpr items) ++ "}"
+    --Expr.Tuple        _ items        -> "{" ++ List.intercalate ", " (map showExpr items) ++ "}"
     --Expr.Typed        _ cls      expr
     --Expr.Var          _ name         -> name
     Expr.Wildcard     _              -> "_"
