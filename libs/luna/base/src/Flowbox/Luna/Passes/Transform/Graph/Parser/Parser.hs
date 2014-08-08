@@ -118,21 +118,21 @@ parsePatNode nodeID pat = do
 parseAppNode :: Node.ID -> String -> GPPass ()
 parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
-    case srcs of
-        []  -> if length app == 1 && head app `elem` Lexer.operators
-                 then addExpr nodeID $ Expr.Var nodeID app
-                 else case Parser.parseExpr app $ ASTInfo.mk nodeID of
+    expr <- if length app == 1 && head app `elem` Lexer.operators
+                then return $ Expr.Var nodeID app
+                else case Parser.parseExpr app $ ASTInfo.mk nodeID of
                     Left  er     -> left $ show er
-                    Right (e, _) -> addExpr nodeID e
-        --[f] -> do let e   = Expr.Accessor nodeID app f
-        --          addExpr nodeID e
-        (Expr.Wildcard {}):t
-            -> do let acc = Expr.Var nodeID app
-                      e   = Expr.App      IDFixer.unknownID acc t
-                  addExpr nodeID e
-        f:t -> do let acc = Expr.Accessor nodeID app f
-                      e   = Expr.App      IDFixer.unknownID acc t
-                  addExpr nodeID e
+                    Right (e, _) -> return e
+    let requiresApp (Expr.Con {}) = True
+        requiresApp _             = False
+    case srcs of
+        []                   -> addExpr nodeID $ if requiresApp expr
+                                    then Expr.App IDFixer.unknownID expr []
+                                    else expr
+        (Expr.Wildcard {}):t -> addExpr nodeID $ Expr.App IDFixer.unknownID expr t
+        f:t                  -> do let acc = Expr.Accessor nodeID app f
+                                       e   = Expr.App      IDFixer.unknownID acc t
+                                   addExpr nodeID e
 
 
 parseTupleNode :: Node.ID -> GPPass ()

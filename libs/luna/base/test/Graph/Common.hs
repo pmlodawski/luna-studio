@@ -27,8 +27,6 @@ import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser          
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder                     as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser                       as GraphParser
 import           Flowbox.Prelude
-import           Graph.SampleCodes                                                       (sampleCodes)
-
 
 
 
@@ -41,7 +39,7 @@ getAST code = eitherStringToM' $ runEitherT $ do
     callGraph         <- EitherT $ Analysis.CallGraph.run aliasInfo ast
     ast               <- EitherT $ Transform.DepSort.run callGraph aliasInfo ast
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitScopes.run astInfo aliasInfo ast
-    (ast, astInfo)    <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
+    (ast, _astInfo)   <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
     aliasInfo         <- EitherT $ Analysis.Alias.run ast
 
     let bc = [Crumb.Module "Main", Crumb.Function "main" []]

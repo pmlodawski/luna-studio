@@ -29,15 +29,22 @@ def main:
 def main:
     x = 0
 |], named "test4" [r|
+def foo
+def bar
+
 def main:
     1 + 2
     foo
     bar
 |], named "test5" [r|
+def foo
+
 def main:
     foo
     2
 |], named "test6" [r|
+def foo
+
 def main:
     foo.bar.baz
     2
@@ -46,24 +53,36 @@ def main arg:
     arg.bar.baz
     2
 |], named "test8" [r|
+def foo
+
 def main:
     x = foo.bar.baz
     2
 |], named "test9" [r|
+def foo
+
 def main arg:
     foo.bar arg
     2
 |], named "test10" [r|
+def foo
+
 def main arg:
     foo.bar arg 2
 |], named "test11" [r|
+def foo
+
 def main arg:
     x = foo.bar(arg, 15, arg, [19..]).baz arg 2
 |], named "test12" [r|
+def x
+
 def main arg:
     x.zooo 43
     -2
 |], named "test13" [r|
+def x
+
 def main arg:
     x
     x.y
@@ -73,16 +92,34 @@ def main arg:
     x = 4
     x.zooo 43
 |], named "test15" [r|
+def foo
+
 def main arg:
     foo.bar
 |], named "test16" [r|
 def main arg:
     x = {1, [1..10], [9..]}
 |], named "test17" [r|
+def print
+
 def main arg arg2:
     print arg
     print arg2
     self.bla "kota" "albo nie"
+|], named "test18" [r|
+def main arg:
+    Main.foo 1 2 3
+|], named "test19" [r|
+def main arg:
+    Foo 1 2 3
+|], named "test20" [r|
+def main arg:
+    Foo arg.boo 1
+|], named "test21" [r|
+def gap
+
+def main arg:
+    Foo arg.boo My gap
 |]]
 -- |], named "test17" [r|
 -- def main arg:

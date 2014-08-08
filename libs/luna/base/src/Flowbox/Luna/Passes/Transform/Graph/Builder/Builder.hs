@@ -126,6 +126,8 @@ buildNode astFolded monadicBind outName expr = case expr of
                                      case s of
                                         Just (srcNID, _) -> connectArgs True True Nothing srcNID args 1
                                         Nothing          -> return ()
+                                     --connectArgs True True Nothing srcNID args 1
+                                     --connectArgs True True Nothing i (src:args) 0
                                      connectMonadic srcID
                                      return srcID
     Expr.Infix  i name src dst -> do let node = Node.Expr name (genName name i)

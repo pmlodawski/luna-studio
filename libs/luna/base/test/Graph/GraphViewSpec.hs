@@ -10,15 +10,7 @@ module Graph.GraphViewSpec where
 import Test.Hspec
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb     as Crumb
-import           Flowbox.Luna.Data.AST.Expr            (Expr)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus    as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper   as Zipper
-import           Flowbox.Luna.Data.Graph.Graph         (Graph)
 import qualified Flowbox.Luna.Data.GraphView.GraphView as GraphView
-import           Flowbox.Luna.Data.Pass.AliasInfo      (AliasInfo)
-import           Flowbox.Luna.Data.Pass.Source         (Source (Source))
-import           Flowbox.Luna.Data.PropertyMap         (PropertyMap)
 import           Flowbox.Prelude
 import qualified Graph.Common                          as Common
 import           Graph.SampleCodes                     (sampleCodes)

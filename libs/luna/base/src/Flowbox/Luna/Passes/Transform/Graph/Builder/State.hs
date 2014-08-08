@@ -94,10 +94,9 @@ connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstI
 
 connect :: AST.ID -> Node.ID -> InPort -> GBPass ()
 connect srcID dstNID dstPort = do
-    src <- gvmNodeMapLookUp srcID
-    case src of
-        Just (srcNID, srcPort) -> connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
-        Nothing                -> return ()
+    found             <- gvmNodeMapLookUp srcID
+    (srcNID, srcPort) <- found <??> "Graph.Builder.State.connect : cannot find " ++ show srcID
+    connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
 
 
 connectMonadic :: Node.ID -> GBPass ()
@@ -154,9 +153,11 @@ nodeMapLookUp astID = do nm <- getNodeMap
 
 
 gvmNodeMapLookUp :: AST.ID -> GBPass (Maybe (Node.ID, OutPort))
-gvmNodeMapLookUp astID = aaLookUp astID
-                     >>= return . Maybe.fromMaybe astID
-                     >>= nodeMapLookUp
+gvmNodeMapLookUp astID = do
+    found <- nodeMapLookUp =<< Maybe.fromMaybe astID <$> aaLookUp astID
+    if Maybe.isNothing found
+        then nodeMapLookUp astID
+        else return found
 
 
 getPrevoiusNode :: GBPass Node.ID
