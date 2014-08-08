@@ -13,6 +13,7 @@ import           Flowbox.Interpreter.Session.Data.DefPoint (DefPoint (DefPoint))
 import           Flowbox.Interpreter.Session.Session       (Session)
 import qualified Flowbox.Interpreter.Session.Session       as Session
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs   (Breadcrumbs)
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb         as Crumb
 import qualified Flowbox.Luna.Lib.Library                  as Library
 import qualified Flowbox.Luna.Passes.Analysis.NameResolver as NameResolver
 import           Flowbox.Prelude                           hiding (inside)
@@ -24,6 +25,8 @@ fromName name parentBC libraryID = do
     libManager <- Session.getLibManager
     results <- EitherT $ NameResolver.run name parentBC libraryID libManager
     case results of
-        []       -> return   Nothing
-        [result] -> return $ Just $ uncurry DefPoint result
-        _        -> left "Name resolver returned multiple results"
+        []            -> return Nothing
+        [(libID, bc)] -> case last bc of
+                            Crumb.Function {} -> return $ Just $ DefPoint libID bc
+                            _                 -> return Nothing
+        _             -> left "Name resolver returned multiple results"
