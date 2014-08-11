@@ -37,6 +37,14 @@ getArgs callPointPath = do
     return $ map CallDataPath.toCallPointPath args
 
 
+getSuccessors :: CallPointPath -> Session [CallPointPath]
+getSuccessors callPointPath = do
+    mainPtr <- gets $ view Env.mainPtr
+    testCallData <- CallDataPath.fromCallPointPath callPointPath mainPtr
+    successors <- Traverse.next testCallData
+    return $ map CallDataPath.toCallPointPath successors
+
+
 main :: IO ()
 main = hspec spec
 
@@ -48,7 +56,7 @@ spec :: Spec
 spec = do
     describe "interpreter" $ do
         mapM_ (\(name, code) -> it ("executes example - " ++ name) $ do
-            rootLogger setIntLevel 5
+            --rootLogger setIntLevel 5
             Common.runSession code Executor.processMain) SampleCodes.sampleCodes
 
     describe "AST traverse" $ do
@@ -64,6 +72,16 @@ spec = do
                     testCall = [CallPoint 1 15, CallPoint 1 45, CallPoint 1 71]
 
                     tuple    = [CallPoint 1 15, CallPoint 1 45, CallPoint 1 (-68)]
+                varAArgs  <- getArgs var_a
+                varAArgs `shouldBe'` []
+                varBArgs  <- getArgs var_b
+                varBArgs `shouldBe'` []
+                varCArgs  <- getArgs var_c
+                varCArgs `shouldBe'` []
+                varDArgs  <- getArgs var_d
+                varDArgs `shouldBe'` []
+                varEArgs  <- getArgs var_e
+                varEArgs `shouldBe'` []
                 testArgs  <- getArgs testCall
                 testArgs  `shouldBe'` [var_c, var_d, var_a, var_b, var_e]
                 tupleArgs <- getArgs tuple
@@ -71,5 +89,18 @@ spec = do
 
 
         it "finds node successors" $ do
-            --putStrLn =<< ppShow <$> Common.readCode traverseExample
+            --putStrLn =<< ppShow <$> Common.readCode SampleCodes.traverseExample
+            Common.runSession SampleCodes.traverseExample $ do
+                let var_a    = [CallPoint 1 6 ]
+                    var_b    = [CallPoint 1 10]
+                    var_c    = [CallPoint 1 21]
+                    var_d    = [CallPoint 1 15, CallPoint 1 53]
+                    var_e    = [CallPoint 1 15, CallPoint 1 38]
+
+                    testCall = [CallPoint 1 15, CallPoint 1 45, CallPoint 1 71]
+
+                    tuple    = [CallPoint 1 15, CallPoint 1 45, CallPoint 1 (-68)]
+                varASuccs  <- getSuccessors var_a
+                varASuccs  `shouldBe'` [testCall, tuple]
+
             pending

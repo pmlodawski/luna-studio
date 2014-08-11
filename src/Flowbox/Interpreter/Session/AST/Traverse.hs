@@ -30,7 +30,6 @@ import qualified Flowbox.Luna.Data.Graph.Edge                  as Edge
 import qualified Flowbox.Luna.Data.Graph.Graph                 as Graph
 import           Flowbox.Luna.Data.Graph.Node                  (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                  as Node
-import qualified Flowbox.Luna.Data.Graph.Port                  as Port
 import           Flowbox.Prelude                               hiding (inside, matching)
 
 
@@ -38,38 +37,32 @@ import           Flowbox.Prelude                               hiding (inside, m
 arguments :: CallDataPath -> Session [CallDataPath]
 arguments []           = return []
 arguments callDataPath =
-    Maybe.catMaybes <$> mapM (globalPredecesor callDataPath)
+    Maybe.catMaybes <$> mapM (globalPredecessor callDataPath)
                              (Exts.sortWith (\edge -> edge ^. _3 ^? Edge.dst)
                                             (inDataConnections callDataPath))
 
 
 inDataConnections :: CallDataPath -> [(Node.ID, Node, Edge)]
-inDataConnections callDataPath = localPreds where
-    graph           = last callDataPath ^. CallData.parentGraph
-    isDataEdge edge = Edge.isData $ edge ^. _3
-    localPreds      = List.filter isDataEdge
-                    $ Graph.lprel graph
-                    $ last callDataPath ^. CallData.callPoint . CallPoint.nodeID
+inDataConnections callDataPath = Graph.lprelData graph nodeID where
+    graph  = last callDataPath ^. CallData.parentGraph
+    nodeID = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
 
 
-globalPredecesor :: CallDataPath -> (Node.ID, Node, Edge) -> Session (Maybe CallDataPath)
-globalPredecesor []           _                    = return Nothing
-globalPredecesor callDataPath (nodeID, node, edge) = do
+globalPredecessor :: CallDataPath -> (Node.ID, Node, Edge) -> Session (Maybe CallDataPath)
+globalPredecessor []           _                    = return Nothing
+globalPredecessor callDataPath (nodeID, node, edge) = do
     let upperLevel = init callDataPath
     case node of
         Node.Inputs {} -> if null upperLevel
                             then return Nothing
                             else do found <- matchPredecessor upperLevel edge
-                                    globalPredecesor upperLevel found
+                                    globalPredecessor upperLevel found
         _           -> return $ Just $ CallDataPath.updateNode callDataPath node nodeID
 
 
 matchPredecessor :: CallDataPath -> Edge -> Session (Node.ID, Node, Edge)
-matchPredecessor callDataPath edge = do
-    let matching (Edge.Data src _) (_, _, Edge.Data _ dst) = src == Port.Num dst
-        --matching  Edge.Monadic     (_, _, Edge.Monadic   ) = True
-        matching  _                 _                      = False
-    List.find (matching edge) (inDataConnections callDataPath) <??> "Incorrectly connected graph"
+matchPredecessor callDataPath edge =
+    List.find (flip Edge.match edge . view _3) (inDataConnections callDataPath) <??> "Incorrectly connected graph"
 
 
 into :: CallDataPath -> Session [CallDataPath]
