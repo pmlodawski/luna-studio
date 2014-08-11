@@ -52,14 +52,15 @@ processNode callDataPath = do
     arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
         node      = callData ^. CallData.node
-        argumentsPointPaths = map CallDataPath.toCallPointPath arguments
-    argsVarNames <- mapM Cache.recentVarName argumentsPointPaths
+    argsVarNames <- mapM (Cache.recentVarName . CallDataPath.toCallPointPath) arguments
     children <- Traverse.into callDataPath
     if null children
         then case node of
             Node.Inputs  {} -> return ()
             Node.Outputs {} -> executeOutputs callDataPath argsVarNames
-            Node.Expr    {} -> executeNode    callDataPath argsVarNames
+            Node.Expr    {} -> if head (node ^. Node.expr) == '='
+                then executeAssignment callDataPath argsVarNames
+                else executeNode       callDataPath argsVarNames
         else mapM_ processNodeIfNeeded children
 
 
@@ -76,6 +77,11 @@ executeNode callDataPath argsVarNames = do
     let node         = last callDataPath ^. CallData.node
         functionName = node ^. Node.expr
     execute callDataPath functionName argsVarNames
+
+
+executeAssignment :: CallDataPath -> [VarName] -> Session ()
+executeAssignment callDataPath [argsVarName] = do
+    execute callDataPath "id" [argsVarName] -- TODO [PM] : handle Luna's pattern matching
 
 
 execute :: CallDataPath -> String -> [VarName] -> Session ()

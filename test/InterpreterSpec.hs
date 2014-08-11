@@ -47,19 +47,9 @@ shouldBe' = liftIO .: shouldBe
 spec :: Spec
 spec = do
     describe "interpreter" $ do
-        it "executes simple example" $ do
-            --rootLogger setIntLevel 5
-            Common.runSession SampleCodes.simpleExample Executor.processMain
-
-        it "executes more complicated example" $ do
-            pending
-            --rootLogger setIntLevel 5
-            --Common.runSession SampleCodes.notWorkingCode Executor.processMain
-
         mapM_ (\(name, code) -> it ("executes example - " ++ name) $ do
             rootLogger setIntLevel 5
             Common.runSession code Executor.processMain) SampleCodes.sampleCodes
-
 
     describe "AST traverse" $ do
         it "finds function arguments" $ do
