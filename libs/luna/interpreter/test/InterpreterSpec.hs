@@ -4,13 +4,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE QuasiQuotes #-}
 
 module InterpreterSpec where
 
 import Control.Monad.State hiding (mapM, mapM_)
 import Test.Hspec
-import Text.RawString.QQ
 import Text.Show.Pretty
 
 import qualified Common
@@ -23,69 +21,12 @@ import qualified Flowbox.Interpreter.Session.Env                as Env
 import           Flowbox.Interpreter.Session.Session            (Session)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-
+import qualified SampleCodes
 
 
 rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
 
-
-
-simpleExample :: String
-simpleExample = [r|
-
-def main:
-    hello = "hello"
-    world = "world"
-    print hello
-    print world
-|]
-
-traverseExample :: String
-traverseExample = [r|
-
-def main:
-    a = "var a"
-    b = "var b"
-    r = self.foo a b "var c"
-    print r
-    "dummy"
-
-def foo arg1 arg2 arg3:
-    e = "var e"
-    n = "var n"
-    self.bar arg1 arg2 arg3 "var d" e
-
-def bar arg1 arg2 arg3 arg4 arg5:
-    r = test arg3 arg4 arg1 arg2 arg5
-
-    {arg5, arg4, arg3, arg2, r, arg1}
-
-|]
-
-notWorkingCode :: String
-notWorkingCode = [r|
-
-def main:
-    a = "var a"
-    b = "var b"
-    r = self.foo a b "var c"
-    print r
-    "dummy"
-
-def foo arg1 arg2 arg3:
-    e = "var e"
-    n = "var n"
-    self.bar arg1 arg2 arg3 "var d" e
-
-def bar arg1 arg2 arg3 arg4 arg5:
-    tuple = self.mkTuple arg1 arg2 arg3 arg4 arg5
-    print tuple
-    tuple
-
-def mkTuple arg1 arg2 arg3 arg4 arg5:
-    {arg1, arg2, arg3, arg4, arg5}
-|]
 
 
 getArgs :: CallPointPath -> Session [CallPointPath]
@@ -108,17 +49,22 @@ spec = do
     describe "interpreter" $ do
         it "executes simple example" $ do
             --rootLogger setIntLevel 5
-            Common.runSession simpleExample Executor.processMain
+            Common.runSession SampleCodes.simpleExample Executor.processMain
 
         it "executes more complicated example" $ do
+            pending
             --rootLogger setIntLevel 5
-            Common.runSession notWorkingCode Executor.processMain
+            --Common.runSession SampleCodes.notWorkingCode Executor.processMain
 
+        mapM_ (\(name, code) -> it ("executes example - " ++ name) $ do
+            rootLogger setIntLevel 5
+            Common.runSession code Executor.processMain) SampleCodes.sampleCodes
 
 
     describe "AST traverse" $ do
         it "finds function arguments" $ do
-            Common.runSession traverseExample $ do
+            --rootLogger setIntLevel 5
+            Common.runSession SampleCodes.traverseExample $ do
                 let var_a    = [CallPoint 1 6 ]
                     var_b    = [CallPoint 1 10]
                     var_c    = [CallPoint 1 21]

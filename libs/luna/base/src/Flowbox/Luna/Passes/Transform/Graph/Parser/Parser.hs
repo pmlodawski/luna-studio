@@ -107,7 +107,7 @@ parsePatNode nodeID pat = do
 parseAppNode :: Node.ID -> String -> GPPass ()
 parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
-    expr <- if length app == 1 && head app `elem` Lexer.operators
+    expr <- if isOperator app
                 then return $ Expr.Var nodeID app
                 else case Parser.parseExpr app $ ASTInfo.mk nodeID of
                     Left  er     -> left $ show er
@@ -156,3 +156,6 @@ addExpr nodeID e = do
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
 
+
+isOperator :: String -> Bool
+isOperator expr = length expr == 1 && head expr `elem` Lexer.operators

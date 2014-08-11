@@ -10,24 +10,24 @@ import           Control.Monad.State        hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Data.List                  as List
 
-import qualified Flowbox.Interpreter.Session.AST.Traverse      as Traverse
-import qualified Flowbox.Interpreter.Session.Cache.Cache       as Cache
-import qualified Flowbox.Interpreter.Session.Cache.Invalidate  as Invalidate
-import qualified Flowbox.Interpreter.Session.Cache.Status      as CacheStatus
-import qualified Flowbox.Interpreter.Session.Data.CallData     as CallData
-import           Flowbox.Interpreter.Session.Data.CallDataPath (CallDataPath)
-import qualified Flowbox.Interpreter.Session.Data.CallDataPath as CallDataPath
-import           Flowbox.Interpreter.Session.Data.VarName      (VarName)
-import qualified Flowbox.Interpreter.Session.Data.VarName      as VarName
-import qualified Flowbox.Interpreter.Session.Env               as Env
-import qualified Flowbox.Interpreter.Session.Hash              as Hash
-import           Flowbox.Interpreter.Session.Session           (Session)
-import qualified Flowbox.Interpreter.Session.Session           as Session
-import qualified Flowbox.Interpreter.Session.TypeCheck         as TypeCheck
-import qualified Flowbox.Luna.Data.Graph.Node                  as Node
-import           Flowbox.Prelude                               hiding (children, inside)
+import qualified Flowbox.Interpreter.Session.AST.Traverse          as Traverse
+import qualified Flowbox.Interpreter.Session.Cache.Cache           as Cache
+import qualified Flowbox.Interpreter.Session.Cache.Invalidate      as Invalidate
+import qualified Flowbox.Interpreter.Session.Cache.Status          as CacheStatus
+import qualified Flowbox.Interpreter.Session.Data.CallData         as CallData
+import           Flowbox.Interpreter.Session.Data.CallDataPath     (CallDataPath)
+import qualified Flowbox.Interpreter.Session.Data.CallDataPath     as CallDataPath
+import           Flowbox.Interpreter.Session.Data.VarName          (VarName)
+import qualified Flowbox.Interpreter.Session.Data.VarName          as VarName
+import qualified Flowbox.Interpreter.Session.Env                   as Env
+import qualified Flowbox.Interpreter.Session.Hash                  as Hash
+import           Flowbox.Interpreter.Session.Session               (Session)
+import qualified Flowbox.Interpreter.Session.Session               as Session
+import qualified Flowbox.Interpreter.Session.TypeCheck             as TypeCheck
+import qualified Flowbox.Luna.Data.Graph.Node                      as Node
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser as GraphParser
+import           Flowbox.Prelude                                   hiding (children, inside)
 import           Flowbox.System.Log.Logger
-
 
 
 logger :: LoggerIO
@@ -119,7 +119,8 @@ evalFunction :: String -> CallDataPath -> [VarName] -> Session VarName
 evalFunction funName callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-    typedFun  <- TypeCheck.function funName argsVarNames
+        funStr = if GraphParser.isOperator funName then "(" ++ funName ++ ")" else funName
+    typedFun  <- TypeCheck.function funStr argsVarNames
     typedArgs <- mapM TypeCheck.variable argsVarNames
     let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
         argSeparator  = " `call` "

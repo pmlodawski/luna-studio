@@ -38,5 +38,9 @@ typeOf :: String -> Session String
 typeOf arg = do
     logger trace $ "Checking type of: " ++ show arg
     t <- lift2 $ Interpreter.typeOf arg
-    logger trace $ "Result: " ++ show t
-    return t
+    let t2 = case t of
+                "Num a => a"        -> "Int"
+                "Fractional a => a" -> "Double"
+                _                   -> t
+    logger trace $ "Result: " ++ show t2
+    return t2
