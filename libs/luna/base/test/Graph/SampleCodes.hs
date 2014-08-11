@@ -25,9 +25,17 @@ def main:
 |], named "simple infix" [r|
 def main:
     1 + 2
-|], named "simple assignment" [r|
+|], named "simple assignment 1" [r|
 def main:
     x = 0
+|], named "simple assignment 2" [r|
+def main:
+    x = 0
+    y = x
+|], named "simple assignment 3" [r|
+def main:
+    x = 0
+    {y, _} = x
 |], named "following calls" [r|
 def foo
 def bar
