@@ -87,8 +87,10 @@ parseArg nodeID (num, input) = case input of
 parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
-    when (length srcs > 1) $
-        State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
+    case srcs of
+        [src@Expr.Var {}] -> State.setOutput src
+        _:(_:_)           -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
+        _                 -> return ()
 
 
 parsePatNode :: Node.ID -> String -> GPPass ()

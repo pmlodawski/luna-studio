@@ -36,6 +36,16 @@ def main:
 def main:
     x = 0
     {y, _} = x
+|], named "simple assignment 4" [r|
+def main:
+    x = 0
+    y = 1
+    {z, v} = {x, y}
+|], named "assignment" [r|
+def main arg1 arg2:
+    tuple = self.mkTuple arg1 arg2
+    print tuple
+    tuple
 |], named "following calls" [r|
 def foo
 def bar
@@ -137,3 +147,15 @@ def main arg:
     x = 4
     y = [1, x]
 |]]
+
+---------------------------------------------------------------------------
+---- DOES NOT WORK YET: ---------------------------------------------------
+---------------------------------------------------------------------------
+
+-- named "simple assignment 5" [r|
+-- def main:
+--     x = 0
+--     y = 1
+--     {z, v} = {x, y}
+--     h = {z, v}
+-- |]]

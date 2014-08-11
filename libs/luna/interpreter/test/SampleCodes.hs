@@ -31,11 +31,22 @@ def main:
 |], named "simple infix" [r|
 def main:
     1 + 2
-|], named "simple assignment" [r|
+|], named "simple assignment 1" [r|
 def main:
     x = 0
     print x
- |], named "following calls" [r|
+|], named "simple assignment 2" [r|
+def main:
+    x = 0
+    y = x
+    print y
+|], named "hello world" [r|
+def main:
+    hello = "hello"
+    world = "world"
+    print hello
+    print world
+|], named "following calls" [r|
 def foo:
     print "foo"
 
@@ -53,7 +64,30 @@ def foo arg:
 def main:
     self.foo 1.4
     2
+|], named "output tuples" [r|
+def main:
+    a = "var a"
+    b = "var b"
+    r = self.foo a b "var c"
+    print r
+    "dummy"
+
+def foo arg1 arg2 arg3:
+    e = "var e"
+    n = "var n"
+    self.bar arg1 arg2 arg3 "var d" e
+
+def bar arg1 arg2 arg3 arg4 arg5:
+    tuple000 = self.mkTuple arg1 arg2 arg3 arg4 arg5
+    print tuple000
+    tuple000
+
+def mkTuple arg1 arg2 arg3 arg4 arg5:
+    {arg1, arg2, arg3, arg4, arg5}
 |]]
+
+
+
 -- |], named "accessors 1" [r|
 -- def foo
 --
@@ -143,17 +177,6 @@ def main:
 -- |]]
 
 
-
-simpleExample :: String
-simpleExample = [r|
-
-def main:
-    hello = "hello"
-    world = "world"
-    print hello
-    print world
-|]
-
 traverseExample :: String
 traverseExample = [r|
 
@@ -174,28 +197,4 @@ def bar arg1 arg2 arg3 arg4 arg5:
 
     {arg5, arg4, arg3, arg2, r, arg1}
 
-|]
-
-notWorkingCode :: String
-notWorkingCode = [r|
-
-def main:
-    a = "var a"
-    b = "var b"
-    r = self.foo a b "var c"
-    print r
-    "dummy"
-
-def foo arg1 arg2 arg3:
-    e = "var e"
-    n = "var n"
-    self.bar arg1 arg2 arg3 "var d" e
-
-def bar arg1 arg2 arg3 arg4 arg5:
-    tuple = self.mkTuple arg1 arg2 arg3 arg4 arg5
-    print tuple
-    tuple
-
-def mkTuple arg1 arg2 arg3 arg4 arg5:
-    {arg1, arg2, arg3, arg4, arg5}
 |]
