@@ -8,8 +8,9 @@
 
 module Flowbox.Luna.Data.Graph.Edge where
 
-import Flowbox.Luna.Data.Graph.Port (InPort, OutPort)
-import Flowbox.Prelude
+import           Flowbox.Luna.Data.Graph.Port (InPort, OutPort)
+import qualified Flowbox.Luna.Data.Graph.Port as Port
+import           Flowbox.Prelude
 
 
 
@@ -31,3 +32,9 @@ isData _         = False
 isMonadic :: Edge -> Bool
 isMonadic Monadic = True
 isMonadic _       = False
+
+
+match :: Edge -> Edge -> Bool
+match (Data _ d) (Data s _) = Port.Num d == s
+match  Monadic    Monadic   = True
+match  _          _         = False

@@ -48,3 +48,7 @@ sort graph = DG.topsortStable graph $ Exts.sortWith Node.position' $ DG.labNodes
 createMonadicEdges :: Graph -> [LEdge Edge]
 createMonadicEdges = List.merge mkMonEdge . map fst . sort where
     mkMonEdge a b = (a, b, Edge.Monadic)
+
+
+lprelData :: Graph -> Node.ID -> [(Node.ID, Node, Edge)]
+lprelData = filter (Edge.isData . view _3) .: DG.lprel
