@@ -42,9 +42,11 @@ def main:
     y = 1
     {z, v} = {x, y}
 |], named "assignment" [r|
+def foo
+
 def main arg1 arg2:
     tuple = self.mkTuple arg1 arg2
-    print tuple
+    self.foo tuple
     tuple
 |], named "following calls" [r|
 def foo
