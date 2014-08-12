@@ -1,3 +1,6 @@
 [submodule "third-party/protocol-buffers"]
 	path = third-party/protocol-buffers
 	url = https://github.com/korrix/protocol-buffers.git
+[submodule "third-party/HaskellBooster"]
+	path = third-party/HaskellBooster
+	url = https://github.com/wdanilo/HaskellBooster
