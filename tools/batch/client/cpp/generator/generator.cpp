@@ -594,44 +594,30 @@ struct MethodWrapper
 //methods covnerting between expr/pat/type -> cls 
 std::string extToClsCovnersions()
 {
+	using namespace generated::proto;
+
 	std::string ret;
 
-	std::vector<std::string> toHandle = { "Expr", "Pat", "Type" };
-	auto d = generated::proto::projectManager::Project::descriptor();
-	auto f = d->file();
-	for(int i = 0; i < f->dependency_count(); i++)
+	for(auto e : { expr::Expr::Cls_descriptor(), pat::Pat::Cls_descriptor(), type::Type::Cls_descriptor() })
 	{
-		auto dep = f->dependency(i);
-		for(int j = 0; j < dep->message_type_count(); j++)
+		auto fname = e->file()->name();
+		boost::replace_last(fname, ".proto", "");
+
+		std::cout << "\t" << e->containing_type()->name() << " -> " << e->full_name() << std::endl;
+		for(int k = 0; k < e->value_count(); k++)
 		{
-			auto msg = dep->message_type(j);
-			auto e = msg->FindEnumTypeByName("Cls");
-			//std::cout << msg->full_name() << std::endl;
-			if(e  &&  std::find(toHandle.begin(), toHandle.end(), e->containing_type()->name()) != toHandle.end())
-			{
-				auto fname = e->file()->name();
-				boost::replace_last(fname, ".proto", "");
+			auto enumVal = e->value(k);
 
-				std::cout << "\t" << e->containing_type()->name() << " -> " << e->full_name() << std::endl;
-				for(int k = 0; k < e->value_count(); k++)
-				{
-					auto enumVal = e->value(k);
+			auto hlp = clsGetterMethod;
 
-					auto hlp = clsGetterMethod;
-
-					std::cout << "\t\t" << enumVal->name() << std::endl;
-					boost::replace_all(hlp, "%fname%", fname);
-					boost::replace_all(hlp, "%msg%", msg->name());
-					boost::replace_all(hlp, "%ext%", enumVal->name());
-					ret += hlp;
-				}
-				//boost::replace_all(hlp, "%ext_msg%", )
-				//std::cout << hlp << std::endl;
-			}
+			std::cout << "\t\t" << enumVal->name() << std::endl;
+			boost::replace_all(hlp, "%fname%", fname);
+			boost::replace_all(hlp, "%msg%", e->containing_type()->name());
+			boost::replace_all(hlp, "%ext%", enumVal->name());
+			ret += hlp;
 		}
-
-		//std::cout << dep->name() << std::endl;
 	}
+
 	return ret;
 }
 
