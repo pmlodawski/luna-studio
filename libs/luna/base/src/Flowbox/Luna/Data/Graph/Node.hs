@@ -31,3 +31,16 @@ position' :: (ID, Node) -> (Float, Float)
 position' = view pos . snd
 
 
+isInputs :: Node -> Bool
+isInputs (Inputs {}) = True
+isInputs _           = False
+
+
+isOutputs :: Node -> Bool
+isOutputs (Outputs {}) = True
+isOutputs _            = False
+
+
+isExpr :: Node -> Bool
+isExpr (Expr {}) = True
+isExpr _         = False

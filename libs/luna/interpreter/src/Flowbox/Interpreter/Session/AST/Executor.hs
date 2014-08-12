@@ -136,6 +136,7 @@ evalFunction funName callDataPath argsVarNames = do
     hash <- Hash.compute tmpVarName
     let varName = VarName.mk hash callPointPath
     Session.runAssignment varName tmpVarName
+    Cache.dumpAll
     Cache.put callDataPath argsVarNames varName
     return varName
 

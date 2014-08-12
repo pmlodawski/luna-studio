@@ -185,7 +185,6 @@ def main:
     b = "var b"
     r = self.foo a b "var c"
     print r
-    "dummy"
 
 def foo arg1 arg2 arg3:
     e = "var e"

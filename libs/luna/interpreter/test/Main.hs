@@ -128,11 +128,14 @@ main = do
         putStrLn "--------- 2"
         Executor.processMain
 
-        putStrLn "========= 2"
+        putStrLn "========= ready ==========1="
         Cache.dumpAll
         Session.setLibManager libManager2
         Invalidate.modifyNode libID 45
+        putStrLn "========= modified =======2="
         Cache.dumpAll
+        putStrLn "========= running ========3="
         Executor.processMain
+        putStrLn "========= finished =======4="
         Cache.dumpAll
     eitherStringToM $ fmapL Error.format result
