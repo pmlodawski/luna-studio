@@ -24,13 +24,15 @@ import qualified Flowbox.Interpreter.Session.Data.CallData     as CallData
 import           Flowbox.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Flowbox.Interpreter.Session.Data.CallDataPath as CallDataPath
 import qualified Flowbox.Interpreter.Session.Data.CallPoint    as CallPoint
+import           Flowbox.Interpreter.Session.Data.DefPoint     (DefPoint)
 import           Flowbox.Interpreter.Session.Session           (Session)
+import qualified Flowbox.Interpreter.Session.Session           as Session
 import           Flowbox.Luna.Data.Graph.Edge                  (Edge)
 import qualified Flowbox.Luna.Data.Graph.Edge                  as Edge
 import qualified Flowbox.Luna.Data.Graph.Graph                 as Graph
 import           Flowbox.Luna.Data.Graph.Node                  (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                  as Node
-import           Flowbox.Prelude                               hiding (inside, matching)
+import           Flowbox.Prelude                               hiding (inside, matching, succ)
 
 
 
@@ -65,13 +67,19 @@ matchPredecessor callDataPath edge =
     List.find (flip Edge.match edge . view _3) (inDataConnections callDataPath) <??> "Incorrectly connected graph"
 
 
-into :: CallDataPath -> Session [CallDataPath]
-into callDataPath = do
+
+into' :: CallDataPath -> Session (Maybe DefPoint)
+into' callDataPath = do
     let callData  = last callDataPath
         libraryID = callData ^. CallData.callPoint . CallPoint.libraryID
         parentBC  = callData ^. CallData.parentBC
         node      = callData ^. CallData.node
-    mdefPoint <- Inspect.fromName (node ^. Node.expr) parentBC libraryID
+    Inspect.fromName (node ^. Node.expr) parentBC libraryID
+
+
+into :: CallDataPath -> Session [CallDataPath]
+into callDataPath = do
+    mdefPoint <- into' callDataPath
     case mdefPoint of
         Nothing       -> return []
         Just defPoint -> CallDataPath.addLevel callDataPath defPoint
@@ -81,18 +89,46 @@ up :: CallDataPath -> CallDataPath
 up = init
 
 
+--next :: CallDataPath -> Session [CallDataPath]
+--next []           = return []
+--next callDataPath = do
+--    let callData  = last callDataPath
+--        graph  = callData ^. CallData.parentGraph
+--        nodeID = callData ^. CallData.callPoint . CallPoint.nodeID
+--        sucl   = Graph.sucl graph nodeID
+--    concat <$> mapM (globalSuccessors callDataPath) sucl
+
+
+--globalSuccessors :: CallDataPath -> (Node.ID, Node)  -> Session [CallDataPath]
+--globalSuccessors prevCallDataPath (nodeID, node) = do
+--    let callDataPath = CallDataPath.updateNode prevCallDataPath node nodeID
+--    inner <- into callDataPath
+--    return $ callDataPath : inner
+
 next :: CallDataPath -> Session [CallDataPath]
 next []           = return []
 next callDataPath = do
     let callData  = last callDataPath
         graph  = callData ^. CallData.parentGraph
         nodeID = callData ^. CallData.callPoint . CallPoint.nodeID
-        sucl   = Graph.sucl graph nodeID
-    concat <$> mapM (globalSuccessors callDataPath) sucl
+        node   = callData ^. CallData.node
+        lsucl  = Graph.lsucl graph nodeID
+    if Node.isOutputs node
+        then return [init callDataPath]
+        else List.nub . concat <$> mapM (globalSuccessors callDataPath) lsucl
 
 
-globalSuccessors :: CallDataPath -> (Node.ID, Node)  -> Session [CallDataPath]
-globalSuccessors prevCallDataPath (nodeID, node) = do
+globalSuccessors :: CallDataPath -> (Node.ID, Node, Edge)  -> Session [CallDataPath]
+globalSuccessors prevCallDataPath (_     , Node.Outputs {}, _   ) = return [init prevCallDataPath]
+globalSuccessors prevCallDataPath (nodeID, node           , edge) = do
     let callDataPath = CallDataPath.updateNode prevCallDataPath node nodeID
-    inner <- into callDataPath
-    return $ callDataPath : inner
+    mdefPoint <- into' callDataPath
+    case mdefPoint of
+        Nothing       -> return [callDataPath]
+        Just defPoint -> do
+            (graph, defID) <- Session.getGraph defPoint
+            inputs         <- List.find (Node.isInputs . snd) (Graph.labNodes graph) <??> "Traverse.globalSuccessor : cannot find inputs node"
+            let succs = List.filter (Edge.match edge . view _3) $ Graph.lsucl graph $ fst inputs
+                newCallDataPath = CallDataPath.append callDataPath defPoint defID graph inputs
+            concat <$> mapM (globalSuccessors newCallDataPath) succs
+

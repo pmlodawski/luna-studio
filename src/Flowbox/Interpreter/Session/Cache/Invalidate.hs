@@ -56,18 +56,18 @@ modifyNode libraryID nodeID = modifyMatching matchNode where
 modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session ()
 modifyMatching predicate = do
     matching <- MapForest.find predicate <$> Cache.cached
-    mapM_ (modifyParents . fst) matching
+    mapM_ (setStatusParents CacheStatus.Modified . fst) matching
 
 
-modifyParents :: CallPointPath -> Session ()
-modifyParents [] = return ()
-modifyParents callPointPath = do
-    Cache.setStatus CacheStatus.Modified callPointPath
-    modifyParents $ init callPointPath
+setStatusParents :: CacheStatus -> CallPointPath -> Session ()
+setStatusParents _      []            = return ()
+setStatusParents status callPointPath = do
+    Cache.setStatus status callPointPath
+    setStatusParents status $ init callPointPath
 
 
 markSuccessors :: CallDataPath -> CacheStatus -> Session ()
 markSuccessors callDataPath status =
     Traverse.next callDataPath >>=
-    mapM_ (Cache.setStatus status . CallDataPath.toCallPointPath)
+    mapM_ (setStatusParents status . CallDataPath.toCallPointPath)
 

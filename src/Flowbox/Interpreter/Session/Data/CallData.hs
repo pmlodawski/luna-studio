@@ -25,7 +25,7 @@ data CallData = CallData { _callPoint   :: CallPoint
                          , _parentDefID :: AST.ID
                          , _parentGraph :: Graph
                          , _node        :: Node
-                         } deriving (Show)
+                         } deriving (Show, Eq)
 
 makeLenses (''CallData)
 
