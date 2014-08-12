@@ -14,16 +14,21 @@ Library
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse
 
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*FlowboxM/Luna/FClasses/__generator\.hs)')`
+  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*old\.hs)')`
 
 
   Build-Depends:  base,
                   --flowbox-graphics,
                   generic-deriving,
                   ghc-prim,
+                  hspec,
+                  OneTuple,
                   pretty-show,
                   template-haskell,
-                  OneTuple
+                  transformers,
+                  mmorph,
+                  mtl,
+                  QuickCheck
 
 
 
