@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleInstances #-}
 
 module Luna.Target.HS.Control.Context.Monad where
 

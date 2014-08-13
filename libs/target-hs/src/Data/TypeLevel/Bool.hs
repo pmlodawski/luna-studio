@@ -7,6 +7,7 @@
 
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE EmptyDataDecls #-}
 
 module Data.TypeLevel.Bool where
 

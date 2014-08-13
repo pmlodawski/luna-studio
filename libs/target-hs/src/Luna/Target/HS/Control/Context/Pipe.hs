@@ -36,6 +36,7 @@ import Control.PolyApplicative.App
 import Luna.Target.HS.Utils.BaseMonads
 import Data.Typeable
 import Luna.Target.HS.Control.Context.Bind
+import Luna.Target.HS.Control.Context.MonadCtx
 
 --------------------------------------------------------------------------------
 -- Type classes
