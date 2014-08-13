@@ -39,11 +39,11 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.Parser"
 
 
-run :: Graph -> PropertyMap -> Expr -> Pass.Result Expr
+run :: Graph -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)
 run gr pm = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr pm) . graph2expr
 
 
-graph2expr :: Expr -> GPPass Expr
+graph2expr :: Expr -> GPPass (Expr, PropertyMap)
 graph2expr expr = do
     let inputs = expr ^. Expr.inputs
     graph <- State.getGraph
@@ -53,7 +53,8 @@ graph2expr expr = do
     let body = reverse $ case mo of
                 Nothing -> b
                 Just o  -> o : b
-    return (expr & Expr.body .~ body)
+    pm <- State.getPropertyMap
+    return (expr & Expr.body .~ body, pm)
 
 
 parseNode :: [Expr] ->  (Node.ID, Node) -> GPPass ()
@@ -143,20 +144,20 @@ parseListNode nodeID = do
 addExpr :: Node.ID -> Expr -> GPPass ()
 addExpr nodeID e = do
     folded         <- State.hasFlag nodeID Attributes.astFolded
-    noAssignement  <- State.hasFlag nodeID Attributes.astNoAssignment
+    assignement    <- State.hasFlag nodeID Attributes.astAssignment
     defaultNodeGen <- State.hasFlag nodeID Attributes.defaultNodeGenerated
 
     if folded || defaultNodeGen
         then State.addToNodeMap (nodeID, Port.All) e
-        else if noAssignement
-            then do State.addToNodeMap (nodeID, Port.All) e
-                    State.addToBody e
-            else do outName <- State.getNodeOutputName nodeID
+        else if assignement
+            then do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName
                         a = Expr.Assignment IDFixer.unknownID p e
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
+            else do State.addToNodeMap (nodeID, Port.All) e
+                    State.addToBody e
 
 
 isOperator :: String -> Bool

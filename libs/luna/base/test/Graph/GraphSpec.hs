@@ -9,22 +9,23 @@ module Graph.GraphSpec where
 
 import Test.Hspec
 
-import qualified Flowbox.Luna.Data.Graph.Edge                      as Edge
-import           Flowbox.Luna.Data.Graph.Graph                     (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                     as Graph
-import qualified Flowbox.Luna.Data.Graph.Node                      as Node
-import qualified Flowbox.Luna.Data.Graph.Port                      as Port
-import           Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer (clearIDs)
+import qualified Flowbox.Luna.Data.Graph.Edge                        as Edge
+import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph                       as Graph
+import qualified Flowbox.Luna.Data.Graph.Node                        as Node
+import qualified Flowbox.Luna.Data.Graph.Port                        as Port
+import           Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer   (clearIDs)
+import           Flowbox.Luna.Passes.Transform.Graph.Node.OutputName (fixEmpty')
 import           Flowbox.Prelude
-import           Graph.Common                                      (named)
-import qualified Graph.Common                                      as Common
-import           Graph.SampleCodes                                 (sampleCodes)
-
+import           Graph.Common                                        (named)
+import qualified Graph.Common                                        as Common
+import           Graph.SampleCodes                                   (sampleCodes)
+import qualified Graph.SampleCodes                                   as SampleCodes
 
 
 backAndForth :: String -> IO ()
 backAndForth code = do
-    ast        <- Common.getAST code
+    ast         <- Common.getAST code
     (graph, pm) <- Common.getGraph def ast
     --printLn
     --print ast
@@ -32,34 +33,33 @@ backAndForth code = do
     --print graph
     --print pm
     --printLn
-    ast2         <- Common.getExpr graph pm ast
-    (graph2, pm2) <- Common.getGraph def ast
+    (ast2  , pm2) <- Common.getExpr graph pm ast
+    (graph3, pm3) <- Common.getGraph pm2 ast2
 
     expr  <- Common.getMain (clearIDs 0 ast)
     expr2 <- Common.getMain (clearIDs 0 ast2)
 
     expr2  `shouldBe` expr
-    graph2 `shouldBe` graph
-    pm2    `shouldBe` pm
+    graph3 `shouldBe` graph
+    pm3    `shouldBe` pm2
 
 
 backAndForth2 :: Graph -> IO ()
 backAndForth2 graph = do
-    emptyAst <- Common.getAST "def main"
-    printLn
-    print emptyAst
-    printLn
-    print graph
-    let emptyPM = def
-    ast         <- Common.getExpr graph emptyPM emptyAst
-    printLn
-    print ast
-    (graph2, pm) <- Common.getGraph emptyPM ast
-    printLn
-    print graph2
-    printLn
-    print pm
-    printLn
+    emptyAst <- Common.getAST SampleCodes.emptyMain
+    --printLn
+    --print emptyAst
+    --printLn
+    --print graph
+    (ast, pm) <- Common.getExpr graph def emptyAst
+    --printLn
+    --print ast
+    (graph2, pm2) <- Common.getGraph pm ast
+    --printLn
+    --print graph2
+    --printLn
+    --print pm
+    --printLn
     graph2 `shouldBe` graph
 
     --ast2           <- Common.getExpr graph2 pm ast
@@ -74,14 +74,14 @@ sampleGraphs =
     [ named "simple graph 1"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        ,( 100, Node.Expr "main2" "mainResult" (0, 1))
+        , fixEmpty' (100, Node.Expr "main2" "" (0, 1))
         ,(-3, Node.Outputs        (0, 2))
         ]
         []
     , named "simple graph 2"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        ,( 100, Node.Expr "main" "mainResult" (0, 1))
+        , fixEmpty' (100, Node.Expr "main" "" (0, 1))
         ,(-3, Node.Outputs        (0, 2))
         ]
         []

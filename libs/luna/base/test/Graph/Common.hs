@@ -12,8 +12,8 @@ module Graph.Common where
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs                                 (Breadcrumbs)
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                       as Crumb
+import           Flowbox.Luna.Data.AST.Expr                                              (Expr)
 import           Flowbox.Luna.Data.AST.Module                                            (Module)
-import           Flowbox.Luna.Data.AST.Expr                                            (Expr)
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus                                      as Focus
 import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                                     as Zipper
 import           Flowbox.Luna.Data.Graph.Graph                                           (Graph)
@@ -66,18 +66,18 @@ getGraph pm ast = eitherStringToM' $ runEitherT $ do
     EitherT $ GraphBuilder.run aliasInfo pm expr
 
 
-getExpr :: Graph -> PropertyMap -> Module -> IO Module
+getExpr :: Graph -> PropertyMap -> Module -> IO (Module, PropertyMap)
 getExpr graph pm ast = eitherStringToM' $ runEitherT $ do
 
     zipper <- hoistEither $ Zipper.focusBreadcrumbs' mainBC ast
 
     expr  <- Focus.getFunction (Zipper.getFocus zipper) <??> "test.Common.getExpr : Target is not a function"
 
-    modExpr   <- EitherT $ GraphParser.run graph pm expr
-    maxID     <- EitherT $ MaxID.runExpr modExpr
-    fixedExpr <- EitherT $ IDFixer.runExpr maxID Nothing False modExpr
+    (expr2', pm2) <- EitherT $ GraphParser.run graph pm expr
+    maxID         <- EitherT $ MaxID.runExpr expr2'
+    expr2         <- EitherT $ IDFixer.runExpr maxID Nothing False expr2'
 
-    return $ Zipper.close $ Zipper.modify (const $ Focus.Function fixedExpr) zipper
+    return (Zipper.close $ Zipper.modify (const $ Focus.Function expr2) zipper, pm2)
 
 
 getMain :: Module -> IO Expr
