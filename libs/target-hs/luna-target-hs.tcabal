@@ -8,13 +8,14 @@ Build-Type:     Simple
 
 
 Library
-  Hs-Source-Dirs: src
+  Hs-Source-Dirs: src, libs
   GHC-Options:    -O2
                   -- -Wall
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse
 
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*old\.hs)')`
+  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*old\.hs)')`,
+                   `findmodules('libs', '.*\.hs', exclude='(.*old\.hs)')`
 
 
   Build-Depends:  base,

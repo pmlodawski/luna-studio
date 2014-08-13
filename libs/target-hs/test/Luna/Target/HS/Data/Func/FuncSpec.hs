@@ -44,32 +44,32 @@ argSet1_p123 = (mkArg 1 :: Named "arg1" (Untyped (Provided Int))) // (mkArg 2 ::
 main = hspec spec
 
 spec = do
-        describe "Arg application" $ do
-            describe "Single argument application" $ do
-                it "Unprovided arg" $ appArg (1::Int) (mkArg   :: Unnamed (Untyped Unprovided))     `shouldBe` ( Unnamed (Untyped (Provided 1)) :: (Unnamed (Untyped (Provided Int))) )
-                it "Default arg"    $ appArg (1::Int) (mkArg 0 :: Unnamed (Untyped (Default Int)))  `shouldBe` ( Unnamed (Untyped (Provided 1)) :: (Unnamed (Untyped (Provided Int))) )
-                it "Provided arg"   $ appArg (1::Int) (mkArg 0 :: Unnamed (Untyped (Provided Int))) `shouldBe` ( Unnamed (Untyped (Provided 1)) :: (Unnamed (Untyped (Provided Int))) )
+    describe "Arg application" $ do
+        describe "Single argument application" $ do
+            it "Unprovided arg" $ appArg (1::Int) (mkArg   :: Unnamed (Untyped Unprovided))     `shouldBe` ( Unnamed (Untyped (Provided 1)) :: (Unnamed (Untyped (Provided Int))) )
+            it "Default arg"    $ appArg (1::Int) (mkArg 0 :: Unnamed (Untyped (Default Int)))  `shouldBe` ( Unnamed (Untyped (Provided 1)) :: (Unnamed (Untyped (Provided Int))) )
+            it "Provided arg"   $ appArg (1::Int) (mkArg 0 :: Unnamed (Untyped (Provided Int))) `shouldBe` ( Unnamed (Untyped (Provided 1)) :: (Unnamed (Untyped (Provided Int))) )
 
-            describe "Multi argument application" $ do
-                it "1 arg app" $ appNextArg (1::Int) argSet1     `shouldBe` argSet1_p1
-                it "2 arg app" $ appNextArg (2::Int) argSet1_p1  `shouldBe` argSet1_p12
-                it "3 arg app" $ appNextArg (3::Int) argSet1_p12 `shouldBe` argSet1_p123
+        describe "Multi argument application" $ do
+            it "1 arg app" $ appNextArg (1::Int) argSet1     `shouldBe` argSet1_p1
+            it "2 arg app" $ appNextArg (2::Int) argSet1_p1  `shouldBe` argSet1_p12
+            it "3 arg app" $ appNextArg (3::Int) argSet1_p12 `shouldBe` argSet1_p123
 
-            describe "Keyword based application" $ do
-                it "1st arg app"        $ appArgByName (Proxy::Proxy "arg1") (1::Int) argSet1                                               `shouldBe` argSet1_p1
-                it "2st arg app"        $ appArgByName (Proxy::Proxy "arg2") (2::Int) argSet1                                               `shouldBe` argSet1_p2
-                it "double arg setting" $ appArgByName (Proxy::Proxy "arg2") (2::Int) (appArgByName (Proxy::Proxy "arg2") (3::Int) argSet1) `shouldBe` argSet1_p2
+        describe "Keyword based application" $ do
+            it "1st arg app"        $ appArgByName (Proxy::Proxy "arg1") (1::Int) argSet1                                               `shouldBe` argSet1_p1
+            it "2st arg app"        $ appArgByName (Proxy::Proxy "arg2") (2::Int) argSet1                                               `shouldBe` argSet1_p2
+            it "double arg setting" $ appArgByName (Proxy::Proxy "arg2") (2::Int) (appArgByName (Proxy::Proxy "arg2") (3::Int) argSet1) `shouldBe` argSet1_p2
 
-            describe "Argument reading" $ do
-                it "Reading all args"     $ readArgs argSet1_p123 `shouldBe` ((1::Int)//(2::Int)//(3::Int)//())
-                it "Reading default args" $ readArgs argSet1_p12  `shouldBe` ((1::Int)//(2::Int)//(0::Int)//())
+        describe "Argument reading" $ do
+            it "Reading all args"     $ readArgs argSet1_p123 `shouldBe` ((1::Int)//(2::Int)//(3::Int)//())
+            it "Reading default args" $ readArgs argSet1_p12  `shouldBe` ((1::Int)//(2::Int)//(0::Int)//())
 
-        describe "Function call" $ do
-            it "Default args function call" $ call handler1_d `shouldBe` ((1,2)::(Int,Int))
+    describe "Function call" $ do
+        it "Default args function call" $ call handler1_d `shouldBe` ((1,2)::(Int,Int))
 
-        describe "Func handler arg application" $ do
-            it "Simple arg app" $ appNext (1::Int) handler1 `shouldBe` handler1_p1
-            it "Auto call"      $ (curryNext (2::Int) $ curryNext (1::Int) handler1) `shouldBe` ((1,2)::(Int,Int))
+    describe "Func handler arg application" $ do
+        it "Simple arg app" $ appNext (1::Int) handler1 `shouldBe` handler1_p1
+        it "Auto call"      $ (curryNext (2::Int) $ curryNext (1::Int) handler1) `shouldBe` ((1,2)::(Int,Int))
 
     putStrLn ""
 
