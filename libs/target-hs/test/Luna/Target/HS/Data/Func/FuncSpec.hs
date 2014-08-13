@@ -41,8 +41,9 @@ argSet1_p123 = (mkArg 1 :: Named "arg1" (Untyped (Provided Int))) // (mkArg 2 ::
 
 ----------------------------------------------------------------------------
 
-main = do
-    hspec $ do
+main = hspec spec
+
+spec = do
         describe "Arg application" $ do
             describe "Single argument application" $ do
                 it "Unprovided arg" $ appArg (1::Int) (mkArg   :: Unnamed (Untyped Unprovided))     `shouldBe` ( Unnamed (Untyped (Provided 1)) :: (Unnamed (Untyped (Provided Int))) )

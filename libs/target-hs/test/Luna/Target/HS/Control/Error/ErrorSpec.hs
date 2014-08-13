@@ -62,8 +62,9 @@ summe' = liftErr2 summe
 
 
 
-main = do
-    hspec $ do
+main = hspec spec
+
+spec = do
         describe "Touching values" $ do
             it "safe touch"             $ touchErr E1 v    `shouldBe` (UnsafeValue 1 :: UnsafeBase Safe E1 Int)
             it "simple unsafe touch"    $ touchErr E1 e12  `shouldBe` (Error E1 :: UnsafeBase (UnsafeBase Safe E2) E1 Int)

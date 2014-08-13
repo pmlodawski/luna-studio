@@ -37,8 +37,9 @@ instance Eq a => Eq (IO a) where
     a == b = unsafePerformIO a == unsafePerformIO b 
     a /= b = unsafePerformIO a /= unsafePerformIO b 
 
-main = do
-    hspec $ do
+main = hspec spec
+
+spec = do
         describe "Running monads" $ do
             it "running single monad"          $ runStateTX getX   0                         `shouldBeStrict` (Pure (0,0))
             it "monad mono-concatenation"      $ (flip runStateTX  0 $ getX `bindEnv_` getX) `shouldBeStrict` (Pure (0,0))
