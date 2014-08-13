@@ -19,6 +19,9 @@ from utils.errors      import fatal
 from utils.net         import download
 from utils.system      import platformFix
 import argparse
+import tempfile
+import glob
+from contextlib import contextmanager
 
 SILENTINSTALL = False
 
@@ -43,12 +46,17 @@ def checkAvailable(name):
         print_info("yes")
         return True
 
-def checkCabalPkg(name, version=""):
+def checkCabalPkg(name, version="", installUsing=None):
     if not checkAvailable(name):
         if ask ("Cabal binary '%s' is not available. Should I install it?" % name):
             pkg = name
             if version: pkg += "-%s" % version
-            try_call("cd && cabal install %s" % pkg)
+            if installUsing == None:
+                installUsing = "cd && cabal install %s" % pkg
+            if not issubclass (type(installUsing), str):
+                installUsing = installUsing(name, version)
+            try_call(installUsing)
+
         else: fatal ()
 
 def checkCabalVersion():
@@ -59,12 +67,12 @@ def checkCabalVersion():
     if not LooseVersion(out) >= LooseVersion(minv): return (False, "Your %s version is too old (%s)" % ("cabal", out))
     else: return (True, None)
 
-def checkInstall(name, installCmd, chckf):
+def checkInstall(name, installUsing, chckf):
     (ok, err) = chckf()
     if not ok:
         print_error (err)
-        if ask("Should I install it? (%s)" % installCmd):
-            try_call(installCmd)
+        if ask("Should I install it? (%s)" % installUsing):
+            try_call(installUsing)
             (ok, err) = chckf()
             if not ok:
                 print_error("Running install command didn't fix the issue!")
@@ -127,6 +135,38 @@ def removeIfExists(pathToRemove):
         os.remove(pathToRemove)
 
 
+@contextmanager
+def temporary_directory():
+    tmpdir = tempfile.mkdtemp(prefix='flowbox-init')
+    yield tmpdir
+    shutil.rmtree(tmpdir)
+
+@contextmanager
+def changed_cwd(newdir):
+    cwd = os.getcwd()
+    os.chdir(newdir)
+    yield
+    os.chdir(cwd)
+
+
+def install_from_sources(name, version=None):
+    with temporary_directory() as tmpPath:
+        with changed_cwd(tmpPath):
+            if version:
+                try_call('cabal get ' + name + "-" + version)
+            else:
+                try_call('cabal get ' + name)
+            [d] = glob.glob(name + "-*")
+            with changed_cwd(d):
+                try_call ('cabal clean; cabal install')
+
+def instal_c2hs(name, version):
+    install_from_sources('haskell-src-exts', version='1.13.5')
+    try_call('cd third-party/protocol-buffers && cabal install')
+    install_from_sources('hprotoc')
+    return (name + '-' + version)
+
+
 def main():
     if os.path.exists(sboxName):
         if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?"):
@@ -143,7 +183,11 @@ def main():
     global SILENTINSTALL
     SILENTINSTALL = args.SILENTINSTALL
 
+    print_info ("Updating git submodules")
+    try_call ('git submodule init')
+    try_call ('git submodule update')
 
+    print_info ("Fixing platform dependent stuff")
     platformFix(sboxName)
 
     assertInstall("cabal")
@@ -151,19 +195,13 @@ def main():
     print_info ("Updating cabal package cache")
     try_call('cd && cabal update')
 
-    checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", checkCabalVersion)
-
-    checkCabalPkg("hprotoc")
-    checkCabalPkg("c2hs", version="0.16.5")
-
+    checkInstall("cabal", installUsing="cabal install cabal-install", chckf=checkCabalVersion)
+    checkCabalPkg("c2hs", version="0.16.5", installUsing=instal_c2hs)
+    checkInstall("cabal", installUsing="cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", checkCabalVersion)
 
     print_info ("Generating Protocol Buffers files using genproto")
     path = os.path.join(rootPath, 'scripts', 'genproto')
     try_call ('python2.7 %s' % path)
-
-
-    try_call ('git submodule init')
-    try_call ('git submodule update')
 
     print_info ("Generating cabal configs using gencabal")
     path = os.path.join(rootPath, 'scripts', 'gencabal')
@@ -178,3 +216,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
