@@ -11,13 +11,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Luna.Target.HS.Data.Func.Tests where
+module Luna.Target.HS.Data.Func.FuncSpec where
 
 import Data.Typeable
 import Flowbox.Test.QuickCheck
 import Luna.Target.HS.Data.Func
 import Data.TupleList
-
+import Prelude
 
 
 data Vector = Vector deriving (Show, Eq, Typeable)

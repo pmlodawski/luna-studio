@@ -32,3 +32,15 @@ Library
 
 
 
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  hspec,
+                  luna-target-hs,
+                  mtl,
+                  transformers

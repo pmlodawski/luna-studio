@@ -23,6 +23,8 @@ def main():
     sboxEnv   = "FDEV_TARGETS"
     os.chdir(rootPath)
 
+    cabalExec = os.path.join(rootPath, "third-party/HaskellBooster/shell/cabal!")
+
     pkgNames = []
     args = ["--show-details=streaming"]
     for arg in sys.argv[1:]:
@@ -48,7 +50,7 @@ def main():
         os.chdir(pkg.path)
         if not os.path.isfile("cabal.sandbox.config"):
             handle_out(call("cabal sandbox init --sandbox %s" % pkg.sbox, shell=True))
-        handle_out(call("cabal test --builddir=%s %s" % (pkg.sbox, ' '.join(args)), shell=True))
+        handle_out(call("%s test --builddir=%s %s" % (cabalExec, pkg.sbox, ' '.join(args)), shell=True))
 
 main()
 

@@ -26,7 +26,7 @@
 !{-# LANGUAGE RightSideContexts #-}
 !{-# LANGUAGE Python #-}
 
-module Luna.Target.HS.Control.Error.Tests where
+module Luna.Target.HS.Control.Error.ErrorSpec where
 
 import Control.Applicative  
 import Control.Monad.IO.Class
@@ -39,6 +39,7 @@ import Flowbox.Test.QuickCheck
 import Luna.Target.HS.Control.Error
 import Luna.Target.HS.Control.Flow
 import Flowbox.Utils
+import Prelude
 
 
 ------------------------------------------------------------------------

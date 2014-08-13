@@ -25,12 +25,13 @@
 
 !{-# LANGUAGE RightSideContexts #-}
 
-module Luna.Target.HS.Control.Context.Tests where
+module Luna.Target.HS.Control.Context.ContextSpec where
 
 import Flowbox.Test.QuickCheck
 import Luna.Target.HS.Control.Context
 import Luna.Target.HS.Utils.BaseMonads
 import System.IO.Unsafe
+import Prelude
 
 instance Eq a => Eq (IO a) where
     a == b = unsafePerformIO a == unsafePerformIO b 
