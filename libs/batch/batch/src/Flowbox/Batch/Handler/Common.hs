@@ -54,7 +54,7 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphPar
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults    as Defaults
 import           Flowbox.Prelude                                     hiding (error)
 import           Flowbox.System.Log.Logger
-
+import           Text.Show.Pretty
 
 
 logger :: LoggerIO
@@ -207,6 +207,7 @@ setClassFocus newClass = setFocus (Focus.Class newClass)
 getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (Graph, PropertyMap)
 getGraph bc libraryID projectID = do
     ast         <- getAST libraryID projectID
+    putStrLn $ ppShow ast
     propertyMap <- getPropertyMap libraryID projectID
     expr        <- getFunctionFocus bc libraryID projectID
     aa          <- EitherT $ Alias.run ast

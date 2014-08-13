@@ -66,9 +66,15 @@ toGraph gv pm = do
 
 applyEdgeView :: (Graph, PropertyMap) -> LEdge EdgeView -> Either String (Graph, PropertyMap)
 applyEdgeView (graph, pm) (src, dst, edgeview) = case edgeview of
-    EdgeView _   []  -> Left "Destination port descriptor should have at least one element"
-    EdgeView []  [d] -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All    d) graph, pm)
-    EdgeView [s] [d] -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s) d) graph, pm)
+    EdgeView _     []  -> Left "Destination port descriptor should have at least one element"
+    EdgeView []    [d] -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All    d) graph, pm)
+    EdgeView [s]   [d] -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s) d) graph, pm)
+    EdgeView (h:t)  d  -> applyEdgeView (newGraph, newPm) (getNodeID, dst, EdgeView t d) where
+        getNode             = Node.Expr ("get" ++ show h) "" (0, 0)
+        (graph1, getNodeID) = Graph.insNewNode getNode graph
+        newGraph            = Graph.insEdge (src, getNodeID, Edge.Data (Port.Num h) 0) graph1
+        newPm               = pm
+
 
 
 

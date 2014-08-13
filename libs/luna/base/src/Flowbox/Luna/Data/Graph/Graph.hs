@@ -50,5 +50,9 @@ createMonadicEdges = List.merge mkMonEdge . map fst . sort where
     mkMonEdge a b = (a, b, Edge.Monadic)
 
 
+addMonadicEdges :: Graph -> Graph
+addMonadicEdges graph = DG.insEdges (createMonadicEdges graph) graph
+
+
 lprelData :: Graph -> Node.ID -> [(Node.ID, Node, Edge)]
 lprelData = filter (Edge.isData . view _3) .: DG.lprel
