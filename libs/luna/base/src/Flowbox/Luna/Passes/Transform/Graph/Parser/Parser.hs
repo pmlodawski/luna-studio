@@ -157,11 +157,7 @@ addExpr nodeID e = do
         assignmentCount = length $ List.filter assignmentEdge
                                  $ Graph.lsuclData graph nodeID
 
-        foldedImplicit = not assignment && assignmentCount == 1 && case e of
-            Expr.Var {} -> True
-            _           -> False
-
-    if folded || defaultNodeGen || foldedImplicit
+    if folded || defaultNodeGen
         then State.addToNodeMap (nodeID, Port.All) e
         else if assignment || assignmentCount > 0
             then do outName <- State.getNodeOutputName nodeID

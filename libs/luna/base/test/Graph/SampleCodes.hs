@@ -18,7 +18,9 @@ import Graph.Common    (named)
 
 
 sampleCodes :: [(String,String)]
-sampleCodes = [named "simple return" [r|
+sampleCodes = [named "empty" [r|
+def main
+|], named "simple return" [r|
 def main:
     1
 |], named "simple infix" [r|

@@ -207,15 +207,19 @@ setClassFocus newClass = setFocus (Focus.Class newClass)
 getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (Graph, PropertyMap)
 getGraph bc libraryID projectID = do
     ast         <- getAST libraryID projectID
-    putStrLn $ ppShow ast
+    logger trace $ ppShow ast
     propertyMap <- getPropertyMap libraryID projectID
     expr        <- getFunctionFocus bc libraryID projectID
     aa          <- EitherT $ Alias.run ast
-    EitherT $ GraphBuilder.run aa propertyMap expr
+    result <- EitherT $ GraphBuilder.run aa propertyMap expr
+    logger trace $ ppShow result
+    return result
 
 
 setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setGraph (newGraph, newPM) bc libraryID projectID = do
+    logger trace  $ ppShow newGraph
+    logger trace $ ppShow newPM
     expr <- getFunctionFocus bc libraryID projectID
     (ast, newPM2)  <- EitherT $ GraphParser.run newGraph newPM expr
 

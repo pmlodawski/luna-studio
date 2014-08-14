@@ -54,10 +54,12 @@ run aliasInfo pm expr = Pass.run_ (Pass.Info "GraphBuilder")
 expr2graph :: Expr -> GBPass (Graph, PropertyMap)
 expr2graph (Expr.Function i _ _ inputs output body) = do
     (inputsID, outputID) <- prepareInputsOutputs i (output ^. Type.id)
-    unless (null body) $ do
-        parseArgs inputsID inputs
-        mapM_ (buildNode False True Nothing) $ init body
-        buildOutput outputID $ last body
+    parseArgs inputsID inputs
+    if null body
+        then State.connectMonadic outputID
+        else do
+            mapM_ (buildNode False True Nothing) $ init body
+            buildOutput outputID $ last body
     finalize
 expr2graph _ = left "expr2graph: Unsupported Expr type"
 

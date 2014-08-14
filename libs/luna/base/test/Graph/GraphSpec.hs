@@ -104,12 +104,32 @@ sampleGraphs =
         [(100, -3, Edge.Data Port.All 2)
         ,(100, -3, Edge.Data Port.All 3)
         ]
+    , named "simple graph 5"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "main" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 3))
+        ]
+        [(100, -3, Edge.Data (Port.All) 0)]
+    , named "simple graph 6"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "main" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 3))
+        ]
+        [(-2,100, Edge.Data (Port.Num 0) 0)
+        ,(100, -3, Edge.Data (Port.All) 0)
+        ]
     ]
 
 
 buggyGraphs :: [(String, Graph)]
 buggyGraphs =
-    [ named "buggy graph 1"
+    [ named "empty"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        []
+        []
+    , named "buggy graph 1"
     $ Graph.mkGraph
         [(100, Node.Expr "main" "" (0, 1))]
         []
