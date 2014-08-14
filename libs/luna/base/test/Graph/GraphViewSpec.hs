@@ -24,21 +24,27 @@ import           Graph.SampleCodes                     (sampleCodes)
 backAndForth :: String -> IO ()
 backAndForth code = do
     expr        <- Common.getAST code
-    (graph, pm) <- Common.getGraph def expr
-    let graphview = GraphView.fromGraph graph
-    (graph2, pm2) <- eitherStringToM $ GraphView.toGraph graphview pm
+    (graph    , pm) <- Common.getGraph def expr
+    let (graphview, pm2) = GraphView.fromGraph graph pm
+    (graph3   , pm3) <- eitherStringToM $ GraphView.toGraph graphview pm2
 
-    graph `shouldBe` graph2
-    pm    `shouldBe` pm2
+    graph `shouldBe` graph3
+    pm    `shouldBe` pm3
 
 
 backAndForth2 :: GraphView -> IO ()
 backAndForth2 graphview = do
     let emptyPM    = def
-    (graph, pm)   <- eitherStringToM $ GraphView.toGraph graphview emptyPM
-    let graphview2 = GraphView.fromGraph graph
+    --printLn
+    --print graphview
+    (graph, pm) <- eitherStringToM $ GraphView.toGraph graphview emptyPM
+    --printLn
+    --print graph
+    --printLn
+    let (graphview2, pm2) = GraphView.fromGraph graph pm
 
     graphview2 `shouldBe` graphview
+    pm2        `shouldBe` emptyPM
 
 
 main :: IO ()
@@ -49,20 +55,24 @@ sampleGraphs :: [(String, GraphView)]
 sampleGraphs =
     [ named "simple graphview"
     $ GraphView.mkGraph
-        [(0, Node.Expr "foo" "" (0, 0))
-        ,(1, Node.Expr "bar" "" (1, 1))
-        ,(2, Node.Expr "baz" "" (0, 0))
+        [(-1, Node.Inputs  (0, 0))
+        ,(-2, Node.Outputs (0, 0))
+        ,(0 , Node.Expr "foo" "" (0, 0))
+        ,(1 , Node.Expr "bar" "" (1, 1))
+        ,(2 , Node.Expr "baz" "" (0, 0))
         ]
-        [(0, 1, EdgeView [0] [1])
-        ,(0, 1, EdgeView []  [2])
-        ,(1, 2, EdgeView [1] [0])
-        ,(1, 2, EdgeView []  [3])
+        [(0 , 1, EdgeView [0] [1])
+        ,(0 , 1, EdgeView []  [2])
+        ,(1 , 2, EdgeView [1] [0])
+        ,(1 , 2, EdgeView []  [3])
         ]
     , named "graphview with in-ports"
     $ GraphView.mkGraph
-        [(0, Node.Expr "foo" "" (0, 0))
-        ,(1, Node.Expr "bar" "" (1, 1))
-        ,(2, Node.Expr "baz" "" (0, 0))
+        [(-1, Node.Inputs  (0, 0))
+        ,(-2, Node.Outputs (0, 0))
+        ,(0 , Node.Expr "foo" "" (0, 0))
+        ,(1 , Node.Expr "bar" "" (1, 1))
+        ,(2 , Node.Expr "baz" "" (0, 0))
         ]
         [(0, 1, EdgeView [0, 2] [1])
         ,(0, 1, EdgeView [] [2])
@@ -71,9 +81,11 @@ sampleGraphs =
         ]
     , named "graphview with out-ports"
     $ GraphView.mkGraph
-        [(0, Node.Expr "foo" "" (0, 0))
-        ,(1, Node.Expr "bar" "" (1, 1))
-        ,(2, Node.Expr "baz" "" (0, 0))
+        [(-1, Node.Inputs  (0, 0))
+        ,(-2, Node.Outputs (0, 0))
+        ,(0 , Node.Expr "foo" "" (0, 0))
+        ,(1 , Node.Expr "bar" "" (1, 1))
+        ,(2 , Node.Expr "baz" "" (0, 0))
         ]
         [(0, 1, EdgeView [0] [1])
         ,(0, 1, EdgeView []  [2])
@@ -82,9 +94,11 @@ sampleGraphs =
         ]
     , named "graphview with in-ports and out-ports"
     $ GraphView.mkGraph
-        [(0, Node.Expr "foo" "" (0, 0))
-        ,(1, Node.Expr "bar" "" (1, 1))
-        ,(2, Node.Expr "baz" "" (0, 0))
+        [(-1, Node.Inputs  (0, 0))
+        ,(-2, Node.Outputs (0, 0))
+        ,(0 , Node.Expr "foo" "" (0, 0))
+        ,(1 , Node.Expr "bar" "" (1, 1))
+        ,(2 , Node.Expr "baz" "" (0, 0))
         ]
         [(0, 1, EdgeView [0, 2]    [1])
         ,(0, 1, EdgeView [1, 2, 3] [2])

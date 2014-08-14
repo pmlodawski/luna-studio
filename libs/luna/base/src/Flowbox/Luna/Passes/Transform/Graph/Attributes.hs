@@ -29,3 +29,7 @@ astAssignment = "AST-assignment"
 
 nodePosition :: String
 nodePosition = "Node-position"
+
+
+graphViewGenerated :: String
+graphViewGenerated = "GraphView-generated"
