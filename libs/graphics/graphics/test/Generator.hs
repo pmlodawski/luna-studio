@@ -32,8 +32,9 @@ import Flowbox.Graphics.Utils
 import Linear.V2
 import Math.Space.Space
 import Math.Metric
-import Math.Coordinate.Cartesian
 import qualified Math.Coordinate.Polar as Polar
+import qualified Math.Coordinate.Cartesian as Cartesian
+import Math.Coordinate.Coordinate (convertCoord)
 import Data.Array.Accelerate (index2, Boundary(..))
 
 import Utils
@@ -200,7 +201,7 @@ rotateGen phi grid gen = monosampler $ translate (V2 rx ry)
           Grid rx ry = fmap (/ (2)) $ bbox phi size
 
 lineGen :: DiscreteGenerator (Exp Float)
-lineGen = Generator $ \(Point2 x y) -> A.cond (y ==* 1) 1 0
+lineGen = Generator $ \(Cartesian.Point2 x y) -> A.cond (y ==* 1) 1 0
 
 motionBlur' :: (Elt a, IsFloating a) =>  Exp a -> Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
 motionBlur' alpha grid kernel = Stencil.normStencil (+) (fmap A.ceiling $ bbox alpha $ fmap A.fromIntegral grid) (rotateGen alpha grid kernel) (+) 0
@@ -209,7 +210,30 @@ radialBlurTest :: IO ()
 radialBlurTest = do
     (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
 
-    let process x = rasterizer 512 $ fromMatrix Clamp x
+    let remap = S.transform $ \(Polar.Point2 x y) -> Cartesian.Point2 x (y / (2 * pi) * 512)
+
+    let remap' = S.transform $ \(Cartesian.Point2 x' y') -> Polar.Point2 x' (y')
+
+    let flt = normalize $ toMatrix 10 $ gauss 1.0
+
+    let wrap x = monosampler
+               $ translate (256)
+               $ S.transform (Polar.toPolar (512 :: Grid (Exp Float))) 
+               $ remap
+               $ translate (-256)
+               $ nearest x
+               
+
+    let unwrap x = Conv.filter 2 flt 
+                 $ monosampler 
+                 $ translate (256)
+                 $ S.transform (\(Cartesian.Point2 x y) -> Polar.Point2 x (y * (2 * pi) / 512))
+                 $ S.transform (convertCoord Cartesian.Cartesian (512 :: Grid (Exp Float))) 
+                 $ translate (-256)
+                 $ nearest
+                 $ fromMatrix (Clamp) x
+
+    let process = rasterizer 512 . wrap . unwrap
     print "Szatan"
     testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
