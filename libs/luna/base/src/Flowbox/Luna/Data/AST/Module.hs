@@ -17,10 +17,13 @@ import           Flowbox.Luna.Data.AST.Expr      (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr      as Expr
 import           Flowbox.Luna.Data.AST.Lit       (Lit)
 import           Flowbox.Luna.Data.AST.Pat       (Pat)
+import qualified Flowbox.Luna.Data.AST.Pat       as Pat
 import           Flowbox.Luna.Data.AST.Type      (Type)
 import qualified Flowbox.Luna.Data.AST.Type      as Type
 import           Flowbox.Prelude                 hiding (Traversal, drop, id, mod)
 import           GHC.Generics                    (Generic)
+
+
 
 type Traversal m = (Functor m, Applicative m, Monad m)
 
@@ -33,7 +36,7 @@ data Module = Module { _id          :: ID
                      , _fields      :: [Expr]
                      , _methods     :: [Expr]
                      , _modules     :: [Module]
-                     } deriving (Show, Generic, Read)
+                     } deriving (Show, Generic, Read, Eq)
 
 instance QShow Module
 makeLenses (''Module)
@@ -102,6 +105,13 @@ traverseM_ fmod fexp ftype _{-fpat-} _{-flit-} mod = case mod of
           fexpMap = mapM_ fexp
           fmodMap = mapM_ fmod
 
+
+traverseMR :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Module -> m Module
+traverseMR fmod fexp ftype fpat flit = tfmod where
+    tfmod m = fmod =<< traverseM tfmod tfexp tftype tfpat flit m
+    tfexp   = Expr.traverseMR fexp ftype fpat flit
+    tfpat   = Pat.traverseMR fpat ftype flit
+    tftype  = Type.traverseMR ftype
 
 --traverseM' :: Traversal m => (Expr -> m Expr) -> Module -> m Module
 --traverseM' fexp mod = traverseM fexp pure pure pure mod

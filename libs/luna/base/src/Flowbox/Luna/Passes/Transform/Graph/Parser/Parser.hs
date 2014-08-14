@@ -10,8 +10,9 @@
 
 module Flowbox.Luna.Passes.Transform.Graph.Parser.Parser where
 
-import Control.Monad.State
-import Control.Monad.Trans.Either
+import           Control.Monad.State
+import           Control.Monad.Trans.Either
+import qualified Data.List                  as List
 
 import           Flowbox.Luna.Data.AST.Expr                         (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                         as Expr
@@ -39,11 +40,11 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.Parser"
 
 
-run :: Graph -> PropertyMap -> Expr -> Pass.Result Expr
+run :: Graph -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)
 run gr pm = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr pm) . graph2expr
 
 
-graph2expr :: Expr -> GPPass Expr
+graph2expr :: Expr -> GPPass (Expr, PropertyMap)
 graph2expr expr = do
     let inputs = expr ^. Expr.inputs
     graph <- State.getGraph
@@ -53,7 +54,8 @@ graph2expr expr = do
     let body = reverse $ case mo of
                 Nothing -> b
                 Just o  -> o : b
-    return (expr & Expr.body .~ body)
+    pm <- State.getPropertyMap
+    return (expr & Expr.body .~ body, pm)
 
 
 parseNode :: [Expr] ->  (Node.ID, Node) -> GPPass ()
@@ -88,9 +90,11 @@ parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
+        []                -> whenM State.doesLastStatementReturn
+                                $ State.setOutput $ Expr.Tuple IDFixer.unknownID []
         [src@Expr.Var {}] -> State.setOutput src
+        [_]               -> return ()
         _:(_:_)           -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
-        _                 -> return ()
 
 
 parsePatNode :: Node.ID -> String -> GPPass ()
@@ -142,21 +146,28 @@ parseListNode nodeID = do
 
 addExpr :: Node.ID -> Expr -> GPPass ()
 addExpr nodeID e = do
+    graph          <- State.getGraph
+
     folded         <- State.hasFlag nodeID Attributes.astFolded
-    noAssignement  <- State.hasFlag nodeID Attributes.astNoAssignment
+    assignment     <- State.hasFlag nodeID Attributes.astAssignment
     defaultNodeGen <- State.hasFlag nodeID Attributes.defaultNodeGenerated
+
+
+    let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
+        assignmentCount = length $ List.filter assignmentEdge
+                                 $ Graph.lsuclData graph nodeID
 
     if folded || defaultNodeGen
         then State.addToNodeMap (nodeID, Port.All) e
-        else if noAssignement
-            then do State.addToNodeMap (nodeID, Port.All) e
-                    State.addToBody e
-            else do outName <- State.getNodeOutputName nodeID
+        else if assignment || assignmentCount > 0
+            then do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName
                         a = Expr.Assignment IDFixer.unknownID p e
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
+            else do State.addToNodeMap (nodeID, Port.All) e
+                    State.addToBody e
 
 
 isOperator :: String -> Bool

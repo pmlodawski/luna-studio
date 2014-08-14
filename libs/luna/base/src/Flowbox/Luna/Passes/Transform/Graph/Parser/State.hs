@@ -106,10 +106,10 @@ addToNodeMap :: (Node.ID, OutPort) -> Expr -> GPPass ()
 addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
 
 
-nodeMapLookUp :: (Node.ID, OutPort) -> GPPass Expr
-nodeMapLookUp key = do nm <- getNodeMap
-                       Map.lookup key nm <??> "GraphParser: nodeMapLookUp: Cannot find " ++ show key ++ " in nodeMap"
-
+nodeMapLookup :: (Node.ID, OutPort) -> GPPass Expr
+nodeMapLookup key = do
+    nm <- getNodeMap
+    Map.lookup key nm <??> "GraphParser: nodeMapLookup: Cannot find " ++ show key ++ " in nodeMap"
 
 
 getNodeSrcs :: Node.ID -> GPPass [Expr]
@@ -130,7 +130,7 @@ getNodeSrcs nodeID = do
 
 getNodeSrc :: Maybe (Node.ID, OutPort) -> GPPass Expr
 getNodeSrc Nothing  = return $ Expr.Wildcard IDFixer.unknownID
-getNodeSrc (Just a) = nodeMapLookUp a
+getNodeSrc (Just a) = nodeMapLookup a
 
 
 getNode :: Node.ID -> GPPass Node
@@ -162,3 +162,12 @@ setProperty nodeID key value =
 setPosition :: Node.ID -> (Float, Float) -> GPPass ()
 setPosition nodeID position =
     setProperty nodeID Attributes.nodePosition $ show position
+
+
+doesLastStatementReturn :: GPPass Bool
+doesLastStatementReturn = do
+    body' <- getBody
+    return $ case body' of
+        []                       -> False
+        (Expr.Assignment {} : _) -> False
+        _                        -> True

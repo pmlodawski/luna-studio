@@ -54,7 +54,7 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphPar
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults    as Defaults
 import           Flowbox.Prelude                                     hiding (error)
 import           Flowbox.System.Log.Logger
-
+import           Text.Show.Pretty
 
 
 logger :: LoggerIO
@@ -207,25 +207,30 @@ setClassFocus newClass = setFocus (Focus.Class newClass)
 getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (Graph, PropertyMap)
 getGraph bc libraryID projectID = do
     ast         <- getAST libraryID projectID
+    logger trace $ ppShow ast
     propertyMap <- getPropertyMap libraryID projectID
     expr        <- getFunctionFocus bc libraryID projectID
     aa          <- EitherT $ Alias.run ast
-    EitherT $ GraphBuilder.run aa propertyMap expr
+    result <- EitherT $ GraphBuilder.run aa propertyMap expr
+    logger trace $ ppShow result
+    return result
 
 
 setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setGraph (newGraph, newPM) bc libraryID projectID = do
+    logger trace  $ ppShow newGraph
+    logger trace $ ppShow newPM
     expr <- getFunctionFocus bc libraryID projectID
-    ast  <- EitherT $ GraphParser.run newGraph newPM expr
+    (ast, newPM2)  <- EitherT $ GraphParser.run newGraph newPM expr
 
     newMaxID <- EitherT $ MaxID.runExpr ast
     fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
 
     logger debug $ show newGraph
-    logger debug $ show newPM
+    logger debug $ show newPM2
     logger debug $ ppShow fixedAst
     setFunctionFocus fixedAst bc libraryID projectID
-    setPropertyMap newPM libraryID projectID
+    setPropertyMap newPM2 libraryID projectID
 
 
 getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (GraphView, PropertyMap)
