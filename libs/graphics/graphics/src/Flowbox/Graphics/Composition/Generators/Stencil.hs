@@ -12,7 +12,6 @@ module Flowbox.Graphics.Composition.Generators.Stencil where
 
 import Flowbox.Prelude                                    as P hiding (filter)
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Constant
 import Flowbox.Math.Matrix                                as M hiding (stencil)
 
 import qualified Data.Array.Accelerate                    as A
@@ -23,7 +22,7 @@ stencil :: forall a b c . (Elt a, IsNum a)
         => (Point2 c -> Point2 (Exp Int) -> Point2 b)
         -> Grid (Exp Int) -> DiscreteGenerator (Exp a)
         -> (Exp a -> Exp a -> Exp a) -> Exp a
-        -> Generator b (Exp a) -> Generator c (Exp a)
+        -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
 stencil mode (Grid width height) (Generator kernel) foldOp initVal (Generator input) = Generator $ \pos ->
     let get x' y' = input $ mode pos (Point2 x' y')
         outer :: (Exp Int, Exp a) -> (Exp Int, Exp a)
@@ -36,7 +35,7 @@ normStencil :: forall a b c . (Elt a, IsNum a, IsFloating a)
             => (Point2 c -> Point2 (Exp Int) -> Point2 b)
             -> Grid (Exp Int) -> DiscreteGenerator (Exp a)
             -> (Exp a -> Exp a -> Exp a) -> Exp a
-            -> Generator b (Exp a) -> Generator c (Exp a)
+            -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
 normStencil mode (Grid width height) (Generator kernel) foldOp initVal (Generator input) = Generator $ \pos ->
     let get x' y' = input $ mode pos (Point2 x' y')
 

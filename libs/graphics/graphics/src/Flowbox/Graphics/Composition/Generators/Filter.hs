@@ -138,7 +138,7 @@ scharr = M.fromList (Z :. 3 :. 3) [  -3, 0, 3
 -- == General convolutions ==
 
 convolve :: (IsNum a, Elt a) => (Point2 c -> Point2 (Exp Int) -> Point2 b)
-         -> Matrix2 a -> Generator b (Exp a) -> Generator c (Exp a)
+         -> Matrix2 a -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
 convolve mode kernel = stencil mode (Grid width height) (unsafeFromMatrix kernel) (+) 0
     where Z :. height :. width = A.unlift $ M.shape kernel
 

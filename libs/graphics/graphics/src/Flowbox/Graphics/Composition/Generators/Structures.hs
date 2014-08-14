@@ -14,28 +14,29 @@
 {-# LANGUAGE UndecidableInstances  #-}
 {-# LANGUAGE FlexibleContexts      #-}
 
-module Flowbox.Graphics.Composition.Generators.Structures (
-    module Flowbox.Graphics.Composition.Generators.Structures,
-    Point2
-) where
+module Flowbox.Graphics.Composition.Generators.Structures where
 
-import Flowbox.Prelude
+import Flowbox.Prelude hiding            (transform)
 
 import Data.Array.Accelerate
 import Data.Array.Accelerate.Array.Sugar
 import Data.Array.Accelerate.Smart
 import Data.Array.Accelerate.Tuple
 import Data.Typeable                     (Typeable)
-import Math.Coordinate.Cartesian
+import Data.Profunctor
+
+import           Math.Coordinate.Coordinate
+import qualified Math.Coordinate.Cartesian as Cartesian
 
 -- == Generator type ==
 
 newtype Generator a b = Generator {
-    runGenerator :: Point2 a -> b
+    runGenerator :: a -> b
 } deriving Functor
 
-type ContinousGenerator = Generator (Exp Double)
-type DiscreteGenerator = Generator (Exp Int)
+type CartesianGenerator a = Generator (Cartesian.Point2 a)
+type DiscreteGenerator = CartesianGenerator (Exp Int)
+type ContinousGenerator = CartesianGenerator (Exp Double)
 
 instance Applicative (Generator a) where
     pure v = Generator $ \_ -> v
@@ -61,8 +62,18 @@ instance Num b => Num (Generator a b) where
     fromInteger = pure . fromInteger
     {-# INLINE fromInteger #-}
 
-transform :: (Point2 a -> Point2 t) -> Generator t b -> Generator a b
-transform trans (Generator gen) = Generator $ \pixel -> gen (trans pixel)
+instance Profunctor Generator where
+    lmap f (Generator gen) = Generator $ gen . f
+    rmap = fmap
+
+transform :: (a -> t) -> Generator t b -> Generator a b
+transform = lmap
+
+-- == Coord conversions ==
+--instance ( CoordConversion convType sys space (h a) (f a)
+--         , CoordConversion convType sys space (g a) (h a)
+--         ) => CoordConversion convType sys space (Generator (f a) b) (Generator (g a) b) where
+--    convertCoordBase _ sys space = transform (convertCoordBase ManualConversion sys space)
 
 -- == Gradient tick type ==
 

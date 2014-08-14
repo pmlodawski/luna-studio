@@ -30,19 +30,19 @@ rotate' phi (Point2 x y) = Point2 x' y'
     where x' = cos phi * x - sin phi * y
           y' = sin phi * x + cos phi * y
 
-rotate :: (Num a, Floating a) => a -> Generator a b -> Generator a b
+rotate :: (Num a, Floating a) => a -> CartesianGenerator a b -> CartesianGenerator a b
 rotate = transform . rotate'
 
 translate' :: Num a => V2 a -> Point2 a -> Point2 a
 translate' (V2 dx dy) (Point2 x y) = Point2 (x - dx) (y - dy)
 
-translate :: Num a => V2 a -> Generator a b -> Generator a b
+translate :: Num a => V2 a -> CartesianGenerator a b -> CartesianGenerator a b
 translate = transform . translate'
 
 scale' :: (Num a, Fractional a) => V2 a -> Point2 a -> Point2 a
 scale' (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
 
-scale :: (Num a, Fractional a) => V2 a -> Generator a b -> Generator a b
+scale :: (Num a, Fractional a) => V2 a -> CartesianGenerator a b -> CartesianGenerator a b
 scale = transform . scale'
 
 bbox :: (Ord a, Floating a) => a -> Grid a -> Grid a

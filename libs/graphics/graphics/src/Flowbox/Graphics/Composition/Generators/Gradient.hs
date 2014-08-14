@@ -46,21 +46,21 @@ colorMapper ticks weightFun shapeGenerator = Generator $ \pixel ->
 
     in sfoldl findColor 0 index0 zippedTicks
 
-radialShape :: (Num b, MetricCoord a Cartesian, Metric a (Point2 b) c) => a -> Generator b c
-radialShape metric = Generator $ \pixel -> distanceBase metric (Point2 0 0) pixel
+radialShape :: (Num b, MetricCoord a Cartesian, Metric a b c) => a -> Generator b c
+radialShape metric = Generator $ \pixel -> distanceBase metric 0 pixel
 
-circularShape :: (Num a, Metric Euclidean (Point2 a) b) => Generator a b
+circularShape :: (Num a, Metric Euclidean a b) => Generator a b
 circularShape = radialShape Euclidean
 
-diamondShape :: (Num a, Metric Taxicab (Point2 a) b) => Generator a b
+diamondShape :: (Num a, Metric Taxicab a b) => Generator a b
 diamondShape = radialShape Taxicab
 
-squareShape :: (Num a, Metric Chebyshev (Point2 a) b) => Generator a b
+squareShape :: (Num a, Metric Chebyshev a b) => Generator a b
 squareShape  = radialShape Chebyshev
 
-conicalShape :: (Elt a, IsFloating a) => Generator (Exp a) (Exp a)
+conicalShape :: (Elt a, IsFloating a) => CartesianGenerator (Exp a) (Exp a)
 conicalShape = Generator $ \pixel -> let res = 1 - Cartesian.uncurry atan2 pixel / (2 * pi)
                                       in min (res A.>* 1 ? (res - 1, res)) 1
 
-linearShape :: Fractional a => Generator a a
+linearShape :: Fractional a => CartesianGenerator a a
 linearShape = Generator $ \(Point2 x _) -> x
