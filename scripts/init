@@ -202,6 +202,8 @@ def main():
     checkCabalPkg("c2hs", version="0.16.5", installUsing=instal_c2hs)
     checkInstall("cabal", installUsing="cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", chckf=checkCabalVersion)
 
+    checkCabalPkg("gtk2hs-buildtools")
+
     print_info ("Generating Protocol Buffers files using genproto")
     path = os.path.join(rootPath, 'scripts', 'genproto')
     try_call ('python2.7 %s' % path)

@@ -11,6 +11,9 @@ out
 #generated files
 gen
 
+# patch artifacts
+*.rej
+
 # OS X temp
 .DS_Store
 
