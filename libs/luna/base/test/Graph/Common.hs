@@ -17,7 +17,6 @@ import           Flowbox.Luna.Data.AST.Module                                   
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus                                      as Focus
 import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                                     as Zipper
 import           Flowbox.Luna.Data.Graph.Graph                                           (Graph)
-import           Flowbox.Luna.Data.Pass.AliasInfo                                        (AliasInfo)
 import           Flowbox.Luna.Data.Pass.Source                                           (Source (Source))
 import           Flowbox.Luna.Data.PropertyMap                                           (PropertyMap)
 import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                                as Analysis.Alias

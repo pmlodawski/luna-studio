@@ -108,7 +108,7 @@ buildNode astFolded monadicBind outName expr = case expr of
                                     connectMonadic i
                                     return i
     Expr.Assignment i pat dst -> do let patStr = Pat.lunaShow pat
-                                    if isRealPat pat dst
+                                    if isRealPat pat dst assignment
                                         then do patIDs <- buildPat pat
                                                 let node = Node.Expr ('=': patStr) (genName "pattern" i)
                                                 State.insNodeWithFlags (i, node) astFolded assignment
@@ -136,7 +136,7 @@ buildNode astFolded monadicBind outName expr = case expr of
                                     connectArg True True Nothing i (dst, 1)
                                     connectMonadic i
                                     return i
-    Expr.Var       i name     -> do isBound <- Maybe.isJust <$> State.aaLookUp i
+    Expr.Var       i name     -> do isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp i
                                     if astFolded && isBound
                                         then return i
                                         else do let node = Node.Expr name (genName name i)
@@ -198,10 +198,10 @@ connectArg astFolded monadicBind outName dstID (expr, dstPort) = do
         Just srcID -> State.connect srcID dstID dstPort
 
 
-isRealPat :: Pat -> Expr -> Bool
-isRealPat (Pat.Var {}) (Expr.Var {}) = True
-isRealPat (Pat.Var {}) _             = False
-isRealPat _ _                        = True
+isRealPat :: Pat -> Expr -> Bool -> Bool
+isRealPat (Pat.Var {}) (Expr.Var {}) True = True
+isRealPat (Pat.Var {}) _             _    = False
+isRealPat _ _                        _    = True
 
 
 buildPat :: Pat -> GBPass [AST.ID]

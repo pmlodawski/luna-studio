@@ -217,16 +217,16 @@ getGraph bc libraryID projectID = do
 setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setGraph (newGraph, newPM) bc libraryID projectID = do
     expr <- getFunctionFocus bc libraryID projectID
-    ast  <- EitherT $ GraphParser.run newGraph newPM expr
+    (ast, newPM2)  <- EitherT $ GraphParser.run newGraph newPM expr
 
     newMaxID <- EitherT $ MaxID.runExpr ast
     fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
 
     logger debug $ show newGraph
-    logger debug $ show newPM
+    logger debug $ show newPM2
     logger debug $ ppShow fixedAst
     setFunctionFocus fixedAst bc libraryID projectID
-    setPropertyMap newPM libraryID projectID
+    setPropertyMap newPM2 libraryID projectID
 
 
 getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (GraphView, PropertyMap)

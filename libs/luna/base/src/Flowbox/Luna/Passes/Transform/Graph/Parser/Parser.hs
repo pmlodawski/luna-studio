@@ -10,8 +10,9 @@
 
 module Flowbox.Luna.Passes.Transform.Graph.Parser.Parser where
 
-import Control.Monad.State
-import Control.Monad.Trans.Either
+import           Control.Monad.State
+import           Control.Monad.Trans.Either
+import qualified Data.List                  as List
 
 import           Flowbox.Luna.Data.AST.Expr                         (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                         as Expr
@@ -89,9 +90,11 @@ parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
+        []                -> whenM State.doesLastStatementReturn
+                                $ State.setOutput $ Expr.Tuple IDFixer.unknownID []
         [src@Expr.Var {}] -> State.setOutput src
+        [_]               -> return ()
         _:(_:_)           -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
-        _                 -> return ()
 
 
 parsePatNode :: Node.ID -> String -> GPPass ()
@@ -143,13 +146,24 @@ parseListNode nodeID = do
 
 addExpr :: Node.ID -> Expr -> GPPass ()
 addExpr nodeID e = do
+    graph          <- State.getGraph
+
     folded         <- State.hasFlag nodeID Attributes.astFolded
-    assignement    <- State.hasFlag nodeID Attributes.astAssignment
+    assignment     <- State.hasFlag nodeID Attributes.astAssignment
     defaultNodeGen <- State.hasFlag nodeID Attributes.defaultNodeGenerated
 
-    if folded || defaultNodeGen
+
+    let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
+        assignmentCount = length $ List.filter assignmentEdge
+                                 $ Graph.lsuclData graph nodeID
+
+        foldedImplicit = not assignment && assignmentCount == 1 && case e of
+            Expr.Var {} -> True
+            _           -> False
+
+    if folded || defaultNodeGen || foldedImplicit
         then State.addToNodeMap (nodeID, Port.All) e
-        else if assignement
+        else if assignment || assignmentCount > 0
             then do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName

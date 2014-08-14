@@ -46,27 +46,19 @@ backAndForth code = do
 
 backAndForth2 :: Graph -> IO ()
 backAndForth2 graph = do
+    graph2 <- backAndForth2' graph
+    graph2 `shouldBe` graph
+
+
+backAndForth2' :: Graph -> IO Graph
+backAndForth2' graph = do
     emptyAst <- Common.getAST SampleCodes.emptyMain
-    --printLn
-    --print emptyAst
-    --printLn
-    --print graph
     (ast, pm) <- Common.getExpr graph def emptyAst
     --printLn
     --print ast
-    (graph2, pm2) <- Common.getGraph pm ast
-    --printLn
-    --print graph2
-    --printLn
+    (graph2, _pm2) <- Common.getGraph pm ast
     --print pm
-    --printLn
-    graph2 `shouldBe` graph
-
-    --ast2           <- Common.getExpr graph2 pm ast
-    --(graph2, pm)    <- Common.getGraph aa pm ast2
-
-
-    --pm2    `shouldBe` pm
+    return graph2
 
 
 sampleGraphs :: [(String, Graph)]
@@ -85,8 +77,43 @@ sampleGraphs =
         ,(-3, Node.Outputs        (0, 2))
         ]
         []
+    , named "simple graph 3"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "foo" "" (0, 1))
+        , fixEmpty' (200, Node.Expr "bar" "" (0, 2))
+        ,(-3, Node.Outputs        (0, 3))
+        ]
+        [(100, 200, Edge.Data Port.All 5)]
+    , named "simple graph 4"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "foo" "" (0, 1))
+        , fixEmpty' (200, Node.Expr "bar" "" (0, 2))
+        ,(-3, Node.Outputs        (0, 3))
+        ]
+        [(100, 200, Edge.Data Port.All 5)
+        ,(100, 200, Edge.Data Port.All 3)
+        ]
+    , named "simple graph 4"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "foo" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 3))
+        ]
+        [(100, -3, Edge.Data Port.All 2)
+        ,(100, -3, Edge.Data Port.All 3)
+        ]
     ]
 
+
+buggyGraphs :: [(String, Graph)]
+buggyGraphs =
+    [ named "buggy graph 1"
+    $ Graph.mkGraph
+        [(100, Node.Expr "main" "" (0, 1))]
+        []
+    ]
 
 main :: IO ()
 main = hspec spec
@@ -99,8 +126,11 @@ spec = do
                 backAndForth code) sampleCodes
 
     describe "graph <-> ast conversion" $ do
-        mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth2 code) sampleGraphs
+        mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $
+                backAndForth2 graph) sampleGraphs
+        mapM_ (\(name, graph) -> it ("don't crash on buggy graphs - " ++ name) $
+                void $ backAndForth2' graph) buggyGraphs
+
 
     describe "graph sort alghorithm" $ do
         it "sorts graph correctly" $ do
