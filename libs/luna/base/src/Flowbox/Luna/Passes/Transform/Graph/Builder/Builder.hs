@@ -103,15 +103,15 @@ buildOutput outputID expr = do
 buildNode :: Bool -> Bool -> Maybe String -> Expr -> GBPass AST.ID
 buildNode astFolded monadicBind outName expr = case expr of
     Expr.Accessor i name dst  -> do let node = Node.Expr name (genName name i)
-                                    State.addNode i Port.All node astFolded noAssignment
+                                    State.addNode i Port.All node astFolded assignment
                                     connectArg True True Nothing  i (dst, 0)
                                     connectMonadic i
                                     return i
     Expr.Assignment i pat dst -> do let patStr = Pat.lunaShow pat
-                                    if isRealPat pat dst
+                                    if isRealPat pat dst assignment
                                         then do patIDs <- buildPat pat
                                                 let node = Node.Expr ('=': patStr) (genName "pattern" i)
-                                                State.insNodeWithFlags (i, node) astFolded noAssignment
+                                                State.insNodeWithFlags (i, node) astFolded assignment
                                                 case patIDs of
                                                    [patID] -> State.addToNodeMap patID (i, Port.All)
                                                    _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs
@@ -131,36 +131,36 @@ buildNode astFolded monadicBind outName expr = case expr of
                                     connectMonadic srcID
                                     return srcID
     Expr.Infix i name src dst -> do let node = Node.Expr name (genName name i)
-                                    State.addNode i Port.All node astFolded noAssignment
+                                    State.addNode i Port.All node astFolded assignment
                                     connectArg True True Nothing i (src, 0)
                                     connectArg True True Nothing i (dst, 1)
                                     connectMonadic i
                                     return i
-    Expr.Var       i name     -> do isBound <- Maybe.isJust <$> State.aaLookUp i
+    Expr.Var       i name     -> do isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp i
                                     if astFolded && isBound
                                         then return i
                                         else do let node = Node.Expr name (genName name i)
-                                                State.addNode i Port.All node astFolded noAssignment
+                                                State.addNode i Port.All node astFolded assignment
                                                 connectMonadic i
                                                 return i
     Expr.Con       i name     -> do let node = Node.Expr name (genName name i)
-                                    State.addNode i Port.All node astFolded noAssignment
+                                    State.addNode i Port.All node astFolded assignment
                                     connectMonadic i
                                     return i
     Expr.Lit       i lvalue   -> do let litStr = Lit.lunaShow lvalue
                                         node = Node.Expr litStr (genName litStr i)
-                                    State.addNode i Port.All node astFolded noAssignment
+                                    State.addNode i Port.All node astFolded assignment
                                     connectMonadic i
                                     return i
     Expr.Tuple     i items    -> do let node = Node.Expr "Tuple" (genName "tuple" i)
-                                    State.addNode i Port.All node astFolded noAssignment
+                                    State.addNode i Port.All node astFolded assignment
                                     connectArgs True True Nothing i items 0
                                     connectMonadic i
                                     return i
     Expr.List _ [Expr.RangeFromTo {}] -> showAndAddNode
     Expr.List _ [Expr.RangeFrom   {}] -> showAndAddNode
     Expr.List      i items    -> do let node = Node.Expr "List" (genName "list" i)
-                                    State.addNode i Port.All node astFolded noAssignment
+                                    State.addNode i Port.All node astFolded assignment
                                     connectArgs True True Nothing i items 0
                                     connectMonadic i
                                     return i
@@ -168,13 +168,13 @@ buildNode astFolded monadicBind outName expr = case expr of
     _                         -> showAndAddNode
     where
         connectMonadic i = when monadicBind $ State.connectMonadic i
-        noAssignment     = Maybe.isNothing outName
+        assignment       = Maybe.isJust outName
         genName base num = Maybe.fromMaybe (OutputName.generate base num) outName
 
         showAndAddNode = do let i = expr ^. Expr.id
                                 name = showExpr expr
                                 node = Node.Expr name (genName name i)
-                            State.addNode i Port.All node astFolded noAssignment
+                            State.addNode i Port.All node astFolded assignment
                             connectMonadic i
                             return i
 
@@ -198,10 +198,10 @@ connectArg astFolded monadicBind outName dstID (expr, dstPort) = do
         Just srcID -> State.connect srcID dstID dstPort
 
 
-isRealPat :: Pat -> Expr -> Bool
-isRealPat (Pat.Var {}) (Expr.Var {}) = True
-isRealPat (Pat.Var {}) _             = False
-isRealPat _ _                        = True
+isRealPat :: Pat -> Expr -> Bool -> Bool
+isRealPat (Pat.Var {}) (Expr.Var {}) True = True
+isRealPat (Pat.Var {}) _             _    = False
+isRealPat _ _                        _    = True
 
 
 buildPat :: Pat -> GBPass [AST.ID]

@@ -4,19 +4,18 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE QuasiQuotes   #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Graph.SampleCodes where
 
 import Text.RawString.QQ
 
 import Flowbox.Prelude
+import Graph.Common    (named)
 
 
 
-named :: a -> b -> (a, b)
-named = (,)
+
 
 sampleCodes :: [(String,String)]
 sampleCodes = [named "simple return" [r|
@@ -161,3 +160,7 @@ def main arg:
 --     {z, v} = {x, y}
 --     h = {z, v}
 -- |]]
+
+
+emptyMain :: String
+emptyMain = "def main"
