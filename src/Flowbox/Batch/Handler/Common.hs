@@ -54,7 +54,7 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphPar
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults    as Defaults
 import           Flowbox.Prelude                                     hiding (error)
 import           Flowbox.System.Log.Logger
-import           Text.Show.Pretty
+
 
 
 logger :: LoggerIO
@@ -236,8 +236,8 @@ setGraph (newGraph, newPM) bc libraryID projectID = do
 getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (GraphView, PropertyMap)
 getGraphView bc libraryID projectID = do
     (graph, propertyMap) <- getGraph bc libraryID projectID
-    let graphView = GraphView.fromGraph graph
-    return $ Defaults.removeDefaults graphView propertyMap
+    let (graphView, propertyMap2) = GraphView.fromGraph graph propertyMap
+    return $ Defaults.removeDefaults graphView propertyMap2
 
 
 setGraphView :: (GraphView, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
