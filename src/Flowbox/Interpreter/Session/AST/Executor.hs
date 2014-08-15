@@ -80,7 +80,7 @@ executeNode callDataPath argsVarNames = do
 
 
 executeAssignment :: CallDataPath -> [VarName] -> Session ()
-executeAssignment callDataPath [argsVarName] = do
+executeAssignment callDataPath [argsVarName] =
     execute callDataPath "id" [argsVarName] -- TODO [PM] : handle Luna's pattern matching
 
 
