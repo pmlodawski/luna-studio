@@ -45,6 +45,12 @@ def main:
     x = 0
     y = 1
     {z, v} = {x, y}
+|], named "assignment with patterns" [r|
+def main:
+    x = 0
+    y = 1
+    {z, v} = {x, y}
+    h = {z, v}
 |], named "assignment" [r|
 def foo
 
