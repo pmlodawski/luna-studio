@@ -31,7 +31,7 @@ type ExtractIDPass result = Pass IDState result
 
 
 run :: Focus -> Pass.Result IntSet
-run = (Pass.run_ (Pass.Info "ExtractIDs") $ State.make) . analyseFocus
+run = (Pass.run_ (Pass.Info "ExtractIDs") State.make) . analyseFocus
 
 
 analyseFocus :: Focus -> ExtractIDPass IntSet

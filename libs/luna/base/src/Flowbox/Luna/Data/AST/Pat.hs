@@ -85,10 +85,10 @@ lunaShow :: Pat -> String
 lunaShow p = case p of
     Var      _ name'      -> name'
     Lit      _ value'     -> Lit.lunaShow value'
-    Tuple    _ items'     -> "{" ++ (List.intercalate ", " strs) ++ "}" where
+    Tuple    _ items'     -> "{" ++ List.intercalate ", " strs ++ "}" where
                                    strs = map lunaShow items'
     Con      _ name'      -> name'
-    App      _ src' args' -> srcStr ++ " " ++ (List.intercalate " " argStrs) where
+    App      _ src' args' -> srcStr ++ " " ++ unwords argStrs where
                                    argStrs = map lunaShow args'
                                    srcStr  = lunaShow src'
     Typed    _ pat' cls'  -> patStr ++ " :: " ++ typeStr where
