@@ -34,6 +34,8 @@ backAndForth code = do
     --print pm
     --printLn
     (ast2  , pm2) <- Common.getExpr graph pm ast
+    --print ast2
+    --print pm
     (graph3, pm3) <- Common.getGraph pm2 ast2
 
     expr  <- Common.getMain (clearIDs 0 ast)
@@ -56,8 +58,8 @@ backAndForth2' graph = do
     (ast, pm) <- Common.getExpr graph def emptyAst
     --printLn
     --print ast
-    (graph2, _pm2) <- Common.getGraph pm ast
     --print pm
+    (graph2, _pm2) <- Common.getGraph pm ast
     return graph2
 
 

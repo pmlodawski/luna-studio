@@ -16,6 +16,7 @@ import qualified Data.List                  as List
 
 import           Flowbox.Luna.Data.AST.Expr                         (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                         as Expr
+import           Flowbox.Luna.Data.AST.Pat                          (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                          as Pat
 import           Flowbox.Luna.Data.Graph.Graph                      (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                      as Graph
@@ -97,16 +98,27 @@ parseOutputsNode nodeID = do
         _:(_:_)           -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
 
 
+patVariables :: Pat -> [Expr]
+patVariables pat = case pat of
+    Pat.Var i name    -> [Expr.Var i name]
+    Pat.Tuple _ items -> concatMap patVariables items
+    Pat.App _ _ args  -> concatMap patVariables args
+    _                 -> []
+
+
 parsePatNode :: Node.ID -> String -> GPPass ()
 parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
-        [s] -> do p <- case Parser.parsePattern pat $ ASTInfo.mk IDFixer.unknownID of
-                            Left  er     -> left $ show er
-                            Right (p, _) -> return p
-                  let e = Expr.Assignment nodeID p s
-                  State.addToNodeMap (nodeID, Port.All) e
-                  State.addToBody e
+        [s] -> do
+            p <- case Parser.parsePattern pat $ ASTInfo.mk IDFixer.unknownID of
+                    Left  er     -> left $ show er
+                    Right (p, _) -> return p
+            let e = Expr.Assignment nodeID p s
+            case patVariables p of
+                [var] -> State.addToNodeMap (nodeID, Port.All) var
+                vars  -> mapM_ (\(i, v) -> State.addToNodeMap (nodeID, Port.Num i) v) $ zip [0..] vars
+            State.addToBody e
         _      -> left "parsePatNode: Wrong Pat arguments"
 
 

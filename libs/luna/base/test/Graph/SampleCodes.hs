@@ -30,9 +30,12 @@ def main:
 def main:
     x = 0
 |], named "simple assignment 2" [r|
+def print
+
 def main:
     x = 0
     y = x
+    print y
 |], named "simple assignment 3" [r|
 def main:
     x = 0

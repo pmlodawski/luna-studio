@@ -45,7 +45,6 @@ readCode code = eitherStringToM' $ runEitherT $ do
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitScopes.run astInfo aliasInfo ast
     (ast, _astInfo)   <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
     _aliasInfo        <- EitherT $ Analysis.Alias.run ast
-
     let path = UniPath.fromUnixString "."
     return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty)
            $ LibManager.empty
