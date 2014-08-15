@@ -6,7 +6,8 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.AST.WatchPoint where
 
-import           Control.Monad.State
+import Control.Monad.State
+
 import           Flowbox.Data.SetForest                         (SetForest)
 import qualified Flowbox.Data.SetForest                         as SetForest
 import           Flowbox.Interpreter.Session.Data.CallPoint     (CallPoint)

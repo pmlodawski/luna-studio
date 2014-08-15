@@ -16,6 +16,8 @@ import           Flowbox.Control.Error
 import qualified Flowbox.Interpreter.Session.AST.Executor                                as Executor
 import qualified Flowbox.Interpreter.Session.Cache.Cache                                 as Cache
 import qualified Flowbox.Interpreter.Session.Cache.Invalidate                            as Invalidate
+import qualified Flowbox.Interpreter.Session.Cache.Value                                 as Value
+import           Flowbox.Interpreter.Session.Data.CallPoint                              (CallPoint (CallPoint))
 import           Flowbox.Interpreter.Session.Data.DefPoint                               (DefPoint (DefPoint))
 import qualified Flowbox.Interpreter.Session.Env                                         as Env
 import qualified Flowbox.Interpreter.Session.Error                                       as Error
@@ -116,6 +118,7 @@ main = do
 
     result <- Session.run env $ do
         Executor.processMain
+        print =<< Value.get [CallPoint libID 45] ""
         putStrLn "--------- 1"
         Executor.processMain
         putStrLn "========= 1"
@@ -138,4 +141,6 @@ main = do
         Executor.processMain
         putStrLn "========= finished =======4="
         Cache.dumpAll
+
+        print =<< Value.get [CallPoint libID 45] ""
     eitherStringToM $ fmapL Error.format result

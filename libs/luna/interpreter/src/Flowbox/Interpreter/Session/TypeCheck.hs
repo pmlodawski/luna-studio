@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.TypeCheck where
 
-import qualified Data.List as List
+import qualified Data.List                    as List
+import qualified Language.Haskell.Interpreter as Interpreter
 
-import           Flowbox.Interpreter.Session.Session (Session)
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
-import qualified Language.Haskell.Interpreter        as Interpreter
+import Flowbox.Interpreter.Session.Session (Session)
+import Flowbox.Prelude
+import Flowbox.System.Log.Logger
 
 
 
