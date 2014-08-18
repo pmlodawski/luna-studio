@@ -26,6 +26,7 @@
 {-# LANGUAGE RebindableSyntax #-}
 
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE PackageImports #-}
 
 
 module Vector where
@@ -42,7 +43,7 @@ import Luna.Target.HS.Control.Context
 import Luna.Target.HS.Control.Flow
 import Luna.Target.HS.Utils.BaseMonads
 import Luna.Target.HS.Data.Func
-import Control.Monad.Morph
+import "luna-target-ghchs" Control.Monad.Morph
 import Flowbox.Utils
 import Data.Typeable (Typeable, Proxy(..))
 import Data.TypeLevel
