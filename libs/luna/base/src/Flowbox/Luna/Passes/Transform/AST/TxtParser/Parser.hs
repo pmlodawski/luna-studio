@@ -7,6 +7,7 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser where
 
