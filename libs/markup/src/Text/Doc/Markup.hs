@@ -6,6 +6,8 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 module Text.Doc.Markup where
 
 --import           Data.ByteString.Lazy (ByteString)

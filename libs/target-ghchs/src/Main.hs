@@ -30,7 +30,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
 
-module Vector where
+module Main where
 
 import Control.PolyMonad
 import Control.Monad (join)
