@@ -66,5 +66,5 @@ rotateMat phi b mat = rasterizer nsize' $ monosampler
           size = fmap A.fromIntegral $ Grid width height
           Grid tx ty = fmap (/ (-2)) size
           nsize = bbox phi size
-          nsize' = fmap A.round nsize
+          nsize' = fmap A.ceiling nsize
           Grid rx ry = fmap (/ (2)) nsize

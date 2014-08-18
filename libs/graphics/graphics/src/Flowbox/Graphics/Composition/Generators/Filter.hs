@@ -31,6 +31,14 @@ data Filter a = Filter { window :: Exp a
                        , apply :: Exp a -> Exp a
                        }
 
+instance (Elt a, IsScalar a, IsNum a) => Num (Filter a) where
+    Filter w1 a1 + Filter w2 a2 = Filter (w1 `max` w2) $ \t -> a1 t + a2 t
+    Filter w1 a1 - Filter w2 a2 = Filter (w1 `max` w2) $ \t -> a1 t - a2 t
+    Filter w1 a1 * Filter w2 a2 = Filter (w1 `max` w2) $ \t -> a1 t * a2 t
+    negate (Filter w a) = Filter w $ \t -> negate (a t)
+    abs (Filter w a)    = Filter w $ \t -> abs (a t)
+    signum (Filter w a) = Filter w $ \t -> signum (a t)
+    fromInteger x       = Filter 1 $ \t -> fromInteger x
 
 -- == Helper functions ==
 
@@ -92,8 +100,10 @@ catmulRom :: (Elt a, IsFloating a) => Filter a
 catmulRom = polynomial 0.0 0.5
 
 gauss :: (Elt a, IsFloating a) => Exp a -> Filter a
-gauss sigma = Filter ((10.0 / 3.0) * sigma) $ \t -> exp (-(t ** 2) / (2 * sigma * sigma)) / (sigma * sqrt (2 * pi))
+gauss sigma = Filter ((10.0 / 3.0) * sigma) $ \t -> exp (-(t ** 2) / (2 * sigma * sigma)) / (sigma * sqrt pi)
 
+dirac :: (Elt a, IsFloating a) => Exp a -> Filter a
+dirac sigma = Filter 1.0 $ \(abs -> t) -> exp (- (t * t) / (sigma * sigma)) / (sigma * sqrt pi)
 
 -- == Non separable filters ==
 
@@ -138,10 +148,10 @@ filter scatter = convolve $ \point offset -> point + pure scatter * offset
 -- == Morphological filters
 
 dilate :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
-dilate size = stencil (\point offset -> point + offset) size (constant 1) max (-1e20)
+dilate size = stencil (+) size (constant 1) max (-1e20)
 
 erode :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
-erode size = stencil (\point offset -> point + offset) size (constant 1) min 1e20
+erode size = stencil (+) size (constant 1) min 1e20
 
 opening :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
 opening size = erode size . dilate size

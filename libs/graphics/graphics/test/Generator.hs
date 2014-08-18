@@ -19,6 +19,7 @@ import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Filter as Conv
 import Flowbox.Graphics.Composition.Generators.Gradient
 import Flowbox.Graphics.Composition.Generators.Matrix
+import Flowbox.Graphics.Composition.Generators.Stencil as Stencil
 import Flowbox.Graphics.Composition.Generators.Pipe
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 import Flowbox.Graphics.Composition.Generators.Sampler
@@ -32,6 +33,7 @@ import Linear.V2
 import Math.Space.Space
 import Math.Metric
 import Math.Coordinate.Cartesian
+import qualified Math.Coordinate.Polar as Polar
 import Data.Array.Accelerate (index2, Boundary(..))
 
 import Utils
@@ -153,7 +155,6 @@ motionBlurTest alpha kernSize = do
     testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
 
-
 --
 -- Applies Kirsch Operator to red channel of Lena image. Available operators: prewitt, sobel, sharr
 -- (Advanced rotational convolution, Edge detection test)
@@ -171,6 +172,46 @@ kirschTest edgeOp = do
     let res = rasterizer 512 $ max8 <$> (k 0) <*> (k 45) <*> (k 90) <*> (k 135) <*> (k 180) <*> (k 225) <*> (k 270) <*> (k 315)
     testSaveChan' "out.bmp" res
 
+
+--
+-- Unsharp mask - FIXME [kl]
+-- (Sharpening test)
+--
+unsharpMaskTest :: Exp Float -> Exp Int -> IO ()
+unsharpMaskTest sigma kernSize = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
+    let flt = normalize $ toMatrix (Grid (variable kernSize) (variable kernSize)) $ dirac (variable sigma) - gauss 1.0
+    let p = pipe 512 Clamp
+    let process x = rasterizer 512 $ id `p` Conv.filter 1 flt `p` id $ fromMatrix Clamp x
+    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
+
+--
+-- Radial blur
+-- (Sharpening test)
+--
+rotateGen :: (Elt a, IsFloating a, IsScalar a) => Exp a -> Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+rotateGen phi grid gen = monosampler $ translate (V2 rx ry) 
+                                     $ rotate phi 
+                                     $ translate (V2 tx ty) 
+                                     $ interpolator triangle 
+                                     $ gen
+    where size = fmap A.fromIntegral grid
+          Grid tx ty = fmap (/ (-2)) size
+          Grid rx ry = fmap (/ (2)) $ bbox phi size
+
+lineGen :: DiscreteGenerator (Exp Float)
+lineGen = Generator $ \(Point2 x y) -> A.cond (y ==* 1) 1 0
+
+motionBlur' :: (Elt a, IsFloating a) =>  Exp a -> Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+motionBlur' alpha grid kernel = Stencil.normStencil (+) (fmap A.ceiling $ bbox alpha $ fmap A.fromIntegral grid) (rotateGen alpha grid kernel) (+) 0
+
+radialBlurTest :: IO ()
+radialBlurTest = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
+
+    let process x = rasterizer 512 $ fromMatrix Clamp x
+    print "Szatan"
+    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
 main :: IO ()
 main = do
