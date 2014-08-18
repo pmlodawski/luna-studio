@@ -39,7 +39,7 @@ module Flowbox.Math.Matrix (
 import qualified Data.Array.Accelerate as A
 import           Data.Array.Accelerate hiding (Scalar, Vector, (!), shape, fromList, toList, (++))
 
-import Flowbox.Prelude hiding (use, (<*), (?), (++))
+import Flowbox.Prelude hiding (use, (<*), (?), (++), ix)
 
 
 
@@ -186,11 +186,19 @@ reshape sh mat = Delayed $ A.reshape sh (accMatrix mat)
 flatten :: (Elt a, Shape ix) => Matrix ix a -> Vector a
 flatten mat = Delayed $ A.flatten (accMatrix mat)
 
--- = Specialised permutations =
+-- = Permutations =
 
 transpose :: Elt e => Matrix2 e -> Matrix2 e
 transpose mat = Delayed $ A.transpose $ accMatrix mat
 
+permute :: (Shape ix, Shape ix', Elt a)
+        => (Exp a -> Exp a -> Exp a)
+        -> Matrix ix' a
+        -> (Exp ix -> Exp ix')
+        -> Matrix ix a
+        -> Matrix ix' a
+permute combination defaults permutation array =
+    Delayed $ A.permute combination (accMatrix defaults) permutation (accMatrix array)
 
 -- == Element-wise operations ==
 
