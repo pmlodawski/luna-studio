@@ -7,5 +7,6 @@
 
 module Luna.Target.HS.Data.Func (module X) where
 
+import Luna.Target.HS.Data.Func.App  as X
 import Luna.Target.HS.Data.Func.Args as X
 import Luna.Target.HS.Data.Func.Func as X

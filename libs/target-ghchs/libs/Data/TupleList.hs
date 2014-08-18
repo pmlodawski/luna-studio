@@ -111,3 +111,13 @@ instance Reverse (x,xs) rst out <= Reverse xs (x, rst) out where
 
 
 
+curryTuple0 f () = f
+curryTuple1 f (x,xs) = curryTuple0 (f x) xs
+curryTuple2 f (x,xs) = curryTuple1 (f x) xs
+curryTuple3 f (x,xs) = curryTuple2 (f x) xs
+curryTuple4 f (x,xs) = curryTuple3 (f x) xs
+curryTuple5 f (x,xs) = curryTuple4 (f x) xs
+curryTuple6 f (x,xs) = curryTuple5 (f x) xs
+curryTuple7 f (x,xs) = curryTuple6 (f x) xs
+curryTuple8 f (x,xs) = curryTuple7 (f x) xs
+curryTuple9 f (x,xs) = curryTuple8 (f x) xs
