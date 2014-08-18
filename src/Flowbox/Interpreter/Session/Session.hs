@@ -12,6 +12,7 @@ import qualified DynFlags                     as F
 import qualified GHC
 import qualified Language.Haskell.Interpreter as I
 
+import qualified Flowbox.Batch.Project.Project                       as Project
 import           Flowbox.Control.Error
 import           Flowbox.Interpreter.Session.Data.DefPoint           (DefPoint (DefPoint))
 import qualified Flowbox.Interpreter.Session.Data.DefPoint           as DefPoint
@@ -151,3 +152,7 @@ getGraph defPoint = do
 
 findMain :: Session DefPoint
 findMain = gets $ view Env.mainPtr
+
+
+getProjectID :: Session Project.ID
+getProjectID = gets $ view Env.projectID
