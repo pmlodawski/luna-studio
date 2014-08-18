@@ -1,3 +1,9 @@
 [submodule "third-party/protocol-buffers"]
 	path = third-party/protocol-buffers
 	url = https://github.com/korrix/protocol-buffers.git
+[submodule "third-party/HaskellBooster"]
+	path = third-party/HaskellBooster
+	url = https://github.com/wdanilo/HaskellBooster
+[submodule "third-party/language-c-0.4.5"]
+	path = third-party/language-c-0.4.5
+	url = git@github.com:wdanilo/haskell-language-c.git
