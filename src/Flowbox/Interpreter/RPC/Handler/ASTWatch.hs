@@ -12,6 +12,7 @@ import qualified Text.Read as Read
 
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Project.Project                                                                as Project
+import  Flowbox.Batch.Project.Project                                                                 (Project)
 import           Flowbox.Batch.Project.ProjectManager                                                         (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                                                         as ProjectManager
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
@@ -20,6 +21,7 @@ import           Flowbox.Control.Monad.Morph
 import           Flowbox.Interpreter.Proto.CallPoint                                                          ()
 import           Flowbox.Interpreter.Proto.CallPointPath                                                      ()
 import qualified Flowbox.Interpreter.Session.Session                                                          as Session
+import  Flowbox.Interpreter.Session.Session                                                           (Session)
 import           Flowbox.Interpreter.Session.SessionT                                                         (SessionT (SessionT))
 import           Flowbox.Prelude                                                                              hiding (Context)
 import           Flowbox.ProjectManager.Context                                                               (Context)
@@ -61,6 +63,8 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Update   
 import qualified Generated.Proto.ProjectManager.Project.Open.Update                                           as ProjectOpen
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request                               as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status                                as ProjectManagerSyncGet
+import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project   ()
+import qualified Flowbox.Interpreter.Session.Cache.Invalidate  as Invalidate
 
 
 
@@ -87,6 +91,22 @@ testUpdateNo updateNo = do
 hoistSessionT :: RPC Context IO a -> RPC Context SessionT ()
 hoistSessionT = void . hoist ( hoist $ SessionT . liftIO)
 
+
+whenProjectActive :: Project.ID -> RPC Context SessionT () -> RPC Context SessionT ()
+whenProjectActive projectID action = do
+    activeProjectID <- lift2 $ SessionT $ Session.getProjectID
+    when (activeProjectID == projectID) action
+
+
+sync :: Int32 -> RPC Context IO a -> RPC Context SessionT ()
+sync updateNo syncOp = do
+    hoistSessionT $ void syncOp
+
+
+interpreterDo :: Project.ID -> Session () -> RPC Context SessionT ()
+interpreterDo projectID op = 
+    whenProjectActive projectID $ lift2 $ SessionT op
+
 --- handlers --------------------------------------------------------------
 
 projectmanagerSyncGet :: ProjectManagerSyncGet.Status -> RPC Context SessionT ()
@@ -94,7 +114,6 @@ projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata updateNo) = do
     (projectManager :: ProjectManager) <- hoistEither $ Read.readEither $ decodeP tdata
     Batch.setProjectManager projectManager
     Batch.setUpdateNo updateNo
-    syncLibManager updateNo
 
 
 syncIfNeeded :: RPC Context SessionT () -> RPC Context SessionT (Maybe ProjectManagerSyncGet.Request)
@@ -107,174 +126,147 @@ syncIfNeeded rpc = do
 
 
 projectCreate :: ProjectCreate.Update -> RPC Context SessionT ()
-projectCreate (ProjectCreate.Update request _ updateNo) = do
-    hoistSessionT $ ProjectHandler.create request
-    syncLibManager updateNo
+projectCreate (ProjectCreate.Update request tproject updateNo) = do
+    (projectID, _)  :: (Project.ID, Project) <- decodeE (tproject, def)
+    sync updateNo $ ProjectHandler.create request
+    interpreterDo projectID Invalidate.modifyAll
 
 
 projectOpen :: ProjectOpen.Update -> RPC Context SessionT ()
 projectOpen (ProjectOpen.Update request _ updateNo) = do
-    hoistSessionT $ ProjectHandler.open request
-    syncLibManager updateNo
+    sync updateNo $ ProjectHandler.open request
 
 
 projectClose :: ProjectClose.Update -> RPC Context SessionT ()
 projectClose (ProjectClose.Update request updateNo) = do
-    hoistSessionT $ ProjectHandler.close request
-    syncLibManager updateNo
+    sync updateNo $ ProjectHandler.close request
 
 
 libraryCreate :: LibraryCreate.Update -> RPC Context SessionT ()
 libraryCreate (LibraryCreate.Update request _ updateNo) = do
-    hoistSessionT $ LibraryHandler.create request
-    syncLibManager updateNo
+    sync updateNo $ LibraryHandler.create request
 
 
 libraryLoad :: LibraryLoad.Update -> RPC Context SessionT ()
 libraryLoad (LibraryLoad.Update request _ updateNo) = do
-    hoistSessionT $ LibraryHandler.load request
-    syncLibManager updateNo
+    sync updateNo $ LibraryHandler.load request
 
 
 libraryUnload :: LibraryUnload.Update -> RPC Context SessionT ()
 libraryUnload (LibraryUnload.Update request updateNo) = do
-    hoistSessionT $ LibraryHandler.unload request
-    syncLibManager updateNo
+    sync updateNo $ LibraryHandler.unload request
 
 
 astRemove :: ASTRemove.Update -> RPC Context SessionT ()
 astRemove (ASTRemove.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.remove request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.remove request
 
 
 astModuleAdd :: ASTModuleAdd.Update -> RPC Context SessionT ()
 astModuleAdd (ASTModuleAdd.Update request _ _ updateNo) = do
-    hoistSessionT $ ASTHandler.moduleAdd request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.moduleAdd request
 
 
 astModuleModifyCls :: ASTModuleModifyCls.Update -> RPC Context SessionT ()
 astModuleModifyCls (ASTModuleModifyCls.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.moduleClsModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.moduleClsModify request
 
 
 astModuleModifyFields :: ASTModuleModifyFields.Update -> RPC Context SessionT ()
 astModuleModifyFields (ASTModuleModifyFields.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.moduleFieldsModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.moduleFieldsModify request
 
 
 astModuleModifyImports :: ASTModuleModifyImports.Update -> RPC Context SessionT ()
 astModuleModifyImports (ASTModuleModifyImports.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.moduleImportsModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.moduleImportsModify request
 
 
 astDataAdd :: ASTDataAdd.Update -> RPC Context SessionT ()
 astDataAdd (ASTDataAdd.Update request _ _ updateNo) = do
-    hoistSessionT $ ASTHandler.dataAdd request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.dataAdd request
 
 
 astDataModifyClasses :: ASTDataModifyClasses.Update -> RPC Context SessionT ()
 astDataModifyClasses (ASTDataModifyClasses.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.dataClassesModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.dataClassesModify request
 
 
 astDataModifyCls :: ASTDataModifyCls.Update -> RPC Context SessionT ()
 astDataModifyCls (ASTDataModifyCls.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.dataClsModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.dataClsModify request
 
 
 astDataModifyCons :: ASTDataModifyCons.Update -> RPC Context SessionT ()
 astDataModifyCons (ASTDataModifyCons.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.dataConsModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.dataConsModify request
 
 
 astDataModifyMethods :: ASTDataModifyMethods.Update -> RPC Context SessionT ()
 astDataModifyMethods (ASTDataModifyMethods.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.dataMethodsModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.dataMethodsModify request
 
 
 astFunctionAdd :: ASTFunctionAdd.Update -> RPC Context SessionT ()
 astFunctionAdd (ASTFunctionAdd.Update request _ _ updateNo) = do
-    hoistSessionT $ ASTHandler.functionAdd request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.functionAdd request
 
 
 astFunctionModifyInputs :: ASTFunctionModifyInputs.Update -> RPC Context SessionT ()
 astFunctionModifyInputs (ASTFunctionModifyInputs.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.functionInputsModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.functionInputsModify request
 
 
 astFunctionModifyName :: ASTFunctionModifyName.Update -> RPC Context SessionT ()
 astFunctionModifyName (ASTFunctionModifyName.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.functionNameModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.functionNameModify request
 
 
 astFunctionModifyOutput :: ASTFunctionModifyOutput.Update -> RPC Context SessionT ()
 astFunctionModifyOutput (ASTFunctionModifyOutput.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.functionOutputModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.functionOutputModify request
 
 
 astFunctionModifyPath :: ASTFunctionModifyPath.Update -> RPC Context SessionT ()
 astFunctionModifyPath (ASTFunctionModifyPath.Update request updateNo) = do
-    hoistSessionT $ ASTHandler.functionPathModify request
-    syncLibManager updateNo
+    sync updateNo $ ASTHandler.functionPathModify request
 
 
 graphConnect :: GraphConnect.Update -> RPC Context SessionT ()
 graphConnect (GraphConnect.Update request updateNo) = do
-    hoistSessionT $ GraphHandler.connect request
-    syncLibManager updateNo
+    sync updateNo $ GraphHandler.connect request
 
 
 graphDisconnect :: GraphDisconnect.Update -> RPC Context SessionT ()
 graphDisconnect (GraphDisconnect.Update request updateNo) = do
-    hoistSessionT $ GraphHandler.disconnect request
-    syncLibManager updateNo
+    sync updateNo $ GraphHandler.disconnect request
 
 
 graphNodeAdd :: GraphNodeAdd.Update -> RPC Context SessionT ()
 graphNodeAdd (GraphNodeAdd.Update request _ updateNo) = do
-    hoistSessionT $ GraphHandler.nodeAdd request
-    syncLibManager updateNo
+    sync updateNo $ GraphHandler.nodeAdd request
 
 
 graphNodeRemove :: GraphNodeRemove.Update -> RPC Context SessionT ()
 graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
-    hoistSessionT $ GraphHandler.nodeRemove request
-    syncLibManager updateNo
+    sync updateNo $ GraphHandler.nodeRemove request
 
 
 graphNodeModify :: GraphNodeModify.Update -> RPC Context SessionT ()
 graphNodeModify (GraphNodeModify.Update request _ updateNo) = do
-    hoistSessionT $ GraphHandler.nodeModify request
-    syncLibManager updateNo
+    sync updateNo $ GraphHandler.nodeModify request
 
 
 graphNodeModifyInPlace :: GraphNodeModifyInPlace.Update -> RPC Context SessionT ()
 graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
-    hoistSessionT $ GraphHandler.nodeModifyInPlace request
-    syncLibManager updateNo
+    sync updateNo $ GraphHandler.nodeModifyInPlace request
 
 
 graphNodeDefaultRemove :: GraphNodeDefaultRemove.Update -> RPC Context SessionT ()
 graphNodeDefaultRemove (GraphNodeDefaultRemove.Update request updateNo) = do
-    hoistSessionT $ NodeDefaultHandler.remove request
-    syncLibManager updateNo
+    sync updateNo $ NodeDefaultHandler.remove request
 
 
 graphNodeDefaultSet :: GraphNodeDefaultSet.Update -> RPC Context SessionT ()
 graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
-    hoistSessionT $ NodeDefaultHandler.set request
-    syncLibManager updateNo
+    sync updateNo $ NodeDefaultHandler.set request
