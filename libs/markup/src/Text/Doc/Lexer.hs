@@ -1,3 +1,10 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Flowbox Team <contact@flowbox.io>, 2014
+-- Proprietary and confidential
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
@@ -5,6 +12,8 @@ module Text.Doc.Lexer where
 
 import Control.Applicative
 import Text.Parsec         hiding (many, optional, parse, (<|>))
+
+
 
 pH1 = string "==="
 pH2 = string "=="

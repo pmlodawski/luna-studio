@@ -1,6 +1,14 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Flowbox Team <contact@flowbox.io>, 2014
+-- Proprietary and confidential
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+---------------------------------------------------------------------------
+
 import           Data.ByteString      as BS
 import           Data.ByteString.Lazy as LBS
 import qualified Text.Doc.Markup      as Markup
+
 
 
 code :: String
@@ -75,7 +83,7 @@ code = unlines [ ""
                          , "W wersji zaawansowanej mozemy wspierac tagi html w tekscie."
                          ]
 
-code_test = unlines [ 
+code_test = unlines [
                       ""
                     , "    {{haskell}}"
                     , "    ala"
@@ -89,6 +97,6 @@ main = do
           case Markup.parse code of
                Left parseError -> print parseError
                Right parsed -> do print parsed; BS.writeFile "test.html" $ lazyToStrictBS parsed
-     
+
 --lazyToStrictBS :: LBS.ByteString -> BS.ByteString
 lazyToStrictBS x = BS.concat $ LBS.toChunks x
