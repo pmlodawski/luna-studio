@@ -13,7 +13,7 @@
 {-# LANGUAGE PolyKinds #-}
 !{-# LANGUAGE RightSideContexts #-}
 
-module Luna.Target.HS.Data.Struct.Meta where
+module Luna.Target.HS.Data.Struct.Meta {-# DEPRECATED "Not used anymore" #-} where
 
 import Data.Typeable
 import Type.BaseType
@@ -22,7 +22,7 @@ import Type.BaseType
 -- Data types
 ----------------------------------------------------------------------------------
 
-data Meta a = Meta (Proxy a) deriving (Show, Eq, Typeable)
+data Meta typeName = Meta (Proxy typeName) deriving (Show, Eq, Typeable)
 meta = Meta Proxy
 
 

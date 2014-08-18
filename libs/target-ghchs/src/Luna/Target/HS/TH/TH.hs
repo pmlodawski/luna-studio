@@ -5,7 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Target.HS.Data.Struct (module X) where
+module Luna.Target.HS.TH.TH (
+	module X
+) where
 
---import Luna.Target.HS.Data.Struct.Meta as X
-import Luna.Target.HS.Data.Struct.Prop as X
+import Luna.Target.HS.TH.Struct    as X

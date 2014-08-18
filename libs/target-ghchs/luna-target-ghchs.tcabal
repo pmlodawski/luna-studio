@@ -29,7 +29,8 @@ Library
                   transformers,
                   mmorph,
                   mtl,
-                  QuickCheck
+                  QuickCheck,
+                  lens
 
 
 
@@ -44,4 +45,5 @@ Test-Suite tests
                   hspec,
                   luna-target-ghchs,
                   mtl,
-                  transformers
+                  transformers,
+                  lens

@@ -26,7 +26,8 @@ module Luna.Target.HS.Data.Struct.Prop where
 
 import GHC.TypeLits
 import Data.Typeable (Proxy(..))
-import Luna.Target.HS.Data.Func
+import Luna.Target.HS.Data.Func.App
+import Luna.Target.HS.Data.Func.Args
 
 import Data.Typeable
 import Type.BaseType

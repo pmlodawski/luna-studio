@@ -114,6 +114,34 @@ instance (PolyApplicative (Value Pure) m7 m4,
 instance HasProp "constructor" (Meta Vector) (NParam "self", (NDParam "x" (Value Pure (Safe Int)), (NDParam "y" (Value Pure (Safe Int)), (NDParam "z" (Value Pure (Safe Int)), ())))) where
     propSig _ = (mkArg :: NParam "self") // (mkArg (val (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (val 0) :: NDParam "y" (Value Pure(Safe Int))) // (mkArg (val 0) :: NDParam "z" (Value Pure(Safe Int))) // ()
 
+
+---
+prop_Vector_x (self,()) = liftF1 _prop_Vector_x self
+
+instance ( PolyApplicative (Value Pure) m2 m3, PolyApplicative Safe m1 m4,
+           args~(m2 (m1 (Vector b)), ()), out~m3 (m4 b))
+    => Func (Prop Vector "x") args out where
+    getFunc _ _ = prop_Vector_x
+
+instance HasProp "x" Vector (NParam "self", ()) where
+    propSig _ = (mkArg :: NParam "self") // ()
+
+
+---
+propSetter_Vector_x (self,(a,())) = liftF2 (\x a -> x {_prop_Vector_x = a}) self a
+
+instance ( PolyApplicative (Value Pure) m5 m1, PolyApplicative Safe m8 m4,
+           PolyApplicative m4 m6 m7, PolyApplicative m1 m2 m3,
+           args~(m5 (m8 (Vector a)), (m2 (m6 a), ())), out~m3 (m7 (Vector a)))
+    => Func (Prop Vector "x_setter") args out where
+    getFunc _ _ = propSetter_Vector_x
+
+instance HasProp "x_setter" Vector (NParam "self", (NParam "x", ())) where
+    propSig _ = (mkArg :: NParam "self") // (mkArg :: NParam "x") // ()
+
+
+
+
 ---
 prop_Vector_bar (self,(a,(b,()))) = val (a, b)
 
@@ -231,7 +259,8 @@ a1 = call $ appNext (val 1) $ appNext (val 2) $ objProp (Proxy::Proxy "foo") v
 
 
 main' = do
-    v2 <- call $ appNext (val 2) $ appNext (val 2) $ appNext (val 2) $ objProp (Proxy::Proxy "constructor") (val (meta :: Meta Vector))
+    v2 <- call $ appByName (Proxy :: Proxy "z") (val 3) $ appNext (val 2) $ appNext (val 1) $ objProp (Proxy::Proxy "constructor") (val (meta :: Meta Vector))
+    print2 v2
 
     print2 $ call $ appNext (val 1) $ appNext (val 2) $ objProp (Proxy::Proxy "foo") v2
     print2 $ call $ appByName (Proxy::Proxy "b") (val 1) $ appNext (val 2) $ objProp (Proxy::Proxy "foo") v2
@@ -249,7 +278,9 @@ main' = do
 
     print2 $ flip runStateTX (val 0) $ call $ objProp (Proxy :: Proxy "fstate") v2
 
-
+    -- properties
+    print2 $ call $ objProp (Proxy::Proxy "x") v2
+    call $ appNext (val 5) $ objProp (Proxy::Proxy "x_setter") v
 
     --print' $ shuffleJoin (val $ val 5)
 
