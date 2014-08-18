@@ -14,6 +14,7 @@ module Flowbox.Luna.Data.PropertyMap (
 
 import           Data.IntMap
 import qualified Data.IntMap as IntMap
+import qualified Data.Maybe  as Maybe
 
 import qualified Flowbox.Luna.Data.Attributes       as Attributes
 import qualified Flowbox.Luna.Data.Graph.Node       as Node
@@ -35,9 +36,7 @@ get nodeID spaceKey key propertyMap = do
 
 set :: Node.ID -> String -> String -> String -> PropertyMap -> PropertyMap
 set nodeID spaceKey key value propertyMap = IntMap.insert nodeID newProperties propertyMap where
-    oldProperties  = case IntMap.lookup nodeID propertyMap of
-                        Nothing         -> Properties.empty
-                        Just properties -> properties
+    oldProperties = Maybe.fromMaybe Properties.empty (IntMap.lookup nodeID propertyMap)
     newProperties = oldProperties & Properties.attrs
         %~ Attributes.set spaceKey key value
 

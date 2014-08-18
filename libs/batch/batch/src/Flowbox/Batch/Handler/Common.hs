@@ -207,32 +207,37 @@ setClassFocus newClass = setFocus (Focus.Class newClass)
 getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (Graph, PropertyMap)
 getGraph bc libraryID projectID = do
     ast         <- getAST libraryID projectID
+    logger trace $ ppShow ast
     propertyMap <- getPropertyMap libraryID projectID
     expr        <- getFunctionFocus bc libraryID projectID
     aa          <- EitherT $ Alias.run ast
-    EitherT $ GraphBuilder.run aa propertyMap expr
+    result <- EitherT $ GraphBuilder.run aa propertyMap expr
+    logger trace $ ppShow result
+    return result
 
 
 setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setGraph (newGraph, newPM) bc libraryID projectID = do
+    logger trace  $ ppShow newGraph
+    logger trace $ ppShow newPM
     expr <- getFunctionFocus bc libraryID projectID
-    ast  <- EitherT $ GraphParser.run newGraph newPM expr
+    (ast, newPM2)  <- EitherT $ GraphParser.run newGraph newPM expr
 
     newMaxID <- EitherT $ MaxID.runExpr ast
     fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
 
     logger debug $ show newGraph
-    logger debug $ show newPM
+    logger debug $ show newPM2
     logger debug $ ppShow fixedAst
     setFunctionFocus fixedAst bc libraryID projectID
-    setPropertyMap newPM libraryID projectID
+    setPropertyMap newPM2 libraryID projectID
 
 
 getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (GraphView, PropertyMap)
 getGraphView bc libraryID projectID = do
     (graph, propertyMap) <- getGraph bc libraryID projectID
-    let graphView = GraphView.fromGraph graph
-    return $ Defaults.removeDefaults graphView propertyMap
+    let (graphView, propertyMap2) = GraphView.fromGraph graph propertyMap
+    return $ Defaults.removeDefaults graphView propertyMap2
 
 
 setGraphView :: (GraphView, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()

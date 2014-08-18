@@ -46,8 +46,10 @@ def checkAvailable(name):
         print_info("yes")
         return True
 
-def checkCabalPkg(name, version="", installUsing=None):
-    if not checkAvailable(name):
+def checkCabalPkg(name, version="", installUsing=None, check=None):
+    if check == None:
+        check = name
+    if not checkAvailable(check):
         if ask ("Cabal binary '%s' is not available. Should I install it?" % name):
             pkg = name
             if version: pkg += "-%s" % version
@@ -196,9 +198,14 @@ def main():
     print_info ("Updating cabal package cache")
     try_call('cd && cabal update')
 
+    checkCabalPkg("happy")
+    checkCabalPkg("alex")
+
     checkInstall("cabal", installUsing="cabal install cabal-install", chckf=checkCabalVersion)
     checkCabalPkg("c2hs", version="0.16.5", installUsing=instal_c2hs)
     checkInstall("cabal", installUsing="cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", chckf=checkCabalVersion)
+
+    checkCabalPkg("gtk2hs-buildtools", check="gtk2hsC2hs")
 
     print_info ("Generating Protocol Buffers files using genproto")
     path = os.path.join(rootPath, 'scripts', 'genproto')

@@ -8,6 +8,7 @@
 module Flowbox.Luna.Passes.Transform.Graph.Node.OutputName (
     fix,
     fixEmpty,
+    fixEmpty',
     generate,
 ) where
 
@@ -28,6 +29,11 @@ fixEmpty :: Node -> Node.ID -> Node
 fixEmpty node nodeID = case node ^. Node.outputName of
     "" -> fix node nodeID
     _  -> node
+
+
+fixEmpty' :: (Node.ID, Node) -> (Node.ID, Node)
+fixEmpty' (nodeID, node) =
+    (nodeID, fixEmpty node nodeID)
 
 
 fix :: Node -> Node.ID ->Node

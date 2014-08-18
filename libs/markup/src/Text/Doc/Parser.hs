@@ -1,12 +1,21 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Flowbox Team <contact@flowbox.io>, 2014
+-- Proprietary and confidential
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+---------------------------------------------------------------------------
+
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE OverloadedStrings         #-}
-{-# LANGUAGE ScopedTypeVariables         #-}
-{-# LANGUAGE TemplateHaskell         #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TemplateHaskell           #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Text.Doc.Parser where
 
 import           Control.Applicative
+import           Control.Lens                  hiding (noneOf)
 import           Data.Default
 import           Data.Monoid
 import           Data.String                   as S
@@ -16,11 +25,12 @@ import           Text.Blaze.Html5              ((!))
 import qualified Text.Blaze.Html5              as HTML
 import qualified Text.Blaze.Html5.Attributes   as Attr
 import           Text.Parsec                   hiding (many, optional, parse, (<|>))
-import           Control.Lens                  hiding(noneOf)
 
-import qualified Text.Doc.Lexer as L
+import           Text.Blaze.Internal as Blaze (stringValue)
+import qualified Text.Doc.Lexer      as L
 import           Text.Doc.Utils
-import          Text.Blaze.Internal as Blaze (stringValue)
+
+
 
 data Language = Unknown | String
 
@@ -68,7 +78,7 @@ pCodeLine       = pBlockLine L.pCodeLineBegin
 pBlockBegin     = L.eol *> L.pCodeLineBegin
 
 pCodeSnippet    = try pBlockBegin *> ( generateBlockCode <$>
-                                       pCodeLangLine     <*> 
+                                       pCodeLangLine     <*>
                                        pBlock pCodeLine
                                      )
 
@@ -138,7 +148,7 @@ addJSLibs html = HTML.docTypeHtml $ do
         HTML.meta ! Attr.httpEquiv "Content-Type" ! Attr.content "text/html; charset=utf-8"
         HTML.link
             ! Attr.href "http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,300italic,700&subset=latin,latin-ext"
-            ! Attr.rel "stylesheet" 
+            ! Attr.rel "stylesheet"
             ! Attr.type_ "text/css"
         HTML.link ! Attr.type_ "text/css" ! Attr.rel "stylesheet" ! Attr.href "libs/markup/include/prettify/prettify.css"
         HTML.script "" ! Attr.type_ "text/javascript" ! Attr.src "https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"
@@ -150,12 +160,12 @@ parse markup = fmap (HTML.renderHtml . addJSLibs) (runParser pProgram (def::Pars
 -- testing by hand
 pProgram_test = generateBlockCode <$>
               pCodeLangLine <*>
-              (unlines  <$> 
-                  (L.eol *> 
+              (unlines  <$>
+                  (L.eol *>
                   many1 (L.pCodeLineBegin *> (many $ noneOf "\n\r") <* L.eol))
               )
-parse_test markup = 
-                    fmap (HTML.renderHtml) 
+parse_test markup =
+                    fmap (HTML.renderHtml)
                     (runParser pCodeSnippet (0::Int) "Flowbox Markup Parser" markup)
 
 -- header numbering and anchoring
@@ -171,16 +181,16 @@ incH1 = do
     let nh1 = view (pos.h1) s + 1
     setState $ s & set (pos.h1) nh1
                  & set (pos.h2) def
-                 & set (pos.h3) def 
-             
+                 & set (pos.h3) def
+
     return nh1
 
 incH2 = do
     s <- getState
     let nh2 = view (pos.h2) s + 1
     setState $ s & set (pos.h2) nh2
-                 & set (pos.h3) def 
-             
+                 & set (pos.h3) def
+
     return nh2
 
 

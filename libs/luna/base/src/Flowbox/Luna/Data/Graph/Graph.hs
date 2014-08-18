@@ -10,7 +10,8 @@ module Flowbox.Luna.Data.Graph.Graph(
     module Flowbox.Luna.Data.Graph.Graph,
 ) where
 
-import qualified GHC.Exts as Exts
+import qualified Data.List as List
+import qualified GHC.Exts  as Exts
 
 import           Flowbox.Data.Graph           hiding (Edge, Graph)
 import qualified Flowbox.Data.Graph           as DG
@@ -50,5 +51,17 @@ createMonadicEdges = List.merge mkMonEdge . map fst . sort where
     mkMonEdge a b = (a, b, Edge.Monadic)
 
 
+addMonadicEdges :: Graph -> Graph
+addMonadicEdges graph = DG.insEdges (createMonadicEdges graph) graph
+
+
 lprelData :: Graph -> Node.ID -> [(Node.ID, Node, Edge)]
 lprelData = filter (Edge.isData . view _3) .: DG.lprel
+
+
+lsuclData :: Graph -> Node.ID -> [(Node.ID, Node, Edge)]
+lsuclData = filter (Edge.isData . view _3) .: DG.lsucl
+
+
+inputsNode :: DG.Graph Node a -> Maybe (Node.ID, Node)
+inputsNode = List.find (Node.isInputs . snd) . DG.labNodes

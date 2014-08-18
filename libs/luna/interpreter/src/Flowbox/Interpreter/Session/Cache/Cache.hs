@@ -93,14 +93,13 @@ onCacheInfo f alternative callPointPath =
 
 put :: CallDataPath -> [VarName] -> VarName -> Session ()
 put callDataPath predVarNames varName = do
-    mapForest <- gets $ view Env.cached
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-    oldStatus <- status callPointPath
+    mcacheInfo <- lookupCacheInfo callPointPath
+    oldStatus  <- status callPointPath
     let updatedStatus = if oldStatus == CacheStatus.NonCacheable
                             then oldStatus
                             else CacheStatus.Ready
-        existingDeps = Maybe.maybe Map.empty (view CacheInfo.dependencies)
-                     $ MapForest.lookup callPointPath mapForest
+        existingDeps = Maybe.maybe Map.empty (view CacheInfo.dependencies) mcacheInfo
         dependencies = Map.insert predVarNames varName existingDeps
         cacheInfo    = CacheInfo (last callDataPath ^. CallData.parentDefID)
                                  updatedStatus varName dependencies
@@ -115,3 +114,5 @@ delete callPointPath = modify $ Env.cached %~ MapForest.delete callPointPath
 cached :: Session (MapForest CallPoint CacheInfo)
 cached = gets (view Env.cached)
 
+lookupCacheInfo :: CallPointPath -> Session (Maybe CacheInfo)
+lookupCacheInfo callPointPath = MapForest.lookup callPointPath <$> cached

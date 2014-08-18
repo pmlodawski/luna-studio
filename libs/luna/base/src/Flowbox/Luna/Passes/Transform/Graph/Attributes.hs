@@ -23,9 +23,13 @@ astFolded :: String
 astFolded = "AST-folded"
 
 
-astNoAssignment :: String
-astNoAssignment = "AST-no-assignment"
+astAssignment :: String
+astAssignment = "AST-assignment"
 
 
 nodePosition :: String
 nodePosition = "Node-position"
+
+
+graphViewGenerated :: String
+graphViewGenerated = "GraphView-generated"

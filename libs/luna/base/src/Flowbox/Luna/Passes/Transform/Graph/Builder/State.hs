@@ -76,15 +76,15 @@ insNode (nodeID, node) = do
 
 
 insNodeWithFlags :: (Node.ID, Node.Position -> Node) -> Bool -> Bool -> GBPass ()
-insNodeWithFlags n@(nodeID, _) isFolded noAssignment = do
+insNodeWithFlags n@(nodeID, _) isFolded assignment = do
     insNode n
-    when isFolded     $ setFlag nodeID Attributes.astFolded
-    when noAssignment $ setFlag nodeID Attributes.astNoAssignment
+    when isFolded   $ setFlag nodeID Attributes.astFolded
+    when assignment $ setFlag nodeID Attributes.astAssignment
 
 
 addNode :: AST.ID -> OutPort -> (Node.Position -> Node) -> Bool -> Bool -> GBPass ()
-addNode astID outPort node isFolded noAssignment = do
-    insNodeWithFlags (astID, node) isFolded noAssignment
+addNode astID outPort node isFolded assignment = do
+    insNodeWithFlags (astID, node) isFolded assignment
     addToNodeMap astID (astID, outPort)
 
 

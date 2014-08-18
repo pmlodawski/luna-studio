@@ -4,22 +4,23 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE QuasiQuotes   #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Graph.SampleCodes where
 
 import Text.RawString.QQ
 
 import Flowbox.Prelude
+import Graph.Common    (named)
 
 
 
-named :: a -> b -> (a, b)
-named = (,)
+
 
 sampleCodes :: [(String,String)]
-sampleCodes = [named "simple return" [r|
+sampleCodes = [named "empty" [r|
+def main
+|], named "simple return" [r|
 def main:
     1
 |], named "simple infix" [r|
@@ -29,9 +30,12 @@ def main:
 def main:
     x = 0
 |], named "simple assignment 2" [r|
+def print
+
 def main:
     x = 0
     y = x
+    print y
 |], named "simple assignment 3" [r|
 def main:
     x = 0
@@ -41,6 +45,12 @@ def main:
     x = 0
     y = 1
     {z, v} = {x, y}
+|], named "assignment with patterns" [r|
+def main:
+    x = 0
+    y = 1
+    {z, v} = {x, y}
+    h = {z, v}
 |], named "assignment" [r|
 def foo
 
@@ -161,3 +171,7 @@ def main arg:
 --     {z, v} = {x, y}
 --     h = {z, v}
 -- |]]
+
+
+emptyMain :: String
+emptyMain = "def main"
