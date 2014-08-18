@@ -48,6 +48,10 @@ type Vertex    = DG.Node
 type LVertex a = DG.LNode a
 
 
+instance Default (Graph a b) where
+    def = DG.empty
+
+
 labs :: Graph a b -> [Vertex] -> Maybe [a]
 labs g = mapM (lab g)
 
