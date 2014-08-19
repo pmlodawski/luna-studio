@@ -102,6 +102,7 @@ put callDataPath predVarNames varName = do
         existingDeps = Maybe.maybe Map.empty (view CacheInfo.dependencies) mcacheInfo
         dependencies = Map.insert predVarNames varName existingDeps
         cacheInfo    = CacheInfo (last callDataPath ^. CallData.parentDefID)
+                                 (last callDataPath ^. CallData.parentBC)
                                  updatedStatus varName dependencies
 
     modify (Env.cached %~ MapForest.insert callPointPath cacheInfo)

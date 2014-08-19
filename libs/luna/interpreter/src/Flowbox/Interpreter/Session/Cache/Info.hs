@@ -13,11 +13,13 @@ import Data.Map (Map)
 import           Flowbox.Interpreter.Session.Cache.Status (CacheStatus)
 import           Flowbox.Interpreter.Session.Data.VarName (VarName)
 import qualified Flowbox.Luna.Data.AST.Common             as AST
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs  (Breadcrumbs)
 import           Flowbox.Prelude
 
 
 
 data CacheInfo = CacheInfo { _defID         :: AST.ID
+                           , _breadcrumbs   :: Breadcrumbs
                            , _status        :: CacheStatus
                            , _recentVarName :: VarName
                            , _dependencies  :: Map [VarName] VarName
