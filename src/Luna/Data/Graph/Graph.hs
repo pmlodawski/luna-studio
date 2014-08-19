@@ -5,9 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Graph.Graph(
+module Luna.Data.Graph.Graph(
     module Flowbox.Data.Graph,
-    module Flowbox.Luna.Data.Graph.Graph,
+    module Luna.Data.Graph.Graph,
 ) where
 
 import qualified Data.List as List
@@ -16,11 +16,11 @@ import qualified GHC.Exts  as Exts
 import           Flowbox.Data.Graph           hiding (Edge, Graph)
 import qualified Flowbox.Data.Graph           as DG
 import qualified Flowbox.Data.List            as List
-import           Flowbox.Luna.Data.Graph.Edge (Edge)
-import qualified Flowbox.Luna.Data.Graph.Edge as Edge
-import           Flowbox.Luna.Data.Graph.Node (Node)
-import qualified Flowbox.Luna.Data.Graph.Node as Node
-import           Flowbox.Luna.Data.Graph.Port (InPort)
+import           Luna.Data.Graph.Edge (Edge)
+import qualified Luna.Data.Graph.Edge as Edge
+import           Luna.Data.Graph.Node (Node)
+import qualified Luna.Data.Graph.Node as Node
+import           Luna.Data.Graph.Port (InPort)
 import           Flowbox.Prelude              hiding (empty)
 
 

@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Graph.Port where
+module Luna.Data.Graph.Port where
 
 import Flowbox.Prelude
 

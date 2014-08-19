@@ -7,19 +7,18 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Luna.AST.Control.Zipper where
+module Luna.Data.AST.Control.Zipper where
 
 import           Data.List                               (find)
+import           Luna.Data.AST.Control.Crumbs (Breadcrumbs, Crumb)
+import qualified Luna.Data.AST.Control.Crumbs as Crumb
+import qualified Luna.Data.AST.Expr              as Expr
+import           Luna.Data.AST.Module            (Module)
+import qualified Luna.Data.AST.Module            as Module
+import qualified Luna.Data.AST.Type              as Type
+import           Luna.Data.AST.Control.Focus      (Focus, FocusPath)
+import qualified Luna.Data.AST.Control.Focus      as Focus
 import           Flowbox.Control.Error                   (assert)
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
-import           Flowbox.Luna.Data.AST.Crumb.Crumb       (Crumb)
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb       as Crumb
-import qualified Flowbox.Luna.Data.AST.Expr              as Expr
-import           Flowbox.Luna.Data.AST.Module            (Module)
-import qualified Flowbox.Luna.Data.AST.Module            as Module
-import qualified Flowbox.Luna.Data.AST.Type              as Type
-import           Flowbox.Luna.Data.AST.Zipper.Focus      (Focus, FocusPath)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus      as Focus
 import           Flowbox.Prelude                         hiding (drop, id, mod)
 
 

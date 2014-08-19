@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances #-}
 
-module Luna.AST.Data where
+module Luna.Data.AST.Data where
 
-import           Flowbox.Luna.Data.AST.Common (ID)
-import           Flowbox.Luna.Data.AST.Expr   (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr   as Expr
-import           Flowbox.Luna.Data.AST.Type   (Type)
+import           Luna.Data.AST.Common (ID)
+import           Luna.Data.AST.Expr   (Expr)
+import qualified Luna.Data.AST.Expr   as Expr
+import           Luna.Data.AST.Type   (Type)
 
 
 mk :: ID -> Type -> Expr -> Expr

@@ -8,13 +8,13 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.AST.Type where
+module Luna.Data.AST.Type where
 
 import qualified Data.List    as List
 import           GHC.Generics
 
 import Flowbox.Generics.Deriving.QShow
-import Flowbox.Luna.Data.AST.Common    (ID)
+import Luna.Data.AST.Common    (ID)
 import Flowbox.Prelude                 hiding (Traversal, drop, id)
 
 data Type = Unknown { _id :: ID                                               }

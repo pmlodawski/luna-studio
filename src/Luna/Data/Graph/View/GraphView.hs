@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.GraphView.GraphView (
+module Luna.Data.Graph.View.GraphView (
     module Flowbox.Data.Graph,
     GraphView,
     fromGraph,
@@ -22,22 +22,23 @@ import           Flowbox.Control.Error
 import           Flowbox.Data.Graph                                  hiding (Edge, Graph, fromGraph)
 import qualified Flowbox.Data.Graph                                  as DG
 import           Flowbox.Data.String                                 (toUpper)
-import qualified Flowbox.Luna.Data.Attributes                        as Attributes
-import qualified Flowbox.Luna.Data.Graph.Edge                        as Edge
-import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                       as Graph
-import           Flowbox.Luna.Data.Graph.Node                        (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                        as Node
-import qualified Flowbox.Luna.Data.Graph.Port                        as Port
-import           Flowbox.Luna.Data.GraphView.EdgeView                (EdgeView (EdgeView))
-import qualified Flowbox.Luna.Data.GraphView.EdgeView                as EdgeView
-import           Flowbox.Luna.Data.GraphView.PortDescriptor          (PortDescriptor)
-import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
-import qualified Flowbox.Luna.Data.PropertyMap                       as PropertyMap
-import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes      as Attributes
-import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
+import qualified Luna.Data.Graph.Attributes                        as Attributes
+import qualified Luna.Data.Graph.Edge                        as Edge
+import           Luna.Data.Graph.Graph                       (Graph)
+import qualified Luna.Data.Graph.Graph                       as Graph
+import           Luna.Data.Graph.Node                        (Node)
+import qualified Luna.Data.Graph.Node                        as Node
+import qualified Luna.Data.Graph.Port                        as Port
+import           Luna.Data.Graph.View.EdgeView                (EdgeView (EdgeView))
+import qualified Luna.Data.Graph.View.EdgeView                as EdgeView
+import           Luna.Data.Graph.View.PortDescriptor          (PortDescriptor)
+import           Luna.Data.Graph.PropertyMap                       (PropertyMap)
+import qualified Luna.Data.Graph.PropertyMap                       as PropertyMap
+import qualified Luna.Data.Graph.Attributes      as Attributes
+import qualified Luna.Data.Graph.Attributes.Naming      as Naming
+import qualified Luna.Data.Graph.Node.OutputName as OutputName
 import           Flowbox.Prelude
-
+import qualified Luna.Info                           as Info
 
 
 type GraphView = DG.Graph Node EdgeView
@@ -102,12 +103,12 @@ data NodeType = Tuple
 
 setGenerated :: Node.ID -> PropertyMap -> PropertyMap
 setGenerated nodeID =
-    PropertyMap.set nodeID Attributes.luna Attributes.graphViewGenerated Attributes.true
+    PropertyMap.set nodeID (show Info.apiVersion) Naming.graphViewGenerated Naming.true
 
 
 nodeType :: (Node.ID, Node) -> PropertyMap -> Maybe NodeType
 nodeType (nodeID, Node.Expr expr _ _) pm =
-    if PropertyMap.get nodeID Attributes.luna Attributes.graphViewGenerated pm == Just Attributes.true
+    if PropertyMap.get nodeID (show Info.apiVersion) Naming.graphViewGenerated pm == Just Naming.true
         then readMaybe $ toUpper expr
         else Nothing
 nodeType  _                           _  = Nothing

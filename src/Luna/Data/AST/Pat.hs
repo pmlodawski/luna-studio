@@ -8,17 +8,17 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.AST.Pat where
+module Luna.Data.AST.Pat where
 
 import           Control.Applicative
 import qualified Data.List           as List
 import           GHC.Generics
 
 import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Luna.Data.AST.Common    (ID)
-import qualified Flowbox.Luna.Data.AST.Lit       as Lit
-import           Flowbox.Luna.Data.AST.Type      (Type)
-import qualified Flowbox.Luna.Data.AST.Type      as Type
+import           Luna.Data.AST.Common    (ID)
+import qualified Luna.Data.AST.Lit       as Lit
+import           Luna.Data.AST.Type      (Type)
+import qualified Luna.Data.AST.Type      as Type
 import           Flowbox.Prelude                 hiding (Traversal, drop, id)
 
 

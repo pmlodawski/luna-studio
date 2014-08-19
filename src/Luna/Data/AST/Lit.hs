@@ -7,11 +7,11 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.AST.Lit where
+module Luna.Data.AST.Lit where
 
 import           Control.Lens
 import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Luna.Data.AST.Common    (ID)
+import           Luna.Data.AST.Common    (ID)
 import           Flowbox.Prelude                 (Eq, Read, Show, (++))
 import qualified Flowbox.Prelude                 as Prelude
 import           GHC.Generics

@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.GraphView.Default.Value where
+module Luna.Data.Graph.View.Default.Value where
 
 import Flowbox.Prelude
 

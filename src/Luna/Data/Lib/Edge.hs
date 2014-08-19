@@ -5,9 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Lib.Edge where
+module Luna.Data.Lib.Edge where
 
-import qualified Flowbox.Luna.Lib.Library as Library
+import qualified Luna.Data.Lib.Lib as Lib
 import           Flowbox.Prelude
 
 
@@ -19,7 +19,7 @@ noEdges :: [Edge]
 noEdges = []
 
 
-data Edge = Edge { src :: Library.ID
-                 , dst :: Library.ID
+data Edge = Edge { src :: Lib.ID
+                 , dst :: Lib.ID
                  , cls :: EdgeCls
                  } deriving (Show, Read, Ord, Eq)

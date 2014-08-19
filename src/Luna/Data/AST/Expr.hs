@@ -10,17 +10,17 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
 
-module Luna.AST.Expr where
+module Luna.Data.AST.Expr where
 
 import Control.Applicative
 import GHC.Generics        (Generic)
 
 import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Luna.Data.AST.Common    (ID)
-import qualified Flowbox.Luna.Data.AST.Lit       as Lit
-import qualified Flowbox.Luna.Data.AST.Pat       as Pat
-import           Flowbox.Luna.Data.AST.Type      (Type)
-import qualified Flowbox.Luna.Data.AST.Type      as Type
+import           Luna.Data.AST.Common    (ID)
+import qualified Luna.Data.AST.Lit       as Lit
+import qualified Luna.Data.AST.Pat       as Pat
+import           Luna.Data.AST.Type      (Type)
+import qualified Luna.Data.AST.Type      as Type
 import           Flowbox.Prelude                 hiding (Traversal, cons, drop, id)
 
 

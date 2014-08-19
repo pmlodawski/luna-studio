@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.Graph.Flags where
+module Luna.Data.Graph.Flags where
 
 import Flowbox.Prelude
 
@@ -20,5 +20,5 @@ data Flags = Flags { _io   :: Bool
 makeLenses (''Flags)
 
 
-empty :: Flags
-empty = Flags False False
+instance Default Flags where
+    def = Flags False False

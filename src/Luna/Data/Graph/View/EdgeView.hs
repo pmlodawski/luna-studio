@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.GraphView.EdgeView where
+module Luna.Data.Graph.View.EdgeView where
 
-import           Flowbox.Luna.Data.Graph.Edge               (Edge)
-import qualified Flowbox.Luna.Data.Graph.Edge               as Edge
-import qualified Flowbox.Luna.Data.Graph.Port               as Port
-import           Flowbox.Luna.Data.GraphView.PortDescriptor (PortDescriptor)
+import           Luna.Data.Graph.Edge                (Edge)
+import qualified Luna.Data.Graph.Edge                as Edge
+import qualified Luna.Data.Graph.Port                as Port
+import           Luna.Data.Graph.View.PortDescriptor (PortDescriptor)
 import           Flowbox.Prelude
 
 
