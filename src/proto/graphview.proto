@@ -1,0 +1,23 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.graphview;
+
+import "graph.proto";
+
+
+message EdgeView {
+    optional int32 nodeSrc = 1;
+    optional int32 nodeDst = 2;
+    repeated int32 portSrc = 3;
+    repeated int32 portDst = 4;
+}
+
+message GraphView {
+    repeated generated.proto.graph.Node nodes = 1;
+    repeated EdgeView edges = 2;
+}

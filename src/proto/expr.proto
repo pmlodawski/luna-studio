@@ -1,0 +1,263 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.expr;
+
+import "pat.proto";
+import "lit.proto";
+import "type.proto";
+
+// last used id = 35 / 135
+
+message Expr {
+    enum Cls {
+        NOP          = 1;
+        TypeAlias    = 2;
+        TypeDef      = 3;
+        Accessor     = 4;
+        App          = 5;
+        AppCons_     = 6;
+        Assignment   = 7;
+        RecordUpdate = 8;
+        Data         = 9;
+        ConD         = 10;
+        Con_         = 11;
+        Condition    = 31;
+        Function     = 12;
+        Lambda       = 13;
+        Grouped      = 32;
+        Import       = 14;
+        ImportNative = 35;
+        Infix        = 15;
+        List         = 16;
+        Lit          = 17;
+        Tuple        = 18;
+        Typed        = 19;
+        Var          = 20;
+        Wildcard     = 21;
+
+        RangeFromTo  = 22;
+        RangeFrom    = 23;
+        Field        = 24;
+        Arg          = 25;
+        Native       = 26;
+        NativeCode   = 27;
+        NativeVar    = 28;
+        Ref          = 33;
+        RefType      = 34;
+        Case         = 29;
+        Match        = 30;
+    }
+    required Cls cls = 1;
+    optional int32 id = 2 [default = -1];
+
+    extensions 100 to max;
+}
+
+message NOP {
+    extend Expr { optional NOP ext = 100; }
+}
+
+message Accessor {
+    extend Expr { optional Accessor ext = 101; }
+    optional string name = 1;
+    optional Expr   dst  = 2;
+}
+
+message TypeAlias {
+    extend Expr { optional TypeAlias ext = 127; }
+    optional generated.proto.type.Type srcType = 1;
+    optional generated.proto.type.Type dstType  = 2;
+}
+
+message TypeDef {
+    extend Expr { optional TypeDef ext = 128; }
+    optional generated.proto.type.Type srcType = 1;
+    optional generated.proto.type.Type dstType  = 2;
+}
+
+message App {
+    extend Expr { optional App ext = 102; }
+    optional Expr  src  = 1;
+    repeated Expr  args = 2;
+}
+
+message AppCons_ {
+    extend Expr { optional AppCons_ ext = 103; }
+    repeated Expr  args = 1;
+}
+
+message Assignment {
+    extend Expr { optional Assignment ext = 104; }
+    optional generated.proto.pat.Pat pat = 1;
+    optional Expr  dst = 2;
+}
+
+message RecordUpdate {
+    extend Expr { optional RecordUpdate ext = 129; }
+    optional Expr src         = 1;
+    repeated string selectors = 2;
+    optional Expr expr        = 3;
+}
+
+message Data {
+    extend Expr { optional Data ext = 105; }
+    optional generated.proto.type.Type cls = 1;
+    repeated Expr  cons  = 2;
+    repeated generated.proto.expr.Expr classes = 3;
+    repeated generated.proto.expr.Expr methods = 4;
+}
+
+message ConD {
+    extend Expr { optional ConD ext = 126; }
+    optional string name = 1;
+    repeated generated.proto.expr.Expr fields  = 2;
+}
+
+message Con_ {
+    extend Expr { optional Con_ ext = 106; }
+    optional string name = 1;
+}
+
+message Condition {
+    extend Expr { optional Condition ext = 131; }
+    optional Expr cond = 1;
+    repeated Expr success = 2;
+    repeated Expr failure = 3;
+}
+
+message Function {
+    extend Expr { optional Function ext = 107; }
+    repeated string path   = 1;
+    optional string name   = 2;
+    repeated Expr   inputs = 3;
+    optional generated.proto.type.Type output = 4;
+    repeated Expr   body   = 5;
+}
+
+message Lambda {
+    extend Expr { optional Lambda ext = 108; }
+    repeated Expr   inputs = 1;
+    optional generated.proto.type.Type output = 2;
+    repeated Expr   body   = 3;
+}
+
+message Grouped {
+    extend Expr { optional Grouped ext = 132; }
+    optional Expr expr = 1;
+}
+
+message Import {
+    extend Expr { optional Import ext = 109; }
+    repeated string path   = 1;
+    optional Expr   target = 2;
+    optional string rename = 3;
+}
+
+message ImportNative {
+    extend Expr { optional ImportNative ext = 135; }
+    repeated Expr segments = 1;
+}
+
+message Infix {
+    extend Expr { optional Infix ext = 110; }
+    optional string name = 1;
+    optional Expr   src  = 2;
+    optional Expr   dst  = 3;
+}
+
+message List {
+    extend Expr { optional List ext = 111; }
+    repeated Expr  items = 1;
+}
+
+message Lit {
+    extend Expr { optional Lit ext = 112; }
+    optional generated.proto.lit.Lit  lvalue = 1;
+}
+
+message Tuple {
+    extend Expr { optional Tuple ext = 113; }
+    repeated Expr  items = 1;
+}
+
+message Typed {
+    extend Expr { optional Typed ext = 114; }
+    optional generated.proto.type.Type cls  = 1;
+    optional Expr expr = 2;
+}
+
+message Var {
+    extend Expr { optional Var ext = 115; }
+    optional string name = 1;
+}
+
+message Wildcard {
+    extend Expr { optional Wildcard ext = 116; }
+}
+
+message RangeFromTo {
+    extend Expr { optional RangeFromTo ext = 117; }
+    optional Expr  start = 1;
+    optional Expr  end   = 2;
+}
+
+message RangeFrom {
+    extend Expr { optional RangeFrom ext = 118; }
+    optional Expr  start = 1;
+}
+
+message Field {
+    extend Expr { optional Field ext = 119; }
+    optional string name  = 1;
+    optional generated.proto.type.Type cls = 2;
+    optional Expr   value = 3;
+}
+
+message Arg {
+    extend Expr { optional Arg ext = 120; }
+    optional generated.proto.pat.Pat pat = 1;
+    optional Expr  value = 2;
+}
+
+message Native {
+    extend Expr { optional Native ext = 121; }
+    repeated Expr  segments = 1;
+}
+
+message NativeCode {
+    extend Expr { optional NativeCode ext = 122; }
+    optional string code = 1;
+}
+
+message NativeVar {
+    extend Expr { optional NativeVar ext = 123; }
+    optional string name = 1;
+}
+
+message Ref {
+    extend Expr { optional Ref ext = 133; }
+    optional Expr dst = 1;
+}
+
+message RefType {
+    extend Expr { optional RefType ext = 134; }
+    optional string typename = 1;
+    optional string name     = 2;
+}
+
+message Case {
+    extend Expr { optional Case ext = 124; }
+    optional generated.proto.expr.Expr expr  = 1;
+    repeated generated.proto.expr.Expr match = 2;
+}
+
+message Match {
+    extend Expr { optional Match ext = 125; }
+    optional generated.proto.pat.Pat   pat  = 1;
+    repeated generated.proto.expr.Expr body = 2;
+}

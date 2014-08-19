@@ -1,0 +1,39 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.focus;
+
+import "expr.proto";
+import "module.proto";
+
+
+
+message Focus {
+    enum Cls {
+        ModuleFocus   = 1;
+        ClassFocus    = 2;
+        FunctionFocus = 3;
+    }
+    required Cls cls = 1;
+
+    extensions 100 to max;
+}
+
+message ModuleFocus {
+    extend Focus { optional ModuleFocus ext = 100; }
+    optional generated.proto.module.Module m = 1;
+}
+
+message ClassFocus {
+    extend Focus { optional ClassFocus ext = 101; }
+    optional generated.proto.expr.Expr c = 1;
+}
+
+message FunctionFocus {
+    extend Focus { optional FunctionFocus ext = 102; }
+    optional generated.proto.expr.Expr f = 1;
+}
