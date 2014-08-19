@@ -65,7 +65,7 @@ Executable lib-importer
                   flowbox-luna-base,
                   flowbox-utils,
                   lens,
-                  luna-target-hs,
+                  luna-target-ghchs,
                   MissingH,
                   mtl,
                   timeit,
