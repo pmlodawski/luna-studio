@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.GraphView.Defaults (
+module Luna.Pass.Transform.GraphView.Defaults (
     addDefaults,
     removeDefaults,
     isGenerated,

@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.HAST.Module (
+module Luna.Pass.Data.HAST.Module (
         module Flowbox.Luna.Data.HAST.Module,
         module Flowbox.Luna.Data.HAST.Expr
 )where

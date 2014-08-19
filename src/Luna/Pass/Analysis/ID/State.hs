@@ -7,7 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Luna.Passes.Analysis.ID.State where
+module Luna.Pass.Analysis.ID.State where
 
 import           Control.Monad.State
 import           Data.IntSet         (IntSet)

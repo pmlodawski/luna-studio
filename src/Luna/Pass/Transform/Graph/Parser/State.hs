@@ -10,7 +10,7 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Flowbox.Luna.Passes.Transform.Graph.Parser.State where
+module Luna.Pass.Transform.Graph.Parser.State where
 
 import           Control.Monad.State
 import           Data.Map            (Map)

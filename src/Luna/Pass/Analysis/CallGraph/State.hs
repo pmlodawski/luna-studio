@@ -9,7 +9,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Passes.Analysis.CallGraph.State where
+module Luna.Pass.Analysis.CallGraph.State where
 
 import Control.Applicative
 

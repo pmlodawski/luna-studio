@@ -9,7 +9,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
 
-module Flowbox.Luna.Passes.Build.Build where
+module Luna.Pass.Build.Build where
 
 import Control.Monad.RWS   hiding (mapM, mapM_)
 

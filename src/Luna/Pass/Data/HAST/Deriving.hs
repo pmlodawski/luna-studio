@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.HAST.Deriving (
+module Luna.Pass.Data.HAST.Deriving (
     Deriving(..),
     genCode
 )where

@@ -11,7 +11,7 @@
 {-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE TupleSections             #-}
 
-module Flowbox.Luna.Passes.CodeGen.HSC.HSC where
+module Luna.Pass.CodeGen.HSC.HSC where
 
 import           Data.String.Utils                (join)
 import qualified Flowbox.Luna.Data.HAST.Expr      as HExpr

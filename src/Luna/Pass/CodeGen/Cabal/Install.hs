@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CodeGen.Cabal.Install where
+module Luna.Pass.CodeGen.Cabal.Install where
 
 import Control.Monad.RWS
 

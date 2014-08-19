@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
 
-module Flowbox.Luna.Passes.Analysis.ID.MaxID where
+module Luna.Pass.Analysis.ID.MaxID where
 
 import qualified Flowbox.Luna.Data.AST.Common             as AST
 import           Flowbox.Luna.Data.AST.Expr               (Expr)

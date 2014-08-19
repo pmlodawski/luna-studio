@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Import (
+module Luna.Pass.Transform.HAST.HASTGen.Import (
     Import(..),
     noItems,
     qualified,

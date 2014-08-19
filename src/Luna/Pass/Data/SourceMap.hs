@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Pass.SourceMap (
+module Luna.Pass.Data.SourceMap (
     module Flowbox.Luna.Data.Pass.SourceMap,
     module Data.Map
 )where

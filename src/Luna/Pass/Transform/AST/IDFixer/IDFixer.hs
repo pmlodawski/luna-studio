@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
 
-module Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer where
+module Luna.Pass.Transform.AST.IDFixer.IDFixer where
 
 import qualified Flowbox.Luna.Data.AST.Common                    as AST
 import           Flowbox.Luna.Data.AST.Expr                      (Expr)

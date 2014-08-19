@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Transform.AST.DepSort.DepSort where
+module Luna.Pass.Transform.AST.DepSort.DepSort where
 
 import qualified Flowbox.Luna.Data.AST.AST                               as AST
 import qualified Flowbox.Luna.Data.AST.Expr                              as Expr

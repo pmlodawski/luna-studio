@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CodeGen.Cabal.Store where
+module Luna.Pass.CodeGen.Cabal.Store where
 
 import           Control.Monad.RWS
 import qualified System.IO         as IO

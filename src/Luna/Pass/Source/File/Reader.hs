@@ -9,7 +9,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Source.File.Reader where
+module Luna.Pass.Source.File.Reader where
 
 import           Control.Applicative
 import           Control.Monad.RWS

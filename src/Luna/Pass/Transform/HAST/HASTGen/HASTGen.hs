@@ -11,7 +11,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE Rank2Types #-}
 
-module Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen where
+module Luna.Pass.Transform.HAST.HASTGen.HASTGen where
 
 import qualified Flowbox.Prelude                                     as Prelude
 import           Flowbox.Prelude                                     hiding (error, id, mod, simple, cons, exp)

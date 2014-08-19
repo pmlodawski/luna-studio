@@ -10,7 +10,7 @@
 {-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE TupleSections             #-}
 
-module Flowbox.Luna.Passes.Pass where
+module Luna.Pass.Pass where
 
 import Control.Monad.Reader
 import Control.Monad.State        hiding (fail, state)

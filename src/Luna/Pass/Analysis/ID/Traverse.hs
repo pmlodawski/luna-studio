@@ -7,7 +7,7 @@
 
 -- FIXME [pm]: [wd] to chyba niepowinien być pass. Funkcje traverse juz mamy. Pogadajmy o tym.
 
-module Flowbox.Luna.Passes.Analysis.ID.Traverse where
+module Luna.Pass.Analysis.ID.Traverse where
 
 import qualified Flowbox.Luna.Data.AST.Common       as AST
 import           Flowbox.Luna.Data.AST.Expr         (Expr)

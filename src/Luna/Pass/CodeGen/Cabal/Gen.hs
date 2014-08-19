@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CodeGen.Cabal.Gen where
+module Luna.Pass.CodeGen.Cabal.Gen where
 
 import qualified Data.List    as List
 import           Data.Version (Version)

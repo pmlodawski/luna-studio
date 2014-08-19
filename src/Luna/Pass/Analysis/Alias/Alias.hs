@@ -10,7 +10,7 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Flowbox.Luna.Passes.Analysis.Alias.Alias where
+module Luna.Pass.Analysis.Alias.Alias where
 
 import Control.Applicative
 

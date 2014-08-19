@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
 
-module Flowbox.Luna.Passes.Analysis.ID.ExtractIDs where
+module Luna.Pass.Analysis.ID.ExtractIDs where
 
 import Data.IntSet (IntSet)
 

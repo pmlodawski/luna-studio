@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState where
+module Luna.Pass.Transform.HAST.HASTGen.GenState where
 
 import Control.Monad.State
 

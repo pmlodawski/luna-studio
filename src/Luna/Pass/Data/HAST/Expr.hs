@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.HAST.Expr where
+module Luna.Pass.Data.HAST.Expr where
 
 import           Flowbox.Luna.Data.HAST.Deriving  (Deriving)
 import           Flowbox.Luna.Data.HAST.Extension (Extension)

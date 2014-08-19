@@ -10,7 +10,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TupleSections             #-}
 
-module Flowbox.Luna.Passes.General.Luna.Luna where
+module Luna.Pass.General.Luna.Luna where
 
 import Control.Monad.Trans.Either
 

@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Flowbox.Luna.Passes.Build.Diagnostics where
+module Luna.Pass.Build.Diagnostics where
 
 import Control.Monad.IO.Class
 import Data.String.Utils      (join)

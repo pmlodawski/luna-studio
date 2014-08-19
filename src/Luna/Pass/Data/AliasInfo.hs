@@ -7,7 +7,7 @@
 
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.Pass.AliasInfo where
+module Luna.Pass.Data.AliasInfo where
 
 import Flowbox.Prelude
 

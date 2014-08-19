@@ -9,7 +9,7 @@
 {-# LANGUAGE Rank2Types       #-}
 {-# LANGUAGE TupleSections    #-}
 
-module Flowbox.Luna.Passes.Analysis.NameResolver where
+module Luna.Pass.Analysis.NameResolver where
 
 import           Control.Applicative
 import           Control.Monad.State hiding (mapM, mapM_)
