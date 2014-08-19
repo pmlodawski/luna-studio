@@ -47,12 +47,13 @@ Library
                     protocol-buffers,
                     protocol-buffers-descriptor,
                     resourcet >= 1.1.0,
+                    simple-config >= 1.2.2.1,
                     SHA,
                     text,
                     time,
-                    transformers >= 0.4,
-                    network < 2.6
--- [PM] : network < 2.6 is a temporary fix until https://github.com/yunomu/simple-config/issues/5 is fixed.
+                    transformers >= 0.4
+
+-- [PM] simple-config >= 1.2.2.1 is added to fix dependencies
 
 Executable aws-test-dbpool
     Main-Is:        DBPool.hs
