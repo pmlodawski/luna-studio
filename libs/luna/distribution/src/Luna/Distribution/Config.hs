@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Distribution.Config where
+module Luna.Distribution.Config where
 
 import           Data.Monoid
 import qualified Distribution.Client.Config   as CabalConf

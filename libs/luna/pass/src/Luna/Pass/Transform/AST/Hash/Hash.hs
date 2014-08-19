@@ -9,7 +9,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Transform.AST.Hash.Hash where
+module Luna.Pass.Transform.AST.Hash.Hash where
 
 import Control.Applicative
 import Control.Monad.State

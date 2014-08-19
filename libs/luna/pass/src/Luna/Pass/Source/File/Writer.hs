@@ -10,7 +10,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Source.File.Writer where
+module Luna.Pass.Source.File.Writer where
 
 import           Control.Monad.RWS
 import qualified System.IO         as IO

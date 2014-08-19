@@ -11,7 +11,7 @@
 {-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE TupleSections             #-}
 
-module Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser where
+module Luna.Pass.Transform.AST.TxtParser.TxtParser where
 
 import           Flowbox.Luna.Data.AST.Module                       (Module)
 import           Flowbox.Luna.Data.Pass.ASTInfo                     (ASTInfo)

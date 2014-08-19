@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
 
-module Flowbox.Luna.Passes.Transform.Graph.Builder.Builder where
+module Luna.Pass.Transform.Graph.Builder.Builder where
 
 import           Control.Applicative
 import           Control.Monad.State

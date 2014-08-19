@@ -9,7 +9,7 @@
 {-# LANGUAGE RankNTypes       #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module Flowbox.Luna.Passes.Transform.Graph.Builder.State where
+module Luna.Pass.Transform.Graph.Builder.State where
 
 import           Control.Monad.State
 import qualified Data.IntMap         as IntMap

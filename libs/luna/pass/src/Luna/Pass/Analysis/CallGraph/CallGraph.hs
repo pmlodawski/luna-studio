@@ -10,7 +10,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Analysis.CallGraph.CallGraph where
+module Luna.Pass.Analysis.CallGraph.CallGraph where
 
 import Control.Applicative
 import           Control.Monad.State (get)

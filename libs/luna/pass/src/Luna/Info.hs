@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Config.Config (
+module Luna.Info (
         module Paths_flowbox_luna_base
 ) where
 

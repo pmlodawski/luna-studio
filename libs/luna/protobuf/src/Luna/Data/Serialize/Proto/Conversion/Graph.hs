@@ -10,7 +10,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Graph where
+module Luna.Data.Serialize.Proto.Conversion.Graph where
 
 import Control.Applicative
 import Data.Int            (Int32)

@@ -1,7 +1,7 @@
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent where
+module Luna.Parser.Indent where
 
 import Flowbox.Prelude
 import Text.Parsec                hiding (many, optional, parse, (<|>), State)

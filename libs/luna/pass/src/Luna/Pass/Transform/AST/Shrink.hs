@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.AST.Shrink (
+module Luna.Pass.Transform.AST.Shrink (
     shrinkFunctionBodies,
 ) where
 

@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState where
+module Luna.Parser.State where
 
 import           Flowbox.Prelude                  hiding(id)
 import           Flowbox.Luna.Data.AST.SourcePos  (SourceRange)

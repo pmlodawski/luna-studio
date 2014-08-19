@@ -9,7 +9,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf where
+module Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf where
 
 import qualified Flowbox.Luna.Data.AST.Expr                              as Expr
 import           Flowbox.Luna.Data.AST.Module                            (Module)

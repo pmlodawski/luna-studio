@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Distribution.Client.List where
+module Luna.Distribution.Client.List where
 
 import qualified Data.Aeson           as JSON
 import qualified Data.ByteString.Lazy as ByteString

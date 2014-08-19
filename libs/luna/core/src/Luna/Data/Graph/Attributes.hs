@@ -7,14 +7,7 @@
 
 -- FIXME[pm]: Jezeli ten pas dostarcza danych ktore sa przesylane pomiedzy passami,
 -- powinien znajdowac sie w Flowbox.Luna.Data.Pass
-module Flowbox.Luna.Data.Attributes (
-    Attributes,
-    module Data.Map,
-
-    get,
-    set,
-    luna,
-) where
+module Luna.Data.Graph.Attributes where
 
 import           Data.Map
 import qualified Data.Map        as Map
@@ -36,5 +29,4 @@ set userKey key value attrs = Map.insert userKey newUserAttrs attrs where
                             Just userAttrs -> Map.insert     key  value userAttrs
 
 
-luna :: String
-luna = "Luna-0.1"
+

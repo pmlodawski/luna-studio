@@ -9,7 +9,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes.State where
+module Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State where
 
 import Flowbox.Luna.Data.AST.AST        (ID)
 import Flowbox.Luna.Data.Pass.AliasInfo (AliasInfo)

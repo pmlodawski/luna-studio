@@ -5,17 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.AST.AST (
-    module Flowbox.Luna.Data.AST.AST,
-    module Flowbox.Luna.Data.AST.Common
+module Luna.Data.AST.AST (
+    module Luna.Data.AST.AST,
+    module Luna.Data.AST.Common
 )where
 
-import Flowbox.Luna.Data.AST.Common
-import Flowbox.Luna.Data.AST.Expr   (Expr)
-import Flowbox.Luna.Data.AST.Lit    (Lit)
-import Flowbox.Luna.Data.AST.Module (Module)
-import Flowbox.Luna.Data.AST.Pat    (Pat)
-import Flowbox.Luna.Data.AST.Type   (Type)
+import Luna.Data.AST.Common
+import Luna.Data.AST.Expr   (Expr)
+import Luna.Data.AST.Lit    (Lit)
+import Luna.Data.AST.Module (Module)
+import Luna.Data.AST.Pat    (Pat)
+import Luna.Data.AST.Type   (Type)
 import Flowbox.Prelude
 
 

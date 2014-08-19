@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Build.BuildConfig where
+module Luna.Pass.Build.BuildConfig where
 
 import Data.Version (Version)
 

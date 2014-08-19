@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.Graph.Node.OutputName (
+module Luna.Data.Graph.Node.OutputName (
     fix,
     fixEmpty,
     fixEmpty',
@@ -15,8 +15,8 @@ module Flowbox.Luna.Passes.Transform.Graph.Node.OutputName (
 import qualified Data.Char as Char
 import qualified Data.List as List
 
-import           Flowbox.Luna.Data.Graph.Node (Node)
-import qualified Flowbox.Luna.Data.Graph.Node as Node
+import           Luna.Data.Graph.Node (Node)
+import qualified Luna.Data.Graph.Node as Node
 import           Flowbox.Prelude
 
 
@@ -35,7 +35,7 @@ fixEmpty' :: (Node.ID, Node) -> (Node.ID, Node)
 fixEmpty' (nodeID, node) =
     (nodeID, fixEmpty node nodeID)
 
-
+--FIXME[wd]: nazwe zmienic na ensureProperName lub cos co mowi co to robi
 fix :: Node -> Node.ID ->Node
 fix node nodeID = newNode where
     expr    = node ^. Node.expr

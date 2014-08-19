@@ -9,7 +9,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TypeSynonymInstances      #-}
 
-module Flowbox.Luna.Data.Pass.CallGraph where
+module Luna.Pass.Data.CallGraph where
 
 import Data.Graph.Inductive               hiding (Node)
 import Data.Graph.Inductive.Monad

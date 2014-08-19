@@ -5,12 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Path.Import(
+module Luna.Data.AST.Import(
     Import(..),
 ) where
 
-import Flowbox.Luna.Data.Path.Path (Path)
 import Flowbox.Prelude
+
+type Path = [String]
 
 data Import = Import {path :: Path, name :: String} deriving (Show)
 

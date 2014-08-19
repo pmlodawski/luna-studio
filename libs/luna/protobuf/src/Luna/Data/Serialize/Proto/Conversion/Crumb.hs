@@ -10,7 +10,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb where
+module Luna.Data.Serialize.Proto.Conversion.Crumb where
 
 import           Control.Applicative
 import qualified Data.Sequence                                  as Seq

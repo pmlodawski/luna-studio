@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module Flowbox.Luna.Passes.Analysis.Alias.State where
+module Luna.Pass.Analysis.Alias.State where
 
 import           Control.Monad.State (MonadState, get, modify, put)
 import qualified Data.IntMap         as IntMap

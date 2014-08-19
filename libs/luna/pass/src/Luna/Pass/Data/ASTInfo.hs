@@ -7,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 
-module Flowbox.Luna.Data.Pass.ASTInfo where
+module Luna.Pass.Data.ASTInfo where
 
 import qualified Flowbox.Luna.Data.AST.Common as AST
 import           Flowbox.Prelude              hiding (id)

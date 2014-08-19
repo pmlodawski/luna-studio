@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.AST.TxtParser.Token where
+module Luna.Parser.Token where
 
 --import Flowbox.Luna.Data.AST.SourcePos (SourcePos, SourceRange (SourceRange))
 --import Flowbox.Luna.Data.AST.Utils     (ID)

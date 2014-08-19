@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Cabal.Config where
+module Luna.Distribution.Cabal.Config where
 
 import           Data.Version (Version)
 import qualified Data.Version as Version

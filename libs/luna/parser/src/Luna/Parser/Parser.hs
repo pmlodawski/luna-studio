@@ -9,7 +9,7 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Luna.Parser where
+module Luna.Parser.Parser where
 
 import           Control.Applicative
 import           Text.Parsec         hiding (State, many, optional, parse, (<|>))

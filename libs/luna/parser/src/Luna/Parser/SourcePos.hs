@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.AST.SourcePos where
+module Luna.Parser.SourcePos where
 
 import Flowbox.Prelude
 

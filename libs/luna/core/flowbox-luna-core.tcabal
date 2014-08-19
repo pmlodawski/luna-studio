@@ -26,23 +26,10 @@ Library
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
-  Build-Depends:  base
-
-
-Executable luna-core-test
-  Main-Is:        Main.hs
-  Hs-Source-Dirs: test
-
-  if flag(debug)
-    GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2
-
-  Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
-                  NoImplicitPrelude
-                  OverloadedStrings
-
   Build-Depends:  base,
-                  luna-core
+                  containers,
+                  flowbox-utils,
+                  lens
+
 
 

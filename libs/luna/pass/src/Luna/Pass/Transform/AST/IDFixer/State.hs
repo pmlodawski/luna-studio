@@ -7,7 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Luna.Passes.Transform.AST.IDFixer.State where
+module Luna.Pass.Transform.AST.IDFixer.State where
 
 import Control.Monad.State
 

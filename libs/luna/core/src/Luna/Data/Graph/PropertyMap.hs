@@ -7,19 +7,19 @@
 
 -- FIXME[pm]: Jezeli ten pas dostarcza danych ktore sa przesylane pomiedzy passami,
 -- powinien znajdowac sie w Flowbox.Luna.Data.Pass
-module Flowbox.Luna.Data.PropertyMap (
+module Luna.Data.Graph.PropertyMap (
     module Data.IntMap,
-    module Flowbox.Luna.Data.PropertyMap,
+    module Luna.Data.Graph.PropertyMap,
 ) where
 
 import           Data.IntMap
 import qualified Data.IntMap as IntMap
 import qualified Data.Maybe  as Maybe
 
-import qualified Flowbox.Luna.Data.Attributes       as Attributes
-import qualified Flowbox.Luna.Data.Graph.Node       as Node
-import           Flowbox.Luna.Data.Graph.Properties (Properties)
-import qualified Flowbox.Luna.Data.Graph.Properties as Properties
+import qualified Luna.Data.Graph.Attributes as Attributes
+import qualified Luna.Data.Graph.Node       as Node
+import           Luna.Data.Graph.Properties (Properties)
+import qualified Luna.Data.Graph.Properties as Properties
 import           Flowbox.Prelude                    hiding (set)
 
 
@@ -36,7 +36,7 @@ get nodeID spaceKey key propertyMap = do
 
 set :: Node.ID -> String -> String -> String -> PropertyMap -> PropertyMap
 set nodeID spaceKey key value propertyMap = IntMap.insert nodeID newProperties propertyMap where
-    oldProperties = Maybe.fromMaybe Properties.empty (IntMap.lookup nodeID propertyMap)
+    oldProperties = Maybe.fromMaybe def (IntMap.lookup nodeID propertyMap)
     newProperties = oldProperties & Properties.attrs
         %~ Attributes.set spaceKey key value
 

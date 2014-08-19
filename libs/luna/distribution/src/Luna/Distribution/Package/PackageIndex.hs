@@ -7,7 +7,7 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Distribution.Package.PackageIndex where
+module Luna.Distribution.Package.PackageIndex where
 
 import           Data.Char                        (toLower)
 import qualified Data.List                        as List

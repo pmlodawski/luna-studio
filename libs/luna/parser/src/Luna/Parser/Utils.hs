@@ -7,7 +7,7 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils where
+module Luna.Parser.Utils where
 
 import           Control.Applicative
 import qualified Text.Parsec         as Parsec

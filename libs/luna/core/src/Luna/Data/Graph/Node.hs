@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.Graph.Node where
+module Luna.Data.Graph.Node where
 
 import Flowbox.Prelude
 

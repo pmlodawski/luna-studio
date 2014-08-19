@@ -9,7 +9,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module Flowbox.Luna.Passes.Transform.AST.Desugar.General.State where
+module Luna.Pass.Transform.AST.Desugar.General.State where
 
 import           Flowbox.Luna.Data.Pass.ASTInfo (ASTInfo)
 import qualified Flowbox.Luna.Data.Pass.ASTInfo as ASTInfo

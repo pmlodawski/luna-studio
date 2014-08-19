@@ -6,14 +6,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.Graph.Properties where
+module Luna.Data.Graph.Properties where
 
-import           Flowbox.Luna.Data.Attributes  (Attributes)
-import qualified Flowbox.Luna.Data.Attributes  as Attributes
-import           Flowbox.Luna.Data.Graph.Flags (Flags)
-import qualified Flowbox.Luna.Data.Graph.Flags as Flags
+import           Luna.Data.Graph.Attributes  (Attributes)
+import           Luna.Data.Graph.Flags (Flags)
 import           Flowbox.Prelude
-
 
 
 data Properties = Properties { _flags :: Flags
@@ -23,5 +20,5 @@ data Properties = Properties { _flags :: Flags
 makeLenses (''Properties)
 
 
-empty :: Properties
-empty = Properties Flags.empty Attributes.empty
+instance Default Properties where
+    def = Properties def def

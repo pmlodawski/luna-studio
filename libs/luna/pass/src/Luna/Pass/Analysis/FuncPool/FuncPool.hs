@@ -10,7 +10,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool where
+module Luna.Pass.Analysis.FuncPool.FuncPool where
 
 import Control.Applicative
 import Control.Monad.State hiding (mapM, mapM_)

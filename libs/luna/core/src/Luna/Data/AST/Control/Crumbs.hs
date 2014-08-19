@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.AST.Control.Crumb where
+module Luna.Data.AST.Control.Crumbs where
 
 import Flowbox.Prelude
 

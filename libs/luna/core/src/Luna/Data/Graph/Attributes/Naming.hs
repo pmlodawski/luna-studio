@@ -5,10 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.Graph.Attributes where
+module Luna.Data.Graph.Attributes.Naming where
 
 import Flowbox.Prelude
-
 
 
 true :: String
@@ -33,3 +32,4 @@ nodePosition = "Node-position"
 
 graphViewGenerated :: String
 graphViewGenerated = "GraphView-generated"
+

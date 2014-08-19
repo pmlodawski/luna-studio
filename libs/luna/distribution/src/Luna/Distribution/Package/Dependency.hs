@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveGeneric #-}
 
-module Flowbox.Distribution.Package.Dependency where
+module Luna.Distribution.Package.Dependency where
 
 import Data.Aeson
 --import           Flowbox.Data.Version (Version)

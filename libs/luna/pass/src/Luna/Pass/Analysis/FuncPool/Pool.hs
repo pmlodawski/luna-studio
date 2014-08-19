@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Flowbox.Luna.Passes.Analysis.FuncPool.Pool where
+module Luna.Pass.Analysis.FuncPool.Pool where
 
 import           Control.Monad.State
 import           Data.Set            (Set)

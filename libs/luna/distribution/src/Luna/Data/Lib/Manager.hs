@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Lib.LibManager (
+module Luna.Data.Lib.Manager (
     module Flowbox.Data.Graph,
     LibManager,
     empty,
@@ -15,10 +15,10 @@ module Flowbox.Luna.Lib.LibManager (
 
 import           Flowbox.Data.Graph                         hiding (Edge, empty)
 import qualified Flowbox.Data.Graph                         as Graph
-import           Flowbox.Luna.Lib.Edge                      (Edge)
-import           Flowbox.Luna.Lib.Library                   (Library)
-import qualified Flowbox.Luna.Lib.Library                   as Library
-import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
+import           Luna.Lib.Edge                      (Edge)
+import           Luna.Lib.Library                   (Library)
+import qualified Luna.Lib.Library                   as Library
+import qualified Luna.Tools.Serialize.Proto.Library as LibSerialization
 import           Flowbox.Prelude                            hiding (empty)
 import           Flowbox.System.UniPath                     (UniPath)
 

@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Pass.Source where
+module Luna.Pass.Data.Source where
 
 import Flowbox.Prelude
 

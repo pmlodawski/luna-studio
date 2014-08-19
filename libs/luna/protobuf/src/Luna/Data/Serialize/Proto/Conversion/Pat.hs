@@ -10,7 +10,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Pat where
+module Luna.Data.Serialize.Proto.Conversion.Pat where
 
 import           Control.Applicative
 import qualified Data.Map                        as Map

@@ -6,10 +6,10 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
 
-module Luna.AST.Control.Focus where
+module Luna.Data.AST.Control.Focus where
 
-import Flowbox.Luna.Data.AST.Expr   (Expr)
-import Flowbox.Luna.Data.AST.Module (Module)
+import Luna.Data.AST.Expr   (Expr)
+import Luna.Data.AST.Module (Module)
 import Flowbox.Prelude              hiding (Traversal)
 
 

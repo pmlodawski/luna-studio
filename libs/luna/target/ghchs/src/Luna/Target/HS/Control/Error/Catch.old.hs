@@ -15,7 +15,7 @@
 
 !{-# LANGUAGE RightSideContexts #-}
 
-module Luna.Target.HS.Control.Error.Catch where
+module Luna.Target.HS.Control.Error.Catch.old where
 
 import Luna.Target.HS.Control.Error.Data
 

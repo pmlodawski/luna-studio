@@ -10,7 +10,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Lit where
+module Luna.Data.Serialize.Proto.Conversion.Lit where
 
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Lit                      (Lit)

@@ -5,8 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Config.Config (
-        module Paths_flowbox_luna_base
+module Luna.Info (
+    module Luna.Info,
+    module Paths_luna_core
 ) where
 
-import Paths_flowbox_luna_base (version)
+import Flowbox.Prelude
+import Paths_luna_core (version)
+import Flowbox.Data.Version
+
+apiVersion :: Versioned String
+apiVersion = Versioned "Luna" $ Version [0,1] []

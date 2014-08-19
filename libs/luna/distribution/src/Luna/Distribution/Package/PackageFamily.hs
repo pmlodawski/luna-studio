@@ -7,7 +7,7 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Distribution.Package.PackageFamily where
+module Luna.Distribution.Package.PackageFamily where
 
 import qualified Data.Aeson.TH     as JSON
 import           Data.Function     (on)

@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.HAST.Lit where
+module Luna.Pass.Data.HAST.Lit where
 
 import           Flowbox.Prelude hiding (Char, Integer, String)
 import qualified Flowbox.Prelude as Prelude

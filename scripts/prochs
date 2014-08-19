@@ -86,14 +86,17 @@ def style(args):
 
 def replaceModName(s, newname):
     name = r'''[\w'.]+'''
-    pat  = re.compile(r'module\s+(?P<name>{name})\s+where'.format(**locals()), re.MULTILINE)
-    modname = "module %s where" % newname
-    return pat.sub(modname, s)
-
+    pat  = re.compile(r'(?P<head>module\s+)(?P<name>{name})(?P<exportlist>\s*(\((.|\n)+\)\s*)?)(?P<tail>where)'.format(**locals()), re.MULTILINE)
+    def process(match):
+        return match.group('head') + newname + match.group('exportlist') + match.group('tail')
+    return pat.sub(process, s)
 
 def modrename(args):
     path_prefixes = ['src']
     paths = getTrackedFiles()
+    # paths = ['libs/luna/core/src/Luna/Data/AST/AST.hs']
+    total = len(paths)
+    print_info ("Checking %s file(s)" % total)
     for path in paths:
         namePath = path.split(os.path.sep)
         namePath = dropUnless (namePath, lambda x: x in path_prefixes) [1:]
@@ -101,25 +104,14 @@ def modrename(args):
         if namePath[-1][-2:] != 'hs': continue
         name = namePath[:-1] + [removeExt(namePath[-1])]
         name = '.'.join(name)
-        print name
-        print path
-        with open(path, 'rw') as file:
-            print ">>>>>>>>>>>>>>>"
-            print name
+
+        with open(path, 'r') as file:
             txt = file.read()
-            print replaceModName(txt, name)
-
-    # names = [name for name in names if len(name) > 1]
-
-
-    # names = [dropUnless (path, lambda x: x in path_prefixes) [1:] for path in paths]
-    # names = [name for name in names if len(name) > 1]
-    # names = filter(None, names)
-    # names = [ name[:-1] + [removeExt(name[-1])] for name in names]
-    # names = [ '.'.join(name) for name in names]
-
-    # print paths
-    pass
+        newtxt = replaceModName(txt, name)
+        if txt != newtxt:
+            print_info ("Updating file %s" % path)
+            with open(path, 'w+') as file:
+                file.write(newtxt)
 
 def removeExt(name): 
     return os.path.splitext(name)[0]
@@ -142,12 +134,9 @@ def main():
     parser_style.set_defaults(func=style)
     parser_modrename = subparsers.add_parser('modrename')
     parser_modrename.set_defaults(func=modrename)
-
     args = parser.parse_args()
     args.func(args)
 
-
-    
 main()
 
 

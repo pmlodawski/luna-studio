@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils where
+module Luna.Pass.Transform.HAST.HASTGen.Utils where
 
 import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit  as HLit

@@ -7,18 +7,18 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell    #-}
 
-module Flowbox.Luna.Lib.Library where
+module Luna.Data.Lib.Lib where
 
-import           Flowbox.Luna.Data.AST.Module  (Module)
-import qualified Flowbox.Luna.Data.AST.Module  as Module
-import qualified Flowbox.Luna.Data.AST.Type    as Type
-import           Flowbox.Luna.Data.PropertyMap (PropertyMap)
-import qualified Flowbox.Luna.Data.PropertyMap as PropertyMap
+import           Luna.Data.AST.Module  (Module)
+import qualified Luna.Data.AST.Module  as Module
+import qualified Luna.Data.AST.Type    as Type
+import           Luna.Data.Graph.PropertyMap (PropertyMap)
+import qualified Luna.Data.Graph.PropertyMap as PropertyMap
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath        (UniPath)
 
 
-
+-- FIXME[wd]: property map do wywalenia bo zawiera flagi!
 data Library = Library { _name        :: String
                        , _path        :: UniPath
                        , _ast         :: Module
