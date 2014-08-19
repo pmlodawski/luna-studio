@@ -12,10 +12,10 @@ module Luna.Parser.Utils where
 import           Control.Applicative
 import qualified Text.Parsec         as Parsec
 
-import           Flowbox.Luna.Data.AST.SourcePos                        (SourcePos (SourcePos))
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
-import           Flowbox.Prelude                                        hiding (pre)
-import           Text.Parsec                                            hiding (getPosition, many, optional, parse, (<|>))
+import           Flowbox.Prelude     hiding (pre)
+import           Luna.Data.SourcePos (SourcePos (SourcePos))
+import qualified Luna.Parser.State   as ParseState
+import           Text.Parsec         hiding (getPosition, many, optional, parse, (<|>))
 
 checkIf f msg p = do
         obj <- p

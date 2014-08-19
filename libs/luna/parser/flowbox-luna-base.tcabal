@@ -31,5 +31,6 @@ Library
                   concatenative,
                   flowbox-utils,
                   luna-core,
-                  text
+                  text,
+                  mtl
 

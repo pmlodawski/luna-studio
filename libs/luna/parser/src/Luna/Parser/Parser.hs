@@ -15,23 +15,23 @@ import           Control.Applicative
 import           Text.Parsec         hiding (State, many, optional, parse, (<|>))
 import qualified Text.Parsec.Expr    as PExpr
 
-import           Flowbox.Prelude          hiding (id, mod, noneOf, op)
-import qualified Flowbox.Prelude          as Prelude
-import qualified Luna.Data.AST.Data       as Data
-import qualified Luna.Data.AST.Expr       as Expr
-import qualified Luna.Data.AST.Lit        as Lit
-import           Luna.Data.AST.Module     (Module)
-import qualified Luna.Data.AST.Module     as Module
-import qualified Luna.Data.AST.Pat        as Pat
-import qualified Luna.Data.AST.Type       as Type
-import           Luna.Data.Pass.ASTInfo   (ASTInfo)
-import qualified Luna.Data.Pass.ASTInfo   as ASTInfo
-import           Luna.Data.Pass.Source    (Source (Source))
-import           Luna.Data.Pass.SourceMap (SourceMap)
+import           Flowbox.Prelude     hiding (id, mod, noneOf, op)
+import qualified Flowbox.Prelude     as Prelude
+import qualified Luna.AST.Data       as Data
+import qualified Luna.AST.Expr       as Expr
+import qualified Luna.AST.Lit        as Lit
+import           Luna.AST.Module     (Module)
+import qualified Luna.AST.Module     as Module
+import qualified Luna.AST.Pat        as Pat
+import qualified Luna.AST.Type       as Type
+import           Luna.Data.ASTInfo   (ASTInfo)
+import qualified Luna.Data.ASTInfo   as ASTInfo
+import           Luna.Data.Source    (Source (Source))
+import           Luna.Data.SourceMap (SourceMap)
 import           Luna.Parser.Indent
-import qualified Luna.Parser.Lexer        as L
-import           Luna.Parser.ParseState   (ParseState)
-import qualified Luna.Parser.ParseState   as ParseState
+import qualified Luna.Parser.Lexer   as L
+import           Luna.Parser.State   (ParseState)
+import qualified Luna.Parser.State   as ParseState
 import           Luna.Parser.Utils
 
 import Control.Monad.State hiding (mapM)
