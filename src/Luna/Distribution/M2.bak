@@ -1,0 +1,108 @@
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
+
+module Flowbox.Distribution.M where
+
+import           Flowbox.Prelude       
+import qualified Distribution.Client.Setup    as Setup
+import           Distribution.Client.Setup      (GlobalFlags)
+import           Data.Monoid                    
+import           Distribution.Simple.Compiler   (PackageDB(GlobalPackageDB, SpecificPackageDB))
+import qualified Flowbox.Config.Config        as Config
+import           Flowbox.Config.Config          (Config)
+import           Distribution.Verbosity       as Verbosity
+import           Distribution.Client.Sandbox  as Sandbox
+import           Distribution.Simple.Setup      (Flag(Flag))
+import qualified Distribution.Client.List     as List
+import qualified Distribution.Client.Config   as CabalConf
+
+import qualified Distribution.ModuleName      as ModuleName
+--import           Distribution.ModuleName        (ModuleName)
+import qualified Distribution.PackageDescription        as PackageDescription
+import qualified Distribution.Client.Dependency.Types   as DepTypes
+
+import qualified Distribution.Client.Types              as CliTypes
+
+import qualified Distribution.License                   as License
+import qualified Distribution.Version                   as Version
+import qualified Distribution.Package                   as Package
+
+import Data.Aeson
+import Data.Aeson.TH
+import Data.Char (toLower)
+
+import GHC.Generics
+
+
+localPkgDB :: Config -> PackageDB
+localPkgDB = SpecificPackageDB . Config.pkgDb . Config.local
+
+globalPkgDB :: Config -> PackageDB
+globalPkgDB = SpecificPackageDB . Config.pkgDb . Config.global
+
+localPkgStack :: Config -> [PackageDB]
+localPkgStack cfg = [ GlobalPackageDB
+                    , localPkgDB  cfg
+                    , globalPkgDB cfg
+                    ]
+
+globalPkgStack :: Config -> [PackageDB]
+globalPkgStack cfg = [ GlobalPackageDB
+                     , globalPkgDB cfg
+                     , localPkgDB  cfg
+                     ]
+
+defaultGlobalFlags :: Config -> GlobalFlags
+defaultGlobalFlags cfg = mempty { Setup.globalConfigFile = Flag $ (Config.cabal . Config.config) cfg }
+
+main :: IO ()
+main = do
+    cfg <- Config.load
+    let verbosity   = Verbosity.normal
+        pkgDBs      = localPkgStack cfg
+        globalFlags = defaultGlobalFlags cfg
+    (_, cabalCfg) <- Sandbox.loadConfigOrSandboxConfig verbosity globalFlags mempty
+    let
+        configFlags  = CabalConf.savedConfigureFlags cabalCfg
+        globalFlags' = CabalConf.savedGlobalFlags    cabalCfg `mappend` globalFlags
+    (comp, _, conf) <- configCompilerAux' configFlags
+    pkgs            <- List.getPkgList verbosity
+                                       (configPackageDB' configFlags)
+                                       (Setup.globalRepos globalFlags')
+                                       comp
+                                       conf
+                                       mempty
+                                       ["xxx"]
+
+    return ()
+
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''DepTypes.ExtDependency)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''PackageDescription.Flag)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''PackageDescription.FlagName)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''PackageDescription.GenericPackageDescription)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''ModuleName.ModuleName)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''License.License)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''Version.VersionRange)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''Version.Version)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''CliTypes.SourcePackage)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''CliTypes.PackageLocation)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''Package.PackageName)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''Package.InstalledPackageId)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''Package.Dependency)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''List.PackageDisplayInfo)
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 4, constructorTagModifier = map toLower} ''List.PackageDisplayInfo)
+
+
+--deriving instance Generic List.PackageDisplayInfo
+--deriving instance Generic ModuleName.ModuleName
+--deriving instance Generic PackageDescription.Flag
+--deriving instance Generic DepTypes.ExtDependency
+----instance ToJSON PackageDescription.Flag
+----instance ToJSON DepTypes.ExtDependency
+--instance ToJSON List.PackageDisplayInfo
+--instance ToJSON ModuleName
+
+    --print cabalCfg
+    --print cabalCfg
+    --print pkgDBs
