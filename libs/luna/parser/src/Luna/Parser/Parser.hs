@@ -7,7 +7,7 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts          #-}
 
 module Luna.Parser.Parser where
 
@@ -15,24 +15,24 @@ import           Control.Applicative
 import           Text.Parsec         hiding (State, many, optional, parse, (<|>))
 import qualified Text.Parsec.Expr    as PExpr
 
-import qualified Flowbox.Luna.Data.AST.Data                             as Data
-import qualified Flowbox.Luna.Data.AST.Expr                             as Expr
-import qualified Flowbox.Luna.Data.AST.Lit                              as Lit
-import           Flowbox.Luna.Data.AST.Module                           (Module)
-import qualified Flowbox.Luna.Data.AST.Module                           as Module
-import qualified Flowbox.Luna.Data.AST.Pat                              as Pat
-import qualified Flowbox.Luna.Data.AST.Type                             as Type
-import           Flowbox.Luna.Data.Pass.ASTInfo                         (ASTInfo)
-import qualified Flowbox.Luna.Data.Pass.ASTInfo                         as ASTInfo
-import           Flowbox.Luna.Data.Pass.Source                          (Source (Source))
-import           Flowbox.Luna.Data.Pass.SourceMap                       (SourceMap)
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer      as L
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState (ParseState)
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import           Flowbox.Prelude                                        hiding (id, mod, noneOf, op)
-import qualified Flowbox.Prelude                                        as Prelude
+import           Flowbox.Prelude          hiding (id, mod, noneOf, op)
+import qualified Flowbox.Prelude          as Prelude
+import qualified Luna.Data.AST.Data       as Data
+import qualified Luna.Data.AST.Expr       as Expr
+import qualified Luna.Data.AST.Lit        as Lit
+import           Luna.Data.AST.Module     (Module)
+import qualified Luna.Data.AST.Module     as Module
+import qualified Luna.Data.AST.Pat        as Pat
+import qualified Luna.Data.AST.Type       as Type
+import           Luna.Data.Pass.ASTInfo   (ASTInfo)
+import qualified Luna.Data.Pass.ASTInfo   as ASTInfo
+import           Luna.Data.Pass.Source    (Source (Source))
+import           Luna.Data.Pass.SourceMap (SourceMap)
+import           Luna.Parser.Indent
+import qualified Luna.Parser.Lexer        as L
+import           Luna.Parser.ParseState   (ParseState)
+import qualified Luna.Parser.ParseState   as ParseState
+import           Luna.Parser.Utils
 
 import Control.Monad.State hiding (mapM)
 import Text.Parsec.Pos

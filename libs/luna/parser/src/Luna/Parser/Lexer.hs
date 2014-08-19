@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Luna.Parser.Lexer where
@@ -18,9 +18,9 @@ import Flowbox.Prelude     hiding (noneOf, op)
 import Text.Parsec         hiding (getPosition, many, optional, (<|>))
 
 
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import           Luna.Parser.Indent
+import qualified Luna.Parser.State  as State
+import           Luna.Parser.Utils
 
 
 identLetter  = alphaNum <|> char '_'
@@ -54,7 +54,7 @@ pRef         = symbol  '@'
 
 --FIXME[wd]
 --deleted @, because code like "f @g" does not work
-operators    = "!#$%&*+./<=>?\\^|-~" 
+operators    = "!#$%&*+./<=>?\\^|-~"
 
 opStart      = oneOf operators
 opLetter     = opStart
@@ -297,7 +297,7 @@ lexeme p = do
   res   <- p
   ws    <- try(pSpaces <* checkIndented) <|> pure ""
   state <- getState
-  putState (state & ParseState.lastLexeme .~ ws)
+  putState (state & State.lastLexeme .~ ws)
   return res
 --lexeme2 s p = p <* if s then skipMany pSpaces1 else return ()
 
