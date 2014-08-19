@@ -10,7 +10,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr where
+module Luna.Data.Serialize.Proto.Conversion.Expr where
 
 import           Control.Applicative
 import qualified Data.Foldable                                     as F

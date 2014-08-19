@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Luna.Tools.Serialize.Proto.Library (
+module Luna.Data.Serialize.Proto.Library (
     storeLibrary,
     restoreLibrary,
 ) where
