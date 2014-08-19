@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Distribution.CabalConversion where
+module Luna.Distribution.CabalConversion where
 
 import           Data.List.Split                               (splitOn)
 import           Data.Monoid

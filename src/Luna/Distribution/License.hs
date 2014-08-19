@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveGeneric #-}
 
-module Flowbox.Distribution.License where
+module Luna.Distribution.License where
 
 import Flowbox.Data.Version (Version)
 import Flowbox.Prelude

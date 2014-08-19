@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Cabal.Section where
+module Luna.Distribution.Cabal.Section where
 
 import Flowbox.Luna.Data.HAST.Extension (Extension)
 import Flowbox.Prelude

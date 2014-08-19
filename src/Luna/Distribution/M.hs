@@ -2,7 +2,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell    #-}
 
-module Flowbox.Distribution.M where
+module Luna.Distribution.M where
 
 --import qualified Data.Map as Map
 
