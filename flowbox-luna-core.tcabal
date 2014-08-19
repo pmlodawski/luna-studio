@@ -29,7 +29,9 @@ Library
   Build-Depends:  base,
                   containers,
                   flowbox-utils,
-                  lens
+                  lens,
+                  fgl,
+                  MissingH
 
 
 
