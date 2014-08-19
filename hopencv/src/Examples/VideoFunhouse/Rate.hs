@@ -1,4 +1,4 @@
-module Rate where
+module Examples.VideoFunhouse.Rate where
 import Data.IORef
 import Data.Time.Clock
 import Text.Printf
