@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Initializer.Config (
-    module Paths_flowbox_luna_initializer
+    module Paths_luna_initializer
 ) where
 
-import Paths_flowbox_luna_initializer (version)
+import Paths_luna_initializer (version)
