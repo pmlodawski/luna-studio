@@ -7,7 +7,7 @@
 
 module Luna.Distribution.Cabal.Section where
 
-import Flowbox.Luna.Data.HAST.Extension (Extension)
+import Luna.Data.HAST.Extension (Extension)
 import Flowbox.Prelude
 
 import Data.String.Utils (join)

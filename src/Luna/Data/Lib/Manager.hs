@@ -16,9 +16,9 @@ module Luna.Data.Lib.Manager (
 import           Flowbox.Data.Graph                         hiding (Edge, empty)
 import qualified Flowbox.Data.Graph                         as Graph
 import           Luna.Lib.Edge                      (Edge)
-import           Luna.Lib.Library                   (Library)
-import qualified Luna.Lib.Library                   as Library
-import qualified Luna.Tools.Serialize.Proto.Library as LibSerialization
+import           Luna.Lib.Lib                   (Library)
+import qualified Luna.Lib.Lib                   as Library
+import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
 import           Flowbox.Prelude                            hiding (empty)
 import           Flowbox.System.UniPath                     (UniPath)
 

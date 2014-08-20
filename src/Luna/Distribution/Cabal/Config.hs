@@ -11,8 +11,8 @@ import           Data.Version (Version)
 import qualified Data.Version as Version
 
 import           Data.String.Utils               (join)
-import           Flowbox.Luna.Data.Cabal.Section (Section)
-import qualified Flowbox.Luna.Data.Cabal.Section as Section
+import           Luna.Distribution.Cabal.Section (Section)
+import qualified Luna.Distribution.Cabal.Section as Section
 import           Flowbox.Prelude
 
 
