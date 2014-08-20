@@ -32,6 +32,7 @@ import qualified Luna.Graph.Node                       as Node
 import           Luna.Graph.Port                       (OutPort)
 import           Luna.Graph.PropertyMap                (PropertyMap)
 import qualified Luna.Graph.PropertyMap                as PropertyMap
+import           Luna.Info                             (apiVersion)
 import           Luna.Pass.Pass                        (Pass)
 import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
 
@@ -144,7 +145,7 @@ getNodeOutputName nodeID = view Node.outputName <$> getNode nodeID
 
 getProperty :: Node.ID -> String -> GPPass (Maybe String)
 getProperty nodeID propertyName =
-    PropertyMap.get nodeID Attributes.luna propertyName <$> getPropertyMap
+    PropertyMap.get nodeID (show apiVersion) propertyName <$> getPropertyMap
 
 
 hasFlag :: Node.ID -> String -> GPPass Bool
@@ -156,7 +157,7 @@ hasFlag nodeID flag = do
 setProperty :: Node.ID -> String -> String -> GPPass ()
 setProperty nodeID key value =
     getPropertyMap >>=
-    setPropertyMap . PropertyMap.set nodeID Attributes.luna key value
+    setPropertyMap . PropertyMap.set nodeID (show apiVersion) key value
 
 
 setPosition :: Node.ID -> (Float, Float) -> GPPass ()
@@ -166,6 +167,8 @@ setPosition nodeID position =
 
 doesLastStatementReturn :: GPPass Bool
 doesLastStatementReturn = do
+
+
     body' <- getBody
     return $ case body' of
         []                       -> False
