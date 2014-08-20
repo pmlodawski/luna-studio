@@ -35,6 +35,7 @@ import qualified Luna.Graph.Node              as Node
 import           Luna.Graph.Port              (InPort, OutPort)
 import           Luna.Graph.PropertyMap       (PropertyMap)
 import qualified Luna.Graph.PropertyMap       as PropertyMap
+import           Luna.Info                    (apiVersion)
 import           Luna.Pass.Pass               (Pass)
 
 
@@ -175,12 +176,12 @@ setFlag nodeID key = setProperty nodeID key Attributes.true
 setProperty :: Node.ID -> String -> String -> GBPass ()
 setProperty nodeID key value =
     getPropertyMap >>=
-    setPropertyMap . PropertyMap.set nodeID Attributes.luna key value
+    setPropertyMap . PropertyMap.set nodeID (show apiVersion) key value
 
 
 getProperty :: Node.ID -> String -> GBPass (Maybe String)
 getProperty nodeID key =
-    PropertyMap.get nodeID Attributes.luna key <$> getPropertyMap
+    PropertyMap.get nodeID (show apiVersion) key <$> getPropertyMap
 
 
 getPosition :: Node.ID -> GBPass Node.Position
