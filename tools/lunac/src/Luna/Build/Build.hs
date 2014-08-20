@@ -7,18 +7,18 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Lunac.Build where
+module Luna.Build.Build where
 
 import Control.Applicative
 
 import           Flowbox.Config.Config                 (Config)
 import           Flowbox.Control.Error
 import qualified Flowbox.Initializer.Initializer       as Initializer
-import qualified Flowbox.Luna.Passes.Build.Build       as Build
-import           Flowbox.Luna.Passes.Build.BuildConfig (BuildConfig (BuildConfig))
-import qualified Flowbox.Luna.Passes.Build.BuildConfig as BuildConfig
-import           Flowbox.Luna.Passes.Build.Diagnostics (Diagnostics (Diagnostics))
-import qualified Flowbox.Lunac.Cmd                     as Cmd
+import qualified Luna.Pass.Build.Build       as Build
+import           Luna.Pass.Build.BuildConfig (BuildConfig (BuildConfig))
+import qualified Luna.Pass.Build.BuildConfig as BuildConfig
+import           Luna.Pass.Build.Diagnostics (Diagnostics (Diagnostics))
+import qualified Luna.Build.Cmd                        as Cmd
 import           Flowbox.Prelude                       hiding (op)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform               as Platform
