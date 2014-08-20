@@ -1,0 +1,36 @@
+Name:           flowbox-luna-typechecker
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+
+Library
+  Hs-Source-Dirs:     src
+  Build-Depends:      base
+                    , containers
+                    , QuickCheck
+--                    , flowbox-luna-base
+--                    , array
+  Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
+
+
+
+Executable flowbox-luna-typechecker-tests
+  Hs-Source-Dirs:     test
+  Main-Is:            Spec.hs
+  GHC-Options:        -threaded -Wall -O2
+  Build-Depends:      base
+                    , flowbox-luna-typechecker
+--                    , array
+                    --, containers
+                    , hspec
+                    --, QuickCheck
+--                    , flowbox-luna-base
