@@ -87,6 +87,7 @@ type P = Proxy
 (~::) = ofType
 
 
+print2 = autoLift1 print
 
 -------------------------------------------------------------------------------
 
@@ -99,16 +100,29 @@ type P = Proxy
 --        x = get
 --        put (x+1)
 
+data Cls_ModuleVector = Cls_ModuleVector deriving (Show, Eq, Typeable)
+data ModuleVector = ModuleVector deriving (Show, Eq, Typeable)
+propSig_Cls_ModuleVector_ModuleVector = (mkArg :: NParam "self") // ()
+propDef_Cls_ModuleVector_ModuleVector = liftCons0 ModuleVector
+registerMethod ''Cls_ModuleVector "ModuleVector"
+
+cons_ModuleVector = objProp (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
+
+
+
 ---
-data Vector a = Vector a a a deriving (Show, Eq, Typeable)
 data Cls_Vector = Cls_Vector deriving (Show, Eq, Typeable)
-
-
+data Vector a = Vector a a a deriving (Show, Eq, Typeable)
 $(generateFieldAccessors ''Vector [Just "x", Just "y", Just "z"])
 
 propSig_Cls_Vector_Vector = (mkArg :: NParam "self") // (mkArg (val (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (val 0) :: NDParam "y" (Value Pure(Safe Int))) // (mkArg (val 0) :: NDParam "z" (Value Pure(Safe Int))) // ()
 propDef_Cls_Vector_Vector = liftCons3 Vector
 registerMethod ''Cls_Vector "Vector"
+
+cons_Vector = objProp (Proxy::Proxy "Vector") (val Cls_Vector)
+
+
+
 
 
 --instance (PolyApplicative (Value Pure) m7 m4,
@@ -220,7 +234,7 @@ print' :: a -> MonadCtx IO () m (Value Pure (Safe ())) <= (MonadIO m, Show a)
 print' s = MonadCtx . liftIO $ fmap val $ print s
 
 
-print2 = autoLift1 print
+
 
 tst = do
     val (1::Int)
@@ -241,11 +255,15 @@ tstErr = do
 
 
 
-v = call $ appNext (val 2) $ appNext (val 2) $ appNext (val 2) $ objProp (Proxy::Proxy "Vector") (val Cls_Vector)
+v = call $ appNext (val 2) $ appNext (val 2) $ appNext (val 2) $ cons_Vector
 a1 = call $ appNext (val 1) $ appNext (val 2) $ objProp (Proxy::Proxy "foo") v
 
 
-main' = do
+mymain (self,()) = do
+    --mod <- call $ objProp (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
+    --call $ objProp (Proxy::Proxy "main") mod
+
+
     v2 <- call $ appByName (Proxy :: Proxy "z") (val 3) $ appNext (val 2) $ appNext (val 1) $ objProp (Proxy::Proxy "Vector") (val Cls_Vector)
     print2 v2
 
@@ -272,7 +290,14 @@ main' = do
     print2 $ val "end2"
 
 
-main = fromValue $ main'
+propSig_ModuleVector_main = (mkArg :: NParam "self") // ()
+propDef_ModuleVector_main = mymain
+registerMethod ''ModuleVector "main"
+
+
+main = mainMaker cons_ModuleVector
+
+mainMaker modCons = fromValue $ call $ objProp (Proxy::Proxy "main") $ call modCons
 
 
 

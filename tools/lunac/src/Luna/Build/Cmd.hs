@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Lunac.Cmd where
+module Luna.Build.Cmd where
 
 import Data.Version (Version)
 
