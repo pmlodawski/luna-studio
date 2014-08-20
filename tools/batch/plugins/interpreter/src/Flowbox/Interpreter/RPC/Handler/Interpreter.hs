@@ -13,7 +13,6 @@ import           Flowbox.Interpreter.Proto.CallPoint                            
 import           Flowbox.Interpreter.Proto.CallPointPath                           ()
 import qualified Flowbox.Interpreter.Session.AST.Executor                          as Executor
 import qualified Flowbox.Interpreter.Session.AST.WatchPoint                        as WatchPoint
-import qualified Flowbox.Interpreter.Session.Data.CallPoint                        as CallPoint
 import           Flowbox.Interpreter.Session.SessionT                              (SessionT (SessionT))
 import           Flowbox.Prelude                                                   hiding (Context)
 import           Flowbox.ProjectManager.Context                                    (Context)

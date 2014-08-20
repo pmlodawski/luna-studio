@@ -29,6 +29,7 @@ Executable interpreter
                     flowbox-batch,
                     flowbox-bus,
                     flowbox-config,
+                    flowbox-luna-base,
                     flowbox-luna-interpreter,
                     flowbox-project-manager,
                     flowbox-utils,
