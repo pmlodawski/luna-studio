@@ -19,23 +19,23 @@ import qualified Data.Maybe          as Maybe
 import qualified Text.Read           as Read
 
 import           Flowbox.Control.Error
-import qualified Luna.AST.Common                   as AST
-import qualified Luna.Graph.Attributes                   as Attributes
-import           Luna.Graph.Edge                   (Edge)
-import qualified Luna.Graph.Edge                   as Edge
-import           Luna.Graph.Graph                  (Graph)
-import qualified Luna.Graph.Graph                  as Graph
-import           Luna.Graph.Node                   (Node)
-import qualified Luna.Graph.Node                   as Node
-import           Luna.Graph.Port                   (InPort, OutPort)
-import           Luna.Data.AliasInfo               (AliasInfo)
-import qualified Luna.Data.AliasInfo               as AliasInfo
-import           Luna.Graph.PropertyMap                  (PropertyMap)
-import qualified Luna.Graph.PropertyMap                  as PropertyMap
-import           Luna.Pass.Pass                       (Pass)
-import qualified Luna.Pass.Transform.Graph.Attributes as Attributes
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Common              as AST
+import           Luna.Data.AliasInfo          (AliasInfo)
+import qualified Luna.Data.AliasInfo          as AliasInfo
+import qualified Luna.Graph.Attributes        as Attributes
+import qualified Luna.Graph.Attributes.Naming as Attributes
+import           Luna.Graph.Edge              (Edge)
+import qualified Luna.Graph.Edge              as Edge
+import           Luna.Graph.Graph             (Graph)
+import qualified Luna.Graph.Graph             as Graph
+import           Luna.Graph.Node              (Node)
+import qualified Luna.Graph.Node              as Node
+import           Luna.Graph.Port              (InPort, OutPort)
+import           Luna.Graph.PropertyMap       (PropertyMap)
+import qualified Luna.Graph.PropertyMap       as PropertyMap
+import           Luna.Pass.Pass               (Pass)
 
 
 
