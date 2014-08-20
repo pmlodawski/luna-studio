@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Lunac.Version  where
+module Luna.Build.Version  where
 
 import qualified Data.Version as Version
 
-import qualified Flowbox.Luna.Config.Config as LibConfig
-import qualified Flowbox.Lunac.Config       as Config
+import qualified Luna.Info       as LunaInfo
+import qualified Luna.Build.Info as CompilerInfo
 import           Flowbox.Prelude
 
 
@@ -21,8 +21,8 @@ full numeric comp lib =  (if not comp && lib then "" else compiler numeric ++ "\
 
 
 compiler :: Bool -> String
-compiler numeric = (if numeric then "" else "Luna compiler version ") ++ Version.showVersion Config.version
+compiler numeric = (if numeric then "" else "Luna compiler version ") ++ Version.showVersion CompilerInfo.version
 
 
 library :: Bool -> String
-library numeric = (if numeric then "" else "Luna library version ") ++ Version.showVersion LibConfig.version
+library numeric = (if numeric then "" else "Luna library version ") ++ Version.showVersion LunaInfo.version

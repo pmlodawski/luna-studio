@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Lunac.Config (
-    module Paths_flowbox_lunac
+module Luna.Build.Info (
+    module Paths_luna_compiler
 ) where
 
-import Paths_flowbox_lunac (version)
+import Paths_luna_compiler (version)
