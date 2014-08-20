@@ -1,4 +1,4 @@
-Name:           flowbox-lunac
+Name:           luna-compiler
 Version:        0.1
 Stability:      Alpha
 Cabal-Version:  >= 1.8
@@ -28,8 +28,10 @@ Executable luna
   Build-Depends:  base,
                   containers,
                   flowbox-config,
-                  flowbox-luna-base,
-                  flowbox-luna-initializer,
+                  luna-core,
+                  luna-pass,
+                  luna-distribution,
+                  luna-initializer,
                   flowbox-utils,
                   MissingH,
                   optparse-applicative,

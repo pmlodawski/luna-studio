@@ -67,6 +67,9 @@ def main():
 def check_deps(pkg):
     deps = deepcopy(pkg.deps)
     for dep in pkg.deps:
+        if not dep in pkgDb:
+            print_error ("Configuration error! '%s' could not be found." % dep)
+            raise Exception()
         dpkg = pkgDb[dep]
         deps = deepcopy(deps).union(check_deps(dpkg))
     return deps
@@ -119,7 +122,11 @@ def workon(name):
             os.chdir(sbox)
             try_call('cabal sandbox init --sandbox=.')
 
-            pnames = check_deps(pkg)
+            try:
+                pnames = check_deps(pkg)
+            except:
+                print_error ("Dependency checking failed.")
+                return
             pkg = deepcopy(pkg)
             pnames.add(pkg.path)
             for pname in pnames:
