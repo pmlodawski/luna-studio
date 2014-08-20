@@ -17,11 +17,11 @@ import           Data.IntMap         (IntMap)
 import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.AST.Common                             as AST
-import           Flowbox.Luna.Data.Graph.Properties                       (Properties)
-import           Flowbox.Luna.Lib.Library                                 (Library (Library))
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Module     ()
+import qualified Luna.AST.Common                             as AST
+import           Luna.Graph.Properties                       (Properties)
+import           Luna.Lib.Lib                                 (Library (Library))
+import           Luna.Data.Serialize.Proto.Conversion.Attributes ()
+import           Luna.Data.Serialize.Proto.Conversion.Module     ()
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Library.Library                          as Gen

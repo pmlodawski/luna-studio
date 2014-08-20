@@ -16,9 +16,9 @@ import qualified System.IO            as IO
 import qualified Text.ProtocolBuffers as Proto
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Lib.Library                              (Library)
-import qualified Flowbox.Luna.Lib.Library                              as Library
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Library ()
+import           Luna.Lib.Lib                              (Library)
+import qualified Luna.Lib.Lib                              as Library
+import           Luna.Data.Serialize.Proto.Conversion.Library ()
 import           Flowbox.Prelude
 import           Flowbox.System.IO.Serializer                          (Deserializable (Deserializable), Serializable (Serializable))
 import qualified Flowbox.System.IO.Serializer                          as Serializer

@@ -17,10 +17,10 @@ import qualified Data.Foldable                                     as F
 import qualified Data.Map                                          as Map
 import qualified Data.Sequence                                     as Seq
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.AST.Common                      as AST
-import           Flowbox.Luna.Data.AST.Expr                        (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Pat ()
+import qualified Luna.AST.Common                      as AST
+import           Luna.AST.Expr                        (Expr)
+import qualified Luna.AST.Expr                        as Expr
+import           Luna.Data.Serialize.Proto.Conversion.Pat ()
 import           Flowbox.Prelude                                   hiding (cons)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Expr.Accessor                     as GenAccessor

@@ -17,11 +17,11 @@ import qualified Data.Map                        as Map
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.AST.Common                       as AST
-import           Flowbox.Luna.Data.AST.Pat                          (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat                          as Pat
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Lit  ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Type ()
+import qualified Luna.AST.Common                       as AST
+import           Luna.AST.Pat                          (Pat)
+import qualified Luna.AST.Pat                          as Pat
+import           Luna.Data.Serialize.Proto.Conversion.Lit  ()
+import           Luna.Data.Serialize.Proto.Conversion.Type ()
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Pat.App                            as GenApp

@@ -17,10 +17,10 @@ import qualified Data.Map      as Map
 import qualified Data.Sequence as Sequence
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.Attributes                         (Attributes)
-import qualified Flowbox.Luna.Data.Attributes                         as Attributes
-import           Flowbox.Luna.Data.Graph.Flags                        (Flags (Flags))
-import           Flowbox.Luna.Data.Graph.Properties                   (Properties (Properties))
+import           Luna.Graph.Attributes                         (Attributes)
+import qualified Luna.Graph.Attributes                         as Attributes
+import           Luna.Graph.Flags                        (Flags (Flags))
+import           Luna.Graph.Properties                   (Properties (Properties))
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Attributes.Attributes                as Gen

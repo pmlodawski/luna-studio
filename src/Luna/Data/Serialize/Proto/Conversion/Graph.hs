@@ -16,14 +16,14 @@ import Control.Applicative
 import Data.Int            (Int32)
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.Graph.Edge                   (Edge)
-import qualified Flowbox.Luna.Data.Graph.Edge                   as Edge
-import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
-import           Flowbox.Luna.Data.Graph.Node                   (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                   as Node
-import           Flowbox.Luna.Data.Graph.Port                   (OutPort)
-import qualified Flowbox.Luna.Data.Graph.Port                   as Port
+import           Luna.Graph.Edge                   (Edge)
+import qualified Luna.Graph.Edge                   as Edge
+import           Luna.Graph.Graph                  (Graph)
+import qualified Luna.Graph.Graph                  as Graph
+import           Luna.Graph.Node                   (Node)
+import qualified Luna.Graph.Node                   as Node
+import           Luna.Graph.Port                   (OutPort)
+import qualified Luna.Graph.Port                   as Port
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Graph.Edge                     as Gen
