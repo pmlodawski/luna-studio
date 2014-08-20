@@ -15,17 +15,17 @@ module Luna.Pass.Analysis.FuncPool.FuncPool where
 import Control.Applicative
 import Control.Monad.State hiding (mapM, mapM_)
 
-import qualified Flowbox.Luna.Data.AST.Expr                 as Expr
-import           Flowbox.Luna.Data.AST.Module               (Module)
-import qualified Flowbox.Luna.Data.AST.Module               as Module
-import           Flowbox.Luna.Data.AST.Pat                  (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat                  as Pat
-import           Flowbox.Luna.Data.AST.Type                 (Type)
-import qualified Flowbox.Luna.Data.AST.Type                 as Type
-import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool (Pool)
-import qualified Flowbox.Luna.Passes.Analysis.FuncPool.Pool as Pool
-import           Flowbox.Luna.Passes.Pass                   (Pass)
-import qualified Flowbox.Luna.Passes.Pass                   as Pass
+import qualified Luna.AST.Expr                 as Expr
+import           Luna.AST.Module               (Module)
+import qualified Luna.AST.Module               as Module
+import           Luna.AST.Pat                  (Pat)
+import qualified Luna.AST.Pat                  as Pat
+import           Luna.AST.Type                 (Type)
+import qualified Luna.AST.Type                 as Type
+import           Luna.Pass.Analysis.FuncPool.Pool (Pool)
+import qualified Luna.Pass.Analysis.FuncPool.Pool as Pool
+import           Luna.Pass.Pass                   (Pass)
+import qualified Luna.Pass.Pass                   as Pass
 import           Flowbox.Prelude                            hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 

@@ -16,23 +16,23 @@ import           Control.Monad.Trans.Either
 import qualified Data.List                  as List
 import qualified Data.Maybe                 as Maybe
 
-import qualified Flowbox.Luna.Data.AST.Common                        as AST
-import           Flowbox.Luna.Data.AST.Expr                          (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                          as Expr
-import qualified Flowbox.Luna.Data.AST.Lit                           as Lit
-import           Flowbox.Luna.Data.AST.Pat                           (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat                           as Pat
-import qualified Flowbox.Luna.Data.AST.Type                          as Type
-import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
-import qualified Flowbox.Luna.Data.Graph.Node                        as Node
-import           Flowbox.Luna.Data.Graph.Port                        (InPort)
-import qualified Flowbox.Luna.Data.Graph.Port                        as Port
-import           Flowbox.Luna.Data.Pass.AliasInfo                    (AliasInfo)
-import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
-import qualified Flowbox.Luna.Passes.Pass                            as Pass
-import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBPass)
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State   as State
-import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
+import qualified Luna.AST.Common                        as AST
+import           Luna.AST.Expr                          (Expr)
+import qualified Luna.AST.Expr                          as Expr
+import qualified Luna.AST.Lit                           as Lit
+import           Luna.AST.Pat                           (Pat)
+import qualified Luna.AST.Pat                           as Pat
+import qualified Luna.AST.Type                          as Type
+import           Luna.Graph.Graph                       (Graph)
+import qualified Luna.Graph.Node                        as Node
+import           Luna.Graph.Port                        (InPort)
+import qualified Luna.Graph.Port                        as Port
+import           Luna.Data.AliasInfo                    (AliasInfo)
+import           Luna.Graph.PropertyMap                       (PropertyMap)
+import qualified Luna.Pass.Pass                            as Pass
+import           Luna.Pass.Transform.Graph.Builder.State   (GBPass)
+import qualified Luna.Pass.Transform.Graph.Builder.State   as State
+import qualified Luna.Graph.Node.OutputName as OutputName
 import           Flowbox.Prelude                                     hiding (error, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 

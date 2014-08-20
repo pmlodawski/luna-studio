@@ -14,24 +14,24 @@ import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import qualified Data.List                  as List
 
-import           Flowbox.Luna.Data.AST.Expr                         (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                         as Expr
-import           Flowbox.Luna.Data.AST.Pat                          (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat                          as Pat
-import           Flowbox.Luna.Data.Graph.Graph                      (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                      as Graph
-import           Flowbox.Luna.Data.Graph.Node                       (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                       as Node
-import qualified Flowbox.Luna.Data.Graph.Port                       as Port
-import qualified Flowbox.Luna.Data.Pass.ASTInfo                     as ASTInfo
-import           Flowbox.Luna.Data.PropertyMap                      (PropertyMap)
-import qualified Flowbox.Luna.Passes.Pass                           as Pass
-import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State    as IDFixer
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer  as Lexer
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
-import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes     as Attributes
-import           Flowbox.Luna.Passes.Transform.Graph.Parser.State   (GPPass)
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State   as State
+import           Luna.AST.Expr                         (Expr)
+import qualified Luna.AST.Expr                         as Expr
+import           Luna.AST.Pat                          (Pat)
+import qualified Luna.AST.Pat                          as Pat
+import           Luna.Graph.Graph                      (Graph)
+import qualified Luna.Graph.Graph                      as Graph
+import           Luna.Graph.Node                       (Node)
+import qualified Luna.Graph.Node                       as Node
+import qualified Luna.Graph.Port                       as Port
+import           Luna.Graph.PropertyMap                      (PropertyMap)
+import qualified Luna.Data.ASTInfo                     as ASTInfo
+import qualified Luna.Pass.Pass                           as Pass
+import qualified Luna.Pass.Transform.AST.IDFixer.State    as IDFixer
+import qualified Luna.Parser.Lexer  as Lexer
+import qualified Luna.Parser.Parser as Parser
+import qualified Luna.Pass.Transform.Graph.Attributes     as Attributes
+import           Luna.Pass.Transform.Graph.Parser.State   (GPPass)
+import qualified Luna.Pass.Transform.Graph.Parser.State   as State
 import           Flowbox.Prelude                                    hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 

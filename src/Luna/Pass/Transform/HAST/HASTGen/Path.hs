@@ -30,7 +30,7 @@ module Luna.Pass.Transform.HAST.HASTGen.Path (
 import Data.Char         (isLower)
 import Data.String.Utils (join)
 
-import Flowbox.Luna.Data.Path.Path
+import Luna.Data.Path.Path
 import Flowbox.Prelude             hiding (init, last, last, tail)
 
 

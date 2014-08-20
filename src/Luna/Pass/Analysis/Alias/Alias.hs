@@ -14,20 +14,20 @@ module Luna.Pass.Analysis.Alias.Alias where
 
 import Control.Applicative
 
-import qualified Flowbox.Luna.Data.AST.Expr               as Expr
-import           Flowbox.Luna.Data.AST.Lit                (Lit)
-import qualified Flowbox.Luna.Data.AST.Lit                as Lit
-import           Flowbox.Luna.Data.AST.Module             (Module)
-import qualified Flowbox.Luna.Data.AST.Module             as Module
-import           Flowbox.Luna.Data.AST.Pat                (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat                as Pat
-import           Flowbox.Luna.Data.AST.Type               (Type)
-import qualified Flowbox.Luna.Data.AST.Type               as Type
-import           Flowbox.Luna.Data.Pass.AliasInfo         (AliasInfo)
-import           Flowbox.Luna.Passes.Analysis.Alias.State (VAState)
-import qualified Flowbox.Luna.Passes.Analysis.Alias.State as VAState
-import           Flowbox.Luna.Passes.Pass                 (Pass)
-import qualified Flowbox.Luna.Passes.Pass                 as Pass
+import qualified Luna.AST.Expr               as Expr
+import           Luna.AST.Lit                (Lit)
+import qualified Luna.AST.Lit                as Lit
+import           Luna.AST.Module             (Module)
+import qualified Luna.AST.Module             as Module
+import           Luna.AST.Pat                (Pat)
+import qualified Luna.AST.Pat                as Pat
+import           Luna.AST.Type               (Type)
+import qualified Luna.AST.Type               as Type
+import           Luna.Data.AliasInfo         (AliasInfo)
+import           Luna.Pass.Analysis.Alias.State (VAState)
+import qualified Luna.Pass.Analysis.Alias.State as VAState
+import           Luna.Pass.Pass                 (Pass)
+import qualified Luna.Pass.Pass                 as Pass
 import           Flowbox.Prelude                          hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 

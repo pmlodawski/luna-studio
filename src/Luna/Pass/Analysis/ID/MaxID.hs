@@ -10,14 +10,14 @@
 
 module Luna.Pass.Analysis.ID.MaxID where
 
-import qualified Flowbox.Luna.Data.AST.Common             as AST
-import           Flowbox.Luna.Data.AST.Expr               (Expr)
-import           Flowbox.Luna.Data.AST.Module             (Module)
-import           Flowbox.Luna.Passes.Analysis.ID.State    (IDState)
-import qualified Flowbox.Luna.Passes.Analysis.ID.State    as State
-import qualified Flowbox.Luna.Passes.Analysis.ID.Traverse as IDTraverse
-import           Flowbox.Luna.Passes.Pass                 (Pass)
-import qualified Flowbox.Luna.Passes.Pass                 as Pass
+import qualified Luna.AST.Common             as AST
+import           Luna.AST.Expr               (Expr)
+import           Luna.AST.Module             (Module)
+import           Luna.Pass.Analysis.ID.State    (IDState)
+import qualified Luna.Pass.Analysis.ID.State    as State
+import qualified Luna.Pass.Analysis.ID.Traverse as IDTraverse
+import           Luna.Pass.Pass                 (Pass)
+import qualified Luna.Pass.Pass                 as Pass
 import           Flowbox.Prelude                          hiding (mapM, mapM_)
 import           Flowbox.System.Log.Logger
 

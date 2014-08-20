@@ -10,23 +10,23 @@
 
 module Luna.Pass.Transform.AST.IDFixer.IDFixer where
 
-import qualified Flowbox.Luna.Data.AST.Common                    as AST
-import           Flowbox.Luna.Data.AST.Expr                      (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                      as Expr
-import           Flowbox.Luna.Data.AST.Lit                       (Lit)
-import qualified Flowbox.Luna.Data.AST.Lit                       as Lit
-import           Flowbox.Luna.Data.AST.Module                    (Module)
-import qualified Flowbox.Luna.Data.AST.Module                    as Module
-import           Flowbox.Luna.Data.AST.Pat                       (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat                       as Pat
-import           Flowbox.Luna.Data.AST.Type                      (Type)
-import qualified Flowbox.Luna.Data.AST.Type                      as Type
-import           Flowbox.Luna.Data.AST.Zipper.Focus              (Focus)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus              as Focus
-import           Flowbox.Luna.Passes.Pass                        (Pass)
-import qualified Flowbox.Luna.Passes.Pass                        as Pass
-import           Flowbox.Luna.Passes.Transform.AST.IDFixer.State (IDFixerState)
-import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State as State
+import qualified Luna.AST.Common                    as AST
+import           Luna.AST.Expr                      (Expr)
+import qualified Luna.AST.Expr                      as Expr
+import           Luna.AST.Lit                       (Lit)
+import qualified Luna.AST.Lit                       as Lit
+import           Luna.AST.Module                    (Module)
+import qualified Luna.AST.Module                    as Module
+import           Luna.AST.Pat                       (Pat)
+import qualified Luna.AST.Pat                       as Pat
+import           Luna.AST.Type                      (Type)
+import qualified Luna.AST.Type                      as Type
+import           Luna.AST.Control.Focus              (Focus)
+import qualified Luna.AST.Control.Focus              as Focus
+import           Luna.Pass.Pass                        (Pass)
+import qualified Luna.Pass.Pass                        as Pass
+import           Luna.Pass.Transform.AST.IDFixer.State (IDFixerState)
+import qualified Luna.Pass.Transform.AST.IDFixer.State as State
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 

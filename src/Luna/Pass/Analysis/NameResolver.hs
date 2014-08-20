@@ -18,22 +18,22 @@ import           Data.List.Split     (splitOn)
 import qualified Data.Maybe          as Maybe
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb       as Crumb
-import           Flowbox.Luna.Data.AST.Expr              (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr              as Expr
-import           Flowbox.Luna.Data.AST.Module            (Module)
-import qualified Flowbox.Luna.Data.AST.Module            as Module
-import qualified Flowbox.Luna.Data.AST.Type              as Type
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus      as Focus
-import           Flowbox.Luna.Data.AST.Zipper.Zipper     (Zipper)
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper     as Zipper
-import           Flowbox.Luna.Lib.LibManager             (LibManager)
-import qualified Flowbox.Luna.Lib.LibManager             as LibManager
-import           Flowbox.Luna.Lib.Library                (Library)
-import qualified Flowbox.Luna.Lib.Library                as Library
-import           Flowbox.Luna.Passes.Pass                (Pass)
-import qualified Flowbox.Luna.Passes.Pass                as Pass
+import           Luna.AST.Control.Crumbs (Breadcrumbs)
+import qualified Luna.AST.Control.Crumbs as Crumb
+import           Luna.AST.Expr              (Expr)
+import qualified Luna.AST.Expr              as Expr
+import           Luna.AST.Module            (Module)
+import qualified Luna.AST.Module            as Module
+import qualified Luna.AST.Type              as Type
+import qualified Luna.AST.Control.Focus      as Focus
+import           Luna.AST.Control.Zipper     (Zipper)
+import qualified Luna.AST.Control.Zipper     as Zipper
+import           Luna.Lib.LibManager             (LibManager)
+import qualified Luna.Lib.LibManager             as LibManager
+import           Luna.Lib.Lib                (Library)
+import qualified Luna.Lib.Lib                as Library
+import           Luna.Pass.Pass                (Pass)
+import qualified Luna.Pass.Pass                as Pass
 import           Flowbox.Prelude                         hiding (elements, mod)
 import           Flowbox.System.Log.Logger               hiding (trace)
 

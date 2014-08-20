@@ -11,11 +11,11 @@
 
 module Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State where
 
-import Flowbox.Luna.Data.AST.AST        (ID)
-import Flowbox.Luna.Data.Pass.AliasInfo (AliasInfo)
+import Luna.AST.AST        (ID)
+import Luna.Data.AliasInfo (AliasInfo)
 
-import           Flowbox.Luna.Data.Pass.ASTInfo (ASTInfo)
-import qualified Flowbox.Luna.Data.Pass.ASTInfo as ASTInfo
+import           Luna.Data.ASTInfo (ASTInfo)
+import qualified Luna.Data.ASTInfo as ASTInfo
 
 import Flowbox.Prelude           hiding (id)
 import Flowbox.System.Log.Logger hiding (info)
