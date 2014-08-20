@@ -9,17 +9,17 @@
 
 module Luna.AST.Control.Zipper where
 
-import           Data.List               (find)
-import           Flowbox.Control.Error   (assert)
-import           Flowbox.Prelude         hiding (drop, id, mod)
-import           Luna.AST.Control.Crumbs (Breadcrumbs, Crumb)
-import qualified Luna.AST.Control.Crumbs as Crumb
-import           Luna.AST.Control.Focus  (Focus, FocusPath)
-import qualified Luna.AST.Control.Focus  as Focus
-import qualified Luna.AST.Expr           as Expr
-import           Luna.AST.Module         (Module)
-import qualified Luna.AST.Module         as Module
-import qualified Luna.AST.Type           as Type
+import           Data.List              (find)
+import           Flowbox.Control.Error  (assert)
+import           Flowbox.Prelude        hiding (drop, id, mod)
+import           Luna.AST.Control.Crumb (Breadcrumbs, Crumb)
+import qualified Luna.AST.Control.Crumb as Crumb
+import           Luna.AST.Control.Focus (Focus, FocusPath)
+import qualified Luna.AST.Control.Focus as Focus
+import qualified Luna.AST.Expr          as Expr
+import           Luna.AST.Module        (Module)
+import qualified Luna.AST.Module        as Module
+import qualified Luna.AST.Type          as Type
 
 
 

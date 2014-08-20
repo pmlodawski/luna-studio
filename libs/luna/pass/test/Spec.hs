@@ -5,16 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.AST.Control.Crumbs where
+{-# LANGUAGE ImplicitPrelude #-}
+{-# OPTIONS_GHC -F -pgmF hspec-discover #-}
 
-import Flowbox.Prelude
-
-
-type Breadcrumbs = [Crumb]
-
-data Crumb = Function { name :: String
-                      , path :: [String]
-                      }
-           | Class    { name :: String }
-           | Module   { name :: String }
-           deriving (Show, Ord, Eq)
