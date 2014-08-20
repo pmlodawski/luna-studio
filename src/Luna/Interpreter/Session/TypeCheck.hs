@@ -4,19 +4,19 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.TypeCheck where
+module Luna.Interpreter.Session.TypeCheck where
 
 import qualified Data.List                    as List
 import qualified Language.Haskell.Interpreter as Interpreter
 
-import Flowbox.Interpreter.Session.Session (Session)
 import Flowbox.Prelude
 import Flowbox.System.Log.Logger
+import Luna.Interpreter.Session.Session (Session)
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.Session"
+logger = getLoggerIO "Luna.Interpreter.Session.Session"
 
 
 function :: String -> [String] -> Session String

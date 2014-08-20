@@ -4,19 +4,19 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.AST.Inspect where
+module Luna.Interpreter.Session.AST.Inspect where
 
 import Control.Monad.State hiding (mapM, mapM_)
 
 import           Flowbox.Control.Error
-import           Flowbox.Interpreter.Session.Data.DefPoint (DefPoint (DefPoint))
-import           Flowbox.Interpreter.Session.Session       (Session)
-import qualified Flowbox.Interpreter.Session.Session       as Session
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs   (Breadcrumbs)
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb         as Crumb
-import qualified Flowbox.Luna.Lib.Library                  as Library
-import qualified Flowbox.Luna.Passes.Analysis.NameResolver as NameResolver
-import           Flowbox.Prelude                           hiding (inside)
+import           Flowbox.Prelude                        hiding (inside)
+import           Luna.AST.Control.Crumb                 (Breadcrumbs)
+import qualified Luna.AST.Control.Crumb                 as Crumb
+import           Luna.Interpreter.Session.Data.DefPoint (DefPoint (DefPoint))
+import           Luna.Interpreter.Session.Session       (Session)
+import qualified Luna.Interpreter.Session.Session       as Session
+import qualified Luna.Lib.Lib                           as Library
+import qualified Luna.Pass.Analysis.NameResolver        as NameResolver
 
 
 

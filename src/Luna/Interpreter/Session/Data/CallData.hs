@@ -6,17 +6,17 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Interpreter.Session.Data.CallData where
+module Luna.Interpreter.Session.Data.CallData where
 
-import           Flowbox.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
-import           Flowbox.Interpreter.Session.Data.DefPoint  (DefPoint)
-import qualified Flowbox.Interpreter.Session.Data.DefPoint  as DefPoint
-import qualified Flowbox.Luna.Data.AST.Common               as AST
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs    (Breadcrumbs)
-import           Flowbox.Luna.Data.Graph.Graph              (Graph)
-import           Flowbox.Luna.Data.Graph.Node               (Node)
-import qualified Flowbox.Luna.Data.Graph.Node               as Node
 import           Flowbox.Prelude
+import qualified Luna.AST.Common                         as AST
+import           Luna.AST.Control.Crumb                  (Breadcrumbs)
+import           Luna.Graph.Graph                        (Graph)
+import           Luna.Graph.Node                         (Node)
+import qualified Luna.Graph.Node                         as Node
+import           Luna.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
+import           Luna.Interpreter.Session.Data.DefPoint  (DefPoint)
+import qualified Luna.Interpreter.Session.Data.DefPoint  as DefPoint
 
 
 

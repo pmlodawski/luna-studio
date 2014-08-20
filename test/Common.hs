@@ -8,29 +8,29 @@
 module Common where
 
 import           Flowbox.Control.Error
-import           Flowbox.Interpreter.Session.Data.DefPoint                               (DefPoint (DefPoint))
-import           Flowbox.Interpreter.Session.Env                                         (Env)
-import qualified Flowbox.Interpreter.Session.Env                                         as Env
-import qualified Flowbox.Interpreter.Session.Error                                       as Error
-import           Flowbox.Interpreter.Session.Session                                     (Session)
-import qualified Flowbox.Interpreter.Session.Session                                     as Session
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                       as Crumb
-import           Flowbox.Luna.Data.Pass.Source                                           (Source (Source))
-import qualified Flowbox.Luna.Data.PropertyMap                                           as PropertyMap
-import           Flowbox.Luna.Lib.LibManager                                             (LibManager)
-import qualified Flowbox.Luna.Lib.LibManager                                             as LibManager
-import           Flowbox.Luna.Lib.Library                                                (Library (Library))
-import qualified Flowbox.Luna.Lib.Library                                                as Library
-import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                                as Analysis.Alias
-import qualified Flowbox.Luna.Passes.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
-import qualified Flowbox.Luna.Passes.Transform.AST.DepSort.DepSort                       as Transform.DepSort
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import           Flowbox.Prelude
-import qualified Flowbox.System.UniPath                                                  as UniPath
+import qualified Flowbox.System.UniPath                                        as UniPath
+import qualified Luna.AST.Control.Crumb                                        as Crumb
+import           Luna.Data.Source                                              (Source (Source))
+import qualified Luna.Graph.PropertyMap                                        as PropertyMap
+import           Luna.Interpreter.Session.Data.DefPoint                        (DefPoint (DefPoint))
+import           Luna.Interpreter.Session.Env                                  (Env)
+import qualified Luna.Interpreter.Session.Env                                  as Env
+import qualified Luna.Interpreter.Session.Error                                as Error
+import           Luna.Interpreter.Session.Session                              (Session)
+import qualified Luna.Interpreter.Session.Session                              as Session
+import           Luna.Lib.Lib                                                  (Library (Library))
+import qualified Luna.Lib.Lib                                                  as Library
+import           Luna.Lib.Manager                                              (LibManager)
+import qualified Luna.Lib.Manager                                              as LibManager
+import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
+import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
+import qualified Luna.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
+import qualified Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
+import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
+import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
+import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
+import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
 
 
 

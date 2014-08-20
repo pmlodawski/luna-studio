@@ -4,12 +4,12 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.SessionT where
+module Luna.Interpreter.Session.SessionT where
 
 import Control.Monad.IO.Class
 
-import Flowbox.Interpreter.Session.Session (Session)
 import Flowbox.Prelude
+import Luna.Interpreter.Session.Session (Session)
 
 
 

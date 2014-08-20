@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE RankNTypes #-}
 
-module Flowbox.Interpreter.Session.Error where
+module Luna.Interpreter.Session.Error where
 
 import qualified Data.List                    as List
 import qualified Language.Haskell.Interpreter as Interpreter

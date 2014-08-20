@@ -4,14 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.Cache.Status where
 
-import Flowbox.Prelude
+module Luna.Interpreter.Session.Data.CallPointPath where
+
+import Luna.Interpreter.Session.Data.CallPoint (CallPoint)
 
 
 
-data CacheStatus = Ready
-                 | Modified
-                 | Affected
-                 | NonCacheable
-                 deriving (Show, Eq)
+type CallPointPath  = [CallPoint]
+
+
+

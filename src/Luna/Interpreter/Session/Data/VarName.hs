@@ -4,14 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.Data.VarName where
+module Luna.Interpreter.Session.Data.VarName where
 
 import qualified Data.Maybe as Maybe
 
-import qualified Flowbox.Interpreter.Session.Data.CallPoint     as CallPoint
-import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Flowbox.Interpreter.Session.Data.Hash          (Hash)
 import           Flowbox.Prelude
+import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
+import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Data.Hash          (Hash)
 
 
 

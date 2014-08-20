@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.AST.Traverse (
+module Luna.Interpreter.Session.AST.Traverse (
   arguments
 , inDataConnections
 , into
@@ -19,20 +19,20 @@ import qualified Data.Maybe          as Maybe
 import qualified GHC.Exts            as Exts
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Interpreter.Session.AST.Inspect       as Inspect
-import qualified Flowbox.Interpreter.Session.Data.CallData     as CallData
-import           Flowbox.Interpreter.Session.Data.CallDataPath (CallDataPath)
-import qualified Flowbox.Interpreter.Session.Data.CallDataPath as CallDataPath
-import qualified Flowbox.Interpreter.Session.Data.CallPoint    as CallPoint
-import           Flowbox.Interpreter.Session.Data.DefPoint     (DefPoint)
-import           Flowbox.Interpreter.Session.Session           (Session)
-import qualified Flowbox.Interpreter.Session.Session           as Session
-import           Flowbox.Luna.Data.Graph.Edge                  (Edge)
-import qualified Flowbox.Luna.Data.Graph.Edge                  as Edge
-import qualified Flowbox.Luna.Data.Graph.Graph                 as Graph
-import           Flowbox.Luna.Data.Graph.Node                  (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                  as Node
-import           Flowbox.Prelude                               hiding (inside, matching, succ)
+import           Flowbox.Prelude                            hiding (inside, matching, succ)
+import           Luna.Graph.Edge                            (Edge)
+import qualified Luna.Graph.Edge                            as Edge
+import qualified Luna.Graph.Graph                           as Graph
+import           Luna.Graph.Node                            (Node)
+import qualified Luna.Graph.Node                            as Node
+import qualified Luna.Interpreter.Session.AST.Inspect       as Inspect
+import qualified Luna.Interpreter.Session.Data.CallData     as CallData
+import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
+import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
+import qualified Luna.Interpreter.Session.Data.CallPoint    as CallPoint
+import           Luna.Interpreter.Session.Data.DefPoint     (DefPoint)
+import           Luna.Interpreter.Session.Session           (Session)
+import qualified Luna.Interpreter.Session.Session           as Session
 
 
 

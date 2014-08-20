@@ -4,24 +4,24 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.Cache.Value where
+module Luna.Interpreter.Session.Cache.Value where
 
 import           Data.Typeable                (Typeable)
 import qualified Language.Haskell.Interpreter as Interpreter
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Interpreter.Session.Cache.Cache        as Cache
-import qualified Flowbox.Interpreter.Session.Cache.Info         as CacheInfo
-import qualified Flowbox.Interpreter.Session.Cache.Status       as Status
-import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Flowbox.Interpreter.Session.Session            (Session)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
+import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
+import qualified Luna.Interpreter.Session.Cache.Status       as Status
+import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Session            (Session)
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.Cache.Value"
+logger = getLoggerIO "Luna.Interpreter.Session.Cache.Value"
 
 
 get :: Typeable a => CallPointPath -> a -> Session a

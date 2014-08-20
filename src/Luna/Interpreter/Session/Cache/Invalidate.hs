@@ -4,35 +4,35 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.Cache.Invalidate where
+module Luna.Interpreter.Session.Cache.Invalidate where
 
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.List           as List
 
-import qualified Flowbox.Data.MapForest                         as MapForest
-import qualified Flowbox.Interpreter.Session.AST.Traverse       as Traverse
-import qualified Flowbox.Interpreter.Session.Cache.Cache        as Cache
-import           Flowbox.Interpreter.Session.Cache.Info         (CacheInfo)
-import qualified Flowbox.Interpreter.Session.Cache.Info         as CacheInfo
-import           Flowbox.Interpreter.Session.Cache.Status       (CacheStatus)
-import qualified Flowbox.Interpreter.Session.Cache.Status       as CacheStatus
-import           Flowbox.Interpreter.Session.Data.CallDataPath  (CallDataPath)
-import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
-import           Flowbox.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
-import qualified Flowbox.Interpreter.Session.Data.CallPoint     as CallPoint
-import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Flowbox.Interpreter.Session.Session            (Session)
-import qualified Flowbox.Luna.Data.AST.Common                   as AST
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs        (Breadcrumbs)
-import qualified Flowbox.Luna.Data.Graph.Node                   as Node
-import qualified Flowbox.Luna.Lib.Library                       as Library
-import           Flowbox.Prelude                                hiding (matching)
+import qualified Flowbox.Data.MapForest                      as MapForest
+import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Common                             as AST
+import           Luna.AST.Control.Crumb                      (Breadcrumbs)
+import qualified Luna.Graph.Node                             as Node
+import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
+import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
+import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
+import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
+import           Luna.Interpreter.Session.Cache.Status       (CacheStatus)
+import qualified Luna.Interpreter.Session.Cache.Status       as CacheStatus
+import           Luna.Interpreter.Session.Data.CallDataPath  (CallDataPath)
+import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
+import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
+import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
+import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Session            (Session)
+import qualified Luna.Lib.Lib                                as Library
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.Cache.Invalidate"
+logger = getLoggerIO "Luna.Interpreter.Session.Cache.Invalidate"
 
 
 modifyAll :: Session ()

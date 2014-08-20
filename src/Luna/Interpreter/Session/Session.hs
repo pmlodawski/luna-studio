@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.Session where
+module Luna.Interpreter.Session.Session where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
@@ -12,34 +12,34 @@ import qualified DynFlags                     as F
 import qualified GHC
 import qualified Language.Haskell.Interpreter as I
 
-import qualified Flowbox.Batch.Project.Project                       as Project
+import qualified Flowbox.Batch.Project.Project             as Project
 import           Flowbox.Control.Error
-import           Flowbox.Interpreter.Session.Data.DefPoint           (DefPoint (DefPoint))
-import qualified Flowbox.Interpreter.Session.Data.DefPoint           as DefPoint
-import           Flowbox.Interpreter.Session.Env                     (Env)
-import qualified Flowbox.Interpreter.Session.Env                     as Env
-import           Flowbox.Interpreter.Session.Error                   (Error)
-import qualified Flowbox.Interpreter.Session.Error                   as Error
-import qualified Flowbox.Interpreter.Session.Helpers                 as Helpers
-import qualified Flowbox.Luna.Data.AST.Common                        as AST
-import           Flowbox.Luna.Data.AST.Expr                          (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                          as Expr
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                  as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                 as Zipper
-import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
-import           Flowbox.Luna.Lib.LibManager                         (LibManager)
-import qualified Flowbox.Luna.Lib.LibManager                         as LibManager
-import           Flowbox.Luna.Lib.Library                            (Library)
-import qualified Flowbox.Luna.Lib.Library                            as Library
-import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias            as Alias
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder as GraphBuilder
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Common                           as AST
+import qualified Luna.AST.Control.Focus                    as Focus
+import qualified Luna.AST.Control.Zipper                   as Zipper
+import           Luna.AST.Expr                             (Expr)
+import qualified Luna.AST.Expr                             as Expr
+import           Luna.Graph.Graph                          (Graph)
+import           Luna.Interpreter.Session.Data.DefPoint    (DefPoint (DefPoint))
+import qualified Luna.Interpreter.Session.Data.DefPoint    as DefPoint
+import           Luna.Interpreter.Session.Env              (Env)
+import qualified Luna.Interpreter.Session.Env              as Env
+import           Luna.Interpreter.Session.Error            (Error)
+import qualified Luna.Interpreter.Session.Error            as Error
+import qualified Luna.Interpreter.Session.Helpers          as Helpers
+import           Luna.Lib.Lib                              (Library)
+import qualified Luna.Lib.Lib                              as Library
+import           Luna.Lib.Manager                          (LibManager)
+import qualified Luna.Lib.Manager                          as LibManager
+import qualified Luna.Pass.Analysis.Alias.Alias            as Alias
+import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.Session"
+logger = getLoggerIO "Luna.Interpreter.Session.Session"
 
 
 type Session a = EitherT Error.ErrorStr (StateT Env I.Interpreter) a

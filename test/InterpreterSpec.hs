@@ -11,15 +11,15 @@ import Control.Monad.State hiding (mapM, mapM_)
 import Test.Hspec
 
 import qualified Common
-import qualified Flowbox.Interpreter.Session.AST.Executor       as Executor
-import qualified Flowbox.Interpreter.Session.AST.Traverse       as Traverse
-import qualified Flowbox.Interpreter.Session.Data.CallDataPath  as CallDataPath
-import           Flowbox.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
-import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import qualified Flowbox.Interpreter.Session.Env                as Env
-import           Flowbox.Interpreter.Session.Session            (Session)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import qualified Luna.Interpreter.Session.AST.Executor       as Executor
+import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
+import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
+import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
+import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import qualified Luna.Interpreter.Session.Env                as Env
+import           Luna.Interpreter.Session.Session            (Session)
 import qualified SampleCodes
 
 
