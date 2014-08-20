@@ -5,7 +5,7 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 {-# LANGUAGE QuasiQuotes #-}
-module Flowbox.Interpreter.Session.Helpers where
+module Luna.Interpreter.Session.Helpers where
 
 import Flowbox.Prelude
 import Text.RawString.QQ

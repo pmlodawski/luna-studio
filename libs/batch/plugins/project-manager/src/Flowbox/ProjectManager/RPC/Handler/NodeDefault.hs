@@ -9,8 +9,6 @@ module Flowbox.ProjectManager.RPC.Handler.NodeDefault where
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
 import qualified Flowbox.Batch.Handler.NodeDefault                                                             as BatchND
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                                           ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.NodeDefault                                     ()
 import           Flowbox.Prelude                                                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import           Flowbox.System.Log.Logger
@@ -21,6 +19,8 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Remove.Update  as NodeDefaultRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Request    as NodeDefaultSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Update     as NodeDefaultSet
+import           Luna.Data.Serialize.Proto.Conversion.Crumb                                                    ()
+import           Luna.Data.Serialize.Proto.Conversion.NodeDefault                                              ()
 
 
 

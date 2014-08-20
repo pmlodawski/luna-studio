@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Interpreter.Session.Data.Hash where
+module Luna.Interpreter.Session.Data.Hash where
 
 import Data.Word (Word64)
 

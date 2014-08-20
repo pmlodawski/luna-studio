@@ -9,7 +9,6 @@ module Flowbox.ProjectManager.RPC.Handler.Properties where
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
 import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes                                      ()
 import           Flowbox.Prelude                                                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import           Flowbox.System.Log.Logger
@@ -22,6 +21,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.G
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Get.Status                      as GetASTProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Request                     as SetASTProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Update                      as SetASTProperties
+import           Luna.Data.Serialize.Proto.Conversion.Attributes                                               ()
 
 
 

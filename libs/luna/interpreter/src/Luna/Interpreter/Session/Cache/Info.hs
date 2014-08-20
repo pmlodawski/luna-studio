@@ -6,15 +6,15 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Interpreter.Session.Cache.Info where
+module Luna.Interpreter.Session.Cache.Info where
 
 import Data.Map (Map)
 
-import           Flowbox.Interpreter.Session.Cache.Status (CacheStatus)
-import           Flowbox.Interpreter.Session.Data.VarName (VarName)
-import qualified Flowbox.Luna.Data.AST.Common             as AST
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs  (Breadcrumbs)
 import           Flowbox.Prelude
+import qualified Luna.AST.Common                       as AST
+import           Luna.AST.Control.Crumb                (Breadcrumbs)
+import           Luna.Interpreter.Session.Cache.Status (CacheStatus)
+import           Luna.Interpreter.Session.Data.VarName (VarName)
 
 
 

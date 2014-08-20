@@ -14,10 +14,10 @@ import           Flowbox.Batch.Project.Project               (Project)
 import qualified Flowbox.Batch.Project.Project               as Project
 import qualified Flowbox.Batch.Project.ProjectManager        as ProjectManager
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
-import           Flowbox.Luna.Data.Attributes                (Attributes)
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath                      (UniPath)
 import qualified Flowbox.System.UniPath                      as UniPath
+import           Luna.Graph.Attributes                       (Attributes)
 
 
 

@@ -5,24 +5,24 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Interpreter.Session.Data.CallDataPath where
+module Luna.Interpreter.Session.Data.CallDataPath where
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Interpreter.Session.AST.Inspect        as Inspect
-import           Flowbox.Interpreter.Session.Data.CallData      (CallData (CallData))
-import qualified Flowbox.Interpreter.Session.Data.CallData      as CallData
-import qualified Flowbox.Interpreter.Session.Data.CallPoint     as CallPoint
-import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Flowbox.Interpreter.Session.Data.DefPoint      (DefPoint)
-import qualified Flowbox.Interpreter.Session.Data.DefPoint      as DefPoint
-import           Flowbox.Interpreter.Session.Session            (Session)
-import qualified Flowbox.Interpreter.Session.Session            as Session
-import qualified Flowbox.Luna.Data.AST.Common                   as AST
-import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
-import           Flowbox.Luna.Data.Graph.Node                   (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                   as Node
 import           Flowbox.Prelude
+import qualified Luna.AST.Common                             as AST
+import           Luna.Graph.Graph                            (Graph)
+import qualified Luna.Graph.Graph                            as Graph
+import           Luna.Graph.Node                             (Node)
+import qualified Luna.Graph.Node                             as Node
+import qualified Luna.Interpreter.Session.AST.Inspect        as Inspect
+import           Luna.Interpreter.Session.Data.CallData      (CallData (CallData))
+import qualified Luna.Interpreter.Session.Data.CallData      as CallData
+import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
+import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
+import qualified Luna.Interpreter.Session.Data.DefPoint      as DefPoint
+import           Luna.Interpreter.Session.Session            (Session)
+import qualified Luna.Interpreter.Session.Session            as Session
 
 
 

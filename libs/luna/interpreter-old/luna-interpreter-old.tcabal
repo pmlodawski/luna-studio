@@ -14,7 +14,7 @@ Flag Debug
 Library
   Hs-Source-Dirs: dist/gen,
                   src
-  Other-Modules:  Paths_luna_protobuf
+  Other-Modules:  Paths_luna_interpreter_old
   if flag(debug)
     GHC-Options:  -csacc
   GHC-Options:    -Wall -O2 -threaded
@@ -24,10 +24,11 @@ Library
                   TemplateHaskell,
                   OverloadedStrings
 
-  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`
+  Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*hs-boot.*')`
 
   Build-Depends:  base,
                   flowbox-utils,
                   flowbox-config,
+                  ghc,
                   luna-core
 

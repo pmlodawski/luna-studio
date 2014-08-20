@@ -6,17 +6,17 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Interpreter.Session.Data.CallPoint where
+module Luna.Interpreter.Session.Data.DefPoint where
 
-import qualified Flowbox.Luna.Data.Graph.Node as Node
-import qualified Flowbox.Luna.Lib.Library     as Library
 import           Flowbox.Prelude
+import           Luna.AST.Control.Crumb (Breadcrumbs)
+import qualified Luna.Lib.Lib           as Library
 
 
 
-data CallPoint = CallPoint { _libraryID :: Library.ID
-                           , _nodeID    :: Node.ID
-                           } deriving (Show, Ord, Eq)
+data DefPoint = DefPoint { _libraryID   :: Library.ID
+                         , _breadcrumbs :: Breadcrumbs
+                         } deriving (Show, Ord, Eq)
 
-makeLenses (''CallPoint)
+makeLenses(''DefPoint)
 

@@ -1,4 +1,4 @@
-Name:           flowbox-luna-interpreter
+Name:           luna-interpreter
 Version:        0.1
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
@@ -13,7 +13,7 @@ Flag Debug
 
 Library
   Hs-Source-Dirs: src
-  Other-Modules:  Paths_flowbox_luna_interpreter
+  Other-Modules:  Paths_luna_interpreter
   if flag(debug)
     GHC-Options:  -csacc
   GHC-Options:    -Wall -O2 -threaded
@@ -26,10 +26,12 @@ Library
                   data-hash,
                   either,
                   flowbox-batch,
-                  flowbox-luna-base,
                   flowbox-utils,
                   ghc,
                   hint,
+                  luna-core,
+                  luna-distribution,
+                  luna-pass,
                   mtl,
                   raw-strings-qq,
                   transformers
@@ -47,9 +49,11 @@ Executable luna-interpreter-test
 
   Build-Depends:  base,
                   errors,
-                  flowbox-luna-base,
-                  flowbox-luna-interpreter,
                   flowbox-utils,
+                  luna-core,
+                  luna-distribution,
+                  luna-interpreter,
+                  luna-pass,
                   pretty-show,
                   raw-strings-qq,
                   transformers
@@ -63,9 +67,11 @@ Test-Suite tests
   Extensions:     NoImplicitPrelude
   Build-Depends:  base,
                   errors,
-                  flowbox-luna-base,
-                  flowbox-luna-interpreter,
                   flowbox-utils,
+                  luna-core,
+                  luna-distribution,
+                  luna-interpreter,
+                  luna-pass,
                   pretty-show,
                   hspec,
                   mtl,
