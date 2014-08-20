@@ -18,22 +18,22 @@ import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
 
 import           Flowbox.Control.Error
-import           Luna.AST.Expr                      (Expr)
-import qualified Luna.AST.Expr                      as Expr
-import qualified Luna.Graph.Attributes                    as Attributes
-import qualified Luna.Graph.Edge                    as Edge
-import           Luna.Graph.Graph                   (Graph)
-import qualified Luna.Graph.Graph                   as Graph
-import           Luna.Graph.Node                    (Node)
-import qualified Luna.Graph.Node                    as Node
-import           Luna.Graph.Port                    (OutPort)
-import           Luna.Graph.PropertyMap                   (PropertyMap)
-import qualified Luna.Graph.PropertyMap                   as PropertyMap
+import           Flowbox.Prelude                       hiding (mapM)
+import           Flowbox.System.Log.Logger
+import           Luna.AST.Expr                         (Expr)
+import qualified Luna.AST.Expr                         as Expr
+import qualified Luna.Graph.Attributes                 as Attributes
+import qualified Luna.Graph.Attributes.Naming          as Attributes
+import qualified Luna.Graph.Edge                       as Edge
+import           Luna.Graph.Graph                      (Graph)
+import qualified Luna.Graph.Graph                      as Graph
+import           Luna.Graph.Node                       (Node)
+import qualified Luna.Graph.Node                       as Node
+import           Luna.Graph.Port                       (OutPort)
+import           Luna.Graph.PropertyMap                (PropertyMap)
+import qualified Luna.Graph.PropertyMap                as PropertyMap
 import           Luna.Pass.Pass                        (Pass)
 import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
-import qualified Luna.Pass.Transform.Graph.Attributes  as Attributes
-import           Flowbox.Prelude                                 hiding (mapM)
-import           Flowbox.System.Log.Logger
 
 
 

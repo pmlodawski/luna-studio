@@ -6,7 +6,8 @@
 ---------------------------------------------------------------------------
 module Flowbox.Interpreter.Session.Cache.Invalidate where
 
-import Control.Monad.State hiding (mapM, mapM_)
+import           Control.Monad.State hiding (mapM, mapM_)
+import qualified Data.List           as List
 
 import qualified Flowbox.Data.MapForest                         as MapForest
 import qualified Flowbox.Interpreter.Session.AST.Traverse       as Traverse
@@ -22,6 +23,7 @@ import qualified Flowbox.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Flowbox.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Flowbox.Interpreter.Session.Session            (Session)
 import qualified Flowbox.Luna.Data.AST.Common                   as AST
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs        (Breadcrumbs)
 import qualified Flowbox.Luna.Data.Graph.Node                   as Node
 import qualified Flowbox.Luna.Lib.Library                       as Library
 import           Flowbox.Prelude                                hiding (matching)
@@ -45,7 +47,19 @@ modifyLibrary libraryID = modifyMatching matchLib where
 modifyDef :: Library.ID -> AST.ID -> Session ()
 modifyDef libraryID defID = modifyMatching matchDef where
     matchDef k v = last k ^. CallPoint.libraryID == libraryID
-                     && v ^. CacheInfo.defID == defID
+                     && v ^. CacheInfo.defID     == defID
+
+
+modifyBreadcrumbsRec :: Library.ID -> Breadcrumbs -> Session ()
+modifyBreadcrumbsRec libraryID bc = modifyMatching matchBC where
+    matchBC k v = last k ^. CallPoint.libraryID   == libraryID
+                    && List.isPrefixOf bc (v ^. CacheInfo.breadcrumbs)
+
+
+modifyBreadcrumbs :: Library.ID -> Breadcrumbs -> Session ()
+modifyBreadcrumbs libraryID bc = modifyMatching matchBC where
+    matchBC k v = last k ^. CallPoint.libraryID == libraryID
+                    && v ^. CacheInfo.breadcrumbs == bc
 
 
 modifyNode :: Library.ID -> Node.ID -> Session ()

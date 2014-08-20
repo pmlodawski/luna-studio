@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Luna.Pass.Transform.HAST.HASTGen.Path (
-    module Flowbox.Luna.Data.Path.Path,
+    module Flowbox.Data.Path,
     toModulePath,
     toModuleName,
     toFilePath,
@@ -30,8 +30,8 @@ module Luna.Pass.Transform.HAST.HASTGen.Path (
 import Data.Char         (isLower)
 import Data.String.Utils (join)
 
-import Luna.Data.Path.Path
-import Flowbox.Prelude             hiding (init, last, last, tail)
+import Flowbox.Data.Path
+import Flowbox.Prelude   hiding (init, last, last, tail)
 
 
 
