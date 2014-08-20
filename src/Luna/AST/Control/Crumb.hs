@@ -5,12 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.AST.Control.Crumbs where
+module Luna.AST.Control.Crumb where
 
 import Flowbox.Prelude
 
 
+
 type Breadcrumbs = [Crumb]
+
 
 data Crumb = Function { name :: String
                       , path :: [String]
