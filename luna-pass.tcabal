@@ -27,14 +27,15 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
-                  luna-core,
-                  luna-target-ghchs,
                   containers,
-                  flowbox-utils,
-                  split,
-                  mtl,
+                  either,
+                  luna-core,
+                  luna-distribution,
+                  luna-target-ghchs,
                   flowbox-config,
-                  transformers,
+                  flowbox-utils,
+                  mtl,
                   MissingH,
-                  either
+                  split,
+                  transformers
 
