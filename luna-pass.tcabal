@@ -41,6 +41,33 @@ Library
                   transformers
 
 
+Executable luna-pass-test
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: test
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2
+
+  Extensions:     DoAndIfThenElse
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+
+  Build-Depends:  base,
+                  luna-pass,
+                  luna-core,
+                  luna-distribution,
+                  luna-parser,
+                  flowbox-utils,
+                  mtl,
+                  either,
+                  dlist,
+                  MissingH,
+                  transformers,
+                  timeit
+
+
 Test-Suite tests
   Type:           exitcode-stdio-1.0
   Main-Is:        Spec.hs
