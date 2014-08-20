@@ -15,16 +15,16 @@ module Luna.Data.Serialize.Proto.Conversion.Crumb where
 import           Control.Applicative
 import qualified Data.Sequence                                  as Seq
 import           Flowbox.Control.Error
-import           Luna.AST.Control.Crumbs        (Breadcrumbs)
-import           Luna.AST.Control.Crumbs        (Crumb)
-import qualified Luna.AST.Control.Crumbs        as Crumb
-import qualified Luna.Lib.Lib                       as Lib
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Crumb.ASTPtr                   as Gen
 import qualified Generated.Proto.Crumb.Breadcrumbs              as Gen
 import qualified Generated.Proto.Crumb.Crumb                    as Gen
 import qualified Generated.Proto.Crumb.Crumb.Cls                as GenCls
+import           Luna.AST.Control.Crumb                         (Breadcrumbs)
+import           Luna.AST.Control.Crumb                         (Crumb)
+import qualified Luna.AST.Control.Crumb                         as Crumb
+import qualified Luna.Lib.Lib                                   as Lib
 
 
 
