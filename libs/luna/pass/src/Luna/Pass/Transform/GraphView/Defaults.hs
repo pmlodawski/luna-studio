@@ -14,20 +14,20 @@ module Luna.Pass.Transform.GraphView.Defaults (
 import qualified Data.Map as Map
 
 import           Flowbox.Control.Error                               ()
-import qualified Flowbox.Luna.Data.Attributes                        as Attributes
-import qualified Flowbox.Luna.Data.Graph.Flags                       as Flags
-import qualified Flowbox.Luna.Data.Graph.Node                        as Node
-import           Flowbox.Luna.Data.Graph.Properties                  (Properties (Properties))
-import qualified Flowbox.Luna.Data.GraphView.Default.DefaultsMap     as DefaultsMap
-import           Flowbox.Luna.Data.GraphView.Default.Value           (Value)
-import           Flowbox.Luna.Data.GraphView.EdgeView                (EdgeView (EdgeView))
-import           Flowbox.Luna.Data.GraphView.GraphView               (GraphView)
-import qualified Flowbox.Luna.Data.GraphView.GraphView               as GraphView
-import           Flowbox.Luna.Data.GraphView.PortDescriptor          (PortDescriptor)
-import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
-import qualified Flowbox.Luna.Data.PropertyMap                       as PropertyMap
-import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes      as Attributes
-import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
+import qualified Luna.Graph.Attributes                        as Attributes
+import qualified Luna.Graph.Flags                       as Flags
+import qualified Luna.Graph.Node                        as Node
+import           Luna.Graph.Properties                  (Properties (Properties))
+import qualified Luna.Graph.View.Default.DefaultsMap     as DefaultsMap
+import           Luna.Graph.View.Default.Value           (Value)
+import           Luna.Graph.View.EdgeView                (EdgeView (EdgeView))
+import           Luna.Graph.View.GraphView               (GraphView)
+import qualified Luna.Graph.View.GraphView               as GraphView
+import           Luna.Graph.View.PortDescriptor          (PortDescriptor)
+import           Luna.Graph.PropertyMap                       (PropertyMap)
+import qualified Luna.Graph.PropertyMap                       as PropertyMap
+import qualified Luna.Graph.Attributes      as Attributes
+import qualified Luna.Graph.Node.OutputName as OutputName
 import           Flowbox.Prelude                                     hiding (empty)
 
 

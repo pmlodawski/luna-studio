@@ -19,21 +19,21 @@ import qualified Data.Maybe          as Maybe
 import qualified Text.Read           as Read
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.AST.Common                   as AST
-import qualified Flowbox.Luna.Data.Attributes                   as Attributes
-import           Flowbox.Luna.Data.Graph.Edge                   (Edge)
-import qualified Flowbox.Luna.Data.Graph.Edge                   as Edge
-import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
-import           Flowbox.Luna.Data.Graph.Node                   (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                   as Node
-import           Flowbox.Luna.Data.Graph.Port                   (InPort, OutPort)
-import           Flowbox.Luna.Data.Pass.AliasInfo               (AliasInfo)
-import qualified Flowbox.Luna.Data.Pass.AliasInfo               as AliasInfo
-import           Flowbox.Luna.Data.PropertyMap                  (PropertyMap)
-import qualified Flowbox.Luna.Data.PropertyMap                  as PropertyMap
-import           Flowbox.Luna.Passes.Pass                       (Pass)
-import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes as Attributes
+import qualified Luna.AST.Common                   as AST
+import qualified Luna.Graph.Attributes                   as Attributes
+import           Luna.Graph.Edge                   (Edge)
+import qualified Luna.Graph.Edge                   as Edge
+import           Luna.Graph.Graph                  (Graph)
+import qualified Luna.Graph.Graph                  as Graph
+import           Luna.Graph.Node                   (Node)
+import qualified Luna.Graph.Node                   as Node
+import           Luna.Graph.Port                   (InPort, OutPort)
+import           Luna.Data.AliasInfo               (AliasInfo)
+import qualified Luna.Data.AliasInfo               as AliasInfo
+import           Luna.Graph.PropertyMap                  (PropertyMap)
+import qualified Luna.Graph.PropertyMap                  as PropertyMap
+import           Luna.Pass.Pass                       (Pass)
+import qualified Luna.Pass.Transform.Graph.Attributes as Attributes
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 

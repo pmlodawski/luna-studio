@@ -7,7 +7,10 @@
 
 -- FIXME[pm]: Jezeli ten pas dostarcza danych ktore sa przesylane pomiedzy passami,
 -- powinien znajdowac sie w Flowbox.Luna.Data.Pass
-module Luna.Graph.Attributes where
+module Luna.Graph.Attributes (
+    module Luna.Graph.Attributes,
+    module Map
+) where
 
 import           Data.Map
 import qualified Data.Map        as Map

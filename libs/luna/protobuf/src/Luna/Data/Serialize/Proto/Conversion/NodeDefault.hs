@@ -15,10 +15,10 @@ module Luna.Data.Serialize.Proto.Conversion.NodeDefault where
 import qualified Data.Map as Map
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.Graph.Node                    as Node
-import           Flowbox.Luna.Data.GraphView.Default.DefaultsMap (DefaultsMap)
-import           Flowbox.Luna.Data.GraphView.Default.Value       (Value)
-import           Flowbox.Luna.Data.GraphView.PortDescriptor      (PortDescriptor)
+import qualified Luna.Graph.Node                    as Node
+import           Luna.Graph.View.Default.DefaultsMap (DefaultsMap)
+import           Luna.Graph.View.Default.Value       (Value)
+import           Luna.Graph.View.PortDescriptor      (PortDescriptor)
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Nodedefault.DefaultsMap         as Gen

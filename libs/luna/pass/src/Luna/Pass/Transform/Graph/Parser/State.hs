@@ -18,20 +18,20 @@ import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Expr                      (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                      as Expr
-import qualified Flowbox.Luna.Data.Attributes                    as Attributes
-import qualified Flowbox.Luna.Data.Graph.Edge                    as Edge
-import           Flowbox.Luna.Data.Graph.Graph                   (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                   as Graph
-import           Flowbox.Luna.Data.Graph.Node                    (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                    as Node
-import           Flowbox.Luna.Data.Graph.Port                    (OutPort)
-import           Flowbox.Luna.Data.PropertyMap                   (PropertyMap)
-import qualified Flowbox.Luna.Data.PropertyMap                   as PropertyMap
-import           Flowbox.Luna.Passes.Pass                        (Pass)
-import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State as IDFixer
-import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes  as Attributes
+import           Luna.AST.Expr                      (Expr)
+import qualified Luna.AST.Expr                      as Expr
+import qualified Luna.Graph.Attributes                    as Attributes
+import qualified Luna.Graph.Edge                    as Edge
+import           Luna.Graph.Graph                   (Graph)
+import qualified Luna.Graph.Graph                   as Graph
+import           Luna.Graph.Node                    (Node)
+import qualified Luna.Graph.Node                    as Node
+import           Luna.Graph.Port                    (OutPort)
+import           Luna.Graph.PropertyMap                   (PropertyMap)
+import qualified Luna.Graph.PropertyMap                   as PropertyMap
+import           Luna.Pass.Pass                        (Pass)
+import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
+import qualified Luna.Pass.Transform.Graph.Attributes  as Attributes
 import           Flowbox.Prelude                                 hiding (mapM)
 import           Flowbox.System.Log.Logger
 

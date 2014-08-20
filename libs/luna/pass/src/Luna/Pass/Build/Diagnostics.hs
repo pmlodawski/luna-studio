@@ -14,10 +14,10 @@ import Control.Monad.IO.Class
 import Data.String.Utils      (join)
 
 import qualified Flowbox.Generics.Deriving.QShow  as QShow
-import           Flowbox.Luna.Data.Pass.AliasInfo (AliasInfo)
-import qualified Flowbox.Luna.Data.Pass.AliasInfo as AliasInfo
-import           Flowbox.Luna.Data.Pass.Source    (Source)
-import qualified Flowbox.Luna.Data.Pass.Source    as Source
+import           Luna.Data.AliasInfo (AliasInfo)
+import qualified Luna.Data.AliasInfo as AliasInfo
+import           Luna.Data.Source    (Source)
+import qualified Luna.Data.Source    as Source
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.Text.Show.Hs             (hsShow)

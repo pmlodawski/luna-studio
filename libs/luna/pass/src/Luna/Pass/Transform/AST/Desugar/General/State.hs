@@ -11,8 +11,8 @@
 
 module Luna.Pass.Transform.AST.Desugar.General.State where
 
-import           Flowbox.Luna.Data.Pass.ASTInfo (ASTInfo)
-import qualified Flowbox.Luna.Data.Pass.ASTInfo as ASTInfo
+import           Luna.Data.ASTInfo (ASTInfo)
+import qualified Luna.Data.ASTInfo as ASTInfo
 
 import Flowbox.Prelude           hiding (id)
 import Flowbox.System.Log.Logger hiding (info)

@@ -15,22 +15,22 @@ module Luna.Pass.Transform.HAST.HASTGen.HASTGen where
 
 import qualified Flowbox.Prelude                                     as Prelude
 import           Flowbox.Prelude                                     hiding (error, id, mod, simple, cons, exp)
-import qualified Flowbox.Luna.Data.AST.Expr                          as LExpr
-import qualified Flowbox.Luna.Data.AST.Type                          as LType
-import qualified Flowbox.Luna.Data.AST.Pat                           as LPat
-import qualified Flowbox.Luna.Data.AST.Lit                           as LLit
-import qualified Flowbox.Luna.Data.AST.Module                        as LModule
-import qualified Flowbox.Luna.Data.HAST.Expr                         as HExpr
-import qualified Flowbox.Luna.Data.HAST.Lit                          as HLit
-import qualified Flowbox.Luna.Data.HAST.Module                       as HModule
-import qualified Flowbox.Luna.Data.HAST.Extension                    as HExtension
-import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
-import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
-import qualified Flowbox.Luna.Passes.Pass                            as Pass
-import           Flowbox.Luna.Passes.Pass                              (Pass)
+import qualified Luna.AST.Expr                          as LExpr
+import qualified Luna.AST.Type                          as LType
+import qualified Luna.AST.Pat                           as LPat
+import qualified Luna.AST.Lit                           as LLit
+import qualified Luna.AST.Module                        as LModule
+import qualified Luna.Data.HAST.Expr                         as HExpr
+import qualified Luna.Data.HAST.Lit                          as HLit
+import qualified Luna.Data.HAST.Module                       as HModule
+import qualified Luna.Data.HAST.Extension                    as HExtension
+import qualified Luna.Pass.Transform.HAST.HASTGen.GenState as GenState
+import           Luna.Pass.Transform.HAST.HASTGen.GenState   (GenState)
+import qualified Luna.Pass.Pass                            as Pass
+import           Luna.Pass.Pass                              (Pass)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils
-import qualified Luna.Target.HS.Host.Naming                          as Naming
+import           Flowbox.Luna.Pass.Transform.HAST.HASTGen.Utils
+--import qualified Luna.Target.HS.Host.Naming                          as Naming
 import           Data.String.Utils                                     (join)
 import qualified Flowbox.Luna.Data.HAST.Deriving                     as Deriving
 import           Flowbox.Luna.Data.HAST.Deriving                     (Deriving)

@@ -17,10 +17,10 @@ import qualified Data.Map                        as Map
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Zipper.Focus                   (Focus)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                   as Focus
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr   ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Module ()
+import           Luna.AST.Control.Focus                   (Focus)
+import qualified Luna.AST.Control.Focus                   as Focus
+import           Luna.Data.Serialize.Proto.Conversion.Expr   ()
+import           Luna.Data.Serialize.Proto.Conversion.Module ()
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Focus.ClassFocus                     as GenClass

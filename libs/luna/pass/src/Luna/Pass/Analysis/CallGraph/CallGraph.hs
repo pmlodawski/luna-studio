@@ -15,23 +15,23 @@ module Luna.Pass.Analysis.CallGraph.CallGraph where
 import Control.Applicative
 import           Control.Monad.State (get)
 
-import qualified Flowbox.Luna.Data.AST.Expr                 as Expr
-import           Flowbox.Luna.Data.AST.Module               (Module)
-import qualified Flowbox.Luna.Data.AST.Module               as Module
-import           Flowbox.Luna.Data.AST.Pat                  (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat                  as Pat
-import           Flowbox.Luna.Data.AST.Type                 (Type)
-import qualified Flowbox.Luna.Data.AST.Type                 as Type
-import           Flowbox.Luna.Passes.Analysis.CallGraph.State (State)
-import qualified Flowbox.Luna.Passes.Analysis.CallGraph.State as State
-import           Flowbox.Luna.Passes.Pass                   (Pass)
-import qualified Flowbox.Luna.Passes.Pass                   as Pass
+import qualified Luna.AST.Expr                 as Expr
+import           Luna.AST.Module               (Module)
+import qualified Luna.AST.Module               as Module
+import           Luna.AST.Pat                  (Pat)
+import qualified Luna.AST.Pat                  as Pat
+import           Luna.AST.Type                 (Type)
+import qualified Luna.AST.Type                 as Type
+import           Luna.Pass.Analysis.CallGraph.State (State)
+import qualified Luna.Pass.Analysis.CallGraph.State as State
+import           Luna.Pass.Pass                   (Pass)
+import qualified Luna.Pass.Pass                   as Pass
 import           Flowbox.Prelude                            hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Luna.Data.Pass.AliasInfo                               (AliasInfo)
-import qualified Flowbox.Luna.Data.Pass.AliasInfo                               as AliasInfo
-import           Flowbox.Luna.Data.Pass.CallGraph (CallGraph)
-import qualified Flowbox.Luna.Data.AST.AST                                      as AST
+import           Luna.Data.AliasInfo                               (AliasInfo)
+import qualified Luna.Data.AliasInfo                               as AliasInfo
+import           Luna.Data.CallGraph (CallGraph)
+import qualified Luna.AST.AST                                      as AST
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.CallGraph.CallGraph"

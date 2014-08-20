@@ -15,9 +15,9 @@ module Luna.Data.Serialize.Proto.Conversion.Module where
 import Control.Applicative
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Module                       (Module (Module))
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Type ()
+import           Luna.AST.Module                       (Module (Module))
+import           Luna.Data.Serialize.Proto.Conversion.Expr ()
+import           Luna.Data.Serialize.Proto.Conversion.Type ()
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Module.Module                      as Gen
 

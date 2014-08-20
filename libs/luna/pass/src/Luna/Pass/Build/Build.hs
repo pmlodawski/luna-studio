@@ -14,35 +14,35 @@ module Luna.Pass.Build.Build where
 import Control.Monad.RWS   hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
-import qualified Flowbox.Luna.Data.AST.Module                                            as ASTModule
-import           Flowbox.Luna.Data.Pass.ASTInfo                                          (ASTInfo)
-import           Flowbox.Luna.Data.Pass.Source                                           (Source)
-import qualified Flowbox.Luna.Data.Pass.Source                                           as Source
-import           Flowbox.Luna.Data.Pass.SourceMap                                        (SourceMap)
-import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                                as Analysis.Alias
-import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool                          as FuncPool
-import           Flowbox.Luna.Passes.Build.BuildConfig                                   (BuildConfig (BuildConfig))
-import qualified Flowbox.Luna.Passes.Build.BuildConfig                                   as BuildConfig
-import           Flowbox.Luna.Passes.Build.Diagnostics                                   (Diagnostics)
-import qualified Flowbox.Luna.Passes.Build.Diagnostics                                   as Diagnostics
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                                   as CabalGen
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install                               as CabalInstall
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                                 as CabalStore
-import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                                     as HSC
-import qualified Flowbox.Luna.Passes.Pass                                                as Pass
-import qualified Flowbox.Luna.Passes.Source.File.Reader                                  as FileReader
-import qualified Flowbox.Luna.Passes.Source.File.Writer                                  as FileWriter
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
-import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash                             as Hash
-import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash                             as Hash
-import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                               as SSA
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser                   as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen                      as HASTGen
-import qualified Flowbox.Luna.Passes.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
-import qualified Flowbox.Luna.Passes.Transform.AST.DepSort.DepSort                       as Transform.DepSort
+import qualified Luna.AST.Module                                            as ASTModule
+import           Luna.Data.ASTInfo                                          (ASTInfo)
+import           Luna.Data.Source                                           (Source)
+import qualified Luna.Data.Source                                           as Source
+import           Luna.Data.SourceMap                                        (SourceMap)
+import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
+import qualified Luna.Pass.Analysis.FuncPool.FuncPool                          as FuncPool
+import           Luna.Pass.Build.BuildConfig                                   (BuildConfig (BuildConfig))
+import qualified Luna.Pass.Build.BuildConfig                                   as BuildConfig
+import           Luna.Pass.Build.Diagnostics                                   (Diagnostics)
+import qualified Luna.Pass.Build.Diagnostics                                   as Diagnostics
+import qualified Luna.Pass.CodeGen.Cabal.Gen                                   as CabalGen
+import qualified Luna.Pass.CodeGen.Cabal.Install                               as CabalInstall
+import qualified Luna.Pass.CodeGen.Cabal.Store                                 as CabalStore
+import qualified Luna.Pass.CodeGen.HSC.HSC                                     as HSC
+import qualified Luna.Pass.Pass                                                as Pass
+import qualified Luna.Pass.Source.File.Reader                                  as FileReader
+import qualified Luna.Pass.Source.File.Writer                                  as FileWriter
+import qualified Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
+import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
+import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
+import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
+import qualified Luna.Pass.Transform.AST.Hash.Hash                             as Hash
+import qualified Luna.Pass.Transform.AST.Hash.Hash                             as Hash
+import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
+import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
+import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
+import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
+import qualified Luna.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory                                      as Directory
 import           Flowbox.System.Log.Logger

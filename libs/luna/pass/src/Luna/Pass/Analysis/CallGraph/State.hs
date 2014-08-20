@@ -17,11 +17,11 @@ import           Control.Monad.State (MonadState, get, modify, put)
 
 import           Flowbox.Prelude                            hiding (error, id, mod)
 import           Flowbox.System.Log.Logger                  hiding (info)
-import qualified Flowbox.Luna.Data.Pass.CallGraph as CallGraph
-import           Flowbox.Luna.Data.Pass.CallGraph (CallGraph)
-import           Flowbox.Luna.Data.AST.AST        (AST, ID)
-import           Flowbox.Luna.Data.Pass.AliasInfo                               (AliasInfo)
-import qualified Flowbox.Luna.Data.Pass.AliasInfo                               as AliasInfo
+import qualified Luna.Data.CallGraph as CallGraph
+import           Luna.Data.CallGraph (CallGraph)
+import           Luna.AST.AST        (AST, ID)
+import           Luna.Data.AliasInfo                               (AliasInfo)
+import qualified Luna.Data.AliasInfo                               as AliasInfo
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.CallGraph.State"
