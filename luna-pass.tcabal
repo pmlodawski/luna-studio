@@ -40,3 +40,17 @@ Library
                   split,
                   transformers
 
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  luna-core,
+                  luna-pass,
+                  flowbox-utils,
+                  hspec,
+                  raw-strings-qq,
+                  MissingH
