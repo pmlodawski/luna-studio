@@ -22,37 +22,37 @@ import           Data.Version               (Version (Version))
 import           Debug.Trace
 import           System.TimeIt
 
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                       as ASTCrumb
-import qualified Flowbox.Luna.Data.AST.Expr                                              as LExpr
-import qualified Flowbox.Luna.Data.AST.Module                                            as FModule
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                                      as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                                     as Zipper
-import qualified Flowbox.Luna.Data.Cabal.Config                                          as Config
-import qualified Flowbox.Luna.Data.Cabal.Section                                         as Section
-import qualified Flowbox.Luna.Data.HAST.Expr                                             as HExpr
-import qualified Flowbox.Luna.Data.HAST.Module                                           as Module
-import qualified Flowbox.Luna.Data.Pass.AliasInfo                                        as AliasInfo
-import           Flowbox.Luna.Data.Pass.Source                                           (Source)
-import qualified Flowbox.Luna.Data.Pass.Source                                           as Source
-import qualified Flowbox.Luna.Data.PropertyMap                                           as PropertyMap
-import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                                as Analysis.Alias
-import qualified Flowbox.Luna.Passes.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
-import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool                          as FuncPool
-import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                                   as MaxID
-import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                                     as HSC
-import qualified Flowbox.Luna.Passes.General.Luna.Luna                                   as Luna
-import qualified Flowbox.Luna.Passes.Source.File.Reader                                  as FileReader
-import qualified Flowbox.Luna.Passes.Transform.AST.DepSort.DepSort                       as Transform.DepSort
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
-import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash                             as Hash
-import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                               as SSA
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser                      as Parser
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser                      as Parser
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser                   as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen                      as HASTGen
+import qualified Luna.AST.Control.Crumbs                                    as ASTCrumb
+import qualified Luna.AST.Expr                                              as LExpr
+import qualified Luna.AST.Module                                            as FModule
+import qualified Luna.AST.Control.Focus                                      as Focus
+import qualified Luna.AST.Control.Zipper                                     as Zipper
+import qualified Luna.Distribution.Cabal.Config                                          as Config
+import qualified Luna.Distribution.Cabal.Section                                         as Section
+import qualified Luna.Data.HAST.Expr                                             as HExpr
+import qualified Luna.Data.HAST.Module                                           as Module
+import qualified Luna.Data.AliasInfo                                        as AliasInfo
+import           Luna.Data.Source                                           (Source)
+import qualified Luna.Data.Source                                           as Source
+import qualified Luna.Graph.PropertyMap                                           as PropertyMap
+import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
+import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
+import qualified Luna.Pass.Analysis.FuncPool.FuncPool                          as FuncPool
+import qualified Luna.Pass.Analysis.ID.MaxID                                   as MaxID
+import qualified Luna.Pass.CodeGen.HSC.HSC                                     as HSC
+import qualified Luna.Pass.General.Luna.Luna                                   as Luna
+import qualified Luna.Pass.Source.File.Reader                                  as FileReader
+import qualified Luna.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
+import qualified Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
+import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
+import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
+import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
+import qualified Luna.Pass.Transform.AST.Hash.Hash                             as Hash
+import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
+import qualified Luna.Parser.Parser                      as Parser
+import qualified Luna.Parser.Parser                      as Parser
+import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
+import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.LogEntry                                             as LogEntry
 import           Flowbox.System.Log.Logger

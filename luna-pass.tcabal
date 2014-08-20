@@ -42,7 +42,7 @@ Library
 
 
 
-Executable luna-base-test
+Executable luna-pass-test
   Main-Is:        Main.hs
   Hs-Source-Dirs: test
 
@@ -56,4 +56,14 @@ Executable luna-base-test
                   OverloadedStrings
 
   Build-Depends:  base,
-                  luna-pass
+                  luna-pass,
+                  luna-core,
+                  luna-distribution,
+                  luna-parser,
+                  flowbox-utils,
+                  mtl,
+                  either,
+                  dlist,
+                  MissingH,
+                  transformers,
+                  timeit
