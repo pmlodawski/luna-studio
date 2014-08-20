@@ -29,11 +29,11 @@ import           Luna.Pass.Transform.HAST.HASTGen.GenState   (GenState)
 import qualified Luna.Pass.Pass                            as Pass
 import           Luna.Pass.Pass                              (Pass)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Luna.Pass.Transform.HAST.HASTGen.Utils
+import           Luna.Pass.Transform.HAST.HASTGen.Utils
 --import qualified Luna.Target.HS.Host.Naming                          as Naming
 import           Data.String.Utils                                     (join)
-import qualified Flowbox.Luna.Data.HAST.Deriving                     as Deriving
-import           Flowbox.Luna.Data.HAST.Deriving                     (Deriving)
+import qualified Luna.Data.HAST.Deriving                     as Deriving
+import           Luna.Data.HAST.Deriving                     (Deriving)
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
 

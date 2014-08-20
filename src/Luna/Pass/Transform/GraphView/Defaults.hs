@@ -13,27 +13,28 @@ module Luna.Pass.Transform.GraphView.Defaults (
 
 import qualified Data.Map as Map
 
-import           Flowbox.Control.Error                               ()
-import qualified Luna.Graph.Attributes                        as Attributes
-import qualified Luna.Graph.Flags                       as Flags
-import qualified Luna.Graph.Node                        as Node
-import           Luna.Graph.Properties                  (Properties (Properties))
-import qualified Luna.Graph.View.Default.DefaultsMap     as DefaultsMap
-import           Luna.Graph.View.Default.Value           (Value)
-import           Luna.Graph.View.EdgeView                (EdgeView (EdgeView))
-import           Luna.Graph.View.GraphView               (GraphView)
-import qualified Luna.Graph.View.GraphView               as GraphView
-import           Luna.Graph.View.PortDescriptor          (PortDescriptor)
-import           Luna.Graph.PropertyMap                       (PropertyMap)
-import qualified Luna.Graph.PropertyMap                       as PropertyMap
-import qualified Luna.Graph.Attributes      as Attributes
-import qualified Luna.Graph.Node.OutputName as OutputName
-import           Flowbox.Prelude                                     hiding (empty)
+import           Flowbox.Control.Error               ()
+import           Flowbox.Prelude                     hiding (empty)
+import qualified Luna.Graph.Attributes               as Attributes
+import qualified Luna.Graph.Attributes.Naming        as Attributes
+import qualified Luna.Graph.Node                     as Node
+import qualified Luna.Graph.Node.OutputName          as OutputName
+import           Luna.Graph.Properties               (Properties (Properties))
+import           Luna.Graph.PropertyMap              (PropertyMap)
+import qualified Luna.Graph.PropertyMap              as PropertyMap
+import qualified Luna.Graph.View.Default.DefaultsMap as DefaultsMap
+import           Luna.Graph.View.Default.Value       (Value)
+import           Luna.Graph.View.EdgeView            (EdgeView (EdgeView))
+import           Luna.Graph.View.GraphView           (GraphView)
+import qualified Luna.Graph.View.GraphView           as GraphView
+import           Luna.Graph.View.PortDescriptor      (PortDescriptor)
+import           Luna.Info                           (apiVersion)
+
 
 
 generatedProperties :: Properties
-generatedProperties = Properties Flags.empty
-                    $ Attributes.fromList [( Attributes.luna
+generatedProperties = Properties def
+                    $ Attributes.fromList [( show apiVersion
                                            , Map.fromList [( Attributes.defaultNodeGenerated
                                                            , Attributes.true
                                                            )]
@@ -66,7 +67,7 @@ addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, property
 
 isGenerated :: Node.ID -> PropertyMap -> Bool
 isGenerated nodeID propertyMap =
-    PropertyMap.get nodeID Attributes.luna Attributes.defaultNodeGenerated propertyMap == Just "True"
+    PropertyMap.get nodeID (show apiVersion) Attributes.defaultNodeGenerated propertyMap == Just "True"
 
 
 delGenerated :: Node.ID -> (GraphView, PropertyMap) -> (GraphView, PropertyMap)

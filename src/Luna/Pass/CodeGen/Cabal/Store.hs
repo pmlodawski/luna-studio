@@ -10,11 +10,11 @@ module Luna.Pass.CodeGen.Cabal.Store where
 import           Control.Monad.RWS
 import qualified System.IO         as IO
 
-import qualified Luna.Data.Cabal.Config as CabalConfig
 import           Flowbox.Prelude
 import           Flowbox.System.IO.Serializer   (Serializable (Serializable))
 import qualified Flowbox.System.IO.Serializer   as Serializer
 import           Flowbox.System.UniPath         (UniPath)
+import qualified Luna.Distribution.Cabal.Config as CabalConfig
 
 
 type CabalConfig = CabalConfig.Config
