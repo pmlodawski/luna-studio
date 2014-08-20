@@ -22,19 +22,28 @@ import           Data.Version               (Version (Version))
 import           Debug.Trace
 import           System.TimeIt
 
-import qualified Luna.AST.Control.Crumbs                                    as ASTCrumb
-import qualified Luna.AST.Expr                                              as LExpr
-import qualified Luna.AST.Module                                            as FModule
-import qualified Luna.AST.Control.Focus                                      as Focus
-import qualified Luna.AST.Control.Zipper                                     as Zipper
-import qualified Luna.Distribution.Cabal.Config                                          as Config
-import qualified Luna.Distribution.Cabal.Section                                         as Section
-import qualified Luna.Data.HAST.Expr                                             as HExpr
-import qualified Luna.Data.HAST.Module                                           as Module
-import qualified Luna.Data.AliasInfo                                        as AliasInfo
-import           Luna.Data.Source                                           (Source)
-import qualified Luna.Data.Source                                           as Source
-import qualified Luna.Graph.PropertyMap                                           as PropertyMap
+import           Flowbox.Prelude
+import qualified Flowbox.System.Log.LogEntry                                   as LogEntry
+import           Flowbox.System.Log.Logger
+import qualified Flowbox.System.Log.Logger                                     as Logger
+import qualified Flowbox.System.UniPath                                        as UniPath
+import           Flowbox.Text.Show.Hs                                          (hsShow)
+import qualified Flowbox.Text.Show.Pretty                                      as PP
+import qualified Luna.AST.Control.Crumb                                        as ASTCrumb
+import qualified Luna.AST.Control.Focus                                        as Focus
+import qualified Luna.AST.Control.Zipper                                       as Zipper
+import qualified Luna.AST.Expr                                                 as LExpr
+import qualified Luna.AST.Module                                               as FModule
+import qualified Luna.Data.AliasInfo                                           as AliasInfo
+import qualified Luna.Data.HAST.Expr                                           as HExpr
+import qualified Luna.Data.HAST.Module                                         as Module
+import           Luna.Data.Source                                              (Source)
+import qualified Luna.Data.Source                                              as Source
+import qualified Luna.Distribution.Cabal.Config                                as Config
+import qualified Luna.Distribution.Cabal.Section                               as Section
+import qualified Luna.Graph.PropertyMap                                        as PropertyMap
+import qualified Luna.Parser.Parser                                            as Parser
+import qualified Luna.Parser.Parser                                            as Parser
 import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
 import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
 import qualified Luna.Pass.Analysis.FuncPool.FuncPool                          as FuncPool
@@ -49,17 +58,8 @@ import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     a
 import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
 import qualified Luna.Pass.Transform.AST.Hash.Hash                             as Hash
 import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
-import qualified Luna.Parser.Parser                      as Parser
-import qualified Luna.Parser.Parser                      as Parser
 import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
-import           Flowbox.Prelude
-import qualified Flowbox.System.Log.LogEntry                                             as LogEntry
-import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Log.Logger                                               as Logger
-import qualified Flowbox.System.UniPath                                                  as UniPath
-import           Flowbox.Text.Show.Hs                                                    (hsShow)
-import qualified Flowbox.Text.Show.Pretty                                                as PP
 
 
 
