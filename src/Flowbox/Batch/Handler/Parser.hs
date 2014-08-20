@@ -8,16 +8,16 @@
 
 module Flowbox.Batch.Handler.Parser where
 
-import           Flowbox.Batch.Batch                                (Error)
+import           Flowbox.Batch.Batch   (Error)
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Expr                         (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                         as Expr
-import           Flowbox.Luna.Data.AST.Pat                          (Pat)
-import           Flowbox.Luna.Data.AST.Type                         (Type)
-import qualified Flowbox.Luna.Data.Pass.ASTInfo                     as ASTInfo
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer  as Lexer
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
 import           Flowbox.Prelude
+import           Luna.AST.Expr         (Expr)
+import qualified Luna.AST.Expr         as Expr
+import           Luna.AST.Pat          (Pat)
+import           Luna.AST.Type         (Type)
+import qualified Luna.Data.ASTInfo     as ASTInfo
+import qualified Luna.Parser.Lexer     as Lexer
+import qualified Luna.Parser.Parser    as Parser
 
 
 
