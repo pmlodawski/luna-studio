@@ -16,3 +16,6 @@
 [submodule "third-party/hs-crypto-random"]
 	path = third-party/hs-crypto-random
 	url = https://github.com/remdezx/hs-crypto-random.git
+[submodule "third-party/hs-tls"]
+	path = third-party/hs-tls
+	url = https://github.com/remdezx/hs-tls.git
