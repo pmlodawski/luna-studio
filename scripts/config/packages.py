@@ -96,7 +96,7 @@ class AllProject(Project):
 
 pkgDb = \
        { '@all'                                : AllProject ('@all', deps = [])
-       , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/utils', 'libs/rpc', 'third-party/hs-certificate/x509'])
+       , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/utils', 'libs/rpc', 'third-party/hs-certificate/x509', 'third-party/hs-crypto-random'])
        , 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/distribution', 'libs/luna/initializer', 'libs/luna/interpreter-old', 'libs/luna/pass', 'libs/luna/protobuf'])
        , 'libs/batch/plugins/project-manager'  : HProject   ('batch-lib-project-manager'    , os.path.join ('libs' , 'batch', 'plugins', 'project-manager') , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/core', 'libs/batch/batch'])
        , 'libs/bus'                            : HProject   ('flowbox-bus'                  , os.path.join ('libs' , 'bus')                                 , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc'])
@@ -137,6 +137,7 @@ pkgDb = \
        , 'third-party/protocol-buffers'        : HProject   ('protocol-buffers'             , os.path.join ('third-party', 'protocol-buffers')              , 'third-party', []) # [PM] temporary fix until protocol-buffers is fixed
        , 'third-party/fgl'                     : HProject   ('fgl'                          , os.path.join ('third-party', 'fgl')                           , 'third-party', []) # [PM] temporary fix until fgl is fixed
        , 'third-party/hs-certificate/x509'     : HProject   ('x509'                         , os.path.join ('third-party', 'hs-certificate', 'x509')        , 'third-party', []) # [PM] temporary fix until x509 is fixed ( https://github.com/vincenthz/hs-certificate/pull/33 )
+       , 'third-party/hs-crypto-random'        : HProject   ('crypto-random'                , os.path.join ('third-party', 'hs-crypto-random')              , 'third-party', []) # [PM] temporary fix until crypto-random is fixed ( https://github.com/vincenthz/hs-crypto-random/pull/8 )
        }
 
 

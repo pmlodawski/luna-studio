@@ -13,3 +13,6 @@
 [submodule "third-party/hs-certificate"]
 	path = third-party/hs-certificate
 	url = https://github.com/remdezx/hs-certificate.git
+[submodule "third-party/hs-crypto-random"]
+	path = third-party/hs-crypto-random
+	url = https://github.com/remdezx/hs-crypto-random.git
