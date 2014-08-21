@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.ProjectManager.Config (
-    module Paths_flowbox_project_manager,
+    module Paths_batch_lib_project_manager,
 ) where
 
-import Paths_flowbox_project_manager (version)
+import Paths_batch_lib_project_manager (version)
 
 
