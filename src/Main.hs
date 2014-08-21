@@ -113,7 +113,7 @@ cons_ModuleVector = objProp (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
 ---
 data Cls_Vector = Cls_Vector deriving (Show, Eq, Typeable)
 data Vector a = Vector a a a deriving (Show, Eq, Typeable)
-$(generateFieldAccessors ''Vector [Just "x", Just "y", Just "z"])
+generateFieldAccessors ''Vector [Just "x", Just "y", Just "z"]
 
 propSig_Cls_Vector_Vector = (mkArg :: NParam "self") // (mkArg (val (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (val 0) :: NDParam "y" (Value Pure(Safe Int))) // (mkArg (val 0) :: NDParam "z" (Value Pure(Safe Int))) // ()
 propDef_Cls_Vector_Vector = liftCons3 Vector
