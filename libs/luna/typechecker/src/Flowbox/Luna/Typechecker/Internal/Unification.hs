@@ -17,7 +17,7 @@ mgu (Ty.TAp l r) (Ty.TAp l' r')              = do s1 <- mgu l l'
 mgu (Ty.TVar u) t                            = varBind u t
 mgu t (Ty.TVar u)                            = varBind u t
 mgu (Ty.TCon tc1) (Ty.TCon tc2) | tc1 == tc2 = return Sub.nullSubst
-mgu t1 t2                                    = fail "types do not unify"
+mgu _ _                                      = fail "types do not unify"
 
 
 -- TODO [kgdk] 14 sie 2014: nie lubimy się z 'fail' za bardzo. Fix here and there
@@ -45,4 +45,4 @@ match (Ty.TAp l r) (Ty.TAp l' r')                    = do sl <- match l l'
                                                           Sub.merge sl sr -- TODO [kg]: dlaczego musi być syme
 match (Ty.TVar u) t               | HKd.kind u == HKd.kind t = return (u Sub.+-> t)
 match (Ty.TCon tc1) (Ty.TCon tc2) |    tc1 == tc2    = return Sub.nullSubst
-match t1 t2                                          = fail "types do not match"
+match _ _                                            = fail "types do not match"

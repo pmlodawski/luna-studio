@@ -1,4 +1,7 @@
-module Flowbox.Luna.Typechecker.Internal.AST.Type (Type(..), Tyvar(..), Tycon(..), fn, tChar, tFloat, tInteger, tString, tDouble) where
+module Flowbox.Luna.Typechecker.Internal.AST.Type (
+    Type(..), Tyvar(..), Tycon(..),
+    fn, pair, list, tUnit, tChar, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString
+  ) where
 
 import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
 

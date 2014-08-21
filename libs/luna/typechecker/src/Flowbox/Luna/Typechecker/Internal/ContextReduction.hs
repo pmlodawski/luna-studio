@@ -8,10 +8,11 @@ import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
 
 
 inHnf :: Tcl.Pred -> Bool
-inHnf (Tcl.IsIn c t) = hnf t
-  where hnf (Ty.TVar v ) = True
-        hnf (Ty.TCon tc) = False  -- TODO [kgdk] 18 sie 2014: well, why actually can't this be true?
-        hnv (Ty.TAp t _) = hnf t
+inHnf (Tcl.IsIn _ t) = hnf t
+  where hnf (Ty.TVar   _ ) = True
+        hnf (Ty.TCon   _ ) = False  -- TODO [kgdk] 18 sie 2014: well, why actually can't this be true?
+        hnf (Ty.TAp t1 _ ) = hnf t1
+        hnf (Ty.TGen   _ ) = error "ContextReduction.hs:inHnf got TGen!" -- TODO [kgdk] 21 sie 2014: czy może tylko False?
 
 
 

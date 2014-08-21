@@ -13,7 +13,7 @@ data Assump = TID :>: Sch.Scheme
 
 instance Sub.Types Assump where
   apply s (i :>: sc) = i :>: (Sub.apply s sc)
-  tv (i :>: sc) = Sub.tv sc
+  tv (_ :>: sc) = Sub.tv sc
 
 -- TODO [kgdk] 19 sie 2014: wybrać lepsze
 --find i lst = case Prelude.find (\(i' :>: sc) -> i' == i) lst of

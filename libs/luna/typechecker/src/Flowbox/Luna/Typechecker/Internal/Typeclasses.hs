@@ -1,4 +1,7 @@
-module Flowbox.Luna.Typechecker.Internal.Typeclasses (Pred(..), Qual(..), ClassEnv(..), entail, byInst) where
+module Flowbox.Luna.Typechecker.Internal.Typeclasses (
+    Pred(..), Qual(..), ClassEnv(..),
+    entail, byInst, addClass, addInst, (<:>)
+  ) where
 
 import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
 
@@ -52,7 +55,7 @@ data Pred = IsIn TID Ty.Type
 
 instance Sub.Types Pred where
   apply s (IsIn i t) = IsIn i (Sub.apply s t)
-  tv (IsIn i t)      = Sub.tv t
+  tv (IsIn _ t)      = Sub.tv t
 
 -- TODO [kgdk] 14 sie 2014: napisać instancje Show dla Qual i Pred
 
@@ -71,11 +74,13 @@ data ClassEnv = ClassEnv {
 
 super :: ClassEnv -> TID -> [TID]
 super ce i = case classes ce i of
-               Just (is, its) -> is
+               Just (is, _) -> is
+               Nothing -> error "Typeclasses.hs:super got no result"
 
 insts :: ClassEnv -> TID -> [Inst]
 insts ce i = case classes ce i of
-               Just (is, its) -> its
+               Just (_, its) -> its
+               Nothing -> error "Typeclasses.hs:insts got no result"
 
 
 -- TODO [kg]: how fucking stupid is this one? :<
@@ -90,11 +95,11 @@ modify ce i c = ce {
 -- TODO [kgdk] 18 sie 2014: zastąpić przez coś bardziej nienormalnego jak... nie wiem... Data.Map?
 
 
-initialEnv :: ClassEnv
-initialEnv = ClassEnv {
-               classes = \i -> fail "class not defined/found",
-               defaults = [Ty.tInteger, Ty.tDouble]
-             }
+--initialEnv :: ClassEnv
+--initialEnv = ClassEnv {
+--               classes = \_ -> fail "class not defined/found",
+--               defaults = [Ty.tInteger, Ty.tDouble]
+--             }
 
 -- TODO [kgdk] 18 sie 2014: zbadać jak zachowuje się defaulting w Lunie
 
@@ -144,7 +149,7 @@ bySuper ce p@(IsIn i t) = p : concat [bySuper ce (IsIn i' t) | i' <- super ce i]
 
 -- | List subgoals for a predicate to match.
 byInst :: ClassEnv -> Pred -> Maybe [Pred]
-byInst ce p@(IsIn i t) = msum [tryInst it | it <- insts ce i] -- at most one of those from list would match (since no overlapping instances!)
+byInst ce p@(IsIn i _) = msum [tryInst it | it <- insts ce i] -- at most one of those from list would match (since no overlapping instances!)
   where tryInst (ps :=> h) = do u <- matchPred h p
                                 Just (map (Sub.apply u) ps)
 

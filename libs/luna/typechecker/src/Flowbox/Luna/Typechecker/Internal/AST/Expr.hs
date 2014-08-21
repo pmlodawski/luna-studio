@@ -21,7 +21,7 @@ data Expr = NOP          { _id :: ID                                      }
           deriving (Show, Eq)
 
 tiExpr :: Inf.Infer Expr Ty.Type
-tiExpr ce as (NOP _) = do t <- TIM.newTVar Knd.Star
+tiExpr _  _  (NOP _) = do t <- TIM.newTVar Knd.Star
                           return ([], t)
 tiExpr ce as (App _ e fs) = do (ps, te) <- tiExpr ce as e
                                qstfs    <- mapM (tiExpr ce as) fs
@@ -30,11 +30,11 @@ tiExpr ce as (App _ e fs) = do (ps, te) <- tiExpr ce as e
                                t <- TIM.newTVar Knd.Star
                                TIM.unify t (foldr Ty.fn te tfs)
                                return (ps++qs, t)
-tiExpr ce as (Lit _ l) = Lit.tiLit l
-tiExpr ce as (Var _ name) = do sc         <- Ass.find name as
+tiExpr _  _  (Lit _ l) = Lit.tiLit l
+tiExpr _  as (Var _ name) = do sc         <- Ass.find name as
                                (ps Tcl.:=> t) <- TIM.freshInst sc
                                return (ps, t)
-tiExpr ce as (Assignment _ pat dst) = error "AST.Expr.tiExpr: not defined for Assignment yet!"
+tiExpr _  _  (Assignment _ _ _ ) = error "AST.Expr.tiExpr: not defined for Assignment yet!"
 
 
 -- #            | Accessor     { _id :: ID, _name      :: String   , _dst       :: Expr                                               }

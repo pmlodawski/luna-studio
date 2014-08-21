@@ -13,7 +13,7 @@ import           Data.List                                          ((\\))
 type Ambiguity = (Ty.Tyvar, [Tcl.Pred])
 
 ambiguities :: Tcl.ClassEnv -> [Ty.Tyvar] -> [Tcl.Pred] -> [Ambiguity]
-ambiguities ce vs ps = [(v, filter (elem v . Sub.tv) ps) | v <- Sub.tv ps \\ vs]
+ambiguities _ vs ps = [(v, filter (elem v . Sub.tv) ps) | v <- Sub.tv ps \\ vs]
 
 
 
@@ -29,8 +29,8 @@ stdClasses = ["Eq", "Ord", "Show", "Read", "Bounded", "Enum", "Ix", "Functor", "
 
 -- TODO [kgdk] 21 sie 2014: 
 candidates :: Tcl.ClassEnv -> Ambiguity -> [Ty.Type]
-candidates ce (v, qs) = [t' | let is = [i | Tcl.IsIn i t <- qs]
-                                  ts = [t | Tcl.IsIn i t <- qs],
+candidates ce (v, qs) = [t' | let is = [i | Tcl.IsIn i _ <- qs]
+                                  ts = [t | Tcl.IsIn _ t <- qs],
                               all (Ty.TVar v ==) ts,
                               any (`elem` numClasses) is,
                               all (`elem` stdClasses) is,
@@ -46,7 +46,7 @@ withDefaults f ce vs ps | any null tss = fail "cannot resolve ambiguity"
 
 -- TODO [kgdk] 21 sie 2014: 
 defaultedPreds :: Monad m => Tcl.ClassEnv -> [Ty.Tyvar] -> [Tcl.Pred] -> m [Tcl.Pred]
-defaultedPreds = withDefaults (\vps ts -> concatMap snd vps)
+defaultedPreds = withDefaults (\vps _ -> concatMap snd vps)
 
 -- TODO [kgdk] 21 sie 2014: 
 defaultSubst :: Monad m => Tcl.ClassEnv -> [Ty.Tyvar] -> [Tcl.Pred] -> m Sub.Subst

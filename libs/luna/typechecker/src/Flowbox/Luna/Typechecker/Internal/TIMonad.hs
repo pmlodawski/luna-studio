@@ -9,7 +9,7 @@ import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
 import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
 import qualified Flowbox.Luna.Typechecker.Internal.Unification      as Unf
 
-
+import           Control.Applicative                                (Applicative(..))
 
 
 -- TODO [kgdk] 19 sie 2014: a może użyć State/ST zamiast newtype TI a?
@@ -24,6 +24,15 @@ instance Monad TI where
                              (s',n',x) -> let TI gx = g x
                                            in gx s' n')
 
+instance Functor TI where
+  --fmap :: (a -> b) -> f a -> f b
+  fmap = undefined 
+
+instance Applicative TI where
+  --pure :: a -> TI a
+  pure = undefined
+  --(<*>) :: f (a -> b) -> f a -> f b
+  (<*>) = undefined
 
 
 -- TODO [kgdk] 19 sie 2014: co to jest z tymi nazwami? :< to powinno być nazwą pola rekordu natomiast
@@ -31,7 +40,7 @@ instance Monad TI where
 -- TODO [kg] 15 lip 2014: opcjonalnie zrobić instance MonadState TI
 runTI :: TI a -> a
 runTI (TI f) = x
-  where (s, n, x) = f Sub.nullSubst 0
+  where (_, _, x) = f Sub.nullSubst 0
 
 getSubst :: TI Sub.Subst
 getSubst = TI (\s n -> (s, n, s))
@@ -60,7 +69,7 @@ class Instantiate t where
 instance Instantiate Ty.Type where
   inst ts (Ty.TAp l r) = Ty.TAp (inst ts l) (inst ts r)
   inst ts (Ty.TGen n)  = ts !! n
-  inst ts t            = t
+  inst _  t            = t
 
 instance Instantiate a => Instantiate [a] where
   inst ts = map (inst ts)
