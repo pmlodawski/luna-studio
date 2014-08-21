@@ -20,8 +20,8 @@ import qualified Data.Maybe          as Maybe
 import           Flowbox.Control.Error
 import           Flowbox.Prelude           hiding (elements, mod)
 import           Flowbox.System.Log.Logger hiding (trace)
-import           Luna.AST.Control.Crumbs   (Breadcrumbs)
-import qualified Luna.AST.Control.Crumbs   as Crumb
+import           Luna.AST.Control.Crumb    (Breadcrumbs)
+import qualified Luna.AST.Control.Crumb    as Crumb
 import qualified Luna.AST.Control.Focus    as Focus
 import           Luna.AST.Control.Zipper   (Zipper)
 import qualified Luna.AST.Control.Zipper   as Zipper
@@ -30,10 +30,10 @@ import qualified Luna.AST.Expr             as Expr
 import           Luna.AST.Module           (Module)
 import qualified Luna.AST.Module           as Module
 import qualified Luna.AST.Type             as Type
-import           Luna.Data.Lib.Manager     (LibManager)
-import qualified Luna.Data.Lib.Manager     as LibManager
 import           Luna.Lib.Lib              (Library)
 import qualified Luna.Lib.Lib              as Library
+import           Luna.Lib.Manager          (LibManager)
+import qualified Luna.Lib.Manager          as LibManager
 import           Luna.Pass.Pass            (Pass)
 import qualified Luna.Pass.Pass            as Pass
 
