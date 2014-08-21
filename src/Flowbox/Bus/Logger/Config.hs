@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Bus.Logger.Config (
-    module Paths_flowbox_bus_logger,
+    module Paths_batch_plugin_bus_logger,
 ) where
 
-import Paths_flowbox_bus_logger (version)
+import Paths_batch_plugin_bus_logger (version)
