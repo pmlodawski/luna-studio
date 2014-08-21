@@ -24,12 +24,12 @@ Library
 
 
 
-Executable flowbox-luna-typechecker-tests
+Executable luna-typechecker-tests
   Hs-Source-Dirs:     test
   Main-Is:            Spec.hs
   GHC-Options:        -threaded -Wall -O2
   Build-Depends:      base
-                    , flowbox-luna-typechecker
+                    , luna-typechecker
 --                    , array
                     --, containers
                     , hspec
