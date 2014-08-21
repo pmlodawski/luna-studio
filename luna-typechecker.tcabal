@@ -19,7 +19,6 @@ Library
                     , containers
                     , QuickCheck
                     , flowbox-luna-base
---                    , array
   Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
 
 
@@ -30,8 +29,9 @@ Executable luna-typechecker-tests
   GHC-Options:        -threaded -Wall -O2
   Build-Depends:      base
                     , luna-typechecker
---                    , array
-                    --, containers
+                    , flowbox-luna-base
                     , hspec
-                    --, QuickCheck
+--                    , array
+--                    , containers
+--                    , QuickCheck
 --                    , flowbox-luna-base
