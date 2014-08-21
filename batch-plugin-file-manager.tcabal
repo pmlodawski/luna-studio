@@ -1,4 +1,4 @@
-Name:               flowbox-file-manager
+Name:               batch-plugin-file-manager
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -14,7 +14,7 @@ Flag Debug
 Executable file-manager
     Hs-Source-Dirs: dist/gen
                     src
-    Other-Modules:  Paths_flowbox_file_manager
+    Other-Modules:  Paths_batch_plugin_file_manager
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
