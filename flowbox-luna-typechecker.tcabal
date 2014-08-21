@@ -13,11 +13,12 @@ Flag Debug
 
 
 Library
+  GHC-Options:        -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     src
   Build-Depends:      base
                     , containers
                     , QuickCheck
---                    , flowbox-luna-base
+                    , flowbox-luna-base
 --                    , array
   Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
 

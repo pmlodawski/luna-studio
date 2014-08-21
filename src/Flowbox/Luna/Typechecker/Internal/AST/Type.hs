@@ -1,11 +1,31 @@
-module Flowbox.Luna.Typechecker.Internal.AST.Type (
-    Type(..),
-    Tyvar(..), Tycon(..),
-    tUnit, tChar, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString,
-    fn, list, pair
-  ) where
+module Flowbox.Luna.Typechecker.Internal.AST.Type (Type(..), Tyvar(..), Tycon(..), fn, tChar, tFloat, tInteger, tString, tDouble) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind as Knd
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Alternatives as Alt
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.AST          as AST
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Common       as Com
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Expr         as Exp
+import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Lit          as Lit
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Module       as Mod
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Pat          as Pat
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Scheme       as Sch
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.TID          as TID
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+
+--import qualified Flowbox.Luna.Typechecker.Internal.Ambiguity        as Amb
+--import qualified Flowbox.Luna.Typechecker.Internal.Assumptions      as Ass
+--import qualified Flowbox.Luna.Typechecker.Internal.BindingGroups    as Bnd
+--import qualified Flowbox.Luna.Typechecker.Internal.ContextReduction as CxR
+--import qualified Flowbox.Luna.Typechecker.Internal.HasKind          as HKd
+--import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
+--import qualified Flowbox.Luna.Typechecker.Internal.TIMonad          as TIM
+--import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+--import qualified Flowbox.Luna.Typechecker.Internal.TypeInference    as Inf
+--import qualified Flowbox.Luna.Typechecker.Internal.Unification      as Unf
+
+--import           Flowbox.Luna.Data.AST.Common                       (ID)
+--import           Flowbox.Luna.Typechecker.Internal.AST.TID          (TID(..))
+
 
 -- #     Type(..), Tyvar(..), Tycon(..),
 -- #     tUnit, tChar, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString,
@@ -33,35 +53,36 @@ data Type = TVar Tyvar    -- ^ Type variable (named unknown).
           | TCon Tycon    -- ^ Type constant (Int, Char, etc.).
           | TAp Type Type -- ^ Type application ( 'TAp [] Int' means '[Int]').
           | TGen Int      -- ^ Used for quantified variables ('a' in 'forall. a b => a -> b -> a').
-          deriving (Eq)
+          deriving (Eq, Show)
 
-instance Show Type where
-    show (TVar (Tyvar name kind)) = "(Var " ++ name ++ " :: " ++ show kind ++ ")"
-    show (TCon (Tycon name kind)) = "(Con " ++ name ++ " :: " ++ show kind ++ ")"
-    show (TGen i) = "(Gen " ++ show i ++ ")"
-    show (TAp x y) = "(" ++ show x ++ " -> " ++ show y ++ " :: " ++ show (on Kfun kind x y)++ ")"
+-- TODO [kgdk] 21 sie 2014: cyclic-reference
+--instance Show Type where
+--    show (TVar (Tyvar name kind)) = "(Var " ++ name ++ " :: " ++ show kind ++ ")"
+--    show (TCon (Tycon name kind)) = "(Con " ++ name ++ " :: " ++ show kind ++ ")"
+--    show (TGen i) = "(Gen " ++ show i ++ ")"
+--    show (TAp x y) = "(" ++ show x ++ " -> " ++ show y ++ " :: " ++ show (on Knd.Kfun HKd.kind x y)++ ")"
 
 -- TODO [kgdk] 14 sie 2014: lepsze instancje show, by Tyvar: "var a :: *" a Tycon: "Int :: *"
 
 -- | Type variable.
-data Tyvar = Tyvar String Kind -- ^ Type variable consists of name and kind.
+data Tyvar = Tyvar String Knd.Kind -- ^ Type variable consists of name and kind.
            deriving (Show, Eq)
 
 -- | Type constant.
-data Tycon = Tycon String Kind -- ^ Type constant consists of name and kind.
+data Tycon = Tycon String Knd.Kind -- ^ Type constant consists of name and kind.
            deriving (Show, Eq)
 
 tUnit, tChar, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString :: Type
-tUnit    = TCon (Tycon "()"      Star)
-tChar    = TCon (Tycon "Char"    Star)
-tInt     = TCon (Tycon "Int"     Star)
-tInteger = TCon (Tycon "Integer" Star)
-tFloat   = TCon (Tycon "Float"   Star)
-tDouble  = TCon (Tycon "Double"  Star)
+tUnit    = TCon (Tycon "()"      Knd.Star)
+tChar    = TCon (Tycon "Char"    Knd.Star)
+tInt     = TCon (Tycon "Int"     Knd.Star)
+tInteger = TCon (Tycon "Integer" Knd.Star)
+tFloat   = TCon (Tycon "Float"   Knd.Star)
+tDouble  = TCon (Tycon "Double"  Knd.Star)
 
-tList    = TCon (Tycon "[]"      (Kfun Star Star))
-tArrow   = TCon (Tycon "(->)"    (Kfun Star (Kfun Star Star)))
-tTuple2  = TCon (Tycon "(,)"     (Kfun Star (Kfun Star Star)))
+tList    = TCon (Tycon "[]"      (Knd.Kfun Knd.Star Knd.Star))
+tArrow   = TCon (Tycon "(->)"    (Knd.Kfun Knd.Star (Knd.Kfun Knd.Star Knd.Star)))
+tTuple2  = TCon (Tycon "(,)"     (Knd.Kfun Knd.Star (Knd.Kfun Knd.Star Knd.Star)))
 
 tString  = list tChar
 
@@ -74,31 +95,3 @@ list = TAp tList
 
 pair :: Type -> Type -> Type
 pair = TAp . TAp tTuple2
-
-
-
-
-
-class Types t where
-    apply :: Subst -> t -> t -- ^ Substitutions can be applied to types-and, in fact, to any other value with type components-in a natural way.
-    tv :: t -> [Ty.Tyvar]    -- ^ Returns the set of type variables (i.e., Tyvars) appearing in its argument, listed in order of first occurrence (from left to right), with no duplicates.
-
-
-instance Types Type where
-  apply s (Ty.TVar u)  = fromMaybe (Ty.TVar u) (lookup u s)
-  apply s (Ty.TAp l r) = Ty.TAp (apply s l) (apply s r)
-  apply _ t            = t -- no substitution for TGen and TCon
-  tv (Ty.TVar u)  = [u]
-  tv (Ty.TAp l r) = tv l `union` tv r
-  tv _            = [] -- no type variables from TGen and TCon
-
--- TODO [kgdk] 14 sie 2014: czy apply/tv dla TGen/TCon powinno rzucać error czy działać?
-
-
-instance Types a => Types [a] where
-  apply s = map (apply s)
-  tv = nub . concatMap tv -- O(n^2)
-
--- TODO [kgdk] 14 sie 2014: poprawić implementację 'tv', by była w czasie O(n log n). Na 95% konieczne będzie
--- zachowanie kolejności elementów.
-

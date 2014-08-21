@@ -1,28 +1,43 @@
-module Flowbox.Luna.Typechecker.Internal.Typeclasses (
-    Qual(..), Pred(..)
-  ) where
+module Flowbox.Luna.Typechecker.Internal.Typeclasses (Pred(..), Qual(..), ClassEnv(..), entail, byInst) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.AST    as AST
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Common as Com
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Expr   as Exp
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind   as Knd
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Lit    as Lit
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Module as Mod
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Pat    as Pat
-import qualified Flowbox.Luna.Typechecker.Internal.AST.TID    as TID
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type   as Ty
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Alternatives as Alt
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.AST          as AST
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Common       as Com
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Expr         as Exp
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Lit          as Lit
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Module       as Mod
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Pat          as Pat
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Scheme       as Sch
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.TID          as TID
+import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
 
-import           Flowbox.Luna.Data.AST.Common                 (ID(..))
-import           Flowbox.Luna.Typechecker.Internal.AST.TID    (TID(..))
+--import qualified Flowbox.Luna.Typechecker.Internal.Ambiguity        as Amb
+--import qualified Flowbox.Luna.Typechecker.Internal.Assumptions      as Ass
+--import qualified Flowbox.Luna.Typechecker.Internal.BindingGroups    as Bnd
+--import qualified Flowbox.Luna.Typechecker.Internal.ContextReduction as CxR
+--import qualified Flowbox.Luna.Typechecker.Internal.HasKind          as HKd
+import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
+--import qualified Flowbox.Luna.Typechecker.Internal.TIMonad          as TIM
+--import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+--import qualified Flowbox.Luna.Typechecker.Internal.TypeInference    as Inf
+import qualified Flowbox.Luna.Typechecker.Internal.Unification      as Unf
 
+--import           Flowbox.Luna.Data.AST.Common                       (ID)
+import           Flowbox.Luna.Typechecker.Internal.AST.TID          (TID)
+
+import           Control.Monad                                      (msum)
+
+import           Data.List                                          (union)
+import           Data.Maybe                                         (isJust)
 
 
 -- TODO [kg]: instance Functor Pred a potem zmienić lift na fmap
-mguPred :: Pred -> Pred -> Maybe Subst -- why so Maybe? why not just 'm'?
-mguPred = liftPred mgu
+mguPred :: Pred -> Pred -> Maybe Sub.Subst -- why so Maybe? why not just 'm'?
+mguPred = liftPred Unf.mgu
 
-matchPred :: Pred -> Pred -> Maybe Subst -- why so Maybe? why not just 'm'?
-matchPred = liftPred match
+matchPred :: Pred -> Pred -> Maybe Sub.Subst -- why so Maybe? why not just 'm'?
+matchPred = liftPred Unf.match
 
 liftPred :: Monad m => (Ty.Type -> Ty.Type -> m a) -> Pred -> Pred -> m a
 liftPred m (IsIn i t) (IsIn i' t') | i == i'   = m t t'
@@ -43,20 +58,20 @@ liftPred m (IsIn i t) (IsIn i' t') | i == i'   = m t t'
 data Qual t = [Pred] :=> t
             deriving (Eq, Show)
 
-instance Types t => Types (Qual t) where
-  apply s (ps :=> t) = apply s ps :=> apply s t
-  tv (ps :=> t)      = tv ps `union` tv t
+instance Sub.Types t => Sub.Types (Qual t) where
+  apply s (ps :=> t) = Sub.apply s ps :=> Sub.apply s t
+  tv (ps :=> t)      = Sub.tv ps `union` Sub.tv t
 
 
 
-
+-- TODO [kgdk] 21 sie 2014: przesunąć wszystkie klasy na górę plików
 data Pred = IsIn TID Ty.Type
           deriving (Eq, Show)
 
 
-instance Types Pred where
-  apply s (IsIn i t) = IsIn i (apply s t)
-  tv (IsIn i t)      = tv t
+instance Sub.Types Pred where
+  apply s (IsIn i t) = IsIn i (Sub.apply s t)
+  tv (IsIn i t)      = Sub.tv t
 
 -- TODO [kgdk] 14 sie 2014: napisać instancje Show dla Qual i Pred
 
@@ -132,4 +147,32 @@ addInst ps p@(IsIn i _) ce | not (defined (classes ce i)) = fail "no class for i
 
 overlap :: Pred -> Pred -> Bool
 overlap p q = defined (mguPred p q)
+
+
+
+
+
+-- TODO [kgdk] 21 sie 2014: refactor, był problem z recursive import
+-- | List predicates from superclasses: if is instance of a class, then there must be instances
+-- for all superclasses.
+-- If predicate 'p' then all of 'bySuper ce p' must hold as well.
+-- It can contain duplicates but is always finite (since superclass hierarchy is a DAG).
+bySuper :: ClassEnv -> Pred -> [Pred]
+bySuper ce p@(IsIn i t) = p : concat [bySuper ce (IsIn i' t) | i' <- super ce i]
+
+
+-- | List subgoals for a predicate to match.
+byInst :: ClassEnv -> Pred -> Maybe [Pred]
+byInst ce p@(IsIn i t) = msum [tryInst it | it <- insts ce i] -- at most one of those from list would match (since no overlapping instances!)
+  where tryInst (ps :=> h) = do u <- matchPred h p
+                                Just (map (Sub.apply u) ps)
+
+
+-- | Is 'p' true whenever 'ps'?
+entail :: ClassEnv -> [Pred] -> Pred -> Bool
+entail ce ps p = any (p `elem`) (map (bySuper ce) ps) || case byInst ce p of
+                                                           Nothing -> False
+                                                           Just qs -> all (entail ce ps) qs
+
+-- TODO [kgdk] 18 sie 2014: zmienić case na maybe
 

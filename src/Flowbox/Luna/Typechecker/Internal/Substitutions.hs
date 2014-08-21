@@ -1,19 +1,33 @@
-module Flowbox.Luna.Typechecker.Internal.Substitutions (
-    Subst(..), nullSubst, (+->), (@@), merge
-  ) where
+module Flowbox.Luna.Typechecker.Internal.Substitutions (Subst, Types(..), (@@), merge, nullSubst, (+->)) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.AST    as AST
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Common as Com
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Expr   as Exp
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind   as Knd
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Lit    as Lit
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Module as Mod
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Pat    as Pat
-import qualified Flowbox.Luna.Typechecker.Internal.AST.TID    as TID
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type   as Ty
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Alternatives as Alt
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.AST          as AST
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Common       as Com
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Expr         as Exp
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Lit          as Lit
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Module       as Mod
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Pat          as Pat
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Scheme       as Sch
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.TID          as TID
+import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
 
-import           Flowbox.Luna.Data.AST.Common                 (ID(..))
-import           Flowbox.Luna.Typechecker.Internal.AST.TID    (TID(..))
+--import qualified Flowbox.Luna.Typechecker.Internal.Ambiguity        as Amb
+--import qualified Flowbox.Luna.Typechecker.Internal.Assumptions      as Ass
+--import qualified Flowbox.Luna.Typechecker.Internal.BindingGroups    as Bnd
+--import qualified Flowbox.Luna.Typechecker.Internal.ContextReduction as CxR
+--import qualified Flowbox.Luna.Typechecker.Internal.HasKind          as HKd
+--import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
+--import qualified Flowbox.Luna.Typechecker.Internal.TIMonad          as TIM
+--import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+--import qualified Flowbox.Luna.Typechecker.Internal.TypeInference    as Inf
+--import qualified Flowbox.Luna.Typechecker.Internal.Unification      as Unf
+
+--import           Flowbox.Luna.Data.AST.Common                       (ID)
+--import           Flowbox.Luna.Typechecker.Internal.AST.TID          (TID(..))
+
+import           Data.List                                          (intersect,nub,union)
+import           Data.Maybe                                         (fromMaybe)
 
 -- | Type substitution: substitute one type for another.
 -- Example: substitute 
@@ -56,3 +70,33 @@ merge s1 s2 = if agree then return (s1 ++ s2) else fail "merge fails"
 
 -- TODO [kgdk] 14 sie 2014: merge działa w czasie O(n^2) przez 'intersect'. Jeśli Subst będzie inaczej
 -- reprezentowany to można nawet do O(n) zejść.
+
+
+
+
+-- --------------------------------------------------------------------------------
+
+-- TODO [kgdk] 21 sie 2014: przenieść to co poniżej gdzieś (było: recursive import)
+class Types t where
+  apply :: Subst -> t -> t -- ^ Substitutions can be applied to types-and, in fact, to any other value with type components-in a natural way.
+  tv :: t -> [Ty.Tyvar]    -- ^ Returns the set of type variables (i.e., Tyvars) appearing in its argument, listed in order of first occurrence (from left to right), with no duplicates.
+
+
+instance Types Ty.Type where
+  apply s (Ty.TVar u)  = fromMaybe (Ty.TVar u) (lookup u s)
+  apply s (Ty.TAp l r) = Ty.TAp (apply s l) (apply s r)
+  apply _ t            = t -- no substitution for TGen and TCon
+  tv (Ty.TVar u)  = [u]
+  tv (Ty.TAp l r) = tv l `union` tv r
+  tv _            = [] -- no type variables from TGen and TCon
+
+-- TODO [kgdk] 14 sie 2014: czy apply/tv dla TGen/TCon powinno rzucać error czy działać?
+
+
+instance Types a => Types [a] where
+  apply s = map (apply s)
+  tv = nub . concatMap tv -- O(n^2)
+
+-- TODO [kgdk] 14 sie 2014: poprawić implementację 'tv', by była w czasie O(n log n). Na 95% konieczne będzie
+-- zachowanie kolejności elementów.
+
