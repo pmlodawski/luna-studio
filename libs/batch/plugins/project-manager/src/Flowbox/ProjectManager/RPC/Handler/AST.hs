@@ -9,14 +9,6 @@ module Flowbox.ProjectManager.RPC.Handler.AST where
 import qualified Flowbox.Batch.Handler.AST                                                         as BatchAST
 import qualified Flowbox.Batch.Handler.Common                                                      as Batch
 import           Flowbox.Bus.RPC.RPC                                                               (RPC)
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                                 as Crumb
-import qualified Flowbox.Luna.Data.AST.Expr                                                        as Expr
-import qualified Flowbox.Luna.Data.AST.Module                                                      as Module
-import qualified Flowbox.Luna.Data.AST.Type                                                        as Type
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                               ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr                                ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Focus                               ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Module                              ()
 import           Flowbox.Prelude                                                                   hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                    (Context)
 import           Flowbox.System.Log.Logger
@@ -55,6 +47,14 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Reque
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Update                  as Remove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                as ResolveDefinition
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                 as ResolveDefinition
+import qualified Luna.AST.Control.Crumb                                                            as Crumb
+import qualified Luna.AST.Expr                                                                     as Expr
+import qualified Luna.AST.Module                                                                   as Module
+import qualified Luna.AST.Type                                                                     as Type
+import           Luna.Data.Serialize.Proto.Conversion.Crumb                                        ()
+import           Luna.Data.Serialize.Proto.Conversion.Expr                                         ()
+import           Luna.Data.Serialize.Proto.Conversion.Focus                                        ()
+import           Luna.Data.Serialize.Proto.Conversion.Module                                       ()
 
 
 

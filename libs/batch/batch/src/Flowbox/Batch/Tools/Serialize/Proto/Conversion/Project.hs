@@ -12,15 +12,15 @@
 
 module Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project where
 
-import qualified Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes ()
+import qualified Luna.Data.Serialize.Proto.Conversion.Attributes ()
 
 import           Flowbox.Batch.Project.Project                  (Project (Project))
 import qualified Flowbox.Batch.Project.Project                  as Project
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Lib.LibManager                    (LibManager)
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Project.Project                as Gen
+import           Luna.Lib.Manager                               (LibManager)
 
 
 
