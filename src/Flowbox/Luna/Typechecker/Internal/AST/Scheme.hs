@@ -15,7 +15,7 @@ data Scheme = Forall [Knd.Kind] (Tcl.Qual Ty.Type)
 
 instance Sub.Types Scheme where
   apply s (Forall ks qt) = Forall ks (Sub.apply s qt)
-  tv (Forall ks qt) = Sub.tv qt
+  tv (Forall _ qt) = Sub.tv qt
 
 
 quantify :: [Ty.Tyvar] -> Tcl.Qual Ty.Type -> Scheme

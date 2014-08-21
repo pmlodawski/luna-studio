@@ -21,7 +21,7 @@ data Pat = Con             { _id :: ID, _name :: String, _scheme :: Sch.Scheme, 
 
 
 tiPat :: Pat -> TIM.TI ([Tcl.Pred], [Ass.Assump], Ty.Type)
-tiPat (Con _ i sc pats) = do (ps,as,ts) <- tiPats pats
+tiPat (Con _ _ sc pats) = do (ps,as,ts) <- tiPats pats
                              t' <- TIM.newTVar Knd.Star
                              (qs Tcl.:=> t) <- TIM.freshInst sc
                              TIM.unify t (foldr Ty.fn t' ts)

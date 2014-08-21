@@ -26,7 +26,7 @@ type Impl = (TID, [Alt.Alt])
 
 -- TODO [kgdk] 20 sie 2014: 
 tiExpl :: Tcl.ClassEnv -> [Ass.Assump] -> Expl -> TIM.TI [Tcl.Pred]
-tiExpl ce as (i, sc, alts) = do (qs Tcl.:=> t) <- TIM.freshInst sc
+tiExpl ce as (_, sc, alts) = do (qs Tcl.:=> t) <- TIM.freshInst sc
                                 ps         <- Alt.tiAlts ce as alts t
                                 s          <- TIM.getSubst
                                 let qs' = Sub.apply s qs
@@ -44,7 +44,7 @@ tiExpl ce as (i, sc, alts) = do (qs Tcl.:=> t) <- TIM.freshInst sc
 -- TODO [kgdk] 20 sie 2014: 
 restricted :: [Impl] -> Bool
 restricted = any simple
-  where simple (i, alts) = any (null . fst) alts
+  where simple (_, alts) = any (null . fst) alts
 
 
 
@@ -76,7 +76,7 @@ tiImpls ce as bs = do ts <- mapM (\_ -> TIM.newTVar Knd.Star) bs
 type BindGroup = ([Expl], [[Impl]])
 
 tiBindGroup :: Inf.Infer BindGroup [Ass.Assump]
-tiBindGroup ce as (es, iss) = do let as' = [v Ass.:>: sc | (v, sc, alts) <- es]
+tiBindGroup ce as (es, iss) = do let as' = [v Ass.:>: sc | (v, sc, _) <- es]
                                  (ps, as'') <- tiSeq tiImpls ce (as' ++ as) iss
                                  qss        <- mapM (tiExpl ce (as'' ++ as' ++ as)) es
                                  return (ps ++ concat qss, as'' ++ as')
@@ -84,7 +84,7 @@ tiBindGroup ce as (es, iss) = do let as' = [v Ass.:>: sc | (v, sc, alts) <- es]
 
 
 tiSeq :: Inf.Infer bg [Ass.Assump] -> Inf.Infer [bg] [Ass.Assump]
-tiSeq ti ce as [] = return ([], [])
+tiSeq _  _  _  [] = return ([], [])
 tiSeq ti ce as (bs : bss) = do (ps, as')  <- ti ce as bs
                                (qs, as'') <- tiSeq ti ce (as' ++ as) bss
                                return (ps ++ qs, as'' ++ as')
