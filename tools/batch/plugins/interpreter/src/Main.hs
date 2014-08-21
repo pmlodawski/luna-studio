@@ -55,5 +55,5 @@ run cmd = case cmd of
         let busConfig = EP.clientFromConfig cfg
             ctx       = Context.mk cfg
         logger info "Starting rpc server"
-        Pipes.run busConfig Handler.handlerMap >>= Handler.run ctx >>= eitherToM
+        Pipes.run busConfig Handler.handlerMap >>= Handler.run cfg ctx >>= eitherToM
 

@@ -7,6 +7,7 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module Common where
 
+import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.System.UniPath                                        as UniPath
@@ -61,6 +62,7 @@ mkEnv code = do
 
 runSession :: String -> Session () -> IO ()
 runSession code session = do
+    cfg <- Config.load
     env <- mkEnv code
-    result <- Session.run env session
+    result <- Session.run cfg env session
     eitherStringToM $ fmapL Error.format result

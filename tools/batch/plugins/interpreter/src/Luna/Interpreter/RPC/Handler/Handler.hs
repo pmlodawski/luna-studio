@@ -23,6 +23,7 @@ import           Flowbox.Bus.RPC.HandlerMap               (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap               as HandlerMap
 import           Flowbox.Bus.RPC.RPC                      (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor         as Processor
+import           Flowbox.Config.Config                    (Config)
 import           Flowbox.Prelude                          hiding (Context, error)
 import           Flowbox.ProjectManager.Context           (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic         as Topic
@@ -102,10 +103,12 @@ interpret = forever $ do
     mapM_ (\r -> Pipes.yield (r, crl)) results
 
 
-run :: Context -> (Pipes.Input  (Message, Message.CorrelationID),
-                   Pipes.Output (Message, Message.CorrelationID))
+run :: Config -> Context
+    -> (Pipes.Input  (Message, Message.CorrelationID),
+       Pipes.Output (Message, Message.CorrelationID))
     -> IO (Either Error ())
-run ctx (input, output) = Session.run def $ SessionT.runSessionT $ flip evalStateT ctx $
+run cfg ctx (input, output) =
+    Session.run cfg def $ SessionT.runSessionT $ flip evalStateT ctx $
         Pipes.runEffect $ Pipes.fromInput input
                       >-> interpret
                       >-> Pipes.toOutput output
