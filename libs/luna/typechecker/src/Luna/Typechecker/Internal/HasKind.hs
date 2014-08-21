@@ -1,7 +1,7 @@
-module Flowbox.Luna.Typechecker.Internal.HasKind (HasKind(..)) where
+module Luna.Typechecker.Internal.HasKind (HasKind(..)) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
+import qualified Luna.Typechecker.Internal.AST.Type         as Ty
 
 
 

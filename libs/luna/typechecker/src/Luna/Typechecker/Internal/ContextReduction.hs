@@ -1,8 +1,8 @@
-module Flowbox.Luna.Typechecker.Internal.ContextReduction (reduce) where
+module Luna.Typechecker.Internal.ContextReduction (reduce) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+import qualified Luna.Typechecker.Internal.AST.Type         as Ty
 
-import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
 
 
 

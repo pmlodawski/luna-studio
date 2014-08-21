@@ -1,16 +1,16 @@
-module Flowbox.Luna.Typechecker.Internal.BindingGroups (BindGroup, tiBindGroup, tiSeq) where
+module Luna.Typechecker.Internal.BindingGroups (BindGroup, tiBindGroup, tiSeq) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Alternatives as Alt
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Scheme       as Sch
+import qualified Luna.Typechecker.Internal.AST.Alternatives as Alt
+import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
+import qualified Luna.Typechecker.Internal.AST.Scheme       as Sch
 
-import qualified Flowbox.Luna.Typechecker.Internal.Assumptions      as Ass
-import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
-import qualified Flowbox.Luna.Typechecker.Internal.TIMonad          as TIM
-import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
-import qualified Flowbox.Luna.Typechecker.Internal.TypeInference    as Inf
+import qualified Luna.Typechecker.Internal.Assumptions      as Ass
+import qualified Luna.Typechecker.Internal.Substitutions    as Sub
+import qualified Luna.Typechecker.Internal.TIMonad          as TIM
+import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
+import qualified Luna.Typechecker.Internal.TypeInference    as Inf
 
-import           Flowbox.Luna.Typechecker.Internal.AST.TID          (TID)
+import           Luna.Typechecker.Internal.AST.TID          (TID)
 
 
 import           Control.Monad                                      (zipWithM)

@@ -1,6 +1,6 @@
-module Flowbox.Luna.Typechecker.Internal.Substitutions (Subst, Types(..), (@@), merge, nullSubst, (+->)) where
+module Luna.Typechecker.Internal.Substitutions (Subst, Types(..), (@@), merge, nullSubst, (+->)) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+import qualified Luna.Typechecker.Internal.AST.Type         as Ty
 
 
 

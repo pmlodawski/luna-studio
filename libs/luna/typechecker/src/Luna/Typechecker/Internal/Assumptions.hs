@@ -1,10 +1,10 @@
-module Flowbox.Luna.Typechecker.Internal.Assumptions (Assump(..), find) where
+module Luna.Typechecker.Internal.Assumptions (Assump(..), find) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Scheme       as Sch
+import qualified Luna.Typechecker.Internal.AST.Scheme       as Sch
 
-import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
+import qualified Luna.Typechecker.Internal.Substitutions    as Sub
 
-import           Flowbox.Luna.Typechecker.Internal.AST.TID          (TID)
+import           Luna.Typechecker.Internal.AST.TID          (TID)
 
 
 

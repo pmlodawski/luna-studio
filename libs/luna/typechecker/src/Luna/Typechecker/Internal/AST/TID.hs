@@ -1,4 +1,4 @@
-module Flowbox.Luna.Typechecker.Internal.AST.TID (enumTID, TID) where
+module Luna.Typechecker.Internal.AST.TID (enumTID, TID) where
 
 
 
