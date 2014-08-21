@@ -1,4 +1,4 @@
-Name:               flowbox-project-manager-exec
+Name:               batch-plugin-project-manager
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -20,8 +20,8 @@ Executable project-manager
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
+                    batch-lib-project-manager,
                     flowbox-bus,
                     flowbox-config,
-                    flowbox-project-manager,
                     flowbox-utils,
                     optparse-applicative
