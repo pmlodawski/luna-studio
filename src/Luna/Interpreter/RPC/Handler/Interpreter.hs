@@ -5,15 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Interpreter.RPC.Handler.Interpreter where
+module Luna.Interpreter.RPC.Handler.Interpreter where
 
 import           Flowbox.Bus.RPC.RPC                                               (RPC)
 import qualified Flowbox.Data.SetForest                                            as SetForest
-import           Flowbox.Interpreter.Proto.CallPoint                               ()
-import           Flowbox.Interpreter.Proto.CallPointPath                           ()
-import qualified Flowbox.Interpreter.Session.AST.Executor                          as Executor
-import qualified Flowbox.Interpreter.Session.AST.WatchPoint                        as WatchPoint
-import           Flowbox.Interpreter.Session.SessionT                              (SessionT (SessionT))
 import           Flowbox.Prelude                                                   hiding (Context)
 import           Flowbox.ProjectManager.Context                                    (Context)
 import           Flowbox.System.Log.Logger                                         hiding (error)
@@ -26,11 +21,16 @@ import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Request
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Status    as WatchPointList
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Request as WatchPointRemove
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update  as WatchPointRemove
+import           Luna.Interpreter.Proto.CallPoint                                  ()
+import           Luna.Interpreter.Proto.CallPointPath                              ()
+import qualified Luna.Interpreter.Session.AST.Executor                             as Executor
+import qualified Luna.Interpreter.Session.AST.WatchPoint                           as WatchPoint
+import           Luna.Interpreter.Session.SessionT                                 (SessionT (SessionT))
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.Interpreter"
+logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Interpreter"
 
 
 run :: Run.Request -> RPC Context SessionT Run.Update

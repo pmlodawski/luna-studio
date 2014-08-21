@@ -1,4 +1,4 @@
-Name:               flowbox-interpreter
+Name:               batch-plugin-interpreter
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -14,7 +14,7 @@ Flag Debug
 Executable interpreter
     Hs-Source-Dirs: dist/gen
                     src
-    Other-Modules:  Paths_flowbox_interpreter
+    Other-Modules:  Paths_batch_plugin_interpreter
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
@@ -22,6 +22,7 @@ Executable interpreter
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
+                    batch-lib-project-manager,
                     bytestring,
                     containers,
                     either,
@@ -29,9 +30,9 @@ Executable interpreter
                     flowbox-batch,
                     flowbox-bus,
                     flowbox-config,
-                    flowbox-luna-base,
-                    flowbox-luna-interpreter,
-                    flowbox-project-manager,
+                    luna-core,
+                    luna-interpreter,
+                    luna-protobuf,
                     flowbox-utils,
                     MissingH,
                     mmorph,
