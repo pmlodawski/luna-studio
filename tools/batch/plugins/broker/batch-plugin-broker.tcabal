@@ -1,4 +1,4 @@
-Name:               flowbox-project-manager-exec
+Name:               batch-plugin-broker
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -11,8 +11,9 @@ Flag Debug
     Default:        False
 
 
-Executable project-manager
+Executable broker
     Hs-Source-Dirs: src
+    Other-Modules:  Paths_batch_plugin_broker
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
@@ -20,8 +21,12 @@ Executable project-manager
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
+                    bytestring,
+                    containers,
                     flowbox-bus,
+                    flowbox-rpc,
                     flowbox-config,
-                    flowbox-project-manager,
                     flowbox-utils,
-                    optparse-applicative
+                    transformers,
+                    protocol-buffers,
+                    zeromq4-haskell >= 0.4

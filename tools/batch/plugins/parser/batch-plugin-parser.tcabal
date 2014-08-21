@@ -1,4 +1,4 @@
-Name:               flowbox-s3-file-manager
+Name:               batch-plugin-parser
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -11,31 +11,30 @@ Flag Debug
     Default:        False
 
 
-Executable s3-file-manager
+Executable parser
     Hs-Source-Dirs: dist/gen
                     src
-    Other-Modules:  Paths_flowbox_s3_file_manager
+    Other-Modules:  Paths_batch_plugin_parser
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
 
     Extensions:     NoImplicitPrelude
 
-    Build-Depends:  aws,
-                    base,
+    Build-Depends:  base,
                     bytestring,
                     containers,
                     either,
                     errors,
-                    flowbox-aws,
+                    flowbox-batch,
                     flowbox-bus,
                     flowbox-config,
+                    luna-parser,
+                    luna-protobuf,
                     flowbox-utils,
-                    http-conduit,
                     MissingH,
                     mtl,
                     optparse-applicative,
                     protocol-buffers,
-                    text,
                     transformers,
                     zeromq4-haskell >= 0.4

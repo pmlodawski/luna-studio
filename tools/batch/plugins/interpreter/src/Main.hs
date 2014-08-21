@@ -6,28 +6,28 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import qualified Flowbox.Bus.EndPoint                    as EP
-import qualified Flowbox.Bus.RPC.Pipes                   as Pipes
-import qualified Flowbox.Config.Config                   as Config
+import qualified Flowbox.Bus.EndPoint                 as EP
+import qualified Flowbox.Bus.RPC.Pipes                as Pipes
+import qualified Flowbox.Config.Config                as Config
 import           Flowbox.Control.Error
-import           Flowbox.Interpreter.Cmd                 (Cmd)
-import qualified Flowbox.Interpreter.Cmd                 as Cmd
-import qualified Flowbox.Interpreter.RPC.Handler.Handler as Handler
-import qualified Flowbox.Interpreter.Version             as Version
-import           Flowbox.Options.Applicative             hiding (info)
-import qualified Flowbox.Options.Applicative             as Opt
+import           Flowbox.Options.Applicative          hiding (info)
+import qualified Flowbox.Options.Applicative          as Opt
 import           Flowbox.Prelude
-import qualified Flowbox.ProjectManager.Context          as Context
+import qualified Flowbox.ProjectManager.Context       as Context
 import           Flowbox.System.Log.Logger
+import           Luna.Interpreter.Cmd                 (Cmd)
+import qualified Luna.Interpreter.Cmd                 as Cmd
+import qualified Luna.Interpreter.RPC.Handler.Handler as Handler
+import qualified Luna.Interpreter.Version             as Version
 
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+rootLogger = getLogger "Luna"
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Main"
+logger = getLoggerIO "Luna.Interpreter.Main"
 
 
 parser :: Parser Cmd

@@ -10,3 +10,6 @@
 [submodule "third-party/fgl"]
 	path = third-party/fgl
 	url = https://github.com/remdezx/fgl
+[submodule "third-party/hs-certificate"]
+	path = third-party/hs-certificate
+	url = https://github.com/remdezx/hs-certificate.git

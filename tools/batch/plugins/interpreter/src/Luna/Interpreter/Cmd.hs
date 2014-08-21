@@ -5,8 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Broker.Config (
-    module Paths_batch_plugin_broker,
-) where
+module Luna.Interpreter.Cmd where
 
-import Paths_batch_plugin_broker (version)
+import Flowbox.Prelude
+
+
+
+data Cmd = Run { verbose :: Int
+               , noColor :: Bool
+               }
+         | Version
+         deriving Show

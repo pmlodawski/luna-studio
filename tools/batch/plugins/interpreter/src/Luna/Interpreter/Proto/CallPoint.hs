@@ -10,13 +10,13 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Flowbox.Interpreter.Proto.CallPoint where
+module Luna.Interpreter.Proto.CallPoint where
 
 import           Flowbox.Control.Error
-import           Flowbox.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Interpreter.CallPoint          as Gen
+import           Luna.Interpreter.Session.Data.CallPoint        (CallPoint (CallPoint))
 
 
 

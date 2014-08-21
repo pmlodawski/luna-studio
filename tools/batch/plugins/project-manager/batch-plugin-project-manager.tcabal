@@ -1,4 +1,4 @@
-Name:               flowbox-bus-logger
+Name:               batch-plugin-project-manager
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -11,9 +11,8 @@ Flag Debug
     Default:        False
 
 
-Executable bus-logger
+Executable project-manager
     Hs-Source-Dirs: src
-    Other-Modules:  Paths_flowbox_bus_logger
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
@@ -21,15 +20,8 @@ Executable bus-logger
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
-                    bytestring,
-                    containers,
-                    either,
-                    errors,
+                    batch-lib-project-manager,
                     flowbox-bus,
                     flowbox-config,
                     flowbox-utils,
-                    mtl,
-                    optparse-applicative,
-                    protocol-buffers,
-                    transformers,
-                    zeromq4-haskell >= 0.4
+                    optparse-applicative

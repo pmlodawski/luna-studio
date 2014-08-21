@@ -5,10 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Interpreter.Config (
-    module Paths_flowbox_interpreter,
-) where
+module Luna.Interpreter.Version where
 
-import Paths_flowbox_interpreter (version)
+import qualified Data.Version as Version
+
+import           Flowbox.Prelude
+import qualified Luna.Interpreter.Config as Config
 
 
+
+full :: Bool -> String
+full = interpreter
+
+
+interpreter :: Bool -> String
+interpreter numeric = (if numeric then "" else "Luna interpreter version ") ++ Version.showVersion Config.version

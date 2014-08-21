@@ -1,4 +1,4 @@
-Name:               flowbox-broker
+Name:               batch-plugin-bus-logger
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -11,9 +11,9 @@ Flag Debug
     Default:        False
 
 
-Executable broker
+Executable bus-logger
     Hs-Source-Dirs: src
-    Other-Modules:  Paths_flowbox_broker
+    Other-Modules:  Paths_batch_plugin_bus_logger
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
@@ -23,10 +23,13 @@ Executable broker
     Build-Depends:  base,
                     bytestring,
                     containers,
+                    either,
+                    errors,
                     flowbox-bus,
-                    flowbox-rpc,
                     flowbox-config,
                     flowbox-utils,
-                    transformers,
+                    mtl,
+                    optparse-applicative,
                     protocol-buffers,
+                    transformers,
                     zeromq4-haskell >= 0.4

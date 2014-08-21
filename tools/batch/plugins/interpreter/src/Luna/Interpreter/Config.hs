@@ -5,14 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Interpreter.Cmd where
+module Luna.Interpreter.Config (
+    module Paths_batch_plugin_interpreter,
+) where
 
-import Flowbox.Prelude
+import Paths_batch_plugin_interpreter (version)
 
 
-
-data Cmd = Run { verbose :: Int
-               , noColor :: Bool
-               }
-         | Version
-         deriving Show

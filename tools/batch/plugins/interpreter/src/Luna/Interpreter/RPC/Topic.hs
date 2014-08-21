@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Flowbox.Interpreter.RPC.Topic where
+module Luna.Interpreter.RPC.Topic where
 
 
 

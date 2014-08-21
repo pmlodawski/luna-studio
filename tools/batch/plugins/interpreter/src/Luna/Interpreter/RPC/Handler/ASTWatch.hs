@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
-module Flowbox.Interpreter.RPC.Handler.ASTWatch where
+module Luna.Interpreter.RPC.Handler.ASTWatch where
 
 import           Data.Int  (Int32)
 import qualified Text.Read as Read
@@ -18,12 +18,6 @@ import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project         
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Control.Error                                                                         hiding (err)
 import           Flowbox.Control.Monad.Morph
-import           Flowbox.Interpreter.Proto.CallPoint                                                           ()
-import           Flowbox.Interpreter.Proto.CallPointPath                                                       ()
-import qualified Flowbox.Interpreter.Session.Cache.Invalidate                                                  as Invalidate
-import           Flowbox.Interpreter.Session.Session                                                           (Session)
-import qualified Flowbox.Interpreter.Session.Session                                                           as Session
-import           Flowbox.Interpreter.Session.SessionT                                                          (SessionT (SessionT))
 import           Flowbox.Prelude                                                                               hiding (Context, op)
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import qualified Flowbox.ProjectManager.RPC.Handler.AST                                                        as ASTHandler
@@ -95,11 +89,17 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Update   
 import qualified Generated.Proto.ProjectManager.Project.Open.Update                                            as ProjectOpen
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request                                as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status                                 as ProjectManagerSyncGet
+import           Luna.Interpreter.Proto.CallPoint                                                              ()
+import           Luna.Interpreter.Proto.CallPointPath                                                          ()
+import qualified Luna.Interpreter.Session.Cache.Invalidate                                                     as Invalidate
+import           Luna.Interpreter.Session.Session                                                              (Session)
+import qualified Luna.Interpreter.Session.Session                                                              as Session
+import           Luna.Interpreter.Session.SessionT                                                             (SessionT (SessionT))
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.RPC.Handler.ASTWatch"
+logger = getLoggerIO "Luna.Interpreter.RPC.Handler.ASTWatch"
 
 --- helpers ---------------------------------------------------------------
 

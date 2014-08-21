@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.FileManager.Config (
-    module Paths_flowbox_file_manager,
+    module Paths_batch_plugin_file_manager,
 ) where
 
-import Paths_flowbox_file_manager (version)
+import Paths_batch_plugin_file_manager (version)
 
 
