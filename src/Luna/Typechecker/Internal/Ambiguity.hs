@@ -1,11 +1,11 @@
-module Flowbox.Luna.Typechecker.Internal.Ambiguity (defaultedPreds, defaultSubst) where
+module Luna.Typechecker.Internal.Ambiguity (defaultedPreds, defaultSubst) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+import qualified Luna.Typechecker.Internal.AST.Type         as Ty
 
-import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
-import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+import qualified Luna.Typechecker.Internal.Substitutions    as Sub
+import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
 
-import           Flowbox.Luna.Typechecker.Internal.AST.TID          (TID)
+import           Luna.Typechecker.Internal.AST.TID          (TID)
 
 import           Data.List                                          ((\\))
 

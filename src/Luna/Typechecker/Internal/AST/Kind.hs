@@ -1,4 +1,4 @@
-module Flowbox.Luna.Typechecker.Internal.AST.Kind (Kind(..)) where
+module Luna.Typechecker.Internal.AST.Kind (Kind(..)) where
 
 
 

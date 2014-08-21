@@ -1,16 +1,16 @@
-module Flowbox.Luna.Typechecker.Internal.AST.Expr (Expr, tiExpr) where
+module Luna.Typechecker.Internal.AST.Expr (Expr, tiExpr) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Lit          as Lit
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Pat          as Pat
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
+import qualified Luna.Typechecker.Internal.AST.Lit          as Lit
+import qualified Luna.Typechecker.Internal.AST.Pat          as Pat
+import qualified Luna.Typechecker.Internal.AST.Type         as Ty
 
-import qualified Flowbox.Luna.Typechecker.Internal.Assumptions      as Ass
-import qualified Flowbox.Luna.Typechecker.Internal.TIMonad          as TIM
-import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
-import qualified Flowbox.Luna.Typechecker.Internal.TypeInference    as Inf
+import qualified Luna.Typechecker.Internal.Assumptions      as Ass
+import qualified Luna.Typechecker.Internal.TIMonad          as TIM
+import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
+import qualified Luna.Typechecker.Internal.TypeInference    as Inf
 
-import           Flowbox.Luna.Data.AST.Common                       (ID)
+import           Luna.Typechecker.Internal.AST.Common       (ID)
 
 
 data Expr = NOP          { _id :: ID                                      }

@@ -1,11 +1,11 @@
-module Flowbox.Luna.Typechecker.Internal.AST.Scheme (Scheme(..), toScheme, quantify) where
+module Luna.Typechecker.Internal.AST.Scheme (Scheme(..), toScheme, quantify) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
+import qualified Luna.Typechecker.Internal.AST.Type         as Ty
 
-import qualified Flowbox.Luna.Typechecker.Internal.HasKind          as HKd
-import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
-import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+import qualified Luna.Typechecker.Internal.HasKind          as HKd
+import qualified Luna.Typechecker.Internal.Substitutions    as Sub
+import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
 
 
 -- TODO [kgdk] 20 sie 2014: przenieść Scheme.hs do AST/Scheme.hs

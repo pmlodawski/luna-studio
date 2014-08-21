@@ -1,9 +1,9 @@
-module Flowbox.Luna.Typechecker.Internal.Unification (mgu, match) where
+module Luna.Typechecker.Internal.Unification (mgu, match) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+import qualified Luna.Typechecker.Internal.AST.Type         as Ty
 
-import qualified Flowbox.Luna.Typechecker.Internal.HasKind          as HKd
-import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
+import qualified Luna.Typechecker.Internal.HasKind          as HKd
+import qualified Luna.Typechecker.Internal.Substitutions    as Sub
 
 
 

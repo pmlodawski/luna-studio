@@ -1,15 +1,15 @@
-module Flowbox.Luna.Typechecker where
+module Luna.Typechecker where
 
 
 
 
-import qualified Flowbox.Luna.Typechecker.Internal.Ambiguity        as Amb
-import qualified Flowbox.Luna.Typechecker.Internal.Assumptions      as Ass
-import qualified Flowbox.Luna.Typechecker.Internal.BindingGroups    as Bnd
-import qualified Flowbox.Luna.Typechecker.Internal.ContextReduction as CxR
-import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
-import qualified Flowbox.Luna.Typechecker.Internal.TIMonad          as TIM
-import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+import qualified Luna.Typechecker.Internal.Ambiguity        as Amb
+import qualified Luna.Typechecker.Internal.Assumptions      as Ass
+import qualified Luna.Typechecker.Internal.BindingGroups    as Bnd
+import qualified Luna.Typechecker.Internal.ContextReduction as CxR
+import qualified Luna.Typechecker.Internal.Substitutions    as Sub
+import qualified Luna.Typechecker.Internal.TIMonad          as TIM
+import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
 
 
 -- TODO [kgdk] 15 sie 2014: czy let-polymorphism vs lambda-monomorphism nie jest popsute?

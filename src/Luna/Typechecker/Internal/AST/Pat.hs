@@ -1,15 +1,15 @@
-module Flowbox.Luna.Typechecker.Internal.AST.Pat (tiPat, Pat, tiPats) where
+module Luna.Typechecker.Internal.AST.Pat (tiPat, Pat, tiPats) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Lit          as Lit
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Scheme       as Sch
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
+import qualified Luna.Typechecker.Internal.AST.Lit          as Lit
+import qualified Luna.Typechecker.Internal.AST.Scheme       as Sch
+import qualified Luna.Typechecker.Internal.AST.Type         as Ty
 
-import qualified Flowbox.Luna.Typechecker.Internal.Assumptions      as Ass
-import qualified Flowbox.Luna.Typechecker.Internal.TIMonad          as TIM
-import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+import qualified Luna.Typechecker.Internal.Assumptions      as Ass
+import qualified Luna.Typechecker.Internal.TIMonad          as TIM
+import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
 
-import           Flowbox.Luna.Data.AST.Common                       (ID)
+import           Luna.Typechecker.Internal.AST.Common       (ID)
 
 data Pat = Con             { _id :: ID, _name :: String, _scheme :: Sch.Scheme, _args :: [Pat] }
          | Var             { _id :: ID, _name :: String                                        }

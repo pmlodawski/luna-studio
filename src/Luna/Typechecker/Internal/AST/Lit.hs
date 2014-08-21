@@ -1,11 +1,11 @@
-module Flowbox.Luna.Typechecker.Internal.AST.Lit (Lit,tiLit) where
+module Luna.Typechecker.Internal.AST.Lit (Lit,tiLit) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
+import qualified Luna.Typechecker.Internal.AST.Type         as Ty
 
-import qualified Flowbox.Luna.Typechecker.Internal.TIMonad          as TIM
-import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+import qualified Luna.Typechecker.Internal.TIMonad          as TIM
+import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
 
-import           Flowbox.Luna.Data.AST.Common                       (ID)
+import           Luna.Typechecker.Internal.AST.Common       (ID)
 
 data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
          | Float   { _id :: ID, _str  :: Prelude.String }

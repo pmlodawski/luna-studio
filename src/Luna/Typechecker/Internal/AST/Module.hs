@@ -1,4 +1,4 @@
-module Flowbox.Luna.Typechecker.Internal.AST.Module () where
+module Luna.Typechecker.Internal.AST.Module () where
 
 
 
