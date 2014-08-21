@@ -8,11 +8,13 @@ module Luna.Interpreter.Session.Session where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import qualified DynFlags                     as F
+import qualified DynFlags                     as GHC
 import qualified GHC
 import qualified Language.Haskell.Interpreter as I
 
 import qualified Flowbox.Batch.Project.Project             as Project
+import           Flowbox.Config.Config                     (Config)
+import qualified Flowbox.Config.Config                     as Config
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -45,10 +47,10 @@ logger = getLoggerIO "Luna.Interpreter.Session.Session"
 type Session a = EitherT Error.ErrorStr (StateT Env I.Interpreter) a
 
 
-run :: Env -> Session a -> IO (Either Error a)
-run env session = do
+run :: Config -> Env -> Session a -> IO (Either Error a)
+run config env session = do
     result <- I.runInterpreter
-            $ fst <$> runStateT (runEitherT (initialize >> session)) env
+            $ fst <$> runStateT (runEitherT (initialize config >> session)) env
     return $ case result of
         Left e    -> Left $ Error.InterpreterError e
         Right res -> case res of
@@ -56,9 +58,19 @@ run env session = do
             Right r -> Right r
 
 
-initialize :: Session ()
-initialize = do
+initialize :: Config -> Session ()
+initialize config = do
     lift2 I.reset
+    --lift2 $ I.runGhc $ do
+    --    flags <- GHC.getSessionDynFlags
+    --    void $ GHC.setSessionDynFlags flags
+    --            { GHC.extraPkgConfs = ( [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
+    --                                    , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
+    --                                    ] ++) . GHC.extraPkgConfs flags
+    --            , GHC.hscTarget = GHC.HscInterpreted
+    --            , GHC.ghcLink   = GHC.LinkInMemory
+    --            --, GHC.verbosity = 4
+    --            }
     setHardcodedExtensions
     lift2 $ I.setImportsQ [("Prelude", Nothing)
                           ,("Control.Monad", Nothing)
@@ -69,16 +81,16 @@ initialize = do
     runDecls Helpers.hash
 
 
-setFlags :: [F.ExtensionFlag] -> Session ()
+setFlags :: [GHC.ExtensionFlag] -> Session ()
 setFlags flags = lift2 $ I.runGhc $ do
     current <- GHC.getSessionDynFlags
-    void $ GHC.setSessionDynFlags $ foldl F.xopt_set current flags
+    void $ GHC.setSessionDynFlags $ foldl GHC.xopt_set current flags
 
 
-unsetFlags :: [F.ExtensionFlag] -> Session ()
+unsetFlags :: [GHC.ExtensionFlag] -> Session ()
 unsetFlags flags = lift2 $ I.runGhc $ do
     current <- GHC.getSessionDynFlags
-    void $ GHC.setSessionDynFlags $ foldl F.xopt_unset current flags
+    void $ GHC.setSessionDynFlags $ foldl GHC.xopt_unset current flags
 
 
 runStmt :: String -> Session ()
@@ -103,19 +115,18 @@ runAssignment asigned asignee =
 
 
 setHardcodedExtensions :: Session ()
-setHardcodedExtensions = do
-    setFlags [ F.Opt_EmptyDataDecls
-             , F.Opt_FlexibleContexts
-             , F.Opt_FlexibleInstances
-             , F.Opt_FunctionalDependencies
-             , F.Opt_GADTs
-             , F.Opt_MultiParamTypeClasses
-             , F.Opt_OverlappingInstances
-             , F.Opt_ScopedTypeVariables
-             , F.Opt_UndecidableInstances
-             --, F.Opt_IncoherentInstances
+setHardcodedExtensions =
+    setFlags [ GHC.Opt_EmptyDataDecls
+             , GHC.Opt_FlexibleContexts
+             , GHC.Opt_FlexibleInstances
+             , GHC.Opt_FunctionalDependencies
+             , GHC.Opt_GADTs
+             , GHC.Opt_MultiParamTypeClasses
+             , GHC.Opt_OverlappingInstances
+             , GHC.Opt_ScopedTypeVariables
+             , GHC.Opt_UndecidableInstances
              ]
-    unsetFlags []
+    --unsetFlags []
 
 
 setLibManager :: LibManager -> Session ()

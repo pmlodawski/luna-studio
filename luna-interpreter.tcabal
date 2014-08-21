@@ -26,6 +26,7 @@ Library
                   data-hash,
                   either,
                   flowbox-batch,
+                  flowbox-config,
                   flowbox-utils,
                   ghc,
                   hint,
@@ -49,6 +50,7 @@ Executable luna-interpreter-test
 
   Build-Depends:  base,
                   errors,
+                  flowbox-config,
                   flowbox-utils,
                   luna-core,
                   luna-distribution,
@@ -67,6 +69,7 @@ Test-Suite tests
   Extensions:     NoImplicitPrelude
   Build-Depends:  base,
                   errors,
+                  flowbox-config,
                   flowbox-utils,
                   luna-core,
                   luna-distribution,

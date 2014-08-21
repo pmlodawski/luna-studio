@@ -12,6 +12,7 @@ module Main where
 import Text.RawString.QQ
 import Text.Show.Pretty
 
+import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -108,6 +109,7 @@ readSource source = eitherStringToM' $ runEitherT $ do
 main :: IO ()
 main = do
     rootLogger setIntLevel 5
+    cfg <- Config.load
 
     (libManager , libID) <- readSource code
     (libManager2, _    ) <- readSource code2
@@ -115,8 +117,7 @@ main = do
     let env = Env.mk libManager 0 (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
-
-    result <- Session.run env $ do
+    result <- Session.run cfg env $ do
         Executor.processMain
         print =<< Value.get [CallPoint libID 45] ""
         putStrLn "--------- 1"
