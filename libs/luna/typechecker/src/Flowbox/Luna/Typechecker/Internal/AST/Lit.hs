@@ -1,16 +1,30 @@
-module Flowbox.Luna.Typechecker.Internal.AST.Lit (Lit(..)) where
+module Flowbox.Luna.Typechecker.Internal.AST.Lit (Lit,tiLit) where
 
-import qualified Flowbox.Luna.Typechecker.Internal.AST.AST    as AST
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Common as Com
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Expr   as Exp
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind   as Knd
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Module as Mod
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Pat    as Pat
-import qualified Flowbox.Luna.Typechecker.Internal.AST.TID    as TID
-import qualified Flowbox.Luna.Typechecker.Internal.AST.Type   as Ty
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Alternatives as Alt
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.AST          as AST
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Common       as Com
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Expr         as Exp
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Kind         as Knd
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Lit          as Lit
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Module       as Mod
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Pat          as Pat
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.Scheme       as Sch
+--import qualified Flowbox.Luna.Typechecker.Internal.AST.TID          as TID
+import qualified Flowbox.Luna.Typechecker.Internal.AST.Type         as Ty
 
-import           Flowbox.Luna.Data.AST.Common                 (ID(..))
-import           Flowbox.Luna.Typechecker.Internal.AST.TID    (TID(..))
+--import qualified Flowbox.Luna.Typechecker.Internal.Ambiguity        as Amb
+--import qualified Flowbox.Luna.Typechecker.Internal.Assumptions      as Ass
+--import qualified Flowbox.Luna.Typechecker.Internal.BindingGroups    as Bnd
+--import qualified Flowbox.Luna.Typechecker.Internal.ContextReduction as CxR
+--import qualified Flowbox.Luna.Typechecker.Internal.HasKind          as HKd
+--import qualified Flowbox.Luna.Typechecker.Internal.Substitutions    as Sub
+import qualified Flowbox.Luna.Typechecker.Internal.TIMonad          as TIM
+import qualified Flowbox.Luna.Typechecker.Internal.Typeclasses      as Tcl
+--import qualified Flowbox.Luna.Typechecker.Internal.TypeInference    as Inf
+--import qualified Flowbox.Luna.Typechecker.Internal.Unification      as Unf
+
+import           Flowbox.Luna.Data.AST.Common                       (ID)
+--import           Flowbox.Luna.Typechecker.Internal.AST.TID          (TID(..))
 
 data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
          | Float   { _id :: ID, _str  :: Prelude.String }
@@ -19,7 +33,7 @@ data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
          deriving (Show, Eq)
 
 
-tiLit :: Lit -> TI ([Pred], Ty.Type)
+tiLit :: Lit -> TIM.TI ([Tcl.Pred], Ty.Type)
 tiLit (Char    _ _) = return ( [], Ty.tChar )
 tiLit (Float   _ _) = return ( [], Ty.tFloat ) -- 'tFloat' of 'Fractional'?
 tiLit (Integer _ _) = return ( [], Ty.tInteger )
