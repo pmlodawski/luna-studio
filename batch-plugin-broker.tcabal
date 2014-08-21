@@ -1,4 +1,4 @@
-Name:               flowbox-broker
+Name:               batch-plugin-broker
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -13,7 +13,7 @@ Flag Debug
 
 Executable broker
     Hs-Source-Dirs: src
-    Other-Modules:  Paths_flowbox_broker
+    Other-Modules:  Paths_batch_plugin_broker
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
