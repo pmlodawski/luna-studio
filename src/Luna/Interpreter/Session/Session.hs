@@ -8,35 +8,37 @@ module Luna.Interpreter.Session.Session where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import           Data.ByteString.Lazy         (ByteString)
 import qualified DynFlags                     as GHC
 import qualified GHC
 import qualified Language.Haskell.Interpreter as I
 
-import qualified Flowbox.Batch.Project.Project             as Project
-import           Flowbox.Config.Config                     (Config)
-import qualified Flowbox.Config.Config                     as Config
+import qualified Flowbox.Batch.Project.Project               as Project
+import           Flowbox.Config.Config                       (Config)
+import qualified Flowbox.Config.Config                       as Config
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Common                           as AST
-import qualified Luna.AST.Control.Focus                    as Focus
-import qualified Luna.AST.Control.Zipper                   as Zipper
-import           Luna.AST.Expr                             (Expr)
-import qualified Luna.AST.Expr                             as Expr
-import           Luna.Graph.Graph                          (Graph)
-import           Luna.Interpreter.Session.Data.DefPoint    (DefPoint (DefPoint))
-import qualified Luna.Interpreter.Session.Data.DefPoint    as DefPoint
-import           Luna.Interpreter.Session.Env              (Env)
-import qualified Luna.Interpreter.Session.Env              as Env
-import           Luna.Interpreter.Session.Error            (Error)
-import qualified Luna.Interpreter.Session.Error            as Error
-import qualified Luna.Interpreter.Session.Helpers          as Helpers
-import           Luna.Lib.Lib                              (Library)
-import qualified Luna.Lib.Lib                              as Library
-import           Luna.Lib.Manager                          (LibManager)
-import qualified Luna.Lib.Manager                          as LibManager
-import qualified Luna.Pass.Analysis.Alias.Alias            as Alias
-import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
+import qualified Luna.AST.Common                             as AST
+import qualified Luna.AST.Control.Focus                      as Focus
+import qualified Luna.AST.Control.Zipper                     as Zipper
+import           Luna.AST.Expr                               (Expr)
+import qualified Luna.AST.Expr                               as Expr
+import           Luna.Graph.Graph                            (Graph)
+import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
+import qualified Luna.Interpreter.Session.Data.DefPoint      as DefPoint
+import           Luna.Interpreter.Session.Env                (Env)
+import qualified Luna.Interpreter.Session.Env                as Env
+import           Luna.Interpreter.Session.Error              (Error)
+import qualified Luna.Interpreter.Session.Error              as Error
+import qualified Luna.Interpreter.Session.Helpers            as Helpers
+import           Luna.Lib.Lib                                (Library)
+import qualified Luna.Lib.Lib                                as Library
+import           Luna.Lib.Manager                            (LibManager)
+import qualified Luna.Lib.Manager                            as LibManager
+import qualified Luna.Pass.Analysis.Alias.Alias              as Alias
+import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
 
 
 
@@ -167,3 +169,7 @@ findMain = gets $ view Env.mainPtr
 
 getProjectID :: Session Project.ID
 getProjectID = gets $ view Env.projectID
+
+
+getResultCallBack :: Session (CallPointPath -> ByteString -> IO ())
+getResultCallBack = gets $ view Env.resultCallBack
