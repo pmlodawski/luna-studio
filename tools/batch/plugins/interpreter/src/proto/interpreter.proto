@@ -50,4 +50,13 @@ message Interpreter {
             required Request request = 1;
         }
     }
+    message Value {
+        message Request {
+            required CallPointPath callPointPath = 1;
+        }
+        message Update {
+            required CallPointPath callPointPath = 1;
+            required bytes         value         = 2;
+        }
+    }
 }

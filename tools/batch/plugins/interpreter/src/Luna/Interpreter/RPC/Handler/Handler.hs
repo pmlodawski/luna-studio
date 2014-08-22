@@ -31,7 +31,9 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers             as Proto
 import qualified Luna.Interpreter.RPC.Handler.ASTWatch    as ASTWatch
 import qualified Luna.Interpreter.RPC.Handler.Interpreter as Interpreter
+import qualified Luna.Interpreter.RPC.Handler.Value       as Value
 import qualified Luna.Interpreter.RPC.Topic               as Topic
+import qualified Luna.Interpreter.Session.Env             as Env
 import           Luna.Interpreter.Session.Error           (Error)
 import qualified Luna.Interpreter.Session.Session         as Session
 import           Luna.Interpreter.Session.SessionT        (SessionT)
@@ -49,6 +51,7 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd    )
     , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove )
     , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList   )
+    , (Topic.interpreterValueRequest           , respond Topic.update Value.get                    )
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 ASTWatch.projectmanagerSyncGet)
 
@@ -95,20 +98,25 @@ handlerMap callback = HandlerMap.fromList
 
 
 interpret :: Pipes.Pipe (Message, Message.CorrelationID)
-                        (Message, Message.CorrelationID)
+                        (Message, Maybe Message.CorrelationID)
                         (StateT Context SessionT) ()
 interpret = forever $ do
     (message, crl) <- Pipes.await
     results <- lift $ Processor.processLifted handlerMap message
-    mapM_ (\r -> Pipes.yield (r, crl)) results
+    mapM_ (\r -> Pipes.yield (r, Just crl)) results
 
 
 run :: Config -> Context
     -> (Pipes.Input  (Message, Message.CorrelationID),
-       Pipes.Output (Message, Message.CorrelationID))
+        Pipes.Output (Message, Maybe Message.CorrelationID))
     -> IO (Either Error ())
 run cfg ctx (input, output) =
-    Session.run cfg def $ SessionT.runSessionT $ flip evalStateT ctx $
+    Session.run cfg env $ SessionT.runSessionT $ flip evalStateT ctx $
         Pipes.runEffect $ Pipes.fromInput input
                       >-> interpret
                       >-> Pipes.toOutput output
+    where
+        env = def & Env.resultCallBack .~ Value.reportOutputValue output
+
+
+

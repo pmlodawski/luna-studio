@@ -114,12 +114,14 @@ main = do
     (libManager , libID) <- readSource code
     (libManager2, _    ) <- readSource code2
 
-    let env = Env.mk libManager 0 (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
+    let env = Env.mk libManager 0
+                (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
+                (curry print)
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
     result <- Session.run cfg env $ do
         Executor.processMain
-        print =<< Value.get [CallPoint libID 45] ""
+        print =<< Value.getIfReady [CallPoint libID 45]
         putStrLn "--------- 1"
         Executor.processMain
         putStrLn "========= 1"
@@ -143,5 +145,5 @@ main = do
         putStrLn "========= finished =======4="
         Cache.dumpAll
 
-        print =<< Value.get [CallPoint libID 45] ""
+        print =<< Value.getIfReady [CallPoint libID 45]
     eitherStringToM $ fmapL Error.format result

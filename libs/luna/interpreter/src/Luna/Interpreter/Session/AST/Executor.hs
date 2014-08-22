@@ -17,6 +17,7 @@ import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate  as Invalidate
 import qualified Luna.Interpreter.Session.Cache.Status      as CacheStatus
+import qualified Luna.Interpreter.Session.Cache.Value       as Value
 import qualified Luna.Interpreter.Session.Data.CallData     as CallData
 import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
@@ -28,7 +29,6 @@ import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TypeCheck         as TypeCheck
 import qualified Luna.Pass.Transform.Graph.Parser.Parser    as GraphParser
-
 
 logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Executor"
@@ -138,6 +138,7 @@ evalFunction funName callDataPath argsVarNames = do
     Session.runAssignment varName tmpVarName
     Cache.dumpAll
     Cache.put callDataPath argsVarNames varName
+    Value.report callPointPath varName
     return varName
 
 
