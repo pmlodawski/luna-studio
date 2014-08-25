@@ -70,6 +70,7 @@ Test-Suite tests
   Extensions:     NoImplicitPrelude
   Build-Depends:  base,
                   errors,
+                  flowbox-batch,
                   flowbox-config,
                   flowbox-utils,
                   luna-core,
