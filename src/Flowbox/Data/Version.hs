@@ -16,8 +16,8 @@ import           Flowbox.Prelude
 import           GHC.Generics
 
 
-data Versioned el = Versioned { base :: el
-                              , version :: Version 
+data Versioned el = Versioned { base    :: el
+                              , version :: Version
                               } deriving (Read, Eq, Generic, Ord)
 
 data Version = Version { branch :: [Int]
