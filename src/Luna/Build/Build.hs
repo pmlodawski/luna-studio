@@ -11,19 +11,19 @@ module Luna.Build.Build where
 
 import Control.Applicative
 
-import           Flowbox.Config.Config                 (Config)
+import           Flowbox.Config.Config           (Config)
 import           Flowbox.Control.Error
-import qualified Flowbox.Initializer.Initializer       as Initializer
-import qualified Luna.Pass.Build.Build       as Build
-import           Luna.Pass.Build.BuildConfig (BuildConfig (BuildConfig))
-import qualified Luna.Pass.Build.BuildConfig as BuildConfig
-import           Luna.Pass.Build.Diagnostics (Diagnostics (Diagnostics))
-import qualified Luna.Build.Cmd                        as Cmd
-import           Flowbox.Prelude                       hiding (op)
+import qualified Flowbox.Initializer.Initializer as Initializer
+import           Flowbox.Prelude                 hiding (op)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Platform               as Platform
-import           Flowbox.System.UniPath                (UniPath)
-import qualified Flowbox.System.UniPath                as UniPath
+import qualified Flowbox.System.Platform         as Platform
+import           Flowbox.System.UniPath          (UniPath)
+import qualified Flowbox.System.UniPath          as UniPath
+import qualified Luna.Build.Cmd                  as Cmd
+import qualified Luna.Pass.Build.Build           as Build
+import           Luna.Pass.Build.BuildConfig     (BuildConfig (BuildConfig))
+import qualified Luna.Pass.Build.BuildConfig     as BuildConfig
+import           Luna.Pass.Build.Diagnostics     (Diagnostics (Diagnostics))
 
 
 
