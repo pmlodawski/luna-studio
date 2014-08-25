@@ -96,24 +96,41 @@ logger = getLoggerIO "Flowbox"
 example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
+                    , "class Vector a:"
+                    , "    x,y,z :: a"
+                    , "    def test a b:"
+                    , "        {a,b}"
 
-                        , "def print msg:"
-                        , "    ```print' #{msg}```"
+                    , "def print msg:"
+                    , "    ```autoLift1 print #{msg}```"
 
+                    , "def Int.+ a:"
+                    , "    ```liftF2 (+) #{self} #{a}```"
 
+                    , "def Int.> a:"
+                    , "    ```liftF2 (>) #{self} #{a}```"
+
+                    , "def Int.inc:"
+                    , "    self + 1"
 
 
                     , "def main:"
-                    , "    print $ test2 1"
+                    , "    print $ if 1 > 2: 5"
+                    , "            else: 6"
+                    , "    print $ 1 > 2"
+                    , "    v = Vector 1 2 3"
+                    --, "    f = x:x"
+                    --, "    v.x = 5"
+                    , "    print $ v"
 
 
 
-                    , "def test2 a:"
-                    , "    test1 a"
+                    --, "def test2 a:"
+                    --, "    test1 a"
 
 
-                    , "def test1 a:"
-                    , "    {a,a}"
+                    --, "def test1 a:"
+                    --, "    {a,a}"
 
                     ]
 

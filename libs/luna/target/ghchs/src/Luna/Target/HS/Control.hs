@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Target.HS.Data.Struct (module X) where
+module Luna.Target.HS.Control (module X) where
 
-import Luna.Target.HS.Data.Struct.Mem  as X
+import Luna.Target.HS.Control.Context as X
+import Luna.Target.HS.Control.Error   as X
+import Luna.Target.HS.Control.Flow    as X

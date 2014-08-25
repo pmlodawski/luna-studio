@@ -71,6 +71,15 @@ genTH f a b c = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var f) vars where
 genTHInst  = genTH "mkInst"
 
 
+
+thGenerateFieldAccessors conName fieldNames = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "generateFieldAccessors")
+                                                        [ HExpr.Var $ mkTHVarName conName
+                                                        , HExpr.ListE $ fmap mconv fieldNames
+                                                        ]
+    where mconv v = case v of
+                    Just a -> HExpr.AppE (HExpr.VarE "Just") (HExpr.Lit $ HLit.String a)
+                    Nothing -> HExpr.VarE "Nothing"
+
 thRegisterCon dataName conName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerCon")
                                                 [ HExpr.Var $ mkTHTypeName dataName
                                                 , HExpr.Var $ mkTHVarName conName
@@ -81,6 +90,12 @@ thRegisterCon dataName conName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE)
 
 thTypeRef clsName mName = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "typeRef")
                                     $ map (HExpr.Lit . HLit.String) [clsName, mName]
+
+
+thRegisterMethod tpName funcName = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerMethod") $
+                                 [ HExpr.Var $ mkTHTypeName tpName
+                                 , HExpr.Lit $ HLit.String funcName
+                                 ]
 
 thRegisterFunction fName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerFunc") $
                                           [ HExpr.Var $ mkTHVarName  fName
@@ -159,13 +174,13 @@ mkIO     = HExpr.AppE (HExpr.ConE ["IO"])
 mkLiftf1     = HExpr.AppE (HExpr.Var "liftf1")
 mkFlattenCtx = HExpr.AppE (HExpr.Var "flattenCtx")
 
-mkVal    = mkPure . mkSafe
+mkVal    = HExpr.AppE (HExpr.Var "val")
 
 
 emptyHExpr = mkVal (HExpr.Var "()")
 
 
-mkMemberGetter name = HExpr.AppE (HExpr.VarE "member") (HExpr.TypedE (HExpr.AppT (HExpr.ConT "P") (HExpr.LitT $ HLit.String name)) (HExpr.ConE ["P"]) )
+mkMemberGetter name = HExpr.AppE (HExpr.VarE "member") (HExpr.TypedE (HExpr.AppT (HExpr.ConT "Proxy") (HExpr.LitT $ HLit.String name)) (HExpr.ConE ["Proxy"]) )
 
 
 mkRTuple :: [HExpr] -> HExpr

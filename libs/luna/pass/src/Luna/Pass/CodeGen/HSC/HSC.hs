@@ -15,6 +15,7 @@ module Luna.Pass.CodeGen.HSC.HSC where
 
 import           Data.String.Utils                (join)
 import qualified Luna.Data.HAST.Expr      as HExpr
+import qualified Luna.Data.HAST.Comment   as HComment
 import           Luna.Data.HAST.Extension (Extension)
 import qualified Luna.Data.HAST.Lit       as HLit
 import           Luna.Data.Source    (Source (Source))
@@ -29,6 +30,7 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.HSC.HSC"
 
 type HExpr = HExpr.Expr
+type HComment = HComment.Comment
 
 type HSCPass result = Pass Pass.NoState result
 
@@ -117,8 +119,9 @@ buildExpr e = case e of
     HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ params' ++ " = " ++ (code.buildExpr) con
                                              where params' = if null params then "" else " " ++ join " " (fsExpMap params)
     HExpr.Con      name fields            -> pure $ name ++ body
-                                             where body = if null fields then "" else " { " ++ sepjoin (fExpMap fields) ++ " }"
-    HExpr.CondE    cond sucess failure    -> Complex $ "if " ++ csBuildExpr cond ++ " then " ++ (code.buildDoBlock) sucess ++ " else " ++ (code.buildDoBlock) failure
+                                             where body = if null fields then "" else " " ++ spacejoin (fExpMap fields)
+    --HExpr.CondE    cond sucess failure    -> Complex $ "if " ++ csBuildExpr cond ++ " then " ++ (code.buildDoBlock) sucess ++ " else " ++ (code.buildDoBlock) failure
+    HExpr.CondE    cond sucess failure    -> Complex $ "ifThenElse' " ++ csBuildExpr cond ++ (code.simplify.buildDoBlock) sucess ++ (code.simplify.buildDoBlock) failure
     HExpr.RecUpdE  expr name val          -> Complex $ csBuildExpr expr ++ " { " ++ name ++ " = " ++ cBuildExpr val ++ "}"
     HExpr.Typed    cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ cBuildExpr cls
     HExpr.TypedP   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ cBuildExpr cls
@@ -155,9 +158,20 @@ buildExpr e = case e of
     HExpr.THE      expr                   -> pure $ "$(" ++ (code.buildExpr) expr ++ ")"
     HExpr.CaseE    expr matches           -> Complex $ "case " ++ (code.buildExpr) expr ++ " of {" ++ buildBody matches ++ "}"
     HExpr.Match    pat matchBody          -> Complex $ (code.buildExpr) pat ++ " -> " ++ (code.buildExpr) matchBody
+    HExpr.Comment  comment                -> buildComment comment
     --_                                     ->
     where spacejoin   = join " "
           sepjoin     = join ", "
+
+
+buildComment :: HComment -> CodeBuilder String
+buildComment comment = pure $ case comment of
+    HComment.H1 str -> mkSpace 2 ++ "-- " ++ replicate 67 '=' ++ "\n-- " ++ str ++ "\n" ++ "-- " ++ replicate 67 '='
+    HComment.H2 str -> mkSpace 1 ++ "-- ====== " ++ str ++ " ====== --"
+    HComment.H3 str -> "-- === " ++ str ++ " === --"
+    HComment.H4 str -> "-- --- " ++ str ++ " --- --"
+    HComment.H5 str -> "-- " ++ str
+    where mkSpace n = replicate n '\n'
 
 fExpMap :: [HExpr] -> [String]
 fExpMap     = map cBuildExpr
@@ -172,7 +186,7 @@ csBuildExpr :: HExpr -> String
 csBuildExpr = code.simplify.buildExpr
 
 buildDoBlock :: [HExpr] -> CodeBuilder String
-buildDoBlock exprs = pure $ "do { " ++ buildBody exprs ++ " }"
+buildDoBlock exprs = Complex $ "do { " ++ buildBody exprs ++ " }"
 
 buildBody :: [HExpr] -> String
 buildBody exprs = if null exprs then "" else join "; " (fExpMap exprs) ++ ";"

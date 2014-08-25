@@ -13,6 +13,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverlappingInstances #-}
@@ -33,7 +34,7 @@ import Control.Applicative
 -- Structures
 --------------------------------------------------------------------------------
 
-newtype Value m v = Value (m v) deriving (Show, Typeable)
+newtype Value m v = Value (m v) deriving (Typeable)
 
 fromValue (Value a) = a
 
@@ -49,6 +50,17 @@ class LiftValue m mout where
 --------------------------------------------------------------------------------
 -- Instances
 --------------------------------------------------------------------------------
+
+instance Show (m a) => Show (Value m a) where
+#ifdef DEBUG
+    show (Value a) = "Value (" ++ child ++ ")" where
+        child = show a
+        content = if ' ' `elem` child then "(" ++ child ++ ")" else child
+#else
+    show (Value a) = show a
+#endif
+
+---
 
 instance Monad m => Monad (Value m) where
     return = Value . return
