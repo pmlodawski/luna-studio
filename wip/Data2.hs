@@ -1,15 +1,15 @@
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 
-{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE PolyKinds                 #-}
 
 
 module Data2 where
 
-import Bind2 (StateT(..),put,get)
+import Bind2 (StateT (..), get, put)
 
 import Control.Applicative
 import Control.Monad.Trans
@@ -75,7 +75,7 @@ instance (Functor m, Monad m) => Applicative (Value m) where
 newtype IC t m v = IC { fromIC :: t m (Value m v) }
 
 instance (Monad m, Monad (t m), MonadTrans t) => Monad (IC t m) where
-    return = IC . return . return 
+    return = IC . return . return
     IC tma >>= f = IC $ do
         Value ma <- tma
         a        <- lift ma
@@ -101,7 +101,7 @@ icmap2 f ca = IC $ do
     return $ f $ (Value . return) a
 
 instance (Functor (t m), Functor m) => Functor (IC t m) where
-    fmap f (IC a) = IC $ (fmap.fmap) f a 
+    fmap f (IC a) = IC $ (fmap.fmap) f a
 
 instance (Functor (t m), Functor m) => Applicative (IC t m) where
     pure = undefined

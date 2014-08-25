@@ -1,18 +1,18 @@
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
+{-# LANGUAGE IncoherentInstances       #-}
+{-# LANGUAGE OverlappingInstances      #-}
 
 import Control.Applicative
 import Control.Monad.IO.Class
-import Control.Monad.Trans
 import Control.Monad.State
+import Control.Monad.Trans
 
 --import Bind (bind)
 
@@ -85,7 +85,7 @@ instance (Monad m, a~b, out~(c :> m)) => Pipe (b -> (c :> m)) (a :> m) out where
         unliftCtx $ f a
 
 
-instance (Monad m, Monad (mt m), MonadTrans mt, a~b, out~(c :> mt m)) => 
+instance (Monad m, Monad (mt m), MonadTrans mt, a~b, out~(c :> mt m)) =>
          Pipe (b -> (c :> m)) (a :> mt m) out where
     pipe f (InContext ma) = InContext $ do
         a <- ma
@@ -152,7 +152,7 @@ t2 :: () -> Int
 t2 _ = 5
 
 sme :: [Int] -> [Int] -> [Int]
-sme = (++) 
+sme = (++)
 
 main = do
     print $ sme >>> [(1::Int)] >>> (2::Int)

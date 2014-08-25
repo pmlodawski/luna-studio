@@ -1,12 +1,12 @@
 {-# OPTIONS_GHC -fno-warn-missing-methods #-}
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE IncoherentInstances       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 module Main where
 
@@ -35,7 +35,7 @@ data Id5 t1 t2 t3 t4 t5 = Id5 deriving (Show, Typeable)
 -- Instances
 --------------------------------------------------------------------------------
 
-instance InferType Int 
+instance InferType Int
 
 instance (InferType m, InferType a) => InferType (m a)
 instance (a~Id0)                    => InferType (a :: *)
@@ -51,8 +51,8 @@ toProxy _ = Proxy
 inferTypeBase :: a -> Proxy a
 inferTypeBase a = inferType $ toProxy a
 
-instance InferType Foo1 
-instance InferType Foo2  
+instance InferType Foo1
+instance InferType Foo2
 
 tm _ = 5
 

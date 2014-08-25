@@ -1,11 +1,11 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
 --{-# LANGUAGE UndecidableInstances #-}
 --{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
 
 
 class Pipe a b c | a b -> c where
@@ -22,27 +22,27 @@ apply (Func f) a = Func $ f a
 ----------------------------------------------
 
 --instance Monad m => Pipe (Func (a -> b)) (m a) (m (Func b)) where
---    pipe f ma = do 
---        a <- ma 
+--    pipe f ma = do
+--        a <- ma
 --        return $ apply f a
 
 
 ----instance Monad m => Pipe (Func (m a -> b)) (a) (Func b) where
-----    pipe (Func f) ma = do 
-----        a <- ma 
+----    pipe (Func f) ma = do
+----        a <- ma
 ----        return $ apply f a
 
 
 --instance Monad m => Pipe (m (Func (a -> b))) (a) (m (Func b)) where
---    pipe mf a = do 
---        f <- mf 
+--    pipe mf a = do
+--        f <- mf
 --        return $ apply f a
 
 
 --instance Monad m => Pipe (m (Func (a -> b))) (m a) (m (Func b)) where
---    pipe mf ma = do 
+--    pipe mf ma = do
 --        a <- ma
---        f <- mf 
+--        f <- mf
 --        return $ apply f a
 
 

@@ -5,9 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Target.HS.Host.Naming where
 
@@ -23,22 +23,22 @@ instance NameCls String where
     withName f = f
     toStr      = id
     toName     = mkName
-    
+
 instance NameCls Name where
     withName f = mkName.f.nameBase
     toStr      = nameBase
     toName     = id
 
-mkFieldAccessor accName typeName conName memName = mkName $ "field" ++ accName ++ "_" 
-                                                           ++ toStr typeName  ++ "_" 
-                                                           ++ toStr conName   ++ "_" 
+mkFieldAccessor accName typeName conName memName = mkName $ "field" ++ accName ++ "_"
+                                                           ++ toStr typeName  ++ "_"
+                                                           ++ toStr conName   ++ "_"
                                                            ++ toStr memName
 
 mkFieldGetter = mkFieldAccessor "Getter"
 mkFieldSetter = mkFieldAccessor "Setter"
 
 
---mkMemRef base typeName methodName = mkName $ "prop" ++ base ++ "_" 
+--mkMemRef base typeName methodName = mkName $ "prop" ++ base ++ "_"
 --                                           ++ toStr typeName ++ "_"
 --                                           ++ toStr methodName
 
@@ -53,7 +53,7 @@ classFunc   = mkName "Func"
 funcGetFunc = mkName "getFunc"
 
 
-mkMemRef base typeName methodName = "mem" ++ base ++ "_" 
+mkMemRef base typeName methodName = "mem" ++ base ++ "_"
                                           ++ toStr typeName ++ "_"
                                           ++ toStr methodName
 
@@ -63,6 +63,6 @@ mkMemDef = mkMemRef "Def"
 
 modCon = con -- . mkModName
 
-con = ("cons_" ++) 
+con = ("cons_" ++)
 
 mkModName = ("Module" ++)

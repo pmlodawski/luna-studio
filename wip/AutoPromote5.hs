@@ -1,13 +1,13 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
 --{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE IncoherentInstances       #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 --{-# LANGUAGE AllowAmbiguousTypes #-}
 
@@ -111,7 +111,7 @@ instance TestC TestD (Int -> (Int,Int)) where
 myfun3 a b = unContext $ Context getD `pipe` a `pipe` b
 
 --myfun4 :: (Pipe (Context a) b m c, Monad m, UnContext (m c) out) => a -> b -> out
---myfun4 f a = unContext $ Context f `pipe` a 
+--myfun4 f a = unContext $ Context f `pipe` a
 
 
 main = do
@@ -146,7 +146,7 @@ main = do
     print =<< (unContext $ Context testT `pipe` (return(1::Int)))
 
     print =<< (unContext $ Context test2T `pipe` (return(1::Int)) `pipe` (return(1::Int)))
-    
+
     print $ (unContext $ Context myfun3 `pipe` (1::Int) `pipe` (1::Int))
 
     print $ (unContext $ Context testNT `pipe` ((unContext $ Context myfun3 `pipe` (1::Int) `pipe` (1::Int))))

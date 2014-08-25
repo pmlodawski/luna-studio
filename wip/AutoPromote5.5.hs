@@ -1,13 +1,13 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
 --{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE IncoherentInstances       #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 --{-# LANGUAGE AllowAmbiguousTypes #-}
 
@@ -88,11 +88,11 @@ instance TestC TestD (Int -> (Int,Int)) where
 myfun3 a b = fromContext $ Context getD `pipe` a `pipe` b
 
 --myfun4 :: (Pipe (Context a) b m c, Monad m, UnContext (m c) out) => a -> b -> out
---myfun4 f a = fromContext $ Context f `pipe` a 
+--myfun4 f a = fromContext $ Context f `pipe` a
 
---myfun4 f a = fromContext2 $ Context f `pipe` a 
+--myfun4 f a = fromContext2 $ Context f `pipe` a
 
-myfun4 f a = fromContext $ Context f `pipe` a 
+myfun4 f a = fromContext $ Context f `pipe` a
 
 autoLift1 :: Pipe (Context a1) b (Context a) => a1 -> b -> a
 autoLift1 f t1 = fromContext $ Context f `pipe` t1
@@ -134,7 +134,7 @@ main = do
     print =<< (fromContext $ Context testT `pipe` (return(1::Int)))
 
     print =<< (fromContext $ Context test2T `pipe` (return(1::Int)) `pipe` (return(1::Int)))
-    
+
     print $ (fromContext $ Context myfun3 `pipe` (1::Int) `pipe` (1::Int))
 
     print $ (fromContext $ Context testNT `pipe` ((fromContext $ Context myfun3 `pipe` (1::Int) `pipe` (1::Int))))

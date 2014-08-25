@@ -1,13 +1,13 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
 --{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE IncoherentInstances       #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 --{-# LANGUAGE AllowAmbiguousTypes #-}
 
@@ -90,11 +90,11 @@ data TestD = TestD deriving Show
 
 
 test f a = f `pipe` a
---test2 f a b = f `pipe` a `pipe` b 
+--test2 f a b = f `pipe` a `pipe` b
 --WPROWADZIC DATATYPE DLA WYNIKU PIPE!!! ZEBY ROZROZNIAC WYWOLANIA FUNKCJI OD NIE-WYWOLAN!
 
 sme :: [Int] -> [Int] -> [Int]
-sme = (++) 
+sme = (++)
 
 
 --tescik :: a -> b -> (a,b)
@@ -135,7 +135,7 @@ main = do
     --print =<< (testT >>> (return(1::Int)))
 
     --print =<< (test2T >>> (return(1::Int)) >>> (return(1::Int)))
-    
+
     --print $ (myfun3 >>> (1::Int) >>> (1::Int))
 
     --print $ (testNT >>> ((myfun3 >>> (1::Int) >>> (1::Int))))
