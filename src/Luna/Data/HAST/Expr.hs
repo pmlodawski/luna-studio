@@ -11,6 +11,7 @@ import           Flowbox.Prelude
 import           Luna.Data.HAST.Deriving  (Deriving)
 import           Luna.Data.HAST.Extension (Extension)
 import qualified Luna.Data.HAST.Lit       as Lit
+import           Luna.Data.HAST.Comment   (Comment)
 
 type Lit = Lit.Lit
 
@@ -54,6 +55,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | THE        { expr :: Expr                                                             }
           | CaseE      { expr :: Expr, matches :: [Expr]                                          }
           | Match      { pat :: Expr, matchBody :: Expr }
+          | Comment    { comment :: Comment }
           | WildP
           | RecWildP
           | NOP
