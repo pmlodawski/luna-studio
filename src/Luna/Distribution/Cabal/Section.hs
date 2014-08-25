@@ -7,8 +7,8 @@
 
 module Luna.Distribution.Cabal.Section where
 
-import Luna.Data.HAST.Extension (Extension)
 import Flowbox.Prelude
+import Luna.Data.HAST.Extension (Extension)
 
 import Data.String.Utils (join)
 
@@ -16,7 +16,7 @@ import Data.String.Utils (join)
 
 data Section = Library    { exposedModules :: [String]
                           , ghcOptions     :: [String]
-                          , ccOptions     :: [String]
+                          , ccOptions      :: [String]
                           , buildDepends   :: [String]
                           , extensions     :: [Extension]
                           , hsSourceDirs   :: [String]
@@ -24,7 +24,7 @@ data Section = Library    { exposedModules :: [String]
              | Executable { name         :: String
                           , mainIs       :: String
                           , ghcOptions   :: [String]
-                          , ccOptions   :: [String]
+                          , ccOptions    :: [String]
                           , buildDepends :: [String]
                           , extensions   :: [Extension]
                           , hsSourceDirs :: [String]
