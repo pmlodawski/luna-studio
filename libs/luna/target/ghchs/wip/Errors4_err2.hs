@@ -1,9 +1,9 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE IncoherentInstances    #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE OverlappingInstances   #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 data X a b = X a
            | Y b

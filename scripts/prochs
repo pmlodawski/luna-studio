@@ -58,7 +58,7 @@ def style(args):
 
     # search for files
     print_info('Search paths: %s' % path_prefixes)
-    if args.STYLE_ALL in args:
+    if args.STYLE_ALL:
         print_info('Styling all git tracked haskell files')
         paths = getTrackedFiles()
     else:

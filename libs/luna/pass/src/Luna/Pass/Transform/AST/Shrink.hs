@@ -9,13 +9,13 @@ module Luna.Pass.Transform.AST.Shrink (
     shrinkFunctionBodies,
 ) where
 
-import           Luna.AST.Expr         (Expr)
-import qualified Luna.AST.Expr         as Expr
-import           Luna.AST.Module       (Module)
-import qualified Luna.AST.Module       as Module
+import           Flowbox.Prelude
 import           Luna.AST.Control.Focus (Focus)
 import qualified Luna.AST.Control.Focus as Focus
-import           Flowbox.Prelude
+import           Luna.AST.Expr          (Expr)
+import qualified Luna.AST.Expr          as Expr
+import           Luna.AST.Module        (Module)
+import qualified Luna.AST.Module        as Module
 
 
 

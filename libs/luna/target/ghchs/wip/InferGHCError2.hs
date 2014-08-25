@@ -1,9 +1,9 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE UndecidableInstances   #-}
 --{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE IncoherentInstances #-} -- the flag is niot needed by the example
+{-# LANGUAGE IncoherentInstances    #-}
 
 module Main where
 import Data.Typeable

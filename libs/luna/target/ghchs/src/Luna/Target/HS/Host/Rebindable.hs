@@ -13,9 +13,9 @@ module Luna.Target.HS.Host.Rebindable (
     ifThenElse
 ) where
 
-import           Prelude hiding ((>>=),(>>), return, fail)
-import qualified Prelude
 import           Luna.Target.HS.Host.Wrapper (ifThenElse)
+import           Prelude                     hiding (fail, return, (>>), (>>=))
+import qualified Prelude
 
 import Luna.Target.HS.Control.Context.Bind
 

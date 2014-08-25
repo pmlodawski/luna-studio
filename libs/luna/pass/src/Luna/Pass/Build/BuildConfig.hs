@@ -9,10 +9,10 @@ module Luna.Pass.Build.BuildConfig where
 
 import Data.Version (Version)
 
-import Flowbox.Config.Config                 (Config)
-import Luna.Pass.Build.Diagnostics (Diagnostics)
+import Flowbox.Config.Config       (Config)
 import Flowbox.Prelude
-import Flowbox.System.UniPath                (UniPath)
+import Flowbox.System.UniPath      (UniPath)
+import Luna.Pass.Build.Diagnostics (Diagnostics)
 
 
 

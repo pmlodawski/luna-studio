@@ -9,9 +9,9 @@ module Luna.Build.Version  where
 
 import qualified Data.Version as Version
 
-import qualified Luna.Info       as LunaInfo
-import qualified Luna.Build.Info as CompilerInfo
 import           Flowbox.Prelude
+import qualified Luna.Build.Info as CompilerInfo
+import qualified Luna.Info       as LunaInfo
 
 
 

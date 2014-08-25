@@ -11,18 +11,18 @@
 
 module Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf where
 
-import qualified Luna.AST.Expr                              as Expr
-import           Luna.AST.Module                            (Module)
-import qualified Luna.AST.Module                            as Module
-import           Luna.AST.Pat                               (Pat)
-import qualified Luna.AST.Pat                               as Pat
-import           Luna.Data.ASTInfo                          (ASTInfo)
+import           Flowbox.Prelude                               hiding (error, id, mod)
+import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Expr                                 as Expr
+import           Luna.AST.Module                               (Module)
+import qualified Luna.AST.Module                               as Module
+import           Luna.AST.Pat                                  (Pat)
+import qualified Luna.AST.Pat                                  as Pat
+import           Luna.Data.ASTInfo                             (ASTInfo)
 import           Luna.Pass.Pass                                (Pass)
 import qualified Luna.Pass.Pass                                as Pass
 import           Luna.Pass.Transform.AST.Desugar.General.State (DesugarState)
 import qualified Luna.Pass.Transform.AST.Desugar.General.State as State
-import           Flowbox.Prelude                                         hiding (error, id, mod)
-import           Flowbox.System.Log.Logger
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.ImplicitSelf.ImplicitSelf"

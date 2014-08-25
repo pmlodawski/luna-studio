@@ -17,16 +17,16 @@ import           Data.IntMap         (IntMap)
 import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Control.Error
-import qualified Luna.AST.Common                             as AST
-import           Luna.Graph.Properties                       (Properties)
-import           Luna.Lib.Lib                                 (Library (Library))
-import           Luna.Data.Serialize.Proto.Conversion.Attributes ()
-import           Luna.Data.Serialize.Proto.Conversion.Module     ()
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Library.Library                          as Gen
-import qualified Generated.Proto.Library.Library.PropertyMap              as Gen
-import qualified Generated.Proto.Library.Library.PropertyMap.KeyValue     as Gen
+import qualified Generated.Proto.Library.Library                      as Gen
+import qualified Generated.Proto.Library.Library.PropertyMap          as Gen
+import qualified Generated.Proto.Library.Library.PropertyMap.KeyValue as Gen
+import qualified Luna.AST.Common                                      as AST
+import           Luna.Data.Serialize.Proto.Conversion.Attributes      ()
+import           Luna.Data.Serialize.Proto.Conversion.Module          ()
+import           Luna.Graph.Properties                                (Properties)
+import           Luna.Lib.Lib                                         (Library (Library))
 
 
 

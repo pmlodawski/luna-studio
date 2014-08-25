@@ -13,12 +13,12 @@
 module Luna.Data.Serialize.Proto.Conversion.Lit where
 
 import           Flowbox.Control.Error
-import           Luna.AST.Lit                      (Lit)
-import qualified Luna.AST.Lit                      as Lit
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Lit.Lit                        as Gen
 import qualified Generated.Proto.Lit.Lit.Cls                    as Gen
+import           Luna.AST.Lit                                   (Lit)
+import qualified Luna.AST.Lit                                   as Lit
 
 
 

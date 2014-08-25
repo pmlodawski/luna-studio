@@ -7,13 +7,13 @@
 
 module Luna.Data.HAST.Comment where
 
-import           Flowbox.Prelude
+import Flowbox.Prelude
 
-data Comment = H1 { text :: String } 
-             | H2 { text :: String } 
-             | H3 { text :: String } 
-             | H4 { text :: String } 
-             | H5 { text :: String } 
+data Comment = H1 { text :: String }
+             | H2 { text :: String }
+             | H3 { text :: String }
+             | H4 { text :: String }
+             | H5 { text :: String }
              deriving (Show)
 
 

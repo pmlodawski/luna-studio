@@ -1,15 +1,15 @@
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 
-{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE PolyKinds                 #-}
 
 
 module Data3 where
 
-import Bind2 (StateT(..),put,get)
+import Bind2 (StateT (..), get, put)
 
 import Control.Applicative
 import Control.Monad.Trans
@@ -100,7 +100,7 @@ instance (Monad m, Monad (t m), MonadTrans t) => Monad (IC t m) where
 --    return $ f $ (Value . return) a
 
 instance (Functor (t m), Functor m) => Functor (IC t m) where
-    fmap f (IC a) = IC $ fmap f a 
+    fmap f (IC a) = IC $ fmap f a
 
 instance (Functor (t m), Functor m) => Applicative (IC t m) where
     pure = undefined

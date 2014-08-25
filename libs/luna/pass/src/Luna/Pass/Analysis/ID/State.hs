@@ -13,9 +13,9 @@ import           Control.Monad.State
 import           Data.IntSet         (IntSet)
 import qualified Data.IntSet         as IntSet
 
-import qualified Luna.AST.Common as AST
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Common           as AST
 
 
 

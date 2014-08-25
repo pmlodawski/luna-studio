@@ -17,23 +17,23 @@ import qualified Data.Map                        as Map
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 import           Flowbox.Control.Error
-import qualified Luna.AST.Common                       as AST
-import           Luna.AST.Pat                          (Pat)
-import qualified Luna.AST.Pat                          as Pat
-import           Luna.Data.Serialize.Proto.Conversion.Lit  ()
-import           Luna.Data.Serialize.Proto.Conversion.Type ()
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Pat.App                            as GenApp
-import qualified Generated.Proto.Pat.Con_                           as GenCon_
-import qualified Generated.Proto.Pat.Lit                            as GenLit
-import qualified Generated.Proto.Pat.Pat                            as Gen
-import qualified Generated.Proto.Pat.Pat.Cls                        as GenCls
-import qualified Generated.Proto.Pat.RecWildcard                    as GenRecWildcard
-import qualified Generated.Proto.Pat.Tuple                          as GenTuple
-import qualified Generated.Proto.Pat.Typed                          as GenTyped
-import qualified Generated.Proto.Pat.Var                            as GenVar
-import qualified Generated.Proto.Pat.Wildcard                       as GenWildcard
+import qualified Generated.Proto.Pat.App                        as GenApp
+import qualified Generated.Proto.Pat.Con_                       as GenCon_
+import qualified Generated.Proto.Pat.Lit                        as GenLit
+import qualified Generated.Proto.Pat.Pat                        as Gen
+import qualified Generated.Proto.Pat.Pat.Cls                    as GenCls
+import qualified Generated.Proto.Pat.RecWildcard                as GenRecWildcard
+import qualified Generated.Proto.Pat.Tuple                      as GenTuple
+import qualified Generated.Proto.Pat.Typed                      as GenTyped
+import qualified Generated.Proto.Pat.Var                        as GenVar
+import qualified Generated.Proto.Pat.Wildcard                   as GenWildcard
+import qualified Luna.AST.Common                                as AST
+import           Luna.AST.Pat                                   (Pat)
+import qualified Luna.AST.Pat                                   as Pat
+import           Luna.Data.Serialize.Proto.Conversion.Lit       ()
+import           Luna.Data.Serialize.Proto.Conversion.Type      ()
 
 
 

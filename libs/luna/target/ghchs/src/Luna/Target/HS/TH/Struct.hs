@@ -5,25 +5,25 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE ViewPatterns              #-}
 
 module Luna.Target.HS.TH.Struct where
 
-import Language.Haskell.TH
-import Luna.Target.HS.TH.Utils
-import Data.Maybe
-import Control.Applicative
-import Control.Lens
+import           Control.Applicative
+import           Control.Lens
+import           Data.Maybe
+import           Language.Haskell.TH
 import qualified Luna.Target.HS.Host.Naming as Naming
+import           Luna.Target.HS.TH.Utils
 
-con2TypeName conName = do 
+con2TypeName conName = do
     DataConI _ _ typeName _ <- reify conName
     return typeName
 
- 
+
 --generateFieldGetters typeName fieldNames = do
 --    TyConI (DataD _ _ _ cons _) <- reify typeName
 --    return $ concat $ fmap genCon cons
@@ -67,16 +67,16 @@ generateFieldSetters conName fieldNames = do
             accName = Naming.mkFieldSetter typeName conName fieldName
             appExpr = foldl AppE (ConE conName) appExprs
     return $ fmap genPropAcc namedPatterns
-                  
+
 
 registerMethodSignature typeName methodName (Naming.toName -> funcName) = do
     funcT   <- getTypeQ funcName
     dataDec <- getDec typeName
-    let 
+    let
         dataVars   = map VarT $ getDecVarNames dataDec
         baseT      = ConT typeName
         nt         = foldl AppT (ConT Naming.classHasProp) [LitT (StrTyLit methodName), baseT, funcT]
-        funcs      = [FunD Naming.funcPropSig [Clause [WildP] (NormalB (VarE funcName)) []]] 
+        funcs      = [FunD Naming.funcPropSig [Clause [WildP] (NormalB (VarE funcName)) []]]
         inst       = InstanceD [] nt funcs
 
     return [inst]
@@ -93,7 +93,7 @@ registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
     dataDec <- getDec typeName
     argsT      <- VarT <$> newName "args"
     outT       <- VarT <$> newName "out"
-    let 
+    let
         dataVars   = map VarT $ getDecVarNames dataDec
         baseT      = ConT typeName
         ctx        = getContext funcT
@@ -101,20 +101,20 @@ registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
         c1         = equalT argsT src
         c2         = equalT outT ret
         nt         = foldl AppT (ConT Naming.classFunc) [baseT, LitT (StrTyLit methodName), argsT, outT]
-        funcs      = [FunD Naming.funcGetFunc [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+        funcs      = [FunD Naming.funcGetFunc [Clause [WildP, WildP] (NormalB (VarE funcName)) []]]
         inst       = InstanceD (c1:c2:ctx) nt funcs
     return [inst]
 
 equalT = AppT . (AppT EqualityT)
 
 
-genTNameSet elmod el n = tvars where 
+genTNameSet elmod el n = tvars where
     tnames = fmap elmod $ genTNameList n
     tvars  = fmap (insertAt tnames el) [0..n]
 
 generateFieldAccessors :: Name -> [Maybe String] -> Q [Dec]
 generateFieldAccessors typeName fieldNames = do
-    (++) <$> generateFieldGetters typeName fieldNames 
+    (++) <$> generateFieldGetters typeName fieldNames
          <*> generateFieldSetters typeName fieldNames
 
 genTNameList = genNameList "t"

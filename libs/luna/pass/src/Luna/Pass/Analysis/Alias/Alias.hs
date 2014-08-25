@@ -4,9 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE Rank2Types                #-}
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
@@ -14,22 +14,22 @@ module Luna.Pass.Analysis.Alias.Alias where
 
 import Control.Applicative
 
-import qualified Luna.AST.Expr               as Expr
-import           Luna.AST.Lit                (Lit)
-import qualified Luna.AST.Lit                as Lit
-import           Luna.AST.Module             (Module)
-import qualified Luna.AST.Module             as Module
-import           Luna.AST.Pat                (Pat)
-import qualified Luna.AST.Pat                as Pat
-import           Luna.AST.Type               (Type)
-import qualified Luna.AST.Type               as Type
-import           Luna.Data.AliasInfo         (AliasInfo)
+import           Flowbox.Prelude                hiding (error, id, mod)
+import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Expr                  as Expr
+import           Luna.AST.Lit                   (Lit)
+import qualified Luna.AST.Lit                   as Lit
+import           Luna.AST.Module                (Module)
+import qualified Luna.AST.Module                as Module
+import           Luna.AST.Pat                   (Pat)
+import qualified Luna.AST.Pat                   as Pat
+import           Luna.AST.Type                  (Type)
+import qualified Luna.AST.Type                  as Type
+import           Luna.Data.AliasInfo            (AliasInfo)
 import           Luna.Pass.Analysis.Alias.State (VAState)
 import qualified Luna.Pass.Analysis.Alias.State as VAState
 import           Luna.Pass.Pass                 (Pass)
 import qualified Luna.Pass.Pass                 as Pass
-import           Flowbox.Prelude                          hiding (error, id, mod)
-import           Flowbox.System.Log.Logger
 
 
 
@@ -45,7 +45,7 @@ run = (Pass.run_ (Pass.Info "Alias") mempty) . vaMod
 
 
 vaMod :: Module -> VAPass AliasInfo
-vaMod el@(Module.Module id cls imports classes typeAliases typeDefs fields methods modules) = do 
+vaMod el@(Module.Module id cls imports classes typeAliases typeDefs fields methods modules) = do
     VAState.registerModule el
     withID $ do VAState.registerName name id
                 continue

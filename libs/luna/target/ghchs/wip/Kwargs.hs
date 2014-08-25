@@ -1,13 +1,13 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
+{-# LANGUAGE IncoherentInstances    #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE OverlappingInstances   #-}
+{-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections          #-}
 
 
 
@@ -143,5 +143,5 @@ main = do
     print $ x
     print x'
     --print y
-    --print $ reverseMe 
+    --print $ reverseMe
     print "hello"

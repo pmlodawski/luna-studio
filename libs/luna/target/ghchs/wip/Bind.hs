@@ -1,10 +1,10 @@
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
 
-module Bind where 
+module Bind where
 
 import Control.Applicative
 import Control.Monad.IO.Class
@@ -80,22 +80,22 @@ instance Bind IO IO IO where
 
 instance Monad (m Pure) => Bind (m Pure) (m Pure) (m Pure) where
     bind ma f = do
-        a <- ma 
+        a <- ma
         f (Pure a)
 
 instance Monad (m IO) => Bind (m IO) (m IO) (m IO) where
     bind ma f = do
-        a <- ma 
+        a <- ma
         f (Pure a)
 
 instance (Monad (m IO), MonadTransBase m Pure IO) => Bind (m Pure) (m IO) (m IO) where
     bind ma f = do
-        a <- transBase ma 
+        a <- transBase ma
         f (Pure a)
 
 instance (Monad (m IO), MonadTransBase m Pure IO) => Bind (m IO) (m Pure) (m IO) where
     bind ma f = do
-        a <- ma 
+        a <- ma
         transBase $ f (Pure a)
 
 
@@ -119,7 +119,7 @@ testStateT2 (Pure x) = do
 bind_ a b = bind a (\_ -> b)
 
 
-main = do 
+main = do
     let x = testStateT `bind` testStateT2
     print =<< runStateT x 5
 

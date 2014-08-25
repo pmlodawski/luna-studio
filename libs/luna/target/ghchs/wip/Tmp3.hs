@@ -1,11 +1,11 @@
+{-# LANGUAGE AllowAmbiguousTypes       #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE AllowAmbiguousTypes #-} 
- 
+{-# LANGUAGE ScopedTypeVariables       #-}
+
 module Main where
- 
+
 --class Fst' a b | a -> b where
 --    fst' :: a -> b
 

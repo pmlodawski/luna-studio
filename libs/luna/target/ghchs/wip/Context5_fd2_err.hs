@@ -1,10 +1,10 @@
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
 
-import Control.Monad.Trans.State
 import Control.Monad.Trans
+import Control.Monad.Trans.State
 
 ------------------------------------------------------------------------------------------
 

@@ -20,8 +20,8 @@ import Luna.AST.Type   (Type)
 
 
 data AST = Module { fromModule :: Module }
-         | Expr   { fromExpr   :: Expr   }
-         | Lit    { fromLit    :: Lit    }
-         | Pat    { fromPat    :: Pat    }
-         | Type   { fromType   :: Type   }
+         | Expr   { fromExpr :: Expr   }
+         | Lit    { fromLit :: Lit    }
+         | Pat    { fromPat :: Pat    }
+         | Type   { fromType :: Type   }
          deriving (Show)

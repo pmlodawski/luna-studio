@@ -7,9 +7,9 @@
 
 module Luna.Pass.Transform.HAST.HASTGen.Utils where
 
+import           Flowbox.Prelude     hiding (error, id)
 import qualified Luna.Data.HAST.Expr as HExpr
 import qualified Luna.Data.HAST.Lit  as HLit
-import           Flowbox.Prelude             hiding (error, id)
 
 --import Data.Hashable (hash)
 

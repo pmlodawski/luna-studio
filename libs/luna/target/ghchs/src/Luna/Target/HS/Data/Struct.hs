@@ -7,4 +7,4 @@
 
 module Luna.Target.HS.Data.Struct (module X) where
 
-import Luna.Target.HS.Data.Struct.Mem  as X
+import Luna.Target.HS.Data.Struct.Mem as X

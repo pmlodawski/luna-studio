@@ -4,29 +4,29 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds           #-}
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE ConstraintKinds  #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types       #-}
 
 module Luna.Pass.Transform.AST.DepSort.DepSort where
 
-import qualified Luna.AST.AST                               as AST
-import qualified Luna.AST.Expr                              as Expr
-import           Luna.AST.Module                            (Module)
-import qualified Luna.AST.Module                            as Module
-import           Luna.AST.Pat                               (Pat)
-import qualified Luna.AST.Pat                               as Pat
-import           Luna.Data.ASTInfo                          (ASTInfo)
+import           Flowbox.Prelude                               hiding (error, id, mod)
+import           Flowbox.System.Log.Logger
+import qualified Luna.AST.AST                                  as AST
+import qualified Luna.AST.Expr                                 as Expr
+import           Luna.AST.Module                               (Module)
+import qualified Luna.AST.Module                               as Module
+import           Luna.AST.Pat                                  (Pat)
+import qualified Luna.AST.Pat                                  as Pat
+import           Luna.Data.AliasInfo                           (AliasInfo)
+import qualified Luna.Data.AliasInfo                           as AliasInfo
+import           Luna.Data.ASTInfo                             (ASTInfo)
+import           Luna.Data.CallGraph                           (CallGraph)
+import qualified Luna.Data.CallGraph                           as CallGraph
 import           Luna.Pass.Pass                                (Pass)
 import qualified Luna.Pass.Pass                                as Pass
 import           Luna.Pass.Transform.AST.Desugar.General.State (DesugarState)
 import qualified Luna.Pass.Transform.AST.Desugar.General.State as DS
-import           Luna.Data.AliasInfo                               (AliasInfo)
-import qualified Luna.Data.AliasInfo                               as AliasInfo
-import           Luna.Data.CallGraph                               (CallGraph)
-import qualified Luna.Data.CallGraph                               as CallGraph
-import           Flowbox.Prelude                                         hiding (error, id, mod)
-import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO

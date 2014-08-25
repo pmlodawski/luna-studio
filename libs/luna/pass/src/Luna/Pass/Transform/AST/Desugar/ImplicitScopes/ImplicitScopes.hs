@@ -11,23 +11,23 @@
 
 module Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes where
 
-import qualified Luna.AST.AST                                      as AST
-import qualified Luna.AST.Expr                                     as Expr
-import           Luna.AST.Module                                   (Module)
-import qualified Luna.AST.Module                                   as Module
-import qualified Luna.AST.Module                                   as Module
-import           Luna.AST.Pat                                      (Pat)
-import qualified Luna.AST.Pat                                      as Pat
-import qualified Luna.AST.Type                                     as Type
-import           Luna.Data.AliasInfo                               (AliasInfo)
-import qualified Luna.Data.AliasInfo                               as AliasInfo
-import           Luna.Data.ASTInfo                                 (ASTInfo)
+import           Flowbox.Prelude                                      hiding (error, id, mod)
+import           Flowbox.System.Log.Logger
+import qualified Luna.AST.AST                                         as AST
+import qualified Luna.AST.Expr                                        as Expr
+import           Luna.AST.Module                                      (Module)
+import qualified Luna.AST.Module                                      as Module
+import qualified Luna.AST.Module                                      as Module
+import           Luna.AST.Pat                                         (Pat)
+import qualified Luna.AST.Pat                                         as Pat
+import qualified Luna.AST.Type                                        as Type
+import           Luna.Data.AliasInfo                                  (AliasInfo)
+import qualified Luna.Data.AliasInfo                                  as AliasInfo
+import           Luna.Data.ASTInfo                                    (ASTInfo)
 import           Luna.Pass.Pass                                       (Pass)
 import qualified Luna.Pass.Pass                                       as Pass
 import           Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State (State)
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State as State
-import           Flowbox.Prelude                                                hiding (error, id, mod)
-import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO

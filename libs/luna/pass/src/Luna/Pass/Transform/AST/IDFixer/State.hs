@@ -11,9 +11,9 @@ module Luna.Pass.Transform.AST.IDFixer.State where
 
 import Control.Monad.State
 
-import qualified Luna.AST.Common as AST
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Common           as AST
 
 
 

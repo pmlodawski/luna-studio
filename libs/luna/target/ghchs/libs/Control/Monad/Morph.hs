@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE PackageImports        #-}
 
 module Control.Monad.Morph (
     module Control.Monad.Morph,

@@ -10,13 +10,13 @@ module Luna.Pass.CodeGen.Cabal.Gen where
 import qualified Data.List    as List
 import           Data.Version (Version)
 
+import           Flowbox.Prelude
+import           Luna.Data.Source                (Source)
+import qualified Luna.Data.Source                as Source
 import           Luna.Distribution.Cabal.Config  (Config)
 import qualified Luna.Distribution.Cabal.Config  as Config
 import           Luna.Distribution.Cabal.Section (Section)
 import qualified Luna.Distribution.Cabal.Section as Section
-import           Luna.Data.Source   (Source)
-import qualified Luna.Data.Source   as Source
-import           Flowbox.Prelude
 
 
 

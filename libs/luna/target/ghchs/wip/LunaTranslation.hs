@@ -1,6 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-import Control.Applicative 
+import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.State
 

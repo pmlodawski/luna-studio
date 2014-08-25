@@ -3,10 +3,10 @@ module Flowbox.Test.QuickCheck (
     module X
 ) where
 
-import           Test.QuickCheck as X
+import           Data.Typeable
 import           Test.Hspec      as X hiding (shouldBe)
 import qualified Test.Hspec      as Hspec
-import           Data.Typeable
+import           Test.QuickCheck as X
 
 
 
