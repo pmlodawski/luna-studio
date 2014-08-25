@@ -9,7 +9,7 @@
 
 module Flowbox.FileManager.RPC.Handler.Handler where
 
-import           Control.Monad.Trans.State
+import Control.Monad.Trans.State
 
 import           Flowbox.Bus.Data.Message                  (Message)
 import           Flowbox.Bus.Data.Topic                    (status, update, (/+))
