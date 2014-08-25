@@ -61,15 +61,17 @@ getDecName dec = case dec of
 pprint_me :: Ppr a => Q a -> Q String
 pprint_me = liftM pprint
 
-getType :: Name -> Q Type
-getType name = do
-    reified <- reify name
-    return $ case reified of
+getType :: Info -> Type
+getType info = case info of
         ClassOpI _ tp _ _ -> tp
         DataConI _ tp _ _ -> tp
         VarI     _ tp _ _ -> tp
         TyVarI   _ tp     -> tp
         _                 -> error "No type, sorry."
+
+
+getTypeQ :: Name -> Q Type
+getTypeQ name = getType <$> reify name
 
 
 mkFuncAlias :: Name -> Name -> Dec
@@ -101,17 +103,28 @@ getRecNames name = do
     return $ zip conNames fieldNames
 
 
-getSignature :: Type -> (Type, Type)
+--getSignature :: Type -> (Type, Type)
+--getSignature t = case t of
+--                 ForallT _ _ tp             -> getSignature tp
+--                 AppT (AppT ArrowT src) ret -> (src, ret)
+--                 _                          -> error "It does not look like a function!"
+
+getSignature :: Type -> Type
 getSignature t = case t of
-                 ForallT _ _ tp             -> getSignature tp
-                 AppT (AppT ArrowT src) ret -> (src, ret)
+                 ForallT _ _ tp             -> tp
+                 AppT (AppT ArrowT src) ret -> AppT (AppT ArrowT src) ret
                  _                          -> error "It does not look like a function!"
 
 splitSignature :: Type -> (Type, Type)
-splitSignature t = case t of
-                 ForallT _ _ tp             -> getSignature tp
+splitSignature t = case getSignature t of
                  AppT (AppT ArrowT src) ret -> (src, ret)
-                 _                          -> error "It does not look like a function!"
+                 _                          -> error "It does not look like a signature!"
+
+
+getArity :: Type -> Int
+getArity t = case t of
+    AppT (AppT ArrowT src) ret -> 1 + getArity ret
+    _                          -> 0
 
 getContext :: Type -> [Pred]
 getContext t = case t of
@@ -119,3 +132,8 @@ getContext t = case t of
                _             -> []
 
 
+
+getTypeNameQ conName = getTypeName <$> reify conName
+
+
+getTypeName (DataConI _ _ pname _) = pname

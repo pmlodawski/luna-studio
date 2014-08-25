@@ -29,25 +29,40 @@ instance NameCls Name where
     toStr      = nameBase
     toName     = id
 
-mkFieldAccessor accName typeName conName propName = mkName $ "field" ++ accName ++ "_" 
+mkFieldAccessor accName typeName conName memName = mkName $ "field" ++ accName ++ "_" 
                                                            ++ toStr typeName  ++ "_" 
                                                            ++ toStr conName   ++ "_" 
-                                                           ++ toStr propName
+                                                           ++ toStr memName
 
 mkFieldGetter = mkFieldAccessor "Getter"
 mkFieldSetter = mkFieldAccessor "Setter"
 
 
-mkMemRef base typeName methodName = mkName $ "prop" ++ base ++ "_" 
-                                           ++ toStr typeName ++ "_"
-                                           ++ toStr methodName
+--mkMemRef base typeName methodName = mkName $ "prop" ++ base ++ "_" 
+--                                           ++ toStr typeName ++ "_"
+--                                           ++ toStr methodName
+
+--mkMemSig = mkMemRef "Sig"
+--mkMemDef = mkMemRef "Def"
+
+
+classHasProp = mkName "HasMem"
+funcPropSig  = mkName "memSig"
+
+classFunc   = mkName "Func"
+funcGetFunc = mkName "getFunc"
+
+
+mkMemRef base typeName methodName = "mem" ++ base ++ "_" 
+                                          ++ toStr typeName ++ "_"
+                                          ++ toStr methodName
 
 mkMemSig = mkMemRef "Sig"
 mkMemDef = mkMemRef "Def"
 
 
-classHasProp = mkName "HasProp"
-funcPropSig  = mkName "propSig"
+modCon = con -- . mkModName
 
-classFunc   = mkName "Func"
-funcGetFunc = mkName "getFunc"
+con = ("cons_" ++) 
+
+mkModName = ("Module" ++)

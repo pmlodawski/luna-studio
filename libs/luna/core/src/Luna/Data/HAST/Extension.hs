@@ -19,6 +19,7 @@ data Extension = AllowAmbiguousTypes
                | Arrows
                | AutoDeriveTypeable
                | BangPatterns
+               | BinaryLiterals
                | CApiFFI
                | CPP
                | ConstrainedClassMethods
@@ -34,6 +35,7 @@ data Extension = AllowAmbiguousTypes
                | DisambiguateRecordFields
                | DoAndIfThenElse
                | DoRec
+               | DysfunctionalDependencies
                | EmptyCase
                | EmptyDataDecls
                | ExistentialQuantification
@@ -77,6 +79,7 @@ data Extension = AllowAmbiguousTypes
                | NoArrows
                | NoAutoDeriveTypeable
                | NoBangPatterns
+               | NoBinaryLiterals
                | NoCApiFFI
                | NoCPP
                | NoConstrainedClassMethods
@@ -92,6 +95,7 @@ data Extension = AllowAmbiguousTypes
                | NoDisambiguateRecordFields
                | NoDoAndIfThenElse
                | NoDoRec
+               | NoDysfunctionalDependencies
                | NoEmptyCase
                | NoEmptyDataDecls
                | NoExistentialQuantification
@@ -138,6 +142,7 @@ data Extension = AllowAmbiguousTypes
                | NoParallelListComp
                | NoPatternGuards
                | NoPatternSignatures
+               | NoPatternSynonyms
                | NoPolyKinds
                | NoPolymorphicComponents
                | NoPostfixOperators
@@ -158,7 +163,6 @@ data Extension = AllowAmbiguousTypes
                | NoTransformListComp
                | NoTupleSections
                | NoTypeFamilies
-               | NoTypeHoles
                | NoTypeOperators
                | NoTypeSynonymInstances
                | NoUnboxedTuples
@@ -177,6 +181,7 @@ data Extension = AllowAmbiguousTypes
                | ParallelListComp
                | PatternGuards
                | PatternSignatures
+               | PatternSynonyms
                | PolyKinds
                | PolymorphicComponents
                | PostfixOperators
@@ -199,7 +204,6 @@ data Extension = AllowAmbiguousTypes
                | Trustworthy
                | TupleSections
                | TypeFamilies
-               | TypeHoles
                | TypeOperators
                | TypeSynonymInstances
                | UnboxedTuples

@@ -7,13 +7,15 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Luna.Target.HS.Control.Context.Rebindable (
-    module Luna.Target.HS.Control.Context.Rebindable,
-    module Prelude
+module Luna.Target.HS.Host.Rebindable (
+    module Luna.Target.HS.Host.Rebindable,
+    module Prelude,
+    ifThenElse
 ) where
 
 import           Prelude hiding ((>>=),(>>), return, fail)
 import qualified Prelude
+import           Luna.Target.HS.Host.Wrapper (ifThenElse)
 
 import Luna.Target.HS.Control.Context.Bind
 

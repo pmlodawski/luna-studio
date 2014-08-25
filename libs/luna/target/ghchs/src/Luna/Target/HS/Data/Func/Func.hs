@@ -33,14 +33,14 @@ import Flowbox.Utils
 
 import Luna.Target.HS.Data.Func.Args
 import Luna.Target.HS.Data.Func.App
-import Luna.Target.HS.Data.Struct.Prop
+import Luna.Target.HS.Data.Struct
 
 ----------------------------------------------------------------------------------
 -- Type classes
 ----------------------------------------------------------------------------------
 
 class Func base name args out | base name args -> out where
-    getFunc :: Prop base name -> args -> (args -> out)
+    getFunc :: Mem base name -> args -> (args -> out)
 
 class MatchCallProto (allArgs :: Bool) obj out | allArgs obj -> out where
     matchCallProto :: Proxy allArgs -> obj -> out
@@ -67,7 +67,7 @@ curryNext   = matchCall `dot2` appNext
 instance MatchCallProto False a a where
     matchCallProto _ = id
 
-instance MatchCallProto True (AppH (Prop base name) args) out <= (ReadArgs args margs, Func base name margs out) where
+instance MatchCallProto True (AppH (Mem base name) args) out <= (ReadArgs args margs, Func base name margs out) where
     matchCallProto _ = call
 
 ---

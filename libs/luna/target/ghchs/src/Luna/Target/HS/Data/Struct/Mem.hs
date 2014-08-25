@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
--- Proprietary and confidential
+-- Memrietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
@@ -22,7 +22,7 @@
 
 !{-# LANGUAGE RightSideContexts #-}
 
-module Luna.Target.HS.Data.Struct.Prop where
+module Luna.Target.HS.Data.Struct.Mem where
 
 import GHC.TypeLits
 import Data.Typeable (Proxy(..))
@@ -33,31 +33,31 @@ import Data.Typeable
 import Type.BaseType
 
 ----------------------------------------------------------------------------------
--- Prop (proxy datatype)
+-- Mem (proxy datatype)
 ----------------------------------------------------------------------------------
 
-data Prop obj (name :: Symbol) = Prop (Proxy obj) (Proxy name) deriving (Typeable)
+data Mem obj (name :: Symbol) = Mem (Proxy obj) (Proxy name) deriving (Typeable)
 
-instance Show (Prop obj name) <= (Typeable obj, KnownSymbol name) where
+instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
     show = show . typeOf
 
 ----------------------------------------------------------------------------------
--- HasProp
+-- HasMem
 ----------------------------------------------------------------------------------
 
-class HasProp (name :: Symbol) obj sig | name obj -> sig where
-    propSig :: Prop obj name -> sig
+class HasMem (name :: Symbol) obj sig | name obj -> sig where
+    memSig :: Mem obj name -> sig
 
 
 objPtr :: m (s a) -> out <= (BaseType (Proxy a) out, out~Proxy b)
 objPtr el = Proxy
 
-propPtr :: Proxy name -> m (s a) -> Prop obj name <= BaseType (Proxy a) (Proxy obj)
-propPtr name obj = Prop (objPtr obj) name
+memPtr :: Proxy name -> m (s a) -> Mem obj name <= BaseType (Proxy a) (Proxy obj)
+memPtr name obj = Mem (objPtr obj) name
 
-getProp :: Proxy name -> m (s a) -> AppH (Prop obj name) args <= (HasProp name obj args, BaseType (Proxy a) (Proxy obj))     
-getProp name obj = appH ptr (propSig ptr) where
-    ptr = propPtr name obj
+getMem :: Proxy name -> m (s a) -> AppH (Mem obj name) args <= (HasMem name obj args, BaseType (Proxy a) (Proxy obj))     
+getMem name obj = appH ptr (memSig ptr) where
+    ptr = memPtr name obj
 
-objProp :: Proxy name -> m (s a) -> AppH (Prop obj name) args <= (HasProp name obj args1, BaseType (Proxy a) (Proxy obj), AppArgByName "self" (m (s a)) args1 args)
-objProp name obj = appByName (Proxy::Proxy "self") obj $ getProp name $ obj
+member :: Proxy name -> m (s a) -> AppH (Mem obj name) args <= (HasMem name obj args1, BaseType (Proxy a) (Proxy obj), AppArgByName "self" (m (s a)) args1 args)
+member name obj = appByName (Proxy::Proxy "self") obj $ getMem name $ obj

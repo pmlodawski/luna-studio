@@ -8,9 +8,12 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP #-}
 
 module Luna.Target.HS.Control.Context.Env where
 
+import GHC.Generics
 import Control.PolyMonad
 import Control.PolyApplicative
 import Control.Applicative
@@ -21,7 +24,7 @@ import Data.Typeable (Typeable)
 -- Structures
 --------------------------------------------------------------------------------
 
-data Pure a = Pure a deriving (Show, Eq, Typeable)
+data Pure a = Pure a deriving (Eq, Ord, Typeable, Generic)
 
 fromPure (Pure a) = a
 
@@ -63,6 +66,17 @@ type family GetEnv t where
 --------------------------------------------------------------------------------
 -- Instances
 --------------------------------------------------------------------------------
+
+instance Show a => Show (Pure a) where
+#ifdef DEBUG
+    show (Pure a) = "Pure (" ++ child ++ ")" where
+        child = show a
+        content = if ' ' `elem` child then "(" ++ child ++ ")" else child
+#else
+    show (Pure a) = show a
+#endif
+
+---
 
 instance Monad Pure where
     return = Pure

@@ -24,30 +24,53 @@ con2TypeName conName = do
     return typeName
 
  
-generateFieldGetters typeName fieldNames = do
-    TyConI (DataD _ _ _ cons _) <- reify typeName
-    return $ concat $ fmap genCon cons
-    where genCon (NormalC conName stypes) = fmap genPropGetter namedPatterns where
-              namedPatterns = fmap (over _1 fromJust) $ filter (isJust . view _1) $ (zip fieldNames patternsSet)
-              patternsSet   = genTNameSet VarP unitP (length stypes - 1)
-              genPropGetter (fieldName, patterns) = FunD accName [Clause [ConP conName patterns] (NormalB unitE) []] where
-                accName = Naming.mkFieldGetter typeName conName fieldName
+--generateFieldGetters typeName fieldNames = do
+--    TyConI (DataD _ _ _ cons _) <- reify typeName
+--    return $ concat $ fmap genCon cons
+--    where genCon (NormalC conName stypes) = fmap genPropGetter namedPatterns where
+--              namedPatterns = fmap (over _1 fromJust) $ filter (isJust . view _1) $ (zip fieldNames patternsSet)
+--              patternsSet   = genTNameSet VarP unitP (length stypes - 1)
+--              genPropGetter (fieldName, patterns) = FunD accName [Clause [ConP conName patterns] (NormalB unitE) []] where
+--                accName = Naming.mkFieldGetter typeName conName fieldName
 
 
-generateFieldSetters typeName fieldNames = do
-    TyConI (DataD _ _ _ cons _) <- reify typeName
-    return $ concat $ fmap genCon cons
-    where genCon (NormalC conName stypes) = fmap genPropGetter namedPatterns where
-              namedPatterns = fmap (over _1 fromJust) $ filter (isJust . view _1) $ (zip3 fieldNames patternsSet exprSet)
-              patternsSet   = genTNameSet VarP WildP (length stypes - 1)
-              exprSet       = genTNameSet VarE unitE (length stypes - 1)
-              genPropGetter (fieldName, patterns, appExprs) = FunD accName [Clause [unitP, ConP conName patterns] (NormalB appExpr) []] where
-                  accName = Naming.mkFieldSetter typeName conName fieldName
-                  appExpr = foldl AppE (ConE conName) appExprs
+--generateFieldSetters typeName fieldNames = do
+--    TyConI (DataD _ _ _ cons _) <- reify typeName
+--    return $ concat $ fmap genCon cons
+--    where genCon (NormalC conName stypes) = fmap genPropGetter namedPatterns where
+--              namedPatterns = fmap (over _1 fromJust) $ filter (isJust . view _1) $ (zip3 fieldNames patternsSet exprSet)
+--              patternsSet   = genTNameSet VarP WildP (length stypes - 1)
+--              exprSet       = genTNameSet VarE unitE (length stypes - 1)
+--              genPropGetter (fieldName, patterns, appExprs) = FunD accName [Clause [unitP, ConP conName patterns] (NormalB appExpr) []] where
+--                  accName = Naming.mkFieldSetter typeName conName fieldName
+--                  appExpr = foldl AppE (ConE conName) appExprs
+
+generateFieldGetters conName fieldNames = do
+    typeName <- getTypeNameQ conName
+    unit     <- unitName
+    let argnum        = length fieldNames
+        namedPatterns = fmap (over _1 fromJust) $ filter (isJust . view _1) $ (zip fieldNames patternsSet)
+        patternsSet   = genTNameSet VarP (VarP unit) (argnum - 1)
+        genPropAcc (fieldName, patterns) = FunD accName [Clause [ConP conName patterns] (NormalB $ VarE unit) []] where
+            accName = Naming.mkFieldGetter typeName conName fieldName
+    return $ fmap genPropAcc namedPatterns
+
+
+generateFieldSetters conName fieldNames = do
+    typeName <- getTypeNameQ conName
+    unit     <- unitName
+    let argnum        = length fieldNames
+        namedPatterns = fmap (over _1 fromJust) $ filter (isJust . view _1) $ (zip3 fieldNames patternsSet exprSet)
+        patternsSet   = genTNameSet VarP WildP (argnum - 1)
+        exprSet       = genTNameSet VarE (VarE unit) (argnum - 1)
+        genPropAcc (fieldName, patterns, appExprs) = FunD accName [Clause [VarP unit, ConP conName patterns] (NormalB appExpr) []] where
+            accName = Naming.mkFieldSetter typeName conName fieldName
+            appExpr = foldl AppE (ConE conName) appExprs
+    return $ fmap genPropAcc namedPatterns
                   
 
 registerMethodSignature typeName methodName (Naming.toName -> funcName) = do
-    funcT   <- getType $ funcName
+    funcT   <- getTypeQ funcName
     dataDec <- getDec typeName
     let 
         dataVars   = map VarT $ getDecVarNames dataDec
@@ -66,15 +89,15 @@ registerMethod typeName methodName = do
 
 
 registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
-    funcT   <- getType $ funcName
+    funcT   <- getTypeQ funcName
     dataDec <- getDec typeName
+    argsT      <- VarT <$> newName "args"
+    outT       <- VarT <$> newName "out"
     let 
-        argsT      = VarT $ mkName "args"
-        outT       = VarT $ mkName "out"
         dataVars   = map VarT $ getDecVarNames dataDec
         baseT      = ConT typeName
         ctx        = getContext funcT
-        (src, ret) = getSignature funcT
+        (src, ret) = splitSignature $ getSignature funcT
         c1         = equalT argsT src
         c2         = equalT outT ret
         nt         = foldl AppT (ConT Naming.classFunc) [baseT, LitT (StrTyLit methodName), argsT, outT]
@@ -89,6 +112,7 @@ genTNameSet elmod el n = tvars where
     tnames = fmap elmod $ genTNameList n
     tvars  = fmap (insertAt tnames el) [0..n]
 
+generateFieldAccessors :: Name -> [Maybe String] -> Q [Dec]
 generateFieldAccessors typeName fieldNames = do
     (++) <$> generateFieldGetters typeName fieldNames 
          <*> generateFieldSetters typeName fieldNames
@@ -98,9 +122,7 @@ genNameList prefix n = fmap (\x -> mkName $ prefix ++ show x) [1..n]
 
 insertAt lst val idx = take idx lst ++ val : drop idx lst
 
-unitName = mkName "x"
-unitP = VarP unitName
-unitE = VarE unitName
+unitName = newName "x"
 
 --genWildPatterns2 n x = fmap (flip replicate WildP) [n,n-1..0]
 

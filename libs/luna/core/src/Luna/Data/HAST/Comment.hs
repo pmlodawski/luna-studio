@@ -5,6 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Target.HS.Data.Struct (module X) where
+module Luna.Data.HAST.Comment where
 
-import Luna.Target.HS.Data.Struct.Mem  as X
+import           Flowbox.Prelude
+
+data Comment = H1 { text :: String } 
+             | H2 { text :: String } 
+             | H3 { text :: String } 
+             | H4 { text :: String } 
+             | H5 { text :: String } 
+             deriving (Show)
+
+
