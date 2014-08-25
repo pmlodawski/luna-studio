@@ -8,10 +8,10 @@
 module Luna.Data.HAST.Expr where
 
 import           Flowbox.Prelude
+import           Luna.Data.HAST.Comment   (Comment)
 import           Luna.Data.HAST.Deriving  (Deriving)
 import           Luna.Data.HAST.Extension (Extension)
 import qualified Luna.Data.HAST.Lit       as Lit
-import           Luna.Data.HAST.Comment   (Comment)
 
 type Lit = Lit.Lit
 

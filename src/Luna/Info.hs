@@ -10,9 +10,9 @@ module Luna.Info (
     module Paths_luna_core
 ) where
 
-import Flowbox.Prelude
-import Paths_luna_core (version)
 import Flowbox.Data.Version
+import Flowbox.Prelude
+import Paths_luna_core      (version)
 
 apiVersion :: Versioned String
 apiVersion = Versioned "Luna" $ Version [0,1] []
