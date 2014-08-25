@@ -148,12 +148,12 @@ run buildConfig ast astInfo implicitSelf = runEitherT $ do
         allLibs = "base"
                 : "containers"
                 -- : "flowboxM-core"
-                : "flowbox-graphics"
+                -- : "flowbox-graphics"
                 : "luna-target-hs"
                 : "template-haskell"
-                : "accelerate"
+                -- : "accelerate"
                 : BuildConfig.libs buildConfig
-                ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
+                ++ if False -- BuildConfig.name buildConfig /= "flowboxM-stdlib"
                       then ["flowboxM-stdlib"]
                       else []
     hsc <- hoistEither =<< prepareSources diag ast astInfo implicitSelf

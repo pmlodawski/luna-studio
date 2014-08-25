@@ -50,7 +50,7 @@ Library
 
 -- FIXME [MU] : aeson >= 0.7.0.5 fixes compilation error on Windows
 
-Executable utils 
+Executable utils-test
   Main-Is:        Main.hs
   Hs-Source-Dirs: test
 
@@ -65,3 +65,14 @@ Executable utils
   Build-Depends:  base,
                   flowbox-utils,
                   ghc-prim
+
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  flowbox-utils,
+                  hspec
