@@ -15,12 +15,14 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 
 !{-# LANGUAGE RightSideContexts #-}
 
 module Luna.Target.HS.Control.Error.Data where
 
+import GHC.Generics
 import Control.Applicative  
 import Data.Typeable
 
@@ -34,7 +36,7 @@ import Flowbox.Utils
 -- Data Types
 ------------------------------------------------------------------------
 
-newtype Safe a = Safe a deriving (Show, Typeable, Eq)
+newtype Safe a = Safe a deriving (Eq, Ord, Typeable, Generic)
 
 data UnsafeBase base err val = UnsafeValue val
                              | Error       err
@@ -59,6 +61,15 @@ fromSafe (Safe a) = a
 ------------------------------------------------------------------------
 -- Instances
 ------------------------------------------------------------------------
+
+instance Show a => Show (Safe a) where
+#ifdef DEBUG
+    show (Safe a) = "Safe (" ++ child ++ ")" where
+        child = show a
+        content = if ' ' `elem` child then "(" ++ child ++ ")" else child
+#else
+    show (Safe a) = show a
+#endif
 
 -- == Functor == --
 
