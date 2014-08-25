@@ -100,6 +100,11 @@ addFunction fun = do
     m <- getModule
     setModule $ m { Module.body = Module.body m ++ [fun] }
 
+addComment :: GenStateM m => HExpr -> m ()
+addComment c = do
+    m <- getModule
+    setModule $ m { Module.body = Module.body m ++ [c] }
+
 
 addTHExpression :: GenStateM m => HExpr -> m ()
 addTHExpression e = do
