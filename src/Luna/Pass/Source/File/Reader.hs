@@ -5,9 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE ConstraintKinds           #-}
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE ConstraintKinds  #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types       #-}
 
 module Luna.Pass.Source.File.Reader where
 
@@ -15,11 +15,11 @@ import           Control.Applicative
 import           Control.Monad.RWS
 import qualified System.IO           as IO
 
-import           Data.String.Utils             (replace)
-import           Luna.Data.Source (Source (Source))
-import           Flowbox.Prelude               hiding (error, id)
-import           Flowbox.System.UniPath        (UniPath)
-import qualified Flowbox.System.UniPath        as UniPath
+import           Data.String.Utils      (replace)
+import           Flowbox.Prelude        hiding (error, id)
+import           Flowbox.System.UniPath (UniPath)
+import qualified Flowbox.System.UniPath as UniPath
+import           Luna.Data.Source       (Source (Source))
 
 import           Luna.Pass.Pass (Pass)
 import qualified Luna.Pass.Pass as Pass

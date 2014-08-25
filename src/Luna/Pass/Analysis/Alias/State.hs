@@ -13,22 +13,22 @@ module Luna.Pass.Analysis.Alias.State where
 import           Control.Monad.State (MonadState, get, modify, put)
 import qualified Data.IntMap         as IntMap
 
-import           Luna.AST.AST        (AST, ID)
-import qualified Luna.AST.AST        as AST
-import           Luna.AST.Expr       (Expr)
-import qualified Luna.AST.Expr       as Expr
-import           Luna.AST.Lit        (Lit)
-import qualified Luna.AST.Lit        as Lit
-import           Luna.AST.Module     (Module)
-import qualified Luna.AST.Module     as Module
-import           Luna.AST.Pat        (Pat)
-import qualified Luna.AST.Pat        as Pat
-import           Luna.AST.Type       (Type)
-import qualified Luna.AST.Type       as Type
-import           Luna.Data.AliasInfo (AliasInfo)
-import qualified Luna.Data.AliasInfo as AliasInfo
-import           Flowbox.Prelude                  hiding (id)
+import           Flowbox.Prelude           hiding (id)
 import           Flowbox.System.Log.Logger
+import           Luna.AST.AST              (AST, ID)
+import qualified Luna.AST.AST              as AST
+import           Luna.AST.Expr             (Expr)
+import qualified Luna.AST.Expr             as Expr
+import           Luna.AST.Lit              (Lit)
+import qualified Luna.AST.Lit              as Lit
+import           Luna.AST.Module           (Module)
+import qualified Luna.AST.Module           as Module
+import           Luna.AST.Pat              (Pat)
+import qualified Luna.AST.Pat              as Pat
+import           Luna.AST.Type             (Type)
+import qualified Luna.AST.Type             as Type
+import           Luna.Data.AliasInfo       (AliasInfo)
+import qualified Luna.Data.AliasInfo       as AliasInfo
 
 
 

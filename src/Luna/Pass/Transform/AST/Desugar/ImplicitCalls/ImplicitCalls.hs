@@ -11,18 +11,18 @@
 
 module Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls where
 
-import qualified Luna.AST.Expr                              as Expr
-import           Luna.AST.Module                            (Module)
-import qualified Luna.AST.Module                            as Module
-import           Luna.AST.Pat                               (Pat)
-import qualified Luna.AST.Pat                               as Pat
-import           Luna.Data.ASTInfo                          (ASTInfo)
+import           Flowbox.Prelude                               hiding (error, id, mod)
+import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Expr                                 as Expr
+import           Luna.AST.Module                               (Module)
+import qualified Luna.AST.Module                               as Module
+import           Luna.AST.Pat                                  (Pat)
+import qualified Luna.AST.Pat                                  as Pat
+import           Luna.Data.ASTInfo                             (ASTInfo)
 import           Luna.Pass.Pass                                (Pass)
 import qualified Luna.Pass.Pass                                as Pass
 import           Luna.Pass.Transform.AST.Desugar.General.State (DesugarState)
 import qualified Luna.Pass.Transform.AST.Desugar.General.State as DS
-import           Flowbox.Prelude                                         hiding (error, id, mod)
-import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
@@ -62,10 +62,10 @@ omitNextExpr ast = continue
 
 desugarExprGeneral :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExprGeneral ast = case ast of
-	Expr.Ref      {}                           -> omitAll
-	_                                          -> continue
-	where continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
-	      omitAll   = Expr.traverseM omitAllExpr pure desugarPat pure ast
+    Expr.Ref      {}                           -> omitAll
+    _                                          -> continue
+    where continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
+          omitAll   = Expr.traverseM omitAllExpr pure desugarPat pure ast
 
 omitAllExpr :: Expr.Expr -> DesugarPass Expr.Expr
 omitAllExpr ast = continue

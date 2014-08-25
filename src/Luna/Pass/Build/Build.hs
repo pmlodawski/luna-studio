@@ -11,15 +11,23 @@
 
 module Luna.Pass.Build.Build where
 
-import Control.Monad.RWS   hiding (mapM, mapM_)
+import Control.Monad.RWS hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
-import qualified Luna.AST.Module                                            as ASTModule
-import           Luna.Data.ASTInfo                                          (ASTInfo)
-import           Luna.Data.Source                                           (Source)
-import qualified Luna.Data.Source                                           as Source
-import           Luna.Data.SourceMap                                        (SourceMap)
+import           Flowbox.Prelude
+import qualified Flowbox.System.Directory.Directory                            as Directory
+import           Flowbox.System.Log.Logger
+import qualified Flowbox.System.Platform                                       as Platform
+import           Flowbox.System.UniPath                                        (UniPath)
+import qualified Flowbox.System.UniPath                                        as UniPath
+import           Flowbox.Text.Show.Hs                                          (hsShow)
+import qualified Luna.AST.Module                                               as ASTModule
+import           Luna.Data.ASTInfo                                             (ASTInfo)
+import           Luna.Data.Source                                              (Source)
+import qualified Luna.Data.Source                                              as Source
+import           Luna.Data.SourceMap                                           (SourceMap)
 import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
+import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
 import qualified Luna.Pass.Analysis.FuncPool.FuncPool                          as FuncPool
 import           Luna.Pass.Build.BuildConfig                                   (BuildConfig (BuildConfig))
 import qualified Luna.Pass.Build.BuildConfig                                   as BuildConfig
@@ -32,6 +40,7 @@ import qualified Luna.Pass.CodeGen.HSC.HSC                                     a
 import qualified Luna.Pass.Pass                                                as Pass
 import qualified Luna.Pass.Source.File.Reader                                  as FileReader
 import qualified Luna.Pass.Source.File.Writer                                  as FileWriter
+import qualified Luna.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
@@ -41,15 +50,6 @@ import qualified Luna.Pass.Transform.AST.Hash.Hash                             a
 import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
 import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
-import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
-import qualified Luna.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
-import           Flowbox.Prelude
-import qualified Flowbox.System.Directory.Directory                                      as Directory
-import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Platform                                                 as Platform
-import           Flowbox.System.UniPath                                                  (UniPath)
-import qualified Flowbox.System.UniPath                                                  as UniPath
-import           Flowbox.Text.Show.Hs                                                    (hsShow)
 
 
 

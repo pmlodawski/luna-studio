@@ -12,14 +12,14 @@ module Luna.Pass.Analysis.ID.ExtractIDs where
 
 import Data.IntSet (IntSet)
 
-import           Luna.AST.Control.Focus       (Focus)
+import           Flowbox.Prelude                hiding (mapM, mapM_)
+import           Flowbox.System.Log.Logger
+import           Luna.AST.Control.Focus         (Focus)
 import           Luna.Pass.Analysis.ID.State    (IDState)
 import qualified Luna.Pass.Analysis.ID.State    as State
 import qualified Luna.Pass.Analysis.ID.Traverse as IDTraverse
 import           Luna.Pass.Pass                 (Pass)
 import qualified Luna.Pass.Pass                 as Pass
-import           Flowbox.Prelude                          hiding (mapM, mapM_)
-import           Flowbox.System.Log.Logger
 
 
 

@@ -7,27 +7,27 @@
 
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Analysis.CallGraph.State where
 
 import Control.Applicative
 
-import           Control.Monad.State (MonadState, get, modify, put)
+import Control.Monad.State (MonadState, get, modify, put)
 
-import           Flowbox.Prelude                            hiding (error, id, mod)
-import           Flowbox.System.Log.Logger                  hiding (info)
-import qualified Luna.Data.CallGraph as CallGraph
-import           Luna.Data.CallGraph (CallGraph)
-import           Luna.AST.AST        (AST, ID)
-import           Luna.Data.AliasInfo                               (AliasInfo)
-import qualified Luna.Data.AliasInfo                               as AliasInfo
+import           Flowbox.Prelude           hiding (error, id, mod)
+import           Flowbox.System.Log.Logger hiding (info)
+import           Luna.AST.AST              (AST, ID)
+import           Luna.Data.AliasInfo       (AliasInfo)
+import qualified Luna.Data.AliasInfo       as AliasInfo
+import           Luna.Data.CallGraph       (CallGraph)
+import qualified Luna.Data.CallGraph       as CallGraph
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.CallGraph.State"
 
 
-data State = State { _cg      :: CallGraph 
+data State = State { _cg      :: CallGraph
                    , _info    :: AliasInfo
                    , _idStack :: [ID]
                    }
@@ -59,7 +59,7 @@ registerFunction id = modify (cg %~ CallGraph.insert id)
 registerCall :: CGMonad m => ID -> m ()
 registerCall id = do
     mCid <- getCurrentID
-    case mCid of 
+    case mCid of
         Nothing  -> return ()
         Just cid -> modify (cg %~ CallGraph.connect (cid, id))
 
@@ -85,4 +85,4 @@ withID id f = pushID id *> f <* popID
 
 instance Monoid State where
     mempty = State mempty mempty mempty
-    --mappend a b = State 
+    --mappend a b = State

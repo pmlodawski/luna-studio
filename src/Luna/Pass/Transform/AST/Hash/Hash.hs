@@ -16,15 +16,15 @@ import Control.Monad.State
 import Data.Char           (ord)
 --import           Data.Hashable       (hash)
 
-import qualified Luna.AST.Expr   as Expr
-import           Luna.AST.Module (Module)
-import qualified Luna.AST.Module as Module
-import           Luna.AST.Pat    (Pat)
-import qualified Luna.AST.Pat    as Pat
-import           Luna.Pass.Pass     (Pass)
-import qualified Luna.Pass.Pass     as Pass
-import           Flowbox.Prelude              hiding (error, id, mod)
+import           Flowbox.Prelude           hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Expr             as Expr
+import           Luna.AST.Module           (Module)
+import qualified Luna.AST.Module           as Module
+import           Luna.AST.Pat              (Pat)
+import qualified Luna.AST.Pat              as Pat
+import           Luna.Pass.Pass            (Pass)
+import qualified Luna.Pass.Pass            as Pass
 
 
 

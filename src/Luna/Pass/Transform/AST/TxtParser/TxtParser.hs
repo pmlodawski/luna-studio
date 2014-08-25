@@ -13,14 +13,14 @@
 
 module Luna.Pass.Transform.AST.TxtParser.TxtParser where
 
-import           Luna.AST.Module                       (Module)
-import           Luna.Data.ASTInfo                     (ASTInfo)
-import           Luna.Data.Source                      (Source)
-import           Luna.Data.SourceMap                   (SourceMap)
-import           Luna.Pass.Pass                           (Pass)
-import qualified Luna.Pass.Pass                           as Pass
-import qualified Luna.Parser.Parser as Parser
 import           Flowbox.System.Log.Logger
+import           Luna.AST.Module           (Module)
+import           Luna.Data.ASTInfo         (ASTInfo)
+import           Luna.Data.Source          (Source)
+import           Luna.Data.SourceMap       (SourceMap)
+import qualified Luna.Parser.Parser        as Parser
+import           Luna.Pass.Pass            (Pass)
+import qualified Luna.Pass.Pass            as Pass
 
 import Control.Monad.State
 import Flowbox.Prelude     hiding (error)

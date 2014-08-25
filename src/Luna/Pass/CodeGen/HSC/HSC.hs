@@ -13,15 +13,15 @@
 
 module Luna.Pass.CodeGen.HSC.HSC where
 
-import           Data.String.Utils                (join)
-import qualified Luna.Data.HAST.Expr      as HExpr
+import           Data.String.Utils        (join)
+import           Flowbox.Prelude          hiding (cons)
 import qualified Luna.Data.HAST.Comment   as HComment
+import qualified Luna.Data.HAST.Expr      as HExpr
 import           Luna.Data.HAST.Extension (Extension)
 import qualified Luna.Data.HAST.Lit       as HLit
-import           Luna.Data.Source    (Source (Source))
-import           Luna.Pass.Pass         (Pass)
-import qualified Luna.Pass.Pass         as Pass
-import           Flowbox.Prelude                  hiding (cons)
+import           Luna.Data.Source         (Source (Source))
+import           Luna.Pass.Pass           (Pass)
+import qualified Luna.Pass.Pass           as Pass
 
 import Flowbox.System.Log.Logger
 

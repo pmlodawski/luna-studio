@@ -13,15 +13,15 @@ module Luna.Pass.Build.Diagnostics where
 import Control.Monad.IO.Class
 import Data.String.Utils      (join)
 
-import qualified Flowbox.Generics.Deriving.QShow  as QShow
-import           Luna.Data.AliasInfo (AliasInfo)
-import qualified Luna.Data.AliasInfo as AliasInfo
-import           Luna.Data.Source    (Source)
-import qualified Luna.Data.Source    as Source
+import qualified Flowbox.Generics.Deriving.QShow as QShow
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import           Flowbox.Text.Show.Hs             (hsShow)
-import qualified Flowbox.Text.Show.Pretty         as PP
+import           Flowbox.Text.Show.Hs            (hsShow)
+import qualified Flowbox.Text.Show.Pretty        as PP
+import           Luna.Data.AliasInfo             (AliasInfo)
+import qualified Luna.Data.AliasInfo             as AliasInfo
+import           Luna.Data.Source                (Source)
+import qualified Luna.Data.Source                as Source
 
 
 

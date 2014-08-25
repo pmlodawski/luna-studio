@@ -15,9 +15,9 @@ module Luna.Pass.Transform.HAST.HASTGen.Import (
     genCode
 )where
 
+import           Flowbox.Prelude                       hiding (simple)
 import           Luna.Pass.Transform.HAST.HASTGen.Path (Path (..))
 import qualified Luna.Pass.Transform.HAST.HASTGen.Path as Path
-import           Flowbox.Prelude                                 hiding (simple)
 
 
 data Import = Regular   {path :: Path, item :: String}

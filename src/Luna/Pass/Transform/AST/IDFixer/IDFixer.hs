@@ -10,25 +10,25 @@
 
 module Luna.Pass.Transform.AST.IDFixer.IDFixer where
 
-import qualified Luna.AST.Common                    as AST
-import           Luna.AST.Expr                      (Expr)
-import qualified Luna.AST.Expr                      as Expr
-import           Luna.AST.Lit                       (Lit)
-import qualified Luna.AST.Lit                       as Lit
-import           Luna.AST.Module                    (Module)
-import qualified Luna.AST.Module                    as Module
-import           Luna.AST.Pat                       (Pat)
-import qualified Luna.AST.Pat                       as Pat
-import           Luna.AST.Type                      (Type)
-import qualified Luna.AST.Type                      as Type
-import           Luna.AST.Control.Focus              (Focus)
-import qualified Luna.AST.Control.Focus              as Focus
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Common                       as AST
+import           Luna.AST.Control.Focus                (Focus)
+import qualified Luna.AST.Control.Focus                as Focus
+import           Luna.AST.Expr                         (Expr)
+import qualified Luna.AST.Expr                         as Expr
+import           Luna.AST.Lit                          (Lit)
+import qualified Luna.AST.Lit                          as Lit
+import           Luna.AST.Module                       (Module)
+import qualified Luna.AST.Module                       as Module
+import           Luna.AST.Pat                          (Pat)
+import qualified Luna.AST.Pat                          as Pat
+import           Luna.AST.Type                         (Type)
+import qualified Luna.AST.Type                         as Type
 import           Luna.Pass.Pass                        (Pass)
 import qualified Luna.Pass.Pass                        as Pass
 import           Luna.Pass.Transform.AST.IDFixer.State (IDFixerState)
 import qualified Luna.Pass.Transform.AST.IDFixer.State as State
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
 
 
 
