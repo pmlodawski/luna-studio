@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE QuasiQuotes #-}
 
-module Graph.SampleCodes where
+module Test.Pass.Transform.Graph.SampleCodes where
 
 import Text.RawString.QQ
 
 import Flowbox.Prelude
-import Graph.Common    (named)
+import Test.Pass.Transform.Graph.Common (named)
 
 
 

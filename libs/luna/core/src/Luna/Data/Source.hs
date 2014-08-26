@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Data.Source where
 
@@ -11,10 +12,13 @@ import Flowbox.Prelude
 
 
 
-data Source = Source { path :: [String]
-                     , code :: String
+data Source = Source { _path :: [String]
+                     , _code :: String
                      } deriving (Show)
+
+makeLenses(''Source)
+
 
 
 transCode :: (String -> String) -> Source -> Source
-transCode f src = src { code = f $ code src }
+transCode = (code %~ )

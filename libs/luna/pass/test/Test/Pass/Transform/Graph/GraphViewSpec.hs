@@ -5,19 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Graph.GraphViewSpec where
+module Test.Pass.Transform.Graph.GraphViewSpec where
 
 import Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import           Graph.Common              (named)
-import qualified Graph.Common              as Common
-import           Graph.SampleCodes         (sampleCodes)
-import qualified Luna.Graph.Node           as Node
-import           Luna.Graph.View.EdgeView  (EdgeView (EdgeView))
-import           Luna.Graph.View.GraphView (GraphView)
-import qualified Luna.Graph.View.GraphView as GraphView
+import qualified Luna.Graph.Node                       as Node
+import           Luna.Graph.View.EdgeView              (EdgeView (EdgeView))
+import           Luna.Graph.View.GraphView             (GraphView)
+import qualified Luna.Graph.View.GraphView             as GraphView
+import           Test.Pass.Transform.Graph.Common      (named)
+import qualified Test.Pass.Transform.Graph.Common      as Common
+import           Test.Pass.Transform.Graph.SampleCodes (sampleCodes)
 
 
 

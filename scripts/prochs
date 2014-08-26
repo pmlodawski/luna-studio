@@ -91,7 +91,7 @@ def replaceModName(s, newname):
     return pat.sub(process, s)
 
 def modrename(args):
-    path_prefixes = ['src']
+    path_prefixes = ['src', 'test']
     paths = getTrackedFiles()
     # paths = ['libs/luna/core/src/Luna/Data/AST/AST.hs']
     total = len(paths)

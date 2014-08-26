@@ -271,7 +271,7 @@ main_inner = Luna.run $ do
 
 
 printSrc :: Source -> [Char]
-printSrc src = ">>> file '" ++ join "/" (Source.path src) ++ "':\n\n"
-             ++ hsShow (Source.code src)
+printSrc src = ">>> file '" ++ join "/" (src ^. Source.path) ++ "':\n\n"
+             ++ hsShow (src ^. Source.code)
 
 

@@ -79,7 +79,7 @@ interpretLibrary libraryID projectID = do
     cfg <- gets (view Batch.config)
     maxID <- EitherT $ MaxID.run ast
     [hsc] <- EitherT $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
-    let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ Source.code hsc)
+    let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ hsc ^. Source.code)
     liftIO $ Interpreter.runSource cfg imports code "main"
 
 

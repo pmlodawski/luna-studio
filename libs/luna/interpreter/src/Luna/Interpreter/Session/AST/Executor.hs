@@ -13,6 +13,7 @@ import qualified Data.List                  as List
 import           Flowbox.Prelude                            hiding (children, inside)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Graph.Node                            as Node
+import qualified Luna.Interpreter.Session.AST.GenCode       as GenCode
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate  as Invalidate
@@ -30,15 +31,19 @@ import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TypeCheck         as TypeCheck
 import qualified Luna.Pass.Transform.Graph.Parser.Parser    as GraphParser
 
+
+
 logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Executor"
 
 
 processMain :: Session ()
 processMain = do
+    GenCode.loadModule
     mainPtr <- gets $ view Env.mainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
+
 
 
 processNodeIfNeeded :: CallDataPath -> Session ()

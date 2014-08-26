@@ -24,6 +24,7 @@ import qualified Luna.AST.Control.Focus                      as Focus
 import qualified Luna.AST.Control.Zipper                     as Zipper
 import           Luna.AST.Expr                               (Expr)
 import qualified Luna.AST.Expr                               as Expr
+import           Luna.AST.Module                             (Module)
 import           Luna.Graph.Graph                            (Graph)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
@@ -63,21 +64,22 @@ run config env session = do
 initialize :: Config -> Session ()
 initialize config = do
     lift2 I.reset
-    --lift2 $ I.runGhc $ do
-    --    flags <- GHC.getSessionDynFlags
-    --    void $ GHC.setSessionDynFlags flags
-    --            { GHC.extraPkgConfs = ( [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
-    --                                    , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
-    --                                    ] ++) . GHC.extraPkgConfs flags
-    --            , GHC.hscTarget = GHC.HscInterpreted
-    --            , GHC.ghcLink   = GHC.LinkInMemory
-    --            --, GHC.verbosity = 4
-    --            }
+    lift2 $ I.runGhc $ do
+        flags <- GHC.getSessionDynFlags
+        void $ GHC.setSessionDynFlags flags
+                { GHC.extraPkgConfs = ( [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
+                                        , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
+                                        ] ++) . GHC.extraPkgConfs flags
+                , GHC.hscTarget = GHC.HscInterpreted
+                , GHC.ghcLink   = GHC.LinkInMemory
+                --, GHC.verbosity = 4
+                }
     setHardcodedExtensions
     lift2 $ I.setImportsQ [("Prelude", Nothing)
                           ,("Control.Monad", Nothing)
                           ,("Data.Hash", Just "Data.Hash")
                           ,("Data.Word", Nothing)
+                          ,("Luna.Target.HS", Nothing)
                           ]
     runDecls Helpers.operation
     runDecls Helpers.hash
@@ -117,18 +119,23 @@ runAssignment asigned asignee =
 
 
 setHardcodedExtensions :: Session ()
-setHardcodedExtensions =
-    setFlags [ GHC.Opt_EmptyDataDecls
-             , GHC.Opt_FlexibleContexts
-             , GHC.Opt_FlexibleInstances
-             , GHC.Opt_FunctionalDependencies
-             , GHC.Opt_GADTs
-             , GHC.Opt_MultiParamTypeClasses
-             , GHC.Opt_OverlappingInstances
-             , GHC.Opt_ScopedTypeVariables
-             , GHC.Opt_UndecidableInstances
-             ]
-    --unsetFlags []
+setHardcodedExtensions = do
+    setFlags   [ GHC.Opt_DataKinds
+               , GHC.Opt_DeriveDataTypeable
+               , GHC.Opt_DeriveGeneric
+               , GHC.Opt_DysfunctionalDependencies
+               , GHC.Opt_FlexibleContexts
+               , GHC.Opt_FlexibleInstances
+               , GHC.Opt_GADTs
+               , GHC.Opt_RebindableSyntax
+               , GHC.Opt_TemplateHaskell
+               , GHC.Opt_UndecidableInstances
+
+               --, GHC.Opt_MultiParamTypeClasses
+               --, GHC.Opt_FunctionalDependencies
+               ]
+    unsetFlags [ GHC.Opt_MonomorphismRestriction
+               ]
 
 
 setLibManager :: LibManager -> Session ()
@@ -143,6 +150,13 @@ getLibrary :: Library.ID -> Session Library
 getLibrary libraryID = do
     libManager <- getLibManager
     LibManager.lab libManager libraryID <??> "Session.getLibrary : Cannot find library with id=" ++ show libraryID
+
+
+getModule :: DefPoint -> Session Module
+getModule (DefPoint libraryID bc) = do
+    ast <- view Library.ast <$> getLibrary libraryID
+    focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
+    Focus.getModule focus <??> "Session.getModule : Target is not a module"
 
 
 getFunction :: DefPoint -> Session Expr
@@ -163,8 +177,8 @@ getGraph defPoint = do
     return (graph, expr ^. Expr.id)
 
 
-findMain :: Session DefPoint
-findMain = gets $ view Env.mainPtr
+getMainPtr :: Session DefPoint
+getMainPtr = gets $ view Env.mainPtr
 
 
 getProjectID :: Session Project.ID

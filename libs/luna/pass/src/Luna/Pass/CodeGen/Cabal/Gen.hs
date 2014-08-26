@@ -21,7 +21,7 @@ import qualified Luna.Distribution.Cabal.Section as Section
 
 
 getModuleName :: Source -> String
-getModuleName source = List.intercalate "." $ Source.path source
+getModuleName source = List.intercalate "." $ source ^. Source.path
 
 
 genLibrary :: String -> Version -> [String] -> [String] -> [String] -> [Source] -> Config

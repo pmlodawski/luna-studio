@@ -53,9 +53,8 @@ import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      a
 
 
 
-
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Build.Build"
+logger = getLoggerIO "Luna.Pass.Build.Build"
 
 
 srcFolder :: String
@@ -149,7 +148,7 @@ run buildConfig ast astInfo implicitSelf = runEitherT $ do
                 : "containers"
                 -- : "flowboxM-core"
                 -- : "flowbox-graphics"
-                : "luna-target-hs"
+                : "luna-target-ghchs"
                 : "template-haskell"
                 -- : "accelerate"
                 : BuildConfig.libs buildConfig
@@ -184,6 +183,7 @@ writeSource :: UniPath -> Source -> Pass.Result ()
 writeSource outputPath source = FileWriter.run path hsExt source where
     path     = UniPath.append srcFolder outputPath
 
+
 copyExecutable :: MonadIO m => UniPath -> String -> UniPath -> m ()
 copyExecutable location name outputPath = liftIO $ do
     let execName   = Platform.dependent name (name ++ ".exe") name
@@ -198,5 +198,6 @@ parseFile rootPath filePath = runEitherT $ do
     result <- hoistEither =<< TxtParser.run source
     return result
 
+
 formatSource :: Source -> Source
-formatSource s = s { Source.code = hsShow $ Source.code s }
+formatSource = Source.transCode hsShow
