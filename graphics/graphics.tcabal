@@ -51,7 +51,7 @@ Library
                   bmp,
                   --ekg,
                   repa-devil,
-                  base                    == 4.6.*,
+                  base                    == 4.7.*,
                   either,
                   errors,
                   fclabels                >= 2.0          && < 2.1,
@@ -73,8 +73,6 @@ Library
                   cubicbezier,
                   split,
                   -- Dependencies that cabal 1.19.2 complains on
-                  network == 2.4.2.2,
-                  HTTP == 4000.2.11,
                   HOpenCV >= 0.4
 
   if flag(cuda)
@@ -122,7 +120,7 @@ Executable test
                       accelerate-io    == 0.14.*,
                       bmp,
                       repa-devil,
-                      base                    == 4.6.*,
+                      base                    == 4.7.*,
                       either,
                       errors,
                       fclabels                >= 2.0          && < 2.1,
