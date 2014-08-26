@@ -5,15 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Graph.GraphSpec where
+module Test.Pass.Transform.Graph.GraphSpec where
 
 import Test.Hspec
 
 import           Flowbox.Prelude
-import           Graph.Common                            (named)
-import qualified Graph.Common                            as Common
-import           Graph.SampleCodes                       (sampleCodes)
-import qualified Graph.SampleCodes                       as SampleCodes
 import qualified Luna.Graph.Edge                         as Edge
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Graph                        as Graph
@@ -21,6 +17,10 @@ import qualified Luna.Graph.Node                         as Node
 import           Luna.Graph.Node.OutputName              (fixEmpty')
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Pass.Transform.AST.IDFixer.IDFixer (clearIDs)
+import           Test.Pass.Transform.Graph.Common        (named)
+import qualified Test.Pass.Transform.Graph.Common        as Common
+import           Test.Pass.Transform.Graph.SampleCodes   (sampleCodes)
+import qualified Test.Pass.Transform.Graph.SampleCodes   as SampleCodes
 
 
 

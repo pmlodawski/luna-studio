@@ -7,7 +7,7 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# LANGUAGE TupleSections #-}
 
-module Graph.Common where
+module Test.Pass.Transform.Graph.Common where
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
