@@ -9,6 +9,7 @@ module Flowbox.Graphics.Composition.Generators.Noise.Perlin where
 import qualified Data.Array.Accelerate      as A
 import           Data.Bits                  ((.&.))
 import qualified Math.Coordinate.Cartesian  as Cartesian
+import           Math.Space.Space          (Grid)
 
 import Flowbox.Graphics.Composition.Generators.Noise.Internal
 import Flowbox.Graphics.Composition.Generators.Structures
@@ -16,14 +17,14 @@ import Flowbox.Prelude
 
 
 
-perlinNoise :: A.Exp Double -> ContinousGenerator (A.Exp Double)
-perlinNoise z = Generator $ runGenerator $ perlinGen Standard 1.0 2.0 6 0.5 0 z
+perlinNoise :: Grid (A.Exp Int) -> A.Exp Double -> ContinousGenerator (A.Exp Double)
+perlinNoise canvas z = Generator canvas $ runGenerator $ perlinGen canvas Standard 1.0 2.0 6 0.5 0 z
 
-perlinGen :: Quality -> A.Exp Double -> A.Exp Double ->
+perlinGen :: Grid (A.Exp Int) -> Quality -> A.Exp Double -> A.Exp Double ->
              A.Exp Int -> A.Exp Double -> A.Exp Int ->
              A.Exp Double ->
              ContinousGenerator (A.Exp Double)
-perlinGen quality freq lac octaveCount persistence seed z = Generator $ \point ->
+perlinGen canvas quality freq lac octaveCount persistence seed z = Generator canvas $ \point ->
     value $ A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
     where value args = val
               where (val, _, _, _, _) =

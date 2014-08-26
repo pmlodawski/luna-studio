@@ -23,16 +23,17 @@ import           Data.Monoid
 
 
 
-rasterizer :: Elt e => Grid (Exp Int) -> DiscreteGenerator (Exp e) -> Matrix2 e
-rasterizer space (Generator gen) = generate (A.index2 (height space) (width space)) wrapper
+rasterizer :: Elt e => DiscreteGenerator (Exp e) -> Matrix2 e
+rasterizer (Generator (Grid width height) gen) = generate (A.index2 height width) wrapper
     where wrapper (A.unlift -> Z :. y :. x :: EDIM2) = gen (Point2 x y)
 
-gridRasterizer :: forall e . Elt e => Grid (Exp Int) -> Grid (Exp Int) -> [DiscreteGenerator (Exp e)] -> Matrix2 e
-gridRasterizer space grid generators = generate (A.index2 (height space) (width space)) wrapper
-    where cell = div <$> space <*> grid
-          rasterized = mconcat $ P.map (flatten . (rasterizer cell)) generators :: Vector e
-          wrapper (A.unlift -> Z :. y :. x :: EDIM2) = rasterized M.!! (i `mod` size rasterized)
-              where i = (cw * ch) * gridi + celli
-                    Grid cw ch = cell
-                    gridi = x `div` cw + (height grid - y `div` ch - 1) * width grid
-                    celli = x `mod` cw + (y `mod` ch) * cw
+-- TODO [KL] - rozmiar wynikowy jest sumą rozmiarów wejściowych
+--gridRasterizer :: forall e . Elt e => Grid (Exp Int) -> Grid (Exp Int) -> [DiscreteGenerator (Exp e)] -> Matrix2 e
+--gridRasterizer space grid generators = generate (A.index2 (height space) (width space)) wrapper
+--    where cell = div <$> space <*> grid
+--          rasterized = mconcat $ P.map (flatten . rasterizer) generators :: Vector e
+--          wrapper (A.unlift -> Z :. y :. x :: EDIM2) = rasterized M.!! (i `mod` size rasterized)
+--              where i = (cw * ch) * gridi + celli
+--                    Grid cw ch = cell
+--                    gridi = x `div` cw + (height grid - y `div` ch - 1) * width grid
+--                    celli = x `mod` cw + (y `mod` ch) * cw

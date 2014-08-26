@@ -20,10 +20,10 @@ import           Math.Space.Space
 
 stencil :: forall a b c . (Elt a, IsNum a)
         => (Point2 c -> Point2 (Exp Int) -> Point2 b)
-        -> Grid (Exp Int) -> DiscreteGenerator (Exp a)
+        -> DiscreteGenerator (Exp a) -- kernel generator
         -> (Exp a -> Exp a -> Exp a) -> Exp a
         -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
-stencil mode (Grid width height) (Generator kernel) foldOp initVal (Generator input) = Generator $ \pos ->
+stencil mode (Generator (Grid width height) kernel) foldOp initVal (Generator cnv input) = Generator cnv $ \pos ->
     let get x' y' = input $ mode pos (Point2 x' y')
         outer :: (Exp Int, Exp a) -> (Exp Int, Exp a)
         outer (h, acc) = (h + 1, A.snd $ A.while (\e -> A.fst e A.<* width) (A.lift1 inner) (A.lift (0 :: Exp Int, acc)))
@@ -33,10 +33,10 @@ stencil mode (Grid width height) (Generator kernel) foldOp initVal (Generator in
 
 normStencil :: forall a b c . (Elt a, IsNum a, IsFloating a)
             => (Point2 c -> Point2 (Exp Int) -> Point2 b)
-            -> Grid (Exp Int) -> DiscreteGenerator (Exp a)
+            -> DiscreteGenerator (Exp a) -- kernel generator
             -> (Exp a -> Exp a -> Exp a) -> Exp a
             -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
-normStencil mode (Grid width height) (Generator kernel) foldOp initVal (Generator input) = Generator $ \pos ->
+normStencil mode (Generator (Grid width height) kernel) foldOp initVal (Generator cnv input) = Generator cnv $ \pos ->
     let get x' y' = input $ mode pos (Point2 x' y')
 
         testW :: (Exp Int, Exp a, Exp a) -> Exp Bool

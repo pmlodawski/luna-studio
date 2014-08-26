@@ -36,7 +36,7 @@ nearest :: (Elt e, IsFloating e) => DiscreteGenerator (Exp e) -> CartesianGenera
 nearest = transform $ fmap A.floor
 
 interpolator :: forall e .(Elt e, IsFloating e) => Filter e -> DiscreteGenerator (Exp e) -> CartesianGenerator (Exp e) (Exp e)
-interpolator filter (Generator input) = Generator $ \pos@(Point2 x y) ->
+interpolator filter (Generator cnv input) = Generator cnv $ \pos@(Point2 x y) ->
     let get x' y' = input $ fmap A.floor pos + Point2 x' y'
         size = A.floor $ window filter
         kernel dx dy = apply filter (A.fromIntegral dx - frac x) * apply filter (A.fromIntegral dy - frac y)

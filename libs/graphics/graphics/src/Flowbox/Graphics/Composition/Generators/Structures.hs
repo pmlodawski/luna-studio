@@ -27,43 +27,46 @@ import Data.Profunctor
 
 import           Math.Coordinate.Coordinate
 import qualified Math.Coordinate.Cartesian as Cartesian
+import           Math.Space.Space
 
 -- == Generator type ==
 
-newtype Generator a b = Generator {
-    runGenerator :: a -> b
-} deriving Functor
+data Generator a b = Generator { canvas :: Grid (Exp Int)
+                               , runGenerator :: a -> b
+                               } deriving Functor
 
 type CartesianGenerator a = Generator (Cartesian.Point2 a)
 type DiscreteGenerator = CartesianGenerator (Exp Int)
 type ContinousGenerator = CartesianGenerator (Exp Double)
 
-instance Applicative (Generator a) where
-    pure v = Generator $ \_ -> v
-    Generator f <*> Generator gen = Generator $ \point -> f point (gen point)
+unitGenerator a = Generator 1 a
 
-instance Monad (Generator a) where
-    return = pure
-    Generator gen >>= f = Generator $ \point -> runGenerator (f $ gen point) point
+--instance Applicative (Generator a) where
+--    pure v = Generator $ \_ -> v
+--    Generator f <*> Generator gen = Generator $ \point -> f point (gen point)
 
-instance Num b => Num (Generator a b) where
-    (+) = liftA2 (+)
-    {-# INLINE (+) #-}
-    (-) = liftA2 (-)
-    {-# INLINE (-) #-}
-    (*) = liftA2 (*)
-    {-# INLINE (*) #-}
-    negate = fmap negate
-    {-# INLINE negate #-}
-    abs = fmap abs
-    {-# INLINE abs #-}
-    signum = fmap signum
-    {-# INLINE signum #-}
-    fromInteger = pure . fromInteger
-    {-# INLINE fromInteger #-}
+--instance Monad (Generator a) where
+--    return = pure
+--    Generator gen >>= f = Generator $ \point -> runGenerator (f $ gen point) point
+
+--instance Num b => Num (Generator a b) where
+--    (+) = liftA2 (+)
+--    {-# INLINE (+) #-}
+--    (-) = liftA2 (-)
+--    {-# INLINE (-) #-}
+--    (*) = liftA2 (*)
+--    {-# INLINE (*) #-}
+--    negate = fmap negate
+--    {-# INLINE negate #-}
+--    abs = fmap abs
+--    {-# INLINE abs #-}
+--    signum = fmap signum
+--    {-# INLINE signum #-}
+--    fromInteger = pure . fromInteger
+--    {-# INLINE fromInteger #-}
 
 instance Profunctor Generator where
-    lmap f (Generator gen) = Generator $ gen . f
+    lmap f (Generator cnv gen) = Generator cnv $ gen . f
     rmap = fmap
 
 transform :: (a -> t) -> Generator t b -> Generator a b

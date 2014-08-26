@@ -16,14 +16,13 @@ import Flowbox.Graphics.Composition.Generators.Matrix
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 
 import Flowbox.Math.Matrix                                as M hiding (ftrans)
-import Math.Space.Space
 
 
-pipe :: Elt a => Grid (Exp Int) -> Boundary (Exp a) 
+pipe :: Elt a => Boundary (Exp a) 
                 -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)) 
                 -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)) 
                 -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
-pipe g bn a b gen = fromMatrix bn $ (ftrans g bn a >-> ftrans g bn b) (rasterizer g gen)
+pipe bn a b gen = fromMatrix bn $ (ftrans bn a >-> ftrans bn b) (rasterizer gen)
 
-ftrans :: Elt a => Grid (Exp Int) -> Boundary (Exp a) -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)) -> Matrix2 a -> Matrix2 a
-ftrans g bn f a = rasterizer g $ f (fromMatrix bn a)
+ftrans :: Elt a => Boundary (Exp a) -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)) -> Matrix2 a -> Matrix2 a
+ftrans bn f a = rasterizer $ f (fromMatrix bn a)

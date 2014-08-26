@@ -9,7 +9,9 @@ module Flowbox.Graphics.Composition.Generators.Constant where
 
 import Flowbox.Prelude
 import Flowbox.Graphics.Composition.Generators.Structures
+import Math.Space.Space
 
+import Data.Array.Accelerate (Exp)
 
-constant :: b -> Generator a b
-constant = pure
+constant :: Grid (Exp Int) -> b -> Generator a b
+constant cnv a = Generator cnv $ const a 

@@ -9,6 +9,7 @@ module Flowbox.Graphics.Composition.Generators.Noise.Billow where
 import qualified Data.Array.Accelerate     as A
 import           Data.Bits                 ((.&.))
 import qualified Math.Coordinate.Cartesian as Cartesian
+import           Math.Space.Space          (Grid)
 
 import Flowbox.Graphics.Composition.Generators.Noise.Internal
 import Flowbox.Graphics.Composition.Generators.Structures
@@ -16,14 +17,14 @@ import Flowbox.Prelude
 
 
 
-billowNoise :: A.Exp Double -> ContinousGenerator (A.Exp Double)
-billowNoise z = Generator $ runGenerator $ billowGen Standard 1.0 2.0 6 0.5 0 z
+billowNoise :: Grid (A.Exp Int) -> A.Exp Double -> ContinousGenerator (A.Exp Double)
+billowNoise canvas z = Generator canvas $ runGenerator $ billowGen canvas Standard 1.0 2.0 6 0.5 0 z
 
-billowGen :: Quality -> A.Exp Double -> A.Exp Double ->
+billowGen :: Grid (A.Exp Int) -> Quality -> A.Exp Double -> A.Exp Double ->
              A.Exp Int -> A.Exp Double -> A.Exp Int ->
              A.Exp Double ->
              ContinousGenerator (A.Exp Double)
-billowGen quality freq lac octaveCount persistence seed z = Generator $ \point ->
+billowGen canvas quality freq lac octaveCount persistence seed z = Generator canvas $ \point ->
     0.5 + value (A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int)))
     where value args = val
               where (val, _, _, _, _) =

@@ -30,6 +30,7 @@ data AlphaBlend = Adobe
 union :: Num a => a -> a -> a
 union a b = a + b - (a * b)
 
+-- FIXME [KL]: Bounding box now is taken from the overlay generator
 basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                              => ContinousGenerator (A.Exp a) -- ^ Overlay / Source / Foreground / A
                              -> ContinousGenerator (A.Exp a) -- ^ Overlay alpha
@@ -38,14 +39,15 @@ basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                              -> AlphaBlend                   -- ^ Specifies if the same blending method is used on alpha channels
                              -> BlendMode a                  -- ^ Function used for blending
                              -> ContinousGenerator (A.Exp a) -- ^ Merge result
-basicColorCompositingFormula (Generator overlay) (Generator alphaOverlay) (Generator background) (Generator alphaBackground) alphaBlend blend =
-    Generator $ \p ->
+basicColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOverlay) (Generator _ background) (Generator _ alphaBackground) alphaBlend blend =
+    Generator cnv $ \p ->
     let alphaResult = \p' -> case alphaBlend of
             Adobe  -> union (alphaOverlay p') (alphaBackground p')
             Custom -> blend (alphaOverlay p') (alphaBackground p')
     in (1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
         (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (overlay p) (background p))
 
+-- FIXME [KL]: Bounding box now is taken from the overlay generator
 threeWayMerge :: (A.Elt a, A.IsFloating a)
               => ContinousGenerator (A.Exp a) -- ^ A.R
               -> ContinousGenerator (A.Exp a) -- ^ A.G
@@ -61,6 +63,7 @@ threeWayMerge ar ag ab br bg bb aa ba blend =
     (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, ba)
     where merge ov aov bgnd abgnd = complicatedColorCompositingFormula ov aov bgnd abgnd blend
 
+-- FIXME [KL]: Bounding box now is taken from the aa' generator
 threeWayMerge' :: (A.Elt a, A.IsFloating a)
               => ContinousGenerator (A.Exp a) -- ^ A.R
               -> ContinousGenerator (A.Exp a) -- ^ A.G
@@ -76,10 +79,11 @@ threeWayMerge' :: (A.Elt a, A.IsFloating a)
 threeWayMerge' ar ag ab br bg bb aa ba alphaBlend blend =
   (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, mergeAlpha aa ba)
   where merge ov aov bgnd abgnd = basicColorCompositingFormula ov aov bgnd abgnd alphaBlend blend
-        mergeAlpha (Generator aa') (Generator ba') = Generator $ \p -> case alphaBlend of
+        mergeAlpha (Generator cnv aa') (Generator _ ba') = Generator cnv $ \p -> case alphaBlend of
             Adobe  -> union (aa' p) (ba' p)
             Custom -> blend (aa' p) (ba' p)
 
+-- FIXME [KL]: Bounding box now is taken from the overlay generator
 complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                                    => ContinousGenerator (A.Exp a)
                                    -> ContinousGenerator (A.Exp a)
@@ -87,8 +91,8 @@ complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                                    -> ContinousGenerator (A.Exp a)
                                    -> ComplicatedBlendMode a
                                    -> ContinousGenerator (A.Exp a)
-complicatedColorCompositingFormula (Generator overlay) (Generator alphaOverlay) (Generator background) (Generator alphaBackground) blend =
-    Generator $ \p -> blend (overlay p) (alphaOverlay p) (background p) (alphaBackground p)
+complicatedColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOverlay) (Generator _ background) (Generator _ alphaBackground) blend =
+    Generator cnv $ \p -> blend (overlay p) (alphaOverlay p) (background p) (alphaBackground p)
 
 liftBlend :: (A.Elt a, A.IsFloating a) => BlendMode a -> ComplicatedBlendMode a
 liftBlend blend = \overlay _ background _ -> blend overlay background
