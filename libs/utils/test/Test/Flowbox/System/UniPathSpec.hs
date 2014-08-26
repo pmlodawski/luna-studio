@@ -11,6 +11,7 @@ import Test.Hspec
 
 import           Flowbox.Prelude
 import qualified Flowbox.System.UniPath as UniPath
+import  Flowbox.System.UniPath (UniPath)
 
 
 
@@ -18,13 +19,52 @@ main :: IO ()
 main = hspec spec
 
 
+fromString :: FilePath -> UniPath
+fromString = UniPath.fromUnixString
 
-backAndForth path = 
-    UniPath.toUnixString (UniPath.fromUnixString path) `shouldBe` path
+toString :: UniPath -> FilePath
+toString = UniPath.toUnixString
+
+sameBackAndForth :: String -> Expectation
+sameBackAndForth path = 
+    toString (fromString path) `shouldBe` path
 
 
 spec :: Spec
 spec = do
     describe "UniPath" $ do
         it "returns the same when converting back and forth" $ do
-            backAndForth "."
+            sameBackAndForth "."
+            sameBackAndForth ".."
+            sameBackAndForth "../.."
+            sameBackAndForth "../../."
+            sameBackAndForth "foo"
+            sameBackAndForth "foo/"
+            sameBackAndForth "foo/bar"
+            sameBackAndForth "foo/bar/"
+            sameBackAndForth "foo/bar/baz"
+            sameBackAndForth "foo/bar/baz/"
+            sameBackAndForth "/"
+            sameBackAndForth "/foo"
+            sameBackAndForth "/foo/"
+            sameBackAndForth "/foo/bar"
+            sameBackAndForth "/foo/bar/"
+            sameBackAndForth "/foo/bar/baz"
+            sameBackAndForth "/foo/bar/baz/"
+            sameBackAndForth "C:/foo"
+            sameBackAndForth "C:/foo/"
+            sameBackAndForth "C:/foo/bar"
+            sameBackAndForth "C:/foo/bar/"
+            sameBackAndForth "C:/foo/bar/baz"
+            sameBackAndForth "C:/foo/bar/baz/"
+            sameBackAndForth "C:/foo/bar/baz/.."
+
+        it "normalises path" $ do
+            toString (UniPath.normalise $ fromString "./foo/bar"   ) `shouldBe` "./foo/bar"
+            toString (UniPath.normalise $ fromString "./foo/.."    ) `shouldBe` "."
+            toString (UniPath.normalise $ fromString "./foo/../bar") `shouldBe` "./bar"
+            toString (UniPath.normalise $ fromString "/foo/.."     ) `shouldBe` "/"
+            toString (UniPath.normalise $ fromString "/foo/../.."  ) `shouldBe` "/"
+
+        it "computes base path" $ do
+            toString (UniPath.basePath $ fromString "./foo/bar") `shouldBe` "./foo"
