@@ -42,6 +42,7 @@ Library
                   transformers             ,
                   errors                   ,
                   either                   ,
+                  profunctors              ,
                   cubicbezier
 
 Executable test_generator

@@ -8,20 +8,22 @@ module Flowbox.Graphics.Composition.Generators.Noise.Turbulence where
 
 import qualified Data.Array.Accelerate     as A
 import qualified Math.Coordinate.Cartesian as Cartesian
+import           Math.Space.Space          (Grid)
 
 import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Prelude
 
 
 
-turbulence :: (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
+turbulence :: Grid (A.Exp Int) ->
+              (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
               (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
               (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
               (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
               A.Exp Double ->
               A.Exp Double ->
               ContinousGenerator (A.Exp Double)
-turbulence xFun yFun zFun sourceFun power z = Generator $ \point ->
+turbulence canvas xFun yFun zFun sourceFun power z = Generator canvas $ \point ->
     let x0 = Cartesian.x point + (12414.0 / 65536.0)
         y0 = Cartesian.y point + (65124.0 / 65536.0)
         z0 = z                 + (31337.0 / 65536.0)

@@ -138,9 +138,8 @@ scharr = M.fromList (Z :. 3 :. 3) [  -3, 0, 3
 -- == General convolutions ==
 
 convolve :: (IsNum a, Elt a) => (Point2 c -> Point2 (Exp Int) -> Point2 b)
-         -> Matrix2 a -> Generator b (Exp a) -> Generator c (Exp a)
-convolve mode kernel = stencil mode (Grid width height) (unsafeFromMatrix kernel) (+) 0
-    where Z :. height :. width = A.unlift $ M.shape kernel
+         -> Matrix2 a -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
+convolve mode kernel = stencil mode (unsafeFromMatrix kernel) (+) 0
 
 filter :: (Elt a, IsNum a) => Exp Int -> Matrix2 a -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
 filter scatter = convolve $ \point offset -> point + pure scatter * offset
@@ -148,10 +147,10 @@ filter scatter = convolve $ \point offset -> point + pure scatter * offset
 -- == Morphological filters
 
 dilate :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
-dilate size = stencil (+) size (constant 1) max (-1e20)
+dilate size = stencil (+) (constant size 1) max (-1e20)
 
 erode :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
-erode size = stencil (+) size (constant 1) min 1e20
+erode size = stencil (+) (constant size 1) min 1e20
 
 opening :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
 opening size = erode size . dilate size

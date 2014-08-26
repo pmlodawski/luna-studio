@@ -13,11 +13,15 @@ import Flowbox.Math.Matrix                                as M
 
 import qualified Data.Array.Accelerate                    as A
 import           Math.Coordinate.Cartesian                (Point2(..))
-
+import           Math.Space.Space
 
 
 unsafeFromMatrix :: Elt e => Matrix2 e -> DiscreteGenerator (Exp e)
-unsafeFromMatrix mat = Generator $ \(Point2 x y) -> mat M.! A.index2 y x
+unsafeFromMatrix mat = Generator cnv $ \(Point2 x y) -> mat M.! A.index2 y x
+    where Z :. h :. w = A.unlift $ shape mat :: EDIM2
+          cnv = Grid w h 
 
 fromMatrix :: Elt e => Boundary (Exp e) -> Matrix2 e -> DiscreteGenerator (Exp e)
-fromMatrix b mat = Generator $ \(Point2 x y) -> boundedIndex b mat $ A.index2 y x
+fromMatrix b mat = Generator cnv $ \(Point2 x y) -> boundedIndex b mat $ A.index2 y x
+    where Z :. h :. w = A.unlift $ shape mat :: EDIM2
+          cnv = Grid w h 

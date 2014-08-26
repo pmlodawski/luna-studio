@@ -30,19 +30,19 @@ rotate' phi (Point2 x y) = Point2 x' y'
     where x' = cos phi * x - sin phi * y
           y' = sin phi * x + cos phi * y
 
-rotate :: (Num a, Floating a) => a -> Generator a b -> Generator a b
+rotate :: (Num a, Floating a) => a -> CartesianGenerator a b -> CartesianGenerator a b
 rotate = transform . rotate'
 
 translate' :: Num a => V2 a -> Point2 a -> Point2 a
 translate' (V2 dx dy) (Point2 x y) = Point2 (x - dx) (y - dy)
 
-translate :: Num a => V2 a -> Generator a b -> Generator a b
+translate :: Num a => V2 a -> CartesianGenerator a b -> CartesianGenerator a b
 translate = transform . translate'
 
 scale' :: (Num a, Fractional a) => V2 a -> Point2 a -> Point2 a
 scale' (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
 
-scale :: (Num a, Fractional a) => V2 a -> Generator a b -> Generator a b
+scale :: (Num a, Fractional a) => V2 a -> CartesianGenerator a b -> CartesianGenerator a b
 scale = transform . scale'
 
 bbox :: (Ord a, Floating a) => a -> Grid a -> Grid a
@@ -55,16 +55,16 @@ bbox theta (fmap (/2) -> Grid gw gh) = Grid gw' gh'
           Point2 px3 py3 = rotate' theta $ Point2 ( gw) ( gh)
           Point2 px4 py4 = rotate' theta $ Point2 (-gw) ( gh)
 
-rotateMat :: (Elt e, IsFloating e) => Exp e -> Boundary (Exp e) -> Matrix2 e -> Matrix2 e
-rotateMat phi b mat = rasterizer nsize' $ monosampler 
-                                        $ translate (V2 rx ry) 
-                                        $ rotate phi 
-                                        $ translate (V2 tx ty) 
-                                        $ interpolator triangle 
-                                        $ fromMatrix b $ mat
-    where A.Z A.:. height A.:. width = A.unlift $ M.shape mat
-          size = fmap A.fromIntegral $ Grid width height
-          Grid tx ty = fmap (/ (-2)) size
-          nsize = bbox phi size
-          nsize' = fmap A.ceiling nsize
-          Grid rx ry = fmap (/ (2)) nsize
+--rotateMat :: (Elt e, IsFloating e) => Exp e -> Boundary (Exp e) -> Matrix2 e -> Matrix2 e
+--rotateMat phi b mat = rasterizer nsize' $ monosampler 
+--                                        $ translate (V2 rx ry) 
+--                                        $ rotate phi 
+--                                        $ translate (V2 tx ty) 
+--                                        $ interpolator triangle 
+--                                        $ fromMatrix b $ mat
+--    where A.Z A.:. height A.:. width = A.unlift $ M.shape mat
+--          size = fmap A.fromIntegral $ Grid width height
+--          Grid tx ty = fmap (/ (-2)) size
+--          nsize = bbox phi size
+--          nsize' = fmap A.ceiling nsize
+--          Grid rx ry = fmap (/ (2)) nsize

@@ -50,7 +50,7 @@ testFunction :: (A.Exp Float -> A.Exp Float)
              -> IO ()
 testFunction f input output = do
     img <- map4 (fromMatrix A.Wrap) <$> testLoadRGBA' input
-    let (r', g', b', a') = img & each %~ (rasterizer (Grid 512 512) . (fmap f) . monosampler)
+    let (r', g', b', a') = img & each %~ (rasterizer . (fmap f) . monosampler)
     testSaveRGBA' output r' g' b' a'
 
 printMat :: forall a . (Elt a, Show a, PrintfArg a) => Matrix2 a -> IO ()

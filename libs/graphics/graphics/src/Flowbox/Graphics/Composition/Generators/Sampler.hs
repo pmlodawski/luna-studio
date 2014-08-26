@@ -19,26 +19,24 @@ import Flowbox.Math.Matrix                                as M
 
 import qualified Data.Array.Accelerate                    as A
 import           Math.Coordinate.Cartesian                (Point2(..))
-import           Linear.V2
-import           Math.Space.Space
 
 
 
-monosampler :: (Elt a, IsNum a) => Generator (Exp a) e -> DiscreteGenerator e
+monosampler :: (Elt a, IsNum a) => CartesianGenerator (Exp a) e -> DiscreteGenerator e
 monosampler = transform $ fmap A.fromIntegral
 
-multisampler :: (Elt e, IsNum e, IsFloating e) => Matrix2 e -> Generator (Exp e) (Exp e) -> DiscreteGenerator (Exp e)
+multisampler :: (Elt e, IsNum e, IsFloating e) => Matrix2 e -> CartesianGenerator (Exp e) (Exp e) -> DiscreteGenerator (Exp e)
 multisampler kernel = convolve msampler kernel
     where fi = fmap A.fromIntegral
           msampler point offset = fi point + subpixel * fi offset 
           Z :. h :. w = A.unlift $ shape kernel
           subpixel = Point2 (1 / (A.fromIntegral w - 1)) (1 / (A.fromIntegral h - 1))
 
-nearest :: (Elt e, IsFloating e) => DiscreteGenerator (Exp e) -> Generator (Exp e) (Exp e)
+nearest :: (Elt e, IsFloating e) => DiscreteGenerator (Exp e) -> CartesianGenerator (Exp e) (Exp e)
 nearest = transform $ fmap A.floor
 
-interpolator :: forall e .(Elt e, IsFloating e) => Filter e -> DiscreteGenerator (Exp e) -> Generator (Exp e) (Exp e)
-interpolator filter (Generator input) = Generator $ \pos@(Point2 x y) ->
+interpolator :: forall e .(Elt e, IsFloating e) => Filter e -> DiscreteGenerator (Exp e) -> CartesianGenerator (Exp e) (Exp e)
+interpolator filter (Generator cnv input) = Generator cnv $ \pos@(Point2 x y) ->
     let get x' y' = input $ fmap A.floor pos + Point2 x' y'
         size = A.floor $ window filter
         kernel dx dy = apply filter (A.fromIntegral dx - frac x) * apply filter (A.fromIntegral dy - frac y)
