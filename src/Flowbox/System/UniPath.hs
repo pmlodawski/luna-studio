@@ -118,15 +118,17 @@ normalise path = case reverse (normaliseR (reverse path) 0) of
 
 normaliseR :: UniPath -> Int -> UniPath
 normaliseR path undo = case path of
-        [] -> replicate undo Up
+        []   -> replicate undo Up
         x:xs -> case x of
-                root@(Root _) -> [root]
-                Up            -> normaliseR xs (undo+1)
-                Current       -> normaliseR xs undo
-                Empty         -> normaliseR xs undo
-                _             -> if undo>0 then
-                                         normaliseR xs (undo-1)
-                                     else x:normaliseR xs undo
+                   root@(Root _) -> [root]
+                   Up            -> normaliseR xs (undo+1)
+                   Current       -> if null xs && undo == 0
+                                        then path 
+                                        else normaliseR xs undo
+                   Empty         -> normaliseR xs undo
+                   _             -> if undo > 0 
+                                        then normaliseR xs (undo-1)
+                                        else x:normaliseR xs undo
 
 
 fileName :: UniPath -> String
