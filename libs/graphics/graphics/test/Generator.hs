@@ -42,31 +42,31 @@ import Utils
 --
 -- Draws all the existing types of gradients using ContactSheet.
 -- (General geometry test)
---
---gradientsTest :: IO ()
---gradientsTest = do
---    let reds   = [Tick 0.0 1.0 1.0, Tick 0.25 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
---    let greens = [Tick 0.0 1.0 1.0, Tick 0.50 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
---    let blues  = [Tick 0.0 1.0 1.0, Tick 0.75 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
 
---    let alphas = [Tick 0.0 1.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
---    let gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+gradientsTest :: IO ()
+gradientsTest = do
+    let reds   = [Tick 0.0 1.0 1.0, Tick 0.25 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+    let greens = [Tick 0.0 1.0 1.0, Tick 0.50 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+    let blues  = [Tick 0.0 1.0 1.0, Tick 0.75 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
 
---    let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
---    let mapper = flip colorMapper weightFun
---    let center = translate (V2 90 120) . scale (V2 90 90)
---    let grad1 t = monosampler $ center $ mapper t circularShape
---    let grad2 t = monosampler $ center $ mapper t diamondShape
---    let grad3 t = monosampler $ center $ mapper t squareShape
---    let grad4 t = monosampler $ center $ mapper t conicalShape
---    let grad5 t = monosampler $ center $ mapper t $ radialShape (Minkowski 0.6)
---    let grad6 t = monosampler $ center $ mapper t $ radialShape (Minkowski 3)
---    let grad7 t = monosampler $ mapper t $ scale (V2 180 1) $ linearShape
---    let grad8   = monosampler $ center $ rotate (45 * pi / 180) $ mapper gray conicalShape
+    let alphas = [Tick 0.0 1.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+    let gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+
+    let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
+    let mapper = flip colorMapper weightFun
+    let center = translate (V2 (0.5) (0.5)) .zoom (V2 0.5 0.5)
+    let grad1 t = center $ mapper t circularShape
+    let grad2 t = center $ mapper t diamondShape
+    let grad3 t = center $ mapper t squareShape
+    let grad4 t = center $ mapper t conicalShape
+    let grad5 t = center $ mapper t $ radialShape (Minkowski 0.6)
+    let grad6 t = center $ mapper t $ radialShape (Minkowski 3)
+    let grad7 t = mapper t $ linearShape
+    let grad8   = center . turn (45 * pi / 180) $ mapper gray conicalShape
     
---    let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
-
---    testSaveRGBA' "out.bmp" (raster reds) (raster greens) (raster blues) (raster alphas)
+    let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) monosampler [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
+    --let raster t = rasterizer $ monosampler $ scaleTo (Grid 720 480) $ grad4 t
+    testSaveRGBA' "out.bmp" (raster reds) (raster greens) (raster blues) (raster alphas)
 
 --
 -- Draws single conical gradient rotated 84deg
@@ -78,8 +78,9 @@ multisamplerTest = do
     let mysampler = multisampler (normalize $ toMatrix 10 box)
     let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
     let mapper = flip colorMapper weightFun
-    let grad8     = rasterizer $ mysampler $ translate (V2 (720/2) (480/2)) $ rotate (84 * pi / 180) $ mapper gray conicalShape
-    testSaveChan' "out.bmp" grad8
+    let shape = scaleTo (Grid 720 480) conicalShape
+    let grad      = rasterizer $ mysampler $ translate (V2 (720/2) (480/2)) $ turn (84 * pi / 180) $ mapper gray shape
+    testSaveChan' "out.bmp" grad
 
 --
 -- Upcales lena 64x64 image into 720x480 one
@@ -123,19 +124,19 @@ laplacianTest kernSize crossVal sideVal = do
 -- Applies morphological operators to Lena image
 -- (Morphology test)
 --
---morphologyTest :: Exp Int -> IO ()
---morphologyTest size = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
+morphologyTest :: Exp Int -> IO ()
+morphologyTest size = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
 
---    let l c = monosampler $ scale 0.5 $ nearest $ fromMatrix Clamp c
---    let v = pure $ variable size
---    let morph1 c = closing v $ l c -- Bottom left
---    let morph2 c = opening v $ l c -- Bottom right
---    let morph3 c = dilate  v $ l c -- Top left
---    let morph4 c = erode   v $ l c -- Top right
+    let l c = fromMatrix Clamp c
+    let v = pure $ variable size
+    let morph1 c = nearest $ closing v $ l c -- Bottom left
+    let morph2 c = nearest $ opening v $ l c -- Bottom right
+    let morph3 c = nearest $ dilate  v $ l c -- Top left
+    let morph4 c = nearest $ erode   v $ l c -- Top right
 
---    let raster chan = gridRasterizer 512 (Grid 2 2) [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
---    testSaveRGBA' "out.bmp" (raster r) (raster g) (raster b) (raster a)
+    let raster chan = gridRasterizer 512 (Grid 2 2) monosampler [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
+    testSaveRGBA' "out.bmp" (raster r) (raster g) (raster b) (raster a)
 
 --
 -- Applies directional motion blur to Lena image

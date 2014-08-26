@@ -41,36 +41,15 @@ type ContinousGenerator = CartesianGenerator (Exp Double)
 
 unitGenerator a = Generator 1 a
 
---instance Applicative (Generator a) where
---    pure v = Generator $ \_ -> v
---    Generator f <*> Generator gen = Generator $ \point -> f point (gen point)
-
---instance Monad (Generator a) where
---    return = pure
---    Generator gen >>= f = Generator $ \point -> runGenerator (f $ gen point) point
-
---instance Num b => Num (Generator a b) where
---    (+) = liftA2 (+)
---    {-# INLINE (+) #-}
---    (-) = liftA2 (-)
---    {-# INLINE (-) #-}
---    (*) = liftA2 (*)
---    {-# INLINE (*) #-}
---    negate = fmap negate
---    {-# INLINE negate #-}
---    abs = fmap abs
---    {-# INLINE abs #-}
---    signum = fmap signum
---    {-# INLINE signum #-}
---    fromInteger = pure . fromInteger
---    {-# INLINE fromInteger #-}
-
 instance Profunctor Generator where
     lmap f (Generator cnv gen) = Generator cnv $ gen . f
     rmap = fmap
 
 transform :: (a -> t) -> Generator t b -> Generator a b
 transform = lmap
+
+resize :: Grid (Exp Int) -> Generator a b -> Generator a b
+resize cnv (Generator _ gen) = Generator cnv gen
 
 -- == Coord conversions ==
 --instance ( CoordConversion convType sys space (h a) (f a)
