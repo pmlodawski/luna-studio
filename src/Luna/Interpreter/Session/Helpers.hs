@@ -12,7 +12,7 @@ import Text.RawString.QQ
 
 
 operation :: String
-operation = ""
+operation = "default ()"
 -- [r|
 
 --newtype Operation a = Operation { fromOperation :: a } deriving Show

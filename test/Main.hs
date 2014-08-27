@@ -45,7 +45,7 @@ import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   a
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+rootLogger = getLogger ""
 
 
 logger :: LoggerIO
@@ -54,20 +54,29 @@ logger = getLoggerIO "Flowbox.Interpreter.Test"
 
 code :: Source
 code = Source ["Main"] $ [r|
-def test arg arg2:
-    print arg
-    print arg2
-    self.bla "kota" "albo nie"
+class Vector a:
+    x,y,z :: a
+    def test a b:
+        {a,b}
 
-def bla arg arg2:
-    a = "grubego"
+def print msg:
+    ```autoLift1 print #{msg}```
 
-    {arg, arg2, print a}
+def Int.+ a:
+    ```liftF2 (+) #{self} #{a}```
+
+def Int.> a:
+    ```liftF2 (>) #{self} #{a}```
+
+def Int.inc:
+    self + 1
 
 def main:
-    a = self.test "ala" "ma"
-    print a
-    "dummy"
+    print $ if 1 > 2: 5
+            else: 6
+    print $ 1 > 2
+    v = Vector 1 2 3
+    print $ v
 |]
 
 code2 :: Source
