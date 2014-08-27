@@ -18,14 +18,14 @@ import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project         
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Control.Error                                                                         hiding (err)
 import           Flowbox.Control.Monad.Morph
-import           Flowbox.Prelude                                                                               hiding (Context, op)
+import           Flowbox.Prelude                                                                               hiding (Context, error, op)
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import qualified Flowbox.ProjectManager.RPC.Handler.AST                                                        as ASTHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.Graph                                                      as GraphHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.Library                                                    as LibraryHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault                                                as NodeDefaultHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.Project                                                    as ProjectHandler
-import           Flowbox.System.Log.Logger                                                                     hiding (error)
+import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Crumb.Breadcrumbs                                                             as Gen
 import qualified Generated.Proto.Graph.Node                                                                    as Gen.Node
@@ -107,8 +107,8 @@ syncLibManager :: Int32 -> RPC Context SessionT ()
 syncLibManager updateNo = do
     testUpdateNo updateNo
     pm <- Batch.getProjectManager
-    -- TODO [PM] hardcoded project number!
-    project <- ProjectManager.lab pm 0 <??> "Project 0 not found"
+    activeProjectID <- lift2 $ SessionT $ Session.getProjectID
+    project <- ProjectManager.lab pm activeProjectID <??> "Project " ++ show activeProjectID ++ " not found"
     lift2 $ SessionT $ Session.setLibManager $ project ^. Project.libs
 
 

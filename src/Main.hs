@@ -23,7 +23,7 @@ import qualified Luna.Interpreter.Version             as Version
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Luna"
+rootLogger = getLogger ""
 
 
 logger :: LoggerIO
