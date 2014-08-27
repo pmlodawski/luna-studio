@@ -15,15 +15,14 @@ import Flowbox.Prelude
 
 
 
-turbulence :: Grid (A.Exp Int) ->
-              (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
+turbulence :: (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
               (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
               (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
               (A.Exp Double -> ContinousGenerator (A.Exp Double)) ->
               A.Exp Double ->
               A.Exp Double ->
               ContinousGenerator (A.Exp Double)
-turbulence canvas xFun yFun zFun sourceFun power z = Generator canvas $ \point ->
+turbulence xFun yFun zFun sourceFun power z = unitGenerator $ \point ->
     let x0 = Cartesian.x point + (12414.0 / 65536.0)
         y0 = Cartesian.y point + (65124.0 / 65536.0)
         z0 = z                 + (31337.0 / 65536.0)

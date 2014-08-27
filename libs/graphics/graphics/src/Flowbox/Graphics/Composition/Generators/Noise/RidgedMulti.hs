@@ -19,15 +19,15 @@ import Flowbox.Prelude                                        hiding (ix)
 
 
 
-ridgedMultiNoise :: Grid (A.Exp Int) -> A.Exp Double -> ContinousGenerator (A.Exp Double)
-ridgedMultiNoise canvas z = Generator canvas $ runGenerator $ ridgedMultiGen canvas Standard 1.0 2.0 6 30 0 1.0 1.0 2.0 z
+ridgedMultiNoise :: A.Exp Double -> ContinousGenerator (A.Exp Double)
+ridgedMultiNoise z = unitGenerator $ runGenerator $ ridgedMultiGen Standard 1.0 2.0 6 30 0 1.0 1.0 2.0 z
 
-ridgedMultiGen :: Grid (A.Exp Int) -> Quality -> A.Exp Double -> A.Exp Double ->
+ridgedMultiGen :: Quality -> A.Exp Double -> A.Exp Double ->
                   A.Exp Int -> A.Exp Int -> A.Exp Int ->
                   A.Exp Double -> A.Exp Double -> A.Exp Double ->
                   A.Exp Double ->
                   ContinousGenerator (A.Exp Double)
-ridgedMultiGen canvas quality freq lac octaveCount maxOctave seed exponent' offset gain z = Generator canvas $ \point ->
+ridgedMultiGen quality freq lac octaveCount maxOctave seed exponent' offset gain z = unitGenerator $ \point ->
     let finalValue = value $
               A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
 
