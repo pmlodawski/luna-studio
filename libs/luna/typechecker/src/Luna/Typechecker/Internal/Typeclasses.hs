@@ -16,19 +16,19 @@ import           Data.List                                          (union)
 import           Data.Maybe                                         (isJust)
 
 
--- TODO [kg]: instance Functor Pred a potem zmienić lift na fmap
-mguPred :: Pred -> Pred -> Maybe Sub.Subst -- why so Maybe? why not just 'm'?
+data Pred = IsIn TID Ty.Type
+          deriving (Eq, Show)
+
+
+mguPred :: Pred -> Pred -> Maybe Sub.Subst
 mguPred = liftPred Unf.mgu
 
-matchPred :: Pred -> Pred -> Maybe Sub.Subst -- why so Maybe? why not just 'm'?
+matchPred :: Pred -> Pred -> Maybe Sub.Subst
 matchPred = liftPred Unf.match
 
 liftPred :: Monad m => (Ty.Type -> Ty.Type -> m a) -> Pred -> Pred -> m a
 liftPred m (IsIn i t) (IsIn i' t') | i == i'   = m t t'
                                    | otherwise = fail "classes differ"
-
--- TODO [kgdk] 14 sie 2014: Z jakich monad tutaj korzystamy? Ustalić i pozbyć się `fail`
-
 
 
 -- | Qualify.
@@ -48,26 +48,17 @@ instance Sub.Types t => Sub.Types (Qual t) where
 
 
 
--- TODO [kgdk] 21 sie 2014: przesunąć wszystkie klasy na górę plików
-data Pred = IsIn TID Ty.Type
-          deriving (Eq, Show)
-
-
 instance Sub.Types Pred where
   apply s (IsIn i t) = IsIn i (Sub.apply s t)
   tv (IsIn _ t)      = Sub.tv t
-
--- TODO [kgdk] 14 sie 2014: napisać instancje Show dla Qual i Pred
 
 
 type Class = ([TID], [Inst])
 type Inst  = Qual Pred
 
--- TODO [kgdk] 18 sie 2014: rozważyć, które 'type' zmienić na 'newtype'/'data'
-
 
 data ClassEnv = ClassEnv {
-                  classes :: TID -> Maybe Class, -- TODO [kg]: IntMap, będzie trzeba TID = Int
+                  classes :: TID -> Maybe Class,
                   defaults :: [Ty.Type]
                 }
 
@@ -92,9 +83,6 @@ modify ce i c = ce {
                        else classes ce j
                 }
 
--- TODO [kgdk] 18 sie 2014: zastąpić przez coś bardziej nienormalnego jak... nie wiem... Data.Map?
-
-
 --initialEnv :: ClassEnv
 --initialEnv = ClassEnv {
 --               classes = \_ -> fail "class not defined/found",
@@ -107,7 +95,6 @@ modify ce i c = ce {
 type EnvTransformer = ClassEnv -> Maybe ClassEnv
 
 
--- TODO [kgdk] 18 sie 2014: zastąpić przez (>=>)
 infixr 5 <:>
 (<:>) :: EnvTransformer -> EnvTransformer -> EnvTransformer
 (f <:> g) ce = do ce' <- f ce
@@ -138,7 +125,6 @@ overlap p q = defined (mguPred p q)
 
 
 
--- TODO [kgdk] 21 sie 2014: refactor, był problem z recursive import
 -- | List predicates from superclasses: if is instance of a class, then there must be instances
 -- for all superclasses.
 -- If predicate 'p' then all of 'bySuper ce p' must hold as well.
@@ -159,6 +145,3 @@ entail :: ClassEnv -> [Pred] -> Pred -> Bool
 entail ce ps p = any (p `elem`) (map (bySuper ce) ps) || case byInst ce p of
                                                            Nothing -> False
                                                            Just qs -> all (entail ce ps) qs
-
--- TODO [kgdk] 18 sie 2014: zmienić case na maybe
-

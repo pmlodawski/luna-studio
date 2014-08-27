@@ -1,4 +1,4 @@
-module Luna.Typechecker.Tests.Internal.AST.SchemeSpec (spec) where
+module Test.Luna.Typechecker.Internal.AmbiguitySpec (spec) where
 
 import qualified Luna.Typechecker.Internal.AST.Alternatives as Alt
 import qualified Luna.Typechecker.Internal.AST.Common       as Cmm
@@ -28,4 +28,4 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "Luna/Typechecker/Internal/AST/Scheme.hs" $ it "is" pending
+  describe "Luna/Typechecker/Internal/Ambiguity.hs" $ it "is" pending

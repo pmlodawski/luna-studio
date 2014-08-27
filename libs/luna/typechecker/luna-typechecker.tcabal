@@ -29,9 +29,9 @@ Executable luna-typechecker-tests
   GHC-Options:        -threaded -Wall -O2
   Build-Depends:      base
                     , luna-typechecker
+                    , mtl
                     , flowbox-luna-base
                     , hspec
+                    , QuickCheck
 --                    , array
 --                    , containers
---                    , QuickCheck
---                    , flowbox-luna-base
