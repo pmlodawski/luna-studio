@@ -26,3 +26,4 @@ main = do
                        : ("-package-db=" ++ (Cfg.pkgDb . Cfg.local)  cfg)
                        : args
     Exit.exitWith exitCode
+

@@ -19,3 +19,6 @@
 [submodule "third-party/hs-tls"]
 	path = third-party/hs-tls
 	url = https://github.com/remdezx/hs-tls.git
+[submodule "third-party/hint"]
+	path = third-party/hint
+	url = https://github.com/remdezx/hint.git
