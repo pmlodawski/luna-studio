@@ -43,6 +43,7 @@ import qualified Luna.Pass.Analysis.Alias.Alias              as Alias
 import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
 
 
+
 logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Session"
 
@@ -52,7 +53,6 @@ type Session a = EitherT Error.ErrorStr (StateT Env I.Interpreter) a
 
 run :: Config -> Env -> Session a -> IO (Either Error a)
 run config env session = do
-    print $ Just $ Config.topDir $ Config.ghcS config
     result <- I.unsafeRunInterpreterWithTopDirAndArgs
                 (Just $ Config.topDir $ Config.ghcS config)
                 [ "-no-user-package-db"
@@ -69,7 +69,14 @@ run config env session = do
 
 initialize :: Session ()
 initialize = do
+    lift2 $ I.reset
+    flags <- lift2 $ I.runGhc GHC.getSessionDynFlags
+    print $ length $ GHC.extensions flags
+
     setHardcodedExtensions
+    flags <- lift2 $ I.runGhc GHC.getSessionDynFlags
+    print $ length $ GHC.extensions flags
+
     lift2 $ I.setImportsQ [("Luna.Target.HS", Nothing)]
     runDecls Helpers.operation
     runDecls Helpers.hash
@@ -116,6 +123,18 @@ runAssignment asigned asignee =
 
 setHardcodedExtensions :: Session ()
 setHardcodedExtensions = do
+    setFlags   [ GHC.Opt_ImplicitPrelude
+               , GHC.Opt_MonomorphismRestriction
+               , GHC.Opt_DatatypeContexts
+               , GHC.Opt_TraditionalRecordSyntax
+               , GHC.Opt_EmptyDataDecls
+               , GHC.Opt_ForeignFunctionInterface
+               , GHC.Opt_PatternGuards
+               , GHC.Opt_DoAndIfThenElse
+               , GHC.Opt_RelaxedPolyRec
+               , GHC.Opt_ExtendedDefaultRules
+               ]
+
     setFlags   [ GHC.Opt_DataKinds
                , GHC.Opt_DeriveDataTypeable
                , GHC.Opt_DeriveGeneric
@@ -128,7 +147,7 @@ setHardcodedExtensions = do
                , GHC.Opt_UndecidableInstances
 
                , GHC.Opt_MultiParamTypeClasses
-               --, GHC.Opt_FunctionalDependencies
+               , GHC.Opt_OverlappingInstances
                ]
     unsetFlags [ GHC.Opt_MonomorphismRestriction
                ]

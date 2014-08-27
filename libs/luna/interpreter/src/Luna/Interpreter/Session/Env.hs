@@ -44,6 +44,6 @@ mk = Env MapForest.empty SetForest.empty
 
 instance Default Env where
     def = mk def
-             0
+             1
              (DefPoint 0 [Crumb.Module "Main", Crumb.Function "main" []])
              (const (void . return))

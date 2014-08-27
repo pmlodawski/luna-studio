@@ -8,6 +8,7 @@ module Luna.Interpreter.Session.AST.Executor where
 
 import           Control.Monad.State        hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
+import qualified Data.Char                  as Char
 import qualified Data.List                  as List
 
 import           Flowbox.Prelude                            hiding (children, inside)
@@ -131,11 +132,21 @@ evalFunction funName callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
         funStr = if GraphParser.isOperator funName then "(" ++ funName ++ ")" else funName
-    typedFun  <- TypeCheck.function funStr argsVarNames
-    typedArgs <- mapM TypeCheck.variable argsVarNames
-    let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
-        argSeparator  = " `call` "
-        operation     = List.intercalate argSeparator (function : typedArgs)
+    --typedFun  <- TypeCheck.function funStr argsVarNames
+    --typedArgs <- mapM TypeCheck.variable argsVarNames
+    --let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
+    --    argSeparator  = " `call` "
+    --let operation     = List.intercalate argSeparator (function : typedArgs)
+    let mkArg v@(h:_)
+            | Char.isDigit h = "(val " ++ v ++ ")"
+            | Char.isUpper h = "Con_" ++ v
+            | otherwise      = v
+        mkObj v@(h:_)
+            | Char.isDigit h = "(val " ++ v ++ ")"
+            | Char.isUpper h = "$ member (Proxy::Proxy " ++ show v ++ ") (val Cls_" ++ v ++ ")"
+            | otherwise      = v
+        args = map mkArg argsVarNames
+        operation     = "toIOEnv $ call " ++ List.intercalate " $ appNext " (reverse args) ++ " " ++ mkObj funName
         expression    = tmpVarName ++ " <- " ++ operation
     Session.runStmt expression
     hash <- Hash.compute tmpVarName

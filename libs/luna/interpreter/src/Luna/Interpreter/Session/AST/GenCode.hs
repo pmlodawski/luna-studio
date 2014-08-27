@@ -37,23 +37,10 @@ genModule = do
     hash      <- EitherT $ Hash.run ast
     ssa       <- EitherT $ SSA.run aliasInfo hash
     hast      <- EitherT $ HASTGen.run ssa
-    hsc       <- EitherT $ HSC.run  hast
-    putStrLn $ List.intercalate "\n\n" (map printSrc hsc)
-    return hsc
+    EitherT $ HSC.run  hast
 
 
 loadModule :: Session ()
 loadModule = do
     srcs <- genModule
     mapM_ (Session.runDecls . unlines . drop 18 . lines . view Source.code) srcs
-
-
-
-
-
-
------------
-printSrc :: Source -> [Char]
-printSrc src = ">>> file '" ++ List.intercalate "/" (src ^. Source.path) ++ "':\n\n"
-             ++ hsShow (src ^. Source.code)
-----------
