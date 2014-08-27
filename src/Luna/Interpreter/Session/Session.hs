@@ -8,10 +8,11 @@ module Luna.Interpreter.Session.Session where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import           Data.ByteString.Lazy         (ByteString)
-import qualified DynFlags                     as GHC
+import           Data.ByteString.Lazy                (ByteString)
+import qualified DynFlags                            as GHC
 import qualified GHC
-import qualified Language.Haskell.Interpreter as I
+import qualified Language.Haskell.Interpreter        as I
+import qualified Language.Haskell.Interpreter.Unsafe as I
 
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Config.Config                       (Config)
@@ -42,7 +43,6 @@ import qualified Luna.Pass.Analysis.Alias.Alias              as Alias
 import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
 
 
-
 logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Session"
 
@@ -52,8 +52,14 @@ type Session a = EitherT Error.ErrorStr (StateT Env I.Interpreter) a
 
 run :: Config -> Env -> Session a -> IO (Either Error a)
 run config env session = do
-    result <- I.runInterpreter
-            $ fst <$> runStateT (runEitherT (initialize config >> session)) env
+    print $ Just $ Config.topDir $ Config.ghcS config
+    result <- I.unsafeRunInterpreterWithTopDirAndArgs
+                (Just $ Config.topDir $ Config.ghcS config)
+                [ "-no-user-package-db"
+                , "-package-db " ++ Config.pkgDb (Config.global config)
+                , "-package-db " ++ Config.pkgDb (Config.local config)
+                ]
+               $ fst <$> runStateT (runEitherT (initialize >> session)) env
     return $ case result of
         Left e    -> Left $ Error.InterpreterError e
         Right res -> case res of
@@ -61,28 +67,18 @@ run config env session = do
             Right r -> Right r
 
 
-initialize :: Config -> Session ()
-initialize config = do
-    lift2 I.reset
-    lift2 $ I.runGhc $ do
-        flags <- GHC.getSessionDynFlags
-        void $ GHC.setSessionDynFlags flags
-                { GHC.extraPkgConfs = ( [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
-                                        , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
-                                        ] ++) . GHC.extraPkgConfs flags
-                , GHC.hscTarget = GHC.HscInterpreted
-                , GHC.ghcLink   = GHC.LinkInMemory
-                --, GHC.verbosity = 4
-                }
+initialize :: Session ()
+initialize = do
     setHardcodedExtensions
-    lift2 $ I.setImportsQ [("Prelude", Nothing)
-                          ,("Control.Monad", Nothing)
-                          ,("Data.Hash", Just "Data.Hash")
-                          ,("Data.Word", Nothing)
-                          ,("Luna.Target.HS", Nothing)
-                          ]
+    lift2 $ I.setImportsQ [("Luna.Target.HS", Nothing)]
     runDecls Helpers.operation
     runDecls Helpers.hash
+
+
+setImports :: [String] -> Session ()
+setImports imports = lift2 $ I.runGhc $
+    GHC.setContext $ map (GHC.IIDecl . GHC.simpleImportDecl . GHC.mkModuleName) imports
+
 
 
 setFlags :: [GHC.ExtensionFlag] -> Session ()
@@ -131,7 +127,7 @@ setHardcodedExtensions = do
                , GHC.Opt_TemplateHaskell
                , GHC.Opt_UndecidableInstances
 
-               --, GHC.Opt_MultiParamTypeClasses
+               , GHC.Opt_MultiParamTypeClasses
                --, GHC.Opt_FunctionalDependencies
                ]
     unsetFlags [ GHC.Opt_MonomorphismRestriction
