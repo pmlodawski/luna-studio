@@ -68,7 +68,7 @@ compileAndRun imports declarations stmt = do
     GHC.setTargets []
     GHC.load GHC.LoadAllTargets
     setImports imports
-    _ <- GHC.runDecls declarations
+    _  <- GHC.runDecls declarations
     rr <- GHC.runStmt stmt GHC.RunToCompletion
     case rr of
             GHC.RunOk _        -> liftIO $ logger info "runOk"
