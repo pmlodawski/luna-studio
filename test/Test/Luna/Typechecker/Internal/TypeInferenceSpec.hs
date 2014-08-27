@@ -1,4 +1,4 @@
-module Luna.Typechecker.Tests.Internal.BindingGroupsSpec (spec) where
+module Test.Luna.Typechecker.Internal.TypeInferenceSpec (spec) where
 
 import qualified Luna.Typechecker.Internal.AST.Alternatives as Alt
 import qualified Luna.Typechecker.Internal.AST.Common       as Cmm
@@ -28,4 +28,4 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "Luna/Typechecker/Internal/BindingGroups.hs" $ it "is" pending
+  describe "Luna/Typechecker/Internal/TypeInference.hs" $ it "is" pending

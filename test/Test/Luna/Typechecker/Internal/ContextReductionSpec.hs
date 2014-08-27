@@ -1,4 +1,4 @@
-module Luna.Typechecker.Tests.Internal.AST.ExprSpec (spec) where
+module Test.Luna.Typechecker.Internal.ContextReductionSpec (spec) where
 
 import qualified Luna.Typechecker.Internal.AST.Alternatives as Alt
 import qualified Luna.Typechecker.Internal.AST.Common       as Cmm
@@ -28,4 +28,4 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "Luna/Typechecker/Internal/AST/Expr.hs" $ it "is" pending
+  describe "Luna/Typechecker/Internal/ContextReduction.hs" $ it "is" pending

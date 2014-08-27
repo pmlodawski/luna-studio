@@ -11,6 +11,23 @@ import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
 
 import           Luna.Typechecker.Internal.AST.Common       (ID)
 
+
+--data Pat = Con             { _id :: ID, _name      :: String                          }  -- to jest tylko konstruktor
+--         | Var             { _id :: ID, _name      :: String                          }
+--         | Wildcard        { _id :: ID                                                }
+--         | Lit             { _id :: ID, _value     :: Lit                             }
+         
+--         | Tuple           { _id :: ID, _items     :: [Pat]                           }
+--         | App             { _id :: ID, _src       :: Pat       , _args      :: [Pat] }
+--         | Typed           { _id :: ID, _pat       :: Pat       , _cls       :: Type  }
+--         | RecWildcard     { _id :: ID                                                }
+--         deriving (Show, Eq, Generic, Read)
+
+
+
+
+
+-- TODO [kgdk] 21 sie 2014: _scheme w Con musi być osobno
 data Pat = Con             { _id :: ID, _name :: String, _scheme :: Sch.Scheme, _args :: [Pat] }
          | Var             { _id :: ID, _name :: String                                        }
          | Wildcard        { _id :: ID                                                         }

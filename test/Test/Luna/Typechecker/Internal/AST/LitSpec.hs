@@ -1,4 +1,4 @@
-module Luna.Typechecker.Tests.Internal.AST.LitSpec (spec) where
+module Test.Luna.Typechecker.Internal.AST.LitSpec (spec) where
 
 import qualified Luna.Typechecker.Internal.AST.Alternatives as Alt
 import qualified Luna.Typechecker.Internal.AST.Common       as Cmm

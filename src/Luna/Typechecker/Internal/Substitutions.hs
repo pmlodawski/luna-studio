@@ -11,8 +11,6 @@ import           Data.Maybe                                         (fromMaybe)
 -- Example: substitute 
 type Subst = [(Ty.Tyvar, Ty.Type)]
 
--- TODO [kgdk] 14 sie 2014: ogarnąć aliasy typów tak, by np. wyświetlać 'String' a nie '[Char]'
-
 -- | Empty substitution.
 nullSubst :: Subst
 nullSubst = []
@@ -20,9 +18,6 @@ nullSubst = []
 -- | Singleton substitution.
 (+->) :: Ty.Tyvar -> Ty.Type -> Subst
 u +-> t = [(u, t)]
-
--- TODO [kgdk] 14 sie 2014: wszystko, co wykorzystuje (+->), otestować dokładnie:
--- sprawdzić właściwość, że konstuowane jest 'u +-> t' wyłącznie gdy 'kind u = kind t'
 
 -- |Composition of substitutions. Order matters.
 --
@@ -46,15 +41,9 @@ merge s1 s2 = if agree then return (s1 ++ s2) else fail "merge fails"
   where agree = all (\v -> apply s1 (Ty.TVar v) == apply s2 (Ty.TVar v))
                     (map fst s1 `intersect` map fst s2)
 
--- TODO [kgdk] 14 sie 2014: merge działa w czasie O(n^2) przez 'intersect'. Jeśli Subst będzie inaczej
--- reprezentowany to można nawet do O(n) zejść.
-
-
-
 
 -- --------------------------------------------------------------------------------
 
--- TODO [kgdk] 21 sie 2014: przenieść to co poniżej gdzieś (było: recursive import)
 class Types t where
   apply :: Subst -> t -> t -- ^ Substitutions can be applied to types-and, in fact, to any other value with type components-in a natural way.
   tv :: t -> [Ty.Tyvar]    -- ^ Returns the set of type variables (i.e., Tyvars) appearing in its argument, listed in order of first occurrence (from left to right), with no duplicates.
@@ -67,14 +56,10 @@ instance Types Ty.Type where
   tv (Ty.TVar u)  = [u]
   tv (Ty.TAp l r) = tv l `union` tv r
   tv _            = [] -- no type variables from TGen and TCon
-
--- TODO [kgdk] 14 sie 2014: czy apply/tv dla TGen/TCon powinno rzucać error czy działać?
+  -- TODO [kgdk] 25 sie 2014: what's the expected behaviour for TGen? what for TCon?
 
 
 instance Types a => Types [a] where
   apply s = map (apply s)
-  tv = nub . concatMap tv -- O(n^2)
-
--- TODO [kgdk] 14 sie 2014: poprawić implementację 'tv', by była w czasie O(n log n). Na 95% konieczne będzie
--- zachowanie kolejności elementów.
+  tv = nub . concatMap tv
 

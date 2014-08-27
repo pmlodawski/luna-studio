@@ -20,10 +20,9 @@ instance HasKind Ty.Tycon where
 instance HasKind Ty.Type where
   kind (Ty.TVar u)   = kind u
   kind (Ty.TCon tc)  = kind tc
-  kind (Ty.TAp t _)  = case kind t of
-                         (Knd.Kfun _ k) -> k
-                         _              -> error "kind mismatch"
-                         -- TODO [kgdk] 21 sie 2014: checking, że t' == k'
+  kind (Ty.TAp t t')  = case kind t of
+                         Knd.Kfun k' k | kind t' == k' -> k
+                         _                             -> error "kind mismatch"
   kind (Ty.TGen _)   = error "HasKind.hs:HasKind Ty.Type/TGen should never be asked for kind!"
 
 -- TODO [kgdk] 14 sie 2014: zmienić typ zwracany kind na Either by obsługiwać errory
