@@ -29,7 +29,6 @@ import qualified Luna.Interpreter.Session.Env               as Env
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
-import qualified Luna.Interpreter.Session.TypeCheck         as TypeCheck
 import qualified Luna.Pass.Transform.Graph.Parser.Parser    as GraphParser
 
 

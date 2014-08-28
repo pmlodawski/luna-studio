@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-module Common where
+module Test.Luna.Interpreter.Common where
 
 import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error

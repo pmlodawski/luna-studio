@@ -5,12 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module InterpreterSpec where
+module Test.Luna.Interpreter.InterpreterSpec where
 
 import Control.Monad.State hiding (mapM, mapM_)
 import Test.Hspec
 
-import qualified Common
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Luna.Interpreter.Session.AST.Executor       as Executor
@@ -20,7 +19,8 @@ import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoi
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Session            (Session)
-import qualified SampleCodes
+import qualified Test.Luna.Interpreter.Common                as Common
+import qualified Test.Luna.Interpreter.SampleCodes           as SampleCodes
 
 
 rootLogger :: Logger
