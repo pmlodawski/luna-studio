@@ -43,3 +43,6 @@
 [submodule "tools/graphics/webghci"]
 	path = tools/graphics/webghci
 	url = git@github.com:korrix/WebGHCI.git
+[submodule "third-party/imagemagick"]
+	path = third-party/imagemagick
+	url = git@github.com:korrix/imagemagick.git

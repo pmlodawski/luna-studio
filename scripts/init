@@ -164,11 +164,13 @@ def install_from_sources(name, version=None):
 
 def instal_c2hs(name, version):
     install_from_sources('haskell-src-exts', version='1.13.5')
-    try_call('cd third-party/protocol-buffers && cabal install')
     try_call('cd third-party/language-c-0.4.5 && cabal install')
-    install_from_sources('hprotoc')
     return (name + '-' + version)
 
+def install_hprotoc(name, version):
+    try_call('cd third-party/protocol-buffers && cabal install')
+    install_from_sources('hprotoc')
+    return (name)
 
 def main():
     if os.path.exists(sboxName):
@@ -206,6 +208,8 @@ def main():
     checkCabalPkg("c2hs", version="0.16.5", installUsing=instal_c2hs)
 
     checkCabalPkg("gtk2hs-buildtools", check="gtk2hsC2hs")
+
+    checkCabalPkg("hprotoc", installUsing=install_hprotoc) # FIXME [KL]: Temporary fix for hprotoc
 
     print_info ("Generating Protocol Buffers files using genproto")
     path = os.path.join(rootPath, 'scripts', 'genproto')

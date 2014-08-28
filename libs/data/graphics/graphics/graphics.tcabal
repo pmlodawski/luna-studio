@@ -30,7 +30,7 @@ Library
                   bmp                      ,
                   containers               ,
                   flowbox-utils            ,
-                  imagemagick              ,
+                  imagemagick   >= 0.0.3.6 ,
                   lifted-base              ,
                   linear                   ,
                   linear-accelerate        ,
@@ -46,6 +46,9 @@ Library
                   cubicbezier
 
 Executable test_generator
+  if !flag(cuda)
+    buildable: False
+
   Main-Is:        Generator.hs
   Hs-Source-Dirs: test
 
@@ -75,6 +78,9 @@ Executable test_generator
                   vector
 
 Executable test_bezier
+  if !flag(cuda)
+    buildable: False
+
   Main-Is:        Bezier.hs
   Hs-Source-Dirs: test
 
@@ -107,6 +113,9 @@ Executable test_bezier
     build-depends:      accelerate-cuda  == 0.15.*
 
 Executable test_merge
+  if !flag(cuda)
+    buildable: False
+
   Main-Is:        Merge.hs
   Hs-Source-Dirs: test
 
@@ -137,6 +146,9 @@ Executable test_merge
     build-depends:      accelerate-cuda  == 0.15.*
 
 Executable test_color
+  if !flag(cuda)
+    buildable: False
+    
   Main-Is:        Color.hs
   Hs-Source-Dirs: test
 

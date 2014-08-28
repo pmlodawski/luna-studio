@@ -23,7 +23,7 @@ import Data.Array.Accelerate.Array.Sugar
 import Data.Foldable                     (Foldable)
 import Data.Typeable
 
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (lift)
 
 
 

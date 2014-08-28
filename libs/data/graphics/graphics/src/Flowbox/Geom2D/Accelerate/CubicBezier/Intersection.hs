@@ -13,7 +13,7 @@ import Data.Array.Accelerate as A
 
 import Math.Coordinate.Cartesian (Point2(..))
 import Flowbox.Geom2D.Accelerate.CubicBezier
-import Flowbox.Prelude hiding ((<*), (?), fst, snd)
+import Flowbox.Prelude hiding ((<*), (?), fst, snd, lift)
 
 
 
