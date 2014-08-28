@@ -4,168 +4,275 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts #-}
-
 module Flowbox.Graphics.Image.Merge where
 
-import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
 
-import           Flowbox.Graphics.Channel           (ChannelAcc)
-import qualified Flowbox.Graphics.Channel           as Channel
-import           Flowbox.Graphics.Image             (Image)
-import qualified Flowbox.Graphics.Image             as Image
-import           Flowbox.Graphics.Image.Composition (Mask(..), MaskSource(..))
-import qualified Flowbox.Graphics.Image.Composition as Comp
-import qualified Flowbox.Graphics.Utils             as U
-import           Flowbox.Prelude
+import           Flowbox.Graphics.Composition.Generators.Structures
+import qualified Flowbox.Graphics.Utils                             as U
+import           Flowbox.Prelude                                    hiding (min, max)
+import qualified Flowbox.Prelude                                    as P
 
 
 
-data MergeOperation ix a = ATop         Channel.Name Channel.Name
-                         | Average
-                         | ColorBurn
-                         | ColorDodge
-                         | ConjointOver Channel.Name Channel.Name
-                         | Copy
-                         | Difference
-                         | DisjointOver Channel.Name Channel.Name
-                         | DivideByDst
-                         | DivideBySrc
-                         | Divide
-                         | Exclusion
-                         | From
-                         | Geometric
-                         | HardLight
-                         | Hypot
-                         | In           Channel.Name
-                         | WithMask     Channel.Name
-                         | Matte        Channel.Name
-                         | Max
-                         | Min
-                         | Minus
-                        -- | Mix          (Exp a) -- INFO: implemented this as a separate function
-                                                  -- was identical to `Copy` with `mix` attribute set in the `merge` function)
-                                                  -- made no sense to make this an option of merge, since it would be possible to set the mix-amount twice
-                         | Multiply
-                         | Out          Channel.Name
-                         | Over         Channel.Name
-                         | Overlay
-                         | Plus
-                         | Screen
-                         | SoftLight
-                         | Stencil      Channel.Name
-                         | Under        Channel.Name
-                         | XOR          Channel.Name Channel.Name
---               | AddMix (Map ChannelName (Curve, Curve))
---                         | Custom (ImageAcc ix a -> ImageAcc ix a -> Image.Result (ImageAcc ix a))
+type Overlay a         = A.Exp a
+type OverlayAlpha a    = A.Exp a
+type Background a      = A.Exp a
+type BackgroundAlpha a = A.Exp a
 
-applyMerge :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a)) => MergeOperation ix a -> img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> Image.Result (img (ChannelAcc ix a))
-applyMerge mergeType overlay background = case mergeType of
-    ATop alphaNameOv alphaNameBg -> do alphaChanOv <- Image.get alphaNameOv overlay
-                                       alphaChanBg <- Image.get alphaNameBg background
-                                       mergeWith4 alphaChanOv alphaChanBg $
-                                           \alphaOv alphaBg ov bg -> bg * alphaOv + ov * U.invert alphaBg -- TODO: nuke version, gotta check this later and make sure it works as intended, kinda feels like imagemagick explains it a bit differently
-    Average           -> mergeWith $ \ov bg -> (bg + ov) / 2
-    ColorBurn         -> mergeWith $ \ov bg -> U.invert $ U.invert bg / ov
-    ColorDodge        -> mergeWith $ \ov bg -> bg / U.invert ov
-    ConjointOver alphaNameOv alphaNameBg -> do alphaChanOv <- Image.get alphaNameOv overlay
-                                               alphaChanBg <- Image.get alphaNameBg background
-                                               mergeWith4 alphaChanOv alphaChanBg $ 
-                                                   \alphaOv alphaBg ov bg -> A.cond (alphaBg A.>* alphaOv) bg $ bg + ov * U.invert alphaBg / alphaOv
-    Copy              -> mergeWith (\_ bg -> bg)
-    Difference        -> mergeWith (\ov bg -> abs $ bg - ov)
-    DisjointOver alphaNameOv alphaNameBg -> do alphaChanOv <- Image.get alphaNameOv overlay
-                                               alphaChanBg <- Image.get alphaNameBg background
-                                               mergeWith4 alphaChanOv alphaChanBg $
-                                                   \alphaOv alphaBg ov bg -> A.cond (alphaBg + alphaOv A.<* 1) (bg + ov) $ bg + ov * U.invert alphaBg / alphaOv
-    DivideByDst       -> mergeWith divideWithCheck
-    DivideBySrc       -> mergeWith $ flip divideWithCheck
-    Divide            -> mergeWith divideWithCheck
-    Exclusion         -> mergeWith (\ov bg -> bg + ov - 2 * bg * ov)
-    From              -> mergeWith (-)
-    Geometric         -> mergeWith (\ov bg -> 2 * bg * ov / (bg + ov))
-    HardLight         -> mergeWith $ flip overlayFun
-    Hypot             -> mergeWith (\ov bg -> sqrt $ bg ^ 2 + ov ^ 2)
-    In alphaName      -> do alphaChan <- Image.get alphaName overlay
-                            mergeWith3 alphaChan $ \alpha _ bg -> bg * alpha
-    WithMask alphaName -> do alphaChan <- Image.get alphaName background
-                             mergeWith3 alphaChan $ \alpha ov _ -> ov * alpha
-    Matte alphaName   -> do alphaChan <- Image.get alphaName background
-                            mergeWith3 alphaChan $ \alpha ov bg -> bg * alpha + ov * U.invert alpha
-    Max               -> mergeWith max
-    Min               -> mergeWith min
-    Minus             -> mergeWith $ flip (-)
-    --Mix val           -> mergeWith (\ov bg -> bg * val + ov * (U.invert val)) -- INFO: commented out because: check the datatype
-    Multiply          -> mergeWith multiplyWithCheck
-    Out alphaName     -> do alphaChan <- Image.get alphaName overlay
-                            mergeWith3 alphaChan $ \alpha _ bg -> bg * U.invert alpha
-    Over alphaName    -> do alphaChan <- Image.get alphaName background
-                            mergeWith3 alphaChan $ \alpha ov bg -> bg + ov * U.invert alpha
-    Overlay           -> mergeWith overlayFun
-    Plus              -> mergeWith (+)
-    Screen            -> mergeWith $ \ov bg -> U.invert $ U.invert ov * U.invert bg -- INFO: imagemagick version, nuke does this in a slightly different way but the result might be the same
-    SoftLight         -> mergeWith softLightFunc
-    Stencil alphaName -> do alphaChan <- Image.get alphaName background
-                            mergeWith3 alphaChan $ \alpha ov _ -> ov * U.invert alpha
-    Under alphaName   -> do alphaChan <- Image.get alphaName overlay
-                            mergeWith3 alphaChan $ \alpha ov bg -> bg * U.invert alpha + ov
-    XOR alphaNameOv alphaNameBg -> do alphaChanOv <- Image.get alphaNameOv overlay
-                                      alphaChanBg <- Image.get alphaNameBg background
-                                      mergeWith4 alphaChanOv alphaChanBg $
-                                          \alphaOv alphaBg ov bg -> bg * U.invert alphaOv + ov * U.invert alphaBg
---  AddMix (Map ChannelName (Curve, Curve))
---    Custom f          -> f overlay background
-    where mergeWith f              = return $ Image.channelUnionWith (Channel.zipWith f)              overlay background
-          mergeWith3 chan f        = return $ Image.channelUnionWith (Channel.zipWith3 f chan)        overlay background
-          mergeWith4 chanA chanB f = return $ Image.channelUnionWith (Channel.zipWith4 f chanA chanB) overlay background
-          divideWithCheck a b      = checkForNegatives a b (a / b)
-          multiplyWithCheck a b    = checkForNegatives a b (a * b)
-          checkForNegatives a b    = A.cond (a A.<* 0 A.&&* b A.<* 0) 0
-          overlayFun ov bg         = A.cond (bg A.<=* 0.5) (2 * bg * ov) (1 - 2 * (1 - ov) * (1 - bg))
-          softLightFunc ov bg      = A.cond (bg A.<=* 0.5) (2 * bg * (ov / 2 + 0.25)) (U.invert $ 2 * U.invert bg * U.invert (ov / 2 + 0.25)) -- INFO: photoshop (?) version, nuke does this in a slightly different way and might produce different results
+type BlendMode a = Overlay a -> Background a -> A.Exp a
+
+type ComplicatedBlendMode a = Overlay a -> OverlayAlpha a -> Background a -> BackgroundAlpha a -> A.Exp a
+
+data AlphaBlend = Adobe
+                | Custom
+
+union :: Num a => a -> a -> a
+union a b = a + b - (a * b)
+
+-- FIXME [KL]: Bounding box now is taken from the overlay generator
+basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
+                             => ContinousGenerator (A.Exp a) -- ^ Overlay / Source / Foreground / A
+                             -> ContinousGenerator (A.Exp a) -- ^ Overlay alpha
+                             -> ContinousGenerator (A.Exp a) -- ^ Background / Destination / B
+                             -> ContinousGenerator (A.Exp a) -- ^ Background alpha
+                             -> AlphaBlend                   -- ^ Specifies if the same blending method is used on alpha channels
+                             -> BlendMode a                  -- ^ Function used for blending
+                             -> ContinousGenerator (A.Exp a) -- ^ Merge result
+basicColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOverlay) (Generator _ background) (Generator _ alphaBackground) alphaBlend blend =
+    Generator cnv $ \p ->
+    let alphaResult = \p' -> case alphaBlend of
+            Adobe  -> union (alphaOverlay p') (alphaBackground p')
+            Custom -> blend (alphaOverlay p') (alphaBackground p')
+    in (1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
+        (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (overlay p) (background p))
+
+-- FIXME [KL]: Bounding box now is taken from the overlay generator
+threeWayMerge :: (A.Elt a, A.IsFloating a)
+              => ContinousGenerator (A.Exp a) -- ^ A.R
+              -> ContinousGenerator (A.Exp a) -- ^ A.G
+              -> ContinousGenerator (A.Exp a) -- ^ A.B
+              -> ContinousGenerator (A.Exp a) -- ^ B.R
+              -> ContinousGenerator (A.Exp a) -- ^ B.G
+              -> ContinousGenerator (A.Exp a) -- ^ B.B
+              -> ContinousGenerator (A.Exp a) -- ^ A.A
+              -> ContinousGenerator (A.Exp a) -- ^ B.A
+              -> ComplicatedBlendMode a
+              -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
+threeWayMerge ar ag ab br bg bb aa ba blend =
+    (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, ba)
+    where merge ov aov bgnd abgnd = complicatedColorCompositingFormula ov aov bgnd abgnd blend
+
+-- FIXME [KL]: Bounding box now is taken from the aa' generator
+threeWayMerge' :: (A.Elt a, A.IsFloating a)
+              => ContinousGenerator (A.Exp a) -- ^ A.R
+              -> ContinousGenerator (A.Exp a) -- ^ A.G
+              -> ContinousGenerator (A.Exp a) -- ^ A.B
+              -> ContinousGenerator (A.Exp a) -- ^ B.R
+              -> ContinousGenerator (A.Exp a) -- ^ B.G
+              -> ContinousGenerator (A.Exp a) -- ^ B.B
+              -> ContinousGenerator (A.Exp a) -- ^ A.A
+              -> ContinousGenerator (A.Exp a) -- ^ B.A
+              -> AlphaBlend
+              -> BlendMode a
+              -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
+threeWayMerge' ar ag ab br bg bb aa ba alphaBlend blend =
+  (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, mergeAlpha aa ba)
+  where merge ov aov bgnd abgnd = basicColorCompositingFormula ov aov bgnd abgnd alphaBlend blend
+        mergeAlpha (Generator cnv aa') (Generator _ ba') = Generator cnv $ \p -> case alphaBlend of
+            Adobe  -> union (aa' p) (ba' p)
+            Custom -> blend (aa' p) (ba' p)
+
+-- FIXME [KL]: Bounding box now is taken from the overlay generator
+complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
+                                   => ContinousGenerator (A.Exp a)
+                                   -> ContinousGenerator (A.Exp a)
+                                   -> ContinousGenerator (A.Exp a)
+                                   -> ContinousGenerator (A.Exp a)
+                                   -> ComplicatedBlendMode a
+                                   -> ContinousGenerator (A.Exp a)
+complicatedColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOverlay) (Generator _ background) (Generator _ alphaBackground) blend =
+    Generator cnv $ \p -> blend (overlay p) (alphaOverlay p) (background p) (alphaBackground p)
+
+liftBlend :: (A.Elt a, A.IsFloating a) => BlendMode a -> ComplicatedBlendMode a
+liftBlend blend = \overlay _ background _ -> blend overlay background
 
 
-mask :: (A.Shape ix, A.Elt a, A.IsNum a, Image img (ChannelAcc ix a)) => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> Maybe (Mask img ix a) -> Image.Result (img (ChannelAcc ix a))
-mask imgA _ Nothing = Right imgA
-mask imgA imgB (Just theMask) = do
-    maskChan <- Image.get name maskImg
-    let applyMask = Channel.zipWith3 calculateMask maskChan
-        calculateMask alpha = flip (U.mix (Comp.invert invertFlag alpha))
-    return $ Comp.inject injection maskChan
-           $ Image.channelUnion (Image.channelIntersectionWith applyMask imgA imgB) imgA
-    where Mask name injection invertFlag maskImg' = theMask --case theMask of
-          maskImg = case maskImg' of
-              Local        -> imgA
-              External img -> img
-              --ChannelMask name' injection' invertFlag'          -> (name', injection', invertFlag', imgA)
-              --ImageMask   name' injection' invertFlag' maskImg' -> (name', injection', invertFlag', maskImg')
+-- | A*b + B*(1-a)
+atop :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+atop overlay alphaOverlay background alphaBackground = overlay * alphaBackground + background * U.invert alphaOverlay
+--atop overlay alphaOverlay background alphaBackground = background * alphaOverlay + overlay * U.invert alphaBackground
 
+-- | (A+B)/2
+average :: (A.Elt a, A.IsFloating a) => BlendMode a
+average overlay background = (overlay + background) / 2
 
-mix :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
-    => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> Exp a
-    -> Maybe (Mask img ix a)
-    -> Image.Result (img (ChannelAcc ix a))
-mix imgA imgB val maskInfo = do
-    let result = Image.channelUnion (Image.channelIntersectionWith (Channel.zipWith (U.mix val)) imgA imgB) imgA
-    mask result imgA maskInfo
+-- | 1 - min (1, (1-B)/A), 0 if A = 0
+-- Imagemagick says: 1 - ((1-B) / A)
+colorBurn :: (A.Elt a, A.IsFloating a) => BlendMode a
+colorBurn overlay background = (overlay A.==* 0.0) A.? (0, U.invert $ min 1 $ U.invert background / overlay)
 
--- INFO: `mix` but without using a mask (quite an often scenario, since the functions using `mix` apply the mask on their own)
-mix' :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
-    => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> Exp a -> Image.Result (img (ChannelAcc ix a))
-mix' imgA imgB val = mix imgA imgB val Nothing
+-- | min(1, B / (1-A)), 1 if A = 1
+-- Imagemagick says: B / (1-A)
+colorDodge :: (A.Elt a, A.IsFloating a) => BlendMode a
+colorDodge overlay background = (overlay A.==* 1.0) A.? (1, min 1 (background / U.invert overlay))
 
+-- | A + B(1-a)/b, A if a > b
+-- Dividing by zero avoided due to implementing a >= b condition. That way, if a = b = 0,
+-- it takes a pixel from A. Nuke does the same thing.
+conjointOver :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+conjointOver overlay alphaOverlay background alphaBackground =
+    (alphaOverlay A.>=* alphaBackground) A.? 
+        (overlay,
+        overlay + background * U.invert alphaOverlay / alphaBackground)
 
--- TODO: add alpha masking, bounding boxes, metadata, etc. (check confluence)
--- TODO: should there be a third Channel.Select for outgoing channels?
---       same thing can be achieved by not selecting channels from the image we're merging with
-merge :: (A.Shape ix, A.Elt a, A.IsFloating a, Image img (ChannelAcc ix a))
-    => img (ChannelAcc ix a) -> img (ChannelAcc ix a) -> MergeOperation ix a -> Channel.Select -> Channel.Select
-    -> Maybe (Mask img ix a) -> Exp a
-    -> Image.Result (img (ChannelAcc ix a))
-merge overlay background mergeType channelsOv channelsBg maskInfo mixValue = do
-    result      <- applyMerge mergeType overlay' background'
-    resultMixed <- mix' overlay result mixValue
-    mask resultMixed background maskInfo
-    where overlay'    = Image.selectChannels channelsOv overlay
-          background' = Image.selectChannels channelsBg background
+-- | A
+copy :: (A.Elt a, A.IsFloating a) => BlendMode a
+copy overlay _ = overlay
+
+-- | |A-B|
+difference :: (A.Elt a, A.IsFloating a) => BlendMode a
+difference overlay background = abs (overlay - background)
+
+-- | A + B(1-a)/b, A + B if a + b < 1
+disjointOver :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+disjointOver overlay alphaOverlay background alphaBackground =
+    (alphaOverlay + alphaBackground A.<* 1) A.?
+        (overlay + background,
+        overlay + background * U.invert alphaOverlay / alphaBackground)
+
+-- | A / B, 0 if B = 0 or (A < 0 and B < 0)
+--  In Nuke docs, there is an explanation for both cs and cb being negative.
+--  Case for cs being equal to 0.0 was tested with Nuke. For a channel with
+--  all zeroed values it produced a zero valued channel, while for channel
+--  having a value of 0.00001, it divided as expected, producing huge values
+--  in the result.
+divideBySrc :: (A.Elt a, A.IsFloating a) => BlendMode a
+divideBySrc overlay background = (background A.==* 0.0 A.||* (overlay A.<* 0.0 A.&&* background A.<* 0.0)) A.? (0, overlay / background)
+
+-- | B / A
+-- See docs for @divideBySrc
+divideByDst :: (A.Elt a, A.IsFloating a) => BlendMode a
+divideByDst = flip divideBySrc
+
+-- | A + B - 2AB
+exclusion :: (A.Elt a, A.IsFloating a) => BlendMode a
+exclusion overlay background = overlay + background - 2 * overlay * background
+
+-- | B - A
+from :: (A.Elt a, A.IsFloating a) => BlendMode a
+from overlay background = background - overlay
+
+-- | 2AB / (A+B)
+geometric :: (A.Elt a, A.IsFloating a) => BlendMode a
+geometric overlay background = 2 * overlay * background / (overlay + background)
+
+-- | if A <= 0.5 then 2 * @multiply else 1 - 2*(1-A)*(1-B)
+-- Nuke version: if A < 0.5 then multiply else screen - it's an error in docs.
+-- In reality, Nuke multiplies by 2 just like Imagemagick.
+--
+-- Nuke says the condition is A < 0.5, Imagemagick says it's A <= 0.5
+-- Since we have no idea why 0.5 would be special, we use Imagemagick version.
+--
+-- TODO[mm]: It seems that Nuke takes a max of 1 and result - investigate further.
+hardLight :: (A.Elt a, A.IsFloating a) => BlendMode a
+hardLight overlay background =
+    (overlay A.<=* 0.5) A.?
+        (2 * multiply overlay background,
+        U.invert $ 2 * U.invert overlay * U.invert background)
+
+-- | sqrt(A^2 + B^2)
+hypot :: (A.Elt a, A.IsFloating a) => BlendMode a
+hypot overlay background = sqrt $ overlay ** 2 + background ** 2
+
+-- | A*b
+inBlend :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+inBlend overlay _ _ alphaBackground = overlay * alphaBackground
+
+-- | B*a
+withMask :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+withMask _ alphaOverlay background _ = background * alphaOverlay
+
+-- | A*a + B(1-a)
+matte :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+matte overlay alphaOverlay background _ = overlay * alphaOverlay + background * U.invert alphaOverlay
+
+-- | max(A,B)
+max :: (A.Elt a, A.IsFloating a) => BlendMode a
+max overlay background = P.max overlay background
+
+-- | min(A,B)
+min :: (A.Elt a, A.IsFloating a) => BlendMode a
+min overlay background = P.min overlay background
+
+-- | A - B
+minus :: (A.Elt a, A.IsFloating a) => BlendMode a
+minus overlay background = overlay - background
+
+-- | A*B, A if A < 0 and B < 0
+-- Nuke says that when A and B are negative, we should return left value to prevent
+-- creating a positive value.
+multiply :: (A.Elt a, A.IsFloating a) => BlendMode a
+multiply overlay background = (overlay A.<* 0.0 A.&&* background A.<* 0.0) A.? (overlay, overlay * background)
+
+-- | A(1-b)
+out :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+out overlay _ _ alphaBackground = overlay * U.invert alphaBackground
+
+-- | A + B(1-a)
+over :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+over overlay alphaOverlay background _ = overlay + background * U.invert alphaOverlay
+
+-- | A + B
+plus :: (A.Elt a, A.IsFloating a) => BlendMode a
+plus = (+)
+
+-- | A + B - A * B
+screen :: (A.Elt a, A.IsFloating a) => BlendMode a
+screen overlay background = union overlay background
+
+-- | if A <= 0.5 then 1 - 2*(1-A)*(1-B) else 2 * @multiply
+-- See @hardLight
+overlayFun :: (A.Elt a, A.IsFloating a) => BlendMode a
+overlayFun overlay background = hardLight background overlay
+
+-- | if A <= 0.5 then B - (1 - 2*A) * B * (1-B) else B + (2 * A - 1) * (d(B) - B)
+-- where d(B) = if B <= 0.25 then ((16 * B - 12) * B + 4) * B else sqrt(B)
+-- Formula from W3C Compositing and Blending
+softLight :: (A.Elt a, A.IsFloating a) => BlendMode a
+softLight overlay background =
+    (overlay A.<=* 0.5) A.?
+        (background - (U.invert $ 2 * overlay) * background * U.invert background
+        , background + (2 * overlay - 1) * (d background - background))
+    where d x = (x A.<=* 0.25) A.? (((16 * x - 12) * x + 4) * x
+                                  , sqrt x)
+
+-- | 2AB + B^2 - 2 * B^2 * A
+softLightPegtop :: (A.Elt a, A.IsFloating a) => BlendMode a
+softLightPegtop overlay background =
+    2 * overlay * background + background ** 2 - 2 * (background ** 2) * overlay
+
+-- | B^(2^(2 * (0.5 - A)))
+softLightIllusions :: (A.Elt a, A.IsFloating a) => BlendMode a
+softLightIllusions overlay background =
+    background ** (2 ** (2 * (0.5 - overlay)))
+
+-- | if A <= 0.5 then 2 * A * B + B^2 * (1 - 2 * A) else sqrt(B) * (2 * A - 1) + 2 * B * (1-A)
+softLightPhotoshop :: (A.Elt a, A.IsFloating a) => BlendMode a
+softLightPhotoshop overlay background =
+    (overlay A.<=* 0.5) A.?
+        (2 * background * overlay + background ** 2 * (U.invert $ 2 * overlay)
+        , sqrt background * (2 * overlay - 1) + 2 * background * U.invert overlay)
+
+-- | B(1-a)
+stencil :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+stencil _ alphaOverlay background _ = background * U.invert alphaOverlay
+
+-- | A(1-b) + B
+under :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+under overlay _ background alphaBackground = overlay * U.invert alphaBackground + background
+
+-- | A(1-b) + B(1-a)
+xor :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+xor overlay alphaOverlay background alphaBackground =
+    overlay * U.invert alphaBackground + background * U.invert alphaOverlay

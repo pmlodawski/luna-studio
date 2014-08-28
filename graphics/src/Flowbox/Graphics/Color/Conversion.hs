@@ -12,8 +12,5 @@ import Data.Array.Accelerate
 
 
 
---type ColorAcc a = (Elt a, IsTuple a, Lift Exp a, Unlift Exp a) -- TODO: use this to put constraints on ColorConvertAcc parameters
-
---class (ColorAcc a, ColorAcc b) => ColorConvertAcc a b where
-class ColorConvertAcc a b where
-    convertColorAcc :: (Elt t, IsFloating t) => a (Exp t) -> b (Exp t)
+class ColorConvert a b where
+    convertColor :: (Elt t, IsFloating t) => a (Exp t) -> b (Exp t)

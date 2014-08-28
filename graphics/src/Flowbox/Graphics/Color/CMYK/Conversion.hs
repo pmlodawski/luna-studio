@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -11,29 +12,28 @@ module Flowbox.Graphics.Color.CMYK.Conversion where
 
 import           Data.Array.Accelerate
 
-import           Flowbox.Graphics.Color.Conversion
-import           Flowbox.Graphics.Color.Helpers
-import           Flowbox.Graphics.Color.Conversion
-import           Flowbox.Graphics.Color.RGB
-import           Flowbox.Graphics.Color.RGBA
-import           Flowbox.Graphics.Color.HSV
-import           Flowbox.Graphics.Color.HSL
 import           Flowbox.Graphics.Color.CMY
 import           Flowbox.Graphics.Color.CMYK
+import           Flowbox.Graphics.Color.Conversion
+import           Flowbox.Graphics.Color.Helpers
+import           Flowbox.Graphics.Color.HSL
+import           Flowbox.Graphics.Color.HSV
+import           Flowbox.Graphics.Color.RGB
+import           Flowbox.Graphics.Color.RGBA
 import           Flowbox.Graphics.Color.YUV
 import           Flowbox.Graphics.Color.YUV_HD
 import           Flowbox.Prelude
 
 
 
-toCMYK :: (Elt a, IsFloating a, ColorConvertAcc c CMYK) => c (Exp a) -> CMYK (Exp a)
-toCMYK = convertColorAcc
+toCMYK :: (Elt a, IsFloating a, ColorConvert c CMYK) => c (Exp a) -> CMYK (Exp a)
+toCMYK = convertColor
 
-instance ColorConvertAcc CMYK CMYK where
-    convertColorAcc = id
+instance ColorConvert CMYK CMYK where
+    convertColor = id
 
-instance ColorConvertAcc RGB CMYK where
-    convertColorAcc (RGB r' g' b') = CMYK c' m' y' k'
+instance ColorConvert RGB CMYK where
+    convertColor (RGB r' g' b') = CMYK c' m' y' k'
         where c'  = (1 - r' - k') / k''
               m'  = (1 - g' - k') / k''
               y'  = (1 - b' - k') / k''
@@ -41,20 +41,20 @@ instance ColorConvertAcc RGB CMYK where
               k'' = 1 - k'
               maxRGB = max r' $ max g' b'
 
-instance ColorConvertAcc RGBA CMYK where
-    convertColorAcc = helperColorConverter toCMYK
+instance ColorConvert RGBA CMYK where
+    convertColor = helperColorConverter toCMYK
 
-instance ColorConvertAcc HSV CMYK where
-    convertColorAcc = helperColorConverter toCMYK
+instance ColorConvert HSV CMYK where
+    convertColor = helperColorConverter toCMYK
 
-instance ColorConvertAcc HSL CMYK where
-    convertColorAcc = helperColorConverter toCMYK
+instance ColorConvert HSL CMYK where
+    convertColor = helperColorConverter toCMYK
 
-instance ColorConvertAcc CMY CMYK where
-    convertColorAcc = helperColorConverter toCMYK
+instance ColorConvert CMY CMYK where
+    convertColor = helperColorConverter toCMYK
 
-instance ColorConvertAcc YUV CMYK where
-    convertColorAcc = helperColorConverter toCMYK
+instance ColorConvert YUV CMYK where
+    convertColor = helperColorConverter toCMYK
 
-instance ColorConvertAcc YUV_HD CMYK where
-    convertColorAcc = helperColorConverter toCMYK
+instance ColorConvert YUV_HD CMYK where
+    convertColor = helperColorConverter toCMYK
