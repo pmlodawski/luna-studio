@@ -16,6 +16,8 @@ import Prelude                         hiding (error)
 
 import qualified Flowbox.System.Console.StyledText.StyledText as Text
 
+
+
 data Test = Test Int Int deriving(Show, Generic)
 
 instance FShow Test

@@ -70,10 +70,11 @@ parseNode inputs (nodeID, node) = do
 
 parseExprNode :: Node.ID -> String -> GPPass ()
 parseExprNode nodeID expr = case expr of
-    "List"  -> parseListNode  nodeID
-    "Tuple" -> parseTupleNode nodeID
-    '=':pat -> parsePatNode   nodeID pat
-    _       -> parseAppNode   nodeID expr
+    "List"        -> parseListNode   nodeID
+    "Tuple"       -> parseTupleNode  nodeID
+    '=':pat       -> parsePatNode    nodeID pat
+    '`':'`':'`':_ -> parseNativeNode nodeID expr
+    _             -> parseAppNode    nodeID expr
 
 
 parseInputsNode :: Node.ID -> [Expr] -> GPPass ()
@@ -120,6 +121,15 @@ parsePatNode nodeID pat = do
                 vars  -> mapM_ (\(i, v) -> State.addToNodeMap (nodeID, Port.Num i) v) $ zip [0..] vars
             State.addToBody e
         _      -> left "parsePatNode: Wrong Pat arguments"
+
+
+parseNativeNode :: Node.ID -> String -> GPPass ()
+parseNativeNode nodeID native = do
+    srcs <- State.getNodeSrcs nodeID
+    expr <- case Parser.parseExpr native $ ASTInfo.mk nodeID of
+                    Left  er     -> left $ show er
+                    Right (e, _) -> return e
+    addExpr nodeID expr
 
 
 parseAppNode :: Node.ID -> String -> GPPass ()
