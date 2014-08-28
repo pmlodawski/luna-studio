@@ -222,7 +222,7 @@ buildPat p = case p of
 
 
 showExpr :: Expr -> String
-showExpr expr = case expr of
+showExpr expr = case ddump expr of
     --Expr.Accessor     _ name     dst
     --Expr.App          _ src      args
     --Expr.AppCons_     _ args
@@ -245,7 +245,7 @@ showExpr expr = case expr of
     --Expr.Field        _ name     cls       value
     --Expr.Arg          _ pat      value
     --Expr.Native       _ segments
-    --Expr.NativeCode   _ code
+    Expr.NativeCode   _ code         -> "```" ++ code ++ "```"
     --Expr.NativeVar    _ name
     --Expr.Case         _ expr     match
     --Expr.Match        _ pat      body

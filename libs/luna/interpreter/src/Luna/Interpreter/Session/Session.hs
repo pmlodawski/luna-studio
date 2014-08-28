@@ -70,22 +70,11 @@ run config env session = do
 initialize :: Session ()
 initialize = do
     lift2 $ I.reset
-    flags <- lift2 $ I.runGhc GHC.getSessionDynFlags
-    print $ length $ GHC.extensions flags
-
     setHardcodedExtensions
-    flags <- lift2 $ I.runGhc GHC.getSessionDynFlags
-    print $ length $ GHC.extensions flags
-
-    lift2 $ I.setImportsQ [("Luna.Target.HS", Nothing)]
-    runDecls Helpers.operation
+    lift2 $ I.setImportsQ [ ("Data.Word", Nothing)
+                          , ("Luna.Target.HS", Nothing)
+                          ]
     runDecls Helpers.hash
-
-
-setImports :: [String] -> Session ()
-setImports imports = lift2 $ I.runGhc $
-    GHC.setContext $ map (GHC.IIDecl . GHC.simpleImportDecl . GHC.mkModuleName) imports
-
 
 
 setFlags :: [GHC.ExtensionFlag] -> Session ()
@@ -98,6 +87,16 @@ unsetFlags :: [GHC.ExtensionFlag] -> Session ()
 unsetFlags flags = lift2 $ I.runGhc $ do
     current <- GHC.getSessionDynFlags
     void $ GHC.setSessionDynFlags $ foldl GHC.xopt_unset current flags
+
+
+withFlags :: [GHC.ExtensionFlag] -> [GHC.ExtensionFlag] -> Session a -> Session a
+withFlags enable disable action = do
+    flags <- lift2 $ I.runGhc $ GHC.getSessionDynFlags
+    setFlags enable
+    unsetFlags disable
+    result <- action
+    lift2 $ I.runGhc $ GHC.setSessionDynFlags flags
+    return result
 
 
 runStmt :: String -> Session ()
@@ -122,35 +121,9 @@ runAssignment asigned asignee =
 
 
 setHardcodedExtensions :: Session ()
-setHardcodedExtensions = do
-    setFlags   [ GHC.Opt_ImplicitPrelude
-               , GHC.Opt_MonomorphismRestriction
-               , GHC.Opt_DatatypeContexts
-               , GHC.Opt_TraditionalRecordSyntax
-               , GHC.Opt_EmptyDataDecls
-               , GHC.Opt_ForeignFunctionInterface
-               , GHC.Opt_PatternGuards
-               , GHC.Opt_DoAndIfThenElse
-               , GHC.Opt_RelaxedPolyRec
-               , GHC.Opt_ExtendedDefaultRules
-               ]
+setHardcodedExtensions =
+    setFlags [ GHC.Opt_DataKinds ]
 
-    setFlags   [ GHC.Opt_DataKinds
-               , GHC.Opt_DeriveDataTypeable
-               , GHC.Opt_DeriveGeneric
-               , GHC.Opt_DysfunctionalDependencies
-               , GHC.Opt_FlexibleContexts
-               , GHC.Opt_FlexibleInstances
-               , GHC.Opt_GADTs
-               , GHC.Opt_RebindableSyntax
-               , GHC.Opt_TemplateHaskell
-               , GHC.Opt_UndecidableInstances
-
-               , GHC.Opt_MultiParamTypeClasses
-               , GHC.Opt_OverlappingInstances
-               ]
-    unsetFlags [ GHC.Opt_MonomorphismRestriction
-               ]
 
 
 setLibManager :: LibManager -> Session ()
