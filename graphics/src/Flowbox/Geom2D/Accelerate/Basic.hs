@@ -20,7 +20,7 @@ import           Data.Array.Accelerate.Array.Sugar
 import           Data.Typeable
 
 import Math.Coordinate.Cartesian (Point2(..))
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (lift)
 
 
 

@@ -85,10 +85,10 @@ instance ColorConvert YUV_HD RGB where
 -- = Helpers
 
 helperHsvHsl :: (Elt a, Elt (Plain b), IsNum a, IsScalar a, Lift Exp b, Num b) => Exp a -> b -> b -> Exp (Plain b, Plain b, Plain b)
-helperHsvHsl i x z = cond (i ==* 0) (lift (x,   z,   x*0))
-                   $ cond (i ==* 1) (lift (z,   x,   x*0))
-                   $ cond (i ==* 2) (lift (x*0, x,   z))
-                   $ cond (i ==* 3) (lift (x*0, z,   x))
-                   $ cond (i ==* 4) (lift (z,   x*0, x))
-                   $ cond (i ==* 5) (lift (x,   x*0, z))
-                   $ lift (x,   z,   x*0)
+helperHsvHsl i x z = cond (i ==* 0) (A.lift (x,   z,   x*0))
+                   $ cond (i ==* 1) (A.lift (z,   x,   x*0))
+                   $ cond (i ==* 2) (A.lift (x*0, x,   z))
+                   $ cond (i ==* 3) (A.lift (x*0, z,   x))
+                   $ cond (i ==* 4) (A.lift (z,   x*0, x))
+                   $ cond (i ==* 5) (A.lift (x,   x*0, z))
+                   $ A.lift (x,   z,   x*0)
