@@ -16,7 +16,7 @@
 
 module Flowbox.Graphics.Composition.Generators.Structures where
 
-import Flowbox.Prelude hiding            (transform)
+import Flowbox.Prelude hiding            (transform, lift)
 
 import Data.Array.Accelerate
 import Data.Array.Accelerate.Array.Sugar

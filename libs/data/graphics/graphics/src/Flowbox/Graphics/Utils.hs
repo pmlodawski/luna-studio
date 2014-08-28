@@ -86,32 +86,32 @@ frac x = x - A.fromIntegral (A.floor x :: Exp Int)
 
 -- TODO: Try to make accelerate tuples instances of Field1,2,3,4... from lens
 fstTrio :: forall a b c. (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp a
-fstTrio e = let (x, _:: Exp b, _:: Exp c) = unlift e in x
+fstTrio e = let (x, _:: Exp b, _:: Exp c) = A.unlift e in x
 
 sndTrio :: forall a b c. (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp b
-sndTrio e = let (_:: Exp a, x, _:: Exp c) = unlift e in x
+sndTrio e = let (_:: Exp a, x, _:: Exp c) = A.unlift e in x
 
 trdTrio :: forall a b c. (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp c
-trdTrio e = let (_:: Exp a, _:: Exp b, x) = unlift e in x
+trdTrio e = let (_:: Exp a, _:: Exp b, x) = A.unlift e in x
 
 -- = MORE TUPLES :D
 
 fstQuad :: forall a b c d. (Elt a, Elt b, Elt c, Elt d) => Exp (a, b, c, d) -> Exp a
-fstQuad e = let (x, _:: Exp b, _:: Exp c, _:: Exp d) = unlift e in x
+fstQuad e = let (x, _:: Exp b, _:: Exp c, _:: Exp d) = A.unlift e in x
 
 sndQuad :: forall a b c d. (Elt a, Elt b, Elt c, Elt d) => Exp (a, b, c, d) -> Exp b
-sndQuad e = let (_:: Exp a, x, _:: Exp c, _:: Exp d) = unlift e in x
+sndQuad e = let (_:: Exp a, x, _:: Exp c, _:: Exp d) = A.unlift e in x
 
 trdQuad :: forall a b c d. (Elt a, Elt b, Elt c, Elt d) => Exp (a, b, c, d) -> Exp c
-trdQuad e = let (_:: Exp a, _:: Exp b, x, _:: Exp d) = unlift e in x
+trdQuad e = let (_:: Exp a, _:: Exp b, x, _:: Exp d) = A.unlift e in x
 
 frthQuad :: forall a b c d. (Elt a, Elt b, Elt c, Elt d) => Exp (a, b, c, d) -> Exp d
-frthQuad e = let (_:: Exp a, _:: Exp b, _:: Exp c, x) = unlift e in x
+frthQuad e = let (_:: Exp a, _:: Exp b, _:: Exp c, x) = A.unlift e in x
 
 -- = Accelerate utils
 
 variable :: (Lift Exp e, Elt (Plain e)) => e -> Exp (Plain e)
-variable a = the $ unit $ lift a
+variable a = the $ unit $ A.lift a
 
 
 -- = Accelerate instances
@@ -138,7 +138,7 @@ instance IsTuple (Range a) where
 
 instance (Lift Exp a, Elt (Plain a)) => Lift Exp (Range a) where
     type Plain (Range a) = Range (Plain a)
-    lift (Range lo hi) = Exp $ Tuple $ NilTup `SnocTup` lift lo `SnocTup` lift hi
+    lift (Range lo hi) = Exp $ Tuple $ NilTup `SnocTup` A.lift lo `SnocTup` A.lift hi
 
 instance (Elt a, e ~ Exp a) => Unlift Exp (Range e) where
     unlift t = Range (Exp $ SuccTupIdx ZeroTupIdx `Prj` t)
