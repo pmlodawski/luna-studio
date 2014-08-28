@@ -7,7 +7,7 @@
 {-# LANGUAGE QuasiQuotes   #-}
 {-# LANGUAGE TupleSections #-}
 
-module SampleCodes where
+module Test.Luna.Interpreter.SampleCodes where
 
 import Text.RawString.QQ
 

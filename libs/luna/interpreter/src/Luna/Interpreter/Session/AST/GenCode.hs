@@ -7,12 +7,10 @@
 module Luna.Interpreter.Session.AST.GenCode where
 
 import           Control.Monad.Trans.Either
-import qualified Data.List                  as List
 import qualified DynFlags                   as GHC
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import           Flowbox.Text.Show.Hs                     (hsShow)
 import           Luna.Data.Source                         (Source)
 import qualified Luna.Data.Source                         as Source
 import qualified Luna.Interpreter.Session.Data.DefPoint   as DefPoint

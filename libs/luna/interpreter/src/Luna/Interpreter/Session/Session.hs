@@ -95,7 +95,7 @@ withFlags enable disable action = do
     setFlags enable
     unsetFlags disable
     result <- action
-    lift2 $ I.runGhc $ GHC.setSessionDynFlags flags
+    _ <- lift2 $ I.runGhc $ GHC.setSessionDynFlags flags
     return result
 
 
