@@ -158,19 +158,29 @@ def main arg:
 def main arg:
     x = 4
     y = [1, x]
+|], named "native code" [r|
+def main arg:
+    ```autoLift1 print #{arg}```
 |]]
 
 ---------------------------------------------------------------------------
 ---- DOES NOT WORK YET: ---------------------------------------------------
 ---------------------------------------------------------------------------
 
--- named "simple assignment 5" [r|
+-- |], named "if-else" [r|
+-- def print
+-- 
+-- def main arg:
+--     print $ if 1 > 2: 5
+--             else: 6
+--     print $ 1 > 2
+
+-- |], named "simple assignment 5" [r|
 -- def main:
 --     x = 0
 --     y = 1
 --     {z, v} = {x, y}
 --     h = {z, v}
--- |]]
 
 
 emptyMain :: String

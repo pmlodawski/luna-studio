@@ -167,6 +167,22 @@ buildNode astFolded monadicBind outName expr = case expr of
                                     connectArgs True True Nothing i items 0
                                     connectMonadic i
                                     return i
+    Expr.Native    i segments -> do let node = Node.Expr (showExpr expr) (genName "native" i)
+                                    State.addNode i Port.All node astFolded assignment
+                                    let isNativeVar (Expr.NativeVar {}) = True
+                                        isNativeVar _                   = False
+
+                                        vars = filter isNativeVar segments
+                                    connectArgs True True Nothing i vars 0
+                                    connectMonadic i
+                                    return i
+    Expr.NativeVar i name     -> do isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp i
+                                    if astFolded && isBound
+                                        then return i
+                                        else do let node = Node.Expr name (genName name i)
+                                                State.addNode i Port.All node astFolded assignment
+                                                connectMonadic i
+                                                return i
     Expr.Wildcard  i          -> left $ "GraphBuilder: Unexpected Expr.Wildcard with id=" ++ show i
     _                         -> showAndAddNode
     where
@@ -244,8 +260,8 @@ showExpr expr = case ddump expr of
     Expr.RangeFrom    _ start        -> showExpr start ++ ".."
     --Expr.Field        _ name     cls       value
     --Expr.Arg          _ pat      value
-    --Expr.Native       _ segments
-    Expr.NativeCode   _ code         -> "```" ++ code ++ "```"
-    --Expr.NativeVar    _ name
+    Expr.Native       _ segments     -> "```" ++ concatMap showExpr segments ++ "```"
+    Expr.NativeCode   _ code         -> code
+    Expr.NativeVar    _ name         -> "#{" ++ name ++ "}"
     --Expr.Case         _ expr     match
     --Expr.Match        _ pat      body
