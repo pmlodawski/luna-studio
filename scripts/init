@@ -199,12 +199,12 @@ def main():
 
     print_info ("Updating cabal package cache")
     try_call('cd && cabal update')
+    checkInstall("cabal", installUsing="cabal install cabal-install", chckf=checkCabalVersion)
 
     checkCabalPkg("happy")
     checkCabalPkg("alex")
     checkCabalPkg("hspec", check="hspec-discover")
 
-    checkInstall("cabal", installUsing="cabal install cabal-install", chckf=checkCabalVersion)
     checkCabalPkg("c2hs", version="0.16.5", installUsing=instal_c2hs)
 
     checkCabalPkg("gtk2hs-buildtools", check="gtk2hsC2hs")
