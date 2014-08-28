@@ -8,6 +8,7 @@ module Luna.Interpreter.Session.AST.GenCode where
 
 import           Control.Monad.Trans.Either
 import qualified Data.List                  as List
+import qualified DynFlags                   as GHC
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -43,4 +44,21 @@ genModule = do
 loadModule :: Session ()
 loadModule = do
     srcs <- genModule
-    mapM_ (Session.runDecls . unlines . drop 18 . lines . view Source.code) srcs
+    let enableFlags  = [ GHC.Opt_DataKinds
+                       , GHC.Opt_DeriveDataTypeable
+                       , GHC.Opt_DeriveGeneric
+                       , GHC.Opt_DysfunctionalDependencies
+                       , GHC.Opt_FlexibleContexts
+                       , GHC.Opt_FlexibleInstances
+                       , GHC.Opt_GADTs
+                       , GHC.Opt_RebindableSyntax
+                       , GHC.Opt_TemplateHaskell
+                       , GHC.Opt_UndecidableInstances
+
+                       , GHC.Opt_MultiParamTypeClasses
+                       ]
+        disableFlags = [ GHC.Opt_MonomorphismRestriction
+                       ]
+
+    Session.withFlags enableFlags disableFlags $
+        mapM_ (Session.runDecls . unlines . dropWhile (not . (== "-- body --")) . lines . view Source.code) srcs
