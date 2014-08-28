@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -11,13 +12,13 @@ module Flowbox.Graphics.Color.RGB.Conversion where
 
 import           Data.Array.Accelerate as A
 
-import           Flowbox.Graphics.Color.Conversion
-import           Flowbox.Graphics.Color.RGB
-import           Flowbox.Graphics.Color.RGBA
-import           Flowbox.Graphics.Color.HSV
-import           Flowbox.Graphics.Color.HSL
 import           Flowbox.Graphics.Color.CMY
 import           Flowbox.Graphics.Color.CMYK
+import           Flowbox.Graphics.Color.Conversion
+import           Flowbox.Graphics.Color.HSL
+import           Flowbox.Graphics.Color.HSV
+import           Flowbox.Graphics.Color.RGB
+import           Flowbox.Graphics.Color.RGBA
 import           Flowbox.Graphics.Color.YUV
 import           Flowbox.Graphics.Color.YUV_HD
 import           Flowbox.Graphics.Utils
@@ -25,17 +26,17 @@ import           Flowbox.Prelude
 
 
 
-toRGB :: (Elt a, IsFloating a, ColorConvertAcc c RGB) => c (Exp a) -> RGB (Exp a)
-toRGB = convertColorAcc
+toRGB :: (Elt a, IsFloating a, ColorConvert c RGB) => c (Exp a) -> RGB (Exp a)
+toRGB = convertColor
 
-instance ColorConvertAcc RGB RGB where
-    convertColorAcc = id
+instance ColorConvert RGB RGB where
+    convertColor = id
 
-instance ColorConvertAcc RGBA RGB where
-    convertColorAcc (RGBA r' g' b' _) = RGB r' g' b'
+instance ColorConvert RGBA RGB where
+    convertColor (RGBA r' g' b' _) = RGB r' g' b'
 
-instance ColorConvertAcc HSV RGB where
-    convertColorAcc (HSV  h' s' v') = RGB (r'+m') (g'+m') (b'+m')
+instance ColorConvert HSV RGB where
+    convertColor (HSV h' s' v') = RGB (r'+m') (g'+m') (b'+m')
         where (r', g', b') = unlift res
               res = helperHsvHsl i c' x
               h'' = h' * 6
@@ -44,8 +45,10 @@ instance ColorConvertAcc HSV RGB where
               c' = v' * s'
               m' = v' - c'
 
-instance ColorConvertAcc HSL RGB where
-    convertColorAcc (HSL h' s' l') = RGB (r'+m') (g'+m') (b'+m')
+instance ColorConvert HSL RGB where
+    -- NOTE[mm]: There are slight differences between Nuke and this formula. Probably Nuke uses another way
+    --           of computing HSL that gives different values for particular colors.
+    convertColor (HSL h' s' l') = RGB (r'+m') (g'+m') (b'+m')
         where (r', g', b') = unlift res
               res = helperHsvHsl i c' x
               h'' = h' * 6
@@ -54,27 +57,27 @@ instance ColorConvertAcc HSL RGB where
               c' = (1 - abs(2 * l' - 1)) * s'
               m' = l' - c' / 2
 
-instance ColorConvertAcc CMY RGB where
-    convertColorAcc (CMY c' m' y') = RGB r' g' b'
+instance ColorConvert CMY RGB where
+    convertColor (CMY c' m' y') = RGB r' g' b'
         where r' = 1 - c'
               g' = 1 - m'
               b' = 1 - y'
 
-instance ColorConvertAcc CMYK RGB where
-    convertColorAcc (CMYK c' m' y' k') = RGB r' g' b'
+instance ColorConvert CMYK RGB where
+    convertColor (CMYK c' m' y' k') = RGB r' g' b'
         where r' = (1 - c') * k''
               g' = (1 - m') * k''
               b' = (1 - y') * k''
               k'' = 1 - k'
 
-instance ColorConvertAcc YUV RGB where
-    convertColorAcc (YUV y' u' v') = RGB r' g' b'
+instance ColorConvert YUV RGB where
+    convertColor (YUV y' u' v') = RGB r' g' b'
         where r' = y' + 1.13983 * v'
               g' = y' - 0.39465 * u' - 0.58060 * v'
               b' = y' + 2.03211 * u'
 
-instance ColorConvertAcc YUV_HD RGB where
-    convertColorAcc (YUV_HD y' u' v') = RGB r' g' b'
+instance ColorConvert YUV_HD RGB where
+    convertColor (YUV_HD y' u' v') = RGB r' g' b'
         where r' = y' + 1.28033 * v'
               g' = y' - 0.21482 * u' - 0.38059 * v'
               b' = y' + 2.12798 * u'

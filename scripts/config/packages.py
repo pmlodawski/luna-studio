@@ -103,8 +103,7 @@ pkgDb = \
        , 'libs/config'                         : HProject   ('flowbox-config'               , os.path.join ('libs' , 'config')                              , 'libs'    , ['libs/utils'])
        , 'libs/data/codec/exr'                 : HProject   ('openexr'                      , os.path.join ('libs' , 'data', 'codec', 'exr')                , 'libs'    , [], flags=Flags([Flag('--with-gcc=g++')]))
        , 'libs/data/dynamics/particles'        : HProject   ('particle'                     , os.path.join ('libs' , 'data', 'dynamics', 'particles')       , 'libs'    , [])
-       , 'libs/data/graphics/graphics'         : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'data', 'graphics', 'graphics')        , 'libs'    , ['libs/luna/target/ghchs', 'libs/utils', 'libs/num-conversion', 'libs/data/codec/exr', 'libs/data/graphics/hopencv'], flags=Flags([Flag("--with-gcc=gcc-4.9", [systems.DARWIN])]))
-       , 'libs/data/graphics/hopencv'          : HProject   ('HOpenCV'                      , os.path.join ('libs' , 'data', 'graphics', 'hopencv')         , 'libs'    , [])
+       , 'libs/data/graphics/graphics'         : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'data', 'graphics', 'graphics')        , 'libs'    , ['libs/luna/target/ghchs', 'libs/utils', 'libs/num-conversion', 'libs/data/codec/exr'], flags=Flags([Flag("--with-gcc=gcc-4.9", [systems.DARWIN])]))
        , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
        , 'libs/luna/parser'                    : HProject   ('luna-parser'                  , os.path.join ('libs' , 'luna', 'parser')                      , 'libs'    , ['libs/utils', 'libs/luna/core'])
        , 'libs/luna/distribution'              : HProject   ('luna-distribution'            , os.path.join ('libs' , 'luna', 'distribution')                , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/protobuf'])
@@ -133,11 +132,18 @@ pkgDb = \
        , 'tools/initializer'                   : HProject   ('flowbox-initializer-cli'      , os.path.join ('tools', 'initializer')                         , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/initializer'])
        , 'tools/lunac'                         : HProject   ('luna-compiler'                , os.path.join ('tools', 'lunac')                               , 'tools'   , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/pass', 'libs/luna/distribution', 'libs/luna/initializer'])
        , 'tools/wrappers'                      : HProject   ('flowbox-wrappers'             , os.path.join ('tools', 'wrappers')                            , 'wrappers', ['libs/config'])
+
+       , 'third-party/algebraic'               : HProject   ('algebraic'                    , os.path.join ('third-party', 'algebraic')                     , 'third-party', ['third-party/accelerate'])
+       , 'third-party/cuda'                    : HProject   ('cuda'                         , os.path.join ('third-party', 'cuda')                          , 'third-party', [], flags=Flags([Flag('--enable-executable-dynamic')]))
+       , 'third-party/accelerate'              : HProject   ('accelerate'                   , os.path.join ('third-party', 'accelerate')                    , 'third-party', [], flags=Flags([Flag('-fdebug')])) # [KL] accelerate debug flag is necessary to dump generated CUDA kernels
+       , 'third-party/accelerate-cuda'         : HProject   ('accelerate-cuda'              , os.path.join ('third-party', 'accelerate-cuda')               , 'third-party', [], flags=Flags([Flag('-fdebug')]))
+       , 'third-party/accelerate-io'           : HProject   ('accelerate-io'                , os.path.join ('third-party', 'accelerate-io')                 , 'third-party', [], flags=Flags([Flag('-fdebug')]))
        , 'third-party/fgl'                     : HProject   ('fgl'                          , os.path.join ('third-party', 'fgl')                           , 'third-party', []) # [PM] temporary fix until fgl is fixed
        , 'third-party/hint'                    : HProject   ('hint'                         , os.path.join ('third-party', 'hint')                          , 'third-party', []) # [PM] temporary fix until patch to hint is applied ( http://hub.darcs.net/jcpetruzza/hint/issue/6 )
        , 'third-party/hs-certificate/x509'     : HProject   ('x509'                         , os.path.join ('third-party', 'hs-certificate', 'x509')        , 'third-party', []) # [PM] temporary fix until x509 is fixed ( https://github.com/vincenthz/hs-certificate/pull/33 )
        , 'third-party/hs-crypto-random'        : HProject   ('crypto-random'                , os.path.join ('third-party', 'hs-crypto-random')              , 'third-party', []) # [PM] temporary fix until crypto-random is fixed ( https://github.com/vincenthz/hs-crypto-random/pull/8 )
        , 'third-party/hs-tls/core'             : HProject   ('tls'                          , os.path.join ('third-party', 'hs-tls', 'core')                , 'third-party', []) # [PM] temporary fix until tls is fixed ( https://github.com/vincenthz/hs-tls/pull/75 )
+       , 'third-party/linear-accelerate'       : HProject   ('linear-accelerate'            , os.path.join ('third-party', 'linear-accelerate')             , 'third-party', [])
        , 'third-party/protocol-buffers'        : HProject   ('protocol-buffers'             , os.path.join ('third-party', 'protocol-buffers')              , 'third-party', []) # [PM] temporary fix until protocol-buffers is fixed
        }
 

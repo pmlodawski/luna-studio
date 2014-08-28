@@ -64,6 +64,8 @@ aws.config
 # assets for tests
 *.bmp
 *.jpg
+*.jpeg
+*.png
 
 test.html
 report.html

@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -11,15 +12,14 @@ module Flowbox.Graphics.Color.HSL.Conversion where
 
 import           Data.Array.Accelerate as A
 
-import           Flowbox.Graphics.Color.Conversion
-import           Flowbox.Graphics.Color.Helpers
-import           Flowbox.Graphics.Color.Conversion
-import           Flowbox.Graphics.Color.RGB
-import           Flowbox.Graphics.Color.RGBA
-import           Flowbox.Graphics.Color.HSV
-import           Flowbox.Graphics.Color.HSL
 import           Flowbox.Graphics.Color.CMY
 import           Flowbox.Graphics.Color.CMYK
+import           Flowbox.Graphics.Color.Conversion
+import           Flowbox.Graphics.Color.Helpers
+import           Flowbox.Graphics.Color.HSL
+import           Flowbox.Graphics.Color.HSV
+import           Flowbox.Graphics.Color.RGB
+import           Flowbox.Graphics.Color.RGBA
 import           Flowbox.Graphics.Color.YUV
 import           Flowbox.Graphics.Color.YUV_HD
 import           Flowbox.Graphics.Utils
@@ -27,15 +27,17 @@ import           Flowbox.Prelude
 
 
 
-toHSL :: (Elt a, IsFloating a, ColorConvertAcc c HSL) => c (Exp a) -> HSL (Exp a)
-toHSL = convertColorAcc
+toHSL :: (Elt a, IsFloating a, ColorConvert c HSL) => c (Exp a) -> HSL (Exp a)
+toHSL = convertColor
 
-instance ColorConvertAcc HSL HSL where
-    convertColorAcc = id
+instance ColorConvert HSL HSL where
+    convertColor = id
 
-instance ColorConvertAcc RGB HSL where
-    convertColorAcc (RGB r' g' b') = HSL h'' s' l'
-        where h'' = (h' >* 0 A.? (h' , h' + 6)) / 6
+instance ColorConvert RGB HSL where
+    -- NOTE[mm]: There are slight differences between Nuke and this formula. Probably Nuke uses another way
+    --           of computing HSL that gives different values for particular colors.
+    convertColor (RGB r' g' b') = HSL h'' s' l'
+        where h'' = (h' >=* 0 A.? (h' , h' + 6)) / 6
               h' = delta ==* 0 A.? (0,
                     r' ==* maxRGB A.? (((g' - b') / delta) `nonIntRem` 6,
                     g' ==* maxRGB A.? ((b' - r') / delta + 2,
@@ -47,20 +49,20 @@ instance ColorConvertAcc RGB HSL where
               maxRGB = max r' $ max g' b'
               delta = maxRGB - minRGB
 
-instance ColorConvertAcc RGBA HSL where
-    convertColorAcc = helperColorConverter toHSL
+instance ColorConvert RGBA HSL where
+    convertColor = helperColorConverter toHSL
 
-instance ColorConvertAcc HSV HSL where
-    convertColorAcc = helperColorConverter toHSL
+instance ColorConvert HSV HSL where
+    convertColor = helperColorConverter toHSL
 
-instance ColorConvertAcc CMY HSL where
-    convertColorAcc = helperColorConverter toHSL
+instance ColorConvert CMY HSL where
+    convertColor = helperColorConverter toHSL
 
-instance ColorConvertAcc CMYK HSL where
-    convertColorAcc = helperColorConverter toHSL
+instance ColorConvert CMYK HSL where
+    convertColor = helperColorConverter toHSL
 
-instance ColorConvertAcc YUV HSL where
-    convertColorAcc = helperColorConverter toHSL
+instance ColorConvert YUV HSL where
+    convertColor = helperColorConverter toHSL
 
-instance ColorConvertAcc YUV_HD HSL where
-    convertColorAcc = helperColorConverter toHSL
+instance ColorConvert YUV_HD HSL where
+    convertColor = helperColorConverter toHSL

@@ -17,5 +17,5 @@ import           Flowbox.Prelude
 
 
 
-helperColorConverter :: (Elt a, IsFloating a, ColorConvertAcc c1 RGB, ColorConvertAcc RGB c2) => (RGB (Exp a) -> c2 (Exp a)) -> c1 (Exp a) -> c2 (Exp a)
+helperColorConverter :: (Elt a, IsFloating a, ColorConvert c1 RGB, ColorConvert RGB c2) => (RGB (Exp a) -> c2 (Exp a)) -> c1 (Exp a) -> c2 (Exp a)
 helperColorConverter converter color = converter . toRGB $ color

@@ -6,18 +6,19 @@
 ---------------------------------------------------------------------------
 module Flowbox.Graphics.Image.Error where
 
-import Flowbox.Prelude hiding (lookup, map)
+import qualified Flowbox.Graphics.Image.Channel as Channel
+import			 Flowbox.Prelude
 
 
 
-data Error = ChannelLookupError { name :: String }
-
-------------------------------------------------------------------------
--- INSTANCES
-------------------------------------------------------------------------
+data Error = ChannelLookupError { chanName :: Channel.Name }
+		   | ChannelNameError { chanDescriptor :: Channel.Name, chanName :: Channel.Name }
+		   | InvalidMap
 
 instance Show Error where
     show err = case err of
         ChannelLookupError name -> "Channel lookup error: channel '" ++ name ++ "' not found"
+        ChannelNameError descriptor name -> "Channel naming error: last part of the descriptor '" ++ descriptor ++ "' does not match '" ++ name ++ "'"
+        InvalidMap -> "Map inconsistency error: the map contains values with names not matching their associated keys"
 
 type Result a = Either Error a
