@@ -9,7 +9,8 @@
 module Flowbox.FileManager.Context where
 
 import qualified Aws
-import qualified Network.HTTP.Conduit as Conduit
+import           Control.Monad.Trans.State
+import qualified Network.HTTP.Conduit      as Conduit
 
 import           Flowbox.AWS.S3.S3     (S3)
 import qualified Flowbox.AWS.S3.S3     as S3
@@ -28,5 +29,7 @@ mk cfg bucket = do
     return $ S3.S3Env cfg Aws.defServiceConfig manager bucket
 
 
-run :: Context -> S3 a -> RPC a
-run ctx s3 = safeLiftIO $ S3.runS3env ctx s3
+run :: S3 a -> RPC Context IO a
+run s3 = do
+    ctx <- lift $ get
+    safeLiftIO $ S3.runS3env ctx s3

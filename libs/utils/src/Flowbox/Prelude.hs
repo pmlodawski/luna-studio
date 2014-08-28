@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Prelude(
@@ -14,18 +15,19 @@ module Flowbox.Prelude(
     void,
     when,
     unless,
+    lift
 ) where
 
-import           Control.Applicative    as X
-import           Control.Lens           as X
-import           Control.Monad          (void, when, unless)
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Control.Monad.Trans    (lift)
-import           Data.Default           as X
-import           Data.Foldable          (forM_)
-import           Data.Monoid            as X (Monoid, mappend, mempty)
-import qualified Data.Traversable       as Traversable
-import Control.Monad.Trans.Class (MonadTrans)
+import           Control.Applicative       as X
+import           Control.Lens              as X
+import           Control.Monad             (unless, void, when)
+import           Control.Monad.IO.Class    (MonadIO, liftIO)
+import           Control.Monad.Trans       (lift)
+import           Control.Monad.Trans.Class (MonadTrans)
+import           Data.Default              as X
+import           Data.Foldable             (forM_)
+import           Data.Monoid               as X (Monoid, mappend, mempty)
+import qualified Data.Traversable          as Traversable
 
 import           Flowbox.Debug.Debug as X
 import           Prelude             hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
@@ -38,6 +40,9 @@ import qualified Prelude
 
 print :: (MonadIO m, Show s) => s -> m ()
 print    = liftIO . Prelude.print
+
+printLn :: MonadIO m => m ()
+printLn = putStrLn ""
 
 putStr :: MonadIO m => String -> m ()
 putStr   = liftIO . Prelude.putStr
@@ -134,7 +139,7 @@ withJust = forM_
 
 
 lift2 :: (Monad (t1 m), Monad m,
-          MonadTrans t, MonadTrans t1) 
+          MonadTrans t, MonadTrans t1)
       => m a -> t (t1 m) a
 lift2 = lift . lift
 

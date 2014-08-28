@@ -6,9 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Control.Concurrent (
     module Control.Concurrent,
-    forkIO_,
-    forkIO',
-    waitThread,
+    module Flowbox.Control.Concurrent,
 ) where
 
 import Control.Concurrent
@@ -19,14 +17,3 @@ import Flowbox.Prelude
 
 forkIO_ :: IO () -> IO ()
 forkIO_ a = void $ forkIO a
-
-
-forkIO' :: IO a -> IO (MVar ())
-forkIO' io = do
-    mvar <- newEmptyMVar
-    _ <- forkFinally io (\_ -> putMVar mvar ())
-    return mvar
-
-
-waitThread :: MVar a -> IO a
-waitThread = takeMVar

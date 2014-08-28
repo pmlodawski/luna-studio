@@ -9,18 +9,20 @@ module Main where
 import qualified Aws
 import qualified Data.Text as Text
 
-import qualified Flowbox.Bus.EndPoint                as EP
-import qualified Flowbox.Bus.RPC.Server.Server       as Server
-import qualified Flowbox.Config.Config               as Config
-import           Flowbox.FileManager.Cmd             (Cmd)
-import qualified Flowbox.FileManager.Cmd             as Cmd
-import qualified Flowbox.FileManager.Context         as Context
-import qualified Flowbox.FileManager.Handler.Handler as Handler
-import qualified Flowbox.FileManager.Version         as Version
-import           Flowbox.Options.Applicative         hiding (info)
-import qualified Flowbox.Options.Applicative         as Opt
+import qualified Flowbox.Bus.EndPoint                    as EP
+import qualified Flowbox.Bus.RPC.Server.Server           as Server
+import qualified Flowbox.Config.Config                   as Config
+import           Flowbox.Control.Error
+import           Flowbox.FileManager.Cmd                 (Cmd)
+import qualified Flowbox.FileManager.Cmd                 as Cmd
+import qualified Flowbox.FileManager.Context             as Context
+import qualified Flowbox.FileManager.RPC.Handler.Handler as Handler
+import qualified Flowbox.FileManager.Version             as Version
+import           Flowbox.Options.Applicative             hiding (info)
+import qualified Flowbox.Options.Applicative             as Opt
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+
 
 
 rootLogger :: Logger
@@ -52,6 +54,4 @@ run cmd = case cmd of
         endPoints <- EP.clientFromConfig <$> Config.load
         cfg <- Aws.baseConfiguration
         ctx <- Context.mk cfg $ Text.pack $ Cmd.bucket cmd
-        r <- Server.run endPoints $ Handler.handlerMap ctx
-        print r
-
+        Server.run endPoints ctx Handler.handlerMap >>= eitherStringToM

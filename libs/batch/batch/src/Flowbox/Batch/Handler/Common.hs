@@ -11,49 +11,49 @@ module Flowbox.Batch.Handler.Common where
 import           Control.Exception  (IOException)
 import qualified Control.Exception  as Exception
 import           Control.Monad.RWS
+import           Data.Int           (Int32)
 import qualified System.Environment as Environment
 import           Text.Show.Pretty
 
-import           Flowbox.Batch.Batch                                       (Batch)
-import qualified Flowbox.Batch.Batch                                       as Batch
-import           Flowbox.Batch.Process.Map                                 (ProcessMap)
-import           Flowbox.Batch.Project.Project                             (Project)
-import qualified Flowbox.Batch.Project.Project                             as Project
-import           Flowbox.Batch.Project.ProjectManager                      (ProjectManager)
-import qualified Flowbox.Batch.Project.ProjectManager                      as ProjectManager
-import qualified Flowbox.Control.Concurrent                                as Concurrent
+import           Flowbox.Batch.Batch                       (Batch)
+import qualified Flowbox.Batch.Batch                       as Batch
+import           Flowbox.Batch.Project.Project             (Project)
+import qualified Flowbox.Batch.Project.Project             as Project
+import           Flowbox.Batch.Project.ProjectManager      (ProjectManager)
+import qualified Flowbox.Batch.Project.ProjectManager      as ProjectManager
+import qualified Flowbox.Control.Concurrent                as Concurrent
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.AST.Common                              as AST
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs                   (Breadcrumbs)
-import           Flowbox.Luna.Data.AST.Expr                                (Expr)
-import           Flowbox.Luna.Data.AST.Module                              (Module)
-import           Flowbox.Luna.Data.AST.Zipper.Focus                        (Focus)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                        as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                       as Zipper
-import           Flowbox.Luna.Data.Graph.Graph                             (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                             as Graph
-import           Flowbox.Luna.Data.Graph.Node                              (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                              as Node
-import           Flowbox.Luna.Data.GraphView.GraphView                     (GraphView)
-import qualified Flowbox.Luna.Data.GraphView.GraphView                     as GraphView
-import qualified Flowbox.Luna.Data.Pass.ASTInfo                            as ASTInfo
-import qualified Flowbox.Luna.Data.Pass.Source                             as Source
-import           Flowbox.Luna.Data.PropertyMap                             (PropertyMap)
-import qualified Flowbox.Luna.Interpreter.Interpreter                      as Interpreter
-import           Flowbox.Luna.Lib.LibManager                               (LibManager)
-import qualified Flowbox.Luna.Lib.LibManager                               as LibManager
-import           Flowbox.Luna.Lib.Library                                  (Library)
-import qualified Flowbox.Luna.Lib.Library                                  as Library
-import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                  as Alias
-import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
-import qualified Flowbox.Luna.Passes.Build.Build                           as Build
-import qualified Flowbox.Luna.Passes.Build.Diagnostics                     as Diagnostics
-import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer         as IDFixer
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as GraphParser
-import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
-import           Flowbox.Prelude                                           hiding (error)
+import           Flowbox.Prelude                           hiding (error)
 import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Common                           as AST
+import           Luna.AST.Control.Crumb                    (Breadcrumbs)
+import           Luna.AST.Control.Focus                    (Focus)
+import qualified Luna.AST.Control.Focus                    as Focus
+import qualified Luna.AST.Control.Zipper                   as Zipper
+import           Luna.AST.Expr                             (Expr)
+import           Luna.AST.Module                           (Module)
+import qualified Luna.Data.ASTInfo                         as ASTInfo
+import qualified Luna.Data.Source                          as Source
+import           Luna.Graph.Graph                          (Graph)
+import qualified Luna.Graph.Graph                          as Graph
+import           Luna.Graph.Node                           (Node)
+import qualified Luna.Graph.Node                           as Node
+import           Luna.Graph.PropertyMap                    (PropertyMap)
+import           Luna.Graph.View.GraphView                 (GraphView)
+import qualified Luna.Graph.View.GraphView                 as GraphView
+import qualified Luna.Interpreter                          as Interpreter
+import           Luna.Lib.Lib                              (Library)
+import qualified Luna.Lib.Lib                              as Library
+import           Luna.Lib.Manager                          (LibManager)
+import qualified Luna.Lib.Manager                          as LibManager
+import qualified Luna.Pass.Analysis.Alias.Alias            as Alias
+import qualified Luna.Pass.Analysis.ID.MaxID               as MaxID
+import qualified Luna.Pass.Build.Build                     as Build
+import qualified Luna.Pass.Build.Diagnostics               as Diagnostics
+import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer   as IDFixer
+import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
+import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
+import qualified Luna.Pass.Transform.GraphView.Defaults    as Defaults
 
 
 
@@ -79,8 +79,20 @@ interpretLibrary libraryID projectID = do
     cfg <- gets (view Batch.config)
     maxID <- EitherT $ MaxID.run ast
     [hsc] <- EitherT $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
-    let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ Source.code hsc)
+    let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ hsc ^. Source.code)
     liftIO $ Interpreter.runSource cfg imports code "main"
+
+
+increaseUpdateNo :: Batch ()
+increaseUpdateNo = modify (Batch.updateNo %~ (+1))
+
+
+getUpdateNo :: Batch Int32
+getUpdateNo = gets (view Batch.updateNo)
+
+
+setUpdateNo :: Int32 -> Batch ()
+setUpdateNo updateNo = modify (set Batch.updateNo updateNo)
 
 
 getProjectManager :: Batch ProjectManager
@@ -88,7 +100,8 @@ getProjectManager = gets (view Batch.projectManager)
 
 
 setProjectManager :: ProjectManager -> Batch ()
-setProjectManager projectManager = modify (set Batch.projectManager projectManager)
+setProjectManager projectManager =
+    increaseUpdateNo >> modify (set Batch.projectManager projectManager)
 
 
 getProject :: Project.ID -> Batch Project
@@ -101,16 +114,6 @@ setProject :: Project -> Project.ID -> Batch ()
 setProject newProject projectID = do
     pm <- getProjectManager
     setProjectManager (ProjectManager.updateNode (projectID, newProject) pm)
-
-
-getProcessMap :: Project.ID -> Batch ProcessMap
-getProcessMap projectID = view Project.processMap <$> getProject projectID
-
-
-setProcessMap :: ProcessMap -> Project.ID -> Batch ()
-setProcessMap newProcessMap projectID = do
-    project <- getProject projectID
-    setProject (project & Project.processMap .~ newProcessMap) projectID
 
 
 getLibManager :: Project.ID -> Batch LibManager
@@ -160,14 +163,14 @@ setAST newModule libraryID projectID = do
 getFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Focus
 getFocus bc libraryID projectID = do
     m <- getAST libraryID projectID
-    Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc m
+    hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc m
 
 
 setFocus :: Focus -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setFocus newFocus bc libraryID projectID = do
     m      <- getAST libraryID projectID
-    zipper <- Zipper.focusBreadcrumbs' bc m
-    newM   <- Zipper.modify (const newFocus) zipper >>= Zipper.close
+    zipper <- hoistEither $ Zipper.focusBreadcrumbs' bc m
+    let newM = Zipper.close $ Zipper.modify (const newFocus) zipper
     setAST newM libraryID projectID
 
 
@@ -178,7 +181,7 @@ getModuleFocus bc libraryID projectID = do
 
 
 setModuleFocus :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setModuleFocus newModule = setFocus (Focus.ModuleFocus newModule)
+setModuleFocus newModule = setFocus (Focus.Module newModule)
 
 
 getFunctionFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
@@ -188,7 +191,7 @@ getFunctionFocus bc libraryID projectID = do
 
 
 setFunctionFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setFunctionFocus newFunction = setFocus (Focus.FunctionFocus newFunction)
+setFunctionFocus newFunction = setFocus (Focus.Function newFunction)
 
 
 getClassFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
@@ -198,45 +201,50 @@ getClassFocus bc libraryID projectID = do
 
 
 setClassFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setClassFocus newClass = setFocus (Focus.ClassFocus newClass)
+setClassFocus newClass = setFocus (Focus.Class newClass)
 
 
 getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (Graph, PropertyMap)
 getGraph bc libraryID projectID = do
     ast         <- getAST libraryID projectID
+    logger trace $ ppShow ast
     propertyMap <- getPropertyMap libraryID projectID
     expr        <- getFunctionFocus bc libraryID projectID
     aa          <- EitherT $ Alias.run ast
-    EitherT $ GraphBuilder.run aa propertyMap expr
+    result <- EitherT $ GraphBuilder.run aa propertyMap expr
+    logger trace $ ppShow result
+    return result
 
 
 setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setGraph (newGraph, newPM) bc libraryID projectID = do
+    logger trace  $ ppShow newGraph
+    logger trace $ ppShow newPM
     expr <- getFunctionFocus bc libraryID projectID
-    ast  <- EitherT $ GraphParser.run newGraph newPM expr
+    (ast, newPM2)  <- EitherT $ GraphParser.run newGraph newPM expr
 
     newMaxID <- EitherT $ MaxID.runExpr ast
     fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
 
     logger debug $ show newGraph
-    logger debug $ show newPM
+    logger debug $ show newPM2
     logger debug $ ppShow fixedAst
     setFunctionFocus fixedAst bc libraryID projectID
-    setPropertyMap newPM libraryID projectID
+    setPropertyMap newPM2 libraryID projectID
 
 
 getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (GraphView, PropertyMap)
 getGraphView bc libraryID projectID = do
     (graph, propertyMap) <- getGraph bc libraryID projectID
-    let graphView = GraphView.fromGraph graph
-    return $ Defaults.removeDefaults graphView propertyMap
+    let (graphView, propertyMap2) = GraphView.fromGraph graph propertyMap
+    return $ Defaults.removeDefaults graphView propertyMap2
 
 
 setGraphView :: (GraphView, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setGraphView (newGraphView', newPM') bc libraryID projectID = do
     let (newGraphView, newPM) = Defaults.addDefaults newGraphView' newPM'
-    newGraph <- GraphView.toGraph newGraphView
-    setGraph (newGraph, newPM) bc libraryID projectID
+    graphWithPm <- hoistEither $ GraphView.toGraph newGraphView newPM
+    setGraph graphWithPm bc libraryID projectID
 
 
 getNode :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node
@@ -266,14 +274,6 @@ projectOp projectID operation = do
     project         <- getProject projectID
     (newProject, r) <- operation project
     setProject newProject projectID
-    return r
-
-
-processMapOp :: Project.ID -> (ProcessMap -> Batch (ProcessMap, r)) -> Batch r
-processMapOp projectID operation = do
-    processMap <- getProcessMap projectID
-    (newProcessMap, r) <- operation processMap
-    setProcessMap newProcessMap projectID
     return r
 
 

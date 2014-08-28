@@ -11,29 +11,29 @@ module Flowbox.Batch.Handler.AST where
 import qualified Data.IntSet as IntSet
 import qualified Data.Tuple  as Tuple
 
-import           Flowbox.Batch.Batch                               (Batch)
-import           Flowbox.Batch.Handler.Common                      (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, libManagerOp)
-import qualified Flowbox.Batch.Handler.Common                      as Batch
-import qualified Flowbox.Batch.Project.Project                     as Project
+import           Flowbox.Batch.Batch                     (Batch)
+import           Flowbox.Batch.Handler.Common            (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, libManagerOp)
+import qualified Flowbox.Batch.Handler.Common            as Batch
+import qualified Flowbox.Batch.Project.Project           as Project
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs           (Breadcrumbs)
-import           Flowbox.Luna.Data.AST.Expr                        (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
-import           Flowbox.Luna.Data.AST.Module                      (Module)
-import qualified Flowbox.Luna.Data.AST.Module                      as Module
-import           Flowbox.Luna.Data.AST.Type                        (Type)
-import qualified Flowbox.Luna.Data.AST.Type                        as Type
-import           Flowbox.Luna.Data.AST.Zipper.Focus                (Focus)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper               as Zipper
-import qualified Flowbox.Luna.Data.PropertyMap                     as PropertyMap
-import qualified Flowbox.Luna.Lib.Library                          as Library
-import qualified Flowbox.Luna.Passes.Analysis.ID.ExtractIDs        as ExtractIDs
-import qualified Flowbox.Luna.Passes.Analysis.NameResolver         as NameResolver
-import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer as IDFixer
-import qualified Flowbox.Luna.Passes.Transform.AST.Shrink          as Shrink
-import           Flowbox.Prelude                                   hiding (cons)
+import           Flowbox.Prelude                         hiding (cons)
 import           Flowbox.System.Log.Logger
+import           Luna.AST.Control.Crumb                  (Breadcrumbs)
+import           Luna.AST.Control.Focus                  (Focus)
+import qualified Luna.AST.Control.Focus                  as Focus
+import qualified Luna.AST.Control.Zipper                 as Zipper
+import           Luna.AST.Expr                           (Expr)
+import qualified Luna.AST.Expr                           as Expr
+import           Luna.AST.Module                         (Module)
+import qualified Luna.AST.Module                         as Module
+import           Luna.AST.Type                           (Type)
+import qualified Luna.AST.Type                           as Type
+import qualified Luna.Graph.PropertyMap                  as PropertyMap
+import qualified Luna.Lib.Lib                            as Library
+import qualified Luna.Pass.Analysis.ID.ExtractIDs        as ExtractIDs
+import qualified Luna.Pass.Analysis.NameResolver         as NameResolver
+import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer as IDFixer
+import qualified Luna.Pass.Transform.AST.Shrink          as Shrink
 
 
 
@@ -52,9 +52,9 @@ addModule newModule bcParent libID projectID = astFocusOp bcParent libID project
     maxID       <- Batch.getMaxID libID projectID
     fixedModule <- EitherT $ IDFixer.runModule maxID Nothing True newModule
     newFocus    <- case focus of
-        Focus.ClassFocus    _ -> fail "Cannot add module to a class"
-        Focus.FunctionFocus _ -> fail "Cannot add module to a function"
-        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addModule fixedModule m
+        Focus.Class    _ -> left "Cannot add module to a class"
+        Focus.Function _ -> left "Cannot add module to a function"
+        Focus.Module   m -> return $ Focus.Module $ Module.addModule fixedModule m
     return (newFocus, fixedModule))
 
 
@@ -63,9 +63,9 @@ addClass newClass bcParent libID projectID = astFocusOp bcParent libID projectID
     maxID       <- Batch.getMaxID libID projectID
     fixedClass <- EitherT $ IDFixer.runExpr maxID Nothing True newClass
     newFocus <- case focus of
-        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addClass fixedClass c
-        Focus.FunctionFocus _ -> fail "Cannot add class to a function"
-        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addClass fixedClass m
+        Focus.Class    c -> return $ Focus.Class $ Expr.addClass fixedClass c
+        Focus.Function _ -> left "Cannot add class to a function"
+        Focus.Module   m -> return $ Focus.Module $ Module.addClass fixedClass m
     return (newFocus, fixedClass))
 
 
@@ -74,18 +74,18 @@ addFunction newFunction bcParent libID projectID = astFocusOp bcParent libID pro
     maxID       <- Batch.getMaxID libID projectID
     fixedFunction <- EitherT $ IDFixer.runExpr maxID Nothing True newFunction
     newFocus <- case focus of
-        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addMethod fixedFunction c
-        Focus.FunctionFocus _ -> fail "Cannot add function to a function"
-        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addMethod fixedFunction m
+        Focus.Class    c -> return $ Focus.Class $ Expr.addMethod fixedFunction c
+        Focus.Function _ -> left "Cannot add function to a function"
+        Focus.Module   m -> return $ Focus.Module $ Module.addMethod fixedFunction m
     return (newFocus, fixedFunction))
 
 
 remove :: Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 remove bc libID projectID = astOp libID projectID (\ast propertyMap -> do
-    focus <- Zipper.focusBreadcrumbs' bc ast
+    focus <- hoistEither $ Zipper.focusBreadcrumbs' bc ast
     ids   <- EitherT $ ExtractIDs.run $ Zipper.getFocus focus
     let newPropertyMap = foldr PropertyMap.delete propertyMap $ IntSet.toList ids
-    newAst <- Zipper.close $ Zipper.defocusDrop focus
+        newAst         = Zipper.close $ Zipper.defocusDrop focus
     return ((newAst, newPropertyMap), ()))
 
 

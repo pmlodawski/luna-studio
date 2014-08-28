@@ -62,12 +62,19 @@ action <??&> m = do
         Nothing -> left m
 
 
-assert :: Monad m => Bool -> String -> m ()
-assert condition msg = unless condition $ fail msg
+assertIO :: Monad m => Bool -> String -> m ()
+assertIO condition msg = unless condition $ fail msg
+
+
+assert :: Bool -> a -> Either a ()
+assert condition msg = unless condition $ Left msg
+
+assertE :: Monad m => Bool -> a -> EitherT a m ()
+assertE condition msg = unless condition $ left msg
 
 
 -- FIXME [PM] : find better name
-safeLiftIO :: IO b -> EitherT String IO b
+safeLiftIO :: MonadIO m => IO b -> EitherT String m b
 safeLiftIO operation = do
     result <- liftIO $ (Exc.try :: IO a -> IO (Either Exc.SomeException a)) operation
     hoistEither $ fmapL show result
@@ -83,5 +90,13 @@ eitherToM :: (MonadIO m, Show a) => Either a b -> m b
 eitherToM = either (fail . show) return
 
 
+eitherToM' :: (MonadIO m, Show a) => m (Either a b) -> m b
+eitherToM' action = action >>= eitherToM
+
+
 eitherStringToM :: MonadIO m => Either String b -> m b
 eitherStringToM = either fail return
+
+
+eitherStringToM' :: MonadIO m => m (Either String b) -> m b
+eitherStringToM' action = action >>= eitherStringToM

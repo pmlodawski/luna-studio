@@ -50,6 +50,10 @@ base :: Topic -> Topic
 base = List.intercalate separator . init . Utils.split separator
 
 
+(/+) :: Topic -> Topic -> Topic
+topic /+ type_ = respond topic type_
+
+
 respond :: Topic -> Topic -> Topic
 respond topic type_ =
     (List.intercalate separator . flip (++) [type_] . init . Utils.split separator) topic

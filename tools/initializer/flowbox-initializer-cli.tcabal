@@ -24,6 +24,6 @@ Executable initializer
   Build-Depends:  base,
                   flowbox-config,
                   flowbox-utils,
-                  flowbox-luna-initializer,
+                  luna-initializer,
                   MissingH,
                   optparse-applicative

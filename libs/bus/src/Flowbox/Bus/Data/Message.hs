@@ -12,7 +12,7 @@ module Flowbox.Bus.Data.Message where
 import Data.ByteString (ByteString)
 
 import           Flowbox.Bus.Data.Exception                     (Exception (Exception))
-import           Flowbox.Bus.Data.Topic                         (Topic)
+import           Flowbox.Bus.Data.Topic                         (Topic, (/+))
 import qualified Flowbox.Bus.Data.Topic                         as Topic
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
@@ -40,12 +40,10 @@ makeLenses(''CorrelationID)
 makeLenses(''Message)
 
 
-
-mkResponse :: Proto.Serializable msg => Topic -> String -> msg -> Message
-mkResponse topic' type_  data_ = Message newTopic $ Proto.messagePut' data_ where
-    newTopic = Topic.respond topic' type_
+mk :: Proto.Serializable msg => Topic -> msg -> Message
+mk topic' data_ = Message topic' $ Proto.messagePut' data_ where
 
 
 mkError :: Topic -> String -> [Message]
-mkError topic' = mkList . mkResponse topic' Topic.error . encodeP . Exception . Just
+mkError topic' = mkList . mk (topic' /+ Topic.error) . encodeP . Exception . Just
 

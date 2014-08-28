@@ -78,8 +78,8 @@ instance (QShow' a, Constructor c) => QShow' (M1 C c a) where
               tupleName _           = False
 
 instance (Selector s, QShow' a) => QShow' (M1 S s a) where
-  qshowsPrec' t n s@(M1 x) | selName s == "" = --showParen (n > appPrec)
-                                                 (qshowsPrec' t n x)
+  qshowsPrec' t n s@(M1 x) | selName s == "" = --showParen (n > appPrec) $
+                                                 qshowsPrec' t n x
                            | otherwise       =   showString (selName s)
                                                . showString " = "
                                                . qshowsPrec' t 0 x

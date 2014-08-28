@@ -11,29 +11,26 @@ module Flowbox.Batch.Handler.Library where
 import           Data.Version   (Version (Version))
 import qualified System.Process as Process
 
-import           Flowbox.Batch.Batch                        (Batch, gets)
-import qualified Flowbox.Batch.Batch                        as Batch
-import           Flowbox.Batch.Handler.Common               (libManagerOp, projectOp)
-import qualified Flowbox.Batch.Handler.Common               as Batch
-import           Flowbox.Batch.Process.Handle               (Handle (Handle))
-import qualified Flowbox.Batch.Process.Map                  as ProcessMap
-import qualified Flowbox.Batch.Process.Process              as Process
-import qualified Flowbox.Batch.Project.Project              as Project
+import           Flowbox.Batch.Batch               (Batch, gets)
+import qualified Flowbox.Batch.Batch               as Batch
+import           Flowbox.Batch.Handler.Common      (libManagerOp)
+import qualified Flowbox.Batch.Handler.Common      as Batch
+import qualified Flowbox.Batch.Project.Project     as Project
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.Pass.ASTInfo             as ASTInfo
-import qualified Flowbox.Luna.Lib.LibManager                as LibManager
-import           Flowbox.Luna.Lib.Library                   (Library)
-import qualified Flowbox.Luna.Lib.Library                   as Library
-import qualified Flowbox.Luna.Passes.Build.Build            as Build
-import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
-import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
-import qualified Flowbox.Luna.Passes.Build.Diagnostics      as Diagnostics
-import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Platform                    as Platform
-import           Flowbox.System.UniPath                     (UniPath)
-import qualified Flowbox.System.UniPath                     as UniPath
+import qualified Flowbox.System.Platform           as Platform
+import           Flowbox.System.UniPath            (UniPath)
+import qualified Flowbox.System.UniPath            as UniPath
+import qualified Luna.Data.ASTInfo                 as ASTInfo
+import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
+import           Luna.Lib.Lib                      (Library)
+import qualified Luna.Lib.Lib                      as Library
+import qualified Luna.Lib.Manager                  as LibManager
+import qualified Luna.Pass.Build.Build             as Build
+import           Luna.Pass.Build.BuildConfig       (BuildConfig (BuildConfig))
+import qualified Luna.Pass.Build.BuildConfig       as BuildConfig
+import qualified Luna.Pass.Build.Diagnostics       as Diagnostics
 
 
 
@@ -97,11 +94,11 @@ buildLibrary libraryID projectID = do
 
 
 -- TODO [PM] : Needs architecture change
-runLibrary ::  Library.ID -> Project.ID -> Batch Process.ID
-runLibrary libraryID projectID = projectOp projectID (\project -> do
+runLibrary ::  Library.ID -> Project.ID -> Batch ()
+runLibrary libraryID projectID = do
+    project <- Batch.getProject projectID
     let projectPath = project ^. Project.path
         libs        = project ^. Project.libs
-        processMap  = project ^. Project.processMap
     library <- LibManager.lab libs libraryID <??> "Wrong libraryID=" ++ show libraryID
     name    <- UniPath.toUnixString <$> UniPath.expand (UniPath.append (library ^. Library.name) projectPath)
     let command = Platform.dependent name (name ++ ".exe") name
@@ -112,11 +109,7 @@ runLibrary libraryID projectID = projectOp projectID (\project -> do
     --let exitMsg = "Program exited with " ++ (show errorCode) ++ " code"
     --loggerIO debug exitMsg
     --return (library, stdOut ++ stdErr ++ "\n" ++ "Program exited with " ++ (show errorCode) ++ " code"))
-    handle <- liftIO $ Process.runCommand command
-    let processID     = ProcessMap.size processMap + 1
-        newProcessMap = ProcessMap.insert processID (Handle handle) processMap
-        newProject    = project & Project.processMap .~ newProcessMap
-    return (newProject, processID))
+    void $ liftIO $ Process.runCommand command
 
 
 interpretLibrary :: Library.ID -> Project.ID -> Batch ()

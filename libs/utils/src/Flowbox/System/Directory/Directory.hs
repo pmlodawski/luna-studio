@@ -106,7 +106,7 @@ getDirectoryRecursive upath = do
     isDir <- doesDirectoryExist path
     if isDir
         then do paths <- listDirectory $ UniPath.toUnixString path
-                let upaths = map (\a -> UniPath.append a path) paths
+                let upaths = map (`UniPath.append` path) paths
                 children <- mapM getDirectoryRecursive upaths
                 return $ List.concat children
         else return [path]

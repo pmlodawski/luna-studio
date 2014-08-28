@@ -1,0 +1,83 @@
+Name:           luna-pass
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Library
+  Hs-Source-Dirs: dist/gen,
+                  src
+  Other-Modules:  Paths_luna_pass
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2 -threaded
+                  -- -F -pgmF ./util/preprocessors/imports.py
+  Extensions:     DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings
+
+  Exposed-modules: `findmodules('src', '.*\.hs')`
+
+  Build-Depends:  base,
+                  containers,
+                  either,
+                  luna-core,
+                  luna-distribution,
+                  luna-parser,
+                  luna-target-ghchs,
+                  flowbox-config,
+                  flowbox-utils,
+                  mtl,
+                  MissingH,
+                  split,
+                  transformers
+
+
+Executable luna-pass-test
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: test
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2
+
+  Extensions:     DoAndIfThenElse
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+
+  Build-Depends:  base,
+                  luna-pass,
+                  luna-core,
+                  luna-distribution,
+                  luna-parser,
+                  flowbox-utils,
+                  mtl,
+                  either,
+                  dlist,
+                  MissingH,
+                  transformers,
+                  timeit
+
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  luna-core,
+                  luna-pass,
+                  flowbox-utils,
+                  hspec,
+                  raw-strings-qq,
+                  MissingH

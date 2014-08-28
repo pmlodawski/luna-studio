@@ -1,22 +1,23 @@
-#include <fstream>
 
-#include "generated/server-api.pb.h"
-#include "generated/project-manager.pb.h"
-#include "generated/file-manager.pb.h"
-#include "generated/parser.pb.h"
-#include "generated/plugin-manager.pb.h"
+#include "../generated/project-manager.pb.h"
+#include "../generated/file-manager.pb.h"
+#include "../generated/parser.pb.h"
+#include "../generated/plugin-manager.pb.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #ifdef _WIN32
 #pragma comment(lib, "libprotobuf.lib")
 #endif
 
 
-using namespace generated::proto::batch;
+using namespace boost::filesystem;
+using namespace generated::proto::type;
 using namespace google::protobuf;
 
+const path outputDirectory = path("..") / "generated";
 
 void formatOutput(std::ostream &out, std::string contents)
 {
@@ -394,8 +395,9 @@ struct MethodWrapper
 				assert(argsFields.at(i + 1)->name() == "bc");
 				assert(argsFields.at(i + 2)->name() == "libraryID");
 				assert(argsFields.at(i + 3)->name() == "projectID");
-				collapsedArgs.resize(4, i);
-				i += 3;
+				assert(argsFields.at(i + 4)->name() == "_astID");
+				collapsedArgs.resize(5, i);
+				i += 4;
 				argsTxt.push_back("const NodeId &nodeID");
 				collapsedName = "nodeID";
 			}
@@ -403,13 +405,24 @@ struct MethodWrapper
 			{
 				assert(argsFields.at(i + 1)->name() == "libraryID");
 				assert(argsFields.at(i + 2)->name() == "projectID");
-				collapsedArgs.resize(3, i);
-				i += 2;
 
 				if(arg->name() == "bc")
+				{
+					assert(argsFields.at(i + 3)->name() == "_astID");
+					collapsedArgs.resize(4, i);
+					i += 3;
 					collapsedName = "defID";
+				}
 				else
+				{
+					assert(argsFields.at(i + 3)->name() == "_astID");
+					collapsedArgs.resize(4, i);
+					i += 3;
+// 					collapsedArgs.resize(3, i);
+// 					i += 2;
 					collapsedName = "parent";
+				}
+
 				argsTxt.push_back("const DefinitionId &" + collapsedName);
 			}
 			else if(arg->name() == "libraryID")
@@ -445,19 +458,23 @@ struct MethodWrapper
 		std::string ret;
 		for(int i = 0; i < (int)argsFields.size(); i++)
 		{
+			const bool packContainsAstId = collapsedArgs.size() >= 3u;
 			auto &arg = argsFields.at(i);
 			if(collapsedArgs.size() && collapsedArgs.front() == i)
 			{
 				for(int j = 0; j < (int)collapsedArgs.size(); j++)
 				{
-					auto &argInner = argsFields.at(i+j);
+					const auto &argInner = argsFields.at(i+j);
 
-					static const std::string names[] = { "nodeID", "defID", "libID", "projID" };
-					int index = 4-collapsedArgs.size()+j;
-					auto derefedArg = collapsedName + "." + names[index];
+					const int index = 4 + packContainsAstId - collapsedArgs.size() + j;
+					static const std::vector<std::string> names = { "nodeID", "defID", "libID", "projID", "defID" };
+					const auto derefedArg = collapsedName + "." + names[index];
+
 					if(index == 1)
 					{
-						ret += "request.mutable_" + argInner->lowercase_name() + "()->CopyFrom(crumbify(" + collapsedName + "));\n";
+						auto argLowerName = argInner->lowercase_name();
+						assert(argLowerName == "bc" || argLowerName == "parentbc");
+						ret += "request.mutable_" + argLowerName + "()->CopyFrom(crumbify(" + collapsedName + "));\n";
 					}
 					else
 						ret += "request.set_" + argInner->lowercase_name() + "(" + derefedArg + ");\n";
@@ -577,43 +594,30 @@ struct MethodWrapper
 //methods covnerting between expr/pat/type -> cls 
 std::string extToClsCovnersions()
 {
+	using namespace generated::proto;
+
 	std::string ret;
 
-	std::vector<std::string> toHandle = { "Expr", "Pat", "Type" };
-	auto d = AST::descriptor();
-	auto f = d->file();
-	for(int i = 0; i < f->dependency_count(); i++)
+	for(auto e : { expr::Expr::Cls_descriptor(), pat::Pat::Cls_descriptor(), type::Type::Cls_descriptor() })
 	{
-		auto dep = f->dependency(i);
-		for(int j = 0; j < dep->message_type_count(); j++)
+		auto fname = e->file()->name();
+		boost::replace_last(fname, ".proto", "");
+
+		std::cout << "\t" << e->containing_type()->name() << " -> " << e->full_name() << std::endl;
+		for(int k = 0; k < e->value_count(); k++)
 		{
-			auto msg = dep->message_type(j);
-			auto e = msg->FindEnumTypeByName("Cls");
-			//std::cout << msg->full_name() << std::endl;
-			if(e  &&  std::find(toHandle.begin(), toHandle.end(), e->containing_type()->name()) != toHandle.end())
-			{
-				auto fname = e->file()->name();
-				boost::replace_last(fname, ".proto", "");
+			auto enumVal = e->value(k);
 
-				std::cout << "\t" << e->containing_type()->name() << " -> " << e->full_name() << std::endl;
-				for(int k = 0; k < e->value_count(); k++)
-				{
-					auto enumVal = e->value(k);
+			auto hlp = clsGetterMethod;
 
-					auto hlp = clsGetterMethod;
-
-					boost::replace_all(hlp, "%fname%", fname);
-					boost::replace_all(hlp, "%msg%", msg->name());
-					boost::replace_all(hlp, "%ext%", enumVal->name());
-					ret += hlp;
-				}
-				//boost::replace_all(hlp, "%ext_msg%", )
-				//std::cout << hlp << std::endl;
-			}
+			std::cout << "\t\t" << enumVal->name() << std::endl;
+			boost::replace_all(hlp, "%fname%", fname);
+			boost::replace_all(hlp, "%msg%", e->containing_type()->name());
+			boost::replace_all(hlp, "%ext%", enumVal->name());
+			ret += hlp;
 		}
-
-		//std::cout << dep->name() << std::endl;
 	}
+
 	return ret;
 }
 
@@ -670,7 +674,7 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 	return methods;
 }
 
-void generate(const std::string &outputFile)
+void generate(path outputFile)
 {
 	std::string methodImpls;
 	std::string methodDecls;
@@ -690,23 +694,28 @@ void generate(const std::string &outputFile)
 		auto ret = input;
 		boost::replace_all(ret, "%method_decls%", methodDecls);
 		boost::replace_all(ret, "%method_impls%", methodImpls);
-		boost::replace_all(ret, "%wrapper_name%", outputFile.substr(outputFile.find_last_of('/') + 1));
+		boost::replace_all(ret, "%wrapper_name%", outputFile.leaf().string());
 		boost::replace_all(ret, "%ext_to_enum%", extToClsCovnersions());
 		return ret;
 	};
 
+	auto formatAndWrite = [&](const path &outfile, const std::string &preformattedFile)
 	{
-		std::ofstream out(outputFile + ".cpp");
-		formatOutput(out, formatFile(sourceFile));
-	}
-	{
-		std::ofstream out(outputFile + ".h");
-		formatOutput(out, formatFile(headerFile));
-	}
+		std::cout << "Formatting " << outfile << std::endl;
+		auto formattedText = formatFile(preformattedFile);
+		std::cout << "Formatting output " << outfile << std::endl;
+		boost::filesystem::ofstream out(outfile);
+		assert(out);
+		formatOutput(out, formattedText);
+	};
+
+	formatAndWrite(outputFile.string() + ".cpp", sourceFile);
+	formatAndWrite(outputFile.string() + ".h", headerFile);
 }
 
 void generateDeserializers()
 {
+	std::cout << "Generating deserializers..." << std::endl;
 	static const std::string header = R"(
 #pragma once 
 
@@ -778,14 +787,15 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 	std::string output = body;
 	boost::replace_all(output, "%deserializers%", entries);
 
-	std::ofstream outcpp("generated/Deserializer.cpp");
-	std::ofstream outh("generated/Deserializer.h");
+	boost::filesystem::ofstream outcpp(outputDirectory / "Deserializer.cpp");
+	boost::filesystem::ofstream outh(outputDirectory / "Deserializer.h");
 	formatOutput(outh, header);
 	formatOutput(outcpp, output);
 }
 
 void generateDispatcher()
 {
+	std::cout << "Generating dispatcher..." << std::endl;
 	std::string source = R"(
 #include "MessageDispatcher.h"
 #include "../bus/BusLibrary.h"
@@ -867,8 +877,8 @@ struct IBusMessagesReceiver : IBusListener, IDispatchee
 	boost::replace_all(header, "%dispatchee%", dispatchee);
 	boost::replace_all(source, "%elements%", entries);
 
-	std::ofstream outcpp("generated/MessageDispatcher.cpp");
-	std::ofstream outh("generated/MessageDispatcher.h");
+	boost::filesystem::ofstream outcpp(outputDirectory / "MessageDispatcher.cpp");
+	boost::filesystem::ofstream outh(outputDirectory /"MessageDispatcher.h");
 	formatOutput(outh, header);
 	formatOutput(outcpp, source);
 	//topic project.library.ast.properties.set.update
@@ -879,7 +889,7 @@ struct IBusMessagesReceiver : IBusListener, IDispatchee
 int main()
 {
 //	extToClsCovnersions();
-	generate("generated/ProjectManager");
+	generate(outputDirectory / "ProjectManager");
 	generateDeserializers();
 	generateDispatcher();
 	return EXIT_SUCCESS;

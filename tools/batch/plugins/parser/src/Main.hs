@@ -6,15 +6,15 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import qualified Flowbox.Bus.EndPoint           as EP
-import qualified Flowbox.Bus.RPC.Server.Server  as Server
-import qualified Flowbox.Config.Config          as Config
-import           Flowbox.Options.Applicative    hiding (info)
-import qualified Flowbox.Options.Applicative    as Opt
-import           Flowbox.Parser.Cmd             (Cmd)
-import qualified Flowbox.Parser.Cmd             as Cmd
-import qualified Flowbox.Parser.Handler.Handler as Handler
-import qualified Flowbox.Parser.Version         as Version
+import qualified Flowbox.Bus.EndPoint               as EP
+import qualified Flowbox.Bus.RPC.Server.Server      as Server
+import qualified Flowbox.Config.Config              as Config
+import           Flowbox.Options.Applicative        hiding (info)
+import qualified Flowbox.Options.Applicative        as Opt
+import           Flowbox.Parser.Cmd                 (Cmd)
+import qualified Flowbox.Parser.Cmd                 as Cmd
+import qualified Flowbox.Parser.RPC.Handler.Handler as Handler
+import qualified Flowbox.Parser.Version             as Version
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -46,6 +46,6 @@ run cmd = case cmd of
     Cmd.Run {}  -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         endPoints <- EP.clientFromConfig <$> Config.load
-        r <- Server.run endPoints Handler.handlerMap
+        r <- Server.run endPoints () Handler.handlerMap
         print r
 

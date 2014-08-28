@@ -15,12 +15,10 @@ import qualified Data.ByteString.Lazy as ByteString
 import           System.IO
 import qualified Text.ProtocolBuffers as Proto
 
-import qualified Flowbox.Batch.Process.Map                              as ProcessMap
 import           Flowbox.Batch.Project.Project                          (Project)
 import qualified Flowbox.Batch.Project.Project                          as Project
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Lib.LibManager                            as LibManager
 import           Flowbox.Prelude
 import           Flowbox.System.IO.Serializer                           (Deserializable (..), Serializable (..))
 import qualified Flowbox.System.IO.Serializer                           as Serializer
@@ -28,6 +26,7 @@ import           Flowbox.System.UniPath                                 (UniPath
 import qualified Flowbox.System.UniPath                                 as UniPath
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Project.Project                        as Gen
+import qualified Luna.Lib.Manager                                       as LibManager
 
 
 
@@ -44,7 +43,7 @@ getProject :: Handle -> IO Project
 getProject h = runScript $ do
     bytes                        <- scriptIO $ ByteString.hGetContents h
     (tproject :: Gen.Project, _) <- tryRight $ Proto.messageGet bytes
-    (_ :: Project.ID, project)   <- tryRight $ decode (tproject, LibManager.empty, ProcessMap.empty)
+    (_ :: Project.ID, project)   <- tryRight $ decode (tproject, LibManager.empty)
     return project
 
 

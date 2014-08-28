@@ -7,9 +7,9 @@
 module Flowbox.AWS.Database.Session where
 
 import           Control.Monad
+import qualified Data.Maybe                 as Maybe
 import qualified Data.Time                  as Time
 import qualified Database.PostgreSQL.Simple as PSQL
-import qualified Data.Maybe as Maybe
 
 import qualified Flowbox.AWS.Database.SQL.Session.Add            as SessionAdd
 import qualified Flowbox.AWS.Database.SQL.Session.All            as SessionAll
