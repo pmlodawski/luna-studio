@@ -198,6 +198,15 @@ defocusBlur size = do
    forAllChannels "lena.bmp" process
 
 --
+-- Bounduary test
+--
+boundTest :: IO ()
+boundTest = do
+   let mysampler = multisampler (normalize $ toMatrix 10 box)
+   let mask = mysampler $ scale 0.25 $ nearest $ bound Mirror $ ellipse 200 1 (0 :: Exp Float)
+   testSaveChan' "out.bmp" (rasterizer mask)
+
+--
 -- Applies Kirsch Operator to red channel of Lena image. Available operators: prewitt, sobel, sharr
 -- (Advanced rotational convolution, Edge detection test)
 --
