@@ -13,7 +13,7 @@ Flag Debug
 
 
 Library
-  GHC-Options:        -Wall -Werror -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -fhpc -Werror -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     src
   Build-Depends:      base
                     , containers
@@ -24,7 +24,7 @@ Library
 
 
 Executable luna-typechecker-tests
-  GHC-Options:        -Wall -Werror -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -fhpc -Werror -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     test
   Main-Is:            Spec.hs
   GHC-Options:        -threaded -Wall -O2
