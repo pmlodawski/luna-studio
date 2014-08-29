@@ -39,6 +39,12 @@ import Data.Array.Accelerate (index2, Boundary(..))
 
 import Utils
 
+-- Test helpers
+forAllChannels :: String -> (Matrix2 Float -> Matrix2 Float) -> IO ()
+forAllChannels image process = do
+    (r, g, b, a) <- testLoadRGBA' $ "samples/" P.++ image
+    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
+
 --
 -- Draws all the existing types of gradients using ContactSheet.
 -- (General geometry test)
@@ -88,12 +94,11 @@ multisamplerTest = do
 --
 scalingTest :: Filter Float -> IO ()
 scalingTest flt = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena_small.bmp"
     let process x = rasterizer $ monosampler 
                                $ scale (V2 (720 / 64) (480 / 64))
                                $ interpolator flt 
                                $ fromMatrix Clamp x
-    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
+    forAllChannels "lena_small.bmp" process
 
 --
 -- Applies 2 pass gaussian blur onto the 4k image
@@ -101,12 +106,11 @@ scalingTest flt = do
 --
 gaussianTest :: Exp Int -> IO ()
 gaussianTest kernSize = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/moonbow.bmp"
     let hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable kernSize)) $ gauss 1.0
     let vmat = id M.>-> normalize $ toMatrix (Grid (variable kernSize) 1) $ gauss 1.0
     let p = pipe Clamp
     let process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix Clamp x
-    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
+    forAllChannels "moonbow.bmp" process
 
 --
 -- Applies laplacian edge detector to Lena image
@@ -114,11 +118,10 @@ gaussianTest kernSize = do
 --
 laplacianTest :: Exp Int -> Exp Float -> Exp Float -> IO ()
 laplacianTest kernSize crossVal sideVal = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
     let flt = laplacian (variable crossVal) (variable sideVal) (pure $ variable kernSize)
     let p = pipe Clamp
     let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix Clamp x
-    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
+    forAllChannels "lena.bmp" process
 
 --
 -- Applies morphological operators to Lena image
@@ -126,8 +129,6 @@ laplacianTest kernSize crossVal sideVal = do
 --
 morphologyTest :: Exp Int -> IO ()
 morphologyTest size = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
-
     let l c = fromMatrix Clamp c
     let v = pure $ variable size
     let morph1 c = nearest $ closing v $ l c -- Bottom left
@@ -135,8 +136,8 @@ morphologyTest size = do
     let morph3 c = nearest $ dilate  v $ l c -- Top left
     let morph4 c = nearest $ erode   v $ l c -- Top right
 
-    let raster chan = gridRasterizer 512 (Grid 2 2) monosampler [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
-    testSaveRGBA' "out.bmp" (raster r) (raster g) (raster b) (raster a)
+    let process chan = gridRasterizer 512 (Grid 2 2) monosampler [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
+    forAllChannels "lena.bmp" process
 
 --
 -- Applies directional motion blur to Lena image
@@ -181,62 +182,10 @@ morphologyTest size = do
 --
 unsharpMaskTest :: Exp Float -> Exp Int -> IO ()
 unsharpMaskTest sigma kernSize = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
     let flt = normalize $ toMatrix (Grid (variable kernSize) (variable kernSize)) $ dirac (variable sigma) - gauss 1.0
     let p = pipe Clamp
     let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix Clamp x
-    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
-
---
--- Radial blur
--- (Sharpening test)
---
---rotateGen :: (Elt a, IsFloating a, IsScalar a) => Exp a -> Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
---rotateGen phi grid gen = monosampler $ translate (V2 rx ry) 
---                                     $ rotate phi 
---                                     $ translate (V2 tx ty) 
---                                     $ interpolator triangle 
---                                     $ gen
---    where size = fmap A.fromIntegral grid
---          Grid tx ty = fmap (/ (-2)) size
---          Grid rx ry = fmap (/ (2)) $ bbox phi size
-
---lineGen :: DiscreteGenerator (Exp Float)
---lineGen = Generator $ \(Cartesian.Point2 x y) -> A.cond (y ==* 1) 1 0
-
---motionBlur' :: (Elt a, IsFloating a) =>  Exp a -> Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
---motionBlur' alpha grid kernel = Stencil.normStencil (+) (fmap A.ceiling $ bbox alpha $ fmap A.fromIntegral grid) (rotateGen alpha grid kernel) (+) 0
-
---radialBlurTest :: IO ()
---radialBlurTest = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
-
---    let remap = S.transform $ \(Polar.Point2 x y) -> Cartesian.Point2 x (y / (2 * pi) * 512)
-
---    let remap' = S.transform $ \(Cartesian.Point2 x' y') -> Polar.Point2 x' (y')
-
---    let flt = normalize $ toMatrix 10 $ gauss 1.0
-
---    let wrap x = monosampler
---               $ translate (256)
---               $ S.transform (Polar.toPolar (512 :: Grid (Exp Float))) 
---               $ remap
---               $ translate (-256)
---               $ nearest x
-               
-
---    let unwrap x = Conv.filter 2 flt 
---                 $ monosampler 
---                 $ translate (256)
---                 $ S.transform (\(Cartesian.Point2 x y) -> Polar.Point2 x (y * (2 * pi) / 512))
---                 $ S.transform (convertCoord Cartesian.Cartesian (512 :: Grid (Exp Float))) 
---                 $ translate (-256)
---                 $ nearest
---                 $ fromMatrix (Clamp) x
-
---    let process = rasterizer 512 . wrap . unwrap
---    print "Szatan"
---    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
+    forAllChannels "lena.bmp" process
 
 main :: IO ()
 main = do

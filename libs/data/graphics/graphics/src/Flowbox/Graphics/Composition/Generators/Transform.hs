@@ -66,17 +66,3 @@ scaleTo :: (Elt a, IsNum a, IsFloating a) => Grid (Exp Int) -> CartesianGenerato
 scaleTo newCnv gen@(Generator oldCnv _) = resize newCnv $ zoom (V2 (nw / ow) (nh / oh)) gen
     where Grid nw nh = fmap A.fromIntegral newCnv
           Grid ow oh = fmap A.fromIntegral oldCnv
-
---rotateMat :: (Elt e, IsFloating e) => Exp e -> Boundary (Exp e) -> Matrix2 e -> Matrix2 e
---rotateMat phi b mat = rasterizer nsize' $ monosampler 
---                                        $ translate (V2 rx ry) 
---                                        $ rotate phi 
---                                        $ translate (V2 tx ty) 
---                                        $ interpolator triangle 
---                                        $ fromMatrix b $ mat
---    where A.Z A.:. height A.:. width = A.unlift $ M.shape mat
---          size = fmap A.fromIntegral $ Grid width height
---          Grid tx ty = fmap (/ (-2)) size
---          nsize = bbox phi size
---          nsize' = fmap A.ceiling nsize
---          Grid rx ry = fmap (/ (2)) nsize

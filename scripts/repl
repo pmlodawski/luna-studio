@@ -40,10 +40,11 @@ def main():
 
     for pkg in pkgs:
         print_info ("Starting ghci for %s" % pkg.name)
-        
         old_action = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        os.chdir(os.environ["PWD"])
         call("cabal --sandbox=%s/cabal.sandbox.config exec ghci -- -XNoImplicitPrelude "% pkg.sbox, shell=True)
         signal.signal(signal.SIGINT, old_action)         # restore original signal handler
+        os.chdir(rootPath)
 
 main()
 
