@@ -88,7 +88,7 @@ multisamplerTest = do
 --
 scalingTest :: Filter Float -> IO ()
 scalingTest flt = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena_small.bmp"
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena_small.bmp"
     let process x = rasterizer $ monosampler 
                                $ scale (V2 (720 / 64) (480 / 64))
                                $ interpolator flt 
@@ -101,7 +101,7 @@ scalingTest flt = do
 --
 gaussianTest :: Exp Int -> IO ()
 gaussianTest kernSize = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "moonbow.bmp"
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/moonbow.bmp"
     let hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable kernSize)) $ gauss 1.0
     let vmat = id M.>-> normalize $ toMatrix (Grid (variable kernSize) 1) $ gauss 1.0
     let p = pipe Clamp
@@ -114,7 +114,7 @@ gaussianTest kernSize = do
 --
 laplacianTest :: Exp Int -> Exp Float -> Exp Float -> IO ()
 laplacianTest kernSize crossVal sideVal = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
     let flt = laplacian (variable crossVal) (variable sideVal) (pure $ variable kernSize)
     let p = pipe Clamp
     let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix Clamp x
@@ -126,7 +126,7 @@ laplacianTest kernSize crossVal sideVal = do
 --
 morphologyTest :: Exp Int -> IO ()
 morphologyTest size = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
 
     let l c = fromMatrix Clamp c
     let v = pure $ variable size
@@ -150,7 +150,7 @@ morphologyTest size = do
 
 --motionBlurTest :: Exp Float -> Exp Int -> IO ()
 --motionBlurTest alpha kernSize = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
+--    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
 --    let flt = normalize $ toMatrix (Grid 1 (variable kernSize)) $ box
 --    let p = pipe 512 Clamp
 --    let process x = rasterizer 512 $ id `p` motionBlur (alpha * pi / 180) 1 flt `p` id $ fromMatrix Clamp x
@@ -168,7 +168,7 @@ morphologyTest size = do
 
 --kirschTest :: Matrix2 Float -> IO ()
 --kirschTest edgeOp = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"  
+--    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"  
 --    let k alpha = rotational alpha edgeOp r
 --    let max8 a b c d e f g h = a `min` b `min` c `min` d `min` e `min` f `min` g `min` h
 --    let res = rasterizer 512 $ max8 <$> (k 0) <*> (k 45) <*> (k 90) <*> (k 135) <*> (k 180) <*> (k 225) <*> (k 270) <*> (k 315)
@@ -181,7 +181,7 @@ morphologyTest size = do
 --
 unsharpMaskTest :: Exp Float -> Exp Int -> IO ()
 unsharpMaskTest sigma kernSize = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
     let flt = normalize $ toMatrix (Grid (variable kernSize) (variable kernSize)) $ dirac (variable sigma) - gauss 1.0
     let p = pipe Clamp
     let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix Clamp x
@@ -209,7 +209,7 @@ unsharpMaskTest sigma kernSize = do
 
 --radialBlurTest :: IO ()
 --radialBlurTest = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "lena.bmp"
+--    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
 
 --    let remap = S.transform $ \(Polar.Point2 x y) -> Cartesian.Point2 x (y / (2 * pi) * 512)
 

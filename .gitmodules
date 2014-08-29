@@ -46,3 +46,6 @@
 [submodule "third-party/imagemagick"]
 	path = third-party/imagemagick
 	url = git@github.com:korrix/imagemagick.git
+[submodule "libs/data/graphics/graphics/test/samples"]
+	path = libs/data/graphics/graphics/test/samples
+	url = git@github.com:korrix/ImageProcessingSamples.git
