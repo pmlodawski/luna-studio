@@ -31,17 +31,24 @@ turn = transform . turn'
 
 bbox :: (Elt a, Ord a, IsNum a, IsFloating a) => Exp a -> Grid (Exp Int) -> Grid (Exp Int)
 bbox phi cnv = fmap A.ceiling $ Grid gw' gh'
-    where Grid gw gh = fmap (/2) $ fmap A.fromIntegral cnv
+    where Grid gw gh = fmap A.fromIntegral cnv
           pmax = Point2 (px1 `max` px2 `max` px3 `max` px4) (py1 `max` py2 `max` py3 `max` py4) 
           pmin = Point2 (px1 `min` px2 `min` px3 `min` px4) (py1 `min` py2 `min` py3 `min` py4) 
           Point2 gw' gh' = pmax - pmin
-          Point2 px1 py1 = turn' phi $ Point2 (-gw) (-gh)
-          Point2 px2 py2 = turn' phi $ Point2 ( gw) (-gh)
-          Point2 px3 py3 = turn' phi $ Point2 ( gw) ( gh)
-          Point2 px4 py4 = turn' phi $ Point2 (-gw) ( gh)
+          Point2 px1 py1 = turn' phi $ Point2  0 0
+          Point2 px2 py2 = turn' phi $ Point2 gw 0
+          Point2 px3 py3 = turn' phi $ Point2 gw gh
+          Point2 px4 py4 = turn' phi $ Point2 0  gh
 
 rotate :: (Elt a, Num a, Ord a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
 rotate phi gen = turn phi $ resize (bbox phi $ canvas gen) gen
+
+-- :: (Elt b, IsFloating b) => Exp a -> CartesianGenerator (Exp b) b1 -> CartesianGenerator (Exp b) b1
+rotateCenter :: (Elt b, IsFloating b, Ord b) => Exp b -> Generator (Point2 (Exp b)) b1 -> CartesianGenerator (Exp b) b1
+rotateCenter phi gen@(Generator (Grid ow oh) _) = translate newcenter newgen 
+    where oldcenter = V2 (-A.fromIntegral ow / 2) (-A.fromIntegral oh / 2)
+          newgen@(Generator (Grid nw nh) _) = rotate phi $ translate oldcenter gen
+          newcenter = V2 (A.fromIntegral nw / 2) (A.fromIntegral nh / 2)
 
 -- == Translation ==
 translate' :: Num a => V2 a -> Point2 a -> Point2 a

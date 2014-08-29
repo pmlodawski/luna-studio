@@ -10,8 +10,13 @@ module Flowbox.Graphics.Composition.Generators.Constant where
 import Flowbox.Prelude
 import Flowbox.Graphics.Composition.Generators.Structures
 import Math.Space.Space
+import Math.Coordinate.Cartesian
 
-import Data.Array.Accelerate (Exp)
+import Data.Array.Accelerate as A
 
 constant :: Grid (Exp Int) -> b -> Generator a b
 constant cnv a = Generator cnv $ const a 
+
+rectangle :: Elt b => Grid (Exp Int) -> Exp b -> Exp b -> DiscreteGenerator (Exp b)
+rectangle cnv@(Grid w h) interior exterior = Generator cnv $ \(Point2 x y) -> 
+    A.cond (x A.<* 0 ||* y A.<* 0 ||* x A.>* w ||* y A.>* h) exterior interior
