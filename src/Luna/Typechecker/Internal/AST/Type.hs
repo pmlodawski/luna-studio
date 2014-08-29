@@ -5,13 +5,24 @@ module Luna.Typechecker.Internal.AST.Type (
 
 import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
 
+import           Text.Printf                                (printf)
+import           Data.List                                  (intercalate)
 
 -- | The type of an expression.
 data Type = TVar Tyvar    -- ^ Type variable (named unknown).
           | TCon Tycon    -- ^ Type constant (Int, Char, etc.).
           | TAp Type Type -- ^ Type application ( 'TAp [] Int' means '[Int]').
           | TGen Int      -- ^ Used for quantified variables ('a' in 'forall. a b => a -> b -> a').
-          deriving (Eq, Show)
+          deriving (Eq)
+
+instance Show Type where
+  show (TVar (Tyvar n k)) = printf "(%s::%s)" n (show k)
+  show (TCon (Tycon n k)) = printf "(%s::%s)" (show n) (show k)
+  show (TAp (TAp x t1) t2)
+    | x == tArrow         = printf "%s -> %s" (show t1) (show t2)
+  show (TAp t1 t2)        = printf "(%s %s)" (show t1) (show t2)
+  show (TGen i)           = printf "gen{%d}" i
+  showList cs s = printf "%s%s" s (intercalate " " $ map show cs)
 
 
 -- | Type variable.

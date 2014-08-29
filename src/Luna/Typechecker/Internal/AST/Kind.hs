@@ -11,6 +11,6 @@ data Kind = Star
 
 instance Show Kind where
   show Star = "*"
-  show (Kfun x y) = show' x ++ " -> " ++ show' y
+  show (Kfun x y) = show' x ++ "->" ++ show y
     where show' Star = show Star
           show' k = "(" ++ show k ++ ")"

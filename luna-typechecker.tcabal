@@ -24,6 +24,7 @@ Library
 
 
 Executable luna-typechecker-tests
+  GHC-Options:        -Wall -Werror -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     test
   Main-Is:            Spec.hs
   GHC-Options:        -threaded -Wall -O2
@@ -33,5 +34,6 @@ Executable luna-typechecker-tests
                     , flowbox-luna-base
                     , hspec
                     , QuickCheck
+                    , transformers
 --                    , array
 --                    , containers

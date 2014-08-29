@@ -10,7 +10,7 @@ import           Luna.Typechecker.Internal.Unification
 import           Test.Hspec
 import           Control.Exception                          (evaluate)
 
-import           Data.Either                                (isRight)
+--import           Data.Either                                (isRight)
 
 spec :: Spec
 spec = do

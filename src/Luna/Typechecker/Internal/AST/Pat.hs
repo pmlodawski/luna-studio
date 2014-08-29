@@ -1,4 +1,4 @@
-module Luna.Typechecker.Internal.AST.Pat (tiPat, Pat, tiPats) where
+module Luna.Typechecker.Internal.AST.Pat (tiPat, Pat(..), tiPats) where
 
 import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
 import qualified Luna.Typechecker.Internal.AST.Lit          as Lit
@@ -10,6 +10,8 @@ import qualified Luna.Typechecker.Internal.TIMonad          as TIM
 import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
 
 import           Luna.Typechecker.Internal.AST.Common       (ID)
+import           Text.Printf                                (printf)
+import           Data.List                                  (intercalate)
 
 
 --data Pat = Con             { _id :: ID, _name      :: String                          }  -- to jest tylko konstruktor
@@ -32,9 +34,23 @@ data Pat = Con             { _id :: ID, _name :: String, _scheme :: Sch.Scheme, 
          | Var             { _id :: ID, _name :: String                                        }
          | Wildcard        { _id :: ID                                                         }
          | Lit             { _id :: ID, _value     :: Lit.Lit                                  }
-         deriving (Show, Eq)
+         deriving (Eq)
 -- TODO [kgdk] 20 sie 2014: ScopedTypeVariables?
 -- TODO [kgdk] 20 sie 2014: odpowiednik 'PAs' tj. named pattern?
+
+instance Show Pat where
+    show (Con _ n _ a) = printf "%s %s" n (show a)
+    show (Var _ n)     = n
+    show (Wildcard _)  = "_"
+    show (Lit _ l)     = show l
+
+    showList cs s = printf "%s%s" s (intercalate " " $ map show cs)
+
+--instance  Show Char  where
+    --showsPrec _ '\'' = showString "'\\''"
+    --showsPrec _ c    = showChar '\'' . showLitChar c . showChar '\''
+
+    --showList cs = showChar '"' . showLitString cs . showChar '"'
 
 
 tiPat :: Pat -> TIM.TI ([Tcl.Pred], [Ass.Assump], Ty.Type)

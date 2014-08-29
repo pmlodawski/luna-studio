@@ -12,7 +12,7 @@ import           Test.Luna.Typechecker.Internal.AST.TypeGen
 
 import           Test.Hspec
 import           Test.QuickCheck
-import           Control.Exception                          (evaluate)
+--import           Control.Exception                          (evaluate)
 
 import           Data.List                                  (subsequences)
 import           Data.Maybe                                 (fromJust, isJust)
@@ -25,9 +25,9 @@ spec = do
   describe "(+->)" $ do
     it "yields some result for all reasonably-kinded values" $ property $
       forAll arbitrary    $ \k ->
-      forAll (genTyvar k) $ \tv ->
+      forAll (genTyvar k) $ \tvar ->
       forAll (genType k)  $ \ty ->
-        (tv+->ty) `shouldSatisfy` not.null
+        (tvar+->ty) `shouldSatisfy` not.null
     describe "enforcing of kind-preserveness" $ do
       it "satisfies that property" $
         pendingWith "waiting for refactor: +-> should be partial  "
@@ -56,13 +56,14 @@ spec = do
         forAll (genSubst (tv t)) $ \s2 ->
           apply (s1 @@ s2) t == (apply s1 . apply s2) t
   describe "Symmetric substitutions composition (merge)" $ do
-    it "satisfies property: apply (s1++s2) = apply (s2++s1)" $
+    it "satisfies property: apply (s1 `merge` s2) = apply (s2 `merge` s1) in its domain" $
       property $
         forAll arbitrary         $ \(t :: Type)  -> 
         forAll (genSubst (tv t)) $ \s1 ->
         forAll (genSubst (tv t)) $ \s2 ->
           let s12 = merge s1 s2
-           in isJust s12 ==> apply (fromJust s12) t == (apply s1 . apply s2) t
+              s21 = merge s2 s1
+           in isJust s12 ==> apply (fromJust s12) t == apply (fromJust s21) t
   describe "class Types t" $ do
     describe "instance Types Type" $ do
       describe "apply :: Subst -> t -> t" $ do
@@ -72,12 +73,12 @@ spec = do
           let a  = (Ty.Tyvar "a"  Knd.Star)
               b  = (Ty.Tyvar "b"  Knd.Star)
               c  = (Ty.Tyvar "c"  Knd.Star)
-              d  = (Ty.Tyvar "d"  Knd.Star)
+              --d  = (Ty.Tyvar "d"  Knd.Star)
               dot = (TVar b `fn` TVar c) `fn` (TVar a `fn` TVar b) `fn` (TVar a `fn` TVar c)
               dlr = (TVar a `fn` TVar b) `fn` TVar a `fn` TVar b
-              f  = (Ty.Tyvar "f"  (Knd.Kfun Knd.Star Knd.Star))
-              m  = (Ty.Tyvar "m"  (Knd.Kfun Knd.Star Knd.Star))
-              mt = (Ty.Tyvar "mt" (Knd.Kfun (Knd.Kfun (Knd.Kfun Knd.Star Knd.Star) Knd.Star) Knd.Star))
+              --f  = (Ty.Tyvar "f"  (Knd.Kfun Knd.Star Knd.Star))
+              --m  = (Ty.Tyvar "m"  (Knd.Kfun Knd.Star Knd.Star))
+              --mt = (Ty.Tyvar "mt" (Knd.Kfun (Knd.Kfun (Knd.Kfun Knd.Star Knd.Star) Knd.Star) Knd.Star))
           tv Ty.tInt              `shouldBe` []
           tv (TVar a)             `shouldBe` [a]
           tv (TVar a `fn` TVar b) `shouldBe` [a, b]
@@ -91,11 +92,11 @@ spec = do
           let a  = (Ty.Tyvar "a"  Knd.Star)
               b  = (Ty.Tyvar "b"  Knd.Star)
               c  = (Ty.Tyvar "c"  Knd.Star)
-              d  = (Ty.Tyvar "d"  Knd.Star)
-              dot = (TVar b `fn` TVar c) `fn` (TVar a `fn` TVar b) `fn` (TVar a `fn` TVar c)
-              dlr = (TVar a `fn` TVar b) `fn` TVar a `fn` TVar b
-              f  = (Ty.Tyvar "f"  (Knd.Kfun Knd.Star Knd.Star))
-              m  = (Ty.Tyvar "m"  (Knd.Kfun Knd.Star Knd.Star))
-              mt = (Ty.Tyvar "mt" (Knd.Kfun (Knd.Kfun (Knd.Kfun Knd.Star Knd.Star) Knd.Star) Knd.Star))
+              --d  = (Ty.Tyvar "d"  Knd.Star)
+              --dot = (TVar b `fn` TVar c) `fn` (TVar a `fn` TVar b) `fn` (TVar a `fn` TVar c)
+              --dlr = (TVar a `fn` TVar b) `fn` TVar a `fn` TVar b
+              --f  = (Ty.Tyvar "f"  (Knd.Kfun Knd.Star Knd.Star))
+              --m  = (Ty.Tyvar "m"  (Knd.Kfun Knd.Star Knd.Star))
+              --mt = (Ty.Tyvar "mt" (Knd.Kfun (Knd.Kfun (Knd.Kfun Knd.Star Knd.Star) Knd.Star) Knd.Star))
           tv [TVar a, TVar b, TVar c] `shouldBe` [a, b, c]
           (tv $ subsequences [TVar a, TVar b, TVar c, TVar b]) `shouldBe` [a, b, c]
