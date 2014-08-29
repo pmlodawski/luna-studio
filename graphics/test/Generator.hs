@@ -32,8 +32,7 @@ import Flowbox.Graphics.Utils
 import Linear.V2
 import Math.Space.Space
 import Math.Metric
-import qualified Math.Coordinate.Polar as Polar
-import qualified Math.Coordinate.Cartesian as Cartesian
+import Math.Coordinate.Cartesian as Cartesian
 import Math.Coordinate.Coordinate (convertCoord)
 import Data.Array.Accelerate (index2, Boundary(..))
 
@@ -143,20 +142,51 @@ morphologyTest size = do
 -- Applies directional motion blur to Lena image
 -- (Simple rotational convolution)
 --
+motionBlur :: Exp Int -> Exp Float -> IO ()
+motionBlur size angle = do
+    let kern = monosampler
+             $ rotateCenter (variable angle)
+             $ nearest
+             $ rectangle (Grid (variable size) 1) 1 0
+    let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix Clamp x
+    forAllChannels "lena.bmp" process
 
--- Motion blur function should be done in luna instead of Haskell
---motionBlur  :: (IsFloating a, Elt a) => Exp a -> Exp Int -> Matrix2 a -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
---motionBlur alpha scatter kernel = Conv.filter scatter rotKern
---    where rotKern = rotateMat alpha (Constant 0) kernel
+--
+-- Radial blur test
+-- (Simple rotational convolution)
+--
+fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
+fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) -> 
+    let Grid cw ch = fmap A.fromIntegral cnv
+        radius = (sqrt $ x * x + y * y) / (sqrt $ cw * cw + ch * ch)
+        angle  = atan2 y x / (2 * pi)
+    in gen (Point2 (angle * cw) (radius * ch))
 
---motionBlurTest :: Exp Float -> Exp Int -> IO ()
---motionBlurTest alpha kernSize = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
---    let flt = normalize $ toMatrix (Grid 1 (variable kernSize)) $ box
---    let p = pipe 512 Clamp
---    let process x = rasterizer 512 $ id `p` motionBlur (alpha * pi / 180) 1 flt `p` id $ fromMatrix Clamp x
---    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
+toPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
+toPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 angle' radius') -> 
+    let Grid cw ch = fmap A.fromIntegral cnv
+        angle = (angle' / cw) * 2 * pi
+        radius = (radius' / ch) * (sqrt $ cw * cw + ch * ch)
+    in gen (Point2 (radius * cos angle) (radius * sin angle))
 
+radialBlur :: Exp Int -> Exp Float -> IO ()
+radialBlur size angle = do
+    let kern = monosampler
+             $ rotateCenter (variable angle)
+             $ nearest
+             $ rectangle (Grid (variable size) 1) 1 0
+    let process x = rasterizer 
+                  $ monosampler 
+                  $ translate (V2 (256) (256))
+                  $ fromPolarMapping
+                  $ nearest
+                  $ normStencil (+) kern (+) 0 
+                  $ monosampler
+                  $ toPolarMapping 
+                  $ translate (V2 (-256) (-256))
+                  $ nearest 
+                  $ fromMatrix Clamp x
+    forAllChannels "lena.bmp" process
 
 --
 -- Applies Kirsch Operator to red channel of Lena image. Available operators: prewitt, sobel, sharr
