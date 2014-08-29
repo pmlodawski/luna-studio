@@ -2,11 +2,11 @@ module Test.Luna.TypecheckerSpec (spec) where
 
 --import qualified Luna.Typechecker.Internal.AST.Alternatives as Alt
 --import qualified Luna.Typechecker.Internal.AST.Common       as Cmm
---import qualified Luna.Typechecker.Internal.AST.Expr         as Exp
+import qualified Luna.Typechecker.Internal.AST.Expr         as Exp
 import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
 --import qualified Luna.Typechecker.Internal.AST.Lit          as Lit
 --import qualified Luna.Typechecker.Internal.AST.Module       as Mod
---import qualified Luna.Typechecker.Internal.AST.Pat          as Pat
+import qualified Luna.Typechecker.Internal.AST.Pat          as Pat
 --import           Luna.Typechecker.Internal.AST.Pat          (Pat(..))
 import qualified Luna.Typechecker.Internal.AST.Scheme       as Sch
 --import qualified Luna.Typechecker.Internal.AST.TID          as TID
@@ -41,15 +41,12 @@ preludeDefns :: [Bnd.BindGroup]
 preludeDefns = [
     (
       [
-      --["id" :>: Forall [] ([] :=> TAp (TAp (TCon (Tycon "(->)" * -> (* -> *))) (TVar (Tyvar "a" *))) (TAp (TAp (TCon (Tycon "(->)" * -> (* -> *))) (TVar (Tyvar "b" *))) (TVar (Tyvar "a" *))))]
-        ( "id",
+        ( "const",
           Sch.Forall [] ([] Tcl.:=> ((Ty.TVar (Ty.Tyvar "a" Knd.Star)) `Ty.fn` (Ty.TVar (Ty.Tyvar "b" Knd.Star)) `Ty.fn` (Ty.TVar (Ty.Tyvar "a" Knd.Star)))),
           [
-
-            --(
-            --  [Pat.Var 0 "x"],
-            --  (Exp.Var 0 "x")
-            --)
+            ([], Exp.NOP 0)
+          , ([Pat.Var 1 "x", Pat.Var 2 "y"], Exp.Var 3 "x")
+          , ([Pat.Var 4 "z", Pat.Wildcard 5], Exp.Var 6 "z")
           ]
         )
       ],
