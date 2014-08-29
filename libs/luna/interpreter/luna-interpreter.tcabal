@@ -1,0 +1,84 @@
+Name:           luna-interpreter
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Library
+  Hs-Source-Dirs: src
+  Other-Modules:  Paths_luna_interpreter
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2 -threaded
+  Extensions:     NoImplicitPrelude
+
+  Exposed-modules: `findmodules('src', '.*\.hs')`
+
+  Build-Depends:  base,
+                  bytestring,
+                  containers,
+                  data-hash,
+                  either,
+                  flowbox-batch,
+                  flowbox-config,
+                  flowbox-utils,
+                  ghc,
+                  hint,
+                  luna-core,
+                  luna-distribution,
+                  luna-pass,
+                  mtl,
+                  raw-strings-qq,
+                  transformers
+
+
+Executable luna-interpreter-test
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: test
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2
+
+  Extensions:     NoImplicitPrelude
+
+  Build-Depends:  base,
+                  errors,
+                  flowbox-config,
+                  flowbox-utils,
+                  luna-core,
+                  luna-distribution,
+                  luna-interpreter,
+                  luna-pass,
+                  pretty-show,
+                  raw-strings-qq,
+                  transformers
+
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  errors,
+                  flowbox-batch,
+                  flowbox-config,
+                  flowbox-utils,
+                  luna-core,
+                  luna-distribution,
+                  luna-interpreter,
+                  luna-pass,
+                  pretty-show,
+                  hspec,
+                  mtl,
+                  raw-strings-qq,
+                  transformers

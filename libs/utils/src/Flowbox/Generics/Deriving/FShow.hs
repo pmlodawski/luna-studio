@@ -62,16 +62,15 @@ instance (FShow' a, Constructor c) => FShow' (M1 C c a) where
     case fixity of
       Prefix    -> showParen (n > appPrec && not (isNullary x)) 
                     ( showString (conName c) 
-                    . if (isNullary x) then id else showChar ' '
+                    . if isNullary x then id else showChar ' '
                     . showBraces t (fshowsPrec' t appPrec f x))
       Infix _ m -> showParen (n > m) (showBraces t (fshowsPrec' t m f x))
       where fixity = conFixity c
-            t = if (conIsRecord c) then Rec else
-                  case (conIsTuple c) of
-                    True -> Tup
-                    False -> case fixity of
-                                Prefix    -> Pref
-                                Infix _ _ -> Inf (show (conName c))
+            t | conIsRecord c = Rec 
+              | conIsTuple  c = Tup
+              | otherwise     = case fixity of
+                                      Prefix    -> Pref
+                                      Infix _ _ -> Inf (show (conName c))
             showBraces :: Type -> ShowS -> ShowS
             showBraces Rec     p = showChar '{' . p . showChar '}'
             showBraces Tup     p = showChar '(' . p . showChar ')'
@@ -82,9 +81,9 @@ instance (FShow' a, Constructor c) => FShow' (M1 C c a) where
               tupleName _           = False
 
 instance (Selector s, FShow' a) => FShow' (M1 S s a) where
-  fshowsPrec' t n f s@(M1 x) | selName s == "" = --showParen (n > appPrec)
-                                                 (fshowsPrec' t n f x)
-                           | otherwise       =   showString (selName s)
+  fshowsPrec' t n f s@(M1 x) | selName s == "" = --showParen (n > appPrec) $
+                                                 fshowsPrec' t n f x
+                             | otherwise       = showString (selName s)
                                                . showString " = "
                                                . fshowsPrec' t 0 f x
   isNullary (M1 x) = isNullary x
@@ -128,12 +127,12 @@ instance (FShow a) => FShow (Maybe a) where
 
 fshowsPrecdefault :: (Generic a, FShow' (Rep a))
                   => Int -> FType -> a -> ShowS
-fshowsPrecdefault n f = (fshowsPrec' Pref n f) . from
+fshowsPrecdefault n f = fshowsPrec' Pref n f . from
 
 
 -- Base types instances
 --instance FShow Char   where fshowsPrec = (\_ -> showsPrec)
-instance FShow Int    where fshowsPrec = (\i _ -> showsPrec i)
+instance FShow Int    where fshowsPrec i _ = showsPrec i
 --instance FShow Float  where fshowsPrec = (\_ -> showsPrec)
 --instance FShow String where fshowsPrec = (\_ -> showsPrec)
 --instance FShow Bool   where fshowsPrec = (\_ -> showsPrec)

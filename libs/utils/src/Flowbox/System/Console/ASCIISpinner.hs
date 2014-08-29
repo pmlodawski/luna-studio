@@ -10,7 +10,7 @@ import Flowbox.Prelude hiding (elements)
 
 progress :: Int -> IO ()
 progress i = do
-    let elements = ['-', '\\', '|', '/']
+    let elements = "-\\|/"
         current  = elements !! (i `mod` length elements)
     putStr ('\b':[current])
     IO.hFlush IO.stdout

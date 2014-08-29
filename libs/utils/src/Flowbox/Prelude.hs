@@ -5,24 +5,29 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Prelude(
     module Flowbox.Prelude,
     module Prelude,
     module X,
-    void
+    void,
+    when,
+    unless,
+    lift
 ) where
 
-import           Control.Applicative    as X
-import           Control.Lens           as X
-import           Control.Monad          (void)
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Control.Monad.Trans    (lift)
-import           Data.Default           as X
-import           Data.Foldable          (forM_)
-import           Data.Monoid            as X (Monoid, mappend, mempty)
-import qualified Data.Traversable       as Traversable
+import           Control.Applicative       as X
+import           Control.Lens              as X
+import           Control.Monad             (unless, void, when)
+import           Control.Monad.IO.Class    (MonadIO, liftIO)
+import           Control.Monad.Trans       (lift)
+import           Control.Monad.Trans.Class (MonadTrans)
+import           Data.Default              as X
+import           Data.Foldable             (forM_)
+import           Data.Monoid               as X (Monoid, mappend, mempty)
+import qualified Data.Traversable          as Traversable
 
 import           Flowbox.Debug.Debug as X
 import           Prelude             hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
@@ -35,6 +40,9 @@ import qualified Prelude
 
 print :: (MonadIO m, Show s) => s -> m ()
 print    = liftIO . Prelude.print
+
+printLn :: MonadIO m => m ()
+printLn = putStrLn ""
 
 putStr :: MonadIO m => String -> m ()
 putStr   = liftIO . Prelude.putStr
@@ -108,7 +116,7 @@ whenRight e f = case e of
 
 
 whenRight' :: (Monad m) => Either a b -> m () -> m ()
-whenRight' e f = whenRight e (\_ -> f)
+whenRight' e f = whenRight e $ const f
 
 -- trenary operator
 data Cond a = a :? a
@@ -129,9 +137,30 @@ False ? (_ :? y) = y
 withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
 withJust = forM_
 
+
+lift2 :: (Monad (t1 m), Monad m,
+          MonadTrans t, MonadTrans t1)
+      => m a -> t (t1 m) a
 lift2 = lift . lift
 
 
-ifM :: (Monad m) => m Bool -> m a -> m a -> m a
+lift3 :: (Monad (t1 (t2 m)), Monad (t2 m), Monad m,
+          MonadTrans t, MonadTrans t1, MonadTrans t2)
+      => m a -> t (t1 (t2 m)) a
+lift3 = lift . lift2
+
+
+ifM :: Monad m => m Bool -> m a -> m a -> m a
 ifM predicate a b = do bool <- predicate
                        if bool then a else b
+
+whenM :: Monad m => m Bool -> m () -> m ()
+whenM predicate a = do
+    bool <- predicate
+    when bool a
+
+
+unlessM :: Monad m => m Bool -> m () -> m ()
+unlessM predicate a = do
+    bool <- predicate
+    unless bool a

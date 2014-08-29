@@ -28,9 +28,7 @@ os = case Info.os of
 
 
 onPlatform :: Monad m => Platform -> m () -> m ()
-onPlatform platform f = if os == platform
-                            then f
-                            else return ()
+onPlatform platform = when (os == platform)
 
 
 onLinux :: Monad m => m () -> m ()

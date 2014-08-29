@@ -14,9 +14,8 @@ import qualified Control.Exception   as Exception
 import qualified Data.Configurator   as Configurator
 import qualified System.Environment  as Env
 
-import           Flowbox.Prelude           hiding (error)
-import           Flowbox.System.Log.Logger
-import qualified Prelude                   as Prelude
+import Flowbox.Prelude           hiding (error)
+import Flowbox.System.Log.Logger
 
 
 

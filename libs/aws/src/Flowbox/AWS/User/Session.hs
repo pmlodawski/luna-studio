@@ -4,29 +4,24 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes       #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.AWS.User.Session where
 
-import           AWS.EC2                (EC2)
-import qualified AWS.EC2.Types          as Types
-import           Control.Monad.IO.Class
-import           Data.IP                (IPv4)
+import qualified Data.Time                            as Time
+import           Database.PostgreSQL.Simple.FromField (FromField, fromField)
+import           Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
+import qualified Text.Read                            as Read
 
-import qualified Flowbox.AWS.EC2.Control.Pool.Instance.Instance as Instance
-import           Flowbox.AWS.EC2.Control.Pool.Pool              (MPool)
-import           Flowbox.AWS.EC2.EC2                            (EC2Resource)
-import qualified Flowbox.AWS.EC2.Instance.Request               as Request
-import           Flowbox.AWS.User.Database                      (Database)
-import qualified Flowbox.AWS.User.Database                      as Database
-import qualified Flowbox.AWS.User.Password                      as Password
-import           Flowbox.AWS.User.User                          (User (User))
+import qualified Flowbox.AWS.EC2.Instance.Instance              as Instance
 import qualified Flowbox.AWS.User.User                          as User
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.Session.Policy                 as Gen
+import qualified Generated.Proto.Session.Session                as Gen
 
 
 
@@ -34,48 +29,49 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.AWS.Session"
 
 
-type Error = String
+type ID = Int
 
 
-register :: User.Name -> Password.Plain -> Database -> EitherT Error IO ()
-register userName password database =
-    Database.addUser database $ User userName $ Password.mk password
+data Policy = Autocharge
+            | Halt
+            deriving (Show, Read, Eq, Ord)
+
+instance FromField Policy where
+    fromField f dat = read <$> fromField f dat
 
 
-authenticate :: User.Name -> Password.Plain -> Database -> EitherT Error IO ()
-authenticate userName password database = do
-    users <- safeLiftIO $ Database.getUser database userName
-    case users of
-        [User _ hash] -> if Password.verify hash password
-                            then right ()
-                            else left "Authentication failed"
-        _             -> left "Authentication failed"
-
-login :: EC2Resource m
-      => User.Name -> Password.Plain -> MPool -> Database -> EC2 m (Either Error IPv4)
-login userName password mpool database = do
-    auth <- liftIO $ runEitherT $ authenticate userName password database
-    case auth of
-        Right () -> Right <$> start userName mpool
-        Left msg -> return $ Left msg
+data Session = Session { _id         :: ID
+                       , _userName   :: User.Name
+                       , _instanceID :: Instance.ID
+                       , _expires    :: Time.UTCTime
+                       , _policy     :: Policy
+                       } deriving (Show, Read, Eq, Ord)
 
 
-logout :: EC2Resource m => User.Name -> Password.Plain -> MPool -> Database -> EC2 m (Either Error ())
-logout userName password mpool database = do
-    auth <- liftIO $ runEitherT $ authenticate userName password database
-    case auth of
-        Right () -> Right <$> end userName mpool
-        Left msg -> return $ Left msg
+makeLenses (''Session)
 
 
-start :: EC2Resource m => User.Name -> MPool -> EC2 m IPv4
-start userName mpool = do
-    logger info $ "Starting session for, username=" ++ (show userName)
-    inst <- Instance.retrieve userName Request.mk mpool
-    fromJust $ Types.instanceIpAddress inst
+instance FromRow Session where
+    fromRow = Session <$> field <*> field <*> field <*> field <*> field
 
 
-end :: EC2Resource m => User.Name -> MPool -> EC2 m ()
-end userName mpool = do
-    logger info $ "Ending session for, username=" ++ (show userName)
-    Instance.releaseUser userName mpool
+instance ConvertPure Policy Gen.Policy where
+    encodeP Halt       = Gen.Halt
+    encodeP Autocharge = Gen.Autocharge
+    decodeP Gen.Autocharge = Autocharge
+    decodeP Gen.Halt       = Halt
+
+
+instance Convert Session Gen.Session where
+    encode (Session id' userName' instanceID' expires' policy') =
+        Gen.Session (encodePJ id') (encodePJ userName') (encodePJ instanceID')
+                    (encodePJ $ show expires') (encodePJ policy')
+    decode (Gen.Session mid' muserName' minstanceID' mexpires' mpolicy') = do
+        id'         <- decodeP <$> mid'         <?> "Failed to decode Session: 'id' field is missing"
+        userName'   <- decodeP <$> muserName'   <?> "Failed to decode Session: 'userName' field is missing"
+        instanceID' <- decodeP <$> minstanceID' <?> "Failed to decode Session: 'instanceID' field is missing"
+        texpires'   <- decodeP <$> mexpires'    <?> "Failed to decode Session: 'expires' field is missing"
+        policy'     <- decodeP <$> mpolicy'     <?> "Failed to decode Session: 'policy' field is missing"
+        expires'    <- Read.readMaybe texpires' <?> "Failed to decode Session: 'expires' field is wrong"
+        return $ Session id' userName' instanceID' expires' policy'
+

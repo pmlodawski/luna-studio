@@ -4,7 +4,7 @@ Cabal-Version:      >= 1.8
 --License-file:       LICENSE
 Author:             Flowbox <contact@flowbox.io>
 Maintainer:         Flowbox <contact@flowbox.io>
-Build-Type:         Simple
+Build-Type:         Custom
 
 Flag Debug
     Description:      Enable debug support
@@ -12,14 +12,16 @@ Flag Debug
 
 
 Library
-    Hs-Source-Dirs: src
+    Hs-Source-Dirs: src,
+                    dist/gen
     Other-Modules:  Paths_flowbox_aws
 
     GHC-Options:    -Wall -O2 -threaded
 
     Extensions:     NoImplicitPrelude
 
-    Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*hs-boot.*')`
+    Exposed-modules: `findmodules('src', '.*\.(hs|sql)', exclude='.*hs-boot.*')`,
+                     `findmodules('dist/gen', '.*\.(hs|sql)', exclude='.*hs-boot.*')`
                      
     Build-Depends:  aws,
                     aws-sdk >= 0.12.4,
@@ -41,78 +43,33 @@ Library
                     monad-loops,
                     mtl,
                     network,
-                    optparse-applicative,
                     postgresql-simple,
                     protocol-buffers,
+                    protocol-buffers-descriptor,
                     resourcet >= 1.1.0,
+                    simple-config >= 1.2.2.1,
                     SHA,
                     text,
                     time,
-                    transformers
+                    transformers >= 0.4
 
-Executable aws-test-pool
-    Main-Is:        Pool.hs
+-- [PM] simple-config >= 1.2.2.1 is added to fix dependencies
+
+Executable aws-test-dbpool
+    Main-Is:        DBPool.hs
     Hs-Source-Dirs: test
 
     GHC-Options:    -Wall -O2 -threaded
     
     Extensions:     NoImplicitPrelude
 
-    Build-Depends:  aws,
-                    aws-sdk >= 0.12.4,
+    Build-Depends:  aws-sdk,
                     base,
-                    bytestring,
                     containers,
-                    conduit >= 1.1.0,
-                    conduit-extra >= 1.1.0,
-                    exceptions,
-                    errors,
                     flowbox-aws,
-                    flowbox-rpc,
                     flowbox-utils,
-                    http-conduit,
-                    mtl,
-                    network,
-                    optparse-applicative,
                     postgresql-simple,
-                    pretty-show,
-                    protocol-buffers,
-                    resourcet >= 1.1.0,
-                    monad-loops,
-                    text,
-                    transformers
-
-Executable aws-test-simple
-    Main-Is:        Simple.hs
-    Hs-Source-Dirs: test
-
-    GHC-Options:    -Wall -O2 -threaded
-    
-    Extensions:     NoImplicitPrelude
-
-    Build-Depends:  aws,
-                    aws-sdk >= 0.12.4,
-                    base,
-                    bytestring,
-                    containers,
-                    conduit >= 1.1.0,
-                    conduit-extra >= 1.1.0,
-                    exceptions,
-                    errors,
-                    flowbox-aws,
-                    flowbox-rpc,
-                    flowbox-utils,
-                    http-conduit,
-                    mtl,
-                    network,
-                    optparse-applicative,
-                    postgresql-simple,
-                    pretty-show,
-                    protocol-buffers,
-                    resourcet >= 1.1.0,
-                    monad-loops,
-                    text,
-                    transformers
+                    text
 
 
 Executable aws-test-querydb
@@ -123,29 +80,12 @@ Executable aws-test-querydb
     
     Extensions:     NoImplicitPrelude
 
-    Build-Depends:  aws,
-                    aws-sdk >= 0.12.4,
+    Build-Depends:  aws-sdk >= 0.12.4,
                     base,
-                    bytestring,
-                    containers,
-                    conduit >= 1.1.0,
-                    conduit-extra >= 1.1.0,
-                    exceptions,
-                    errors,
                     flowbox-aws,
-                    flowbox-rpc,
                     flowbox-utils,
-                    http-conduit,
-                    mtl,
-                    network,
-                    optparse-applicative,
                     postgresql-simple,
-                    pretty-show,
-                    protocol-buffers,
-                    resourcet >= 1.1.0,
-                    monad-loops,
-                    text,
-                    transformers
+                    time
 
 
 Executable aws-test-s3
@@ -157,25 +97,23 @@ Executable aws-test-s3
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  aws,
-                    aws-sdk >= 0.12.4,
                     base,
-                    bytestring,
-                    containers,
-                    conduit >= 1.1.0,
-                    conduit-extra >= 1.1.0,
-                    exceptions,
-                    errors,
                     flowbox-aws,
-                    flowbox-rpc,
                     flowbox-utils,
-                    http-conduit,
-                    mtl,
-                    network,
-                    optparse-applicative,
-                    postgresql-simple,
-                    pretty-show,
-                    protocol-buffers,
-                    resourcet >= 1.1.0,
-                    monad-loops,
-                    text,
                     transformers
+
+
+Executable aws-test-simple
+    Main-Is:        Simple.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+    
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws-sdk >= 0.12.4,
+                    base,
+                    flowbox-aws,
+                    flowbox-utils,
+                    text
+

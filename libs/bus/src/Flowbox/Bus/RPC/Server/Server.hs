@@ -9,9 +9,9 @@
 
 module Flowbox.Bus.RPC.Server.Server where
 
-import           Flowbox.Bus.Data.Topic           (Topic)
 import           Flowbox.Bus.EndPoint             (BusEndPoints)
-import           Flowbox.Bus.RPC.Handler          (BusRPCHandler)
+import           Flowbox.Bus.RPC.HandlerMap       (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap       as HandlerMap
 import qualified Flowbox.Bus.RPC.Server.Processor as Processor
 import qualified Flowbox.Bus.Server               as Server
 import           Flowbox.Prelude                  hiding (error)
@@ -23,5 +23,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Bus.RPC.Server.Server"
 
 
-run :: BusEndPoints -> [Topic] -> BusRPCHandler -> IO (Either String ())
-run endPoints topics handler = Server.run endPoints topics $ Processor.process handler
+run :: BusEndPoints -> s -> HandlerMap s IO -> IO (Either String ())
+run endPoints s handlerMap =
+    Server.runState endPoints (HandlerMap.topics handlerMap) s $ Processor.process handlerMap
+

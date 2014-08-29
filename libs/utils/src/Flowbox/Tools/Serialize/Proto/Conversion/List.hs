@@ -4,24 +4,29 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Flowbox.Tools.Serialize.Proto.Conversion.List where
 
-import qualified Data.Foldable                  as Foldable
-import qualified Data.Sequence                  as Sequence
-import           Data.Sequence                    (Seq)
+import           Control.Monad.Trans.Either
+import qualified Data.Foldable              as Foldable
+import           Data.Sequence              (Seq)
+import qualified Data.Sequence              as Sequence
 
-import           Flowbox.Prelude                  
-import           Flowbox.Tools.Conversion.Proto   
-
+import Flowbox.Prelude
+import Flowbox.Tools.Conversion.Proto
 
 
 encodeList :: Convert a b => [a] -> Seq b
 encodeList = Sequence.fromList . map encode
 
 
-decodeList :: (Convert a b, Applicative m, Monad m) => Seq b -> m [a]
-decodeList = sequence . map decode . Foldable.toList
+decodeList :: Convert a b => Seq b -> Either String [a]
+decodeList = mapM decode . Foldable.toList
+
+
+decodeListE :: (Monad m, Convert a b) => Seq b -> EitherT String m [a]
+decodeListE = hoistEither . decodeList
 
 
 encodeListP :: ConvertPure a b => [a] -> Seq b

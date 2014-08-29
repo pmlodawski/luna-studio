@@ -7,11 +7,14 @@
 
 module Flowbox.PluginManager.Cmd where
 
+import Flowbox.PluginManager.Prefix (Prefix)
 import Flowbox.Prelude
 
 
 
-data Cmd = Run { initConfig :: String
+data Cmd = Run { initConfig :: FilePath
+
+               , prefix     :: Prefix
 
                , verbose    :: Int
                , noColor    :: Bool

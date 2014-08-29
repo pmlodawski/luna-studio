@@ -1,0 +1,55 @@
+#!/usr/bin/python2.7
+
+###########################################################################
+## Copyright (C) Flowbox, Inc / All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2014
+###########################################################################
+
+from   config.packages import pkgDb
+import os
+import os.path
+import sys
+from   utils.colors import print_error, print_info, print_warning
+from   utils.errors import handle_out
+from   subprocess   import call
+
+
+
+def main():
+    rootPath  = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    srcDirName  = 'src'
+    sboxEnv   = "FDEV_TARGETS"
+    os.chdir(rootPath)
+
+    cabalExec = os.path.join(rootPath, "third-party/HaskellBooster/shell/cabal!")
+
+    pkgNames = []
+    args = ["--show-details=streaming"]
+    for arg in sys.argv[1:]:
+        if arg.startswith('--pkgs='):
+            pkgNames = arg[7:].split(',')
+        else: args.append(arg)
+
+    if not pkgNames:
+        if not os.environ.has_key(sboxEnv):
+            print_error("Flowbox development environment not initialized.")
+            sys.exit(1)
+
+        pkgNames = os.environ[sboxEnv].split(":")
+
+    pkgs = [pkgDb[name] for name in pkgNames]
+
+    print_info("Running gencabal")
+    handle_out(call('python2.7 scripts/gencabal', shell=True))
+
+    print_warning('If tests are not enabled, run "./scripts/compile -j --enable-tests"')
+
+    for pkg in pkgs:
+        os.chdir(pkg.path)
+        handle_out(call("%s --sandbox-config-file=%s test %s" % (cabalExec, os.path.join(pkg.sbox, 'cabal.sandbox.config'), ' '.join(args)), shell=True))
+
+main()
+
+

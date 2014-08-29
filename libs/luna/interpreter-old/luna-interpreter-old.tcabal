@@ -1,0 +1,34 @@
+Name:           luna-interpreter-old
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Library
+  Hs-Source-Dirs: dist/gen,
+                  src
+  Other-Modules:  Paths_luna_interpreter_old
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2 -threaded
+                  -- -F -pgmF ./util/preprocessors/imports.py
+  Extensions:     DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings
+
+  Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*hs-boot.*')`
+
+  Build-Depends:  base,
+                  flowbox-utils,
+                  flowbox-config,
+                  ghc,
+                  luna-core
+

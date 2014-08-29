@@ -13,7 +13,6 @@ import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Control.Monad.Trans.Class                      (lift)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
@@ -33,13 +32,13 @@ query :: (ZMQ.Sender t, ZMQ.Receiver t, Proto.Serializable request, Proto.Serial
       -> Extensions.Key Maybe Response result
       -> EitherT Error (ZMQ z) result
 query socket request rspKey = do
-    response <- query_raw socket request
+    response <- queryRaw socket request
     hoistEither $ processResponse rspKey response
 
 
-query_raw :: (ZMQ.Sender t, ZMQ.Receiver t, Proto.Serializable request)
+queryRaw :: (ZMQ.Sender t, ZMQ.Receiver t, Proto.Serializable request)
           => ZMQ.Socket z t -> request -> EitherT Error (ZMQ z) Response
-query_raw socket request = do
+queryRaw socket request = do
     lift $ ZMQ.send socket [] $ Proto.messagePut' request
     encoded_response <- lift $ ZMQ.receive socket
     hoistEither $ Proto.messageGet' encoded_response

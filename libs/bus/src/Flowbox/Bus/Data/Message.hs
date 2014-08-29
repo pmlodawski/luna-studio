@@ -4,13 +4,19 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Flowbox.Bus.Data.Message where
 
-import           Data.ByteString              (ByteString)
-import qualified Flowbox.Text.ProtocolBuffers as Proto
+import Data.ByteString (ByteString)
 
-import Flowbox.Bus.Data.Topic (Topic)
-import Flowbox.Prelude
+import           Flowbox.Bus.Data.Exception                     (Exception (Exception))
+import           Flowbox.Bus.Data.Topic                         (Topic, (/+))
+import qualified Flowbox.Bus.Data.Topic                         as Topic
+import           Flowbox.Prelude
+import qualified Flowbox.Text.ProtocolBuffers                   as Proto
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
 
@@ -20,11 +26,24 @@ type RequestID = ID
 type ClientID  = ID
 
 
-data CorrelationID = CorrelationID { clientID  :: ClientID
-                                   , messageID :: RequestID
+data CorrelationID = CorrelationID { _clientID  :: ClientID
+                                   , _messageID :: RequestID
                                    } deriving (Read, Show, Eq)
 
 
-data Message = Message { topic   :: Topic
-                       , message :: ByteString
+data Message = Message { _topic   :: Topic
+                       , _message :: ByteString
                        } deriving (Read, Show, Eq)
+
+
+makeLenses(''CorrelationID)
+makeLenses(''Message)
+
+
+mk :: Proto.Serializable msg => Topic -> msg -> Message
+mk topic' data_ = Message topic' $ Proto.messagePut' data_ where
+
+
+mkError :: Topic -> String -> [Message]
+mkError topic' = mkList . mk (topic' /+ Topic.error) . encodeP . Exception . Just
+

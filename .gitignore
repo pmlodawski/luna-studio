@@ -11,6 +11,9 @@ out
 #generated files
 gen
 
+# patch artifacts
+*.rej
+
 # OS X temp
 .DS_Store
 
@@ -38,6 +41,7 @@ gen
 # cabal configs - they should be generated from tcabal files
 libs/*/*.cabal
 libs/*/*/*.cabal
+libs/*/*/*/*.cabal
 tools/*/*.cabal
 tools/*/*/*.cabal
 tools/*/*/*/*.cabal
@@ -60,5 +64,8 @@ aws.config
 # assets for tests
 *.bmp
 *.jpg
+*.jpeg
+*.png
 
 test.html
+report.html

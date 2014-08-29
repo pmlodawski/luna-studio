@@ -13,10 +13,10 @@
 module Flowbox.PluginManager.Proto.Plugin where
 
 import           Flowbox.Control.Error
-import           Flowbox.PluginManager.Data.Plugin              (Plugin (Plugin))
-import qualified Flowbox.PluginManager.Data.Plugin              as Plugin
-import           Flowbox.PluginManager.Data.PluginInfo          (PluginInfo (PluginInfo))
-import qualified Flowbox.PluginManager.Data.PluginInfo          as PluginInfo
+import           Flowbox.PluginManager.Plugin.Info              (PluginInfo (PluginInfo))
+import qualified Flowbox.PluginManager.Plugin.Info              as PluginInfo
+import           Flowbox.PluginManager.Plugin.Plugin            (Plugin (Plugin))
+import qualified Flowbox.PluginManager.Plugin.Plugin            as Plugin
 import           Flowbox.Prelude                                hiding (id)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Plugin.Plugin                  as Gen
@@ -51,4 +51,4 @@ instance Convert (Plugin.ID, PluginInfo) Gen.PluginInfo where
         id     <- decodeP <$> mtid     <?> "Failed to decode PluginInfo: 'id' field is missing"
         plugin <- decode  =<< mtplugin <?> "Failed to decode PluginInfo: 'plugin' field is missing"
         status <- decodeP <$> mtstatus <?> "Failed to decode PluginInfo: 'status' field is missing"
-        return $ (id, PluginInfo plugin status)
+        return (id, PluginInfo plugin status)

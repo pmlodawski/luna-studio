@@ -1,35 +1,97 @@
 digraph "G" {
-    rankdir = "LR";
-    // '\n'.join(["Expr:{x} -> {y};".format(**locals()) for x, y in re.findall("<([a-zA-Z_]*)>[a-zA-Z_]* :: [[]?([a-zA-Z_]*)[]]?",  text)])
-    node [shape=Mrecord];
+    /// for fmt in png svg; do
+    ///     for i in dot neato twopi circo fdp sfdp patchwork; do
+    ///         # echo $fmt $i;
+    ///         $i "-T$fmt" ast.dot > ${i}.$fmt &
+    ///     done
+    /// done
+    /// 
+    /// for i in dot; do
+    ///     # echo $fmt $i 300 DPI;
+    ///     # 7016 x 4961
+    ///     $i -Tpng -Gdpi=300 -Gsize=23.38666666666666666666,16.53666666666666666666\! ast.dot > ${i}_big.png &
+    ///     $i -Tsvg -Gdpi=300 -Gsize=23.38666666666666666666,16.53666666666666666666\! ast.dot > ${i}_big.svg &
+    ///     $i -Tpdf -Gdpi=28                                                           ast.dot > ${i}_big.pdf &
+    /// done
+    /// wait
 
-    AST [ label = "{<AST> AST | <AST_Module> fromModule :: Module| <AST_Expr> fromExpr :: Expr| <AST_Lit> fromLit :: Lit| <AST_Pat> fromPat :: Pat| <AST_Type> fromType :: Type}" ];
-    AST:AST_Module -> Module;
+    //
+    // '\n'.join(["Expr:{x} -> {y};".format(**locals()) for x, y in re.findall("<([a-zA-Z_]*)>[a-zA-Z_]* :: [[]?([a-zA-Z_]*)[]]?",  text)])
+
+    rankdir = "LR";
+    node [shape=none; fontname="Menlo-Regular" ];
+    edge [penwidth=0.5; style=dashed; arrowsize=2; arrowhead="empty"];
+
+    AST [ label = < <table>
+         <tr><td ALIGN="center" bgcolor="black" colspan="3" PORT="AST"><font color="white" POINT-SIZE="36.0" FACE="Futura-Medium"><b>AST</b></font></td></tr>
+         <tr><td ALIGN="left"  bgcolor="grey"><font FACE="Futura-Medium">Module</font></td> <td ALIGN="left">{</td> <td ALIGN="left" PORT="AST_Module">fromModule :: Module</td></tr>
+         <tr><td ALIGN="left"  bgcolor="grey"><font FACE="Futura-Medium">Expr</font></td>   <td ALIGN="left">{</td> <td ALIGN="left" PORT="AST_Expr">fromExpr :: Expr</td></tr>
+         <tr><td ALIGN="left"  bgcolor="grey"><font FACE="Futura-Medium">Lit</font></td>    <td ALIGN="left">{</td> <td ALIGN="left" PORT="AST_Lit">fromLit :: Lit</td></tr>
+         <tr><td ALIGN="left"  bgcolor="grey"><font FACE="Futura-Medium">Pat</font></td>    <td ALIGN="left">{</td> <td ALIGN="left" PORT="AST_Pat">fromPat :: Pat</td></tr>
+         <tr><td ALIGN="left"  bgcolor="grey"><font FACE="Futura-Medium">Type</font></td>   <td ALIGN="left">{</td> <td ALIGN="left" PORT="AST_Type">fromType :: Type</td></tr>
+     </table>>
+    ];
+    AST:AST_Module -> Module [weight=0.1; constraint=false];
     AST:AST_Expr -> Expr;
     AST:AST_Lit -> Lit;
     AST:AST_Pat -> Pat;
     AST:AST_Type -> Type;
 
-    Module [ label = "<Module> Module | <id> _id :: ID | <cls> _cls :: Type | <imports> _imports :: [Expr] | <classes> _classes :: [Expr] | <typeAliases> _typeAliases :: [Expr] | <typeDefs> _typeDefs :: [Expr] | <fields> _fields :: [Expr] | <methods> _methods :: [Expr] | <modules> _modules :: [Module]" ];
+    Module [ label = < <table>
+        <tr><td ALIGN="center" bgcolor="black" COLSPAN="11" PORT="Module"><font color="white" POINT-SIZE="36.0" FACE="Futura-Medium"><b>Module</b></font></td></tr>
+        <tr>
+            <td ALIGN="left" PORT="Module" bgcolor="grey"><font FACE="Futura-Medium">Module</font></td>
+            <td ALIGN="left">{</td>
+            <td ALIGN="left" PORT="id">_id :: ID</td>
+            <td ALIGN="left" PORT="cls">_cls :: Type</td>
+            <td ALIGN="left" PORT="imports">_imports :: [Expr]</td>
+            <td ALIGN="left" PORT="classes">_classes :: [Expr]</td>
+            <td ALIGN="left" PORT="typeAliases">_typeAliases :: [Expr]</td>
+            <td ALIGN="left" PORT="typeDefs">_typeDefs :: [Expr]</td>
+            <td ALIGN="left" PORT="fields">_fields :: [Expr]</td>
+            <td ALIGN="left" PORT="methods">_methods :: [Expr]</td>
+            <td ALIGN="left" PORT="modules">_modules :: [Module]</td>
+        </tr>
+     </table>>
+    ];
 // (for clarity)    Module:id -> ID;
-    Module:cls -> Type;
-    Module:imports -> Expr;
-    Module:classes -> Expr;
-    Module:typeAliases -> Expr;
-    Module:typeDefs -> Expr;
-    Module:fields -> Expr;
-    Module:methods -> Expr;
-// (for clarity)    Module:modules -> Module;
+    Module:cls -> Type [weight=0.1];
+    Module:imports -> Expr [weight=0.1];
+    Module:classes -> Expr [weight=0.1];
+    Module:typeAliases -> Expr [weight=0.1];
+    Module:typeDefs -> Expr [weight=0.1];
+    Module:fields -> Expr [weight=0.1];
+    Module:methods -> Expr [weight=0.1];
+// (for clarity)    Module:modules -> Module [weight=0.1];
 
     ID [ label = "type ID = Int"];
 
-    Lit [ label = "<Lit> Lit | {<Char> Char | <Char_id>_id :: ID | <Char_char>_char :: Prelude.Char } | {<String> String | <String_id>_id :: ID | <String_str>_str  :: Prelude.String } | { <Integer> Integer | <Integer_id>_id :: ID | <Integer_str>_str  :: Prelude.String } | {<Float> Float | <Float_id>_id :: ID | <Float_str>_str  :: Prelude.String }" ];
+    Lit [ label = < <table>
+         <tr><td ALIGN="center" bgcolor="black" COLSPAN="4" PORT="Lit"><font color="white" POINT-SIZE="36.0" FACE="Futura-Medium"><b>Lit</b></font></td></tr>
+         <tr><td ALIGN="left" PORT="Char" bgcolor="grey"><font FACE="Futura-Medium">Char</font></td>       <td ALIGN="left">{</td> <td ALIGN="left" PORT="Char_id">_id :: ID</td>   <td ALIGN="left" PORT="Char_char">_char :: Prelude.Char</td></tr>
+         <tr><td ALIGN="left" PORT="String" bgcolor="grey"><font FACE="Futura-Medium">String</font></td>   <td ALIGN="left">{</td> <td ALIGN="left" PORT="String_id">_id :: ID</td> <td ALIGN="left" PORT="String_str">_str  :: Prelude.String</td></tr>
+         <tr><td ALIGN="left" PORT="Integer" bgcolor="grey"><font FACE="Futura-Medium">Integer</font></td> <td ALIGN="left">{</td> <td ALIGN="left" PORT="Integer_id">_id :: ID</td><td ALIGN="left" PORT="Integer_str">_str  :: Prelude.String</td></tr>
+         <tr><td ALIGN="left" PORT="Float" bgcolor="grey"><font FACE="Futura-Medium">Float</font></td>     <td ALIGN="left">{</td> <td ALIGN="left" PORT="Float_id">_id :: ID</td>  <td ALIGN="left" PORT="Float_str">_str  :: Prelude.String</td></tr>
+     </table>>
+    ];
 // (for clarity)    Lit:Char_id -> ID;
 // (for clarity)    Lit:String_id -> ID;
 // (for clarity)    Lit:Integer_id -> ID;
 // (for clarity)    Lit:Float_id -> ID;
 
-    Pat [ label = "<Pat> Pat | {<Var> Var | <Var_id>_id :: ID | <Var_name>_name :: String } | {<Lit> Lit | <Lit_id>_id :: ID | <Lit_value>_value :: Lit } | {<Tuple> Tuple | <Tuple_id>_id :: ID | <Tuple_items>_items :: [Pat] } | {<Con> Con | <Con_id>_id :: ID | <Con_name>_name :: String } | {<App> App | <App_id>_id :: ID | <App_src>_src :: Pat | <App_args>_args :: [Pat] } | {<Typed> Typed | <Typed_id>_id :: ID | <Typed_pat>_pat :: Pat | <Typed_cls>_cls :: Type } | {<Wildcard> Wildcard | <Wildcard_id>_id :: ID } | {<RecWildcard> RecWildcard | <RecWildcard_id>_id :: ID }" ];
+    Pat [ label = < <table>
+            <tr><td ALIGN="center" bgcolor="black" COLSPAN="5" PORT="Pat"><font color="white" POINT-SIZE="36.0" FACE="Futura-Medium"><b>Pat</b></font></td></tr>
+            <tr><td ALIGN="left" PORT="Var" bgcolor="grey"><font FACE="Futura-Medium">Var</font></td>                 <td ALIGN="left">{</td> <td ALIGN="left" PORT="Var_id">_id :: ID</td>             <td ALIGN="left" PORT="Var_name">_name :: String</td></tr>
+            <tr><td ALIGN="left" PORT="Lit" bgcolor="grey"><font FACE="Futura-Medium">Lit</font></td>                 <td ALIGN="left">{</td> <td ALIGN="left" PORT="Lit_id">_id :: ID</td>             <td ALIGN="left" PORT="Lit_value">_value :: Lit</td></tr>
+            <tr><td ALIGN="left" PORT="Tuple" bgcolor="grey"><font FACE="Futura-Medium">Tuple</font></td>             <td ALIGN="left">{</td> <td ALIGN="left" PORT="Tuple_id">_id :: ID</td>           <td ALIGN="left" PORT="Tuple_items">_items :: [Pat]</td></tr>
+            <tr><td ALIGN="left" PORT="Con" bgcolor="grey"><font FACE="Futura-Medium">Con</font></td>                 <td ALIGN="left">{</td> <td ALIGN="left" PORT="Con_id">_id :: ID</td>             <td ALIGN="left" PORT="Con_name">_name :: String</td></tr>
+            <tr><td ALIGN="left" PORT="App" bgcolor="grey"><font FACE="Futura-Medium">App</font></td>                 <td ALIGN="left">{</td> <td ALIGN="left" PORT="App_id">_id :: ID</td>             <td ALIGN="left" PORT="App_src">_src :: Pat</td>              <td ALIGN="left" PORT="App_args">_args :: [Pat]</td></tr>
+            <tr><td ALIGN="left" PORT="Typed" bgcolor="grey"><font FACE="Futura-Medium">Typed</font></td>             <td ALIGN="left">{</td> <td ALIGN="left" PORT="Typed_id">_id :: ID</td>           <td ALIGN="left" PORT="Typed_pat">_pat :: Pat</td>            <td ALIGN="left" PORT="Typed_cls">_cls :: Type</td></tr>
+            <tr><td ALIGN="left" PORT="Wildcard" bgcolor="grey"><font FACE="Futura-Medium">Wildcard</font></td>       <td ALIGN="left">{</td> <td ALIGN="left" PORT="Wildcard_id">_id :: ID</td></tr>
+            <tr><td ALIGN="left" PORT="RecWildcard" bgcolor="grey"><font FACE="Futura-Medium">RecWildcard</font></td> <td ALIGN="left">{</td> <td ALIGN="left" PORT="RecWildcard_id">_id :: ID</td></tr>
+        </table>
+     >
+    ];
 // (for clarity)    Pat:Var_id -> ID;  
 // (for clarity)    Pat:Lit_id -> ID;  
 // (for clarity)    Pat:Tuple_id -> ID;  
@@ -38,14 +100,52 @@ digraph "G" {
 // (for clarity)    Pat:Typed_id -> ID;  
 // (for clarity)    Pat:Wildcard_id -> ID;  
 // (for clarity)    Pat:RecWildcard_id -> ID;
-    Pat:Lit_value -> Lit;
+    Pat:Lit_value -> Lit [constraint=false];
 // (for clarity)    Pat:Tuple_items -> Pat;
 // (for clarity)    Pat:App_src -> Pat;
 // (for clarity)    Pat:Typed_pat -> Pat;
 // (for clarity)    Pat:App_args -> Pat;
-    Pat:Typed_cls -> Type;
+    Pat:Typed_cls -> Type [constraint=false];
 
-    Expr [ label = "<Expr> Expr | { <Expr_NOP>NOP | <Expr_NOP_id>_id :: ID } | { <Expr_Accessor>Accessor | <Expr_Accessor_id>_id :: ID | <Expr_Accessor_name>_name :: String | <Expr_Accessor_dst>_dst :: Expr } | { <Expr_TypeAlias>TypeAlias | <Expr_TypeAlias_id>_id :: ID | <Expr_TypeAlias_srcType>_srcType :: Type | <Expr_TypeAlias_dstType>_dstType :: Type } | { <Expr_TypeDef>TypeDef | <Expr_TypeDef_id>_id :: ID | <Expr_TypeDef_srcType>_srcType :: Type | <Expr_TypeDef_dstType>_dstType :: Type } | { <Expr_App>App | <Expr_App_id>_id :: ID | <Expr_App_src>_src :: Expr | <Expr_App_args>_args :: [Expr] } | { <Expr_AppCons_>AppCons_ | <Expr_AppCons__id>_id :: ID | <Expr_AppCons__args>_args :: [Expr] } | { <Expr_Assignment>Assignment | <Expr_Assignment_id>_id :: ID | <Expr_Assignment_pat>_pat :: Pat | <Expr_Assignment_dst>_dst :: Expr } | { <Expr_RecordUpdate>RecordUpdate | <Expr_RecordUpdate_id>_id :: ID | <Expr_RecordUpdate_src>_src :: Expr | <Expr_RecordUpdate_selectors>_selectors :: [String]| <Expr_RecordUpdate__expr>_expr :: Expr } | { <Expr_Data>Data | <Expr_Data_id>_id :: ID | <Expr_Data_cls>_cls :: Type | <Expr_Data_cons>_cons :: [Expr] | <Expr_Data_classes>_classes :: [Expr] | <Expr_Data_methods>_methods :: [Expr] } | { <Expr_ConD>ConD | <Expr_ConD_id>_id :: ID | <Expr_ConD_name>_name :: String | <Expr_ConD_fields>_fields :: [Expr] } | { <Expr_Con>Con | <Expr_Con_id>_id :: ID | <Expr_Con_name>_name :: String } | { <Expr_Cond>Cond | <Expr_Cond_id>_id :: ID | <Expr_Cond_cond>_cond :: Expr | <Expr_Cond_success>_success :: [Expr] | _failure :: Maybe [Expr] } | { <Expr_Function>Function | <Expr_Function_id>_id :: ID | <Expr_Function_path>_path :: [String] | <Expr_Function_name>_name :: String | _inputs :: [Expr] | <Expr_Function_output>_output :: Type | <Expr_Function_body>_body :: [Expr] } | { <Expr_Lambda>Lambda | <Expr_Lambda_id>_id :: ID | <Expr_Lambda_inputs>_inputs :: [Expr] | <Expr_Lambda_output>_output :: Type | _body :: [Expr] } | { <Expr_Grouped>Grouped | <Expr_Grouped_id>_id :: ID | <Expr_Grouped_expr>_expr :: Expr } | { <Expr_Import>Import | <Expr_Import_id>_id :: ID | <Expr_Import_path>_path :: [String] | <Expr_Import_target>_target :: Expr | <Expr_Import_rename>_rename :: Maybe String } | { <Expr_ImportNative>ImportNative | <Expr_ImportNative_id>_id :: ID | <Expr_ImportNative_segments>_segments :: [Expr] } | { <Expr_Infix>Infix | <Expr_Infix_id>_id :: ID | <Expr_Infix_name>_name :: String | <Expr_Infix_src>_src :: Expr | <Expr_Infix_dst>_dst :: Expr } | { <Expr_List>List | <Expr_List_id>_id :: ID | <Expr_List_items>_items :: [Expr] } | { <Expr_Lit>Lit | <Expr_Lit_id>_id :: ID | <Expr_Lit_lvalue>_lvalue :: Lit } | { <Expr_Tuple>Tuple | <Expr_Tuple_id>_id :: ID | <Expr_Tuple_items>_items :: [Expr] } | { <Expr_Typed>Typed | <Expr_Typed_id>_id :: ID | <Expr_Typed_cls>_cls :: Type | <Expr_Typed_expr>_expr :: Expr } | { <Expr_Var>Var | <Expr_Var_id>_id :: ID | <Expr_Var_name>_name :: String} | { <Expr_Wildcard>Wildcard | <Expr_Wildcard_id>_id :: ID } | { <Expr_RangeFromTo>RangeFromTo | <Expr_RangeFromTo_id>_id :: ID | <Expr_RangeFromTo_start>_start :: Expr | <Expr_RangeFromTo_end>_end :: Expr } | { <Expr_RangeFrom>RangeFrom | <Expr_RangeFrom_id>_id :: ID | <Expr_RangeFrom_start>_start :: Expr } | { <Expr_Field>Field | <Expr_Field_id>_id :: ID | <Expr_Field_name>_name :: String | <Expr_Field_cls>_cls :: Type | <Expr_Field_value>_value :: Maybe Expr } | { <Expr_Arg>Arg | <Expr_Arg_id>_id :: ID | <Expr_Arg_pat>_pat :: Pat | <Expr_Arg_value>_value :: Maybe Expr } | { <Expr_Native>Native | <Expr_Native_id>_id :: ID | <Expr_Native_segments>_segments :: [Expr] } | { <Expr_NativeCode>NativeCode | <Expr_NativeCode_id>_id :: ID | <Expr_NativeCode_code>_code :: String } | { <Expr_NativeVar>NativeVar | <Expr_NativeVar_id>_id :: ID | <Expr_NativeVar_name>_name :: String } | { <Expr_Ref>Ref | <Expr_Ref_id>_id :: ID | <Expr_Ref_dst>_dst :: Expr } | { <Expr_RefType>RefType | <Expr_RefType_id>_id :: ID | <Expr_RefType_typeName>_typeName :: String | <Expr_RefType_name>_name :: String } | { <Expr_Case>Case | <Expr_Case_id>_id :: ID | <Expr_Case_expr>_expr :: Expr | <Expr_Case_match>_match :: [Expr] } | { <Expr_Match>Match | <Expr_Match_id>_id :: ID | <Expr_Match_pat>_pat :: Pat | <Expr_Match_body>_body :: [Expr] }" ];
+    Expr [ shape = none; label = < <table>
+         <tr><td ALIGN="center" bgcolor="black" colspan="8" PORT="Expr"><font color="white" POINT-SIZE="36.0" FACE="Futura-Medium"><b>Expr</b></font></td></tr>
+         <tr><td ALIGN="left" PORT="Expr_NOP" bgcolor="grey"><font FACE="Futura-Medium">NOP</font></td>                   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_NOP_id">_id :: ID</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Accessor" bgcolor="grey"><font FACE="Futura-Medium">Accessor</font></td>         <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Accessor_id">_id :: ID</td>     <td ALIGN="left" PORT="Expr_Accessor_name">_name :: String</td>                  <td ALIGN="left" PORT="Expr_Accessor_dst">_dst :: Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_TypeAlias" bgcolor="grey"><font FACE="Futura-Medium">TypeAlias</font></td>       <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_TypeAlias_id">_id :: ID</td>    <td ALIGN="left" PORT="Expr_TypeAlias_srcType">_srcType :: Type</td>             <td ALIGN="left" PORT="Expr_TypeAlias_dstType">_dstType :: Type</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_TypeDef" bgcolor="grey"><font FACE="Futura-Medium">TypeDef</font></td>           <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_TypeDef_id">_id :: ID</td>      <td ALIGN="left" PORT="Expr_TypeDef_srcType">_srcType :: Type</td>               <td ALIGN="left" PORT="Expr_TypeDef_dstType">_dstType :: Type</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_App" bgcolor="grey"><font FACE="Futura-Medium">App</font></td>                   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_App_id">_id :: ID</td>          <td ALIGN="left" PORT="Expr_App_src">_src :: Expr</td>                           <td ALIGN="left" PORT="Expr_App_args">_args :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_AppCons_" bgcolor="grey"><font FACE="Futura-Medium">AppCons_</font></td>         <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_AppCons__id">_id :: ID</td>     <td ALIGN="left" PORT="Expr_AppCons__args">_args :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Assignment" bgcolor="grey"><font FACE="Futura-Medium">Assignment</font></td>     <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Assignment_id">_id :: ID</td>   <td ALIGN="left" PORT="Expr_Assignment_pat">_pat :: Pat</td>                     <td ALIGN="left" PORT="Expr_Assignment_dst">_dst :: Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_RecordUpdate" bgcolor="grey"><font FACE="Futura-Medium">RecordUpdate</font></td> <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_RecordUpdate_id">_id :: ID</td> <td ALIGN="left" PORT="Expr_RecordUpdate_src">_src :: Expr</td>                  <td ALIGN="left" PORT="Expr_RecordUpdate_selectors">_selectors :: [String]</td> <td ALIGN="left" PORT="Expr_RecordUpdate__expr">_expr :: Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Data" bgcolor="grey"><font FACE="Futura-Medium">Data</font></td>                 <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Data_id">_id :: ID</td>         <td ALIGN="left" PORT="Expr_Data_cls">_cls :: Type</td>                          <td ALIGN="left" PORT="Expr_Data_cons">_cons :: [Expr]</td>                     <td ALIGN="left" PORT="Expr_Data_classes">_classes :: [Expr]</td>           <td ALIGN="left" PORT="Expr_Data_methods">_methods :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_ConD" bgcolor="grey"><font FACE="Futura-Medium">ConD</font></td>                 <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_ConD_id">_id :: ID</td>         <td ALIGN="left" PORT="Expr_ConD_name">_name :: String</td>                      <td ALIGN="left" PORT="Expr_ConD_fields">_fields :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Con" bgcolor="grey"><font FACE="Futura-Medium">Con</font></td>                   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Con_id">_id :: ID</td>          <td ALIGN="left" PORT="Expr_Con_name">_name :: String</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Cond" bgcolor="grey"><font FACE="Futura-Medium">Cond</font></td>                 <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Cond_id">_id :: ID</td>         <td ALIGN="left" PORT="Expr_Cond_cond">_cond :: Expr</td>                        <td ALIGN="left" PORT="Expr_Cond_success">_success :: [Expr]</td>               <td ALIGN="left" >_failure :: Maybe [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Function" bgcolor="grey"><font FACE="Futura-Medium">Function</font></td>         <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Function_id">_id :: ID</td>     <td ALIGN="left" PORT="Expr_Function_path">_path :: [String]</td>                <td ALIGN="left" PORT="Expr_Function_name">_name :: String</td>                 <td ALIGN="left" >_inputs :: [Expr]</td>                                    <td ALIGN="left" PORT="Expr_Function_output">_output :: Type</td>      <td ALIGN="left" PORT="Expr_Function_body">_body :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Lambda" bgcolor="grey"><font FACE="Futura-Medium">Lambda</font></td>             <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Lambda_id">_id :: ID</td>       <td ALIGN="left" PORT="Expr_Lambda_inputs">_inputs :: [Expr]</td>                <td ALIGN="left" PORT="Expr_Lambda_output">_output :: Type</td>                 <td ALIGN="left" >_body :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Grouped" bgcolor="grey"><font FACE="Futura-Medium">Grouped</font></td>           <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Grouped_id">_id :: ID</td>      <td ALIGN="left" PORT="Expr_Grouped_expr">_expr :: Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Import" bgcolor="grey"><font FACE="Futura-Medium">Import</font></td>             <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Import_id">_id :: ID</td>       <td ALIGN="left" PORT="Expr_Import_path">_path :: [String]</td>                  <td ALIGN="left" PORT="Expr_Import_target">_target :: Expr</td>                 <td ALIGN="left" PORT="Expr_Import_rename">_rename :: Maybe String</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_ImportNative" bgcolor="grey"><font FACE="Futura-Medium">ImportNative</font></td> <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_ImportNative_id">_id :: ID</td> <td ALIGN="left" PORT="Expr_ImportNative_segments">_segments :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Infix" bgcolor="grey"><font FACE="Futura-Medium">Infix</font></td>               <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Infix_id">_id :: ID</td>        <td ALIGN="left" PORT="Expr_Infix_name">_name :: String</td>                     <td ALIGN="left" PORT="Expr_Infix_src">_src :: Expr</td>                        <td ALIGN="left" PORT="Expr_Infix_dst">_dst :: Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_List" bgcolor="grey"><font FACE="Futura-Medium">List</font></td>                 <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_List_id">_id :: ID</td>         <td ALIGN="left" PORT="Expr_List_items">_items :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Lit" bgcolor="grey"><font FACE="Futura-Medium">Lit</font></td>                   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Lit_id">_id :: ID</td>          <td ALIGN="left" PORT="Expr_Lit_lvalue">_lvalue :: Lit</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Tuple" bgcolor="grey"><font FACE="Futura-Medium">Tuple</font></td>               <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Tuple_id">_id :: ID</td>        <td ALIGN="left" PORT="Expr_Tuple_items">_items :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Typed" bgcolor="grey"><font FACE="Futura-Medium">Typed</font></td>               <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Typed_id">_id :: ID</td>        <td ALIGN="left" PORT="Expr_Typed_cls">_cls :: Type</td>                         <td ALIGN="left" PORT="Expr_Typed_expr">_expr :: Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Var" bgcolor="grey"><font FACE="Futura-Medium">Var</font></td>                   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Var_id">_id :: ID</td>          <td ALIGN="left" PORT="Expr_Var_name">_name :: Strin</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Wildcard" bgcolor="grey"><font FACE="Futura-Medium">Wildcard</font></td>         <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Wildcard_id">_id :: ID</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_RangeFromTo" bgcolor="grey"><font FACE="Futura-Medium">RangeFromTo</font></td>   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_RangeFromTo_id">_id :: ID</td>  <td ALIGN="left" PORT="Expr_RangeFromTo_start">_start :: Expr</td>               <td ALIGN="left" PORT="Expr_RangeFromTo_end">_end :: Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_RangeFrom" bgcolor="grey"><font FACE="Futura-Medium">RangeFrom</font></td>       <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_RangeFrom_id">_id :: ID</td>    <td ALIGN="left" PORT="Expr_RangeFrom_start">_start :: Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Field" bgcolor="grey"><font FACE="Futura-Medium">Field</font></td>               <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Field_id">_id :: ID</td>        <td ALIGN="left" PORT="Expr_Field_name">_name :: String</td>                     <td ALIGN="left" PORT="Expr_Field_cls">_cls :: Type</td>                        <td ALIGN="left" PORT="Expr_Field_value">_value :: Maybe Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Arg" bgcolor="grey"><font FACE="Futura-Medium">Arg</font></td>                   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Arg_id">_id :: ID</td>          <td ALIGN="left" PORT="Expr_Arg_pat">_pat :: Pat</td>                            <td ALIGN="left" PORT="Expr_Arg_value">_value :: Maybe Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Native" bgcolor="grey"><font FACE="Futura-Medium">Native</font></td>             <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Native_id">_id :: ID</td>       <td ALIGN="left" PORT="Expr_Native_segments">_segments :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_NativeCode" bgcolor="grey"><font FACE="Futura-Medium">NativeCode</font></td>     <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_NativeCode_id">_id :: ID</td>   <td ALIGN="left" PORT="Expr_NativeCode_code">_code :: String</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_NativeVar" bgcolor="grey"><font FACE="Futura-Medium">NativeVar</font></td>       <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_NativeVar_id">_id :: ID</td>    <td ALIGN="left" PORT="Expr_NativeVar_name">_name :: String</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Ref" bgcolor="grey"><font FACE="Futura-Medium">Ref</font></td>                   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Ref_id">_id :: ID</td>          <td ALIGN="left" PORT="Expr_Ref_dst">_dst :: Expr</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_RefType" bgcolor="grey"><font FACE="Futura-Medium">RefType</font></td>           <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_RefType_id">_id :: ID</td>      <td ALIGN="left" PORT="Expr_RefType_typeName">_typeName :: String</td>           <td ALIGN="left" PORT="Expr_RefType_name">_name :: String</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Case" bgcolor="grey"><font FACE="Futura-Medium">Case</font></td>                 <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Case_id">_id :: ID</td>         <td ALIGN="left" PORT="Expr_Case_expr">_expr :: Expr</td>                        <td ALIGN="left" PORT="Expr_Case_match">_match :: [Expr]</td></tr>
+         <tr><td ALIGN="left" PORT="Expr_Match" bgcolor="grey"><font FACE="Futura-Medium">Match</font></td>               <td ALIGN="left">{</td> <td ALIGN="left" PORT="Expr_Match_id">_id :: ID</td>        <td ALIGN="left" PORT="Expr_Match_pat">_pat :: Pat</td>                          <td ALIGN="left" PORT="Expr_Match_body">_body :: [Expr]</td></tr>
+     </table>>
+    ];
 // (for clarity)    Expr:Expr_NOP_id -> ID;
 // (for clarity)    Expr:Expr_Accessor_id -> ID;
 // (for clarity)    Expr:Expr_Accessor_dst -> Expr;
@@ -129,7 +229,18 @@ digraph "G" {
     Expr:Expr_Match_pat -> Pat;
 // (for clarity)    Expr:Expr_Match_body -> Expr;
 
-    Type [ label = "Type | { <Type_Unknown>Unknown | <Type_Unknown_id>_id :: ID } | { <Type_Var>Var | <Type_Var_id>_id :: ID | <Type_Var_name>_name :: String } | { <Type_Tuple>Tuple | <Type_Tuple_id>_id :: ID | <Type_Tuple_items>_items :: [Type] } | { <Type_Data>Data | <Type_Data_id>_id :: ID | <Type_Data_name>_name :: String | <Type_Data_params>_params :: [String] } | { <Type_Module>Module | <Type_Module_id>_id :: ID | <Type_Module_name>_name :: String | <Type_Module_path>_path :: [String] } | { <Type_Lambda>Lambda | <Type_Lambda_id>_id :: ID | <Type_Lambda_inputs>_inputs :: [Type] | <Type_Lambda_output>_output :: Type } | { <Type_Con>Con | <Type_Con_id>_id :: ID | <Type_Con_segments>_segments :: [String] } | { <Type_App>App | <Type_App_id>_id :: ID | <Type_App_src>_src :: Type | _args :: [Type] }" ];
+    Type [ label = < <table>
+     <tr><td ALIGN="center" bgcolor="black" COLSPAN="5"><font color="white" POINT-SIZE="36.0" FACE="Futura-Medium"><b>Type</b></font></td></tr>
+     <tr><td ALIGN="left" PORT="Type_Unknown" bgcolor="grey"><font FACE="Futura-Medium">Unknown</font></td> <td ALIGN="left">{</td> <td ALIGN="left" PORT="Type_Unknown_id">_id :: ID</td></tr>
+     <tr><td ALIGN="left" PORT="Type_Var" bgcolor="grey"><font FACE="Futura-Medium">Var</font></td>         <td ALIGN="left">{</td> <td ALIGN="left" PORT="Type_Var_id">_id :: ID</td>         <td ALIGN="left" PORT="Type_Var_name">_name :: String</td></tr>
+     <tr><td ALIGN="left" PORT="Type_Tuple" bgcolor="grey"><font FACE="Futura-Medium">Tuple</font></td>     <td ALIGN="left">{</td> <td ALIGN="left" PORT="Type_Tuple_id">_id :: ID</td>       <td ALIGN="left" PORT="Type_Tuple_items">_items :: [Type]</td></tr>
+     <tr><td ALIGN="left" PORT="Type_Data" bgcolor="grey"><font FACE="Futura-Medium">Data</font></td>       <td ALIGN="left">{</td> <td ALIGN="left" PORT="Type_Data_id">_id :: ID</td>        <td ALIGN="left" PORT="Type_Data_name">_name :: String</td>               <td ALIGN="left" PORT="Type_Data_params">_params :: [String]</td></tr>
+     <tr><td ALIGN="left" PORT="Type_Module" bgcolor="grey"><font FACE="Futura-Medium">Module</font></td>   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Type_Module_id">_id :: ID</td>      <td ALIGN="left" PORT="Type_Module_name">_name :: String</td>             <td ALIGN="left" PORT="Type_Module_path">_path :: [String]</td></tr>
+     <tr><td ALIGN="left" PORT="Type_Lambda" bgcolor="grey"><font FACE="Futura-Medium">Lambda</font></td>   <td ALIGN="left">{</td> <td ALIGN="left" PORT="Type_Lambda_id">_id :: ID</td>      <td ALIGN="left" PORT="Type_Lambda_inputs">_inputs :: [Type]</td>         <td ALIGN="left" PORT="Type_Lambda_output">_output :: Type</td></tr>
+     <tr><td ALIGN="left" PORT="Type_Con" bgcolor="grey"><font FACE="Futura-Medium">Con</font></td>         <td ALIGN="left">{</td> <td ALIGN="left" PORT="Type_Con_id">_id :: ID</td>         <td ALIGN="left" PORT="Type_Con_segments">_segments :: [String]</td></tr>
+     <tr><td ALIGN="left" PORT="Type_App" bgcolor="grey"><font FACE="Futura-Medium">App</font></td>         <td ALIGN="left">{</td> <td ALIGN="left" PORT="Type_App_id">_id :: ID</td>         <td ALIGN="left" PORT="Type_App_src">_src :: Type</td>                    <td ALIGN="left" PORT="Type_App_args">_args :: [Type]</td></tr>
+     </table>>
+    ];
 // (for clarity)    Type:Type_Unknown_id -> ID;
 // (for clarity)    Type:Type_Var_id -> ID;
 // (for clarity)    Type:Type_Tuple_id -> ID;

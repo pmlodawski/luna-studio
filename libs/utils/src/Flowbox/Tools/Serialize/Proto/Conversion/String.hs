@@ -11,6 +11,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Flowbox.Tools.Serialize.Proto.Conversion.String where
 
+import           Data.Text                  (Text)
+import qualified Data.Text                  as Text
 import qualified Text.ProtocolBuffers.Basic as Proto
 
 import Flowbox.Prelude
@@ -21,3 +23,6 @@ instance ConvertPure String Proto.Utf8 where
     encodeP = Proto.uFromString
     decodeP = Proto.uToString
 
+instance ConvertPure Text Proto.Utf8 where
+    encodeP = encodeP . Text.unpack
+    decodeP = Text.pack . decodeP

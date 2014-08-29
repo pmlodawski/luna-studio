@@ -20,7 +20,7 @@ module Flowbox.AWS.S3.S3 (
     withBucket,
 ) where
 
-import qualified Aws                          as Aws
+import qualified Aws
 import           Aws.S3                       as S3
 import           Control.Monad.Reader
 import qualified Control.Monad.Trans.Resource as Resource

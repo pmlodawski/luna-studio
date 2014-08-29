@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Parser.Config (
-    module Paths_flowbox_parser,
+    module Paths_batch_plugin_parser,
 ) where
 
-import Paths_flowbox_parser (version)
+import Paths_batch_plugin_parser (version)
 
 

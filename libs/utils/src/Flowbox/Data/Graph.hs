@@ -21,6 +21,7 @@ module Flowbox.Data.Graph (
     innvtx,
     suc_,
     sucl,
+    lsucl,
     pre_,
     prel,
     lprel,
@@ -28,14 +29,18 @@ module Flowbox.Data.Graph (
     newVtxs,
     newVtx,
     insNewNode,
+    findNode,
     topsortl,
+    topsortStable,
 ) where
-
-import Flowbox.Prelude hiding (fromJust, pre, (&))
 
 import           Data.Graph.Inductive hiding (Graph, Node)
 import qualified Data.Graph.Inductive as DG
+import qualified Data.List            as List
 import           Data.Maybe           (fromJust)
+
+import Flowbox.Prelude hiding (fromJust, pre, (&))
+
 
 
 type Graph a b = DG.Gr a b
@@ -43,8 +48,12 @@ type Vertex    = DG.Node
 type LVertex a = DG.LNode a
 
 
+instance Default (Graph a b) where
+    def = DG.empty
+
+
 labs :: Graph a b -> [Vertex] -> Maybe [a]
-labs g vtxs = mapM (lab g) vtxs
+labs g = mapM (lab g)
 
 
 labVtx :: Graph a b -> Vertex -> Maybe (LVertex a)
@@ -52,7 +61,7 @@ labVtx g vtx = (,) vtx <$> lab g vtx
 
 
 labVtxs :: Graph a b -> [Vertex] -> Maybe [LVertex a]
-labVtxs g vtxs = mapM (labVtx g) vtxs
+labVtxs g = mapM (labVtx g)
 
 
 out_ :: Graph a b -> Vertex -> [b]
@@ -68,19 +77,22 @@ innvtx g vtx = [pvtx | (pvtx,_,_) <- inn g vtx]
 
 
 suc_ :: Graph a b -> Vertex -> [a]
-suc_ g vtx = map (fromJust . (lab g)) $ suc g vtx
+suc_ g vtx = map (fromJust . lab g) $ suc g vtx
 
 
 sucl :: Graph a b -> Vertex -> [LVertex a]
-sucl g vtx = map (fromJust . (labVtx g)) $ suc g vtx
+sucl g vtx = map (fromJust . labVtx g) $ suc g vtx
 
+
+lsucl :: Graph a b -> Vertex -> [(Vertex, a, b)]
+lsucl g vtx = map (\((v, b)) -> (v, fromJust $ lab g v, b)) $ lsuc g vtx
 
 pre_ :: Graph a b -> Vertex -> [a]
-pre_ g vtx = map (fromJust . (lab g)) $ pre g vtx
+pre_ g vtx = map (fromJust . lab g) $ pre g vtx
 
 
 prel :: Graph a b -> Vertex -> [LVertex a]
-prel g vtx = map (fromJust . (labVtx g)) $ pre g vtx
+prel g vtx = map (fromJust . labVtx g) $ pre g vtx
 
 
 lprel :: Graph a b -> Vertex -> [(Vertex, a, b)]
@@ -122,5 +134,33 @@ insNewNode node graph = (newGraph, nodeID) where
     newGraph = insNode (nodeID, node) graph
 
 
+findNode :: (a -> Bool) -> Graph a b -> Maybe Vertex
+findNode predicate = fmap fst . List.find (predicate . snd) . labNodes
+
+
 topsortl :: Graph a b -> [LVertex a]
 topsortl graph = map (fromJust . labVtx graph) $ topsort graph
+
+
+topsortStable :: Eq a => Graph a b -> [LVertex a] -> [LVertex a]
+topsortStable graph pending = topsortStable' graph [] pending
+
+
+topsortStable' :: Eq a => Graph a b -> [LVertex a] -> [LVertex a] -> [LVertex a]
+topsortStable' _     []            []            = []
+topsortStable' graph pending1 pending2 =
+    case findReady pending1 of
+        (Just n1, rest1) -> n1 : topsortStable' (delNode' n1) rest1 pending2
+        (Nothing, _    ) -> case findReady pending2 of
+            (Just n2, rest2) -> n2 : topsortStable' (delNode' n2) pending1 rest2
+            (Nothing, _    ) -> if null pending2
+                then error "topsortStable : Graph contains cycle"
+                else topsortStable' graph (pending1 ++ [head pending2]) (tail pending2)
+    where
+        indegIs0  item  = DG.indeg graph (fst item) == 0
+        delNode'  item  = DG.delNode (fst item) graph
+        findReady queue = (found, rest) where
+            found = List.find indegIs0 queue
+            rest  = case found of
+                Just f  -> List.delete f queue
+                Nothing -> queue
