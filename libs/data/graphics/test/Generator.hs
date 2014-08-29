@@ -14,15 +14,15 @@ import Flowbox.Prelude as P hiding (zoom, constant)
 import Data.Array.Accelerate as A hiding (rotate, constant)
 import Data.Array.Accelerate.CUDA
 
-import Flowbox.Graphics.Composition.Generators.Constant
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Filter as Conv
 import Flowbox.Graphics.Composition.Generators.Gradient
 import Flowbox.Graphics.Composition.Generators.Matrix
-import Flowbox.Graphics.Composition.Generators.Stencil as Stencil
 import Flowbox.Graphics.Composition.Generators.Pipe
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 import Flowbox.Graphics.Composition.Generators.Sampler
+import Flowbox.Graphics.Composition.Generators.Shape
+import Flowbox.Graphics.Composition.Generators.Stencil as Stencil
 import Flowbox.Graphics.Composition.Generators.Structures as S
 import Flowbox.Graphics.Composition.Generators.Transform
 
@@ -187,6 +187,15 @@ radialBlur size angle = do
                   $ nearest 
                   $ fromMatrix Clamp x
     forAllChannels "lena.bmp" process
+
+--
+-- Defocus test
+--
+defocusBlur :: Exp Int -> IO ()
+defocusBlur size = do
+   let kern = ellipse (pure $ variable size) 1 (0 :: Exp Float)
+   let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix Clamp x
+   forAllChannels "lena.bmp" process
 
 --
 -- Applies Kirsch Operator to red channel of Lena image. Available operators: prewitt, sobel, sharr

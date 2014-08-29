@@ -10,7 +10,7 @@
 
 module Flowbox.Graphics.Composition.Generators.Filter where
 
-import Flowbox.Graphics.Composition.Generators.Constant
+import Flowbox.Graphics.Composition.Generators.Shape
 import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Graphics.Composition.Generators.Stencil
 import Flowbox.Graphics.Composition.Generators.Matrix
