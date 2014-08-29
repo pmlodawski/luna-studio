@@ -6,10 +6,16 @@ import qualified Luna.Typechecker.Internal.Substitutions    as Sub
 
 import           Luna.Typechecker.Internal.AST.TID          (TID)
 
+import           Text.Printf                                (printf)
+import           Data.List                                  (intercalate)
+
 
 
 data Assump = TID :>: Sch.Scheme
-            deriving (Show)
+
+instance Show Assump where
+  show (t :>: sch) = printf "%s :: %s" (show t) (show sch)
+  showList as s = printf "%s%s" s (intercalate "\n" $ map show as)
 
 instance Sub.Types Assump where
   apply s (i :>: sc) = i :>: (Sub.apply s sc)
