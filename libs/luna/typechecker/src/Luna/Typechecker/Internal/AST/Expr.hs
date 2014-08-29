@@ -1,4 +1,4 @@
-module Luna.Typechecker.Internal.AST.Expr (Expr, tiExpr) where
+module Luna.Typechecker.Internal.AST.Expr (Expr(..), tiExpr) where
 
 import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
 import qualified Luna.Typechecker.Internal.AST.Lit          as Lit

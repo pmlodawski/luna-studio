@@ -3,6 +3,7 @@
 *.chi
 *.chs.h
 .virthualenv
+*.tix
 *~
 *.swp
 *.imports

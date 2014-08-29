@@ -1,6 +1,6 @@
 module Luna.Typechecker.Internal.Typeclasses (
     Pred(..), Qual(..), ClassEnv(..),
-    entail, byInst, addClass, addInst, (<:>)
+    entail, byInst, addClass, addInst, (<:>), initialEnv
   ) where
 
 import qualified Luna.Typechecker.Internal.AST.Type         as Ty
@@ -10,14 +10,19 @@ import qualified Luna.Typechecker.Internal.Unification      as Unf
 
 import           Luna.Typechecker.Internal.AST.TID          (TID)
 
-import           Control.Monad                                      (msum)
+import           Control.Monad                              (msum)
 
-import           Data.List                                          (union)
-import           Data.Maybe                                         (isJust)
-
+import           Data.List                                  (intercalate,union)
+import           Data.Maybe                                 (isJust)
+import           Text.Printf                                (printf)
 
 data Pred = IsIn TID Ty.Type
-          deriving (Eq, Show)
+          deriving (Eq)
+
+instance Show Pred where
+  show (IsIn tid ty) = printf "%s %d" (show ty) tid
+  showList [] s = s
+  showList ps s = printf "%s(%s)" s (intercalate " " $ map show ps)
 
 
 mguPred :: Pred -> Pred -> Maybe Sub.Subst
@@ -83,11 +88,12 @@ modify ce i c = ce {
                        else classes ce j
                 }
 
---initialEnv :: ClassEnv
---initialEnv = ClassEnv {
---               classes = \_ -> fail "class not defined/found",
---               defaults = [Ty.tInteger, Ty.tDouble]
---             }
+initialEnv :: ClassEnv
+initialEnv = ClassEnv {
+               classes = \_ -> fail "class not defined/found",
+               --defaults = [Ty.tInteger, Ty.tDouble]
+               defaults = []
+             }
 
 -- TODO [kgdk] 18 sie 2014: zbadać jak zachowuje się defaulting w Lunie
 
