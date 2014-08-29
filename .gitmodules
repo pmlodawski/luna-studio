@@ -49,3 +49,6 @@
 [submodule "libs/data/graphics/graphics/test/samples"]
 	path = libs/data/graphics/graphics/test/samples
 	url = git@github.com:korrix/ImageProcessingSamples.git
+[submodule "libs/data/graphics/test/samples"]
+	path = libs/data/graphics/test/samples
+	url = git@github.com:korrix/ImageProcessingSamples.git
