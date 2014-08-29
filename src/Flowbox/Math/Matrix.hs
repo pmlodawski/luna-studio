@@ -96,17 +96,6 @@ sfoldl f z ix mat = A.sfoldl f z ix (accMatrix mat)
 the :: Elt e => Scalar e -> Exp e
 the mat = A.the $ accMatrix mat
 
-boundedIndex :: Elt e => Boundary (Exp e) -> Matrix2 e -> Exp DIM2 -> Exp e
-boundedIndex b mat i = case b of
-    Clamp      -> mat ! index2 ((y `min` h1) `max` 0) ((x `min` w1) `max` 0)
-    Mirror     -> mat ! index2 (abs $ -abs (y `mod` (2 * height) - h1) + h1) (abs $ -abs (x `mod` (2 * width) - w1) + w1)
-    Wrap       -> mat ! index2 (y `mod` height) (x `mod` width)
-    Constant a -> (x >=* width ||* y >=* height ||* x <* 0 ||* y <* 0) ? (a, mat ! i)
-    where Z :. height :. width = unlift $ shape mat
-          Z :. y      :. x     = unlift i
-          h1 = height - 1
-          w1 = width - 1
-
 -- = Shape Information =
 
 empty :: (Shape ix, Elt e) => Matrix ix e -> Exp Bool

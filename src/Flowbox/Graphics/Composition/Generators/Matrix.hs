@@ -9,6 +9,7 @@ module Flowbox.Graphics.Composition.Generators.Matrix where
 
 import Flowbox.Prelude
 import Flowbox.Graphics.Composition.Generators.Structures
+import Flowbox.Graphics.Composition.Generators.Shape
 import Flowbox.Math.Matrix                                as M
 
 import qualified Data.Array.Accelerate                    as A
@@ -22,6 +23,4 @@ unsafeFromMatrix mat = Generator cnv $ \(Point2 x y) -> mat M.! A.index2 y x
           cnv = Grid w h 
 
 fromMatrix :: Elt e => Boundary (Exp e) -> Matrix2 e -> DiscreteGenerator (Exp e)
-fromMatrix b mat = Generator cnv $ \(Point2 x y) -> boundedIndex b mat $ A.index2 y x
-    where Z :. h :. w = A.unlift $ shape mat :: EDIM2
-          cnv = Grid w h 
+fromMatrix b mat = bound b $ unsafeFromMatrix mat
