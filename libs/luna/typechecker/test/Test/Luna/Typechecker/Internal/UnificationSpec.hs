@@ -29,7 +29,7 @@ spec = do
       let t1 = Ty.TVar (Ty.Tyvar "a" Knd.Star)
           t2 = Ty.list t1
           u  = mgu t1 t2 :: Either String Sub.Subst
-      evaluate u `shouldThrow` errorCall "occurs check fail (can't build infinite type)"
+      evaluate u `shouldThrow` anyErrorCall
   describe "match" $
     it "satisfies property: apply u t1 == t2 for u = match t1 t2" $ do
       let t1 = Ty.TVar (Ty.Tyvar "a" Knd.Star)

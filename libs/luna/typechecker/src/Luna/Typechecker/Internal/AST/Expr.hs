@@ -12,13 +12,24 @@ import qualified Luna.Typechecker.Internal.TypeInference    as Inf
 
 import           Luna.Typechecker.Internal.AST.Common       (ID)
 
+import           Text.Printf                                (printf)
+import           Data.List                                  (intercalate)
+
 
 data Expr = NOP          { _id :: ID                                      }
           | App          { _id :: ID, _src    :: Expr,  _args :: [Expr]   }
           | Lit          { _id :: ID, _lvalue :: Lit.Lit                  }
           | Var          { _id :: ID, _name   :: String                   }
           | Assignment   { _id :: ID, _pat    :: Pat.Pat ,  _dst  :: Expr }
-          deriving (Show, Eq)
+          deriving (Eq)
+
+instance Show Expr where
+  show (NOP _) = "nop"
+  show (App _ x xs) = printf "(%s)" $ intercalate " " $ map show (x:xs)
+  show (Lit _ x) = show x
+  show (Var _ x) = show x
+  show (Assignment _ p x) = printf "let %s = %s" (show p) (show x)
+  showList xs s = printf "%s%s" s $ unlines $ map show xs
 
 tiExpr :: Inf.Infer Expr Ty.Type
 tiExpr _  _  (NOP _) = do t <- TIM.newTVar Knd.Star

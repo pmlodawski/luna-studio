@@ -17,10 +17,8 @@ data Scheme = Forall [Knd.Kind] (Tcl.Qual Ty.Type)
 instance Show Scheme where
   show (Forall [] ([] Tcl.:=> t)) = printf "%s" (show t)
   show (Forall [] (ps Tcl.:=> t)) = printf "%s => %s" (show ps) (show t)
-  show (Forall ks ([] Tcl.:=> t)) = printf "forall%s. %s" (concatMap ((" "++).show) ks) (show t)
-  show (Forall ks (ps Tcl.:=> t)) = printf "forall%s.%s => %s" (concatMap ((" "++).show) ks) (show ps) (show t)
-
---Forall [] ([] :=> TAp (TAp (TCon (Tycon "(->)" * -> (* -> *))) (TVar (Tyvar "a" *))) (TAp (TAp (TCon (Tycon "(->)" * -> (* -> *))) (TVar (Tyvar "b" *))) (TVar (Tyvar "a" *))))
+  show (Forall ks ([] Tcl.:=> t)) = printf "forall %s. %s" (show ks) (show t)
+  show (Forall ks (ps Tcl.:=> t)) = printf "forall %s. %s => %s" (show ks) (show ps) (show t)
 
 
 instance Sub.Types Scheme where
