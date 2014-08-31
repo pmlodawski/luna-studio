@@ -36,7 +36,7 @@ tiExpl ce as (_, sc, alts) = do (qs Tcl.:=> t) <- TIM.freshInst sc
                                     sc' = Sch.quantify gs (qs' Tcl.:=> t')
                                     ps' = filter (not . Tcl.entail ce qs') (Sub.apply s ps)
                                 (ds, rs) <- Inf.split ce fs gs ps'
-                                if Sub.apply s sc /= sc'
+                                if sc /= sc'
                                   then fail $ "signature too general: " ++ show sc ++ " != " ++ show sc' ++ " // " ++ show s -- yeah, we can use (==) thanks to 'Scheme' declaration and building
                                   else if not (null rs) then fail "context too weak"
                                                         else return ds

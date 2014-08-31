@@ -1,6 +1,6 @@
 module Luna.Typechecker.Internal.AST.Type (
     Type(..), Tyvar(..), Tycon(..),
-    fn, pair, list, tUnit, tChar, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString
+    fn, pair, list, tUnit, tChar, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString, tCons
   ) where
 
 import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
@@ -27,11 +27,17 @@ instance Show Type where
 
 -- | Type variable.
 data Tyvar = Tyvar String Knd.Kind -- ^ Type variable consists of name and kind.
-           deriving (Show, Eq)
+           deriving (Eq)
+
+instance Show Tyvar where
+  show x = show (TVar x)
 
 -- | Type constant.
 data Tycon = Tycon String Knd.Kind -- ^ Type constant consists of name and kind.
-           deriving (Show, Eq)
+           deriving (Eq)
+
+instance Show Tycon where
+  show x = show (TCon x)
 
 tUnit, tChar, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString :: Type
 tUnit    = TCon (Tycon "()"      Knd.Star)
@@ -46,6 +52,9 @@ tArrow   = TCon (Tycon "(->)"    (Knd.Kfun Knd.Star (Knd.Kfun Knd.Star Knd.Star)
 tTuple2  = TCon (Tycon "(,)"     (Knd.Kfun Knd.Star (Knd.Kfun Knd.Star Knd.Star)))
 
 tString  = list tChar
+
+tCons :: Type -> Type
+tCons  a = a `fn` list a `fn` list a
 
 infixr 4 `fn`
 fn :: Type -> Type -> Type
