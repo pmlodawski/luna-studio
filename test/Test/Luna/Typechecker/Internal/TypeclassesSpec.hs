@@ -1,31 +1,33 @@
 module Test.Luna.Typechecker.Internal.TypeclassesSpec (spec) where
 
---import qualified Luna.Typechecker.Internal.AST.Alternatives as Alt
---import qualified Luna.Typechecker.Internal.AST.Common       as Cmm
---import qualified Luna.Typechecker.Internal.AST.Expr         as Exp
---import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
---import qualified Luna.Typechecker.Internal.AST.Lit          as Lit
---import qualified Luna.Typechecker.Internal.AST.Module       as Mod
---import qualified Luna.Typechecker.Internal.AST.Pat          as Pat
---import qualified Luna.Typechecker.Internal.AST.Scheme       as Sch
---import qualified Luna.Typechecker.Internal.AST.TID          as TID
---import qualified Luna.Typechecker.Internal.AST.Type         as Ty
+import           Luna.Typechecker.Internal.AST.Kind         (Kind(..))
+import           Luna.Typechecker.Internal.Typeclasses      (Pred(..), initialEnv, addClass, addInst, (<:>))
+import           Luna.Typechecker.Internal.AST.Type         (Type(..), Tyvar(..), tBool, list)
 
-
---import qualified Luna.Typechecker.Internal.Ambiguity        as Amb
---import qualified Luna.Typechecker.Internal.Assumptions      as Ass
---import qualified Luna.Typechecker.Internal.BindingGroups    as Bnd
---import qualified Luna.Typechecker.Internal.ContextReduction as CxR
---import qualified Luna.Typechecker.Internal.HasKind          as HKd
---import qualified Luna.Typechecker.Internal.Substitutions    as Sub
---import qualified Luna.Typechecker.Internal.TIMonad          as TIM
---import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
---import qualified Luna.Typechecker.Internal.TypeInference    as Inf
---import qualified Luna.Typechecker.Internal.Unification      as Uni
---import qualified Luna.Typechecker                           as Typechecker
-
-import Test.Hspec
+import           Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "Luna/Typechecker/Internal/Typeclasses.hs" $ it "is" pending
+  describe "basic input verification" $ do
+    it "checks if class was defined twice" $
+      (     addClass "Eq" []
+        <:> addClass "Eq" []
+      ) initialEnv `shouldBe` Nothing
+    it "checks if class has a known superclass" $
+      (     addClass "Eq" []
+        <:> addClass "Ord" ["EqNOPE"]
+      ) initialEnv `shouldBe` Nothing
+    it "checks if instance is given for a known class" $
+      (     addClass "Eq" []
+        <:> addInst [] (IsIn "EqNOPE" tBool)
+      ) initialEnv `shouldBe` Nothing
+    it "checks for overlapping instances (trivial)" $
+      (     addClass "Eq" []
+        <:> addInst [] (IsIn "Eq" tBool)
+        <:> addInst [] (IsIn "Eq" tBool)
+      ) initialEnv `shouldBe` Nothing
+    it "checks for overlapping instances (non-trivial)" $
+      (     addClass "Eq" []
+        <:> addInst [IsIn "Eq" tBool]                   (IsIn "Eq" (list tBool))
+        <:> addInst [IsIn "Eq" (TVar $ Tyvar "a" Star)] (IsIn "Eq" (list (TVar $ Tyvar "a" Star)))
+      ) initialEnv `shouldBe` Nothing
