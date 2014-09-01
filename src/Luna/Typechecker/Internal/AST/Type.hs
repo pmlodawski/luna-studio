@@ -1,12 +1,12 @@
 module Luna.Typechecker.Internal.AST.Type (
     Type(..), Tyvar(..), Tycon(..),
-    fn, pair, list, tUnit, tChar, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString, tCons
+    fn, pair, list, tUnit, tChar, tBool, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString, tCons
   ) where
 
-import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
+import           Luna.Typechecker.Internal.AST.Kind         (Kind(..))
+import           Luna.Typechecker.Internal.AST.TID          (TID)
 
 import           Text.Printf                                (printf)
-import           Data.List                                  (intercalate)
 
 -- | The type of an expression.
 data Type = TVar Tyvar    -- ^ Type variable (named unknown).
@@ -22,34 +22,35 @@ instance Show Type where
     | x == tArrow         = printf "%s -> %s" (show t1) (show t2)
   show (TAp t1 t2)        = printf "(%s %s)" (show t1) (show t2)
   show (TGen i)           = printf "gen{%d}" i
-  showList cs s = printf "%s%s" s (intercalate " " $ map show cs)
+  showList cs s = printf "%s%s" s (unwords $ map show cs)
 
 
 -- | Type variable.
-data Tyvar = Tyvar String Knd.Kind -- ^ Type variable consists of name and kind.
+data Tyvar = Tyvar TID Kind -- ^ Type variable consists of name and kind.
            deriving (Eq)
 
 instance Show Tyvar where
   show x = show (TVar x)
 
 -- | Type constant.
-data Tycon = Tycon String Knd.Kind -- ^ Type constant consists of name and kind.
+data Tycon = Tycon TID Kind -- ^ Type constant consists of name and kind.
            deriving (Eq)
 
 instance Show Tycon where
   show x = show (TCon x)
 
-tUnit, tChar, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString :: Type
-tUnit    = TCon (Tycon "()"      Knd.Star)
-tChar    = TCon (Tycon "Char"    Knd.Star)
-tInt     = TCon (Tycon "Int"     Knd.Star)
-tInteger = TCon (Tycon "Integer" Knd.Star)
-tFloat   = TCon (Tycon "Float"   Knd.Star)
-tDouble  = TCon (Tycon "Double"  Knd.Star)
+tUnit, tChar, tBool, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString :: Type
+tUnit    = TCon (Tycon "()"      Star)
+tBool    = TCon (Tycon "Bool"    Star)
+tChar    = TCon (Tycon "Char"    Star)
+tInt     = TCon (Tycon "Int"     Star)
+tInteger = TCon (Tycon "Integer" Star)
+tFloat   = TCon (Tycon "Float"   Star)
+tDouble  = TCon (Tycon "Double"  Star)
 
-tList    = TCon (Tycon "[]"      (Knd.Kfun Knd.Star Knd.Star))
-tArrow   = TCon (Tycon "(->)"    (Knd.Kfun Knd.Star (Knd.Kfun Knd.Star Knd.Star)))
-tTuple2  = TCon (Tycon "(,)"     (Knd.Kfun Knd.Star (Knd.Kfun Knd.Star Knd.Star)))
+tList    = TCon (Tycon "[]"      (Kfun Star Star))
+tArrow   = TCon (Tycon "(->)"    (Kfun Star (Kfun Star Star)))
+tTuple2  = TCon (Tycon "(,)"     (Kfun Star (Kfun Star Star)))
 
 tString  = list tChar
 

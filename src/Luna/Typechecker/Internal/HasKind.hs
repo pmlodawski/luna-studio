@@ -1,28 +1,23 @@
 module Luna.Typechecker.Internal.HasKind (HasKind(..)) where
 
-import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
-import qualified Luna.Typechecker.Internal.AST.Type         as Ty
-
-
-
-
--- TODO [kgdk] 21 sie 2014: zmienić nazwę HaskKind -> ClassHasKind
+import           Luna.Typechecker.Internal.AST.Kind         (Kind(..))
+import           Luna.Typechecker.Internal.AST.Type         (Type(..), Tyvar(..), Tycon(..))
 
 class HasKind t where
-    kind :: t -> Knd.Kind -- ^ Determine the kind of a type variable, type constant, or type expression.
+    kind :: t -> Kind -- ^ Determine the kind of a type variable, type constant, or type expression.
 
-instance HasKind Ty.Tyvar where
-  kind (Ty.Tyvar _ k) = k
+instance HasKind Tyvar where
+  kind (Tyvar _ k) = k
 
-instance HasKind Ty.Tycon where
-  kind (Ty.Tycon _ k) = k
+instance HasKind Tycon where
+  kind (Tycon _ k) = k
 
-instance HasKind Ty.Type where
-  kind (Ty.TVar u)   = kind u
-  kind (Ty.TCon tc)  = kind tc
-  kind (Ty.TAp t t')  = case kind t of
-                         Knd.Kfun k' k | kind t' == k' -> k
-                         _                             -> error "kind mismatch"
-  kind (Ty.TGen _)   = error "HasKind.hs:HasKind Ty.Type/TGen should never be asked for kind!"
+instance HasKind Type where
+  kind (TVar u)   = kind u
+  kind (TCon tc)  = kind tc
+  kind (TAp t t')  = case kind t of
+                         Kfun k' k | kind t' == k' -> k
+                         _                         -> error "kind mismatch"
+  kind (TGen _)   = error "HasKind.hs:HasKind Type/TGen should never be asked for kind!"
 
 -- TODO [kgdk] 14 sie 2014: zmienić typ zwracany kind na Either by obsługiwać errory
