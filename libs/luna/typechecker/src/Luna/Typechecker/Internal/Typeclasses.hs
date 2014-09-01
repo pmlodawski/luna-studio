@@ -3,7 +3,7 @@ module Luna.Typechecker.Internal.Typeclasses (
     entail, byInst, addClass, addInst, (<:>), initialEnv
   ) where
 
-import           Luna.Typechecker.Internal.AST.Type         (Type(..))
+import           Luna.Typechecker.Internal.AST.Type         (Type(..), tInteger, tDouble)
 
 import           Luna.Typechecker.Internal.Substitutions    (Types(..), Subst)
 import           Luna.Typechecker.Internal.Unification      (match, mgu)
@@ -12,7 +12,7 @@ import           Luna.Typechecker.Internal.AST.TID          (TID)
 
 import           Control.Monad                              (msum)
 
-import           Data.List                                  (union)
+import           Data.List                                  (intercalate,union)
 import           Data.Maybe                                 (isJust)
 import           Text.Printf                                (printf)
 
@@ -20,9 +20,9 @@ data Pred = IsIn TID Type
           deriving (Eq)
 
 instance Show Pred where
-  show (IsIn tid ty) = printf "%s %d" (show ty) tid
+  show (IsIn tid ty) = printf "%s %s" (show ty) tid
   showList [] s = s
-  showList ps s = printf "%s(%s)" s (unwords $ map show ps)
+  showList ps s = printf "%s(%s)" s (intercalate "," $ map show ps)
 
 
 mguPred :: Pred -> Pred -> Maybe Subst
@@ -45,7 +45,10 @@ liftPred m (IsIn i t) (IsIn i' t') | i == i'   = m t t'
 --      :=>
 --    IsIn "Ord" (pair (TVar (Tyvar "a" Star)) (TVar (Tyvar "b" Star)))]
 data Qual t = [Pred] :=> t
-            deriving (Eq, Show)
+            deriving (Eq)
+
+instance Show t => Show (Qual t) where
+  show (ps :=> t) = printf "(%s :=> %s)" (show ps) (show t)
 
 instance Types t => Types (Qual t) where
   apply s (ps :=> t) = apply s ps :=> apply s t
@@ -66,6 +69,13 @@ data ClassEnv = ClassEnv {
                   classes :: TID -> Maybe Class,
                   defaults :: [Type]
                 }
+
+
+instance Show ClassEnv where
+  show _ = "<classenv>"
+
+instance Eq ClassEnv where
+  (==) _ _ = False
 
 
 super :: ClassEnv -> TID -> [TID]
@@ -91,8 +101,7 @@ modify ce i c = ce {
 initialEnv :: ClassEnv
 initialEnv = ClassEnv {
                classes = \_ -> fail "class not defined/found",
-               --defaults = [tInteger, tDouble]
-               defaults = []
+               defaults = [tInteger, tDouble]
              }
 
 -- TODO [kgdk] 18 sie 2014: zbadać jak zachowuje się defaulting w Lunie

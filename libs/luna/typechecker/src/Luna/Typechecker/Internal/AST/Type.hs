@@ -60,6 +60,8 @@ tCons  a = a `fn` list a `fn` list a
 infixr 4 `fn`
 fn :: Type -> Type -> Type
 a `fn` b = TAp (TAp tArrow a) b
+-- a `fn` b | kind a == Star && kind b == Star = TAp (TAp tArrow a) b
+-- a `fn` b = error "nope"
 
 list :: Type -> Type
 list = TAp tList

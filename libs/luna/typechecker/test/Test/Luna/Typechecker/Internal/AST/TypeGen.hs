@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Test.Luna.Typechecker.Internal.AST.TypeGen (
-    genType, genTVar, genTCon, genTAp, genTGen, genTyvar, genSubst
+    genType, genTVar, genTCon, genTAp, genTGen, genTyvar, genSubst, genTypeNogen, genPredNogen
   ) where
 
 import           Luna.Typechecker.Internal.AST.Type      (Type(..), Tyvar(..), Tycon(..))
@@ -9,6 +9,7 @@ import           Luna.Typechecker.Internal.AST.Kind      (Kind(..))
 import           Luna.Typechecker.Internal.AST.TID       (enumTID, TID)
 
 import qualified Luna.Typechecker.Internal.HasKind       as HKd
+import           Luna.Typechecker.Internal.Typeclasses      (Pred(..))
 import qualified Luna.Typechecker.Internal.Substitutions as Sub
 
 import           Control.Applicative                     ((<$>), (<*>))
@@ -44,6 +45,11 @@ instance Arbitrary Tycon where
   arbitrary = arbitrary >>= genTycon
   shrink (Tycon n kind) = map (Tycon n) (shrink kind)
 
+--data Pred = IsIn TID Type
+instance Arbitrary Pred where
+  arbitrary = liftM2 IsIn arbitrary arbitrary
+  shrink (IsIn tid t) = (IsIn tid <$> shrink t) ++ (IsIn <$> shrink tid <*> [t]) ++ (IsIn <$> shrink tid <*> shrink t)
+
 
 tid_tc :: Int -> TID
 tid_tc = ("tc_"++) . enumTID
@@ -51,6 +57,16 @@ tid_tc = ("tc_"++) . enumTID
 tid_tv :: Int -> TID
 tid_tv = ("tv_"++) . enumTID
 
+
+genPredNogen :: Kind -> Gen Pred
+genPredNogen k = liftM2 IsIn arbitrary (genTypeNogen k)
+
+genTypeNogen  :: Kind -> Gen Type
+genTypeNogen k = frequency [(3, genTVar k), (3, genTCon k), (2, genTAp')]
+  where genTAp' = do k2 <- arbitrary
+                     t1 <- genTypeNogen (Kfun k2 k)
+                     t2 <- genTypeNogen k
+                     return $ TAp t1 t2
 
 genType :: Kind -> Gen Type
 genType k = frequency [(3, genTVar k), (3, genTCon k), (1, genTGen), (2, genTAp k)]
