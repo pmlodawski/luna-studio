@@ -73,7 +73,7 @@ processNode callDataPath = do
 executeOutputs :: CallDataPath -> [VarName] -> Session ()
 executeOutputs callDataPath argsVarNames = do
     let argsCount     = length $ Traverse.inDataConnections callDataPath
-        functionName  = if argsCount == 1 then "id" else '(' : replicate (argsCount-1) ',' ++ ")"
+        functionName  = if argsCount == 1 then "id" else "Tuple"
     when (length callDataPath > 1) $
         execute (init callDataPath) functionName  argsVarNames
 
@@ -130,13 +130,15 @@ execute callDataPath functionName argsVarNames = do
 data VarType = Lit
              | Con
              | Var
-             | Native 
+             | Native
+             | Tuple
              | Id     deriving Show
 
 
 varType :: String -> VarType
 varType [] = Prelude.error "varType : empty var name"
 varType "id"                                             = Id
+varType "Tuple"                                          = Tuple
 varType name@(h:_)
     | List.isPrefixOf "```" name                         = Native
     | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit
@@ -163,15 +165,15 @@ evalFunction funName callDataPath argsVarNames = do
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
 
         self      = head argsVarNames
-        operation = "toIOEnv $ " ++ case (varType funName, null argsVarNames) of
-            (Id    , _    ) -> mkArg self
-            (Native, _    ) -> genNative funName
-            --(Con   , True ) -> "call cons_" ++ nameHash
-            (Con   , _    ) -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
-            (Var   , False) -> "call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
-            (Lit   , _    ) -> if Maybe.isJust (Read.readMaybe funName :: Maybe Int)
+        operation = "toIOEnv $ " ++ case varType funName of
+            Id     -> mkArg self
+            Native -> genNative funName
+            Con    -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
+            Var    -> "call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
+            Lit    -> if Maybe.isJust (Read.readMaybe funName :: Maybe Int)
                         then "val (" ++ funName ++" :: Int)"
                         else "val " ++ funName
+            Tuple  -> "val (" ++ List.intercalate "," args ++ ")"
         expression    = tmpVarName ++ " <- " ++ operation
     Session.runStmt expression
     hash <- Hash.compute tmpVarName

@@ -8,9 +8,9 @@
 module Flowbox.Data.List (
     module List,
     module Flowbox.Data.List,
-)where
+) where
 
-import Data.List as List
+import           Data.List       as List
 import qualified Data.List.Utils as Utils
 
 import Flowbox.Prelude
