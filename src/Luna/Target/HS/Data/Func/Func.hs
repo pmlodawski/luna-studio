@@ -48,13 +48,23 @@ class MatchCallProto (allArgs :: Bool) obj out | allArgs obj -> out where
 class MatchCall obj out | obj -> out where
     matchCall :: obj -> out
 
+class Call a b | a -> b where
+    call :: a -> b
+
 
 ----------------------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------------------
 
-call (AppH(fptr, args)) = (getFunc fptr args') args' where
-    args' = readArgs args
+--call (AppH(fptr, args)) = (getFunc fptr args') args' where
+--    args' = readArgs args
+
+instance Call (AppH (Mem base name) args) out <= (Func base name argsout out, ReadArgs args argsout) where
+    call (AppH(fptr, args)) = (getFunc fptr args') args' where
+        args' = readArgs args
+
+instance Call (AppH (Lam lam) args) out <= (lam~(argsout -> out), ReadArgs args argsout) where
+    call (AppH(Lam lam, args)) = lam (readArgs args)
 
 curryByName = matchCall `dot3` appByName
 curryNext   = matchCall `dot2` appNext

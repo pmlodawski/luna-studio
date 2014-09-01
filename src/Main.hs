@@ -209,7 +209,10 @@ mymain (self,()) = do
 
     v2 <- call $ appByName (Proxy :: Proxy "z") (val 3) $ appNext (val 2) $ appNext (val 1) $ member (Proxy::Proxy "Vector") (val Cls_Vector)
 
-    let lam1 = (\x -> v2)
+    let lam1 = appH (Lam (\x -> v2)) ((mkArg :: NParam "self") // ())
+        lam2 = appNext (val 1) lam1
+    print2 $ call lam2
+
     print2 v2
 
     print2 $ call $ appNext (val 1) $ appNext (val 2) $ member (Proxy::Proxy "foo") v2
