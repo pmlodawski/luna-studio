@@ -106,6 +106,11 @@ registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
     return [inst]
 
 equalT = AppT . (AppT EqualityT)
+--equalT = EqualP
+
+--equalT a b = ClassP (mkName "TypeEq") [a, b]
+
+--ClassP Ghci2.TypeEq [VarT a_0,ConT GHC.Types.Int]
 
 
 genTNameSet elmod el n = tvars where 

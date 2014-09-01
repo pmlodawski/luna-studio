@@ -19,6 +19,10 @@ import Luna.Target.HS
 
 -- body --
 
+import qualified GHC.Prim
+import Control.PolyMonad
+import Control.PolyApplicative
+import Type.BaseType
 
 -- ===================================================================
 -- Data types
@@ -101,6 +105,19 @@ memDef_Int_inc (_v_97, ()) = do {
 }
 memSig_Int_inc = ((mkArg :: NParam "self"), ())
 $(registerMethod ''Int "inc")
+
+--instance (args_aosf ~ (m_aoqG (s_aoqH a_aoqI), ()),
+--          out_aosg ~ m3_aoqC b_aoqD,
+--          PolyMonad (Value Pure) m2_aoqB m3_aoqC,
+--          Func obj_aoqJ "_43" argsout_aoqL (m2_aoqB b_aoqD),
+--          HasMem "_43" obj_aoqJ args1_aoqK,
+--          AppNextArg (Value Pure (Safe Int)) args1_aoqF args_aoqE,
+--          AppArgByName "self" (m_aoqG (s_aoqH a_aoqI)) args1_aoqK args1_aoqF,
+--          ReadArgs args_aoqE argsout_aoqL,
+--          Type.BaseType.BaseType (Proxy a_aoqI) (Proxy obj_aoqJ)) =>
+--         Func Int "inc" args_aosf out_aosg where
+--  getFunc _ _ = memDef_Int_inc
+
 
 -- ====== Method: Main.main ====== --
 memDef_Main_main (_v_99, ()) = do {
