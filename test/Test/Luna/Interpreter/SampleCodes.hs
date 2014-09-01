@@ -29,24 +29,42 @@ def main:
 def main:
     "test"
 |], named "simple infix" [r|
+def Int.+ a:
+    ```liftF2 (+) #{self} #{a}```
+
 def main:
     1 + 2
 |], named "simple assignment 1" [r|
+def print msg:
+    ```autoLift1 print #{msg}```
+
 def main:
     x = 0
     print x
 |], named "simple assignment 2" [r|
+def print msg:
+    ```autoLift1 print #{msg}```
+
 def main:
     x = 0
     y = x
     print y
 |], named "hello world" [r|
+def print msg:
+    ```autoLift1 print #{msg}```
+
 def main:
     hello = "hello"
     world = "world"
     print hello
     print world
 |], named "following calls" [r|
+def print msg:
+    ```autoLift1 print #{msg}```
+
+def Int.+ a:
+    ```liftF2 (+) #{self} #{a}```
+
 def foo:
     print "foo"
 
@@ -58,13 +76,25 @@ def main:
     self.foo
     self.bar
 |], named "following calls 2" [r|
+def print msg:
+    ```autoLift1 print #{msg}```
+
 def foo arg:
     print arg
 
 def main:
     self.foo 1.4
     2
+|], named "tuples" [r|
+def print msg:
+    ```autoLift1 print #{msg}```
+
+def main:
+    print {1, 2}
 |], named "output tuples" [r|
+def print msg:
+    ```autoLift1 print #{msg}```
+
 def main:
     a = "var a"
     b = "var b"
