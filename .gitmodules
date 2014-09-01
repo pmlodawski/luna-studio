@@ -15,22 +15,22 @@
 	url = git@github.com:tmcdonell/cuda.git
 [submodule "third-party/fgl"]
     path = third-party/fgl
-    url = https://github.com/remdezx/fgl
+    url = git@github.com:remdezx/fgl.git
 [submodule "third-party/HaskellBooster"]
     path = third-party/HaskellBooster
-    url = https://github.com/wdanilo/HaskellBooster.git
+    url = git@github.com:wdanilo/HaskellBooster.git
 [submodule "third-party/hint"]
     path = third-party/hint
-    url = https://github.com/remdezx/hint.git
+    url = git@github.com:remdezx/hint.git
 [submodule "third-party/hs-certificate"]
     path = third-party/hs-certificate
-    url = https://github.com/remdezx/hs-certificate.git
+    url = git@github.com:remdezx/hs-certificate.git
 [submodule "third-party/hs-crypto-random"]
     path = third-party/hs-crypto-random
-    url = https://github.com/remdezx/hs-crypto-random.git
+    url = git@github.com:remdezx/hs-crypto-random.git
 [submodule "third-party/hs-tls"]
     path = third-party/hs-tls
-    url = https://github.com/remdezx/hs-tls.git
+    url = git@github.com:remdezx/hs-tls.git
 [submodule "third-party/language-c-0.4.5"]
     path = third-party/language-c-0.4.5
     url = git@github.com:wdanilo/haskell-language-c.git
@@ -39,7 +39,7 @@
     url = git@github.com:korrix/linear-accelerate.git
 [submodule "third-party/protocol-buffers"]
     path = third-party/protocol-buffers
-    url = https://github.com/korrix/protocol-buffers.git
+    url = git@github.com:korrix/protocol-buffers.git
 [submodule "tools/graphics/webghci"]
 	path = tools/graphics/webghci
 	url = git@github.com:korrix/WebGHCI.git
