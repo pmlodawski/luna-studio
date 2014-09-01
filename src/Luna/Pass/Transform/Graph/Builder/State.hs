@@ -24,7 +24,6 @@ import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Common              as AST
 import           Luna.Data.AliasInfo          (AliasInfo)
 import qualified Luna.Data.AliasInfo          as AliasInfo
-import qualified Luna.Graph.Attributes        as Attributes
 import qualified Luna.Graph.Attributes.Naming as Attributes
 import           Luna.Graph.Edge              (Edge)
 import qualified Luna.Graph.Edge              as Edge

@@ -239,7 +239,7 @@ buildPat p = case p of
 
 
 showExpr :: Expr -> String
-showExpr expr = case ddump expr of
+showExpr expr = case expr of
     --Expr.Accessor     _ name     dst
     --Expr.App          _ src      args
     --Expr.AppCons_     _ args
