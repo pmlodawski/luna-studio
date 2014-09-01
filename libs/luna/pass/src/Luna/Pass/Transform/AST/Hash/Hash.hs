@@ -65,7 +65,7 @@ ssaPat pat = case pat of
 
 --FIXME [wd]: some reduntant functions here
 hashMe2 :: [Char] -> [Char]
-hashMe2 = concat.(map hashMeBody)
+hashMe2 = concatMap hashMeBody
 
 hashMeBody :: Char -> [Char]
 hashMeBody c

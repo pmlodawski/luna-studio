@@ -11,6 +11,7 @@ module Flowbox.Data.List (
 )where
 
 import Data.List as List
+import qualified Data.List.Utils as Utils
 
 import Flowbox.Prelude
 
@@ -33,3 +34,12 @@ merge :: (a -> a -> b) -> [a] -> [b]
 merge _   []    = []
 merge _   [_]   = []
 merge fun (h:t) = fun h (head t) : merge fun t
+
+
+stripIdx :: Int -> Int -> [a] -> [a]
+stripIdx start end = reverse . drop end . reverse . drop start
+
+
+replaceByMany :: Eq a => [a] -> [[a]] -> [a] -> [a]
+replaceByMany _    []    = id
+replaceByMany from (to:rest) = replaceByMany from rest . Utils.replace from to

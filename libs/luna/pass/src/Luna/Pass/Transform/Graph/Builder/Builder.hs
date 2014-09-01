@@ -17,6 +17,7 @@ import qualified Data.List                  as List
 import qualified Data.Maybe                 as Maybe
 
 import           Flowbox.Prelude                         hiding (error, mapM, mapM_)
+import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Common                         as AST
 import           Luna.AST.Expr                           (Expr)
@@ -167,7 +168,7 @@ buildNode astFolded monadicBind outName expr = case expr of
                                     connectArgs True True Nothing i items 0
                                     connectMonadic i
                                     return i
-    Expr.Native    i segments -> do let node = Node.Expr (showExpr expr) (genName "native" i)
+    Expr.Native    i segments -> do let node = Node.Expr (showNative expr) (genName "native" i)
                                     State.addNode i Port.All node astFolded assignment
                                     let isNativeVar (Expr.NativeVar {}) = True
                                         isNativeVar _                   = False
@@ -260,8 +261,16 @@ showExpr expr = case ddump expr of
     Expr.RangeFrom    _ start        -> showExpr start ++ ".."
     --Expr.Field        _ name     cls       value
     --Expr.Arg          _ pat      value
-    Expr.Native       _ segments     -> "```" ++ concatMap showExpr segments ++ "```"
-    Expr.NativeCode   _ code         -> code
-    Expr.NativeVar    _ name         -> "#{" ++ name ++ "}"
+    --Expr.Native       _ segments     -> "```" ++ concatMap showExpr segments ++ "```"
+    --Expr.NativeCode   _ code         -> code
+    --Expr.NativeVar    _ name         -> "#{" ++ name ++ "}"
     --Expr.Case         _ expr     match
     --Expr.Match        _ pat      body
+
+
+showNative :: Expr -> String
+showNative native = case native of
+    Expr.Native       _ segments     -> "```" ++ concatMap showNative segments ++ "```"
+    Expr.NativeCode   _ code         -> code
+    Expr.NativeVar    _ _            -> "#{}"
+    _                                -> Prelude.error $ "Graph.Builder.Builder.showNative: Not a native: " ++ show native
