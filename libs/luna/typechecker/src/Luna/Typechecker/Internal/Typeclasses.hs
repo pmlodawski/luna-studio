@@ -3,35 +3,35 @@ module Luna.Typechecker.Internal.Typeclasses (
     entail, byInst, addClass, addInst, (<:>), initialEnv
   ) where
 
-import qualified Luna.Typechecker.Internal.AST.Type         as Ty
+import           Luna.Typechecker.Internal.AST.Type         (Type(..))
 
-import qualified Luna.Typechecker.Internal.Substitutions    as Sub
-import qualified Luna.Typechecker.Internal.Unification      as Unf
+import           Luna.Typechecker.Internal.Substitutions    (Types(..), Subst)
+import           Luna.Typechecker.Internal.Unification      (match, mgu)
 
 import           Luna.Typechecker.Internal.AST.TID          (TID)
 
 import           Control.Monad                              (msum)
 
-import           Data.List                                  (intercalate,union)
+import           Data.List                                  (union)
 import           Data.Maybe                                 (isJust)
 import           Text.Printf                                (printf)
 
-data Pred = IsIn TID Ty.Type
+data Pred = IsIn TID Type
           deriving (Eq)
 
 instance Show Pred where
   show (IsIn tid ty) = printf "%s %d" (show ty) tid
   showList [] s = s
-  showList ps s = printf "%s(%s)" s (intercalate " " $ map show ps)
+  showList ps s = printf "%s(%s)" s (unwords $ map show ps)
 
 
-mguPred :: Pred -> Pred -> Maybe Sub.Subst
-mguPred = liftPred Unf.mgu
+mguPred :: Pred -> Pred -> Maybe Subst
+mguPred = liftPred mgu
 
-matchPred :: Pred -> Pred -> Maybe Sub.Subst
-matchPred = liftPred Unf.match
+matchPred :: Pred -> Pred -> Maybe Subst
+matchPred = liftPred match
 
-liftPred :: Monad m => (Ty.Type -> Ty.Type -> m a) -> Pred -> Pred -> m a
+liftPred :: Monad m => (Type -> Type -> m a) -> Pred -> Pred -> m a
 liftPred m (IsIn i t) (IsIn i' t') | i == i'   = m t t'
                                    | otherwise = fail "classes differ"
 
@@ -47,15 +47,15 @@ liftPred m (IsIn i t) (IsIn i' t') | i == i'   = m t t'
 data Qual t = [Pred] :=> t
             deriving (Eq, Show)
 
-instance Sub.Types t => Sub.Types (Qual t) where
-  apply s (ps :=> t) = Sub.apply s ps :=> Sub.apply s t
-  tv (ps :=> t)      = Sub.tv ps `union` Sub.tv t
+instance Types t => Types (Qual t) where
+  apply s (ps :=> t) = apply s ps :=> apply s t
+  tv (ps :=> t)      = tv ps `union` tv t
 
 
 
-instance Sub.Types Pred where
-  apply s (IsIn i t) = IsIn i (Sub.apply s t)
-  tv (IsIn _ t)      = Sub.tv t
+instance Types Pred where
+  apply s (IsIn i t) = IsIn i (apply s t)
+  tv (IsIn _ t)      = tv t
 
 
 type Class = ([TID], [Inst])
@@ -64,7 +64,7 @@ type Inst  = Qual Pred
 
 data ClassEnv = ClassEnv {
                   classes :: TID -> Maybe Class,
-                  defaults :: [Ty.Type]
+                  defaults :: [Type]
                 }
 
 
@@ -91,7 +91,7 @@ modify ce i c = ce {
 initialEnv :: ClassEnv
 initialEnv = ClassEnv {
                classes = \_ -> fail "class not defined/found",
-               --defaults = [Ty.tInteger, Ty.tDouble]
+               --defaults = [tInteger, tDouble]
                defaults = []
              }
 
@@ -143,7 +143,7 @@ bySuper ce p@(IsIn i t) = p : concat [bySuper ce (IsIn i' t) | i' <- super ce i]
 byInst :: ClassEnv -> Pred -> Maybe [Pred]
 byInst ce p@(IsIn i _) = msum [tryInst it | it <- insts ce i] -- at most one of those from list would match (since no overlapping instances!)
   where tryInst (ps :=> h) = do u <- matchPred h p
-                                Just (map (Sub.apply u) ps)
+                                Just (map (apply u) ps)
 
 
 -- | Is 'p' true whenever 'ps'?

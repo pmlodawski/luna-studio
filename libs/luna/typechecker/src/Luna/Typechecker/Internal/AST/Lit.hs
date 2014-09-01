@@ -1,37 +1,29 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Luna.Typechecker.Internal.AST.Lit (Lit(..),tiLit) where
+module           Luna.Typechecker.Internal.AST.Lit          (Lit(..),tiLit) where
 
-import qualified Luna.Typechecker.Internal.AST.Type         as Ty
+import           Luna.Typechecker.Internal.AST.Type         (Type(..), tChar, tInteger, tFloat, tString)
 
-import qualified Luna.Typechecker.Internal.TIMonad          as TIM
-import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
+import           Luna.Typechecker.Internal.TIMonad          (TI)
+import           Luna.Typechecker.Internal.Typeclasses      (Pred)
 
-import           Luna.Typechecker.Internal.AST.Common       (ID)
 import           Text.Printf                                (printf)
 
-data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
-         | Float   { _id :: ID, _str  :: Prelude.String }
-         | Integer { _id :: ID, _str  :: Prelude.String }
-         | String  { _id :: ID, _str  :: Prelude.String }
-         deriving (Eq)
+data Lit = LitChar    Char
+         | LitFloat   Float
+         | LitInt     Integer
+         | LitStr     String
 
 
-tiLit :: Lit -> TIM.TI ([Tcl.Pred], Ty.Type)
-tiLit (Char    _ _) = return ( [], Ty.tChar )
-tiLit (Float   _ _) = return ( [], Ty.tFloat ) -- 'tFloat' of 'Fractional'?
-tiLit (Integer _ _) = return ( [], Ty.tInteger )
---tiLit (Integer _ _) = do v <- newTVar Knd.Star
---                         return ([IsIn "Num" v], v)
-tiLit (String  _ _) = return ( [], Ty.tString )
+tiLit :: Lit -> TI ([Pred], Type)
+tiLit (LitChar _)  = return ([], tChar)
+tiLit (LitInt _)   = return ([], tInteger)
+tiLit (LitFloat _) = return ([], tFloat)
+tiLit (LitStr _)   = return ([], tString)
 
 
 instance Show Lit where
-  show (Char    _ c) = printf "'%c'" c
-  show (Float   _ f) = case reads f of
-                         (fl::Float, _):_ -> printf "%.3f" fl
-                         _                -> "{badparse}"
-  show (Integer _ i) = case reads i of
-                         (ii::Int, _):_ -> printf "%d" ii
-                         _                -> "{badparse}"
-  show (String  _ s) = printf "\"%s\"" s
+  show (LitChar    c) = printf "'%c'" c
+  show (LitFloat   f) = printf "%.3f" f
+  show (LitInt     i) = show i
+  show (LitStr     s) = show s

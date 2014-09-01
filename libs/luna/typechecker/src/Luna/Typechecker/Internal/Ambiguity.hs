@@ -1,53 +1,47 @@
 module Luna.Typechecker.Internal.Ambiguity (defaultedPreds, defaultSubst) where
 
-import qualified Luna.Typechecker.Internal.AST.Type         as Ty
+import           Luna.Typechecker.Internal.AST.Type         (Type(..), Tyvar)
 
-import qualified Luna.Typechecker.Internal.Substitutions    as Sub
-import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
+import           Luna.Typechecker.Internal.Substitutions    (Subst,Types(..))
+import           Luna.Typechecker.Internal.Typeclasses      (ClassEnv(..), Pred(..),entail)
 
 import           Luna.Typechecker.Internal.AST.TID          (TID)
 
-import           Data.List                                          ((\\))
+import           Data.List                                  ((\\))
 
 
-type Ambiguity = (Ty.Tyvar, [Tcl.Pred])
+type Ambiguity = (Tyvar, [Pred])
 
-ambiguities :: Tcl.ClassEnv -> [Ty.Tyvar] -> [Tcl.Pred] -> [Ambiguity]
-ambiguities _ vs ps = [(v, filter (elem v . Sub.tv) ps) | v <- Sub.tv ps \\ vs]
-
-
+ambiguities :: ClassEnv -> [Tyvar] -> [Pred] -> [Ambiguity]
+ambiguities _ vs ps = [(v, filter (elem v . tv) ps) | v <- tv ps \\ vs]
 
 
-
--- TODO [kgdk] 21 sie 2014: 
 numClasses :: [TID]
 numClasses = ["Num", "Integral", "Floating", "Fractional", "Real", "RealFloat", "RealFrac"]
 
--- TODO [kgdk] 21 sie 2014: 
 stdClasses :: [TID]
 stdClasses = ["Eq", "Ord", "Show", "Read", "Bounded", "Enum", "Ix", "Functor", "Monad", "MonadPlus"] ++ numClasses
 
--- TODO [kgdk] 21 sie 2014: 
-candidates :: Tcl.ClassEnv -> Ambiguity -> [Ty.Type]
-candidates ce (v, qs) = [t' | let is = [i | Tcl.IsIn i _ <- qs]
-                                  ts = [t | Tcl.IsIn _ t <- qs],
-                              all (Ty.TVar v ==) ts,
+candidates :: ClassEnv -> Ambiguity -> [Type]
+candidates ce (v, qs) = [t' | let is = [i | IsIn i _ <- qs]
+                                  ts = [t | IsIn _ t <- qs],
+                              all (TVar v ==) ts,
                               any (`elem` numClasses) is,
                               all (`elem` stdClasses) is,
-                              t' <- Tcl.defaults ce,
-                              all (Tcl.entail ce []) [Tcl.IsIn i t' | i <- is]]
+                              t' <- defaults ce,
+                              all (entail ce []) [IsIn i t' | i <- is]]
 
 -- TODO [kgdk] 21 sie 2014: 
-withDefaults :: Monad m => ([Ambiguity] -> [Ty.Type] -> a) -> Tcl.ClassEnv -> [Ty.Tyvar] -> [Tcl.Pred] -> m a
+withDefaults :: Monad m => ([Ambiguity] -> [Type] -> a) -> ClassEnv -> [Tyvar] -> [Pred] -> m a
 withDefaults f ce vs ps | any null tss = fail "cannot resolve ambiguity"
                         | otherwise = return (f vps (map head tss))
   where vps = ambiguities ce vs ps
         tss = map (candidates ce) vps
 
 -- TODO [kgdk] 21 sie 2014: 
-defaultedPreds :: Monad m => Tcl.ClassEnv -> [Ty.Tyvar] -> [Tcl.Pred] -> m [Tcl.Pred]
+defaultedPreds :: Monad m => ClassEnv -> [Tyvar] -> [Pred] -> m [Pred]
 defaultedPreds = withDefaults (\vps _ -> concatMap snd vps)
 
 -- TODO [kgdk] 21 sie 2014: 
-defaultSubst :: Monad m => Tcl.ClassEnv -> [Ty.Tyvar] -> [Tcl.Pred] -> m Sub.Subst
+defaultSubst :: Monad m => ClassEnv -> [Tyvar] -> [Pred] -> m Subst
 defaultSubst = withDefaults (\vps ts -> zip (map fst vps) ts)

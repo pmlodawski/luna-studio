@@ -1,23 +1,23 @@
 module Luna.Typechecker.Internal.TypeInference (Infer, split) where
 
-import qualified Luna.Typechecker.Internal.AST.Type         as Ty
+import           Luna.Typechecker.Internal.AST.Type         (Tyvar(..))
 
-import qualified Luna.Typechecker.Internal.Ambiguity        as Amb
-import qualified Luna.Typechecker.Internal.Assumptions      as Ass
-import qualified Luna.Typechecker.Internal.ContextReduction as CxR
-import qualified Luna.Typechecker.Internal.Substitutions    as Sub
-import qualified Luna.Typechecker.Internal.TIMonad          as TIM
-import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
+import           Luna.Typechecker.Internal.Ambiguity        (defaultedPreds)
+import           Luna.Typechecker.Internal.Assumptions      (Assump)
+import           Luna.Typechecker.Internal.ContextReduction (reduce)
+import           Luna.Typechecker.Internal.Substitutions    (Types(..))
+import           Luna.Typechecker.Internal.TIMonad          (TI)
+import           Luna.Typechecker.Internal.Typeclasses      (Pred,ClassEnv  )
 
 
 import           Data.List                                          ((\\),partition)
 
 
-type Infer e t = Tcl.ClassEnv -> [Ass.Assump] -> e -> TIM.TI ([Tcl.Pred], t)
+type Infer e t = ClassEnv -> [Assump] -> e -> TI ([Pred], t)
 
 
-split :: Monad m => Tcl.ClassEnv -> [Ty.Tyvar] -> [Ty.Tyvar] -> [Tcl.Pred] -> m ([Tcl.Pred], [Tcl.Pred])
-split ce fs gs ps =  do ps'         <- CxR.reduce ce ps
-                        let (ds, rs) = partition (all (`elem` fs) . Sub.tv) ps'
-                        rs'         <- Amb.defaultedPreds ce (fs ++ gs) rs
+split :: Monad m => ClassEnv -> [Tyvar] -> [Tyvar] -> [Pred] -> m ([Pred], [Pred])
+split ce fs gs ps =  do ps'         <- reduce ce ps
+                        let (ds, rs) = partition (all (`elem` fs) . tv) ps'
+                        rs'         <- defaultedPreds ce (fs ++ gs) rs
                         return (ds, rs \\ rs')
