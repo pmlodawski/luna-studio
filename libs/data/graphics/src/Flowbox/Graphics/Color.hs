@@ -32,16 +32,4 @@ import           Flowbox.Graphics.Color.YUV.Conversion    as X
 import           Flowbox.Graphics.Color.YUV_HD            as X
 import           Flowbox.Graphics.Color.YUV_HD.Conversion as X
 
-import Flowbox.Prelude
-
-makeFields ''CMY
-makeFields ''CMYK
-makeFields ''HSV
-makeFields ''HSL
-makeFields ''RGB
-makeFields ''RGBA
-makeFields ''YUV
-makeFields ''YUV_HD
-
-
 -- TODO: LAB color space
