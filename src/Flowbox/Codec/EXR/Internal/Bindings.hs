@@ -47,9 +47,6 @@ foreign import ccall unsafe "haskexr.h readTileFromChannelUnsafe" readTileFromCh
 foreign import ccall "haskexr.h readTiledScanlineChannelUnsafe" readTiledScanlineChannel ::
 	Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
 
-foreign import ccall "haskexr.h foobar" foobar ::
-	Ptr EXR -> CInt -> CString -> CInt -> CInt -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
-
 -- not supported
 --foreign import ccall "haskexr.h readDeepScanlineChannelUnsafe" readDeepScanlineChannel ::
 --    Ptr EXR -> CInt -> CString -> Ptr CInt -> Ptr CInt -> IO (Ptr CFloat)
