@@ -1,31 +1,25 @@
 module Test.Luna.Typechecker.Internal.AST.LitSpec (spec) where
 
---import qualified Luna.Typechecker.Internal.AST.Alternatives as Alt
---import qualified Luna.Typechecker.Internal.AST.Common       as Cmm
---import qualified Luna.Typechecker.Internal.AST.Expr         as Exp
---import qualified Luna.Typechecker.Internal.AST.Kind         as Knd
---import qualified Luna.Typechecker.Internal.AST.Lit          as Lit
---import qualified Luna.Typechecker.Internal.AST.Module       as Mod
---import qualified Luna.Typechecker.Internal.AST.Pat          as Pat
---import qualified Luna.Typechecker.Internal.AST.Scheme       as Sch
---import qualified Luna.Typechecker.Internal.AST.TID          as TID
---import qualified Luna.Typechecker.Internal.AST.Type         as Ty
-
-
---import qualified Luna.Typechecker.Internal.Ambiguity        as Amb
---import qualified Luna.Typechecker.Internal.Assumptions      as Ass
---import qualified Luna.Typechecker.Internal.BindingGroups    as Bnd
---import qualified Luna.Typechecker.Internal.ContextReduction as CxR
---import qualified Luna.Typechecker.Internal.HasKind          as HKd
---import qualified Luna.Typechecker.Internal.Substitutions    as Sub
---import qualified Luna.Typechecker.Internal.TIMonad          as TIM
---import qualified Luna.Typechecker.Internal.Typeclasses      as Tcl
---import qualified Luna.Typechecker.Internal.TypeInference    as Inf
---import qualified Luna.Typechecker.Internal.Unification      as Uni
---import qualified Luna.Typechecker                           as Typechecker
+import Luna.Typechecker.Internal.AST.Lit
+import Luna.Typechecker.Internal.TIMonad     (runTI)
+import Luna.Typechecker.Internal.Typeclasses (Pred(..))
+import Luna.Typechecker.Internal.AST.Type    (tChar, tInteger, tFloat, tString)
 
 import Test.Hspec
+import Test.QuickCheck
+
 
 spec :: Spec
 spec = do
-  describe "Luna/Typechecker/Internal/AST/Lit.hs" $ it "is" pending
+  describe "tiLit" $ do
+    it "just works for Char" $ property $
+      \x -> runTI (tiLit (LitChar x)) `shouldBe` ([], tChar)
+    it "just works for Float" $ property $
+      \x -> runTI (tiLit (LitFloat x)) `shouldBe` ([], tFloat)
+    it "just works for Int" $ property $
+      \x -> runTI (tiLit (LitInt x)) `shouldBe` ([], tInteger)
+    it "just works for Integral" $ property $
+      \x -> let (ps, t) = runTI (tiLit (LitIntegral x))
+             in ps `shouldContain` [IsIn "Integral" t]
+    it "just works for String" $ property $
+      \x -> runTI (tiLit (LitStr x)) `shouldBe` ([], tString)

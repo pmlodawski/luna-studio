@@ -1,7 +1,7 @@
 module Luna.Typechecker.Internal.AST.Kind (Kind(..)) where
 
-import           Text.Printf                                (printf)
-import           Data.List                                  (intercalate)
+import Text.Printf (printf)
+import Data.List   (intercalate)
 
 data Kind = Star
           | Kfun Kind Kind
