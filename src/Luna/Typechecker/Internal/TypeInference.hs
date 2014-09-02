@@ -10,7 +10,7 @@ import           Luna.Typechecker.Internal.TIMonad          (TI)
 import           Luna.Typechecker.Internal.Typeclasses      (Pred,ClassEnv  )
 
 
-import           Data.List                                          ((\\),partition)
+import           Data.List                                  ((\\),partition)
 
 
 type Infer e t = ClassEnv -> [Assump] -> e -> TI ([Pred], t)

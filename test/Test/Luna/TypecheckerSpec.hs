@@ -1,18 +1,17 @@
 module Test.Luna.TypecheckerSpec (spec) where
 
-import Luna.Typechecker.Internal.AST.Kind         (Kind(..))
-import Luna.Typechecker.Internal.AST.Lit          (Lit(..))
-import Luna.Typechecker.Internal.AST.Pat          (Pat(..))
-import Luna.Typechecker.Internal.AST.Scheme       (Scheme(..),toScheme)
-import Luna.Typechecker.Internal.AST.Type         (Type(..),fn,tInteger,list,tBool,tInt)
+import Luna.Typechecker.Internal.AST.Kind      (Kind(..))
+import Luna.Typechecker.Internal.AST.Lit       (Lit(..))
+import Luna.Typechecker.Internal.AST.Pat       (Pat(..))
+import Luna.Typechecker.Internal.AST.Scheme    (Scheme(..),toScheme)
+import Luna.Typechecker.Internal.AST.Type      (Type(..),fn,tInteger,list,tBool,tInt)
 
-import Luna.Typechecker.Internal.Assumptions      (Assump(..))
-import Luna.Typechecker.Internal.BindingGroups    (Expr(..))
-import Luna.Typechecker.Internal.Typeclasses      (Qual(..), Pred(..), initialEnv, addClass, addInst, (<:>))
-import Luna.Typechecker                           (tiProgram)
+import Luna.Typechecker.Internal.Assumptions   (Assump(..))
+import Luna.Typechecker.Internal.BindingGroups (Expr(..))
+import Luna.Typechecker.Internal.Typeclasses   (Qual(..), Pred(..), initialEnv, addClass, addInst, (<:>))
+import Luna.Typechecker                        (tiProgram)
 
 import Test.Hspec
-import Debug.Trace
 
 ap :: [Expr] -> Expr
 ap = foldl1 Ap
@@ -187,5 +186,5 @@ spec = do
                   <:> addInst [] (IsIn "Enum" tInt)     <:> addInst [] (IsIn "Enum" tInteger)
                   <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
           Just classenv = classenvT initialEnv
-          res = ("classenv clean = " ++ show classenv )`trace` tiProgram classenv ["(==)":>:eq_type, "fromIntegral":>:fromIntegral_type, "(+)":>:integralAdd_type] [def]
+          res = tiProgram classenv ["(==)":>:eq_type, "fromIntegral":>:fromIntegral_type, "(+)":>:integralAdd_type] [def]
       res `shouldContain` ["fulting_type" :>: fulting_type]
