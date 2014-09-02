@@ -1,5 +1,6 @@
-{ haskellPackages ? (import <nixpkgs> {}).haskellPackages,
-  flowbox }:
+{ haskellPackages ? import ../../../nix/flowbox.nix,
+  flowbox ? import ../../../nix/flowbox.nix
+}:
 
 haskellPackages.cabal.mkDerivation (self: {
   pname = "luna-initializer";
