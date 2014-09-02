@@ -1,5 +1,6 @@
-{ haskellPackages ? (import <nixpkgs> {}).haskellPackages,
-  flowbox }:
+{ haskellPackages ? import ../../nix/overrides.nix,
+  flowbox ? import ../../nix/flowbox.nix
+}:
 
 let inherit (haskellPackages) cabalInstall_1_20_0_3;
 in
