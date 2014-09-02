@@ -1,5 +1,5 @@
-{ haskellPackages ? (import <nixpkgs> {}).haskellPackages,
-  pkgs ? (import <nixpkgs> {})
+{ haskellPackages ? import ../../../../nix/overrides.nix,
+  pkgs ? import ../../../../nix/packages.nix
 }:
 
 haskellPackages.cabal.mkDerivation (self: {
