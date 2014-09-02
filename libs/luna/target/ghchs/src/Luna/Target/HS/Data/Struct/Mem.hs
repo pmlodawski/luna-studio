@@ -38,7 +38,9 @@ import Type.BaseType
 
 data Mem obj (name :: Symbol) = Mem (Proxy obj) (Proxy name) deriving (Typeable)
 
-instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
+data Lam lam = Lam lam deriving (Typeable)
+
+instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name, Typeable name) where
     show = show . typeOf
 
 ----------------------------------------------------------------------------------
