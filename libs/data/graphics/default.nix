@@ -1,5 +1,5 @@
-{ haskellPackages ? (import <nixpkgs> {}).haskellPackages,
-  flowbox
+{ haskellPackages ? import ../../../nix/overrides.nix,
+  flowbox ? import ../../../nix/flowbox.nix
 }:
 
 haskellPackages.cabal.mkDerivation (self: {
@@ -11,7 +11,7 @@ haskellPackages.cabal.mkDerivation (self: {
   noHaddock = true;
   buildDepends = with flowbox; with haskellPackages; [
     accelerate accelerateCuda accelerateIo algebraic bmp cubicbezier
-    either errors flowboxUtils genericsSop imagemagick JuicyPixels lens liftedBase
+    either errors flowboxUtils imagemagick JuicyPixels lens liftedBase
     linear linearAccelerate monadControl mtl profunctors QuickCheck
     resourcet split systemFilepath transformers vector
   ];

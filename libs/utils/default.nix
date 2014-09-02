@@ -1,4 +1,4 @@
-{ haskellPackages ? (import <nixpkgs> {}).haskellPackages }:
+{ haskellPackages ? import ../../nix/overrides.nix }:
 
 let inherit (haskellPackages) cabalInstall_1_20_0_3;
 in
