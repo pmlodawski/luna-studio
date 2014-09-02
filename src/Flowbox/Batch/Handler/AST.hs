@@ -90,9 +90,10 @@ remove bc libID projectID = astOp libID projectID (\ast propertyMap -> do
 
 
 resolveDefinition :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(Breadcrumbs, Library.ID)]
-resolveDefinition name bc libID projectID = libManagerOp projectID (\libManager -> do
+resolveDefinition name bc libID projectID = do
+    libManager <- Batch.getLibManager projectID
     results <- EitherT $ NameResolver.run name bc libID libManager
-    return (libManager, map Tuple.swap results))
+    return (map Tuple.swap results)
 
 
 updateModuleCls :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
