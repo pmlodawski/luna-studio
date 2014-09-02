@@ -31,6 +31,7 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers             as Proto
 import qualified Luna.Interpreter.RPC.Handler.ASTWatch    as ASTWatch
 import qualified Luna.Interpreter.RPC.Handler.Interpreter as Interpreter
+import qualified Luna.Interpreter.RPC.Handler.Sync        as Sync
 import qualified Luna.Interpreter.RPC.Handler.Value       as Value
 import qualified Luna.Interpreter.RPC.Topic               as Topic
 import qualified Luna.Interpreter.Session.Env             as Env
@@ -53,37 +54,40 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList   )
     , (Topic.interpreterValueRequest           , respond Topic.update Value.get                    )
 
-    , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 ASTWatch.projectmanagerSyncGet)
+    , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
-    , (Topic.projectCreateRequest                                   /+ update, sync ASTWatch.projectCreate)
-    , (Topic.projectOpenRequest                                     /+ update, sync ASTWatch.projectOpen)
-    , (Topic.projectCloseRequest                                    /+ update, sync ASTWatch.projectClose)
-    , (Topic.projectLibraryCreateRequest                            /+ update, sync ASTWatch.libraryCreate)
-    , (Topic.projectLibraryLoadRequest                              /+ update, sync ASTWatch.libraryLoad)
-    , (Topic.projectLibraryUnloadRequest                            /+ update, sync ASTWatch.libraryUnload)
-    , (Topic.projectLibraryAstRemoveRequest                         /+ update, sync ASTWatch.astRemove)
-    , (Topic.projectLibraryAstModuleAddRequest                      /+ update, sync ASTWatch.astModuleAdd)
-    , (Topic.projectLibraryAstModuleModifyClsRequest                /+ update, sync ASTWatch.astModuleModifyCls)
-    , (Topic.projectLibraryAstModuleModifyFieldsRequest             /+ update, sync ASTWatch.astModuleModifyFields)
-    , (Topic.projectLibraryAstModuleModifyImportsRequest            /+ update, sync ASTWatch.astModuleModifyImports)
-    , (Topic.projectLibraryAstDataAddRequest                        /+ update, sync ASTWatch.astDataAdd)
-    , (Topic.projectLibraryAstDataModifyClassesRequest              /+ update, sync ASTWatch.astDataModifyClasses)
-    , (Topic.projectLibraryAstDataModifyClsRequest                  /+ update, sync ASTWatch.astDataModifyCls)
-    , (Topic.projectLibraryAstDataModifyConsRequest                 /+ update, sync ASTWatch.astDataModifyCons)
-    , (Topic.projectLibraryAstDataModifyMethodsRequest              /+ update, sync ASTWatch.astDataModifyMethods)
-    , (Topic.projectLibraryAstFunctionAddRequest                    /+ update, sync ASTWatch.astFunctionAdd)
-    , (Topic.projectLibraryAstFunctionModifyInputsRequest           /+ update, sync ASTWatch.astFunctionModifyInputs)
-    , (Topic.projectLibraryAstFunctionModifyNameRequest             /+ update, sync ASTWatch.astFunctionModifyName)
-    , (Topic.projectLibraryAstFunctionModifyOutputRequest           /+ update, sync ASTWatch.astFunctionModifyOutput)
-    , (Topic.projectLibraryAstFunctionModifyPathRequest             /+ update, sync ASTWatch.astFunctionModifyPath)
-    , (Topic.projectLibraryAstFunctionGraphConnectRequest           /+ update, sync ASTWatch.graphConnect)
-    , (Topic.projectLibraryAstFunctionGraphDisconnectRequest        /+ update, sync ASTWatch.graphDisconnect)
-    , (Topic.projectLibraryAstFunctionGraphNodeAddRequest           /+ update, sync ASTWatch.graphNodeAdd)
-    , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        /+ update, sync ASTWatch.graphNodeRemove)
-    , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        /+ update, sync ASTWatch.graphNodeModify)
-    , (Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest /+ update, sync ASTWatch.graphNodeModifyInPlace)
-    , (Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest /+ update, sync ASTWatch.graphNodeDefaultRemove)
-    , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    /+ update, sync ASTWatch.graphNodeDefaultSet)
+    , (Topic.projectCreateRequest                                   /+ update, optionalSync ASTWatch.projectCreate)
+    , (Topic.projectOpenRequest                                     /+ update, requiredSync ASTWatch.projectOpen)
+    , (Topic.projectCloseRequest                                    /+ update, optionalSync ASTWatch.projectClose)
+    , (Topic.projectModifyRequest                                   /+ update, optionalSync ASTWatch.projectModify)
+    , (Topic.projectLibraryCreateRequest                            /+ update, optionalSync ASTWatch.libraryCreate)
+    , (Topic.projectLibraryLoadRequest                              /+ update, requiredSync ASTWatch.libraryLoad)
+    , (Topic.projectLibraryUnloadRequest                            /+ update, optionalSync ASTWatch.libraryUnload)
+    , (Topic.projectLibraryAstRemoveRequest                         /+ update, optionalSync ASTWatch.astRemove)
+    , (Topic.projectLibraryAstModuleAddRequest                      /+ update, optionalSync ASTWatch.astModuleAdd)
+    , (Topic.projectLibraryAstModuleModifyClsRequest                /+ update, optionalSync ASTWatch.astModuleModifyCls)
+    , (Topic.projectLibraryAstModuleModifyFieldsRequest             /+ update, optionalSync ASTWatch.astModuleModifyFields)
+    , (Topic.projectLibraryAstModuleModifyImportsRequest            /+ update, optionalSync ASTWatch.astModuleModifyImports)
+    , (Topic.projectLibraryAstDataAddRequest                        /+ update, optionalSync ASTWatch.astDataAdd)
+    , (Topic.projectLibraryAstDataModifyClassesRequest              /+ update, optionalSync ASTWatch.astDataModifyClasses)
+    , (Topic.projectLibraryAstDataModifyClsRequest                  /+ update, optionalSync ASTWatch.astDataModifyCls)
+    , (Topic.projectLibraryAstDataModifyConsRequest                 /+ update, optionalSync ASTWatch.astDataModifyCons)
+    , (Topic.projectLibraryAstDataModifyMethodsRequest              /+ update, optionalSync ASTWatch.astDataModifyMethods)
+    , (Topic.projectLibraryAstFunctionAddRequest                    /+ update, optionalSync ASTWatch.astFunctionAdd)
+    , (Topic.projectLibraryAstFunctionModifyInputsRequest           /+ update, optionalSync ASTWatch.astFunctionModifyInputs)
+    , (Topic.projectLibraryAstFunctionModifyNameRequest             /+ update, optionalSync ASTWatch.astFunctionModifyName)
+    , (Topic.projectLibraryAstFunctionModifyOutputRequest           /+ update, optionalSync ASTWatch.astFunctionModifyOutput)
+    , (Topic.projectLibraryAstFunctionModifyPathRequest             /+ update, optionalSync ASTWatch.astFunctionModifyPath)
+    , (Topic.projectLibraryAstPropertiesGetRequest                  /+ update, optionalSync ASTWatch.astPropertiesSet)
+    , (Topic.projectLibraryAstFunctionGraphConnectRequest           /+ update, optionalSync ASTWatch.graphConnect)
+    , (Topic.projectLibraryAstFunctionGraphDisconnectRequest        /+ update, optionalSync ASTWatch.graphDisconnect)
+    , (Topic.projectLibraryAstFunctionGraphNodeAddRequest           /+ update, optionalSync ASTWatch.graphNodeAdd)
+    , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        /+ update, optionalSync ASTWatch.graphNodeRemove)
+    , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        /+ update, optionalSync ASTWatch.graphNodeModify)
+    , (Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest /+ update, optionalSync ASTWatch.graphNodeModifyInPlace)
+    , (Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest /+ update, optionalSync ASTWatch.graphNodeDefaultRemove)
+    , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    /+ update, optionalSync ASTWatch.graphNodeDefaultSet)
+    , (Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest /+ update, optionalSync ASTWatch.graphNodePropertiesSet)
     ]
     where
         respond type_ = callback (/+ type_) . Processor.singleResult
@@ -93,8 +97,11 @@ handlerMap callback = HandlerMap.fromList
         call0 :: Proto.Serializable a => (a -> RPC Context SessionT ()) -> StateT Context SessionT [Message]
         call0 = callback id . Processor.noResult
 
-        sync :: Proto.Serializable a => (a -> RPC Context SessionT ()) -> StateT Context SessionT [Message]
-        sync = callback (const Topic.projectmanagerSyncGetRequest) . Processor.optResult . (.) ASTWatch.syncIfNeeded
+        optionalSync :: Proto.Serializable a => (a -> RPC Context SessionT ()) -> StateT Context SessionT [Message]
+        optionalSync = callback (const Topic.projectmanagerSyncGetRequest) . Processor.optResult . (.) Sync.syncIfNeeded
+
+        requiredSync :: Proto.Serializable a => (a -> RPC Context SessionT ()) -> StateT Context SessionT [Message]
+        requiredSync op = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult $ (\args -> op args >> Sync.syncRequest)
 
 
 interpret :: Pipes.Pipe (Message, Message.CorrelationID)

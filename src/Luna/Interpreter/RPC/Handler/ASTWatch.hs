@@ -7,17 +7,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Luna.Interpreter.RPC.Handler.ASTWatch where
 
-import           Data.Int  (Int32)
-import qualified Text.Read as Read
+import Data.Int (Int32)
 
-import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
-import qualified Flowbox.Batch.Project.Project                                                                 as Project
-import           Flowbox.Batch.Project.ProjectManager                                                          (ProjectManager)
-import qualified Flowbox.Batch.Project.ProjectManager                                                          as ProjectManager
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project                                        ()
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Control.Error                                                                         hiding (err)
-import           Flowbox.Control.Monad.Morph
 import           Flowbox.Prelude                                                                               hiding (Context, error, op)
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import qualified Flowbox.ProjectManager.RPC.Handler.AST                                                        as ASTHandler
@@ -25,6 +19,7 @@ import qualified Flowbox.ProjectManager.RPC.Handler.Graph                       
 import qualified Flowbox.ProjectManager.RPC.Handler.Library                                                    as LibraryHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault                                                as NodeDefaultHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.Project                                                    as ProjectHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Properties                                                 as PropertiesHandler
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Crumb.Breadcrumbs                                                             as Gen
@@ -60,6 +55,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Update          as GraphNodeModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request  as GraphNodeModifyInPlace
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update   as GraphNodeModifyInPlace
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Update  as GraphNodePropertiesSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request         as GraphNodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update          as GraphNodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Inputs.Request             as ASTFunctionModifyInputs
@@ -78,6 +74,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modif
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Fields.Update                as ASTModuleModifyFields
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Imports.Request              as ASTModuleModifyImports
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Imports.Update               as ASTModuleModifyImports
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Update                      as ASTPropertiesSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Request                             as ASTRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Update                              as ASTRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request                                 as LibraryCreate
@@ -86,11 +83,12 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Load.Request    
 import qualified Generated.Proto.ProjectManager.Project.Library.Load.Update                                    as LibraryLoad
 import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Request                                 as LibraryUnload
 import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Update                                  as LibraryUnload
+import qualified Generated.Proto.ProjectManager.Project.Modify.Request                                         as ProjectModify
+import qualified Generated.Proto.ProjectManager.Project.Modify.Update                                          as ProjectModify
 import qualified Generated.Proto.ProjectManager.Project.Open.Update                                            as ProjectOpen
-import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request                                as ProjectManagerSyncGet
-import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status                                 as ProjectManagerSyncGet
 import           Luna.Interpreter.Proto.CallPoint                                                              ()
 import           Luna.Interpreter.Proto.CallPointPath                                                          ()
+import           Luna.Interpreter.RPC.Handler.Sync                                                             (sync)
 import qualified Luna.Interpreter.Session.Cache.Invalidate                                                     as Invalidate
 import           Luna.Interpreter.Session.Session                                                              (Session)
 import qualified Luna.Interpreter.Session.Session                                                              as Session
@@ -102,31 +100,6 @@ logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.RPC.Handler.ASTWatch"
 
 --- helpers ---------------------------------------------------------------
-
-syncLibManager :: Int32 -> RPC Context SessionT ()
-syncLibManager updateNo = do
-    testUpdateNo updateNo
-    pm <- Batch.getProjectManager
-    activeProjectID <- lift2 $ SessionT $ Session.getProjectID
-    project <- ProjectManager.lab pm activeProjectID <??> "Project " ++ show activeProjectID ++ " not found"
-    lift2 $ SessionT $ Session.setLibManager $ project ^. Project.libs
-
-
-testUpdateNo :: Int32 -> RPC Context SessionT ()
-testUpdateNo updateNo = do
-    localUpdateNo <- Batch.getUpdateNo
-    assertE (updateNo == localUpdateNo) "UpdateNo does not match"
-
-
-hoistSessionT :: RPC Context IO a -> RPC Context SessionT ()
-hoistSessionT = void . hoist ( hoist $ SessionT . liftIO)
-
-
-sync :: Int32 -> RPC Context IO a -> RPC Context SessionT ()
-sync updateNo syncOp = do
-    hoistSessionT $ void syncOp
-    syncLibManager updateNo
-
 
 interpreterDo :: Int32 -> Session () -> RPC Context SessionT ()
 interpreterDo projectID op = do
@@ -162,22 +135,6 @@ modifyNode projectID libraryID nodeID = do
 
 --- handlers --------------------------------------------------------------
 
-projectmanagerSyncGet :: ProjectManagerSyncGet.Status -> RPC Context SessionT ()
-projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata updateNo) = do
-    (projectManager :: ProjectManager) <- hoistEither $ Read.readEither $ decodeP tdata
-    Batch.setProjectManager projectManager
-    Batch.setUpdateNo updateNo
-
-
-syncIfNeeded :: RPC Context SessionT () -> RPC Context SessionT (Maybe ProjectManagerSyncGet.Request)
-syncIfNeeded rpc = do
-    result <- lift $ runEitherT rpc
-    case result of
-        Right () -> return Nothing
-        Left err -> do logger error $ "Not syncing : " ++ err
-                       return $ Just ProjectManagerSyncGet.Request
-
-
 projectCreate :: ProjectCreate.Update -> RPC Context SessionT ()
 projectCreate (ProjectCreate.Update request project updateNo) = do
     sync updateNo $ ProjectHandler.create request
@@ -186,8 +143,7 @@ projectCreate (ProjectCreate.Update request project updateNo) = do
 
 
 projectOpen :: ProjectOpen.Update -> RPC Context SessionT ()
-projectOpen (ProjectOpen.Update request project updateNo) = do
-    sync updateNo $ ProjectHandler.open request
+projectOpen (ProjectOpen.Update _ project updateNo) = do
     projectID <- Gen.Project.id project <??> "ASTWatch.projectOpen : 'projectID' field is missing"
     modifyAll projectID
 
@@ -196,6 +152,13 @@ projectClose :: ProjectClose.Update -> RPC Context SessionT ()
 projectClose (ProjectClose.Update request updateNo) = do
     sync updateNo $ ProjectHandler.close request
     modifyAll $ ProjectClose.projectID request
+
+
+projectModify :: ProjectModify.Update -> RPC Context SessionT ()
+projectModify (ProjectModify.Update request updateNo) = do
+    sync updateNo $ ProjectHandler.modify request
+    projectID <- Gen.Project.id (ProjectModify.project request) <??> "ASTWatch.projectModify : 'projectID' field is missing"
+    modifyAll projectID
 
 
 libraryCreate :: LibraryCreate.Update -> RPC Context SessionT ()
@@ -208,7 +171,6 @@ libraryCreate (LibraryCreate.Update request library updateNo) = do
 
 libraryLoad :: LibraryLoad.Update -> RPC Context SessionT ()
 libraryLoad (LibraryLoad.Update request library updateNo) = do
-    sync updateNo $ LibraryHandler.load request
     let projectID = LibraryLoad.projectID request
     libraryID <- Gen.Library.id library <??> "ASTWatch.libraryLoad : 'libraryID' field is missing"
     modifyLibrary projectID libraryID
@@ -351,6 +313,11 @@ astFunctionModifyPath (ASTFunctionModifyPath.Update request updateNo) = do
     modifyBreadcrumbsRec projectID libraryID bc
 
 
+astPropertiesSet :: ASTPropertiesSet.Update -> RPC Context SessionT ()
+astPropertiesSet (ASTPropertiesSet.Update request updateNo) =
+    sync updateNo $ PropertiesHandler.setASTProperties request
+
+
 graphConnect :: GraphConnect.Update -> RPC Context SessionT ()
 graphConnect (GraphConnect.Update request updateNo) = do
     sync updateNo $ GraphHandler.connect request
@@ -421,3 +388,7 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
         libraryID = GraphNodeDefaultSet.libraryID request
         nodeID    = GraphNodeDefaultSet.nodeID request
     modifyNode projectID libraryID nodeID
+
+graphNodePropertiesSet :: GraphNodePropertiesSet.Update -> RPC Context SessionT ()
+graphNodePropertiesSet (GraphNodePropertiesSet.Update request updateNo) =
+    sync updateNo $ PropertiesHandler.setNodeProperties request
