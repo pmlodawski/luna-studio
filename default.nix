@@ -1,4 +1,4 @@
-{ haskellPackages ? (import <nixpkgs> {}).haskellPackages }:
+{ haskellPackages ? import ../../nix/overrides.nix }:
 
 haskellPackages.cabal.mkDerivation (self: {
   pname = "num-conversion";
