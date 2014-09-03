@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
-module Flowbox.Graphics.Color.Companding.AlexaV3LogC where
+module Flowbox.Graphics.Color.Companding.AlexaV3LogC (AlexaV3LogC(..)) where
 
 import qualified Data.Array.Accelerate as A
 
