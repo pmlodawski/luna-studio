@@ -1,0 +1,9 @@
+import Flowbox:Std
+
+
+def main:
+    print $ if 1 > 2: 5
+            else: 6
+    print $ 1 > 2
+    v = Vector 1 2 3
+    print $ v
