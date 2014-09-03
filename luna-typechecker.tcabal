@@ -8,7 +8,7 @@ Build-Type:     Simple
 
 
 Library
-  GHC-Options:        -Wall -fhpc -Werror -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     src
   Build-Depends:      base
                     , containers
@@ -19,7 +19,7 @@ Library
 
 
 Executable luna-typechecker-tests
-  GHC-Options:        -Wall -fhpc -Werror -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     test
   Main-Is:            Spec.hs
   Build-Depends:      base

@@ -3,26 +3,25 @@ module Luna.Typechecker.Internal.Typeclasses (
     entail, byInst, addClass, addInst, (<:>), initialEnv
   ) where
 
-import           Luna.Typechecker.Internal.AST.Type         (Type(..), tInteger, tDouble)
+import Luna.Typechecker.Internal.AST.Type         (Type(..), tInteger, tDouble)
 
-import           Luna.Typechecker.Internal.Substitutions    (Types(..), Subst)
-import           Luna.Typechecker.Internal.Unification      (match, mgu)
+import Luna.Typechecker.Internal.Substitutions    (Types(..), Subst)
+import Luna.Typechecker.Internal.Unification      (match, mgu)
 
-import           Luna.Typechecker.Internal.AST.TID          (TID)
+import Luna.Typechecker.Internal.AST.TID          (TID)
 
-import           Control.Monad                              (msum)
+import Control.Monad                              (msum)
 
-import           Data.List                                  (intercalate,union)
-import           Data.Maybe                                 (isJust)
-import           Text.Printf                                (printf)
+import Data.List                                  (intercalate,union,nubBy)
+import Data.Maybe                                 (isJust)
+import Data.Function                              (on)
+import Text.Printf                                (printf)
 
 data Pred = IsIn TID Type
           deriving (Eq)
 
 instance Show Pred where
   show (IsIn tid ty) = printf "%s %s" (show ty) tid
-  showList [] s = s
-  showList ps s = printf "%s(%s)" s (intercalate "," $ map show ps)
 
 
 mguPred :: Pred -> Pred -> Maybe Subst
@@ -67,12 +66,14 @@ type Inst  = Qual Pred
 
 data ClassEnv = ClassEnv {
                   classes :: TID -> Maybe Class,
+                  classes_names :: [(TID, Class)],
                   defaults :: [Type]
                 }
 
 
 instance Show ClassEnv where
-  show _ = "<classenv>"
+  show (ClassEnv _ nm _) = printf "(classenv: %s)" (intercalate ", " $ map show $ nubBy ((==) `on` fst) nm)
+  --show  = printf "(classenv: %s)" . intercalate ", " . map show . nubBy ((==) `on` fst) . classes_names
 
 instance Eq ClassEnv where
   (==) _ _ = False
@@ -92,6 +93,7 @@ insts ce i = case classes ce i of
 -- TODO [kg]: how fucking stupid is this one? :<
 modify :: ClassEnv -> TID -> Class -> ClassEnv
 modify ce i c = ce {
+                   classes_names = (i,c) : classes_names ce,
                    classes = \j ->
                      if i == j
                        then Just c
@@ -101,6 +103,7 @@ modify ce i c = ce {
 initialEnv :: ClassEnv
 initialEnv = ClassEnv {
                classes = \_ -> fail "class not defined/found",
+               classes_names = [],
                defaults = [tInteger, tDouble]
              }
 
