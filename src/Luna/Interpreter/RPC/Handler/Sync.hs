@@ -40,9 +40,12 @@ syncLibManager :: Int32 -> RPC Context SessionT ()
 syncLibManager updateNo = do
     testUpdateNo updateNo
     pm <- Batch.getProjectManager
-    activeProjectID <- lift2 $ SessionT $ Session.getProjectID
-    project <- ProjectManager.lab pm activeProjectID <??> "Project " ++ show activeProjectID ++ " not found"
-    lift2 $ SessionT $ Session.setLibManager $ project ^. Project.libs
+    activeProjectID <- lift2 $ SessionT Session.getProjectID
+    libs <- case ProjectManager.lab pm activeProjectID of 
+        Just project -> return $ project ^. Project.libs
+        Nothing      -> do logger warning $ "Project " ++ show activeProjectID ++ " not found" 
+                           return def
+    lift2 $ SessionT $ Session.setLibManager libs
 
 
 testUpdateNo :: Int32 -> RPC Context SessionT ()
