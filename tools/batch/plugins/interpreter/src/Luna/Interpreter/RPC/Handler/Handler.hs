@@ -101,7 +101,7 @@ handlerMap callback = HandlerMap.fromList
         optionalSync = callback (const Topic.projectmanagerSyncGetRequest) . Processor.optResult . (.) Sync.syncIfNeeded
 
         requiredSync :: Proto.Serializable a => (a -> RPC Context SessionT ()) -> StateT Context SessionT [Message]
-        requiredSync op = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult $ (\args -> op args >> Sync.syncRequest)
+        requiredSync op = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> op args >> Sync.syncRequest)
 
 
 interpret :: Pipes.Pipe (Message, Message.CorrelationID)
