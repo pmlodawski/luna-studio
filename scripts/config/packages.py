@@ -96,7 +96,7 @@ class AllProject(Project):
 
 pkgDb = \
        { '@all'                                : AllProject ('@all', deps = [])
-       , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/utils', 'libs/rpc', 'third-party/hs-certificate/x509', 'third-party/hs-crypto-random', 'third-party/hs-tls/core'])
+       , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/utils', 'libs/rpc'])
        , 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/distribution', 'libs/luna/initializer', 'libs/luna/interpreter-old', 'libs/luna/pass', 'libs/luna/protobuf'])
        , 'libs/batch/plugins/project-manager'  : HProject   ('batch-lib-project-manager'    , os.path.join ('libs' , 'batch', 'plugins', 'project-manager') , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/core', 'libs/batch/batch'])
        , 'libs/bus'                            : HProject   ('flowbox-bus'                  , os.path.join ('libs' , 'bus')                                 , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc'])
@@ -117,7 +117,7 @@ pkgDb = \
        , 'libs/repo-manager'                   : HProject   ('flowbox-repo-manager'         , os.path.join ('libs' , 'repo-manager')                        , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'libs/rpc'                            : HProject   ('flowbox-rpc'                  , os.path.join ('libs' , 'rpc')                                 , 'libs'    , ['libs/utils'])
        , 'libs/luna/target/ghchs'              : HProject   ('luna-target-ghchs'            , os.path.join ('libs' , 'luna', 'target', 'ghchs')             , 'libs'    , [])
-       , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , ['third-party/protocol-buffers', "third-party/fgl"])
+       , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , ['third-party/protocol-buffers'])
        , 'tools/aws/account-manager'           : HProject   ('flowbox-account-manager'      , os.path.join ('tools', 'aws', 'account-manager')              , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'])
        , 'tools/aws/account-manager-mock'      : HProject   ('flowbox-account-manager-mock' , os.path.join ('tools', 'aws', 'account-manager-mock')         , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'])
        , 'tools/aws/instance-manager'          : HProject   ('flowbox-instance-manager'     , os.path.join ('tools', 'aws', 'instance-manager')             , 'tools'   , ['libs/utils', 'libs/aws'])
@@ -138,11 +138,7 @@ pkgDb = \
        , 'third-party/accelerate'              : HProject   ('accelerate'                   , os.path.join ('third-party', 'accelerate')                    , 'third-party', [], flags=Flags([Flag('-fdebug')])) # [KL] accelerate debug flag is necessary to dump generated CUDA kernels
        , 'third-party/accelerate-cuda'         : HProject   ('accelerate-cuda'              , os.path.join ('third-party', 'accelerate-cuda')               , 'third-party', [], flags=Flags([Flag('-fdebug')]))
        , 'third-party/accelerate-io'           : HProject   ('accelerate-io'                , os.path.join ('third-party', 'accelerate-io')                 , 'third-party', [], flags=Flags([Flag('-fdebug')]))
-       , 'third-party/fgl'                     : HProject   ('fgl'                          , os.path.join ('third-party', 'fgl')                           , 'third-party', []) # [PM] temporary fix until fgl is fixed
        , 'third-party/hint'                    : HProject   ('hint'                         , os.path.join ('third-party', 'hint')                          , 'third-party', []) # [PM] temporary fix until patch to hint is applied ( http://hub.darcs.net/jcpetruzza/hint/issue/6 )
-       , 'third-party/hs-certificate/x509'     : HProject   ('x509'                         , os.path.join ('third-party', 'hs-certificate', 'x509')        , 'third-party', []) # [PM] temporary fix until x509 is fixed ( https://github.com/vincenthz/hs-certificate/pull/33 )
-       , 'third-party/hs-crypto-random'        : HProject   ('crypto-random'                , os.path.join ('third-party', 'hs-crypto-random')              , 'third-party', []) # [PM] temporary fix until crypto-random is fixed ( https://github.com/vincenthz/hs-crypto-random/pull/8 )
-       , 'third-party/hs-tls/core'             : HProject   ('tls'                          , os.path.join ('third-party', 'hs-tls', 'core')                , 'third-party', []) # [PM] temporary fix until tls is fixed ( https://github.com/vincenthz/hs-tls/pull/75 )
        , 'third-party/imagemagick'             : HProject   ('imagemagick'                  , os.path.join ('third-party', 'imagemagick')                   , 'third-party', []) # [KL] temporary fix until imagemagick is fixed
        , 'third-party/linear-accelerate'       : HProject   ('linear-accelerate'            , os.path.join ('third-party', 'linear-accelerate')             , 'third-party', [])
        , 'third-party/protocol-buffers'        : HProject   ('protocol-buffers'             , os.path.join ('third-party', 'protocol-buffers')              , 'third-party', []) # [PM] temporary fix until protocol-buffers is fixed
