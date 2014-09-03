@@ -2,7 +2,7 @@ Name:                   flowbox-graphics
 Version:                0.15.0.0
 Cabal-version:          >= 1.20
 Tested-with:            GHC == 7.8.*
-Build-type:             Simple
+Build-type:             Custom
 
 Flag cuda
   Description:          Enable the CUDA parallel backend for NVIDIA GPUs
@@ -17,7 +17,7 @@ Library
                           OverloadedStrings
   Default-Language:       Haskell2010
 
-  Exposed-modules: `findmodules('src', '.*\.hs')`
+  Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND

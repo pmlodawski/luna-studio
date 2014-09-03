@@ -5,14 +5,20 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies          #-}
 
-module Flowbox.Graphics.Color.Companding where
+module Flowbox.Graphics.Color.Gamma where
 
 import Flowbox.Prelude
 
 
 
-class (Num b, Floating b) => Companding a b where
-    toLinear   :: a -> b -> b
-    fromLinear :: a -> b -> b
+data GammaCorrection = Linear | GammaCorrected
+
+class GammaCorrectible a c where
+    type GammaT (a :: GammaCorrection -> * -> *) c :: *
+    toLinear   :: a 'GammaCorrected c -> a 'Linear c
+    fromLinear :: a 'Linear c -> a 'GammaCorrected c
+    gamma      :: a b c -> GammaT a c

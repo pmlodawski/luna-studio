@@ -21,20 +21,30 @@ rgbProfileGen _ _ = PreProcessor {
         putStrLn $ "Processing " ++ inFile
         source <- readFile inFile
         let moduleName = concat $ List.intersperse "." $ tail $ FilePath.splitDirectories $ FilePath.dropExtension inFile
-            [name, whitepoint, forwardMatrix, inverseMatrix] = lines source
+            [name, whitepoint, gammaT, gamma, forwardMatrix, inverseMatrix] = lines source
             [m11, m12, m13, m21, m22, m23, m31, m32, m33] = words forwardMatrix
             [invM11, invM12, invM13, invM21, invM22, invM23, invM31, invM32, invM33] = words inverseMatrix
-            contents = unlines
-                [ "{-# LANGUAGE FlexibleInstances     #-}"
+            contents = unlines [
+                  "{-# LANGUAGE DataKinds             #-}"
+                , "{-# LANGUAGE FlexibleInstances     #-}"
                 , "{-# LANGUAGE MultiParamTypeClasses #-}"
                 , "{-# LANGUAGE TypeFamilies          #-}"
+                , "{-# LANGUAGE UndecidableInstances  #-}"
+                , "{-# OPTIONS_GHC -fno-warn-unused-imports #-}"
                 , ""
                 , "module " ++ moduleName ++ " where"
                 , ""
+                , "import qualified Data.Array.Accelerate as A"
                 , "import qualified Linear"
                 , "import           Linear.Accelerate ()"
                 , ""
                 , "import Flowbox.Graphics.Color.CIE.XYZ"
+                , "import qualified Flowbox.Graphics.Color.Companding as Companding"
+                , "import Flowbox.Graphics.Color.Companding.AlexaV3LogC"
+                , "import Flowbox.Graphics.Color.Companding.Gamma"
+                , "import Flowbox.Graphics.Color.Companding.LStar"
+                , "import Flowbox.Graphics.Color.Companding.SRGB"
+                , "import Flowbox.Graphics.Color.Gamma"
                 , "import Flowbox.Graphics.Color.Illuminants"
                 , "import Flowbox.Graphics.Color.Profile"
                 , "import Flowbox.Graphics.Color.RGB"
@@ -42,7 +52,7 @@ rgbProfileGen _ _ = PreProcessor {
                 , ""
                 , ""
                 , ""
-                , "newtype " ++ name ++ " a = " ++ name ++ " (RGB a)"
+                , "newtype " ++ name ++ " (correction :: GammaCorrection) a = " ++ name ++ " (RGB a)"
                 , "                        deriving Show"
                 , ""
                 , "instance (Num a, Fractional a) => RGBProfile " ++ name ++ " a where"
@@ -61,9 +71,22 @@ rgbProfileGen _ _ = PreProcessor {
                 , "                            (Linear.V3 " ++ parens invM11 ++ " " ++ parens invM22 ++ " " ++ parens invM33 ++ ")"
                 , "                            (Linear.V3 " ++ parens invM11 ++ " " ++ parens invM22 ++ " " ++ parens invM33 ++ ")"
                 , "              xyz = Linear.V3 x y z"
-                , ""]
+                , ""
+                , "    whitepoint _ = " ++ whitepoint
+                , ""
+                , "instance (Num a, Floating a, a ~ A.Exp t, A.Elt t, A.IsFloating t) => GammaCorrectible " ++ name ++ " a where"
+                , "    type GammaT " ++ name ++ " a = " ++ gammaT
+                , ""
+                , "    fromLinear c@(" ++ name ++ " rgb) = " ++ name ++ " $ rgb & each %~ (Companding.fromLinear (gamma c))"
+                , ""
+                , "    toLinear   c@(" ++ name ++ " rgb) = " ++ name ++ " $ rgb & each %~ (Companding.toLinear   (gamma c))"
+                , ""
+                , "    gamma _ = " ++ gamma
+                , ""
+                ]
 
         writeFile outFile contents
+        writeFile "/tmp/foo.hs" contents
     }
 
 parens s = '(' : s ++ ")"

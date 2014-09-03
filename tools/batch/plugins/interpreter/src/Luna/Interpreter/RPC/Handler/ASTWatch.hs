@@ -103,7 +103,7 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.ASTWatch"
 
 interpreterDo :: Int32 -> Session () -> RPC Context SessionT ()
 interpreterDo projectID op = do
-    activeProjectID <- lift2 $ SessionT $ Session.getProjectID
+    activeProjectID <- lift2 $ SessionT Session.getProjectID
     when (activeProjectID == decodeP projectID) $ lift2 $ SessionT op
 
 
@@ -129,7 +129,7 @@ modifyBreadcrumbs projectID libraryID tbc = do
 
 
 modifyNode :: Int32 -> Int32 -> Int32 -> RPC Context SessionT ()
-modifyNode projectID libraryID nodeID = do
+modifyNode projectID libraryID nodeID = 
     interpreterDo projectID $ Invalidate.modifyNode (decodeP libraryID) (decodeP nodeID)
 
 

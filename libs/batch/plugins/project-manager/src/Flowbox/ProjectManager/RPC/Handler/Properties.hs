@@ -45,8 +45,7 @@ setASTProperties request@(SetASTProperties.Request tproperties tnodeID tlibID tp
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchP.setProperties properties nodeID libID projectID
-    updateNo <- Batch.getUpdateNo
-    return $ SetASTProperties.Update request updateNo
+    SetASTProperties.Update request <$> Batch.getUpdateNo
 
 
 getNodeProperties :: GetNodeProperties.Request -> RPC Context IO GetNodeProperties.Status
@@ -65,5 +64,4 @@ setNodeProperties request@(SetNodeProperties.Request tproperties tnodeID _ tlibI
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchP.setProperties properties nodeID libID projectID
-    updateNo <- Batch.getUpdateNo
-    return $ SetNodeProperties.Update request updateNo
+    SetNodeProperties.Update request <$> Batch.getUpdateNo
