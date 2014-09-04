@@ -22,7 +22,6 @@ import           Flowbox.Prelude                       hiding (mapM)
 import           Flowbox.System.Log.Logger
 import           Luna.AST.Expr                         (Expr)
 import qualified Luna.AST.Expr                         as Expr
-import qualified Luna.Graph.Attributes                 as Attributes
 import qualified Luna.Graph.Attributes.Naming          as Attributes
 import qualified Luna.Graph.Edge                       as Edge
 import           Luna.Graph.Graph                      (Graph)
