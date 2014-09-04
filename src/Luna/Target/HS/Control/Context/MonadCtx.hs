@@ -44,6 +44,15 @@ fromReq (Req a) = a
 
 newtype MonadCtx (base :: * -> *) set m val = MonadCtx (m val) deriving (Show, Typeable)
 
+
+
+--newtype MonadCtx2 (base :: * -> *) safety set m val = MonadCtx2 (m val) deriving (Show, Typeable)
+
+--operacje safety okazuja sie PO wykonaniu monadu, np IO(Safe ...)
+
+
+newtype MonadWrapper m = MonadWrapper m
+
 fromMonadCtx :: MonadCtx base set m val -> m val
 fromMonadCtx (MonadCtx a) = a
 

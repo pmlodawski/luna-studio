@@ -26,6 +26,7 @@ module Luna.Target.HS.Data.Struct.Mem where
 
 import GHC.TypeLits
 import Data.Typeable (Proxy(..))
+import Luna.Target.HS.Control
 import Luna.Target.HS.Data.Func.App
 import Luna.Target.HS.Data.Func.Args
 
@@ -57,9 +58,17 @@ objPtr el = Proxy
 memPtr :: Proxy name -> m (s a) -> Mem obj name <= BaseType (Proxy a) (Proxy obj)
 memPtr name obj = Mem (objPtr obj) name
 
-getMem :: Proxy name -> m (s a) -> AppH (Mem obj name) args <= (HasMem name obj args, BaseType (Proxy a) (Proxy obj))     
-getMem name obj = appH ptr (memSig ptr) where
+getMem' :: Proxy name -> m (s a) -> AppH (Mem obj name) args <= (HasMem name obj args, BaseType (Proxy a) (Proxy obj))     
+getMem' name obj = appH ptr (memSig ptr) where
     ptr = memPtr name obj
 
-member :: Proxy name -> m (s a) -> AppH (Mem obj name) args <= (HasMem name obj args1, BaseType (Proxy a) (Proxy obj), AppArgByName "self" (m (s a)) args1 args)
+member' :: Proxy name -> m (s a) -> AppH (Mem obj name) args <= (HasMem name obj args1, BaseType (Proxy a) (Proxy obj), AppArgByName "self" (m (s a)) args1 args)
+member' name obj = appByName' (Proxy::Proxy "self") obj $ getMem' name $ obj
+
+
+getMem :: Proxy name -> m (s a) -> Value Pure (Safe (AppH (Mem obj name) args)) <= (HasMem name obj args, BaseType (Proxy a) (Proxy obj))     
+getMem name obj = val $ appH ptr (memSig ptr) where
+    ptr = memPtr name obj
+
+member :: Proxy name -> m (s a) -> Value Pure (Safe (AppH (Mem obj name) args)) <= (HasMem name obj args1, BaseType (Proxy a) (Proxy obj), AppArgByName "self" (m (s a)) args1 args)
 member name obj = appByName (Proxy::Proxy "self") obj $ getMem name $ obj

@@ -34,6 +34,7 @@ import Flowbox.Utils
 import Luna.Target.HS.Data.Func.Args
 import Luna.Target.HS.Data.Func.App
 import Luna.Target.HS.Data.Struct
+import Control.Monad.Shuffle
 
 ----------------------------------------------------------------------------------
 -- Type classes
@@ -49,7 +50,7 @@ class MatchCall obj out | obj -> out where
     matchCall :: obj -> out
 
 class Call a b | a -> b where
-    call :: a -> b
+    call' :: a -> b
 
 
 ----------------------------------------------------------------------------------
@@ -60,15 +61,16 @@ class Call a b | a -> b where
 --    args' = readArgs args
 
 instance Call (AppH (Mem base name) args) out <= (Func base name argsout out, ReadArgs args argsout) where
-    call (AppH(fptr, args)) = (getFunc fptr args') args' where
+    call' (AppH(fptr, args)) = (getFunc fptr args') args' where
         args' = readArgs args
 
 instance Call (AppH (Lam lam) args) out <= (lam~(argsout -> out), ReadArgs args argsout) where
-    call (AppH(Lam lam, args)) = lam (readArgs args)
+    call' (AppH(Lam lam, args)) = lam (readArgs args)
 
 curryByName = matchCall `dot3` appByName
 curryNext   = matchCall `dot2` appNext
 
+call = shuffleJoin . (fmap.fmap) call'
 
 ----------------------------------------------------------------------------------
 -- Instances
@@ -78,7 +80,7 @@ instance MatchCallProto False a a where
     matchCallProto _ = id
 
 instance MatchCallProto True (AppH (Mem base name) args) out <= (ReadArgs args margs, Func base name margs out) where
-    matchCallProto _ = call
+    matchCallProto _ = call'
 
 ---
 
