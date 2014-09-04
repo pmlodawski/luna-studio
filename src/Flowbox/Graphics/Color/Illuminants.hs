@@ -5,19 +5,44 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE AutoDeriveTypeable    #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Flowbox.Graphics.Color.Illuminants where
 
+import qualified Data.Array.Accelerate as A
+
+import Flowbox.Graphics.Color.CIE.XyY
+import Flowbox.Graphics.Color.CIE.XYZ
 import Flowbox.Prelude
+
 
 
 
 data Chromaticity a = Chromaticity { chromaX :: a, chromaY :: a }
                     deriving Show
 
+toxyY :: (Num a) => Chromaticity a -> XyY a
+toxyY (Chromaticity x y) = XyY x y 1
+
+toXYZ :: forall t. (A.Elt t, A.IsFloating t)
+      => XyY (A.Exp t) -> XYZ (A.Exp t)
+toXYZ (XyY x y y') = A.unlift $ A.cond (y A.==* 0)
+    (A.lift $ XYZ 0 0 (0 :: A.Exp t) :: A.Exp (XYZ t))
+    (A.lift $ XYZ { xyzX = (x * y') / y
+                  , xyzY = y'
+                  , xyzZ = ((1 - x - y) * y') / y
+                  } :: A.Exp (XYZ t)
+    ) :: XYZ (A.Exp t)
+
+toXYZ' :: (Num t, Eq t, Fractional t) => XyY t -> XYZ t
+toXYZ' (XyY x y y') = if y' == 0 then XYZ 0 0 0 else XYZ { xyzX = (x * y') / y
+                                                         , xyzY = y'
+                                                         , xyzZ = ((1 - x - y) * y') / y
+                                                         }
 
 
 class Illuminant a b where
