@@ -13,16 +13,19 @@ import Data.Array.Accelerate as A
 
 import Math.Coordinate.Cartesian (Point2(..))
 import Flowbox.Geom2D.Accelerate.CubicBezier
+import Flowbox.Graphics.Utils (fstTrio, sndTrio, trdTrio)
 import Flowbox.Prelude hiding ((<*), (?), fst, snd, lift)
 
 
 
+-- INFO: this file is to be removed (the functionality is/will be implemented in Flowbox.Math.Function)
+
 -- WARNING IMPORTANT TODO: add a step limit
-findCubicYforX :: forall a. (Elt a, IsFloating a) => Exp a -> Exp (CubicBezier a) -> Exp a -> Exp a
-findCubicYforX eps (unlift -> curve) x = solvey $ fst $ while (\v -> (err $ snd v) >* eps) (lift1 step) $ lift (startAt, solvex startAt)
+findCubicYforX :: forall a. (Elt a, IsFloating a) => Exp Int -> Exp a -> Exp (CubicBezier a) -> Exp a -> Exp a
+findCubicYforX limit eps (unlift -> curve) x = solvey $ sndTrio $ while (\v -> fstTrio v <* limit &&* (err $ trdTrio v) >* eps) (lift1 step) $ lift (0 :: Exp Int, startAt, solvex startAt)
     where CubicBezier (Point2 x1 y1) (Point2 x2 y2) (Point2 x3 y3) (Point2 x4 y4) = curve
-          step :: (Exp a, Exp a) -> (Exp a, Exp a)
-          step (t, x') = (solvex t <* x' ? (t/2, (t+1)/2), solvex t)
+          step :: (Exp Int, Exp a, Exp a) -> (Exp Int, Exp a, Exp a)
+          step (s, t, x') = (s+1, solvex t <* x' ? (t/2, (t+1)/2), solvex t)
           err x'       = abs $ x - x'
           startAt      = constant 0.5
           solvex t     = (1-t)^^3 * x1 + 3*(1-t)^^2*t * x2 + 3*(1-t)*t^^2 * x3 + t^^3 * x4
