@@ -134,6 +134,7 @@ buildExpr e = case e of
                                              where params = if null signature then ""
                                                             else " " ++ join " " (fsExpMap signature)
     HExpr.LetBlock exprs result           -> pure $ "let { " ++ join "; " (fExpMap exprs) ++ " } in " ++ (code.buildExpr) result
+    HExpr.LetExpr  expr                   -> pure $ "let " ++ cBuildExpr expr 
     HExpr.DoBlock  exprs                  -> buildDoBlock exprs
     HExpr.Infix    name src dst           -> Complex $ csBuildExpr src ++ " " ++ name ++ " " ++ csBuildExpr dst
     HExpr.NOP                             -> pure $ "nop"

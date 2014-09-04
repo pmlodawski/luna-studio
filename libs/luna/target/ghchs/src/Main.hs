@@ -10,6 +10,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+{-# LANGUAGE FunctionalDependencies #-}
+
 -- module --
 module Main where
 
@@ -63,6 +65,34 @@ memDef_Cls_Vector_Vector = liftCons3 Vector
 registerMethod ''Cls_Vector "Vector"
 
 cons_Vector = member (Proxy::Proxy "Vector") (val Cls_Vector)
+
+
+---
+
+--class Functor2 ca ea cb eb f g | ca ea cb eb f -> g where
+--    fmap2 :: (ca (ea a) -> cb (eb b)) -> f a -> g b
+
+--data Cls_Vector2 = Cls_Vector2 deriving (Show, Eq, Typeable)
+--data Vector2 c1 e1 c2 e2 c3 e3 a = Vector2 (c1 (e1 a)) (c2 (e2 a)) (c3 (e3 a)) deriving (Show, Eq, Typeable)
+--generateFieldAccessors 'Vector2 [Just "x2", Just "y2", Just "z2"]
+
+--memSig_Cls_Vector2_Vector2 = (mkArg :: NParam "self") // (mkArg (val (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (val 0) :: NDParam "y" (Value Pure(Safe Int))) // (mkArg (val 0) :: NDParam "z" (Value Pure(Safe Int))) // ()
+--memDef_Cls_Vector2_Vector2 (self,(x,(y,(z,())))) = val $ Vector2 x y z
+--registerMethod ''Cls_Vector2 "Vector2"
+
+--cons_Vector2 = member (Proxy::Proxy "Vector2") (val Cls_Vector2)
+
+
+--instance Functor2 ca ea cb eb (Vector2 ca ea ca ea ca ea) (Vector2 cb eb cb eb cb eb) where
+--    fmap2 f (Vector2 x y z) = Vector2 (f x) (f y) (f z)
+
+
+--xxx2 :: (ca (ea a) -> cb (eb b)) -> Vector2 ca ea ca ea ca ea a -> Vector2 cb eb cb eb cb eb b
+--xxx2 f (Vector2 x y z) = Vector2 (f x) (f y) (f z)
+
+---
+
+
 
 
 
@@ -138,9 +168,9 @@ registerMethod ''Vector "foo"
 
 
 ---
-memSig_Vector_baz = (mkArg :: NParam "self") // (mkArg :: NParam "a") // ()
-memDef_Vector_baz (self,(a,())) = flip runStateTX (val 0) a
-registerMethod ''Vector "baz"
+    --memSig_Vector_baz = (mkArg :: NParam "self") // (mkArg :: NParam "a") // ()
+    --memDef_Vector_baz (self,(a,())) = flip runStateTX (val 0) a
+    --registerMethod ''Vector "baz"
 
 --instance (AppMonadCtx a (Req (Proxy StateT) (MonadCtx env set (StateT (Value Pure (Safe a2)) mb)) a1), Functor mb,
 --          MatchMonadCloseProto (IsEmpty (Remove (Proxy StateT) set)) (MonadCtx env (Remove (Proxy StateT) set) mb) t1, Num a2,
@@ -156,10 +186,14 @@ registerMethod ''Vector "baz"
 ---
 memSig_Vector_fstate = (mkArg :: NParam "self") // ()
 memDef_Vector_fstate (self,()) = do
-    x <- getX
-    putX (x)
+    x <- getX'
+    putX' x
 
 registerMethod ''Vector "fstate"
+
+xxx = do
+    x <- getX
+    putX x
 
 --instance (MonadState (Value Pure (Safe a)) m, Num a,
 --         args ~ (t, ()),
@@ -202,7 +236,7 @@ v = call $ appNext (val 2) $ appNext (val 2) $ appNext (val 2) $ cons_Vector
 a1 = call $ appNext (val 1) $ appNext (val 2) $ member (Proxy::Proxy "foo") v
 
 
-mkLam lam sig = appH (Lam lam) sig
+mkLam lam sig = val $ appH (Lam lam) sig
 
 mymain (self,()) = do
     --mod <- call $ member (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
@@ -224,11 +258,11 @@ mymain (self,()) = do
     print2 (val "---")
 
 
-    print2 $ call $ appNext (getX) $ member (Proxy :: Proxy "baz") v2
-    print2 $ call $ appNext (val 5) $ member (Proxy :: Proxy "baz") v2
+    --print2 $ call $ appNext (getX) $ member (Proxy :: Proxy "baz") v2
+    --print2 $ call $ appNext (val 5) $ member (Proxy :: Proxy "baz") v2
 
 
-    print2 $ flip runStateTX (val 0) $ call $ member (Proxy :: Proxy "fstate") v2
+    --print2 $ flip runStateTX (val 0) $ call $ member (Proxy :: Proxy "fstate") v2
 
     -- properties
     print2 $ call $ member (Proxy::Proxy "x") v2

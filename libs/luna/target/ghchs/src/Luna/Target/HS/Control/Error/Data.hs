@@ -17,6 +17,8 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DeriveGeneric #-}
 
+{-# LANGUAGE TypeFamilies #-}
+
 
 !{-# LANGUAGE RightSideContexts #-}
 
@@ -58,6 +60,18 @@ fromSafe :: Safe a -> a
 fromSafe (Safe a) = a
 
 
+--type family MatchSafety s1 s2 where
+--    MatchSafety Safe                  Safe                  = Safe
+--    MatchSafety Safe                  (UnsafeBase base e)   = UnsafeBase base e
+--    MatchSafety (UnsafeBase base  e)  Safe                  = UnsafeBase base e
+--    MatchSafety (UnsafeBase base1 e)  (UnsafeBase base2 e)  = UnsafeBase (MatchSafety base1 base2) e
+--    MatchSafety (UnsafeBase base1 e1) (UnsafeBase base2 e2) = MatchSafety (UnsafeBase (MatchSafety base1 (UnsafeBase Safe e2)) e1) base2
+
+type family MatchSafety s1 s2 where
+    MatchSafety Safe                  a                     = a
+    MatchSafety a                     Safe                  = a
+    MatchSafety (UnsafeBase base1 e)  (UnsafeBase base2 e)  = UnsafeBase (MatchSafety base1 base2) e
+    MatchSafety (UnsafeBase base1 e1) (UnsafeBase base2 e2) = MatchSafety (UnsafeBase (MatchSafety base1 (UnsafeBase Safe e2)) e1) base2
 ------------------------------------------------------------------------
 -- Instances
 ------------------------------------------------------------------------

@@ -32,6 +32,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Function   { name      :: String   , pats      :: [Expr]      , expr      :: Expr     }
           | Lambda     { paths     :: [Expr]   , expr      :: Expr                                }
           | LetBlock   { exprs     :: [Expr]   , result    :: Expr                                }
+          | LetExpr    { expr      :: Expr                                                        }
           | DoBlock    { exprs :: [Expr]                                                          }
           | DataD      { name      :: String   , params    :: [String]    , cons      :: [Expr] , derivings :: [Deriving]   }
           | NewTypeD   { name      :: String   , paramsE   :: [Expr]      , con       :: Expr     } -- FIXME: paramsE -> params
