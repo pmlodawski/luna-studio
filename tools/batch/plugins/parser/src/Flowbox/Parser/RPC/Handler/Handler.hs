@@ -34,6 +34,7 @@ handlerMap callback = HandlerMap.fromList
     , ("parse.pat.request"     , respond status ParserHandler.parsePat     )
     , ("parse.type.request"    , respond status ParserHandler.parseType    )
     , ("parse.nodeexpr.request", respond status ParserHandler.parseNodeExpr)
+    , ("parser.ping.request"   , respond status ParserHandler.ping)
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)

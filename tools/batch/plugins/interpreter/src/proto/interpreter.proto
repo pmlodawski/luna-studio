@@ -59,4 +59,10 @@ message Interpreter {
             required bytes         value         = 2;
         }
     }
+    message Ping {
+        message Request { }
+        message Status  { 
+            required Request request = 1;
+        }
+    }
 }

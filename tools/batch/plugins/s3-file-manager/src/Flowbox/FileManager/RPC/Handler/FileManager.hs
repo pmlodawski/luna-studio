@@ -4,19 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.PluginManager.RPC.Handler.PluginManager where
+module Flowbox.FileManager.RPC.Handler.FileManager where
 
-import           Flowbox.Bus.RPC.RPC                                      (RPC)
-import           Flowbox.PluginManager.Context                            (Context)
-import           Flowbox.Prelude                                          hiding (Context, error, id)
+import           Flowbox.Bus.RPC.RPC                                  (RPC)
+import           Flowbox.FileManager.Context                          (Context)
+import           Flowbox.Prelude                                      hiding (Context, error, id)
 import           Flowbox.System.Log.Logger
-import qualified Generated.Proto.PluginManager.PluginManager.Ping.Request as Ping
-import qualified Generated.Proto.PluginManager.PluginManager.Ping.Status  as Ping
+import qualified Generated.Proto.FileManager.FileManager.Ping.Request as Ping
+import qualified Generated.Proto.FileManager.FileManager.Ping.Status  as Ping
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
+logger = getLoggerIO "Flowbox.FileManager.RPC.Handler.Plugin"
 
 -------- public api -------------------------------------------------
 

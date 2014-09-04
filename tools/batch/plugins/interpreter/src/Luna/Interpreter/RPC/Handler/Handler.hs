@@ -53,6 +53,7 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove )
     , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList   )
     , (Topic.interpreterValueRequest           , respond Topic.update Value.get                    )
+    , (Topic.interpreterPingRequest            , respond Topic.update Interpreter.ping             )
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
