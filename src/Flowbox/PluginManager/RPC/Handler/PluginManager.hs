@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 module Flowbox.PluginManager.RPC.Handler.PluginManager where
 
-import           Flowbox.Bus.RPC.RPC                               (RPC)
-import           Flowbox.PluginManager.Context                     (Context)
-import           Flowbox.Prelude                                   hiding (Context, error, id)
+import           Flowbox.Bus.RPC.RPC                                      (RPC)
+import           Flowbox.PluginManager.Context                            (Context)
+import           Flowbox.Prelude                                          hiding (Context, error, id)
 import           Flowbox.System.Log.Logger
-import qualified Generated.Proto.PluginManager.Plugin.Ping.Request as Ping
-import qualified Generated.Proto.PluginManager.Plugin.Ping.Status  as Ping
+import qualified Generated.Proto.PluginManager.PluginManager.Ping.Request as Ping
+import qualified Generated.Proto.PluginManager.PluginManager.Ping.Status  as Ping
 
 
 
@@ -21,6 +21,6 @@ logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
 -------- public api -------------------------------------------------
 
 ping :: Ping.Request -> RPC Context IO Ping.Status
-ping Ping.Request = do
+ping request = do
     logger info "Ping received"
-    return Ping.Status
+    return $ Ping.Status request
