@@ -13,6 +13,8 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                    (Context)
 import           Flowbox.System.Log.Logger                                         hiding (error)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.Interpreter.Interpreter.Ping.Request              as Ping
+import qualified Generated.Proto.Interpreter.Interpreter.Ping.Status               as Ping
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Request               as Run
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Update                as Run
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Request    as WatchPointAdd
@@ -58,3 +60,8 @@ watchPointList request = do
     list <- lift2 $ SessionT $ SetForest.toList <$> WatchPoint.all
     return $ WatchPointList.Status request $ encodeList list
 
+
+ping :: Ping.Request -> RPC Context SessionT Ping.Status
+ping request = do
+    logger info "Ping received"
+    return $ Ping.Status request
