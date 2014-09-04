@@ -43,7 +43,14 @@ isNotAlreadyConnected graph nodeID adstPort = not connected where
 
 
 sort :: Graph -> [(Node.ID, Node)]
-sort graph = DG.topsortStable graph $ Exts.sortWith Node.position' $ DG.labNodes graph
+sort graph = DG.topsortStable graph $ List.sortBy compareNodes $ DG.labNodes graph where
+    compareNodes :: (Node.ID, Node) -> (Node.ID, Node) -> Ordering
+    compareNodes (_, aNode) (_, bNode) 
+        |      Node.isInputs  aNode  && not (Node.isInputs  bNode) = LT
+        | not (Node.isInputs  aNode) &&      Node.isInputs  bNode  = GT
+        |      Node.isOutputs aNode  && not (Node.isOutputs bNode) = GT
+        | not (Node.isOutputs aNode) &&      Node.isOutputs bNode  = LT
+        | otherwise = compare (aNode ^. Node.pos) (bNode ^. Node.pos)
 
 
 createMonadicEdges :: Graph -> [LEdge Edge]
