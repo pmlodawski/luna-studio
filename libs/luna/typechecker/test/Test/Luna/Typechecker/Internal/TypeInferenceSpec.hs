@@ -81,7 +81,7 @@ spec = do
       deferred `shouldBe` []
       retained `shouldBe` []
     it "prop: returns [] for null predicate list" $
-      property $  
+      property $
       forAll (listOf $ genTyvar Star) $ \fs ->
       forAll (listOf $ genTyvar Star) $ \gs ->
         let (ds, rs) = runTI (split initialEnv fs gs [])
