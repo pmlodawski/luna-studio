@@ -162,11 +162,6 @@ def install_from_sources(name, version=None):
             with changed_cwd(d):
                 try_call ('cabal clean; cabal install')
 
-def instal_c2hs(name, version):
-    install_from_sources('haskell-src-exts', version='1.13.5')
-    try_call('cd third-party/language-c-0.4.5 && cabal install')
-    return (name + '-' + version)
-
 def install_hprotoc(name, version):
     try_call('cd third-party/protocol-buffers && cabal install')
     install_from_sources('hprotoc')
@@ -205,7 +200,7 @@ def main():
     checkCabalPkg("alex")
     checkCabalPkg("hspec", check="hspec-discover")
 
-    checkCabalPkg("c2hs", version="0.16.5", installUsing=instal_c2hs)
+    checkCabalPkg("c2hs", version="0.16.5")
 
     checkCabalPkg("gtk2hs-buildtools", check="gtk2hsC2hs")
 
