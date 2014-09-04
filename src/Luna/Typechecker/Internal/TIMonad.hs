@@ -11,7 +11,6 @@ import           Luna.Typechecker.Internal.Unification      (mgu)
 
 import           Control.Applicative                        (Applicative(..))
 
-
 -- TODO [kgdk] 19 sie 2014: a może użyć State/ST zamiast newtype TI a?
 -- TODO [kgdk] 19 sie 2014: zbadać performance 'State (x,y)' vs to tutaj vs 'StateT x (State y)'
 -- TODO [kgdk] 21 sie 2014: zrobic z tego Applicative
