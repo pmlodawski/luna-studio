@@ -7,8 +7,10 @@
 
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TemplateHaskell           #-}
-{-# LANGUAGE ViewPatterns              #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Target.HS.TH.Struct where
 
@@ -96,16 +98,33 @@ registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
     let
         dataVars   = map VarT $ getDecVarNames dataDec
         baseT      = ConT typeName
-        ctx        = getContext funcT
+        prectx     = getContext funcT
         (src, ret) = splitSignature $ getSignature funcT
         c1         = equalT argsT src
         c2         = equalT outT ret
         nt         = foldl AppT (ConT Naming.classFunc) [baseT, LitT (StrTyLit methodName), argsT, outT]
-        funcs      = [FunD Naming.funcGetFunc [Clause [WildP, WildP] (NormalB (VarE funcName)) []]]
-        inst       = InstanceD (c1:c2:ctx) nt funcs
-    return [inst]
+        funcs      = [FunD Naming.funcGetFunc [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+        ctx        = fmap fixCtx_GHC_7_8 $ c1:c2:prectx
+        inst       = InstanceD ctx nt funcs
+    return $ [inst]
 
+-- GHC up to 7.9 has a bug when reifying contexts of classes compiled with -XPolyKinds
+-- it adds GHC.Prim.* as first argument to each such constraint
+fixCtx_GHC_7_8 ctx = case ctx of
+    ClassP name t -> ClassP name t' where
+        t' = filter checkStar t
+        checkStar t = case t of
+            ConT name -> if (nameBase name == "*") then False else True
+            _         -> True
+    _             -> ctx
+
+
+#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 709
 equalT = AppT . (AppT EqualityT)
+#else
+equalT = EqualP
+#endif
+
 
 
 genTNameSet elmod el n = tvars where

@@ -1,150 +1,16 @@
-
-# ###### File ###################################
-
-# class File:
-#     def readFile self name:
-#         ```getIO $ liftFIO1 hsLib_System_IO_readFile #{name}```
-
-#     def writeFile self name content:
-#         content = content.toString
-#         ```getIO $ liftFIO2 hsLib_System_IO_writeFile #{name} #{content}```
-
-import ```           Control.Applicative                          ```
-import ``` qualified Data.Array.Accelerate             as A       ```
-import ```           Data.Map.Lazy                     (Map)      ```
-import ``` qualified Data.Map.Lazy                     as Map     ```
-import ``` qualified System.Exit                       as Exit    ```
-
-
-###### Console ################################
+class Vector a:
+    x,y,z :: a
+    def test a b:
+        {a,b}
 
 def print msg:
-    ```print' #{msg}```
-
-###### List ###################################
-
-def List.at index::Int:
-    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```
-
-def List.+ l2:
-    ```liftf2 (++) #{self} #{l2}```
-
-def List.contains el:
-    ```liftf2 (elem) (val #{el}) #{self}```
-
-def List.each callback:
-    ```liftf2 map (val $ call1 #{callback}) #{self}```
-
-def List.foldr f el:
-    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```
-
-def List.head:
-    ```flattenCtx $ liftf1 head #{self}```
-
-def List.length:
-    ```liftf1 length #{self}```
-
-def List.sort:
-    #FIXME[wd]: very dirty hack for Pure Safe values.
-    ```(fmap.fmap.fmap) val $ liftf1 sort ((fmap.fmap.fmap) (fromSafe.fromPure) #{self})```
-
-def List.min:
-    self.sort.head
-
-def List.sum:
-    self.foldr ((x,y):x+y) 0
-
-###### Map ####################################
-
-def Map.each f:
-    ```liftf2 Map.map (val $ call1 #{f}) #{self}```
-
-def Map.eachWithKey f:
-    ```liftf2 Map.mapWithKey (val $ call2 #{f}) #{self}```
-
-###### Bool ####################################
-
-def Bool.not:
-    ```liftf1 not #{self}```
-
-###### Int ####################################
+    ```autoLift1 print #{msg}```
 
 def Int.+ a:
-    ```liftf2 (+) #{self} #{a}```
-
-def Int.- a:
-    ```liftf2 (-) #{self} #{a}```
-
-def Int.* a:
-    ```liftf2 (*) #{self} #{a}```
-
-def Int./ a:
-    ```liftf2 (\a b -> toDouble a / toDouble b) #{self} #{a}```
-
-def Int.< a:
-    ```liftf2 (<) #{self} #{a}```
+    ```liftF2 (+) #{self} #{a}```
 
 def Int.> a:
-    ```liftf2 (>) #{self} #{a}```
+    ```liftF2 (>) #{self} #{a}```
 
-def Int.sqrt:
-    ```liftf1 (sqrt.toDouble) #{self}```
-
-def Int.next:
-    ```liftf1 (+1) #{self}```
-
-def Int.prev:
-    ```liftf1 (-1) #{self}```
-
-def Int.str:
-    ```liftf1 show #{self}```
-
-###### Double ##################################
-
-def Double.+ a:
-    ```liftf2 (+) #{self} #{a}```
-
-def Double.- a:
-    ```liftf2 (-) #{self} #{a}```
-
-def Double.* a:
-    ```liftf2 (*) #{self} #{a}```
-
-def Double./ a:
-    ```liftf2 (/) #{self} #{a}```
-
-def Double.< a:
-    ```liftf2 (<) #{self} #{a}```
-
-def Double.> a:
-    ```liftf2 (>) #{self} #{a}```
-
-def Double.sqrt:
-    ```liftf1 sqrt #{self}```
-
-def Double.next:
-    ```liftf1 (+1) #{self}```
-
-def Double.prev:
-    ```liftf1 (-1) #{self}```
-
-def Double.str:
-    ```liftf1 show #{self}```
-
-def raise el err:
-    ```raise #{el} #{err}```
-
-def catch el f:
-    ```catch #{el} #{f}```
-
-def isError a:
-    ```isError #{a}```
-
-
-class Sys:
-    def exitSuccess:
-        ```Exit.exitSuccess *> returnIO (Safe ())```
-    def exitFailure:
-        ```Exit.exitFailure *> returnIO (Safe ())```
-
-
+def Int.inc:
+    self + 1

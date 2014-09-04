@@ -129,7 +129,14 @@ parseNativeNode nodeID native = do
     expr <- case Parser.parseExpr native $ ASTInfo.mk nodeID of
                     Left  er     -> left $ show er
                     Right (e, _) -> return e
-    addExpr nodeID expr
+    addExpr nodeID $ replaceNativeVars srcs expr
+
+replaceNativeVars :: [Expr] -> Expr -> Expr
+replaceNativeVars srcs native = native & Expr.segments %~ replaceNativeVars' srcs where
+    replaceNativeVars' []                      segments                   = segments
+    replaceNativeVars' _                       []                         = []
+    replaceNativeVars' vars                    (sh@Expr.NativeCode {}:st) = sh : replaceNativeVars' vars st
+    replaceNativeVars' ((Expr.Var _ name ):vt) (sh@Expr.NativeVar  {}:st) = (sh & Expr.name .~ name) : replaceNativeVars' vt st
 
 
 parseAppNode :: Node.ID -> String -> GPPass ()

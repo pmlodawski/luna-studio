@@ -117,7 +117,7 @@ runDecls decls = do
 
 runAssignment :: String -> String -> Session ()
 runAssignment asigned asignee =
-    runStmt $ asigned ++ " <- return " ++ asignee
+    runDecls $ asigned ++ " = " ++ asignee
 
 
 setHardcodedExtensions :: Session ()
