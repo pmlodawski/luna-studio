@@ -12,6 +12,7 @@ module Flowbox.Graphics.Color.Profile where
 
 import Flowbox.Graphics.Color.CIE.XYZ
 import Flowbox.Graphics.Color.Gamma
+import Flowbox.Graphics.Color.Illuminants (Chromaticity(..))
 import Flowbox.Prelude
 
 
@@ -21,3 +22,4 @@ class RGBProfile a b where
     toXYZ      :: a 'Linear b -> XYZ b
     fromXYZ    :: XYZ b -> a 'Linear b
     whitepoint :: a c b -> ReferenceWhite a
+    primaries  :: a c b -> (Chromaticity b, Chromaticity b, Chromaticity b)
