@@ -36,7 +36,6 @@ rgbProfileGen _ _ = PreProcessor {
                 , ""
                 , "import qualified Data.Array.Accelerate as A"
                 , "import qualified Linear"
-                , "import           Linear.Accelerate ()"
                 , ""
                 , "import Flowbox.Graphics.Color.CIE.XYZ"
                 , "import qualified Flowbox.Graphics.Color.Companding as Companding"
