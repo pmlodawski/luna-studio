@@ -7,7 +7,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
 
-module Utils where
+module Utils (
+  module Utils,
+  run
+) where
 
 import           Flowbox.Prelude                      as P
 import           Flowbox.Math.Matrix                  as M

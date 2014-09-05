@@ -11,9 +11,6 @@ module Main where
 
 import Flowbox.Prelude as P hiding (zoom, constant)
 
-import Data.Array.Accelerate as A hiding (rotate, constant)
-import Data.Array.Accelerate.CUDA
-
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Filter as Conv
 import Flowbox.Graphics.Composition.Generators.Gradient
@@ -29,12 +26,13 @@ import Flowbox.Graphics.Composition.Generators.Transform
 import Flowbox.Math.Matrix as M
 import Flowbox.Graphics.Utils
 
+import qualified Data.Array.Accelerate              as A
+import qualified Data.Array.Accelerate.Math.Complex as A
+
 import Linear.V2
-import Math.Space.Space
-import Math.Metric
 import Math.Coordinate.Cartesian as Cartesian
-import Math.Coordinate.Coordinate (convertCoord)
-import Data.Array.Accelerate (index2, Boundary(..))
+import Math.Metric
+import Math.Space.Space
 
 import Utils
 
@@ -96,7 +94,7 @@ scalingTest flt = do
     let process x = rasterizer $ monosampler 
                                $ scale (V2 (720 / 64) (480 / 64))
                                $ interpolator flt 
-                               $ fromMatrix Clamp x
+                               $ fromMatrix A.Clamp x
     forAllChannels "lena_small.bmp" process
 
 --
@@ -107,8 +105,8 @@ gaussianTest :: Exp Int -> IO ()
 gaussianTest kernSize = do
     let hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable kernSize)) $ gauss 1.0
     let vmat = id M.>-> normalize $ toMatrix (Grid (variable kernSize) 1) $ gauss 1.0
-    let p = pipe Clamp
-    let process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix Clamp x
+    let p = pipe A.Clamp
+    let process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
     forAllChannels "moonbow.bmp" process
 
 --
@@ -118,8 +116,8 @@ gaussianTest kernSize = do
 laplacianTest :: Exp Int -> Exp Float -> Exp Float -> IO ()
 laplacianTest kernSize crossVal sideVal = do
     let flt = laplacian (variable crossVal) (variable sideVal) (pure $ variable kernSize)
-    let p = pipe Clamp
-    let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix Clamp x
+    let p = pipe A.Clamp
+    let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
 
 --
@@ -128,7 +126,7 @@ laplacianTest kernSize crossVal sideVal = do
 --
 morphologyTest :: Exp Int -> IO ()
 morphologyTest size = do
-    let l c = fromMatrix Clamp c
+    let l c = fromMatrix A.Clamp c
     let v = pure $ variable size
     let morph1 c = nearest $ closing v $ l c -- Bottom left
     let morph2 c = nearest $ opening v $ l c -- Bottom right
@@ -148,7 +146,7 @@ motionBlur size angle = do
              $ rotateCenter (variable angle)
              $ nearest
              $ rectangle (Grid (variable size) 1) 1 0
-    let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix Clamp x
+    let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
 
 --
@@ -185,7 +183,7 @@ radialBlur size angle = do
                   $ toPolarMapping 
                   $ translate (V2 (-256) (-256))
                   $ nearest 
-                  $ fromMatrix Clamp x
+                  $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
 
 --
@@ -194,7 +192,7 @@ radialBlur size angle = do
 defocusBlur :: Exp Int -> IO ()
 defocusBlur size = do
    let kern = ellipse (pure $ variable size) 1 (0 :: Exp Float)
-   let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix Clamp x
+   let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix A.Clamp x
    forAllChannels "lena.bmp" process
 
 --
@@ -203,7 +201,7 @@ defocusBlur size = do
 boundTest :: IO ()
 boundTest = do
    let mysampler = multisampler (normalize $ toMatrix 10 box)
-   let mask = mysampler $ scale 0.25 $ nearest $ bound Mirror $ ellipse 200 1 (0 :: Exp Float)
+   let mask = mysampler $ scale 0.25 $ nearest $ bound A.Mirror $ ellipse 200 1 (0 :: Exp Float)
    testSaveChan' "out.bmp" (rasterizer mask)
 
 --
@@ -211,9 +209,9 @@ boundTest = do
 -- (Advanced rotational convolution, Edge detection test)
 --
 --rotational :: Exp Float -> Matrix2 Float -> Matrix2 Float -> DiscreteGenerator (Exp Float)
---rotational phi mat chan = id `p` Conv.filter 1 edgeKern `p` id $ fromMatrix Clamp chan
+--rotational phi mat chan = id `p` Conv.filter 1 edgeKern `p` id $ fromMatrix A.Clamp chan
 --    where edgeKern = rotateMat (phi * pi / 180) (Constant 0) mat
---          p = pipe 512 Clamp
+--          p = pipe 512 A.Clamp
 
 --kirschTest :: Matrix2 Float -> IO ()
 --kirschTest edgeOp = do
@@ -231,9 +229,21 @@ boundTest = do
 unsharpMaskTest :: Exp Float -> Exp Int -> IO ()
 unsharpMaskTest sigma kernSize = do
     let flt = normalize $ toMatrix (Grid (variable kernSize) (variable kernSize)) $ dirac (variable sigma) - gauss 1.0
-    let p = pipe Clamp
-    let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix Clamp x
+    let p = pipe A.Clamp
+    let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
+
+--
+-- FFT test
+--
+fftTest :: (Exp Float -> Exp Float) -> IO ()
+fftTest response = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/edge/mountain.png"
+
+    -- Test with response = \x -> abs $ 50 * (x - 0.012)
+    let process = fftFilter run $ \freq ampl -> ampl * clamp' 0 2 (response $ freq / 150)
+
+    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
 
 main :: IO ()
 main = do
