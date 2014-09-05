@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
-module Flowbox.Graphics.Color.Companding.LStar where
+module Flowbox.Graphics.Color.Companding.LStar (LStar(..)) where
 
 import qualified Data.Array.Accelerate as A
 
@@ -18,10 +18,10 @@ import Flowbox.Prelude
 
 
 
-data L = L
-       deriving Show
+data LStar = LStar
+           deriving Show
 
-instance (Num a, a ~ A.Exp t, A.Elt t, A.IsFloating t) => Companding L a where
+instance (Num a, a ~ A.Exp t, A.Elt t, A.IsFloating t) => Companding LStar a where
     toLinear   _ v = v A.<=* 0.08 A.? (100 * v / k, ((v + 0.16) / 1.16) ** 3)
 
     fromLinear _ v = v A.<=* e A.? (v * k / 100, 1.16 * v ** (1/3) - 0.16)

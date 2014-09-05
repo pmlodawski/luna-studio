@@ -34,16 +34,40 @@ import Flowbox.Utils
 import Luna.Target.HS.Data.Func.Args
 
 ----------------------------------------------------------------------------------
+-- Type classes
+----------------------------------------------------------------------------------
+
+--class AppNext val a b | val a -> b where
+--    appNext :: val -> a -> b
+
+----------------------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------------------
+
 
 newtype AppH fptr args = AppH (fptr, args) deriving (Show, Eq, Typeable)
 appH fptr args = AppH (fptr, args)
 
 fromAppH (AppH a) = a
 
+--newtype LamH lam args = LamH (lam, args) deriving (Show, Eq, Typeable)
+--lamH lam args = LamH (lam, args)
+
+--fromLamH (LamH a) = a
+
+----------------------------------------------------------------------------------
+-- Utils
+----------------------------------------------------------------------------------
+
 appByName name val (AppH (fptr, args)) = AppH (fptr, appArgByName name val args)
 appNext val (AppH (fptr, args)) = AppH (fptr, appNextArg val args)
 
 appByName' name val fptr = fmap (appArgByName name val) fptr
 appNext' val fptr = fmap (appNextArg val) fptr
+
+
+--instance AppNext val (AppH fptr args) (AppH fptr argsout) <= (AppNextArg val args argsout) where
+--    appNext val (AppH (fptr, args)) = AppH (fptr, appNextArg val args)
+
+--instance AppNext val (LamH lam args) (LamH lam argsout) <= (AppNextArg val args argsout) where
+--    appNext val (LamH (lam, args)) = LamH (lam, appNextArg val args)

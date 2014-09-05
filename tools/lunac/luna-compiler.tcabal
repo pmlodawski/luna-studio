@@ -34,5 +34,6 @@ Executable luna
                   luna-initializer,
                   flowbox-utils,
                   MissingH,
-                  optparse-applicative,
+                  optparse-applicative < 0.10, 
                   timeit
+-- FIXME: update optparse-applicative to newer version

@@ -150,7 +150,11 @@ def gap
 
 def main arg:
     Foo arg.boo My gap
-|], named "tuples" [r|
+|], named "tuples 1" [r|
+def main arg:
+    {1, 2}
+    3
+|], named "tuples 2" [r|
 def main arg:
     x = 4
     y = {1, x}
@@ -169,7 +173,7 @@ def main arg:
 
 -- |], named "if-else" [r|
 -- def print
--- 
+--
 -- def main arg:
 --     print $ if 1 > 2: 5
 --             else: 6

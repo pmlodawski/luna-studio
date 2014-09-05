@@ -9,9 +9,11 @@ module Luna.Interpreter.Session.AST.Executor where
 import           Control.Monad.State        hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Data.Char                  as Char
-import qualified Data.List                  as List
+import qualified Data.Maybe                 as Maybe
+import qualified Text.Read                  as Read
 
-import           Flowbox.Prelude                            hiding (children, inside)
+import qualified Flowbox.Data.List                          as List
+import           Flowbox.Prelude                            as Prelude hiding (children, inside)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Graph.Node                            as Node
 import qualified Luna.Interpreter.Session.AST.GenCode       as GenCode
@@ -29,7 +31,7 @@ import qualified Luna.Interpreter.Session.Env               as Env
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
-import qualified Luna.Pass.Transform.Graph.Parser.Parser    as GraphParser
+import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
 
 
 
@@ -43,7 +45,6 @@ processMain = do
     mainPtr <- gets $ view Env.mainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
-
 
 
 processNodeIfNeeded :: CallDataPath -> Session ()
@@ -72,7 +73,7 @@ processNode callDataPath = do
 executeOutputs :: CallDataPath -> [VarName] -> Session ()
 executeOutputs callDataPath argsVarNames = do
     let argsCount     = length $ Traverse.inDataConnections callDataPath
-        functionName  = if argsCount == 1 then "id" else '(' : replicate (argsCount-1) ',' ++ ")"
+        functionName  = if argsCount == 1 then "id" else "Tuple"
     when (length callDataPath > 1) $
         execute (init callDataPath) functionName  argsVarNames
 
@@ -126,26 +127,53 @@ execute callDataPath functionName argsVarNames = do
         CacheStatus.Ready        -> left "executeNode (Ready) : something went wrong"
 
 
+data VarType = Lit
+             | Con
+             | Var
+             | Native
+             | Tuple
+             | Id     deriving Show
+
+
+varType :: String -> VarType
+varType [] = Prelude.error "varType : empty var name"
+varType "id"                                             = Id
+varType "Tuple"                                          = Tuple
+varType name@(h:_)
+    | List.isPrefixOf "```" name                         = Native
+    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit
+    | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit
+    | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit
+    | Char.isUpper h = Con
+    | otherwise      = Var
+
+
 evalFunction :: String -> CallDataPath -> [VarName] -> Session VarName
 evalFunction funName callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        funStr = if GraphParser.isOperator funName then "(" ++ funName ++ ")" else funName
+        nameHash      = Hash.hashMe2 funName
     --typedFun  <- TypeCheck.function funStr argsVarNames
     --typedArgs <- mapM TypeCheck.variable argsVarNames
     --let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
     --    argSeparator  = " `call` "
     --let operation     = List.intercalate argSeparator (function : typedArgs)
-    let mkArg v@(h:_)
-            | Char.isDigit h = "(val " ++ v ++ ")"
-            | Char.isUpper h = "Con_" ++ v
-            | otherwise      = v
-        mkObj v@(h:_)
-            | Char.isDigit h = "(val " ++ v ++ ")"
-            | Char.isUpper h = "$ member (Proxy::Proxy " ++ show v ++ ") (val Cls_" ++ v ++ ")"
-            | otherwise      = v
-        args = map mkArg argsVarNames
-        operation     = "toIOEnv $ call " ++ List.intercalate " $ appNext " (reverse args) ++ " " ++ mkObj funName
+
+    let mkArg arg = "(Value (Pure "  ++ arg ++ "))"
+        args      = map mkArg argsVarNames
+        appArgs a = if null a then "" else " $ appNext " ++ List.intercalate " $ appNext " (reverse a)
+        genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
+
+        self      = head argsVarNames
+        operation = "toIOEnv $ " ++ case varType funName of
+            Id     -> mkArg self
+            Native -> genNative funName
+            Con    -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
+            Var    -> "call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
+            Lit    -> if Maybe.isJust (Read.readMaybe funName :: Maybe Int)
+                        then "val (" ++ funName ++" :: Int)"
+                        else "val " ++ funName
+            Tuple  -> "val (" ++ List.intercalate "," args ++ ")"
         expression    = tmpVarName ++ " <- " ++ operation
     Session.runStmt expression
     hash <- Hash.compute tmpVarName
