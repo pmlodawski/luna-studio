@@ -31,9 +31,9 @@ import Flowbox.Prelude
 --    0,         0,       0.91822
 --    ]
 vonKries :: (Num a, Floating a) => Linear.M33 a
-vonKries = Linear.V3 (Linear.V3   0.40024  (-0.2263) 0)
-                     (Linear.V3   0.7076     1.16532 0)
-                     (Linear.V3 (-0.08081)   0.0457  0.91822)
+vonKries = Linear.V3 (Linear.V3   0.40024 0.7076  (-0.08081))
+                     (Linear.V3 (-0.2263) 1.16532   0.0457)
+                     (Linear.V3   0       0         0.91822)
 
 --vonKriesInverse :: A.Array A.DIM2 Float
 --vonKriesInverse = A.fromList (A.Z A.:. 3 A.:. 3) [
@@ -42,9 +42,9 @@ vonKries = Linear.V3 (Linear.V3   0.40024  (-0.2263) 0)
 --    0        , 0           , 1.0890636
 --    ]
 vonKriesInverse :: (Num a, Floating a) => Linear.M33 a
-vonKriesInverse = Linear.V3 (Linear.V3   1.8599364    0.3611914  0)
-                            (Linear.V3 (-1.1293816)   0.6388125  0)
-                            (Linear.V3   0.2198974  (-0.0000064) 1.0890636)
+vonKriesInverse = Linear.V3 (Linear.V3 1.8599364 (-1.1293816)   0.2198974)
+                            (Linear.V3 0.3611914   0.6388125  (-0.0000064))
+                            (Linear.V3 0           0            1.0890636)
 
 --bradford :: A.Array A.DIM2 Float
 --bradford = A.fromList (A.Z A.:. 3 A.:. 3) [
@@ -53,9 +53,9 @@ vonKriesInverse = Linear.V3 (Linear.V3   1.8599364    0.3611914  0)
 --    0.0389,     (-0.0685), 1.0296
 --    ]
 bradford :: (Num a, Floating a) => Linear.M33 a
-bradford = Distributive.distribute $ Linear.V3 (Linear.V3 0.8951    (-0.7502)   0.0389)
-                     (Linear.V3 0.2664      1.7135  (-0.0685))
-                     (Linear.V3 (-0.1614)   0.0367    1.0296)
+bradford = Linear.V3 (Linear.V3   0.8951    0.2664  (-0.1614))
+                     (Linear.V3 (-0.7502)   1.7135    0.0367)
+                     (Linear.V3   0.0389  (-0.0685)   1.0296)
 
 --bradfordInverse :: A.Array A.DIM2 Float
 --bradfordInverse = A.fromList (A.Z A.:. 3 A.:. 3) [
@@ -64,9 +64,9 @@ bradford = Distributive.distribute $ Linear.V3 (Linear.V3 0.8951    (-0.7502)   
 --    (-0.0085287), 0.0400428,    0.9684867
 --    ]
 bradfordInverse :: (Num a, Floating a) => Linear.M33 a
-bradfordInverse = Distributive.distribute $ Linear.V3 (Linear.V3   0.9869929  0.4323053 (-0.0085287))
-                            (Linear.V3 (-0.1470543) 0.5183603   0.0400428)
-                            (Linear.V3   0.1599627  0.0492912   0.9684867)
+bradfordInverse = Linear.V3 (Linear.V3   0.9869929  (-0.1470543) 0.1599627)
+                            (Linear.V3   0.4323053    0.5183603  0.0492912)
+                            (Linear.V3 (-0.0085287)   0.0400428  0.9684867)
 
 xyzScaling :: (Num a, Floating a) => Linear.M33 a
 xyzScaling = Linear.eye3
