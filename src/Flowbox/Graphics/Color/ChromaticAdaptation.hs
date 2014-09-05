@@ -13,7 +13,6 @@ import qualified Data.Array.Accelerate as A
 import qualified Data.Distributive     as Distributive
 import           Linear ((^*), _x, _y, _z)
 import qualified Linear
-import           Linear.Accelerate ()
 
 import Flowbox.Graphics.Color.CIE.XYZ
 import Flowbox.Graphics.Color.CIE.XyY
