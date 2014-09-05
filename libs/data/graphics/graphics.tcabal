@@ -29,6 +29,7 @@ Library
                   algebraic       > 0.1    ,
                   bmp                      ,
                   containers               ,
+                  distributive             ,
                   flowbox-utils            ,
                   imagemagick   >= 0.0.3.6 ,
                   lifted-base              ,

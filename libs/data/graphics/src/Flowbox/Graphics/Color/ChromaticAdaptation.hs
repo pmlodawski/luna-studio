@@ -54,7 +54,7 @@ vonKriesInverse = Linear.V3 (Linear.V3   1.8599364    0.3611914  0)
 --    0.0389,     (-0.0685), 1.0296
 --    ]
 bradford :: (Num a, Floating a) => Linear.M33 a
-bradford = Linear.V3 (Linear.V3 0.8951    (-0.7502)   0.0389)
+bradford = Distributive.distribute $ Linear.V3 (Linear.V3 0.8951    (-0.7502)   0.0389)
                      (Linear.V3 0.2664      1.7135  (-0.0685))
                      (Linear.V3 (-0.1614)   0.0367    1.0296)
 
@@ -65,7 +65,7 @@ bradford = Linear.V3 (Linear.V3 0.8951    (-0.7502)   0.0389)
 --    (-0.0085287), 0.0400428,    0.9684867
 --    ]
 bradfordInverse :: (Num a, Floating a) => Linear.M33 a
-bradfordInverse = Linear.V3 (Linear.V3   0.9869929  0.4323053 (-0.0085287))
+bradfordInverse = Distributive.distribute $ Linear.V3 (Linear.V3   0.9869929  0.4323053 (-0.0085287))
                             (Linear.V3 (-0.1470543) 0.5183603   0.0400428)
                             (Linear.V3   0.1599627  0.0492912   0.9684867)
 
@@ -90,18 +90,24 @@ inverseAdaptationMatrix XYZScaling = xyzScalingInverse
 inverseAdaptationMatrix Bradford   = bradfordInverse
 inverseAdaptationMatrix VonKries   = vonKriesInverse
 
---chromaticAdaptation :: (Illuminant a c, Illuminant b c)
---                    => AdaptationMethod -> a -> b -> XYZ c -> XYZ c
---chromaticAdaptation adaptationMethod sourceWhitepoint destinationWhitepoint xyz = unV3 $ m Linear.!* toV3 xyz
---    where m = (inverseAdaptationMatrix adaptationMethod Linear.!*! coneResponseMatrix) Linear.!*! adaptationMatrix adaptationMethod
---          coneResponseMatrix        = diag $ destinationResponseVector / sourceResponseVector
---          sourceResponseVector      = adaptationMatrix adaptationMethod Linear.!* srcWhiteVec
---          destinationResponseVector = adaptationMatrix adaptationMethod Linear.!* dstWhiteVec
+chromaticAdaptation :: forall a b c. (Eq c, Num c, Floating c, Illuminant a c, Illuminant b c)
+                    => AdaptationMethod -> a -> b -> XYZ c -> XYZ c
+chromaticAdaptation adaptationMethod sourceWhitepoint destinationWhitepoint xyz = unV3 $ m Linear.!* toV3 xyz
+    where m = chromaticAdaptationMatrix adaptationMethod sourceWhitepoint destinationWhitepoint
 
---          srcWhiteVec = toV3 . Illuminants.toXYZ' . toxyY . Illuminants.primaries $ sourceWhitepoint
---          dstWhiteVec = toV3 . Illuminants.toXYZ' . toxyY . Illuminants.primaries $ destinationWhitepoint
+chromaticAdaptationMatrix :: forall a b c. (Eq c, Num c, Floating c, Illuminant a c, Illuminant b c)
+                          => AdaptationMethod -> a -> b -> Linear.M33 c
+chromaticAdaptationMatrix adaptationMethod sourceWhitepoint destinationWhitepoint = m
+    where m = (inverseAdaptationMatrix adaptationMethod Linear.!*! coneResponseMatrix) Linear.!*! adaptationMatrix adaptationMethod
+          coneResponseMatrix        = diag rho gamma beta
+              where Linear.V3 rho gamma beta = destinationResponseVector / sourceResponseVector
+          sourceResponseVector      = adaptationMatrix adaptationMethod Linear.!* srcWhiteVec
+          destinationResponseVector = adaptationMatrix adaptationMethod Linear.!* dstWhiteVec
 
---          diag a b c = Linear.V3 (Linear.V3 a 0 0) (Linear.V3 0 b 0) (Linear.V3 0 0 c)
+          srcWhiteVec = toV3 . Illuminants.toXYZ' . toxyY . Illuminants.primaries $ sourceWhitepoint
+          dstWhiteVec = toV3 . Illuminants.toXYZ' . toxyY . Illuminants.primaries $ destinationWhitepoint
+
+          diag a b c = Linear.V3 (Linear.V3 a 0 0) (Linear.V3 0 b 0) (Linear.V3 0 0 c)
 
 toV3 (XYZ x y z) = Linear.V3 x y z
 unV3 (Linear.V3 x y z) = XYZ x y z
