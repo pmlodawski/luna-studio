@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
-module Flowbox.Graphics.Color.Companding.REDLog where
+module Flowbox.Graphics.Color.Companding.REDLog (REDLog(..)) where
 
 import qualified Data.Array.Accelerate as A
 

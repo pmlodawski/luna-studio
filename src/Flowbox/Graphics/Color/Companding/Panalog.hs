@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
-module Flowbox.Graphics.Color.Companding.Panalog where
+module Flowbox.Graphics.Color.Companding.Panalog (Panalog(..)) where
 
 import qualified Data.Array.Accelerate as A
 

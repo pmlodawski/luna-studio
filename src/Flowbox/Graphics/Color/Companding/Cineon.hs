@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
-module Flowbox.Graphics.Color.Companding.Cineon where
+module Flowbox.Graphics.Color.Companding.Cineon (Cineon(..)) where
 
 import qualified Data.Array.Accelerate as A
 

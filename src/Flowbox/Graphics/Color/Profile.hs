@@ -4,17 +4,22 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 
 module Flowbox.Graphics.Color.Profile where
 
 import Flowbox.Graphics.Color.CIE.XYZ
+import Flowbox.Graphics.Color.Gamma
+import Flowbox.Graphics.Color.Illuminants (Chromaticity(..))
 import Flowbox.Prelude
 
 
 
 class RGBProfile a b where
     type ReferenceWhite a :: *
-    toXYZ   :: a b -> XYZ (ReferenceWhite a) b
-    fromXYZ :: XYZ (ReferenceWhite a) b -> a b
+    toXYZ      :: a 'Linear b -> XYZ b
+    fromXYZ    :: XYZ b -> a 'Linear b
+    whitepoint :: a c b -> ReferenceWhite a
+    primaries  :: a c b -> (Chromaticity b, Chromaticity b, Chromaticity b)
