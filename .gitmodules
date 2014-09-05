@@ -52,3 +52,6 @@
 [submodule "libs/data/graphics/test/samples"]
     path = libs/data/graphics/test/samples
     url = git@github.com:flowbox-public/ImageProcessingSamples.git
+[submodule "third-party/accelerate-fft"]
+	path = third-party/accelerate-fft
+	url = git@github.com:AccelerateHS/accelerate-fft.git
