@@ -14,6 +14,7 @@ import Flowbox.Prelude as P hiding (zoom, constant)
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Filter as Conv
 import Flowbox.Graphics.Composition.Generators.Gradient
+import Flowbox.Graphics.Composition.Generators.Keyer
 import Flowbox.Graphics.Composition.Generators.Matrix
 import Flowbox.Graphics.Composition.Generators.Pipe
 import Flowbox.Graphics.Composition.Generators.Rasterizer
@@ -232,6 +233,12 @@ unsharpMaskTest sigma kernSize = do
     let p = pipe A.Clamp
     let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
+
+keyerTest :: Exp Float -> Exp Float -> Exp Float -> Exp Float -> IO ()
+keyerTest w x y z = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
+    let process c = rasterizer $ keyer (A.lift (w, x, y, z)) $ fromMatrix A.Clamp c
+    testSaveRGBA' "out.png" r g b (process g)
 
 --
 -- FFT test
