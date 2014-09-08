@@ -1,4 +1,4 @@
-module Luna.Typechecker.Internal.Unification (mgu, match) where
+module Luna.Typechecker.Internal.Unification where
 
 import           Luna.Typechecker.Internal.AST.Type         (Type(..),Tyvar)
 
