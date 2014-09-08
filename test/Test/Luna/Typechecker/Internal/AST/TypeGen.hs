@@ -1,12 +1,14 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Test.Luna.Typechecker.Internal.AST.TypeGen (
-    genType, genTVar, genTCon, genTAp, genTGen, genTyvar, genSubst, genTypeNogen, genPredNogen
-  ) where
+module Test.Luna.Typechecker.Internal.AST.TypeGen where
 
 import           Luna.Typechecker.Internal.AST.Type      (Type(..), Tyvar(..), Tycon(..))
 import           Luna.Typechecker.Internal.AST.Kind      (Kind(..))
 import           Luna.Typechecker.Internal.AST.TID       (enumTID, TID)
+import Luna.Typechecker.Internal.AST.Scheme
+import Luna.Typechecker.Internal.Typeclasses
 
 import qualified Luna.Typechecker.Internal.HasKind       as HKd
 import           Luna.Typechecker.Internal.Typeclasses      (Pred(..))
@@ -16,7 +18,6 @@ import           Control.Applicative                     ((<$>), (<*>))
 import           Control.Monad                           (liftM2)
 
 import           Test.QuickCheck
-
 
 
 instance Arbitrary Kind where

@@ -29,3 +29,4 @@ Executable luna-typechecker-tests
                     , hspec
                     , QuickCheck
                     , transformers
+                    , array
