@@ -23,21 +23,22 @@ import qualified Generated.Proto.Interpreter.Interpreter.Value.Request as Value
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Update  as Value
 import           Luna.Interpreter.Proto.CallPoint                      ()
 import           Luna.Interpreter.Proto.CallPointPath                  ()
+import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.RPC.Topic                            as Topic
 import qualified Luna.Interpreter.Session.Cache.Value                  as Value
 import           Luna.Interpreter.Session.Data.CallPointPath           (CallPointPath)
-import           Luna.Interpreter.Session.SessionT                     (SessionT (SessionT))
-
+import           Luna.Interpreter.Session.Session                      (SessionST)
 
 
 logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Value"
 
 
-get :: Value.Request -> RPC Context SessionT Value.Update
+
+get :: Value.Request -> RPC Context SessionST Value.Update
 get (Value.Request tcallPointPath) = do
     callPointPath <- decodeE tcallPointPath
-    result <- lift2 $ SessionT $ Value.getIfReady callPointPath
+    result <- liftSession $ Value.getIfReady callPointPath
     return $ Value.Update tcallPointPath result
 
 

@@ -39,5 +39,5 @@ run rpc = do
 
 
 runLifted :: Monad m => RPC s m r -> StateT s m (Either Error r)
-runLifted rpc = runEitherT rpc
+runLifted = runEitherT
 

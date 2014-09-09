@@ -66,7 +66,7 @@ handleLoopState topics s process = do
 
 handleState :: (Message -> StateT s IO [Message]) -> StateT s BusT ()
 handleState process = do
-    (MessageFrame msg crlID _ _) <- lift $ BusT $ Bus.receive
+    (MessageFrame msg crlID _ _) <- lift $ BusT Bus.receive
     liftIO $ logger debug $ "Received request: " ++ (msg ^. Message.topic)
     response <- hoist liftIO $ process msg
     lift $ BusT $ unless (null response) $ do

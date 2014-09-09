@@ -48,7 +48,10 @@ logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Session"
 
 
-type Session a = EitherT Error.ErrorStr (StateT Env I.Interpreter) a
+type SessionST = StateT Env I.Interpreter
+
+
+type Session = EitherT Error.ErrorStr SessionST
 
 
 run :: Config -> Env -> Session a -> IO (Either Error a)
