@@ -57,7 +57,7 @@ testUpdateNo updateNo = do
 
 
 hoistSessionST :: RPC Context IO a -> RPC Context SessionST a
-hoistSessionST = hoist ( hoist $ liftIO)
+hoistSessionST = hoist (hoist liftIO)
 --hoistSessionST = hoist ( hoist $ SessionT . liftIO)
 
 

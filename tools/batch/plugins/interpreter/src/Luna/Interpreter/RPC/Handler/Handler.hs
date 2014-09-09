@@ -47,12 +47,14 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Handler"
 
 handlerMap :: HandlerMap Context SessionST
 handlerMap callback = HandlerMap.fromList
-    [ (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run              )
-    , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd    )
-    , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove )
-    , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList   )
-    , (Topic.interpreterValueRequest           , respond Topic.update Value.get                    )
-    , (Topic.interpreterPingRequest            , respond Topic.update Interpreter.ping             )
+    [ (Topic.interpreterSetProjectIDRequest    , respond Topic.update Interpreter.setProjectID    )
+    , (Topic.interpreterSetMainPtrRequest      , respond Topic.update Interpreter.setMainPtr      )
+    , (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run             )
+    , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd   )
+    , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove)
+    , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList  )
+    , (Topic.interpreterValueRequest           , respond Topic.update Value.get                   )
+    , (Topic.interpreterPingRequest            , respond Topic.update Interpreter.ping            )
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 

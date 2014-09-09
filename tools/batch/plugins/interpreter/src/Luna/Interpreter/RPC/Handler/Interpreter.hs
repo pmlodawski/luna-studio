@@ -17,6 +17,10 @@ import qualified Generated.Proto.Interpreter.Interpreter.Ping.Request           
 import qualified Generated.Proto.Interpreter.Interpreter.Ping.Status               as Ping
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Request               as Run
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Update                as Run
+import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Request        as SetMainPtr
+import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Update         as SetMainPtr
+import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Request      as SetProjectID
+import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Update       as SetProjectID
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Request    as WatchPointAdd
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Update     as WatchPointAdd
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Request   as WatchPointList
@@ -24,15 +28,31 @@ import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Status 
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Request as WatchPointRemove
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update  as WatchPointRemove
 import           Luna.Interpreter.Proto.CallPointPath                              ()
+import           Luna.Interpreter.Proto.DefPoint                                   ()
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.AST.Executor                             as Executor
 import qualified Luna.Interpreter.Session.AST.WatchPoint                           as WatchPoint
 import           Luna.Interpreter.Session.Session                                  (SessionST)
+import qualified Luna.Interpreter.Session.Session                                  as Session
 
 
 
 logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Interpreter"
+
+
+
+setProjectID :: SetProjectID.Request -> RPC Context SessionST SetProjectID.Update
+setProjectID request@(SetProjectID.Request tprojectID) = do
+    liftSession $ Session.setProjectID $ decodeP tprojectID
+    return $ SetProjectID.Update request
+
+
+setMainPtr :: SetMainPtr.Request -> RPC Context SessionST SetMainPtr.Update
+setMainPtr request@(SetMainPtr.Request tmainPtr) = do
+    mainPtr <- decodeE tmainPtr
+    liftSession $ Session.setMainPtr mainPtr
+    return $ SetMainPtr.Update request
 
 
 run :: Run.Request -> RPC Context SessionST Run.Update
