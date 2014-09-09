@@ -23,11 +23,11 @@ import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Request
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Status    as WatchPointList
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Request as WatchPointRemove
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update  as WatchPointRemove
-import           Luna.Interpreter.Proto.CallPoint                                  ()
 import           Luna.Interpreter.Proto.CallPointPath                              ()
+import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.AST.Executor                             as Executor
 import qualified Luna.Interpreter.Session.AST.WatchPoint                           as WatchPoint
-import           Luna.Interpreter.Session.SessionT                                 (SessionT (SessionT))
+import           Luna.Interpreter.Session.Session                                  (SessionST)
 
 
 
@@ -35,33 +35,33 @@ logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Interpreter"
 
 
-run :: Run.Request -> RPC Context SessionT Run.Update
+run :: Run.Request -> RPC Context SessionST Run.Update
 run request = do
-    lift2 $ SessionT Executor.processMain
+    liftSession Executor.processMain
     return $ Run.Update request
 
 
-watchPointAdd :: WatchPointAdd.Request -> RPC Context SessionT WatchPointAdd.Update
+watchPointAdd :: WatchPointAdd.Request -> RPC Context SessionST WatchPointAdd.Update
 watchPointAdd request@(WatchPointAdd.Request tcallPointPath) = do
     callPointPath <- decodeE tcallPointPath
-    lift2 $ SessionT $ WatchPoint.add callPointPath
+    liftSession $ WatchPoint.add callPointPath
     return $ WatchPointAdd.Update request
 
 
-watchPointRemove :: WatchPointRemove.Request -> RPC Context SessionT WatchPointRemove.Update
+watchPointRemove :: WatchPointRemove.Request -> RPC Context SessionST WatchPointRemove.Update
 watchPointRemove request@(WatchPointRemove.Request tcallPointPath) = do
     callPointPath <- decodeE tcallPointPath
-    lift2 $ SessionT $ WatchPoint.delete callPointPath
+    liftSession $ WatchPoint.delete callPointPath
     return $ WatchPointRemove.Update request
 
 
-watchPointList :: WatchPointList.Request -> RPC Context SessionT WatchPointList.Status
+watchPointList :: WatchPointList.Request -> RPC Context SessionST WatchPointList.Status
 watchPointList request = do
-    list <- lift2 $ SessionT $ SetForest.toList <$> WatchPoint.all
+    list <- liftSession $ SetForest.toList <$> WatchPoint.all
     return $ WatchPointList.Status request $ encodeList list
 
 
-ping :: Ping.Request -> RPC Context SessionT Ping.Status
+ping :: Ping.Request -> RPC Context SessionST Ping.Status
 ping request = do
     logger info "Ping received"
     return $ Ping.Status request
