@@ -46,7 +46,7 @@ isRequest frame =
 
 allFramesReceived :: Message.CorrelationID -> MessageFrame -> Bool
 allFramesReceived correlationID frame =
-    (not $ isRequest frame)
+    not (isRequest frame)
     && isCorrelationIDValid correlationID frame
     && frame ^. MessageFrame.lastFrame == Flag.Enable
 
@@ -54,12 +54,12 @@ allFramesReceived correlationID frame =
 query :: (Proto.Serializable args, Proto.Serializable result)
       => Topic -> args -> Bus [result]
 query topic args = do
-    results <- query_raw $ Message topic $ Proto.messagePut' args
+    results <- queryRaw $ Message topic $ Proto.messagePut' args
     mapM (lift . hoistEither . Proto.messageGet' . view Message.message) results
 
 
-query_raw :: Message -> Bus [Message]
-query_raw message = do
+queryRaw :: Message -> Bus [Message]
+queryRaw message = do
     let topicBase = Topic.base $ message ^. Message.topic
     Bus.subscribe topicBase
     logger debug "Query : sending..."

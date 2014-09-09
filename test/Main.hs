@@ -18,7 +18,7 @@ test = do
     Bus.subscribe ""
     clientID <- Bus.getClientID
     Bus.reply (Message.CorrelationID clientID 0) Flag.Enable
-              (Message.Message "project.open.request" (Char8.pack "some data"))
+              (Message.Message "interpreter.run.request" (Char8.pack ""))
     putStrLn "sent"
     _ <- Bus.receive
     putStrLn "received"
