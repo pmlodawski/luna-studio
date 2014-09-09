@@ -172,8 +172,16 @@ getMainPtr :: Session DefPoint
 getMainPtr = gets $ view Env.mainPtr
 
 
+setMainPtr :: DefPoint -> Session ()
+setMainPtr mainPtr = modify (Env.mainPtr .~ mainPtr)
+
+
 getProjectID :: Session Project.ID
 getProjectID = gets $ view Env.projectID
+
+
+setProjectID :: Project.ID -> Session ()
+setProjectID projectID = modify (Env.projectID .~ projectID)
 
 
 getResultCallBack :: Session (CallPointPath -> ByteString -> IO ())
