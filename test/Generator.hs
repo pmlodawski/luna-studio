@@ -24,6 +24,8 @@ import Flowbox.Graphics.Composition.Generators.Stencil as Stencil
 import Flowbox.Graphics.Composition.Generators.Structures as S
 import Flowbox.Graphics.Composition.Generators.Transform
 
+import Flowbox.Graphics.Composition.Dither
+
 import Flowbox.Math.Matrix as M
 import Flowbox.Graphics.Utils
 
@@ -37,11 +39,13 @@ import Math.Space.Space
 
 import Utils
 
+import Data.Foldable
+
 -- Test helpers
 forAllChannels :: String -> (Matrix2 Float -> Matrix2 Float) -> IO ()
 forAllChannels image process = do
     (r, g, b, a) <- testLoadRGBA' $ "samples/" P.++ image
-    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
+    testSaveRGBA' "out.png" (process r) (process g) (process b) (process a)
 
 --
 -- Draws all the existing types of gradients using ContactSheet.
@@ -70,7 +74,7 @@ gradientsTest = do
     
     let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) monosampler [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
     --let raster t = rasterizer $ monosampler $ scaleTo (Grid 720 480) $ grad4 t
-    testSaveRGBA' "out.bmp" (raster reds) (raster greens) (raster blues) (raster alphas)
+    testSaveRGBA' "out.png" (raster reds) (raster greens) (raster blues) (raster alphas)
 
 --
 -- Draws single conical gradient rotated 84deg
@@ -84,7 +88,7 @@ multisamplerTest = do
     let mapper = flip colorMapper weightFun
     let shape = scaleTo (Grid 720 480) conicalShape
     let grad      = rasterizer $ mysampler $ translate (V2 (720/2) (480/2)) $ turn (84 * pi / 180) $ mapper gray shape
-    testSaveChan' "out.bmp" grad
+    testSaveChan' "out.png" grad
 
 --
 -- Upcales lena 64x64 image into 720x480 one
@@ -203,7 +207,7 @@ boundTest :: IO ()
 boundTest = do
    let mysampler = multisampler (normalize $ toMatrix 10 box)
    let mask = mysampler $ scale 0.25 $ nearest $ bound A.Mirror $ ellipse 200 1 (0 :: Exp Float)
-   testSaveChan' "out.bmp" (rasterizer mask)
+   testSaveChan' "out.png" (rasterizer mask)
 
 --
 -- Applies Kirsch Operator to red channel of Lena image. Available operators: prewitt, sobel, sharr
@@ -220,7 +224,7 @@ boundTest = do
 --    let k alpha = rotational alpha edgeOp r
 --    let max8 a b c d e f g h = a `min` b `min` c `min` d `min` e `min` f `min` g `min` h
 --    let res = rasterizer 512 $ max8 <$> (k 0) <*> (k 45) <*> (k 90) <*> (k 135) <*> (k 180) <*> (k 225) <*> (k 270) <*> (k 315)
---    testSaveChan' "out.bmp" res
+--    testSaveChan' "out.png" res
 
 
 --
@@ -245,14 +249,27 @@ keyerTest w x y z = do
 --
 fftTest :: (Exp Float -> Exp Float) -> IO ()
 fftTest response = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/edge/mountain.png"
-
     -- Test with response = \x -> abs $ 50 * (x - 0.012)
     let process = fftFilter run $ \freq ampl -> ampl * clamp' 0 2 (response $ freq / 150)
+    forAllChannels "edge/mountain.png" process
 
-    testSaveRGBA' "out.bmp" (process r) (process g) (process b) (process a)
+--
+-- Dither test
+--
+
+ditherTest :: IO ()
+ditherTest = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/edge/mountain.png"
+    let mydither = dither floydSteinberg 2
+    r' <- mutableProcess run mydither r
+    g' <- mutableProcess run mydither g
+    b' <- mutableProcess run mydither b
+    a' <- mutableProcess run mydither a
+    testSaveRGBA' "out.png" r' g' b' a'
+    --putStrLn "Szatan"
 
 main :: IO ()
 main = do
-    putStrLn "Running gauss 50x50..."
-    gaussianTest (50 :: Exp Int)
+    ditherTest
+    --putStrLn "Running gauss 50x50..."
+    --gaussianTest (50 :: Exp Int)
