@@ -11,7 +11,6 @@
 
 module Flowbox.Bus.RPC.Client where
 
-import Control.Monad.Trans.Class  (lift)
 import Control.Monad.Trans.Either
 
 import           Flowbox.Bus.Bus               (Bus)
