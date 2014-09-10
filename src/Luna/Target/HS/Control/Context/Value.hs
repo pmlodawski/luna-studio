@@ -36,7 +36,10 @@ import Control.Applicative
 
 newtype Value m v = Value (m v) deriving (Typeable)
 
+newtype Value2 m (s :: * -> *) v = Value2 (m s v) deriving (Show, Typeable)
+
 fromValue (Value a) = a
+fromValue2 (Value2 a) = a
 
 
 --------------------------------------------------------------------------------

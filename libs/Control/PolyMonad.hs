@@ -11,3 +11,4 @@ polyBind = (>>=~)
 
 polyJoin :: PolyMonad m1 m2 m3 => m1 (m2 a) -> m3 a
 polyJoin = (>>=~ id)
+
