@@ -19,6 +19,8 @@ import qualified Generated.Proto.Parser.Parse.Pat.Request       as ParsePat
 import qualified Generated.Proto.Parser.Parse.Pat.Status        as ParsePat
 import qualified Generated.Proto.Parser.Parse.Type.Request      as ParseType
 import qualified Generated.Proto.Parser.Parse.Type.Status       as ParseType
+import qualified Generated.Proto.Parser.Parser.Ping.Request     as Ping
+import qualified Generated.Proto.Parser.Parser.Ping.Status      as Ping
 import           Luna.Data.Serialize.Proto.Conversion.Crumb     ()
 import           Luna.Data.Serialize.Proto.Conversion.Expr      ()
 import           Luna.Data.Serialize.Proto.Conversion.Pat       ()
@@ -60,3 +62,9 @@ parseNodeExpr (ParseNodeExpr.Request tstr) = do
     let str = decodeP tstr
     expr <- BatchP.parseNodeExpr str
     return $ ParseNodeExpr.Status (encode expr) tstr
+
+
+ping :: Ping.Request -> RPC () IO Ping.Status
+ping request = do
+    logger info "Ping received"
+    return $ Ping.Status request

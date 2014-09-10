@@ -71,7 +71,7 @@ addToNodeMap k v = do nm <- getNodeMap
 insNode :: (Node.ID, Node.Position -> Node) -> GBPass ()
 insNode (nodeID, node) = do
     g   <- getGraph
-    pos <- getPosition nodeID
+    pos <- Maybe.fromMaybe (0,0) <$> getPosition nodeID
     setGraph $ Graph.insNode (nodeID, node pos) g
 
 
@@ -103,10 +103,10 @@ connectMonadic :: Node.ID -> GBPass ()
 connectMonadic nodeID = do
     prevID <- getPrevoiusNode
     setPrevoiusNode nodeID
-    prevPos <- getPosition prevID
+    prevPos <- Maybe.fromMaybe (0,0) <$> getPosition prevID
     currPos <- getPosition nodeID
-    unless (prevPos < currPos) $
-        setPosition nodeID (fst prevPos + 1, snd currPos)
+    when (Maybe.isNothing currPos) $
+        setPosition nodeID (fst prevPos + 10, snd prevPos)
     connectNodes prevID nodeID Edge.Monadic
 
 
@@ -183,12 +183,12 @@ getProperty nodeID key =
     PropertyMap.get nodeID (show apiVersion) key <$> getPropertyMap
 
 
-getPosition :: Node.ID -> GBPass Node.Position
+getPosition :: Node.ID -> GBPass (Maybe Node.Position)
 getPosition nodeID = do
     mprop <- getProperty nodeID Attributes.nodePosition
-    case mprop of
-        Nothing   -> return (0, 0)
-        Just prop -> Read.readMaybe prop <??> "BuilderState.getPosition : cannot parse position for node " ++ show nodeID
+    return $ case mprop of
+        Nothing   -> Nothing
+        Just prop -> Read.readMaybe prop
 
 
 setPosition :: Node.ID -> Node.Position -> GBPass ()

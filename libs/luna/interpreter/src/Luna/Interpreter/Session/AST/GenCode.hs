@@ -7,7 +7,10 @@
 module Luna.Interpreter.Session.AST.GenCode where
 
 import           Control.Monad.Trans.Either
-import qualified DynFlags                   as GHC
+import qualified DynFlags                     as GHC
+import qualified GhcMonad
+import qualified HscTypes
+import qualified Language.Haskell.Interpreter as I
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -57,6 +60,13 @@ loadModule = do
                        ]
         disableFlags = [ GHC.Opt_MonomorphismRestriction
                        ]
+
+    -- FIXME [PM] : Code below remove all declared instances. It may be
+    --              dangerous and needs to be deeply tested or removed.
+    lift2 $ I.runGhc $
+        GhcMonad.modifySession $ \hscEnv -> let
+            ic = (HscTypes.hsc_IC hscEnv) {HscTypes.ic_instances = ([], []) }
+            in hscEnv { HscTypes.hsc_IC = ic}
 
     Session.withFlags enableFlags disableFlags $
         mapM_ (Session.runDecls . unlines . dropWhile (not . (== "-- body --")) . lines . view Source.code) srcs

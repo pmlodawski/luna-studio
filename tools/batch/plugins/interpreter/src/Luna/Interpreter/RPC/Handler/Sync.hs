@@ -24,10 +24,11 @@ import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  as ProjectManagerSyncGet
-import           Luna.Interpreter.Proto.CallPoint                               ()
-import           Luna.Interpreter.Proto.CallPointPath                           ()
-import qualified Luna.Interpreter.Session.Session                               as Session
-import           Luna.Interpreter.Session.SessionT                              (SessionT (SessionT))
+--import           Luna.Interpreter.Proto.CallPoint                               ()
+--import           Luna.Interpreter.Proto.CallPointPath                           ()
+import           Luna.Interpreter.RPC.Handler.Lift
+import           Luna.Interpreter.Session.Session  (SessionST)
+import qualified Luna.Interpreter.Session.Session  as Session
 
 
 
@@ -36,44 +37,45 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Sync"
 
 --- helpers ---------------------------------------------------------------
 
-syncLibManager :: Int32 -> RPC Context SessionT ()
+syncLibManager :: Int32 -> RPC Context SessionST ()
 syncLibManager updateNo = do
     testUpdateNo updateNo
     pm <- Batch.getProjectManager
-    activeProjectID <- lift2 $ SessionT Session.getProjectID
-    libs <- case ProjectManager.lab pm activeProjectID of 
+    activeProjectID <- liftSession Session.getProjectID
+    libs <- case ProjectManager.lab pm activeProjectID of
         Just project -> return $ project ^. Project.libs
-        Nothing      -> do logger warning $ "Project " ++ show activeProjectID ++ " not found" 
+        Nothing      -> do logger warning $ "Project " ++ show activeProjectID ++ " not found"
                            return def
-    lift2 $ SessionT $ Session.setLibManager libs
+    liftSession $ Session.setLibManager libs
 
 
-testUpdateNo :: Int32 -> RPC Context SessionT ()
+testUpdateNo :: Int32 -> RPC Context SessionST ()
 testUpdateNo updateNo = do
     localUpdateNo <- Batch.getUpdateNo
     assertE (updateNo == localUpdateNo) $
         "UpdateNo does not match (local: " ++ show localUpdateNo ++ ", remote: " ++ show updateNo ++ ")"
 
 
-hoistSessionT :: RPC Context IO a -> RPC Context SessionT ()
-hoistSessionT = void . hoist ( hoist $ SessionT . liftIO)
+hoistSessionST :: RPC Context IO a -> RPC Context SessionST a
+hoistSessionST = hoist (hoist liftIO)
+--hoistSessionST = hoist ( hoist $ SessionT . liftIO)
 
 
-sync :: Int32 -> RPC Context IO a -> RPC Context SessionT ()
+sync :: Int32 -> RPC Context IO a -> RPC Context SessionST ()
 sync updateNo syncOp = do
-    hoistSessionT $ void syncOp
+    hoistSessionST $ void syncOp
     syncLibManager updateNo
 
 --- handlers --------------------------------------------------------------
 
-projectmanagerSyncGet :: ProjectManagerSyncGet.Status -> RPC Context SessionT ()
+projectmanagerSyncGet :: ProjectManagerSyncGet.Status -> RPC Context SessionST ()
 projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata updateNo) = do
     (projectManager :: ProjectManager) <- hoistEither $ Read.readEither $ decodeP tdata
     Batch.setProjectManager projectManager
     Batch.setUpdateNo updateNo
 
 
-syncIfNeeded :: RPC Context SessionT () -> RPC Context SessionT (Maybe ProjectManagerSyncGet.Request)
+syncIfNeeded :: RPC Context SessionST () -> RPC Context SessionST (Maybe ProjectManagerSyncGet.Request)
 syncIfNeeded rpc = do
     result <- lift $ runEitherT rpc
     case result of
@@ -82,5 +84,5 @@ syncIfNeeded rpc = do
                        return $ Just ProjectManagerSyncGet.Request
 
 
-syncRequest :: RPC Context SessionT ProjectManagerSyncGet.Request
+syncRequest :: RPC Context SessionST ProjectManagerSyncGet.Request
 syncRequest = return ProjectManagerSyncGet.Request

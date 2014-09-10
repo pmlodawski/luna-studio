@@ -18,6 +18,7 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                        as UniPath
 import qualified Luna.AST.Control.Crumb                                        as Crumb
+import qualified Luna.AST.Control.Zipper                                       as Zipper
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Graph.PropertyMap                                        as PropertyMap
 import qualified Luna.Interpreter.Session.AST.Executor                         as Executor
@@ -124,8 +125,8 @@ readSource source = eitherStringToM' $ runEitherT $ do
            $ LibManager.empty
 
 
-main :: IO ()
-main = do
+main1 :: IO ()
+main1 = do
     rootLogger setIntLevel 5
     cfg <- Config.load
 
@@ -165,3 +166,28 @@ main = do
 
         print =<< Value.getIfReady [CallPoint libID 54]
     eitherStringToM $ fmapL Error.format result
+
+
+
+main2 :: IO ()
+main2 = do
+    rootLogger setIntLevel 5
+    cfg <- Config.load
+
+    (libManager , libID) <- readSource code
+    let Just library = LibManager.lab libManager libID
+        ast          = library ^. Library.ast
+        astGet bc    = eitherStringToM
+                     . fmap Zipper.getFocus
+                     . Zipper.focusBreadcrumbs bc
+                     . Zipper.mk
+    putStrLn $ ppShow ast
+    ast_main   <- astGet [Crumb.Function "main"   []] ast
+    ast_Vector <- astGet [Crumb.Class    "Vector"   ] ast
+    ast_IntAdd <- astGet [Crumb.Function "+" ["Int"]] ast
+
+    return ()
+
+
+main :: IO ()
+main = main2
