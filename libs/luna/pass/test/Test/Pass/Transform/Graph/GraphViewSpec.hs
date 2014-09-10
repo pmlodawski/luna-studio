@@ -23,10 +23,10 @@ import           Test.Pass.Transform.Graph.SampleCodes (sampleCodes)
 
 backAndForth :: String -> IO ()
 backAndForth code = do
-    expr        <- Common.getAST code
-    (graph    , pm) <- Common.getGraph def expr
+    expr          <- Common.getAST code
+    (graph , pm)  <- Common.getGraph def expr
     let (graphview, pm2) = GraphView.fromGraph graph pm
-    (graph3   , pm3) <- eitherStringToM $ GraphView.toGraph graphview pm2
+    (graph3, pm3) <- eitherStringToM $ GraphView.toGraph graphview pm2
 
     graph `shouldBe` graph3
     pm    `shouldBe` pm3

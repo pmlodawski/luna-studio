@@ -16,7 +16,6 @@ import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Expr                                 as Expr
 import           Luna.AST.Module                               (Module)
 import qualified Luna.AST.Module                               as Module
-import           Luna.AST.Pat                                  (Pat)
 import qualified Luna.AST.Pat                                  as Pat
 import           Luna.Data.ASTInfo                             (ASTInfo)
 import           Luna.Pass.Pass                                (Pass)

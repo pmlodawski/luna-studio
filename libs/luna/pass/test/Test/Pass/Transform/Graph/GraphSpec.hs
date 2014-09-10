@@ -123,6 +123,14 @@ sampleGraphs =
         [(-2,100, Edge.Data (Port.Num 0) 0)
         ,(100, -3, Edge.Data (Port.All) 0)
         ]
+    , named "inverse order graph"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "foo" "" (0, 1))
+        , fixEmpty' (200, Node.Expr "bar" "" (0, 2))
+        ,(-3, Node.Outputs        (0, 3))
+        ]
+        [(200, 100, Edge.Data Port.All 5)]
     ]
 
 

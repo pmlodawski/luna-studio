@@ -147,7 +147,7 @@ topsortStable graph pending = topsortStable' graph [] pending
 
 
 topsortStable' :: Eq a => Graph a b -> [LVertex a] -> [LVertex a] -> [LVertex a]
-topsortStable' _     []            []            = []
+topsortStable' _     []       []       = []
 topsortStable' graph pending1 pending2 =
     case findReady pending1 of
         (Just n1, rest1) -> n1 : topsortStable' (delNode' n1) rest1 pending2

@@ -24,7 +24,7 @@ import qualified Test.Luna.Interpreter.SampleCodes           as SampleCodes
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+rootLogger = getLogger ""
 
 
 
@@ -61,6 +61,10 @@ spec = do
         mapM_ (\(name, code) -> it ("executes example - " ++ name) $ do
             --rootLogger setIntLevel 5
             Common.runSession code Executor.processMain) SampleCodes.sampleCodes
+
+        mapM_ (\(name, code) -> it ("executes example many times - " ++ name) $ do
+            --rootLogger setIntLevel 5
+            Common.runSession code $ replicateM_ 5 Executor.processMain) $ SampleCodes.sampleCodes
 
     describe "AST traverse" $ do
         it "finds function arguments" $ do

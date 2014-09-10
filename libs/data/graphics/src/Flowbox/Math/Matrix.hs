@@ -4,9 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators        #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE RecordWildCards        #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE TypeOperators          #-}
+{-# LANGUAGE TypeSynonymInstances   #-}
+{-# LANGUAGE ViewPatterns           #-}
 
 module Flowbox.Math.Matrix (
     module Flowbox.Math.Matrix,
@@ -37,154 +44,168 @@ module Flowbox.Math.Matrix (
     A.Z(..)
 ) where
 
-import qualified Data.Array.Accelerate as A
-import           Data.Array.Accelerate hiding (Scalar, Vector, (!), shape, fromList, toList, (++))
+import qualified Data.Array.Accelerate                 as A
+import qualified Data.Array.Accelerate.Array.Sugar     as Sugar
+import qualified Data.Array.Accelerate.Data.Complex    as A
+import qualified Data.Array.Accelerate.Math.FFT        as A
+import qualified Data.Array.Accelerate.Math.DFT.Centre as A
+import qualified Data.Array.Accelerate.IO              as A
 
-import Flowbox.Prelude hiding (use, (<*), (?), (++), ix)
+import qualified Math.Coordinate.Cartesian as Cartesian
+import qualified Math.Space.Space          as Space
+
+import Data.Complex                        (mkPolar)
+import Data.Vector.Storable.Mutable hiding (set)
+import Foreign.Ptr
+
+import Flowbox.Prelude as P hiding (use, (<*), (?), (++), map, zipWith, set)
+import Flowbox.Math.Index
 
 
-
-data Matrix ix a = Raw (Array ix a)
-                 | Delayed (Acc (Array ix a))
+data Matrix ix a = Raw (A.Array ix a)
+                 | Delayed (A.Acc (A.Array ix a))
                  deriving (Show)
 
-type Scalar  a = Matrix DIM0 a
-type Vector  a = Matrix DIM1 a
-type Matrix2 a = Matrix DIM2 a
+type Scalar  a = Matrix A.DIM0 a
+type Vector  a = Matrix A.DIM1 a
+type Matrix2 a = Matrix A.DIM2 a
 
-type Backend ix a = Acc (Array ix a) -> Array ix a
+type Backend = forall a . A.Arrays a => A.Acc a -> a
 
 -- == Instances ==
-instance (Elt e) => Monoid (Vector e) where
-    mempty = fromList (Z :. 0) []
+instance (A.Elt e) => Monoid (Vector e) where
+    mempty = fromList (A.Z A.:. 0) []
     mappend a b = a ++ b
 
 -- == Helpers ==
 
-type EDIM1 =  DIM0 :. Exp Int
-type EDIM2 = EDIM1 :. Exp Int
-type EDIM3 = EDIM2 :. Exp Int
-type EDIM4 = EDIM3 :. Exp Int
+type EDIM1 = A.DIM0 A.:. A.Exp Int
+type EDIM2 = EDIM1 A.:. A.Exp Int
+type EDIM3 = EDIM2 A.:. A.Exp Int
+type EDIM4 = EDIM3 A.:. A.Exp Int
 
-accMatrix :: (Elt a, Shape ix) => Matrix ix a -> Acc (Array ix a)
+accMatrix :: (A.Elt a, A.Shape ix) => Matrix ix a -> A.Acc (A.Array ix a)
 accMatrix mat = case mat of
     Raw     m -> A.use m
     Delayed m -> m
 
-compute :: Backend ix a -> Matrix ix a -> Matrix ix a
+compute :: (A.Elt a, A.Shape ix) => Backend -> Matrix ix a -> Matrix ix a
 compute backend mat = Raw $ compute' backend mat
 
-compute' :: Backend ix a -> Matrix ix a -> Array ix a
+compute' :: (A.Elt a, A.Shape ix) => Backend -> Matrix ix a -> A.Array ix a
 compute' backend mat = case mat of
     Raw     m -> m
     Delayed m -> backend m
 
--- == Accessors ==
+-- == A.Accessors ==
 
 -- = Scalar reduction =
-sfoldl :: (Slice sh, Shape sh, Elt a, Elt b) => (Exp a -> Exp b -> Exp a) -> Exp a -> Exp sh -> Matrix (sh :. Int) b -> Exp a
+sfoldl :: (A.Slice sh, A.Shape sh, A.Elt a, A.Elt b)
+       => (A.Exp a -> A.Exp b -> A.Exp a)
+       -> A.Exp a -> A.Exp sh
+       -> Matrix (sh A.:. Int) b -> A.Exp a
 sfoldl f z ix mat = A.sfoldl f z ix (accMatrix mat)
 
 -- = Indexing =
 
-(!) :: (Shape ix, Elt e) => Matrix ix e -> Exp ix -> Exp e
+(!) :: (A.Shape ix, A.Elt e) => Matrix ix e -> A.Exp ix -> A.Exp e
 (!) mat = (A.!) $ accMatrix mat
 
-(!!) :: (Shape ix, Elt e) => Matrix ix e -> Exp Int -> Exp e
+(!!) :: (A.Shape ix, A.Elt e) => Matrix ix e -> A.Exp Int -> A.Exp e
 (!!) mat = (A.!!) $ accMatrix mat
 
-the :: Elt e => Scalar e -> Exp e
+the :: A.Elt e => Scalar e -> A.Exp e
 the mat = A.the $ accMatrix mat
 
--- = Shape Information =
+-- = A.Shape Information =
 
-empty :: (Shape ix, Elt e) => Matrix ix e -> Exp Bool
+empty :: (A.Shape ix, A.Elt e) => Matrix ix e -> A.Exp Bool
 empty mat = A.null $ accMatrix mat
 
-shape :: (Shape ix, Elt e) => Matrix ix e -> Exp ix
+shape :: (A.Shape ix, A.Elt e) => Matrix ix e -> A.Exp ix
 shape mat = A.shape $ accMatrix mat
 
-size :: (Shape ix, Elt e) => Matrix ix e -> Exp Int
+size :: (A.Shape ix, A.Elt e) => Matrix ix e -> A.Exp Int
 size mat = A.size $ accMatrix mat
 
-shapeSize :: Shape ix => Exp ix -> Exp Int
+shapeSize :: A.Shape ix => A.Exp ix -> A.Exp Int
 shapeSize = A.shapeSize
 
 -- = Extracting sub-arrays =
 
-slice :: (Slice slix, Elt e) => Matrix (FullShape slix) e -> Exp slix -> Matrix (SliceShape slix) e
+slice :: (A.Slice slix, A.Elt e) => Matrix (A.FullShape slix) e -> A.Exp slix -> Matrix (A.SliceShape slix) e
 slice mat fragments = Delayed $ A.slice (accMatrix mat) fragments
 
-take :: (Elt e) => Exp Int -> Vector e -> Vector e
+take :: (A.Elt e) => A.Exp Int -> Vector e -> Vector e
 take elems mat = Delayed $ A.take elems (accMatrix mat)
 
 -- == Construction ==
 
 -- = Introduction =
 
-use :: (Elt a, Shape ix) => Matrix ix a -> Matrix ix a
+use :: (A.Elt a, A.Shape ix) => Matrix ix a -> Matrix ix a
 use mat = Delayed $ accMatrix mat
 
-unit :: Elt e => Exp e -> Scalar e
+unit :: A.Elt e => A.Exp e -> Scalar e
 unit e = Delayed $ A.unit e
 
 
 -- = Initialisation =
 
-generate :: (Shape ix, Elt e) => Exp ix -> (Exp ix -> Exp e) -> Matrix ix e
+generate :: (A.Shape ix, A.Elt e) => A.Exp ix -> (A.Exp ix -> A.Exp e) -> Matrix ix e
 generate sh f = Delayed $ A.generate sh f
 
-replicate :: (Slice slix, Elt e)
-    => Exp slix -> Matrix (SliceShape slix) e -> Matrix (FullShape slix) e
+replicate :: (A.Slice slix, A.Elt e)
+    => A.Exp slix -> Matrix (A.SliceShape slix) e -> Matrix (A.FullShape slix) e
 replicate sh m = Delayed $ A.replicate sh $ accMatrix m
 
-fill :: (Shape ix, Elt e) => Exp ix -> Exp e -> Matrix ix e
+fill :: (A.Shape ix, A.Elt e) => A.Exp ix -> A.Exp e -> Matrix ix e
 fill sh x = Delayed $ A.fill sh x
 
 
 -- = Enumeration =
 
-enumFromN :: (Shape ix, Elt e, IsNum e) => Exp ix -> Exp e -> Matrix ix e
+enumFromN :: (A.Shape ix, A.Elt e, A.IsNum e) => A.Exp ix -> A.Exp e -> Matrix ix e
 enumFromN sh n = Delayed $ A.enumFromN sh n
 
-enumFromStepN :: (Shape ix, Elt e, IsNum e)
-    => Exp ix -> Exp e -> Exp e -> Matrix ix e
+enumFromStepN :: (A.Shape ix, A.Elt e, A.IsNum e)
+    => A.Exp ix -> A.Exp e -> A.Exp e -> Matrix ix e
 enumFromStepN sh n s = Delayed $ A.enumFromStepN sh n s
 
 -- = Pipelining =
 infixl 1 >->
-(>->) :: (Shape ixa, Shape ixb, Shape ixc, Elt a, Elt b, Elt c)
+(>->) :: (A.Shape ixa, A.Shape ixb, A.Shape ixc, A.Elt a, A.Elt b, A.Elt c)
       => (Matrix ixa a -> Matrix ixb b) -> (Matrix ixb b -> Matrix ixc c) -> Matrix ixa a -> Matrix ixc c
 (>->) a b mat = Delayed $ (ftrans a A.>-> ftrans b) (accMatrix mat)
 
-ftrans :: (Shape ixa, Shape ixb, Elt a, Elt b) => (Matrix ixa a -> Matrix ixb b) -> Acc (Array ixa a) -> Acc (Array ixb b)
+ftrans :: (A.Shape ixa, A.Shape ixb, A.Elt a, A.Elt b) => (Matrix ixa a -> Matrix ixb b) -> A.Acc (A.Array ixa a) -> A.Acc (A.Array ixb b)
 ftrans f a = accMatrix $ f (Delayed a)
 
 -- = Concatenation =
 
-(++) :: (Slice ix, Shape ix, Elt e) => Matrix (ix :. Int) e -> Matrix (ix :. Int) e -> Matrix (ix :. Int) e
+(++) :: (A.Slice ix, A.Shape ix, A.Elt e) => Matrix (ix A.:. Int) e -> Matrix (ix A.:. Int) e -> Matrix (ix A.:. Int) e
 (++) chan1 chan2 = Delayed $ accMatrix chan1 A.++ accMatrix chan2
 
 
 -- == Modifying arrays ==
 
--- = Shape manipulation =
+-- = A.Shape manipulation =
 
-reshape :: (Shape ix, Shape ix', Elt e) => Exp ix -> Matrix ix' e -> Matrix ix e
+reshape :: (A.Shape ix, A.Shape ix', A.Elt e) => A.Exp ix -> Matrix ix' e -> Matrix ix e
 reshape sh mat = Delayed $ A.reshape sh (accMatrix mat)
 
-flatten :: (Elt a, Shape ix) => Matrix ix a -> Vector a
+flatten :: (A.Elt a, A.Shape ix) => Matrix ix a -> Vector a
 flatten mat = Delayed $ A.flatten (accMatrix mat)
 
 -- = Permutations =
 
-transpose :: Elt e => Matrix2 e -> Matrix2 e
+transpose :: A.Elt e => Matrix2 e -> Matrix2 e
 transpose mat = Delayed $ A.transpose $ accMatrix mat
 
-permute :: (Shape ix, Shape ix', Elt a)
-        => (Exp a -> Exp a -> Exp a)
+permute :: (A.Shape ix, A.Shape ix', A.Elt a)
+        => (A.Exp a -> A.Exp a -> A.Exp a)
         -> Matrix ix' a
-        -> (Exp ix -> Exp ix')
+        -> (A.Exp ix -> A.Exp ix')
         -> Matrix ix a
         -> Matrix ix' a
 permute combination defaults permutation array =
@@ -194,29 +215,29 @@ permute combination defaults permutation array =
 
 -- = Mapping =
 
-map :: (Shape ix, Elt a, Elt b)
-    => (Exp a -> Exp b) -> Matrix ix a -> Matrix ix b
+map :: (A.Shape ix, A.Elt a, A.Elt b)
+    => (A.Exp a -> A.Exp b) -> Matrix ix a -> Matrix ix b
 map f mat = Delayed $ A.map f (accMatrix mat)
 
 -- = Zipping =
 
-zipWith :: (Shape ix, Elt a, Elt b, Elt c)
-    => (Exp a -> Exp b -> Exp c)
+zipWith :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c)
+    => (A.Exp a -> A.Exp b -> A.Exp c)
     -> Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
 zipWith f mat1 mat2 = Delayed $ A.zipWith f (accMatrix mat1) (accMatrix mat2)
 
-zipWith3 :: (Shape ix, Elt a, Elt b, Elt c, Elt d)
-    => (Exp a -> Exp b -> Exp c -> Exp d)
+zipWith3 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d)
+    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d)
     -> Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
     -> Matrix ix d
 zipWith3 f mat1 mat2 mat3 = Delayed $ A.zipWith3 f (accMatrix mat1) (accMatrix mat2) (accMatrix mat3)
 
-zipWith4 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e)
-    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e)
+zipWith4 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e)
+    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e)
     -> Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -224,8 +245,8 @@ zipWith4 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e)
     -> Matrix ix e
 zipWith4 f mat1 mat2 mat3 mat4 = Delayed $ A.zipWith4 f (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4)
 
-zipWith5 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f)
-    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f)
+zipWith5 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f)
+    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f)
     -> Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -234,8 +255,8 @@ zipWith5 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f)
     -> Matrix ix f
 zipWith5 f mat1 mat2 mat3 mat4 mat5 = Delayed $ A.zipWith5 f (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4) (accMatrix mat5)
 
-zipWith6 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g)
-    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g)
+zipWith6 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g)
+    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f -> A.Exp g)
     -> Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -245,8 +266,8 @@ zipWith6 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g)
     -> Matrix ix g
 zipWith6 f mat1 mat2 mat3 mat4 mat5 mat6 = Delayed $ A.zipWith6 f (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4) (accMatrix mat5) (accMatrix mat6)
 
-zipWith7 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h)
-    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g -> Exp h)
+zipWith7 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h)
+    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f -> A.Exp g -> A.Exp h)
     -> Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -257,8 +278,8 @@ zipWith7 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h)
     -> Matrix ix h
 zipWith7 f mat1 mat2 mat3 mat4 mat5 mat6 mat7 = Delayed $ A.zipWith7 f (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4) (accMatrix mat5) (accMatrix mat6) (accMatrix mat7)
 
-zipWith8 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i)
-    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g -> Exp h -> Exp i)
+zipWith8 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h, A.Elt i)
+    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f -> A.Exp g -> A.Exp h -> A.Exp i)
     -> Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -270,8 +291,8 @@ zipWith8 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, E
     -> Matrix ix i
 zipWith8 f mat1 mat2 mat3 mat4 mat5 mat6 mat7 mat8 = Delayed $ A.zipWith8 f (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4) (accMatrix mat5) (accMatrix mat6) (accMatrix mat7) (accMatrix mat8)
 
-zipWith9 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i, Elt j)
-    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g -> Exp h -> Exp i -> Exp j)
+zipWith9 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h, A.Elt i, A.Elt j)
+    => (A.Exp a -> A.Exp b -> A.Exp c -> A.Exp d -> A.Exp e -> A.Exp f -> A.Exp g -> A.Exp h -> A.Exp i -> A.Exp j)
     -> Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -285,20 +306,20 @@ zipWith9 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, E
 zipWith9 f mat1 mat2 mat3 mat4 mat5 mat6 mat7 mat8 mat9 = Delayed $ A.zipWith9 f (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4) (accMatrix mat5) (accMatrix mat6) (accMatrix mat7) (accMatrix mat8) (accMatrix mat9)
 
 
-zip :: (Shape ix, Elt a, Elt b)
+zip :: (A.Shape ix, A.Elt a, A.Elt b)
     => Matrix ix a
     -> Matrix ix b
     -> Matrix ix (a, b)
 zip  mat1 mat2 = Delayed $ A.zip (accMatrix mat1) (accMatrix mat2)
 
-zip3 :: (Shape ix, Elt a, Elt b, Elt c)
+zip3 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c)
     => Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
     -> Matrix ix (a, b, c)
 zip3 mat1 mat2 mat3 = Delayed $ A.zip3 (accMatrix mat1) (accMatrix mat2) (accMatrix mat3)
 
-zip4 :: (Shape ix, Elt a, Elt b, Elt c, Elt d)
+zip4 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d)
     => Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -306,7 +327,7 @@ zip4 :: (Shape ix, Elt a, Elt b, Elt c, Elt d)
     -> Matrix ix (a, b, c, d)
 zip4 mat1 mat2 mat3 mat4 = Delayed $ A.zip4 (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4)
 
-zip5 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e)
+zip5 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e)
     => Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -315,7 +336,7 @@ zip5 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e)
     -> Matrix ix (a, b, c, d, e)
 zip5 mat1 mat2 mat3 mat4 mat5 = Delayed $ A.zip5 (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4) (accMatrix mat5)
 
-zip6 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f)
+zip6 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f)
     => Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -325,7 +346,7 @@ zip6 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f)
     -> Matrix ix (a, b, c, d, e, f)
 zip6 mat1 mat2 mat3 mat4 mat5 mat6 = Delayed $ A.zip6 (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4) (accMatrix mat5) (accMatrix mat6)
 
-zip7 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g)
+zip7 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g)
     => Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -336,7 +357,7 @@ zip7 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g)
     -> Matrix ix (a, b, c, d, e, f, g)
 zip7 mat1 mat2 mat3 mat4 mat5 mat6 mat7 = Delayed $ A.zip7 (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4) (accMatrix mat5) (accMatrix mat6) (accMatrix mat7)
 
-zip8 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h)
+zip8 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h)
     => Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -348,7 +369,7 @@ zip8 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h)
     -> Matrix ix (a, b, c, d, e, f, g, h)
 zip8 mat1 mat2 mat3 mat4 mat5 mat6 mat7 mat8 = Delayed $ A.zip8 (accMatrix mat1) (accMatrix mat2) (accMatrix mat3) (accMatrix mat4) (accMatrix mat5) (accMatrix mat6) (accMatrix mat7) (accMatrix mat8)
 
-zip9 :: (Shape ix, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i)
+zip9 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Elt d, A.Elt e, A.Elt f, A.Elt g, A.Elt h, A.Elt i)
     => Matrix ix a
     -> Matrix ix b
     -> Matrix ix c
@@ -363,42 +384,42 @@ zip9 mat1 mat2 mat3 mat4 mat5 mat6 mat7 mat8 mat9 = Delayed $ A.zip9 (accMatrix 
 
 -- = Unzipping =
 
-unzip :: (Shape ix, Elt a)
+unzip :: (A.Shape ix, A.Elt a)
     => Matrix ix (a, a)
     -> (Matrix ix a, Matrix ix a)
 unzip mat = over each Delayed $ A.unzip (accMatrix mat)
 
-unzip3 :: (Shape ix, Elt a)
+unzip3 :: (A.Shape ix, A.Elt a)
     => Matrix ix (a, a, a)
     -> (Matrix ix a, Matrix ix a, Matrix ix a)
 unzip3 mat = over each Delayed $ A.unzip3 (accMatrix mat)
 
-unzip4 :: (Shape ix, Elt a)
+unzip4 :: (A.Shape ix, A.Elt a)
     => Matrix ix (a, a, a, a)
     -> (Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a)
 unzip4 mat = over each Delayed $ A.unzip4 (accMatrix mat)
 
-unzip5 :: (Shape ix, Elt a)
+unzip5 :: (A.Shape ix, A.Elt a)
     => Matrix ix (a, a, a, a, a)
     -> (Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a)
 unzip5 mat = over each Delayed $ A.unzip5 (accMatrix mat)
 
-unzip6 :: (Shape ix, Elt a)
+unzip6 :: (A.Shape ix, A.Elt a)
     => Matrix ix (a, a, a, a, a, a)
     -> (Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a)
 unzip6 mat = over each Delayed $ A.unzip6 (accMatrix mat)
 
-unzip7 :: (Shape ix, Elt a)
+unzip7 :: (A.Shape ix, A.Elt a)
     => Matrix ix (a, a, a, a, a, a, a)
     -> (Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a)
 unzip7 mat = over each Delayed $ A.unzip7 (accMatrix mat)
 
-unzip8 :: (Shape ix, Elt a)
+unzip8 :: (A.Shape ix, A.Elt a)
     => Matrix ix (a, a, a, a, a, a, a, a)
     -> (Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a)
 unzip8 mat = over each Delayed $ A.unzip8 (accMatrix mat)
 
-unzip9 :: (Shape ix, Elt a)
+unzip9 :: (A.Shape ix, A.Elt a)
     => Matrix ix (a, a, a, a, a, a, a, a, a)
     -> (Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a, Matrix ix a)
 unzip9 mat = over each Delayed $ A.unzip9 (accMatrix mat)
@@ -406,71 +427,146 @@ unzip9 mat = over each Delayed $ A.unzip9 (accMatrix mat)
 
 -- == Folding ==
 
-fold :: (Shape ix, Elt a) => (Exp a -> Exp a -> Exp a) -> Exp a -> Matrix (ix :. Int) a -> Matrix ix a
+fold :: (A.Shape ix, A.Elt a) => (A.Exp a -> A.Exp a -> A.Exp a) -> A.Exp a -> Matrix (ix A.:. Int) a -> Matrix ix a
 fold f acc mat = Delayed $ A.fold f acc $ accMatrix mat
 
-fold1 :: (Shape ix, Elt a) => (Exp a -> Exp a -> Exp a) -> Matrix (ix :. Int) a -> Matrix ix a
+fold1 :: (A.Shape ix, A.Elt a) => (A.Exp a -> A.Exp a -> A.Exp a) -> Matrix (ix A.:. Int) a -> Matrix ix a
 fold1 f mat = Delayed $ A.fold1 f $ accMatrix mat
 
-foldAll :: (Shape sh, Elt a) => (Exp a -> Exp a -> Exp a) -> Exp a -> Matrix sh a -> Scalar a
+foldAll :: (A.Shape sh, A.Elt a) => (A.Exp a -> A.Exp a -> A.Exp a) -> A.Exp a -> Matrix sh a -> Scalar a
 foldAll f acc mat = Delayed $ A.foldAll f acc $ accMatrix mat
 
-fold1All :: (Shape sh, Elt a) => (Exp a -> Exp a -> Exp a) -> Matrix sh a -> Scalar a
+fold1All :: (A.Shape sh, A.Elt a) => (A.Exp a -> A.Exp a -> A.Exp a) -> Matrix sh a -> Scalar a
 fold1All f mat = Delayed $ A.fold1All f $ accMatrix mat
 
-foldSeg :: (Shape ix, Elt a, Elt i, IsIntegral i) => (Exp a -> Exp a -> Exp a) -> Exp a -> Matrix (ix :. Int) a -> Acc (Segments i) -> Matrix (ix :. Int) a
+foldSeg :: (A.Shape ix, A.Elt a, A.Elt i, A.IsIntegral i) => (A.Exp a -> A.Exp a -> A.Exp a) -> A.Exp a -> Matrix (ix A.:. Int) a -> A.Acc (A.Segments i) -> Matrix (ix A.:. Int) a
 foldSeg f acc mat segments = Delayed $ A.foldSeg f acc (accMatrix mat) segments
 
-fold1Seg :: (Shape ix, Elt a, Elt i, IsIntegral i) => (Exp a -> Exp a -> Exp a) -> Matrix (ix :. Int) a -> Acc (Segments i) -> Matrix (ix :. Int) a
+fold1Seg :: (A.Shape ix, A.Elt a, A.Elt i, A.IsIntegral i) => (A.Exp a -> A.Exp a -> A.Exp a) -> Matrix (ix A.:. Int) a -> A.Acc (A.Segments i) -> Matrix (ix A.:. Int) a
 fold1Seg f mat segments = Delayed $ A.fold1Seg f (accMatrix mat) segments
 
 -- == Specialised folds ==
 
-all :: (Shape sh, Elt e) => (Exp e -> Exp Bool) -> Matrix sh e -> Scalar Bool
+all :: (A.Shape sh, A.Elt e) => (A.Exp e -> A.Exp Bool) -> Matrix sh e -> Scalar Bool
 all pred mat = Delayed $ A.all pred (accMatrix mat)
 
-any :: (Shape sh, Elt e) => (Exp e -> Exp Bool) -> Matrix sh e -> Scalar Bool
+any :: (A.Shape sh, A.Elt e) => (A.Exp e -> A.Exp Bool) -> Matrix sh e -> Scalar Bool
 any pred mat = Delayed $ A.any pred (accMatrix mat)
 
-sum :: (IsNum a, Shape sh, Elt a) => Matrix sh a -> Scalar a
+sum :: (A.IsNum a, A.Shape sh, A.Elt a) => Matrix sh a -> Scalar a
 sum mat = Delayed $ A.sum (accMatrix mat)
 
-product :: (IsNum a, Shape sh, Elt a) => Matrix sh a -> Scalar a
+product :: (A.IsNum a, A.Shape sh, A.Elt a) => Matrix sh a -> Scalar a
 product mat = Delayed $ A.product (accMatrix mat)
 
-minimum :: (IsNum a, Shape sh, Elt a) => Matrix sh a -> Scalar a
+minimum :: (A.IsNum a, A.Shape sh, A.Elt a) => Matrix sh a -> Scalar a
 minimum mat = Delayed $ A.minimum (accMatrix mat)
 
-maximum :: (IsNum a, Shape sh, Elt a) => Matrix sh a -> Scalar a
+maximum :: (A.IsNum a, A.Shape sh, A.Elt a) => Matrix sh a -> Scalar a
 maximum mat = Delayed $ A.maximum (accMatrix mat)
 
--- == Stencil ==
+-- == A.Stencil ==
 
-stencil :: (Shape ix, Elt a, Elt b, Stencil ix a stencil)
-    => (stencil -> Exp b) -> Boundary a -> Matrix ix a -> Matrix ix b
+stencil :: (A.Shape ix, A.Elt a, A.Elt b, A.Stencil ix a stencil)
+    => (stencil -> A.Exp b) -> A.Boundary a -> Matrix ix a -> Matrix ix b
 stencil f b mat = Delayed $ A.stencil f b (accMatrix mat)
 
-stencil2 :: (Shape ix, Elt a, Elt b, Elt c, Stencil ix a stencil1, Stencil ix b stencil2)
-    => (stencil1 -> stencil2 -> Exp c) -> Boundary a -> Matrix ix a -> Boundary b -> Matrix ix b -> Matrix ix c
+stencil2 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Stencil ix a stencil1, A.Stencil ix b stencil2)
+    => (stencil1 -> stencil2 -> A.Exp c) -> A.Boundary a -> Matrix ix a -> A.Boundary b -> Matrix ix b -> Matrix ix c
 stencil2 f b1 mat1 b2 mat2 = Delayed $ A.stencil2 f b1 (accMatrix mat1) b2 (accMatrix mat2)
 
 
 -- == Operations ==
 
--- = Shape manipulation =
+-- = A.Shape manipulation =
 
---index3 :: (Elt i, A.Slice (A.Z A.:. i), A.Slice (A.Z A.:. i A.:. i))
---    => Exp i -> Exp i -> Exp i -> Exp (A.Z A.:. i A.:. i A.:. i)
---index3 i j k = A.lift (A.Z A.:. i A.:. j A.:. k)
+--index3 :: (A.Elt i, A.Slice (A.Z A.A.:. i), A.Slice (A.Z A.A.:. i A.A.:. i))
+--    => A.Exp i -> A.Exp i -> A.Exp i -> A.Exp (A.Z A.A.:. i A.A.:. i A.A.:. i)
+--index3 i j k = A.lift (A.Z A.A.:. i A.A.:. j A.A.:. k)
 
---lift2Dto3D :: (Elt a) => Matrix A.DIM2 a -> Matrix A.DIM3 a
+--lift2Dto3D :: (A.Elt a) => Matrix A.DIM2 a -> Matrix A.DIM3 a
 --lift2Dto3D channel = reshape (index3 a b 1) channel
---    where (A.Z A.:. a A.:. b) = A.unlift $ shape channel
+--    where (A.Z A.A.:. a A.A.:. b) = A.unlift $ shape channel
 
 -- == Conversions ==
 
-fromList :: (Shape sh, Elt e) => sh -> [e] -> Matrix sh e
+fromList :: (A.Shape sh, A.Elt e) => sh -> [e] -> Matrix sh e
 fromList sh mat = Raw $ A.fromList sh mat
 
-toList :: Backend sh e -> Matrix sh e -> [e]
+toList :: (A.Shape sh, A.Elt e) => Backend -> Matrix sh e -> [e]
 toList b mat = A.toList $ compute' b mat
+
+
+-- == FFT ==
+
+fft :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 e -> Matrix2 (A.Complex e)
+fft backend mat' = Delayed $ A.fft2D' A.Forward width height arrCentered
+    where cMat = compute' backend mat'
+          A.Z A.:. height A.:. width = A.arrayShape cMat
+          mat = A.use cMat
+          arrComplex  = A.map (\r -> A.lift (r A.:+ A.constant 0)) mat
+          arrCentered = A.centre2D arrComplex
+
+inverseFFT :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 (A.Complex e) -> Matrix2 e
+inverseFFT backend mat' = Delayed $ A.map A.magnitude $ A.fft2D' A.Inverse width height mat
+    where cMat = compute' backend mat'
+          A.Z A.:. height A.:. width = A.arrayShape cMat
+          mat = A.use cMat
+
+-- trans :: Frequency -> Amplitude -> FrequencyResponse
+fftFilter :: (A.Elt e, A.IsFloating e) => Backend -> (A.Exp e -> A.Exp e -> A.Exp e) -> Matrix2 e -> Matrix2 e
+fftFilter backend trans mat = inverseFFT backend fftProc
+    where matFFT = fft backend mat
+          mag = map A.magnitude matFFT
+          pha = map A.phase matFFT
+
+          polar :: (A.Elt e, A.IsFloating e) => A.Exp e -> A.Exp e -> A.Exp (A.Complex e)
+          polar r theta = A.lift $ r * cos theta A.:+ r * sin theta
+
+          magSh = shape mag
+          tmag = generate magSh wrapper
+          A.Z A.:. height A.:. width = A.unlift $ magSh :: EDIM2
+          wrapper ix@(A.unlift -> A.Z A.:. y A.:. x :: EDIM2) = trans freq (mag ! ix)
+              where iW = A.fromIntegral width / 2
+                    iH = A.fromIntegral height / 2
+                    xFreq = let x' = A.fromIntegral x - iW in A.cond (x' A.>* iW) (x' - iW) x'
+                    yFreq = let y' = A.fromIntegral y - iH in A.cond (y' A.>* iH) (y' - iH) y'
+                    freq = sqrt $ xFreq * xFreq + yFreq * yFreq
+
+          fftProc = zipWith polar tmag pha
+
+-- == Mutable, CPU based matrix processing
+
+type MImage = BMatrix IOVector
+
+data MValue a = MValue { get :: IO a
+                       , set :: a -> IO ()
+                       }
+
+infixr 2 $=
+($=) :: MValue a -> a -> IO ()
+($=) = set
+
+instance Storable a => Boundable (MImage a) Int (MValue a) where
+    unsafeIndex2D BMatrix{..} (Cartesian.Point2 x y) = MValue getter setter
+        where linearIndex = Sugar.toIndex canvas (A.Z A.:. y A.:. x)
+              getter = unsafeRead container linearIndex
+              setter = unsafeWrite container linearIndex
+    bounduary BMatrix{..} = Space.Grid width height
+        where A.Z A.:. height A.:. width = canvas
+
+
+mutableProcess :: forall a . (A.Elt a, Storable a, A.BlockPtrs (Sugar.EltRepr a) ~ ((), Ptr a)) 
+               => Backend
+               -> (MImage a -> IO ())
+               -> Matrix2 a -> IO (Matrix2 a)
+mutableProcess b action mat = do
+    let gpuMat   = compute' b mat
+    let gpuShape = A.arrayShape gpuMat
+    cpuMat <- unsafeNew $ A.arraySize gpuShape  :: IO (IOVector a)
+    newGpuMat <- unsafeWith cpuMat $ \ptr' -> do
+        let ptr = ((), ptr')
+        A.toPtr gpuMat ptr
+        action $ BMatrix cpuMat gpuShape
+        A.fromPtr gpuShape ptr :: IO (A.Array A.DIM2 a)
+    return $ Raw newGpuMat

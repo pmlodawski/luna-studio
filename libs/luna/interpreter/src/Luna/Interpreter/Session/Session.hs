@@ -48,7 +48,10 @@ logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Session"
 
 
-type Session a = EitherT Error.ErrorStr (StateT Env I.Interpreter) a
+type SessionST = StateT Env I.Interpreter
+
+
+type Session = EitherT Error.ErrorStr SessionST
 
 
 run :: Config -> Env -> Session a -> IO (Either Error a)
@@ -69,7 +72,7 @@ run config env session = do
 
 initialize :: Session ()
 initialize = do
-    lift2 $ I.reset
+    lift2 I.reset
     setHardcodedExtensions
     lift2 $ I.setImportsQ [ ("Data.Word", Nothing)
                           , ("Luna.Target.HS", Nothing)
@@ -91,7 +94,7 @@ unsetFlags flags = lift2 $ I.runGhc $ do
 
 withFlags :: [GHC.ExtensionFlag] -> [GHC.ExtensionFlag] -> Session a -> Session a
 withFlags enable disable action = do
-    flags <- lift2 $ I.runGhc $ GHC.getSessionDynFlags
+    flags <- lift2 $ I.runGhc GHC.getSessionDynFlags
     setFlags enable
     unsetFlags disable
     result <- action
@@ -117,7 +120,7 @@ runDecls decls = do
 
 runAssignment :: String -> String -> Session ()
 runAssignment asigned asignee =
-    runStmt $ asigned ++ " <- return " ++ asignee
+    runDecls $ asigned ++ " = " ++ asignee
 
 
 setHardcodedExtensions :: Session ()
@@ -169,8 +172,16 @@ getMainPtr :: Session DefPoint
 getMainPtr = gets $ view Env.mainPtr
 
 
+setMainPtr :: DefPoint -> Session ()
+setMainPtr mainPtr = modify (Env.mainPtr .~ mainPtr)
+
+
 getProjectID :: Session Project.ID
 getProjectID = gets $ view Env.projectID
+
+
+setProjectID :: Project.ID -> Session ()
+setProjectID projectID = modify (Env.projectID .~ projectID)
 
 
 getResultCallBack :: Session (CallPointPath -> ByteString -> IO ())

@@ -138,3 +138,11 @@ message FileSystem {
         }
     }
 }
+message FileManager {
+    message Ping {
+        message Request { }
+        message Status  { 
+            required Request request = 1;
+        }
+    }
+}

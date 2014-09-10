@@ -18,6 +18,7 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                        as UniPath
 import qualified Luna.AST.Control.Crumb                                        as Crumb
+import qualified Luna.AST.Control.Zipper                                       as Zipper
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Graph.PropertyMap                                        as PropertyMap
 import qualified Luna.Interpreter.Session.AST.Executor                         as Executor
@@ -72,8 +73,8 @@ def Int.inc:
     self + 1
 
 def main:
-    print $ if 1 > 2: 5
-            else: 6
+    #print $ if 1 > 2: 5
+    #        else: 6
     print $ 1 > 2
     v = Vector 1 2 3
     print $ v
@@ -81,20 +82,29 @@ def main:
 
 code2 :: Source
 code2 = Source ["Main"] $ [r|
-def test arg arg2:
-    print arg
-    print arg2
-    self.bla "kota" "albo nie"
+class Vector a:
+    x,y,z :: a
+    def test a b:
+        {a,b}
 
-def bla arg arg2:
-    a = "grubego"
+def print msg:
+    ```autoLift1 print #{msg}```
 
-    {arg, arg2, print a}
+def Int.+ a:
+    ```liftF2 (+) #{self} #{a}```
+
+def Int.> a:
+    ```liftF2 (>) #{self} #{a}```
+
+def Int.inc:
+    self + 1
 
 def main:
-    a = self.test "ala2" "ma"
-    print a
-    "dummy"
+    #print $ if 1 > 2: 5
+    #        else: 6
+    print $ 3 > 2
+    v = Vector 1 2 3
+    print $ v
 |]
 
 
@@ -115,8 +125,8 @@ readSource source = eitherStringToM' $ runEitherT $ do
            $ LibManager.empty
 
 
-main :: IO ()
-main = do
+main1 :: IO ()
+main1 = do
     rootLogger setIntLevel 5
     cfg <- Config.load
 
@@ -130,13 +140,13 @@ main = do
     putStrLn $ ppShow $ LibManager.lab libManager libID
     result <- Session.run cfg env $ do
         Executor.processMain
-        print =<< Value.getIfReady [CallPoint libID 45]
+        print =<< Value.getIfReady [CallPoint libID 54]
         putStrLn "--------- 1"
         Executor.processMain
         putStrLn "========= 1"
 
         Cache.dumpAll
-        Invalidate.modifyNode libID 45
+        Invalidate.modifyNode libID 54
         Cache.dumpAll
 
         Executor.processMain
@@ -146,7 +156,7 @@ main = do
         putStrLn "========= ready ==========1="
         Cache.dumpAll
         Session.setLibManager libManager2
-        Invalidate.modifyNode libID 45
+        Invalidate.modifyNode libID 54
         putStrLn "========= modified =======2="
         Cache.dumpAll
         putStrLn "========= running ========3="
@@ -154,5 +164,30 @@ main = do
         putStrLn "========= finished =======4="
         Cache.dumpAll
 
-        print =<< Value.getIfReady [CallPoint libID 45]
+        print =<< Value.getIfReady [CallPoint libID 54]
     eitherStringToM $ fmapL Error.format result
+
+
+
+main2 :: IO ()
+main2 = do
+    rootLogger setIntLevel 5
+    cfg <- Config.load
+
+    (libManager , libID) <- readSource code
+    let Just library = LibManager.lab libManager libID
+        ast          = library ^. Library.ast
+        astGet bc    = eitherStringToM
+                     . fmap Zipper.getFocus
+                     . Zipper.focusBreadcrumbs bc
+                     . Zipper.mk
+    putStrLn $ ppShow ast
+    ast_main   <- astGet [Crumb.Function "main"   []] ast
+    ast_Vector <- astGet [Crumb.Class    "Vector"   ] ast
+    ast_IntAdd <- astGet [Crumb.Function "+" ["Int"]] ast
+
+    return ()
+
+
+main :: IO ()
+main = main2

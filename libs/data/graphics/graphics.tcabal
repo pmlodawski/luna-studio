@@ -2,7 +2,7 @@ Name:                   flowbox-graphics
 Version:                0.15.0.0
 Cabal-version:          >= 1.20
 Tested-with:            GHC == 7.8.*
-Build-type:             Simple
+Build-type:             Custom
 
 Flag cuda
   Description:          Enable the CUDA parallel backend for NVIDIA GPUs
@@ -17,23 +17,25 @@ Library
                           OverloadedStrings
   Default-Language:       Haskell2010
 
-  Exposed-modules: `findmodules('src', '.*\.hs')`
+  Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.15.* ,
+                        accelerate-thrust
 
   Build-Depends:  base           == 4.7.*  ,
                   accelerate     == 0.15.* ,
                   accelerate-io  == 0.15.* ,
+                  accelerate-fft == 0.15.* ,
                   algebraic       > 0.1    ,
                   bmp                      ,
                   containers               ,
+                  distributive             ,
                   flowbox-utils            ,
                   imagemagick   >= 0.0.3.6 ,
                   lifted-base              ,
                   linear                   ,
-                  linear-accelerate        ,
                   monad-control            ,
                   mtl                      ,
                   resourcet                ,
@@ -43,7 +45,8 @@ Library
                   errors                   ,
                   either                   ,
                   profunctors              ,
-                  cubicbezier
+                  cubicbezier              ,
+                  vector
 
 Executable test_generator
   if !flag(cuda)
@@ -69,6 +72,7 @@ Executable test_generator
                   linear                   ,
                   accelerate               ,
                   accelerate-io            ,
+                  accelerate-fft           ,
                   algebraic                ,
                   flowbox-utils            ,
                   flowbox-graphics         ,

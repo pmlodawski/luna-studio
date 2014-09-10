@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -28,7 +29,6 @@ import qualified Luna.Data.Source                                              a
 import           Luna.Data.SourceMap                                           (SourceMap)
 import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
 import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
-import qualified Luna.Pass.Analysis.FuncPool.FuncPool                          as FuncPool
 import           Luna.Pass.Build.BuildConfig                                   (BuildConfig (BuildConfig))
 import qualified Luna.Pass.Build.BuildConfig                                   as BuildConfig
 import           Luna.Pass.Build.Diagnostics                                   (Diagnostics)
@@ -45,7 +45,6 @@ import qualified Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   a
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
 import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
-import qualified Luna.Pass.Transform.AST.Hash.Hash                             as Hash
 import qualified Luna.Pass.Transform.AST.Hash.Hash                             as Hash
 import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
 import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
@@ -147,12 +146,12 @@ run buildConfig ast astInfo implicitSelf = runEitherT $ do
         allLibs = "base"
                 : "containers"
                 -- : "flowboxM-core"
-                -- : "flowbox-graphics"
+                : "flowbox-graphics"
                 : "luna-target-ghchs"
                 : "template-haskell"
                 -- : "accelerate"
                 : BuildConfig.libs buildConfig
-                ++ if False -- BuildConfig.name buildConfig /= "flowboxM-stdlib"
+                ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
                       then ["flowboxM-stdlib"]
                       else []
     hsc <- hoistEither =<< prepareSources diag ast astInfo implicitSelf

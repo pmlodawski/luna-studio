@@ -1,54 +1,42 @@
 [submodule "third-party/accelerate"]
-	path = third-party/accelerate
-	url = git@github.com:AccelerateHS/accelerate.git
+    path = third-party/accelerate
+    url = git@github.com:AccelerateHS/accelerate.git
 [submodule "third-party/accelerate-cuda"]
-	path = third-party/accelerate-cuda
-	url = git@github.com:AccelerateHS/accelerate-cuda.git
+    path = third-party/accelerate-cuda
+    url = git@github.com:AccelerateHS/accelerate-cuda.git
 [submodule "third-party/accelerate-io"]
-	path = third-party/accelerate-io
-	url = git@github.com:AccelerateHS/accelerate-io.git
+    path = third-party/accelerate-io
+    url = git@github.com:AccelerateHS/accelerate-io.git
 [submodule "third-party/algebraic"]
-	path = third-party/algebraic
-	url = git@github.com:wdanilo/algebraic.git
+    path = third-party/algebraic
+    url = git@github.com:wdanilo/algebraic.git
 [submodule "third-party/cuda"]
-	path = third-party/cuda
-	url = git@github.com:tmcdonell/cuda.git
-[submodule "third-party/fgl"]
-    path = third-party/fgl
-    url = git@github.com:remdezx/fgl.git
+    path = third-party/cuda
+    url = git@github.com:tmcdonell/cuda.git
 [submodule "third-party/HaskellBooster"]
     path = third-party/HaskellBooster
     url = git@github.com:wdanilo/HaskellBooster.git
 [submodule "third-party/hint"]
     path = third-party/hint
-    url = git@github.com:remdezx/hint.git
-[submodule "third-party/hs-certificate"]
-    path = third-party/hs-certificate
-    url = git@github.com:remdezx/hs-certificate.git
-[submodule "third-party/hs-crypto-random"]
-    path = third-party/hs-crypto-random
-    url = git@github.com:remdezx/hs-crypto-random.git
-[submodule "third-party/hs-tls"]
-    path = third-party/hs-tls
-    url = git@github.com:remdezx/hs-tls.git
-[submodule "third-party/language-c-0.4.5"]
-    path = third-party/language-c-0.4.5
-    url = git@github.com:wdanilo/haskell-language-c.git
+    url = git@github.com:flowbox-public/hint.git
 [submodule "third-party/linear-accelerate"]
     path = third-party/linear-accelerate
-    url = git@github.com:korrix/linear-accelerate.git
+    url = git@github.com:ekmett/linear-accelerate.git
 [submodule "third-party/protocol-buffers"]
     path = third-party/protocol-buffers
-    url = git@github.com:korrix/protocol-buffers.git
+    url = git@github.com:flowbox-public/protocol-buffers.git
 [submodule "tools/graphics/webghci"]
-	path = tools/graphics/webghci
-	url = git@github.com:korrix/WebGHCI.git
+    path = tools/graphics/webghci
+    url = git@github.com:flowbox-public/WebGHCI.git
 [submodule "third-party/imagemagick"]
-	path = third-party/imagemagick
-	url = git@github.com:korrix/imagemagick.git
-[submodule "libs/data/graphics/graphics/test/samples"]
-	path = libs/data/graphics/graphics/test/samples
-	url = git@github.com:korrix/ImageProcessingSamples.git
+    path = third-party/imagemagick
+    url = git@github.com:flowbox-public/imagemagick.git
 [submodule "libs/data/graphics/test/samples"]
-	path = libs/data/graphics/test/samples
-	url = git@github.com:korrix/ImageProcessingSamples.git
+    path = libs/data/graphics/test/samples
+    url = git@github.com:flowbox-public/ImageProcessingSamples.git
+[submodule "third-party/accelerate-fft"]
+    path = third-party/accelerate-fft
+    url = git@github.com:AccelerateHS/accelerate-fft.git
+[submodule "third-party/mainland-pretty"]
+    path = third-party/mainland-pretty
+    url = git@github.com:flowbox-public/mainland-pretty.git

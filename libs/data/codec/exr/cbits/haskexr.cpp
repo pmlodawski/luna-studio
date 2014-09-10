@@ -46,7 +46,7 @@ int parts(void* fileHandle) {
 
 int version(void* fileHandle) {
     auto exrFile = static_cast<Imf::MultiPartInputFile*>(fileHandle);
-    return exrFile->version();    
+    return exrFile->version();
 }
 
 // will segfault if part is not present in file
@@ -57,7 +57,7 @@ void displayWindowUnsafe(void* fileHandle, int part, int* minx, int* miny, int* 
     *miny = exrFile->header(part).displayWindow().min.y;
 
     *maxx = exrFile->header(part).displayWindow().max.x;
-    *maxy = exrFile->header(part).displayWindow().max.y;    
+    *maxy = exrFile->header(part).displayWindow().max.y;
 }
 
 void dataWindowUnsafe(void* fileHandle, int part, int* minx, int* miny, int* maxx, int* maxy) {
@@ -166,7 +166,7 @@ float* readTileFromChannelUnsafe(void* fileHandle, int part, const char* chanNam
         // FIXME[mm]: log exception
     }
 
-    return buffer;   
+    return buffer;
 }
 
 float* readTiledScanlineChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width) {
@@ -223,10 +223,6 @@ float* readTiledScanlineChannelUnsafe(void* fileHandle, int part, const char* ch
     }
 
     return buffer;
-}
-
-float* foobar(void*, int, const char*, int, int, int*, int*) {
-    return nullptr;
 }
 
 
