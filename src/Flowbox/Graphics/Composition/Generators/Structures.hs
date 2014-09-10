@@ -16,7 +16,8 @@
 
 module Flowbox.Graphics.Composition.Generators.Structures where
 
-import Flowbox.Prelude hiding            (transform, lift)
+import           Flowbox.Prelude    hiding (transform, lift)
+import qualified Flowbox.Math.Index as I
 
 import Data.Array.Accelerate
 import Data.Array.Accelerate.Array.Sugar
@@ -51,11 +52,9 @@ transform = lmap
 resize :: Grid (Exp Int) -> Generator a b -> Generator a b
 resize cnv (Generator _ gen) = Generator cnv gen
 
--- == Coord conversions ==
---instance ( CoordConversion convType sys space (h a) (f a)
---         , CoordConversion convType sys space (g a) (h a)
---         ) => CoordConversion convType sys space (Generator (f a) b) (Generator (g a) b) where
---    convertCoordBase _ sys space = transform (convertCoordBase ManualConversion sys space)
+instance I.Boundable (DiscreteGenerator b) (Exp Int) b where
+    unsafeIndex2D = runGenerator
+    bounduary     = canvas
 
 -- == Gradient tick type ==
 

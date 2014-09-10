@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
@@ -13,7 +14,6 @@
 {-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE TypeSynonymInstances   #-}
 {-# LANGUAGE ViewPatterns           #-}
-{-# LANGUAGE FunctionalDependencies #-}
 
 module Flowbox.Math.Matrix (
     module Flowbox.Math.Matrix,
@@ -52,13 +52,14 @@ import qualified Data.Array.Accelerate.Math.DFT.Centre as A
 import qualified Data.Array.Accelerate.IO              as A
 
 import qualified Math.Coordinate.Cartesian as Cartesian
+import qualified Math.Space.Space          as Space
 
 import Data.Complex                        (mkPolar)
 import Data.Vector.Storable.Mutable hiding (set)
 import Foreign.Ptr
 
 import Flowbox.Prelude as P hiding (use, (<*), (?), (++), map, zipWith, set)
-
+import Flowbox.Math.Index
 
 
 data Matrix ix a = Raw (A.Array ix a)
@@ -536,16 +537,29 @@ fftFilter backend trans mat = inverseFFT backend fftProc
 
 -- == Mutable, CPU based matrix processing
 
-data MMatrix m a = MMatrix { vector :: m a
-                           , canvas :: A.DIM2
-                           }
+type MImage = BMatrix IOVector
 
-type MImage = MMatrix IOVector
+data MValue a = MValue { get :: IO a
+                       , set :: a -> IO ()
+                       }
+
+infixr 2 $=
+($=) :: MValue a -> a -> IO ()
+($=) = set
+
+instance Storable a => Boundable (MImage a) Int (MValue a) where
+    unsafeIndex2D BMatrix{..} (Cartesian.Point2 x y) = MValue getter setter
+        where linearIndex = Sugar.toIndex canvas (A.Z A.:. y A.:. x)
+              getter = unsafeRead container linearIndex
+              setter = unsafeWrite container linearIndex
+    bounduary BMatrix{..} = Space.Grid width height
+        where A.Z A.:. height A.:. width = canvas
+
 
 mutableProcess :: forall a . (A.Elt a, Storable a, A.BlockPtrs (Sugar.EltRepr a) ~ ((), Ptr a)) 
-       => Backend 
-       -> (MImage a -> IO ())
-       -> Matrix2 a -> IO (Matrix2 a)
+               => Backend
+               -> (MImage a -> IO ())
+               -> Matrix2 a -> IO (Matrix2 a)
 mutableProcess b action mat = do
     let gpuMat   = compute' b mat
     let gpuShape = A.arrayShape gpuMat
@@ -553,50 +567,6 @@ mutableProcess b action mat = do
     newGpuMat <- unsafeWith cpuMat $ \ptr' -> do
         let ptr = ((), ptr')
         A.toPtr gpuMat ptr
-        action $ MMatrix cpuMat gpuShape
+        action $ BMatrix cpuMat gpuShape
         A.fromPtr gpuShape ptr :: IO (A.Array A.DIM2 a)
     return $ Raw newGpuMat
-
-class Storable a => UnsafeIndexable m a where
-    data family MatValue (m :: * -> *) a
-    unsafeShapeIndex :: MMatrix m a -> A.DIM2 -> MatValue m a
-    unsafeConstant :: a -> MatValue m a
-
-{-# INLINE index #-}
-index :: UnsafeIndexable m a => A.Boundary a -> MMatrix m a -> Cartesian.Point2 Int -> MatValue m a
-index boundary mimage@MMatrix{..} (Cartesian.Point2 x y) =
-    case boundary of
-        A.Clamp      -> mimage `unsafeShapeIndex` (A.Z A.:. ((x `min` w1) `max` 0) A.:. ((y `min` h1) `max` 0))
-        A.Mirror     -> mimage `unsafeShapeIndex` (A.Z A.:. (abs $ -abs (x `mod` (2 * width) - w1) + w1) A.:. (abs $ -abs (y `mod` (2 * height) - h1) + h1))
-        A.Wrap       -> mimage `unsafeShapeIndex` (A.Z A.:. (x `mod` width) A.:. (y `mod` height))
-        A.Constant a -> if (x >= width || y >= height || x < 0 || y < 0)
-                        then unsafeConstant a
-                        else mimage `unsafeShapeIndex` (A.Z A.:. x A.:. y)
-    where A.Z A.:. height A.:. width = canvas
-          h1 = height - 1 -- FIXME [KL]: Buggy behavior with index ranges
-          w1 = width - 1
-
-instance Storable a => UnsafeIndexable IOVector a where
-    data MatValue IOVector a = MValue (IO a) (a -> IO ())
-    unsafeShapeIndex MMatrix{..} sh = MValue value setter
-        where linearIndex = Sugar.toIndex canvas sh
-              value =  unsafeRead vector linearIndex
-              setter = unsafeWrite vector linearIndex
-
-    unsafeConstant a = MValue (return a) (const $ error "Unable to save to the Constant array value!")
-
-class HasGetter a g | a -> g where
-    get :: a -> g
-
-class HasSetter a s | a -> s where
-    set :: a -> s -> IO ()
-
-    infixr 2 $=
-    ($=) :: a -> s -> IO ()
-    ($=) = set
-
-instance HasGetter (MatValue IOVector a) (IO a) where
-    get (MValue g _) = g
-
-instance HasSetter (MatValue IOVector a) a where
-    set (MValue _ s) = s

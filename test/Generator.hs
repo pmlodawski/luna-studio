@@ -259,17 +259,15 @@ fftTest response = do
 
 ditherTest :: IO ()
 ditherTest = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/edge/mountain.png"
-    let mydither = dither floydSteinberg 2
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/david.png"
+    let mydither = dither A.Clamp jarvisJudiceNinke 1
     r' <- mutableProcess run mydither r
     g' <- mutableProcess run mydither g
     b' <- mutableProcess run mydither b
     a' <- mutableProcess run mydither a
     testSaveRGBA' "out.png" r' g' b' a'
-    --putStrLn "Szatan"
 
 main :: IO ()
 main = do
     ditherTest
-    --putStrLn "Running gauss 50x50..."
-    --gaussianTest (50 :: Exp Int)
+    putStrLn "Running gauss 50x50..."
