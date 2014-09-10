@@ -30,7 +30,7 @@ import Flowbox.Math.Matrix as M
 import Flowbox.Graphics.Utils
 
 import qualified Data.Array.Accelerate              as A
-import qualified Data.Array.Accelerate.Math.Complex as A
+import qualified Data.Array.Accelerate.Data.Complex as A
 
 import Linear.V2
 import Math.Coordinate.Cartesian as Cartesian
@@ -243,6 +243,11 @@ keyerTest w x y z = do
     (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
     let process c = rasterizer $ keyer (A.lift (w, x, y, z)) $ fromMatrix A.Clamp c
     testSaveRGBA' "out.png" r g b (process g)
+
+--medianTest :: IO ()
+medianTest = do
+    let process x = stencilTest x
+    forAllChannels "lena.bmp" process
 
 --
 -- FFT test

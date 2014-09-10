@@ -21,7 +21,8 @@ Library
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.15.* ,
+                        accelerate-thrust
 
   Build-Depends:  base           == 4.7.*  ,
                   accelerate     == 0.15.* ,
