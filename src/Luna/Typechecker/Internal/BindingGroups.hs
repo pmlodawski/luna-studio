@@ -1,32 +1,38 @@
 module Luna.Typechecker.Internal.BindingGroups (BindGroup, tiBindGroup, tiSeq, Expr(..)) where
 
-import           Luna.Typechecker.Internal.AST.Kind         (Kind(..))
-import           Luna.Typechecker.Internal.AST.Lit          (Lit(..),tiLit)
-import           Luna.Typechecker.Internal.AST.Pat          (Pat, tiPats)
-import           Luna.Typechecker.Internal.AST.Scheme       (Scheme, quantify, toScheme)
-import           Luna.Typechecker.Internal.AST.Type         (Type(..), fn)
+import Luna.Typechecker.Internal.AST.Kind         (Kind(..))
+import Luna.Typechecker.Internal.AST.Lit          (Lit(..),tiLit)
+import Luna.Typechecker.Internal.AST.Pat          (Pat, tiPats)
+import Luna.Typechecker.Internal.AST.Scheme       (Scheme, quantify, toScheme)
+import Luna.Typechecker.Internal.AST.Type         (Type(..), fn)
 
-import           Luna.Typechecker.Internal.Assumptions      (Assump(..),find)
-import           Luna.Typechecker.Internal.Substitutions    (Types(..))
-import           Luna.Typechecker.Internal.TIMonad          (TI, freshInst, getSubst, newTVar, unify)
-import           Luna.Typechecker.Internal.Typeclasses      (ClassEnv, Pred(..), Qual(..), entail)
-import           Luna.Typechecker.Internal.TypeInference    (Infer, split)
+import Luna.Typechecker.Internal.Assumptions      (Assump(..),find)
+import Luna.Typechecker.Internal.Substitutions    (Types(..))
+import Luna.Typechecker.Internal.TIMonad          (TI, freshInst, getSubst, newTVar, unify)
+import Luna.Typechecker.Internal.Typeclasses      (ClassEnv, Pred(..), Qual(..), entail)
+import Luna.Typechecker.Internal.TypeInference    (Infer, split)
 
-import           Luna.Typechecker.Internal.AST.TID          (TID)
-
-
-import           Control.Monad                              (zipWithM)
-
-import           Data.List                                  ((\\), intersect, union)
+import Luna.Typechecker.Internal.AST.TID          (TID)
 
 
+import Control.Monad                              (zipWithM)
+
+import Data.List                                  ((\\), intersect, union)
+
+import Text.Printf
 
 data Expr = Var TID
           | Lit Lit
           | Const Assump
           | Ap Expr Expr
           | Let BindGroup Expr
-          deriving (Show)
+
+instance Show Expr where
+  show (Var tid)         = printf "evar %s" (show tid)
+  show (Lit lit)         = printf "elit %s" (show lit)
+  show (Const (t:>:sch)) = printf "econst (%s :: %s)" (show t) (show sch)
+  show (Ap e1 e2)        = printf "eap %s %s" (show e1) (show e2)
+  show (Let bnd e)       = printf "elet %s = %s" (show bnd) (show e)
 
 
 tiExpr :: Infer Expr Type

@@ -1,4 +1,4 @@
-module Luna.Typechecker.Internal.ContextReduction (reduce) where
+module Luna.Typechecker.Internal.ContextReduction where
 
 import           Luna.Typechecker.Internal.AST.Type         (Type(..))
 

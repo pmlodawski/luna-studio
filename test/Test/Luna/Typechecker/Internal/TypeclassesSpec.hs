@@ -1,13 +1,17 @@
 module Test.Luna.Typechecker.Internal.TypeclassesSpec (spec) where
 
 import           Luna.Typechecker.Internal.AST.Kind         (Kind(..))
-import           Luna.Typechecker.Internal.Typeclasses      (Pred(..), initialEnv, addClass, addInst, (<:>))
+import           Luna.Typechecker.Internal.Typeclasses
 import           Luna.Typechecker.Internal.AST.Type         (Type(..), Tyvar(..), tBool, list,tInt)
 
 import           Test.Hspec
 
 spec :: Spec
 spec = do
+  describe "mguPred" $ do
+    it "checks if classes match" $ do
+      let res = mguPred (IsIn "YEP" (TGen 0)) (IsIn "NOPE" (TGen 0))
+      res `shouldBe` Nothing
   describe "addClass" $ do
     it "checks if class was defined twice" $
       (     addClass "Eq" []

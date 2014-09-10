@@ -15,7 +15,6 @@ data Lit = LitChar     Char
          | LitInt      Integer
          | LitIntegral Int
          | LitStr      String
-         deriving (Eq)
 
 
 tiLit :: Lit -> TI ([Pred], Type)

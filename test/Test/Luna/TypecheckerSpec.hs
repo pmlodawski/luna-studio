@@ -190,8 +190,7 @@ spec = do
       res `shouldContain` ["fulting_type" :>: fulting_type]
 
 
-  describe "coverage booster" $ do -- nasty hack to ignore some debugging stuff in analysis of coverage
+  describe "(coverage booster)" $ do
     it "should ignore Show instances" $ do
-      length (concatMap show [LitChar 'c', LitFloat 1.0, LitInt (1 :: Integer), LitIntegral 1, LitStr "lel"]) `shouldSatisfy` (>0)
       length (concatMap show [Star, Kfun Star Star]) `shouldSatisfy` (>0)
       length (          show [Star, Kfun (Kfun Star Star) (Kfun (Kfun Star Star) (Kfun Star Star))]) `shouldSatisfy` (>0)

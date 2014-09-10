@@ -1,7 +1,6 @@
-module Luna.Typechecker.Internal.Typeclasses (
-    Pred(..), Qual(..), ClassEnv(..),
-    entail, byInst, addClass, addInst, (<:>), initialEnv
-  ) where
+module Luna.Typechecker.Internal.Typeclasses where
+    --Pred(..), Qual(..), ClassEnv(..),
+    --entail, byInst, addClass, addInst, (<:>), initialEnv
 
 import Luna.Typechecker.Internal.AST.Type         (Type(..), tInteger, tDouble)
 
