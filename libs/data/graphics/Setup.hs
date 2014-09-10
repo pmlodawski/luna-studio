@@ -21,7 +21,7 @@ rgbProfileGen _ _ = PreProcessor {
         putStrLn $ "Processing " ++ inFile
         source <- readFile inFile
         let moduleName = concat $ List.intersperse "." $ tail $ FilePath.splitDirectories $ FilePath.dropExtension inFile
-            [name, whitepoint, gammaT, gamma, forwardMatrix, inverseMatrix] = lines source
+            [name, whitepoint, gammaT, gamma, chromaR, chromaG, chromaB, forwardMatrix, inverseMatrix] = lines source
             [m11, m12, m13, m21, m22, m23, m31, m32, m33] = words forwardMatrix
             [invM11, invM12, invM13, invM21, invM22, invM23, invM31, invM32, invM33] = words inverseMatrix
             contents = unlines [
@@ -36,7 +36,6 @@ rgbProfileGen _ _ = PreProcessor {
                 , ""
                 , "import qualified Data.Array.Accelerate as A"
                 , "import qualified Linear"
-                , "import           Linear.Accelerate ()"
                 , ""
                 , "import Flowbox.Graphics.Color.CIE.XYZ"
                 , "import qualified Flowbox.Graphics.Color.Companding as Companding"
@@ -74,6 +73,8 @@ rgbProfileGen _ _ = PreProcessor {
                 , ""
                 , "    whitepoint _ = " ++ whitepoint
                 , ""
+                , "    primaries _ = (Chromaticity " ++ chromaR ++ ", Chromaticity " ++ chromaG ++ ", Chromaticity " ++ chromaB ++ ")"
+                , ""
                 , "instance (Num a, Floating a, a ~ A.Exp t, A.Elt t, A.IsFloating t) => GammaCorrectible " ++ name ++ " a where"
                 , "    type GammaT " ++ name ++ " a = " ++ gammaT
                 , ""
@@ -86,7 +87,6 @@ rgbProfileGen _ _ = PreProcessor {
                 ]
 
         writeFile outFile contents
-        writeFile "/tmp/foo.hs" contents
     }
 
 parens s = '(' : s ++ ")"
