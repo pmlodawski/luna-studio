@@ -17,7 +17,6 @@ import qualified Luna.AST.AST                                         as AST
 import qualified Luna.AST.Expr                                        as Expr
 import           Luna.AST.Module                                      (Module)
 import qualified Luna.AST.Module                                      as Module
-import qualified Luna.AST.Module                                      as Module
 import           Luna.AST.Pat                                         (Pat)
 import qualified Luna.AST.Pat                                         as Pat
 import qualified Luna.AST.Type                                        as Type
@@ -52,10 +51,10 @@ desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat p
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExpr ast = case ast of
     Expr.Var id name -> do
-        info <- State.getAliasInfo
-        let aliasMap  = info ^. AliasInfo.aliasMap
-            parentMap = info ^. AliasInfo.parentMap
-            astMap    = info ^. AliasInfo.astMap
+        inf <- State.getAliasInfo
+        let aliasMap  = inf ^. AliasInfo.aliasMap
+            parentMap = inf ^. AliasInfo.parentMap
+            astMap    = inf ^. AliasInfo.astMap
             mPid      = parentMap ^. at id
             mPAST     = (do pid <- mPid; astMap ^. at pid)
             mAlias    = aliasMap  ^. at id
