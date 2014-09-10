@@ -1,0 +1,20 @@
+name:                accelerate-thrust
+version:             0.1.0.0
+category:            Data, Parallelism
+build-type:          Custom
+extra-source-files:  cbits/wrap.h,
+                     cbits/wrap.cu
+cabal-version:       >=1.10
+
+library
+  build-tools:         nvcc
+  exposed-modules:     Data.Array.Accelerate.CUDA.Thrust
+  build-depends:       base >=4.7 && <4.8,
+                       cuda >= 0.5,
+                       accelerate == 0.15.*,
+                       accelerate-cuda == 0.15.*
+  extra-libraries:     stdc++
+  hs-source-dirs:      src
+  include-dirs:        .
+  ghc-options:         -O2 -Wall
+  default-language:    Haskell2010
