@@ -93,3 +93,8 @@ spec = do
       kind xs `shouldBe` Star
       (xs `match` list x) `shouldSatisfy` isJust
       kind t `shouldBe` Star
+  describe "(coverage booster)" $ do
+    it "show" $ do
+      let v = PCon ("(:)":>:cons_type) [PVar "x", PVar "xs"]
+          cons_type = Forall [Star] ([] :=> (TGen 0 `fn` list (TGen 0) `fn` list (TGen 0)))
+      length (concatMap show [PVar "a", PWildcard, PAs "a" (PVar "b"), PLit (LitInt 123), v]) `shouldSatisfy` (>0)

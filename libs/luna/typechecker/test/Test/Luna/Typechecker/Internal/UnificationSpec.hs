@@ -56,7 +56,15 @@ spec = do
       let t1 = TVar (Tyvar "a" Star)
           t2 = tUnit
           u = mgu t1 t2 :: Either String Subst
+          tvar = Tyvar "b" Star
+          tvar' = Tyvar "b" (Kfun Star Star)
+          tap = TAp (TVar tvar) (TVar tvar')
+          tap' = TAp (TVar tvar') (TVar tvar)
+          res = match (TVar tvar) (TVar tvar') :: Either String Subst
+          res' = match tap tap' :: Either String Subst
       evaluate (flip apply t1 <$> u) `shouldReturn` Right t2
+      evaluate res `shouldThrow` anyErrorCall
+      evaluate res' `shouldThrow` anyErrorCall
   describe "(internals)" $ do
     describe "varBind" $ do
       it "QC: ∀ (Tyvar tv): varBind tv (TVar tv) == nullSubst" $ property $

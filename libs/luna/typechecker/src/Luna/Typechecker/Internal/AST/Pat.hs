@@ -19,7 +19,13 @@ data Pat = PVar TID
          | PAs TID Pat
          | PLit Lit
          | PCon Assump [Pat]
-         deriving (Show)
+
+instance Show Pat where
+  show (PVar tid)            = printf "pvar %s" (show tid) 
+  show PWildcard             = "_"
+  show (PAs tid pat)         = printf "(%s PAs %s)" (show tid) (show pat)
+  show (PLit lit)            = show lit
+  show (PCon (i:>:sch) pats) = printf "(%s::%s) %s" (show i) (show sch) (show pats)
 
 tiPat :: Pat -> TI ([Pred], [Assump], Type)
 tiPat (PVar i) = do v <- newTVar Star

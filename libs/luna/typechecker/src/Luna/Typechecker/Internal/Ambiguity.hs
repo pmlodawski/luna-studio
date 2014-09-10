@@ -1,4 +1,4 @@
-module Luna.Typechecker.Internal.Ambiguity (defaultedPreds, defaultSubst) where
+module Luna.Typechecker.Internal.Ambiguity where
 
 import Luna.Typechecker.Internal.AST.Type         (Type(..), Tyvar)
 

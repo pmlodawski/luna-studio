@@ -12,6 +12,7 @@ import Luna.Typechecker.Internal.AST.Kind
 import Luna.Typechecker.Internal.AST.Scheme
 --import Luna.Typechecker.Internal.AST.TID
 import Luna.Typechecker.Internal.AST.Type
+import Test.Luna.Typechecker.Internal.AST.TypeGen
 
 
 --import Luna.Typechecker.Internal.Ambiguity
@@ -55,26 +56,27 @@ permute xs = do swaps <- mapM mkSwapTuple [nd,nd-1..1]
 spec :: Spec
 spec = do
   describe "quantify" $ do
-    it "quantifies variables in order of appearance in `tv qt`, *not* the order of vs [QC]" $ property $ 
+    it "quantifies variables in order of appearance in `tv qt`, *not* the order of `vs` [QC]" $ property $ 
       let az = map (flip Tyvar Star) vs
+          az' = map (flip Tyvar Star) vs'
+          az'' = map (flip Tyvar Star) vs''
           gs = foldr1 fn $ map TGen $ zipWith const [0..] vs
+          gs' = foldr1 fn $ ((map TGen $ zipWith const [0..] vs) ++ [TVar $ Tyvar "y" Star])
           ks = map (const Star) vs
           vs = ["a", "b", "c", "d", "e", "f"]
+          vs' = ["z"] -- variable to quantify that does not exist
+          vs'' = ["y"] -- the variable that is not quantified
        in forAll (permute az) $ \azPermuted ->
-            quantify azPermuted ([] :=> (foldr1 fn $ map TVar azPermuted)) `shouldBe` Forall ks ([] :=> gs)
-      --in forAll (permute $ bleh) $ \tvs_permuted ->
-      --  let a = ([] :=> (foldr1 fn $ map TVar tvs))
-      --      b =  Forall [Star, Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 2))
-      --   in quantify bleh a `shouldBe` bleh
-      --let tyv1 = flip Tyvar Star "a"
-      --    tyv2 = flip Tyvar Star "b"
-      --    tyv3 = flip Tyvar Star "c"
-      --property $ forAll ()
-
-      --quantify [tyv1, tyv2, tyv3] ([] :=> (TVar tyv3 `fn` TVar tyv1 `fn` TVar tyv2)) `shouldBe` Forall [Star, Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 2))
-      --quantify [tyv1, tyv2, tyv3] ([] :=> (TVar tyv2 `fn` TVar tyv1 `fn` TVar tyv3)) `shouldBe` Forall [Star, Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 2))
-      --quantify [tyv1, tyv2, tyv3] ([] :=> (TVar tyv1 `fn` TVar tyv3 `fn` TVar tyv2)) `shouldBe` Forall [Star, Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 2))
-      --quantify [tyv3, tyv1, tyv2] ([] :=> (TVar tyv3 `fn` TVar tyv1 `fn` TVar tyv2)) `shouldBe` Forall [Star, Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 2))
-      --quantify [tyv3, tyv1, tyv2] ([] :=> (TVar tyv2 `fn` TVar tyv1 `fn` TVar tyv3)) `shouldBe` Forall [Star, Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 2))
-      --quantify [tyv3, tyv1, tyv2] ([] :=> (TVar tyv1 `fn` TVar tyv3 `fn` TVar tyv2)) `shouldBe` Forall [Star, Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 2))
-  describe "Luna/Typechecker/Internal/AST/Scheme.hs" $ it "is" pending
+            quantify (azPermuted++az') ([] :=> (foldr1 fn $ map TVar (azPermuted++az''))) `shouldBe` Forall ks ([] :=> gs')
+  describe "(coverage booster)" $ do
+    it "instance Show Scheme" $ do
+      let sch1 = Forall [] ([] :=> t)
+          sch2 = Forall ks ([] :=> tk)
+          sch3 = Forall [] (ps :=> t)
+          sch4 = Forall ks (psk :=> tk)
+          ks = [Star]
+          ps = [IsIn "Integral" t]
+          psk = [IsIn "Integral" tk]
+          t = TVar $ Tyvar "a" Star
+          tk = TGen 0
+      length (concatMap show [sch1, sch2, sch3, sch4]) `shouldSatisfy` (>0)
