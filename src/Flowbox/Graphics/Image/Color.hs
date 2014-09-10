@@ -71,13 +71,13 @@ grade blackpoint whitepoint lift gain multiply' offset' gamma =
 colorCorrect :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a -> Exp a -> RGB (Exp a) -> RGB (Exp a)
 colorCorrect saturation' contrast' gamma' gain' offset' pix =
     saturated & each %~ (offset offset' . gain'' gain' . U.gamma gamma' . contrast contrast')
-    where saturated  = toHSV pix & s %~ (*saturation') & toRGB
+    where saturated  = toHSV pix & (\(HSV h s v) -> HSV h (s * saturation') v) & toRGB
           gain'' b x = b * x -- U.gain is broken, tested with Nuke that it's simply multiplication
 
 -- NOTE[mm]: pretty sure Nuke uses HSL colorspace for saturation manipulation. There are slight differences still,
 --           but operating on HSV looks unalike to Nuke.
 saturate :: (Elt t, IsFloating t, ColorConvert a HSL, ColorConvert HSL a) => Exp t -> a (Exp t) -> a (Exp t)
-saturate saturation pix = toHSL pix & s %~ (*saturation) & convertColor
+saturate saturation pix = toHSL pix & (\(HSL h s l) -> HSL h (s * saturation) l) & convertColor
 
 hsvTool :: forall a t. (Elt t, IsFloating t, ColorConvert a HSV, ColorConvert HSV a,
                         A.Lift Exp (a (Exp t)), A.Unlift Exp (a (Exp t)), Elt (A.Plain (a (Exp t))))
@@ -90,20 +90,20 @@ hsvTool (A.unlift . U.variable -> hueRange) (U.variable -> hueRotation) (U.varia
         (A.unlift . U.variable -> saturationRange) (U.variable -> saturationAdjustment) (U.variable -> saturationRolloff)
         (A.unlift . U.variable -> brightnessRange) (U.variable -> brightnessAdjustment) (U.variable -> brightnessRolloff) pix =
     A.unlift (conditionsFulfilled A.? (
-        A.lift (hsv & h %~ (\hue -> rotation (hueRotation * cyclicPower hueRange hueRolloff hue) hue) -- hue
-            & s %~ (\saturation -> saturation + saturationAdjustment * power saturationRange saturationRolloff saturation)
-            & v %~ (\value -> value + brightnessAdjustment * power brightnessRange brightnessRolloff value)
-            & convertColor :: a (Exp t))
+        A.lift (HSV (rotation (hueRotation * cyclicPower hueRange hueRolloff h) h)
+                    (s + saturationAdjustment * power saturationRange saturationRolloff s)
+                    (v + brightnessAdjustment * power brightnessRange brightnessRolloff v)
+                & convertColor :: a (Exp t))
         ,
         A.lift pix))
-    where hsv = toHSV pix
+    where HSV h s v = toHSV pix
           rotation r hue = U.frac $ hue + r
 
-          conditionsFulfilled = cyclicPower hueRange        hueRolloff        (hsv ^. h) A.>* 0
+          conditionsFulfilled = cyclicPower hueRange        hueRolloff        h A.>* 0
                                 A.&&*
-                                power       saturationRange saturationRolloff (hsv ^. s) A.>* 0
+                                power       saturationRange saturationRolloff s A.>* 0
                                 A.&&*
-                                power       brightnessRange brightnessRolloff (hsv ^. v) A.>* 0
+                                power       brightnessRange brightnessRolloff v A.>* 0
 
 power :: forall a. (Elt a, IsFloating a) => U.Range (Exp a) -> Exp a -> Exp a -> Exp a
 power range@(U.Range a' b') rolloff x =
