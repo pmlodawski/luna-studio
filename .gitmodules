@@ -21,7 +21,7 @@
     url = git@github.com:flowbox-public/hint.git
 [submodule "third-party/linear-accelerate"]
     path = third-party/linear-accelerate
-    url = git@github.com:flowbox-public/linear-accelerate.git
+    url = git@github.com:ekmett/linear-accelerate.git
 [submodule "third-party/protocol-buffers"]
     path = third-party/protocol-buffers
     url = git@github.com:flowbox-public/protocol-buffers.git
@@ -31,9 +31,12 @@
 [submodule "third-party/imagemagick"]
     path = third-party/imagemagick
     url = git@github.com:flowbox-public/imagemagick.git
-[submodule "libs/data/graphics/graphics/test/samples"]
-    path = libs/data/graphics/graphics/test/samples
-    url = git@github.com:flowbox-public/ImageProcessingSamples.git
 [submodule "libs/data/graphics/test/samples"]
     path = libs/data/graphics/test/samples
     url = git@github.com:flowbox-public/ImageProcessingSamples.git
+[submodule "third-party/accelerate-fft"]
+    path = third-party/accelerate-fft
+    url = git@github.com:AccelerateHS/accelerate-fft.git
+[submodule "third-party/mainland-pretty"]
+    path = third-party/mainland-pretty
+    url = git@github.com:flowbox-public/mainland-pretty.git
