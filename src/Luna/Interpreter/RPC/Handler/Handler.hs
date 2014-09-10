@@ -11,7 +11,9 @@ module Luna.Interpreter.RPC.Handler.Handler where
 
 import           Control.Monad             (forever)
 import           Control.Monad.Trans.State
-import           Pipes                     ((>->))
+import           Data.IORef                (IORef)
+import qualified Data.IORef                as IORef
+import           Pipes                     (liftIO, (>->))
 import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
 
@@ -106,26 +108,25 @@ handlerMap callback = HandlerMap.fromList
         requiredSync fun = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> fun args >> Sync.syncRequest)
 
 
-interpret :: Pipes.Pipe (Message, Message.CorrelationID)
-                        (Message, Maybe Message.CorrelationID)
+interpret :: IORef Message.CorrelationID
+          -> Pipes.Pipe (Message, Message.CorrelationID)
+                        (Message, Message.CorrelationID)
                         (StateT Context SessionST) ()
-interpret = forever $ do
+interpret crlRef = forever $ do
     (message, crl) <- Pipes.await
+    liftIO $ IORef.writeIORef crlRef crl
     results <- lift $ Processor.processLifted handlerMap message
-    mapM_ (\r -> Pipes.yield (r, Just crl)) results
+    mapM_ (\r -> Pipes.yield (r, crl)) results
 
 
 run :: Config -> Context
     -> (Pipes.Input  (Message, Message.CorrelationID),
-        Pipes.Output (Message, Maybe Message.CorrelationID))
+        Pipes.Output (Message, Message.CorrelationID))
     -> IO (Either Error ())
-run cfg ctx (input, output) =
+run cfg ctx (input, output) = do
+    crlRef <- IORef.newIORef def
+    let env = def & Env.resultCallBack .~ Value.reportOutputValue crlRef output
     Session.run cfg env $ lift $ flip evalStateT ctx $
         Pipes.runEffect $ Pipes.fromInput input
-                      >-> interpret
+                      >-> interpret crlRef
                       >-> Pipes.toOutput output
-    where
-        env = def & Env.resultCallBack .~ Value.reportOutputValue output
-
-
-

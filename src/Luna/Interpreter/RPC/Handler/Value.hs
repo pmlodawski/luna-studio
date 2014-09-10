@@ -8,6 +8,8 @@
 module Luna.Interpreter.RPC.Handler.Value where
 
 import           Data.ByteString.Lazy (ByteString)
+import           Data.IORef           (IORef)
+import qualified Data.IORef           as IORef
 import qualified Pipes.Concurrent     as Pipes
 
 import           Flowbox.Bus.Data.Message                              (Message (Message))
@@ -30,6 +32,7 @@ import           Luna.Interpreter.Session.Data.CallPointPath           (CallPoin
 import           Luna.Interpreter.Session.Session                      (SessionST)
 
 
+
 logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Value"
 
@@ -42,12 +45,14 @@ get (Value.Request tcallPointPath) = do
     return $ Value.Update tcallPointPath result
 
 
-reportOutputValue :: Pipes.Output (Message, Maybe Message.CorrelationID)
+reportOutputValue :: IORef Message.CorrelationID
+                  -> Pipes.Output (Message, Message.CorrelationID)
                   -> CallPointPath -> ByteString -> IO ()
-reportOutputValue output callPointPath value = do
+reportOutputValue crlRef output callPointPath value = do
+    crl <- IORef.readIORef crlRef
     let tcallPointPath = encode callPointPath
         response = Value.Update tcallPointPath value
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response
-        packet   = (msg, Nothing)
+        packet   = (msg, crl)
     void $ Pipes.atomically $ Pipes.send output packet
