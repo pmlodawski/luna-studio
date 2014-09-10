@@ -13,15 +13,16 @@ module Luna.Pass.Analysis.CallGraph.State where
 
 import Control.Applicative
 
-import Control.Monad.State (MonadState, get, modify, put)
+import Control.Monad.State (MonadState, get, modify)
 
 import           Flowbox.Prelude           hiding (error, id, mod)
 import           Flowbox.System.Log.Logger hiding (info)
-import           Luna.AST.AST              (AST, ID)
+import           Luna.AST.AST              (ID)
 import           Luna.Data.AliasInfo       (AliasInfo)
-import qualified Luna.Data.AliasInfo       as AliasInfo
 import           Luna.Data.CallGraph       (CallGraph)
 import qualified Luna.Data.CallGraph       as CallGraph
+
+
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.CallGraph.State"

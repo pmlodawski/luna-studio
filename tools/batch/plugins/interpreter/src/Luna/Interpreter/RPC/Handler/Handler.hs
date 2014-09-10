@@ -11,7 +11,9 @@ module Luna.Interpreter.RPC.Handler.Handler where
 
 import           Control.Monad             (forever)
 import           Control.Monad.Trans.State
-import           Pipes                     ((>->))
+import           Data.IORef                (IORef)
+import qualified Data.IORef                as IORef
+import           Pipes                     (liftIO, (>->))
 import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
 
@@ -36,9 +38,8 @@ import qualified Luna.Interpreter.RPC.Handler.Value       as Value
 import qualified Luna.Interpreter.RPC.Topic               as Topic
 import qualified Luna.Interpreter.Session.Env             as Env
 import           Luna.Interpreter.Session.Error           (Error)
+import           Luna.Interpreter.Session.Session         (SessionST)
 import qualified Luna.Interpreter.Session.Session         as Session
-import           Luna.Interpreter.Session.SessionT        (SessionT)
-import qualified Luna.Interpreter.Session.SessionT        as SessionT
 
 
 
@@ -46,13 +47,16 @@ logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Handler"
 
 
-handlerMap :: HandlerMap Context SessionT
+handlerMap :: HandlerMap Context SessionST
 handlerMap callback = HandlerMap.fromList
-    [ (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run              )
-    , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd    )
-    , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove )
-    , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList   )
-    , (Topic.interpreterValueRequest           , respond Topic.update Value.get                    )
+    [ (Topic.interpreterSetProjectIDRequest    , respond Topic.update Interpreter.setProjectID    )
+    , (Topic.interpreterSetMainPtrRequest      , respond Topic.update Interpreter.setMainPtr      )
+    , (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run             )
+    , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd   )
+    , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove)
+    , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList  )
+    , (Topic.interpreterValueRequest           , respond Topic.update Value.get                   )
+    , (Topic.interpreterPingRequest            , respond Topic.update Interpreter.ping            )
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
@@ -94,36 +98,35 @@ handlerMap callback = HandlerMap.fromList
 
         --query topic = callback (const topic) . Processor.singleResult
 
-        call0 :: Proto.Serializable a => (a -> RPC Context SessionT ()) -> StateT Context SessionT [Message]
+        call0 :: Proto.Serializable a => (a -> RPC Context SessionST ()) -> StateT Context SessionST [Message]
         call0 = callback id . Processor.noResult
 
-        optionalSync :: Proto.Serializable a => (a -> RPC Context SessionT ()) -> StateT Context SessionT [Message]
+        optionalSync :: Proto.Serializable a => (a -> RPC Context SessionST ()) -> StateT Context SessionST [Message]
         optionalSync = callback (const Topic.projectmanagerSyncGetRequest) . Processor.optResult . (.) Sync.syncIfNeeded
 
-        requiredSync :: Proto.Serializable a => (a -> RPC Context SessionT ()) -> StateT Context SessionT [Message]
-        requiredSync op = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> op args >> Sync.syncRequest)
+        requiredSync :: Proto.Serializable a => (a -> RPC Context SessionST ()) -> StateT Context SessionST [Message]
+        requiredSync fun = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> fun args >> Sync.syncRequest)
 
 
-interpret :: Pipes.Pipe (Message, Message.CorrelationID)
-                        (Message, Maybe Message.CorrelationID)
-                        (StateT Context SessionT) ()
-interpret = forever $ do
+interpret :: IORef Message.CorrelationID
+          -> Pipes.Pipe (Message, Message.CorrelationID)
+                        (Message, Message.CorrelationID)
+                        (StateT Context SessionST) ()
+interpret crlRef = forever $ do
     (message, crl) <- Pipes.await
+    liftIO $ IORef.writeIORef crlRef crl
     results <- lift $ Processor.processLifted handlerMap message
-    mapM_ (\r -> Pipes.yield (r, Just crl)) results
+    mapM_ (\r -> Pipes.yield (r, crl)) results
 
 
 run :: Config -> Context
     -> (Pipes.Input  (Message, Message.CorrelationID),
-        Pipes.Output (Message, Maybe Message.CorrelationID))
+        Pipes.Output (Message, Message.CorrelationID))
     -> IO (Either Error ())
-run cfg ctx (input, output) =
-    Session.run cfg env $ SessionT.runSessionT $ flip evalStateT ctx $
+run cfg ctx (input, output) = do
+    crlRef <- IORef.newIORef def
+    let env = def & Env.resultCallBack .~ Value.reportOutputValue crlRef output
+    Session.run cfg env $ lift $ flip evalStateT ctx $
         Pipes.runEffect $ Pipes.fromInput input
-                      >-> interpret
+                      >-> interpret crlRef
                       >-> Pipes.toOutput output
-    where
-        env = def & Env.resultCallBack .~ Value.reportOutputValue output
-
-
-

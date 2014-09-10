@@ -21,10 +21,6 @@ import qualified Luna.AST.AST                       as AST
 import qualified Luna.AST.Expr                      as Expr
 import           Luna.AST.Module                    (Module)
 import qualified Luna.AST.Module                    as Module
-import           Luna.AST.Pat                       (Pat)
-import qualified Luna.AST.Pat                       as Pat
-import           Luna.AST.Type                      (Type)
-import qualified Luna.AST.Type                      as Type
 import           Luna.Data.AliasInfo                (AliasInfo)
 import qualified Luna.Data.AliasInfo                as AliasInfo
 import           Luna.Data.CallGraph                (CallGraph)

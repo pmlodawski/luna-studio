@@ -31,29 +31,26 @@ import           Flowbox.Prelude               hiding (error)
 
 produce :: Pipes.Producer (Message, Message.CorrelationID) BusT ()
 produce = forever $ do
-    frame <- lift $ BusT $ Bus.receive
+    frame <- lift $ BusT Bus.receive
     Pipes.yield (frame ^. MessageFrame.message, frame ^. MessageFrame.correlation)
 
 
-consume :: Pipes.Consumer (Message, Maybe Message.CorrelationID) BusT ()
+consume :: Pipes.Consumer (Message, Message.CorrelationID) BusT ()
 consume = forever $ do
-    (msg, mcrl) <- Pipes.await
-    void $ lift $ BusT $ case mcrl of
-        Just crl -> Bus.reply crl Flag.Enable msg
-        Nothing  -> void $ Bus.send Flag.Enable msg
+    (msg, crl) <- Pipes.await
+    void $ lift $ BusT $ Bus.reply crl Flag.Enable msg
 
 
 run :: BusEndPoints -> HandlerMap s m
     -> IO (Pipes.Input  (Message, Message.CorrelationID),
-           Pipes.Output (Message, Maybe Message.CorrelationID))
+           Pipes.Output (Message, Message.CorrelationID))
 run endPoints handlerMap = do
     (output1, input1) <- Pipes.spawn Pipes.Single
     (output2, input2) <- Pipes.spawn Pipes.Single
-    forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
-        mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
-        BusT.runBusT $ Pipes.runEffect $ produce >-> Pipes.toOutput output1
-    forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
-        mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
-        BusT.runBusT $ Pipes.runEffect $ Pipes.fromInput input2 >-> consume
+    let forkPipesThread fun = forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
+                            mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
+                            BusT.runBusT $ Pipes.runEffect fun
+    forkPipesThread $ produce >-> Pipes.toOutput output1
+    forkPipesThread $ Pipes.fromInput input2 >-> consume
     return (input1, output2)
 

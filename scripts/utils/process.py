@@ -9,8 +9,10 @@ import sys
 
 from colors import print_error
 from subprocess import call
+from utils.colors      import print_error, formatQuestion
 
 
+SILENTINSTALL = False
 
 def handle_out(code):
     if code != 0 and code != "":
@@ -19,3 +21,19 @@ def handle_out(code):
 
 def autocall(args):
     handle_out(call(args))
+
+
+def ask(question):
+    if SILENTINSTALL:
+        print(formatQuestion("Question override: " + question))
+        return True
+    else:
+        answer = None
+        while True:
+            ansRaw = raw_input(formatQuestion(question) + " [Y/n] ")
+            ans = ansRaw.lower()
+            if ans not in ["", "y", "yes", "n", "no"]:
+                print_error("'%s' is not a valid answer, please choose beetween YES or NO." % ansRaw)
+            else: break
+        if ans in ["", "y", "yes"]: return True
+        else:                       return False
