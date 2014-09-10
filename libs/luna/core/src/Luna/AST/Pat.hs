@@ -95,3 +95,4 @@ lunaShow p = case p of
                                    patStr = lunaShow pat'
                                    typeStr = Type.lunaShow cls'
     Wildcard _            -> "_"
+    RecWildcard _         -> ".."
