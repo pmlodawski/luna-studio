@@ -9,6 +9,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE CPP #-}
 
 module Luna.Target.HS.Control.Context.Env where
@@ -20,14 +22,22 @@ import Control.Applicative
 import Control.Monad.Morph
 import Data.Typeable (Typeable)
 
+import Flowbox.Utils
+
 --------------------------------------------------------------------------------
 -- Structures
 --------------------------------------------------------------------------------
 
 data Pure a = Pure a deriving (Eq, Ord, Typeable, Generic)
 
-fromPure (Pure a) = a
+newtype IOS s a = IOS (IO (s a)) deriving (Show)
 
+newtype PureS s a = PureS (Pure (s a)) deriving (Typeable)
+
+fromPure (Pure a) = a
+fromPureS (PureS a) = a
+
+fromIOS (IOS a) = a
 
 --------------------------------------------------------------------------------
 -- Utils
@@ -57,6 +67,10 @@ type family EnvMerge a b where
   EnvMerge Pure Pure = Pure
   EnvMerge a    b    = IO
 
+type family EnvMerge2 a b where
+  EnvMerge2 PureS PureS = PureS
+  EnvMerge2 a    b      = IOS
+
 type family GetEnv t where
     GetEnv Pure  = Pure
     GetEnv IO    = IO
@@ -74,6 +88,16 @@ instance Show a => Show (Pure a) where
         content = if ' ' `elem` child then "(" ++ child ++ ")" else child
 #else
     show (Pure a) = show a
+#endif
+
+
+instance Show (s a) => Show (PureS s a) where
+#ifdef DEBUG
+    show (PureS (Pure a)) = "PureS (" ++ child ++ ")" where
+        child = show a
+        content = if ' ' `elem` child then "(" ++ child ++ ")" else child
+#else
+    show (PureS (Pure a)) = show a
 #endif
 
 ---
