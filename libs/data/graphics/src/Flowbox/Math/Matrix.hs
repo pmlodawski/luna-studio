@@ -46,8 +46,8 @@ module Flowbox.Math.Matrix (
 
 import qualified Data.Array.Accelerate                 as A
 import qualified Data.Array.Accelerate.Array.Sugar     as Sugar
+import qualified Data.Array.Accelerate.Data.Complex    as A
 import qualified Data.Array.Accelerate.Math.FFT        as A
-import qualified Data.Array.Accelerate.Math.Complex    as A
 import qualified Data.Array.Accelerate.Math.DFT.Centre as A
 import qualified Data.Array.Accelerate.IO              as A
 
