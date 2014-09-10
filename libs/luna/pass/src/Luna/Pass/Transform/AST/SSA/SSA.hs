@@ -16,6 +16,7 @@ import Control.Monad.State
 
 import           Flowbox.Prelude           hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
+import           Luna.AST.Expr             (Expr)
 import qualified Luna.AST.Expr             as Expr
 import           Luna.AST.Module           (Module)
 import qualified Luna.AST.Module           as Module
@@ -41,6 +42,10 @@ mkVar id = "v_" ++ show id
 
 run :: AliasInfo -> Module -> Pass.Result Module
 run aliasInfo = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaModule aliasInfo)
+
+
+runExpr :: AliasInfo -> Expr -> Pass.Result Expr
+runExpr aliasInfo = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaExpr aliasInfo)
 
 
 ssaModule :: AliasInfo -> Module -> SSAPass Module

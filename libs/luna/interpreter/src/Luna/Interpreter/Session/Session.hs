@@ -72,7 +72,7 @@ run config env session = do
 
 initialize :: Session ()
 initialize = do
-    lift2 $ I.reset
+    lift2 I.reset
     setHardcodedExtensions
     lift2 $ I.setImportsQ [ ("Data.Word", Nothing)
                           , ("Luna.Target.HS", Nothing)
@@ -94,7 +94,7 @@ unsetFlags flags = lift2 $ I.runGhc $ do
 
 withFlags :: [GHC.ExtensionFlag] -> [GHC.ExtensionFlag] -> Session a -> Session a
 withFlags enable disable action = do
-    flags <- lift2 $ I.runGhc $ GHC.getSessionDynFlags
+    flags <- lift2 $ I.runGhc GHC.getSessionDynFlags
     setFlags enable
     unsetFlags disable
     result <- action
