@@ -11,7 +11,7 @@
 module Flowbox.Graphics.Composition.Generators.Transform where
 
 import Flowbox.Prelude                                    as P hiding (transform, zoom)
-import Flowbox.Math.Matrix                                as M
+import Flowbox.Math.Matrix                                as M hiding (canvas)
 import Flowbox.Graphics.Composition.Generators.Structures
 
 import qualified Data.Array.Accelerate     as A
