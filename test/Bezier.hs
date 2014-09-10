@@ -15,7 +15,7 @@ import Data.Array.Accelerate.CUDA as C
 import Math.Coordinate.Cartesian (Point2(..))
 import Flowbox.Geom2D.Accelerate.Basic
 import Flowbox.Geom2D.Accelerate.CubicBezier
-import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection
+import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection as Cubic
 import Flowbox.Prelude
 
 --changeLine :: Elt a => Line (Exp a) -> Line (Exp a)
@@ -46,14 +46,17 @@ main = do
         p2 = Point2 0 1 :: Point2 Double
         p3 = Point2 1 1 :: Point2 Double
         p4 = Point2 1 0 :: Point2 Double
-        --l = Line p1 p2 :: Line Double
         curve = CubicBezier p1 p2 p3 p4
-        --a = A.use $ fromList (Z :. 3) [1,2,3] :: Acc (Vector Int)
-        --b = A.use $ fromList (Z :. 1) [l] :: Acc (Vector (Line Double))
-        --c = A.use $ fromList (Z :. 2) [p1, p2] :: Acc (Vector (Point2 Double))
-        curves = A.use $ fromList (Z :. 1) [curve] :: Acc (Vector (CubicBezier Double))
-        root = A.unit $ findCubicYforX 10 0.01 (A.lift curve) 0.25
+        solve x = A.unit $ Cubic.findYforX 10 0.01 (A.lift curve) x
 
-    print $ run $ root
+    print $ run $ solve 0
+    print $ run $ solve 0.01
+    print $ run $ solve 0.011
+    print $ run $ solve 0.25
+    print $ run $ solve 0.5
+    print $ run $ solve 0.75
+    print $ run $ solve 0.989
+    print $ run $ solve 0.99
+    print $ run $ solve 1
 
     return ()
