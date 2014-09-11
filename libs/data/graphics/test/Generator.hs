@@ -25,6 +25,7 @@ import Flowbox.Graphics.Composition.Generators.Structures as S
 import Flowbox.Graphics.Composition.Generators.Transform
 
 import Flowbox.Graphics.Composition.Dither
+import Flowbox.Graphics.Image.Color (LinearGeneratorMock(..), crosstalk)
 
 import Flowbox.Math.Matrix as M
 import Flowbox.Graphics.Utils
@@ -272,6 +273,23 @@ ditherTest = do
     a' <- mutableProcess run mydither a
     testSaveRGBA' "out.png" r' g' b' a'
     --putStrLn "Szatan"
+
+--
+-- Crosstalk test
+--
+crosstalkTest :: IO ()
+crosstalkTest = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.png"
+    let r' = fromMatrix A.Clamp r
+        g' = fromMatrix A.Clamp g
+        b' = fromMatrix A.Clamp b
+        one = LinearGeneratorMock $ const 1
+        zero = LinearGeneratorMock $ const 0
+        id' = LinearGeneratorMock $ id
+
+        (newR, newG, newB) = crosstalk id' id' zero zero zero zero id' zero zero r' g' b'
+    print "foo"
+    testSaveRGBA' "out.png" (rasterizer newR) (rasterizer newG) (rasterizer newB) a
 
 main :: IO ()
 main = do
