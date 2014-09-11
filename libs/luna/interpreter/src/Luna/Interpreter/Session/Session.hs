@@ -184,5 +184,5 @@ setProjectID :: Project.ID -> Session ()
 setProjectID projectID = modify (Env.projectID .~ projectID)
 
 
-getResultCallBack :: Session (CallPointPath -> ByteString -> IO ())
+getResultCallBack :: Session (Project.ID -> CallPointPath -> ByteString -> IO ())
 getResultCallBack = gets $ view Env.resultCallBack

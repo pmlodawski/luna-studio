@@ -30,7 +30,7 @@ data Env = Env { _cached         :: MapForest CallPoint CacheInfo
                , _libManager     :: LibManager
                , _projectID      :: Project.ID
                , _mainPtr        :: DefPoint
-               , _resultCallBack :: CallPointPath -> ByteString -> IO ()
+               , _resultCallBack :: Project.ID -> CallPointPath -> ByteString -> IO ()
                }
 
 
@@ -38,7 +38,7 @@ makeLenses(''Env)
 
 
 mk :: LibManager -> Project.ID -> DefPoint
-   -> (CallPointPath -> ByteString -> IO ()) -> Env
+   -> (Project.ID -> CallPointPath -> ByteString -> IO ()) -> Env
 mk = Env MapForest.empty SetForest.empty
 
 
@@ -46,4 +46,4 @@ instance Default Env where
     def = mk def
              1
              (DefPoint 0 [Crumb.Module "Main", Crumb.Function "main" []])
-             (const (void . return))
+             (const (const (void . return)))

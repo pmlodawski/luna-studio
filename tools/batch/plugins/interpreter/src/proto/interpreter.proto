@@ -17,12 +17,14 @@ message CallPoint {
 }
 
 message CallPointPath {
-    repeated CallPoint calls = 1;
+    optional int32 projectID = 1;
+    repeated CallPoint calls = 2;
 }
 
 message DefPoint {
-    optional int32 libraryID = 1;
-    optional generated.proto.crumb.Breadcrumbs breadcrumbs = 2;
+    optional int32 projectID = 1;
+    optional int32 libraryID = 2;
+    optional generated.proto.crumb.Breadcrumbs breadcrumbs = 3;
 }
 
 message Interpreter {
@@ -59,12 +61,26 @@ message Interpreter {
             required Request request = 1;
         }
     }
+    message GetProjectID {
+        message Request { }
+        message Status {
+            required Request request = 1;
+            required int32 projectID = 2;
+        }
+    }
     message SetMainPtr {
         message Request {
             required DefPoint mainPtr = 1;
         }
         message Update {
             required Request request = 1;
+        }
+    }
+    message GetMainPtr {
+        message Request { }
+        message Status {
+            required Request request = 1;
+            required DefPoint mainPtr = 2;
         }
     }
     message Run {

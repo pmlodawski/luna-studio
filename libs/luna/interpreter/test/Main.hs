@@ -135,7 +135,7 @@ main1 = do
 
     let env = Env.mk libManager 0
                 (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
-                (curry print)
+                (curry $ curry print)
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
     result <- Session.run cfg env $ do
