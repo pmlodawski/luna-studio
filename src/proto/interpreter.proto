@@ -27,6 +27,14 @@ message DefPoint {
     optional generated.proto.crumb.Breadcrumbs breadcrumbs = 3;
 }
 
+enum Status {
+    Ready        = 1;
+    Modified     = 2;
+    NonCacheable = 3;
+    NotInCache   = 4;
+    Unknown      = 5;
+}
+
 message Interpreter {
     message WatchPoint {
         message Add {
@@ -95,7 +103,8 @@ message Interpreter {
         }
         message Update {
             required CallPointPath callPointPath = 1;
-            required bytes         value         = 2;
+            required Status        status        = 2;
+            optional bytes         value         = 3;
         }
     }
     message Ping {

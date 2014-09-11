@@ -26,6 +26,7 @@ import qualified Generated.Proto.Interpreter.Interpreter.Value.Request as Value
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Update  as Value
 import           Luna.Interpreter.Proto.CallPoint                      ()
 import           Luna.Interpreter.Proto.CallPointPath                  ()
+import           Luna.Interpreter.Proto.Status                         ()
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.RPC.Handler.Sync                     as Sync
 import qualified Luna.Interpreter.RPC.Topic                            as Topic
@@ -44,8 +45,8 @@ get :: Value.Request -> RPC Context SessionST Value.Update
 get (Value.Request tcallPointPath) = do
     (projectID, callPointPath) <- decodeE tcallPointPath
     Sync.testProjectID projectID
-    result <- liftSession $ Value.getIfReady callPointPath
-    return $ Value.Update tcallPointPath result
+    (status, bytes) <- liftSession $ Value.getWithStatus callPointPath
+    return $ Value.Update tcallPointPath (encodeP status) bytes
 
 
 reportOutputValue :: IORef Message.CorrelationID
@@ -54,7 +55,7 @@ reportOutputValue :: IORef Message.CorrelationID
 reportOutputValue crlRef output projectID callPointPath value = do
     crl <- IORef.readIORef crlRef
     let tcallPointPath = encode (projectID, callPointPath)
-        response = Value.Update tcallPointPath value
+        response = Value.Update tcallPointPath (encodeP Value.Ready) (Just value)
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response
         packet   = (msg, crl)
