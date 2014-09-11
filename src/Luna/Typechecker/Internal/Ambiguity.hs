@@ -30,6 +30,8 @@ stdClasses :: [TID]
 stdClasses = ["Eq", "Ord", "Show", "Read", "Bounded", "Enum", "Ix", "Functor", "Monad", "MonadPlus"] ++ numClasses
 
 candidates :: ClassEnv -> Ambiguity -> [Type]
+-- TODO [kgdk] 10 wrz 2014: use the trick with mappend: return `Maybe Type` instead of `[] Type`
+-- since only the head is used.
 candidates ce (v, qs) = [t' | let is = [i | IsIn i _ <- qs]
                                   ts = [t | IsIn _ t <- qs],
                               all (TVar v ==) ts,

@@ -1,4 +1,4 @@
-module Luna.Typechecker.Internal.BindingGroups (BindGroup, tiBindGroup, tiSeq, Expr(..)) where
+module Luna.Typechecker.Internal.BindingGroups where
 
 import Luna.Typechecker.Internal.AST.Kind         (Kind(..))
 import Luna.Typechecker.Internal.AST.Lit          (Lit(..),tiLit)

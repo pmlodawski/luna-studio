@@ -27,5 +27,16 @@ module Test.Luna.Typechecker.Internal.BindingGroupsSpec (spec) where
 import Test.Hspec
 
 spec :: Spec
-spec = do
-  describe "Luna/Typechecker/Internal/BindingGroups.hs" $ it "is" pending
+spec = it "is" $ True
+
+  --describe "tiBindGroup" $ it "is" pending
+  --describe "tiSeq" $ it "is" pending
+  --describe "(internal)" $ do
+  --  describe "tiExpr" $ do
+
+    --describe "tiAlt" $ it "is" pending
+    --describe "tiAlts" $ it "is" pending
+    --describe "tiExpl" $ it "is" pending
+    --describe "restricted" $ it "is" pending
+    --describe "tiImpls" $ it "is" pending
+

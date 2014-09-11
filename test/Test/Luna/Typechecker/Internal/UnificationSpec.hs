@@ -19,6 +19,47 @@ import Data.Either
 spec :: Spec
 spec = do
   describe "mgu" $ do
+    it "matches some simple `TAp`s" $ do 
+      let 
+          tv0 = Tyvar "a1" Star
+          tt0 = TVar tv0
+          tv1 = Tyvar "b1" Star
+          tt1 = TVar tv1
+          tv2 = Tyvar "a2" Star
+          tt2 = TVar tv2
+          tv3 = Tyvar "b2" Star
+          tt3 = TVar tv3
+
+          cc0 = Tycon "A1" Star
+          ct0 = TCon cc0
+          cc1 = Tycon "B1" Star
+          ct1 = TCon cc1
+          cc2 = Tycon "A2" Star
+          ct2 = TCon cc2
+          cc3 = Tycon "B2" Star
+          ct3 = TCon cc3
+
+          test :: Type -> Type -> Either String Subst
+          test t1 t2 = case mgu t1 t2 of
+                         Left  x -> x `seq` Left  x
+                         Right x -> x `seq` Right x
+
+          testPos :: Type -> Type -> [Subst -> Expectation] -> Expectation
+          testPos t1 t2 ts = do let res = test t1 t2
+                                res `shouldSatisfy` isRight
+                                let Right subres = res
+                                mapM_ ($ subres) ts
+
+      testPos (TAp tt0 tt1) (TAp tt2 tt3) [ (`shouldContain` [(tv0,tt2)])
+                                          , (`shouldContain` [(tv1,tt3)])
+                                          ]
+      testPos (TAp ct0 tt1) (TAp tt2 ct3) [ (`shouldContain` [(tv1,ct3)])
+                                          , (`shouldContain` [(tv2,ct0)])
+                                          ]
+      testPos (TAp tt2 tt1) (TAp ct0 ct3) [ (`shouldContain` [(tv1,ct3)])
+                                          , (`shouldContain` [(tv2,ct0)])
+                                          ]
+
     it "satisfies property: apply u t1 == apply u t2 for u = mgu t1 t2" $ do
       let t1 = tUnit
           t2 = TVar (Tyvar "a" Star)
@@ -51,7 +92,49 @@ spec = do
       evaluate (mgu tg   t1 :: Either String Subst) `shouldThrow` anyErrorCall
       evaluate (mgu tg  tc1 :: Either String Subst) `shouldThrow` anyErrorCall
       evaluate (mgu (t1 `fn` t2 `fn` t1) tc2 :: Either String Subst) `shouldThrow` anyErrorCall
-  describe "match" $
+  describe "match" $ do
+    it "matches some trivial `TAp`s" $ do
+      let 
+          tv0 = Tyvar "a1" Star
+          tt0 = TVar tv0
+          tv1 = Tyvar "b1" Star
+          tt1 = TVar tv1
+          tv2 = Tyvar "a2" Star
+          tt2 = TVar tv2
+          tv3 = Tyvar "b2" Star
+          tt3 = TVar tv3
+
+          cc0 = Tycon "A1" Star
+          ct0 = TCon cc0
+          cc1 = Tycon "B1" Star
+          ct1 = TCon cc1
+          cc2 = Tycon "A2" Star
+          ct2 = TCon cc2
+          cc3 = Tycon "B2" Star
+          ct3 = TCon cc3
+
+          test :: Type -> Type -> Either String Subst
+          test t1 t2 = case match t1 t2 of
+                         Left  x -> x `seq` Left  x
+                         Right x -> x `seq` Right x
+      
+      test (TAp tt0 tt1) (TAp tt2 tt3) `shouldSatisfy` isRight
+      let Right res = test (TAp tt0 tt1) (TAp tt2 tt3)
+      res `shouldContain` [(tv0,tt2)]
+      res `shouldContain` [(tv1,tt3)]
+
+      test (TAp tt2 tt3) (TAp tt0 tt1) `shouldSatisfy` isRight
+      let Right res = test (TAp tt2 tt3) (TAp tt0 tt1)
+      res `shouldContain` [(tv2, tt0)]
+      res `shouldContain` [(tv3, tt1)]
+
+      evaluate (match (TAp ct0 tt1) (TAp tt2 tt3) :: Either String Subst) `shouldThrow` anyErrorCall
+      evaluate (match (TAp tt0 ct1) (TAp tt2 tt3) :: Either String Subst) `shouldThrow` anyErrorCall
+
+      test (TAp tt2 tt3) (TAp ct0 tt1) `shouldSatisfy` isRight
+      test (TAp tt2 tt3) (TAp tt0 ct1) `shouldSatisfy` isRight
+
+
     it "some examples for property: apply u t1 == t2 for u = match t1 t2" $ do
       let t1 = TVar (Tyvar "a" Star)
           t2 = tUnit

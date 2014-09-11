@@ -15,9 +15,13 @@ import Data.List                                  (intercalate,union,nubBy)
 import Data.Maybe                                 (isJust)
 import Data.Function                              (on)
 import Text.Printf                                (printf)
+import Control.DeepSeq
 
 data Pred = IsIn TID Type
           deriving (Eq)
+
+instance NFData Pred where
+  rnf (IsIn tid t) = rnf tid `seq` rnf t
 
 instance Show Pred where
   show (IsIn tid ty) = printf "%s %s" (show ty) tid
@@ -44,6 +48,9 @@ liftPred m (IsIn i t) (IsIn i' t') | i == i'   = m t t'
 --    IsIn "Ord" (pair (TVar (Tyvar "a" Star)) (TVar (Tyvar "b" Star)))]
 data Qual t = [Pred] :=> t
             deriving (Eq)
+
+instance NFData t => NFData (Qual t) where
+  rnf (ps :=> t) = rnf ps `seq` rnf t
 
 instance Show t => Show (Qual t) where
   show (ps :=> t) = printf "(%s :=> %s)" (show ps) (show t)
