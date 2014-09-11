@@ -12,9 +12,7 @@ import Data.ByteString.Lazy (ByteString)
 
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Data.MapForest                      (MapForest)
-import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Data.SetForest                      (SetForest)
-import qualified Flowbox.Data.SetForest                      as SetForest
 import           Flowbox.Prelude
 import qualified Luna.AST.Control.Crumb                      as Crumb
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
@@ -27,6 +25,7 @@ import           Luna.Lib.Manager                            (LibManager)
 
 data Env = Env { _cached         :: MapForest CallPoint CacheInfo
                , _watchPoints    :: SetForest CallPoint
+               , _allReady       :: Bool
                , _libManager     :: LibManager
                , _projectID      :: Project.ID
                , _mainPtr        :: DefPoint
@@ -39,7 +38,7 @@ makeLenses(''Env)
 
 mk :: LibManager -> Project.ID -> DefPoint
    -> (Project.ID -> CallPointPath -> ByteString -> IO ()) -> Env
-mk = Env MapForest.empty SetForest.empty
+mk = Env def def False
 
 
 instance Default Env where
