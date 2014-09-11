@@ -35,9 +35,8 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Sync"
 
 --- helpers ---------------------------------------------------------------
 
-syncLibManager :: Int32 -> RPC Context SessionST ()
-syncLibManager updateNo = do
-    testUpdateNo updateNo
+syncLibManager :: RPC Context SessionST ()
+syncLibManager = do
     pm <- Batch.getProjectManager
     activeProjectID <- liftSession Session.getProjectID
     libs <- case ProjectManager.lab pm activeProjectID of
@@ -68,7 +67,8 @@ hoistSessionST = hoist (hoist liftIO)
 sync :: Int32 -> RPC Context IO a -> RPC Context SessionST ()
 sync updateNo syncOp = do
     hoistSessionST $ void syncOp
-    syncLibManager updateNo
+    testUpdateNo updateNo
+    syncLibManager
 
 --- handlers --------------------------------------------------------------
 

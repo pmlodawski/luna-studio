@@ -55,6 +55,7 @@ getProjectID request = do
 setProjectID :: SetProjectID.Request -> RPC Context SessionST SetProjectID.Update
 setProjectID request@(SetProjectID.Request tprojectID) = do
     liftSession $ Session.setProjectID $ decodeP tprojectID
+    Sync.syncLibManager
     return $ SetProjectID.Update request
 
 
