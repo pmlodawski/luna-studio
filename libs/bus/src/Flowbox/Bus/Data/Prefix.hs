@@ -5,8 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.PluginManager.Prefix where
+module Flowbox.Bus.Data.Prefix where
 
+import Control.Arrow          (first)
 import Flowbox.Bus.Data.Topic (Topic)
 import Flowbox.Prelude
 
@@ -19,3 +20,7 @@ prefixify :: Prefix -> Topic -> Topic
 prefixify prefix topic = if null prefix
     then topic
     else prefix ++ "." ++ topic
+
+
+prefixifyTopics :: Prefix -> [(Topic, a)] -> [(Topic, a)]
+prefixifyTopics prefix = map (first $ prefixify prefix)

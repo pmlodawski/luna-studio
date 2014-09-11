@@ -12,6 +12,7 @@ import           Data.IORef           (IORef)
 import qualified Data.IORef           as IORef
 import qualified Pipes.Concurrent     as Pipes
 
+import qualified Flowbox.Batch.Project.Project                         as Project
 import           Flowbox.Bus.Data.Message                              (Message (Message))
 import qualified Flowbox.Bus.Data.Message                              as Message
 import           Flowbox.Bus.Data.Topic                                (update, (/+))
@@ -26,6 +27,7 @@ import qualified Generated.Proto.Interpreter.Interpreter.Value.Update  as Value
 import           Luna.Interpreter.Proto.CallPoint                      ()
 import           Luna.Interpreter.Proto.CallPointPath                  ()
 import           Luna.Interpreter.RPC.Handler.Lift
+import qualified Luna.Interpreter.RPC.Handler.Sync                     as Sync
 import qualified Luna.Interpreter.RPC.Topic                            as Topic
 import qualified Luna.Interpreter.Session.Cache.Value                  as Value
 import           Luna.Interpreter.Session.Data.CallPointPath           (CallPointPath)
@@ -40,17 +42,18 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Value"
 
 get :: Value.Request -> RPC Context SessionST Value.Update
 get (Value.Request tcallPointPath) = do
-    callPointPath <- decodeE tcallPointPath
+    (projectID, callPointPath) <- decodeE tcallPointPath
+    Sync.testProjectID projectID
     result <- liftSession $ Value.getIfReady callPointPath
     return $ Value.Update tcallPointPath result
 
 
 reportOutputValue :: IORef Message.CorrelationID
                   -> Pipes.Output (Message, Message.CorrelationID)
-                  -> CallPointPath -> ByteString -> IO ()
-reportOutputValue crlRef output callPointPath value = do
+                  -> Project.ID -> CallPointPath -> ByteString -> IO ()
+reportOutputValue crlRef output projectID callPointPath value = do
     crl <- IORef.readIORef crlRef
-    let tcallPointPath = encode callPointPath
+    let tcallPointPath = encode (projectID, callPointPath)
         response = Value.Update tcallPointPath value
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response

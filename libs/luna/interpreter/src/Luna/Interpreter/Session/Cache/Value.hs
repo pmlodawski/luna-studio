@@ -40,9 +40,10 @@ getIfReady callPointPath = do
 
 report :: CallPointPath -> VarName -> Session ()
 report callPointPath varName = do
-    resultCB <- Session.getResultCallBack
-    result <- get varName
-    safeLiftIO $ resultCB callPointPath result
+    resultCB  <- Session.getResultCallBack
+    projectID <- Session.getProjectID
+    result    <- get varName
+    safeLiftIO $ resultCB projectID callPointPath result
 
 
 get :: VarName -> Session ByteString
