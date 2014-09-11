@@ -128,9 +128,16 @@ setHardcodedExtensions =
     setFlags [ GHC.Opt_DataKinds ]
 
 
+setAllReady :: Bool -> Session ()
+setAllReady flag = modify $ Env.allReady .~ flag
+
+
+getAllReady :: Session Bool
+getAllReady = gets $ view Env.allReady
+
 
 setLibManager :: LibManager -> Session ()
-setLibManager libManager = modify (Env.libManager .~ libManager)
+setLibManager libManager = modify $ Env.libManager .~ libManager
 
 
 getLibManager :: Session LibManager

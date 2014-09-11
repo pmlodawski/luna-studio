@@ -38,6 +38,36 @@ getIfReady callPointPath = do
     get varName
 
 
+data Status = Ready
+            | Modified
+            | NonCacheable
+            | NotInCache
+            | Unknown
+            deriving (Show, Eq)
+
+getWithStatus :: CallPointPath -> Session (Status, Maybe ByteString)
+getWithStatus callPointPath = do
+    mcacheInfo <- Cache.lookupCacheInfo callPointPath
+    case mcacheInfo of
+        Nothing        -> return (NotInCache, Nothing)
+        Just cacheInfo -> do
+            let varName = cacheInfo ^. CacheInfo.recentVarName
+
+            allReady <- Session.getAllReady
+            let returnBytes status = do
+                    bytes <- get varName
+                    return (status, Just bytes)
+                returnNothing status = return (status, Nothing)
+
+            case (cacheInfo ^. CacheInfo.status, allReady) of
+                (Status.Ready,     True) -> returnBytes   Ready
+                (Status.Ready,    False) -> returnBytes   Unknown
+                (Status.Modified,     _) -> returnBytes   Modified
+                (Status.Affected,     _) -> returnBytes   Modified
+                (Status.NonCacheable, _) -> returnNothing NonCacheable
+
+
+
 report :: CallPointPath -> VarName -> Session ()
 report callPointPath varName = do
     resultCB  <- Session.getResultCallBack

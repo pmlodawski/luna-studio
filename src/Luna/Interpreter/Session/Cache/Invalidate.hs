@@ -27,6 +27,7 @@ import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoi
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Session            (Session)
+import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Lib.Lib                                as Library
 
 
@@ -70,18 +71,19 @@ modifyNode libraryID nodeID = modifyMatching matchNode where
 modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session ()
 modifyMatching predicate = do
     matching <- MapForest.find predicate <$> Cache.cached
-    mapM_ (setStatusParents CacheStatus.Modified . fst) matching
+    mapM_ (setParentsStatus CacheStatus.Modified . fst) matching
+    Session.setAllReady False
 
 
-setStatusParents :: CacheStatus -> CallPointPath -> Session ()
-setStatusParents _      []            = return ()
-setStatusParents status callPointPath = do
+setParentsStatus :: CacheStatus -> CallPointPath -> Session ()
+setParentsStatus _      []            = return ()
+setParentsStatus status callPointPath = do
     Cache.setStatus status callPointPath
-    setStatusParents status $ init callPointPath
+    setParentsStatus status $ init callPointPath
 
 
 markSuccessors :: CallDataPath -> CacheStatus -> Session ()
 markSuccessors callDataPath status =
     Traverse.next callDataPath >>=
-    mapM_ (setStatusParents status . CallDataPath.toCallPointPath)
+    mapM_ (setParentsStatus status . CallDataPath.toCallPointPath)
 

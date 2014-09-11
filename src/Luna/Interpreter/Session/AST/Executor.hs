@@ -45,6 +45,7 @@ processMain = do
     mainPtr <- gets $ view Env.mainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
+    Session.setAllReady True
 
 
 processNodeIfNeeded :: CallDataPath -> Session ()
