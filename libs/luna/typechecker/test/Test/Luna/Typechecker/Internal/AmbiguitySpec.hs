@@ -135,10 +135,33 @@ spec = do
           myType2 = TCon (Tycon "MyType2" Star) :: Type
           mys     = Forall [Star] ([IsIn "MyType" (TGen 0)] :=> (TGen 0))
 
-          fromMytype_type = Forall [Star, Star] ([IsIn "MyType" (TVar $ Tyvar "a" Star)] :=> ((TVar $ Tyvar "a" Star) `fn` tInt))
+          fromMytype_type = Forall [] ([IsIn "MyType" (TVar $ Tyvar "a" Star)] :=> ((TVar $ Tyvar "a" Star) `fn` tInt))
           xx_type         = Forall [Star] ([IsIn "MyType" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
 
           Just classenv = classenvT initialEnv
           res = tiProgram classenv ["(==)":>:eq_type, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [def]
       evaluate res `shouldThrow` anyErrorCall
 
+    it "can't solve ambiguity for: `fromMytype (xx my1 my2)` (III)" $ do
+      let def = ( [( "fulting2_type", fulting2_type, [(fulting2_pat, fulting2_body)])] , [])
+          classenvT = addClass "MyEq"     []
+                  <:> addClass "MyType" ["MyEq"]
+                  <:> addInst [] (IsIn "MyEq"     tInt)
+                  <:> addInst [] (IsIn "MyEq"     myType1) <:> addInst [] (IsIn "MyEq"     myType2)
+                  <:> addInst [] (IsIn "MyType" myType1) <:> addInst [] (IsIn "MyType" myType2)
+
+          fulting2_type = Forall [] ([] :=> (tInt `fn` tBool))
+          fulting2_pat  = [PVar "v"]
+          fulting2_body = ap [Var "(==)", Var "v", ap [Var "fromMytype", ap [Var "xx", Var "my1", Var "my2"]]]
+
+          myeq_type = Forall [Star] ([IsIn "MyEq" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
+          myType1 = TCon (Tycon "MyType1" Star) :: Type
+          myType2 = TCon (Tycon "MyType2" Star) :: Type
+          mys     = Forall [Star] ([IsIn "MyType" (TGen 0)] :=> (TGen 0))
+
+          fromMytype_type = Forall [] ([IsIn "MyType" (TVar $ Tyvar "a" Star)] :=> ((TVar $ Tyvar "a" Star) `fn` tInt))
+          xx_type         = Forall [Star] ([IsIn "MyType" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
+
+          Just classenv = classenvT initialEnv
+          res = tiProgram classenv ["(==)":>:myeq_type, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [def]
+      evaluate res `shouldThrow` anyErrorCall

@@ -9,10 +9,13 @@ import           Luna.Typechecker.Internal.AST.TID          (TID)
 import           Text.Printf                                (printf)
 import           Data.List                                  (intercalate)
 
-
+import Control.DeepSeq
 
 data Assump = TID :>: Scheme
             deriving (Eq)
+
+instance NFData Assump where
+  rnf (tid :>: sch) = rnf tid `seq` rnf sch
 
 instance Show Assump where
   show (t :>: sch) = printf "%s :: %s" (show t) (show sch)

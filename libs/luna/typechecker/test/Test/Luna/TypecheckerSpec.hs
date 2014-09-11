@@ -12,6 +12,8 @@ import Luna.Typechecker.Internal.Typeclasses   (Qual(..), Pred(..), initialEnv, 
 import Luna.Typechecker                        (tiProgram)
 
 import Test.Hspec
+import Control.DeepSeq
+import Control.Exception
 
 ap :: [Expr] -> Expr
 ap = foldl1 Ap
@@ -57,6 +59,10 @@ spec = do
         mutualim_pat  = [PVar "y"]
         mutualim_body = ap [Var "(||)", ap [Var "(<=)", Var "y", Var "y"], ap [Var "f", Const ("True" :>: toScheme tBool)]]
 
+        badtest_type = Forall [Star] ([] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
+        badtest_pat  = [PVar "x", PVar "y"]
+        badtest_body = Let ([], [[("result", [([PWildcard], ap [Var "(==)", Var "x", Var "y"])])]]) (Var "result")
+
         leq_type  = Forall [Star] ([IsIn "Ord" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
         eq_type   = Forall [Star] ([IsIn "Eq"  (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
         land_type = toScheme (tBool `fn` tBool `fn` tBool)
@@ -73,12 +79,12 @@ spec = do
 
     it "typechecks `const`" $ do
       let def = ([( "const", const_type , [( const_pat , const_body )] )] , [])
-      tiProgram initialEnv [] [def] `shouldContain` ["const" :>: const_type]
+      force (tiProgram initialEnv [] [def]) `shouldContain` ["const" :>: const_type]
     
 
     it "infers type for `const`" $ do
       let def = ([] , [[( "const", [(const_pat , const_body)] )]] )
-      tiProgram initialEnv [] [def] `shouldContain` ["const" :>: const_type]
+      force (tiProgram initialEnv [] [def]) `shouldContain` ["const" :>: const_type]
     
 
     it "typechecks `gcd`" $ do
@@ -156,6 +162,11 @@ spec = do
           res = tiProgram initialEnv ["decr" :>: toScheme (tInteger `fn` tInteger)] [def]
       res `shouldContain` ["f" :>: alternating_type]
       res `shouldContain` ["g" :>: alternating_type]
+
+    it "signals too general explicit typing" $ do
+      let def = ( [("badtest", badtest_type, [(badtest_pat, badtest_body)])], [] )
+          res = tiProgram initialEnv ["(==)":>:eq_type] [def]
+      evaluate res `shouldThrow` anyErrorCall
 
 
     it "typechecks the example with mutually-recursive functions, one typed, both using typeclasses" $ do

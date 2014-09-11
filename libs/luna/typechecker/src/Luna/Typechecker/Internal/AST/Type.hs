@@ -7,6 +7,7 @@ import           Luna.Typechecker.Internal.AST.Kind         (Kind(..))
 import           Luna.Typechecker.Internal.AST.TID          (TID)
 
 import           Text.Printf                                (printf)
+import Control.DeepSeq
 
 -- | The type of an expression.
 data Type = TVar Tyvar    -- ^ Type variable (named unknown).
@@ -14,6 +15,13 @@ data Type = TVar Tyvar    -- ^ Type variable (named unknown).
           | TAp Type Type -- ^ Type application ( 'TAp [] Int' means '[Int]').
           | TGen Int      -- ^ Used for quantified variables ('a' in 'forall. a b => a -> b -> a').
           deriving (Eq)
+
+
+instance NFData Type where
+  rnf (TVar t) = rnf t
+  rnf (TCon t) = rnf t
+  rnf (TAp t1 t2) = rnf t1 `seq` rnf t2
+  rnf (TGen i) = rnf i
 
 instance Show Type where
   show (TVar (Tyvar n k)) = printf "(%s::%s)" n (show k)
@@ -29,12 +37,18 @@ instance Show Type where
 data Tyvar = Tyvar TID Kind -- ^ Type variable consists of name and kind.
            deriving (Eq)
 
+instance NFData Tyvar where
+  rnf (Tyvar tid knd) = rnf tid `seq` rnf knd
+
 instance Show Tyvar where
   show x = show (TVar x)
 
 -- | Type constant.
 data Tycon = Tycon TID Kind -- ^ Type constant consists of name and kind.
            deriving (Eq)
+
+instance NFData Tycon where
+  rnf (Tycon tid knd) = rnf tid `seq` rnf knd
 
 instance Show Tycon where
   show x = show (TCon x)

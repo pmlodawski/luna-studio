@@ -3,9 +3,15 @@ module Luna.Typechecker.Internal.AST.Kind (Kind(..)) where
 import Text.Printf (printf)
 import Data.List   (intercalate)
 
+import Control.DeepSeq
+
 data Kind = Star
           | Kfun Kind Kind
           deriving (Eq)
+
+instance NFData Kind where
+  rnf Star = ()
+  rnf (Kfun k1 k2) = rnf k1 `seq` rnf k2
 
 instance Show Kind where
   show Star = "*"

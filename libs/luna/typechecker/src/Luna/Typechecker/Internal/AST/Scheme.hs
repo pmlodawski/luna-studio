@@ -8,11 +8,14 @@ import           Luna.Typechecker.Internal.Substitutions    (Types(..))
 import           Luna.Typechecker.Internal.Typeclasses      (Qual(..))
 
 import           Text.Printf                                (printf)
-
+import Control.DeepSeq
 
 -- TODO [kgdk] 20 sie 2014: przenieść Scheme.hs do AST/Scheme.hs
 data Scheme = Forall [Kind] (Qual Type)
             deriving (Eq)
+
+instance NFData Scheme where
+  rnf (Forall ks ql) = rnf ks `seq` rnf ql
 
 instance Show Scheme where
   show (Forall [] ([] :=> t)) = printf "%s" (show t)
