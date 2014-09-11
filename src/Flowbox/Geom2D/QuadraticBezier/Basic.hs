@@ -17,6 +17,8 @@ import           Geom2D.CubicBezier.Basic
 import Flowbox.Geom2D.CubicBezier.Basic
 import Flowbox.Prelude hiding ((++))
 
+
+
 data QuadraticBezier = QuadraticBezier { quadraticC0 :: Point
                                        , quadraticC1 :: Point
                                        , quadraticC2 :: Point
