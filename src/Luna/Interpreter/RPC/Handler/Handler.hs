@@ -50,7 +50,9 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Handler"
 handlerMap :: HandlerMap Context SessionST
 handlerMap callback = HandlerMap.fromList
     [ (Topic.interpreterSetProjectIDRequest    , respond Topic.update Interpreter.setProjectID    )
+    , (Topic.interpreterGetProjectIDRequest    , respond Topic.update Interpreter.getProjectID    )
     , (Topic.interpreterSetMainPtrRequest      , respond Topic.update Interpreter.setMainPtr      )
+    , (Topic.interpreterGetMainPtrRequest      , respond Topic.update Interpreter.getMainPtr      )
     , (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run             )
     , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd   )
     , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove)
