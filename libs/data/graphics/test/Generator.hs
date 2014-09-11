@@ -244,11 +244,6 @@ keyerTest w x y z = do
     let process c = rasterizer $ keyer (A.lift (w, x, y, z)) $ fromMatrix A.Clamp c
     testSaveRGBA' "out.png" r g b (process g)
 
---medianTest :: IO ()
-medianTest = do
-    let process x = stencilTest x
-    forAllChannels "lena.bmp" process
-
 --
 -- FFT test
 --
