@@ -65,7 +65,7 @@ safeInterpretLibrary :: Library.ID -> Project.ID -> Batch ()
 safeInterpretLibrary libraryID projectID = do
     args <- liftIO Environment.getArgs
     batch  <- get
-    unless ("--no-auto-interpreter" `elem` args) $
+    when ("--auto-interpreter" `elem` args) $
             liftIO $ Concurrent.forkIO_ $ Exception.catch
                                  (eitherStringToM =<< Batch.runBatch batch (interpretLibrary libraryID projectID))
                                  (\e -> logger error $ "Interpret failed: " ++ show (e :: IOException))
