@@ -48,7 +48,7 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Interpreter"
 
 getProjectID :: GetProjectID.Request -> RPC Context SessionST GetProjectID.Status
 getProjectID request = do
-    projectID <- liftSession $ Session.getProjectID
+    projectID <- liftSession Session.getProjectID
     return $ GetProjectID.Status request $ encodeP projectID
 
 
@@ -60,8 +60,8 @@ setProjectID request@(SetProjectID.Request tprojectID) = do
 
 getMainPtr :: GetMainPtr.Request -> RPC Context SessionST GetMainPtr.Status
 getMainPtr request = do
-    projectID <- liftSession $ Session.getProjectID
-    mainPtr   <- liftSession $ Session.getMainPtr
+    projectID <- liftSession Session.getProjectID
+    mainPtr   <- liftSession Session.getMainPtr
     return $ GetMainPtr.Status request $ encode (projectID, mainPtr)
 
 
@@ -98,7 +98,7 @@ watchPointRemove request@(WatchPointRemove.Request tcallPointPath) = do
 watchPointList :: WatchPointList.Request -> RPC Context SessionST WatchPointList.Status
 watchPointList request = do
     list      <- liftSession $ SetForest.toList <$> WatchPoint.all
-    projectID <- liftSession $ Session.getProjectID
+    projectID <- liftSession Session.getProjectID
     return $ WatchPointList.Status request $ encodeList $ map (projectID,) list
 
 

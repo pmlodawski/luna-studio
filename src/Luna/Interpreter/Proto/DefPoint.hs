@@ -31,4 +31,4 @@ instance Convert (Project.ID, DefPoint) Gen.DefPoint where
         projectID <- decodeP <$> mtprojectID <?> "Failed to decode DefPoint: 'projectID' field is missing"
         libraryID <- decodeP <$> mtlibraryID <?> "Failed to decode DefPoint: 'libraryID' field is missing"
         bc        <- decode =<< (mtbc        <?> "Failed to decode DefPoint: 'breadcrumbs' field is missing")
-        return $ (projectID, DefPoint libraryID bc)
+        return (projectID, DefPoint libraryID bc)

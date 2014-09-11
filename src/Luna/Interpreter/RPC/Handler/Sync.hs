@@ -56,7 +56,7 @@ testUpdateNo updateNo = do
 
 testProjectID :: Project.ID -> RPC Context SessionST ()
 testProjectID projectID = do
-    currentProjectID <- liftSession $ Session.getProjectID
+    currentProjectID <- liftSession Session.getProjectID
     assertE (projectID == currentProjectID) $
         "Sync.testProjectID : wrong projectID = " ++ show projectID
 
