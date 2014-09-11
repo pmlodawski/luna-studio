@@ -71,7 +71,7 @@ gradientsTest = do
     let grad6 t = center $ mapper t $ radialShape (Minkowski 3)
     let grad7 t = mapper t $ linearShape
     let grad8   = center . turn (45 * pi / 180) $ mapper gray conicalShape
-    
+
     let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) monosampler [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
     --let raster t = rasterizer $ monosampler $ scaleTo (Grid 720 480) $ grad4 t
     testSaveRGBA' "out.png" (raster reds) (raster greens) (raster blues) (raster alphas)
@@ -96,9 +96,9 @@ multisamplerTest = do
 --
 scalingTest :: Filter Float -> IO ()
 scalingTest flt = do
-    let process x = rasterizer $ monosampler 
+    let process x = rasterizer $ monosampler
                                $ scale (V2 (720 / 64) (480 / 64))
-                               $ interpolator flt 
+                               $ interpolator flt
                                $ fromMatrix A.Clamp x
     forAllChannels "lena_small.bmp" process
 
@@ -159,14 +159,14 @@ motionBlur size angle = do
 -- (Simple rotational convolution)
 --
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
-fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) -> 
+fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
     let Grid cw ch = fmap A.fromIntegral cnv
         radius = (sqrt $ x * x + y * y) / (sqrt $ cw * cw + ch * ch)
         angle  = atan2 y x / (2 * pi)
     in gen (Point2 (angle * cw) (radius * ch))
 
 toPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
-toPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 angle' radius') -> 
+toPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 angle' radius') ->
     let Grid cw ch = fmap A.fromIntegral cnv
         angle = (angle' / cw) * 2 * pi
         radius = (radius' / ch) * (sqrt $ cw * cw + ch * ch)
@@ -178,16 +178,16 @@ radialBlur size angle = do
              $ rotateCenter (variable angle)
              $ nearest
              $ rectangle (Grid (variable size) 1) 1 0
-    let process x = rasterizer 
-                  $ monosampler 
+    let process x = rasterizer
+                  $ monosampler
                   $ translate (V2 (256) (256))
                   $ fromPolarMapping
                   $ nearest
-                  $ normStencil (+) kern (+) 0 
+                  $ normStencil (+) kern (+) 0
                   $ monosampler
-                  $ toPolarMapping 
+                  $ toPolarMapping
                   $ translate (V2 (-256) (-256))
-                  $ nearest 
+                  $ nearest
                   $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
 
@@ -220,7 +220,7 @@ boundTest = do
 
 --kirschTest :: Matrix2 Float -> IO ()
 --kirschTest edgeOp = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"  
+--    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
 --    let k alpha = rotational alpha edgeOp r
 --    let max8 a b c d e f g h = a `min` b `min` c `min` d `min` e `min` f `min` g `min` h
 --    let res = rasterizer 512 $ max8 <$> (k 0) <*> (k 45) <*> (k 90) <*> (k 135) <*> (k 180) <*> (k 225) <*> (k 270) <*> (k 315)
@@ -252,11 +252,11 @@ medianTest = do
 --
 -- FFT test
 --
-fftTest :: (Exp Float -> Exp Float) -> IO ()
-fftTest response = do
-    -- Test with response = \x -> abs $ 50 * (x - 0.012)
-    let process = fftFilter run $ \freq ampl -> ampl * clamp' 0 2 (response $ freq / 150)
-    forAllChannels "edge/mountain.png" process
+--fftTest :: (Exp Float -> Exp Float) -> IO ()
+--fftTest response = do
+--    -- Test with response = \x -> abs $ 50 * (x - 0.012)
+--    let process = fftFilter run $ \freq ampl -> ampl * clamp' 0 2 (response $ freq / 150)
+--    forAllChannels "edge/mountain.png" process
 
 --
 -- Dither test

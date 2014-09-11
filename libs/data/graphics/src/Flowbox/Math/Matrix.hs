@@ -499,41 +499,43 @@ toList b mat = A.toList $ compute' b mat
 
 -- == FFT ==
 
-fft :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 e -> Matrix2 (A.Complex e)
-fft backend mat' = Delayed $ A.fft2D' A.Forward width height arrCentered
-    where cMat = compute' backend mat'
-          A.Z A.:. height A.:. width = A.arrayShape cMat
-          mat = A.use cMat
-          arrComplex  = A.map (\r -> A.lift (r A.:+ A.constant 0)) mat
-          arrCentered = A.centre2D arrComplex
+-- INFO: temporarily commented out as it causes weird linking errors on some systems (KM)
 
-inverseFFT :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 (A.Complex e) -> Matrix2 e
-inverseFFT backend mat' = Delayed $ A.map A.magnitude $ A.fft2D' A.Inverse width height mat
-    where cMat = compute' backend mat'
-          A.Z A.:. height A.:. width = A.arrayShape cMat
-          mat = A.use cMat
+--fft :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 e -> Matrix2 (A.Complex e)
+--fft backend mat' = Delayed $ A.fft2D' A.Forward width height arrCentered
+--    where cMat = compute' backend mat'
+--          A.Z A.:. height A.:. width = A.arrayShape cMat
+--          mat = A.use cMat
+--          arrComplex  = A.map (\r -> A.lift (r A.:+ A.constant 0)) mat
+--          arrCentered = A.centre2D arrComplex
 
--- trans :: Frequency -> Amplitude -> FrequencyResponse
-fftFilter :: (A.Elt e, A.IsFloating e) => Backend -> (A.Exp e -> A.Exp e -> A.Exp e) -> Matrix2 e -> Matrix2 e
-fftFilter backend trans mat = inverseFFT backend fftProc
-    where matFFT = fft backend mat
-          mag = map A.magnitude matFFT
-          pha = map A.phase matFFT
+--inverseFFT :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 (A.Complex e) -> Matrix2 e
+--inverseFFT backend mat' = Delayed $ A.map A.magnitude $ A.fft2D' A.Inverse width height mat
+--    where cMat = compute' backend mat'
+--          A.Z A.:. height A.:. width = A.arrayShape cMat
+--          mat = A.use cMat
 
-          polar :: (A.Elt e, A.IsFloating e) => A.Exp e -> A.Exp e -> A.Exp (A.Complex e)
-          polar r theta = A.lift $ r * cos theta A.:+ r * sin theta
+---- trans :: Frequency -> Amplitude -> FrequencyResponse
+--fftFilter :: (A.Elt e, A.IsFloating e) => Backend -> (A.Exp e -> A.Exp e -> A.Exp e) -> Matrix2 e -> Matrix2 e
+--fftFilter backend trans mat = inverseFFT backend fftProc
+--    where matFFT = fft backend mat
+--          mag = map A.magnitude matFFT
+--          pha = map A.phase matFFT
 
-          magSh = shape mag
-          tmag = generate magSh wrapper
-          A.Z A.:. height A.:. width = A.unlift $ magSh :: EDIM2
-          wrapper ix@(A.unlift -> A.Z A.:. y A.:. x :: EDIM2) = trans freq (mag ! ix)
-              where iW = A.fromIntegral width / 2
-                    iH = A.fromIntegral height / 2
-                    xFreq = let x' = A.fromIntegral x - iW in A.cond (x' A.>* iW) (x' - iW) x'
-                    yFreq = let y' = A.fromIntegral y - iH in A.cond (y' A.>* iH) (y' - iH) y'
-                    freq = sqrt $ xFreq * xFreq + yFreq * yFreq
+--          polar :: (A.Elt e, A.IsFloating e) => A.Exp e -> A.Exp e -> A.Exp (A.Complex e)
+--          polar r theta = A.lift $ r * cos theta A.:+ r * sin theta
 
-          fftProc = zipWith polar tmag pha
+--          magSh = shape mag
+--          tmag = generate magSh wrapper
+--          A.Z A.:. height A.:. width = A.unlift $ magSh :: EDIM2
+--          wrapper ix@(A.unlift -> A.Z A.:. y A.:. x :: EDIM2) = trans freq (mag ! ix)
+--              where iW = A.fromIntegral width / 2
+--                    iH = A.fromIntegral height / 2
+--                    xFreq = let x' = A.fromIntegral x - iW in A.cond (x' A.>* iW) (x' - iW) x'
+--                    yFreq = let y' = A.fromIntegral y - iH in A.cond (y' A.>* iH) (y' - iH) y'
+--                    freq = sqrt $ xFreq * xFreq + yFreq * yFreq
+
+--          fftProc = zipWith polar tmag pha
 
 -- == Mutable, CPU based matrix processing
 
@@ -556,7 +558,7 @@ instance Storable a => Boundable (MImage a) Int (MValue a) where
         where A.Z A.:. height A.:. width = canvas
 
 
-mutableProcess :: forall a . (A.Elt a, Storable a, A.BlockPtrs (Sugar.EltRepr a) ~ ((), Ptr a)) 
+mutableProcess :: forall a . (A.Elt a, Storable a, A.BlockPtrs (Sugar.EltRepr a) ~ ((), Ptr a))
                => Backend
                -> (MImage a -> IO ())
                -> Matrix2 a -> IO (Matrix2 a)
