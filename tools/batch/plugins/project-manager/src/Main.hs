@@ -28,7 +28,8 @@ rootLogger = getLogger "Flowbox"
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Run
-           <$> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
+           <$> switch    ( hidden <> long "auto-interpreter" <> help "Disable color output" )
+           <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"          <> help "Disable color output" )
 
 
