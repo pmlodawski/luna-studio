@@ -19,6 +19,8 @@ import qualified Pipes.Concurrent          as Pipes
 
 import           Flowbox.Bus.Data.Message                 (Message)
 import qualified Flowbox.Bus.Data.Message                 as Message
+import           Flowbox.Bus.Data.Prefix                  (Prefix)
+import qualified Flowbox.Bus.Data.Prefix                  as Prefix
 import           Flowbox.Bus.Data.Topic                   (status, update, (/+))
 import qualified Flowbox.Bus.Data.Topic                   as Topic
 import           Flowbox.Bus.RPC.HandlerMap               (HandlerMap)
@@ -42,13 +44,12 @@ import           Luna.Interpreter.Session.Session         (SessionST)
 import qualified Luna.Interpreter.Session.Session         as Session
 
 
-
 logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Handler"
 
 
-handlerMap :: HandlerMap Context SessionST
-handlerMap callback = HandlerMap.fromList
+handlerMap :: Prefix -> HandlerMap Context SessionST
+handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
     [ (Topic.interpreterSetProjectIDRequest    , respond Topic.update Interpreter.setProjectID    )
     , (Topic.interpreterGetProjectIDRequest    , respond Topic.update Interpreter.getProjectID    )
     , (Topic.interpreterSetMainPtrRequest      , respond Topic.update Interpreter.setMainPtr      )
@@ -110,25 +111,26 @@ handlerMap callback = HandlerMap.fromList
         requiredSync fun = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> fun args >> Sync.syncRequest)
 
 
-interpret :: IORef Message.CorrelationID
+interpret :: Prefix
+          -> IORef Message.CorrelationID
           -> Pipes.Pipe (Message, Message.CorrelationID)
                         (Message, Message.CorrelationID)
                         (StateT Context SessionST) ()
-interpret crlRef = forever $ do
+interpret prefix crlRef = forever $ do
     (message, crl) <- Pipes.await
     liftIO $ IORef.writeIORef crlRef crl
-    results <- lift $ Processor.processLifted handlerMap message
+    results <- lift $ Processor.processLifted (handlerMap prefix) message
     mapM_ (\r -> Pipes.yield (r, crl)) results
 
 
-run :: Config -> Context
+run :: Config -> Prefix -> Context
     -> (Pipes.Input  (Message, Message.CorrelationID),
         Pipes.Output (Message, Message.CorrelationID))
     -> IO (Either Error ())
-run cfg ctx (input, output) = do
+run cfg prefix ctx (input, output) = do
     crlRef <- IORef.newIORef def
     let env = def & Env.resultCallBack .~ Value.reportOutputValue crlRef output
     Session.run cfg env $ lift $ flip evalStateT ctx $
         Pipes.runEffect $ Pipes.fromInput input
-                      >-> interpret crlRef
+                      >-> interpret prefix crlRef
                       >-> Pipes.toOutput output
