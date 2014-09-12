@@ -26,18 +26,25 @@ import qualified Flowbox.Bus.RPC.HandlerMap    as HandlerMap
 import           Flowbox.Control.Concurrent    (forkIO_)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude               hiding (error)
+import           Flowbox.System.Log.Logger
 
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Bus.RPC.Pipes"
 
 
 produce :: Pipes.Producer (Message, Message.CorrelationID) BusT ()
 produce = forever $ do
     frame <- lift $ BusT Bus.receive
+    liftIO $ logger debug $ "Received request: " ++ (frame ^. MessageFrame.message . Message.topic)
     Pipes.yield (frame ^. MessageFrame.message, frame ^. MessageFrame.correlation)
 
 
 consume :: Pipes.Consumer (Message, Message.CorrelationID) BusT ()
 consume = forever $ do
     (msg, crl) <- Pipes.await
+    liftIO $ logger debug $ "Sending reply: " ++ (msg ^. Message.topic)
     void $ lift $ BusT $ Bus.reply crl Flag.Enable msg
 
 

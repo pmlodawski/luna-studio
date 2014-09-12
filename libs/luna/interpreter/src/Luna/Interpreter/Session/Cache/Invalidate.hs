@@ -41,31 +41,40 @@ modifyAll = modifyMatching $ const . const True
 
 
 modifyLibrary :: Library.ID -> Session ()
-modifyLibrary libraryID = modifyMatching matchLib where
-    matchLib k _ = last k ^. CallPoint.libraryID == libraryID
+modifyLibrary libraryID = do
+    let matchLib k _ = last k ^. CallPoint.libraryID == libraryID
+    logger info $ "Mark modified: library " ++ show libraryID
+    modifyMatching matchLib
 
 
 modifyDef :: Library.ID -> AST.ID -> Session ()
-modifyDef libraryID defID = modifyMatching matchDef where
-    matchDef k v = last k ^. CallPoint.libraryID == libraryID
-                     && v ^. CacheInfo.defID     == defID
+modifyDef libraryID defID = do
+    let matchDef k v = last k ^. CallPoint.libraryID == libraryID
+                         && v ^. CacheInfo.defID     == defID
+    logger info $ "Mark modified: definition " ++ show (libraryID, defID)
+    modifyMatching matchDef
 
 
 modifyBreadcrumbsRec :: Library.ID -> Breadcrumbs -> Session ()
-modifyBreadcrumbsRec libraryID bc = modifyMatching matchBC where
-    matchBC k v = last k ^. CallPoint.libraryID   == libraryID
-                    && List.isPrefixOf bc (v ^. CacheInfo.breadcrumbs)
+modifyBreadcrumbsRec libraryID bc = do
+    let matchBC k v = last k ^. CallPoint.libraryID   == libraryID
+                        && List.isPrefixOf bc (v ^. CacheInfo.breadcrumbs)
+    logger info $ "Mark modified: breadcrumbs rec. " ++ show (libraryID, bc)
+    modifyMatching matchBC
 
 
 modifyBreadcrumbs :: Library.ID -> Breadcrumbs -> Session ()
-modifyBreadcrumbs libraryID bc = modifyMatching matchBC where
-    matchBC k v = last k ^. CallPoint.libraryID == libraryID
-                    && v ^. CacheInfo.breadcrumbs == bc
-
+modifyBreadcrumbs libraryID bc = do
+    let matchBC k v = last k ^. CallPoint.libraryID == libraryID
+                        && v ^. CacheInfo.breadcrumbs == bc
+    logger info $ "Mark modified: breadcrumbs " ++ show (libraryID, bc)
+    modifyMatching matchBC
 
 modifyNode :: Library.ID -> Node.ID -> Session ()
-modifyNode libraryID nodeID = modifyMatching matchNode where
-    matchNode k _ = last k == CallPoint libraryID nodeID
+modifyNode libraryID nodeID = do
+    let matchNode k _ = last k == CallPoint libraryID nodeID
+    logger info $ "Mark modified: node " ++ show (libraryID, nodeID)
+    modifyMatching matchNode
 
 
 modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session ()
