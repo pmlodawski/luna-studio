@@ -57,3 +57,44 @@ spec = do
                                (IsIn "Eq" (TAp (TVar $ Tyvar "c" (Kfun Star Star)) (TVar $ Tyvar "a" Star)))
                     ) initialEnv
       byInst ce (IsIn "Eq" (TAp tList tInt)) `shouldBe` Just [IsIn "Eq" tInt, IsIn "Container" tList]
+
+  describe "entail" $ do
+    it "works" $ do
+      let Just ce = (  addClass "Eq"       []
+                   <:> addClass "Ord"      ["Eq"]
+                   <:> addClass "Num"      []
+                   <:> addClass "Real"     ["Num", "Ord"]
+                   <:> addClass "Enum"     []
+                   <:> addClass "Integral" ["Real", "Enum"]
+
+                   <:> addClass "Functor"     []
+                   <:> addClass "Applicative" ["Functor"]
+                   <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
+                               (IsIn "Ord" ((TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star))))
+                   <:> addInst [] (IsIn "Eq"       tInt)   <:> addInst [] (IsIn "Eq"       tInteger)
+                   <:> addInst [] (IsIn "Ord"      tInt)   <:> addInst [] (IsIn "Ord"      tInteger)
+                   <:> addInst [] (IsIn "Num"      tInt)   <:> addInst [] (IsIn "Num"      tInteger)
+                   <:> addInst [] (IsIn "Real"     tInt)   <:> addInst [] (IsIn "Real"     tInteger)
+                   <:> addInst [] (IsIn "Enum"     tInt)   <:> addInst [] (IsIn "Enum"     tInteger)
+                   <:> addInst [] (IsIn "Integral" tInt)   <:> addInst [] (IsIn "Integral" tInteger)
+                   <:> addInst [] (IsIn "Functor"     tList)
+                   <:> addInst [] (IsIn "Applicative" tList)
+                    ) initialEnv
+          f = (TVar $ Tyvar "f" Star)
+          a = (TVar $ Tyvar "a" Star)
+          v = (TVar $ Tyvar "lel" Star)
+          ps = [ IsIn "Functor" f
+               , IsIn "Ord"     a
+               ]
+          p  = IsIn "Ord" (TAp f
+                               a)
+
+      entail ce [IsIn "Functor" f, IsIn "Ord" a] p              `shouldBe` True
+      entail ce [                  IsIn "Ord" a] p              `shouldBe` False
+      entail ce [IsIn "Functor" f              ] p              `shouldBe` False
+      entail ce [                              ] p              `shouldBe` False
+
+      entail ce [IsIn "Integral" v]              (IsIn "Num" v) `shouldBe` True
+
+      entail ce [IsIn "Integral" a, IsIn "Applicative" f] p     `shouldBe` True
+
