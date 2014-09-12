@@ -265,18 +265,18 @@ mul4x4 ((a, b, c, d), (e, f, g, h), (i, j, k, l), (m, n, o, p)) pix = toTuple ((
           w' = m * x + n * y + o * z + p * w
 
 
-data LinearGeneratorMock a = LinearGeneratorMock { runBezier :: a -> a }
+data LinearGenerator a = LinearGenerator { runBezier :: a -> a }
 
 crosstalk :: (A.Elt a, A.IsFloating a)
-          => LinearGeneratorMock (A.Exp a) -- ^ red channel curve
-          -> LinearGeneratorMock (A.Exp a) -- ^ green channel curve
-          -> LinearGeneratorMock (A.Exp a) -- ^ blue channel curve
-          -> LinearGeneratorMock (A.Exp a) -- ^ r->g curve
-          -> LinearGeneratorMock (A.Exp a) -- ^ r->b curve
-          -> LinearGeneratorMock (A.Exp a) -- ^ g->r curve
-          -> LinearGeneratorMock (A.Exp a) -- ^ g->b curve
-          -> LinearGeneratorMock (A.Exp a) -- ^ b->r curve
-          -> LinearGeneratorMock (A.Exp a) -- ^ b->g curve
+          => LinearGenerator (A.Exp a) -- ^ red channel curve
+          -> LinearGenerator (A.Exp a) -- ^ green channel curve
+          -> LinearGenerator (A.Exp a) -- ^ blue channel curve
+          -> LinearGenerator (A.Exp a) -- ^ r->g curve
+          -> LinearGenerator (A.Exp a) -- ^ r->b curve
+          -> LinearGenerator (A.Exp a) -- ^ g->r curve
+          -> LinearGenerator (A.Exp a) -- ^ g->b curve
+          -> LinearGenerator (A.Exp a) -- ^ b->r curve
+          -> LinearGenerator (A.Exp a) -- ^ b->g curve
           -> Generator x (A.Exp a)         -- ^ r channel
           -> Generator x (A.Exp a)         -- ^ g channel
           -> Generator x (A.Exp a)         -- ^ b channel

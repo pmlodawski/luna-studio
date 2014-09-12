@@ -26,6 +26,8 @@ import Flowbox.Graphics.Composition.Generators.Transform
 
 import Flowbox.Graphics.Composition.Dither
 import Flowbox.Graphics.Image.Color (LinearGeneratorMock(..), crosstalk)
+import Flowbox.Geom2D.Accelerate.CubicBezier
+import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection
 
 import Flowbox.Math.Matrix as M
 import Flowbox.Graphics.Utils
@@ -282,11 +284,12 @@ crosstalkTest = do
     let r' = fromMatrix A.Clamp r
         g' = fromMatrix A.Clamp g
         b' = fromMatrix A.Clamp b
-        one = LinearGeneratorMock $ const 1
-        zero = LinearGeneratorMock $ const 0
-        id' = LinearGeneratorMock $ id
+        one = LinearGenerator $ const 1
+        zero = LinearGenerator $ const 0
+        id' = LinearGenerator $ id
+        foo = LinearGenerator $ findYforX 20 0.00001 (A.lift $ CubicBezier (Point2 0 (0::A.Exp Float)) (Point2 0.25 1.2) (Point2 0.75 1.2) (Point2 1 0))
 
-        (newR, newG, newB) = crosstalk id' id' zero zero zero zero id' zero zero r' g' b'
+        (newR, newG, newB) = crosstalk foo id' id' zero zero zero zero zero zero r' g' b'
     print "foo"
     testSaveRGBA' "out.png" (rasterizer newR) (rasterizer newG) (rasterizer newB) a
 
