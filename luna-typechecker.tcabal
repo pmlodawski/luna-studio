@@ -14,6 +14,7 @@ Library
                     , containers
                     , QuickCheck
                     , flowbox-luna-base
+                    , deepseq
   Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
 
 
@@ -30,3 +31,4 @@ Executable luna-typechecker-tests
                     , QuickCheck
                     , transformers
                     , array
+                    , deepseq
