@@ -262,18 +262,28 @@ medianTest = do
 --    forAllChannels "edge/mountain.png" process
 
 --
--- Dither test
+-- Dithering test
 --
 
-ditherTest :: IO ()
-ditherTest = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/david.png"
-    let mydither = dither A.Clamp jarvisJudiceNinke 1
-    r' <- mutableProcess run mydither r
-    g' <- mutableProcess run mydither g
-    b' <- mutableProcess run mydither b
-    a' <- mutableProcess run mydither a
-    testSaveRGBA' "out.png" r' g' b' a'
+ditherTest :: Int -> IO ()
+ditherTest a = do
+    let mydither = dither A.Clamp floydSteinberg a
+    let grad = monosampler $ scaleTo 512 $ circularShape :: DiscreteGenerator (Exp Float)
+    result <- mutableProcess run mydither $ rasterizer grad
+    testSaveChan' "out.png" result
+
+
+orderedDitherTest :: Int -> IO ()
+orderedDitherTest a = do
+  --let shape = rasterizer $ monosampler $ scaleTo 512 $ linearShape :: Matrix2 Float
+  --let shape = rasterizer $ constant 512 0.5 :: Matrix2 Float
+  --testSaveChan' "out.png" (bayer a shape)
+  forAllChannels "lena.bmp" (bayer a)
+
+
+simpleTest :: IO ()
+simpleTest = do
+    forAllChannels "edge/mountain.png" id
 
 --
 -- Crosstalk test
@@ -295,5 +305,5 @@ crosstalkTest = do
 
 main :: IO ()
 main = do
-    ditherTest
-    putStrLn "Running gauss 50x50..."
+  print "Szatan"
+    --ditherTest
