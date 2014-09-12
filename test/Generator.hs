@@ -25,7 +25,7 @@ import Flowbox.Graphics.Composition.Generators.Structures as S
 import Flowbox.Graphics.Composition.Generators.Transform
 
 import Flowbox.Graphics.Composition.Dither
-import Flowbox.Graphics.Image.Color (LinearGeneratorMock(..), crosstalk)
+import Flowbox.Graphics.Image.Color (LinearGenerator(..), crosstalk)
 import Flowbox.Geom2D.Accelerate.CubicBezier
 import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection
 
