@@ -138,7 +138,7 @@ main1 = do
                 (curry $ curry print)
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
-    result <- Session.run cfg env $ do
+    result <- Session.run cfg env [] $ do
         Executor.processMain
         print =<< Value.getIfReady [CallPoint libID 54]
         putStrLn "--------- 1"

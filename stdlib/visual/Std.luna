@@ -3,38 +3,39 @@ class Vector a:
     def test a b:
         {a,b}
 
-def print msg:
+def print self msg::String:
     ```autoLift1 print #{msg}```
 
-def Int.+ a:
+def Int.+ self::Int a::Int:
     ```liftF2 (+) #{self} #{a}```
 
-def Int.- a:
+def Int.- self::Int a::Int:
     ```liftF2 (+) #{self} #{a}```
 
-def Int.* a:
+def Int.* self::Int a::Int:
     ```liftF2 (*) #{self} #{a}```
 
-def Int./ a:
+def Int./ self::Int a::Int:
     ```liftF2 (/) #{self} #{a}```
 
-def Int.> a:
+def Int.> self::Int a::Int:
     ```liftF2 (>) #{self} #{a}```
 
-def Int.== a:
+def Int.== self::Int a::Int:
     ```liftF2 (==) #{self} #{a}```
 
-def Int.< a:
+def Int.< self::Int a::Int:
     ```liftF2 (==) #{self} #{a}```
 
-def Int.<= a:
+def Int.<= self::Int a::Int:
     ```liftF2 (==) #{self} #{a}```
 
-def Int.=> a:
+def Int.=> self::Int a::Int:
     ```liftF2 (==) #{self} #{a}```
 
-def Int.inc:
+def Int.inc self::Int: 
     self + 1
 
-def Int.dec:
+def Int.dec self::Int:
     self - 1
+

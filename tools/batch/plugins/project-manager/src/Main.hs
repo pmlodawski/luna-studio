@@ -18,6 +18,7 @@ import qualified Flowbox.ProjectManager.Context             as Context
 import qualified Flowbox.ProjectManager.RPC.Handler.Handler as Handler
 import qualified Flowbox.ProjectManager.Version             as Version
 import           Flowbox.System.Log.Logger
+import Flowbox.Control.Error
 
 
 
@@ -49,6 +50,5 @@ run cmd = case cmd of
         rootLogger setIntLevel $ Cmd.verbose cmd
         cfg <- Config.load
         let ctx = Context.mk cfg
-        r <- Server.run (EP.clientFromConfig cfg) ctx Handler.handlerMap
-        print r
+        eitherStringToM' $ Server.run (EP.clientFromConfig cfg) ctx Handler.handlerMap
 

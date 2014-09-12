@@ -111,6 +111,10 @@ handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
         requiredSync fun = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> fun args >> Sync.syncRequest)
 
 
+extraImports :: [Session.Import]
+extraImports = [("FlowboxM.Libs.Flowbox.Std", Nothing)]
+
+
 interpret :: Prefix
           -> IORef Message.CorrelationID
           -> Pipes.Pipe (Message, Message.CorrelationID)
@@ -130,7 +134,7 @@ run :: Config -> Prefix -> Context
 run cfg prefix ctx (input, output) = do
     crlRef <- IORef.newIORef def
     let env = def & Env.resultCallBack .~ Value.reportOutputValue crlRef output
-    Session.run cfg env $ lift $ flip evalStateT ctx $
+    Session.run cfg env extraImports $ lift $ flip evalStateT ctx $
         Pipes.runEffect $ Pipes.fromInput input
                       >-> interpret prefix crlRef
                       >-> Pipes.toOutput output
