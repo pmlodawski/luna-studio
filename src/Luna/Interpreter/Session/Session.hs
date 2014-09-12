@@ -21,6 +21,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Common                             as AST
+import           Luna.AST.Control.Focus                      (Focus)
 import qualified Luna.AST.Control.Focus                      as Focus
 import qualified Luna.AST.Control.Zipper                     as Zipper
 import           Luna.AST.Expr                               (Expr)
@@ -154,17 +155,27 @@ getLibrary libraryID = do
 
 
 getModule :: DefPoint -> Session Module
-getModule (DefPoint libraryID bc) = do
-    ast <- view Library.ast <$> getLibrary libraryID
-    focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
+getModule defPoint = do
+    focus <- getFocus defPoint
     Focus.getModule focus <??> "Session.getModule : Target is not a module"
 
 
 getFunction :: DefPoint -> Session Expr
-getFunction (DefPoint libraryID bc) = do
-    ast <- view Library.ast <$> getLibrary libraryID
-    focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
+getFunction defPoint = do
+    focus <- getFocus defPoint
     Focus.getFunction focus <??> "Session.getFunction : Target is not a function"
+
+
+getClass :: DefPoint -> Session Expr
+getClass defPoint = do
+    focus <- getFocus defPoint
+    Focus.getClass focus <??> "Session.getClass : Target is not a class"
+
+
+getFocus :: DefPoint -> Session Focus
+getFocus (DefPoint libraryID bc) = do
+    ast <- view Library.ast <$> getLibrary libraryID
+    hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
 
 
 getGraph :: DefPoint -> Session (Graph, AST.ID)

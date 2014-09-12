@@ -41,7 +41,7 @@ logger = getLoggerIO "Luna.Interpreter.Session.Executor"
 
 processMain :: Session ()
 processMain = do
-    GenCode.loadModule
+    GenCode.reloadAll
     mainPtr <- gets $ view Env.mainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
