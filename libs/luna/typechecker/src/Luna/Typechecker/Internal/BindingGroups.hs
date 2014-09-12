@@ -20,6 +20,7 @@ import Control.Monad                              (zipWithM)
 import Data.List                                  ((\\), intersect, union)
 
 import Text.Printf
+import Debug.Trace
 
 data Expr = Var TID
           | Lit Lit

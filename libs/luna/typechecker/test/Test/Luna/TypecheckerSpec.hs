@@ -4,7 +4,7 @@ import Luna.Typechecker.Internal.AST.Kind      (Kind(..))
 import Luna.Typechecker.Internal.AST.Lit       (Lit(..))
 import Luna.Typechecker.Internal.AST.Pat       (Pat(..))
 import Luna.Typechecker.Internal.AST.Scheme    (Scheme(..),toScheme)
-import Luna.Typechecker.Internal.AST.Type      (Type(..),fn,tInteger,list,tBool,tInt)
+import Luna.Typechecker.Internal.AST.Type      (Type(..),fn,tInteger,list,tBool,tInt,tChar)
 
 import Luna.Typechecker.Internal.Assumptions   (Assump(..))
 import Luna.Typechecker.Internal.BindingGroups (Expr(..))
@@ -199,6 +199,20 @@ spec = do
           Just classenv = classenvT initialEnv
           res = tiProgram classenv ["(==)":>:eq_type, "fromIntegral":>:fromIntegral_type, "(+)":>:integralAdd_type] [def]
       res `shouldContain` ["fulting_type" :>: fulting_type]
+
+    it "handles monomorphism restriction" $ do
+      let def pat = ([], [[("test", [(pat, test_body)])]])
+          test_pat  = [PVar "x"]
+          test_pat' = []
+          test_body = Var "show"
+          show_type = Forall [Star] ([IsIn "Show" (TGen 0)] :=> (TGen 0 `fn` (list tChar)))
+          Just ce = (  addClass "Show" []
+                   <:> addInst [] (IsIn "Show" tInt)
+                   <:> addInst [] (IsIn "Show" tBool)
+                    ) initialEnv
+          res pat = tiProgram ce ["show":>:show_type] [def pat]
+      res test_pat `shouldContain` ["test":>:(Forall [Star, Star] ([IsIn "Show" (TGen 0)] :=> (TGen 1 `fn` TGen 0 `fn` list tChar)))]
+      evaluate (res test_pat') `shouldThrow` anyErrorCall
 
 
   describe "(coverage booster)" $ do

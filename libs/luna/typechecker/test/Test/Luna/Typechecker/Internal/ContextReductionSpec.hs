@@ -26,6 +26,7 @@ import Luna.Typechecker.Internal.Typeclasses
 
 import Test.Hspec
 import Control.Exception
+import Data.Either
 
 spec :: Spec
 spec = do
@@ -37,4 +38,14 @@ spec = do
       inHnf (IsIn "anything" (list (TVar $ Tyvar "a" Star))) `shouldBe` False
       inHnf (IsIn "anything" (TAp (TVar $ Tyvar "m" Star) (TCon $ Tycon "Int" Star))) `shouldBe` True
       evaluate (inHnf (IsIn "anything" (TGen 0))) `shouldThrow` anyErrorCall
-
+  describe "toHnf" $ do
+    it "works for bad input" $ do
+      let Just ce = (     addClass "Eq" []
+                      <:> addInst [] (IsIn "Eq" tBool))
+                    initialEnv
+          res = toHnf initialEnv (IsIn "anything" (TCon $ Tycon "Int" Star)) :: Either String [Pred]
+          res2 = toHnf ce (IsIn "Eq" tBool) :: Either String [Pred]
+          res3 = toHnf ce (IsIn "Eq" tInt) :: Either String [Pred]
+      evaluate res `shouldThrow` anyErrorCall
+      res2 `shouldBe` Right []
+      evaluate res3 `shouldThrow` anyErrorCall
