@@ -89,6 +89,7 @@ genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields meth
     
     GenState.addComment $ HExpr.Comment $ HComment.H1 $ "Data types"
     genCon' cls modCon stdDerivings
+    GenState.addComment $ HExpr.Comment $ HComment.H5 $ "Other data types"
     mapM_ genExpr classes
 
     GenState.setCls    cls

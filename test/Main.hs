@@ -264,14 +264,12 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast
-    logger info $ join "\n\n" (map printSrc hsc)
+    logger info $ join "\n\n" (map showSrc hsc)
 
 
     return ()
 
 
-printSrc :: Source -> [Char]
-printSrc src = ">>> file '" ++ join "/" (src ^. Source.path) ++ "':\n\n"
+showSrc :: Source -> String
+showSrc src = ">>> file '" ++ join "/" (src ^. Source.path) ++ "':\n\n"
              ++ hsShow (src ^. Source.code)
-
-
