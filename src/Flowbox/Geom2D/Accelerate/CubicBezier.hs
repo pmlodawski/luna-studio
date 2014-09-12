@@ -26,7 +26,7 @@ import Flowbox.Prelude hiding (lift)
 data CubicBezier a = CubicBezier (Point2 a) (Point2 a) (Point2 a) (Point2 a) deriving (Eq, Ord, Show,Typeable)
 
 ----------------------------------------------------------------------------------
----- CubicBezier accelerate tuple instances
+---- CubicBezier accelerate tuple instances # straight to the tuple with no intermediate (un)lifting
 ----------------------------------------------------------------------------------
 instance Functor CubicBezier where
     fmap f (CubicBezier a b c d) = CubicBezier (fmap f a) (fmap f b) (fmap f c) (fmap f d)
@@ -42,12 +42,12 @@ type instance EltRepr' (CubicBezier a) = EltRepr' ((a, a), (a, a), (a, a), (a, a
 
 instance Elt a => Elt (CubicBezier a) where
   eltType _ = eltType (undefined :: ((a,a),(a,a),(a,a),(a,a)))
-  toElt e = case toElt e of
+  toElt n = case toElt n of
      ((a, b), (c, d), (e, f), (g, h)) -> CubicBezier (Point2 a b) (Point2 c d) (Point2 e f) (Point2 g h)
   fromElt (CubicBezier (Point2 a b) (Point2 c d) (Point2 e f) (Point2 g h)) = fromElt ((a, b), (c, d), (e, f), (g, h))
 
   eltType' _ = eltType' (undefined :: ((a,a),(a,a),(a,a),(a,a)))
-  toElt' e = case toElt' e of
+  toElt' n = case toElt' n of
      ((a, b), (c, d), (e, f), (g, h)) -> CubicBezier (Point2 a b) (Point2 c d) (Point2 e f) (Point2 g h)
   fromElt' (CubicBezier (Point2 a b) (Point2 c d) (Point2 e f) (Point2 g h)) = fromElt' ((a, b), (c, d), (e, f), (g, h))
 
