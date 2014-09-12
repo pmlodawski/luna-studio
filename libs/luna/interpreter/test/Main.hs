@@ -9,6 +9,7 @@
 
 module Main where
 
+import Data.List         (intercalate)
 import Text.RawString.QQ
 import Text.Show.Pretty
 
@@ -17,9 +18,15 @@ import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                        as UniPath
+import           Flowbox.Text.Show.Hs                                          (hsShow)
 import qualified Luna.AST.Control.Crumb                                        as Crumb
+import qualified Luna.AST.Control.Focus                                        as Focus
 import qualified Luna.AST.Control.Zipper                                       as Zipper
+import           Luna.AST.Module                                               (Module)
+import qualified Luna.AST.Module                                               as Module
+import qualified Luna.AST.Type                                                 as Type
 import           Luna.Data.Source                                              (Source (Source))
+import qualified Luna.Data.Source                                              as Source
 import qualified Luna.Graph.PropertyMap                                        as PropertyMap
 import qualified Luna.Interpreter.Session.AST.Executor                         as Executor
 import qualified Luna.Interpreter.Session.Cache.Cache                          as Cache
@@ -36,12 +43,16 @@ import           Luna.Lib.Manager                                              (
 import qualified Luna.Lib.Manager                                              as LibManager
 import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
 import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
+import qualified Luna.Pass.CodeGen.HSC.HSC                                     as HSC
 import qualified Luna.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
 import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
+import qualified Luna.Pass.Transform.AST.Hash.Hash                             as Hash
+import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
 import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
+import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
 
 
 
@@ -182,12 +193,36 @@ main2 = do
                      . Zipper.focusBreadcrumbs bc
                      . Zipper.mk
     putStrLn $ ppShow ast
-    ast_main   <- astGet [Crumb.Function "main"   []] ast
-    ast_Vector <- astGet [Crumb.Class    "Vector"   ] ast
-    ast_IntAdd <- astGet [Crumb.Function "+" ["Int"]] ast
+    Just ast_main   <- Focus.getFunction <$> astGet [Crumb.Function "main"   []] ast
+    Just ast_Vector <- Focus.getClass    <$> astGet [Crumb.Class    "Vector"   ] ast
+    Just ast_IntAdd <- Focus.getFunction <$> astGet [Crumb.Function "+" ["Int"]] ast
 
-    return ()
+    logger info "Whole ast"
+    printHsSrc ast
+    logger info "main only"
+    printHsSrc $ Module.methods .~ [ast_main] $ Module.mk 0 $ Type.Module 1 "Main" []
+    logger info "Vector only"
+    printHsSrc $ Module.classes .~ [ast_Vector] $ Module.mk 0 $ Type.Module 1 "Main" []
+    logger info "Int.+ only"
+    printHsSrc $ Module.methods .~ [ast_IntAdd] $ Module.mk 0 $ Type.Module 1 "Main" []
+    logger info "empty"
+    printHsSrc $ Module.mk 0 $ Type.Module 1 "Main" []
 
+printHsSrc :: Module -> IO ()
+printHsSrc ast = eitherStringToM' $ runEitherT $ do
+    aliasInfo <- EitherT $ Analysis.Alias.run ast
+    hash      <- EitherT $ Hash.run ast
+    ssa       <- EitherT $ SSA.run aliasInfo hash
+    hast      <- EitherT $ HASTGen.run ssa
+    hsc       <- EitherT $ HSC.run  hast
+    logger debug $ intercalate "\n\n" (map showSrc hsc)
+
+
+showSrc :: Source -> String
+showSrc src = ">>> file '" ++ intercalate "/" (src ^. Source.path) ++ "':\n\n"
+             ++ hsShow (src ^. Source.code)
 
 main :: IO ()
 main = main2
+
+--serialize parameters type
