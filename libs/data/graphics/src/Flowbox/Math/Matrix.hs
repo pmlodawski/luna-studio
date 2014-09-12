@@ -73,10 +73,17 @@ type Matrix2 a = Matrix A.DIM2 a
 type Backend = forall a . A.Arrays a => A.Acc a -> a
 
 -- == Instances ==
-instance (A.Elt e) => Monoid (Vector e) where
+instance A.Elt e => Monoid (Vector e) where
     mempty = fromList (A.Z A.:. 0) []
     mappend a b = a ++ b
 
+instance Ord A.DIM2 where
+    compare (A.Z A.:. y1 A.:. x1) (A.Z A.:. y2 A.:. x2) = compare x1 x2 `mappend` compare y1 y2
+
+instance A.Elt a => Boundable (Matrix2 a) (A.Exp Int) (A.Exp a) where
+    unsafeIndex2D mat (Cartesian.Point2 x y) = mat ! A.index2 y x 
+    bounduary mat = Space.Grid width height
+        where A.Z A.:. height A.:. width = A.unlift $ shape mat
 -- == Helpers ==
 
 type EDIM1 = A.DIM0 A.:. A.Exp Int

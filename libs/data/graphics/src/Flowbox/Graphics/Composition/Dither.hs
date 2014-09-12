@@ -9,6 +9,8 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE ViewPatterns          #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
 module Flowbox.Graphics.Composition.Dither where
 
@@ -24,6 +26,10 @@ import Flowbox.Math.Index
 
 import Math.Coordinate.Cartesian
 import Math.Space.Space
+
+import Data.List
+import Data.Function
+
 -- == Error diffusion table ==
 
 type DiffusionTable = BMatrix VU.Vector
@@ -50,7 +56,7 @@ dither bnd dTable bits' img = do
     forM_ [0..height-1] $ \y -> do
         forM_ [0..width-1] $ \x -> do
             oldpixel <- M.get $ array x y
-            let newpixel = P.fromIntegral (floor $ oldpixel * bits) / bits
+            let newpixel = P.fromIntegral (floor $ oldpixel * bits :: Int) / bits
             array x y $= newpixel
             let quant_error = oldpixel - newpixel
 
@@ -117,3 +123,27 @@ shiauFan5 :: (Unbox a, Fractional a) => DiffusionTable a
 shiauFan5 = BMatrix [ 0   , 0   , 0   , 0   , 8/16, 0   , 0
                     , 1/16, 1/16, 2/16, 4/16, 0   , 0   , 0
                     ] (Z :. 2 :. 7)
+
+bayerTable :: (Elt a, IsFloating a) => Int -> Matrix2 a
+bayerTable n = M.map (\x -> A.fromIntegral x / A.fromIntegral (A.lift maxVal + 1)) $ M.fromList arraySize array
+    where array = fmap snd $ sortBy (compare `on` fst) table :: [Int]
+          arraySize = Z :. tableSize :. tableSize :: DIM2
+          table = [1 .. maxVal] <&> \i -> (Z :. yIndex i tableSize 0 :. xIndex i tableSize 0, i) 
+          maxVal = tableSize ^ 2
+          tableSize = 2 ^ n
+          xIndex i size shift = if size == 2 then shift + i2 else xIndex newi s2 (shift + i2 * s2)
+              where s2 = size `div` 2
+                    i2 = i `mod` 2
+                    newi = ((i - 1) `div` 4) + 1
+          yIndex i size shift = if size == 2 then shift + i2 else yIndex newi s2 (shift + i2 * s2)
+              where s2 = size `div` 2
+                    i2 = ((i + 2) `mod`  4) `div` 2
+                    newi = ((i - 1) `div` 4) + 1
+
+bayer :: (Elt a, IsFloating a) => Int -> Matrix2 a -> Matrix2 a
+bayer n mat = M.generate (shape mat) $ \elem@(A.unlift -> Z :. y :. x :: EDIM2) -> 
+        let bayerVal = boundedIndex2D A.Wrap mosaic $ Point2 x y
+            oldpixel = mat M.! elem
+        in A.fromIntegral (A.floor $ (oldpixel * bits + bayerVal) :: Exp Int) / bits
+    where bits   = A.fromIntegral $ A.lift (2 ^ (n - 1) :: Int)
+          mosaic = bayerTable n
