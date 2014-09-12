@@ -1,13 +1,17 @@
 module Test.Luna.Typechecker.Internal.TypeclassesSpec (spec) where
 
-import           Luna.Typechecker.Internal.AST.Kind         (Kind(..))
-import           Luna.Typechecker.Internal.Typeclasses
-import           Luna.Typechecker.Internal.AST.Type         (Type(..), Tyvar(..), tBool, list,tInt)
+import Luna.Typechecker.Internal.AST.Kind
+import Luna.Typechecker.Internal.Typeclasses
+import Luna.Typechecker.Internal.AST.Type
 
-import           Test.Hspec
+import Test.Hspec
+import Control.Exception
 
 spec :: Spec
 spec = do
+  describe "insts" $ do
+    it "raises error when no superclass" $ do
+      evaluate (super initialEnv "nothing") `shouldThrow` anyErrorCall
   describe "mguPred" $ do
     it "checks if classes match" $ do
       let res = mguPred (IsIn "YEP" (TGen 0)) (IsIn "NOPE" (TGen 0))
@@ -41,4 +45,15 @@ spec = do
         <:> addInst [IsIn "Len" (TVar $ Tyvar "a" Star)] (IsIn "Len" (list (TVar $ Tyvar "a" Star)))
         <:> addInst [IsIn "Len" tInt]                    (IsIn "Len" (list tInt))
       ) initialEnv `shouldBe` Nothing
-      
+  describe "byInst" $ do
+    it "works" $ do
+      let Just ce = (  addClass "Eq" []
+                   <:> addClass "Container" []
+                   <:> addInst [] (IsIn "Eq" tInt)
+                   <:> addInst [] (IsIn "Container" tList)
+                   <:> addInst [ IsIn "Eq" (TVar $ Tyvar "a" Star)
+                               , IsIn "Container" (TVar $ Tyvar "c" (Kfun Star Star))
+                               ]
+                               (IsIn "Eq" (TAp (TVar $ Tyvar "c" (Kfun Star Star)) (TVar $ Tyvar "a" Star)))
+                    ) initialEnv
+      byInst ce (IsIn "Eq" (TAp tList tInt)) `shouldBe` Just [IsIn "Eq" tInt, IsIn "Container" tList]
