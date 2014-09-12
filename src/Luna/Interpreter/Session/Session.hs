@@ -54,15 +54,18 @@ type SessionST = StateT Env I.Interpreter
 type Session = EitherT Error.ErrorStr SessionST
 
 
-run :: Config -> Env -> Session a -> IO (Either Error a)
-run config env session = do
+type Import = (String, Maybe String)
+
+
+run :: Config -> Env -> [Import] -> Session a -> IO (Either Error a)
+run config env imports session = do
     result <- I.unsafeRunInterpreterWithTopDirAndArgs
                 (Just $ Config.topDir $ Config.ghcS config)
                 [ "-no-user-package-db"
                 , "-package-db " ++ Config.pkgDb (Config.global config)
                 , "-package-db " ++ Config.pkgDb (Config.local config)
                 ]
-               $ fst <$> runStateT (runEitherT (initialize >> session)) env
+               $ fst <$> runStateT (runEitherT (initialize imports >> session)) env
     return $ case result of
         Left e    -> Left $ Error.InterpreterError e
         Right res -> case res of
@@ -70,13 +73,13 @@ run config env session = do
             Right r -> Right r
 
 
-initialize :: Session ()
-initialize = do
+initialize :: [Import] -> Session ()
+initialize imports = do
     lift2 I.reset
     setHardcodedExtensions
-    lift2 $ I.setImportsQ [ ("Data.Word", Nothing)
-                          , ("Luna.Target.HS", Nothing)
-                          ]
+    lift2 $ I.setImportsQ ([("Data.Word", Nothing)
+                           ,("Luna.Target.HS", Nothing)
+                           ] ++ imports)
     runDecls Helpers.hash
 
 

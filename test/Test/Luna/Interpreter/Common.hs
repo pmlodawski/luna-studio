@@ -50,19 +50,18 @@ readCode code = eitherStringToM' $ runEitherT $ do
     return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty)
            $ LibManager.empty
 
+
 mkEnv :: String -> IO Env
 mkEnv code = do
     (libManager, libID) <- readCode code
 
     let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
-    return $ Env.mk libManager 0 defPoint $ const (void . return)-- curry print
-
-
+    return $ Env.mk libManager 0 defPoint $ const $ const (void . return)-- curry print
 
 
 runSession :: String -> Session () -> IO ()
 runSession code session = do
     cfg <- Config.load
     env <- mkEnv code
-    result <- Session.run cfg env session
+    result <- Session.run cfg env [] session
     eitherStringToM $ fmapL Error.format result
