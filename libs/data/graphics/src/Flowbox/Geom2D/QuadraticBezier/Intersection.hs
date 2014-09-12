@@ -10,15 +10,14 @@ module Flowbox.Geom2D.QuadraticBezier.Intersection where
 
 import Data.Array.Accelerate as A
 
-import Flowbox.Graphics.Utils
-import Flowbox.Math.Matrix
+import Flowbox.Graphics.Utils hiding (sign)
 import Flowbox.Prelude
 
 
 
 cuberoot :: Exp Double -> Exp Double
 cuberoot x = (sign x) * (pow $ abs x)
-    where sign x = (abs x) / x
+    where sign a = (abs a) / a
           pow = flip (**) (1/3)
 
 solveCubic :: Exp Double -> Exp Double -> Exp Double -> Exp (Int, (Double, Double, Double))
@@ -64,8 +63,8 @@ distanceFromQuadratic p0 p1 p2 p = A.cond (n A.>* 1)
           getLength r = let
                   t = clamp' 0 1 r
                   pos = p0 `plus` ((sb `plus` (sc `mult` t)) `mult` t)
-              in length $ pos `minus` p
-          length o = sqrt $ dot o o
+              in len $ pos `minus` p
+          len o = sqrt $ dot o o
           --
           dot o q = let
                   (ox, oy) = getCoords o

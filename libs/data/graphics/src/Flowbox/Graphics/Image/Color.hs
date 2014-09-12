@@ -25,10 +25,11 @@ import qualified Data.Array.Accelerate       as A
 import           Data.Array.Accelerate.Tuple (IsTuple, TupleRepr, fromTuple, toTuple)
 import           Data.Array.Accelerate.Type  (IsScalar)
 
+import           Flowbox.Graphics.Composition.Generators.Structures
 import           Flowbox.Graphics.Color
-import qualified Flowbox.Graphics.Utils as U
-import           Flowbox.Math.Matrix    as M
-import           Flowbox.Prelude        as P
+import qualified Flowbox.Graphics.Utils                             as U
+import           Flowbox.Math.Matrix                                as M hiding (canvas)
+import           Flowbox.Prelude                                    as P
 
 
 
@@ -262,3 +263,62 @@ mul4x4 ((a, b, c, d), (e, f, g, h), (i, j, k, l), (m, n, o, p)) pix = toTuple ((
           y' = e * x + f * y + g * z + h * w
           z' = i * x + j * y + k * z + l * w
           w' = m * x + n * y + o * z + p * w
+
+
+data LinearGeneratorMock a = LinearGeneratorMock { runBezier :: a -> a }
+
+crosstalk :: (A.Elt a, A.IsFloating a)
+          => LinearGeneratorMock (A.Exp a) -- ^ red channel curve
+          -> LinearGeneratorMock (A.Exp a) -- ^ green channel curve
+          -> LinearGeneratorMock (A.Exp a) -- ^ blue channel curve
+          -> LinearGeneratorMock (A.Exp a) -- ^ r->g curve
+          -> LinearGeneratorMock (A.Exp a) -- ^ r->b curve
+          -> LinearGeneratorMock (A.Exp a) -- ^ g->r curve
+          -> LinearGeneratorMock (A.Exp a) -- ^ g->b curve
+          -> LinearGeneratorMock (A.Exp a) -- ^ b->r curve
+          -> LinearGeneratorMock (A.Exp a) -- ^ b->g curve
+          -> Generator x (A.Exp a)         -- ^ r channel
+          -> Generator x (A.Exp a)         -- ^ g channel
+          -> Generator x (A.Exp a)         -- ^ b channel
+          -> (Generator x (A.Exp a), Generator x (A.Exp a), Generator x (A.Exp a))
+crosstalk redBezier greenBezier blueBezier
+          redGreenBezier redBlueBezier
+          greenRedBezier greenBlueBezier
+          blueRedBezier blueGreenBezier
+          red green blue = (newRed, newGreen, newBlue)
+    where newRed   = Generator (canvas red)   $ \x ->
+              (runGenerator redBeziered) x + (runGenerator greenToRed) x + (runGenerator blueToRed) x
+
+          newGreen = Generator (canvas green) $ \x ->
+              (runGenerator greenBeziered) x + (runGenerator redToGreen) x + (runGenerator blueToGreen) x
+
+          newBlue  = Generator (canvas blue)  $ \x ->
+              (runGenerator blueBeziered) x + (runGenerator redToBlue) x + (runGenerator greenToBlue) x
+
+          redBeziered = Generator (canvas red) $ \x -> let redColor = (runGenerator red) x
+                                                       in  (runBezier redBezier) redColor
+
+          redToGreen = Generator (canvas red) $ \x -> let redColor = (runGenerator red) x
+                                                      in  (runBezier redGreenBezier) redColor
+
+          redToBlue = Generator (canvas red) $ \x -> let redColor = (runGenerator red) x
+                                                     in  (runBezier redBlueBezier) redColor
+
+          greenBeziered = Generator (canvas green) $ \x -> let greenColor = (runGenerator green) x
+                                                           in  (runBezier greenBezier) greenColor
+
+          greenToRed = Generator (canvas green) $ \x -> let greenColor = (runGenerator green) x
+                                                        in  (runBezier greenRedBezier) greenColor
+
+          greenToBlue = Generator (canvas green) $ \x -> let greenColor = (runGenerator green) x
+                                                         in  (runBezier greenBlueBezier) greenColor
+
+          blueBeziered = Generator (canvas blue) $ \x -> let blueColor = (runGenerator blue) x
+                                                         in  (runBezier blueBezier) blueColor
+
+          blueToRed = Generator (canvas blue) $ \x -> let blueColor = (runGenerator blue) x
+                                                      in  (runBezier blueRedBezier) blueColor
+
+          blueToGreen = Generator (canvas blue) $ \x -> let blueColor = (runGenerator blue) x
+                                                        in  (runBezier blueGreenBezier) blueColor 
+
