@@ -56,7 +56,7 @@ mkEnv code = do
     (libManager, libID) <- readCode code
 
     let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
-    return $ Env.mk libManager 0 defPoint $ const $ const (void . return)-- curry print
+    return $ Env.mk libManager (Just 0) defPoint $ const $ const (void . return)-- curry print
 
 
 runSession :: String -> Session () -> IO ()

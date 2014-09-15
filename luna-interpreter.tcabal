@@ -35,6 +35,7 @@ Library
                   luna-distribution,
                   luna-pass,
                   mtl,
+                  pretty-show,
                   raw-strings-qq,
                   transformers
 
