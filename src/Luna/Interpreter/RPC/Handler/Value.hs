@@ -13,6 +13,8 @@ import qualified Data.IORef           as IORef
 import qualified Pipes.Concurrent     as Pipes
 
 import qualified Flowbox.Batch.Project.Project                         as Project
+import           Flowbox.Bus.Data.Flag                                 (Flag)
+import qualified Flowbox.Bus.Data.Flag                                 as Flag
 import           Flowbox.Bus.Data.Message                              (Message (Message))
 import qualified Flowbox.Bus.Data.Message                              as Message
 import           Flowbox.Bus.Data.Topic                                (update, (/+))
@@ -50,7 +52,7 @@ get (Value.Request tcallPointPath) = do
 
 
 reportOutputValue :: IORef Message.CorrelationID
-                  -> Pipes.Output (Message, Message.CorrelationID)
+                  -> Pipes.Output (Message, Message.CorrelationID, Flag)
                   -> Project.ID -> CallPointPath -> ByteString -> IO ()
 reportOutputValue crlRef output projectID callPointPath value = do
     crl <- IORef.readIORef crlRef
@@ -58,5 +60,5 @@ reportOutputValue crlRef output projectID callPointPath value = do
         response = Value.Update tcallPointPath (encodeP Value.Ready) (Just value)
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response
-        packet   = (msg, crl)
+        packet   = (msg, crl, Flag.Disable)
     void $ Pipes.atomically $ Pipes.send output packet
