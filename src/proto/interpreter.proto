@@ -73,7 +73,7 @@ message Interpreter {
         message Request { }
         message Status {
             required Request request = 1;
-            required int32 projectID = 2;
+            optional int32 projectID = 2;
         }
     }
     message SetMainPtr {
