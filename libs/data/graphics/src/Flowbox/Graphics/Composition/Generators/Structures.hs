@@ -40,7 +40,8 @@ type CartesianGenerator a = Generator (Cartesian.Point2 a)
 type DiscreteGenerator = CartesianGenerator (Exp Int)
 type ContinousGenerator = CartesianGenerator (Exp Double)
 
-unitGenerator a = Generator 1 a
+unitGenerator :: (a -> b) -> Generator a b
+unitGenerator = Generator 1
 
 instance Profunctor Generator where
     lmap f (Generator cnv gen) = Generator cnv $ gen . f

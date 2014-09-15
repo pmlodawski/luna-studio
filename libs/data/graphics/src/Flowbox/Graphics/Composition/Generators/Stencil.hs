@@ -5,7 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TypeOperators       #-}
-{-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Composition.Generators.Stencil where
@@ -28,7 +27,7 @@ stencil mode (Generator (Grid width height) kernel) foldOp initVal (Generator cn
         outer :: (Exp Int, Exp a) -> (Exp Int, Exp a)
         outer (h, acc) = (h + 1, A.snd $ A.while (\e -> A.fst e A.<* width) (A.lift1 inner) (A.lift (0 :: Exp Int, acc)))
             where inner :: (Exp Int, Exp a) -> (Exp Int, Exp a)
-                  inner (w, acc) = (w + 1, acc `foldOp` ((kernel $ Point2 w h) * (get (w - width `div` 2) (h - height `div` 2))))
+                  inner (w, acc) = (w + 1, acc `foldOp` (kernel (Point2 w h) * get (w - width `div` 2) (h - height `div` 2)))
     in A.snd $ A.while (\e -> A.fst e A.<* height) (A.lift1 outer) (A.lift (0 :: Exp Int, initVal))
 
 normStencil :: forall a b c . (Elt a, IsNum a, IsFloating a)

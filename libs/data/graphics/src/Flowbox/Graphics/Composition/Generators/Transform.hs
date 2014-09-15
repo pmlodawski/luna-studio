@@ -5,7 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TypeOperators       #-}
-{-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Composition.Generators.Transform where
@@ -30,7 +29,7 @@ turn :: (Num a, Floating a) => a -> CartesianGenerator a b -> CartesianGenerator
 turn = transform . turn'
 
 bbox :: (Elt a, Ord a, IsNum a, IsFloating a) => Exp a -> Grid (Exp Int) -> Grid (Exp Int)
-bbox phi cnv = fmap A.ceiling $ Grid gw' gh'
+bbox phi cnv = A.ceiling <$> Grid gw' gh'
     where Grid gw gh = fmap A.fromIntegral cnv
           pmax = Point2 (px1 `max` px2 `max` px3 `max` px4) (py1 `max` py2 `max` py3 `max` py4) 
           pmin = Point2 (px1 `min` px2 `min` px3 `min` px4) (py1 `min` py2 `min` py3 `min` py4) 

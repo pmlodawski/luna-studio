@@ -23,7 +23,7 @@ keyer (A.unlift -> (a, b, c, d)) gen = flip fmap gen $ \pixelValue ->
                    $ A.cond (pixelValue A.<=* b) (risingEdgePosition pixelValue)
                    $ A.cond (pixelValue A.<=* c) 1
                    $ A.cond (pixelValue A.<=* d) (fallingEdgePosition pixelValue)
-                   $ 0
+                   0
 
         -- simply linear functions
         risingEdgePosition x  = A.cond (a A.==* b) 1

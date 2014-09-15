@@ -32,7 +32,7 @@ toXYZ :: forall t. (A.Elt t, A.IsFloating t)
       => XyY (A.Exp t) -> XYZ (A.Exp t)
 toXYZ (XyY x y y') = A.unlift $ A.cond (y A.==* 0)
     (A.lift $ XYZ 0 0 (0 :: A.Exp t) :: A.Exp (XYZ t))
-    (A.lift $ XYZ { xyzX = (x * y') / y
+    (A.lift   XYZ { xyzX = (x * y') / y
                   , xyzY = y'
                   , xyzZ = ((1 - x - y) * y') / y
                   } :: A.Exp (XYZ t)

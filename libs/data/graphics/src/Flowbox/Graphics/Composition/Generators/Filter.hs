@@ -111,7 +111,7 @@ dirac sigma = Filter 1.0 $ \(abs -> t) -> exp (- (t * t) / (sigma * sigma)) / (s
 
 laplacian :: (Elt a, IsFloating a) => Exp a -> Exp a -> Grid (Exp Int) -> Matrix2 a
 laplacian cross side (fmap (1+).(2*) -> Grid sizex sizey) = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
-    let center = (A.fromIntegral $ sizex + sizey - 2) * cross + (A.fromIntegral $ (sizex - 1)*(sizey - 1)) * side
+    let center = A.fromIntegral (sizex + sizey - 2) * cross + A.fromIntegral ((sizex - 1) * (sizey - 1)) * side
     in  A.cond (x A.==* sizex `div` 2) 
             (A.cond (y A.==* sizey `div` 2) (-center) cross) 
             (A.cond (y A.==* sizey `div` 2) cross     side)
@@ -164,7 +164,7 @@ closing size = dilate size . erode size
 
 median :: forall a . (A.Stencil A.DIM2 a (A.Stencil3x3 a), A.IsFloating a)
        => M.Matrix2 a -> M.Matrix2 a
-median array = M.stencil stencil A.Mirror array
+median = M.stencil stencil A.Mirror
     where stencil :: A.Stencil3x3 a -> A.Exp a
           stencil ((v0, v1, v2)
                   ,(v3, v4, v5)
@@ -174,7 +174,7 @@ median array = M.stencil stencil A.Mirror array
 
 stencilTest :: forall a . (A.Stencil A.DIM2 a (A.Stencil3x3 a), A.IsFloating a)
        => M.Matrix2 a -> M.Matrix2 a
-stencilTest array = M.stencil stencil A.Mirror array
+stencilTest = M.stencil stencil A.Mirror
     where stencil ((v0, v1, v2)
                   ,(v3, v4, v5)
                   ,(v6, v7, v8)) = (v0 + v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8) / 9
@@ -183,9 +183,9 @@ unit1 :: (A.Elt a) => A.Exp a -> A.Acc (A.Array A.DIM1 a)
 unit1 = A.reshape (A.index1 1) . A.unit
 
 middle :: (A.Elt a, A.IsNum a, A.IsFloating a) => A.Acc (A.Vector a) -> A.Acc (A.Scalar a)
-middle vec = A.unit ((len `mod` 2) A.==* 0 A.? ( vec A.! (A.index1 $ (len + 1) `div` 2)
-                                               , (vec A.! (A.index1 $ len `div` 2)
-                                                 + vec A.! (A.index1 $ (len `div` 2) + 1))
+middle vec = A.unit ((len `mod` 2) A.==* 0 A.? ( vec A.! A.index1 ((len + 1) `div` 2)
+                                               , (vec A.! A.index1 (len `div` 2)
+                                                 + vec A.! A.index1 ((len `div` 2) + 1))
                                                  / 2
                                                ))
     where len = A.unindex1 $ A.shape vec

@@ -31,8 +31,9 @@ smap f arr = A.reshape inputSize $ A.asnd $ A.awhile condition step initialState
 
         step :: A.Acc (A.Scalar Int, A.Vector e) -> A.Acc (A.Scalar Int, A.Vector e)
         step (A.unlift -> (it, acc) :: (A.Acc (A.Scalar Int), A.Acc (A.Vector e))) =
-            A.lift (A.unit (A.the it + 1),
-                    acc A.++ (A.reshape (A.index1 1) $ A.unit (f $ arr A.!! (A.the it))))
+            A.lift ( A.unit (A.the it + 1)
+                   , acc A.++ A.reshape (A.index1 1) (A.unit (f $ arr A.!! A.the it))
+                   )
 
 
 emptyVector :: (A.Elt e) => A.Acc (A.Vector e)

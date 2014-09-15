@@ -1,6 +1,5 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE RecordWildCards        #-}
 
 module Flowbox.Math.Index where
 
