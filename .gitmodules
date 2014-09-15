@@ -16,9 +16,6 @@
 [submodule "third-party/hint"]
     path = third-party/hint
     url = git@github.com:flowbox-public/hint.git
-[submodule "third-party/linear-accelerate"]
-    path = third-party/linear-accelerate
-    url = git@github.com:ekmett/linear-accelerate.git
 [submodule "third-party/protocol-buffers"]
     path = third-party/protocol-buffers
     url = git@github.com:flowbox-public/protocol-buffers.git
