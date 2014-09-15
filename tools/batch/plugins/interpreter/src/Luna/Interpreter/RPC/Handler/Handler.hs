@@ -51,9 +51,9 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Handler"
 handlerMap :: Prefix -> HandlerMap Context SessionST
 handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
     [ (Topic.interpreterSetProjectIDRequest    , respond Topic.update Interpreter.setProjectID    )
-    , (Topic.interpreterGetProjectIDRequest    , respond Topic.update Interpreter.getProjectID    )
+    , (Topic.interpreterGetProjectIDRequest    , respond Topic.status Interpreter.getProjectID    )
     , (Topic.interpreterSetMainPtrRequest      , respond Topic.update Interpreter.setMainPtr      )
-    , (Topic.interpreterGetMainPtrRequest      , respond Topic.update Interpreter.getMainPtr      )
+    , (Topic.interpreterGetMainPtrRequest      , respond Topic.status Interpreter.getMainPtr      )
     , (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run             )
     , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd   )
     , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove)
