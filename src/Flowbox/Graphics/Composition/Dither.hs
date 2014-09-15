@@ -53,14 +53,14 @@ dither bnd dTable bits' img = do
     let Z :. diffH :. diffW = canvas dTable
     let diffW2 = diffW `div` 2
 
-    forM_ [0..height-1] $ \y -> do
+    forM_ [0..height-1] $ \y ->
         forM_ [0..width-1] $ \x -> do
             oldpixel <- M.get $ array x y
             let newpixel = P.fromIntegral (floor $ oldpixel * bits :: Int) / bits
             array x y $= newpixel
             let quant_error = oldpixel - newpixel
 
-            forM_ [0..diffH-1] $ \dy -> do
+            forM_ [0..diffH-1] $ \dy ->
                 forM_ [0..diffW-1] $ \dx -> do
                     let dither = unsafeIndex2D dTable (Point2 dx dy)
                     update (x + dx - diffW2) (y + dy) ( + (quant_error * dither))
@@ -126,7 +126,7 @@ shiauFan5 = BMatrix [ 0   , 0   , 0   , 0   , 8/16, 0   , 0
 
 bayerTable :: (Elt a, IsFloating a) => Int -> Matrix2 a
 bayerTable n = M.map (\x -> A.fromIntegral x / A.fromIntegral (A.lift maxVal + 1)) $ M.fromList arraySize array
-    where array = fmap snd $ sortBy (compare `on` fst) table :: [Int]
+    where array = snd <$> sortBy (compare `on` fst) table :: [Int]
           arraySize = Z :. tableSize :. tableSize :: DIM2
           table = [1 .. maxVal] <&> \i -> (Z :. yIndex i tableSize 0 :. xIndex i tableSize 0, i) 
           maxVal = tableSize ^ 2
@@ -144,6 +144,6 @@ bayer :: (Elt a, IsFloating a) => Int -> Matrix2 a -> Matrix2 a
 bayer n mat = M.generate (shape mat) $ \elem@(A.unlift -> Z :. y :. x :: EDIM2) -> 
         let bayerVal = boundedIndex2D A.Wrap mosaic $ Point2 x y
             oldpixel = mat M.! elem
-        in A.fromIntegral (A.floor $ (oldpixel * bits + bayerVal) :: Exp Int) / bits
+        in A.fromIntegral (A.floor (oldpixel * bits + bayerVal) :: Exp Int) / bits
     where bits   = A.fromIntegral $ A.lift (2 ^ (n - 1) :: Int)
           mosaic = bayerTable n

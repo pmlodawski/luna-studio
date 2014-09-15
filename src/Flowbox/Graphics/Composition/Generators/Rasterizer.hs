@@ -7,7 +7,6 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FunctionalDependencies #-}
 
 module Flowbox.Graphics.Composition.Generators.Rasterizer where
 

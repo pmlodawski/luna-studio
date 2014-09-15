@@ -13,7 +13,6 @@
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE TypeSynonymInstances   #-}
-{-# LANGUAGE ViewPatterns           #-}
 
 module Flowbox.Math.Matrix (
     module Flowbox.Math.Matrix,

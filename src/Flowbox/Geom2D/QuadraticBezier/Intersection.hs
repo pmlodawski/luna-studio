@@ -16,9 +16,8 @@ import Flowbox.Prelude
 
 
 cuberoot :: Exp Double -> Exp Double
-cuberoot x = (sign x) * (pow $ abs x)
-    where sign a = (abs a) / a
-          pow = flip (**) (1/3)
+cuberoot x = signum x * pow (abs x)
+    where pow = flip (**) (1/3)
 
 solveCubic :: Exp Double -> Exp Double -> Exp Double -> Exp (Int, (Double, Double, Double))
 solveCubic a b c = A.cond (d >=* 0) opt1 opt3
@@ -35,7 +34,7 @@ solveCubic a b c = A.cond (d >=* 0) opt1 opt3
           u' = sqrt $ (-p) / 3
           m = cos v'
           n = sin v' * 1.732050808
-          v' = acos (-(sqrt $ (-27) / p3) * q / 2) / 3
+          v' = acos (-sqrt ((-27) / p3) * q / 2) / 3
 
 distanceFromQuadratic :: Exp (Double, Double) -> Exp (Double, Double) -> Exp (Double, Double) -> Exp (Double, Double) -> Exp Double
 distanceFromQuadratic p0 p1 p2 p = A.cond (n A.>* 1)

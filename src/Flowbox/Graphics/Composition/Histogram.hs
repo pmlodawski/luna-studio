@@ -55,13 +55,12 @@ histeq bins arr = lut mini cdf arr
 -- | Equalize histogram of array to the given one
 histeq' :: forall sh e. (A.Shape sh, A.Elt e, A.IsFloating e)
         => Histogram e -> A.Acc (A.Array sh e) -> A.Acc (A.Array sh e)
-histeq' (A.unlift -> (hist, mini, maxi) :: Histogram' e) arr = lut mini cdf arr
+histeq' (A.unlift -> (hist, mini, maxi) :: Histogram' e) = lut mini cdf
     where cdf = histogramToCDF hist
 
 lut :: (A.Shape sh, A.Elt e, A.IsFloating e)
     => A.Acc (A.Scalar e) -> A.Acc (A.Vector e)
     -> A.Acc (A.Array sh e)
     -> A.Acc (A.Array sh e)
-lut (A.the -> mini) cdf arr =
-    A.map (\x -> cdf A.!! (A.ceiling $ (x - mini) / step)) arr
+lut (A.the -> mini) cdf = A.map (\x -> cdf A.!! A.ceiling ((x - mini) / step))
     where step = (cdf A.!! 1) - (cdf A.!! 0)

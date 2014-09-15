@@ -5,7 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
 module Flowbox.Graphics.Color (

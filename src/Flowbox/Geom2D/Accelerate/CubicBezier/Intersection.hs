@@ -22,7 +22,7 @@ findYforX :: forall a. (Elt a, IsFloating a) => Exp Int -> Exp a -> Exp (CubicBe
 findYforX limit eps (unlift -> curve) x = solvey
     $ cond (err x1 <=* eps) x1
         $ cond (err x4 <=* eps) x4
-            $ mid $ sndTrio $ while (\v -> fstTrio v <* limit &&* (err $ trdTrio v) >* eps) (lift1 step) $ lift (0 :: Exp Int, startAt, solvex $ mid startAt)
+            $ mid $ sndTrio $ while (\v -> fstTrio v <* limit &&* err (trdTrio v) >* eps) (lift1 step) $ lift (0 :: Exp Int, startAt, solvex $ mid startAt)
     where CubicBezier (Point2 x1 y1) (Point2 x2 y2) (Point2 x3 y3) (Point2 x4 y4) = curve
           step :: (Exp Int, Exp (a, a), Exp a) -> (Exp Int, Exp (a, a), Exp a)
           step (s, t@(unlift -> (a::Exp a, b::Exp a)), x') = let

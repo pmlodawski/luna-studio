@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Utils.Linear where
 
@@ -38,10 +37,10 @@ instance AccEpsilon CDouble where
 inv33 :: forall a. (AccEpsilon a, A.Elt a, A.IsFloating a)
       => A.Exp (M33 a) -> A.Exp (Bool, M33 a)
 inv33 t = A.cond (nearZero det)
-          (A.lift $ (False, m))
-          (A.lift $ (True, (1 / det) *!! V3 (V3 a' b' c')
-                                            (V3 d' e' f')
-                                            (V3 g' h' i')))
+          (A.lift (False, m))
+          (A.lift (True, (1 / det) *!! V3 (V3 a' b' c')
+                                          (V3 d' e' f')
+                                          (V3 g' h' i')))
     where (V3 x y z) = A.unlift t :: V3 (A.Exp (V3 a))
           x'@(V3 a b c) = A.unlift x :: V3 (A.Exp a)
           y'@(V3 d e f) = A.unlift y :: V3 (A.Exp a)

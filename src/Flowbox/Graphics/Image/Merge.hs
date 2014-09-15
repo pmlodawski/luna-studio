@@ -41,9 +41,9 @@ basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                              -> ContinousGenerator (A.Exp a) -- ^ Merge result
 basicColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOverlay) (Generator _ background) (Generator _ alphaBackground) alphaBlend blend =
     Generator cnv $ \p ->
-    let alphaResult = \p' -> case alphaBlend of
-            Adobe  -> union (alphaOverlay p') (alphaBackground p')
-            Custom -> blend (alphaOverlay p') (alphaBackground p')
+    let alphaResult p' = case alphaBlend of
+            Adobe  -> alphaOverlay p' `union` alphaBackground p'
+            Custom -> alphaOverlay p' `blend` alphaBackground p'
     in (1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
         (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (overlay p) (background p))
 
@@ -80,8 +80,8 @@ threeWayMerge' ar ag ab br bg bb aa ba alphaBlend blend =
   (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, mergeAlpha aa ba)
   where merge ov aov bgnd abgnd = basicColorCompositingFormula ov aov bgnd abgnd alphaBlend blend
         mergeAlpha (Generator cnv aa') (Generator _ ba') = Generator cnv $ \p -> case alphaBlend of
-            Adobe  -> union (aa' p) (ba' p)
-            Custom -> blend (aa' p) (ba' p)
+            Adobe  -> aa' p `union` ba' p
+            Custom -> aa' p `blend` ba' p
 
 -- FIXME [KL]: Bounding box now is taken from the overlay generator
 complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
@@ -95,7 +95,7 @@ complicatedColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOve
     Generator cnv $ \p -> blend (overlay p) (alphaOverlay p) (background p) (alphaBackground p)
 
 liftBlend :: (A.Elt a, A.IsFloating a) => BlendMode a -> ComplicatedBlendMode a
-liftBlend blend = \overlay _ background _ -> blend overlay background
+liftBlend blend overlay _ background _ = blend overlay background
 
 
 -- | A*b + B*(1-a)
@@ -199,15 +199,15 @@ matte overlay alphaOverlay background _ = overlay * alphaOverlay + background * 
 
 -- | max(A,B)
 max :: (A.Elt a, A.IsFloating a) => BlendMode a
-max overlay background = P.max overlay background
+max = P.max
 
 -- | min(A,B)
 min :: (A.Elt a, A.IsFloating a) => BlendMode a
-min overlay background = P.min overlay background
+min = P.min
 
 -- | A - B
 minus :: (A.Elt a, A.IsFloating a) => BlendMode a
-minus overlay background = overlay - background
+minus = (-)
 
 -- | A*B, A if A < 0 and B < 0
 -- Nuke says that when A and B are negative, we should return left value to prevent
@@ -229,12 +229,12 @@ plus = (+)
 
 -- | A + B - A * B
 screen :: (A.Elt a, A.IsFloating a) => BlendMode a
-screen overlay background = union overlay background
+screen = union
 
 -- | if A <= 0.5 then 1 - 2*(1-A)*(1-B) else 2 * @multiply
 -- See @hardLight
 overlayFun :: (A.Elt a, A.IsFloating a) => BlendMode a
-overlayFun overlay background = hardLight background overlay
+overlayFun = flip hardLight
 
 -- | if A <= 0.5 then B - (1 - 2*A) * B * (1-B) else B + (2 * A - 1) * (d(B) - B)
 -- where d(B) = if B <= 0.25 then ((16 * B - 12) * B + 4) * B else sqrt(B)
@@ -242,7 +242,7 @@ overlayFun overlay background = hardLight background overlay
 softLight :: (A.Elt a, A.IsFloating a) => BlendMode a
 softLight overlay background =
     (overlay A.<=* 0.5) A.?
-        (background - (U.invert $ 2 * overlay) * background * U.invert background
+        (background - U.invert (2 * overlay) * background * U.invert background
         , background + (2 * overlay - 1) * (d background - background))
     where d x = (x A.<=* 0.25) A.? (((16 * x - 12) * x + 4) * x
                                   , sqrt x)
@@ -261,7 +261,7 @@ softLightIllusions overlay background =
 softLightPhotoshop :: (A.Elt a, A.IsFloating a) => BlendMode a
 softLightPhotoshop overlay background =
     (overlay A.<=* 0.5) A.?
-        (2 * background * overlay + background ** 2 * (U.invert $ 2 * overlay)
+        (2 * background * overlay + background ** 2 * U.invert (2 * overlay)
         , sqrt background * (2 * overlay - 1) + 2 * background * U.invert overlay)
 
 -- | B(1-a)
