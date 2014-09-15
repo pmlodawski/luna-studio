@@ -198,11 +198,15 @@ setMainPtr mainPtr = modify (Env.mainPtr .~ mainPtr)
 
 
 getProjectID :: Session Project.ID
-getProjectID = gets $ view Env.projectID
+getProjectID = gets (view Env.projectID) <??&> "Project ID not set."
+
+
+getProjectIDMaybe :: Session (Maybe Project.ID)
+getProjectIDMaybe = gets (view Env.projectID)
 
 
 setProjectID :: Project.ID -> Session ()
-setProjectID projectID = modify (Env.projectID .~ projectID)
+setProjectID projectID = modify (Env.projectID .~ Just projectID)
 
 
 getResultCallBack :: Session (Project.ID -> CallPointPath -> ByteString -> IO ())

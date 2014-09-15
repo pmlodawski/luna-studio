@@ -48,8 +48,8 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Interpreter"
 
 getProjectID :: GetProjectID.Request -> RPC Context SessionST GetProjectID.Status
 getProjectID request = do
-    projectID <- liftSession Session.getProjectID
-    return $ GetProjectID.Status request $ encodeP projectID
+    projectID <- liftSession Session.getProjectIDMaybe
+    return $ GetProjectID.Status request $ fmap encodeP projectID
 
 
 setProjectID :: SetProjectID.Request -> RPC Context SessionST SetProjectID.Update

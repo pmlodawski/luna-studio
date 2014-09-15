@@ -144,7 +144,7 @@ main1 = do
     (libManager , libID) <- readSource code
     (libManager2, _    ) <- readSource code2
 
-    let env = Env.mk libManager 0
+    let env = Env.mk libManager (Just 0)
                 (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
                 (curry $ curry print)
 
@@ -223,6 +223,6 @@ showSrc src = ">>> file '" ++ intercalate "/" (src ^. Source.path) ++ "':\n\n"
              ++ hsShow (src ^. Source.code)
 
 main :: IO ()
-main = main2
+main = main1
 
 --serialize parameters type
