@@ -17,6 +17,8 @@ import           Pipes                     (liftIO, (>->))
 import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
 
+import           Flowbox.Bus.Data.Flag                    (Flag)
+import qualified Flowbox.Bus.Data.Flag                    as Flag
 import           Flowbox.Bus.Data.Message                 (Message)
 import qualified Flowbox.Bus.Data.Message                 as Message
 import           Flowbox.Bus.Data.Prefix                  (Prefix)
@@ -118,18 +120,21 @@ extraImports = [("FlowboxM.Libs.Flowbox.Std", Nothing)]
 interpret :: Prefix
           -> IORef Message.CorrelationID
           -> Pipes.Pipe (Message, Message.CorrelationID)
-                        (Message, Message.CorrelationID)
+                        (Message, Message.CorrelationID, Flag)
                         (StateT Context SessionST) ()
 interpret prefix crlRef = forever $ do
     (message, crl) <- Pipes.await
     liftIO $ IORef.writeIORef crlRef crl
     results <- lift $ Processor.processLifted (handlerMap prefix) message
-    mapM_ (\r -> Pipes.yield (r, crl)) results
+    let send []    = return ()
+        send [r]   = Pipes.yield (r, crl, Flag.Enable)
+        send (r:t) = Pipes.yield (r, crl, Flag.Disable) >> send t
+    send results
 
 
 run :: Config -> Prefix -> Context
     -> (Pipes.Input  (Message, Message.CorrelationID),
-        Pipes.Output (Message, Message.CorrelationID))
+        Pipes.Output (Message, Message.CorrelationID, Flag))
     -> IO (Either Error ())
 run cfg prefix ctx (input, output) = do
     crlRef <- IORef.newIORef def
