@@ -86,15 +86,12 @@ spec = do
           ps = [ IsIn "Functor" f
                , IsIn "Ord"     a
                ]
-          p  = IsIn "Ord" (TAp f
-                               a)
+          p  = IsIn "Ord" (TAp f a)
 
-      entail ce [IsIn "Functor" f, IsIn "Ord" a] p              `shouldBe` True
-      entail ce [                  IsIn "Ord" a] p              `shouldBe` False
-      entail ce [IsIn "Functor" f              ] p              `shouldBe` False
-      entail ce [                              ] p              `shouldBe` False
-
-      entail ce [IsIn "Integral" v]              (IsIn "Num" v) `shouldBe` True
-
-      entail ce [IsIn "Integral" a, IsIn "Applicative" f] p     `shouldBe` True
+      entail ce [IsIn "Functor" f, IsIn "Ord" a]          p              `shouldBe` True
+      entail ce [                  IsIn "Ord" a]          p              `shouldBe` False
+      entail ce [IsIn "Functor" f              ]          p              `shouldBe` False
+      entail ce [                              ]          p              `shouldBe` False
+      entail ce [IsIn "Integral" a, IsIn "Applicative" f] p              `shouldBe` True
+      entail ce [IsIn "Integral" v]                       (IsIn "Num" v) `shouldBe` True
 
