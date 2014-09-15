@@ -1,0 +1,63 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Flowbox Team <contact@flowbox.io>, 2014
+-- Proprietary and confidential
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+module Luna.Interpreter.Session.TargetHS.TargetHS where
+
+import qualified DynFlags as GHC
+
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
+import           Luna.Interpreter.Session.Session            (Session)
+import qualified Luna.Interpreter.Session.Session            as Session
+import qualified Luna.Interpreter.Session.TargetHS.Generator as Generator
+import qualified Luna.Interpreter.Session.TargetHS.Instances as Instances
+
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Luna.Interpreter.Session.TargetHS.Reload"
+
+
+enabledFlags :: [GHC.ExtensionFlag]
+enabledFlags = [ GHC.Opt_DataKinds
+               , GHC.Opt_DeriveDataTypeable
+               , GHC.Opt_DeriveGeneric
+               , GHC.Opt_DysfunctionalDependencies
+               , GHC.Opt_FlexibleContexts
+               , GHC.Opt_FlexibleInstances
+               , GHC.Opt_GADTs
+               , GHC.Opt_RebindableSyntax
+               , GHC.Opt_TemplateHaskell
+               , GHC.Opt_UndecidableInstances
+
+               , GHC.Opt_MultiParamTypeClasses
+               ]
+
+
+disabledFlags :: [GHC.ExtensionFlag]
+disabledFlags = [GHC.Opt_MonomorphismRestriction]
+
+
+runDecls :: [String] -> Session ()
+runDecls = Session.withFlags enabledFlags disabledFlags . mapM_ Session.runDecls
+
+
+reloadAll :: Session ()
+reloadAll = Instances.clean
+         >> Generator.genAll >>= runDecls
+
+
+reloadFunctions :: Session ()
+reloadFunctions = Instances.clean
+               >> Generator.genFunctions >>= runDecls
+
+
+reloadClass :: DefPoint -> Session ()
+reloadClass defPoint = Instances.clean
+                    >> Generator.genClass defPoint >>= runDecls
+                    >> Generator.genFunctions      >>= runDecls

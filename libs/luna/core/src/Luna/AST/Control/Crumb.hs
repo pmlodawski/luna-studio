@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.AST.Control.Crumb where
 
@@ -14,9 +15,27 @@ import Flowbox.Prelude
 type Breadcrumbs = [Crumb]
 
 
-data Crumb = Function { name :: String
-                      , path :: [String]
+data Crumb = Function { _name :: String
+                      , _path :: [String]
                       }
-           | Class    { name :: String }
-           | Module   { name :: String }
+           | Class    { _name :: String }
+           | Module   { _name :: String }
            deriving (Show, Ord, Eq)
+
+
+makeLenses(''Crumb)
+
+
+isFunction :: Crumb -> Bool
+isFunction (Function {}) = True
+isFunction _             = False
+
+
+isClass :: Crumb -> Bool
+isClass (Class {}) = True
+isClass _          = False
+
+
+isModule :: Crumb -> Bool
+isModule (Module {}) = True
+isModule _           = False

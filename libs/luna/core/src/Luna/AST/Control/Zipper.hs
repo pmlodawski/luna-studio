@@ -43,6 +43,8 @@ defocus (env, parent:path) = (newenv, path) where
         Focus.Class  pcls -> Focus.Class $ case env of
             Focus.Function fun -> Expr.addMethod fun pcls
             Focus.Class    cls -> Expr.addClass  cls pcls
+            _                  -> error "Zipper.defocus"
+        _                 -> error "Zipper.defocus"
 
 
 defocusDrop :: Zipper -> Zipper

@@ -12,7 +12,7 @@ import qualified Data.IntSet as IntSet
 import qualified Data.Tuple  as Tuple
 
 import           Flowbox.Batch.Batch                     (Batch)
-import           Flowbox.Batch.Handler.Common            (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, libManagerOp)
+import           Flowbox.Batch.Handler.Common            (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp)
 import qualified Flowbox.Batch.Handler.Common            as Batch
 import qualified Flowbox.Batch.Project.Project           as Project
 import           Flowbox.Control.Error

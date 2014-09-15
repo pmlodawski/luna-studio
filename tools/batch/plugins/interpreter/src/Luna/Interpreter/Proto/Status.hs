@@ -12,9 +12,6 @@
 
 module Luna.Interpreter.Proto.Status where
 
-import qualified Flowbox.Batch.Project.Project                  as Project
-import           Flowbox.Control.Error
-import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Interpreter.Status             as Gen
 import           Luna.Data.Serialize.Proto.Conversion.Crumb     ()
