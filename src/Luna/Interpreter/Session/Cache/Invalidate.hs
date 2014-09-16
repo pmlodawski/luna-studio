@@ -30,6 +30,7 @@ import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
 import qualified Luna.Lib.Lib                                as Library
+import qualified Luna.Lib.Manager                            as LibManager
 
 
 
@@ -37,10 +38,11 @@ logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Cache.Invalidate"
 
 
---modifyAll :: Session ()
---modifyAll = do
---    modifyMatching $ const . const True
---    --Session.addReload libraryID Reload.ReloadLibrary
+modifyAll :: Session ()
+modifyAll = do
+    modifyMatching $ const . const True
+    libIDs <- LibManager.nodes <$> Session.getLibManager
+    mapM_ (flip Session.addReload Reload.ReloadLibrary) libIDs
 
 
 modifyLibrary :: Library.ID -> Session ()
