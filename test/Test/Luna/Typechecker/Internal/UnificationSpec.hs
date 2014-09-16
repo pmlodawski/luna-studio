@@ -133,6 +133,8 @@ spec = do
 
       test (TAp tt2 tt3) (TAp ct0 tt1) `shouldSatisfy` isRight
       test (TAp tt2 tt3) (TAp tt0 ct1) `shouldSatisfy` isRight
+      (match ct0 ct0 :: Either String Subst) `shouldBe` Right nullSubst
+
 
 
     it "some examples for property: apply u t1 == t2 for u = match t1 t2" $ do
