@@ -202,3 +202,72 @@ spec = do
       candidates ce (Tyvar "a" Star, [IsIn "Integral" a, IsIn "LOLOLOL" a]) `shouldBe` []
 
 
+  describe "fighting monomorphism restriction" $ do
+    it "works" $ do
+      let as = [ "(+)":>:integralAdd_type
+               , "(:)":>:cons_type
+               , "foldl":>:foldl_type
+               , "sum":>:sum_type
+               , "take":>:(Forall [Star] $ [] :=> (tInt `fn` list (TGen 0) `fn` list (TGen 0)))
+               , "zipWith":>:(Forall [Star,Star,Star] $ [] :=> ((TGen 0 `fn` TGen 1 `fn` TGen 2) `fn` list (TGen 0) `fn` list (TGen 1) `fn` list (TGen 2)))
+               , "(/)":>:(Forall [Star] $ [IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
+               , "iterate":>:(Forall [Star] $ [] :=> ((TGen 0 `fn` TGen 0) `fn` TGen 0 `fn` list (TGen 0)))
+               , "negate":>:(Forall [Star] $ [IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0))
+               , "[]":>:nil_type
+               ]
+          bgs = [( []
+                 , [[
+                      ("pie", [( []
+                               , ap [ Var "sum"
+                                    , ap [ Var "take"
+                                         , Lit (LitIntegral 2)
+                                         , ap [ Var "zipWith"
+                                              , Var "(/)"
+                                              , ap [ Var "iterate"
+                                                   , Var "negate"
+                                                   , Lit (LitIntegral 4)
+                                                   ]
+                                              , ap [ Var "(:)"
+                                                   , Lit (LitIntegral 1)
+                                                   , Var "[]"
+                                                   ]
+                                              ]
+                                         ]
+                                    ]
+                              )]
+                      )
+                   ]]
+                )]
+          foldl_type  = Forall [Star, Star] ([] :=> ((TGen 1 `fn` TGen 0 `fn` TGen 1) `fn` TGen 1 `fn` list (TGen 0) `fn` TGen 1))
+          foldl_pat1  = [PWildcard, PVar "a", PCon ("[]":>:nil_type) []]
+          foldl_body1 = Var "a"
+          foldl_pat2  = [PVar "f", PVar "a", PAs "xxs" (PCon (":":>:cons_type) [PVar "x", PVar "xs"]  )]
+          foldl_body2 = ap [Var "foldl", Var "f", ap [Var "f", Var "a", Var "x"], Var "xs"]
+
+          integralAdd_type = Forall [Star] ([IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
+
+          sum_type = Forall [Star] ([IsIn "Num" (TGen 0)] :=> (list (TGen 0) `fn` TGen 0))
+          sum_pat  = []
+          sum_body = ap [Var "foldl", Var "(+)", Lit (LitInt 0)]
+
+          cons_type = Forall [Star] ([] :=> (TGen 0 `fn` list (TGen 0) `fn` list (TGen 0)))
+          nil_type  = Forall [Star] ([] :=> (list (TGen 0)))
+
+          Just ce = (  addClass "Eq" []
+                   <:> addClass "Ord" ["Eq"]
+                   <:> addClass "Num" []
+                   <:> addClass "Real" ["Num", "Ord"]
+                   <:> addClass "Enum" []
+                   <:> addClass "Integral" ["Real", "Enum"]
+                   <:> addClass "Functor" []
+                   <:> addInst [] (IsIn "Eq" tInt)       <:> addInst [] (IsIn "Eq" tInteger)
+                   <:> addInst [] (IsIn "Ord" tInt)      <:> addInst [] (IsIn "Ord" tInteger)
+                   <:> addInst [] (IsIn "Num" tInt)      <:> addInst [] (IsIn "Num" tInteger)
+                   <:> addInst [] (IsIn "Real" tInt)     <:> addInst [] (IsIn "Real" tInteger)
+                   <:> addInst [] (IsIn "Enum" tInt)     <:> addInst [] (IsIn "Enum" tInteger)
+                   <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
+                   <:> addInst [] (IsIn "Functor" tList)
+                   <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
+                               (IsIn "Ord" ((TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star))))
+                    ) initialEnv
+       in tiProgram ce as bgs `shouldContain` ["pie":>:toScheme tInteger]
