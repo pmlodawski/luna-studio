@@ -61,9 +61,10 @@ setProjectID request@(SetProjectID.Request tprojectID) = do
 
 getMainPtr :: GetMainPtr.Request -> RPC Context SessionST GetMainPtr.Status
 getMainPtr request = do
-    projectID <- liftSession Session.getProjectID
-    mainPtr   <- liftSession Session.getMainPtr
-    return $ GetMainPtr.Status request $ encode (projectID, mainPtr)
+    projectID <- liftSession Session.getProjectIDMaybe
+    mainPtr   <- liftSession Session.getMainPtrMaybe
+    let tmainPtr = (encode .: (,)) <$> projectID <*> mainPtr
+    return $ GetMainPtr.Status request tmainPtr
 
 
 setMainPtr :: SetMainPtr.Request -> RPC Context SessionST SetMainPtr.Update

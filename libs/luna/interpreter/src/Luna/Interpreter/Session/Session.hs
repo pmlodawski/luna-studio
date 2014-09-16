@@ -39,8 +39,7 @@ import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Helpers            as Helpers
-import           Luna.Interpreter.Session.TargetHS.Reload    (Reload)
-import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
+import           Luna.Interpreter.Session.TargetHS.Reload    (Reload, ReloadMap)
 import           Luna.Lib.Lib                                (Library)
 import qualified Luna.Lib.Lib                                as Library
 import           Luna.Lib.Manager                            (LibManager)
@@ -200,7 +199,11 @@ getGraph defPoint = do
 
 
 getMainPtr :: Session DefPoint
-getMainPtr = gets (view Env.mainPtr) <??&> "MainPtr not set."
+getMainPtr = getMainPtrMaybe <??&> "MainPtr not set."
+
+
+getMainPtrMaybe :: Session (Maybe DefPoint)
+getMainPtrMaybe = gets (view Env.mainPtr)
 
 
 setMainPtr :: DefPoint -> Session ()
@@ -208,7 +211,7 @@ setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
 
 
 getProjectID :: Session Project.ID
-getProjectID = gets (view Env.projectID) <??&> "Project ID not set."
+getProjectID = getProjectIDMaybe <??&> "Project ID not set."
 
 
 getProjectIDMaybe :: Session (Maybe Project.ID)

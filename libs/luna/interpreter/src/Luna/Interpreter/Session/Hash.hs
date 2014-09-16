@@ -23,6 +23,4 @@ logger = getLoggerIO "Luna.Interpreter.Session.Hash"
 compute :: String -> Session (Maybe Hash)
 compute varName = do
     let expr = "hash " ++ varName
-    -- FIXME [PM] !!!!!!
     lift2 $ Interpreter.interpret expr (as :: Maybe Hash)
-    --return $ Just $ hash varName

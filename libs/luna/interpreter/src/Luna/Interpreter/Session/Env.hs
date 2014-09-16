@@ -44,4 +44,3 @@ mk = Env def def def False
 
 instance Default Env where
     def = mk def def def (const (const (void . return)))
---(DefPoint 0 [Crumb.Module "Main", Crumb.Function "main" []])
