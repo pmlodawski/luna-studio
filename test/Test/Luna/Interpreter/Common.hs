@@ -20,6 +20,7 @@ import qualified Luna.Interpreter.Session.Env                                  a
 import qualified Luna.Interpreter.Session.Error                                as Error
 import           Luna.Interpreter.Session.Session                              (Session)
 import qualified Luna.Interpreter.Session.Session                              as Session
+import qualified Luna.Interpreter.Session.TargetHS.Reload                      as Reload
 import           Luna.Lib.Lib                                                  (Library (Library))
 import qualified Luna.Lib.Lib                                                  as Library
 import           Luna.Lib.Manager                                              (LibManager)
@@ -51,17 +52,19 @@ readCode code = eitherStringToM' $ runEitherT $ do
            $ LibManager.empty
 
 
-mkEnv :: String -> IO Env
+mkEnv :: String -> IO (Env, Library.ID)
 mkEnv code = do
     (libManager, libID) <- readCode code
 
     let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
-    return $ Env.mk libManager (Just 0) defPoint $ const $ const (void . return)-- curry print
+        env      = Env.mk libManager (Just 0) (Just defPoint) $ const $ const (void . return)-- curry print
+    return (env, libID)
 
 
 runSession :: String -> Session () -> IO ()
 runSession code session = do
     cfg <- Config.load
-    env <- mkEnv code
-    result <- Session.run cfg env [] session
+    (env, libID) <- mkEnv code
+
+    result <- Session.run cfg env [] (Session.addReload libID Reload.ReloadLibrary >> session)
     eitherStringToM $ fmapL Error.format result
