@@ -31,6 +31,7 @@ import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
+import Luna.Interpreter.Session.Data.Hash (Hash)
 
 
 
@@ -99,16 +100,19 @@ execute callDataPath functionName argsVarNames = do
     let execFunction = evalFunction functionName callDataPath argsVarNames
 
         executeModified = do
-            varName <- execFunction
+            (hash, varName) <- execFunction
             if varName /= prevVarName
                 then if boundVarName /= Just varName
-                        then do logger debug "processing modified node - result value differs"
-                                mapM_ freeVarName boundVarName
-                                Invalidate.markSuccessors callDataPath CacheStatus.Modified
+                    then do logger debug "processing modified node - result value differs"
+                            mapM_ freeVarName boundVarName
+                            Invalidate.markSuccessors callDataPath CacheStatus.Modified
 
-                        else do logger debug "processing modified node - result value differs but is cached"
-                                Invalidate.markSuccessors callDataPath CacheStatus.Affected
-                else logger debug "processing modified node - result value is same"
+                    else do logger debug "processing modified node - result value differs but is cached"
+                            Invalidate.markSuccessors callDataPath CacheStatus.Affected
+                else if Maybe.isNothing hash
+                    then do logger debug "processing modified node - result value non hashable"
+                            Invalidate.markSuccessors callDataPath CacheStatus.Modified
+                    else logger debug "processing modified node - result value is same"
 
         executeAffected = case boundVarName of
             Nothing    -> do
@@ -148,7 +152,7 @@ varType name@(h:_)
     | otherwise      = Var
 
 
-evalFunction :: String -> CallDataPath -> [VarName] -> Session VarName
+evalFunction :: String -> CallDataPath -> [VarName] -> Session (Maybe Hash, VarName)
 evalFunction funName callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
@@ -182,7 +186,7 @@ evalFunction funName callDataPath argsVarNames = do
     Cache.dumpAll
     Cache.put callDataPath argsVarNames varName
     Value.report callPointPath varName
-    return varName
+    return (hash, varName)
 
 
 freeVarName :: VarName -> Session ()
