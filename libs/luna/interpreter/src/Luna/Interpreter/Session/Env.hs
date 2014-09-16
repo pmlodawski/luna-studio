@@ -14,21 +14,22 @@ import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Data.MapForest                      (MapForest)
 import           Flowbox.Data.SetForest                      (SetForest)
 import           Flowbox.Prelude
-import qualified Luna.AST.Control.Crumb                      as Crumb
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
+import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
+import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 import           Luna.Lib.Manager                            (LibManager)
-
 
 
 data Env = Env { _cached         :: MapForest CallPoint CacheInfo
                , _watchPoints    :: SetForest CallPoint
+               , _reloadMap      :: ReloadMap
                , _allReady       :: Bool
+
                , _libManager     :: LibManager
                , _projectID      :: Maybe Project.ID
-               , _mainPtr        :: DefPoint
+               , _mainPtr        :: Maybe DefPoint
                , _resultCallBack :: Project.ID -> CallPointPath -> ByteString -> IO ()
                }
 
@@ -36,13 +37,11 @@ data Env = Env { _cached         :: MapForest CallPoint CacheInfo
 makeLenses(''Env)
 
 
-mk :: LibManager -> Maybe Project.ID -> DefPoint
+mk :: LibManager -> Maybe Project.ID -> Maybe DefPoint
    -> (Project.ID -> CallPointPath -> ByteString -> IO ()) -> Env
-mk = Env def def False
+mk = Env def def def False
 
 
 instance Default Env where
-    def = mk def
-             def
-             (DefPoint 0 [Crumb.Module "Main", Crumb.Function "main" []])
-             (const (const (void . return)))
+    def = mk def def def (const (const (void . return)))
+--(DefPoint 0 [Crumb.Module "Main", Crumb.Function "main" []])

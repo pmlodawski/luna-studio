@@ -9,6 +9,9 @@ module Luna.Interpreter.Session.Session where
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import           Data.ByteString.Lazy                (ByteString)
+import qualified Data.Map                            as Map
+import qualified Data.Maybe                          as Maybe
+import           Data.Monoid                         ((<>))
 import qualified DynFlags                            as GHC
 import qualified GHC
 import qualified Language.Haskell.Interpreter        as I
@@ -36,6 +39,8 @@ import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Helpers            as Helpers
+import           Luna.Interpreter.Session.TargetHS.Reload    (Reload)
+import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 import           Luna.Lib.Lib                                (Library)
 import qualified Luna.Lib.Lib                                as Library
 import           Luna.Lib.Manager                            (LibManager)
@@ -195,11 +200,11 @@ getGraph defPoint = do
 
 
 getMainPtr :: Session DefPoint
-getMainPtr = gets $ view Env.mainPtr
+getMainPtr = gets (view Env.mainPtr) <??&> "MainPtr not set."
 
 
 setMainPtr :: DefPoint -> Session ()
-setMainPtr mainPtr = modify (Env.mainPtr .~ mainPtr)
+setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
 
 
 getProjectID :: Session Project.ID
@@ -216,3 +221,16 @@ setProjectID projectID = modify (Env.projectID .~ Just projectID)
 
 getResultCallBack :: Session (Project.ID -> CallPointPath -> ByteString -> IO ())
 getResultCallBack = gets $ view Env.resultCallBack
+
+
+addReload :: Library.ID -> Reload -> Session ()
+addReload libraryID reload = modify (Env.reloadMap %~ update) where
+    update = Map.alter (Just . (<> reload) . Maybe.fromMaybe def) libraryID
+
+
+getReloads :: Session ReloadMap
+getReloads = gets $ view Env.reloadMap
+
+
+cleanReloads :: Session ()
+cleanReloads = modify (Env.reloadMap .~ mempty)

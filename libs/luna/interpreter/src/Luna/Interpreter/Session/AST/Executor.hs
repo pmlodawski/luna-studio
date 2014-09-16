@@ -26,7 +26,6 @@ import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import           Luna.Interpreter.Session.Data.VarName      (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
-import qualified Luna.Interpreter.Session.Env               as Env
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
@@ -41,8 +40,8 @@ logger = getLoggerIO "Luna.Interpreter.Session.Executor"
 
 processMain :: Session ()
 processMain = do
-    TargetHS.reloadAll
-    mainPtr <- gets $ view Env.mainPtr
+    TargetHS.reload
+    mainPtr  <- Session.getMainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
     Session.setAllReady True

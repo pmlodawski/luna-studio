@@ -37,6 +37,7 @@ import           Luna.Interpreter.Session.Data.DefPoint                        (
 import qualified Luna.Interpreter.Session.Env                                  as Env
 import qualified Luna.Interpreter.Session.Error                                as Error
 import qualified Luna.Interpreter.Session.Session                              as Session
+import qualified Luna.Interpreter.Session.TargetHS.Reload                      as Reload
 import           Luna.Lib.Lib                                                  (Library (Library))
 import qualified Luna.Lib.Lib                                                  as Library
 import           Luna.Lib.Manager                                              (LibManager)
@@ -145,11 +146,12 @@ main1 = do
     (libManager2, _    ) <- readSource code2
 
     let env = Env.mk libManager (Just 0)
-                (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
+                (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
                 (curry $ curry print)
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
     result <- Session.run cfg env [] $ do
+        Session.addReload libID Reload.ReloadLibrary
         Executor.processMain
         print =<< Value.getIfReady [CallPoint libID 54]
         putStrLn "--------- 1"

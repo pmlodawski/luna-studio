@@ -26,10 +26,9 @@ import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
-import qualified Luna.Interpreter.Session.TargetHS.TargetHS  as TargetHS
+import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
 import qualified Luna.Lib.Lib                                as Library
 
 
@@ -38,10 +37,10 @@ logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Cache.Invalidate"
 
 
-modifyAll :: Session ()
-modifyAll = do
-    modifyMatching $ const . const True
-    TargetHS.reloadAll
+--modifyAll :: Session ()
+--modifyAll = do
+--    modifyMatching $ const . const True
+--    --Session.addReload libraryID Reload.ReloadLibrary
 
 
 modifyLibrary :: Library.ID -> Session ()
@@ -49,7 +48,7 @@ modifyLibrary libraryID = do
     let matchLib k _ = last k ^. CallPoint.libraryID == libraryID
     logger info $ "Mark modified: library " ++ show libraryID
     modifyMatching matchLib
-    TargetHS.reloadAll
+    Session.addReload libraryID Reload.ReloadLibrary
 
 
 --modifyDef :: Library.ID -> AST.ID -> Session ()
@@ -66,7 +65,7 @@ modifyBreadcrumbsRec libraryID bc = do
                         && List.isPrefixOf bc (v ^. CacheInfo.breadcrumbs)
     logger info $ "Mark modified: breadcrumbs rec. " ++ show (libraryID, bc)
     modifyMatching matchBC
-    TargetHS.reloadAll
+    Session.addReload libraryID Reload.ReloadLibrary
 
 
 modifyBreadcrumbs :: Library.ID -> Breadcrumbs -> Session ()
@@ -76,11 +75,11 @@ modifyBreadcrumbs libraryID bc = do
     logger info $ "Mark modified: breadcrumbs " ++ show (libraryID, bc)
     modifyMatching matchBC
     let lastBC = last bc
-    if Crumb.isClass lastBC
-        then TargetHS.reloadClass (DefPoint libraryID bc)
+    Session.addReload libraryID $ if Crumb.isClass lastBC
+        then Reload.mkReloadClasses bc
         else if Crumb.isFunction lastBC
-            then TargetHS.reloadFunctions
-            else TargetHS.reloadAll
+            then Reload.ReloadFunctions
+            else Reload.ReloadLibrary
 
 
 modifyNode :: Library.ID -> Node.ID -> Session ()
@@ -88,7 +87,7 @@ modifyNode libraryID nodeID = do
     let matchNode k _ = last k == CallPoint libraryID nodeID
     logger info $ "Mark modified: node " ++ show (libraryID, nodeID)
     modifyMatching matchNode
-    TargetHS.reloadFunctions
+    Session.addReload libraryID Reload.ReloadFunctions
 
 
 
