@@ -79,7 +79,6 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Load.Request    
 import qualified Generated.Proto.ProjectManager.Project.Library.Load.Update                                    as LibraryLoad
 import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Request                                 as LibraryUnload
 import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Update                                  as LibraryUnload
-import qualified Generated.Proto.ProjectManager.Project.Modify.Request                                         as ProjectModify
 import qualified Generated.Proto.ProjectManager.Project.Modify.Update                                          as ProjectModify
 import qualified Generated.Proto.ProjectManager.Project.Open.Update                                            as ProjectOpen
 import           Luna.Interpreter.Proto.CallPointPath                                                          ()
@@ -115,10 +114,8 @@ projectClose (ProjectClose.Update request updateNo) = do
 
 
 projectModify :: ProjectModify.Update -> RPC Context SessionST ()
-projectModify (ProjectModify.Update request updateNo) = do
+projectModify (ProjectModify.Update request updateNo) =
     sync updateNo $ ProjectHandler.modify request
-    projectID <- Gen.Project.id (ProjectModify.project request) <??> "ASTWatch.projectModify : 'projectID' field is missing"
-    Modify.modifyAll projectID
 
 
 libraryCreate :: LibraryCreate.Update -> RPC Context SessionST ()

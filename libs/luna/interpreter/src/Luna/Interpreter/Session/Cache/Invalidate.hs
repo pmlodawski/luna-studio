@@ -40,6 +40,7 @@ logger = getLoggerIO "Luna.Interpreter.Session.Cache.Invalidate"
 
 modifyAll :: Session ()
 modifyAll = do
+    logger info $ "Mark modified: everything"
     modifyMatching $ const . const True
     libIDs <- LibManager.nodes <$> Session.getLibManager
     mapM_ (flip Session.addReload Reload.ReloadLibrary) libIDs
