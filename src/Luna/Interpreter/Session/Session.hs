@@ -117,7 +117,7 @@ location = "<target ghc-hs interactive>"
 runStmt :: String -> Session ()
 runStmt stmt = do
     logger trace stmt
-    result <- lift2 $ I.runGhc $ GHC.runStmtWithLocation location 0 stmt GHC.RunToCompletion
+    result <- lift2 $ I.runGhc $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
     case result of
         GHC.RunOk _         -> return ()
         GHC.RunException ex -> left $ show ex
@@ -127,7 +127,7 @@ runStmt stmt = do
 runDecls :: String -> Session ()
 runDecls decls = do
     logger trace decls
-    void $ lift2 $ I.runGhc $ GHC.runDeclsWithLocation location 0 decls
+    void $ lift2 $ I.runGhc $ GHC.runDeclsWithLocation location 1 decls
 
 
 
