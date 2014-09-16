@@ -7,15 +7,18 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Luna.Interpreter.Session.TargetHS.TargetHS where
 
+import qualified Data.Map as Map
+import qualified Data.Set as Set
 import qualified DynFlags as GHC
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude                             hiding (perform)
 import           Flowbox.System.Log.Logger
-import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
+import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Interpreter.Session.TargetHS.Generator as Generator
 import qualified Luna.Interpreter.Session.TargetHS.Instances as Instances
+import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
 
 
 
@@ -60,4 +63,17 @@ reloadFunctions = Instances.clean
 reloadClass :: DefPoint -> Session ()
 reloadClass defPoint = Instances.clean
                     >> Generator.genClass defPoint >>= runDecls
-                    >> Generator.genFunctions      >>= runDecls
+
+
+reload :: Session ()
+reload = do
+    reloads <- Session.getReloads
+    logger debug $ "Reloading: " ++ show reloads
+    let perform (libID, Reload.ReloadClasses items) =
+            mapM_ (reloadClass . DefPoint libID . view Reload.breadcrumbs) (Set.toList items) >> reloadFunctions
+        perform (libID, Reload.ReloadFunctions  ) = reloadFunctions
+        perform (libID, Reload.ReloadLibrary    ) = reloadAll
+        perform (libID, Reload.NoReload         ) = return ()
+    mapM_ perform $ Map.toList reloads
+    Session.cleanReloads
+
