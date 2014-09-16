@@ -55,7 +55,7 @@ genFunctions = do
     --let ast = emptyModule & Module.methods .~ [expr]
     mainPtr <- Session.getMainPtr
     ast     <- Session.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
-    genCode ( List.filter (not . List.isPrefixOf "data ")
+    genCode ( List.filter (not . (\a -> List.isPrefixOf "data " a || List.isPrefixOf "$(generateFieldAccessors" a))
              . dropWhile   (not . (== "-- Other data types"))
             --dropWhile   (not . (== "-- ====== Method: Vector.test ====== --"))
 
