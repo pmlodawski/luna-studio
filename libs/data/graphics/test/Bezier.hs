@@ -47,7 +47,7 @@ main = do
         p3 = Point2 1 1 :: Point2 Double
         p4 = Point2 1 0 :: Point2 Double
         curve = CubicBezier p1 p2 p3 p4
-        solve x = A.unit $ Cubic.findYforX 10 0.01 (A.lift curve) x
+        solve x = A.unit $ Cubic.getValueAtX 10 0.01 (A.lift curve) x
 
     print $ run $ solve 0
     print $ run $ solve 0.01
