@@ -69,7 +69,7 @@ clamp (Range thresholdLo thresholdHi) clampTo v = (v A.<* thresholdLo A.?) $ cas
 clamp' :: (Elt t, IsScalar t) => Exp t -> Exp t -> Exp t -> Exp t
 clamp' low high val = (val A.>* high) A.? (high, (val A.<* low) A.? (low, val))
 
-mix :: (Elt a, IsNum a) => Exp a -> Exp a -> Exp a -> Exp a
+mix :: Num a => a -> a -> a -> a
 mix amount oldValue newValue = invert amount * oldValue + amount * newValue
 
 

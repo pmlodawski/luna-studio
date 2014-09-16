@@ -1,3 +1,10 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances      #-}
 
@@ -25,7 +32,7 @@ boundedIndex2D :: (Boundable a b c, Integral b) => A.Boundary c -> a -> Point2 b
 boundedIndex2D b obj (Point2 x y) = case b of
     A.Clamp      -> getter $ Point2 ((x `min` (width - 1)) `max` 0) ((y `min` (height - 1)) `max` 0) 
     A.Wrap       -> getter $ Point2 (x `mod` width) (y `mod` height) 
-    A.Mirror     -> getter $ Point2 0 0 -- TODO [KL]
-    A.Constant a -> a
+    A.Mirror     -> error "Not implemented yet" -- TODO [KL]
+    A.Constant a -> error "Not implemented yet"
     where Grid width height = bounduary obj
           getter            = unsafeIndex2D obj
