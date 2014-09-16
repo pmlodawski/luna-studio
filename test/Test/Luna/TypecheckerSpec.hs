@@ -1,14 +1,14 @@
 module Test.Luna.TypecheckerSpec (spec) where
 
-import Luna.Typechecker.Internal.AST.Kind      (Kind(..))
-import Luna.Typechecker.Internal.AST.Lit       (Lit(..))
-import Luna.Typechecker.Internal.AST.Pat       (Pat(..))
-import Luna.Typechecker.Internal.AST.Scheme    (Scheme(..),toScheme)
-import Luna.Typechecker.Internal.AST.Type      (Type(..),fn,tInteger,list,tBool,tInt,tChar)
+import Luna.Typechecker.AST.Kind      (Kind(..))
+import Luna.Typechecker.AST.Lit       (Lit(..))
+import Luna.Typechecker.AST.Pat       (Pat(..))
+import Luna.Typechecker.AST.Scheme    (Scheme(..),toScheme)
+import Luna.Typechecker.AST.Type      (Type(..),fn,tInteger,list,tBool,tInt,tChar)
 
-import Luna.Typechecker.Internal.Assumptions   (Assump(..))
-import Luna.Typechecker.Internal.BindingGroups (Expr(..))
-import Luna.Typechecker.Internal.Typeclasses   (Qual(..), Pred(..), initialEnv, addClass, addInst, (<:>))
+import Luna.Typechecker.Assumptions   (Assump(..))
+import Luna.Typechecker.BindingGroups (Expr(..))
+import Luna.Typechecker.Typeclasses   (Qual(..), Pred(..), initialEnv, addClass, addInst, (<:>))
 import Luna.Typechecker                        (tiProgram)
 
 import Test.Hspec
