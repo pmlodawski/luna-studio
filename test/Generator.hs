@@ -297,7 +297,7 @@ crosstalkTest = do
         one = LinearGenerator $ const 1
         zero = LinearGenerator $ const 0
         id' = LinearGenerator $ id
-        foo = LinearGenerator $ findYforX 20 0.00001 (A.lift $ CubicBezier (Point2 0 (0::A.Exp Float)) (Point2 0.25 1.2) (Point2 0.75 1.2) (Point2 1 0))
+        foo = LinearGenerator $ getValueAtX 20 0.00001 (A.lift $ CubicBezier (Point2 0 (0::A.Exp Float)) (Point2 0.25 1.2) (Point2 0.75 1.2) (Point2 1 0))
 
         (newR, newG, newB) = crosstalk foo id' id' zero zero zero zero zero zero r' g' b'
     print "foo"
