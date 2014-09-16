@@ -1,12 +1,12 @@
 module Luna.Typechecker where
 
-import Luna.Typechecker.Internal.Ambiguity        (defaultSubst)
-import Luna.Typechecker.Internal.Assumptions      (Assump)
-import Luna.Typechecker.Internal.BindingGroups    (BindGroup,tiSeq,tiBindGroup)
-import Luna.Typechecker.Internal.ContextReduction (reduce)
-import Luna.Typechecker.Internal.Substitutions    (Types(..),(@@))
-import Luna.Typechecker.Internal.TIMonad          (runTI,getSubst)
-import Luna.Typechecker.Internal.Typeclasses      (ClassEnv)
+import Luna.Typechecker.Ambiguity        (defaultSubst)
+import Luna.Typechecker.Assumptions      (Assump)
+import Luna.Typechecker.BindingGroups    (BindGroup,tiSeq,tiBindGroup)
+import Luna.Typechecker.ContextReduction (reduce)
+import Luna.Typechecker.Substitutions    (Types(..),(@@))
+import Luna.Typechecker.TIMonad          (runTI,getSubst)
+import Luna.Typechecker.Typeclasses      (ClassEnv)
 
 
 type Program = [BindGroup]
