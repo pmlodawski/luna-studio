@@ -125,7 +125,7 @@ interpret :: Prefix
 interpret prefix crlRef = forever $ do
     (message, crl) <- Pipes.await
     liftIO $ IORef.writeIORef crlRef crl
-    results <- lift $ Processor.processLifted (handlerMap prefix) message
+    results <- lift $ Processor.process (handlerMap prefix) message
     let send []    = return ()
         send [r]   = Pipes.yield (r, crl, Flag.Enable)
         send (r:t) = Pipes.yield (r, crl, Flag.Disable) >> send t

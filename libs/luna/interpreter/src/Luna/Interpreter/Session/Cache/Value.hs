@@ -61,11 +61,11 @@ getWithStatus callPointPath = do
                 returnNothing status = return (status, Nothing)
 
             case (cacheInfo ^. CacheInfo.status, allReady) of
-                (Status.Ready,     True) -> returnBytes   Ready
-                (Status.Ready,    False) -> returnBytes   Unknown
-                (Status.Modified,     _) -> returnBytes   Modified
-                (Status.Affected,     _) -> returnBytes   Modified
-                (Status.NonCacheable, _) -> returnNothing NonCacheable
+                (Status.Ready,        True ) -> returnBytes   Ready
+                (Status.Ready,        False) -> returnBytes   Unknown
+                (Status.Modified,     _    ) -> returnBytes   Modified
+                (Status.Affected,     _    ) -> returnBytes   Modified
+                (Status.NonCacheable, _    ) -> returnNothing NonCacheable
 
 
 
