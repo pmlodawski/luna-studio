@@ -5,17 +5,25 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE PolyKinds #-}
 
-module Luna.Target.HS.Data.Func.Func where
+{-# LANGUAGE DeriveDataTypeable #-}
+!{-# LANGUAGE RightSideContexts #-}
 
-import Luna.Target.HS.Data.Struct
+module Luna.Target.HS.Data.Func.Lam where
+
+import Luna.Target.HS.Data.Func.App
+import Data.Typeable
+import Luna.Target.HS.Control.Flow.Env
 
 ----------------------------------------------------------------------------------
--- Type classes
+-- Data types
 ----------------------------------------------------------------------------------
 
-class Func (base :: k) name args out | base name args -> out where
-    getFunc :: Mem base name -> args -> (args -> out)
+data Lam lam = Lam lam deriving (Typeable)
 
+
+----------------------------------------------------------------------------------
+-- Utils
+----------------------------------------------------------------------------------
+
+mkLam lam args = valS $ AppH (Lam lam, args)

@@ -11,6 +11,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE CPP #-}
 
 module Luna.Target.HS.Control.Context.Env where
@@ -32,7 +33,7 @@ data Pure a = Pure a deriving (Eq, Ord, Typeable, Generic)
 
 newtype IOS s a = IOS (IO (s a)) deriving (Show)
 
-newtype PureS s a = PureS (Pure (s a)) deriving (Typeable)
+newtype PureS s a = PureS (Pure (s a)) deriving (Typeable, Functor)
 
 fromPure (Pure a) = a
 fromPureS (PureS a) = a
@@ -70,6 +71,8 @@ type family EnvMerge a b where
 type family EnvMerge2 a b where
   EnvMerge2 PureS PureS = PureS
   EnvMerge2 a    b      = IOS
+
+
 
 type family GetEnv t where
     GetEnv Pure  = Pure

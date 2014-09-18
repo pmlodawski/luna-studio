@@ -20,6 +20,9 @@ import Luna.Target.HS hiding ((>>=), (>>), fail, return)
 
 import qualified Prelude
 import Control.PolyApplicative
+import Control.PolyApplicative.App
+import Control.PolyMonad
+import Data.TupleList
 
 --bindEnv2 a f = bindEnv a (inferTypeBase . f)
 --bindEnv2_ a b = bindEnv2 a (\_ -> b)
@@ -35,57 +38,15 @@ type P = Proxy
 (~::) = ofType
 
 
-print2 = autoLift1 print
+--print2 = autoLift1 print
+
+print_DBG val = ValueS $ fmap Safe $ print val
 
 
-(>>=)  = polyBind3Env
-(>>)   = polyBind3Env_
+(>>=)  = polyBind5'
+(>>)   = polyBind5'_
 fail _ = undefined
 return = Prelude.return
-
--------------------------------------------------------------------------------
-
---class Vector a:
---    x,y,z :: a = 0
---    def foo a b=0: a+b
---    def bar a b: (a,b)
---    def baz x: runState @x
---    def fstate:
---        x = get
---        put (x+1)
-
-data Cls_ModuleVector = Cls_ModuleVector deriving (Show, Eq, Typeable)
-data ModuleVector = ModuleVector deriving (Show, Eq, Typeable)
-memSig_Cls_ModuleVector_ModuleVector = (mkArg :: NParam "self") // ()
-memDef_Cls_ModuleVector_ModuleVector = liftCons0 ModuleVector
-registerMethod ''Cls_ModuleVector "ModuleVector"
-
-cons_ModuleVector = member (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
-
-
-
----
-data Cls_Vector = Cls_Vector deriving (Show, Eq, Typeable)
-data Vector a = Vector a a a deriving (Show, Eq, Typeable)
-generateFieldAccessors 'Vector [Just "x", Just "y", Just "z"]
-
-memSig_Cls_Vector_Vector = (mkArg :: NParam "self") // (mkArg (val (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (val 0) :: NDParam "y" (Value Pure(Safe Int))) // (mkArg (val 0) :: NDParam "z" (Value Pure(Safe Int))) // ()
-memDef_Cls_Vector_Vector = liftCons3 Vector
-registerMethod ''Cls_Vector "Vector"
-
-cons_Vector = member (Proxy::Proxy "Vector") (val Cls_Vector)
-
-memDef_Cls_Vector_Vector2 x y z = do
-    Value2(PureS(Pure sx)) <- x
-    Value2(PureS(Pure sy)) <- y
-    Value2(PureS(Pure sz)) <- z
-    Value2 $ PureS $ Pure $ Safe Vector <<*>> sx <<*>> sy <<*>> sz
-
-memDef_Cls_Vector_Vector2' x y z = do
-    Value2 x' <- x
-    Value2 y' <- y
-    Value2 z' <- z
-    Value2 $ packCtxS $ fromValue $ liftF3 Vector (Value $ unpackCtxS x') (Value $ unpackCtxS y') (Value $ unpackCtxS z')
 
 class UnpackCtxS ctx m | ctx -> m where
     unpackCtxS :: ctx s a -> m (s a)
@@ -106,6 +67,106 @@ instance PackCtxS Pure PureS where
 
 instance PackCtxS IO IOS where
     packCtxS = IOS
+
+
+
+liftF0' f = valS f
+liftF1' f t1 = do
+    t1' <- t1
+    valS f <<*>> t1
+
+liftF2' f t1 t2 = do
+    t1' <- t1
+    t2' <- t2
+    valS f <<*>> t1 <<*>> t2
+
+
+liftF3' f t1 t2 t3 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    valS f <<*>> t1 <<*>> t2 <<*>> t3
+
+
+liftF4' f t1 t2 t3 t4 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    valS f <<*>> t1 <<*>> t2 <<*>> t3 <<*>> t4
+
+liftF5' f t1 t2 t3 t4 t5 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    t5' <- t5
+    valS f <<*>> t1 <<*>> t2 <<*>> t3 <<*>> t4 <<*>> t5
+
+
+liftCons0' = curryTuple1 . const . liftF0'
+liftCons1' = curryTuple2 . const . liftF1'
+liftCons2' = curryTuple3 . const . liftF2'
+liftCons3' = curryTuple4 . const . liftF3'
+liftCons4' = curryTuple5 . const . liftF4'
+liftCons5' = curryTuple6 . const . liftF5'
+
+-------------------------------------------------------------------------------
+
+--class Vector a:
+--    x,y,z :: a = 0
+--    def foo a b=0: a+b
+--    def bar a b: (a,b)
+--    def baz x: runState @x
+--    def fstate:
+--        x = get
+--        put (x+1)
+
+data Cls_ModuleVector = Cls_ModuleVector deriving (Show, Eq, Typeable)
+data ModuleVector = ModuleVector deriving (Show, Eq, Typeable)
+memSig_Cls_ModuleVector_ModuleVector = (mkArg :: NParam "self") // ()
+memDef_Cls_ModuleVector_ModuleVector (self, ()) = valS ModuleVector --liftCons0 ModuleVector
+registerMethod ''Cls_ModuleVector "ModuleVector"
+
+cons_ModuleVector = member (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
+
+cons_ModuleVector2 = member2 (Proxy::Proxy "ModuleVector") (valS Cls_ModuleVector)
+
+
+
+---
+data Cls_Vector = Cls_Vector deriving (Show, Eq, Typeable)
+data Vector a = Vector a a a deriving (Show, Eq, Typeable)
+generateFieldAccessors 'Vector [Just "x", Just "y", Just "z"]
+
+memSig_Cls_Vector_Vector = (mkArg :: NParam "self") // (mkArg (valS (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (valS 0) :: NDParam "y" (ValueS Pure Safe Int)) // (mkArg (valS 0) :: NDParam "z" (ValueS Pure Safe Int)) // ()
+memDef_Cls_Vector_Vector = liftCons3' Vector
+
+
+
+memDef_Cls_Vector_Vector2 (self, (x, (y, (z, ())))) = polyJoin $ valS (\a b c -> valS Vector `appBind5` a `appBind5` b `appBind5` c) <<*>> x <<*>> y <<*>> z
+
+registerMethod ''Cls_Vector "Vector"
+
+cons_Vector = member2 (Proxy::Proxy "Vector") (valS Cls_Vector)
+
+
+
+--liftF0' = ValueS . Pure . Safe
+
+
+--liftF1' f a = do
+--    a' <- a
+
+
+--memDef_Cls_Vector_Vector2 x y z = do
+--    Value2(PureS(Pure sx)) <- x
+--    Value2(PureS(Pure sy)) <- y
+--    Value2(PureS(Pure sz)) <- z
+--    Value2 $ PureS $ Pure $ Safe Vector <<*>> sx <<*>> sy <<*>> sz
+
+
+
 
 ---
 
@@ -154,7 +215,7 @@ instance PackCtxS IO IOS where
 
 -----
 memSig_Vector_x = (mkArg :: NParam "self") // ()
-memDef_Vector_x (self,()) = liftF1 fieldGetter_Vector_Vector_x self
+memDef_Vector_x (self,()) = liftF1' fieldGetter_Vector_Vector_x self
 registerMethod ''Vector "x"
 
 --instance ( PolyApplicative (Value Pure) m2 m3, PolyApplicative Safe m1 m4,
@@ -168,7 +229,7 @@ registerMethod ''Vector "x"
 
 -----
 memSig_Vector_x_setter = (mkArg :: NParam "self") // (mkArg :: NParam "x") // ()
-memDef_Vector_x_setter (self,(a,())) = liftF2 fieldSetter_Vector_Vector_x a self
+memDef_Vector_x_setter (self,(a,())) = liftF2' fieldSetter_Vector_Vector_x a self
 registerMethod ''Vector "x_setter"
 
 --instance ( PolyApplicative (Value Pure) m5 m1, PolyApplicative Safe m8 m4,
@@ -183,7 +244,7 @@ registerMethod ''Vector "x_setter"
 
 ---
 memSig_Vector_bar = (mkArg :: NParam "self") // (mkArg :: NParam "a") // (mkArg :: NParam "b") // ()
-memDef_Vector_bar (self,(a,(b,()))) = val (a, b)
+memDef_Vector_bar (self,(a,(b,()))) = valS (a, b)
 registerMethod ''Vector "bar"
 
 --instance (args~(t, (t1, (t2, ()))), out~Value Pure (Safe (t1, t2)))
@@ -196,7 +257,7 @@ registerMethod ''Vector "bar"
 
 ---
 memSig_Vector_foo = (mkArg :: NParam "self") // (mkArg :: NParam "a") // (mkArg (val 0) :: NDParam "b" (Value Pure (Safe Int))) // ()
-memDef_Vector_foo (self,(a,(b,()))) = (liftF2 (+)) a b
+memDef_Vector_foo (self,(a,(b,()))) = liftF2' (+) a b
 registerMethod ''Vector "foo"
 
 --instance (PolyApplicative (Value Pure) m5 m1, PolyApplicative Safe m8 m4, PolyApplicative m4 m6 m7, PolyApplicative m1 m2 m3, Num b, args~(t, (m5 (m8 b), (m2 (m6 b), ()))), out~(m3 (m7 b)))
@@ -208,9 +269,9 @@ registerMethod ''Vector "foo"
 
 
 ---
-    --memSig_Vector_baz = (mkArg :: NParam "self") // (mkArg :: NParam "a") // ()
-    --memDef_Vector_baz (self,(a,())) = flip runStateTX (val 0) a
-    --registerMethod ''Vector "baz"
+memSig_Vector_baz = (mkArg :: NParam "self") // (mkArg :: NParam "a") // ()
+memDef_Vector_baz (self,(a,())) = flip runStateT3X (valS 0) a
+registerMethod ''Vector "baz"
 
 --instance (AppMonadCtx a (Req (Proxy StateT) (MonadCtx env set (StateT (Value Pure (Safe a2)) mb)) a1), Functor mb,
 --          MatchMonadCloseProto (IsEmpty (Remove (Proxy StateT) set)) (MonadCtx env (Remove (Proxy StateT) set) mb) t1, Num a2,
@@ -222,10 +283,56 @@ registerMethod ''Vector "foo"
 --instance HasProp "baz" Vector (NParam "self", (NParam "a", ())) where
 --    memSig _ = memSig_Vector_baz
 
+testX1 :: m a -> b -> X1 m b
+testX1 = undefined
 
 tst = do
-    val2 0
-    val2 5
+    x <- get5X
+    put5X x
+    valS 6
+
+
+tst2 = do
+    t1' <- valS 0
+    t1'
+
+
+--id :: a -> a
+
+--get5X :: MonadState4 val m Safe => MonadCtx2 (ValueS Pure) (Insert (Proxy StateT3) Empty) m Safe val
+
+--class PolyMonad5 m1 m2 m3 | m1 m2 -> m3 where
+--    polyBind5 :: m1 a -> (X1 m1 a -> m2 c) -> m3 c
+
+--type family X1 m a where
+--    X1 (MonadCtx2 env1 set1 m1 s1)          a = a
+--    X1 (ValueS m s)                         a = (ValueS Pure s a)
+--    X1 (MonadCtx2Dummy env set m2 s2 m1 s1) a = (ValueS m2 s2 a)
+
+
+--polyBind5 :: MonadCtx2 (ValueS Pure) (Insert (Proxy StateT3) Empty) m Safe (m2 c) -> (m2 c -> m2 c) -> m3 c <= MonadState4 (m2 c) m Safe
+
+
+--tst3 = get5X `polyBind5` id - czemu to sie nie kompiluje?
+--tst3 = (valS 0) `polyBind5` id - a to tak
+--i analogicznie: runMonad2 ... $ liftF2' (+) get5X (valS 0)
+--tst3 = get5X `polyBind5'` id - to tez sie nie kompiluje (tam jest prim). Co oznacza ze type family jest ok. 
+
+--class PolyMonad5 m1 m2 m3 | m1 m2 -> m3 where
+--    polyBind5 :: m1 a -> (X1 m1 a -> m2 c) -> m3 c
+
+--    polyBind5 :: m1 a -> (m2 c -> m2 c) -> m3 c
+
+--polyBind5 :: m1 (m2 c) -> (m2 c -> m2 c) -> m3 c
+
+
+
+    --let x :: Int
+    --    x = t1'
+    ----t2' <- valS 6
+    --valS 0
+    --valS (+) <<*>> t1' <<*>> t2'
+
 ---
     --memSig_Vector_fstate = (mkArg :: NParam "self") // ()
     --memDef_Vector_fstate (self,()) = do
@@ -275,7 +382,7 @@ tst = do
 
 
 
-    --v = call $ appNext (val 2) $ appNext (val 2) $ appNext (val 2) $ cons_Vector
+v = call2 $ appByName2 (Proxy :: Proxy "z") (valS 3) $ appNext2 (valS 2) $ appNext2 (valS 1) $ cons_Vector
     --a1 = call $ appNext (val 1) $ appNext (val 2) $ member (Proxy::Proxy "foo") v
 
 
@@ -286,44 +393,44 @@ mymain (self,()) = do
 --    --call $ member (Proxy::Proxy "main") mod
 
 
---    v2 <- call $ appByName (Proxy :: Proxy "z") (val 3) $ appNext (val 2) $ appNext (val 1) $ member (Proxy::Proxy "Vector") (val Cls_Vector)
+    v2 <- call2 $ appByName2 (Proxy :: Proxy "z") (valS 3) $ appNext2 (valS 2) $ appNext2 (valS 1) $ member2 (Proxy::Proxy "Vector") (valS Cls_Vector)
 
---    let lam1 = mkLam (\x -> v2) ((mkArg :: NParam "self") // ())
+    let lam1 = mkLam (\x -> v2) ((mkArg :: NParam "self") // ())
 
---    print2 $ call $ appNext (val 1) lam1
+    print_DBG $ call2 $ appNext2 (valS 1) lam1
 
---    print2 v2
+    print_DBG v2
 
---    print2 $ call $ appNext (val 1) $ appNext (val 2) $ member (Proxy::Proxy "foo") v2
---    print2 $ call $ appByName (Proxy::Proxy "b") (val 1) $ appNext (val 2) $ member (Proxy::Proxy "foo") v2
+    print_DBG $ call2 $ appNext2 (valS 1) $ appNext2 (valS 2) $ member2 (Proxy::Proxy "foo") v2
+    print_DBG $ call2 $ appByName2 (Proxy::Proxy "b") (valS 1) $ appNext2 (valS 2) $ member2 (Proxy::Proxy "foo") v2
 
---    print2 $ call $ appNext (val 2) $ appNext (val 1) $ member (Proxy::Proxy "bar") v2
---    print2 (val "---")
+    print_DBG $ call2 $ appNext2 (valS 2) $ appNext2 (valS 1) $ member2 (Proxy::Proxy "bar") v2
+    print_DBG (valS "---")
 
 
---    --print2 $ call $ appNext (getX) $ member (Proxy :: Proxy "baz") v2
---    --print2 $ call $ appNext (val 5) $ member (Proxy :: Proxy "baz") v2
+    print_DBG $ call2 $ appNext2 (get5X) $ member2 (Proxy :: Proxy "baz") v2
+    print_DBG $ call2 $ appNext2 (valS 5) $ member2 (Proxy :: Proxy "baz") v2
 
 
 --    --print2 $ flip runStateTX (val 0) $ call $ member (Proxy :: Proxy "fstate") v2
 
---    -- properties
---    print2 $ call $ member (Proxy::Proxy "x") v2
---    print2 $ call $ appNext (val 5) $ member (Proxy::Proxy "x_setter") v2
+    -- properties
+    print_DBG $ call2 $ member2 (Proxy::Proxy "x") v2
+    print_DBG $ call2 $ appNext2 (valS 5) $ member2 (Proxy::Proxy "x_setter") v2
 
 ----    --print'2 tst
 --    print2 $ val "end"
 --    print2 tstErr
 --    print2 $ val "end2"
-    val2 5
+    valS 5
 
 
-    --memSig_ModuleVector_main = (mkArg :: NParam "self") // ()
-    --memDef_ModuleVector_main = mymain
-    --registerMethod ''ModuleVector "main"
+memSig_ModuleVector_main = (mkArg :: NParam "self") // ()
+memDef_ModuleVector_main = mymain
+registerMethod ''ModuleVector "main"
 
 
-    --main = mainMaker cons_ModuleVector
+main = mainMaker2 cons_ModuleVector2
 
 
 

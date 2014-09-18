@@ -39,8 +39,6 @@ import Type.BaseType
 
 data Mem obj (name :: Symbol) = Mem (Proxy obj) (Proxy name) deriving (Typeable)
 
-data Lam lam = Lam lam deriving (Typeable)
-
 instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name, Typeable name) where
     show = show . typeOf
 
@@ -72,3 +70,19 @@ getMem name obj = val $ appH ptr (memSig ptr) where
 
 member :: Proxy name -> m (s a) -> Value Pure (Safe (AppH (Mem obj name) args)) <= (HasMem name obj args1, BaseType (Proxy a) (Proxy obj), AppArgByName "self" (m (s a)) args1 args)
 member name obj = appByName (Proxy::Proxy "self") obj $ getMem name $ obj
+
+---
+
+objPtr2 :: m base s a -> out <= (BaseType (Proxy a) out, out~Proxy b)
+objPtr2 el = Proxy
+
+memPtr2 :: Proxy name -> m base s a -> Mem obj name <= BaseType (Proxy a) (Proxy obj)
+memPtr2 name obj = Mem (objPtr2 obj) name
+
+--getMem2 :: Proxy name -> m (s a) -> Value Pure (Safe (AppH (Mem obj name) args)) <= (HasMem name obj args, BaseType (Proxy a) (Proxy obj))     
+getMem2 name obj = valS $ appH ptr (memSig ptr) where
+    ptr = memPtr2 name obj
+
+member2 :: Proxy (name :: Symbol) -> m base s a -> ValueS Pure Safe (AppH (Mem obj name) args) <= (HasMem name obj args1, AppArgByName "self" (m base s a) args1 args, Type.BaseType.BaseType (Proxy a) (Proxy obj))
+member2 name obj = appByName2 (Proxy::Proxy "self") obj $ getMem2 name $ obj
+

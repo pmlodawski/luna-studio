@@ -13,18 +13,20 @@
 {-# LANGUAGE OverlappingInstances #-}
 --{-# LANGUAGE IncoherentInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE DysfunctionalDependencies #-}
+--{-# LANGUAGE DysfunctionalDependencies #-}
 !{-# LANGUAGE RightSideContexts #-}
 
 
 module Luna.Target.HS.Host.Lift where
 
 import Control.PolyApplicative.App 
+import Control.PolyApplicative
 import Luna.Target.HS.Control.Context
 import Luna.Target.HS.Control.Error.Data
 import Control.Monad.Shuffle
 import Control.Category.Dot
 import Data.TupleList
+import Luna.Target.HS.Control.Flow.Env
 
 ------------------------------------------------------------------------
 -- Type classes
@@ -53,6 +55,18 @@ liftEnv8 = app8 . Value . Pure
 liftEnv9 = app9 . Value . Pure
 
 
+liftEnv0' = ValueS . Pure
+liftEnv1' = app1 . ValueS . Pure
+liftEnv2' = app2 . ValueS . Pure
+liftEnv3' = app3 . ValueS . Pure
+liftEnv4' = app4 . ValueS . Pure
+liftEnv5' = app5 . ValueS . Pure
+liftEnv6' = app6 . ValueS . Pure
+liftEnv7' = app7 . ValueS . Pure
+liftEnv8' = app8 . ValueS . Pure
+liftEnv9' = app9 . ValueS . Pure
+
+
 liftErr0 = Safe
 liftErr1 = app1 . Safe
 liftErr2 = app2 . Safe
@@ -65,6 +79,18 @@ liftErr8 = app8 . Safe
 liftErr9 = app9 . Safe
 
 
+liftErr0' = Safe
+liftErr1' = app1 . Safe
+liftErr2' = app2 . Safe
+liftErr3' = app3 . Safe
+liftErr4' = app4 . Safe
+liftErr5' = app5 . Safe
+liftErr6' = app6 . Safe
+liftErr7' = app7 . Safe
+liftErr8' = app8 . Safe
+liftErr9' = app9 . Safe
+
+
 liftF0 = liftEnv0 . liftErr0
 liftF1 = liftEnv1 . liftErr1
 liftF2 = liftEnv2 . liftErr2
@@ -74,6 +100,19 @@ liftF5 = liftEnv5 . liftErr5
 liftF6 = liftEnv6 . liftErr6
 liftF7 = liftEnv7 . liftErr7
 liftF8 = liftEnv8 . liftErr8
+
+
+
+
+--liftF0' = liftEnv0' . liftErr0'
+--liftF1' = liftEnv1' . liftErr1'
+--liftF2' = liftEnv2' . liftErr2'
+--liftF3' = liftEnv3' . liftErr3'
+--liftF4' = liftEnv4' . liftErr4'
+--liftF5' = liftEnv5' . liftErr5'
+--liftF6' = liftEnv6' . liftErr6'
+--liftF7' = liftEnv7' . liftErr7'
+--liftF8' = liftEnv8' . liftErr8'
 
 
 autoLift0 = (shuffleJoin . (fmap.fmap) autoEnvLift) `dot1` liftF0
@@ -93,6 +132,9 @@ liftCons5 = curryTuple6 . const . liftF5
 liftCons6 = curryTuple7 . const . liftF6
 liftCons7 = curryTuple8 . const . liftF7
 liftCons8 = curryTuple9 . const . liftF8
+
+
+
 
 -- FIXME [wd]: automate with TH
 

@@ -23,7 +23,7 @@
 
 !{-# LANGUAGE RightSideContexts #-}
 
-module Luna.Target.HS.Data.Func.App where
+module Luna.Target.HS.Data.Func.Call where
 
 import GHC.TypeLits
 import Data.Typeable (Typeable, Proxy)
@@ -31,49 +31,57 @@ import Data.Typeable (Typeable, Proxy)
 
 import Flowbox.Utils
 
+import Control.PolyMonad
 import Luna.Target.HS.Data.Func.Args
+import Luna.Target.HS.Data.Func.App
+import Luna.Target.HS.Data.Struct
+import Control.Monad.Shuffle
+import Luna.Target.HS.Data.Func.Func
+import Luna.Target.HS.Data.Func.Lam
 
 ----------------------------------------------------------------------------------
 -- Type classes
 ----------------------------------------------------------------------------------
 
---class AppNext val a b | val a -> b where
---    appNext :: val -> a -> b
+class MatchCallProto (allArgs :: Bool) obj out | allArgs obj -> out where
+    matchCallProto :: Proxy allArgs -> obj -> out
 
-----------------------------------------------------------------------------------
--- Data types
-----------------------------------------------------------------------------------
+class MatchCall obj out | obj -> out where
+    matchCall :: obj -> out
 
+class Call a b | a -> b where
+    call' :: a -> b
 
-newtype AppH fptr args = AppH (fptr, args) deriving (Show, Eq, Typeable)
-appH fptr args = AppH (fptr, args)
-
-fromAppH (AppH a) = a
-
---newtype LamH lam args = LamH (lam, args) deriving (Show, Eq, Typeable)
---lamH lam args = LamH (lam, args)
-
---fromLamH (LamH a) = a
 
 ----------------------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------------------
 
-appByName' name val (AppH (fptr, args)) = AppH (fptr, appArgByName name val args)
-appNext' val (AppH (fptr, args)) = AppH (fptr, appNextArg val args)
+instance Call (AppH (Mem (base :: k) name) args) out <= (Func base name argsout out, ReadArgs args argsout) where
+    call' (AppH(fptr, args)) = (getFunc fptr args') args' where
+        args' = readArgs args
 
-appByName name val = (fmap.fmap) $ appByName' name val
-appNext val = (fmap.fmap) $ appNext' val
+instance Call (AppH (Lam lam) args) out <= (lam~(argsout -> out), ReadArgs args argsout) where
+    call' (AppH(Lam lam, args)) = lam (readArgs args)
 
-appByName2 name val = fmap $ appByName' name val
-appNext2 val = fmap $ appNext' val
+curryByName = matchCall `dot3` appByName
+curryNext   = matchCall `dot2` appNext
 
---appByName' name val fptr = fmap (appArgByName name val) fptr
---appNext' val fptr = fmap (appNextArg val) fptr
+call = shuffleJoin . (fmap.fmap) call'
 
+call2 = polyJoin . fmap call'
 
---instance AppNext val (AppH fptr args) (AppH fptr argsout) <= (AppNextArg val args argsout) where
---    appNext val (AppH (fptr, args)) = AppH (fptr, appNextArg val args)
+----------------------------------------------------------------------------------
+-- Instances
+----------------------------------------------------------------------------------
 
---instance AppNext val (LamH lam args) (LamH lam argsout) <= (AppNextArg val args argsout) where
---    appNext val (LamH (lam, args)) = LamH (lam, appNextArg val args)
+instance MatchCallProto False a a where
+    matchCallProto _ = id
+
+instance MatchCallProto True (AppH (Mem base name) args) out <= (ReadArgs args margs, Func base name margs out) where
+    matchCallProto _ = call'
+
+---
+
+instance MatchCall (AppH fptr args) out <= (MatchCallProto flag (AppH fptr args) out, AllArgs args flag) where
+    matchCall = matchCallProto (undefined :: Proxy flag)

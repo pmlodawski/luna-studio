@@ -8,9 +8,11 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PolyKinds #-} -- needed by mainMaker
 
 module Luna.Target.HS.Host.Wrapper where
 
+import Control.Monad
 import Data.Typeable
 import Luna.Target.HS.Control
 import Luna.Target.HS.Data
@@ -18,7 +20,11 @@ import Luna.Target.HS.Host.Lift
 import Control.Monad.Shuffle
 
 
+checkVal = join . fmap printCheck . toIOEnv
+
 mainMaker modCons = toIOEnv $ fromValue $ call $ member (Proxy::Proxy "main") $ call modCons
+
+mainMaker2 modCons = checkVal $ fromValueS $ call2 $ member2 (Proxy::Proxy "main") $ call2 modCons
 
 
 rangeFromTo' a b = if a <= b then [a..b]

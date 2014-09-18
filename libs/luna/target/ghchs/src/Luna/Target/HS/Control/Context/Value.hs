@@ -17,6 +17,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TypeFamilies #-}
 !{-# LANGUAGE RightSideContexts #-}
 
 module Luna.Target.HS.Control.Context.Value where
@@ -36,10 +38,13 @@ import Control.Applicative
 
 newtype Value m v = Value (m v) deriving (Typeable)
 
-newtype Value2 m (s :: * -> *) v = Value2 (m s v) deriving (Show, Typeable)
+newtype Value2 m (s :: * -> *) v = Value2 (m s v) deriving (Show, Typeable, Functor)
+
+newtype ValueS m s v = ValueS (m (s v)) deriving (Show, Typeable, Functor)
 
 fromValue (Value a) = a
 fromValue2 (Value2 a) = a
+fromValueS (ValueS a) = a
 
 
 --------------------------------------------------------------------------------
@@ -48,6 +53,20 @@ fromValue2 (Value2 a) = a
 
 class LiftValue m mout where
     liftValue :: Value m a -> mout a
+
+
+class LiftValueS m t where
+    liftValueS :: Functor s => ValueS m s a -> t s a
+
+
+
+class LiftValueS' m s t where
+    liftValueS' :: m (s :: * -> *) a -> t m s a
+
+--liftValueS :: m s a -> t m s a
+--liftValueS :: ValueS m s a -> t m s a <- tak powinna wygladac ta sygnatura!!!
+--bo inaczej AppMonadCtx nie wnioskuje ze m jest pod monadem t!
+
 
 
 --------------------------------------------------------------------------------
@@ -88,3 +107,8 @@ instance LiftValue IO m <= MonadIO m where
 
 instance LiftValue Pure m <= Monad m where
     liftValue = return . fromPure . fromValue
+
+
+type family EnvMerge3 a b where
+  EnvMerge3 (ValueS Pure) (ValueS Pure) = (ValueS Pure)
+  EnvMerge3 a             b             = (ValueS IO)
