@@ -8,6 +8,7 @@ import Test.Luna.Typechecker.AST.TypeGen
 
 
 import Luna.Typechecker.Unification
+import Luna.Typechecker.Internal.Unification
 
 import Control.Exception                        (evaluate)
 import Control.Applicative                      ((<$>))
@@ -18,27 +19,28 @@ import Data.Either
 
 spec :: Spec
 spec = do
+  let 
+      tv0 = Tyvar "a1" Star
+      tt0 = TVar tv0
+      tv1 = Tyvar "b1" Star
+      tt1 = TVar tv1
+      tv2 = Tyvar "a2" Star
+      tt2 = TVar tv2
+      tv3 = Tyvar "b2" Star
+      tt3 = TVar tv3
+
+      cc0 = Tycon "A1" Star
+      ct0 = TCon cc0
+      cc1 = Tycon "B1" Star
+      ct1 = TCon cc1
+      --cc2 = Tycon "A2" Star
+      --ct2 = TCon cc2
+      cc3 = Tycon "B2" Star
+      ct3 = TCon cc3
+
   describe "mgu" $ do
     it "matches some simple `TAp`s" $ do 
-      let 
-          tv0 = Tyvar "a1" Star
-          tt0 = TVar tv0
-          tv1 = Tyvar "b1" Star
-          tt1 = TVar tv1
-          tv2 = Tyvar "a2" Star
-          tt2 = TVar tv2
-          tv3 = Tyvar "b2" Star
-          tt3 = TVar tv3
-
-          cc0 = Tycon "A1" Star
-          ct0 = TCon cc0
-          --cc1 = Tycon "B1" Star
-          --ct1 = TCon cc1
-          --cc2 = Tycon "A2" Star
-          --ct2 = TCon cc2
-          cc3 = Tycon "B2" Star
-          ct3 = TCon cc3
-
+      let -- | Forces evaluation to WHNF of `mgu`.
           test :: Type -> Type -> Either String Subst
           test t1 t2 = case mgu t1 t2 of
                          Left  x -> x `seq` Left  x
@@ -85,35 +87,16 @@ spec = do
           tc1 = TCon (Tycon "Bool" Star)
           tc2 = TCon (Tycon "Maybe" (Kfun Star Star))
           tg  = TGen 0
-      evaluate (mgu  t1  t2  :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (mgu tc1 tc2  :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (mgu tc1  t2  :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (mgu  t1 tc2  :: Either String Subst) `shouldThrow` anyErrorCall
+      evaluate (mgu  t1  t2 :: Either String Subst) `shouldThrow` anyErrorCall
+      evaluate (mgu tc1 tc2 :: Either String Subst) `shouldThrow` anyErrorCall
+      evaluate (mgu tc1  t2 :: Either String Subst) `shouldThrow` anyErrorCall
+      evaluate (mgu  t1 tc2 :: Either String Subst) `shouldThrow` anyErrorCall
       evaluate (mgu tg   t1 :: Either String Subst) `shouldThrow` anyErrorCall
       evaluate (mgu tg  tc1 :: Either String Subst) `shouldThrow` anyErrorCall
       evaluate (mgu (t1 `fn` t2 `fn` t1) tc2 :: Either String Subst) `shouldThrow` anyErrorCall
   describe "match" $ do
     it "matches some trivial `TAp`s" $ do
-      let 
-          tv0 = Tyvar "a1" Star
-          tt0 = TVar tv0
-          tv1 = Tyvar "b1" Star
-          tt1 = TVar tv1
-          tv2 = Tyvar "a2" Star
-          tt2 = TVar tv2
-          tv3 = Tyvar "b2" Star
-          tt3 = TVar tv3
-
-          cc0 = Tycon "A1" Star
-          ct0 = TCon cc0
-          cc1 = Tycon "B1" Star
-          ct1 = TCon cc1
-          --cc2 = Tycon "A2" Star
-          --ct2 = TCon cc2
-          --cc3 = Tycon "B2" Star
-          --ct3 = TCon cc3
-
-          test :: Type -> Type -> Either String Subst
+      let test :: Type -> Type -> Either String Subst
           test t1 t2 = case match t1 t2 of
                          Left  x -> x `seq` Left  x
                          Right x -> x `seq` Right x
@@ -153,7 +136,7 @@ spec = do
   describe "(internals)" $
     describe "varBind" $ do
       it "QC: ∀ (Tyvar tv): varBind tv (TVar tv) == nullSubst" $ property $
-        \tyvar -> (varBind tyvar (TVar tyvar) :: Either String Subst) `shouldBe` (Right nullSubst)
+        \tyvar -> (varBind tyvar (TVar tyvar) :: Either String Subst) `shouldBe` Right nullSubst
       it "QC: ∀ (Tyvar u, Type t): u `elem` tv t, u != tv t ===>  varBind u t == ⊥" $ property $
         forAll (genTypeNogen Star) $ \t ->
           let tvt = tv t

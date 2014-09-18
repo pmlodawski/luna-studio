@@ -1,4 +1,6 @@
-module Luna.Typechecker.TIMonad (TI(..), newTVar, freshInst, unify, getSubst, runTI, Instantiate(..)) where
+module Luna.Typechecker.TIMonad (
+    TI(..), newTVar, freshInst, unify, getSubst, runTI, Instantiate(..)
+  ) where
 
 import           Luna.Typechecker.AST.Kind         (Kind)
 import           Luna.Typechecker.AST.Scheme       (Scheme(..))

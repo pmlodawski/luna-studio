@@ -1,4 +1,6 @@
-module Luna.Typechecker.HasKind (HasKind(..)) where
+module Luna.Typechecker.HasKind (
+    HasKind(..)
+  ) where
 
 import           Luna.Typechecker.AST.Kind         (Kind(..))
 import           Luna.Typechecker.AST.Type         (Type(..), Tyvar(..), Tycon(..))

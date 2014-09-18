@@ -61,13 +61,13 @@ spec = do
           az' = map (flip Tyvar Star) vs'
           az'' = map (flip Tyvar Star) vs''
           --gs = foldr1 fn $ map TGen $ zipWith const [0..] vs
-          gs' = foldr1 fn $ ((map TGen $ zipWith const [0..] vs) ++ [TVar $ Tyvar "y" Star])
+          gs' = foldr1 fn (map TGen (zipWith const [0..] vs) ++ [TVar $ Tyvar "y" Star])
           ks = map (const Star) vs
           vs = ["a", "b", "c", "d", "e", "f"]
           vs' = ["z"] -- variable to quantify that does not exist
           vs'' = ["y"] -- the variable that is not quantified
        in forAll (permute az) $ \azPermuted ->
-            quantify (azPermuted++az') ([] :=> (foldr1 fn $ map TVar (azPermuted++az''))) `shouldBe` Forall ks ([] :=> gs')
+            quantify (azPermuted++az') ([] :=> foldr1 fn (map TVar (azPermuted++az''))) `shouldBe` Forall ks ([] :=> gs')
   describe "(coverage booster)" $
     it "instance Show Scheme" $ do
       let sch1 = Forall [] ([] :=> t)

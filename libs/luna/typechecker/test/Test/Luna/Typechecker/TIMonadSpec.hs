@@ -37,12 +37,12 @@ spec = do
     
     it "works for simple types [QC]" $ property $ 
       forAll (genTypeNogen Star) $ \t -> do
-        let qt = ([] :=> t)
+        let qt = [] :=> t
             x  = runTI $ freshInst (Forall [] qt)
         x `shouldBe` qt
 
     it "works with one predicate" $ do
-      let a  = (TVar $ Tyvar "a" Star)
+      let a  = TVar $ Tyvar "a" Star
           ps = [ IsIn "Integral" a ]
           qt = ps :=> (a `fn` a)
           x  = runTI $ freshInst (Forall [] qt)
@@ -72,4 +72,4 @@ spec = do
           forAll arbitrary        $ \c  ->
           forAll arbitrary        $ \k  ->
           forAll (genTypeNogen k) $ \t  ->
-            inst [] (IsIn c t) `shouldBe` (IsIn c t)
+            inst [] (IsIn c t) `shouldBe` IsIn c t

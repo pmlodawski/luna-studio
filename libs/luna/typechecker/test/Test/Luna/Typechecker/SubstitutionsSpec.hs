@@ -19,6 +19,10 @@ import           Data.Maybe                                 (fromJust, isJust)
 
 spec :: Spec
 spec = do
+  let a  = Ty.Tyvar "a" Knd.Star
+      b  = Ty.Tyvar "b" Knd.Star
+      c  = Ty.Tyvar "c" Knd.Star
+
   describe "nullSubst" $
     it "does not affect any type" $ property $
       \t -> apply nullSubst t == (t :: Ty.Type)
@@ -70,10 +74,7 @@ spec = do
         it "is" pending
       describe "tv :: t -> [Ty.Tyvar]" $
         it "returns variables, in left-to-right order, no duplicates" $ do
-          let a  = (Ty.Tyvar "a"  Knd.Star)
-              b  = (Ty.Tyvar "b"  Knd.Star)
-              c  = (Ty.Tyvar "c"  Knd.Star)
-              --d  = (Ty.Tyvar "d"  Knd.Star)
+          let --d  = (Ty.Tyvar "d"  Knd.Star)
               dot = (TVar b `fn` TVar c) `fn` (TVar a `fn` TVar b) `fn` (TVar a `fn` TVar c)
               dlr = (TVar a `fn` TVar b) `fn` TVar a `fn` TVar b
               --f  = (Ty.Tyvar "f"  (Knd.Kfun Knd.Star Knd.Star))
@@ -89,14 +90,5 @@ spec = do
         it "is" pending
       describe "tv :: t -> [Ty.Tyvar]" $
         it "returns variables, in left-to-right order, no duplicates" $ do
-          let a  = (Ty.Tyvar "a"  Knd.Star)
-              b  = (Ty.Tyvar "b"  Knd.Star)
-              c  = (Ty.Tyvar "c"  Knd.Star)
-              --d  = (Ty.Tyvar "d"  Knd.Star)
-              --dot = (TVar b `fn` TVar c) `fn` (TVar a `fn` TVar b) `fn` (TVar a `fn` TVar c)
-              --dlr = (TVar a `fn` TVar b) `fn` TVar a `fn` TVar b
-              --f  = (Ty.Tyvar "f"  (Knd.Kfun Knd.Star Knd.Star))
-              --m  = (Ty.Tyvar "m"  (Knd.Kfun Knd.Star Knd.Star))
-              --mt = (Ty.Tyvar "mt" (Knd.Kfun (Knd.Kfun (Knd.Kfun Knd.Star Knd.Star) Knd.Star) Knd.Star))
           tv [TVar a, TVar b, TVar c] `shouldBe` [a, b, c]
-          (tv $ subsequences [TVar a, TVar b, TVar c, TVar b]) `shouldBe` [a, b, c]
+          tv (subsequences [TVar a, TVar b, TVar c, TVar b]) `shouldBe` [a, b, c]

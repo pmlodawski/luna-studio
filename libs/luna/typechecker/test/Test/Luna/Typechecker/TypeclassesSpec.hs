@@ -7,6 +7,8 @@ import Luna.Typechecker.AST.Type
 import Test.Hspec
 import Control.Exception
 
+import Data.Maybe (isNothing)
+
 spec :: Spec
 spec = do
   describe "insts" $
@@ -20,31 +22,31 @@ spec = do
     it "checks if class was defined twice" $
       (     addClass "Eq" []
         <:> addClass "Eq" []
-      ) initialEnv `shouldBe` Nothing
+      ) initialEnv `shouldSatisfy` isNothing
     it "checks if class has a known superclass" $
       (     addClass "Eq" []
         <:> addClass "Ord" ["EqNOPE"]
-      ) initialEnv `shouldBe` Nothing
+      ) initialEnv `shouldSatisfy` isNothing
   describe "addInstance" $ do
     it "checks if instance is given for a known class" $
       (     addClass "Eq" []
         <:> addInst [] (IsIn "EqNOPE" tBool)
-      ) initialEnv `shouldBe` Nothing
+      ) initialEnv `shouldSatisfy` isNothing
     it "checks for overlapping instances (trivial)" $
       (     addClass "Eq" []
         <:> addInst [] (IsIn "Eq" tBool)
         <:> addInst [] (IsIn "Eq" tBool)
-      ) initialEnv `shouldBe` Nothing
+      ) initialEnv `shouldSatisfy` isNothing
     it "checks for overlapping instances (slightly non-trivial)" $
       (     addClass "Eq" []
         <:> addInst [IsIn "Eq" tBool]                   (IsIn "Eq" (list tBool))
         <:> addInst [IsIn "Eq" (TVar $ Tyvar "a" Star)] (IsIn "Eq" (list (TVar $ Tyvar "a" Star)))
-      ) initialEnv `shouldBe` Nothing
+      ) initialEnv `shouldSatisfy` isNothing
     it "checks for overlapping instances (another slightly non-trivial)" $ 
       (     addClass "Len" []
         <:> addInst [IsIn "Len" (TVar $ Tyvar "a" Star)] (IsIn "Len" (list (TVar $ Tyvar "a" Star)))
         <:> addInst [IsIn "Len" tInt]                    (IsIn "Len" (list tInt))
-      ) initialEnv `shouldBe` Nothing
+      ) initialEnv `shouldSatisfy` isNothing
   describe "byInst" $
     it "works" $ do
       let Just ce = (  addClass "Eq" []
@@ -80,9 +82,9 @@ spec = do
                    <:> addInst [] (IsIn "Functor"     tList)
                    <:> addInst [] (IsIn "Applicative" tList)
                     ) initialEnv
-          f = (TVar $ Tyvar "f" Star)
-          a = (TVar $ Tyvar "a" Star)
-          v = (TVar $ Tyvar "lel" Star)
+          f = TVar $ Tyvar "f" Star
+          a = TVar $ Tyvar "a" Star
+          v = TVar $ Tyvar "lel" Star
           --ps = [ IsIn "Functor" f
                --, IsIn "Ord"     a
                --]

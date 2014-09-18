@@ -1,4 +1,6 @@
-module Luna.Typechecker.TypeInference (Infer, split) where
+module Luna.Typechecker.TypeInference (
+    Infer, split
+  ) where
 
 import Luna.Typechecker.AST.Type         (Tyvar(..))
 

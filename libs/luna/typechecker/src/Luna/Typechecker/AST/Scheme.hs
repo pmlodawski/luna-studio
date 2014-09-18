@@ -1,4 +1,6 @@
-module Luna.Typechecker.AST.Scheme (Scheme(..), toScheme, quantify) where
+module Luna.Typechecker.AST.Scheme (
+    Scheme(..), toScheme, quantify
+  ) where
 
 import           Luna.Typechecker.AST.Kind         (Kind(..))
 import           Luna.Typechecker.AST.Type         (Tyvar(..),Type(..))

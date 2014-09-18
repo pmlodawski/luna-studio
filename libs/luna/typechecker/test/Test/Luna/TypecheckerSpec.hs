@@ -20,23 +20,23 @@ spec :: Spec
 spec = do
   describe "the typechecker interface for basic AST" $ do
     let 
-        alternatingF_BG = ( "f"
+        alternatingFBG = ( "f"
                           , toScheme (tInteger `fn` list tInteger)
                           , [ (  [PVar "x"]
-                              ,  ap [EConst (cons_BG^.asmp), Var "x", ap [Var "g", Var "x"]]
+                              ,  ap [EConst (consBG^.asmp), Var "x", ap [Var "g", Var "x"]]
                               )
                             ]
                           )
 
-        alternatingG_BG = ( "g"
+        alternatingGBG = ( "g"
                           , toScheme (tInteger `fn` list tInteger)
                           , [ (  [PVar "x"]
-                              ,  ap [EConst (cons_BG^.asmp), Var "x", ap [Var "f", ap [Var "decr", Var "x"]]]
+                              ,  ap [EConst (consBG^.asmp), Var "x", ap [Var "f", ap [Var "decr", Var "x"]]]
                               )
                             ]
                           )
 
-        badtest_BG      = ( "badtest"
+        badtestBG      = ( "badtest"
                           , Forall [Star] ([] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
                           , [ (  [PVar "x", PVar "y"]
                               ,  Let ([], [[("result", [([PWildcard], ap [Var "(==)", Var "x", Var "y"])])]]) (Var "result")
@@ -44,7 +44,7 @@ spec = do
                             ]
                           )
 
-        decr_BG         = ( "decr"
+        decrBG         = ( "decr"
                           , toScheme (tInteger `fn` tInteger)
                           , [ (  [ error "no pat for decr" ]
                               ,  error "no body for decr"
@@ -52,7 +52,7 @@ spec = do
                             ]
                           )
 
-        fulting_BG      = ( "fulting"
+        fultingBG      = ( "fulting"
                           , Forall [] ([] :=> (tInt `fn` tBool))
                           , [ (  [PVar "v"]
                               ,  ap [Var "(==)", Var "v", ap [Var "fromIntegral", ap [Var "(+)", Lit (LitIntegral 2), Lit (LitIntegral 3)]]]
@@ -60,108 +60,92 @@ spec = do
                             ]
                           )
 
-        mutualEX_BG     = ( "ff"
-                          , Forall [Star] ([IsIn "Eq"  (TGen 0)] :=> (TGen 0 `fn` tBool))
-                          , [ (  [PVar "x"]
-                              ,  ap [Var "(||)", ap [Var "(==)", Var "x", Var "x"], ap [Var "g", EConst ("True" :>: toScheme tBool)]]
-                              )
-                            ]
-                          )
-
-        mutualIM_BG     = ( "gg"
-                          , Forall [Star] ([IsIn "Eq"  (TGen 0)] :=> (TGen 0 `fn` tBool))
-                          , [ (  [PVar "x"]
-                              ,  ap [Var "(||)", ap [Var "(==)", Var "x", Var "x"], ap [Var "g", EConst ("True" :>: toScheme tBool)]]
-                              )
-                            ]
-                          )
-
     it "typechecks `const`" $ do
-      let def = ([ const_BG ] , [])
-      force (tiProgram initialEnv [] [def]) `shouldContain` [const_BG^.asmp]
+      let def = ([ constBG ] , [])
+      force (tiProgram initialEnv [] [def]) `shouldContain` [constBG^.asmp]
     
 
     it "infers type for `const`" $ do
-      let def = ([] , [[ const_BG^.impl ]] )
-      force (tiProgram initialEnv [] [def]) `shouldContain` [const_BG^.asmp]
+      let def = ([] , [[ constBG^.impl ]] )
+      force (tiProgram initialEnv [] [def]) `shouldContain` [constBG^.asmp]
     
 
     it "typechecks `gcd`" $ do
-      let def = ( [ gcd_BG ] , [] )
-      tiProgram initialEnv [mod_BG^.asmp] [def] `shouldContain` [gcd_BG^.asmp]
+      let def = ( [ gcdBG ] , [] )
+      tiProgram initialEnv [modBG^.asmp] [def] `shouldContain` [gcdBG^.asmp]
     
 
     it "infers type for `gcd`" $ do
-      let def = ( [] , [[ gcd_BG^.impl ]] )
-      tiProgram initialEnv [mod_BG^.asmp] [def] `shouldContain` [gcd_BG^.asmp]
+      let def = ( [] , [[ gcdBG^.impl ]] )
+      tiProgram initialEnv [modBG^.asmp] [def] `shouldContain` [gcdBG^.asmp]
     
 
     it "typechecks `foldr`" $ do
-      let def = ([foldr_BG], [])
+      let def = ([foldrBG], [])
           res = tiProgram initialEnv [] [def]
-      res `shouldContain` [foldr_BG^.asmp]
+      res `shouldContain` [foldrBG^.asmp]
     
 
     it "infers type for `foldr`" $ do
-      let def = ([], [[ foldr_BG^.impl ]] )
+      let def = ([], [[ foldrBG^.impl ]] )
           res = tiProgram initialEnv [] [def]
-      res `shouldContain` [foldr_BG^.asmp]
+      res `shouldContain` [foldrBG^.asmp]
     
 
     it "typechecks `and`" $ do
-      let def = ([and_BG], [])
-          res = tiProgram initialEnv [foldr_BG^.asmp, land_BG^.asmp] [def]
-      res `shouldContain` ["and" :>: (and_BG ^. scheme)]
+      let def = ([andBG], [])
+          res = tiProgram initialEnv [foldrBG^.asmp, landBG^.asmp] [def]
+      res `shouldContain` ["and" :>: (andBG ^. scheme)]
     
 
     it "infers type for `and`" $ do
-      let def = ([], [[ and_BG ^. impl ]])
-          res = tiProgram initialEnv [foldr_BG^.asmp, land_BG^.asmp] [def]
-      res `shouldContain` ["and" :>: (and_BG ^. scheme)]
+      let def = ([], [[ andBG ^. impl ]])
+          res = tiProgram initialEnv [foldrBG^.asmp, landBG^.asmp] [def]
+      res `shouldContain` ["and" :>: (andBG ^. scheme)]
     
 
     it "typechecks `foldr` & infers `and`" $ do
-      let defs = [ ([], [[ foldr_BG^.impl ]] )
-                 , ([], [[ and_BG ^. impl ]] )
+      let defs = [ ([], [[ foldrBG^.impl ]] )
+                 , ([], [[ andBG ^. impl ]] )
                  ]
-          res = tiProgram initialEnv [land_BG^.asmp] defs
-      res `shouldContain` [foldr_BG^.asmp]
-      res `shouldContain` [and_BG ^. asmp]
+          res = tiProgram initialEnv [landBG^.asmp] defs
+      res `shouldContain` [foldrBG^.asmp]
+      res `shouldContain` [andBG ^. asmp]
     
 
     it "typechecks mutually-recursive functions" $ do
-      let def = ( [ alternatingF_BG, alternatingG_BG ] , [])
-          res = tiProgram initialEnv [decr_BG^.asmp] [def]
-      res `shouldContain` [alternatingF_BG^.asmp]
-      res `shouldContain` [alternatingG_BG^.asmp]
+      let def = ( [ alternatingFBG, alternatingGBG ] , [])
+          res = tiProgram initialEnv [decrBG^.asmp] [def]
+      res `shouldContain` [alternatingFBG^.asmp]
+      res `shouldContain` [alternatingGBG^.asmp]
 
 
     it "infers types for mutually-recursive functions" $ do
-      let def = ( [], [[ alternatingF_BG^.impl, alternatingG_BG^.impl ]] )
-          res = tiProgram initialEnv [decr_BG^.asmp] [def]
-      res `shouldContain` [alternatingF_BG^.asmp]
-      res `shouldContain` [alternatingG_BG^.asmp]
+      let def = ( [], [[ alternatingFBG^.impl, alternatingGBG^.impl ]] )
+          res = tiProgram initialEnv [decrBG^.asmp] [def]
+      res `shouldContain` [alternatingFBG^.asmp]
+      res `shouldContain` [alternatingGBG^.asmp]
 
     it "signals too general explicit typing" $ do
-      let def = ( [badtest_BG], [] )
-          res = tiProgram initialEnv [eq_BG^.asmp] [def]
+      let def = ( [badtestBG], [] )
+          res = tiProgram initialEnv [eqBG^.asmp] [def]
       evaluate res `shouldThrow` anyErrorCall
 
 
     it "typechecks the example with mutually-recursive functions, one typed, both using typeclasses" $ do
-      let def = ( [alternatingF_BG], [[alternatingG_BG^.impl]])
+      let def = ( [alternatingFBG], [[alternatingGBG^.impl]])
           classenvT = addClass "Eq" []
                   <:> addClass "Ord" ["Eq"]
                   <:> addInst [] (IsIn "Eq" tBool)
                   <:> addInst [] (IsIn "Ord" tBool)
           Just classenv = classenvT initialEnv
-          res = tiProgram classenv [decr_BG^.asmp, leq_BG^.asmp, eq_BG^.asmp, lor_BG^.asmp] [def]
-      res `shouldContain` [alternatingF_BG^.asmp]
-      res `shouldContain` [alternatingG_BG^.asmp]
+          res = tiProgram classenv [decrBG^.asmp, leqBG^.asmp, eqBG^.asmp, lorBG^.asmp] [def]
+      res `shouldContain` [alternatingFBG^.asmp]
+      res `shouldContain` [alternatingGBG^.asmp]
 
 
     it "resolves ambiguities: `fromIntegral (2 + 3)`" $ do
-      let def = ( [fulting_BG] , [])
+      let def = ( [fultingBG] , [])
           classenvT = addClass "Eq" []
                   <:> addClass "Ord" ["Eq"]
                   <:> addClass "Num" []
@@ -175,8 +159,8 @@ spec = do
                   <:> addInst [] (IsIn "Enum" tInt)     <:> addInst [] (IsIn "Enum" tInteger)
                   <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
           Just classenv = classenvT initialEnv
-          res = tiProgram classenv [eq_BG^.asmp, fromIntegral_BG^.asmp, integralAdd_BG^.asmp] [def]
-      res `shouldContain` [fulting_BG^.asmp]
+          res = tiProgram classenv [eqBG^.asmp, fromIntegralBG^.asmp, integralAddBG^.asmp] [def]
+      res `shouldContain` [fultingBG^.asmp]
 
     it "handles monomorphism restriction" $ do
       let def pat = ([], [[("test", [(pat, test_body)])]])
