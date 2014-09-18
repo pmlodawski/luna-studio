@@ -12,7 +12,6 @@ module Flowbox.Control.Error (
 ) where
 
 import           Control.Error          as X hiding (runScript)
-import           Control.Exception      (Exception)
 import qualified Control.Exception      as Exc
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 
@@ -75,12 +74,10 @@ assertE condition msg = unless condition $ left msg
 
 -- FIXME [PM] : find better name
 safeLiftIO :: MonadIO m => IO b -> EitherT String m b
-safeLiftIO operation = do
-    result <- liftIO $ (Exc.try :: IO a -> IO (Either Exc.SomeException a)) operation
-    hoistEither $ fmapL show result
+safeLiftIO = safeLiftIO' show
 
 
-safeLiftIO' :: (Exception e, Show e) => (e -> a) -> IO b -> EitherT a IO b
+safeLiftIO' :: MonadIO m => (Exc.SomeException -> a) -> IO b -> EitherT a m b
 safeLiftIO' excMap operation  = do
     result <- liftIO $ Exc.try operation
     hoistEither $ fmapL excMap result
