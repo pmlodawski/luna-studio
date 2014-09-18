@@ -11,12 +11,13 @@ module Flowbox.Graphics.Composition.Generators.Transform where
 
 import Flowbox.Prelude                                    as P hiding (transform, zoom)
 import Flowbox.Math.Matrix                                as M hiding (canvas)
+import Flowbox.Graphics.Utils.Linear
 import Flowbox.Graphics.Composition.Generators.Structures
 
 import qualified Data.Array.Accelerate     as A
 import           Math.Coordinate.Cartesian (Point2(..))
 import           Math.Space.Space
-import           Linear.V2
+import           Linear                    hiding (normalize, inv33, rotate)
 
 
 -- == Rotation ==
@@ -72,3 +73,35 @@ scaleTo :: (Elt a, IsNum a, IsFloating a) => Grid (Exp Int) -> CartesianGenerato
 scaleTo newCnv gen@(Generator oldCnv _) = resize newCnv $ zoom (V2 (nw / ow) (nh / oh)) gen
     where Grid nw nh = fmap A.fromIntegral newCnv
           Grid ow oh = fmap A.fromIntegral oldCnv
+
+cornerPin :: forall a b . (Elt a, IsFloating a, AccEpsilon a) 
+           => Point2 (Exp a) -> Point2 (Exp a) -> Point2 (Exp a) -> Point2 (Exp a) 
+           -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
+cornerPin (Point2 x1 y1) (Point2 x2 y2) (Point2 x3 y3) (Point2 x4 y4) (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
+    let V3 hx hy hz = matC !* V3 x y 1
+    in gen $ Point2 (hx / hz) (hy / hz)
+    where Grid width height = fmap A.fromIntegral cnv
+          unsafeInv33 :: M33 (Exp a) -> M33 (Exp a)
+          unsafeInv33 a = let (_, lifted) = A.unlift $ inv33 (A.lift a) :: (Exp Bool, Exp (M33 a))
+                          in A.unlift <$> A.unlift lifted
+          
+          srcPlane = V3 (V3 0 width width ) 
+                        (V3 0 0     height) 
+                        (V3 1 1     1     )
+
+          V3 l1 u1 t1 = unsafeInv33 srcPlane !* V3 0 height 1
+          matA = srcPlane !*! V3 (V3 l1 0  0 )
+                                 (V3 0  u1 0 )
+                                 (V3 0  0  t1)
+
+          dstPlane = V3 (V3 x1 x2 x3) 
+                        (V3 y1 y2 y3)
+                        (V3 1  1  1 )
+
+          V3 l2 u2 t2 = unsafeInv33 dstPlane !* V3 x4 y4 1
+
+          matB = dstPlane !*! V3 (V3 l2 0  0 )
+                                 (V3 0  u2 0 )
+                                 (V3 0  0  t2)
+
+          matC = matA !*! unsafeInv33 matB
