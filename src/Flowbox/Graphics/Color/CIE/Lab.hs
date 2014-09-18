@@ -28,8 +28,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data Lab a = Lab { labL :: a, labA :: a, labB :: a }
            deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (Lab a) (Lab b) a b where
-    each f (Lab x y z) = Lab <$> f x <*> f y <*> f z
-    {-# INLINE each #-}
-
 deriveAccelerate ''Lab
+deriveEach ''Lab

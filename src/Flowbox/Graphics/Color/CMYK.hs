@@ -28,8 +28,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data CMYK a = CMYK { cmykC :: a, cmykM :: a, cmykY :: a, cmykK :: a }
            deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (CMYK a) (CMYK a) a a where
-    each f (CMYK c m y k) = CMYK <$> f c <*> f m <*> f y <*> f k
-    {-# INLINE each #-}
-
 deriveAccelerate ''CMYK
+deriveEach ''CMYK

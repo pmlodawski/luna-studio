@@ -27,8 +27,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data XyY a = XyY { xyYx :: a, xyYy :: a, xyYY :: a }
            deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (XyY a) (XyY b) a b where
-    each f (XyY x y y') = XyY <$> f x <*> f y <*> f y'
-    {-# INLINE each #-}
-
 deriveAccelerate ''XyY
+deriveEach ''XyY

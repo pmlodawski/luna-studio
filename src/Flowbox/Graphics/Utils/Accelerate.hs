@@ -57,16 +57,18 @@ last vec = vec A.!! (A.size vec - 1)
 --   {-# LANGUAGE ScopedTypeVariables   #-}
 --   {-# LANGUAGE TypeFamilies          #-}
 --   {-# LANGUAGE UndecidableInstances  #-}
+genFullTypeConstructor :: Name -> [TyVarBndr] -> (Name -> TypeQ) -> TypeQ
+genFullTypeConstructor typeName typeParams f = wrapper (reverse typeParams)
+            where wrapper []                  = conT typeName
+                  wrapper (PlainTV name : xs) = appT (wrapper xs) (f name)
+
 deriveAccelerate :: Name -> DecsQ
 deriveAccelerate t = do
     TyConI (DataD _ typeName typeParams constructors _) <- reify t
 
     let [RecC valueConstructorName accessors] = constructors
 
-    let fullTypeConstructor :: (Name -> TypeQ) -> TypeQ
-        fullTypeConstructor f = wrapper (reverse typeParams)
-            where wrapper []                  = conT typeName
-                  wrapper (PlainTV name : xs) = appT (wrapper xs) (f name)
+    let fullTypeConstructor = genFullTypeConstructor typeName typeParams
 
     let genConstraints :: Name -> [TyVarBndr] -> (Name -> Name -> PredQ) -> [PredQ]
         genConstraints className tParams predGen = case tParams of
@@ -167,3 +169,34 @@ deriveAccelerate t = do
 
     foldM (fmap . (++)) [] quotes
 
+
+-- | Requires following language pragmas to work:
+--   {-# LANGUAGE FlexibleInstances  #-}
+deriveEach :: Name -> DecsQ
+deriveEach t = do
+    TyConI (DataD _ typeName typeParams constructors _) <- reify t
+    when (length typeParams > 1) $ error "Unable to derive instance for the type having more than one parameter!"
+
+    let fullTypeConstructor = genFullTypeConstructor typeName typeParams
+    let tFullType = fullTypeConstructor varT
+
+    let [RecC valueConstructorName accessors] = constructors
+    let paramNames = fmap (\(n, _) -> mkName [n]) $ zip ['a'..] accessors
+    let patternData = conP valueConstructorName $ fmap varP paramNames
+
+    let valueConstructor = conE valueConstructorName
+
+    let genEach f = wrapper $ reverse $ mkName . pure . fst <$> zip ['a'..] accessors
+            where wrapper (name : []) = infixE (Just valueConstructor)
+                                               (varE '(<$>))
+                                               (Just $ appE (varE f) (varE name))
+                  wrapper (name : xs) = infixE (Just $ wrapper xs)
+                                               (varE '(<*>))
+                                               (Just $ appE (varE f) (varE name))
+
+    let freeVariable = varT $ mkName "fr"
+    let singularType = appT (conT typeName) freeVariable 
+    [d| instance Each $singularType $singularType $freeVariable $freeVariable where
+            each f $patternData = $(genEach 'f)
+            {-# INLINE each #-}
+      |]

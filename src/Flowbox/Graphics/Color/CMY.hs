@@ -28,8 +28,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data CMY a = CMY { cmyC :: a, cmyM :: a, cmyY :: a }
            deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (CMY a) (CMY a) a a where
-    each f (CMY c m y) = CMY <$> f c <*> f m <*> f y
-    {-# INLINE each #-}
-
 deriveAccelerate ''CMY
+deriveEach ''CMY
