@@ -36,6 +36,8 @@ import Flowbox.Utils
 import Data.TypeLevel
 import Control.Applicative
 
+import Luna.Target.HS.Control.Error.Data as DELME
+
 --------------------------------------------------------------------------------
 -- Structures
 --------------------------------------------------------------------------------
@@ -107,8 +109,8 @@ runMonad = matchMonadClose `dot3` runMonadProtoReq
 --runMonadProto :: mptr -> (ma a -> mb b) -> (MonadCtx2 env set ma s a) -> (MonadCtx env (Remove mptr set) mb b)
 --runMonadProto _ f ms = MonadCtx $ f (fromMonadCtx ms)
 
-closeMonadCtx2 :: MonadCtx2 base set base s a -> Value (base s) a
-closeMonadCtx2 (MonadCtx2 a) = Value a
+closeMonadCtx2 :: MonadCtx2 base set base s a -> base s a
+closeMonadCtx2 (MonadCtx2 a) = a
 
 runMonadProto2 :: mptr -> (ma sa a -> mb sb b) -> (MonadCtx2 env set ma sa a) -> (MonadCtx2 env (Remove mptr set) mb sb b)
 runMonadProto2 _ f ms = MonadCtx2 $ f (fromMonadCtx2 ms)
@@ -172,7 +174,7 @@ instance MatchMonadClose (MonadCtx env set ma) out <= (MatchMonadCloseProto empt
 instance MatchMonadClose (MonadCtx2 env set ma sa) out <= (MatchMonadCloseProto emptySet (MonadCtx2 env set ma sa) out, emptySet ~ IsEmpty set) where
     matchMonadClose = matchMonadCloseProto (undefined :: emptySet)
 
-instance MatchMonadCloseProto True (MonadCtx2 env set m s) (Value (env s)) <= env~m where
+instance MatchMonadCloseProto True (MonadCtx2 env set m s) (env s) <= env~m where
     matchMonadCloseProto _ = closeMonadCtx2
 
 ---
@@ -207,6 +209,26 @@ instance AppMonadCtx (Req req (MonadCtx env set m) a) (Req req (MonadCtx env set
 
 instance AppMonadCtx (Value m2 a2) (Req req (MonadCtx env set m1) a1) <= (a1~Value Pure a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2, Functor m2) where
     appMonadCtx = Req . MonadCtx . lift . (fmap (Value . Pure)) . fromValue
+
+
+--instance AppMonadCtx (ValueS m2 s2 a2) (Req req (MonadCtx2 env set m1 s1) a1) <= (s2~s1, a1~ValueS Pure Safe a2, Functor s1, Functor m2, LiftValueS m2 m1) where
+--    appMonadCtx = Req . MonadCtx2 . liftValueS . (fmap (ValueS . Pure . Safe))
+
+--wyzej dodana jest informacja o env - tu nie, a i tak dziala. Czy jest to potrzbne ? 
+--- do czego potrzebne jest req?
+-- nie powinnismy dodac tu informacji o env?
+instance AppMonadCtx (ValueS m2 s2 a2) (Req req (MonadCtx2 env set m1 s1) a1) <= (set~Insert req Empty, s1~s2, m1~t (ValueS m2), a1 ~ ValueS Pure Safe a2, LiftValueS' (ValueS m2) s2 t, Functor s2, Functor m2) where
+    appMonadCtx = Req . MonadCtx2 . liftValueS' . (fmap (ValueS . Pure . Safe))
+
+
+
+--class LiftValueS' m s t where
+--    liftValueS' :: m (s :: * -> *) a -> t m s a
+
+--liftValueS :: m s a -> t m s a
+--liftValueS :: ValueS m s a -> t m s a <- tak powinna wygladac ta sygnatura!!!
+--bo inaczej AppMonadCtx nie wnioskuje ze m jest pod monadem t!
+
 
 ---
 

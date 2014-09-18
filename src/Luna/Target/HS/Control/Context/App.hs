@@ -18,7 +18,7 @@
 {-# LANGUAGE OverlappingInstances #-}
 !{-# LANGUAGE RightSideContexts #-}
 
---{-# LANGUAGE DysfunctionalDependencies #-}
+{-# LANGUAGE DysfunctionalDependencies #-}
 
 
 module Luna.Target.HS.Control.Context.App where
@@ -75,7 +75,7 @@ instance PolyApplicative (MonadCtx env1 set1 m1) (MonadCtx env2 set2 m2) (MonadC
         a <- fromMonadCtx ma
         return $ f a
 
----------------------------
+---
 
 instance PolyApplicative (Value f) (Value a) (Value out) <= PolyApplicative f a out where
     Value f <<*>> Value a = Value $ f <<*>> a
@@ -85,3 +85,26 @@ instance PolyApplicative (Value f) (MonadCtx env set m) out <= PolyApplicative f
 
 instance PolyApplicative (MonadCtx env set m) (Value ma) out <= PolyApplicative (MonadCtx env set m) ma out where
     f <<*>> Value a = f <<*>> a
+
+-----------------------------------
+
+instance PolyApplicative (ValueS Pure s1) (ValueS Pure s2) (ValueS Pure s3) <= PolyApplicative s1 s2 s3 where
+    ValueS (Pure sf) <<*>> ValueS (Pure sa) = ValueS . Pure $ sf <<*>> sa
+
+instance PolyApplicative (ValueS IO s1) (ValueS Pure s2) (ValueS IO s3) <= PolyApplicative s1 s2 s3 where
+    ValueS msf <<*>> ValueS (Pure sa) = ValueS $ do
+        sf <- msf
+        return $ sf <<*>> sa
+
+instance PolyApplicative (ValueS Pure s1) (ValueS IO s2) (ValueS IO s3) <= PolyApplicative s1 s2 s3 where
+    ValueS (Pure sf) <<*>> ValueS msa = ValueS $ do
+        sa <- msa
+        return $ sf <<*>> sa
+
+instance PolyApplicative (ValueS IO s1) (ValueS IO s2) (ValueS IO s3) <= PolyApplicative s1 s2 s3 where
+    ValueS msf <<*>> ValueS msa = ValueS $ do
+        sf <- msf
+        sa <- msa
+        return $ sf <<*>> sa
+
+
