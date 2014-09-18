@@ -85,9 +85,6 @@ spec = do
           f = TVar $ Tyvar "f" Star
           a = TVar $ Tyvar "a" Star
           v = TVar $ Tyvar "lel" Star
-          --ps = [ IsIn "Functor" f
-               --, IsIn "Ord"     a
-               --]
           p  = IsIn "Ord" (TAp f a)
 
       entail ce [IsIn "Functor" f, IsIn "Ord" a]          p              `shouldBe` True

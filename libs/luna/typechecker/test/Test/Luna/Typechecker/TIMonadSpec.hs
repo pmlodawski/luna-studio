@@ -1,30 +1,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Test.Luna.Typechecker.TIMonadSpec (spec) where
-
---import Luna.Typechecker.AST.Alternatives as Alt
---import Luna.Typechecker.AST.Common       as Cmm
---import Luna.Typechecker.AST.Expr         as Exp
 import Luna.Typechecker.AST.Kind
---import Luna.Typechecker.AST.Lit          as Lit
---import Luna.Typechecker.AST.Module       as Mod
---import Luna.Typechecker.AST.Pat          as Pat
 import Luna.Typechecker.AST.Scheme
---import Luna.Typechecker.AST.TID          as TID
 import Luna.Typechecker.AST.Type
-
-
---import Luna.Typechecker.Ambiguity        as Amb
---import Luna.Typechecker.Assumptions      as Ass
---import Luna.Typechecker.BindingGroups    as Bnd
---import Luna.Typechecker.ContextReduction as CxR
---import Luna.Typechecker.HasKind          as HKd
---import Luna.Typechecker.Substitutions    as Sub
 import Luna.Typechecker.TIMonad
 import Luna.Typechecker.Typeclasses
---import Luna.Typechecker.TypeInference    as Inf
---import Luna.Typechecker.Unification      as Uni
---import Luna.Typechecker                           as Typechecker
 
 import Test.Luna.Typechecker.AST.TypeGen (genTypeNogen,genPredNogen)
 

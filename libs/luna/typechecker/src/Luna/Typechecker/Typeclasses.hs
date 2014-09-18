@@ -14,11 +14,7 @@ import Luna.Typechecker.AST.TID        (TID)
 
 import Control.Monad                   (msum)
 
---import Data.List                       (intercalate,union,nubBy)
 import Data.Maybe                      (isJust)
---import Data.Function                   (on)
---import Text.Printf                     (printf)
---import Control.DeepSeq
 
 
 mguPred :: Pred -> Pred -> Maybe Subst
@@ -48,8 +44,6 @@ insts ce i = case classes ce i of
                Just (_, its) -> its
                Nothing -> error "Typeclasses.hs:insts got no result"
 
-
--- TODO [kg]: how fucking stupid is this one? :<
 modify :: ClassEnv -> TID -> Class -> ClassEnv
 modify ce i c = ce {
                    classesNames = (i,c) : classesNames ce,
@@ -65,8 +59,6 @@ initialEnv = ClassEnv {
                classesNames = [],
                defaults = [tInteger, tDouble]
              }
-
--- TODO [kgdk] 18 sie 2014: zbadać jak zachowuje się defaulting w Lunie
 
 
 type EnvTransformer = ClassEnv -> Maybe ClassEnv
@@ -101,23 +93,16 @@ overlap p q = defined (mguPred p q)
 
 
 
-
--- | List predicates from superclasses: if is instance of a class, then there must be instances
--- for all superclasses.
--- If predicate 'p' then all of 'bySuper ce p' must hold as well.
--- It can contain duplicates but is always finite (since superclass hierarchy is a DAG).
 bySuper :: ClassEnv -> Pred -> [Pred]
 bySuper ce p@(IsIn i t) = p : concat [bySuper ce (IsIn i' t) | i' <- super ce i]
 
 
--- | List subgoals for a predicate to match.
 byInst :: ClassEnv -> Pred -> Maybe [Pred]
 byInst ce p@(IsIn i _) = msum [tryInst it | it <- insts ce i] -- at most one of those from list would match (since no overlapping instances!)
   where tryInst (ps :=> h) = do u <- matchPred h p
                                 Just (map (apply u) ps)
 
 
--- | Is 'p' true whenever 'ps'?
 entail :: ClassEnv -> [Pred] -> Pred -> Bool
 entail ce ps p = any (p `elem`) (map (bySuper ce) ps) || case byInst ce p of
                                                            Nothing -> False

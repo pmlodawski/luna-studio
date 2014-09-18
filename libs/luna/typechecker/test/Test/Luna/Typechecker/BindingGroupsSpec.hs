@@ -1,28 +1,12 @@
 module Test.Luna.Typechecker.BindingGroupsSpec (spec) where
-
---import Luna.Typechecker.AST.Alternatives
---import Luna.Typechecker.AST.Common
---import Luna.Typechecker.AST.Expr
 import Luna.Typechecker.AST.Kind
 import Luna.Typechecker.AST.Lit
---import Luna.Typechecker.AST.Module
 import Luna.Typechecker.AST.Pat
 import Luna.Typechecker.AST.Scheme
---import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
-
-
---import Luna.Typechecker.Ambiguity
---import Luna.Typechecker.Assumptions
 import Luna.Typechecker.BindingGroups
---import Luna.Typechecker.ContextReduction
---import Luna.Typechecker.HasKind
---import Luna.Typechecker.Substitutions
 import Luna.Typechecker.TIMonad
 import Luna.Typechecker.Typeclasses
---import Luna.Typechecker.TypeInference
---import Luna.Typechecker.Unification
---import Luna.Typechecker
 
 import Test.Hspec
 import Test.Luna.Common
@@ -114,23 +98,6 @@ spec = do
                     ("pie2", [([], Let bg (Var "pie"))])
                   ]]
                 )
-          --bgs = [bg]
-          --bgs = [([], [[("sum", [(sum_pat, sum_body)])]])]
-
-
-          --(__s1, __i1,     (ps, as')) = evalTI nullSubst    0 $ tiSeq tiBindGroup ce as bgs
-          --(__s2, __i2,     s)         = evalTI __s1      __i1 $ getSubst
-          --(__s3, __i3,     rs)        = evalTI __s2      __i2 $ reduce ce (apply s ps)
-          --(__s4, __i4,     s')        = evalTI __s3      __i3 $ defaultSubst ce [] rs
-
-          --result = apply (s' @@ s) as'
-
-          --p = IsIn "Num" (TAp tMaybe tv_a1)
-          --(IsIn i _) = p
-
-          --it = insts ce i
-
-          --[ps1 :=> h1] = take 1 $ insts ce "Num"
 
 
           (ps, t@(TVar (Tyvar _ t_kind))) = runTI $ tiExpr ce as (Let bg2 (Var "pie2"))

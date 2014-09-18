@@ -1,43 +1,15 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Test.Luna.Typechecker.AST.SchemeSpec (spec) where
-
---import Luna.Typechecker.AST.Alternatives
---import Luna.Typechecker.AST.Common
---import Luna.Typechecker.AST.Expr
 import Luna.Typechecker.AST.Kind
---import Luna.Typechecker.AST.Lit
---import Luna.Typechecker.AST.Module
---import Luna.Typechecker.AST.Pat
 import Luna.Typechecker.AST.Scheme
---import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
---import Test.Luna.Typechecker.AST.TypeGen
-
-
---import Luna.Typechecker.Ambiguity
---import Luna.Typechecker.Assumptions
---import Luna.Typechecker.BindingGroups
---import Luna.Typechecker.ContextReduction
---import Luna.Typechecker.HasKind
---import Luna.Typechecker.Substitutions
---import Luna.Typechecker.TIMonad
 import Luna.Typechecker.Typeclasses
---import Luna.Typechecker.TypeInference
---import Luna.Typechecker.Unification
---import Luna.Typechecker
 
 import Test.Hspec
 import Test.QuickCheck
---import Text.Printf
---import Debug.Trace
-
---import Control.Monad.Trans.State.Strict
 import Data.Array.ST
 import Control.Monad.ST
-
-
--- |Knuth shuffle.
 permute :: [a] -> Gen [a]
 permute xs = do swaps <- mapM mkSwapTuple [nd,nd-1..1]
                 return (runST $ permute' xs swaps)
@@ -60,7 +32,6 @@ spec = do
       let az = map (flip Tyvar Star) vs
           az' = map (flip Tyvar Star) vs'
           az'' = map (flip Tyvar Star) vs''
-          --gs = foldr1 fn $ map TGen $ zipWith const [0..] vs
           gs' = foldr1 fn (map TGen (zipWith const [0..] vs) ++ [TVar $ Tyvar "y" Star])
           ks = map (const Star) vs
           vs = ["a", "b", "c", "d", "e", "f"]

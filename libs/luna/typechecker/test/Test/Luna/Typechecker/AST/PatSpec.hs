@@ -4,28 +4,16 @@ import Luna.Typechecker.AST.Kind
 import Luna.Typechecker.AST.Lit
 import Luna.Typechecker.AST.Pat
 import Luna.Typechecker.AST.Scheme
---import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
-
-
---import Luna.Typechecker.Ambiguity
 import Luna.Typechecker.Assumptions
---import Luna.Typechecker.BindingGroups
---import Luna.Typechecker.ContextReduction
 import Luna.Typechecker.HasKind
 import Luna.Typechecker.Substitutions
 import Luna.Typechecker.TIMonad
 import Luna.Typechecker.Typeclasses
---import Luna.Typechecker.TypeInference
 import Luna.Typechecker.Unification
---import Luna.Typechecker
 
 import Data.Maybe
---import Text.Printf
 import Test.Hspec
---import Test.QuickCheck
---import Debug.Trace
---import Control.Exception
 
 spec :: Spec
 spec = do

@@ -64,5 +64,4 @@ data ClassEnv = ClassEnv {
 
 instance Show ClassEnv where
   show (ClassEnv _ nm _) = printf "(classenv: %s)" (intercalate ", " $ map show $ nubBy ((==) `on` fst) nm)
-  --show  = printf "(classenv: %s)" . intercalate ", " . map show . nubBy ((==) `on` fst) . classesNames
 

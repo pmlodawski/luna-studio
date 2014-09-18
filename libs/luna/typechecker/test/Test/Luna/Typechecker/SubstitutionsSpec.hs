@@ -12,7 +12,6 @@ import           Test.Luna.Typechecker.AST.TypeGen
 
 import           Test.Hspec
 import           Test.QuickCheck
---import           Control.Exception                          (evaluate)
 
 import           Data.List                                  (subsequences)
 import           Data.Maybe                                 (fromJust, isJust)
@@ -35,23 +34,10 @@ spec = do
     describe "enforcing of kind-preserveness" $ do
       it "satisfies that property" $
         pendingWith "waiting for refactor: +-> should be partial  "
-        --property $
-        --forAll arbitrary     $ \k1 ->
-        --forAll arbitrary     $ \k2 ->
-        --forAll (genTyvar k1) $ \tv ->
-        --forAll (genType k2)  $ \ty ->
-        --  (k1/=k2) ==> ((tv+->ty) `shouldBe` [])
       it "passes some basic unit tests" $
         pendingWith "waiting for refactor: +-> should be partial  "
-        --let a = Ty.Tyvar "a" Knd.Star
-        --    b = Ty.Tyvar "b" (Knd.Kfun Knd.Star Knd.Star)
-        --a           +-> Ty.tInt     `shouldSatisfy` not . null
-        --evaluate (a +-> Ty.tList)   `shouldThrow`   anyErrorCall
-        --b           +-> Ty.tList    `shouldSatisfy` not . null
     it "should check for infinite-types" $
       pendingWith "waiting for refactor: +-> should be partial  "
-      --let a = Ty.Tyvar "a" Knd.Star
-      --evaluate (a +-> Ty.list (Ty.TVar a)) `shouldThrow` anyErrorCall
   describe "Substitutions composition (@@)" $
     it "satisfies property: apply (s1 @@ s2) = apply s1 . apply s2" $
       property $
@@ -74,12 +60,8 @@ spec = do
         it "is" pending
       describe "tv :: t -> [Ty.Tyvar]" $
         it "returns variables, in left-to-right order, no duplicates" $ do
-          let --d  = (Ty.Tyvar "d"  Knd.Star)
-              dot = (TVar b `fn` TVar c) `fn` (TVar a `fn` TVar b) `fn` (TVar a `fn` TVar c)
+          let dot = (TVar b `fn` TVar c) `fn` (TVar a `fn` TVar b) `fn` (TVar a `fn` TVar c)
               dlr = (TVar a `fn` TVar b) `fn` TVar a `fn` TVar b
-              --f  = (Ty.Tyvar "f"  (Knd.Kfun Knd.Star Knd.Star))
-              --m  = (Ty.Tyvar "m"  (Knd.Kfun Knd.Star Knd.Star))
-              --mt = (Ty.Tyvar "mt" (Knd.Kfun (Knd.Kfun (Knd.Kfun Knd.Star Knd.Star) Knd.Star) Knd.Star))
           tv Ty.tInt              `shouldBe` []
           tv (TVar a)             `shouldBe` [a]
           tv (TVar a `fn` TVar b) `shouldBe` [a, b]

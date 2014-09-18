@@ -1,13 +1,8 @@
 module Luna.Typechecker.AST.Internal.Pat (Pat(..)) where
 
---import Luna.Typechecker.AST.Kind         (Kind(..))
 import Luna.Typechecker.AST.Lit          (Lit)
---import Luna.Typechecker.AST.Scheme       (toScheme)
---import Luna.Typechecker.AST.Type         (Type, fn)
 
 import Luna.Typechecker.Assumptions      (Assump(..))
---import Luna.Typechecker.TIMonad          (TI, freshInst, unify, newTVar)
---import Luna.Typechecker.Typeclasses      (Pred(..), Qual(..))
 
 import Luna.Typechecker.AST.TID          (TID)
 
