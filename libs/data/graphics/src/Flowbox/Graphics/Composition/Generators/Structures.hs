@@ -17,6 +17,7 @@
 module Flowbox.Graphics.Composition.Generators.Structures where
 
 import           Flowbox.Prelude    hiding (transform, lift)
+import           Flowbox.Graphics.Utils.Accelerate
 import qualified Flowbox.Math.Index as I
 
 import Data.Array.Accelerate
@@ -71,32 +72,4 @@ instance Ord a => Ord (Tick a b c) where
     compare (Tick p1 _ _) (Tick p2 _ _) = compare p1 p2
 
 makeLenses ''Tick
-
-type instance EltRepr (Tick a b c)  = EltRepr (a, b, c)
-type instance EltRepr' (Tick a b c) = EltRepr' (a, b, c)
-
-instance (Elt a, Elt b, Elt c) => Elt (Tick a b c) where
-    eltType _ = eltType (undefined :: (a,b,c))
-    toElt p = case toElt p of
-        (x, y, z) -> Tick x y z
-    fromElt (Tick x y z) = fromElt (x, y, z)
-
-    eltType' _ = eltType' (undefined :: (a,b,c))
-    toElt' p = case toElt' p of
-        (x, y, z) -> Tick x y z
-    fromElt' (Tick x y z) = fromElt' (x, y, z)
-
-instance IsTuple (Tick a b c) where
-    type TupleRepr (Tick a b c) = TupleRepr (a,b,c)
-    fromTuple (Tick x y z) = fromTuple (x,y,z)
-    toTuple t = case toTuple t of
-        (x, y, z) -> Tick x y z
-
-instance (Lift Exp a, Elt (Plain a), Lift Exp b, Elt (Plain b), Lift Exp c, Elt (Plain c)) => Lift Exp (Tick a b c) where
-    type Plain (Tick a b c) = Tick (Plain a) (Plain b) (Plain c)
-    lift (Tick x y z) = Exp $ Tuple $ NilTup `SnocTup` lift x `SnocTup` lift y `SnocTup` lift z
-
-instance (Elt a, Elt b, Elt c, e ~ Exp a, f ~ Exp b, g ~ Exp c) => Unlift Exp (Tick e f g) where
-    unlift t = Tick (Exp $ SuccTupIdx (SuccTupIdx ZeroTupIdx) `Prj` t)
-                    (Exp $ SuccTupIdx ZeroTupIdx `Prj` t)
-                    (Exp $ ZeroTupIdx `Prj` t)
+deriveAccelerate ''Tick
