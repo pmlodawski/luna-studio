@@ -52,6 +52,11 @@ head vec = vec A.!! 0
 last :: (A.Elt e, A.Shape sh) => A.Acc (A.Array sh e) -> A.Exp e
 last vec = vec A.!! (A.size vec - 1)
 
+-- | Requires following language pragmas to work:
+--   {-# LANGUAGE MultiParamTypeClasses #-}
+--   {-# LANGUAGE ScopedTypeVariables   #-}
+--   {-# LANGUAGE TypeFamilies          #-}
+--   {-# LANGUAGE UndecidableInstances  #-}
 deriveAccelerate :: Name -> DecsQ
 deriveAccelerate t = do
     TyConI (DataD _ typeName typeParams constructors _) <- reify t
