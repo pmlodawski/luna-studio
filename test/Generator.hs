@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Main where
 
@@ -35,7 +36,9 @@ import Flowbox.Graphics.Utils
 import qualified Data.Array.Accelerate              as A
 import qualified Data.Array.Accelerate.Data.Complex as A
 
-import Linear.V2
+import Linear hiding (normalize, inv33)
+import Flowbox.Graphics.Utils.Linear
+
 import Math.Coordinate.Cartesian as Cartesian
 import Math.Metric
 import Math.Space.Space
@@ -44,6 +47,7 @@ import Utils
 
 import Data.Foldable
 
+import Data.List (permutations)
 -- Test helpers
 forAllChannels :: String -> (Matrix2 Float -> Matrix2 Float) -> IO ()
 forAllChannels image process = do
@@ -288,6 +292,7 @@ simpleTest = do
 --
 -- Crosstalk test
 --
+
 crosstalkTest :: IO ()
 crosstalkTest = do
     (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.png"
