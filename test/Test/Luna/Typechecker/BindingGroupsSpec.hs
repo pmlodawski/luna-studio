@@ -52,8 +52,8 @@ spec = do
                       ) initialEnv
       evaluate (runTI inf) `shouldThrow` anyErrorCall
 
-  describe "tiExpr" $ do
-    it "recurses into let" $ do
+  describe "tiExpr" $
+    it "recurses into let" $
       let Just ce = (  addClass "Eq" []
                    <:> addClass "Ord" ["Eq"]
                    <:> addClass "Num" []
@@ -72,13 +72,13 @@ spec = do
                    <:> addInst [] (IsIn "Functor" tList)       <:> addInst [] (IsIn "Functor" tMaybe)
                    <:> addInst [IsIn "Functor" tv_f2, IsIn "Num" tv_a1] (IsIn "Num" (TAp tv_f2 tv_a1)) -- nonsense, I know
                    <:> addInst [IsIn "Functor" tv_f2, IsIn "Ord" tv_a1]
-                               (IsIn "Ord" ((TAp tv_f2 tv_a1)))
+                               (IsIn "Ord" (TAp tv_f2 tv_a1))
                     ) initialEnv
 
           tMaybe = TCon $ Tycon "Maybe" $ Star `Kfun` Star
 
-          tv_a1 = TVar $ Tyvar "a" $ Star
-          tv_f2 = TVar $ Tyvar "f" $ Star `Kfun` Star
+          tv_a1 = TVar $ Tyvar "a" Star
+          tv_f2 = TVar $ Tyvar "f" (Star `Kfun` Star)
 
           ap :: [Expr] -> Expr
           ap = foldl1 Ap
@@ -111,11 +111,11 @@ spec = do
                , "(:)"     :>: cons_type
                , "foldl"   :>: foldl_type
                , "sum"     :>: sum_type
-               , "take"    :>: (Forall [Star          ] $ [                   ] :=> (  tInt `fn` list (TGen 0) `fn` list (TGen 0))                                                 )
-               , "zipWith" :>: (Forall [Star,Star,Star] $ [                   ] :=> (  (TGen 0 `fn` TGen 1 `fn` TGen 2) `fn` list (TGen 0) `fn` list (TGen 1) `fn` list (TGen 2))  )
-               , "(/)"     :>: (Forall [Star          ] $ [IsIn "Num" (TGen 0)] :=> (  TGen 0 `fn` TGen 0 `fn` TGen 0)                                                             )
-               , "iterate" :>: (Forall [Star          ] $ [                   ] :=> (  (TGen 0 `fn` TGen 0) `fn` TGen 0 `fn` list (TGen 0))                                        )
-               , "negate"  :>: (Forall [Star          ] $ [IsIn "Num" (TGen 0)] :=> (  TGen 0 `fn` TGen 0)                                                                         )
+               , "take"    :>: Forall [Star          ] ([                   ] :=> (  tInt `fn` list (TGen 0) `fn` list (TGen 0))                                                 )
+               , "zipWith" :>: Forall [Star,Star,Star] ([                   ] :=> (  (TGen 0 `fn` TGen 1 `fn` TGen 2) `fn` list (TGen 0) `fn` list (TGen 1) `fn` list (TGen 2))  )
+               , "(/)"     :>: Forall [Star          ] ([IsIn "Num" (TGen 0)] :=> (  TGen 0 `fn` TGen 0 `fn` TGen 0)                                                             )
+               , "iterate" :>: Forall [Star          ] ([                   ] :=> (  (TGen 0 `fn` TGen 0) `fn` TGen 0 `fn` list (TGen 0))                                        )
+               , "negate"  :>: Forall [Star          ] ([IsIn "Num" (TGen 0)] :=> (  TGen 0 `fn` TGen 0)                                                                         )
                , "[]"      :>: nil_type
                ]
           bg = ( []

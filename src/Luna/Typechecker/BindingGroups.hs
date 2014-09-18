@@ -23,14 +23,14 @@ import Text.Printf
 
 data Expr = Var TID
           | Lit Lit
-          | Const Assump
+          | EConst Assump
           | Ap Expr Expr
           | Let BindGroup Expr
 
 instance Show Expr where
   show (Var tid)         = printf "evar %s" (show tid)
   show (Lit lit)         = printf "elit %s" (show lit)
-  show (Const (t:>:sch)) = printf "econst (%s :: %s)" (show t) (show sch)
+  show (EConst (t:>:sch)) = printf "econst (%s :: %s)" (show t) (show sch)
   show (Ap e1 e2)        = printf "eap %s %s" (show e1) (show e2)
   show (Let bnd e)       = printf "elet %s = %s" (show bnd) (show e)
 
@@ -39,8 +39,8 @@ tiExpr :: Infer Expr Type
 tiExpr _  as (Var i) = do sc <- find i as
                           (ps :=> t) <- freshInst sc
                           return (ps, t)
-tiExpr _  _  (Const (_ :>: sc)) = do (ps :=> t) <- freshInst sc
-                                     return (ps, t)
+tiExpr _  _  (EConst (_ :>: sc)) = do (ps :=> t) <- freshInst sc
+                                      return (ps, t)
 tiExpr _  _  (Lit l) = do (ps, t) <- tiLit l
                           return (ps, t)
 tiExpr ce as (Ap e f) = do (ps, te) <- tiExpr ce as e

@@ -9,10 +9,10 @@ import Control.Exception
 
 spec :: Spec
 spec = do
-  describe "insts" $ do
-    it "raises error when no superclass" $ do
+  describe "insts" $
+    it "raises error when no superclass" $
       evaluate (super initialEnv "nothing") `shouldThrow` anyErrorCall
-  describe "mguPred" $ do
+  describe "mguPred" $
     it "checks if classes match" $ do
       let res = mguPred (IsIn "YEP" (TGen 0)) (IsIn "NOPE" (TGen 0))
       res `shouldBe` Nothing
@@ -45,7 +45,7 @@ spec = do
         <:> addInst [IsIn "Len" (TVar $ Tyvar "a" Star)] (IsIn "Len" (list (TVar $ Tyvar "a" Star)))
         <:> addInst [IsIn "Len" tInt]                    (IsIn "Len" (list tInt))
       ) initialEnv `shouldBe` Nothing
-  describe "byInst" $ do
+  describe "byInst" $
     it "works" $ do
       let Just ce = (  addClass "Eq" []
                    <:> addClass "Container" []
@@ -58,7 +58,7 @@ spec = do
                     ) initialEnv
       byInst ce (IsIn "Eq" (TAp tList tInt)) `shouldBe` Just [IsIn "Eq" tInt, IsIn "Container" tList]
 
-  describe "entail" $ do
+  describe "entail" $
     it "works" $ do
       let Just ce = (  addClass "Eq"       []
                    <:> addClass "Ord"      ["Eq"]
@@ -70,7 +70,7 @@ spec = do
                    <:> addClass "Functor"     []
                    <:> addClass "Applicative" ["Functor"]
                    <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
-                               (IsIn "Ord" ((TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star))))
+                               (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
                    <:> addInst [] (IsIn "Eq"       tInt)   <:> addInst [] (IsIn "Eq"       tInteger)
                    <:> addInst [] (IsIn "Ord"      tInt)   <:> addInst [] (IsIn "Ord"      tInteger)
                    <:> addInst [] (IsIn "Num"      tInt)   <:> addInst [] (IsIn "Num"      tInteger)

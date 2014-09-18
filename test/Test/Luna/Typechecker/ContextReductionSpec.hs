@@ -45,7 +45,7 @@ import Control.Exception
 
 spec :: Spec
 spec = do
-  describe "inHnf" $ do
+  describe "inHnf" $
     it "verifies the result" $ do
       inHnf (IsIn "anything" (TVar $ Tyvar "a" Star)) `shouldBe` True
       inHnf (IsIn "anything" (TCon $ Tycon "Int" Star)) `shouldBe` False
@@ -65,7 +65,7 @@ spec = do
       res2 `shouldBe` Right []
       evaluate res3 `shouldThrow` anyErrorCall
 
-    it "covers nested predicates" $ do
+    it "covers nested predicates" $
       let Just ce = (  addClass "Eq" []
                    <:> addClass "Ord" ["Eq"]
                    <:> addClass "Num" []
@@ -84,13 +84,13 @@ spec = do
                    <:> addInst [] (IsIn "Functor" tList)       <:> addInst [] (IsIn "Functor" tMaybe)
                    <:> addInst [IsIn "Functor" tv_f2, IsIn "Num" tv_a1] (IsIn "Num" (TAp tv_f2 tv_a1)) -- nonsense, I know
                    <:> addInst [IsIn "Functor" tv_f2, IsIn "Ord" tv_a1]
-                               (IsIn "Ord" ((TAp tv_f2 tv_a1)))
+                               (IsIn "Ord" (TAp tv_f2 tv_a1))
                     ) initialEnv
 
           tMaybe = TCon $ Tycon "Maybe" $ Star `Kfun` Star
 
-          tv_a1 = TVar $ Tyvar "a" $ Star
-          tv_f2 = TVar $ Tyvar "f" $ Star `Kfun` Star
+          tv_a1 = TVar $ Tyvar "a" Star
+          tv_f2 = TVar $ Tyvar "f" (Star `Kfun` Star)
 
           --ap :: [Expr] -> Expr
           --ap = foldl1 Ap

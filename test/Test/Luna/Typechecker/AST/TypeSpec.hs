@@ -38,12 +38,12 @@ spec = do
       HKd.kind (tInt `pair` tInt)                   `shouldBe` Knd.Star
       HKd.kind (tInt `pair` tUnit)                  `shouldBe` Knd.Star
       HKd.kind ((tInt `fn` tInt) `pair` list tUnit) `shouldBe` Knd.Star
-  describe "fn" $ do
+  describe "fn" $
     it "should verify kinds" $ pendingWith "fn needs to verify that both arguments have kind *"
-  describe "list" $ do
+  describe "list" $
     it "should verify kinds" $ pendingWith "list needs to verify that argument have kind *"
-  describe "pair" $ do
+  describe "pair" $
     it "should verify kinds" $ pendingWith "pair needs to verify that both arguments have kind *"
-  describe "(coverage booster)" $ do
-    it "shows TAp (TAp (,) Int) String == (Int,String)" $ do
+  describe "(coverage booster)" $
+    it "shows TAp (TAp (,) Int) String == (Int,String)" $
       length (show (TAp (TAp tTuple2 tInt) tString)) `shouldSatisfy` (>0)

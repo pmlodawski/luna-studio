@@ -50,11 +50,11 @@ instance Arbitrary Pred where
   shrink (IsIn tid t) = (IsIn tid <$> shrink t) ++ (IsIn <$> shrink tid <*> [t]) ++ (IsIn <$> shrink tid <*> shrink t)
 
 
-tid_tc :: Int -> TID
-tid_tc = ("tc_"++) . enumTID
+tidTC :: Int -> TID
+tidTC = ("tc_"++) . enumTID
 
-tid_tv :: Int -> TID
-tid_tv = ("tv_"++) . enumTID
+tidTV :: Int -> TID
+tidTV = ("tv_"++) . enumTID
 
 
 genPredNogen :: Kind -> Gen Pred
@@ -74,7 +74,7 @@ genTVar :: Kind -> Gen Type
 genTVar k = TVar <$> genTyvar k
 
 genTCon :: Kind -> Gen Type
-genTCon k = do tid <- tid_tc . getPositive <$> arbitrary
+genTCon k = do tid <- tidTC . getPositive <$> arbitrary
                return (TCon $ Tycon tid k)
 
 genTGen :: Gen Type
@@ -87,11 +87,11 @@ genTAp k = do k2 <- arbitrary
               return $ TAp t1 t2
 
 genTyvar :: Kind -> Gen Tyvar
-genTyvar k = do tid <- tid_tv . getPositive <$> arbitrary
+genTyvar k = do tid <- tidTV . getPositive <$> arbitrary
                 return (Tyvar tid k)
 
 genTycon :: Kind -> Gen Tycon
-genTycon k = do tid <- tid_tc . getPositive <$> arbitrary
+genTycon k = do tid <- tidTC . getPositive <$> arbitrary
                 return (Tycon tid k)
 
 genSubst :: [Tyvar] -> Gen Sub.Subst

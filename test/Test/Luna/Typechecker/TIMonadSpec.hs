@@ -55,8 +55,8 @@ spec = do
           ([IsIn "Integral" t'] :=> t'') = runTI $ freshInst (Forall [Star] qt)
       t'' `shouldBe` (t' `fn` t')
 
-  describe "(internals)" $ do
-    describe "class Instantiate t" $ do
+  describe "(internals)" $
+    describe "class Instantiate t" $
       describe "instance Instantiate a => Instantiate [a]" $ do
         it "inst [] is an identity for x::Type  (no TGen inside!) [qc]" $ property $
           forAll arbitrary        $ \k ->

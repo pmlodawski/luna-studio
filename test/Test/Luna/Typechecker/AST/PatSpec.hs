@@ -58,7 +58,7 @@ spec = do
           getall = do res <- tiPat v
                       s' <- getSubst
                       return (res, s')
-          ((ps, as, TVar t), s) = runTI $ getall
+          ((ps, as, TVar t), s) = runTI getall
           Just (Forall [] ([] :=> x'))  = find "x"  as
           Just (Forall [] ([] :=> xs')) = find "xs" as
           Just (Forall [] ([] :=> lel')) = find "lel" as
@@ -94,7 +94,7 @@ spec = do
       kind xs `shouldBe` Star
       (xs `match` list x) `shouldSatisfy` isJust
       kind t `shouldBe` Star
-  describe "(coverage booster)" $ do
+  describe "(coverage booster)" $
     it "show" $ do
       let v = PCon ("(:)":>:cons_type) [PVar "x", PVar "xs"]
           cons_type = Forall [Star] ([] :=> (TGen 0 `fn` list (TGen 0) `fn` list (TGen 0)))

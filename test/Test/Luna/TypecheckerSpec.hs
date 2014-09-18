@@ -9,181 +9,159 @@ import Luna.Typechecker.AST.Type      (Type(..),fn,tInteger,list,tBool,tInt,tCha
 import Luna.Typechecker.Assumptions   (Assump(..))
 import Luna.Typechecker.BindingGroups (Expr(..))
 import Luna.Typechecker.Typeclasses   (Qual(..), Pred(..), initialEnv, addClass, addInst, (<:>))
-import Luna.Typechecker                        (tiProgram)
+import Luna.Typechecker               (tiProgram)
 
 import Test.Hspec
 import Control.DeepSeq
 import Control.Exception
-
-ap :: [Expr] -> Expr
-ap = foldl1 Ap
+import Test.Luna.Common
 
 spec :: Spec
 spec = do
   describe "the typechecker interface for basic AST" $ do
-    let const_type = Forall [Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 0))  
-        const_pat  = [PVar "x", PVar "y"]
-        const_body = Var "x"
+    let 
+        alternatingF_BG = ( "f"
+                          , toScheme (tInteger `fn` list tInteger)
+                          , [ (  [PVar "x"]
+                              ,  ap [EConst (cons_BG^.asmp), Var "x", ap [Var "g", Var "x"]]
+                              )
+                            ]
+                          )
 
-        gcd_type  = toScheme (tInteger `fn` tInteger `fn` tInteger)
-        gcd_pat1  = [PVar "a", PLit (LitInt 0)]
-        gcd_body1 = Var "a"
-        gcd_pat2  = [PVar "a", PVar "b"]
-        gcd_body2 = ap [Var "gcd", Var "b", ap [Var "mod", Var "a", Var "b"]]
-        
-        mod_type  = toScheme (tInteger `fn` tInteger `fn` tInteger)
+        alternatingG_BG = ( "g"
+                          , toScheme (tInteger `fn` list tInteger)
+                          , [ (  [PVar "x"]
+                              ,  ap [EConst (cons_BG^.asmp), Var "x", ap [Var "f", ap [Var "decr", Var "x"]]]
+                              )
+                            ]
+                          )
 
-        cons_type = Forall [Star] ([] :=> (TGen 0 `fn` list (TGen 0) `fn` list (TGen 0)))
-        nil_type  = Forall [Star] ([] :=> (list (TGen 0)))
+        badtest_BG      = ( "badtest"
+                          , Forall [Star] ([] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
+                          , [ (  [PVar "x", PVar "y"]
+                              ,  Let ([], [[("result", [([PWildcard], ap [Var "(==)", Var "x", Var "y"])])]]) (Var "result")
+                              )
+                            ]
+                          )
 
-        foldr_type  = Forall [Star, Star] ([] :=> ((TGen 0 `fn` TGen 1 `fn` TGen 1) `fn` TGen 1 `fn` list (TGen 0) `fn` TGen 1))
-        foldr_pat1  = [PWildcard, PVar "a", PCon ("[]":>:nil_type) []]
-        foldr_body1 = Var "a"
-        foldr_pat2  = [PVar "f", PVar "a", PAs "xxs" (PCon (":":>:cons_type) [PVar "x", PVar "xs"]  )]
-        foldr_body2 = ap [Var "f", Var "x", ap [Var "foldr", Var "f", Var "a", Var "xs"]]
+        decr_BG         = ( "decr"
+                          , toScheme (tInteger `fn` tInteger)
+                          , [ (  [ error "no pat for decr" ]
+                              ,  error "no body for decr"
+                              )
+                            ]
+                          )
 
-        and_type = toScheme (list tBool `fn` tBool)
-        and_pat  = []
-        and_body = ap [Var "foldr", Var "(&&)", Const ("True" :>: toScheme tBool)]
+        fulting_BG      = ( "fulting"
+                          , Forall [] ([] :=> (tInt `fn` tBool))
+                          , [ (  [PVar "v"]
+                              ,  ap [Var "(==)", Var "v", ap [Var "fromIntegral", ap [Var "(+)", Lit (LitIntegral 2), Lit (LitIntegral 3)]]]
+                              )
+                            ]
+                          )
 
+        mutualEX_BG     = ( "ff"
+                          , Forall [Star] ([IsIn "Eq"  (TGen 0)] :=> (TGen 0 `fn` tBool))
+                          , [ (  [PVar "x"]
+                              ,  ap [Var "(||)", ap [Var "(==)", Var "x", Var "x"], ap [Var "g", EConst ("True" :>: toScheme tBool)]]
+                              )
+                            ]
+                          )
 
-        alternating_type = toScheme (tInteger `fn` list tInteger)
-        alternating_pat  = [PVar "x"]
-        alternating1_body = ap [Const ("(:)":>:cons_type), Var "x", ap [Var "g", Var "x"]]
-        alternating2_body = ap [Const ("(:)":>:cons_type), Var "x", ap [Var "f", ap [Var "decr", Var "x"]]]
-
-        mutualex_type = Forall [Star] ([IsIn "Eq"  (TGen 0)] :=> (TGen 0 `fn` tBool))
-        mutualex_pat  = [PVar "x"]
-        mutualex_body = ap [Var "(||)", ap [Var "(==)", Var "x", Var "x"], ap [Var "g", Const ("True" :>: toScheme tBool)]]
-        mutualim_type = Forall [Star] ([IsIn "Ord" (TGen 0)] :=> (TGen 0 `fn` tBool))
-        mutualim_pat  = [PVar "y"]
-        mutualim_body = ap [Var "(||)", ap [Var "(<=)", Var "y", Var "y"], ap [Var "f", Const ("True" :>: toScheme tBool)]]
-
-        badtest_type = Forall [Star] ([] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
-        badtest_pat  = [PVar "x", PVar "y"]
-        badtest_body = Let ([], [[("result", [([PWildcard], ap [Var "(==)", Var "x", Var "y"])])]]) (Var "result")
-
-        leq_type  = Forall [Star] ([IsIn "Ord" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
-        eq_type   = Forall [Star] ([IsIn "Eq"  (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
-        land_type = toScheme (tBool `fn` tBool `fn` tBool)
-        lor_type  = toScheme (tBool `fn` tBool `fn` tBool)
-        fromIntegral_type = Forall [Star, Star] ([IsIn "Integral" (TGen 0), IsIn "Num" (TGen 1)] :=> (TGen 0 `fn` TGen 1))
-        integralAdd_type = Forall [Star] ([IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
-
-        fulting_type = Forall [] ([] :=> (tInt `fn` tBool))
-        fulting_pat  = [PVar "v"]
-        fulting_body = ap [Var "(==)", Var "v", ap [Var "fromIntegral", ap [Var "(+)", Lit (LitIntegral 2), Lit (LitIntegral 3)]]]
-
-          --        xxx :: Int -> Bool
-          --xxx v = v == (fromIntegral (2 + 3))
+        mutualIM_BG     = ( "gg"
+                          , Forall [Star] ([IsIn "Eq"  (TGen 0)] :=> (TGen 0 `fn` tBool))
+                          , [ (  [PVar "x"]
+                              ,  ap [Var "(||)", ap [Var "(==)", Var "x", Var "x"], ap [Var "g", EConst ("True" :>: toScheme tBool)]]
+                              )
+                            ]
+                          )
 
     it "typechecks `const`" $ do
-      let def = ([( "const", const_type , [( const_pat , const_body )] )] , [])
-      force (tiProgram initialEnv [] [def]) `shouldContain` ["const" :>: const_type]
+      let def = ([ const_BG ] , [])
+      force (tiProgram initialEnv [] [def]) `shouldContain` [const_BG^.asmp]
     
 
     it "infers type for `const`" $ do
-      let def = ([] , [[( "const", [(const_pat , const_body)] )]] )
-      force (tiProgram initialEnv [] [def]) `shouldContain` ["const" :>: const_type]
+      let def = ([] , [[ const_BG^.impl ]] )
+      force (tiProgram initialEnv [] [def]) `shouldContain` [const_BG^.asmp]
     
 
     it "typechecks `gcd`" $ do
-      let def = ( [( "gcd", gcd_type , [ (gcd_pat1, gcd_body1)
-                                       , (gcd_pat2, gcd_body2)
-                                       ]
-                  )] , [] )
-      tiProgram initialEnv ["mod" :>: mod_type] [def] `shouldContain` ["gcd" :>: gcd_type]
+      let def = ( [ gcd_BG ] , [] )
+      tiProgram initialEnv [mod_BG^.asmp] [def] `shouldContain` [gcd_BG^.asmp]
     
 
     it "infers type for `gcd`" $ do
-      let def = ( [] , [[( "gcd", [ (gcd_pat1, gcd_body1)
-                                  , (gcd_pat2, gcd_body2)
-                                  ]
-                  )]] )
-      tiProgram initialEnv ["mod" :>: mod_type] [def] `shouldContain` ["gcd" :>: gcd_type]
+      let def = ( [] , [[ gcd_BG^.impl ]] )
+      tiProgram initialEnv [mod_BG^.asmp] [def] `shouldContain` [gcd_BG^.asmp]
     
 
     it "typechecks `foldr`" $ do
-      let def = ([("foldr", foldr_type, [(foldr_pat1, foldr_body1),(foldr_pat2,foldr_body2)])], [])
+      let def = ([foldr_BG], [])
           res = tiProgram initialEnv [] [def]
-      res `shouldContain` ["foldr" :>: foldr_type]
+      res `shouldContain` [foldr_BG^.asmp]
     
 
     it "infers type for `foldr`" $ do
-      let def = ([], [[  ( "foldr", [ (foldr_pat1, foldr_body1)
-                                    , (foldr_pat2, foldr_body2)])
-                     ]]
-                )
+      let def = ([], [[ foldr_BG^.impl ]] )
           res = tiProgram initialEnv [] [def]
-      res `shouldContain` ["foldr" :>: foldr_type]
+      res `shouldContain` [foldr_BG^.asmp]
     
 
     it "typechecks `and`" $ do
-      let def = ([("and", and_type, [(and_pat, and_body)])], [])
-          res = tiProgram initialEnv ["foldr" :>: foldr_type, "(&&)" :>: land_type] [def]
-      res `shouldContain` ["and" :>: and_type]
+      let def = ([and_BG], [])
+          res = tiProgram initialEnv [foldr_BG^.asmp, land_BG^.asmp] [def]
+      res `shouldContain` ["and" :>: (and_BG ^. scheme)]
     
 
     it "infers type for `and`" $ do
-      let def = ([], [[("and", [(and_pat, and_body)])]])
-          res = tiProgram initialEnv ["foldr" :>: foldr_type, "(&&)" :>: land_type] [def]
-      res `shouldContain` ["and" :>: and_type]
+      let def = ([], [[ and_BG ^. impl ]])
+          res = tiProgram initialEnv [foldr_BG^.asmp, land_BG^.asmp] [def]
+      res `shouldContain` ["and" :>: (and_BG ^. scheme)]
     
 
     it "typechecks `foldr` & infers `and`" $ do
-      let defs = [ ([], [[  ( "foldr", [ (foldr_pat1, foldr_body1)
-                                       , (foldr_pat2, foldr_body2)])
-                        ]]
-                   )
-                 , ([], [[  ( "and", [(and_pat, and_body)])
-                        ]]
-                   )
+      let defs = [ ([], [[ foldr_BG^.impl ]] )
+                 , ([], [[ and_BG ^. impl ]] )
                  ]
-          res = tiProgram initialEnv ["(&&)" :>: land_type] defs
-      res `shouldContain` ["foldr" :>: foldr_type]
-      res `shouldContain` ["and" :>: and_type]
+          res = tiProgram initialEnv [land_BG^.asmp] defs
+      res `shouldContain` [foldr_BG^.asmp]
+      res `shouldContain` [and_BG ^. asmp]
     
 
     it "typechecks mutually-recursive functions" $ do
-      let def = ( [ ("f", alternating_type, [(alternating_pat, alternating1_body)])
-                  , ("g", alternating_type, [(alternating_pat, alternating2_body)])
-                  ]
-                , [])
-          res = tiProgram initialEnv ["decr" :>: toScheme (tInteger `fn` tInteger)] [def]
-      res `shouldContain` ["f" :>: alternating_type]
-      res `shouldContain` ["g" :>: alternating_type]
+      let def = ( [ alternatingF_BG, alternatingG_BG ] , [])
+          res = tiProgram initialEnv [decr_BG^.asmp] [def]
+      res `shouldContain` [alternatingF_BG^.asmp]
+      res `shouldContain` [alternatingG_BG^.asmp]
 
 
     it "infers types for mutually-recursive functions" $ do
-      let def = ( [], [[ ("f", [(alternating_pat, alternating1_body)])
-                       , ("g", [(alternating_pat, alternating2_body)])
-                      ]]
-                )
-          res = tiProgram initialEnv ["decr" :>: toScheme (tInteger `fn` tInteger)] [def]
-      res `shouldContain` ["f" :>: alternating_type]
-      res `shouldContain` ["g" :>: alternating_type]
+      let def = ( [], [[ alternatingF_BG^.impl, alternatingG_BG^.impl ]] )
+          res = tiProgram initialEnv [decr_BG^.asmp] [def]
+      res `shouldContain` [alternatingF_BG^.asmp]
+      res `shouldContain` [alternatingG_BG^.asmp]
 
     it "signals too general explicit typing" $ do
-      let def = ( [("badtest", badtest_type, [(badtest_pat, badtest_body)])], [] )
-          res = tiProgram initialEnv ["(==)":>:eq_type] [def]
+      let def = ( [badtest_BG], [] )
+          res = tiProgram initialEnv [eq_BG^.asmp] [def]
       evaluate res `shouldThrow` anyErrorCall
 
 
     it "typechecks the example with mutually-recursive functions, one typed, both using typeclasses" $ do
-      let def = ( [(  "f", mutualex_type, [(mutualex_pat, mutualex_body)])]
-                , [[( "g",                [(mutualim_pat, mutualim_body)] )]])
+      let def = ( [alternatingF_BG], [[alternatingG_BG^.impl]])
           classenvT = addClass "Eq" []
                   <:> addClass "Ord" ["Eq"]
                   <:> addInst [] (IsIn "Eq" tBool)
                   <:> addInst [] (IsIn "Ord" tBool)
           Just classenv = classenvT initialEnv
-          res = tiProgram classenv ["(<=)":>:leq_type, "(==)":>:eq_type, "(||)":>:lor_type] [def]
-      res `shouldContain` ["f" :>: mutualex_type]
-      res `shouldContain` ["g" :>: mutualim_type]
+          res = tiProgram classenv [decr_BG^.asmp, leq_BG^.asmp, eq_BG^.asmp, lor_BG^.asmp] [def]
+      res `shouldContain` [alternatingF_BG^.asmp]
+      res `shouldContain` [alternatingG_BG^.asmp]
 
 
     it "resolves ambiguities: `fromIntegral (2 + 3)`" $ do
-      let def = ( [( "fulting_type", fulting_type, [(fulting_pat, fulting_body)])] , [])
+      let def = ( [fulting_BG] , [])
           classenvT = addClass "Eq" []
                   <:> addClass "Ord" ["Eq"]
                   <:> addClass "Num" []
@@ -197,25 +175,25 @@ spec = do
                   <:> addInst [] (IsIn "Enum" tInt)     <:> addInst [] (IsIn "Enum" tInteger)
                   <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
           Just classenv = classenvT initialEnv
-          res = tiProgram classenv ["(==)":>:eq_type, "fromIntegral":>:fromIntegral_type, "(+)":>:integralAdd_type] [def]
-      res `shouldContain` ["fulting_type" :>: fulting_type]
+          res = tiProgram classenv [eq_BG^.asmp, fromIntegral_BG^.asmp, integralAdd_BG^.asmp] [def]
+      res `shouldContain` [fulting_BG^.asmp]
 
     it "handles monomorphism restriction" $ do
       let def pat = ([], [[("test", [(pat, test_body)])]])
           test_pat  = [PVar "x"]
           test_pat' = []
           test_body = Var "show"
-          show_type = Forall [Star] ([IsIn "Show" (TGen 0)] :=> (TGen 0 `fn` (list tChar)))
+          show_type = Forall [Star] ([IsIn "Show" (TGen 0)] :=> (TGen 0 `fn` list tChar))
           Just ce = (  addClass "Show" []
                    <:> addInst [] (IsIn "Show" tInt)
                    <:> addInst [] (IsIn "Show" tBool)
                     ) initialEnv
           res pat = tiProgram ce ["show":>:show_type] [def pat]
-      res test_pat `shouldContain` ["test":>:(Forall [Star, Star] ([IsIn "Show" (TGen 0)] :=> (TGen 1 `fn` TGen 0 `fn` list tChar)))]
+      res test_pat `shouldContain` ["test":>:Forall [Star, Star] ([IsIn "Show" (TGen 0)] :=> (TGen 1 `fn` TGen 0 `fn` list tChar))]
       evaluate (res test_pat') `shouldThrow` anyErrorCall
 
 
-  describe "(coverage booster)" $ do
+  describe "(coverage booster)" $
     it "should ignore Show instances" $ do
       length (concatMap show [Star, Kfun Star Star]) `shouldSatisfy` (>0)
       length (          show [Star, Kfun (Kfun Star Star) (Kfun (Kfun Star Star) (Kfun Star Star))]) `shouldSatisfy` (>0)

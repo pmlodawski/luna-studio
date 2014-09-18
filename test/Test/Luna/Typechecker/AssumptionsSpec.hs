@@ -28,7 +28,7 @@ import Test.Hspec
 import Control.Exception
 
 spec :: Spec
-spec = do
+spec =
   describe "find" $ do
     it "can fail" $ do
       let res = find "a" [] :: Either String Scheme

@@ -150,7 +150,7 @@ spec = do
       evaluate (flip apply t1 <$> u) `shouldReturn` Right t2
       evaluate res `shouldThrow` anyErrorCall
       evaluate res' `shouldThrow` anyErrorCall
-  describe "(internals)" $ do
+  describe "(internals)" $
     describe "varBind" $ do
       it "QC: ∀ (Tyvar tv): varBind tv (TVar tv) == nullSubst" $ property $
         \tyvar -> (varBind tyvar (TVar tyvar) :: Either String Subst) `shouldBe` (Right nullSubst)
