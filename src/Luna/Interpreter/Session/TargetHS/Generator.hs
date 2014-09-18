@@ -6,8 +6,7 @@
 ---------------------------------------------------------------------------
 module Luna.Interpreter.Session.TargetHS.Generator where
 
-import           Control.Monad.Trans.Either
-import qualified Data.List                  as List
+import qualified Data.List as List
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -64,11 +63,12 @@ genFunctions = do
 
 genCode :: ([String] -> [String]) -> Module -> Session [String]
 genCode selector ast = do
-    aliasInfo <- EitherT $ Analysis.Alias.run ast
-    hash      <- EitherT $ Hash.run ast
-    ssa       <- EitherT $ SSA.run aliasInfo hash
-    hast      <- EitherT $ HASTGen.run ssa
-    srcs      <- EitherT $ HSC.run hast
+    let runPass = Session.runPass "Generator.genCode"
+    aliasInfo <- runPass $ Analysis.Alias.run ast
+    hash      <- runPass $ Hash.run ast
+    ssa       <- runPass $ SSA.run aliasInfo hash
+    hast      <- runPass $ HASTGen.run ssa
+    srcs      <- runPass $ HSC.run hast
     return $ map (unlines . selector . lines . view Source.code) srcs
 
 

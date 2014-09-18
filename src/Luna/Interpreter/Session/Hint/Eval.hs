@@ -8,8 +8,8 @@
 
 module Luna.Interpreter.Session.Hint.Eval where
 
+import           Data.Typeable (Typeable)
 import qualified Data.Typeable as Typeable
-import  Data.Typeable (Typeable)
 import qualified GHC
 import qualified GHC.Exts      as Exts
 
@@ -22,6 +22,7 @@ interpret :: (GHC.GhcMonad m, Typeable a) => String -> m a
 interpret expr = interpret' expr wit where
     wit :: a
     wit = undefined
+
 
 -- | Evaluates an expression, given a witness for its monomorphic type.
 interpret' :: (GHC.GhcMonad m, Typeable a) => String -> a -> m a
