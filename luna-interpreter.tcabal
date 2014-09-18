@@ -30,6 +30,7 @@ Library
                   flowbox-config,
                   flowbox-utils,
                   ghc,
+                  ghc-mtl,
                   luna-core,
                   luna-distribution,
                   luna-pass,

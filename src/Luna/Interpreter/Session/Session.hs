@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Luna.Interpreter.Session.Session where
 
+import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import           Data.ByteString.Lazy       (ByteString)
@@ -15,7 +16,6 @@ import           Data.Monoid                ((<>))
 import           Data.Typeable              (Typeable)
 import qualified DynFlags                   as GHC
 import qualified GHC
-import qualified GhcMonad                   as GHC
 
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Config.Config                       (Config)
@@ -54,7 +54,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Session"
 
 
-type SessionST = StateT Env GHC.Ghc
+type SessionST = StateT Env MGHC.Ghc
 
 
 type Session = EitherT Error SessionST
@@ -65,16 +65,16 @@ type Import = String
 
 run :: Config -> Env -> [Import] -> Session a -> IO (Either Error a)
 run config env imports session =
-    GHC.runGhc (Just $ Config.topDir $ Config.ghcS config) $
+    MGHC.runGhc (Just $ Config.topDir $ Config.ghcS config) $
         evalStateT (runEitherT (initialize config imports >> session)) env
 
 
-reifySession :: (GHC.Session -> Env -> IO a) -> Session a
-reifySession f = lift2 . f' =<< get where
-    --f' :: Env -> GHC.Ghc a
-    f' env' = GHC.reifyGhc (f'' env')
-    --f'' :: Env -> GHC.Session -> IO a
-    f'' = flip f
+--reifySession :: (GHC.Session -> Env -> IO a) -> Session a
+--reifySession f = lift2 . f' =<< get where
+--    --f' :: Env -> GHC.Ghc a
+--    f' env' = GHC.reifyGhc (f'' env')
+--    --f'' :: Env -> GHC.Session -> IO a
+--    f'' = flip f
 
 
 --reflectSession :: GHC.Session -> Env -> Session a -> IO a
@@ -92,9 +92,9 @@ initialize config imports = do
                 --, GHC.verbosity = 4
                 }
     setHardcodedExtensions
-    setImports ([ "Data.Word"
-                , "Luna.Target.HS"
-                ] ++ imports)
+    setImports $ "Data.Word"
+               : "Luna.Target.HS"
+               : imports
     runDecls Helpers.hash
 
 
@@ -128,7 +128,7 @@ location :: String
 location = "<target ghc-hs interactive>"
 
 
-interceptSourceErrors :: GHC.Ghc a -> Session a
+interceptSourceErrors :: MGHC.Ghc a -> Session a
 interceptSourceErrors ghc = do
     let handler srcErr = do
             let errDat = Error.SourceError "Session.runStmt" srcErr
