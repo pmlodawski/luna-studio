@@ -16,7 +16,7 @@ data Kind = Star
 
 instance NFData Kind
 
--- | Pretty-print.
+
 instance Show Kind where
   show Star = "*"
   show (Kfun x y) = showNopars x ++ "->" ++ show y

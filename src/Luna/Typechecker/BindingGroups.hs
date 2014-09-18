@@ -77,7 +77,6 @@ type Expl = (TID, Scheme, [Alt])
 type Impl = (TID, [Alt])
 
 
--- TODO [kgdk] 20 sie 2014: 
 tiExpl :: ClassEnv -> [Assump] -> Expl -> TI [Pred]
 tiExpl ce as (_, sc, alts) = do (qs :=> t) <- freshInst sc
                                 ps         <- tiAlts ce as alts t
@@ -97,14 +96,12 @@ tiExpl ce as (_, sc, alts) = do (qs :=> t) <- freshInst sc
                                     return ds
 
 
--- TODO [kgdk] 20 sie 2014: 
 restricted :: [Impl] -> Bool
 restricted = any simple
   where simple (_, alts) = any (null . fst) alts
 
 
 
--- TODO [kgdk] 20 sie 2014: 
 tiImpls :: Infer [Impl] [Assump]
 tiImpls ce as bs = do ts <- mapM (\_ -> newTVar Star) bs
                       let is    = map fst bs

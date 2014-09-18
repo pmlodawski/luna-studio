@@ -2,20 +2,17 @@ module Luna.Typechecker.TIMonad (
     TI(..), newTVar, freshInst, unify, getSubst, runTI, Instantiate(..)
   ) where
 
-import           Luna.Typechecker.AST.Kind         (Kind)
-import           Luna.Typechecker.AST.Scheme       (Scheme(..))
-import           Luna.Typechecker.AST.TID          (enumTID)
-import           Luna.Typechecker.AST.Type         (Type(..), Tyvar(..))
+import Luna.Typechecker.AST.Kind       (Kind)
+import Luna.Typechecker.AST.Scheme     (Scheme(..))
+import Luna.Typechecker.AST.TID        (enumTID)
+import Luna.Typechecker.AST.Type       (Type(..), Tyvar(..))
 
-import           Luna.Typechecker.Substitutions    (Types(..),Subst,nullSubst,(@@))
-import           Luna.Typechecker.Typeclasses      (Qual(..),Pred(..))
-import           Luna.Typechecker.Unification      (mgu)
+import Luna.Typechecker.Substitutions  (Types(..),Subst,nullSubst,(@@))
+import Luna.Typechecker.Typeclasses    (Qual(..),Pred(..))
+import Luna.Typechecker.Unification    (mgu)
 
-import           Control.Applicative                        (Applicative(..))
+import Control.Applicative             (Applicative(..))
 
--- TODO [kgdk] 19 sie 2014: a może użyć State/ST zamiast newtype TI a?
--- TODO [kgdk] 19 sie 2014: zbadać performance 'State (x,y)' vs to tutaj vs 'StateT x (State y)'
--- TODO [kgdk] 21 sie 2014: zrobic z tego Applicative
 newtype TI a = TI (Subst -> Int -> (Subst, Int, a))
 
 
@@ -26,19 +23,13 @@ instance Monad TI where
                                            in gx s' n')
 
 instance Functor TI where
-  --fmap :: (a -> b) -> f a -> f b
   fmap = undefined 
 
 instance Applicative TI where
-  --pure :: a -> TI a
   pure = undefined
-  --(<*>) :: f (a -> b) -> f a -> f b
   (<*>) = undefined
 
 
--- TODO [kgdk] 19 sie 2014: co to jest z tymi nazwami? :< to powinno być nazwą pola rekordu natomiast
--- to co tutaj to powinno się nazywać… runTIWithDefault lub podobnie oraz getTI
--- TODO [kg] 15 lip 2014: opcjonalnie zrobić instance MonadState TI
 runTI :: TI a -> a
 runTI (TI f) = x
   where (_, _, x) = f nullSubst 0

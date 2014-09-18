@@ -33,8 +33,6 @@ spec = do
       ct0 = TCon cc0
       cc1 = Tycon "B1" Star
       ct1 = TCon cc1
-      --cc2 = Tycon "A2" Star
-      --ct2 = TCon cc2
       cc3 = Tycon "B2" Star
       ct3 = TCon cc3
 

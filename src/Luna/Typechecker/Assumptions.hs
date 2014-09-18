@@ -27,10 +27,6 @@ instance Types Assump where
   apply s (i :>: sc) = i :>: apply s sc
   tv (_ :>: sc) = tv sc
 
--- TODO [kgdk] 19 sie 2014: wybrać lepsze
---find i lst = case Prelude.find (\(i' :>: sc) -> i' == i) lst of
---               Just (i' :>: sc) -> return sc
---               Nothing          -> fail ("unbound identifier: " ++ i)
 find :: Monad m => TID -> [Assump] -> m Scheme
 find i [] = fail ("unbound identifier: " ++ i)
 find i ((i' :>: sc) : as) = if i==i'

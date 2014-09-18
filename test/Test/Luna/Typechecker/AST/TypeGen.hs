@@ -44,7 +44,6 @@ instance Arbitrary Tycon where
   arbitrary = arbitrary >>= genTycon
   shrink (Tycon n kind) = map (Tycon n) (shrink kind)
 
---data Pred = IsIn TID Type
 instance Arbitrary Pred where
   arbitrary = liftM2 IsIn arbitrary arbitrary
   shrink (IsIn tid t) = (IsIn tid <$> shrink t) ++ (IsIn <$> shrink tid <*> [t]) ++ (IsIn <$> shrink tid <*> shrink t)
