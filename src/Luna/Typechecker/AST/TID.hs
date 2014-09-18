@@ -1,4 +1,6 @@
-module Luna.Typechecker.AST.TID (enumTID, TID) where
+module Luna.Typechecker.AST.TID (
+    enumTID, TID
+  ) where
 
 
 -- | Type identifier.

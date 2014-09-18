@@ -99,6 +99,6 @@ genSubst []  = return Sub.nullSubst
 genSubst tvs = do t <- elements tvs
                   let k = HKd.kind t
                   ty <- genType k `suchThat` (notElem t . Sub.tv)
-                  return $ (t Sub.+-> ty)
+                  return (t Sub.+-> ty)
 
 

@@ -1,4 +1,6 @@
-module Luna.Typechecker.Substitutions (Subst, Types(..), (@@), merge, nullSubst, (+->)) where
+module Luna.Typechecker.Substitutions (
+    Subst, Types(..), (@@), merge, nullSubst, (+->)
+  ) where
 
 import           Luna.Typechecker.AST.Type         (Tyvar(..), Type(..))
 

@@ -1,30 +1,24 @@
-module Luna.Typechecker.Typeclasses where
-    --Pred(..), Qual(..), ClassEnv(..),
-    --entail, byInst, addClass, addInst, (<:>), initialEnv
+module Luna.Typechecker.Typeclasses (
+    Pred(..), Qual(..), ClassEnv(..),EnvTransformer,
+    entail, byInst, addClass, addInst, (<:>), initialEnv, mguPred, matchPred, super
+  ) where
 
-import Luna.Typechecker.AST.Type         (Type(..), tInteger, tDouble)
+import Luna.Typechecker.Internal.Typeclasses (Pred(..),Qual(..),ClassEnv(..))
 
-import Luna.Typechecker.Substitutions    (Types(..), Subst)
-import Luna.Typechecker.Unification      (match, mgu)
+import Luna.Typechecker.AST.Type       (Type(..), tInteger, tDouble)
 
-import Luna.Typechecker.AST.TID          (TID)
+import Luna.Typechecker.Substitutions  (Types(..), Subst)
+import Luna.Typechecker.Unification    (match, mgu)
 
-import Control.Monad                              (msum)
+import Luna.Typechecker.AST.TID        (TID)
 
-import Data.List                                  (intercalate,union,nubBy)
-import Data.Maybe                                 (isJust)
-import Data.Function                              (on)
-import Text.Printf                                (printf)
-import Control.DeepSeq
+import Control.Monad                   (msum)
 
-data Pred = IsIn TID Type
-          deriving (Eq)
-
-instance NFData Pred where
-  rnf (IsIn tid t) = rnf tid `seq` rnf t
-
-instance Show Pred where
-  show (IsIn tid ty) = printf "%s %s" (show ty) tid
+--import Data.List                       (intercalate,union,nubBy)
+import Data.Maybe                      (isJust)
+--import Data.Function                   (on)
+--import Text.Printf                     (printf)
+--import Control.DeepSeq
 
 
 mguPred :: Pred -> Pred -> Maybe Subst
@@ -38,51 +32,10 @@ liftPred m (IsIn i t) (IsIn i' t') | i == i'   = m t t'
                                    | otherwise = fail "classes differ"
 
 
--- | Qualify.
--- Used for qualifying types and for class dependencies.
--- E.g.: '(Num a) => a -> Int' is represented as
---   [IsIn "Num" (TVar (Tyvar "a" Star))] :=> (TVar (Tyvar "a" Star) `fn` tInt)
--- E.g.: to state, that the instance 'Ord (a,b)' requires 'Ord a' and 'Ord b':
---    [IsIn "Ord" (TVar (Tyvar "a" Star)), IsIn "Ord" (TVar (Tyvar "b" Star))]
---      :=>
---    IsIn "Ord" (pair (TVar (Tyvar "a" Star)) (TVar (Tyvar "b" Star)))]
-data Qual t = [Pred] :=> t
-            deriving (Eq)
-
-instance NFData t => NFData (Qual t) where
-  rnf (ps :=> t) = rnf ps `seq` rnf t
-
-instance Show t => Show (Qual t) where
-  show (ps :=> t) = printf "(%s :=> %s)" (show ps) (show t)
-
-instance Types t => Types (Qual t) where
-  apply s (ps :=> t) = apply s ps :=> apply s t
-  tv (ps :=> t)      = tv ps `union` tv t
-
-
-
-instance Types Pred where
-  apply s (IsIn i t) = IsIn i (apply s t)
-  tv (IsIn _ t)      = tv t
-
 
 type Class = ([TID], [Inst])
 type Inst  = Qual Pred
 
-
-data ClassEnv = ClassEnv {
-                  classes :: TID -> Maybe Class,
-                  classesNames :: [(TID, Class)],
-                  defaults :: [Type]
-                }
-
-
-instance Show ClassEnv where
-  show (ClassEnv _ nm _) = printf "(classenv: %s)" (intercalate ", " $ map show $ nubBy ((==) `on` fst) nm)
-  --show  = printf "(classenv: %s)" . intercalate ", " . map show . nubBy ((==) `on` fst) . classesNames
-
-instance Eq ClassEnv where
-  (==) _ _ = False
 
 
 super :: ClassEnv -> TID -> [TID]

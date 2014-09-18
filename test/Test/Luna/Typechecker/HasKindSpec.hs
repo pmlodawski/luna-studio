@@ -37,11 +37,11 @@ spec =
     describe "instance HasKind Tyvar" $
       it "kind :: t -> Kind" $ do
         kind (Ty.Tyvar undefined Star)             `shouldBe` Star
-        kind (Ty.Tyvar undefined (Kfun Star Star)) `shouldBe` (Kfun Star Star)
+        kind (Ty.Tyvar undefined (Kfun Star Star)) `shouldBe` Kfun Star Star
     describe "instance HasKind Tycon" $
       it "kind :: t -> Kind" $ do
         kind (Ty.Tycon undefined Star)             `shouldBe` Star
-        kind (Ty.Tycon undefined (Kfun Star Star)) `shouldBe` (Kfun Star Star)
+        kind (Ty.Tycon undefined (Kfun Star Star)) `shouldBe` Kfun Star Star
     describe "instance HasKind Type" $
       it "kind :: t -> Kind" $ do
         kind Ty.tUnit                              `shouldBe` Star

@@ -35,10 +35,10 @@ spec =
       evaluate res `shouldThrow` anyErrorCall
     it "works for singletons" $ do
       let res = find "a" ["a" :>: sch]
-          sch = (Forall [] ([] :=> (TVar $ Tyvar "a" Star)))
+          sch = Forall [] ([] :=> (TVar $ Tyvar "a" Star))
       evaluate res `shouldReturn` Just sch
     it "recurses" $ do
       let res = find "a" ["b" :>: sch2, "a" :>: sch1]
-          sch1 = (Forall [] ([] :=> (TVar $ Tyvar "a" Star)))
-          sch2 = (Forall [] ([] :=> (TVar $ Tyvar "b" Star)))
+          sch1 = Forall [] ([] :=> (TVar $ Tyvar "a" Star))
+          sch2 = Forall [] ([] :=> (TVar $ Tyvar "b" Star))
       evaluate res `shouldReturn` Just sch1

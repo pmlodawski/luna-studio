@@ -1,4 +1,6 @@
-module Luna.Typechecker.Assumptions (Assump(..), find) where
+module Luna.Typechecker.Assumptions (
+    Assump(..), find
+  ) where
 
 import           Luna.Typechecker.AST.Scheme       (Scheme(..))
 

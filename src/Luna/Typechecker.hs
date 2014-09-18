@@ -1,4 +1,6 @@
-module Luna.Typechecker where
+module Luna.Typechecker (
+    tiProgram
+  ) where
 
 import Luna.Typechecker.Ambiguity        (defaultSubst)
 import Luna.Typechecker.Assumptions      (Assump)

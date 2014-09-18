@@ -1,4 +1,7 @@
-module Luna.Typechecker.BindingGroups where
+module Luna.Typechecker.BindingGroups (
+    BindGroup, Expl, Impl, Alt, Expr(..),
+    tiSeq, tiBindGroup, tiExpl, tiExpr
+  ) where
 
 import Luna.Typechecker.AST.Kind         (Kind(..))
 import Luna.Typechecker.AST.Lit          (Lit(..),tiLit)
@@ -15,9 +18,9 @@ import Luna.Typechecker.TypeInference    (Infer, split)
 import Luna.Typechecker.AST.TID          (TID)
 
 
-import Control.Monad                              (zipWithM)
+import Control.Monad                     (zipWithM)
 
-import Data.List                                  ((\\), intersect, union)
+import Data.List                         ((\\), intersect, union)
 
 import Text.Printf
 

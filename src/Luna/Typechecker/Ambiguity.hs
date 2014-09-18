@@ -1,4 +1,6 @@
-module Luna.Typechecker.Ambiguity where
+module Luna.Typechecker.Ambiguity (
+    defaultedPreds, defaultSubst, candidates  
+  ) where
 
 import Luna.Typechecker.AST.Type         (Type(..), Tyvar)
 
@@ -8,14 +10,11 @@ import Luna.Typechecker.Typeclasses      (ClassEnv(..), Pred(..),entail)
 import Luna.Typechecker.AST.TID          (TID)
 
 import Data.List                                  ((\\))
-import Text.Printf
+--import Text.Printf
 
 type Ambiguity = (Tyvar, [Pred])
 
 
-debug :: a -> String -> a
---debug = flip trace
-debug = const
 
 
 ambiguities :: ClassEnv -> [Tyvar] -> [Pred] -> [Ambiguity]
@@ -41,8 +40,8 @@ candidates ce (v, qs) = [t' | let is = [i | IsIn i _ <- qs]
 
 -- TODO [kgdk] 21 sie 2014: 
 withDefaults :: Monad m => ([Ambiguity] -> [Type] -> a) -> ClassEnv -> [Tyvar] -> [Pred] -> m a
-withDefaults f ce vs ps | any null tss = fail "cannot resolve ambiguity" `debug` printf "result: FIAL'd vps=%s tss=%s" (show vps) (show tss)
-                        | otherwise = return (f vps (map head tss)) `debug` printf "result: OK vps=%s tss=%s" (show vps) (show tss)
+withDefaults f ce vs ps | any null tss = fail "cannot resolve ambiguity"
+                        | otherwise = return (f vps (map head tss))
   where vps = ambiguities ce vs ps
         tss = map (candidates ce) vps
 

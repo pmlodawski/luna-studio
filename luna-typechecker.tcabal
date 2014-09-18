@@ -8,19 +8,20 @@ Build-Type:     Simple
 
 
 Library
-  GHC-Options:        -Werror -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -Werror -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     src
   Build-Depends:      base
                     , containers
                     , QuickCheck
                     , flowbox-luna-base
                     , deepseq
+                    , deepseq-generics
   Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
 
 
 
 Executable luna-typechecker-tests
-  GHC-Options:        -Werror -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -Werror -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     test
   Main-Is:            Spec.hs
   Build-Depends:      base
@@ -32,5 +33,4 @@ Executable luna-typechecker-tests
                     , transformers
                     , array
                     , deepseq
-                    , lens
                     , containers
