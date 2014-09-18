@@ -23,7 +23,7 @@ spec = do
              in ps `shouldContain` [IsIn "Integral" t]
     it "just works for String" $ property $
       \x -> runTI (tiLit (LitStr x)) `shouldBe` ([], tString)
-  describe "(coverage booster)" $ do
-    describe "instance Show Lit" $ do
-      it "show :: a -> String" $ do
+  describe "(coverage booster)" $
+    describe "instance Show Lit" $
+      it "show :: a -> String" $
         length (concatMap show [LitChar 'c', LitFloat 1.0, LitInt (1 :: Integer), LitIntegral 1, LitStr "lel"]) `shouldSatisfy` (>0)

@@ -72,14 +72,14 @@ type Inst  = Qual Pred
 
 data ClassEnv = ClassEnv {
                   classes :: TID -> Maybe Class,
-                  classes_names :: [(TID, Class)],
+                  classesNames :: [(TID, Class)],
                   defaults :: [Type]
                 }
 
 
 instance Show ClassEnv where
   show (ClassEnv _ nm _) = printf "(classenv: %s)" (intercalate ", " $ map show $ nubBy ((==) `on` fst) nm)
-  --show  = printf "(classenv: %s)" . intercalate ", " . map show . nubBy ((==) `on` fst) . classes_names
+  --show  = printf "(classenv: %s)" . intercalate ", " . map show . nubBy ((==) `on` fst) . classesNames
 
 instance Eq ClassEnv where
   (==) _ _ = False
@@ -99,7 +99,7 @@ insts ce i = case classes ce i of
 -- TODO [kg]: how fucking stupid is this one? :<
 modify :: ClassEnv -> TID -> Class -> ClassEnv
 modify ce i c = ce {
-                   classes_names = (i,c) : classes_names ce,
+                   classesNames = (i,c) : classesNames ce,
                    classes = \j ->
                      if i == j
                        then Just c
@@ -109,7 +109,7 @@ modify ce i c = ce {
 initialEnv :: ClassEnv
 initialEnv = ClassEnv {
                classes = \_ -> fail "class not defined/found",
-               classes_names = [],
+               classesNames = [],
                defaults = [tInteger, tDouble]
              }
 

@@ -32,17 +32,17 @@ import           Control.Exception                          (evaluate)
 
 
 spec :: Spec
-spec = do
+spec =
   describe "class HasKind t" $ do
-    describe "instance HasKind Tyvar" $ do
+    describe "instance HasKind Tyvar" $
       it "kind :: t -> Kind" $ do
         kind (Ty.Tyvar undefined Star)             `shouldBe` Star
         kind (Ty.Tyvar undefined (Kfun Star Star)) `shouldBe` (Kfun Star Star)
-    describe "instance HasKind Tycon" $ do
+    describe "instance HasKind Tycon" $
       it "kind :: t -> Kind" $ do
         kind (Ty.Tycon undefined Star)             `shouldBe` Star
         kind (Ty.Tycon undefined (Kfun Star Star)) `shouldBe` (Kfun Star Star)
-    describe "instance HasKind Type" $ do
+    describe "instance HasKind Type" $
       it "kind :: t -> Kind" $ do
         kind Ty.tUnit                              `shouldBe` Star
         kind Ty.tChar                              `shouldBe` Star

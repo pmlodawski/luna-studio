@@ -46,15 +46,15 @@ stGetTID = do
   return $ enumTID x
 
 spec :: Spec
-spec = do
+spec =
   describe "type TID" $ do
     it "can be included inside of lazy State" $
       let res = Lz.evalState (do a <- lzGetTID
                                  b <- lzGetTID
                                  return [a /= b]) 0
-       in res `shouldSatisfy` all id
+       in res `shouldSatisfy` and
     it "can be included inside of strict State" $
       let res = St.evalState (do a <- stGetTID
                                  b <- stGetTID
                                  return [a /= b]) 0
-       in res `shouldSatisfy` all id
+       in res `shouldSatisfy` and

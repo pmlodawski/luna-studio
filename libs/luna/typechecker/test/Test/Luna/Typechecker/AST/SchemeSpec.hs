@@ -55,7 +55,7 @@ permute xs = do swaps <- mapM mkSwapTuple [nd,nd-1..1]
 
 spec :: Spec
 spec = do
-  describe "quantify" $ do
+  describe "quantify" $
     it "quantifies variables in order of appearance in `tv qt`, *not* the order of `vs` [QC]" $ property $ 
       let az = map (flip Tyvar Star) vs
           az' = map (flip Tyvar Star) vs'
@@ -68,7 +68,7 @@ spec = do
           vs'' = ["y"] -- the variable that is not quantified
        in forAll (permute az) $ \azPermuted ->
             quantify (azPermuted++az') ([] :=> (foldr1 fn $ map TVar (azPermuted++az''))) `shouldBe` Forall ks ([] :=> gs')
-  describe "(coverage booster)" $ do
+  describe "(coverage booster)" $
     it "instance Show Scheme" $ do
       let sch1 = Forall [] ([] :=> t)
           sch2 = Forall ks ([] :=> tk)

@@ -167,7 +167,7 @@ spec = do
           res = tiProgram classenv ["(==)":>:myeq_type, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [def]
       evaluate res `shouldThrow` anyErrorCall
 
-  describe "candidates" $ do
+  describe "candidates" $
     it "works" $ do
       let Just ce = (  addClass "Eq"       []
                    <:> addClass "Ord"      ["Eq"]
@@ -180,7 +180,7 @@ spec = do
                    <:> addClass "LOLOLOL"  []
 
                    <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
-                               (IsIn "Ord" ((TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star))))
+                               (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
                    <:> addInst [] (IsIn "Eq"       tInt)   <:> addInst [] (IsIn "Eq"       tInteger)
                    <:> addInst [] (IsIn "Ord"      tInt)   <:> addInst [] (IsIn "Ord"      tInteger)
                    <:> addInst [] (IsIn "Num"      tInt)   <:> addInst [] (IsIn "Num"      tInteger)
@@ -203,18 +203,18 @@ spec = do
       candidates ce (Tyvar "a" Star, [IsIn "Integral" a, IsIn "LOLOLOL" a]) `shouldBe` []
 
 
-  describe "fighting monomorphism restriction" $ do
-    it "works" $ do
-      let as = [ "(+)":>:integralAdd_type
-               , "(:)":>:cons_type
-               , "foldl":>:foldl_type
-               , "sum":>:sum_type
-               , "take":>:(Forall [Star] $ [] :=> (tInt `fn` list (TGen 0) `fn` list (TGen 0)))
-               , "zipWith":>:(Forall [Star,Star,Star] $ [] :=> ((TGen 0 `fn` TGen 1 `fn` TGen 2) `fn` list (TGen 0) `fn` list (TGen 1) `fn` list (TGen 2)))
-               , "(/)":>:(Forall [Star] $ [IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
-               , "iterate":>:(Forall [Star] $ [] :=> ((TGen 0 `fn` TGen 0) `fn` TGen 0 `fn` list (TGen 0)))
-               , "negate":>:(Forall [Star] $ [IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0))
-               , "[]":>:nil_type
+  describe "fighting monomorphism restriction" $
+    it "works" $
+      let as = [ "(+)"    :>: integralAdd_type
+               , "(:)"    :>: cons_type
+               , "foldl"  :>: foldl_type
+               , "sum"    :>: sum_type
+               , "take"   :>: Forall [Star] ([] :=> (tInt `fn` list (TGen 0) `fn` list (TGen 0)))
+               , "zipWith":>: Forall [Star,Star,Star] ([] :=> ((TGen 0 `fn` TGen 1 `fn` TGen 2) `fn` list (TGen 0) `fn` list (TGen 1) `fn` list (TGen 2)))
+               , "(/)"    :>: Forall [Star] ([IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
+               , "iterate":>: Forall [Star] ([] :=> ((TGen 0 `fn` TGen 0) `fn` TGen 0 `fn` list (TGen 0)))
+               , "negate" :>: Forall [Star] ([IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0))
+               , "[]"     :>: nil_type
                ]
           bgs = [( []
                  , [[
@@ -269,6 +269,6 @@ spec = do
                    <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
                    <:> addInst [] (IsIn "Functor" tList)
                    <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
-                               (IsIn "Ord" ((TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star))))
+                               (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
                     ) initialEnv
        in tiProgram ce as bgs `shouldContain` ["pie":>:toScheme tInteger]

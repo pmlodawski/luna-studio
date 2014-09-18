@@ -19,7 +19,7 @@ import           Data.Maybe                                 (fromJust, isJust)
 
 spec :: Spec
 spec = do
-  describe "nullSubst" $ do
+  describe "nullSubst" $
     it "does not affect any type" $ property $
       \t -> apply nullSubst t == (t :: Ty.Type)
   describe "(+->)" $ do
@@ -37,7 +37,7 @@ spec = do
         --forAll (genTyvar k1) $ \tv ->
         --forAll (genType k2)  $ \ty ->
         --  (k1/=k2) ==> ((tv+->ty) `shouldBe` [])
-      it "passes some basic unit tests" $ do
+      it "passes some basic unit tests" $
         pendingWith "waiting for refactor: +-> should be partial  "
         --let a = Ty.Tyvar "a" Knd.Star
         --    b = Ty.Tyvar "b" (Knd.Kfun Knd.Star Knd.Star)
@@ -48,14 +48,14 @@ spec = do
       pendingWith "waiting for refactor: +-> should be partial  "
       --let a = Ty.Tyvar "a" Knd.Star
       --evaluate (a +-> Ty.list (Ty.TVar a)) `shouldThrow` anyErrorCall
-  describe "Substitutions composition (@@)" $ do
+  describe "Substitutions composition (@@)" $
     it "satisfies property: apply (s1 @@ s2) = apply s1 . apply s2" $
       property $
         forAll arbitrary         $ \(t :: Type)  -> 
         forAll (genSubst (tv t)) $ \s1 ->
         forAll (genSubst (tv t)) $ \s2 ->
           apply (s1 @@ s2) t == (apply s1 . apply s2) t
-  describe "Symmetric substitutions composition (merge)" $ do
+  describe "Symmetric substitutions composition (merge)" $
     it "satisfies property: apply (s1 `merge` s2) = apply (s2 `merge` s1) in its domain" $
       property $
         forAll arbitrary         $ \(t :: Type)  -> 
@@ -66,9 +66,9 @@ spec = do
            in isJust s12 ==> apply (fromJust s12) t == apply (fromJust s21) t
   describe "class Types t" $ do
     describe "instance Types Type" $ do
-      describe "apply :: Subst -> t -> t" $ do
+      describe "apply :: Subst -> t -> t" $
         it "is" pending
-      describe "tv :: t -> [Ty.Tyvar]" $ do
+      describe "tv :: t -> [Ty.Tyvar]" $
         it "returns variables, in left-to-right order, no duplicates" $ do
           let a  = (Ty.Tyvar "a"  Knd.Star)
               b  = (Ty.Tyvar "b"  Knd.Star)
@@ -85,9 +85,9 @@ spec = do
           tv dot                  `shouldBe` [b, c, a]
           tv dlr                  `shouldBe` [a, b]
     describe "instance Types a => Types [a]" $ do
-      describe "apply :: Subst -> t -> t" $ do
+      describe "apply :: Subst -> t -> t" $
         it "is" pending
-      describe "tv :: t -> [Ty.Tyvar]" $ do
+      describe "tv :: t -> [Ty.Tyvar]" $
         it "returns variables, in left-to-right order, no duplicates" $ do
           let a  = (Ty.Tyvar "a"  Knd.Star)
               b  = (Ty.Tyvar "b"  Knd.Star)
