@@ -67,9 +67,9 @@ instance Call (AppH (Lam lam) args) out <= (lam~(argsout -> out), ReadArgs args 
 curryByName = matchCall `dot3` appByName
 curryNext   = matchCall `dot2` appNext
 
-call = shuffleJoin . (fmap.fmap) call'
+--call = shuffleJoin . (fmap.fmap) call'
 
-call2 = polyJoin . fmap call'
+call = polyJoin . fmap call'
 
 ----------------------------------------------------------------------------------
 -- Instances

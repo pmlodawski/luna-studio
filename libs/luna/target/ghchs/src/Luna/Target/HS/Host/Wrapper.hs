@@ -22,17 +22,16 @@ import Control.Monad.Shuffle
 
 checkVal = join . fmap printCheck . toIOEnv
 
-mainMaker modCons = toIOEnv $ fromValue $ call $ member (Proxy::Proxy "main") $ call modCons
-
-mainMaker2 modCons = checkVal $ fromValueS $ call2 $ member2 (Proxy::Proxy "main") $ call2 modCons
+mainMaker2 modCons = checkVal $ fromValue $ call $ member (Proxy::Proxy "main") $ call modCons
 
 
 rangeFromTo' a b = if a <= b then [a..b]
                              else [a,a-1..b]
 
-rangeFromTo = liftF2 rangeFromTo'
+-- FIXME[wd]: update
+--rangeFromTo = liftF2 rangeFromTo'
 
-concatPure = (fmap.fmap.fmap) val . (fmap.fmap) concat . (fmap sequence) . sequence
+--concatPure = (fmap.fmap.fmap) val . (fmap.fmap) concat . (fmap sequence) . sequence
 
 ifThenElse cond a b = if cond then a else b
 

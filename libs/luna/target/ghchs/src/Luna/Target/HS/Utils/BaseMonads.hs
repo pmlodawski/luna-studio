@@ -238,18 +238,6 @@ type family MatchEnv e1 e2 where
     MatchEnv IOS IOS = IOS
 
 
---Pure (Safe Int)
-
---MonadCtx Pure (Proxy StateT3, ()) m a
-
---PureS Safe Int
-
-
---StateT3 v m s a
-
---MonadT m s a
-
-
 
 
 class Monad3 m s1 s2 s3 | s1 s2 -> s3 where
@@ -257,25 +245,12 @@ class Monad3 m s1 s2 s3 | s1 s2 -> s3 where
 
 
 
-
-class PolyMonad4 m1 m2 s1 s2 where
-    polyBind4 ::  PolyMonad (m1 s1) (m2 s2) ((MatchEnv m1 m2) (MatchSafety s1 s2)) => m1 s1 a -> (a -> m2 s2 b) -> (MatchEnv m1 m2) (MatchSafety s1 s2) b
-
---instance Monad m => Monad3 (StateT2 s m) Safe s2 s2 where
---    bind3 m f = StateT2 $ \ s -> do
---        Safe (a, s') <- runStateT2 m s
---        runStateT2 (f a) s'
+class PolyMonadSafety m1 m2 s1 s2 where
+    polyBindSafety ::  PolyMonad (m1 s1) (m2 s2) ((MatchEnv m1 m2) (MatchSafety s1 s2)) => m1 s1 a -> (a -> m2 s2 b) -> (MatchEnv m1 m2) (MatchSafety s1 s2) b
 
 
-
-
---instance PolyMonad (IOS Safe) (IOS s) (IOS s) where
---    m >>=~ f = IOS $ do
---        Safe a <- fromIOS m
---        fromIOS $ f a 
-
-instance PolyMonad4 IOS IOS Safe s where
-    polyBind4 m f = IOS $ do
+instance PolyMonadSafety IOS IOS Safe s where
+    polyBindSafety m f = IOS $ do
         Safe a <- fromIOS m
         fromIOS $ f a
 
@@ -288,12 +263,9 @@ instance Monad3R PureS m <= Monad m where
     return3 fs a = PureS . return $ fs a
 
 
---class Monad3R m s where
---    return3 :: (forall x. x -> s x) -> a -> m s a
 
-
-instance Monad3R (ValueS m) s <= Monad m where
-    return3 fs a = ValueS . return $ fs a
+instance Monad3R (Value m) s <= Monad m where
+    return3 fs a = Value . return $ fs a
 
 
 
@@ -301,24 +273,24 @@ instance Monad3R (ValueS m) s <= Monad m where
 instance Monad3T PureS where
     return3T = PureS . Pure
 
---class Monad4 m s1 s2 where
---    bind4 :: m s1 a -> (a -> m s2 b) -> m (MatchSafety s1 s2) b
+--class MonadSafety m s1 s2 where
+--    bindSafety :: m s1 a -> (a -> m s2 b) -> m (MatchSafety s1 s2) b
 
-instance Monad4 PureS s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
-    bind4 m f = tst where
+instance MonadSafety PureS s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
+    bindSafety m f = tst where
         f' = fromPure . fromPureS . f -- :: a -> (s2 b)
         m' = fromPure $ fromPureS m   -- :: (s1 a)
         tst = PureS $ Pure $ m' >>=~ f'
         -- PureS $ fromPureS m >>=~ (fromPureS . f)
 
-instance Monad4 IOS Safe s where
-    bind4 m f = IOS $ do
+instance MonadSafety IOS Safe s where
+    bindSafety m f = IOS $ do
         Safe a <- fromIOS m
         fromIOS $ f a
 
 
-instance Monad4 IOS (UnsafeBase base err) Safe where
-    bind4 m f = IOS $ do
+instance MonadSafety IOS (UnsafeBase base err) Safe where
+    bindSafety m f = IOS $ do
         sa <- fromIOS m
         case sa of
             UnsafeValue a -> fmap (UnsafeValue . fromSafe) $ fromIOS $ f a
@@ -327,26 +299,26 @@ instance Monad4 IOS (UnsafeBase base err) Safe where
 
 --- ===
 
-instance Monad4 (ValueS Pure) s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
-    bind4 m f = tst where
-        f' = fromPure . fromValueS . f -- :: a -> (s2 b)
-        m' = fromPure $ fromValueS m   -- :: (s1 a)
-        tst = ValueS $ Pure $ m' >>=~ f'
+instance MonadSafety (Value Pure) s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
+    bindSafety m f = tst where
+        f' = fromPure . fromValue . f -- :: a -> (s2 b)
+        m' = fromPure $ fromValue m   -- :: (s1 a)
+        tst = Value $ Pure $ m' >>=~ f'
         -- PureS $ fromPureS m >>=~ (fromPureS . f)
 
-instance Monad4 (ValueS IO) Safe s where
-    bind4 m f = ValueS $ do
-        Safe a <- fromValueS m
-        fromValueS $ f a
+instance MonadSafety (Value IO) Safe s where
+    bindSafety m f = Value $ do
+        Safe a <- fromValue m
+        fromValue $ f a
 
---instance Monad4 PureS Safe s where
---    bind4 m f = PureS $ do
+--instance MonadSafety PureS Safe s where
+--    bindSafety m f = PureS $ do
 --        Safe a <- fromPureS m
 --        fromPureS $ f a
 
 
---instance Monad4 PureS (UnsafeBase base err) Safe where
---    bind4 m f = fromPureS m
+--instance MonadSafety PureS (UnsafeBase base err) Safe where
+--    bindSafety m f = fromPureS m
 
 
 
@@ -374,9 +346,9 @@ newtype StateT3 v m (s :: * -> *) a = StateT3 { runStateT3 :: v -> m s (a,v) } d
 
 
 
-instance Monad4 (StateT3 s m) s1 s2 <= Monad4 m s1 s2 where
-    bind4 m f = StateT3 $ \ s ->
-        runStateT3 m s `bind4` (\(a, s')->
+instance MonadSafety (StateT3 s m) s1 s2 <= MonadSafety m s1 s2 where
+    bindSafety m f = StateT3 $ \ s ->
+        runStateT3 m s `bindSafety` (\(a, s')->
         runStateT3 (f a) s')
 
 
@@ -410,21 +382,14 @@ instance MonadState2 v (StateT3 v m) <= Monad3R m Safe where
 
 class MonadState4 v (m :: (* -> *) -> * -> *) s | m -> v where
     get4 :: m s v
-    put4 :: v -> m s (ValueS Pure Safe ())
+    put4 :: v -> m s (Value Pure Safe ())
 
 instance MonadState4 v (StateT3 v m) s <= (Monad s, Monad3R m s) where
     get4   = StateT3 $ \s -> return3 return (s, s)
-    put4 s = StateT3 $ \_ -> return3 return (valS (), s)
+    put4 s = StateT3 $ \_ -> return3 return (val (), s)
 
 
-xxx2 :: (MonadState4 (m2 c) m Safe,
-       PolyMonad5 (MonadCtx2 (ValueS Pure) (Proxy StateT3, ()) m Safe) m2 m3) =>
-       (MonadCtx2 base set m s) c
 
-xxx2 = undefined
-
-
-tstmeMID = get5X `polyBind5'` id
 
 
 
@@ -456,14 +421,14 @@ put3 s = StateT3 $ \_ -> wrap3 (s,s)
 raiseMe :: e -> m (UnsafeBase Safe e) () <= Monad3R m (UnsafeBase Safe e)
 raiseMe e = return3 (\_ -> Error e) ()
 
-tst1 = put3 (0::Int) `bind4` (\_ -> put3 (0::Int))
-tst1' = put3' (0::Int) `bind4` (\_ -> put3' (0::Int))
+tst1 = put3 (0::Int) `bindSafety` (\_ -> put3 (0::Int))
+tst1' = put3' (0::Int) `bindSafety` (\_ -> put3' (0::Int))
 
-tst2 = put3 (0::Int) `bind4` (\_ -> raiseMe E1)
-tst2' = put3' (0::Int) `bind4` (\_ -> raiseMe E1)
+tst2 = put3 (0::Int) `bindSafety` (\_ -> raiseMe E1)
+tst2' = put3' (0::Int) `bindSafety` (\_ -> raiseMe E1)
 
-tst3 = raiseMe E1 `bind4` (\_ -> put3 (0::Int))
-tst3' = raiseMe E1 `bind4` (\_ -> put3' (0::Int))
+tst3 = raiseMe E1 `bindSafety` (\_ -> put3 (0::Int))
+tst3' = raiseMe E1 `bindSafety` (\_ -> put3' (0::Int))
 
 
 put3X :: v -> MonadCtx2 PureS (Insert (Proxy StateT3) Empty) m Safe v <= MonadState2 v m
@@ -477,17 +442,17 @@ get4X :: MonadState4 val m Safe => MonadCtx2 PureS (Insert (Proxy StateT3) Empty
 get4X = MonadCtx2 $ get4
 
 
-get5X :: MonadState4 val m Safe => MonadCtx2 (ValueS Pure) (Insert (Proxy StateT3) Empty) m Safe val
+get5X :: MonadState4 val m Safe => MonadCtx2 (Value Pure) (Insert (Proxy StateT3) Empty) m Safe val
 get5X = MonadCtx2 $ get4
 
-put5X :: MonadState4 val m Safe => val -> MonadCtx2 (ValueS Pure) (Insert (Proxy StateT3) Empty) m Safe (ValueS Pure Safe ())
+put5X :: MonadState4 val m Safe => val -> MonadCtx2 (Value Pure) (Insert (Proxy StateT3) Empty) m Safe (Value Pure Safe ())
 put5X = MonadCtx2 . put4
 
 --put4X :: v -> MonadCtx2 PureS (Insert (Proxy StateT3) Empty) m Safe v <= MonadState4 v m Safe
 --put4X = MonadCtx2 . put4
 
 
-tstB1 = val 0 `bindEnv_` val 1
+--tstB1 = val 0 `bindEnv_` val 1
 
 
 
@@ -609,21 +574,21 @@ instance (MonadReader r m) => MonadReader r (StateT s m) where
     local f m = StateT $ \s -> local f (runStateT m s)
 
 
-class (Monad m) => MonadState s m | m -> s where
-    get :: m s
-    put :: s -> m (Safe (Value Pure (Safe ())))
+--class (Monad m) => MonadState s m | m -> s where
+--    get :: m s
+--    put :: s -> m (Safe (Value Pure (Safe ())))
 
-instance MonadState s (StateT s m) <= Monad m where
-    get   = StateT $ \s -> return (s, s)
-    put s = StateT $ \_ -> return (Safe $ val (), s)
+--instance MonadState s (StateT s m) <= Monad m where
+--    get   = StateT $ \s -> return (s, s)
+--    put s = StateT $ \_ -> return (Safe $ val (), s)
 
-instance MonadState s (ReaderT s m) <= MonadState s m where
-    get   = lift $ get
-    put s = lift $ put s
+--instance MonadState s (ReaderT s m) <= MonadState s m where
+--    get   = lift $ get
+--    put s = lift $ put s
 
-instance MonadState s (t s m) <= (MonadTrans (t s), MonadState s m, Monad (t s m)) where
-    get   = lift $ get
-    put s = lift $ put s
+--instance MonadState s (t s m) <= (MonadTrans (t s), MonadState s m, Monad (t s m)) where
+--    get   = lift $ get
+--    put s = lift $ put s
 
 instance MFunctor (StateT s) where
     hoist nat m = StateT (\s -> nat (runStateT m s))
@@ -637,25 +602,26 @@ state f = StateT (return . f)
 
 ----------------------------------------------------------------------
 
-getX2 :: MonadCtx Pure (Insert (Proxy StateT) Empty) m s <= MonadState s m
-getX2 = MonadCtx get
+--getX2 :: MonadCtx Pure (Insert (Proxy StateT) Empty) m s <= MonadState s m
+--getX2 = MonadCtx get
 
-getX :: MonadCtx Pure (Insert (Proxy StateT) Empty) m s <= MonadState s m
-getX = MonadCtx get
+--getX :: MonadCtx Pure (Insert (Proxy StateT) Empty) m s <= MonadState s m
+--getX = MonadCtx get
 
-putX :: s -> MonadCtx Pure (Insert (Proxy StateT) Empty) m (Safe (Value Pure (Safe ()))) <= MonadState s m
-putX = MonadCtx . put
+--putX :: s -> MonadCtx Pure (Insert (Proxy StateT) Empty) m (Safe (Value Pure (Safe ()))) <= MonadState s m
+--putX = MonadCtx . put
 
-askX :: MonadCtx Pure (Insert (Proxy ReaderT) Empty) m s <= MonadReader s m
-askX = MonadCtx ask
+--askX :: MonadCtx Pure (Insert (Proxy ReaderT) Empty) m s <= MonadReader s m
+--askX = MonadCtx ask
 
 --getX' :: MonadCtx Pure (ConstrainSet () (Insert (Proxy StateT) Empty)) m s <= MonadState s m
 --getX' = MonadCtx get
 
 runStateT' a s = fmap Safe $ runStateT a s
 
-runStateTX  = liftMonadRunner1 (Proxy :: Proxy StateT)  runStateT  . appMonadCtx
-runReaderTX = liftMonadRunner1 (Proxy :: Proxy ReaderT) runReaderT . appMonadCtx
+-- FIXME[wd]: update
+--runStateTX  = liftMonadRunner1 (Proxy :: Proxy StateT)  runStateT  . appMonadCtx
+--runReaderTX = liftMonadRunner1 (Proxy :: Proxy ReaderT) runReaderT . appMonadCtx
 
 
 runStateT3X a s = runMonad2 (Proxy::Proxy StateT3) (flip runStateT3 s) $ appMonadCtx $ unpackMonadCtxDummy $ a
@@ -667,8 +633,8 @@ runStateT3X a s = runMonad2 (Proxy::Proxy StateT3) (flip runStateT3 s) $ appMona
 --liftMonadRunner1' :: MatchMonadCloseProto (IsEmpty (Remove mptr set)) (MonadCtx env (Remove mptr set) mb) t => mptr -> (ma a1 -> a -> mb b) -> MonadCtx env set ma a1 -> a -> t b
 --liftMonadRunner1' (mf :: (t x (ma :: * -> *) a1 -> a -> mb b)) = liftMonadRunner1 (Proxy :: Proxy t) mf
 
-putX' = putX . Safe
-getX' = fmap fromSafe getX
+--putX' = putX . Safe
+--getX' = fmap fromSafe getX
 
 
 
@@ -697,44 +663,44 @@ getX' = fmap fromSafe getX
 --newtype StateT3 v m (s :: * -> *) a = StateT3 { runStateT3 :: v -> m s (a,v) } deriving (Typeable)
 
 
-instance LiftValueS2 Pure (StateT3 v m) <= Monad3R m Safe where
-    liftValueS2 a = StateT3 $ \v -> return3 Safe (fromSafe . fromPure . fromValueS $ a,v)
+instance LiftValue2 Pure (StateT3 v m) <= Monad3R m Safe where
+    liftValue2 a = StateT3 $ \v -> return3 Safe (fromSafe . fromPure . fromValue $ a,v)
 
 
-instance LiftValueS2 IO (StateT3 v m) <= (Monad3R m Safe, LiftValueS2 IO m) where
-    liftValueS2 a = StateT3 $ \v -> liftValueS2 $ fmap (\x -> (x,v)) a
-    --liftValueS2 a = StateT3 $ \v -> (lift . liftIO . fmap fromSafe . fromValueS $ a,v)
+instance LiftValue2 IO (StateT3 v m) <= (Monad3R m Safe, LiftValue2 IO m) where
+    liftValue2 a = StateT3 $ \v -> liftValue2 $ fmap (\x -> (x,v)) a
+    --liftValue2 a = StateT3 $ \v -> (lift . liftIO . fmap fromSafe . fromValue $ a,v)
 
 
-instance LiftValueS2 IO (ValueS IO) where
-    liftValueS2 = id
+instance LiftValue2 IO (Value IO) where
+    liftValue2 = id
 
-instance LiftValueS2 Pure (ValueS Pure) where
-    liftValueS2 = id
-
-
-
-instance LiftValueS base (StateT3 v m) <= (Monad3R m Safe, LiftValueS base m, Functor base) where
-    liftValueS a = StateT3 $ \v -> liftValueS $ fmap (\x -> (x,v)) a
+instance LiftValue2 Pure (Value Pure) where
+    liftValue2 = id
 
 
 
-
---class LiftValueS' m t where
---    liftValueS' :: Functor s => m s a -> t m s a
+instance LiftValue base (StateT3 v m) <= (Monad3R m Safe, LiftValue base m, Functor base) where
+    liftValue a = StateT3 $ \v -> liftValue $ fmap (\x -> (x,v)) a
 
 
 
 
-instance LiftValueS' base s (StateT3 v) <= Functor (base s) where
-    liftValueS' a = StateT3 $ \v -> fmap (\x -> (x,v)) a
+--class LiftValue' m t where
+--    liftValue' :: Functor s => m s a -> t m s a
 
 
---class LiftValueS m t where
---    liftValueS :: ValueS m s a -> t s a
 
---class LiftValueS2 m t where
---    liftValueS2 :: ValueS m Safe a -> t Safe a
+
+instance LiftValue' base s (StateT3 v) <= Functor (base s) where
+    liftValue' a = StateT3 $ \v -> fmap (\x -> (x,v)) a
+
+
+--class LiftValue m t where
+--    liftValue :: Value m s a -> t s a
+
+--class LiftValue2 m t where
+--    liftValue2 :: Value m Safe a -> t Safe a
 
 
 
