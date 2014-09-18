@@ -10,10 +10,15 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module Flowbox.Graphics.Color.Illuminants where
 
-import qualified Data.Array.Accelerate as A
+import Data.Array.Accelerate as A
+import Data.Array.Accelerate.Smart
+import Data.Array.Accelerate.Tuple
+import Data.Array.Accelerate.Array.Sugar
+import Data.Typeable
 
 import Flowbox.Graphics.Color.CIE.XyY
 import Flowbox.Graphics.Color.CIE.XYZ
@@ -23,7 +28,36 @@ import Flowbox.Prelude
 
 
 data Chromaticity a = Chromaticity { chromaX :: a, chromaY :: a }
-                    deriving Show
+                    deriving (Show, Typeable)
+
+type instance EltRepr  (Chromaticity a) = EltRepr  (a, a)
+type instance EltRepr' (Chromaticity a) = EltRepr' (a, a)
+
+instance Elt a => Elt (Chromaticity a) where
+    eltType _ = eltType (undefined :: (a, a))
+    toElt p = case toElt p of
+        (lo, hi) -> Chromaticity lo hi
+    fromElt (Chromaticity lo hi) = fromElt (lo, hi)
+
+    eltType' _ = eltType' (undefined :: (a, a))
+    toElt' p = case toElt' p of
+        (lo, hi) -> Chromaticity lo hi
+    fromElt' (Chromaticity lo hi) = fromElt' (lo, hi)
+
+instance IsTuple (Chromaticity a) where
+    type TupleRepr (Chromaticity a) = TupleRepr (a, a)
+    fromTuple (Chromaticity lo hi) = fromTuple (lo, hi)
+    toTuple t = case toTuple t of
+        (lo, hi) -> Chromaticity lo hi
+
+instance (Lift Exp a, Elt (Plain a)) => Lift Exp (Chromaticity a) where
+    type Plain (Chromaticity a) = Chromaticity (Plain a)
+    lift (Chromaticity lo hi) = Exp $ Tuple $ NilTup `SnocTup` A.lift lo `SnocTup` A.lift hi
+
+instance (Elt a, e ~ Exp a) => Unlift Exp (Chromaticity e) where
+    unlift t = Chromaticity (Exp $ SuccTupIdx ZeroTupIdx `Prj` t)
+                     (Exp $ ZeroTupIdx `Prj` t)
+
 
 toxyY :: (Num a) => Chromaticity a -> XyY a
 toxyY (Chromaticity x y) = XyY x y 1
@@ -43,6 +77,11 @@ toXYZ' (XyY x y y') = if y' == 0 then XYZ 0 0 0 else XYZ { xyzX = (x * y') / y
                                                          , xyzY = y'
                                                          , xyzZ = ((1 - x - y) * y') / y
                                                          }
+
+xyzColor :: (Illuminant a (A.Exp t), A.Elt t, A.IsFloating t)
+         => a -> XYZ (A.Exp t)
+xyzColor = toXYZ . toxyY . primaries
+
 
 
 class Illuminant a b where
