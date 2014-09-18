@@ -28,6 +28,7 @@ Library
                   bytestring,
                   containers,
                   either,
+                  exceptions,
                   flowbox-config,
                   flowbox-rpc,
                   flowbox-utils,
