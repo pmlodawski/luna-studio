@@ -21,6 +21,7 @@ import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
 import qualified Luna.Interpreter.Session.Data.DefPoint      as DefPoint
+import qualified Luna.Interpreter.Session.Error              as Error
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 
@@ -51,7 +52,8 @@ fromCallPointPath (callPoint:t) parentDefPoint = do
     (graph, defID) <- Session.getGraph parentDefPoint
     let nodeID    = callPoint ^. CallPoint.nodeID
         libraryID = callPoint ^. CallPoint.libraryID
-    node <- Graph.lab graph nodeID <??> "CallDataPath.fromCallPointPath : No node with id = " ++ show nodeID
+    node <- Graph.lab graph nodeID
+        <??> Error.ASTLookupError "CallDataPath.fromCallPointPath" ("No node with id = " ++ show nodeID)
     let parentBC = parentDefPoint  ^. DefPoint.breadcrumbs
         callData = CallData callPoint parentBC defID graph node
     mdefPoint <- Inspect.fromName (node ^. Node.expr) parentBC libraryID

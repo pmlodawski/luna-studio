@@ -23,8 +23,6 @@ import           Flowbox.Data.Graph             hiding (Edge, Graph, fromGraph)
 import qualified Flowbox.Data.Graph             as DG
 import           Flowbox.Data.String            (toUpper)
 import           Flowbox.Prelude
-import qualified Luna.Graph.Attributes          as Attributes
-import qualified Luna.Graph.Attributes          as Attributes
 import qualified Luna.Graph.Attributes.Naming   as Naming
 import qualified Luna.Graph.Edge                as Edge
 import           Luna.Graph.Graph               (Graph)

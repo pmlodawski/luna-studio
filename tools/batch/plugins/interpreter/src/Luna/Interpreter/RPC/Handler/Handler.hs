@@ -114,7 +114,7 @@ handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
 
 
 extraImports :: [Session.Import]
-extraImports = [("FlowboxM.Libs.Flowbox.Std", Nothing)]
+extraImports = ["FlowboxM.Libs.Flowbox.Std"]
 
 
 interpret :: Prefix

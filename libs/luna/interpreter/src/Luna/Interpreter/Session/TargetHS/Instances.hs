@@ -25,7 +25,7 @@ logger = getLoggerIO "Luna.Interpreter.Session.TargetHS.Instances"
 
 
 clean :: Session ()
-clean = lift2 $ do
+clean = lift2 $
 
     --dflags <- GHC.getSessionDynFlags
     --GhcMonad.withSession $ \hscEnv -> do

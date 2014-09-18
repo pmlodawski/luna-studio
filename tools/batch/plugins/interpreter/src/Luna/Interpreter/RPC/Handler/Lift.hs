@@ -7,13 +7,14 @@
 
 module Luna.Interpreter.RPC.Handler.Lift where
 
-import Flowbox.Bus.RPC.RPC              (RPC)
-import Flowbox.Control.Error
-import Flowbox.Prelude                  hiding (Context)
-import Flowbox.ProjectManager.Context   (Context)
-import Luna.Interpreter.Session.Session (Session, SessionST)
+import           Flowbox.Bus.RPC.RPC              (RPC)
+import           Flowbox.Control.Error
+import           Flowbox.Prelude                  hiding (Context)
+import           Flowbox.ProjectManager.Context   (Context)
+import qualified Luna.Interpreter.Session.Error   as Error
+import           Luna.Interpreter.Session.Session (Session, SessionST)
 
 
 
 liftSession :: Session a -> RPC Context SessionST a
-liftSession a = hoistEither =<< lift2 (runEitherT a)
+liftSession a = hoistEither . fmapL Error.format =<< lift2 (runEitherT a)

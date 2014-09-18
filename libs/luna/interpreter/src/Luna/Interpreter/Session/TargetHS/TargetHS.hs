@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.TargetHS.TargetHS where
 
 import qualified Data.Map as Map

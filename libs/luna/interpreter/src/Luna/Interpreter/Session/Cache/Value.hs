@@ -17,6 +17,7 @@ import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
 import qualified Luna.Interpreter.Session.Cache.Status       as Status
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
+import qualified Luna.Interpreter.Session.Error              as Error
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 
@@ -29,11 +30,11 @@ logger = getLoggerIO "Luna.Interpreter.Session.Cache.Value"
 getIfReady :: CallPointPath -> Session ByteString
 getIfReady callPointPath = do
     cacheInfo <- Cache.lookupCacheInfo callPointPath
-             <??&>  "Cache.Value.get : Object " ++ show callPointPath ++ " is not in cache."
+             <??&> Error.CacheError "Cache.Value.get" ("Object " ++ show callPointPath ++ " is not in cache.")
     let varName = cacheInfo ^. CacheInfo.recentVarName
         status  = cacheInfo ^. CacheInfo.status
 
-    assertE (status == Status.Ready) $ "Cache.Value.get : Object " ++ show callPointPath ++ " is not computed yet."
+    assertE (status == Status.Ready) $ Error.CacheError "Cache.Value.get" $ "Object " ++ show callPointPath ++ " is not computed yet."
     get varName
 
 
@@ -43,6 +44,7 @@ data Status = Ready
             | NotInCache
             | Unknown
             deriving (Show, Eq)
+
 
 getWithStatus :: CallPointPath -> Session (Status, Maybe ByteString)
 getWithStatus callPointPath = do
@@ -72,7 +74,7 @@ report callPointPath varName = do
     resultCB  <- Session.getResultCallBack
     projectID <- Session.getProjectID
     result    <- get varName
-    safeLiftIO $ resultCB projectID callPointPath result
+    safeLiftIO' (Error.CallbackError "Value.report") $ resultCB projectID callPointPath result
 
 
 get :: VarName -> Session ByteString

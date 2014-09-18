@@ -27,6 +27,7 @@ import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import           Luna.Interpreter.Session.Data.Hash         (Hash)
 import           Luna.Interpreter.Session.Data.VarName      (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
+import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
@@ -128,7 +129,7 @@ execute callDataPath functionName argsVarNames = do
         CacheStatus.Affected     -> executeAffected
         CacheStatus.Modified     -> executeModified
         CacheStatus.NonCacheable -> executeModified
-        CacheStatus.Ready        -> left "executeNode (Ready) : something went wrong"
+        CacheStatus.Ready        -> left $ Error.OtherError "Executor.executeNode" "something went wrong : status = Ready"
 
 
 data VarType = Lit

@@ -39,10 +39,10 @@ makeLenses(''BatchEnv)
 runBatch :: BatchEnv -> Batch a -> IO (Either Error a)
 runBatch env batch = fst <$> runStateT (runEitherT batch) env
 
+
 make :: Config -> BatchEnv
 make config' = BatchEnv config' ProjectManager.empty 0
 
 
 attributeKey :: String
 attributeKey = "Batch-0.1"
-
