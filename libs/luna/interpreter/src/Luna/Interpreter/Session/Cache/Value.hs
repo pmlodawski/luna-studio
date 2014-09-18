@@ -6,9 +6,8 @@
 ---------------------------------------------------------------------------
 module Luna.Interpreter.Session.Cache.Value where
 
-import           Data.ByteString.Lazy         (ByteString)
-import qualified Data.ByteString.Lazy.Char8   as ByteString
-import qualified Language.Haskell.Interpreter as Interpreter
+import           Data.ByteString.Lazy       (ByteString)
+import qualified Data.ByteString.Lazy.Char8 as ByteString
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -79,4 +78,4 @@ report callPointPath varName = do
 get :: VarName -> Session ByteString
 get varName = do
     let expr = "show " ++ varName
-    ByteString.pack <$> lift2 (Interpreter.interpret expr "")
+    ByteString.pack <$> Session.interpret expr

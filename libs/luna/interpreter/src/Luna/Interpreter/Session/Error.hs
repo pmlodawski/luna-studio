@@ -8,30 +8,25 @@
 
 module Luna.Interpreter.Session.Error where
 
-import qualified Data.List                    as List
-import qualified Language.Haskell.Interpreter as Interpreter
+import Control.Monad.IO.Class (MonadIO)
 
 import Flowbox.Prelude           hiding (error)
 import Flowbox.System.Log.Logger
 
 
-
 type ErrorStr = String
 
-data Error = InterpreterError Interpreter.InterpreterError
-           | OtherError ErrorStr
+data Error = OtherError ErrorStr
            deriving (Show)
 
 
 
 format :: Error -> String
 format err = case err of
-    InterpreterError (Interpreter.WontCompile ghcErrs)
-        -> "WontCompile:\n" ++ List.intercalate "\n\n" (map Interpreter.errMsg ghcErrs)
     _   -> show err
 
 
-logErrors :: Interpreter.MonadIO m => LoggerIO -> Either Error a -> m ()
+logErrors :: MonadIO m => LoggerIO -> Either Error a -> m ()
 logErrors logger result = case result of
     Left err -> logger error $ format err
     _        -> return ()

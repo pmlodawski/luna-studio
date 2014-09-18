@@ -24,6 +24,7 @@ import qualified Luna.Interpreter.Session.Cache.Value       as Value
 import qualified Luna.Interpreter.Session.Data.CallData     as CallData
 import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
+import           Luna.Interpreter.Session.Data.Hash         (Hash)
 import           Luna.Interpreter.Session.Data.VarName      (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
 import qualified Luna.Interpreter.Session.Hash              as Hash
@@ -31,7 +32,6 @@ import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
-import Luna.Interpreter.Session.Data.Hash (Hash)
 
 
 

@@ -8,14 +8,13 @@ module Luna.Interpreter.Session.Session where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import           Data.ByteString.Lazy                (ByteString)
-import qualified Data.Map                            as Map
-import qualified Data.Maybe                          as Maybe
-import           Data.Monoid                         ((<>))
-import qualified DynFlags                            as GHC
+import           Data.ByteString.Lazy       (ByteString)
+import  Data.Typeable (Typeable)
+import qualified Data.Map                   as Map
+import qualified Data.Maybe                 as Maybe
+import           Data.Monoid                ((<>))
+import qualified DynFlags                   as GHC
 import qualified GHC
-import qualified Language.Haskell.Interpreter        as I
-import qualified Language.Haskell.Interpreter.Unsafe as I
 
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Config.Config                       (Config)
@@ -39,6 +38,7 @@ import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Helpers            as Helpers
+import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
 import           Luna.Interpreter.Session.TargetHS.Reload    (Reload, ReloadMap)
 import           Luna.Lib.Lib                                (Library)
 import qualified Luna.Lib.Lib                                as Library
@@ -53,60 +53,71 @@ logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.Session.Session"
 
 
-type SessionST = StateT Env I.Interpreter
+type SessionST = StateT Env GHC.Ghc
 
 
 type Session = EitherT Error.ErrorStr SessionST
 
 
-type Import = (String, Maybe String)
+type Import = String
 
 
 run :: Config -> Env -> [Import] -> Session a -> IO (Either Error a)
 run config env imports session = do
-    result <- I.unsafeRunInterpreterWithTopDirAndArgs
-                (Just $ Config.topDir $ Config.ghcS config)
-                [ "-no-user-package-db"
-                , "-package-db " ++ Config.pkgDb (Config.global config)
-                , "-package-db " ++ Config.pkgDb (Config.local config)
-                ]
-               $ fst <$> runStateT (runEitherT (initialize imports >> session)) env
+    result <- GHC.runGhc (Just $ Config.topDir $ Config.ghcS config)
+    --I.unsafeRunInterpreterWithTopDirAndArgs
+    --            (Just $ Config.topDir $ Config.ghcS config)
+    --            [ "-no-user-package-db"
+    --            , "-package-db " ++ Config.pkgDb (Config.global config)
+    --            , "-package-db " ++ Config.pkgDb (Config.local config)
+    --            ]
+               $ fst <$> runStateT (runEitherT (initialize config imports >> session)) env
     return $ case result of
-        Left e    -> Left $ Error.InterpreterError e
-        Right res -> case res of
-            Left e  -> Left $ Error.OtherError e
-            Right r -> Right r
+        Left e    -> Left $ Error.OtherError e
+        Right res -> Right res
 
 
-initialize :: [Import] -> Session ()
-initialize imports = do
-    lift2 I.reset
+initialize :: Config -> [Import] -> Session ()
+initialize config imports = do
+    flags <- lift2 $ GHC.getSessionDynFlags
+    _ <- lift2 $ GHC.setSessionDynFlags flags
+                { GHC.extraPkgConfs = ( [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
+                                        , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
+                                        ] ++) . GHC.extraPkgConfs flags
+                , GHC.hscTarget = GHC.HscInterpreted
+                , GHC.ghcLink   = GHC.LinkInMemory
+                --, GHC.verbosity = 4
+                }
     setHardcodedExtensions
-    lift2 $ I.setImportsQ ([("Data.Word", Nothing)
-                           ,("Luna.Target.HS", Nothing)
-                           ] ++ imports)
+    setImports ([ "Data.Word"
+                , "Luna.Target.HS"
+                ] ++ imports)
     runDecls Helpers.hash
 
 
+setImports :: [Import] -> Session ()
+setImports = lift2 . GHC.setContext . map (GHC.IIDecl . GHC.simpleImportDecl . GHC.mkModuleName)
+
+
 setFlags :: [GHC.ExtensionFlag] -> Session ()
-setFlags flags = lift2 $ I.runGhc $ do
+setFlags flags = lift2 $ do
     current <- GHC.getSessionDynFlags
     void $ GHC.setSessionDynFlags $ foldl GHC.xopt_set current flags
 
 
 unsetFlags :: [GHC.ExtensionFlag] -> Session ()
-unsetFlags flags = lift2 $ I.runGhc $ do
+unsetFlags flags = lift2 $ do
     current <- GHC.getSessionDynFlags
     void $ GHC.setSessionDynFlags $ foldl GHC.xopt_unset current flags
 
 
 withFlags :: [GHC.ExtensionFlag] -> [GHC.ExtensionFlag] -> Session a -> Session a
 withFlags enable disable action = do
-    flags <- lift2 $ I.runGhc GHC.getSessionDynFlags
+    flags <- lift2 GHC.getSessionDynFlags
     setFlags enable
     unsetFlags disable
     result <- action
-    _ <- lift2 $ I.runGhc $ GHC.setSessionDynFlags flags
+    _ <- lift2 $ GHC.setSessionDynFlags flags
     return result
 
 
@@ -117,7 +128,7 @@ location = "<target ghc-hs interactive>"
 runStmt :: String -> Session ()
 runStmt stmt = do
     logger trace stmt
-    result <- lift2 $ I.runGhc $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
+    result <- lift2 $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
     case result of
         GHC.RunOk _         -> return ()
         GHC.RunException ex -> left $ show ex
@@ -127,13 +138,17 @@ runStmt stmt = do
 runDecls :: String -> Session ()
 runDecls decls = do
     logger trace decls
-    void $ lift2 $ I.runGhc $ GHC.runDeclsWithLocation location 1 decls
+    void $ lift2 $ GHC.runDeclsWithLocation location 1 decls
 
 
 
 runAssignment :: String -> String -> Session ()
 runAssignment asigned asignee =
     runDecls $ asigned ++ " = " ++ asignee
+
+
+interpret :: Typeable a => String -> Session a
+interpret = lift2 . HEval.interpret
 
 
 setHardcodedExtensions :: Session ()
