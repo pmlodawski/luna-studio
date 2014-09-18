@@ -48,61 +48,23 @@ instance PolyApplicative Pure IO IO where
 instance PolyApplicative IO IO IO where
     f <<*>> a = f <*> a
 
----
-
-instance PolyApplicative Pure (MonadCtx env set m) (MonadCtx env set m) <= Functor m where
-    (Pure f) <<*>> a = f <$> a
-
-instance PolyApplicative (MonadCtx env set m) Pure (MonadCtx env set m) <= (Functor m, Monad m) where
-    f <<*>> (Pure a) = f <*> pure a
-
-
-instance PolyApplicative IO (MonadCtx env set m) (MonadCtx envout set m) <= (MonadIO m, envout ~ EnvMerge env IO) where
-    mf <<*>> ma = MonadCtx $ do
-        f <- liftIO mf
-        a <- fromMonadCtx ma
-        return $ f a
-
-instance PolyApplicative (MonadCtx env set m) IO (MonadCtx envout set m) <= (MonadIO m, envout ~ EnvMerge env IO) where
-    mf <<*>> ma = MonadCtx $ do
-        f <- fromMonadCtx mf
-        a <- liftIO ma
-        return $ f a
-
-instance PolyApplicative (MonadCtx env1 set1 m1) (MonadCtx env2 set2 m2) (MonadCtx envout setout m1) <= (envout ~ EnvMerge env1 env2, setout ~ Union set1 set2, m1~m2, Monad m1) where
-    mf <<*>> ma = MonadCtx $ do
-        f <- fromMonadCtx mf
-        a <- fromMonadCtx ma
-        return $ f a
-
----
-
-instance PolyApplicative (Value f) (Value a) (Value out) <= PolyApplicative f a out where
-    Value f <<*>> Value a = Value $ f <<*>> a
-
-instance PolyApplicative (Value f) (MonadCtx env set m) out <= PolyApplicative f (MonadCtx env set m) out where
-    Value f <<*>> a = f <<*>> a
-
-instance PolyApplicative (MonadCtx env set m) (Value ma) out <= PolyApplicative (MonadCtx env set m) ma out where
-    f <<*>> Value a = f <<*>> a
-
 -----------------------------------
 
-instance PolyApplicative (ValueS Pure s1) (ValueS Pure s2) (ValueS Pure s3) <= PolyApplicative s1 s2 s3 where
-    ValueS (Pure sf) <<*>> ValueS (Pure sa) = ValueS . Pure $ sf <<*>> sa
+instance PolyApplicative (Value Pure s1) (Value Pure s2) (Value Pure s3) <= PolyApplicative s1 s2 s3 where
+    Value (Pure sf) <<*>> Value (Pure sa) = Value . Pure $ sf <<*>> sa
 
-instance PolyApplicative (ValueS IO s1) (ValueS Pure s2) (ValueS IO s3) <= PolyApplicative s1 s2 s3 where
-    ValueS msf <<*>> ValueS (Pure sa) = ValueS $ do
+instance PolyApplicative (Value IO s1) (Value Pure s2) (Value IO s3) <= PolyApplicative s1 s2 s3 where
+    Value msf <<*>> Value (Pure sa) = Value $ do
         sf <- msf
         return $ sf <<*>> sa
 
-instance PolyApplicative (ValueS Pure s1) (ValueS IO s2) (ValueS IO s3) <= PolyApplicative s1 s2 s3 where
-    ValueS (Pure sf) <<*>> ValueS msa = ValueS $ do
+instance PolyApplicative (Value Pure s1) (Value IO s2) (Value IO s3) <= PolyApplicative s1 s2 s3 where
+    Value (Pure sf) <<*>> Value msa = Value $ do
         sa <- msa
         return $ sf <<*>> sa
 
-instance PolyApplicative (ValueS IO s1) (ValueS IO s2) (ValueS IO s3) <= PolyApplicative s1 s2 s3 where
-    ValueS msf <<*>> ValueS msa = ValueS $ do
+instance PolyApplicative (Value IO s1) (Value IO s2) (Value IO s3) <= PolyApplicative s1 s2 s3 where
+    Value msf <<*>> Value msa = Value $ do
         sf <- msf
         sa <- msa
         return $ sf <<*>> sa

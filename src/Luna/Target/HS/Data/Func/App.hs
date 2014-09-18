@@ -62,11 +62,11 @@ fromAppH (AppH a) = a
 appByName' name val (AppH (fptr, args)) = AppH (fptr, appArgByName name val args)
 appNext' val (AppH (fptr, args)) = AppH (fptr, appNextArg val args)
 
-appByName name val = (fmap.fmap) $ appByName' name val
-appNext val = (fmap.fmap) $ appNext' val
+--appByName name val = (fmap.fmap) $ appByName' name val
+--appNext val = (fmap.fmap) $ appNext' val
 
-appByName2 name val = fmap $ appByName' name val
-appNext2 val = fmap $ appNext' val
+appByName name val = fmap $ appByName' name val
+appNext val = fmap $ appNext' val
 
 --appByName' name val fptr = fmap (appArgByName name val) fptr
 --appNext' val fptr = fmap (appNextArg val) fptr

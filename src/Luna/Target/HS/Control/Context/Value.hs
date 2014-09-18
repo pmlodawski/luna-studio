@@ -36,44 +36,27 @@ import Control.Applicative
 -- Structures
 --------------------------------------------------------------------------------
 
-newtype Value m v = Value (m v) deriving (Typeable)
-
-newtype Value2 m (s :: * -> *) v = Value2 (m s v) deriving (Show, Typeable, Functor)
-
-newtype ValueS m s v = ValueS (m (s v)) deriving (Show, Typeable, Functor)
+newtype Value m s v = Value (m (s v)) deriving (Typeable, Functor)
 
 fromValue (Value a) = a
-fromValue2 (Value2 a) = a
-fromValueS (ValueS a) = a
-
 
 --------------------------------------------------------------------------------
 -- Type classes
 --------------------------------------------------------------------------------
 
-class LiftValue m mout where
-    liftValue :: Value m a -> mout a
+-- FIXME [wd]: to remove?
+class LiftValue m t where
+    liftValue :: Functor s => Value m s a -> t s a
 
 
-class LiftValueS m t where
-    liftValueS :: Functor s => ValueS m s a -> t s a
-
-
-
-class LiftValueS' m s t where
-    liftValueS' :: m (s :: * -> *) a -> t m s a
-
---liftValueS :: m s a -> t m s a
---liftValueS :: ValueS m s a -> t m s a <- tak powinna wygladac ta sygnatura!!!
---bo inaczej AppMonadCtx nie wnioskuje ze m jest pod monadem t!
-
-
+class LiftValue' m s t where
+    liftValue' :: m (s :: * -> *) a -> t m s a
 
 --------------------------------------------------------------------------------
 -- Instances
 --------------------------------------------------------------------------------
 
-instance Show (m a) => Show (Value m a) where
+instance Show (m (s a)) => Show (Value m s a) where
 #ifdef DEBUG
     show (Value a) = "Value (" ++ child ++ ")" where
         child = show a
@@ -84,31 +67,6 @@ instance Show (m a) => Show (Value m a) where
 
 ---
 
-instance Monad m => Monad (Value m) where
-    return = Value . return
-    Value ma >>= f = Value $ do
-        a <- ma
-        fromValue $ f a
-
-instance Functor m => Functor (Value m) where
-    fmap f (Value a) = Value $ fmap f a
-
-instance (Functor m, Monad m) => Applicative (Value m) where
-    pure  = Value . return
-    (Value mf) <*> (Value ma) = Value $ do
-        f <- mf
-        a <- ma
-        return $ f a
-
----
-
-instance LiftValue IO m <= MonadIO m where
-    liftValue = liftIO . fromValue
-
-instance LiftValue Pure m <= Monad m where
-    liftValue = return . fromPure . fromValue
-
-
 type family EnvMerge3 a b where
-  EnvMerge3 (ValueS Pure) (ValueS Pure) = (ValueS Pure)
-  EnvMerge3 a             b             = (ValueS IO)
+  EnvMerge3 (Value Pure) (Value Pure) = (Value Pure)
+  EnvMerge3 a             b             = (Value IO)

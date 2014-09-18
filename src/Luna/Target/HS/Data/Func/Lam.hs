@@ -26,4 +26,4 @@ data Lam lam = Lam lam deriving (Typeable)
 -- Utils
 ----------------------------------------------------------------------------------
 
-mkLam lam args = valS $ AppH (Lam lam, args)
+mkLam lam args = val $ AppH (Lam lam, args)

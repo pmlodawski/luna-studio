@@ -19,7 +19,7 @@ import           Luna.Target.HS.Host.Wrapper (ifThenElse)
 
 import Luna.Target.HS.Control.Context.Bind
 
-(>>=)  = bindEnv
-(>>)   = bindEnv_
+--(>>=)  = bindEnv
+--(>>)   = bindEnv_
 fail _ = undefined
 return = Prelude.return

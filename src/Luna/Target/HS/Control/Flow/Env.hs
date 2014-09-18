@@ -17,14 +17,8 @@ import Luna.Target.HS.Control.Error   as X
 -- Utils
 --------------------------------------------------------------------------------
 
+val :: v -> Value Pure Safe v
 val = Value . Pure . Safe
 
-
-val2 = Value2 . PureS . Pure . Safe
-
-val2io = Value2 . IOS . return . Safe
-
-valS = ValueS . Pure . Safe
-
-valSio :: a -> ValueS IO Safe a
-valSio = ValueS . return . Safe
+valIO :: a -> Value IO Safe a
+valIO = Value . return . Safe

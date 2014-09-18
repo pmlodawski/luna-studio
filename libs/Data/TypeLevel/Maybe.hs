@@ -8,6 +8,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE EmptyDataDecls #-}
+{-# LANGUAGE PolyKinds #-} -- needed to handle poly kinded Just args
 
 module Data.TypeLevel.Maybe where
 
@@ -16,8 +17,8 @@ import Prelude (Show)
 import qualified Prelude as P
 
 
-newtype Just a  = Just a deriving (Show, Typeable)
-data    Nothing = Nothing deriving (Show, Typeable)
+data Just (a :: k) deriving (Typeable)
+data Nothing       deriving (Typeable)
 
 --------------------------------------------------------------------------------
 -- Type classes
