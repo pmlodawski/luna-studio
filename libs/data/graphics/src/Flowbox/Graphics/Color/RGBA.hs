@@ -27,8 +27,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data RGBA a = RGBA { rgbaR :: a, rgbaG :: a, rgbaB :: a, rgbaA :: a }
 			deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (RGBA a) (RGBA a) a a where
-    each f (RGBA r g b a) = RGBA <$> f r <*> f g <*> f b <*> f a
-    {-# INLINE each #-}
-
 deriveAccelerate ''RGBA
+deriveEach ''RGBA

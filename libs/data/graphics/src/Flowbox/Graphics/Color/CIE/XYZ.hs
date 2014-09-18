@@ -27,8 +27,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data XYZ a = XYZ { xyzX :: a, xyzY :: a, xyzZ :: a }
            deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (XYZ a) (XYZ b) a b where
-    each f (XYZ x y z) = XYZ <$> f x <*> f y <*> f z
-    {-# INLINE each #-}
-
 deriveAccelerate ''XYZ
+deriveEach ''XYZ

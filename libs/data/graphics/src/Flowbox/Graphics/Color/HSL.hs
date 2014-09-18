@@ -28,8 +28,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data HSL a = HSL { hslH :: a, hslS :: a, hslL :: a }
            deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (HSL a) (HSL a) a a where
-    each f (HSL h s l) = HSL <$> f h <*> f s <*> f l
-    {-# INLINE each #-}
-
 deriveAccelerate ''HSL
+deriveEach ''HSL

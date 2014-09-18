@@ -28,8 +28,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data YUV_HD a = YUV_HD { yuv_hdY :: a, yuv_hdU :: a, yuv_hdV :: a }
               deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (YUV_HD a) (YUV_HD a) a a where
-    each f (YUV_HD y u v) = YUV_HD <$> f y <*> f u <*> f v
-    {-# INLINE each #-}
-
 deriveAccelerate ''YUV_HD
+deriveEach ''YUV_HD

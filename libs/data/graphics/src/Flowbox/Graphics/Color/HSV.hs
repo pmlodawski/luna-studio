@@ -28,8 +28,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data HSV a = HSV { hsvH :: a, hsvS :: a, hsvV :: a }
            deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (HSV a) (HSV a) a a where
-    each f (HSV h s v) = HSV <$> f h <*> f s <*> f v
-    {-# INLINE each #-}
-
 deriveAccelerate ''HSV
+deriveEach ''HSV

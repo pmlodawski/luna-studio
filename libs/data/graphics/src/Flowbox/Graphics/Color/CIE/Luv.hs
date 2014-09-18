@@ -28,8 +28,5 @@ import Flowbox.Graphics.Utils.Accelerate
 data Luv a = Luv { luvL :: a, luvU :: a, luvV :: a }
            deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-instance Each (Luv a) (Luv b) a b where
-    each f (Luv x y z) = Luv <$> f x <*> f y <*> f z
-    {-# INLINE each #-}
-
 deriveAccelerate ''Luv
+deriveEach ''Luv
