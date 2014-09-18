@@ -185,7 +185,6 @@ main1 = do
 main2 :: IO ()
 main2 = do
     rootLogger setIntLevel 5
-    cfg <- Config.load
 
     (libManager , libID) <- readSource code
     let Just library = LibManager.lab libManager libID

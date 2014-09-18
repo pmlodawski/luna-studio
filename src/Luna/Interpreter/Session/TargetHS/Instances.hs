@@ -8,7 +8,6 @@ module Luna.Interpreter.Session.TargetHS.Instances where
 
 import qualified GhcMonad
 import qualified HscTypes
-import qualified Language.Haskell.Interpreter as I
 --import qualified GHC
 --import qualified InstEnv
 --import qualified Outputable
@@ -26,7 +25,7 @@ logger = getLoggerIO "Luna.Interpreter.Session.TargetHS.Instances"
 
 
 clean :: Session ()
-clean = lift2 $ I.runGhc $ do
+clean = lift2 $ do
 
     --dflags <- GHC.getSessionDynFlags
     --GhcMonad.withSession $ \hscEnv -> do
