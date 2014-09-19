@@ -21,7 +21,7 @@ data Edge = Data { _src :: OutPort
           deriving (Show, Read, Ord, Eq)
 
 
-makeLenses(''Edge)
+makeLenses ''Edge
 
 
 isData :: Edge -> Bool

@@ -28,8 +28,24 @@ dshow :: Outputable.Outputable a => GHC.DynFlags -> a -> String
 dshow dflags = Outputable.showSDoc dflags . Outputable.ppr
 
 
-clean :: Session ()
-clean = lift2 $ do
+type ClsInstSelector = GHC.DynFlags -> InstEnv.ClsInst -> Bool
+type FamInstSelector = GHC.DynFlags -> FamInstEnv.FamInst -> Bool
+
+
+cleanFunctions :: Session ()
+cleanFunctions = clean clsInstFilter famInstFilter where
+    clsInstFilter dflags inst = dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Func.Func.Func"
+                             && dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Struct.Mem.HasMem"
+    famInstFilter = const $ const True
+
+
+cleanAll :: Session ()
+cleanAll = clean true true where
+    true = const $ const True
+
+
+clean :: ClsInstSelector -> FamInstSelector -> Session ()
+clean clsInstFilter famInstFilter = lift2 $ do
     dflags <- GHC.getSessionDynFlags
     --printInstances
 
@@ -38,10 +54,9 @@ clean = lift2 $ do
     GhcMonad.modifySession $ \hscEnv -> let
         hsc_IC             = HscTypes.hsc_IC       hscEnv
         (clsInst, famInst) = HscTypes.ic_instances hsc_IC
-        clsInst'           = filter remove clsInst
-        famInst'           = famInst
-        remove inst = dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Func.Func.Func"
-                   && dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Struct.Mem.HasMem"
+        clsInst'           = filter (clsInstFilter dflags) clsInst
+        famInst'           = filter (famInstFilter dflags) famInst
+
         hsc_IC'            = hsc_IC {HscTypes.ic_instances = (clsInst', famInst')}
         in hscEnv { HscTypes.hsc_IC = hsc_IC'}
 
