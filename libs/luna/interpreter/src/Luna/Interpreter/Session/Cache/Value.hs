@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.Cache.Value where
 
 import           Data.ByteString.Lazy       (ByteString)
@@ -11,6 +13,7 @@ import qualified Data.ByteString.Lazy.Char8 as ByteString
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
+import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
@@ -30,11 +33,11 @@ logger = getLoggerIO "Luna.Interpreter.Session.Cache.Value"
 getIfReady :: CallPointPath -> Session ByteString
 getIfReady callPointPath = do
     cacheInfo <- Cache.lookupCacheInfo callPointPath
-             <??&> Error.CacheError "Cache.Value.get" ("Object " ++ show callPointPath ++ " is not in cache.")
+             <??&> Error.CacheError $(loc) ("Object " ++ show callPointPath ++ " is not in cache.")
     let varName = cacheInfo ^. CacheInfo.recentVarName
         status  = cacheInfo ^. CacheInfo.status
 
-    assertE (status == Status.Ready) $ Error.CacheError "Cache.Value.get" $ "Object " ++ show callPointPath ++ " is not computed yet."
+    assertE (status == Status.Ready) $ Error.CacheError $(loc) $ "Object " ++ show callPointPath ++ " is not computed yet."
     get varName
 
 
@@ -68,13 +71,12 @@ getWithStatus callPointPath = do
                 (Status.NonCacheable, _    ) -> returnNothing NonCacheable
 
 
-
 report :: CallPointPath -> VarName -> Session ()
 report callPointPath varName = do
     resultCB  <- Session.getResultCallBack
     projectID <- Session.getProjectID
     result    <- get varName
-    safeLiftIO' (Error.CallbackError "Value.report") $ resultCB projectID callPointPath result
+    safeLiftIO' (Error.CallbackError $(loc)) $ resultCB projectID callPointPath result
 
 
 get :: VarName -> Session ByteString

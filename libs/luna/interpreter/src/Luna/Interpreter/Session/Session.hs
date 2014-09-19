@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.Session where
 
 import qualified Control.Monad.Ghc          as MGHC
@@ -22,6 +24,7 @@ import           Flowbox.Config.Config                       (Config)
 import qualified Flowbox.Config.Config                       as Config
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
+import           Flowbox.Source.Location                     (Location, loc)
 import           Flowbox.System.Log.Logger                   as Logger
 import qualified Luna.AST.Common                             as AST
 import           Luna.AST.Control.Focus                      (Focus)
@@ -131,7 +134,7 @@ location = "<target ghc-hs interactive>"
 interceptSourceErrors :: MGHC.Ghc a -> Session a
 interceptSourceErrors ghc = do
     let handler srcErr = do
-            let errDat = Error.SourceError "Session.runStmt" srcErr
+            let errDat = Error.SourceError $(loc) srcErr
                 errMsg = Error.format errDat
             logger Logger.error errMsg
             return $ Left errDat
@@ -145,8 +148,8 @@ runStmt stmt = do
     result <- interceptSourceErrors $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
     case result of
         GHC.RunOk _         -> return ()
-        GHC.RunException ex -> left $ Error.RunError   "Session.runStmt" ex
-        GHC.RunBreak {}     -> left $ Error.OtherError "Session.runStmt" "Run break"
+        GHC.RunException ex -> left $ Error.RunError   $(loc) ex
+        GHC.RunBreak {}     -> left $ Error.OtherError $(loc) "Run break"
 
 
 runDecls :: String -> Session ()
@@ -189,38 +192,38 @@ getLibrary :: Library.ID -> Session Library
 getLibrary libraryID = do
     libManager <- getLibManager
     LibManager.lab libManager libraryID
-        <??> Error.ASTLookupError "Session.getLibrary" ("Cannot find library with id=" ++ show libraryID)
+        <??> Error.ASTLookupError $(loc) ("Cannot find library with id=" ++ show libraryID)
 
 
 getModule :: DefPoint -> Session Module
 getModule defPoint = do
     focus <- getFocus defPoint
     Focus.getModule focus
-        <??> Error.ASTLookupError "Session.getModule" "Target is not a module"
+        <??> Error.ASTLookupError $(loc) "Target is not a module"
 
 
 getFunction :: DefPoint -> Session Expr
 getFunction defPoint = do
     focus <- getFocus defPoint
     Focus.getFunction focus
-        <??> Error.ASTLookupError "Session.getFunction" "Target is not a function"
+        <??> Error.ASTLookupError $(loc) "Target is not a function"
 
 
 getClass :: DefPoint -> Session Expr
 getClass defPoint = do
     focus <- getFocus defPoint
     Focus.getClass focus
-        <??> Error.ASTLookupError "Session.getClass" "Target is not a class"
+        <??> Error.ASTLookupError $(loc) "Target is not a class"
 
 
 getFocus :: DefPoint -> Session Focus
 getFocus (DefPoint libraryID bc) = do
     ast <- view Library.ast <$> getLibrary libraryID
-    hoistEither $ fmapL (Error.ASTLookupError "Session.getFocus") $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
+    hoistEither $ fmapL (Error.ASTLookupError $(loc)) $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
 
 
-runPass :: Functor m => Error.Location -> m (Either Error.ErrorStr a) -> EitherT Error m a
-runPass loc p = EitherT $ (fmap . fmapL) (Error.PassError loc) p
+runPass :: Functor m => Location -> m (Either Error.ErrorStr a) -> EitherT Error m a
+runPass loc' p = EitherT $ (fmap . fmapL) (Error.PassError loc') p
 
 
 getGraph :: DefPoint -> Session (Graph, AST.ID)
@@ -229,13 +232,13 @@ getGraph defPoint = do
     let propertyMap = library ^. Library.propertyMap
         ast         = library ^. Library.ast
     expr  <- getFunction defPoint
-    aa    <- runPass "Session.getGraph" $ Alias.run ast
-    graph <- fst <$> runPass "Session.getGraph" (GraphBuilder.run aa propertyMap expr)
+    aa    <- runPass $(loc) $ Alias.run ast
+    graph <- fst <$> runPass $(loc) (GraphBuilder.run aa propertyMap expr)
     return (graph, expr ^. Expr.id)
 
 
 getMainPtr :: Session DefPoint
-getMainPtr = getMainPtrMaybe <??&> Error.ConfigError "Session.getMainPtr" "MainPtr not set."
+getMainPtr = getMainPtrMaybe <??&> Error.ConfigError $(loc) "MainPtr not set."
 
 
 getMainPtrMaybe :: Session (Maybe DefPoint)
@@ -247,7 +250,7 @@ setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
 
 
 getProjectID :: Session Project.ID
-getProjectID = getProjectIDMaybe <??&> Error.ConfigError "Session.getProjectID" "Project ID not set."
+getProjectID = getProjectIDMaybe <??&> Error.ConfigError $(loc) "Project ID not set."
 
 
 getProjectIDMaybe :: Session (Maybe Project.ID)

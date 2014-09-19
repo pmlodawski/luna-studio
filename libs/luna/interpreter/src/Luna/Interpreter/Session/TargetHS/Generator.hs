@@ -4,11 +4,14 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.TargetHS.Generator where
 
 import qualified Data.List as List
 
 import           Flowbox.Prelude
+import           Flowbox.Source.Location                  (loc)
 import           Flowbox.System.Log.Logger
 import           Luna.AST.Module                          (Module)
 import qualified Luna.AST.Module                          as Module
@@ -63,12 +66,11 @@ genFunctions = do
 
 genCode :: ([String] -> [String]) -> Module -> Session [String]
 genCode selector ast = do
-    let runPass = Session.runPass "Generator.genCode"
-    aliasInfo <- runPass $ Analysis.Alias.run ast
-    hash      <- runPass $ Hash.run ast
-    ssa       <- runPass $ SSA.run aliasInfo hash
-    hast      <- runPass $ HASTGen.run ssa
-    srcs      <- runPass $ HSC.run hast
+    aliasInfo <- Session.runPass $(loc) $ Analysis.Alias.run ast
+    hash      <- Session.runPass $(loc) $ Hash.run ast
+    ssa       <- Session.runPass $(loc) $ SSA.run aliasInfo hash
+    hast      <- Session.runPass $(loc) $ HASTGen.run ssa
+    srcs      <- Session.runPass $(loc) $ HSC.run hast
     return $ map (unlines . selector . lines . view Source.code) srcs
 
 
