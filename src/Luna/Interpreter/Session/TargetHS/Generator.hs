@@ -48,7 +48,7 @@ genClass :: DefPoint -> Session [String]
 genClass defPoint = do
     expr <- Session.getClass defPoint
     let ast = emptyModule & Module.classes .~ [expr]
-    genCode (dropWhile (not . (== "-- Other data types"))) ast
+    genCode (dropWhile (not . (== "-- body --"))) ast
 
 
 genFunctions :: Session [String]
@@ -58,7 +58,7 @@ genFunctions = do
     mainPtr <- Session.getMainPtr
     ast     <- Session.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
     genCode ( List.filter (not . (\a -> List.isPrefixOf "data " a || List.isPrefixOf "$(generateFieldAccessors" a))
-             . dropWhile   (not . (== "-- Other data types"))
+             . dropWhile   (not . (== "-- body --"))
             --dropWhile   (not . (== "-- ====== Method: Vector.test ====== --"))
 
             ) ast
