@@ -63,8 +63,22 @@ fcurry6 :: t1 -> t2 -> t3 -> t4 -> t5 -> t6 -> (t1 -> t2 -> t3 -> t4 -> t5 -> t6
 fcurry6 t = (flip dot1) (fcurry1 t) `dot5` fcurry5
 
 
-appLastArg1 f = (curryFirst f) `dot1` fcurry1
-appLastArg2 f = (curryFirst f) `dot2` fcurry2
-appLastArg3 f = (curryFirst f) `dot3` fcurry3
-appLastArg4 f = (curryFirst f) `dot4` fcurry4
-appLastArg5 f = (curryFirst f) `dot5` fcurry5
+--appLastArg1 f = (curryFirst f) `dot1` fcurry1
+--appLastArg2 f = (curryFirst f) `dot2` fcurry2
+--appLastArg3 f = (curryFirst f) `dot3` fcurry3
+--appLastArg4 f = (curryFirst f) `dot4` fcurry4
+--appLastArg5 f = (curryFirst f) `dot5` fcurry5
+
+
+appArg0 = id
+appArg1 = ($)
+appArg2 f x = flip appArg1 x . f
+appArg3 f x = flip appArg2 x . f
+appArg4 f x = flip appArg3 x . f
+appArg5 f x = flip appArg4 x . f
+appArg6 f x = flip appArg5 x . f
+appArg7 f x = flip appArg6 x . f
+appArg8 f x = flip appArg7 x . f
+appArg9 f x = flip appArg8 x . f
+
+--appArg2 f x t1 = f t1 x

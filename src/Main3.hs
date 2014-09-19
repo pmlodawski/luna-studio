@@ -11,6 +11,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- module --
 module Main where
@@ -41,30 +42,16 @@ type P = Proxy
 print_DBG val = Value $ fmap Safe $ print val
 
 
-(>>=)  = polyCtxBind
-(>>)   = polyCtxBind_
+(>>=)  = polyMonadCtxBind
+(>>)   = polyMonadCtxBind_
+
+--polyBind_ a b = a >>>= (\_ -> b)
+--(>>=)  = polyBind
+--(>>)   = polyBind_
+
 fail _ = undefined
 return = Prelude.return
 
-class UnpackCtxS ctx m | ctx -> m where
-    unpackCtxS :: ctx s a -> m (s a)
-
-instance UnpackCtxS PureS Pure where
-    unpackCtxS = fromPureS
-
-instance UnpackCtxS IOS IO where
-    unpackCtxS = fromIOS
-
-
-
-class PackCtxS m ctx | m -> ctx where
-    packCtxS :: m (s a) -> ctx s a
-
-instance PackCtxS Pure PureS where
-    packCtxS = PureS
-
-instance PackCtxS IO IOS where
-    packCtxS = IOS
 
 
 
@@ -73,10 +60,28 @@ liftF1' f t1 = do
     t1' <- t1
     val f <<*>> t1
 
+liftF1'x t1 = do
+    t1' <- t1
+    t1'
+
+zzz =  liftF1'x get5X
+
 liftF2' f t1 t2 = do
     t1' <- t1
     t2' <- t2
     val f <<*>> t1 <<*>> t2
+
+liftF2'x f t1 t2 = do
+    t1' <- t1
+    t2' <- t2
+    val (t1', t2')
+
+testi2 a b = a >>>~ (\_ -> b)
+{-# INLINE testi2 #-}
+
+
+--tx1 = liftF2'x (,) get5X  (val 2)
+--tx2 = liftF2' (,) get5X  (val 2)
 
 
 liftF3' f t1 t2 t3 = do
@@ -108,6 +113,19 @@ liftCons2' = curryTuple3 . const . liftF2'
 liftCons3' = curryTuple4 . const . liftF3'
 liftCons4' = curryTuple5 . const . liftF4'
 liftCons5' = curryTuple6 . const . liftF5'
+
+
+oldtest = get5X >>= id
+
+-- monad tests - should compile.
+tstme x = x >>= (\_ -> val 0)
+tstme2 = (val 1) >>= (\_ -> val (0::Int))
+tstme3 = (val (1::Int)) >>= (\_ -> val 0)
+tstme4 = (val 1) >>= (\_ -> val 0)
+tstme5 x y = x >>= (\_ -> y >>= (\_ -> val 0))
+
+
+--nw = runStateT3X (liftF2' (+) get5X  (val 2)) (val 0)
 
 -------------------------------------------------------------------------------
 
@@ -142,7 +160,7 @@ memDef_Cls_Vector_Vector = liftCons3' Vector
 
 
 
-memDef_Cls_Vector_Vector2 (self, (x, (y, (z, ())))) = polyJoin $ val (\a b c -> val Vector `appBind5` a `appBind5` b `appBind5` c) <<*>> x <<*>> y <<*>> z
+memDef_Cls_Vector_Vector2 (self, (x, (y, (z, ())))) = polyJoin $ val (\a b c -> val Vector `appBindCtx` a `appBindCtx` b `appBindCtx` c) <<*>> x <<*>> y <<*>> z
 
 registerMethod ''Cls_Vector "Vector"
 
@@ -281,7 +299,7 @@ registerMethod ''Vector "baz"
 --instance HasProp "baz" Vector (NParam "self", (NParam "a", ())) where
 --    memSig _ = memSig_Vector_baz
 
-testX1 :: m a -> b -> X1 m b
+testX1 :: m a -> b -> XArg m b
 testX1 = undefined
 
 tst = do

@@ -22,6 +22,7 @@ import Control.PolyApplicative
 import Control.Applicative
 import Control.Monad.Morph
 import Data.Typeable (Typeable)
+import Luna.Target.HS.Control.Context.Value
 
 import Flowbox.Utils
 
@@ -31,14 +32,7 @@ import Flowbox.Utils
 
 data Pure a = Pure a deriving (Eq, Ord, Typeable, Generic)
 
-newtype IOS s a = IOS (IO (s a)) deriving (Show)
-
-newtype PureS s a = PureS (Pure (s a)) deriving (Typeable, Functor)
-
 fromPure (Pure a) = a
-fromPureS (PureS a) = a
-
-fromIOS (IOS a) = a
 
 --------------------------------------------------------------------------------
 -- Utils
@@ -49,8 +43,6 @@ returnPure = return
 
 returnIO :: a -> IO a
 returnIO = return
-
-
 
 --------------------------------------------------------------------------------
 -- Type classes
@@ -64,20 +56,20 @@ class IOEnv m where
 -- Type families
 --------------------------------------------------------------------------------
 
-type family EnvMerge a b where
-  EnvMerge Pure Pure = Pure
-  EnvMerge a    b    = IO
-
-type family EnvMerge2 a b where
-  EnvMerge2 PureS PureS = PureS
-  EnvMerge2 a    b      = IOS
-
+type family BottomEnvMerge a b where
+  BottomEnvMerge Pure a = a
+  BottomEnvMerge a    b = IO
 
 
 type family GetEnv t where
     GetEnv Pure  = Pure
     GetEnv IO    = IO
     GetEnv (t m) = GetEnv m
+
+
+type family EnvMerge3 a b where
+  EnvMerge3 (Value Pure) (Value Pure) = (Value Pure)
+  EnvMerge3 a             b           = (Value IO)
     
 
 --------------------------------------------------------------------------------
@@ -93,15 +85,6 @@ instance Show a => Show (Pure a) where
     show (Pure a) = show a
 #endif
 
-
-instance Show (s a) => Show (PureS s a) where
-#ifdef DEBUG
-    show (PureS (Pure a)) = "PureS (" ++ child ++ ")" where
-        child = show a
-        content = if ' ' `elem` child then "(" ++ child ++ ")" else child
-#else
-    show (PureS (Pure a)) = show a
-#endif
 
 ---
 

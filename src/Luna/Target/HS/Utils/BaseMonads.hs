@@ -229,13 +229,7 @@ class IsError a where
 
 ------------------------
 
---newtype MonadCtx2 (base :: * -> *) set m s val = MonadCtx2 (m s val) deriving (Show, Typeable)
-
-
-
-type family MatchEnv e1 e2 where
-    MatchEnv IOS IOS = IOS
-    MatchEnv IOS IOS = IOS
+--newtype MonadCtx (base :: * -> *) set m s val = MonadCtx (m s val) deriving (Show, Typeable)
 
 
 
@@ -245,22 +239,6 @@ class Monad3 m s1 s2 s3 | s1 s2 -> s3 where
 
 
 
-class PolyMonadSafety m1 m2 s1 s2 where
-    polyBindSafety ::  PolyMonad (m1 s1) (m2 s2) ((MatchEnv m1 m2) (MatchSafety s1 s2)) => m1 s1 a -> (a -> m2 s2 b) -> (MatchEnv m1 m2) (MatchSafety s1 s2) b
-
-
-instance PolyMonadSafety IOS IOS Safe s where
-    polyBindSafety m f = IOS $ do
-        Safe a <- fromIOS m
-        fromIOS $ f a
-
-
-instance Monad3R IOS m <= Monad m where
-    return3 fs a = IOS . return $ fs a
-
-
-instance Monad3R PureS m <= Monad m where
-    return3 fs a = PureS . return $ fs a
 
 
 
@@ -270,41 +248,14 @@ instance Monad3R (Value m) s <= Monad m where
 
 
 
-instance Monad3T PureS where
-    return3T = PureS . Pure
-
---class MonadSafety m s1 s2 where
---    bindSafety :: m s1 a -> (a -> m s2 b) -> m (MatchSafety s1 s2) b
-
-instance MonadSafety PureS s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
-    bindSafety m f = tst where
-        f' = fromPure . fromPureS . f -- :: a -> (s2 b)
-        m' = fromPure $ fromPureS m   -- :: (s1 a)
-        tst = PureS $ Pure $ m' >>=~ f'
-        -- PureS $ fromPureS m >>=~ (fromPureS . f)
-
-instance MonadSafety IOS Safe s where
-    bindSafety m f = IOS $ do
-        Safe a <- fromIOS m
-        fromIOS $ f a
-
-
-instance MonadSafety IOS (UnsafeBase base err) Safe where
-    bindSafety m f = IOS $ do
-        sa <- fromIOS m
-        case sa of
-            UnsafeValue a -> fmap (UnsafeValue . fromSafe) $ fromIOS $ f a
-            Error e       -> return $ Error e
-        --fromIOS $ f a
-
 --- ===
 
 instance MonadSafety (Value Pure) s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
     bindSafety m f = tst where
         f' = fromPure . fromValue . f -- :: a -> (s2 b)
         m' = fromPure $ fromValue m   -- :: (s1 a)
-        tst = Value $ Pure $ m' >>=~ f'
-        -- PureS $ fromPureS m >>=~ (fromPureS . f)
+        tst = Value $ Pure $ m' >>>= f'
+        -- PureS $ fromPureS m >>>= (fromPureS . f)
 
 instance MonadSafety (Value IO) Safe s where
     bindSafety m f = Value $ do
@@ -361,8 +312,8 @@ instance Monad3R (StateT3 s m) safety <= (Monad3R m safety) where
 
 
 
-instance Monad3T (StateT3 s m) <= Monad3T m where
-    return3T sa = StateT3 $ \s -> return3T $ fmap (\a -> (a, s)) sa
+--instance Monad3T (StateT3 s m) <= Monad3T m where
+--    return3T sa = StateT3 $ \s -> return3T $ fmap (\a -> (a, s)) sa
 
 
 class MonadState2 v m | m -> v where
@@ -431,39 +382,30 @@ tst3 = raiseMe E1 `bindSafety` (\_ -> put3 (0::Int))
 tst3' = raiseMe E1 `bindSafety` (\_ -> put3' (0::Int))
 
 
-put3X :: v -> MonadCtx2 PureS (Insert (Proxy StateT3) Empty) m Safe v <= MonadState2 v m
-put3X = MonadCtx2 . put3'
-
---put4X :: v -> MonadCtx2 PureS (Insert (Proxy StateT3) Empty) m Safe (Value2 PureS Safe ()) <= MonadState4 v m Safe
---put4X = MonadCtx2 . put4
-
---get4X :: MonadCtx2 PureS (Insert (Proxy StateT3) Empty) m Safe (Value2 PureS Safe ())
-get4X :: MonadState4 val m Safe => MonadCtx2 PureS (Insert (Proxy StateT3) Empty) m Safe val
-get4X = MonadCtx2 $ get4
 
 
-get5X :: MonadState4 val m Safe => MonadCtx2 (Value Pure) (Insert (Proxy StateT3) Empty) m Safe val
-get5X = MonadCtx2 $ get4
+get5X :: MonadState4 val m Safe => MonadCtx (Value Pure) (Insert (Proxy StateT3) Empty) m Safe val
+get5X = MonadCtx $ get4
 
-put5X :: MonadState4 val m Safe => val -> MonadCtx2 (Value Pure) (Insert (Proxy StateT3) Empty) m Safe (Value Pure Safe ())
-put5X = MonadCtx2 . put4
+put5X :: MonadState4 val m Safe => val -> MonadCtx (Value Pure) (Insert (Proxy StateT3) Empty) m Safe (Value Pure Safe ())
+put5X = MonadCtx . put4
 
---put4X :: v -> MonadCtx2 PureS (Insert (Proxy StateT3) Empty) m Safe v <= MonadState4 v m Safe
---put4X = MonadCtx2 . put4
+--put4X :: v -> MonadCtx PureS (Insert (Proxy StateT3) Empty) m Safe v <= MonadState4 v m Safe
+--put4X = MonadCtx . put4
 
 
 --tstB1 = val 0 `bindEnv_` val 1
 
 
 
--- !!!!!!!!! zrobic by runStateT3 dzialal na MonadCtx2
+-- !!!!!!!!! zrobic by runStateT3 dzialal na MonadCtx
 
 --bindEnv_ :: (PolyBindEnv m1 m2 m3 a1 a2, PolyMonad m1 m2 m3) => m1 a1 -> m2 b -> m3 b
 
---m1 :: MonadCtx2 base set m Safe
---m2 :: MonadCtx2 base set m Safe
+--m1 :: MonadCtx base set m Safe
+--m2 :: MonadCtx base set m Safe
 
---put3X (val 0) :: MonadCtx2 base set m Safe (Value Pure (Safe a))
+--put3X (val 0) :: MonadCtx base set m Safe (Value Pure (Safe a))
 
 --tstB2 = put3X (val 0) `bindEnv_` put3X (val 0)
 
@@ -624,7 +566,7 @@ runStateT' a s = fmap Safe $ runStateT a s
 --runReaderTX = liftMonadRunner1 (Proxy :: Proxy ReaderT) runReaderT . appMonadCtx
 
 
-runStateT3X a s = runMonad2 (Proxy::Proxy StateT3) (flip runStateT3 s) $ appMonadCtx $ unpackMonadCtxDummy $ a
+runStateT3X a s = runMonad (Proxy::Proxy StateT3) (flip runStateT3 s) $ appMonadCtx $ unpackCtxWrapper $ a
 
 --runStateTX''  = liftMonadRunner1'' (Proxy :: Proxy StateT)  runStateT
 --runReaderTX'' = liftMonadRunner1'' (Proxy :: Proxy ReaderT) runReaderT
@@ -641,9 +583,9 @@ runStateT3X a s = runMonad2 (Proxy::Proxy StateT3) (flip runStateT3 s) $ appMona
 --main = do
 --    printType (1::Int)
     --NIE DZIALA:
-    --runMonad2 (Proxy :: Proxy StateT3) (flip runStateT3 (swapCtx $ val2 (0::Int))) $ appMonadCtx $  put4X (val2 (1::Int)) `polyBind2` (\_ -> put4X (val2io (2::Int)))
+    --runMonad (Proxy :: Proxy StateT3) (flip runStateT3 (swapCtx $ val2 (0::Int))) $ appMonadCtx $  put4X (val2 (1::Int)) `polyBind2` (\_ -> put4X (val2io (2::Int)))
 
-    --print $ runMonad2 (Proxy :: Proxy StateT3) (flip runStateT3 (swapCtx $ val2 (0::Int))) $ appMonadCtx $  put4X (val2io (0::Int)) `polyBind2` (\_ -> (val2io (2::Int)))
+    --print $ runMonad (Proxy :: Proxy StateT3) (flip runStateT3 (swapCtx $ val2 (0::Int))) $ appMonadCtx $  put4X (val2io (0::Int)) `polyBind2` (\_ -> (val2io (2::Int)))
     --czemu trzeba robic swapCtx tam ? Czy nie powinno to dzialac bez tego?
 
         --printType $ (val2 (0::Int)) `polyBind2` (\_ -> put4X $ val2 (2::Int))
