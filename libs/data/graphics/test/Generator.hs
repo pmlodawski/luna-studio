@@ -308,6 +308,16 @@ crosstalkTest = do
     print "foo"
     testSaveRGBA' "out.png" (rasterizer newR) (rasterizer newG) (rasterizer newB) a
 
+--
+-- cornerPin test
+--
+
+-- Try with cornerPinTest 0 (Point2 512 0) 512 (Point2 0 512)
+cornerPinTest :: Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float)-> IO ()
+cornerPinTest p1 p2 p3 p4 = do
+    let process x = rasterizer $ monosampler $ cornerPin p1 p2 p3 p4 $ nearest $ fromMatrix (A.Clamp) x
+    forAllChannels "lena.png" process
+
 main :: IO ()
 main = do
   print "Szatan"
