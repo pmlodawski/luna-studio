@@ -56,7 +56,7 @@ resize cnv (Generator _ gen) = Generator cnv gen
 
 instance I.Boundable (DiscreteGenerator b) (Exp Int) b where
     unsafeIndex2D = runGenerator
-    bounduary     = canvas
+    boundary     = canvas
 
 -- == Gradient tick type ==
 
