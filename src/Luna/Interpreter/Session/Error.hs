@@ -13,13 +13,13 @@ import           Control.Exception.Base (SomeException)
 import           Control.Monad.IO.Class (MonadIO)
 import qualified HscTypes
 
-import Flowbox.Prelude           hiding (error)
-import Flowbox.System.Log.Logger
-
+import           Flowbox.Prelude           hiding (error)
+import           Flowbox.Source.Location   (Location)
+import qualified Flowbox.Source.Location   as Location
+import           Flowbox.System.Log.Logger
 
 
 type ErrorStr = String
-type Location = String
 
 data Error = RunError          { _location :: Location , _exception :: SomeException        }
            | SourceError       { _location :: Location , _sourceErr :: HscTypes.SourceError }
@@ -37,7 +37,7 @@ makeLenses(''Error)
 
 
 format :: Error -> String
-format err = (err ^. location) ++ " : " ++ case err of
+format err = Location.format (err ^. location) ++ " : " ++ case err of
     RunError      _ e -> show e
     CallbackError _ e -> show e
     SourceError   _ s -> show s

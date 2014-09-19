@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.AST.Traverse (
   arguments
 , inDataConnections
@@ -20,6 +22,7 @@ import qualified GHC.Exts            as Exts
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                            hiding (inside, matching, succ)
+import           Flowbox.Source.Location                    (loc)
 import           Luna.Graph.Edge                            (Edge)
 import qualified Luna.Graph.Edge                            as Edge
 import qualified Luna.Graph.Graph                           as Graph
@@ -66,7 +69,7 @@ globalPredecessor callDataPath (nodeID, node, edge) = do
 matchPredecessor :: CallDataPath -> Edge -> Session (Node.ID, Node, Edge)
 matchPredecessor callDataPath edge =
     List.find (flip Edge.match edge . view _3) (inDataConnections callDataPath)
-        <??> Error.GraphError "Traverse.matchPredecessor" "Incorrectly connected graph"
+        <??> Error.GraphError $(loc) "Incorrectly connected graph"
 
 
 
@@ -130,7 +133,7 @@ globalSuccessors prevCallDataPath (nodeID, node           , edge) = do
         Just defPoint -> do
             (graph, defID) <- Session.getGraph defPoint
             inputs         <- List.find (Node.isInputs . snd) (Graph.labNodes graph)
-                                <??> Error.GraphError "Traverse.globalSuccessor" "cannot find inputs node"
+                                <??> Error.GraphError $(loc) "cannot find inputs node"
             let succs = List.filter (Edge.match edge . view _3) $ Graph.lsucl graph $ fst inputs
                 newCallDataPath = CallDataPath.append callDataPath defPoint defID graph inputs
             concat <$> mapM (globalSuccessors newCallDataPath) succs

@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.AST.Executor where
 
 import           Control.Monad.State        hiding (mapM, mapM_)
@@ -14,6 +16,7 @@ import qualified Text.Read                  as Read
 
 import qualified Flowbox.Data.List                          as List
 import           Flowbox.Prelude                            as Prelude hiding (children, inside)
+import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Graph.Node                            as Node
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
@@ -129,7 +132,7 @@ execute callDataPath functionName argsVarNames = do
         CacheStatus.Affected     -> executeAffected
         CacheStatus.Modified     -> executeModified
         CacheStatus.NonCacheable -> executeModified
-        CacheStatus.Ready        -> left $ Error.OtherError "Executor.executeNode" "something went wrong : status = Ready"
+        CacheStatus.Ready        -> left $ Error.OtherError $(loc) "something went wrong : status = Ready"
 
 
 data VarType = Lit
