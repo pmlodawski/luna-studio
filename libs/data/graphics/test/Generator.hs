@@ -101,7 +101,7 @@ multisamplerTest = do
 -- Upcales lena 64x64 image into 720x480 one
 -- (Filtering test)
 --
-scalingTest :: Filter Float -> IO ()
+scalingTest :: Filter (Exp Float) -> IO ()
 scalingTest flt = do
     let process x = rasterizer $ monosampler
                                $ scale (V2 (720 / 64) (480 / 64))
