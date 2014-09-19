@@ -24,7 +24,7 @@ import Math.Space.Space
 -- == Boundable class
 class Boundable a b c | a -> b c where
     unsafeIndex2D  :: a -> Point2 b -> c
-    bounduary      :: a -> Grid b
+    boundary       :: a -> Grid b
 
 -- Boundable matrix
 data BMatrix m a = BMatrix { container :: m a
@@ -39,5 +39,5 @@ boundedIndex2D b obj (Point2 x y) = case b of
     A.Wrap       -> getter $ Point2 (x `mod` width) (y `mod` height) 
     A.Mirror     -> error "Not implemented yet" -- TODO [KL]
     A.Constant a -> if' (x > width - 1 || x < 0 || y > height - 1 || y < 0) a $ getter $ Point2 x y
-    where Grid width height = bounduary obj
+    where Grid width height = boundary obj
           getter            = unsafeIndex2D obj
