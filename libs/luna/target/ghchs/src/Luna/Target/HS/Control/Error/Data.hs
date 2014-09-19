@@ -106,7 +106,7 @@ instance Monad Safe where
 
 instance Monad (UnsafeBase base err) <= (PolyMonad base (UnsafeBase base err) (UnsafeBase base err)) where
     return = UnsafeValue
-    v >>= f = v >>=~ f
+    v >>= f = v >>>= f
 
 -- == Applicative == --   
 
@@ -122,24 +122,24 @@ instance Applicative (UnsafeBase base err) <= (Functor base, (PolyApplicative (U
 -- == PolyMonad == --
 
 instance PolyMonad Safe Safe Safe where
-    (Safe a) >>=~ f = f a
+    (Safe a) >>>= f = f a
 
 instance PolyMonad Safe (UnsafeBase base err) (UnsafeBase base err) where
-    (Safe a) >>=~ f = f a
+    (Safe a) >>>= f = f a
 
 instance PolyMonad (UnsafeBase base err) Safe (UnsafeBase base err) <= Functor base where
-    a >>=~ f = fmap (fromSafe . f) a
+    a >>>= f = fmap (fromSafe . f) a
 
 -- FIXME!!! PolyMonad should be defined for distinct base nd err types!
 instance PolyMonad (UnsafeBase base1 err1) (UnsafeBase base2 err2) (UnsafeBase base2 err2) where
-    a >>=~ f = undefined
+    a >>>= f = undefined
 
 
 --instance PolyMonad (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err) <= (PolyMonad base (UnsafeBase base err) (UnsafeBase base err)) where
---    a >>=~ f = case a of
+--    a >>>= f = case a of
 --        UnsafeValue v -> f v
 --        Error       e -> Error e
---        UnsafeOther o -> o >>=~ f
+--        UnsafeOther o -> o >>>= f
 
 
 -- == PolyApplicative == --

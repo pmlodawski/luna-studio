@@ -25,7 +25,6 @@ module Luna.Target.HS.Control.Context.Value where
 
 import Control.PolyMonad
 import Control.PolyApplicative
-import Luna.Target.HS.Control.Context.Env
 import Control.Monad.IO.Class
 import Data.Typeable (Typeable)
 import Flowbox.Utils
@@ -67,6 +66,3 @@ instance Show (m (s a)) => Show (Value m s a) where
 
 ---
 
-type family EnvMerge3 a b where
-  EnvMerge3 (Value Pure) (Value Pure) = (Value Pure)
-  EnvMerge3 a             b             = (Value IO)
