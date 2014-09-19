@@ -4,14 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns  #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ViewPatterns  #-}
 
 module Flowbox.Codec.EXR.Channels (
       readScanlineChannelR
     , readScanlineChannelA
     , readTiledScanlineChannelR
     , readTileFromChannel'
+    , readTileFromChannelR
     ) where
 
 import           Control.Applicative
@@ -25,8 +27,6 @@ import           Foreign.C.Types
 
 import qualified Flowbox.Codec.EXR.Internal.Bindings as Bindings
 import           Flowbox.Codec.EXR.Internal.Types
-
-import Debug.Trace
 
 
 
@@ -85,16 +85,12 @@ readTiledScanlineChannelR exrFile part chanName = do
 type TileCoordinates = (Int, Int)
 
 readTileFromChannel' :: EXRFile -> PartNumber -> String -> TileCoordinates -> IO (ForeignPtr CFloat, Int, Int)
-readTileFromChannel' (EXRFile exr) part chanName (xPos, yPos) = do
+readTileFromChannel' (EXRFile exr) (fromIntegral -> part) chanName (fromIntegral -> xPos, fromIntegral -> yPos) = do
     (buf, h, w) <- withForeignPtr exr $ \ptr ->
         withCString chanName $ \str ->
         alloca $ \height ->
         alloca $ \width -> do
-            let xPos' = fromIntegral xPos
-                yPos' = fromIntegral yPos
-            --putStrLn "before"
-            buf <- Bindings.readTileFromChannel ptr 0 str 0 0 height width
-            --putStrLn "after"
+            buf <- Bindings.readTileFromChannel ptr part str xPos yPos height width
             h <- fromIntegral <$> peek height
             w <- fromIntegral <$> peek width
             return (buf, h, w)
