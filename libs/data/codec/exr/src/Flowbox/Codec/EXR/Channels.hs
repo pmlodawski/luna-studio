@@ -20,7 +20,8 @@ import           Control.Applicative
 import qualified Data.Array.Accelerate           as A   
 import qualified Data.Array.Accelerate.IO        as A
 import qualified Data.Array.Repa                 as R
-import qualified Data.Array.Repa.Repr.ForeignPtr as R 
+import qualified Data.Array.Repa.Repr.ForeignPtr as R
+import qualified Data.Vector.Storable            as SV
 import           Foreign
 import           Foreign.C.String
 import           Foreign.C.Types
@@ -53,12 +54,12 @@ readScanlineChannelR exrFile part chanName = do
 
 
 -- |Reads a given channel into an Accelerate array.
-readScanlineChannelA :: EXRFile -> PartNumber -> String -> IO (A.Array (A.Z A.:. Int A.:. Int) CFloat)
+readScanlineChannelA :: EXRFile -> PartNumber -> String -> IO (A.Array (A.Z A.:. Int A.:. Int) Float)
 readScanlineChannelA exrFile part chanName = do
     (ptr, height, width) <- readScanlineChannel' exrFile part chanName
     let shape = A.Z A.:. height A.:. width
-    array <- withForeignPtr ptr $ \p -> A.fromPtr shape ((), castPtr p)
-    return array
+        storableVector = SV.unsafeFromForeignPtr0 ptr (height * width)
+    return $ A.fromVectors shape ((), SV.unsafeCast storableVector)
 
 readTiledScanlineChannel' :: EXRFile -> PartNumber -> String -> IO (ForeignPtr CFloat, Int, Int)
 readTiledScanlineChannel' (EXRFile exr) part chanName = do
@@ -66,9 +67,7 @@ readTiledScanlineChannel' (EXRFile exr) part chanName = do
         withCString chanName $ \str ->
         alloca $ \height ->
         alloca $ \width -> do
-            putStrLn "before"
             buf <- Bindings.readTiledScanlineChannel ptr (fromIntegral part) str height width
-            putStrLn "after"
             h <- fromIntegral <$> peek height
             w <- fromIntegral <$> peek width
             return (buf, h, w)
