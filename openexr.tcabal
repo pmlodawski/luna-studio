@@ -28,8 +28,7 @@ Executable test
   Hs-Source-Dirs:    src
   Main-is:           Main.hs
 
-  ghc-options:       -Wall -Odph -optlo-O3 -fllvm -debug -threaded
-  ghc-prof-options:  -auto-all
+  ghc-options:       -Wall -O2 -threaded
   extra-libraries:   z
 
   ghc-options:       -rtsopts
