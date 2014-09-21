@@ -12,6 +12,10 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE Rank2Types #-}
 
+{-# LANGUAGE ScopedTypeVariables #-}
+
+{-# LANGUAGE DysfunctionalDependencies #-}
+
 !{-# LANGUAGE RightSideContexts #-}
 
 module Luna.Target.HS.Control.Context.Bind where
@@ -152,25 +156,6 @@ instance PolyMonad IO IO IO where
 
 ----------------------------------------------
 
-instance PolyMonad (MonadCtx env1 set1 m1 s1) (MonadCtx env2 set2 m2 s2) (MonadCtx envout setout m1 s3) <= (envout~EnvMerge3 env1 env2, s3 ~ MatchSafety s1 s2, setout ~ Union set1 set2, m1~m2, MonadSafety m2 s1 s2) where
-    a >>>= f = MonadCtx $ (fromMonadCtx a) `bindSafety` (fromMonadCtx . f)
-
-instance PolyMonad (MonadCtx env set m s1) (Value Pure s2) (MonadCtx env set m s3) <= (s3 ~ MatchSafety s1 s2, MonadSafety m s1 s2, MonadTrans m, Monad s2) where
-    a >>>= f = MonadCtx $ (fromMonadCtx a) `bindSafety` (lift . fromPure . fromValue . f)
-
-instance PolyMonad (MonadCtx env set m s1) (Value IO s2) (MonadCtx envout set m s3) <= (envout~EnvMerge3 env (Value IO), s3 ~ MatchSafety s1 s2, MonadSafety m s1 s2, MonadTrans m, Monad s2, LiftValue IO m, Functor s2) where
-    a >>>= f = MonadCtx $ (fromMonadCtx a) `bindSafety` (liftValue . f)
-
-instance PolyMonad (Value Pure s1) (MonadCtx env set m s2) (MonadCtx env set m s3) <= (s3 ~ MatchSafety s1 s2, MonadTrans m, MonadSafety m s1 s2, Monad s1) where
-    a >>>= f = MonadCtx $ (lift . fromPure $ fromValue a) `bindSafety` (fromMonadCtx . f)
-
-instance PolyMonad (Value IO s1) (MonadCtx env set m s2) (MonadCtx envout set m s3) <= (envout~EnvMerge3 (Value IO) env, s3 ~ MatchSafety s1 s2, MonadTrans m, MonadSafety m s1 s2, Monad s1, LiftValue IO m, Functor s1) where
-    a >>>= f = MonadCtx $ (liftValue a) `bindSafety` (fromMonadCtx . f)
-
---instance PolyMonad IO (MonadCtx env set m) (MonadCtx envout set m) <= (envout ~ EnvMerge env IO, MonadIO m) where
---    a >>>= f = MonadCtx $ liftIO a >>= (fromMonadCtx . f)
-
-
 instance PolyMonad (Value Pure s1) (Value Pure s2) (Value Pure s3) <= (s3 ~ MatchSafety s1 s2, MonadSafety (Value Pure) s1 s2) where
     a >>>= f = a `bindSafety` f
 
@@ -182,6 +167,57 @@ instance PolyMonad (Value Pure s1) (Value IO s2) (Value IO s3) <= (s3 ~ MatchSaf
 
 instance PolyMonad (Value IO s1) (Value IO s2) (Value IO s3) <= (s3 ~ MatchSafety s1 s2, MonadSafety (Value IO) s1 s2) where
     a >>>= f = a `bindSafety` f
+
+---
+
+instance PolyMonad (MonadCtx env1 set1 m1 s1) (MonadCtx env2 set2 m2 s2) (MonadCtx envout setout m1 s3) <= (envout~EnvMerge3 env1 env2, s3 ~ MatchSafety s1 s2, setout ~ Union set1 set2, m1~m2, MonadSafety m2 s1 s2) where
+    a >>>= f = MonadCtx $ (fromMonadCtx a) `bindSafety` (fromMonadCtx . f)
+
+instance PolyMonad (MonadCtx env set m s1) (Value Pure s2) (MonadCtx env set m s3) <= (s3 ~ MatchSafety s1 s2, MonadSafety m s1 s2, MonadTrans m, Monad s2) where
+    a >>>= f = MonadCtx $ (fromMonadCtx a) `bindSafety` (lift . fromPure . fromValue . f)
+
+instance PolyMonad (MonadCtx env set m s1) (Value IO s2) (MonadCtx envout set m s3) <= (envout~EnvMerge3 env (Value IO), s3 ~ MatchSafety s1 s2, MonadSafety m s1 s2, MonadTrans m, Monad s2, LiftValue IO m, Functor s2) where
+    a >>>= f = MonadCtx $ (fromMonadCtx a) `bindSafety` (liftValue . f)
+
+--instance PolyMonad (Value Pure s1) (MonadCtx env set m s2) (MonadCtx env set m s3) <= (s3 ~ MatchSafety s1 s2, MonadTrans m, MonadSafety m s1 s2, Monad s1) where
+--    a >>>= f = MonadCtx $ (lift . fromPure $ fromValue a) `bindSafety` (fromMonadCtx . f)
+
+--instance PolyMonad (Value IO s1) (MonadCtx env set m s2) (MonadCtx envout set m s3) <= (envout~EnvMerge3 (Value IO) env, s3 ~ MatchSafety s1 s2, MonadTrans m, MonadSafety m s1 s2, Monad s1, LiftValue IO m, Functor s1) where
+--    a >>>= f = MonadCtx $ (liftValue a) `bindSafety` (fromMonadCtx . f)
+
+instance PolyMonad (Value base s1) (MonadCtx env set m s2) (MonadCtx envout set m s3) <= (s3~MatchSafety s1 s2, LiftValue base m, MonadSafety m s1 s2, Functor s1) where
+    a >>>= f = MonadCtx $ (liftValue a) `bindSafety` (fromMonadCtx . f)
+
+---
+
+--    (>>>=) :: m1 a -> (a -> m2 b) -> m3 b
+
+-- CHECKME [wd]: not sure if the implementation is ok!
+--instance PolyMonad (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2)) (CtxWrapper (ValCtx m2' s2') m) <= (Functor s1', Functor m1', PolyMonad (Value m1' s1') (MonadCtx env2 set2 m2 s2) m3, PolyMonad (MonadCtx env1 set1 m1 s1) m3 m) where
+--    a >>>= f = CtxWrapper . ValCtx $ unpackCtxWrapper a >>>= (polyJoin . fmap (unpackCtxWrapper . f))
+
+instance PolyMonad (Value base s1) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2)) (CtxWrapper (ValCtx m2' s2') (MonadCtx envout set2 m2 s3)) <= (envout~EnvMerge3 (Value base) env2, s3~MatchSafety s1 s2, MonadSafety m2 s1 s2, LiftValue base m2, Functor s1) where
+    a >>>= f = CtxWrapper . ValCtx $ a >>>= (unpackCtxWrapper . f)
+
+instance PolyMonad (Value base s1) (CtxWrapper AppCtx (MonadCtx env2 set2 m2 s2)) (CtxWrapper AppCtx (MonadCtx envout set2 m2 s3)) <= (envout~EnvMerge3 (Value base) env2, s3~MatchSafety s1 s2, MonadSafety m2 s1 s2, LiftValue base m2, Functor s1) where
+    a >>>= f = CtxWrapper . AppCtx $ a >>>= (unpackCtxWrapper . f)
+
+--qqq :: PolyMonad (Value m1' s1') (MonadCtx env2 set2 m2 s2) xout => CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1) a -> (a -> CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2) b) -> xox
+--qqq (a::CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1) a) (f::a -> CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2) b) = undefined where
+
+    -- !!!!!!!!! dokonczyc te instancje + czy ta nizej jest poprawna ? vvvvvvvvvvvvvvvvvvvvvvv
+qqq (a::CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1) a) (f::a -> CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2) b) = polyJoin $ fmap f' a where
+    f' = (unpackCtxWrapper . f) :: a -> MonadCtx env2 set2 m2 s2 (Value m2' s2' b) 
+    a' = (unpackCtxWrapper a) -- :: MonadCtx env1 set1 m1 s1 (Value m1' s1' a)
+    --xxx' = polyJoin $ fmap f' a :: Int
+
+--qqq (a::Value base s1 a) (f::a -> CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2) b) = CtxWrapper . ValCtx $ x' where
+--    f' = (unpackCtxWrapper . f) :: a -> MonadCtx env2 set2 m2 s2 (Value m2' s2' b) 
+--    x' = a >>>= f'
+
+
+
+    --CtxWrapper . ValCtx $ unpackCtxWrapper a >>>= (polyJoin . fmap (unpackCtxWrapper . f))
 
 -----------------------------------------------------------
 

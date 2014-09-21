@@ -9,17 +9,16 @@
 
 module Luna.Target.HS.Host.Rebindable (
     module Luna.Target.HS.Host.Rebindable,
-    module Prelude,
-    ifThenElse
+    module Prelude
 ) where
 
 import           Prelude hiding ((>>=),(>>), return, fail)
 import qualified Prelude
-import           Luna.Target.HS.Host.Wrapper (ifThenElse)
 
 import Luna.Target.HS.Control.Context.Bind
 
---(>>=)  = bindEnv
---(>>)   = bindEnv_
+(>>=)  = polyMonadCtxBind
+(>>)   = polyMonadCtxBind_
 fail _ = undefined
 return = Prelude.return
+

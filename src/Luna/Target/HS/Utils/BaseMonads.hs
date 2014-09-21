@@ -626,6 +626,8 @@ instance LiftValue base (StateT3 v m) <= (Monad3R m Safe, LiftValue base m, Func
     liftValue a = StateT3 $ \v -> liftValue $ fmap (\x -> (x,v)) a
 
 
+instance LiftValue a (Value a) where
+    liftValue = id
 
 
 --class LiftValue' m t where
