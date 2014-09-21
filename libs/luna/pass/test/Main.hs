@@ -101,8 +101,8 @@ example = Source.Source ["Main"] $
                     --, "    def test a b:"
                     --, "        {a,b}"
 
-                    --, "def print msg:"
-                    --, "    ```autoLift1 print #{msg}```"
+                    , "def print msg:"
+                    , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
 
                     --, "def Int.+ a:"
                     --, "    ```liftF2 (+) #{self} #{a}```"
@@ -119,7 +119,7 @@ example = Source.Source ["Main"] $
                     --, "            else: 6"
                     --, "    print $ 1 > 2"
                     --, "    v = Vector 1 2 3"
-                    , "    f = x:x"
+                    , "    print 1"
                     --, "    f = x:x"
                     --, "    v.x = 5"
                     --, "    print $ v"

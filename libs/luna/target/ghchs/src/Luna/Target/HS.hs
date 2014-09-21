@@ -16,3 +16,4 @@ import Luna.Target.HS.Host.Rebindable  as X
 import Data.Typeable                   as X (Typeable, Proxy(..))
 import Data.TupleList                  as X ((//))
 import GHC.Generics                    as X
+import Control.PolyMonad               as X

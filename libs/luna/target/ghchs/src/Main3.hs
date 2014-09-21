@@ -14,10 +14,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- module --
-module Main where
+module Main3 where
 
 -- imports --
-import Luna.Target.HS hiding ((>>=), (>>), fail, return)
+import Luna.Target.HS
 
 import qualified Prelude
 import Control.PolyApplicative
@@ -42,77 +42,9 @@ type P = Proxy
 print_DBG val = Value $ fmap Safe $ print val
 
 
-(>>=)  = polyMonadCtxBind
-(>>)   = polyMonadCtxBind_
-
---polyBind_ a b = a >>>= (\_ -> b)
---(>>=)  = polyBind
---(>>)   = polyBind_
-
-fail _ = undefined
-return = Prelude.return
 
 
-
-
-liftF0' f = val f
-liftF1' f t1 = do
-    t1' <- t1
-    val f <<*>> t1
-
-liftF1'x t1 = do
-    t1' <- t1
-    t1'
-
-zzz =  liftF1'x get5X
-
-liftF2' f t1 t2 = do
-    t1' <- t1
-    t2' <- t2
-    val f <<*>> t1 <<*>> t2
-
-liftF2'x f t1 t2 = do
-    t1' <- t1
-    t2' <- t2
-    val (t1', t2')
-
-testi2 a b = a >>>~ (\_ -> b)
-{-# INLINE testi2 #-}
-
-
---tx1 = liftF2'x (,) get5X  (val 2)
---tx2 = liftF2' (,) get5X  (val 2)
-
-
-liftF3' f t1 t2 t3 = do
-    t1' <- t1
-    t2' <- t2
-    t3' <- t3
-    val f <<*>> t1 <<*>> t2 <<*>> t3
-
-
-liftF4' f t1 t2 t3 t4 = do
-    t1' <- t1
-    t2' <- t2
-    t3' <- t3
-    t4' <- t4
-    val f <<*>> t1 <<*>> t2 <<*>> t3 <<*>> t4
-
-liftF5' f t1 t2 t3 t4 t5 = do
-    t1' <- t1
-    t2' <- t2
-    t3' <- t3
-    t4' <- t4
-    t5' <- t5
-    val f <<*>> t1 <<*>> t2 <<*>> t3 <<*>> t4 <<*>> t5
-
-
-liftCons0' = curryTuple1 . const . liftF0'
-liftCons1' = curryTuple2 . const . liftF1'
-liftCons2' = curryTuple3 . const . liftF2'
-liftCons3' = curryTuple4 . const . liftF3'
-liftCons4' = curryTuple5 . const . liftF4'
-liftCons5' = curryTuple6 . const . liftF5'
+print2 = polyJoin . liftF1 (Value . fmap Safe . print)
 
 
 oldtest = get5X >>= id
@@ -123,6 +55,7 @@ tstme2 = (val 1) >>= (\_ -> val (0::Int))
 tstme3 = (val (1::Int)) >>= (\_ -> val 0)
 tstme4 = (val 1) >>= (\_ -> val 0)
 tstme5 x y = x >>= (\_ -> y >>= (\_ -> val 0))
+tstme6 = get5X >>= id
 
 
 --nw = runStateT3X (liftF2' (+) get5X  (val 2)) (val 0)
@@ -146,7 +79,7 @@ registerMethod ''Cls_ModuleVector "ModuleVector"
 
 --cons_ModuleVector = member (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
 
-cons_ModuleVector2 = member (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
+cons_ModuleVector = member (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
 
 
 
@@ -156,11 +89,10 @@ data Vector a = Vector a a a deriving (Show, Eq, Typeable)
 generateFieldAccessors 'Vector [Just "x", Just "y", Just "z"]
 
 memSig_Cls_Vector_Vector = (mkArg :: NParam "self") // (mkArg (val (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (val 0) :: NDParam "y" (Value Pure Safe Int)) // (mkArg (val 0) :: NDParam "z" (Value Pure Safe Int)) // ()
-memDef_Cls_Vector_Vector = liftCons3' Vector
+memDef_Cls_Vector_Vector = liftCons3 Vector
 
 
-
-memDef_Cls_Vector_Vector2 (self, (x, (y, (z, ())))) = polyJoin $ val (\a b c -> val Vector `appBindCtx` a `appBindCtx` b `appBindCtx` c) <<*>> x <<*>> y <<*>> z
+--memDef_Cls_Vector_Vector2 (self, (x, (y, (z, ())))) = polyJoin $ val (\a b c -> val Vector `appBindCtx` a `appBindCtx` b `appBindCtx` c) <<*>> x <<*>> y <<*>> z
 
 registerMethod ''Cls_Vector "Vector"
 
@@ -168,139 +100,33 @@ cons_Vector = member (Proxy::Proxy "Vector") (val Cls_Vector)
 
 
 
---liftF0' = Value . Pure . Safe
-
-
---liftF1' f a = do
---    a' <- a
-
-
---memDef_Cls_Vector_Vector2 x y z = do
---    Value2(PureS(Pure sx)) <- x
---    Value2(PureS(Pure sy)) <- y
---    Value2(PureS(Pure sz)) <- z
---    Value2 $ PureS $ Pure $ Safe Vector <<*>> sx <<*>> sy <<*>> sz
-
-
-
-
----
-
---class Functor2 ca ea cb eb f g | ca ea cb eb f -> g where
---    fmap2 :: (ca (ea a) -> cb (eb b)) -> f a -> g b
-
---data Cls_Vector2 = Cls_Vector2 deriving (Show, Eq, Typeable)
---data Vector2 c1 e1 c2 e2 c3 e3 a = Vector2 (c1 (e1 a)) (c2 (e2 a)) (c3 (e3 a)) deriving (Show, Eq, Typeable)
---generateFieldAccessors 'Vector2 [Just "x2", Just "y2", Just "z2"]
-
---memSig_Cls_Vector2_Vector2 = (mkArg :: NParam "self") // (mkArg (val (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (val 0) :: NDParam "y" (Value Pure(Safe Int))) // (mkArg (val 0) :: NDParam "z" (Value Pure(Safe Int))) // ()
---memDef_Cls_Vector2_Vector2 (self,(x,(y,(z,())))) = val $ Vector2 x y z
---registerMethod ''Cls_Vector2 "Vector2"
-
---cons_Vector2 = member (Proxy::Proxy "Vector2") (val Cls_Vector2)
-
-
---instance Functor2 ca ea cb eb (Vector2 ca ea ca ea ca ea) (Vector2 cb eb cb eb cb eb) where
---    fmap2 f (Vector2 x y z) = Vector2 (f x) (f y) (f z)
-
-
---xxx2 :: (ca (ea a) -> cb (eb b)) -> Vector2 ca ea ca ea ca ea a -> Vector2 cb eb cb eb cb eb b
---xxx2 f (Vector2 x y z) = Vector2 (f x) (f y) (f z)
-
----
-
-
-
-
-
-
-
---instance (PolyApplicative (Value Pure) m7 m4,
---      PolyApplicative Safe m12 m10, PolyApplicative m10 m11 m6,
---      PolyApplicative m6 m8 m9, PolyApplicative m4 m5 m1,
---      PolyApplicative m1 m2 m3,
---      args~(self,(m7 (m12 a), (m5 (m11 a), (m2 (m8 a), ())))),
---      out~m3 (m9 (Vector a))) =>
---    Func Cls_Vector "Vector" args out where
---    getFunc _ _ = memDef_Cls_Vector_Vector
-
-
---instance HasProp "Vector" Cls_Vector (NParam "self", (NDParam "x" (Value Pure (Safe Int)), (NDParam "y" (Value Pure (Safe Int)), (NDParam "z" (Value Pure (Safe Int)), ())))) where
---    memSig _ = memSig_Cls_Vector_Vector
-
 
 -----
 memSig_Vector_x = (mkArg :: NParam "self") // ()
-memDef_Vector_x (self,()) = liftF1' fieldGetter_Vector_Vector_x self
+memDef_Vector_x (self,()) = liftF1 fieldGetter_Vector_Vector_x self
 registerMethod ''Vector "x"
-
---instance ( PolyApplicative (Value Pure) m2 m3, PolyApplicative Safe m1 m4,
---           args~(m2 (m1 (Vector b)), ()), out~m3 (m4 b))
---    => Func Vector "x" args out where
---    getFunc _ _ = memDef_Vector_x
-
---instance HasProp "x" Vector (NParam "self", ()) where
---    memSig _ = memSig_Vector_x
-
 
 -----
 memSig_Vector_x_setter = (mkArg :: NParam "self") // (mkArg :: NParam "x") // ()
-memDef_Vector_x_setter (self,(a,())) = liftF2' fieldSetter_Vector_Vector_x a self
+memDef_Vector_x_setter (self,(a,())) = liftF2 fieldSetter_Vector_Vector_x a self
 registerMethod ''Vector "x_setter"
-
---instance ( PolyApplicative (Value Pure) m5 m1, PolyApplicative Safe m8 m4,
---           PolyApplicative m4 m6 m7, PolyApplicative m1 m2 m3,
---           args~(m2 (m6 (Vector a1)), (m5 (m8 a1), ())), out~m3 (m7 (Vector a1)))
---    => Func Vector "x_setter" args out where
---    getFunc _ _ = memDef_Vector_x_setter
-
---instance HasProp "x_setter" Vector (NParam "self", (NParam "x", ())) where
---    memSig _ = memSig_Vector_x_setter
-
 
 ---
 memSig_Vector_bar = (mkArg :: NParam "self") // (mkArg :: NParam "a") // (mkArg :: NParam "b") // ()
 memDef_Vector_bar (self,(a,(b,()))) = val (a, b)
 registerMethod ''Vector "bar"
 
---instance (args~(t, (t1, (t2, ()))), out~Value Pure (Safe (t1, t2)))
---    => Func Vector "bar" args out where
---    getFunc _ _ = memDef_Vector_bar
-
---instance HasProp "bar" Vector (NParam "self", (NParam "a", (NParam "b", ()))) where
---    memSig _ = memSig_Vector_bar
-
-
 ---
 memSig_Vector_foo = (mkArg :: NParam "self") // (mkArg :: NParam "a") // (mkArg (val 0) :: NDParam "b" (Value Pure Safe Int)) // ()
-memDef_Vector_foo (self,(a,(b,()))) = liftF2' (+) a b
+memDef_Vector_foo (self,(a,(b,()))) = liftF2 (+) a b
 registerMethod ''Vector "foo"
-
---instance (PolyApplicative (Value Pure) m5 m1, PolyApplicative Safe m8 m4, PolyApplicative m4 m6 m7, PolyApplicative m1 m2 m3, Num b, args~(t, (m5 (m8 b), (m2 (m6 b), ()))), out~(m3 (m7 b)))
---    => Func Vector "foo" args out where
---    getFunc _ _ = memDef_Vector_foo
-
---instance HasProp "foo" Vector (NParam "self", (NParam "a", (NDParam "b" (Value Pure (Safe Int)), ()))) where
---    memSig _ = memSig_Vector_foo
-
 
 ---
 memSig_Vector_baz = (mkArg :: NParam "self") // (mkArg :: NParam "a") // ()
 memDef_Vector_baz (self,(a,())) = flip runStateT3X (val 0) a
 registerMethod ''Vector "baz"
 
---instance (AppMonadCtx a (Req (Proxy StateT) (MonadCtx env set (StateT (Value Pure (Safe a2)) mb)) a1), Functor mb,
---          MatchMonadCloseProto (IsEmpty (Remove (Proxy StateT) set)) (MonadCtx env (Remove (Proxy StateT) set) mb) t1, Num a2,
---          args ~ (t, (a, ())),
---          out ~ t1 (Safe (a1, Value Pure (Safe a2))))
---      => Func Vector "baz" args out where
---    getFunc _ _ = memDef_Vector_baz
-
---instance HasProp "baz" Vector (NParam "self", (NParam "a", ())) where
---    memSig _ = memSig_Vector_baz
-
-testX1 :: m a -> b -> XArg m b
-testX1 = undefined
+---
 
 tst = do
     x <- get5X
@@ -355,12 +181,13 @@ tst4 = do
     --val (+) <<*>> t1' <<*>> t2'
 
 ---
-    --memSig_Vector_fstate = (mkArg :: NParam "self") // ()
+
+memSig_Vector_fstate = (mkArg :: NParam "self") // ()
 memDef_Vector_fstate (self,()) = do
     x <- get5X
     put5X x
 
-    --registerMethod ''Vector "fstate"
+registerMethod ''Vector "fstate"
 
     --xxx = do
     --    x <- getX
@@ -432,17 +259,12 @@ mymain (self,()) = do
     print_DBG $ call $ appNext (get5X) $ member (Proxy :: Proxy "baz") v2
     print_DBG $ call $ appNext (val 5) $ member (Proxy :: Proxy "baz") v2
 
-
---    --print2 $ flip runStateTX (val 0) $ call $ member (Proxy :: Proxy "fstate") v2
+    print_DBG $ flip runStateT3X (val 0) $ call $ member (Proxy :: Proxy "fstate") v2
 
     -- properties
     print_DBG $ call $ member (Proxy::Proxy "x") v2
     print_DBG $ call $ appNext (val 5) $ member (Proxy::Proxy "x_setter") v2
 
-----    --print'2 tst
---    print2 $ val "end"
---    print2 tstErr
---    print2 $ val "end2"
     val 5
 
 
@@ -451,7 +273,7 @@ memDef_ModuleVector_main = mymain
 registerMethod ''ModuleVector "main"
 
 
-main = mainMaker2 cons_ModuleVector2
+main = mainMaker cons_ModuleVector
 
 
 
