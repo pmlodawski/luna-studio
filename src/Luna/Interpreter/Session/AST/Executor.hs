@@ -49,6 +49,7 @@ processMain = do
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
     Session.setAllReady True
+    Cache.dumpAll
 
 
 processNodeIfNeeded :: CallDataPath -> Session ()
@@ -186,7 +187,6 @@ evalFunction funName callDataPath argsVarNames = do
     hash <- Hash.compute tmpVarName
     let varName = VarName.mk hash callPointPath
     Session.runAssignment varName tmpVarName
-    Cache.dumpAll
     Cache.put callDataPath argsVarNames varName
     Value.report callPointPath varName
     return (hash, varName)
