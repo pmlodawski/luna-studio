@@ -12,6 +12,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE CPP #-}
 
 module Luna.Target.HS.Control.Context.Env where

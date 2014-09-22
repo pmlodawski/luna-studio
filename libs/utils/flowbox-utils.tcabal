@@ -46,7 +46,10 @@ Library
                   split,
                   text,
                   time,
-                  transformers
+                  transformers,
+                  template-haskell,
+                  QuickCheck,
+                  hspec
 
 -- FIXME [MU] : aeson >= 0.7.0.5 fixes compilation error on Windows
 
