@@ -14,28 +14,28 @@ import qualified Data.Char                  as Char
 import qualified Data.Maybe                 as Maybe
 import qualified Text.Read                  as Read
 
-import qualified Flowbox.Data.List                           as List
-import           Flowbox.Prelude                             as Prelude hiding (children, inside)
-import           Flowbox.Source.Location                     (loc)
+import qualified Flowbox.Data.List                          as List
+import           Flowbox.Prelude                            as Prelude hiding (children, inside)
+import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Graph.Node                             as Node
-import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
-import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
-import qualified Luna.Interpreter.Session.Cache.Invalidate   as Invalidate
-import qualified Luna.Interpreter.Session.Cache.Status       as CacheStatus
-import qualified Luna.Interpreter.Session.Cache.Value        as Value
-import qualified Luna.Interpreter.Session.Data.CallData      as CallData
-import           Luna.Interpreter.Session.Data.CallDataPath  (CallDataPath)
-import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
-import           Luna.Interpreter.Session.Data.Hash          (Hash)
-import           Luna.Interpreter.Session.Data.VarName       (VarName)
-import qualified Luna.Interpreter.Session.Data.VarName       as VarName
-import qualified Luna.Interpreter.Session.Error              as Error
-import qualified Luna.Interpreter.Session.Hash               as Hash
-import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Interpreter.Session.Session            as Session
-import qualified Luna.Interpreter.Session.TargetHS.TargetHS  as TargetHS
-import qualified Luna.Pass.Transform.AST.Hash.Hash           as Hash
+import qualified Luna.Graph.Node                            as Node
+import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
+import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
+import qualified Luna.Interpreter.Session.Cache.Invalidate  as Invalidate
+import qualified Luna.Interpreter.Session.Cache.Status      as CacheStatus
+import qualified Luna.Interpreter.Session.Cache.Value       as Value
+import qualified Luna.Interpreter.Session.Data.CallData     as CallData
+import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
+import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
+import           Luna.Interpreter.Session.Data.Hash         (Hash)
+import           Luna.Interpreter.Session.Data.VarName      (VarName)
+import qualified Luna.Interpreter.Session.Data.VarName      as VarName
+import qualified Luna.Interpreter.Session.Error             as Error
+import qualified Luna.Interpreter.Session.Hash              as Hash
+import           Luna.Interpreter.Session.Session           (Session)
+import qualified Luna.Interpreter.Session.Session           as Session
+import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
+import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
 
 
 logger :: LoggerIO
@@ -172,7 +172,7 @@ evalFunction funName callDataPath argsVarNames = do
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
 
         self      = head argsVarNames
-        operation = "toIOEnv $ " ++ case varType funName of
+        operation = "toIOEnv $ fromValue $ " ++ case varType funName of
             Id     -> mkArg self
             Native -> genNative funName
             Con    -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
