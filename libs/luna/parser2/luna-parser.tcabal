@@ -42,7 +42,8 @@ Library
                   unordered-containers,
                   lens,
                   raw-strings-qq,
-                  MissingH
+                  MissingH,
+                  containers
 
 
 
@@ -75,4 +76,5 @@ Executable luna-parser-test
                   unordered-containers,
                   lens,
                   raw-strings-qq,
-                  MissingH
+                  MissingH,
+                  containers

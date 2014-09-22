@@ -15,6 +15,7 @@ import           System.IO                    (IOMode (ReadMode), hClose, openFi
 import           System.IO                    (stdout)
 import           Text.Parser.Token.Highlight
 import           Text.Parser.Token.Style
+import           Text.Parser.Token
 import           Text.PrettyPrint.ANSI.Leijen (displayIO, linebreak, renderPretty, (<>))
 import           Text.Trifecta                hiding (token)
 import           Text.Trifecta.Delta          as Delta
@@ -35,31 +36,63 @@ identStyle = IdentifierStyle
   , _styleReservedHighlight = ReservedIdentifier
   }
 
-variableStyle :: TokenParsing m => IdentifierStyle m
-variableStyle = identStyle { _styleName      = "variable",
-                             _styleStart     = lower
-                           }
+varStyle :: TokenParsing m => IdentifierStyle m
+varStyle = identStyle { _styleName      = "variable identifier"
+                      , _styleStart     = lower
+                      }
+
+conStyle :: TokenParsing m => IdentifierStyle m
+conStyle = identStyle { _styleName      = "constructor identifier"
+                      , _styleStart     = upper
+                      }
+
+typeVarStyle :: TokenParsing m => IdentifierStyle m
+typeVarStyle = identStyle { _styleName      = "type variable identifier"
+                          , _styleStart     = lower
+                          }
 
 
-identifier :: (TokenParsing m, Monad m) => m String
-identifier = ident identStyle
+typeStyle :: TokenParsing m => IdentifierStyle m
+typeStyle = identStyle { _styleName      = "type identifier"
+                       , _styleStart     = upper
+                       }
 
-variable :: (TokenParsing m, Monad m) => m String
-variable = ident variableStyle
+
+
+
+--identifier :: (TokenParsing m, Monad m) => m String
+--identifier = ident identStyle
+
+
+varIdent :: (TokenParsing m, Monad m) => m String
+varIdent = ident varStyle
+
+conIdent :: (TokenParsing m, Monad m) => m String
+conIdent = ident conStyle
+
+typeVarIdent :: (TokenParsing m, Monad m) => m String
+typeVarIdent = ident typeVarStyle
+
+typeIdent :: (TokenParsing m, Monad m) => m String
+typeIdent = ident typeStyle
 
 reserved   = reserve identStyle
 
-
 identLetter  = alphaNum <|> char '_'
 
-pTypeAlias  = reserved "alias"
-pAs         = reserved "as"
-pCase       = reserved "case"
-pClass      = reserved "class"
-pDef        = reserved "def"
-pElse       = reserved "else"
-pFrom       = reserved "from"
-pIf         = reserved "if"
-pInterface  = reserved "interface"
-pImport     = reserved "import"
-pTypeDef    = reserved "type"
+kwAlias     = reserved "alias"
+kwAs        = reserved "as"
+kwCase      = reserved "case"
+kwClass     = reserved "class"
+kwDef       = reserved "def"
+kwElse      = reserved "else"
+kwFrom      = reserved "from"
+kwIf        = reserved "if"
+kwInterface = reserved "interface"
+kwImport    = reserved "import"
+kwType      = reserved "type"
+
+
+
+accessor  = token $ char '.'
+separator = token $ char ','

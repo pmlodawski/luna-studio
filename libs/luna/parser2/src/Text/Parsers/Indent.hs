@@ -23,6 +23,7 @@ import           Text.Parser.Char
 import           Text.Parser.Combinators
 import           Text.Parser.Token
 import           Text.Trifecta.Combinators
+import           Text.Trifecta.Delta (column)
 
 
 ----------------------------------------------------------------------
@@ -52,13 +53,41 @@ with f m = do
   put s
   return ret
 
+
+withPos p = do
+  c <- getColumn
+  with (set col c) p
+
+indentSegment p = many (checkIndent >> p)
+
+indentBlock p = spaces *> indented *> withPos (indentSegment p)
+
+
+block = string "a" <|> (foldl (++) "" <$> (char ':' *> spaces *> indentBlock block))
+
+
+getColumn = column <$> position
+
+mapIndent f err = do
+  c <- getColumn
+  s <- get
+  when (not $ c `f` view col s) $ fail err
+
+
+indented          = mapIndent (>)  "not indented"
+indentedOrEq      = mapIndent (>=) "not indented"
+checkIndent       = mapIndent (==) "indentation doesn't match"
+checkIndented     = mapIndent (>)  "indentation doesn't match"
+checkIndentedOrEq = mapIndent (>=) "indentation doesn't match"
+
+
 ----------------------------------------------------------------------
 -- IndentStateT
 ----------------------------------------------------------------------
 
 newtype IndentStateT s m a = IndentStateT { getState :: State.StateT s m a } 
         deriving (Monad, MonadPlus, Applicative, Alternative, Functor, DeltaParsing, 
-                  TokenParsing, CharParsing, Parsing)
+                  TokenParsing, CharParsing, Parsing, MonadIO)
 
 
 instance MonadState x m => MonadState x (IndentStateT s m) where
