@@ -18,14 +18,14 @@ import Flowbox.Generics.Deriving.QShow
 import Flowbox.Prelude                 hiding (Traversal, drop, id)
 import Luna.AST.Common                 (ID)
 
-data Type = Unknown { _id :: ID                                               }
-          | Var     { _id :: ID, _name     :: String                          }
-          | Tuple   { _id :: ID, _items    :: [Type]                          }
-          | Data    { _id :: ID, _name     :: String   , _params  :: [String] }
-          | Module  { _id :: ID, _name     :: String   , _path    :: [String] }
-          | Lambda  { _id :: ID, _inputs   :: [Type]   , _output  :: Type     }
-          | Con     { _id :: ID, _segments :: [String]                        }
-          | App     { _id :: ID, _src      :: Type     , _args    :: [Type]   }
+data Type = Unknown  { _id :: ID                                               }
+          | Var      { _id :: ID, _name     :: String                          }
+          | Tuple    { _id :: ID, _items    :: [Type]                          }
+          | Data     { _id :: ID, _name     :: String   , _params  :: [String] }
+          | Module   { _id :: ID, _name     :: String   , _path    :: [String] }
+          | Function { _id :: ID, _inputs   :: [Type]   , _output  :: Type     }
+          | Con      { _id :: ID, _segments :: [String]                        }
+          | App      { _id :: ID, _src      :: Type     , _args    :: [Type]   }
           deriving (Show, Eq, Generic, Read)
 
 
@@ -38,7 +38,7 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 traverseM :: Traversal m => (Type -> m Type) -> Type -> m Type
 traverseM ftype t = case t of
     Tuple      id' items'                    -> Tuple  id' <$> ftypeMap items'
-    Lambda     id' inputs' output'           -> Lambda id' <$> ftypeMap inputs' <*> ftype output'
+    Function   id' inputs' output'           -> Function id' <$> ftypeMap inputs' <*> ftype output'
     App        id' src' args'                -> App    id' <$> ftype    src'    <*> ftypeMap args'
     Var        {}                            -> pure t
     Data       {}                            -> pure t
@@ -51,7 +51,7 @@ traverseM ftype t = case t of
 traverseM_ :: Traversal m => (Type -> m b) -> Type -> m ()
 traverseM_ ftype t = case t of
     Tuple      _  items'                     -> drop <* ftypeMap items'
-    Lambda     _  inputs' output'            -> drop <* ftypeMap inputs' <* ftype output'
+    Function   _  inputs' output'            -> drop <* ftypeMap inputs' <* ftype output'
     App        _  src' args'                 -> drop <* ftype    src'    <* ftypeMap args'
     Var        {}                            -> drop
     Data       {}                            -> drop
