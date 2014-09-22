@@ -9,7 +9,7 @@ Flag cuda
   Default:              True
 
 Library
-  Hs-Source-Dirs:         src
+  Hs-Source-Dirs:         src, dist/gen
   GHC-Options:            -Wall -O2
   Default-Extensions:     DoAndIfThenElse,
                           NoImplicitPrelude,
@@ -30,8 +30,12 @@ Library
                   accelerate-fft == 0.15.* ,
                   algebraic       > 0.1    ,
                   bmp                      ,
+                  bytestring               ,
                   containers               ,
+                  cubicbezier              ,
                   distributive             ,
+                  either                   ,
+                  errors                   ,
                   flowbox-utils            ,
                   imagemagick   >= 0.0.3.6 ,
                   lifted-base              ,
@@ -39,15 +43,13 @@ Library
                   linear-accelerate        ,
                   monad-control            ,
                   mtl                      ,
+                  profunctors              ,
+                  protocol-buffers         ,
                   resourcet                ,
                   split                    ,
-                  template-haskell         ,
                   system-filepath          ,
+                  template-haskell         ,
                   transformers             ,
-                  errors                   ,
-                  either                   ,
-                  profunctors              ,
-                  cubicbezier              ,
                   vector
 
 Executable test_generator
