@@ -5,11 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE PackageImports #-}
 
 module Flowbox.Bus.Server where
 
 import Control.Monad             (forever)
-import Control.Monad.Morph
+import "mmorph" Control.Monad.Morph
 import Control.Monad.Trans
 import Control.Monad.Trans.State
 
