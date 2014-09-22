@@ -51,18 +51,21 @@ runDecls = Session.withFlags enabledFlags disabledFlags . mapM_ Session.runDecls
 
 
 reloadAll :: Session ()
-reloadAll = Instances.cleanAll
-         >> Generator.genAll >>= runDecls
+reloadAll = Session.atomically $ Instances.cleanAll
+                             >>  Generator.genAll
+                             >>= runDecls
 
 
 reloadFunctions :: Session ()
-reloadFunctions = Instances.cleanFunctions
-               >> Generator.genFunctions >>= runDecls
+reloadFunctions = Session.atomically $ Instances.cleanFunctions
+                                   >>  Generator.genFunctions
+                                   >>= runDecls
 
 
 reloadClass :: DefPoint -> Session ()
-reloadClass defPoint = Instances.cleanFunctions
-                    >> Generator.genClass defPoint >>= runDecls
+reloadClass defPoint = Session.atomically $ Instances.cleanFunctions
+                                        >>  Generator.genClass defPoint
+                                        >>= runDecls
 
 
 reload :: Session ()

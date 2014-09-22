@@ -47,7 +47,6 @@ cleanAll = clean true true where
 clean :: ClsInstSelector -> FamInstSelector -> Session ()
 clean clsInstFilter famInstFilter = lift2 $ do
     dflags <- GHC.getSessionDynFlags
-    --printInstances
 
     -- FIXME [PM] : Code below remove all declared instances. It may be
     --              dangerous and needs to be deeply tested or removed.
