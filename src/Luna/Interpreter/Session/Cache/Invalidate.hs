@@ -43,6 +43,7 @@ modifyAll = do
     logger info "Mark modified: everything"
     modifyMatching $ const . const True
     libIDs <- LibManager.nodes <$> Session.getLibManager
+    --Session.addReload (head libIDs) Reload.ReloadLibrary
     mapM_ (`Session.addReload` Reload.ReloadLibrary) libIDs
 
 

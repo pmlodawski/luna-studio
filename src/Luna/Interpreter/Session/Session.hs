@@ -12,6 +12,7 @@ import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import           Data.ByteString.Lazy       (ByteString)
+import qualified Data.Either                as Either
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 import           Data.Monoid                ((<>))
@@ -140,6 +141,15 @@ interceptSourceErrors ghc = do
             return $ Left errDat
     r <- lift2 $ GHC.handleSourceError handler $ Right <$> ghc
     hoistEither r
+
+
+atomically :: Session a -> Session a
+atomically f = do
+    sessionBackup <- lift2 $ GHC.getSession
+    result <- lift $ runEitherT f
+    when (Either.isLeft result) $
+        lift2 $ GHC.setSession sessionBackup
+    hoistEither result
 
 
 runStmt :: String -> Session ()
