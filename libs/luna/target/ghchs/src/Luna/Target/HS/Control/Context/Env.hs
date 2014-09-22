@@ -49,6 +49,8 @@ returnIO = return
 -- Type classes
 --------------------------------------------------------------------------------
 
+class Env (m :: * -> *)
+
 class IOEnv m where
     toIOEnv :: m a -> IO a
 
@@ -86,6 +88,10 @@ instance Show a => Show (Pure a) where
     show (Pure a) = show a
 #endif
 
+---
+
+instance Env Pure
+instance Env IO
 
 ---
 

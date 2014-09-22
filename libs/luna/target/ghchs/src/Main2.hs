@@ -12,7 +12,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- module --
-module Main2 where
+module Main where
 
 -- imports --
 import Luna.Target.HS
@@ -32,6 +32,7 @@ memSig_Cls_Main_Main = ((mkArg :: NParam "self"), ())
 memDef_Cls_Main_Main = liftCons0 Main
 $(registerMethod ''Cls_Main "Main")
 $(generateFieldAccessors 'Main [])
+-- Other data types
 
 
 -- ===================================================================
@@ -49,7 +50,7 @@ $(generateFieldAccessors 'Main [])
 -- ===================================================================
 
 -- ====== Method: Main.print ====== --
-memDef_Main_print (_v_16, (_v_4, ())) = do {
+memDef_Main_print (_v_20, (_v_4, ())) = do {
      val ();
      autoLift1 print _v_4;
      
@@ -57,10 +58,19 @@ memDef_Main_print (_v_16, (_v_4, ())) = do {
 memSig_Main_print = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
 $(registerMethod ''Main "print")
 
--- ====== Method: Main.main ====== --
-memDef_Main_main (_v_18, ()) = do {
+-- ====== Method: Main.foo ====== --
+memDef_Main_foo (_v_22, ()) = do {
      val ();
-     call (appNext (val (1 :: Int)) (member (Proxy :: Proxy "print") (call cons_Main)));
+     call (appNext (val ("foo" :: String)) (member (Proxy :: Proxy "print") (call cons_Main)));
+     
+}
+memSig_Main_foo = ((mkArg :: NParam "self"), ())
+$(registerMethod ''Main "foo")
+
+-- ====== Method: Main.main ====== --
+memDef_Main_main (_v_24, ()) = do {
+     val ();
+     call (member (Proxy :: Proxy "foo") _v_24);
      
 }
 memSig_Main_main = ((mkArg :: NParam "self"), ())

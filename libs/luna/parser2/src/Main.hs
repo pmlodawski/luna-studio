@@ -14,6 +14,9 @@ import           Data.CharSet.ByteSet         as S
 import           Data.Default
 import           Flowbox.Prelude              hiding (noneOf)
 import qualified Luna.Data.ASTInfo            as ASTInfo
+import qualified Luna.AST.Module     as Module
+import qualified Luna.AST.Pat        as Pat
+import qualified Luna.AST.Type       as Type
 import qualified Luna.Parser.Lexer            as Lex
 import qualified Luna.Parser.State            as ParseState
 import           System.Environment           (getArgs)
@@ -30,6 +33,7 @@ import qualified Luna.Pragma.Pragma           as Pragma
 import           Luna.Pragma.Pragma           (Pragma)
 import           Data.Typeable
 import           Data.String.Utils            (join)
+import           Luna.Parser.Combinators
 
 
 --import Data.HashSet (HashSet)
@@ -94,36 +98,10 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 
 --indentBlock p = spaces *> withPos p
 
-indentSegment p = many (checkIndent >> p)
-
-indentBlock p = spaces *> indented *> withPos (indentSegment p)
-
-
-block = string "a" <|> (foldl (++) "" <$> (char ':' *> spaces *> indentBlock block))
 
 
 
 
-getColumn = column <$> position
-
-mapIndent f err = do
-  col <- getColumn
-  s   <- Indent.get
-  when (not $ col `f` view Indent.col s) $ fail err
-
-
-indented          = mapIndent (>)  "not indented"
-indentedOrEq      = mapIndent (>=) "not indented"
-checkIndent       = mapIndent (==) "indentation doesn't match"
-checkIndented     = mapIndent (>)  "indentation doesn't match"
-checkIndentedOrEq = mapIndent (>=) "indentation doesn't match"
-
-
-
-
-withPos p = do
-  col <- getColumn
-  Indent.with (set Indent.col col) p
 
 
 --emptyIdents = IdentifierStyle
@@ -136,13 +114,19 @@ withPos p = do
 --  }
 
 
---pFunc           = appID Expr.Function <*  L.pDef
---                                      <*> (pExtPath            <?> "")
---                                      <*> (pVarOp <?> "function name")
---                                      <*> (pArgList pArg       <?> "function argument list")
---                                      <*> (try (L.pArrow *> pType) <|> appID Type.Unknown)
---                                      <*> (pExprBlock <|> return [])
---                                      <?> "function definition"
+--arg            = tok Expr.Arg      <*> pArgPattern
+--                                   <*> ((Just <$ L.pAssignment <*> pExpr) <|> pure Nothing)
+
+
+func           = do
+    Lex.kwDef
+    (extPath, name) <- extensionPath
+    appID Expr.Function <*> pure extPath
+                        <*> pure name
+                        <*> pure []
+                        <*> appID Type.Unknown
+                        <*> pure []
+                        <?> "function definition"
 
 
 
@@ -163,6 +147,11 @@ withPos p = do
 --  , styleReserved = set $ haskell98ReservedIdents ++
 --      ["foreign","import","export","primitive","_ccall_","_casm_" ,"forall"]
 --  }
+
+
+qualifiedPath p = sepBy1_ng p Lex.accessor
+extensionPath   = (,) <$> ((qualifiedPath Lex.typeIdent <* Lex.accessor) <|> pure []) <*> (Lex.varIdent <?> "function name")
+argList       p = try (sepBy2 p Lex.separator) <|> many p <?> "argument list"
 
 
 getASTInfo = view ParseState.info <$> get
@@ -198,18 +187,20 @@ pragma = do
 --    Indent.get
 
 prog = do
-  pragma
-  get
-  --Indent.get
-  --get
-  --many $ char 'a'
-  --withPos prog2
-  --block
-  --getColumn
-  --indented
-  --Lex.variable
-  --char 'a'
-  --reserved
+    argList Lex.varIdent
+    --func
+    --pragma
+    --get
+    --Indent.get
+    --get
+    --many $ char 'a'
+    --withPos prog2
+    --block
+    --getColumn
+    --indented
+    --Lex.variable
+    --char 'a'
+    --reserved
 
 --prog2 = do
 --  many $ char 'b'
@@ -217,7 +208,7 @@ prog = do
 --  get
 
 input :: String
-input = [r|@ 
+input = [r|ala, ma , kota
 |]
 
 
