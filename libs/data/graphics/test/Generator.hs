@@ -101,13 +101,21 @@ multisamplerTest = do
 -- Upcales lena 64x64 image into 720x480 one
 -- (Filtering test)
 --
-scalingTest :: Filter (Exp Float) -> IO ()
-scalingTest flt = do
+upscalingTest :: Filter (Exp Float) -> IO ()
+upscalingTest flt = do
     let process x = rasterizer $ monosampler
                                $ scale (V2 (720 / 64) (480 / 64))
                                $ interpolator flt
                                $ fromMatrix A.Clamp x
     forAllChannels "lena_small.bmp" process
+
+downscalingTest :: Filter (Exp Float) -> IO ()
+downscalingTest flt = do
+    let process x = rasterizer $ monosampler
+                               $ scaleTo 200
+                               $ interpolator flt
+                               $ fromMatrix (A.Constant 0) x
+    forAllChannels "rings.bmp" process
 
 --
 -- Applies 2 pass gaussian blur onto the 4k image
@@ -315,7 +323,7 @@ crosstalkTest = do
 -- Try with cornerPinTest 0 (Point2 512 0) 512 (Point2 0 512)
 cornerPinTest :: Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float)-> IO ()
 cornerPinTest p1 p2 p3 p4 = do
-    let process x = rasterizer $ monosampler $ cornerPin p1 p2 p3 p4 $ nearest $ fromMatrix (A.Clamp) x
+    let process x = rasterizer $ monosampler $ cornerPin p1 p2 p3 p4 $ nearest $ fromMatrix (A.Constant 0) x
     forAllChannels "lena.png" process
 
 main :: IO ()

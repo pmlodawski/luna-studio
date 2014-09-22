@@ -81,7 +81,7 @@ instance Ord A.DIM2 where
 
 instance A.Elt a => Boundable (Matrix2 a) (A.Exp Int) (A.Exp a) where
     unsafeIndex2D mat (Cartesian.Point2 x y) = mat ! A.index2 y x 
-    bounduary mat = Space.Grid width height
+    boundary mat = Space.Grid width height
         where A.Z A.:. height A.:. width = A.unlift $ shape mat
 -- == Helpers ==
 
@@ -560,7 +560,7 @@ instance Storable a => Boundable (MImage a) Int (MValue a) where
         where linearIndex = Sugar.toIndex canvas (A.Z A.:. y A.:. x)
               getter = unsafeRead container linearIndex
               setter = unsafeWrite container linearIndex
-    bounduary BMatrix{..} = Space.Grid width height
+    boundary BMatrix{..} = Space.Grid width height
         where A.Z A.:. height A.:. width = canvas
 
 
