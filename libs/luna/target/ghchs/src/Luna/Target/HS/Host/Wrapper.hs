@@ -18,7 +18,7 @@ import Luna.Target.HS.Control
 import Luna.Target.HS.Data
 import Luna.Target.HS.Host.Lift
 import Control.Monad.Shuffle
-
+import Control.PolyMonad
 
 checkVal = join . fmap printCheck . toIOEnv
 
@@ -35,4 +35,4 @@ rangeFromTo' a b = if a <= b then [a..b]
 
 ifThenElse cond a b = if cond then a else b
 
-ifThenElse' cond a b = shuffleJoin $ (fmap.fmap) (\x -> ifThenElse x a b) cond
+ifThenElse' cond a b = polyJoin $ (fmap) (\x -> ifThenElse x a b) cond
