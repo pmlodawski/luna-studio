@@ -34,7 +34,6 @@ import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Hash               as Hash
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
-import qualified Luna.Interpreter.Session.TargetHS.Instances as Instances
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS  as TargetHS
 import qualified Luna.Pass.Transform.AST.Hash.Hash           as Hash
 
