@@ -50,7 +50,7 @@ $(generateFieldAccessors 'Main [])
 -- ===================================================================
 
 -- ====== Method: Main.print ====== --
-memDef_Main_print (_v_20, (_v_4, ())) = do {
+memDef_Main_print (_v_34, (_v_4, ())) = do {
      val ();
      autoLift1 print _v_4;
      
@@ -58,19 +58,25 @@ memDef_Main_print (_v_20, (_v_4, ())) = do {
 memSig_Main_print = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
 $(registerMethod ''Main "print")
 
--- ====== Method: Main.foo ====== --
-memDef_Main_foo (_v_22, ()) = do {
+-- ====== Method: Int._62 ====== --
+memDef_Int__62 (_v_36, (_v_11, ())) = do {
      val ();
-     call (appNext (val ("foo" :: String)) (member (Proxy :: Proxy "print") (call cons_Main)));
+     liftF2 (>) _v_36 _v_11;
      
 }
-memSig_Main_foo = ((mkArg :: NParam "self"), ())
-$(registerMethod ''Main "foo")
+memSig_Int__62 = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
+$(registerMethod ''Int "_62")
 
 -- ====== Method: Main.main ====== --
-memDef_Main_main (_v_24, ()) = do {
+memDef_Main_main (_v_38, ()) = do {
      val ();
-     call (member (Proxy :: Proxy "foo") _v_24);
+     call (appNext (ifThenElse' (call (appNext (val (2 :: Int)) (member (Proxy :: Proxy "_62") (val (1 :: Int)))))(do {
+         val (5 :: Int);
+         
+    })(do {
+         val (6 :: Int);
+         
+    })) (member (Proxy :: Proxy "print") (call cons_Main)));
      
 }
 memSig_Main_main = ((mkArg :: NParam "self"), ())
