@@ -16,6 +16,8 @@ Library
                     , flowbox-luna-base
                     , deepseq
                     , deepseq-generics
+                    , transformers
+                    , mtl
   Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
 
 
