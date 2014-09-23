@@ -7,12 +7,18 @@
 
 package generated.proto.graphics;
 
-
-message Matrix {
+message Image {
     enum Precision {
-        SINGLE = 0;
+        FLOAT = 0;
         DOUBLE = 1;
     }
-    required Precision precision = 4;
-    required bytes matrix = 2;
+
+    required uint32 width        = 1;
+    required uint32 height       = 2;
+    required Precision precision = 3;
+
+    required bytes red   = 4;
+    required bytes green = 5;
+    required bytes blue  = 6;
+    required bytes alpha = 7;
 }

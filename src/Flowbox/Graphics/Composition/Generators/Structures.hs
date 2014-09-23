@@ -54,6 +54,9 @@ transform = lmap
 resize :: Grid (Exp Int) -> Generator a b -> Generator a b
 resize cnv (Generator _ gen) = Generator cnv gen
 
+canvasT :: (Grid (Exp Int) -> Grid (Exp Int)) -> Generator a b -> Generator a b
+canvasT f (Generator cnv gen) = Generator (f cnv) gen
+
 instance I.Boundable (DiscreteGenerator b) (Exp Int) b where
     unsafeIndex2D = runGenerator
     boundary     = canvas
