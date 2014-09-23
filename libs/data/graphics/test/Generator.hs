@@ -10,7 +10,7 @@
 
 module Main where
 
-import Flowbox.Prelude as P hiding (zoom, constant)
+import Flowbox.Prelude as P hiding (constant)
 
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Filter as Conv
@@ -36,7 +36,7 @@ import Flowbox.Graphics.Utils
 import qualified Data.Array.Accelerate              as A
 import qualified Data.Array.Accelerate.Data.Complex as A
 
-import Linear hiding (normalize, inv33)
+import Linear hiding (normalize, inv33, rotate)
 import Flowbox.Graphics.Utils.Linear
 
 import Math.Coordinate.Cartesian as Cartesian
@@ -69,7 +69,7 @@ gradientsTest = do
 
     let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
     let mapper = flip colorMapper weightFun
-    let center = translate (V2 (0.5) (0.5)) .zoom (V2 0.5 0.5)
+    let center = translate (V2 0.5 0.5) . scale (V2 0.5 0.5)
     let grad1 t = center $ mapper t circularShape
     let grad2 t = center $ mapper t diamondShape
     let grad3 t = center $ mapper t squareShape
@@ -77,7 +77,7 @@ gradientsTest = do
     let grad5 t = center $ mapper t $ radialShape (Minkowski 0.6)
     let grad6 t = center $ mapper t $ radialShape (Minkowski 3)
     let grad7 t = mapper t $ linearShape
-    let grad8   = center . turn (45 * pi / 180) $ mapper gray conicalShape
+    let grad8   = center . rotate (45 * pi / 180) $ mapper gray conicalShape
 
     let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) monosampler [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
     --let raster t = rasterizer $ monosampler $ scaleTo (Grid 720 480) $ grad4 t
@@ -93,8 +93,8 @@ multisamplerTest = do
     let mysampler = multisampler (normalize $ toMatrix 10 box)
     let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
     let mapper = flip colorMapper weightFun
-    let shape = scaleTo (Grid 720 480) conicalShape
-    let grad      = rasterizer $ mysampler $ translate (V2 (720/2) (480/2)) $ turn (84 * pi / 180) $ mapper gray shape
+    let shape = scale (Grid 720 480) conicalShape
+    let grad      = rasterizer $ mysampler $ translate (V2 (720/2) (480/2)) $ rotate (84 * pi / 180) $ mapper gray shape
     testSaveChan' "out.png" grad
 
 --
@@ -112,7 +112,7 @@ upscalingTest flt = do
 downscalingTest :: Filter (Exp Float) -> IO ()
 downscalingTest flt = do
     let process x = rasterizer $ monosampler
-                               $ scaleTo 200
+                               $ scale (200 :: Grid (Exp Int))
                                $ interpolator flt
                                $ fromMatrix (A.Constant 0) x
     forAllChannels "rings.bmp" process
@@ -160,6 +160,9 @@ morphologyTest size = do
 -- Applies directional motion blur to Lena image
 -- (Simple rotational convolution)
 --
+rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
+rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
+
 motionBlur :: Exp Int -> Exp Float -> IO ()
 motionBlur size angle = do
     let kern = monosampler
@@ -221,7 +224,7 @@ defocusBlur size = do
 boundTest :: IO ()
 boundTest = do
    let mysampler = multisampler (normalize $ toMatrix 10 box)
-   let mask = mysampler $ scale 0.25 $ nearest $ bound A.Mirror $ ellipse 200 1 (0 :: Exp Float)
+   let mask = mysampler $ scale (0.25 :: V2 (Exp Float)) $ nearest $ bound A.Mirror $ ellipse 200 1 (0 :: Exp Float)
    testSaveChan' "out.png" (rasterizer mask)
 
 --
@@ -280,7 +283,7 @@ medianTest = do
 ditherTest :: Int -> IO ()
 ditherTest a = do
     let mydither = dither A.Clamp floydSteinberg a
-    let grad = monosampler $ scaleTo 512 $ circularShape :: DiscreteGenerator (Exp Float)
+    let grad = monosampler $ scale (512 :: Grid (Exp Int)) $ circularShape :: DiscreteGenerator (Exp Float)
     result <- mutableProcess run mydither $ rasterizer grad
     testSaveChan' "out.png" result
 
@@ -323,7 +326,7 @@ crosstalkTest = do
 -- Try with cornerPinTest 0 (Point2 512 0) 512 (Point2 0 512)
 cornerPinTest :: Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float)-> IO ()
 cornerPinTest p1 p2 p3 p4 = do
-    let process x = rasterizer $ monosampler $ cornerPin p1 p2 p3 p4 $ nearest $ fromMatrix (A.Constant 0) x
+    let process x = rasterizer $ monosampler $ cornerPin (p1, p2, p3, p4) $ nearest $ fromMatrix (A.Constant 0) x
     forAllChannels "lena.png" process
 
 main :: IO ()
