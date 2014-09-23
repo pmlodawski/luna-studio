@@ -25,7 +25,7 @@ data Project = Project { _name     :: String
                        , _attrs    :: Attributes
                        } deriving (Show, Read)
 
-makeLenses(''Project)
+makeLenses ''Project
 
 
 type ID = Int

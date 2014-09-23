@@ -65,23 +65,24 @@ toGraph gv pm = do
 
 applyEdgeView :: (Graph, PropertyMap) -> LEdge EdgeView -> Either String (Graph, PropertyMap)
 applyEdgeView (graph, pm) (src, dst, edgeview) = do
-    node <- Graph.lab graph src <?> "GraphView.applyEdgeView : Cannot find node with id = " ++ show src
-    let patternLikeNode = case node of
+    srcNode <- Graph.lab graph src <?> "GraphView.applyEdgeView : Cannot find node with id = " ++ show src
+    dstNode <- Graph.lab graph src <?> "GraphView.applyEdgeView : Cannot find node with id = " ++ show src
+    let patternLikeNode = case srcNode of
             Node.Inputs  {}    -> True
             Node.Expr expr _ _ -> (not (null expr)) && (head expr == '=')
             Node.Outputs {}    -> False
-    --dtraceM (patternLikeNode, node, edgeview)
-    case (patternLikeNode, edgeview) of
-        (_   , EdgeView _     [] ) -> Left "Destination port descriptor should have at least one element"
-        (_   , EdgeView []    [d]) -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All    d) graph, pm)
-        (True, EdgeView [s]   [d]) -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s) d) graph, pm)
+    case (patternLikeNode || Node.isOutputs dstNode, edgeview) of
+        (_   , EdgeView []    [] ) -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All     Port.All   ) graph, pm)
+        (_   , EdgeView []    [d]) -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All    (Port.Num d)) graph, pm)
+        (_   , EdgeView [s]   [] ) -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s)  Port.All   ) graph, pm)
+        (True, EdgeView [s]   [d]) -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s) (Port.Num d)) graph, pm)
         (_   , EdgeView (h:t)  d ) -> applyEdgeView (newGraph, newPM) (newNodeID, dst, EdgeView t d) where
             (graph1, newNodeID) = createNode (Get h) graph
-            newGraph  = Graph.insEdge (src, newNodeID, Edge.Data Port.All 0) graph1
+            newGraph  = Graph.insEdge (src, newNodeID, Edge.Data Port.All $ Port.Num 0) graph1
             newPM     = setGenerated newNodeID pm
-        (_   , EdgeView s   d) -> applyEdgeView (newGraph, newPM) (src, newNodeID, EdgeView s $ init d) where
+        (_   , EdgeView []   d) -> applyEdgeView (newGraph, newPM) (src, newNodeID, EdgeView [] $ init d) where
             (graph1, newNodeID) = createNode Tuple graph
-            newGraph  = Graph.insEdge (newNodeID, dst, Edge.Data Port.All $ last d) graph1
+            newGraph  = Graph.insEdge (newNodeID, dst, Edge.Data Port.All $ Port.Num $ last d) graph1
             newPM     = setGenerated newNodeID pm
 
 

@@ -11,8 +11,11 @@ import Flowbox.Prelude
 
 
 
-type InPort = Int
+data Port = All
+          | Num Int
+          deriving (Eq, Show, Ord, Read)
 
-data OutPort = All
-             | Num Int
-             deriving (Eq, Show, Ord, Read)
+
+toList :: Port -> [Int]
+toList All     = []
+toList (Num a) = [a]
