@@ -31,7 +31,7 @@ import           Luna.Graph.Graph             (Graph)
 import qualified Luna.Graph.Graph             as Graph
 import           Luna.Graph.Node              (Node)
 import qualified Luna.Graph.Node              as Node
-import           Luna.Graph.Port              (InPort, OutPort)
+import           Luna.Graph.Port              (Port)
 import           Luna.Graph.PropertyMap       (PropertyMap)
 import qualified Luna.Graph.PropertyMap       as PropertyMap
 import           Luna.Info                    (apiVersion)
@@ -43,7 +43,7 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
 
 
-type NodeMap = Map AST.ID (Node.ID, OutPort)
+type NodeMap = Map AST.ID (Node.ID, Port)
 
 
 data GBState = GBState { _graph        :: Graph
@@ -63,7 +63,7 @@ make :: AliasInfo -> PropertyMap -> Node.ID -> GBState
 make = GBState Graph.empty Map.empty
 
 
-addToNodeMap :: AST.ID -> (Node.ID, OutPort) -> GBPass ()
+addToNodeMap :: AST.ID -> (Node.ID, Port) -> GBPass ()
 addToNodeMap k v = do nm <- getNodeMap
                       setNodeMap $ Map.insert k v nm
 
@@ -82,7 +82,7 @@ insNodeWithFlags n@(nodeID, _) isFolded assignment = do
     when assignment $ setFlag nodeID Attributes.astAssignment
 
 
-addNode :: AST.ID -> OutPort -> (Node.Position -> Node) -> Bool -> Bool -> GBPass ()
+addNode :: AST.ID -> Port -> (Node.Position -> Node) -> Bool -> Bool -> GBPass ()
 addNode astID outPort node isFolded assignment = do
     insNodeWithFlags (astID, node) isFolded assignment
     addToNodeMap astID (astID, outPort)
@@ -92,7 +92,7 @@ connectNodes :: Node.ID -> Node.ID -> Edge -> GBPass ()
 connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
 
 
-connect :: AST.ID -> Node.ID -> InPort -> GBPass ()
+connect :: AST.ID -> Node.ID -> Port -> GBPass ()
 connect srcID dstNID dstPort = do
     found             <- gvmNodeMapLookUp srcID
     (srcNID, srcPort) <- found <??> "Graph.Builder.State.connect : cannot find " ++ show srcID
@@ -147,12 +147,12 @@ aaLookUp astID = do aa' <- getAAMap
                     return $ IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap
 
 
-nodeMapLookUp :: AST.ID -> GBPass (Maybe (Node.ID, OutPort))
+nodeMapLookUp :: AST.ID -> GBPass (Maybe (Node.ID, Port))
 nodeMapLookUp astID = do nm <- getNodeMap
                          return $ Map.lookup astID nm
 
 
-gvmNodeMapLookUp :: AST.ID -> GBPass (Maybe (Node.ID, OutPort))
+gvmNodeMapLookUp :: AST.ID -> GBPass (Maybe (Node.ID, Port))
 gvmNodeMapLookUp astID = do
     found <- nodeMapLookUp =<< Maybe.fromMaybe astID <$> aaLookUp astID
     if Maybe.isNothing found
