@@ -13,24 +13,26 @@ import           Control.Exception.Base (SomeException)
 import           Control.Monad.IO.Class (MonadIO)
 import qualified HscTypes
 
-import           Flowbox.Prelude           hiding (error)
-import           Flowbox.Source.Location   (Location)
-import qualified Flowbox.Source.Location   as Location
+import           Flowbox.Prelude                             hiding (error)
+import           Flowbox.Source.Location                     (Location)
+import qualified Flowbox.Source.Location                     as Location
 import           Flowbox.System.Log.Logger
+import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 
 
 type ErrorStr = String
 
-data Error = RunError          { _location :: Location , _exception :: SomeException        }
-           | SourceError       { _location :: Location , _sourceErr :: HscTypes.SourceError }
-           | ASTLookupError    { _location :: Location , _errStr    :: ErrorStr             }
-           | CacheError        { _location :: Location , _errStr    :: ErrorStr             }
-           | CallbackError     { _location :: Location , _exception :: SomeException        }
-           | ConfigError       { _location :: Location , _errStr    :: ErrorStr             }
-           | GraphError        { _location :: Location , _errStr    :: ErrorStr             }
-           | NameResolverError { _location :: Location , _errStr    :: ErrorStr             }
-           | PassError         { _location :: Location , _errStr    :: ErrorStr             }
-           | OtherError        { _location :: Location , _errStr    :: ErrorStr             }
+data Error = RunError          { _location :: Location, _callPointPath :: CallPointPath, _innerErr  :: Error}
+           | GhcRunError       { _location :: Location, _exception     :: SomeException       }
+           | SourceError       { _location :: Location, _sourceErr     :: HscTypes.SourceError}
+           | ASTLookupError    { _location :: Location, _errStr        :: ErrorStr            }
+           | CacheError        { _location :: Location, _errStr        :: ErrorStr            }
+           | CallbackError     { _location :: Location, _exception     :: SomeException       }
+           | ConfigError       { _location :: Location, _errStr        :: ErrorStr            }
+           | GraphError        { _location :: Location, _errStr        :: ErrorStr            }
+           | NameResolverError { _location :: Location, _errStr        :: ErrorStr            }
+           | PassError         { _location :: Location, _errStr        :: ErrorStr            }
+           | OtherError        { _location :: Location, _errStr        :: ErrorStr            }
            deriving (Show)
 
 makeLenses(''Error)
@@ -38,7 +40,8 @@ makeLenses(''Error)
 
 format :: Error -> String
 format err = Location.format (err ^. location) ++ " : " ++ case err of
-    RunError      _ e -> show e
+    RunError _ cpp ie -> concat ["RunError ", show cpp, " inner error:\n", format ie] 
+    GhcRunError   _ e -> show e
     CallbackError _ e -> show e
     SourceError   _ s -> show s
     _                 -> err ^. errStr
