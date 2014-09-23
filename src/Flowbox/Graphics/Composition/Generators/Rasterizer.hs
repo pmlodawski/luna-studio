@@ -34,7 +34,7 @@ gridRasterizer :: forall a e . (Elt e, Elt a, IsFloating a)
                -> [CartesianGenerator (Exp a) (Exp e)] -> Matrix2 e
 gridRasterizer space grid sampler generators = generate (A.index2 (height space) (width space)) wrapper
     where cell = div <$> space <*> grid
-          rasterized = mconcat $ P.map (flatten . rasterizer . sampler . scaleTo cell) generators :: Vector e
+          rasterized = mconcat $ P.map (flatten . rasterizer . sampler . scale cell) generators :: Vector e
           wrapper (A.unlift -> Z :. y :. x :: EDIM2) = rasterized M.!! (i `mod` size rasterized)
               where i = (cw * ch) * gridi + celli
                     Grid cw ch = cell
