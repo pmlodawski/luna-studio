@@ -158,8 +158,8 @@ runStmt stmt = do
     result <- interceptSourceErrors $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
     case result of
         GHC.RunOk _         -> return ()
-        GHC.RunException ex -> left $ Error.RunError   $(loc) ex
-        GHC.RunBreak {}     -> left $ Error.OtherError $(loc) "Run break"
+        GHC.RunException ex -> left $ Error.GhcRunError $(loc) ex
+        GHC.RunBreak {}     -> left $ Error.OtherError  $(loc) "Run break"
 
 
 runDecls :: String -> Session ()

@@ -14,6 +14,7 @@ import qualified Data.Char                  as Char
 import qualified Data.Maybe                 as Maybe
 import qualified Text.Read                  as Read
 
+import           Flowbox.Control.Error                      (catchEither)
 import qualified Flowbox.Data.List                          as List
 import           Flowbox.Prelude                            as Prelude hiding (children, inside)
 import           Flowbox.Source.Location                    (loc)
@@ -36,6 +37,7 @@ import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
+
 
 
 logger :: LoggerIO
@@ -183,13 +185,15 @@ evalFunction funName callDataPath argsVarNames = do
                         else "val " ++ funName
             Tuple  -> "val (" ++ List.intercalate "," args ++ ")"
         expression    = tmpVarName ++ " <- " ++ operation
-    Session.runStmt expression
-    hash <- Hash.compute tmpVarName
-    let varName = VarName.mk hash callPointPath
-    Session.runAssignment varName tmpVarName
-    Cache.put callDataPath argsVarNames varName
-    Value.report callPointPath varName
-    return (hash, varName)
+
+    catchEither (left . Error.RunError $(loc) callPointPath) $ do
+        Session.runStmt expression
+        hash <- Hash.compute tmpVarName
+        let varName = VarName.mk hash callPointPath
+        Session.runAssignment varName tmpVarName
+        Cache.put callDataPath argsVarNames varName
+        Value.report callPointPath varName
+        return (hash, varName)
 
 
 freeVarName :: VarName -> Session ()
