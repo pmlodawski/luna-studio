@@ -10,7 +10,7 @@ def Int.+ self::Int a::Int:
     ```liftF2 (+) #{self} #{a}```
 
 def Int.- self::Int a::Int:
-    ```liftF2 (+) #{self} #{a}```
+    ```liftF2 (-) #{self} #{a}```
 
 def Int.* self::Int a::Int:
     ```liftF2 (*) #{self} #{a}```
@@ -25,13 +25,13 @@ def Int.== self::Int a::Int:
     ```liftF2 (==) #{self} #{a}```
 
 def Int.< self::Int a::Int:
-    ```liftF2 (==) #{self} #{a}```
+    ```liftF2 (<) #{self} #{a}```
 
 def Int.<= self::Int a::Int:
-    ```liftF2 (==) #{self} #{a}```
+    ```liftF2 (<=) #{self} #{a}```
 
-def Int.=> self::Int a::Int:
-    ```liftF2 (==) #{self} #{a}```
+def Int.>= self::Int a::Int:
+    ```liftF2 (>=) #{self} #{a}```
 
 def Int.inc self::Int: 
     self + 1
