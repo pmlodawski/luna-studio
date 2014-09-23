@@ -113,3 +113,6 @@ frthQuad e = let (_:: Exp a, _:: Exp b, _:: Exp c, x) = A.unlift e in x
 
 variable :: (Lift Exp e, Elt (Plain e)) => e -> Exp (Plain e)
 variable a = the $ unit $ A.lift a
+
+asFloating :: (Elt a, Elt b, Functor f, IsIntegral a, IsNum b) => f (Exp a) -> f (Exp b)
+asFloating = fmap A.fromIntegral
