@@ -12,6 +12,7 @@ module Main where
 
 import Flowbox.Prelude as P hiding (constant)
 
+import Flowbox.Graphics.Color
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Filter as Conv
 import Flowbox.Graphics.Composition.Generators.Gradient
@@ -26,6 +27,7 @@ import Flowbox.Graphics.Composition.Generators.Structures as S
 import Flowbox.Graphics.Composition.Generators.Transform
 
 import Flowbox.Graphics.Composition.Dither
+import Flowbox.Graphics.Composition.Histogram
 import Flowbox.Graphics.Image.Color (LinearGenerator(..), crosstalk)
 import Flowbox.Geom2D.Accelerate.CubicBezier
 import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection
@@ -299,6 +301,28 @@ orderedDitherTest a = do
 simpleTest :: IO ()
 simpleTest = do
     forAllChannels "edge/mountain.png" id
+
+--histTest :: IO ()
+histTest = do
+    (r :: Matrix2 Float, _, _, _) <- testLoadRGBA' "samples/lena.png"
+    return $ run $ histeq 256 (accMatrix r)
+
+
+histTest' :: Int -> IO ()
+histTest' n = do
+    let equalize = Delayed . histeq (variable n) . accMatrix
+    forAllChannels "lena.png" equalize
+
+hsvHistTest :: IO ()
+hsvHistTest = do
+    rgb <- loadRGB "samples/lena.png"
+    let hsv :: Matrix2 (HSV Float)
+        hsv = M.map (A.lift1 (toHSV :: RGB (Exp Float) -> HSV (Exp Float)) :: Exp (RGB Float) -> Exp (HSV Float)) rgb
+        (h, s, v) = M.unzip3 $ M.map (\(A.unlift -> HSV h s v) -> A.lift (h, s, v)) hsv
+        newV = Delayed . histeq 256 $ accMatrix v
+        rgb' = M.map (A.lift1 (toRGB :: HSV (Exp Float) -> RGB (Exp Float)) :: A.Exp (HSV Float) -> A.Exp (RGB Float)) $ M.zipWith3 (\a b c -> A.lift $ HSV a b c) h s newV
+        (r, g, b) = M.unzip3 $ M.map (\(A.unlift -> RGB r g b) -> A.lift (r, g, b)) rgb'
+    testSaveRGBA' "out.png" r g b r
 
 --
 -- Crosstalk test

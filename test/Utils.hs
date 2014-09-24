@@ -78,6 +78,15 @@ testLoadRGBA backend filename = do
 testLoadRGBA' :: (Elt b, IsFloating b) => FilePath -> IO (Matrix2 b, Matrix2 b, Matrix2 b, Matrix2 b)
 testLoadRGBA' = testLoadRGBA loadImage
 
+loadRGB :: (Elt b, IsFloating b) => FilePath -> IO (Matrix2 (RGB b))
+loadRGB filename = do
+    file <- loadImage filename
+    case file of
+        Left e -> error $ "Unable to load file: " P.++ show e
+        Right mat -> return $ M.map (\(A.unlift -> (r, g, b) :: (Exp b, Exp b, Exp b)) -> A.lift $ RGB r g b :: Exp (RGB b)) $ M.map (convert . unpackRGBA32) (Raw mat)
+    where convert t = let (r, g, b, _) = A.unlift t :: (Exp A.Word8, Exp A.Word8, Exp A.Word8, Exp A.Word8)
+                      in A.lift (A.fromIntegral r / 255, A.fromIntegral g / 255, A.fromIntegral b / 255)
+
 
 testSaveRGBA :: (Elt a, IsFloating a) => IOSaveBackend -> FilePath -> Matrix2 a -> Matrix2 a -> Matrix2 a -> Matrix2 a -> IO ()
 testSaveRGBA backend filename r g b a = backend filename $ compute' run $ M.map packRGBA32 $ zip4 (conv r) (conv g) (conv b) (conv a)
