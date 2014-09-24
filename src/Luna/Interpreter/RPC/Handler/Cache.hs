@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
-module Luna.Interpreter.RPC.Handler.Modify where
+module Luna.Interpreter.RPC.Handler.Cache where
 
 import Data.Int (Int32)
 
@@ -18,14 +18,14 @@ import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Crumb.Breadcrumbs                      as Gen
 import           Luna.Interpreter.Proto.CallPointPath                   ()
 import           Luna.Interpreter.RPC.Handler.Lift
+import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
 import           Luna.Interpreter.Session.Session                       (Session, SessionST)
 import qualified Luna.Interpreter.Session.Session                       as Session
 
 
-
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Modify"
+logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Cache"
 
 --- helpers ---------------------------------------------------------------
 
@@ -33,6 +33,10 @@ interpreterDo :: Int32 -> Session () -> RPC Context SessionST ()
 interpreterDo projectID op = do
     activeProjectID <- liftSession Session.getProjectID
     when (activeProjectID == decodeP projectID) $ liftSession op
+
+
+deleteAll :: Int32 -> RPC Context SessionST ()
+deleteAll projectID = interpreterDo projectID Cache.deleteAll
 
 
 modifyAll :: Int32 -> RPC Context SessionST ()
