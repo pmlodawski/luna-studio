@@ -1,0 +1,24 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.graphics;
+
+message Image {
+    enum Precision {
+        FLOAT = 0;
+        DOUBLE = 1;
+    }
+
+    required uint32 width        = 1;
+    required uint32 height       = 2;
+    required Precision precision = 3;
+
+    required bytes red   = 4;
+    required bytes green = 5;
+    required bytes blue  = 6;
+    required bytes alpha = 7;
+}

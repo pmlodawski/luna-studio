@@ -144,7 +144,6 @@ float* readTileFromChannelUnsafe(void* fileHandle, int part, const char* chanNam
     *height = tileDescription.ySize;
 
     auto buffer = static_cast<float*>(calloc(*width * *height, sizeof(float)));
-    printf("foobar\n");
     Imf::FrameBuffer frameBuffer;
 
     frameBuffer.insert(
@@ -170,7 +169,6 @@ float* readTileFromChannelUnsafe(void* fileHandle, int part, const char* chanNam
 }
 
 float* readTiledScanlineChannelUnsafe(void* fileHandle, int part, const char* chanName, int* height, int* width) {
-    printf("bar\n");
     auto exrFile = static_cast<Imf::MultiPartInputFile*>(fileHandle);
 
     Imf::TiledInputPart tiledInputPart {*exrFile, part};

@@ -11,22 +11,23 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.Graphics.Utils where
 
 import Data.Array.Accelerate as A
-import Data.Array.Accelerate.Smart
-import Data.Array.Accelerate.Tuple
-import Data.Array.Accelerate.Array.Sugar
 import Data.Typeable
 
 import Flowbox.Prelude as P
+import Flowbox.Graphics.Utils.Accelerate
 
 
 
 data Size a = Size {sizeW :: a, sizeH :: a}
+
 data Range a = Range {rangeLo :: a, rangeHi :: a}
              deriving (Show, Typeable)
+deriveAccelerate ''Range
 
 range :: Float -> Float -> Exp (Range Float)
 range lo hi = A.lift $ Range (variable lo) (variable hi)
@@ -69,7 +70,7 @@ clamp (Range thresholdLo thresholdHi) clampTo v = (v A.<* thresholdLo A.?) $ cas
 clamp' :: (Elt t, IsScalar t) => Exp t -> Exp t -> Exp t -> Exp t
 clamp' low high val = (val A.>* high) A.? (high, (val A.<* low) A.? (low, val))
 
-mix :: (Elt a, IsNum a) => Exp a -> Exp a -> Exp a -> Exp a
+mix :: Num a => a -> a -> a -> a
 mix amount oldValue newValue = invert amount * oldValue + amount * newValue
 
 
@@ -113,33 +114,5 @@ frthQuad e = let (_:: Exp a, _:: Exp b, _:: Exp c, x) = A.unlift e in x
 variable :: (Lift Exp e, Elt (Plain e)) => e -> Exp (Plain e)
 variable a = the $ unit $ A.lift a
 
-
--- = Accelerate instances
-
-type instance EltRepr  (Range a) = EltRepr  (a, a)
-type instance EltRepr' (Range a) = EltRepr' (a, a)
-
-instance Elt a => Elt (Range a) where
-    eltType _ = eltType (undefined :: (a, a))
-    toElt p = case toElt p of
-        (lo, hi) -> Range lo hi
-    fromElt (Range lo hi) = fromElt (lo, hi)
-
-    eltType' _ = eltType' (undefined :: (a, a))
-    toElt' p = case toElt' p of
-        (lo, hi) -> Range lo hi
-    fromElt' (Range lo hi) = fromElt' (lo, hi)
-
-instance IsTuple (Range a) where
-    type TupleRepr (Range a) = TupleRepr (a, a)
-    fromTuple (Range lo hi) = fromTuple (lo, hi)
-    toTuple t = case toTuple t of
-        (lo, hi) -> Range lo hi
-
-instance (Lift Exp a, Elt (Plain a)) => Lift Exp (Range a) where
-    type Plain (Range a) = Range (Plain a)
-    lift (Range lo hi) = Exp $ Tuple $ NilTup `SnocTup` A.lift lo `SnocTup` A.lift hi
-
-instance (Elt a, e ~ Exp a) => Unlift Exp (Range e) where
-    unlift t = Range (Exp $ SuccTupIdx ZeroTupIdx `Prj` t)
-                     (Exp $ ZeroTupIdx `Prj` t)
+asFloating :: (Elt a, Elt b, Functor f, IsIntegral a, IsNum b) => f (Exp a) -> f (Exp b)
+asFloating = fmap A.fromIntegral
