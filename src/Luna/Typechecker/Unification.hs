@@ -31,6 +31,6 @@ match (TVar u) t                               = do ku <- kind u
                                                       then return (u +-> t)
                                                       else throwError "types do not match"
 match (TCon tc1) (TCon tc2) |    tc1 == tc2    = return nullSubst
-match _ _                                      = throwError $ "types do not match"
+match _ _                                      = throwError "types do not match"
 
 

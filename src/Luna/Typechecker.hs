@@ -24,5 +24,6 @@ tiProgram ce as bgs = blah $ do (ps, as') <- tiSeq tiBindGroup ce as bgs
                                 s'        <- defaultSubst ce [] rs
                                 return    $  apply (s' @@ s) as'
 
-blah x = runTI $ do (Right res, stack) <- runLoggerT x
+blah :: LoggerT e TI a -> a
+blah x = runTI $ do Right res <- evalLoggerT x
                     return res

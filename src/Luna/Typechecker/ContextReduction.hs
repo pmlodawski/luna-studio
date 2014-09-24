@@ -9,9 +9,6 @@ import Luna.Typechecker.AST.Type        (Type(..))
 
 import Luna.Typechecker.Internal.Logger
 
-import Control.Monad                    (foldM)
-
-
 
 inHnf :: (Monad m) => Pred -> TCLoggerT m Bool
 inHnf (IsIn _ t) = hnf t

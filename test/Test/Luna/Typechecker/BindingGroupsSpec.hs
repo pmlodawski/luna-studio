@@ -13,8 +13,6 @@ import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Internal.Logger
 
-import Control.Exception
-
 import Data.Either                      (isLeft)
 
 import Test.Hspec
@@ -33,11 +31,11 @@ spec = do
     it "fails for too weak contexts" $ do
       let inf       = tiExpl ceEq [eqBG^.asmp] ("lel", lel_type, [(lel_pat1, lel_body1)])
           lel_type  = Forall [Star] ([] :=> (TGen 0 `fn` tBool))
-      (runTI $ evalLoggerT inf) `shouldSatisfy` isLeft
+      runTI (evalLoggerT inf) `shouldSatisfy` isLeft
     it "fails for too general signatures" $ do
       let inf       = tiExpl ceEq [eqBG^.asmp] ("lel", lel_type, [(lel_pat1, lel_body1)])
           lel_type  = Forall [Star, Star] ([] :=> (TGen 0 `fn` TGen 1))
-      (runTI $ evalLoggerT inf) `shouldSatisfy` isLeft
+      runTI (evalLoggerT inf) `shouldSatisfy` isLeft
 
   describe "tiExpr" $
     it "recurses into let" $

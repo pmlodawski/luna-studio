@@ -14,8 +14,6 @@ import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Internal.Logger
 
-import Data.Either                       (isLeft)
-
 import Test.Hspec
 import Test.QuickCheck
 

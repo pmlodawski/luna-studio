@@ -10,8 +10,6 @@ import Luna.Typechecker.Internal.Logger
 
 import Test.Hspec
 
-import Control.Exception
-
 import Data.Either                      (isLeft)
 
 

@@ -20,8 +20,6 @@ import Control.Applicative             ((<$>))
 
 import Data.Either
 
-import Data.Functor.Identity
-
 
 spec :: Spec
 spec = do
@@ -46,7 +44,7 @@ spec = do
     it "matches some simple `TAp`s" $ do 
       let -- | Forces evaluation to WHNF of `mgu`.
           test :: Type -> Type -> Either String Subst
-          test t1 t2 = case (evalLogger $ mgu t1 t2) of
+          test t1 t2 = case evalLogger (mgu t1 t2) of
                          Left  x -> x `seq` Left  x
                          Right x -> x `seq` Right x
 
@@ -91,13 +89,13 @@ spec = do
           tc1 = TCon (Tycon "Bool" Star)
           tc2 = TCon (Tycon "Maybe" (Kfun Star Star))
           tg  = TGen 0
-      (evalLogger $ mgu  t1  t2)                  `shouldSatisfy` isLeft
-      (evalLogger $ mgu tc1 tc2)                  `shouldSatisfy` isLeft
-      (evalLogger $ mgu tc1  t2)                  `shouldSatisfy` isLeft
-      (evalLogger $ mgu  t1 tc2)                  `shouldSatisfy` isLeft
-      (evalLogger $ mgu tg   t1)                  `shouldSatisfy` isLeft
-      (evalLogger $ mgu tg  tc1)                  `shouldSatisfy` isLeft
-      (evalLogger $ mgu (t1 `fn` t2 `fn` t1) tc2) `shouldSatisfy` isLeft
+      evalLogger (mgu  t1  t2)                  `shouldSatisfy` isLeft
+      evalLogger (mgu tc1 tc2)                  `shouldSatisfy` isLeft
+      evalLogger (mgu tc1  t2)                  `shouldSatisfy` isLeft
+      evalLogger (mgu  t1 tc2)                  `shouldSatisfy` isLeft
+      evalLogger (mgu tg   t1)                  `shouldSatisfy` isLeft
+      evalLogger (mgu tg  tc1)                  `shouldSatisfy` isLeft
+      evalLogger (mgu (t1 `fn` t2 `fn` t1) tc2) `shouldSatisfy` isLeft
   describe "match" $ do
     it "matches some trivial `TAp`s" $ do
       let test :: Type -> Type -> Either String Subst
