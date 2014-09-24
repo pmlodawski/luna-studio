@@ -1,12 +1,18 @@
 module Test.Luna.Typechecker.HasKindSpec (spec) where
+
+
 import qualified Luna.Typechecker.AST.Type         as Ty
 
 import           Luna.Typechecker.AST.Kind         (Kind(..))
 import           Luna.Typechecker.HasKind          (kind)
 
+import           Luna.Typechecker.Internal.Logger
+
+import           Control.Exception                 (evaluate)
+
+import           Data.Either                       (isLeft)
 
 import           Test.Hspec
-import           Control.Exception                          (evaluate)
 
 
 spec :: Spec
@@ -14,29 +20,29 @@ spec =
   describe "class HasKind t" $ do
     describe "instance HasKind Tyvar" $
       it "kind :: t -> Kind" $ do
-        kind (Ty.Tyvar undefined Star)             `shouldBe` Star
-        kind (Ty.Tyvar undefined (Kfun Star Star)) `shouldBe` Kfun Star Star
+        evalLogger (kind (Ty.Tyvar undefined Star)            ) `shouldBe` Right (Star)
+        evalLogger (kind (Ty.Tyvar undefined (Kfun Star Star))) `shouldBe` Right (Kfun Star Star)
     describe "instance HasKind Tycon" $
       it "kind :: t -> Kind" $ do
-        kind (Ty.Tycon undefined Star)             `shouldBe` Star
-        kind (Ty.Tycon undefined (Kfun Star Star)) `shouldBe` Kfun Star Star
+        evalLogger (kind (Ty.Tycon undefined Star)            ) `shouldBe` Right (Star)
+        evalLogger (kind (Ty.Tycon undefined (Kfun Star Star))) `shouldBe` Right (Kfun Star Star)
     describe "instance HasKind Type" $
       it "kind :: t -> Kind" $ do
-        kind Ty.tUnit                              `shouldBe` Star
-        kind Ty.tChar                              `shouldBe` Star
-        kind Ty.tInt                               `shouldBe` Star
-        kind Ty.tInteger                           `shouldBe` Star
-        kind Ty.tFloat                             `shouldBe` Star
-        kind Ty.tDouble                            `shouldBe` Star
+        evalLogger (kind Ty.tUnit                             ) `shouldBe` Right (Star)
+        evalLogger (kind Ty.tChar                             ) `shouldBe` Right (Star)
+        evalLogger (kind Ty.tInt                              ) `shouldBe` Right (Star)
+        evalLogger (kind Ty.tInteger                          ) `shouldBe` Right (Star)
+        evalLogger (kind Ty.tFloat                            ) `shouldBe` Right (Star)
+        evalLogger (kind Ty.tDouble                           ) `shouldBe` Right (Star)
 
-        kind Ty.tList                              `shouldBe` Kfun Star Star
-        kind Ty.tArrow                             `shouldBe` Kfun Star (Kfun Star Star)
-        kind Ty.tTuple2                            `shouldBe` Kfun Star (Kfun Star Star)
+        evalLogger (kind Ty.tList                             ) `shouldBe` Right (Kfun Star Star)
+        evalLogger (kind Ty.tArrow                            ) `shouldBe` Right (Kfun Star (Kfun Star Star))
+        evalLogger (kind Ty.tTuple2                           ) `shouldBe` Right (Kfun Star (Kfun Star Star))
 
-        kind Ty.tString                            `shouldBe` Star
+        evalLogger (kind Ty.tString                           ) `shouldBe` Right (Star)
 
-        kind (Ty.TVar $ Ty.Tyvar undefined Star)   `shouldBe` Star
-        kind (Ty.TCon $ Ty.Tycon undefined Star)   `shouldBe` Star
-        kind (Ty.TAp Ty.tList Ty.tInt)             `shouldBe` Star
-        evaluate (kind (Ty.TAp Ty.tList Ty.tList)) `shouldThrow` errorCall "kind mismatch"
-        evaluate (kind (Ty.TGen undefined))        `shouldThrow` anyErrorCall
+        evalLogger (kind (Ty.TVar $ Ty.Tyvar undefined Star)  ) `shouldBe` Right (Star)
+        evalLogger (kind (Ty.TCon $ Ty.Tycon undefined Star)  ) `shouldBe` Right (Star)
+        evalLogger (kind (Ty.TAp Ty.tList Ty.tInt)            ) `shouldBe` Right (Star)
+        evalLogger (kind (Ty.TAp Ty.tList Ty.tList))            `shouldSatisfy` isLeft
+        evalLogger (kind (Ty.TGen undefined))                   `shouldSatisfy` isLeft

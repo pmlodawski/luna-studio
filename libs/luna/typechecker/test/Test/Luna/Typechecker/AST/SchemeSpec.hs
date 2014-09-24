@@ -1,15 +1,24 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Test.Luna.Typechecker.AST.SchemeSpec (spec) where
+
+
+import Luna.Typechecker.Typeclasses
+
 import Luna.Typechecker.AST.Kind
 import Luna.Typechecker.AST.Scheme
 import Luna.Typechecker.AST.Type
-import Luna.Typechecker.Typeclasses
+
+import Luna.Typechecker.Internal.Logger
+
+import Control.Monad.ST
+
+import Data.Array.ST
 
 import Test.Hspec
 import Test.QuickCheck
-import Data.Array.ST
-import Control.Monad.ST
+
+
 permute :: [a] -> Gen [a]
 permute xs = do swaps <- mapM mkSwapTuple [nd,nd-1..1]
                 return (runST $ permute' xs swaps)
@@ -38,7 +47,7 @@ spec = do
           vs' = ["z"] -- variable to quantify that does not exist
           vs'' = ["y"] -- the variable that is not quantified
        in forAll (permute az) $ \azPermuted ->
-            quantify (azPermuted++az') ([] :=> foldr1 fn (map TVar (azPermuted++az''))) `shouldBe` Forall ks ([] :=> gs')
+            evalLogger (quantify (azPermuted++az') ([] :=> foldr1 fn (map TVar (azPermuted++az'')))) `shouldBe` Right (Forall ks ([] :=> gs'))
   describe "(coverage booster)" $
     it "instance Show Scheme" $ do
       let sch1 = Forall [] ([] :=> t)

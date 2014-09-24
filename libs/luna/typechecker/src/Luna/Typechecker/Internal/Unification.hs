@@ -11,5 +11,8 @@ import Luna.Typechecker.Internal.Logger
 varBind :: (Monad m) => Tyvar -> Type -> TCLoggerT m Subst
 varBind u t | t == TVar u      = return nullSubst
             | u `elem` tv t    = throwError "occurs check fail (can't build infinite type)"
-            | kind u /= kind t = throwError "kinds do not match"
-            | otherwise        = return (u +-> t)
+            | otherwise        = do ku <- kind u
+                                    kt <- kind t
+                                    if ku /= kt
+                                      then throwError "kinds do not match"
+                                      else return (u +-> t)

@@ -4,13 +4,16 @@
 
 module Test.Luna.Typechecker.AST.TypeGen where
 
-import           Luna.Typechecker.AST.Type      (Type(..), Tyvar(..), Tycon(..))
-import           Luna.Typechecker.AST.Kind      (Kind(..))
-import           Luna.Typechecker.AST.TID       (enumTID, TID)
 
 import qualified Luna.Typechecker.HasKind       as HKd
 import           Luna.Typechecker.Typeclasses      (Pred(..))
 import qualified Luna.Typechecker.Substitutions as Sub
+
+import           Luna.Typechecker.AST.Type      (Type(..), Tyvar(..), Tycon(..))
+import           Luna.Typechecker.AST.Kind      (Kind(..))
+import           Luna.Typechecker.AST.TID       (enumTID, TID)
+
+import           Luna.Typechecker.Internal.Logger
 
 import           Control.Applicative                     ((<$>), (<*>))
 import           Control.Monad                           (liftM2)
@@ -96,7 +99,7 @@ genTycon k = do tid <- tidTC . getPositive <$> arbitrary
 genSubst :: [Tyvar] -> Gen Sub.Subst
 genSubst []  = return Sub.nullSubst
 genSubst tvs = do t <- elements tvs
-                  let k = HKd.kind t
+                  let Right k = evalLogger $ HKd.kind t
                   ty <- genType k `suchThat` (notElem t . Sub.tv)
                   return (t Sub.+-> ty)
 
