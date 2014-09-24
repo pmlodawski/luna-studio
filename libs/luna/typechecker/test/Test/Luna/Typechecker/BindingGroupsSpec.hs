@@ -16,7 +16,7 @@ import Luna.Typechecker.Internal.Logger
 import Data.Either                      (isLeft)
 
 import Test.Hspec
-import Test.Luna.Common
+import Test.Luna.Typechecker.Common
 
 
 spec :: Spec
