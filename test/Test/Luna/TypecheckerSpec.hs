@@ -16,6 +16,10 @@ import Control.DeepSeq
 import Control.Exception
 import Test.Luna.Common
 
+import Data.Functor.Identity
+
+import Luna.Typechecker.Internal.Logger
+
 spec :: Spec
 spec = do
   describe "the typechecker interface for basic AST" $ do
@@ -138,7 +142,7 @@ spec = do
                   <:> addClass "Ord" ["Eq"]
                   <:> addInst [] (IsIn "Eq" tBool)
                   <:> addInst [] (IsIn "Ord" tBool)
-          Just classenv = classenvT initialEnv
+          (Right classenv, _) = runIdentity $ runLoggerT $ classenvT initialEnv
           res = tiProgram classenv [decrBG^.asmp, leqBG^.asmp, eqBG^.asmp, lorBG^.asmp] [def]
       res `shouldContain` [alternatingFBG^.asmp]
       res `shouldContain` [alternatingGBG^.asmp]
@@ -158,7 +162,7 @@ spec = do
                   <:> addInst [] (IsIn "Real" tInt)     <:> addInst [] (IsIn "Real" tInteger)
                   <:> addInst [] (IsIn "Enum" tInt)     <:> addInst [] (IsIn "Enum" tInteger)
                   <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
-          Just classenv = classenvT initialEnv
+          (Right classenv, _) = runIdentity $ runLoggerT $ classenvT initialEnv
           res = tiProgram classenv [eqBG^.asmp, fromIntegralBG^.asmp, integralAddBG^.asmp] [def]
       res `shouldContain` [fultingBG^.asmp]
 
@@ -168,10 +172,10 @@ spec = do
           test_pat' = []
           test_body = Var "show"
           show_type = Forall [Star] ([IsIn "Show" (TGen 0)] :=> (TGen 0 `fn` list tChar))
-          Just ce = (  addClass "Show" []
-                   <:> addInst [] (IsIn "Show" tInt)
-                   <:> addInst [] (IsIn "Show" tBool)
-                    ) initialEnv
+          (Right ce, _) = runIdentity $ runLoggerT $ (  addClass "Show" []
+                                                    <:> addInst [] (IsIn "Show" tInt)
+                                                    <:> addInst [] (IsIn "Show" tBool)
+                                                     ) initialEnv
           res pat = tiProgram ce ["show":>:show_type] [def pat]
       res test_pat `shouldContain` ["test":>:Forall [Star, Star] ([IsIn "Show" (TGen 0)] :=> (TGen 1 `fn` TGen 0 `fn` list tChar))]
       evaluate (res test_pat') `shouldThrow` anyErrorCall

@@ -1,26 +1,28 @@
 module Test.Luna.Typechecker.AmbiguitySpec (spec) where
 
-import Luna.Typechecker.AST.Kind
-import Luna.Typechecker.AST.Lit
-import Luna.Typechecker.AST.Pat
-import Luna.Typechecker.AST.Scheme
-
-import Luna.Typechecker.AST.Type
-
 
 import Luna.Typechecker.Ambiguity
 import Luna.Typechecker.Assumptions
 import Luna.Typechecker.BindingGroups
-
 import Luna.Typechecker.Typeclasses
 
+import Luna.Typechecker.AST.Kind
+import Luna.Typechecker.AST.Lit
+import Luna.Typechecker.AST.Pat
+import Luna.Typechecker.AST.Scheme
+import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker
 
-import Test.Luna.Common
+import Luna.Typechecker.Internal.Logger
+
+import Control.Exception
+
+import Data.Either                      (isLeft)
 
 import Test.Hspec
-import Control.Exception
+
+import Test.Luna.Common
 
 
 spec :: Spec
@@ -56,7 +58,7 @@ spec = do
                   <:> addInst [] (IsIn "Real" tInt)     <:> addInst [] (IsIn "Real" tInteger)
                   <:> addInst [] (IsIn "Enum" tInt)     <:> addInst [] (IsIn "Enum" tInteger)
                   <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
-          Just classenv = classenvT initialEnv
+          Right classenv = evalLogger $ classenvT initialEnv
           res = tiProgram classenv [eqBG^.asmp, fromIntegralBG^.asmp, integralAddBG^.asmp] [fultingdef1]
       res `shouldContain` ["fulting_type" :>: fulting_type]
 
@@ -69,7 +71,7 @@ spec = do
 
           fromMytype_type = Forall [Star, Star] ([IsIn "MyType" (TGen 0)] :=> (TGen 0 `fn` tInt))
 
-          Just classenv = classenvT initialEnv
+          Right classenv = evalLogger $ classenvT initialEnv
           res = tiProgram classenv [eqBG^.asmp, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [fultingdef2]
       evaluate res `shouldThrow` anyErrorCall
 
@@ -82,7 +84,7 @@ spec = do
 
           fromMytype_type = Forall [] ([IsIn "MyType" (TVar $ Tyvar "a" Star)] :=> ((TVar $ Tyvar "a" Star) `fn` tInt))
 
-          Just classenv = classenvT initialEnv
+          Right classenv = evalLogger $ classenvT initialEnv
           res = tiProgram classenv [eqBG^.asmp, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [fultingdef2]
       evaluate res `shouldThrow` anyErrorCall
 
@@ -97,39 +99,39 @@ spec = do
 
           fromMytype_type = Forall [] ([IsIn "MyType" (TVar $ Tyvar "a" Star)] :=> ((TVar $ Tyvar "a" Star) `fn` tInt))
 
-          Just classenv = classenvT initialEnv
+          Right classenv = evalLogger $ classenvT initialEnv
           res = tiProgram classenv ["(==)":>:myeq_type, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [fultingdef2]
       evaluate res `shouldThrow` anyErrorCall
 
   describe "candidates" $
     it "works" $ do
-      let Just ce = (  addClass "Eq"       []
-                   <:> addClass "Ord"      ["Eq"]
-                   <:> addClass "Num"      []
-                   <:> addClass "Real"     ["Num", "Ord"]
-                   <:> addClass "Enum"     []
-                   <:> addClass "Integral" ["Real", "Enum"]
-                   <:> addClass "Functor"     []
-                   <:> addClass "Applicative" ["Functor"]
-                   <:> addClass "LOLOLOL"  []
-
-                   <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
-                               (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
-                   <:> addInst [] (IsIn "Eq"       tInt)   <:> addInst [] (IsIn "Eq"       tInteger)
-                   <:> addInst [] (IsIn "Ord"      tInt)   <:> addInst [] (IsIn "Ord"      tInteger)
-                   <:> addInst [] (IsIn "Num"      tInt)   <:> addInst [] (IsIn "Num"      tInteger)
-                   <:> addInst [] (IsIn "Real"     tInt)   <:> addInst [] (IsIn "Real"     tInteger)
-                   <:> addInst [] (IsIn "Enum"     tInt)   <:> addInst [] (IsIn "Enum"     tInteger)
-                   <:> addInst [] (IsIn "Integral" tInt)   <:> addInst [] (IsIn "Integral" tInteger)
-                   <:> addInst [] (IsIn "LOLOLOL"  tInt)   <:> addInst [] (IsIn "LOLOLOL"  tInteger)
-                   <:> addInst [] (IsIn "Functor"     tList)
-                   <:> addInst [] (IsIn "Applicative" tList)
-                    ) initialEnv
+      let Right ce = evalLogger ((  addClass "Eq"       []
+                         <:> addClass "Ord"      ["Eq"]
+                         <:> addClass "Num"      []
+                         <:> addClass "Real"     ["Num", "Ord"]
+                         <:> addClass "Enum"     []
+                         <:> addClass "Integral" ["Real", "Enum"]
+                         <:> addClass "Functor"     []
+                         <:> addClass "Applicative" ["Functor"]
+                         <:> addClass "LOLOLOL"  []
+      
+                         <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
+                                     (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
+                         <:> addInst [] (IsIn "Eq"       tInt)   <:> addInst [] (IsIn "Eq"       tInteger)
+                         <:> addInst [] (IsIn "Ord"      tInt)   <:> addInst [] (IsIn "Ord"      tInteger)
+                         <:> addInst [] (IsIn "Num"      tInt)   <:> addInst [] (IsIn "Num"      tInteger)
+                         <:> addInst [] (IsIn "Real"     tInt)   <:> addInst [] (IsIn "Real"     tInteger)
+                         <:> addInst [] (IsIn "Enum"     tInt)   <:> addInst [] (IsIn "Enum"     tInteger)
+                         <:> addInst [] (IsIn "Integral" tInt)   <:> addInst [] (IsIn "Integral" tInteger)
+                         <:> addInst [] (IsIn "LOLOLOL"  tInt)   <:> addInst [] (IsIn "LOLOLOL"  tInteger)
+                         <:> addInst [] (IsIn "Functor"     tList)
+                         <:> addInst [] (IsIn "Applicative" tList)
+                          ) initialEnv)
           f = TVar $ Tyvar "f" Star
           a = TVar $ Tyvar "a" Star
-      candidates ce (Tyvar "a" Star, [IsIn "Ord" (TAp f a)]) `shouldBe` []
-      candidates ce (Tyvar "a" Star, [IsIn "Integral" a]) `shouldBe` [tInteger]
-      candidates ce (Tyvar "a" Star, [IsIn "Integral" a, IsIn "LOLOLOL" a]) `shouldBe` []
+      (evalLogger $ candidates ce (Tyvar "a" Star, [IsIn "Ord" (TAp f a)])) `shouldBe` Right []
+      (evalLogger $ candidates ce (Tyvar "a" Star, [IsIn "Integral" a])) `shouldBe` Right [tInteger]
+      (evalLogger $ candidates ce (Tyvar "a" Star, [IsIn "Integral" a, IsIn "LOLOLOL" a])) `shouldBe` Right []
 
 
   describe "fighting monomorphism restriction" $
@@ -169,21 +171,21 @@ spec = do
                    ]]
                 )]
 
-          Just ce = (  addClass "Eq" []
-                   <:> addClass "Ord" ["Eq"]
-                   <:> addClass "Num" []
-                   <:> addClass "Real" ["Num", "Ord"]
-                   <:> addClass "Enum" []
-                   <:> addClass "Integral" ["Real", "Enum"]
-                   <:> addClass "Functor" []
-                   <:> addInst [] (IsIn "Eq" tInt)       <:> addInst [] (IsIn "Eq" tInteger)
-                   <:> addInst [] (IsIn "Ord" tInt)      <:> addInst [] (IsIn "Ord" tInteger)
-                   <:> addInst [] (IsIn "Num" tInt)      <:> addInst [] (IsIn "Num" tInteger)
-                   <:> addInst [] (IsIn "Real" tInt)     <:> addInst [] (IsIn "Real" tInteger)
-                   <:> addInst [] (IsIn "Enum" tInt)     <:> addInst [] (IsIn "Enum" tInteger)
-                   <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
-                   <:> addInst [] (IsIn "Functor" tList)
-                   <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
-                               (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
-                    ) initialEnv
+          Right ce = evalLogger ((  addClass "Eq" []
+                             <:> addClass "Ord" ["Eq"]
+                             <:> addClass "Num" []
+                             <:> addClass "Real" ["Num", "Ord"]
+                             <:> addClass "Enum" []
+                             <:> addClass "Integral" ["Real", "Enum"]
+                             <:> addClass "Functor" []
+                             <:> addInst [] (IsIn "Eq" tInt)       <:> addInst [] (IsIn "Eq" tInteger)
+                             <:> addInst [] (IsIn "Ord" tInt)      <:> addInst [] (IsIn "Ord" tInteger)
+                             <:> addInst [] (IsIn "Num" tInt)      <:> addInst [] (IsIn "Num" tInteger)
+                             <:> addInst [] (IsIn "Real" tInt)     <:> addInst [] (IsIn "Real" tInteger)
+                             <:> addInst [] (IsIn "Enum" tInt)     <:> addInst [] (IsIn "Enum" tInteger)
+                             <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
+                             <:> addInst [] (IsIn "Functor" tList)
+                             <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
+                                         (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
+                              ) initialEnv)
        in tiProgram ce as bgs `shouldContain` ["pie":>:toScheme tInteger]

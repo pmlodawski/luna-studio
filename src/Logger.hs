@@ -1,15 +1,19 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 
 module Logger (
-  LoggerT, Logger,
-  function, functionResult, trace, err,
-  formatStack, runLogger, evalLoggerT
-    ) where
+    LoggerT, Logger,
+    function, functionResult, trace, err,
+    formatStack,
+    runLogger, runLoggerT,
+    evalLogger, evalLoggerT,
+    isFail, isFine
+  ) where
 
-import Data.Either            (isRight)
+import Data.Either            (isLeft,isRight)
+import Data.Monoid            (Monoid(..))
 import Data.Functor.Identity  (Identity,runIdentity)
 import Control.Applicative    (Applicative(..))
-import Control.Monad          (ap,join,liftM)
+import Control.Monad          (MonadPlus(..),ap,join,liftM)
 import Control.Monad.Error    (MonadError(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.Trans    (MonadTrans(..))
@@ -62,12 +66,29 @@ instance (Monad m, Show e) => MonadError e (LoggerT e m) where
       Left l -> runLoggerT $ handler l
       _      -> return (mres, s)
 
+instance (Monad m, Show e, Monoid e) => MonadPlus (LoggerT e m) where
+  mzero = LoggerT $ return (Left mempty, [])
+  mplus ma mb = ma `catchError` (\_ -> mb)
+
+
+isFine :: (Monad m) => LoggerT e m a -> LoggerT e m Bool
+isFine logger = LoggerT $ do
+  (ma, s) <- runLoggerT logger
+  return (Right (isRight ma), s)
+
+isFail :: (Monad m) => LoggerT e m a -> LoggerT e m Bool
+isFail logger = LoggerT $ do
+  (ma, s) <- runLoggerT logger
+  return (Right (isLeft ma), s)
 
 evalLoggerT :: (Monad m) => LoggerT e m a -> m (Either e a)
 evalLoggerT logger = runLoggerT logger >>= return . fst
 
 runLogger :: Logger e a -> (Either e a, [Log e])
 runLogger = runIdentity . runLoggerT
+
+evalLogger :: Logger e a -> Either e a
+evalLogger = runIdentity . evalLoggerT
 
 formatStack :: (Show e) => Bool -> [Log e] -> String
 formatStack fulldebug = concatMap (printStack 0)

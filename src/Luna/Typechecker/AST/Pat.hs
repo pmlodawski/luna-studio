@@ -2,19 +2,23 @@ module Luna.Typechecker.AST.Pat (
     tiPat, Pat(..), tiPats
   ) where
 
-import Luna.Typechecker.AST.Internal.Pat (Pat(..))
+import Luna.Typechecker.Assumptions      (Assump(..))
+import Luna.Typechecker.TIMonad          (TI, freshInst, unify, newTVar)
+import Luna.Typechecker.Typeclasses      (Pred(..), Qual(..))
 
 import Luna.Typechecker.AST.Kind         (Kind(..))
 import Luna.Typechecker.AST.Lit          (tiLit)
 import Luna.Typechecker.AST.Scheme       (toScheme)
 import Luna.Typechecker.AST.Type         (Type, fn)
 
-import Luna.Typechecker.Assumptions      (Assump(..))
-import Luna.Typechecker.TIMonad          (TI, freshInst, unify, newTVar)
-import Luna.Typechecker.Typeclasses      (Pred(..), Qual(..))
+import Luna.Typechecker.AST.Internal.Pat (Pat(..))
+
+import Luna.Typechecker.Internal.Logger
+
+import Control.Monad.Trans               (lift)
 
 
-tiPat :: Pat -> TI ([Pred], [Assump], Type)
+tiPat :: Pat -> TCLoggerT TI ([Pred], [Assump], Type)
 tiPat (PVar i)    = do v <- newTVar Star
                        return ([], [i :>: toScheme v], v)
 tiPat PWildcard   = do v <- newTVar Star
@@ -30,7 +34,7 @@ tiPat (PCon (_ :>: sc) pats)
                        unify t (foldr fn t' ts)
                        return (ps ++ qs, as, t')
 
-tiPats :: [Pat] -> TI ([Pred], [Assump], [Type])
+tiPats :: [Pat] -> TCLoggerT TI ([Pred], [Assump], [Type])
 tiPats pats = do psasts <- mapM tiPat pats
                  let ps = concat [ps' | (ps', _,  _) <- psasts]
                      as = concat [as' | ( _, as', _) <- psasts]

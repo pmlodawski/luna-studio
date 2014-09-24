@@ -2,8 +2,12 @@ module Luna.Typechecker.HasKind (
     HasKind(..)
   ) where
 
-import           Luna.Typechecker.AST.Kind         (Kind(..))
-import           Luna.Typechecker.AST.Type         (Type(..), Tyvar(..), Tycon(..))
+
+import Luna.Typechecker.AST.Kind         (Kind(..))
+import Luna.Typechecker.AST.Type         (Type(..), Tyvar(..), Tycon(..))
+
+import Luna.Typechecker.Internal.Logger
+
 
 class HasKind t where
     kind :: t -> Kind
@@ -17,7 +21,7 @@ instance HasKind Tycon where
 instance HasKind Type where
   kind (TVar u)   = kind u
   kind (TCon tc)  = kind tc
-  kind (TAp t t')  = case kind t of
+  kind (TAp t t') = case kind t of
                          Kfun k' k | kind t' == k' -> k
                          _                         -> error "kind mismatch"
   kind (TGen _)   = error "HasKind.hs:HasKind Type/TGen should never be asked for kind!"

@@ -1,14 +1,22 @@
 module Test.Luna.Typechecker.TypeInferenceSpec (spec) where
 
+
 import Luna.Typechecker.TypeInference
-import Luna.Typechecker.TIMonad (runTI)
+import Luna.Typechecker.TIMonad         (runTI)
 import Luna.Typechecker.Typeclasses
-import Test.Luna.Typechecker.AST.TypeGen
+
 import Luna.Typechecker.AST.Kind
 import Luna.Typechecker.AST.Type
 
+import Luna.Typechecker.Internal.Logger
+
+import Data.Either                      (isLeft)
+
 import Test.Hspec
 import Test.QuickCheck
+
+import Test.Luna.Typechecker.AST.TypeGen
+
 
 spec :: Spec
 spec = do
@@ -29,36 +37,36 @@ spec = do
   describe "split" $ do
     it "works for single predicate: retains it" $ do
       let type01  = Tyvar "a" Star
-          Just ce = (diamond_classes <:> diamond_inst) initialEnv
+          Right ce = evalLogger $ (diamond_classes <:> diamond_inst) initialEnv
           fixvars = []
           toquant = [type01]
           predics = [IsIn "ClassA" tInt, IsIn "ClassC" tInt, IsIn "ClassC" (TVar type01)]
-          (deferred, retained) = runTI (split ce fixvars toquant predics)
+          (Right (deferred, retained), _) = runTI $ runLoggerT (split ce fixvars toquant predics)
       retained `shouldContain` [IsIn "ClassC" (TVar type01)]
       deferred `shouldBe` []
     it "works for single predicate: defers it" $ do
       let type01  = Tyvar "a" Star
-          Just ce = (diamond_classes <:> diamond_inst) initialEnv
+          Right ce = evalLogger $ (diamond_classes <:> diamond_inst) initialEnv
           fixvars = [type01]
           toquant = []
           predics = [IsIn "ClassA" tInt, IsIn "ClassC" tInt, IsIn "ClassC" (TVar type01)]
-          (deferred, retained) = runTI (split ce fixvars toquant predics)
+          (Right (deferred, retained), _) = runTI $ runLoggerT (split ce fixvars toquant predics)
       deferred `shouldContain` [IsIn "ClassC" (TVar type01)]
       retained `shouldBe` []
     it "works for single predicate: defaulting" $ do
       let type01  = Tyvar "a" Star
           type02  = Tyvar "b" Star
-          Just ce = (int_classes <:> double_classes) initialEnv
+          Right ce = evalLogger $ (int_classes <:> double_classes) initialEnv
           fixvars = []
           toquant = []
           predics = [IsIn "Integral" (TVar type01), IsIn "Fractional" (TVar type02)]
-          (deferred, retained) = runTI (split ce fixvars toquant predics)
+          (Right (deferred, retained), _) = runTI $ runLoggerT (split ce fixvars toquant predics)
       deferred `shouldBe` []
       retained `shouldBe` []
     it "prop: returns [] for null predicate list" $
       property $
       forAll (listOf $ genTyvar Star) $ \fs ->
       forAll (listOf $ genTyvar Star) $ \gs ->
-        let (ds, rs) = runTI (split initialEnv fs gs [])
+        let (Right (ds, rs), _) = runTI $ runLoggerT (split initialEnv fs gs [])
             in do ds `shouldBe` []
                   rs `shouldBe` []
