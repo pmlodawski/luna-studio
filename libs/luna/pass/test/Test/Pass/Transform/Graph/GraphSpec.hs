@@ -48,20 +48,18 @@ backAndForth code = do
 
 
 backAndForth2 :: Graph -> IO ()
-backAndForth2 graph = do
-    graph2 <- backAndForth2' graph
-    graph2 `shouldBe` graph
+backAndForth2 graph = backAndForth2' graph graph
 
 
-backAndForth2' :: Graph -> IO Graph
-backAndForth2' graph = do
+backAndForth2' :: Graph -> Graph -> IO ()
+backAndForth2' providedGraph expectedGraph = do
     emptyAst <- Common.getAST SampleCodes.emptyMain
-    (ast, pm) <- Common.getExpr graph def emptyAst
+    (ast, pm) <- Common.getExpr providedGraph def emptyAst
     --printLn
     --print ast
     --print pm
-    (graph2, _pm2) <- Common.getGraph pm ast
-    return graph2
+    (resultGraph, _pm2) <- Common.getGraph pm ast
+    resultGraph `shouldBe` expectedGraph
 
 
 sampleGraphs :: [(String, Graph)]
@@ -134,17 +132,28 @@ sampleGraphs =
     ]
 
 
-buggyGraphs :: [(String, Graph)]
+buggyGraphs :: [(String, Graph, Graph)]
 buggyGraphs =
-    [ named "empty"
-    $ Graph.addMonadicEdges $ Graph.mkGraph
+    [( "empty"
+     , Graph.addMonadicEdges $ Graph.mkGraph
         []
         []
-    , named "buggy graph 1"
-    $ Graph.mkGraph
-        [(100, Node.Expr "main" "" (0, 1))]
+     ,  Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2,Node.Inputs  (0 ,0))
+        ,(-3,Node.Outputs (10,0))
+        ]
         []
-    ]
+    ),( "buggy graph 1"
+     , Graph.mkGraph
+        [fixEmpty' (100, Node.Expr "main" "" (0, 1))]
+        []
+     , Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2,Node.Inputs           (0 , 0))
+        ,(-3,Node.Outputs          (10, 1))
+        ,fixEmpty' (100, Node.Expr "main" "" (0 , 1))
+        ]
+        [(100, -3, Edge.Data Port.All $ Port.Num 0)]
+    )]
 
 main :: IO ()
 main = hspec spec
@@ -159,8 +168,8 @@ spec = do
     describe "graph <-> ast conversion" $ do
         mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth2 graph) sampleGraphs
-        mapM_ (\(name, graph) -> it ("don't crash on buggy graphs - " ++ name) $
-                void $ backAndForth2' graph) buggyGraphs
+        mapM_ (\(name, providedGraph, expectedGraph) -> it ("fixes buggy graphs - " ++ name) $
+                backAndForth2' providedGraph expectedGraph) buggyGraphs
 
 
     describe "graph sort alghorithm" $ do
