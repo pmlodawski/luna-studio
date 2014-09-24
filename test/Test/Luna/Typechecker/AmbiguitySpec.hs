@@ -16,11 +16,11 @@ import Luna.Typechecker
 
 import Luna.Typechecker.Internal.Logger
 
-import Control.Exception
+import Data.Either                      (isLeft,isRight)
 
 import Test.Hspec
 
-import Test.Luna.Common
+import Test.Luna.Typechecker.Common
 
 
 spec :: Spec
@@ -57,7 +57,9 @@ spec = do
                   <:> addInst [] (IsIn "Enum" tInt)     <:> addInst [] (IsIn "Enum" tInteger)
                   <:> addInst [] (IsIn "Integral" tInt) <:> addInst [] (IsIn "Integral" tInteger)
           Right classenv = evalLogger $ classenvT initialEnv
-          res = tiProgram classenv [eqBG^.asmp, fromIntegralBG^.asmp, integralAddBG^.asmp] [fultingdef1]
+          (eres, _) = tiProgram classenv [eqBG^.asmp, fromIntegralBG^.asmp, integralAddBG^.asmp] [fultingdef1]
+      eres `shouldSatisfy` isRight
+      let Right res = eres
       res `shouldContain` ["fulting_type" :>: fulting_type]
 
     it "can't solve ambiguity for: `fromMytype (xx my1 my2)` (I)" $ do
@@ -70,8 +72,8 @@ spec = do
           fromMytype_type = Forall [Star, Star] ([IsIn "MyType" (TGen 0)] :=> (TGen 0 `fn` tInt))
 
           Right classenv = evalLogger $ classenvT initialEnv
-          res = tiProgram classenv [eqBG^.asmp, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [fultingdef2]
-      evaluate res `shouldThrow` anyErrorCall
+          (eres, _) = tiProgram classenv [eqBG^.asmp, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [fultingdef2]
+      eres `shouldSatisfy` isLeft
 
     it "can't solve ambiguity for: `fromMytype (xx my1 my2)` (II)" $ do
       let classenvT = addClass "Eq"     []
@@ -83,8 +85,8 @@ spec = do
           fromMytype_type = Forall [] ([IsIn "MyType" (TVar $ Tyvar "a" Star)] :=> ((TVar $ Tyvar "a" Star) `fn` tInt))
 
           Right classenv = evalLogger $ classenvT initialEnv
-          res = tiProgram classenv [eqBG^.asmp, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [fultingdef2]
-      evaluate res `shouldThrow` anyErrorCall
+          (eres, _) = tiProgram classenv [eqBG^.asmp, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [fultingdef2]
+      eres `shouldSatisfy` isLeft
 
     it "can't solve ambiguity for: `fromMytype (xx my1 my2)` (III)" $ do
       let classenvT = addClass "MyEq"     []
@@ -98,8 +100,8 @@ spec = do
           fromMytype_type = Forall [] ([IsIn "MyType" (TVar $ Tyvar "a" Star)] :=> ((TVar $ Tyvar "a" Star) `fn` tInt))
 
           Right classenv = evalLogger $ classenvT initialEnv
-          res = tiProgram classenv ["(==)":>:myeq_type, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [fultingdef2]
-      evaluate res `shouldThrow` anyErrorCall
+          (eres, _) = tiProgram classenv ["(==)":>:myeq_type, "fromMytype":>:fromMytype_type, "xx":>:xx_type, "my1":>:mys, "my2":>:mys] [fultingdef2]
+      eres `shouldSatisfy` isLeft
 
   describe "candidates" $
     it "works" $ do
@@ -133,7 +135,7 @@ spec = do
 
 
   describe "fighting monomorphism restriction" $
-    it "works" $
+    it "works" $ do
       let as = [ integralAddBG   ^. asmp
                , consBG          ^. asmp
                , foldlBG         ^. asmp
@@ -186,4 +188,7 @@ spec = do
                              <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
                                          (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
                               ) initialEnv)
-       in tiProgram ce as bgs `shouldContain` ["pie":>:toScheme tInteger]
+          (eres, _) = tiProgram ce as bgs
+      eres `shouldSatisfy` isRight
+      let Right res = eres
+      res `shouldContain` ["pie":>:toScheme tInteger]

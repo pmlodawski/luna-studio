@@ -7,7 +7,7 @@ import Luna.Typechecker.Assumptions      (Assump)
 import Luna.Typechecker.BindingGroups    (BindGroup,tiSeq,tiBindGroup)
 import Luna.Typechecker.ContextReduction (reduce)
 import Luna.Typechecker.Substitutions    (Types(..),(@@))
-import Luna.Typechecker.TIMonad          (TI,runTI,getSubst)
+import Luna.Typechecker.TIMonad          (runTI,getSubst)
 import Luna.Typechecker.Typeclasses      (ClassEnv)
 
 import Luna.Typechecker.Internal.Logger
@@ -17,13 +17,10 @@ type Program = [BindGroup]
 
 
 
-tiProgram :: ClassEnv -> [Assump] -> Program -> [Assump]
-tiProgram ce as bgs = blah $ do (ps, as') <- tiSeq tiBindGroup ce as bgs
-                                s         <- getSubst
-                                rs        <- reduce ce (apply s ps)
-                                s'        <- defaultSubst ce [] rs
-                                return    $  apply (s' @@ s) as'
-
-blah :: LoggerT e TI a -> a
-blah x = runTI $ do Right res <- evalLoggerT x
-                    return res
+tiProgram :: ClassEnv -> [Assump] -> Program -> (Either String [Assump], String)
+tiProgram ce as bgs = let (res, stack) = runTI $ runLoggerT $ do (ps, as') <- tiSeq tiBindGroup ce as bgs
+                                                                 s         <- getSubst
+                                                                 rs        <- reduce ce (apply s ps)
+                                                                 s'        <- defaultSubst ce [] rs
+                                                                 return    $  apply (s' @@ s) as'
+                       in (res, formatStack True stack)

@@ -7,13 +7,12 @@ import Luna.Typechecker.AST.Kind      (Kind(..))
 import Luna.Typechecker.AST.Lit       (Lit(..))
 import Luna.Typechecker.AST.Pat       (Pat(..))
 import Luna.Typechecker.AST.Scheme    (Scheme(..),toScheme)
-import Luna.Typechecker.AST.TID       (TID(..))
+import Luna.Typechecker.AST.TID       (TID)
 import Luna.Typechecker.AST.Type      (Type(..),Tyvar(..),fn,tInteger,list,tBool,pair,tChar,tDouble,tFloat,tInt,tUnit,tList,tArrow,tTuple2)
 
 import Luna.Typechecker.Assumptions   (Assump(..))
 import Luna.Typechecker.BindingGroups (Alt,Expr(..),Impl)
-import Luna.Typechecker.Typeclasses   (Qual(..),Pred(..),EnvTransformer,(<:>),addInst)
-import qualified Luna.Typechecker.Typeclasses as TCS
+import Luna.Typechecker.Typeclasses   (Qual(..),Pred(..),EnvTransformer,(<:>),addClass,addInst)
 
 
 import Control.Applicative ((<$>),Const(..))
@@ -57,8 +56,6 @@ impl f (t, s, as) = (\(t',as') -> (t',s,as')) <$> f (t, as)
 asmp :: Lens (TID, Scheme, [Alt]) (TID, Scheme, [Alt]) Assump Assump
 asmp f (t, s, as) = (\(t' :>: s') -> (t', s', as)) <$> f (t :>: s)
 
-addClass i = TCS.addClass (TID i)
-
 
 -- ------------------------------------------------------------
 -- ████████╗██╗   ██╗██████╗ ███████╗ ██████╗██╗      █████╗ ███████╗███████╗███████╗███████╗
@@ -69,7 +66,7 @@ addClass i = TCS.addClass (TID i)
 --    ╚═╝      ╚═╝   ╚═╝     ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚══════╝
 -- ------------------------------------------------------------
 
-standardET :: EnvTransformer
+standardET :: (Monad m) => EnvTransformer m
 standardET =  addClass "Eq" []
               <:> addInst [] (IsIn "Eq" tUnit)
               <:> addInst [] (IsIn "Eq" tBool)
