@@ -25,6 +25,12 @@ match :: (Monad m) => Type -> Type -> TCLoggerT m Subst
 match (TAp l r) (TAp l' r') = do sl <- match l l'
                                  sr <- match r r'
                                  merge sl sr
-match (TVar u) t            | kind u == kind t = return (u +-> t)
+match (TVar u) t                               = do ku <- kind u
+                                                    kt <- kind t
+                                                    if ku == kt
+                                                      then return (u +-> t)
+                                                      else throwError "types do not match"
 match (TCon tc1) (TCon tc2) |    tc1 == tc2    = return nullSubst
 match _ _                                      = throwError $ "types do not match"
+
+

@@ -85,7 +85,7 @@ tiExpl ce as (_, sc, alts) = do (qs :=> t) <- freshInst sc
                                     t'  = apply s t
                                     fs  = tv (apply s as)
                                     gs  = tv t' \\ fs
-                                    sc' = quantify gs (qs' :=> t')
+                                sc' <- quantify gs (qs' :=> t')
                                        --Monad m => (Pred -> LoggerT String TI Bool) -> [Pred] -> LoggerT String TI [Pred]
                                 ps' <- filterM (\p -> do ttt <- entail ce qs p
                                                          return (not ttt))
@@ -120,13 +120,11 @@ tiImpls ce as bs = do ts <- mapM (\_ -> newTVar Star) bs
                           vss = map tv ts'
                           gs  = foldr1 union vss \\ fs
                       (ds,rs) <- split ce fs (foldr1 intersect vss) ps'
-                      if restricted bs then
-                          let gs'  = gs \\ tv rs
-                              scs' = map (quantify gs' . ([] :=>)) ts'
-                           in return (ds ++ rs, zipWith (:>:) is scs')
-                        else
-                          let scs' = map (quantify gs . (rs :=>)) ts'
-                           in return (ds, zipWith (:>:) is scs')
+                      if restricted bs then do let gs' = gs \\ tv rs
+                                               scs' <- mapM (quantify gs' . ([] :=>)) ts'
+                                               return (ds ++ rs, zipWith (:>:) is scs')
+                        else do scs' <- mapM (quantify gs . (rs :=>)) ts'
+                                return (ds, zipWith (:>:) is scs')
 
 
 

@@ -1,8 +1,12 @@
 module Test.Luna.Typechecker.AST.TypeSpec (spec) where
-import qualified Luna.Typechecker.AST.Kind         as Knd
+
+
 import qualified Luna.Typechecker.HasKind          as HKd
 
+import qualified Luna.Typechecker.AST.Kind         as Knd
 import           Luna.Typechecker.AST.Type
+
+import           Luna.Typechecker.Internal.Logger
 
 import           Test.Hspec
 
@@ -10,14 +14,14 @@ spec :: Spec
 spec = do
   describe "predefined types" $
     it "shall yield kind * when appropriate" $ do
-      HKd.kind tUnit                                `shouldBe` Knd.Star
-      HKd.kind tInt                                 `shouldBe` Knd.Star
-      HKd.kind (list tInt)                          `shouldBe` Knd.Star
-      HKd.kind (tInt `fn` tInt)                     `shouldBe` Knd.Star
-      HKd.kind (list tInt `fn` tInt)                `shouldBe` Knd.Star
-      HKd.kind (tInt `pair` tInt)                   `shouldBe` Knd.Star
-      HKd.kind (tInt `pair` tUnit)                  `shouldBe` Knd.Star
-      HKd.kind ((tInt `fn` tInt) `pair` list tUnit) `shouldBe` Knd.Star
+      evalLogger (HKd.kind tUnit                               ) `shouldBe` Right Knd.Star
+      evalLogger (HKd.kind tInt                                ) `shouldBe` Right Knd.Star
+      evalLogger (HKd.kind (list tInt)                         ) `shouldBe` Right Knd.Star
+      evalLogger (HKd.kind (tInt `fn` tInt)                    ) `shouldBe` Right Knd.Star
+      evalLogger (HKd.kind (list tInt `fn` tInt)               ) `shouldBe` Right Knd.Star
+      evalLogger (HKd.kind (tInt `pair` tInt)                  ) `shouldBe` Right Knd.Star
+      evalLogger (HKd.kind (tInt `pair` tUnit)                 ) `shouldBe` Right Knd.Star
+      evalLogger (HKd.kind ((tInt `fn` tInt) `pair` list tUnit)) `shouldBe` Right Knd.Star
   describe "fn" $
     it "should verify kinds" $ pendingWith "fn needs to verify that both arguments have kind *"
   describe "list" $

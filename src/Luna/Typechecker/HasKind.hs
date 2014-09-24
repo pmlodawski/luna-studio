@@ -10,18 +10,20 @@ import Luna.Typechecker.Internal.Logger
 
 
 class HasKind t where
-    kind :: t -> Kind
+    kind :: (Monad m) => t -> TCLoggerT m Kind
 
 instance HasKind Tyvar where
-  kind (Tyvar _ k) = k
+  kind (Tyvar _ k) = return k
 
 instance HasKind Tycon where
-  kind (Tycon _ k) = k
+  kind (Tycon _ k) = return k
 
 instance HasKind Type where
   kind (TVar u)   = kind u
   kind (TCon tc)  = kind tc
-  kind (TAp t t') = case kind t of
-                         Kfun k' k | kind t' == k' -> k
-                         _                         -> error "kind mismatch"
-  kind (TGen _)   = error "HasKind.hs:HasKind Type/TGen should never be asked for kind!"
+  kind (TAp t t') = do kt <- kind t
+                       kt' <- kind t'
+                       case kt of
+                         Kfun k' k | kt' == k' -> return k
+                         _ -> throwError "kind mismatch"
+  kind (TGen _)   = throwError "HasKind.hs:HasKind Type/TGen should never be asked for kind!"

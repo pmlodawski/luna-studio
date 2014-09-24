@@ -29,14 +29,14 @@ spec = do
           Right (ps, as, TVar t) = runTI $ evalLoggerT $ tiPat v
       ps `shouldBe` []
       as `shouldContain` ["lel" :>: toScheme (TVar t)]
-      kind t `shouldBe` Star
+      evalLogger (kind t) `shouldBe` Right Star
 
     it "just works for PWildcard" $ do
       let v = PWildcard
           Right (ps, as, TVar t) = runTI $ evalLoggerT $  tiPat v
       ps `shouldBe` []
       as `shouldContain` []
-      kind t `shouldBe` Star
+      evalLogger (kind t) `shouldBe` Right Star
 
     it "just works for PAs+PVar" $ do
       let v = PAs "lel" (PVar "lol")
@@ -44,7 +44,7 @@ spec = do
       ps `shouldBe` []
       as `shouldContain` ["lel" :>: toScheme (TVar t)]
       as `shouldContain` ["lol" :>: toScheme (TVar t)]
-      kind t `shouldBe` Star
+      evalLogger (kind t) `shouldBe` Right Star
 
     it "just works for PAs+PCon" $ do
       let v = PAs "lel" (PCon ("(:)":>:cons_type) [PVar "x", PVar "xs"])
@@ -62,7 +62,7 @@ spec = do
       ps `shouldBe` []
       xs `shouldBe` lel
       list x `shouldBe` xs
-      kind t `shouldBe` Star
+      evalLogger (kind t) `shouldBe` Right Star
 
     it "just works for PLit+LitChar" $ do
       let v = PLit (LitChar 'l')
@@ -84,10 +84,10 @@ spec = do
           Just (Forall [] ([] :=> x))  = find "x"  as
           Just (Forall [] ([] :=> xs)) = find "xs" as
       ps `shouldBe` []
-      kind x  `shouldBe` Star
-      kind xs `shouldBe` Star
+      evalLogger (kind x)  `shouldBe` Right Star
+      evalLogger (kind xs) `shouldBe` Right Star
       evalLogger (xs `match` list x) `shouldSatisfy` isRight
-      kind t `shouldBe` Star
+      evalLogger (kind t) `shouldBe` Right Star
   describe "(coverage booster)" $
     it "show" $ do
       let v = PCon ("(:)":>:cons_type) [PVar "x", PVar "xs"]
