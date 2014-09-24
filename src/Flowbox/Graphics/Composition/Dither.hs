@@ -37,7 +37,7 @@ type DiffusionTable = BMatrix VU.Vector
 instance (Storable a, Unbox a) => Boundable (DiffusionTable a) Int a where
     unsafeIndex2D BMatrix{..} (Point2 x y) = container VU.! linearIndex
         where linearIndex = Sugar.toIndex canvas (A.Z A.:. y A.:. x)
-    bounduary BMatrix{..} = Grid width height
+    boundary BMatrix{..} = Grid width height
         where A.Z A.:. height A.:. width = canvas
 
 dither :: (Storable a, RealFrac a, Unbox a) => M.Boundary (MValue a) -> DiffusionTable a -> Int -> MImage a -> IO ()
