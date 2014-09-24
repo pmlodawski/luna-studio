@@ -66,7 +66,7 @@ asmp f (t, s, as) = (\(t' :>: s') -> (t', s', as)) <$> f (t :>: s)
 --    ╚═╝      ╚═╝   ╚═╝     ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚══════╝
 -- ------------------------------------------------------------
 
-standardET :: EnvTransformer
+standardET :: (Monad m) => EnvTransformer m
 standardET =  addClass "Eq" []
               <:> addInst [] (IsIn "Eq" tUnit)
               <:> addInst [] (IsIn "Eq" tBool)

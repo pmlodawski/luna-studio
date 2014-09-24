@@ -1,21 +1,27 @@
 module Test.Luna.Typechecker.UnificationSpec (spec) where
 
+
+import Luna.Typechecker.Substitutions
+import Luna.Typechecker.Unification
+
 import Luna.Typechecker.AST.Kind       (Kind(..))
 import Luna.Typechecker.AST.Type
-import Luna.Typechecker.Substitutions
-import Test.Luna.Typechecker.AST.TypeGen
 
-
-
-import Luna.Typechecker.Unification
+import Luna.Typechecker.Internal.Logger
 import Luna.Typechecker.Internal.Unification
-
-import Control.Exception                        (evaluate)
-import Control.Applicative                      ((<$>))
 
 import Test.Hspec
 import Test.QuickCheck
+
+import Test.Luna.Typechecker.AST.TypeGen
+
+import Control.Exception               (evaluate)
+import Control.Applicative             ((<$>))
+
 import Data.Either
+
+import Data.Functor.Identity
+
 
 spec :: Spec
 spec = do
@@ -40,7 +46,7 @@ spec = do
     it "matches some simple `TAp`s" $ do 
       let -- | Forces evaluation to WHNF of `mgu`.
           test :: Type -> Type -> Either String Subst
-          test t1 t2 = case mgu t1 t2 of
+          test t1 t2 = case (evalLogger $ mgu t1 t2) of
                          Left  x -> x `seq` Left  x
                          Right x -> x `seq` Right x
 
@@ -63,21 +69,21 @@ spec = do
     it "satisfies property: apply u t1 == apply u t2 for u = mgu t1 t2" $ do
       let t1 = tUnit
           t2 = TVar (Tyvar "a" Star)
-          Just u = mgu t1 t2
+          Right u = evalLogger $ mgu t1 t2
       apply u t1 `shouldBe` apply u t2
     it "does the kind check" $ do
       let t1 = TVar (Tyvar "a" Star)
           t2 = tList
-          u = mgu t1 t2 :: Either String Subst
-      evaluate u `shouldThrow` anyErrorCall
+          u = evalLogger $ mgu t1 t2
+      u `shouldSatisfy` isLeft
     it "does the infinite-type check" $ do
       let t1 = TVar (Tyvar "a" Star)
           t2 = list t1
-          u  = mgu t1 t2 :: Either String Subst
-      evaluate u `shouldThrow` anyErrorCall
+          u  = evalLogger $ mgu t1 t2
+      u `shouldSatisfy` isLeft
     it "doesn't mind matching equal consts [QC]" $ property $
       forAll (arbitrary >>= genTCon) $ \tc ->
-        let u = mgu tc tc :: Either String Subst
+        let u = evalLogger $ mgu tc tc
          in u `shouldSatisfy` isRight
     it "errors when types can't be unified" $ do
       let t1  = TVar (Tyvar "a1" Star)
@@ -85,17 +91,17 @@ spec = do
           tc1 = TCon (Tycon "Bool" Star)
           tc2 = TCon (Tycon "Maybe" (Kfun Star Star))
           tg  = TGen 0
-      evaluate (mgu  t1  t2 :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (mgu tc1 tc2 :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (mgu tc1  t2 :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (mgu  t1 tc2 :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (mgu tg   t1 :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (mgu tg  tc1 :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (mgu (t1 `fn` t2 `fn` t1) tc2 :: Either String Subst) `shouldThrow` anyErrorCall
+      (evalLogger $ mgu  t1  t2)                  `shouldSatisfy` isLeft
+      (evalLogger $ mgu tc1 tc2)                  `shouldSatisfy` isLeft
+      (evalLogger $ mgu tc1  t2)                  `shouldSatisfy` isLeft
+      (evalLogger $ mgu  t1 tc2)                  `shouldSatisfy` isLeft
+      (evalLogger $ mgu tg   t1)                  `shouldSatisfy` isLeft
+      (evalLogger $ mgu tg  tc1)                  `shouldSatisfy` isLeft
+      (evalLogger $ mgu (t1 `fn` t2 `fn` t1) tc2) `shouldSatisfy` isLeft
   describe "match" $ do
     it "matches some trivial `TAp`s" $ do
       let test :: Type -> Type -> Either String Subst
-          test t1 t2 = case match t1 t2 of
+          test t1 t2 = case evalLogger $ match t1 t2 of
                          Left  x -> x `seq` Left  x
                          Right x -> x `seq` Right x
       
@@ -109,39 +115,39 @@ spec = do
       res' `shouldContain` [(tv2, tt0)]
       res' `shouldContain` [(tv3, tt1)]
 
-      evaluate (match (TAp ct0 tt1) (TAp tt2 tt3) :: Either String Subst) `shouldThrow` anyErrorCall
-      evaluate (match (TAp tt0 ct1) (TAp tt2 tt3) :: Either String Subst) `shouldThrow` anyErrorCall
+      evalLogger (match (TAp ct0 tt1) (TAp tt2 tt3)) `shouldSatisfy` isLeft
+      evalLogger (match (TAp tt0 ct1) (TAp tt2 tt3)) `shouldSatisfy` isLeft
 
       test (TAp tt2 tt3) (TAp ct0 tt1) `shouldSatisfy` isRight
       test (TAp tt2 tt3) (TAp tt0 ct1) `shouldSatisfy` isRight
-      (match ct0 ct0 :: Either String Subst) `shouldBe` Right nullSubst
+      evalLogger (match ct0 ct0) `shouldBe` Right nullSubst
 
 
 
     it "some examples for property: apply u t1 == t2 for u = match t1 t2" $ do
       let t1 = TVar (Tyvar "a" Star)
           t2 = tUnit
-          u = mgu t1 t2 :: Either String Subst
+          u = evalLogger $ mgu t1 t2
           tvar = Tyvar "b" Star
           tvar' = Tyvar "b" (Kfun Star Star)
           tap = TAp (TVar tvar) (TVar tvar')
           tap' = TAp (TVar tvar') (TVar tvar)
-          res = match (TVar tvar) (TVar tvar') :: Either String Subst
-          res' = match tap tap' :: Either String Subst
+          res = evalLogger $ match (TVar tvar) (TVar tvar')
+          res' = evalLogger $ match tap tap'
       evaluate (flip apply t1 <$> u) `shouldReturn` Right t2
-      evaluate res `shouldThrow` anyErrorCall
-      evaluate res' `shouldThrow` anyErrorCall
+      res `shouldSatisfy` isLeft
+      res' `shouldSatisfy` isLeft
   describe "(internals)" $
     describe "varBind" $ do
       it "QC: ∀ (Tyvar tv): varBind tv (TVar tv) == nullSubst" $ property $
-        \tyvar -> (varBind tyvar (TVar tyvar) :: Either String Subst) `shouldBe` Right nullSubst
+        \tyvar -> evalLogger (varBind tyvar (TVar tyvar)) `shouldBe` Right nullSubst
       it "QC: ∀ (Tyvar u, Type t): u `elem` tv t, u != tv t ===>  varBind u t == ⊥" $ property $
         forAll (genTypeNogen Star) $ \t ->
           let tvt = tv t
-           in length tvt > 1 ==> (varBind (head tvt) t :: Maybe Subst) `shouldBe` Nothing
+           in length tvt > 1 ==> evalLogger (varBind (head tvt) t) `shouldSatisfy` isLeft
       it "QC: ∀ (Tyvar tv, Type t): kind tv /= kind t  ===>  varBind tv t == ⊥" $ property $
         forAll arbitrary $ \k1 ->
         forAll arbitrary $ \k2 ->
         forAll (genTyvar k1) $ \tvar ->
         forAll (genTVar  k2) $ \ty ->
-          k1 /= k2 ==> (varBind tvar ty :: Maybe Subst) `shouldBe` Nothing
+          k1 /= k2 ==> evalLogger (varBind tvar ty) `shouldSatisfy` isLeft

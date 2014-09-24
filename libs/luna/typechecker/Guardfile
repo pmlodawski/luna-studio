@@ -21,21 +21,22 @@ guard :shell, :version => 2, :cli => "--color" do
         puts "                          ____  ____  ____  ____  ____\n                         (_  _)(  __)/ ___)(_  _)/ ___)\n                           )(   ) _) \\___ \\  )(  \\___ \\\n                          (__) (____)(____/ (__) (____/\n"
         puts "--------------------------------------------------------------------------------\n"
         system("rm -f luna-typechecker-tests.tix")
-        system("./dist/dist-sandbox-*/build/luna-typechecker-tests/luna-typechecker-tests --qc-max-success=5000 --print-cpu-time")
+        if system("./dist/dist-sandbox-*/build/luna-typechecker-tests/luna-typechecker-tests --qc-max-success=5000 --print-cpu-time")
         
-        # coverage
-        puts "--------------------------------------------------------------------------------\n"
-        puts "                  ___  __   _  _  ____  ____   __    ___  ____ \n                 / __)/  \\ / )( \\(  __)(  _ \\ / _\\  / __)(  __)\n                ( (__(  O )\\ \\/ / ) _)  )   //    \\( (_ \\ ) _)\n                 \\___)\\__/  \\__/ (____)(__\\_)\\_/\\_/ \\___/(____)\n"
-        puts "--------------------------------------------------------------------------------\n"
-        system("rm -rf hpc_report")
-        system("hpc markup luna-typechecker-tests --destdir=hpc_report --exclude=Main --exclude=Test.Luna.Typechecker.AST.TypeGen --exclude=Test.Luna.TypecheckerSpec --exclude=Test.Luna.Typechecker.UnificationSpec --exclude=Test.Luna.Typechecker.TypeclassesSpec --exclude=Test.Luna.Typechecker.TypeInferenceSpec --exclude=Test.Luna.Typechecker.TIMonadSpec --exclude=Test.Luna.Typechecker.SubstitutionsSpec --exclude=Test.Luna.Typechecker.HasKindSpec --exclude=Test.Luna.Typechecker.ContextReductionSpec --exclude=Test.Luna.Typechecker.BindingGroupsSpec --exclude=Test.Luna.Typechecker.AssumptionsSpec --exclude=Test.Luna.Typechecker.AmbiguitySpec --exclude=Test.Luna.Typechecker.AST.TypeSpec --exclude=Test.Luna.Typechecker.AST.TIDSpec --exclude=Test.Luna.Typechecker.AST.SchemeSpec --exclude=Test.Luna.Typechecker.AST.PatSpec --exclude=Test.Luna.Typechecker.AST.ModuleSpec --exclude=Test.Luna.Typechecker.AST.LitSpec --exclude=Test.Luna.Typechecker.AST.ExprSpec --exclude=Test.Luna.Typechecker.AST.AlternativesSpec")
+            # coverage
+            puts "--------------------------------------------------------------------------------\n"
+            puts "                  ___  __   _  _  ____  ____   __    ___  ____ \n                 / __)/  \\ / )( \\(  __)(  _ \\ / _\\  / __)(  __)\n                ( (__(  O )\\ \\/ / ) _)  )   //    \\( (_ \\ ) _)\n                 \\___)\\__/  \\__/ (____)(__\\_)\\_/\\_/ \\___/(____)\n"
+            puts "--------------------------------------------------------------------------------\n"
+            system("rm -rf hpc_report")
+            system("hpc markup luna-typechecker-tests --destdir=hpc_report --exclude=Main --exclude=Test.Luna.Typechecker.AST.TypeGen --exclude=Test.Luna.TypecheckerSpec --exclude=Test.Luna.Typechecker.UnificationSpec --exclude=Test.Luna.Typechecker.TypeclassesSpec --exclude=Test.Luna.Typechecker.TypeInferenceSpec --exclude=Test.Luna.Typechecker.TIMonadSpec --exclude=Test.Luna.Typechecker.SubstitutionsSpec --exclude=Test.Luna.Typechecker.HasKindSpec --exclude=Test.Luna.Typechecker.ContextReductionSpec --exclude=Test.Luna.Typechecker.BindingGroupsSpec --exclude=Test.Luna.Typechecker.AssumptionsSpec --exclude=Test.Luna.Typechecker.AmbiguitySpec --exclude=Test.Luna.Typechecker.AST.TypeSpec --exclude=Test.Luna.Typechecker.AST.TIDSpec --exclude=Test.Luna.Typechecker.AST.SchemeSpec --exclude=Test.Luna.Typechecker.AST.PatSpec --exclude=Test.Luna.Typechecker.AST.ModuleSpec --exclude=Test.Luna.Typechecker.AST.LitSpec --exclude=Test.Luna.Typechecker.AST.ExprSpec --exclude=Test.Luna.Typechecker.AST.AlternativesSpec")
 
 
-        # linting
-        puts "--------------------------------------------------------------------------------\n"
-        puts "                      __    __  __ _  ____  __  __ _   ___\n                     (  )  (  )(  ( \\(_  _)(  )(  ( \\ / __)\n                     / (_/\\ )( /    /  )(   )( /    /( (_ \\\n                     \\____/(__)\\_)__) (__) (__)\\_)__) \\___/\n"
-        puts "--------------------------------------------------------------------------------\n"
-        system("echo NOPE")
+            # linting
+            puts "--------------------------------------------------------------------------------\n"
+            puts "                      __    __  __ _  ____  __  __ _   ___\n                     (  )  (  )(  ( \\(_  _)(  )(  ( \\ / __)\n                     / (_/\\ )( /    /  )(   )( /    /( (_ \\\n                     \\____/(__)\\_)__) (__) (__)\\_)__) \\___/\n"
+            puts "--------------------------------------------------------------------------------\n"
+            system("pushd ..; hlint typechecker --report; popd")
+        end
     end
   end
 end 

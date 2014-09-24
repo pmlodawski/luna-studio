@@ -4,22 +4,23 @@ module Luna.Typechecker.Internal.Typeclasses (
     Pred(..),Qual(..),ClassEnv(..)
   ) where
 
-import Luna.Typechecker.AST.Type       (Type(..))
 
 import Luna.Typechecker.Substitutions  (Types(..))
 
 import Luna.Typechecker.AST.TID        (TID)
+import Luna.Typechecker.AST.Type       (Type(..))
 
+--import Luna.Typechecker.Internal.Logger
 
 import Data.List                       (intercalate,union,nubBy)
 import Data.Function                   (on)
-import Text.Printf                     (printf)
+import qualified Data.Map.Strict       as M
+
 import Control.DeepSeq
 
 import GHC.Generics
 
-
-
+import Text.Printf                     (printf)
 
 
 data Pred = IsIn TID Type
@@ -56,7 +57,7 @@ type Inst  = Qual Pred
 
 
 data ClassEnv = ClassEnv {
-                  classes :: TID -> Maybe Class,
+                  classes :: M.Map TID Class,
                   classesNames :: [(TID, Class)],
                   defaults :: [Type]
                 }

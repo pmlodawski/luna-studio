@@ -2,16 +2,21 @@ module Luna.Typechecker.TIMonad (
     TI(..), newTVar, freshInst, unify, getSubst, runTI, Instantiate(..)
   ) where
 
-import Luna.Typechecker.AST.Kind       (Kind)
-import Luna.Typechecker.AST.Scheme     (Scheme(..))
-import Luna.Typechecker.AST.TID        (enumTID)
-import Luna.Typechecker.AST.Type       (Type(..), Tyvar(..))
 
 import Luna.Typechecker.Substitutions  (Types(..),Subst,nullSubst,(@@))
 import Luna.Typechecker.Typeclasses    (Qual(..),Pred(..))
 import Luna.Typechecker.Unification    (mgu)
 
+import Luna.Typechecker.AST.Kind       (Kind)
+import Luna.Typechecker.AST.Scheme     (Scheme(..))
+import Luna.Typechecker.AST.TID        (enumTID)
+import Luna.Typechecker.AST.Type       (Type(..), Tyvar(..))
+
+import Luna.Typechecker.Internal.Logger
+
 import Control.Applicative             (Applicative(..))
+import Control.Monad.Trans             (lift)
+
 
 newtype TI a = TI (Subst -> Int -> (Subst, Int, a))
 
@@ -22,35 +27,30 @@ instance Monad TI where
                              (s',n',x) -> let TI gx = g x
                                            in gx s' n')
 
-instance Functor TI where
-  fmap = undefined 
 
-instance Applicative TI where
-  pure = undefined
-  (<*>) = undefined
 
 
 runTI :: TI a -> a
 runTI (TI f) = x
   where (_, _, x) = f nullSubst 0
 
-getSubst :: TI Subst
-getSubst = TI (\s n -> (s, n, s))
+getSubst :: TCLoggerT TI Subst
+getSubst = lift (TI (\s n -> (s, n, s)))
 
-unify :: Type -> Type -> TI ()
+unify :: Type -> Type -> TCLoggerT TI ()
 unify t1 t2 = do s <- getSubst
                  u <- mgu (apply s t1) (apply s t2)
                  extSubst u
 
-extSubst :: Subst -> TI ()
-extSubst s' = TI (\s n -> (s' @@ s, n, ()))
+extSubst :: Subst -> TCLoggerT TI ()
+extSubst s' = lift (TI (\s n -> (s' @@ s, n, ())))
 
 
-newTVar :: Kind -> TI Type
-newTVar k = TI (\s n -> let v = Tyvar (enumTID n) k
-                        in (s, n+1, TVar v))
+newTVar :: Kind -> TCLoggerT TI Type
+newTVar k = lift $ TI (\s n -> let v = Tyvar (enumTID n) k
+                                in (s, n+1, TVar v))
 
-freshInst :: Scheme -> TI (Qual Type)
+freshInst :: Scheme -> TCLoggerT TI (Qual Type)
 freshInst (Forall ks qt) = do ts <- mapM newTVar ks
                               return (inst ts qt)
 

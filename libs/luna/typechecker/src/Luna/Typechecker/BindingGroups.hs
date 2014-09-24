@@ -7,6 +7,7 @@ import Luna.Typechecker.AST.Kind         (Kind(..))
 import Luna.Typechecker.AST.Lit          (Lit(..),tiLit)
 import Luna.Typechecker.AST.Pat          (Pat, tiPats)
 import Luna.Typechecker.AST.Scheme       (Scheme, quantify, toScheme)
+import Luna.Typechecker.AST.TID          (TID)
 import Luna.Typechecker.AST.Type         (Type(..), fn)
 
 import Luna.Typechecker.Assumptions      (Assump(..),find)
@@ -15,10 +16,9 @@ import Luna.Typechecker.TIMonad          (TI, freshInst, getSubst, newTVar, unif
 import Luna.Typechecker.Typeclasses      (ClassEnv, Pred(..), Qual(..), entail)
 import Luna.Typechecker.TypeInference    (Infer, split)
 
-import Luna.Typechecker.AST.TID          (TID)
+import Luna.Typechecker.Internal.Logger
 
-
-import Control.Monad                     (zipWithM)
+import Control.Monad                     (filterM,zipWithM)
 
 import Data.List                         ((\\), intersect, union)
 
@@ -65,7 +65,7 @@ tiAlt ce as (pats, e) = do (ps, as', ts) <- tiPats pats
                            (qs, t)       <- tiExpr ce (as' ++ as) e
                            return (ps ++ qs, foldr fn t ts)
 
-tiAlts :: ClassEnv -> [Assump] -> [Alt] -> Type -> TI [Pred]
+tiAlts :: ClassEnv -> [Assump] -> [Alt] -> Type -> TCLoggerT TI [Pred]
 tiAlts ce as alts t = do psts <- mapM (tiAlt ce as) alts
                          mapM_ (unify t . snd) psts
                          return (concatMap fst psts)
@@ -77,7 +77,7 @@ type Expl = (TID, Scheme, [Alt])
 type Impl = (TID, [Alt])
 
 
-tiExpl :: ClassEnv -> [Assump] -> Expl -> TI [Pred]
+tiExpl :: ClassEnv -> [Assump] -> Expl -> TCLoggerT TI [Pred]
 tiExpl ce as (_, sc, alts) = do (qs :=> t) <- freshInst sc
                                 ps         <- tiAlts ce as alts t
                                 s          <- getSubst
@@ -86,12 +86,16 @@ tiExpl ce as (_, sc, alts) = do (qs :=> t) <- freshInst sc
                                     fs  = tv (apply s as)
                                     gs  = tv t' \\ fs
                                     sc' = quantify gs (qs' :=> t')
-                                    ps' = filter (not . entail ce qs') (apply s ps)
+                                       --Monad m => (Pred -> LoggerT String TI Bool) -> [Pred] -> LoggerT String TI [Pred]
+                                ps' <- filterM (\p -> do ttt <- entail ce qs p
+                                                         return (not ttt))
+                                               (apply s ps)
+                                    --ps' = filter (not . entail ce qs') (apply s ps)
                                 (ds, rs) <- split ce fs gs ps'
                                 if sc /= sc' then
-                                    fail "signature too general "
+                                    throwError "signature too general "
                                   else if not (null rs) then
-                                    fail "context too weak"
+                                    throwError "context too weak"
                                   else
                                     return ds
 

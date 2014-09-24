@@ -1,16 +1,26 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Test.Luna.Typechecker.TIMonadSpec (spec) where
-import Luna.Typechecker.AST.Kind
-import Luna.Typechecker.AST.Scheme
-import Luna.Typechecker.AST.Type
+
 import Luna.Typechecker.TIMonad
 import Luna.Typechecker.Typeclasses
 
-import Test.Luna.Typechecker.AST.TypeGen (genTypeNogen,genPredNogen)
+import Luna.Typechecker.AST.Kind
+import Luna.Typechecker.AST.Scheme
+import Luna.Typechecker.AST.Type
+
+--import Luna.Typechecker.Internal.Logger -- evalLogger
+--import Data.Either                      (isLeft)
+
+import Luna.Typechecker.Internal.Logger
+
+import Data.Either                       (isLeft)
 
 import Test.Hspec
 import Test.QuickCheck
+
+import Test.Luna.Typechecker.AST.TypeGen (genTypeNogen,genPredNogen)
+
 
 spec :: Spec
 spec = do
@@ -19,21 +29,21 @@ spec = do
     it "works for simple types [QC]" $ property $ 
       forAll (genTypeNogen Star) $ \t -> do
         let qt = [] :=> t
-            x  = runTI $ freshInst (Forall [] qt)
+            Right x  = runTI $ evalLoggerT $ freshInst (Forall [] qt)
         x `shouldBe` qt
 
     it "works with one predicate" $ do
       let a  = TVar $ Tyvar "a" Star
           ps = [ IsIn "Integral" a ]
           qt = ps :=> (a `fn` a)
-          x  = runTI $ freshInst (Forall [] qt)
+          Right x  = runTI $ evalLoggerT $ freshInst (Forall [] qt)
       x `shouldBe` qt
 
     it "works with one predicate and one gen-var" $ do
       let a  = TGen 0
           ps = [ IsIn "Integral" a ]
           qt = ps :=> (a `fn` a)
-          ([IsIn "Integral" t'] :=> t'') = runTI $ freshInst (Forall [Star] qt)
+          Right ([IsIn "Integral" t'] :=> t'') = runTI $ evalLoggerT $ freshInst (Forall [Star] qt)
       t'' `shouldBe` (t' `fn` t')
 
   describe "(internals)" $
