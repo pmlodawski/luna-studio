@@ -4,16 +4,21 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.Cache.Cache where
 
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
 
+import           Flowbox.Control.Error
 import           Flowbox.Data.MapForest                      (MapForest)
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude
+import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
+import qualified Luna.Interpreter.Session.Cache.Free         as Free
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo (CacheInfo))
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
 import           Luna.Interpreter.Session.Cache.Status       (CacheStatus)
@@ -27,6 +32,7 @@ import           Luna.Interpreter.Session.Data.Hash          (Hash)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName       as VarName
 import qualified Luna.Interpreter.Session.Env                as Env
+import qualified Luna.Interpreter.Session.Error              as Error
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 
@@ -94,7 +100,7 @@ onCacheInfo f alternative callPointPath =
 put :: CallDataPath -> [VarName] -> VarName -> Session ()
 put callDataPath predVarNames varName = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-    mcacheInfo <- lookupCacheInfo callPointPath
+    mcacheInfo <- lookupCacheInfoMaybe callPointPath
     oldStatus  <- status callPointPath
     let updatedStatus = if oldStatus == CacheStatus.NonCacheable
                             then oldStatus
@@ -109,12 +115,32 @@ put callDataPath predVarNames varName = do
 
 
 delete :: CallPointPath -> Session ()
-delete callPointPath = modify $ Env.cached %~ MapForest.delete callPointPath
+delete callPointPath = do
+    logger info $ "Cleaning cached value: " ++ show callPointPath
+    cacheInfo <- lookupCacheInfo callPointPath
+    delete' (callPointPath, cacheInfo)
+
+
+delete' :: (CallPointPath, CacheInfo) -> Session ()
+delete' (callPointPath, cacheInfo) = do
+    Free.freeCacheInfo cacheInfo
+    modify $ Env.cached %~ MapForest.delete callPointPath
+
+
+deleteAll :: Session ()
+deleteAll = do
+    logger info "Cleaning all cached values"
+    mapM_ delete' =<< MapForest.toList <$> cached
 
 
 cached :: Session (MapForest CallPoint CacheInfo)
 cached = gets (view Env.cached)
 
 
-lookupCacheInfo :: CallPointPath -> Session (Maybe CacheInfo)
-lookupCacheInfo callPointPath = MapForest.lookup callPointPath <$> cached
+lookupCacheInfoMaybe :: CallPointPath -> Session (Maybe CacheInfo)
+lookupCacheInfoMaybe callPointPath = MapForest.lookup callPointPath <$> cached
+
+
+lookupCacheInfo :: CallPointPath -> Session CacheInfo
+lookupCacheInfo callPointPath = lookupCacheInfoMaybe callPointPath
+    <??&> Error.CacheError $(loc) (concat ["Object ", show callPointPath, " is not in cache."])

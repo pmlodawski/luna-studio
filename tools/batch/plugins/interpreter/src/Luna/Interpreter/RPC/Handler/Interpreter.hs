@@ -33,8 +33,8 @@ import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Reque
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update  as WatchPointRemove
 import           Luna.Interpreter.Proto.CallPointPath                              ()
 import           Luna.Interpreter.Proto.DefPoint                                   ()
+import qualified Luna.Interpreter.RPC.Handler.Cache                                as Cache
 import           Luna.Interpreter.RPC.Handler.Lift
-import qualified Luna.Interpreter.RPC.Handler.Modify                               as Modify
 import qualified Luna.Interpreter.RPC.Handler.Sync                                 as Sync
 import qualified Luna.Interpreter.Session.AST.Executor                             as Executor
 import qualified Luna.Interpreter.Session.AST.WatchPoint                           as WatchPoint
@@ -57,7 +57,8 @@ setProjectID :: SetProjectID.Request -> RPC Context SessionST SetProjectID.Updat
 setProjectID request@(SetProjectID.Request tprojectID) = do
     liftSession $ Session.setProjectID $ decodeP tprojectID
     Sync.syncLibManager
-    Modify.modifyAll tprojectID
+    Cache.deleteAll tprojectID
+    Cache.modifyAll tprojectID
     return $ SetProjectID.Update request
 
 

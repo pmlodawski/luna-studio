@@ -22,6 +22,7 @@ import           Flowbox.System.Log.Logger
 import qualified Luna.Graph.Node                            as Node
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
+import qualified Luna.Interpreter.Session.Cache.Free        as Free
 import qualified Luna.Interpreter.Session.Cache.Invalidate  as Invalidate
 import qualified Luna.Interpreter.Session.Cache.Status      as CacheStatus
 import qualified Luna.Interpreter.Session.Cache.Value       as Value
@@ -110,7 +111,7 @@ execute callDataPath functionName argsVarNames = do
             if varName /= prevVarName
                 then if boundVarName /= Just varName
                     then do logger debug "processing modified node - result value differs"
-                            mapM_ freeVarName boundVarName
+                            mapM_ Free.freeVarName boundVarName
                             Invalidate.markSuccessors callDataPath CacheStatus.Modified
 
                     else do logger debug "processing modified node - result value differs but is cached"
@@ -194,7 +195,3 @@ evalFunction funName callDataPath argsVarNames = do
         Cache.put callDataPath argsVarNames varName
         Value.report callPointPath varName
         return (hash, varName)
-
-
-freeVarName :: VarName -> Session ()
-freeVarName varName = Session.runAssignment varName "()"
