@@ -8,6 +8,8 @@
 
 module Flowbox.Batch.Handler.Graph where
 
+import Control.Monad (forM_)
+
 import           Flowbox.Batch.Batch            (Batch)
 import qualified Flowbox.Batch.Handler.Common   as Batch
 import qualified Flowbox.Batch.Project.Project  as Project
@@ -71,12 +73,13 @@ updateNodeInPlace (nodeID, newNode) bc libID projectID = Batch.graphViewOp bc li
     return ((newGraph, propertyMap), ()))
 
 
-removeNode :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-removeNode nodeID bc libID projectID = do
+
+removeNodes :: [Node.ID] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+removeNodes nodeIDs bc libID projectID = do
     (graph, propertyMap) <- Batch.getGraphView bc libID projectID
-    GraphView.gelem nodeID graph `assertE` ("Wrong 'nodeID' = " ++ show nodeID)
-    let newGraph = GraphView.delNode nodeID graph
-        newPropertyMap = PropertyMap.delete nodeID propertyMap
+    forM_ nodeIDs (\nodeID -> GraphView.gelem nodeID graph `assertE` ("Wrong 'nodeID' = " ++ show nodeID))
+    let newGraph = GraphView.delNodes nodeIDs graph
+        newPropertyMap = foldl (flip PropertyMap.delete) propertyMap nodeIDs
     Batch.setGraphView (newGraph, newPropertyMap) bc libID projectID
     Batch.safeInterpretLibrary libID projectID
 
