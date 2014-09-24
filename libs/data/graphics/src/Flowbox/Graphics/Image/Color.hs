@@ -200,14 +200,14 @@ type Mat4x4 a = (Vec4 a, Vec4 a, Vec4 a, Vec4 a)
 
 type family ColorMatrix (colorspace :: * -> *) t :: *
 
-type instance ColorMatrix CMY    t = Mat3x3 t
-type instance ColorMatrix CMYK   t = Mat4x4 t
-type instance ColorMatrix HSL    t = Mat3x3 t
-type instance ColorMatrix HSV    t = Mat3x3 t
-type instance ColorMatrix RGB    t = Mat3x3 t
-type instance ColorMatrix RGBA   t = Mat4x4 t
-type instance ColorMatrix YUV    t = Mat3x3 t
-type instance ColorMatrix YUV_HD t = Mat3x3 t
+type instance ColorMatrix CMY      t = Mat3x3 t
+type instance ColorMatrix CMYK     t = Mat4x4 t
+type instance ColorMatrix HSL      t = Mat3x3 t
+type instance ColorMatrix HSV      t = Mat3x3 t
+type instance ColorMatrix RGB      t = Mat3x3 t
+type instance ColorMatrix RGBA     t = Mat4x4 t
+type instance ColorMatrix YCbCr    t = Mat3x3 t
+type instance ColorMatrix YCbCr_HD t = Mat3x3 t
 
 -- | Multiplies given matrix by colour.
 --   Matrix needs to be in a row major order and n x n size, where n is a number
@@ -242,10 +242,10 @@ instance MatrixMultiplication RGB where
 instance MatrixMultiplication RGBA where
     mmult = mul4x4
 
-instance MatrixMultiplication YUV where
+instance MatrixMultiplication YCbCr where
     mmult = mul3x3
 
-instance MatrixMultiplication YUV_HD where
+instance MatrixMultiplication YCbCr_HD where
     mmult = mul3x3
 
 mul3x3 :: (IsTuple (a (Exp t)), Elt t, IsNum t, TupleRepr (a (Exp t)) ~ TupleRepr (Vec3 t)) => Mat3x3 t -> a (Exp t) -> a (Exp t)
