@@ -18,8 +18,6 @@ import Luna.Typechecker.Internal.Logger
 
 import Control.Exception
 
-import Data.Either                      (isLeft)
-
 import Test.Hspec
 
 import Test.Luna.Common
@@ -129,9 +127,9 @@ spec = do
                           ) initialEnv)
           f = TVar $ Tyvar "f" Star
           a = TVar $ Tyvar "a" Star
-      (evalLogger $ candidates ce (Tyvar "a" Star, [IsIn "Ord" (TAp f a)])) `shouldBe` Right []
-      (evalLogger $ candidates ce (Tyvar "a" Star, [IsIn "Integral" a])) `shouldBe` Right [tInteger]
-      (evalLogger $ candidates ce (Tyvar "a" Star, [IsIn "Integral" a, IsIn "LOLOLOL" a])) `shouldBe` Right []
+      evalLogger (candidates ce (Tyvar "a" Star, [IsIn "Ord" (TAp f a)])               ) `shouldBe` Right []
+      evalLogger (candidates ce (Tyvar "a" Star, [IsIn "Integral" a])                  ) `shouldBe` Right [tInteger]
+      evalLogger (candidates ce (Tyvar "a" Star, [IsIn "Integral" a, IsIn "LOLOLOL" a])) `shouldBe` Right []
 
 
   describe "fighting monomorphism restriction" $

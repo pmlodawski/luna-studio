@@ -25,7 +25,7 @@ matchPred :: (Monad m) => Pred -> Pred -> TCLoggerT m Subst
 matchPred = liftPred match
 
 liftPred :: (Monad m) => (Type -> Type -> TCLoggerT m a) -> Pred -> Pred -> TCLoggerT m a
-liftPred mf (IsIn i t) (IsIn i' t') = do
+liftPred mf (IsIn i t) (IsIn i' t') =
   if i == i'
     then mf t t'
     else throwError "classes differ"
@@ -73,7 +73,7 @@ defined = isFine
 
 addClass :: (Monad m) => TID -> [TID] -> EnvTransformer m
 addClass i is ce | M.member i (classes ce)                = throwError "class is already defined"
-                 | any (flip M.notMember (classes ce)) is = throwError "superclass not defined"
+                 | any (`M.notMember` classes ce) is = throwError "superclass not defined"
                  | otherwise                              = return (modify ce i (is, []))
 
 addInst :: (Monad m) => [Pred] -> Pred -> EnvTransformer m

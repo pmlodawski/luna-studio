@@ -9,11 +9,16 @@ module Logger (
     isFail, isFine
   ) where
 
+
 import Data.Either            (isLeft,isRight)
 import Data.Monoid            (Monoid(..))
+
 import Data.Functor.Identity  (Identity,runIdentity)
-import Control.Applicative    (Applicative(..))
+
+import Control.Applicative    (Applicative(..),Alternative(..))
+
 import Control.Monad          (MonadPlus(..),ap,join,liftM)
+
 import Control.Monad.Error    (MonadError(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.Trans    (MonadTrans(..))
@@ -66,9 +71,13 @@ instance (Monad m, Show e) => MonadError e (LoggerT e m) where
       Left l -> runLoggerT $ handler l
       _      -> return (mres, s)
 
+instance (Monad m, Show e, Monoid e) => Alternative (LoggerT e m) where
+  empty = mzero
+  (<|>) = mplus
+
 instance (Monad m, Show e, Monoid e) => MonadPlus (LoggerT e m) where
   mzero = LoggerT $ return (Left mempty, [])
-  mplus ma mb = ma `catchError` (\_ -> mb)
+  mplus ma mb = ma `catchError` const mb
 
 
 isFine :: (Monad m) => LoggerT e m a -> LoggerT e m Bool
@@ -82,7 +91,7 @@ isFail logger = LoggerT $ do
   return (Right (isLeft ma), s)
 
 evalLoggerT :: (Monad m) => LoggerT e m a -> m (Either e a)
-evalLoggerT logger = runLoggerT logger >>= return . fst
+evalLoggerT = liftM fst . runLoggerT
 
 runLogger :: Logger e a -> (Either e a, [Log e])
 runLogger = runIdentity . runLoggerT
@@ -96,7 +105,7 @@ formatStack fulldebug = concatMap (printStack 0)
         printStack n (CallResult str (Just a) stck2) = concat
           [ indent n
           , "CALL: "++str++" … -> "++show a++"\n"
-          , if fulldebug then (concatMap (printStack $ n+1) stck2) else ""
+          , if fulldebug then concatMap (printStack $ n+1) stck2 else ""
           ]
         printStack n (CallResult str Nothing stck2) = concat
           [ indent n
@@ -131,7 +140,7 @@ formatStack fulldebug = concatMap (printStack 0)
           , str
           , "\n"
           ]
-        indent n = if (n>0)
+        indent n = if n>0
                  then join (replicate (n-1) "    ") ++ "  - "
                  else ""
 
@@ -153,43 +162,3 @@ trace s = LoggerT $ return (Right (), [Log s])
 err :: (Show e, Monad m) => e -> String -> LoggerT e m ()
 err e s = LoggerT $ return (Left e, [Error s])
 
-
-
-
-
---main = do
---  --let (mres, s) = runIdentity $ runLoggerT test1
---  --putStrLn $ formatStack True s
---  (mres', s') <- runLoggerT test1
---  putStrLn $ formatStack True s'
-
---test1 :: LoggerT Bool IO Int
---test1 = function "test1" $ do
---  liftIO $ print "DUPA!!!"
---  trace "przed startem test2"
---  x <- test2 100
---  trace "po starcie test2"
---  trace "startuję test2 drugi raz!"
---  y <- test2 200
---  trace "udało się!"
---  liftIO $ print "DUPA 2 ??"
---  trace "to teraz może test3?"
---  z <- test3
---  trace "nie powinno było się udać ;_;"
---  liftIO $ print "DUPA 3 !!!"
---  return (x+y+z)
-
---test2 i = function "test2" $ do
---  trace $ "test2 z argumentem " ++ show i
---  return (i + 1000)
-
---test3 = function "test3" $ do
---  trace "przed startem test4"
---  x <- test4 100 --`catchError` (\_ -> return 200)
---  trace "po starcie test4"
---  return x
-
---test4 i = function "test4" $ do
---  throwError False
---  err False $ "błąd gdyż ponieważ " ++ show i
---  return (i - 1000)

@@ -15,11 +15,20 @@ import Luna.Typechecker.AST.Type       (Type(..), Tyvar(..))
 import Luna.Typechecker.Internal.Logger
 
 import Control.Applicative             (Applicative(..))
+import Control.Monad                   (ap)
+
 import Control.Monad.Trans             (lift)
 
 
 newtype TI a = TI (Subst -> Int -> (Subst, Int, a))
 
+
+instance Functor TI where
+  fmap f (TI sia) = TI $ \s i -> let (s', i', a') = sia s i in (s', i', f a')
+
+instance Applicative TI where
+  pure = return
+  (<*>) = ap
 
 instance Monad TI where
   return x   = TI (\s n -> (s,n,x))

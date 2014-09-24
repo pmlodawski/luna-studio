@@ -9,10 +9,7 @@ import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Internal.Logger
 
-import Control.Exception
-
-import Data.Either                       (isLeft)
-import Data.Functor.Identity             (runIdentity)
+import Data.Either                      (isLeft)
 
 import Test.Hspec
 
@@ -21,17 +18,17 @@ spec :: Spec
 spec = do
   describe "inHnf" $
     it "verifies the result" $ do
-      (evalLogger $ inHnf (IsIn "anything" (TVar $ Tyvar "a" Star))) `shouldBe` Right True
-      (evalLogger $ inHnf (IsIn "anything" (TCon $ Tycon "Int" Star))) `shouldBe` Right False
-      (evalLogger $ inHnf (IsIn "anything" (list (TCon $ Tycon "Int" Star)))) `shouldBe` Right False
-      (evalLogger $ inHnf (IsIn "anything" (list (TVar $ Tyvar "a" Star)))) `shouldBe` Right False
-      (evalLogger $ inHnf (IsIn "anything" (TAp (TVar $ Tyvar "m" Star) (TCon $ Tycon "Int" Star)))) `shouldBe` Right True
-      (evalLogger $ (inHnf (IsIn "anything" (TGen 0)))) `shouldSatisfy` isLeft
+      evalLogger (inHnf (IsIn "anything" (TVar $ Tyvar "a" Star))                                ) `shouldBe` Right True
+      evalLogger (inHnf (IsIn "anything" (TCon $ Tycon "Int" Star))                              ) `shouldBe` Right False
+      evalLogger (inHnf (IsIn "anything" (list (TCon $ Tycon "Int" Star)))                       ) `shouldBe` Right False
+      evalLogger (inHnf (IsIn "anything" (list (TVar $ Tyvar "a" Star)))                         ) `shouldBe` Right False
+      evalLogger (inHnf (IsIn "anything" (TAp (TVar $ Tyvar "m" Star) (TCon $ Tycon "Int" Star)))) `shouldBe` Right True
+      evalLogger (inHnf (IsIn "anything" (TGen 0))                                               ) `shouldSatisfy` isLeft
   describe "toHnf" $ do
     it "works for bad input" $ do
       let Right ce = evalLogger ((     addClass "Eq" []
-                      <:> addInst [] (IsIn "Eq" tBool))
-                    initialEnv)
+                                <:> addInst [] (IsIn "Eq" tBool))
+                              initialEnv)
           res = evalLogger (toHnf initialEnv (IsIn "anything" (TCon $ Tycon "Int" Star)))
           res2 = evalLogger (toHnf ce (IsIn "Eq" tBool))
           res3 = evalLogger (toHnf ce (IsIn "Eq" tInt))

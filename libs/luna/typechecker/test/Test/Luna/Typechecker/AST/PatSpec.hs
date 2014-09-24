@@ -15,8 +15,7 @@ import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Internal.Logger
 
-import Data.Either                      (isLeft, isRight)
-import Data.Maybe
+import Data.Either                      (isRight)
 
 import Test.Hspec
 
@@ -52,7 +51,7 @@ spec = do
           getall = do res <- tiPat v
                       s' <- getSubst
                       return (res, s')
-          Right ((ps, as, TVar t), s) = runTI $ evalLoggerT $ getall
+          Right ((ps, as, TVar t), s) = runTI $ evalLoggerT getall
           Just (Forall [] ([] :=> x'))  = find "x"  as
           Just (Forall [] ([] :=> xs')) = find "xs" as
           Just (Forall [] ([] :=> lel')) = find "lel" as

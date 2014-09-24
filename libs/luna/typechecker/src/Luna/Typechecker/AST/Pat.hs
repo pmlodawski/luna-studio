@@ -15,8 +15,6 @@ import Luna.Typechecker.AST.Internal.Pat (Pat(..))
 
 import Luna.Typechecker.Internal.Logger
 
-import Control.Monad.Trans               (lift)
-
 
 tiPat :: Pat -> TCLoggerT TI ([Pred], [Assump], Type)
 tiPat (PVar i)    = do v <- newTVar Star
