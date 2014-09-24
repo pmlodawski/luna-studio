@@ -116,8 +116,9 @@ nodeMapLookup key = do
 getNodeSrcs :: Node.ID -> GPPass [Expr]
 getNodeSrcs nodeID = do
     g <- getGraph
-    let processEdge (pNID, _, Edge.Data s d) = Just (d, (pNID, s))
-        processEdge (_   , _, Edge.Monadic ) = Nothing
+    let processEdge (pNID, _, Edge.Data s Port.All) = Just (Port.Num 0, (pNID, s))
+        processEdge (pNID, _, Edge.Data s d       ) = Just (d, (pNID, s))
+        processEdge (_   , _, Edge.Monadic        ) = Nothing
 
         connectedMap = Map.fromList
                      $ Maybe.mapMaybe processEdge
