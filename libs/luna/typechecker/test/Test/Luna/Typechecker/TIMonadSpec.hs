@@ -27,21 +27,21 @@ spec = do
     it "works for simple types [QC]" $ property $ 
       forAll (genTypeNogen Star) $ \t -> do
         let qt = [] :=> t
-            Right x  = runTI $ evalLoggerT $ freshInst (Forall [] qt)
+            Right x  = startTI $ evalLoggerT $ freshInst (Forall [] qt)
         x `shouldBe` qt
 
     it "works with one predicate" $ do
       let a  = TVar $ Tyvar "a" Star
           ps = [ IsIn "Integral" a ]
           qt = ps :=> (a `fn` a)
-          Right x  = runTI $ evalLoggerT $ freshInst (Forall [] qt)
+          Right x  = startTI $ evalLoggerT $ freshInst (Forall [] qt)
       x `shouldBe` qt
 
     it "works with one predicate and one gen-var" $ do
       let a  = TGen 0
           ps = [ IsIn "Integral" a ]
           qt = ps :=> (a `fn` a)
-          Right ([IsIn "Integral" t'] :=> t'') = runTI $ evalLoggerT $ freshInst (Forall [Star] qt)
+          Right ([IsIn "Integral" t'] :=> t'') = startTI $ evalLoggerT $ freshInst (Forall [Star] qt)
       t'' `shouldBe` (t' `fn` t')
 
   describe "(internals)" $

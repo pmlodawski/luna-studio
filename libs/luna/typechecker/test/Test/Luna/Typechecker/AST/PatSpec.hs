@@ -25,21 +25,21 @@ spec = do
   describe "tiPat" $ do
     it "just works for PVar" $ do
       let v = PVar "lel"
-          Right (ps, as, TVar t) = runTI $ evalLoggerT $ tiPat v
+          Right (ps, as, TVar t) = startTI $ evalLoggerT $ tiPat v
       ps `shouldBe` []
       as `shouldContain` ["lel" :>: toScheme (TVar t)]
       evalLogger (kind t) `shouldBe` Right Star
 
     it "just works for PWildcard" $ do
       let v = PWildcard
-          Right (ps, as, TVar t) = runTI $ evalLoggerT $  tiPat v
+          Right (ps, as, TVar t) = startTI $ evalLoggerT $  tiPat v
       ps `shouldBe` []
       as `shouldContain` []
       evalLogger (kind t) `shouldBe` Right Star
 
     it "just works for PAs+PVar" $ do
       let v = PAs "lel" (PVar "lol")
-          Right (ps, as, TVar t) = runTI $ evalLoggerT $  tiPat v
+          Right (ps, as, TVar t) = startTI $ evalLoggerT $  tiPat v
       ps `shouldBe` []
       as `shouldContain` ["lel" :>: toScheme (TVar t)]
       as `shouldContain` ["lol" :>: toScheme (TVar t)]
@@ -51,7 +51,7 @@ spec = do
           getall = do res <- tiPat v
                       s' <- getSubst
                       return (res, s')
-          Right ((ps, as, TVar t), s) = runTI $ evalLoggerT getall
+          Right ((ps, as, TVar t), s) = startTI $ evalLoggerT getall
           Right (Forall [] ([] :=> x'))   = evalLogger $ find "x"   as
           Right (Forall [] ([] :=> xs'))  = evalLogger $ find "xs"  as
           Right (Forall [] ([] :=> lel')) = evalLogger $ find "lel" as
@@ -65,21 +65,21 @@ spec = do
 
     it "just works for PLit+LitChar" $ do
       let v = PLit (LitChar 'l')
-          Right (ps, as, tChar') = runTI $ evalLoggerT $ tiPat v
+          Right (ps, as, tChar') = startTI $ evalLoggerT $ tiPat v
       tChar' `shouldBe` tChar
       ps `shouldBe` []
       as `shouldBe` []
 
     it "just works for PLit+LitIntegral" $ do
       let v = PLit (LitIntegral 123)
-          Right (ps, as, t) = runTI $ evalLoggerT $ tiPat v
+          Right (ps, as, t) = startTI $ evalLoggerT $ tiPat v
       ps `shouldContain` [IsIn "Integral" t]
       as `shouldBe` []
 
     it "just works for PCon" $ do
       let v = PCon ("(:)":>:cons_type) [PVar "x", PVar "xs"]
           cons_type = Forall [Star] ([] :=> (TGen 0 `fn` list (TGen 0) `fn` list (TGen 0)))
-          Right (ps, as, TVar t) = runTI $ evalLoggerT $ tiPat v
+          Right (ps, as, TVar t) = startTI $ evalLoggerT $ tiPat v
           Right (Forall [] ([] :=> x))  = evalLogger $ find "x"  as
           Right (Forall [] ([] :=> xs)) = evalLogger $ find "xs" as
       ps `shouldBe` []
