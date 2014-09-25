@@ -61,7 +61,7 @@ handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
     , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove)
     , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList  )
     , (Topic.interpreterValueRequest           , respond Topic.update Value.get                   )
-    , (Topic.interpreterPingRequest            , respond Topic.update Interpreter.ping            )
+    , (Topic.interpreterPingRequest            , respond Topic.status Interpreter.ping            )
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
