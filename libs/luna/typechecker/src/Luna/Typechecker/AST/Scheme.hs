@@ -19,13 +19,6 @@ quantify vs qt = do ks <- mapM kind vs'
                     return (Forall ks (apply s qt))
   where vs' = [v | v <- tv qt, v `elem` vs]
         s   = zip vs' (map TGen [0..])
---quantify vs qt = Forall ks (apply s qt)
---  where vs' = [v | v <- tv qt, v `elem` vs]
---        ks  = map kind vs'
---        s   = zip vs' (map TGen [0..])
 
 toScheme :: Type -> Scheme
 toScheme t = Forall [] ([] :=> t)
-
-
-

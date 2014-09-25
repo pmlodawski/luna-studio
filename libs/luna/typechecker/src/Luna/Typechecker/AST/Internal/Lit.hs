@@ -4,8 +4,8 @@ module Luna.Typechecker.AST.Internal.Lit (
     Lit(..)
   ) where
 
-import Text.Printf                                (printf)
 
+import Text.Printf                                (printf)
 
 
 data Lit = LitChar     Char
@@ -13,7 +13,6 @@ data Lit = LitChar     Char
          | LitInt      Integer
          | LitIntegral Int
          | LitStr      String
-
 
 
 instance Show Lit where

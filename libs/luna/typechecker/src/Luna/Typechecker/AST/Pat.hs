@@ -2,6 +2,7 @@ module Luna.Typechecker.AST.Pat (
     tiPat, Pat(..), tiPats
   ) where
 
+
 import Luna.Typechecker.Assumptions      (Assump(..))
 import Luna.Typechecker.TIMonad          (TI, freshInst, unify, newTVar)
 import Luna.Typechecker.Typeclasses      (Pred(..), Qual(..))

@@ -22,7 +22,6 @@ type Ambiguity = (Tyvar, [Pred])
 ambiguities :: ClassEnv -> [Tyvar] -> [Pred] -> [Ambiguity]
 ambiguities _ vs ps = [(v, filter (elem v . tv) ps) | v <- tv ps \\ vs]
 
-
 numClasses :: [TID]
 numClasses = ["Num", "Integral", "Floating", "Fractional", "Real", "RealFloat", "RealFrac"]
 
@@ -36,7 +35,8 @@ candidates ce (v, qs) = do
   if    all (TVar v ==) ts         &&
         any (`elem` numClasses) is &&
         all (`elem` stdClasses) is
-    then filterM (\t' -> liftM and $ mapM (entail ce []) [IsIn i t' | i <- is]) (defaults ce)
+    then filterM (\t' -> liftM and $ mapM (entail ce []) [IsIn i t' | i <- is])
+                 (defaults ce)
     else return []
 
 withDefaults :: (Monad m) => ([Ambiguity] -> [Type] -> TCLoggerT m a) -> ClassEnv -> [Tyvar] -> [Pred] -> TCLoggerT m a
