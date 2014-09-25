@@ -1,5 +1,5 @@
 module Luna.Typechecker.TIMonad (
-    TI(..), newTVar, freshInst, unify, getSubst, runTI, Instantiate(..)
+    TI(..),newTVar,freshInst,unify,getSubst,startTI,Instantiate(..)
   ) where
 
 
@@ -20,7 +20,7 @@ import Control.Monad                    (ap)
 import Control.Monad.Trans              (lift)
 
 
-newtype TI a = TI (Subst -> Int -> (Subst, Int, a))
+newtype TI a = TI { runTI :: Subst -> Int -> (Subst, Int, a) }
 
 
 instance Functor TI where
@@ -37,8 +37,8 @@ instance Monad TI where
                                            in gx s' n')
 
 
-runTI :: TI a -> a
-runTI (TI f) = x
+startTI :: TI a -> a
+startTI (TI f) = x
   where (_, _, x) = f nullSubst 0
 
 getSubst :: TCLoggerT TI Subst

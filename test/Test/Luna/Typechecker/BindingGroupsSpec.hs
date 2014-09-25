@@ -31,11 +31,11 @@ spec = do
     it "fails for too weak contexts" $ do
       let inf       = tiExpl ceEq [eqBG^.asmp] ("lel", lel_type, [(lel_pat1, lel_body1)])
           lel_type  = Forall [Star] ([] :=> (TGen 0 `fn` tBool))
-      runTI (evalLoggerT inf) `shouldSatisfy` isLeft
+      startTI (evalLoggerT inf) `shouldSatisfy` isLeft
     it "fails for too general signatures" $ do
       let inf       = tiExpl ceEq [eqBG^.asmp] ("lel", lel_type, [(lel_pat1, lel_body1)])
           lel_type  = Forall [Star, Star] ([] :=> (TGen 0 `fn` TGen 1))
-      runTI (evalLoggerT inf) `shouldSatisfy` isLeft
+      startTI (evalLoggerT inf) `shouldSatisfy` isLeft
 
   describe "tiExpr" $
     it "recurses into let" $
@@ -106,7 +106,7 @@ spec = do
                 )
 
 
-          Right (ps, t@(TVar (Tyvar _ t_kind))) = runTI $ evalLoggerT $ tiExpr ce as (Let bg2 (Var "pie2"))
+          Right (ps, t@(TVar (Tyvar _ t_kind))) = startTI $ evalLoggerT $ tiExpr ce as (Let bg2 (Var "pie2"))
        in do
         t_kind `shouldBe` Star
         ps `shouldContain` [IsIn "Integral" t]

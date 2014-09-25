@@ -2,7 +2,7 @@ module Test.Luna.Typechecker.TypeInferenceSpec (spec) where
 
 
 import Luna.Typechecker.TypeInference
-import Luna.Typechecker.TIMonad         (runTI)
+import Luna.Typechecker.TIMonad         (startTI)
 import Luna.Typechecker.Typeclasses
 
 import Luna.Typechecker.AST.Kind
@@ -39,7 +39,7 @@ spec = do
           fixvars = []
           toquant = [type01]
           predics = [IsIn "ClassA" tInt, IsIn "ClassC" tInt, IsIn "ClassC" (TVar type01)]
-          (Right (deferred, retained), _) = runTI $ runLoggerT (split ce fixvars toquant predics)
+          (Right (deferred, retained), _) = startTI $ runLoggerT (split ce fixvars toquant predics)
       retained `shouldContain` [IsIn "ClassC" (TVar type01)]
       deferred `shouldBe` []
     it "works for single predicate: defers it" $ do
@@ -48,7 +48,7 @@ spec = do
           fixvars = [type01]
           toquant = []
           predics = [IsIn "ClassA" tInt, IsIn "ClassC" tInt, IsIn "ClassC" (TVar type01)]
-          (Right (deferred, retained), _) = runTI $ runLoggerT (split ce fixvars toquant predics)
+          (Right (deferred, retained), _) = startTI $ runLoggerT (split ce fixvars toquant predics)
       deferred `shouldContain` [IsIn "ClassC" (TVar type01)]
       retained `shouldBe` []
     it "works for single predicate: defaulting" $ do
@@ -58,13 +58,13 @@ spec = do
           fixvars = []
           toquant = []
           predics = [IsIn "Integral" (TVar type01), IsIn "Fractional" (TVar type02)]
-          (Right (deferred, retained), _) = runTI $ runLoggerT (split ce fixvars toquant predics)
+          (Right (deferred, retained), _) = startTI $ runLoggerT (split ce fixvars toquant predics)
       deferred `shouldBe` []
       retained `shouldBe` []
     it "prop: returns [] for null predicate list" $
       property $
       forAll (listOf $ genTyvar Star) $ \fs ->
       forAll (listOf $ genTyvar Star) $ \gs ->
-        let (Right (ds, rs), _) = runTI $ runLoggerT (split initialEnv fs gs [])
+        let (Right (ds, rs), _) = startTI $ runLoggerT (split initialEnv fs gs [])
             in do ds `shouldBe` []
                   rs `shouldBe` []
