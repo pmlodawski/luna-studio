@@ -9,13 +9,15 @@
 module Luna.AST.Control.Crumb where
 
 import Flowbox.Prelude
+import Luna.AST.Common (ID)
 
 
 
 type Breadcrumbs = [Crumb]
 
 
-data Crumb = Function { _name :: String
+data Crumb = Lambda   { _id :: ID     }
+           | Function { _name :: String
                       , _path :: [String]
                       }
            | Class    { _name :: String }
@@ -39,3 +41,8 @@ isClass _          = False
 isModule :: Crumb -> Bool
 isModule (Module {}) = True
 isModule _           = False
+
+
+isLambda :: Crumb -> Bool
+isLambda (Lambda {}) = True
+isLambda _           = False

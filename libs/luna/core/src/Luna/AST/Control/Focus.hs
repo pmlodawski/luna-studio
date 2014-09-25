@@ -14,7 +14,8 @@ import Luna.AST.Module (Module)
 
 
 
-data Focus  = Function Expr
+data Focus  = Lambda   Expr
+            | Function Expr
             | Class    Expr
             | Module Module
             deriving (Show)
@@ -29,6 +30,7 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 traverseM :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> Focus -> m Focus
 traverseM fmod fexp focus = case focus of
+    Lambda   l -> Lambda   <$> fexp l
     Function f -> Function <$> fexp f
     Class    c -> Class    <$> fexp c
     Module   m -> Module   <$> fmod m
@@ -36,9 +38,15 @@ traverseM fmod fexp focus = case focus of
 
 traverseM_ :: Traversal m => (Module -> m r) -> (Expr -> m r) -> Focus -> m r
 traverseM_ fmod fexp focus = case focus of
+    Lambda   l -> fexp l
     Function f -> fexp f
     Class    c -> fexp c
     Module   m -> fmod m
+
+
+getLambda :: Focus -> Maybe Expr
+getLambda (Lambda l) = Just l
+getLambda _          = Nothing
 
 
 getFunction :: Focus -> Maybe Expr
