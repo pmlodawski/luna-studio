@@ -1,21 +1,23 @@
 {-# LANGUAGE DeriveGeneric #-}
 
+
 module Luna.Typechecker.AST.Internal.Kind (
     Kind(..)
   ) where
 
+
 import Control.DeepSeq
+import Data.List       (intercalate)
 import GHC.Generics
-import Text.Printf (printf)
-import Data.List   (intercalate)
+import Text.Printf     (printf)
 
 
 data Kind = Star
           | Kfun Kind Kind
           deriving (Eq,Generic)
 
-instance NFData Kind
 
+instance NFData Kind
 
 instance Show Kind where
   show Star = "*"

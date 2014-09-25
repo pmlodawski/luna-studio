@@ -10,6 +10,8 @@ import Luna.Typechecker.AST.Type             (Type(..))
 import Luna.Typechecker.Internal.Logger
 import Luna.Typechecker.Internal.Unification (varBind)
 
+import Control.Monad                         (unless)
+
 
 mgu :: (Monad m) => Type -> Type -> TCLoggerT m Subst
 mgu (TAp l r) (TAp l' r')              = do s1 <- mgu l l'
@@ -20,17 +22,13 @@ mgu t (TVar u)                         = varBind u t
 mgu (TCon tc1) (TCon tc2) | tc1 == tc2 = return nullSubst
 mgu a b                                = throwError $ "types do not unify: " ++ show a ++ " // " ++ show b
 
-
 match :: (Monad m) => Type -> Type -> TCLoggerT m Subst
-match (TAp l r) (TAp l' r') = do sl <- match l l'
-                                 sr <- match r r'
-                                 merge sl sr
-match (TVar u) t                               = do ku <- kind u
-                                                    kt <- kind t
-                                                    if ku == kt
-                                                      then return (u +-> t)
-                                                      else throwError "types do not match"
-match (TCon tc1) (TCon tc2) |    tc1 == tc2    = return nullSubst
-match _ _                                      = throwError "types do not match"
-
-
+match (TAp l r) (TAp l' r')              = do sl <- match l l'
+                                              sr <- match r r'
+                                              merge sl sr
+match (TVar u) t                         = do ku <- kind u
+                                              kt <- kind t
+                                              unless (ku == kt) $ throwError "types do not match"
+                                              return (u +-> t)
+match (TCon tc1) (TCon tc2) | tc1 == tc2 = return nullSubst
+match _ _                                = throwError "types do not match"

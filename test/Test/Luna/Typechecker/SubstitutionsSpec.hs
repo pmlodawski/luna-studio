@@ -2,29 +2,32 @@
 
 module Test.Luna.Typechecker.SubstitutionsSpec (spec) where
 
-import qualified Luna.Typechecker.AST.Kind         as Knd
-import qualified Luna.Typechecker.AST.Type         as Ty
-import           Luna.Typechecker.AST.Type         (Type(TVar), fn)
 
-import           Luna.Typechecker.Substitutions
+import Luna.Typechecker.AST.Kind
+import Luna.Typechecker.AST.Type
 
-import           Test.Luna.Typechecker.AST.TypeGen
+import Luna.Typechecker.Substitutions
 
-import           Test.Hspec
-import           Test.QuickCheck
+import Luna.Typechecker.Internal.Logger
 
-import           Data.List                                  (subsequences)
-import           Data.Maybe                                 (fromJust, isJust)
+import Test.Luna.Typechecker.AST.TypeGen
+
+import Test.Hspec
+import Test.QuickCheck
+
+import Data.Either
+import Data.List
+
 
 spec :: Spec
 spec = do
-  let a  = Ty.Tyvar "a" Knd.Star
-      b  = Ty.Tyvar "b" Knd.Star
-      c  = Ty.Tyvar "c" Knd.Star
+  let a  = Tyvar "a" Star
+      b  = Tyvar "b" Star
+      c  = Tyvar "c" Star
 
   describe "nullSubst" $
     it "does not affect any type" $ property $
-      \t -> apply nullSubst t == (t :: Ty.Type)
+      \t -> apply nullSubst t == (t :: Type)
   describe "(+->)" $ do
     it "yields some result for all reasonably-kinded values" $ property $
       forAll arbitrary    $ \k ->
@@ -51,18 +54,18 @@ spec = do
         forAll arbitrary         $ \(t :: Type)  -> 
         forAll (genSubst (tv t)) $ \s1 ->
         forAll (genSubst (tv t)) $ \s2 ->
-          let s12 = merge s1 s2
-              s21 = merge s2 s1
-           in isJust s12 ==> apply (fromJust s12) t == apply (fromJust s21) t
+          let s12 = evalLogger $ merge s1 s2
+              s21 = evalLogger $ merge s2 s1
+           in isRight s12 ==> let (Right s12', Right s21') = (s12, s21) in (apply s12' t == apply s21' t)
   describe "class Types t" $ do
     describe "instance Types Type" $ do
       describe "apply :: Subst -> t -> t" $
         it "is" pending
-      describe "tv :: t -> [Ty.Tyvar]" $
+      describe "tv :: t -> [Tyvar]" $
         it "returns variables, in left-to-right order, no duplicates" $ do
           let dot = (TVar b `fn` TVar c) `fn` (TVar a `fn` TVar b) `fn` (TVar a `fn` TVar c)
               dlr = (TVar a `fn` TVar b) `fn` TVar a `fn` TVar b
-          tv Ty.tInt              `shouldBe` []
+          tv tInt                 `shouldBe` []
           tv (TVar a)             `shouldBe` [a]
           tv (TVar a `fn` TVar b) `shouldBe` [a, b]
           tv dot                  `shouldBe` [b, c, a]
@@ -70,7 +73,7 @@ spec = do
     describe "instance Types a => Types [a]" $ do
       describe "apply :: Subst -> t -> t" $
         it "is" pending
-      describe "tv :: t -> [Ty.Tyvar]" $
+      describe "tv :: t -> [Tyvar]" $
         it "returns variables, in left-to-right order, no duplicates" $ do
           tv [TVar a, TVar b, TVar c] `shouldBe` [a, b, c]
           tv (subsequences [TVar a, TVar b, TVar c, TVar b]) `shouldBe` [a, b, c]

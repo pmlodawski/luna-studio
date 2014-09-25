@@ -12,6 +12,7 @@ import Luna.Typechecker.Internal.Logger
 class HasKind t where
     kind :: (Monad m) => t -> TCLoggerT m Kind
 
+
 instance HasKind Tyvar where
   kind (Tyvar _ k) = return k
 
@@ -25,5 +26,5 @@ instance HasKind Type where
                        kt' <- kind t'
                        case kt of
                          Kfun k' k | kt' == k' -> return k
-                         _ -> throwError "kind mismatch"
+                         _                     -> throwError "kind mismatch"
   kind (TGen _)   = throwError "HasKind.hs:HasKind Type/TGen should never be asked for kind!"

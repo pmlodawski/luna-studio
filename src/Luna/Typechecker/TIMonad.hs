@@ -3,21 +3,21 @@ module Luna.Typechecker.TIMonad (
   ) where
 
 
-import Luna.Typechecker.Substitutions  (Types(..),Subst,nullSubst,(@@))
-import Luna.Typechecker.Typeclasses    (Qual(..),Pred(..))
-import Luna.Typechecker.Unification    (mgu)
+import Luna.Typechecker.Substitutions   (Types(..),Subst,nullSubst,(@@))
+import Luna.Typechecker.Typeclasses     (Qual(..),Pred(..))
+import Luna.Typechecker.Unification     (mgu)
 
-import Luna.Typechecker.AST.Kind       (Kind)
-import Luna.Typechecker.AST.Scheme     (Scheme(..))
-import Luna.Typechecker.AST.TID        (enumTID)
-import Luna.Typechecker.AST.Type       (Type(..), Tyvar(..))
+import Luna.Typechecker.AST.Kind        (Kind)
+import Luna.Typechecker.AST.Scheme      (Scheme(..))
+import Luna.Typechecker.AST.TID         (enumTID)
+import Luna.Typechecker.AST.Type        (Type(..), Tyvar(..))
 
 import Luna.Typechecker.Internal.Logger
 
-import Control.Applicative             (Applicative(..))
-import Control.Monad                   (ap)
+import Control.Applicative              (Applicative(..))
+import Control.Monad                    (ap)
 
-import Control.Monad.Trans             (lift)
+import Control.Monad.Trans              (lift)
 
 
 newtype TI a = TI (Subst -> Int -> (Subst, Int, a))
@@ -35,8 +35,6 @@ instance Monad TI where
   TI f >>= g = TI (\s n -> case f s n of
                              (s',n',x) -> let TI gx = g x
                                            in gx s' n')
-
-
 
 
 runTI :: TI a -> a
@@ -67,10 +65,11 @@ freshInst (Forall ks qt) = do ts <- mapM newTVar ks
 class Instantiate t where
   inst :: [Type] -> t -> t
 
+
 instance Instantiate Type where
   inst ts (TAp l r) = TAp (inst ts l) (inst ts r)
   inst ts (TGen n)  = ts !! n
-  inst _  t            = t
+  inst _  t         = t
 
 instance Instantiate a => Instantiate [a] where
   inst ts = map (inst ts)

@@ -3,9 +3,10 @@ module Luna.Typechecker.AST.Type (
     fn, pair, list, tUnit, tChar, tBool, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString, tCons
   ) where
 
-import Luna.Typechecker.AST.Internal.Type (Type(..),Tyvar(..),Tycon(..))
 
 import Luna.Typechecker.AST.Kind          (Kind(..))
+
+import Luna.Typechecker.AST.Internal.Type (Type(..),Tyvar(..),Tycon(..))
 
 
 tUnit, tChar, tBool, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString :: Type
@@ -16,11 +17,9 @@ tInt     = TCon (Tycon "Int"     Star)
 tInteger = TCon (Tycon "Integer" Star)
 tFloat   = TCon (Tycon "Float"   Star)
 tDouble  = TCon (Tycon "Double"  Star)
-
 tList    = TCon (Tycon "[]"      (Kfun Star Star))
 tArrow   = TCon (Tycon "(->)"    (Kfun Star (Kfun Star Star)))
 tTuple2  = TCon (Tycon "(,)"     (Kfun Star (Kfun Star Star)))
-
 tString  = list tChar
 
 tCons :: Type -> Type

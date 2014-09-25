@@ -3,26 +3,28 @@ module Luna.Typechecker.BindingGroups (
     tiSeq, tiBindGroup, tiExpl, tiExpr
   ) where
 
-import Luna.Typechecker.AST.Kind         (Kind(..))
-import Luna.Typechecker.AST.Lit          (Lit(..),tiLit)
-import Luna.Typechecker.AST.Pat          (Pat, tiPats)
-import Luna.Typechecker.AST.Scheme       (Scheme, quantify, toScheme)
-import Luna.Typechecker.AST.TID          (TID)
-import Luna.Typechecker.AST.Type         (Type(..), fn)
 
 import Luna.Typechecker.Assumptions      (Assump(..),find)
 import Luna.Typechecker.Substitutions    (Types(..))
-import Luna.Typechecker.TIMonad          (TI, freshInst, getSubst, newTVar, unify)
-import Luna.Typechecker.Typeclasses      (ClassEnv, Pred(..), Qual(..), entail)
-import Luna.Typechecker.TypeInference    (Infer, split)
+import Luna.Typechecker.TIMonad          (TI,freshInst,getSubst,newTVar,unify)
+import Luna.Typechecker.Typeclasses      (ClassEnv,Pred(..),Qual(..),entail)
+import Luna.Typechecker.TypeInference    (Infer,split)
+
+import Luna.Typechecker.AST.Kind         (Kind(..))
+import Luna.Typechecker.AST.Lit          (Lit(..),tiLit)
+import Luna.Typechecker.AST.Pat          (Pat,tiPats)
+import Luna.Typechecker.AST.Scheme       (Scheme,quantify,toScheme)
+import Luna.Typechecker.AST.TID          (TID)
+import Luna.Typechecker.AST.Type         (Type(..),fn)
 
 import Luna.Typechecker.Internal.Logger
 
-import Control.Monad                     (filterM,zipWithM)
+import Control.Monad                     (filterM,unless,when,zipWithM)
 
-import Data.List                         ((\\), intersect, union)
+import Data.List                         ((\\),intersect,union)
 
 import Text.Printf
+
 
 data Expr = Var TID
           | Lit Lit
@@ -31,30 +33,29 @@ data Expr = Var TID
           | Let BindGroup Expr
 
 instance Show Expr where
-  show (Var tid)         = printf "evar %s" (show tid)
-  show (Lit lit)         = printf "elit %s" (show lit)
+  show (Var tid)          = printf "evar %s" (show tid)
+  show (Lit lit)          = printf "elit %s" (show lit)
   show (EConst (t:>:sch)) = printf "econst (%s :: %s)" (show t) (show sch)
-  show (Ap e1 e2)        = printf "eap %s %s" (show e1) (show e2)
-  show (Let bnd e)       = printf "elet %s = %s" (show bnd) (show e)
+  show (Ap e1 e2)         = printf "eap %s %s" (show e1) (show e2)
+  show (Let bnd e)        = printf "elet %s = %s" (show bnd) (show e)
 
 
 tiExpr :: Infer Expr Type
-tiExpr _  as (Var i) = do sc <- find i as
-                          (ps :=> t) <- freshInst sc
-                          return (ps, t)
+tiExpr _  as (Var i)             = do sc <- find i as
+                                      (ps :=> t) <- freshInst sc
+                                      return (ps, t)
 tiExpr _  _  (EConst (_ :>: sc)) = do (ps :=> t) <- freshInst sc
                                       return (ps, t)
-tiExpr _  _  (Lit l) = do (ps, t) <- tiLit l
-                          return (ps, t)
-tiExpr ce as (Ap e f) = do (ps, te) <- tiExpr ce as e
-                           (qs, tf) <- tiExpr ce as f
-                           t <- newTVar Star
-                           unify (tf `fn` t) te
-                           return (ps ++ qs, t)
-tiExpr ce as (Let bg e) = do (ps, as') <- tiBindGroup ce as bg
-                             (qs, t) <- tiExpr ce (as' ++ as) e
-                             return (ps ++ qs, t)
-
+tiExpr _  _  (Lit l)             = do (ps, t) <- tiLit l
+                                      return (ps, t)
+tiExpr ce as (Ap e f)            = do (ps, te) <- tiExpr ce as e
+                                      (qs, tf) <- tiExpr ce as f
+                                      t <- newTVar Star
+                                      unify (tf `fn` t) te
+                                      return (ps ++ qs, t)
+tiExpr ce as (Let bg e)          = do (ps, as') <- tiBindGroup ce as bg
+                                      (qs, t) <- tiExpr ce (as' ++ as) e
+                                      return (ps ++ qs, t)
 
 
 type Alt = ([Pat], Expr)
@@ -71,7 +72,6 @@ tiAlts ce as alts t = do psts <- mapM (tiAlt ce as) alts
                          return (concatMap fst psts)
 
 
-
 type Expl = (TID, Scheme, [Alt])
 
 type Impl = (TID, [Alt])
@@ -86,25 +86,17 @@ tiExpl ce as (_, sc, alts) = do (qs :=> t) <- freshInst sc
                                     fs  = tv (apply s as)
                                     gs  = tv t' \\ fs
                                 sc' <- quantify gs (qs' :=> t')
-                                       --Monad m => (Pred -> LoggerT String TI Bool) -> [Pred] -> LoggerT String TI [Pred]
                                 ps' <- filterM (\p -> do ttt <- entail ce qs p
                                                          return (not ttt))
                                                (apply s ps)
-                                    --ps' = filter (not . entail ce qs') (apply s ps)
                                 (ds, rs) <- split ce fs gs ps'
-                                if sc /= sc' then
-                                    throwError "signature too general "
-                                  else if not (null rs) then
-                                    throwError "context too weak"
-                                  else
-                                    return ds
-
+                                when   (sc /= sc') $ throwError "signature too general "
+                                unless (null rs)   $ throwError "context too weak"
+                                return ds
 
 restricted :: [Impl] -> Bool
 restricted = any simple
   where simple (_, alts) = any (null . fst) alts
-
-
 
 tiImpls :: Infer [Impl] [Assump]
 tiImpls ce as bs = do ts <- mapM (\_ -> newTVar Star) bs
@@ -120,16 +112,16 @@ tiImpls ce as bs = do ts <- mapM (\_ -> newTVar Star) bs
                           vss = map tv ts'
                           gs  = foldr1 union vss \\ fs
                       (ds,rs) <- split ce fs (foldr1 intersect vss) ps'
-                      if restricted bs then do let gs' = gs \\ tv rs
-                                               scs' <- mapM (quantify gs' . ([] :=>)) ts'
-                                               return (ds ++ rs, zipWith (:>:) is scs')
+                      if restricted bs
+                        then do let gs' = gs \\ tv rs
+                                scs' <- mapM (quantify gs' . ([] :=>)) ts'
+                                return (ds ++ rs, zipWith (:>:) is scs')
                         else do scs' <- mapM (quantify gs . (rs :=>)) ts'
                                 return (ds, zipWith (:>:) is scs')
 
 
-
-
 type BindGroup = ([Expl], [[Impl]])
+
 
 tiBindGroup :: Infer BindGroup [Assump]
 tiBindGroup ce as (es, iss) = do let as' = [v :>: sc | (v, sc, _) <- es]
@@ -137,12 +129,8 @@ tiBindGroup ce as (es, iss) = do let as' = [v :>: sc | (v, sc, _) <- es]
                                  qss        <- mapM (tiExpl ce (as'' ++ as' ++ as)) es
                                  return (ps ++ concat qss, as'' ++ as')
 
-
-
 tiSeq :: Infer bg [Assump] -> Infer [bg] [Assump]
 tiSeq _  _  _  [] = return ([], [])
 tiSeq ti ce as (bs : bss) = do (ps, as')  <- ti ce as bs
                                (qs, as'') <- tiSeq ti ce (as' ++ as) bss
                                return (ps ++ qs, as'' ++ as')
-
-

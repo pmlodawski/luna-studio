@@ -52,9 +52,9 @@ spec = do
                       s' <- getSubst
                       return (res, s')
           Right ((ps, as, TVar t), s) = runTI $ evalLoggerT getall
-          Just (Forall [] ([] :=> x'))  = find "x"  as
-          Just (Forall [] ([] :=> xs')) = find "xs" as
-          Just (Forall [] ([] :=> lel')) = find "lel" as
+          Right (Forall [] ([] :=> x'))   = evalLogger $ find "x"   as
+          Right (Forall [] ([] :=> xs'))  = evalLogger $ find "xs"  as
+          Right (Forall [] ([] :=> lel')) = evalLogger $ find "lel" as
           x = apply s x'
           xs = apply s xs'
           lel = apply s lel'
@@ -80,8 +80,8 @@ spec = do
       let v = PCon ("(:)":>:cons_type) [PVar "x", PVar "xs"]
           cons_type = Forall [Star] ([] :=> (TGen 0 `fn` list (TGen 0) `fn` list (TGen 0)))
           Right (ps, as, TVar t) = runTI $ evalLoggerT $ tiPat v
-          Just (Forall [] ([] :=> x))  = find "x"  as
-          Just (Forall [] ([] :=> xs)) = find "xs" as
+          Right (Forall [] ([] :=> x))  = evalLogger $ find "x"  as
+          Right (Forall [] ([] :=> xs)) = evalLogger $ find "xs" as
       ps `shouldBe` []
       evalLogger (kind x)  `shouldBe` Right Star
       evalLogger (kind xs) `shouldBe` Right Star

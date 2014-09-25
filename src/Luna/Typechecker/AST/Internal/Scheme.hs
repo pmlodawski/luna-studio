@@ -1,23 +1,27 @@
 {-# LANGUAGE DeriveGeneric #-}
 
+
 module Luna.Typechecker.AST.Internal.Scheme (
     Scheme(..)
   ) where
 
-import Luna.Typechecker.AST.Kind            (Kind(..))
-import Luna.Typechecker.AST.Type            (Type(..))
 
-import Luna.Typechecker.Substitutions       (Types(..))
-import Luna.Typechecker.Typeclasses         (Qual(..))
+import Luna.Typechecker.AST.Kind      (Kind(..))
+import Luna.Typechecker.AST.Type      (Type(..))
 
-import Text.Printf                          (printf)
+import Luna.Typechecker.Substitutions (Types(..))
+import Luna.Typechecker.Typeclasses   (Qual(..))
+
 
 import Control.DeepSeq
 import GHC.Generics
 
+import Text.Printf                    (printf)
+
 
 data Scheme = Forall [Kind] (Qual Type)
             deriving (Eq,Generic)
+
 
 instance Types Scheme where
   apply s (Forall ks qt) = Forall ks (apply s qt)
