@@ -44,15 +44,11 @@ insts ce i = case M.lookup i (classes ce) of
                Nothing -> throwError "Typeclasses.hs:insts got no result"
 
 modify :: ClassEnv -> TID -> Class -> ClassEnv
-modify ce i c = ce {
-                   classesNames = (i,c) : classesNames ce,
-                   classes = M.insert i c (classes ce)
-                }
+modify ce i c = ce { classes = M.insert i c (classes ce) }
 
 initialEnv :: ClassEnv
 initialEnv = ClassEnv {
                classes = M.empty,
-               classesNames = [],
                defaults = [tInteger, tDouble]
              }
 
@@ -75,14 +71,14 @@ addClass i is ce | M.member i (classes ce)           = throwError "class is alre
                  | otherwise                         = return (modify ce i (is, []))
 
 addInst :: (Monad m) => [Pred] -> Pred -> EnvTransformer m
-addInst ps p@(IsIn i _) ce | M.notMember i (classes ce) = throwError "no class for instance"
-                           | otherwise                  = do
-  its <- insts ce i
-  overlapping <- mapM (overlap p) [q | (_ :=> q) <- its]
-  when (or overlapping) $ throwError "overlapping instances"
-  ca <- super ce i
-  let c = (ca, (ps :=> p) : its)
-  return (modify ce i c)
+addInst ps p@(IsIn i _) ce 
+  | M.notMember i (classes ce) = throwError "no class for instance"                         
+  | otherwise                  = do its <- insts ce i
+                                    overlapping <- mapM (overlap p) [q | (_ :=> q) <- its]
+                                    when (or overlapping) $ throwError "overlapping instances"
+                                    ca <- super ce i
+                                    let c = (ca, (ps :=> p) : its)
+                                    return (modify ce i c)
 
 overlap :: (Monad m) => Pred -> Pred -> TCLoggerT m Bool
 overlap p q = defined (mguPred p q)
