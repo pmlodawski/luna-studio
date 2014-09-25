@@ -155,9 +155,9 @@ def install_hprotoc(name, version):
     install_from_sources('hprotoc')
     return (name)
 
-def install_c2hs(name, version):
+def install_alex_happy(name, version):
     try_call('cabal install alex')
-    try_call('cabal install c2hs')
+    try_call('cabal install happy')
     return (name)
 
 def main():
@@ -193,9 +193,9 @@ def main():
     checkCabalPkg("alex")
     checkCabalPkg("hspec", check="hspec-discover")
 
-    checkCabalPkg("c2hs", installUsing=install_c2hs, version="0.16.5")
+    checkCabalPkg("c2hs", installUsing=install_alex_happy, version="0.16.5")
 
-    checkCabalPkg("gtk2hs-buildtools", check="gtk2hsC2hs")
+    checkCabalPkg("gtk2hs-buildtools", installUsing=install_alex_happy, check="gtk2hsC2hs")
 
     checkCabalPkg("hprotoc", installUsing=install_hprotoc) # FIXME [KL]: Temporary fix for hprotoc
 
