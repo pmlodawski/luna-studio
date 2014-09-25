@@ -13,8 +13,7 @@ import           Luna.Typechecker.AST.Type       (Type(..))
 
 import           Control.DeepSeq
 
-import           Data.List                       (intercalate,union,nubBy)
-import           Data.Function                   (on)
+import           Data.List                       (intercalate,union)
 
 import qualified Data.Map.Strict                 as M
 
@@ -56,9 +55,8 @@ type Inst  = Qual Pred
 
 data ClassEnv = ClassEnv {
                   classes :: M.Map TID Class,
-                  classesNames :: [(TID, Class)],
                   defaults :: [Type]
                 }
 
 instance Show ClassEnv where
-  show (ClassEnv _ nm _) = printf "(classenv: %s)" (intercalate ", " $ map show $ nubBy ((==) `on` fst) nm)
+  show ce = printf "(classenv: %s)" (intercalate ", " . map show . M.toList . classes $ ce)
