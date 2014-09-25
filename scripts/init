@@ -155,6 +155,11 @@ def install_hprotoc(name, version):
     install_from_sources('hprotoc')
     return (name)
 
+def install_c2hs(name, version):
+    try_call('cabal install alex')
+    try_call('cabal install c2hs')
+    return (name)
+
 def main():
     if os.path.exists(sboxName):
         if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?", SILENTINSTALL):
@@ -188,7 +193,7 @@ def main():
     checkCabalPkg("alex")
     checkCabalPkg("hspec", check="hspec-discover")
 
-    checkCabalPkg("c2hs", version="0.16.5")
+    checkCabalPkg("c2hs", installUsing=install_c2hs, version="0.16.5")
 
     checkCabalPkg("gtk2hs-buildtools", check="gtk2hsC2hs")
 
