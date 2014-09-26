@@ -71,8 +71,8 @@ addClass i is ce | M.member i (classes ce)           = throwError "class is alre
                  | otherwise                         = return (modify ce i (is, []))
 
 addInst :: (Monad m) => [Pred] -> Pred -> EnvTransformer m
-addInst ps p@(IsIn i _) ce 
-  | M.notMember i (classes ce) = throwError "no class for instance"                         
+addInst ps p@(IsIn i _) ce
+  | M.notMember i (classes ce) = throwError "no class for instance"                       
   | otherwise                  = do its <- insts ce i
                                     overlapping <- mapM (overlap p) [q | (_ :=> q) <- its]
                                     when (or overlapping) $ throwError "overlapping instances"

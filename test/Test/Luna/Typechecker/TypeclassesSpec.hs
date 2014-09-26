@@ -46,7 +46,7 @@ spec = do
                 <:> addInst [IsIn "Eq" tBool]                   (IsIn "Eq" (list tBool))
                 <:> addInst [IsIn "Eq" (TVar $ Tyvar "a" Star)] (IsIn "Eq" (list (TVar $ Tyvar "a" Star)))
                  ) initialEnv) `shouldSatisfy` isLeft
-    it "checks for overlapping instances (another slightly non-trivial)" $ 
+    it "checks for overlapping instances (another slightly non-trivial)" $
       evalLogger ((     addClass "Len" []
                 <:> addInst [IsIn "Len" (TVar $ Tyvar "a" Star)] (IsIn "Len" (list (TVar $ Tyvar "a" Star)))
                 <:> addInst [IsIn "Len" tInt]                    (IsIn "Len" (list tInt))

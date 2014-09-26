@@ -148,7 +148,7 @@ andBG =
 consBG =
   ( "(:)"
   , Forall [Star] ([] :=> (TGen 0 `fn` list (TGen 0) `fn` list (TGen 0)))
-  , [ ( [ error "no pat for cons" ] 
+  , [ ( [ error "no pat for cons" ]
       , error "no body for cons"
       )
     ]
@@ -158,7 +158,7 @@ consBG =
 constBG =
   ( "const"
   , Forall [Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 0))
-  , [ ( [ PVar "x", PVar "y" ] 
+  , [ ( [ PVar "x", PVar "y" ]
       , Var "x"
       )
     ]

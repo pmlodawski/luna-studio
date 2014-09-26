@@ -23,8 +23,8 @@ import Test.Luna.Typechecker.AST.TypeGen (genTypeNogen,genPredNogen)
 spec :: Spec
 spec = do
   describe "freshInst" $ do
-    
-    it "works for simple types [QC]" $ property $ 
+   
+    it "works for simple types [QC]" $ property $
       forAll (genTypeNogen Star) $ \t -> do
         let qt = [] :=> t
             Right x  = startTI $ evalLoggerT $ freshInst (Forall [] qt)

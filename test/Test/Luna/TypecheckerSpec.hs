@@ -33,7 +33,7 @@ resultTest (eres, _) test = case eres of
 spec :: Spec
 spec = do
   describe "the typechecker interface for basic AST" $ do
-    let 
+    let
         alternatingFBG = ( "f"
                           , toScheme (tInteger `fn` list tInteger)
                           , [ (  [PVar "x"]
@@ -78,31 +78,31 @@ spec = do
       let def = ([ constBG ] , [])
           res = tiProgram initialEnv [] [def]
       resultTest res (`shouldContain` [constBG^.asmp])
-    
+   
 
     it "infers type for `const`" $ do
       let def = ([] , [[ constBG^.impl ]] )
           res = tiProgram initialEnv [] [def]
       resultTest res (`shouldContain` [constBG^.asmp])
-    
+   
 
     it "typechecks `gcd`" $ do
       let def = ( [ gcdBG ] , [] )
           res = tiProgram initialEnv [modBG^.asmp] [def]
       resultTest res (`shouldContain` [gcdBG^.asmp])
-    
+   
 
     it "infers type for `gcd`" $ do
       let def = ( [] , [[ gcdBG^.impl ]] )
           res = tiProgram initialEnv [modBG^.asmp] [def]
       resultTest res (`shouldContain` [gcdBG^.asmp])
-    
+   
 
     it "typechecks `foldr`" $ do
       let def = ([foldrBG], [])
           res = tiProgram initialEnv [] [def]
       resultTest res (`shouldContain` [foldrBG^.asmp])
-    
+   
 
     it "infers type for `foldr`" $ do
       let def = ([], [[ foldrBG^.impl ]] )
@@ -127,7 +127,7 @@ spec = do
           res = tiProgram initialEnv [landBG^.asmp] defs
       resultTest res (`shouldContain` [foldrBG^.asmp])
       resultTest res (`shouldContain` [andBG ^. asmp])
-    
+   
 
     it "typechecks mutually-recursive functions" $ do
       let def = ( [ alternatingFBG, alternatingGBG ] , [])

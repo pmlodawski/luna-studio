@@ -17,7 +17,7 @@ data Pat = PVar TID
 
 
 instance Show Pat where
-  show (PVar tid)            = printf "pvar %s" (show tid) 
+  show (PVar tid)            = printf "pvar %s" (show tid)
   show PWildcard             = "_"
   show (PAs tid pat)         = printf "(%s PAs %s)" (show tid) (show pat)
   show (PLit lit)            = show lit

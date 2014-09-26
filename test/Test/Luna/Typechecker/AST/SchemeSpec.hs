@@ -32,12 +32,12 @@ permute xs = do swaps <- mapM mkSwapTuple [nd,nd-1..1]
                             b <- readArray arr j
                             writeArray arr i b
                             writeArray arr j a
-  
+ 
 
 spec :: Spec
 spec = do
   describe "quantify" $
-    it "quantifies variables in order of appearance in `tv qt`, *not* the order of `vs` [QC]" $ property $ 
+    it "quantifies variables in order of appearance in `tv qt`, *not* the order of `vs` [QC]" $ property $
       let az = map (flip Tyvar Star) vs
           az' = map (flip Tyvar Star) vs'
           az'' = map (flip Tyvar Star) vs''

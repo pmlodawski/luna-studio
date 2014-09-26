@@ -1,5 +1,5 @@
 module Luna.Typechecker.Ambiguity (
-    defaultedPreds, defaultSubst, candidates  
+    defaultedPreds, defaultSubst, candidates
   ) where
 
 
