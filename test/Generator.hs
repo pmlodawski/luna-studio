@@ -263,6 +263,13 @@ keyerTest w x y z = do
     let process c = M.map (keyer Greenscreen (A.lift (w, x, y, z))) c
     testSaveRGBA' "out.png" r g b (process rgb)
 
+differenceKeyerTest :: Exp Float -> Exp Float -> IO ()
+differenceKeyerTest off gain = do
+    rgb <- loadRGB "samples/keying/greenscreen.jpg"
+    (r :: Matrix2 Float, g, b, _) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
+    let process c = M.map (differenceKeyer off gain (rgb M.! (A.index2 1 1))) c
+    testSaveRGBA' "out.png" r g b (process rgb)
+
 --medianTest :: IO ()
 medianTest = do
     let process x = stencilTest x
