@@ -44,14 +44,14 @@ spec = do
   describe "Substitutions composition (@@)" $
     it "satisfies property: apply (s1 @@ s2) = apply s1 . apply s2" $
       property $
-        forAll arbitrary         $ \(t :: Type)  -> 
+        forAll arbitrary         $ \(t :: Type)  ->
         forAll (genSubst (tv t)) $ \s1 ->
         forAll (genSubst (tv t)) $ \s2 ->
           apply (s1 @@ s2) t == (apply s1 . apply s2) t
   describe "Symmetric substitutions composition (merge)" $
     it "satisfies property: apply (s1 `merge` s2) = apply (s2 `merge` s1) in its domain" $
       property $
-        forAll arbitrary         $ \(t :: Type)  -> 
+        forAll arbitrary         $ \(t :: Type)  ->
         forAll (genSubst (tv t)) $ \s1 ->
         forAll (genSubst (tv t)) $ \s2 ->
           let s12 = evalLogger $ merge s1 s2

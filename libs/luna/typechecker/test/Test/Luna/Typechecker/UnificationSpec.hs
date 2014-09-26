@@ -23,7 +23,7 @@ import Data.Either
 
 spec :: Spec
 spec = do
-  let 
+  let
       tv0 = Tyvar "a1" Star
       tt0 = TVar tv0
       tv1 = Tyvar "b1" Star
@@ -41,7 +41,7 @@ spec = do
       ct3 = TCon cc3
 
   describe "mgu" $ do
-    it "matches some simple `TAp`s" $ do 
+    it "matches some simple `TAp`s" $ do
       let -- | Forces evaluation to WHNF of `mgu`.
           test :: Type -> Type -> Either String Subst
           test t1 t2 = case evalLogger (mgu t1 t2) of
@@ -102,7 +102,7 @@ spec = do
           test t1 t2 = case evalLogger $ match t1 t2 of
                          Left  x -> x `seq` Left  x
                          Right x -> x `seq` Right x
-      
+     
       test (TAp tt0 tt1) (TAp tt2 tt3) `shouldSatisfy` isRight
       let Right res = test (TAp tt0 tt1) (TAp tt2 tt3)
       res `shouldContain` [(tv0,tt2)]

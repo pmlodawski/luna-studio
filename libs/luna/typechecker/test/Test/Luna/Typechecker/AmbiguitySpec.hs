@@ -114,7 +114,7 @@ spec = do
                          <:> addClass "Functor"     []
                          <:> addClass "Applicative" ["Functor"]
                          <:> addClass "LOLOLOL"  []
-      
+     
                          <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
                                      (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
                          <:> addInst [] (IsIn "Eq"       tInt)   <:> addInst [] (IsIn "Eq"       tInteger)

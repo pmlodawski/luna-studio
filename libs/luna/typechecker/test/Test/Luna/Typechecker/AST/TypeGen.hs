@@ -31,7 +31,7 @@ instance Arbitrary Kind where
             liftM2 Kfun (genKind x1) (genKind x2)
   shrink (Star) = []
   shrink (Kfun k1 k2) = [k1, k2, Kfun k1 k1, Kfun k2 k2] ++ (flip Kfun k2 <$> shrink k1) ++ (Kfun k1 <$> shrink k2)
-  
+ 
 instance Arbitrary Type where
   arbitrary = arbitrary >>= genType
   shrink (TVar t) = TVar <$> shrink t
