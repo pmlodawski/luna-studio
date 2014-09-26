@@ -79,3 +79,24 @@ keyer mode = A.lift2 $ keyer' mode
                           ]
                           ((cVal A.>=* 1) A.? (1, fallingEdgePosition preClampedAlpha))
               in clamp' 0 1 alpha
+
+differenceKeyer :: forall a. (A.Elt a, A.IsFloating a)
+                => A.Exp a -- ^ offset
+                -> A.Exp a -- ^ gain
+                -> A.Exp (RGB a) -- ^ background
+                -> A.Exp (RGB a) -- ^ foreground
+                -> A.Exp a
+differenceKeyer offset gain = A.lift2 $ differenceKeyer' offset gain
+    where differenceKeyer' :: A.Exp a
+                           -> A.Exp a
+                           -> RGB (A.Exp a)
+                           -> RGB (A.Exp a)
+                           -> A.Exp a
+          differenceKeyer' offset' gain' (RGB bgR bgG bgB) (RGB fgR fgG fgB) =
+              let rDistance = (fgR - bgR) ** 2
+                  gDistance = (fgG - bgG) ** 2
+                  bDistance = (fgB - bgB) ** 2
+
+                  distance = rDistance + gDistance + bDistance
+                  alpha    = distance * gain - offset
+              in clamp' 0 1 alpha
