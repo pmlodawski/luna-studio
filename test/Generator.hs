@@ -260,9 +260,10 @@ unsharpMaskTest sigma kernSize = do
 
 keyerTest :: Exp Float -> Exp Float -> Exp Float -> Exp Float -> IO ()
 keyerTest w x y z = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
-    let process c = rasterizer $ keyer (A.lift (w, x, y, z)) $ fromMatrix A.Clamp c
-    testSaveRGBA' "out.png" r g b (process g)
+    rgb <- loadRGB "samples/keying/greenscreen.jpg"
+    (r :: Matrix2 Float, g, b, _) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
+    let process c = M.map (keyer Greenscreen (A.lift (w, x, y, z))) c
+    testSaveRGBA' "out.png" r g b (process rgb)
 
 --medianTest :: IO ()
 medianTest = do
