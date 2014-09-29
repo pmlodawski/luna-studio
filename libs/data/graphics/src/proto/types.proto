@@ -1,0 +1,102 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.graphics;
+
+message Value {
+    extensions 100 to max;
+
+    enum Type {
+        Int    = 1;
+        Char   = 2;
+        Bool   = 3;
+        String = 4;
+        Float  = 5;
+        Double = 6;
+        Matrix = 7;
+        Image  = 8;
+    }
+
+    required Type type = 1;
+}
+
+message IntData {
+    extend Value {
+        optional IntData data = 101;
+    }
+
+    required int32 value = 1;
+}
+
+message CharData {
+    extend Value {
+        optional CharData data = 102;
+    }
+
+    required int32 value = 1;
+}
+
+message BoolData {
+    extend Value {
+        optional BoolData data = 103;
+    }
+
+    required bool value = 1;
+}
+
+message StringData {
+    extend Value {
+        optional StringData data = 104;
+    }
+
+    required string value = 1;
+}
+
+message FloatData {
+    extend Value {
+        optional FloatData data = 105;
+    }
+
+    required float value = 1;
+}
+
+message DoubleData {
+    extend Value {
+        optional DoubleData data = 106;
+    }
+
+    required double value = 1;
+}
+
+message MatrixData {
+    enum Type {
+        INT    = 0;
+        FLOAT  = 1;
+        DOUBLE = 2;
+        BOOL   = 3;
+    }
+
+    extend Value {
+        optional DoubleData MatrixData = 107;
+    }
+
+    required bytes value         = 1;
+    required uint32 width        = 2;
+    required uint32 height       = 3;
+    required Type precision = 4;
+}
+
+message ImageData {
+    extend Value {
+        optional ImageData data = 108;
+    }
+
+    required MatrixData red   = 1;
+    required MatrixData green = 2;
+    required MatrixData blue  = 3;
+    optional MatrixData alpha = 4;
+}
