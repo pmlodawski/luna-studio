@@ -33,6 +33,7 @@ import           Math.Coordinate.Coordinate
 import qualified Math.Coordinate.Cartesian as Cartesian
 import           Math.Space.Space
 
+
 -- == Generator type ==
 
 data Generator a b = Generator { canvas :: Grid (Exp Int)
