@@ -17,6 +17,8 @@ import qualified Data.Array.Accelerate                    as A
 import           Math.Coordinate.Cartesian                (Point2(..))
 import           Math.Space.Space
 
+
+
 stencil :: forall a b c . (Elt a, IsNum a)
         => (Point2 c -> Point2 (Exp Int) -> Point2 b)
         -> DiscreteGenerator (Exp a) -- kernel generator
