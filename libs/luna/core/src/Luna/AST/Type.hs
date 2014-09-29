@@ -70,7 +70,7 @@ lunaShow :: Type -> String
 lunaShow t = case t of
     Unknown _               -> "Unknown"
     Var     _ name'         -> name'
-    Tuple   _ items'        -> "{" ++ (List.intercalate ", " strs) ++ "}" where
+    Tuple   _ items'        -> "{" ++ List.intercalate ", " strs ++ "}" where
                                    strs = map lunaShow items'
     --Class   _ name' params' -> name' ++ " " ++ (List.intercalate " " params')
     --Module  _ path'         -> List.intercalate "." path'

@@ -69,11 +69,11 @@ traverseM_ fpat ftype flit p = case p of
 
 
 traverseM' :: Traversal m => (Pat -> m Pat) -> Pat -> m Pat
-traverseM' fpat p = traverseM fpat pure pure p
+traverseM' fpat = traverseM fpat pure pure
 
 
 traverseM'_ :: Traversal m => (Pat -> m ()) -> Pat -> m ()
-traverseM'_ fpat p = traverseM_ fpat pure pure p
+traverseM'_ fpat = traverseM_ fpat pure pure
 
 
 traverseMR :: Traversal m => (Pat -> m Pat) -> (Type -> m Type) -> (Lit -> m Lit) -> Pat -> m Pat
