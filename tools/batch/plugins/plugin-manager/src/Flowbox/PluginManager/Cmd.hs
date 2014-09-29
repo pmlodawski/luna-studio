@@ -4,20 +4,23 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.PluginManager.Cmd where
 
-import Flowbox.PluginManager.Prefix (Prefix)
+import Flowbox.Bus.Data.Prefix (Prefix)
 import Flowbox.Prelude
 
 
 
-data Cmd = Run { initConfig :: FilePath
+data Cmd = Run { _initConfig :: FilePath
 
-               , prefix     :: Prefix
+               , _prefix     :: Prefix
 
-               , verbose    :: Int
-               , noColor    :: Bool
+               , _verbose    :: Int
+               , _noColor    :: Bool
                }
          | Version
          deriving Show
+
+makeLenses(''Cmd)

@@ -123,10 +123,10 @@ normaliseR path undo = case path of
                    root@(Root _) -> [root]
                    Up            -> normaliseR xs (undo+1)
                    Current       -> if null xs && undo == 0
-                                        then path 
+                                        then path
                                         else normaliseR xs undo
                    Empty         -> normaliseR xs undo
-                   _             -> if undo > 0 
+                   _             -> if undo > 0
                                         then normaliseR xs (undo-1)
                                         else x:normaliseR xs undo
 

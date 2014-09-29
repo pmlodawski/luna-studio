@@ -28,7 +28,8 @@ import           Luna.Graph.Graph                      (Graph)
 import qualified Luna.Graph.Graph                      as Graph
 import           Luna.Graph.Node                       (Node)
 import qualified Luna.Graph.Node                       as Node
-import           Luna.Graph.Port                       (OutPort)
+import           Luna.Graph.Port                       (Port)
+import qualified Luna.Graph.Port                       as Port
 import           Luna.Graph.PropertyMap                (PropertyMap)
 import qualified Luna.Graph.PropertyMap                as PropertyMap
 import           Luna.Info                             (apiVersion)
@@ -41,7 +42,7 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
 
 
-type NodeMap = Map (Node.ID, OutPort) Expr
+type NodeMap = Map (Node.ID, Port) Expr
 
 
 data GPState = GPState { _body        :: [Expr]
@@ -102,11 +103,11 @@ addToBody e = do b <- getBody
                  setBody $ e : b
 
 
-addToNodeMap :: (Node.ID, OutPort) -> Expr -> GPPass ()
+addToNodeMap :: (Node.ID, Port) -> Expr -> GPPass ()
 addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
 
 
-nodeMapLookup :: (Node.ID, OutPort) -> GPPass Expr
+nodeMapLookup :: (Node.ID, Port) -> GPPass Expr
 nodeMapLookup key = do
     nm <- getNodeMap
     Map.lookup key nm <??> "GraphParser: nodeMapLookup: Cannot find " ++ show key ++ " in nodeMap"
@@ -115,20 +116,22 @@ nodeMapLookup key = do
 getNodeSrcs :: Node.ID -> GPPass [Expr]
 getNodeSrcs nodeID = do
     g <- getGraph
-    let processEdge (pNID, _, Edge.Data s d) = Just (d, (pNID, s))
-        processEdge (_   , _, Edge.Monadic ) = Nothing
+    let processEdge (pNID, _, Edge.Data s Port.All) = Just (Port.Num 0, (pNID, s))
+        processEdge (pNID, _, Edge.Data s d       ) = Just (d, (pNID, s))
+        processEdge (_   , _, Edge.Monadic        ) = Nothing
 
         connectedMap = Map.fromList
                      $ Maybe.mapMaybe processEdge
                      $ Graph.lprel g nodeID
     case Map.size connectedMap of
         0 -> return []
-        _ -> do let maxPort   = fst $ Map.findMax connectedMap
-                    connected = map (flip Map.lookup connectedMap) [0..maxPort]
-                mapM getNodeSrc connected
+        _ -> case fst $ Map.findMax connectedMap of
+            Port.Num  maxPort -> do let connected = map (flip Map.lookup connectedMap . Port.Num) [0..maxPort]
+                                    mapM getNodeSrc connected
+            Port.All          -> mkList <$> getNodeSrc (Map.lookup Port.All connectedMap)
 
 
-getNodeSrc :: Maybe (Node.ID, OutPort) -> GPPass Expr
+getNodeSrc :: Maybe (Node.ID, Port) -> GPPass Expr
 getNodeSrc Nothing  = return $ Expr.Wildcard IDFixer.unknownID
 getNodeSrc (Just a) = nodeMapLookup a
 

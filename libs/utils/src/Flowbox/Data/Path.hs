@@ -38,21 +38,23 @@ single s = Path [s]
 
 
 fromList :: [String] -> Path
-fromList s = Path s
+fromList = Path
+
 
 toList :: Path -> [String]
 toList = segments
+
 
 add :: Path -> Path -> Path
 add (Path s1) (Path s2) = Path $ s1 ++ s2
 
 
 append :: String -> Path -> Path
-append segment path = Path $ (segments path) ++ [segment]
+append segment path = Path $ segments path ++ [segment]
 
 
 prepend :: String -> Path -> Path
-prepend segment path = Path $ segment:(segments path)
+prepend segment path = Path $ segment : segments path
 
 
 head :: Path -> String
@@ -73,10 +75,6 @@ last path = Prelude.last $ segments path
 
 --toString :: Path -> String
 --toString path = join "." $ segments path
-
-
-
-
 
 
 --instance Show Path where

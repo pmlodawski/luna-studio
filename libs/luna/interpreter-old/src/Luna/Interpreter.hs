@@ -12,7 +12,7 @@ import           Control.Concurrent.Chan (Chan)
 import qualified Control.Concurrent.Chan as Chan
 import           Control.Monad           (forever)
 import           DynFlags                (PkgConfRef (PkgConfFile))
-import qualified DynFlags                as F
+import qualified DynFlags                as GHC
 import           GHC                     (Ghc, GhcMonad)
 import qualified GHC                     as GHC
 import           MonadUtils              (liftIO)
@@ -45,16 +45,20 @@ initialize config = do
 setHardodedExtensions :: GhcMonad m => m ()
 setHardodedExtensions = do
     flags <- GHC.getSessionDynFlags
-    let f = foldl F.xopt_set flags [ F.Opt_DataKinds,
-                                     F.Opt_DeriveDataTypeable,
-                                     F.Opt_DeriveGeneric,
-                                     F.Opt_FlexibleInstances,
-                                     F.Opt_MultiParamTypeClasses,
-                                     F.Opt_RebindableSyntax,
-                                     F.Opt_ScopedTypeVariables,
-                                     F.Opt_TemplateHaskell,
-                                     F.Opt_UndecidableInstances]
-        f' = foldl F.xopt_unset f  [ F.Opt_MonomorphismRestriction]
+    let f = foldl GHC.xopt_set flags [ GHC.Opt_DataKinds
+                                     , GHC.Opt_DeriveDataTypeable
+                                     , GHC.Opt_DeriveGeneric
+                                     , GHC.Opt_DysfunctionalDependencies
+                                     , GHC.Opt_FlexibleContexts
+                                     , GHC.Opt_FlexibleInstances
+                                     , GHC.Opt_GADTs
+                                     , GHC.Opt_RebindableSyntax
+                                     , GHC.Opt_TemplateHaskell
+                                     , GHC.Opt_UndecidableInstances
+
+                                     , GHC.Opt_MultiParamTypeClasses
+                                     ]
+        f' = foldl GHC.xopt_unset f  [ GHC.Opt_MonomorphismRestriction]
     _ <- GHC.setSessionDynFlags f'
     return ()
 

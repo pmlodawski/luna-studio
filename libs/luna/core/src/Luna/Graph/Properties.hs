@@ -17,7 +17,7 @@ data Properties = Properties { _flags :: Flags
                              , _attrs :: Attributes
                              } deriving (Show, Read, Eq)
 
-makeLenses (''Properties)
+makeLenses ''Properties
 
 
 instance Default Properties where

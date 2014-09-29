@@ -12,6 +12,9 @@ import           Data.IORef           (IORef)
 import qualified Data.IORef           as IORef
 import qualified Pipes.Concurrent     as Pipes
 
+import qualified Flowbox.Batch.Project.Project                         as Project
+import           Flowbox.Bus.Data.Flag                                 (Flag)
+import qualified Flowbox.Bus.Data.Flag                                 as Flag
 import           Flowbox.Bus.Data.Message                              (Message (Message))
 import qualified Flowbox.Bus.Data.Message                              as Message
 import           Flowbox.Bus.Data.Topic                                (update, (/+))
@@ -25,7 +28,9 @@ import qualified Generated.Proto.Interpreter.Interpreter.Value.Request as Value
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Update  as Value
 import           Luna.Interpreter.Proto.CallPoint                      ()
 import           Luna.Interpreter.Proto.CallPointPath                  ()
+import           Luna.Interpreter.Proto.Status                         ()
 import           Luna.Interpreter.RPC.Handler.Lift
+import qualified Luna.Interpreter.RPC.Handler.Sync                     as Sync
 import qualified Luna.Interpreter.RPC.Topic                            as Topic
 import qualified Luna.Interpreter.Session.Cache.Value                  as Value
 import           Luna.Interpreter.Session.Data.CallPointPath           (CallPointPath)
@@ -40,19 +45,20 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Value"
 
 get :: Value.Request -> RPC Context SessionST Value.Update
 get (Value.Request tcallPointPath) = do
-    callPointPath <- decodeE tcallPointPath
-    result <- liftSession $ Value.getIfReady callPointPath
-    return $ Value.Update tcallPointPath result
+    (projectID, callPointPath) <- decodeE tcallPointPath
+    Sync.testProjectID projectID
+    (status, bytes) <- liftSession $ Value.getWithStatus callPointPath
+    return $ Value.Update tcallPointPath (encodeP status) bytes
 
 
 reportOutputValue :: IORef Message.CorrelationID
-                  -> Pipes.Output (Message, Message.CorrelationID)
-                  -> CallPointPath -> ByteString -> IO ()
-reportOutputValue crlRef output callPointPath value = do
+                  -> Pipes.Output (Message, Message.CorrelationID, Flag)
+                  -> Project.ID -> CallPointPath -> ByteString -> IO ()
+reportOutputValue crlRef output projectID callPointPath value = do
     crl <- IORef.readIORef crlRef
-    let tcallPointPath = encode callPointPath
-        response = Value.Update tcallPointPath value
+    let tcallPointPath = encode (projectID, callPointPath)
+        response = Value.Update tcallPointPath (encodeP Value.Ready) (Just value)
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response
-        packet   = (msg, crl)
+        packet   = (msg, crl, Flag.Disable)
     void $ Pipes.atomically $ Pipes.send output packet
