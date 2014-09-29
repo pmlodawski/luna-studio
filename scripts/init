@@ -51,7 +51,7 @@ def checkCabalPkg(name, version="", installUsing=None, check=None):
     if check == None:
         check = name
     if not checkAvailable(check):
-        if ask ("Cabal binary '%s' is not available. Should I install it?" % name):
+        if ask ("Cabal binary '%s' is not available. Should I install it?" % name, SILENTINSTALL):
             pkg = name
             if version: pkg += "-%s" % version
             if installUsing == None:
@@ -74,7 +74,7 @@ def checkInstall(name, installUsing, chckf):
     (ok, err) = chckf()
     if not ok:
         print_error (err)
-        if ask("Should I install it? (%s)" % installUsing):
+        if ask("Should I install it? (%s)" % installUsing, SILENTINSTALL):
             try_call(installUsing)
             (ok, err) = chckf()
             if not ok:
@@ -97,14 +97,14 @@ def checkPythonPkg(package, version=None):
                 _, installed_ver = line.split('==')
                 installed_ver = [int(x) for x in installed_ver.split('.')]
                 if version and installed_ver <= version:
-                    if ask("Python package '{package}' too old: {installed_ver} available, {version} required. "\
+                    if ask("Python package '{package}' too old: {installed_ver} available, {version} required. , SILENTINSTALL"\
                            "Should I upgrade it?".format(**locals())):
                         try_call(install_cmd)
                     else:
                         fatal()
                 break
         else:
-            if ask("Python package '{package}' not installed. Should I install it?".format(**locals())):
+            if ask("Python package '{package}' not installed. Should I install it?".format(**locals()), SILENTINSTALL):
                 try_call(install_cmd)
             else:
                 fatal()
@@ -155,9 +155,14 @@ def install_hprotoc(name, version):
     install_from_sources('hprotoc')
     return (name)
 
+def install_alex_happy(name, version):
+    try_call('cabal install alex')
+    try_call('cabal install happy')
+    return (name)
+
 def main():
     if os.path.exists(sboxName):
-        if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?"):
+        if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?", SILENTINSTALL):
             shutil.rmtree(sboxName)
             removeIfExists("cabal.sandbox.config")
 
@@ -165,7 +170,7 @@ def main():
         os.mkdir(sboxName)
 
     parser = argparse.ArgumentParser(description='Flowbox Development Environment Initializer')
-    parser.add_argument('-y', dest='SILENTINSTALL', action='store_true' , help = 'Install all needed stuff without asking')
+    parser.add_argument('-y', dest='SILENTINSTALL', action='store_true' , help = 'Install all needed stuff without asking, SILENTINSTALL')
     args = parser.parse_args()
 
     global SILENTINSTALL
@@ -188,9 +193,9 @@ def main():
     checkCabalPkg("alex")
     checkCabalPkg("hspec", check="hspec-discover")
 
-    checkCabalPkg("c2hs", version="0.16.5")
+    checkCabalPkg("c2hs", installUsing=install_alex_happy, version="0.16.5")
 
-    checkCabalPkg("gtk2hs-buildtools", check="gtk2hsC2hs")
+    checkCabalPkg("gtk2hs-buildtools", installUsing=install_alex_happy, check="gtk2hsC2hs")
 
     checkCabalPkg("hprotoc", installUsing=install_hprotoc) # FIXME [KL]: Temporary fix for hprotoc
 

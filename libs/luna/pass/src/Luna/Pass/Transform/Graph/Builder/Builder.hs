@@ -98,8 +98,8 @@ buildOutput outputID expr = do
     case expr of
         Expr.Assignment {} -> void $ buildNode False True Nothing expr
         Expr.Tuple _ items -> connectArgs True  True Nothing outputID items 0
-        Expr.Var {}        -> connectArg  True  True Nothing outputID (expr, Port.Num 0)
-        _                  -> connectArg  False True Nothing outputID (expr, Port.Num 0)
+        Expr.Var {}        -> connectArg  True  True Nothing outputID (expr, Port.All)
+        _                  -> connectArg  False True Nothing outputID (expr, Port.All)
     State.connectMonadic outputID
 
 

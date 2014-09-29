@@ -33,11 +33,10 @@ logger = getLoggerIO "Luna.Interpreter.Session.Cache.Value"
 getIfReady :: CallPointPath -> Session ByteString
 getIfReady callPointPath = do
     cacheInfo <- Cache.lookupCacheInfo callPointPath
-             <??&> Error.CacheError $(loc) ("Object " ++ show callPointPath ++ " is not in cache.")
     let varName = cacheInfo ^. CacheInfo.recentVarName
         status  = cacheInfo ^. CacheInfo.status
 
-    assertE (status == Status.Ready) $ Error.CacheError $(loc) $ "Object " ++ show callPointPath ++ " is not computed yet."
+    assertE (status == Status.Ready) $ Error.CacheError $(loc) $ concat ["Object ", show callPointPath, " is not computed yet."]
     get varName
 
 
@@ -51,7 +50,7 @@ data Status = Ready
 
 getWithStatus :: CallPointPath -> Session (Status, Maybe ByteString)
 getWithStatus callPointPath = do
-    mcacheInfo <- Cache.lookupCacheInfo callPointPath
+    mcacheInfo <- Cache.lookupCacheInfoMaybe callPointPath
     case mcacheInfo of
         Nothing        -> return (NotInCache, Nothing)
         Just cacheInfo -> do

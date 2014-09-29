@@ -148,7 +148,7 @@ interceptSourceErrors ghc = do
 
 atomically :: Session a -> Session a
 atomically f = do
-    sessionBackup <- lift2 $ GHC.getSession
+    sessionBackup <- lift2 GHC.getSession
     result <- lift $ runEitherT f
     when (Either.isLeft result) $
         lift2 $ GHC.setSession sessionBackup
