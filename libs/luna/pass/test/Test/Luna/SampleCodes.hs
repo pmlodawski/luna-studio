@@ -203,8 +203,6 @@ class Vector a:
         def inner a b:
             a + b
 
-x :: Int
-
 def main:
     v = Vector 1 2 3
     v.test

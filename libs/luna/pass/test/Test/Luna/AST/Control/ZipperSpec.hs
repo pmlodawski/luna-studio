@@ -14,6 +14,7 @@ import           Flowbox.Prelude
 import qualified Luna.AST.Control.Crumb  as Crumb
 import qualified Luna.AST.Control.Focus  as Focus
 import qualified Luna.AST.Control.Zipper as Zipper
+import qualified Luna.AST.Expr           as Expr
 import           Luna.AST.Module         (Module)
 import qualified Test.Luna.AST.Common    as Common
 import qualified Test.Luna.SampleCodes   as SampleCodes
@@ -38,7 +39,7 @@ spec = do
                         , Crumb.Function "main" []
                         ] ast
             let focus = Zipper.getFocus  zipper
-            _ <- Focus.getFunction focus <?.> "Not a function"
+            Expr.Function {} <- Focus.getFunction focus <?.> "Not a function"
             Zipper.close (Zipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on class in module" $ do
@@ -48,7 +49,7 @@ spec = do
                         , Crumb.Class    "Vector"
                         ] ast
             let focus = Zipper.getFocus  zipper
-            _ <- Focus.getClass focus <?.> "Not a class"
+            Expr.Data {} <- Focus.getClass focus <?.> "Not a class"
             Zipper.close (Zipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on class in class in module" $ do
@@ -59,7 +60,7 @@ spec = do
                         , Crumb.Class    "Inner"
                         ] ast
             let focus = Zipper.getFocus  zipper
-            _ <- Focus.getClass focus <?.> "Not a class"
+            Expr.Data {} <- Focus.getClass focus <?.> "Not a class"
             Zipper.close (Zipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on function in class in module" $ do
@@ -70,7 +71,7 @@ spec = do
                         , Crumb.Function "test" []
                         ] ast
             let focus = Zipper.getFocus  zipper
-            _ <- Focus.getFunction focus <?.> "Not a function"
+            Expr.Function {} <- Focus.getFunction focus <?.> "Not a function"
             Zipper.close (Zipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on function in class in class in module" $ do
@@ -82,7 +83,7 @@ spec = do
                         , Crumb.Function "inner" []
                         ] ast
             let focus = Zipper.getFocus  zipper
-            _ <- Focus.getFunction focus <?.> "Not a function"
+            Expr.Function {} <- Focus.getFunction focus <?.> "Not a function"
             Zipper.close (Zipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on lambda in function in class in module" $ do
@@ -91,9 +92,8 @@ spec = do
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
                         , Crumb.Function "test" []
-                        , Crumb.Lambda   27
+                        , Crumb.Lambda   18
                         ] ast
             let focus = Zipper.getFocus  zipper
-            l <- Focus.getLambda focus <?.> "Not a lambda"
-            print l
+            Expr.Lambda {} <- Focus.getLambda focus <?.> "Not a lambda"
             Zipper.close (Zipper.defocus zipper) `shouldBe` ast
