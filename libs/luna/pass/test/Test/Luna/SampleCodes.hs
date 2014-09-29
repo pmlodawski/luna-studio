@@ -10,14 +10,18 @@ module Test.Luna.SampleCodes where
 
 import Text.RawString.QQ
 
-import Flowbox.Prelude
-import Test.Luna.Pass.Transform.Graph.Common (named)
+import           Flowbox.Prelude
+import           Luna.AST.Control.Crumb                (Breadcrumbs)
+import qualified Luna.AST.Control.Crumb                as Crumb
+import           Test.Luna.Pass.Transform.Graph.Common (named)
 
 
 
+type Name = String
+type Code = String
 
 
-sampleCodes :: [(String,String)]
+sampleCodes :: [(Name, Code)]
 sampleCodes = [named "empty" [r|
 def main
 |], named "simple return" [r|
@@ -186,12 +190,22 @@ def main arg:
 --     print $ 1 > 2
 
 
+sampleLambdas :: [(Name, Breadcrumbs, Code)]
+sampleLambdas = [
+    ( "sample lambda 1"
+    , [Crumb.Module "Main", Crumb.Function "main" [], Crumb.Lambda 6]
+    , [r|
+def main:
+    f = a : a + 1
+    |])
+    ]
 
-emptyMain :: String
+
+emptyMain :: Code
 emptyMain = "def main"
 
 
-zipperTestModule :: String
+zipperTestModule :: Code
 zipperTestModule = [r|
 class Vector a:
     x,y,z :: a
