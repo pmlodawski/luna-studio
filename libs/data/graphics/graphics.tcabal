@@ -54,6 +54,8 @@ Library
                   transformers                ,
                   vector
 
+-- == test generator ==
+
 Executable test_generator
   if !flag(cuda)
     buildable: False
@@ -86,6 +88,8 @@ Executable test_generator
                   lens                     ,
                   split                    ,
                   vector
+
+-- == test bezier ==
 
 Executable test_bezier
   if !flag(cuda)
@@ -122,6 +126,45 @@ Executable test_bezier
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.15.*
 
+-- == test func model ==
+
+Executable test_func
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        Func.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          TemplateHaskell,
+                          OverloadedStrings
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  lens                     ,
+                  split                    ,
+                  cubicbezier
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+-- == test merge ==
+
 Executable test_merge
   if !flag(cuda)
     buildable: False
@@ -155,10 +198,12 @@ Executable test_merge
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.15.*
 
+-- == test color ==
+
 Executable test_color
   if !flag(cuda)
     buildable: False
-    
+
   Main-Is:        Color.hs
   Hs-Source-Dirs: test
 

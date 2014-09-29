@@ -4,11 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Geom2D.Path.Basic where
 
---import Math.Coordinate.Cartesian (Point2(..))
+module Main where
+
+import           Geom2D
+import           Geom2D.CubicBezier.Basic
+
+import Flowbox.Geom2D.CubicBezier.Intersection
+import Flowbox.Prelude
+
+main :: IO ()
+main = do
+    print "- - - = = =   Func Test  = = = - - -"
 
 
 
-data PathJoin a = JoinLine a
-			    | JoinQuadratic a
+    return ()
