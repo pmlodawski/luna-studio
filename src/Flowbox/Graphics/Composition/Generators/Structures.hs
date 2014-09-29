@@ -16,7 +16,8 @@
 
 module Flowbox.Graphics.Composition.Generators.Structures where
 
-import           Flowbox.Prelude    hiding (transform, lift)
+import           Flowbox.Graphics.Prelude          hiding (transform, lift)
+import qualified Flowbox.Prelude                   as P (Eq(..), Ord(..)) -- unfortunately required for the tick sorting
 import           Flowbox.Graphics.Utils.Accelerate
 import qualified Flowbox.Math.Index as I
 
@@ -24,7 +25,8 @@ import Data.Array.Accelerate
 import Data.Array.Accelerate.Array.Sugar
 import Data.Array.Accelerate.Smart
 import Data.Array.Accelerate.Tuple
-import Data.Typeable                     (Typeable)
+import Control.Monad (ap)
+import Data.Typeable (Typeable)
 import Data.Profunctor
 
 import           Math.Coordinate.Coordinate
@@ -43,6 +45,11 @@ type ContinousGenerator = CartesianGenerator (Exp Double)
 
 unitGenerator :: (a -> b) -> Generator a b
 unitGenerator = Generator 1
+
+instance Applicative (Generator a) where
+    pure a = Generator 1 $ const a
+    Generator (Grid h1 w1) f <*> Generator (Grid h2 w2) gen =
+        Generator (Grid (h1 `max` h2) (w1 `max` w2)) $ ap f gen
 
 instance Profunctor Generator where
     lmap f (Generator cnv gen) = Generator cnv $ gen . f
@@ -68,11 +75,11 @@ data Tick a b c = Tick { _position :: a
                        , _weight   :: c
                        } deriving (Show, Read, Typeable)
 
-instance Eq a => Eq (Tick a b c) where
-    Tick p1 _ _ == Tick p2 _ _ = p1 == p2
+instance P.Eq a => P.Eq (Tick a b c) where
+    Tick p1 _ _ == Tick p2 _ _ = p1 P.== p2
 
-instance Ord a => Ord (Tick a b c) where
-    compare (Tick p1 _ _) (Tick p2 _ _) = compare p1 p2
+instance P.Ord a => P.Ord (Tick a b c) where
+    compare (Tick p1 _ _) (Tick p2 _ _) = P.compare p1 p2
 
 makeLenses ''Tick
 deriveAccelerate ''Tick

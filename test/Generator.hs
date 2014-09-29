@@ -10,7 +10,7 @@
 
 module Main where
 
-import Flowbox.Prelude as P hiding (constant)
+import Flowbox.Graphics.Prelude as P hiding (constant)
 
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Filter as Conv
@@ -231,18 +231,21 @@ boundTest = do
 -- Applies Kirsch Operator to red channel of Lena image. Available operators: prewitt, sobel, sharr
 -- (Advanced rotational convolution, Edge detection test)
 --
---rotational :: Exp Float -> Matrix2 Float -> Matrix2 Float -> DiscreteGenerator (Exp Float)
---rotational phi mat chan = id `p` Conv.filter 1 edgeKern `p` id $ fromMatrix A.Clamp chan
---    where edgeKern = rotateMat (phi * pi / 180) (Constant 0) mat
---          p = pipe 512 A.Clamp
+rotational :: Exp Float
+           -> DiscreteGenerator (Exp Float)
+           -> DiscreteGenerator (Exp Float)
+           -> DiscreteGenerator (Exp Float)
+rotational phi mat chan = Stencil.stencil (+) edgeKern (+) 0 chan
+    where edgeKern = monosampler $ rotateCenter (phi * pi / 180) $ nearest $ mat
 
---kirschTest :: Matrix2 Float -> IO ()
---kirschTest edgeOp = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
---    let k alpha = rotational alpha edgeOp r
---    let max8 a b c d e f g h = a `min` b `min` c `min` d `min` e `min` f `min` g `min` h
---    let res = rasterizer 512 $ max8 <$> (k 0) <*> (k 45) <*> (k 90) <*> (k 135) <*> (k 180) <*> (k 225) <*> (k 270) <*> (k 315)
---    testSaveChan' "out.png" res
+kirschTest :: Matrix2 Float -> IO ()
+kirschTest edgeOp = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
+    let k alpha = rotational alpha (unsafeFromMatrix edgeOp) (fromMatrix A.Clamp r)
+    let max8 a b c d e f g h = a `max` b `max` c `max` d `max` e `max` f `max` g `max` h
+    let res = rasterizer $ max8 <$> k 0 <*> k 45 <*> k 90 <*> k 135 <*> k 180 <*> k 225 <*> k 270 <*> k 315
+    testSaveChan' "out.png" res
+    --print "szatan"
 
 
 --
