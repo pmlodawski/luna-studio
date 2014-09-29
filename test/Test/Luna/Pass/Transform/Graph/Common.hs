@@ -46,12 +46,13 @@ getGraph bc pm ast = eitherStringToM' $ runEitherT $ do
 getExpr :: Breadcrumbs -> Graph -> PropertyMap -> Module -> IO (Module, PropertyMap)
 getExpr bc graph pm ast = eitherStringToM' $ runEitherT $ do
     zipper <- hoistEither $ Zipper.focusBreadcrumbs' bc ast
-    expr   <- Focus.getFunction (Zipper.getFocus zipper)
-            <??> "test.Common.getExpr : Target is not a function"
+    let focus = Zipper.getFocus zipper
+    expr <- focus ^? Focus.expr <??> "test.Common.getExpr : Target is not a function"
     (expr2', pm2) <- EitherT $ GraphParser.run graph pm expr
     maxID         <- EitherT $ MaxID.runExpr expr2'
     expr2         <- EitherT $ IDFixer.runExpr maxID Nothing False expr2'
-    return (Zipper.close $ Zipper.modify (const $ Focus.Function expr2) zipper, pm2)
+    let newFocus = focus & Focus.expr .~ expr2
+    return (Zipper.close $ Zipper.modify (const newFocus) zipper, pm2)
 
 
 getMain :: Module -> IO Expr
