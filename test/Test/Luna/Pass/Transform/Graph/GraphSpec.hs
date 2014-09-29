@@ -10,6 +10,7 @@ module Test.Luna.Pass.Transform.Graph.GraphSpec where
 import Test.Hspec
 
 import           Flowbox.Prelude
+import           Luna.AST.Control.Crumb                  (Breadcrumbs)
 import qualified Luna.Graph.Edge                         as Edge
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Graph                        as Graph
@@ -25,20 +26,20 @@ import qualified Test.Luna.SampleCodes                   as SampleCodes
 
 
 
-backAndForth :: String -> IO ()
-backAndForth code = do
+backAndForth :: Breadcrumbs -> String -> IO ()
+backAndForth bc code = do
     ast         <- Common.getAST code
-    (graph, pm) <- Common.getGraph def ast
+    (graph, pm) <- Common.getGraph bc def ast
     --printLn
     --print ast
     --printLn
     --print graph
     --print pm
     --printLn
-    (ast2  , pm2) <- Common.getExpr graph pm ast
+    (ast2  , pm2) <- Common.getExpr bc graph pm ast
     --print ast2
     --print pm
-    (graph3, pm3) <- Common.getGraph pm2 ast2
+    (graph3, pm3) <- Common.getGraph bc pm2 ast2
 
     expr  <- Common.getMain (clearIDs 0 ast)
     expr2 <- Common.getMain (clearIDs 0 ast2)
@@ -48,18 +49,18 @@ backAndForth code = do
     pm3    `shouldBe` pm2
 
 
-backAndForth2 :: Graph -> IO ()
-backAndForth2 graph = backAndForth2' graph graph
+backAndForth2 :: Breadcrumbs -> Graph -> IO ()
+backAndForth2 bc graph = backAndForth2' bc graph graph
 
 
-backAndForth2' :: Graph -> Graph -> IO ()
-backAndForth2' providedGraph expectedGraph = do
-    emptyAst <- Common.getAST SampleCodes.emptyMain
-    (ast, pm) <- Common.getExpr providedGraph def emptyAst
+backAndForth2' :: Breadcrumbs -> Graph -> Graph -> IO ()
+backAndForth2' bc providedGraph expectedGraph = do
+    emptyAst  <- Common.getAST SampleCodes.emptyMain
+    (ast, pm) <- Common.getExpr bc providedGraph def emptyAst
     --printLn
     --print ast
     --print pm
-    (resultGraph, _pm2) <- Common.getGraph pm ast
+    (resultGraph, _pm2) <- Common.getGraph bc pm ast
     resultGraph `shouldBe` expectedGraph
 
 
@@ -220,7 +221,7 @@ buggyGraphs =
         [(100, -3, Edge.Data Port.All $ Port.Num 0)
         ,(200, -3, Edge.Data Port.All $ Port.Num 1)
         ]
-    ),( "graph with [] ,[1] and [2] port descriptors on output - 1"
+    ),( "graph with [], [1] and [2] port descriptors on output - 1"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
         ,(-3,Node.Outputs (10,0))
@@ -239,7 +240,7 @@ buggyGraphs =
         ,(100, -3, Edge.Data Port.All $ Port.Num 1)
         ,(100, -3, Edge.Data Port.All $ Port.Num 2)
         ]
-    ),( "graph with [] ,[1] and [2] port descriptors on output - 2"
+    ),( "graph with [], [1] and [2] port descriptors on output - 2"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
         ,(-3,Node.Outputs (10,0))
@@ -270,13 +271,13 @@ spec :: Spec
 spec = do
     describe "ast <-> graph conversion" $ do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth code) sampleCodes
+                backAndForth Common.mainBC code) sampleCodes
 
     describe "graph <-> ast conversion" $ do
         mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth2 graph) sampleGraphs
+                backAndForth2 Common.mainBC graph) sampleGraphs
         mapM_ (\(name, providedGraph, expectedGraph) -> it ("fixes buggy graphs - " ++ name) $
-                backAndForth2' providedGraph expectedGraph) buggyGraphs
+                backAndForth2' Common.mainBC providedGraph expectedGraph) buggyGraphs
 
 
     describe "graph sort alghorithm" $ do

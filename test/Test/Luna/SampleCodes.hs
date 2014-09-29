@@ -45,6 +45,12 @@ def main:
     x = 0
     y = 1
     {z, v} = {x, y}
+|], named "simple assignment 5" [r|
+def main:
+    x = 0
+    y = 1
+    {z, v} = {x, y}
+    h = {z, v}
 |], named "assignment with patterns" [r|
 def main:
     x = 0
@@ -179,12 +185,6 @@ def main arg:
 --             else: 6
 --     print $ 1 > 2
 
--- |], named "simple assignment 5" [r|
--- def main:
---     x = 0
---     y = 1
---     {z, v} = {x, y}
---     h = {z, v}
 
 
 emptyMain :: String

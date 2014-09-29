@@ -35,26 +35,22 @@ mainBC :: Breadcrumbs
 mainBC = [Crumb.Module "Main", Crumb.Function "main" []]
 
 
-getGraph :: PropertyMap -> Module -> IO (Graph, PropertyMap)
-getGraph pm ast = eitherStringToM' $ runEitherT $ do
-    focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' mainBC ast
-    expr  <- Focus.getFunction focus <??> "test.Common.getGraph : Target is not a function"
-
+getGraph :: Breadcrumbs -> PropertyMap -> Module -> IO (Graph, PropertyMap)
+getGraph bc pm ast = eitherStringToM' $ runEitherT $ do
+    focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
+    expr  <- focus ^? Focus.expr <??> "test.Common.getFunctionGraph : Target is not a function"
     aliasInfo <- EitherT $ Analysis.Alias.run ast
     EitherT $ GraphBuilder.run aliasInfo pm expr
 
 
-getExpr :: Graph -> PropertyMap -> Module -> IO (Module, PropertyMap)
-getExpr graph pm ast = eitherStringToM' $ runEitherT $ do
-
-    zipper <- hoistEither $ Zipper.focusBreadcrumbs' mainBC ast
-
-    expr  <- Focus.getFunction (Zipper.getFocus zipper) <??> "test.Common.getExpr : Target is not a function"
-
+getExpr :: Breadcrumbs -> Graph -> PropertyMap -> Module -> IO (Module, PropertyMap)
+getExpr bc graph pm ast = eitherStringToM' $ runEitherT $ do
+    zipper <- hoistEither $ Zipper.focusBreadcrumbs' bc ast
+    expr   <- Focus.getFunction (Zipper.getFocus zipper)
+            <??> "test.Common.getExpr : Target is not a function"
     (expr2', pm2) <- EitherT $ GraphParser.run graph pm expr
     maxID         <- EitherT $ MaxID.runExpr expr2'
     expr2         <- EitherT $ IDFixer.runExpr maxID Nothing False expr2'
-
     return (Zipper.close $ Zipper.modify (const $ Focus.Function expr2) zipper, pm2)
 
 
