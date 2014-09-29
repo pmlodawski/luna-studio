@@ -18,7 +18,7 @@ Library
   Default-Language:       Haskell2010
 
   Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
-                   `findmodules('dist/gen', '.*\.hs')`
+                   `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -158,7 +158,7 @@ Executable test_merge
 Executable test_color
   if !flag(cuda)
     buildable: False
-    
+
   Main-Is:        Color.hs
   Hs-Source-Dirs: test
 
