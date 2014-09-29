@@ -11,7 +11,7 @@ import Control.Monad
 
 generateGetNthFromTuple elem size = do
     name <- newName "x"
-    let patternP = tupP $ replicate elem wildP ++ varP name : replicate (size - elem) wildP
+    let patternP = tupP $ replicate elem wildP ++ varP name : replicate (size - elem - 1) wildP
         expr = varE name
     lamE [patternP] expr
 
@@ -43,18 +43,12 @@ generateSorter list@(_:_:rest) size = do
     let aSize = size `div` 2
         bSize = size - aSize
         (halfA, halfB) = splitAt aSize list
-    [wireNamesA, wireNamesB] <- sequence $ generateWires <$> [aSize, bSize]
     sorterHalfA <- normalB $ generateSorter halfA aSize
     sorterHalfB <- normalB $ generateSorter halfB bSize
+    [wireNamesA, wireNamesB] <- sequence $ generateWires <$> [aSize, bSize]
     merge <- generateMerger (reverse wireNamesA ++ wireNamesB) size
     let [wiresA, wiresB] = wiresGeneratorP <$> [wireNamesA, wireNamesB]
     return $ LetE [ValD wiresA sorterHalfA [], ValD wiresB sorterHalfB []] merge
-
-wiresGeneratorP = TupP . map VarP
-
-wiresGeneratorE = TupE . map VarE
-
-generateWires size = replicateM size (newName "x")
 
 generateMerger wires size =
     if size == 1
@@ -100,3 +94,9 @@ declaration ((nameA, nameB),(vA, vB)) = valD pat val [] where
 splitOnPowerOf2 size = split' size 1 where
   split' a power | power < a = split' a $ power * 2
                  | power >= a = power `div` 2
+
+wiresGeneratorP = TupP . map VarP
+
+wiresGeneratorE = TupE . map VarE
+
+generateWires size = replicateM size (newName "x")
