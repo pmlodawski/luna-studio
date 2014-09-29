@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Pass.Transform.Graph.SampleCodes where
+module Test.Luna.SampleCodes where
 
 import Text.RawString.QQ
 
 import Flowbox.Prelude
-import Test.Pass.Transform.Graph.Common (named)
+import Test.Luna.Pass.Transform.Graph.Common (named)
 
 
 
@@ -189,3 +189,23 @@ def main arg:
 
 emptyMain :: String
 emptyMain = "def main"
+
+
+zipperTestModule :: String
+zipperTestModule = [r|
+class Vector a:
+    x,y,z :: a
+
+    def test a b:
+        {a,b, c : c + a + b}
+
+    class Inner:
+        def inner a b:
+            a + b
+
+x :: Int
+
+def main:
+    v = Vector 1 2 3
+    v.test
+|]
