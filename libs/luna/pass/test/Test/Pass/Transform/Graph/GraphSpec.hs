@@ -87,7 +87,7 @@ sampleGraphs =
         , fixEmpty' (200, Node.Expr "bar" "" (0, 2))
         ,(-3, Node.Outputs        (0, 3))
         ]
-        [(100, 200, Edge.Data Port.All 5)]
+        [(100, 200, Edge.Data Port.All $ Port.Num 5)]
     , named "simple graph 4"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
@@ -95,8 +95,8 @@ sampleGraphs =
         , fixEmpty' (200, Node.Expr "bar" "" (0, 2))
         ,(-3, Node.Outputs        (0, 3))
         ]
-        [(100, 200, Edge.Data Port.All 5)
-        ,(100, 200, Edge.Data Port.All 3)
+        [(100, 200, Edge.Data Port.All $ Port.Num 5)
+        ,(100, 200, Edge.Data Port.All $ Port.Num 3)
         ]
     , named "simple graph 4"
     $ Graph.addMonadicEdges $ Graph.mkGraph
@@ -104,8 +104,8 @@ sampleGraphs =
         , fixEmpty' (100, Node.Expr "foo" "" (0, 1))
         ,(-3, Node.Outputs        (0, 3))
         ]
-        [(100, -3, Edge.Data Port.All 2)
-        ,(100, -3, Edge.Data Port.All 3)
+        [(100, -3, Edge.Data Port.All $ Port.Num 2)
+        ,(100, -3, Edge.Data Port.All $ Port.Num 3)
         ]
     , named "simple graph 5"
     $ Graph.addMonadicEdges $ Graph.mkGraph
@@ -113,15 +113,15 @@ sampleGraphs =
         , fixEmpty' (100, Node.Expr "main" "" (0, 1))
         ,(-3, Node.Outputs        (0, 3))
         ]
-        [(100, -3, Edge.Data (Port.All) 0)]
+        [(100, -3, Edge.Data (Port.All) $ Port.Num 0)]
     , named "simple graph 6"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
         , fixEmpty' (100, Node.Expr "main" "" (0, 1))
         ,(-3, Node.Outputs        (0, 3))
         ]
-        [(-2,100, Edge.Data (Port.Num 0) 0)
-        ,(100, -3, Edge.Data (Port.All) 0)
+        [(-2 ,100, Edge.Data (Port.Num 0) $ Port.Num 0)
+        ,(100, -3, Edge.Data (Port.All  ) $ Port.Num 0)
         ]
     , named "inverse order graph"
     $ Graph.addMonadicEdges $ Graph.mkGraph
@@ -130,7 +130,7 @@ sampleGraphs =
         , fixEmpty' (200, Node.Expr "bar" "" (0, 2))
         ,(-3, Node.Outputs        (0, 3))
         ]
-        [(200, 100, Edge.Data Port.All 5)]
+        [(200, 100, Edge.Data Port.All $ Port.Num 5)]
     ]
 
 
@@ -173,8 +173,8 @@ spec = do
                 n6 = (6, Node.Expr "" "" (5, 0))
                 properOrder = [n1, n2, n4, n5, n3, n6]
                 testOrder   = [n2, n3, n5, n6, n4, n1]
-                edges  = [(1, 2, Edge.Data Port.All 0)
-                         ,(5, 3, Edge.Data Port.All 0)]
+                edges  = [(1, 2, Edge.Data Port.All $ Port.Num 0)
+                         ,(5, 3, Edge.Data Port.All $ Port.Num 0)]
                 graph  = Graph.mkGraph testOrder edges
                 sorted = Graph.sort graph
             map fst sorted `shouldBe` map fst properOrder

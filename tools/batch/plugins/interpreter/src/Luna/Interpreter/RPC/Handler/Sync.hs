@@ -24,11 +24,9 @@ import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  as ProjectManagerSyncGet
---import           Luna.Interpreter.Proto.CallPoint                               ()
---import           Luna.Interpreter.Proto.CallPointPath                           ()
 import           Luna.Interpreter.RPC.Handler.Lift
-import           Luna.Interpreter.Session.Session  (SessionST)
-import qualified Luna.Interpreter.Session.Session  as Session
+import           Luna.Interpreter.Session.Session                               (SessionST)
+import qualified Luna.Interpreter.Session.Session                               as Session
 
 
 
@@ -37,9 +35,8 @@ logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Sync"
 
 --- helpers ---------------------------------------------------------------
 
-syncLibManager :: Int32 -> RPC Context SessionST ()
-syncLibManager updateNo = do
-    testUpdateNo updateNo
+syncLibManager :: RPC Context SessionST ()
+syncLibManager = do
     pm <- Batch.getProjectManager
     activeProjectID <- liftSession Session.getProjectID
     libs <- case ProjectManager.lab pm activeProjectID of
@@ -56,15 +53,22 @@ testUpdateNo updateNo = do
         "UpdateNo does not match (local: " ++ show localUpdateNo ++ ", remote: " ++ show updateNo ++ ")"
 
 
+testProjectID :: Project.ID -> RPC Context SessionST ()
+testProjectID projectID = do
+    currentProjectID <- liftSession Session.getProjectID
+    assertE (projectID == currentProjectID) $
+        "Sync.testProjectID : wrong projectID = " ++ show projectID
+
+
 hoistSessionST :: RPC Context IO a -> RPC Context SessionST a
 hoistSessionST = hoist (hoist liftIO)
---hoistSessionST = hoist ( hoist $ SessionT . liftIO)
 
 
 sync :: Int32 -> RPC Context IO a -> RPC Context SessionST ()
 sync updateNo syncOp = do
     hoistSessionST $ void syncOp
-    syncLibManager updateNo
+    testUpdateNo updateNo
+    syncLibManager
 
 --- handlers --------------------------------------------------------------
 

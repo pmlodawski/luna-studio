@@ -17,8 +17,12 @@ import           Pipes                     (liftIO, (>->))
 import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
 
+import           Flowbox.Bus.Data.Flag                    (Flag)
+import qualified Flowbox.Bus.Data.Flag                    as Flag
 import           Flowbox.Bus.Data.Message                 (Message)
 import qualified Flowbox.Bus.Data.Message                 as Message
+import           Flowbox.Bus.Data.Prefix                  (Prefix)
+import qualified Flowbox.Bus.Data.Prefix                  as Prefix
 import           Flowbox.Bus.Data.Topic                   (status, update, (/+))
 import qualified Flowbox.Bus.Data.Topic                   as Topic
 import           Flowbox.Bus.RPC.HandlerMap               (HandlerMap)
@@ -42,15 +46,16 @@ import           Luna.Interpreter.Session.Session         (SessionST)
 import qualified Luna.Interpreter.Session.Session         as Session
 
 
-
 logger :: LoggerIO
 logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Handler"
 
 
-handlerMap :: HandlerMap Context SessionST
-handlerMap callback = HandlerMap.fromList
+handlerMap :: Prefix -> HandlerMap Context SessionST
+handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
     [ (Topic.interpreterSetProjectIDRequest    , respond Topic.update Interpreter.setProjectID    )
+    , (Topic.interpreterGetProjectIDRequest    , respond Topic.status Interpreter.getProjectID    )
     , (Topic.interpreterSetMainPtrRequest      , respond Topic.update Interpreter.setMainPtr      )
+    , (Topic.interpreterGetMainPtrRequest      , respond Topic.status Interpreter.getMainPtr      )
     , (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run             )
     , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd   )
     , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove)
@@ -108,25 +113,33 @@ handlerMap callback = HandlerMap.fromList
         requiredSync fun = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> fun args >> Sync.syncRequest)
 
 
-interpret :: IORef Message.CorrelationID
+extraImports :: [Session.Import]
+extraImports = ["FlowboxM.Libs.Flowbox.Std"]
+
+
+interpret :: Prefix
+          -> IORef Message.CorrelationID
           -> Pipes.Pipe (Message, Message.CorrelationID)
-                        (Message, Message.CorrelationID)
+                        (Message, Message.CorrelationID, Flag)
                         (StateT Context SessionST) ()
-interpret crlRef = forever $ do
+interpret prefix crlRef = forever $ do
     (message, crl) <- Pipes.await
     liftIO $ IORef.writeIORef crlRef crl
-    results <- lift $ Processor.processLifted handlerMap message
-    mapM_ (\r -> Pipes.yield (r, crl)) results
+    results <- lift $ Processor.process (handlerMap prefix) message
+    let send []    = return ()
+        send [r]   = Pipes.yield (r, crl, Flag.Enable)
+        send (r:t) = Pipes.yield (r, crl, Flag.Disable) >> send t
+    send results
 
 
-run :: Config -> Context
+run :: Config -> Prefix -> Context
     -> (Pipes.Input  (Message, Message.CorrelationID),
-        Pipes.Output (Message, Message.CorrelationID))
+        Pipes.Output (Message, Message.CorrelationID, Flag))
     -> IO (Either Error ())
-run cfg ctx (input, output) = do
+run cfg prefix ctx (input, output) = do
     crlRef <- IORef.newIORef def
     let env = def & Env.resultCallBack .~ Value.reportOutputValue crlRef output
-    Session.run cfg env $ lift $ flip evalStateT ctx $
+    Session.run cfg env extraImports $ lift $ flip evalStateT ctx $
         Pipes.runEffect $ Pipes.fromInput input
-                      >-> interpret crlRef
+                      >-> interpret prefix crlRef
                       >-> Pipes.toOutput output

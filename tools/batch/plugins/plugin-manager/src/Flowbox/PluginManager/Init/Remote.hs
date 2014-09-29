@@ -19,12 +19,12 @@ import qualified Data.Text                  as Text
 
 import           Flowbox.Bus.Bus                     (Bus)
 import qualified Flowbox.Bus.Bus                     as Bus
+import           Flowbox.Bus.Data.Prefix             (Prefix)
 import           Flowbox.Bus.EndPoint                (BusEndPoints)
 import           Flowbox.Control.Error               (safeLiftIO)
 import qualified Flowbox.PluginManager.Plugin.Info   as PluginInfo
 import           Flowbox.PluginManager.Plugin.Plugin (Plugin (Plugin))
 import qualified Flowbox.PluginManager.Plugin.Plugin as Plugin
-import           Flowbox.PluginManager.Prefix        (Prefix)
 import qualified Flowbox.PluginManager.RPC.Client    as Client
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger

@@ -4,11 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.Session.Data.CallDataPath where
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
+import           Flowbox.Source.Location                     (loc)
 import qualified Luna.AST.Common                             as AST
 import           Luna.Graph.Graph                            (Graph)
 import qualified Luna.Graph.Graph                            as Graph
@@ -21,6 +23,7 @@ import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
 import qualified Luna.Interpreter.Session.Data.DefPoint      as DefPoint
+import qualified Luna.Interpreter.Session.Error              as Error
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 
@@ -51,7 +54,8 @@ fromCallPointPath (callPoint:t) parentDefPoint = do
     (graph, defID) <- Session.getGraph parentDefPoint
     let nodeID    = callPoint ^. CallPoint.nodeID
         libraryID = callPoint ^. CallPoint.libraryID
-    node <- Graph.lab graph nodeID <??> "CallDataPath.fromCallPointPath : No node with id = " ++ show nodeID
+    node <- Graph.lab graph nodeID
+        <??> Error.ASTLookupError $(loc) ("No node with id = " ++ show nodeID)
     let parentBC = parentDefPoint  ^. DefPoint.breadcrumbs
         callData = CallData callPoint parentBC defID graph node
     mdefPoint <- Inspect.fromName (node ^. Node.expr) parentBC libraryID

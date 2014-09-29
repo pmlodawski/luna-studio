@@ -11,7 +11,6 @@ module Luna.Graph.Graph(
 ) where
 
 import qualified Data.List as List
-import qualified GHC.Exts  as Exts
 
 import           Flowbox.Data.Graph hiding (Edge, Graph)
 import qualified Flowbox.Data.Graph as DG
@@ -21,7 +20,7 @@ import           Luna.Graph.Edge    (Edge)
 import qualified Luna.Graph.Edge    as Edge
 import           Luna.Graph.Node    (Node)
 import qualified Luna.Graph.Node    as Node
-import           Luna.Graph.Port    (InPort)
+import           Luna.Graph.Port    (Port)
 
 
 type Graph = DG.Graph Node Edge
@@ -31,13 +30,13 @@ connect :: Node.ID -> Node.ID -> Edge -> Graph -> Graph
 connect srcID dstID edge = insEdge (srcID, dstID, edge)
 
 
-portMatches :: InPort -> LEdge Edge -> Bool
+portMatches :: Port -> LEdge Edge -> Bool
 portMatches _          (_, _, Edge.Monadic) = False
 portMatches newDstPort (_, _, Edge.Data _ connectedDstPort) =
     newDstPort == connectedDstPort
 
 
-isNotAlreadyConnected :: Graph -> Node.ID -> InPort -> Bool
+isNotAlreadyConnected :: Graph -> Node.ID -> Port -> Bool
 isNotAlreadyConnected graph nodeID adstPort = not connected where
     connected = any (portMatches adstPort) (inn graph nodeID)
 
@@ -45,7 +44,7 @@ isNotAlreadyConnected graph nodeID adstPort = not connected where
 sort :: Graph -> [(Node.ID, Node)]
 sort graph = DG.topsortStable graph $ List.sortBy compareNodes $ DG.labNodes graph where
     compareNodes :: (Node.ID, Node) -> (Node.ID, Node) -> Ordering
-    compareNodes (_, aNode) (_, bNode) 
+    compareNodes (_, aNode) (_, bNode)
         |      Node.isInputs  aNode  && not (Node.isInputs  bNode) = LT
         | not (Node.isInputs  aNode) &&      Node.isInputs  bNode  = GT
         |      Node.isOutputs aNode  && not (Node.isOutputs bNode) = GT

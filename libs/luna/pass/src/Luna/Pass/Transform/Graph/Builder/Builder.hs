@@ -30,7 +30,7 @@ import           Luna.Data.AliasInfo                     (AliasInfo)
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Node                         as Node
 import qualified Luna.Graph.Node.OutputName              as OutputName
-import           Luna.Graph.Port                         (InPort)
+import           Luna.Graph.Port                         (Port)
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Graph.PropertyMap                  (PropertyMap)
 import qualified Luna.Pass.Pass                          as Pass
@@ -98,8 +98,8 @@ buildOutput outputID expr = do
     case expr of
         Expr.Assignment {} -> void $ buildNode False True Nothing expr
         Expr.Tuple _ items -> connectArgs True  True Nothing outputID items 0
-        Expr.Var {}        -> connectArg  True  True Nothing outputID (expr, 0)
-        _                  -> connectArg  False True Nothing outputID (expr, 0)
+        Expr.Var {}        -> connectArg  True  True Nothing outputID (expr, Port.Num 0)
+        _                  -> connectArg  False True Nothing outputID (expr, Port.Num 0)
     State.connectMonadic outputID
 
 
@@ -107,7 +107,7 @@ buildNode :: Bool -> Bool -> Maybe String -> Expr -> GBPass AST.ID
 buildNode astFolded monadicBind outName expr = case expr of
     Expr.Accessor i name dst  -> do let node = Node.Expr name (genName name i)
                                     State.addNode i Port.All node astFolded assignment
-                                    connectArg True True Nothing  i (dst, 0)
+                                    connectArg True True Nothing  i (dst, Port.Num 0)
                                     connectMonadic i
                                     return i
     Expr.Assignment i pat dst -> do let patStr = Pat.lunaShow pat
@@ -120,7 +120,7 @@ buildNode astFolded monadicBind outName expr = case expr of
                                                    [patID] -> State.addToNodeMap patID (i, Port.All)
                                                    _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs
                                                 dstID <- buildNode True True Nothing dst
-                                                State.connect dstID i 0
+                                                State.connect dstID i $ Port.Num 0
                                                 connectMonadic i
                                                 return i
                                         else do [p] <- buildPat pat
@@ -136,8 +136,8 @@ buildNode astFolded monadicBind outName expr = case expr of
                                     return srcID
     Expr.Infix i name src dst -> do let node = Node.Expr name (genName name i)
                                     State.addNode i Port.All node astFolded assignment
-                                    connectArg True True Nothing i (src, 0)
-                                    connectArg True True Nothing i (dst, 1)
+                                    connectArg True True Nothing i (src, Port.Num 0)
+                                    connectArg True True Nothing i (dst, Port.Num 1)
                                     connectMonadic i
                                     return i
     Expr.Var       i name     -> do isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp i
@@ -207,10 +207,10 @@ buildArg astFolded monadicBind outName expr = case expr of
 
 connectArgs :: Bool -> Bool -> Maybe String -> AST.ID -> [Expr] -> Int ->  GBPass ()
 connectArgs astFolded monadicBind outName dstID exprs start =
-    mapM_ (connectArg astFolded monadicBind outName dstID) $ zip exprs [start..]
+    mapM_ (connectArg astFolded monadicBind outName dstID) $ zip exprs $ map Port.Num [start..]
 
 
-connectArg :: Bool -> Bool -> Maybe String -> AST.ID -> (Expr, InPort) -> GBPass ()
+connectArg :: Bool -> Bool -> Maybe String -> AST.ID -> (Expr, Port) -> GBPass ()
 connectArg astFolded monadicBind outName dstID (expr, dstPort) = do
     msrcID <- buildArg astFolded monadicBind outName expr
     case msrcID of

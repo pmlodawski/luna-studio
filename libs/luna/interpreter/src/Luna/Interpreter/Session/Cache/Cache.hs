@@ -115,5 +115,6 @@ delete callPointPath = modify $ Env.cached %~ MapForest.delete callPointPath
 cached :: Session (MapForest CallPoint CacheInfo)
 cached = gets (view Env.cached)
 
+
 lookupCacheInfo :: CallPointPath -> Session (Maybe CacheInfo)
 lookupCacheInfo callPointPath = MapForest.lookup callPointPath <$> cached

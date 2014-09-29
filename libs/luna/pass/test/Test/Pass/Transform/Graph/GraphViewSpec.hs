@@ -105,6 +105,22 @@ sampleGraphs =
         ,(1, 2, EdgeView []        [0, 1, 2])
         ,(1, 2, EdgeView [1, 3, 4] [3, 5, 7, 9])
         ]
+    , named "graphview with single-vaule output port descriptor"
+    $ GraphView.mkGraph
+        [(-1, Node.Inputs  (0, 0))
+        ,(-2, Node.Outputs (0, 0))
+        ,(0 , Node.Expr "foo" "" (0, 0))
+        ]
+        [(0 , -2, EdgeView [0] [1])
+        ]
+    , named "graphview with empty output port descriptor"
+    $ GraphView.mkGraph
+        [(-1, Node.Inputs  (0, 0))
+        ,(-2, Node.Outputs (0, 0))
+        ,(0 , Node.Expr "foo" "" (0, 0))
+        ]
+        [(0 , -2, EdgeView [0] [])
+        ]
     ]
 
 

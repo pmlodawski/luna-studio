@@ -30,11 +30,12 @@ Library
                   flowbox-config,
                   flowbox-utils,
                   ghc,
-                  hint,
+                  ghc-mtl,
                   luna-core,
                   luna-distribution,
                   luna-pass,
                   mtl,
+                  pretty-show,
                   raw-strings-qq,
                   transformers
 

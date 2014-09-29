@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Flowbox.Data.Graph (
     module Data.Graph.Inductive,
@@ -143,7 +144,7 @@ topsortl graph = map (fromJust . labVtx graph) $ topsort graph
 
 
 topsortStable :: Eq a => Graph a b -> [LVertex a] -> [LVertex a]
-topsortStable graph pending = topsortStable' graph [] pending
+topsortStable graph = topsortStable' graph []
 
 
 topsortStable' :: Eq a => Graph a b -> [LVertex a] -> [LVertex a] -> [LVertex a]

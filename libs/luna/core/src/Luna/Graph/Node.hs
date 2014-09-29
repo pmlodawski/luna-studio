@@ -20,7 +20,7 @@ data Node = Expr     { _expr :: String, _outputName :: String, _pos :: Position 
 
 type Position = (Float, Float)
 
-makeLenses (''Node)
+makeLenses ''Node
 
 
 type ID = Int

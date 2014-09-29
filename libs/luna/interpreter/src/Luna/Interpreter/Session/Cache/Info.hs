@@ -25,4 +25,4 @@ data CacheInfo = CacheInfo { _defID         :: AST.ID
                            , _dependencies  :: Map [VarName] VarName
                            } deriving (Show)
 
-makeLenses (''CacheInfo)
+makeLenses ''CacheInfo
