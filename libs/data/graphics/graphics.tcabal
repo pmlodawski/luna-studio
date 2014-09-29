@@ -1,0 +1,179 @@
+Name:                   flowbox-graphics
+Version:                0.15.0.0
+Cabal-version:          >= 1.20
+Tested-with:            GHC == 7.8.*
+Build-type:             Custom
+
+Flag cuda
+  Description:          Enable the CUDA parallel backend for NVIDIA GPUs
+  Default:              True
+
+Library
+  Hs-Source-Dirs:         src
+  GHC-Options:            -Wall -O2
+  Default-Extensions:     DoAndIfThenElse,
+                          NoImplicitPrelude,
+                          TemplateHaskell,
+                          OverloadedStrings
+  Default-Language:       Haskell2010
+
+  Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  accelerate     == 0.15.* ,
+                  accelerate-io  == 0.15.* ,
+                  accelerate-fft == 0.15.* ,
+                  algebraic       > 0.1    ,
+                  bmp                      ,
+                  containers               ,
+                  distributive             ,
+                  flowbox-utils            ,
+                  imagemagick   >= 0.0.3.6 ,
+                  lifted-base              ,
+                  linear                   ,
+                  monad-control            ,
+                  mtl                      ,
+                  resourcet                ,
+                  split                    ,
+                  system-filepath          ,
+                  transformers             ,
+                  errors                   ,
+                  either                   ,
+                  profunctors              ,
+                  cubicbezier              ,
+                  vector
+
+Executable test_generator
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        Generator.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -fno-full-laziness
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          TemplateHaskell,
+                          OverloadedStrings
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  accelerate-fft           ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  split                    ,
+                  vector
+
+Executable test_bezier
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        Bezier.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          TemplateHaskell,
+                          OverloadedStrings
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  lens                     ,
+                  split                    ,
+                  cubicbezier
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+Executable test_merge
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        Merge.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  split                    ,
+                  vector
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+Executable test_color
+  if !flag(cuda)
+    buildable: False
+    
+  Main-Is:        Color.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  QuickCheck               ,
+                  split                    ,
+                  vector

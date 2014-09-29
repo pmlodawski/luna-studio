@@ -8,13 +8,13 @@
 
 module Flowbox.Batch.Project.Project where
 
-import           Flowbox.Luna.Data.Attributes (Attributes)
-import qualified Flowbox.Luna.Data.Attributes as Attributes
-import           Flowbox.Luna.Lib.LibManager  (LibManager)
-import qualified Flowbox.Luna.Lib.LibManager  as LibManager
-import           Flowbox.Prelude              hiding (empty)
-import           Flowbox.System.UniPath       (UniPath)
-import qualified Flowbox.System.UniPath       as UniPath
+import           Flowbox.Prelude        hiding (empty)
+import           Flowbox.System.UniPath (UniPath)
+import qualified Flowbox.System.UniPath as UniPath
+import           Luna.Graph.Attributes  (Attributes)
+import qualified Luna.Graph.Attributes  as Attributes
+import           Luna.Lib.Manager       (LibManager)
+import qualified Luna.Lib.Manager       as LibManager
 
 
 
@@ -25,7 +25,8 @@ data Project = Project { _name     :: String
                        , _attrs    :: Attributes
                        } deriving (Show, Read)
 
-makeLenses(''Project)
+makeLenses ''Project
+
 
 type ID = Int
 

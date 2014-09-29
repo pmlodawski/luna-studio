@@ -34,8 +34,9 @@ Executable account-manager-mock
                     flowbox-rpc,
                     flowbox-utils,
                     network,
-                    optparse-applicative,
+                    optparse-applicative < 0.10, 
                     postgresql-simple,
                     protocol-buffers,
                     text,
                     transformers
+-- FIXME: update optparse-applicative to newer version

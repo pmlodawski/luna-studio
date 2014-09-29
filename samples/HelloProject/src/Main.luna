@@ -1,8 +1,14 @@
 import Flowbox:Std
 
 
+class Vector a:
+    x,y,z :: a
+    def test a b:
+        {a,b}
+
+def print msg:
+    ```autoLift1 print #{msg}```
+
 def main:
-    Std.print $ [3,2,1].min
     v = Vector 1 2 3
-    Std.print v
-    Std.print (v + v)
+    print $ v.test 1 2

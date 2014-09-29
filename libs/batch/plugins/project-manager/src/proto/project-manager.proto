@@ -434,7 +434,7 @@ message Project {
                         }
                         message Remove {
                             message Request {
-                                required int32 nodeID    = 1;
+                                repeated int32 nodeIDs   = 1;
                                 required generated.proto.crumb.Breadcrumbs bc = 2;
                                 required int32 libraryID = 3;
                                 required int32 projectID = 4;

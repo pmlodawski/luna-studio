@@ -51,3 +51,12 @@ message Parse {
         }   
     }
 }
+
+message Parser {
+    message Ping {
+        message Request { }
+        message Status  { 
+            required Request request = 1;
+        }
+    }
+}

@@ -10,6 +10,7 @@
 module Flowbox.Bus.RPC.Server.Processor where
 
 import           Control.Monad             (liftM)
+import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.IO.Class    (MonadIO)
 import           Control.Monad.Trans.State
 import qualified Data.Maybe                as Maybe
@@ -43,30 +44,14 @@ optResult :: MonadIO m => (a -> m (Maybe b)) -> a -> m [b]
 optResult f a = liftM Maybe.maybeToList $ f a
 
 
--- FIXME [PM] : Code duplication
 
-process :: HandlerMap s IO -> Message -> StateT s IO [Message]
+process :: (Catch.MonadCatch m, MonadIO m, Functor m)
+        => HandlerMap s m -> Message -> StateT s m [Message]
 process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
     call mkTopic method = case Proto.messageGet' $ msg ^. Message.message of
         Left err   -> do logger error err
                          return $ Message.mkError topic err
         Right args -> do results <- RPC.run $ method args
-                         return $ case results of
-                            Left err -> Message.mkError topic err
-                            Right ok -> map (respond mkTopic) ok
-
-    topic = msg ^. Message.topic
-
-    respond :: Proto.Serializable msg => (Topic -> Topic) -> msg -> Message
-    respond mkTopic = Message.mk (mkTopic topic)
-
-
-processLifted :: MonadIO m => HandlerMap s m -> Message -> StateT s m [Message]
-processLifted handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
-    call mkTopic method = case Proto.messageGet' $ msg ^. Message.message of
-        Left err   -> do logger error err
-                         return $ Message.mkError topic err
-        Right args -> do results <- RPC.runLifted $ method args
                          return $ case results of
                             Left err -> Message.mkError topic err
                             Right ok -> map (respond mkTopic) ok

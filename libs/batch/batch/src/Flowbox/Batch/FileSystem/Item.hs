@@ -4,16 +4,18 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Batch.FileSystem.Item (
-    Item(..)
-) where
+module Flowbox.Batch.FileSystem.Item where
 
 import Flowbox.Prelude
 import Flowbox.System.UniPath (UniPath)
 
 
 
-data Item = File      { path :: UniPath, size :: Int }
-          | Directory { path :: UniPath, size :: Int }
-          | Other     { path :: UniPath, size :: Int }
+data Item = File      { _path :: UniPath, _size :: Int }
+          | Directory { _path :: UniPath, _size :: Int }
+          | Other     { _path :: UniPath, _size :: Int }
+          deriving (Show)
+
+makeLenses ''Item

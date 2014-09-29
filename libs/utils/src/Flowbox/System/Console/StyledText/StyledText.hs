@@ -39,8 +39,8 @@ hPrintStack handler stack (x:xs) = case x of
     StylePush s        -> ANSI.hSetSGR handler (Style.toSGR s) *> printStack (s:stack) xs
     StylePop           -> case stack of
                           _:s:ss -> ANSI.hSetSGR handler (Style.toSGR s)             *> printStack (s:ss) xs
-                          _:[]     -> ANSI.hSetSGR handler (Style.toSGR Style.Reset) *> printStack [] xs
-                          []       -> printStack [] xs
+                          [_]    -> ANSI.hSetSGR handler (Style.toSGR Style.Reset) *> printStack [] xs
+                          []     -> printStack [] xs
     where printStack = hPrintStack handler
 
 

@@ -38,6 +38,14 @@ toList :: MapForest k v -> [([k], v)]
 toList = find (const . const True)
 
 
+keys :: MapForest k v -> [[k]]
+keys = map fst . toList
+
+
+elems :: MapForest k v -> [v]
+elems = map snd . toList
+
+
 find :: ([k] -> v -> Bool) -> MapForest k v -> [([k], v)]
 find predicate = concatMap (find' []) . Map.toList where
     find' key (k, level) = case level ^. value of

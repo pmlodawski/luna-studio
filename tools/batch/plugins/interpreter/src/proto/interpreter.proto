@@ -7,6 +7,8 @@
 
 package generated.proto.interpreter;
 
+import "crumb.proto";
+
 
 
 message CallPoint {
@@ -15,7 +17,22 @@ message CallPoint {
 }
 
 message CallPointPath {
-    repeated CallPoint calls = 1;
+    optional int32 projectID = 1;
+    repeated CallPoint calls = 2;
+}
+
+message DefPoint {
+    optional int32 projectID = 1;
+    optional int32 libraryID = 2;
+    optional generated.proto.crumb.Breadcrumbs breadcrumbs = 3;
+}
+
+enum Status {
+    Ready        = 1;
+    Modified     = 2;
+    NonCacheable = 3;
+    NotInCache   = 4;
+    Unknown      = 5;
 }
 
 message Interpreter {
@@ -44,9 +61,55 @@ message Interpreter {
             }
         }
     }
+    message SetProjectID {
+        message Request {
+            required int32 projectID = 1;
+        }
+        message Update {
+            required Request request = 1;
+        }
+    }
+    message GetProjectID {
+        message Request { }
+        message Status {
+            required Request request = 1;
+            optional int32 projectID = 2;
+        }
+    }
+    message SetMainPtr {
+        message Request {
+            required DefPoint mainPtr = 1;
+        }
+        message Update {
+            required Request request = 1;
+        }
+    }
+    message GetMainPtr {
+        message Request { }
+        message Status {
+            required Request request = 1;
+            optional DefPoint mainPtr = 2;
+        }
+    }
     message Run {
         message Request { }
         message Update  { 
+            required Request request = 1;
+        }
+    }
+    message Value {
+        message Request {
+            required CallPointPath callPointPath = 1;
+        }
+        message Update {
+            required CallPointPath callPointPath = 1;
+            required Status        status        = 2;
+            optional bytes         value         = 3;
+        }
+    }
+    message Ping {
+        message Request { }
+        message Status  { 
             required Request request = 1;
         }
     }

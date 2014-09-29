@@ -17,7 +17,7 @@ message Plugin {
             required generated.proto.plugin.Plugin plugin = 1;
         }
         message Update { 
-            required generated.proto.plugin.Plugin plugin = 1;
+            required Request request = 1;
             required int32 id = 2;
         }
     }
@@ -26,7 +26,7 @@ message Plugin {
             required int32 id = 1;
         }
         message Update { 
-            required int32 id = 1;
+            required Request request = 1;
         }
     }
     message Start {
@@ -34,7 +34,7 @@ message Plugin {
             required int32 id = 1;
         }
         message Update {
-            required int32 id = 1;
+            required Request request = 1;
         }
     }
     message Stop {
@@ -42,7 +42,7 @@ message Plugin {
             required int32 id = 1;
         }
         message Update { 
-            required int32 id = 1;
+            required Request request = 1;
         }
     }
     message Restart {
@@ -50,7 +50,7 @@ message Plugin {
             required int32 id = 1;
         }
         message Update { 
-            required int32 id = 1;
+            required Request request = 1;
         }
     }
     message Lookup {
@@ -58,18 +58,24 @@ message Plugin {
             required int32 id = 1;
         }
         message Status { 
-            required generated.proto.plugin.PluginInfo pluginInfo = 1;
-            required int32 id = 2;
+            required Request request = 1;
+            required generated.proto.plugin.PluginInfo pluginInfo = 2;
         }
     }
     message List {
         message Request { }
         message Status { 
-            repeated generated.proto.plugin.PluginInfo list = 1;
+            required Request request = 1;
+            repeated generated.proto.plugin.PluginInfo list = 2;
         }
     }
+}
+
+message PluginManager {
     message Ping {
         message Request { }
-        message Status  { }
+        message Status  { 
+            required Request request = 1;
+        }
     }
 }

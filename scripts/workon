@@ -12,14 +12,14 @@ import os.path
 import ConfigParser
 
 import psutil
-from copy            import copy, deepcopy
-from config.packages import pkgDb
-from subprocess      import call, Popen, PIPE
-from utils.colors    import print_info, print_error, print_warning
-from utils.errors    import fatal
-from utils.system    import platformFix, system, systems, osname
+from   copy              import copy, deepcopy
+from   config.packages   import pkgDb
+from   subprocess        import call, Popen, PIPE
+from   utils.colors      import print_info, print_error, print_warning
+from   utils.errors      import fatal
+from   utils.system      import platformFix, system, systems, osname
+from   utils.initialized import checkAndHandleInitialized, markInitialized
 import shutil
-
 SILENTINSTALL = False
 
 myPath = os.path.dirname(os.path.realpath(__file__))
@@ -67,31 +67,15 @@ def main():
 def check_deps(pkg):
     deps = deepcopy(pkg.deps)
     for dep in pkg.deps:
+        if not dep in pkgDb:
+            print_error ("Configuration error! '%s' could not be found." % dep)
+            raise Exception()
         dpkg = pkgDb[dep]
         deps = deepcopy(deps).union(check_deps(dpkg))
     return deps
 
 zdotdir = None  # see notes for system.DARWIN in workon(name) below (grep for OSXWORKAROUND_01)
 
-
-def checkInitialized(path):
-    initPath = os.path.join(path,".init")
-    return os.path.exists(initPath)
-
-def markInitialized(path):
-    initPath = os.path.join(path,".init")
-    open(initPath,'a').close()
-
-def handleInitialized(path):
-    if os.path.exists(path):
-        print_warning("The path '%s' exists but seems corrupted. Deleting." % path)
-        shutil.rmtree(path)
-
-def checkAndHandleInitialized(path):
-    if not checkInitialized(path):
-        handleInitialized(path)
-        return False
-    return True
 
 def workon(name):
     if not checkAndHandleInitialized('dist'):
@@ -119,7 +103,11 @@ def workon(name):
             os.chdir(sbox)
             try_call('cabal sandbox init --sandbox=.')
 
-            pnames = check_deps(pkg)
+            try:
+                pnames = check_deps(pkg)
+            except:
+                print_error ("Dependency checking failed.")
+                return
             pkg = deepcopy(pkg)
             pnames.add(pkg.path)
             for pname in pnames:

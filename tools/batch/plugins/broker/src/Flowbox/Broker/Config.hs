@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Broker.Config (
-    module Paths_flowbox_broker,
+    module Paths_batch_plugin_broker,
 ) where
 
-import Paths_flowbox_broker (version)
+import Paths_batch_plugin_broker (version)

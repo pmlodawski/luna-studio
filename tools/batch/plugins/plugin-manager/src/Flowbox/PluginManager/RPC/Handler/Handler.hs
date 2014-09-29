@@ -9,18 +9,17 @@
 
 module Flowbox.PluginManager.RPC.Handler.Handler where
 
-import Control.Arrow             (first)
 import Control.Monad.Trans.State
 
 import           Flowbox.Bus.Data.Message                        (Message)
+import           Flowbox.Bus.Data.Prefix                         (Prefix)
+import qualified Flowbox.Bus.Data.Prefix                         as Prefix
 import           Flowbox.Bus.Data.Topic                          (Topic, status, update, (/+))
 import           Flowbox.Bus.RPC.HandlerMap                      (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                      as HandlerMap
 import           Flowbox.Bus.RPC.RPC                             (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor                as Processor
 import           Flowbox.PluginManager.Context                   (Context)
-import           Flowbox.PluginManager.Prefix                    (Prefix)
-import qualified Flowbox.PluginManager.Prefix                    as Prefix
 import qualified Flowbox.PluginManager.RPC.Handler.Plugin        as PluginHandler
 import qualified Flowbox.PluginManager.RPC.Handler.PluginManager as PluginManagerHandler
 import qualified Flowbox.PluginManager.RPC.Topic                 as Topic
@@ -34,12 +33,8 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Handler"
 
 
-prefixifyTopics :: Prefix -> [(Topic, a)] -> [(Topic, a)]
-prefixifyTopics prefix = map (first $ Prefix.prefixify prefix)
-
-
 handlerMap :: Prefix -> HandlerMap Context IO
-handlerMap prefix callback = HandlerMap.fromList $ prefixifyTopics prefix
+handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
     [ (Topic.pluginAddRequest        , respond update PluginHandler.add    )
     , (Topic.pluginRemoveRequest     , respond update PluginHandler.remove )
     , (Topic.pluginListRequest       , respond status PluginHandler.list   )

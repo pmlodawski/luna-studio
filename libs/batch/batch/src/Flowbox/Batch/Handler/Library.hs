@@ -11,26 +11,26 @@ module Flowbox.Batch.Handler.Library where
 import           Data.Version   (Version (Version))
 import qualified System.Process as Process
 
-import           Flowbox.Batch.Batch                        (Batch, gets)
-import qualified Flowbox.Batch.Batch                        as Batch
-import           Flowbox.Batch.Handler.Common               (libManagerOp)
-import qualified Flowbox.Batch.Handler.Common               as Batch
-import qualified Flowbox.Batch.Project.Project              as Project
+import           Flowbox.Batch.Batch               (Batch, gets)
+import qualified Flowbox.Batch.Batch               as Batch
+import           Flowbox.Batch.Handler.Common      (libManagerOp)
+import qualified Flowbox.Batch.Handler.Common      as Batch
+import qualified Flowbox.Batch.Project.Project     as Project
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.Pass.ASTInfo             as ASTInfo
-import qualified Flowbox.Luna.Lib.LibManager                as LibManager
-import           Flowbox.Luna.Lib.Library                   (Library)
-import qualified Flowbox.Luna.Lib.Library                   as Library
-import qualified Flowbox.Luna.Passes.Build.Build            as Build
-import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
-import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
-import qualified Flowbox.Luna.Passes.Build.Diagnostics      as Diagnostics
-import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Platform                    as Platform
-import           Flowbox.System.UniPath                     (UniPath)
-import qualified Flowbox.System.UniPath                     as UniPath
+import qualified Flowbox.System.Platform           as Platform
+import           Flowbox.System.UniPath            (UniPath)
+import qualified Flowbox.System.UniPath            as UniPath
+import qualified Luna.Data.ASTInfo                 as ASTInfo
+import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
+import           Luna.Lib.Lib                      (Library)
+import qualified Luna.Lib.Lib                      as Library
+import qualified Luna.Lib.Manager                  as LibManager
+import qualified Luna.Pass.Build.Build             as Build
+import           Luna.Pass.Build.BuildConfig       (BuildConfig (BuildConfig))
+import qualified Luna.Pass.Build.BuildConfig       as BuildConfig
+import qualified Luna.Pass.Build.Diagnostics       as Diagnostics
 
 
 

@@ -3,6 +3,7 @@
 #include "../generated/file-manager.pb.h"
 #include "../generated/parser.pb.h"
 #include "../generated/plugin-manager.pb.h"
+#include "../generated/interpreter.pb.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -500,7 +501,7 @@ struct MethodWrapper
 						entry =
 							R"(	for(size_t i = 0; i < %1.size(); i++)
 								{
-									assert(request.%2_size() == i);
+									assert(request.%2_size() == (int)i);
 									request.add_%2(%1.at(i));
 								})";
 					}
@@ -671,6 +672,7 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::fileManager::FileSystem::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::Plugin::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::interpreter::Interpreter::descriptor());
 	return methods;
 }
 

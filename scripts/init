@@ -14,10 +14,11 @@ import platform
 import subprocess
 from subprocess        import call, Popen, PIPE, check_output, CalledProcessError
 from distutils.version import LooseVersion
-from utils.colors      import print_info, print_error, putInfo, formatQuestion
+from utils.colors      import print_info, print_error, putInfo
 from utils.errors      import fatal
 from utils.net         import download
 from utils.system      import platformFix
+from utils.process     import ask
 import argparse
 import tempfile
 import glob
@@ -46,9 +47,11 @@ def checkAvailable(name):
         print_info("yes")
         return True
 
-def checkCabalPkg(name, version="", installUsing=None):
-    if not checkAvailable(name):
-        if ask ("Cabal binary '%s' is not available. Should I install it?" % name):
+def checkCabalPkg(name, version="", installUsing=None, check=None):
+    if check == None:
+        check = name
+    if not checkAvailable(check):
+        if ask ("Cabal binary '%s' is not available. Should I install it?" % name, SILENTINSTALL):
             pkg = name
             if version: pkg += "-%s" % version
             if installUsing == None:
@@ -71,7 +74,7 @@ def checkInstall(name, installUsing, chckf):
     (ok, err) = chckf()
     if not ok:
         print_error (err)
-        if ask("Should I install it? (%s)" % installUsing):
+        if ask("Should I install it? (%s)" % installUsing, SILENTINSTALL):
             try_call(installUsing)
             (ok, err) = chckf()
             if not ok:
@@ -94,14 +97,14 @@ def checkPythonPkg(package, version=None):
                 _, installed_ver = line.split('==')
                 installed_ver = [int(x) for x in installed_ver.split('.')]
                 if version and installed_ver <= version:
-                    if ask("Python package '{package}' too old: {installed_ver} available, {version} required. "\
+                    if ask("Python package '{package}' too old: {installed_ver} available, {version} required. , SILENTINSTALL"\
                            "Should I upgrade it?".format(**locals())):
                         try_call(install_cmd)
                     else:
                         fatal()
                 break
         else:
-            if ask("Python package '{package}' not installed. Should I install it?".format(**locals())):
+            if ask("Python package '{package}' not installed. Should I install it?".format(**locals()), SILENTINSTALL):
                 try_call(install_cmd)
             else:
                 fatal()
@@ -114,20 +117,7 @@ def try_call(cmd):
     print_info ("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
 
-def ask(question):
-    if SILENTINSTALL:
-        print(formatQuestion("Question override: " + question))
-        return True
-    else:
-        answer = None
-        while True:
-            ansRaw = raw_input(formatQuestion(question) + " [Y/n] ")
-            ans = ansRaw.lower()
-            if ans not in ["", "y", "yes", "n", "no"]:
-                print_error("'%s' is not a valid answer, please choose beetween YES or NO." % ansRaw)
-            else: break
-        if ans in ["", "y", "yes"]: return True
-        else:                       return False
+
 
 
 def removeIfExists(pathToRemove):
@@ -160,16 +150,19 @@ def install_from_sources(name, version=None):
             with changed_cwd(d):
                 try_call ('cabal clean; cabal install')
 
-def instal_c2hs(name, version):
-    install_from_sources('haskell-src-exts', version='1.13.5')
+def install_hprotoc(name, version):
     try_call('cd third-party/protocol-buffers && cabal install')
     install_from_sources('hprotoc')
-    return (name + '-' + version)
+    return (name)
 
+def install_alex_happy(name, version):
+    try_call('cabal install alex')
+    try_call('cabal install happy')
+    return (name)
 
 def main():
     if os.path.exists(sboxName):
-        if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?"):
+        if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?", SILENTINSTALL):
             shutil.rmtree(sboxName)
             removeIfExists("cabal.sandbox.config")
 
@@ -177,7 +170,7 @@ def main():
         os.mkdir(sboxName)
 
     parser = argparse.ArgumentParser(description='Flowbox Development Environment Initializer')
-    parser.add_argument('-y', dest='SILENTINSTALL', action='store_true' , help = 'Install all needed stuff without asking')
+    parser.add_argument('-y', dest='SILENTINSTALL', action='store_true' , help = 'Install all needed stuff without asking, SILENTINSTALL')
     args = parser.parse_args()
 
     global SILENTINSTALL
@@ -194,15 +187,17 @@ def main():
 
     print_info ("Updating cabal package cache")
     try_call('cd && cabal update')
+    checkInstall("cabal", installUsing="cabal install cabal-install", chckf=checkCabalVersion)
 
     checkCabalPkg("happy")
     checkCabalPkg("alex")
+    checkCabalPkg("hspec", check="hspec-discover")
 
-    checkInstall("cabal", installUsing="cabal install cabal-install", chckf=checkCabalVersion)
-    checkCabalPkg("c2hs", version="0.16.5", installUsing=instal_c2hs)
-    checkInstall("cabal", installUsing="cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", chckf=checkCabalVersion)
+    checkCabalPkg("c2hs", installUsing=install_alex_happy, version="0.16.5")
 
-    checkCabalPkg("gtk2hs-buildtools")
+    checkCabalPkg("gtk2hs-buildtools", installUsing=install_alex_happy, check="gtk2hsC2hs")
+
+    checkCabalPkg("hprotoc", installUsing=install_hprotoc) # FIXME [KL]: Temporary fix for hprotoc
 
     print_info ("Generating Protocol Buffers files using genproto")
     path = os.path.join(rootPath, 'scripts', 'genproto')

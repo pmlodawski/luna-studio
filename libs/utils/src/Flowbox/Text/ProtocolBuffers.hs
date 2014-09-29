@@ -25,6 +25,7 @@ import qualified Text.ProtocolBuffers.Extensions as Extensions
 import Flowbox.Prelude
 
 
+
 type Serializable msg = (Proto.ReflectDescriptor msg, Proto.Wire msg)
 
 

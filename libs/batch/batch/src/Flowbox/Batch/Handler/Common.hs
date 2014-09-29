@@ -15,46 +15,46 @@ import           Data.Int           (Int32)
 import qualified System.Environment as Environment
 import           Text.Show.Pretty
 
-import           Flowbox.Batch.Batch                                 (Batch)
-import qualified Flowbox.Batch.Batch                                 as Batch
-import           Flowbox.Batch.Project.Project                       (Project)
-import qualified Flowbox.Batch.Project.Project                       as Project
-import           Flowbox.Batch.Project.ProjectManager                (ProjectManager)
-import qualified Flowbox.Batch.Project.ProjectManager                as ProjectManager
-import qualified Flowbox.Control.Concurrent                          as Concurrent
+import           Flowbox.Batch.Batch                       (Batch)
+import qualified Flowbox.Batch.Batch                       as Batch
+import           Flowbox.Batch.Project.Project             (Project)
+import qualified Flowbox.Batch.Project.Project             as Project
+import           Flowbox.Batch.Project.ProjectManager      (ProjectManager)
+import qualified Flowbox.Batch.Project.ProjectManager      as ProjectManager
+import qualified Flowbox.Control.Concurrent                as Concurrent
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.AST.Common                        as AST
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs             (Breadcrumbs)
-import           Flowbox.Luna.Data.AST.Expr                          (Expr)
-import           Flowbox.Luna.Data.AST.Module                        (Module)
-import           Flowbox.Luna.Data.AST.Zipper.Focus                  (Focus)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                  as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                 as Zipper
-import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                       as Graph
-import           Flowbox.Luna.Data.Graph.Node                        (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                        as Node
-import           Flowbox.Luna.Data.GraphView.GraphView               (GraphView)
-import qualified Flowbox.Luna.Data.GraphView.GraphView               as GraphView
-import qualified Flowbox.Luna.Data.Pass.ASTInfo                      as ASTInfo
-import qualified Flowbox.Luna.Data.Pass.Source                       as Source
-import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
-import qualified Flowbox.Luna.Interpreter.Interpreter                as Interpreter
-import           Flowbox.Luna.Lib.LibManager                         (LibManager)
-import qualified Flowbox.Luna.Lib.LibManager                         as LibManager
-import           Flowbox.Luna.Lib.Library                            (Library)
-import qualified Flowbox.Luna.Lib.Library                            as Library
-import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias            as Alias
-import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID               as MaxID
-import qualified Flowbox.Luna.Passes.Build.Build                     as Build
-import qualified Flowbox.Luna.Passes.Build.Diagnostics               as Diagnostics
-import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer   as IDFixer
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder as GraphBuilder
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphParser
-import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults    as Defaults
-import           Flowbox.Prelude                                     hiding (error)
+import           Flowbox.Prelude                           hiding (error)
 import           Flowbox.System.Log.Logger
-import           Text.Show.Pretty
+import qualified Luna.AST.Common                           as AST
+import           Luna.AST.Control.Crumb                    (Breadcrumbs)
+import           Luna.AST.Control.Focus                    (Focus)
+import qualified Luna.AST.Control.Focus                    as Focus
+import qualified Luna.AST.Control.Zipper                   as Zipper
+import           Luna.AST.Expr                             (Expr)
+import           Luna.AST.Module                           (Module)
+import qualified Luna.Data.ASTInfo                         as ASTInfo
+import qualified Luna.Data.Source                          as Source
+import           Luna.Graph.Graph                          (Graph)
+import qualified Luna.Graph.Graph                          as Graph
+import           Luna.Graph.Node                           (Node)
+import qualified Luna.Graph.Node                           as Node
+import           Luna.Graph.PropertyMap                    (PropertyMap)
+import           Luna.Graph.View.GraphView                 (GraphView)
+import qualified Luna.Graph.View.GraphView                 as GraphView
+import qualified Luna.Interpreter                          as Interpreter
+import           Luna.Lib.Lib                              (Library)
+import qualified Luna.Lib.Lib                              as Library
+import           Luna.Lib.Manager                          (LibManager)
+import qualified Luna.Lib.Manager                          as LibManager
+import qualified Luna.Pass.Analysis.Alias.Alias            as Alias
+import qualified Luna.Pass.Analysis.ID.MaxID               as MaxID
+import qualified Luna.Pass.Build.Build                     as Build
+import qualified Luna.Pass.Build.Diagnostics               as Diagnostics
+import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer   as IDFixer
+import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
+import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
+import qualified Luna.Pass.Transform.GraphView.Defaults    as Defaults
+
 
 
 logger :: LoggerIO
@@ -65,7 +65,7 @@ safeInterpretLibrary :: Library.ID -> Project.ID -> Batch ()
 safeInterpretLibrary libraryID projectID = do
     args <- liftIO Environment.getArgs
     batch  <- get
-    unless ("--no-auto-interpreter" `elem` args) $
+    when ("--auto-interpreter" `elem` args) $
             liftIO $ Concurrent.forkIO_ $ Exception.catch
                                  (eitherStringToM =<< Batch.runBatch batch (interpretLibrary libraryID projectID))
                                  (\e -> logger error $ "Interpret failed: " ++ show (e :: IOException))
@@ -74,12 +74,12 @@ safeInterpretLibrary libraryID projectID = do
 interpretLibrary :: Library.ID -> Project.ID -> Batch ()
 interpretLibrary libraryID projectID = do
     let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
-        imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
+        imports = ["Luna.Target.HS", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
     ast <- getAST libraryID projectID
     cfg <- gets (view Batch.config)
     maxID <- EitherT $ MaxID.run ast
     [hsc] <- EitherT $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
-    let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ Source.code hsc)
+    let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ hsc ^. Source.code)
     liftIO $ Interpreter.runSource cfg imports code "main"
 
 
@@ -236,8 +236,8 @@ setGraph (newGraph, newPM) bc libraryID projectID = do
 getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (GraphView, PropertyMap)
 getGraphView bc libraryID projectID = do
     (graph, propertyMap) <- getGraph bc libraryID projectID
-    let graphView = GraphView.fromGraph graph
-    return $ Defaults.removeDefaults graphView propertyMap
+    let (graphView, propertyMap2) = GraphView.fromGraph graph propertyMap
+    return $ Defaults.removeDefaults graphView propertyMap2
 
 
 setGraphView :: (GraphView, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()

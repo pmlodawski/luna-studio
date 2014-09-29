@@ -43,62 +43,62 @@ logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
 -------- public api -------------------------------------------------
 
 add :: Add.Request -> RPC Context IO Add.Update
-add (Add.Request tplugin) = do
+add request@(Add.Request tplugin) = do
     ctx <- lift get
     let plugins = Context.plugins ctx
         id      = PluginMap.uniqueID plugins
     plugin <- decodeE tplugin
     lift $ put $ ctx { Context.plugins = PluginMap.insert id (PluginHandle.mk plugin) plugins}
-    return $ Add.Update tplugin (encodeP id)
+    return $ Add.Update request (encodeP id)
 
 
 remove :: Remove.Request -> RPC Context IO Remove.Update
-remove (Remove.Request tid) = do
+remove request@(Remove.Request tid) = do
     ctx <- lift get
     let id      = decodeP tid
         plugins = Context.plugins ctx
     lift $ put $ ctx { Context.plugins = PluginMap.delete id plugins}
-    return $ Remove.Update tid
+    return $ Remove.Update request
 
 
 list :: List.Request -> RPC Context IO List.Status
-list List.Request = do
+list request = do
     ctx <- lift get
     let plugins = Context.plugins ctx
     pluginInfos <- safeLiftIO $ mapM PluginHandle.info $ PluginMap.elems plugins
-    return $ List.Status (encodeList $ zip (PluginMap.keys plugins) pluginInfos)
+    return $ List.Status request (encodeList $ zip (PluginMap.keys plugins) pluginInfos)
 
 
 -- TODO [PM] : Duplikacja kodu
 lookup :: Lookup.Request -> RPC Context IO Lookup.Status
-lookup (Lookup.Request tid) = do
+lookup request@(Lookup.Request tid) = do
     ctx <- lift get
     let id      = decodeP tid
         plugins = Context.plugins ctx
     pluginHandle <- PluginMap.lookup id plugins <??> "Cannot find plugin with id=" ++ show id
     pluginInfo   <- safeLiftIO $ PluginHandle.info pluginHandle
-    return $ Lookup.Status (encode (id, pluginInfo)) tid
+    return $ Lookup.Status request (encode (id, pluginInfo))
 
 
 start :: Start.Request -> RPC Context IO Start.Update
-start (Start.Request tid) = do
+start request@(Start.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle id (PluginHandle.start . view PluginHandle.plugin)
-    return $ Start.Update tid
+    return $ Start.Update request
 
 
 stop :: Stop.Request -> RPC Context IO Stop.Update
-stop (Stop.Request tid) = do
+stop request@(Stop.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle id PluginHandle.stop
-    return $ Stop.Update tid
+    return $ Stop.Update request
 
 
 restart :: Restart.Request -> RPC Context IO Restart.Update
-restart (Restart.Request tid) = do
+restart request@(Restart.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle id PluginHandle.restart
-    return $ Restart.Update tid
+    return $ Restart.Update request
 
 
 withPluginHandle :: Plugin.ID -> (PluginHandle -> IO PluginHandle) -> RPC Context IO PluginHandle

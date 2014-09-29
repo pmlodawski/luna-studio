@@ -6,22 +6,24 @@
 ---------------------------------------------------------------------------
 module Flowbox.Parser.RPC.Handler.Parser where
 
-import qualified Flowbox.Batch.Handler.Parser                        as BatchP
-import           Flowbox.Bus.RPC.RPC                                 (RPC)
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr  ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Pat   ()
+import qualified Flowbox.Batch.Handler.Parser                   as BatchP
+import           Flowbox.Bus.RPC.RPC                            (RPC)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Parser.Parse.Expr.Request           as ParseExpr
-import qualified Generated.Proto.Parser.Parse.Expr.Status            as ParseExpr
-import qualified Generated.Proto.Parser.Parse.NodeExpr.Request       as ParseNodeExpr
-import qualified Generated.Proto.Parser.Parse.NodeExpr.Status        as ParseNodeExpr
-import qualified Generated.Proto.Parser.Parse.Pat.Request            as ParsePat
-import qualified Generated.Proto.Parser.Parse.Pat.Status             as ParsePat
-import qualified Generated.Proto.Parser.Parse.Type.Request           as ParseType
-import qualified Generated.Proto.Parser.Parse.Type.Status            as ParseType
+import qualified Generated.Proto.Parser.Parse.Expr.Request      as ParseExpr
+import qualified Generated.Proto.Parser.Parse.Expr.Status       as ParseExpr
+import qualified Generated.Proto.Parser.Parse.NodeExpr.Request  as ParseNodeExpr
+import qualified Generated.Proto.Parser.Parse.NodeExpr.Status   as ParseNodeExpr
+import qualified Generated.Proto.Parser.Parse.Pat.Request       as ParsePat
+import qualified Generated.Proto.Parser.Parse.Pat.Status        as ParsePat
+import qualified Generated.Proto.Parser.Parse.Type.Request      as ParseType
+import qualified Generated.Proto.Parser.Parse.Type.Status       as ParseType
+import qualified Generated.Proto.Parser.Parser.Ping.Request     as Ping
+import qualified Generated.Proto.Parser.Parser.Ping.Status      as Ping
+import           Luna.Data.Serialize.Proto.Conversion.Crumb     ()
+import           Luna.Data.Serialize.Proto.Conversion.Expr      ()
+import           Luna.Data.Serialize.Proto.Conversion.Pat       ()
 
 
 
@@ -60,3 +62,9 @@ parseNodeExpr (ParseNodeExpr.Request tstr) = do
     let str = decodeP tstr
     expr <- BatchP.parseNodeExpr str
     return $ ParseNodeExpr.Status (encode expr) tstr
+
+
+ping :: Ping.Request -> RPC () IO Ping.Status
+ping request = do
+    logger info "Ping received"
+    return $ Ping.Status request

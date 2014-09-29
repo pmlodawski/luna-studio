@@ -16,7 +16,7 @@ import           Control.Monad                 (forever)
 import qualified Flowbox.Bus.Bus               as Bus
 import           Flowbox.Bus.BusT              (BusT (BusT))
 import qualified Flowbox.Bus.BusT              as BusT
-import qualified Flowbox.Bus.Data.Flag         as Flag
+import           Flowbox.Bus.Data.Flag         (Flag)
 import           Flowbox.Bus.Data.Message      (Message)
 import qualified Flowbox.Bus.Data.Message      as Message
 import qualified Flowbox.Bus.Data.MessageFrame as MessageFrame
@@ -26,31 +26,38 @@ import qualified Flowbox.Bus.RPC.HandlerMap    as HandlerMap
 import           Flowbox.Control.Concurrent    (forkIO_)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude               hiding (error)
+import           Flowbox.System.Log.Logger
 
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Bus.RPC.Pipes"
 
 
 produce :: Pipes.Producer (Message, Message.CorrelationID) BusT ()
 produce = forever $ do
-    frame <- lift $ BusT $ Bus.receive
+    frame <- lift $ BusT Bus.receive
+    liftIO $ logger debug $ "Received request: " ++ (frame ^. MessageFrame.message . Message.topic)
     Pipes.yield (frame ^. MessageFrame.message, frame ^. MessageFrame.correlation)
 
 
-consume :: Pipes.Consumer (Message, Message.CorrelationID) BusT ()
+consume :: Pipes.Consumer (Message, Message.CorrelationID, Flag) BusT ()
 consume = forever $ do
-    (msg, crl) <- Pipes.await
-    void $ lift $ BusT $ Bus.reply crl Flag.Enable msg
+    (msg, crl, flag) <- Pipes.await
+    liftIO $ logger debug $ "Sending reply: " ++ (msg ^. Message.topic)
+    void $ lift $ BusT $ Bus.reply crl flag msg
 
 
 run :: BusEndPoints -> HandlerMap s m
     -> IO (Pipes.Input  (Message, Message.CorrelationID),
-           Pipes.Output (Message, Message.CorrelationID))
+           Pipes.Output (Message, Message.CorrelationID, Flag))
 run endPoints handlerMap = do
     (output1, input1) <- Pipes.spawn Pipes.Single
     (output2, input2) <- Pipes.spawn Pipes.Single
-    forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
-        mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
-        BusT.runBusT $ Pipes.runEffect $ produce >-> Pipes.toOutput output1
-    forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
-        mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
-        BusT.runBusT $ Pipes.runEffect $ Pipes.fromInput input2 >-> consume
+    let forkPipesThread fun = forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
+                            mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
+                            BusT.runBusT $ Pipes.runEffect fun
+    forkPipesThread $ produce >-> Pipes.toOutput output1
+    forkPipesThread $ Pipes.fromInput input2 >-> consume
     return (input1, output2)
+

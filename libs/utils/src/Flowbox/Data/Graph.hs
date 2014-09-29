@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Flowbox.Data.Graph (
     module Data.Graph.Inductive,
@@ -46,6 +47,10 @@ import Flowbox.Prelude hiding (fromJust, pre, (&))
 type Graph a b = DG.Gr a b
 type Vertex    = DG.Node
 type LVertex a = DG.LNode a
+
+
+instance Default (Graph a b) where
+    def = DG.empty
 
 
 labs :: Graph a b -> [Vertex] -> Maybe [a]
@@ -139,11 +144,11 @@ topsortl graph = map (fromJust . labVtx graph) $ topsort graph
 
 
 topsortStable :: Eq a => Graph a b -> [LVertex a] -> [LVertex a]
-topsortStable graph pending = topsortStable' graph [] pending
+topsortStable graph = topsortStable' graph []
 
 
 topsortStable' :: Eq a => Graph a b -> [LVertex a] -> [LVertex a] -> [LVertex a]
-topsortStable' _     []            []            = []
+topsortStable' _     []       []       = []
 topsortStable' graph pending1 pending2 =
     case findReady pending1 of
         (Just n1, rest1) -> n1 : topsortStable' (delNode' n1) rest1 pending2

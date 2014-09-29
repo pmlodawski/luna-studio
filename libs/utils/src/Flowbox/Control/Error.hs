@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts #-}
+
 module Flowbox.Control.Error (
   module Flowbox.Control.Error
 , module X
@@ -11,10 +13,10 @@ module Flowbox.Control.Error (
 , liftIO
 ) where
 
-import           Control.Error          as X hiding (runScript)
-import           Control.Exception      (Exception)
-import qualified Control.Exception      as Exc
-import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Control.Error             as X hiding (runScript)
+import qualified Control.Exception         as Exc
+import           Control.Monad.IO.Class    (MonadIO, liftIO)
+import           Control.Monad.Trans.Class (MonadTrans)
 
 import Flowbox.Prelude
 
@@ -75,12 +77,10 @@ assertE condition msg = unless condition $ left msg
 
 -- FIXME [PM] : find better name
 safeLiftIO :: MonadIO m => IO b -> EitherT String m b
-safeLiftIO operation = do
-    result <- liftIO $ (Exc.try :: IO a -> IO (Either Exc.SomeException a)) operation
-    hoistEither $ fmapL show result
+safeLiftIO = safeLiftIO' show
 
 
-safeLiftIO' :: (Exception e, Show e) => (e -> a) -> IO b -> EitherT a IO b
+safeLiftIO' :: MonadIO m => (Exc.SomeException -> a) -> IO b -> EitherT a m b
 safeLiftIO' excMap operation  = do
     result <- liftIO $ Exc.try operation
     hoistEither $ fmapL excMap result
@@ -100,3 +100,12 @@ eitherStringToM = either fail return
 
 eitherStringToM' :: MonadIO m => m (Either String b) -> m b
 eitherStringToM' action = action >>= eitherStringToM
+
+
+catchEither :: (MonadTrans t, Monad (t m), Monad m)
+            => (e -> t m b) -> EitherT e m b -> t m b
+catchEither handler fun = do
+    result <- lift $ runEitherT fun
+    case result of
+        Left  e -> handler e
+        Right r -> return r

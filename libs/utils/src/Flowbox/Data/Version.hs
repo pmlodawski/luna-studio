@@ -15,23 +15,31 @@ import           Data.String.Utils (join)
 import           Flowbox.Prelude
 import           GHC.Generics
 
+
+data Versioned el = Versioned { base    :: el
+                              , version :: Version
+                              } deriving (Read, Eq, Generic, Ord)
+
 data Version = Version { branch :: [Int]
                        , tags   :: [String]
-                       } deriving (Read, Show, Eq, Generic, Ord)
+                       } deriving (Read, Eq, Generic, Ord)
 
 
 partition :: Int -> [Version] -> Map [Int] [Version]
 partition i = foldl (\m xs -> Map.insertWith (++) (take i $ branch xs) [xs] m) mempty
 
-readable :: Version -> String
-readable v = readableBranch (branch v) ++ join "" (map ("-"++) $ tags v)
-
-readableBranch :: [Int] -> String
-readableBranch b = join "." (map show b)
+showBranch :: [Int] -> String
+showBranch b = join "." (map show b)
 
 ------------------------------------------------------------------------
 -- INSTANCES
 ------------------------------------------------------------------------
+
+instance Show Version where
+    show v = showBranch (branch v) ++ join "" (map ("-"++) $ tags v)
+
+instance Show el => Show (Versioned el) where
+    show (Versioned el v) = show el ++ "-" ++ show v
 
 instance Default Version where
     def = Version { branch = [0,1,0]

@@ -40,6 +40,10 @@ makeLenses(''CorrelationID)
 makeLenses(''Message)
 
 
+instance Default CorrelationID where
+    def = CorrelationID def def
+
+
 mk :: Proto.Serializable msg => Topic -> msg -> Message
 mk topic' data_ = Message topic' $ Proto.messagePut' data_ where
 

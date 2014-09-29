@@ -10,8 +10,6 @@ module Flowbox.ProjectManager.RPC.Handler.Graph where
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                                          ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.GraphView                                      ()
 import           Flowbox.Prelude                                                                              hiding (Context)
 import           Flowbox.ProjectManager.Context                                                               (Context)
 import           Flowbox.System.Log.Logger
@@ -32,6 +30,8 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update  as NodeModifyInPlace
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
+import           Luna.Data.Serialize.Proto.Conversion.Crumb                                                   ()
+import           Luna.Data.Serialize.Proto.Conversion.GraphView                                               ()
 
 
 
@@ -93,12 +93,12 @@ nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID
 
 
 nodeRemove :: NodeRemove.Request -> RPC Context IO NodeRemove.Update
-nodeRemove request@(NodeRemove.Request tnodeID tbc tlibID tprojectID _) = do
+nodeRemove request@(NodeRemove.Request tnodeIDs tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
-    let nodeID    = decodeP tnodeID
+    let nodeIDs   = decodeListP tnodeIDs
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchG.removeNode nodeID bc libID projectID
+    BatchG.removeNodes nodeIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ NodeRemove.Update request updateNo
 
