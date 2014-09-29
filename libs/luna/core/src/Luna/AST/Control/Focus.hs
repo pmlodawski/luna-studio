@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.AST.Control.Focus where
 
@@ -14,11 +15,13 @@ import Luna.AST.Module (Module)
 
 
 
-data Focus  = Lambda   Expr
-            | Function Expr
-            | Class    Expr
-            | Module Module
+data Focus  = Lambda   { _expr :: Expr   }
+            | Function { _expr :: Expr   }
+            | Class    { _expr :: Expr   }
+            | Module   { _module_ :: Module }
             deriving (Show)
+
+makeLenses ''Focus
 
 
 type FocusPath = [Focus]
@@ -50,15 +53,16 @@ getLambda _          = Nothing
 
 
 getFunction :: Focus -> Maybe Expr
-getFunction (Function expr) = Just expr
-getFunction _               = Nothing
+getFunction (Function e) = Just e
+getFunction _            = Nothing
 
 
 getClass :: Focus -> Maybe Expr
-getClass (Class expr) = Just expr
-getClass _            = Nothing
+getClass (Class e) = Just e
+getClass _         = Nothing
 
 
 getModule :: Focus -> Maybe Module
 getModule (Module m) = Just m
 getModule _          = Nothing
+
