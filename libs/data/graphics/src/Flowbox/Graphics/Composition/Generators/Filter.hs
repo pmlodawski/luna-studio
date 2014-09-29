@@ -4,10 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators       #-}
-{-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE ViewPatterns         #-}
+{-# LANGUAGE ConstraintKinds      #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Flowbox.Graphics.Composition.Generators.Filter where
 
@@ -16,23 +18,22 @@ import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Graphics.Composition.Generators.Stencil
 import Flowbox.Graphics.Composition.Generators.Matrix
 
-import           Flowbox.Prelude                   as P hiding ((<*), filter)
+import           Flowbox.Graphics.Prelude          as P hiding (filter)
 import           Flowbox.Math.Matrix               as M hiding (stencil)
 import qualified Flowbox.Math.Matrix               as M (stencil)
 import           Data.Array.Accelerate             as A hiding (filter, stencil, constant)
 
 import Math.Space.Space
 import Math.Coordinate.Cartesian                (Point2(..))
-import Linear.V2
 
 
 -- == Filter datatype ==
 
-data Filter a = Filter { window :: Exp a
-                       , apply :: Exp a -> Exp a
+data Filter a = Filter { window :: a
+                       , apply :: a -> a
                        }
 
-instance (Elt a, IsScalar a, IsNum a) => Num (Filter a) where
+instance (Condition a, Ord a, Num a) => Num (Filter a) where
     Filter w1 a1 + Filter w2 a2 = Filter (w1 `max` w2) $ \t -> a1 t + a2 t
     Filter w1 a1 - Filter w2 a2 = Filter (w1 `max` w2) $ \t -> a1 t - a2 t
     Filter w1 a1 * Filter w2 a2 = Filter (w1 `max` w2) $ \t -> a1 t * a2 t
@@ -43,7 +44,7 @@ instance (Elt a, IsScalar a, IsNum a) => Num (Filter a) where
 
 -- == Helper functions ==
 
-toMatrix :: (Elt a, IsFloating a) => Grid (Exp Int) -> Filter a -> Matrix2 a
+toMatrix :: (Elt a, IsFloating a) => Grid (Exp Int) -> Filter (Exp a) -> Matrix2 a
 toMatrix (Grid sizex sizey) filter = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
     let sx = 2 * window filter / A.fromIntegral sizex
         sy = 2 * window filter / A.fromIntegral sizey
@@ -57,63 +58,63 @@ normalize kern = M.map (/ksum) kern
 
 -- == Windowed filters ==
 
-box :: (Elt a, IsFloating a) => Filter a
-box = Filter 1 $ \(abs -> t) -> A.cond (t <=* 1.0) 1.0 0.0
+box :: (Num a, Condition a, Ord a) => Filter a
+box = Filter 1 $ \(abs -> t) -> if' (t <= 1) 1 0
 
 -- TODO: Find the name
-basic :: (Elt a, IsFloating a) => Filter a
-basic = Filter 1.0 $ \(abs -> t) -> A.cond (t <* 1.0) ((2.0 * t - 3.0) * t * t + 1.0) 0.0
+basic :: (Num a, Condition a, Ord a) => Filter a
+basic = Filter 1 $ \(abs -> t) -> if' (t < 1) ((2 * t - 3) * t * t + 1) 0
 
 
-triangle :: (Elt a, IsFloating a) => Filter a
-triangle = Filter 1.0 $ \(abs -> t) -> A.cond (t <* 1.0) (1.0 - t) 0.0
+triangle :: (Num a, Condition a, Ord a) => Filter a
+triangle = Filter 1 $ \(abs -> t) -> if' (t < 1) (1 - t) 0
 
-bell :: (Elt a, IsFloating a) => Filter a
-bell = Filter 1.5 $ \(abs -> t) -> A.cond (t <* 0.5) (0.75 - t * t) 
-                                 $ A.cond (t <* 1.5) (0.5 * ((t - 1.5)*(t - 1.5)))
+bell :: (Fractional a, Condition a, Ord a) => Filter a
+bell = Filter 1.5 $ \(abs -> t) -> if' (t < 0.5) (0.75 - t * t) 
+                                 $ if' (t < 1.5) (0.5 * ((t - 1.5) * (t - 1.5)))
                                  0.0
 
-bspline :: (Elt a, IsFloating a) => Filter a
-bspline = Filter 2.0 $ \(abs -> t) -> A.cond (t <* 1.0) ((0.5 * t * t * t) - t * t + (2.0 / 3.0))
-                                    $ A.cond (t <* 2.0) ((1.0 / 6.0) * ((2 - t) * (2 - t) * (2 - t)))
+bspline :: (Fractional a, Condition a, Ord a) => Filter a
+bspline = Filter 2.0 $ \(abs -> t) -> if' (t < 1.0) ((0.5 * t * t * t) - t * t + (2.0 / 3.0))
+                                    $ if' (t < 2.0) ((1.0 / 6.0) * ((2 - t) * (2 - t) * (2 - t)))
                                     0.0
 
-lanczos :: (Elt a, IsFloating a) => Exp a -> Filter a
-lanczos a = Filter a $ \(abs -> t) -> A.cond (t <=*  1e-6) 1.0 
-                                    $ A.cond (t <* a) ((a * sin (pi * t) * sin (pi * t / a)) / (pi * pi * t * t))
+lanczos :: (Floating a, Condition a, Ord a) => a -> Filter a
+lanczos a = Filter a $ \(abs -> t) -> if' (t <=  1e-6) 1.0 
+                                    $ if' (t < a) ((a * sin (pi * t) * sin (pi * t / a)) / (pi * pi * t * t))
                                     0.0
 
-lanczos2 :: (Elt a, IsFloating a) => Filter a
+lanczos2 :: (Floating a, Condition a, Ord a) => Filter a
 lanczos2 = lanczos 2
 
-lanczos3 :: (Elt a, IsFloating a) => Filter a
+lanczos3 :: (Floating a, Condition a, Ord a) => Filter a
 lanczos3 = lanczos 3
 
-polynomial :: (Elt a, IsFloating a) => Exp a -> Exp a -> Filter a
-polynomial b c = Filter 2.0 $ \(abs -> t) -> (/6.0) $ A.cond (t <* 1.0) (((12.0 - 9.0 * b - 6.0 * c) * (t * t * t)) + ((-18.0 + 12.0 * b + 6.0 * c) * t * t) + (6.0 - 2 * b))
-                                                    $ A.cond (t <* 2.0) (((-1.0 * b - 6.0 * c) * (t * t * t)) + ((6.0 * b + 30.0 * c) * t * t) + ((-12.0 * b - 48.0 * c) * t) + (8.0 * b + 24 * c))
+polynomial :: (Fractional a, Condition a, Ord a) => a -> a -> Filter a
+polynomial b c = Filter 2.0 $ \(abs -> t) -> (/6.0) $ if' (t < 1.0) (((12.0 - 9.0 * b - 6.0 * c) * (t * t * t)) + ((-18.0 + 12.0 * b + 6.0 * c) * t * t) + (6.0 - 2 * b))
+                                                    $ if' (t < 2.0) (((-1.0 * b - 6.0 * c) * (t * t * t)) + ((6.0 * b + 30.0 * c) * t * t) + ((-12.0 * b - 48.0 * c) * t) + (8.0 * b + 24 * c))
                                                     0.0
 
-mitchell :: (Elt a, IsFloating a) => Filter a
+mitchell :: (Fractional a, Condition a, Ord a) => Filter a
 mitchell = polynomial (1.0 / 3.0) (1.0 / 3.0)
 
-catmulRom :: (Elt a, IsFloating a) => Filter a
+catmulRom :: (Fractional a, Condition a, Ord a) => Filter a
 catmulRom = polynomial 0.0 0.5
 
-gauss :: (Elt a, IsFloating a) => Exp a -> Filter a
+gauss :: (Floating a, Condition a) => a -> Filter a
 gauss sigma = Filter ((10.0 / 3.0) * sigma) $ \t -> exp (-(t ** 2) / (2 * sigma * sigma)) / (sigma * sqrt pi)
 
-dirac :: (Elt a, IsFloating a) => Exp a -> Filter a
+dirac :: (Floating a, Condition a) => a -> Filter a
 dirac sigma = Filter 1.0 $ \(abs -> t) -> exp (- (t * t) / (sigma * sigma)) / (sigma * sqrt pi)
 
 -- == Non separable filters ==
 
 laplacian :: (Elt a, IsFloating a) => Exp a -> Exp a -> Grid (Exp Int) -> Matrix2 a
 laplacian cross side (fmap (1+).(2*) -> Grid sizex sizey) = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
-    let center = (A.fromIntegral $ sizex + sizey - 2) * cross + (A.fromIntegral $ (sizex - 1)*(sizey - 1)) * side
-    in  A.cond (x A.==* sizex `div` 2) 
-            (A.cond (y A.==* sizey `div` 2) (-center) cross) 
-            (A.cond (y A.==* sizey `div` 2) cross     side)
+    let center = A.fromIntegral (sizex + sizey - 2) * cross + A.fromIntegral ((sizex - 1) * (sizey - 1)) * side
+    in  if' (x == sizex `div` 2) 
+            (if' (y == sizey `div` 2) (-center) cross) 
+            (if' (y == sizey `div` 2) cross     side)
 
 -- == Constant sized kernels ==
 

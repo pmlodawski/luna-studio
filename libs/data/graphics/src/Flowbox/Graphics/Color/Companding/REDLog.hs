@@ -27,4 +27,4 @@ instance (Num a, Floating a, a ~ A.Exp t, A.Elt t, A.IsFloating t) => Companding
     fromLinear _ v = (1023 + 511 * logBase 10 (v * (1 - redBlackOffset) + redBlackOffset)) / 1023
 
 redBlackOffset :: (A.Elt e, A.IsFloating e) => A.Exp e
-redBlackOffset = 10 ** ((0 - 1023) / 511)
+redBlackOffset = 10 ** (negate 1023 / 511)

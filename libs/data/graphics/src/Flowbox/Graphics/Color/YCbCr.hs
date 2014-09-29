@@ -15,17 +15,18 @@
 {-# LANGUAGE UndecidableInstances  #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Flowbox.Graphics.Color.CIE.XYZ where
+module Flowbox.Graphics.Color.YCbCr where
 
-import Data.Foldable                     (Foldable)
+import Data.Foldable (Foldable)
 import Data.Typeable
 
-import Flowbox.Prelude hiding (lift)
+import Flowbox.Prelude                   hiding (lift)
 import Flowbox.Graphics.Utils.Accelerate
 
 
-data XYZ a = XYZ { xyzX :: a, xyzY :: a, xyzZ :: a }
-           deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-deriveAccelerate ''XYZ
-deriveEach ''XYZ
+data YCbCr a = YCbCr { ycbcrY :: a, ycbcrCb :: a, ycbcrCr :: a }
+             deriving (Foldable, Functor, Traversable, Typeable, Show)
+
+deriveAccelerate ''YCbCr
+deriveEach ''YCbCr
