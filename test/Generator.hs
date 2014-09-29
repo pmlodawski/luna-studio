@@ -273,11 +273,6 @@ differenceKeyerTest off gain = do
     let process c = M.map (differenceKeyer off gain (rgb M.! (A.index2 1 1))) c
     testSaveRGBA' "out.png" r g b (process rgb)
 
---medianTest :: IO ()
-medianTest = do
-    let process x = stencilTest x
-    forAllChannels "lena.bmp" process
-
 --
 -- FFT test
 --
