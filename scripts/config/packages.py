@@ -92,20 +92,32 @@ class HProject(Project):
 class AllProject(Project):
     def targets(self):
         # It is needed to omit non-project entries with no path (like @all)
-        return [project for project in pkgDb.values() if project.path]  
+        return [project for project in pkgDb.values() if project.path]
 
-pkgDb = \
-       { '@all'                                : AllProject ('@all', deps = [])
+class CoreLunaPlatform(Project):
+    def targets(self):
+        return [project for project in corePkgDb.values() if project.path]
+
+corePkgDb = \
+       { 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/distribution', 'libs/luna/initializer', 'libs/luna/interpreter-old', 'libs/luna/pass', 'libs/luna/protobuf'])
+       , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
+       , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , ['third-party/protocol-buffers'])
+       , 'libs/luna/typechecker'               : HProject   ('luna-typechecker'             , os.path.join ('libs' , 'luna', 'typechecker')                 , 'libs'    , ['libs/luna/core'])  # [szaman] flags=Flags([Flag('--force-reinstalls')]) ?????
+
+       , 'third-party/protocol-buffers'        : HProject   ('protocol-buffers'             , os.path.join ('third-party', 'protocol-buffers')              , 'third-party', []) # [PM] temporary fix until protocol-buffers is fixed
+       }
+
+pkgDb = dict(corePkgDb, **{
+         '@all'                                : AllProject ('@all', deps = [])
+       , '@core'                               : CoreLunaPlatform ('@core', deps = [])
        , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/utils', 'libs/rpc'])
-       , 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/distribution', 'libs/luna/initializer', 'libs/luna/interpreter-old', 'libs/luna/pass', 'libs/luna/protobuf'])
        , 'libs/batch/plugins/project-manager'  : HProject   ('batch-lib-project-manager'    , os.path.join ('libs' , 'batch', 'plugins', 'project-manager') , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/core', 'libs/batch/batch'])
        , 'libs/bus'                            : HProject   ('flowbox-bus'                  , os.path.join ('libs' , 'bus')                                 , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc'])
        , 'libs/config'                         : HProject   ('flowbox-config'               , os.path.join ('libs' , 'config')                              , 'libs'    , ['libs/utils'])
        , 'libs/data/codec/exr'                 : HProject   ('openexr'                      , os.path.join ('libs' , 'data', 'codec', 'exr')                , 'libs'    , [], flags=Flags([Flag('--with-gcc=g++')]))
        , 'libs/data/dynamics/particles'        : HProject   ('particle'                     , os.path.join ('libs' , 'data', 'dynamics', 'particles')       , 'libs'    , [])
-       , 'libs/data/graphics'                  : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'data', 'graphics')                    , 'libs'    , ['third-party/algebraic', 'third-party/cuda', 'third-party/accelerate', 'third-party/accelerate-cuda', 'third-party/accelerate-io', 'third-party/accelerate-fft', 'third-party/imagemagick', 'libs/utils', 'libs/num-conversion', 'libs/data/codec/exr'], flags=Flags([Flag("--with-gcc=gcc-4.9", [systems.DARWIN]), Flag("-fcuda")])) # FIXME [kl]: The fcuda flag is a temporary solution for the strange cabal behavior
+       , 'libs/data/graphics'                  : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'data', 'graphics')                    , 'libs'    , ['third-party/algebraic', 'third-party/cuda', 'third-party/accelerate', 'third-party/accelerate-cuda', 'third-party/accelerate-io', 'third-party/accelerate-fft', 'third-party/imagemagick', 'libs/utils', 'libs/num-conversion', 'libs/data/codec/exr'], flags=Flags([Flag("--with-gcc=gcc-4.9 --extra-include-dirs=/usr/local/cuda/include --extra-lib-dirs=/usr/local/cuda/lib", [systems.DARWIN])]))
        , 'libs/data/accelerate/thrust'         : HProject   ('accelerate-thrust'            , os.path.join ('libs' , 'data', 'accelerate', 'thrust')        , 'libs'    , ['third-party/accelerate', 'third-party/accelerate-cuda'])
-       , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
        , 'libs/luna/parser'                    : HProject   ('luna-parser'                  , os.path.join ('libs' , 'luna', 'parser')                      , 'libs'    , ['libs/utils', 'libs/luna/core'])
        , 'libs/luna/parser2'                   : HProject   ('luna-parser'                  , os.path.join ('libs' , 'luna', 'parser2')                     , 'libs'    , ['libs/utils', 'libs/luna/core'])
        , 'libs/luna/distribution'              : HProject   ('luna-distribution'            , os.path.join ('libs' , 'luna', 'distribution')                , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/protobuf'])
@@ -119,8 +131,6 @@ pkgDb = \
        , 'libs/repo-manager'                   : HProject   ('flowbox-repo-manager'         , os.path.join ('libs' , 'repo-manager')                        , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'libs/rpc'                            : HProject   ('flowbox-rpc'                  , os.path.join ('libs' , 'rpc')                                 , 'libs'    , ['libs/utils'])
        , 'libs/luna/target/ghchs'              : HProject   ('luna-target-ghchs'            , os.path.join ('libs' , 'luna', 'target', 'ghchs')             , 'libs'    , ['libs/utils'])
-       , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , ['third-party/protocol-buffers'])
-       , 'libs/luna/typechecker'               : HProject   ('luna-typechecker'             , os.path.join ('libs' , 'luna', 'typechecker')                 , 'libs'    , ['libs/luna/core'])  # [szaman] flags=Flags([Flag('--force-reinstalls')]) ?????
        , 'tools/aws/account-manager'           : HProject   ('flowbox-account-manager'      , os.path.join ('tools', 'aws', 'account-manager')              , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'])
        , 'tools/aws/account-manager-mock'      : HProject   ('flowbox-account-manager-mock' , os.path.join ('tools', 'aws', 'account-manager-mock')         , 'tools'   , ['libs/utils', 'libs/rpc'   , 'libs/aws'])
        , 'tools/aws/instance-manager'          : HProject   ('flowbox-instance-manager'     , os.path.join ('tools', 'aws', 'instance-manager')             , 'tools'   , ['libs/utils', 'libs/aws'])
@@ -144,8 +154,4 @@ pkgDb = \
        , 'third-party/accelerate-io'           : HProject   ('accelerate-io'                , os.path.join ('third-party', 'accelerate-io')                 , 'third-party', [])
        , 'third-party/imagemagick'             : HProject   ('imagemagick'                  , os.path.join ('third-party', 'imagemagick')                   , 'third-party', []) # [KL] temporary fix until imagemagick is fixed
        , 'third-party/mainland-pretty'         : HProject   ('mainland-pretty'              , os.path.join ('third-party', 'mainland-pretty')               , 'third-party', []) # [MM] temporary fix until mainland-pretty relaxes upper bound on text to allow version 1.2
-       , 'third-party/protocol-buffers'        : HProject   ('protocol-buffers'             , os.path.join ('third-party', 'protocol-buffers')              , 'third-party', []) # [PM] temporary fix until protocol-buffers is fixed
-       }
-
-
-
+       })
