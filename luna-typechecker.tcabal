@@ -13,7 +13,7 @@ Library
   Build-Depends:      base
                     , containers
                     , QuickCheck
-                    , flowbox-luna-base
+                    , luna-core
                     , deepseq
                     , deepseq-generics
                     , transformers
@@ -29,7 +29,7 @@ Executable luna-typechecker-tests
   Build-Depends:      base
                     , luna-typechecker
                     , mtl
-                    , flowbox-luna-base
+                    , luna-core
                     , hspec
                     , QuickCheck
                     , transformers

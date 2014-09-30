@@ -19,7 +19,7 @@ import Control.Applicative    (Applicative(..),Alternative(..))
 
 import Control.Monad          (MonadPlus(..),ap,join,liftM)
 
-import Control.Monad.Error    (MonadError(..))
+import Control.Monad.Except   (MonadError(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.Trans    (MonadTrans(..))
 
