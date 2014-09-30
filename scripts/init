@@ -150,11 +150,6 @@ def install_from_sources(name, version=None):
             with changed_cwd(d):
                 try_call ('cabal clean; cabal install')
 
-def install_hprotoc(name, version):
-    try_call('cd third-party/protocol-buffers && cabal install')
-    install_from_sources('hprotoc')
-    return (name)
-
 def install_alex_happy(name, version):
     try_call('cabal install alex')
     try_call('cabal install happy')
@@ -197,7 +192,7 @@ def main():
 
     checkCabalPkg("gtk2hs-buildtools", installUsing=install_alex_happy, check="gtk2hsC2hs")
 
-    checkCabalPkg("hprotoc", installUsing=install_hprotoc) # FIXME [KL]: Temporary fix for hprotoc
+    checkCabalPkg("hprotoc-fork", check="hprotoc") # FIXME [KL]: Temporary fix for hprotoc
 
     print_info ("Generating Protocol Buffers files using genproto")
     path = os.path.join(rootPath, 'scripts', 'genproto')
