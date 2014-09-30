@@ -18,7 +18,7 @@ message Value {
         Float  = 5;
         Double = 6;
         Matrix = 7;
-        Image  = 8;
+        View  = 8;
     }
 
     required Type type = 1;
@@ -81,7 +81,7 @@ message MatrixData {
     }
 
     extend Value {
-        optional DoubleData MatrixData = 107;
+        optional MatrixData data = 107;
     }
 
     required bytes value         = 1;
@@ -90,9 +90,9 @@ message MatrixData {
     required Type precision = 4;
 }
 
-message ImageData {
+message ViewData {
     extend Value {
-        optional ImageData data = 108;
+        optional ViewData data = 108;
     }
 
     required MatrixData red   = 1;
