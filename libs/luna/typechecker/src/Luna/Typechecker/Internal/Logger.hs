@@ -4,7 +4,7 @@ module Luna.Typechecker.Internal.Logger (
   ) where
 
 
-import Control.Monad.Error (MonadError(..))
+import Control.Monad.Except (MonadError(..))
 
 import Logger
 
