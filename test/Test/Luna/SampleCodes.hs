@@ -192,12 +192,18 @@ def main arg:
 
 sampleLambdas :: [(Name, Breadcrumbs, Code)]
 sampleLambdas = [
-    ( "sample lambda 1"
+    ( "simple lambda"
     , [Crumb.Module "Main", Crumb.Function "main" [], Crumb.Lambda 6]
     , [r|
 def main:
     f = a : a + 1
-    |])
+|]), ( "lambda with context"
+    , [Crumb.Module "Main", Crumb.Function "main" [], Crumb.Lambda 12]
+    , [r|
+def main arg:
+    x = 15
+    f = a : a + 1 + x + arg
+|])
     ]
 
 
