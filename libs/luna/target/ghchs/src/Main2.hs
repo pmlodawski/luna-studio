@@ -12,7 +12,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- module --
-module Main where
+module Main2 where
 
 -- imports --
 import Luna.Target.HS

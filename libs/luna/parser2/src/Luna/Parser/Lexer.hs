@@ -1,4 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Luna.Parser.Lexer where
 
@@ -7,25 +8,81 @@ import Control.Monad (MonadPlus(..), when)
 import Data.Char
 import qualified Data.HashSet as HashSet
 import Data.HashSet (HashSet)
-import Data.List (foldl')
+import Data.List (foldl', nub)
 import Data.Monoid
 import Data.String
-import Data.Text hiding (empty,zip,foldl,foldl')
+import Data.Text hiding (empty,zip,foldl,foldl', concat)
 import qualified Text.ParserCombinators.ReadP as ReadP
-import Text.Parser.Char
+import Text.Parser.Char hiding (spaces)
 import Text.Parser.Combinators
-import Text.Parser.Token.Highlight
-import Text.Parser.Token
-import Flowbox.Prelude as Prelude hiding (op)
+import Text.Parser.Token.Highlight hiding (Comment)
+import Text.Parser.Token hiding (symbol, symbolic)
+import Flowbox.Prelude as Prelude hiding (op, noneOf, lex, use)
 import qualified Luna.AST.Lit.Number as Number
 
+import qualified Text.Parsers.Indent as Indent
+import           Luna.Parser.Combinators 
+import qualified Luna.AST.Lit as Lit
+import           Luna.Parser.Char
+import qualified Luna.Parser.State as State
+import           Luna.AST.Comment (Comment(..))
 
+isSpaceLine c = isSpace c && c /= '\n' && c /= '\r'
+
+spaceLine = satisfy isSpaceLine <?> "space"
+
+--spacesLine = skipMany spaceLine <?> "white space"
+
+lineSpaces = many spaceLine <?> "white space"
 
 reservedIdents :: [String]
-reservedIdents = ["alias", "as", "case", "class", "def", "else", "from", "if", "interface", "import", "in", "type"]
+reservedIdents = ["alias", "as", "case", "class", "def", "from", "interface", "import", "in", "type"]
+
+--identBlock s = ident s <* Indent.indented
+
+--tokenBlock :: m a -> m a
+--tokenBlock p = p <* (try (someSpace <* Indent.checkIndented) <|> pure ())
+tokenBlock p = p <* (try (spaces *> Indent.checkIndented) <|> pure ())
+
+--tokenBlock2 p = p <**> spaces2
 
 
-opToken p = token (highlight Operator p)
+spaces     = concat <$> many tokBase <?> ""
+
+lineCom   = State.registerComment <=< lineComStart *> manyTill anyChar (eol <|> eof)
+
+
+
+
+mlineCom = State.registerComment <=< try mlineComStart *> mlineComBody
+
+mlineComBody = try mlineComEnd *> return ""
+                 <|> ((++) <$> mlineCom                <*> mlineComBody)
+                 <|> ((++) <$> many1 (noneOf startEnd) <*> mlineComBody)
+                 <|> oneOf startEnd                     *> mlineComBody
+                 <?> "end of comment"
+                 where startEnd = nub (mlineComEndLetter ++ mlineComStartLetter)
+
+--tokBase = many1 space <|> lineCom <?> ""
+tokBase = many1 space <|> try mlineCom <|> lineCom <?> ""
+
+
+--spaces2 = (try lineCom <|> pure id) <* (try (spaces <* Indent.checkIndented) <|> pure ())
+
+--identBlock :: (TokenParsing m, Monad m, IsString s) => IdentifierStyle m -> m s
+identBlock s = fmap fromString $ tokenBlock $ try $ do
+  name <- highlight (_styleHighlight s)
+          ((:) <$> _styleStart s <*> many (_styleLetter s) <?> _styleName s)
+  when (HashSet.member name (_styleReserved s)) $ unexpected $ "reserved " ++ _styleName s ++ " " ++ show name
+  return name
+
+reserveBlock s name = tokenBlock $ try $ do
+   _ <- highlight (_styleReservedHighlight s) $ string name
+   notFollowedBy (_styleLetter s) <?> "end of " ++ show name
+{-# INLINE reserveBlock #-}
+
+
+opToken p = tokenBlock (highlight Operator p)
 
 opLetter = oneOf "!#$%&*+./<=>?\\^|-~"
 opStart = opLetter
@@ -34,7 +91,7 @@ operator = opToken ((:) <$> opStart <*> many opLetter <?> "operator")
 
 identStyle = IdentifierStyle
   { _styleName      = "identifier"
-  , _styleStart     = letter <|> char '_'
+  , _styleStart     = letter <|> lex '_'
   , _styleLetter    = alphaNum <|> oneOf "_'"
   , _styleReserved  = HashSet.fromList reservedIdents
   , _styleHighlight = Identifier
@@ -77,44 +134,50 @@ opStyle = IdentifierStyle
 --identifier = ident identStyle
 
 
-varIdent :: (TokenParsing m, Monad m) => m String
-varIdent = ident varStyle
+--varIdent :: (TokenParsing m, Monad m, Indent.MonadIndentState Indent.State m) => m String
+varIdent = identBlock varStyle
 
-conIdent :: (TokenParsing m, Monad m) => m String
-conIdent = ident conStyle
+--conIdent :: (TokenParsing m, Monad m, Indent.MonadIndentState Indent.State m) => m String
+conIdent = identBlock conStyle
 
-typeVarIdent :: (TokenParsing m, Monad m) => m String
-typeVarIdent = ident typeVarStyle
+--typeVarIdent :: (TokenParsing m, Monad m, Indent.MonadIndentState Indent.State m) => m String
+typeVarIdent = identBlock typeVarStyle
 
-typeIdent :: (TokenParsing m, Monad m) => m String
-typeIdent = ident typeStyle
+--typeIdent :: (TokenParsing m, Monad m, Indent.MonadIndentState Indent.State m) => m String
+typeIdent = identBlock typeStyle
 
-reservedIdent = reserve identStyle
-reservedOp    = reserve opStyle
+reservedIdent = reserveBlock identStyle
+reservedOp    = reserveBlock opStyle
 
-identLetter  = alphaNum <|> char '_'
+identLetter  = alphaNum <|> lex '_'
 
 
-wildcard    = symbolic  '_'   <?> "wildcard"
-recWildcard = symbol    "..." <?> "record wildcard"
-blockBegin  = symbolic  ':'
-separator   = symbolic  ','
-parenL      = symbolic  '('
-parenR      = symbolic  ')'
-bracketL    = symbolic  '['
-bracketR    = symbolic  ']'
-braceL      = symbolic  '{'
-braceR      = symbolic  '}'
-pipe        = symbolic  '|'
-accessor    = symbolic  '.'
-arrow       = symbol    "->"
-typeDecl    = symbol    "::"
-importAll   = symbolic  '*'
-assignment  = symbolic  '='
-nativeSym   = symbol    "```"
-range       = symbol    ".."
-ref         = symbolic  '@'
+wildcard      = symbol '_'   <?> "wildcard"
+recWildcard   = symbol "..." <?> "record wildcard"
+indBlockBegin = symbol ':'
+separator     = symbol ','
+parenL        = symbol '('
+parenR        = symbol ')'
+bracketL      = symbol '['
+bracketR      = symbol ']'
+braceL        = symbol '{'
+braceR        = symbol '}'
+pipe          = symbol '|'
+accessor      = symbol '.' <?> "accessor (.)"
+arrow         = symbol "->"
+typeDecl      = symbol "::"
+importAll     = symbol '*'
+assignment    = symbol '='
+nativeSym     = symbol "```"
+range         = symbol ".."
+ref           = symbol '@'
+terminator    = symbol ';' <?> "terminator"
 
+lineComStart        = lex '#'
+mlineComStartLetter = "#["
+mlineComEndLetter   = "#]"
+mlineComStart = string mlineComStartLetter
+mlineComEnd   = string mlineComEndLetter
 
 
 kwAlias     = reservedIdent "alias"
@@ -135,21 +198,22 @@ kwType      = reservedIdent "type"
 -- Numbers
 ----------------------------------------------------------------------
 
-numberL = sign <**> numBase
+numberL = try (sign <**> tokenBlock numBase) <?> "number"
 
 numBase =   (numPrefix ['o', 'O'] *> (Number.octodecimal <$> numRepr octDigit <*> numExp 'e'))
         <|> (numPrefix ['x', 'X'] *> (Number.hexadecimal <$> numRepr hexDigit <*> numExp 'p'))
         <|> (Number.decimal <$> numRepr digit <*> numExp 'e')
 
-numPrefix pfxs = try (char '0' *> choice (fmap char pfxs))
+numPrefix pfxs = try (lex '0' *> choice (fmap lex pfxs))
 
-numRepr baseDigit = some baseDigit <**> ((flip Number.Float <$ char '.' <*> some baseDigit) <|> pure Number.Decimal)
+numRepr baseDigit = some baseDigit <**> ((flip Number.Float <$> try (lex '.' *> some baseDigit)) <|> pure Number.Decimal)
+                  <|> try (Number.Float "0" <$ lex '.' <*> some baseDigit)
 
-numExp c = (Just <$ char c <*> numberL) <|> pure Nothing
+numExp c = (Just <$ lex c <*> numberL) <|> pure Nothing
 
 sign = highlight Operator
-     $ Number.Negative <$ char '-'
-   <|> Number.Positive <$ char '+'
+     $ Number.Negative <$ lex '-'
+   <|> Number.Positive <$ lex '+'
    <|> pure Number.Positive
 
 -- c-pasted
@@ -161,36 +225,42 @@ number base baseDigit =
 -- Strings
 ----------------------------------------------------------------------
 
-stringLiteral :: (TokenParsing m, IsString s) => m s
-stringLiteral = fromString <$> token (highlight StringLiteral lit) where
-  lit = Prelude.foldr (maybe id (:)) ""
-    <$> between (char '"') (char '"' <?> "end of string") (many stringChar)
+--stringLiteral :: (TokenParsing m, IsString s) => m s
+stringLiteral = fromString <$> tokenBlock (highlight StringLiteral lit) where
+  lit = Prelude.foldr (Prelude.maybe id (:)) ""
+    <$> between (lex '"') (lex '"' <?> "end of string") (many stringChar)
     <?> "string"
   stringChar = Just <$> stringLetter
            <|> stringEscape
        <?> "string character"
   stringLetter    = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026' || c == '\n' || c == '\r'))
 
-  stringEscape = highlight EscapeCode $ char '\\' *> esc where
+  stringEscape = highlight EscapeCode $ lex '\\' *> esc where
     esc = Nothing <$ escapeGap
       <|> Nothing <$ escapeEmpty
       <|> Just <$> escapeCode
-  escapeEmpty = char '&'
-  escapeGap = skipSome space *> (char '\\' <?> "end of string gap")
+  escapeEmpty = lex '&'
+  escapeGap = skipSome space *> (lex '\\' <?> "end of string gap")
 {-# INLINE stringLiteral #-}
 
+
+--charLiteral :: TokenParsing m => m Char
+charLiteral = tokenBlock (highlight CharLiteral lit) where
+  lit = between (lex '\'') (lex '\'' <?> "end of character") characterChar
+    <?> "character"
+{-# INLINE charLiteral #-}
 
 -- c-pasted
 escapeCode :: TokenParsing m => m Char
 escapeCode = (charEsc <|> charNum <|> charAscii <|> charControl) <?> "escape code"
   where
-  charControl = (\c -> toEnum (fromEnum c - fromEnum '@')) <$> (char '^' *> (upper <|> char '@'))
+  charControl = (\c -> toEnum (fromEnum c - fromEnum '@')) <$> (lex '^' *> (upper <|> lex '@'))
   charNum     = toEnum . fromInteger <$> num where
     num = decimal
-      <|> (char 'o' *> number 8 octDigit)
-      <|> (char 'x' *> number 16 hexDigit)
+      <|> (lex 'o' *> number 8 octDigit)
+      <|> (lex 'x' *> number 16 hexDigit)
   charEsc = choice $ parseEsc <$> escMap
-  parseEsc (c,code) = code <$ char c
+  parseEsc (c,code) = code <$ lex c
   escMap = zip "abfnrtv\\\"\'" "\a\b\f\n\r\t\v\\\"\'"
   charAscii = choice $ parseAscii <$> asciiMap
   parseAscii (asc,code) = try $ code <$ string asc
@@ -204,3 +274,22 @@ escapeCode = (charEsc <|> charNum <|> charAscii <|> charControl) <?> "escape cod
   ascii2, ascii3 :: String
   ascii2 = "\BS\HT\LF\VT\FF\CR\SO\SI\EM\FS\GS\RS\US\SP"
   ascii3 = "\NUL\SOH\STX\ETX\EOT\ENQ\ACK\BEL\DLE\DC1\DC2\DC3\DC4\NAK\SYN\ETB\CAN\SUB\ESC\DEL"
+
+
+----------------------------------------------------------------------
+-- Chars
+----------------------------------------------------------------------
+
+--symbol   name = tokenBlock (highlight Symbol (string name))
+--symbolic name = tokenBlock (highlight Symbol (lex name))
+
+symbol name = tokenBlock (highlight Symbol (lex name))
+----------------------------------------------------------------------
+-- Combinators
+----------------------------------------------------------------------
+
+parens = nesting . between (symbol '(') (symbol ')')
+
+brackets = nesting . between (symbol '[') (symbol ']')
+
+braces = nesting . between (symbol '{') (symbol '}')

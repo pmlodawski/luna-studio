@@ -42,6 +42,7 @@ infixl 4 <**$>
 infixl 4 <??$>
 p <?*> q = (p <*> q) <|> q
 -- p <**> q = (\f g -> g f) <$> p <*> q
+p <***> q = (\f g -> g f) <*> p <*> q
 p <??> q = p <**> (q <|> return id)
 p <**$> q = p <**> (flip (foldr ($)) <$> q)
 p <??$> q = p <**> ((flip (foldr ($)) <$> q) <|> return id)
@@ -62,3 +63,10 @@ maybe p = try (Just <$> p) <|> pure Nothing
 
 applyAll x (f : fs) = applyAll (f x) fs
 applyAll x [] = x
+
+
+infixl 3 <=<
+(<=<) s p = do
+    ret <- p
+    s ret
+    return ret

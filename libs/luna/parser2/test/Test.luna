@@ -1,0 +1,5 @@
+class Vector a:
+    x,y,z :: a
+
+def foo ala ola hola:
+    a = bola
