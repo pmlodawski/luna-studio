@@ -1,0 +1,64 @@
+import ```Flowbox.Graphics.Mockup```
+
+class Vector a:
+    x,y,z :: a
+    def test a b:
+        {a,b}
+
+def print msg:
+    ```autoLift1 print #{msg}```
+
+def Int.+ a:
+    ```liftF2 (+) #{self} #{a}```
+
+def Int.- a:
+    ```liftF2 (-) #{self} #{a}```
+
+def Int.* a:
+    ```liftF2 (*) #{self} #{a}```
+
+def Int./ a:
+    ```liftF2 (/) #{self} #{a}```
+
+def Int.> a:
+    ```liftF2 (>) #{self} #{a}```
+
+def Int.== a:
+    ```liftF2 (==) #{self} #{a}```
+
+def Int.< a:
+    ```liftF2 (<) #{self} #{a}```
+
+def Int.<= a:
+    ```liftF2 (<=) #{self} #{a}```
+
+def Int.>= a:
+    ```liftF2 (>=) #{self} #{a}```
+
+def Int.inc:
+    self + 1
+
+def Int.dec:
+    self - 1
+
+def loadImage path:
+    ```autoLift1 testLoadRGBA #{path}```
+
+def saveImage path rgba:
+    ```autoLift2 testSaveRGBA #{path} #{rgba}```
+
+def defocus radius rgba:
+    ```liftF2 defocus #{radius} #{rgba}```
+
+def motionBlur size angle rgba:
+    ```liftF3 motionBlur #{size} #{angle} #{rgba}```
+
+def bilateral psigma csigma size rgba:
+    ```liftF4 bilateral #{psigma} #{csigma} #{size} #{rgba}```
+
+def main:
+    rgba = loadImage "/home/mgw/test.png"
+    rgbaD = defocus 30 rgba
+    rgbaM = motionBlur 50 45.0 rgba
+    rgbaB = bilateral 1.0 5.0 15 rgba
+    saveImage "/home/mgw/out.png" rgbaB

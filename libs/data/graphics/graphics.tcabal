@@ -51,7 +51,8 @@ Library
                   system-filepath             ,
                   template-haskell            ,
                   transformers                ,
-                  vector
+                  vector                      ,
+                  luna-target-ghchs
 
 Executable test_generator
   if !flag(cuda)
