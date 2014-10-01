@@ -18,10 +18,11 @@ import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Graphics.Composition.Generators.Stencil
 import Flowbox.Graphics.Composition.Generators.Matrix
 
-import           Flowbox.Graphics.Prelude          as P hiding (filter)
-import           Flowbox.Math.Matrix               as M hiding (stencil)
-import qualified Flowbox.Math.Matrix               as M (stencil)
-import           Data.Array.Accelerate             as A hiding (filter, stencil, constant)
+import           Flowbox.Graphics.Prelude            as P hiding (filter)
+import           Flowbox.Math.Matrix                 as M hiding (stencil)
+import qualified Flowbox.Math.Matrix                 as M (stencil)
+import           Flowbox.Math.BitonicSorterGenerator as B
+import           Data.Array.Accelerate               as A hiding (filter, stencil, constant)
 
 import Math.Space.Space
 import Math.Coordinate.Cartesian                (Point2(..))
@@ -164,13 +165,8 @@ closing size = dilate size . erode size
 
 median :: forall a . (A.Stencil A.DIM2 a (A.Stencil3x3 a), A.IsFloating a)
        => M.Matrix2 a -> M.Matrix2 a
-median array = M.stencil stencil A.Mirror array
-    where stencil :: A.Stencil3x3 a -> A.Exp a
-          stencil ((v0, v1, v2)
-                  ,(v3, v4, v5)
-                  ,(v6, v7, v8)) = A.the $ middle $ Thrust.sort (unit1 v0 A.++ unit1 v1 A.++ unit1 v2
-                                                            A.++ unit1 v3 A.++ unit1 v4 A.++ unit1 v5
-                                                            A.++ unit1 v6 A.++ unit1 v7 A.++ unit1 v8)
+median array = M.stencil stencil A.Mirror array where
+  stencil = $(B.generateGetNthFromTuple 24 49) . $(B.generateBitonicNetworkTuple 7 7)
 
 stencilTest :: forall a . (A.Stencil A.DIM2 a (A.Stencil3x3 a), A.IsFloating a)
        => M.Matrix2 a -> M.Matrix2 a
@@ -189,6 +185,3 @@ middle vec = A.unit ((len `mod` 2) A.==* 0 A.? ( vec A.! (A.index1 $ (len + 1) `
                                                  / 2
                                                ))
     where len = A.unindex1 $ A.shape vec
-
-sort :: (A.IsNum a, A.Elt a) => M.Matrix2 a -> M.Matrix2 a
-sort m = Delayed $ Thrust.sort $ accMatrix m
