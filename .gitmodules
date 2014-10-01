@@ -31,3 +31,6 @@
 [submodule "third-party/mainland-pretty"]
     path = third-party/mainland-pretty
     url = git@github.com:flowbox-public/mainland-pretty.git
+[submodule "third-party/linear-accelerate"]
+    path = third-party/linear-accelerate
+    url = git@github.com:flowbox-public/linear-accelerate.git
