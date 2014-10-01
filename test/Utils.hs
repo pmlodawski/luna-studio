@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
 
@@ -25,7 +26,13 @@ import qualified Codec.Picture.Png          as Juicy
 import qualified Codec.Picture.Types        as Juicy
 import qualified Data.Array.Accelerate      as A
 import           Data.Array.Accelerate.IO
-import           Data.Array.Accelerate.CUDA
+
+#ifdef ACCELERATE_CUDA_BACKEND
+import           Data.Array.Accelerate.CUDA        (run)
+#else
+import           Data.Array.Accelerate.Interpreter (run)
+#endif
+
 import qualified Data.Vector.Storable       as SV
 
 import           Math.Space.Space
