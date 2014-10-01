@@ -1,18 +1,29 @@
-{-# LANGUAGE BangPatterns    #-}
-{-# LANGUAGE OverloadedLists #-}
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+{-# LANGUAGE BangPatterns        #-}
+{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Color.Transfer where
 
-import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as AIO
-import Data.Array.Accelerate.CUDA
+
+#ifdef ACCELERATE_CUDA_BACKEND
+import           Data.Array.Accelerate.CUDA        (run)
+#else
+import           Data.Array.Accelerate.Interpreter (run)
+#endif
 
 import           Flowbox.Graphics.Composition.Histogram
-import qualified Flowbox.Graphics.Utils as U
+import qualified Flowbox.Graphics.Utils                 as U
 import           Flowbox.Graphics.Utils.Accelerate
-import qualified Flowbox.Math.Numeric   as Num
+import qualified Flowbox.Math.Numeric                   as Num
 import           Flowbox.Prelude
 
 
@@ -39,7 +50,7 @@ smin h p = A.fold1 min $ bigG h A.++ bigR p
 smax h p = A.fold1 max $ bigG h A.++ bigR p
 
 
---rhoGi :: A.Acc (A.Array A.DIM2 Float)
+-- rhoGi :: A.Acc (A.Array A.DIM2 Float)
 rhoGi h p = A.reshape (A.index2 6 (256 :: A.Exp Int))
      $ A.asnd
      $ A.awhile 
@@ -81,22 +92,28 @@ histogramWithBins' mini maxi bins vec = A.permute (+) zeros hist ones
 
     hist ix = A.index1 (A.ceiling $ ((vec A.! ix) - mini) / step :: A.Exp Int)
 
-szatan = do
-  (plainR, plainG, plainB) <- loadRGBA "plain.bmp"
-  (houseR, houseG, houseB) <- loadRGBA "house.bmp"
-  putStrLn "loaded"
+-- szatan = do
+--   (plainR, plainG, plainB) <- loadRGBA "samples/transfer/scotland_plain.bmp"
+--   (houseR, houseG, houseB) <- loadRGBA "samples/transfer/scotland_house.bmp"
+--   putStrLn "loaded"
 
-  let vectoredPlain = customReshape $ A.lift (A.use plainR, A.use plainG, A.use plainB)
-      vectoredHouse = customReshape $ A.lift (A.use houseR, A.use houseG, A.use houseB)
+--   let vectoredPlain = customReshape $ A.lift (A.use plainR, A.use plainG, A.use plainB)
+--       vectoredHouse = customReshape $ A.lift (A.use houseR, A.use houseG, A.use houseB)
 
-  let !foo = flip A.slice (A.lift $ A.Z A.:. (0::A.Exp Int) A.:. A.All) $ rhoGi vectoredHouse vectoredPlain
+--   let (r, g, b) = A.unlift $ reshapeBack (A.shape $ A.use plainR) $ rhoGi vectoredHouse vectoredPlain
 
-  return foo
+--   return foo
 
 customReshape :: A.Acc (A.Array A.DIM2 Float, A.Array A.DIM2 Float, A.Array A.DIM2 Float) -> A.Acc (A.Array A.DIM2 Float)
 customReshape (A.unlift -> (r, g, b) :: Vectors) = A.reshape newShape (A.flatten r A.++ A.flatten g A.++ A.flatten b)
   where
     newShape = A.index2 3 $ A.size r
+
+reshapeBack :: A.Exp A.DIM2 -> A.Acc (A.Array A.DIM2 Float) -> A.Acc (A.Array A.DIM2 Float, A.Array A.DIM2 Float, A.Array A.DIM2 Float)
+reshapeBack sh input = A.lift (A.reshape sh r, A.reshape sh g, A.reshape sh b)
+  where r = A.slice input (A.lift $ A.Z A.:. (0 :: A.Exp Int) A.:. A.All)
+        g = A.slice input (A.lift $ A.Z A.:. (1 :: A.Exp Int) A.:. A.All)
+        b = A.slice input (A.lift $ A.Z A.:. (2 :: A.Exp Int) A.:. A.All)
 
 type Vectors = (A.Acc (A.Array A.DIM2 Float), A.Acc (A.Array A.DIM2 Float), A.Acc (A.Array A.DIM2 Float))
 
