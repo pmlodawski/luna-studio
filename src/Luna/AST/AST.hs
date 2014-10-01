@@ -5,13 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE MultiParamTypeClasses #-}
+
+
 module Luna.AST.AST (
     module Luna.AST.AST,
-    module Luna.AST.Common
+    module X
 )where
 
 import Flowbox.Prelude
-import Luna.AST.Common
+import Luna.AST.Common as X
+import Luna.AST.Prop   as X
 import Luna.AST.Expr   (Expr)
 import Luna.AST.Lit    (Lit)
 import Luna.AST.Module (Module)
@@ -24,4 +28,18 @@ data AST = Module { fromModule :: Module }
          | Lit    { fromLit :: Lit    }
          | Pat    { fromPat :: Pat    }
          | Type   { fromType :: Type   }
-         deriving (Show)
+         deriving (Show, Eq, Read)
+
+
+class Wrapper a b where
+    wrap :: a -> b
+
+
+instance Wrapper Expr AST where
+    wrap = Expr
+
+instance Wrapper Pat AST where
+    wrap = Pat
+
+
+

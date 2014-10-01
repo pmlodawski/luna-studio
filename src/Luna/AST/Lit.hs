@@ -12,7 +12,7 @@ module Luna.AST.Lit where
 
 import           Control.Lens
 import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Prelude                 (Eq, Read, Show, (++))
+import           Flowbox.Prelude                 (Eq, Read, Show, (++), String)
 import qualified Flowbox.Prelude                 as Prelude
 import           GHC.Generics
 import           Luna.AST.Common                 (ID)
