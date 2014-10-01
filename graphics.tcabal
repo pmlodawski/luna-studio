@@ -18,12 +18,11 @@ Library
   Default-Language:       Haskell2010
 
   Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
-                   `findmodules('dist/gen', '.*\.hs')`
+                   `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.* ,
-                        accelerate-thrust
+    Build-Depends:      accelerate-cuda  == 0.15.*
 
   Build-Depends:  base           == 4.7.*     ,
                   accelerate     == 0.15.*    ,
@@ -158,7 +157,7 @@ Executable test_merge
 Executable test_color
   if !flag(cuda)
     buildable: False
-    
+
   Main-Is:        Color.hs
   Hs-Source-Dirs: test
 
@@ -184,3 +183,32 @@ Executable test_color
                   QuickCheck               ,
                   split                    ,
                   vector
+
+Executable test_serialization
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        Serialization.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  bytestring               ,
+                  protocol-buffers         ,
+                  vector                   ,
+                  JuicyPixels              ,
+                  algebraic                ,
+                  split
