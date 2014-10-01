@@ -1,0 +1,41 @@
+class Vector a:
+    x,y,z :: a
+    def test a b:
+        {a,b}
+
+def print self msg::String:
+    ```autoLift1 print #{msg}```
+
+def Int.+ self::Int a::Int:
+    ```liftF2 (+) #{self} #{a}```
+
+def Int.- self::Int a::Int:
+    ```liftF2 (-) #{self} #{a}```
+
+def Int.* self::Int a::Int:
+    ```liftF2 (*) #{self} #{a}```
+
+def Int./ self::Int a::Int:
+    ```liftF2 (/) #{self} #{a}```
+
+def Int.> self::Int a::Int:
+    ```liftF2 (>) #{self} #{a}```
+
+def Int.== self::Int a::Int:
+    ```liftF2 (==) #{self} #{a}```
+
+def Int.< self::Int a::Int:
+    ```liftF2 (<) #{self} #{a}```
+
+def Int.<= self::Int a::Int:
+    ```liftF2 (<=) #{self} #{a}```
+
+def Int.>= self::Int a::Int:
+    ```liftF2 (>=) #{self} #{a}```
+
+def Int.inc self::Int: 
+    self + 1
+
+def Int.dec self::Int:
+    self - 1
+

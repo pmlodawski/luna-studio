@@ -14,8 +14,7 @@ Library
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse
 
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*old\.hs)')`,
-                   `findmodules('libs', '.*\.hs', exclude='(.*old\.hs)')`
+  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*old\.hs)')`
 
 
   Build-Depends:  base,
@@ -27,10 +26,10 @@ Library
                   pretty-show,
                   template-haskell,
                   transformers,
-                  mmorph,
                   mtl,
                   QuickCheck,
-                  lens
+                  lens,
+                  flowbox-utils
 
 
 

@@ -17,13 +17,14 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TypeFamilies #-}
 !{-# LANGUAGE RightSideContexts #-}
 
 module Luna.Target.HS.Control.Context.Value where
 
 import Control.PolyMonad
 import Control.PolyApplicative
-import Luna.Target.HS.Control.Context.Env
 import Control.Monad.IO.Class
 import Data.Typeable (Typeable)
 import Flowbox.Utils
@@ -34,24 +35,27 @@ import Control.Applicative
 -- Structures
 --------------------------------------------------------------------------------
 
-newtype Value m v = Value (m v) deriving (Typeable)
+newtype Value m s v = Value (m (s v)) deriving (Typeable, Functor)
 
 fromValue (Value a) = a
-
 
 --------------------------------------------------------------------------------
 -- Type classes
 --------------------------------------------------------------------------------
 
-class LiftValue m mout where
-    liftValue :: Value m a -> mout a
+-- FIXME [wd]: to remove?
+class LiftValue m t where
+    liftValue :: Functor s => Value m s a -> t s a
 
+
+class LiftValue' m s t where
+    liftValue' :: m (s :: * -> *) a -> t m s a
 
 --------------------------------------------------------------------------------
 -- Instances
 --------------------------------------------------------------------------------
 
-instance Show (m a) => Show (Value m a) where
+instance Show (m (s a)) => Show (Value m s a) where
 #ifdef DEBUG
     show (Value a) = "Value (" ++ child ++ ")" where
         child = show a
@@ -62,26 +66,3 @@ instance Show (m a) => Show (Value m a) where
 
 ---
 
-instance Monad m => Monad (Value m) where
-    return = Value . return
-    Value ma >>= f = Value $ do
-        a <- ma
-        fromValue $ f a
-
-instance Functor m => Functor (Value m) where
-    fmap f (Value a) = Value $ fmap f a
-
-instance (Functor m, Monad m) => Applicative (Value m) where
-    pure  = Value . return
-    (Value mf) <*> (Value ma) = Value $ do
-        f <- mf
-        a <- ma
-        return $ f a
-
----
-
-instance LiftValue IO m <= MonadIO m where
-    liftValue = liftIO . fromValue
-
-instance LiftValue Pure m <= Monad m where
-    liftValue = return . fromPure . fromValue

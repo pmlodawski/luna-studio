@@ -8,20 +8,19 @@
 
 module Luna.Graph.Edge where
 
-import           Flowbox.Prelude
-import           Luna.Graph.Port (InPort, OutPort)
-import qualified Luna.Graph.Port as Port
+import Flowbox.Prelude
+import Luna.Graph.Port (Port)
 
 
 
-data Edge = Data { _src :: OutPort
-                 , _dst :: InPort
+data Edge = Data { _src :: Port
+                 , _dst :: Port
                  }
           | Monadic
           deriving (Show, Read, Ord, Eq)
 
 
-makeLenses(''Edge)
+makeLenses ''Edge
 
 
 isData :: Edge -> Bool
@@ -35,6 +34,6 @@ isMonadic _       = False
 
 
 match :: Edge -> Edge -> Bool
-match (Data _ d) (Data s _) = Port.Num d == s
+match (Data _ d) (Data s _) = d == s
 match  Monadic    Monadic   = True
 match  _          _         = False

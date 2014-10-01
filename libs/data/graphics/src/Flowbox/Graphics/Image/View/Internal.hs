@@ -30,11 +30,7 @@ import           Flowbox.Prelude                as P hiding (set, map)
 
 type Name = String
 type ChanTree = ChannelTree Channel.Name Channel
-
-data Select = All
-            | Default
-            | Group { names :: Set Name }
-            deriving (Show)
+type Select = Set Name
 
 class View v where
     name     :: v -> Name -- Lens' v Name

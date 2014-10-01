@@ -65,7 +65,7 @@ safeInterpretLibrary :: Library.ID -> Project.ID -> Batch ()
 safeInterpretLibrary libraryID projectID = do
     args <- liftIO Environment.getArgs
     batch  <- get
-    unless ("--no-auto-interpreter" `elem` args) $
+    when ("--auto-interpreter" `elem` args) $
             liftIO $ Concurrent.forkIO_ $ Exception.catch
                                  (eitherStringToM =<< Batch.runBatch batch (interpretLibrary libraryID projectID))
                                  (\e -> logger error $ "Interpret failed: " ++ show (e :: IOException))
@@ -74,7 +74,7 @@ safeInterpretLibrary libraryID projectID = do
 interpretLibrary :: Library.ID -> Project.ID -> Batch ()
 interpretLibrary libraryID projectID = do
     let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
-        imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
+        imports = ["Luna.Target.HS", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
     ast <- getAST libraryID projectID
     cfg <- gets (view Batch.config)
     maxID <- EitherT $ MaxID.run ast

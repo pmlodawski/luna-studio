@@ -37,8 +37,8 @@ main = do
 
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
-    let rootPath = "samples/VisualStd"
-        filePath = "samples/VisualStd/Std.luna"
+    let rootPath = "stdlib/visual"
+        filePath = "stdlib/visual/Std.luna"
     (ast, _, _) <- hoistEither =<< Build.parseFile (UniPath.fromUnixString rootPath)
                                                    (UniPath.fromUnixString filePath)
     let name = "Std"

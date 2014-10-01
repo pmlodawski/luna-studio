@@ -8,11 +8,11 @@
 
 module Flowbox.Bus.RPC.RPC where
 
-import Control.Exception          (SomeException, try)
-import Control.Monad.Trans.Either
-import Control.Monad.Trans.State
+import           Control.Exception          (SomeException)
+import qualified Control.Monad.Catch        as Catch
+import           Control.Monad.Trans.Either
+import           Control.Monad.Trans.State
 
-import Flowbox.Control.Error hiding (err)
 import Flowbox.Prelude
 
 
@@ -26,18 +26,16 @@ data NoState = NoState
              deriving (Read, Show)
 
 
-run :: MonadIO m => RPC s IO r -> StateT s m (Either Error r)
+run :: (Catch.MonadCatch m, Monad m, Functor m)
+    => RPC s m r -> StateT s m (Either Error r)
 run rpc = do
     s <- get
-    result <- liftIO $ (try :: IO a -> IO (Either SomeException a)) $ runStateT (runEitherT rpc) s
+    let handler :: Monad m => SomeException -> m (Either String a)
+        handler ex = return $ Left $ "Unhandled exception: " ++ show ex
+    result <- lift $ Catch.catch (Right <$> runStateT (runEitherT rpc) s) handler
     case result of
-        Left err        -> return $ Left $ "Unhandled exception: " ++ show err
+        Left err        -> return $ Left err
         Right (res, s') -> case res of
             Left err -> return $ Left err
             Right r  -> do put s'
                            return $ Right r
-
-
-runLifted :: Monad m => RPC s m r -> StateT s m (Either Error r)
-runLifted = runEitherT
-

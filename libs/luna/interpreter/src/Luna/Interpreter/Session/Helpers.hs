@@ -4,11 +4,11 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE QuasiQuotes #-}
+--{-# LANGUAGE QuasiQuotes #-}
 module Luna.Interpreter.Session.Helpers where
 
 import Flowbox.Prelude
-import Text.RawString.QQ
+--import Text.RawString.QQ
 
 
 

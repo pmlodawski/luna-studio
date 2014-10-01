@@ -8,14 +8,17 @@
 {-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell           #-}
+
+module Main where
 
 import Flowbox.Generics.Deriving.FShow
 import Flowbox.System.Log.Logger       as Logger
 import GHC.Generics
 import Prelude                         hiding (error)
 
+import           Flowbox.Source.Location
 import qualified Flowbox.System.Console.StyledText.StyledText as Text
-
 
 
 data Test = Test Int Int deriving(Show, Generic)
@@ -42,6 +45,7 @@ f x = x
 
 main :: IO ()
 main = do
+    putStrLn $ format $loc
     let t = Test 5 5
     putStrLn $ fshow f t
 
