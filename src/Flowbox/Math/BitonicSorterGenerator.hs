@@ -1,26 +1,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Flowbox.Graphics.Composition.Generators.BitonicSorterGenerator (generateBitonicNetwork, generateBitonicNetworkTuple, generateGetNthFromTuple)  where
+module Flowbox.Math.BitonicSorterGenerator (generateBitonicNetworkList, generateBitonicNetworkTuple, generateGetNthFromTuple)  where
 
 import Language.Haskell.TH
-import Control.Applicative
-import Control.Monad
+import Control.Monad (replicateM)
+
+import Flowbox.Prelude hiding ((<&>))
 
 (<&>) = flip fmap
 
+generateGetNthFromTuple :: Int -> Int -> Q Exp
 generateGetNthFromTuple elem size = do
     name <- newName "x"
-    let patternP = tupP $ replicate elem wildP ++ varP name : replicate (size - elem - 1) wildP
+    let patternP = tupP $ (replicate elem wildP) ++ (varP name : replicate (size - elem - 1) wildP)
         expr = varE name
     lamE [patternP] expr
-
-generateGetNthFromTuple2 :: Int -> Int -> Q Exp
-generateGetNthFromTuple2 elem size = do
-    tupleElems <- generateWires size
-    let tupP = wiresGeneratorP tupleElems
-        resultExpr = VarE $ tupleElems !! (size `div` 2)
-    return $ LamE [tupP] resultExpr
 
 generateBitonicNetworkTuple :: Int -> Int -> Q Exp
 generateBitonicNetworkTuple width height = do
@@ -31,8 +26,8 @@ generateBitonicNetworkTuple width height = do
     let tuplesP = TupP $ (TupP . map VarP) <$> variables
     return $ LamE [tuplesP] resultExpression
 
-generateBitonicNetwork :: Int -> Q Exp
-generateBitonicNetwork size = do
+generateBitonicNetworkList :: Int -> Q Exp
+generateBitonicNetworkList size = do
     variables <- generateWires size
     resultExpresion <- generateSorter variables size
     let varsP = ListP $ VarP <$> variables
