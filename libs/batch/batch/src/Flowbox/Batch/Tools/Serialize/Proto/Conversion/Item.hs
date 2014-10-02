@@ -28,8 +28,8 @@ instance Convert Item Gen.Item where
             Directory {} -> Gen.Directory
             File      {} -> Gen.File
             Other     {} -> Gen.Other
-        tpath = encodePJ $ Item.path item
-        tsize = encodePJ $ Item.size item
+        tpath = encodePJ $ item ^. Item.path
+        tsize = encodePJ $ item ^. Item.size
     decode (Gen.Item mtitemType mtpath mtsize) = do
         titemType <- mtitemType <?> "Failed to decode Item: 'itemType' field is missing"
         tpath     <- mtpath     <?> "Failed to decode Item: 'path' field is missing"

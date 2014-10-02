@@ -10,8 +10,8 @@ module Test.Flowbox.System.UniPathSpec where
 import Test.Hspec
 
 import           Flowbox.Prelude
+import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath
-import  Flowbox.System.UniPath (UniPath)
 
 
 
@@ -26,7 +26,7 @@ toString :: UniPath -> FilePath
 toString = UniPath.toUnixString
 
 sameBackAndForth :: String -> Expectation
-sameBackAndForth path = 
+sameBackAndForth path =
     toString (fromString path) `shouldBe` path
 
 

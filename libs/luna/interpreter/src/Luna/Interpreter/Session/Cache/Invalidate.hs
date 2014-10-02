@@ -12,8 +12,8 @@ import qualified Data.List           as List
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Common                             as AST
 import           Luna.AST.Control.Crumb                      (Breadcrumbs)
+import qualified Luna.AST.Control.Crumb                      as Crumb
 import qualified Luna.Graph.Node                             as Node
 import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
@@ -27,7 +27,10 @@ import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoi
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Session            (Session)
+import qualified Luna.Interpreter.Session.Session            as Session
+import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
 import qualified Luna.Lib.Lib                                as Library
+import qualified Luna.Lib.Manager                            as LibManager
 
 
 
@@ -36,52 +39,78 @@ logger = getLoggerIO "Luna.Interpreter.Session.Cache.Invalidate"
 
 
 modifyAll :: Session ()
-modifyAll = modifyMatching $ const . const True
+modifyAll = do
+    logger info "Mark modified: everything"
+    modifyMatching $ const . const True
+    libIDs <- LibManager.nodes <$> Session.getLibManager
+    --Session.addReload (head libIDs) Reload.ReloadLibrary
+    mapM_ (`Session.addReload` Reload.ReloadLibrary) libIDs
 
 
 modifyLibrary :: Library.ID -> Session ()
-modifyLibrary libraryID = modifyMatching matchLib where
-    matchLib k _ = last k ^. CallPoint.libraryID == libraryID
+modifyLibrary libraryID = do
+    let matchLib k _ = last k ^. CallPoint.libraryID == libraryID
+    logger info $ "Mark modified: library " ++ show libraryID
+    modifyMatching matchLib
+    Session.addReload libraryID Reload.ReloadLibrary
 
 
-modifyDef :: Library.ID -> AST.ID -> Session ()
-modifyDef libraryID defID = modifyMatching matchDef where
-    matchDef k v = last k ^. CallPoint.libraryID == libraryID
-                     && v ^. CacheInfo.defID     == defID
+--modifyDef :: Library.ID -> AST.ID -> Session ()
+--modifyDef libraryID defID = do
+--    let matchDef k v = last k ^. CallPoint.libraryID == libraryID
+--                         && v ^. CacheInfo.defID     == defID
+--    logger info $ "Mark modified: definition " ++ show (libraryID, defID)
+--    modifyMatching matchDef
 
 
 modifyBreadcrumbsRec :: Library.ID -> Breadcrumbs -> Session ()
-modifyBreadcrumbsRec libraryID bc = modifyMatching matchBC where
-    matchBC k v = last k ^. CallPoint.libraryID   == libraryID
-                    && List.isPrefixOf bc (v ^. CacheInfo.breadcrumbs)
+modifyBreadcrumbsRec libraryID bc = do
+    let matchBC k v = last k ^. CallPoint.libraryID   == libraryID
+                        && List.isPrefixOf bc (v ^. CacheInfo.breadcrumbs)
+    logger info $ "Mark modified: breadcrumbs rec. " ++ show (libraryID, bc)
+    modifyMatching matchBC
+    Session.addReload libraryID Reload.ReloadLibrary
 
 
 modifyBreadcrumbs :: Library.ID -> Breadcrumbs -> Session ()
-modifyBreadcrumbs libraryID bc = modifyMatching matchBC where
-    matchBC k v = last k ^. CallPoint.libraryID == libraryID
-                    && v ^. CacheInfo.breadcrumbs == bc
+modifyBreadcrumbs libraryID bc = do
+    let matchBC k v = last k ^. CallPoint.libraryID == libraryID
+                        && v ^. CacheInfo.breadcrumbs == bc
+    logger info $ "Mark modified: breadcrumbs " ++ show (libraryID, bc)
+    modifyMatching matchBC
+    let lastBC = last bc
+    Session.addReload libraryID $ if Crumb.isClass lastBC
+        then Reload.mkReloadClasses bc
+        else if Crumb.isFunction lastBC
+            then Reload.ReloadFunctions
+            else Reload.ReloadLibrary
 
 
 modifyNode :: Library.ID -> Node.ID -> Session ()
-modifyNode libraryID nodeID = modifyMatching matchNode where
-    matchNode k _ = last k == CallPoint libraryID nodeID
+modifyNode libraryID nodeID = do
+    let matchNode k _ = last k == CallPoint libraryID nodeID
+    logger info $ "Mark modified: node " ++ show (libraryID, nodeID)
+    modifyMatching matchNode
+    Session.addReload libraryID Reload.ReloadFunctions
+
 
 
 modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session ()
 modifyMatching predicate = do
     matching <- MapForest.find predicate <$> Cache.cached
-    mapM_ (setStatusParents CacheStatus.Modified . fst) matching
+    mapM_ (setParentsStatus CacheStatus.Modified . fst) matching
+    Session.setAllReady False
 
 
-setStatusParents :: CacheStatus -> CallPointPath -> Session ()
-setStatusParents _      []            = return ()
-setStatusParents status callPointPath = do
+setParentsStatus :: CacheStatus -> CallPointPath -> Session ()
+setParentsStatus _      []            = return ()
+setParentsStatus status callPointPath = do
     Cache.setStatus status callPointPath
-    setStatusParents status $ init callPointPath
+    setParentsStatus status $ init callPointPath
 
 
 markSuccessors :: CallDataPath -> CacheStatus -> Session ()
 markSuccessors callDataPath status =
     Traverse.next callDataPath >>=
-    mapM_ (setStatusParents status . CallDataPath.toCallPointPath)
+    mapM_ (setParentsStatus status . CallDataPath.toCallPointPath)
 

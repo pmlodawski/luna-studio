@@ -13,9 +13,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
@@ -34,18 +36,18 @@ import Flowbox.Utils
 import Data.TypeLevel
 import Control.Applicative
 
+import Luna.Target.HS.Control.Error.Data as DELME
+
 --------------------------------------------------------------------------------
 -- Structures
 --------------------------------------------------------------------------------
 
 newtype Req req m a = Req (m a) deriving (Show, Typeable)
-
 fromReq (Req a) = a
 
-newtype MonadCtx (base :: * -> *) set m val = MonadCtx (m val) deriving (Show, Typeable)
-
-fromMonadCtx :: MonadCtx base set m val -> m val
+newtype MonadCtx (base :: (* -> *) -> * -> *) set (m :: (* -> *) -> * -> *) s val = MonadCtx (m s val) deriving (Show, Typeable, Functor)
 fromMonadCtx (MonadCtx a) = a
+
 
 --------------------------------------------------------------------------------
 -- Type classes
@@ -65,100 +67,43 @@ class AppMonadCtx a b | a -> b where
 -- Utils
 --------------------------------------------------------------------------------
 
-closeMonadCtx :: MonadCtx base set base a -> Value base a
-closeMonadCtx (MonadCtx a) = Value a
+closeMonadCtx :: MonadCtx base set base s a -> base s a
+closeMonadCtx (MonadCtx a) = a
 
-runMonadProto :: mptr -> (ma a -> mb b) -> (MonadCtx env set ma a) -> (MonadCtx env (Remove mptr set) mb b)
+runMonadProto :: mptr -> (ma sa a -> mb sb b) -> (MonadCtx env set ma sa a) -> (MonadCtx env (Remove mptr set) mb sb b)
 runMonadProto _ f ms = MonadCtx $ f (fromMonadCtx ms)
 
-runMonadProtoReq :: mptr -> (ma a -> mb b) -> Req mptr (MonadCtx env set ma) a -> MonadCtx env (Remove mptr set) mb b
+runMonadProtoReq :: mptr -> (ma sa a -> mb sb b) -> Req mptr (MonadCtx env set ma sa) a -> MonadCtx env (Remove mptr set) mb sb b
 runMonadProtoReq mptr f ms = runMonadProto mptr f (fromReq ms)
 
-runMonad :: mptr -> (ma a -> mb b) -> Req mptr (MonadCtx env set ma) a -> t b <= MatchMonadClose (MonadCtx env (Remove mptr set) mb) t
+runMonad :: mptr -> (ma sa a -> mb sb b) -> Req mptr (MonadCtx env set ma sa) a -> t b <= MatchMonadClose (MonadCtx env (Remove mptr set) mb sb) t
 runMonad = matchMonadClose `dot3` runMonadProtoReq
 
 
-
---runMonad'' :: mptr -> (ma a -> mb b) -> MonadCtx env (ConstrainSet (Insert mptr Empty) set) ma a -> t b <= MatchMonadClose (MonadCtx env (ConstrainSet (Insert mptr Empty) (Remove mptr set)) mb) t 
-    --runMonad'' = (removeReqConstrains . matchMonadClose) `dot3` runMonadProto'
-
---liftMonadRunner1' :: MatchMonadCloseProto (IsEmpty (Remove mptr set)) (MonadCtx env (Remove mptr set) mb) t => mptr -> (ma a1 -> a -> mb b) -> MonadCtx env (Insert (Include mptr) Empty) ma a1 -> a -> t b
---liftMonadRunner1' (mptr :: mprt) (f :: ma a1 -> a -> mb b) (m :: MonadCtx env (Insert (Include mptr) Empty) ma a1) = flip (runMonad mptr) m . (appLastArg1 f)
-
-liftMonadRunner1 mptr f m = flip (runMonad mptr) m . (appLastArg1 f)
-liftMonadRunner2 mptr f m = flip (runMonad mptr) m . (appLastArg2 f)
-liftMonadRunner3 mptr f m = flip (runMonad mptr) m . (appLastArg3 f)
-
-
---removeReqConstrains :: MonadCtx env (ConstrainSet req set) m a -> MonadCtx env (ConstrainSet newreq set) m a
---removeReqConstrains = MonadCtx . fromMonadCtx
-
-
+-- FIXME [wd]: to update
+--liftMonadRunner1 mptr f m = flip (runMonad mptr) m . (appArg2 f)
+--liftMonadRunner2 mptr f m = flip (runMonad mptr) m . (appArg3 f)
+--liftMonadRunner3 mptr f m = flip (runMonad mptr) m . (appArg4 f)
 
 
 --------------------------------------------------------------------------------
 -- Instances
 --------------------------------------------------------------------------------
 
-instance Monad (MonadCtx base set m) <= Monad m where
-    return = MonadCtx . return
-    (MonadCtx ma) >>= f = MonadCtx $ do
-        a <- ma
-        fromMonadCtx $ f a
-
-instance Functor (MonadCtx base set m) <= Functor m where
-    fmap f (MonadCtx mval) = MonadCtx $ fmap f mval
-
-instance Applicative (MonadCtx base set m) <= (Monad m, Functor m) where
-    pure = MonadCtx . return
-    MonadCtx mf <*> MonadCtx ma = MonadCtx $ do
-        f <- mf
-        a <- ma
-        return $ f a
-    
-        
 instance MatchMonadCloseProto False m m where
     matchMonadCloseProto _ = id
 
-instance MatchMonadCloseProto True (MonadCtx env set m) (Value env) <= (m~env) where
+instance MatchMonadCloseProto True (MonadCtx env set m s) (env s) <= env~m where
     matchMonadCloseProto _ = closeMonadCtx
 
-instance MatchMonadClose (MonadCtx env set ma) out <= (MatchMonadCloseProto emptySet (MonadCtx env set ma) out, emptySet ~ IsEmpty set) where
+instance MatchMonadClose (MonadCtx env set ma sa) out <= (MatchMonadCloseProto emptySet (MonadCtx env set ma sa) out, emptySet ~ IsEmpty set) where
     matchMonadClose = matchMonadCloseProto (undefined :: emptySet)
----
-
---instance MatchMonadClose (MonadCtx env set ma) out <= out ~ MonadCtx env set ma where
---    matchMonadClose = id
-
---instance MatchMonadClose (MonadCtx env () m) env <= (m~env) where
---    matchMonadClose = closeMonadCtx
 
 ---
 
---instance MatchMonadCloseProto False m m where
---    matchMonadCloseProto _ = id
-
---instance MatchMonadCloseProto True (MonadCtx env set m) (Value env) <= (m~env) where
---    matchMonadCloseProto _ = closeMonadCtx
-
---instance MatchMonadClose (MonadCtx env (ConstrainSet req set) ma) out <= (MatchMonadCloseProto emptySet (MonadCtx env (ConstrainSet req set) ma) out, emptySet ~ IsEmpty set) where
---    matchMonadClose = matchMonadCloseProto (undefined :: emptySet)
-
----
-
-instance AppMonadCtx (MonadCtx env set m a) (Req req (MonadCtx env set m) a) where
+instance AppMonadCtx (MonadCtx env set m s a) (Req req (MonadCtx env set m s) a) where
     appMonadCtx = Req
 
-instance AppMonadCtx (Req req (MonadCtx env set m) a) (Req req (MonadCtx env set m) a) where
-    appMonadCtx = id
+instance AppMonadCtx (Value m2 s2 a2) (Req req (MonadCtx env set m1 s1) a1) <= (set~Insert req Empty, s1~s2, m1~t (Value m2), a1 ~ Value Pure Safe a2, LiftValue' (Value m2) s2 t, Functor s2, Functor m2) where
+    appMonadCtx = Req . MonadCtx . liftValue' . (fmap (Value . Pure . Safe))
 
-instance AppMonadCtx (Value m2 a2) (Req req (MonadCtx env set m1) a1) <= (a1~Value Pure a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2, Functor m2) where
-    appMonadCtx = Req . MonadCtx . lift . (fmap (Value . Pure)) . fromValue
-
----
-
-instance IOEnv (Value m) <= IOEnv m where
-    toIOEnv = toIOEnv . fromValue
-
-instance IOEnv (MonadCtx base set m) <= (base~m, IOEnv m) where
-    toIOEnv = toIOEnv . closeMonadCtx

@@ -33,7 +33,8 @@ logger = getLoggerIO "Luna.Interpreter.Main"
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Run
-           <$> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
+           <$> strOption  (long "prefix" <> short 'p' <> metavar "PREFIX" <> value "" <> help "Prefix used by this plugin manager (e.g. client, main, etc.")
+           <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"          <> help "Disable color output" )
 
 
@@ -49,11 +50,11 @@ main = execParser opts >>= run
 run :: Cmd -> IO ()
 run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
-    Cmd.Run {}  -> do
-        rootLogger setIntLevel $ Cmd.verbose cmd
+    Cmd.Run prefix verbose _ -> do
+        rootLogger setIntLevel verbose
         cfg       <- Config.load
         let busConfig = EP.clientFromConfig cfg
             ctx       = Context.mk cfg
         logger info "Starting rpc server"
-        Pipes.run busConfig Handler.handlerMap >>= Handler.run cfg ctx >>= eitherToM
+        Pipes.run busConfig (Handler.handlerMap prefix) >>= Handler.run cfg prefix ctx >>= eitherToM
 

@@ -18,14 +18,14 @@ import           Luna.Graph.PropertyMap (PropertyMap)
 import qualified Luna.Graph.PropertyMap as PropertyMap
 
 
--- FIXME[wd]: property map do wywalenia bo zawiera flagi!
+
 data Library = Library { _name        :: String
                        , _path        :: UniPath
                        , _ast         :: Module
                        , _propertyMap :: PropertyMap
                        } deriving (Show, Read)
 
-makeLenses (''Library)
+makeLenses ''Library
 
 type ID  = Int
 

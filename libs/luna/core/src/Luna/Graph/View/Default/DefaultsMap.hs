@@ -11,7 +11,6 @@ import           Data.Map (Map)
 import qualified Data.Map as Map
 
 import           Flowbox.Prelude
-import qualified Luna.Graph.Attributes          as Attributes
 import qualified Luna.Graph.Node                as Node
 import           Luna.Graph.PropertyMap         (PropertyMap)
 import qualified Luna.Graph.PropertyMap         as PropertyMap

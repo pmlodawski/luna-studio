@@ -9,8 +9,32 @@ def print msg:
 def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
 
+def Int.- a:
+    ```liftF2 (-) #{self} #{a}```
+
+def Int.* a:
+    ```liftF2 (*) #{self} #{a}```
+
+def Int./ a:
+    ```liftF2 (/) #{self} #{a}```
+
 def Int.> a:
     ```liftF2 (>) #{self} #{a}```
 
+def Int.== a:
+    ```liftF2 (==) #{self} #{a}```
+
+def Int.< a:
+    ```liftF2 (<) #{self} #{a}```
+
+def Int.<= a:
+    ```liftF2 (<=) #{self} #{a}```
+
+def Int.>= a:
+    ```liftF2 (>=) #{self} #{a}```
+
 def Int.inc:
     self + 1
+
+def Int.dec:
+    self - 1

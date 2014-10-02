@@ -25,13 +25,15 @@ import Luna.Target.HS.Control.Context
 -- Instances
 ----------------------------------------------------------------------------------
 
-instance Catch e (Value base1 a1) (Value base2 a2) (Value base3 a3) <= Catch e (base1 a1) (base2 a2) (base3 a3) where
-    catch f a = Value $ catch (fromValue . f) (fromValue a)
+-- FIXME [wd]: update
+--instance Catch e (Value base1 a1) (Value base2 a2) (Value base3 a3) <= Catch e (base1 a1) (base2 a2) (base3 a3) where
+--    catch f a = Value $ catch (fromValue . f) (fromValue a)
 
 instance Catch e (Pure a1) (Pure a2) (Pure a3) <= Catch e a1 a2 a3 where
     catch f a = Pure $ catch (fromPure . f) (fromPure a)
 
-instance Raise e (Value base a) (Value base a') <= (Raise e a a', Functor base) where
-    raise = fmap . raise
+-- FIXME [wd]: update
+--instance Raise e (Value base a) (Value base a') <= (Raise e a a', Functor base) where
+--    raise = fmap . raise
 
 -- FIXME: we need other instances for catching here! For IO and MonadCtx

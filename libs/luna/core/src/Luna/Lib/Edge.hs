@@ -7,19 +7,12 @@
 
 module Luna.Lib.Edge where
 
-import           Flowbox.Prelude
-import qualified Luna.Lib.Lib    as Lib
+import Flowbox.Prelude
 
-
-
-data EdgeCls = Standard deriving (Show, Read, Ord, Eq)
 
 
 noEdges :: [Edge]
 noEdges = []
 
 
-data Edge = Edge { src :: Lib.ID
-                 , dst :: Lib.ID
-                 , cls :: EdgeCls
-                 } deriving (Show, Read, Ord, Eq)
+data Edge = Standard deriving (Show, Read, Ord, Eq)

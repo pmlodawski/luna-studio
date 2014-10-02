@@ -89,6 +89,7 @@ genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields meth
     
     GenState.addComment $ HExpr.Comment $ HComment.H1 $ "Data types"
     genCon' cls modCon stdDerivings
+    GenState.addComment $ HExpr.Comment $ HComment.H5 $ "Other data types"
     mapM_ genExpr classes
 
     GenState.setCls    cls
@@ -241,18 +242,19 @@ genExpr ast = case ast of
                                                 cfName     = mkCFLName fname
                                                 argNum     = length inputs
 
-                                            GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] [Deriving.Show]
+                                            --GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] [Deriving.Show]
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname)
                                                     <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
                                                                        <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
                                                         )
-                                            GenState.addFunction f
+                                            --GenState.addFunction f
 
-                                            GenState.addTHExpression $ thRegisterFunction fname argNum []
-                                            GenState.addTHExpression $ thClsCallInsts fname argNum (0::Int)
+                                            --GenState.addTHExpression $ thRegisterFunction fname argNum []
+                                            --GenState.addTHExpression $ thClsCallInsts fname argNum (0::Int)
 
-                                            return $ HExpr.Var hName
+                                            --return $ HExpr.Var hName
+                                            return $ HExpr.LetExpr HExpr.NOP
     LExpr.Grouped _ expr                 -> genExpr expr
     LExpr.Arg     _ pat _                -> genPat pat
     LExpr.ImportNative _ segments        -> pure $ HExpr.ImportNative (join "" $ map genNative segments)

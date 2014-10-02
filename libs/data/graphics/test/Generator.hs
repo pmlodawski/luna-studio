@@ -10,7 +10,7 @@
 
 module Main where
 
-import Flowbox.Prelude as P hiding (constant)
+import Flowbox.Graphics.Prelude as P hiding (constant)
 
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Filter as Conv
@@ -46,18 +46,19 @@ import Math.Space.Space
 import Utils
 
 import Data.Foldable
-
 import Data.List (permutations)
+
 -- Test helpers
 forAllChannels :: String -> (Matrix2 Float -> Matrix2 Float) -> IO ()
 forAllChannels image process = do
     (r, g, b, a) <- testLoadRGBA' $ "samples/" P.++ image
     testSaveRGBA' "out.png" (process r) (process g) (process b) (process a)
 
+
 --
 -- Draws all the existing types of gradients using ContactSheet.
 -- (General geometry test)
-
+--
 gradientsTest :: IO ()
 gradientsTest = do
     let reds   = [Tick 0.0 1.0 1.0, Tick 0.25 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
@@ -83,6 +84,7 @@ gradientsTest = do
     --let raster t = rasterizer $ monosampler $ scaleTo (Grid 720 480) $ grad4 t
     testSaveRGBA' "out.png" (raster reds) (raster greens) (raster blues) (raster alphas)
 
+
 --
 -- Draws single conical gradient rotated 84deg
 -- (Multisampling test)
@@ -96,6 +98,7 @@ multisamplerTest = do
     let shape = scale (Grid 720 480) conicalShape
     let grad      = rasterizer $ mysampler $ translate (V2 (720/2) (480/2)) $ rotate (84 * pi / 180) $ mapper gray shape
     testSaveChan' "out.png" grad
+
 
 --
 -- Upcales lena 64x64 image into 720x480 one
@@ -117,6 +120,7 @@ downscalingTest flt = do
                                $ fromMatrix (A.Constant 0) x
     forAllChannels "rings.bmp" process
 
+
 --
 -- Applies 2 pass gaussian blur onto the 4k image
 -- (Convolution regression test)
@@ -129,6 +133,7 @@ gaussianTest kernSize = do
     let process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
     forAllChannels "moonbow.bmp" process
 
+
 --
 -- Applies laplacian edge detector to Lena image
 -- (Edge detection test)
@@ -139,6 +144,7 @@ laplacianTest kernSize crossVal sideVal = do
     let p = pipe A.Clamp
     let process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
+
 
 --
 -- Applies morphological operators to Lena image
@@ -156,6 +162,7 @@ morphologyTest size = do
     let process chan = gridRasterizer 512 (Grid 2 2) monosampler [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
     forAllChannels "lena.bmp" process
 
+
 --
 -- Applies directional motion blur to Lena image
 -- (Simple rotational convolution)
@@ -171,6 +178,7 @@ motionBlur size angle = do
              $ rectangle (Grid (variable size) 1) 1 0
     let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
+
 
 --
 -- Radial blur test
@@ -209,6 +217,7 @@ radialBlur size angle = do
                   $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
 
+
 --
 -- Defocus test
 --
@@ -217,6 +226,7 @@ defocusBlur size = do
    let kern = ellipse (pure $ variable size) 1 (0 :: Exp Float)
    let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix A.Clamp x
    forAllChannels "lena.bmp" process
+
 
 --
 -- Bounduary test
@@ -227,22 +237,25 @@ boundTest = do
    let mask = mysampler $ scale (0.25 :: V2 (Exp Float)) $ nearest $ bound A.Mirror $ ellipse 200 1 (0 :: Exp Float)
    testSaveChan' "out.png" (rasterizer mask)
 
+
 --
 -- Applies Kirsch Operator to red channel of Lena image. Available operators: prewitt, sobel, sharr
 -- (Advanced rotational convolution, Edge detection test)
 --
---rotational :: Exp Float -> Matrix2 Float -> Matrix2 Float -> DiscreteGenerator (Exp Float)
---rotational phi mat chan = id `p` Conv.filter 1 edgeKern `p` id $ fromMatrix A.Clamp chan
---    where edgeKern = rotateMat (phi * pi / 180) (Constant 0) mat
---          p = pipe 512 A.Clamp
+rotational :: Exp Float
+           -> DiscreteGenerator (Exp Float)
+           -> DiscreteGenerator (Exp Float)
+           -> DiscreteGenerator (Exp Float)
+rotational phi mat chan = Stencil.stencil (+) edgeKern (+) 0 chan
+    where edgeKern = monosampler $ rotateCenter (phi * pi / 180) $ nearest $ mat
 
---kirschTest :: Matrix2 Float -> IO ()
---kirschTest edgeOp = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
---    let k alpha = rotational alpha edgeOp r
---    let max8 a b c d e f g h = a `min` b `min` c `min` d `min` e `min` f `min` g `min` h
---    let res = rasterizer 512 $ max8 <$> (k 0) <*> (k 45) <*> (k 90) <*> (k 135) <*> (k 180) <*> (k 225) <*> (k 270) <*> (k 315)
---    testSaveChan' "out.png" res
+kirschTest :: Matrix2 Float -> IO ()
+kirschTest edgeOp = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
+    let k alpha = rotational alpha (unsafeFromMatrix edgeOp) (fromMatrix A.Clamp r)
+    let max8 a b c d e f g h = a `max` b `max` c `max` d `max` e `max` f `max` g `max` h
+    let res = rasterizer $ max8 <$> k 0 <*> k 45 <*> k 90 <*> k 135 <*> k 180 <*> k 225 <*> k 270 <*> k 315
+    testSaveChan' "out.png" res
 
 
 --
@@ -258,14 +271,17 @@ unsharpMaskTest sigma kernSize = do
 
 keyerTest :: Exp Float -> Exp Float -> Exp Float -> Exp Float -> IO ()
 keyerTest w x y z = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
-    let process c = rasterizer $ keyer (A.lift (w, x, y, z)) $ fromMatrix A.Clamp c
-    testSaveRGBA' "out.png" r g b (process g)
+    rgb <- loadRGB "samples/keying/greenscreen.jpg"
+    (r :: Matrix2 Float, g, b, _) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
+    let process c = M.map (keyer Greenscreen (A.lift (w, x, y, z))) c
+    testSaveRGBA' "out.png" r g b (process rgb)
 
---medianTest :: IO ()
-medianTest = do
-    let process x = stencilTest x
-    forAllChannels "lena.bmp" process
+differenceKeyerTest :: Exp Float -> Exp Float -> IO ()
+differenceKeyerTest off gain = do
+    rgb <- loadRGB "samples/keying/greenscreen.jpg"
+    (r :: Matrix2 Float, g, b, _) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
+    let process c = M.map (differenceKeyer off gain (rgb M.! (A.index2 1 1))) c
+    testSaveRGBA' "out.png" r g b (process rgb)
 
 --
 -- FFT test
@@ -279,7 +295,6 @@ medianTest = do
 --
 -- Dithering test
 --
-
 ditherTest :: Int -> IO ()
 ditherTest a = do
     let mydither = dither A.Clamp floydSteinberg a
@@ -296,14 +311,9 @@ orderedDitherTest a = do
   forAllChannels "lena.bmp" (bayer a)
 
 
-simpleTest :: IO ()
-simpleTest = do
-    forAllChannels "edge/mountain.png" id
-
 --
 -- Crosstalk test
 --
-
 crosstalkTest :: IO ()
 crosstalkTest = do
     (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.png"
@@ -319,15 +329,30 @@ crosstalkTest = do
     print "foo"
     testSaveRGBA' "out.png" (rasterizer newR) (rasterizer newG) (rasterizer newB) a
 
+
 --
 -- cornerPin test
 --
-
 -- Try with cornerPinTest 0 (Point2 512 0) 512 (Point2 0 512)
 cornerPinTest :: Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float)-> IO ()
 cornerPinTest p1 p2 p3 p4 = do
     let process x = rasterizer $ monosampler $ cornerPin (p1, p2, p3, p4) $ nearest $ fromMatrix (A.Constant 0) x
     forAllChannels "lena.png" process
+
+
+--
+-- Bilateral test
+--
+bilateralTest :: Exp Float -> Exp Float -> Exp Int -> IO ()
+bilateralTest psigma csigma size = do
+    let p = pipe A.Clamp
+    let spatial = Generator (pure $ variable size) $ \(Point2 x y) ->
+            let dst = sqrt . A.fromIntegral $ (x - size `div` 2) * (x - size `div` 2) + (y - size `div` 2) * (y - size `div` 2)
+            in apply (gauss psigma) dst
+    let domain center neighbour = apply (gauss csigma) (abs $ neighbour - center)
+    let process x = rasterizer $ id `p` bilateralStencil (+) spatial domain (+) 0 `p` id $ fromMatrix A.Clamp x
+    forAllChannels "lena.png" process
+
 
 main :: IO ()
 main = do

@@ -55,21 +55,20 @@ main = execParser opts >>= run
 run :: Cmd -> IO ()
 run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
-    Cmd.Run {}  -> do
-        rootLogger setIntLevel $ Cmd.verbose cmd
+    Cmd.Run initConfig prefix verbose _ -> do
+        rootLogger setIntLevel verbose
 
         cfg <- Config.load
 
-        let confPath  = Cmd.initConfig cmd
-            busConfig = EP.clientFromConfig cfg
+        let busConfig = EP.clientFromConfig cfg
 
-        pluginHandles <- if null confPath
+        pluginHandles <- if null initConfig
             then return []
-            else do Concurrent.forkIO_ $ runEitherT (InitRemote.init confPath busConfig) >>= eitherStringToM
-                    runEitherT (InitLocal.init confPath) >>= eitherStringToM
+            else do Concurrent.forkIO_ $ runEitherT (InitRemote.init initConfig busConfig) >>= eitherStringToM
+                    runEitherT (InitLocal.init initConfig) >>= eitherStringToM
 
         let ctx = Context.mk cfg pluginHandles
 
         logger info "Starting rpc server"
-        Server.run busConfig ctx (Handler.handlerMap $ Cmd.prefix cmd) >>= eitherStringToM
+        Server.run busConfig ctx (Handler.handlerMap prefix) >>= eitherStringToM
 

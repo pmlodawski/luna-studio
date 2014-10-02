@@ -47,7 +47,7 @@ handlerMap callback = HandlerMap.fromList
     , ("filesystem.file.remove.request", respond update $ FileHandler.remove)
     , ("filesystem.file.copy.request"  , respond update $ FileHandler.copy  )
     , ("filesystem.file.move.request"  , respond update $ FileHandler.move  )
-    , ("filemanager.ping.request"      , respond update FileManager.ping)
+    , ("filemanager.ping.request"      , respond status FileManager.ping)
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
