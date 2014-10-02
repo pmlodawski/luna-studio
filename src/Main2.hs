@@ -10,6 +10,7 @@
 {-# LANGUAGE RebindableSyntax #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- module --
 module Main2 where
@@ -50,33 +51,19 @@ $(generateFieldAccessors 'Main [])
 -- ===================================================================
 
 -- ====== Method: Main.print ====== --
-memDef_Main_print (_v_34, (_v_4, ())) = do {
+memDef_Main_print (_v_26, (_v_4, ())) = do {
      val ();
-     autoLift1 print _v_4;
+     polyJoin . liftF1 (Value . fmap Safe . print) $ _v_4;
      
 }
 memSig_Main_print = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
 $(registerMethod ''Main "print")
 
--- ====== Method: Int._62 ====== --
-memDef_Int__62 (_v_36, (_v_11, ())) = do {
-     val ();
-     liftF2 (>) _v_36 _v_11;
-     
-}
-memSig_Int__62 = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
-$(registerMethod ''Int "_62")
-
 -- ====== Method: Main.main ====== --
-memDef_Main_main (_v_38, ()) = do {
+memDef_Main_main (_v_28, ()) = do {
      val ();
-     call (appNext (ifThenElse' (call (appNext (val (2 :: Int)) (member (Proxy :: Proxy "_62") (val (1 :: Int)))))(do {
-         val (5 :: Int);
-         
-    })(do {
-         val (6 :: Int);
-         
-    })) (member (Proxy :: Proxy "print") (call cons_Main)));
+     (extractTuple2 -> (_v_14, _v_15)) <- val ((val (1 :: Int)), (val (2 :: Int)));
+     call (appNext _v_14 (member (Proxy :: Proxy "print") (call cons_Main)));
      
 }
 memSig_Main_main = ((mkArg :: NParam "self"), ())
