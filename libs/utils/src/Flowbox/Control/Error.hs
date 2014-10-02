@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts #-}
+
 module Flowbox.Control.Error (
   module Flowbox.Control.Error
 , module X
@@ -11,9 +13,10 @@ module Flowbox.Control.Error (
 , liftIO
 ) where
 
-import           Control.Error          as X hiding (runScript)
-import qualified Control.Exception      as Exc
-import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Control.Error             as X hiding (runScript)
+import qualified Control.Exception         as Exc
+import           Control.Monad.IO.Class    (MonadIO, liftIO)
+import           Control.Monad.Trans.Class (MonadTrans)
 
 import Flowbox.Prelude
 
@@ -97,3 +100,12 @@ eitherStringToM = either fail return
 
 eitherStringToM' :: MonadIO m => m (Either String b) -> m b
 eitherStringToM' action = action >>= eitherStringToM
+
+
+catchEither :: (MonadTrans t, Monad (t m), Monad m)
+            => (e -> t m b) -> EitherT e m b -> t m b
+catchEither handler fun = do
+    result <- lift $ runEitherT fun
+    case result of
+        Left  e -> handler e
+        Right r -> return r

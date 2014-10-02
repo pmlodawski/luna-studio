@@ -6,14 +6,13 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE TypeSynonymInstances   #-}
-{-# LANGUAGE ViewPatterns           #-}
-{-# LANGUAGE FunctionalDependencies #-}
 
 module Flowbox.Math.Matrix (
     module Flowbox.Math.Matrix,
@@ -52,13 +51,14 @@ import qualified Data.Array.Accelerate.Math.DFT.Centre as A
 import qualified Data.Array.Accelerate.IO              as A
 
 import qualified Math.Coordinate.Cartesian as Cartesian
+import qualified Math.Space.Space          as Space
 
 import Data.Complex                        (mkPolar)
 import Data.Vector.Storable.Mutable hiding (set)
 import Foreign.Ptr
 
 import Flowbox.Prelude as P hiding (use, (<*), (?), (++), map, zipWith, set)
-
+import Flowbox.Math.Index
 
 
 data Matrix ix a = Raw (A.Array ix a)
@@ -72,10 +72,17 @@ type Matrix2 a = Matrix A.DIM2 a
 type Backend = forall a . A.Arrays a => A.Acc a -> a
 
 -- == Instances ==
-instance (A.Elt e) => Monoid (Vector e) where
+instance A.Elt e => Monoid (Vector e) where
     mempty = fromList (A.Z A.:. 0) []
     mappend a b = a ++ b
 
+instance Ord A.DIM2 where
+    compare (A.Z A.:. y1 A.:. x1) (A.Z A.:. y2 A.:. x2) = compare x1 x2 `mappend` compare y1 y2
+
+instance A.Elt a => Boundable (Matrix2 a) (A.Exp Int) (A.Exp a) where
+    unsafeIndex2D mat (Cartesian.Point2 x y) = mat ! A.index2 y x 
+    boundary mat = Space.Grid width height
+        where A.Z A.:. height A.:. width = A.unlift $ shape mat
 -- == Helpers ==
 
 type EDIM1 = A.DIM0 A.:. A.Exp Int
@@ -498,54 +505,69 @@ toList b mat = A.toList $ compute' b mat
 
 -- == FFT ==
 
-fft :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 e -> Matrix2 (A.Complex e)
-fft backend mat' = Delayed $ A.fft2D' A.Forward width height arrCentered
-    where cMat = compute' backend mat'
-          A.Z A.:. height A.:. width = A.arrayShape cMat
-          mat = A.use cMat
-          arrComplex  = A.map (\r -> A.lift (r A.:+ A.constant 0)) mat
-          arrCentered = A.centre2D arrComplex
+-- INFO: temporarily commented out as it causes weird linking errors on some systems (KM)
 
-inverseFFT :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 (A.Complex e) -> Matrix2 e
-inverseFFT backend mat' = Delayed $ A.map A.magnitude $ A.fft2D' A.Inverse width height mat
-    where cMat = compute' backend mat'
-          A.Z A.:. height A.:. width = A.arrayShape cMat
-          mat = A.use cMat
+--fft :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 e -> Matrix2 (A.Complex e)
+--fft backend mat' = Delayed $ A.fft2D' A.Forward width height arrCentered
+--    where cMat = compute' backend mat'
+--          A.Z A.:. height A.:. width = A.arrayShape cMat
+--          mat = A.use cMat
+--          arrComplex  = A.map (\r -> A.lift (r A.:+ A.constant 0)) mat
+--          arrCentered = A.centre2D arrComplex
 
--- trans :: Frequency -> Amplitude -> FrequencyResponse
-fftFilter :: (A.Elt e, A.IsFloating e) => Backend -> (A.Exp e -> A.Exp e -> A.Exp e) -> Matrix2 e -> Matrix2 e
-fftFilter backend trans mat = inverseFFT backend fftProc
-    where matFFT = fft backend mat
-          mag = map A.magnitude matFFT
-          pha = map A.phase matFFT
+--inverseFFT :: (A.Elt e, A.IsFloating e) => Backend -> Matrix2 (A.Complex e) -> Matrix2 e
+--inverseFFT backend mat' = Delayed $ A.map A.magnitude $ A.fft2D' A.Inverse width height mat
+--    where cMat = compute' backend mat'
+--          A.Z A.:. height A.:. width = A.arrayShape cMat
+--          mat = A.use cMat
 
-          polar :: (A.Elt e, A.IsFloating e) => A.Exp e -> A.Exp e -> A.Exp (A.Complex e)
-          polar r theta = A.lift $ r * cos theta A.:+ r * sin theta
+---- trans :: Frequency -> Amplitude -> FrequencyResponse
+--fftFilter :: (A.Elt e, A.IsFloating e) => Backend -> (A.Exp e -> A.Exp e -> A.Exp e) -> Matrix2 e -> Matrix2 e
+--fftFilter backend trans mat = inverseFFT backend fftProc
+--    where matFFT = fft backend mat
+--          mag = map A.magnitude matFFT
+--          pha = map A.phase matFFT
 
-          magSh = shape mag
-          tmag = generate magSh wrapper
-          A.Z A.:. height A.:. width = A.unlift $ magSh :: EDIM2
-          wrapper ix@(A.unlift -> A.Z A.:. y A.:. x :: EDIM2) = trans freq (mag ! ix)
-              where iW = A.fromIntegral width / 2
-                    iH = A.fromIntegral height / 2
-                    xFreq = let x' = A.fromIntegral x - iW in A.cond (x' A.>* iW) (x' - iW) x'
-                    yFreq = let y' = A.fromIntegral y - iH in A.cond (y' A.>* iH) (y' - iH) y'
-                    freq = sqrt $ xFreq * xFreq + yFreq * yFreq
+--          polar :: (A.Elt e, A.IsFloating e) => A.Exp e -> A.Exp e -> A.Exp (A.Complex e)
+--          polar r theta = A.lift $ r * cos theta A.:+ r * sin theta
 
-          fftProc = zipWith polar tmag pha
+--          magSh = shape mag
+--          tmag = generate magSh wrapper
+--          A.Z A.:. height A.:. width = A.unlift $ magSh :: EDIM2
+--          wrapper ix@(A.unlift -> A.Z A.:. y A.:. x :: EDIM2) = trans freq (mag ! ix)
+--              where iW = A.fromIntegral width / 2
+--                    iH = A.fromIntegral height / 2
+--                    xFreq = let x' = A.fromIntegral x - iW in A.cond (x' A.>* iW) (x' - iW) x'
+--                    yFreq = let y' = A.fromIntegral y - iH in A.cond (y' A.>* iH) (y' - iH) y'
+--                    freq = sqrt $ xFreq * xFreq + yFreq * yFreq
+
+--          fftProc = zipWith polar tmag pha
 
 -- == Mutable, CPU based matrix processing
 
-data MMatrix m a = MMatrix { vector :: m a
-                           , canvas :: A.DIM2
-                           }
+type MImage = BMatrix IOVector
 
-type MImage = MMatrix IOVector
+data MValue a = MValue { get :: IO a
+                       , set :: a -> IO ()
+                       }
 
-mutableProcess :: forall a . (A.Elt a, Storable a, A.BlockPtrs (Sugar.EltRepr a) ~ ((), Ptr a)) 
-       => Backend 
-       -> (MImage a -> IO ())
-       -> Matrix2 a -> IO (Matrix2 a)
+infixr 2 $=
+($=) :: MValue a -> a -> IO ()
+($=) = set
+
+instance Storable a => Boundable (MImage a) Int (MValue a) where
+    unsafeIndex2D BMatrix{..} (Cartesian.Point2 x y) = MValue getter setter
+        where linearIndex = Sugar.toIndex canvas (A.Z A.:. y A.:. x)
+              getter = unsafeRead container linearIndex
+              setter = unsafeWrite container linearIndex
+    boundary BMatrix{..} = Space.Grid width height
+        where A.Z A.:. height A.:. width = canvas
+
+
+mutableProcess :: forall a . (A.Elt a, Storable a, A.BlockPtrs (Sugar.EltRepr a) ~ ((), Ptr a))
+               => Backend
+               -> (MImage a -> IO ())
+               -> Matrix2 a -> IO (Matrix2 a)
 mutableProcess b action mat = do
     let gpuMat   = compute' b mat
     let gpuShape = A.arrayShape gpuMat
@@ -553,50 +575,6 @@ mutableProcess b action mat = do
     newGpuMat <- unsafeWith cpuMat $ \ptr' -> do
         let ptr = ((), ptr')
         A.toPtr gpuMat ptr
-        action $ MMatrix cpuMat gpuShape
+        action $ BMatrix cpuMat gpuShape
         A.fromPtr gpuShape ptr :: IO (A.Array A.DIM2 a)
     return $ Raw newGpuMat
-
-class Storable a => UnsafeIndexable m a where
-    data family MatValue (m :: * -> *) a
-    unsafeShapeIndex :: MMatrix m a -> A.DIM2 -> MatValue m a
-    unsafeConstant :: a -> MatValue m a
-
-{-# INLINE index #-}
-index :: UnsafeIndexable m a => A.Boundary a -> MMatrix m a -> Cartesian.Point2 Int -> MatValue m a
-index boundary mimage@MMatrix{..} (Cartesian.Point2 x y) =
-    case boundary of
-        A.Clamp      -> mimage `unsafeShapeIndex` (A.Z A.:. ((x `min` w1) `max` 0) A.:. ((y `min` h1) `max` 0))
-        A.Mirror     -> mimage `unsafeShapeIndex` (A.Z A.:. (abs $ -abs (x `mod` (2 * width) - w1) + w1) A.:. (abs $ -abs (y `mod` (2 * height) - h1) + h1))
-        A.Wrap       -> mimage `unsafeShapeIndex` (A.Z A.:. (x `mod` width) A.:. (y `mod` height))
-        A.Constant a -> if (x >= width || y >= height || x < 0 || y < 0)
-                        then unsafeConstant a
-                        else mimage `unsafeShapeIndex` (A.Z A.:. x A.:. y)
-    where A.Z A.:. height A.:. width = canvas
-          h1 = height - 1 -- FIXME [KL]: Buggy behavior with index ranges
-          w1 = width - 1
-
-instance Storable a => UnsafeIndexable IOVector a where
-    data MatValue IOVector a = MValue (IO a) (a -> IO ())
-    unsafeShapeIndex MMatrix{..} sh = MValue value setter
-        where linearIndex = Sugar.toIndex canvas sh
-              value =  unsafeRead vector linearIndex
-              setter = unsafeWrite vector linearIndex
-
-    unsafeConstant a = MValue (return a) (const $ error "Unable to save to the Constant array value!")
-
-class HasGetter a g | a -> g where
-    get :: a -> g
-
-class HasSetter a s | a -> s where
-    set :: a -> s -> IO ()
-
-    infixr 2 $=
-    ($=) :: a -> s -> IO ()
-    ($=) = set
-
-instance HasGetter (MatValue IOVector a) (IO a) where
-    get (MValue g _) = g
-
-instance HasSetter (MatValue IOVector a) a where
-    set (MValue _ s) = s

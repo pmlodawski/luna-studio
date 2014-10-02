@@ -9,7 +9,7 @@ Flag cuda
   Default:              True
 
 Library
-  Hs-Source-Dirs:         src
+  Hs-Source-Dirs:         src, dist/gen
   GHC-Options:            -Wall -O2
   Default-Extensions:     DoAndIfThenElse,
                           NoImplicitPrelude,
@@ -18,33 +18,39 @@ Library
   Default-Language:       Haskell2010
 
   Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
+                   `findmodules('dist/gen', '.*\.hs')`
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.15.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  accelerate     == 0.15.* ,
-                  accelerate-io  == 0.15.* ,
-                  accelerate-fft == 0.15.* ,
-                  algebraic       > 0.1    ,
-                  bmp                      ,
-                  containers               ,
-                  distributive             ,
-                  flowbox-utils            ,
-                  imagemagick   >= 0.0.3.6 ,
-                  lifted-base              ,
-                  linear                   ,
-                  monad-control            ,
-                  mtl                      ,
-                  resourcet                ,
-                  split                    ,
-                  system-filepath          ,
-                  transformers             ,
-                  errors                   ,
-                  either                   ,
-                  profunctors              ,
-                  cubicbezier              ,
+  Build-Depends:  base           == 4.7.*     ,
+                  accelerate     == 0.15.*    ,
+                  accelerate-io  == 0.15.*    ,
+                  accelerate-fft == 0.15.*    ,
+                  algebraic       > 0.1       ,
+                  bmp                         ,
+                  bytestring                  ,
+                  containers                  ,
+                  cubicbezier                 ,
+                  distributive                ,
+                  either                      ,
+                  errors                      ,
+                  flowbox-utils               ,
+                  imagemagick   >= 0.0.3.6    ,
+                  lifted-base                 ,
+                  linear                      ,
+                  linear-accelerate           ,
+                  monad-control               ,
+                  mtl                         ,
+                  profunctors                 ,
+                  protocol-buffers-fork            ,
+                  protocol-buffers-descriptor-fork ,
+                  resourcet                   ,
+                  split                       ,
+                  system-filepath             ,
+                  template-haskell            ,
+                  transformers                ,
                   vector
 
 Executable test_generator

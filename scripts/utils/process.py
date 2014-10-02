@@ -12,8 +12,6 @@ from subprocess import call
 from utils.colors      import print_error, formatQuestion
 
 
-SILENTINSTALL = False
-
 def handle_out(code):
     if code != 0 and code != "":
         print_error("ERROR")
@@ -23,8 +21,8 @@ def autocall(args):
     handle_out(call(args))
 
 
-def ask(question):
-    if SILENTINSTALL:
+def ask(question, silent=False):
+    if silent:
         print(formatQuestion("Question override: " + question))
         return True
     else:

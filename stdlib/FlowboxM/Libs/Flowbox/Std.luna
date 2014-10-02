@@ -10,7 +10,7 @@ def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
 
 def Int.- a:
-    ```liftF2 (+) #{self} #{a}```
+    ```liftF2 (-) #{self} #{a}```
 
 def Int.* a:
     ```liftF2 (*) #{self} #{a}```
@@ -25,13 +25,13 @@ def Int.== a:
     ```liftF2 (==) #{self} #{a}```
 
 def Int.< a:
-    ```liftF2 (==) #{self} #{a}```
+    ```liftF2 (<) #{self} #{a}```
 
 def Int.<= a:
-    ```liftF2 (==) #{self} #{a}```
+    ```liftF2 (<=) #{self} #{a}```
 
-def Int.=> a:
-    ```liftF2 (==) #{self} #{a}```
+def Int.>= a:
+    ```liftF2 (>=) #{self} #{a}```
 
 def Int.inc:
     self + 1

@@ -14,28 +14,31 @@ import qualified Data.Char                  as Char
 import qualified Data.Maybe                 as Maybe
 import qualified Text.Read                  as Read
 
-import qualified Flowbox.Data.List                           as List
-import           Flowbox.Prelude                             as Prelude hiding (children, inside)
-import           Flowbox.Source.Location                     (loc)
+import           Flowbox.Control.Error                      (catchEither)
+import qualified Flowbox.Data.List                          as List
+import           Flowbox.Prelude                            as Prelude hiding (children, inside)
+import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Graph.Node                             as Node
-import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
-import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
-import qualified Luna.Interpreter.Session.Cache.Invalidate   as Invalidate
-import qualified Luna.Interpreter.Session.Cache.Status       as CacheStatus
-import qualified Luna.Interpreter.Session.Cache.Value        as Value
-import qualified Luna.Interpreter.Session.Data.CallData      as CallData
-import           Luna.Interpreter.Session.Data.CallDataPath  (CallDataPath)
-import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
-import           Luna.Interpreter.Session.Data.Hash          (Hash)
-import           Luna.Interpreter.Session.Data.VarName       (VarName)
-import qualified Luna.Interpreter.Session.Data.VarName       as VarName
-import qualified Luna.Interpreter.Session.Error              as Error
-import qualified Luna.Interpreter.Session.Hash               as Hash
-import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Interpreter.Session.Session            as Session
-import qualified Luna.Interpreter.Session.TargetHS.TargetHS  as TargetHS
-import qualified Luna.Pass.Transform.AST.Hash.Hash           as Hash
+import qualified Luna.Graph.Node                            as Node
+import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
+import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
+import qualified Luna.Interpreter.Session.Cache.Free        as Free
+import qualified Luna.Interpreter.Session.Cache.Invalidate  as Invalidate
+import qualified Luna.Interpreter.Session.Cache.Status      as CacheStatus
+import qualified Luna.Interpreter.Session.Cache.Value       as Value
+import qualified Luna.Interpreter.Session.Data.CallData     as CallData
+import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
+import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
+import           Luna.Interpreter.Session.Data.Hash         (Hash)
+import           Luna.Interpreter.Session.Data.VarName      (VarName)
+import qualified Luna.Interpreter.Session.Data.VarName      as VarName
+import qualified Luna.Interpreter.Session.Error             as Error
+import qualified Luna.Interpreter.Session.Hash              as Hash
+import           Luna.Interpreter.Session.Session           (Session)
+import qualified Luna.Interpreter.Session.Session           as Session
+import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
+import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
+
 
 
 logger :: LoggerIO
@@ -49,6 +52,7 @@ processMain = do
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
     Session.setAllReady True
+    Cache.dumpAll
 
 
 processNodeIfNeeded :: CallDataPath -> Session ()
@@ -107,7 +111,7 @@ execute callDataPath functionName argsVarNames = do
             if varName /= prevVarName
                 then if boundVarName /= Just varName
                     then do logger debug "processing modified node - result value differs"
-                            mapM_ freeVarName boundVarName
+                            mapM_ Free.freeVarName boundVarName
                             Invalidate.markSuccessors callDataPath CacheStatus.Modified
 
                     else do logger debug "processing modified node - result value differs but is cached"
@@ -172,7 +176,7 @@ evalFunction funName callDataPath argsVarNames = do
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
 
         self      = head argsVarNames
-        operation = "toIOEnv $ " ++ case varType funName of
+        operation = "toIOEnv $ fromValue $ " ++ case varType funName of
             Id     -> mkArg self
             Native -> genNative funName
             Con    -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
@@ -182,15 +186,12 @@ evalFunction funName callDataPath argsVarNames = do
                         else "val " ++ funName
             Tuple  -> "val (" ++ List.intercalate "," args ++ ")"
         expression    = tmpVarName ++ " <- " ++ operation
-    Session.runStmt expression
-    hash <- Hash.compute tmpVarName
-    let varName = VarName.mk hash callPointPath
-    Session.runAssignment varName tmpVarName
-    Cache.dumpAll
-    Cache.put callDataPath argsVarNames varName
-    Value.report callPointPath varName
-    return (hash, varName)
 
-
-freeVarName :: VarName -> Session ()
-freeVarName varName = Session.runAssignment varName "()"
+    catchEither (left . Error.RunError $(loc) callPointPath) $ do
+        Session.runStmt expression
+        hash <- Hash.compute tmpVarName
+        let varName = VarName.mk hash callPointPath
+        Session.runAssignment varName tmpVarName
+        Cache.put callDataPath argsVarNames varName
+        Value.report callPointPath varName
+        return (hash, varName)

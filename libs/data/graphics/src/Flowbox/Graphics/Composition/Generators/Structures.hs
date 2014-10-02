@@ -16,18 +16,23 @@
 
 module Flowbox.Graphics.Composition.Generators.Structures where
 
-import Flowbox.Prelude hiding            (transform, lift)
+import           Flowbox.Graphics.Prelude          hiding (transform, lift)
+import qualified Flowbox.Prelude                   as P (Eq(..), Ord(..)) -- unfortunately required for the tick sorting
+import           Flowbox.Graphics.Utils.Accelerate
+import qualified Flowbox.Math.Index as I
 
 import Data.Array.Accelerate
 import Data.Array.Accelerate.Array.Sugar
 import Data.Array.Accelerate.Smart
 import Data.Array.Accelerate.Tuple
-import Data.Typeable                     (Typeable)
+import Control.Monad (ap)
+import Data.Typeable (Typeable)
 import Data.Profunctor
 
 import           Math.Coordinate.Coordinate
 import qualified Math.Coordinate.Cartesian as Cartesian
 import           Math.Space.Space
+
 
 -- == Generator type ==
 
@@ -39,7 +44,13 @@ type CartesianGenerator a = Generator (Cartesian.Point2 a)
 type DiscreteGenerator = CartesianGenerator (Exp Int)
 type ContinousGenerator = CartesianGenerator (Exp Double)
 
-unitGenerator a = Generator 1 a
+unitGenerator :: (a -> b) -> Generator a b
+unitGenerator = Generator 1
+
+instance Applicative (Generator a) where
+    pure a = Generator 1 $ const a
+    Generator (Grid h1 w1) f <*> Generator (Grid h2 w2) gen =
+        Generator (Grid (h1 `max` h2) (w1 `max` w2)) $ ap f gen
 
 instance Profunctor Generator where
     lmap f (Generator cnv gen) = Generator cnv $ gen . f
@@ -51,11 +62,12 @@ transform = lmap
 resize :: Grid (Exp Int) -> Generator a b -> Generator a b
 resize cnv (Generator _ gen) = Generator cnv gen
 
--- == Coord conversions ==
---instance ( CoordConversion convType sys space (h a) (f a)
---         , CoordConversion convType sys space (g a) (h a)
---         ) => CoordConversion convType sys space (Generator (f a) b) (Generator (g a) b) where
---    convertCoordBase _ sys space = transform (convertCoordBase ManualConversion sys space)
+canvasT :: (Grid (Exp Int) -> Grid (Exp Int)) -> Generator a b -> Generator a b
+canvasT f (Generator cnv gen) = Generator (f cnv) gen
+
+instance I.Boundable (DiscreteGenerator b) (Exp Int) b where
+    unsafeIndex2D = runGenerator
+    boundary     = canvas
 
 -- == Gradient tick type ==
 
@@ -64,39 +76,11 @@ data Tick a b c = Tick { _position :: a
                        , _weight   :: c
                        } deriving (Show, Read, Typeable)
 
-instance Eq a => Eq (Tick a b c) where
-    Tick p1 _ _ == Tick p2 _ _ = p1 == p2
+instance P.Eq a => P.Eq (Tick a b c) where
+    Tick p1 _ _ == Tick p2 _ _ = p1 P.== p2
 
-instance Ord a => Ord (Tick a b c) where
-    compare (Tick p1 _ _) (Tick p2 _ _) = compare p1 p2
+instance P.Ord a => P.Ord (Tick a b c) where
+    compare (Tick p1 _ _) (Tick p2 _ _) = P.compare p1 p2
 
 makeLenses ''Tick
-
-type instance EltRepr (Tick a b c)  = EltRepr (a, b, c)
-type instance EltRepr' (Tick a b c) = EltRepr' (a, b, c)
-
-instance (Elt a, Elt b, Elt c) => Elt (Tick a b c) where
-    eltType _ = eltType (undefined :: (a,b,c))
-    toElt p = case toElt p of
-        (x, y, z) -> Tick x y z
-    fromElt (Tick x y z) = fromElt (x, y, z)
-
-    eltType' _ = eltType' (undefined :: (a,b,c))
-    toElt' p = case toElt' p of
-        (x, y, z) -> Tick x y z
-    fromElt' (Tick x y z) = fromElt' (x, y, z)
-
-instance IsTuple (Tick a b c) where
-    type TupleRepr (Tick a b c) = TupleRepr (a,b,c)
-    fromTuple (Tick x y z) = fromTuple (x,y,z)
-    toTuple t = case toTuple t of
-        (x, y, z) -> Tick x y z
-
-instance (Lift Exp a, Elt (Plain a), Lift Exp b, Elt (Plain b), Lift Exp c, Elt (Plain c)) => Lift Exp (Tick a b c) where
-    type Plain (Tick a b c) = Tick (Plain a) (Plain b) (Plain c)
-    lift (Tick x y z) = Exp $ Tuple $ NilTup `SnocTup` lift x `SnocTup` lift y `SnocTup` lift z
-
-instance (Elt a, Elt b, Elt c, e ~ Exp a, f ~ Exp b, g ~ Exp c) => Unlift Exp (Tick e f g) where
-    unlift t = Tick (Exp $ SuccTupIdx (SuccTupIdx ZeroTupIdx) `Prj` t)
-                    (Exp $ SuccTupIdx ZeroTupIdx `Prj` t)
-                    (Exp $ ZeroTupIdx `Prj` t)
+deriveAccelerate ''Tick

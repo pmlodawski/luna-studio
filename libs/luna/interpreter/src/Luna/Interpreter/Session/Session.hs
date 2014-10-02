@@ -86,11 +86,14 @@ run config env imports session =
 
 initialize :: Config -> [Import] -> Session ()
 initialize config imports = do
+    let isNotUser GHC.UserPkgConf = False
+        isNotUser _ = True
+        extraPkgConfs p = [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
+                          , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
+                          ] ++ filter isNotUser p
     flags <- lift2 GHC.getSessionDynFlags
     _  <- lift2 $ GHC.setSessionDynFlags flags
-                { GHC.extraPkgConfs = ( [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
-                                        , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
-                                        ] ++) . GHC.extraPkgConfs flags
+                { GHC.extraPkgConfs = extraPkgConfs
                 , GHC.hscTarget = GHC.HscInterpreted
                 , GHC.ghcLink   = GHC.LinkInMemory
                 --, GHC.verbosity = 4
@@ -145,7 +148,7 @@ interceptSourceErrors ghc = do
 
 atomically :: Session a -> Session a
 atomically f = do
-    sessionBackup <- lift2 $ GHC.getSession
+    sessionBackup <- lift2 GHC.getSession
     result <- lift $ runEitherT f
     when (Either.isLeft result) $
         lift2 $ GHC.setSession sessionBackup
@@ -158,8 +161,8 @@ runStmt stmt = do
     result <- interceptSourceErrors $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
     case result of
         GHC.RunOk _         -> return ()
-        GHC.RunException ex -> left $ Error.RunError   $(loc) ex
-        GHC.RunBreak {}     -> left $ Error.OtherError $(loc) "Run break"
+        GHC.RunException ex -> left $ Error.GhcRunError $(loc) ex
+        GHC.RunBreak {}     -> left $ Error.OtherError  $(loc) "Run break"
 
 
 runDecls :: String -> Session ()

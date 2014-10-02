@@ -33,13 +33,12 @@ Library
                   flowbox-rpc,
                   flowbox-utils,
                   MissingH,
-                  mmorph,
                   mtl,
                   monad-loops,
                   pipes,
                   pipes-concurrency,
-                  protocol-buffers,
-                  protocol-buffers-descriptor,
+                  protocol-buffers-fork,
+                  protocol-buffers-descriptor-fork,
                   transformers,
                   zeromq4-haskell >= 0.6
 
@@ -58,8 +57,8 @@ Executable bus-test
                   flowbox-rpc,
                   flowbox-utils,
                   mtl,
-                  protocol-buffers,
-                  protocol-buffers-descriptor,
+                  protocol-buffers-fork,
+                  protocol-buffers-descriptor-fork,
                   transformers,
                   zeromq4-haskell
 

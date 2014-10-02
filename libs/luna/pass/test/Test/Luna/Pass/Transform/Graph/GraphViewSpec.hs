@@ -5,26 +5,28 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Test.Pass.Transform.Graph.GraphViewSpec where
+module Test.Luna.Pass.Transform.Graph.GraphViewSpec where
 
 import Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
+import           Luna.AST.Control.Crumb                (Breadcrumbs)
 import qualified Luna.Graph.Node                       as Node
 import           Luna.Graph.View.EdgeView              (EdgeView (EdgeView))
 import           Luna.Graph.View.GraphView             (GraphView)
 import qualified Luna.Graph.View.GraphView             as GraphView
-import           Test.Pass.Transform.Graph.Common      (named)
-import qualified Test.Pass.Transform.Graph.Common      as Common
-import           Test.Pass.Transform.Graph.SampleCodes (sampleCodes)
+import qualified Test.Luna.AST.Common                  as Common
+import           Test.Luna.Pass.Transform.Graph.Common (named)
+import qualified Test.Luna.Pass.Transform.Graph.Common as Common
+import           Test.Luna.SampleCodes                 (sampleCodes)
 
 
 
-backAndForth :: String -> IO ()
-backAndForth code = do
+backAndForth :: Breadcrumbs -> String -> IO ()
+backAndForth bc code = do
     expr          <- Common.getAST code
-    (graph , pm)  <- Common.getGraph def expr
+    (graph , pm)  <- Common.getGraph bc def expr
     let (graphview, pm2) = GraphView.fromGraph graph pm
     (graph3, pm3) <- eitherStringToM $ GraphView.toGraph graphview pm2
 
@@ -34,7 +36,7 @@ backAndForth code = do
 
 backAndForth2 :: GraphView -> IO ()
 backAndForth2 graphview = do
-    let emptyPM    = def
+    let emptyPM = def
     --printLn
     --print graphview
     (graph, pm) <- eitherStringToM $ GraphView.toGraph graphview emptyPM
@@ -105,7 +107,7 @@ sampleGraphs =
         ,(1, 2, EdgeView []        [0, 1, 2])
         ,(1, 2, EdgeView [1, 3, 4] [3, 5, 7, 9])
         ]
-    , named "graphview with single-vaule output port descriptor"
+    , named "graphview with single-value output port descriptor 1"
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
@@ -113,13 +115,30 @@ sampleGraphs =
         ]
         [(0 , -2, EdgeView [0] [1])
         ]
-    , named "graphview with empty output port descriptor"
+    , named "graphview with single-value output port descriptor 2"
+    $ GraphView.mkGraph
+        [(-1, Node.Inputs  (0, 0))
+        ,(-2, Node.Outputs (0, 0))
+        ,(0 , Node.Expr "foo" "" (0, 0))
+        ]
+        [(0 , -2, EdgeView [0] [0])
+        ]
+    , named "graphview with empty output port descriptor 1"
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
         ,(0 , Node.Expr "foo" "" (0, 0))
         ]
         [(0 , -2, EdgeView [0] [])
+        ]
+    , named "graphview with empty output port descriptor 2"
+    $ GraphView.mkGraph
+        [(-1, Node.Inputs  (0, 0))
+        ,(-2, Node.Outputs (0, 0))
+        ,(0 , Node.Expr "foo" "" (0, 0))
+        ]
+        [(-1 , 0, EdgeView [0] [])
+        ,(0 , -2, EdgeView [0] [])
         ]
     ]
 
@@ -128,7 +147,7 @@ spec :: Spec
 spec = do
     describe "code -> graph <-> graphview conversion" $ do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth code) sampleCodes
+                backAndForth Common.mainBC code) sampleCodes
 
 
     describe "graphview <-> graph conversion" $ do

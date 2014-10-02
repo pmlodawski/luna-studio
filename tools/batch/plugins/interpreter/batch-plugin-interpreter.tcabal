@@ -40,6 +40,6 @@ Executable interpreter
                     optparse-applicative,
                     pipes,
                     pipes-concurrency,
-                    protocol-buffers,
+                    protocol-buffers-fork,
                     transformers,
                     zeromq4-haskell >= 0.4

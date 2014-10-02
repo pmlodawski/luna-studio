@@ -4,25 +4,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+module Flowbox.Geom2D.Path.Basic where
 
-module Flowbox.Debug.Debug where
-
-import qualified Debug.Trace as Debug
-
-import Prelude
+import Math.Coordinate.Cartesian (Point2(..))
 
 
-traceShowM :: (Monad m, Show a) => a -> m ()
-traceShowM s = Debug.traceShow s $ return ()
 
-
-dtrace :: Show a => a -> b -> b
-dtrace = Debug.traceShow
-
-
-dtraceM :: (Monad m, Show a) => a -> m ()
-dtraceM = traceShowM
-
-
-ddump :: Show a => a -> a
-ddump a = Debug.traceShow a a
+data PathJoin a = JoinLine a
+			    | JoinQuadratic a

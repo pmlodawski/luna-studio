@@ -29,7 +29,6 @@ import           Data.Foldable             (forM_)
 import           Data.Monoid               as X (Monoid, mappend, mempty)
 import qualified Data.Traversable          as Traversable
 
-import           Flowbox.Debug.Debug as X
 import           Prelude             hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
 

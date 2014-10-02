@@ -6,10 +6,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Main where
 
-import Flowbox.Prelude as P hiding (zoom, constant)
+import Flowbox.Graphics.Prelude as P hiding (constant)
 
 import Flowbox.Graphics.Composition.Generators.Filter
 import Flowbox.Graphics.Composition.Generators.Filter as Conv
@@ -25,6 +26,9 @@ import Flowbox.Graphics.Composition.Generators.Structures as S
 import Flowbox.Graphics.Composition.Generators.Transform
 
 import Flowbox.Graphics.Composition.Dither
+import Flowbox.Graphics.Image.Color (LinearGenerator(..), crosstalk)
+import Flowbox.Geom2D.Accelerate.CubicBezier
+import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection
 
 import Flowbox.Math.Matrix as M
 import Flowbox.Graphics.Utils
@@ -32,7 +36,9 @@ import Flowbox.Graphics.Utils
 import qualified Data.Array.Accelerate              as A
 import qualified Data.Array.Accelerate.Data.Complex as A
 
-import Linear.V2
+import Linear hiding (normalize, inv33, rotate)
+import Flowbox.Graphics.Utils.Linear
+
 import Math.Coordinate.Cartesian as Cartesian
 import Math.Metric
 import Math.Space.Space
@@ -41,6 +47,7 @@ import Utils
 
 import Data.Foldable
 
+import Data.List (permutations)
 -- Test helpers
 forAllChannels :: String -> (Matrix2 Float -> Matrix2 Float) -> IO ()
 forAllChannels image process = do
@@ -62,7 +69,7 @@ gradientsTest = do
 
     let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
     let mapper = flip colorMapper weightFun
-    let center = translate (V2 (0.5) (0.5)) .zoom (V2 0.5 0.5)
+    let center = translate (V2 0.5 0.5) . scale (V2 0.5 0.5)
     let grad1 t = center $ mapper t circularShape
     let grad2 t = center $ mapper t diamondShape
     let grad3 t = center $ mapper t squareShape
@@ -70,8 +77,8 @@ gradientsTest = do
     let grad5 t = center $ mapper t $ radialShape (Minkowski 0.6)
     let grad6 t = center $ mapper t $ radialShape (Minkowski 3)
     let grad7 t = mapper t $ linearShape
-    let grad8   = center . turn (45 * pi / 180) $ mapper gray conicalShape
-    
+    let grad8   = center . rotate (45 * pi / 180) $ mapper gray conicalShape
+
     let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) monosampler [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
     --let raster t = rasterizer $ monosampler $ scaleTo (Grid 720 480) $ grad4 t
     testSaveRGBA' "out.png" (raster reds) (raster greens) (raster blues) (raster alphas)
@@ -86,21 +93,29 @@ multisamplerTest = do
     let mysampler = multisampler (normalize $ toMatrix 10 box)
     let weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
     let mapper = flip colorMapper weightFun
-    let shape = scaleTo (Grid 720 480) conicalShape
-    let grad      = rasterizer $ mysampler $ translate (V2 (720/2) (480/2)) $ turn (84 * pi / 180) $ mapper gray shape
+    let shape = scale (Grid 720 480) conicalShape
+    let grad      = rasterizer $ mysampler $ translate (V2 (720/2) (480/2)) $ rotate (84 * pi / 180) $ mapper gray shape
     testSaveChan' "out.png" grad
 
 --
 -- Upcales lena 64x64 image into 720x480 one
 -- (Filtering test)
 --
-scalingTest :: Filter Float -> IO ()
-scalingTest flt = do
-    let process x = rasterizer $ monosampler 
+upscalingTest :: Filter (Exp Float) -> IO ()
+upscalingTest flt = do
+    let process x = rasterizer $ monosampler
                                $ scale (V2 (720 / 64) (480 / 64))
-                               $ interpolator flt 
+                               $ interpolator flt
                                $ fromMatrix A.Clamp x
     forAllChannels "lena_small.bmp" process
+
+downscalingTest :: Filter (Exp Float) -> IO ()
+downscalingTest flt = do
+    let process x = rasterizer $ monosampler
+                               $ scale (200 :: Grid (Exp Int))
+                               $ interpolator flt
+                               $ fromMatrix (A.Constant 0) x
+    forAllChannels "rings.bmp" process
 
 --
 -- Applies 2 pass gaussian blur onto the 4k image
@@ -145,6 +160,9 @@ morphologyTest size = do
 -- Applies directional motion blur to Lena image
 -- (Simple rotational convolution)
 --
+rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
+rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
+
 motionBlur :: Exp Int -> Exp Float -> IO ()
 motionBlur size angle = do
     let kern = monosampler
@@ -159,14 +177,14 @@ motionBlur size angle = do
 -- (Simple rotational convolution)
 --
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
-fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) -> 
+fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
     let Grid cw ch = fmap A.fromIntegral cnv
         radius = (sqrt $ x * x + y * y) / (sqrt $ cw * cw + ch * ch)
         angle  = atan2 y x / (2 * pi)
     in gen (Point2 (angle * cw) (radius * ch))
 
 toPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
-toPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 angle' radius') -> 
+toPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 angle' radius') ->
     let Grid cw ch = fmap A.fromIntegral cnv
         angle = (angle' / cw) * 2 * pi
         radius = (radius' / ch) * (sqrt $ cw * cw + ch * ch)
@@ -178,16 +196,16 @@ radialBlur size angle = do
              $ rotateCenter (variable angle)
              $ nearest
              $ rectangle (Grid (variable size) 1) 1 0
-    let process x = rasterizer 
-                  $ monosampler 
+    let process x = rasterizer
+                  $ monosampler
                   $ translate (V2 (256) (256))
                   $ fromPolarMapping
                   $ nearest
-                  $ normStencil (+) kern (+) 0 
+                  $ normStencil (+) kern (+) 0
                   $ monosampler
-                  $ toPolarMapping 
+                  $ toPolarMapping
                   $ translate (V2 (-256) (-256))
-                  $ nearest 
+                  $ nearest
                   $ fromMatrix A.Clamp x
     forAllChannels "lena.bmp" process
 
@@ -206,25 +224,28 @@ defocusBlur size = do
 boundTest :: IO ()
 boundTest = do
    let mysampler = multisampler (normalize $ toMatrix 10 box)
-   let mask = mysampler $ scale 0.25 $ nearest $ bound A.Mirror $ ellipse 200 1 (0 :: Exp Float)
+   let mask = mysampler $ scale (0.25 :: V2 (Exp Float)) $ nearest $ bound A.Mirror $ ellipse 200 1 (0 :: Exp Float)
    testSaveChan' "out.png" (rasterizer mask)
 
 --
 -- Applies Kirsch Operator to red channel of Lena image. Available operators: prewitt, sobel, sharr
 -- (Advanced rotational convolution, Edge detection test)
 --
---rotational :: Exp Float -> Matrix2 Float -> Matrix2 Float -> DiscreteGenerator (Exp Float)
---rotational phi mat chan = id `p` Conv.filter 1 edgeKern `p` id $ fromMatrix A.Clamp chan
---    where edgeKern = rotateMat (phi * pi / 180) (Constant 0) mat
---          p = pipe 512 A.Clamp
+rotational :: Exp Float
+           -> DiscreteGenerator (Exp Float)
+           -> DiscreteGenerator (Exp Float)
+           -> DiscreteGenerator (Exp Float)
+rotational phi mat chan = Stencil.stencil (+) edgeKern (+) 0 chan
+    where edgeKern = monosampler $ rotateCenter (phi * pi / 180) $ nearest $ mat
 
---kirschTest :: Matrix2 Float -> IO ()
---kirschTest edgeOp = do
---    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"  
---    let k alpha = rotational alpha edgeOp r
---    let max8 a b c d e f g h = a `min` b `min` c `min` d `min` e `min` f `min` g `min` h
---    let res = rasterizer 512 $ max8 <$> (k 0) <*> (k 45) <*> (k 90) <*> (k 135) <*> (k 180) <*> (k 225) <*> (k 270) <*> (k 315)
---    testSaveChan' "out.png" res
+kirschTest :: Matrix2 Float -> IO ()
+kirschTest edgeOp = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.bmp"
+    let k alpha = rotational alpha (unsafeFromMatrix edgeOp) (fromMatrix A.Clamp r)
+    let max8 a b c d e f g h = a `max` b `max` c `max` d `max` e `max` f `max` g `max` h
+    let res = rasterizer $ max8 <$> k 0 <*> k 45 <*> k 90 <*> k 135 <*> k 180 <*> k 225 <*> k 270 <*> k 315
+    testSaveChan' "out.png" res
+    --print "szatan"
 
 
 --
@@ -240,36 +261,94 @@ unsharpMaskTest sigma kernSize = do
 
 keyerTest :: Exp Float -> Exp Float -> Exp Float -> Exp Float -> IO ()
 keyerTest w x y z = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
-    let process c = rasterizer $ keyer (A.lift (w, x, y, z)) $ fromMatrix A.Clamp c
-    testSaveRGBA' "out.png" r g b (process g)
+    rgb <- loadRGB "samples/keying/greenscreen.jpg"
+    (r :: Matrix2 Float, g, b, _) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
+    let process c = M.map (keyer Greenscreen (A.lift (w, x, y, z))) c
+    testSaveRGBA' "out.png" r g b (process rgb)
+
+differenceKeyerTest :: Exp Float -> Exp Float -> IO ()
+differenceKeyerTest off gain = do
+    rgb <- loadRGB "samples/keying/greenscreen.jpg"
+    (r :: Matrix2 Float, g, b, _) <- testLoadRGBA' "samples/keying/greenscreen.jpg"
+    let process c = M.map (differenceKeyer off gain (rgb M.! (A.index2 1 1))) c
+    testSaveRGBA' "out.png" r g b (process rgb)
 
 --
 -- FFT test
 --
-fftTest :: (Exp Float -> Exp Float) -> IO ()
-fftTest response = do
-    -- Test with response = \x -> abs $ 50 * (x - 0.012)
-    let process = fftFilter run $ \freq ampl -> ampl * clamp' 0 2 (response $ freq / 150)
-    forAllChannels "edge/mountain.png" process
+--fftTest :: (Exp Float -> Exp Float) -> IO ()
+--fftTest response = do
+--    -- Test with response = \x -> abs $ 50 * (x - 0.012)
+--    let process = fftFilter run $ \freq ampl -> ampl * clamp' 0 2 (response $ freq / 150)
+--    forAllChannels "edge/mountain.png" process
 
 --
--- Dither test
+-- Dithering test
 --
 
-ditherTest :: IO ()
-ditherTest = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/edge/mountain.png"
-    let mydither = dither floydSteinberg 2
-    r' <- mutableProcess run mydither r
-    g' <- mutableProcess run mydither g
-    b' <- mutableProcess run mydither b
-    a' <- mutableProcess run mydither a
-    testSaveRGBA' "out.png" r' g' b' a'
-    --putStrLn "Szatan"
+ditherTest :: Int -> IO ()
+ditherTest a = do
+    let mydither = dither A.Clamp floydSteinberg a
+    let grad = monosampler $ scale (512 :: Grid (Exp Int)) $ circularShape :: DiscreteGenerator (Exp Float)
+    result <- mutableProcess run mydither $ rasterizer grad
+    testSaveChan' "out.png" result
+
+
+orderedDitherTest :: Int -> IO ()
+orderedDitherTest a = do
+  --let shape = rasterizer $ monosampler $ scaleTo 512 $ linearShape :: Matrix2 Float
+  --let shape = rasterizer $ constant 512 0.5 :: Matrix2 Float
+  --testSaveChan' "out.png" (bayer a shape)
+  forAllChannels "lena.bmp" (bayer a)
+
+
+simpleTest :: IO ()
+simpleTest = do
+    forAllChannels "edge/mountain.png" id
+
+--
+-- Crosstalk test
+--
+
+crosstalkTest :: IO ()
+crosstalkTest = do
+    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.png"
+    let r' = fromMatrix A.Clamp r
+        g' = fromMatrix A.Clamp g
+        b' = fromMatrix A.Clamp b
+        one = LinearGenerator $ const 1
+        zero = LinearGenerator $ const 0
+        id' = LinearGenerator $ id
+        foo = LinearGenerator $ getValueAtX 20 0.00001 (A.lift $ CubicBezier (Point2 0 (0::A.Exp Float)) (Point2 0.25 1.2) (Point2 0.75 1.2) (Point2 1 0))
+
+        (newR, newG, newB) = crosstalk foo id' id' zero zero zero zero zero zero r' g' b'
+    print "foo"
+    testSaveRGBA' "out.png" (rasterizer newR) (rasterizer newG) (rasterizer newB) a
+
+--
+-- cornerPin test
+--
+
+-- Try with cornerPinTest 0 (Point2 512 0) 512 (Point2 0 512)
+cornerPinTest :: Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float) -> Point2 (Exp Float)-> IO ()
+cornerPinTest p1 p2 p3 p4 = do
+    let process x = rasterizer $ monosampler $ cornerPin (p1, p2, p3, p4) $ nearest $ fromMatrix (A.Constant 0) x
+    forAllChannels "lena.png" process
+
+--
+-- Bilateral test
+--
+bilateralTest :: Exp Float -> Exp Float -> Exp Int -> IO ()
+bilateralTest psigma csigma size = do
+    let p = pipe A.Clamp
+    let spatial = Generator (pure $ variable size) $ \(Point2 x y) ->
+            let dst = sqrt . A.fromIntegral $ (x - size `div` 2) * (x - size `div` 2) + (y - size `div` 2) * (y - size `div` 2)
+            in apply (gauss psigma) dst
+    let domain center neighbour = apply (gauss csigma) (abs $ neighbour - center)
+    let process x = rasterizer $ id `p` bilateralStencil (+) spatial domain (+) 0 `p` id $ fromMatrix A.Clamp x
+    forAllChannels "lena.png" process
 
 main :: IO ()
 main = do
-    ditherTest
-    --putStrLn "Running gauss 50x50..."
-    --gaussianTest (50 :: Exp Int)
+  print "Szatan"
+    --ditherTest
