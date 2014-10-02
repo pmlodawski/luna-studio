@@ -111,11 +111,11 @@ registerElBy fCon fID el = registerAST id (fCon el) *> registerID id
 registerID :: VAMonad m => ID -> m ()
 registerID id = do
     mcid <- getCurrentID
-    withJust mcid (\cid -> modifyAliasInfo $ AliasInfo.parentMap %~ IntMap.insert id cid)
+    withJust mcid (\cid -> modifyAliasInfo $ AliasInfo.parent %~ IntMap.insert id cid)
 
 
 registerAST :: VAMonad m => ID -> AST -> m ()
-registerAST id ast = modifyAliasInfo $ AliasInfo.astMap %~ IntMap.insert id ast
+registerAST id ast = modifyAliasInfo $ AliasInfo.ast %~ IntMap.insert id ast
 
 
 registerName :: VAMonad m => String -> ID -> m ()
@@ -125,9 +125,9 @@ registerName name id = do
     case mcid of
         Nothing  -> fail "Unable to get current id"
         Just cid -> putAliasInfo a2
-            where varRel  = a ^. (AliasInfo.varRel . (ix cid))
+            where varRel  = a ^. (AliasInfo.scope . (ix cid))
                   varRel2 = varRel & AliasInfo.nameMap.at name ?~ id
-                  a2      = a & AliasInfo.varRel.at cid ?~ varRel2
+                  a2      = a & AliasInfo.scope.at cid ?~ varRel2
 
 
 registerParentName :: VAMonad m => String -> ID -> m ()
@@ -148,11 +148,11 @@ bindVarRec id ctxID name a = case dstIDLookup of
                   Just pid -> bindVarRec id pid name a
                   Nothing  -> updateInvalidMap $ AliasInfo.LookupError name
     where dstIDLookup          = nameMap ^. at name
-          mPid                 = (a ^. AliasInfo.parentMap) ^. at ctxID
-          varRel               = a ^. AliasInfo.varRel.ix ctxID
+          mPid                 = (a ^. AliasInfo.parent) ^. at ctxID
+          varRel               = a ^. AliasInfo.scope.ix ctxID
           nameMap              = varRel ^. AliasInfo.nameMap
-          updateAliasMap val   = a & AliasInfo.aliasMap.at id ?~ val
-          updateInvalidMap val = a & AliasInfo.invalidMap.at id ?~ val
+          updateAliasMap val   = a & AliasInfo.alias.at id ?~ val
+          updateInvalidMap val = a & AliasInfo.orphans.at id ?~ val
 
 
 

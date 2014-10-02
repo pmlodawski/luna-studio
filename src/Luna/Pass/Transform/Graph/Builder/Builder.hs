@@ -26,6 +26,7 @@ import qualified Luna.AST.Lit                            as Lit
 import           Luna.AST.Pat                            (Pat)
 import qualified Luna.AST.Pat                            as Pat
 import qualified Luna.AST.Type                           as Type
+import qualified Luna.AST.Arg                            as Arg
 import           Luna.Data.AliasInfo                     (AliasInfo)
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Node                         as Node
@@ -130,7 +131,7 @@ buildNode astFolded monadicBind outName expr = case expr of
     Expr.App       _ src args -> do srcID <- buildNode astFolded False outName src
                                     s     <- State.gvmNodeMapLookUp srcID
                                     case s of
-                                       Just (srcNID, _) -> connectArgs True True Nothing srcNID args 1
+                                       Just (srcNID, _) -> connectArgs True True Nothing srcNID (fmap (view Arg.arg) args) 1
                                        Nothing          -> return ()
                                     connectMonadic srcID
                                     return srcID

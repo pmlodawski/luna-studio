@@ -119,7 +119,9 @@ example = Source.Source ["Main"] $
                     --, "            else: 6"
                     --, "    print $ 1 > 2"
                     --, "    v = Vector 1 2 3"
-                    , "    print 1"
+                    , "    (a,b) = (1,2)"
+                    --, "    a = 1"
+                    , "    print a"
                     --, "    f = x:x"
                     --, "    v.x = 5"
                     --, "    print $ v"
@@ -199,14 +201,16 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
-    logger info "\n>> varRel:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.varRel)
-    logger info "\n>> aliasMap:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
-    logger info "\n>> invalidMap:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    logger info "\n>> scope:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.scope)
+    logger info "\n>> alias map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.alias)
+    logger info "\n>> parent map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.parent)
+    logger info "\n>> orphans map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
     --logger info "\n>> parentMap"
-    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
 
     -----------------------------------------
     -- !!! CallGraph and DepSort are mockup passes !!!
@@ -236,12 +240,12 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
-    logger info "\n>> varRel:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.varRel)
-    logger info "\n>> aliasMap:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
-    logger info "\n>> invalidMap:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    logger info "\n>> scope:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.scope)
+    logger info "\n>> alias map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.alias)
+    logger info "\n>> orphans map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
 
 
 

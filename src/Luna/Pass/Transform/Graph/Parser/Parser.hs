@@ -20,6 +20,7 @@ import           Luna.AST.Expr                          (Expr)
 import qualified Luna.AST.Expr                          as Expr
 import           Luna.AST.Pat                           (Pat)
 import qualified Luna.AST.Pat                           as Pat
+import qualified Luna.AST.Arg                           as Arg
 import qualified Luna.Data.ASTInfo                      as ASTInfo
 import qualified Luna.Graph.Attributes.Naming           as Attributes
 import           Luna.Graph.Graph                       (Graph)
@@ -28,12 +29,18 @@ import           Luna.Graph.Node                        (Node)
 import qualified Luna.Graph.Node                        as Node
 import qualified Luna.Graph.Port                        as Port
 import           Luna.Graph.PropertyMap                 (PropertyMap)
-import qualified Luna.Parser.Lexer                      as Lexer
+import qualified Luna.Parser.Token                      as Tok
 import qualified Luna.Parser.Parser                     as Parser
 import qualified Luna.Pass.Pass                         as Pass
 import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
+import qualified Luna.Data.Config                       as Config
+
+--FIXME[wd]: following imports should be removed after moving to plugin based structure
+--           including all use cases. Nothing should modify Parser.State explicitly!
+import qualified Luna.Parser.State                      as ParserState
+import qualified Luna.Parser.Pragma                     as Pragma
 
 
 
@@ -106,13 +113,17 @@ patVariables pat = case pat of
     Pat.App _ _ args  -> concatMap patVariables args
     _                 -> []
 
+patchedParserState info = def
+    & ParserState.info .~ info
+    & ParserState.conf .~ parserConf
+    where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
 
 parsePatNode :: Node.ID -> String -> GPPass ()
 parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
         [s] -> do
-            p <- case Parser.parsePattern pat $ ASTInfo.mk IDFixer.unknownID of
+            p <- case Parser.parseString pat $ Parser.patternParser (patchedParserState $ ASTInfo.mk IDFixer.unknownID) of
                     Left  er     -> left $ show er
                     Right (p, _) -> return p
             let e = Expr.Assignment nodeID p s
@@ -126,7 +137,7 @@ parsePatNode nodeID pat = do
 parseNativeNode :: Node.ID -> String -> GPPass ()
 parseNativeNode nodeID native = do
     srcs <- State.getNodeSrcs nodeID
-    expr <- case Parser.parseExpr native $ ASTInfo.mk nodeID of
+    expr <- case Parser.parseString native $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
                     Left  er     -> left $ show er
                     Right (e, _) -> return e
     addExpr nodeID $ replaceNativeVars srcs expr
@@ -144,7 +155,7 @@ parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     expr <- if isOperator app
                 then return $ Expr.Var nodeID app
-                else case Parser.parseExpr app $ ASTInfo.mk nodeID of
+                else case Parser.parseString app $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
                     Left  er     -> left $ show er
                     Right (e, _) -> return e
     let requiresApp (Expr.Con {}) = True
@@ -153,10 +164,10 @@ parseAppNode nodeID app = do
         []                   -> addExpr nodeID $ if requiresApp expr
                                     then Expr.App IDFixer.unknownID expr []
                                     else expr
-        (Expr.Wildcard {}):t -> addExpr nodeID $ Expr.App IDFixer.unknownID expr t
-        f:t                  -> do let acc = Expr.Accessor nodeID app f
-                                       e   = Expr.App      IDFixer.unknownID acc t
-                                   addExpr nodeID e
+        (Expr.Wildcard {}):t -> addExpr nodeID $ Expr.App IDFixer.unknownID expr (fmap (Arg.Unnamed IDFixer.unknownID) t)
+        f:t                  -> addExpr nodeID $ Expr.App IDFixer.unknownID acc  (fmap (Arg.Unnamed IDFixer.unknownID) t)
+                                where acc = Expr.Accessor nodeID app f
+                                   
 
 
 parseTupleNode :: Node.ID -> GPPass ()
@@ -200,4 +211,4 @@ addExpr nodeID e = do
 
 
 isOperator :: String -> Bool
-isOperator expr = length expr == 1 && head expr `elem` Lexer.operators
+isOperator expr = length expr == 1 && head expr `elem` Tok.opChars

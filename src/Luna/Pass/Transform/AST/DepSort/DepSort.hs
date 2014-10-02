@@ -41,7 +41,7 @@ run = (Pass.run_ (Pass.Info "Transform.DepSort") Pass.NoState) .:. depSort
 depSort :: CallGraph -> AliasInfo -> Module -> DepSortPass Module
 depSort cg info mod = do
     let sGraph = reverse $ CallGraph.sort cg
-        mAst   = sequence $ map (\id -> info ^. AliasInfo.astMap ^. at id) sGraph
+        mAst   = sequence $ map (\id -> info ^. AliasInfo.ast ^. at id) sGraph
     case mAst of
         Nothing      -> Pass.fail "Cannot make dependency sorting!"
         Just methods -> return $ (mod & Module.methods .~ (map AST.fromExpr methods))

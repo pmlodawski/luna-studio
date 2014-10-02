@@ -16,11 +16,13 @@ module Luna.Pass.Transform.AST.TxtParser.TxtParser where
 import           Flowbox.System.Log.Logger
 import           Luna.AST.Module           (Module)
 import           Luna.Data.ASTInfo         (ASTInfo)
-import           Luna.Data.Source          (Source)
+import           Luna.Data.Source          (Source(..))
 import           Luna.Data.SourceMap       (SourceMap)
 import qualified Luna.Parser.Parser        as Parser
 import           Luna.Pass.Pass            (Pass)
 import qualified Luna.Pass.Pass            as Pass
+import qualified Luna.Parser.State         as State
+import           Text.PrettyPrint.ANSI.Leijen (displayS)
 
 import Control.Monad.State
 import Flowbox.Prelude     hiding (error)
@@ -38,6 +40,9 @@ run = (Pass.run_ (Pass.Info "Luna Parser") Pass.NoState) . parse
 
 
 parse :: Source -> ParserPass (Module, SourceMap, ASTInfo)
-parse src = case Parser.parse src of
-    Left  e -> Pass.fail $ show e
-    Right v -> return v
+parse (Source modpath txt) = case Parser.parseString txt $ Parser.moduleParser modpath def of
+    Left  e -> Pass.fail $ displayS (Parser.renderErr e) "" -- FIXME[wd]: poprawic wyswietlanie bledow
+    Right a -> return (fst a, view State.sourceMap $ snd a, view State.info $ snd a)
+
+
+
