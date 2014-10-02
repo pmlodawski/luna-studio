@@ -20,58 +20,72 @@ import Prelude hiding (lookup)
 import Text.Parser.Token
 
 import qualified Data.Map as Map
-import Data.Map (Map)
-import Type.BaseType (baseOf, BaseType)
-import Data.Typeable
-import Data.Proxy.Utils (proxyTypeName)
-import Data.TypeLevel.Set
-import Data.Default
-import Control.Applicative hiding (empty)
-import Text.Parser.Char (noneOf)
-import Text.Parser.Char (CharParsing)
+import           Data.Map (Map)
+import           Type.BaseType (baseOf, BaseType)
+import           Data.Typeable
+import           Data.Proxy.Utils (proxyTypeName)
+import qualified Data.TypeLevel.Set as Set
+import           Data.Default
+import           Control.Applicative hiding (empty)
+import           Text.Parser.Char (noneOf)
+import           Text.Parser.Char (CharParsing)
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
-data PragmaItem a = PragmaItem { name :: String 
-                               , val  :: Maybe a
-                               } deriving (Show)
+data Pragma a = Pragma { name :: String 
+                       , val  :: Maybe a
+                       } deriving (Show)
 
 newtype PragmaSet a = PragmaSet a deriving (Show, Functor)
 
 fromPragmaSet (PragmaSet a) = a
+
+data Lookup a = Defined a
+              | Undefined
+              | Unregistered
+              deriving (Show)
 
 
 ----------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------
 
-pragma :: (Typeable ta, BaseType (Proxy a) (Proxy ta)) => a -> PragmaItem a
-pragma a = PragmaItem name Nothing where
-    name = proxyTypeName $ baseOf a
+pragma :: (Typeable ta, BaseType (Proxy a) (Proxy ta)) => a -> Pragma a
+pragma a = Pragma (baseName a) Nothing where
 
+
+baseName = proxyTypeName . baseOf
 
 empty = PragmaSet ()
 
-register p (PragmaSet set) = PragmaSet $ insert (pragma p) set
+register p (PragmaSet set) = PragmaSet $ Set.insert (pragma p) set
+
+set p (PragmaSet set) = PragmaSet $ Set.modify (\(Pragma name _) -> Pragma name (Just p)) set
+
+lookup (PragmaSet set) = case Set.lookup set of
+        Nothing              -> Unregistered
+        Just (Pragma name p) -> case p of
+            Nothing -> Undefined
+            Just x  -> Defined x
 
 names = fromPragmaSet . fmap setNames
 
-parsePragma (PragmaSet set) name = fmap PragmaSet $ _parsePragma set name
+parsePragma (PragmaSet set) name = fmap PragmaSet $ parseByName set name
 
 ----------------------------------------------------------------------
 -- Type classes
 ----------------------------------------------------------------------
 
-class Typeable a => Pragma a where
-    parse :: (TokenParsing m, CharParsing m, Monad m) => PragmaItem a -> m a
+class Typeable a => IsPragma a where
+    parse :: (TokenParsing m, CharParsing m, Monad m) => Pragma a -> m a
 
-    default parse :: (Monad m, CharParsing m, Read a) => PragmaItem a -> m a
+    default parse :: (Monad m, CharParsing m, Read a) => Pragma a -> m a
     parse a = read . (name a ++) <$> many (noneOf "\n")
 
 class ParsePragma a where
-    _parsePragma :: (Monad m, TokenParsing m) => a -> String -> m a
+    parseByName :: (Monad m, TokenParsing m) => a -> String -> m a
 
 class PragmaSetNames a where
     setNames :: a -> [String]
@@ -81,16 +95,16 @@ class PragmaSetNames a where
 ----------------------------------------------------------------------
 
 instance ParsePragma () where
-    _parsePragma a _ = return a
+    parseByName a _ = return a
 
 
-instance (ParsePragma xs, Read a, Pragma a) => ParsePragma (PragmaItem a,xs) where
-    _parsePragma (x,xs) n = if name x == n 
+instance (ParsePragma xs, Read a, IsPragma a) => ParsePragma (Pragma a,xs) where
+    parseByName (x,xs) n = if name x == n 
         then do
             nval <- parse x 
             return (x {val = Just nval}, xs) 
         else do 
-            nval <- _parsePragma xs n
+            nval <- parseByName xs n
             return $ (x,nval)
 
 ---
@@ -98,7 +112,7 @@ instance (ParsePragma xs, Read a, Pragma a) => ParsePragma (PragmaItem a,xs) whe
 instance PragmaSetNames () where
     setNames _ = []
 
-instance PragmaSetNames xs => PragmaSetNames (PragmaItem a,xs) where
+instance PragmaSetNames xs => PragmaSetNames (Pragma a,xs) where
     setNames (x,xs) = name x : setNames xs
 
 ---
@@ -110,9 +124,10 @@ instance a~() => Default (PragmaSet a) where
 
 --data Pragma1 = Pragma1 Int deriving (Show, Read, Typeable)
 --data Pragma2 = Pragma2 Int deriving (Show, Read, Typeable)
+--data Pragma3 = Pragma3 Int deriving (Show, Read, Typeable)
 
---instance Pragma Pragma1
---instance Pragma Pragma2
+--instance IsPragma Pragma1
+--instance IsPragma Pragma2
 
 --instance Default Pragma1 where
 --    def = Pragma1 0
@@ -122,15 +137,31 @@ instance a~() => Default (PragmaSet a) where
 
 
 
+
+
+
 --main = do
 --    let --s = insert ("a"::String) $ insert (0::Int) $ empty
 --        pmap = (pragma $ Pragma1 0 ,(pragma $ Pragma2 0 ,()))
---        ps = register (pragma (undefined :: Pragma1))
---           $ register (pragma (undefined :: Pragma2))
+--        ps = register (undefined :: Pragma1)
+--           $ register (undefined :: Pragma2)
 --           $ empty
---        --pmap3 = register (undefined :: Pragma1) pmap2
+
+--        ps2 = set (Pragma1 5) ps
+
+--    case lookup ps2 of
+--        Unregistered        -> print "Pragma not defined!"
+--        Undefined           -> print "Pragma not set"
+--        Defined (Pragma2 x) -> print $ "found " ++ show x
+
+--    --case lookup ps2 of
+--    --    Nothing -> print $ "Pragma '" ++ baseName (Unregistered :: Pragma1) ++ "' not defined"
+--    --    Just (Pragma name Nothing)            -> print "not set"
+--    --    Just (Pragma name (Just (Pragma1 x))) -> print $ "found " ++ show x
+--        --pmap3 = register (Unregistered :: Pragma1) pmap2
 --        --pmap = (Map.empty,(Map.empty,())) :: (Map Int Pragma1,(Map Int Pragma2,()))
 --    --print $ show $ Pragma1 (4 :: Int)
+
 --    print $ ps
---    --print $ _parsePragma pmap "Pragma1" "Pragma1 1"
+--    --print $ parseByName pmap "Pragma1" "Pragma1 1"
 --    --print $ proxyTypeName . baseOf $ Pragma1 0
