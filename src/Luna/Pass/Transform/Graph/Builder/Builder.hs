@@ -31,7 +31,7 @@ import           Luna.Data.AliasInfo                     (AliasInfo)
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Node                         as Node
 import qualified Luna.Graph.Node.OutputName              as OutputName
-import           Luna.Graph.Port                         (InPort)
+import           Luna.Graph.Port                         (Port)
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Graph.PropertyMap                  (PropertyMap)
 import qualified Luna.Pass.Pass                          as Pass
@@ -44,8 +44,6 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 
 
-
-
 run :: AliasInfo -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
 run aliasInfo pm expr = Pass.run_ (Pass.Info "GraphBuilder")
                                   (State.make aliasInfo pm inputsID)
@@ -54,16 +52,21 @@ run aliasInfo pm expr = Pass.run_ (Pass.Info "GraphBuilder")
 
 
 expr2graph :: Expr -> GBPass (Graph, PropertyMap)
-expr2graph (Expr.Function i _ _ inputs output body) = do
-    (inputsID, outputID) <- prepareInputsOutputs i (output ^. Type.id)
-    parseArgs inputsID inputs
-    if null body
-        then State.connectMonadic outputID
-        else do
-            mapM_ (buildNode False True Nothing) $ init body
-            buildOutput outputID $ last body
-    finalize
-expr2graph _ = left "expr2graph: Unsupported Expr type"
+expr2graph expr = case expr of
+    Expr.Function i _ _ inputs output body -> processExpr i inputs output body
+    Expr.Lambda   i     inputs output body -> processExpr i inputs output body
+    _                                      -> left "expr2graph: Unsupported Expr type"
+
+  where
+    processExpr i inputs output body = do
+        (inputsID, outputID) <- prepareInputsOutputs i (output ^. Type.id)
+        parseArgs inputsID inputs
+        if null body
+            then State.connectMonadic outputID
+            else do
+                mapM_ (buildNode False True Nothing) $ init body
+                buildOutput outputID $ last body
+        finalize
 
 
 prepareInputsOutputs :: AST.ID -> AST.ID -> GBPass (Node.ID, Node.ID)
@@ -99,8 +102,8 @@ buildOutput outputID expr = do
     case expr of
         Expr.Assignment {} -> void $ buildNode False True Nothing expr
         Expr.Tuple _ items -> connectArgs True  True Nothing outputID items 0
-        Expr.Var {}        -> connectArg  True  True Nothing outputID (expr, 0)
-        _                  -> connectArg  False True Nothing outputID (expr, 0)
+        Expr.Var {}        -> connectArg  True  True Nothing outputID (expr, Port.All)
+        _                  -> connectArg  False True Nothing outputID (expr, Port.All)
     State.connectMonadic outputID
 
 
@@ -108,7 +111,7 @@ buildNode :: Bool -> Bool -> Maybe String -> Expr -> GBPass AST.ID
 buildNode astFolded monadicBind outName expr = case expr of
     Expr.Accessor i name dst  -> do let node = Node.Expr name (genName name i)
                                     State.addNode i Port.All node astFolded assignment
-                                    connectArg True True Nothing  i (dst, 0)
+                                    connectArg True True Nothing  i (dst, Port.Num 0)
                                     connectMonadic i
                                     return i
     Expr.Assignment i pat dst -> do let patStr = Pat.lunaShow pat
@@ -121,7 +124,7 @@ buildNode astFolded monadicBind outName expr = case expr of
                                                    [patID] -> State.addToNodeMap patID (i, Port.All)
                                                    _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs
                                                 dstID <- buildNode True True Nothing dst
-                                                State.connect dstID i 0
+                                                State.connect dstID i $ Port.Num 0
                                                 connectMonadic i
                                                 return i
                                         else do [p] <- buildPat pat
@@ -137,8 +140,8 @@ buildNode astFolded monadicBind outName expr = case expr of
                                     return srcID
     Expr.Infix i name src dst -> do let node = Node.Expr name (genName name i)
                                     State.addNode i Port.All node astFolded assignment
-                                    connectArg True True Nothing i (src, 0)
-                                    connectArg True True Nothing i (dst, 1)
+                                    connectArg True True Nothing i (src, Port.Num 0)
+                                    connectArg True True Nothing i (dst, Port.Num 1)
                                     connectMonadic i
                                     return i
     Expr.Var       i name     -> do isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp i
@@ -208,10 +211,10 @@ buildArg astFolded monadicBind outName expr = case expr of
 
 connectArgs :: Bool -> Bool -> Maybe String -> AST.ID -> [Expr] -> Int ->  GBPass ()
 connectArgs astFolded monadicBind outName dstID exprs start =
-    mapM_ (connectArg astFolded monadicBind outName dstID) $ zip exprs [start..]
+    mapM_ (connectArg astFolded monadicBind outName dstID) $ zip exprs $ map Port.Num [start..]
 
 
-connectArg :: Bool -> Bool -> Maybe String -> AST.ID -> (Expr, InPort) -> GBPass ()
+connectArg :: Bool -> Bool -> Maybe String -> AST.ID -> (Expr, Port) -> GBPass ()
 connectArg astFolded monadicBind outName dstID (expr, dstPort) = do
     msrcID <- buildArg astFolded monadicBind outName expr
     case msrcID of
