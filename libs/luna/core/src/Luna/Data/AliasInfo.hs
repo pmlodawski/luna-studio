@@ -23,8 +23,8 @@ import qualified Data.Maps    as Map
 type IDMap = IntMap
 
 
---data Error  = LookupError {key :: String}
---            deriving (Show)
+data Error  = LookupError {key :: String}
+            deriving (Show, Eq, Generic, Read)
 
 
 --data VarRel = VarRel { _nameMap :: Map String AST.ID }
@@ -40,7 +40,7 @@ makeLenses (''Scope)
 
 data AliasInfo = AliasInfo  { _scope   :: IDMap Scope
                             , _alias   :: IDMap ID
-                            --, _orphans :: IDMap Error
+                            , _orphans :: IDMap Error
                             , _parent  :: IDMap ID
                             , _ast     :: IDMap AST
                             } deriving (Show, Eq, Generic, Read)
@@ -60,22 +60,22 @@ regName   pid id name info = info & scope.at pid ?~ Scope (nmap & at name ?~ id)
 -- Instances
 ------------------------------------------------------------------------
 
---instance Monoid VarRel where
---    mempty      = VarRel mempty
---    mappend a b = VarRel (mappend (a ^. nameMap)  (b ^. nameMap))
+instance Monoid Scope where
+    mempty      = Scope mempty
+    mappend a b = Scope (mappend (a ^. nameMap)  (b ^. nameMap))
 
 
---instance Monoid AliasInfo where
---    mempty      = AliasInfo mempty mempty mempty mempty mempty
---    mappend a b = AliasInfo (mappend (a ^. varRel)     (b ^. varRel))
---                            (mappend (a ^. aliasMap)   (b ^. aliasMap))
---                            (mappend (a ^. invalidMap) (b ^. invalidMap))
---                            (mappend (a ^. parentMap)  (b ^. parentMap))
---                            (mappend (a ^. astMap)     (b ^. astMap))
+instance Monoid AliasInfo where
+    mempty      = AliasInfo mempty mempty mempty mempty mempty
+    mappend a b = AliasInfo (mappend (a ^. scope)   (b ^. scope))
+                            (mappend (a ^. alias)   (b ^. alias))
+                            (mappend (a ^. orphans) (b ^. orphans))
+                            (mappend (a ^. parent)  (b ^. parent))
+                            (mappend (a ^. ast)     (b ^. ast))
 
 
 instance Default Scope where
     def = Scope def
 
 instance Default AliasInfo where
-    def = AliasInfo def def def def
+    def = AliasInfo def def def def def

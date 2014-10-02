@@ -18,6 +18,7 @@ import           Luna.AST.Module                               (Module)
 import qualified Luna.AST.Module                               as Module
 import           Luna.AST.Pat                                  (Pat)
 import qualified Luna.AST.Pat                                  as Pat
+import qualified Luna.AST.Arg                                  as Arg
 import           Luna.Data.ASTInfo                             (ASTInfo)
 import           Luna.Pass.Pass                                (Pass)
 import qualified Luna.Pass.Pass                                as Pass
@@ -43,11 +44,16 @@ desugar mod = (,) <$> desugarModule mod <*> DS.getInfo
 desugarModule :: Module -> DesugarPass Module
 desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure mod
 
+--TODO[wd]: convert to traverses!
+desugarArg :: Arg.Arg Expr.Expr -> DesugarPass (Arg.Arg Expr.Expr)
+desugarArg a = case a of
+    Arg.Unnamed id      arg -> fmap (Arg.Unnamed id)      $ desugarExpr arg
+    Arg.Named   id name arg -> fmap (Arg.Named   id name) $ desugarExpr arg
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExpr ast = case ast of
     Expr.Con      {}                           -> Expr.App <$> DS.genID <*> continue <*> pure []
-    Expr.App      id src args                  -> Expr.App id <$> omitNextExpr src <*> mapM desugarExpr args
+    Expr.App      id src args                  -> Expr.App id <$> omitNextExpr src <*> mapM desugarArg args
     Expr.Accessor id name dst                  -> Expr.App <$> DS.genID <*> continue <*> pure []
     Expr.Import   {}                           -> omitAll
     _                                          -> continue

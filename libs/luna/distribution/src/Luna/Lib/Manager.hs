@@ -8,16 +8,14 @@
 module Luna.Lib.Manager (
     module Flowbox.Data.Graph,
     LibManager,
-    empty,
-
-    loadLibrary,
+    empty
 ) where
 
 import           Flowbox.Data.Graph                hiding (Edge, empty)
 import qualified Flowbox.Data.Graph                as Graph
 import           Flowbox.Prelude                   hiding (empty)
 import           Flowbox.System.UniPath            (UniPath)
-import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
+--import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
 import           Luna.Lib.Edge                     (Edge)
 import           Luna.Lib.Lib                      (Library)
 import qualified Luna.Lib.Lib                      as Library
@@ -30,9 +28,9 @@ type LibManager = Graph Library Edge
 empty :: LibManager
 empty = Graph.empty
 
-
-loadLibrary :: UniPath -> LibManager -> IO (LibManager, (Library.ID, Library))
-loadLibrary apath libManager = do
-    library <- LibSerialization.restoreLibrary apath
-    let (newLibManager, libID) = insNewNode library libManager
-    return (newLibManager, (libID, library))
+-- TODO[pm]: przeniesc do biblioteki serializacji!
+--loadLibrary :: UniPath -> LibManager -> IO (LibManager, (Library.ID, Library))
+--loadLibrary apath libManager = do
+--    library <- LibSerialization.restoreLibrary apath
+--    let (newLibManager, libID) = insNewNode library libManager
+--    return (newLibManager, (libID, library))

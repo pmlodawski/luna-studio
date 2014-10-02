@@ -1,3 +1,10 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE QuasiQuotes               #-}
@@ -22,7 +29,7 @@ import qualified Luna.AST.Type       as Type
 import qualified Luna.AST.Lit.Number as Number
 import qualified Luna.AST.Lit        as Lit
 import qualified Luna.AST.Data       as Data
-import qualified Luna.Parser.Lexer            as Lex
+import qualified Luna.Parser.Token            as Tok
 import qualified Luna.Parser.State            as State
 import           System.Environment           (getArgs)
 import           System.IO                    (IOMode (ReadMode), hClose, openFile)
@@ -36,7 +43,7 @@ import qualified Text.Trifecta                as Trifecta
 import           Text.Trifecta.Delta          as Delta
 import qualified Luna.Data.Config             as Config
 import qualified Luna.Pragma.Pragma           as Pragma
-import           Luna.Pragma.Pragma           (Pragma)
+import           Luna.Pragma.Pragma           (IsPragma)
 import           Data.Typeable
 import           Data.String.Utils            (join)
 import           Luna.Parser.Combinators
@@ -52,6 +59,7 @@ import qualified Data.Maps                    as Map
 import           Data.Maybe                   (fromJust)
 import qualified Luna.AST.Arg                 as Arg
 import qualified Data.List                    as List
+import qualified Luna.Parser.Pragma           as Pragma
 
 import           Text.EditDistance            --(defaultEditCosts, levenshteinDistance, EditCosts, Costs(..))
 import           Text.PhoneticCode.Phonix     (phonix)
@@ -71,7 +79,7 @@ import qualified Luna.AST.Expr as Expr
 infixl 4 <$!>
 
 
-
+unknownID = -1
 
 
 (<$!>) :: Monad m => (a -> b) -> m a -> m b
@@ -125,7 +133,7 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 
 
 
---indentBlock p = Lex.spaces *> withPos p
+--indentBlock p = Tok.spaces *> withPos p
 
 
 
@@ -168,19 +176,19 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 --      ["foreign","import","export","primitive","_ccall_","_casm_" ,"forall"]
 --  }
 
-tuple         p = Lex.parens (sepBy p Lex.separator)
-qualifiedPath p = sepBy1_ng p Lex.accessor
-extensionPath   = (,) <$> (((qualifiedPath Lex.typeIdent <?> "extension path") <* Lex.accessor) <|> pure [])
-                      <*> (     (Name.Single <$> Lex.varIdent)
-                            <|> Lex.parens (Name.Multi <$> Lex.varIdent <*> many1 Lex.varIdent) 
+tuple         p = Tok.parens (sepBy p Tok.separator)
+qualifiedPath p = sepBy1_ng p Tok.accessor
+extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
+                      <*> (     (Name.Single <$> Tok.varIdent)
+                            <|> Tok.parens (Name.Multi <$> Tok.varIdent <*> many1 Tok.varIdent) 
                             <?> "function name")
-argList       p = try (sepBy2 p Lex.separator) <|> many p <?> "argument list"
-argList'      p = braces (sepBy2 p Lex.separator) <|> ((:[]) <$> p) <?> "argument list"
-callList      p = Lex.parens (sepBy p Lex.separator)
-list          p = Lex.brackets (sepBy p Lex.separator)
-anyIdent        = choice [ Lex.varIdent, Lex.typeIdent ]
+argList       p = try (sepBy2 p Tok.separator) <|> many p <?> "argument list"
+argList'      p = braces (sepBy2 p Tok.separator) <|> ((:[]) <$> p) <?> "argument list"
+callList      p = Tok.parens (sepBy p Tok.separator)
+list          p = Tok.brackets (sepBy p Tok.separator)
+anyIdent        = choice [ Tok.varIdent, Tok.typeIdent ]
 
-varOp           = Lex.varIdent <|> Lex.operator
+varOp           = Tok.varIdent <|> Tok.operator
 
 
 
@@ -200,7 +208,7 @@ appID a = a <$> genID
 --expr    = buildExpressionParser table term
 --      <?> "expression"
 
---term    =  Lex.parens expr
+--term    =  Tok.parens expr
 --      <|> natural
 --      <?> "simple expression"
 
@@ -213,34 +221,24 @@ appID a = a <$> genID
 --          --, [binary "+" (+) AssocLeft, binary "-" (-)   AssocLeft ]
 --          ]
 
---binary  name fun assoc = Infix (fun <$ Lex.reservedOp name) assoc
---prefix  name fun       = Prefix (fun <$ Lex.reservedOp name)
---postfix name fun       = Postfix (fun <$ Lex.reservedOp name)
+--binary  name fun assoc = Infix (fun <$ Tok.reservedOp name) assoc
+--prefix  name fun       = Prefix (fun <$ Tok.reservedOp name)
+--postfix name fun       = Postfix (fun <$ Tok.reservedOp name)
 
-binary   name fun assoc = Infix   (Lex.reservedOp name *> return fun) assoc
-binaryM  name fun assoc = Infix   (Lex.reservedOp name *>        fun) assoc
-prefix   name fun       = Prefix  (Lex.reservedOp name *> return fun)
-prefixM  name fun       = Prefix  (Lex.reservedOp name *>        fun)
+binary   name fun assoc = Infix   (Tok.reservedOp name *> return fun) assoc
+binaryM  name fun assoc = Infix   (Tok.reservedOp name *>        fun) assoc
+prefix   name fun       = Prefix  (Tok.reservedOp name *> return fun)
+prefixM  name fun       = Prefix  (Tok.reservedOp name *>        fun)
 prefixfM      fun       = Prefix  (fun)
-postfix  name fun       = Postfix (Lex.reservedOp name *> return fun)
-postfixM name fun       = Postfix (Lex.reservedOp name *>        fun)
+postfix  name fun       = Postfix (Tok.reservedOp name *> return fun)
+postfixM name fun       = Postfix (Tok.reservedOp name *>        fun)
 
 
 --operator2 op = binaryM op (binaryMatchE <$> ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 op x) [y]) <$> genID <*> genID) )
 
 --binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 
-pragma = do
-    token $ char '@'
-    s <- get
-    let lens  = State.conf . Config.pragmaSet
-        pset  = s ^. lens
-        names = Pragma.names pset
-    name      <- choice (fmap string names) <?> "language pragma [" ++ (join ", " $ take 3 names) ++ ", ...]"
-    out       <- Pragma.parsePragma pset name
-    let npset = s & lens .~ out
-    put npset
-    <?> "pragma"
+
 
 
 --pragma2 = pragma <?> "pragma"
@@ -291,45 +289,67 @@ tok p = element $ \id -> p <*> pure id
 -----------------------------------------------------------
 -- Definitions
 -----------------------------------------------------------
-pImport          = appID Expr.Import <*  Lex.kwImport
+
+--pragma           = Tok.pragma >* Tok.pragmaIdent
+
+pragma = do
+    Tok.pragma
+    name <- Tok.pragmaIdent
+    s <- get
+    let lens  = State.conf . Config.pragmaSet
+        pset  = s ^. lens
+        names = Pragma.names pset
+        pragmaIdent s = try (string s <* notFollowedBy alphaNum)
+        simWords = findSimWords name names
+        msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " simWords ++ "}"
+                                        else ""
+    when (not $ name `elem` names) $ fail $ "Unsupported extension: " ++ name ++ msgTip
+    --name      <- choice (fmappragmaIdent names) <|>             -- <?> "language pragma [" ++ (join ", " $ take 3 names) ++ ", ...]"
+    out       <- Pragma.parsePragma pset name
+    let npset = s & lens .~ out
+    put npset
+    --return ()
+    <?> "pragma"
+
+pImport          = appID Expr.Import <*  Tok.kwImport
                                      <*> qualifiedPath anyIdent
-                                     <*  Lex.indBlockBegin
-                                     <*> (try (appID Expr.Wildcard <* Lex.importAll) <|> identE)
-                                     <*> (     try (Just <$ Lex.kwAs <*> (anyIdent <?> "import name"))
+                                     <*  Tok.indBlockBegin
+                                     <*> (try (appID Expr.Wildcard <* Tok.importAll) <|> identE)
+                                     <*> (     try (Just <$ Tok.kwAs <*> (anyIdent <?> "import name"))
                                            <|> pure Nothing
                                          )
                                      <?> "import"
 
 
-pImportNative   = appID Expr.ImportNative  <*  Lex.kwImport <*> nativeE
+pImportNative   = appID Expr.ImportNative  <*  Tok.kwImport <*> nativeE
 
 
-pTypeAlias      = appID Expr.TypeAlias <*  Lex.kwAlias
+pTypeAlias      = appID Expr.TypeAlias <*  Tok.kwAlias
                                        <*> typeT
-                                       <*  Lex.assignment
+                                       <*  Tok.assignment
                                        <*> typeT
 
 
-pTypeDef        = appID Expr.TypeDef <*  Lex.kwType
+pTypeDef        = appID Expr.TypeDef <*  Tok.kwType
                                      <*> typeT
-                                     <*  Lex.assignment
+                                     <*  Tok.assignment
                                      <*> typeT
 
 
 pArg            = appID Expr.Arg     <*> argPattern
-                                     <*> ((Just <$ Lex.assignment <*> expr) <|> pure Nothing)
+                                     <*> ((Just <$ Tok.assignment <*> expr) <|> pure Nothing)
 
 
 
 func = element $ \id -> do
-    Lex.kwDef
+    Tok.kwDef
     (extPath, name) <- extensionPath
     State.registerName id (view Name.base name)
     State.withScope id $ 
         Expr.function <$> pure extPath
                       <*> pure name
                       <*> (argList pArg <?> "function argument list")
-                      <*> (try (Lex.arrow *> typeT) <|> appID Type.Unknown)
+                      <*> (try (Tok.arrow *> typeT) <|> appID Type.Unknown)
                       <*> (exprBlock <|> return [])
                       <*> pure id
                       <?> "function definition"
@@ -337,7 +357,7 @@ func = element $ \id -> do
 
 
 lambda          = appID Expr.Lambda <*> argList' pArg
-                                    <*> (try (Lex.arrow *> typeT) <|> appID Type.Unknown)
+                                    <*> (try (Tok.arrow *> typeT) <|> appID Type.Unknown)
                                     <*> exprBlock
                                     <?> "lambda definition"
 
@@ -354,11 +374,11 @@ lambda          = appID Expr.Lambda <*> argList' pArg
 pData            = Expr.afterData <$> pDataT
 
 pDataT = element $ \id -> do
-    Lex.kwClass
-    name <- Lex.typeIdent <?> "class name"
+    Tok.kwClass
+    name <- Tok.typeIdent <?> "class name"
     State.registerName id name
     Data.mk id <$> (appID Type.Data <*> (pure name)
-                                       <*> (many (Lex.typeVarIdent <?> "class parameter")))
+                                       <*> (many (Tok.typeVarIdent <?> "class parameter")))
                   <*> (appID Expr.ConD <*> pure "default" <*> pure [] ) -- default constructor
                   <??$> blockBegin dataBody
                   <?> "class definition"
@@ -368,7 +388,7 @@ pDataT = element $ \id -> do
 ----                                    <??$> pDotBlockBegin pDataBody
 ----                                    <?> "data constructor definition"
 
-pConD            = appID Expr.ConD    <*> Lex.conIdent
+pConD            = appID Expr.ConD    <*> Tok.conIdent
                                     <*> pure []
                                     <??$> blockBegin pConDBody
                                     <?> "data constructor definition"
@@ -401,6 +421,7 @@ pModuleBody      = choice [ Module.addMethod    <$> func
                           , Module.addImport    <$> pImport
                           , Module.addTypeAlias <$> pTypeAlias
                           , Module.addTypeDef   <$> pTypeDef
+                          , id                  <$ pragma
                           ]
                 <?> "definition"
 
@@ -418,10 +439,10 @@ pCombine f p = do
 mkField t val name id = Expr.Field id name t val
 
 fields        =   (\names t val -> map (appID . (mkField t val)) names )
-               <$> (sepBy1 Lex.varIdent Lex.separator)
-               <*  Lex.typeDecl
+               <$> (sepBy1 Tok.varIdent Tok.separator)
+               <*  Tok.typeDecl
                <*> typeT
-               <*> (Lex.assignment *> (Just <$> expr) <|> pure Nothing)
+               <*> (Tok.assignment *> (Just <$> expr) <|> pure Nothing)
                <?> "field declaration"
 
 declaration   = choice [ pImport
@@ -437,7 +458,7 @@ expr       = exprT entBaseE
 
 exprSimple = exprT pEntBaseSimpleE
 
-exprT base =   (try (appID Expr.Assignment   <*> pattern <* (Lex.reservedOp "=")) <*> opTupleTE base)
+exprT base =   (try (appID Expr.Assignment   <*> pattern <* (Tok.reservedOp "=")) <*> opTupleTE base)
            <|> opTupleTE base
            <?> "expression"
 
@@ -447,12 +468,12 @@ opTupleTE base = tupleE $ opTE base
 
 opTE base = buildExpressionParser optableE (appE base)
 
-tupleE p = p <??> ((\xs x -> Expr.Tuple 0 (x:xs)) <$ Lex.separator <*> sepBy1 p Lex.separator)
+tupleE p = p <??> ((\xs x -> Expr.Tuple unknownID (x:xs)) <$ Tok.separator <*> sepBy1 p Tok.separator)
 
 appE base = p <??> (appID (\i a s -> Expr.App i s a) <*> many1 (argE p)) where 
     p = termE base
 
-argE p = try (appID Arg.Named <*> Lex.varIdent <* Lex.assignment <*> p) <|> (appID Arg.Unnamed <*> p)
+argE p = try (appID Arg.Named <*> Tok.varIdent <* Tok.assignment <*> p) <|> (appID Arg.Unnamed <*> p)
 
 termE base = base <??> (flip applyAll <$> many1 (termBaseE base))  ------  many1 (try $ recUpdE))
 
@@ -462,9 +483,9 @@ termBaseE p = choice [ try recUpdE
                      , callTermE p
                      ]
 
-accBaseE  = (Lex.accessor *> varOp)
+accBaseE  = (Tok.accessor *> varOp)
 
-recUpdE   = appID (\id sel expr src -> Expr.RecordUpdate id src sel expr) <*> many1 accBaseE <* Lex.assignment <*> exprSimple
+recUpdE   = appID (\id sel expr src -> Expr.RecordUpdate id src sel expr) <*> many1 accBaseE <* Tok.assignment <*> exprSimple
 
 accE      = try(appID Expr.Accessor <*> accBaseE) -- needed by the syntax [1..10]
 
@@ -474,7 +495,7 @@ accE      = try(appID Expr.Accessor <*> accBaseE) -- needed by the syntax [1..10
 --    exprsid <- mapM appID exprs
 --    return (\x -> foldl (flip ($)) x exprsid)
 
-parensE p = Lex.parens (p <|> (appID Expr.Tuple <*> pure [])) -- checks for empty tuple
+parensE p = Tok.parens (p <|> (appID Expr.Tuple <*> pure [])) -- checks for empty tuple
 
 
 callTermE p = lastLexemeEmpty *> ((flip <$> appID Expr.App) <*> callList (argE p))
@@ -496,8 +517,8 @@ entSimpleE = choice[ caseE -- CHECK [wd]: removed try
                    --, condE
                    , appID Expr.Grouped <*> parensE expr
                    , identE
-                   , try (appID Expr.RefType <*  Lex.ref <*> Lex.conIdent) <* Lex.accessor <*> varOp
-                   , appID Expr.Ref     <*  Lex.ref <*> entSimpleE
+                   , try (appID Expr.RefType <*  Tok.ref <*> Tok.conIdent) <* Tok.accessor <*> varOp
+                   , appID Expr.Ref     <*  Tok.ref <*> entSimpleE
                    , appID Expr.Lit     <*> literal
                    , appID Expr.List    <*> list  listE
                    , appID Expr.Native  <*> nativeE
@@ -553,13 +574,17 @@ callBuilder id id2 src arg = case src of
 withReservedWords words p = withState (State.addReserved words) p
 
 
-mkFuncParser func = withReservedWords segments $ tok (Expr.app <$> tok (pure $ Expr.var fname) <*> argParser)
-    where argExpr       = argE expr
+mkFuncParser func defparser = case name of
+    (Name.Multi base segments) -> multiparser
+    _                          -> defparser
+    where name          = Expr._fname func
+          argExpr       = argE expr
           exprApp p a b = (:) <$> p <* a <*> b
-          segParsers    = fmap (Lex.symbol) segments
+          segParsers    = fmap (Tok.symbol) segments
           argParser     = foldr (exprApp argExpr) ((:[]) <$> argExpr) segParsers
-          (Name.Multi base segments) = Expr._fname func
-          [s1,s2] = fmap Lex.symbol segments
+          (Name.Multi base segments) = name
+          multiparser   = withReservedWords segments $ tok (Expr.app <$> tok (pure $ Expr.var fname) <*> argParser)
+          [s1,s2] = fmap Tok.symbol segments
           fname = base ++ " " ++ join " " segments
 
 
@@ -573,11 +598,11 @@ notReserved p = do
 
 ---
 varE   = do
-    name  <- try $ notReserved Lex.varIdent
-    ast <- lookupAST name
+    name <- try $ notReserved Tok.varIdent
+    ast  <- lookupAST name
     case ast of
         -- FIXME[wd]: dopiero przy dwuprzebiegowym parserze bedziemy mieli wieloczlonowe funkcje rekurencyjne
-        Just(AST.Expr func@(Expr.Function {})) -> mkFuncParser func
+        Just(AST.Expr func@(Expr.Function {})) -> mkFuncParser func (tok $ Expr.var <$> pure name)
         _                                      -> tok $ Expr.var <$> pure name
                           
 
@@ -585,12 +610,18 @@ lookupAST name = do
     scope  <- State.getScope
     astMap <- State.getASTMap
     pid    <- State.getPid
+
+    pragmaSet <- view (State.conf . Config.pragmaSet) <$> get
         
     case Map.lookup pid scope of
             Nothing                    -> fail "Internal parser error [1]"
             Just (Alias.Scope nameMap) -> case Map.lookup name nameMap of
-                Just dstID -> return $ Map.lookup dstID astMap -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
-                Nothing    -> fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
+                -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
+                -- poprawka: Nothing zostanie rowniez zwrocone przy ustawionej fladze
+                Just dstID -> return $ Map.lookup dstID astMap 
+                Nothing    -> case Pragma.lookup pragmaSet of
+                    Pragma.Defined Pragma.AllowOrphans -> return Nothing
+                    _                                  -> fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
                     where scopedNames = Map.keys nameMap
                           simWords    = findSimWords name scopedNames
                           msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
@@ -603,9 +634,15 @@ editCosts = EditCosts { deletionCosts      = ConstantCost 10
                       , transpositionCosts = ConstantCost 10
                       }
 
+editCosts2 = EditCosts { deletionCosts      = ConstantCost 10
+                      , insertionCosts     = ConstantCost 1
+                      , substitutionCosts  = ConstantCost 10
+                      , transpositionCosts = ConstantCost 3
+                      }
+
 findSimWords word words = fmap snd simPairs
-    where dist a b = levenshteinDistance editCosts (phonix a) (phonix b)
-    --where dist a b = levenshteinDistance editCosts a b
+    --where dist a b = levenshteinDistance editCosts (phonix a) (phonix b)
+    where dist a b = levenshteinDistance editCosts2 a b
           simWords = fmap (dist word) words
           simPairs = filter ((<20).fst) 
                    $ List.sortBy (compare `on` fst) 
@@ -613,10 +650,10 @@ findSimWords word words = fmap snd simPairs
 
 
     
---varE   = appID $ Expr.var <*> Lex.varIdent
-varOpE = tok $ Expr.var <$> try (Lex.parens varOp)
+--varE   = appID $ Expr.var <*> Tok.varIdent
+varOpE = tok $ Expr.var <$> try (Tok.parens varOp)
 conE   = do
-    name <- Lex.conIdent
+    name <- Tok.conIdent
     _ <- lookupAST name
     appID Expr.Con <*> pure name
 
@@ -628,20 +665,20 @@ identE = choice [ varE
 ---
 
 
-listE = choice [ try $ appID Expr.RangeFromTo <*> opE <* Lex.range <*> opE
-               , try $ appID Expr.RangeFrom   <*> opE <* Lex.range
+listE = choice [ try $ appID Expr.RangeFromTo <*> opE <* Tok.range <*> opE
+               , try $ appID Expr.RangeFrom   <*> opE <* Tok.range
                , opE
                ]
 
 
-caseE     = appID Expr.Case <* Lex.kwCase <*> exprSimple <*> (blockBegin caseBodyE <|> return [])
+caseE     = appID Expr.Case <* Tok.kwCase <*> exprSimple <*> (blockBegin caseBodyE <|> return [])
 caseBodyE = appID Expr.Match <*> pattern <*> exprBlock
 
 
---condE     = appID Expr.Cond <* Lex.kwIf <*> exprSimple <*> exprBlock <*> maybe (indBlockSpacesIE *> Lex.kwElse *> exprBlock)
+--condE     = appID Expr.Cond <* Tok.kwIf <*> exprSimple <*> exprBlock <*> maybe (indBlockSpacesIE *> Tok.kwElse *> exprBlock)
 
 
-nativeE     = between Lex.nativeSym Lex.nativeSym (many nativeElemE)
+nativeE     = between Tok.nativeSym Tok.nativeSym (many nativeElemE)
 nativeElemE = choice [ nativeVarE
                      , nativeCodeE
                      ]
@@ -667,19 +704,19 @@ typeSingle  = choice [ try appT
                      , termT 
                      ] <?> "type"
 
-termT       = choice [ try $ Lex.parens typeT 
+termT       = choice [ try $ Tok.parens typeT 
                      , entT 
                      ] <?> "type term"
 
 appT        = appID Type.App      <*> appBaseT <*> many1 termT
 
 
-argListT    = braces (sepBy2 typeT Lex.separator) <|> ((:[]) <$> typeSingle) <?> "type argument list"
-funcT       = appID Type.Function <*> argListT <* Lex.arrow <*> typeT
-varT        = appID Type.Var      <*> Lex.typeVarIdent
-conT        = appID Type.Con      <*> qualifiedPath Lex.conIdent
+argListT    = braces (sepBy2 typeT Tok.separator) <|> ((:[]) <$> typeSingle) <?> "type argument list"
+funcT       = appID Type.Function <*> argListT <* Tok.arrow <*> typeT
+varT        = appID Type.Var      <*> Tok.typeVarIdent
+conT        = appID Type.Con      <*> qualifiedPath Tok.conIdent
 tupleT      = appID Type.Tuple    <*> tuple typeT
-wildT       = appID Type.Unknown  <*  Lex.wildcard
+wildT       = appID Type.Unknown  <*  Tok.wildcard
 
 appBaseT    = choice [ varT, conT
                      ]
@@ -708,18 +745,18 @@ argPattern = termBase termT
 
 termP      = termBase typeT
 
-termBase t = choice [ try (appID Pat.Grouped <*> Lex.parens patTup)
-                    , try (appID Pat.Typed <*> entP <* Lex.typeDecl <*> t)
+termBase t = choice [ try (appID Pat.Grouped <*> Tok.parens patTup)
+                    , try (appID Pat.Typed <*> entP <* Tok.typeDecl <*> t)
                     , entP
                     ]
               <?> "pattern term"
 
-varP       = nameTok $ Pat.var         <$> Lex.varIdent
+varP       = nameTok $ Pat.var         <$> Tok.varIdent
 litP       = appID Pat.Lit         <*> literal
-implTupleP = appID Pat.Tuple       <*> sepBy2 patCon Lex.separator
-wildP      = appID Pat.Wildcard    <*  Lex.wildcard
-recWildP   = appID Pat.RecWildcard <*  Lex.recWildcard
-conP       = appID Pat.Con         <*> Lex.conIdent
+implTupleP = appID Pat.Tuple       <*> sepBy2 patCon Tok.separator
+wildP      = appID Pat.Wildcard    <*  Tok.wildcard
+recWildP   = appID Pat.RecWildcard <*  Tok.recWildcard
+conP       = appID Pat.Con         <*> Tok.conIdent
 appP       = appID Pat.App         <*> conP <*> many1 termP
 
 entP = choice [ varP
@@ -734,9 +771,9 @@ entP = choice [ varP
 ----------------------------------------------------------------------
 
 literal = choice [ numL, charL, stringL ]
-charL   = appID Lit.Char   <*> Lex.charLiteral
-stringL = appID Lit.String <*> Lex.stringLiteral
-numL    = appID Lit.Number <*> Lex.numberL
+charL   = appID Lit.Char   <*> Tok.charLiteral
+stringL = appID Lit.String <*> Tok.stringLiteral
+numL    = appID Lit.Number <*> Tok.numberL
 
 
 prevParsedChar = do
@@ -754,20 +791,20 @@ lastLexemeEmpty = do
 ----------------------------------------------------------------------
 --indBlockBody   p = many1 (Indent.checkIndentedOrEq *> p <* indBlockSpaces)
 
---indBlockSpaces   = try (Lex.spaces <* Indent.checkIndent) <|> pure mempty
+--indBlockSpaces   = try (Tok.spaces <* Indent.checkIndent) <|> pure mempty
 
 moduleBlock p = braceBlockBegin p <|> indBlockBody p
 blockBegin  p = indBlockBegin   p <|> braceBlockBegin p
 
-indBlockBegin  p = Lex.indBlockBegin *> indBlock p
-indBlock       p = Lex.spaces *> Indent.indented *> Indent.withPos (indBlockBody p)
+indBlockBegin  p = Tok.indBlockBegin *> indBlock p
+indBlock       p = Tok.spaces *> Indent.indented *> Indent.withPos (indBlockBody p)
 indBlockBody   p = (:) <$> p <*> many (indBlockPrefix p)
-indBlockPrefix p = try ((try (Lex.spaces *> Indent.checkIndent) <|> try (Lex.terminator *> Lex.spaces *> Indent.checkIndentedOrEq )) *> notFollowedBy eof) *> p
---indBlockBody   p = (:) <$> p <*> many (try (Lex.spaces *> Indent.checkIndent) *> p)
-indBlockSpacesIE = try (Lex.spaces <* Indent.checkIndentedOrEq) <|> pure mempty
+indBlockPrefix p = try ((try (Tok.spaces *> Indent.checkIndent) <|> try (Tok.terminator *> Tok.spaces *> Indent.checkIndentedOrEq )) *> notFollowedBy eof) *> p
+--indBlockBody   p = (:) <$> p <*> many (try (Tok.spaces *> Indent.checkIndent) *> p)
+indBlockSpacesIE = try (Tok.spaces <* Indent.checkIndentedOrEq) <|> pure mempty
 
-braceBlockBegin p = Lex.braceL *> Lex.spaces *> Indent.discarded (many1 (p <* braceBlockSpaces)) <* Lex.braceR
-braceBlockSpaces  = Lex.terminator *> Lex.spaces
+braceBlockBegin p = Tok.braceL *> Tok.spaces *> Indent.discarded (many1 (p <* braceBlockSpaces)) <* Tok.braceR
+braceBlockSpaces  = Tok.terminator *> Tok.spaces
 
 
 -----------------------------------------------------------
@@ -784,9 +821,9 @@ handleResult r = case r of
 
 bundleResult p = (,) <$> p <*> get
 
-end = (Lex.spaces <?> "") <* (eof <?> "")
+end = (Tok.spaces <?> "") <* (eof <?> "")
 
-upToEnd p = Lex.spaces *> p <* end
+upToEnd p = Tok.spaces *> p <* end
 
 renderErr e = renderPretty 0.8 80 $ e <> linebreak
 
@@ -794,21 +831,16 @@ renderErr e = renderPretty 0.8 80 $ e <> linebreak
 -- Pragmas
 -----------------------------------------------------------
 
-data TabLength = TabLength Int   deriving (Show, Typeable, Read)
-data ImplicitSelf = ImplicitSelf deriving (Show, Typeable, Read)
+appConf = Config.registerPragma (undefined :: Pragma.TabLength)
+        . Config.registerPragma (undefined :: Pragma.AllowOrphans)
+        . Config.registerPragma (undefined :: Pragma.ImplicitSelf)
 
-instance Pragma TabLength
-instance Pragma ImplicitSelf
-
-conf = def & Config.registerPragma (undefined :: TabLength)
-           & Config.registerPragma (undefined :: ImplicitSelf)
-
-appConf = Config.registerPragma (undefined :: TabLength)
-        . Config.registerPragma (undefined :: ImplicitSelf)
+-- FIXME[wd]: logika powina byc przeniesiona na system pluginow
+defConfig = appConf def
 
 appSt = State.conf %~ appConf
 
-st = def {State._conf = conf}
+--st = def {State._conf = conf}
 
 -----------------------------------------------------------
 -- Section parsing
@@ -818,9 +850,9 @@ st = def {State._conf = conf}
 parseGen p st = run (bundleResult p) st
 
 moduleParser modPath = parseGen (upToEnd $ pModule (last modPath) (init modPath)) . appSt
-exprParser           = parseGen expr  . appSt
-typeParser           = parseGen typeT . appSt
-
+exprParser           = parseGen (upToEnd expr) . appSt
+patternParser        = parseGen (upToEnd pattern) . appSt
+typeParser           = parseGen (upToEnd typeT) . appSt
 
 -----------------------------------------------------------
 -- Input utils

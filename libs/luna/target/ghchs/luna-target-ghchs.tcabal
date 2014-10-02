@@ -29,7 +29,8 @@ Library
                   mtl,
                   QuickCheck,
                   lens,
-                  flowbox-utils
+                  flowbox-utils,
+                  tuple
 
 
 

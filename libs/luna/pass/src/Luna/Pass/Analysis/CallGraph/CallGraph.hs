@@ -57,8 +57,8 @@ cgExpr el = case el of
     Expr.Function   {} -> withID continue
     _                  -> do
                           info <- State.getInfo
-                          let mTargetID = info ^. AliasInfo.aliasMap ^. at id
-                              mTargetAST = (do tid <- mTargetID; info ^. AliasInfo.astMap ^. at tid)
+                          let mTargetID = info ^. AliasInfo.alias ^. at id
+                              mTargetAST = (do tid <- mTargetID; info ^. AliasInfo.ast ^. at tid)
                           case mTargetAST of
                               Nothing  -> return ()
                               Just ast -> case ast of

@@ -1,7 +1,14 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Luna.Parser.Lexer where
+module Luna.Parser.Token where
 
 import Control.Applicative
 import Control.Monad (MonadPlus(..), when)
@@ -16,7 +23,7 @@ import qualified Text.ParserCombinators.ReadP as ReadP
 import Text.Parser.Char hiding (spaces)
 import Text.Parser.Combinators
 import Text.Parser.Token.Highlight hiding (Comment)
-import Text.Parser.Token hiding (symbol, symbolic)
+import Text.Parser.Token hiding (symbol, symbolic, ident)
 import Flowbox.Prelude as Prelude hiding (op, noneOf, lex, use)
 import qualified Luna.AST.Lit.Number as Number
 
@@ -38,7 +45,7 @@ lineSpaces = many spaceLine <?> "white space"
 reservedIdents :: [String]
 reservedIdents = ["alias", "as", "case", "class", "def", "from", "interface", "import", "in", "type"]
 
---identBlock s = ident s <* Indent.indented
+--ident s = ident s <* Indent.indented
 
 --tokenBlock :: m a -> m a
 --tokenBlock p = p <* (try (someSpace <* Indent.checkIndented) <|> pure ())
@@ -69,8 +76,8 @@ tokBase = many1 space <|> try mlineCom <|> lineCom <?> ""
 
 --spaces2 = (try lineCom <|> pure id) <* (try (spaces <* Indent.checkIndented) <|> pure ())
 
---identBlock :: (TokenParsing m, Monad m, IsString s) => IdentifierStyle m -> m s
-identBlock s = fmap fromString $ tokenBlock $ try $ do
+--ident :: (TokenParsing m, Monad m, IsString s) => IdentifierStyle m -> m s
+ident s = fmap fromString $ tokenBlock $ try $ do
   name <- highlight (_styleHighlight s)
           ((:) <$> _styleStart s <*> many (_styleLetter s) <?> _styleName s)
   when (HashSet.member name (_styleReserved s)) $ unexpected $ "reserved " ++ _styleName s ++ " " ++ show name
@@ -84,8 +91,9 @@ reserveBlock s name = tokenBlock $ try $ do
 
 opToken p = tokenBlock (highlight Operator p)
 
-opLetter = oneOf "!#$%&*+./<=>?\\^|-~"
-opStart = opLetter
+opChars  = "!#$%&*+./<=>?\\^|-~"
+opLetter = oneOf opChars
+opStart  = opLetter
 
 operator = opToken ((:) <$> opStart <*> many opLetter <?> "operator")
 
@@ -97,6 +105,12 @@ identStyle = IdentifierStyle
   , _styleHighlight = Identifier
   , _styleReservedHighlight = ReservedIdentifier
   }
+
+
+pragmaStyle :: TokenParsing m => IdentifierStyle m
+pragmaStyle = identStyle { _styleName      = "pragma identifier"
+                         , _styleStart     = letter
+                         }
 
 varStyle :: TokenParsing m => IdentifierStyle m
 varStyle = identStyle { _styleName      = "variable identifier"
@@ -135,16 +149,18 @@ opStyle = IdentifierStyle
 
 
 --varIdent :: (TokenParsing m, Monad m, Indent.MonadIndentState Indent.State m) => m String
-varIdent = identBlock varStyle
+varIdent = ident varStyle
+
+pragmaIdent = ident pragmaStyle
 
 --conIdent :: (TokenParsing m, Monad m, Indent.MonadIndentState Indent.State m) => m String
-conIdent = identBlock conStyle
+conIdent = ident conStyle
 
 --typeVarIdent :: (TokenParsing m, Monad m, Indent.MonadIndentState Indent.State m) => m String
-typeVarIdent = identBlock typeVarStyle
+typeVarIdent = ident typeVarStyle
 
 --typeIdent :: (TokenParsing m, Monad m, Indent.MonadIndentState Indent.State m) => m String
-typeIdent = identBlock typeStyle
+typeIdent = ident typeStyle
 
 reservedIdent = reserveBlock identStyle
 reservedOp    = reserveBlock opStyle
@@ -171,6 +187,7 @@ assignment    = symbol '='
 nativeSym     = symbol "```"
 range         = symbol ".."
 ref           = symbol '@'
+pragma        = symbol '@'
 terminator    = symbol ';' <?> "terminator"
 
 lineComStart        = lex '#'

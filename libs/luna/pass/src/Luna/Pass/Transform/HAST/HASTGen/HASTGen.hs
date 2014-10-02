@@ -36,6 +36,10 @@ import qualified Luna.Target.HS.Host.Naming                             as Namin
 import           Data.String.Utils                                     (join)
 import qualified Luna.Data.HAST.Deriving                     as Deriving
 import           Luna.Data.HAST.Deriving                     (Deriving)
+import qualified Luna.Data.Name                              as Name
+import qualified Luna.AST.Arg                                as Arg
+import qualified Luna.AST.Lit.Number                         as Number
+import           Data.Maybe                                  (isNothing)
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
 
@@ -80,6 +84,7 @@ genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields meth
                 $ HModule.addExt HExtension.RebindableSyntax
                 $ HModule.addExt HExtension.TemplateHaskell
                 $ HModule.addExt HExtension.UndecidableInstances
+                $ HModule.addExt HExtension.ViewPatterns
                 $ HModule.mk (path ++ [name])
         params  = view LType.params cls
         modCon  = LExpr.ConD 0 name fields
@@ -185,18 +190,20 @@ genExpr ast = case ast of
     LExpr.Con      _ name                -> pure $ HExpr.Var (Naming.con name)
     LExpr.Function _ path name
                      inputs output body  -> do
+                                            let name2 = Name.unified name
+
                                             cls <- GenState.getCls
                                             let tpName = if (null path)
                                                     then cls ^. LType.name
                                                     else (path!!0) -- FIXME[wd]: needs name resolver
 
                                                 argNum     = length inputs
-                                                memDefName      = Naming.mkMemDef tpName name
-                                                memSigName      = Naming.mkMemSig tpName name
+                                                memDefName      = Naming.mkMemDef tpName name2
+                                                memSigName      = Naming.mkMemSig tpName name2
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
-                                            GenState.addComment $ HExpr.Comment $ HComment.H2 $ "Method: " ++ tpName ++ "." ++ name
+                                            GenState.addComment $ HExpr.Comment $ HComment.H2 $ "Method: " ++ tpName ++ "." ++ name2
 
                                             -----------------------------------------
                                             -- FIXME[wd]: genFuncSig is naive, it should not handle such cases as (a::Int)::Int
@@ -220,7 +227,7 @@ genExpr ast = case ast of
 
                                             GenState.addFunction $ HExpr.Function memSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length inputs - 1) paramSig))
 
-                                            GenState.addTHExpression $ thRegisterMethod tpName name
+                                            GenState.addTHExpression $ thRegisterMethod tpName name2
 
                                             return f
 
@@ -294,11 +301,11 @@ genExpr ast = case ast of
 
                                            return $ HExpr.NOP
 
-    LExpr.Infix        id name src dst       -> genExpr (LExpr.App id (LExpr.Var 0 name) [src, dst])
+    LExpr.Infix        id name src dst       -> genExpr (LExpr.App id (LExpr.Var 0 name) $ fmap (Arg.Unnamed 0) [src, dst])
                                                 --HExpr.Infix name <$> genExpr src <*> genExpr dst
     LExpr.Assignment   _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
     LExpr.RecordUpdate _ src selectors expr  -> genExpr $ (setSteps sels) expr
-                                                where setter sel exp val = flip (LExpr.App 0) [val]
+                                                where setter sel exp val = flip (LExpr.App 0) [Arg.Unnamed 0 val]
                                                                          $ LExpr.Accessor 0 (Naming.mkSetName sel) exp
                                                       getter sel exp     = flip (LExpr.App 0) []
                                                                          $ LExpr.Accessor 0 sel exp
@@ -322,7 +329,7 @@ genExpr ast = case ast of
     --LExpr.App          _ src args             -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
     --LExpr.App          _ src args            -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (mkRTuple <$> mapM genCallExpr args)
     --LExpr.App          _ src args            -> foldr (<*>) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) [return $ HExpr.VarE "xxx"]) 
-    LExpr.App          _ src args            -> HExpr.AppE (HExpr.VarE "call") <$> foldl (flip (<*>)) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) (map genCallExpr args)) 
+    LExpr.App          _ src args            -> HExpr.AppE (HExpr.VarE "call") <$> foldl (flip (<*>)) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) (map genCallExpr $ fmap (view Arg.arg) args)) 
     LExpr.Accessor     _ name dst            -> HExpr.AppE <$> (pure $ mkMemberGetter name) <*> genExpr dst --(get0 <$> genExpr dst))
     LExpr.TypeAlias    _ srcType dstType     -> case srcType of
                                                     LType.Con _ segments                    -> HExpr.TySynD (last segments) [] <$> genType' dstType
@@ -398,11 +405,12 @@ genPat p = case p of
     LPat.App         _ src args -> foldl HExpr.AppP <$> genPat src <*> mapM genPat args
     LPat.Var         _ name     -> return $ HExpr.Var (mkVarName name)
     LPat.Typed       _ pat cls  -> genTypedP cls <*> genPat pat
-    LPat.Tuple       _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
+    LPat.Tuple       _ items    -> (HExpr.ViewP $ "extractTuple" ++ show (length items)) . HExpr.TupleP <$> mapM genPat items
     LPat.Lit         _ value    -> genLit value
     LPat.Wildcard    _          -> return $ HExpr.WildP
     LPat.RecWildcard _          -> return $ HExpr.RecWildP
     LPat.Con         _ name     -> return $ HExpr.ConP name
+    LPat.Grouped     _ p'       -> genPat p'
     --_ -> fail $ show p
 
 
@@ -467,8 +475,16 @@ genType' t = case t of
 
 genLit :: LLit.Lit -> GenPass HExpr
 genLit lit = case lit of
-    LLit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
-    LLit.Float   _ str      -> mkLit "Double" (HLit.Float   str)
+    -- FIXME[wd]: fix the number handling.
+    LLit.Number _ (Number.Number base repr exp sign) -> do
+        when (base /= 10) $ Pass.fail "number base different than 10 are not yet supported"
+        when (not $ isNothing exp) $ Pass.fail "number exponents are not yet supported"
+        case repr of
+            Number.Float   int frac -> mkLit "Double" (HLit.Float $ int ++ "." ++ frac)
+            Number.Decimal int      -> mkLit "Int"    (HLit.Integer int)
+
+    --LLit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
+    --LLit.Float   _ str      -> mkLit "Double" (HLit.Float   str)
     LLit.String  _ str      -> mkLit "String" (HLit.String  str)
     LLit.Char    _ char     -> mkLit "Char"   (HLit.Char    char)
     --_ -> fail $ show lit

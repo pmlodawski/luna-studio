@@ -136,12 +136,17 @@ addCon :: Expr -> Expr -> Expr
 addCon ncon e = e & cons %~ (ncon:)
 
 
+argMapM f a = case a of
+    Arg.Unnamed id      arg -> fmap (Arg.Unnamed id)      $ f arg
+    Arg.Named   id name arg -> fmap (Arg.Named   id name) $ f arg
+
+
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
 traverseM fexp ftype fpat flit e = case e of
     Accessor     id' name' dst'                    -> Accessor     id' name' <$> fexp dst'
     TypeAlias    id' srcType' dstType'             -> TypeAlias    id'       <$> ftype srcType' <*> ftype dstType'
     TypeDef      id' srcType' dstType'             -> TypeDef      id'       <$> ftype srcType' <*> ftype dstType'
-    --App          id' src' args'                    -> App          id'       <$> fexp src'      <*> fexpMap args'
+    App          id' src' args'                    -> App          id'       <$> fexp src'      <*> mapM (argMapM fexp) args'
     Assignment   id' pat' dst'                     -> Assignment   id'       <$> fpat pat'      <*> fexp dst'
     RecordUpdate id' src' selectors' expr'         -> RecordUpdate id'       <$> fexp src'      <*> pure selectors' <*> fexp expr'
     Data         id' cls' cons' classes' methods'  -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
@@ -181,7 +186,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Accessor     _  _ dst'                         -> drop <* fexp dst'
     TypeAlias    _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
     TypeDef      _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
-    --App          _  src' args'                     -> drop <* fexp src'  <* fexpMap args'
+    App          _  src' args'                     -> drop <* fexp src'  <* mapM_ (argMapM fexp) args'
     Assignment   _  pat' dst'                      -> drop <* fpat pat'  <* fexp dst'
     RecordUpdate _ src' _ expr'                    -> drop <* fexp src'  <* fexp expr'
     Data         _ cls' cons'  classes' methods'   -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
