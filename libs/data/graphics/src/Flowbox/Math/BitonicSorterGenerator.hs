@@ -13,9 +13,13 @@ import Flowbox.Prelude hiding ((<&>))
 generateGetNthFromTuple :: Int -> Int -> Q Exp
 generateGetNthFromTuple elem size = do
     name <- newName "x"
-    let patternP = tupP $ (replicate elem wildP) ++ (varP name : replicate (size - elem - 1) wildP)
+    let patternP = tupleGenerator $ (replicate elem wildP) ++ (varP name : replicate (size - elem - 1) wildP)
         expr = varE name
     lamE [patternP] expr
+
+tupleGenerator [value] = tupP [value]
+tupleGenerator (a:b:rest) = foldl tuple (tupP [a, b]) rest where
+  tuple val new = tupP [val, new]
 
 generateBitonicNetworkTuple :: Int -> Int -> Q Exp
 generateBitonicNetworkTuple width height = do
@@ -90,8 +94,12 @@ splitOnPowerOf2 size = split' size 1 where
   split' a power | power < a = split' a $ power * 2
                  | power >= a = power `div` 2
 
-wiresGeneratorP = TupP . map VarP
+wiresGeneratorP [name] = TupP [VarP name]
+wiresGeneratorP (a:b:rest) = foldl tuple (TupP [VarP a, VarP b]) rest where
+  tuple tupleVal name = TupP [tupleVal, VarP name]
 
-wiresGeneratorE = TupE . map VarE
+wiresGeneratorE [name] = TupE [VarE name]
+wiresGeneratorE (a:b:rest) = foldl tuple (TupE [VarE a, VarE b]) rest where
+  tuple tupleVal name = TupE [tupleVal, VarE name]
 
 generateWires size = replicateM size (newName "x")
