@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.AST.Control.Focus where
 
@@ -14,10 +15,13 @@ import Luna.AST.Module (Module)
 
 
 
-data Focus  = Function Expr
-            | Class    Expr
-            | Module Module
+data Focus  = Lambda   { _expr :: Expr   }
+            | Function { _expr :: Expr   }
+            | Class    { _expr :: Expr   }
+            | Module   { _module_ :: Module }
             deriving (Show)
+
+makeLenses ''Focus
 
 
 type FocusPath = [Focus]
@@ -29,6 +33,7 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 traverseM :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> Focus -> m Focus
 traverseM fmod fexp focus = case focus of
+    Lambda   l -> Lambda   <$> fexp l
     Function f -> Function <$> fexp f
     Class    c -> Class    <$> fexp c
     Module   m -> Module   <$> fmod m
@@ -36,21 +41,28 @@ traverseM fmod fexp focus = case focus of
 
 traverseM_ :: Traversal m => (Module -> m r) -> (Expr -> m r) -> Focus -> m r
 traverseM_ fmod fexp focus = case focus of
+    Lambda   l -> fexp l
     Function f -> fexp f
     Class    c -> fexp c
     Module   m -> fmod m
 
 
+getLambda :: Focus -> Maybe Expr
+getLambda (Lambda l) = Just l
+getLambda _          = Nothing
+
+
 getFunction :: Focus -> Maybe Expr
-getFunction (Function expr) = Just expr
-getFunction _               = Nothing
+getFunction (Function e) = Just e
+getFunction _            = Nothing
 
 
 getClass :: Focus -> Maybe Expr
-getClass (Class expr) = Just expr
-getClass _            = Nothing
+getClass (Class e) = Just e
+getClass _         = Nothing
 
 
 getModule :: Focus -> Maybe Module
 getModule (Module m) = Just m
 getModule _          = Nothing
+

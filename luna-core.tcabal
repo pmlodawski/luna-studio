@@ -28,12 +28,10 @@ Library
 
   Build-Depends:  base,
                   containers,
+                  data-default,
+                  fgl,
                   flowbox-utils,
                   lens,
-                  fgl,
                   MissingH,
-                  data-default,
-                  parsers
-
-
-
+                  parsers,
+                  transformers
