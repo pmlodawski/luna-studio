@@ -1,4 +1,2 @@
-@AllowOrphans
-
-def test ola hola:
-    a = bola
+def foo a:
+    foo 1

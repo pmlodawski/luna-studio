@@ -179,7 +179,7 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 tuple         p = Tok.parens (sepBy p Tok.separator)
 qualifiedPath p = sepBy1_ng p Tok.accessor
 extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
-                      <*> (     (Name.Single <$> Tok.varIdent)
+                      <*> (     (Name.Single <$> varOp)
                             <|> Tok.parens (Name.Multi <$> Tok.varIdent <*> many1 Tok.varIdent) 
                             <?> "function name")
 argList       p = try (sepBy2 p Tok.separator) <|> many p <?> "argument list"
@@ -618,14 +618,17 @@ lookupAST name = do
             Just (Alias.Scope nameMap) -> case Map.lookup name nameMap of
                 -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
                 -- poprawka: Nothing zostanie rowniez zwrocone przy ustawionej fladze
+                -- poprawka: Nothing zostanie rowniez zwrocone przy "self"
                 Just dstID -> return $ Map.lookup dstID astMap 
-                Nothing    -> case Pragma.lookup pragmaSet of
-                    Pragma.Defined Pragma.AllowOrphans -> return Nothing
-                    _                                  -> fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
-                    where scopedNames = Map.keys nameMap
-                          simWords    = findSimWords name scopedNames
-                          msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
-                                                          else ""
+                Nothing    -> if (name == "self") 
+                    then return Nothing
+                    else case Pragma.lookup pragmaSet of
+                        Pragma.Defined Pragma.AllowOrphans -> return Nothing
+                        _                                  -> fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
+                        where scopedNames = Map.keys nameMap
+                              simWords    = findSimWords name scopedNames
+                              msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
+                                                              else ""
                           
 
 editCosts = EditCosts { deletionCosts      = ConstantCost 10

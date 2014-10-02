@@ -2,7 +2,7 @@
 
 module Data.Proxy.Utils where
 
-import Data.Typeable
+import Data.Typeable (Proxy(..), Typeable, typeOf)
 import Prelude
 
 toProxy :: a -> Proxy a

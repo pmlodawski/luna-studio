@@ -13,7 +13,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- module --
-module Main2 where
+module Main where
 
 -- imports --
 import Luna.Target.HS
@@ -51,7 +51,7 @@ $(generateFieldAccessors 'Main [])
 -- ===================================================================
 
 -- ====== Method: Main.print ====== --
-memDef_Main_print (_v_26, (_v_4, ())) = do {
+memDef_Main_print (_v_34, (_v_4, ())) = do {
      val ();
      polyJoin . liftF1 (Value . fmap Safe . print) $ _v_4;
      
@@ -60,10 +60,21 @@ memSig_Main_print = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
 $(registerMethod ''Main "print")
 
 -- ====== Method: Main.main ====== --
-memDef_Main_main (_v_28, ()) = do {
+memDef_Main_main (_v_36, ()) = do {
      val ();
-     (extractTuple2 -> (_v_14, _v_15)) <- val ((val (1 :: Int)), (val (2 :: Int)));
-     call (appNext _v_14 (member (Proxy :: Proxy "print") (call cons_Main)));
+     _v_12 <- val 3;
+     polyJoin (liftF1 (\ a -> (case a of {
+        1 -> do {
+             call (appNext (val 2) (member (Proxy :: Proxy "print") (call cons_Main)));
+             
+        };
+         2 -> do {
+             call (appNext (val 3) (member (Proxy :: Proxy "print") (call cons_Main)));
+             
+        };
+         _ -> error "TODO (!!!) Main2.hs: path/Main2.hs:(...,...)-(...,...): Non-exhaustive patterns in case";
+        
+    })) _v_12);
      
 }
 memSig_Main_main = ((mkArg :: NParam "self"), ())

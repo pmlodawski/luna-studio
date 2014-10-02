@@ -119,9 +119,11 @@ example = Source.Source ["Main"] $
                     --, "            else: 6"
                     --, "    print $ 1 > 2"
                     --, "    v = Vector 1 2 3"
-                    , "    (a,b) = (1,2)"
+                    , "    a = 1"
                     --, "    a = 1"
-                    , "    print a"
+                    , "    case a:"
+                    , "        1: print 2"
+                    , "        2: print 3"
                     --, "    f = x:x"
                     --, "    v.x = 5"
                     --, "    print $ v"
@@ -265,7 +267,7 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- HASTGen --------"
     hast <- hoistEither =<< HASTGen.run ssa
-    --logger info $ PP.ppShow hast
+    logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast

@@ -19,6 +19,7 @@ from utils.errors      import fatal
 from utils.net         import download
 from utils.system      import platformFix
 from utils.process     import ask
+from utils.env         import checkCabalVersion, checkGHCVersion
 import argparse
 import tempfile
 import glob
@@ -27,10 +28,11 @@ from contextlib import contextmanager
 SILENTINSTALL = False
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-
-sboxName = "dist"
-
 os.chdir(rootPath)
+
+distPath     = "dist"
+sboxRootPath = os.path.join(distPath, 'sboxRoot')
+
 
 def assertInstall(name):
     if not checkAvailable(name):
@@ -62,13 +64,7 @@ def checkCabalPkg(name, version="", installUsing=None, check=None):
 
         else: fatal ()
 
-def checkCabalVersion():
-    minv = '1.19.1'
-    print_info ("Checking cabal version (>= %s)" % minv)
-    (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
-    out = out.lstrip().rstrip()
-    if not LooseVersion(out) >= LooseVersion(minv): return (False, "Your %s version is too old (%s)" % ("cabal", out))
-    else: return (True, None)
+
 
 def checkInstall(name, installUsing, chckf):
     (ok, err) = chckf()
@@ -155,14 +151,18 @@ def install_alex_happy(name, version):
     try_call('cabal install happy')
     return (name)
 
+
+def createSandbox(path='.'):
+    try_call('cabal sandbox init --sandbox=%s' % path)
+
+
 def main():
-    if os.path.exists(sboxName):
+    if os.path.exists(distPath):
         if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?", SILENTINSTALL):
-            shutil.rmtree(sboxName)
+            shutil.rmtree(distPath)
             removeIfExists("cabal.sandbox.config")
 
-    if not os.path.exists(sboxName):
-        os.mkdir(sboxName)
+
 
     parser = argparse.ArgumentParser(description='Flowbox Development Environment Initializer')
     parser.add_argument('-y', dest='SILENTINSTALL', action='store_true' , help = 'Install all needed stuff without asking, SILENTINSTALL')
@@ -176,13 +176,24 @@ def main():
     try_call ('git submodule update')
 
     print_info ("Fixing platform dependent stuff")
-    platformFix(sboxName)
+    platformFix(distPath)
 
+    ### check if cabal is available in the system in the proper version
     assertInstall("cabal")
-
     print_info ("Updating cabal package cache")
     try_call('cd && cabal update')
+
+    # we need to be sure that cabal supports sandboxes
     checkInstall("cabal", installUsing="cabal install cabal-install", chckf=checkCabalVersion)
+
+    ### sandbox related stuff
+
+    if not os.path.exists(distPath):
+        os.mkdir(distPath)
+        print_info ("Creating root sandbox")
+        createSandbox(sboxRootPath)
+        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        print "TODO: FINISH SANDBOX SUPPORT"
 
     checkCabalPkg("happy")
     checkCabalPkg("alex")
