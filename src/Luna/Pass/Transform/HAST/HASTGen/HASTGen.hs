@@ -238,9 +238,11 @@ genExpr ast = case ast of
 
     LExpr.Case id expr match             -> mkFlattenCtx <$> (HExpr.AppE <$> lamFunc <*> genExpr expr)
                                             where passVar = HExpr.VarE "a"
-                                                  body    = HExpr.CaseE passVar <$> mapM genExpr match
-                                                  lam     = HExpr.Lambda [passVar] <$> body
+                                                  caseE   = HExpr.CaseE passVar <$> body'
+                                                  body    = mapM genExpr match
+                                                  lam     = HExpr.Lambda [passVar] <$> caseE
                                                   lamFunc = mkLiftf1 <$> lam
+                                                  body'   = (\a -> a ++ [HExpr.Match HExpr.WildP (HExpr.AppE (HExpr.VarE "error") (HExpr.Lit $ HLit.String "TODO (!!!) Main.luna: path/Main.luna:(...,...)-(...,...): Non-exhaustive patterns in case"))]) <$> body
     LExpr.Match id pat body              -> HExpr.Match <$> genPat pat <*> (HExpr.DoBlock <$> mapM genExpr body)
 
     LExpr.Lambda id inputs output body   -> do
@@ -316,7 +318,7 @@ genExpr ast = case ast of
                                                       setSteps          [] = undefined
                                                       sels = reverse selectors
 
-    LExpr.Lit          _ value               -> genLit value
+    LExpr.Lit          _ value               -> mkVal <$> genLit value
     LExpr.Tuple        _ items               -> mkVal . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field        _ name fcls _         -> genType' fcls
                                                --cls <- GenState.getCls
@@ -488,5 +490,6 @@ genLit lit = case lit of
     LLit.String  _ str      -> mkLit "String" (HLit.String  str)
     LLit.Char    _ char     -> mkLit "Char"   (HLit.Char    char)
     --_ -> fail $ show lit
-    where mkLit cons hast = return . mkVal $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
+    --where mkLit cons hast = return $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
+    where mkLit cons hast = return $ HExpr.Lit hast
 
