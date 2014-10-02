@@ -4,15 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Main where
 
 import Geom2D
 import Geom2D.CubicBezier.Basic as Cubic
-import Data.Array.Accelerate as A
-import Data.Array.Accelerate.CUDA as C
+import Data.Array.Accelerate      as A
+
+#ifdef ACCELERATE_CUDA_BACKEND
+import Data.Array.Accelerate.CUDA        (run)
+#else
+import Data.Array.Accelerate.Interpreter (run)
+#endif
 
 import Math.Coordinate.Cartesian (Point2(..))
 import Flowbox.Geom2D.CubicBezier.Intersection as Cubic

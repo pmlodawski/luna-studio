@@ -15,7 +15,7 @@
 {-# LANGUAGE UndecidableInstances  #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Flowbox.Graphics.Color.YUV_HD where
+module Flowbox.Graphics.Color.YCbCr_HD where
 
 import Data.Foldable                     (Foldable)
 import Data.Typeable
@@ -25,8 +25,8 @@ import Flowbox.Graphics.Utils.Accelerate
 
 
 
-data YUV_HD a = YUV_HD { yuv_hdY :: a, yuv_hdU :: a, yuv_hdV :: a }
-              deriving (Foldable, Functor, Traversable, Typeable, Show)
+data YCbCr_HD a = YCbCr_HD { ycbcr_hdY :: a, ycbcr_hdCb :: a, ycbcr_hdCr :: a }
+                deriving (Foldable, Functor, Traversable, Typeable, Show)
 
-deriveAccelerate ''YUV_HD
-deriveEach ''YUV_HD
+deriveAccelerate ''YCbCr_HD
+deriveEach ''YCbCr_HD
