@@ -107,22 +107,24 @@ buildOutput outputID expr = do
 
 
 buildNode :: Bool -> Bool -> Maybe String -> Expr -> GBPass AST.ID
-buildNode astFolded monadicBind outName expr = case expr of
-    Expr.Assignment i pat dst               -> buildAssignment i pat dst
-    Expr.App        _ src args              -> buildApp src args
-    Expr.Accessor   i name dst              -> addNode  i name [dst]
-    Expr.Infix      i name src dst          -> addNode  i name [src, dst]
-    Expr.Var        i name                  -> buildVar i name
-    Expr.NativeVar  i name                  -> buildVar i name
-    Expr.Con        i name                  -> addNode  i name []
-    Expr.Lit        i lvalue                -> addNode  i (Lit.lunaShow lvalue) []
-    Expr.Tuple      i items                 -> addNode  i "Tuple" items
-    Expr.List       _ [Expr.RangeFromTo {}] -> showAndAddNode
-    Expr.List       _ [Expr.RangeFrom   {}] -> showAndAddNode
-    Expr.List       i items                 -> addNode i "List" items
-    Expr.Native     i segments              -> addNode i (showNative expr) $ filter isNativeVar segments
-    Expr.Wildcard   i                       -> left $ "GraphBuilder.buildNode: Unexpected Expr.Wildcard with id=" ++ show i
-    _                                       -> showAndAddNode
+buildNode astFolded monadicBind outName expr = do
+    let i = expr ^. Expr.id
+    case expr of
+            Expr.Assignment _ pat dst               -> buildAssignment i pat dst
+            Expr.App        _ src args              -> buildApp i src args
+            Expr.Accessor   _ name dst              -> addNode  i name [dst]
+            Expr.Infix      _ name src dst          -> addNode  i name [src, dst]
+            Expr.Var        _ name                  -> buildVar i name
+            Expr.NativeVar  _ name                  -> buildVar i name
+            Expr.Con        _ name                  -> addNode  i name []
+            Expr.Lit        _ lvalue                -> addNode  i (Lit.lunaShow lvalue) []
+            Expr.Tuple      _ items                 -> addNode  i "Tuple" items
+            Expr.List       _ [Expr.RangeFromTo {}] -> showAndAddNode
+            Expr.List       _ [Expr.RangeFrom   {}] -> showAndAddNode
+            Expr.List       _ items                 -> addNode i "List" items
+            Expr.Native     _ segments              -> addNode i (showNative expr) $ filter isNativeVar segments
+            Expr.Wildcard   _                       -> left $ "GraphBuilder.buildNode: Unexpected Expr.Wildcard with id=" ++ show i
+            _                                       -> showAndAddNode
     where
         buildVar i name = do
             isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp i
@@ -149,16 +151,27 @@ buildNode astFolded monadicBind outName expr = case expr of
                         State.addToNodeMap p (j, Port.All)
                         return j
 
-        buildApp src args = do
-            srcID <- buildNode astFolded False outName src
-            s     <- State.gvmNodeMapLookUp srcID
-            case s of
-               Just (srcNID, _) -> buildAndConnectMany True True Nothing srcNID args 1
-               Nothing          -> return ()
-            connectMonadic srcID
-            return srcID
+        buildApp i src args = do
+            mAstFolded <- State.getGraphFolded i
+            --if not astFolded && (mAstFolded == Just True)
+            if mAstFolded == Just True
+                then addNode' (src ^?! Expr.dst . Expr.id) (showExpr expr) []
+                else do srcID <- buildNode astFolded False outName src
+                        s     <- State.gvmNodeMapLookUp srcID
+                        case s of
+                           Just (srcNID, _) -> buildAndConnectMany True True Nothing srcNID args 1
+                           Nothing          -> return ()
+                        connectMonadic srcID
+                        return srcID
 
         addNode i name args = do
+            mAstFolded <- State.getGraphFolded i
+            --if not astFolded && (mAstFolded == Just True)
+            if mAstFolded == Just True
+                then addNode' i (showExpr expr) []
+                else addNode' i name args
+
+        addNode' i name args = do
             let node = Node.Expr name (genName name i)
             State.addNode i Port.All node astFolded assignment
             buildAndConnectMany True True Nothing i args 0
@@ -215,33 +228,35 @@ buildPat p = case p of
 
 
 showExpr :: Expr -> String
-showExpr expr = case expr of
-    --Expr.Accessor     _ name     dst
-    --Expr.App          _ src      args
+showExpr expr = concat $ case expr of
+    Expr.Accessor     _ name     dst  -> [showExpr dst, ".", name]
+    Expr.App          _ src      args -> [List.intercalate " " $ map showExpr $ src:args]
     --Expr.AppCons_     _ args
-    --Expr.Assignment   _ pat      dst
+    --Expr.Assignment   _ pat      dst  -> concat [Pat.lunaShow pat, " = ", showExpr dst]
     --Expr.RecordUpdate _ name     selectors expr
     --Expr.Data         _ cls      cons      classes methods
     --Expr.ConD         _ name     fields
-    --Expr.Con          _ name
+    Expr.Con          _ name          -> [name]
     --Expr.Function     _ path     name      inputs  output  body
+    Expr.Grouped      _ expr'         -> ["(", showExpr expr', ")"]
     --Expr.Import       _ path     target    rename
     --Expr.Infix        _ name     src       dst
-    Expr.List         _ items        -> "[" ++ List.intercalate ", " (map showExpr items) ++ "]"
-    Expr.Lit          _ lvalue       -> Lit.lunaShow lvalue
-    --Expr.Tuple        _ items        -> "{" ++ List.intercalate ", " (map showExpr items) ++ "}"
+    Expr.List         _ items         -> ["[", List.intercalate ", " (map showExpr items), "]"]
+    Expr.Lit          _ lvalue        -> [Lit.lunaShow lvalue]
+    Expr.Tuple        _ items         -> ["{", List.intercalate ", " (map showExpr items), "}"]
     --Expr.Typed        _ cls      expr
-    --Expr.Var          _ name         -> name
-    Expr.Wildcard     _              -> "_"
-    Expr.RangeFromTo  _ start    end -> showExpr start ++ ".." ++ showExpr end
-    Expr.RangeFrom    _ start        -> showExpr start ++ ".."
+    Expr.Var          _ name          -> [name]
+    Expr.Wildcard     _               -> ["_"]
+    Expr.RangeFromTo  _ start    end  -> [showExpr start, "..", showExpr end]
+    Expr.RangeFrom    _ start         -> [showExpr start, ".."]
     --Expr.Field        _ name     cls       value
     --Expr.Arg          _ pat      value
-    --Expr.Native       _ segments     -> "```" ++ concatMap showExpr segments ++ "```"
-    --Expr.NativeCode   _ code         -> code
-    --Expr.NativeVar    _ name         -> "#{" ++ name ++ "}"
+    Expr.Native       _ segments      -> ["```", concatMap showExpr segments, "```"]
+    Expr.NativeCode   _ code          -> [code]
+    Expr.NativeVar    _ name          -> ["#{", name, "}"]
     --Expr.Case         _ expr     match
     --Expr.Match        _ pat      body
+    _ -> Prelude.error $ show expr
 
 
 showNative :: Expr -> String

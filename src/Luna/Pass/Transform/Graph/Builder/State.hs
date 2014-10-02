@@ -184,11 +184,8 @@ getProperty nodeID key =
 
 
 getPosition :: Node.ID -> GBPass (Maybe Node.Position)
-getPosition nodeID = do
-    mprop <- getProperty nodeID Attributes.nodePosition
-    return $ case mprop of
-        Nothing   -> Nothing
-        Just prop -> Read.readMaybe prop
+getPosition nodeID =
+    join . fmap Read.readMaybe <$> getProperty nodeID Attributes.nodePosition
 
 
 setPosition :: Node.ID -> Node.Position -> GBPass ()
@@ -197,3 +194,13 @@ setPosition nodeID pos = do
     graph' <- getGraph
     node   <- Graph.lab graph' nodeID <??> "BuilderState.setPosition : cannot find node with id = " ++ show nodeID
     setGraph $ Graph.updateNode (nodeID, node & Node.pos .~ pos) graph'
+
+
+getASTFolded :: Node.ID -> GBPass (Maybe Bool)
+getASTFolded nodeID =
+    join . fmap Read.readMaybe <$> getProperty nodeID Attributes.astFolded
+
+
+getGraphFolded :: Node.ID -> GBPass (Maybe Bool)
+getGraphFolded nodeID =
+    join . fmap Read.readMaybe <$> getProperty nodeID Attributes.graphFolded
