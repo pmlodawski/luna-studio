@@ -20,7 +20,7 @@ message Expr {
         TypeDef      = 3;
         Accessor     = 4;
         App          = 5;
-        AppCons_     = 6;
+        //AppCons_     = 6;
         Assignment   = 7;
         RecordUpdate = 8;
         Data         = 9;
@@ -86,10 +86,10 @@ message App {
     repeated Expr  args = 2;
 }
 
-message AppCons_ {
-    extend Expr { optional AppCons_ ext = 103; }
-    repeated Expr  args = 1;
-}
+//message AppCons_ {
+//    extend Expr { optional AppCons_ ext = 103; }
+//    repeated Expr  args = 1;
+//}
 
 message Assignment {
     extend Expr { optional Assignment ext = 104; }

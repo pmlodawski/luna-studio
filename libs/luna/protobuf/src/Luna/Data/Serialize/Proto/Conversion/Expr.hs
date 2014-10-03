@@ -21,46 +21,46 @@ import           Flowbox.Prelude                                hiding (cons)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Expr.Accessor                  as GenAccessor
 import qualified Generated.Proto.Expr.App                       as GenApp
-import qualified Generated.Proto.Expr.AppCons_                  as GenAppCons_
-import qualified Generated.Proto.Expr.Arg                       as GenArg
-import qualified Generated.Proto.Expr.Assignment                as GenAssignment
-import qualified Generated.Proto.Expr.Case                      as GenCase
-import qualified Generated.Proto.Expr.Con_                      as GenCon_
-import qualified Generated.Proto.Expr.ConD                      as GenConD
-import qualified Generated.Proto.Expr.Condition                 as GenCondition
-import qualified Generated.Proto.Expr.Data                      as GenData
-import qualified Generated.Proto.Expr.Expr                      as Gen
-import qualified Generated.Proto.Expr.Expr.Cls                  as GenCls
-import qualified Generated.Proto.Expr.Field                     as GenField
-import qualified Generated.Proto.Expr.Function                  as GenFunction
-import qualified Generated.Proto.Expr.Grouped                   as GenGrouped
-import qualified Generated.Proto.Expr.Import                    as GenImport
-import qualified Generated.Proto.Expr.ImportNative              as GenImportNative
-import qualified Generated.Proto.Expr.Infix                     as GenInfix
-import qualified Generated.Proto.Expr.Lambda                    as GenLambda
-import qualified Generated.Proto.Expr.List                      as GenList
-import qualified Generated.Proto.Expr.Lit                       as GenLit
-import qualified Generated.Proto.Expr.Match                     as GenMatch
-import qualified Generated.Proto.Expr.Native                    as GenNative
-import qualified Generated.Proto.Expr.NativeCode                as GenNativeCode
-import qualified Generated.Proto.Expr.NativeVar                 as GenNativeVar
-import qualified Generated.Proto.Expr.NOP                       as GenNOP
-import qualified Generated.Proto.Expr.RangeFrom                 as GenRangeFrom
-import qualified Generated.Proto.Expr.RangeFromTo               as GenRangeFromTo
-import qualified Generated.Proto.Expr.RecordUpdate              as GenRecordUpdate
-import qualified Generated.Proto.Expr.Ref                       as GenRef
-import qualified Generated.Proto.Expr.RefType                   as GenRefType
-import qualified Generated.Proto.Expr.Tuple                     as GenTuple
-import qualified Generated.Proto.Expr.TypeAlias                 as GenTypeAlias
-import qualified Generated.Proto.Expr.Typed                     as GenTyped
-import qualified Generated.Proto.Expr.TypeDef                   as GenTypeDef
-import qualified Generated.Proto.Expr.Var                       as GenVar
-import qualified Generated.Proto.Expr.Wildcard                  as GenWildcard
-import qualified Luna.AST.Common                                as AST
-import           Luna.AST.Expr                                  (Expr)
-import qualified Luna.AST.Expr                                  as Expr
-import           Luna.Data.Serialize.Proto.Conversion.Pat       ()
-import qualified Text.ProtocolBuffers.Extensions                as Extensions
+--import qualified Generated.Proto.Expr.AppCons_                  as GenAppCons_
+import qualified Generated.Proto.Expr.Arg                 as GenArg
+import qualified Generated.Proto.Expr.Assignment          as GenAssignment
+import qualified Generated.Proto.Expr.Case                as GenCase
+import qualified Generated.Proto.Expr.Con_                as GenCon_
+import qualified Generated.Proto.Expr.ConD                as GenConD
+import qualified Generated.Proto.Expr.Condition           as GenCondition
+import qualified Generated.Proto.Expr.Data                as GenData
+import qualified Generated.Proto.Expr.Expr                as Gen
+import qualified Generated.Proto.Expr.Expr.Cls            as GenCls
+import qualified Generated.Proto.Expr.Field               as GenField
+import qualified Generated.Proto.Expr.Function            as GenFunction
+import qualified Generated.Proto.Expr.Grouped             as GenGrouped
+import qualified Generated.Proto.Expr.Import              as GenImport
+import qualified Generated.Proto.Expr.ImportNative        as GenImportNative
+import qualified Generated.Proto.Expr.Infix               as GenInfix
+import qualified Generated.Proto.Expr.Lambda              as GenLambda
+import qualified Generated.Proto.Expr.List                as GenList
+import qualified Generated.Proto.Expr.Lit                 as GenLit
+import qualified Generated.Proto.Expr.Match               as GenMatch
+import qualified Generated.Proto.Expr.Native              as GenNative
+import qualified Generated.Proto.Expr.NativeCode          as GenNativeCode
+import qualified Generated.Proto.Expr.NativeVar           as GenNativeVar
+import qualified Generated.Proto.Expr.NOP                 as GenNOP
+import qualified Generated.Proto.Expr.RangeFrom           as GenRangeFrom
+import qualified Generated.Proto.Expr.RangeFromTo         as GenRangeFromTo
+import qualified Generated.Proto.Expr.RecordUpdate        as GenRecordUpdate
+import qualified Generated.Proto.Expr.Ref                 as GenRef
+import qualified Generated.Proto.Expr.RefType             as GenRefType
+import qualified Generated.Proto.Expr.Tuple               as GenTuple
+import qualified Generated.Proto.Expr.TypeAlias           as GenTypeAlias
+import qualified Generated.Proto.Expr.Typed               as GenTyped
+import qualified Generated.Proto.Expr.TypeDef             as GenTypeDef
+import qualified Generated.Proto.Expr.Var                 as GenVar
+import qualified Generated.Proto.Expr.Wildcard            as GenWildcard
+import qualified Luna.AST.Common                          as AST
+import           Luna.AST.Expr                            (Expr)
+import qualified Luna.AST.Expr                            as Expr
+import           Luna.Data.Serialize.Proto.Conversion.Pat ()
+import qualified Text.ProtocolBuffers.Extensions          as Extensions
 
 
 
@@ -77,8 +77,8 @@ instance Convert Expr Gen.Expr where
                                       (encodeJ srcType) (encodeJ dstType)
         Expr.App        i src args -> genExpr GenCls.App i GenApp.ext $ GenApp.App
                                       (encodeJ src) (encodeList args)
-        Expr.AppCons_   i args     -> genExpr GenCls.AppCons_ i GenAppCons_.ext $ GenAppCons_.AppCons_
-                                      (encodeList args)
+        --Expr.AppCons_   i args     -> genExpr GenCls.AppCons_ i GenAppCons_.ext $ GenAppCons_.AppCons_
+        --                              (encodeList args)
         Expr.Assignment i pat dst  -> genExpr GenCls.Assignment i GenAssignment.ext $ GenAssignment.Assignment
                                       (encodeJ pat) (encodeJ dst)
         Expr.RecordUpdate i src selectors expr
@@ -184,10 +184,10 @@ instance Convert Expr Gen.Expr where
                 (GenApp.App mtsrc targs) <- ext <?> "Failed to decode Expr.App: extension is missing"
                 tsrc <- mtsrc <?> "Failed to decode Expr.App: 'src' field is missing"
                 Expr.App i <$> decode tsrc <*> decodeList targs
-            GenCls.AppCons_ -> do
-                ext <- getExt GenAppCons_.ext
-                (GenAppCons_.AppCons_ targs) <- ext <?> "Failed to decode Expr.AppCons_: extension is missing"
-                Expr.AppCons_ i <$> decodeList targs
+            --GenCls.AppCons_ -> do
+            --    ext <- getExt GenAppCons_.ext
+            --    (GenAppCons_.AppCons_ targs) <- ext <?> "Failed to decode Expr.AppCons_: extension is missing"
+            --    Expr.AppCons_ i <$> decodeList targs
             GenCls.Assignment -> do
                 ext <- getExt GenAssignment.ext
                 (GenAssignment.Assignment mtpat mtdst) <- ext <?> "Failed to decode Expr.Assignment: extension is missing"

@@ -13,10 +13,32 @@ message Lit {
     enum Cls {
         Char    = 1;
         String  = 2;
-        Integer = 3;
-        Float   = 4;
+        Number  = 3;
     }
-    required Cls  dtype = 1;
-    optional int32  id    = 2;
-    optional string str   = 3;
+    required Cls  dtype    = 1;
+    optional int32  id     = 2;
+    optional string str    = 3;
+    optional Number number = 4;
+}
+
+message Number {
+    optional int32  base = 1;
+    optional Repr   repr = 2;
+    optional Number exp  = 3;
+    optional Sign   sign = 4;
+}
+
+enum Sign {
+    Positive = 1;
+    Negative = 2;
+}
+
+message Repr { 
+    enum Cls {
+        Float   = 1;
+        Decimal = 2;
+    }
+    required Cls    rtype = 1;
+    optional string int   = 2;
+    optional string frac  = 3;
 }

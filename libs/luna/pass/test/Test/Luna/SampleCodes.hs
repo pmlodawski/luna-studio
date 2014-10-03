@@ -217,7 +217,7 @@ class Vector a:
     x,y,z :: a
 
     def test a b:
-        {a,b, c : c + a + b}
+        (a,b, c : c + a + b)
 
     class Inner:
         def inner a b:
