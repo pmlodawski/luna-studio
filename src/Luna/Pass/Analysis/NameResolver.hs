@@ -30,13 +30,13 @@ import qualified Luna.AST.Expr             as Expr
 import           Luna.AST.Module           (Module)
 import qualified Luna.AST.Module           as Module
 import qualified Luna.AST.Type             as Type
+import qualified Luna.AST.Name             as Name
 import           Luna.Lib.Lib              (Library)
 import qualified Luna.Lib.Lib              as Library
 import           Luna.Lib.Manager          (LibManager)
 import qualified Luna.Lib.Manager          as LibManager
 import           Luna.Pass.Pass            (Pass)
 import qualified Luna.Pass.Pass            as Pass
-import qualified Luna.Data.Name            as Name
 
 
 
