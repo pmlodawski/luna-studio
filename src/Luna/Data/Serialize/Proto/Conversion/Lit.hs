@@ -12,21 +12,25 @@
 
 module Luna.Data.Serialize.Proto.Conversion.Lit where
 
+import qualified Data.Map   as Map
 import qualified Data.Maybe as Maybe
 
 import           Flowbox.Control.Error
-import           Flowbox.Prelude
+import           Flowbox.Prelude                                hiding (exp)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.Lit.Decimal                    as GenDecimal
+import qualified Generated.Proto.Lit.Float                      as GenFloat
 import qualified Generated.Proto.Lit.Lit                        as Gen
 import qualified Generated.Proto.Lit.Lit.Cls                    as Gen
 import qualified Generated.Proto.Lit.Number                     as GenNumber
 import qualified Generated.Proto.Lit.Repr                       as Gen
+import qualified Generated.Proto.Lit.Repr.Cls                   as GenCls
 import qualified Generated.Proto.Lit.Sign                       as Gen
-import qualified Generated.Proto.Lit.Repr.Cls                   as Gen
 import           Luna.AST.Lit                                   (Lit)
 import qualified Luna.AST.Lit                                   as Lit
-import           Luna.AST.Lit.Number                            (Number (Number), Repr (Repr))
+import           Luna.AST.Lit.Number                            (Number (Number))
 import qualified Luna.AST.Lit.Number                            as Number
+import qualified Text.ProtocolBuffers.Extensions                as Extensions
 
 
 
@@ -42,6 +46,7 @@ instance Convert Lit Gen.Lit where
             Gen.String -> Lit.String i      <$> decodePJ str (missing "Lit" "str")
             Gen.Number -> Lit.Number i      <$> decodeJ  num (missing "Lit" "num")
 
+
 instance Convert Number GenNumber.Number where
     encode (Number base repr exp sign) =
         GenNumber.Number (encodePJ base) (encodeJ repr) (fmap encode exp) (encodePJ sign)
@@ -51,14 +56,23 @@ instance Convert Number GenNumber.Number where
                <*> Maybe.maybe (pure Nothing) (fmap Just . decode) exp
                <*> decodePJ sign (missing "Number" "sign")
 
+
 instance Convert Number.Repr Gen.Repr where
     encode repr = case repr of
-        Number.Float   int frac -> Gen.Repr Gen.Float   (encodePJ int) (encodePJ frac)
-        Number.Decimal int      -> Gen.Repr Gen.Decimal (encodePJ int) Nothing
-    decode (Gen.Repr dtype int frac) = case dtype of
-        Gen.Float   -> Number.Float   <$> decodePJ int  (missing "Repr" "int") 
-                                      <*> decodePJ frac (missing "Repr" "frac") 
-        Gen.Decimal -> Number.Decimal <$> decodePJ int  (missing "Repr" "int")
+        Number.Float   int frac -> genRepr GenCls.Float   GenFloat.ext   $ GenFloat.Float     (encodePJ int) (encodePJ frac)
+        Number.Decimal int      -> genRepr GenCls.Decimal GenDecimal.ext $ GenDecimal.Decimal (encodePJ int)
+        where genRepr cls key ext = Extensions.putExt key (Just ext)
+                                    $ Gen.Repr cls $ Extensions.ExtField Map.empty
+    decode t@(Gen.Repr cls _) = case cls of
+        GenCls.Float   -> do
+            GenFloat.Float int frac <- getExt GenFloat.ext "Repr.Float"
+            Number.Float <$> decodePJ int  (missing "Repr.Float" "int")
+                         <*> decodePJ frac (missing "Repr.Float" "frac")
+        GenCls.Decimal -> do
+            GenDecimal.Decimal int <- getExt GenDecimal.ext "Repr.Decimal"
+            Number.Decimal <$> decodePJ int  (missing "Repr.Decimal" "int")
+        where getExt key datatype = Extensions.getExt key t <?&> missing datatype "extension"
+
 
 instance ConvertPure Number.Sign Gen.Sign where
     encodeP Number.Positive = Gen.Positive
