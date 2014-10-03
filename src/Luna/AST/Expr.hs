@@ -23,7 +23,7 @@ import qualified Luna.AST.Lit                    as Lit
 import qualified Luna.AST.Pat                    as Pat
 import           Luna.AST.Type                   (Type)
 import qualified Luna.AST.Type                   as Type
-import           Luna.Data.Name                  (Name)
+import           Luna.AST.Name                   (Name)
 import           Luna.AST.Prop                   (HasName)
 import qualified Luna.AST.Prop                   as Prop
 import qualified Luna.AST.Arg                    as Arg

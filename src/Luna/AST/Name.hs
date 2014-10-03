@@ -7,7 +7,7 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Luna.Data.Name where
+module Luna.AST.Name where
 
 
 import GHC.Generics        (Generic)
@@ -23,22 +23,29 @@ import           Data.String.Utils (join)
 -- Data types
 ----------------------------------------------------------------------
 
-data Name = Single { _base :: String                        }
-          | Multi  { _base :: String, _segments :: [String] }
+data Name = Name { _base :: String, _segments :: [String] }
           deriving (Show, Eq, Generic, Read)
 
 makeLenses ''Name
-
 instance QShow Name
 
 
+single = flip Name []
+multi  = Name
+
+isSingle :: Name -> Bool
+isSingle = null . view segments
+
+isMulti :: Name -> Bool
+isMulti = not . isSingle
+
 toStr :: Name -> String
-toStr n = case n of
-    Single x    -> x
-    Multi  x xs -> x ++ (' ' : join " " xs)
+toStr n = if isSingle n
+    then n^.base
+    else (n^.base) ++ (' ' : join " " (n^.segments))
 
 
 unified :: Name -> String
-unified n = case n of
-    Single x    -> x
-    Multi  x xs -> x ++ ('_' : join "_" xs)
+unified n = if isSingle n
+    then n^.base
+    else (n^.base) ++ ('_' : join "_" (n^.segments))
