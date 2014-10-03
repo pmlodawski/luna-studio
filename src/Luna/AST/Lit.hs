@@ -12,11 +12,12 @@ module Luna.AST.Lit where
 
 import           Control.Lens
 import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Prelude                 (Eq, Read, Show, (++), String)
+import           Flowbox.Prelude                 (Eq, Read, Show, (++))
 import qualified Flowbox.Prelude                 as Prelude
 import           GHC.Generics
 import           Luna.AST.Common                 (ID)
 import           Luna.AST.Lit.Number             (Number)
+
 
 
 data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
@@ -25,7 +26,7 @@ data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
          deriving (Show, Eq, Generic, Read)
 
 instance QShow Lit
-makeLenses (''Lit)
+makeLenses ''Lit
 
 
 lunaShow :: Lit -> Prelude.String
