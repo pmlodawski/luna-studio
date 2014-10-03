@@ -95,11 +95,15 @@ logger = getLoggerIO "Flowbox"
 
 example :: Source
 example = Source.Source ["Main"] $
-        concat $ replicate 1 $ unlines [ ""
-                    --, "class Vector a:"
-                    --, "    x,y,z :: a"
+        concat $ replicate 1 $ unlines [ "@AllowOrphans"
+                    , "class Vector a:"
+                    , "    Vector: x,y,z :: a"
+                    , "    Scalar: w     :: a"
                     --, "    def test a b:"
                     --, "        {a,b}"
+                    , "class ```Bool```:"
+                    , "    True"
+                    , "    False"
 
                     , "def print msg:"
                     , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
@@ -118,15 +122,16 @@ example = Source.Source ["Main"] $
                     --, "    print $ if 1 > 2: 5"
                     --, "            else: 6"
                     --, "    print $ 1 > 2"
-                    --, "    v = Vector 1 2 3"
-                    , "    a = 1"
+                    , "    v = Vector 1 2 3"
                     --, "    a = 1"
-                    , "    case a:"
-                    , "        1: print 2"
-                    , "        2: print 3"
+                    --, "    a = 1"
+                    --, "    case a:"
+                    --, "        1: print 2"
+                    --, "        2: print 3"
                     --, "    f = x:x"
                     --, "    v.x = 5"
-                    --, "    print $ v"
+                    , "    Vector a b c = v"
+                    , "    print a"
 
 
 
