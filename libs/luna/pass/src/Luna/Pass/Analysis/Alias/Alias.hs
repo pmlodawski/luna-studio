@@ -25,7 +25,7 @@ import           Luna.AST.Pat                   (Pat)
 import qualified Luna.AST.Pat                   as Pat
 import           Luna.AST.Type                  (Type)
 import qualified Luna.AST.Type                  as Type
-import qualified Luna.Data.Name                 as Name
+import qualified Luna.AST.Name                  as Name
 import           Luna.Data.AliasInfo            (AliasInfo)
 import           Luna.Pass.Analysis.Alias.State (VAState, bindVar, regTypeName, regParentVarName, regVarName)
 import qualified Luna.Pass.Analysis.Alias.State as VAState
