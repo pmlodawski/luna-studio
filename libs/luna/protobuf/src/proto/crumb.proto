@@ -11,14 +11,37 @@ package generated.proto.crumb;
 
 message Crumb {
     enum Cls {
-         FunctionCrumb = 1;
-         ClassCrumb    = 2;
-         ModuleCrumb   = 3;
+         Function = 1;
+         Class    = 2;
+         Module   = 3;
+         Lambda   = 4;
     }
-    required Cls    cls  = 1;
+    required Cls cls  = 1;
+
+    extensions 100 to max;
+}
+
+message Module {
+    extend Crumb { optional Module ext = 100; }
+    optional string name = 2;
+}
+
+message Class {
+    extend Crumb { optional Class ext = 101; }
+    optional string name = 2;
+}
+
+message Function {
+    extend Crumb { optional Function ext = 102; }
     optional string name = 2;
     repeated string path = 3;
 }
+
+message Lambda {
+    extend Crumb { optional Lambda ext = 103; }
+    optional int32 id = 2;
+}
+
 
 message Breadcrumbs {
     repeated Crumb crumbs = 1;

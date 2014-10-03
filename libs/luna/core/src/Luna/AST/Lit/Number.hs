@@ -45,8 +45,8 @@ makeLenses ''Repr
 makeLenses ''Number
 
 
-binary, ternary, quaternary, quinary, senary, septenary, octal, nonary, decimal, undecimal, duoDecimal, tridecimal, tetradecimal, pentadecimal, hexadecimal, septendecimal, octodecimal, nonadecimal, vigesimal, unovigesimal, duovigesimal, triovigesimal, quadrovigesimal, pentavigesimal, hexavigesimal, heptovigesimal, ocotovigesimal, novovigesimal, trigesimal, unotrigesimal, duotrigesimal, triotrigesimal, quadrotrigesimal, pentatrigesimal,
- hexatrigesimal :: Repr -> Maybe Number -> Sign -> Number
+binary, ternary, quaternary, quinary, senary, septenary, octal, nonary, decimal, undecimal, duoDecimal, tridecimal, tetradecimal, pentadecimal, hexadecimal, septendecimal, octodecimal, nonadecimal, vigesimal, unovigesimal, duovigesimal, triovigesimal, quadrovigesimal, pentavigesimal, hexavigesimal, heptovigesimal, ocotovigesimal, novovigesimal, trigesimal, unotrigesimal, duotrigesimal, triotrigesimal, quadrotrigesimal, pentatrigesimal, hexatrigesimal
+    :: Repr -> Maybe Number -> Sign -> Number
 binary           = Number 2
 ternary          = Number 3
 quaternary       = Number 4
