@@ -44,6 +44,7 @@ data Expr  = NOP          { _id :: ID                                           
            | Assignment   { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
            | RecordUpdate { _id :: ID, _src       :: Expr     , _selectors :: [String], _expr :: Expr                            }
            | Data         { _id :: ID, _cls       :: Type     , _cons      :: [Expr] , _classes   :: [Expr] , _methods :: [Expr] }
+           | DataNative   { _id :: ID, _cls       :: Type     , _cons      :: [Expr] , _classes   :: [Expr] , _methods :: [Expr] }
            -- FIXME [wd]: name clash. ConD = Constructor Declaration. Cond = Condition
            | ConD         { _id :: ID, _name      :: String   , _fields    :: [Expr]                                             }
            | Con          { _id :: ID, _name      :: String                                                                      }
@@ -150,6 +151,7 @@ traverseM fexp ftype fpat flit e = case e of
     Assignment   id' pat' dst'                     -> Assignment   id'       <$> fpat pat'      <*> fexp dst'
     RecordUpdate id' src' selectors' expr'         -> RecordUpdate id'       <$> fexp src'      <*> pure selectors' <*> fexp expr'
     Data         id' cls' cons' classes' methods'  -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
+    DataNative   id' cls' cons' classes' methods'  -> DataNative   id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
     ConD         id' name' fields'                 -> ConD         id' name' <$> fexpMap fields'
     Con          {}                                -> pure e
     Cond         id' cond' success' failure'       -> Cond         id'       <$> fexp cond' <*> fexpMap success' <*> mapM fexpMap failure'
@@ -190,6 +192,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Assignment   _  pat' dst'                      -> drop <* fpat pat'  <* fexp dst'
     RecordUpdate _ src' _ expr'                    -> drop <* fexp src'  <* fexp expr'
     Data         _ cls' cons'  classes' methods'   -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
+    DataNative   _ cls' cons'  classes' methods'   -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
     ConD         _ _ fields'                       -> drop <* fexpMap fields'
     Cond         _ cond' success' failure'         -> drop <* fexp cond' <* fexpMap success' <* mapM fexpMap failure'
     Con          {}                                -> drop

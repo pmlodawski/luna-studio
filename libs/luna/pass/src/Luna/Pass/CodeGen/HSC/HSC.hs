@@ -170,7 +170,7 @@ buildComment :: HComment -> CodeBuilder String
 buildComment comment = pure $ case comment of
     HComment.H1 str -> mkSpace 2 ++ "-- " ++ replicate 67 '=' ++ "\n-- " ++ str ++ "\n" ++ "-- " ++ replicate 67 '='
     HComment.H2 str -> mkSpace 1 ++ "-- ====== " ++ str ++ " ====== --"
-    HComment.H3 str -> "-- === " ++ str ++ " === --"
+    HComment.H3 str -> mkSpace 1 ++ "-- ------ " ++ str ++ " ------ --"
     HComment.H4 str -> "-- --- " ++ str ++ " --- --"
     HComment.H5 str -> "-- " ++ str
     where mkSpace n = replicate n '\n'

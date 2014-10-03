@@ -1,2 +1,8 @@
 def foo a:
     foo 1
+
+
+class Bool:
+    True
+    False
+

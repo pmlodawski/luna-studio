@@ -375,13 +375,18 @@ pData            = Expr.afterData <$> pDataT
 
 pDataT = element $ \id -> do
     Tok.kwClass
-    name <- Tok.typeIdent <?> "class name"
+    name' <-  (Left  <$> Tok.betweenNative Tok.typeIdent) 
+          <|> (Right <$> Tok.typeIdent)
+          <?> "class name"
+    let (name, cons) = case name' of
+            Left  n -> (n, Expr.DataNative)
+            Right n -> (n, Expr.Data)
     State.registerName id name
-    Data.mk id <$> (appID Type.Data <*> (pure name)
-                                       <*> (many (Tok.typeVarIdent <?> "class parameter")))
-                  <*> (appID Expr.ConD <*> pure "default" <*> pure [] ) -- default constructor
-                  <??$> blockBegin dataBody
-                  <?> "class definition"
+    Data.mk cons id <$> (appID Type.Data <*> (pure name)
+                                         <*> (many (Tok.typeVarIdent <?> "class parameter")))
+                    <*> (appID Expr.ConD <*> pure "default" <*> pure [] ) -- default constructor
+                    <??$> blockBegin dataBody
+                    <?> "class definition"
 
 
 ----pConDN      name = appID (\i -> Expr.ConD i name [] [] [])
@@ -681,7 +686,7 @@ caseBodyE = appID Expr.Match <*> pattern <*> exprBlock
 --condE     = appID Expr.Cond <* Tok.kwIf <*> exprSimple <*> exprBlock <*> maybe (indBlockSpacesIE *> Tok.kwElse *> exprBlock)
 
 
-nativeE     = between Tok.nativeSym Tok.nativeSym (many nativeElemE)
+nativeE     = Tok.betweenNative (many nativeElemE)
 nativeElemE = choice [ nativeVarE
                      , nativeCodeE
                      ]

@@ -60,6 +60,7 @@ lineCom   = State.registerComment <=< lineComStart *> manyTill anyChar (eol <|> 
 
 
 
+betweenNative p = between nativeSym nativeSym p
 
 mlineCom = State.registerComment <=< try mlineComStart *> mlineComBody
 

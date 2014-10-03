@@ -96,6 +96,7 @@ vaExpr el = VAState.registerExpr el *> case el of
     Expr.Lambda     {} -> withID continue
     Expr.Cond       {} -> withID continue
     Expr.Data       {} -> withID continue
+    Expr.DataNative {} -> withID continue
     Expr.Var        {} -> VAState.bindVar id name
     Expr.NativeVar  {} -> VAState.bindVar id name
     Expr.Con        {} -> VAState.bindVar id name
