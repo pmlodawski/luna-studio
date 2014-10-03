@@ -21,18 +21,17 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
                   TemplateHaskell,
-                  OverloadedStrings
+                  OverloadedStrings,
+                  DeriveGeneric
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
                   containers,
+                  data-default,
+                  fgl,
                   flowbox-utils,
                   lens,
-                  fgl,
                   MissingH,
-                  data-default,
-                  parsers
-
-
-
+                  parsers,
+                  transformers

@@ -160,6 +160,7 @@ buildExpr e = case e of
     HExpr.CaseE    expr matches           -> Complex $ "case " ++ (code.buildExpr) expr ++ " of {" ++ buildBody matches ++ "}"
     HExpr.Match    pat matchBody          -> Complex $ (code.buildExpr) pat ++ " -> " ++ (code.buildExpr) matchBody
     HExpr.Comment  comment                -> buildComment comment
+    HExpr.ViewP    name dst               -> pure $ "(" ++ name ++ " -> " ++ (code.buildExpr) dst ++ ")"
     --_                                     ->
     where spacejoin   = join " "
           sepjoin     = join ", "
@@ -169,7 +170,7 @@ buildComment :: HComment -> CodeBuilder String
 buildComment comment = pure $ case comment of
     HComment.H1 str -> mkSpace 2 ++ "-- " ++ replicate 67 '=' ++ "\n-- " ++ str ++ "\n" ++ "-- " ++ replicate 67 '='
     HComment.H2 str -> mkSpace 1 ++ "-- ====== " ++ str ++ " ====== --"
-    HComment.H3 str -> "-- === " ++ str ++ " === --"
+    HComment.H3 str -> mkSpace 1 ++ "-- ------ " ++ str ++ " ------ --"
     HComment.H4 str -> "-- --- " ++ str ++ " --- --"
     HComment.H5 str -> "-- " ++ str
     where mkSpace n = replicate n '\n'

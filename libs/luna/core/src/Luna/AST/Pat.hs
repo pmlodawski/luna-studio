@@ -21,33 +21,39 @@ import           Luna.AST.Common                 (ID)
 import qualified Luna.AST.Lit                    as Lit
 import           Luna.AST.Type                   (Type)
 import qualified Luna.AST.Type                   as Type
-
+import qualified Luna.AST.Prop                   as Prop
+import           Luna.AST.Prop                   (HasName)
 
 
 type Lit = Lit.Lit
 
-data Pat = Var             { _id :: ID, _name      :: String                          }
-         | Lit             { _id :: ID, _value     :: Lit                             }
-         | Tuple           { _id :: ID, _items     :: [Pat]                           }
-         | Con             { _id :: ID, _name      :: String                          }
-         | App             { _id :: ID, _src       :: Pat       , _args      :: [Pat] }
-         | Typed           { _id :: ID, _pat       :: Pat       , _cls       :: Type  }
-         | Wildcard        { _id :: ID                                                }
-         | RecWildcard     { _id :: ID                                                }
+data Pat = Var             { _id :: ID, _name  :: String                          }
+         | Lit             { _id :: ID, _value :: Lit                             }
+         | Tuple           { _id :: ID, _items :: [Pat]                           }
+         | Con             { _id :: ID, _name  :: String                          }
+         | App             { _id :: ID, _src   :: Pat       , _args      :: [Pat] }
+         | Typed           { _id :: ID, _pat   :: Pat       , _cls       :: Type  }
+         | Wildcard        { _id :: ID                                            }
+         | Grouped         { _id :: ID, _pat   :: Pat                             }
+         | RecWildcard     { _id :: ID                                            }
          deriving (Show, Eq, Generic, Read)
 
 instance QShow Pat
 makeLenses (''Pat)
 
 
+var = flip Var
+
+
 type Traversal m = (Functor m, Applicative m, Monad m)
 
 traverseM :: Traversal m => (Pat -> m Pat) -> (Type -> m Type) -> (Lit -> m Lit) -> Pat -> m Pat
 traverseM fpat ftype flit p = case p of
-    Lit         id' val'                      -> Lit   id' <$> flit val'
-    Tuple       id' items'                    -> Tuple id' <$> fpatMap items'
-    App         id' src' args'                -> App   id' <$> fpat src' <*> fpatMap args'
-    Typed       id' pat' cls'                 -> Typed id' <$> fpat pat' <*> ftype cls'
+    Lit         id' val'                      -> Lit     id' <$> flit val'
+    Tuple       id' items'                    -> Tuple   id' <$> fpatMap items'
+    App         id' src' args'                -> App     id' <$> fpat src' <*> fpatMap args'
+    Typed       id' pat' cls'                 -> Typed   id' <$> fpat pat' <*> ftype cls'
+    Grouped     id' pat'                      -> Grouped id' <$> fpat pat'
     Var         {}                            -> pure p
     Con         {}                            -> pure p
     Wildcard    {}                            -> pure p
@@ -60,6 +66,7 @@ traverseM_ fpat ftype flit p = case p of
     Tuple       _  items'                     -> drop <* fpatMap items'
     App         _  src' args'                 -> drop <* fpat src' <* fpatMap args'
     Typed       _  pat' cls'                  -> drop <* fpat pat' <* ftype cls'
+    Grouped     _  pat'                       -> drop <* fpat pat'
     Var         {}                            -> drop
     Con         {}                            -> drop
     Wildcard    {}                            -> drop
@@ -69,11 +76,11 @@ traverseM_ fpat ftype flit p = case p of
 
 
 traverseM' :: Traversal m => (Pat -> m Pat) -> Pat -> m Pat
-traverseM' fpat p = traverseM fpat pure pure p
+traverseM' fpat = traverseM fpat pure pure
 
 
 traverseM'_ :: Traversal m => (Pat -> m ()) -> Pat -> m ()
-traverseM'_ fpat p = traverseM_ fpat pure pure p
+traverseM'_ fpat = traverseM_ fpat pure pure
 
 
 traverseMR :: Traversal m => (Pat -> m Pat) -> (Type -> m Type) -> (Lit -> m Lit) -> Pat -> m Pat
@@ -97,3 +104,11 @@ lunaShow p = case p of
                                    typeStr = Type.lunaShow cls'
     Wildcard _            -> "_"
     RecWildcard _         -> ".."
+
+
+----------------------------------------------------------------------
+-- Instances
+----------------------------------------------------------------------
+
+instance HasName Pat where
+    name = _name

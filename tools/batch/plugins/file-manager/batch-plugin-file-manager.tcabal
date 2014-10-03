@@ -28,7 +28,7 @@ Executable file-manager
                     flowbox-utils,
                     mtl,
                     optparse-applicative,
-                    protocol-buffers,
+                    protocol-buffers-fork,
                     text,
                     transformers,
                     zeromq4-haskell >= 0.4

@@ -24,6 +24,7 @@ import           Text.Parser.Combinators
 import           Text.Parser.Token
 import           Text.Trifecta.Combinators
 import           Text.Trifecta.Delta (column)
+import           Text.Parser.LookAhead
 
 
 ----------------------------------------------------------------------
@@ -58,6 +59,8 @@ withPos p = do
   c <- getColumn
   with (set col c) p
 
+discarded = with (set col 0)
+
 indentSegment p = many (checkIndent >> p)
 
 indentBlock p = spaces *> indented *> withPos (indentSegment p)
@@ -80,14 +83,13 @@ checkIndent       = mapIndent (==) "indentation doesn't match"
 checkIndented     = mapIndent (>)  "indentation doesn't match"
 checkIndentedOrEq = mapIndent (>=) "indentation doesn't match"
 
-
 ----------------------------------------------------------------------
 -- IndentStateT
 ----------------------------------------------------------------------
 
 newtype IndentStateT s m a = IndentStateT { getState :: State.StateT s m a } 
         deriving (Monad, MonadPlus, Applicative, Alternative, Functor, DeltaParsing, 
-                  TokenParsing, CharParsing, Parsing, MonadIO)
+                  TokenParsing, CharParsing, Parsing, MonadIO, LookAheadParsing)
 
 
 instance MonadState x m => MonadState x (IndentStateT s m) where

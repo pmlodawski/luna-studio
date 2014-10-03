@@ -25,6 +25,7 @@ import           Luna.AST.Pat                   (Pat)
 import qualified Luna.AST.Pat                   as Pat
 import           Luna.AST.Type                  (Type)
 import qualified Luna.AST.Type                  as Type
+import qualified Luna.Data.Name                 as Name
 import           Luna.Data.AliasInfo            (AliasInfo)
 import           Luna.Pass.Analysis.Alias.State (VAState)
 import qualified Luna.Pass.Analysis.Alias.State as VAState
@@ -95,11 +96,12 @@ vaExpr el = VAState.registerExpr el *> case el of
     Expr.Lambda     {} -> withID continue
     Expr.Cond       {} -> withID continue
     Expr.Data       {} -> withID continue
+    Expr.DataNative {} -> withID continue
     Expr.Var        {} -> VAState.bindVar id name
     Expr.NativeVar  {} -> VAState.bindVar id name
     Expr.Con        {} -> VAState.bindVar id name
     Expr.ConD       {} -> VAState.registerParentName name id *> continue
-    Expr.Function   {} -> VAState.registerName name id       *> withID continue
+    Expr.Function   _ _ name _ _ _ -> VAState.registerName (Name.unified name) id       *> withID continue
     Expr.Field      {} -> VAState.registerName name id       *> continue
     Expr.Assignment {} -> vaExpr dst <* vaPat pat
     _                  -> continue

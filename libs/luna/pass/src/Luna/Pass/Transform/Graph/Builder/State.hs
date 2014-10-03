@@ -144,7 +144,7 @@ setPropertyMap pm = modify (set propertyMap pm)
 
 aaLookUp :: AST.ID -> GBPass (Maybe AST.ID)
 aaLookUp astID = do aa' <- getAAMap
-                    return $ IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap
+                    return $ IntMap.lookup astID $ aa' ^. AliasInfo.alias
 
 
 nodeMapLookUp :: AST.ID -> GBPass (Maybe (Node.ID, Port))

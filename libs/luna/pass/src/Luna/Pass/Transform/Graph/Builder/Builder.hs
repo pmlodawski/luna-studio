@@ -26,6 +26,7 @@ import qualified Luna.AST.Lit                            as Lit
 import           Luna.AST.Pat                            (Pat)
 import qualified Luna.AST.Pat                            as Pat
 import qualified Luna.AST.Type                           as Type
+import qualified Luna.AST.Arg                            as Arg
 import           Luna.Data.AliasInfo                     (AliasInfo)
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Node                         as Node
@@ -43,8 +44,6 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 
 
-
-
 run :: AliasInfo -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
 run aliasInfo pm expr = Pass.run_ (Pass.Info "GraphBuilder")
                                   (State.make aliasInfo pm inputsID)
@@ -53,16 +52,21 @@ run aliasInfo pm expr = Pass.run_ (Pass.Info "GraphBuilder")
 
 
 expr2graph :: Expr -> GBPass (Graph, PropertyMap)
-expr2graph (Expr.Function i _ _ inputs output body) = do
-    (inputsID, outputID) <- prepareInputsOutputs i (output ^. Type.id)
-    parseArgs inputsID inputs
-    if null body
-        then State.connectMonadic outputID
-        else do
-            mapM_ (buildNode False True Nothing) $ init body
-            buildOutput outputID $ last body
-    finalize
-expr2graph _ = left "expr2graph: Unsupported Expr type"
+expr2graph expr = case expr of
+    Expr.Function i _ _ inputs output body -> processExpr i inputs output body
+    Expr.Lambda   i     inputs output body -> processExpr i inputs output body
+    _                                      -> left "expr2graph: Unsupported Expr type"
+
+  where
+    processExpr i inputs output body = do
+        (inputsID, outputID) <- prepareInputsOutputs i (output ^. Type.id)
+        parseArgs inputsID inputs
+        if null body
+            then State.connectMonadic outputID
+            else do
+                mapM_ (buildNode False True Nothing) $ init body
+                buildOutput outputID $ last body
+        finalize
 
 
 prepareInputsOutputs :: AST.ID -> AST.ID -> GBPass (Node.ID, Node.ID)
@@ -130,7 +134,7 @@ buildNode astFolded monadicBind outName expr = case expr of
     Expr.App       _ src args -> do srcID <- buildNode astFolded False outName src
                                     s     <- State.gvmNodeMapLookUp srcID
                                     case s of
-                                       Just (srcNID, _) -> connectArgs True True Nothing srcNID args 1
+                                       Just (srcNID, _) -> connectArgs True True Nothing srcNID (fmap (view Arg.arg) args) 1
                                        Nothing          -> return ()
                                     connectMonadic srcID
                                     return srcID

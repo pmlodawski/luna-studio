@@ -13,9 +13,6 @@
 [submodule "third-party/HaskellBooster"]
     path = third-party/HaskellBooster
     url = git@github.com:wdanilo/HaskellBooster.git
-[submodule "third-party/protocol-buffers"]
-    path = third-party/protocol-buffers
-    url = git@github.com:flowbox-public/protocol-buffers.git
 [submodule "tools/graphics/webghci"]
     path = tools/graphics/webghci
     url = git@github.com:flowbox-public/WebGHCI.git

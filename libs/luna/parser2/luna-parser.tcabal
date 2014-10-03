@@ -21,8 +21,7 @@ Library
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
-                  TemplateHaskell,
-                  OverloadedStrings
+                  TemplateHaskell
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
@@ -43,13 +42,15 @@ Library
                   lens,
                   raw-strings-qq,
                   MissingH,
-                  containers
+                  containers,
+                  phonetic-code,
+                  edit-distance
 
 
 
 Executable luna-parser-test
   Main-Is:        Main.hs
-  Hs-Source-Dirs: src
+  Hs-Source-Dirs: test
 
   if flag(debug)
     GHC-Options:  -csacc
@@ -58,23 +59,10 @@ Executable luna-parser-test
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
                   NoImplicitPrelude
-                  OverloadedStrings
 
   Build-Depends:  base,
-                  trifecta,
-                  data-default,
-                  concatenative,
                   flowbox-utils,
-                  luna-core,
-                  text,
-                  mtl,
-                  parsers,
-                  charset,
-                  bytestring,
-                  utf8-string,
+                  luna-parser,
                   ansi-wl-pprint,
-                  unordered-containers,
-                  lens,
-                  raw-strings-qq,
-                  MissingH,
-                  containers
+                  data-default,
+                  pretty-show

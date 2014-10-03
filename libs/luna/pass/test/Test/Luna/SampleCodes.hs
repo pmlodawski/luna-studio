@@ -6,18 +6,22 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Pass.Transform.Graph.SampleCodes where
+module Test.Luna.SampleCodes where
 
 import Text.RawString.QQ
 
-import Flowbox.Prelude
-import Test.Pass.Transform.Graph.Common (named)
+import           Flowbox.Prelude
+import           Luna.AST.Control.Crumb                (Breadcrumbs)
+import qualified Luna.AST.Control.Crumb                as Crumb
+import           Test.Luna.Pass.Transform.Graph.Common (named)
 
 
 
+type Name = String
+type Code = String
 
 
-sampleCodes :: [(String,String)]
+sampleCodes :: [(Name, Code)]
 sampleCodes = [named "empty" [r|
 def main
 |], named "simple return" [r|
@@ -45,6 +49,12 @@ def main:
     x = 0
     y = 1
     {z, v} = {x, y}
+|], named "simple assignment 5" [r|
+def main:
+    x = 0
+    y = 1
+    {z, v} = {x, y}
+    h = {z, v}
 |], named "assignment with patterns" [r|
 def main:
     x = 0
@@ -179,13 +189,41 @@ def main arg:
 --             else: 6
 --     print $ 1 > 2
 
--- |], named "simple assignment 5" [r|
--- def main:
---     x = 0
---     y = 1
---     {z, v} = {x, y}
---     h = {z, v}
+
+sampleLambdas :: [(Name, Breadcrumbs, Code)]
+sampleLambdas = [
+    ( "simple lambda"
+    , [Crumb.Module "Main", Crumb.Function "main" [], Crumb.Lambda 6]
+    , [r|
+def main:
+    f = a : a + 1
+|]), ( "lambda with context"
+    , [Crumb.Module "Main", Crumb.Function "main" [], Crumb.Lambda 12]
+    , [r|
+def main arg:
+    x = 15
+    f = a : a + 1 + x + arg
+|])
+    ]
 
 
-emptyMain :: String
+emptyMain :: Code
 emptyMain = "def main"
+
+
+zipperTestModule :: Code
+zipperTestModule = [r|
+class Vector a:
+    x,y,z :: a
+
+    def test a b:
+        (a,b, c : c + a + b)
+
+    class Inner:
+        def inner a b:
+            a + b
+
+def main:
+    v = Vector 1 2 3
+    v.test
+|]

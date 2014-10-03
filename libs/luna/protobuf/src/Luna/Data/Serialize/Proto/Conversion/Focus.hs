@@ -23,6 +23,7 @@ import qualified Generated.Proto.Focus.ClassFocus               as GenClass
 import qualified Generated.Proto.Focus.Focus                    as Gen
 import qualified Generated.Proto.Focus.Focus.Cls                as GenCls
 import qualified Generated.Proto.Focus.FunctionFocus            as GenFunction
+import qualified Generated.Proto.Focus.LambdaFocus              as GenLambda
 import qualified Generated.Proto.Focus.ModuleFocus              as GenModule
 import           Luna.AST.Control.Focus                         (Focus)
 import qualified Luna.AST.Control.Focus                         as Focus
@@ -33,6 +34,7 @@ import           Luna.Data.Serialize.Proto.Conversion.Module    ()
 
 instance Convert Focus Gen.Focus where
     encode t = case t of
+        Focus.Lambda   l -> genFocus GenCls.LambdaFocus   GenLambda.ext   $ GenLambda.LambdaFocus     $ encodeJ l
         Focus.Function f -> genFocus GenCls.FunctionFocus GenFunction.ext $ GenFunction.FunctionFocus $ encodeJ f
         Focus.Class    c -> genFocus GenCls.ClassFocus    GenClass.ext    $ GenClass.ClassFocus       $ encodeJ c
         Focus.Module   m -> genFocus GenCls.ModuleFocus   GenModule.ext   $ GenModule.ModuleFocus     $ encodeJ m
@@ -42,6 +44,11 @@ instance Convert Focus Gen.Focus where
                                 $ Gen.Focus cls $ Extensions.ExtField Map.empty
 
     decode t@(Gen.Focus cls _) = case cls of
+        GenCls.LambdaFocus -> do
+            ext <- getExt GenLambda.ext
+            (GenLambda.LambdaFocus mtl) <- ext <?> "Failed to decode Focus.LambdaFocus: extension is missing"
+            tl  <- mtl <?> "Failed to decode Focus.LambdaFocus: 'l' field is missing"
+            Focus.Lambda <$> decode tl
         GenCls.FunctionFocus -> do
             ext <- getExt GenFunction.ext
             (GenFunction.FunctionFocus mtf) <- ext <?> "Failed to decode Focus.FunctionFocus: extension is missing"
