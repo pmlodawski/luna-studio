@@ -371,8 +371,18 @@ lambda          = appID Expr.Lambda <*> argList' pArg
 ----                      --cons  <- try(pPipeBlockBegin pConD) <|> ((:[]) <$> pConDN name)
 ----                      appID Expr.Data <*> pure cls <*> pure cons
 
+closeDefinition d = do
+    ncons <- if length dcons == 1
+              then do let tpname = d ^. (Expr.cls . Type.name)
+                      State.regVarName (view Expr.id d) tpname
+                      return $ [defc & Expr.name .~ tpname]
+              else return $ init dcons
+    return $ d & Expr.cons .~ ncons
+    where dcons = d ^. Expr.cons
+          defc  = last dcons
 
-pData            = Expr.afterData <$> pDataT
+
+pData            = closeDefinition =<< pDataT
 
 pDataT = element $ \id -> do
     Tok.kwClass
@@ -394,10 +404,12 @@ pDataT = element $ \id -> do
 ----                                    <??$> pDotBlockBegin pDataBody
 ----                                    <?> "data constructor definition"
 
-pConD            = appID Expr.ConD    <*> Tok.conIdent
-                                    <*> pure []
-                                    <??$> blockBegin pConDBody
-                                    <?> "data constructor definition"
+pConD = element $ \id -> do
+    name <- Tok.conIdent
+    State.regVarName id name
+    Expr.ConD id name <$> pure []
+                      <??$> blockBegin pConDBody
+                      <?> "data constructor definition"
 
 
 pConDBody        = pCombine Expr.addField fields
@@ -414,10 +426,10 @@ pModule name path = do
 
 
 dataBody       = choice [ Expr.addMethod <$> func
-                         , pCombine Expr.addFieldDC fields
-                         , Expr.addClass  <$> pData
-                         , Expr.addCon    <$> pConD
-                         ]
+                        , pCombine Expr.addFieldDC fields
+                        , Expr.addClass  <$> pData
+                        , Expr.addCon    <$> pConD
+                        ]
                 <?> "class body"
 
 pModuleBody      = choice [ Module.addMethod    <$> func
