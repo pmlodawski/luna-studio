@@ -12,10 +12,10 @@ module Luna.AST.Lit.Number where
 
 import           Control.Lens
 import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Prelude                 (Eq, Read, Show, (++), Maybe)
+import           Flowbox.Prelude                 (Eq, Maybe, Read, Show)
 import qualified Flowbox.Prelude                 as P
 import           GHC.Generics
-import           Luna.AST.Common                 (ID)
+
 
 
 data Sign = Positive
@@ -30,16 +30,23 @@ data Repr = Float   { _int :: P.String, _frac :: P.String }
 
 type Base = P.Int
 
-data Number = Number { _base :: Base, _repr :: Repr, _exp :: Maybe Number, _sign :: Sign }
-            deriving (Show, Eq, Generic, Read) 
+data Number = Number { _base :: Base
+                     , _repr :: Repr
+                     , _exp  :: Maybe Number
+                     , _sign :: Sign
+                     }
+            deriving (Show, Eq, Generic, Read)
 
 
 instance QShow Sign
 instance QShow Repr
 instance QShow Number
-makeLenses (''Number)
+makeLenses ''Repr
+makeLenses ''Number
 
 
+binary, ternary, quaternary, quinary, senary, septenary, octal, nonary, decimal, undecimal, duoDecimal, tridecimal, tetradecimal, pentadecimal, hexadecimal, septendecimal, octodecimal, nonadecimal, vigesimal, unovigesimal, duovigesimal, triovigesimal, quadrovigesimal, pentavigesimal, hexavigesimal, heptovigesimal, ocotovigesimal, novovigesimal, trigesimal, unotrigesimal, duotrigesimal, triotrigesimal, quadrotrigesimal, pentatrigesimal,
+ hexatrigesimal :: Repr -> Maybe Number -> Sign -> Number
 binary           = Number 2
 ternary          = Number 3
 quaternary       = Number 4

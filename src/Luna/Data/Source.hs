@@ -22,3 +22,25 @@ makeLenses(''Source)
 
 transCode :: (String -> String) -> Source -> Source
 transCode = (code %~ )
+
+
+
+--{-# LANGUAGE TemplateHaskell #-}
+
+--module Luna.Data.Source where
+
+--import Flowbox.Prelude
+--import qualified Data.ByteString.UTF8 as UTF8
+
+
+
+--data Source = File       { _path  :: String          }
+--            | String     { _input :: String          } 
+--            | ByteString { _input :: UTF8.ByteString }
+--            deriving (Show)
+
+--makeLenses(''Source)
+
+
+----transCode :: (String -> String) -> Source -> Source
+----transCode = (code %~ )

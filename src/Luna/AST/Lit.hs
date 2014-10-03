@@ -19,13 +19,14 @@ import           Luna.AST.Common                 (ID)
 import           Luna.AST.Lit.Number             (Number)
 
 
+
 data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
          | String  { _id :: ID, _str  :: Prelude.String }
          | Number  { _id :: ID, _num  :: Number         }
          deriving (Show, Eq, Generic, Read)
 
 instance QShow Lit
-makeLenses (''Lit)
+makeLenses ''Lit
 
 
 lunaShow :: Lit -> Prelude.String

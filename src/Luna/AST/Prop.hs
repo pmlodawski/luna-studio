@@ -4,16 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleInstances #-}
 
-module Luna.AST.Data where
-
-import           Luna.AST.Common (ID)
-import           Luna.AST.Expr   (Expr)
-import qualified Luna.AST.Expr   as Expr
-import           Luna.AST.Type   (Type)
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 
---mk :: ID -> Type -> Expr -> Expr
-mk cons id cls con = cons id cls [con] [] []
+module Luna.AST.Prop where
+
+import Flowbox.Prelude
+
+
+class HasName a where
+    name :: a -> String

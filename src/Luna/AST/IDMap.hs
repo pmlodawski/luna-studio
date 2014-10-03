@@ -4,16 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Luna.AST.Data where
+module Luna.AST.IDMap (
+    module Luna.AST.IDMap,
+    module X
+) where
 
-import           Luna.AST.Common (ID)
-import           Luna.AST.Expr   (Expr)
-import qualified Luna.AST.Expr   as Expr
-import           Luna.AST.Type   (Type)
+import qualified Data.IntMap as IntMap
+import           Data.IntMap as X hiding (IntMap)
 
 
---mk :: ID -> Type -> Expr -> Expr
-mk cons id cls con = cons id cls [con] [] []
+type IDMap = IntMap.IntMap
