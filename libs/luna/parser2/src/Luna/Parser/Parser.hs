@@ -179,7 +179,7 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 tuple         p = Tok.parens (sepBy p Tok.separator)
 qualifiedPath p = sepBy1_ng p Tok.accessor
 extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
-                      <*> (     (Name.Single <$> Tok.varIdent)
+                      <*> (     (Name.Single <$> varOp)
                             <|> Tok.parens (Name.Multi <$> Tok.varIdent <*> many1 Tok.varIdent) 
                             <?> "function name")
 argList       p = try (sepBy2 p Tok.separator) <|> many p <?> "argument list"
@@ -375,13 +375,18 @@ pData            = Expr.afterData <$> pDataT
 
 pDataT = element $ \id -> do
     Tok.kwClass
-    name <- Tok.typeIdent <?> "class name"
+    name' <-  (Left  <$> Tok.betweenNative Tok.typeIdent) 
+          <|> (Right <$> Tok.typeIdent)
+          <?> "class name"
+    let (name, cons) = case name' of
+            Left  n -> (n, Expr.DataNative)
+            Right n -> (n, Expr.Data)
     State.registerName id name
-    Data.mk id <$> (appID Type.Data <*> (pure name)
-                                       <*> (many (Tok.typeVarIdent <?> "class parameter")))
-                  <*> (appID Expr.ConD <*> pure "default" <*> pure [] ) -- default constructor
-                  <??$> blockBegin dataBody
-                  <?> "class definition"
+    Data.mk cons id <$> (appID Type.Data <*> (pure name)
+                                         <*> (many (Tok.typeVarIdent <?> "class parameter")))
+                    <*> (appID Expr.ConD <*> pure "default" <*> pure [] ) -- default constructor
+                    <??$> blockBegin dataBody
+                    <?> "class definition"
 
 
 ----pConDN      name = appID (\i -> Expr.ConD i name [] [] [])
@@ -618,14 +623,17 @@ lookupAST name = do
             Just (Alias.Scope nameMap) -> case Map.lookup name nameMap of
                 -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
                 -- poprawka: Nothing zostanie rowniez zwrocone przy ustawionej fladze
+                -- poprawka: Nothing zostanie rowniez zwrocone przy "self"
                 Just dstID -> return $ Map.lookup dstID astMap 
-                Nothing    -> case Pragma.lookup pragmaSet of
-                    Pragma.Defined Pragma.AllowOrphans -> return Nothing
-                    _                                  -> fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
-                    where scopedNames = Map.keys nameMap
-                          simWords    = findSimWords name scopedNames
-                          msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
-                                                          else ""
+                Nothing    -> if (name == "self") 
+                    then return Nothing
+                    else case Pragma.lookup pragmaSet of
+                        Pragma.Defined Pragma.AllowOrphans -> return Nothing
+                        _                                  -> fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
+                        where scopedNames = Map.keys nameMap
+                              simWords    = findSimWords name scopedNames
+                              msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
+                                                              else ""
                           
 
 editCosts = EditCosts { deletionCosts      = ConstantCost 10
@@ -678,7 +686,7 @@ caseBodyE = appID Expr.Match <*> pattern <*> exprBlock
 --condE     = appID Expr.Cond <* Tok.kwIf <*> exprSimple <*> exprBlock <*> maybe (indBlockSpacesIE *> Tok.kwElse *> exprBlock)
 
 
-nativeE     = between Tok.nativeSym Tok.nativeSym (many nativeElemE)
+nativeE     = Tok.betweenNative (many nativeElemE)
 nativeElemE = choice [ nativeVarE
                      , nativeCodeE
                      ]

@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module Luna.AST.Data where
@@ -14,5 +15,5 @@ import qualified Luna.AST.Expr   as Expr
 import           Luna.AST.Type   (Type)
 
 
-mk :: ID -> Type -> Expr -> Expr
-mk id cls con = Expr.Data id cls [con] [] []
+--mk :: ID -> Type -> Expr -> Expr
+mk cons id cls con = cons id cls [con] [] []
