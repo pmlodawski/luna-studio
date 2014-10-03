@@ -15,7 +15,7 @@ import GHC.Generics        (Generic)
 import           Flowbox.Prelude     hiding (head)
 import qualified Data.Maps           as Map
 import           Data.Map            (Map)
-import           Luna.Data.Name      (Name)
+import           Luna.AST.Name       (Name)
 import           Luna.AST.AST        (ID)
 import           Luna.Data.AliasInfo (AliasInfo)
 import qualified Luna.Data.AliasInfo as Alias

@@ -20,6 +20,11 @@ import           Luna.AST.AST (AST, ID)
 import qualified Luna.AST.AST as AST
 import qualified Data.Maps    as Map
 
+
+----------------------------------------------------------------------
+-- Data types
+----------------------------------------------------------------------
+
 type IDMap = IntMap
 
 
@@ -27,13 +32,9 @@ data Error  = LookupError {key :: String}
             deriving (Show, Eq, Generic, Read)
 
 
---data VarRel = VarRel { _nameMap :: Map String AST.ID }
---            deriving (Show)
-
---makeLenses (''VarRel)
-
-data Scope = Scope { _nameMap :: Map String ID }
-           deriving (Show, Eq, Generic, Read)
+data Scope = Scope { _varnames  :: Map String ID
+                   , _typenames :: Map String ID 
+                   } deriving (Show, Eq, Generic, Read)
 
 makeLenses (''Scope)
 
@@ -48,21 +49,32 @@ data AliasInfo = AliasInfo  { _scope   :: IDMap Scope
 makeLenses (''AliasInfo)
 
 
+----------------------------------------------------------------------
+-- Utils
+----------------------------------------------------------------------
 
-regParent id pid  = parent %~ Map.insert id pid
-regAST    id a    = ast    %~ Map.insert id a
-regName   pid id name info = info & scope.at pid ?~ Scope (nmap & at name ?~ id) where
-    nmap = case Map.lookup pid (_scope info) of
-        Nothing        -> mempty
-        Just (Scope m) -> m
+regParent  id pid  = parent %~ Map.insert id pid
+regAST     id a    = ast    %~ Map.insert id a
+regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
+    (vnmap, tnmap) = scopeLookup pid info
+
+regTypeName pid id name info = setScope info pid $ Scope vnmap (tnmap & at name ?~ id) where
+    (vnmap, tnmap) = scopeLookup pid info
+
+setScope info id s = info & scope.at id ?~ s
+
+scopeLookup pid info = case Map.lookup pid (_scope info) of
+        Nothing          -> (mempty, mempty)
+        Just (Scope v t) -> (v,t)
 
 ------------------------------------------------------------------------
 -- Instances
 ------------------------------------------------------------------------
 
 instance Monoid Scope where
-    mempty      = Scope mempty
-    mappend a b = Scope (mappend (a ^. nameMap)  (b ^. nameMap))
+    mempty      = Scope mempty mempty
+    mappend a b = Scope (mappend (a ^. varnames)  (b ^. varnames))
+                        (mappend (a ^. typenames) (b ^. typenames))
 
 
 instance Monoid AliasInfo where
@@ -75,7 +87,7 @@ instance Monoid AliasInfo where
 
 
 instance Default Scope where
-    def = Scope def
+    def = Scope def def
 
 instance Default AliasInfo where
     def = AliasInfo def def def def def
