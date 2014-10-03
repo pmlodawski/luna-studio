@@ -27,7 +27,7 @@ import           Luna.AST.Type                  (Type)
 import qualified Luna.AST.Type                  as Type
 import qualified Luna.Data.Name                 as Name
 import           Luna.Data.AliasInfo            (AliasInfo)
-import           Luna.Pass.Analysis.Alias.State (VAState)
+import           Luna.Pass.Analysis.Alias.State (VAState, bindVar, regTypeName, regParentVarName, regVarName)
 import qualified Luna.Pass.Analysis.Alias.State as VAState
 import           Luna.Pass.Pass                 (Pass)
 import qualified Luna.Pass.Pass                 as Pass
@@ -48,7 +48,7 @@ run = (Pass.run_ (Pass.Info "Alias") mempty) . vaMod
 vaMod :: Module -> VAPass AliasInfo
 vaMod el@(Module.Module id cls imports classes typeAliases typeDefs fields methods modules) = do
     VAState.registerModule el
-    withID $ do VAState.registerName name id
+    withID $ do regVarName name id
                 continue
     VAState.getAliasInfo
     where continue =  pure ()
@@ -73,7 +73,7 @@ vaMod el@(Module.Module id cls imports classes typeAliases typeDefs fields metho
 registerDataCons :: Expr.Expr -> VAPass ()
 registerDataCons el = VAState.registerExpr el *> case el of
     Expr.Data       {} -> withID continue
-    Expr.ConD       {} -> VAState.registerParentName name id *> continue
+    Expr.ConD       {} -> regParentVarName name id *> continue
     _                  -> continue
     where continue = Expr.traverseM_ registerDataCons vaType vaPat vaLit el
           withID   = VAState.withID (el ^. Expr.id)
@@ -83,7 +83,7 @@ registerDataCons el = VAState.registerExpr el *> case el of
 
 registerFuncHeaders :: Expr.Expr -> VAPass ()
 registerFuncHeaders el = VAState.registerExpr el *> case el of
-    Expr.Function   {} -> VAState.registerName name id       *> withID continue
+    Expr.Function   {} -> regVarName name id       *> withID continue
     _                  -> continue
     where continue = Expr.traverseM_ registerFuncHeaders vaType vaPat vaLit el
           withID   = VAState.withID (el ^. Expr.id)
@@ -95,14 +95,14 @@ vaExpr :: Expr.Expr -> VAPass ()
 vaExpr el = VAState.registerExpr el *> case el of
     Expr.Lambda     {} -> withID continue
     Expr.Cond       {} -> withID continue
-    Expr.Data       {} -> withID continue
+    Expr.Data       {} -> regTypeName name id *> withID continue
     Expr.DataNative {} -> withID continue
-    Expr.Var        {} -> VAState.bindVar id name
-    Expr.NativeVar  {} -> VAState.bindVar id name
-    Expr.Con        {} -> VAState.bindVar id name
-    Expr.ConD       {} -> VAState.registerParentName name id *> continue
-    Expr.Function   _ _ name _ _ _ -> VAState.registerName (Name.unified name) id       *> withID continue
-    Expr.Field      {} -> VAState.registerName name id       *> continue
+    Expr.Var        {} -> bindVar id name
+    Expr.NativeVar  {} -> bindVar id name
+    Expr.Con        {} -> bindVar id name
+    Expr.ConD       {} -> regParentVarName name id *> continue
+    Expr.Function   _ _ name _ _ _ -> regVarName (Name.unified name) id       *> withID continue
+    Expr.Field      {} -> regVarName name id       *> continue
     Expr.Assignment {} -> vaExpr dst <* vaPat pat
     _                  -> continue
     where continue = Expr.traverseM_ vaExpr vaType vaPat vaLit el
@@ -115,7 +115,7 @@ vaExpr el = VAState.registerExpr el *> case el of
 
 vaPat :: Pat -> VAPass ()
 vaPat el = VAState.registerPat el *> case el of
-    Pat.Var     id name                 -> VAState.registerName name id
+    Pat.Var     id name                 -> regVarName name id
     _                                   -> Pat.traverseM_ vaPat vaType vaLit el
 
 

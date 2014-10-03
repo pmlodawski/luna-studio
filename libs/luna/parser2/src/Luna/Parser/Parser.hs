@@ -51,7 +51,8 @@ import           Text.Parser.Expression
 import           Text.Parser.LookAhead
 import           Data.Char                    (isSpace)
 import qualified Data.ByteString as ByteStr
-import qualified Luna.Data.Name               as Name
+import           Luna.AST.Name                (Name(Name))
+import qualified Luna.AST.Name                as Name
 import qualified Luna.Data.Namespace          as Namespace
 import qualified Luna.Data.AliasInfo          as Alias
 import qualified Luna.AST.AST                 as AST
@@ -179,8 +180,8 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 tuple         p = Tok.parens (sepBy p Tok.separator)
 qualifiedPath p = sepBy1_ng p Tok.accessor
 extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
-                      <*> (     (Name.Single <$> varOp)
-                            <|> Tok.parens (Name.Multi <$> Tok.varIdent <*> many1 Tok.varIdent) 
+                      <*> (     (Name.single <$> varOp)
+                            <|> Tok.parens (Name.multi <$> Tok.varIdent <*> many1 Tok.varIdent) 
                             <?> "function name")
 argList       p = try (sepBy2 p Tok.separator) <|> many p <?> "argument list"
 argList'      p = braces (sepBy2 p Tok.separator) <|> ((:[]) <$> p) <?> "argument list"
@@ -275,13 +276,13 @@ container m = element $ \id -> State.withScope id $ m id
 
 
 
-registerName m id = do
+regVarName m id = do
     ast <- m id
-    State.registerName id (AST.name ast)
+    State.regVarName id (AST.name ast)
     return ast
 
 
-nameTok p = element $ registerName $ \id -> p <*> pure id
+nameTok p = element $ regVarName $ \id -> p <*> pure id
 
 tok p = element $ \id -> p <*> pure id
 
@@ -344,7 +345,7 @@ pArg            = appID Expr.Arg     <*> argPattern
 func = element $ \id -> do
     Tok.kwDef
     (extPath, name) <- extensionPath
-    State.registerName id (view Name.base name)
+    State.regVarName id (view Name.base name)
     State.withScope id $ 
         Expr.function <$> pure extPath
                       <*> pure name
@@ -381,7 +382,7 @@ pDataT = element $ \id -> do
     let (name, cons) = case name' of
             Left  n -> (n, Expr.DataNative)
             Right n -> (n, Expr.Data)
-    State.registerName id name
+    State.regTypeName id name
     Data.mk cons id <$> (appID Type.Data <*> (pure name)
                                          <*> (many (Tok.typeVarIdent <?> "class parameter")))
                     <*> (appID Expr.ConD <*> pure "default" <*> pure [] ) -- default constructor
@@ -580,14 +581,14 @@ withReservedWords words p = withState (State.addReserved words) p
 
 
 mkFuncParser func defparser = case name of
-    (Name.Multi base segments) -> multiparser
+    (Name base segments) -> multiparser
     _                          -> defparser
     where name          = Expr._fname func
           argExpr       = argE expr
           exprApp p a b = (:) <$> p <* a <*> b
           segParsers    = fmap (Tok.symbol) segments
           argParser     = foldr (exprApp argExpr) ((:[]) <$> argExpr) segParsers
-          (Name.Multi base segments) = name
+          (Name base segments) = name
           multiparser   = withReservedWords segments $ tok (Expr.app <$> tok (pure $ Expr.var fname) <*> argParser)
           [s1,s2] = fmap Tok.symbol segments
           fname = base ++ " " ++ join " " segments
@@ -620,7 +621,7 @@ lookupAST name = do
         
     case Map.lookup pid scope of
             Nothing                    -> fail "Internal parser error [1]"
-            Just (Alias.Scope nameMap) -> case Map.lookup name nameMap of
+            Just (Alias.Scope varnames typenames) -> case Map.lookup name varnames of
                 -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
                 -- poprawka: Nothing zostanie rowniez zwrocone przy ustawionej fladze
                 -- poprawka: Nothing zostanie rowniez zwrocone przy "self"
@@ -630,7 +631,7 @@ lookupAST name = do
                     else case Pragma.lookup pragmaSet of
                         Pragma.Defined Pragma.AllowOrphans -> return Nothing
                         _                                  -> fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
-                        where scopedNames = Map.keys nameMap
+                        where scopedNames = Map.keys varnames
                               simWords    = findSimWords name scopedNames
                               msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
                                                               else ""
