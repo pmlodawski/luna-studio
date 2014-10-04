@@ -10,13 +10,12 @@ import Luna.Typechecker.AST.Type      (Type(..),Tyvar)
 
 import Luna.Typechecker.Internal.Logger
 
-import Control.Monad
+import Control.Monad                  (when)
 
 
 varBind :: (Monad m) => Tyvar -> Type -> TCLoggerT m Subst
 varBind u t | t == TVar u      = return nullSubst
             | u `elem` tv t    = throwError "occurs check fail (can't build infinite type)"
-            | otherwise        = do kindsMatch <- liftM2 (/=) (kind u) (kind t)
-                                    if kindsMatch
-                                      then throwError "kinds do not match"
-                                      else return (u +-> t)
+            | otherwise        = do kindsMismatch <- liftM2 (/=) (kind u) (kind t)
+                                    when kindsMismatch $ throwError "kinds do not match"
+                                    return (u +-> t)

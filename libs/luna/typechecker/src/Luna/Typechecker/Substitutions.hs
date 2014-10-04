@@ -7,6 +7,8 @@ import Luna.Typechecker.AST.Type        (Tyvar(..),Type(..))
 
 import Luna.Typechecker.Internal.Logger
 
+import Control.Monad                    (unless)
+
 import Data.List                        (intersect,nub,union)
 import Data.Maybe                       (fromMaybe)
 
@@ -43,6 +45,7 @@ infixr 4 @@
 s1 @@ s2 = [(u, apply s1 t) | (u, t) <- s2] ++ s1
 
 merge :: (Monad m) => Subst -> Subst -> TCLoggerT m Subst
-merge s1 s2 = if agree then return (s1 ++ s2) else throwError "merge fails"
+merge s1 s2 = do unless agree $ throwError "merge fails"
+                 return (s1 ++ s2)
   where agree = all (\v -> apply s1 (TVar v) == apply s2 (TVar v))
                     (map fst s1 `intersect` map fst s2)

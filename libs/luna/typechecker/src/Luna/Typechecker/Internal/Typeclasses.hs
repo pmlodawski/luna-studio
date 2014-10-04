@@ -50,7 +50,7 @@ instance Show t => Show (Qual t) where
   show (ps :=> t) = printf "(%s :=> %s)" (show ps) (show t)
 
 
-type Class = ([TID], [Inst])
+type Class = ([TID], [Inst]) -- ^ super-classes, instances
 type Inst  = Qual Pred
 
 data ClassEnv = ClassEnv {
