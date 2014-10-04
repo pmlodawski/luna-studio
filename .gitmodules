@@ -15,7 +15,7 @@
     url = git@github.com:tmcdonell/cuda.git
 [submodule "third-party/HaskellBooster"]
     path = third-party/HaskellBooster
-    url = git@github.com:wdanilo/HaskellBooster.git
+    url = git@github.com:kgadek/HaskellBooster.git
 [submodule "third-party/protocol-buffers"]
     path = third-party/protocol-buffers
     url = git@github.com:flowbox-public/protocol-buffers.git
