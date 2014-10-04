@@ -90,7 +90,7 @@ tiExpl ce as (_, sc, alts) = do (qs :=> t) <- freshInst sc
                                                          return (not ttt))
                                                (apply s ps)
                                 (ds, rs) <- split ce fs gs ps'
-                                when   (sc /= sc') $ throwError "signature too general "
+                                when   (sc /= sc') $ throwError "signature too general"
                                 unless (null rs)   $ throwError "context too weak"
                                 return ds
 
