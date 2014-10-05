@@ -10,7 +10,7 @@ import Luna.Typechecker.AST.Type      (Type(..),Tyvar)
 
 import Luna.Typechecker.Internal.Logger
 
-import Control.Monad                  (when)
+import Control.Monad                  (liftM2,when)
 
 
 varBind :: (Monad m) => Tyvar -> Type -> TCLoggerT m Subst

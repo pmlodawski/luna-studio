@@ -5,9 +5,12 @@ import Luna.Typechecker.ContextReduction
 import Luna.Typechecker.Typeclasses
 
 import Luna.Typechecker.AST.Kind
+import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Internal.Logger
+
+import Control.Applicative
 
 import Data.Either                      (isLeft)
 
@@ -18,54 +21,54 @@ spec :: Spec
 spec = do
   describe "inHnf" $
     it "verifies the result" $ do
-      evalLogger (inHnf (IsIn "anything" (TVar $ Tyvar "a" Star))                                ) `shouldBe` Right True
-      evalLogger (inHnf (IsIn "anything" (TCon $ Tycon "Int" Star))                              ) `shouldBe` Right False
-      evalLogger (inHnf (IsIn "anything" (list (TCon $ Tycon "Int" Star)))                       ) `shouldBe` Right False
-      evalLogger (inHnf (IsIn "anything" (list (TVar $ Tyvar "a" Star)))                         ) `shouldBe` Right False
-      evalLogger (inHnf (IsIn "anything" (TAp (TVar $ Tyvar "m" Star) (TCon $ Tycon "Int" Star)))) `shouldBe` Right True
-      evalLogger (inHnf (IsIn "anything" (TGen 0))                                               ) `shouldSatisfy` isLeft
+      evalLogger (inHnf (IsIn (TID "anything") (TVar $ Tyvar (TID "a") Star))                                ) `shouldBe` Right True
+      evalLogger (inHnf (IsIn (TID "anything") (TCon $ Tycon (TID "Int") Star))                              ) `shouldBe` Right False
+      evalLogger (inHnf (IsIn (TID "anything") (list (TCon $ Tycon (TID "Int") Star)))                       ) `shouldBe` Right False
+      evalLogger (inHnf (IsIn (TID "anything") (list (TVar $ Tyvar (TID "a") Star)))                         ) `shouldBe` Right False
+      evalLogger (inHnf (IsIn (TID "anything") (TAp (TVar $ Tyvar (TID "m") Star) (TCon $ Tycon (TID "Int") Star)))) `shouldBe` Right True
+      evalLogger (inHnf (IsIn (TID "anything") (TGen 0))                                               ) `shouldSatisfy` isLeft
   describe "toHnf" $ do
     it "works for bad input" $ do
-      let Right ce = evalLogger ((     addClass "Eq" []
-                                <:> addInst [] (IsIn "Eq" tBool))
+      let Right ce = evalLogger ((     addClass (TID "Eq") (TID <$> [])
+                                <:> addInst [] (IsIn (TID "Eq") tBool))
                               initialEnv)
-          res = evalLogger (toHnf initialEnv (IsIn "anything" (TCon $ Tycon "Int" Star)))
-          res2 = evalLogger (toHnf ce (IsIn "Eq" tBool))
-          res3 = evalLogger (toHnf ce (IsIn "Eq" tInt))
+          res = evalLogger (toHnf initialEnv (IsIn (TID "anything") (TCon $ Tycon (TID "Int") Star)))
+          res2 = evalLogger (toHnf ce (IsIn (TID "Eq") tBool))
+          res3 = evalLogger (toHnf ce (IsIn (TID "Eq") tInt))
       res `shouldSatisfy` isLeft
       res2 `shouldBe` Right []
       res3 `shouldSatisfy` isLeft
 
     it "covers nested predicates" $
-      let Right ce = evalLogger ((  addClass "Eq" []
-                         <:> addClass "Ord" ["Eq"]
-                         <:> addClass "Num" []
-                         <:> addClass "Real" ["Num", "Ord"]
-                         <:> addClass "Enum" []
-                         <:> addClass "Integral" ["Real", "Enum"]
-                         <:> addClass "Fractional" ["Num"]
-                         <:> addClass "Functor" []
-                         <:> addInst [] (IsIn "Eq" tInt)             <:> addInst [] (IsIn "Eq" tInteger)       <:> addInst [] (IsIn "Eq" tDouble)   <:> addInst [] (IsIn "Eq" tFloat)
-                         <:> addInst [] (IsIn "Ord" tInt)            <:> addInst [] (IsIn "Ord" tInteger)      <:> addInst [] (IsIn "Ord" tDouble)  <:> addInst [] (IsIn "Ord" tFloat)
-                         <:> addInst [] (IsIn "Num" tInt)            <:> addInst [] (IsIn "Num" tInteger)      <:> addInst [] (IsIn "Num" tDouble)  <:> addInst [] (IsIn "Num" tFloat)
-                         <:> addInst [] (IsIn "Real" tInt)           <:> addInst [] (IsIn "Real" tInteger)     <:> addInst [] (IsIn "Real" tDouble) <:> addInst [] (IsIn "Real" tFloat)
-                         <:> addInst [] (IsIn "Enum" tInt)           <:> addInst [] (IsIn "Enum" tInteger)
-                         <:> addInst [] (IsIn "Integral" tInt)       <:> addInst [] (IsIn "Integral" tInteger)
-                         <:> addInst [] (IsIn "Fractional" tDouble)  <:> addInst [] (IsIn "Fractional" tFloat)
-                         <:> addInst [] (IsIn "Functor" tList)       <:> addInst [] (IsIn "Functor" tMaybe)
-                         <:> addInst [IsIn "Functor" tv_f2, IsIn "Num" tv_a1] (IsIn "Num" (TAp tv_f2 tv_a1)) -- nonsense, I know
-                         <:> addInst [IsIn "Functor" tv_f2, IsIn "Ord" tv_a1]
-                                     (IsIn "Ord" (TAp tv_f2 tv_a1))
+      let Right ce = evalLogger ((  addClass (TID "Eq") (TID <$> [])
+                         <:> addClass (TID "Ord") (TID <$> ["Eq"])
+                         <:> addClass (TID "Num") (TID <$> [])
+                         <:> addClass (TID "Real") (TID <$> ["Num", "Ord"])
+                         <:> addClass (TID "Enum") (TID <$> [])
+                         <:> addClass (TID "Integral") (TID <$> ["Real", "Enum"])
+                         <:> addClass (TID "Fractional") (TID <$> ["Num"])
+                         <:> addClass (TID "Functor") (TID <$> [])
+                         <:> addInst [] (IsIn (TID "Eq") tInt)             <:> addInst [] (IsIn (TID "Eq") tInteger)       <:> addInst [] (IsIn (TID "Eq") tDouble)   <:> addInst [] (IsIn (TID "Eq") tFloat)
+                         <:> addInst [] (IsIn (TID "Ord") tInt)            <:> addInst [] (IsIn (TID "Ord") tInteger)      <:> addInst [] (IsIn (TID "Ord") tDouble)  <:> addInst [] (IsIn (TID "Ord") tFloat)
+                         <:> addInst [] (IsIn (TID "Num") tInt)            <:> addInst [] (IsIn (TID "Num") tInteger)      <:> addInst [] (IsIn (TID "Num") tDouble)  <:> addInst [] (IsIn (TID "Num") tFloat)
+                         <:> addInst [] (IsIn (TID "Real") tInt)           <:> addInst [] (IsIn (TID "Real") tInteger)     <:> addInst [] (IsIn (TID "Real") tDouble) <:> addInst [] (IsIn (TID "Real") tFloat)
+                         <:> addInst [] (IsIn (TID "Enum") tInt)           <:> addInst [] (IsIn (TID "Enum") tInteger)
+                         <:> addInst [] (IsIn (TID "Integral") tInt)       <:> addInst [] (IsIn (TID "Integral") tInteger)
+                         <:> addInst [] (IsIn (TID "Fractional") tDouble)  <:> addInst [] (IsIn (TID "Fractional") tFloat)
+                         <:> addInst [] (IsIn (TID "Functor") tList)       <:> addInst [] (IsIn (TID "Functor") tMaybe)
+                         <:> addInst [IsIn (TID "Functor") tv_f2, IsIn (TID "Num") tv_a1] (IsIn (TID "Num") (TAp tv_f2 tv_a1)) -- nonsense, I know
+                         <:> addInst [IsIn (TID "Functor") tv_f2, IsIn (TID "Ord") tv_a1]
+                                     (IsIn (TID "Ord") (TAp tv_f2 tv_a1))
                           ) initialEnv)
 
-          tMaybe = TCon $ Tycon "Maybe" $ Star `Kfun` Star
+          tMaybe = TCon $ Tycon (TID "Maybe") $ Star `Kfun` Star
 
-          tv_a1 = TVar $ Tyvar "a" Star
-          tv_f2 = TVar $ Tyvar "f" (Star `Kfun` Star)
+          tv_a1 = TVar $ Tyvar (TID "a") Star
+          tv_f2 = TVar $ Tyvar (TID "f") (Star `Kfun` Star)
 
-          p = IsIn "Num" (TAp tMaybe tv_a1)
+          p = IsIn (TID "Num") (TAp tMaybe tv_a1)
 
           Right res = evalLogger $ toHnf ce p
-       in res `shouldSatisfy` any (\(IsIn name _) -> name == "Num")
+       in res `shouldSatisfy` any (\(IsIn (TID name) _) -> name == "Num")
 
 

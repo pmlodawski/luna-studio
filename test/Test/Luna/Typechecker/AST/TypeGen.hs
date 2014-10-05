@@ -11,7 +11,7 @@ import qualified Luna.Typechecker.Substitutions as Sub
 
 import           Luna.Typechecker.AST.Type      (Type(..), Tyvar(..), Tycon(..))
 import           Luna.Typechecker.AST.Kind      (Kind(..))
-import           Luna.Typechecker.AST.TID       (enumTID, TID)
+import           Luna.Typechecker.AST.TID       (enumTID, TID(..))
 
 import           Luna.Typechecker.Internal.Logger
 
@@ -19,6 +19,10 @@ import           Control.Applicative                     ((<$>), (<*>))
 import           Control.Monad                           (liftM2)
 
 import           Test.QuickCheck
+
+
+instance Arbitrary TID where
+  arbitrary = TID <$> arbitrary
 
 
 instance Arbitrary Kind where
@@ -31,7 +35,7 @@ instance Arbitrary Kind where
             liftM2 Kfun (genKind x1) (genKind x2)
   shrink (Star) = []
   shrink (Kfun k1 k2) = [k1, k2, Kfun k1 k1, Kfun k2 k2] ++ (flip Kfun k2 <$> shrink k1) ++ (Kfun k1 <$> shrink k2)
- 
+
 instance Arbitrary Type where
   arbitrary = arbitrary >>= genType
   shrink (TVar t) = TVar <$> shrink t
@@ -53,10 +57,12 @@ instance Arbitrary Pred where
 
 
 tidTC :: Int -> TID
-tidTC = ("tc_"++) . enumTID
+tidTC i = TID ("tc_"++str)
+  where (TID str) = enumTID i
 
 tidTV :: Int -> TID
-tidTV = ("tv_"++) . enumTID
+tidTV i = TID ("tv_"++str)
+  where (TID str) = enumTID i
 
 
 genPredNogen :: Kind -> Gen Pred

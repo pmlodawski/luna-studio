@@ -7,10 +7,12 @@ import Luna.Typechecker.Typeclasses
 
 import Luna.Typechecker.AST.Kind
 import Luna.Typechecker.AST.Scheme
+import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Internal.Logger
 
+import Control.Applicative
 import Control.Monad.ST
 
 import Data.Array.ST
@@ -41,11 +43,11 @@ spec = do
       let az = map (flip Tyvar Star) vs
           az' = map (flip Tyvar Star) vs'
           az'' = map (flip Tyvar Star) vs''
-          gs' = foldr1 fn (map TGen (zipWith const [0..] vs) ++ [TVar $ Tyvar "y" Star])
+          gs' = foldr1 fn (map TGen (zipWith const [0..] vs) ++ [TVar $ Tyvar (TID "y") Star])
           ks = map (const Star) vs
-          vs = ["a", "b", "c", "d", "e", "f"]
-          vs' = ["z"] -- variable to quantify that does not exist
-          vs'' = ["y"] -- the variable that is not quantified
+          vs = TID <$> ["a", "b", "c", "d", "e", "f"]
+          vs' = TID <$> ["z"] -- variable to quantify that does not exist
+          vs'' = TID <$> ["y"] -- the variable that is not quantified
        in forAll (permute az) $ \azPermuted ->
             evalLogger (quantify (azPermuted++az') ([] :=> foldr1 fn (map TVar (azPermuted++az'')))) `shouldBe` Right (Forall ks ([] :=> gs'))
   describe "(coverage booster)" $
@@ -55,8 +57,8 @@ spec = do
           sch3 = Forall [] (ps :=> t)
           sch4 = Forall ks (psk :=> tk)
           ks = [Star]
-          ps = [IsIn "Integral" t]
-          psk = [IsIn "Integral" tk]
-          t = TVar $ Tyvar "a" Star
+          ps = [IsIn (TID "Integral") t]
+          psk = [IsIn (TID "Integral") tk]
+          t = TVar $ Tyvar (TID "a") Star
           tk = TGen 0
       length (concatMap show [sch1, sch2, sch3, sch4]) `shouldSatisfy` (>0)

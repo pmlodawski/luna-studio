@@ -5,21 +5,22 @@ module Luna.Typechecker.AST.Type (
 
 
 import Luna.Typechecker.AST.Kind          (Kind(..))
+import Luna.Typechecker.AST.TID           (TID(..))
 
 import Luna.Typechecker.AST.Internal.Type (Type(..),Tyvar(..),Tycon(..))
 
 
 tUnit, tChar, tBool, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString :: Type
-tUnit    = TCon (Tycon "()"      Star)
-tBool    = TCon (Tycon "Bool"    Star)
-tChar    = TCon (Tycon "Char"    Star)
-tInt     = TCon (Tycon "Int"     Star)
-tInteger = TCon (Tycon "Integer" Star)
-tFloat   = TCon (Tycon "Float"   Star)
-tDouble  = TCon (Tycon "Double"  Star)
-tList    = TCon (Tycon "[]"      (Kfun Star Star))
-tArrow   = TCon (Tycon "(->)"    (Kfun Star (Kfun Star Star)))
-tTuple2  = TCon (Tycon "(,)"     (Kfun Star (Kfun Star Star)))
+tUnit    = TCon (Tycon (TID "()"     ) Star)
+tBool    = TCon (Tycon (TID "Bool"   ) Star)
+tChar    = TCon (Tycon (TID "Char"   ) Star)
+tInt     = TCon (Tycon (TID "Int"    ) Star)
+tInteger = TCon (Tycon (TID "Integer") Star)
+tFloat   = TCon (Tycon (TID "Float"  ) Star)
+tDouble  = TCon (Tycon (TID "Double" ) Star)
+tList    = TCon (Tycon (TID "[]"     ) (Kfun Star Star))
+tArrow   = TCon (Tycon (TID "(->)"   ) (Kfun Star (Kfun Star Star)))
+tTuple2  = TCon (Tycon (TID "(,)"    ) (Kfun Star (Kfun Star Star)))
 tString  = list tChar
 
 tCons :: Type -> Type

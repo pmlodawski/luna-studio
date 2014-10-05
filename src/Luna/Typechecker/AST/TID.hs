@@ -1,9 +1,25 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Luna.Typechecker.AST.TID (
-    enumTID, TID
+    enumTID, TID(..)
   ) where
 
-type TID = String
+
+import Control.DeepSeq
+
+import GHC.Generics
+
+import Text.Printf
+
+
+newtype TID = TID String
+  deriving (Eq,Show,Ord,Generic)
+
+instance PrintfArg TID where
+  formatArg (TID m) = formatArg m
+
+instance NFData TID
 
 
 enumTID :: Int -> TID
-enumTID n = "v" ++ show n
+enumTID n = TID $ "v" ++ show n

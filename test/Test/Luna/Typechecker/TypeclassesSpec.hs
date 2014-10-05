@@ -4,6 +4,7 @@ module Test.Luna.Typechecker.TypeclassesSpec (spec) where
 import Luna.Typechecker.Typeclasses
 
 import Luna.Typechecker.AST.Kind
+import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Internal.Logger
@@ -17,84 +18,84 @@ spec :: Spec
 spec = do
   describe "insts" $
     it "raises error when no superclass" $
-      evalLogger (super initialEnv "nothing") `shouldSatisfy` isLeft
+      evalLogger (super initialEnv (TID "nothing")) `shouldSatisfy` isLeft
   describe "mguPred" $
     it "checks if classes match" $ do
-      let res = evalLogger $ mguPred (IsIn "YEP" (TGen 0)) (IsIn "NOPE" (TGen 0))
+      let res = evalLogger $ mguPred (IsIn (TID "YEP") (TGen 0)) (IsIn (TID "NOPE") (TGen 0))
       res `shouldSatisfy` isLeft
   describe "addClass" $ do
     it "checks if class was defined twice" $
-      evalLogger ((     addClass "Eq" []
-                <:> addClass "Eq" []
+      evalLogger ((     addClass (TID "Eq") []
+                <:> addClass (TID "Eq") []
               ) initialEnv) `shouldSatisfy` isLeft
     it "checks if class has a known superclass" $
-      evalLogger ((     addClass "Eq" []
-                <:> addClass "Ord" ["EqNOPE"]
+      evalLogger ((     addClass (TID "Eq") []
+                <:> addClass (TID "Ord") [TID "EqNOPE"]
               ) initialEnv) `shouldSatisfy` isLeft
   describe "addInstance" $ do
     it "checks if instance is given for a known class" $
-      evalLogger ((     addClass "Eq" []
-                <:> addInst [] (IsIn "EqNOPE" tBool)
+      evalLogger ((     addClass (TID "Eq") []
+                <:> addInst [] (IsIn (TID "EqNOPE") tBool)
               ) initialEnv) `shouldSatisfy` isLeft
     it "checks for overlapping instances (trivial)" $
-      evalLogger ((     addClass "Eq" []
-                <:> addInst [] (IsIn "Eq" tBool)
-                <:> addInst [] (IsIn "Eq" tBool)
+      evalLogger ((     addClass (TID "Eq") []
+                <:> addInst [] (IsIn (TID "Eq") tBool)
+                <:> addInst [] (IsIn (TID "Eq") tBool)
                  ) initialEnv) `shouldSatisfy` isLeft
     it "checks for overlapping instances (slightly non-trivial)" $
-      evalLogger ((     addClass "Eq" []
-                <:> addInst [IsIn "Eq" tBool]                   (IsIn "Eq" (list tBool))
-                <:> addInst [IsIn "Eq" (TVar $ Tyvar "a" Star)] (IsIn "Eq" (list (TVar $ Tyvar "a" Star)))
+      evalLogger ((     addClass (TID "Eq") []
+                <:> addInst [IsIn (TID "Eq") tBool]                   (IsIn (TID "Eq") (list tBool))
+                <:> addInst [IsIn (TID "Eq") (TVar $ Tyvar (TID "a") Star)] (IsIn (TID "Eq") (list (TVar $ Tyvar (TID "a") Star)))
                  ) initialEnv) `shouldSatisfy` isLeft
     it "checks for overlapping instances (another slightly non-trivial)" $
-      evalLogger ((     addClass "Len" []
-                <:> addInst [IsIn "Len" (TVar $ Tyvar "a" Star)] (IsIn "Len" (list (TVar $ Tyvar "a" Star)))
-                <:> addInst [IsIn "Len" tInt]                    (IsIn "Len" (list tInt))
+      evalLogger ((     addClass (TID "Len") []
+                <:> addInst [IsIn (TID "Len") (TVar $ Tyvar (TID "a") Star)] (IsIn (TID "Len") (list (TVar $ Tyvar (TID "a") Star)))
+                <:> addInst [IsIn (TID "Len") tInt]                    (IsIn (TID "Len") (list tInt))
                  ) initialEnv) `shouldSatisfy` isLeft
   describe "byInst" $
     it "works" $ do
-      let Right ce = evalLogger ((  addClass "Eq" []
-                               <:> addClass "Container" []
-                               <:> addInst [] (IsIn "Eq" tInt)
-                               <:> addInst [] (IsIn "Container" tList)
-                               <:> addInst [ IsIn "Eq" (TVar $ Tyvar "a" Star)
-                                           , IsIn "Container" (TVar $ Tyvar "c" (Kfun Star Star))
+      let Right ce = evalLogger ((  addClass (TID "Eq") []
+                               <:> addClass (TID "Container") []
+                               <:> addInst [] (IsIn (TID "Eq") tInt)
+                               <:> addInst [] (IsIn (TID "Container") tList)
+                               <:> addInst [ IsIn (TID "Eq") (TVar $ Tyvar (TID "a") Star)
+                                           , IsIn (TID "Container") (TVar $ Tyvar (TID "c") (Kfun Star Star))
                                            ]
-                                           (IsIn "Eq" (TAp (TVar $ Tyvar "c" (Kfun Star Star)) (TVar $ Tyvar "a" Star)))
+                                           (IsIn (TID "Eq") (TAp (TVar $ Tyvar (TID "c") (Kfun Star Star)) (TVar $ Tyvar (TID "a") Star)))
                                 ) initialEnv)
-      evalLogger (byInst ce (IsIn "Eq" (TAp tList tInt))) `shouldBe` Right [IsIn "Eq" tInt, IsIn "Container" tList]
+      evalLogger (byInst ce (IsIn (TID "Eq") (TAp tList tInt))) `shouldBe` Right [IsIn (TID "Eq") tInt, IsIn (TID "Container") tList]
 
   describe "entail" $
     it "works" $ do
-      let Right ce = evalLogger ((  addClass "Eq"       []
-                               <:> addClass "Ord"      ["Eq"]
-                               <:> addClass "Num"      []
-                               <:> addClass "Real"     ["Num", "Ord"]
-                               <:> addClass "Enum"     []
-                               <:> addClass "Integral" ["Real", "Enum"]
+      let Right ce = evalLogger ((  addClass (TID "Eq")       []
+                               <:> addClass (TID "Ord")      [TID "Eq"]
+                               <:> addClass (TID "Num")      []
+                               <:> addClass (TID "Real")     [TID "Num", TID "Ord"]
+                               <:> addClass (TID "Enum")     []
+                               <:> addClass (TID "Integral") [TID "Real", TID "Enum"]
 
-                               <:> addClass "Functor"     []
-                               <:> addClass "Applicative" ["Functor"]
-                               <:> addInst [IsIn "Functor" (TVar $ Tyvar "f" Star), IsIn "Ord" (TVar $ Tyvar "a" Star)]
-                                           (IsIn "Ord" (TAp (TVar $ Tyvar "f" Star) (TVar $ Tyvar "a" Star)))
-                               <:> addInst [] (IsIn "Eq"       tInt)   <:> addInst [] (IsIn "Eq"       tInteger)
-                               <:> addInst [] (IsIn "Ord"      tInt)   <:> addInst [] (IsIn "Ord"      tInteger)
-                               <:> addInst [] (IsIn "Num"      tInt)   <:> addInst [] (IsIn "Num"      tInteger)
-                               <:> addInst [] (IsIn "Real"     tInt)   <:> addInst [] (IsIn "Real"     tInteger)
-                               <:> addInst [] (IsIn "Enum"     tInt)   <:> addInst [] (IsIn "Enum"     tInteger)
-                               <:> addInst [] (IsIn "Integral" tInt)   <:> addInst [] (IsIn "Integral" tInteger)
-                               <:> addInst [] (IsIn "Functor"     tList)
-                               <:> addInst [] (IsIn "Applicative" tList)
+                               <:> addClass (TID "Functor")     []
+                               <:> addClass (TID "Applicative") [TID "Functor"]
+                               <:> addInst [IsIn (TID "Functor") (TVar $ Tyvar (TID "f") Star), IsIn (TID "Ord") (TVar $ Tyvar (TID "a") Star)]
+                                           (IsIn (TID "Ord") (TAp (TVar $ Tyvar (TID "f") Star) (TVar $ Tyvar (TID "a") Star)))
+                               <:> addInst [] (IsIn (TID "Eq")       tInt)   <:> addInst [] (IsIn (TID "Eq")       tInteger)
+                               <:> addInst [] (IsIn (TID "Ord")      tInt)   <:> addInst [] (IsIn (TID "Ord")      tInteger)
+                               <:> addInst [] (IsIn (TID "Num")      tInt)   <:> addInst [] (IsIn (TID "Num")      tInteger)
+                               <:> addInst [] (IsIn (TID "Real")     tInt)   <:> addInst [] (IsIn (TID "Real")     tInteger)
+                               <:> addInst [] (IsIn (TID "Enum")     tInt)   <:> addInst [] (IsIn (TID "Enum")     tInteger)
+                               <:> addInst [] (IsIn (TID "Integral") tInt)   <:> addInst [] (IsIn (TID "Integral") tInteger)
+                               <:> addInst [] (IsIn (TID "Functor")     tList)
+                               <:> addInst [] (IsIn (TID "Applicative") tList)
                                 ) initialEnv)
-          f = TVar $ Tyvar "f" Star
-          a = TVar $ Tyvar "a" Star
-          v = TVar $ Tyvar "lel" Star
-          p  = IsIn "Ord" (TAp f a)
+          f = TVar $ Tyvar (TID "f") Star
+          a = TVar $ Tyvar (TID "a") Star
+          v = TVar $ Tyvar (TID "lel") Star
+          p  = IsIn (TID "Ord") (TAp f a)
 
-      evalLogger (entail ce [IsIn "Functor" f, IsIn "Ord" a]          p)              `shouldBe` Right True
-      evalLogger (entail ce [                  IsIn "Ord" a]          p)              `shouldBe` Right False
-      evalLogger (entail ce [IsIn "Functor" f              ]          p)              `shouldBe` Right False
+      evalLogger (entail ce [IsIn (TID "Functor") f, IsIn (TID "Ord") a]          p)              `shouldBe` Right True
+      evalLogger (entail ce [                  IsIn (TID "Ord") a]          p)              `shouldBe` Right False
+      evalLogger (entail ce [IsIn (TID "Functor") f              ]          p)              `shouldBe` Right False
       evalLogger (entail ce [                              ]          p)              `shouldBe` Right False
-      evalLogger (entail ce [IsIn "Integral" a, IsIn "Applicative" f] p)              `shouldBe` Right True
-      evalLogger (entail ce [IsIn "Integral" v]                       (IsIn "Num" v)) `shouldBe` Right True
+      evalLogger (entail ce [IsIn (TID "Integral") a, IsIn (TID "Applicative") f] p)              `shouldBe` Right True
+      evalLogger (entail ce [IsIn (TID "Integral") v]                       (IsIn (TID "Num") v)) `shouldBe` Right True
 

@@ -5,6 +5,7 @@ import Luna.Typechecker.Substitutions
 import Luna.Typechecker.Unification
 
 import Luna.Typechecker.AST.Kind       (Kind(..))
+import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Internal.Logger
@@ -24,20 +25,20 @@ import Data.Either
 spec :: Spec
 spec = do
   let
-      tv0 = Tyvar "a1" Star
+      tv0 = Tyvar (TID "a1") Star
       tt0 = TVar tv0
-      tv1 = Tyvar "b1" Star
+      tv1 = Tyvar (TID "b1") Star
       tt1 = TVar tv1
-      tv2 = Tyvar "a2" Star
+      tv2 = Tyvar (TID "a2") Star
       tt2 = TVar tv2
-      tv3 = Tyvar "b2" Star
+      tv3 = Tyvar (TID "b2") Star
       tt3 = TVar tv3
 
-      cc0 = Tycon "A1" Star
+      cc0 = Tycon (TID "A1") Star
       ct0 = TCon cc0
-      cc1 = Tycon "B1" Star
+      cc1 = Tycon (TID "B1") Star
       ct1 = TCon cc1
-      cc3 = Tycon "B2" Star
+      cc3 = Tycon (TID "B2") Star
       ct3 = TCon cc3
 
   describe "mgu" $ do
@@ -66,16 +67,16 @@ spec = do
 
     it "satisfies property: apply u t1 == apply u t2 for u = mgu t1 t2" $ do
       let t1 = tUnit
-          t2 = TVar (Tyvar "a" Star)
+          t2 = TVar (Tyvar (TID "a") Star)
           Right u = evalLogger $ mgu t1 t2
       apply u t1 `shouldBe` apply u t2
     it "does the kind check" $ do
-      let t1 = TVar (Tyvar "a" Star)
+      let t1 = TVar (Tyvar (TID "a") Star)
           t2 = tList
           u = evalLogger $ mgu t1 t2
       u `shouldSatisfy` isLeft
     it "does the infinite-type check" $ do
-      let t1 = TVar (Tyvar "a" Star)
+      let t1 = TVar (Tyvar (TID "a") Star)
           t2 = list t1
           u  = evalLogger $ mgu t1 t2
       u `shouldSatisfy` isLeft
@@ -84,10 +85,10 @@ spec = do
         let u = evalLogger $ mgu tc tc
          in u `shouldSatisfy` isRight
     it "errors when types can't be unified" $ do
-      let t1  = TVar (Tyvar "a1" Star)
-          t2  = TVar (Tyvar "a2" (Kfun Star Star))
-          tc1 = TCon (Tycon "Bool" Star)
-          tc2 = TCon (Tycon "Maybe" (Kfun Star Star))
+      let t1  = TVar (Tyvar (TID "a1")    Star)
+          t2  = TVar (Tyvar (TID "a2")    (Kfun Star Star))
+          tc1 = TCon (Tycon (TID "Bool")  Star)
+          tc2 = TCon (Tycon (TID "Maybe") (Kfun Star Star))
           tg  = TGen 0
       evalLogger (mgu  t1  t2)                  `shouldSatisfy` isLeft
       evalLogger (mgu tc1 tc2)                  `shouldSatisfy` isLeft
@@ -123,11 +124,11 @@ spec = do
 
 
     it "some examples for property: apply u t1 == t2 for u = match t1 t2" $ do
-      let t1 = TVar (Tyvar "a" Star)
+      let t1 = TVar (Tyvar (TID "a") Star)
           t2 = tUnit
           u = evalLogger $ mgu t1 t2
-          tvar = Tyvar "b" Star
-          tvar' = Tyvar "b" (Kfun Star Star)
+          tvar = Tyvar (TID "b") Star
+          tvar' = Tyvar (TID "b") (Kfun Star Star)
           tap = TAp (TVar tvar) (TVar tvar')
           tap' = TAp (TVar tvar') (TVar tvar)
           res = evalLogger $ match (TVar tvar) (TVar tvar')
