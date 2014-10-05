@@ -4,6 +4,7 @@ module Test.Luna.Typechecker.SubstitutionsSpec (spec) where
 
 
 import Luna.Typechecker.AST.Kind
+import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Substitutions
@@ -21,9 +22,9 @@ import Data.List
 
 spec :: Spec
 spec = do
-  let a  = Tyvar "a" Star
-      b  = Tyvar "b" Star
-      c  = Tyvar "c" Star
+  let a  = Tyvar (TID "a") Star
+      b  = Tyvar (TID "b") Star
+      c  = Tyvar (TID "c") Star
 
   describe "nullSubst" $
     it "does not affect any type" $ property $

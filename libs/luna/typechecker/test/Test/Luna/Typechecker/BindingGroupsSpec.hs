@@ -9,6 +9,7 @@ import Luna.Typechecker.AST.Kind
 import Luna.Typechecker.AST.Lit
 import Luna.Typechecker.AST.Pat
 import Luna.Typechecker.AST.Scheme
+import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
 
 import Luna.Typechecker.Internal.Logger
@@ -21,49 +22,49 @@ import Test.Luna.Typechecker.Common
 
 spec :: Spec
 spec = do
-  let lel_pat1  = [PVar "x"]
-      lel_body1 = foldl1 Ap [Var "(==)", Var "x", Var "x"]
-      Right ceEq = evalLogger $ ( addClass "Eq" []
-                 <:> addInst [] (IsIn "Eq" tInt)
+  let lel_pat1  = [PVar (TID "x")]
+      lel_body1 = foldl1 Ap [Var (TID "(==)"), Var (TID "x"), Var (TID "x")]
+      Right ceEq = evalLogger $ ( addClass (TID "Eq") []
+                 <:> addInst [] (IsIn (TID "Eq") tInt)
                   ) initialEnv
 
   describe "tiExpl" $ do
     it "fails for too weak contexts" $ do
-      let inf       = tiExpl ceEq [eqBG^.asmp] ("lel", lel_type, [(lel_pat1, lel_body1)])
+      let inf       = tiExpl ceEq [eqBG^.asmp] (TID "lel", lel_type, [(lel_pat1, lel_body1)])
           lel_type  = Forall [Star] ([] :=> (TGen 0 `fn` tBool))
       startTI (evalLoggerT inf) `shouldSatisfy` isLeft
     it "fails for too general signatures" $ do
-      let inf       = tiExpl ceEq [eqBG^.asmp] ("lel", lel_type, [(lel_pat1, lel_body1)])
+      let inf       = tiExpl ceEq [eqBG^.asmp] (TID "lel", lel_type, [(lel_pat1, lel_body1)])
           lel_type  = Forall [Star, Star] ([] :=> (TGen 0 `fn` TGen 1))
       startTI (evalLoggerT inf) `shouldSatisfy` isLeft
 
   describe "tiExpr" $
     it "recurses into let" $
-      let Right ce = evalLogger ((  addClass "Eq" []
-                         <:> addClass "Ord" ["Eq"]
-                         <:> addClass "Num" []
-                         <:> addClass "Real" ["Num", "Ord"]
-                         <:> addClass "Enum" []
-                         <:> addClass "Integral" ["Real", "Enum"]
-                         <:> addClass "Fractional" ["Num"]
-                         <:> addClass "Functor" []
-                         <:> addInst [] (IsIn "Eq" tInt)             <:> addInst [] (IsIn "Eq" tInteger)       <:> addInst [] (IsIn "Eq" tDouble)   <:> addInst [] (IsIn "Eq" tFloat)
-                         <:> addInst [] (IsIn "Ord" tInt)            <:> addInst [] (IsIn "Ord" tInteger)      <:> addInst [] (IsIn "Ord" tDouble)  <:> addInst [] (IsIn "Ord" tFloat)
-                         <:> addInst [] (IsIn "Num" tInt)            <:> addInst [] (IsIn "Num" tInteger)      <:> addInst [] (IsIn "Num" tDouble)  <:> addInst [] (IsIn "Num" tFloat)
-                         <:> addInst [] (IsIn "Real" tInt)           <:> addInst [] (IsIn "Real" tInteger)     <:> addInst [] (IsIn "Real" tDouble) <:> addInst [] (IsIn "Real" tFloat)
-                         <:> addInst [] (IsIn "Enum" tInt)           <:> addInst [] (IsIn "Enum" tInteger)
-                         <:> addInst [] (IsIn "Integral" tInt)       <:> addInst [] (IsIn "Integral" tInteger)
-                         <:> addInst [] (IsIn "Fractional" tDouble)  <:> addInst [] (IsIn "Fractional" tFloat)
-                         <:> addInst [] (IsIn "Functor" tList)       <:> addInst [] (IsIn "Functor" tMaybe)
-                         <:> addInst [IsIn "Functor" tv_f2, IsIn "Num" tv_a1] (IsIn "Num" (TAp tv_f2 tv_a1)) -- nonsense, I know
-                         <:> addInst [IsIn "Functor" tv_f2, IsIn "Ord" tv_a1]
-                                     (IsIn "Ord" (TAp tv_f2 tv_a1))
+      let Right ce = evalLogger ((  addClass (TID "Eq") []
+                         <:> addClass (TID "Ord") [TID "Eq"]
+                         <:> addClass (TID "Num") []
+                         <:> addClass (TID "Real") [TID "Num", TID "Ord"]
+                         <:> addClass (TID "Enum") []
+                         <:> addClass (TID "Integral") [TID "Real", TID "Enum"]
+                         <:> addClass (TID "Fractional") [TID "Num"]
+                         <:> addClass (TID "Functor") []
+                         <:> addInst [] (IsIn (TID "Eq") tInt)             <:> addInst [] (IsIn (TID "Eq") tInteger)       <:> addInst [] (IsIn (TID "Eq") tDouble)   <:> addInst [] (IsIn (TID "Eq") tFloat)
+                         <:> addInst [] (IsIn (TID "Ord") tInt)            <:> addInst [] (IsIn (TID "Ord") tInteger)      <:> addInst [] (IsIn (TID "Ord") tDouble)  <:> addInst [] (IsIn (TID "Ord") tFloat)
+                         <:> addInst [] (IsIn (TID "Num") tInt)            <:> addInst [] (IsIn (TID "Num") tInteger)      <:> addInst [] (IsIn (TID "Num") tDouble)  <:> addInst [] (IsIn (TID "Num") tFloat)
+                         <:> addInst [] (IsIn (TID "Real") tInt)           <:> addInst [] (IsIn (TID "Real") tInteger)     <:> addInst [] (IsIn (TID "Real") tDouble) <:> addInst [] (IsIn (TID "Real") tFloat)
+                         <:> addInst [] (IsIn (TID "Enum") tInt)           <:> addInst [] (IsIn (TID "Enum") tInteger)
+                         <:> addInst [] (IsIn (TID "Integral") tInt)       <:> addInst [] (IsIn (TID "Integral") tInteger)
+                         <:> addInst [] (IsIn (TID "Fractional") tDouble)  <:> addInst [] (IsIn (TID "Fractional") tFloat)
+                         <:> addInst [] (IsIn (TID "Functor") tList)       <:> addInst [] (IsIn (TID "Functor") tMaybe)
+                         <:> addInst [IsIn (TID "Functor") tv_f2, IsIn (TID "Num") tv_a1] (IsIn (TID "Num") (TAp tv_f2 tv_a1)) -- nonsense, I know
+                         <:> addInst [IsIn (TID "Functor") tv_f2, IsIn (TID "Ord") tv_a1]
+                                     (IsIn (TID "Ord") (TAp tv_f2 tv_a1))
                           ) initialEnv)
 
-          tMaybe = TCon $ Tycon "Maybe" $ Star `Kfun` Star
+          tMaybe = TCon $ Tycon (TID "Maybe") $ Star `Kfun` Star
 
-          tv_a1 = TVar $ Tyvar "a" Star
-          tv_f2 = TVar $ Tyvar "f" (Star `Kfun` Star)
+          tv_a1 = TVar $ Tyvar (TID "a") Star
+          tv_f2 = TVar $ Tyvar (TID "f") (Star `Kfun` Star)
 
           as = [ integralAddBG   ^. asmp
                , consBG          ^. asmp
@@ -78,19 +79,19 @@ spec = do
                ]
           bg = ( []
                  , [[
-                      ("pie", [( []
-                               , ap [ Var "sum"
-                                    , ap [ Var "take"
+                      (TID "pie", [( []
+                               , ap [ Var (TID "sum")
+                                    , ap [ Var (TID "take")
                                          , Lit (LitIntegral 2)
-                                         , ap [ Var "zipWith"
-                                              , Var "(/)"
-                                              , ap [ Var "iterate"
-                                                   , Var "negate"
+                                         , ap [ Var (TID "zipWith")
+                                              , Var (TID "(/)")
+                                              , ap [ Var (TID "iterate")
+                                                   , Var (TID "negate")
                                                    , Lit (LitIntegral 4)
                                                    ]
-                                              , ap [ Var "(:)"
+                                              , ap [ Var (TID "(:)")
                                                    , Lit (LitIntegral 1)
-                                                   , Var "[]"
+                                                   , Var (TID "[]")
                                                    ]
                                               ]
                                          ]
@@ -101,12 +102,12 @@ spec = do
                 )
           bg2 = ( []
                 , [[
-                    ("pie2", [([], Let bg (Var "pie"))])
+                    (TID "pie2", [([], Let bg (Var (TID "pie")))])
                   ]]
                 )
 
 
-          Right (ps, t@(TVar (Tyvar _ t_kind))) = startTI $ evalLoggerT $ tiExpr ce as (Let bg2 (Var "pie2"))
+          Right (ps, t@(TVar (Tyvar _ t_kind))) = startTI $ evalLoggerT $ tiExpr ce as (Let bg2 (Var (TID "pie2")))
        in do
         t_kind `shouldBe` Star
-        ps `shouldContain` [IsIn "Integral" t]
+        ps `shouldContain` [IsIn (TID "Integral") t]

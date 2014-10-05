@@ -6,7 +6,7 @@ module Luna.Typechecker.Assumptions (
 import Luna.Typechecker.Substitutions (Types(..))
 
 import Luna.Typechecker.AST.Scheme    (Scheme(..))
-import Luna.Typechecker.AST.TID       (TID)
+import Luna.Typechecker.AST.TID       (TID(..))
 
 import Luna.Typechecker.Internal.Logger
 
@@ -32,7 +32,7 @@ instance Types Assump where
 
 
 find :: (Monad m) => TID -> [Assump] -> TCLoggerT m Scheme
-find i [] = throwError $ "unbound identifier: " ++ i
+find (TID i) [] = throwError $ "unbound identifier: " ++ i
 find i ((i' :>: sc) : as) = if i==i'
                               then return sc
                               else find i as

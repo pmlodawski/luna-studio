@@ -7,7 +7,7 @@ module Luna.Typechecker.AST.Internal.Type (
 
 
 import Luna.Typechecker.AST.Kind (Kind(..))
-import Luna.Typechecker.AST.TID  (TID)
+import Luna.Typechecker.AST.TID  (TID(..))
 
 import Control.DeepSeq
 
@@ -24,10 +24,10 @@ data Type = TVar Tyvar
 
 
 instance Show Type where
-  show (TVar (Tyvar n k)) = printf "(%s::%s)" n (show k)
+  show (TVar (Tyvar n k)) = printf "(%s::%s)" (show n) (show k)
   show (TCon (Tycon n k)) = printf "(%s::%s)" (show n) (show k)
   show (TAp (TAp x t1) t2)
-    | x == TCon (Tycon "(->)" (Kfun Star (Kfun Star Star)))
+    | x == TCon (Tycon (TID "(->)") (Kfun Star (Kfun Star Star)))
                           = printf "%s -> %s" (show t1) (show t2)
   show (TAp t1 t2)        = printf "(%s %s)" (show t1) (show t2)
   show (TGen i)           = printf "gen{%d}" i

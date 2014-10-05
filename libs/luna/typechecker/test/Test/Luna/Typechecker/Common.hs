@@ -7,11 +7,11 @@ import Luna.Typechecker.AST.Kind      (Kind(..))
 import Luna.Typechecker.AST.Lit       (Lit(..))
 import Luna.Typechecker.AST.Pat       (Pat(..))
 import Luna.Typechecker.AST.Scheme    (Scheme(..),toScheme)
-import Luna.Typechecker.AST.TID       (TID)
+import Luna.Typechecker.AST.TID       (TID(..))
 import Luna.Typechecker.AST.Type      (Type(..),Tyvar(..),fn,tInteger,list,tBool,pair,tChar,tDouble,tFloat,tInt,tUnit,tList,tArrow,tTuple2)
 
 import Luna.Typechecker.Assumptions   (Assump(..))
-import Luna.Typechecker.BindingGroups (Alt,Expr(..),Impl)
+import Luna.Typechecker.BindingGroups (Alt,Expr(..),Impl,Expl)
 import Luna.Typechecker.Typeclasses   (Qual(..),Pred(..),EnvTransformer,(<:>),addClass,addInst)
 
 
@@ -31,7 +31,7 @@ import Control.Applicative ((<$>),Const(..))
 ap :: [Expr] -> Expr
 ap = foldl1 Ap
 
-type TypeDecl = (TID, Scheme, [Alt])
+type TypeDecl = (String, Scheme, [Alt])
 
 -- we need no dep on lens, that's good
 type Lens s t a b = Functor f => (a -> f b) -> s -> f t
@@ -41,7 +41,7 @@ infixl 8 ^.
 s ^. l = getConst (l Const s)
 
 tid :: Lens TypeDecl TypeDecl TID TID
-tid f (t, s, as) = (\t' -> (t', s, as)) <$> f t
+tid f (t, s, as) = (\(TID t') -> (t', s, as)) <$> f (TID t)
 
 scheme :: Lens TypeDecl TypeDecl Scheme Scheme
 scheme f (t, s, as) = (\s' -> (t, s', as)) <$> f s
@@ -49,12 +49,16 @@ scheme f (t, s, as) = (\s' -> (t, s', as)) <$> f s
 alts :: Lens TypeDecl TypeDecl [Alt] [Alt]
 alts f (t, s, as) = (\as' -> (t, s, as')) <$> f as
 
---impl :: Lens TypeDecl Impl TypeDecl Impl
-impl :: Lens TypeDecl (a, Scheme, c) Impl (a,c)
-impl f (t, s, as) = (\(t',as') -> (t',s,as')) <$> f (t, as)
+--expl :: Lens TypeDecl TypeDecl 
+expl :: Lens TypeDecl TypeDecl Expl Expl
+expl f (t, s, as) = (\(TID ts',s',as') -> (ts',s',as')) <$> f (TID t, s, as)
 
-asmp :: Lens (TID, Scheme, [Alt]) (TID, Scheme, [Alt]) Assump Assump
-asmp f (t, s, as) = (\(t' :>: s') -> (t', s', as)) <$> f (t :>: s)
+--impl :: Lens TypeDecl Impl TypeDecl Impl
+impl :: Lens TypeDecl (String, Scheme, c) Impl (TID,c)
+impl f (t, s, as) = (\(TID t',as') -> (t',s,as')) <$> f (TID t, as)
+
+asmp :: Lens (String, Scheme, [Alt]) (String, Scheme, [Alt]) Assump Assump
+asmp f (t, s, as) = (\(TID t' :>: s') -> (t', s', as)) <$> f (TID t :>: s)
 
 
 -- ------------------------------------------------------------
@@ -67,61 +71,61 @@ asmp f (t, s, as) = (\(t' :>: s') -> (t', s', as)) <$> f (t :>: s)
 -- ------------------------------------------------------------
 
 standardET :: (Monad m) => EnvTransformer m
-standardET =  addClass "Eq" []
-              <:> addInst [] (IsIn "Eq" tUnit)
-              <:> addInst [] (IsIn "Eq" tBool)
-              <:> addInst [] (IsIn "Eq" tChar)
-              <:> addInst [] (IsIn "Eq" tInt)
-              <:> addInst [] (IsIn "Eq" tInteger)
-              <:> addInst [] (IsIn "Eq" tFloat)
-              <:> addInst [] (IsIn "Eq" tDouble)
-              <:> addInst [IsIn "Eq" tvarA] (IsIn "Eq" (list tvarA))
-              <:> addInst [IsIn "Eq" tvarA, IsIn "Eq" tvarB] (IsIn "Eq" (tvarA `pair` tvarB))
-          <:> addClass "Ord" ["Eq"]
-              <:> addInst [] (IsIn "Ord" tUnit)
-              <:> addInst [] (IsIn "Ord" tBool)
-              <:> addInst [] (IsIn "Ord" tChar)
-              <:> addInst [] (IsIn "Ord" tInt)
-              <:> addInst [] (IsIn "Ord" tInteger)
-              <:> addInst [] (IsIn "Ord" tFloat)
-              <:> addInst [] (IsIn "Ord" tDouble)
-              <:> addInst [IsIn "Ord" tvarA] (IsIn "Ord" (list tvarA))
-              <:> addInst [IsIn "Ord" tvarA, IsIn "Ord" tvarB] (IsIn "Ord" (tvarA `pair` tvarB))
-          <:> addClass "Enum" []
-              <:> addInst [] (IsIn "Enum" tUnit)
-              <:> addInst [] (IsIn "Enum" tBool)
-              <:> addInst [] (IsIn "Enum" tChar)
-              <:> addInst [] (IsIn "Enum" tInt)
-              <:> addInst [] (IsIn "Enum" tInteger)
-              <:> addInst [] (IsIn "Enum" tFloat)
-              <:> addInst [] (IsIn "Enum" tDouble)
-          <:> addClass "Num" []
-              <:> addInst [] (IsIn "Num" tInt)
-              <:> addInst [] (IsIn "Num" tInteger)
-              <:> addInst [] (IsIn "Num" tFloat)
-              <:> addInst [] (IsIn "Num" tDouble)
-          <:> addClass "Real" ["Num", "Ord"]
-              <:> addInst [] (IsIn "Real" tInt)
-              <:> addInst [] (IsIn "Real" tInteger)
-              <:> addInst [] (IsIn "Real" tFloat)
-              <:> addInst [] (IsIn "Real" tDouble)
-          <:> addClass "Integral" ["Real", "Enum"]
-              <:> addInst [] (IsIn "Integral" tInt)
-              <:> addInst [] (IsIn "Integral" tInteger)
-              <:> addInst [] (IsIn "Integral" tFloat)
-              <:> addInst [] (IsIn "Integral" tDouble)
-          <:> addClass "Fractional" ["Num"]
-              <:> addInst [] (IsIn "Fractional" tFloat)
-              <:> addInst [] (IsIn "Fractional" tDouble)
-          <:> addClass "Floating" ["Fractional"]
-              <:> addInst [] (IsIn "Floating" tFloat)
-              <:> addInst [] (IsIn "Floating" tDouble)
-          <:> addClass "Functor" []
-              <:> addInst [] (IsIn "Functor" tList)
-              <:> addInst [] (IsIn "Functor" (TAp tArrow tvarA))
-              <:> addInst [] (IsIn "Functor" (TAp tTuple2 tvarA))
-  where tvarA = TVar $ Tyvar "a" Star
-        tvarB = TVar $ Tyvar "b" Star
+standardET =  addClass (TID "Eq") (TID <$> [])
+              <:> addInst [] (IsIn (TID "Eq") tUnit)
+              <:> addInst [] (IsIn (TID "Eq") tBool)
+              <:> addInst [] (IsIn (TID "Eq") tChar)
+              <:> addInst [] (IsIn (TID "Eq") tInt)
+              <:> addInst [] (IsIn (TID "Eq") tInteger)
+              <:> addInst [] (IsIn (TID "Eq") tFloat)
+              <:> addInst [] (IsIn (TID "Eq") tDouble)
+              <:> addInst [IsIn (TID "Eq") tvarA] (IsIn (TID "Eq") (list tvarA))
+              <:> addInst [IsIn (TID "Eq") tvarA, IsIn (TID "Eq") tvarB] (IsIn (TID "Eq") (tvarA `pair` tvarB))
+          <:> addClass (TID "Ord") (TID <$> ["Eq"])
+              <:> addInst [] (IsIn (TID "Ord") tUnit)
+              <:> addInst [] (IsIn (TID "Ord") tBool)
+              <:> addInst [] (IsIn (TID "Ord") tChar)
+              <:> addInst [] (IsIn (TID "Ord") tInt)
+              <:> addInst [] (IsIn (TID "Ord") tInteger)
+              <:> addInst [] (IsIn (TID "Ord") tFloat)
+              <:> addInst [] (IsIn (TID "Ord") tDouble)
+              <:> addInst [IsIn (TID "Ord") tvarA] (IsIn (TID "Ord") (list tvarA))
+              <:> addInst [IsIn (TID "Ord") tvarA, IsIn (TID "Ord") tvarB] (IsIn (TID "Ord") (tvarA `pair` tvarB))
+          <:> addClass (TID "Enum") (TID <$> [])
+              <:> addInst [] (IsIn (TID "Enum") tUnit)
+              <:> addInst [] (IsIn (TID "Enum") tBool)
+              <:> addInst [] (IsIn (TID "Enum") tChar)
+              <:> addInst [] (IsIn (TID "Enum") tInt)
+              <:> addInst [] (IsIn (TID "Enum") tInteger)
+              <:> addInst [] (IsIn (TID "Enum") tFloat)
+              <:> addInst [] (IsIn (TID "Enum") tDouble)
+          <:> addClass (TID "Num") (TID <$> [])
+              <:> addInst [] (IsIn (TID "Num") tInt)
+              <:> addInst [] (IsIn (TID "Num") tInteger)
+              <:> addInst [] (IsIn (TID "Num") tFloat)
+              <:> addInst [] (IsIn (TID "Num") tDouble)
+          <:> addClass (TID "Real") (TID <$> ["Num", "Ord"])
+              <:> addInst [] (IsIn (TID "Real") tInt)
+              <:> addInst [] (IsIn (TID "Real") tInteger)
+              <:> addInst [] (IsIn (TID "Real") tFloat)
+              <:> addInst [] (IsIn (TID "Real") tDouble)
+          <:> addClass (TID "Integral") (TID <$> ["Real", "Enum"])
+              <:> addInst [] (IsIn (TID "Integral") tInt)
+              <:> addInst [] (IsIn (TID "Integral") tInteger)
+              <:> addInst [] (IsIn (TID "Integral") tFloat)
+              <:> addInst [] (IsIn (TID "Integral") tDouble)
+          <:> addClass (TID "Fractional") (TID <$> ["Num"])
+              <:> addInst [] (IsIn (TID "Fractional") tFloat)
+              <:> addInst [] (IsIn (TID "Fractional") tDouble)
+          <:> addClass (TID "Floating") (TID <$> ["Fractional"])
+              <:> addInst [] (IsIn (TID "Floating") tFloat)
+              <:> addInst [] (IsIn (TID "Floating") tDouble)
+          <:> addClass (TID "Functor") (TID <$> [])
+              <:> addInst [] (IsIn (TID "Functor") tList)
+              <:> addInst [] (IsIn (TID "Functor") (TAp tArrow tvarA))
+              <:> addInst [] (IsIn (TID "Functor") (TAp tTuple2 tvarA))
+  where tvarA = TVar $ Tyvar (TID "a") Star
+        tvarB = TVar $ Tyvar (TID "b") Star
 
 
 -- ------------------------------------------------------------
@@ -140,7 +144,7 @@ andBG =
   ( "and"
   , Forall [] ([] :=> (list tBool `fn` tBool))
   , [ ( []
-      , ap [Var "foldr", Var "(&&)", EConst ("True" :>: toScheme tBool)]
+      , ap [Var (TID "foldr"), Var (TID "(&&)"), EConst (TID "True" :>: toScheme tBool)]
       )
     ]
   )
@@ -158,8 +162,8 @@ consBG =
 constBG =
   ( "const"
   , Forall [Star, Star] ([] :=> (TGen 0 `fn` TGen 1 `fn` TGen 0))
-  , [ ( [ PVar "x", PVar "y" ]
-      , Var "x"
+  , [ ( [ PVar (TID "x"), PVar (TID "y") ]
+      , Var (TID "x")
       )
     ]
   )
@@ -167,7 +171,7 @@ constBG =
 
 eqBG =
   ( "(==)"
-  , Forall [Star] ([IsIn "Eq" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
+  , Forall [Star] ([IsIn (TID "Eq") (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
   , [ ( [ error "no pat for eq" ]
       , error "no body for eq"
       )
@@ -177,7 +181,7 @@ eqBG =
 
 fromIntegralBG =
   ( "fromIntegral"
-  , Forall [Star, Star] ([IsIn "Integral" (TGen 0), IsIn "Num" (TGen 1)] :=> (TGen 0 `fn` TGen 1))
+  , Forall [Star, Star] ([IsIn (TID "Integral") (TGen 0), IsIn (TID "Num") (TGen 1)] :=> (TGen 0 `fn` TGen 1))
   , [ ( [ error "no pat for fromIntegral" ]
       , error "no body for fromIntegral"
       )
@@ -188,10 +192,10 @@ fromIntegralBG =
 foldlBG =
   ( "foldl"
   , Forall [Star, Star] ([] :=> ((TGen 0 `fn` TGen 1 `fn` TGen 0) `fn` TGen 0 `fn` list (TGen 1) `fn` TGen 0))
-  , [ (  [PWildcard, PVar "a", PCon (nilBG^.asmp) []]
-      ,  Var "a"
-     ),( [PVar "f", PVar "a", PAs "xxs" (PCon (consBG ^. asmp) [PVar "x", PVar "xs"] )]
-      ,  ap [Var "foldl", Var "f", ap [Var "f", Var "a", Var "x"], Var "xs"]
+  , [ (  [PWildcard, PVar (TID "a"), PCon (nilBG^.asmp) []]
+      ,  Var (TID "a")
+     ),( [PVar (TID "f"), PVar (TID "a"), PAs (TID "xxs") (PCon (consBG ^. asmp) [PVar (TID "x"), PVar (TID "xs")] )]
+      ,  ap [Var (TID "foldl"), Var (TID "f"), ap [Var (TID "f"), Var (TID "a"), Var (TID "x")], Var (TID "xs")]
       )
     ]
   )
@@ -200,10 +204,10 @@ foldlBG =
 foldrBG =
   ( "foldr"
   , Forall [Star, Star] ([] :=> ((TGen 0 `fn` TGen 1 `fn` TGen 1) `fn` TGen 1 `fn` list (TGen 0) `fn` TGen 1))
-  , [ (  [PWildcard, PVar "a", PCon (nilBG^.asmp) []]
-      ,  Var "a"
-     ),( [PVar "f", PVar "a", PAs "xxs" (PCon (consBG ^. asmp) [PVar "x", PVar "xs"] )]
-      ,  ap [Var "f", Var "x", ap [Var "foldr", Var "f", Var "a", Var "xs"]]
+  , [ (  [PWildcard, PVar (TID "a"), PCon (nilBG^.asmp) []]
+      ,  Var (TID "a")
+     ),( [PVar (TID "f"), PVar (TID "a"), PAs (TID "xxs") (PCon (consBG ^. asmp) [PVar (TID "x"), PVar (TID "xs")] )]
+      ,  ap [Var (TID "f"), Var (TID "x"), ap [Var (TID "foldr"), Var (TID "f"), Var (TID "a"), Var (TID "xs")]]
       )
     ]
   )
@@ -211,7 +215,7 @@ foldrBG =
 
 fractionalDivBG =
   ( "(/)"
-  , Forall [Star] ([IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
+  , Forall [Star] ([IsIn (TID "Num") (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
   , [ (  [ error "no pat for fractionalDiv" ]
       ,  error "no body for fractionalDiv"
       )
@@ -222,10 +226,10 @@ fractionalDivBG =
 gcdBG =
   ( "gcd"
   , toScheme (tInteger `fn` tInteger `fn` tInteger)
-  , [ (  [PVar "a", PLit (LitInt 0)]
-      ,  Var "a"
-     ),( [PVar "a", PVar "b"]
-      ,  ap [Var "gcd", Var "b", ap [Var "mod", Var "a", Var "b"]]
+  , [ (  [PVar (TID "a"), PLit (LitInt 0)]
+      ,  Var (TID "a")
+     ),( [PVar (TID "a"), PVar (TID "b")]
+      ,  ap [Var (TID "gcd"), Var (TID "b"), ap [Var (TID "mod"), Var (TID "a"), Var (TID "b")]]
       )
     ]
   )
@@ -233,7 +237,7 @@ gcdBG =
 
 integralAddBG =
   ( "(+)"
-  , Forall [Star] ([IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
+  , Forall [Star] ([IsIn (TID "Num") (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` TGen 0))
   , [ (  [ error "no pat for integralAdd" ]
       ,  error "no body for integralAdd"
       )
@@ -263,7 +267,7 @@ landBG =
 
 leqBG =
   ( "(<=)"
-  , Forall [Star] ([IsIn "Ord" (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
+  , Forall [Star] ([IsIn (TID "Ord") (TGen 0)] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
   , [ (  [ error "no pat for (<=)" ]
       ,  error "no body for (<=)"
       )
@@ -293,7 +297,7 @@ modBG =
 
 negateBG =
   ( "negate"
-  , Forall [Star] ([IsIn "Num" (TGen 0)] :=> (TGen 0 `fn` TGen 0))
+  , Forall [Star] ([IsIn (TID "Num") (TGen 0)] :=> (TGen 0 `fn` TGen 0))
   , [ (  [ error "no pat for negate" ]
       ,  error "no body for negate"
       )
@@ -313,7 +317,7 @@ nilBG =
 
 sumBG =
   ( "sum"
-  , Forall [Star] ([IsIn "Num" (TGen 0)] :=> (list (TGen 0) `fn` TGen 0))
+  , Forall [Star] ([IsIn (TID "Num") (TGen 0)] :=> (list (TGen 0) `fn` TGen 0))
   , [ (  [ error "no pat for sum" ]
       ,  error "no body for sum"
       )

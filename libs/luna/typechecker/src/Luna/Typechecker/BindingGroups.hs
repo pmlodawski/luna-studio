@@ -14,7 +14,7 @@ import Luna.Typechecker.AST.Kind         (Kind(..))
 import Luna.Typechecker.AST.Lit          (Lit(..),tiLit)
 import Luna.Typechecker.AST.Pat          (Pat,tiPats)
 import Luna.Typechecker.AST.Scheme       (Scheme,quantify,toScheme)
-import Luna.Typechecker.AST.TID          (TID)
+import Luna.Typechecker.AST.TID          (TID(..))
 import Luna.Typechecker.AST.Type         (Type(..),fn)
 
 import Luna.Typechecker.Internal.Logger
