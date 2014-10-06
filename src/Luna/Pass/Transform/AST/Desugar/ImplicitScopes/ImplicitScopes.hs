@@ -45,7 +45,7 @@ desugar mod = (,) <$> desugarModule mod <*> State.getAstInfo
 
 
 desugarModule :: Module -> DesugarPass Module
-desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure mod
+desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure pure mod
 
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
@@ -71,7 +71,7 @@ desugarExpr ast = case ast of
                                                  selfVar = Expr.Var <$> State.genID <*> pure "self"
                 _                       -> continue
     _                -> continue
-    where continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
+    where continue  = Expr.traverseM desugarExpr pure desugarPat pure pure ast
 
 
 desugarPat :: Pat -> DesugarPass Pat

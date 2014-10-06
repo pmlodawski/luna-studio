@@ -6,9 +6,8 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE Rank2Types                #-}
-
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
 
 module Luna.Pass.Analysis.Alias.Alias where
 
@@ -18,16 +17,15 @@ import           Flowbox.Prelude                hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Expr                  as Expr
 import           Luna.AST.Lit                   (Lit)
-import qualified Luna.AST.Lit                   as Lit
 import           Luna.AST.Module                (Module)
 import qualified Luna.AST.Module                as Module
+import qualified Luna.AST.Name                  as Name
 import           Luna.AST.Pat                   (Pat)
 import qualified Luna.AST.Pat                   as Pat
 import           Luna.AST.Type                  (Type)
 import qualified Luna.AST.Type                  as Type
-import qualified Luna.AST.Name                  as Name
 import           Luna.Data.AliasInfo            (AliasInfo)
-import           Luna.Pass.Analysis.Alias.State (VAState, bindVar, regTypeName, regParentVarName, regVarName)
+import           Luna.Pass.Analysis.Alias.State (VAState, bindVar, regParentVarName, regTypeName, regVarName)
 import qualified Luna.Pass.Analysis.Alias.State as VAState
 import           Luna.Pass.Pass                 (Pass)
 import qualified Luna.Pass.Pass                 as Pass
@@ -75,7 +73,7 @@ registerDataCons el = VAState.registerExpr el *> case el of
     Expr.Data       {} -> withID continue
     Expr.ConD       {} -> regParentVarName name id *> continue
     _                  -> continue
-    where continue = Expr.traverseM_ registerDataCons vaType vaPat vaLit el
+    where continue = Expr.traverseM_ registerDataCons vaType vaPat vaLit pure el
           withID   = VAState.withID (el ^. Expr.id)
           id       = el ^.  Expr.id
           name     = el ^.  Expr.name
@@ -85,7 +83,7 @@ registerFuncHeaders :: Expr.Expr -> VAPass ()
 registerFuncHeaders el = VAState.registerExpr el *> case el of
     Expr.Function   {} -> regVarName name id       *> withID continue
     _                  -> continue
-    where continue = Expr.traverseM_ registerFuncHeaders vaType vaPat vaLit el
+    where continue = Expr.traverseM_ registerFuncHeaders vaType vaPat vaLit pure el
           withID   = VAState.withID (el ^. Expr.id)
           id       = el ^.  Expr.id
           name     = el ^.  Expr.name
@@ -105,7 +103,7 @@ vaExpr el = VAState.registerExpr el *> case el of
     Expr.Field      {} -> regVarName name id       *> continue
     Expr.Assignment {} -> vaExpr dst <* vaPat pat
     _                  -> continue
-    where continue = Expr.traverseM_ vaExpr vaType vaPat vaLit el
+    where continue = Expr.traverseM_ vaExpr vaType vaPat vaLit pure el
           withID   = VAState.withID (el ^. Expr.id)
           id       = el ^.  Expr.id
           name     = el ^.  Expr.name

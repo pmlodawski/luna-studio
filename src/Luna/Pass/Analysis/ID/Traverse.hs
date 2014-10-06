@@ -10,6 +10,8 @@
 module Luna.Pass.Analysis.ID.Traverse where
 
 import           Flowbox.Prelude        hiding (mapM, mapM_, op)
+import           Luna.AST.Arg           (Arg)
+import qualified Luna.AST.Arg           as Arg
 import qualified Luna.AST.Common        as AST
 import           Luna.AST.Control.Focus (Focus)
 import qualified Luna.AST.Control.Focus as Focus
@@ -32,12 +34,12 @@ traverseFocus op f = Focus.traverseM_ (traverseModule op) (traverseExpr op) f
 
 traverseModule :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Module -> m ()
 traverseModule op m = do op $ m ^. Module.id
-                         Module.traverseM_ (traverseModule op) (traverseExpr op) (traverseType op) (traversePat op) (traverseLit op) m
+                         Module.traverseM_ (traverseModule op) (traverseExpr op) (traverseType op) (traversePat op) (traverseLit op) (traverseArg op) m
 
 
 traverseExpr :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Expr -> m ()
 traverseExpr op e = do op $ e ^. Expr.id
-                       Expr.traverseM_ (traverseExpr op) (traverseType op) (traversePat op) (traverseLit op) e
+                       Expr.traverseM_ (traverseExpr op) (traverseType op) (traversePat op) (traverseLit op) (traverseArg op) e
 
 
 traversePat :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Pat -> m ()
@@ -52,3 +54,7 @@ traverseType op t = do op $ t ^. Type.id
 
 traverseLit :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Lit -> m ()
 traverseLit op l = op $ l ^. Lit.id
+
+
+traverseArg :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Arg Expr -> m ()
+traverseArg op a = op $ a ^. Arg.id
