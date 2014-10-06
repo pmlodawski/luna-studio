@@ -7,6 +7,8 @@
 
 package generated.proto.crumb;
 
+import "name.proto";
+
 
 
 message Crumb {
@@ -33,8 +35,8 @@ message Class {
 
 message Function {
     extend Crumb { optional Function ext = 102; }
-    optional string name = 2;
-    repeated string path = 3;
+    optional generated.proto.name.Name name = 2;
+    repeated string path                    = 3;
 }
 
 message Lambda {
