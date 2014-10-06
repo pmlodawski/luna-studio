@@ -27,9 +27,9 @@ instance Convert Module Gen.Module where
                    (encodeList classes)  (encodeList typeAliases)
                    (encodeList typeDefs) (encodeList fields)
                    (encodeList methods)  (encodeList modules)
-    decode (Gen.Module i cls imports classes typeAliases typeDefs fields methods modules) = do
-        Module <$> decodePJ i   (missing "Module" "id" ) 
-               <*> decodeJ  cls (missing "Module" "cls") 
-               <*> decodeList imports  <*> decodeList classes <*> decodeList typeAliases 
+    decode (Gen.Module i cls imports classes typeAliases typeDefs fields methods modules) =
+        Module <$> decodePJ i   (missing "Module" "id" )
+               <*> decodeJ  cls (missing "Module" "cls")
+               <*> decodeList imports  <*> decodeList classes <*> decodeList typeAliases
                <*> decodeList typeDefs <*> decodeList fields  <*> decodeList methods
                <*> decodeList modules

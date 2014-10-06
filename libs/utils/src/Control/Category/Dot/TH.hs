@@ -10,7 +10,9 @@
 module Control.Category.Dot.TH where
 
 import Language.Haskell.TH
-import Prelude
+import Prelude             hiding (max, min)
+
+
 
 mkDots :: Int -> Int -> Q [Dec]
 mkDots min max = do

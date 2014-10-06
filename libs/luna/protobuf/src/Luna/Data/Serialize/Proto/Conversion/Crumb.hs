@@ -29,6 +29,7 @@ import qualified Generated.Proto.Crumb.Lambda                   as GenLambda
 import qualified Generated.Proto.Crumb.Module                   as GenModule
 import           Luna.AST.Control.Crumb                         (Breadcrumbs, Crumb)
 import qualified Luna.AST.Control.Crumb                         as Crumb
+import           Luna.Data.Serialize.Proto.Conversion.Name      ()
 import qualified Luna.Lib.Lib                                   as Lib
 import qualified Text.ProtocolBuffers.Extensions                as Extensions
 
@@ -37,7 +38,7 @@ import qualified Text.ProtocolBuffers.Extensions                as Extensions
 instance Convert Crumb Gen.Crumb where
     encode crumb = case crumb of
         Crumb.Function name path -> genCrumb GenCls.Function GenFunction.ext $ GenFunction.Function
-                                      (encodePJ name) (encodeListP path)
+                                      (encodeJ name) (encodeListP path)
         Crumb.Class    name      -> genCrumb GenCls.Class  GenClass.ext  $ GenClass.Class   (encodePJ name)
         Crumb.Module   name      -> genCrumb GenCls.Module GenModule.ext $ GenModule.Module (encodePJ name)
         Crumb.Lambda   i         -> genCrumb GenCls.Lambda GenLambda.ext $ GenLambda.Lambda (encodePJ i)
@@ -48,7 +49,7 @@ instance Convert Crumb Gen.Crumb where
     decode t@(Gen.Crumb cls _) = case cls of
         GenCls.Function -> do
             GenFunction.Function name path <- getExt GenFunction.ext "Crumb.Function"
-            Crumb.Function <$> decodePJ name (missing "Crumb.Function" "name")
+            Crumb.Function <$> decodeJ name (missing "Crumb.Function" "name")
                            <*> pure (decodeListP path)
         GenCls.Class    -> do
             GenClass.Class name <- getExt GenClass.ext "Crumb.Class"
@@ -69,6 +70,6 @@ instance Convert Breadcrumbs Gen.Breadcrumbs where
 
 instance Convert (Breadcrumbs, Lib.ID) Gen.ASTPtr where
     encode (bc, libraryID) = Gen.ASTPtr (encodeJ bc) (encodePJ libraryID)
-    decode (Gen.ASTPtr bc libraryID) = do
+    decode (Gen.ASTPtr bc libraryID) =
         (,) <$> decodeJ  bc        (missing "ASTPtr" "breadcrumbs")
             <*> decodePJ libraryID (missing "ASTPtr" "libraryID"  )
