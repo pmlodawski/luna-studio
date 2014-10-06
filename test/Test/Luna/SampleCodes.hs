@@ -44,24 +44,24 @@ def main:
 |], named "simple assignment 3" [r|
 def main:
     x = 0
-    {y, _} = x
+    (y, _) = x
 |], named "simple assignment 4" [r|
 def main:
     x = 0
     y = 1
-    {z, v} = {x, y}
+    (z, v) = (x, y)
 |], named "simple assignment 5" [r|
 def main:
     x = 0
     y = 1
-    {z, v} = {x, y}
-    h = {z, v}
+    (z, v) = (x, y)
+    h = (z, v)
 |], named "assignment with patterns" [r|
 def main:
     x = 0
     y = 1
-    {z, v} = {x, y}
-    h = {z, v}
+    (z, v) = (x, y)
+    h = (z, v)
 |], named "assignment" [r|
 def foo
 
@@ -139,7 +139,7 @@ def main arg:
     x = foo.bar(arg, 15, arg, [19..]).baz arg 2
 |], named "ranges" [r|
 def main arg:
-    x = {1, [1..10], [9..]}
+    x = (1, [1..10], [9..])
 |], named "prints" [r|
 def print
 
@@ -163,7 +163,7 @@ def main arg:
     Foo arg.boo My gap
 |], named "tuples 1" [r|
 def main arg:
-    {1, 2}
+    (1, 2)
     3
 |], named "tuples 2" [r|
 def main arg:
