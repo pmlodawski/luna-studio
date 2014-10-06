@@ -29,6 +29,7 @@ import           Luna.AST.Expr             (Expr)
 import qualified Luna.AST.Expr             as Expr
 import           Luna.AST.Module           (Module)
 import qualified Luna.AST.Module           as Module
+import qualified Luna.AST.Name             as Name
 import qualified Luna.AST.Type             as Type
 import           Luna.Lib.Lib              (Library)
 import qualified Luna.Lib.Lib              as Library
@@ -36,7 +37,6 @@ import           Luna.Lib.Manager          (LibManager)
 import qualified Luna.Lib.Manager          as LibManager
 import           Luna.Pass.Pass            (Pass)
 import qualified Luna.Pass.Pass            as Pass
-import qualified Luna.Data.Name            as Name
 
 
 
@@ -113,10 +113,9 @@ searchModule path bc (Module.Module _ (Type.Module _ name _) _ classes _typeAlia
 
 searchExpr :: [String] -> Breadcrumbs -> Expr -> [Breadcrumbs]
 searchExpr path bc expr = case expr of
-    -- FIXME[PM]: name is now String but should be Name datatype. Should be changed in the future.
     -- TODO[PM]: Add search for functions with path set!
     Expr.Function _ [] name _ _ _           -> if length path == 1 && head path == strName
-                                                   then [bc ++ [Crumb.Function strName []]]
+                                                   then [bc ++ [Crumb.Function name []]]
                                                    else []
                                                where strName = Name.toStr name
     Expr.Data _ (Type.Data _ name _) _ _ _  -> if length path == 1 && head path == name

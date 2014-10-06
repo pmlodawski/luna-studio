@@ -39,6 +39,16 @@ message Repr {
         Decimal = 2;
     }
     required Cls    rtype = 1;
-    optional string int   = 2;
-    optional string frac  = 3;
+    extensions 100 to max;
+}
+
+message Float {
+    extend Repr { optional Float ext = 100; }
+    optional string int  = 2;
+    optional string frac = 3;
+}
+
+message Decimal {
+    extend Repr { optional Decimal ext = 101; }
+    optional string int = 2;
 }

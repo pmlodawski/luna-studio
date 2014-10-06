@@ -7,11 +7,11 @@
 
 package generated.proto.expr;
 
-import "pat.proto";
 import "lit.proto";
+import "name.proto";
+import "pat.proto";
 import "type.proto";
-
-// last used id = 35 / 135
+// last used id = 36 / 136
 
 message Expr {
     enum Cls {
@@ -24,6 +24,7 @@ message Expr {
         Assignment   = 7;
         RecordUpdate = 8;
         Data         = 9;
+        DataNative   = 36;
         ConD         = 10;
         Con_         = 11;
         Condition    = 31;
@@ -82,8 +83,8 @@ message TypeDef {
 
 message App {
     extend Expr { optional App ext = 102; }
-    optional Expr  src  = 1;
-    repeated Expr  args = 2;
+    optional Expr src  = 1;
+    repeated Arg_ args = 2;
 }
 
 //message AppCons_ {
@@ -112,6 +113,14 @@ message Data {
     repeated generated.proto.expr.Expr methods = 4;
 }
 
+message DataNative {
+    extend Expr { optional DataNative ext = 136; }
+    optional generated.proto.type.Type cls = 1;
+    repeated Expr  cons  = 2;
+    repeated generated.proto.expr.Expr classes = 3;
+    repeated generated.proto.expr.Expr methods = 4;
+}
+
 message ConD {
     extend Expr { optional ConD ext = 126; }
     optional string name = 1;
@@ -132,11 +141,11 @@ message Condition {
 
 message Function {
     extend Expr { optional Function ext = 107; }
-    repeated string path   = 1;
-    optional string name   = 2;
-    repeated Expr   inputs = 3;
+    repeated string                    path   = 1;
+    optional generated.proto.name.Name name   = 2;
+    repeated Expr                      inputs = 3;
     optional generated.proto.type.Type output = 4;
-    repeated Expr   body   = 5;
+    repeated Expr                      body   = 5;
 }
 
 message Lambda {
@@ -260,4 +269,28 @@ message Match {
     extend Expr { optional Match ext = 125; }
     optional generated.proto.pat.Pat   pat  = 1;
     repeated generated.proto.expr.Expr body = 2;
+}
+
+
+
+message Arg_ {
+    enum Cls {
+        Named   = 1;
+        Unnamed = 2;
+    }
+    required Cls    cls  = 1;
+    optional int32 id = 2 [default = -1];
+
+    extensions 100 to max;
+}
+
+message Named {
+    extend Arg_ { optional Named ext = 100; }
+    optional string name = 3;
+    optional Expr    arg  = 4;
+}
+
+message Unnamed {
+    extend Arg_ { optional Unnamed ext = 101; }
+    optional Expr   arg  = 4;
 }

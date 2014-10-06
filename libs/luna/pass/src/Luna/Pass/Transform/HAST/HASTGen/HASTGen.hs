@@ -36,7 +36,7 @@ import qualified Luna.Target.HS.Host.Naming                             as Namin
 import           Data.String.Utils                                     (join)
 import qualified Luna.Data.HAST.Deriving                     as Deriving
 import           Luna.Data.HAST.Deriving                     (Deriving)
-import qualified Luna.Data.Name                              as Name
+import qualified Luna.AST.Name                               as Name
 import qualified Luna.AST.Arg                                as Arg
 import qualified Luna.AST.Lit.Number                         as Number
 import           Data.Maybe                                  (isNothing)

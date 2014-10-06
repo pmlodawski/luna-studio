@@ -67,10 +67,15 @@ registerAST id ast = mapStateVal (namespace . Namespace.alias %~ Alias.regAST id
 pushScope id = mapStateVal (namespace %~ Namespace.pushScope id)
 popScope     = mapStateVal (namespace %~ Namespace.popScope)
 
-registerName id name = do
+regVarName id name = do
     pid <- getPid
-    mapStateVal (namespace . Namespace.alias %~ Alias.regName pid id name)
+    withAlias $ Alias.regVarName pid id name
 
+regTypeName id name = do
+    pid <- getPid
+    withAlias $ Alias.regTypeName pid id name
+
+withAlias f = mapStateVal (namespace . Namespace.alias %~ f)
 
 withScope id p = do
     pushScope id

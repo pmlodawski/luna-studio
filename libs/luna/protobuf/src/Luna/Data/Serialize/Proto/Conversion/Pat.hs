@@ -56,26 +56,26 @@ instance Convert Pat Gen.Pat where
         i <- decodeP <$> mtid <?> "Failed to decode Pat: 'id' field is missing"
         case cls of
            GenCls.Var      -> do ext <- getExt GenVar.ext
-                                 (GenVar.Var mtname) <- ext <?> "Failed to decode Pat.Var: extension is missing"
+                                 GenVar.Var mtname <- ext <?> "Failed to decode Pat.Var: extension is missing"
                                  tname <- mtname <?> "Failed to decode Pat.Var: 'name' field is missing"
                                  pure $ Pat.Var i (decodeP tname)
            GenCls.Lit      -> do ext <- getExt GenLit.ext
-                                 (GenLit.Lit mtvalue) <- ext <?> "Failed to decode Pat.Lit: extension is missing"
+                                 GenLit.Lit mtvalue <- ext <?> "Failed to decode Pat.Lit: extension is missing"
                                  tvalue <- mtvalue <?> "Failed to decode Pat.Lit: 'value' field is missing"
                                  Pat.Lit i <$> decode tvalue
            GenCls.Tuple    -> do ext <- getExt GenTuple.ext
-                                 (GenTuple.Tuple titems) <- ext <?> "Failed to decode Pat.Tuple: extension is missing"
+                                 GenTuple.Tuple titems <- ext <?> "Failed to decode Pat.Tuple: extension is missing"
                                  Pat.Tuple i <$> decodeList titems
            GenCls.Con_     -> do ext <- getExt GenCon_.ext
-                                 (GenCon_.Con_ mtname) <- ext <?> "Failed to decode Pat.Con: extension is missing"
+                                 GenCon_.Con_ mtname <- ext <?> "Failed to decode Pat.Con: extension is missing"
                                  tname <- mtname <?> "Failed to decode Pat.Con: 'name' field is missing"
                                  pure $ Pat.Con i (decodeP tname)
            GenCls.App      -> do ext <- getExt GenApp.ext
-                                 (GenApp.App mtsrc targs) <- ext <?> "Failed to decode Pat.App: extension is missing"
+                                 GenApp.App mtsrc targs <- ext <?> "Failed to decode Pat.App: extension is missing"
                                  tsrc <- mtsrc <?> "Failed to decode Pat.App: 'src' field is missing"
                                  Pat.App i <$> decode tsrc <*> decodeList targs
            GenCls.Typed    -> do ext <- getExt GenTyped.ext
-                                 (GenTyped.Typed mtpat mttype) <- ext <?> "Failed to decode Pat.Typed: extension is missing"
+                                 GenTyped.Typed mtpat mttype <- ext <?> "Failed to decode Pat.Typed: extension is missing"
                                  tpat  <- mtpat  <?> "Failed to decode Pat.Typed: 'pat' field is missing"
                                  ttype <- mttype <?> "Failed to decode Pat.Typed: 'type' field is missing"
                                  Pat.Typed i <$> decode tpat <*> decode ttype

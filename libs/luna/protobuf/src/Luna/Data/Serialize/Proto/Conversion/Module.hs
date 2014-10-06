@@ -14,7 +14,6 @@ module Luna.Data.Serialize.Proto.Conversion.Module where
 
 import Control.Applicative
 
-import           Flowbox.Control.Error
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Module.Module                  as Gen
 import           Luna.AST.Module                                (Module (Module))
@@ -28,9 +27,9 @@ instance Convert Module Gen.Module where
                    (encodeList classes)  (encodeList typeAliases)
                    (encodeList typeDefs) (encodeList fields)
                    (encodeList methods)  (encodeList modules)
-    decode (Gen.Module mtid mtcls timports tclasses ttypeAliases ttypeDefs tfields tmethods tmodules) = do
-        i    <- decodeP <$> mtid  <?> "Failed to decode Module: 'id' field is missing"
-        tcls <- mtcls <?> "Failed to decode Module: 'cls' field is missing"
-        Module i <$> decode tcls <*> decodeList timports <*> decodeList tclasses
-                 <*> decodeList ttypeAliases <*> decodeList ttypeDefs
-                 <*> decodeList tfields <*> decodeList tmethods <*> decodeList tmodules
+    decode (Gen.Module i cls imports classes typeAliases typeDefs fields methods modules) =
+        Module <$> decodePJ i   (missing "Module" "id" )
+               <*> decodeJ  cls (missing "Module" "cls")
+               <*> decodeList imports  <*> decodeList classes <*> decodeList typeAliases
+               <*> decodeList typeDefs <*> decodeList fields  <*> decodeList methods
+               <*> decodeList modules

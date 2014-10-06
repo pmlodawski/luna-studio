@@ -16,12 +16,13 @@ import qualified Data.List                  as List
 
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Arg                           as Arg
 import           Luna.AST.Expr                          (Expr)
 import qualified Luna.AST.Expr                          as Expr
 import           Luna.AST.Pat                           (Pat)
 import qualified Luna.AST.Pat                           as Pat
-import qualified Luna.AST.Arg                           as Arg
 import qualified Luna.Data.ASTInfo                      as ASTInfo
+import qualified Luna.Data.Config                       as Config
 import qualified Luna.Graph.Attributes.Naming           as Attributes
 import           Luna.Graph.Graph                       (Graph)
 import qualified Luna.Graph.Graph                       as Graph
@@ -29,18 +30,18 @@ import           Luna.Graph.Node                        (Node)
 import qualified Luna.Graph.Node                        as Node
 import qualified Luna.Graph.Port                        as Port
 import           Luna.Graph.PropertyMap                 (PropertyMap)
-import qualified Luna.Parser.Token                      as Tok
 import qualified Luna.Parser.Parser                     as Parser
+import qualified Luna.Parser.Token                      as Tok
 import qualified Luna.Pass.Pass                         as Pass
 import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
-import qualified Luna.Data.Config                       as Config
 
 --FIXME[wd]: following imports should be removed after moving to plugin based structure
 --           including all use cases. Nothing should modify Parser.State explicitly!
-import qualified Luna.Parser.State                      as ParserState
-import qualified Luna.Parser.Pragma                     as Pragma
+import qualified Luna.Parser.Pragma as Pragma
+import qualified Luna.Parser.State  as ParserState
+import           Luna.Pragma.Pragma (Pragma)
 
 
 
@@ -113,10 +114,14 @@ patVariables pat = case pat of
     Pat.App _ _ args  -> concatMap patVariables args
     _                 -> []
 
+
+patchedParserState :: ASTInfo.ASTInfo
+                   -> ParserState.State (Pragma Pragma.ImplicitSelf, (Pragma Pragma.AllowOrphans, (Pragma Pragma.TabLength, ())))
 patchedParserState info = def
     & ParserState.info .~ info
     & ParserState.conf .~ parserConf
     where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
+
 
 parsePatNode :: Node.ID -> String -> GPPass ()
 parsePatNode nodeID pat = do
@@ -167,7 +172,7 @@ parseAppNode nodeID app = do
         (Expr.Wildcard {}):t -> addExpr nodeID $ Expr.App IDFixer.unknownID expr (fmap (Arg.Unnamed IDFixer.unknownID) t)
         f:t                  -> addExpr nodeID $ Expr.App IDFixer.unknownID acc  (fmap (Arg.Unnamed IDFixer.unknownID) t)
                                 where acc = Expr.Accessor nodeID app f
-                                   
+
 
 
 parseTupleNode :: Node.ID -> GPPass ()
