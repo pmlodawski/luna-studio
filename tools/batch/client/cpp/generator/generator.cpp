@@ -1,3 +1,4 @@
+#include <iostream>
 
 #include "../generated/project-manager.pb.h"
 #include "../generated/file-manager.pb.h"
@@ -56,6 +57,7 @@ class %wrapper_name%
 {
 public:
 	shared_ptr<BusHandler> bh;
+	Maybe<boost::chrono::milliseconds> timeout;
 
 	CorrelationId sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback);
 
@@ -137,13 +139,13 @@ const std::string methodDefinition = R"(
 		return ret;
 	};
 
-	CondSh<bool> isDone;
+	SharedCondVariable<bool> isDone;
 	std::string errorMessage;
 
 	// Because we are synchronous, we can use [&] -- we won't leave block until everything is done
 	auto callback = [&](Conversation &c)
 	{
-		FINALIZE{ isDone.setn(true); };
+		FINALIZE{ isDone.set(true); };
 		//logDebug("Project create call has been finished!");
 		if(c.ontopicReplies.empty())
 		{
@@ -197,11 +199,24 @@ const std::string methodDefinition = R"(
 		while(!isDone.get())
 			bh->processMessageFor(correlation);
 	}
-	isDone.waitWhile(false);
+	if(timeout)
+	{
+		isDone.waitWhileEqualsTimeout(false, *timeout);
+	}
+	else
+	{
+		isDone.waitWhileEquals(false);
+	}
 
 	if(errorMessage.size())
 	{
 		THROW("Request %s failed: %s", topic, errorMessage);
+	}
+
+	if(!isDone.get())
+	{
+		bh->removeCallback(correlation);
+		THROW("Did not received answer %s. Request timed-out! Is the bus plugin for this call active?", topic);
 	}
 
 	%return_ret%
@@ -673,6 +688,10 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::fileManager::FileSystem::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::Plugin::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::interpreter::Interpreter::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::fileManager::FileManager::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::projectManager::ProjectManager::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parser::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::PluginManager::descriptor());
 	return methods;
 }
 
@@ -723,6 +742,7 @@ void generateDeserializers()
 
 struct PackageDeserializer
 {
+	static std::function<bool(const std::string &)> ignorePredicate;
 	static std::unique_ptr<google::protobuf::Message> deserialize(const BusMessage &message);
 };
 )";
@@ -734,6 +754,11 @@ struct PackageDeserializer
 
 
 typedef std::unique_ptr<google::protobuf::Message> MessagePtr;
+
+std::function<bool(const std::string &)> PackageDeserializer::ignorePredicate = [](const std::string &topic)
+		{
+			return boost::starts_with(topic, "builder.") || boost::starts_with(topic, "test.") || boost::starts_with(topic, "projectmanager.sync.");
+		};
 
 std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(const BusMessage &message)
 {
@@ -754,7 +779,7 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 		return std::move(ret);
 	}
 
-	if(/*boost::ends_with(message.topic, "request") || */boost::starts_with(message.topic, "builder.")  ||  boost::starts_with(message.topic, "test."))
+	if(!ignorePredicate  ||  ignorePredicate(message.topic))
 		// No action needed for our packs
 		return nullptr;
 
