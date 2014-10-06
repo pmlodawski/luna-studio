@@ -10,6 +10,7 @@ module Luna.AST.Control.Crumb where
 
 import           Flowbox.Prelude
 import qualified Luna.AST.Common as AST
+import           Luna.AST.Name   (Name)
 
 
 
@@ -18,8 +19,8 @@ type Breadcrumbs = [Crumb]
 
 data Crumb = Module   { _name :: String }
            | Class    { _name :: String }
-           | Function { _name :: String
-                      , _path :: [String]
+           | Function { _fname :: Name
+                      , _path  :: [String]
                       }
            | Lambda   { _id :: AST.ID }
            deriving (Show, Ord, Eq)

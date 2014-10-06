@@ -17,6 +17,7 @@ import qualified Luna.AST.Control.Focus                    as Focus
 import qualified Luna.AST.Control.Zipper                   as Zipper
 import           Luna.AST.Expr                             (Expr)
 import           Luna.AST.Module                           (Module)
+import qualified Luna.AST.Name                             as Name
 import           Luna.Graph.Graph                          (Graph)
 import           Luna.Graph.PropertyMap                    (PropertyMap)
 import qualified Luna.Pass.Analysis.Alias.Alias            as Analysis.Alias
@@ -32,7 +33,7 @@ named = (,)
 
 
 mainBC :: Breadcrumbs
-mainBC = [Crumb.Module "Main", Crumb.Function "main" []]
+mainBC = [Crumb.Module "Main", Crumb.Function (Name.single "main") []]
 
 
 getGraph :: Breadcrumbs -> PropertyMap -> Module -> IO (Graph, PropertyMap)

@@ -7,20 +7,20 @@
 
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-
 module Luna.AST.AST (
     module Luna.AST.AST,
     module X
-)where
+) where
 
 import Flowbox.Prelude
 import Luna.AST.Common as X
-import Luna.AST.Prop   as X
 import Luna.AST.Expr   (Expr)
 import Luna.AST.Lit    (Lit)
 import Luna.AST.Module (Module)
 import Luna.AST.Pat    (Pat)
+import Luna.AST.Prop   as X
 import Luna.AST.Type   (Type)
+
 
 
 data AST = Module { fromModule :: Module }
