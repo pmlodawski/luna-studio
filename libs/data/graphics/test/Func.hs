@@ -7,16 +7,17 @@
 
 module Main where
 
-import           Geom2D
-import           Geom2D.CubicBezier.Basic
+import Geom2D
+import Geom2D.CubicBezier.Basic
 
-import Flowbox.Geom2D.CubicBezier.Intersection
+import Flowbox.Math.Function.Model 	   as Func
+import Flowbox.Math.Function.Construct as Func
 import Flowbox.Prelude
 
 main :: IO ()
 main = do
     print "- - - = = =   Func Test  = = = - - -"
 
-
+    --let func = bsplineLinearFromPoints
 
     return ()
