@@ -119,17 +119,6 @@ addFieldDC :: Expr -> Expr -> Expr
 addFieldDC field e = e & cons .~ addField field defc : cons' where
     defc:cons' = e ^. cons
 
-
-afterData :: Expr -> Expr
-afterData d = nd where
-    dcons = d ^. cons
-    defc  = last dcons
-    ncons = if length dcons == 1
-                then [defc & name .~ (nd ^. (cls. Type.name))]
-                else init dcons
-    nd = d & cons .~ ncons
-
-
 addClass :: Expr -> Expr -> Expr
 addClass ncls e = e & classes %~ (ncls:)
 
