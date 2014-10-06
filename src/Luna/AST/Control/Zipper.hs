@@ -23,6 +23,7 @@ import           Luna.AST.Expr          (Expr)
 import qualified Luna.AST.Expr          as Expr
 import           Luna.AST.Module        (Module)
 import qualified Luna.AST.Module        as Module
+import           Luna.AST.Name          (Name)
 import qualified Luna.AST.Type          as Type
 
 
@@ -96,14 +97,14 @@ focusClass name zipper@(env, _) = case env of
     where classComp f = f ^. (Expr.cls . Type.name) == name
 
 
-focusFunction :: String -> [String] -> Zipper -> Either Error Zipper
+focusFunction :: Name -> [String] -> Zipper -> Either Error Zipper
 focusFunction name path zipper@(env, _) = case env of
     Focus.Module mod -> focusListElem Module.methods funComp
                             Focus.Function Focus.Module mod zipper
     Focus.Class  cls -> focusListElem Expr.methods funComp
                             Focus.Function Focus.Class cls zipper
     _                -> Left $ "Zipper.focusFunction : Cannot focus on " ++ show name
-    where funComp f = f ^. Expr.name == name && f ^. Expr.path == path
+    where funComp f = (f ^?! Expr.fname) == name && f ^. Expr.path == path
 
 
 focusLambda :: AST.ID -> Zipper -> Either Error Zipper
