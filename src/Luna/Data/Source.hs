@@ -16,7 +16,7 @@ data Source = Source { _path :: [String]
                      , _code :: String
                      } deriving (Show)
 
-makeLenses(''Source)
+makeLenses ''Source
 
 
 
@@ -35,7 +35,7 @@ transCode = (code %~ )
 
 
 --data Source = File       { _path  :: String          }
---            | String     { _input :: String          } 
+--            | String     { _input :: String          }
 --            | ByteString { _input :: UTF8.ByteString }
 --            deriving (Show)
 
