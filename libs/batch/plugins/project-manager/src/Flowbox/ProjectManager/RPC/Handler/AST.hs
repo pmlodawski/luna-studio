@@ -104,7 +104,7 @@ functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectI
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     addedFunction <- BatchAST.addFunction newFunction bcParent libID projectID
-    let newBC = bcParent ++ [Crumb.Function (addedFunction ^. Expr.name) (addedFunction ^. Expr.path)]
+    let newBC = bcParent ++ [Crumb.Function (addedFunction ^?! Expr.fname) (addedFunction ^. Expr.path)]
     updateNo <- Batch.getUpdateNo
     return $ AddFunction.Update request (encode addedFunction) (encode newBC) updateNo
 
