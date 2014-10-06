@@ -13,17 +13,18 @@
 
 module Luna.AST.Arg where
 
-import Control.Applicative
-import GHC.Generics        (Generic)
+import GHC.Generics (Generic)
 
-import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Prelude                 hiding (Traversal, cons, drop, id)
-import           Luna.AST.Common                 (ID)
+import Flowbox.Generics.Deriving.QShow
+import Flowbox.Prelude                 hiding (Traversal, cons, drop, id)
+import Luna.AST.Common                 (ID)
+
 
 
 data Arg a = Named   { _id :: ID, _name :: String, _arg :: a }
            | Unnamed { _id :: ID, _arg :: a                  }
            deriving (Show, Eq, Generic, Read)
+
 
 instance QShow a => QShow (Arg a)
 makeLenses (''Arg)

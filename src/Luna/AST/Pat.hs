@@ -19,10 +19,10 @@ import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, drop, id)
 import           Luna.AST.Common                 (ID)
 import qualified Luna.AST.Lit                    as Lit
+import           Luna.AST.Prop                   (HasName)
+import qualified Luna.AST.Prop                   as Prop
 import           Luna.AST.Type                   (Type)
 import qualified Luna.AST.Type                   as Type
-import qualified Luna.AST.Prop                   as Prop
-import           Luna.AST.Prop                   (HasName)
 
 
 type Lit = Lit.Lit
@@ -42,6 +42,7 @@ instance QShow Pat
 makeLenses (''Pat)
 
 
+var :: String -> ID -> Pat
 var = flip Var
 
 
@@ -102,6 +103,7 @@ lunaShow p = case p of
     Typed    _ pat' cls'  -> patStr ++ " :: " ++ typeStr where
                                    patStr = lunaShow pat'
                                    typeStr = Type.lunaShow cls'
+    Grouped  _ pat'       -> concat ["(", lunaShow pat', ")"]
     Wildcard _            -> "_"
     RecWildcard _         -> ".."
 
