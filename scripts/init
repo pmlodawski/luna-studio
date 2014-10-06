@@ -148,7 +148,8 @@ def install_from_sources(name, version=None):
                 try_call('cabal get ' + name)
             [d] = glob.glob(name + "-*")
             with changed_cwd(d):
-                try_call ('cabal clean; cabal install')
+                try_call('cabal clean')
+                try_call('cabal install')
 
 def install_alex_happy(name, version):
     try_call('cabal install alex')
