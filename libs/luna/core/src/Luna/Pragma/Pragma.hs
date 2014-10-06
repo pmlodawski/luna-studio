@@ -1,3 +1,9 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -27,8 +33,7 @@ import           Data.Proxy.Utils (proxyTypeName)
 import qualified Data.TypeLevel.Set as Set
 import           Data.Default
 import           Control.Applicative hiding (empty)
-import           Text.Parser.Char (noneOf)
-import           Text.Parser.Char (CharParsing)
+import           Text.Parser.Char (noneOf, CharParsing)
 
 ----------------------------------------------------------------------
 -- Data types
@@ -72,7 +77,7 @@ lookup (PragmaSet set) = case Set.lookup set of
 
 names = fromPragmaSet . fmap setNames
 
-parsePragma (PragmaSet set) name = fmap PragmaSet $ parseByName set name
+parsePragma (PragmaSet set) name = PragmaSet <$> parseByName set name
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -105,7 +110,7 @@ instance (ParsePragma xs, Read a, IsPragma a) => ParsePragma (Pragma a,xs) where
             return (x {val = Just nval}, xs) 
         else do 
             nval <- parseByName xs n
-            return $ (x,nval)
+            return (x,nval)
 
 ---
 
