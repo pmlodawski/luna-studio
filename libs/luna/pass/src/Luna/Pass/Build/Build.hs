@@ -147,9 +147,7 @@ run buildConfig ast astInfo implicitSelf = runEitherT $ do
                 : "luna-target-ghchs"
                 : "template-haskell"
                 : BuildConfig.libs buildConfig
-                ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
-                      then ["flowboxM-stdlib"]
-                      else []
+                ++ ["flowboxM-stdlib" | BuildConfig.name buildConfig /= "flowboxM-stdlib"]
     hsc <- hoistEither =<< prepareSources diag ast astInfo implicitSelf
     case BuildConfig.buildDir buildConfig of
         Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig hsc allLibs
@@ -190,8 +188,7 @@ parseFile :: UniPath -> UniPath -> Pass.Result (ASTModule.Module, SourceMap, AST
 parseFile rootPath filePath = runEitherT $ do
     logger debug $ "Compiling file '" ++ UniPath.toUnixString filePath ++ "'"
     source <- hoistEither =<< FileReader.run rootPath filePath
-    result <- hoistEither =<< TxtParser.run source
-    return result
+    hoistEither =<< TxtParser.run source
 
 
 formatSource :: Source -> Source
