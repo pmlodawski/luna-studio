@@ -13,6 +13,7 @@ import Text.RawString.QQ
 import           Flowbox.Prelude
 import           Luna.AST.Control.Crumb                (Breadcrumbs)
 import qualified Luna.AST.Control.Crumb                as Crumb
+import qualified Luna.AST.Name                         as Name
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 
 
@@ -193,12 +194,12 @@ def main arg:
 sampleLambdas :: [(Name, Breadcrumbs, Code)]
 sampleLambdas = [
     ( "simple lambda"
-    , [Crumb.Module "Main", Crumb.Function "main" [], Crumb.Lambda 6]
+    , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 6]
     , [r|
 def main:
     f = a : a + 1
 |]), ( "lambda with context"
-    , [Crumb.Module "Main", Crumb.Function "main" [], Crumb.Lambda 12]
+    , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 12]
     , [r|
 def main arg:
     x = 15
