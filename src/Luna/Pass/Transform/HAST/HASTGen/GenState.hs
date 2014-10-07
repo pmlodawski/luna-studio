@@ -21,6 +21,7 @@ import qualified Luna.Data.HAST.Module as Module
 import Flowbox.System.Log.Logger
 
 
+
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.HSGen.GenState"
 
