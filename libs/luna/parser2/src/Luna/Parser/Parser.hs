@@ -603,7 +603,8 @@ mkFuncParser func defparser = case name of
           (Name base segments) = name
           multiparser   = withReservedWords segments $ tok (Expr.app <$> tok (pure $ Expr.var fname) <*> argParser)
           [s1,s2] = fmap Tok.symbol segments
-          fname = base ++ " " ++ join " " segments
+          fname = if null segments then base 
+                                   else base ++ " " ++ join " " segments
 
 
 
