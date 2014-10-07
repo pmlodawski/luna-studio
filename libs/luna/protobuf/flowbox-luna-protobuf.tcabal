@@ -28,8 +28,8 @@ Library
                    `findmodules('src', '.*\.hs', exclude='.*Distribution.*')`
 
   Build-Depends:  base,
-                  protocol-buffers,
-                  protocol-buffers-descriptor,
+                  protocol-buffers-fork,
+                  protocol-buffers-descriptor-fork,
                   flowbox-utils,
                   luna-core,
                   containers,

@@ -69,7 +69,7 @@ applyEdgeView (graph, pm) (src, dst, edgeview) = do
     dstNode <- Graph.lab graph src <?> "GraphView.applyEdgeView : Cannot find node with id = " ++ show src
     let patternLikeNode = case srcNode of
             Node.Inputs  {}    -> True
-            Node.Expr expr _ _ -> (not (null expr)) && (head expr == '=')
+            Node.Expr expr _ _ -> not (null expr) && (head expr == '=')
             Node.Outputs {}    -> False
     case (patternLikeNode || Node.isOutputs dstNode, edgeview) of
         (_   , EdgeView []    [] ) -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All     Port.All   ) graph, pm)
