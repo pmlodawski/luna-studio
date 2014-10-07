@@ -38,3 +38,6 @@ def Int.inc:
 
 def Int.dec:
     self - 1
+
+def main:
+    print "test"
