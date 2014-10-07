@@ -58,5 +58,5 @@ inv33 t = A.cond (nearZero det)
           g' = cofactor (d,e,g,h)
           h' = cofactor (b,a,h,g)
           i' = cofactor (a,b,d,e)
-          cofactor (q,r,s,t) = det22 (V2 (V2 q r) (V2 s t))
+          cofactor (p,q,r,s) = det22 (V2 (V2 p q) (V2 r s))
           det = det33 m

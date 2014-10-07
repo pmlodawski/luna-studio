@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Math.Function.Segment where
 
+import Control.Monad
 import Data.Map as Map
 
 import Flowbox.Math.Function.Model
@@ -13,37 +14,36 @@ import Flowbox.Prelude
 
 
 
-isValidIndex :: Function -> Int -> Bool
-isValidIndex (Function _ rest) idx = idx >= 0 && idx <= Map.size rest
+isValidIndex :: Function x y -> Int -> Bool
+isValidIndex (Function segs) idx = idx >= 0 && idx < Map.size segs
 
-size :: Function -> Int
-size (Function _ rest) = Map.size rest + 1
+size :: Function x y -> Int
+size (Function segs) = Map.size segs
 
--- TODO: might bea good idea to rescale the adjacent (probably only the previous one) segments so that this one fits in
-insertSegmentAt :: Function -> CoordinateX -> Segment -> Function
-insertSegmentAt fun x seg = fun & segments %~ Map.insert x seg
+insertSegmentAt :: Ord x => Function x y -> x -> Segment x y -> Function x y
+insertSegmentAt fun x seg = fun & segments %~ Map.insert x (Just seg)
 
-getSegmentAt :: Function -> CoordinateX -> Segment
-getSegmentAt (Function first rest) x = maybe first snd $ Map.lookupLE x rest
+getSegmentAt :: Ord x => Function x y -> x -> Maybe (Segment x y)
+getSegmentAt (Function segs) x = join . fmap snd $ Map.lookupLE x segs
 
-getSegmentIdAt :: Function -> CoordinateX -> Int
-getSegmentIdAt (Function _ rest) x =
-    let inc = (+1) . flip Map.findIndex rest . fst
-    in maybe 0 inc $ Map.lookupLE x rest
+--(x, Maybe (Segment x y))
 
-getNthSegment :: Function -> Int -> Maybe Segment
-getNthSegment fun@(Function first rest) idx = case idx of
-    0                      -> Just first
-    i | isValidIndex fun i -> Just $ snd $ Map.elemAt (idx - 1) rest
+getSegmentIdAt :: Ord x => Function x y -> x -> Maybe Int
+getSegmentIdAt (Function segs) x =
+    let getIdx = flip Map.findIndex segs . fst
+    in fmap getIdx $ Map.lookupLE x segs
+
+getNthSegment :: Ord x => Function x y -> Int -> Maybe (Segment x y)
+getNthSegment fun@(Function segs) idx = case idx of
+    i | isValidIndex fun i -> snd $ Map.elemAt idx segs
     _                      -> Nothing
 
-replaceSegment :: Function -> Int -> Segment -> Function
-replaceSegment (Function _ rest) 0 seg = Function seg rest
-replaceSegment fun@(Function first rest) idx seg
-    | isValidIndex fun idx = Function first $ Map.updateAt (const . const $ Just seg) (idx - 1) rest
+replaceSegment :: Ord x => Function x y -> Int -> Segment x y -> Function x y
+replaceSegment fun@(Function segs) idx seg
+    | isValidIndex fun idx = Function $ Map.updateAt (const . const . pure . pure $ seg) idx segs
     | otherwise            = fun
 
-modifySegment :: Function -> Int -> (Segment -> Segment) -> Function
+modifySegment :: Ord x => Function x y -> Int -> (Segment x y -> Segment x y) -> Function x y
 modifySegment fun idx f =
     let updatedSegment = f <$> getNthSegment fun idx
     in maybe fun (replaceSegment fun idx) updatedSegment
