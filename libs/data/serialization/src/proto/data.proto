@@ -5,7 +5,7 @@
 // Flowbox Team <contact@flowbox.io>, 2014
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto.graphics;
+package generated.proto.data;
 
 message Value {
     extensions 100 to max;

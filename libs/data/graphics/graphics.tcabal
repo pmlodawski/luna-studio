@@ -36,6 +36,7 @@ Library
                   distributive                ,
                   either                      ,
                   errors                      ,
+                  flowbox-serialization       ,
                   flowbox-utils               ,
                   imagemagick   >= 0.0.3.6    ,
                   lifted-base                 ,
@@ -246,14 +247,15 @@ Executable test_serialization
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.15.*
 
-  Build-Depends:  base           == 4.7.*  ,
+  Build-Depends:  algebraic                ,
                   accelerate               ,
                   accelerate-io            ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
+                  base           == 4.7.*  ,
                   bytestring               ,
-                  protocol-buffers         ,
-                  vector                   ,
+                  flowbox-graphics         ,
+                  flowbox-serialization    ,
+                  flowbox-utils            ,
                   JuicyPixels              ,
-                  algebraic                ,
-                  split
+                  protocol-buffers-fork    ,
+                  split                    ,
+                  vector

@@ -1,4 +1,4 @@
-Name:           luna-protobuf
+Name:           flowbox-serialization
 Version:        0.1
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
@@ -10,26 +10,23 @@ Flag Debug
   Description: Enable debug support
   Default:     False
 
-
 Library
   Hs-Source-Dirs: dist/gen,
                   src
-  Other-Modules:  Paths_luna_protobuf
-  if flag(debug)
-    GHC-Options:  -csacc
+  Other-Modules:  Paths_flowbox_serialization
   GHC-Options:    -Wall -O2 -threaded
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude
 
-  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`,
+  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`
                    `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
-                  protocol-buffers-fork,
-                  protocol-buffers-descriptor-fork,
-                  flowbox-utils,
-                  luna-core,
+                  bytestring,
                   containers,
-                  bytestring
+                  errors,
+                  flowbox-utils,
+                  protocol-buffers-fork,
+                  protocol-buffers-descriptor-fork
 
