@@ -137,8 +137,10 @@ pkgDb = \
 
        , 'third-party/algebraic'               : HProject   ('algebraic'                    , os.path.join ('third-party', 'algebraic')                     , 'third-party', ['third-party/accelerate'])
        , 'third-party/accelerate'              : HProject   ('accelerate'                   , os.path.join ('third-party', 'accelerate')                    , 'third-party', [])
-       , 'third-party/accelerate-cuda'         : HProject   ('accelerate-cuda'              , os.path.join ('third-party', 'accelerate-cuda')               , 'third-party', ['third-party/mainland-pretty'], flags=Flags([Flag('-fdebug')])) # [KL] accelerate debug flag is necessary to dump generated CUDA kernels
-       , 'third-party/accelerate-fft'          : HProject   ('accelerate-fft'               , os.path.join ('third-party', 'accelerate-fft')                , 'third-party', [])
+       , 'third-party/accelerate-cuda'         : HProject   ('accelerate-cuda'              , os.path.join ('third-party', 'accelerate-cuda')               , 'third-party', ['third-party/mainland-pretty', 'third-party/cuda'], flags=Flags([Flag('-fdebug')])) # [KL] accelerate debug flag is necessary to dump generated CUDA kernels
+       , 'third-party/cuda'                    : HProject   ('cuda'                         , os.path.join ('third-party', 'cuda')                          , 'third-party', [])
+       , 'third-party/accelerate-fft'          : HProject   ('accelerate-fft'               , os.path.join ('third-party', 'accelerate-fft')                , 'third-party', ['third-party/cufft'])
+       , 'third-party/cufft'                   : HProject   ('cufft'                        , os.path.join ('third-party', 'cufft')                         , 'third-party', [])
        , 'third-party/accelerate-io'           : HProject   ('accelerate-io'                , os.path.join ('third-party', 'accelerate-io')                 , 'third-party', [])
        , 'third-party/imagemagick'             : HProject   ('imagemagick'                  , os.path.join ('third-party', 'imagemagick')                   , 'third-party', []) # [KL] temporary fix until imagemagick is fixed
        , 'third-party/mainland-pretty'         : HProject   ('mainland-pretty'              , os.path.join ('third-party', 'mainland-pretty')               , 'third-party', []) # [MM] temporary fix until mainland-pretty relaxes upper bound on text to allow version 1.2
