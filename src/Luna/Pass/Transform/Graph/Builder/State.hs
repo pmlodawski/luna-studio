@@ -50,6 +50,7 @@ data GBState = GBState { _graph        :: Graph
                        , _nodeMap      :: NodeMap
                        , _aa           :: AliasInfo
                        , _propertyMap  :: PropertyMap
+                       , _foldNodes    :: Bool
                        , _prevoiusNode :: Node.ID
                        } deriving (Show)
 
@@ -59,7 +60,7 @@ makeLenses(''GBState)
 type GBPass result = Pass GBState result
 
 
-make :: AliasInfo -> PropertyMap -> Node.ID -> GBState
+make :: AliasInfo -> PropertyMap -> Bool -> Node.ID -> GBState
 make = GBState Graph.empty Map.empty
 
 
@@ -196,11 +197,10 @@ setPosition nodeID pos = do
     setGraph $ Graph.updateNode (nodeID, node & Node.pos .~ pos) graph'
 
 
-getASTFolded :: Node.ID -> GBPass (Maybe Bool)
-getASTFolded nodeID =
-    join . fmap Read.readMaybe <$> getProperty nodeID Attributes.astFolded
 
-
-getGraphFolded :: Node.ID -> GBPass (Maybe Bool)
-getGraphFolded nodeID =
-    join . fmap Read.readMaybe <$> getProperty nodeID Attributes.graphFolded
+getGraphFolded :: Node.ID -> GBPass Bool
+getGraphFolded nodeID = do
+    foldSetting <- gets (view foldNodes)
+    if foldSetting
+        then (== Just True) . join . fmap Read.readMaybe <$> getProperty nodeID Attributes.graphFolded
+        else return False

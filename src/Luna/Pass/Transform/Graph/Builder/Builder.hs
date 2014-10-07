@@ -43,9 +43,9 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 
 
-run :: AliasInfo -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
-run aliasInfo pm expr = Pass.run_ (Pass.Info "GraphBuilder")
-                                  (State.make aliasInfo pm inputsID)
+run :: AliasInfo -> PropertyMap -> Bool -> Expr -> Pass.Result (Graph, PropertyMap)
+run aliasInfo pm foldNodes expr = Pass.run_ (Pass.Info "GraphBuilder")
+                                  (State.make aliasInfo pm foldNodes inputsID)
                                   (expr2graph expr)
     where inputsID = - expr ^. Expr.id
 
@@ -152,9 +152,8 @@ buildNode astFolded monadicBind outName expr = do
                         return j
 
         buildApp i src args = do
-            mAstFolded <- State.getGraphFolded i
-            --if not astFolded && (mAstFolded == Just True)
-            if mAstFolded == Just True
+            graphFolded <- State.getGraphFolded i
+            if graphFolded
                 then addNode' (src ^?! Expr.dst . Expr.id) (showExpr expr) []
                 else do srcID <- buildNode astFolded False outName src
                         s     <- State.gvmNodeMapLookUp srcID
@@ -165,9 +164,8 @@ buildNode astFolded monadicBind outName expr = do
                         return srcID
 
         addNode i name args = do
-            mAstFolded <- State.getGraphFolded i
-            --if not astFolded && (mAstFolded == Just True)
-            if mAstFolded == Just True
+            graphFolded <- State.getGraphFolded i
+            if graphFolded
                 then addNode' i (showExpr expr) []
                 else addNode' i name args
 
