@@ -83,7 +83,5 @@ clear :: Config -> IO ()
 clear config = do
     logger info "Cleaning Flowbox configuration."
     let localPath = UniPath.fromUnixString $ Config.path $ Config.local config
-    exists <- Directory.doesDirectoryExist localPath
-    if exists
-        then Directory.removeDirectoryRecursive localPath
-        else return ()
+    whenM (Directory.doesDirectoryExist localPath) $
+        Directory.removeDirectoryRecursive localPath
