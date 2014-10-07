@@ -201,61 +201,61 @@ main_inner = Luna.run $ do
     -----------------------------------------
     -- !!! CallGraph and DepSort are mockup passes !!!
     -- They are working right now only with not self typed variables
-        --logger info "\n-------- Analysis.CallGraph --------"
-        --callGraph <- hoistEither =<< Analysis.CallGraph.run aliasInfo ast
-        --logger info $ PP.ppShow callGraph
+    logger info "\n-------- Analysis.CallGraph --------"
+    callGraph <- hoistEither =<< Analysis.CallGraph.run aliasInfo ast
+    logger info $ PP.ppShow callGraph
 
 
-        --logger info "\n-------- Transform.DepSort --------"
-        --ast <- hoistEither =<< Transform.DepSort.run callGraph aliasInfo ast
-        --logger info $ PP.ppShow ast
-        -------------------------------------------
+    logger info "\n-------- Transform.DepSort --------"
+    ast <- hoistEither =<< Transform.DepSort.run callGraph aliasInfo ast
+    logger info $ PP.ppShow ast
+    -----------------------------------------
 
 
-        ---- !!! [WARNING] INVALIDATES aliasInfo !!!
-        --logger info "\n-------- Desugar.ImplicitScopes --------"
-        --(ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
-        --logger info $ PP.ppqShow ast
+    -- !!! [WARNING] INVALIDATES aliasInfo !!!
+    logger info "\n-------- Desugar.ImplicitScopes --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
+    logger info $ PP.ppqShow ast
 
 
-        ---- Should be run AFTER ImplicitScopes
-        --logger info "\n-------- Desugar.ImplicitCalls --------"
-        --(ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
-        --logger info $ PP.ppqShow ast
+    -- Should be run AFTER ImplicitScopes
+    logger info "\n-------- Desugar.ImplicitCalls --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
+    logger info $ PP.ppqShow ast
 
 
-        --logger info "\n-------- Analysis.Alias --------"
-        --aliasInfo <- hoistEither =<< Analysis.Alias.run ast
-        --logger info "\n>> scope:"
-        --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.scope)
-        --logger info "\n>> alias map:"
-        --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.alias)
-        --logger info "\n>> orphans map:"
-        --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
+    logger info "\n-------- Analysis.Alias --------"
+    aliasInfo <- hoistEither =<< Analysis.Alias.run ast
+    logger info "\n>> scope:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.scope)
+    logger info "\n>> alias map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.alias)
+    logger info "\n>> orphans map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
 
 
 
 
 
-        ----logger info "\n-------- FuncPool --------"
-        ----fp <- hoistEither =<< FuncPool.run ast
-        ----logger info $ PP.ppShow fp
+    --logger info "\n-------- FuncPool --------"
+    --fp <- hoistEither =<< FuncPool.run ast
+    --logger info $ PP.ppShow fp
 
-        --logger info "\n-------- Hash --------"
-        --hash <- hoistEither =<< Hash.run ast
-        ----logger info $ PP.ppShow hash
+    logger info "\n-------- Hash --------"
+    hash <- hoistEither =<< Hash.run ast
+    --logger info $ PP.ppShow hash
 
-        --logger info "\n-------- SSA --------"
-        --ssa <- hoistEither =<< SSA.run aliasInfo hash
-        ----logger info $ PP.ppqShow ssa
+    logger info "\n-------- SSA --------"
+    ssa <- hoistEither =<< SSA.run aliasInfo hash
+    --logger info $ PP.ppqShow ssa
 
-        --logger info "\n-------- HASTGen --------"
-        --hast <- hoistEither =<< HASTGen.run ssa
-        --logger info $ PP.ppShow hast
+    logger info "\n-------- HASTGen --------"
+    hast <- hoistEither =<< HASTGen.run ssa
+    logger info $ PP.ppShow hast
 
-        --logger info "\n-------- HSC --------"
-        --hsc <- hoistEither =<< HSC.run  hast
-        --logger info $ join "\n\n" (map showSrc hsc)
+    logger info "\n-------- HSC --------"
+    hsc <- hoistEither =<< HSC.run  hast
+    logger info $ join "\n\n" (map showSrc hsc)
 
 
     return ()
