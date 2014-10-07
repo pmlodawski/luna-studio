@@ -50,6 +50,7 @@ data GBState = GBState { _graph        :: Graph
                        , _nodeMap      :: NodeMap
                        , _aa           :: AliasInfo
                        , _propertyMap  :: PropertyMap
+                       , _foldNodes    :: Bool
                        , _prevoiusNode :: Node.ID
                        } deriving (Show)
 
@@ -59,7 +60,7 @@ makeLenses(''GBState)
 type GBPass result = Pass GBState result
 
 
-make :: AliasInfo -> PropertyMap -> Node.ID -> GBState
+make :: AliasInfo -> PropertyMap -> Bool -> Node.ID -> GBState
 make = GBState Graph.empty Map.empty
 
 
@@ -184,11 +185,8 @@ getProperty nodeID key =
 
 
 getPosition :: Node.ID -> GBPass (Maybe Node.Position)
-getPosition nodeID = do
-    mprop <- getProperty nodeID Attributes.nodePosition
-    return $ case mprop of
-        Nothing   -> Nothing
-        Just prop -> Read.readMaybe prop
+getPosition nodeID =
+    join . fmap Read.readMaybe <$> getProperty nodeID Attributes.nodePosition
 
 
 setPosition :: Node.ID -> Node.Position -> GBPass ()
@@ -197,3 +195,12 @@ setPosition nodeID pos = do
     graph' <- getGraph
     node   <- Graph.lab graph' nodeID <??> "BuilderState.setPosition : cannot find node with id = " ++ show nodeID
     setGraph $ Graph.updateNode (nodeID, node & Node.pos .~ pos) graph'
+
+
+
+getGraphFolded :: Node.ID -> GBPass Bool
+getGraphFolded nodeID = do
+    foldSetting <- gets (view foldNodes)
+    if foldSetting
+        then (== Just True) . join . fmap Read.readMaybe <$> getProperty nodeID Attributes.graphFolded
+        else return False

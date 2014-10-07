@@ -41,7 +41,7 @@ getGraph bc pm ast = eitherStringToM' $ runEitherT $ do
     focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
     expr  <- focus ^? Focus.expr <??> "test.Common.getFunctionGraph : Target is not a function"
     aliasInfo <- EitherT $ Analysis.Alias.run ast
-    EitherT $ GraphBuilder.run aliasInfo pm expr
+    EitherT $ GraphBuilder.run aliasInfo pm True expr
 
 
 getExpr :: Breadcrumbs -> Graph -> PropertyMap -> Module -> IO (Module, PropertyMap)
