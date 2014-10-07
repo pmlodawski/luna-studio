@@ -399,7 +399,7 @@ genExpr ast = case ast of
     LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start
     LExpr.Ref         _ dst                  -> genExpr dst
     LExpr.RefType     _ typeName name        -> pure $ thTypeRef typeName name
-    LExpr.Native      _ segments             -> pure $ HExpr.Native (join "" $ map genNative segments)
+    LExpr.Native      _ segments             -> pure $ HExpr.Native (join " " $ map genNative segments)
     LExpr.Typed       _ _cls _expr           -> Pass.fail "Typing expressions is not supported yet." -- Potrzeba uzywac hacku: matchTypes (undefined :: m1(s1(Int)))  (val (5 :: Int))
     LExpr.NOP         _                      -> pure HExpr.NOP
     --x                                        -> logger error (show x) *> return HExpr.NOP

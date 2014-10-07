@@ -81,7 +81,7 @@ registerDataCons el = VAState.registerExpr el *> case el of
 
 registerFuncHeaders :: Expr.Expr -> VAPass ()
 registerFuncHeaders el = VAState.registerExpr el *> case el of
-    Expr.Function   {} -> regVarName name id       *> withID continue
+    Expr.Function   _ _ name _ _ _ -> regVarName (Name.unified name) id       *> withID continue
     _                  -> continue
     where continue = Expr.traverseM_ registerFuncHeaders vaType vaPat vaLit pure el
           withID   = VAState.withID (el ^. Expr.id)
