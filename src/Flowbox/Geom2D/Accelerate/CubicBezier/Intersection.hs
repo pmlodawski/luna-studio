@@ -7,6 +7,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
+-- TODO: change this module name to something more apropriate, like Query?
 module Flowbox.Geom2D.Accelerate.CubicBezier.Intersection where
 
 import Data.Array.Accelerate as A
@@ -18,8 +19,8 @@ import Flowbox.Prelude hiding ((<*), (?), fst, snd, lift)
 
 
 
-getValueAtX :: forall a. (Elt a, IsFloating a) => Exp Int -> Exp a -> Exp (CubicBezier a) -> Exp a -> Exp a
-getValueAtX limit eps (unlift -> curve) x = solvey
+valueAtX :: forall a. (Elt a, IsFloating a) => Exp Int -> Exp a -> Exp (CubicBezier a) -> Exp a -> Exp a
+valueAtX limit eps (unlift -> curve) x = solvey
     $ cond (x <=* x1 ||* err x1 <=* eps) 0
         $ cond (x >=* x4 ||* err x4 <=* eps) 1
             $ mid $ sndTrio $ while (\v -> fstTrio v <* limit &&* err (trdTrio v) >* eps) (lift1 step) $ lift (0 :: Exp Int, startAt, solvex $ mid startAt)
@@ -29,8 +30,8 @@ getValueAtX limit eps (unlift -> curve) x = solvey
                                                     m = mid t :: Exp a
                                                     t' = x <* x' ? (lift (a, m), lift (m, b))
                                                 in (s+1, t', solvex $ mid t')
-          err x'                   = abs $ x - x'
           mid (A.unlift -> (a, b)) = (a + b) / 2
-          startAt = A.constant (0, 1)
-          solvex t     = (1-t)^^(3 :: Exp Int) * x1 + 3*(1-t)^^(2 :: Exp Int)*t * x2 + 3*(1-t)*t^^(2 :: Exp Int) * x3 + t^^(3 :: Exp Int) * x4
-          solvey t     = (1-t)^^(3 :: Exp Int) * y1 + 3*(1-t)^^(2 :: Exp Int)*t * y2 + 3*(1-t)*t^^(2 :: Exp Int) * y3 + t^^(3 :: Exp Int) * y4
+          err x'   = abs $ x - x'
+          startAt  = A.constant (0, 1)
+          solvex t = (1-t)^3 * x1 + 3*(1-t)^2*t * x2 + 3*(1-t)*t^2 * x3 + t^3 * x4
+          solvey t = (1-t)^3 * y1 + 3*(1-t)^2*t * y2 + 3*(1-t)*t^2 * y3 + t^3 * y4
