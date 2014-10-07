@@ -1,7 +1,7 @@
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        (a,b)
 
 def print self msg::String:
     ```autoLift1 print #{msg}```

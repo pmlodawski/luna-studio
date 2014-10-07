@@ -62,7 +62,7 @@ spec = do
             --rootLogger setIntLevel 5
             Common.runSession code Executor.processMain) SampleCodes.sampleCodes
 
-        mapM_ (\(name, code) -> it ("executes example many times - " ++ name) $ do
+        mapM_ (\(name, code) -> it ("executes example 5 times - " ++ name) $ do
             --rootLogger setIntLevel 5
             Common.runSession code $ replicateM_ 5 Executor.processMain) $ SampleCodes.sampleCodes
 

@@ -24,11 +24,11 @@ shrinkFunctionBodies = Focus.traverseM shrinkModule shrinkExpr
 
 
 shrinkModule :: (Applicative m, Monad m) => Module -> m Module
-shrinkModule m = Module.traverseM shrinkModule shrinkExpr pure pure pure m
+shrinkModule m = Module.traverseM shrinkModule shrinkExpr pure pure pure pure m
 
 
 shrinkExpr :: (Applicative m, Monad m) => Expr -> m Expr
 shrinkExpr e = case e of
      Expr.Function i path name inputs output _ -> pure $ Expr.Function i path name inputs output []
-     _                                         -> Expr.traverseM shrinkExpr pure pure pure e
+     _                                         -> Expr.traverseM shrinkExpr pure pure pure pure e
 
