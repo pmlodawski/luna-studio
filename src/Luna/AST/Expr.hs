@@ -14,20 +14,21 @@
 module Luna.AST.Expr where
 
 import Control.Applicative
+import Control.Monad       ((<=<))
 import GHC.Generics        (Generic)
 
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, cons, drop, id)
+import           Luna.AST.Arg                    (Arg)
+import qualified Luna.AST.Arg                    as Arg
 import           Luna.AST.Common                 (ID)
 import qualified Luna.AST.Lit                    as Lit
-import qualified Luna.AST.Pat                    as Pat
-import           Luna.AST.Type                   (Type)
-import qualified Luna.AST.Type                   as Type
 import           Luna.AST.Name                   (Name)
+import qualified Luna.AST.Pat                    as Pat
 import           Luna.AST.Prop                   (HasName)
 import qualified Luna.AST.Prop                   as Prop
-import qualified Luna.AST.Arg                    as Arg
-import           Luna.AST.Arg                    (Arg)
+import           Luna.AST.Type                   (Type)
+import qualified Luna.AST.Type                   as Type
 
 
 type Lit         = Lit.Lit
@@ -83,14 +84,24 @@ shiftArg4 f t1 t2 t3 t4 x = f x t1 t2 t3 t4
 shiftArg5 f t1 t2 t3 t4 t5 x = f x t1 t2 t3 t4 t5
 shiftArg6 f t1 t2 t3 t4 t5 t6 x = f x t1 t2 t3 t4 t5 t6
 
+
+var :: String -> ID -> Expr
 var = shiftArg1 Var
+
+
+function :: [String] -> Name -> [Expr] -> Type -> [Expr] -> ID -> Expr
 function = shiftArg5 Function
+
+
+app :: Expr -> [Arg Expr] -> ID -> Expr
 app = shiftArg2 App
+
 
 instance QShow Expr
 makeLenses (''Expr)
 
 
+tupleBuilder :: ID -> Expr -> Expr -> Expr
 tupleBuilder id src arg = case src of
     Tuple id items -> Tuple id (items ++ [arg])
     _              -> Tuple id [src, arg]
@@ -126,17 +137,18 @@ addCon :: Expr -> Expr -> Expr
 addCon ncon e = e & cons %~ (ncon:)
 
 
+argMapM :: Traversal m => (t -> m a) -> Arg t -> m (Arg a)
 argMapM f a = case a of
-    Arg.Unnamed id      arg -> fmap (Arg.Unnamed id)      $ f arg
-    Arg.Named   id name arg -> fmap (Arg.Named   id name) $ f arg
+    Arg.Unnamed id      arg -> Arg.Unnamed id      <$> f arg
+    Arg.Named   id name arg -> Arg.Named   id name <$> f arg
 
 
-traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
-traverseM fexp ftype fpat flit e = case e of
+traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> (Arg Expr -> m (Arg Expr)) -> Expr -> m Expr
+traverseM fexp ftype fpat flit farg e = case e of
     Accessor     id' name' dst'                    -> Accessor     id' name' <$> fexp dst'
     TypeAlias    id' srcType' dstType'             -> TypeAlias    id'       <$> ftype srcType' <*> ftype dstType'
     TypeDef      id' srcType' dstType'             -> TypeDef      id'       <$> ftype srcType' <*> ftype dstType'
-    App          id' src' args'                    -> App          id'       <$> fexp src'      <*> mapM (argMapM fexp) args'
+    App          id' src' args'                    -> App          id'       <$> fexp src'      <*> mapM (farg <=< argMapM fexp) args'
     Assignment   id' pat' dst'                     -> Assignment   id'       <$> fpat pat'      <*> fexp dst'
     RecordUpdate id' src' selectors' expr'         -> RecordUpdate id'       <$> fexp src'      <*> pure selectors' <*> fexp expr'
     Data         id' cls' cons' classes' methods'  -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
@@ -172,12 +184,12 @@ traverseM fexp ftype fpat flit e = case e of
     where fexpMap = mapM fexp
 
 
-traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
-traverseM_ fexp ftype fpat flit e = case e of
+traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> (Arg Expr -> m e) -> Expr -> m ()
+traverseM_ fexp ftype fpat flit farg e = case e of
     Accessor     _  _ dst'                         -> drop <* fexp dst'
     TypeAlias    _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
     TypeDef      _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
-    App          _  src' args'                     -> drop <* fexp src'  <* mapM_ (argMapM fexp) args'
+    App          _  src' args'                     -> drop <* fexp src'  <* mapM_ (argMapM fexp <* farg) args'
     Assignment   _  pat' dst'                      -> drop <* fpat pat'  <* fexp dst'
     RecordUpdate _ src' _ expr'                    -> drop <* fexp src'  <* fexp expr'
     Data         _ cls' cons'  classes' methods'   -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
@@ -214,16 +226,16 @@ traverseM_ fexp ftype fpat flit e = case e of
 
 
 traverseM' :: Traversal m => (Expr -> m Expr) -> Expr -> m Expr
-traverseM' fexp = traverseM fexp pure pure pure
+traverseM' fexp = traverseM fexp pure pure pure pure
 
 
 traverseM'_ :: Traversal m => (Expr -> m ()) -> Expr -> m ()
-traverseM'_ fexp = traverseM_ fexp pure pure pure
+traverseM'_ fexp = traverseM_ fexp pure pure pure pure
 
 
-traverseMR :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
-traverseMR fexp ftype fpat flit = tfexp where
-    tfexp e = fexp  =<< traverseM tfexp tftype tfpat flit e
+traverseMR :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> (Arg Expr -> m (Arg Expr)) -> Expr -> m Expr
+traverseMR fexp ftype fpat flit farg = tfexp where
+    tfexp e = fexp  =<< traverseM tfexp tftype tfpat flit farg e
     tfpat   = Pat.traverseMR fpat tftype flit
     tftype  = Type.traverseMR ftype
 

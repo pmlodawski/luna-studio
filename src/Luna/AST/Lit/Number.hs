@@ -12,7 +12,7 @@ module Luna.AST.Lit.Number where
 
 import           Control.Lens
 import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Prelude                 (Eq, Maybe, Read, Show)
+import           Flowbox.Prelude                 (Eq, Maybe, Maybe (Just, Nothing), Read, Show, concat, (++))
 import qualified Flowbox.Prelude                 as P
 import           GHC.Generics
 
@@ -83,4 +83,15 @@ quadrotrigesimal = Number 34
 pentatrigesimal  = Number 35
 hexatrigesimal   = Number 36
 
+
+lunaShow :: Number -> P.String
+lunaShow (Number base' repr' exp' sign') = concat [showSign sign', showRepr repr', showExp base' exp'] where
+    showSign Positive = ""
+    showSign Negative = "-"
+    showRepr (Float int' frac') = concat [int', ".", frac']
+    showRepr (Decimal int')     = int'
+    showExp _ Nothing = ""
+    -- FIXME [PM] : Implement other bases than 10 and 16!
+    showExp 10 (Just num) = "E" ++ lunaShow num
+    showExp 16 (Just num) = "P" ++ lunaShow num
 

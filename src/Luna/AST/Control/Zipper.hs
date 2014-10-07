@@ -177,7 +177,7 @@ replaceExprByAstID ast part = do
     let fexp expr = if expr ^. Expr.id == part ^. Expr.id
                         then put (Just expr) >> return part
                         else return expr
-        (ast', mpart') = runState (Expr.traverseMR fexp return return return ast) Nothing
+        (ast', mpart') = runState (Expr.traverseMR fexp return return return return ast) Nothing
     part' <- mpart'
     return (ast', part')
 
@@ -187,6 +187,6 @@ replaceModuleByAstID ast part = do
     let fexp expr = if expr ^. Expr.id == part ^. Expr.id
                         then put (Just expr) >> return part
                         else return expr
-        (ast', mpart') = runState (Module.traverseMR return fexp return return return ast) Nothing
+        (ast', mpart') = runState (Module.traverseMR return fexp return return return return ast) Nothing
     part' <- mpart'
     return (ast', part')
