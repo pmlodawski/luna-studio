@@ -34,6 +34,7 @@ Executable interpreter
                     luna-interpreter,
                     luna-protobuf,
                     flowbox-utils,
+                    flowbox-serialization,
                     MissingH,
                     mmorph,
                     mtl,
