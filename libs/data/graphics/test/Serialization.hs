@@ -8,22 +8,22 @@
 
 module Main where
 
-import Flowbox.Prelude hiding (putStrLn)
 import Data.ByteString.Lazy.Char8
+import Flowbox.Prelude            hiding (putStrLn)
 
 import Flowbox.Data.Channel
 import Flowbox.Graphics.Image.Channel hiding (compute)
 import Flowbox.Graphics.Image.View    as V
 import Flowbox.Graphics.Serialization
 
-import Flowbox.Graphics.Composition.Generators.Shape
-import Flowbox.Graphics.Composition.Generators.Rasterizer
-import Flowbox.Graphics.Composition.Generators.Matrix
-import Flowbox.Graphics.Composition.Generators.Stencil as Stencil
-import Flowbox.Graphics.Utils
-import Text.ProtocolBuffers.WireMessage
-
-import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate                              as A
+import           Flowbox.Data.Serialization                         (compute, toValue)
+import           Flowbox.Graphics.Composition.Generators.Matrix
+import           Flowbox.Graphics.Composition.Generators.Rasterizer
+import           Flowbox.Graphics.Composition.Generators.Shape
+import           Flowbox.Graphics.Composition.Generators.Stencil    as Stencil
+import           Flowbox.Graphics.Utils
+import           Text.ProtocolBuffers.WireMessage
 
 import Utils
 
