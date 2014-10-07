@@ -189,7 +189,7 @@ traverseM_ fexp ftype fpat flit farg e = case e of
     Accessor     _  _ dst'                         -> drop <* fexp dst'
     TypeAlias    _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
     TypeDef      _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
-    App          _  src' args'                     -> drop <* fexp src'  <* mapM_ (farg <* argMapM fexp) args'
+    App          _  src' args'                     -> drop <* fexp src'  <* mapM_ (argMapM fexp <* farg) args'
     Assignment   _  pat' dst'                      -> drop <* fpat pat'  <* fexp dst'
     RecordUpdate _ src' _ expr'                    -> drop <* fexp src'  <* fexp expr'
     Data         _ cls' cons'  classes' methods'   -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
