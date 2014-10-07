@@ -97,56 +97,31 @@ example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
                     --, "@AllowOrphans"
-                    --, "class Vector a:"
-                    --, "    Vector: x,y,z :: a"
-                    --, "    Scalar: w     :: a"
-                    ----, "    def test a b:"
-                    ----, "        {a,b}"
-                    ----, "class ```Bool```:"
-                    ----, "    True"
-                    ----, "    False"
-
-                    --, "def print msg:"
-                    --, "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
-
-                    --, "def Int.+ a:"
-                    --, "    ```liftF2 (+) #{self} #{a}```"
-
-                    --, "def Int.> a:"
-                    --, "    ```liftF2 (>) #{self} #{a}```"
-
-                    --, "def Int.inc:"
-                    --, "    self + 1"
-                    , "def saveImage path rgba:"
-                    , "   ```autoLift2 saveRGBA #{path} #{rgba}```"
+                    , "def print msg:"
+                    , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
 
 
-                    --, "def main:"
-                    ----, "    print $ if 1 > 2: 5"
-                    ----, "            else: 6"
-                    ----, "    print $ 1 > 2"
-                    --, "    v = Vector 1 2 3"
-                    --, "    s = Scalar 5"
-                    ----, "    a = 1"
-                    ----, "    a = 1"
-                    ----, "    case a:"
-                    ----, "        1: print 2"
-                    ----, "        2: print 3"
-                    ----, "    f = x:x"
-                    ----, "    v.x = 5"
-                    --, "    Vector a b c = v"
-                    --, "    print a"
-
-
-
-                    --, "def test2 a:"
-                    --, "    test1 a"
-
-
-                    --, "def test1 a:"
-                    --, "    {a,a}"
-
+                    , "def main:"
+                    , "    print 1"
                     ]
+
+
+        --concat $ replicate 1 $ unlines [ ""
+        --            --, "@AllowOrphans"
+        --            , "class Vector a:"
+        --            , "    Vector: x,y,z :: a"
+        --            , "    Scalar: w     :: a"
+
+        --            , "def print msg:"
+        --            , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
+
+
+        --            , "def main:"
+        --            , "    v = Vector 1 2 3"
+        --            , "    s = Scalar 5"
+        --            , "    Vector a b c = v"
+        --            , "    print a"
+        --            ]
 
 
 
@@ -226,61 +201,61 @@ main_inner = Luna.run $ do
     -----------------------------------------
     -- !!! CallGraph and DepSort are mockup passes !!!
     -- They are working right now only with not self typed variables
-    logger info "\n-------- Analysis.CallGraph --------"
-    callGraph <- hoistEither =<< Analysis.CallGraph.run aliasInfo ast
-    logger info $ PP.ppShow callGraph
+        --logger info "\n-------- Analysis.CallGraph --------"
+        --callGraph <- hoistEither =<< Analysis.CallGraph.run aliasInfo ast
+        --logger info $ PP.ppShow callGraph
 
 
-    logger info "\n-------- Transform.DepSort --------"
-    ast <- hoistEither =<< Transform.DepSort.run callGraph aliasInfo ast
-    logger info $ PP.ppShow ast
-    -----------------------------------------
+        --logger info "\n-------- Transform.DepSort --------"
+        --ast <- hoistEither =<< Transform.DepSort.run callGraph aliasInfo ast
+        --logger info $ PP.ppShow ast
+        -------------------------------------------
 
 
-    -- !!! [WARNING] INVALIDATES aliasInfo !!!
-    logger info "\n-------- Desugar.ImplicitScopes --------"
-    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
-    logger info $ PP.ppqShow ast
+        ---- !!! [WARNING] INVALIDATES aliasInfo !!!
+        --logger info "\n-------- Desugar.ImplicitScopes --------"
+        --(ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
+        --logger info $ PP.ppqShow ast
 
 
-    -- Should be run AFTER ImplicitScopes
-    logger info "\n-------- Desugar.ImplicitCalls --------"
-    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
-    logger info $ PP.ppqShow ast
+        ---- Should be run AFTER ImplicitScopes
+        --logger info "\n-------- Desugar.ImplicitCalls --------"
+        --(ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
+        --logger info $ PP.ppqShow ast
 
 
-    logger info "\n-------- Analysis.Alias --------"
-    aliasInfo <- hoistEither =<< Analysis.Alias.run ast
-    logger info "\n>> scope:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.scope)
-    logger info "\n>> alias map:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.alias)
-    logger info "\n>> orphans map:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
+        --logger info "\n-------- Analysis.Alias --------"
+        --aliasInfo <- hoistEither =<< Analysis.Alias.run ast
+        --logger info "\n>> scope:"
+        --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.scope)
+        --logger info "\n>> alias map:"
+        --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.alias)
+        --logger info "\n>> orphans map:"
+        --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
 
 
 
 
 
-    --logger info "\n-------- FuncPool --------"
-    --fp <- hoistEither =<< FuncPool.run ast
-    --logger info $ PP.ppShow fp
+        ----logger info "\n-------- FuncPool --------"
+        ----fp <- hoistEither =<< FuncPool.run ast
+        ----logger info $ PP.ppShow fp
 
-    logger info "\n-------- Hash --------"
-    hash <- hoistEither =<< Hash.run ast
-    --logger info $ PP.ppShow hash
+        --logger info "\n-------- Hash --------"
+        --hash <- hoistEither =<< Hash.run ast
+        ----logger info $ PP.ppShow hash
 
-    logger info "\n-------- SSA --------"
-    ssa <- hoistEither =<< SSA.run aliasInfo hash
-    --logger info $ PP.ppqShow ssa
+        --logger info "\n-------- SSA --------"
+        --ssa <- hoistEither =<< SSA.run aliasInfo hash
+        ----logger info $ PP.ppqShow ssa
 
-    logger info "\n-------- HASTGen --------"
-    hast <- hoistEither =<< HASTGen.run ssa
-    logger info $ PP.ppShow hast
+        --logger info "\n-------- HASTGen --------"
+        --hast <- hoistEither =<< HASTGen.run ssa
+        --logger info $ PP.ppShow hast
 
-    logger info "\n-------- HSC --------"
-    hsc <- hoistEither =<< HSC.run  hast
-    logger info $ join "\n\n" (map showSrc hsc)
+        --logger info "\n-------- HSC --------"
+        --hsc <- hoistEither =<< HSC.run  hast
+        --logger info $ join "\n\n" (map showSrc hsc)
 
 
     return ()
