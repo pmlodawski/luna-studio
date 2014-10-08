@@ -4,8 +4,8 @@ module Test.Luna.Typechecker.AST.LitSpec (spec) where
 import Luna.Typechecker.TIMonad         (startTI)
 import Luna.Typechecker.Typeclasses     (Pred(..))
 
+import Luna.Typechecker.AST.ClassID
 import Luna.Typechecker.AST.Lit
-import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type        (tChar, tInteger, tFloat, tString)
 
 import Luna.Typechecker.Internal.Logger
@@ -25,7 +25,7 @@ spec = do
       \x -> startTI (evalLoggerT (tiLit (LitInt x)))   `shouldBe` Right ([], tInteger)
     it "just works for Integral" $ property $
       \x -> let Right (ps, t) = startTI $ evalLoggerT (tiLit (LitIntegral x))
-             in ps `shouldContain` [IsIn (TID "Integral") t]
+             in ps `shouldContain` [IsIn (ClassID "Integral") t]
     it "just works for String" $ property $
       \x -> startTI (evalLoggerT (tiLit (LitStr x))) `shouldBe` Right ([], tString)
   describe "(coverage booster)" $

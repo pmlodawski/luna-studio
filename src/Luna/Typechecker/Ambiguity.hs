@@ -6,7 +6,7 @@ module Luna.Typechecker.Ambiguity (
 import Luna.Typechecker.Substitutions    (Subst,Types(..))
 import Luna.Typechecker.Typeclasses      (ClassEnv(..), Pred(..),entail)
 
-import Luna.Typechecker.AST.TID          (TID(..))
+import Luna.Typechecker.AST.ClassID      (ClassID(..))
 import Luna.Typechecker.AST.Type         (Type(..), Tyvar)
 
 import Luna.Typechecker.Internal.Logger
@@ -23,11 +23,11 @@ type Ambiguity = (Tyvar, [Pred])
 ambiguities :: ClassEnv -> [Tyvar] -> [Pred] -> [Ambiguity]
 ambiguities _ vs ps = [(v, filter (elem v . tv) ps) | v <- tv ps \\ vs]
 
-numClasses :: [TID]
-numClasses = TID <$> ["Num", "Integral", "Floating", "Fractional", "Real", "RealFloat", "RealFrac"]
+numClasses :: [ClassID]
+numClasses = ClassID <$> ["Num", "Integral", "Floating", "Fractional", "Real", "RealFloat", "RealFrac"]
 
-stdClasses :: [TID]
-stdClasses = (TID <$> ["Eq", "Ord", "Show", "Read", "Bounded", "Enum", "Ix", "Functor", "Monad", "MonadPlus"]) ++ numClasses
+stdClasses :: [ClassID]
+stdClasses = (ClassID <$> ["Eq", "Ord", "Show", "Read", "Bounded", "Enum", "Ix", "Functor", "Monad", "MonadPlus"]) ++ numClasses
 
 candidates :: (Monad m) => ClassEnv -> Ambiguity -> TCLoggerT m [Type]
 candidates ce (v, qs) = do

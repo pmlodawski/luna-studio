@@ -4,14 +4,14 @@ module Luna.Typechecker.AST.Internal.Pat (Pat(..)) where
 import Luna.Typechecker.Assumptions      (Assump(..))
 
 import Luna.Typechecker.AST.Lit          (Lit)
-import Luna.Typechecker.AST.TID          (TID)
+import Luna.Typechecker.AST.VarID        (VarID)
 
 import Text.Printf
 
 
-data Pat = PVar TID
+data Pat = PVar VarID
          | PWildcard
-         | PAs TID Pat
+         | PAs VarID Pat
          | PLit Lit
          | PCon Assump [Pat]
 

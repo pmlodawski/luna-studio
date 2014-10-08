@@ -5,6 +5,7 @@ module Test.Luna.Typechecker.TIMonadSpec (spec) where
 import Luna.Typechecker.TIMonad
 import Luna.Typechecker.Typeclasses
 
+import Luna.Typechecker.AST.ClassID
 import Luna.Typechecker.AST.Kind
 import Luna.Typechecker.AST.Scheme
 import Luna.Typechecker.AST.TID
@@ -33,16 +34,16 @@ spec = do
 
     it "works with one predicate" $ do
       let a  = TVar $ Tyvar (TID "a") Star
-          ps = [ IsIn (TID "Integral") a ]
+          ps = [ IsIn (ClassID "Integral") a ]
           qt = ps :=> (a `fn` a)
           Right x  = startTI $ evalLoggerT $ freshInst (Forall [] qt)
       x `shouldBe` qt
 
     it "works with one predicate and one gen-var" $ do
       let a  = TGen 0
-          ps = [ IsIn (TID "Integral") a ]
+          ps = [ IsIn (ClassID "Integral") a ]
           qt = ps :=> (a `fn` a)
-          Right ([IsIn (TID "Integral") t'] :=> t'') = startTI $ evalLoggerT $ freshInst (Forall [Star] qt)
+          Right ([IsIn (ClassID "Integral") t'] :=> t'') = startTI $ evalLoggerT $ freshInst (Forall [Star] qt)
       t'' `shouldBe` (t' `fn` t')
 
   describe "(internals)" $

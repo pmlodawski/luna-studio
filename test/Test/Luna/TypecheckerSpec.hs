@@ -7,12 +7,13 @@ import Luna.Typechecker.Assumptions     (Assump(..))
 import Luna.Typechecker.BindingGroups   (Expr(..))
 import Luna.Typechecker.Typeclasses     (Qual(..),Pred(..),initialEnv,addClass,addInst,(<:>))
 
+import Luna.Typechecker.AST.ClassID
 import Luna.Typechecker.AST.Kind        (Kind(..))
 import Luna.Typechecker.AST.Lit         (Lit(..))
 import Luna.Typechecker.AST.Pat         (Pat(..))
 import Luna.Typechecker.AST.Scheme      (Scheme(..),toScheme)
-import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type        (Type(..),fn,tInteger,list,tBool,tInt,tChar)
+import Luna.Typechecker.AST.VarID
 
 import Luna.Typechecker.Internal.Logger
 
@@ -37,24 +38,24 @@ spec = do
     let
         alternatingFBG = ( "f"
                           , toScheme (tInteger `fn` list tInteger)
-                          , [ (  [PVar (TID "x")]
-                              ,  ap [EConst (consBG^.asmp), Var (TID "x"), ap [Var (TID "g"), Var (TID "x")]]
+                          , [ (  [PVar (VarID "x")]
+                              ,  ap [EConst (consBG^.asmp), Var (VarID "x"), ap [Var (VarID "g"), Var (VarID "x")]]
                               )
                             ]
                           )
 
         alternatingGBG = ( "g"
                           , toScheme (tInteger `fn` list tInteger)
-                          , [ (  [PVar (TID "x")]
-                              ,  ap [EConst (consBG^.asmp), Var (TID "x"), ap [Var (TID "f"), ap [Var (TID "decr"), Var (TID "x")]]]
+                          , [ (  [PVar (VarID "x")]
+                              ,  ap [EConst (consBG^.asmp), Var (VarID "x"), ap [Var (VarID "f"), ap [Var (VarID "decr"), Var (VarID "x")]]]
                               )
                             ]
                           )
 
         badtestBG      = ( "badtest"
                           , Forall [Star] ([] :=> (TGen 0 `fn` TGen 0 `fn` tBool))
-                          , [ (  [PVar (TID "x"), PVar (TID "y")]
-                              ,  Let ([], [[(TID "result", [([PWildcard], ap [Var (TID "(==)"), Var (TID "x"), Var (TID "y")])])]]) (Var (TID "result"))
+                          , [ (  [PVar (VarID "x"), PVar (VarID "y")]
+                              ,  Let ([], [[(VarID "result", [([PWildcard], ap [Var (VarID "(==)"), Var (VarID "x"), Var (VarID "y")])])]]) (Var (VarID "result"))
                               )
                             ]
                           )
@@ -69,8 +70,8 @@ spec = do
 
         fultingBG      = ( "fulting"
                           , Forall [] ([] :=> (tInt `fn` tBool))
-                          , [ (  [PVar (TID "v")]
-                              ,  ap [Var (TID "(==)"), Var (TID "v"), ap [Var (TID "fromIntegral"), ap [Var (TID "(+)"), Lit (LitIntegral 2), Lit (LitIntegral 3)]]]
+                          , [ (  [PVar (VarID "v")]
+                              ,  ap [Var (VarID "(==)"), Var (VarID "v"), ap [Var (VarID "fromIntegral"), ap [Var (VarID "(+)"), Lit (LitIntegral 2), Lit (LitIntegral 3)]]]
                               )
                             ]
                           )
@@ -114,20 +115,20 @@ spec = do
     it "typechecks `and`" $ do
       let def = ([ andBG^.expl ], [])
           res = tiProgram initialEnv [foldrBG^.asmp, landBG^.asmp] [def]
-      resultTest res (`shouldContain` [TID "and" :>: (andBG ^. scheme)])
+      resultTest res (`shouldContain` [VarID "and" :>: (andBG^.scheme)])
 
     it "infers type for `and`" $ do
-      let def = ([], [[ andBG ^. impl ]])
+      let def = ([], [[ andBG^.impl ]])
           res = tiProgram initialEnv [foldrBG^.asmp, landBG^.asmp] [def]
-      resultTest res (`shouldContain` [TID "and" :>: (andBG ^. scheme)])
+      resultTest res (`shouldContain` [VarID "and" :>: (andBG^.scheme)])
 
     it "typechecks `foldr` & infers `and`" $ do
       let defs = [ ([], [[ foldrBG^.impl ]] )
-                 , ([], [[ andBG ^. impl ]] )
+                 , ([], [[ andBG^.impl ]] )
                  ]
           res = tiProgram initialEnv [landBG^.asmp] defs
       resultTest res (`shouldContain` [foldrBG^.asmp])
-      resultTest res (`shouldContain` [andBG ^. asmp])
+      resultTest res (`shouldContain` [andBG^.asmp])
    
 
     it "typechecks mutually-recursive functions" $ do
@@ -151,10 +152,10 @@ spec = do
 
     it "typechecks the example with mutually-recursive functions, one typed, both using typeclasses" $ do
       let def = ( [ alternatingFBG^.expl ], [[alternatingGBG^.impl]])
-          classenvT = addClass (TID "Eq") []
-                  <:> addClass (TID "Ord") [TID "Eq"]
-                  <:> addInst [] (IsIn (TID "Eq") tBool)
-                  <:> addInst [] (IsIn (TID "Ord") tBool)
+          classenvT = addClass (ClassID "Eq") []
+                  <:> addClass (ClassID "Ord") [ClassID "Eq"]
+                  <:> addInst [] (IsIn (ClassID "Eq") tBool)
+                  <:> addInst [] (IsIn (ClassID "Ord") tBool)
           (Right classenv, _) = runIdentity $ runLoggerT $ classenvT initialEnv
           res = tiProgram classenv [decrBG^.asmp, leqBG^.asmp, eqBG^.asmp, lorBG^.asmp] [def]
       resultTest res (`shouldContain` [alternatingFBG^.asmp])
@@ -163,35 +164,35 @@ spec = do
 
     it "resolves ambiguities: `fromIntegral (2 + 3)`" $ do
       let def = ( [ fultingBG^.expl ] , [])
-          classenvT = addClass (TID "Eq") []
-                  <:> addClass (TID "Ord") [TID "Eq"]
-                  <:> addClass (TID "Num") []
-                  <:> addClass (TID "Real") [TID "Num", TID "Ord"]
-                  <:> addClass (TID "Enum") []
-                  <:> addClass (TID "Integral") [TID "Real", TID "Enum"]
-                  <:> addInst [] (IsIn (TID "Eq") tInt)       <:> addInst [] (IsIn (TID "Eq") tInteger)
-                  <:> addInst [] (IsIn (TID "Ord") tInt)      <:> addInst [] (IsIn (TID "Ord") tInteger)
-                  <:> addInst [] (IsIn (TID "Num") tInt)      <:> addInst [] (IsIn (TID "Num") tInteger)
-                  <:> addInst [] (IsIn (TID "Real") tInt)     <:> addInst [] (IsIn (TID "Real") tInteger)
-                  <:> addInst [] (IsIn (TID "Enum") tInt)     <:> addInst [] (IsIn (TID "Enum") tInteger)
-                  <:> addInst [] (IsIn (TID "Integral") tInt) <:> addInst [] (IsIn (TID "Integral") tInteger)
+          classenvT = addClass (ClassID "Eq") []
+                  <:> addClass (ClassID "Ord") [ClassID "Eq"]
+                  <:> addClass (ClassID "Num") []
+                  <:> addClass (ClassID "Real") [ClassID "Num", ClassID "Ord"]
+                  <:> addClass (ClassID "Enum") []
+                  <:> addClass (ClassID "Integral") [ClassID "Real", ClassID "Enum"]
+                  <:> addInst [] (IsIn (ClassID "Eq") tInt)       <:> addInst [] (IsIn (ClassID "Eq") tInteger)
+                  <:> addInst [] (IsIn (ClassID "Ord") tInt)      <:> addInst [] (IsIn (ClassID "Ord") tInteger)
+                  <:> addInst [] (IsIn (ClassID "Num") tInt)      <:> addInst [] (IsIn (ClassID "Num") tInteger)
+                  <:> addInst [] (IsIn (ClassID "Real") tInt)     <:> addInst [] (IsIn (ClassID "Real") tInteger)
+                  <:> addInst [] (IsIn (ClassID "Enum") tInt)     <:> addInst [] (IsIn (ClassID "Enum") tInteger)
+                  <:> addInst [] (IsIn (ClassID "Integral") tInt) <:> addInst [] (IsIn (ClassID "Integral") tInteger)
           (Right classenv, _) = runIdentity $ runLoggerT $ classenvT initialEnv
           res = tiProgram classenv [eqBG^.asmp, fromIntegralBG^.asmp, integralAddBG^.asmp] [def]
       resultTest res (`shouldContain` [fultingBG^.asmp])
 
     it "handles monomorphism restriction" $ do
-      let def pat = ([], [[(TID "test", [(pat, test_body)])]])
-          test_pat  = [PVar (TID "x")]
+      let def pat = ([], [[(VarID "test", [(pat, test_body)])]])
+          test_pat  = [PVar (VarID "x")]
           test_pat' = []
-          test_body = Var (TID "show")
-          show_type = Forall [Star] ([IsIn (TID "Show") (TGen 0)] :=> (TGen 0 `fn` list tChar))
-          (Right ce, _) = runIdentity $ runLoggerT $ (  addClass (TID "Show") []
-                                                    <:> addInst [] (IsIn (TID "Show") tInt)
-                                                    <:> addInst [] (IsIn (TID "Show") tBool)
+          test_body = Var (VarID "show")
+          show_type = Forall [Star] ([IsIn (ClassID "Show") (TGen 0)] :=> (TGen 0 `fn` list tChar))
+          (Right ce, _) = runIdentity $ runLoggerT $ (  addClass (ClassID "Show") []
+                                                    <:> addInst [] (IsIn (ClassID "Show") tInt)
+                                                    <:> addInst [] (IsIn (ClassID "Show") tBool)
                                                      ) initialEnv
-          resF pat = tiProgram ce [TID "show" :>: show_type] [def pat]
+          resF pat = tiProgram ce [VarID "show" :>: show_type] [def pat]
 
-      resultTest (resF test_pat) (`shouldContain` [TID "test":>:Forall [Star, Star] ([IsIn (TID "Show") (TGen 0)] :=> (TGen 1 `fn` TGen 0 `fn` list tChar))])
+      resultTest (resF test_pat) (`shouldContain` [VarID "test" :>:Forall [Star, Star] ([IsIn (ClassID "Show") (TGen 0)] :=> (TGen 1 `fn` TGen 0 `fn` list tChar))])
       let (eres', _) = resF test_pat'
       eres' `shouldSatisfy` isLeft
 

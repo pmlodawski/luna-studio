@@ -14,8 +14,8 @@ import Luna.Typechecker.AST.Kind         (Kind(..))
 import Luna.Typechecker.AST.Lit          (Lit(..),tiLit)
 import Luna.Typechecker.AST.Pat          (Pat,tiPats)
 import Luna.Typechecker.AST.Scheme       (Scheme,quantify,toScheme)
-import Luna.Typechecker.AST.TID          (TID(..))
 import Luna.Typechecker.AST.Type         (Type(..),fn)
+import Luna.Typechecker.AST.VarID        (VarID(..))
 
 import Luna.Typechecker.Internal.Logger
 
@@ -26,7 +26,7 @@ import Data.List                         ((\\),intersect,union)
 import Text.Printf
 
 
-data Expr = Var TID
+data Expr = Var VarID
           | Lit Lit
           | EConst Assump
           | Ap Expr Expr
@@ -72,9 +72,9 @@ tiAlts ce as alts t = do psts <- mapM (tiAlt ce as) alts
                          return (concatMap fst psts)
 
 
-type Expl = (TID, Scheme, [Alt])
+type Expl = (VarID, Scheme, [Alt])
 
-type Impl = (TID, [Alt])
+type Impl = (VarID, [Alt])
 
 
 tiExpl :: ClassEnv -> [Assump] -> Expl -> TCLoggerT TI [Pred]

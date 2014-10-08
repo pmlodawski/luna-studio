@@ -6,7 +6,7 @@ module Luna.Typechecker.Assumptions (
 import Luna.Typechecker.Substitutions (Types(..))
 
 import Luna.Typechecker.AST.Scheme    (Scheme(..))
-import Luna.Typechecker.AST.TID       (TID(..))
+import Luna.Typechecker.AST.VarID     (VarID(..))
 
 import Luna.Typechecker.Internal.Logger
 
@@ -15,7 +15,7 @@ import Control.DeepSeq
 import Data.List                      (intercalate)
 
 
-data Assump = TID :>: Scheme
+data Assump = VarID :>: Scheme
             deriving (Eq)
 
 
@@ -31,8 +31,9 @@ instance Types Assump where
   tv (_ :>: sc) = tv sc
 
 
-find :: (Monad m) => TID -> [Assump] -> TCLoggerT m Scheme
-find (TID i) [] = throwError $ "unbound identifier: " ++ i
-find i ((i' :>: sc) : as) = if i==i'
-                              then return sc
-                              else find i as
+find :: (Monad m) => VarID -> [Assump] -> TCLoggerT m Scheme
+find (VarID i) []         = throwError $ "unbound identifier: " ++ i
+find i ((i' :>: sc) : as) = if i==i' then
+                              return sc
+                            else
+                              find i as
