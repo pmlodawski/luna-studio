@@ -70,6 +70,9 @@ def Image.exposure blackpoint ex:
 def Image.colorCorrect saturation contrast gamma gain offset:
     ```liftF1 (onEachRGB $ colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset}) #{self}```
 
+def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+    ```liftF1 (onEachValue $ gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma}) #{self}```
+
 def main:
     rgba = load "/home/mgw/test.png"
     defocused = rgba.colorCorrect 1.4 1 1 1 0
