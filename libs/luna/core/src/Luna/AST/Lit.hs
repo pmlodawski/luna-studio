@@ -16,22 +16,28 @@ import           Flowbox.Prelude                 (Eq, Read, Show, (++))
 import qualified Flowbox.Prelude                 as Prelude
 import           GHC.Generics
 import           Luna.AST.Common                 (ID)
+import           Luna.AST.Lit.Number             (Number)
+import qualified Luna.AST.Lit.Number             as Number
 
 
 
 data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
          | String  { _id :: ID, _str  :: Prelude.String }
-         | Integer { _id :: ID, _str  :: Prelude.String }
-         | Float   { _id :: ID, _str  :: Prelude.String }
+         | Number  { _id :: ID, _num  :: Number         }
          deriving (Show, Eq, Generic, Read)
 
 instance QShow Lit
-makeLenses (''Lit)
+makeLenses ''Lit
 
 
 lunaShow :: Lit -> Prelude.String
 lunaShow lit = case lit of
     Char    _ char' -> '\'' : char' : "'"
     String  _ str'  -> '\"' : str' ++ "\""
-    Integer _ str'  -> str'
-    Float   _ str'  -> str'
+    Number  _ num'  -> Number.lunaShow num'
+
+
+
+
+
+

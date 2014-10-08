@@ -46,22 +46,20 @@ instance Convert Focus Gen.Focus where
     decode t@(Gen.Focus cls _) = case cls of
         GenCls.LambdaFocus -> do
             ext <- getExt GenLambda.ext
-            (GenLambda.LambdaFocus mtl) <- ext <?> "Failed to decode Focus.LambdaFocus: extension is missing"
+            GenLambda.LambdaFocus mtl <- ext <?> "Failed to decode Focus.LambdaFocus: extension is missing"
             tl  <- mtl <?> "Failed to decode Focus.LambdaFocus: 'l' field is missing"
             Focus.Lambda <$> decode tl
         GenCls.FunctionFocus -> do
-            ext <- getExt GenFunction.ext
-            (GenFunction.FunctionFocus mtf) <- ext <?> "Failed to decode Focus.FunctionFocus: extension is missing"
-            tf  <- mtf <?> "Failed to decode Focus.FunctionFocus: 'f' field is missing"
-            Focus.Function <$> decode tf
+            GenFunction.FunctionFocus f <- getExt GenFunction.ext <?&> "Failed to decode Focus.FunctionFocus: extension is missing"
+            Focus.Function <$> decodeJ f (missing "Focus.FunctionFocus" "f")
         GenCls.ClassFocus -> do
             ext <- getExt GenClass.ext
-            (GenClass.ClassFocus mtf) <- ext <?> "Failed to decode Focus.ClassFocus: extension is missing"
+            GenClass.ClassFocus mtf <- ext <?> "Failed to decode Focus.ClassFocus: extension is missing"
             tf  <- mtf <?> "Failed to decode Focus.ClassFocus: 'c' field is missing"
             Focus.Class <$> decode tf
         GenCls.ModuleFocus -> do
             ext <- getExt GenModule.ext
-            (GenModule.ModuleFocus mtf) <- ext <?> "Failed to decode Focus.ModuleFocus: extension is missing"
+            GenModule.ModuleFocus mtf <- ext <?> "Failed to decode Focus.ModuleFocus: extension is missing"
             tf  <- mtf <?> "Failed to decode Focus.ModuleFocus: 'm' field is missing"
             Focus.Module <$> decode tf
        where getExt = flip Extensions.getExt t

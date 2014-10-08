@@ -21,7 +21,8 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
                   TemplateHaskell,
-                  OverloadedStrings
+                  OverloadedStrings,
+                  DeriveGeneric
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 

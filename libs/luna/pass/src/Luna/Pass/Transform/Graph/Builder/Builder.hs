@@ -21,11 +21,13 @@ import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Common                         as AST
 import           Luna.AST.Expr                           (Expr)
+import           Luna.AST.Arg                           (Arg)
 import qualified Luna.AST.Expr                           as Expr
 import qualified Luna.AST.Lit                            as Lit
 import           Luna.AST.Pat                            (Pat)
 import qualified Luna.AST.Pat                            as Pat
 import qualified Luna.AST.Type                           as Type
+import qualified Luna.AST.Arg                            as Arg
 import           Luna.Data.AliasInfo                     (AliasInfo)
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Node                         as Node
@@ -158,7 +160,7 @@ buildNode astFolded monadicBind outName expr = do
                 else do srcID <- buildNode astFolded False outName src
                         s     <- State.gvmNodeMapLookUp srcID
                         case s of
-                           Just (srcNID, _) -> buildAndConnectMany True True Nothing srcNID args 1
+                           Just (srcNID, _) -> buildAndConnectMany True True Nothing srcNID (fmap (view Arg.arg) args) 1
                            Nothing          -> return ()
                         connectMonadic srcID
                         return srcID
@@ -183,7 +185,6 @@ buildNode astFolded monadicBind outName expr = do
 
         isNativeVar (Expr.NativeVar {}) = True
         isNativeVar _                   = False
-
 
 
 buildArg :: Bool -> Bool -> Maybe String -> Expr -> GBPass (Maybe AST.ID)
@@ -225,10 +226,16 @@ buildPat p = case p of
     Pat.Wildcard i        -> return [i]
 
 
+showArg :: Arg Expr -> String
+showArg arg = case arg of
+    --Arg.Named _ name a -> 
+    Arg.Unnamed _ a -> showExpr a
+
+
 showExpr :: Expr -> String
 showExpr expr = concat $ case expr of
     Expr.Accessor     _ name     dst  -> [showExpr dst, ".", name]
-    Expr.App          _ src      args -> [List.intercalate " " $ map showExpr $ src:args]
+    Expr.App          _ src      args -> [List.intercalate " " $ showExpr src : map showArg args]
     --Expr.AppCons_     _ args
     --Expr.Assignment   _ pat      dst  -> concat [Pat.lunaShow pat, " = ", showExpr dst]
     --Expr.RecordUpdate _ name     selectors expr

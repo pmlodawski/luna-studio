@@ -24,6 +24,7 @@ import qualified Luna.AST.Control.Focus                                        a
 import qualified Luna.AST.Control.Zipper                                       as Zipper
 import           Luna.AST.Module                                               (Module)
 import qualified Luna.AST.Module                                               as Module
+import qualified Luna.AST.Name                                                 as Name
 import qualified Luna.AST.Type                                                 as Type
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Data.Source                                              as Source
@@ -146,7 +147,7 @@ main1 = do
     (libManager2, _    ) <- readSource code2
 
     let env = Env.mk libManager (Just 0)
-                (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
+                (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
                 (curry $ curry print)
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
@@ -194,9 +195,9 @@ main2 = do
                      . Zipper.focusBreadcrumbs bc
                      . Zipper.mk
     putStrLn $ ppShow ast
-    Just ast_main   <- Focus.getFunction <$> astGet [Crumb.Function "main"   []] ast
+    Just ast_main   <- Focus.getFunction <$> astGet [Crumb.Function (Name.single "main") []] ast
     Just ast_Vector <- Focus.getClass    <$> astGet [Crumb.Class    "Vector"   ] ast
-    Just ast_IntAdd <- Focus.getFunction <$> astGet [Crumb.Function "+" ["Int"]] ast
+    Just ast_IntAdd <- Focus.getFunction <$> astGet [Crumb.Function (Name.single "+") ["Int"]] ast
 
     logger info "Whole ast"
     printHsSrc ast

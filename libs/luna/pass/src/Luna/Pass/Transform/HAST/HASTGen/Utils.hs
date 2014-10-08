@@ -171,8 +171,8 @@ mkCall0  = HExpr.AppE (HExpr.Var "call0")
 mkIO     = HExpr.AppE (HExpr.ConE ["IO"])
 
 
-mkLiftf1     = HExpr.AppE (HExpr.Var "liftf1")
-mkFlattenCtx = HExpr.AppE (HExpr.Var "flattenCtx")
+mkLiftf1     = HExpr.AppE (HExpr.Var "liftF1")
+mkFlattenCtx = HExpr.AppE (HExpr.Var "polyJoin")
 
 mkVal    = HExpr.AppE (HExpr.Var "val")
 

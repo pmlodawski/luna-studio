@@ -93,9 +93,9 @@ isRight (Right _) = True
 isRight _         = False
 
 
-fromJust :: Monad m => Maybe a -> m a
-fromJust Nothing  = fail "Maybe.fromJust: Nothing"
-fromJust (Just x) = return x
+fromJustM :: Monad m => Maybe a -> m a
+fromJustM Nothing  = fail "Maybe.fromJust: Nothing"
+fromJustM (Just x) = return x
 
 
 whenLeft :: (Monad m) => Either a b -> (a -> m ()) -> m ()

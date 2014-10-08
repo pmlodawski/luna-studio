@@ -37,7 +37,8 @@ Library
                   mtl,
                   MissingH,
                   split,
-                  transformers
+                  transformers,
+                  ansi-wl-pprint
 
 
 Executable luna-pass-test

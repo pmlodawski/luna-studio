@@ -13,6 +13,7 @@ import Text.RawString.QQ
 import           Flowbox.Prelude
 import           Luna.AST.Control.Crumb                (Breadcrumbs)
 import qualified Luna.AST.Control.Crumb                as Crumb
+import qualified Luna.AST.Name                         as Name
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 
 
@@ -43,24 +44,24 @@ def main:
 |], named "simple assignment 3" [r|
 def main:
     x = 0
-    {y, _} = x
+    (y, _) = x
 |], named "simple assignment 4" [r|
 def main:
     x = 0
     y = 1
-    {z, v} = {x, y}
+    (z, v) = (x, y)
 |], named "simple assignment 5" [r|
 def main:
     x = 0
     y = 1
-    {z, v} = {x, y}
-    h = {z, v}
+    (z, v) = (x, y)
+    h = (z, v)
 |], named "assignment with patterns" [r|
 def main:
     x = 0
     y = 1
-    {z, v} = {x, y}
-    h = {z, v}
+    (z, v) = (x, y)
+    h = (z, v)
 |], named "assignment" [r|
 def foo
 
@@ -138,7 +139,7 @@ def main arg:
     x = foo.bar(arg, 15, arg, [19..]).baz arg 2
 |], named "ranges" [r|
 def main arg:
-    x = {1, [1..10], [9..]}
+    x = (1, [1..10], [9..])
 |], named "prints" [r|
 def print
 
@@ -162,7 +163,7 @@ def main arg:
     Foo arg.boo My gap
 |], named "tuples 1" [r|
 def main arg:
-    {1, 2}
+    (1, 2)
     3
 |], named "tuples 2" [r|
 def main arg:
@@ -193,12 +194,12 @@ def main arg:
 sampleLambdas :: [(Name, Breadcrumbs, Code)]
 sampleLambdas = [
     ( "simple lambda"
-    , [Crumb.Module "Main", Crumb.Function "main" [], Crumb.Lambda 6]
+    , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 6]
     , [r|
 def main:
     f = a : a + 1
 |]), ( "lambda with context"
-    , [Crumb.Module "Main", Crumb.Function "main" [], Crumb.Lambda 12]
+    , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 12]
     , [r|
 def main arg:
     x = 15
@@ -217,7 +218,7 @@ class Vector a:
     x,y,z :: a
 
     def test a b:
-        {a,b, c : c + a + b}
+        (a,b, c : c + a + b)
 
     class Inner:
         def inner a b:

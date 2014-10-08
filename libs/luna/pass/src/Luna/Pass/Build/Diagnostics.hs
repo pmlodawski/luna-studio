@@ -52,12 +52,12 @@ printAST v diag = when (showAST  diag) $ logger info (PP.ppqShow v)
 
 printAA :: MonadIO m => AliasInfo -> Diagnostics -> m ()
 printAA v diag = when (showAA   diag) $ do
-    logger info "\n>> varRel:"
-    logger info $ PP.ppShow (v ^. AliasInfo.varRel)
-    logger info "\n>> aliasMap:"
-    logger info $ PP.ppShow (v ^. AliasInfo.aliasMap)
-    logger info "\n>> invalidMap:"
-    logger info $ PP.ppShow (v ^. AliasInfo.invalidMap)
+    logger info "\n>> scope:"
+    logger info $ PP.ppShow (v ^. AliasInfo.scope)
+    logger info "\n>> alias map:"
+    logger info $ PP.ppShow (v ^. AliasInfo.alias)
+    logger info "\n>> orphans map:"
+    logger info $ PP.ppShow (v ^. AliasInfo.orphans)
 
 
 printSSA :: (QShow.QShow a, MonadIO m) => a -> Diagnostics -> m ()

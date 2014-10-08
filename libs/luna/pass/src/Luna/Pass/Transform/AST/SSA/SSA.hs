@@ -49,7 +49,7 @@ runExpr aliasInfo = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaExpr aliasI
 
 
 ssaModule :: AliasInfo -> Module -> SSAPass Module
-ssaModule aliasInfo mod = Module.traverseM (ssaModule aliasInfo) (ssaExpr aliasInfo) pure ssaPat pure mod
+ssaModule aliasInfo mod = Module.traverseM (ssaModule aliasInfo) (ssaExpr aliasInfo) pure ssaPat pure pure mod
 
 
 ssaExpr :: AliasInfo -> Expr.Expr -> SSAPass Expr.Expr
@@ -58,10 +58,10 @@ ssaExpr aliasInfo ast = case ast of
     Expr.Var        id _        -> checkVar id
     Expr.NativeVar  id _        -> checkVar id
     _                           -> continue
-    where continue    = Expr.traverseM (ssaExpr aliasInfo) pure ssaPat pure ast
-          checkVar id = case (aliasInfo ^. AliasInfo.invalidMap) ^. at id of
+    where continue    = Expr.traverseM (ssaExpr aliasInfo) pure ssaPat pure pure ast
+          checkVar id = case (aliasInfo ^. AliasInfo.orphans) ^. at id of
                            Just err -> (logger error $ "Not in scope '" ++ (show err) ++ "'.") *> continue
-                           Nothing  -> case (aliasInfo ^. AliasInfo.aliasMap) ^. at id of
+                           Nothing  -> case (aliasInfo ^. AliasInfo.alias) ^. at id of
                                            Nothing    -> Pass.fail ("Variable not found in AliasInfo!")
                                            Just nid -> return $ (ast & Expr.name .~ mkVar nid)
 

@@ -41,7 +41,7 @@ desugar mod = (,) <$> desugarModule mod <*> DS.getInfo
 
 
 desugarModule :: Module -> DesugarPass Module
-desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure mod
+desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure pure mod
 
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
@@ -54,7 +54,7 @@ desugarExpr ast = case ast of
     where ftype     = pure
           fexpMap   = mapM desugarExpr
           fexpTLMap = mapM desugarFuncTLExpr
-          continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
+          continue  = Expr.traverseM desugarExpr pure desugarPat pure pure ast
           --omitNext  = Expr.traverseM omitExpr pure desugarPat pure ast
 
 desugarFuncTLExpr :: Expr.Expr -> DesugarPass Expr.Expr
@@ -66,7 +66,7 @@ desugarFuncTLExpr ast = case ast of
 
 omitExpr :: Expr.Expr -> DesugarPass Expr.Expr
 omitExpr ast = continue
-    where continue = Expr.traverseM desugarExpr pure desugarPat pure ast
+    where continue = Expr.traverseM desugarExpr pure desugarPat pure pure ast
 
 
 desugarPat :: Pat -> DesugarPass Pat

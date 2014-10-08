@@ -108,7 +108,7 @@ load = do
 
     cfgFile <- Configurator.load [Configurator.Required $ cpath ++ "/config/flowbox.config"]
 
-    let readConf name = Exception.onException (fromJust =<< (Configurator.lookup cfgFile name :: IO (Maybe String)))
+    let readConf name = Exception.onException (fromJustM =<< (Configurator.lookup cfgFile name :: IO (Maybe String)))
                       $ logger error ("Error reading config variable '" ++ show name)
 
     --let readConfDefault val name = Configurator.lookupDefault val cfgFile name

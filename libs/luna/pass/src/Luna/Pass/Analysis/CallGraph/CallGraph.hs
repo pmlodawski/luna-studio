@@ -29,13 +29,13 @@ import qualified Luna.Pass.Analysis.CallGraph.State as State
 import           Luna.Pass.Pass                     (Pass)
 import qualified Luna.Pass.Pass                     as Pass
 
+
+
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.CallGraph.CallGraph"
 
 
 type CGPass result = Pass State result
-
-
 
 
 run :: AliasInfo -> Module -> Pass.Result CallGraph
@@ -52,13 +52,14 @@ cgMod el@(Module.Module id cls imports classes typeAliases typeDefs fields metho
 cgRegisterFunc :: Expr.Expr -> CGPass ()
 cgRegisterFunc el@(Expr.Function {}) = State.registerFunction (el ^. Expr.id)
 
+
 cgExpr :: Expr.Expr -> CGPass ()
 cgExpr el = case el of
     Expr.Function   {} -> withID continue
     _                  -> do
                           info <- State.getInfo
-                          let mTargetID = info ^. AliasInfo.aliasMap ^. at id
-                              mTargetAST = (do tid <- mTargetID; info ^. AliasInfo.astMap ^. at tid)
+                          let mTargetID = info ^. AliasInfo.alias ^. at id
+                              mTargetAST = (do tid <- mTargetID; info ^. AliasInfo.ast ^. at tid)
                           case mTargetAST of
                               Nothing  -> return ()
                               Just ast -> case ast of
@@ -68,6 +69,6 @@ cgExpr el = case el of
                           continue
     where id        = el ^. Expr.id
           withID    = State.withID id
-          continue  = Expr.traverseM_ cgExpr pure pure pure el
+          continue  = Expr.traverseM_ cgExpr pure pure pure pure el
 
 

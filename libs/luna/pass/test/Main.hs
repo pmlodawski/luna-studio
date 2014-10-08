@@ -96,44 +96,32 @@ logger = getLoggerIO "Flowbox"
 example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
-                    --, "class Vector a:"
-                    --, "    x,y,z :: a"
-                    --, "    def test a b:"
-                    --, "        {a,b}"
-
+                    --, "@AllowOrphans"
                     , "def print msg:"
                     , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
 
-                    --, "def Int.+ a:"
-                    --, "    ```liftF2 (+) #{self} #{a}```"
-
-                    --, "def Int.> a:"
-                    --, "    ```liftF2 (>) #{self} #{a}```"
-
-                    --, "def Int.inc:"
-                    --, "    self + 1"
-
 
                     , "def main:"
-                    --, "    print $ if 1 > 2: 5"
-                    --, "            else: 6"
-                    --, "    print $ 1 > 2"
-                    --, "    v = Vector 1 2 3"
                     , "    print 1"
-                    --, "    f = x:x"
-                    --, "    v.x = 5"
-                    --, "    print $ v"
-
-
-
-                    --, "def test2 a:"
-                    --, "    test1 a"
-
-
-                    --, "def test1 a:"
-                    --, "    {a,a}"
-
                     ]
+
+
+        --concat $ replicate 1 $ unlines [ ""
+        --            --, "@AllowOrphans"
+        --            , "class Vector a:"
+        --            , "    Vector: x,y,z :: a"
+        --            , "    Scalar: w     :: a"
+
+        --            , "def print msg:"
+        --            , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
+
+
+        --            , "def main:"
+        --            , "    v = Vector 1 2 3"
+        --            , "    s = Scalar 5"
+        --            , "    Vector a b c = v"
+        --            , "    print a"
+        --            ]
 
 
 
@@ -199,14 +187,16 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
-    logger info "\n>> varRel:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.varRel)
-    logger info "\n>> aliasMap:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
-    logger info "\n>> invalidMap:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    logger info "\n>> scope:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.scope)
+    logger info "\n>> alias map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.alias)
+    logger info "\n>> parent map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.parent)
+    logger info "\n>> orphans map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
     --logger info "\n>> parentMap"
-    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
 
     -----------------------------------------
     -- !!! CallGraph and DepSort are mockup passes !!!
@@ -236,12 +226,12 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
-    logger info "\n>> varRel:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.varRel)
-    logger info "\n>> aliasMap:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
-    logger info "\n>> invalidMap:"
-    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    logger info "\n>> scope:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.scope)
+    logger info "\n>> alias map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.alias)
+    logger info "\n>> orphans map:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.orphans)
 
 
 
@@ -261,7 +251,7 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- HASTGen --------"
     hast <- hoistEither =<< HASTGen.run ssa
-    --logger info $ PP.ppShow hast
+    logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast

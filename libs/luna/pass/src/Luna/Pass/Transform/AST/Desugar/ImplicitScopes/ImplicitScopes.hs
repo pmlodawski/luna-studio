@@ -45,16 +45,16 @@ desugar mod = (,) <$> desugarModule mod <*> State.getAstInfo
 
 
 desugarModule :: Module -> DesugarPass Module
-desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure mod
+desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure pure mod
 
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExpr ast = case ast of
     Expr.Var id name -> do
         inf <- State.getAliasInfo
-        let aliasMap  = inf ^. AliasInfo.aliasMap
-            parentMap = inf ^. AliasInfo.parentMap
-            astMap    = inf ^. AliasInfo.astMap
+        let aliasMap  = inf ^. AliasInfo.alias
+            parentMap = inf ^. AliasInfo.parent
+            astMap    = inf ^. AliasInfo.ast
             mPid      = parentMap ^. at id
             mPAST     = (do pid <- mPid; astMap ^. at pid)
             mAlias    = aliasMap  ^. at id
@@ -71,7 +71,7 @@ desugarExpr ast = case ast of
                                                  selfVar = Expr.Var <$> State.genID <*> pure "self"
                 _                       -> continue
     _                -> continue
-    where continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
+    where continue  = Expr.traverseM desugarExpr pure desugarPat pure pure ast
 
 
 desugarPat :: Pat -> DesugarPass Pat

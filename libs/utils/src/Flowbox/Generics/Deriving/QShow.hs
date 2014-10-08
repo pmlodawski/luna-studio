@@ -133,11 +133,12 @@ qshowsPrecdefault n = qshowsPrec' Pref n . from
 
 
 -- Base types instances
-instance QShow Char   where qshowsPrec = showsPrec
-instance QShow Int    where qshowsPrec = showsPrec
-instance QShow Float  where qshowsPrec = showsPrec
-instance QShow String where qshowsPrec = showsPrec
-instance QShow Bool   where qshowsPrec = showsPrec
+instance QShow Char    where qshowsPrec = showsPrec
+instance QShow Int     where qshowsPrec = showsPrec
+instance QShow Float   where qshowsPrec = showsPrec
+instance QShow String  where qshowsPrec = showsPrec
+instance QShow Bool    where qshowsPrec = showsPrec
+instance QShow Integer where qshowsPrec = showsPrec
 
 intersperse :: a -> [a] -> [a]
 intersperse _ []    = []
