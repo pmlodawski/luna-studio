@@ -4,11 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Geom2D.Path.Basic where
 
---import Math.Coordinate.Cartesian (Point2(..))
+module Main where
 
+import Geom2D
+import Geom2D.CubicBezier.Basic
 
+import Flowbox.Math.Function.Model 	   as Func
+import Flowbox.Math.Function.Construct as Func
+import Flowbox.Prelude
 
-data PathJoin a = JoinLine a
-			    | JoinQuadratic a
+main :: IO ()
+main = do
+    print "- - - = = =   Func Test  = = = - - -"
+
+    --let func = bsplineLinearFromPoints
+
+    return ()
