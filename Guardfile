@@ -28,7 +28,31 @@ guard :shell, :version => 2, :cli => "--color" do
             puts "                  ___  __   _  _  ____  ____   __    ___  ____ \n                 / __)/  \\ / )( \\(  __)(  _ \\ / _\\  / __)(  __)\n                ( (__(  O )\\ \\/ / ) _)  )   //    \\( (_ \\ ) _)\n                 \\___)\\__/  \\__/ (____)(__\\_)\\_/\\_/ \\___/(____)\n"
             puts "--------------------------------------------------------------------------------\n"
             system("rm -rf hpc_report")
-            system("hpc markup luna-typechecker-tests --destdir=hpc_report --exclude=Main --exclude=Test.Luna.Typechecker.AST.TypeGen --exclude=Test.Luna.TypecheckerSpec --exclude=Test.Luna.Typechecker.UnificationSpec --exclude=Test.Luna.Typechecker.TypeclassesSpec --exclude=Test.Luna.Typechecker.TypeInferenceSpec --exclude=Test.Luna.Typechecker.TIMonadSpec --exclude=Test.Luna.Typechecker.SubstitutionsSpec --exclude=Test.Luna.Typechecker.HasKindSpec --exclude=Test.Luna.Typechecker.ContextReductionSpec --exclude=Test.Luna.Typechecker.BindingGroupsSpec --exclude=Test.Luna.Typechecker.AssumptionsSpec --exclude=Test.Luna.Typechecker.AmbiguitySpec --exclude=Test.Luna.Typechecker.AST.TypeSpec --exclude=Test.Luna.Typechecker.AST.TIDSpec --exclude=Test.Luna.Typechecker.AST.SchemeSpec --exclude=Test.Luna.Typechecker.AST.PatSpec --exclude=Test.Luna.Typechecker.AST.ModuleSpec --exclude=Test.Luna.Typechecker.AST.LitSpec --exclude=Test.Luna.Typechecker.AST.ExprSpec --exclude=Test.Luna.Typechecker.AST.AlternativesSpec > /dev/null")
+            hpc_excluded_modules = %w(
+                                    Main
+                                    Test.Luna.Typechecker.Common
+                                    Test.Luna.Typechecker.AST.TypeGen
+                                    Test.Luna.TypecheckerSpec
+                                    Test.Luna.Typechecker.UnificationSpec
+                                    Test.Luna.Typechecker.TypeclassesSpec
+                                    Test.Luna.Typechecker.TypeInferenceSpec
+                                    Test.Luna.Typechecker.TIMonadSpec
+                                    Test.Luna.Typechecker.SubstitutionsSpec
+                                    Test.Luna.Typechecker.HasKindSpec
+                                    Test.Luna.Typechecker.ContextReductionSpec
+                                    Test.Luna.Typechecker.BindingGroupsSpec
+                                    Test.Luna.Typechecker.AssumptionsSpec
+                                    Test.Luna.Typechecker.AmbiguitySpec
+                                    Test.Luna.Typechecker.AST.TypeSpec
+                                    Test.Luna.Typechecker.AST.TIDSpec
+                                    Test.Luna.Typechecker.AST.SchemeSpec
+                                    Test.Luna.Typechecker.AST.PatSpec
+                                    Test.Luna.Typechecker.AST.ModuleSpec
+                                    Test.Luna.Typechecker.AST.LitSpec
+                                    Test.Luna.Typechecker.AST.ExprSpec
+                                    Test.Luna.Typechecker.AST.AlternativesSpec
+                               ).map{|k| "--exclude=#{k}" }.join(" ")
+            system("hpc markup luna-typechecker-tests --destdir=hpc_report #{hpc_excluded_modules} > /dev/null")
             puts "Report written to 'hpc_report'"
 
 
