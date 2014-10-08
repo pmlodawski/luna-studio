@@ -12,8 +12,8 @@ module Luna.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import qualified Data.IntSet                            as IntSet
 import qualified Data.List                              as List
-import qualified Data.IntSet                               as IntSet
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Arg                           as Arg
@@ -120,8 +120,8 @@ patVariables pat = case pat of
 
 patchedParserState :: ASTInfo.ASTInfo
                    -> ParserState.State (Pragma Pragma.ImplicitSelf, (Pragma Pragma.AllowOrphans, (Pragma Pragma.TabLength, ())))
-patchedParserState info = def
-    & ParserState.info .~ info
+patchedParserState info' = def
+    & ParserState.info .~ info'
     & ParserState.conf .~ parserConf
     where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
 
