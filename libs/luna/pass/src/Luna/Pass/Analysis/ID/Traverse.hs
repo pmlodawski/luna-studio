@@ -52,3 +52,7 @@ traverseType op t = do op $ t ^. Type.id
 
 traverseLit :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Lit -> m ()
 traverseLit op l = op $ l ^. Lit.id
+
+
+--traverseExpr' :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Expr -> m ()
+--traverseExpr' op = void . Expr.traverseMR (op . view Expr.id) (op . view Type.id) (op . view Pat.id) (op . view Lit.id)

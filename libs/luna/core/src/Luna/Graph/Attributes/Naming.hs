@@ -14,12 +14,20 @@ true :: String
 true = "True"
 
 
+false :: String
+false = "False"
+
+
 defaultNodeGenerated :: String
 defaultNodeGenerated = "DefaultNode-generated"
 
 
 astFolded :: String
 astFolded = "AST-folded"
+
+
+graphFolded :: String
+graphFolded = "graph-folded"
 
 
 astAssignment :: String

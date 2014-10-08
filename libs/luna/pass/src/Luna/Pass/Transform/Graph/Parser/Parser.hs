@@ -12,8 +12,8 @@ module Luna.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import qualified Data.List                  as List
-
+import qualified Data.List                              as List
+import qualified Data.IntSet                               as IntSet
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import           Luna.AST.Expr                          (Expr)
@@ -30,6 +30,7 @@ import qualified Luna.Graph.Port                        as Port
 import           Luna.Graph.PropertyMap                 (PropertyMap)
 import qualified Luna.Parser.Lexer                      as Lexer
 import qualified Luna.Parser.Parser                     as Parser
+import qualified Luna.Pass.Analysis.ID.ExtractIDs       as ExtractIDs
 import qualified Luna.Pass.Pass                         as Pass
 import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
@@ -65,7 +66,8 @@ parseNode inputs (nodeID, node) = do
         Node.Expr    {} -> parseExprNode    nodeID $ node ^. Node.expr
         Node.Inputs  {} -> parseInputsNode  nodeID inputs
         Node.Outputs {} -> parseOutputsNode nodeID
-    State.setPosition nodeID $ node ^. Node.pos
+    --State.setGraphFolded nodeID
+    State.setPosition    nodeID $ node ^. Node.pos
 
 
 parseExprNode :: Node.ID -> String -> GPPass ()
@@ -147,6 +149,8 @@ parseAppNode nodeID app = do
                 else case Parser.parseExpr app $ ASTInfo.mk nodeID of
                     Left  er     -> left $ show er
                     Right (e, _) -> return e
+    ids <- hoistEither =<< ExtractIDs.runExpr expr
+    mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
     let requiresApp (Expr.Con {}) = True
         requiresApp _             = False
     case srcs of

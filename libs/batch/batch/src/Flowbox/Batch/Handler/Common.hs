@@ -211,7 +211,7 @@ getGraph bc libraryID projectID = do
     propertyMap <- getPropertyMap libraryID projectID
     expr        <- getFunctionFocus bc libraryID projectID
     aa          <- EitherT $ Alias.run ast
-    result <- EitherT $ GraphBuilder.run aa propertyMap expr
+    result <- EitherT $ GraphBuilder.run aa propertyMap True expr
     logger trace $ ppShow result
     return result
 

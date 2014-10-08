@@ -14,8 +14,13 @@ import qualified GHC
 import qualified GHC.Exts      as Exts
 
 import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 import qualified Luna.Interpreter.Session.Hint.Util as Util
 
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Luna.Interpreter.Session.Hint.Eva"
 
 
 interpret :: (GHC.GhcMonad m, Typeable a) => String -> m a
@@ -29,6 +34,7 @@ interpret' :: (GHC.GhcMonad m, Typeable a) => String -> a -> m a
 interpret' expr wit = do
     let typeStr = show $ Typeable.typeOf wit
         typedExpr = concat [parens expr, " :: ", typeStr]
+    logger trace typedExpr
     exprVal <- GHC.compileExpr typedExpr
     return (Exts.unsafeCoerce# exprVal :: a)
 
