@@ -116,6 +116,11 @@ gradeLuna (VPS (variable -> blackpoint))
           (VPS (variable -> gamma')) =
             grade blackpoint whitepoint lift gain multiply' offset' gamma'
 
+saturateLuna :: VPS Double -> A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)
+saturateLuna (VPS (variable -> s)) = A.lift1 $ (saturate s :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
+
+posterizeLuna :: VPS Double -> A.Exp Double -> A.Exp Double
+posterizeLuna (VPS (variable -> colors)) = posterize colors
 
 loadImageLuna :: FilePath -> IO (Image RGBA)
 loadImageLuna path = do

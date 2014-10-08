@@ -73,7 +73,13 @@ def Image.colorCorrect saturation contrast gamma gain offset:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF1 (onEachValue $ gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma}) #{self}```
 
+def Image.saturate saturation:
+    ```liftF1 (onEachRGB $ saturateLuna #{saturation}) #{self}```
+
+def Image.posterize colors:
+    ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
+
 def main:
     rgba = load "/home/mgw/test.png"
-    defocused = rgba.colorCorrect 1.4 1 1 1 0
+    defocused = rgba.posterize 4
     defocused.save "/home/mgw/out.png"
