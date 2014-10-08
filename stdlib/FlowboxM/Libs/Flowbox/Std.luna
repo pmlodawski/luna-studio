@@ -1,7 +1,7 @@
 class Vector a:
     x,y,z :: a
     def test a b:
-        (a,b)
+        {a,b}
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -38,6 +38,3 @@ def Int.inc:
 
 def Int.dec:
     self - 1
-
-def main:
-    print "test"
