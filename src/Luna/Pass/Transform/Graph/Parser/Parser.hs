@@ -104,8 +104,9 @@ parseOutputsNode nodeID = do
     case srcs of
         []                -> whenM State.doesLastStatementReturn
                                 $ State.setOutput $ Expr.Tuple IDFixer.unknownID []
-        [src@Expr.Var {}] -> State.setOutput src
-        [_]               -> return ()
+        --[src@Expr.Var {}] -> State.setOutput src
+        [src] -> State.setOutput src
+        --[_]               -> return ()
         _:(_:_)           -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
 
 
@@ -201,14 +202,16 @@ addExpr nodeID e = do
     assignment     <- State.hasFlag nodeID Attributes.astAssignment
     defaultNodeGen <- State.hasFlag nodeID Attributes.defaultNodeGenerated
 
-
     let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
         assignmentCount = length $ List.filter assignmentEdge
                                  $ Graph.lsuclData graph nodeID
 
+        connectedToOutput = List.any (Node.isOutputs . view _2)
+                          $ Graph.lsuclData graph nodeID
+
     if folded || defaultNodeGen
         then State.addToNodeMap (nodeID, Port.All) e
-        else if assignment || assignmentCount > 0
+        else if assignment || assignmentCount > 1
             then do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName
@@ -216,7 +219,8 @@ addExpr nodeID e = do
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
             else do State.addToNodeMap (nodeID, Port.All) e
-                    State.addToBody e
+                    unless connectedToOutput $
+                        State.addToBody e
 
 
 isOperator :: String -> Bool
