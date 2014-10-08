@@ -48,5 +48,5 @@ makeLenses ''Segment
 makeLenses ''Function
 
 
-hardJoint :: y -> (ControlPoint y)
+hardJoint :: y -> ControlPoint y
 hardJoint y = ControlPoint y Nothing Nothing
