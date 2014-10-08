@@ -27,6 +27,7 @@ import           Flowbox.Graphics.Composition.Generators.Stencil
 import           Flowbox.Graphics.Composition.Generators.Structures
 import           Flowbox.Graphics.Composition.Generators.Transform
 import           Flowbox.Graphics.Image.Channel
+import           Flowbox.Graphics.Image.Color
 import           Flowbox.Graphics.Image.Image          as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage, saveImage)
 import           Flowbox.Graphics.Image.View           as View
@@ -86,17 +87,14 @@ bilateral (VPS psigma) (VPS csigma) (VPS (variable -> size)) = process
           domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
           process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
-data Chan = R | G | B | A
-          deriving Show
+offsetLuna :: Value Pure Safe Double -> A.Exp Double -> A.Exp Double
+offsetLuna (VPS (variable -> v)) = offset v
 
--- loadChannel :: FilePath -> Chan -> IO Channel
--- loadChannel path chan = fmap (ChannelFloat (P.map toLower $ show chan) . FlatData . get chan) (testLoadRGBA path)
---     where get :: Chan -> Matrix2 (Double, Double, Double, Double) -> Matrix2 Double
---           get R = M.map (\(A.unlift -> (r, _, _, _)::(A.Exp Double, A.Exp Double, A.Exp Double, A.Exp Double)) -> r)
---           get G = M.map (\(A.unlift -> (_, g, _, _)::(A.Exp Double, A.Exp Double, A.Exp Double, A.Exp Double)) -> g)
---           get B = M.map (\(A.unlift -> (_, _, b, _)::(A.Exp Double, A.Exp Double, A.Exp Double, A.Exp Double)) -> b)
---           get A = M.map (\(A.unlift -> (_, _, _, a)::(A.Exp Double, A.Exp Double, A.Exp Double, A.Exp Double)) -> a)
+contrastLuna :: Value Pure Safe Double -> A.Exp Double -> A.Exp Double
+contrastLuna (VPS (variable -> v)) = contrast v
 
+exposureLuna :: Value Pure Safe Double -> Value Pure Safe Double -> A.Exp Double -> A.Exp Double
+exposureLuna (VPS (variable -> blackpoint)) (VPS (variable -> ex)) = exposure blackpoint ex
 
 -- ====== On 4-tuples ======
 -- testLoadRGBA :: FilePath -> IO (Matrix2 (Double, Double, Double, Double))
