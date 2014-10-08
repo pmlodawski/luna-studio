@@ -1,0 +1,24 @@
+class Point a:
+    x,y :: a
+
+class Optional a:
+    Some:
+        x :: a
+    None
+
+
+# def newPoint x y:
+#     ```liftf2 Point #{x} #{y}```
+
+# def convertPoint point:
+#     ```liftf2 Point #{point.x} #{point.y}```
+
+# def fromPoints points:
+#     pointsConverted = map convertPoint points
+#     ```liftf1 hybdridLinearFromPoints #{pointsConverted}```
+
+def print msg:
+    ```autoLift1 print #{msg}```
+
+def main:
+    print "- - - function test - - -"
