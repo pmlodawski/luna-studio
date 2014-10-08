@@ -43,7 +43,7 @@ def Int.gte a:
 #     self.sub 1
 
 
-def loadImage path:
+def load path:
     ```autoLift1 loadImageLuna #{path}```
 
 def Image.save path:
@@ -56,9 +56,18 @@ def Image.motionBlur size angle:
     ```liftF1 (onEachChannel $ motionBlur #{size} #{angle}) #{self}```
 
 def Image.bilateral psigma csigma size:
-    ```liftF1 (bilateral #{psigma} #{csigma} #{size}) #{self}```
+    ```liftF1 (onEachChannel $ bilateral #{psigma} #{csigma} #{size}) #{self}```
+
+def Image.offset value:
+    ```liftF1 (onEachValue $ offsetLuna #{value}) #{self}```
+
+def Image.contrast value:
+    ```liftF1 (onEachValue $ contrastLuna #{value}) #{self}```
+
+def Image.exposure blackpoint ex:
+    ```liftF1 (onEachValue $ exposureLuna #{blackpoint} #{ex}) #{self}```
 
 def main:
-    rgba = loadImage "/home/mgw/test.png"
+    rgba = load "/home/mgw/test.png"
     defocused = rgba.defocus 20
     defocused.save "/home/mgw/out.png"
