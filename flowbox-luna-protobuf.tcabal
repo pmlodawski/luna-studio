@@ -30,6 +30,7 @@ Library
                   protocol-buffers-descriptor-fork,
                   flowbox-utils,
                   luna-core,
+                  luna-distribution,
                   containers,
                   bytestring
 
