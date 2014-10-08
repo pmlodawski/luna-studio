@@ -99,7 +99,23 @@ exposureLuna :: VPS Double -> VPS Double -> A.Exp Double -> A.Exp Double
 exposureLuna (VPS (variable -> blackpoint)) (VPS (variable -> ex)) = exposure blackpoint ex
 
 colorCorrectLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)
-colorCorrectLuna (VPS (variable -> saturation')) (VPS (variable -> contrast')) (VPS (variable -> gamma')) (VPS (variable -> gain')) (VPS (variable -> offset')) = A.lift1 $ colorCorrect saturation' contrast' gamma' gain' offset'
+colorCorrectLuna (VPS (variable -> saturation'))
+                 (VPS (variable -> contrast'))
+                 (VPS (variable -> gamma'))
+                 (VPS (variable -> gain'))
+                 (VPS (variable -> offset')) =
+                    A.lift1 $ colorCorrect saturation' contrast' gamma' gain' offset'
+
+gradeLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> A.Exp Double -> A.Exp Double
+gradeLuna (VPS (variable -> blackpoint))
+          (VPS (variable -> whitepoint))
+          (VPS (variable -> lift))
+          (VPS (variable -> gain))
+          (VPS (variable -> multiply'))
+          (VPS (variable -> offset'))
+          (VPS (variable -> gamma')) =
+            grade blackpoint whitepoint lift gain multiply' offset' gamma'
+
 
 loadImageLuna :: FilePath -> IO (Image RGBA)
 loadImageLuna path = do
