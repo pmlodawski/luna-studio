@@ -5,6 +5,7 @@ module Test.Luna.Typechecker.AST.SchemeSpec (spec) where
 
 import Luna.Typechecker.Typeclasses
 
+import Luna.Typechecker.AST.ClassID
 import Luna.Typechecker.AST.Kind
 import Luna.Typechecker.AST.Scheme
 import Luna.Typechecker.AST.TID
@@ -57,8 +58,8 @@ spec = do
           sch3 = Forall [] (ps :=> t)
           sch4 = Forall ks (psk :=> tk)
           ks = [Star]
-          ps = [IsIn (TID "Integral") t]
-          psk = [IsIn (TID "Integral") tk]
+          ps = [IsIn (ClassID "Integral") t]
+          psk = [IsIn (ClassID "Integral") tk]
           t = TVar $ Tyvar (TID "a") Star
           tk = TGen 0
       length (concatMap show [sch1, sch2, sch3, sch4]) `shouldSatisfy` (>0)

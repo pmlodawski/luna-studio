@@ -5,24 +5,32 @@
 module Test.Luna.Typechecker.AST.TypeGen where
 
 
-import qualified Luna.Typechecker.HasKind       as HKd
-import           Luna.Typechecker.Typeclasses      (Pred(..))
-import qualified Luna.Typechecker.Substitutions as Sub
+import Luna.Typechecker.HasKind         (HasKind(..))
+import Luna.Typechecker.Typeclasses     (Pred(..))
+import Luna.Typechecker.Substitutions   (Subst,Types(..),(+->),nullSubst)
 
-import           Luna.Typechecker.AST.Type      (Type(..), Tyvar(..), Tycon(..))
-import           Luna.Typechecker.AST.Kind      (Kind(..))
-import           Luna.Typechecker.AST.TID       (enumTID, TID(..))
+import Luna.Typechecker.AST.ClassID     (ClassID(..))
+import Luna.Typechecker.AST.Kind        (Kind(..))
+import Luna.Typechecker.AST.TID         (enumTID, TID(..))
+import Luna.Typechecker.AST.Type        (Type(..), Tyvar(..), Tycon(..))
+import Luna.Typechecker.AST.VarID       (VarID(..))
 
-import           Luna.Typechecker.Internal.Logger
+import Luna.Typechecker.Internal.Logger
 
-import           Control.Applicative                     ((<$>), (<*>))
-import           Control.Monad                           (liftM2)
+import Control.Applicative              ((<$>), (<*>))
+import Control.Monad                    (liftM2)
 
-import           Test.QuickCheck
+import Test.QuickCheck
 
 
 instance Arbitrary TID where
   arbitrary = TID <$> arbitrary
+
+instance Arbitrary ClassID where
+  arbitrary = ClassID <$> arbitrary
+
+instance Arbitrary VarID where
+  arbitrary = VarID <$> arbitrary
 
 
 instance Arbitrary Kind where
@@ -45,11 +53,11 @@ instance Arbitrary Type where
 
 instance Arbitrary Tyvar where
   arbitrary = arbitrary >>= genTyvar
-  shrink (Tyvar n kind) = map (Tyvar n) (shrink kind)
+  shrink (Tyvar n knd) = map (Tyvar n) (shrink knd)
 
 instance Arbitrary Tycon where
   arbitrary = arbitrary >>= genTycon
-  shrink (Tycon n kind) = map (Tycon n) (shrink kind)
+  shrink (Tycon n knd) = map (Tycon n) (shrink knd)
 
 instance Arbitrary Pred where
   arbitrary = liftM2 IsIn arbitrary arbitrary
@@ -102,11 +110,11 @@ genTycon :: Kind -> Gen Tycon
 genTycon k = do tid <- tidTC . getPositive <$> arbitrary
                 return (Tycon tid k)
 
-genSubst :: [Tyvar] -> Gen Sub.Subst
-genSubst []  = return Sub.nullSubst
+genSubst :: [Tyvar] -> Gen Subst
+genSubst []  = return nullSubst
 genSubst tvs = do t <- elements tvs
-                  let Right k = evalLogger $ HKd.kind t
-                  ty <- genType k `suchThat` (notElem t . Sub.tv)
-                  return (t Sub.+-> ty)
+                  let Right k = evalLogger $ kind t
+                  ty <- genType k `suchThat` (notElem t . tv)
+                  return (t +-> ty)
 
 

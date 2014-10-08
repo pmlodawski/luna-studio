@@ -8,7 +8,7 @@ module Luna.Typechecker.Internal.Typeclasses (
 
 import           Luna.Typechecker.Substitutions  (Types(..))
 
-import           Luna.Typechecker.AST.TID        (TID)
+import           Luna.Typechecker.AST.ClassID    (ClassID)
 import           Luna.Typechecker.AST.Type       (Type(..))
 
 import           Control.DeepSeq
@@ -22,7 +22,7 @@ import           GHC.Generics
 import           Text.Printf                     (printf)
 
 
-data Pred = IsIn TID Type
+data Pred = IsIn ClassID Type
           deriving (Eq,Generic)
 
 
@@ -50,11 +50,11 @@ instance Show t => Show (Qual t) where
   show (ps :=> t) = printf "(%s :=> %s)" (show ps) (show t)
 
 
-type Class = ([TID], [Inst]) -- ^ super-classes, instances
+type Class = ([ClassID], [Inst]) -- ^ super-classes, instances
 type Inst  = Qual Pred
 
 data ClassEnv = ClassEnv {
-                  classes :: M.Map TID Class,
+                  classes :: M.Map ClassID Class,
                   defaults :: [Type]
                 }
 

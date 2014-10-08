@@ -4,6 +4,7 @@ module Test.Luna.Typechecker.ContextReductionSpec (spec) where
 import Luna.Typechecker.ContextReduction
 import Luna.Typechecker.Typeclasses
 
+import Luna.Typechecker.AST.ClassID
 import Luna.Typechecker.AST.Kind
 import Luna.Typechecker.AST.TID
 import Luna.Typechecker.AST.Type
@@ -21,44 +22,44 @@ spec :: Spec
 spec = do
   describe "inHnf" $
     it "verifies the result" $ do
-      evalLogger (inHnf (IsIn (TID "anything") (TVar $ Tyvar (TID "a") Star))                                ) `shouldBe` Right True
-      evalLogger (inHnf (IsIn (TID "anything") (TCon $ Tycon (TID "Int") Star))                              ) `shouldBe` Right False
-      evalLogger (inHnf (IsIn (TID "anything") (list (TCon $ Tycon (TID "Int") Star)))                       ) `shouldBe` Right False
-      evalLogger (inHnf (IsIn (TID "anything") (list (TVar $ Tyvar (TID "a") Star)))                         ) `shouldBe` Right False
-      evalLogger (inHnf (IsIn (TID "anything") (TAp (TVar $ Tyvar (TID "m") Star) (TCon $ Tycon (TID "Int") Star)))) `shouldBe` Right True
-      evalLogger (inHnf (IsIn (TID "anything") (TGen 0))                                               ) `shouldSatisfy` isLeft
+      evalLogger (inHnf (IsIn (ClassID "anything") (TVar $ Tyvar (TID "a") Star))                                ) `shouldBe` Right True
+      evalLogger (inHnf (IsIn (ClassID "anything") (TCon $ Tycon (TID "Int") Star))                              ) `shouldBe` Right False
+      evalLogger (inHnf (IsIn (ClassID "anything") (list (TCon $ Tycon (TID "Int") Star)))                       ) `shouldBe` Right False
+      evalLogger (inHnf (IsIn (ClassID "anything") (list (TVar $ Tyvar (TID "a") Star)))                         ) `shouldBe` Right False
+      evalLogger (inHnf (IsIn (ClassID "anything") (TAp (TVar $ Tyvar (TID "m") Star) (TCon $ Tycon (TID "Int") Star)))) `shouldBe` Right True
+      evalLogger (inHnf (IsIn (ClassID "anything") (TGen 0))                                               ) `shouldSatisfy` isLeft
   describe "toHnf" $ do
     it "works for bad input" $ do
-      let Right ce = evalLogger ((     addClass (TID "Eq") (TID <$> [])
-                                <:> addInst [] (IsIn (TID "Eq") tBool))
+      let Right ce = evalLogger ((     addClass (ClassID "Eq") (ClassID <$> [])
+                                <:> addInst [] (IsIn (ClassID "Eq") tBool))
                               initialEnv)
-          res = evalLogger (toHnf initialEnv (IsIn (TID "anything") (TCon $ Tycon (TID "Int") Star)))
-          res2 = evalLogger (toHnf ce (IsIn (TID "Eq") tBool))
-          res3 = evalLogger (toHnf ce (IsIn (TID "Eq") tInt))
+          res = evalLogger (toHnf initialEnv (IsIn (ClassID "anything") (TCon $ Tycon (TID "Int") Star)))
+          res2 = evalLogger (toHnf ce (IsIn (ClassID "Eq") tBool))
+          res3 = evalLogger (toHnf ce (IsIn (ClassID "Eq") tInt))
       res `shouldSatisfy` isLeft
       res2 `shouldBe` Right []
       res3 `shouldSatisfy` isLeft
 
     it "covers nested predicates" $
-      let Right ce = evalLogger ((  addClass (TID "Eq") (TID <$> [])
-                         <:> addClass (TID "Ord") (TID <$> ["Eq"])
-                         <:> addClass (TID "Num") (TID <$> [])
-                         <:> addClass (TID "Real") (TID <$> ["Num", "Ord"])
-                         <:> addClass (TID "Enum") (TID <$> [])
-                         <:> addClass (TID "Integral") (TID <$> ["Real", "Enum"])
-                         <:> addClass (TID "Fractional") (TID <$> ["Num"])
-                         <:> addClass (TID "Functor") (TID <$> [])
-                         <:> addInst [] (IsIn (TID "Eq") tInt)             <:> addInst [] (IsIn (TID "Eq") tInteger)       <:> addInst [] (IsIn (TID "Eq") tDouble)   <:> addInst [] (IsIn (TID "Eq") tFloat)
-                         <:> addInst [] (IsIn (TID "Ord") tInt)            <:> addInst [] (IsIn (TID "Ord") tInteger)      <:> addInst [] (IsIn (TID "Ord") tDouble)  <:> addInst [] (IsIn (TID "Ord") tFloat)
-                         <:> addInst [] (IsIn (TID "Num") tInt)            <:> addInst [] (IsIn (TID "Num") tInteger)      <:> addInst [] (IsIn (TID "Num") tDouble)  <:> addInst [] (IsIn (TID "Num") tFloat)
-                         <:> addInst [] (IsIn (TID "Real") tInt)           <:> addInst [] (IsIn (TID "Real") tInteger)     <:> addInst [] (IsIn (TID "Real") tDouble) <:> addInst [] (IsIn (TID "Real") tFloat)
-                         <:> addInst [] (IsIn (TID "Enum") tInt)           <:> addInst [] (IsIn (TID "Enum") tInteger)
-                         <:> addInst [] (IsIn (TID "Integral") tInt)       <:> addInst [] (IsIn (TID "Integral") tInteger)
-                         <:> addInst [] (IsIn (TID "Fractional") tDouble)  <:> addInst [] (IsIn (TID "Fractional") tFloat)
-                         <:> addInst [] (IsIn (TID "Functor") tList)       <:> addInst [] (IsIn (TID "Functor") tMaybe)
-                         <:> addInst [IsIn (TID "Functor") tv_f2, IsIn (TID "Num") tv_a1] (IsIn (TID "Num") (TAp tv_f2 tv_a1)) -- nonsense, I know
-                         <:> addInst [IsIn (TID "Functor") tv_f2, IsIn (TID "Ord") tv_a1]
-                                     (IsIn (TID "Ord") (TAp tv_f2 tv_a1))
+      let Right ce = evalLogger ((  addClass (ClassID "Eq") (ClassID <$> [])
+                         <:> addClass (ClassID "Ord") (ClassID <$> ["Eq"])
+                         <:> addClass (ClassID "Num") (ClassID <$> [])
+                         <:> addClass (ClassID "Real") (ClassID <$> ["Num", "Ord"])
+                         <:> addClass (ClassID "Enum") (ClassID <$> [])
+                         <:> addClass (ClassID "Integral") (ClassID <$> ["Real", "Enum"])
+                         <:> addClass (ClassID "Fractional") (ClassID <$> ["Num"])
+                         <:> addClass (ClassID "Functor") (ClassID <$> [])
+                         <:> addInst [] (IsIn (ClassID "Eq") tInt)             <:> addInst [] (IsIn (ClassID "Eq") tInteger)       <:> addInst [] (IsIn (ClassID "Eq") tDouble)   <:> addInst [] (IsIn (ClassID "Eq") tFloat)
+                         <:> addInst [] (IsIn (ClassID "Ord") tInt)            <:> addInst [] (IsIn (ClassID "Ord") tInteger)      <:> addInst [] (IsIn (ClassID "Ord") tDouble)  <:> addInst [] (IsIn (ClassID "Ord") tFloat)
+                         <:> addInst [] (IsIn (ClassID "Num") tInt)            <:> addInst [] (IsIn (ClassID "Num") tInteger)      <:> addInst [] (IsIn (ClassID "Num") tDouble)  <:> addInst [] (IsIn (ClassID "Num") tFloat)
+                         <:> addInst [] (IsIn (ClassID "Real") tInt)           <:> addInst [] (IsIn (ClassID "Real") tInteger)     <:> addInst [] (IsIn (ClassID "Real") tDouble) <:> addInst [] (IsIn (ClassID "Real") tFloat)
+                         <:> addInst [] (IsIn (ClassID "Enum") tInt)           <:> addInst [] (IsIn (ClassID "Enum") tInteger)
+                         <:> addInst [] (IsIn (ClassID "Integral") tInt)       <:> addInst [] (IsIn (ClassID "Integral") tInteger)
+                         <:> addInst [] (IsIn (ClassID "Fractional") tDouble)  <:> addInst [] (IsIn (ClassID "Fractional") tFloat)
+                         <:> addInst [] (IsIn (ClassID "Functor") tList)       <:> addInst [] (IsIn (ClassID "Functor") tMaybe)
+                         <:> addInst [IsIn (ClassID "Functor") tv_f2, IsIn (ClassID "Num") tv_a1] (IsIn (ClassID "Num") (TAp tv_f2 tv_a1)) -- nonsense, I know
+                         <:> addInst [IsIn (ClassID "Functor") tv_f2, IsIn (ClassID "Ord") tv_a1]
+                                     (IsIn (ClassID "Ord") (TAp tv_f2 tv_a1))
                           ) initialEnv)
 
           tMaybe = TCon $ Tycon (TID "Maybe") $ Star `Kfun` Star
@@ -66,9 +67,9 @@ spec = do
           tv_a1 = TVar $ Tyvar (TID "a") Star
           tv_f2 = TVar $ Tyvar (TID "f") (Star `Kfun` Star)
 
-          p = IsIn (TID "Num") (TAp tMaybe tv_a1)
+          p = IsIn (ClassID "Num") (TAp tMaybe tv_a1)
 
           Right res = evalLogger $ toHnf ce p
-       in res `shouldSatisfy` any (\(IsIn (TID name) _) -> name == "Num")
+       in res `shouldSatisfy` any (\(IsIn (ClassID name) _) -> name == "Num")
 
 

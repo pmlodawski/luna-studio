@@ -8,8 +8,8 @@ module Luna.Typechecker.AST.Lit (
 import Luna.Typechecker.TIMonad          (TI, newTVar)
 import Luna.Typechecker.Typeclasses      (Pred(..))
 
+import Luna.Typechecker.AST.ClassID      (ClassID(..))
 import Luna.Typechecker.AST.Kind         (Kind(..))
-import Luna.Typechecker.AST.TID          (TID(..))
 import Luna.Typechecker.AST.Type         (Type(..), tChar, tInteger, tFloat, tString)
 
 import Luna.Typechecker.AST.Internal.Lit (Lit(..))
@@ -21,6 +21,6 @@ tiLit :: Lit -> TCLoggerT TI ([Pred], Type)
 tiLit (LitChar _)     = return ([], tChar)
 tiLit (LitInt _)      = return ([], tInteger)
 tiLit (LitIntegral _) = do t <- newTVar Star
-                           return ([IsIn (TID "Integral") t], t)
+                           return ([IsIn (ClassID "Integral") t], t)
 tiLit (LitFloat _)    = return ([], tFloat)
 tiLit (LitStr _)      = return ([], tString)

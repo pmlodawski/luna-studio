@@ -7,7 +7,7 @@ module Luna.Typechecker.Typeclasses (
 import           Luna.Typechecker.Substitutions        (Types(..), Subst)
 import           Luna.Typechecker.Unification          (match, mgu)
 
-import           Luna.Typechecker.AST.TID              (TID)
+import           Luna.Typechecker.AST.ClassID          (ClassID)
 import           Luna.Typechecker.AST.Type             (Type(..), tInteger, tDouble)
 
 import           Luna.Typechecker.Internal.Logger
@@ -29,21 +29,21 @@ liftPred mf (IsIn i t) (IsIn i' t') = do unless (i == i') $ throwError "classes 
                                          mf t t'
 
 
-type Class = ([TID], [Inst])
+type Class = ([ClassID], [Inst])
 type Inst  = Qual Pred
 
 
-super :: (Monad m) => ClassEnv -> TID -> TCLoggerT m [TID]
+super :: (Monad m) => ClassEnv -> ClassID -> TCLoggerT m [ClassID]
 super ce i = case M.lookup i (classes ce) of
                Just (is, _) -> return is
                Nothing -> throwError "Typeclasses.hs:super got no result"
 
-insts :: (Monad m) => ClassEnv -> TID -> TCLoggerT m [Inst]
+insts :: (Monad m) => ClassEnv -> ClassID -> TCLoggerT m [Inst]
 insts ce i = case M.lookup i (classes ce) of
                Just (_, its) -> return its
                Nothing -> throwError "Typeclasses.hs:insts got no result"
 
-modify :: ClassEnv -> TID -> Class -> ClassEnv
+modify :: ClassEnv -> ClassID -> Class -> ClassEnv
 modify ce i c = ce { classes = M.insert i c (classes ce) }
 
 initialEnv :: ClassEnv
@@ -65,7 +65,7 @@ defined :: (Monad m) => TCLoggerT m a -> TCLoggerT m Bool
 defined = isFine
 
 
-addClass :: (Monad m) => TID -> [TID] -> EnvTransformer m
+addClass :: (Monad m) => ClassID -> [ClassID] -> EnvTransformer m
 addClass i is ce | M.member i (classes ce)           = throwError "class is already defined"
                  | any (`M.notMember` classes ce) is = throwError "superclass not defined"
                  | otherwise                         = return (modify ce i (is, []))
