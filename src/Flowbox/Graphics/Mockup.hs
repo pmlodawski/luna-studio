@@ -17,6 +17,7 @@ import           Data.Char                  (toLower)
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
 
+import qualified Flowbox.Graphics.Color                as Color
 import           Flowbox.Graphics.Composition.Generators.Filter
 import           Flowbox.Graphics.Composition.Generators.Matrix
 import           Flowbox.Graphics.Composition.Generators.Pipe
@@ -56,13 +57,14 @@ testSaveRGBA filename r g b a = saveImage filename $ compute' run $ M.map A.pack
     where conv = M.map (A.truncate . (* 255.0) . clamp' 0 1)
 
 pattern VPS x = Value (Pure (Safe x))
+type VPS x = Value Pure Safe x
 
-defocus :: Value Pure Safe Int -> Matrix2 Double -> Matrix2 Double
+defocus :: VPS Int -> Matrix2 Double -> Matrix2 Double
 defocus (VPS size) = process
     where kernel = ellipse (pure $ variable size) 1 (0 :: A.Exp Double)
           process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
-motionBlur :: Value Pure Safe Int -> Value Pure Safe Double -> Matrix2 Double -> Matrix2 Double
+motionBlur :: VPS Int -> VPS Double -> Matrix2 Double -> Matrix2 Double
 motionBlur (VPS size) (VPS angle) = process
     where kernel = monosampler
                  $ rotateCenter (variable angle)
@@ -73,9 +75,9 @@ motionBlur (VPS size) (VPS angle) = process
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
 rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
 
-bilateral :: Value Pure Safe Double
-          -> Value Pure Safe Double
-          -> Value Pure Safe Int
+bilateral :: VPS Double
+          -> VPS Double
+          -> VPS Int
           -> Matrix2 Double
           -> Matrix2 Double
 bilateral (VPS psigma) (VPS csigma) (VPS (variable -> size)) = process
@@ -87,57 +89,17 @@ bilateral (VPS psigma) (VPS csigma) (VPS (variable -> size)) = process
           domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
           process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
-offsetLuna :: Value Pure Safe Double -> A.Exp Double -> A.Exp Double
+offsetLuna :: VPS Double -> A.Exp Double -> A.Exp Double
 offsetLuna (VPS (variable -> v)) = offset v
 
-contrastLuna :: Value Pure Safe Double -> A.Exp Double -> A.Exp Double
+contrastLuna :: VPS Double -> A.Exp Double -> A.Exp Double
 contrastLuna (VPS (variable -> v)) = contrast v
 
-exposureLuna :: Value Pure Safe Double -> Value Pure Safe Double -> A.Exp Double -> A.Exp Double
+exposureLuna :: VPS Double -> VPS Double -> A.Exp Double -> A.Exp Double
 exposureLuna (VPS (variable -> blackpoint)) (VPS (variable -> ex)) = exposure blackpoint ex
 
--- ====== On 4-tuples ======
--- testLoadRGBA :: FilePath -> IO (Matrix2 (Double, Double, Double, Double))
--- testLoadRGBA filename = do
---     file <- loadImage filename
---     case file of
---         Right mat -> return $ M.map (convert . A.unpackRGBA32) (Raw mat)
---         Left e -> error $ "Unable to load file: " P.++ show e
---     where convert t = let (r, g, b, a) = A.unlift t :: (A.Exp A.Word8, A.Exp A.Word8, A.Exp A.Word8, A.Exp A.Word8)
---                       in A.lift (A.fromIntegral r / 255, A.fromIntegral g / 255, A.fromIntegral b / 255, A.fromIntegral a / 255)
-
--- testSaveRGBA :: FilePath -> Matrix2 (Double, Double, Double, Double) -> IO ()
--- testSaveRGBA filename rgba = saveImage filename $ compute' run $ M.map A.packRGBA32 $ M.map (\(A.unlift -> (r, g, b, a)) -> A.lift (conv r, conv g, conv b, conv a)) rgba
---     where conv = A.truncate . (* 255.0) . clamp' 0 1
-
--- defocus :: Int -> Matrix2 (Double, Double, Double, Double) -> Matrix2 (Double, Double, Double, Double)
--- defocus size = (\(a, b, c, d) -> M.zip4 a b c d) . over each process . M.unzip4
---     where kernel = ellipse (pure $ variable size) 1 (0 :: A.Exp Double)
---           process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
-
--- motionBlur :: Int -> Double -> Matrix2 (Double, Double, Double, Double) -> Matrix2 (Double, Double, Double, Double)
--- motionBlur size angle = (\(a, b, c, d) -> M.zip4 a b c d) . over each process . M.unzip4
---     where kernel = monosampler
---                  $ rotateCenter (variable angle)
---                  $ nearest
---                  $ rectangle (Grid (variable size) 1) 1 0
---           process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
-
--- -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
--- rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
-
--- bilateral :: Double -> Double -> Int -> Matrix2 (Double, Double, Double, Double) -> Matrix2 (Double, Double, Double, Double)
--- bilateral (variable -> psigma) (variable -> csigma) (variable -> size) = (\(a, b, c, d) -> M.zip4 a b c d) . over each process . M.unzip4
---     where p = pipe A.Clamp
---           spatial :: Generator (Point2 (Exp Int)) (Exp Double)
---           spatial = Generator (pure $ size) $ \(Point2 x y) ->
---               let dst = sqrt . A.fromIntegral $ (x - size `div` 2) * (x - size `div` 2) + (y - size `div` 2) * (y - size `div` 2)
---               in apply (gauss psigma) dst
---           domain center neighbour = apply (gauss csigma) (abs $ neighbour - center)
---           process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
-
--- ====== END ======
-
+colorCorrectLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)
+colorCorrectLuna (VPS (variable -> saturation')) (VPS (variable -> contrast')) (VPS (variable -> gamma')) (VPS (variable -> gain')) (VPS (variable -> offset')) = A.lift1 $ colorCorrect saturation' contrast' gamma' gain' offset'
 
 loadImageLuna :: FilePath -> IO (Image RGBA)
 loadImageLuna path = do
@@ -173,3 +135,24 @@ onEachValue f img = res
 
           f' :: Channel -> Channel
           f' (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ (M.map f))
+
+onEachRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image RGBA -> Image RGBA
+onEachRGB f img = img'
+    where Just view = lookup "rgba" img
+          Right (Just (ChannelFloat _ (FlatData r))) = View.get view "r"
+          Right (Just (ChannelFloat _ (FlatData g))) = View.get view "g"
+          Right (Just (ChannelFloat _ (FlatData b))) = View.get view "b"
+
+          rgb = M.zipWith3 (\x y z -> A.lift $ Color.RGB x y z) r g b
+
+          rgb' = M.map f rgb
+
+          unzipRGB = M.unzip3 . M.map (\(A.unlift -> Color.RGB x y z) -> A.lift (x, y, z))
+
+          (r', g', b') = unzipRGB rgb'
+
+          v1 = View.append (ChannelFloat "r" (FlatData r')) view
+          v2 = View.append (ChannelFloat "g" (FlatData g')) v1
+          v3 = View.append (ChannelFloat "b" (FlatData b')) v2
+
+          Right img' = Image.update (const $ Just v3) "rgba" img
