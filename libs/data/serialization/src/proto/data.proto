@@ -7,6 +7,8 @@
 
 package generated.proto.data;
 
+import "enum-type.proto";
+
 message Value {
     extensions 100 to max;
 
@@ -18,7 +20,7 @@ message Value {
         Float  = 5;
         Double = 6;
         Matrix = 7;
-        View  = 8;
+        View   = 8;
     }
 
     required Type type = 1;
@@ -99,4 +101,14 @@ message ViewData {
     required MatrixData green = 2;
     required MatrixData blue  = 3;
     optional MatrixData alpha = 4;
+}
+
+// ===   Function Model   ===
+
+message PointData {
+    extend Value {
+        optional PointData data = 109;
+    }
+
+    optional generated.proto.enum.type.Numeric precision = 1;
 }
