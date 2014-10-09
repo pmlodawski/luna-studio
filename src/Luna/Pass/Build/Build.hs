@@ -9,6 +9,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Build.Build where
 
@@ -53,7 +54,7 @@ import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      a
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Pass.Build.Build"
+logger = getLoggerIO $(moduleName)
 
 
 srcFolder :: String

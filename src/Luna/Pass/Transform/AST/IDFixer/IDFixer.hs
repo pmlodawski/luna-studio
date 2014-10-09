@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.AST.IDFixer.IDFixer where
 
@@ -33,7 +34,7 @@ import qualified Luna.Pass.Transform.AST.IDFixer.State as State
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer"
+logger = getLogger $(moduleName)
 
 
 type IDFixerPass result = Pass IDFixerState result

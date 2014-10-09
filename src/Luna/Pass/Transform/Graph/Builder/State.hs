@@ -40,7 +40,7 @@ import           Luna.Pass.Pass               (Pass)
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
+logger = getLogger $(moduleName)
 
 
 type NodeMap = Map AST.ID (Node.ID, Port)
