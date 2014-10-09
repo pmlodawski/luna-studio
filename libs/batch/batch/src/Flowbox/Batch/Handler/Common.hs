@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Batch.Handler.Common where
 
@@ -58,7 +59,7 @@ import qualified Luna.Pass.Transform.GraphView.Defaults    as Defaults
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Batch.Handler.Common"
+logger = getLoggerIO $(moduleName)
 
 
 safeInterpretLibrary :: Library.ID -> Project.ID -> Batch ()

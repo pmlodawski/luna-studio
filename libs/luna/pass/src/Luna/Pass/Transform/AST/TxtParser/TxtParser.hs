@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE TupleSections             #-}
 
 module Luna.Pass.Transform.AST.TxtParser.TxtParser where
@@ -26,8 +27,9 @@ import Control.Monad.State
 import Flowbox.Prelude     hiding (error)
 
 
+
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser"
+logger = getLogger $(moduleName)
 
 
 type ParserPass m = Pass Pass.NoState m

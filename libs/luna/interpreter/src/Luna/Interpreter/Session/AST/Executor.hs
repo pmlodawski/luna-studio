@@ -42,7 +42,7 @@ import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.Executor"
+logger = getLoggerIO $(moduleName)
 
 
 processMain :: Session ()

@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections   #-}
 module Luna.Interpreter.RPC.Handler.Interpreter where
 
 import           Flowbox.Bus.RPC.RPC                                               (RPC)
@@ -44,7 +45,7 @@ import qualified Luna.Interpreter.Session.Session                               
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Interpreter"
+logger = getLoggerIO $(moduleName)
 
 
 getProjectID :: GetProjectID.Request -> RPC Context SessionST GetProjectID.Status

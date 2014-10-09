@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Flowbox.RepoManager.Data.Package.Config (
     --loadPackage
@@ -15,22 +16,22 @@ import qualified Control.Exception   as Exception
 import qualified Data.Configurator   as Configurator
 import           Data.Text           as Text
 
-import           Data.Configurator.Types              (Value)
-import qualified Data.Configurator.Types              as Configurator
-import qualified Data.Map                             as Map
-import           Flowbox.Prelude                      hiding (error)
-import           Flowbox.RepoManager.Data.Dependency  as Dependency
-import qualified Flowbox.RepoManager.Data.Environment as Environment
-import qualified Flowbox.RepoManager.Data.Package.Package   as Package
-import qualified Flowbox.RepoManager.Data.Version     as Version
+import           Data.Configurator.Types                  (Value)
+import qualified Data.Configurator.Types                  as Configurator
+import qualified Data.Map                                 as Map
+import           Flowbox.Prelude                          hiding (error)
+import           Flowbox.RepoManager.Data.Dependency      as Dependency
+import qualified Flowbox.RepoManager.Data.Environment     as Environment
+import qualified Flowbox.RepoManager.Data.Package.Package as Package
+import qualified Flowbox.RepoManager.Data.Version         as Version
 import           Flowbox.System.Log.Logger
+import qualified Network.URI                              as URI
 import qualified Prelude
-import qualified Text.ParserCombinators.ReadP         as ReadP
-import qualified System.FilePath                      as FilePath
-import qualified Network.URI                          as URI
+import qualified System.FilePath                          as FilePath
+import qualified Text.ParserCombinators.ReadP             as ReadP
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Config.Config"
+logger = getLoggerIO $(moduleName)
 
 fromString :: Value -> Text
 fromString (Configurator.String a) = a
@@ -50,7 +51,7 @@ fromList (Configurator.List a) = a
 --                             <*> (getScript       <$> readConf "install")
 --                             <*> (getScript       <$> readConf "uninstall")
 --                             <*> (getDependencies <$> readConf "dependencies")
-                                 
+
 
 getPackageName :: Value -> String
 getPackageName nameString = Text.unpack $ fromString nameString
@@ -80,7 +81,7 @@ getScript scriptValue = fmap (Text.unpack . fromString) (fromList scriptValue)
 
 --loadConfig :: FilePath -> IO (Either String Package.Package)
 --loadConfig file = do config <- Configurator.load [Configurator.Required file]
-                     
+
 --                     let fileBaseName = FilePath.takeBaseName file
 --                         name    = Prelude.takeWhile (/= '-') fileBaseName
 --                         version = Prelude.tail . Prelude.dropWhile (/= '-') $ fileBaseName

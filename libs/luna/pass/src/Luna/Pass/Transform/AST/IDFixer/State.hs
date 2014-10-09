@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.AST.IDFixer.State where
 
@@ -18,7 +19,7 @@ import qualified Luna.AST.Common           as AST
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.AST.IDFixer.State"
+logger = getLogger $(moduleName)
 
 
 data IDFixerState = IDFixerState { maxID  :: AST.ID

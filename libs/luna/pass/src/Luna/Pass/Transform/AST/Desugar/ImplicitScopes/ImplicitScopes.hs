@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes where
 
@@ -30,7 +31,7 @@ import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State as State
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.ImplicitScopes.ImplicitScopes"
+logger = getLoggerIO $(moduleName)
 
 
 type DesugarPass result = Pass State result

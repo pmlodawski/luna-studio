@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.PluginManager.RPC.Handler.Handler where
 
@@ -30,7 +31,7 @@ import qualified Flowbox.Text.ProtocolBuffers                    as Proto
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Handler"
+logger = getLoggerIO $(moduleName)
 
 
 handlerMap :: Prefix -> HandlerMap Context IO
