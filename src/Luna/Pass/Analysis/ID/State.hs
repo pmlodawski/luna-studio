@@ -24,9 +24,11 @@ logger :: Logger
 logger = getLogger $(moduleName)
 
 
-data IDState = IDState { maxID :: AST.ID
-                       , ids   :: IntSet
+data IDState = IDState { _foundID :: AST.ID
+                       , _ids   :: IntSet
                        } deriving (Show)
+
+makeLenses ''IDState
 
 
 type IDStateM m = MonadState IDState m
@@ -36,29 +38,29 @@ make :: IDState
 make = IDState 0 IntSet.empty
 
 
-getMaxID :: IDStateM m => m AST.ID
-getMaxID = get >>= return . maxID
+getFoundID :: IDStateM m => m AST.ID
+getFoundID = gets $ view foundID
 
 
-setMaxID :: IDStateM m => AST.ID -> m ()
-setMaxID i = do s <- get
-                put s { maxID = i }
+setFoundID :: IDStateM m => AST.ID -> m ()
+setFoundID i = modify $ foundID .~ i
 
 
-compareID :: IDStateM m => AST.ID -> m ()
-compareID i = do mi <- getMaxID
-                 if i > mi
-                    then setMaxID i
-                    else return ()
+findMaxID :: IDStateM m => AST.ID -> m ()
+findMaxID i = do mi <- getFoundID
+                 when (i > mi) $ setFoundID i
+
+findMinID :: IDStateM m => AST.ID -> m ()
+findMinID i = do mi <- getFoundID
+                 when (i < mi) $ setFoundID i
 
 
 getIDs :: IDStateM m => m IntSet
-getIDs = get >>= return . ids
+getIDs = gets $ view ids
 
 
 setIDs :: IDStateM m => IntSet -> m ()
-setIDs i = do s <- get
-              put s { ids = i }
+setIDs i = modify $ ids .~ i 
 
 
 appendID :: IDStateM m => AST.ID -> m ()
