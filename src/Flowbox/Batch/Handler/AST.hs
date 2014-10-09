@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Batch.Handler.AST where
 
@@ -38,7 +39,7 @@ import qualified Luna.Pass.Transform.AST.Shrink          as Shrink
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Batch.Handler.AST"
+logger = getLoggerIO $(moduleName)
 
 
 definitions :: Maybe Int -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Focus
