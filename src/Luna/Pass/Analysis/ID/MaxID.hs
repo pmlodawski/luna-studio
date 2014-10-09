@@ -40,10 +40,10 @@ runExpr = (Pass.run_ (Pass.Info "MaxID") $ State.make) . analyseExpr
 
 
 analyseModule :: Module -> MaxIDPass AST.ID
-analyseModule m = do IDTraverse.traverseModule State.findMinID m
+analyseModule m = do IDTraverse.traverseModule State.findMaxID m
                      State.getFoundID
 
 
 analyseExpr :: Expr -> MaxIDPass AST.ID
-analyseExpr e = do IDTraverse.traverseExpr State.findMinID e
+analyseExpr e = do IDTraverse.traverseExpr State.findMaxID e
                    State.getFoundID
