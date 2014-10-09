@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Transform.AST.Hash.Hash where
 
@@ -30,7 +31,7 @@ import qualified Luna.Pass.Pass            as Pass
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Hash.Hash"
+logger = getLoggerIO $(moduleName)
 
 
 type HashPass result = Pass Pass.NoState result

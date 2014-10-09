@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
@@ -42,7 +43,7 @@ import qualified Luna.Pass.Transform.Graph.Builder.State as State
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
+logger = getLoggerIO $(moduleName)
 
 
 run :: AliasInfo -> PropertyMap -> Bool -> Expr -> Pass.Result (Graph, PropertyMap)
