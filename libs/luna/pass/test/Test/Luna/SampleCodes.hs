@@ -176,6 +176,15 @@ def main arg:
 |], named "native code" [r|
 def main arg:
     ```autoLift1 print #{arg}```
+|], named "hello world" [r|
+def print msg:
+    ```autoLift1 print #{msg}```
+
+def main:
+    hello = "hello"
+    world = "world"
+    print hello
+    print world
 |]]
 
 ---------------------------------------------------------------------------

@@ -45,7 +45,8 @@ getSuccessors callPointPath = do
 
 
 main :: IO ()
-main = hspec spec
+main = do rootLogger setIntLevel 5
+          hspec spec
 
 
 shouldBe' :: (Show a, Eq a, MonadIO m) => a -> a -> m ()
