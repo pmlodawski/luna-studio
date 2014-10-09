@@ -3,7 +3,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.System.Process (
     module System.Process,
@@ -34,7 +35,7 @@ import qualified Flowbox.System.UniPath             as UniPath
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.System.Process"
+logger = getLoggerIO $(moduleName)
 
 
 runProcess' :: FilePath -> [String] -> Maybe FilePath -> Maybe [(String, String)] -> Maybe IO.Handle -> Maybe IO.Handle -> Maybe IO.Handle -> IO ProcessHandle

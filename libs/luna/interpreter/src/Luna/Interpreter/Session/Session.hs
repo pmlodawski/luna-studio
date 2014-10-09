@@ -55,7 +55,7 @@ import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.Session"
+logger = getLoggerIO $(moduleName)
 
 
 type SessionST = StateT Env MGHC.Ghc

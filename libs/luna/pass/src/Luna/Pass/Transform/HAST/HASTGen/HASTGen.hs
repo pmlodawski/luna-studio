@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ConstraintKinds #-}
@@ -49,7 +50,7 @@ type LModule = LModule.Module
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen"
+logger = getLoggerIO $(moduleName)
 
 
 

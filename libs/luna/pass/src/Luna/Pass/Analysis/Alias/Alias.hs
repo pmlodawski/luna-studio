@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE Rank2Types                #-}
-
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Analysis.Alias.Alias where
 
@@ -34,7 +34,7 @@ import qualified Luna.Pass.Pass                 as Pass
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Alias.Alias"
+logger = getLoggerIO $(moduleName)
 
 
 type VAPass result = Pass VAState result

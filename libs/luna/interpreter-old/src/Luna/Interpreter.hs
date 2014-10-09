@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter where
 
@@ -25,7 +25,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter"
+logger = getLoggerIO $(moduleName)
 
 
 initialize :: GhcMonad m => Config -> m ()

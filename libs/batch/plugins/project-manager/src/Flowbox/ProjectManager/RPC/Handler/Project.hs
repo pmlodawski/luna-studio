@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.Project where
 
 import qualified Data.Sequence as Sequence
@@ -38,7 +39,7 @@ import qualified Luna.Lib.Manager                                       as LibMa
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Project"
+logger = getLoggerIO $(moduleName)
 
 ------ public api -------------------------------------------------
 

@@ -39,7 +39,7 @@ import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
+logger = getLogger $(moduleName)
 
 
 type NodeMap = Map (Node.ID, Port) Expr

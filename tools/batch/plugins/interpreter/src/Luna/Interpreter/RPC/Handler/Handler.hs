@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.RPC.Handler.Handler where
 
@@ -48,7 +49,7 @@ import qualified Luna.Interpreter.Session.Session         as Session
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Handler"
+logger = getLoggerIO $(moduleName)
 
 
 handlerMap :: Prefix -> HandlerMap Context SessionST

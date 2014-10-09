@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Analysis.FuncPool.FuncPool where
 
@@ -30,7 +31,7 @@ import           Luna.Pass.Pass                   (Pass)
 import qualified Luna.Pass.Pass                   as Pass
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.FuncPool.FuncPool"
+logger = getLogger $(moduleName)
 
 
 type FPPass result = Pass Pool result

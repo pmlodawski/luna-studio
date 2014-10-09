@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 {-# LANGUAGE TupleSections    #-}
 
 module Luna.Pass.Analysis.NameResolver where
@@ -40,7 +41,7 @@ import qualified Luna.Pass.Pass            as Pass
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Analysis.NameResolver"
+logger = getLogger $(moduleName)
 
 
 type NRPass result = Pass Pass.NoState result

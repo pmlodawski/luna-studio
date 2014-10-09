@@ -163,17 +163,31 @@ sampleGraphs =
     , named "graph with folded nodes 4"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "(1.+ 2).* 2" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        []
+    , named "graph with folded nodes 5"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
         , fixEmpty' (100, Node.Expr "a.foo bar 1 \"asda\"" "" (0, 1))
         ,(-3, Node.Outputs        (0, 2))
         ]
         []
-     , named "graph with folded nodes 5"
+     , named "graph with folded nodes 6"
      $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
         , fixEmpty' (100, Node.Expr "a.foo bar baz (gaz 1 \"asda\")" "" (0, 1))
         ,(-3, Node.Outputs        (0, 2))
         ]
         []
+     , named "BATCH-62"
+     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "12" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        [(100, -3, Edge.Data Port.All $ Port.Num 1)]
     ]
 
 

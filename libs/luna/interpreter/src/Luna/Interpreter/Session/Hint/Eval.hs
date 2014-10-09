@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE MagicHash       #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.Session.Hint.Eval where
 
@@ -20,7 +21,7 @@ import qualified Luna.Interpreter.Session.Hint.Util as Util
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.Hint.Eva"
+logger = getLoggerIO $(moduleName)
 
 
 interpret :: (GHC.GhcMonad m, Typeable a) => String -> m a

@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
 import qualified Database.PostgreSQL.Simple as PSQL
@@ -24,11 +25,11 @@ import qualified Flowbox.ZMQ.RPC.Server.Server          as RPC
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+rootLogger = getLogger ""
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AccountManager"
+logger = getLoggerIO $(moduleName)
 
 
 parser :: Parser Cmd

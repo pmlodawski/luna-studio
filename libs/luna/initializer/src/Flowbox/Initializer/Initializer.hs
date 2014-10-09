@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Initializer.Initializer where
 
@@ -24,7 +25,7 @@ import qualified Flowbox.System.UniPath             as UniPath
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Initializer.Initializer"
+logger = getLoggerIO $(moduleName)
 
 
 successfullInstallFilePath :: Config -> UniPath

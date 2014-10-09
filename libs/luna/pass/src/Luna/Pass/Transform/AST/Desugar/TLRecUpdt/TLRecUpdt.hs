@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt where
 
@@ -26,7 +27,7 @@ import qualified Luna.Pass.Transform.AST.Desugar.General.State as DS
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.TLRecUpdt.TLRecUpdt"
+logger = getLoggerIO $(moduleName)
 
 
 type DesugarPass result = Pass DesugarState result
