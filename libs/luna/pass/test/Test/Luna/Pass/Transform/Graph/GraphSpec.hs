@@ -139,13 +139,13 @@ sampleGraphs =
         ,(-3, Node.Outputs        (0, 3))
         ]
         [(200, 100, Edge.Data Port.All $ Port.Num 5)]
-     , named "graph with folded nodes 1"
-     $ Graph.addMonadicEdges $ Graph.mkGraph
-        [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr "1 * 2 * 3" "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
-        ]
-        []
+    -- , named "graph with folded nodes 1"
+    -- $ Graph.addMonadicEdges $ Graph.mkGraph
+    --    [(-2, Node.Inputs         (0, 0))
+    --    , fixEmpty' (100, Node.Expr "1 * 2 * 3" "" (0, 1))
+    --    ,(-3, Node.Outputs        (0, 2))
+    --    ]
+    --    []
     , named "graph with folded nodes 2"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
