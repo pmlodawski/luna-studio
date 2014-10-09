@@ -28,7 +28,7 @@ import qualified Luna.Interpreter.Session.Session            as Session
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.Cache.Value"
+logger = getLoggerIO $(moduleName)
 
 
 getIfReady :: CallPointPath -> Session (Maybe Value)
