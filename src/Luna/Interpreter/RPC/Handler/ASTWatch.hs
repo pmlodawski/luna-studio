@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 module Luna.Interpreter.RPC.Handler.ASTWatch where
 
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project                                        ()
@@ -89,7 +90,7 @@ import           Luna.Interpreter.Session.Session                               
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.ASTWatch"
+logger = getLoggerIO $(moduleName)
 
 
 --- handlers --------------------------------------------------------------
