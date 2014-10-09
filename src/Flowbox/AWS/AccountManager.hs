@@ -75,7 +75,7 @@ start :: Database -> AWS.Credential -> Region -> User.Name -> IO (IPv4, Instance
 start database credential region userName = do
     logger info $ "Starting session for username=" ++ show userName
     [inst] <- Instance.retrieve database credential region userName Request.mk
-    ip <- fromJust $ Types.instanceIpAddress inst
+    ip <- fromJustM $ Types.instanceIpAddress inst
     return (ip, Types.instanceId inst)
 
 
