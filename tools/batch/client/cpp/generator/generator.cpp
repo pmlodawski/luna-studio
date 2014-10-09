@@ -57,7 +57,7 @@ class %wrapper_name%
 {
 public:
 	shared_ptr<BusHandler> bh;
-	Maybe<boost::chrono::milliseconds> timeout;
+	Maybe<std::chrono::milliseconds> timeout;
 
 	CorrelationId sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback);
 
@@ -117,7 +117,7 @@ const std::string methodDeclarationAsync = "CorrelationId %method%_Async(%args_l
 const std::string methodDefinition = R"(
 %rettype% %wrapper_name%::%method%(%args_list%)
 {
-	LOG_TIME("%topic% -- request in total");
+	LOG_TIME_TRACE("%topic% -- request in total");
 	std::string topic = "%topic%";
 
 #define USES_%answerType%
@@ -196,12 +196,18 @@ const std::string methodDefinition = R"(
 
 	if(threadManager->getThreadName(boost::this_thread::get_id()) == threads::LISTENER)
 	{
+		auto timeoutBefore = bh->getTimeout();
+		FINALIZE{ bh->setTimeout(timeoutBefore); };
+		bh->setTimeout(timeout);
+
 		while(!isDone.get())
+		{
 			bh->processMessageFor(correlation);
+		}
 	}
 	if(timeout)
 	{
-		isDone.waitWhileEqualsTimeout(false, *timeout);
+		isDone.waitWhileEqualsTimeout(false, boost::chrono::milliseconds(timeout->count()));
 	}
 	else
 	{
