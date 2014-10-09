@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 module Flowbox.ProjectManager.RPC.Handler.Graph where
 
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
@@ -36,7 +37,7 @@ import           Luna.Data.Serialize.Proto.Conversion.GraphView                 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Graph"
+logger = getLoggerIO $(moduleName)
 
 
 get :: GetGraph.Request -> RPC Context IO GetGraph.Status
