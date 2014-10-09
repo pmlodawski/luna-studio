@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.Library where
 
 import qualified Flowbox.Batch.Handler.Common                                  as Batch
@@ -31,7 +32,7 @@ import           Luna.Data.Serialize.Proto.Conversion.Library                  (
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Library"
+logger = getLoggerIO $(moduleName)
 
 -------- public api -------------------------------------------------
 

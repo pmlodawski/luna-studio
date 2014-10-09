@@ -5,31 +5,36 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, Rank2Types #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
 
 module Flowbox.System.Log.Logger (
     module Flowbox.System.Log.Logger,
+    module X,
     Priority(..)
-)where
+) where
 
-import           Prelude                     hiding (log, fail)
-import           Control.Monad.State           
-import           Control.Monad.Writer          
+import           Control.Monad.State
+import           Control.Monad.Writer
+import           Data.DList                  (DList)
 import qualified Data.DList                  as DList
-import           Data.DList                    (DList)
 import qualified Data.Maybe                  as Maybe
 import qualified Data.String.Utils           as StringUtils
+import           Flowbox.System.Log.Priority
+import           Prelude                     hiding (fail, log)
 import qualified System.Console.ANSI         as ANSI
-import           System.IO                     (stderr)
+import           System.IO                   (stderr)
 import qualified System.Log.Logger           as HSLogger
-import           Flowbox.System.Log.Priority   
 --import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
 
+import           Control.Applicative
+import           Flowbox.Source.Location     as X (moduleName)
+import           Flowbox.System.Log.LogEntry (LogEntry (LogEntry))
 import qualified Flowbox.System.Log.LogEntry as LogEntry
-import           Flowbox.System.Log.LogEntry   (LogEntry(LogEntry))
-import           Control.Applicative           
 
-  
 
 
 type LogList     = DList LogEntry
@@ -93,9 +98,9 @@ logIO entry = liftIO $ do
 
         --parentLoggers :: String -> IO [Logger] -- [PM] copied from System.Log.Logger
         parentLoggers [] = return []
-        parentLoggers n = 
+        parentLoggers n =
             let pname = (head . drop 1 . reverse . componentsOfName) n
-                in 
+                in
                 do parent <- HSLogger.getLogger pname
                    next <- parentLoggers pname
                    return (parent : next)
@@ -109,7 +114,7 @@ logIO entry = liftIO $ do
                  (x:_) -> return x
 
     lpri <- hspri2pri <$> getLoggerPriority name
-    
+
     when (pri >= lpri) $ ANSI.hSetSGR stderr sgr
 
     HSLogger.logM name (pri2hspri pri) msg
@@ -152,12 +157,12 @@ setLevel lvl name = liftIO $ HSLogger.updateGlobalLogger name (HSLogger.setLevel
 
 
 setIntLevel :: Int -> String -> IO ()
-setIntLevel lvl = setLevel nlvl where 
+setIntLevel lvl = setLevel nlvl where
     nlvl = case lvl of
-        0 -> CRITICAL 
+        0 -> CRITICAL
         1 -> ERROR
-        2 -> WARNING   
-        3 -> INFO      
-        4 -> DEBUG     
+        2 -> WARNING
+        3 -> INFO
+        4 -> DEBUG
         5 -> TRACE
         _ -> TRACE

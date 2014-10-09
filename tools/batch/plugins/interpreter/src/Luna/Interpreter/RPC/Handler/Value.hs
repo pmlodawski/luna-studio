@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.RPC.Handler.Value where
 
@@ -39,7 +40,7 @@ import           Luna.Interpreter.Session.Session                      (SessionS
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Value"
+logger = getLoggerIO $(moduleName)
 
 
 

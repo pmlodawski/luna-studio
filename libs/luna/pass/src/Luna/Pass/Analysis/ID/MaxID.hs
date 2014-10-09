@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Analysis.ID.MaxID where
 
@@ -24,7 +25,7 @@ import qualified Luna.Pass.Pass                 as Pass
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Analysis.ID.MaxID"
+logger = getLogger $(moduleName)
 
 
 type MaxIDPass result = Pass IDState result

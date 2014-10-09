@@ -39,7 +39,7 @@ import qualified Luna.Interpreter.Session.Session            as Session
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.Cache.Cache"
+logger = getLoggerIO $(moduleName)
 
 
 dump :: CallPointPath -> Maybe Hash -> Session ()

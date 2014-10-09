@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Bus.RPC.Server.Server where
 
@@ -20,7 +21,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.RPC.Server.Server"
+logger = getLoggerIO $(moduleName)
 
 
 run :: BusEndPoints -> s -> HandlerMap s IO -> IO (Either String ())
