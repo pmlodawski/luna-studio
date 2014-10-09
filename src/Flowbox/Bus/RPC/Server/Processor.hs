@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Bus.RPC.Server.Processor where
 
@@ -29,7 +30,7 @@ import           Generated.Proto.Rpc.Response (Response)
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.RPC.Server.Processor"
+logger = getLoggerIO $(moduleName)
 
 
 singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
