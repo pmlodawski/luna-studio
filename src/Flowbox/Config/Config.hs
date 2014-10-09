@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Flowbox.Config.Config where
 
@@ -20,7 +21,7 @@ import Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Config.Config"
+logger = getLoggerIO $(moduleName)
 
 
 data Config = Config      { root      :: Section
