@@ -30,10 +30,12 @@ main = hspec spec
 patterns :: [String]
 patterns = ["(a, b)", "_", "a"]
 
+
 expressions :: [String]
 expressions = [ "\"\"", "\"foo\"", "foo", "foo.bar", "foo.bar 1", "foo.bar.baz"
-              , "foo.(bar 12 baz).boo", "1000e10", "2 + 5", "10 * (25 + 5)"
-              , "Main", "Foo.Bar", "Main 5", "Foo.(Bar 5).Baz"]
+              , "foo.bar(baz, 12).boo", "foo.bar(baz, 12).boo", "1000e10"
+              , "2 + 5", "10 * (25 + 5)", "Main", "Foo.Bar", "Main 5", "Foo.Bar(5).Baz"]
+
 
 patchedParserState :: ASTInfo.ASTInfo
                    -> ParserState.State (Pragma Pragma.ImplicitSelf, 
