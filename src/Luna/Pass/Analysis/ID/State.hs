@@ -13,6 +13,7 @@ module Luna.Pass.Analysis.ID.State where
 import           Control.Monad.State
 import           Data.IntSet         (IntSet)
 import qualified Data.IntSet         as IntSet
+import qualified Data.Maybe as Maybe
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -24,41 +25,53 @@ logger :: Logger
 logger = getLogger $(moduleName)
 
 
-data IDState = IDState { maxID :: AST.ID
-                       , ids   :: IntSet
+data IDState = IDState { _foundID :: Maybe AST.ID
+                       , _ids     :: IntSet
                        } deriving (Show)
 
+makeLenses ''IDState
 
-type IDStateM m = MonadState IDState m
+
+type IDStateM m = (Functor m, MonadState IDState m)
 
 
 make :: IDState
-make = IDState 0 IntSet.empty
+make = IDState Nothing IntSet.empty
 
 
-getMaxID :: IDStateM m => m AST.ID
-getMaxID = get >>= return . maxID
+getFoundID :: IDStateM m => m AST.ID
+getFoundID = Maybe.fromMaybe def <$> getFoundIDMaybe
 
 
-setMaxID :: IDStateM m => AST.ID -> m ()
-setMaxID i = do s <- get
-                put s { maxID = i }
+getFoundIDMaybe :: IDStateM m => m (Maybe AST.ID)
+getFoundIDMaybe = gets $ view foundID
 
 
-compareID :: IDStateM m => AST.ID -> m ()
-compareID i = do mi <- getMaxID
-                 if i > mi
-                    then setMaxID i
-                    else return ()
+setFoundID :: IDStateM m => AST.ID -> m ()
+setFoundID i = modify $ foundID .~ Just i
+
+
+findMaxID :: IDStateM m => AST.ID -> m ()
+findMaxID ni = do 
+    mi <- getFoundIDMaybe
+    case mi of
+        Just i  -> when (ni > i) $ setFoundID ni
+        Nothing -> setFoundID ni
+
+findMinID :: IDStateM m => AST.ID -> m ()
+findMinID ni = do 
+    mi <- getFoundIDMaybe
+    case mi of
+        Just i  -> when (ni < i) $ setFoundID ni
+        Nothing -> setFoundID ni
 
 
 getIDs :: IDStateM m => m IntSet
-getIDs = get >>= return . ids
+getIDs = gets $ view ids
 
 
 setIDs :: IDStateM m => IntSet -> m ()
-setIDs i = do s <- get
-              put s { ids = i }
+setIDs i = modify $ ids .~ i
 
 
 appendID :: IDStateM m => AST.ID -> m ()
