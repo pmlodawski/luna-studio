@@ -61,6 +61,8 @@ import           Data.Maybe                   (fromJust)
 import qualified Luna.AST.Arg                 as Arg
 import qualified Data.List                    as List
 import qualified Luna.Parser.Pragma           as Pragma
+import           Luna.Parser.Unit             (Unit(Unit))
+import qualified Luna.Parser.Unit             as Unit
 
 import           Text.EditDistance            --(defaultEditCosts, levenshteinDistance, EditCosts, Costs(..))
 import           Text.PhoneticCode.Phonix     (phonix)
@@ -415,13 +417,17 @@ pConD = element $ \id -> do
 pConDBody        = pCombine Expr.addField fields
 
 
-pModule name path = do
-                    id <- genID
-                    mapStateVal (State.namespace %~ Namespace.pushScope id)
-                    ret <- Module.mk id <$>   (appID Type.Module <*> pure name <*> pure path)
-                                        <??$> Indent.withPos (moduleBlock pModuleBody)
-                    mapStateVal (State.namespace %~ Namespace.popScope)
-                    return ret
+pModule name path = element $ \id -> do
+                    State.withScope id (Module.mk id <$>   (appID Type.Module <*> pure name <*> pure path)
+                                                     <??$> Indent.withPos (moduleBlock pModuleBody))
+
+
+-- Parser translation unit.
+-- Provides a global namespace when parsing module, expression etc.
+unit p = do
+    id <- genID
+    --Unit id <$> State.withScope id p
+    State.withScope id p
 
 
 
@@ -869,7 +875,7 @@ appSt = State.conf %~ appConf
 -----------------------------------------------------------
 -- Usage example: parseExpr (fileFeed "test.txt")
 
-parseGen p st = run (bundleResult p) st
+parseGen p st = run (bundleResult (unit p)) st
 
 moduleParser modPath = parseGen (upToEnd $ pModule (last modPath) (init modPath)) . appSt
 exprParser           = parseGen (upToEnd expr) . appSt

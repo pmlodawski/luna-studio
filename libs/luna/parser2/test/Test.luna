@@ -1,7 +1,1 @@
-
-def print a:
-    a
-
-def main:
-    print 1
-
+a
