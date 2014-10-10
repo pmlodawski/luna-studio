@@ -9,7 +9,7 @@
 {-# LANGUAGE Rank2Types       #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module Luna.Pass.Analysis.ID.MaxID where
+module Luna.Pass.Analysis.ID.MinID where
 
 import           Flowbox.Prelude                hiding (mapM, mapM_)
 import           Flowbox.System.Log.Logger
@@ -28,22 +28,22 @@ logger :: Logger
 logger = getLogger $(moduleName)
 
 
-type MaxIDPass result = Pass IDState result
+type MinIDPass result = Pass IDState result
 
 
 run :: Module -> Pass.Result AST.ID
-run = (Pass.run_ (Pass.Info "MaxID") State.make) . analyseModule
+run = (Pass.run_ (Pass.Info "MinID") State.make) . analyseModule
 
 
 runExpr :: Expr -> Pass.Result AST.ID
-runExpr = (Pass.run_ (Pass.Info "MaxID") State.make) . analyseExpr
+runExpr = (Pass.run_ (Pass.Info "MinID") State.make) . analyseExpr
 
 
-analyseModule :: Module -> MaxIDPass AST.ID
-analyseModule m = do IDTraverse.traverseModule State.findMaxID m
+analyseModule :: Module -> MinIDPass AST.ID
+analyseModule m = do IDTraverse.traverseModule State.findMinID m
                      State.getFoundID
 
 
-analyseExpr :: Expr -> MaxIDPass AST.ID
-analyseExpr e = do IDTraverse.traverseExpr State.findMaxID e
+analyseExpr :: Expr -> MinIDPass AST.ID
+analyseExpr e = do IDTraverse.traverseExpr State.findMinID e
                    State.getFoundID
