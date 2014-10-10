@@ -35,6 +35,9 @@ class Wrapper a b where
     wrap :: a -> b
 
 
+instance Wrapper Module AST where
+    wrap = Module
+
 instance Wrapper Expr AST where
     wrap = Expr
 
