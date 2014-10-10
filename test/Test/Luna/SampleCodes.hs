@@ -168,7 +168,7 @@ def main arg:
 |], named "tuples 2" [r|
 def main arg:
     x = 4
-    y = {1, x}
+    y = 1, x
 |], named "lists" [r|
 def main arg:
     x = 4

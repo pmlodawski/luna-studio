@@ -64,11 +64,11 @@ backAndForth2' :: Breadcrumbs -> Graph -> Graph -> IO ()
 backAndForth2' bc providedGraph expectedGraph = do
     emptyAst  <- Common.getAST SampleCodes.emptyMain
     (ast, pm) <- Common.getExpr bc providedGraph def emptyAst
-    --printLn
-    --print ast
-    --printLn
-    --print pm
-    --printLn
+    printLn
+    print ast
+    printLn
+    print pm
+    printLn
     (resultGraph, _pm2) <- Common.getGraph bc pm ast
     resultGraph `shouldBe` expectedGraph
 
