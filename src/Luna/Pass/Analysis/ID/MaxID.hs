@@ -32,11 +32,11 @@ type MaxIDPass result = Pass IDState result
 
 
 run :: Module -> Pass.Result AST.ID
-run = (Pass.run_ (Pass.Info "MaxID") $ State.make) . analyseModule
+run = (Pass.run_ (Pass.Info "MaxID") State.make) . analyseModule
 
 
 runExpr :: Expr -> Pass.Result AST.ID
-runExpr = (Pass.run_ (Pass.Info "MaxID") $ State.make) . analyseExpr
+runExpr = (Pass.run_ (Pass.Info "MaxID") State.make) . analyseExpr
 
 
 analyseModule :: Module -> MaxIDPass AST.ID
