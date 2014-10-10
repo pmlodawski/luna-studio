@@ -19,6 +19,7 @@ import           Math.Space.Space
 
 import qualified Flowbox.Graphics.Color                as Color
 import           Flowbox.Graphics.Composition.Generators.Filter
+import           Flowbox.Graphics.Composition.Generators.Filter as Conv
 import           Flowbox.Graphics.Composition.Generators.Keyer
 import           Flowbox.Graphics.Composition.Generators.Matrix
 import           Flowbox.Graphics.Composition.Generators.Pipe
@@ -213,3 +214,28 @@ differenceKeyerLuna :: VPS Double -> VPS Double -> Image RGBA -> Image RGBA -> I
 differenceKeyerLuna (VPS (variable -> offset)) (VPS (variable -> gain)) background foreground = img'
     where diff = differenceKeyer offset gain
           img' = differenceKeyer' diff background foreground
+
+cornerPinLuna :: VPS Double -> VPS Double
+              -> VPS Double -> VPS Double
+              -> VPS Double -> VPS Double
+              -> VPS Double -> VPS Double
+              -> Image RGBA
+              -> Image RGBA
+cornerPinLuna (VPS (variable -> p1x)) (VPS (variable -> p1y))
+              (VPS (variable -> p2x)) (VPS (variable -> p2y))
+              (VPS (variable -> p3x)) (VPS (variable -> p3y))
+              (VPS (variable -> p4x)) (VPS (variable -> p4y)) img = img'
+    where img' = onEachChannel process img
+          process = rasterizer . monosampler . cornerPin (p1, p2, p3, p4) . nearest . fromMatrix (A.Constant 0)
+          p1 = Point2 p1x p1y
+          p2 = Point2 p2x p2y
+          p3 = Point2 p3x p3y
+          p4 = Point2 p4x p4y
+
+gaussianLuna :: VPS Int -> Image RGBA -> Image RGBA
+gaussianLuna (VPS (variable -> kernelSize)) img = img'
+    where img' = onEachChannel process img
+          hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
+          vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
+          p = pipe A.Clamp
+          process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
