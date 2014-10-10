@@ -23,7 +23,7 @@ import qualified Luna.Build.Version          as Version
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+rootLogger = getLogger ""
 
 
 versionParser :: Opt.Parser Cmd.Command
