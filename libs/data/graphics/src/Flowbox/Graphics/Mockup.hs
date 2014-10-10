@@ -19,6 +19,7 @@ import           Math.Space.Space
 
 import qualified Flowbox.Graphics.Color                as Color
 import           Flowbox.Graphics.Composition.Generators.Filter
+import           Flowbox.Graphics.Composition.Generators.Keyer
 import           Flowbox.Graphics.Composition.Generators.Matrix
 import           Flowbox.Graphics.Composition.Generators.Pipe
 import           Flowbox.Graphics.Composition.Generators.Rasterizer
@@ -159,13 +160,8 @@ onEachValue f img = res
 
 onEachRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image RGBA -> Image RGBA
 onEachRGB f img = img'
-    where Just view = lookup "rgba" img
-          Right (Just (ChannelFloat _ (FlatData r))) = View.get view "r"
-          Right (Just (ChannelFloat _ (FlatData g))) = View.get view "g"
-          Right (Just (ChannelFloat _ (FlatData b))) = View.get view "b"
-
-          rgb = M.zipWith3 (\x y z -> A.lift $ Color.RGB x y z) r g b
-
+    where rgb = unsafeGetRGB img
+          Just view = lookup "rgba" img
           rgb' = M.map f rgb
 
           unzipRGB = M.unzip3 . M.map (\(A.unlift -> Color.RGB x y z) -> A.lift (x, y, z))
@@ -177,3 +173,43 @@ onEachRGB f img = img'
           v3 = View.append (ChannelFloat "b" (FlatData b')) v2
 
           Right img' = Image.update (const $ Just v3) "rgba" img
+
+keyer' :: (A.Exp (Color.RGB Double) -> A.Exp Double) -> Image RGBA -> Image RGBA
+keyer' f img = img'
+    where rgb = unsafeGetRGB img
+          Just view = lookup "rgba" img
+          alpha = M.map f rgb
+
+          view' = View.append (ChannelFloat "a" (FlatData alpha)) view
+
+          Right img' = Image.update (const $ Just view') "rgba" img
+
+unsafeGetRGB :: Image RGBA -> M.Matrix2 (Color.RGB Double)
+unsafeGetRGB img = rgb
+    where Just view = lookup "rgba" img
+          Right (Just (ChannelFloat _ (FlatData r))) = View.get view "r"
+          Right (Just (ChannelFloat _ (FlatData g))) = View.get view "g"
+          Right (Just (ChannelFloat _ (FlatData b))) = View.get view "b"
+
+          rgb = M.zipWith3 (\x y z -> A.lift $ Color.RGB x y z) r g b
+
+keyerLuna :: VPS KeyerMode -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> Image RGBA -> Image RGBA
+keyerLuna (VPS mode) (VPS (variable -> a)) (VPS (variable -> b)) (VPS (variable -> c)) (VPS (variable -> d)) img =
+    keyer' (keyer mode (A.lift $ (a, b, c, d))) img
+
+differenceKeyer' :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double) -> A.Exp Double) -> Image RGBA -> Image RGBA -> Image RGBA
+differenceKeyer' f background foreground = img'
+    where backgroundRGB = unsafeGetRGB background
+          foregroundRGB = unsafeGetRGB foreground
+
+          alpha = M.map (A.uncurry f) $ M.zip backgroundRGB foregroundRGB
+
+          Just view = lookup "rgba" foreground
+          view' = View.append (ChannelFloat "a" (FlatData alpha)) view
+
+          Right img' = Image.update (const $ Just view') "rgba" foreground
+
+differenceKeyerLuna :: VPS Double -> VPS Double -> Image RGBA -> Image RGBA -> Image RGBA
+differenceKeyerLuna (VPS (variable -> offset)) (VPS (variable -> gain)) background foreground = img'
+    where diff = differenceKeyer offset gain
+          img' = differenceKeyer' diff background foreground

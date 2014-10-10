@@ -1,5 +1,6 @@
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image```
+import ```Flowbox.Graphics.Composition.Generators.Keyer```
 
 class Vector a:
     x,y,z :: a
@@ -79,7 +80,30 @@ def Image.saturate saturation:
 def Image.posterize colors:
     ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
 
+class ```Bool```:
+    True
+    False
+
+class ```KeyerMode```:
+    Red
+    Green
+    Blue
+    Redscreen
+    Greenscreen
+    Bluescreen
+    Saturation
+    Luminance
+    Max
+    Min
+
+def Image.key mode a b c d:
+    ```liftF1 (keyerLuna #{mode} #{a} #{b} #{c} #{d}) #{self}```
+
+def Image.differenceKey offset gain background:
+    ```liftF2 (differenceKeyerLuna #{offset} #{gain}) #{background} #{self}```
+
 def main:
-    rgba = load "/home/mgw/test.png"
-    defocused = rgba.posterize 4
+    rgba = load "/home/mgw/green.jpg"
+    back = load "/home/mgw/g.png"
+    defocused = rgba.differenceKey 0 1 back
     defocused.save "/home/mgw/out.png"
