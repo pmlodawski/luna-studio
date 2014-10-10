@@ -1,10 +1,10 @@
 class Point a:
     x,y :: a
 
-class Optional a:
-    Some:
-        x :: a
-    None
+class ```Maybe``` a:
+    Just:
+        unwarp :: a
+    Nothing
 
 
 # def newPoint x y:

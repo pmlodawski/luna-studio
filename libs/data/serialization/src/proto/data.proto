@@ -13,14 +13,18 @@ message Value {
     extensions 100 to max;
 
     enum Type {
-        Int    = 1;
-        Char   = 2;
-        Bool   = 3;
-        String = 4;
-        Float  = 5;
-        Double = 6;
-        Matrix = 7;
-        View   = 8;
+        Int     = 1;
+        Char    = 2;
+        Bool    = 3;
+        String  = 4;
+        Float   = 5;
+        Double  = 6;
+        Matrix  = 7;
+        View    = 8;
+        Point   = 9;
+        Tangent = 10;
+        Vertex  = 11;
+        Curve   = 12;
     }
 
     required Type type = 1;
@@ -103,12 +107,41 @@ message ViewData {
     optional MatrixData alpha = 4;
 }
 
-// ===   Function Model   ===
+// ===   GUI Curve Model   ===
 
 message PointData {
     extend Value {
         optional PointData data = 109;
     }
 
-    optional generated.proto.enum.type.Numeric precision = 1;
+    optional double x = 1;
+    optional double y = 2;
+}
+
+message TangentData {
+    extend Value {
+        optional TangentData data = 110;
+    }
+
+    optional double weight   = 1;
+    optional double angle    = 2;
+    optional bool   isLinear = 3;
+}
+
+message VertexData {
+    extend Value {
+        optional VertexData data = 111;
+    }
+
+    optional PointData point      = 1;
+    optional TangentData handleIn  = 2;
+    optional TangentData handleOut = 3;
+}
+
+message CurveData {
+    extend Value {
+        optional CurveData data = 112;
+    }
+
+    repeated VertexData vertices = 1;
 }
