@@ -102,8 +102,25 @@ def Image.key mode a b c d:
 def Image.differenceKey offset gain background:
     ```liftF2 (differenceKeyerLuna #{offset} #{gain}) #{background} #{self}```
 
+class Point a:
+    x,y :: a
+
+def Image.cornerPin p1 p2 p3 p4:
+    p1x = p1.x
+    p1y = p1.y
+    p2x = p2.x
+    p2y = p2.y
+    p3x = p3.x
+    p3y = p3.y
+    p4x = p4.x
+    p4y = p4.y
+
+    ```liftF1 (cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y}) #{self}```
+
+def Image.blur kernelSize:
+    ```liftF1 (gaussianLuna #{kernelSize}) #{self}```
+
 def main:
-    rgba = load "/home/mgw/green.jpg"
-    back = load "/home/mgw/g.png"
-    defocused = rgba.differenceKey 0 1 back
-    defocused.save "/home/mgw/out.png"
+    lena = load "/home/mgw/test.png"
+    lena = lena.blur 7
+    lena.save "/home/mgw/out.png"
