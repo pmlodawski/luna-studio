@@ -7,13 +7,15 @@ module Luna.Typechecker.AST.Internal.Scheme (
 
 
 import Luna.Typechecker.AST.Kind      (Kind(..))
-import Luna.Typechecker.AST.Type      (Type(..))
+import Luna.Typechecker.AST.Type      (Type(..),Dependent(..))
 
 import Luna.Typechecker.Substitutions (Types(..))
 import Luna.Typechecker.Typeclasses   (Qual(..))
 
-
 import Control.DeepSeq
+
+import Data.List                      (intercalate)
+
 import GHC.Generics
 
 import Text.Printf                    (printf)
@@ -28,9 +30,7 @@ instance Types Scheme where
   tv (Forall _ qt) = tv qt
 
 instance Show Scheme where
-  show (Forall [] ([] :=> t)) = printf "%s" (show t)
-  show (Forall [] (ps :=> t)) = printf "%s => %s" (show ps) (show t)
-  show (Forall ks ([] :=> t)) = printf "forall %s. %s" (show ks) (show t)
-  show (Forall ks (ps :=> t)) = printf "forall %s. %s => %s" (show ks) (show ps) (show t)
+  show (Forall ks (ps :=> t)) = printf "∀%s ∃[%s] : %s => %s" (show ks) (listify (deps t)) (show ps) (show t)
+    where listify = intercalate ", " . map (\(k,v) -> show k ++ "↦" ++ show v)
 
 instance NFData Scheme

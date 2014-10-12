@@ -20,11 +20,12 @@ instance HasKind Tycon where
   kind (Tycon _ k) = return k
 
 instance HasKind Type where
-  kind (TVar u)   = kind u
-  kind (TCon tc)  = kind tc
-  kind (TAp t t') = do kt <- kind t
-                       kt' <- kind t'
-                       case kt of
-                         Kfun k' k | kt' == k' -> return k
-                         _                     -> throwError "kind mismatch"
-  kind (TGen _)   = throwError "HasKind.hs:HasKind Type/TGen should never be asked for kind!"
+  kind (TStruct _ _) = throwError "HasKind.hs:HasKind Type/TStruct not yet defined :(" -- TODO
+  kind (TVar u)      = kind u
+  kind (TCon tc)     = kind tc
+  kind (TAp t t')    = do kt <- kind t
+                          kt' <- kind t'
+                          case kt of
+                            Kfun k' k | kt' == k' -> return k
+                            _                     -> throwError "kind mismatch"
+  kind (TGen _)      = throwError "HasKind.hs:HasKind Type/TGen should never be asked for kind!"

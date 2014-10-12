@@ -13,7 +13,7 @@ import Luna.Typechecker.AST.Type      (Type(..),Tyvar(..),fn,tInteger,list,tBool
 import Luna.Typechecker.AST.VarID     (VarID(..))
 
 import Luna.Typechecker.Assumptions   (Assump(..))
-import Luna.Typechecker.BindingGroups (Alt,Expr(..),Impl,Expl)
+import Luna.Typechecker.BindingGroups (BindGroup,Alt,Expr(..),Impl,Expl)
 import Luna.Typechecker.Typeclasses   (Qual(..),Pred(..),EnvTransformer,(<:>),addClass,addInst)
 
 
@@ -54,6 +54,16 @@ alts f (t, s, as) = (\as' -> (t, s, as')) <$> f as
 --expl :: Lens TypeDecl TypeDecl 
 expl :: Lens TypeDecl TypeDecl Expl Expl
 expl f (t, s, as) = (\(VarID ts',s',as') -> (ts',s',as')) <$> f (VarID t, s, as)
+
+bndgrpexpl :: Lens TypeDecl TypeDecl BindGroup BindGroup
+bndgrpexpl f (t, s, as) = reconstruct <$> f ([(VarID t, s, as)], [])
+  where reconstruct ((VarID t',s',as'):_ , _) = (t', s', as')
+        reconstruct _                         = (t, s, as)
+
+bndgrpimpl :: Lens TypeDecl TypeDecl BindGroup BindGroup
+bndgrpimpl f (t, s, as) = reconstruct <$> f ([], [[(VarID t, as)]])
+  where reconstruct (_ , [ (VarID t',as'):_ ]) = (t', s, as')
+        reconstruct _                          = (t, s, as)
 
 --impl :: Lens TypeDecl Impl TypeDecl Impl
 impl :: Lens TypeDecl (String, Scheme, c) Impl (VarID,c)

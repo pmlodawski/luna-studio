@@ -1,5 +1,6 @@
 module Luna.Typechecker.AST.Type (
     Type(..), Tyvar(..), Tycon(..),
+    Dependent(..),
     fn, pair, list, tUnit, tChar, tBool, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString, tCons
   ) where
 
@@ -7,7 +8,7 @@ module Luna.Typechecker.AST.Type (
 import Luna.Typechecker.AST.Kind          (Kind(..))
 import Luna.Typechecker.AST.TID           (TID(..))
 
-import Luna.Typechecker.AST.Internal.Type (Type(..),Tyvar(..),Tycon(..))
+import Luna.Typechecker.AST.Internal.Type (Type(..),Tyvar(..),Tycon(..), Dependent(..))
 
 
 tUnit, tChar, tBool, tInt, tInteger, tFloat, tDouble, tList, tArrow, tTuple2, tString :: Type

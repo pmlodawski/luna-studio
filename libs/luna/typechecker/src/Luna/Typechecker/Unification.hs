@@ -14,6 +14,8 @@ import Control.Monad                         (unless)
 
 
 mgu :: (Monad m) => Type -> Type -> TCLoggerT m Subst
+mgu (TStruct _ _) _                    = throwError "not yet defined (1) :<" -- TODO
+mgu _ (TStruct _ _)                    = throwError "not yet defined (2) :<" -- TODO
 mgu (TAp l r) (TAp l' r')              = do s1 <- mgu l l'
                                             s2 <- mgu (apply s1 r) (apply s1 r')
                                             return (s2 @@ s1)
@@ -23,6 +25,8 @@ mgu (TCon tc1) (TCon tc2) | tc1 == tc2 = return nullSubst
 mgu a b                                = throwError $ "types do not unify: " ++ show a ++ " // " ++ show b
 
 match :: (Monad m) => Type -> Type -> TCLoggerT m Subst
+match (TStruct _ _) _                    = throwError "not yet defined (3) :<" -- TODO
+match _ (TStruct _ _)                    = throwError "not yet defined (4) :<" -- TODO
 match (TAp l r) (TAp l' r')              = do sl <- match l l'
                                               sr <- match r r'
                                               merge sl sr
