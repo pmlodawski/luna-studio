@@ -46,10 +46,11 @@ instance Arbitrary Kind where
 
 instance Arbitrary Type where
   arbitrary = arbitrary >>= genType
-  shrink (TVar t) = TVar <$> shrink t
-  shrink (TCon t) = TCon <$> shrink t
-  shrink (TAp t1 t2) = TAp <$> shrink t1 <*> shrink t2
-  shrink (TGen n) = TGen <$> shrink n
+  shrink (TStruct s m) = [TStruct s m] -- TODO
+  shrink (TVar t)      = TVar <$> shrink t
+  shrink (TCon t)      = TCon <$> shrink t
+  shrink (TAp t1 t2)   = TAp <$> shrink t1 <*> shrink t2
+  shrink (TGen n)      = TGen <$> shrink n
 
 instance Arbitrary Tyvar where
   arbitrary = arbitrary >>= genTyvar

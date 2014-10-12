@@ -12,10 +12,11 @@ import Luna.Typechecker.Internal.Logger
 
 inHnf :: (Monad m) => Pred -> TCLoggerT m Bool
 inHnf (IsIn _ t) = hnf t
-  where hnf (TVar   _ ) = return True
-        hnf (TCon   _ ) = return False
-        hnf (TAp t1 _ ) = hnf t1
-        hnf (TGen   _ ) = throwError "ContextReduction.hs:inHnf got TGen!"
+  where hnf (TVar    _    ) = return True
+        hnf (TCon    _    ) = return False
+        hnf (TAp     t1 _ ) = hnf t1
+        hnf (TGen    _    ) = throwError "ContextReduction.hs:inHnf got TGen!"
+        hnf (TStruct _  _ ) = throwError "ContextReduction.hs:inHnf got TStruct, dunno what to do :<" -- TODO
 
 toHnfs :: (Monad m) => ClassEnv -> [Pred] -> TCLoggerT m [Pred]
 toHnfs ce ps = do pss <- mapM (toHnf ce) ps

@@ -67,6 +67,7 @@ class Instantiate t where
 
 
 instance Instantiate Type where
+  -- TODO
   inst ts (TAp l r) = TAp (inst ts l) (inst ts r)
   inst ts (TGen n)  = ts !! n
   inst _  t         = t

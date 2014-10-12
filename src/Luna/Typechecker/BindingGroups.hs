@@ -31,6 +31,7 @@ data Expr = Var VarID
           | EConst Assump
           | Ap Expr Expr
           | Let BindGroup Expr
+          -- | Get VarID VarID -- ^ Get "x" "foo" oznacza tyle, co "x.foo" w kodzie -- TODO: dodać wyrażenia strukturalne
 
 instance Show Expr where
   show (Var tid)          = printf "evar %s" (show tid)
@@ -38,6 +39,7 @@ instance Show Expr where
   show (EConst (t:>:sch)) = printf "econst (%s :: %s)" (show t) (show sch)
   show (Ap e1 e2)         = printf "eap %s %s" (show e1) (show e2)
   show (Let bnd e)        = printf "elet %s = %s" (show bnd) (show e)
+  --show (Get x f)          = printf "eget %s ↣ %s" (show x) (show f)
 
 
 tiExpr :: Infer Expr Type
