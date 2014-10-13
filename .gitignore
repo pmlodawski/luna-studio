@@ -13,6 +13,9 @@ out
 tags
 TAGS
 
+# haskell coverage reports
+.hpc
+
 #generated files
 gen
 
