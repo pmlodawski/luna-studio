@@ -81,15 +81,16 @@ report callPointPath varName = do
 
 get :: VarName -> Session (Maybe Value)
 get varName = do
-    let expr = "toValue " ++ varName
+    let expr = "toValue $ compute " ++ varName
         excHandler exc = do
             logger warning $ show exc
             return Nothing
     Session.withImports [ "Flowbox.Data.Serialization"
+                        , "Flowbox.Graphics.Serialization"
                         , "Prelude"
                         , "Generated.Proto.Data.Value" ] 
                         $ lift2 $ GHC.handleSourceError excHandler $ do
-        let computeExpr =  concat [varName, " = compute ", varName]
-        _      <- GHC.runDecls computeExpr
+        --let computeExpr =  concat [varName, " = compute ", varName]
+        --_      <- GHC.runDecls computeExpr
         action <- HEval.interpret expr
         liftIO action
