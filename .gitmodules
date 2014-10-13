@@ -31,3 +31,7 @@
 [submodule "third-party/cufft"]
 	path = third-party/cufft
 	url = https://github.com/srutownik/cufft.git
+[submodule "third-party/accelerate-cuda"]
+	path = third-party/accelerate-cuda
+	url = https://github.com/srutownik/accelerate-cuda.git
+	branch = release/0.15
