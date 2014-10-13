@@ -38,6 +38,7 @@ Library
                   errors                      ,
                   flowbox-utils               ,
                   imagemagick   >= 0.0.3.6    ,
+                  JuicyPixels                 ,
                   lifted-base                 ,
                   linear                      ,
                   linear-accelerate           ,
