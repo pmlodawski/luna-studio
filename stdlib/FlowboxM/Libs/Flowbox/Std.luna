@@ -7,31 +7,31 @@ import ```Flowbox.Graphics.Composition.Generators.Keyer```
 def print msg:
     ```autoLift1 print #{msg}```
 
-def Int.add a:
+def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
 
-def Int.sub a:
+def Int.- a:
     ```liftF2 (-) #{self} #{a}```
 
-def Int.mul a:
+def Int.* a:
     ```liftF2 (*) #{self} #{a}```
 
-def Int.div a:
+def Int./ a:
     ```liftF2 (/) #{self} #{a}```
 
-def Int.gt a:
+def Int.> a:
     ```liftF2 (>) #{self} #{a}```
 
-def Int.eq a:
+def Int.== a:
     ```liftF2 (==) #{self} #{a}```
 
-def Int.lt a:
+def Int.< a:
     ```liftF2 (<) #{self} #{a}```
 
-def Int.lte a:
+def Int.<= a:
     ```liftF2 (<=) #{self} #{a}```
 
-def Int.gte a:
+def Int.>= a:
     ```liftF2 (>=) #{self} #{a}```
 
 # def Int.inc:
