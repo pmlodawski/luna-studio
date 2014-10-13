@@ -10,9 +10,12 @@
 
 module Flowbox.Graphics.Mockup where
 
+import qualified Codec.Picture.Png          as Juicy
+import qualified Codec.Picture.Types        as Juicy
 import qualified Data.Array.Accelerate      as A
 import qualified Data.Array.Accelerate.IO   as A
 import           Data.Array.Accelerate.CUDA
+import qualified Data.Vector.Storable       as SV
 import           Data.Char                  (toLower)
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
@@ -55,8 +58,13 @@ testLoadRGBA filename = do
                       in A.lift (A.fromIntegral r / 255, A.fromIntegral g / 255, A.fromIntegral b / 255, A.fromIntegral a / 255)
 
 testSaveRGBA :: FilePath -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> IO ()
-testSaveRGBA filename r g b a = saveImage filename $ compute' run $ M.map A.packRGBA32 $ M.zip4 (conv r) (conv g) (conv b) (conv a)
+testSaveRGBA filename r g b a = saveImageJuicy filename $ compute' run $ M.map A.packRGBA32 $ M.zip4 (conv r) (conv g) (conv b) (conv a)
     where conv = M.map (A.truncate . (* 255.0) . clamp' 0 1)
+
+saveImageJuicy file matrix = do
+    let ((), vec) = A.toVectors matrix
+        A.Z A.:. h A.:. w = A.arrayShape matrix
+    Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8)
 
 pattern VPS x = Value (Pure (Safe x))
 type VPS x = Value Pure Safe x
