@@ -41,6 +41,7 @@ import qualified Generated.Proto.Data.Value.Type     as Value
 import qualified Luna.Target.HS.Control.Error.Data   as Data
 
 
+
 class Serializable a b | a -> b where
     serialize :: a -> IO (Maybe b)
     toValue :: a -> IO (Maybe Value)
@@ -85,6 +86,7 @@ instance Serializable Double DoubleData.DoubleData where
 instance Serializable a b => Serializable (Data.Safe a) b where
     serialize (Data.Safe a) = serialize a
     toValue   (Data.Safe a) = toValue a
+    compute   (Data.Safe a) = Data.Safe $ compute a
 
 -- TODO [PM] Instance for unsafe
 --instance Serializable a b => Serializable (Data.Unsafe a) b where
