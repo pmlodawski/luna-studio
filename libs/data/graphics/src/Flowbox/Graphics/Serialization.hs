@@ -90,13 +90,13 @@ instance Serializable I.RGBA ViewData.ViewData where
         return $ liftM4 ViewData.ViewData red green blue (Just alpha)
 
     toValue a = liftM (mkValue ViewData.data' Value.View) $ serialize a
-    compute = I.map $ I.compute serializationBackend
+    compute   = I.map $ I.compute serializationBackend
 
 instance Serializable I.RGB ViewData.ViewData where
     serialize v = do
-        red   <- serializeChan v "rgb.r"
-        green <- serializeChan v "rgb.g"
-        blue  <- serializeChan v "rgb.b"
+        red   <- serializeChan v "r"
+        green <- serializeChan v "g"
+        blue  <- serializeChan v "b"
         return $ liftM4 ViewData.ViewData red green blue Nothing
 
     toValue a = liftM (mkValue ViewData.data' Value.View) $ serialize a
@@ -110,4 +110,4 @@ instance Serializable (Img.Image I.RGB) ViewData.ViewData where
 instance Serializable (Img.Image I.RGBA) ViewData.ViewData where
     serialize (Img.Image views _) = serialize (snd $ findMin views)
     toValue a = liftM (mkValue ViewData.data' Value.View) $ serialize a
-    compute = Img.map $ I.map $ I.compute serializationBackend
+    compute   = Img.map $ I.map $ I.compute serializationBackend
