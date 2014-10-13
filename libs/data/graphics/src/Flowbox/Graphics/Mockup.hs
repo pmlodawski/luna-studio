@@ -239,3 +239,10 @@ gaussianLuna (VPS (variable -> kernelSize)) img = img'
           vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
           p = pipe A.Clamp
           process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
+
+laplacianLuna :: VPS Int -> VPS Double -> VPS Double -> Image RGBA -> Image RGBA
+laplacianLuna (VPS (variable -> kernSize)) (VPS (variable -> crossVal)) (VPS (variable -> sideVal)) img = img'
+    where img' = onEachChannel process img
+          process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
+          flt = laplacian crossVal sideVal $ pure kernSize
+          p = pipe A.Clamp

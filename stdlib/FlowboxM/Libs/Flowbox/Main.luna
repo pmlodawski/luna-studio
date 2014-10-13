@@ -120,6 +120,9 @@ def Image.cornerPin p1 p2 p3 p4:
 def Image.blur kernelSize:
     ```liftF1 (gaussianLuna #{kernelSize}) #{self}```
 
+def Image.laplacian kernelSize centerVal sideVal:
+    ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
+
 def main:
     lena = load "/home/mgw/test.png"
     lena = lena.blur 7
