@@ -13,21 +13,28 @@ message Value {
     extensions 100 to max;
 
     enum Type {
-        Int     = 1;
-        Char    = 2;
-        Bool    = 3;
-        String  = 4;
-        Float   = 5;
-        Double  = 6;
-        Matrix  = 7;
-        View    = 8;
-        Point   = 9;
-        Tangent = 10;
-        Vertex  = 11;
-        Curve   = 12;
+        EmptyTuple = 0;
+        Int        = 1;
+        Char       = 2;
+        Bool       = 3;
+        String     = 4;
+        Float      = 5;
+        Double     = 6;
+        Matrix     = 7;
+        View       = 8;
+        Point      = 9;
+        Tangent    = 10;
+        Vertex     = 11;
+        Curve      = 12;
     }
 
     required Type type = 1;
+}
+
+message EmptyTupleData {
+    extend Value {
+        optional EmptyTupleData data = 100;
+    }
 }
 
 message IntData {
