@@ -26,7 +26,7 @@ import           Flowbox.Prelude             hiding (views, lookup, sequence, ma
 
 data Image view = Image { _views       :: Map.Map View.Name view
                         , _defaultView :: View.Select
-                        }
+                        } deriving (Show)
 makeLenses ''Image
 
 image :: View.View v => Map.Map View.Name v -> View.Select -> Either Error (Image v)
