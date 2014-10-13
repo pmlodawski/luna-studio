@@ -84,9 +84,12 @@ get varName = do
     let expr = "toValue " ++ varName
         excHandler exc = do
             logger warning $ show exc
-            return $ return Nothing
+            return Nothing
     Session.withImports [ "Flowbox.Data.Serialization"
                         , "Prelude"
-                        , "Generated.Proto.Data.Value" ] $ do
-        action <- lift2 $ GHC.handleSourceError excHandler $ HEval.interpret expr
+                        , "Generated.Proto.Data.Value" ] 
+                        $ lift2 $ GHC.handleSourceError excHandler $ do
+        let computeExpr =  concat [varName, " = compute ", varName]
+        _      <- GHC.runDecls computeExpr
+        action <- HEval.interpret expr
         liftIO action
