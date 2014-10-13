@@ -61,6 +61,7 @@ data Expr  = NOP          { _id :: ID                                           
            -- | TupleCons_   { _id :: ID, _items     :: [Expr]                                                                      }
            | Typed        { _id :: ID, _cls       :: Type     , _expr      :: Expr                                               }
            | Var          { _id :: ID, _name      :: String                                                                      }
+           | FuncVar      { _id :: ID, _fname     :: Name                                                                        }
            | Wildcard     { _id :: ID                                                                                            }
            | RangeFromTo  { _id :: ID, _start     :: Expr     , _end       :: Expr                                               }
            | RangeFrom    { _id :: ID, _start     :: Expr                                                                        }
@@ -84,6 +85,7 @@ shiftArg5 f t1 t2 t3 t4 t5 x = f x t1 t2 t3 t4 t5
 shiftArg6 f t1 t2 t3 t4 t5 t6 x = f x t1 t2 t3 t4 t5 t6
 
 var = shiftArg1 Var
+funcVar = shiftArg1 FuncVar
 function = shiftArg5 Function
 app = shiftArg2 App
 
@@ -166,6 +168,7 @@ traverseM fexp ftype fpat flit e = case e of
     Ref          id' dst'                          -> Ref          id'       <$> fexp dst'
     RefType      {}                                -> pure e
     Var          {}                                -> pure e
+    FuncVar      {}                                -> pure e
     Wildcard     {}                                -> pure e
     NOP          {}                                -> pure e
     Arg          id' pat' value'                   -> Arg          id'       <$> fpat pat' <*> fexpMap value'
@@ -206,6 +209,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Ref          _ dst'                            -> drop <* fexp dst'
     RefType      {}                                -> drop
     Var          {}                                -> drop
+    FuncVar      {}                                -> drop
     Wildcard     {}                                -> drop
     NOP          {}                                -> drop
     Arg          _ pat' value'                     -> drop <* fpat pat' <* fexpMap value'

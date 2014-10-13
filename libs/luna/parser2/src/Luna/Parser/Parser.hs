@@ -180,9 +180,14 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 tuple         p = Tok.parens (sepBy p Tok.separator)
 qualifiedPath p = sepBy1_ng p Tok.accessor
 extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
-                      <*> (     (Name.single <$> varOp)
-                            <|> Tok.parens (Name.multi <$> Tok.varIdent <*> many1 Tok.varIdent) 
-                            <?> "function name")
+                      <*> (namePattern <?> "function name")
+
+namePattern =   (Name.single <$> varOp)
+            <|> Tok.parens (Name.close <$> (Name.multi <$> Tok.varIdent <*> many1 namePatSeg))
+
+namePatSeg =   (Name.NameToken <$> Tok.varIdent)
+           <|> (Name.NameHole  <$  Tok.nameWildcard)
+
 argList       p = try (sepBy2 p Tok.separator) <|> many p <?> "argument list"
 argList'      p = braces (sepBy2 p Tok.separator) <|> ((:[]) <$> p) <?> "argument list"
 callList      p = Tok.parens (sepBy p Tok.separator)
@@ -589,24 +594,40 @@ callBuilder id id2 src arg = case src of
 --    mapStateVal $ State.delReserved words
 --    return ret
 
-withReservedWords words p = withState (State.addReserved words) p
 
 
-mkFuncParser func defparser = case name of
-    (Name base segments) -> multiparser
-    _                          -> defparser
+--mkFuncParser func defparser = case name of
+--    (Name base segments) -> multiparser
+--    _                          -> defparser
+--    where name          = Expr._fname func
+--          argExpr       = argE expr
+--          exprApp p a b = (:) <$> p <* a <*> b
+--          segParsers    = fmap (Tok.symbol) segments
+--          argParser     = foldr (exprApp argExpr) ((:[]) <$> argExpr) segParsers
+--          (Name base segments) = name
+--          multiparser   = withReservedWords segments $ tok (Expr.app <$> tok (pure $ Expr.var fname) <*> argParser)
+--          [s1,s2] = fmap Tok.symbol segments
+--          fname = if null segments then base 
+--                                   else base ++ " " ++ join " " segments
+
+mkFuncParser func = State.withReserved (segNames segments) $ tok (Expr.app <$> tok (pure $ Expr.funcVar name) <*> argParser)
     where name          = Expr._fname func
           argExpr       = argE expr
-          exprApp p a b = (:) <$> p <* a <*> b
-          segParsers    = fmap (Tok.symbol) segments
-          argParser     = foldr (exprApp argExpr) ((:[]) <$> argExpr) segParsers
+          exprApp a b   = (++) <$> a <*> b
+          segParsers    = fmap segParser segments
+          argParser     = foldr exprApp (pure []) segParsers
           (Name base segments) = name
-          multiparser   = withReservedWords segments $ tok (Expr.app <$> tok (pure $ Expr.var fname) <*> argParser)
-          [s1,s2] = fmap Tok.symbol segments
-          fname = if null segments then base 
-                                   else base ++ " " ++ join " " segments
 
+          segParser seg = case seg of
+              Name.NameHole    -> (:[]) <$> argExpr
+              Name.NameToken s -> []    <$  Tok.symbol s
 
+          segNames = segNames' []
+          segNames' names s = case s of
+              []   -> names
+              x:xs -> case x of
+                  Name.NameToken n -> segNames' (n:names) xs
+                  Name.NameHole    -> segNames' names     xs
 
 notReserved p = do
     rsv  <- view State.adhocReserved <$> get
@@ -621,7 +642,7 @@ varE   = do
     ast  <- lookupAST name
     case ast of
         -- FIXME[wd]: dopiero przy dwuprzebiegowym parserze bedziemy mieli wieloczlonowe funkcje rekurencyjne
-        Just(AST.Expr func@(Expr.Function {})) -> mkFuncParser func (tok $ Expr.var <$> pure name)
+        Just(AST.Expr func@(Expr.Function {})) -> mkFuncParser func
         _                                      -> tok $ Expr.var <$> pure name
                           
 

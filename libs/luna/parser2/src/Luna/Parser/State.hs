@@ -77,6 +77,18 @@ regTypeName id name = do
 
 withAlias f = mapStateVal (namespace . Namespace.alias %~ f)
 
+withReserved words p = do
+    s <- get
+    let reserved = view adhocReserved s
+    put $ (addReserved words s)
+    ret <- p
+    s   <- get
+    put (s & adhocReserved .~ reserved)
+    return ret
+
+
+
+
 withScope id p = do
     pushScope id
     ret <- p

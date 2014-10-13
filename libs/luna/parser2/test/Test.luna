@@ -1,7 +1,5 @@
-
-def print a:
-    a
+def foo
 
 def main:
-    print 1
-
+    foo 'a'
+    foo 'a'
