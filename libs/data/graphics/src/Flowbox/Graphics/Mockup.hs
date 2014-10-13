@@ -10,18 +10,25 @@
 
 module Flowbox.Graphics.Mockup where
 
+import qualified Codec.Picture.Png          as Juicy
+import qualified Codec.Picture.Types        as Juicy
 import qualified Data.Array.Accelerate      as A
 import qualified Data.Array.Accelerate.IO   as A
 import           Data.Array.Accelerate.CUDA
+import qualified Data.Vector.Storable       as SV
 import           Data.Char                  (toLower)
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
+import           Linear                     (V2(..))
 
-import qualified Flowbox.Graphics.Color                as Color
+import qualified Flowbox.Graphics.Color                               as Color
 import           Flowbox.Graphics.Composition.Generators.Filter
-import           Flowbox.Graphics.Composition.Generators.Filter as Conv
+import           Flowbox.Graphics.Composition.Generators.Filter       as Conv
+import           Flowbox.Graphics.Composition.Generators.Gradient
 import           Flowbox.Graphics.Composition.Generators.Keyer
 import           Flowbox.Graphics.Composition.Generators.Matrix
+import           Flowbox.Graphics.Composition.Generators.Noise.Billow
+import           Flowbox.Graphics.Composition.Generators.Noise.Perlin
 import           Flowbox.Graphics.Composition.Generators.Pipe
 import           Flowbox.Graphics.Composition.Generators.Rasterizer
 import           Flowbox.Graphics.Composition.Generators.Sampler
@@ -31,12 +38,12 @@ import           Flowbox.Graphics.Composition.Generators.Structures
 import           Flowbox.Graphics.Composition.Generators.Transform
 import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Color
-import           Flowbox.Graphics.Image.Image          as Image
-import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage, saveImage)
-import           Flowbox.Graphics.Image.View           as View
+import           Flowbox.Graphics.Image.Image                         as Image
+import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
+import           Flowbox.Graphics.Image.View                          as View
 import           Flowbox.Graphics.Utils
-import           Flowbox.Math.Matrix                   as M
-import           Flowbox.Prelude                       as P hiding (lookup)
+import           Flowbox.Math.Matrix                                  as M
+import           Flowbox.Prelude                                      as P hiding (lookup)
 
 import Luna.Target.HS (Value(..), Safe(..), Pure(..), val, autoLift1, autoLift, fromValue)
 
@@ -55,8 +62,14 @@ testLoadRGBA filename = do
                       in A.lift (A.fromIntegral r / 255, A.fromIntegral g / 255, A.fromIntegral b / 255, A.fromIntegral a / 255)
 
 testSaveRGBA :: FilePath -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> IO ()
-testSaveRGBA filename r g b a = saveImage filename $ compute' run $ M.map A.packRGBA32 $ M.zip4 (conv r) (conv g) (conv b) (conv a)
+testSaveRGBA filename r g b a = saveImageJuicy filename $ compute' run $ M.map A.packRGBA32 $ M.zip4 (conv r) (conv g) (conv b) (conv a)
     where conv = M.map (A.truncate . (* 255.0) . clamp' 0 1)
+
+saveImageJuicy file matrix = do
+    let ((), vec) = A.toVectors matrix
+        A.Z A.:. h A.:. w = A.arrayShape matrix
+    Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8)
+
 
 pattern VPS x = Value (Pure (Safe x))
 type VPS x = Value Pure Safe x
@@ -246,3 +259,49 @@ laplacianLuna (VPS (variable -> kernSize)) (VPS (variable -> crossVal)) (VPS (va
           process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
           flt = laplacian crossVal sideVal $ pure kernSize
           p = pipe A.Clamp
+
+circularLuna :: Int -> Int -> Image RGBA
+circularLuna = gradientLuna circularShape
+
+conicalLuna :: Int -> Int -> Image RGBA
+conicalLuna = gradientLuna conicalShape
+
+squareLuna :: Int -> Image RGBA
+squareLuna side = gradientLuna squareShape side side
+
+gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
+    where grad = rasterizer $ monosampler $ gradientGenerator
+
+          gradientGenerator = scale (Grid width height) $ translate (V2 0.5 0.5) $ mapper gray gradient
+          gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Double Double Double]
+
+          weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
+          mapper = flip colorMapper weightFun
+
+channelToImageRGBA :: Matrix2 Double -> Image RGBA
+channelToImageRGBA m = image
+    where image = singleton view
+          view = View.empty "rgba"
+               & View.append (ChannelFloat "r" . FlatData $ m)
+               & View.append (ChannelFloat "g" . FlatData $ m)
+               & View.append (ChannelFloat "b" . FlatData $ m)
+               & View.append (ChannelFloat "a" . FlatData $ alpha)
+
+          alpha :: Matrix2 Double
+          alpha = M.generate (M.shape m) (const 1)
+
+perlinLuna :: Double -> Int -> Int -> Image RGBA
+perlinLuna (variable -> z) = noiseLuna (perlinNoise z)
+
+billowLuna :: Double -> Int -> Int -> Image RGBA
+billowLuna (variable -> z) = noiseLuna (billowNoise z)
+
+noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA noise'
+    where noise' = rasterizer $ monosampler $ noiseGenerator
+
+          noiseGenerator = scale (Grid width height) noise
+
+rotateCenterLuna :: VPS Double -> Matrix2 Double -> Matrix2 Double
+rotateCenterLuna (VPS (variable -> angle)) = rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
+
+test = channelToImageRGBA $ M.generate (A.index2 5 5) (const 0.8)

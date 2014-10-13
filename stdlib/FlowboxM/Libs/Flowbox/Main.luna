@@ -1,3 +1,5 @@
+@AllowOrphans
+
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image```
 import ```Flowbox.Graphics.Composition.Generators.Keyer```
@@ -123,7 +125,35 @@ def Image.blur kernelSize:
 def Image.laplacian kernelSize centerVal sideVal:
     ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
 
+def Image.rotate phi:
+    ```liftF1 (onEachChannel $ rotateCenterLuna #{phi}) #{self}```
+
+def circular width height:
+    ```liftF2 circularLuna #{width} #{height}```
+
+def conical width height:
+    ```liftF2 conicalLuna #{width} #{height}```
+
+def square side:
+    ```liftF1 squareLuna #{side}```
+
+def perlin z width height:
+    ```liftF3 perlinLuna #{z} #{width} #{height}```
+
+def billow z width height:
+    ```liftF3 billowLuna #{z} #{width} #{height}```
+
 def main:
     lena = load "/home/mgw/test.png"
     lena = lena.blur 7
+    lena = lena.rotate 1.61
     lena.save "/home/mgw/out.png"
+
+    circul = Main.circular 720 480
+    circul.save "/home/mgw/out.png"
+
+    conical = Main.conical 1280 720
+    conical.save "/home/mgw/out.png"
+
+    p = Main.billow 0 1280 720
+    p.save "/home/mgw/out.png"
