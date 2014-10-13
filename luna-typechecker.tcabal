@@ -12,6 +12,7 @@ Library
   Hs-Source-Dirs:     src
   Build-Depends:      base
                     , deepseq
+                    , luna-logger
                     , mtl
                     , transformers
   Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
@@ -24,4 +25,5 @@ Executable luna-typechecker-tests
   Main-Is:            Spec.hs
   Build-Depends:      base
                     , hspec
+                    , luna-logger
                     , luna-typechecker
