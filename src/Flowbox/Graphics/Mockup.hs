@@ -147,14 +147,14 @@ saveImageLuna path img = do
 
 onEachChannel :: (Matrix2 Double -> Matrix2 Double) -> Image RGBA -> Image RGBA
 onEachChannel f img = res
-    where Right res = Image.map (View.map fChan) img
+    where res = Image.map (View.map fChan) img
 
           fChan :: Channel -> Channel
           fChan (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ f)
 
 onEachValue :: (A.Exp Double -> A.Exp Double) -> Image RGBA -> Image RGBA
 onEachValue f img = res
-    where Right res = Image.map (View.map f') img
+    where res = Image.map (View.map f') img
 
           f' :: Channel -> Channel
           f' (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ (M.map f))
