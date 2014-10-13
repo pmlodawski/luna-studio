@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 
 ###########################################################################
 ## Copyright (C) Flowbox, Inc / All Rights Reserved
@@ -15,25 +15,25 @@ from   subprocess      import call
 import utils.errors    as     errors
 from   utils.colors    import print_info, print_error
 import signal
+import argparse
 
 
 def main():
+    argparser = argparse.ArgumentParser(description="Run REPL from sandbox",
+                                        epilog="Note that the old syntax for selecting packages is deprecated.")
+    argparser.add_argument('packages',       nargs='*',           help="packages to preload")
+    argparser.add_argument('--with-prelude', action='store_true', help="Do not add `-XNoImplicitPrelude` to GHCi options")
+    args = argparser.parse_args()
+
     rootPath  = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     sboxEnv   = "FDEV_TARGETS"
     os.chdir(rootPath)
 
-    pkgNames = []
-    args = []
-    for arg in sys.argv[1:]:
-        if arg.startswith('--pkgs='):
-            pkgNames = arg[7:].split(',')
-        else: args.append(arg)
-
-    if not pkgNames:
+    pkgsNames = args.packages
+    if not args.packages:
         if not os.environ.has_key(sboxEnv):
             print_error("Flowbox development environment not initialized.")
             sys.exit(1)
-
         pkgNames = os.environ[sboxEnv].split(":")
 
     pkgs = [pkgDb[name] for name in pkgNames]
@@ -42,10 +42,16 @@ def main():
         print_info ("Starting ghci for %s" % pkg.name)
         old_action = signal.signal(signal.SIGINT, signal.SIG_IGN)
         os.chdir(os.environ["PWD"])
-        call("cabal --sandbox=%s/cabal.sandbox.config exec ghci -- -XNoImplicitPrelude "% pkg.sbox, shell=True)
+
+        noprelude = "-XNoImplicitPrelude"
+        if args.with_prelude:
+            noprelude = ""
+        cmd = "cabal --sandbox={pkg.sbox}/cabal.sandbox.config exec ghci -- {noprelude}".format(**locals())
+        print "Executing command:", cmd
+        call(cmd, shell=True)
         signal.signal(signal.SIGINT, old_action)         # restore original signal handler
         os.chdir(rootPath)
 
-main()
 
-
+if __name__ == "__main__":
+    main()
