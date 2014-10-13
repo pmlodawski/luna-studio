@@ -45,38 +45,38 @@ def Image.save self::Image path::String:
 def Image.defocus self::Image radius::Int:
     ```liftF1 (onEachChannel $ defocus #{radius}) #{self}```
 
-def Image.motionBlur self::Image size::Int angle::Double:
+def Image.motionBlur self::Image size::Int angle::Float:
     ```liftF1 (onEachChannel $ motionBlur #{size} #{angle}) #{self}```
 
-def Image.bilateral self::Image psigma::Double csigma::Double size::Int:
+def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
     ```liftF1 (onEachChannel $ bilateral #{psigma} #{csigma} #{size}) #{self}```
 
-def Image.offset self::Image value::Double:
+def Image.offset self::Image value::Float:
     ```liftF1 (onEachValue $ offsetLuna #{value}) #{self}```
 
-def Image.contrast self::Image value::Double:
+def Image.contrast self::Image value::Float:
     ```liftF1 (onEachValue $ contrastLuna #{value}) #{self}```
 
-def Image.exposure self::Image blackpoint::Double ex::Double:
+def Image.exposure self::Image blackpoint::Float ex::Float:
     ```liftF1 (onEachValue $ exposureLuna #{blackpoint} #{ex}) #{self}```
 
-def Image.colorCorrect self::Image saturation::Double contrast::Double gamma::Double gain::Double offset::Double:
+def Image.colorCorrect self::Image saturation::Float contrast::Float gamma::Float gain::Float offset::Float:
     ```liftF1 (onEachRGB $ colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset}) #{self}```
 
-def Image.grade self::Image blackpoint::Double whitepoint::Double lift::Double gain::Double multiply::Double offset::Double gamma::Double:
+def Image.grade self::Image blackpoint::Float whitepoint::Float lift::Float gain::Float multiply::Float offset::Float gamma::Float:
     ```liftF1 (onEachValue $ gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma}) #{self}```
 
-def Image.saturate self::Image saturation::Double:
+def Image.saturate self::Image saturation::Float:
     ```liftF1 (onEachRGB $ saturateLuna #{saturation}) #{self}```
 
-def Image.posterize self::Image colors::Double:
+def Image.posterize self::Image colors::Float:
     ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
 
 
-def Image.key self::Image mode a::Double b::Double c::Double d::Double:
+def Image.key self::Image mode a::Float b::Float c::Float d::Float:
     ```liftF1 (keyerLuna #{mode} #{a} #{b} #{c} #{d}) #{self}```
 
-def Image.differenceKey self::Image offset::Double gain::Double background::Image:
+def Image.differenceKey self::Image offset::Float gain::Float background::Image:
     ```liftF2 (differenceKeyerLuna #{offset} #{gain}) #{background} #{self}```
 
 class Point:
@@ -97,6 +97,6 @@ def Image.cornerPin self::Image p1::Point p2::Point p3::Point p4::Point:
 def Image.blur self::Image kernelSize::Int:
     ```liftF1 (gaussianLuna #{kernelSize}) #{self}```
 
-def Image.laplacian self::Image kernelSize::Int centerVal::Double sideVal::Double:
+def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
     ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
     
