@@ -26,12 +26,12 @@
     path = third-party/mainland-pretty
     url = https://github.com/flowbox-public/mainland-pretty.git
 [submodule "third-party/cuda"]
-	path = third-party/cuda
-	url = https://github.com/srutownik/cuda.git
+    path = third-party/cuda
+    url = https://github.com/srutownik/cuda.git
 [submodule "third-party/cufft"]
-	path = third-party/cufft
-	url = https://github.com/srutownik/cufft.git
+    path = third-party/cufft
+    url = https://github.com/srutownik/cufft.git
 [submodule "third-party/accelerate-cuda"]
-	path = third-party/accelerate-cuda
-	url = https://github.com/srutownik/accelerate-cuda.git
-	branch = release/0.15
+    path = third-party/accelerate-cuda
+    url = https://github.com/srutownik/accelerate-cuda.git
+    branch = release/0.15
