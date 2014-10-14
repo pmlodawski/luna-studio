@@ -204,7 +204,7 @@ addExpr nodeID e = do
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
             else do State.addToNodeMap (nodeID, Port.All) e
-                    unless connectedToOutput $
+                    unless (connectedToOutput || assignmentCount == 1 ) $
                         State.addToBody e
 
 
