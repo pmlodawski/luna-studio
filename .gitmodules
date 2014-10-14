@@ -32,3 +32,6 @@
     path = third-party/accelerate-cuda
     url = https://github.com/srutownik/accelerate-cuda.git
     branch = release/0.15
+[submodule "third-party/cuda"]
+	path = third-party/cuda
+	url = https://github.com/srutownik/cuda.git
