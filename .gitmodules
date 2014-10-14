@@ -28,6 +28,3 @@
 [submodule "third-party/mainland-pretty"]
     path = third-party/mainland-pretty
     url = git@github.com:flowbox-public/mainland-pretty.git
-[submodule "third-party/cuda"]
-	path = third-party/cuda
-	url = https://github.com/srutownik/cuda.git
