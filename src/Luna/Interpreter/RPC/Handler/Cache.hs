@@ -64,3 +64,8 @@ modifyBreadcrumbs projectID libraryID tbc = do
 modifyNode :: Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
 modifyNode projectID libraryID nodeID =
     interpreterDo projectID $ Invalidate.modifyNode (decodeP libraryID) (decodeP nodeID)
+
+
+deleteNode :: Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
+deleteNode projectID libraryID nodeID =
+    interpreterDo projectID $ Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
