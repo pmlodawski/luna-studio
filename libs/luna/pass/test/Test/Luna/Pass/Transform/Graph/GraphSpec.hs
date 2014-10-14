@@ -188,6 +188,20 @@ sampleGraphs =
         ,(-3, Node.Outputs        (0, 2))
         ]
         [(100, -3, Edge.Data Port.All $ Port.Num 1)]
+     , named "BATCH-67"
+     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (10, Node.Expr "12" "" (0, 1))
+        , fixEmpty' (20, Node.Expr "15" "" (0, 1))
+        , fixEmpty' (30, Node.Expr "*" "" (0, 1))
+        , fixEmpty' (40, Node.Expr "+" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        [(10, 30, Edge.Data Port.All $ Port.Num 0)
+        ,(20, 30, Edge.Data Port.All $ Port.Num 1)
+        ,(30, 40, Edge.Data Port.All $ Port.Num 0)
+        ,(30, 40, Edge.Data Port.All $ Port.Num 1)
+        ]
     ]
 
 
