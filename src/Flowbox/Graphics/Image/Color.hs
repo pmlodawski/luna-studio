@@ -33,47 +33,55 @@ import           Flowbox.Prelude                                    as P
 
 
 
-offset :: (Elt a, IsNum a) => Exp a -> Exp a -> Exp a
+offset :: (Num a) => a -> a -> a
 offset v = (+v)
 
-multiply :: (Elt a, IsNum a) => Exp a -> Exp a -> Exp a
+multiply :: (Num a) => a -> a -> a
 multiply v = (*v)
 
-contrast :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
+contrast :: (Num a, Fractional a) => a -> a -> a
 contrast v x = (x - 0.5) * v + 0.5
 
 data Colorspace = Linear | Cineon
 
-exposure :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
+exposure :: (Num a, Floating a) => a -> a -> a -> a
 exposure blackpoint ex pix = blackpointConvert blackpoint (2 ** ex * inverseBlackpointConvert blackpoint pix)
 
-blackpointConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
+blackpointConvert :: (Num a, Floating a) => a -> a -> a
 blackpointConvert blackpoint = pointsConvert blackpoint 1.0
 
-inverseBlackpointConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
+inverseBlackpointConvert :: (Num a, Floating a) => a -> a -> a
 inverseBlackpointConvert lift = inversePointsConvert lift 1.0
 
-whitepointConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
+whitepointConvert :: (Num a, Floating a) => a -> a -> a
 whitepointConvert = pointsConvert 0.0
 
-inverseWhitepointConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
+inverseWhitepointConvert :: (Num a, Floating a) => a -> a -> a
 inverseWhitepointConvert = inversePointsConvert 0.0
 
-pointsConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
+pointsConvert :: (Num a, Floating a) => a -> a -> a -> a
 pointsConvert blackpoint whitepoint pix = (pix - blackpoint) / (whitepoint - blackpoint)
 
-inversePointsConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
+inversePointsConvert :: (Num a, Floating a) => a -> a -> a -> a
 inversePointsConvert lift gain pix = (gain - lift) * pix + lift
 
-grade :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a -> Exp a -> Exp a -> Exp a -> Exp a -> Exp a
+grade :: (Num a, Floating a) => a -> a -> a -> a -> a -> a -> a -> a -> a
 grade blackpoint whitepoint lift gain multiply' offset' gamma =
 	U.gamma gamma . offset offset' . multiply multiply' . inversePointsConvert lift gain . pointsConvert blackpoint whitepoint
 
-colorCorrect :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a -> Exp a -> RGB (Exp a) -> RGB (Exp a)
-colorCorrect saturation' contrast' gamma' gain' offset' pix =
-    saturated & each %~ (offset offset' . gain'' gain' . U.gamma gamma' . contrast contrast')
-    where saturated  = toHSV pix & (\(HSV h s v) -> HSV h (s * saturation') v) & toRGB
-          gain'' b x = b * x -- U.gain is broken, tested with Nuke that it's simply multiplication
+colorCorrect :: forall a. (Elt a, IsFloating a)
+             => Exp a       -- ^ saturation
+             -> Exp a       -- ^ contrast
+             -> Exp a       -- ^ gamma
+             -> Exp a       -- ^ gain
+             -> Exp a       -- ^ offset
+             -> Exp (RGB a) -- ^ input pixel
+             -> Exp (RGB a)
+colorCorrect = ((((A.lift1 .) .) .) .) . colorCorrect'
+    where colorCorrect' :: Exp a -> Exp a -> Exp a -> Exp a -> Exp a -> RGB (Exp a) -> RGB (Exp a)
+          colorCorrect' saturation' contrast' gamma' gain' offset' pix' = saturated & each %~ (offset offset' . gain'' gain' . U.gamma gamma' . contrast contrast')
+              where saturated  = toHSV pix' & (\(HSV h s v) -> HSV h (s * saturation') v) & toRGB
+                    gain'' b x = b * x -- U.gain is broken, tested with Nuke that it's simply multiplication
 
 -- NOTE[mm]: pretty sure Nuke uses HSL colorspace for saturation manipulation. There are slight differences still,
 --           but operating on HSV looks unalike to Nuke.
