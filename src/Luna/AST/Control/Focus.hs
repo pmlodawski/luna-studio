@@ -9,9 +9,14 @@
 
 module Luna.AST.Control.Focus where
 
-import Flowbox.Prelude hiding (Traversal)
-import Luna.AST.Expr   (Expr)
-import Luna.AST.Module (Module)
+import           Flowbox.Prelude hiding (Traversal)
+import           Luna.AST.Expr   (Expr)
+import qualified Luna.AST.Expr   as Expr
+import           Luna.AST.Lit    (Lit)
+import           Luna.AST.Module (Module)
+import qualified Luna.AST.Module as Module
+import           Luna.AST.Pat    (Pat)
+import           Luna.AST.Type   (Type)
 
 
 
@@ -46,6 +51,15 @@ traverseM_ fmod fexp focus = case focus of
     Class    c -> fexp c
     Module   m -> fmod m
 
+
+traverseMR :: Traversal m => (Module -> m Module) -> (Expr -> m Expr)
+           -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit)
+           -> Focus -> m Focus
+traverseMR fmod fexp ftype fpat flit focus = case focus of
+    Lambda   expr  -> Lambda   <$> Expr.traverseMR fexp ftype fpat flit expr
+    Function expr  -> Function <$> Expr.traverseMR fexp ftype fpat flit expr
+    Class    expr  -> Class    <$> Expr.traverseMR fexp ftype fpat flit expr
+    Module module_ -> Module   <$> Module.traverseMR fmod fexp ftype fpat flit module_
 
 getLambda :: Focus -> Maybe Expr
 getLambda (Lambda l) = Just l
