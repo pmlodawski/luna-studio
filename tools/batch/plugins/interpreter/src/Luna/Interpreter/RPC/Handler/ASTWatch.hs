@@ -309,7 +309,7 @@ graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
     let projectID = GraphNodeRemove.projectID request
         libraryID = GraphNodeRemove.libraryID request
         nodeIDs   = GraphNodeRemove.nodeIDs request
-    mapM_ (Cache.modifyNode projectID libraryID) nodeIDs -- FIXME [PM] : invalidate successor nodes
+    mapM_ (Cache.deleteNode projectID libraryID) nodeIDs -- FIXME [PM] : invalidate successor nodes
 
 
 graphNodeModify :: GraphNodeModify.Update -> RPC Context SessionST ()
