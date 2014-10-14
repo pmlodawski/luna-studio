@@ -40,7 +40,7 @@ def assertInstall(name):
 def checkAvailable(name):
     putInfo ("Checking if '%s' is available ... " % name)
     cmd = "where" if platform.system() == "Windows" else "command -v"
-    if call(cmd + " " + name, shell=True): 
+    if call(cmd + " " + name, shell=True):
         print_info("no")
         return False
     else:
@@ -153,7 +153,7 @@ def install_from_sources(name, version=None):
 def install_alex_happy(name, version):
     try_call('cabal install alex')
     try_call('cabal install happy')
-    return (name)
+    return (name + "-" + version)
 
 def main():
     if os.path.exists(sboxName):
@@ -188,7 +188,7 @@ def main():
     checkCabalPkg("alex")
     checkCabalPkg("hspec", check="hspec-discover")
 
-    checkCabalPkg("c2hs", installUsing=install_alex_happy, version="0.16.5")
+    checkCabalPkg("c2hs", installUsing=install_alex_happy, version="0.17.2")
 
     checkCabalPkg("gtk2hs-buildtools", installUsing=install_alex_happy, check="gtk2hsC2hs")
 
