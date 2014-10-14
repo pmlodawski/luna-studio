@@ -63,11 +63,11 @@ backAndForth2' :: Breadcrumbs -> Graph -> Graph -> IO ()
 backAndForth2' bc providedGraph expectedGraph = do
     emptyAst  <- Common.getAST SampleCodes.emptyMain
     (ast, pm) <- Common.getExpr bc providedGraph def emptyAst
-    --printLn
-    --print ast
-    --printLn
-    --print pm
-    --printLn
+    printLn
+    print ast
+    printLn
+    print pm
+    printLn
     (resultGraph, _pm2) <- Common.getGraph bc pm ast
     resultGraph `shouldBe` expectedGraph
 
@@ -130,6 +130,16 @@ sampleGraphs =
         ]
         [(-2 ,100, Edge.Data (Port.Num 0) $ Port.Num 0)
         ,(100, -3, Edge.Data  Port.All      Port.All  )
+        ]
+    , named "simple graph 8"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "25" "" (0, 1))
+        , fixEmpty' (200, Node.Expr "*" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 3))
+        ]
+        [(100,200, Edge.Data Port.All $ Port.Num 0)
+        ,(100,200, Edge.Data Port.All $ Port.Num 1)
         ]
     , named "inverse order graph"
     $ Graph.addMonadicEdges $ Graph.mkGraph
