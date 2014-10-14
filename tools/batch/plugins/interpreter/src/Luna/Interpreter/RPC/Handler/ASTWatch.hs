@@ -291,7 +291,7 @@ graphDisconnect (GraphDisconnect.Update request updateNo) = do
     let projectID = GraphDisconnect.projectID request
         libraryID = GraphDisconnect.libraryID request
         dstID     = GraphDisconnect.libraryID request
-    Cache.modifyNode projectID libraryID dstID
+    Cache.modifyNode projectID libraryID dstID -- FIXME [PM] : invalidate successor nodes
 
 
 graphNodeAdd :: GraphNodeAdd.Update -> RPC Context SessionST ()

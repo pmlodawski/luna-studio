@@ -27,32 +27,44 @@ import qualified Luna.AST.Type          as Type
 
 
 traverseFocus :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Focus -> m ()
-traverseFocus op f = Focus.traverseM_ (traverseModule op) (traverseExpr op) f
+traverseFocus op = void . Focus.traverseMR (processModule op) (processExpr op) (processType op) (processPat op) (processLit op)
 
 
 traverseModule :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Module -> m ()
-traverseModule op m = do op $ m ^. Module.id
-                         Module.traverseM_ (traverseModule op) (traverseExpr op) (traverseType op) (traversePat op) (traverseLit op) m
+traverseModule op = void . Module.traverseMR (processModule op) (processExpr op) (processType op) (processPat op) (processLit op)
 
 
 traverseExpr :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Expr -> m ()
-traverseExpr op e = do op $ e ^. Expr.id
-                       Expr.traverseM_ (traverseExpr op) (traverseType op) (traversePat op) (traverseLit op) e
+traverseExpr op = void . Expr.traverseMR (processExpr op) (processType op) (processPat op) (processLit op)
 
 
 traversePat :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Pat -> m ()
-traversePat op p = do op $ p ^. Pat.id
-                      Pat.traverseM_ (traversePat op) (traverseType op) (traverseLit op) p
+traversePat op = void . Pat.traverseMR (processPat op) (processType op) (processLit op)
 
 
 traverseType :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Type -> m ()
-traverseType op t = do op $ t ^. Type.id
-                       Type.traverseM_ (traverseType op) t
+traverseType op = void . Type.traverseMR (processType op)
 
 
 traverseLit :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Lit -> m ()
 traverseLit op l = op $ l ^. Lit.id
 
 
---traverseExpr' :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Expr -> m ()
---traverseExpr' op = void . Expr.traverseMR (op . view Expr.id) (op . view Type.id) (op . view Pat.id) (op . view Lit.id)
+processModule :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Module -> m Module
+processModule op m = op (m ^. Module.id) >> return m
+
+
+processExpr :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Expr -> m Expr
+processExpr op e = op (e ^. Expr.id) >> return e
+
+
+processPat :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Pat -> m Pat
+processPat op p = op (p ^. Pat.id) >> return p
+
+
+processType :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Type -> m Type
+processType op t = op (t ^. Type.id) >> return t
+
+
+processLit :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Lit -> m Lit
+processLit op l = op (l ^. Lit.id) >> return l
