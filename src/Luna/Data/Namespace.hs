@@ -27,7 +27,7 @@ import           Data.Maybe          (fromJust)
 ----------------------------------------------------------------------
 
 data Namespace = Namespace { _stack :: [ID]
-                           , _alias :: AliasInfo
+                           , _info :: AliasInfo
                            } deriving (Show, Eq, Generic, Read)
 
 
@@ -40,21 +40,68 @@ makeLenses ''Namespace
 --lookup :: String -> Namespace -> Maybe Name
 --lookup name ns = ns^.scope.nameMap.at name
 
+
 head :: Namespace -> Maybe ID
 head (Namespace (id:_) _) = Just id
 head _                    = Nothing
 
 
 pushScope :: ID -> Namespace -> Namespace
-pushScope id ns@(Namespace st a) = Namespace (id:st) (set Alias.scope scope a) where
-    scopes = view Alias.scope a
-    pScope = case head ns of
-        Nothing  -> def
-        Just pid -> fromJust $ Map.lookup pid scopes
-    scope  = Map.insert id pScope scopes
+pushScope id ns@(Namespace st inf) = ns
+                                   & pushID id
+                                   & info .~ ninfo
+    where ninfo  = inf & Alias.scope .~ scope
+          scopes = view Alias.scope inf
+          pScope = case head ns of
+              Nothing  -> def
+              Just pid -> fromJust $ Map.lookup pid scopes
+          scope  = Map.insert id pScope scopes
 
 popScope :: Namespace -> Namespace
-popScope (Namespace (_:st) a) = Namespace st a
+popScope (Namespace (_:st) inf) = Namespace st inf
+
+pushID :: ID -> Namespace -> Namespace
+pushID id = stack %~ (id:)
+
+popID :: Namespace -> (ID, Namespace)
+popID ns = (id, ns & stack .~ ids)
+    where (id:ids) = view stack ns
+
+bindVar :: ID -> String -> Namespace -> Either () Namespace
+bindVar id name ns = 
+    case head ns of
+        Nothing  -> Left ()
+        Just pid -> case view (info.Alias.scope.at pid) ns of
+            Nothing    -> Left ()
+            Just (Alias.Scope varnames typenames) -> case (varnames^.at name) of 
+                Nothing    -> Left ()
+                Just dstID -> Right (ns & info . Alias.alias . at id ?~ dstID)
+
+
+--pushID :: ID -> m ()
+--pushID id = modify (idStack %~ (id:))
+
+--popID :: VAMonad m => m ID
+--popID = do (id:ids) <- view idStack <$> get
+--           modify (idStack .~ ids)
+--           return id
+
+
+
+--pushScopeM id = do
+--    s <- get
+--    put $ pushScope id s
+    
+----popScopeM     = popScope id <$> get
+
+--withScope id p = do
+--    pushScope id
+--    ret <- p
+--    popScope
+--    return ret
+
+modAlias :: (AliasInfo -> AliasInfo) -> Namespace -> Namespace
+modAlias f = info %~ f
 
 ------------------------------------------------------------------------
 ---- Instances
@@ -65,3 +112,10 @@ popScope (Namespace (_:st) a) = Namespace st a
 
 instance Default Namespace where
     def = Namespace def def
+
+
+instance Monoid Namespace where
+    mempty      = Namespace mempty mempty
+    mappend a b = Namespace (mappend (a ^. stack) (b ^. stack))
+                            (mappend (a ^. info)  (b ^. info))
+                            
