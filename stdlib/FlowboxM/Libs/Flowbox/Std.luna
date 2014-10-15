@@ -40,6 +40,7 @@ def Int.>= a:
 # def Int.dec:
 #     self.sub 1
 
+alias Path = String
 
 def load path:
     ```autoLift1 loadImageLuna #{path}```
@@ -104,4 +105,4 @@ def Image.blur kernelSize:
 
 def Image.laplacian kernelSize centerVal sideVal:
     ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
-    
+

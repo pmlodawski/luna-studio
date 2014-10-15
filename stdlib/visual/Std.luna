@@ -35,8 +35,9 @@ def Int.>= self::Int a::Int:
 # def Int.dec:
 #     self.sub 1
 
+alias Path = String
 
-def load self::Std path::String:
+def load self::Std path::Path:
     ```autoLift1 loadImageLuna #{path}```
 
 def Image.save self::Image path::String:
@@ -99,4 +100,4 @@ def Image.blur self::Image kernelSize::Int:
 
 def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
     ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
-    
+
