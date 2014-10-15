@@ -19,7 +19,7 @@ shouldInferenceSatisfy :: (Inference a) => a -> [(Subst, Type) -> Expectation] -
 t `shouldInferenceSatisfy` expectations = do
   let (subst, num, (res, stack)) = runTILogger (infer mkTypeEnv t)
   case res of
-    Left err -> expectationFailure $ "typechecking error:\n" ++ formatStack True stack
+    Left err -> expectationFailure $ "typechecking error: " ++ err ++ "\n" ++ formatStack True stack
     Right res -> mapM_ ($res) expectations
 
 shouldBeInferredTo :: (Inference a) => a -> Type -> Expectation
@@ -43,7 +43,11 @@ instance ELit Char where eLit = ELit . LitChar
 eVar :: String -> Expr
 eVar = EVar . VarID
 
+eAbs :: String -> Expr -> Expr
+eAbs = EAbs . VarID
 
+eApp :: Expr -> Expr -> Expr
+eApp = EApp
 
 spec :: Spec
 spec =
@@ -65,13 +69,16 @@ spec =
       it "typechecks EVar (alone)" $
         shouldNotInfer $ EVar (VarID "v1")
 
-      it "typechecks EApp" pending
+      it "typechecks EApp" $
+        let v = TVar (Tyvar (TyID "0"))
+         in eApp (eAbs "x" (eVar "x")) (eVar "x") `shouldBeInferredTo` v
 
-      it "typechecks EAbs" pending
+      it "typechecks EAbs" $
+        let v = TVar (Tyvar (TyID "0"))
+         in eAbs "x" (eVar "x") `shouldBeInferredTo` (v `mkTyFun` v)
 
       it "typechecks ELet" $
-        eLet "const_char" (eLit 'c')
-              (eVar "const_char")     `shouldBeInferredTo` tChar
+        eLet "const_char" (eLit 'c') (eVar "const_char") `shouldBeInferredTo` tChar
 
   -- describe "basic typechecking"
 

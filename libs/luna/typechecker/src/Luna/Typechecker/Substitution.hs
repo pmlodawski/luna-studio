@@ -21,7 +21,7 @@ instance Monoid Subst where
 
 
 removeSubstitution :: TyID -> Subst -> Subst
-removeSubstitution = undefined
+removeSubstitution = error "Substitution : removeSubstitution"
 
 
 addSubstitution :: Tyvar -> Type -> Subst -> Subst

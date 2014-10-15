@@ -7,6 +7,9 @@ import Luna.Typechecker.Substitution
 import Luna.Typechecker.Type
 import Luna.Typechecker.TypeEnv
 import Luna.Typechecker.TIMonad
+import Luna.Typechecker.Unification
+
+import Luna.Typechecker.RefactorMePlease -- don't say nothing
 
 import Data.List
 import Data.Monoid
@@ -32,9 +35,16 @@ instance Inference Expr where
                              Nothing  -> err "notfounderr" $ "sorry, but " ++ show var ++ " could not be found in env: " ++ show env
                              Just sch -> do ty <- instantiate sch
                                             return (mempty, ty)
-  infer env (ELit lit)   = infer env lit
-  infer _   (EApp _ _)   = err "a3" "b3"
-  infer _   (EAbs _ _)   = err "a4" "b4"
+  infer env (ELit lit)           = infer env lit
+  infer env (EApp f a)           = do tv <- mkTyID
+                                      (sf,tf) <- infer env f
+                                      (sa,ta) <- infer (apply sf env) a
+                                      s3 <- mgu (apply sa tf) (ta `mkTyFun` tv)
+                                      return (s3 `mappend` sa `mappend` sf, apply s3 tv)
+  infer env (EAbs vid body)      = do tv <- mkTyID
+                                      let env' = expandTypeEnv env vid (Scheme [] tv)
+                                      (s1,t1) <- infer env' body
+                                      return (s1, mkTyFun (apply s1 tv) t1)
   infer env (ELet name val body) = do (valSubst, valType) <- infer env val
                                       valTypeGen          <- generalise (apply valSubst env) valType
                                       let env' = expandTypeEnv env name valTypeGen

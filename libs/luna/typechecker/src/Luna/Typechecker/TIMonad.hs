@@ -2,7 +2,7 @@ module Luna.Typechecker.TIMonad (
     TI(..),
     TCLoggerT, TILogger,
     module Logger,
-    runTILogger
+    runTILogger, getNextID
   ) where
 
 
@@ -21,6 +21,10 @@ newtype TI a = TI { runTI :: Subst -> Int -> (Subst, Int, a) }
 
 
 runTILogger x = runTI (runLoggerT x) mempty 0
+
+
+getNextID :: TI Int
+getNextID = TI $ \s i -> (s, i+1, i)
 
 
 instance Functor TI where
