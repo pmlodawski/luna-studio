@@ -4,13 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-
 {-# LANGUAGE TemplateHaskell #-}
 
 module Control.Category.Dot.TH where
 
 import Language.Haskell.TH
 import Prelude             hiding (max, min)
+
+
 
 
 
