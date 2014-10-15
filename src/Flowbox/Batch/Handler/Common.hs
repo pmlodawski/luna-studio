@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Batch.Handler.Common where
 
@@ -54,11 +55,12 @@ import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer   as IDFixer
 import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
 import qualified Luna.Pass.Transform.GraphView.Defaults    as Defaults
+import qualified Luna.Pass.Transform.Graph.GCNodeProperties.GCNodeProperties as GCNodeProperties
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Batch.Handler.Common"
+logger = getLoggerIO $(moduleName)
 
 
 safeInterpretLibrary :: Library.ID -> Project.ID -> Batch ()
@@ -225,12 +227,20 @@ setGraph (newGraph, newPM) bc libraryID projectID = do
 
     newMaxID <- EitherT $ MaxID.runExpr ast
     fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
-
     logger debug $ show newGraph
     logger debug $ show newPM2
     logger debug $ ppShow fixedAst
     setFunctionFocus fixedAst bc libraryID projectID
     setPropertyMap newPM2 libraryID projectID
+    gcPropertyMap libraryID projectID
+
+
+gcPropertyMap :: Library.ID -> Project.ID -> Batch ()
+gcPropertyMap libraryID projectID = do
+    ast <- getAST         libraryID projectID
+    pm  <- getPropertyMap libraryID projectID
+    fixedPM  <- EitherT $ GCNodeProperties.run ast pm
+    setPropertyMap fixedPM libraryID projectID
 
 
 getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (GraphView, PropertyMap)
@@ -288,7 +298,7 @@ libManagerOp projectID operation = do
 libraryOp :: Library.ID -> Project.ID
           -> (Library -> Batch (Library, r))
           -> Batch r
-libraryOp libraryID projectID operation = do
+libraryOp libraryID projectID operation =  do
     library        <- getLibrary libraryID projectID
     (newLibary, r) <- operation library
     setLibrary newLibary libraryID projectID
