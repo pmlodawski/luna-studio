@@ -27,8 +27,7 @@ import           Luna.AST.Type                  (Type)
 import qualified Luna.AST.Type                  as Type
 import qualified Luna.AST.Name                  as Name
 import           Luna.Data.AliasInfo            (AliasInfo)
-import           Luna.Pass.Analysis.Alias.State (regModule, withScope, getAliasInfo, regExpr, regPat, regType, regLit, regVarName, bindVar, regTypeName)
-import qualified Luna.Pass.Analysis.Alias.State as VAState
+import           Luna.Data.Namespace.State      (regModule, withScope, getAliasInfo, regExpr, regPat, regType, regLit, regVarName, bindVar, regTypeName)
 import           Luna.Pass.Pass                 (Pass)
 import qualified Luna.Pass.Pass                 as Pass
 import qualified Luna.Data.Namespace            as Namespace

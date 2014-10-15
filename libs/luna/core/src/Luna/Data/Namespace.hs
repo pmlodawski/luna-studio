@@ -20,7 +20,7 @@ import           Luna.AST.AST        (ID)
 import           Luna.Data.AliasInfo (AliasInfo)
 import qualified Luna.Data.AliasInfo as Alias
 import           Data.Maybe          (fromJust)
-
+import qualified Luna.AST.AST        as AST
 
 ----------------------------------------------------------------------
 -- Data types
@@ -58,7 +58,7 @@ pushScope id ns@(Namespace st inf) = ns
           scope  = Map.insert id pScope scopes
 
 popScope :: Namespace -> Namespace
-popScope (Namespace (_:st) inf) = Namespace st inf
+popScope = snd . popID
 
 pushID :: ID -> Namespace -> Namespace
 pushID id = stack %~ (id:)
@@ -76,6 +76,14 @@ bindVar id name ns =
             Just (Alias.Scope varnames typenames) -> case (varnames^.at name) of 
                 Nothing    -> Left ()
                 Just dstID -> Right (ns & info . Alias.alias . at id ?~ dstID)
+
+
+regAST id ast = info %~ Alias.regAST id (AST.wrap ast)
+
+
+
+regParent id pid = info %~ Alias.regParent id pid
+
 
 
 --pushID :: ID -> m ()

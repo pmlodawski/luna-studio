@@ -60,12 +60,12 @@ addComment cmt s  = s & comments %~ Map.insertWith (++) (lastID s) [cmt]
 
 registerComment = mapStateVal . addComment . Comment
 
-registerParent id pid = mapStateVal (namespace . Namespace.info %~ Alias.regParent id pid)
+regParent id pid = mapStateVal $ namespace %~ Namespace.regParent id pid
 
-registerAST id ast = mapStateVal (namespace . Namespace.info %~ Alias.regAST id (AST.wrap ast))
+registerAST id ast = mapStateVal $ namespace %~ Namespace.regAST id ast
 
-pushScope id = mapStateVal (namespace %~ Namespace.pushScope id)
-popScope     = mapStateVal (namespace %~ Namespace.popScope)
+pushScope id = mapStateVal $ namespace %~ Namespace.pushScope id
+popScope     = mapStateVal $ namespace %~ Namespace.popScope
 
 regVarName id name = do
     pid <- getPid
@@ -85,8 +85,6 @@ withReserved words p = do
     s   <- get
     put (s & adhocReserved .~ reserved)
     return ret
-
-
 
 
 withScope id p = do
@@ -109,7 +107,7 @@ getASTMap = view (namespace . Namespace.info . Alias.ast) <$> get
 
 registerID id = do
     pid <- getPid
-    registerParent id pid
+    regParent id pid
 
 ------------------------------------------------------------------------
 -- Instances
