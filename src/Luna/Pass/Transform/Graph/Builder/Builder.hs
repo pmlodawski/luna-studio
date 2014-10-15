@@ -100,10 +100,11 @@ parseArg inputsID (input, no) = case input of
 buildOutput :: Node.ID -> Expr -> GBPass ()
 buildOutput outputID expr = do
     case expr of
-        Expr.Assignment {} -> void $ buildNode    False True Nothing expr
-        Expr.Tuple _ items -> buildAndConnectMany True  True Nothing outputID items 0
-        Expr.Var {}        -> buildAndConnect     True  True Nothing outputID (expr, Port.All)
-        _                  -> buildAndConnect     False True Nothing outputID (expr, Port.All)
+        Expr.Assignment {}             -> void $ buildNode    False True Nothing expr
+        Expr.Tuple   _ items           -> buildAndConnectMany True  True Nothing outputID items 0
+        Expr.Grouped _ (v@Expr.Var {}) -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
+        Expr.Var {}                    -> buildAndConnect     True  True Nothing outputID (expr, Port.All)
+        _                              -> buildAndConnect     False True Nothing outputID (expr, Port.All)
     State.connectMonadic outputID
 
 
