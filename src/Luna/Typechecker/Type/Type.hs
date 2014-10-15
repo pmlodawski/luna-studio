@@ -3,16 +3,16 @@ module Luna.Typechecker.Type.Type (
   ) where
 
 
-import Luna.Typechecker.AST.IDs (TyID)
+import Luna.Typechecker.IDs (TyID)
 
 
 data Type = TVar Tyvar
           | TConst Tycon
           | TAp Type Type
-          deriving (Eq)
+          deriving (Eq, Show)
 
 data Tyvar = Tyvar TyID
-           deriving (Eq)
+           deriving (Eq, Show)
 
 data Tycon = Tycon TyID
-           deriving (Eq)
+           deriving (Eq, Show)

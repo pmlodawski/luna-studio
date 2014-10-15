@@ -4,6 +4,6 @@ module Luna.Typechecker.AST (
   ) where
 
 
+import Luna.Typechecker.IDs
 import Luna.Typechecker.AST.Expr
-import Luna.Typechecker.AST.IDs
 import Luna.Typechecker.AST.Lit

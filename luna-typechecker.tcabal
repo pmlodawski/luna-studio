@@ -11,6 +11,7 @@ Library
   GHC-Options:        -Wall -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     src
   Build-Depends:      base
+                    , containers
                     , deepseq
                     , luna-logger
                     , mtl
@@ -27,3 +28,4 @@ Executable luna-typechecker-tests
                     , hspec
                     , luna-logger
                     , luna-typechecker
+                    , transformers

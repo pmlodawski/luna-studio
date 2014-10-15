@@ -1,4 +1,4 @@
-module Luna.Typechecker.AST.IDs (
+module Luna.Typechecker.IDs (
     TyID(..), VarID(..)
   ) where
 

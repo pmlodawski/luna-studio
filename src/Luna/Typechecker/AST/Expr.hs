@@ -3,7 +3,7 @@ module Luna.Typechecker.AST.Expr (
   ) where
 
 
-import Luna.Typechecker.AST.IDs (VarID)
+import Luna.Typechecker.IDs (VarID)
 import Luna.Typechecker.AST.Lit (Lit)
 
 
