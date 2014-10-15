@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
@@ -35,14 +36,14 @@ import qualified Luna.Graph.Node.OutputName              as OutputName
 import           Luna.Graph.Port                         (Port)
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Graph.PropertyMap                  (PropertyMap)
+import qualified Luna.Pass.Analysis.ID.MinID             as MinID
 import qualified Luna.Pass.Pass                          as Pass
 import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
 
 
-
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
+logger = getLoggerIO $(moduleName)
 
 
 run :: AliasInfo -> PropertyMap -> Bool -> Expr -> Pass.Result (Graph, PropertyMap)
@@ -156,7 +157,8 @@ buildNode astFolded monadicBind outName expr = do
         buildApp i src args = do
             graphFolded <- State.getGraphFolded i
             if graphFolded
-                then addNode' (src ^?! Expr.dst . Expr.id) (showExpr expr) []
+                then do minID <- hoistEither =<< MinID.runExpr src
+                        addNode' minID (showExpr expr) []
                 else do srcID <- buildNode astFolded False outName src
                         s     <- State.gvmNodeMapLookUp srcID
                         case s of
@@ -224,6 +226,7 @@ buildPat p = case p of
     Pat.App      _ _ args -> List.concat <$> mapM buildPat args
     Pat.Typed    _ pat _  -> buildPat pat
     Pat.Wildcard i        -> return [i]
+    Pat.Grouped  _ pat    -> buildPat pat
 
 
 showArg :: Arg Expr -> String
@@ -248,7 +251,7 @@ showExpr expr = concat $ case expr of
     --Expr.Infix        _ name     src       dst
     Expr.List         _ items         -> ["[", List.intercalate ", " (map showExpr items), "]"]
     Expr.Lit          _ lvalue        -> [Lit.lunaShow lvalue]
-    Expr.Tuple        _ items         -> ["{", List.intercalate ", " (map showExpr items), "}"]
+    Expr.Tuple        _ items         -> [List.intercalate ", " (map showExpr items)]
     --Expr.Typed        _ cls      expr
     Expr.Var          _ name          -> [name]
     Expr.Wildcard     _               -> ["_"]
@@ -261,7 +264,6 @@ showExpr expr = concat $ case expr of
     Expr.NativeVar    _ name          -> ["#{", name, "}"]
     --Expr.Case         _ expr     match
     --Expr.Match        _ pat      body
-    _ -> Prelude.error $ show expr
 
 
 showNative :: Expr -> String
