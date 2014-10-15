@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
 
 module Luna.Pass.Analysis.Alias.State where
 
@@ -29,54 +30,76 @@ import           Luna.AST.Type             (Type)
 import qualified Luna.AST.Type             as Type
 import           Luna.Data.AliasInfo       (AliasInfo)
 import qualified Luna.Data.AliasInfo       as AliasInfo
-
+import           Luna.Data.Namespace       (Namespace)
+import qualified Luna.Data.Namespace       as Namespace
 
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Alias.State"
 
 
-data VAState = VAState { _aa      :: AliasInfo
-                       , _idStack :: [ID]
-                       }
-             deriving (Show)
+--data VAState = VAState { _info    :: AliasInfo
+--                       , _idStack :: [ID]
+--                       }
+--             deriving (Show)
 
-makeLenses (''VAState)
+--makeLenses (''VAState)
 
-type VAMonad m = (MonadState VAState m, Applicative m)
+type VAMonad m = (MonadState Namespace m, Applicative m)
 
 
 getAliasInfo :: VAMonad m => m AliasInfo
-getAliasInfo = view aa <$> get
+getAliasInfo = view Namespace.info <$> get
 
-getCurrentID :: VAMonad m => m (Maybe ID)
-getCurrentID = do stack <- view idStack <$> get
-                  return $ case stack of
-                      []    -> Nothing
-                      (x:_) -> Just x
+--getCurrentID :: VAMonad m => m (Maybe ID)
+--getCurrentID = do stack <- view idStack <$> get
+--                  return $ case stack of
+--                      []    -> Nothing
+--                      (x:_) -> Just x
+
+
+scopeID = Namespace.head <$> get
 
 
 putAliasInfo :: VAMonad m => AliasInfo -> m ()
-putAliasInfo naa = modify (aa .~ naa)
+putAliasInfo info = modify (Namespace.info .~ info)
 
 
 modifyAliasInfo :: VAMonad m => (AliasInfo -> AliasInfo) -> m ()
 modifyAliasInfo f = do
-    aa' <- getAliasInfo
-    putAliasInfo $ f aa'
+    info <- getAliasInfo
+    putAliasInfo $ f info
 
 
-pushID :: VAMonad m => ID -> m ()
-pushID id = modify (idStack %~ (id:))
 
-popID :: VAMonad m => m ID
-popID = do (id:ids) <- view idStack <$> get
-           modify (idStack .~ ids)
-           return id
+--pushID :: VAMonad m => ID -> m ()
+pushID id = modify $ Namespace.pushID id
+
+--popID :: VAMonad m => m ID
+popID = do
+    (id, ns') <- Namespace.popID <$> get
+    put ns'
+    return id
 
 
-withID :: VAMonad m => ID -> m f -> m f
-withID id f = pushID id *> f <* popID
+
+--pushID :: VAMonad m => ID -> m ()
+--pushID id = modify (idStack %~ (id:))
+
+--popID :: VAMonad m => m ID
+--popID = do (id:ids) <- view idStack <$> get
+--           modify (idStack .~ ids)
+--           return id
+
+
+--withID :: VAMonad m => ID -> m f -> m f
+--withID id f = pushID id *> f <* popID
+
+pushScope id = modify $ Namespace.pushScope id
+
+popScope = modify $ Namespace.popScope
+
+withScope id p = pushScope id *> p <* popScope
 
 
 withParentID :: VAMonad m => m f -> m f
@@ -85,37 +108,37 @@ withParentID f = do pid <- popID
                     pushID pid
                     return out
 
---switchID :: VAMonad m => ID -> m ()
---switchID id = modify (currentID .~ id)
+----switchID :: VAMonad m => ID -> m ()
+----switchID id = modify (currentID .~ id)
 
-registerModule :: VAMonad m => Module -> m ()
-registerModule = registerElBy AST.Module Module.id
+regModule :: VAMonad m => Module -> m ()
+regModule = registerElBy AST.Module Module.id
 
-registerExpr :: VAMonad m => Expr -> m ()
-registerExpr = registerElBy AST.Expr Expr.id
+regExpr :: VAMonad m => Expr -> m ()
+regExpr = registerElBy AST.Expr Expr.id
 
-registerLit :: VAMonad m => Lit -> m ()
-registerLit = registerElBy AST.Lit Lit.id
+regLit :: VAMonad m => Lit -> m ()
+regLit = registerElBy AST.Lit Lit.id
 
-registerPat :: VAMonad m => Pat -> m ()
-registerPat = registerElBy AST.Pat Pat.id
+regPat :: VAMonad m => Pat -> m ()
+regPat = registerElBy AST.Pat Pat.id
 
-registerType :: VAMonad m => Type -> m ()
-registerType = registerElBy AST.Type Type.id
+regType :: VAMonad m => Type -> m ()
+regType = registerElBy AST.Type Type.id
 
 
-registerElBy fCon fID el = registerAST id (fCon el) *> registerID id
-    where id = (el ^. fID)
+registerElBy fCon fID el = regAST id (fCon el) *> registerID id
+    where id = el ^. fID
 
 
 registerID :: VAMonad m => ID -> m ()
 registerID id = do
-    mcid <- getCurrentID
-    withJust mcid (\cid -> modifyAliasInfo $ AliasInfo.parent %~ IntMap.insert id cid)
+    mpid <- scopeID
+    withJust mpid (\pid -> modifyAliasInfo $ AliasInfo.parent %~ IntMap.insert id pid)
 
 
-registerAST :: VAMonad m => ID -> AST -> m ()
-registerAST id ast = modifyAliasInfo $ AliasInfo.ast %~ IntMap.insert id ast
+--registerAST :: VAMonad m => ID -> AST -> m ()
+regAST id ast = modifyAliasInfo $ AliasInfo.regAST id ast
 
 
 regVarName :: VAMonad m => String -> ID -> m ()
@@ -127,7 +150,7 @@ regTypeName = regName AliasInfo.typenames
 
 regName lens name id = do
     a    <- getAliasInfo
-    mcid <- getCurrentID
+    mcid <- scopeID
     case mcid of
         Nothing  -> fail "Unable to get current id"
         Just cid -> putAliasInfo a2
@@ -140,32 +163,39 @@ regParentVarName :: VAMonad m => String -> ID -> m ()
 regParentVarName = withParentID .: regVarName
 
 
-bindVar :: VAMonad m => ID -> String -> m ()
 bindVar id name = do
-    mcid <- getCurrentID
-    withJust mcid (\cid -> modifyAliasInfo (bindVarRec id cid name))
+    ns <- get
+    case Namespace.bindVar id name ns of
+        Left _    -> fail $ "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+        Right ns' -> put ns'
 
 
-bindVarRec :: ID -> ID -> String -> AliasInfo -> AliasInfo
-bindVarRec id ctxID name a = case dstIDLookup of
-    Just dstID -> updateAliasMap dstID
-    Nothing    -> case mPid of
-                  Just pid -> bindVarRec id pid name a
-                  Nothing  -> updateInvalidMap $ AliasInfo.LookupError name
-    where dstIDLookup          = varnames ^. at name
-          mPid                 = (a ^. AliasInfo.parent) ^. at ctxID
-          varRel               = a ^. AliasInfo.scope.ix ctxID
-          varnames             = varRel ^. AliasInfo.varnames
-          updateAliasMap val   = a & AliasInfo.alias.at id ?~ val
-          updateInvalidMap val = a & AliasInfo.orphans.at id ?~ val
+--bindVar :: VAMonad m => ID -> String -> m ()
+--bindVar id name = do
+--    mcid <- getCurrentID
+--    withJust mcid (\cid -> modifyAliasInfo (bindVarRec id cid name))
+
+
+--bindVarRec :: ID -> ID -> String -> AliasInfo -> AliasInfo
+--bindVarRec id ctxID name a = case dstIDLookup of
+--    Just dstID -> updateAliasMap dstID
+--    Nothing    -> case mPid of
+--                  Just pid -> bindVarRec id pid name a
+--                  Nothing  -> updateInvalidMap $ AliasInfo.LookupError name
+--    where dstIDLookup          = varnames ^. at name
+--          mPid                 = (a ^. AliasInfo.parent) ^. at ctxID
+--          varRel               = a ^. AliasInfo.scope.ix ctxID
+--          varnames             = varRel ^. AliasInfo.varnames
+--          updateAliasMap val   = a & AliasInfo.alias.at id ?~ val
+--          updateInvalidMap val = a & AliasInfo.orphans.at id ?~ val
 
 
 
-------------------------------------------------------------------------
--- Instances
-------------------------------------------------------------------------
+--------------------------------------------------------------------------
+---- Instances
+--------------------------------------------------------------------------
 
-instance Monoid VAState where
-    mempty      = VAState mempty mempty
-    mappend a b = VAState (mappend (a ^. aa)      (b ^. aa))
-                          (mappend (a ^. idStack) (b ^. idStack))
+--instance Monoid VAState where
+--    mempty      = VAState mempty mempty
+--    mappend a b = VAState (mappend (a ^. aa)      (b ^. aa))
+--                          (mappend (a ^. idStack) (b ^. idStack))

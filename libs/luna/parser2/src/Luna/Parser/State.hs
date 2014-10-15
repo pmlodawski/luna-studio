@@ -60,9 +60,9 @@ addComment cmt s  = s & comments %~ Map.insertWith (++) (lastID s) [cmt]
 
 registerComment = mapStateVal . addComment . Comment
 
-registerParent id pid = mapStateVal (namespace . Namespace.alias %~ Alias.regParent id pid)
+registerParent id pid = mapStateVal (namespace . Namespace.info %~ Alias.regParent id pid)
 
-registerAST id ast = mapStateVal (namespace . Namespace.alias %~ Alias.regAST id (AST.wrap ast))
+registerAST id ast = mapStateVal (namespace . Namespace.info %~ Alias.regAST id (AST.wrap ast))
 
 pushScope id = mapStateVal (namespace %~ Namespace.pushScope id)
 popScope     = mapStateVal (namespace %~ Namespace.popScope)
@@ -75,7 +75,7 @@ regTypeName id name = do
     pid <- getPid
     withAlias $ Alias.regTypeName pid id name
 
-withAlias f = mapStateVal (namespace . Namespace.alias %~ f)
+withAlias f = mapStateVal (namespace . Namespace.info %~ f)
 
 withReserved words p = do
     s <- get
@@ -102,8 +102,8 @@ getPid = do
         Nothing  -> fail "Internal parser error. Cannot optain pid."
         Just pid -> return pid
 
-getScope  = view (namespace . Namespace.alias . Alias.scope) <$> get
-getASTMap = view (namespace . Namespace.alias . Alias.ast) <$> get
+getScope  = view (namespace . Namespace.info . Alias.scope) <$> get
+getASTMap = view (namespace . Namespace.info . Alias.ast) <$> get
 
 
 

@@ -1,5 +1,6 @@
-def foo
+def print msg:
+    ```autoLift1 print #{msg}```
 
 def main:
-    foo 'a'
-    foo 'a'
+    x = a : a
+    print $ x 1
