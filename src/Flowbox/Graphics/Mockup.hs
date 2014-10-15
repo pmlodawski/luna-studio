@@ -118,7 +118,7 @@ colorCorrectLuna (VPS (variable -> saturation'))
                  (VPS (variable -> gamma'))
                  (VPS (variable -> gain'))
                  (VPS (variable -> offset')) =
-                    A.lift1 $ colorCorrect saturation' contrast' gamma' gain' offset'
+                    colorCorrect saturation' contrast' gamma' gain' offset'
 
 gradeLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> A.Exp Double -> A.Exp Double
 gradeLuna (VPS (variable -> blackpoint))
@@ -159,13 +159,13 @@ saveImageLuna path img = do
 
 onEachChannel :: (Matrix2 Double -> Matrix2 Double) -> Image RGBA -> Image RGBA
 onEachChannel f img = res
-    where Right res = Image.map (View.map fChan) img
+    where res = Image.map (View.map fChan) img
           fChan :: Channel -> Channel
           fChan (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ f)
 
 onEachValue :: (A.Exp Double -> A.Exp Double) -> Image RGBA -> Image RGBA
 onEachValue f img = res
-    where Right res = Image.map (View.map f') img
+    where res = Image.map (View.map f') img
 
           f' :: Channel -> Channel
           f' (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ (M.map f))
@@ -302,4 +302,17 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 rotateCenterLuna :: VPS Double -> Matrix2 Double -> Matrix2 Double
 rotateCenterLuna (VPS (variable -> angle)) = rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
 
-test = channelToImageRGBA $ M.generate (A.index2 5 5) (const 0.8)
+hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
+            -> VPS Double -> VPS Double -> VPS Double -> VPS Double
+            -> VPS Double -> VPS Double -> VPS Double -> VPS Double
+            -> A.Exp (Color.RGB Double)
+            -> A.Exp (Color.RGB Double)
+hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
+            (VPS (variable -> hueRotation)) (VPS (variable -> hueRolloff))
+            (VPS (variable -> saturationRangeStart)) (VPS (variable -> saturationRangeEnd))
+            (VPS (variable -> saturationAdjustment)) (VPS (variable -> saturationRolloff))
+            (VPS (variable -> brightnessRangeStart)) (VPS (variable -> brightnessRangeEnd))
+            (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff)) =
+    A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
+                     (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
+                     (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
