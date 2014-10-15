@@ -28,6 +28,7 @@ Library
                   either,
                   flowbox-batch,
                   flowbox-config,
+                  flowbox-serialization,
                   flowbox-utils,
                   ghc,
                   ghc-mtl,

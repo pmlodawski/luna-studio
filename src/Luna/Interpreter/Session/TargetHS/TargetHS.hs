@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.Session.TargetHS.TargetHS where
 
@@ -23,7 +24,7 @@ import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.TargetHS.Reload"
+logger = getLoggerIO $(moduleName)
 
 
 enabledFlags :: [GHC.ExtensionFlag]
@@ -47,7 +48,7 @@ disabledFlags = [GHC.Opt_MonomorphismRestriction]
 
 
 runDecls :: [String] -> Session ()
-runDecls = Session.withFlags enabledFlags disabledFlags . mapM_ Session.runDecls
+runDecls = Session.withExtensionFlags enabledFlags disabledFlags . mapM_ Session.runDecls
 
 
 reloadAll :: Session ()
