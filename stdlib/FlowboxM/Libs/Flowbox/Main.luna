@@ -143,17 +143,34 @@ def perlin z width height:
 def billow z width height:
     ```liftF3 billowLuna #{z} #{width} #{height}```
 
+class Range:
+    lo, hi :: Double
+
+# def Image.hsvTool hueRangeStart hueRotation hueRolloff
+#             saturationRange saturationAdjustment saturationRolloff
+#             brightnessRange brightnessAdjustment brightnessRolloff:
+#     hueRangeStart = hueRange.lo
+#     hueRangeEnd   = hueRange.hi
+#     saturationRangeStart = saturationRange.lo
+#     saturationRangeEnd   = saturationRange.hi
+#     brightnessRangeStart = brightnessRange.lo
+#     brightnessRangeEnd   = brightnessRange.hi
+
+#     ```liftF1 (onEachRGB $ hsvToolLuna #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+#                            #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
+#                            #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff}) #{self}```
+
 def main:
-    lena = load "/home/mgw/test.png"
+    lena = load "./test.png"
     lena = lena.blur 7
     lena = lena.rotate 1.61
-    lena.save "/home/mgw/out.png"
+    lena.save "./out.png"
 
     circul = Main.circular 720 480
-    circul.save "/home/mgw/out.png"
+    circul.save "./out.png"
 
     conical = Main.conical 1280 720
-    conical.save "/home/mgw/out.png"
+    conical.save "./out.png"
 
     p = Main.billow 0 1280 720
-    p.save "/home/mgw/out.png"
+    p.save "./out.png"
