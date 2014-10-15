@@ -501,8 +501,11 @@ opTE base = buildExpressionParser optableE (appE base)
 
 tupleE p = p <??> ((\xs x -> Expr.Tuple unknownID (x:xs)) <$ Tok.separator <*> sepBy1 p Tok.separator)
 
-appE base = p <??> (appID (\i a s -> Expr.App i s a) <*> many1 (argE p)) where 
+--appE base = p <??> (appID (\i a s -> Expr.App i s a) <*> many1 (argE p)) where 
+appE base = p <??> (appID (\i a s -> callBuilder2 i s a) <*> many1 (argE p)) where 
     p = termE base
+
+
 
 argE p = try (appID Arg.Named <*> Tok.varIdent <* Tok.assignment <*> p) <|> (appID Arg.Unnamed <*> p)
 
@@ -587,6 +590,10 @@ callBuilder id id2 src arg = case src of
     Expr.App id' src' args -> Expr.App id' src' (args ++ [Arg.Unnamed id2 arg])
     _                      -> Expr.App id src [Arg.Unnamed id2 arg]
 
+callBuilder2 id src argsx = case src of
+    Expr.App id' src' args -> Expr.App id' src' (args ++ argsx)
+    _                      -> Expr.App id src argsx
+
 
 --callBuilder id id2 src arg = case arg of
 --    Expr.App id' src' args -> Expr.App id' src (Arg.Named id2 "X!" src' : args)
@@ -618,6 +625,7 @@ callBuilder id id2 src arg = case src of
 --          fname = if null segments then base 
 --                                   else base ++ " " ++ join " " segments
 
+--mkFuncParser func = State.withReserved (segNames segments) $ tok (Expr.app <$> tok (pure $ Expr.funcVar name) <*> argParser)
 mkFuncParser func = State.withReserved (segNames segments) $ tok (Expr.app <$> tok (pure $ Expr.funcVar name) <*> argParser)
     where name          = Expr._fname func
           argExpr       = argE expr

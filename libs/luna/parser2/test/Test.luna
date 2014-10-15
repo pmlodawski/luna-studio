@@ -1,2 +1,5 @@
-class Vector:
-    x,y,z :: [Vector Int]
+def print msg:
+    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```
+
+def main a b c:
+    print a $ b c
