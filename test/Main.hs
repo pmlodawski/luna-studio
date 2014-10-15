@@ -106,7 +106,7 @@ example = Source.Source ["Main"] $
 
 
                     , "def main:"
-                    , "    a = 1"
+                    , "    a = Vector [] [] []"
                     , "    print a"
                     ]
 
