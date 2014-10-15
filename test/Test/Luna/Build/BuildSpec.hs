@@ -7,11 +7,11 @@
 
 module Test.Luna.Build.BuildSpec where
 
-import Control.Monad (forM_)
-import Data.Version  (Version (Version))
-import Test.Hspec
+import           Control.Monad  (forM_)
+import           Data.Version   (Version (Version))
+import qualified System.Exit    as Exit
 import qualified System.Process as Process
-import qualified System.Exit as Exit
+import           Test.Hspec
 
 import qualified Flowbox.Config.Config    as Config
 import           Flowbox.Prelude
@@ -54,7 +54,7 @@ build program =
             {- dump_hash    -} False
             {- dump_hast    -} False
             {- dump_hsc     -} False
-        (exitCode, stdout, stderr) <- Process.readProcessWithExitCode 
+        (exitCode, stdout, stderr) <- Process.readProcessWithExitCode
             (UniPath.toUnixString outputFile) [] ""
         stdout `shouldBe` (program ^. Program.output)
         stderr `shouldBe` ""

@@ -35,18 +35,18 @@ programs = [
 
 def main:
     1
-|] "", 
+|] "",
 
-    Program "hello world" [r| 
+    Program "hello world" [r|
 
 def putStrLn msg:
     ```autoLift1 putStrLn #{msg}```
 
-def main: 
+def main:
     putStrLn "Hello World!"
 
 |] [r|Hello World!
-|], 
+|],
 
     Program "Vector 1 2 3" [r|
 
