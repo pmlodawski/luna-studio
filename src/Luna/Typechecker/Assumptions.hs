@@ -19,7 +19,7 @@ instance Types Assumptions where
   ftv (Assumptions m) = ftv (Map.elems m)
 
 instance Show Assumptions where
-  show (Assumptions _) = error "Assumptions : Show Assumptions : show"
+  show (Assumptions m) = "Assumptions:" ++ show (Map.toList m)
 
 mkAssumptions :: Assumptions
 mkAssumptions = Assumptions Map.empty
