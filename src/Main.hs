@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+module Main where
 
 import           Data.Version        (Version (Version))
 import           Options.Applicative (argument, command, command, fullDesc, help, hidden, long, metavar, option, prefs, progDesc, short, str, strOption, subparser, switch, value, (<>))
