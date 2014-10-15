@@ -34,4 +34,5 @@ Library
                   lens,
                   MissingH,
                   parsers,
-                  transformers
+                  transformers,
+                  mtl
