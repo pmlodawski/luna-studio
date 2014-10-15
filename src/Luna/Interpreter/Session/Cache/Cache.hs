@@ -15,7 +15,7 @@ import qualified Data.Maybe          as Maybe
 import           Flowbox.Control.Error
 import           Flowbox.Data.MapForest                      (MapForest)
 import qualified Flowbox.Data.MapForest                      as MapForest
-import           Flowbox.Prelude
+import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Graph.Node                             as Node
