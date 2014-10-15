@@ -29,13 +29,23 @@ nodeDefaults nodeID _ libID projectID =
 
 setNodeDefault :: PortDescriptor -> Value
                -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setNodeDefault dstPort value nodeID _ libID projectID = Batch.propertyMapOp libID projectID (\propertyMap -> do
+setNodeDefault dstPort value nodeID bc libID projectID = do
+    propertyMap <- Batch.getPropertyMap libID projectID
     maxID <- Batch.getMaxID libID projectID
-    return (DefaultsMap.addDefault dstPort (maxID, value) nodeID propertyMap, ()))
+    let newPM = DefaultsMap.addDefault dstPort (maxID, value) nodeID propertyMap
+    Batch.setPropertyMap newPM libID projectID
+    --TODO[PM] : Temporary fix
+    Batch.graphViewOp bc libID projectID $ \gv pm -> return ((gv, pm), ())
+
 
 
 removeNodeDefault :: PortDescriptor
                   -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-removeNodeDefault dstPort nodeID _ libID projectID = Batch.propertyMapOp libID projectID (\propertyMap ->
-    return (DefaultsMap.removeDefault dstPort nodeID propertyMap, ()))
+removeNodeDefault dstPort nodeID bc libID projectID = do
+    propertyMap <- Batch.getPropertyMap libID projectID
+    maxID <- Batch.getMaxID libID projectID
+    let newPM = DefaultsMap.removeDefault dstPort nodeID propertyMap
+    Batch.setPropertyMap newPM libID projectID
+    --TODO[PM] : Temporary fix
+    Batch.graphViewOp bc libID projectID $ \gv pm -> return ((gv, pm), ())
 
