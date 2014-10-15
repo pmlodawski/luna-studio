@@ -72,7 +72,7 @@ code = Source ["Main"] $ [r|
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -89,9 +89,9 @@ def Int.inc:
 def main:
     #print $ if 1 > 2: 5
     #        else: 6
-    print $ 1 > 2
+    print (1 > 2)
     v = Vector 1 2 3
-    print $ v
+    print v
 |]
 
 code2 :: Source
@@ -99,7 +99,7 @@ code2 = Source ["Main"] $ [r|
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -116,9 +116,9 @@ def Int.inc:
 def main:
     #print $ if 1 > 2: 5
     #        else: 6
-    print $ 3 > 2
+    print (3 > 2)
     v = Vector 1 2 3
-    print $ v
+    print v
 |]
 
 

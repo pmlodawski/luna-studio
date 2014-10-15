@@ -90,7 +90,7 @@ def print msg:
     ```autoLift1 print #{msg}```
 
 def main:
-    print {1, 2}
+    print (1, 2)
 |], named "output tuples" [r|
 def print msg:
     ```autoLift1 print #{msg}```
@@ -113,7 +113,7 @@ def bar arg1 arg2 arg3 arg4 arg5:
     tuple000
 
 def mkTuple arg1 arg2 arg3 arg4 arg5:
-    {arg1, arg2, arg3, arg4, arg5}
+    arg1, arg2, arg3, arg4, arg5
 |]]
 
 
@@ -224,6 +224,6 @@ def foo arg1 arg2 arg3:
 def bar arg1 arg2 arg3 arg4 arg5:
     r = test arg3 arg4 arg1 arg2 arg5
 
-    {arg5, arg4, arg3, arg2, r, arg1}
+    arg5, arg4, arg3, arg2, r, arg1
 
 |]
