@@ -90,11 +90,12 @@ traverseMR fpat ftype flit = tfpat where
     tftype  = Type.traverseMR ftype
 
 
+-- FIXME[PM]: make typeclass, gather all similiar lunaShows and move somewhere else
 lunaShow :: Pat -> String
 lunaShow p = case p of
     Var      _ name'      -> name'
     Lit      _ value'     -> Lit.lunaShow value'
-    Tuple    _ items'     -> "{" ++ List.intercalate ", " strs ++ "}" where
+    Tuple    _ items'     -> List.intercalate ", " strs where
                                    strs = map lunaShow items'
     Con      _ name'      -> name'
     App      _ src' args' -> srcStr ++ " " ++ unwords argStrs where

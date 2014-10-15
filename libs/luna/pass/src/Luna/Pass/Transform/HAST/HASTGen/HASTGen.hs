@@ -221,6 +221,7 @@ mkProxyE name = HExpr.Typed (HExpr.AppT (HExpr.VarT "Proxy") (HExpr.Lit $ HLit.S
 genExpr :: LExpr -> GenPass HExpr
 genExpr ast = case ast of
     LExpr.Var      _ name                -> pure $ HExpr.Var $ mkVarName name
+    LExpr.FuncVar  _ name                -> pure $ HExpr.Var $ mkVarName $ Name.unified name
     LExpr.Con      _ name                -> pure $ HExpr.Var (Naming.con name)
     LExpr.Function _ path name
                      inputs output body  -> do

@@ -226,6 +226,7 @@ buildPat p = case p of
     Pat.App      _ _ args -> List.concat <$> mapM buildPat args
     Pat.Typed    _ pat _  -> buildPat pat
     Pat.Wildcard i        -> return [i]
+    Pat.Grouped  _ pat    -> buildPat pat
 
 
 showArg :: Arg Expr -> String
@@ -250,7 +251,7 @@ showExpr expr = concat $ case expr of
     --Expr.Infix        _ name     src       dst
     Expr.List         _ items         -> ["[", List.intercalate ", " (map showExpr items), "]"]
     Expr.Lit          _ lvalue        -> [Lit.lunaShow lvalue]
-    Expr.Tuple        _ items         -> ["{", List.intercalate ", " (map showExpr items), "}"]
+    Expr.Tuple        _ items         -> [List.intercalate ", " (map showExpr items)]
     --Expr.Typed        _ cls      expr
     Expr.Var          _ name          -> [name]
     Expr.Wildcard     _               -> ["_"]
@@ -263,7 +264,6 @@ showExpr expr = concat $ case expr of
     Expr.NativeVar    _ name          -> ["#{", name, "}"]
     --Expr.Case         _ expr     match
     --Expr.Match        _ pat      body
-    _ -> Prelude.error $ show expr
 
 
 showNative :: Expr -> String

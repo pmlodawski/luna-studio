@@ -101,9 +101,13 @@ example = Source.Source ["Main"] $
                     , "def print msg:"
                     , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
 
+                    , "class Vector a:"
+                    , "    x,y,z :: a"
+
 
                     , "def main:"
-                    , "    print 1"
+                    , "    a = 1"
+                    , "    print a"
                     ]
 
 
@@ -130,7 +134,7 @@ example = Source.Source ["Main"] $
 main :: IO ()
 main = do
     --DistMain.main
-    Logger.setLevel DEBUG "Flowbox"
+    Logger.setLevel DEBUG ""
     --let x = Parser.parse' example
     --    --x :: Int
 

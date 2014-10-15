@@ -28,6 +28,7 @@ import           Luna.Pass.Pass                                       (Pass)
 import qualified Luna.Pass.Pass                                       as Pass
 import           Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State (State)
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State as State
+import qualified Luna.AST.Name                                        as Name
 
 
 logger :: LoggerIO
@@ -51,6 +52,7 @@ desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat p
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExpr ast = case ast of
+    Expr.FuncVar id name -> desugarExpr $ Expr.Var id $ view Name.base name
     Expr.Var id name -> do
         inf <- State.getAliasInfo
         let aliasMap  = inf ^. AliasInfo.alias
