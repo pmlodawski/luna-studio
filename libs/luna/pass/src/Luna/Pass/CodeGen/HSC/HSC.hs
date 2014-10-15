@@ -196,8 +196,10 @@ buildBody exprs = if null exprs then "" else join "; " (fExpMap exprs) ++ ";"
 
 genLit :: HLit.Lit -> String
 genLit lit = case lit of
-    HLit.Integer val -> val
-    HLit.Int     val -> val
-    HLit.Float   val -> val
+    HLit.Integer val -> escapeNegative val
+    HLit.Int     val -> escapeNegative val
+    HLit.Float   val -> escapeNegative val
     HLit.String  val -> "\"" ++ val   ++ "\""
     HLit.Char    val -> "'"  ++ [val] ++ "'"
+    where escapeNegative num@('-':_) = '(' : num ++ ")"
+          escapeNegative num         = num
