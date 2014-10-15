@@ -70,7 +70,6 @@ saveImageJuicy file matrix = do
         A.Z A.:. h A.:. w = A.arrayShape matrix
     Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8)
 
-
 pattern VPS x = Value (Pure (Safe x))
 type VPS x = Value Pure Safe x
 
@@ -161,7 +160,6 @@ saveImageLuna path img = do
 onEachChannel :: (Matrix2 Double -> Matrix2 Double) -> Image RGBA -> Image RGBA
 onEachChannel f img = res
     where Right res = Image.map (View.map fChan) img
-
           fChan :: Channel -> Channel
           fChan (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ f)
 
