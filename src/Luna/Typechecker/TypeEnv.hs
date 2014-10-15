@@ -13,15 +13,15 @@ newtype TypeEnv = TypeEnv Assumptions
                 deriving (Show)
 
 instance Types TypeEnv where
-  apply = undefined
-  tv = undefined
+  apply s (TypeEnv a) = TypeEnv $ apply s a
+  ftv (TypeEnv a) = ftv a
 
 mkTypeEnv :: TypeEnv
-mkTypeEnv = TypeEnv $ mkAssumptions
+mkTypeEnv = TypeEnv mkAssumptions
 
 getTypeEnv :: TypeEnv -> VarID -> Maybe Scheme
-getTypeEnv (TypeEnv env) varid = assumptionsSearch env varid
+getTypeEnv (TypeEnv env) = searchAssumptions env
 
 expandTypeEnv :: TypeEnv -> VarID -> Scheme -> TypeEnv
-expandTypeEnv = undefined
+expandTypeEnv (TypeEnv a) v s = TypeEnv $ expandAssumptions a v s
 

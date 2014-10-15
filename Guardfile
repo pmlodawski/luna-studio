@@ -38,7 +38,7 @@ guard :shell, :version => 2, :cli => "--color" do
                                              }
                                     ) << "Main"
                                    ).map{|k| "--exclude=#{k}" }.join(" ")
-            coverage_cmd = "hpc markup luna-typechecker-tests --destdir=hpc_report #{hpc_excluded_modules} > /dev/null"
+            coverage_cmd = "hpc markup luna-typechecker-tests --destdir=hpc_report --exclude=Logger #{hpc_excluded_modules} > /dev/null"
             puts "> #{coverage_cmd}"
             system(coverage_cmd)
             puts "Report written to 'hpc_report'"
