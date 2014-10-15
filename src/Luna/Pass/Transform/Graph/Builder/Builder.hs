@@ -20,15 +20,15 @@ import qualified Data.Maybe                 as Maybe
 import           Flowbox.Prelude                         hiding (error, mapM, mapM_)
 import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Log.Logger
+import           Luna.AST.Arg                            (Arg)
+import qualified Luna.AST.Arg                            as Arg
 import qualified Luna.AST.Common                         as AST
 import           Luna.AST.Expr                           (Expr)
-import           Luna.AST.Arg                           (Arg)
 import qualified Luna.AST.Expr                           as Expr
 import qualified Luna.AST.Lit                            as Lit
 import           Luna.AST.Pat                            (Pat)
 import qualified Luna.AST.Pat                            as Pat
 import qualified Luna.AST.Type                           as Type
-import qualified Luna.AST.Arg                            as Arg
 import           Luna.Data.AliasInfo                     (AliasInfo)
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Node                         as Node
@@ -102,10 +102,11 @@ parseArg inputsID (input, no) = case input of
 buildOutput :: Node.ID -> Expr -> GBPass ()
 buildOutput outputID expr = do
     case expr of
-        Expr.Assignment {} -> void $ buildNode    False True Nothing expr
-        Expr.Tuple _ items -> buildAndConnectMany True  True Nothing outputID items 0
-        Expr.Var {}        -> buildAndConnect     True  True Nothing outputID (expr, Port.All)
-        _                  -> buildAndConnect     False True Nothing outputID (expr, Port.All)
+        Expr.Assignment {}             -> void $ buildNode    False True Nothing expr
+        Expr.Tuple   _ items           -> buildAndConnectMany True  True Nothing outputID items 0
+        Expr.Grouped _ (v@Expr.Var {}) -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
+        Expr.Var {}                    -> buildAndConnect     True  True Nothing outputID (expr, Port.All)
+        _                              -> buildAndConnect     False True Nothing outputID (expr, Port.All)
     State.connectMonadic outputID
 
 
@@ -231,7 +232,7 @@ buildPat p = case p of
 
 showArg :: Arg Expr -> String
 showArg arg = case arg of
-    --Arg.Named _ name a -> 
+    --Arg.Named _ name a ->
     Arg.Unnamed _ a -> showExpr a
 
 
