@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.NodeDefault where
 
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
@@ -25,7 +26,7 @@ import           Luna.Data.Serialize.Proto.Conversion.NodeDefault               
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.NodeDefault"
+logger = getLoggerIO $(moduleName)
 
 
 get :: NodeDefaultGet.Request -> RPC Context IO NodeDefaultGet.Status

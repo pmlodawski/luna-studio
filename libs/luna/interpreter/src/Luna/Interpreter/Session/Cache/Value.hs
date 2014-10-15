@@ -8,29 +8,30 @@
 
 module Luna.Interpreter.Session.Cache.Value where
 
-import           Data.ByteString.Lazy       (ByteString)
-import qualified Data.ByteString.Lazy.Char8 as ByteString
+import qualified GHC
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
+import           Generated.Proto.Data.Value                  (Value)
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
 import qualified Luna.Interpreter.Session.Cache.Status       as Status
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
 import qualified Luna.Interpreter.Session.Error              as Error
+import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.Cache.Value"
+logger = getLoggerIO $(moduleName)
 
 
-getIfReady :: CallPointPath -> Session ByteString
+getIfReady :: CallPointPath -> Session (Maybe Value)
 getIfReady callPointPath = do
     cacheInfo <- Cache.lookupCacheInfo callPointPath
     let varName = cacheInfo ^. CacheInfo.recentVarName
@@ -48,7 +49,7 @@ data Status = Ready
             deriving (Show, Eq)
 
 
-getWithStatus :: CallPointPath -> Session (Status, Maybe ByteString)
+getWithStatus :: CallPointPath -> Session (Status, Maybe Value)
 getWithStatus callPointPath = do
     mcacheInfo <- Cache.lookupCacheInfoMaybe callPointPath
     case mcacheInfo of
@@ -58,8 +59,8 @@ getWithStatus callPointPath = do
 
             allReady <- Session.getAllReady
             let returnBytes status = do
-                    bytes <- get varName
-                    return (status, Just bytes)
+                    value <- get varName
+                    return (status, value)
                 returnNothing status = return (status, Nothing)
 
             case (cacheInfo ^. CacheInfo.status, allReady) of
@@ -78,7 +79,14 @@ report callPointPath varName = do
     safeLiftIO' (Error.CallbackError $(loc)) $ resultCB projectID callPointPath result
 
 
-get :: VarName -> Session ByteString
+get :: VarName -> Session (Maybe Value)
 get varName = do
-    let expr = "show " ++ varName
-    ByteString.pack <$> Session.interpret expr
+    let expr = "toValue " ++ varName
+        excHandler exc = do
+            logger warning $ show exc
+            return $ return Nothing
+    Session.withImports [ "Flowbox.Data.Serialization"
+                        , "Prelude"
+                        , "Generated.Proto.Data.Value" ] $ do
+        action <- lift2 $ GHC.handleSourceError excHandler $ HEval.interpret expr
+        liftIO action

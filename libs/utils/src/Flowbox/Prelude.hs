@@ -29,7 +29,7 @@ import           Data.Foldable             (forM_)
 import           Data.Monoid               as X (Monoid, mappend, mempty)
 import qualified Data.Traversable          as Traversable
 
-import           Prelude             hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
+import           Prelude hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
 
 
@@ -94,7 +94,7 @@ isRight _         = False
 
 
 fromJustM :: Monad m => Maybe a -> m a
-fromJustM Nothing  = fail "Maybe.fromJust: Nothing"
+fromJustM Nothing  = fail "Prelude.fromJustM: Nothing"
 fromJustM (Just x) = return x
 
 

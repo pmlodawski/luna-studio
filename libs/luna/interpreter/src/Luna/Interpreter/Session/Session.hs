@@ -11,7 +11,6 @@ module Luna.Interpreter.Session.Session where
 import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.Either                as Either
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
@@ -27,6 +26,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
 import           Flowbox.System.Log.Logger                   as Logger
+import           Generated.Proto.Data.Value                  (Value)
 import qualified Luna.AST.Common                             as AST
 import           Luna.AST.Control.Focus                      (Focus)
 import qualified Luna.AST.Control.Focus                      as Focus
@@ -55,7 +55,7 @@ import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.Session"
+logger = getLoggerIO $(moduleName)
 
 
 type SessionST = StateT Env MGHC.Ghc
@@ -109,6 +109,12 @@ setImports :: [Import] -> Session ()
 setImports = lift2 . GHC.setContext . map (GHC.IIDecl . GHC.simpleImportDecl . GHC.mkModuleName)
 
 
+withImports :: [Import] -> Session a -> Session a
+withImports imports action = sandboxContext $ do
+    setImports imports
+    action
+
+
 setFlags :: [GHC.ExtensionFlag] -> Session ()
 setFlags flags = lift2 $ do
     current <- GHC.getSessionDynFlags
@@ -121,13 +127,26 @@ unsetFlags flags = lift2 $ do
     void $ GHC.setSessionDynFlags $ foldl GHC.xopt_unset current flags
 
 
-withFlags :: [GHC.ExtensionFlag] -> [GHC.ExtensionFlag] -> Session a -> Session a
-withFlags enable disable action = do
-    flags <- lift2 GHC.getSessionDynFlags
+withExtensionFlags :: [GHC.ExtensionFlag] -> [GHC.ExtensionFlag] -> Session a -> Session a
+withExtensionFlags enable disable action = sandboxDynFlags $ do
     setFlags enable
     unsetFlags disable
+    action
+
+
+sandboxDynFlags :: Session a -> Session a
+sandboxDynFlags action = do
+    flags  <- lift2 GHC.getSessionDynFlags
     result <- action
     _ <- lift2 $ GHC.setSessionDynFlags flags
+    return result
+
+
+sandboxContext :: Session a -> Session a
+sandboxContext action = do
+    context <- lift2 GHC.getContext
+    result  <- action
+    lift2 $ GHC.setContext context
     return result
 
 
@@ -274,7 +293,7 @@ setProjectID :: Project.ID -> Session ()
 setProjectID projectID = modify (Env.projectID .~ Just projectID)
 
 
-getResultCallBack :: Session (Project.ID -> CallPointPath -> ByteString -> IO ())
+getResultCallBack :: Session (Project.ID -> CallPointPath -> Maybe Value -> IO ())
 getResultCallBack = gets $ view Env.resultCallBack
 
 

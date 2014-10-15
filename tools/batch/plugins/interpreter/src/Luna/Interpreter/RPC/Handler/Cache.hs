@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 module Luna.Interpreter.RPC.Handler.Cache where
 
 import Data.Int (Int32)
@@ -25,7 +26,7 @@ import qualified Luna.Interpreter.Session.Session                       as Sessi
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Cache"
+logger = getLoggerIO $(moduleName)
 
 --- helpers ---------------------------------------------------------------
 

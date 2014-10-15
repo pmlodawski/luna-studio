@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.PluginManager.Init.Remote where
 
@@ -32,7 +33,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.Init.Remote"
+logger = getLoggerIO $(moduleName)
 
 
 type Error = String

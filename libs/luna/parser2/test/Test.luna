@@ -1,9 +1,1 @@
-
-class Bool: True
-            False
-
-class Vector: x,y,z :: a
-
-def main:
-    a = Vector 1 2 3
-
+a
