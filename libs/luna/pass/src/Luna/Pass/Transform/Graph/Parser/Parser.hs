@@ -194,7 +194,7 @@ addExpr nodeID e = do
         connectedToOutput = List.any (Node.isOutputs . view _2)
                           $ Graph.lsuclData graph nodeID
 
-    if (folded && assignmentCount > 0) || defaultNodeGen
+    if (folded && assignmentCount == 1) || defaultNodeGen
         then State.addToNodeMap (nodeID, Port.All) e
         else if assignment || assignmentCount > 1
             then do outName <- State.getNodeOutputName nodeID
@@ -204,7 +204,7 @@ addExpr nodeID e = do
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
             else do State.addToNodeMap (nodeID, Port.All) e
-                    unless connectedToOutput $
+                    unless (connectedToOutput || assignmentCount == 1 ) $
                         State.addToBody e
 
 

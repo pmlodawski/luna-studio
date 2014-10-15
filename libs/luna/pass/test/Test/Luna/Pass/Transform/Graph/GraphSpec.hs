@@ -21,8 +21,8 @@ import           Luna.Pass.Transform.AST.IDFixer.IDFixer (clearIDs)
 import qualified Test.Luna.AST.Common                    as Common
 import           Test.Luna.Pass.Transform.Graph.Common   (named)
 import qualified Test.Luna.Pass.Transform.Graph.Common   as Common
-import           Test.Luna.SampleCodes                   (sampleCodes)
-import qualified Test.Luna.SampleCodes                   as SampleCodes
+import           Test.Luna.Sample.Code                   (sampleCodes)
+import qualified Test.Luna.Sample.Code                   as SampleCode
 
 
 
@@ -61,13 +61,13 @@ backAndForth2 bc graph = backAndForth2' bc graph graph
 
 backAndForth2' :: Breadcrumbs -> Graph -> Graph -> IO ()
 backAndForth2' bc providedGraph expectedGraph = do
-    emptyAst  <- Common.getAST SampleCodes.emptyMain
+    emptyAst  <- Common.getAST SampleCode.emptyMain
     (ast, pm) <- Common.getExpr bc providedGraph def emptyAst
-    printLn
-    print ast
-    printLn
-    print pm
-    printLn
+    --printLn
+    --print ast
+    --printLn
+    --print pm
+    --printLn
     (resultGraph, _pm2) <- Common.getGraph bc pm ast
     resultGraph `shouldBe` expectedGraph
 
@@ -131,6 +131,16 @@ sampleGraphs =
         [(-2 ,100, Edge.Data (Port.Num 0) $ Port.Num 0)
         ,(100, -3, Edge.Data  Port.All      Port.All  )
         ]
+    , named "simple graph 8"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "25" "" (0, 1))
+        , fixEmpty' (200, Node.Expr "*" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 3))
+        ]
+        [(100,200, Edge.Data Port.All $ Port.Num 0)
+        ,(100,200, Edge.Data Port.All $ Port.Num 1)
+        ]
     , named "inverse order graph"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
@@ -188,6 +198,20 @@ sampleGraphs =
         ,(-3, Node.Outputs        (0, 2))
         ]
         [(100, -3, Edge.Data Port.All $ Port.Num 1)]
+     , named "BATCH-67"
+     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (10, Node.Expr "12" "" (0, 1))
+        , fixEmpty' (20, Node.Expr "15" "" (0, 1))
+        , fixEmpty' (30, Node.Expr "*" "" (0, 1))
+        , fixEmpty' (40, Node.Expr "+" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        [(10, 30, Edge.Data Port.All $ Port.Num 0)
+        ,(20, 30, Edge.Data Port.All $ Port.Num 1)
+        ,(30, 40, Edge.Data Port.All $ Port.Num 0)
+        ,(30, 40, Edge.Data Port.All $ Port.Num 1)
+        ]
     ]
 
 
@@ -330,7 +354,7 @@ spec = do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth Common.mainBC code) sampleCodes
         mapM_ (\(name, bc, code) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth bc code) SampleCodes.sampleLambdas
+                backAndForth bc code) SampleCode.sampleLambdas
 
     describe "graph <-> ast conversion" $ do
         mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $

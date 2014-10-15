@@ -19,7 +19,7 @@ import qualified Luna.Graph.View.GraphView             as GraphView
 import qualified Test.Luna.AST.Common                  as Common
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 import qualified Test.Luna.Pass.Transform.Graph.Common as Common
-import           Test.Luna.SampleCodes                 (sampleCodes)
+import           Test.Luna.Sample.Code                 (sampleCodes)
 
 
 

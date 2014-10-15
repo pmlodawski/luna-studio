@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE TypeFamilies           #-}
@@ -23,10 +22,12 @@ import qualified Data.Array.Accelerate.Array.Sugar as A
 import           Data.Array.Accelerate.IO
 import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
+import           Data.Map.Lazy
 
 import           Flowbox.Data.Serialization           (Serializable (..), mkValue)
 import qualified Flowbox.Graphics.Image.Channel       as I
 import qualified Flowbox.Graphics.Image.View          as I
+import qualified Flowbox.Graphics.Image.Image         as Img
 import qualified Flowbox.Math.Matrix                  as M
 import qualified Generated.Proto.Data.MatrixData      as MatrixData
 import qualified Generated.Proto.Data.MatrixData.Type as MatrixData
@@ -89,14 +90,24 @@ instance Serializable I.RGBA ViewData.ViewData where
         return $ liftM4 ViewData.ViewData red green blue (Just alpha)
 
     toValue a = liftM (mkValue ViewData.data' Value.View) $ serialize a
-    compute = I.map $ I.compute serializationBackend
+    compute   = I.map $ I.compute serializationBackend
 
 instance Serializable I.RGB ViewData.ViewData where
     serialize v = do
-        red   <- serializeChan v "rgb.r"
-        green <- serializeChan v "rgb.g"
-        blue  <- serializeChan v "rgb.b"
+        red   <- serializeChan v "r"
+        green <- serializeChan v "g"
+        blue  <- serializeChan v "b"
         return $ liftM4 ViewData.ViewData red green blue Nothing
 
     toValue a = liftM (mkValue ViewData.data' Value.View) $ serialize a
     compute = I.map $ I.compute serializationBackend
+
+instance Serializable (Img.Image I.RGB) ViewData.ViewData where
+    serialize (Img.Image views _) = serialize (snd $ findMin views)
+    toValue a = liftM (mkValue ViewData.data' Value.View) $ serialize a
+    compute = Img.map $ I.map $ I.compute serializationBackend
+
+instance Serializable (Img.Image I.RGBA) ViewData.ViewData where
+    serialize (Img.Image views _) = serialize (snd $ findMin views)
+    toValue a = liftM (mkValue ViewData.data' Value.View) $ serialize a
+    compute   = Img.map $ I.map $ I.compute serializationBackend

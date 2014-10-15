@@ -15,6 +15,7 @@ import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.System.Log.Logger
 import           Luna.AST.Control.Crumb                      (Breadcrumbs)
 import qualified Luna.AST.Control.Crumb                      as Crumb
+import qualified Luna.Graph.Graph                            as Graph
 import qualified Luna.Graph.Node                             as Node
 import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
@@ -27,6 +28,7 @@ import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
@@ -94,6 +96,15 @@ modifyNode libraryID nodeID = do
     modifyMatching matchNode
     Session.addReload libraryID Reload.ReloadFunctions
 
+
+modifyNodeSuccessors :: Library.ID -> Breadcrumbs -> Node.ID -> Session ()
+modifyNodeSuccessors libraryID bc nodeID = do
+    let matchNode k _ = last k == CallPoint libraryID nodeID
+    logger info $ concat ["Mark modified: node ", show (libraryID, nodeID), " successors"]
+    graph <- fst <$> Session.getGraph (DefPoint libraryID bc)
+    let successors = Graph.suc graph nodeID
+    mapM_ (modifyNode libraryID) successors
+    Session.addReload libraryID Reload.ReloadFunctions
 
 
 modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session ()

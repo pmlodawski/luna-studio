@@ -1,7 +1,8 @@
-class Vector a:
-    x,y,z :: a
-    def test a b:
-        {a,b}
+import ```Flowbox.Graphics.Mockup```
+import ```Flowbox.Graphics.Image.Image```
+import ```Flowbox.Graphics.Composition.Generators.Keyer```
+
+
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -33,8 +34,74 @@ def Int.<= a:
 def Int.>= a:
     ```liftF2 (>=) #{self} #{a}```
 
-def Int.inc:
-    self + 1
+# def Int.inc:
+#     self.add 1
 
-def Int.dec:
-    self - 1
+# def Int.dec:
+#     self.sub 1
+
+
+def load path:
+    ```autoLift1 loadImageLuna #{path}```
+
+def Image.save path:
+    ```autoLift2 saveImageLuna #{path} #{self}```
+
+def Image.defocus radius:
+    ```liftF1 (onEachChannel $ defocus #{radius}) #{self}```
+
+def Image.motionBlur size angle:
+    ```liftF1 (onEachChannel $ motionBlur #{size} #{angle}) #{self}```
+
+def Image.bilateral psigma csigma size:
+    ```liftF1 (onEachChannel $ bilateral #{psigma} #{csigma} #{size}) #{self}```
+
+def Image.offset value:
+    ```liftF1 (onEachValue $ offsetLuna #{value}) #{self}```
+
+def Image.contrast value:
+    ```liftF1 (onEachValue $ contrastLuna #{value}) #{self}```
+
+def Image.exposure blackpoint ex:
+    ```liftF1 (onEachValue $ exposureLuna #{blackpoint} #{ex}) #{self}```
+
+def Image.colorCorrect saturation contrast gamma gain offset:
+    ```liftF1 (onEachRGB $ colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset}) #{self}```
+
+def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+    ```liftF1 (onEachValue $ gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma}) #{self}```
+
+def Image.saturate saturation:
+    ```liftF1 (onEachRGB $ saturateLuna #{saturation}) #{self}```
+
+def Image.posterize colors:
+    ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
+
+
+def Image.key mode a b c d:
+    ```liftF1 (keyerLuna #{mode} #{a} #{b} #{c} #{d}) #{self}```
+
+def Image.differenceKey offset gain background:
+    ```liftF2 (differenceKeyerLuna #{offset} #{gain}) #{background} #{self}```
+
+class Point a:
+    x,y :: a
+
+def Image.cornerPin p1 p2 p3 p4:
+    p1x = p1.x
+    p1y = p1.y
+    p2x = p2.x
+    p2y = p2.y
+    p3x = p3.x
+    p3y = p3.y
+    p4x = p4.x
+    p4y = p4.y
+
+    ```liftF1 (cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y}) #{self}```
+
+def Image.blur kernelSize:
+    ```liftF1 (gaussianLuna #{kernelSize}) #{self}```
+
+def Image.laplacian kernelSize centerVal sideVal:
+    ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
+    
