@@ -149,6 +149,7 @@ buildExpr e = case e of
     HExpr.AppP     src dst                -> app (buildExpr src) (buildExpr dst)
     HExpr.Native   natCode                -> pure $ natCode
     HExpr.ListE    items                  -> pure $ "[" ++ sepjoin (fExpMap items) ++ "]"
+    HExpr.ListT    item                   -> pure $ "[" ++ cBuildExpr item ++ "]"
     HExpr.Bang     expr                   -> pure $ "--->>>   " ++ (code.buildExpr) expr
     HExpr.THE      expr                   -> pure $ "$(" ++ (code.buildExpr) expr ++ ")"
     HExpr.CaseE    expr matches           -> Complex $ "case " ++ (code.buildExpr) expr ++ " of {" ++ buildBody matches ++ "}"

@@ -1,6 +1,2 @@
-def print msg:
-    ```autoLift1 print #{msg}```
-
-def main:
-    x = a : a
-    print $ x 1
+class Vector:
+    x,y,z :: [Vector Int]

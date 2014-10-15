@@ -767,6 +767,7 @@ funcT       = appID Type.Function <*> argListT <* Tok.arrow <*> typeT
 varT        = appID Type.Var      <*> Tok.typeVarIdent
 conT        = appID Type.Con      <*> qualifiedPath Tok.conIdent
 tupleT      = appID Type.Tuple    <*> tuple typeT
+listT       = appID Type.List     <*> Tok.brackets typeT
 wildT       = appID Type.Unknown  <*  Tok.wildcard
 
 appBaseT    = choice [ varT, conT
@@ -775,6 +776,7 @@ appBaseT    = choice [ varT, conT
 entT        = choice [ varT
                      , conT
                      , tupleT
+                     , listT
                      , wildT
                      ]
 
