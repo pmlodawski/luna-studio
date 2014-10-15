@@ -39,7 +39,7 @@ import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
+logger = getLogger $(moduleName)
 
 
 type NodeMap = Map (Node.ID, Port) Expr
@@ -151,9 +151,8 @@ getProperty nodeID propertyName =
 
 
 hasFlag :: Node.ID -> String -> GPPass Bool
-hasFlag nodeID flag = do
-    property <- getProperty nodeID flag
-    return $ property == Just "True"
+hasFlag nodeID flag =
+    (== Just Attributes.true) <$> getProperty nodeID flag
 
 
 setProperty :: Node.ID -> String -> String -> GPPass ()
@@ -167,10 +166,15 @@ setPosition nodeID position =
     setProperty nodeID Attributes.nodePosition $ show position
 
 
+setGraphFolded :: Node.ID -> GPPass ()
+setGraphFolded nodeID =
+    setProperty nodeID Attributes.graphFolded Attributes.true
+    --return ()
+
+
+
 doesLastStatementReturn :: GPPass Bool
 doesLastStatementReturn = do
-
-
     body' <- getBody
     return $ case body' of
         []                       -> False

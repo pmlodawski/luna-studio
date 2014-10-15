@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Transform.AST.Hash.Hash where
 
@@ -30,7 +31,7 @@ import qualified Luna.Pass.Pass            as Pass
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Hash.Hash"
+logger = getLoggerIO $(moduleName)
 
 
 type HashPass result = Pass Pass.NoState result
@@ -49,7 +50,7 @@ runExpr = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . hashExpr
 
 
 hashModule :: Module -> HashPass Module
-hashModule mod = Module.traverseM hashModule hashExpr pure hashPat pure mod
+hashModule mod = Module.traverseM hashModule hashExpr pure hashPat pure pure mod
 
 
 hashExpr :: Expr.Expr -> HashPass Expr.Expr
@@ -60,7 +61,7 @@ hashExpr ast = case ast of
     Expr.RefType  {} -> hashMe
     _                -> continue
     where hashMe   = set Expr.name (hashMe2 $ view Expr.name ast) <$> continue
-          continue = Expr.traverseM hashExpr pure hashPat pure ast
+          continue = Expr.traverseM hashExpr pure hashPat pure pure ast
 
 
 hashPat :: Pat -> HashPass Pat
@@ -71,6 +72,7 @@ hashPat pat = case pat of
 --FIXME [wd]: some reduntant functions here
 hashMe2 :: [Char] -> [Char]
 hashMe2 = concatMap hashMeBody
+
 
 hashMeBody :: Char -> [Char]
 hashMeBody c

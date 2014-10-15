@@ -17,6 +17,7 @@ import qualified Luna.AST.Control.Focus                    as Focus
 import qualified Luna.AST.Control.Zipper                   as Zipper
 import           Luna.AST.Expr                             (Expr)
 import           Luna.AST.Module                           (Module)
+import qualified Luna.AST.Name                             as Name
 import           Luna.Graph.Graph                          (Graph)
 import           Luna.Graph.PropertyMap                    (PropertyMap)
 import qualified Luna.Pass.Analysis.Alias.Alias            as Analysis.Alias
@@ -32,7 +33,7 @@ named = (,)
 
 
 mainBC :: Breadcrumbs
-mainBC = [Crumb.Module "Main", Crumb.Function "main" []]
+mainBC = [Crumb.Module "Main", Crumb.Function (Name.single "main") []]
 
 
 getGraph :: Breadcrumbs -> PropertyMap -> Module -> IO (Graph, PropertyMap)
@@ -40,7 +41,7 @@ getGraph bc pm ast = eitherStringToM' $ runEitherT $ do
     focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
     expr  <- focus ^? Focus.expr <??> "test.Common.getFunctionGraph : Target is not a function"
     aliasInfo <- EitherT $ Analysis.Alias.run ast
-    EitherT $ GraphBuilder.run aliasInfo pm expr
+    EitherT $ GraphBuilder.run aliasInfo pm True expr
 
 
 getExpr :: Breadcrumbs -> Graph -> PropertyMap -> Module -> IO (Module, PropertyMap)

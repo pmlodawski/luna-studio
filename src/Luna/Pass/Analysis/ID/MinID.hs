@@ -9,13 +9,11 @@
 {-# LANGUAGE Rank2Types       #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module Luna.Pass.Analysis.ID.ExtractIDs where
-
-import Data.IntSet (IntSet)
+module Luna.Pass.Analysis.ID.MinID where
 
 import           Flowbox.Prelude                hiding (mapM, mapM_)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Control.Focus         (Focus)
+import qualified Luna.AST.Common                as AST
 import           Luna.AST.Expr                  (Expr)
 import           Luna.AST.Module                (Module)
 import           Luna.Pass.Analysis.ID.State    (IDState)
@@ -30,28 +28,22 @@ logger :: Logger
 logger = getLogger $(moduleName)
 
 
-type ExtractIDPass result = Pass IDState result
+type MinIDPass result = Pass IDState result
 
 
-run :: Focus -> Pass.Result IntSet
-run = Pass.run_ (Pass.Info "ExtractIDs") State.make . analyseFocus
+run :: Module -> Pass.Result AST.ID
+run = (Pass.run_ (Pass.Info "MinID") State.make) . analyseModule
 
 
-runExpr :: Expr -> Pass.Result IntSet
-runExpr = Pass.run_ (Pass.Info "ExtractIDs") State.make . analyseExpr
+runExpr :: Expr -> Pass.Result AST.ID
+runExpr = (Pass.run_ (Pass.Info "MinID") State.make) . analyseExpr
 
 
-runModule :: Module -> Pass.Result IntSet
-runModule = Pass.run_ (Pass.Info "ExtractIDs") State.make . analyseModule
+analyseModule :: Module -> MinIDPass AST.ID
+analyseModule m = do IDTraverse.traverseModule State.findMinID m
+                     State.getFoundID
 
 
-analyseFocus :: Focus -> ExtractIDPass IntSet
-analyseFocus m = IDTraverse.traverseFocus State.appendID m >> State.getIDs
-
-
-analyseExpr :: Expr -> ExtractIDPass IntSet
-analyseExpr e = IDTraverse.traverseExpr State.appendID e >> State.getIDs
-
-
-analyseModule :: Module -> ExtractIDPass IntSet
-analyseModule e = IDTraverse.traverseModule State.appendID e >> State.getIDs
+analyseExpr :: Expr -> MinIDPass AST.ID
+analyseExpr e = do IDTraverse.traverseExpr State.findMinID e
+                   State.getFoundID

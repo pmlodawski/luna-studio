@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.AST.DepSort.DepSort where
 
@@ -28,7 +29,7 @@ import qualified Luna.Pass.Pass            as Pass
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.DepSort.DepSort"
+logger = getLoggerIO $(moduleName)
 
 
 type DepSortPass result = Pass Pass.NoState result
@@ -48,7 +49,7 @@ depSort cg info mod = do
 
 
 dsMod :: Module -> DepSortPass Module
-dsMod mod = Module.traverseM dsMod dsExpr pure pure pure mod
+dsMod mod = Module.traverseM dsMod dsExpr pure pure pure pure mod
 
 
 dsExpr :: Expr.Expr -> DepSortPass Expr.Expr
@@ -58,7 +59,7 @@ dsExpr ast = case ast of
 --    Expr.Accessor id name dst                  -> Expr.App <$> DS.genID <*> continue <*> pure []
 --    Expr.Import   {}                           -> omitAll
     _                                          -> continue
-    where continue  = Expr.traverseM dsExpr pure pure pure ast
+    where continue  = Expr.traverseM dsExpr pure pure pure pure ast
 --          omitNext  = Expr.traverseM omitNextExpr pure desugarPat pure ast
 --          omitAll   = Expr.traverseM omitAllExpr pure desugarPat pure ast
 

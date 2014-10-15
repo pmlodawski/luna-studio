@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE Rank2Types                #-}
-
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Analysis.Alias.Alias where
 
@@ -18,14 +18,13 @@ import           Flowbox.Prelude                hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Expr                  as Expr
 import           Luna.AST.Lit                   (Lit)
-import qualified Luna.AST.Lit                   as Lit
 import           Luna.AST.Module                (Module)
 import qualified Luna.AST.Module                as Module
+import qualified Luna.AST.Name                  as Name
 import           Luna.AST.Pat                   (Pat)
 import qualified Luna.AST.Pat                   as Pat
 import           Luna.AST.Type                  (Type)
 import qualified Luna.AST.Type                  as Type
-import qualified Luna.AST.Name                  as Name
 import           Luna.Data.AliasInfo            (AliasInfo)
 import           Luna.Data.Namespace.State      (regModule, withScope, getAliasInfo, regExpr, regPat, regType, regLit, regVarName, bindVar, regTypeName)
 import           Luna.Pass.Pass                 (Pass)
@@ -35,7 +34,7 @@ import           Luna.Data.Namespace       (Namespace)
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Alias.Alias"
+logger = getLoggerIO $(moduleName)
 
 
 type VAPass result = Pass Namespace result
@@ -91,7 +90,7 @@ registerConsHeaders (Expr.ConD id name fields) = regVarName name id
 registerFuncHeaders :: Expr.Expr -> VAPass ()
 registerFuncHeaders el = regExpr el *> case el of
     Expr.Function   id _ name _ _ _ -> regVarName (Name.unified name) id
-    where continue = Expr.traverseM_ registerFuncHeaders vaType vaPat vaLit el
+    where continue = Expr.traverseM_ registerFuncHeaders vaType vaPat vaLit pure el
 
 
 vaExpr :: Expr.Expr -> VAPass ()
@@ -109,7 +108,7 @@ vaExpr el = regExpr el *> case el of
     Expr.Field      id name _ _     -> regVarName name id *> continue
     Expr.Assignment id pat dst      -> vaExpr dst <* vaPat pat
     _                  -> continue
-    where continue = Expr.traverseM_ vaExpr vaType vaPat vaLit el
+    where continue = Expr.traverseM_ vaExpr vaType vaPat vaLit pure el
           id       = el ^.  Expr.id
 
 
