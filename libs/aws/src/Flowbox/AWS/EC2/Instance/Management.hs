@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.AWS.EC2.Instance.Management where
 
@@ -31,7 +32,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.EC2.Instance.Instance"
+logger = getLoggerIO $(moduleName)
 
 
 ready :: Types.Instance -> Bool

@@ -8,7 +8,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Flowbox.Graphics.Image.Image (
-    Image,
+    Image(..),
     insert,
     delete,
     lookup,
@@ -26,7 +26,7 @@ import           Flowbox.Prelude             hiding (views, lookup, sequence, ma
 
 data Image view = Image { _views       :: Map.Map View.Name view
                         , _defaultView :: View.Select
-                        }
+                        } deriving (Show)
 makeLenses ''Image
 
 image :: View.View v => Map.Map View.Name v -> View.Select -> Either Error (Image v)
@@ -58,5 +58,6 @@ update f key img = case lookup key img >>= f of
     Just newval -> insert key newval img
     Nothing     -> return $ delete key img
 
-map :: View.View v => (v -> v) -> Image v -> Either Error (Image v)
-map lambda img = image (Map.map lambda $ img ^.views) (img ^. defaultView)
+map :: View.View v => (v -> v) -> Image v -> Image v --Either Error (Image v)
+map lambda (Image vs dv) = Image (Map.map lambda $ vs) dv
+--map lambda img = image (Map.map lambda $ img ^.views) (img ^. defaultView)

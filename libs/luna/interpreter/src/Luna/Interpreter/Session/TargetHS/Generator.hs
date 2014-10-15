@@ -30,7 +30,7 @@ import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen as HASTGen
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.Generator"
+logger = getLoggerIO $(moduleName)
 
 
 emptyModule :: Module

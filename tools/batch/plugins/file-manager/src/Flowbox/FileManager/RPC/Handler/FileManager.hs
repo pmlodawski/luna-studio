@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.FileManager.RPC.Handler.FileManager where
 
 import           Flowbox.Bus.RPC.RPC                                  (RPC)
@@ -15,7 +16,7 @@ import qualified Generated.Proto.FileManager.FileManager.Ping.Status  as Ping
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.FileManager.RPC.Handler.Plugin"
+logger = getLoggerIO $(moduleName)
 
 -------- public api -------------------------------------------------
 

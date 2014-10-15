@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Transform.HAST.HASTGen.GenState where
 
@@ -23,7 +24,7 @@ import Flowbox.System.Log.Logger
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.HSGen.GenState"
+logger = getLogger $(moduleName)
 
 
 type HExpr = HExpr.Expr
