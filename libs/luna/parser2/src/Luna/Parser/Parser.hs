@@ -82,8 +82,6 @@ import qualified Luna.AST.Expr as Expr
 infixl 4 <$!>
 
 
-unknownID = -1
-
 
 (<$!>) :: Monad m => (a -> b) -> m a -> m b
 f <$!> ma = do
@@ -499,7 +497,7 @@ opTupleTE base = tupleE $ opTE base
 
 opTE base = buildExpressionParser optableE (appE base)
 
-tupleE p = p <??> ((\xs x -> Expr.Tuple unknownID (x:xs)) <$ Tok.separator <*> sepBy1 p Tok.separator)
+tupleE p = p <??> (appID (\id xs x -> Expr.Tuple id (x:xs)) <* Tok.separator <*> sepBy1 p Tok.separator)
 
 --appE base = p <??> (appID (\i a s -> Expr.App i s a) <*> many1 (argE p)) where 
 appE base = p <??> (appID (\i a s -> callBuilder2 i s a) <*> many1 (argE p)) where 

@@ -101,13 +101,16 @@ example = Source.Source ["Main"] $
                     , "def print msg:"
                     , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
 
-                    , "class Vector:"
-                    , "    x,y,z :: [Vector]"
+                    --, "class Vector:"
+                    --, "    x,y,z :: [Vector]"
 
+                    , "def foo a b:"
+                    , "    print a"
+                    , "    print b"
 
                     , "def main:"
-                    , "    a = Vector [] [] []"
-                    , "    print a"
+                    --, "    a = Vector [] [] []"
+                    , "    foo 1 2"
                     ]
 
 
