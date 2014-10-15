@@ -12,8 +12,7 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: dist/gen,
-                  src
+  Hs-Source-Dirs: src
   Other-Modules:  Paths_luna_parser
   if flag(debug)
     GHC-Options:  -csacc
@@ -66,3 +65,16 @@ Executable luna-parser-test
                   ansi-wl-pprint,
                   data-default,
                   pretty-show
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  luna-core,
+                  luna-parser,
+                  flowbox-utils,
+                  hspec,
+                  raw-strings-qq

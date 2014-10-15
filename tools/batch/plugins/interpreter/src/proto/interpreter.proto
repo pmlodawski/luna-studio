@@ -8,6 +8,7 @@
 package generated.proto.interpreter;
 
 import "crumb.proto";
+import "data.proto";
 
 
 
@@ -102,9 +103,9 @@ message Interpreter {
             required CallPointPath callPointPath = 1;
         }
         message Update {
-            required CallPointPath callPointPath = 1;
-            required Status        status        = 2;
-            optional bytes         value         = 3;
+            required CallPointPath      callPointPath = 1;
+            required Status                    status = 2;
+            optional generated.proto.data.Value value = 3;
         }
     }
     message Ping {

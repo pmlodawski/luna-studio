@@ -26,12 +26,12 @@ import qualified Luna.Data.ASTInfo                 as ASTInfo
 import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
 import           Luna.Lib.Lib                      (Library)
 import qualified Luna.Lib.Lib                      as Library
+import qualified Luna.Lib.Loader                   as LibLoader
 import qualified Luna.Lib.Manager                  as LibManager
 import qualified Luna.Pass.Build.Build             as Build
 import           Luna.Pass.Build.BuildConfig       (BuildConfig (BuildConfig))
 import qualified Luna.Pass.Build.BuildConfig       as BuildConfig
 import qualified Luna.Pass.Build.Diagnostics       as Diagnostics
-
 
 
 loggerIO :: LoggerIO
@@ -55,7 +55,7 @@ createLibrary name path projectID = libManagerOp projectID (\libManager -> do
 
 loadLibrary :: UniPath -> Project.ID -> Batch (Library.ID, Library)
 loadLibrary path projectID = libManagerOp projectID
-    (liftIO . LibManager.loadLibrary path)
+    (liftIO . LibLoader.loadLibrary path)
 
 
 unloadLibrary :: Library.ID -> Project.ID -> Batch ()

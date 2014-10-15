@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.AST where
 
 import qualified Flowbox.Batch.Handler.AST                                                         as BatchAST
@@ -59,7 +60,7 @@ import           Luna.Data.Serialize.Proto.Conversion.Module                    
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.AST"
+logger = getLoggerIO $(moduleName)
 
 -------- public api -------------------------------------------------
 
@@ -104,7 +105,7 @@ functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectI
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     addedFunction <- BatchAST.addFunction newFunction bcParent libID projectID
-    let newBC = bcParent ++ [Crumb.Function (addedFunction ^. Expr.name) (addedFunction ^. Expr.path)]
+    let newBC = bcParent ++ [Crumb.Function (addedFunction ^?! Expr.fname) (addedFunction ^. Expr.path)]
     updateNo <- Batch.getUpdateNo
     return $ AddFunction.Update request (encode addedFunction) (encode newBC) updateNo
 

@@ -61,6 +61,8 @@ import           Data.Maybe                   (fromJust)
 import qualified Luna.AST.Arg                 as Arg
 import qualified Data.List                    as List
 import qualified Luna.Parser.Pragma           as Pragma
+import           Luna.Parser.Unit             (Unit(Unit))
+import qualified Luna.Parser.Unit             as Unit
 
 import           Text.EditDistance            --(defaultEditCosts, levenshteinDistance, EditCosts, Costs(..))
 import           Text.PhoneticCode.Phonix     (phonix)
@@ -185,8 +187,8 @@ extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <
 namePattern =   (Name.single <$> varOp)
             <|> Tok.parens (Name.close <$> (Name.multi <$> Tok.varIdent <*> many1 namePatSeg))
 
-namePatSeg =   (Name.NameToken <$> Tok.varIdent)
-           <|> (Name.NameHole  <$  Tok.nameWildcard)
+namePatSeg =   (Name.Token <$> Tok.varIdent)
+           <|> (Name.Hole  <$  Tok.nameWildcard)
 
 argList       p = try (sepBy2 p Tok.separator) <|> many p <?> "argument list"
 argList'      p = braces (sepBy2 p Tok.separator) <|> ((:[]) <$> p) <?> "argument list"
@@ -420,13 +422,19 @@ pConD = element $ \id -> do
 pConDBody        = pCombine Expr.addField fields
 
 
-pModule name path = do
-                    id <- genID
-                    mapStateVal (State.namespace %~ Namespace.pushScope id)
-                    ret <- Module.mk id <$>   (appID Type.Module <*> pure name <*> pure path)
-                                        <??$> Indent.withPos (moduleBlock pModuleBody)
-                    mapStateVal (State.namespace %~ Namespace.popScope)
-                    return ret
+pModule name path = element $ \id -> do
+                    State.withScope id (Module.mk id <$>   (appID Type.Module <*> pure name <*> pure path)
+                                                     <??$> Indent.withPos (moduleBlock pModuleBody))
+
+
+-- Parser translation unit.
+-- Provides a global namespace when parsing module, expression etc.
+unit p = do
+    --FIXME[WD] : change id to datatype
+    let id = -666 
+    --id <- genID
+    --Unit id <$> State.withScope id p
+    State.withScope id p
 
 
 
@@ -619,15 +627,15 @@ mkFuncParser func = State.withReserved (segNames segments) $ tok (Expr.app <$> t
           (Name base segments) = name
 
           segParser seg = case seg of
-              Name.NameHole    -> (:[]) <$> argExpr
-              Name.NameToken s -> []    <$  Tok.symbol s
+              Name.Hole    -> (:[]) <$> argExpr
+              Name.Token s -> []    <$  Tok.symbol s
 
           segNames = segNames' []
           segNames' names s = case s of
               []   -> names
               x:xs -> case x of
-                  Name.NameToken n -> segNames' (n:names) xs
-                  Name.NameHole    -> segNames' names     xs
+                  Name.Token n -> segNames' (n:names) xs
+                  Name.Hole    -> segNames' names     xs
 
 notReserved p = do
     rsv  <- view State.adhocReserved <$> get
@@ -890,7 +898,7 @@ appSt = State.conf %~ appConf
 -----------------------------------------------------------
 -- Usage example: parseExpr (fileFeed "test.txt")
 
-parseGen p st = run (bundleResult p) st
+parseGen p st = run (bundleResult (unit p)) st
 
 moduleParser modPath = parseGen (upToEnd $ pModule (last modPath) (init modPath)) . appSt
 exprParser           = parseGen (upToEnd expr) . appSt

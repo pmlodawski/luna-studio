@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE TupleSections             #-}
 
 module Luna.Pass.CodeGen.HSC.HSC where
@@ -27,7 +28,7 @@ import Flowbox.System.Log.Logger
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.HSC.HSC"
+logger = getLogger $(moduleName)
 
 type HExpr = HExpr.Expr
 type HComment = HComment.Comment
@@ -50,7 +51,7 @@ sectionHeader name = "-- " ++ name ++ " --\n"
 genSection :: String -> (a -> String) -> [a] -> String
 genSection header generator d = if null d
     then ""
-    else sectionHeader header ++ (join "\n" $ map generator d) ++ "\n\n"
+    else sectionHeader header ++ join "\n" (map generator d) ++ "\n\n"
 
 
 genModule :: HExpr -> [Source]
@@ -77,7 +78,7 @@ instance Functor CodeBuilder where
     fmap f builder = builder { code = f $ code builder }
 
 instance Applicative CodeBuilder where
-    pure a = Simple a
+    pure = Simple
     l <*> r = case l of
         Simple f -> case r of
             Simple  v -> Simple  $ f v
@@ -95,7 +96,7 @@ simplify c = case c of
 
 
 app :: CodeBuilder String -> CodeBuilder String -> CodeBuilder String
-app a b = Complex (\x y -> x ++ " " ++ y) <*> a <*> (simplify b)
+app a b = Complex (\x y -> x ++ " " ++ y) <*> a <*> simplify b
 
 buildExpr :: HExpr -> CodeBuilder String
 buildExpr e = case e of
@@ -111,30 +112,23 @@ buildExpr e = case e of
                                              ++ case rename of
                                                      Just name -> " as " ++ name
                                                      Nothing   -> ""
-    HExpr.DataD    name params cons ders  -> pure $ "data " ++ name ++ params' ++ " = " ++ cons' ++ ders'
-                                             where params' = if null params then "" else " " ++ join " " params
-                                                   cons'   = join " | " (fExpMap cons)
+    HExpr.DataD    name params cons ders  -> pure $ "data " ++ name ++ " " ++ unwords params ++ " = " ++ cons' ++ ders'
+                                             where cons'   = join " | " (fExpMap cons)
                                                    ders'   = if null ders then "" else " deriving (" ++ sepjoin (map show ders) ++ ")"
     HExpr.InstanceD tp decs               -> pure $ "instance " ++ (code.buildExpr) tp ++ " where { " ++ join "; " (map (code.buildExpr) decs) ++ " }"
-    HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ params' ++ " = " ++ (code.buildExpr) con
-                                             where params' = if null params then "" else " " ++ join " " (fsExpMap params)
-    HExpr.Con      name fields            -> pure $ name ++ body
-                                             where body = if null fields then "" else " " ++ spacejoin (fExpMap fields)
+    HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ " " ++ (unwords . fsExpMap) params ++ " = " ++ (code.buildExpr) con
+    HExpr.Con      name fields            -> pure $ name ++ unwords ("":fsExpMap fields)
     --HExpr.CondE    cond sucess failure    -> Complex $ "if " ++ csBuildExpr cond ++ " then " ++ (code.buildDoBlock) sucess ++ " else " ++ (code.buildDoBlock) failure
     HExpr.CondE    cond sucess failure    -> Complex $ "ifThenElse' " ++ csBuildExpr cond ++ (code.simplify.buildDoBlock) sucess ++ (code.simplify.buildDoBlock) failure
     HExpr.RecUpdE  expr name val          -> Complex $ csBuildExpr expr ++ " { " ++ name ++ " = " ++ cBuildExpr val ++ "}"
     HExpr.Typed    cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ cBuildExpr cls
     HExpr.TypedP   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ cBuildExpr cls
     HExpr.TypedE   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ cBuildExpr cls
-    HExpr.TySynD   name params dstType    -> Complex $ "type " ++ name ++ " " ++ spacejoin (fsExpMap params) ++ " = " ++ (code.buildExpr) dstType
-    HExpr.Function name signature expr    -> pure $ name ++ params ++ " = " ++ (code.buildExpr) expr
-                                             where params = if null signature then ""
-                                                            else " " ++ join " " (fExpMap signature)
-    HExpr.Lambda   signature expr         -> pure $ "(\\" ++ params ++ " -> " ++ (code.simplify.buildExpr) expr ++ ")"
-                                             where params = if null signature then ""
-                                                            else " " ++ join " " (fsExpMap signature)
+    HExpr.TySynD   name params dstType    -> Complex $ "type " ++ name ++ " " ++ unwords (fsExpMap params) ++ " = " ++ (code.buildExpr) dstType
+    HExpr.Function name signature expr    -> pure $ name ++ unwords ("":fExpMap signature) ++ " = " ++ (code.buildExpr) expr
+    HExpr.Lambda   signature expr         -> pure $ "(\\" ++ unwords ("":fsExpMap signature) ++ " -> " ++ (code.simplify.buildExpr) expr ++ ")"
     HExpr.LetBlock exprs result           -> pure $ "let { " ++ join "; " (fExpMap exprs) ++ " } in " ++ (code.buildExpr) result
-    HExpr.LetExpr  expr                   -> pure $ "let " ++ cBuildExpr expr 
+    HExpr.LetExpr  expr                   -> pure $ "let " ++ cBuildExpr expr
     HExpr.DoBlock  exprs                  -> buildDoBlock exprs
     HExpr.Infix    name src dst           -> Complex $ csBuildExpr src ++ " " ++ name ++ " " ++ csBuildExpr dst
     HExpr.NOP                             -> pure $ "nop"
@@ -142,7 +136,7 @@ buildExpr e = case e of
     HExpr.Arrow      src dst              -> pure $ (code.buildExpr) src ++ " <- " ++ (code.buildExpr) dst
     HExpr.Lit      val                    -> pure $ genLit val
     HExpr.LitT     val                    -> pure $ genLit val
-    HExpr.Tuple    items                  -> if length items == 1 then app (Simple "OneTuple") (buildExpr $ items!!0)
+    HExpr.Tuple    items                  -> if length items == 1 then app (Simple "OneTuple") (buildExpr $ head items)
                                                                   else Simple $ "(" ++ sepjoin (map csBuildExpr items) ++ ")"
     --pure $ "(" ++ (if length items == 1 then "OneTuple" else "")
     --                                         ++ sepjoin (fExpMap items) ++ ")"
@@ -162,8 +156,7 @@ buildExpr e = case e of
     HExpr.Comment  comment                -> buildComment comment
     HExpr.ViewP    name dst               -> pure $ "(" ++ name ++ " -> " ++ (code.buildExpr) dst ++ ")"
     --_                                     ->
-    where spacejoin   = join " "
-          sepjoin     = join ", "
+    where sepjoin     = join ", "
 
 
 buildComment :: HComment -> CodeBuilder String
@@ -196,8 +189,10 @@ buildBody exprs = if null exprs then "" else join "; " (fExpMap exprs) ++ ";"
 
 genLit :: HLit.Lit -> String
 genLit lit = case lit of
-    HLit.Integer val -> val
-    HLit.Int     val -> val
-    HLit.Float   val -> val
+    HLit.Integer val -> escapeNegative val
+    HLit.Int     val -> escapeNegative val
+    HLit.Float   val -> escapeNegative val
     HLit.String  val -> "\"" ++ val   ++ "\""
     HLit.Char    val -> "'"  ++ [val] ++ "'"
+    where escapeNegative num@('-':_) = '(' : num ++ ")"
+          escapeNegative num         = num

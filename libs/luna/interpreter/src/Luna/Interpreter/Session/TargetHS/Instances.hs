@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Luna.Interpreter.Session.TargetHS.Instances where
 
 import qualified FamInstEnv
@@ -21,7 +22,7 @@ import Luna.Interpreter.Session.Session (Session)
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.TargetHS.Instances"
+logger = getLoggerIO $(moduleName)
 
 
 dshow :: Outputable.Outputable a => GHC.DynFlags -> a -> String

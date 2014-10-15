@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE CPP          #-}
 {-# LANGUAGE BangPatterns #-}
 
 module Main where
@@ -17,7 +18,13 @@ import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Graphics.Image.Merge
 
 import qualified Data.Array.Accelerate as A
-import Data.Array.Accelerate.CUDA
+
+#ifdef ACCELERATE_CUDA_BACKEND
+import Data.Array.Accelerate.CUDA        (run)
+#else
+import Data.Array.Accelerate.Interpreter (run)
+#endif
+
 import Data.Foldable
 import Math.Space.Space
 

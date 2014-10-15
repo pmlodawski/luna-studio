@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ConstraintKinds #-}
@@ -53,7 +54,7 @@ type LModule = LModule.Module
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen"
+logger = getLoggerIO $(moduleName)
 
 
 
@@ -528,9 +529,12 @@ genLit lit = case lit of
     LLit.Number _ (Number.Number base repr exp sign) -> do
         when (base /= 10) $ Pass.fail "number base different than 10 are not yet supported"
         when (not $ isNothing exp) $ Pass.fail "number exponents are not yet supported"
+        let sign' = case sign of
+                        Number.Positive -> ""
+                        Number.Negative -> "-"
         case repr of
-            Number.Float   int frac -> mkLit "Double" (HLit.Float $ int ++ "." ++ frac)
-            Number.Decimal int      -> mkLit "Int"    (HLit.Integer int)
+            Number.Float   int frac -> mkLit "Double" (HLit.Float   $ sign' ++ int ++ "." ++ frac)
+            Number.Decimal int      -> mkLit "Int"    (HLit.Integer $ sign' ++ int)
 
     --LLit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
     --LLit.Float   _ str      -> mkLit "Double" (HLit.Float   str)

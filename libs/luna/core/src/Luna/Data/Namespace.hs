@@ -6,16 +6,16 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Data.Namespace where
 
 
-import GHC.Generics        (Generic)
+import GHC.Generics (Generic)
 
-import           Flowbox.Prelude     hiding (head)
 import qualified Data.Maps           as Map
-import           Data.Map            (Map)
-import           Luna.AST.Name       (Name)
+import           Data.Maybe          (fromJust)
+import           Flowbox.Prelude     hiding (head, id)
 import           Luna.AST.AST        (ID)
 import           Luna.Data.AliasInfo (AliasInfo)
 import qualified Luna.Data.AliasInfo as Alias
@@ -120,7 +120,6 @@ modAlias f = info %~ f
 
 instance Default Namespace where
     def = Namespace def def
-
 
 instance Monoid Namespace where
     mempty      = Namespace mempty mempty

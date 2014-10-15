@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Bus.RPC.Pipes where
 
@@ -31,7 +32,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.RPC.Pipes"
+logger = getLoggerIO $(moduleName)
 
 
 produce :: Pipes.Producer (Message, Message.CorrelationID) BusT ()

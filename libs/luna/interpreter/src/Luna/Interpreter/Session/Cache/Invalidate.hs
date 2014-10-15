@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Luna.Interpreter.Session.Cache.Invalidate where
 
 import           Control.Monad.State hiding (mapM, mapM_)
@@ -35,7 +36,7 @@ import qualified Luna.Lib.Manager                            as LibManager
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.Cache.Invalidate"
+logger = getLoggerIO $(moduleName)
 
 
 modifyAll :: Session ()

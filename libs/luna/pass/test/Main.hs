@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell           #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
@@ -82,7 +83,7 @@ genProject name = let
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox"
+logger = getLoggerIO $(moduleName)
 
 
 --example :: Source
@@ -133,7 +134,7 @@ example = Source.Source ["Main"] $
 main :: IO ()
 main = do
     --DistMain.main
-    Logger.setLevel DEBUG "Flowbox"
+    Logger.setLevel DEBUG ""
     --let x = Parser.parse' example
     --    --x :: Int
 

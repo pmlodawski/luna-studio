@@ -6,11 +6,12 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.AST.Name where
 
 
-import GHC.Generics        (Generic)
+import GHC.Generics (Generic)
 
 import           Flowbox.Prelude
 import qualified Data.Map        as Map
@@ -24,33 +25,37 @@ import           Data.List         (intersperse)
 -- Data types
 ----------------------------------------------------------------------
 
-data Name = Name { _base :: String, _segments :: [NameSegment] }
-          deriving (Show, Eq, Generic, Read)
+data Name = Name { _base :: String, _segments :: [Segment] }
+          deriving (Show, Eq, Generic, Read, Ord)
 
-
-data NameSegment = NameToken String
-                 | NameHole
-                 deriving (Show, Eq, Generic, Read)
+data Segment = Token String
+             | Hole
+             deriving (Show, Eq, Generic, Read, Ord)
 
 makeLenses ''Name
 instance QShow Name
 
-instance QShow NameSegment
+instance QShow Segment
 
 
+single :: String -> Name
 single = flip Name []
-multi  = Name
+
+multi :: String -> [Segment] -> Name
+multi = Name
+
 
 isSingle :: Name -> Bool
 isSingle = null . view segments
 
+
 isMulti :: Name -> Bool
 isMulti = not . isSingle
 
-segmentShow :: NameSegment -> String
+segmentShow :: Segment -> String
 segmentShow name = case name of
-    NameToken s -> s
-    NameHole    -> "_"
+    Token s -> s
+    Hole    -> "_"
 
 toStr :: Name -> String
 toStr n = if isSingle n
@@ -65,10 +70,10 @@ unified n = if isSingle n
 
 
 -- close the definition, check if name holes are defined explicite
--- define nameholes otherwise
+-- define Holes otherwise
 close :: Name -> Name
-close n@(Name base segments) = case NameHole `elem` segments of
+close n@(Name base segments) = case Hole `elem` segments of
     True  -> n
     False -> case null segments of
         True  -> n
-        False -> Name base $ (NameHole : intersperse NameHole segments)
+        False -> Name base $ (Hole : intersperse Hole segments)

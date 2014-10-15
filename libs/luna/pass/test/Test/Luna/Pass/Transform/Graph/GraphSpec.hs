@@ -29,18 +29,25 @@ import qualified Test.Luna.SampleCodes                   as SampleCodes
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
     ast         <- Common.getAST code
+    putStrLn "== getGraph"
     (graph, pm) <- Common.getGraph bc def ast
-    --printLn
-    --print ast
-    --printLn
-    --print graph
-    --print pm
-    --printLn
+    printLn
+    print ast
+    printLn
+    print graph
+    printLn
+    print pm
+    printLn
+    putStrLn "== getExpr"
     (ast2  , pm2) <- Common.getExpr bc graph pm ast
-    --print ast2
-    --print pm
+    print ast2
+    printLn
+    print pm2
+    printLn
+    putStrLn "== getGraph"
     (graph3, pm3) <- Common.getGraph bc pm2 ast2
-
+    print pm3
+    printLn
     expr  <- Common.getMain (clearIDs 0 ast)
     expr2 <- Common.getMain (clearIDs 0 ast2)
 
@@ -57,9 +64,11 @@ backAndForth2' :: Breadcrumbs -> Graph -> Graph -> IO ()
 backAndForth2' bc providedGraph expectedGraph = do
     emptyAst  <- Common.getAST SampleCodes.emptyMain
     (ast, pm) <- Common.getExpr bc providedGraph def emptyAst
-    --printLn
-    --print ast
-    --print pm
+    printLn
+    print ast
+    printLn
+    print pm
+    printLn
     (resultGraph, _pm2) <- Common.getGraph bc pm ast
     resultGraph `shouldBe` expectedGraph
 
@@ -98,7 +107,7 @@ sampleGraphs =
         [(100, 200, Edge.Data Port.All $ Port.Num 5)
         ,(100, 200, Edge.Data Port.All $ Port.Num 3)
         ]
-    , named "simple graph 4"
+    , named "simple graph 5"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
         , fixEmpty' (100, Node.Expr "foo" "" (0, 1))
@@ -107,14 +116,14 @@ sampleGraphs =
         [(100, -3, Edge.Data Port.All $ Port.Num 2)
         ,(100, -3, Edge.Data Port.All $ Port.Num 3)
         ]
-    , named "simple graph 5"
+    , named "simple graph 6"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
         , fixEmpty' (100, Node.Expr "main" "" (0, 1))
         ,(-3, Node.Outputs        (0, 3))
         ]
         [(100, -3, Edge.Data Port.All Port.All)]
-    , named "simple graph 6"
+    , named "simple graph 7"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
         , fixEmpty' (100, Node.Expr "main" "" (0, 1))
@@ -131,6 +140,55 @@ sampleGraphs =
         ,(-3, Node.Outputs        (0, 3))
         ]
         [(200, 100, Edge.Data Port.All $ Port.Num 5)]
+    -- , named "graph with folded nodes 1"
+    -- $ Graph.addMonadicEdges $ Graph.mkGraph
+    --    [(-2, Node.Inputs         (0, 0))
+    --    , fixEmpty' (100, Node.Expr "1 * 2 * 3" "" (0, 1))
+    --    ,(-3, Node.Outputs        (0, 2))
+    --    ]
+    --    []
+    , named "graph with folded nodes 2"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "1.+ 2" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        []
+    , named "graph with folded nodes 3"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "1.+ 2.* 2" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        []
+    , named "graph with folded nodes 4"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "(1.+ 2).* 2" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        []
+    , named "graph with folded nodes 5"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "a.foo bar 1 \"asda\"" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        []
+     , named "graph with folded nodes 6"
+     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "a.foo bar baz (gaz 1 \"asda\")" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        []
+     , named "BATCH-62"
+     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2, Node.Inputs         (0, 0))
+        , fixEmpty' (100, Node.Expr "12" "" (0, 1))
+        ,(-3, Node.Outputs        (0, 2))
+        ]
+        [(100, -3, Edge.Data Port.All $ Port.Num 1)]
     ]
 
 

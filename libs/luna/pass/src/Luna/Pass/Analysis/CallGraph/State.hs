@@ -25,7 +25,7 @@ import qualified Luna.Data.CallGraph       as CallGraph
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.CallGraph.State"
+logger = getLoggerIO $(moduleName)
 
 
 data State = State { _cg      :: CallGraph
