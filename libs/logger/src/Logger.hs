@@ -159,6 +159,6 @@ functionResult str mm = LoggerT $ do
 trace :: (Monad m) => String -> LoggerT e m ()
 trace s = LoggerT $ return (Right (), [Log s])
 
-err :: (Show e, Monad m) => e -> String -> LoggerT e m ()
+err :: (Show e, Monad m) => e -> String -> LoggerT e m a
 err e s = LoggerT $ return (Left e, [Error s])
 
