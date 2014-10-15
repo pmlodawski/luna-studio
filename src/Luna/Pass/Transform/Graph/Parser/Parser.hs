@@ -22,6 +22,7 @@ import           Luna.AST.Expr                          (Expr)
 import qualified Luna.AST.Expr                          as Expr
 import           Luna.AST.Pat                           (Pat)
 import qualified Luna.AST.Pat                           as Pat
+import           Luna.Data.ASTInfo                      (ASTInfo)
 import qualified Luna.Data.ASTInfo                      as ASTInfo
 import qualified Luna.Data.Config                       as Config
 import qualified Luna.Graph.Attributes.Naming           as Attributes
@@ -47,8 +48,8 @@ import           Luna.Pragma.Pragma (Pragma)
 
 
 
-logger :: Logger
-logger = getLogger $(moduleName)
+logger :: LoggerIO
+logger = getLoggerIO $(moduleName)
 
 
 run :: Graph -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)
@@ -119,10 +120,10 @@ patVariables pat = case pat of
     _                 -> []
 
 
-patchedParserState :: ASTInfo.ASTInfo
+patchedParserState :: ASTInfo
                    -> ParserState.State (Pragma Pragma.ImplicitSelf, (Pragma Pragma.AllowOrphans, (Pragma Pragma.TabLength, ())))
-patchedParserState info = def
-    & ParserState.info .~ info
+patchedParserState info' = def
+    & ParserState.info .~ info'
     & ParserState.conf .~ parserConf
     where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
 
@@ -132,7 +133,7 @@ parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
         [s] -> do
-            p <- case Parser.parseString pat $ Parser.patternParser (patchedParserState $ ASTInfo.mk IDFixer.unknownID) of
+            p <- case Parser.parseString pat $ Parser.patternParser (patchedParserState $ ASTInfo.mk $ IDFixer.unknownID) of
                     Left  er     -> left $ show er
                     Right (p, _) -> return p
             let e = Expr.Assignment nodeID p s
@@ -164,9 +165,13 @@ parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     expr <- if isOperator app
                 then return $ Expr.Var nodeID app
-                else case Parser.parseString app $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
-                    Left  er     -> left $ show er
-                    Right (e, _) -> return e
+                else do
+                    logger warning $ "Parsing " ++ show app
+                    case Parser.parseString app $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
+                        Left  er     -> do logger warning "failed"
+                                           left $ show er
+                        Right (e, _) -> do logger warning "passed"
+                                           return e
     ids <- hoistEither =<< ExtractIDs.runExpr expr
     mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
     let requiresApp (Expr.Con {}) = True

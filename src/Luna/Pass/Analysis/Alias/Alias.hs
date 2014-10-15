@@ -26,18 +26,18 @@ import qualified Luna.AST.Pat                   as Pat
 import           Luna.AST.Type                  (Type)
 import qualified Luna.AST.Type                  as Type
 import           Luna.Data.AliasInfo            (AliasInfo)
-import           Luna.Pass.Analysis.Alias.State (VAState, bindVar, regParentVarName, regTypeName, regVarName)
-import qualified Luna.Pass.Analysis.Alias.State as VAState
+import           Luna.Data.Namespace.State      (regModule, withScope, getAliasInfo, regExpr, regPat, regType, regLit, regVarName, bindVar, regTypeName)
 import           Luna.Pass.Pass                 (Pass)
 import qualified Luna.Pass.Pass                 as Pass
-
+import qualified Luna.Data.Namespace            as Namespace
+import           Luna.Data.Namespace       (Namespace)
 
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-type VAPass result = Pass VAState result
+type VAPass result = Pass Namespace result
 
 
 run :: Module -> Pass.Result AliasInfo
@@ -46,82 +46,82 @@ run = (Pass.run_ (Pass.Info "Alias") mempty) . vaMod
 
 vaMod :: Module -> VAPass AliasInfo
 vaMod el@(Module.Module id cls imports classes typeAliases typeDefs fields methods modules) = do
-    VAState.registerModule el
-    withID $ do regVarName name id
-                continue
-    VAState.getAliasInfo
-    where continue =  pure ()
-                   -- <* mapM registerDataCons classes -- register just data constructors before functions
+    regModule el
+    withScope id $ regVarName name id *> continue
+    getAliasInfo
+    where name     = el ^. Module.cls ^. Type.name
+          continue =  pure ()
+                   -- -- <* mapM registerDataCons classes -- register just data constructors before functions
                    <* mapM registerFuncHeaders methods
+                   <* mapM registerClassHeaders classes
 
                    <* vaType cls
                    <* fexpMap imports
-                   <* fexpMap classes -- register functions before data member functions
+                   <* fexpMap classes -- register class functions before data member functions
                    <* fexpMap typeAliases
                    <* fexpMap typeDefs
                    <* fexpMap fields
                    <* fexpMap methods
                    <* fmodMap modules
-          withID   = VAState.withID id
-          id       = el ^. Module.id
-          name     = el ^. Module.cls ^. Type.name
           fexpMap  = mapM vaExpr
           fmodMap  = mapM vaMod
 
 
-registerDataCons :: Expr.Expr -> VAPass ()
-registerDataCons el = VAState.registerExpr el *> case el of
-    Expr.Data       {} -> withID continue
-    Expr.ConD       {} -> regParentVarName name id *> continue
-    _                  -> continue
-    where continue = Expr.traverseM_ registerDataCons vaType vaPat vaLit pure el
-          withID   = VAState.withID (el ^. Expr.id)
-          id       = el ^.  Expr.id
-          name     = el ^.  Expr.name
+--registerDataCons :: Expr.Expr -> VAPass ()
+--registerDataCons el = VAState.regExpr el *> case el of
+--    --Expr.Data       {} -> withID continue
+--    --Expr.ConD       {} -> regParentVarName name id *> continue
+--    _                  -> continue
+--    where continue = Expr.traverseM_ registerDataCons vaType vaPat vaLit el
+--          withID   = VAState.withID (el ^. Expr.id)
+--          id       = el ^.  Expr.id
+--          name     = el ^.  Expr.name
+
+registerClassHeaders :: Expr.Expr -> VAPass ()
+registerClassHeaders (Expr.Data id cls cons classes methods) = 
+    regTypeName name id <* mapM registerConsHeaders cons where
+        name = view Type.name cls
+
+registerConsHeaders :: Expr.Expr -> VAPass ()
+registerConsHeaders (Expr.ConD id name fields) = regVarName name id
+
 
 
 registerFuncHeaders :: Expr.Expr -> VAPass ()
-registerFuncHeaders el = VAState.registerExpr el *> case el of
-    Expr.Function   _ _ name _ _ _ -> regVarName (Name.unified name) id       *> withID continue
-    _                  -> continue
+registerFuncHeaders el = regExpr el *> case el of
+    Expr.Function   id _ name _ _ _ -> regVarName (Name.unified name) id
     where continue = Expr.traverseM_ registerFuncHeaders vaType vaPat vaLit pure el
-          withID   = VAState.withID (el ^. Expr.id)
-          id       = el ^.  Expr.id
-          name     = el ^.  Expr.name
 
 
 vaExpr :: Expr.Expr -> VAPass ()
-vaExpr el = VAState.registerExpr el *> case el of
-    Expr.Lambda     {} -> withID continue
-    Expr.Cond       {} -> withID continue
-    Expr.Data       {} -> regTypeName name id *> withID continue
-    Expr.DataNative {} -> withID continue
-    Expr.Var        {} -> bindVar id name
-    Expr.NativeVar  {} -> bindVar id name
-    Expr.Con        {} -> bindVar id name
-    Expr.ConD       {} -> regParentVarName name id *> continue
-    Expr.Function   _ _ name _ _ _ -> regVarName (Name.unified name) id       *> withID continue
-    Expr.Field      {} -> regVarName name id       *> continue
-    Expr.Assignment {} -> vaExpr dst <* vaPat pat
+vaExpr el = regExpr el *> case el of
+    Expr.Lambda     {}              -> withScope id continue
+    Expr.Cond       {}              -> withScope id continue
+    Expr.Data       {}              -> withScope id continue
+    Expr.DataNative {}              -> withScope id continue
+    Expr.Function   id _ name _ _ _ -> withScope id continue
+    Expr.Var        id name         -> bindVar id name
+    Expr.FuncVar    id name         -> bindVar id (Name.unified name)
+    Expr.NativeVar  id name         -> bindVar id name
+    Expr.Con        id name         -> bindVar id name
+    Expr.ConD       {}              -> continue
+    Expr.Field      id name _ _     -> regVarName name id *> continue
+    Expr.Assignment id pat dst      -> vaExpr dst <* vaPat pat
     _                  -> continue
     where continue = Expr.traverseM_ vaExpr vaType vaPat vaLit pure el
-          withID   = VAState.withID (el ^. Expr.id)
           id       = el ^.  Expr.id
-          name     = el ^.  Expr.name
-          pat      = el ^?! Expr.pat
-          dst      = el ^?! Expr.dst
 
 
 vaPat :: Pat -> VAPass ()
-vaPat el = VAState.registerPat el *> case el of
+vaPat el = regPat el *> case el of
     Pat.Var     id name                 -> regVarName name id
     _                                   -> Pat.traverseM_ vaPat vaType vaLit el
 
 
 vaType :: Type -> VAPass ()
-vaType el = VAState.registerType el *> case el of
+vaType el = regType el *> case el of
     _                                   -> Type.traverseM_ vaType el
 
 
 vaLit :: Lit -> VAPass ()
-vaLit el = VAState.registerLit el
+vaLit el = regLit el

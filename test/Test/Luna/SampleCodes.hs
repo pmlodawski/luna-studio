@@ -168,7 +168,7 @@ def main arg:
 |], named "tuples 2" [r|
 def main arg:
     x = 4
-    y = {1, x}
+    y = 1, x
 |], named "lists" [r|
 def main arg:
     x = 4
@@ -176,6 +176,15 @@ def main arg:
 |], named "native code" [r|
 def main arg:
     ```autoLift1 print #{arg}```
+|], named "hello world" [r|
+def print msg:
+    ```autoLift1 print #{msg}```
+
+def main:
+    hello = "hello"
+    world = "world"
+    print hello
+    print world
 |]]
 
 ---------------------------------------------------------------------------
