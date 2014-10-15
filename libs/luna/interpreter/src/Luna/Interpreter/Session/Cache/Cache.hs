@@ -15,9 +15,10 @@ import qualified Data.Maybe          as Maybe
 import           Flowbox.Control.Error
 import           Flowbox.Data.MapForest                      (MapForest)
 import qualified Flowbox.Data.MapForest                      as MapForest
-import           Flowbox.Prelude
+import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
+import qualified Luna.Graph.Node                             as Node
 import qualified Luna.Interpreter.Session.Cache.Free         as Free
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo (CacheInfo))
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
@@ -26,7 +27,7 @@ import qualified Luna.Interpreter.Session.Cache.Status       as CacheStatus
 import qualified Luna.Interpreter.Session.Data.CallData      as CallData
 import           Luna.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
-import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
+import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.Hash          (Hash)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
@@ -35,6 +36,7 @@ import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
+import qualified Luna.Lib.Lib                                as Library
 
 
 
@@ -112,6 +114,13 @@ put callDataPath predVarNames varName = do
                                  updatedStatus varName dependencies
 
     modify (Env.cached %~ MapForest.insert callPointPath cacheInfo)
+
+
+deleteNode :: Library.ID -> Node.ID -> Session ()
+deleteNode libraryID nodeID = do
+    let matchNode k _ = last k == CallPoint libraryID nodeID
+    matching <- MapForest.find matchNode <$> cached
+    mapM_ delete' matching
 
 
 delete :: CallPointPath -> Session ()

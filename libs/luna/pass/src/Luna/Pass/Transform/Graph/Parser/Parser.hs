@@ -13,8 +13,9 @@ module Luna.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import qualified Data.IntSet                            as IntSet
-import qualified Data.List                              as List
+import qualified Data.IntSet                as IntSet
+import qualified Data.List                  as List
+
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Arg                           as Arg
@@ -76,7 +77,6 @@ parseNode inputs (nodeID, node) = do
         Node.Expr    {} -> parseExprNode    nodeID $ node ^. Node.expr
         Node.Inputs  {} -> parseInputsNode  nodeID inputs
         Node.Outputs {} -> parseOutputsNode nodeID
-    --State.setGraphFolded nodeID
     State.setPosition    nodeID $ node ^. Node.pos
 
 
@@ -102,14 +102,14 @@ parseArg nodeID (num, input) = case input of
 
 parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
-    srcs <- State.getNodeSrcs nodeID
-    case srcs of
-        []                -> whenM State.doesLastStatementReturn
-                                $ State.setOutput $ Expr.Tuple IDFixer.unknownID []
-        --[src@Expr.Var {}] -> State.setOutput src
-        [src] -> State.setOutput src
-        --[_]               -> return ()
-        _:(_:_)           -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
+    srcs    <- State.getNodeSrcs nodeID
+    inPorts <- State.inboundPorts nodeID
+    case (srcs, inPorts) of
+        ([], _)               -> whenM State.doesLastStatementReturn $
+                                   State.setOutput $ Expr.Tuple IDFixer.unknownID []
+        ([src], [Port.Num 0]) -> State.setOutput $ Expr.Grouped IDFixer.unknownID src
+        ([src], _           ) -> State.setOutput src
+        _                     -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
 
 
 patVariables :: Pat -> [Expr]
@@ -215,7 +215,7 @@ addExpr nodeID e = do
         connectedToOutput = List.any (Node.isOutputs . view _2)
                           $ Graph.lsuclData graph nodeID
 
-    if (folded && assignmentCount > 0) || defaultNodeGen
+    if (folded && assignmentCount == 1) || defaultNodeGen
         then State.addToNodeMap (nodeID, Port.All) e
         else if assignment || assignmentCount > 1
             then do outName <- State.getNodeOutputName nodeID
@@ -225,7 +225,7 @@ addExpr nodeID e = do
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
             else do State.addToNodeMap (nodeID, Port.All) e
-                    unless connectedToOutput $
+                    unless (connectedToOutput || assignmentCount == 1 ) $
                         State.addToBody e
 
 
