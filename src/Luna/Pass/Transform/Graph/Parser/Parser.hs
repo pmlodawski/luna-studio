@@ -7,13 +7,14 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import qualified Data.IntSet                            as IntSet
 import qualified Data.List                              as List
-import qualified Data.IntSet                               as IntSet
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Arg                           as Arg
@@ -47,7 +48,7 @@ import           Luna.Pragma.Pragma (Pragma)
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.Parser"
+logger = getLogger $(moduleName)
 
 
 run :: Graph -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)
@@ -104,8 +105,9 @@ parseOutputsNode nodeID = do
     case srcs of
         []                -> whenM State.doesLastStatementReturn
                                 $ State.setOutput $ Expr.Tuple IDFixer.unknownID []
-        [src@Expr.Var {}] -> State.setOutput src
-        [_]               -> return ()
+        --[src@Expr.Var {}] -> State.setOutput src
+        [src] -> State.setOutput src
+        --[_]               -> return ()
         _:(_:_)           -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
 
 
@@ -201,14 +203,16 @@ addExpr nodeID e = do
     assignment     <- State.hasFlag nodeID Attributes.astAssignment
     defaultNodeGen <- State.hasFlag nodeID Attributes.defaultNodeGenerated
 
-
     let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
         assignmentCount = length $ List.filter assignmentEdge
                                  $ Graph.lsuclData graph nodeID
 
-    if folded || defaultNodeGen
+        connectedToOutput = List.any (Node.isOutputs . view _2)
+                          $ Graph.lsuclData graph nodeID
+
+    if (folded && assignmentCount == 1) || defaultNodeGen
         then State.addToNodeMap (nodeID, Port.All) e
-        else if assignment || assignmentCount > 0
+        else if assignment || assignmentCount > 1
             then do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName
@@ -216,7 +220,8 @@ addExpr nodeID e = do
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
             else do State.addToNodeMap (nodeID, Port.All) e
-                    State.addToBody e
+                    unless (connectedToOutput || assignmentCount == 1 ) $
+                        State.addToBody e
 
 
 isOperator :: String -> Bool

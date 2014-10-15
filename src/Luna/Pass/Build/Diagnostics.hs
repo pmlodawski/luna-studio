@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Build.Diagnostics where
 
@@ -43,7 +44,7 @@ none = Diagnostics False False False False False False
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Build.Diagnostics"
+logger = getLoggerIO $(moduleName)
 
 
 printAST :: (QShow.QShow a, MonadIO m) => a -> Diagnostics -> m ()

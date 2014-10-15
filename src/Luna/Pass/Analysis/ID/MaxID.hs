@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Analysis.ID.MaxID where
 
@@ -24,25 +25,25 @@ import qualified Luna.Pass.Pass                 as Pass
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Analysis.ID.MaxID"
+logger = getLogger $(moduleName)
 
 
 type MaxIDPass result = Pass IDState result
 
 
 run :: Module -> Pass.Result AST.ID
-run = (Pass.run_ (Pass.Info "MaxID") $ State.make) . analyseModule
+run = (Pass.run_ (Pass.Info "MaxID") State.make) . analyseModule
 
 
 runExpr :: Expr -> Pass.Result AST.ID
-runExpr = (Pass.run_ (Pass.Info "MaxID") $ State.make) . analyseExpr
+runExpr = (Pass.run_ (Pass.Info "MaxID") State.make) . analyseExpr
 
 
 analyseModule :: Module -> MaxIDPass AST.ID
-analyseModule m = do IDTraverse.traverseModule State.compareID m
-                     State.getMaxID
+analyseModule m = do IDTraverse.traverseModule State.findMaxID m
+                     State.getFoundID
 
 
 analyseExpr :: Expr -> MaxIDPass AST.ID
-analyseExpr e = do IDTraverse.traverseExpr State.compareID e
-                   State.getMaxID
+analyseExpr e = do IDTraverse.traverseExpr State.findMaxID e
+                   State.getFoundID

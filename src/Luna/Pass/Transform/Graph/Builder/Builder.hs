@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
@@ -35,14 +36,14 @@ import qualified Luna.Graph.Node.OutputName              as OutputName
 import           Luna.Graph.Port                         (Port)
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Graph.PropertyMap                  (PropertyMap)
+import qualified Luna.Pass.Analysis.ID.MinID             as MinID
 import qualified Luna.Pass.Pass                          as Pass
 import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
 
 
-
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
+logger = getLoggerIO $(moduleName)
 
 
 run :: AliasInfo -> PropertyMap -> Bool -> Expr -> Pass.Result (Graph, PropertyMap)
@@ -156,7 +157,8 @@ buildNode astFolded monadicBind outName expr = do
         buildApp i src args = do
             graphFolded <- State.getGraphFolded i
             if graphFolded
-                then addNode' (src ^?! Expr.dst . Expr.id) (showExpr expr) []
+                then do minID <- hoistEither =<< MinID.runExpr src
+                        addNode' minID (showExpr expr) []
                 else do srcID <- buildNode astFolded False outName src
                         s     <- State.gvmNodeMapLookUp srcID
                         case s of
