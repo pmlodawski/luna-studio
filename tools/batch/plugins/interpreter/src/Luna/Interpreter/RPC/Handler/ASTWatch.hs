@@ -281,7 +281,7 @@ graphConnect (GraphConnect.Update request updateNo) = do
     sync updateNo $ GraphHandler.connect request
     let projectID = GraphConnect.projectID request
         libraryID = GraphConnect.libraryID request
-        dstID     = GraphConnect.libraryID request
+        dstID     = GraphConnect.dstNodeID request
     Cache.modifyNode projectID libraryID dstID
 
 
@@ -290,8 +290,8 @@ graphDisconnect (GraphDisconnect.Update request updateNo) = do
     sync updateNo $ GraphHandler.disconnect request
     let projectID = GraphDisconnect.projectID request
         libraryID = GraphDisconnect.libraryID request
-        dstID     = GraphDisconnect.libraryID request
-    Cache.modifyNode projectID libraryID dstID -- FIXME [PM] : invalidate successor nodes
+        dstID     = GraphDisconnect.dstNodeID request
+    Cache.modifyNode projectID libraryID dstID
 
 
 graphNodeAdd :: GraphNodeAdd.Update -> RPC Context SessionST ()
@@ -305,11 +305,13 @@ graphNodeAdd (GraphNodeAdd.Update request node updateNo) = do
 
 graphNodeRemove :: GraphNodeRemove.Update -> RPC Context SessionST ()
 graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
-    sync updateNo $ GraphHandler.nodeRemove request
     let projectID = GraphNodeRemove.projectID request
         libraryID = GraphNodeRemove.libraryID request
+        bc        = GraphNodeRemove.bc request
         nodeIDs   = GraphNodeRemove.nodeIDs request
-    mapM_ (Cache.deleteNode projectID libraryID) nodeIDs -- FIXME [PM] : invalidate successor nodes
+    mapM_ (Cache.modifyNodeSuccessors projectID libraryID bc) nodeIDs
+    sync updateNo $ GraphHandler.nodeRemove request
+    mapM_ (Cache.deleteNode projectID libraryID) nodeIDs
 
 
 graphNodeModify :: GraphNodeModify.Update -> RPC Context SessionST ()
@@ -346,6 +348,7 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
         libraryID = GraphNodeDefaultSet.libraryID request
         nodeID    = GraphNodeDefaultSet.nodeID request
     Cache.modifyNode projectID libraryID nodeID
+
 
 graphNodePropertiesSet :: GraphNodePropertiesSet.Update -> RPC Context SessionST ()
 graphNodePropertiesSet (GraphNodePropertiesSet.Update request updateNo) =
