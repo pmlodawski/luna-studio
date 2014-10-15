@@ -21,8 +21,8 @@ import           Luna.Pass.Transform.AST.IDFixer.IDFixer (clearIDs)
 import qualified Test.Luna.AST.Common                    as Common
 import           Test.Luna.Pass.Transform.Graph.Common   (named)
 import qualified Test.Luna.Pass.Transform.Graph.Common   as Common
-import           Test.Luna.SampleCodes                   (sampleCodes)
-import qualified Test.Luna.SampleCodes                   as SampleCodes
+import           Test.Luna.Sample.Code                   (sampleCodes)
+import qualified Test.Luna.Sample.Code                   as SampleCode
 
 
 
@@ -61,7 +61,7 @@ backAndForth2 bc graph = backAndForth2' bc graph graph
 
 backAndForth2' :: Breadcrumbs -> Graph -> Graph -> IO ()
 backAndForth2' bc providedGraph expectedGraph = do
-    emptyAst  <- Common.getAST SampleCodes.emptyMain
+    emptyAst  <- Common.getAST SampleCode.emptyMain
     (ast, pm) <- Common.getExpr bc providedGraph def emptyAst
     --printLn
     --print ast
@@ -354,7 +354,7 @@ spec = do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth Common.mainBC code) sampleCodes
         mapM_ (\(name, bc, code) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth bc code) SampleCodes.sampleLambdas
+                backAndForth bc code) SampleCode.sampleLambdas
 
     describe "graph <-> ast conversion" $ do
         mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $

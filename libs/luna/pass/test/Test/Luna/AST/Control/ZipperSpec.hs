@@ -17,7 +17,7 @@ import qualified Luna.AST.Control.Zipper as Zipper
 import qualified Luna.AST.Expr           as Expr
 import           Luna.AST.Module         (Module)
 import qualified Test.Luna.AST.Common    as Common
-import qualified Test.Luna.SampleCodes   as SampleCodes
+import qualified Test.Luna.Sample.Code   as SampleCode
 
 
 
@@ -26,7 +26,7 @@ main = hspec spec
 
 
 getAST :: IO Module
-getAST = Common.getAST SampleCodes.zipperTestModule
+getAST = Common.getAST SampleCode.zipperTestModule
 
 
 spec :: Spec

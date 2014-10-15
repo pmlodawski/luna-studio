@@ -4,17 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TemplateHaskell           #-}
 
-module Control.Category.Dot where
+{-# LANGUAGE ImplicitPrelude #-}
+{-# OPTIONS_GHC -F -pgmF hspec-discover #-}
 
-import Control.Category.Dot.TH
-import Prelude
-
-
-
-dot0  = ($)
-dot1  = (.)
-
-mkDots 2 10
