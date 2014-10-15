@@ -148,7 +148,7 @@ Executable test_func
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
   Build-Depends:  base           == 4.7.*  ,
                   linear                   ,
@@ -163,7 +163,7 @@ Executable test_func
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
 -- == test merge ==
 
@@ -247,7 +247,7 @@ Executable test_serialization
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
   Build-Depends:  algebraic                ,
                   accelerate               ,
