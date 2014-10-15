@@ -1,5 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
-
 module Luna.Typechecker.TypecheckClass (
     TCLoggerT, Inference(..)
   ) where
@@ -10,13 +8,18 @@ import Luna.Typechecker.Type
 import Luna.Typechecker.TypeEnv
 import Luna.Typechecker.TIMonad
 
+import Data.List
 import Data.Monoid
 
 
-generalise = undefined
+
+generalise :: TypeEnv -> Type -> TILogger Scheme
+generalise env t = return $ Scheme vars t
+  where vars = map (\(Tyvar x) -> x) (ftv t \\ ftv env)
+
 
 class Inference a where
-  infer :: (Monad m) => TypeEnv -> a -> TCLoggerT m (Subst, Type)
+  infer :: TypeEnv -> a -> TILogger (Subst, Type)
 
 instance Inference Lit where
   infer _ (LitChar _)   = return (mempty, tChar)

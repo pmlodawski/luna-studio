@@ -3,9 +3,9 @@ module Luna.Typechecker.IDs (
   ) where
 
 
+
 newtype VarID = VarID String
   deriving (Eq,Show,Ord)
 
 newtype TyID = TyID String
   deriving (Eq,Show,Ord)
-

@@ -4,12 +4,28 @@ module Luna.Typechecker.Type.Scheme (
   ) where
 
 import Luna.Typechecker.IDs
+import Luna.Typechecker.Substitution
 import Luna.Typechecker.TIMonad
 import Luna.Typechecker.Type.Type
+
+import Data.Monoid
 
 
 
 data Scheme = Scheme [TyID] Type
 
-instantiate :: (Monad m) => Scheme -> TCLoggerT m Type
-instantiate = undefined
+
+instance Types Scheme where
+  apply s (Scheme vars t) = Scheme vars (apply s' t)
+    where s' = foldr removeSubstitution s vars -- avoid var-catching substitution!
+  ftv   = error "Type.Scheme : Types Scheme : ftv"
+
+
+instantiate :: Scheme -> TILogger Type
+instantiate (Scheme vars t) = do nvars <- mapM (const mkTyID) vars
+                                 let s = zipWith (\t1 t2 -> Subst [(Tyvar t1,t2)]) vars nvars
+                                 return $ apply (mconcat s) t
+
+
+mkTyID :: TILogger Type
+mkTyID = undefined
