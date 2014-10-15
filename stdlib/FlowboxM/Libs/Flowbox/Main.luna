@@ -40,6 +40,7 @@ def Int.>= a:
 # def Int.dec:
 #     self.sub 1
 
+alias Path = String
 
 def load path:
     ```autoLift1 loadImageLuna #{path}```
