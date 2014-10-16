@@ -30,12 +30,5 @@ instance Default Flags where
     def = Flags False Nothing Nothing Nothing Nothing Nothing Nothing
 
 
-isSet :: Maybe Flags -> (Flags -> Bool) -> Bool
-isSet  Nothing     _      = False
-isSet (Just flags) getter = getter flags
-
-
-isSet' :: Maybe Flags -> (Flags -> Maybe Bool) -> Bool
-isSet'  Nothing     _      = False
-isSet' (Just flags) getter = getter flags == Just True
-
+isSet' :: Flags -> (Flags -> Maybe Bool) -> Bool
+isSet' flags getter = getter flags == Just True

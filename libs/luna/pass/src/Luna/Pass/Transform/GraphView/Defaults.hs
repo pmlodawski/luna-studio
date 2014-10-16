@@ -22,7 +22,6 @@ import           Luna.Graph.Properties               (Properties)
 import qualified Luna.Graph.Properties               as Properties
 import           Luna.Graph.PropertyMap              (PropertyMap)
 import qualified Luna.Graph.PropertyMap              as PropertyMap
-import qualified Luna.Graph.View.Default.DefaultsMap as DefaultsMap
 import           Luna.Graph.View.Default.Value       (Value)
 import           Luna.Graph.View.EdgeView            (EdgeView (EdgeView))
 import           Luna.Graph.View.GraphView           (GraphView)
@@ -44,7 +43,7 @@ addNodeDefaults :: Node.ID -> (GraphView, PropertyMap) -> (GraphView, PropertyMa
 addNodeDefaults nodeID gp@(_, propertyMap) =
     foldr (addNodeDefault nodeID) gp defaults
     where
-        defaults = Map.toList $ DefaultsMap.getDefaultsMap nodeID propertyMap
+        defaults = Map.toList $ PropertyMap.getDefaultsMap nodeID propertyMap
 
 
 addNodeDefault :: Node.ID -> (PortDescriptor, (Node.ID, Value)) -> (GraphView, PropertyMap) -> (GraphView, PropertyMap)

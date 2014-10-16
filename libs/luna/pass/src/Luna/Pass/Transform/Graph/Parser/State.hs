@@ -155,7 +155,7 @@ getNodeOutputName :: Node.ID -> GPPass String
 getNodeOutputName nodeID = view Node.outputName <$> getNode nodeID
 
 
-getFlags :: Node.ID -> GPPass (Maybe Flags)
+getFlags :: Node.ID -> GPPass Flags
 getFlags nodeID = PropertyMap.getFlags nodeID <$> getPropertyMap
 
 

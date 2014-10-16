@@ -174,14 +174,13 @@ modifyFlags fun nodeID =
     getPropertyMap >>= setPropertyMap . PropertyMap.modifyFlags fun nodeID
 
 
-getFlags :: Node.ID -> GBPass (Maybe Flags)
+getFlags :: Node.ID -> GBPass Flags
 getFlags nodeID = PropertyMap.getFlags nodeID <$> getPropertyMap
 
 
 getPosition :: Node.ID -> GBPass (Maybe Position)
 getPosition nodeID =
-    do flags <- getFlags nodeID
-       return $ view Flags.nodePosition =<< flags
+    view Flags.nodePosition <$> getFlags nodeID
 
 
 setPosition :: Node.ID -> Position -> GBPass ()

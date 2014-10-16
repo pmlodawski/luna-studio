@@ -10,8 +10,6 @@ package generated.proto.data;
 import "enum-type.proto";
 
 message Value {
-    extensions 100 to max;
-
     enum Type {
         EmptyTuple = 0;
         Int        = 1;
@@ -29,6 +27,7 @@ message Value {
     }
 
     required Type type = 1;
+    extensions 100 to max;
 }
 
 message EmptyTupleData {
