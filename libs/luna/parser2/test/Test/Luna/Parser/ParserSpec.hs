@@ -34,7 +34,7 @@ patterns = ["(a, b)", "_", "a"]
 expressions :: [String]
 expressions = [ "\"\"", "\"foo\"", "foo", "foo.bar", "foo.bar 1", "foo.bar.baz"
               , "foo.bar(baz, 12).boo", "foo.bar(baz, 12).boo", "1000e10"
-              , "2 + 5", "10 * (25 + 5)", "Main", "Foo.Bar", "Main 5", "Foo.Bar(5).Baz"]
+              , "2 + 5", "10 * (25 + 5)", "Main", "Foo.Bar", "Vector 5", "Foo.Bar(5).Baz"]
 
 
 patchedParserState :: ASTInfo.ASTInfo

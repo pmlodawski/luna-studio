@@ -182,7 +182,7 @@ parseAppNode nodeID app = do
                                     else expr
         (Expr.Wildcard {}):t -> addExpr nodeID $ Expr.App IDFixer.unknownID expr (fmap (Arg.Unnamed IDFixer.unknownID) t)
         f:t                  -> addExpr nodeID $ Expr.App IDFixer.unknownID acc  (fmap (Arg.Unnamed IDFixer.unknownID) t)
-                                where acc = Expr.Accessor nodeID app f
+                                where acc = Expr.Accessor nodeID (Expr.mkAccessor app) f
 
 
 

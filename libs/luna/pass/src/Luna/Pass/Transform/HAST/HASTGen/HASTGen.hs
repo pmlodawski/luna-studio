@@ -356,9 +356,9 @@ genExpr ast = case ast of
     LExpr.Assignment   _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
     LExpr.RecordUpdate _ src selectors expr  -> genExpr $ (setSteps sels) expr
                                                 where setter sel exp val = flip (LExpr.App 0) [Arg.Unnamed 0 val]
-                                                                         $ LExpr.Accessor 0 (Naming.mkSetName sel) exp
+                                                                         $ LExpr.Accessor 0 (LExpr.VarAccessor $ Naming.mkSetName sel) exp
                                                       getter sel exp     = flip (LExpr.App 0) []
-                                                                         $ LExpr.Accessor 0 sel exp
+                                                                         $ LExpr.Accessor 0 (LExpr.VarAccessor sel) exp
                                                       getSel sel           = foldl (flip($)) src (fmap getter (reverse sel))
                                                       setStep       (x:xs) = setter x (getSel xs)
                                                       setSteps args@(_:[]) = setStep args
@@ -380,7 +380,7 @@ genExpr ast = case ast of
     --LExpr.App          _ src args            -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (mkRTuple <$> mapM genCallExpr args)
     --LExpr.App          _ src args            -> foldr (<*>) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) [return $ HExpr.VarE "xxx"]) 
     LExpr.App          _ src args            -> HExpr.AppE (HExpr.VarE "call") <$> foldl (flip (<*>)) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) (map genCallExpr $ fmap (view Arg.arg) args)) 
-    LExpr.Accessor     _ name dst            -> HExpr.AppE <$> (pure $ mkMemberGetter name) <*> genExpr dst --(get0 <$> genExpr dst))
+    LExpr.Accessor     _ acc dst             -> HExpr.AppE <$> (pure $ mkMemberGetter $ view LExpr.accName acc) <*> genExpr dst --(get0 <$> genExpr dst))
     LExpr.TypeAlias    _ srcType dstType     -> case srcType of
                                                     LType.Con _ segments                    -> HExpr.TySynD (last segments) [] <$> genType' dstType
                                                     LType.App _ (LType.Con _ segments) args -> HExpr.TySynD (last segments) <$> mapM genType' args <*> genType' dstType
