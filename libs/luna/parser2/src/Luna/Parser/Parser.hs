@@ -558,7 +558,7 @@ entSimpleE = choice[ caseE -- CHECK [wd]: removed try
                    , try (appID Expr.RefType <*  Tok.ref <*> Tok.conIdent) <* Tok.accessor <*> varOp
                    , appID Expr.Ref     <*  Tok.ref <*> entSimpleE
                    , appID Expr.Lit     <*> literal
-                   , appID Expr.List    <*> list  listE
+                   , appID Expr.List    <*> list listE
                    , appID Expr.Native  <*> nativeE
                    ]
            <?> "expression term"
