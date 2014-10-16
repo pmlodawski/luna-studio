@@ -16,26 +16,28 @@ import           Data.IntMap
 import qualified Data.IntMap as IntMap
 import qualified Data.Maybe  as Maybe
 
-import           Flowbox.Prelude       hiding (set)
-import qualified Luna.Graph.Attributes as Attributes
-import qualified Luna.Graph.Node       as Node
-import           Luna.Graph.Properties (Properties)
-import qualified Luna.Graph.Properties as Properties
+import           Flowbox.Prelude                     hiding (set)
+import qualified Luna.Graph.Attributes               as Attributes
+import           Luna.Graph.Flags                    (Flags)
+import qualified Luna.Graph.Node                     as Node
+import           Luna.Graph.Properties               (Properties)
+import qualified Luna.Graph.Properties               as Properties
+import           Luna.Graph.View.Default.DefaultsMap (DefaultsMap)
 
 
 
 type PropertyMap = IntMap Properties
 
 
-get :: Node.ID -> String -> String -> PropertyMap -> Maybe String
-get nodeID spaceKey key propertyMap = do
+getAttribute :: Node.ID -> String -> String -> PropertyMap -> Maybe String
+getAttribute nodeID spaceKey key propertyMap = do
     pm <- IntMap.lookup nodeID propertyMap
     let attrs = pm ^. Properties.attrs
     Attributes.get spaceKey key attrs
 
 
-set :: Node.ID -> String -> String -> String -> PropertyMap -> PropertyMap
-set nodeID spaceKey key value propertyMap = IntMap.insert nodeID newProperties propertyMap where
+setAttribute :: Node.ID -> String -> String -> String -> PropertyMap -> PropertyMap
+setAttribute nodeID spaceKey key value propertyMap = IntMap.insert nodeID newProperties propertyMap where
     oldProperties = Maybe.fromMaybe def (IntMap.lookup nodeID propertyMap)
     newProperties = oldProperties & Properties.attrs
         %~ Attributes.set spaceKey key value
@@ -45,3 +47,27 @@ move :: Node.ID -> Node.ID -> PropertyMap -> PropertyMap
 move current new propertyMap = case IntMap.lookup current propertyMap of
     Nothing -> propertyMap
     Just k  -> IntMap.insert new k $ IntMap.delete current propertyMap
+
+
+getFlags :: Node.ID -> PropertyMap -> Flags
+getFlags nodeID propertyMap = Maybe.fromMaybe def $
+    view Properties.flags <$> IntMap.lookup nodeID propertyMap
+
+
+setFlags :: Flags -> Node.ID -> PropertyMap -> PropertyMap
+setFlags flags = modifyFlags (const flags)
+
+
+modifyFlags :: (Flags -> Flags) -> Node.ID -> PropertyMap -> PropertyMap
+modifyFlags fun nodeID propertyMap = IntMap.alter update' nodeID propertyMap where
+    update' = Just . (Properties.flags %~ fun) . Maybe.fromMaybe def
+
+
+getDefaultsMap :: Node.ID -> PropertyMap -> DefaultsMap
+getDefaultsMap nodeID propertyMap = Maybe.fromMaybe def $
+    view Properties.defaultsMap <$> IntMap.lookup nodeID propertyMap
+
+
+modifyDefaultsMap :: (DefaultsMap -> DefaultsMap) -> Node.ID -> PropertyMap -> PropertyMap
+modifyDefaultsMap fun nodeID propertyMap = IntMap.alter update' nodeID propertyMap where
+    update' = Just . (Properties.defaultsMap %~ fun) . Maybe.fromMaybe def
