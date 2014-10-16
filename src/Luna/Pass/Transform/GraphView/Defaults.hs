@@ -15,7 +15,6 @@ import qualified Data.Map as Map
 
 import           Flowbox.Control.Error               ()
 import           Flowbox.Prelude                     hiding (empty)
-import qualified Luna.Graph.Attributes               as Attributes
 import qualified Luna.Graph.Flags                    as Flags
 import qualified Luna.Graph.Node                     as Node
 import qualified Luna.Graph.Node.OutputName          as OutputName
@@ -29,7 +28,6 @@ import           Luna.Graph.View.EdgeView            (EdgeView (EdgeView))
 import           Luna.Graph.View.GraphView           (GraphView)
 import qualified Luna.Graph.View.GraphView           as GraphView
 import           Luna.Graph.View.PortDescriptor      (PortDescriptor)
-import           Luna.Info                           (apiVersion)
 
 
 
