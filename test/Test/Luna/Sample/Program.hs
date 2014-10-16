@@ -53,7 +53,7 @@ def main:
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -64,12 +64,12 @@ def main:
 |] [r|Vector 1 2 3
 |],
 
-    Program "Vector, if, Int.+ and Int.>" [r|
+    Program "Vector, Int.+ and Int.>" [r|
 
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -84,8 +84,6 @@ def Int.inc:
     self + 1
 
 def main:
-    print $ if 1 > 2: 5
-            else: 6
     print $ 1 > 2
     v = Vector 1 2 3
     print $ v
