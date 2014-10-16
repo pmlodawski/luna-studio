@@ -13,6 +13,7 @@ import Luna.Graph.Attributes (Attributes)
 import Luna.Graph.Flags      (Flags)
 
 
+
 data Properties = Properties { _flags :: Flags
                              , _attrs :: Attributes
                              } deriving (Show, Read, Eq)
