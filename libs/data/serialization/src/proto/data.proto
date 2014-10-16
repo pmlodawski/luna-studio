@@ -7,7 +7,7 @@
 
 package generated.proto.data;
 
-import "enum-type.proto";
+import "enums-type.proto";
 
 message Value {
     enum Type {
