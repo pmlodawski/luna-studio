@@ -18,6 +18,8 @@ instance Monoid Subst where
   mempty = Subst []
   mappend ss1@(Subst s1) (Subst s2) = Subst $ [(u, apply ss1 t) | (u, t) <- s2] ++ s1
 
+instance Show Subst where
+  show _ = "<subst>"
 
 
 removeSubstitution :: TyID -> Subst -> Subst

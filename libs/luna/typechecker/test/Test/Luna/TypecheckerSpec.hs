@@ -37,8 +37,9 @@ shouldNotInfer t = do
 eLet :: String -> Expr -> Expr -> Expr
 eLet name = ELet (VarID name)
 
-class    ELit a    where eLit :: a -> Expr
-instance ELit Char where eLit = ELit . LitChar
+class    ELit a       where eLit :: a -> Expr
+instance ELit Char    where eLit = ELit . LitChar
+instance ELit Integer where eLit = ELit . LitInt
 
 eVar :: String -> Expr
 eVar = EVar . VarID
@@ -71,7 +72,7 @@ spec =
 
       it "typechecks EApp" $
         let v = TVar (Tyvar (TyID "0"))
-         in eApp (eAbs "x" (eVar "x")) (eVar "x") `shouldBeInferredTo` v
+         in eLet "xyz" (eLit (123 :: Integer)) (eApp (eAbs "x" (eVar "x")) (eVar "xyz")) `shouldBeInferredTo` tInt
 
       it "typechecks EAbs" $
         let v = TVar (Tyvar (TyID "0"))
