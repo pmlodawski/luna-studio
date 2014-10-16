@@ -29,25 +29,25 @@ import qualified Test.Luna.Sample.Code                   as SampleCode
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
     ast         <- Common.getAST code
-    putStrLn "== getGraph"
+    --putStrLn "== getGraph"
     (graph, pm) <- Common.getGraph bc def ast
-    printLn
-    print ast
-    printLn
-    print graph
-    printLn
-    print pm
-    printLn
-    putStrLn "== getExpr"
+    --printLn
+    --print ast
+    --printLn
+    --print graph
+    --printLn
+    --print pm
+    --printLn
+    --putStrLn "== getExpr"
     (ast2  , pm2) <- Common.getExpr bc graph pm ast
-    print ast2
-    printLn
-    print pm2
-    printLn
-    putStrLn "== getGraph"
+    --print ast2
+    --printLn
+    --print pm2
+    --printLn
+    --putStrLn "== getGraph"
     (graph3, pm3) <- Common.getGraph bc pm2 ast2
-    print pm3
-    printLn
+    --print pm3
+    --printLn
     expr  <- Common.getMain (clearIDs 0 ast)
     expr2 <- Common.getMain (clearIDs 0 ast2)
 

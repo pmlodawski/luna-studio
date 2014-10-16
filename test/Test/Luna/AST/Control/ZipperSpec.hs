@@ -93,7 +93,7 @@ spec = do
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
                         , Crumb.Function (Name.single "test") []
-                        , Crumb.Lambda   18
+                        , Crumb.Lambda   19
                         ] ast
             let focus = Zipper.getFocus  zipper
             Expr.Lambda {} <- Focus.getLambda focus <?.> "Not a lambda"

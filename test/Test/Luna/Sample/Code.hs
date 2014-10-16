@@ -29,6 +29,8 @@ def main
 def main:
     1
 |], named "simple infix" [r|
+def Int.+ a
+
 def main:
     1 + 2
 |], named "simple assignment 1" [r|
@@ -72,6 +74,7 @@ def main arg1 arg2:
 |], named "following calls" [r|
 def foo
 def bar
+def Int.+ a
 
 def main:
     1 + 2
@@ -206,13 +209,13 @@ sampleLambdas = [
     , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 6]
     , [r|
 def main:
-    f = a : a + 1
+    f = a : a , 1
 |]), ( "lambda with context"
     , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 12]
     , [r|
 def main arg:
     x = 15
-    f = a : a + 1 + x + arg
+    f = a : a , 1 , x , arg
 |])
     ]
 
@@ -227,11 +230,11 @@ class Vector a:
     x,y,z :: a
 
     def test a b:
-        (a,b, c : c + a + b)
+        (a,b, c : c, a, b)
 
     class Inner:
         def inner a b:
-            a + b
+            a, b
 
 def main:
     v = Vector 1 2 3
