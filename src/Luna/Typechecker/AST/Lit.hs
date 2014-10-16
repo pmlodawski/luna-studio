@@ -13,7 +13,7 @@ data Lit = LitChar   Char
 
 
 instance Show Lit where
-  show (LitChar  c)  = printf "'%c'" c
+  show (LitChar   c) = printf "'%c'" c
   show (LitDouble f) = printf "%.3f" f
-  show (LitInt   i)  = show i
-  show (LitStr   s)  = show s
+  show (LitInt    i) = show i
+  show (LitStr    s) = show s
