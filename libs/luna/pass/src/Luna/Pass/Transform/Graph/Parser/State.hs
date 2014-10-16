@@ -22,17 +22,18 @@ import           Flowbox.Prelude                       hiding (mapM)
 import           Flowbox.System.Log.Logger
 import           Luna.AST.Expr                         (Expr)
 import qualified Luna.AST.Expr                         as Expr
-import qualified Luna.Graph.Attributes.Naming          as Attributes
 import qualified Luna.Graph.Edge                       as Edge
+import           Luna.Graph.Flags                      (Flags)
+import qualified Luna.Graph.Flags                      as Flags
 import           Luna.Graph.Graph                      (Graph)
 import qualified Luna.Graph.Graph                      as Graph
 import           Luna.Graph.Node                       (Node)
 import qualified Luna.Graph.Node                       as Node
+import           Luna.Graph.Node.Position              (Position)
 import           Luna.Graph.Port                       (Port)
 import qualified Luna.Graph.Port                       as Port
 import           Luna.Graph.PropertyMap                (PropertyMap)
 import qualified Luna.Graph.PropertyMap                as PropertyMap
-import           Luna.Info                             (apiVersion)
 import           Luna.Pass.Pass                        (Pass)
 import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
 
@@ -145,40 +146,31 @@ getNodeSrc (Just a) = nodeMapLookup a
 
 
 getNode :: Node.ID -> GPPass Node
-getNode nodeID = do gr <- getGraph
-                    Graph.lab gr nodeID <??> "GraphParser: getNodeOutputName: Cannot find nodeID=" ++ show nodeID ++ " in graph"
+getNode nodeID = do
+    gr <- getGraph
+    Graph.lab gr nodeID <??> "GraphParser: getNodeOutputName: Cannot find nodeID=" ++ show nodeID ++ " in graph"
 
 
 getNodeOutputName :: Node.ID -> GPPass String
 getNodeOutputName nodeID = view Node.outputName <$> getNode nodeID
 
 
-getProperty :: Node.ID -> String -> GPPass (Maybe String)
-getProperty nodeID propertyName =
-    PropertyMap.get nodeID (show apiVersion) propertyName <$> getPropertyMap
+getFlags :: Node.ID -> GPPass Flags
+getFlags nodeID = PropertyMap.getFlags nodeID <$> getPropertyMap
 
 
-hasFlag :: Node.ID -> String -> GPPass Bool
-hasFlag nodeID flag =
-    (== Just Attributes.true) <$> getProperty nodeID flag
+modifyFlags :: (Flags -> Flags) -> Node.ID -> GPPass ()
+modifyFlags fun nodeID =
+    getPropertyMap >>= setPropertyMap . PropertyMap.modifyFlags fun nodeID
 
 
-setProperty :: Node.ID -> String -> String -> GPPass ()
-setProperty nodeID key value =
-    getPropertyMap >>=
-    setPropertyMap . PropertyMap.set nodeID (show apiVersion) key value
-
-
-setPosition :: Node.ID -> (Float, Float) -> GPPass ()
+setPosition :: Node.ID -> Position -> GPPass ()
 setPosition nodeID position =
-    setProperty nodeID Attributes.nodePosition $ show position
+    modifyFlags (Flags.nodePosition .~ Just position) nodeID
 
 
 setGraphFolded :: Node.ID -> GPPass ()
-setGraphFolded nodeID =
-    setProperty nodeID Attributes.graphFolded Attributes.true
-    --return ()
-
+setGraphFolded = modifyFlags (Flags.graphFolded .~ Just True)
 
 
 doesLastStatementReturn :: GPPass Bool

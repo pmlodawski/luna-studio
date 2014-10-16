@@ -4,17 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
-module Luna.Graph.Attributes.Naming where
+module Luna.Graph.Node.Position where
 
 import Flowbox.Prelude
 
 
 
-true :: String
-true = "True"
-
-
-false :: String
-false = "False"
+type Position = (Float, Float)
 
