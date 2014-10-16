@@ -166,12 +166,9 @@ parseAppNode nodeID app = do
     expr <- if isOperator app
                 then return $ Expr.Var nodeID app
                 else do
-                    logger warning $ "Parsing " ++ show app
                     case Parser.parseString app $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
-                        Left  er     -> do logger warning "failed"
-                                           left $ show er
-                        Right (e, _) -> do logger warning "passed"
-                                           return e
+                        Left  er     -> left $ show er
+                        Right (e, _) -> return e
     ids <- hoistEither =<< ExtractIDs.runExpr expr
     mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
     let requiresApp (Expr.Con {}) = True
