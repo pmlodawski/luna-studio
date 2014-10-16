@@ -163,7 +163,7 @@ evalFunction :: String -> CallDataPath -> [VarName] -> Session (Maybe Hash, VarN
 evalFunction funName callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        nameHash      = Hash.hashMe2 funName
+        nameHash      = Hash.hashStr funName
     --typedFun  <- TypeCheck.function funStr argsVarNames
     --typedArgs <- mapM TypeCheck.variable argsVarNames
     --let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
