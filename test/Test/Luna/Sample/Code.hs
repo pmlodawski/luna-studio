@@ -154,12 +154,18 @@ def main arg arg2:
 def main arg:
     Main.foo 1 2 3
 |], named "constructors 2" [r|
+class Foo
+
 def main arg:
     Foo 1 2 3
 |], named "constructors 3" [r|
+class Foo
+
 def main arg:
     Foo arg.boo 1
 |], named "constructors 4" [r|
+class Foo
+class My
 def gap
 
 def main arg:
@@ -167,7 +173,8 @@ def main arg:
 |], named "tuples 1" [r|
 def main arg:
     (1, 2)
-    3
+    3, 4
+    5
 |], named "tuples 2" [r|
 def main arg:
     x = 4
@@ -221,7 +228,14 @@ def main arg:
 
 
 emptyMain :: Code
-emptyMain = "def main"
+emptyMain = [r|
+def main
+def foo
+def bar
+def baz
+def gaz
+def a
+|]
 
 
 zipperTestModule :: Code
