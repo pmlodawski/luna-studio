@@ -542,6 +542,6 @@ genLit lit = case lit of
     LLit.String  _ str      -> mkLit "String" (HLit.String  str)
     LLit.Char    _ char     -> mkLit "Char"   (HLit.Char    char)
     --_ -> fail $ show lit
-    --where mkLit cons hast = return $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
-    where mkLit cons hast = return $ HExpr.Lit hast
+    where mkLit cons hast = return $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
+    --where mkLit cons hast = return $ HExpr.Lit hast
 
