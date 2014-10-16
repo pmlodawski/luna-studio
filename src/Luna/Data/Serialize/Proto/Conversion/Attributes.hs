@@ -20,16 +20,22 @@ import qualified Data.Sequence as Sequence
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Attributes.Attributes                as Gen
-import qualified Generated.Proto.Attributes.Attributes.Space          as Gen
-import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue as Gen
-import qualified Generated.Proto.Attributes.Flags                     as Gen
-import qualified Generated.Proto.Attributes.Properties                as Gen
-import           Luna.Graph.Attributes                                (Attributes)
-import qualified Luna.Graph.Attributes                                as Attributes
-import           Luna.Graph.Flags                                     (Flags (Flags))
-import           Luna.Graph.Properties                                (Properties (Properties))
-
+import qualified Generated.Proto.Attributes.Attributes                   as Gen
+import qualified Generated.Proto.Attributes.Attributes.Space             as Gen
+import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue    as Gen
+import qualified Generated.Proto.Attributes.DefaultsMap                  as Gen
+import qualified Generated.Proto.Attributes.DefaultsMap.DefaultsMapEntry as Gen
+import qualified Generated.Proto.Attributes.Flags                        as Gen
+import qualified Generated.Proto.Attributes.Properties                   as Gen
+import           Luna.Graph.Attributes                                   (Attributes)
+import qualified Luna.Graph.Attributes                                   as Attributes
+import           Luna.Graph.Flags                                        (Flags (Flags))
+import qualified Luna.Graph.Node                                         as Node
+import           Luna.Graph.Properties                                   (Properties (Properties))
+import           Luna.Graph.View.Default.DefaultsMap                     (DefaultsMap)
+import qualified Luna.Graph.View.Default.DefaultsMap                     as DefaultsMap
+import           Luna.Graph.View.Default.Value                           (Value)
+import           Luna.Graph.View.PortDescriptor                          (PortDescriptor)
 
 
 instance Convert Flags Gen.Flags where
@@ -56,9 +62,25 @@ instance ConvertPure (String, String) Gen.KeyValue where
     decodeP (Gen.KeyValue tk tv) = (decodeP tk, decodeP tv)
 
 
+instance Convert (PortDescriptor, (Node.ID, Value)) Gen.DefaultsMapEntry where
+    encode (portDescriptor, (nodeID, value)) =
+        Gen.DefaultsMapEntry (encodeListP portDescriptor) (encodePJ nodeID) (encodePJ value)
+    decode (Gen.DefaultsMapEntry portDescriptor mtnodeID mtvalue) = do
+        nodeID <- decodeP <$> mtnodeID <?> "Failed to decode DefaultsMapEntry: 'nodeID' field is missing"
+        value  <- decodeP <$> mtvalue  <?> "Failed to decode DefaultsMapEntry: 'value' field is missing"
+        return (decodeListP portDescriptor, (nodeID, value))
+
+
+instance Convert DefaultsMap Gen.DefaultsMap where
+    encode = Gen.DefaultsMap . encodeList . DefaultsMap.toList
+    decode (Gen.DefaultsMap entries) = DefaultsMap.fromList <$> decodeList entries
+
+
 instance Convert Properties Gen.Properties where
-    encode (Properties flags attributes) = Gen.Properties (encodeJ flags) (encodePJ attributes)
-    decode (Gen.Properties mflags mattributes) = do
-        flags      <- mflags      <?> "Failed to decode Properties: 'flags' field is missing"
-        attributes <- mattributes <?> "Failed to decode Properties: 'attributes' field is missing"
-        Properties <$> decode flags <*> pure (decodeP attributes)
+    encode (Properties flags defautsMap attributes) =
+        Gen.Properties (encodeJ flags) (encodeJ defautsMap) (encodePJ attributes)
+    decode (Gen.Properties mflags mtdefaultsMap mattributes) = do
+        flags      <- mflags        <?> "Failed to decode Properties: 'flags' field is missing"
+        defautsMap <- mtdefaultsMap <?> "Failed to decode Properties: 'defautsMap' field is missing"
+        attributes <- mattributes   <?> "Failed to decode Properties: 'attributes' field is missing"
+        Properties <$> decode flags <*> decode defautsMap <*> pure (decodeP attributes)
