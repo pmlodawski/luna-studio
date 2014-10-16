@@ -16,12 +16,13 @@ import           Data.IntMap
 import qualified Data.IntMap as IntMap
 import qualified Data.Maybe  as Maybe
 
-import           Flowbox.Prelude       hiding (set)
-import qualified Luna.Graph.Attributes as Attributes
-import           Luna.Graph.Flags      (Flags)
-import qualified Luna.Graph.Node       as Node
-import           Luna.Graph.Properties (Properties)
-import qualified Luna.Graph.Properties as Properties
+import           Flowbox.Prelude                     hiding (set)
+import qualified Luna.Graph.Attributes               as Attributes
+import           Luna.Graph.Flags                    (Flags)
+import qualified Luna.Graph.Node                     as Node
+import           Luna.Graph.Properties               (Properties)
+import qualified Luna.Graph.Properties               as Properties
+import           Luna.Graph.View.Default.DefaultsMap (DefaultsMap)
 
 
 
@@ -48,8 +49,8 @@ move current new propertyMap = case IntMap.lookup current propertyMap of
     Just k  -> IntMap.insert new k $ IntMap.delete current propertyMap
 
 
-getFlags :: Node.ID -> PropertyMap -> Maybe Flags
-getFlags nodeID propertyMap =
+getFlags :: Node.ID -> PropertyMap -> Flags
+getFlags nodeID propertyMap = Maybe.fromMaybe def $
     view Properties.flags <$> IntMap.lookup nodeID propertyMap
 
 
@@ -58,5 +59,15 @@ setFlags flags = modifyFlags (const flags)
 
 
 modifyFlags :: (Flags -> Flags) -> Node.ID -> PropertyMap -> PropertyMap
-modifyFlags fun nodeID propertyMap = IntMap.alter update nodeID propertyMap where
-    update = Just . (Properties.flags %~ fun) . Maybe.fromMaybe def
+modifyFlags fun nodeID propertyMap = IntMap.alter update' nodeID propertyMap where
+    update' = Just . (Properties.flags %~ fun) . Maybe.fromMaybe def
+
+
+getDefaultsMap :: Node.ID -> PropertyMap -> DefaultsMap
+getDefaultsMap nodeID propertyMap = Maybe.fromMaybe def $
+    view Properties.defaultsMap <$> IntMap.lookup nodeID propertyMap
+
+
+modifyDefaultsMap :: (DefaultsMap -> DefaultsMap) -> Node.ID -> PropertyMap -> PropertyMap
+modifyDefaultsMap fun nodeID propertyMap = IntMap.alter update' nodeID propertyMap where
+    update' = Just . (Properties.defaultsMap %~ fun) . Maybe.fromMaybe def
