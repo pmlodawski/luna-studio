@@ -103,14 +103,18 @@ example = Source.Source ["Main"] $
 
                     --, "class Vector:"
                     --, "    x,y,z :: [Vector]"
+                    , "def Int.+ a:"
+                    , "   a"
 
-                    , "def foo a b:"
-                    , "    print a"
-                    , "    print b"
+                    --, "def foo a b:"
+                    --, "    print a"
+                    --, "    print b"
 
                     , "def main:"
                     --, "    a = Vector [] [] []"
-                    , "    foo 1 2"
+                    --, "    print [1..5]"
+                    --, "    foo 1 2"
+                    , "    print (1.+ 2)"
                     ]
 
 
