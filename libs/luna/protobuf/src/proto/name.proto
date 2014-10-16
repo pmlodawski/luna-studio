@@ -10,6 +10,15 @@ package generated.proto.name;
 
 
 message Name {
-    optional string base     = 1;
-    repeated string segments = 2;
+    optional string  base     = 1;
+    repeated Segment segments = 2;
+}
+
+message Segment {
+    enum Cls {
+        Token = 1;
+        Hole  = 2;
+    }
+    required Cls    cls  = 1;
+    optional string name = 2;
 }
