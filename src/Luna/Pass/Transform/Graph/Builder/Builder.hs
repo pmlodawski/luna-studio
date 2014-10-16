@@ -115,7 +115,7 @@ buildNode astFolded monadicBind outName expr = do
     case expr of
         Expr.Assignment _ pat dst               -> buildAssignment i pat dst
         Expr.App        _ src args              -> buildApp i src args
-        Expr.Accessor   _ name dst              -> addNode  i name [dst]
+        Expr.Accessor   _ acc dst               -> addNode  i (view Expr.accName acc) [dst]
         Expr.Infix      _ name src dst          -> addNode  i name [src, dst]
         Expr.Var        _ name                  -> buildVar i name
         Expr.NativeVar  _ name                  -> buildVar i name
@@ -237,7 +237,7 @@ showArg arg = case arg of
 
 showExpr :: Expr -> String
 showExpr expr = concat $ case expr of
-    Expr.Accessor     _ name     dst  -> [showExpr dst, ".", name]
+    Expr.Accessor     _ acc      dst  -> [showExpr dst, ".", view Expr.accName acc]
     Expr.App          _ src      args -> [List.intercalate " " $ showExpr src : map showArg args]
     --Expr.AppCons_     _ args
     --Expr.Assignment   _ pat      dst  -> concat [Pat.lunaShow pat, " = ", showExpr dst]
