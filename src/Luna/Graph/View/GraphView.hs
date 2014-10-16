@@ -36,11 +36,10 @@ import qualified Luna.Graph.PropertyMap         as PropertyMap
 import           Luna.Graph.View.EdgeView       (EdgeView (EdgeView))
 import qualified Luna.Graph.View.EdgeView       as EdgeView
 import           Luna.Graph.View.PortDescriptor (PortDescriptor)
-import qualified Luna.Info                      as Info
+
 
 
 type GraphView = DG.Graph Node EdgeView
-
 
 
 portMatches :: PortDescriptor -> LEdge EdgeView -> Bool

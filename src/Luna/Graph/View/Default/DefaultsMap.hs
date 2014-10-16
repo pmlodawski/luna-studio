@@ -28,14 +28,14 @@ defaultsMapKey = "Defaults-map"
 
 
 getDefaultsMap :: Node.ID -> PropertyMap -> DefaultsMap
-getDefaultsMap nodeID propertyMap = case PropertyMap.get nodeID (show Info.apiVersion) defaultsMapKey propertyMap of
+getDefaultsMap nodeID propertyMap = case PropertyMap.getAttribute nodeID (show Info.apiVersion) defaultsMapKey propertyMap of
     Nothing -> mempty
     Just d  -> read d
 
 
 setDefaultsMap :: DefaultsMap -> Node.ID -> PropertyMap -> PropertyMap
 setDefaultsMap defaults nodeID =
-    PropertyMap.set nodeID (show Info.apiVersion) defaultsMapKey (show defaults)
+    PropertyMap.setAttribute nodeID (show Info.apiVersion) defaultsMapKey (show defaults)
 
 
 addDefault :: PortDescriptor -> (Node.ID, Value) -> Node.ID -> PropertyMap -> PropertyMap

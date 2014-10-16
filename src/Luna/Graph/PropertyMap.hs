@@ -28,15 +28,15 @@ import qualified Luna.Graph.Properties as Properties
 type PropertyMap = IntMap Properties
 
 
-get :: Node.ID -> String -> String -> PropertyMap -> Maybe String
-get nodeID spaceKey key propertyMap = do
+getAttribute :: Node.ID -> String -> String -> PropertyMap -> Maybe String
+getAttribute nodeID spaceKey key propertyMap = do
     pm <- IntMap.lookup nodeID propertyMap
     let attrs = pm ^. Properties.attrs
     Attributes.get spaceKey key attrs
 
 
-set :: Node.ID -> String -> String -> String -> PropertyMap -> PropertyMap
-set nodeID spaceKey key value propertyMap = IntMap.insert nodeID newProperties propertyMap where
+setAttribute :: Node.ID -> String -> String -> String -> PropertyMap -> PropertyMap
+setAttribute nodeID spaceKey key value propertyMap = IntMap.insert nodeID newProperties propertyMap where
     oldProperties = Maybe.fromMaybe def (IntMap.lookup nodeID propertyMap)
     newProperties = oldProperties & Properties.attrs
         %~ Attributes.set spaceKey key value
