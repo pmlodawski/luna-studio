@@ -19,12 +19,13 @@ import qualified Luna.Graph.View.Default.DefaultsMap as DefaultsMap
 import           Luna.Graph.View.Default.Value       (Value)
 import           Luna.Graph.View.PortDescriptor      (PortDescriptor)
 import qualified Luna.Lib.Lib                        as Library
+import qualified Luna.Graph.PropertyMap as PropertyMap
 
 
 
 nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch DefaultsMap
 nodeDefaults nodeID _ libID projectID =
-    DefaultsMap.getDefaultsMap nodeID <$> Batch.getPropertyMap libID projectID
+    PropertyMap.getDefaultsMap nodeID <$> Batch.getPropertyMap libID projectID
 
 
 setNodeDefault :: PortDescriptor -> Value
@@ -32,7 +33,7 @@ setNodeDefault :: PortDescriptor -> Value
 setNodeDefault dstPort value nodeID bc libID projectID = do 
     propertyMap <- Batch.getPropertyMap libID projectID
     maxID <- Batch.getMaxID libID projectID
-    let newPM = DefaultsMap.addDefault dstPort (maxID, value) nodeID propertyMap
+    let newPM = PropertyMap.modifyDefaultsMap (DefaultsMap.insert dstPort (maxID, value)) nodeID propertyMap
     Batch.setPropertyMap newPM libID projectID
     --TODO[PM] : Temporary fix
     Batch.graphViewOp bc libID projectID $ \gv pm -> return ((gv, pm), ())
@@ -44,7 +45,7 @@ removeNodeDefault :: PortDescriptor
 removeNodeDefault dstPort nodeID bc libID projectID = do
     propertyMap <- Batch.getPropertyMap libID projectID
     maxID <- Batch.getMaxID libID projectID
-    let newPM = DefaultsMap.removeDefault dstPort nodeID propertyMap
+    let newPM = PropertyMap.modifyDefaultsMap (DefaultsMap.delete dstPort) nodeID propertyMap
     Batch.setPropertyMap newPM libID projectID
     --TODO[PM] : Temporary fix
     Batch.graphViewOp bc libID projectID $ \gv pm -> return ((gv, pm), ())
