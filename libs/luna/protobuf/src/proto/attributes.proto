@@ -10,8 +10,14 @@ package generated.proto.attributes;
 
 
 message Flags {
-    optional bool io   = 1 [default = false];
-    optional bool omit = 2 [default = false];
+    optional bool  omit                 = 1 [default = false];
+    optional bool  astFolded            = 2;
+    optional bool  astAssignment        = 3;
+    optional bool  graphFolded          = 4;
+    optional bool  defaultNodeGenerated = 5;
+    optional bool  graphViewGenerated   = 6;
+    optional float nodePositionX        = 7;
+    optional float nodePositionY        = 8;
 }
 
 message Attributes {

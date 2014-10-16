@@ -18,6 +18,7 @@ import qualified Data.Maybe  as Maybe
 
 import           Flowbox.Prelude       hiding (set)
 import qualified Luna.Graph.Attributes as Attributes
+import           Luna.Graph.Flags      (Flags)
 import qualified Luna.Graph.Node       as Node
 import           Luna.Graph.Properties (Properties)
 import qualified Luna.Graph.Properties as Properties
@@ -45,3 +46,17 @@ move :: Node.ID -> Node.ID -> PropertyMap -> PropertyMap
 move current new propertyMap = case IntMap.lookup current propertyMap of
     Nothing -> propertyMap
     Just k  -> IntMap.insert new k $ IntMap.delete current propertyMap
+
+
+getFlags :: Node.ID -> PropertyMap -> Maybe Flags
+getFlags nodeID propertyMap =
+    view Properties.flags <$> IntMap.lookup nodeID propertyMap
+
+
+setFlags :: Flags -> Node.ID -> PropertyMap -> PropertyMap
+setFlags flags = modifyFlags (const flags)
+
+
+modifyFlags :: (Flags -> Flags) -> Node.ID -> PropertyMap -> PropertyMap
+modifyFlags fun nodeID propertyMap = IntMap.alter update nodeID propertyMap where
+    update = Just . (Properties.flags %~ fun) . Maybe.fromMaybe def

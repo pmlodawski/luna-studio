@@ -8,6 +8,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
 module Luna.Data.Serialize.Proto.Conversion.Attributes where
@@ -32,11 +33,12 @@ import           Luna.Graph.Properties                                (Propertie
 
 
 instance Convert Flags Gen.Flags where
-    encode (Flags io omit) = Gen.Flags (Just io) (Just omit)
-    decode (Gen.Flags mio momit) = do
-        io   <- mio   <?> "Failed to decode Flags: 'io' field is missing"
+    encode (Flags omit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated position) =
+        Gen.Flags (Just omit) astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated (fmap fst position) (fmap snd position)
+    decode (Gen.Flags momit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated  mpositionX mpositionY) = do
         omit <- momit <?> "Failed to decode Flags: 'omit' field is missing"
-        return $ Flags io omit
+        let position = (,) <$> mpositionX <*> mpositionY
+        return $ Flags omit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated  position
 
 
 instance ConvertPure Attributes Gen.Attributes where

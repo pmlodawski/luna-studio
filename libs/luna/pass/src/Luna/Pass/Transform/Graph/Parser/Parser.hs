@@ -23,7 +23,7 @@ import qualified Luna.AST.Expr                          as Expr
 import           Luna.AST.Pat                           (Pat)
 import qualified Luna.AST.Pat                           as Pat
 import qualified Luna.Data.ASTInfo                      as ASTInfo
-import qualified Luna.Graph.Attributes.Naming           as Attributes
+import qualified Luna.Graph.Flags                       as Flags
 import           Luna.Graph.Graph                       (Graph)
 import qualified Luna.Graph.Graph                       as Graph
 import           Luna.Graph.Node                        (Node)
@@ -183,9 +183,10 @@ addExpr :: Node.ID -> Expr -> GPPass ()
 addExpr nodeID e = do
     graph          <- State.getGraph
 
-    folded         <- State.hasFlag nodeID Attributes.astFolded
-    assignment     <- State.hasFlag nodeID Attributes.astAssignment
-    defaultNodeGen <- State.hasFlag nodeID Attributes.defaultNodeGenerated
+    flags <- State.getFlags nodeID
+    let folded         = Flags.isSet' flags $ view Flags.astFolded
+        assignment     = Flags.isSet' flags $ view Flags.astAssignment
+        defaultNodeGen = Flags.isSet' flags $ view Flags.defaultNodeGenerated
 
     let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
         assignmentCount = length $ List.filter assignmentEdge
