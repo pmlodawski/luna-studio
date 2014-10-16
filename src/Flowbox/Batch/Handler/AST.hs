@@ -55,6 +55,7 @@ addModule newModule bcParent libID projectID = astFocusOp bcParent libID project
     newFocus    <- case focus of
         Focus.Class    _ -> left "Cannot add module to a class"
         Focus.Function _ -> left "Cannot add module to a function"
+        Focus.Lambda   _ -> left "Cannot add module to a lambda"
         Focus.Module   m -> return $ Focus.Module $ Module.addModule fixedModule m
     return (newFocus, fixedModule))
 
@@ -66,6 +67,7 @@ addClass newClass bcParent libID projectID = astFocusOp bcParent libID projectID
     newFocus <- case focus of
         Focus.Class    c -> return $ Focus.Class $ Expr.addClass fixedClass c
         Focus.Function _ -> left "Cannot add class to a function"
+        Focus.Lambda   _ -> left "Cannot add class to a lambda"
         Focus.Module   m -> return $ Focus.Module $ Module.addClass fixedClass m
     return (newFocus, fixedClass))
 
@@ -77,6 +79,7 @@ addFunction newFunction bcParent libID projectID = astFocusOp bcParent libID pro
     newFocus <- case focus of
         Focus.Class    c -> return $ Focus.Class $ Expr.addMethod fixedFunction c
         Focus.Function _ -> left "Cannot add function to a function"
+        Focus.Lambda   _ -> left "Cannot add function to a lambda"
         Focus.Module   m -> return $ Focus.Module $ Module.addMethod fixedFunction m
     return (newFocus, fixedFunction))
 
