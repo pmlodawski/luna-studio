@@ -105,9 +105,9 @@ example = Source.Source ["Main"] $
                     ----, "    x,y,z :: [Vector]"
                     --, "def Int.+ a:"
                     --, "   a"
-                    , "class ```Maybe``` a:"
-                    , "    Just: unwrap :: a"
-                    , "    Nothing"
+                    --, "class ```Maybe``` a:"
+                    --, "    Just: unwrap :: a"
+                    --, "    Nothing"
                     --, "def foo a b:"
                     --, "    print a"
                     --, "    print b"
@@ -116,7 +116,7 @@ example = Source.Source ["Main"] $
                     --, "    a = Vector [] [] []"
                     --, "    print [1..5]"
                     --, "    foo 1 2"
-                    , "    print $ Just 5"
+                    , "    print $ [1..10]"
                     ]
 
 
