@@ -111,11 +111,6 @@ tupleBuilder id src arg = case src of
     _              -> Tuple id [src, arg]
 
 
---callBuilder :: ID -> Expr -> Expr -> Expr
---callBuilder id' src' arg' = case src' of
---    App id'' src'' args' -> App id'' src'' (args' ++ [Arg.Unnamed 0 arg'])
---    _                    -> App id' src' [Arg.Unnamed 0 arg']
-
 
 --aftermatch :: Expr -> Expr
 --aftermatch x = case x of
