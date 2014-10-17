@@ -1,6 +1,8 @@
 def print msg:
-    ```autoLift1 print #{msg}```
+    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```
 
-def main:
-    x = a : a
-    print $ x 1
+
+
+
+def main a b c:
+    print a $ b c

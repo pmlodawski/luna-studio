@@ -4,16 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
+module Luna.Graph.Node.Position where
 
-module Control.PolyApplicative where
-
-
-
-class PolyApplicative m1 m2 m3 | m1 m2 -> m3 where
-    (<<*>>) :: m1 (a -> b) -> m2 a -> m3 b
+import Flowbox.Prelude
 
 
+
+type Position = (Float, Float)
 

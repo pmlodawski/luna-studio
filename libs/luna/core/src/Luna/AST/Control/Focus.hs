@@ -10,6 +10,7 @@
 module Luna.AST.Control.Focus where
 
 import           Flowbox.Prelude hiding (Traversal)
+import           Luna.AST.Arg    (Arg)
 import           Luna.AST.Expr   (Expr)
 import qualified Luna.AST.Expr   as Expr
 import           Luna.AST.Lit    (Lit)
@@ -53,13 +54,14 @@ traverseM_ fmod fexp focus = case focus of
 
 
 traverseMR :: Traversal m => (Module -> m Module) -> (Expr -> m Expr)
-           -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit)
+           -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> (Arg Expr -> m (Arg Expr))
            -> Focus -> m Focus
-traverseMR fmod fexp ftype fpat flit focus = case focus of
-    Lambda   expr  -> Lambda   <$> Expr.traverseMR fexp ftype fpat flit expr
-    Function expr  -> Function <$> Expr.traverseMR fexp ftype fpat flit expr
-    Class    expr  -> Class    <$> Expr.traverseMR fexp ftype fpat flit expr
-    Module module_ -> Module   <$> Module.traverseMR fmod fexp ftype fpat flit module_
+traverseMR fmod fexp ftype fpat flit farg focus = case focus of
+    Lambda   expr  -> Lambda   <$> Expr.traverseMR fexp ftype fpat flit farg expr
+    Function expr  -> Function <$> Expr.traverseMR fexp ftype fpat flit farg expr
+    Class    expr  -> Class    <$> Expr.traverseMR fexp ftype fpat flit farg expr
+    Module module_ -> Module   <$> Module.traverseMR fmod fexp ftype fpat flit farg module_
+
 
 getLambda :: Focus -> Maybe Expr
 getLambda (Lambda l) = Just l

@@ -16,26 +16,26 @@ import qualified Data.IntMap         as IntMap
 import           Data.Map            (Map)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
-import qualified Text.Read           as Read
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Common              as AST
-import           Luna.Data.AliasInfo          (AliasInfo)
-import qualified Luna.Data.AliasInfo          as AliasInfo
-import qualified Luna.Graph.Attributes.Naming as Attributes
-import           Luna.Graph.Edge              (Edge)
-import qualified Luna.Graph.Edge              as Edge
-import           Luna.Graph.Graph             (Graph)
-import qualified Luna.Graph.Graph             as Graph
-import           Luna.Graph.Node              (Node)
-import qualified Luna.Graph.Node              as Node
-import           Luna.Graph.Port              (Port)
-import           Luna.Graph.PropertyMap       (PropertyMap)
-import qualified Luna.Graph.PropertyMap       as PropertyMap
-import           Luna.Info                    (apiVersion)
-import           Luna.Pass.Pass               (Pass)
+import qualified Luna.AST.Common           as AST
+import           Luna.Data.AliasInfo       (AliasInfo)
+import qualified Luna.Data.AliasInfo       as AliasInfo
+import           Luna.Graph.Edge           (Edge)
+import qualified Luna.Graph.Edge           as Edge
+import           Luna.Graph.Flags          (Flags)
+import qualified Luna.Graph.Flags          as Flags
+import           Luna.Graph.Graph          (Graph)
+import qualified Luna.Graph.Graph          as Graph
+import           Luna.Graph.Node           (Node)
+import qualified Luna.Graph.Node           as Node
+import           Luna.Graph.Node.Position  (Position)
+import           Luna.Graph.Port           (Port)
+import           Luna.Graph.PropertyMap    (PropertyMap)
+import qualified Luna.Graph.PropertyMap    as PropertyMap
+import           Luna.Pass.Pass            (Pass)
 
 
 
@@ -69,21 +69,21 @@ addToNodeMap k v = do nm <- getNodeMap
                       setNodeMap $ Map.insert k v nm
 
 
-insNode :: (Node.ID, Node.Position -> Node) -> GBPass ()
+insNode :: (Node.ID, Position -> Node) -> GBPass ()
 insNode (nodeID, node) = do
     g   <- getGraph
     pos <- Maybe.fromMaybe (0,0) <$> getPosition nodeID
     setGraph $ Graph.insNode (nodeID, node pos) g
 
 
-insNodeWithFlags :: (Node.ID, Node.Position -> Node) -> Bool -> Bool -> GBPass ()
+insNodeWithFlags :: (Node.ID, Position -> Node) -> Bool -> Bool -> GBPass ()
 insNodeWithFlags n@(nodeID, _) isFolded assignment = do
     insNode n
-    when isFolded   $ setFlag nodeID Attributes.astFolded
-    when assignment $ setFlag nodeID Attributes.astAssignment
+    when isFolded   $ modifyFlags (Flags.astFolded     .~ Just True) nodeID
+    when assignment $ modifyFlags (Flags.astAssignment .~ Just True) nodeID
 
 
-addNode :: AST.ID -> Port -> (Node.Position -> Node) -> Bool -> Bool -> GBPass ()
+addNode :: AST.ID -> Port -> (Position -> Node) -> Bool -> Bool -> GBPass ()
 addNode astID outPort node isFolded assignment = do
     insNodeWithFlags (astID, node) isFolded assignment
     addToNodeMap astID (astID, outPort)
@@ -169,38 +169,31 @@ setPrevoiusNode :: Node.ID -> GBPass ()
 setPrevoiusNode nodeID = modify (set prevoiusNode nodeID)
 
 
-setFlag :: Node.ID -> String -> GBPass ()
-setFlag nodeID key = setProperty nodeID key Attributes.true
+modifyFlags :: (Flags -> Flags) -> Node.ID -> GBPass ()
+modifyFlags fun nodeID =
+    getPropertyMap >>= setPropertyMap . PropertyMap.modifyFlags fun nodeID
 
 
-setProperty :: Node.ID -> String -> String -> GBPass ()
-setProperty nodeID key value =
-    getPropertyMap >>=
-    setPropertyMap . PropertyMap.set nodeID (show apiVersion) key value
+getFlags :: Node.ID -> GBPass Flags
+getFlags nodeID = PropertyMap.getFlags nodeID <$> getPropertyMap
 
 
-getProperty :: Node.ID -> String -> GBPass (Maybe String)
-getProperty nodeID key =
-    PropertyMap.get nodeID (show apiVersion) key <$> getPropertyMap
-
-
-getPosition :: Node.ID -> GBPass (Maybe Node.Position)
+getPosition :: Node.ID -> GBPass (Maybe Position)
 getPosition nodeID =
-    join . fmap Read.readMaybe <$> getProperty nodeID Attributes.nodePosition
+    view Flags.nodePosition <$> getFlags nodeID
 
 
-setPosition :: Node.ID -> Node.Position -> GBPass ()
+setPosition :: Node.ID -> Position -> GBPass ()
 setPosition nodeID pos = do
-    setProperty nodeID Attributes.nodePosition $ show pos
+    modifyFlags (Flags.nodePosition .~ Just pos) nodeID
     graph' <- getGraph
     node   <- Graph.lab graph' nodeID <??> "BuilderState.setPosition : cannot find node with id = " ++ show nodeID
     setGraph $ Graph.updateNode (nodeID, node & Node.pos .~ pos) graph'
-
 
 
 getGraphFolded :: Node.ID -> GBPass Bool
 getGraphFolded nodeID = do
     foldSetting <- gets (view foldNodes)
     if foldSetting
-        then (== Just True) . join . fmap Read.readMaybe <$> getProperty nodeID Attributes.graphFolded
+        then flip Flags.isSet' (view Flags.graphFolded) <$> getFlags nodeID
         else return False

@@ -4,12 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE ScopedTypeVariables    #-}
-{-# LANGUAGE TypeFamilies           #-}
-{-# LANGUAGE TypeSynonymInstances   #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 
 module Flowbox.Graphics.Serialization where
 
@@ -26,8 +26,8 @@ import           Data.Map.Lazy
 
 import           Flowbox.Data.Serialization           (Serializable (..), mkValue)
 import qualified Flowbox.Graphics.Image.Channel       as I
-import qualified Flowbox.Graphics.Image.View          as I
 import qualified Flowbox.Graphics.Image.Image         as Img
+import qualified Flowbox.Graphics.Image.View          as I
 import qualified Flowbox.Math.Matrix                  as M
 import qualified Generated.Proto.Data.MatrixData      as MatrixData
 import qualified Generated.Proto.Data.MatrixData.Type as MatrixData

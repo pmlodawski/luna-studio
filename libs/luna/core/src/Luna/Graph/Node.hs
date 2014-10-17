@@ -9,6 +9,7 @@
 module Luna.Graph.Node where
 
 import Flowbox.Prelude
+import Luna.Graph.Node.Position (Position)
 
 
 
@@ -17,8 +18,6 @@ data Node = Expr     { _expr :: String, _outputName :: String, _pos :: Position 
           | Outputs  {                                         _pos :: Position }
           deriving (Show, Eq)
 
-
-type Position = (Float, Float)
 
 makeLenses ''Node
 

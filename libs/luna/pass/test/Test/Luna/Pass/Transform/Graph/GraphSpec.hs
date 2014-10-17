@@ -21,33 +21,33 @@ import           Luna.Pass.Transform.AST.IDFixer.IDFixer (clearIDs)
 import qualified Test.Luna.AST.Common                    as Common
 import           Test.Luna.Pass.Transform.Graph.Common   (named)
 import qualified Test.Luna.Pass.Transform.Graph.Common   as Common
-import           Test.Luna.SampleCodes                   (sampleCodes)
-import qualified Test.Luna.SampleCodes                   as SampleCodes
+import           Test.Luna.Sample.Code                   (sampleCodes)
+import qualified Test.Luna.Sample.Code                   as SampleCode
 
 
 
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
     ast         <- Common.getAST code
-    putStrLn "== getGraph"
+    --putStrLn "== getGraph"
     (graph, pm) <- Common.getGraph bc def ast
-    printLn
-    print ast
-    printLn
-    print graph
-    printLn
-    print pm
-    printLn
-    putStrLn "== getExpr"
+    --printLn
+    --print ast
+    --printLn
+    --print graph
+    --printLn
+    --print pm
+    --printLn
+    --putStrLn "== getExpr"
     (ast2  , pm2) <- Common.getExpr bc graph pm ast
-    print ast2
-    printLn
-    print pm2
-    printLn
-    putStrLn "== getGraph"
+    --print ast2
+    --printLn
+    --print pm2
+    --printLn
+    --putStrLn "== getGraph"
     (graph3, pm3) <- Common.getGraph bc pm2 ast2
-    print pm3
-    printLn
+    --print pm3
+    --printLn
     expr  <- Common.getMain (clearIDs 0 ast)
     expr2 <- Common.getMain (clearIDs 0 ast2)
 
@@ -62,7 +62,7 @@ backAndForth2 bc graph = backAndForth2' bc graph graph
 
 backAndForth2' :: Breadcrumbs -> Graph -> Graph -> IO ()
 backAndForth2' bc providedGraph expectedGraph = do
-    emptyAst  <- Common.getAST SampleCodes.emptyMain
+    emptyAst  <- Common.getAST SampleCode.emptyMain
     (ast, pm) <- Common.getExpr bc providedGraph def emptyAst
     --printLn
     --print ast
@@ -78,7 +78,7 @@ sampleGraphs =
     [ named "simple graph 1"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr "main2" "" (0, 1))
+        , fixEmpty' (100, Node.Expr "foo" "" (0, 1))
         ,(-3, Node.Outputs        (0, 2))
         ]
         []
@@ -202,17 +202,31 @@ sampleGraphs =
      , named "BATCH-67"
      $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (10, Node.Expr "12" "" (0, 1))
-        , fixEmpty' (20, Node.Expr "15" "" (0, 1))
-        , fixEmpty' (30, Node.Expr "*" "" (0, 1))
-        , fixEmpty' (40, Node.Expr "+" "" (0, 1))
+        , fixEmpty' (100, Node.Expr "12" "" (0, 1))
+        , fixEmpty' (200, Node.Expr "15" "" (0, 1))
+        , fixEmpty' (300, Node.Expr "*" "" (0, 1))
+        , fixEmpty' (400, Node.Expr "+" "" (0, 1))
         ,(-3, Node.Outputs        (0, 2))
         ]
-        [(10, 30, Edge.Data Port.All $ Port.Num 0)
-        ,(20, 30, Edge.Data Port.All $ Port.Num 1)
-        ,(30, 40, Edge.Data Port.All $ Port.Num 0)
-        ,(30, 40, Edge.Data Port.All $ Port.Num 1)
+        [(100, 300, Edge.Data Port.All $ Port.Num 0)
+        ,(200, 300, Edge.Data Port.All $ Port.Num 1)
+        ,(300, 400, Edge.Data Port.All $ Port.Num 0)
+        ,(300, 400, Edge.Data Port.All $ Port.Num 1)
         ]
+     , named "graph with [] port descriptor on output"
+     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2,Node.Inputs  (0  ,0))
+        ,(-3,Node.Outputs (100,0))
+        ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
+        ]
+        [(100, -3, Edge.Data Port.All   Port.All)]
+     , named "graph with [0] port descriptor on output"
+     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2,Node.Inputs  (0  ,0))
+        ,(-3,Node.Outputs (100,0))
+        ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
+        ]
+        [(100, -3, Edge.Data Port.All $ Port.Num 0)]
     ]
 
 
@@ -237,23 +251,10 @@ buggyGraphs =
         ,fixEmpty' (100, Node.Expr "main" "" (0 , 1))
         ]
         [(100, -3, Edge.Data Port.All Port.All)]
-    ),( "graph with [0] port descriptor on output"
-     ,  Graph.addMonadicEdges $ Graph.mkGraph
-        [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
-        ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
-        ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 0)]
-     ,  Graph.addMonadicEdges $ Graph.mkGraph
-        [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
-        ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
-        ]
-        [(100, -3, Edge.Data Port.All Port.All)]
     ),( "graph with [0] and [1] port descriptors on output"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ]
         [(100, -3, Edge.Data Port.All $ Port.Num 0)
@@ -261,7 +262,7 @@ buggyGraphs =
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ]
         [(100, -3, Edge.Data Port.All $ Port.Num 0)
@@ -270,7 +271,7 @@ buggyGraphs =
     ),( "graph with [] and [1] port descriptors on output - 1"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ]
         [(100, -3, Edge.Data Port.All $ Port.All)
@@ -278,7 +279,7 @@ buggyGraphs =
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ]
         [(100, -3, Edge.Data Port.All $ Port.Num 0)
@@ -287,7 +288,7 @@ buggyGraphs =
     ),( "graph with [] and [1] port descriptors on output - 2"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ,fixEmpty' (200, Node.Expr "bar" "" (0 , 2))
         ]
@@ -296,7 +297,7 @@ buggyGraphs =
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ,fixEmpty' (200, Node.Expr "bar" "" (0 , 2))
         ]
@@ -306,7 +307,7 @@ buggyGraphs =
     ),( "graph with [], [1] and [2] port descriptors on output - 1"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ]
         [(100, -3, Edge.Data Port.All $ Port.All)
@@ -315,7 +316,7 @@ buggyGraphs =
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ]
         [(100, -3, Edge.Data Port.All $ Port.Num 0)
@@ -325,7 +326,7 @@ buggyGraphs =
     ),( "graph with [], [1] and [2] port descriptors on output - 2"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ,fixEmpty' (200, Node.Expr "bar" "" (0 , 2))
         ]
@@ -335,7 +336,7 @@ buggyGraphs =
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-3,Node.Outputs (100,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ,fixEmpty' (200, Node.Expr "bar" "" (0 , 2))
         ]
@@ -355,7 +356,7 @@ spec = do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth Common.mainBC code) sampleCodes
         mapM_ (\(name, bc, code) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth bc code) SampleCodes.sampleLambdas
+                backAndForth bc code) SampleCode.sampleLambdas
 
     describe "graph <-> ast conversion" $ do
         mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $
