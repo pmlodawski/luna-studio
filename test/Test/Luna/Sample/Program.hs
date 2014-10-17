@@ -93,6 +93,9 @@ def print msg:
 def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
 
+def + a b:
+    a.+ b
+
 def > a b:
     a.> b
 
@@ -103,6 +106,7 @@ def Int.inc:
     self + 1
 
 def main:
+    print $ 2 + 2.inc.inc
     print $ 1 > 2
     v = Vector 1 2 3
     print $ v
