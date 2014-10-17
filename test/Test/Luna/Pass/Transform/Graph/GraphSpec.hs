@@ -33,9 +33,9 @@ backAndForth bc code = do
     (graph, pm) <- Common.getGraph bc def ast
     --printLn
     --print ast
-    printLn
-    putStrLn $ ppShow graph
-    printLn
+    --printLn
+    --putStrLn $ ppShow graph
+    --printLn
     --print pm
     --printLn
     --putStrLn "== getExpr"
@@ -71,7 +71,6 @@ backAndForth2' bc providedGraph expectedGraph = do
     --printLn
     (resultGraph, _pm2) <- Common.getGraph bc pm ast
     resultGraph `shouldBe` expectedGraph
-
 
 
 main :: IO ()
