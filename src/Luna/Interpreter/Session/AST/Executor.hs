@@ -150,6 +150,7 @@ varType :: String -> VarType
 varType [] = Prelude.error "varType : empty var name"
 varType "id"                                             = Id
 varType "Tuple"                                          = Tuple
+varType "Grouped"                                        = Id
 varType name@(h:_)
     | List.isPrefixOf "```" name                         = Native
     | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit
@@ -164,12 +165,6 @@ evalFunction funName callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
         nameHash      = Hash.hashStr funName
-    --typedFun  <- TypeCheck.function funStr argsVarNames
-    --typedArgs <- mapM TypeCheck.variable argsVarNames
-    --let function      = "toIO $ extract $ (Operation (" ++typedFun ++ "))"
-    --    argSeparator  = " `call` "
-    --let operation     = List.intercalate argSeparator (function : typedArgs)
-
     let mkArg arg = "(Value (Pure "  ++ arg ++ "))"
         args      = map mkArg argsVarNames
         appArgs a = if null a then "" else " $ appNext " ++ List.intercalate " $ appNext " (reverse a)

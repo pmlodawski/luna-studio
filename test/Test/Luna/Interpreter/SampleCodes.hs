@@ -215,6 +215,9 @@ def mkTuple arg1 arg2 arg3 arg4 arg5:
 
 traverseExample :: String
 traverseExample = [r|
+def print msg
+def test a b c d e
+
 def main:
     a = "var a"
     b = "var b"
