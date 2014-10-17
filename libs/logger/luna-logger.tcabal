@@ -13,4 +13,4 @@ Library
   Build-Depends:      base
                     , mtl >= 2.2.1
                     , transformers
-  Exposed-Modules:    Logger
+  Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
