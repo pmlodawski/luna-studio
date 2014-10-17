@@ -129,6 +129,7 @@ buildNode astFolded monadicBind outName expr = do
         Expr.List       _ items                 -> addNode i "List" items
         Expr.Native     _ segments              -> addNode i (showNative expr) $ filter isNativeVar segments
         Expr.Wildcard   _                       -> left $ "GraphBuilder.buildNode: Unexpected Expr.Wildcard with id=" ++ show i
+        Expr.Grouped    _ grouped               -> addNode i "Grouped" [grouped]
         _                                       -> showAndAddNode
     where
         buildVar i name = do

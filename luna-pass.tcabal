@@ -79,5 +79,6 @@ Test-Suite tests
                   luna-pass,
                   flowbox-utils,
                   hspec,
+                  pretty-show,
                   raw-strings-qq,
                   MissingH

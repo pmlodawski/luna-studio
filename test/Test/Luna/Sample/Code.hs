@@ -52,19 +52,13 @@ def main:
     x = 0
     y = 1
     (z, v) = (x, y)
-|], named "simple assignment 5" [r|
+|], {-named "assignment with patterns" [r|
 def main:
     x = 0
     y = 1
     (z, v) = (x, y)
     h = (z, v)
-|], named "assignment with patterns" [r|
-def main:
-    x = 0
-    y = 1
-    (z, v) = (x, y)
-    h = (z, v)
-|], named "assignment" [r|
+|], -}  named "assignment" [r|
 def foo
 
 def main arg1 arg2:
@@ -181,6 +175,17 @@ def main arg:
 def main arg:
     x = 4
     y = 1, x
+|], named "tuples 3" [r|
+def print msg
+
+def main:
+    print (1, 2)
+|], named "tuples 4" [r|
+def print msg
+
+def main:
+    x = 1
+    print (x, 2)
 |], named "lists" [r|
 def main arg:
     x = 4
