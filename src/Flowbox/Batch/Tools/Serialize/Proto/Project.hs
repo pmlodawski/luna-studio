@@ -9,6 +9,7 @@
 module Flowbox.Batch.Tools.Serialize.Proto.Project (
     storeProject,
     restoreProject,
+    projectFileExists
 ) where
 
 import qualified Data.ByteString.Lazy as ByteString
@@ -20,6 +21,7 @@ import qualified Flowbox.Batch.Project.Project                          as Proje
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
+import qualified Flowbox.System.Directory                               as Directory
 import           Flowbox.System.IO.Serializer                           (Deserializable (..), Serializable (..))
 import qualified Flowbox.System.IO.Serializer                           as Serializer
 import           Flowbox.System.UniPath                                 (UniPath)
@@ -61,3 +63,8 @@ restoreProject upath = do
     project <- Serializer.deserialize dproject
     return $ project & Project.path .~ upath
 
+
+projectFileExists :: UniPath -> IO Bool
+projectFileExists upath = do
+    expandedPath <- UniPath.expand $ UniPath.append projectFile upath
+    Directory.doesFileExist expandedPath
