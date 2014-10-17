@@ -64,7 +64,8 @@ Executable luna-parser-test
                   luna-parser,
                   ansi-wl-pprint,
                   data-default,
-                  pretty-show
+                  pretty-show,
+                  luna-core
 
 Test-Suite tests
   Type:           exitcode-stdio-1.0

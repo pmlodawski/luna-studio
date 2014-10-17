@@ -29,6 +29,7 @@ import           Luna.AST.Prop                   (HasName)
 import qualified Luna.AST.Prop                   as Prop
 import           Luna.AST.Type                   (Type)
 import qualified Luna.AST.Type                   as Type
+import qualified Data.Char                       as Char
 
 
 type Lit         = Lit.Lit
@@ -37,7 +38,7 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 
 data Expr  = NOP          { _id :: ID                                                                                            }
-           | Accessor     { _id :: ID, _name      :: String   , _dst       :: Expr                                               }
+           | Accessor     { _id :: ID, _acc       :: Accessor , _dst       :: Expr                                               }
            | TypeAlias    { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
            | TypeDef      { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
            | App          { _id :: ID, _src       :: Expr     , _args      :: [Arg Expr]                                         }
@@ -78,8 +79,22 @@ data Expr  = NOP          { _id :: ID                                           
            deriving (Show, Eq, Generic, Read)
 
 
+
+data Accessor = VarAccessor { _accName :: String }
+              | ConAccessor { _accName :: String }
+              deriving (Show, Eq, Generic, Read)
+
+
+mkAccessor :: String -> Accessor
+mkAccessor ""       = VarAccessor ""
+mkAccessor s@(x:xs) = ($ s) $ if Char.isLower x then VarAccessor else ConAccessor
+
+
 instance QShow Expr
 makeLenses (''Expr)
+
+instance QShow Accessor
+makeLenses (''Accessor)
 
 
 shiftArg1 f t1 x = f x t1
