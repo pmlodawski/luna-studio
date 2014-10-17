@@ -35,4 +35,5 @@ Library
                   MissingH,
                   parsers,
                   transformers,
-                  mtl
+                  mtl,
+                  assert
