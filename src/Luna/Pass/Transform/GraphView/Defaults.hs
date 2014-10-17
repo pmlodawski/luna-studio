@@ -15,30 +15,23 @@ import qualified Data.Map as Map
 
 import           Flowbox.Control.Error               ()
 import           Flowbox.Prelude                     hiding (empty)
-import qualified Luna.Graph.Attributes               as Attributes
-import qualified Luna.Graph.Attributes.Naming        as Attributes
+import qualified Luna.Graph.Flags                    as Flags
 import qualified Luna.Graph.Node                     as Node
 import qualified Luna.Graph.Node.OutputName          as OutputName
-import           Luna.Graph.Properties               (Properties (Properties))
+import           Luna.Graph.Properties               (Properties)
+import qualified Luna.Graph.Properties               as Properties
 import           Luna.Graph.PropertyMap              (PropertyMap)
 import qualified Luna.Graph.PropertyMap              as PropertyMap
-import qualified Luna.Graph.View.Default.DefaultsMap as DefaultsMap
 import           Luna.Graph.View.Default.Value       (Value)
 import           Luna.Graph.View.EdgeView            (EdgeView (EdgeView))
 import           Luna.Graph.View.GraphView           (GraphView)
 import qualified Luna.Graph.View.GraphView           as GraphView
 import           Luna.Graph.View.PortDescriptor      (PortDescriptor)
-import           Luna.Info                           (apiVersion)
 
 
 
 generatedProperties :: Properties
-generatedProperties = Properties def
-                    $ Attributes.fromList [( show apiVersion
-                                           , Map.fromList [( Attributes.defaultNodeGenerated
-                                                           , Attributes.true
-                                                           )]
-                                           )]
+generatedProperties = def & Properties.flags . Flags.defaultNodeGenerated .~ Just True
 
 
 addDefaults :: GraphView -> PropertyMap -> (GraphView, PropertyMap)
@@ -50,7 +43,7 @@ addNodeDefaults :: Node.ID -> (GraphView, PropertyMap) -> (GraphView, PropertyMa
 addNodeDefaults nodeID gp@(_, propertyMap) =
     foldr (addNodeDefault nodeID) gp defaults
     where
-        defaults = Map.toList $ DefaultsMap.getDefaultsMap nodeID propertyMap
+        defaults = Map.toList $ PropertyMap.getDefaultsMap nodeID propertyMap
 
 
 addNodeDefault :: Node.ID -> (PortDescriptor, (Node.ID, Value)) -> (GraphView, PropertyMap) -> (GraphView, PropertyMap)
@@ -67,7 +60,7 @@ addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, property
 
 isGenerated :: Node.ID -> PropertyMap -> Bool
 isGenerated nodeID propertyMap =
-    PropertyMap.get nodeID (show apiVersion) Attributes.defaultNodeGenerated propertyMap == Just "True"
+    Flags.isSet' (PropertyMap.getFlags nodeID propertyMap) (view Flags.defaultNodeGenerated)
 
 
 delGenerated :: Node.ID -> (GraphView, PropertyMap) -> (GraphView, PropertyMap)

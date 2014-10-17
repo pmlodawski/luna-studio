@@ -13,8 +13,9 @@ module Luna.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import qualified Data.IntSet                            as IntSet
-import qualified Data.List                              as List
+import qualified Data.IntSet                as IntSet
+import qualified Data.List                  as List
+
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Arg                           as Arg
@@ -25,7 +26,7 @@ import qualified Luna.AST.Pat                           as Pat
 import           Luna.Data.ASTInfo                      (ASTInfo)
 import qualified Luna.Data.ASTInfo                      as ASTInfo
 import qualified Luna.Data.Config                       as Config
-import qualified Luna.Graph.Attributes.Naming           as Attributes
+import qualified Luna.Graph.Flags                       as Flags
 import           Luna.Graph.Graph                       (Graph)
 import qualified Luna.Graph.Graph                       as Graph
 import           Luna.Graph.Node                        (Node)
@@ -76,7 +77,6 @@ parseNode inputs (nodeID, node) = do
         Node.Expr    {} -> parseExprNode    nodeID $ node ^. Node.expr
         Node.Inputs  {} -> parseInputsNode  nodeID inputs
         Node.Outputs {} -> parseOutputsNode nodeID
-    --State.setGraphFolded nodeID
     State.setPosition    nodeID $ node ^. Node.pos
 
 
@@ -102,14 +102,14 @@ parseArg nodeID (num, input) = case input of
 
 parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
-    srcs <- State.getNodeSrcs nodeID
-    case srcs of
-        []                -> whenM State.doesLastStatementReturn
-                                $ State.setOutput $ Expr.Tuple IDFixer.unknownID []
-        --[src@Expr.Var {}] -> State.setOutput src
-        [src] -> State.setOutput src
-        --[_]               -> return ()
-        _:(_:_)           -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
+    srcs    <- State.getNodeSrcs nodeID
+    inPorts <- State.inboundPorts nodeID
+    case (srcs, inPorts) of
+        ([], _)               -> whenM State.doesLastStatementReturn $
+                                   State.setOutput $ Expr.Tuple IDFixer.unknownID []
+        ([src], [Port.Num 0]) -> State.setOutput $ Expr.Grouped IDFixer.unknownID src
+        ([src], _           ) -> State.setOutput src
+        _                     -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
 
 
 patVariables :: Pat -> [Expr]
@@ -166,12 +166,9 @@ parseAppNode nodeID app = do
     expr <- if isOperator app
                 then return $ Expr.Var nodeID app
                 else do
-                    logger warning $ "Parsing " ++ show app
                     case Parser.parseString app $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
-                        Left  er     -> do logger warning "failed"
-                                           left $ show er
-                        Right (e, _) -> do logger warning "passed"
-                                           return e
+                        Left  er     -> left $ show er
+                        Right (e, _) -> return e
     ids <- hoistEither =<< ExtractIDs.runExpr expr
     mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
     let requiresApp (Expr.Con {}) = True
@@ -204,9 +201,10 @@ addExpr :: Node.ID -> Expr -> GPPass ()
 addExpr nodeID e = do
     graph          <- State.getGraph
 
-    folded         <- State.hasFlag nodeID Attributes.astFolded
-    assignment     <- State.hasFlag nodeID Attributes.astAssignment
-    defaultNodeGen <- State.hasFlag nodeID Attributes.defaultNodeGenerated
+    flags <- State.getFlags nodeID
+    let folded         = Flags.isSet' flags $ view Flags.astFolded
+        assignment     = Flags.isSet' flags $ view Flags.astAssignment
+        defaultNodeGen = Flags.isSet' flags $ view Flags.defaultNodeGenerated
 
     let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
         assignmentCount = length $ List.filter assignmentEdge
