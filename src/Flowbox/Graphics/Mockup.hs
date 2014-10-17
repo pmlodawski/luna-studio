@@ -13,10 +13,10 @@ module Flowbox.Graphics.Mockup where
 import qualified Codec.Picture.Png          as Juicy
 import qualified Codec.Picture.Types        as Juicy
 import qualified Data.Array.Accelerate      as A
-import qualified Data.Array.Accelerate.IO   as A
 import           Data.Array.Accelerate.CUDA
-import qualified Data.Vector.Storable       as SV
+import qualified Data.Array.Accelerate.IO   as A
 import           Data.Char                  (toLower)
+import qualified Data.Vector.Storable       as SV
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
 import           Linear                     (V2(..))
@@ -45,7 +45,7 @@ import           Flowbox.Graphics.Utils
 import           Flowbox.Math.Matrix                                  as M
 import           Flowbox.Prelude                                      as P hiding (lookup)
 
-import Luna.Target.HS (Value(..), Safe(..), Pure(..), val, autoLift1, autoLift, fromValue)
+import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 
 
 
