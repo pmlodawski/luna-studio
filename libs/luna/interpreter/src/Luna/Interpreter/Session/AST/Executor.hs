@@ -183,7 +183,7 @@ evalFunction funName callDataPath argsVarNames = do
         expression    = tmpVarName ++ " <- " ++ operation
 
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
-        Session.runStmt expression
+        Session.atomically $ Session.runStmt expression
         hash <- Hash.compute tmpVarName
         let varName = VarName.mk hash callPointPath
         Session.runAssignment varName tmpVarName

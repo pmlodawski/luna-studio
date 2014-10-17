@@ -96,6 +96,6 @@ store request@(Store.Request tprojectID) = do
 
 
 fileExists :: FileExists.Request -> RPC Context IO FileExists.Status
-fileExists request@(Store.Request path) = do
-    exists <- BatchP.fileExists $ decodeP path
+fileExists request@(FileExists.Request path) = do
+    exists <- BatchP.projectFileExists $ decodeP path
     return $ FileExists.Status request exists
