@@ -59,8 +59,8 @@ hashModule mod = Module.traverseM hashModule hashExpr pure hashPat pure pure mod
 hashExpr :: Expr.Expr -> HashPass Expr.Expr
 hashExpr ast = case ast of
     Expr.Function _ _ name _ _ _ -> (Expr.fname .~ hashName name) <$> continue
-    Expr.Infix    {} -> hashMe
-    Expr.Accessor {} -> hashMe
+    Expr.Infix    {}             -> hashMe
+    Expr.Accessor _ acc _        -> (Expr.acc .~ hashAcc acc) <$> continue
     Expr.RefType  {} -> hashMe
     _                -> continue
     where hashMe   = set Expr.name (hashStr $ view Expr.name ast) <$> continue
@@ -75,6 +75,12 @@ hashPat pat = case pat of
 --FIXME [wd]: some reduntant functions here
 hashStr :: String -> String
 hashStr = concatMap hashMeBody
+
+hashAcc :: Expr.Accessor -> Expr.Accessor
+hashAcc acc = case acc of
+    Expr.VarAccessor name -> Expr.VarAccessor $ hashStr name 
+    Expr.ConAccessor name -> Expr.ConAccessor $ hashStr name 
+
 
 hashName :: Name -> Name
 hashName (Name base segments) = Name (hashStr base) (fmap hashNameSeg segments)
