@@ -4,22 +4,27 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE PatternSynonyms     #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE PatternSynonyms           #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE ViewPatterns              #-}
 
 module Flowbox.Graphics.Mockup where
 
-import qualified Codec.Picture.Png          as Juicy
-import qualified Codec.Picture.Types        as Juicy
-import qualified Data.Array.Accelerate      as A
+import qualified Codec.Picture.Png                 as Juicy
+import qualified Codec.Picture.Types               as Juicy
+import qualified Data.Array.Accelerate             as A
+import qualified Data.Array.Accelerate.Array.Sugar as A
 import           Data.Array.Accelerate.CUDA
-import qualified Data.Array.Accelerate.IO   as A
-import           Data.Char                  (toLower)
-import qualified Data.Vector.Storable       as SV
+import qualified Data.Array.Accelerate.IO          as A
+import           Data.Char                         (toLower)
+import qualified Data.Vector.Storable              as SV
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
-import           Linear                     (V2(..))
+import           Linear                            (V2(..))
 
 import qualified Flowbox.Graphics.Color                               as Color
 import           Flowbox.Graphics.Composition.Generators.Filter
@@ -40,13 +45,14 @@ import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Color
 import           Flowbox.Graphics.Image.Image                         as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
+import qualified Flowbox.Graphics.Image.Merge                         as Merge
 import           Flowbox.Graphics.Image.View                          as View
 import           Flowbox.Graphics.Utils
 import           Flowbox.Math.Matrix                                  as M
 import           Flowbox.Prelude                                      as P hiding (lookup)
 
 import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
-
+import Control.PolyApplicative ((<<*>>))
 
 
 testLoadRGBA' :: Value Pure Safe String -> Value IO Safe (Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double))
@@ -65,6 +71,11 @@ testSaveRGBA :: FilePath -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -
 testSaveRGBA filename r g b a = saveImageJuicy filename $ compute' run $ M.map A.packRGBA32 $ M.zip4 (conv r) (conv g) (conv b) (conv a)
     where conv = M.map (A.truncate . (* 255.0) . clamp' 0 1)
 
+saveImageJuicy :: forall e a.
+                        (SV.Storable a, Elt e,
+                         A.Vectors (A.EltRepr e)
+                         ~ ((), SV.Vector a)) =>
+                        FilePath -> A.Array ((Z :. Int) :. Int) e -> IO ()
 saveImageJuicy file matrix = do
     let ((), vec) = A.toVectors matrix
         A.Z A.:. h A.:. w = A.arrayShape matrix
@@ -198,12 +209,17 @@ keyer' f img = img'
 
 unsafeGetRGB :: Image RGBA -> M.Matrix2 (Color.RGB Double)
 unsafeGetRGB img = rgb
+    where (r, g, b, _) = unsafeGetChannels img
+
+          rgb = M.zipWith3 (\x y z -> A.lift $ Color.RGB x y z) r g b
+
+unsafeGetChannels :: Image RGBA -> (M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double)
+unsafeGetChannels img = (r, g, b, a)
     where Just view = lookup "rgba" img
           Right (Just (ChannelFloat _ (FlatData r))) = View.get view "r"
           Right (Just (ChannelFloat _ (FlatData g))) = View.get view "g"
           Right (Just (ChannelFloat _ (FlatData b))) = View.get view "b"
-
-          rgb = M.zipWith3 (\x y z -> A.lift $ Color.RGB x y z) r g b
+          Right (Just (ChannelFloat _ (FlatData a))) = View.get view "a"
 
 keyerLuna :: VPS KeyerMode -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> Image RGBA -> Image RGBA
 keyerLuna (VPS mode) (VPS (variable -> a)) (VPS (variable -> b)) (VPS (variable -> c)) (VPS (variable -> d)) img =
@@ -251,6 +267,14 @@ gaussianLuna (VPS (variable -> kernelSize)) img = img'
           p = pipe A.Clamp
           process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
 
+gaussianLuna' :: Int -> Image RGBA -> Image RGBA
+gaussianLuna' (variable -> kernelSize) img = img'
+    where img' = onEachChannel process img
+          hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
+          vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
+          p = pipe A.Clamp
+          process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
+
 laplacianLuna :: VPS Int -> VPS Double -> VPS Double -> Image RGBA -> Image RGBA
 laplacianLuna (VPS (variable -> kernSize)) (VPS (variable -> crossVal)) (VPS (variable -> sideVal)) img = img'
     where img' = onEachChannel process img
@@ -267,6 +291,10 @@ conicalLuna = gradientLuna conicalShape
 squareLuna :: Int -> Image RGBA
 squareLuna side = gradientLuna squareShape side side
 
+gradientLuna :: forall e a.
+                      (IsFloating a, Elt a, A.Lift Exp e,
+                       A.Plain e ~ Int) =>
+                      Generator (Point2 (Exp a)) (Exp Double) -> e -> e -> Image RGBA
 gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
     where grad = rasterizer $ monosampler $ gradientGenerator
 
@@ -294,6 +322,10 @@ perlinLuna (variable -> z) = noiseLuna (perlinNoise z)
 billowLuna :: Double -> Int -> Int -> Image RGBA
 billowLuna (variable -> z) = noiseLuna (billowNoise z)
 
+noiseLuna :: forall e a.
+                   (IsFloating a, Elt a, A.Lift Exp e,
+                    A.Plain e ~ Int) =>
+                   CartesianGenerator (Exp a) (Exp Double) -> e -> e -> Image RGBA
 noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA noise'
     where noise' = rasterizer $ monosampler $ noiseGenerator
 
@@ -302,17 +334,155 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 rotateCenterLuna :: VPS Double -> Matrix2 Double -> Matrix2 Double
 rotateCenterLuna (VPS (variable -> angle)) = rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
 
-hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
-            -> VPS Double -> VPS Double -> VPS Double -> VPS Double
-            -> VPS Double -> VPS Double -> VPS Double -> VPS Double
-            -> A.Exp (Color.RGB Double)
-            -> A.Exp (Color.RGB Double)
-hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
-            (VPS (variable -> hueRotation)) (VPS (variable -> hueRolloff))
-            (VPS (variable -> saturationRangeStart)) (VPS (variable -> saturationRangeEnd))
-            (VPS (variable -> saturationAdjustment)) (VPS (variable -> saturationRolloff))
-            (VPS (variable -> brightnessRangeStart)) (VPS (variable -> brightnessRangeEnd))
-            (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff)) =
-    A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
+-- hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
+--             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
+--             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
+--             -> A.Exp (Color.RGB Double)
+--             -> A.Exp (Color.RGB Double)
+-- hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
+--             (VPS (variable -> hueRotation)) (VPS (variable -> hueRolloff))
+--             (VPS (variable -> saturationRangeStart)) (VPS (variable -> saturationRangeEnd))
+--             (VPS (variable -> saturationAdjustment)) (VPS (variable -> saturationRolloff))
+--             (VPS (variable -> brightnessRangeStart)) (VPS (variable -> brightnessRangeEnd))
+--             (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff)) =
+--     A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
+--                      (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
+--                      (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
+
+hsvToolLuna' :: Double -> Double -> Double -> Double
+             -> Double -> Double -> Double -> Double
+             -> Double -> Double -> Double -> Double
+             -> Image RGBA
+             -> Image RGBA
+hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
+             (variable -> hueRotation) (variable -> hueRolloff)
+             (variable -> saturationRangeStart) (variable -> saturationRangeEnd)
+             (variable -> saturationAdjustment) (variable -> saturationRolloff)
+             (variable -> brightnessRangeStart) (variable -> brightnessRangeEnd)
+             (variable -> brightnessAdjustment) (variable -> brightnessRolloff) =
+    onEachRGB $ A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
                      (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
                      (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
+
+-- test :: VPS Double -> VPS Double -> VPS Double -> VPS Double
+--      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
+--      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
+--      -> VPS (Image RGBA) -> VPS (Image RGBA)
+test = liftF13 hsvToolLuna'
+
+liftF13 fun a b c d e f g h i j k l m = do
+    a' <- a
+    b' <- b
+    c' <- c
+    d' <- d
+    e' <- e
+    f' <- f
+    g' <- g
+    h' <- h
+    i' <- i
+    j' <- j
+    k' <- k
+    l' <- l
+    m' <- m
+    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
+            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
+
+liftF12 fun a b c d e f g h i j k l = do
+    a' <- a
+    b' <- b
+    c' <- c
+    d' <- d
+    e' <- e
+    f' <- f
+    g' <- g
+    h' <- h
+    i' <- i
+    j' <- j
+    k' <- k
+    l' <- l
+    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
+            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l'
+
+data Merge = Atop
+           | Average
+           | ColorBurn
+           | ColorDodge
+           | ConjointOver
+           | Copy
+           | Difference
+           | DisjointOver
+           | DivideBySource
+           | DivideByDestination
+           | Exclusion
+           | From
+           | Geometric
+           | HardLight
+           | Hypot
+           | In
+           | Mask
+           | Matte
+           -- | Max
+           -- | Min
+           | Minus
+           | Multiply
+           | Out
+           | Over
+           | Overlay
+           | Plus
+           | Screen
+           | SoftLight
+           | SoftLightPegtop
+           | SoftLightIllusions
+           | SoftLightPhotoshop
+           | Stencil
+           | Under
+           | XOR
+           deriving (Show)
+
+mergeLuna :: Merge -> Merge.AlphaBlend -> Image RGBA -> Image RGBA -> Image RGBA
+mergeLuna mode alphaBlend img1 img2 = case mode of
+    Atop                -> processMerge $ Merge.threeWayMerge Merge.atop
+    Average             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.average
+    ColorBurn           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorBurn
+    ColorDodge          -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorDodge
+    ConjointOver        -> processMerge $ Merge.threeWayMerge Merge.conjointOver
+    Copy                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.copy
+    Difference          -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.difference
+    DisjointOver        -> processMerge $ Merge.threeWayMerge Merge.disjointOver
+    DivideBySource      -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.divideBySrc
+    DivideByDestination -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.divideByDst
+    Exclusion           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.exclusion
+    From                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.from
+    Geometric           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.geometric
+    HardLight           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hardLight
+    Hypot               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hypot
+    In                  -> processMerge $ Merge.threeWayMerge Merge.inBlend
+    Mask                -> processMerge $ Merge.threeWayMerge Merge.withMask
+    Matte               -> processMerge $ Merge.threeWayMerge Merge.matte
+     -- | Max -> processMerge $ threeWayMeMerge.rge'  Merge.--
+     -- | Min -> processMerge $ threeWayMeMerge.rge'  Merge.--
+    Minus               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.minus
+    Multiply            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.multiply
+    Out                 -> processMerge $ Merge.threeWayMerge Merge.out
+    Over                -> processMerge $ Merge.threeWayMerge Merge.over
+    Overlay             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.overlayFun
+    Plus                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.plus
+    Screen              -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.screen
+    SoftLight           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLight
+    SoftLightPegtop     -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightPegtop
+    SoftLightIllusions  -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightIllusions
+    SoftLightPhotoshop  -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightPhotoshop
+    Stencil             -> processMerge $ Merge.threeWayMerge Merge.stencil
+    Under               -> processMerge $ Merge.threeWayMerge Merge.under
+    XOR                 -> processMerge $ Merge.threeWayMerge Merge.xor
+    where processMerge f = img'
+              where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 a1 a2
+                    view' = view
+                         & View.append (ChannelFloat "r" (FlatData $ rasterizer . monosampler $ r))
+                         & View.append (ChannelFloat "g" (FlatData $ rasterizer . monosampler $ g))
+                         & View.append (ChannelFloat "b" (FlatData $ rasterizer . monosampler $ b))
+                         & View.append (ChannelFloat "a" (FlatData $ rasterizer . monosampler $ a))
+                    Right img' = Image.update (const $ Just view') "rgba" img1
+          Just view = lookup "rgba" img1
+          (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (nearest . fromMatrix (A.Constant 0))
+          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (nearest . fromMatrix (A.Constant 0))
