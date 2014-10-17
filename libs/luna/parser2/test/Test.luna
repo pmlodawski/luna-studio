@@ -1,5 +1,4 @@
 @AllowOrphans
 
 def main:
-    b = C
-    a = foo.bar.baz
+    a = [x..y]
