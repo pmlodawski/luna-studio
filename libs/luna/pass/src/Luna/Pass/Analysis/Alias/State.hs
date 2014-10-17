@@ -33,7 +33,7 @@ import qualified Luna.Data.AliasInfo       as AliasInfo
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Alias.State"
+logger = getLogger $(moduleName)
 
 
 data VAState = VAState { _aa      :: AliasInfo

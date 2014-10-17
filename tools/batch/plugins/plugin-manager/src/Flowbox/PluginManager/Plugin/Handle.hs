@@ -21,14 +21,14 @@ import           Flowbox.System.Log.Logger           as L
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.Data.PluginHandle"
+logger = getLoggerIO $(moduleName)
 
 
 data PluginHandle = PluginHandle { _plugin :: Plugin
                                  , _handle :: Maybe ProcessHandle
                                  }
 
-makeLenses (''PluginHandle)
+makeLenses ''PluginHandle
 
 
 mk :: Plugin -> PluginHandle

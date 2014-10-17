@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Geom2D.Path.Basic where
 
-import Math.Coordinate.Cartesian (Point2(..))
+--import Math.Coordinate.Cartesian (Point2(..))
 
 
 

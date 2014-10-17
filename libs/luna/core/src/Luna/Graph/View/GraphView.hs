@@ -23,8 +23,8 @@ import           Flowbox.Data.Graph             hiding (Edge, Graph, fromGraph)
 import qualified Flowbox.Data.Graph             as DG
 import           Flowbox.Data.String            (toUpper)
 import           Flowbox.Prelude
-import qualified Luna.Graph.Attributes.Naming   as Naming
 import qualified Luna.Graph.Edge                as Edge
+import qualified Luna.Graph.Flags               as Flags
 import           Luna.Graph.Graph               (Graph)
 import qualified Luna.Graph.Graph               as Graph
 import           Luna.Graph.Node                (Node)
@@ -36,11 +36,10 @@ import qualified Luna.Graph.PropertyMap         as PropertyMap
 import           Luna.Graph.View.EdgeView       (EdgeView (EdgeView))
 import qualified Luna.Graph.View.EdgeView       as EdgeView
 import           Luna.Graph.View.PortDescriptor (PortDescriptor)
-import qualified Luna.Info                      as Info
+
 
 
 type GraphView = DG.Graph Node EdgeView
-
 
 
 portMatches :: PortDescriptor -> LEdge EdgeView -> Bool
@@ -102,12 +101,12 @@ data NodeType = Tuple
 
 setGenerated :: Node.ID -> PropertyMap -> PropertyMap
 setGenerated nodeID =
-    PropertyMap.set nodeID (show Info.apiVersion) Naming.graphViewGenerated Naming.true
+    PropertyMap.modifyFlags (Flags.graphViewGenerated .~ Just True) nodeID
 
 
 nodeType :: (Node.ID, Node) -> PropertyMap -> Maybe NodeType
 nodeType (nodeID, Node.Expr expr _ _) pm =
-    if PropertyMap.get nodeID (show Info.apiVersion) Naming.graphViewGenerated pm == Just Naming.true
+    if Flags.isSet' (PropertyMap.getFlags nodeID pm) (view Flags.graphViewGenerated)
         then readMaybe $ toUpper expr
         else Nothing
 nodeType  _                           _  = Nothing

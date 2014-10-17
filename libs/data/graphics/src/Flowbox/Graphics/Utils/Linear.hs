@@ -46,7 +46,7 @@ inv33 t = A.cond (nearZero det)
           y'@(V3 d e f) = A.unlift y :: V3 (A.Exp a)
           z'@(V3 g h i) = A.unlift z :: V3 (A.Exp a)
           m = V3 x' y' z'
-          -- ^^^ Accelerate why u do dis
+          -- ^^^ Accelerate y u do dis
 
 
           a' = cofactor (e,f,h,i)
@@ -58,5 +58,5 @@ inv33 t = A.cond (nearZero det)
           g' = cofactor (d,e,g,h)
           h' = cofactor (b,a,h,g)
           i' = cofactor (a,b,d,e)
-          cofactor (q,r,s,t) = det22 (V2 (V2 q r) (V2 s t))
+          cofactor (p,q,r,s) = det22 (V2 (V2 p q) (V2 r s))
           det = det33 m

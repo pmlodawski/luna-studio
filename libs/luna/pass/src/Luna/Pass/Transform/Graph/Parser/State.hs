@@ -22,24 +22,25 @@ import           Flowbox.Prelude                       hiding (mapM)
 import           Flowbox.System.Log.Logger
 import           Luna.AST.Expr                         (Expr)
 import qualified Luna.AST.Expr                         as Expr
-import qualified Luna.Graph.Attributes.Naming          as Attributes
 import qualified Luna.Graph.Edge                       as Edge
+import           Luna.Graph.Flags                      (Flags)
+import qualified Luna.Graph.Flags                      as Flags
 import           Luna.Graph.Graph                      (Graph)
 import qualified Luna.Graph.Graph                      as Graph
 import           Luna.Graph.Node                       (Node)
 import qualified Luna.Graph.Node                       as Node
+import           Luna.Graph.Node.Position              (Position)
 import           Luna.Graph.Port                       (Port)
 import qualified Luna.Graph.Port                       as Port
 import           Luna.Graph.PropertyMap                (PropertyMap)
 import qualified Luna.Graph.PropertyMap                as PropertyMap
-import           Luna.Info                             (apiVersion)
 import           Luna.Pass.Pass                        (Pass)
 import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
 
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
+logger = getLogger $(moduleName)
 
 
 type NodeMap = Map (Node.ID, Port) Expr
@@ -116,19 +117,27 @@ nodeMapLookup key = do
 getNodeSrcs :: Node.ID -> GPPass [Expr]
 getNodeSrcs nodeID = do
     g <- getGraph
-    let processEdge (pNID, _, Edge.Data s Port.All) = Just (Port.Num 0, (pNID, s))
-        processEdge (pNID, _, Edge.Data s d       ) = Just (d, (pNID, s))
-        processEdge (_   , _, Edge.Monadic        ) = Nothing
+    let processEdge (pNID, _, Edge.Data s  Port.All   ) = Just (0, (pNID, s))
+        processEdge (pNID, _, Edge.Data s (Port.Num d)) = Just (d, (pNID, s))
+        processEdge (_   , _, Edge.Monadic            ) = Nothing
 
         connectedMap = Map.fromList
                      $ Maybe.mapMaybe processEdge
                      $ Graph.lprel g nodeID
     case Map.size connectedMap of
         0 -> return []
-        _ -> case fst $ Map.findMax connectedMap of
-            Port.Num  maxPort -> do let connected = map (flip Map.lookup connectedMap . Port.Num) [0..maxPort]
-                                    mapM getNodeSrc connected
-            Port.All          -> mkList <$> getNodeSrc (Map.lookup Port.All connectedMap)
+        _ -> do let maxPort   = fst $ Map.findMax connectedMap
+                    connected = map (flip Map.lookup connectedMap) [0..maxPort]
+                mapM getNodeSrc connected
+
+
+inboundPorts :: Node.ID -> GPPass [Port]
+inboundPorts nodeID = do
+    g <- getGraph
+    let processEdge (_, Edge.Data _ d) = Just d
+        processEdge (_, Edge.Monadic ) = Nothing
+    return $ Maybe.mapMaybe processEdge
+           $ Graph.lpre g nodeID
 
 
 getNodeSrc :: Maybe (Node.ID, Port) -> GPPass Expr
@@ -137,40 +146,35 @@ getNodeSrc (Just a) = nodeMapLookup a
 
 
 getNode :: Node.ID -> GPPass Node
-getNode nodeID = do gr <- getGraph
-                    Graph.lab gr nodeID <??> "GraphParser: getNodeOutputName: Cannot find nodeID=" ++ show nodeID ++ " in graph"
+getNode nodeID = do
+    gr <- getGraph
+    Graph.lab gr nodeID <??> "GraphParser: getNodeOutputName: Cannot find nodeID=" ++ show nodeID ++ " in graph"
 
 
 getNodeOutputName :: Node.ID -> GPPass String
 getNodeOutputName nodeID = view Node.outputName <$> getNode nodeID
 
 
-getProperty :: Node.ID -> String -> GPPass (Maybe String)
-getProperty nodeID propertyName =
-    PropertyMap.get nodeID (show apiVersion) propertyName <$> getPropertyMap
+getFlags :: Node.ID -> GPPass Flags
+getFlags nodeID = PropertyMap.getFlags nodeID <$> getPropertyMap
 
 
-hasFlag :: Node.ID -> String -> GPPass Bool
-hasFlag nodeID flag = do
-    property <- getProperty nodeID flag
-    return $ property == Just "True"
+modifyFlags :: (Flags -> Flags) -> Node.ID -> GPPass ()
+modifyFlags fun nodeID =
+    getPropertyMap >>= setPropertyMap . PropertyMap.modifyFlags fun nodeID
 
 
-setProperty :: Node.ID -> String -> String -> GPPass ()
-setProperty nodeID key value =
-    getPropertyMap >>=
-    setPropertyMap . PropertyMap.set nodeID (show apiVersion) key value
-
-
-setPosition :: Node.ID -> (Float, Float) -> GPPass ()
+setPosition :: Node.ID -> Position -> GPPass ()
 setPosition nodeID position =
-    setProperty nodeID Attributes.nodePosition $ show position
+    modifyFlags (Flags.nodePosition .~ Just position) nodeID
+
+
+setGraphFolded :: Node.ID -> GPPass ()
+setGraphFolded = modifyFlags (Flags.graphFolded .~ Just True)
 
 
 doesLastStatementReturn :: GPPass Bool
 doesLastStatementReturn = do
-
-
     body' <- getBody
     return $ case body' of
         []                       -> False

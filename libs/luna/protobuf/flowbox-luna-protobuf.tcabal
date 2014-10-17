@@ -20,12 +20,10 @@ Library
   GHC-Options:    -Wall -O2 -threaded
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
-                  NoImplicitPrelude,
-                  TemplateHaskell,
-                  OverloadedStrings
+                  NoImplicitPrelude
 
   Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`,
-                   `findmodules('src', '.*\.hs', exclude='.*Distribution.*')`
+                   `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
                   protocol-buffers-fork,

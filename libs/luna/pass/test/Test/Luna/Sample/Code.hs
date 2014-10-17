@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Luna.SampleCodes where
+module Test.Luna.Sample.Code where
 
 import Text.RawString.QQ
 

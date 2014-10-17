@@ -18,7 +18,7 @@ Library
   Default-Language:       Haskell2010
 
   Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
-                   `findmodules('dist/gen', '.*\.hs')`
+                   `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -36,8 +36,10 @@ Library
                   distributive                ,
                   either                      ,
                   errors                      ,
+                  flowbox-serialization       ,
                   flowbox-utils               ,
                   imagemagick   >= 0.0.3.6    ,
+                  JuicyPixels                 ,
                   lifted-base                 ,
                   linear                      ,
                   linear-accelerate           ,
@@ -51,7 +53,10 @@ Library
                   system-filepath             ,
                   template-haskell            ,
                   transformers                ,
-                  vector
+                  vector                      ,
+                  luna-target-ghchs
+
+-- == test generator ==
 
 Executable test_generator
   if !flag(cuda)
@@ -85,6 +90,8 @@ Executable test_generator
                   lens                     ,
                   split                    ,
                   vector
+
+-- == test bezier ==
 
 Executable test_bezier
   if !flag(cuda)
@@ -121,6 +128,45 @@ Executable test_bezier
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.15.*
 
+-- == test func model ==
+
+Executable test_func
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        Func.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          TemplateHaskell,
+                          OverloadedStrings
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  lens                     ,
+                  split                    ,
+                  cubicbezier
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+-- == test merge ==
+
 Executable test_merge
   if !flag(cuda)
     buildable: False
@@ -154,10 +200,12 @@ Executable test_merge
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.15.*
 
+-- == test color ==
+
 Executable test_color
   if !flag(cuda)
     buildable: False
-    
+
   Main-Is:        Color.hs
   Hs-Source-Dirs: test
 
@@ -181,5 +229,35 @@ Executable test_color
                   JuicyPixels              ,
                   lens                     ,
                   QuickCheck               ,
+                  split                    ,
+                  vector
+
+Executable test_serialization
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        Serialization.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  algebraic                ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  base           == 4.7.*  ,
+                  bytestring               ,
+                  flowbox-graphics         ,
+                  flowbox-serialization    ,
+                  flowbox-utils            ,
+                  JuicyPixels              ,
+                  protocol-buffers-fork    ,
                   split                    ,
                   vector

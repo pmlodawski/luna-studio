@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.Bus.Logger.Logger where
 
 import Control.Monad (forever)
@@ -25,7 +26,7 @@ import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.Logger.Logger"
+logger = getLoggerIO $(moduleName)
 
 
 run :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())

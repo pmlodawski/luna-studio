@@ -1,0 +1,153 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.data;
+
+import "enums-type.proto";
+
+message Value {
+    enum Type {
+        EmptyTuple = 0;
+        Int        = 1;
+        Char       = 2;
+        Bool       = 3;
+        String     = 4;
+        Float      = 5;
+        Double     = 6;
+        Matrix     = 7;
+        View       = 8;
+        Point      = 9;
+        Tangent    = 10;
+        Vertex     = 11;
+        Curve      = 12;
+    }
+
+    required Type type = 1;
+    extensions 100 to max;
+}
+
+message EmptyTupleData {
+    extend Value {
+        optional EmptyTupleData data = 100;
+    }
+}
+
+message IntData {
+    extend Value {
+        optional IntData data = 101;
+    }
+
+    required int32 value = 1;
+}
+
+message CharData {
+    extend Value {
+        optional CharData data = 102;
+    }
+
+    required int32 value = 1;
+}
+
+message BoolData {
+    extend Value {
+        optional BoolData data = 103;
+    }
+
+    required bool value = 1;
+}
+
+message StringData {
+    extend Value {
+        optional StringData data = 104;
+    }
+
+    required string value = 1;
+}
+
+message FloatData {
+    extend Value {
+        optional FloatData data = 105;
+    }
+
+    required float value = 1;
+}
+
+message DoubleData {
+    extend Value {
+        optional DoubleData data = 106;
+    }
+
+    required double value = 1;
+}
+
+message MatrixData {
+    enum Type {
+        INT    = 0;
+        FLOAT  = 1;
+        DOUBLE = 2;
+        BOOL   = 3;
+    }
+
+    extend Value {
+        optional MatrixData data = 107;
+    }
+
+    required bytes value         = 1;
+    required uint32 width        = 2;
+    required uint32 height       = 3;
+    required Type precision = 4;
+}
+
+message ViewData {
+    extend Value {
+        optional ViewData data = 108;
+    }
+
+    required MatrixData red   = 1;
+    required MatrixData green = 2;
+    required MatrixData blue  = 3;
+    optional MatrixData alpha = 4;
+}
+
+// ===   GUI Curve Model   ===
+
+message PointData {
+    extend Value {
+        optional PointData data = 109;
+    }
+
+    optional double x = 1;
+    optional double y = 2;
+}
+
+message TangentData {
+    extend Value {
+        optional TangentData data = 110;
+    }
+
+    optional double weight   = 1;
+    optional double angle    = 2;
+    optional bool   isLinear = 3;
+}
+
+message VertexData {
+    extend Value {
+        optional VertexData data = 111;
+    }
+
+    optional PointData point      = 1;
+    optional TangentData handleIn  = 2;
+    optional TangentData handleOut = 3;
+}
+
+message CurveData {
+    extend Value {
+        optional CurveData data = 112;
+    }
+
+    repeated VertexData vertices = 1;
+}
