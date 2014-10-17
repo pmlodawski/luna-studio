@@ -63,14 +63,15 @@ desugarExpr ast = case ast of
             mAlias    = aliasMap  ^. at id
             mAliasPid = (do pid <- mAlias; parentMap ^. at pid)
             mAliasAST = (do pid <- mAliasPid; astMap ^. at pid)
+            nameAcc   = Expr.VarAccessor name
         case mAliasAST of
             Nothing  -> logger error ("Cannot find parent AST for variable " ++ name ++ " [" ++ show id ++ "]") *> continue
             Just ast -> case ast of
-                AST.Module mod          -> Expr.Accessor id name <$> conInit
+                AST.Module mod          -> Expr.Accessor id nameAcc <$> conInit
                                            where conBase = Expr.Con <$> State.genID <*> pure (mod ^. Module.cls ^. Type.name)
                                                  conInit = Expr.App <$> State.genID <*> conBase <*> pure []
                 AST.Expr (Expr.Data {}) -> Expr.App <$> State.genID <*> expBase <*> pure []
-                                           where expBase = Expr.Accessor id name <$> selfVar
+                                           where expBase = Expr.Accessor id nameAcc <$> selfVar
                                                  selfVar = Expr.Var <$> State.genID <*> pure "self"
                 _                       -> continue
     _                -> continue
