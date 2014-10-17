@@ -88,7 +88,7 @@ get varName = do
     Session.withImports [ "Flowbox.Data.Serialization"
                         , "Flowbox.Graphics.Serialization"
                         , "Prelude"
-                        , "Generated.Proto.Data.Value" ] 
+                        , "Generated.Proto.Data.Value" ]
                         $ lift2 $ GHC.handleSourceError excHandler $ do
         --let computeExpr =  concat [varName, " = compute ", varName]
         --_      <- GHC.runDecls computeExpr
