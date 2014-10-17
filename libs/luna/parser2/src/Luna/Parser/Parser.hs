@@ -515,9 +515,15 @@ termBaseE p = choice [ try recUpdE
                      , callTermE p
                      ]
 
-accBaseE  = (Tok.accessor *> varOp)
+recAcc  = (Tok.accessor *> varOp)
 
-recUpdE   = appID (\id sel expr src -> Expr.RecordUpdate id src sel expr) <*> many1 accBaseE <* Tok.assignment <*> exprSimple
+accBaseE  = (Tok.accessor *> accessor)
+
+accessor =   (Expr.VarAccessor <$> varOp)
+         <|> (Expr.ConAccessor <$> Tok.conIdent)
+
+
+recUpdE   = appID (\id sel expr src -> Expr.RecordUpdate id src sel expr) <*> many1 recAcc <* Tok.assignment <*> exprSimple
 
 accE      = try(appID Expr.Accessor <*> accBaseE) -- needed by the syntax [1..10]
 
@@ -896,6 +902,8 @@ appConf = Config.registerPragma (undefined :: Pragma.TabLength)
 
 -- FIXME[wd]: logika powina byc przeniesiona na system pluginow
 defConfig = appConf def
+defState  = def & State.conf .~ defConfig
+
 
 appSt = State.conf %~ appConf
 
@@ -908,10 +916,10 @@ appSt = State.conf %~ appConf
 
 parseGen p st = run (bundleResult (unit p)) st
 
-moduleParser modPath = parseGen (upToEnd $ pModule (last modPath) (init modPath)) . appSt
-exprParser           = parseGen (upToEnd expr) . appSt
-patternParser        = parseGen (upToEnd pattern) . appSt
-typeParser           = parseGen (upToEnd typeT) . appSt
+moduleParser modPath = parseGen (upToEnd $ pModule (last modPath) (init modPath))
+exprParser           = parseGen (upToEnd expr)
+patternParser        = parseGen (upToEnd pattern)
+typeParser           = parseGen (upToEnd typeT)
 
 -----------------------------------------------------------
 -- Input utils
