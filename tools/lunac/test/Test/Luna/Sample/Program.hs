@@ -64,6 +64,22 @@ def main:
 |] [r|Vector 1 2 3
 |],
 
+    Program "Int.>" [r|
+
+def print msg:
+    ```autoLift1 print #{msg}```
+
+def > a b:
+    a.> b
+
+def Int.> a:
+    ```liftF2 (>) #{self} #{a}```
+
+def main:
+    print $ 1 > 2
+|] [r|False
+|],
+
     Program "Vector, Int.+ and Int.>" [r|
 
 class Vector a:
@@ -76,6 +92,9 @@ def print msg:
 
 def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
+
+def > a b:
+    a.> b
 
 def Int.> a:
     ```liftF2 (>) #{self} #{a}```
