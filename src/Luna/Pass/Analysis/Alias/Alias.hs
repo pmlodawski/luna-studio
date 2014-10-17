@@ -78,9 +78,11 @@ vaMod el@(Module.Module id cls imports classes typeAliases typeDefs fields metho
 --          name     = el ^.  Expr.name
 
 registerClassHeaders :: Expr.Expr -> VAPass ()
-registerClassHeaders (Expr.Data id cls cons classes methods) = 
-    regTypeName name id <* mapM registerConsHeaders cons where
-        name = view Type.name cls
+registerClassHeaders cls = case cls of
+    Expr.Data       id cls cons _ _ -> register' id cls cons
+    Expr.DataNative id cls cons _ _ -> register' id cls cons
+    where register' id cls cons = regTypeName name id <* mapM registerConsHeaders cons
+                                  where name = view Type.name cls
 
 registerConsHeaders :: Expr.Expr -> VAPass ()
 registerConsHeaders (Expr.ConD id name fields) = regVarName name id

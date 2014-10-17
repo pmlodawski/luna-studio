@@ -42,7 +42,7 @@ run = (Pass.run_ (Pass.Info "Luna Parser") Pass.NoState) . parse
 
 
 parse :: Source -> ParserPass (Module, SourceMap, ASTInfo)
-parse (Source modpath txt) = case Parser.parseString txt $ Parser.moduleParser modpath def of
+parse (Source modpath txt) = case Parser.parseString txt $ Parser.moduleParser modpath Parser.defState of
     Left  e -> Pass.fail $ displayS (Parser.renderErr e) "" -- FIXME[wd]: poprawic wyswietlanie bledow
     Right a -> return (fst a, view State.sourceMap $ snd a, view State.info $ snd a)
 
