@@ -151,8 +151,10 @@ def main arg arg2:
     print arg2
     self.bla "kota" "albo nie"
 |], named "constructors 1" [r|
+class Foo
+
 def main arg:
-    Main.foo 1 2 3
+    Foo.foo 1 2 3
 |], named "constructors 2" [r|
 class Foo
 

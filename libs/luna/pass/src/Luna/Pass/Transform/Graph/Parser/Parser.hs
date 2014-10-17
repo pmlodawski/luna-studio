@@ -152,6 +152,7 @@ parseNativeNode nodeID native = do
                     Right (e, _) -> return e
     addExpr nodeID $ replaceNativeVars srcs expr
 
+
 replaceNativeVars :: [Expr] -> Expr -> Expr
 replaceNativeVars srcs native = native & Expr.segments %~ replaceNativeVars' srcs where
     replaceNativeVars' []                      segments                   = segments
