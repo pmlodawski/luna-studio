@@ -29,8 +29,11 @@ def main:
 def main:
     "test"
 |], named "simple infix" [r|
-def Int.+ a:
+def Int.add a:
     ```liftF2 (+) #{self} #{a}```
+
+def + a b:
+    a.add b
 
 def main:
     1 + 2
@@ -62,7 +65,10 @@ def main:
 def print msg:
     ```autoLift1 print #{msg}```
 
-def Int.+ a:
+def + a b:
+    a.add b
+
+def Int.add a:
     ```liftF2 (+) #{self} #{a}```
 
 def foo:
@@ -209,7 +215,6 @@ def mkTuple arg1 arg2 arg3 arg4 arg5:
 
 traverseExample :: String
 traverseExample = [r|
-
 def main:
     a = "var a"
     b = "var b"
@@ -225,5 +230,6 @@ def bar arg1 arg2 arg3 arg4 arg5:
     r = test arg3 arg4 arg1 arg2 arg5
 
     arg5, arg4, arg3, arg2, r, arg1
+
 
 |]
