@@ -48,6 +48,7 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectModifyRequest                                   , call Topic.update ProjectHandler.modify)
     , (Topic.projectCloseRequest                                    , call Topic.update ProjectHandler.close)
     , (Topic.projectStoreRequest                                    , call Topic.status ProjectHandler.store)
+    , (Topic.projectFileExistsRequest                               , call Topic.status ProjectHandler.fileExists)
     , (Topic.projectLibraryListRequest                              , call Topic.status LibraryHandler.list)
     , (Topic.projectLibraryLookupRequest                            , call Topic.status LibraryHandler.lookup)
     , (Topic.projectLibraryCreateRequest                            , call Topic.update LibraryHandler.create)
