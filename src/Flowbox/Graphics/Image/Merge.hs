@@ -49,7 +49,8 @@ basicColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOverlay) 
 
 -- FIXME [KL]: Bounding box now is taken from the overlay generator
 threeWayMerge :: (A.Elt a, A.IsFloating a)
-              => ContinousGenerator (A.Exp a) -- ^ A.R
+              => ComplicatedBlendMode a
+              -> ContinousGenerator (A.Exp a) -- ^ A.R
               -> ContinousGenerator (A.Exp a) -- ^ A.G
               -> ContinousGenerator (A.Exp a) -- ^ A.B
               -> ContinousGenerator (A.Exp a) -- ^ B.R
@@ -57,15 +58,16 @@ threeWayMerge :: (A.Elt a, A.IsFloating a)
               -> ContinousGenerator (A.Exp a) -- ^ B.B
               -> ContinousGenerator (A.Exp a) -- ^ A.A
               -> ContinousGenerator (A.Exp a) -- ^ B.A
-              -> ComplicatedBlendMode a
               -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
-threeWayMerge ar ag ab br bg bb aa ba blend =
+threeWayMerge blend ar ag ab br bg bb aa ba =
     (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, ba)
     where merge ov aov bgnd abgnd = complicatedColorCompositingFormula ov aov bgnd abgnd blend
 
 -- FIXME [KL]: Bounding box now is taken from the aa' generator
 threeWayMerge' :: (A.Elt a, A.IsFloating a)
-              => ContinousGenerator (A.Exp a) -- ^ A.R
+              => AlphaBlend
+              -> BlendMode a
+              -> ContinousGenerator (A.Exp a) -- ^ A.R
               -> ContinousGenerator (A.Exp a) -- ^ A.G
               -> ContinousGenerator (A.Exp a) -- ^ A.B
               -> ContinousGenerator (A.Exp a) -- ^ B.R
@@ -73,10 +75,8 @@ threeWayMerge' :: (A.Elt a, A.IsFloating a)
               -> ContinousGenerator (A.Exp a) -- ^ B.B
               -> ContinousGenerator (A.Exp a) -- ^ A.A
               -> ContinousGenerator (A.Exp a) -- ^ B.A
-              -> AlphaBlend
-              -> BlendMode a
               -> (ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a), ContinousGenerator (A.Exp a))
-threeWayMerge' ar ag ab br bg bb aa ba alphaBlend blend =
+threeWayMerge' alphaBlend blend ar ag ab br bg bb aa ba =
   (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, mergeAlpha aa ba)
   where merge ov aov bgnd abgnd = basicColorCompositingFormula ov aov bgnd abgnd alphaBlend blend
         mergeAlpha (Generator cnv aa') (Generator _ ba') = Generator cnv $ \p -> case alphaBlend of
