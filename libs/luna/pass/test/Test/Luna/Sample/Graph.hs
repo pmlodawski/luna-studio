@@ -165,11 +165,18 @@ sampleGraphs =
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
         ]
         [(100, -3, Edge.Data Port.All   Port.All)]
-     , named "graph with [0] port descriptor on output"
+     , named "graph with [0] port descriptor on output - 1"
      $ Graph.addMonadicEdges $ Graph.mkGraph
-        [(-2,Node.Inputs  (0  ,0))
-        ,(-3,Node.Outputs (100,0))
+        [(-2,Node.Inputs  (0 ,0))
+        ,(-3,Node.Outputs (10,0))
         ,fixEmpty' (100, Node.Expr "foo" "" (0 , 1))
+        ]
+        [(100, -3, Edge.Data Port.All $ Port.Num 0)]
+     , named "graph with [0] port descriptor on output - 2"
+     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(-2,Node.Inputs  (0 ,0))
+        ,(-3,Node.Outputs (10,0))
+        ,fixEmpty' (100, Node.Expr "255" "" (0 , 1))
         ]
         [(100, -3, Edge.Data Port.All $ Port.Num 0)]
     ]

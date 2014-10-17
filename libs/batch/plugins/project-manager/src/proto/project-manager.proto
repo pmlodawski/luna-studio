@@ -86,7 +86,15 @@ message Project {
             required Request request = 1;
         }
     }
-
+    message FileExists {
+        message Request {
+            required string path = 1;
+        }
+        message Status {
+            required Request request = 1;
+            required bool    exists  = 2;
+        }
+    }
     message Library {
         message List {
             message Request {
@@ -117,6 +125,16 @@ message Project {
                 required Request request = 1;
                 required generated.proto.library.Library library = 2;
                 required int32 updateNo  = 3;
+            }
+        }
+        message Modify {
+            message Request {
+                required generated.proto.library.Library library = 1;
+                required int32 projectID = 2;
+            }
+            message Update {
+                required Request request = 1;
+                required int32 updateNo  = 2;
             }
         }
         message Load {

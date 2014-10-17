@@ -177,11 +177,14 @@ const std::string methodDefinition = R"(
 				break;
 			case Conversation::EXCEPTION:
 				{
-					generated::proto::rpc::Exception e;
-					e.ParseFromString(msg.contents);
-					errorMessage = e.message();
-					if(errorMessage.empty())
+					if(c.errorMessage)
+					{
+						errorMessage = *c.errorMessage;
+					}
+					else
+					{
 						errorMessage = "[No error message was provided by batch.]";
+					}
 				}
 				break;
 			default:
