@@ -54,7 +54,7 @@ data GBState = GBState { _graph        :: Graph
                        , _prevoiusNode :: Node.ID
                        } deriving (Show)
 
-makeLenses(''GBState)
+makeLenses ''GBState
 
 
 type GBPass result = Pass GBState result

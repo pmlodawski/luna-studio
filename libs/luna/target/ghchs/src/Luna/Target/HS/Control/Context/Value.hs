@@ -30,6 +30,7 @@ import Data.Typeable (Typeable)
 import Flowbox.Utils
 import Data.TypeLevel
 import Control.Applicative
+import Control.Monad.Shuffle
 
 --------------------------------------------------------------------------------
 -- Structures
@@ -63,6 +64,15 @@ instance Show (m (s a)) => Show (Value m s a) where
 #else
     show (Value a) = show a
 #endif
+
+-- FIXME[wd]: do we need this? How to implement Monad for Value?
+--instance (Monad m, Monad s) => Monad (Value m s) where
+--    return = Value . return . return
+--    Value m >>= Value f = Value $ do
+--        s <- m
+--        shuffle $ do 
+--            v <- s
+--            shuffle . fromValue $ f v
 
 ---
 

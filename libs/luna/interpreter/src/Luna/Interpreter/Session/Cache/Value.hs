@@ -8,6 +8,8 @@
 
 module Luna.Interpreter.Session.Cache.Value where
 
+import qualified Control.Monad.Catch as Catch
+import qualified Control.Monad.Ghc   as MGHC
 import qualified GHC
 
 import           Flowbox.Control.Error
@@ -24,7 +26,8 @@ import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
-
+import qualified Flowbox.Data.Error as ValueError
+import qualified Flowbox.Data.Serialization as Serialization
 
 
 logger :: LoggerIO
@@ -82,14 +85,15 @@ report callPointPath varName = do
 get :: VarName -> Session (Maybe Value)
 get varName = do
     let expr = "toValue $ compute " ++ varName
+        excHandler :: Catch.SomeException -> MGHC.Ghc (Maybe Value)
         excHandler exc = do
             logger warning $ show exc
-            return Nothing
+            liftIO $ Serialization.toValue $ ValueError.Error $ show exc
     Session.withImports [ "Flowbox.Data.Serialization"
                         , "Flowbox.Graphics.Serialization"
                         , "Prelude"
                         , "Generated.Proto.Data.Value" ]
-                        $ lift2 $ GHC.handleSourceError excHandler $ do
+                        $ lift2 $ flip Catch.catch excHandler $ do
         --let computeExpr =  concat [varName, " = compute ", varName]
         --_      <- GHC.runDecls computeExpr
         action <- HEval.interpret expr

@@ -7,10 +7,11 @@
 
 package generated.proto.data;
 
-import "enum-type.proto";
+import "enums-type.proto";
 
 message Value {
     enum Type {
+        Error      = 13;
         EmptyTuple = 0;
         Int        = 1;
         Char       = 2;
@@ -28,6 +29,14 @@ message Value {
 
     required Type type = 1;
     extensions 100 to max;
+}
+
+
+message ErrorData {
+    extend Value {
+        optional ErrorData data = 113;
+    }
+    required string message = 1;
 }
 
 message EmptyTupleData {

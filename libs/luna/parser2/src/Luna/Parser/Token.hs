@@ -92,7 +92,7 @@ reserveBlock s name = tokenBlock $ try $ do
 
 opToken p = tokenBlock (highlight Operator p)
 
-opChars  = "!#$%&*+./<=>?\\^|-~"
+opChars  = "!#$%&*+/<=>?\\^|-~"
 opLetter = oneOf opChars
 opStart  = opLetter
 
@@ -140,7 +140,7 @@ opStyle = IdentifierStyle
     { _styleName     = "operator"
     , _styleStart    = opStart
     , _styleLetter   = opLetter
-    , _styleReserved = HashSet.fromList [":","::","..","...","=","\\","|","<-","->","@","~","=>"]
+    , _styleReserved = HashSet.fromList [":","::","=","\\","|","<-","->","@","~","=>"]
     , _styleHighlight = Operator
     , _styleReservedHighlight = ReservedOperator
     }

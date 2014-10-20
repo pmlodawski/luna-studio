@@ -387,16 +387,24 @@ genExpr ast = case ast of
     LExpr.TypeDef      _ srcType dstType     -> case srcType of
                                                     LType.Con _ segments                    -> HExpr.NewTypeD (last segments) [] <$> (HExpr.Con (last segments) . (:[]) <$> genType' dstType)
                                                     LType.App _ (LType.Con _ segments) args -> HExpr.NewTypeD (last segments) <$> mapM genType' args <*> (HExpr.Con (last segments) . (:[]) <$> genType' dstType)
-    LExpr.List         _ items               -> do
-                                                let liftEl el = case el of
-                                                        LExpr.RangeFromTo {} -> el
-                                                        LExpr.RangeFrom   {} -> el
-                                                        _                    -> LExpr.List 0 [el]
-                                                    (arrMod, elmod) = if any isRange items
-                                                        then (HExpr.AppE (HExpr.Var "concatPure"), liftEl)
-                                                        else (Prelude.id, Prelude.id)
+    LExpr.List         _ items               -> if (length items == 1) && (isRange $ items!!0)
+                                                    then mkVal . HExpr.ListE <$> mapM genExpr [items!!0]
+                                                    else if isThereRange then Pass.fail "Arrays with multiple sections are not supported yet!"
+                                                                         else mkVal . HExpr.ListE <$> mapM genExpr items
+                                                where isThereRange = any isRange items
 
-                                                mkVal . arrMod . HExpr.ListE <$> mapM (genExpr . elmod) items
+    -- FIXME[wd]: poprawic generacje list - multisection.
+    --LExpr.List         _ items               -> mkVal . arrMod . HExpr.ListE <$> mapM (genExpr . elmod) items
+    --                                            where liftEl el = case el of
+    --                                                      LExpr.RangeFromTo {} -> el
+    --                                                      LExpr.RangeFrom   {} -> el
+    --                                                      _                    -> LExpr.List 0 [el]
+    --                                                  (arrMod, elmod) = if any isRange items
+    --                                                      then (HExpr.AppE (HExpr.Var "concatPure"), liftEl)
+    --                                                      else (Prelude.id, Prelude.id)
+
+                                                
+
     LExpr.RangeFromTo _ start end            -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start
     LExpr.Ref         _ dst                  -> genExpr dst

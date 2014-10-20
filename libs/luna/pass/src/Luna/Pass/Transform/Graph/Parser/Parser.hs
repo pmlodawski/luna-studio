@@ -84,6 +84,7 @@ parseExprNode :: Node.ID -> String -> GPPass ()
 parseExprNode nodeID expr = case expr of
     "List"        -> parseListNode   nodeID
     "Tuple"       -> parseTupleNode  nodeID
+    "Grouped"     -> parseGroupedNode  nodeID
     '=':pat       -> parsePatNode    nodeID pat
     '`':'`':'`':_ -> parseNativeNode nodeID expr
     _             -> parseAppNode    nodeID expr
@@ -152,6 +153,7 @@ parseNativeNode nodeID native = do
                     Right (e, _) -> return e
     addExpr nodeID $ replaceNativeVars srcs expr
 
+
 replaceNativeVars :: [Expr] -> Expr -> Expr
 replaceNativeVars srcs native = native & Expr.segments %~ replaceNativeVars' srcs where
     replaceNativeVars' []                      segments                   = segments
@@ -188,6 +190,15 @@ parseTupleNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = Expr.Tuple nodeID srcs
     addExpr nodeID e
+
+
+
+parseGroupedNode :: Node.ID -> GPPass ()
+parseGroupedNode nodeID = do
+    [src] <- State.getNodeSrcs nodeID
+    let e = Expr.Grouped nodeID src
+    addExpr nodeID e
+
 
 
 parseListNode :: Node.ID -> GPPass ()
