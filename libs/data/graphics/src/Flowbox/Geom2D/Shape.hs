@@ -9,7 +9,7 @@ module Flowbox.Geom2D.Shape where
 import Flowbox.Geom2D.Path
 import Flowbox.Prelude
 
-data Shape a = Shape { pathList :: [Path a] }
+data Shape a = Shape { pathList :: [Path a] } deriving (Eq, Ord, Show)
 
 instance Functor Shape where
     fmap f (Shape points) = Shape ((fmap.fmap) f points)

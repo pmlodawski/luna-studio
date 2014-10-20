@@ -11,7 +11,7 @@ import Flowbox.Prelude
 
 data Path a = Path { controlPoints :: [ControlPoint a]
                    , isClosed        :: Bool
-                   }
+                   } deriving (Eq, Ord, Show)
 
 instance Functor Path where
     fmap f (Path points closed) = Path ((fmap.fmap) f points) closed
