@@ -42,6 +42,7 @@ import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
 
 
+
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
@@ -105,6 +106,7 @@ buildOutput outputID expr = do
         Expr.Assignment {}             -> void $ buildNode    False True Nothing expr
         Expr.Tuple   _ items           -> buildAndConnectMany True  True Nothing outputID items 0
         Expr.Grouped _ (v@Expr.Var {}) -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
+        Expr.Grouped _  v              -> buildAndConnect     False True Nothing outputID (v, Port.Num 0)
         Expr.Var {}                    -> buildAndConnect     True  True Nothing outputID (expr, Port.All)
         _                              -> buildAndConnect     False True Nothing outputID (expr, Port.All)
     State.connectMonadic outputID
@@ -128,6 +130,7 @@ buildNode astFolded monadicBind outName expr = do
         Expr.List       _ items                 -> addNode i "List" items
         Expr.Native     _ segments              -> addNode i (showNative expr) $ filter isNativeVar segments
         Expr.Wildcard   _                       -> left $ "GraphBuilder.buildNode: Unexpected Expr.Wildcard with id=" ++ show i
+        Expr.Grouped    _ grouped               -> addNode i "Grouped" [grouped]
         _                                       -> showAndAddNode
     where
         buildVar i name = do
