@@ -89,13 +89,13 @@ Executable test_generator
                   split                    ,
                   vector
 
--- == test bezier ==
+-- == test shape and bezier (curves) ==
 
-Executable test_bezier
+Executable test_curves
   if !flag(cuda)
     buildable: False
 
-  Main-Is:        Bezier.hs
+  Main-Is:        Curves.hs
   Hs-Source-Dirs: test
 
   Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
