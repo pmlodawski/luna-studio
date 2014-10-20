@@ -26,6 +26,7 @@ Library
                   containers,
                   data-hash,
                   either,
+                  exceptions,
                   flowbox-batch,
                   flowbox-config,
                   flowbox-serialization,

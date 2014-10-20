@@ -21,6 +21,7 @@ import Text.ProtocolBuffers.Basic       (defaultValue)
 import Text.ProtocolBuffers.Extensions
 import Text.ProtocolBuffers.Identifiers
 
+import           Flowbox.Data.Error                  (Error (Error))
 import           Flowbox.Prelude
 import           Generated.Proto.Data.BoolData       (BoolData (BoolData))
 import qualified Generated.Proto.Data.BoolData       as BoolData
@@ -30,6 +31,8 @@ import           Generated.Proto.Data.DoubleData     (DoubleData (DoubleData))
 import qualified Generated.Proto.Data.DoubleData     as DoubleData
 import           Generated.Proto.Data.EmptyTupleData (EmptyTupleData (EmptyTupleData))
 import qualified Generated.Proto.Data.EmptyTupleData as EmptyTupleData
+import           Generated.Proto.Data.ErrorData      (ErrorData (ErrorData))
+import qualified Generated.Proto.Data.ErrorData      as ErrorData
 import           Generated.Proto.Data.FloatData      (FloatData (FloatData))
 import qualified Generated.Proto.Data.FloatData      as FloatData
 import           Generated.Proto.Data.IntData        (IntData (IntData))
@@ -52,6 +55,10 @@ class Serializable a b | a -> b where
 mkValue :: Key Maybe Value a -> Value.Type -> Maybe a -> Maybe Value
 mkValue key keytype = liftM $ \extension -> putExt key (Just extension) $ Value keytype defaultValue
 
+
+instance Serializable Error ErrorData where
+    serialize (Error msg) = return . Just $ ErrorData $ fromString msg
+    toValue a = liftM (mkValue ErrorData.data' Value.Error) $ serialize a
 
 instance Serializable () EmptyTupleData where
     serialize a = return . Just $ EmptyTupleData
