@@ -4,20 +4,18 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Geom2D.Path where
+module Flowbox.Geom2D.Shape where
 
-import Flowbox.Geom2D.ControlPoint
+import Flowbox.Geom2D.Path
 import Flowbox.Prelude
 
-data Path a = Path { controlPoints :: [ControlPoint a]
-                   , isClosed        :: Bool
-                   }
+data Shape a = Shape { pathList :: [Path a] }
 
-instance Functor Path where
-    fmap f (Path points closed) = Path ((fmap.fmap) f points) closed
+instance Functor Shape where
+    fmap f (Shape points) = Shape ((fmap.fmap) f points)
 
---instance Applicative Path where
---    pure a = Path (pure a) False
+--instance Applicative Shape where
+--    pure a = Shape (pure a)
 --    {-# INLINE pure #-}
---    Path a <*> Path b = Path (a <*> b)
+--    Shape a <*> Shape b = Shape (a <*> b)
 --    {-# INLINE (<*>) #-}
