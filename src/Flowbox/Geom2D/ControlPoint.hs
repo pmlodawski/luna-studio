@@ -9,10 +9,10 @@ module Flowbox.Geom2D.ControlPoint where
 import Math.Coordinate.Cartesian (Point2(..))
 import Flowbox.Prelude
 
-data ControlPoint a = ControlPoint a { controlPoint :: Point2 a
-                                     , handleIn     :: Point2 a
-                                     , handleOut    :: Point2 a
-                                     } deriving (Eq, Ord, Show)
+data ControlPoint a = ControlPoint { controlPoint :: Point2 a
+                                   , handleIn     :: Point2 a
+                                   , handleOut    :: Point2 a
+                                   } deriving (Eq, Ord, Show)
 
 instance Functor ControlPoint where
     fmap f (ControlPoint a b c) = ControlPoint (fmap f a) (fmap f b) (fmap f c)
