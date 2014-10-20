@@ -19,14 +19,14 @@ type Range x     = (x, x)
 
 data Function x y = Function { _segments :: Map x (Maybe (Segment x y)) }
 
-data Segment x y = ContinuousHybrid { _nodes    :: Map x (ControlPoint y) }
+data Segment x y = ContinuousHybrid { _vertices :: Map x (ControlPoint y) }
                  | Lambda           { _lambda   :: x -> y }
                  | Repeater         { _startsAt :: x
                                     , _function :: Function x y
                                     , _range    :: Range x
                                     }
 
-data ControlPoint y = ControlPoint { _nodeY     :: y
+data ControlPoint y = ControlPoint { _vertexY   :: y
                                    , _handleIn  :: Maybe Handle
                                    , _handleOut :: Maybe Handle
                                    } deriving (Show, Eq)

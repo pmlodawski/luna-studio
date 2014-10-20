@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Geom2D.QuadraticBezier.Intersection where
+module Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve where
 
 import Data.Array.Accelerate as A
 

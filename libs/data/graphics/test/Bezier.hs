@@ -10,9 +10,7 @@
 
 module Main where
 
-import Geom2D
-import Geom2D.CubicBezier.Basic as Cubic
-import Data.Array.Accelerate      as A
+import Data.Array.Accelerate    as A
 
 #ifdef ACCELERATE_CUDA_BACKEND
 import Data.Array.Accelerate.CUDA        (run)
@@ -21,10 +19,11 @@ import Data.Array.Accelerate.Interpreter (run)
 #endif
 
 import Math.Coordinate.Cartesian (Point2(..))
-import Flowbox.Geom2D.CubicBezier.Intersection as Cubic
+import Flowbox.Geom2D.CubicBezier
+import Flowbox.Geom2D.CubicBezier.Solve            as Cubic
 import Flowbox.Geom2D.Accelerate.Basic
-import Flowbox.Geom2D.Accelerate.CubicBezier as CubicA
-import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection as CubicA
+import Flowbox.Geom2D.Accelerate.CubicBezier       as CubicA
+import Flowbox.Geom2D.Accelerate.CubicBezier.Solve as CubicA
 import Flowbox.Math.Function.Accelerate.BSpline
 import Flowbox.Prelude
 
@@ -44,12 +43,7 @@ main = do
         p2  = Point2 0 1 :: Point2 Double
         p3  = Point2 1 1 :: Point2 Double
         p4  = Point2 1 0 :: Point2 Double
-        p1' = Point 0 0
-        p2' = Point 0 1
-        p3' = Point 1 1
-        p4' = Point 1 0
-        curveA = CubicA.CubicBezier p1 p2 p3 p4
-        curve  = Cubic.CubicBezier p1' p2' p3' p4'
+        curve  = CubicBezier p1 p2 p3 p4
         n1 = Point2 (-0.5) 0.5
         n2 = Point2 0.5 0.5
         n3 = Point2 1.5 0.5
@@ -58,12 +52,12 @@ main = do
         o3 = Point2 2 1
         i2 = Point2 0.5 1.5
         i3 = Point2 1.5 (-0.5)
-        curveT = CubicA.CubicBezier n1 o1 i2 n2 :: CubicA.CubicBezier Double
+        curveT = CubicBezier n1 o1 i2 n2 :: CubicBezier Double
         node1  = BSplineNode n1 n1 o1
         node2  = BSplineNode n2 i2 o2
         node3  = BSplineNode n3 i3 o3
         spline = A.use $ fromList (Z :. 3) [node1, node2, node3] :: Acc (BSpline Double)
-        solve  x = A.unit $ CubicA.valueAtX 10 0.01 (A.lift curveA) x
+        solve  x = A.unit $ CubicA.valueAtX 10 0.01 (A.lift curve) x
         solveS x = A.unit $ valueAt spline x
         solve' x = Cubic.valueAtX 10 0.01 curve x
 

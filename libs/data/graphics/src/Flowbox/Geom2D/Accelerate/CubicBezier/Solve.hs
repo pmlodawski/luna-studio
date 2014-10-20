@@ -8,14 +8,15 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- TODO: change this module name to something more apropriate, like Query?
-module Flowbox.Geom2D.Accelerate.CubicBezier.Intersection where
+module Flowbox.Geom2D.Accelerate.CubicBezier.Solve where
 
 import Data.Array.Accelerate as A
 
-import Math.Coordinate.Cartesian (Point2(..))
-import Flowbox.Geom2D.Accelerate.CubicBezier
-import Flowbox.Graphics.Utils (fstTrio, sndTrio, trdTrio)
-import Flowbox.Prelude hiding ((<*), (?), fst, snd, lift)
+import Math.Coordinate.Cartesian             (Point2(..))
+import Flowbox.Geom2D.CubicBezier
+import Flowbox.Geom2D.Accelerate.CubicBezier ()
+import Flowbox.Graphics.Utils                (fstTrio, sndTrio, trdTrio)
+import Flowbox.Prelude                       hiding ((<*), (?), fst, snd, lift)
 
 
 
