@@ -99,7 +99,6 @@ modifyNode libraryID nodeID = do
 
 modifyNodeSuccessors :: Library.ID -> Breadcrumbs -> Node.ID -> Session ()
 modifyNodeSuccessors libraryID bc nodeID = do
-    let matchNode k _ = last k == CallPoint libraryID nodeID
     logger info $ concat ["Mark modified: node ", show (libraryID, nodeID), " successors"]
     graph <- fst <$> Session.getGraph (DefPoint libraryID bc)
     let successors = Graph.suc graph nodeID

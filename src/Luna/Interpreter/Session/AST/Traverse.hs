@@ -79,7 +79,7 @@ into' callDataPath = do
         libraryID = callData ^. CallData.callPoint . CallPoint.libraryID
         parentBC  = callData ^. CallData.parentBC
         node      = callData ^. CallData.node
-    Inspect.fromName (node ^. Node.expr) parentBC libraryID
+    Inspect.fromName (Node.exprStr node) parentBC libraryID
 
 
 into :: CallDataPath -> Session [CallDataPath]
