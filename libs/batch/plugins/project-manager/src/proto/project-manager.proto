@@ -15,6 +15,7 @@ import "graph.proto";
 import "graphview.proto";
 import "library.proto";
 import "module.proto";
+import "name.proto";
 import "nodedefault.proto";
 import "project.proto";
 import "type.proto";
@@ -331,8 +332,8 @@ message Project {
                 message Modify {
                     message Name {
                         message Request {
-                            required string name     = 1;
-                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required generated.proto.name.Name         name = 1;
+                            required generated.proto.crumb.Breadcrumbs bc   = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
                             required int32 _astID    = 5;

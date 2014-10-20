@@ -56,6 +56,7 @@ import           Luna.Data.Serialize.Proto.Conversion.Crumb                     
 import           Luna.Data.Serialize.Proto.Conversion.Expr                                         ()
 import           Luna.Data.Serialize.Proto.Conversion.Focus                                        ()
 import           Luna.Data.Serialize.Proto.Conversion.Module                                       ()
+import           Luna.Data.Serialize.Proto.Conversion.Name                                         ()
 
 
 
@@ -211,8 +212,8 @@ dataMethodsModify request@(ModifyDataMethods.Request tmethods tbc tlibID tprojec
 functionNameModify :: ModifyFunctionName.Request -> RPC Context IO ModifyFunctionName.Update
 functionNameModify request@(ModifyFunctionName.Request tname tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
-    let name      = decodeP tname
-        libID     = decodeP tlibID
+    name <- decodeE tname
+    let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchAST.updateFunctionName name bc libID projectID
     updateNo <- Batch.getUpdateNo

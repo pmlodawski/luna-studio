@@ -27,6 +27,7 @@ import           Luna.AST.Expr                           (Expr)
 import qualified Luna.AST.Expr                           as Expr
 import           Luna.AST.Module                         (Module)
 import qualified Luna.AST.Module                         as Module
+import           Luna.AST.Name                           (Name)
 import           Luna.AST.Type                           (Type)
 import qualified Luna.AST.Type                           as Type
 import qualified Luna.Graph.PropertyMap                  as PropertyMap
@@ -149,9 +150,9 @@ updateDataMethods methods bc libID projectID = astClassFocusOp bc libID projectI
     return (m & Expr.methods .~ fixedMethods, ()))
 
 
-updateFunctionName :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+updateFunctionName :: Name -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 updateFunctionName name bc libID projectID = astFunctionFocusOp bc libID projectID (\m ->
-    return (m & Expr.name .~ name, ()))
+    return (m & Expr.fname .~ name, ()))
 
 
 updateFunctionPath :: [String] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
