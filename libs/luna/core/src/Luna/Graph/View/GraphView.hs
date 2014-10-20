@@ -29,6 +29,8 @@ import           Luna.Graph.Graph               (Graph)
 import qualified Luna.Graph.Graph               as Graph
 import           Luna.Graph.Node                (Node)
 import qualified Luna.Graph.Node                as Node
+import           Luna.Graph.Node.Expr           (NodeExpr)
+import qualified Luna.Graph.Node.Expr           as NodeExpr
 import qualified Luna.Graph.Node.OutputName     as OutputName
 import qualified Luna.Graph.Port                as Port
 import           Luna.Graph.PropertyMap         (PropertyMap)
@@ -67,47 +69,41 @@ applyEdgeView (graph, pm) (src, dst, edgeview) = do
     srcNode <- Graph.lab graph src <?> "GraphView.applyEdgeView : Cannot find node with id = " ++ show src
     dstNode <- Graph.lab graph src <?> "GraphView.applyEdgeView : Cannot find node with id = " ++ show src
     let patternLikeNode = case srcNode of
-            Node.Inputs  {}    -> True
-            Node.Expr expr _ _ -> not (null expr) && (head expr == '=')
-            Node.Outputs {}    -> False
+            Node.Inputs  {}                        -> True
+            Node.Expr    (NodeExpr.Pattern {}) _ _ -> True
+            Node.Expr     _                    _ _ -> False
+            Node.Outputs {}                        -> False
     case (patternLikeNode || Node.isOutputs dstNode, edgeview) of
         (_   , EdgeView []    [] ) -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All     Port.All   ) graph, pm)
         (_   , EdgeView []    [d]) -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All    (Port.Num d)) graph, pm)
         (_   , EdgeView [s]   [] ) -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s)  Port.All   ) graph, pm)
         (True, EdgeView [s]   [d]) -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s) (Port.Num d)) graph, pm)
         (_   , EdgeView (h:t)  d ) -> applyEdgeView (newGraph, newPM) (newNodeID, dst, EdgeView t d) where
-            (graph1, newNodeID) = createNode (Get h) graph
+            (graph1, newNodeID) = createNode (NodeExpr.Get $ show h) graph
             newGraph  = Graph.insEdge (src, newNodeID, Edge.Data Port.All $ Port.Num 0) graph1
             newPM     = setGenerated newNodeID pm
         (_   , EdgeView []   d) -> applyEdgeView (newGraph, newPM) (src, newNodeID, EdgeView [] $ init d) where
-            (graph1, newNodeID) = createNode Tuple graph
+            (graph1, newNodeID) = createNode NodeExpr.Tuple graph
             newGraph  = Graph.insEdge (newNodeID, dst, Edge.Data Port.All $ Port.Num $ last d) graph1
             newPM     = setGenerated newNodeID pm
 
 
-createNode :: NodeType -> Graph -> (Graph, Node.ID)
-createNode type_ graph = (newGraph, nodeID) where
+createNode :: NodeExpr -> Graph -> (Graph, Node.ID)
+createNode nodeExpr graph = (newGraph, nodeID) where
     nodeID   = DG.newVtx graph
-    expr     = case type_ of
-                Tuple -> "Tuple"
-                Get n -> "get " ++ show n
-    node     = OutputName.fixEmpty (Node.Expr expr "" (0, 0)) nodeID
+    node     = OutputName.fixEmpty (Node.Expr nodeExpr "" (0, 0)) nodeID
     newGraph = Graph.insNode (nodeID, node) graph
 
-
-data NodeType = Tuple
-              | Get Int
-              deriving (Show, Read)
 
 setGenerated :: Node.ID -> PropertyMap -> PropertyMap
 setGenerated nodeID =
     PropertyMap.modifyFlags (Flags.graphViewGenerated .~ Just True) nodeID
 
 
-nodeType :: (Node.ID, Node) -> PropertyMap -> Maybe NodeType
+nodeType :: (Node.ID, Node) -> PropertyMap -> Maybe NodeExpr
 nodeType (nodeID, Node.Expr expr _ _) pm =
     if Flags.isSet' (PropertyMap.getFlags nodeID pm) (view Flags.graphViewGenerated)
-        then readMaybe $ toUpper expr
+        then Just expr
         else Nothing
 nodeType  _                           _  = Nothing
 
@@ -134,8 +130,8 @@ processNode (graphView, pm) (nodeID, node) = case nodeType (nodeID, node) pm of
         newPM = PropertyMap.delete nodeID pm
 
 
-mergeEdges :: NodeType -> (Node.ID, Node.ID, EdgeView) -> (Node.ID, Node.ID, EdgeView) -> (Node.ID, Node.ID, EdgeView)
-mergeEdges Tuple     (src, _, EdgeView s1 d1) (_, dst, EdgeView _ d2) =
+mergeEdges :: NodeExpr -> (Node.ID, Node.ID, EdgeView) -> (Node.ID, Node.ID, EdgeView) -> (Node.ID, Node.ID, EdgeView)
+mergeEdges NodeExpr.Tuple     (src, _, EdgeView s1 d1) (_, dst, EdgeView _ d2) =
     (src, dst, EdgeView s1 (d1 ++ d2) )
-mergeEdges (Get num) (src, _, EdgeView s1 _) (_, dst, EdgeView _ d2) =
-    (src, dst, EdgeView (s1 ++ [num]) d2)
+mergeEdges (NodeExpr.Get num) (src, _, EdgeView s1 _) (_, dst, EdgeView _ d2) =
+    (src, dst, EdgeView (s1 ++ [read num]) d2)

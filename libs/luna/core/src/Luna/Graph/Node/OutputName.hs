@@ -16,13 +16,14 @@ import qualified Data.Char as Char
 import qualified Data.List as List
 
 import           Flowbox.Prelude
-import           Luna.Graph.Node (Node)
-import qualified Luna.Graph.Node as Node
+import           Luna.Graph.Node      (Node)
+import qualified Luna.Graph.Node      as Node
+import           Luna.Graph.Node.Expr (NodeExpr)
+import qualified Luna.Graph.Node.Expr as NodeExpr
 
 
-
-generate :: String -> Int -> String
-generate base num = mangle base ++ "Result" ++ show num
+generate :: NodeExpr -> Int -> String
+generate expr num = mangle (NodeExpr.toString expr) ++ "Result" ++ show num
 
 
 fixEmpty :: Node -> Node.ID -> Node
@@ -36,9 +37,10 @@ fixEmpty' (nodeID, node) =
     (nodeID, fixEmpty node nodeID)
 
 --FIXME[wd]: nazwe zmienic na ensureProperName lub cos co mowi co to robi
-fix :: Node -> Node.ID ->Node
-fix node nodeID = newNode where
-    expr    = node ^. Node.expr
+fix :: Node -> Node.ID -> Node
+fix node@(Node.Inputs      {}) _      = node
+fix node@(Node.Outputs     {}) _      = node
+fix node@(Node.Expr expr _ _ ) nodeID = newNode where
     newNode = node &  Node.outputName .~ generate expr nodeID
 
 

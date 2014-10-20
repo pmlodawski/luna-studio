@@ -58,7 +58,7 @@ fromCallPointPath (callPoint:t) parentDefPoint = do
         <??> Error.ASTLookupError $(loc) ("No node with id = " ++ show nodeID)
     let parentBC = parentDefPoint  ^. DefPoint.breadcrumbs
         callData = CallData callPoint parentBC defID graph node
-    mdefPoint <- Inspect.fromName (node ^. Node.expr) parentBC libraryID
+    mdefPoint <- Inspect.fromName (Node.exprStr node) parentBC libraryID
     (:) callData <$> case mdefPoint of
         Just defPoint -> fromCallPointPath t defPoint
         Nothing       -> return []
