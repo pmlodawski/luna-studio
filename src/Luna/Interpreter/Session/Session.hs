@@ -8,6 +8,7 @@
 
 module Luna.Interpreter.Session.Session where
 
+import qualified Control.Monad.Catch        as Catch
 import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
@@ -165,6 +166,18 @@ interceptSourceErrors ghc = do
     hoistEither r
 
 
+interceptErrors :: MGHC.Ghc a -> Session a
+interceptErrors ghc = do
+    let handler :: Catch.SomeException -> MGHC.Ghc (Either Error a)
+        handler otherErr = do
+            let errDat = Error.OtherError $(loc) $ show otherErr
+                errMsg = Error.format errDat
+            logger Logger.error errMsg
+            return $ Left errDat
+    r <- lift2 $ Catch.catch (Right <$> ghc) handler
+    hoistEither r
+
+
 atomically :: Session a -> Session a
 atomically f = do
     sessionBackup <- lift2 GHC.getSession
@@ -177,7 +190,7 @@ atomically f = do
 runStmt :: String -> Session ()
 runStmt stmt = do
     logger trace stmt
-    result <- interceptSourceErrors $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
+    result <- interceptErrors $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
     case result of
         GHC.RunOk _         -> return ()
         GHC.RunException ex -> left $ Error.GhcRunError $(loc) ex
@@ -187,7 +200,7 @@ runStmt stmt = do
 runDecls :: String -> Session ()
 runDecls decls = do
     logger trace decls
-    void $ interceptSourceErrors $ GHC.runDeclsWithLocation location 1 decls
+    void $ interceptErrors $ GHC.runDeclsWithLocation location 1 decls
 
 
 runAssignment :: String -> String -> Session ()
@@ -196,7 +209,7 @@ runAssignment asigned asignee =
 
 
 interpret :: Typeable a => String -> Session a
-interpret = interceptSourceErrors . HEval.interpret
+interpret = interceptErrors . HEval.interpret
 
 
 setHardcodedExtensions :: Session ()

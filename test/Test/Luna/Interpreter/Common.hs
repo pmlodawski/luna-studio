@@ -7,6 +7,8 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module Test.Luna.Interpreter.Common where
 
+--import Text.Show.Pretty
+
 import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -56,7 +58,7 @@ readCode code = eitherStringToM' $ runEitherT $ do
 mkEnv :: String -> IO (Env, Library.ID)
 mkEnv code = do
     (libManager, libID) <- readCode code
-
+    --putStrLn $ ppShow libManager
     let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
         env      = Env.mk libManager (Just 0) (Just defPoint) $ const $ const (void . return)-- curry print
     return (env, libID)
