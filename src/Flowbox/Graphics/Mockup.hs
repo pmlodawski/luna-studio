@@ -45,6 +45,7 @@ import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Color
 import           Flowbox.Graphics.Image.Image                         as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
+import           Flowbox.Graphics.Image.Merge                         (AlphaBlend(..))
 import qualified Flowbox.Graphics.Image.Merge                         as Merge
 import           Flowbox.Graphics.Image.View                          as View
 import           Flowbox.Graphics.Utils
@@ -403,7 +404,7 @@ liftF12 fun a b c d e f g h i j k l = do
     val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
             <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l'
 
-data Merge = Atop
+data MergeMode = Atop
            | Average
            | ColorBurn
            | ColorDodge
@@ -439,16 +440,16 @@ data Merge = Atop
            | XOR
            deriving (Show)
 
-mergeLuna :: Merge -> Merge.AlphaBlend -> Image RGBA -> Image RGBA -> Image RGBA
+mergeLuna :: MergeMode -> Merge.AlphaBlend -> Image RGBA -> Image RGBA -> Image RGBA
 mergeLuna mode alphaBlend img1 img2 = case mode of
-    Atop                -> processMerge $ Merge.threeWayMerge Merge.atop
+    Atop                -> processMerge $ Merge.threeWayMerge             Merge.atop
     Average             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.average
     ColorBurn           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorBurn
     ColorDodge          -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorDodge
-    ConjointOver        -> processMerge $ Merge.threeWayMerge Merge.conjointOver
+    ConjointOver        -> processMerge $ Merge.threeWayMerge             Merge.conjointOver
     Copy                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.copy
     Difference          -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.difference
-    DisjointOver        -> processMerge $ Merge.threeWayMerge Merge.disjointOver
+    DisjointOver        -> processMerge $ Merge.threeWayMerge             Merge.disjointOver
     DivideBySource      -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.divideBySrc
     DivideByDestination -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.divideByDst
     Exclusion           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.exclusion
@@ -456,15 +457,15 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
     Geometric           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.geometric
     HardLight           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hardLight
     Hypot               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hypot
-    In                  -> processMerge $ Merge.threeWayMerge Merge.inBlend
-    Mask                -> processMerge $ Merge.threeWayMerge Merge.withMask
-    Matte               -> processMerge $ Merge.threeWayMerge Merge.matte
-     -- | Max -> processMerge $ threeWayMeMerge.rge'  Merge.--
-     -- | Min -> processMerge $ threeWayMeMerge.rge'  Merge.--
+    In                  -> processMerge $ Merge.threeWayMerge             Merge.inBlend
+    Mask                -> processMerge $ Merge.threeWayMerge             Merge.withMask
+    Matte               -> processMerge $ Merge.threeWayMerge             Merge.matte
+    -- Max                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
+    -- Min                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
     Minus               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.minus
     Multiply            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.multiply
-    Out                 -> processMerge $ Merge.threeWayMerge Merge.out
-    Over                -> processMerge $ Merge.threeWayMerge Merge.over
+    Out                 -> processMerge $ Merge.threeWayMerge             Merge.out
+    Over                -> processMerge $ Merge.threeWayMerge             Merge.over
     Overlay             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.overlayFun
     Plus                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.plus
     Screen              -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.screen
@@ -472,17 +473,17 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
     SoftLightPegtop     -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightPegtop
     SoftLightIllusions  -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightIllusions
     SoftLightPhotoshop  -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightPhotoshop
-    Stencil             -> processMerge $ Merge.threeWayMerge Merge.stencil
-    Under               -> processMerge $ Merge.threeWayMerge Merge.under
-    XOR                 -> processMerge $ Merge.threeWayMerge Merge.xor
+    Stencil             -> processMerge $ Merge.threeWayMerge             Merge.stencil
+    Under               -> processMerge $ Merge.threeWayMerge             Merge.under
+    XOR                 -> processMerge $ Merge.threeWayMerge             Merge.xor
     where processMerge f = img'
               where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 a1 a2
                     view' = view
-                         & View.append (ChannelFloat "r" (FlatData $ rasterizer . monosampler $ r))
-                         & View.append (ChannelFloat "g" (FlatData $ rasterizer . monosampler $ g))
-                         & View.append (ChannelFloat "b" (FlatData $ rasterizer . monosampler $ b))
-                         & View.append (ChannelFloat "a" (FlatData $ rasterizer . monosampler $ a))
+                          & View.append (ChannelFloat "r" (FlatData $ rasterizer . monosampler $ r))
+                          & View.append (ChannelFloat "g" (FlatData $ rasterizer . monosampler $ g))
+                          & View.append (ChannelFloat "b" (FlatData $ rasterizer . monosampler $ b))
+                          & View.append (ChannelFloat "a" (FlatData $ rasterizer . monosampler $ a))
                     Right img' = Image.update (const $ Just view') "rgba" img1
           Just view = lookup "rgba" img1
-          (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (nearest . fromMatrix (A.Constant 0))
-          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (nearest . fromMatrix (A.Constant 0))
+          (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (nearest . fromMatrix A.Wrap)
+          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (nearest . fromMatrix A.Wrap)
