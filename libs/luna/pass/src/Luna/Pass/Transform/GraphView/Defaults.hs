@@ -13,21 +13,21 @@ module Luna.Pass.Transform.GraphView.Defaults (
 
 import qualified Data.Map as Map
 
-import           Flowbox.Control.Error               ()
-import           Flowbox.Prelude                     hiding (empty)
-import qualified Luna.Graph.Flags                    as Flags
-import qualified Luna.Graph.Node                     as Node
-import qualified Luna.Graph.Node.OutputName          as OutputName
-import           Luna.Graph.Properties               (Properties)
-import qualified Luna.Graph.Properties               as Properties
-import           Luna.Graph.PropertyMap              (PropertyMap)
-import qualified Luna.Graph.PropertyMap              as PropertyMap
-import           Luna.Graph.View.Default.Value       (Value)
-import           Luna.Graph.View.EdgeView            (EdgeView (EdgeView))
-import           Luna.Graph.View.GraphView           (GraphView)
-import qualified Luna.Graph.View.GraphView           as GraphView
-import           Luna.Graph.View.PortDescriptor      (PortDescriptor)
-
+import           Flowbox.Control.Error          ()
+import           Flowbox.Prelude                hiding (empty)
+import qualified Luna.Graph.Flags               as Flags
+import qualified Luna.Graph.Node                as Node
+import qualified Luna.Graph.Node.Expr           as NodeExpr
+import qualified Luna.Graph.Node.OutputName     as OutputName
+import           Luna.Graph.Properties          (Properties)
+import qualified Luna.Graph.Properties          as Properties
+import           Luna.Graph.PropertyMap         (PropertyMap)
+import qualified Luna.Graph.PropertyMap         as PropertyMap
+import           Luna.Graph.View.Default.Value  (Value)
+import           Luna.Graph.View.EdgeView       (EdgeView (EdgeView))
+import           Luna.Graph.View.GraphView      (GraphView)
+import qualified Luna.Graph.View.GraphView      as GraphView
+import           Luna.Graph.View.PortDescriptor (PortDescriptor)
 
 
 generatedProperties :: Properties
@@ -52,7 +52,8 @@ addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, property
         then (newGraph2, newPropertyMap)
         else (graph, propertyMap)
     where
-      node      = Node.Expr defaultValue (OutputName.generate defaultValue nodeID) (0, 0)
+      expr      = NodeExpr.fromString defaultValue
+      node      = Node.Expr expr (OutputName.generate expr nodeID) (0, 0)
       newGraph  = GraphView.insNode (defaultNodeID, node) graph
       newGraph2 = GraphView.insEdge (defaultNodeID, nodeID, EdgeView [] adstPort) newGraph
       newPropertyMap = PropertyMap.insert defaultNodeID generatedProperties propertyMap
