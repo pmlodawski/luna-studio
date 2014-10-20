@@ -4,11 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
 module Flowbox.Geom2D.Accelerate.CubicBezier where
 
@@ -16,27 +17,16 @@ import           Data.Array.Accelerate
 import           Data.Array.Accelerate.Smart
 import           Data.Array.Accelerate.Tuple
 import           Data.Array.Accelerate.Array.Sugar
-import           Data.Typeable
 
-import Math.Coordinate.Cartesian (Point2(..))
-import Flowbox.Prelude hiding (lift)
+import Math.Coordinate.Cartesian  (Point2(..))
+import Flowbox.Geom2D.CubicBezier
+import Flowbox.Prelude            hiding (lift)
 
 
-
-data CubicBezier a = CubicBezier (Point2 a) (Point2 a) (Point2 a) (Point2 a) deriving (Eq, Ord, Show,Typeable)
 
 ----------------------------------------------------------------------------------
 ---- CubicBezier accelerate tuple instances # straight to the tuple with no intermediate (un)lifting
 ----------------------------------------------------------------------------------
-instance Functor CubicBezier where
-    fmap f (CubicBezier a b c d) = CubicBezier (fmap f a) (fmap f b) (fmap f c) (fmap f d)
-
-instance Applicative CubicBezier where
-    pure a = CubicBezier (pure a) (pure a) (pure a) (pure a)
-    {-# INLINE pure #-}
-    CubicBezier a b c d <*> CubicBezier e f g h = CubicBezier (a <*> e) (b <*> f) (c <*> g) (d <*> h)
-    {-# INLINE (<*>) #-}
-
 type instance EltRepr (CubicBezier a)  = EltRepr ((a, a), (a, a), (a, a), (a, a))
 type instance EltRepr' (CubicBezier a) = EltRepr' ((a, a), (a, a), (a, a), (a, a))
 
@@ -63,7 +53,7 @@ instance (Lift Exp a, Elt (Plain a)) => Lift Exp (CubicBezier a) where
   lift (CubicBezier (Point2 a b) (Point2 c d) (Point2 e f) (Point2 g h)) =
     Exp $ Tuple $ NilTup `SnocTup`
     (Exp $ Tuple $ NilTup `SnocTup` lift a `SnocTup` lift b)
-     `SnocTup`
+    `SnocTup`
     (Exp $ Tuple $ NilTup `SnocTup` lift c `SnocTup` lift d)
     `SnocTup`
     (Exp $ Tuple $ NilTup `SnocTup` lift e `SnocTup` lift f)

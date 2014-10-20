@@ -10,7 +10,6 @@ import           Data.List
 import qualified Data.Map as Map
 
 import Flowbox.Math.Function.Model
-import Flowbox.Math.Function.Query
 import Flowbox.Prelude             as P hiding (empty)
 
 
