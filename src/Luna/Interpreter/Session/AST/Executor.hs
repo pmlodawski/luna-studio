@@ -20,6 +20,8 @@ import           Flowbox.Prelude                            as Prelude hiding (c
 import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Graph.Node                            as Node
+import           Luna.Graph.Node.Expr                       (NodeExpr)
+import qualified Luna.Graph.Node.Expr                       as NodeExpr
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
 import qualified Luna.Interpreter.Session.Cache.Free        as Free
@@ -72,39 +74,38 @@ processNode callDataPath = do
         then case node of
             Node.Inputs  {} -> return ()
             Node.Outputs {} -> executeOutputs callDataPath argsVarNames
-            Node.Expr    {} -> if head (node ^. Node.expr) == '='
-                then executeAssignment callDataPath argsVarNames
-                else executeNode       callDataPath argsVarNames
+            Node.Expr    (NodeExpr.Pattern {}) _ _ -> executeAssignment callDataPath argsVarNames
+            Node.Expr    {}                        -> executeNode       callDataPath argsVarNames
         else mapM_ processNodeIfNeeded children
 
 
 executeOutputs :: CallDataPath -> [VarName] -> Session ()
 executeOutputs callDataPath argsVarNames = do
     let argsCount     = length $ Traverse.inDataConnections callDataPath
-        functionName  = if argsCount == 1 then "id" else "Tuple"
+        nodeExpr  = if argsCount == 1 then NodeExpr.Id else NodeExpr.Tuple
     when (length callDataPath > 1) $
-        execute (init callDataPath) functionName  argsVarNames
+        execute (init callDataPath) nodeExpr  argsVarNames
 
 
 executeNode :: CallDataPath -> [VarName] -> Session ()
 executeNode callDataPath argsVarNames = do
-    let node         = last callDataPath ^. CallData.node
-        functionName = node ^. Node.expr
-    execute callDataPath functionName argsVarNames
+    let node     = last callDataPath ^. CallData.node
+        nodeExpr = node ^?! Node.expr
+    execute callDataPath nodeExpr argsVarNames
 
 
 executeAssignment :: CallDataPath -> [VarName] -> Session ()
 executeAssignment callDataPath [argsVarName] =
-    execute callDataPath "id" [argsVarName] -- TODO [PM] : handle Luna's pattern matching
+    execute callDataPath NodeExpr.Id [argsVarName] -- TODO [PM] : handle Luna's pattern matching
 
 
-execute :: CallDataPath -> String -> [VarName] -> Session ()
-execute callDataPath functionName argsVarNames = do
+execute :: CallDataPath -> NodeExpr -> [VarName] -> Session ()
+execute callDataPath nodeExpr argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
     prevVarName  <- Cache.recentVarName callPointPath
     boundVarName <- Cache.dependency argsVarNames callPointPath
-    let execFunction = evalFunction functionName callDataPath argsVarNames
+    let execFunction = evalFunction nodeExpr callDataPath argsVarNames
 
         executeModified = do
             (hash, varName) <- execFunction
@@ -138,34 +139,35 @@ execute callDataPath functionName argsVarNames = do
         CacheStatus.Ready        -> left $ Error.OtherError $(loc) "something went wrong : status = Ready"
 
 
-data VarType = Lit
-             | Con
-             | Var
-             | Native
+data VarType = Lit    String
+             | Con    String
+             | Var    String
+             | Native String
              | Tuple
-             | Id     deriving Show
+             | Id
+             deriving Show
 
 
-varType :: String -> VarType
-varType [] = Prelude.error "varType : empty var name"
-varType "id"                                             = Id
-varType "Tuple"                                          = Tuple
-varType "Grouped"                                        = Id
-varType name@(h:_)
-    | List.isPrefixOf "```" name                         = Native
-    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = Lit
-    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit
-    | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit
-    | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit
-    | Char.isUpper h = Con
-    | otherwise      = Var
+varType :: NodeExpr -> VarType
+varType  NodeExpr.Id                 = Id
+varType  NodeExpr.Grouped            = Id
+varType  NodeExpr.Tuple              = Tuple
+varType (NodeExpr.Native name      ) = Native name
+varType (NodeExpr.Expr   []        ) = Prelude.error "varType : empty expression"
+varType (NodeExpr.Expr   name@(h:_))
+    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = Lit name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit name
+    | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit name
+    | Char.isUpper h                                     = Con name
+    | otherwise                                          = Var name
 
 
-evalFunction :: String -> CallDataPath -> [VarName] -> Session (Maybe Hash, VarName)
-evalFunction funName callDataPath argsVarNames = do
+evalFunction :: NodeExpr -> CallDataPath -> [VarName] -> Session (Maybe Hash, VarName)
+evalFunction nodeExpr callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        nameHash      = Hash.hashStr funName
+        nameHash      = Hash.hashStr $ NodeExpr.toString nodeExpr
 
         mkArg arg = "(Value (Pure "  ++ arg ++ "))"
         args      = map mkArg argsVarNames
@@ -173,15 +175,15 @@ evalFunction funName callDataPath argsVarNames = do
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
 
         self      = head argsVarNames
-        operation = "toIOEnv $ fromValue $ " ++ case varType funName of
-            Id     -> mkArg self
-            Native -> genNative funName
-            Con    -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
-            Var    -> "call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
-            Lit    -> if Maybe.isJust (Read.readMaybe funName :: Maybe Int)
-                        then "val (" ++ funName ++" :: Int)"
-                        else "val " ++ funName
-            Tuple  -> "val (" ++ List.intercalate "," args ++ ")"
+        operation = "toIOEnv $ fromValue $ " ++ case varType nodeExpr of
+            Id          -> mkArg self
+            Native name -> genNative name
+            Con    _    -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
+            Var    _    -> "call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
+            Lit    name -> if Maybe.isJust (Read.readMaybe name :: Maybe Int)
+                              then "val (" ++ name ++" :: Int)"
+                              else "val " ++ name
+            Tuple       -> "val (" ++ List.intercalate "," args ++ ")"
         expression    = tmpVarName ++ " <- " ++ operation
 
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
