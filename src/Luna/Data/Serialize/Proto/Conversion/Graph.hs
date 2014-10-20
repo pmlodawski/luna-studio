@@ -28,6 +28,7 @@ import           Luna.Graph.Graph                               (Graph)
 import qualified Luna.Graph.Graph                               as Graph
 import           Luna.Graph.Node                                (Node)
 import qualified Luna.Graph.Node                                as Node
+import qualified Luna.Graph.Node.Expr                           as NodeExpr
 import           Luna.Graph.Port                                (Port)
 import qualified Luna.Graph.Port                                as Port
 
@@ -46,10 +47,10 @@ instance Convert (Int, Node) Gen.Node where
     encode (nodeID, node) = tnode where
         tnodeID = encodePJ nodeID
         tnodeWithoutPos = case node of
-            Node.Expr    {} -> Gen.Node GenNode.Expr    tnodeID (encodePJ $ node ^. Node.expr)
+            Node.Expr expr _ _ -> Gen.Node GenNode.Expr    tnodeID (encodePJ $ NodeExpr.toString expr)
                                                                 (encodePJ $ node ^. Node.outputName)
-            Node.Inputs  {} -> Gen.Node GenNode.Inputs  tnodeID Nothing Nothing
-            Node.Outputs {} -> Gen.Node GenNode.Outputs tnodeID Nothing Nothing
+            Node.Inputs  {}    -> Gen.Node GenNode.Inputs  tnodeID Nothing Nothing
+            Node.Outputs {}    -> Gen.Node GenNode.Outputs tnodeID Nothing Nothing
         tnode = tnodeWithoutPos (Just $ node ^. Node.pos . _1) (Just $ node ^. Node.pos . _2)
     decode (Gen.Node tcls mtnodeID mtexpr mtoutputName mx my) = do
         nodeID <- decodeP <$> mtnodeID <?> "Failed to decode Node: 'id' field is missing"
@@ -58,7 +59,7 @@ instance Convert (Int, Node) Gen.Node where
         node <- case tcls of
             GenNode.Expr -> do expr       <- decodeP <$> mtexpr       <?> "Failed to decode Node: 'expr' field is missing"
                                outputName <- decodeP <$> mtoutputName <?> "Failed to decode Node: 'outputName' field is missing"
-                               return $ Node.Expr expr outputName
+                               return $ Node.Expr (NodeExpr.fromString expr) outputName
             GenNode.Inputs  -> return Node.Inputs
             GenNode.Outputs -> return Node.Outputs
         return (nodeID, node (x, y ))
