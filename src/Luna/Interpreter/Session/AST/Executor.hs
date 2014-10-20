@@ -1,4 +1,4 @@
----------------------------------------------------------------------------
+--------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Flowbox Team <contact@flowbox.io>, 2014
 -- Proprietary and confidential
@@ -153,6 +153,7 @@ varType "Tuple"                                          = Tuple
 varType "Grouped"                                        = Id
 varType name@(h:_)
     | List.isPrefixOf "```" name                         = Native
+    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = Lit
     | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit
     | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit
     | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit
@@ -165,7 +166,8 @@ evalFunction funName callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
         nameHash      = Hash.hashStr funName
-    let mkArg arg = "(Value (Pure "  ++ arg ++ "))"
+
+        mkArg arg = "(Value (Pure "  ++ arg ++ "))"
         args      = map mkArg argsVarNames
         appArgs a = if null a then "" else " $ appNext " ++ List.intercalate " $ appNext " (reverse a)
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
@@ -183,7 +185,7 @@ evalFunction funName callDataPath argsVarNames = do
         expression    = tmpVarName ++ " <- " ++ operation
 
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
-        Session.atomically $ Session.runStmt expression
+        Session.runStmt expression
         hash <- Hash.compute tmpVarName
         let varName = VarName.mk hash callPointPath
         Session.runAssignment varName tmpVarName
