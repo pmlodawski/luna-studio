@@ -13,6 +13,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Luna.AST.Control.Crumb                (Breadcrumbs)
 import qualified Luna.Graph.Node                       as Node
+import qualified Luna.Graph.Node.Expr                  as NodeExpr
 import           Luna.Graph.View.EdgeView              (EdgeView (EdgeView))
 import           Luna.Graph.View.GraphView             (GraphView)
 import qualified Luna.Graph.View.GraphView             as GraphView
@@ -20,7 +21,6 @@ import qualified Test.Luna.AST.Common                  as Common
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 import qualified Test.Luna.Pass.Transform.Graph.Common as Common
 import           Test.Luna.Sample.Code                 (sampleCodes)
-
 
 
 backAndForth :: Breadcrumbs -> String -> IO ()
@@ -59,9 +59,9 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr "foo" "" (0, 0))
-        ,(1 , Node.Expr "bar" "" (1, 1))
-        ,(2 , Node.Expr "baz" "" (0, 0))
+        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
+        ,(1 , Node.Expr (NodeExpr.Expr "bar") "" (1, 1))
+        ,(2 , Node.Expr (NodeExpr.Expr "baz") "" (0, 0))
         ]
         [(0 , 1, EdgeView [0] [1])
         ,(0 , 1, EdgeView []  [2])
@@ -72,9 +72,9 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr "foo" "" (0, 0))
-        ,(1 , Node.Expr "bar" "" (1, 1))
-        ,(2 , Node.Expr "baz" "" (0, 0))
+        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
+        ,(1 , Node.Expr (NodeExpr.Expr "bar") "" (1, 1))
+        ,(2 , Node.Expr (NodeExpr.Expr "baz") "" (0, 0))
         ]
         [(0, 1, EdgeView [0, 2] [1])
         ,(0, 1, EdgeView [] [2])
@@ -85,9 +85,9 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr "foo" "" (0, 0))
-        ,(1 , Node.Expr "bar" "" (1, 1))
-        ,(2 , Node.Expr "baz" "" (0, 0))
+        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
+        ,(1 , Node.Expr (NodeExpr.Expr "bar") "" (1, 1))
+        ,(2 , Node.Expr (NodeExpr.Expr "baz") "" (0, 0))
         ]
         [(0, 1, EdgeView [0] [1])
         ,(0, 1, EdgeView []  [2])
@@ -98,9 +98,9 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr "foo" "" (0, 0))
-        ,(1 , Node.Expr "bar" "" (1, 1))
-        ,(2 , Node.Expr "baz" "" (0, 0))
+        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
+        ,(1 , Node.Expr (NodeExpr.Expr "bar") "" (1, 1))
+        ,(2 , Node.Expr (NodeExpr.Expr "baz") "" (0, 0))
         ]
         [(0, 1, EdgeView [0, 2]    [1])
         ,(0, 1, EdgeView [1, 2, 3] [2])
@@ -111,7 +111,7 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr "foo" "" (0, 0))
+        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
         ]
         [(0 , -2, EdgeView [0] [1])
         ]
@@ -119,7 +119,7 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr "foo" "" (0, 0))
+        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
         ]
         [(0 , -2, EdgeView [0] [0])
         ]
@@ -127,7 +127,7 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr "foo" "" (0, 0))
+        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
         ]
         [(0 , -2, EdgeView [0] [])
         ]
@@ -135,7 +135,7 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr "foo" "" (0, 0))
+        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
         ]
         [(-1 , 0, EdgeView [0] [])
         ,(0 , -2, EdgeView [0] [])

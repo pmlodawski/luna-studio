@@ -28,6 +28,8 @@ import           Luna.Graph.Graph                       (Graph)
 import qualified Luna.Graph.Graph                       as Graph
 import           Luna.Graph.Node                        (Node)
 import qualified Luna.Graph.Node                        as Node
+import           Luna.Graph.Node.Expr                   (NodeExpr)
+import qualified Luna.Graph.Node.Expr                   as NodeExpr
 import qualified Luna.Graph.Port                        as Port
 import           Luna.Graph.PropertyMap                 (PropertyMap)
 import qualified Luna.Parser.Lexer                      as Lexer
@@ -37,7 +39,6 @@ import qualified Luna.Pass.Pass                         as Pass
 import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
-
 
 
 logger :: Logger
@@ -65,19 +66,19 @@ graph2expr expr = do
 parseNode :: [Expr] ->  (Node.ID, Node) -> GPPass ()
 parseNode inputs (nodeID, node) = do
     case node of
-        Node.Expr    {} -> parseExprNode    nodeID $ node ^. Node.expr
-        Node.Inputs  {} -> parseInputsNode  nodeID inputs
-        Node.Outputs {} -> parseOutputsNode nodeID
+        Node.Expr    expr _ _ -> parseExprNode    nodeID expr
+        Node.Inputs  {}       -> parseInputsNode  nodeID inputs
+        Node.Outputs {}       -> parseOutputsNode nodeID
     State.setPosition    nodeID $ node ^. Node.pos
 
 
-parseExprNode :: Node.ID -> String -> GPPass ()
+parseExprNode :: Node.ID -> NodeExpr -> GPPass ()
 parseExprNode nodeID expr = case expr of
-    "List"        -> parseListNode   nodeID
-    "Tuple"       -> parseTupleNode  nodeID
-    '=':pat       -> parsePatNode    nodeID pat
-    '`':'`':'`':_ -> parseNativeNode nodeID expr
-    _             -> parseAppNode    nodeID expr
+    NodeExpr.List           -> parseListNode   nodeID
+    NodeExpr.Tuple          -> parseTupleNode  nodeID
+    NodeExpr.Pattern pat    -> parsePatNode    nodeID pat
+    NodeExpr.Native  native -> parseNativeNode nodeID native
+    _                       -> parseAppNode    nodeID $ NodeExpr.toString expr
 
 
 parseInputsNode :: Node.ID -> [Expr] -> GPPass ()
@@ -181,7 +182,7 @@ parseListNode nodeID = do
 
 addExpr :: Node.ID -> Expr -> GPPass ()
 addExpr nodeID e = do
-    graph          <- State.getGraph
+    graph <- State.getGraph
 
     flags <- State.getFlags nodeID
     let folded         = Flags.isSet' flags $ view Flags.astFolded
