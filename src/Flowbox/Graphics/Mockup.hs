@@ -335,20 +335,20 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 rotateCenterLuna :: VPS Double -> Matrix2 Double -> Matrix2 Double
 rotateCenterLuna (VPS (variable -> angle)) = rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
 
--- hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
---             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
---             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
---             -> A.Exp (Color.RGB Double)
---             -> A.Exp (Color.RGB Double)
--- hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
---             (VPS (variable -> hueRotation)) (VPS (variable -> hueRolloff))
---             (VPS (variable -> saturationRangeStart)) (VPS (variable -> saturationRangeEnd))
---             (VPS (variable -> saturationAdjustment)) (VPS (variable -> saturationRolloff))
---             (VPS (variable -> brightnessRangeStart)) (VPS (variable -> brightnessRangeEnd))
---             (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff)) =
---     A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
---                      (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
---                      (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
+hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
+            -> VPS Double -> VPS Double -> VPS Double -> VPS Double
+            -> VPS Double -> VPS Double -> VPS Double -> VPS Double
+            -> A.Exp (Color.RGB Double)
+            -> A.Exp (Color.RGB Double)
+hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
+            (VPS (variable -> hueRotation)) (VPS (variable -> hueRolloff))
+            (VPS (variable -> saturationRangeStart)) (VPS (variable -> saturationRangeEnd))
+            (VPS (variable -> saturationAdjustment)) (VPS (variable -> saturationRolloff))
+            (VPS (variable -> brightnessRangeStart)) (VPS (variable -> brightnessRangeEnd))
+            (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff)) =
+    A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
+                     (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
+                     (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
 
 hsvToolLuna' :: Double -> Double -> Double -> Double
              -> Double -> Double -> Double -> Double
@@ -479,11 +479,11 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
     where processMerge f = img'
               where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 a1 a2
                     view' = view
-                          & View.append (ChannelFloat "r" (FlatData $ rasterizer . monosampler $ r))
-                          & View.append (ChannelFloat "g" (FlatData $ rasterizer . monosampler $ g))
-                          & View.append (ChannelFloat "b" (FlatData $ rasterizer . monosampler $ b))
-                          & View.append (ChannelFloat "a" (FlatData $ rasterizer . monosampler $ a))
+                          & View.append (ChannelFloat "r" (FlatData $ rasterizer $ r))
+                          & View.append (ChannelFloat "g" (FlatData $ rasterizer $ g))
+                          & View.append (ChannelFloat "b" (FlatData $ rasterizer $ b))
+                          & View.append (ChannelFloat "a" (FlatData $ rasterizer $ a))
                     Right img' = Image.update (const $ Just view') "rgba" img1
           Just view = lookup "rgba" img1
-          (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (nearest . fromMatrix A.Wrap)
-          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (nearest . fromMatrix A.Wrap)
+          (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (fromMatrix (A.Constant 0))
+          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (fromMatrix (A.Constant 0))
