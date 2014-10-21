@@ -33,6 +33,7 @@ import           Luna.Graph.Node                                (Node)
 import qualified Luna.Graph.Node                                as Node
 import           Luna.Graph.Node.Expr                           (NodeExpr)
 import qualified Luna.Graph.Node.Expr                           as NodeExpr
+import qualified Luna.Graph.Node.StringExpr                     as StringExpr
 import           Luna.Graph.Port                                (Port)
 import qualified Luna.Graph.Port                                as Port
 
@@ -84,14 +85,15 @@ instance ConvertPure Port (Maybe Int32) where
         Nothing -> Port.All
         Just tn -> Port.Num $ decodeP tn
 
+
 instance Convert NodeExpr Gen.NodeExpr where
-    encode (NodeExpr.ASTExpr expr) = Gen.NodeExpr GenNodeExpr.ASTExpr Nothing $ encodeJ expr
-    encode  nodeExpr               = Gen.NodeExpr GenNodeExpr.String  (encodePJ $ NodeExpr.toString nodeExpr) Nothing
+    encode (NodeExpr.ASTExpr    expr   ) = Gen.NodeExpr GenNodeExpr.ASTExpr Nothing $ encodeJ expr
+    encode (NodeExpr.StringExpr strExpr) = Gen.NodeExpr GenNodeExpr.String  (encodePJ $ StringExpr.toString strExpr) Nothing
     decode (Gen.NodeExpr cls mstr mexpr) = case cls of
         GenNodeExpr.ASTExpr -> do
             expr <- mexpr <?> "Failed to decode NodeExpr: 'expr' field is missing"
             NodeExpr.ASTExpr <$> decode expr
         GenNodeExpr.String -> do
             str <- mstr <?> "Failed to decode NodeExpr: 'str' field is missing"
-            return $ NodeExpr.fromString $ decodeP str
+            return $ NodeExpr.StringExpr $ StringExpr.fromString $ decodeP str
 
