@@ -9,9 +9,10 @@
 module Luna.Graph.Node where
 
 import           Flowbox.Prelude
-import           Luna.Graph.Node.Expr     (NodeExpr)
-import qualified Luna.Graph.Node.Expr     as NodeExpr
-import           Luna.Graph.Node.Position (Position)
+import           Luna.Graph.Node.Expr       (NodeExpr)
+import qualified Luna.Graph.Node.Expr       as NodeExpr
+import           Luna.Graph.Node.Position   (Position)
+import qualified Luna.Graph.Node.StringExpr as StringExpr
 
 
 
@@ -47,7 +48,6 @@ isExpr (Expr {}) = True
 isExpr _         = False
 
 
-exprStr :: Node -> String
-exprStr (Inputs  {}       ) = def
-exprStr (Outputs {}       ) = def
-exprStr (Expr nodeExpr _ _) = NodeExpr.toString nodeExpr
+exprStr :: Node -> Maybe String
+exprStr (Expr (NodeExpr.StringExpr strExpr)  _ _) = Just $ StringExpr.toString strExpr
+exprStr _                                         = Nothing
