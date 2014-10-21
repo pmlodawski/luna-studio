@@ -10,12 +10,12 @@ module Luna.ASTNew.Module where
 
 import GHC.Generics     (Generic)
 import Flowbox.Prelude
-import Luna.ASTNew.Name (Name, VName, TName, CName, TVName)
-import Luna.ASTNew.Expr (Expr)
+import Luna.ASTNew.Name (TName)
+import Luna.ASTNew.Decl (Decl)
 
 
-data Module f a = Module { _path :: [TName]
+data Module f e = Module { _path :: [TName]
                          , _name :: TName
-                         , _body :: [Expr f a]
-                         , _mods :: [Module f a] 
+                         , _body :: [Decl f e]
+                         , _mods :: [Module f e] 
                          } deriving (Generic)
