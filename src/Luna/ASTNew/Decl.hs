@@ -8,10 +8,11 @@
 
 module Luna.ASTNew.Decl where
 
+import           Flowbox.Prelude
 import           GHC.Generics           (Generic)
 import           Luna.ASTNew.Type       (RType)
 import           Luna.ASTNew.Rec        (Rec)
-import           Luna.ASTNew.Name       (VName, TName, CName, TVName)
+import           Luna.ASTNew.Name       (Name, VName, TName, CName, TVName)
 import           Luna.ASTNew.Name.Multi (MultiName)
 import           Luna.ASTNew.Arg        (Arg)
 
@@ -21,21 +22,22 @@ import qualified Prelude
 
 
 data Decl f e
-    = Data        { _tname   :: TName   , params    :: [TVName]  , _cons   :: [ConsDef f] , _defs   :: [RDecl f]                     }
-    | Function    { _path    :: Path    , _fname    :: MultiName , _inputs :: [Arg f]     , _output :: RType f  , _body :: [e] }
-    | Import      { _modPath :: Path    , _targets  :: [ImpTgt]                                                                      }
-    | TypeAlias   { _dstType :: RType f , _srcType  :: RType f                                                                       }
-    | TypeWrapper { _dstType :: RType f , _srcType  :: RType f                                                                       }
+    = Data        { _tname   :: TName   , params    :: [TVName]  , _cons   :: [ConsDef f e] , _defs :: [RDecl f e]                }
+    -- | Function    { _path    :: Path    , _fname    :: MultiName , _inputs :: [Arg f e]     , _output :: RType f   , _body :: [e] }
+    | Import      { _modPath :: Path    , _targets  :: [ImpTgt]                                                                   }
+    | TypeAlias   { _dstType :: RType f , _srcType  :: RType f                                                                    }
+    | TypeWrapper { _dstType :: RType f , _srcType  :: RType f                                                                    }
     deriving (Generic)
 
 
-data ConsDef f = ConsDef { _consName :: CName, _fields :: [RField f] }
+data ConsDef f e = ConsDef { _consName :: CName, _fields :: [RField f e] }
                deriving (Generic)
 
 data Field f e = Field { _fType :: RType f, _fName :: Maybe VName, _fVal :: Maybe e }
 
+data ImpTgt = ImpTgt { _impName :: Name, _rename :: Maybe Name } deriving (Show, Eq, Generic, Read)
 
 
 type Path     = [TName]
-type RDecl f = Rec f Decl
-type RField f = Rec f Field
+type RDecl f e = f (Decl f e)
+type RField f e = f (Field f e)
