@@ -41,6 +41,11 @@ cname  (Assert.isCName  -> s) = CName  s
 tvname (Assert.isTVName -> s) = TVName s
 
 
+data Named a n = Named   a n
+               | Unnamed a  
+               deriving (Show, Eq, Generic, Read)
+
+
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------

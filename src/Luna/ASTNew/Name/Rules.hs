@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module Luna.ASTNew.Name.Rules where
 
 import Flowbox.Prelude
