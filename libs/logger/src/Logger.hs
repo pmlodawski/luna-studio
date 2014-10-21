@@ -1,5 +1,5 @@
 module Logger (
-    LoggerT, Logger,
+    LoggerT, Logger, Log,
     function, functionResult, trace, traceInline, err,
     formatStack,
     runLogger, runLoggerT,

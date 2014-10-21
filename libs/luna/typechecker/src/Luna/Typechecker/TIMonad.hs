@@ -19,7 +19,7 @@ type TILogger = LoggerT String TI
 
 newtype TI a = TI { runTI :: Subst -> Int -> (Subst, Int, a) }
 
-
+runTILogger :: (Show e) => LoggerT e TI a -> (Subst, Int, (Either e a, [Log e]))
 runTILogger x = runTI (runLoggerT x) mempty 0
 
 
