@@ -16,12 +16,10 @@ module Luna.Graph.View.GraphView (
 import           Data.Foldable (foldlM)
 import qualified Data.List     as List
 import qualified Data.Maybe    as Maybe
-import           Text.Read     (readMaybe)
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Graph             hiding (Edge, Graph, fromGraph)
 import qualified Flowbox.Data.Graph             as DG
-import           Flowbox.Data.String            (toUpper)
 import           Flowbox.Prelude
 import qualified Luna.Graph.Edge                as Edge
 import qualified Luna.Graph.Flags               as Flags
@@ -32,6 +30,7 @@ import qualified Luna.Graph.Node                as Node
 import           Luna.Graph.Node.Expr           (NodeExpr)
 import qualified Luna.Graph.Node.Expr           as NodeExpr
 import qualified Luna.Graph.Node.OutputName     as OutputName
+import qualified Luna.Graph.Node.StringExpr     as StringExpr
 import qualified Luna.Graph.Port                as Port
 import           Luna.Graph.PropertyMap         (PropertyMap)
 import qualified Luna.Graph.PropertyMap         as PropertyMap
@@ -69,21 +68,21 @@ applyEdgeView (graph, pm) (src, dst, edgeview) = do
     srcNode <- Graph.lab graph src <?> "GraphView.applyEdgeView : Cannot find node with id = " ++ show src
     dstNode <- Graph.lab graph src <?> "GraphView.applyEdgeView : Cannot find node with id = " ++ show src
     let patternLikeNode = case srcNode of
-            Node.Inputs  {}                        -> True
-            Node.Expr    (NodeExpr.Pattern {}) _ _ -> True
-            Node.Expr     _                    _ _ -> False
-            Node.Outputs {}                        -> False
+            Node.Inputs  {}                                                -> True
+            Node.Expr    (NodeExpr.StringExpr (StringExpr.Pattern {})) _ _ -> True
+            Node.Expr    {}                                                -> False
+            Node.Outputs {}                                                -> False
     case (patternLikeNode || Node.isOutputs dstNode, edgeview) of
         (_   , EdgeView []    [] ) -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All     Port.All   ) graph, pm)
         (_   , EdgeView []    [d]) -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All    (Port.Num d)) graph, pm)
         (_   , EdgeView [s]   [] ) -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s)  Port.All   ) graph, pm)
         (True, EdgeView [s]   [d]) -> Right (Graph.insEdge (src, dst, Edge.Data (Port.Num s) (Port.Num d)) graph, pm)
         (_   , EdgeView (h:t)  d ) -> applyEdgeView (newGraph, newPM) (newNodeID, dst, EdgeView t d) where
-            (graph1, newNodeID) = createNode (NodeExpr.Get $ show h) graph
+            (graph1, newNodeID) = createNode (NodeExpr.StringExpr $ StringExpr.Get $ show h) graph
             newGraph  = Graph.insEdge (src, newNodeID, Edge.Data Port.All $ Port.Num 0) graph1
             newPM     = setGenerated newNodeID pm
         (_   , EdgeView []   d) -> applyEdgeView (newGraph, newPM) (src, newNodeID, EdgeView [] $ init d) where
-            (graph1, newNodeID) = createNode NodeExpr.Tuple graph
+            (graph1, newNodeID) = createNode (NodeExpr.StringExpr StringExpr.Tuple) graph
             newGraph  = Graph.insEdge (newNodeID, dst, Edge.Data Port.All $ Port.Num $ last d) graph1
             newPM     = setGenerated newNodeID pm
 
@@ -96,8 +95,7 @@ createNode nodeExpr graph = (newGraph, nodeID) where
 
 
 setGenerated :: Node.ID -> PropertyMap -> PropertyMap
-setGenerated nodeID =
-    PropertyMap.modifyFlags (Flags.graphViewGenerated .~ Just True) nodeID
+setGenerated = PropertyMap.modifyFlags (Flags.graphViewGenerated .~ Just True)
 
 
 nodeType :: (Node.ID, Node) -> PropertyMap -> Maybe NodeExpr
@@ -131,7 +129,7 @@ processNode (graphView, pm) (nodeID, node) = case nodeType (nodeID, node) pm of
 
 
 mergeEdges :: NodeExpr -> (Node.ID, Node.ID, EdgeView) -> (Node.ID, Node.ID, EdgeView) -> (Node.ID, Node.ID, EdgeView)
-mergeEdges NodeExpr.Tuple     (src, _, EdgeView s1 d1) (_, dst, EdgeView _ d2) =
+mergeEdges (NodeExpr.StringExpr StringExpr.Tuple)     (src, _, EdgeView s1 d1) (_, dst, EdgeView _ d2) =
     (src, dst, EdgeView s1 (d1 ++ d2) )
-mergeEdges (NodeExpr.Get num) (src, _, EdgeView s1 _) (_, dst, EdgeView _ d2) =
+mergeEdges (NodeExpr.StringExpr (StringExpr.Get num)) (src, _, EdgeView s1 _) (_, dst, EdgeView _ d2) =
     (src, dst, EdgeView (s1 ++ [read num]) d2)

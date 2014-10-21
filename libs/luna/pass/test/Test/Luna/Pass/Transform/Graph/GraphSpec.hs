@@ -15,7 +15,9 @@ import qualified Luna.Graph.Edge                         as Edge
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Graph                        as Graph
 import qualified Luna.Graph.Node                         as Node
+import           Luna.Graph.Node.Expr                    (NodeExpr)
 import qualified Luna.Graph.Node.Expr                    as NodeExpr
+import qualified Luna.Graph.Node.StringExpr              as StringExpr
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Pass.Transform.AST.IDFixer.IDFixer (clearIDs)
 import qualified Test.Luna.AST.Common                    as Common
@@ -23,8 +25,11 @@ import qualified Test.Luna.Pass.Transform.Graph.Common   as Common
 import           Test.Luna.Sample.Code                   (sampleCodes)
 import qualified Test.Luna.Sample.Code                   as SampleCode
 import           Test.Luna.Sample.Graph                  (buggyGraphs, sampleGraphs)
-import           Text.Show.Pretty
 
+
+
+strExpr :: String -> NodeExpr
+strExpr = NodeExpr.StringExpr . StringExpr.Expr
 
 
 backAndForth :: Breadcrumbs -> String -> IO ()
@@ -95,12 +100,12 @@ spec = do
 
     describe "graph sort alghorithm" $ do
         it "sorts graph correctly" $ do
-            let n1 = (1, Node.Expr (NodeExpr.Expr "") "" (1, 0))
-                n2 = (2, Node.Expr (NodeExpr.Expr "") "" (2, 0))
-                n3 = (3, Node.Expr (NodeExpr.Expr "") "" (2, 0))
-                n4 = (4, Node.Expr (NodeExpr.Expr "") "" (3, 0))
-                n5 = (5, Node.Expr (NodeExpr.Expr "") "" (4, 0))
-                n6 = (6, Node.Expr (NodeExpr.Expr "") "" (5, 0))
+            let n1 = (1, Node.Expr (strExpr "") "" (1, 0))
+                n2 = (2, Node.Expr (strExpr "") "" (2, 0))
+                n3 = (3, Node.Expr (strExpr "") "" (2, 0))
+                n4 = (4, Node.Expr (strExpr "") "" (3, 0))
+                n5 = (5, Node.Expr (strExpr "") "" (4, 0))
+                n6 = (6, Node.Expr (strExpr "") "" (5, 0))
                 properOrder = [n1, n2, n4, n5, n3, n6]
                 testOrder   = [n2, n3, n5, n6, n4, n1]
                 edges  = [(1, 2, Edge.Data Port.All $ Port.Num 0)

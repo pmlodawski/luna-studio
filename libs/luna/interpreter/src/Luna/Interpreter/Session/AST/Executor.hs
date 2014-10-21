@@ -20,8 +20,9 @@ import           Flowbox.Prelude                            as Prelude hiding (c
 import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Graph.Node                            as Node
-import           Luna.Graph.Node.Expr                       (NodeExpr)
 import qualified Luna.Graph.Node.Expr                       as NodeExpr
+import           Luna.Graph.Node.StringExpr                 (StringExpr)
+import qualified Luna.Graph.Node.StringExpr                 as StringExpr
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
 import qualified Luna.Interpreter.Session.Cache.Free        as Free
@@ -72,40 +73,49 @@ processNode callDataPath = do
     children <- Traverse.into callDataPath
     if null children
         then case node of
-            Node.Inputs  {} -> return ()
-            Node.Outputs {} -> executeOutputs callDataPath argsVarNames
-            Node.Expr    (NodeExpr.Pattern {}) _ _ -> executeAssignment callDataPath argsVarNames
-            Node.Expr    {}                        -> executeNode       callDataPath argsVarNames
+            Node.Inputs  {} ->
+                return ()
+            Node.Outputs {} ->
+                executeOutputs callDataPath argsVarNames
+            Node.Expr (NodeExpr.StringExpr (StringExpr.Pattern {})) _ _ ->
+                executeAssignment callDataPath argsVarNames
+            Node.Expr {}                                                ->
+                executeNode       callDataPath argsVarNames
         else mapM_ processNodeIfNeeded children
 
 
 executeOutputs :: CallDataPath -> [VarName] -> Session ()
 executeOutputs callDataPath argsVarNames = do
-    let argsCount     = length $ Traverse.inDataConnections callDataPath
-        nodeExpr  = if argsCount == 1 then NodeExpr.Id else NodeExpr.Tuple
+    let argsCount  = length $ Traverse.inDataConnections callDataPath
+        stringExpr = if argsCount == 1 then StringExpr.Id else StringExpr.Tuple
     when (length callDataPath > 1) $
-        execute (init callDataPath) nodeExpr  argsVarNames
+        execute (init callDataPath) stringExpr  argsVarNames
 
 
 executeNode :: CallDataPath -> [VarName] -> Session ()
 executeNode callDataPath argsVarNames = do
-    let node     = last callDataPath ^. CallData.node
-        nodeExpr = node ^?! Node.expr
-    execute callDataPath nodeExpr argsVarNames
+    let node       = last callDataPath ^. CallData.node
+
+    stringExpr <- case node of
+        Node.Expr (NodeExpr.StringExpr stringExpr) _ _ ->
+            return stringExpr
+        _                                              ->
+            left $ Error.GraphError $(loc) "Wrong node type"
+    execute callDataPath stringExpr argsVarNames
 
 
 executeAssignment :: CallDataPath -> [VarName] -> Session ()
 executeAssignment callDataPath [argsVarName] =
-    execute callDataPath NodeExpr.Id [argsVarName] -- TODO [PM] : handle Luna's pattern matching
+    execute callDataPath StringExpr.Id [argsVarName] -- TODO [PM] : handle Luna's pattern matching
 
 
-execute :: CallDataPath -> NodeExpr -> [VarName] -> Session ()
-execute callDataPath nodeExpr argsVarNames = do
+execute :: CallDataPath -> StringExpr -> [VarName] -> Session ()
+execute callDataPath stringExpr argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
     prevVarName  <- Cache.recentVarName callPointPath
     boundVarName <- Cache.dependency argsVarNames callPointPath
-    let execFunction = evalFunction nodeExpr callDataPath argsVarNames
+    let execFunction = evalFunction stringExpr callDataPath argsVarNames
 
         executeModified = do
             (hash, varName) <- execFunction
@@ -148,13 +158,13 @@ data VarType = Lit    String
              deriving Show
 
 
-varType :: NodeExpr -> VarType
-varType  NodeExpr.Id                 = Id
-varType  NodeExpr.Grouped            = Id
-varType  NodeExpr.Tuple              = Tuple
-varType (NodeExpr.Native name      ) = Native name
-varType (NodeExpr.Expr   []        ) = Prelude.error "varType : empty expression"
-varType (NodeExpr.Expr   name@(h:_))
+varType :: StringExpr -> VarType
+varType  StringExpr.Id                 = Id
+varType  StringExpr.Grouped            = Id
+varType  StringExpr.Tuple              = Tuple
+varType (StringExpr.Native name      ) = Native name
+varType (StringExpr.Expr   []        ) = Prelude.error "varType : empty expression"
+varType (StringExpr.Expr   name@(h:_))
     | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = Lit name
     | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit name
     | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit name
@@ -163,11 +173,11 @@ varType (NodeExpr.Expr   name@(h:_))
     | otherwise                                          = Var name
 
 
-evalFunction :: NodeExpr -> CallDataPath -> [VarName] -> Session (Maybe Hash, VarName)
-evalFunction nodeExpr callDataPath argsVarNames = do
+evalFunction :: StringExpr -> CallDataPath -> [VarName] -> Session (Maybe Hash, VarName)
+evalFunction stringExpr callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        nameHash      = Hash.hashStr $ NodeExpr.toString nodeExpr
+        nameHash      = Hash.hashStr $ StringExpr.toString stringExpr
 
         mkArg arg = "(Value (Pure "  ++ arg ++ "))"
         args      = map mkArg argsVarNames
@@ -175,7 +185,7 @@ evalFunction nodeExpr callDataPath argsVarNames = do
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
 
         self      = head argsVarNames
-        operation = "toIOEnv $ fromValue $ " ++ case varType nodeExpr of
+        operation = "toIOEnv $ fromValue $ " ++ case varType stringExpr of
             Id          -> mkArg self
             Native name -> genNative name
             Con    _    -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash

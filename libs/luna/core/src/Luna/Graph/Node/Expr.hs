@@ -9,42 +9,15 @@
 module Luna.Graph.Node.Expr where
 
 import Flowbox.Prelude
+import Luna.AST.Expr              (Expr)
+import Luna.Graph.Node.StringExpr (StringExpr)
 
 
 
-data NodeExpr = Expr    { _string :: String }
-              | Tuple
-              | Get     { _string :: String }
-              | List
-              | Id
-              | Grouped
-              | Pattern { _string :: String }
-              | Native  { _string :: String }
-              deriving (Show, Eq)
+data NodeExpr = StringExpr { _strExpr :: StringExpr }
+              | ASTExpr    { _expr :: Expr       }
+              deriving (Show, Eq, Read)
+
+
 
 makeLenses ''NodeExpr
-
-
-toString :: NodeExpr -> String
-toString exprStr = case exprStr of
-    Expr    str -> str
-    Tuple       -> "Tuple"
-    Get     str -> "get " ++ str
-    List        -> "List"
-    Id          -> "id"
-    Grouped     -> "Grouped"
-    Pattern str -> '=' : str
-    Native  str -> str
-
-
-fromString :: String -> NodeExpr
-fromString str = case str of
-    "List"              -> List
-    "Tuple"             -> Tuple
-    "id"                -> Id
-    "Grouped"           -> Grouped
-    'g':'e':'t':' ':str -> Get     str
-    '=':pat             -> Pattern pat
-    '`':'`':'`':_       -> Native  str
-    _                   -> Expr    str
-
