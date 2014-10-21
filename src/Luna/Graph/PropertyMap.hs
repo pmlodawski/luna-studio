@@ -59,7 +59,7 @@ setFlags flags = modifyFlags (const flags)
 
 
 modifyFlags :: (Flags -> Flags) -> Node.ID -> PropertyMap -> PropertyMap
-modifyFlags fun nodeID propertyMap = IntMap.alter update' nodeID propertyMap where
+modifyFlags fun = IntMap.alter update' where
     update' = Just . (Properties.flags %~ fun) . Maybe.fromMaybe def
 
 
@@ -69,5 +69,5 @@ getDefaultsMap nodeID propertyMap = Maybe.fromMaybe def $
 
 
 modifyDefaultsMap :: (DefaultsMap -> DefaultsMap) -> Node.ID -> PropertyMap -> PropertyMap
-modifyDefaultsMap fun nodeID propertyMap = IntMap.alter update' nodeID propertyMap where
+modifyDefaultsMap fun = IntMap.alter update' where
     update' = Just . (Properties.defaultsMap %~ fun) . Maybe.fromMaybe def

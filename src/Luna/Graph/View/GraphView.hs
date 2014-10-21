@@ -16,12 +16,10 @@ module Luna.Graph.View.GraphView (
 import           Data.Foldable (foldlM)
 import qualified Data.List     as List
 import qualified Data.Maybe    as Maybe
-import           Text.Read     (readMaybe)
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Graph             hiding (Edge, Graph, fromGraph)
 import qualified Flowbox.Data.Graph             as DG
-import           Flowbox.Data.String            (toUpper)
 import           Flowbox.Prelude
 import qualified Luna.Graph.Edge                as Edge
 import qualified Luna.Graph.Flags               as Flags
@@ -71,7 +69,7 @@ applyEdgeView (graph, pm) (src, dst, edgeview) = do
     let patternLikeNode = case srcNode of
             Node.Inputs  {}                        -> True
             Node.Expr    (NodeExpr.Pattern {}) _ _ -> True
-            Node.Expr     _                    _ _ -> False
+            Node.Expr    {}                        -> False
             Node.Outputs {}                        -> False
     case (patternLikeNode || Node.isOutputs dstNode, edgeview) of
         (_   , EdgeView []    [] ) -> Right (Graph.insEdge (src, dst, Edge.Data  Port.All     Port.All   ) graph, pm)
@@ -96,8 +94,7 @@ createNode nodeExpr graph = (newGraph, nodeID) where
 
 
 setGenerated :: Node.ID -> PropertyMap -> PropertyMap
-setGenerated nodeID =
-    PropertyMap.modifyFlags (Flags.graphViewGenerated .~ Just True) nodeID
+setGenerated = PropertyMap.modifyFlags (Flags.graphViewGenerated .~ Just True)
 
 
 nodeType :: (Node.ID, Node) -> PropertyMap -> Maybe NodeExpr
