@@ -116,3 +116,10 @@ clearIDs zero x = runIdentity (Module.traverseMR (return . set Module.id zero)
                                                  (return . set    Pat.id zero)
                                                  (return . set    Lit.id zero)
                                                  (return . set    Arg.id zero) x)
+
+clearExprIDs :: AST.ID -> Expr -> Expr
+clearExprIDs zero x = runIdentity (Expr.traverseMR (return . set   Expr.id zero)
+                                                   (return . set   Type.id zero)
+                                                   (return . set    Pat.id zero)
+                                                   (return . set    Lit.id zero)
+                                                   (return . set    Arg.id zero) x)

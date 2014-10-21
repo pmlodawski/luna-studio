@@ -9,12 +9,17 @@ module Test.Luna.Sample.GraphView where
 
 import           Flowbox.Prelude
 import qualified Luna.Graph.Node                       as Node
+import           Luna.Graph.Node.Expr                  (NodeExpr)
 import qualified Luna.Graph.Node.Expr                  as NodeExpr
+import qualified Luna.Graph.Node.StringExpr            as StringExpr
 import           Luna.Graph.View.EdgeView              (EdgeView (EdgeView))
 import           Luna.Graph.View.GraphView             (GraphView)
 import qualified Luna.Graph.View.GraphView             as GraphView
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 
+
+strExpr :: String -> NodeExpr
+strExpr = NodeExpr.StringExpr . StringExpr.Expr
 
 
 sampleGraphs :: [(String, GraphView)]
@@ -23,9 +28,9 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
-        ,(1 , Node.Expr (NodeExpr.Expr "bar") "" (1, 1))
-        ,(2 , Node.Expr (NodeExpr.Expr "baz") "" (0, 0))
+        ,(0 , Node.Expr (strExpr "foo") "" (0, 0))
+        ,(1 , Node.Expr (strExpr "bar") "" (1, 1))
+        ,(2 , Node.Expr (strExpr "baz") "" (0, 0))
         ]
         [(0 , 1, EdgeView [0] [1])
         ,(0 , 1, EdgeView []  [2])
@@ -36,9 +41,9 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
-        ,(1 , Node.Expr (NodeExpr.Expr "bar") "" (1, 1))
-        ,(2 , Node.Expr (NodeExpr.Expr "baz") "" (0, 0))
+        ,(0 , Node.Expr (strExpr "foo") "" (0, 0))
+        ,(1 , Node.Expr (strExpr "bar") "" (1, 1))
+        ,(2 , Node.Expr (strExpr "baz") "" (0, 0))
         ]
         [(0, 1, EdgeView [0, 2] [1])
         ,(0, 1, EdgeView [] [2])
@@ -49,9 +54,9 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
-        ,(1 , Node.Expr (NodeExpr.Expr "bar") "" (1, 1))
-        ,(2 , Node.Expr (NodeExpr.Expr "baz") "" (0, 0))
+        ,(0 , Node.Expr (strExpr "foo") "" (0, 0))
+        ,(1 , Node.Expr (strExpr "bar") "" (1, 1))
+        ,(2 , Node.Expr (strExpr "baz") "" (0, 0))
         ]
         [(0, 1, EdgeView [0] [1])
         ,(0, 1, EdgeView []  [2])
@@ -62,9 +67,9 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
-        ,(1 , Node.Expr (NodeExpr.Expr "bar") "" (1, 1))
-        ,(2 , Node.Expr (NodeExpr.Expr "baz") "" (0, 0))
+        ,(0 , Node.Expr (strExpr "foo") "" (0, 0))
+        ,(1 , Node.Expr (strExpr "bar") "" (1, 1))
+        ,(2 , Node.Expr (strExpr "baz") "" (0, 0))
         ]
         [(0, 1, EdgeView [0, 2]    [1])
         ,(0, 1, EdgeView [1, 2, 3] [2])
@@ -75,7 +80,7 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
+        ,(0 , Node.Expr (strExpr "foo") "" (0, 0))
         ]
         [(0 , -2, EdgeView [0] [1])
         ]
@@ -83,7 +88,7 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
+        ,(0 , Node.Expr (strExpr "foo") "" (0, 0))
         ]
         [(0 , -2, EdgeView [0] [0])
         ]
@@ -91,7 +96,7 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
+        ,(0 , Node.Expr (strExpr "foo") "" (0, 0))
         ]
         [(0 , -2, EdgeView [0] [])
         ]
@@ -99,7 +104,7 @@ sampleGraphs =
     $ GraphView.mkGraph
         [(-1, Node.Inputs  (0, 0))
         ,(-2, Node.Outputs (0, 0))
-        ,(0 , Node.Expr (NodeExpr.Expr "foo") "" (0, 0))
+        ,(0 , Node.Expr (strExpr "foo") "" (0, 0))
         ]
         [(-1 , 0, EdgeView [0] [])
         ,(0 , -2, EdgeView [0] [])
