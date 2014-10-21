@@ -10,6 +10,9 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
 
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+
 module Luna.ASTNew.Expr where
 
 import Flowbox.Prelude
@@ -22,6 +25,12 @@ import           Flowbox.Generics.Deriving.QShow
 import           Luna.ASTNew.Name (Name, VName, TName, CName, TVName)
 import qualified Luna.ASTNew.Name as Name
 
+import           Luna.ASTNew.Decl       (Decl)
+import           Luna.ASTNew.Lit        (Lit)
+import           Luna.ASTNew.Pat        (Pat, RPat)
+import           Luna.ASTNew.Type       (Type, RType)
+import           Luna.ASTNew.Native     (Native)
+import           Luna.ASTNew.Name.Multi (MultiName)
 
 
 type ID = Int
@@ -33,56 +42,151 @@ type ID = Int
 --type Traversal m = (Functor m, Applicative m, Monad m)
 
 
-type Path     = [Name]
 type Selector = [VName]
 
-data Fingered f a = Fingered f a
+--data Fingered f a = Fingered f a
 
-type FingeredID = Fingered ID
-
-
-
-type FExpr f t e p l v = Expr (f t) (f e) (f p) (f l) (f v)
-
-type FingerExpr t e p l v = FExpr FingeredID t e p l v
-
-type ExprStage1 = FingerExpr String String String String String
---type ExprStage2 = FingerExpr Type   Expr   Pat    Lit    String
+--type FingeredID = Fingered ID
 
 
---data Def t e p 
---    = Data         { _tname     :: TName  , params     :: [TVName] , _cons      :: [Constructor t e] , _classes :: e , _methods :: e }
---    | Function     { _path      :: Path   , _fname     :: VName    , _inputs    :: [PatArg p e]      , _output  :: t , _body    :: e }
---    | TypeDef      { _srcType   :: t      , _dstType   :: t                                                                          }
---    | TypeAlias    { _srcType   :: t      , _dstType   :: t                                                                          }
 
-data Expr t e p l v  
-    = Lambda       { _inputs :: e          , _output    :: t              , _body      :: e }
-    | RecordUpdate { _src    :: e          , _selector  :: Selector       , _expr      :: e }
-    | Infix        { _vname  :: VName      , _src       :: e              , _dst       :: e }
-    | Import       { _from   :: Maybe Path , _targets   :: [ImportTarget]                   }
-    | Accessor     { _acc    :: Name       , _src       :: e                                }
-    | App          { _src    :: e          , _args      :: [Arg e]                          }
-    | Typed        { _cls    :: t          , _expr      :: e                                }
-    | Case         { _expr   :: e          , _match     :: e                                }
-    | Match        { _pat    :: p          , _body      :: e                                }
-    | Assignment   { _pat    :: p          , _dst       :: e                                }
-    | Con          { _cname  :: CName                                                       }
-    | Grouped      { _expr   :: e                                                           }
-    | List         { _items  :: [e]                                                         }
-    | Lit          { _lvalue :: l                                                           }
-    | Tuple        { _items  :: [e]                                                         }
-    | Var          { _value  :: v                                                           }
-    | Ref          { _dst    :: e                                                           }
-    | Block        { _exprs  :: [e]                                                         }
-    -- | Range        Range
-    -- | Native       Native
-    -- | Def          (Def t e p)
+--type FExpr f t e p l v = Expr (f t) (f e) (f p) (f l) (f v)
+
+--type FingerExpr t e p l v = FExpr FingeredID t e p l v
+
+--type ExprStage1 = FingerExpr String String String String String
+----type ExprStage2 = FingerExpr Type   Expr   Pat    Lit    String
+
+
+----data Def d e t p
+----    = Data         { _tname     :: TName      , params   :: [TVName]      , _cons   :: [f (Constructor e)] , _defs   :: [d]              }
+----    | Function     { _path      :: Path       , _fname   :: VName         , _inputs :: [f (PatArg e)]      , _output :: t , _body :: e }
+----    | TypeAlias    { _srcType   :: t          , _dstType :: t                                                                            }
+----    | TypeWrapper  { _srcType   :: t          , _dstType :: t                                                                            }
+----    | Import       { _from      :: Maybe Path , _targets :: [ImportTarget]                                                               }
+----    -- | TypeFunction { _srcType   :: f Type , _dstType :: f Type  
+
+
+--data Constructor e = Constructor { _name :: CName, _fields :: [Field e] }
+
+--data Field e = Field { _cls :: Type, _name :: Maybe VName, _value :: Maybe e }
+
+
+--type Arg p e = Named (PatVal p e)
+
+--data PatVal p e = PatVal { _pat :: p, _value :: Maybe e }
+
+
+--data Named a = Named   { _arg :: a, _name :: String }
+--             | Unnamed { _arg :: a                  }
+--             deriving (Show, Eq, Generic, Read)
+
+---- TODO: pythonowe importy
+--data ImpTgt = ImpTgt { _path :: Path , _name :: Name, _rename :: Maybe Name } deriving (Show, Eq, Generic, Read)
+
+
+--data AppArgs e = Seq   [Named e]
+--               | Infix e e
+
+--data Expr e t p l v  
+--    = Data         { _tname   :: TName      , params    :: [TVName]  , _cons   :: [Constructor e] , _defs   :: [e]              }
+--    | Function     { _path    :: Path       , _fname    :: MultiName , _inputs :: [Arg p e]       , _output :: t , _body :: [e] }
+--    | TypeAlias    { _dstType :: t          , _srcType  :: t                                                                    }
+--    | TypeWrapper  { _dstType :: t          , _srcType  :: t                                                                    }
+--    | Import       { _from    :: Maybe Path , _targets  :: [ImpTgt]                                                             }
+--    --| TypeFunction { _srcType :: f Type     , _dstType  :: f Type                                                               }
+--    | Lambda       { _inputs  :: [Arg p e]  , _output   :: t        , _body   :: [e]                                            }
+--    | RecordUpdate { _src     :: e          , _selector :: Selector , _expr   :: e                                              }
+--    | App          { _src     :: e          , _args     :: AppArgs                                                              }
+--    | Accessor     { _acc     :: Name       , _src      :: e                                                                    }
+--    | Typed        { _cls     :: t          , _expr     :: e                                                                    }
+--    | Case         { _expr    :: e          , _match    :: [Match p e]                                                          }
+--    | Assignment   { _pat     :: p          , _dst      :: e                                                                    }
+--    | Con          { _cname   :: CName                                                                                          }
+--    | Grouped      { _expr    :: e                                                                                              }
+--    | List         { _items   :: [e]                                                                                            }
+--    | Lit          { _lvalue  :: l                                                                                              }
+--    | Tuple        { _items   :: [e]                                                                                            }
+--    | Var          { _value   :: v                                                                                              }
+--    | Ref          { _dst     :: e                                                                                              }
+--    --| Block        { _exprs   :: [e]                                                                                          }
+--    | Native       (Native e)
+--    | Wildcard
+--    | NOP
+--    deriving (Show, Eq, Generic, Read)
+
+---------------------------
+
+
+--data PatVal f = PatVal { _pat :: RPat f, _value :: Maybe (RExpr f) }
+
+--type Arg f = Named (PatVal f)
+
+
+-- TODO: pythonowe importy
+
+
+data AppArgs e = Seq   [Named e]
+               | Infix e e
+
+
+
+
+
+type R f a = f (a f)
+
+type RExpr f = R f Expr
+
+
+data Expr f a
+    | Lambda      { _inputs  :: [Arg f]   , _output   :: RType f           , _body   :: [RExpr f]                                              }
+    | RecUpdt     { _src     :: RExpr f   , _selector :: Selector          , _expr   :: RExpr f                                                }
+    | App         { _src     :: RExpr f   , _args     :: AppArgs (RExpr f)                                                                     }
+    | Case        { _expr    :: RExpr f   , _match    :: [RMatch f]                                                                            }
+    | Typed       { _cls     :: RType f   , _expr     :: RExpr f                                                                               }
+    | Accessor    { _acc     :: Name      , _src      :: RExpr f                                                                               }
+    | Assignment  { _dst     :: RPat f    , _src      :: RExpr f                                                                               }
+    | Ref         { _ref     :: RExpr f                                                                                                        }
+    | List        { _items   :: [RExpr f]                                                                                                      }
+    | Tuple       { _items   :: [RExpr f]                                                                                                      }
+    | Grouped     { _expr    :: RExpr f                                                                                                        }
+    | Lit         { _lit     :: f Lit                                                                                                         }
+    | Var         { _ident   :: a                                                                                                          }
+    | Cons        { _cname   :: CName                                                                                                          }
+    | Native      (Native (RExpr f))
     | Wildcard
-    | NOP
-    deriving (Show, Eq, Generic, Read)
+    deriving (Generic)
 
 
+
+data Match f = Match { _matchPat :: RPat f, _matchBody :: [RExpr f] }  
+type RMatch f = R f Match
+
+
+data ImpTgt = ImpTgt { _impName :: Name, _rename :: Maybe Name } deriving (Show, Eq, Generic, Read)
+
+
+
+
+
+
+
+
+
+
+
+
+--newtype MuExpr f d t p l v    = MuExpr (f (MuExpr f t p l v) t p l (d (MuD d t p) t p) v)
+
+--type RecExpr v = MuExpr Expr RecType RecPat RecLit v
+
+
+--data Def d t e p
+--    = Data         { _tname     :: TName  , params   :: [TVName] , _cons   :: [f (Constructor e)] , _defs   :: [d]                  }
+--    | Function     { _path      :: Path   , _fname   :: VName    , _inputs :: [f (PatArg p e)]      , _output :: t , _body :: f e }
+--    | TypeAlias    { _srcType   :: t , _dstType :: t                                                                    }
+--    | TypeWrapper  { _srcType   :: t , _dstType :: t                                                                    }
+--    -- | TypeFunction { _srcType   :: f Type , _dstType :: f Type  
 
 
 --data Def f e
@@ -95,81 +199,123 @@ data Expr t e p l v
 
 
 --data Expr f
---    = Lambda       { _inputs :: f Expr     , _output    :: f Type         , _body :: f Expr }
---    | RecordUpdate { _src    :: f Expr     , _selector  :: Selector       , _expr :: f Expr }
---    | Infix        { _vname  :: VName      , _src       :: f Expr         , _dst  :: f Expr }
---    | Import       { _from   :: Maybe Path , _targets   :: [ImportTarget]                   }
---    | Accessor     { _acc    :: Name       , _src       :: f Expr                           }
---    | App          { _src    :: f Expr     , _args      :: [f (Arg Expr)]                   }
---    | Typed        { _cls    :: f Type     , _expr      :: f Expr                           }
---    | Case         { _expr   :: f Expr     , _match     :: f Expr                           }
---    | Match        { _pat    :: f Pat      , _body      :: f Expr                           }
---    | Assignment   { _pat    :: f Pat      , _dst       :: f Expr                           }
---    | Con          { _cname  :: CName                                                       }
---    | Grouped      { _expr   :: f Expr                                                      }
---    | List         { _items  :: [f Expr]                                                    }
---    | Lit          { _lvalue :: f Lit                                                       }
---    | Tuple        { _items  :: [f Expr]                                                    }
---    | Var          { _value  :: String                                                      }
---    | Ref          { _dst    :: f Expr                                                      }
---    | Block        { _exprs  :: [f Expr]                                                    }
---    -- | Range        Range
---    -- | Native       Native
+--    = Lambda       { _inputs :: f (Expr f) , _output    :: f Type             , _body :: f (Expr f) }
+--    | RecordUpdate { _src    :: f (Expr f) , _selector  :: Selector           , _expr :: f (Expr f) }
+--    | Infix        { _vname  :: VName      , _src       :: f (Expr f)         , _dst  :: f (Expr f) }
+--    | Import       { _from   :: Maybe Path , _targets   :: [ImportTarget]                           }
+--    | Accessor     { _acc    :: Name       , _src       :: f (Expr f)                               }
+--    | App          { _src    :: f (Expr f) , _args      :: [f (Arg (Expr f))]                       }
+--    | Typed        { _cls    :: f Type     , _expr      :: f (Expr f)                               }
+--    | Case         { _expr   :: f (Expr f) , _match     :: f (Expr f)                               }
+--    | Match        { _pat    :: f Pat      , _body      :: f (Expr f)                               }
+--    | Assignment   { _pat    :: f Pat      , _dst       :: f (Expr f)                               }
+--    | Con          { _cname  :: CName                                                               }
+--    | Grouped      { _expr   :: f (Expr f)                                                          }
+--    | Lit          { _lvalue :: f Lit                                                               }
+--    | Tuple        { _items  :: [f (Expr f)]                                                        }
+--    | Var          { _value  :: String                                                              }
+--    | Ref          { _dst    :: f (Expr f)                                                          }
+--    | Block        { _exprs  :: [f (Expr f)]                                                        }
+--    | List         List
+--    | Native       Native
 --    | Def          (Def f (Expr f))
 --    | Wildcard
 --    | NOP
 --    deriving (Show, Eq, Generic, Read)
 
 
-newtype Mu f = Mu (f (Mu f))
-
-type X t p l v = MuE Expr t p l v
-
-newtype MuE f t p l v = MuE (f t (MuE f t p l v) p l v)
-newtype MuT f         = MuT (f (MuT f))
+--data List e = ElementList  { _elements :: [e]         }
+--            | RangeList    { _begin    :: e, end :: e }
+--            | InfiniteList { _begin    :: e           }
+--            deriving (Show, Eq, Generic, Read)
 
 
-newtype Mu4 f t1 t2 t3 t4 = Mu4 (f (Mu4 f t1 t2 t3 t4) t1 t2 t3 t4)
-newtype Mu3 f t1 t2 t3    = Mu3 (f (Mu3 f t1 t2 t3) t1 t2 t3)
-newtype Mu2 f t1 t2       = Mu2 (f (Mu2 f t1 t2) t1 t2)
-newtype Mu1 f t1          = Mu1 (f (Mu1 f t1) t1)
-newtype Mu0 f             = Mu0 (f (Mu0 f))
 
 
-data Type a = Type a
 
---MuE e = MuE (e (MuT t) (MuE e) (MuP p) (MuL l) (MuV v))
-
-data ImportTarget = ImportTarget { _path :: Path , _rename :: Maybe Name } deriving (Show, Eq, Generic, Read)
-
-data Arg a = Named   { _arg :: a, _name :: String }
-           | Unnamed { _arg :: a                  }
-           deriving (Show, Eq, Generic, Read)
+--data Lit = Char    { _char :: Prelude.Char   }
+--         | String  { _str  :: Prelude.String }
+--         | Number  { _num  :: Number         }
+--         deriving (Show, Eq, Generic, Read)
 
 
---a :: Expr () (Expr () () () () String) () () ()
+            --newtype Mu f = Mu (f (Mu f))
 
-a :: MuE Expr (MuT Type) () () String
-a = MuE $ Grouped (MuE $ Var "x")
+            ----type X t p l v = MuE Expr t p l v
 
---type PatArg e = Arg (PatVal Pat e)
+            --newtype MuE f t p l v = MuE (f t (MuE f t p l v) p l v)
+            --newtype MuT f         = MuT (f (MuT f))
 
---data PatVal p e = PatVal { _pat :: p, _value :: Maybe e }
+
+            ----class Rec a b | a -> b where
+            ----    rec :: a -> b
+
+
+            --newtype Rec6 f t1 t2 t3 t4 t5 = Rec6 (f (Rec6 f t1 t2 t3 t4 t5) t1 t2 t3 t4 t5)
+            --newtype Rec5 f t1 t2 t3 t4    = Rec5 (f (Rec5 f t1 t2 t3 t4) t1 t2 t3 t4)
+            --newtype Rec4 f t1 t2 t3       = Rec4 (f (Rec4 f t1 t2 t3) t1 t2 t3)
+            --newtype Rec3 f t1 t2          = Rec3 (f (Rec3 f t1 t2) t1 t2)
+            --newtype Rec2 f t1             = Rec2 (f (Rec2 f t1) t1)
+            --newtype Rec1 f                = Rec1 (f (Rec1 f))
+            --newtype Rec0 f                = Rec0 f
+
+
+            --data Def d t e p = Def'
+            --data Type t      = Type'
+
+            --data Pat p l     = Pat'
+            --data Lit         = Lit'
+
+            ---- data Expr e t p l v  
+
+
+            ----RecE e = RecE (e (RecT t) (RecE e) (RecP p) (RecL l) (RecV v))
+
+
+
+
+
+
+
+            ----a :: Expr () (Expr () () () () String) () () ()
+
+            --type RecLit    = Rec0 Lit
+            --type RecType   = Rec1 Type
+            --type RecPat    = Rec2 Pat RecLit
+            --type RecExpr v = Rec5 Expr RecType RecPat RecLit v
+
+            --type RecDef  v = Rec4 Def (RecExpr v) RecType RecPat
+
+            --a :: RecExpr String
+            --a = Rec5 $ Grouped (Rec5 $ Var "x")
+
+
+            ----data A = A B
+
+            ----data B = B A 
+
+
+            --data A a = A a
+            --data B b = B b
+            --         | B'
+
+
+            --newtype RM f g = RM (f (RM g f))
+
+            --b :: RM B A
+            --b = RM (B (RM (A (RM (B')))))
+
+
+
 
 
 --data Range = RangeType RangeBorders
 
---data Constructor se = Constructor { _name :: CName , _fields :: [Field e] }
 
---data Field e = Field { _cls :: Type, _name :: Maybe VName _value :: Maybe e }
 
 --data RangeBorders = Left
 --                  | Both
 
---data Native e = Code   { _code :: String }
---              | Var    { _name :: String }
---              | Data   { _cls  :: t, _cons :: e, _classes :: e, _methods :: e }
---              | Import { _segments :: e }
 
 
 
@@ -177,14 +323,14 @@ a = MuE $ Grouped (MuE $ Var "x")
 
 
 --data Type = Unknown
---          | Var      { _name     :: String                          }
+--          | Var      { _name     :: TVName                          }
 --          | Tuple    { _items    :: [Type]                          }
 --          | List     { _item     :: Type                            }
---          | Data     { _name     :: String   , _params  :: [String] }
---          | Module   { _name     :: String   , _path    :: [String] }
+--          | Data     { _name     :: TName    , _params  :: [TVName] }
+--          | Module   { _name     :: TName    , _path    :: [TName]  }
 --          | Function { _inputs   :: [Type]   , _output  :: Type     }
---          | Con      { _segments :: [String]                        }
 --          | App      { _src      :: Type     , _args    :: [Type]   }
+--          -- ??? | Con      { _segments :: [String]                        }
 --          deriving (Show, Eq, Generic, Read)
 
 
