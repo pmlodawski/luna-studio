@@ -21,6 +21,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Request    as NodeDefaultSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Update     as NodeDefaultSet
 import           Luna.Data.Serialize.Proto.Conversion.Crumb                                                    ()
+import           Luna.Data.Serialize.Proto.Conversion.Graph                                                    ()
 import           Luna.Data.Serialize.Proto.Conversion.NodeDefault                                              ()
 
 
@@ -41,9 +42,9 @@ get request@(NodeDefaultGet.Request tnodeID tbc tlibID tprojectID _) = do
 
 set :: NodeDefaultSet.Request -> RPC Context IO NodeDefaultSet.Update
 set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID _) = do
-    bc <- decodeE tbc
+    bc    <- decodeE tbc
+    value <- decodeE tvalue
     let dstPort   = decodeListP tdstPort
-        value     = decodeP tvalue
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
