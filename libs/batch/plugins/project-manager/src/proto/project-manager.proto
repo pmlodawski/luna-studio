@@ -480,7 +480,7 @@ message Project {
                             message Set {
                                 message Request {
                                     repeated int32 inPort    = 1;
-                                    required string value    = 2;
+                                    required generated.proto.graph.NodeExpr value = 2;
                                     required int32 nodeID    = 3;
                                     required generated.proto.crumb.Breadcrumbs bc = 4;
                                     required int32 libraryID = 5;

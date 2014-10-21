@@ -7,6 +7,7 @@
 
 package generated.proto.attributes;
 
+import "nodedefault.proto";
 
 
 message Flags {
@@ -32,17 +33,8 @@ message Attributes {
     repeated Space spaces = 1;
 }
 
-message DefaultsMap {
-    message DefaultsMapEntry {
-        repeated int32  port   = 1;
-        optional int32  nodeID = 2;
-        optional string value  = 3;
-    }
-    repeated DefaultsMapEntry entries = 1;
-}
-
 message Properties {
     optional Flags       flags       = 1;
-    optional DefaultsMap defaultsMap = 2;
+    optional generated.proto.nodedefault.DefaultsMap defaultsMap = 2;
     optional Attributes  attributes  = 3;
 }

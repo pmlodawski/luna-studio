@@ -16,29 +16,30 @@ import           Control.Monad.Trans.Either
 import qualified Data.IntSet                as IntSet
 import qualified Data.List                  as List
 
-import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
+import           Flowbox.Prelude                         hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Expr                          (Expr)
-import qualified Luna.AST.Expr                          as Expr
-import           Luna.AST.Pat                           (Pat)
-import qualified Luna.AST.Pat                           as Pat
-import qualified Luna.Data.ASTInfo                      as ASTInfo
-import qualified Luna.Graph.Flags                       as Flags
-import           Luna.Graph.Graph                       (Graph)
-import qualified Luna.Graph.Graph                       as Graph
-import           Luna.Graph.Node                        (Node)
-import qualified Luna.Graph.Node                        as Node
-import           Luna.Graph.Node.Expr                   (NodeExpr)
-import qualified Luna.Graph.Node.Expr                   as NodeExpr
-import qualified Luna.Graph.Port                        as Port
-import           Luna.Graph.PropertyMap                 (PropertyMap)
-import qualified Luna.Parser.Lexer                      as Lexer
-import qualified Luna.Parser.Parser                     as Parser
-import qualified Luna.Pass.Analysis.ID.ExtractIDs       as ExtractIDs
-import qualified Luna.Pass.Pass                         as Pass
-import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
-import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
-import qualified Luna.Pass.Transform.Graph.Parser.State as State
+import           Luna.AST.Expr                           (Expr)
+import qualified Luna.AST.Expr                           as Expr
+import           Luna.AST.Pat                            (Pat)
+import qualified Luna.AST.Pat                            as Pat
+import qualified Luna.Data.ASTInfo                       as ASTInfo
+import qualified Luna.Graph.Flags                        as Flags
+import           Luna.Graph.Graph                        (Graph)
+import qualified Luna.Graph.Graph                        as Graph
+import           Luna.Graph.Node                         (Node)
+import qualified Luna.Graph.Node                         as Node
+import           Luna.Graph.Node.Expr                    (NodeExpr)
+import qualified Luna.Graph.Node.Expr                    as NodeExpr
+import qualified Luna.Graph.Port                         as Port
+import           Luna.Graph.PropertyMap                  (PropertyMap)
+import qualified Luna.Parser.Lexer                       as Lexer
+import qualified Luna.Parser.Parser                      as Parser
+import qualified Luna.Pass.Analysis.ID.ExtractIDs        as ExtractIDs
+import qualified Luna.Pass.Pass                          as Pass
+import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer as IDFixer
+import qualified Luna.Pass.Transform.AST.IDFixer.State   as IDFixer
+import           Luna.Pass.Transform.Graph.Parser.State  (GPPass)
+import qualified Luna.Pass.Transform.Graph.Parser.State  as State
 
 
 logger :: Logger
@@ -73,12 +74,13 @@ parseNode inputs (nodeID, node) = do
 
 
 parseExprNode :: Node.ID -> NodeExpr -> GPPass ()
-parseExprNode nodeID expr = case expr of
-    NodeExpr.List           -> parseListNode   nodeID
-    NodeExpr.Tuple          -> parseTupleNode  nodeID
-    NodeExpr.Pattern pat    -> parsePatNode    nodeID pat
-    NodeExpr.Native  native -> parseNativeNode nodeID native
-    _                       -> parseAppNode    nodeID $ NodeExpr.toString expr
+parseExprNode nodeID nodeExpr = case nodeExpr of
+    NodeExpr.List           -> parseListNode    nodeID
+    NodeExpr.Tuple          -> parseTupleNode   nodeID
+    NodeExpr.Pattern pat    -> parsePatNode     nodeID pat
+    NodeExpr.Native  native -> parseNativeNode  nodeID native
+    NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
+    _                       -> parseAppNode     nodeID $ NodeExpr.toString nodeExpr
 
 
 parseInputsNode :: Node.ID -> [Expr] -> GPPass ()
@@ -178,6 +180,11 @@ parseListNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = Expr.List nodeID srcs
     addExpr nodeID e
+
+
+parseASTExprNode :: Node.ID -> Expr -> GPPass ()
+parseASTExprNode nodeID = addExpr nodeID . IDFixer.clearExprIDs IDFixer.unknownID
+
 
 
 addExpr :: Node.ID -> Expr -> GPPass ()
