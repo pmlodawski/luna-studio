@@ -1,6 +1,6 @@
 module Logger (
     LoggerT, Logger,
-    function, functionResult, trace, err,
+    function, functionResult, trace, traceInline, err,
     formatStack,
     runLogger, runLoggerT,
     evalLogger, evalLoggerT,
@@ -12,6 +12,7 @@ import Data.Either             (isRight)
 import Logger.Internal.LoggerT
 import Logger.Internal.Runners
 import Logger.Internal.Stack
+import Logger.Internal.TraceInline (traceInline)
 
 
 
