@@ -10,12 +10,14 @@ module Luna.ASTNew.Arg where
 
 import           Flowbox.Prelude
 
-import           GHC.Generics     (Generic)
-import           Luna.ASTNew.Name (Named)
-import           Luna.ASTNew.Pat  (RPat)
+import GHC.Generics     (Generic)
+import Luna.ASTNew.Name (Named)
+import Luna.ASTNew.Pat  (RPat)
+import Luna.ASTNew.Name (VName)
 
 
 
 data PatVal f a = PatVal { _pat :: RPat f, _value :: Maybe a }
 
-type Arg f a = Named (PatVal f a)
+type Arg f a  = Named (PatVal f a) VName
+type RArg f a = f (Arg f a)

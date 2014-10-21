@@ -23,7 +23,7 @@ import qualified Prelude
 
 data Decl f e
     = Data        { _tname   :: TName   , params    :: [TVName]  , _cons   :: [ConsDef f e] , _defs :: [RDecl f e]                }
-    -- | Function    { _path    :: Path    , _fname    :: MultiName , _inputs :: [Arg f e]     , _output :: RType f   , _body :: [e] }
+    | Function    { _path    :: Path    , _fname    :: MultiName , _inputs :: [Arg f e]     , _output :: RType f   , _body :: [e] }
     | Import      { _modPath :: Path    , _targets  :: [ImpTgt]                                                                   }
     | TypeAlias   { _dstType :: RType f , _srcType  :: RType f                                                                    }
     | TypeWrapper { _dstType :: RType f , _srcType  :: RType f                                                                    }

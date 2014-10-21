@@ -31,7 +31,7 @@ import           Luna.ASTNew.Pat        (Pat, RPat)
 import           Luna.ASTNew.Type       (Type, RType)
 import           Luna.ASTNew.Native     (Native)
 import           Luna.ASTNew.Name.Multi (MultiName)
-import           Luna.ASTNew.Arg        (Arg)
+import           Luna.ASTNew.Arg        (RArg)
 
 
 type ID = Int
@@ -127,8 +127,8 @@ type Selector = [VName]
 -- TODO: pythonowe importy
 
 
-data AppArgs e = Seq   [Named e VName]
-               | Infix e e
+data App e = Seq   [Named e VName]
+         | Infix e e
 
 
 
@@ -138,22 +138,23 @@ type R f a = f (a f)
 
 type RExpr f a = f (Expr f a)
 
+type ExprArg f a = RArg f (Expr f a)
 
 data Expr f a
-    -- = Lambda      { _inputs  :: [Arg f]   , _output   :: RType f           , _body   :: [RExpr f]   }
-    = RecUpdt     { _src     :: RExpr f a   , _selector :: Selector            , _expr   :: RExpr f a  }
-    | App         { _src     :: RExpr f a   , _args     :: AppArgs (RExpr f a)                         }
-    | Case        { _expr    :: RExpr f a   , _match    :: [RMatch f a]                                }
-    | Typed       { _cls     :: RType f     , _expr     :: RExpr f a                                   }
-    | Accessor    { _acc     :: Name        , _src      :: RExpr f a                                   }
-    | Assignment  { _dst     :: RPat f      , _src      :: RExpr f a                                   }
-    | Ref         { _ref     :: RExpr f a                                                              }
-    | List        { _items   :: [RExpr f a]                                                            }
-    | Tuple       { _items   :: [RExpr f a]                                                            }
-    | Grouped     { _expr    :: RExpr f a                                                              }
-    | Lit         { _lit     :: f Lit                                                                  }
-    | Var         { _ident   :: a                                                                      }
-    | Cons        { _cname   :: CName                                                                  }
+    = Lambda      { _inputs  :: [ExprArg f a] , _output   :: RType f         , _body   :: [RExpr f a] }
+    | RecUpdt     { _src     :: RExpr f a     , _selector :: Selector        , _expr   :: RExpr f a   }
+    | App         { _src     :: RExpr f a     , _args     :: App (RExpr f a)                          }
+    | Case        { _expr    :: RExpr f a     , _match    :: [RMatch f a]                             }
+    | Typed       { _cls     :: RType f       , _expr     :: RExpr f a                                }
+    | Assignment  { _dst     :: RPat  f       , _src      :: RExpr f a                                }
+    | Accessor    { _acc     :: Name          , _src      :: RExpr f a                                }
+    | Ref         { _ref     :: RExpr f a                                                             }
+    | List        { _items   :: [RExpr f a]                                                           }
+    | Tuple       { _items   :: [RExpr f a]                                                           }
+    | Grouped     { _expr    :: RExpr f a                                                             }
+    | Lit         { _lit     :: f Lit                                                                 }
+    | Cons        { _cname   :: CName                                                                 }
+    | Var         { _ident   :: a                                                                     }
     | Native      (Native (RExpr f a))
     | Wildcard
     deriving (Generic)
