@@ -8,6 +8,8 @@
 
 module Luna.Interpreter.Session.Data.CallDataPath where
 
+import qualified Data.Maybe as Maybe
+
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (loc)
@@ -58,7 +60,8 @@ fromCallPointPath (callPoint:t) parentDefPoint = do
         <??> Error.ASTLookupError $(loc) ("No node with id = " ++ show nodeID)
     let parentBC = parentDefPoint  ^. DefPoint.breadcrumbs
         callData = CallData callPoint parentBC defID graph node
-    mdefPoint <- Inspect.fromName (Node.exprStr node) parentBC libraryID
+        name = Maybe.fromMaybe "" $ Node.exprStr node
+    mdefPoint <- Inspect.fromName name parentBC libraryID
     (:) callData <$> case mdefPoint of
         Just defPoint -> fromCallPointPath t defPoint
         Nothing       -> return []

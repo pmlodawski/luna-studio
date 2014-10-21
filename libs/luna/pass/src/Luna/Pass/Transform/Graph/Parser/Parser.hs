@@ -30,6 +30,7 @@ import           Luna.Graph.Node                         (Node)
 import qualified Luna.Graph.Node                         as Node
 import           Luna.Graph.Node.Expr                    (NodeExpr)
 import qualified Luna.Graph.Node.Expr                    as NodeExpr
+import qualified Luna.Graph.Node.StringExpr              as StringExpr
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Graph.PropertyMap                  (PropertyMap)
 import qualified Luna.Parser.Lexer                       as Lexer
@@ -40,6 +41,7 @@ import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer as IDFixer
 import qualified Luna.Pass.Transform.AST.IDFixer.State   as IDFixer
 import           Luna.Pass.Transform.Graph.Parser.State  (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State  as State
+
 
 
 logger :: Logger
@@ -75,12 +77,13 @@ parseNode inputs (nodeID, node) = do
 
 parseExprNode :: Node.ID -> NodeExpr -> GPPass ()
 parseExprNode nodeID nodeExpr = case nodeExpr of
-    NodeExpr.List           -> parseListNode    nodeID
-    NodeExpr.Tuple          -> parseTupleNode   nodeID
-    NodeExpr.Pattern pat    -> parsePatNode     nodeID pat
-    NodeExpr.Native  native -> parseNativeNode  nodeID native
+    NodeExpr.StringExpr strExpr -> case strExpr of
+        StringExpr.List           -> parseListNode    nodeID
+        StringExpr.Tuple          -> parseTupleNode   nodeID
+        StringExpr.Pattern pat    -> parsePatNode     nodeID pat
+        StringExpr.Native  native -> parseNativeNode  nodeID native
+        _                         -> parseAppNode     nodeID $ StringExpr.toString strExpr
     NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
-    _                       -> parseAppNode     nodeID $ NodeExpr.toString nodeExpr
 
 
 parseInputsNode :: Node.ID -> [Expr] -> GPPass ()

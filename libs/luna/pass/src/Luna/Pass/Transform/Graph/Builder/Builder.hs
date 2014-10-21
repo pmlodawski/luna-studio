@@ -32,6 +32,7 @@ import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Node                         as Node
 import qualified Luna.Graph.Node.Expr                    as NodeExpr
 import qualified Luna.Graph.Node.OutputName              as OutputName
+import qualified Luna.Graph.Node.StringExpr              as StringExpr
 import           Luna.Graph.Port                         (Port)
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Graph.PropertyMap                  (PropertyMap)
@@ -123,11 +124,11 @@ buildNode astFolded monadicBind outName expr = do
         Expr.NativeVar  _ name                  -> buildVar i name
         Expr.Con        _ name                  -> addExprNode  i name []
         Expr.Lit        _ lvalue                -> addExprNode  i (Lit.lunaShow lvalue) []
-        Expr.Tuple      _ items                 -> addNode  i NodeExpr.Tuple items
+        Expr.Tuple      _ items                 -> addNode  i (NodeExpr.StringExpr StringExpr.Tuple) items
         Expr.List       _ [Expr.RangeFromTo {}] -> showAndAddNode
         Expr.List       _ [Expr.RangeFrom   {}] -> showAndAddNode
-        Expr.List       _ items                 -> addNode i NodeExpr.List items
-        Expr.Native     _ segments              -> addNode i (NodeExpr.Native $ showNative expr) $ filter isNativeVar segments
+        Expr.List       _ items                 -> addNode i (NodeExpr.StringExpr StringExpr.List) items
+        Expr.Native     _ segments              -> addNode i (NodeExpr.StringExpr $ StringExpr.Native $ showNative expr) $ filter isNativeVar segments
         Expr.Wildcard   _                       -> left $ "GraphBuilder.buildNode: Unexpected Expr.Wildcard with id=" ++ show i
         _                                       -> showAndAddNode
     where
@@ -142,7 +143,7 @@ buildNode astFolded monadicBind outName expr = do
             realPat <- isRealPat pat dst
             if realPat
                 then do patIDs <- buildPat pat
-                        let nodeExpr = NodeExpr.Pattern patStr
+                        let nodeExpr = NodeExpr.StringExpr $ StringExpr.Pattern patStr
                             node     = Node.Expr nodeExpr (genName nodeExpr i)
                         State.insNodeWithFlags (i, node) astFolded assignment
                         case patIDs of
@@ -161,7 +162,7 @@ buildNode astFolded monadicBind outName expr = do
             graphFolded <- State.getGraphFolded i
             if graphFolded
                 then do minID <- hoistEither =<< MinID.runExpr src
-                        addNode' minID (NodeExpr.fromString $ showExpr expr) []
+                        addNode' minID (mkNodeExpr expr) []
                 else do srcID <- buildNode astFolded False outName src
                         s     <- State.gvmNodeMapLookUp srcID
                         case s of
@@ -170,12 +171,13 @@ buildNode astFolded monadicBind outName expr = do
                         connectMonadic srcID
                         return srcID
 
-        addExprNode i name = addNode i (NodeExpr.Expr name)
+
+        addExprNode i name = addNode i (NodeExpr.StringExpr $ StringExpr.Expr name)
 
         addNode i nodeExpr args = do
             graphFolded <- State.getGraphFolded i
             if graphFolded
-                then addNode' i (NodeExpr.fromString $ showExpr expr) []
+                then addNode' i (mkNodeExpr expr) []
                 else addNode' i nodeExpr args
 
         addNode' i nodeExpr args = do
@@ -185,10 +187,11 @@ buildNode astFolded monadicBind outName expr = do
             connectMonadic i
             return i
 
+        mkNodeExpr           = NodeExpr.StringExpr . StringExpr.fromString . showExpr
         connectMonadic i     = when monadicBind $ State.connectMonadic i
         assignment           = Maybe.isJust outName
         genName nodeExpr num = Maybe.fromMaybe (OutputName.generate nodeExpr num) outName
-        showAndAddNode       = addNode (expr ^. Expr.id) (NodeExpr.fromString $ showExpr expr) []
+        showAndAddNode       = addNode (expr ^. Expr.id) (mkNodeExpr expr) []
 
         isNativeVar (Expr.NativeVar {}) = True
         isNativeVar _                   = False

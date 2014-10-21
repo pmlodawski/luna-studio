@@ -52,7 +52,7 @@ addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, property
         then (newGraph2, newPropertyMap)
         else (graph, propertyMap)
     where
-      node      = Node.Expr defaultValue (OutputName.generate defaultValue nodeID) (0, 0)
+      node      = OutputName.provide (Node.Expr defaultValue "" (0, 0)) nodeID
       newGraph  = GraphView.insNode (defaultNodeID, node) graph
       newGraph2 = GraphView.insEdge (defaultNodeID, nodeID, EdgeView [] adstPort) newGraph
       newPropertyMap = PropertyMap.insert defaultNodeID generatedProperties propertyMap
