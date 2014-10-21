@@ -14,8 +14,8 @@ import Luna.ASTNew.Name (Name, VName, TName, CName, TVName)
 import Luna.ASTNew.Expr (Expr)
 
 
-data Module f = Module { _path :: [TName]
-                       , _name :: TName
-                       , _body :: [Expr f]
-                       , _mods :: [Module f] 
-                       } deriving (Generic)
+data Module f a = Module { _path :: [TName]
+                         , _name :: TName
+                         , _body :: [Expr f a]
+                         , _mods :: [Module f a] 
+                         } deriving (Generic)
