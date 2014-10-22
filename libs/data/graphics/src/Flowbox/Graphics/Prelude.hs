@@ -17,7 +17,7 @@ module Flowbox.Graphics.Prelude (
 ) where
 
 import Flowbox.Prelude as PE hiding (
-    lift, unlift, 
+    lift,
     Ord(..), Eq(..),
     (&&), (||), not
     )

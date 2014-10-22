@@ -13,18 +13,18 @@ module Utils (
   run
 ) where
 
-import           Flowbox.Prelude                      as P
-import           Flowbox.Math.Matrix                  as M
+import           Flowbox.Prelude                                    as P hiding (pre)
+import           Flowbox.Math.Matrix                                as M
 import           Flowbox.Graphics.Color
 import           Flowbox.Graphics.Composition.Generators.Rasterizer
 import           Flowbox.Graphics.Composition.Generators.Sampler
 import           Flowbox.Graphics.Composition.Generators.Matrix
-import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage, saveImage)
+import           Flowbox.Graphics.Image.IO.ImageMagick              (loadImage, saveImage)
 import           Flowbox.Graphics.Utils
 
-import qualified Codec.Picture.Png          as Juicy
-import qualified Codec.Picture.Types        as Juicy
-import qualified Data.Array.Accelerate      as A
+import qualified Codec.Picture.Png        as Juicy
+import qualified Codec.Picture.Types      as Juicy
+import qualified Data.Array.Accelerate    as A
 import           Data.Array.Accelerate.IO
 
 #ifdef ACCELERATE_CUDA_BACKEND
@@ -34,14 +34,13 @@ import           Data.Array.Accelerate.Interpreter (run)
 #endif
 
 import qualified Data.Vector.Storable       as SV
-
-import           Math.Space.Space
 import           Data.List.Split            (chunksOf)
 import           Text.Printf
 
+
+
 type IOLoadBackend a = FilePath -> IO (Either a (A.Array A.DIM2 RGBA32))
 type IOSaveBackend   = FilePath -> A.Array A.DIM2 RGBA32 -> IO ()
-
 
 testColor :: (RGB (A.Exp Float) -> RGB (A.Exp Float))
           -> FilePath
@@ -49,9 +48,9 @@ testColor :: (RGB (A.Exp Float) -> RGB (A.Exp Float))
           -> IO ()
 testColor f input output = do
     (r, g, b, a) <- testLoadRGBA' input
-    rgb  <- return $ M.zipWith3 (\x y z -> A.lift (RGB x y z)) r g b
-    rgb' <- return $ M.map (\x -> A.lift $ f (A.unlift x :: RGB (Exp Float))) rgb
-    (r', g', b') <- return $ M.unzip3 $ M.map (\(A.unlift -> RGB r g b :: RGB (Exp Float)) -> A.lift (r, g, b)) rgb'
+    let rgb  = M.zipWith3 (\x y z -> A.lift (RGB x y z)) r g b
+        rgb' = M.map (\x -> A.lift $ f (A.unlift x :: RGB (Exp Float))) rgb
+        (r', g', b') = M.unzip3 $ M.map (\(A.unlift -> RGB x y z :: RGB (Exp Float)) -> A.lift (x, y, z)) rgb'
     testSaveRGBA' output r' g' b' a
 
 testFunction :: (A.Exp Float -> A.Exp Float)
@@ -67,7 +66,7 @@ printMat :: forall a . (Elt a, Show a, PrintfArg a) => Matrix2 a -> IO ()
 printMat mat = mapM_ printRow mat2d
     where computed = compute' run mat
           mat2d = chunksOf w $ (A.toList computed :: [a])
-          Z :. h :. w = A.arrayShape computed
+          Z :. _ :. w = A.arrayShape computed
           printRow row = do
               mapM_ (\a -> printf "%6.3f\t" a :: IO ()) row
               printf "\n"

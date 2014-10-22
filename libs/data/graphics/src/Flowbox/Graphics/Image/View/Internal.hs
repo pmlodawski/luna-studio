@@ -6,17 +6,16 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Graphics.Image.View.Internal (
-    View (..),
+    View(..),
     Name,
     ChanTree,
-    Select (..),
+    Select,
     get,
     append
 ) where
 
-import           Data.Set        hiding (map)
+import           Data.Set        hiding (insert, map)
 import           Data.List.Split
-import qualified Data.Map        as Map hiding (map)
 
 import           Flowbox.Data.Channel           (ChannelTree(..))
 import qualified Flowbox.Data.Channel           as ChanTree
@@ -64,9 +63,9 @@ append chan v = set (ChanTree.tree result') v
               Left  _ -> acc >>= ChanTree.append p Nothing >>= ChanTree.lookup p
 
           insert :: String -> Maybe Channel -> ChanTree.Zipper String Channel -> ChanTree.ZipperResult String Channel
-          insert p v zipper = let res = ChanTree.lookup p zipper in case res of
-              Right (ChannelTree _ oldmap, _) -> ChanTree.attach p (ChannelTree v oldmap) zipper
-              Left _ -> ChanTree.append p v zipper
+          insert p v' zipper = let res = ChanTree.lookup p zipper in case res of
+              Right (ChannelTree _ oldmap, _) -> ChanTree.attach p (ChannelTree v' oldmap) zipper
+              Left _ -> ChanTree.append p v' zipper
 
           z          = ChanTree.zipper $ channels v
           nodes      = splitOn "." descriptor

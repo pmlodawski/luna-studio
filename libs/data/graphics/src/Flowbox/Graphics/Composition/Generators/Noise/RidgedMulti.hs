@@ -11,7 +11,6 @@ module Flowbox.Graphics.Composition.Generators.Noise.RidgedMulti where
 import qualified Data.Array.Accelerate     as A
 import           Data.Bits                 ((.&.))
 import qualified Math.Coordinate.Cartesian as Cartesian
-import           Math.Space.Space          (Grid)
 
 import Flowbox.Graphics.Composition.Generators.Noise.Internal
 import Flowbox.Graphics.Composition.Generators.Structures     hiding (value)

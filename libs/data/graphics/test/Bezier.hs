@@ -7,6 +7,7 @@
 {-# LANGUAGE CPP                 #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 
 module Main where
 
@@ -21,8 +22,6 @@ import Data.Array.Accelerate.Interpreter (run)
 import Math.Coordinate.Cartesian (Point2(..))
 import Flowbox.Geom2D.CubicBezier
 import Flowbox.Geom2D.CubicBezier.Solve            as Cubic
-import Flowbox.Geom2D.Accelerate.Basic
-import Flowbox.Geom2D.Accelerate.CubicBezier       as CubicA
 import Flowbox.Geom2D.Accelerate.CubicBezier.Solve as CubicA
 import Flowbox.Math.Function.Accelerate.BSpline
 import Flowbox.Prelude
