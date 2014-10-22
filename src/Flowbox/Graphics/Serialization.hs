@@ -24,6 +24,7 @@ import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
 import           Data.Map.Lazy
 
+import           Flowbox.Data.Mode                    (Mode)
 import           Flowbox.Data.Serialization           (Serializable (..), mkValue)
 import qualified Flowbox.Graphics.Image.Channel       as I
 import qualified Flowbox.Graphics.Image.Image         as Img
@@ -59,7 +60,7 @@ instance MatType Bool where
 instance ( ByteStrings (A.EltRepr a) ~ ((), ByteString)
          , A.Elt a, MatType a
          ) => Serializable (M.Matrix2 a) MatrixData.MatrixData where
-    serialize _ (M.Raw arr) = do
+    serialize (M.Raw arr) _ = do
         ((), mat) <- toByteString arr
         let M.Z M.:. h M.:. w = A.arrayShape arr
 
@@ -69,45 +70,45 @@ instance ( ByteStrings (A.EltRepr a) ~ ((), ByteString)
                                               (getMatType (undefined :: a)) -- precision
     serialize _ _ = return Nothing
 
-    toValue mode a = liftM (mkValue MatrixData.data' Value.Matrix) $ serialize mode a
+    toValue a mode = liftM (mkValue MatrixData.data' Value.Matrix) $ serialize a mode
 
-    compute _ = M.compute serializationBackend
+    compute a _ = M.compute serializationBackend a
 
-serializeChan :: I.View v => v -> String -> IO (Maybe MatrixData.MatrixData)
-serializeChan v x = case join . hush . I.get v $ x of
+serializeChan :: I.View v => v -> String -> Mode -> IO (Maybe MatrixData.MatrixData)
+serializeChan v x mode = case join . hush . I.get v $ x of
     Just c -> case c of
-        I.ChannelFloat _ (I.FlatData mat) -> serialize mat
-        I.ChannelInt   _ (I.FlatData mat) -> serialize mat
-        I.ChannelBit   _ (I.FlatData mat) -> serialize mat
+        I.ChannelFloat _ (I.FlatData mat) -> serialize mat mode
+        I.ChannelInt   _ (I.FlatData mat) -> serialize mat mode
+        I.ChannelBit   _ (I.FlatData mat) -> serialize mat mode
     Nothing -> return Nothing
 
 instance Serializable I.RGBA ViewData.ViewData where
-    serialize _ v = do
-        red   <- serializeChan v "r" -- TODO [KM]: Change to rgba.r etc..
-        green <- serializeChan v "g"
-        blue  <- serializeChan v "b"
-        alpha <- serializeChan v "a"
+    serialize v mode = do
+        red   <- serializeChan v "r" mode -- TODO [KM]: Change to rgba.r etc..
+        green <- serializeChan v "g" mode
+        blue  <- serializeChan v "b" mode
+        alpha <- serializeChan v "a" mode
         return $ liftM4 ViewData.ViewData red green blue (Just alpha)
 
-    toValue mode a = liftM (mkValue ViewData.data' Value.View) $ serialize mode a
-    compute _      = I.map $ I.compute serializationBackend
+    toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
+    compute a _    = I.map (I.compute serializationBackend) a
 
 instance Serializable I.RGB ViewData.ViewData where
-    serialize _ v = do
-        red   <- serializeChan v "r"
-        green <- serializeChan v "g"
-        blue  <- serializeChan v "b"
+    serialize v mode = do
+        red   <- serializeChan v "r" mode
+        green <- serializeChan v "g" mode
+        blue  <- serializeChan v "b" mode
         return $ liftM4 ViewData.ViewData red green blue Nothing
 
-    toValue mode a = liftM (mkValue ViewData.data' Value.View) $ serialize mode a
-    compute _      = I.map $ I.compute serializationBackend
+    toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
+    compute a _    = I.map (I.compute serializationBackend) a
 
 instance Serializable (Img.Image I.RGB) ViewData.ViewData where
-    serialize _ (Img.Image views _) = serialize (snd $ findMin views)
-    toValue mode a = liftM (mkValue ViewData.data' Value.View) $ serialize mode a
-    compute _ = Img.map $ I.map $ I.compute serializationBackend
+    serialize (Img.Image views _) = serialize (snd $ findMin views)
+    toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
+    compute a _    = Img.map (I.map $ I.compute serializationBackend) a
 
 instance Serializable (Img.Image I.RGBA) ViewData.ViewData where
-    serialize _ (Img.Image views _) = serialize (snd $ findMin views)
-    toValue mode a = liftM (mkValue ViewData.data' Value.View) $ serialize mode a
-    compute _      = Img.map $ I.map $ I.compute serializationBackend
+    serialize (Img.Image views _) = serialize (snd $ findMin views)
+    toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
+    compute a _    = Img.map (I.map $ I.compute serializationBackend) a
