@@ -12,3 +12,6 @@ data Expr = EVar VarID
           | EApp Expr  Expr
           | EAbs VarID Expr
           | ELet VarID Expr Expr
+
+instance Show Expr where
+  show _ = "<expr>"

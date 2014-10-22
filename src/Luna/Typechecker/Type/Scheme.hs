@@ -22,7 +22,7 @@ instance Types Scheme where
   ftv   = error "Type.Scheme : Types Scheme : ftv"
 
 instance Show Scheme where
-  show (Scheme vars t) = "<scheme>"
+  show (Scheme _ _) = "<scheme>"
 
 
 instantiate :: Scheme -> TILogger Type
