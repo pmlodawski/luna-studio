@@ -3,11 +3,12 @@ module Luna.Typechecker.Assumptions (
     mkAssumptions, searchAssumptions, expandAssumptions
   ) where
 
-import Luna.Typechecker.IDs
-import Luna.Typechecker.Substitution
-import Luna.Typechecker.Type.Scheme
+import Luna.Typechecker.IDs          (VarID)
+import Luna.Typechecker.Substitution (Types(..))
+import Luna.Typechecker.Type.Scheme  (Scheme)
 
 import qualified Data.Map.Strict as Map
+
 
 
 --data Assump = VarID :>: Scheme

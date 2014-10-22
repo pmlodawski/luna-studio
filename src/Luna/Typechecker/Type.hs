@@ -5,9 +5,11 @@ module Luna.Typechecker.Type (
     instantiate
   ) where
 
-import Luna.Typechecker.IDs
-import Luna.Typechecker.Type.Type
-import Luna.Typechecker.Type.Scheme
+import Luna.Typechecker.IDs         (TyID(..))
+import Luna.Typechecker.Type.Type   (Type(..),Tyvar(..),Tycon(..))
+import Luna.Typechecker.Type.Scheme (Scheme(..),instantiate)
+
+
 
 tChar, tDouble, tInt, tString :: Type
 tChar   = TConst (Tycon (TyID "Char"))

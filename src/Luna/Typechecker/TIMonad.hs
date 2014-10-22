@@ -1,17 +1,18 @@
 module Luna.Typechecker.TIMonad (
     TI(..),
     TCLoggerT, TILogger,
-    module Logger,
     runTILogger, getNextID
   ) where
 
 
-import Luna.Typechecker.Substitution
-import Logger
+import Luna.Typechecker.Substitution (Subst)
 
-import Control.Applicative (Applicative(..))
-import Control.Monad (ap)
+import Logger (LoggerT(..),Log)
+
+import Control.Applicative
+import Control.Monad
 import Data.Monoid
+
 
 
 type TCLoggerT = LoggerT String
