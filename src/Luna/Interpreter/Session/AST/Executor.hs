@@ -161,7 +161,6 @@ data VarType = Lit    String
 
 varType :: StringExpr -> VarType
 varType  StringExpr.Id                 = Id
-varType  StringExpr.Grouped            = Id
 varType  StringExpr.Tuple              = Tuple
 varType (StringExpr.Native name      ) = Native name
 varType (StringExpr.Expr   []        ) = Prelude.error "varType : empty expression"
