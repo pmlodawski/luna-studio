@@ -91,7 +91,6 @@ parseExprNode nodeID nodeExpr = case nodeExpr of
         StringExpr.Tuple          -> parseTupleNode   nodeID
         StringExpr.Pattern pat    -> parsePatNode     nodeID pat
         StringExpr.Native  native -> parseNativeNode  nodeID native
-        StringExpr.Grouped        -> parseGroupedNode nodeID
         _                         -> parseAppNode     nodeID $ StringExpr.toString strExpr
     NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
 
@@ -198,7 +197,6 @@ parseTupleNode nodeID = do
     addExpr nodeID e
 
 
-
 parseGroupedNode :: Node.ID -> GPPass ()
 parseGroupedNode nodeID = do
     [src] <- State.getNodeSrcs nodeID
@@ -220,13 +218,14 @@ parseASTExprNode nodeID = addExpr nodeID . IDFixer.clearExprIDs IDFixer.unknownI
 
 
 addExpr :: Node.ID -> Expr -> GPPass ()
-addExpr nodeID e = do
+addExpr nodeID expr' = do
     graph <- State.getGraph
 
     flags <- State.getFlags nodeID
     let folded         = Flags.isSet' flags $ view Flags.astFolded
         assignment     = Flags.isSet' flags $ view Flags.astAssignment
         defaultNodeGen = Flags.isSet' flags $ view Flags.defaultNodeGenerated
+        grouped        = Flags.isSet' flags $ view Flags.grouped
 
     let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
         assignmentCount = length $ List.filter assignmentEdge
@@ -235,18 +234,22 @@ addExpr nodeID e = do
         connectedToOutput = List.any (Node.isOutputs . view _2)
                           $ Graph.lsuclData graph nodeID
 
+        expr = if grouped
+            then Expr.Grouped IDFixer.unknownID expr'
+            else expr'
+    
     if (folded && assignmentCount == 1) || defaultNodeGen
-        then State.addToNodeMap (nodeID, Port.All) e
+        then State.addToNodeMap (nodeID, Port.All) expr
         else if assignment || assignmentCount > 1
             then do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName
-                        a = Expr.Assignment IDFixer.unknownID p e
+                        a = Expr.Assignment IDFixer.unknownID p expr
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
-            else do State.addToNodeMap (nodeID, Port.All) e
+            else do State.addToNodeMap (nodeID, Port.All) expr
                     unless (connectedToOutput || assignmentCount == 1 ) $
-                        State.addToBody e
+                        State.addToBody expr
 
 
 isOperator :: String -> Bool

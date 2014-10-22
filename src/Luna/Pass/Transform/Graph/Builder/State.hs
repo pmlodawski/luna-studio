@@ -197,3 +197,7 @@ getGraphFolded nodeID = do
     if foldSetting
         then flip Flags.isSet' (view Flags.graphFolded) <$> getFlags nodeID
         else return False
+
+
+setGrouped :: Node.ID -> GBPass ()
+setGrouped = modifyFlags (Flags.grouped .~ Just True) 
