@@ -6,16 +6,19 @@ module Luna.Typechecker where
 --  ) where
 --import Luna.Typechecker.TypecheckClass ()
 
-import Luna.Typechecker.AST
-import Luna.Typechecker.Substitution
-import Luna.Typechecker.TIMonad
-import Luna.Typechecker.IDs
-import Luna.Typechecker.Type
-import Luna.Typechecker.TypeEnv
-import Luna.Typechecker.TypecheckClass
-import Logger
+import Luna.Typechecker.AST            (Expr(..))
+import Luna.Typechecker.Substitution   ()
+import Luna.Typechecker.TIMonad        ()
+import Luna.Typechecker.IDs            (TyID(..),VarID(..))
+import Luna.Typechecker.Type           (Scheme(..),Type(..),Tyvar(..),mkTyFun)
+import Luna.Typechecker.TypeEnv        ()
+import Luna.Typechecker.TypecheckClass ()
+
+import Logger ()
 
 import Control.Applicative
+
+
 
 -- ------------------------------------------------------------
 -- ██╗   ██╗████████╗██╗██╗     ███████╗

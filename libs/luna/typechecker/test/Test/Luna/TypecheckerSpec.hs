@@ -10,9 +10,6 @@ import Logger
 
 import Test.Hspec
 
-import Control.Monad
-import Data.Functor.Identity
-
 
 
 shouldInferenceSatisfy :: (Inference a) => a -> [(Subst, Type) -> Expectation] -> Expectation

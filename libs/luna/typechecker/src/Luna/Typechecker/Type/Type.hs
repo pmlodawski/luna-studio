@@ -2,8 +2,8 @@ module Luna.Typechecker.Type.Type (
     Type(..), Tyvar(..), Tycon(..)
   ) where
 
-
 import Luna.Typechecker.IDs (TyID)
+
 
 
 data Type = TVar Tyvar

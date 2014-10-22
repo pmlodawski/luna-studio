@@ -2,9 +2,9 @@ module Luna.Typechecker.AST.Expr (
     Expr(..)
   ) where
 
-
-import Luna.Typechecker.IDs (VarID)
+import Luna.Typechecker.IDs     (VarID)
 import Luna.Typechecker.AST.Lit (Lit)
+
 
 
 data Expr = EVar VarID
