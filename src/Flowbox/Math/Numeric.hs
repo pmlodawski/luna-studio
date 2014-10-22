@@ -13,7 +13,7 @@ module Flowbox.Math.Numeric where
 import qualified Data.Array.Accelerate as A
 
 import Flowbox.Graphics.Utils.Accelerate
-import Flowbox.Prelude                   hiding (head, last)
+import Flowbox.Prelude                   hiding (head, last, pre, ignored, index)
 
 
 

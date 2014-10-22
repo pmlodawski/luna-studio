@@ -12,12 +12,10 @@ module Flowbox.Graphics.Composition.Generators.Rasterizer where
 
 import Flowbox.Prelude                                    as P
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Sampler
 import Flowbox.Graphics.Composition.Generators.Transform
 import Flowbox.Math.Matrix                                as M
-import Flowbox.Graphics.Utils
 
-import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate     as A
 import           Math.Space.Space
 import           Math.Coordinate.Cartesian (Point2(..))
 import           Data.Monoid
@@ -25,8 +23,8 @@ import           Data.Monoid
 
 
 rasterizer :: Elt e => DiscreteGenerator (Exp e) -> Matrix2 e
-rasterizer (Generator (Grid width height) gen) = generate (A.index2 height width) wrapper
-    where wrapper (A.unlift -> Z :. y :. x :: EDIM2) = gen (Point2 x y)
+rasterizer (Generator (Grid width' height') gen) = generate (A.index2 height' width') wrapper
+    where wrapper (A.unlift . A.unindex2 -> (y, x)) = gen (Point2 x y)
 
 gridRasterizer :: forall a e . (Elt e, Elt a, IsFloating a)
                => Grid (Exp Int) -> Grid (Exp Int) 
@@ -35,7 +33,7 @@ gridRasterizer :: forall a e . (Elt e, Elt a, IsFloating a)
 gridRasterizer space grid sampler generators = generate (A.index2 (height space) (width space)) wrapper
     where cell = div <$> space <*> grid
           rasterized = mconcat $ P.map (flatten . rasterizer . sampler . scale cell) generators :: Vector e
-          wrapper (A.unlift -> Z :. y :. x :: EDIM2) = rasterized M.!! (i `mod` size rasterized)
+          wrapper (A.unlift . A.unindex2 -> (y, x)) = rasterized M.!! (i `mod` size rasterized)
               where i = (cw * ch) * gridi + celli
                     Grid cw ch = cell
                     gridi = x `div` cw + (height grid - y `div` ch - 1) * width grid

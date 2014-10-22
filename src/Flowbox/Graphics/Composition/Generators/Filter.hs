@@ -19,9 +19,8 @@ import Flowbox.Graphics.Composition.Generators.Stencil
 import Flowbox.Graphics.Composition.Generators.Matrix
 
 import           Flowbox.Graphics.Prelude          as P hiding (filter)
-import           Flowbox.Math.Matrix               as M hiding (stencil)
-import qualified Flowbox.Math.Matrix               as M (stencil)
-import           Data.Array.Accelerate             as A hiding (filter, stencil, constant)
+import           Flowbox.Math.Matrix               as M hiding (stencil, size)
+import           Data.Array.Accelerate             as A hiding (filter, stencil, constant, scatter, size)
 
 import Math.Space.Space
 import Math.Coordinate.Cartesian                (Point2(..))
@@ -40,7 +39,7 @@ instance (Condition a, Ord a, Num a) => Num (Filter a) where
     negate (Filter w a) = Filter w $ \t -> negate (a t)
     abs (Filter w a)    = Filter w $ \t -> abs (a t)
     signum (Filter w a) = Filter w $ \t -> signum (a t)
-    fromInteger x       = Filter 1 $ \t -> fromInteger x
+    fromInteger x       = Filter 1 $ const $ fromInteger x
 
 -- == Helper functions ==
 
