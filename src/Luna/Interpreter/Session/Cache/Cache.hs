@@ -13,7 +13,6 @@ import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
 
 import           Flowbox.Control.Error
-import           Flowbox.Data.MapForest                      (MapForest)
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.Source.Location                     (loc)
@@ -52,7 +51,7 @@ dump callPointPath mhash = do
 
 
 dumpAll :: Session ()
-dumpAll = logger trace =<< MapForest.draw <$> cached
+dumpAll = logger trace =<< MapForest.draw <$> Env.getCached
 
 
 isDirty :: CallPointPath -> Session Bool
@@ -89,20 +88,20 @@ setRecentVarName varName = modifyCacheInfo (CacheInfo.recentVarName .~ varName)
 
 modifyCacheInfo :: (CacheInfo -> CacheInfo) -> CallPointPath ->  Session ()
 modifyCacheInfo f callPointPath = onCacheInfo
-    (\cacheInfo -> modify (Env.cached %~ MapForest.insert callPointPath (f cacheInfo)))
+    (Env.cachedInsert callPointPath . f)
     (return ())
     callPointPath
 
 
 onCacheInfo :: (CacheInfo -> Session a) -> Session a -> CallPointPath -> Session a
 onCacheInfo f alternative callPointPath =
-    Maybe.maybe alternative f . MapForest.lookup callPointPath =<< cached
+    Maybe.maybe alternative f . MapForest.lookup callPointPath =<< Env.getCached
 
 
 put :: CallDataPath -> [VarName] -> VarName -> Session ()
 put callDataPath predVarNames varName = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-    mcacheInfo <- lookupCacheInfoMaybe callPointPath
+    mcacheInfo <- Env.cachedLookup callPointPath
     oldStatus  <- status callPointPath
     let updatedStatus = if oldStatus == CacheStatus.NonCacheable
                             then oldStatus
@@ -113,43 +112,35 @@ put callDataPath predVarNames varName = do
                                  (last callDataPath ^. CallData.parentBC)
                                  updatedStatus varName dependencies
 
-    modify (Env.cached %~ MapForest.insert callPointPath cacheInfo)
+    Env.cachedInsert callPointPath cacheInfo
 
 
 deleteNode :: Library.ID -> Node.ID -> Session ()
 deleteNode libraryID nodeID = do
     let matchNode k _ = last k == CallPoint libraryID nodeID
-    matching <- MapForest.find matchNode <$> cached
+    matching <- MapForest.find matchNode <$> Env.getCached
     mapM_ delete' matching
 
 
 delete :: CallPointPath -> Session ()
 delete callPointPath = do
     logger info $ "Cleaning cached value: " ++ show callPointPath
-    cacheInfo <- lookupCacheInfo callPointPath
+    cacheInfo <- getCacheInfo callPointPath
     delete' (callPointPath, cacheInfo)
 
 
 delete' :: (CallPointPath, CacheInfo) -> Session ()
 delete' (callPointPath, cacheInfo) = do
     Free.freeCacheInfo cacheInfo
-    modify $ Env.cached %~ MapForest.delete callPointPath
+    Env.cachedDelete callPointPath
 
 
 deleteAll :: Session ()
 deleteAll = do
     logger info "Cleaning all cached values"
-    mapM_ delete' =<< MapForest.toList <$> cached
+    mapM_ delete' =<< MapForest.toList <$> Env.getCached
 
 
-cached :: Session (MapForest CallPoint CacheInfo)
-cached = gets (view Env.cached)
-
-
-lookupCacheInfoMaybe :: CallPointPath -> Session (Maybe CacheInfo)
-lookupCacheInfoMaybe callPointPath = MapForest.lookup callPointPath <$> cached
-
-
-lookupCacheInfo :: CallPointPath -> Session CacheInfo
-lookupCacheInfo callPointPath = lookupCacheInfoMaybe callPointPath
+getCacheInfo :: CallPointPath -> Session CacheInfo
+getCacheInfo callPointPath = Env.cachedLookup callPointPath
     <??&> Error.CacheError $(loc) (concat ["Object ", show callPointPath, " is not in cache."])
