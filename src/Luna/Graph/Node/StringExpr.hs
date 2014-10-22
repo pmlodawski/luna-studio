@@ -17,7 +17,6 @@ data StringExpr = Expr    { _string :: String }
                 | Get     { _string :: String }
                 | List
                 | Id
-                | Grouped
                 | Pattern { _string :: String }
                 | Native  { _string :: String }
                 deriving (Show, Eq, Read)
@@ -32,7 +31,6 @@ toString exprStr = case exprStr of
     Get     str -> "get " ++ str
     List        -> "List"
     Id          -> "id"
-    Grouped     -> "Grouped"
     Pattern str -> '=' : str
     Native  str -> str
 
@@ -42,7 +40,6 @@ fromString str = case str of
     "List"               -> List
     "Tuple"              -> Tuple
     "id"                 -> Id
-    "Grouped"            -> Grouped
     'g':'e':'t':' ':name -> Get     name
     '=':pat              -> Pattern pat
     '`':'`':'`':_        -> Native  str
