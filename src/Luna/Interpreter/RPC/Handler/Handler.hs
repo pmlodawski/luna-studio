@@ -54,16 +54,21 @@ logger = getLoggerIO $(moduleName)
 
 handlerMap :: Prefix -> HandlerMap Context SessionST
 handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
-    [ (Topic.interpreterSetProjectIDRequest    , respond Topic.update Interpreter.setProjectID    )
-    , (Topic.interpreterGetProjectIDRequest    , respond Topic.status Interpreter.getProjectID    )
-    , (Topic.interpreterSetMainPtrRequest      , respond Topic.update Interpreter.setMainPtr      )
-    , (Topic.interpreterGetMainPtrRequest      , respond Topic.status Interpreter.getMainPtr      )
-    , (Topic.interpreterRunRequest             , respond Topic.update Interpreter.run             )
-    , (Topic.interpreterWatchPointAddRequest   , respond Topic.update Interpreter.watchPointAdd   )
-    , (Topic.interpreterWatchPointRemoveRequest, respond Topic.update Interpreter.watchPointRemove)
-    , (Topic.interpreterWatchPointListRequest  , respond Topic.status Interpreter.watchPointList  )
-    , (Topic.interpreterValueRequest           , respond Topic.update Value.get                   )
-    , (Topic.interpreterPingRequest            , respond Topic.status Interpreter.ping            )
+    [ (Topic.interpreterSetProjectIDRequest         , respond Topic.update Interpreter.setProjectID    )
+    , (Topic.interpreterGetProjectIDRequest         , respond Topic.status Interpreter.getProjectID    )
+    , (Topic.interpreterSetMainPtrRequest           , respond Topic.update Interpreter.setMainPtr      )
+    , (Topic.interpreterGetMainPtrRequest           , respond Topic.status Interpreter.getMainPtr      )
+    , (Topic.interpreterRunRequest                  , respond Topic.update Interpreter.run             )
+    , (Topic.interpreterWatchPointAddRequest        , respond Topic.update Interpreter.watchPointAdd   )
+    , (Topic.interpreterWatchPointRemoveRequest     , respond Topic.update Interpreter.watchPointRemove)
+    , (Topic.interpreterWatchPointListRequest       , respond Topic.status Interpreter.watchPointList  )
+    , (Topic.interpreterValueRequest                , respond Topic.update Value.get                   )
+    , (Topic.interpreterPingRequest                 , respond Topic.status Interpreter.ping            )
+    , (Topic.interpreterSerializationModeDefaultGet , respond Topic.status Interpreter.getDefaultSerializationMode)
+    , (Topic.interpreterSerializationModeDefaultSet , respond Topic.update Interpreter.setDefaultSerializationMode)
+    , (Topic.interpreterSerializationModeGet        , respond Topic.status Interpreter.getSerializationMode       )
+    , (Topic.interpreterSerializationModeSet        , respond Topic.update Interpreter.setSerializationMode       )
+
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 

@@ -9,6 +9,7 @@ package generated.proto.interpreter;
 
 import "crumb.proto";
 import "data.proto";
+import "mode.proto";
 
 
 
@@ -57,8 +58,51 @@ message Interpreter {
         message List {
             message Request { }
             message Status {
-                required Request request = 1;
+                required Request       request     = 1;
                 repeated CallPointPath watchPoints = 2;
+            }
+        }
+    }
+    message SerializationMode {
+        message DefaultGet {
+            message Request { }
+            message Status {
+                required Request request = 1;
+                required generated.proto.mode.Mode mode = 2;
+            }
+        }
+        message DefaultSet {
+            message Request {
+                required generated.proto.mode.Mode mode = 1;
+            }
+            message Update {
+                required Request request = 1;
+            }
+        }
+        message Get {
+            message Request {
+                required CallPointPath callPointPath = 1;
+            }
+            message Status {
+                required Request request = 1;
+                optional generated.proto.mode.Mode mode = 2;
+            }
+        }
+        message Set {
+            message Request {
+                required CallPointPath    callPointPath = 1;
+                required generated.proto.mode.Mode mode = 2;
+            }
+            message Update {
+                required Request request = 1;
+            }
+        }
+        message Delete {
+            message Request {
+                required CallPointPath callPointPath = 1;
+            }
+            message Update {
+                required Request request = 1;
             }
         }
     }
