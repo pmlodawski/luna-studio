@@ -16,9 +16,9 @@ import           Flowbox.Source.Location                (loc)
 import           Luna.AST.Control.Crumb                 (Breadcrumbs)
 import qualified Luna.AST.Control.Crumb                 as Crumb
 import           Luna.Interpreter.Session.Data.DefPoint (DefPoint (DefPoint))
+import qualified Luna.Interpreter.Session.Env           as Env
 import qualified Luna.Interpreter.Session.Error         as Error
 import           Luna.Interpreter.Session.Session       (Session)
-import qualified Luna.Interpreter.Session.Session       as Session
 import qualified Luna.Lib.Lib                           as Library
 import qualified Luna.Pass.Analysis.NameResolver        as NameResolver
 
@@ -26,8 +26,8 @@ import qualified Luna.Pass.Analysis.NameResolver        as NameResolver
 
 fromName :: String -> Breadcrumbs -> Library.ID -> Session (Maybe DefPoint)
 fromName name parentBC libraryID = do
-    libManager <- Session.getLibManager
-    results <- Session.runPass $(loc) $ NameResolver.run name parentBC libraryID libManager
+    libManager <- Env.getLibManager
+    results    <- Env.runPass $(loc) $ NameResolver.run name parentBC libraryID libManager
     case results of
         []            -> return Nothing
         [(libID, bc)] -> case last bc of

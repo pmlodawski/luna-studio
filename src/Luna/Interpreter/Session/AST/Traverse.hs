@@ -34,9 +34,9 @@ import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import qualified Luna.Interpreter.Session.Data.CallPoint    as CallPoint
 import           Luna.Interpreter.Session.Data.DefPoint     (DefPoint)
+import qualified Luna.Interpreter.Session.Env               as Env
 import qualified Luna.Interpreter.Session.Error             as Error
 import           Luna.Interpreter.Session.Session           (Session)
-import qualified Luna.Interpreter.Session.Session           as Session
 
 
 
@@ -133,7 +133,7 @@ globalSuccessors prevCallDataPath (nodeID, node           , edge) = do
     case mdefPoint of
         Nothing       -> return [callDataPath]
         Just defPoint -> do
-            (graph, defID) <- Session.getGraph defPoint
+            (graph, defID) <- Env.getGraph defPoint
             inputs         <- List.find (Node.isInputs . snd) (Graph.labNodes graph)
                                 <??> Error.GraphError $(loc) "cannot find inputs node"
             let succs = List.filter (Edge.match edge . view _3) $ Graph.lsucl graph $ fst inputs
