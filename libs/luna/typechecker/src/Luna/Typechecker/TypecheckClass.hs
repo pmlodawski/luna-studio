@@ -1,15 +1,17 @@
 module Luna.Typechecker.TypecheckClass (
-    TCLoggerT, Inference(..)
+    Inference(..)
   ) where
 
-import Luna.Typechecker.AST
-import Luna.Typechecker.Substitution
-import Luna.Typechecker.Type
-import Luna.Typechecker.TypeEnv
-import Luna.Typechecker.TIMonad
-import Luna.Typechecker.Unification
+import Luna.Typechecker.AST          (Expr(..),Lit(..))
+import Luna.Typechecker.Substitution (Subst,Types(..))
+import Luna.Typechecker.Type         (Scheme(..),Type,Tyvar(..),instantiate,mkTyFun,tChar,tDouble,tInt,tString)
+import Luna.Typechecker.TypeEnv      (TypeEnv,expandTypeEnv,getTypeEnv)
+import Luna.Typechecker.TIMonad      (TILogger)
+import Luna.Typechecker.Unification  (mgu)
 
-import Luna.Typechecker.RefactorMePlease -- don't say nothing
+import Luna.Typechecker.RefactorMePlease (mkTyID) -- don't say nothing
+
+import Logger (err,functionResult,trace)
 
 import Data.List
 import Data.Monoid
