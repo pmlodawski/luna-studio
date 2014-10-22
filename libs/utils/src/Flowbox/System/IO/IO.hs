@@ -4,14 +4,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.System.IO.IO(
-        writeFile
-) where
+module Flowbox.System.IO.IO where
 
 import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath
 import           Prelude                (IO, String)
 import qualified Prelude
+
 
 
 writeFile :: UniPath -> String -> IO ()

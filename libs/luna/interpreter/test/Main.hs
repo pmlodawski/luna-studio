@@ -5,7 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes     #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
@@ -24,6 +25,7 @@ import qualified Luna.AST.Control.Focus                                        a
 import qualified Luna.AST.Control.Zipper                                       as Zipper
 import           Luna.AST.Module                                               (Module)
 import qualified Luna.AST.Module                                               as Module
+import qualified Luna.AST.Name                                                 as Name
 import qualified Luna.AST.Type                                                 as Type
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Data.Source                                              as Source
@@ -62,7 +64,7 @@ rootLogger = getLogger ""
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Test"
+logger = getLoggerIO $(moduleName)
 
 
 code :: Source
@@ -70,23 +72,28 @@ code = Source ["Main"] $ [r|
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
 
-def Int.+ a:
+def Int.add a:
     ```liftF2 (+) #{self} #{a}```
 
-def Int.> a:
+def + a b:
+    a.add b
+
+def > a b:
+    a.gt b
+
+def Int.gt a:
     ```liftF2 (>) #{self} #{a}```
 
 def Int.inc:
     self + 1
 
 def main:
-    #print $ if 1 > 2: 5
-    #        else: 6
+    print $ 2 + 2.inc.inc
     print $ 1 > 2
     v = Vector 1 2 3
     print $ v
@@ -97,23 +104,28 @@ code2 = Source ["Main"] $ [r|
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
 
-def Int.+ a:
+def Int.add a:
     ```liftF2 (+) #{self} #{a}```
 
-def Int.> a:
+def + a b:
+    a.add b
+
+def > a b:
+    a.gt b
+
+def Int.gt a:
     ```liftF2 (>) #{self} #{a}```
 
 def Int.inc:
     self + 1
 
 def main:
-    #print $ if 1 > 2: 5
-    #        else: 6
+    print $ 2 + 2.inc.inc
     print $ 3 > 2
     v = Vector 1 2 3
     print $ v
@@ -146,20 +158,20 @@ main1 = do
     (libManager2, _    ) <- readSource code2
 
     let env = Env.mk libManager (Just 0)
-                (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
+                (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
                 (curry $ curry print)
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
     result <- Session.run cfg env [] $ do
-        Session.addReload libID Reload.ReloadLibrary
+        Env.addReload libID Reload.ReloadLibrary
         Executor.processMain
-        print =<< Value.getIfReady [CallPoint libID 54]
+        print =<< Value.getIfReady [CallPoint libID 92]
         putStrLn "--------- 1"
         Executor.processMain
         putStrLn "========= 1"
 
         Cache.dumpAll
-        Invalidate.modifyNode libID 54
+        Invalidate.modifyNode libID 92
         Cache.dumpAll
 
         Executor.processMain
@@ -168,8 +180,8 @@ main1 = do
 
         putStrLn "========= ready ==========1="
         Cache.dumpAll
-        Session.setLibManager libManager2
-        Invalidate.modifyNode libID 54
+        Env.setLibManager libManager2
+        Invalidate.modifyNode libID 92
         putStrLn "========= modified =======2="
         Cache.dumpAll
         putStrLn "========= running ========3="
@@ -177,7 +189,7 @@ main1 = do
         putStrLn "========= finished =======4="
         Cache.dumpAll
 
-        print =<< Value.getIfReady [CallPoint libID 54]
+        print =<< Value.getIfReady [CallPoint libID 92]
     eitherStringToM $ fmapL Error.format result
 
 
@@ -194,9 +206,9 @@ main2 = do
                      . Zipper.focusBreadcrumbs bc
                      . Zipper.mk
     putStrLn $ ppShow ast
-    Just ast_main   <- Focus.getFunction <$> astGet [Crumb.Function "main"   []] ast
+    Just ast_main   <- Focus.getFunction <$> astGet [Crumb.Function (Name.single "main") []] ast
     Just ast_Vector <- Focus.getClass    <$> astGet [Crumb.Class    "Vector"   ] ast
-    Just ast_IntAdd <- Focus.getFunction <$> astGet [Crumb.Function "+" ["Int"]] ast
+    Just ast_IntAdd <- Focus.getFunction <$> astGet [Crumb.Function (Name.single "+") ["Int"]] ast
 
     logger info "Whole ast"
     printHsSrc ast

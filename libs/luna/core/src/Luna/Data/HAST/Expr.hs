@@ -20,6 +20,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Tuple      { items :: [Expr]                                                          }
           | TupleP     { items :: [Expr]                                                          }
           | ListE      { items :: [Expr]                                                          }
+          | ListT      { item  :: Expr                                                            }
           | StringLit  { litval :: String                                                         }
           | Var        { name :: String                                                           }
           | VarE       { name :: String                                                           }
@@ -57,6 +58,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | CaseE      { expr :: Expr, matches :: [Expr]                                          }
           | Match      { pat :: Expr, matchBody :: Expr }
           | Comment    { comment :: Comment }
+          | ViewP      { name :: String, dst :: Expr} 
           | WildP
           | RecWildP
           | NOP

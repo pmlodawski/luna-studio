@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 module Luna.Interpreter.RPC.Handler.Cache where
 
 import Data.Int (Int32)
@@ -20,18 +21,19 @@ import           Luna.Interpreter.Proto.CallPointPath                   ()
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
+import qualified Luna.Interpreter.Session.Env                           as Env
 import           Luna.Interpreter.Session.Session                       (Session, SessionST)
-import qualified Luna.Interpreter.Session.Session                       as Session
+
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Cache"
+logger = getLoggerIO $(moduleName)
 
 --- helpers ---------------------------------------------------------------
 
 interpreterDo :: Int32 -> Session () -> RPC Context SessionST ()
 interpreterDo projectID op = do
-    activeProjectID <- liftSession Session.getProjectID
+    activeProjectID <- liftSession Env.getProjectID
     when (activeProjectID == decodeP projectID) $ liftSession op
 
 
@@ -63,3 +65,14 @@ modifyBreadcrumbs projectID libraryID tbc = do
 modifyNode :: Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
 modifyNode projectID libraryID nodeID =
     interpreterDo projectID $ Invalidate.modifyNode (decodeP libraryID) (decodeP nodeID)
+
+
+modifyNodeSuccessors :: Int32 -> Int32 -> Gen.Breadcrumbs -> Int32 -> RPC Context SessionST ()
+modifyNodeSuccessors projectID libraryID tbc nodeID = do
+    bc <- decodeE tbc
+    interpreterDo projectID $ Invalidate.modifyNodeSuccessors (decodeP libraryID) bc (decodeP nodeID)
+
+
+deleteNode :: Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
+deleteNode projectID libraryID nodeID =
+    interpreterDo projectID $ Cache.deleteNode (decodeP libraryID) (decodeP nodeID)

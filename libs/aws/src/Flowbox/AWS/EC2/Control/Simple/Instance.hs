@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.AWS.EC2.Control.Simple.Instance where
 
@@ -27,7 +28,7 @@ import           Flowbox.System.Log.Logger           hiding (info)
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.EC2.Control.Simple.Instance"
+logger = getLoggerIO $(moduleName)
 
 
 findInstances :: EC2Resource m => EC2 m [Types.Instance]

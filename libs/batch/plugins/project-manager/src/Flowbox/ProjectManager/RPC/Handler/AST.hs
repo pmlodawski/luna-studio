@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.AST where
 
 import qualified Flowbox.Batch.Handler.AST                                                         as BatchAST
@@ -55,11 +56,12 @@ import           Luna.Data.Serialize.Proto.Conversion.Crumb                     
 import           Luna.Data.Serialize.Proto.Conversion.Expr                                         ()
 import           Luna.Data.Serialize.Proto.Conversion.Focus                                        ()
 import           Luna.Data.Serialize.Proto.Conversion.Module                                       ()
+import           Luna.Data.Serialize.Proto.Conversion.Name                                         ()
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.AST"
+logger = getLoggerIO $(moduleName)
 
 -------- public api -------------------------------------------------
 
@@ -104,7 +106,7 @@ functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectI
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     addedFunction <- BatchAST.addFunction newFunction bcParent libID projectID
-    let newBC = bcParent ++ [Crumb.Function (addedFunction ^. Expr.name) (addedFunction ^. Expr.path)]
+    let newBC = bcParent ++ [Crumb.Function (addedFunction ^?! Expr.fname) (addedFunction ^. Expr.path)]
     updateNo <- Batch.getUpdateNo
     return $ AddFunction.Update request (encode addedFunction) (encode newBC) updateNo
 
@@ -210,8 +212,8 @@ dataMethodsModify request@(ModifyDataMethods.Request tmethods tbc tlibID tprojec
 functionNameModify :: ModifyFunctionName.Request -> RPC Context IO ModifyFunctionName.Update
 functionNameModify request@(ModifyFunctionName.Request tname tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
-    let name      = decodeP tname
-        libID     = decodeP tlibID
+    name <- decodeE tname
+    let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchAST.updateFunctionName name bc libID projectID
     updateNo <- Batch.getUpdateNo

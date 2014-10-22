@@ -25,10 +25,11 @@ import qualified Data.Array.Accelerate       as A
 import           Data.Array.Accelerate.Tuple (IsTuple, TupleRepr, fromTuple, toTuple)
 import           Data.Array.Accelerate.Type  (IsScalar)
 
+import           Flowbox.Graphics.Composition.Generators.Structures
 import           Flowbox.Graphics.Color
-import qualified Flowbox.Graphics.Utils as U
-import           Flowbox.Math.Matrix    as M
-import           Flowbox.Prelude        as P
+import qualified Flowbox.Graphics.Utils                             as U
+import           Flowbox.Math.Matrix                                as M hiding (canvas)
+import           Flowbox.Prelude                                    as P
 
 
 
@@ -44,19 +45,19 @@ contrast v x = (x - 0.5) * v + 0.5
 data Colorspace = Linear | Cineon
 
 exposure :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
-exposure blackpoint ex pix = blackpointConvert blackpoint (2 ** ex * (inverseBlackpointConvert blackpoint pix))
+exposure blackpoint ex pix = blackpointConvert blackpoint (2 ** ex * inverseBlackpointConvert blackpoint pix)
 
 blackpointConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
-blackpointConvert blackpoint pix = pointsConvert blackpoint 1.0 pix
+blackpointConvert blackpoint = pointsConvert blackpoint 1.0
 
 inverseBlackpointConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
-inverseBlackpointConvert lift pix = inversePointsConvert lift 1.0 pix
+inverseBlackpointConvert lift = inversePointsConvert lift 1.0
 
 whitepointConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
-whitepointConvert whitepoint pix = pointsConvert 0.0 whitepoint pix
+whitepointConvert = pointsConvert 0.0
 
 inverseWhitepointConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a
-inverseWhitepointConvert gain pix = inversePointsConvert 0.0 gain pix
+inverseWhitepointConvert = inversePointsConvert 0.0
 
 pointsConvert :: (Elt a, IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
 pointsConvert blackpoint whitepoint pix = (pix - blackpoint) / (whitepoint - blackpoint)
@@ -121,7 +122,7 @@ power range@(U.Range a' b') rolloff x =
     in A.cond (x `inRange` range) 1
        $ A.cond (x `inRange` rLeft) (rLeftEquation x)
        $ A.cond (x `inRange` rRight) (rRightEquation x)
-       $ 0
+       0
 
 inRange :: (Elt a, IsScalar a) => Exp a -> U.Range (Exp a) -> Exp Bool
 inRange val (U.Range a b) = val A.>=* a A.&&* val A.<=* b
@@ -141,13 +142,13 @@ cyclicPower (U.Range a' b') rolloff x =
         rRightEquation val = A.cond (frR A./=* 0) (1 - fxR val / frR) 1
 
         fxL val = U.frac $ val - tL
-        frL = U.frac $ a - tL
+        frL     = U.frac $ a - tL
 
         fxR val = U.frac $ val - tR
-        frR = U.frac $ rolloff -- == b+r - tR == b+r - b == r
+        frR     = U.frac rolloff -- == b+r - tR == b+r - b == r
 
-        tL = U.frac $ a - rolloff
-        tR = U.frac $ b
+        tL      = U.frac $ a - rolloff
+        tR      = U.frac b
     in check x (a,b) A.? (1,
        check x (A.unlift rLeft) A.? (rLeftEquation x,
        check x (A.unlift rRight) A.? (rRightEquation x, 0)))
@@ -199,14 +200,14 @@ type Mat4x4 a = (Vec4 a, Vec4 a, Vec4 a, Vec4 a)
 
 type family ColorMatrix (colorspace :: * -> *) t :: *
 
-type instance ColorMatrix CMY    t = Mat3x3 t
-type instance ColorMatrix CMYK   t = Mat4x4 t
-type instance ColorMatrix HSL    t = Mat3x3 t
-type instance ColorMatrix HSV    t = Mat3x3 t
-type instance ColorMatrix RGB    t = Mat3x3 t
-type instance ColorMatrix RGBA   t = Mat4x4 t
-type instance ColorMatrix YUV    t = Mat3x3 t
-type instance ColorMatrix YUV_HD t = Mat3x3 t
+type instance ColorMatrix CMY      t = Mat3x3 t
+type instance ColorMatrix CMYK     t = Mat4x4 t
+type instance ColorMatrix HSL      t = Mat3x3 t
+type instance ColorMatrix HSV      t = Mat3x3 t
+type instance ColorMatrix RGB      t = Mat3x3 t
+type instance ColorMatrix RGBA     t = Mat4x4 t
+type instance ColorMatrix YCbCr    t = Mat3x3 t
+type instance ColorMatrix YCbCr_HD t = Mat3x3 t
 
 -- | Multiplies given matrix by colour.
 --   Matrix needs to be in a row major order and n x n size, where n is a number
@@ -218,7 +219,7 @@ type instance ColorMatrix YUV_HD t = Mat3x3 t
 --    (0, 0, 1))      1.0)      1.0)
 
 colorMatrix :: (Elt t, IsFloating t, MatrixMultiplication a) => ColorMatrix a t -> a (Exp t) -> a (Exp t)
-colorMatrix matrix colour = mmult matrix colour
+colorMatrix = mmult
 
 class MatrixMultiplication colorspace where
     mmult :: (Elt t, IsNum t) => ColorMatrix colorspace t -> colorspace (Exp t) -> colorspace (Exp t)
@@ -241,10 +242,10 @@ instance MatrixMultiplication RGB where
 instance MatrixMultiplication RGBA where
     mmult = mul4x4
 
-instance MatrixMultiplication YUV where
+instance MatrixMultiplication YCbCr where
     mmult = mul3x3
 
-instance MatrixMultiplication YUV_HD where
+instance MatrixMultiplication YCbCr_HD where
     mmult = mul3x3
 
 mul3x3 :: (IsTuple (a (Exp t)), Elt t, IsNum t, TupleRepr (a (Exp t)) ~ TupleRepr (Vec3 t)) => Mat3x3 t -> a (Exp t) -> a (Exp t)
@@ -262,3 +263,62 @@ mul4x4 ((a, b, c, d), (e, f, g, h), (i, j, k, l), (m, n, o, p)) pix = toTuple ((
           y' = e * x + f * y + g * z + h * w
           z' = i * x + j * y + k * z + l * w
           w' = m * x + n * y + o * z + p * w
+
+
+data LinearGenerator a = LinearGenerator { runBezier :: a -> a }
+
+crosstalk :: (A.Elt a, A.IsFloating a)
+          => LinearGenerator (A.Exp a) -- ^ red channel curve
+          -> LinearGenerator (A.Exp a) -- ^ green channel curve
+          -> LinearGenerator (A.Exp a) -- ^ blue channel curve
+          -> LinearGenerator (A.Exp a) -- ^ r->g curve
+          -> LinearGenerator (A.Exp a) -- ^ r->b curve
+          -> LinearGenerator (A.Exp a) -- ^ g->r curve
+          -> LinearGenerator (A.Exp a) -- ^ g->b curve
+          -> LinearGenerator (A.Exp a) -- ^ b->r curve
+          -> LinearGenerator (A.Exp a) -- ^ b->g curve
+          -> Generator x (A.Exp a)         -- ^ r channel
+          -> Generator x (A.Exp a)         -- ^ g channel
+          -> Generator x (A.Exp a)         -- ^ b channel
+          -> (Generator x (A.Exp a), Generator x (A.Exp a), Generator x (A.Exp a))
+crosstalk redBezier greenBezier blueBezier
+          redGreenBezier redBlueBezier
+          greenRedBezier greenBlueBezier
+          blueRedBezier blueGreenBezier
+          red green blue = (newRed, newGreen, newBlue)
+    where newRed   = Generator (canvas red)   $ \x ->
+              runGenerator redBeziered x + runGenerator greenToRed x + runGenerator blueToRed x
+
+          newGreen = Generator (canvas green) $ \x ->
+              runGenerator greenBeziered x + runGenerator redToGreen x + runGenerator blueToGreen x
+
+          newBlue  = Generator (canvas blue)  $ \x ->
+              runGenerator blueBeziered x + runGenerator redToBlue x + runGenerator greenToBlue x
+
+          redBeziered = Generator (canvas red) $ \x -> let redColor = runGenerator red x
+                                                       in  runBezier redBezier redColor
+
+          redToGreen = Generator (canvas red) $ \x -> let redColor = runGenerator red x
+                                                      in  runBezier redGreenBezier redColor
+
+          redToBlue = Generator (canvas red) $ \x -> let redColor = runGenerator red x
+                                                     in  runBezier redBlueBezier redColor
+
+          greenBeziered = Generator (canvas green) $ \x -> let greenColor = runGenerator green x
+                                                           in  runBezier greenBezier greenColor
+
+          greenToRed = Generator (canvas green) $ \x -> let greenColor = runGenerator green x
+                                                        in  runBezier greenRedBezier greenColor
+
+          greenToBlue = Generator (canvas green) $ \x -> let greenColor = runGenerator green x
+                                                         in  runBezier greenBlueBezier greenColor
+
+          blueBeziered = Generator (canvas blue) $ \x -> let blueColor = runGenerator blue x
+                                                         in  runBezier blueBezier blueColor
+
+          blueToRed = Generator (canvas blue) $ \x -> let blueColor = runGenerator blue x
+                                                      in  runBezier blueRedBezier blueColor
+
+          blueToGreen = Generator (canvas blue) $ \x -> let blueColor = runGenerator blue x
+                                                        in  runBezier blueGreenBezier blueColor 
+

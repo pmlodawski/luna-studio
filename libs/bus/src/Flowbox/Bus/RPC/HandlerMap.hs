@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Bus.RPC.HandlerMap (
     module X,
@@ -31,7 +32,7 @@ import qualified Flowbox.Text.ProtocolBuffers as Proto
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.RPC.HandlerMap"
+logger = getLoggerIO $(moduleName)
 
 
 type Callback s m = (Proto.Serializable args, Proto.Serializable result)

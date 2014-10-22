@@ -49,7 +49,7 @@ addNode node bc libID projectID = do
         fixedNode = OutputName.fixEmpty node newID
         newGraph  = GraphView.insNode (newID, fixedNode) graph
     Batch.setGraphView (newGraph, propertyMap) bc libID projectID
-    unless (node ^. Node.expr == "displayP") $ Batch.safeInterpretLibrary libID projectID
+    Batch.safeInterpretLibrary libID projectID
     return newID
 
 

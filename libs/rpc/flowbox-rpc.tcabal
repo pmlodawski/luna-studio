@@ -28,7 +28,7 @@ Library
                   errors,
                   flowbox-utils,
                   mtl,
-                  protocol-buffers,
-                  protocol-buffers-descriptor,
+                  protocol-buffers-fork,
+                  protocol-buffers-descriptor-fork,
                   transformers,
                   zeromq4-haskell >= 0.6

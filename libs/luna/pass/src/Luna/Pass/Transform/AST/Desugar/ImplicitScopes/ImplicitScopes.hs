@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes where
 
@@ -27,10 +28,11 @@ import           Luna.Pass.Pass                                       (Pass)
 import qualified Luna.Pass.Pass                                       as Pass
 import           Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State (State)
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State as State
+import qualified Luna.AST.Name                                        as Name
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.ImplicitScopes.ImplicitScopes"
+logger = getLoggerIO $(moduleName)
 
 
 type DesugarPass result = Pass State result
@@ -45,33 +47,35 @@ desugar mod = (,) <$> desugarModule mod <*> State.getAstInfo
 
 
 desugarModule :: Module -> DesugarPass Module
-desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure mod
+desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure pure mod
 
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExpr ast = case ast of
+    Expr.FuncVar id name -> desugarExpr $ Expr.Var id $ view Name.base name
     Expr.Var id name -> do
         inf <- State.getAliasInfo
-        let aliasMap  = inf ^. AliasInfo.aliasMap
-            parentMap = inf ^. AliasInfo.parentMap
-            astMap    = inf ^. AliasInfo.astMap
+        let aliasMap  = inf ^. AliasInfo.alias
+            parentMap = inf ^. AliasInfo.parent
+            astMap    = inf ^. AliasInfo.ast
             mPid      = parentMap ^. at id
             mPAST     = (do pid <- mPid; astMap ^. at pid)
             mAlias    = aliasMap  ^. at id
             mAliasPid = (do pid <- mAlias; parentMap ^. at pid)
             mAliasAST = (do pid <- mAliasPid; astMap ^. at pid)
+            nameAcc   = Expr.VarAccessor name
         case mAliasAST of
             Nothing  -> logger error ("Cannot find parent AST for variable " ++ name ++ " [" ++ show id ++ "]") *> continue
             Just ast -> case ast of
-                AST.Module mod          -> Expr.Accessor id name <$> conInit
+                AST.Module mod          -> Expr.Accessor id nameAcc <$> conInit
                                            where conBase = Expr.Con <$> State.genID <*> pure (mod ^. Module.cls ^. Type.name)
                                                  conInit = Expr.App <$> State.genID <*> conBase <*> pure []
                 AST.Expr (Expr.Data {}) -> Expr.App <$> State.genID <*> expBase <*> pure []
-                                           where expBase = Expr.Accessor id name <$> selfVar
+                                           where expBase = Expr.Accessor id nameAcc <$> selfVar
                                                  selfVar = Expr.Var <$> State.genID <*> pure "self"
                 _                       -> continue
     _                -> continue
-    where continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
+    where continue  = Expr.traverseM desugarExpr pure desugarPat pure pure ast
 
 
 desugarPat :: Pat -> DesugarPass Pat

@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Flowbox.Config.Config where
 
@@ -20,7 +21,7 @@ import Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Config.Config"
+logger = getLoggerIO $(moduleName)
 
 
 data Config = Config      { root      :: Section
@@ -94,21 +95,21 @@ data Section = Root       { path :: String
              deriving (Show)
 
 
-ffsEnv :: String
-ffsEnv = "LUNAROOT"
+lunaRootEnv :: String
+lunaRootEnv = "LUNAROOT"
 
 
 load :: IO Config
 load = do
     logger debug "Loading Luna configuration"
-    cpath <- Exception.onException (Env.getEnv ffsEnv)
+    cpath <- Exception.onException (Env.getEnv lunaRootEnv)
            $ logger error ("Luna environment not initialized.")
-          *> logger error ("Environment variable '" ++ ffsEnv ++ "' not defined.")
+          *> logger error ("Environment variable '" ++ lunaRootEnv ++ "' not defined.")
           *> logger error ("Please run 'source <LUNA_INSTALL_PATH>/setup' and try again.")
 
     cfgFile <- Configurator.load [Configurator.Required $ cpath ++ "/config/flowbox.config"]
 
-    let readConf name = Exception.onException (fromJust =<< (Configurator.lookup cfgFile name :: IO (Maybe String)))
+    let readConf name = Exception.onException (fromJustM =<< (Configurator.lookup cfgFile name :: IO (Maybe String)))
                       $ logger error ("Error reading config variable '" ++ show name)
 
     --let readConfDefault val name = Configurator.lookupDefault val cfgFile name
@@ -168,9 +169,3 @@ load = do
                )
 
 -- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.flowbox - defaultowy config?)
-
-
-
-
-
-

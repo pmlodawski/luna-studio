@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Batch.Handler.AST where
 
@@ -26,6 +27,7 @@ import           Luna.AST.Expr                           (Expr)
 import qualified Luna.AST.Expr                           as Expr
 import           Luna.AST.Module                         (Module)
 import qualified Luna.AST.Module                         as Module
+import           Luna.AST.Name                           (Name)
 import           Luna.AST.Type                           (Type)
 import qualified Luna.AST.Type                           as Type
 import qualified Luna.Graph.PropertyMap                  as PropertyMap
@@ -38,7 +40,7 @@ import qualified Luna.Pass.Transform.AST.Shrink          as Shrink
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Batch.Handler.AST"
+logger = getLoggerIO $(moduleName)
 
 
 definitions :: Maybe Int -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Focus
@@ -54,6 +56,7 @@ addModule newModule bcParent libID projectID = astFocusOp bcParent libID project
     newFocus    <- case focus of
         Focus.Class    _ -> left "Cannot add module to a class"
         Focus.Function _ -> left "Cannot add module to a function"
+        Focus.Lambda   _ -> left "Cannot add module to a lambda"
         Focus.Module   m -> return $ Focus.Module $ Module.addModule fixedModule m
     return (newFocus, fixedModule))
 
@@ -65,6 +68,7 @@ addClass newClass bcParent libID projectID = astFocusOp bcParent libID projectID
     newFocus <- case focus of
         Focus.Class    c -> return $ Focus.Class $ Expr.addClass fixedClass c
         Focus.Function _ -> left "Cannot add class to a function"
+        Focus.Lambda   _ -> left "Cannot add class to a lambda"
         Focus.Module   m -> return $ Focus.Module $ Module.addClass fixedClass m
     return (newFocus, fixedClass))
 
@@ -76,6 +80,7 @@ addFunction newFunction bcParent libID projectID = astFocusOp bcParent libID pro
     newFocus <- case focus of
         Focus.Class    c -> return $ Focus.Class $ Expr.addMethod fixedFunction c
         Focus.Function _ -> left "Cannot add function to a function"
+        Focus.Lambda   _ -> left "Cannot add function to a lambda"
         Focus.Module   m -> return $ Focus.Module $ Module.addMethod fixedFunction m
     return (newFocus, fixedFunction))
 
@@ -145,9 +150,9 @@ updateDataMethods methods bc libID projectID = astClassFocusOp bc libID projectI
     return (m & Expr.methods .~ fixedMethods, ()))
 
 
-updateFunctionName :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+updateFunctionName :: Name -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 updateFunctionName name bc libID projectID = astFunctionFocusOp bc libID projectID (\m ->
-    return (m & Expr.name .~ name, ()))
+    return (m & Expr.fname .~ name, ()))
 
 
 updateFunctionPath :: [String] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
