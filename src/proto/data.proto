@@ -9,6 +9,8 @@ package generated.proto.data;
 
 import "enums-type.proto";
 
+
+
 message Value {
     enum Type {
         Error      = 13;
