@@ -3,8 +3,8 @@ module Luna.Typechecker.Substitution (
     removeSubstitution, addSubstitution, addSubstitutions
   ) where
 
-import Luna.Typechecker.IDs
-import Luna.Typechecker.Type.Type
+import Luna.Typechecker.IDs       (TyID)
+import Luna.Typechecker.Type.Type (Type(..),Tyvar)
 
 import Data.List
 import Data.Maybe
@@ -40,7 +40,7 @@ class Types t where
 
 instance Types Type where
   apply (Subst s) (TVar tyv) = fromMaybe (TVar tyv) (lookup tyv s)
-  apply s t = t
+  apply _ t = t
   ftv (TVar tyv) = [tyv]
   ftv (TConst _) = []
   ftv (TAp t1 t2) = ftv t1 `union` ftv t2

@@ -2,8 +2,8 @@ module Luna.Typechecker.AST.Lit (
     Lit(..)
   ) where
 
-
 import Text.Printf
+
 
 
 data Lit = LitChar   Char
