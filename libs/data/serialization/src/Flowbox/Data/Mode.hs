@@ -4,10 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Luna.Interpreter.Session.Env (
+module Flowbox.Data.Mode (
     module X,
+    def,
 ) where
 
-import Luna.Interpreter.Session.Env.Env   as X
-import Luna.Interpreter.Session.Env.State as X
+import Flowbox.Prelude
+import Generated.Proto.Mode.Mode as X
+
+
+instance Default Mode where
+    def = Mode Nothing

@@ -24,10 +24,12 @@ import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
 import qualified Luna.Interpreter.Session.Cache.Status       as Status
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
+import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
+
 
 
 logger :: LoggerIO
@@ -36,12 +38,12 @@ logger = getLoggerIO $(moduleName)
 
 getIfReady :: CallPointPath -> Session (Maybe Value)
 getIfReady callPointPath = do
-    cacheInfo <- Cache.lookupCacheInfo callPointPath
+    cacheInfo <- Cache.getCacheInfo callPointPath
     let varName = cacheInfo ^. CacheInfo.recentVarName
         status  = cacheInfo ^. CacheInfo.status
 
     assertE (status == Status.Ready) $ Error.CacheError $(loc) $ concat ["Object ", show callPointPath, " is not computed yet."]
-    get varName
+    get varName callPointPath
 
 
 data Status = Ready
@@ -54,15 +56,15 @@ data Status = Ready
 
 getWithStatus :: CallPointPath -> Session (Status, Maybe Value)
 getWithStatus callPointPath = do
-    mcacheInfo <- Cache.lookupCacheInfoMaybe callPointPath
+    mcacheInfo <- Env.cachedLookup callPointPath
     case mcacheInfo of
         Nothing        -> return (NotInCache, Nothing)
         Just cacheInfo -> do
             let varName = cacheInfo ^. CacheInfo.recentVarName
 
-            allReady <- Session.getAllReady
+            allReady <- Env.getAllReady
             let returnBytes status = do
-                    value <- get varName
+                    value <- get varName callPointPath
                     return (status, value)
                 returnNothing status = return (status, Nothing)
 
@@ -76,22 +78,24 @@ getWithStatus callPointPath = do
 
 report :: CallPointPath -> VarName -> Session ()
 report callPointPath varName = do
-    resultCB  <- Session.getResultCallBack
-    projectID <- Session.getProjectID
-    result    <- get varName
+    resultCB  <- Env.getResultCallBack
+    projectID <- Env.getProjectID
+    result    <- get varName callPointPath
     safeLiftIO' (Error.CallbackError $(loc)) $ resultCB projectID callPointPath result
 
 
-get :: VarName -> Session (Maybe Value)
-get varName = do
+get :: VarName -> CallPointPath -> Session (Maybe Value)
+get varName callPointPath = do
+    mode <- Env.getSerializationMode callPointPath
     let toValueExpr = "toValue " ++ varName
-        computeExpr = concat [varName, " <- return $ compute ", varName]
+        computeExpr = concat [varName, " <- return $ compute ", varName, " def"]
 
         excHandler :: Catch.SomeException -> MGHC.Ghc (Maybe Value)
         excHandler exc = do
             logger warning $ show exc
-            liftIO $ Serialization.toValue $ ValueError.Error $ show exc
+            liftIO $ Serialization.toValue (ValueError.Error $ show exc) mode
     Session.withImports [ "Flowbox.Data.Serialization"
+                        , "Flowbox.Data.Mode"
                         , "Flowbox.Graphics.Serialization"
                         , "Prelude"
                         , "Generated.Proto.Data.Value" ]
@@ -99,4 +103,4 @@ get varName = do
         logger trace computeExpr
         _      <- GHC.runStmt computeExpr GHC.RunToCompletion
         action <- HEval.interpret toValueExpr
-        liftIO action
+        liftIO $ action mode

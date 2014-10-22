@@ -5,12 +5,10 @@
 // Flowbox Team <contact@flowbox.io>, 2014
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto.enums.type;
+package generated.proto.mode;
 
 
 
-enum Numeric {
-	INT    = 0;
-	FLOAT  = 1;
-	DOUBLE = 2;
+message Mode {
+    optional int32 someDummyParam = 6546;
 }

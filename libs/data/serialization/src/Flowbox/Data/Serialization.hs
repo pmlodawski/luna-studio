@@ -22,6 +22,7 @@ import Text.ProtocolBuffers.Extensions
 import Text.ProtocolBuffers.Identifiers
 
 import           Flowbox.Data.Error                  (Error (Error))
+import           Flowbox.Data.Mode                   (Mode)
 import           Flowbox.Prelude
 import           Generated.Proto.Data.BoolData       (BoolData (BoolData))
 import qualified Generated.Proto.Data.BoolData       as BoolData
@@ -46,10 +47,10 @@ import qualified Luna.Target.HS.Control.Error.Data   as Data
 
 
 class Serializable a b | a -> b where
-    serialize :: a -> IO (Maybe b)
-    toValue :: a -> IO (Maybe Value)
-    compute :: a -> a
-    compute = id
+    serialize :: a -> Mode -> IO (Maybe b)
+    toValue :: a -> Mode -> IO (Maybe Value)
+    compute :: a -> Mode -> a
+    compute = const
 
 
 mkValue :: Key Maybe Value a -> Value.Type -> Maybe a -> Maybe Value
@@ -57,43 +58,43 @@ mkValue key keytype = liftM $ \extension -> putExt key (Just extension) $ Value 
 
 
 instance Serializable Error ErrorData where
-    serialize (Error msg) = return . Just $ ErrorData $ fromString msg
-    toValue a = liftM (mkValue ErrorData.data' Value.Error) $ serialize a
+    serialize (Error msg) _ = return . Just $ ErrorData $ fromString msg
+    toValue a mode = liftM (mkValue ErrorData.data' Value.Error) $ serialize a mode
 
 instance Serializable () EmptyTupleData where
-    serialize a = return . Just $ EmptyTupleData
-    toValue a = liftM (mkValue EmptyTupleData.data' Value.EmptyTuple) $ serialize a
+    serialize _  _ = return . Just $ EmptyTupleData
+    toValue a mode = liftM (mkValue EmptyTupleData.data' Value.EmptyTuple) $ serialize a mode
 
 instance Serializable Int IntData where
-    serialize a = return . Just . IntData . fromIntegral $ a
-    toValue a = liftM (mkValue IntData.data' Value.Int) $ serialize a
+    serialize a  _ = return . Just . IntData . fromIntegral $ a
+    toValue a mode = liftM (mkValue IntData.data' Value.Int) $ serialize a mode
 
 instance Serializable Char CharData where
-    serialize a = return . Just . CharData . fromIntegral . ord $ a
-    toValue a = liftM (mkValue CharData.data' Value.Char) $ serialize a
+    serialize a  _ = return . Just . CharData . fromIntegral . ord $ a
+    toValue a mode = liftM (mkValue CharData.data' Value.Char) $ serialize a mode
 
 instance Serializable Bool BoolData where
-    serialize a = return . Just . BoolData $ a
-    toValue a = liftM (mkValue BoolData.data' Value.Bool) $ serialize a
+    serialize a  _ = return . Just . BoolData $ a
+    toValue a mode = liftM (mkValue BoolData.data' Value.Bool) $ serialize a mode
 
 instance Serializable String StringData where
-    serialize a = return . Just . StringData $ fromString a
-    toValue a = liftM (mkValue StringData.data' Value.String) $ serialize a
+    serialize a  _ = return . Just . StringData $ fromString a
+    toValue a mode = liftM (mkValue StringData.data' Value.String) $ serialize a mode
 
 instance Serializable Float FloatData where
-    serialize a = return . Just . FloatData $ a
-    toValue a = liftM (mkValue FloatData.data' Value.Float) $ serialize a
+    serialize a  _ = return . Just . FloatData $ a
+    toValue a mode = liftM (mkValue FloatData.data' Value.Float) $ serialize a mode
 
 instance Serializable Double DoubleData.DoubleData where
-    serialize a = return . Just . DoubleData $ a
-    toValue a = liftM (mkValue DoubleData.data' Value.Double) $ serialize a
+    serialize a  _ = return . Just . DoubleData $ a
+    toValue a mode = liftM (mkValue DoubleData.data' Value.Double) $ serialize a mode
 
 
 -- [PM] : instance below requires UndecidableInstances enabled
 instance Serializable a b => Serializable (Data.Safe a) b where
-    serialize (Data.Safe a) = serialize a
-    toValue   (Data.Safe a) = toValue a
-    compute   (Data.Safe a) = Data.Safe $ compute a
+    serialize (Data.Safe a) mode = serialize a mode
+    toValue   (Data.Safe a) mode = toValue   a mode
+    compute   (Data.Safe a) mode = Data.Safe $ compute a mode
 
 -- TODO [PM] Instance for unsafe
 --instance Serializable a b => Serializable (Data.Unsafe a) b where
