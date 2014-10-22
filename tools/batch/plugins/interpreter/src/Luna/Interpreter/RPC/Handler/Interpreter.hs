@@ -39,8 +39,8 @@ import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.RPC.Handler.Sync                                 as Sync
 import qualified Luna.Interpreter.Session.AST.Executor                             as Executor
 import qualified Luna.Interpreter.Session.AST.WatchPoint                           as WatchPoint
+import qualified Luna.Interpreter.Session.Env                                      as Env
 import           Luna.Interpreter.Session.Session                                  (SessionST)
-import qualified Luna.Interpreter.Session.Session                                  as Session
 
 
 
@@ -50,13 +50,13 @@ logger = getLoggerIO $(moduleName)
 
 getProjectID :: GetProjectID.Request -> RPC Context SessionST GetProjectID.Status
 getProjectID request = do
-    projectID <- liftSession Session.getProjectIDMaybe
+    projectID <- liftSession Env.getProjectIDMaybe
     return $ GetProjectID.Status request $ fmap encodeP projectID
 
 
 setProjectID :: SetProjectID.Request -> RPC Context SessionST SetProjectID.Update
 setProjectID request@(SetProjectID.Request tprojectID) = do
-    liftSession $ Session.setProjectID $ decodeP tprojectID
+    liftSession $ Env.setProjectID $ decodeP tprojectID
     Sync.syncLibManager
     Cache.deleteAll tprojectID
     Cache.modifyAll tprojectID
@@ -65,8 +65,8 @@ setProjectID request@(SetProjectID.Request tprojectID) = do
 
 getMainPtr :: GetMainPtr.Request -> RPC Context SessionST GetMainPtr.Status
 getMainPtr request = do
-    projectID <- liftSession Session.getProjectIDMaybe
-    mainPtr   <- liftSession Session.getMainPtrMaybe
+    projectID <- liftSession Env.getProjectIDMaybe
+    mainPtr   <- liftSession Env.getMainPtrMaybe
     let tmainPtr = (encode .: (,)) <$> projectID <*> mainPtr
     return $ GetMainPtr.Status request tmainPtr
 
@@ -75,7 +75,7 @@ setMainPtr :: SetMainPtr.Request -> RPC Context SessionST SetMainPtr.Update
 setMainPtr request@(SetMainPtr.Request tmainPtr) = do
     (projectID, mainPtr) <- decodeE tmainPtr
     Sync.testProjectID projectID
-    liftSession $ Session.setMainPtr mainPtr
+    liftSession $ Env.setMainPtr mainPtr
     return $ SetMainPtr.Update request
 
 
@@ -104,7 +104,7 @@ watchPointRemove request@(WatchPointRemove.Request tcallPointPath) = do
 watchPointList :: WatchPointList.Request -> RPC Context SessionST WatchPointList.Status
 watchPointList request = do
     list      <- liftSession $ SetForest.toList <$> WatchPoint.all
-    projectID <- liftSession Session.getProjectID
+    projectID <- liftSession Env.getProjectID
     return $ WatchPointList.Status request $ encodeList $ map (projectID,) list
 
 
