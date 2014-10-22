@@ -24,10 +24,12 @@ import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
 import qualified Luna.Interpreter.Session.Cache.Status       as Status
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
+import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
+
 
 
 logger :: LoggerIO
@@ -60,7 +62,7 @@ getWithStatus callPointPath = do
         Just cacheInfo -> do
             let varName = cacheInfo ^. CacheInfo.recentVarName
 
-            allReady <- Session.getAllReady
+            allReady <- Env.getAllReady
             let returnBytes status = do
                     value <- get varName
                     return (status, value)
@@ -76,21 +78,22 @@ getWithStatus callPointPath = do
 
 report :: CallPointPath -> VarName -> Session ()
 report callPointPath varName = do
-    resultCB  <- Session.getResultCallBack
-    projectID <- Session.getProjectID
+    resultCB  <- Env.getResultCallBack
+    projectID <- Env.getProjectID
     result    <- get varName
     safeLiftIO' (Error.CallbackError $(loc)) $ resultCB projectID callPointPath result
 
 
 get :: VarName -> Session (Maybe Value)
 get varName = do
+    mode <- Env.getSerializationMode
     let toValueExpr = "toValue " ++ varName
         computeExpr = concat [varName, " <- return $ compute ", varName]
 
         excHandler :: Catch.SomeException -> MGHC.Ghc (Maybe Value)
         excHandler exc = do
             logger warning $ show exc
-            liftIO $ Serialization.toValue $ ValueError.Error $ show exc
+            liftIO $ Serialization.toValue mode $ ValueError.Error $ show exc
     Session.withImports [ "Flowbox.Data.Serialization"
                         , "Flowbox.Graphics.Serialization"
                         , "Prelude"
