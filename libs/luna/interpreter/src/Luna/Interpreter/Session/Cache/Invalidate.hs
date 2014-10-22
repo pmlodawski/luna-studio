@@ -108,7 +108,7 @@ modifyNodeSuccessors libraryID bc nodeID = do
 
 modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session ()
 modifyMatching predicate = do
-    matching <- MapForest.find predicate <$> Cache.cached
+    matching <- MapForest.find predicate <$> Env.getCached
     mapM_ (setParentsStatus CacheStatus.Modified . fst) matching
     Env.setAllReady False
 

@@ -17,6 +17,8 @@ import           Data.Monoid                ((<>))
 
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
+import           Flowbox.Data.MapForest                      (MapForest)
+import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
@@ -29,6 +31,8 @@ import           Luna.AST.Expr                               (Expr)
 import qualified Luna.AST.Expr                               as Expr
 import           Luna.AST.Module                             (Module)
 import           Luna.Graph.Graph                            (Graph)
+import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
+import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
 import qualified Luna.Interpreter.Session.Data.DefPoint      as DefPoint
@@ -51,6 +55,41 @@ type SessionST = StateT Env MGHC.Ghc
 type Session = EitherT Error SessionST
 
 
+---- Env.cached -----------------------------------------------------------
+
+getCached :: Session (MapForest CallPoint CacheInfo)
+getCached = gets (view Env.cached)
+
+
+cachedInsert :: CallPointPath -> CacheInfo -> Session ()
+cachedInsert callPointPath cacheInfo =
+    modify (Env.cached %~ MapForest.insert callPointPath cacheInfo)
+
+
+cachedDelete :: CallPointPath -> Session ()
+cachedDelete callPointPath =
+    modify $ Env.cached %~ MapForest.delete callPointPath
+
+
+cachedLookup :: CallPointPath -> Session (Maybe CacheInfo)
+cachedLookup callPointPath = MapForest.lookup callPointPath <$> getCached
+
+---- Env.watchPoints ------------------------------------------------------
+---- Env.reloadMap --------------------------------------------------------
+
+addReload :: Library.ID -> Reload -> Session ()
+addReload libraryID reload = modify (Env.reloadMap %~ update) where
+    update = Map.alter (Just . (<> reload) . Maybe.fromMaybe def) libraryID
+
+
+getReloads :: Session ReloadMap
+getReloads = gets $ view Env.reloadMap
+
+
+cleanReloads :: Session ()
+cleanReloads = modify (Env.reloadMap .~ mempty)
+
+---- Env.allReady ---------------------------------------------------------
 
 setAllReady :: Bool -> Session ()
 setAllReady flag = modify $ Env.allReady .~ flag
@@ -59,6 +98,38 @@ setAllReady flag = modify $ Env.allReady .~ flag
 getAllReady :: Session Bool
 getAllReady = gets $ view Env.allReady
 
+---- Env.defaultSerializationMode -----------------------------------------
+
+getDefaultSerializationMode :: Session Mode
+getDefaultSerializationMode = gets $ view Env.defaultSerializationMode
+
+
+setDefaultSerializationMode :: Mode -> Session ()
+setDefaultSerializationMode mode =
+    modify (Env.defaultSerializationMode .~ mode)
+
+---- Env.serializationModes -----------------------------------------------
+
+getSerializationModes :: Session (MapForest CallPoint Mode)
+getSerializationModes = gets $ view Env.serializationModes
+
+
+getSerializationMode :: CallPointPath -> Session Mode
+getSerializationMode callPointPath = do
+    mode <- MapForest.lookup callPointPath <$> getSerializationModes
+    Maybe.maybe getDefaultSerializationMode return mode
+
+
+insertSerializationMode :: CallPointPath -> Mode -> Session ()
+insertSerializationMode callPointPath mode =
+    modify (Env.serializationModes %~ MapForest.insert callPointPath mode)
+
+
+deleteSerializationMode :: CallPointPath -> Session ()
+deleteSerializationMode callPointPath =
+    modify (Env.serializationModes %~ MapForest.delete callPointPath)
+
+---- Env.libManager -------------------------------------------------------
 
 setLibManager :: LibManager -> Session ()
 setLibManager libManager = modify $ Env.libManager .~ libManager
@@ -116,18 +187,7 @@ getGraph defPoint = do
     graph <- fst <$> runPass $(loc) (GraphBuilder.run aa propertyMap False expr)
     return (graph, expr ^. Expr.id)
 
-
-getMainPtr :: Session DefPoint
-getMainPtr = getMainPtrMaybe <??&> Error.ConfigError $(loc) "MainPtr not set."
-
-
-getMainPtrMaybe :: Session (Maybe DefPoint)
-getMainPtrMaybe = gets (view Env.mainPtr)
-
-
-setMainPtr :: DefPoint -> Session ()
-setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
-
+---- Env.projectID --------------------------------------------------------
 
 getProjectID :: Session Project.ID
 getProjectID = getProjectIDMaybe <??&> Error.ConfigError $(loc) "Project ID not set."
@@ -140,28 +200,20 @@ getProjectIDMaybe = gets (view Env.projectID)
 setProjectID :: Project.ID -> Session ()
 setProjectID projectID = modify (Env.projectID .~ Just projectID)
 
+---- Env.mainPtr ----------------------------------------------------------
+
+getMainPtr :: Session DefPoint
+getMainPtr = getMainPtrMaybe <??&> Error.ConfigError $(loc) "MainPtr not set."
+
+
+getMainPtrMaybe :: Session (Maybe DefPoint)
+getMainPtrMaybe = gets (view Env.mainPtr)
+
+
+setMainPtr :: DefPoint -> Session ()
+setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
+
+---- Env.resultCallback ---------------------------------------------------
 
 getResultCallBack :: Session (Project.ID -> CallPointPath -> Maybe Value -> IO ())
 getResultCallBack = gets $ view Env.resultCallBack
-
-
-addReload :: Library.ID -> Reload -> Session ()
-addReload libraryID reload = modify (Env.reloadMap %~ update) where
-    update = Map.alter (Just . (<> reload) . Maybe.fromMaybe def) libraryID
-
-
-getReloads :: Session ReloadMap
-getReloads = gets $ view Env.reloadMap
-
-
-cleanReloads :: Session ()
-cleanReloads = modify (Env.reloadMap .~ mempty)
-
-
-getSerializationMode :: Session Mode
-getSerializationMode = gets $ view Env.serializationMode
-
-
-setSerializationMode :: Mode -> Session ()
-setSerializationMode mode =
-    modify (Env.serializationMode .~ mode)

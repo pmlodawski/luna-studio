@@ -38,12 +38,12 @@ logger = getLoggerIO $(moduleName)
 
 getIfReady :: CallPointPath -> Session (Maybe Value)
 getIfReady callPointPath = do
-    cacheInfo <- Cache.lookupCacheInfo callPointPath
+    cacheInfo <- Cache.getCacheInfo callPointPath
     let varName = cacheInfo ^. CacheInfo.recentVarName
         status  = cacheInfo ^. CacheInfo.status
 
     assertE (status == Status.Ready) $ Error.CacheError $(loc) $ concat ["Object ", show callPointPath, " is not computed yet."]
-    get varName
+    get varName callPointPath
 
 
 data Status = Ready
@@ -56,7 +56,7 @@ data Status = Ready
 
 getWithStatus :: CallPointPath -> Session (Status, Maybe Value)
 getWithStatus callPointPath = do
-    mcacheInfo <- Cache.lookupCacheInfoMaybe callPointPath
+    mcacheInfo <- Env.cachedLookup callPointPath
     case mcacheInfo of
         Nothing        -> return (NotInCache, Nothing)
         Just cacheInfo -> do
@@ -64,7 +64,7 @@ getWithStatus callPointPath = do
 
             allReady <- Env.getAllReady
             let returnBytes status = do
-                    value <- get varName
+                    value <- get varName callPointPath
                     return (status, value)
                 returnNothing status = return (status, Nothing)
 
@@ -80,13 +80,13 @@ report :: CallPointPath -> VarName -> Session ()
 report callPointPath varName = do
     resultCB  <- Env.getResultCallBack
     projectID <- Env.getProjectID
-    result    <- get varName
+    result    <- get varName callPointPath
     safeLiftIO' (Error.CallbackError $(loc)) $ resultCB projectID callPointPath result
 
 
-get :: VarName -> Session (Maybe Value)
-get varName = do
-    mode <- Env.getSerializationMode
+get :: VarName -> CallPointPath -> Session (Maybe Value)
+get varName callPointPath = do
+    mode <- Env.getSerializationMode callPointPath
     let toValueExpr = "toValue " ++ varName
         computeExpr = concat [varName, " <- return $ compute ", varName, " def"]
 
