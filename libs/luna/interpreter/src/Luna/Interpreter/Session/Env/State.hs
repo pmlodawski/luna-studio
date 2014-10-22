@@ -114,9 +114,14 @@ getSerializationModes :: Session (MapForest CallPoint Mode)
 getSerializationModes = gets $ view Env.serializationModes
 
 
+lookupSerializationMode :: CallPointPath -> Session (Maybe Mode)
+lookupSerializationMode callPointPath =
+    MapForest.lookup callPointPath <$> getSerializationModes
+
+
 getSerializationMode :: CallPointPath -> Session Mode
 getSerializationMode callPointPath = do
-    mode <- MapForest.lookup callPointPath <$> getSerializationModes
+    mode <- lookupSerializationMode callPointPath
     Maybe.maybe getDefaultSerializationMode return mode
 
 
