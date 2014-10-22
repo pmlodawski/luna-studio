@@ -88,13 +88,14 @@ get :: VarName -> Session (Maybe Value)
 get varName = do
     mode <- Env.getSerializationMode
     let toValueExpr = "toValue " ++ varName
-        computeExpr = concat [varName, " <- return $ compute ", varName]
+        computeExpr = concat [varName, " <- return $ compute ", varName, " def"]
 
         excHandler :: Catch.SomeException -> MGHC.Ghc (Maybe Value)
         excHandler exc = do
             logger warning $ show exc
-            liftIO $ Serialization.toValue mode $ ValueError.Error $ show exc
+            liftIO $ Serialization.toValue (ValueError.Error $ show exc) mode
     Session.withImports [ "Flowbox.Data.Serialization"
+                        , "Flowbox.Data.Mode"
                         , "Flowbox.Graphics.Serialization"
                         , "Prelude"
                         , "Generated.Proto.Data.Value" ]
@@ -102,4 +103,4 @@ get varName = do
         logger trace computeExpr
         _      <- GHC.runStmt computeExpr GHC.RunToCompletion
         action <- HEval.interpret toValueExpr
-        liftIO action
+        liftIO $ action mode

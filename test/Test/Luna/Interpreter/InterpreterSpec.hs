@@ -23,9 +23,9 @@ import qualified Test.Luna.Interpreter.Common                as Common
 import qualified Test.Luna.Interpreter.SampleCodes           as SampleCodes
 
 
+
 rootLogger :: Logger
 rootLogger = getLogger ""
-
 
 
 getArgs :: CallPointPath -> Session [CallPointPath]
