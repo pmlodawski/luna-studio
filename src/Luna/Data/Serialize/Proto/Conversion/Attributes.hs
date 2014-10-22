@@ -34,12 +34,12 @@ import           Luna.Graph.Properties                                (Propertie
 
 
 instance Convert Flags Gen.Flags where
-    encode (Flags omit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated position) =
-        Gen.Flags (Just omit) astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated (fmap fst position) (fmap snd position)
-    decode (Gen.Flags momit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated  mpositionX mpositionY) = do
+    encode (Flags       omit  astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated position) =
+        Gen.Flags (Just omit) astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated (fmap fst position) (fmap snd position)
+    decode (Gen.Flags   momit astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated  mpositionX mpositionY) = do
         omit <- momit <?> "Failed to decode Flags: 'omit' field is missing"
         let position = (,) <$> mpositionX <*> mpositionY
-        return $ Flags omit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated  position
+        return $ Flags omit astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated  position
 
 
 instance ConvertPure Attributes Gen.Attributes where
