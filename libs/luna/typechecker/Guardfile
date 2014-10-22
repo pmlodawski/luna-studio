@@ -52,4 +52,17 @@ guard :shell, :version => 2, :cli => "--color" do
         end
     end
   end
+  watch(%r{^runtest.hs$}) do |m|
+    puts "--------------------------------------------------------------------------------".cyan
+    puts "                 __    __  _  _  ____    ____  ____  ____  ____\n                (  )  (  )/ )( \\(  __)  (_  _)(  __)/ ___)(_  _)\n                / (_/\\ )( \\ \\/ / ) _)     )(   ) _) \\___ \\  )(\n                \\____/(__) \\__/ (____)   (__) (____)(____/ (__)".cyan
+    puts "--------------------------------------------------------------------------------".cyan
+    IO.popen("../../../scripts/runhaskell ", mode='r+') do |io|
+        prog = File.read("runtest.hs")
+        puts prog.green
+        io.write prog
+        io.close_write
+        result = io.read
+        puts result.yellow
+    end 
+  end
 end 
