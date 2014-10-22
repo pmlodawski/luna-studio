@@ -36,7 +36,7 @@ handlerMap :: HandlerMap Context IO
 handlerMap callback = HandlerMap.fromList
     [ ("filesystem.directory.fetch.request" , respond status $ DirectoryHandler.fetch )
     , ("filesystem.directory.upload.request", respond status $ DirectoryHandler.upload)
-    , ("filesystem.directory.exists.request", respond update $ DirectoryHandler.exists)
+    , ("filesystem.directory.exists.request", respond status $ DirectoryHandler.exists)
     , ("filesystem.directory.create.request", respond update $ DirectoryHandler.create)
     , ("filesystem.directory.list.request"  , respond status $ DirectoryHandler.list  )
     , ("filesystem.directory.remove.request", respond update $ DirectoryHandler.remove)
