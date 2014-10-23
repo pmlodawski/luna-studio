@@ -19,6 +19,7 @@ import Flowbox.Prelude
 
 type RPC s m a = EitherT Error (StateT s m) a
 
+
 type Error = String
 
 
