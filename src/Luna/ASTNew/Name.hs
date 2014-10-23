@@ -21,6 +21,20 @@ import           Luna.ASTNew.Name.Rules  as X
 import qualified Luna.ASTNew.Name.Assert as Assert
 
 ----------------------------------------------------------------------
+-- Type classes
+----------------------------------------------------------------------
+
+class Convert a b where
+    convert :: a -> b
+    default convert :: (NameClass a, NameClass b) => a -> b
+    convert = toName . fromName
+
+
+class NameClass n where
+    toName   :: String -> n
+    fromName :: n      -> String
+
+----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
@@ -41,11 +55,6 @@ cname  (Assert.isCName  -> s) = CName  s
 tvname (Assert.isTVName -> s) = TVName s
 
 
-data Named a n = Named   a n
-               | Unnamed a  
-               deriving (Show, Eq, Generic, Read)
-
-
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
@@ -54,3 +63,29 @@ instance IsString VName  where fromString = vname
 instance IsString TName  where fromString = tname
 instance IsString CName  where fromString = cname
 instance IsString TVName where fromString = tvname
+
+instance NameClass VName where
+    toName             = VName
+    fromName (VName n) = n
+
+instance NameClass TName where
+    toName             = TName
+    fromName (TName n) = n
+
+instance NameClass CName where
+    toName             = CName
+    fromName (CName n) = n
+
+instance NameClass TVName where
+    toName              = TVName
+    fromName (TVName n) = n
+
+instance Convert VName  TVName
+instance Convert TVName VName
+instance Convert CName  TName
+instance Convert TName  CName
+
+instance Convert VName  VName
+instance Convert TName  TName
+instance Convert CName  CName
+instance Convert TVName TVName
