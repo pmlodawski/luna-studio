@@ -4,18 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.FileManager.RPC.Handler.Directory where
 
-import qualified System.Directory as Directory
-
 import           Flowbox.Bus.RPC.RPC                                             (RPC)
-import           Flowbox.Control.Error
+import           Flowbox.FileManager.FileManager                                 (FileManager)
+import qualified Flowbox.FileManager.FileManager                                 as FileManager
 import           Flowbox.Prelude                                                 hiding (Context)
-import qualified Flowbox.System.Directory.Directory                              as FDirectory
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.UniPath                                          as UniPath
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.FileManager.FileSystem.Directory.Copy.Request   as Copy
 import qualified Generated.Proto.FileManager.FileSystem.Directory.Copy.Update    as Copy
@@ -41,55 +39,67 @@ logger = getLoggerIO $(moduleName)
 ------ public api -------------------------------------------------
 
 
-upload :: Upload.Request -> RPC () IO Upload.Status
-upload (Upload.Request tpath) =
-    return $ Upload.Status tpath
-
-
-fetch :: Fetch.Request -> RPC () IO Fetch.Status
-fetch (Fetch.Request tpath) =
-    return $ Fetch.Status tpath
-
-
-create :: Create.Request -> RPC () IO Create.Update
-create (Create.Request tpath) = do
+upload :: FileManager fm ctx => fm
+       -> Upload.Request -> RPC ctx IO Upload.Status
+upload fm request@(Upload.Request tpath) = do
     let path = decodeP tpath
-    safeLiftIO $ Directory.createDirectory path
-    return $ Create.Update tpath
+    FileManager.uploadDirectory fm path
+    return $ Upload.Status request
 
 
-exists :: Exists.Request -> RPC () IO Exists.Status
-exists (Exists.Request tpath) = do
+fetch :: FileManager fm ctx => fm
+      -> Fetch.Request -> RPC ctx IO Fetch.Status
+fetch fm request@(Fetch.Request tpath) = do
     let path = decodeP tpath
-    e <- safeLiftIO $ Directory.doesDirectoryExist path
-    return $ Exists.Status e tpath
+    FileManager.fetchDirectory fm path
+    return $ Fetch.Status request
 
 
-list :: List.Request -> RPC () IO List.Status
-list (List.Request tpath) = do
+create :: FileManager fm ctx => fm
+       -> Create.Request -> RPC ctx IO Create.Update
+create fm request@(Create.Request tpath) = do
     let path = decodeP tpath
-    contents <- safeLiftIO $ Directory.getDirectoryContents path
-    return $ List.Status (encodeListP contents) tpath
+    FileManager.createDirectory fm path
+    return $ Create.Update request
 
 
-remove :: Remove.Request -> RPC () IO Remove.Update
-remove (Remove.Request tpath) = do
+exists :: FileManager fm ctx => fm
+       -> Exists.Request -> RPC ctx IO Exists.Status
+exists fm request@(Exists.Request tpath) = do
     let path = decodeP tpath
-    safeLiftIO $ Directory.removeDirectory path
-    return $ Remove.Update tpath
+    e <- FileManager.directoryExists fm path
+    return $ Exists.Status request e
 
 
-copy :: Copy.Request -> RPC () IO Copy.Update
-copy (Copy.Request tsrc tdst) = do
+list :: FileManager fm ctx => fm
+     -> List.Request -> RPC ctx IO List.Status
+list fm request@(List.Request tpath) = do
+    let path = decodeP tpath
+    contents <- FileManager.listDirectory fm path
+    return $ List.Status request (encodeListP contents)
+
+
+remove :: FileManager fm ctx => fm
+       -> Remove.Request -> RPC ctx IO Remove.Update
+remove fm request@(Remove.Request tpath) = do
+    let path = decodeP tpath
+    FileManager.removeDirectory fm path
+    return $ Remove.Update request
+
+
+copy :: FileManager fm ctx => fm
+     -> Copy.Request -> RPC ctx IO Copy.Update
+copy fm request@(Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    safeLiftIO $ FDirectory.copyDirectoryRecursive (UniPath.fromUnixString src) (UniPath.fromUnixString dst)
-    return $ Copy.Update tsrc tdst
+    FileManager.copyDirectory fm src dst
+    return $ Copy.Update request
 
 
-move :: Move.Request -> RPC () IO Move.Update
-move (Move.Request tsrc tdst) = do
+move :: FileManager fm ctx => fm
+     -> Move.Request -> RPC ctx IO Move.Update
+move fm request@(Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    safeLiftIO $ Directory.renameDirectory src dst
-    return $ Move.Update tsrc tdst
+    FileManager.moveDirectory fm src dst
+    return $ Move.Update request

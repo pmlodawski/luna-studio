@@ -43,7 +43,7 @@ Library
                     monad-loops,
                     mtl,
                     network,
-                    postgresql-simple,
+                    postgresql-simple >= 0.4.6,
                     protocol-buffers-fork,
                     protocol-buffers-descriptor-fork,
                     resourcet >= 1.1.0,
