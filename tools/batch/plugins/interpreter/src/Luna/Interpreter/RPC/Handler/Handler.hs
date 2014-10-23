@@ -31,6 +31,7 @@ import qualified Flowbox.Bus.RPC.HandlerMap               as HandlerMap
 import           Flowbox.Bus.RPC.RPC                      (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor         as Processor
 import           Flowbox.Config.Config                    (Config)
+import           Flowbox.Control.Concurrent               (forkIO_)
 import           Flowbox.Prelude                          hiding (Context, error)
 import           Flowbox.ProjectManager.Context           (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic         as Topic
@@ -146,7 +147,25 @@ run :: Config -> Prefix -> Context
 run cfg prefix ctx (input, output) = do
     crlRef <- IORef.newIORef def
     let env = def & Env.resultCallBack .~ Value.reportOutputValue crlRef output
+    (output1, input1) <- Pipes.spawn Pipes.Unbounded
+    forkIO_ $ Pipes.runEffect $ Pipes.fromInput input
+                            >-> preprocess prefix
+                            >-> Pipes.toOutput output1
     Session.run cfg env extraImports $ lift $ flip evalStateT ctx $
-        Pipes.runEffect $ Pipes.fromInput input
+        Pipes.runEffect $ Pipes.fromInput input1
                       >-> interpret prefix crlRef
                       >-> Pipes.toOutput output
+
+
+preprocess :: Prefix
+           -> Pipes.Pipe (Message, Message.CorrelationID)
+                         (Message, Message.CorrelationID)
+                         IO ()
+preprocess prefix = forever $ do
+    print prefix
+    packet <- Pipes.await
+    --print packet
+    print "preprocess"
+    Pipes.yield packet
+
+

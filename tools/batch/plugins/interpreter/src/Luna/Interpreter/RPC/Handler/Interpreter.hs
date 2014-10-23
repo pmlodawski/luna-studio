@@ -8,7 +8,10 @@
 {-# LANGUAGE TupleSections   #-}
 module Luna.Interpreter.RPC.Handler.Interpreter where
 
+import qualified Control.Concurrent as Concurrent
+
 import           Flowbox.Bus.RPC.RPC                                                          (RPC)
+import           Flowbox.Control.Error
 import qualified Flowbox.Data.SetForest                                                       as SetForest
 import           Flowbox.Prelude                                                              hiding (Context)
 import           Flowbox.ProjectManager.Context                                               (Context)
@@ -91,7 +94,10 @@ setMainPtr request@(SetMainPtr.Request tmainPtr) = do
 
 run :: Run.Request -> RPC Context SessionST Run.Update
 run request = do
+    liftIO $ putStrLn "start..."
+    liftIO $ Concurrent.threadDelay 3000000
     liftSession Executor.processMain
+    liftIO $ putStrLn "stop"
     return $ Run.Update request
 
 
