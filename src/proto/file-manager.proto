@@ -1,0 +1,153 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.fileManager;
+
+
+
+message FileSystem {
+    message Directory {
+        message Fetch {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+        message Upload {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+        message Create {
+            message Request {
+                required string path = 1;
+            }
+            message Update {
+                required Request request = 1;
+            }
+        }
+        message Exists {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required Request request = 1;
+                required bool    exists  = 2;
+            }
+        }
+        message List {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required Request request = 1;
+                repeated string  items   = 2;
+            }
+        }
+        message Remove {
+            message Request {
+                required string path = 1;
+            }
+            message Update {
+                required Request request = 1;
+            }
+        }
+        message Copy {
+            message Request {
+                required string src = 1;
+                required string dst = 2;
+            }
+            message Update { 
+                required Request request = 1;
+            }
+        }
+        message Move {
+            message Request {
+                required string src = 1;
+                required string dst = 2;
+            }
+            message Update { 
+                required Request request = 1;
+            }
+        }
+    }
+    message File {
+        message Fetch {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+        message Upload {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+        message Exists {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required Request request = 1;
+                required bool exists = 2;
+            }
+        }
+        message Remove {
+            message Request {
+                required string path = 1;
+            }
+            message Update {
+                required Request request = 1;
+            }
+        }
+        message Copy {
+            message Request {
+                required string src = 1;
+                required string dst = 2;
+            }
+            message Update { 
+                required Request request = 1;
+            }
+        }
+        message Move {
+            message Request {
+                required string src = 1;
+                required string dst = 2;
+            }
+            message Update { 
+                required Request request = 1;
+            }
+        }
+    }
+}
+message FileManager {
+    message Resolve {
+        message Request {
+            required string path = 1;
+        }
+        message Status {
+            required Request request      = 1;
+            required string  resolvedPath = 2;
+        }
+    }
+    message Ping {
+        message Request { }
+        message Status  { 
+            required Request request = 1;
+        }
+    }
+}
