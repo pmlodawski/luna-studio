@@ -100,6 +100,8 @@ example = Source.Source ["Main"] $
                     --, "@AllowOrphans"
                     , "def print msg:"
                     , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
+                    , "def Int.> a:"
+                    , "    ```liftF2 (>) #{self} #{a}```"
 
                     , "def Int.> a:"
                     , "    ```liftF2 (>) #{self} #{a}```"
@@ -121,7 +123,7 @@ example = Source.Source ["Main"] $
                     --, "    a = Vector [] [] []"
                     --, "    print [1..5]"
                     --, "    foo 1 2"
-                    , "    print $ 1 > 2"
+                    , "    print $ 1"
                     ]
 
 
