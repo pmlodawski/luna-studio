@@ -39,12 +39,16 @@ class Types t where
   ftv :: t -> [Tyvar]
 
 instance Types Type where
-  apply (Subst s) (TVar tyv) = fromMaybe (TVar tyv) (lookup tyv s)
-  apply s t = t
   ftv (TVar tyv) = [tyv]
   ftv (TConst _) = []
   ftv (TAp t1 t2) = ftv t1 `union` ftv t2
+  ftv (TRow row) = ftv row
+  apply (Subst s) (TVar tyv) = fromMaybe (TVar tyv) (lookup tyv s)
+  apply s (TAp t1 t2) = TAp (apply s t1) (apply s t2)
+  apply s (TRow row) = TRow $ apply s row
+  apply s t = t
 
 instance (Types a) => Types [a] where
   apply = error "Substitution.hs : instance Types [a] : apply"
   ftv = nub . concatMap ftv
+
