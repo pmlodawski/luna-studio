@@ -1,0 +1,4 @@
+@AllowOrphans
+
+def main:
+    a = [x..y]

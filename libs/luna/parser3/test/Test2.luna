@@ -1,0 +1,10 @@
+@ImplicitSelf
+
+@foo: ImplicitSelf
+      IncoherentResolve
+@foo {editor: x=0 y=0}
+def foo:
+    [1,2,3]{editor: x=0 y=0}.each{editor: x=0 y=0} x:
+        print{editor: x=0 y=0} x{editor: x=0 y=0}
+        5{editor: x=0 y=0}
+

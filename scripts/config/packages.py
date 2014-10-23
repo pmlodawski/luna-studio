@@ -109,6 +109,7 @@ pkgDb = \
        , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
        , 'libs/luna/parser'                    : HProject   ('luna-parser'                  , os.path.join ('libs' , 'luna', 'parser')                      , 'libs'    , ['libs/utils', 'libs/luna/core'])
        , 'libs/luna/parser2'                   : HProject   ('luna-parser'                  , os.path.join ('libs' , 'luna', 'parser2')                     , 'libs'    , ['libs/utils', 'libs/luna/core'])
+       , 'libs/luna/parser3'                   : HProject   ('luna-parser'                  , os.path.join ('libs' , 'luna', 'parser3')                     , 'libs'    , ['libs/utils', 'libs/luna/core'])
        , 'libs/luna/distribution'              : HProject   ('luna-distribution'            , os.path.join ('libs' , 'luna', 'distribution')                , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core'])
        , 'libs/luna/pass'                      : HProject   ('luna-pass'                    , os.path.join ('libs' , 'luna', 'pass')                        , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/distribution', 'libs/config', 'libs/luna/target/ghchs', 'libs/luna/parser2'])
        , 'libs/luna/protobuf'                  : HProject   ('luna-protobuf'                , os.path.join ('libs' , 'luna', 'protobuf')                    , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/distribution', 'libs/config'])

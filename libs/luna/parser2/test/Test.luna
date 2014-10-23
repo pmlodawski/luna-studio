@@ -1,4 +1,14 @@
-@AllowOrphans
+class Vector a:
+    x
 
-def main:
-    a = [x..y]
+def foo x y z:
+    x
+
+
+
+
+
+
+
+
+    

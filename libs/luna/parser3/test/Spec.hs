@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Luna.ASTNew.Rec where
 
-type Rec f a = f (a f)
+{-# LANGUAGE ImplicitPrelude #-}
+{-# OPTIONS_GHC -F -pgmF hspec-discover #-}
+
