@@ -52,10 +52,10 @@ instance Convert (Int, Node) Gen.Node where
     encode (nodeID, node) = tnode where
         tnodeID = encodePJ nodeID
         tnodeWithoutPos = case node of
-            Node.Expr expr _ _ -> Gen.Node GenNode.Expr    tnodeID (encodeJ expr)
-                                                                   (encodePJ $ node ^. Node.outputName)
-            Node.Inputs  {}    -> Gen.Node GenNode.Inputs  tnodeID Nothing Nothing
-            Node.Outputs {}    -> Gen.Node GenNode.Outputs tnodeID Nothing Nothing
+            Node.Expr expr outputName _ -> Gen.Node GenNode.Expr tnodeID (encodeJ expr)
+                                                                (encodePJ outputName)
+            Node.Inputs  {}             -> Gen.Node GenNode.Inputs  tnodeID Nothing Nothing
+            Node.Outputs {}             -> Gen.Node GenNode.Outputs tnodeID Nothing Nothing
         tnode = tnodeWithoutPos (Just $ node ^. Node.pos . _1) (Just $ node ^. Node.pos . _2)
     decode (Gen.Node tcls mtnodeID mtexpr mtoutputName mx my) = do
         nodeID <- decodeP <$> mtnodeID <?> "Failed to decode Node: 'id' field is missing"
