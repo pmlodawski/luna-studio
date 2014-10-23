@@ -54,5 +54,12 @@ varBindRow var newTy = if not $ checkConstraints var newTy
                          then err "repeated labels in constraints"
                          else mergeRowTypes var newTy
 
+lacks = S.singleton
 mergeRowTypes var newTy = do
     d
+
+getRowVariable tTy = let (_, value) = typeToTypeList tTy in value
+typeToTypeList (TVar v) = ([], Just v)
+typeToTypeList RowEmpty = ([], Nothing)
+typeToTypeList (Row l t r) = ((l, t):ls, mv) where
+  (ls, mv) = typeToTypeList r
