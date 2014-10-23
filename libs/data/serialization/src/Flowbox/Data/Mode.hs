@@ -4,12 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Luna.Graph.View.Default.Value where
+module Flowbox.Data.Mode (
+    module X,
+    def,
+) where
 
 import Flowbox.Prelude
+import Generated.Proto.Mode.Mode as X
 
 
-
-type Value = String
-
+instance Default Mode where
+    def = Mode Nothing

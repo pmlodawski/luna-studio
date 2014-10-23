@@ -17,6 +17,7 @@ data Flags = Flags { _omit                 :: Bool
                    , _astFolded            :: Maybe Bool
                    , _astAssignment        :: Maybe Bool
                    , _graphFolded          :: Maybe Bool
+                   , _grouped              :: Maybe Bool
                    , _defaultNodeGenerated :: Maybe Bool
                    , _graphViewGenerated   :: Maybe Bool
                    , _nodePosition         :: Maybe Position
@@ -27,7 +28,7 @@ makeLenses ''Flags
 
 
 instance Default Flags where
-    def = Flags False Nothing Nothing Nothing Nothing Nothing Nothing
+    def = Flags False Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 
 isSet' :: Flags -> (Flags -> Maybe Bool) -> Bool

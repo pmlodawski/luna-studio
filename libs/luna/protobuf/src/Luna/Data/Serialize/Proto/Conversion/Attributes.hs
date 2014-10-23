@@ -20,31 +20,26 @@ import qualified Data.Sequence as Sequence
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Attributes.Attributes                   as Gen
-import qualified Generated.Proto.Attributes.Attributes.Space             as Gen
-import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue    as Gen
-import qualified Generated.Proto.Attributes.DefaultsMap                  as Gen
-import qualified Generated.Proto.Attributes.DefaultsMap.DefaultsMapEntry as Gen
-import qualified Generated.Proto.Attributes.Flags                        as Gen
-import qualified Generated.Proto.Attributes.Properties                   as Gen
-import           Luna.Graph.Attributes                                   (Attributes)
-import qualified Luna.Graph.Attributes                                   as Attributes
-import           Luna.Graph.Flags                                        (Flags (Flags))
-import qualified Luna.Graph.Node                                         as Node
-import           Luna.Graph.Properties                                   (Properties (Properties))
-import           Luna.Graph.View.Default.DefaultsMap                     (DefaultsMap)
-import qualified Luna.Graph.View.Default.DefaultsMap                     as DefaultsMap
-import           Luna.Graph.View.Default.Value                           (Value)
-import           Luna.Graph.View.PortDescriptor                          (PortDescriptor)
+import qualified Generated.Proto.Attributes.Attributes                as Gen
+import qualified Generated.Proto.Attributes.Attributes.Space          as Gen
+import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue as Gen
+import qualified Generated.Proto.Attributes.Flags                     as Gen
+import qualified Generated.Proto.Attributes.Properties                as Gen
+import           Luna.Data.Serialize.Proto.Conversion.NodeDefault     ()
+import           Luna.Graph.Attributes                                (Attributes)
+import qualified Luna.Graph.Attributes                                as Attributes
+import           Luna.Graph.Flags                                     (Flags (Flags))
+import           Luna.Graph.Properties                                (Properties (Properties))
+
 
 
 instance Convert Flags Gen.Flags where
-    encode (Flags omit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated position) =
-        Gen.Flags (Just omit) astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated (fmap fst position) (fmap snd position)
-    decode (Gen.Flags momit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated  mpositionX mpositionY) = do
+    encode (Flags       omit  astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated position) =
+        Gen.Flags (Just omit) astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated (fmap fst position) (fmap snd position)
+    decode (Gen.Flags   momit astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated  mpositionX mpositionY) = do
         omit <- momit <?> "Failed to decode Flags: 'omit' field is missing"
         let position = (,) <$> mpositionX <*> mpositionY
-        return $ Flags omit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated  position
+        return $ Flags omit astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated  position
 
 
 instance ConvertPure Attributes Gen.Attributes where
@@ -60,20 +55,6 @@ instance ConvertPure (String, Attributes.Map String String) Gen.Space where
 instance ConvertPure (String, String) Gen.KeyValue where
     encodeP (k, v) = Gen.KeyValue (encodeP k) (encodeP v)
     decodeP (Gen.KeyValue tk tv) = (decodeP tk, decodeP tv)
-
-
-instance Convert (PortDescriptor, (Node.ID, Value)) Gen.DefaultsMapEntry where
-    encode (portDescriptor, (nodeID, value)) =
-        Gen.DefaultsMapEntry (encodeListP portDescriptor) (encodePJ nodeID) (encodePJ value)
-    decode (Gen.DefaultsMapEntry portDescriptor mtnodeID mtvalue) = do
-        nodeID <- decodeP <$> mtnodeID <?> "Failed to decode DefaultsMapEntry: 'nodeID' field is missing"
-        value  <- decodeP <$> mtvalue  <?> "Failed to decode DefaultsMapEntry: 'value' field is missing"
-        return (decodeListP portDescriptor, (nodeID, value))
-
-
-instance Convert DefaultsMap Gen.DefaultsMap where
-    encode = Gen.DefaultsMap . encodeList . DefaultsMap.toList
-    decode (Gen.DefaultsMap entries) = DefaultsMap.fromList <$> decodeList entries
 
 
 instance Convert Properties Gen.Properties where

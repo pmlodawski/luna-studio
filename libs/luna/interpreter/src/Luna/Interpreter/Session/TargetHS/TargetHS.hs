@@ -15,6 +15,7 @@ import qualified DynFlags as GHC
 import           Flowbox.Prelude                             hiding (perform)
 import           Flowbox.System.Log.Logger
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
+import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Interpreter.Session.TargetHS.Generator as Generator
@@ -71,7 +72,7 @@ reloadClass defPoint = Session.atomically $ Instances.cleanFunctions
 
 reload :: Session ()
 reload = do
-    reloads <- Session.getReloads
+    reloads <- Env.getReloads
     logger debug $ "Reloading: " ++ show reloads
     let perform (libID, Reload.ReloadClasses items) =
             mapM_ (reloadClass . DefPoint libID . view Reload.breadcrumbs) (Set.toList items) >> reloadFunctions
@@ -79,5 +80,5 @@ reload = do
         perform (libID, Reload.ReloadLibrary    ) = reloadAll
         perform (libID, Reload.NoReload         ) = return ()
     mapM_ perform $ Map.toList reloads
-    Session.cleanReloads
+    Env.cleanReloads
 
