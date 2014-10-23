@@ -36,7 +36,7 @@ parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Run
            <$> strOption  (long "prefix" <> short 'p' <> metavar "PREFIX" <> value "" <> help "Prefix used by this plugin manager (e.g. client, main, etc.")
            <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
-           <*> switch    ( long "no-color"          <> help "Disable color output" )
+           <*> switch     (long "no-color"            <> help "Disable color output")
 
 
 opts :: ParserInfo Cmd
