@@ -12,8 +12,7 @@ Flag Debug
 
 
 Executable s3-file-manager
-    Hs-Source-Dirs: dist/gen
-                    src
+    Hs-Source-Dirs: src
     Other-Modules:  Paths_batch_plugin_s3_file_manager
     Main-Is:        Main.hs
 
@@ -23,6 +22,7 @@ Executable s3-file-manager
 
     Build-Depends:  aws,
                     base,
+                    batch-lib-file-manager,
                     bytestring,
                     containers,
                     either,
@@ -37,5 +37,5 @@ Executable s3-file-manager
                     optparse-applicative,
                     protocol-buffers-fork,
                     text,
-                    transformers,
+                    transformers >= 0.4,
                     zeromq4-haskell >= 0.4
