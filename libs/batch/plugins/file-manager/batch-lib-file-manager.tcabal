@@ -1,4 +1,4 @@
-Name:               batch-plugin-s3-file-manager
+Name:               batch-lib-file-manager
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -11,31 +11,27 @@ Flag Debug
     Default:        False
 
 
-Executable s3-file-manager
-    Hs-Source-Dirs: src
-    Other-Modules:  Paths_batch_plugin_s3_file_manager
-    Main-Is:        Main.hs
+Library
+    Hs-Source-Dirs: dist/gen
+                    src
+    Other-Modules:  Paths_batch_lib_file_manager
 
     GHC-Options:    -Wall -O2 -threaded
 
     Extensions:     NoImplicitPrelude
 
-    Build-Depends:  aws,
-                    base,
-                    batch-lib-file-manager,
-                    bytestring,
-                    containers,
-                    either,
-                    errors,
-                    flowbox-aws,
+    Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
+                     `findmodules('src', '.*\.hs')`
+
+    Build-Depends:  base,
+                    directory,
                     flowbox-bus,
                     flowbox-config,
                     flowbox-utils,
-                    http-conduit,
-                    MissingH,
                     mtl,
                     optparse-applicative,
+                    protocol-buffers-descriptor-fork,
                     protocol-buffers-fork,
                     text,
-                    transformers >= 0.4,
+                    transformers,
                     zeromq4-haskell >= 0.4
