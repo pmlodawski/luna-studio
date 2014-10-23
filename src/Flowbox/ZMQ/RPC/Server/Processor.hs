@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes       #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.ZMQ.RPC.Server.Processor where
 
@@ -31,7 +32,7 @@ import qualified Generated.Proto.Rpc.Response.Type              as ResponseType
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.ZMQ.RPC.Processor"
+loggerIO = getLoggerIO $(moduleName)
 
 
 responseExt :: ResponseType.Type -> Maybe Int32 -> rsp -> Extensions.Key Maybe Response rsp -> ByteString
