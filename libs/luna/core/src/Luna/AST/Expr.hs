@@ -14,15 +14,22 @@
 module Luna.AST.Expr where
 
 import Control.Applicative
+import Control.Monad       ((<=<))
 import GHC.Generics        (Generic)
 
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, cons, drop, id)
+import           Luna.AST.Arg                    (Arg)
+import qualified Luna.AST.Arg                    as Arg
 import           Luna.AST.Common                 (ID)
 import qualified Luna.AST.Lit                    as Lit
+import           Luna.AST.Name                   (Name)
 import qualified Luna.AST.Pat                    as Pat
+import           Luna.AST.Prop                   (HasName)
+import qualified Luna.AST.Prop                   as Prop
 import           Luna.AST.Type                   (Type)
 import qualified Luna.AST.Type                   as Type
+import qualified Data.Char                       as Char
 
 
 
@@ -32,19 +39,20 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 
 data Expr  = NOP          { _id :: ID                                                                                            }
-           | Accessor     { _id :: ID, _name      :: String   , _dst       :: Expr                                               }
+           | Accessor     { _id :: ID, _acc       :: Accessor , _dst       :: Expr                                               }
            | TypeAlias    { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
            | TypeDef      { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
-           | App          { _id :: ID, _src       :: Expr     , _args      :: [Expr]                                             }
-           | AppCons_     { _id :: ID, _args      :: [Expr]                                                                      }
+           | App          { _id :: ID, _src       :: Expr     , _args      :: [Arg Expr]                                         }
+           -- | AppCons_     { _id :: ID, _args      :: [Expr]                                                                      }
            | Assignment   { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
            | RecordUpdate { _id :: ID, _src       :: Expr     , _selectors :: [String], _expr :: Expr                            }
            | Data         { _id :: ID, _cls       :: Type     , _cons      :: [Expr] , _classes   :: [Expr] , _methods :: [Expr] }
+           | DataNative   { _id :: ID, _cls       :: Type     , _cons      :: [Expr] , _classes   :: [Expr] , _methods :: [Expr] }
            -- FIXME [wd]: name clash. ConD = Constructor Declaration. Cond = Condition
            | ConD         { _id :: ID, _name      :: String   , _fields    :: [Expr]                                             }
            | Con          { _id :: ID, _name      :: String                                                                      }
            | Cond         { _id :: ID, _cond      :: Expr     , _success   :: [Expr] , _failure   :: Maybe [Expr]                }
-           | Function     { _id :: ID, _path      :: [String] , _name      :: String , _inputs    :: [Expr] , _output  :: Type   , _body    :: [Expr] }
+           | Function     { _id :: ID, _path      :: [String] , _fname     :: Name , _inputs    :: [Expr] , _output  :: Type   , _body    :: [Expr] }
            | Lambda       { _id :: ID, _inputs    :: [Expr]   , _output    :: Type   , _body      :: [Expr]                      }
            | Grouped      { _id :: ID, _expr      :: Expr                                                                        }
            | Import       { _id :: ID, _path      :: [String] , _target    :: Expr   , _rename    :: Maybe String                }
@@ -53,8 +61,10 @@ data Expr  = NOP          { _id :: ID                                           
            | List         { _id :: ID, _items     :: [Expr]                                                                      }
            | Lit          { _id :: ID, _lvalue    :: Lit                                                                         }
            | Tuple        { _id :: ID, _items     :: [Expr]                                                                      }
+           -- | TupleCons_   { _id :: ID, _items     :: [Expr]                                                                      }
            | Typed        { _id :: ID, _cls       :: Type     , _expr      :: Expr                                               }
            | Var          { _id :: ID, _name      :: String                                                                      }
+           | FuncVar      { _id :: ID, _fname     :: Name                                                                        }
            | Wildcard     { _id :: ID                                                                                            }
            | RangeFromTo  { _id :: ID, _start     :: Expr     , _end       :: Expr                                               }
            | RangeFrom    { _id :: ID, _start     :: Expr                                                                        }
@@ -70,20 +80,58 @@ data Expr  = NOP          { _id :: ID                                           
            deriving (Show, Eq, Generic, Read)
 
 
+
+data Accessor = VarAccessor { _accName :: String }
+              | ConAccessor { _accName :: String }
+              deriving (Show, Eq, Generic, Read)
+
+
+mkAccessor :: String -> Accessor
+mkAccessor ""       = VarAccessor ""
+mkAccessor s@(x:xs) = ($ s) $ if Char.isUpper x then ConAccessor else VarAccessor
+
+
 instance QShow Expr
-makeLenses (''Expr)
+makeLenses ''Expr
+
+instance QShow Accessor
+makeLenses ''Accessor
 
 
-callConstructor :: ID -> Expr -> Expr -> Expr
-callConstructor id' src' arg' = case src' of
-    (AppCons_ id'' args') -> AppCons_ id'' (args' ++ [arg'])
-    _                     -> AppCons_ id' (src':[arg'])
+shiftArg1 f t1 x = f x t1
+shiftArg2 f t1 t2 x = f x t1 t2
+shiftArg3 f t1 t2 t3 x = f x t1 t2 t3
+shiftArg4 f t1 t2 t3 t4 x = f x t1 t2 t3 t4
+shiftArg5 f t1 t2 t3 t4 t5 x = f x t1 t2 t3 t4 t5
+shiftArg6 f t1 t2 t3 t4 t5 t6 x = f x t1 t2 t3 t4 t5 t6
 
 
-aftermatch :: Expr -> Expr
-aftermatch x = case x of
-    AppCons_ id' (a:as) -> App id' a as
-    _                   -> x
+var :: String -> ID -> Expr
+var = shiftArg1 Var
+funcVar = shiftArg1 FuncVar
+
+function :: [String] -> Name -> [Expr] -> Type -> [Expr] -> ID -> Expr
+function = shiftArg5 Function
+
+
+app :: Expr -> [Arg Expr] -> ID -> Expr
+app = shiftArg2 App
+
+
+
+
+
+tupleBuilder :: ID -> Expr -> Expr -> Expr
+tupleBuilder id src arg = case src of
+    Tuple id items -> Tuple id (items ++ [arg])
+    _              -> Tuple id [src, arg]
+
+
+
+--aftermatch :: Expr -> Expr
+--aftermatch x = case x of
+--    AppCons_ id' (a:as) -> App id' a as
+--    _                   -> x
 
 
 addMethod :: Expr -> Expr -> Expr
@@ -97,17 +145,6 @@ addFieldDC :: Expr -> Expr -> Expr
 addFieldDC field e = e & cons .~ addField field defc : cons' where
     defc:cons' = e ^. cons
 
-
-afterData :: Expr -> Expr
-afterData d = nd where
-    dcons = d ^. cons
-    defc  = last dcons
-    ncons = if length dcons == 1
-                then [defc & name .~ (nd ^. (cls. Type.name))]
-                else init dcons
-    nd = d & cons .~ ncons
-
-
 addClass :: Expr -> Expr -> Expr
 addClass ncls e = e & classes %~ (ncls:)
 
@@ -115,15 +152,22 @@ addCon :: Expr -> Expr -> Expr
 addCon ncon e = e & cons %~ (ncon:)
 
 
-traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
-traverseM fexp ftype fpat flit e = case e of
+argMapM :: Traversal m => (t -> m a) -> Arg t -> m (Arg a)
+argMapM f a = case a of
+    Arg.Unnamed id      arg -> Arg.Unnamed id      <$> f arg
+    Arg.Named   id name arg -> Arg.Named   id name <$> f arg
+
+
+traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> (Arg Expr -> m (Arg Expr)) -> Expr -> m Expr
+traverseM fexp ftype fpat flit farg e = case e of
     Accessor     id' name' dst'                    -> Accessor     id' name' <$> fexp dst'
     TypeAlias    id' srcType' dstType'             -> TypeAlias    id'       <$> ftype srcType' <*> ftype dstType'
     TypeDef      id' srcType' dstType'             -> TypeDef      id'       <$> ftype srcType' <*> ftype dstType'
-    App          id' src' args'                    -> App          id'       <$> fexp src'      <*> fexpMap args'
+    App          id' src' args'                    -> App          id'       <$> fexp src'      <*> mapM (farg <=< argMapM fexp) args'
     Assignment   id' pat' dst'                     -> Assignment   id'       <$> fpat pat'      <*> fexp dst'
     RecordUpdate id' src' selectors' expr'         -> RecordUpdate id'       <$> fexp src'      <*> pure selectors' <*> fexp expr'
     Data         id' cls' cons' classes' methods'  -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
+    DataNative   id' cls' cons' classes' methods'  -> DataNative   id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
     ConD         id' name' fields'                 -> ConD         id' name' <$> fexpMap fields'
     Con          {}                                -> pure e
     Cond         id' cond' success' failure'       -> Cond         id'       <$> fexp cond' <*> fexpMap success' <*> mapM fexpMap failure'
@@ -149,22 +193,23 @@ traverseM fexp ftype fpat flit e = case e of
     Ref          id' dst'                          -> Ref          id'       <$> fexp dst'
     RefType      {}                                -> pure e
     Var          {}                                -> pure e
+    FuncVar      {}                                -> pure e
     Wildcard     {}                                -> pure e
     NOP          {}                                -> pure e
-    AppCons_     {}                                -> pure e
     Arg          id' pat' value'                   -> Arg          id'       <$> fpat pat' <*> fexpMap value'
     where fexpMap = mapM fexp
 
 
-traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
-traverseM_ fexp ftype fpat flit e = case e of
+traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> (Arg Expr -> m e) -> Expr -> m ()
+traverseM_ fexp ftype fpat flit farg e = case e of
     Accessor     _  _ dst'                         -> drop <* fexp dst'
     TypeAlias    _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
     TypeDef      _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
-    App          _  src' args'                     -> drop <* fexp src'  <* fexpMap args'
+    App          _  src' args'                     -> drop <* fexp src'  <* mapM_ (argMapM fexp <* farg) args'
     Assignment   _  pat' dst'                      -> drop <* fpat pat'  <* fexp dst'
     RecordUpdate _ src' _ expr'                    -> drop <* fexp src'  <* fexp expr'
     Data         _ cls' cons'  classes' methods'   -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
+    DataNative   _ cls' cons'  classes' methods'   -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
     ConD         _ _ fields'                       -> drop <* fexpMap fields'
     Cond         _ cond' success' failure'         -> drop <* fexp cond' <* fexpMap success' <* mapM fexpMap failure'
     Con          {}                                -> drop
@@ -189,24 +234,28 @@ traverseM_ fexp ftype fpat flit e = case e of
     Ref          _ dst'                            -> drop <* fexp dst'
     RefType      {}                                -> drop
     Var          {}                                -> drop
+    FuncVar      {}                                -> drop
     Wildcard     {}                                -> drop
     NOP          {}                                -> drop
-    AppCons_     {}                                -> drop
     Arg          _ pat' value'                     -> drop <* fpat pat' <* fexpMap value'
     where drop    = pure ()
           fexpMap = mapM_ fexp
 
 
 traverseM' :: Traversal m => (Expr -> m Expr) -> Expr -> m Expr
-traverseM' fexp = traverseM fexp pure pure pure
+traverseM' fexp = traverseM fexp pure pure pure pure
 
 
 traverseM'_ :: Traversal m => (Expr -> m ()) -> Expr -> m ()
-traverseM'_ fexp = traverseM_ fexp pure pure pure
+traverseM'_ fexp = traverseM_ fexp pure pure pure pure
 
 
-traverseMR :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
-traverseMR fexp ftype fpat flit = tfexp where
-    tfexp e = fexp  =<< traverseM tfexp tftype tfpat flit e
+traverseMR :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> (Arg Expr -> m (Arg Expr)) -> Expr -> m Expr
+traverseMR fexp ftype fpat flit farg = tfexp where
+    tfexp e = fexp  =<< traverseM tfexp tftype tfpat flit farg e
     tfpat   = Pat.traverseMR fpat tftype flit
     tftype  = Type.traverseMR ftype
+
+
+instance HasName Expr where
+  name = _name

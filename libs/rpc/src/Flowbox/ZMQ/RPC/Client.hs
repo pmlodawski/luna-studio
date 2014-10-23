@@ -16,11 +16,12 @@ import qualified Text.ProtocolBuffers.Extensions as Extensions
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic (decodeP)
 import qualified Generated.Proto.Rpc.Exception                  as Exception
 import           Generated.Proto.Rpc.Response                   (Response)
 import qualified Generated.Proto.Rpc.Response                   as Response
 import qualified Generated.Proto.Rpc.Response.Type              as Type
+
 
 
 type Error = String

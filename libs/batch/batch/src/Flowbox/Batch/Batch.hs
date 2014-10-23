@@ -33,7 +33,7 @@ data BatchEnv = BatchEnv { _config         :: Config
                          } deriving (Show)
 
 
-makeLenses(''BatchEnv)
+makeLenses ''BatchEnv
 
 
 runBatch :: BatchEnv -> Batch a -> IO (Either Error a)

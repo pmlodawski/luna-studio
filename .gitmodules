@@ -10,15 +10,9 @@
 [submodule "third-party/algebraic"]
     path = third-party/algebraic
     url = git@github.com:wdanilo/algebraic.git
-[submodule "third-party/cuda"]
-    path = third-party/cuda
-    url = git@github.com:tmcdonell/cuda.git
 [submodule "third-party/HaskellBooster"]
     path = third-party/HaskellBooster
-    url = git@github.com:kgadek/HaskellBooster.git
-[submodule "third-party/protocol-buffers"]
-    path = third-party/protocol-buffers
-    url = git@github.com:flowbox-public/protocol-buffers.git
+    url = git@github.com:wdanilo/HaskellBooster.git
 [submodule "tools/graphics/webghci"]
     path = tools/graphics/webghci
     url = git@github.com:flowbox-public/WebGHCI.git

@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.Bus.Control.Handler.ID where
 
 import           Control.Monad.IO.Class (liftIO)
@@ -20,7 +21,7 @@ import qualified Generated.Proto.Bus.ID.Create.Result           as ID_Create
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.Control.Handler.ID"
+logger = getLoggerIO $(moduleName)
 
 -------- public api -------------------------------------------------
 

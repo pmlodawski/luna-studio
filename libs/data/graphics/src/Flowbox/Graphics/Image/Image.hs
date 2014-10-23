@@ -4,11 +4,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Flowbox.Graphics.Image.Image (
-    Image,
+    Image(..),
     insert,
     delete,
     lookup,
@@ -17,30 +17,29 @@ module Flowbox.Graphics.Image.Image (
     singleton
 ) where
 
-import qualified Data.Map                    as Map
-import qualified Data.Set                    as Set
-import           Data.Traversable            (sequence)
-import qualified Flowbox.Graphics.Image.View as View
+import qualified Data.Map                     as Map
+import qualified Data.Set                     as Set
+import           Data.Traversable             (sequence)
 import           Flowbox.Graphics.Image.Error
-import           Flowbox.Prelude             hiding (views, lookup, sequence, map)
+import qualified Flowbox.Graphics.Image.View  as View
+import           Flowbox.Prelude              hiding (lookup, map, sequence, views)
 
 data Image view = Image { _views       :: Map.Map View.Name view
                         , _defaultView :: View.Select
-                        }
+                        } deriving (Show)
 makeLenses ''Image
 
 image :: View.View v => Map.Map View.Name v -> View.Select -> Either Error (Image v)
-image imgviews defaultview = case defaultview of
-    View.Group names -> if names `Set.isSubsetOf` Map.keysSet imgviews
-                            then newimg
-                            else Left InvalidMap
-    _                 -> newimg
+image imgviews defaultview = if defaultview `Set.isSubsetOf` Map.keysSet imgviews
+                                then newimg
+                                else Left InvalidMap
     where keysMatchingNames = Map.foldrWithKey (\k v acc -> acc && View.name v == k) True imgviews
           newimg = if keysMatchingNames then return $ Image imgviews defaultview
                                         else Left InvalidMap
 
 singleton :: View.View v => v -> Image v
-singleton view = Image (Map.singleton (View.name view) view) View.Default
+singleton view = Image (Map.singleton name view) (Set.singleton name)
+    where name = View.name view
 
 insert :: View.View v => View.Name -> v -> Image v -> Either Error (Image v)
 insert key value img = if View.name value == key
@@ -48,10 +47,8 @@ insert key value img = if View.name value == key
                              else Left InvalidMap
 
 delete :: View.View v => View.Name -> Image v -> Image v
-delete key img = Image (Map.delete key $ img ^. views) $ case default_view of
-    View.Group names -> View.Group $ Set.delete key names
-    _                -> default_view
-    where default_view = img ^. defaultView
+delete key img = Image (Map.delete key $ img ^. views)
+                       (Set.delete key $ img ^. defaultView)
 
 lookup :: View.View v => View.Name -> Image v -> Maybe v
 lookup key img = Map.lookup key (img ^. views)
@@ -61,5 +58,6 @@ update f key img = case lookup key img >>= f of
     Just newval -> insert key newval img
     Nothing     -> return $ delete key img
 
-map :: View.View v => (v -> v) -> Image v -> Either Error (Image v)
-map lambda img = image (Map.map lambda $ img ^.views) (img ^. defaultView)
+map :: View.View v => (v -> v) -> Image v -> Image v --Either Error (Image v)
+map lambda (Image vs dv) = Image (Map.map lambda $ vs) dv
+--map lambda img = image (Map.map lambda $ img ^.views) (img ^. defaultView)

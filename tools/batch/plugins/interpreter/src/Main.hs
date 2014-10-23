@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
 import qualified Flowbox.Bus.EndPoint                 as EP
@@ -27,7 +28,7 @@ rootLogger = getLogger ""
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Main"
+logger = getLoggerIO $(moduleName)
 
 
 parser :: Parser Cmd

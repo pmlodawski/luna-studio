@@ -56,7 +56,7 @@ saveImage filename arr = Magick.withMagickWandGenesis $ do
 
     allocaBytes (4 * arrayLength) $ \mem -> do
         liftIO $ A.toPtr arr ((), mem)
-        flip catchMagick (\e -> liftIO $ print e) $ do
+        flip catchMagick (liftIO . print) $ do
             usePixelsFromPtr mWand width height mem
             Magick.writeImage mWand (Just $ decodeString filename)
 

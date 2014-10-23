@@ -14,9 +14,10 @@ import qualified Flowbox.Batch.Project.Project       as Project
 import           Flowbox.Prelude
 import           Luna.AST.Control.Crumb              (Breadcrumbs)
 import qualified Luna.Graph.Node                     as Node
+import           Luna.Graph.Node.Expr                (NodeExpr)
+import qualified Luna.Graph.PropertyMap              as PropertyMap
 import           Luna.Graph.View.Default.DefaultsMap (DefaultsMap)
 import qualified Luna.Graph.View.Default.DefaultsMap as DefaultsMap
-import           Luna.Graph.View.Default.Value       (Value)
 import           Luna.Graph.View.PortDescriptor      (PortDescriptor)
 import qualified Luna.Lib.Lib                        as Library
 
@@ -24,18 +25,28 @@ import qualified Luna.Lib.Lib                        as Library
 
 nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch DefaultsMap
 nodeDefaults nodeID _ libID projectID =
-    DefaultsMap.getDefaultsMap nodeID <$> Batch.getPropertyMap libID projectID
+    PropertyMap.getDefaultsMap nodeID <$> Batch.getPropertyMap libID projectID
 
 
-setNodeDefault :: PortDescriptor -> Value
+setNodeDefault :: PortDescriptor -> NodeExpr
                -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setNodeDefault dstPort value nodeID _ libID projectID = Batch.propertyMapOp libID projectID (\propertyMap -> do
+setNodeDefault dstPort value nodeID bc libID projectID = do
+    propertyMap <- Batch.getPropertyMap libID projectID
     maxID <- Batch.getMaxID libID projectID
-    return (DefaultsMap.addDefault dstPort (maxID, value) nodeID propertyMap, ()))
+    let newPM = PropertyMap.modifyDefaultsMap (DefaultsMap.insert dstPort (maxID, value)) nodeID propertyMap
+    Batch.setPropertyMap newPM libID projectID
+    --TODO[PM] : Temporary fix
+    Batch.graphViewOp bc libID projectID $ \gv pm -> return ((gv, pm), ())
+
 
 
 removeNodeDefault :: PortDescriptor
                   -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-removeNodeDefault dstPort nodeID _ libID projectID = Batch.propertyMapOp libID projectID (\propertyMap ->
-    return (DefaultsMap.removeDefault dstPort nodeID propertyMap, ()))
+removeNodeDefault dstPort nodeID bc libID projectID = do
+    propertyMap <- Batch.getPropertyMap libID projectID
+    maxID <- Batch.getMaxID libID projectID
+    let newPM = PropertyMap.modifyDefaultsMap (DefaultsMap.delete dstPort) nodeID propertyMap
+    Batch.setPropertyMap newPM libID projectID
+    --TODO[PM] : Temporary fix
+    Batch.graphViewOp bc libID projectID $ \gv pm -> return ((gv, pm), ())
 

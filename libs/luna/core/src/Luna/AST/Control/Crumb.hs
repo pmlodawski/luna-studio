@@ -8,27 +8,30 @@
 
 module Luna.AST.Control.Crumb where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
+import qualified Luna.AST.Common as AST
+import           Luna.AST.Name   (Name)
 
 
 
 type Breadcrumbs = [Crumb]
 
 
-data Crumb = Function { _name :: String
-                      , _path :: [String]
-                      }
+data Crumb = Module   { _name :: String }
            | Class    { _name :: String }
-           | Module   { _name :: String }
+           | Function { _fname :: Name
+                      , _path  :: [String]
+                      }
+           | Lambda   { _id :: AST.ID }
            deriving (Show, Ord, Eq)
 
 
 makeLenses(''Crumb)
 
 
-isFunction :: Crumb -> Bool
-isFunction (Function {}) = True
-isFunction _             = False
+isModule :: Crumb -> Bool
+isModule (Module {}) = True
+isModule _           = False
 
 
 isClass :: Crumb -> Bool
@@ -36,6 +39,11 @@ isClass (Class {}) = True
 isClass _          = False
 
 
-isModule :: Crumb -> Bool
-isModule (Module {}) = True
-isModule _           = False
+isFunction :: Crumb -> Bool
+isFunction (Function {}) = True
+isFunction _             = False
+
+
+isLambda :: Crumb -> Bool
+isLambda (Lambda {}) = True
+isLambda _           = False

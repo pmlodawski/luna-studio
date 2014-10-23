@@ -28,6 +28,5 @@ Library
   Build-Depends:  base,
                   flowbox-utils,
                   luna-core,
-                  MissingH,
-                  luna-protobuf
+                  MissingH
 
