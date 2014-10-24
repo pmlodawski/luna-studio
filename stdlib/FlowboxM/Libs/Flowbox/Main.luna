@@ -228,6 +228,9 @@ def Image.premultiply:
 def Image.unpremultiply:
     ```liftF1 unpremultiplyLuna #{self}```
 
+def Image.invert:
+    ```liftF1 invertLuna #{self}```
+
 
 def main:
     lena = load "./test.png"
