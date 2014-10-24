@@ -240,6 +240,13 @@ def Image.multiply val:
 def Image.gamma val:
     ```liftF2 gammaLuna #{val} #{self}```
 
+def Image.clamp thresholds:
+    # clamps powinno być Maybe ale wymaga pattern-matchingu klas
+    thresholdLo = thresholds.lo
+    thresholdHi = thresholds.hi
+    clampLo = clamps.lo
+    clampHi = clamps.hi
+    ```liftF5 clampLuna #{thresholdLo} #{thresholdHi} #{clampLo} #{clampHi} #{self}```
 
 def main:
     lena = load "./test.png"
