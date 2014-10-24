@@ -8,15 +8,14 @@
 {-# LANGUAGE TupleSections   #-}
 module Luna.Interpreter.RPC.Handler.Interpreter where
 
-import qualified Control.Concurrent as Concurrent
-
 import           Flowbox.Bus.RPC.RPC                                                          (RPC)
-import           Flowbox.Control.Error
 import qualified Flowbox.Data.SetForest                                                       as SetForest
 import           Flowbox.Prelude                                                              hiding (Context)
 import           Flowbox.ProjectManager.Context                                               (Context)
 import           Flowbox.System.Log.Logger                                                    hiding (error)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.Interpreter.Interpreter.Abort.Request                        as Abort
+import qualified Generated.Proto.Interpreter.Interpreter.Abort.Status                         as Abort
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Request                   as GetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Status                    as GetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Request                 as GetProjectID
@@ -94,10 +93,7 @@ setMainPtr request@(SetMainPtr.Request tmainPtr) = do
 
 run :: Run.Request -> RPC Context SessionST Run.Update
 run request = do
-    liftIO $ putStrLn "start..."
-    liftIO $ Concurrent.threadDelay 3000000
     liftSession Executor.processMain
-    liftIO $ putStrLn "stop"
     return $ Run.Update request
 
 
@@ -128,6 +124,10 @@ ping :: Ping.Request -> RPC Context SessionST Ping.Status
 ping request = do
     logger info "Ping received"
     return $ Ping.Status request
+
+
+abort :: Abort.Request -> RPC Context SessionST Abort.Status
+abort = return . Abort.Status
 
 
 getDefaultSerializationMode :: GetDefaultSMode.Request -> RPC Context SessionST GetDefaultSMode.Status

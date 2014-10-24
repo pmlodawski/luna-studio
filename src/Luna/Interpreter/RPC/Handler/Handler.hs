@@ -4,9 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE RankNTypes      #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ConstraintKinds    #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE RankNTypes         #-}
+{-# LANGUAGE TemplateHaskell    #-}
 
 module Luna.Interpreter.RPC.Handler.Handler where
 
@@ -17,6 +18,7 @@ import qualified Data.IORef                as IORef
 import           Pipes                     (liftIO, (>->))
 import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
+import qualified Pipes.Safe                as Pipes
 
 import           Flowbox.Bus.Data.Flag                    (Flag)
 import qualified Flowbox.Bus.Data.Flag                    as Flag
@@ -31,14 +33,16 @@ import qualified Flowbox.Bus.RPC.HandlerMap               as HandlerMap
 import           Flowbox.Bus.RPC.RPC                      (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor         as Processor
 import           Flowbox.Config.Config                    (Config)
-import           Flowbox.Control.Concurrent               (forkIO_)
+import qualified Flowbox.Control.Concurrent               as Concurrent
 import           Flowbox.Prelude                          hiding (Context, error)
 import           Flowbox.ProjectManager.Context           (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic         as Topic
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers             as Proto
+import qualified Luna.Interpreter.RPC.Handler.Abort       as Abort
 import qualified Luna.Interpreter.RPC.Handler.ASTWatch    as ASTWatch
 import qualified Luna.Interpreter.RPC.Handler.Interpreter as Interpreter
+import qualified Luna.Interpreter.RPC.Handler.Preprocess  as Preprocess
 import qualified Luna.Interpreter.RPC.Handler.Sync        as Sync
 import qualified Luna.Interpreter.RPC.Handler.Value       as Value
 import qualified Luna.Interpreter.RPC.Topic               as Topic
@@ -65,11 +69,11 @@ handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
     , (Topic.interpreterWatchPointListRequest       , respond Topic.status Interpreter.watchPointList  )
     , (Topic.interpreterValueRequest                , respond Topic.update Value.get                   )
     , (Topic.interpreterPingRequest                 , respond Topic.status Interpreter.ping            )
+    , (Topic.interpreterAbortRequest                , respond Topic.status Interpreter.abort           )
     , (Topic.interpreterSerializationModeDefaultGet , respond Topic.status Interpreter.getDefaultSerializationMode)
     , (Topic.interpreterSerializationModeDefaultSet , respond Topic.update Interpreter.setDefaultSerializationMode)
     , (Topic.interpreterSerializationModeGet        , respond Topic.status Interpreter.getSerializationMode       )
     , (Topic.interpreterSerializationModeSet        , respond Topic.update Interpreter.setSerializationMode       )
-
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
@@ -129,11 +133,11 @@ interpret :: Prefix
           -> IORef Message.CorrelationID
           -> Pipes.Pipe (Message, Message.CorrelationID)
                         (Message, Message.CorrelationID, Flag)
-                        (StateT Context SessionST) ()
+                        (Pipes.SafeT (StateT Context SessionST)) ()
 interpret prefix crlRef = forever $ do
     (message, crl) <- Pipes.await
     liftIO $ IORef.writeIORef crlRef crl
-    results <- lift $ Processor.process (handlerMap prefix) message
+    results <- lift2 $ Processor.process (handlerMap prefix) message
     let send []    = return ()
         send [r]   = Pipes.yield (r, crl, Flag.Enable)
         send (r:t) = Pipes.yield (r, crl, Flag.Disable) >> send t
@@ -145,27 +149,17 @@ run :: Config -> Prefix -> Context
         Pipes.Output (Message, Message.CorrelationID, Flag))
     -> IO (Either Error ())
 run cfg prefix ctx (input, output) = do
-    crlRef <- IORef.newIORef def
+    crlRef              <- IORef.newIORef def
+    interpreterThreadId <- Concurrent.myThreadId
+    (output1, input1)   <- Pipes.spawn Pipes.Unbounded
     let env = def & Env.resultCallBack .~ Value.reportOutputValue crlRef output
-    (output1, input1) <- Pipes.spawn Pipes.Unbounded
-    forkIO_ $ Pipes.runEffect $ Pipes.fromInput input
-                            >-> preprocess prefix
-                            >-> Pipes.toOutput output1
-    Session.run cfg env extraImports $ lift $ flip evalStateT ctx $
-        Pipes.runEffect $ Pipes.fromInput input1
-                      >-> interpret prefix crlRef
-                      >-> Pipes.toOutput output
-
-
-preprocess :: Prefix
-           -> Pipes.Pipe (Message, Message.CorrelationID)
-                         (Message, Message.CorrelationID)
-                         IO ()
-preprocess prefix = forever $ do
-    print prefix
-    packet <- Pipes.await
-    --print packet
-    print "preprocess"
-    Pipes.yield packet
-
+    Concurrent.forkIO_ $ Pipes.runEffect $
+            Pipes.fromInput input
+        >-> Preprocess.preprocess prefix interpreterThreadId
+        >-> Pipes.toOutput output1
+    Session.run cfg env extraImports $ lift $ flip evalStateT ctx $ forever $
+         Pipes.runSafeT $ Pipes.runEffect $ Abort.handleAbort $
+                Pipes.fromInput input1
+            >-> interpret prefix crlRef
+            >-> Pipes.toOutput output
 
