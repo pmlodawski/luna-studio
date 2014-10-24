@@ -509,3 +509,24 @@ closeLuna (variable -> size) = onGenerator $ closing $ pure size
 
 openLuna :: Int -> Image RGBA -> Image RGBA
 openLuna (variable -> size) = onGenerator $ opening $ pure size
+
+premultiplyLuna :: Image RGBA -> Image RGBA
+premultiplyLuna img = (*) `withAlpha` img
+
+unpremultiplyLuna :: Image RGBA -> Image RGBA
+unpremultiplyLuna img = (/) `withAlpha` img
+
+withAlpha :: (A.Exp Double -> A.Exp Double -> A.Exp Double) -> Image RGBA -> Image RGBA
+withAlpha f img = img'
+    where (r, g, b, a) = unsafeGetChannels img
+          r' = M.zipWith f r a
+          g' = M.zipWith f g a
+          b' = M.zipWith f b a
+
+          Just view = lookup "rgba" img
+          view' = view
+                & View.append (ChannelFloat "r" (FlatData r'))
+                & View.append (ChannelFloat "g" (FlatData g'))
+                & View.append (ChannelFloat "b" (FlatData b'))
+                & View.append (ChannelFloat "a" (FlatData a))
+          Right img' = Image.update (const $ Just view') "rgba" img
