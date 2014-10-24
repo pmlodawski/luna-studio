@@ -530,3 +530,6 @@ withAlpha f img = img'
                 & View.append (ChannelFloat "b" (FlatData b'))
                 & View.append (ChannelFloat "a" (FlatData a))
           Right img' = Image.update (const $ Just view') "rgba" img
+
+invertLuna :: Image RGBA -> Image RGBA
+invertLuna = onEachValue invert
