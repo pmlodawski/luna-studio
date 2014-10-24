@@ -22,7 +22,11 @@ Library
                   NoImplicitPrelude,
                   TemplateHaskell,
                   OverloadedStrings,
-                  DeriveGeneric
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
