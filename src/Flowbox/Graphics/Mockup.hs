@@ -546,3 +546,35 @@ multiplyLuna (variable -> v) = onEachValue (*v)
 
 gammaLuna :: Double -> Image RGBA -> Image RGBA
 gammaLuna (variable -> v) = onEachValue (gamma v)
+
+fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
+fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
+    let Grid cw ch = fmap A.fromIntegral cnv
+        radius = (sqrt $ x * x + y * y) / (sqrt $ cw * cw + ch * ch)
+        angle  = atan2 y x / (2 * pi)
+    in gen (Point2 (angle * cw) (radius * ch))
+
+toPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
+toPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 angle' radius') ->
+    let Grid cw ch = fmap A.fromIntegral cnv
+        angle = (angle' / cw) * 2 * pi
+        radius = (radius' / ch) * (sqrt $ cw * cw + ch * ch)
+    in gen (Point2 (radius * cos angle) (radius * sin angle))
+
+radialBlurLuna :: Int -> Double -> Image RGBA -> Image RGBA
+radialBlurLuna (variable -> size) (variable -> angle) = onEachChannel process
+    where kern = monosampler
+               $ rotateCenter angle
+               $ nearest
+               $ rectangle (Grid size 1) 1 0
+          process = rasterizer
+                  . monosampler
+                  . translate (V2 (256) (256))
+                  . fromPolarMapping
+                  . nearest
+                  . normStencil (+) kern (+) 0
+                  . monosampler
+                  . toPolarMapping
+                  . translate (V2 (-256) (-256))
+                  . nearest
+                  . fromMatrix A.Clamp
