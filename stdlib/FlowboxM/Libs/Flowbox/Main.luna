@@ -222,6 +222,13 @@ def Image.open size:
 def Image.close size:
     ```liftF2 closeLuna #{size} #{self}```
 
+def Image.premultiply:
+    ```liftF1 premultiplyLuna #{self}```
+
+def Image.unpremultiply:
+    ```liftF1 unpremultiplyLuna #{self}```
+
+
 def main:
     lena = load "./test.png"
     checker = load "./checker.png"
