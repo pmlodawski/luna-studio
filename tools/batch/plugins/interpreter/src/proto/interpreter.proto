@@ -152,6 +152,12 @@ message Interpreter {
             optional generated.proto.data.Value value = 3;
         }
     }
+    message Abort {
+        message Request { }
+        message Status {
+            required Request request = 1;
+        }
+    }
     message Ping {
         message Request { }
         message Status  { 

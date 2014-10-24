@@ -19,6 +19,7 @@ import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
 import           Generated.Proto.Data.Value                  (Value)
+import qualified Luna.Graph.Flags                            as Flags
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
 import qualified Luna.Interpreter.Session.Cache.Status       as Status
@@ -74,6 +75,14 @@ getWithStatus callPointPath = do
                 (Status.Modified,     _    ) -> returnBytes   Modified
                 (Status.Affected,     _    ) -> returnBytes   Modified
                 (Status.NonCacheable, _    ) -> returnNothing NonCacheable
+
+
+reportIfVisible :: CallPointPath -> VarName -> Session ()
+reportIfVisible callPointPath varName = do
+    flags <- Env.getFlags $ last callPointPath
+    unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
+         || Flags.isSet' flags (view Flags.graphViewGenerated  )) $
+        report callPointPath varName
 
 
 report :: CallPointPath -> VarName -> Session ()

@@ -35,8 +35,5 @@ run rpc = do
         handler ex = return $ Left $ "Unhandled exception: " ++ show ex
     result <- lift $ Catch.catch (Right <$> runStateT (runEitherT rpc) s) handler
     case result of
-        Left err        -> return $ Left err
-        Right (res, s') -> case res of
-            Left err -> return $ Left err
-            Right r  -> do put s'
-                           return $ Right r
+        Left   err      -> {-put s  >> -} return (Left err)
+        Right (res, s') -> put s' >> return res
