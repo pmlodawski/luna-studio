@@ -487,3 +487,25 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
           Just view = lookup "rgba" img1
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (fromMatrix (A.Constant 0))
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (fromMatrix (A.Constant 0))
+
+onGenerator f img = img'
+    where (r, g, b, a) = unsafeGetChannels img & over each (rasterizer . f . fromMatrix (A.Constant 0))
+          Just view = lookup "rgba" img
+          view' = view
+                & View.append (ChannelFloat "r" (FlatData r))
+                & View.append (ChannelFloat "g" (FlatData g))
+                & View.append (ChannelFloat "b" (FlatData b))
+                & View.append (ChannelFloat "a" (FlatData a))
+          Right img' = Image.update (const $ Just view') "rgba" img
+
+erodeLuna :: Int -> Image RGBA -> Image RGBA
+erodeLuna (variable -> size) = onGenerator $ erode $ pure size
+
+dilateLuna :: Int -> Image RGBA -> Image RGBA
+dilateLuna (variable -> size) = onGenerator $ dilate $ pure size
+
+closeLuna :: Int -> Image RGBA -> Image RGBA
+closeLuna (variable -> size) = onGenerator $ closing $ pure size
+
+openLuna :: Int -> Image RGBA -> Image RGBA
+openLuna (variable -> size) = onGenerator $ opening $ pure size
