@@ -533,3 +533,6 @@ withAlpha f img = img'
 
 invertLuna :: Image RGBA -> Image RGBA
 invertLuna = onEachValue invert
+
+colorMatrixLuna :: ColorMatrix Color.RGB Double -> Image RGBA -> Image RGBA
+colorMatrixLuna matrix = onEachRGB (A.lift1 $ (colorMatrix :: ColorMatrix Color.RGB Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)) matrix)

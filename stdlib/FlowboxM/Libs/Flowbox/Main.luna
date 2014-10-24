@@ -231,6 +231,9 @@ def Image.unpremultiply:
 def Image.invert:
     ```liftF1 invertLuna #{self}```
 
+def Image.colorMatrix matrix:
+    ```liftF2 colorMatrixLuna #{matrix} #{self}```
+
 
 def main:
     lena = load "./test.png"
