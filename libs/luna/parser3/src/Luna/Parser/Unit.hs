@@ -4,19 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
 
-module Luna.ASTNew.Native where
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TemplateHaskell #-}
+
+module Luna.Parser.Unit where
+
+import           Flowbox.Prelude
+import           Luna.AST.Common                 (ID)
 
 
-import Flowbox.Prelude
-import GHC.Generics
 
+data Unit a = Unit ID a deriving Show
 
-data Native e = Code [NativeSegment]
-              | AST e
-              deriving (Show)
-
-data NativeSegment = Str { _code :: String }
-                   | Var { _name :: String } 
-                   deriving (Show)
