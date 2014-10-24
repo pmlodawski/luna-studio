@@ -210,6 +210,18 @@ class ```AlphaBlend```:
 def Image.merge mode alphaBlendMode img:
     ```liftF4 mergeLuna #{mode} #{alphaBlendMode} #{self} #{img}```
 
+def Image.erode size:
+    ```liftF2 erodeLuna #{size} #{self}```
+
+def Image.dilate size:
+    ```liftF2 dilateLuna #{size} #{self}```
+
+def Image.open size:
+    ```liftF2 openLuna #{size} #{self}```
+
+def Image.close size:
+    ```liftF2 closeLuna #{size} #{self}```
+
 def main:
     lena = load "./test.png"
     checker = load "./checker.png"
