@@ -536,3 +536,9 @@ invertLuna = onEachValue invert
 
 colorMatrixLuna :: ColorMatrix Color.RGB Double -> Image RGBA -> Image RGBA
 colorMatrixLuna matrix = onEachRGB (A.lift1 $ (colorMatrix :: ColorMatrix Color.RGB Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)) matrix)
+
+multiplyLuna :: Double -> Image RGBA -> Image RGBA
+multiplyLuna (variable -> v) = onEachValue (*v)
+
+gammaLuna :: Double -> Image RGBA -> Image RGBA
+gammaLuna (variable -> v) = onEachValue (gamma v)
