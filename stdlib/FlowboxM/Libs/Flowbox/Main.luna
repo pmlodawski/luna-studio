@@ -234,6 +234,12 @@ def Image.invert:
 def Image.colorMatrix matrix:
     ```liftF2 colorMatrixLuna #{matrix} #{self}```
 
+def Image.multiply val:
+    ```liftF2 multiplyLuna #{val} #{self}```
+
+def Image.gamma val:
+    ```liftF2 gammaLuna #{val} #{self}```
+
 
 def main:
     lena = load "./test.png"
