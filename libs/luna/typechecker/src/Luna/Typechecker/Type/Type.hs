@@ -11,7 +11,8 @@ type Label = String
 data Type = TVar Tyvar
           | TConst Tycon
           | TAp Type Type
-          | TRow Tyrow
+          | Record Tyrow
+          | Variant Tyrow
           deriving (Eq, Show)
 
 data Tyvar = Tyvar { id :: VarID, constraint :: Constraint }
