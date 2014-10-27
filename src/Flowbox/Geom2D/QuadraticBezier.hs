@@ -20,6 +20,8 @@ data QuadraticBezier a = QuadraticBezier { quadraticC0 :: Point2 a
                                          , quadraticC2 :: Point2 a
                                          } deriving (Eq, Ord, Show, Typeable)
 
+type QuadraticPath a = (Bool, [QuadraticBezier a])
+
 instance Functor QuadraticBezier where
     fmap f (QuadraticBezier a b c) = QuadraticBezier (fmap f a) (fmap f b) (fmap f c)
 

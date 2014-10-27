@@ -19,10 +19,18 @@ import Data.Array.Accelerate.Interpreter (run)
 #endif
 
 import Math.Coordinate.Cartesian (Point2(..))
+import Flowbox.Geom2D.QuadraticBezier.Conversion
+import Flowbox.Geom2D.CubicBezier
 import Flowbox.Geom2D.ControlPoint
 import Flowbox.Geom2D.Path
 import Flowbox.Geom2D.Shape
+import Flowbox.Geom2D.Shape.Conversion
+import Flowbox.Graphics.Image.Image
 import Flowbox.Prelude
+
+import Utils
+
+
 
 generateControls :: [Double] -> [ControlPoint Double]
 generateControls = combine
@@ -32,6 +40,16 @@ generateControls = combine
 
 generatePath :: [ControlPoint Double] -> Path Double
 generatePath = flip Path True
+
+--saveImageLuna :: FilePath -> Image RGBA -> IO (Image RGBA)
+--saveImageLuna path img = do
+--    let Just view = lookup "rgba" img
+--        Right (Just (ChannelFloat _ (FlatData r))) = View.get view "r"
+--        Right (Just (ChannelFloat _ (FlatData g))) = View.get view "g"
+--        Right (Just (ChannelFloat _ (FlatData b))) = View.get view "b"
+--        Right (Just (ChannelFloat _ (FlatData a))) = View.get view "a"
+--    testSaveRGBA path r g b a
+--    return img
 
 main :: IO ()
 main = do
@@ -65,7 +83,8 @@ main = do
         controls = fmap generateControls coordinates
         paths    = fmap generatePath     controls
         shape    = Shape paths
+        quadratics = toQuadratics shape
 
-    print shape
+    print $ quadratics
 
     return ()
