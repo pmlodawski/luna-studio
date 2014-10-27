@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ConstraintKinds #-}
@@ -53,7 +54,7 @@ type LModule = LModule.Module
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen"
+logger = getLoggerIO $(moduleName)
 
 
 
@@ -220,6 +221,7 @@ mkProxyE name = HExpr.Typed (HExpr.AppT (HExpr.VarT "Proxy") (HExpr.Lit $ HLit.S
 genExpr :: LExpr -> GenPass HExpr
 genExpr ast = case ast of
     LExpr.Var      _ name                -> pure $ HExpr.Var $ mkVarName name
+    LExpr.FuncVar  _ name                -> pure $ HExpr.Var $ mkVarName $ Name.unified name
     LExpr.Con      _ name                -> pure $ HExpr.Var (Naming.con name)
     LExpr.Function _ path name
                      inputs output body  -> do
@@ -517,6 +519,7 @@ genType' t = case t of
     LType.Con     _ segments -> return $ HExpr.ConE segments
 
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType' items
+    LType.List    _ item     -> HExpr.ListT <$> genType' item
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType' src) (mapM genType' args)
     LType.Unknown _          -> logger critical "Cannot generate code for unknown type2" *> Pass.fail "Cannot generate code for unknown type"
     --_                        -> fail $ show t
@@ -527,9 +530,12 @@ genLit lit = case lit of
     LLit.Number _ (Number.Number base repr exp sign) -> do
         when (base /= 10) $ Pass.fail "number base different than 10 are not yet supported"
         when (not $ isNothing exp) $ Pass.fail "number exponents are not yet supported"
+        let sign' = case sign of
+                        Number.Positive -> ""
+                        Number.Negative -> "-"
         case repr of
-            Number.Float   int frac -> mkLit "Double" (HLit.Float $ int ++ "." ++ frac)
-            Number.Decimal int      -> mkLit "Int"    (HLit.Integer int)
+            Number.Float   int frac -> mkLit "Double" (HLit.Float   $ sign' ++ int ++ "." ++ frac)
+            Number.Decimal int      -> mkLit "Int"    (HLit.Integer $ sign' ++ int)
 
     --LLit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
     --LLit.Float   _ str      -> mkLit "Double" (HLit.Float   str)

@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Analysis.CallGraph.CallGraph where
 
@@ -32,7 +33,7 @@ import qualified Luna.Pass.Pass                     as Pass
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.CallGraph.CallGraph"
+logger = getLoggerIO $(moduleName)
 
 
 type CGPass result = Pass State result

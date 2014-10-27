@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.Bus.Bus where
 
@@ -42,7 +43,7 @@ import qualified Generated.Proto.Bus.Request.Method   as Method
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.Bus"
+logger = getLoggerIO $(moduleName)
 
 
 type Error = String

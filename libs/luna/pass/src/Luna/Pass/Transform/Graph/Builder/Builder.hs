@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
@@ -19,15 +20,15 @@ import qualified Data.Maybe                 as Maybe
 import           Flowbox.Prelude                         hiding (error, mapM, mapM_)
 import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Log.Logger
+import           Luna.AST.Arg                            (Arg)
+import qualified Luna.AST.Arg                            as Arg
 import qualified Luna.AST.Common                         as AST
 import           Luna.AST.Expr                           (Expr)
-import           Luna.AST.Arg                           (Arg)
 import qualified Luna.AST.Expr                           as Expr
 import qualified Luna.AST.Lit                            as Lit
 import           Luna.AST.Pat                            (Pat)
 import qualified Luna.AST.Pat                            as Pat
 import qualified Luna.AST.Type                           as Type
-import qualified Luna.AST.Arg                            as Arg
 import           Luna.Data.AliasInfo                     (AliasInfo)
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Node                         as Node
@@ -35,14 +36,14 @@ import qualified Luna.Graph.Node.OutputName              as OutputName
 import           Luna.Graph.Port                         (Port)
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Graph.PropertyMap                  (PropertyMap)
+import qualified Luna.Pass.Analysis.ID.MinID             as MinID
 import qualified Luna.Pass.Pass                          as Pass
 import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
 
 
-
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
+logger = getLoggerIO $(moduleName)
 
 
 run :: AliasInfo -> PropertyMap -> Bool -> Expr -> Pass.Result (Graph, PropertyMap)
@@ -101,10 +102,11 @@ parseArg inputsID (input, no) = case input of
 buildOutput :: Node.ID -> Expr -> GBPass ()
 buildOutput outputID expr = do
     case expr of
-        Expr.Assignment {} -> void $ buildNode    False True Nothing expr
-        Expr.Tuple _ items -> buildAndConnectMany True  True Nothing outputID items 0
-        Expr.Var {}        -> buildAndConnect     True  True Nothing outputID (expr, Port.All)
-        _                  -> buildAndConnect     False True Nothing outputID (expr, Port.All)
+        Expr.Assignment {}             -> void $ buildNode    False True Nothing expr
+        Expr.Tuple   _ items           -> buildAndConnectMany True  True Nothing outputID items 0
+        Expr.Grouped _ (v@Expr.Var {}) -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
+        Expr.Var {}                    -> buildAndConnect     True  True Nothing outputID (expr, Port.All)
+        _                              -> buildAndConnect     False True Nothing outputID (expr, Port.All)
     State.connectMonadic outputID
 
 
@@ -156,7 +158,8 @@ buildNode astFolded monadicBind outName expr = do
         buildApp i src args = do
             graphFolded <- State.getGraphFolded i
             if graphFolded
-                then addNode' (src ^?! Expr.dst . Expr.id) (showExpr expr) []
+                then do minID <- hoistEither =<< MinID.runExpr src
+                        addNode' minID (showExpr expr) []
                 else do srcID <- buildNode astFolded False outName src
                         s     <- State.gvmNodeMapLookUp srcID
                         case s of
@@ -224,11 +227,12 @@ buildPat p = case p of
     Pat.App      _ _ args -> List.concat <$> mapM buildPat args
     Pat.Typed    _ pat _  -> buildPat pat
     Pat.Wildcard i        -> return [i]
+    Pat.Grouped  _ pat    -> buildPat pat
 
 
 showArg :: Arg Expr -> String
 showArg arg = case arg of
-    --Arg.Named _ name a -> 
+    --Arg.Named _ name a ->
     Arg.Unnamed _ a -> showExpr a
 
 
@@ -248,7 +252,7 @@ showExpr expr = concat $ case expr of
     --Expr.Infix        _ name     src       dst
     Expr.List         _ items         -> ["[", List.intercalate ", " (map showExpr items), "]"]
     Expr.Lit          _ lvalue        -> [Lit.lunaShow lvalue]
-    Expr.Tuple        _ items         -> ["{", List.intercalate ", " (map showExpr items), "}"]
+    Expr.Tuple        _ items         -> [List.intercalate ", " (map showExpr items)]
     --Expr.Typed        _ cls      expr
     Expr.Var          _ name          -> [name]
     Expr.Wildcard     _               -> ["_"]
@@ -261,7 +265,6 @@ showExpr expr = concat $ case expr of
     Expr.NativeVar    _ name          -> ["#{", name, "}"]
     --Expr.Case         _ expr     match
     --Expr.Match        _ pat      body
-    _ -> Prelude.error $ show expr
 
 
 showNative :: Expr -> String

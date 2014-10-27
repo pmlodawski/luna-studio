@@ -21,6 +21,7 @@ import Luna.AST.Common                 (ID)
 data Type = Unknown  { _id :: ID                                               }
           | Var      { _id :: ID, _name     :: String                          }
           | Tuple    { _id :: ID, _items    :: [Type]                          }
+          | List     { _id :: ID, _item     :: Type                            }
           | Data     { _id :: ID, _name     :: String   , _params  :: [String] }
           | Module   { _id :: ID, _name     :: String   , _path    :: [String] }
           | Function { _id :: ID, _inputs   :: [Type]   , _output  :: Type     }
@@ -38,6 +39,7 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 traverseM :: Traversal m => (Type -> m Type) -> Type -> m Type
 traverseM ftype t = case t of
     Tuple      id' items'                    -> Tuple  id' <$> ftypeMap items'
+    List       id' item'                     -> List   id' <$> ftype item'
     Function   id' inputs' output'           -> Function id' <$> ftypeMap inputs' <*> ftype output'
     App        id' src' args'                -> App    id' <$> ftype    src'    <*> ftypeMap args'
     Var        {}                            -> pure t
@@ -51,6 +53,7 @@ traverseM ftype t = case t of
 traverseM_ :: Traversal m => (Type -> m b) -> Type -> m ()
 traverseM_ ftype t = case t of
     Tuple      _  items'                     -> drop <* ftypeMap items'
+    List       _  item'                      -> drop <* ftype item'
     Function   _  inputs' output'            -> drop <* ftypeMap inputs' <* ftype output'
     App        _  src' args'                 -> drop <* ftype    src'    <* ftypeMap args'
     Var        {}                            -> drop
@@ -70,8 +73,10 @@ lunaShow :: Type -> String
 lunaShow t = case t of
     Unknown _               -> "Unknown"
     Var     _ name'         -> name'
-    Tuple   _ items'        -> "{" ++ List.intercalate ", " strs ++ "}" where
+    Tuple   _ items'        -> "(" ++ List.intercalate ", " strs ++ ")" where
                                    strs = map lunaShow items'
+
+    List    _ item'        -> "[" ++ lunaShow item' ++ "]"
     --Class   _ name' params' -> name' ++ " " ++ (List.intercalate " " params')
     --Module  _ path'         -> List.intercalate "." path'
     Con     _ segments'     -> List.intercalate "." segments'

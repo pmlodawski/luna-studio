@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell           #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
@@ -82,7 +83,7 @@ genProject name = let
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox"
+logger = getLoggerIO $(moduleName)
 
 
 --example :: Source
@@ -100,9 +101,16 @@ example = Source.Source ["Main"] $
                     , "def print msg:"
                     , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
 
+                    --, "class Vector:"
+                    --, "    x,y,z :: [Vector]"
+
+                    , "def foo a b:"
+                    , "    print a"
+                    , "    print b"
 
                     , "def main:"
-                    , "    print 1"
+                    --, "    a = Vector [] [] []"
+                    , "    foo 1 2"
                     ]
 
 
@@ -129,7 +137,7 @@ example = Source.Source ["Main"] $
 main :: IO ()
 main = do
     --DistMain.main
-    Logger.setLevel DEBUG "Flowbox"
+    Logger.setLevel DEBUG ""
     --let x = Parser.parse' example
     --    --x :: Int
 

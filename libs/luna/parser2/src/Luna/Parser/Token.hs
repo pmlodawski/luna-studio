@@ -169,6 +169,7 @@ reservedOp    = reserveBlock opStyle
 identLetter  = alphaNum <|> lex '_'
 
 
+nameWildcard  = symbol '_'   <?> "parameter wildcard"
 wildcard      = symbol '_'   <?> "wildcard"
 recWildcard   = symbol "..." <?> "record wildcard"
 indBlockBegin = symbol ':'

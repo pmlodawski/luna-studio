@@ -4,10 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ViewPatterns           #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE ScopedTypeVariables    #-}
-{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 module Flowbox.Math.Function.Serialization where
 
@@ -18,12 +18,12 @@ import Data.Map      hiding (fromList)
 import Data.Maybe    (fromMaybe)
 import Data.Sequence (fromList)
 
-import           Flowbox.Math.Function.Model
 import           Flowbox.Data.Serialization       (Serializable (..), mkValue)
+import           Flowbox.Math.Function.Model
+import           Generated.Proto.Data.CurveData   as CurveData
 import           Generated.Proto.Data.PointData   as PointData
 import           Generated.Proto.Data.TangentData as TangentData
 import           Generated.Proto.Data.VertexData  as VertexData
-import           Generated.Proto.Data.CurveData   as CurveData
 import qualified Generated.Proto.Data.Value       as Value
 import qualified Generated.Proto.Data.Value.Type  as Value
 

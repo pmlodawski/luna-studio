@@ -5,7 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes     #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
@@ -63,7 +64,7 @@ rootLogger = getLogger ""
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Test"
+logger = getLoggerIO $(moduleName)
 
 
 code :: Source
@@ -71,7 +72,7 @@ code = Source ["Main"] $ [r|
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -88,9 +89,9 @@ def Int.inc:
 def main:
     #print $ if 1 > 2: 5
     #        else: 6
-    print $ 1 > 2
+    print (1 > 2)
     v = Vector 1 2 3
-    print $ v
+    print v
 |]
 
 code2 :: Source
@@ -98,7 +99,7 @@ code2 = Source ["Main"] $ [r|
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -115,9 +116,9 @@ def Int.inc:
 def main:
     #print $ if 1 > 2: 5
     #        else: 6
-    print $ 3 > 2
+    print (3 > 2)
     v = Vector 1 2 3
-    print $ v
+    print v
 |]
 
 

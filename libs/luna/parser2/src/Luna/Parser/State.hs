@@ -60,12 +60,12 @@ addComment cmt s  = s & comments %~ Map.insertWith (++) (lastID s) [cmt]
 
 registerComment = mapStateVal . addComment . Comment
 
-registerParent id pid = mapStateVal (namespace . Namespace.alias %~ Alias.regParent id pid)
+regParent id pid = mapStateVal $ namespace %~ Namespace.regParent id pid
 
-registerAST id ast = mapStateVal (namespace . Namespace.alias %~ Alias.regAST id (AST.wrap ast))
+registerAST id ast = mapStateVal $ namespace %~ Namespace.regAST id ast
 
-pushScope id = mapStateVal (namespace %~ Namespace.pushScope id)
-popScope     = mapStateVal (namespace %~ Namespace.popScope)
+pushScope id = mapStateVal $ namespace %~ Namespace.pushScope id
+popScope     = mapStateVal $ namespace %~ Namespace.popScope
 
 regVarName id name = do
     pid <- getPid
@@ -75,7 +75,17 @@ regTypeName id name = do
     pid <- getPid
     withAlias $ Alias.regTypeName pid id name
 
-withAlias f = mapStateVal (namespace . Namespace.alias %~ f)
+withAlias f = mapStateVal (namespace . Namespace.info %~ f)
+
+withReserved words p = do
+    s <- get
+    let reserved = view adhocReserved s
+    put $ (addReserved words s)
+    ret <- p
+    s   <- get
+    put (s & adhocReserved .~ reserved)
+    return ret
+
 
 withScope id p = do
     pushScope id
@@ -90,14 +100,14 @@ getPid = do
         Nothing  -> fail "Internal parser error. Cannot optain pid."
         Just pid -> return pid
 
-getScope  = view (namespace . Namespace.alias . Alias.scope) <$> get
-getASTMap = view (namespace . Namespace.alias . Alias.ast) <$> get
+getScope  = view (namespace . Namespace.info . Alias.scope) <$> get
+getASTMap = view (namespace . Namespace.info . Alias.ast) <$> get
 
 
 
 registerID id = do
     pid <- getPid
-    registerParent id pid
+    regParent id pid
 
 ------------------------------------------------------------------------
 -- Instances

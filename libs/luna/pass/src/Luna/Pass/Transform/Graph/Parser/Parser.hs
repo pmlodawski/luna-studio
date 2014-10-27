@@ -7,13 +7,15 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import qualified Data.List                              as List
-import qualified Data.IntSet                               as IntSet
+import qualified Data.IntSet                as IntSet
+import qualified Data.List                  as List
+
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Arg                           as Arg
@@ -21,6 +23,7 @@ import           Luna.AST.Expr                          (Expr)
 import qualified Luna.AST.Expr                          as Expr
 import           Luna.AST.Pat                           (Pat)
 import qualified Luna.AST.Pat                           as Pat
+import           Luna.Data.ASTInfo                      (ASTInfo)
 import qualified Luna.Data.ASTInfo                      as ASTInfo
 import qualified Luna.Data.Config                       as Config
 import qualified Luna.Graph.Attributes.Naming           as Attributes
@@ -46,8 +49,8 @@ import           Luna.Pragma.Pragma (Pragma)
 
 
 
-logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.Parser"
+logger :: LoggerIO
+logger = getLoggerIO $(moduleName)
 
 
 run :: Graph -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)
@@ -74,7 +77,6 @@ parseNode inputs (nodeID, node) = do
         Node.Expr    {} -> parseExprNode    nodeID $ node ^. Node.expr
         Node.Inputs  {} -> parseInputsNode  nodeID inputs
         Node.Outputs {} -> parseOutputsNode nodeID
-    --State.setGraphFolded nodeID
     State.setPosition    nodeID $ node ^. Node.pos
 
 
@@ -100,13 +102,14 @@ parseArg nodeID (num, input) = case input of
 
 parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
-    srcs <- State.getNodeSrcs nodeID
-    case srcs of
-        []                -> whenM State.doesLastStatementReturn
-                                $ State.setOutput $ Expr.Tuple IDFixer.unknownID []
-        [src@Expr.Var {}] -> State.setOutput src
-        [_]               -> return ()
-        _:(_:_)           -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
+    srcs    <- State.getNodeSrcs nodeID
+    inPorts <- State.inboundPorts nodeID
+    case (srcs, inPorts) of
+        ([], _)               -> whenM State.doesLastStatementReturn $
+                                   State.setOutput $ Expr.Tuple IDFixer.unknownID []
+        ([src], [Port.Num 0]) -> State.setOutput $ Expr.Grouped IDFixer.unknownID src
+        ([src], _           ) -> State.setOutput src
+        _                     -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
 
 
 patVariables :: Pat -> [Expr]
@@ -117,10 +120,10 @@ patVariables pat = case pat of
     _                 -> []
 
 
-patchedParserState :: ASTInfo.ASTInfo
+patchedParserState :: ASTInfo
                    -> ParserState.State (Pragma Pragma.ImplicitSelf, (Pragma Pragma.AllowOrphans, (Pragma Pragma.TabLength, ())))
-patchedParserState info = def
-    & ParserState.info .~ info
+patchedParserState info' = def
+    & ParserState.info .~ info'
     & ParserState.conf .~ parserConf
     where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
 
@@ -130,7 +133,7 @@ parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
         [s] -> do
-            p <- case Parser.parseString pat $ Parser.patternParser (patchedParserState $ ASTInfo.mk IDFixer.unknownID) of
+            p <- case Parser.parseString pat $ Parser.patternParser (patchedParserState $ ASTInfo.mk $ IDFixer.unknownID) of
                     Left  er     -> left $ show er
                     Right (p, _) -> return p
             let e = Expr.Assignment nodeID p s
@@ -162,9 +165,13 @@ parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     expr <- if isOperator app
                 then return $ Expr.Var nodeID app
-                else case Parser.parseString app $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
-                    Left  er     -> left $ show er
-                    Right (e, _) -> return e
+                else do
+                    logger warning $ "Parsing " ++ show app
+                    case Parser.parseString app $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
+                        Left  er     -> do logger warning "failed"
+                                           left $ show er
+                        Right (e, _) -> do logger warning "passed"
+                                           return e
     ids <- hoistEither =<< ExtractIDs.runExpr expr
     mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
     let requiresApp (Expr.Con {}) = True
@@ -201,14 +208,16 @@ addExpr nodeID e = do
     assignment     <- State.hasFlag nodeID Attributes.astAssignment
     defaultNodeGen <- State.hasFlag nodeID Attributes.defaultNodeGenerated
 
-
     let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
         assignmentCount = length $ List.filter assignmentEdge
                                  $ Graph.lsuclData graph nodeID
 
-    if folded || defaultNodeGen
+        connectedToOutput = List.any (Node.isOutputs . view _2)
+                          $ Graph.lsuclData graph nodeID
+
+    if (folded && assignmentCount == 1) || defaultNodeGen
         then State.addToNodeMap (nodeID, Port.All) e
-        else if assignment || assignmentCount > 0
+        else if assignment || assignmentCount > 1
             then do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName
@@ -216,7 +225,8 @@ addExpr nodeID e = do
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
             else do State.addToNodeMap (nodeID, Port.All) e
-                    State.addToBody e
+                    unless (connectedToOutput || assignmentCount == 1 ) $
+                        State.addToBody e
 
 
 isOperator :: String -> Bool

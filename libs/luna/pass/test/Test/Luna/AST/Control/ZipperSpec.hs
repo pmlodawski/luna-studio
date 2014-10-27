@@ -18,7 +18,7 @@ import qualified Luna.AST.Expr           as Expr
 import           Luna.AST.Module         (Module)
 import qualified Luna.AST.Name           as Name
 import qualified Test.Luna.AST.Common    as Common
-import qualified Test.Luna.SampleCodes   as SampleCodes
+import qualified Test.Luna.Sample.Code   as SampleCode
 
 
 
@@ -27,7 +27,7 @@ main = hspec spec
 
 
 getAST :: IO Module
-getAST = Common.getAST SampleCodes.zipperTestModule
+getAST = Common.getAST SampleCode.zipperTestModule
 
 
 spec :: Spec
@@ -93,7 +93,7 @@ spec = do
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
                         , Crumb.Function (Name.single "test") []
-                        , Crumb.Lambda   18
+                        , Crumb.Lambda   19
                         ] ast
             let focus = Zipper.getFocus  zipper
             Expr.Lambda {} <- Focus.getLambda focus <?.> "Not a lambda"

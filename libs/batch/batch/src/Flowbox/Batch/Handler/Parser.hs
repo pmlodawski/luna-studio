@@ -18,6 +18,7 @@ import           Luna.AST.Type         (Type)
 import qualified Luna.Data.ASTInfo     as ASTInfo
 import qualified Luna.Data.Config      as Config
 import qualified Luna.Parser.Parser    as Parser
+import qualified Luna.Parser.Token     as Tok
 
 --FIXME[wd]: following imports should be removed after moving to plugin based structure
 --           including all use cases. Nothing should modify Parser.State explicitly!
@@ -28,7 +29,7 @@ import           Luna.Pragma.Pragma (Pragma)
 
 
 parseNodeExpr :: (Applicative m, Monad m) => String -> EitherT Error m Expr
-parseNodeExpr str = if length str == 1 && head str `elem` "^*/+-<>="
+parseNodeExpr str = if length str == 1 && head str `elem` Tok.opChars
     -- FIXME [PM] : remove this hack, create real node expression parser
     then return $ Expr.Infix 0 str (Expr.Wildcard 1) (Expr.Wildcard 2)
     else case Parser.parseString str $ Parser.exprParser (patchedParserState $ ASTInfo.mk 0) of

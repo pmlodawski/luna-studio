@@ -39,7 +39,7 @@ import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
+logger = getLogger $(moduleName)
 
 
 type NodeMap = Map (Node.ID, Port) Expr
@@ -116,19 +116,27 @@ nodeMapLookup key = do
 getNodeSrcs :: Node.ID -> GPPass [Expr]
 getNodeSrcs nodeID = do
     g <- getGraph
-    let processEdge (pNID, _, Edge.Data s Port.All) = Just (Port.Num 0, (pNID, s))
-        processEdge (pNID, _, Edge.Data s d       ) = Just (d, (pNID, s))
-        processEdge (_   , _, Edge.Monadic        ) = Nothing
+    let processEdge (pNID, _, Edge.Data s  Port.All   ) = Just (0, (pNID, s))
+        processEdge (pNID, _, Edge.Data s (Port.Num d)) = Just (d, (pNID, s))
+        processEdge (_   , _, Edge.Monadic            ) = Nothing
 
         connectedMap = Map.fromList
                      $ Maybe.mapMaybe processEdge
                      $ Graph.lprel g nodeID
     case Map.size connectedMap of
         0 -> return []
-        _ -> case fst $ Map.findMax connectedMap of
-            Port.Num  maxPort -> do let connected = map (flip Map.lookup connectedMap . Port.Num) [0..maxPort]
-                                    mapM getNodeSrc connected
-            Port.All          -> mkList <$> getNodeSrc (Map.lookup Port.All connectedMap)
+        _ -> do let maxPort   = fst $ Map.findMax connectedMap
+                    connected = map (flip Map.lookup connectedMap) [0..maxPort]
+                mapM getNodeSrc connected
+
+
+inboundPorts :: Node.ID -> GPPass [Port]
+inboundPorts nodeID = do
+    g <- getGraph
+    let processEdge (_, Edge.Data _ d) = Just d
+        processEdge (_, Edge.Monadic ) = Nothing
+    return $ Maybe.mapMaybe processEdge
+           $ Graph.lpre g nodeID
 
 
 getNodeSrc :: Maybe (Node.ID, Port) -> GPPass Expr

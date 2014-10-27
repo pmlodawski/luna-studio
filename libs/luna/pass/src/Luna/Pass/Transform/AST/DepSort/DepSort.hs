@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.AST.DepSort.DepSort where
 
@@ -28,7 +29,7 @@ import qualified Luna.Pass.Pass            as Pass
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.DepSort.DepSort"
+logger = getLoggerIO $(moduleName)
 
 
 type DepSortPass result = Pass Pass.NoState result

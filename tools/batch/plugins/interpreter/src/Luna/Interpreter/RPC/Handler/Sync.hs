@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 module Luna.Interpreter.RPC.Handler.Sync where
 
 import           Data.Int  (Int32)
@@ -31,7 +32,7 @@ import qualified Luna.Interpreter.Session.Session                               
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Sync"
+logger = getLoggerIO $(moduleName)
 
 --- helpers ---------------------------------------------------------------
 

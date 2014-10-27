@@ -46,4 +46,4 @@ main = hspec spec
 
 spec = do
     describe "Touching values" $ do
-        it "safe touch"             $ (1::Int)    `shouldBe` (1:Int)
+        it "safe touch"             $ (1::Int)    `shouldBe` (1::Int)
