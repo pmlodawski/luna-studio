@@ -31,7 +31,6 @@ data ControlPoint y = ControlPoint { _vertexY   :: y
                                    , _handleOut :: Maybe Handle
                                    } deriving (Show, Eq)
 
-
 data Handle = Handle { _weight   :: Weight
                      , _angle    :: Angle
                      }
