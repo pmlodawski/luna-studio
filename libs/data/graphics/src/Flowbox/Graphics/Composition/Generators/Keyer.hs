@@ -98,5 +98,5 @@ differenceKeyer offset gain = A.lift2 $ differenceKeyer' offset gain
                   bDistance = (fgB - bgB) ** 2
 
                   distance = rDistance + gDistance + bDistance
-                  alpha    = distance * gain - offset
+                  alpha    = distance * gain' - offset'
               in clamp' 0 1 alpha

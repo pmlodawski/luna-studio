@@ -28,8 +28,8 @@ import           Data.Array.Accelerate.Type  (IsScalar)
 import           Flowbox.Graphics.Composition.Generators.Structures
 import           Flowbox.Graphics.Color
 import qualified Flowbox.Graphics.Utils                             as U
-import           Flowbox.Math.Matrix                                as M hiding (canvas)
-import           Flowbox.Prelude                                    as P
+import           Flowbox.Math.Matrix                                as M
+import           Flowbox.Prelude                                    as P hiding (lift)
 
 
 
@@ -160,8 +160,10 @@ intersection a b r = (y A.>* 0 A.&&* y A.<* 1, x)
           (a1, b1) = rise a r
           (a2, b2) = fall b r
 
+rise :: Fractional t => t -> t -> (t, t)
 rise a r = (1/r, 1-(a+1)/r)
 
+fall :: Fractional t => t -> t -> (t, t)
 fall b r = ((-1)/r, 1+(b/r))
 
 check :: (A.Elt a, A.IsFloating a) => Exp a -> (Exp a, Exp a) -> Exp Bool

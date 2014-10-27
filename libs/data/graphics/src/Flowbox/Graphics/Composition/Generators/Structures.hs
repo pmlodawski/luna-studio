@@ -16,22 +16,22 @@
 
 module Flowbox.Graphics.Composition.Generators.Structures where
 
-import           Flowbox.Graphics.Prelude          hiding (transform, lift)
+import           Flowbox.Graphics.Prelude          hiding (transform)
 import qualified Flowbox.Prelude                   as P (Eq(..), Ord(..)) -- unfortunately required for the tick sorting
 import           Flowbox.Graphics.Utils.Accelerate
-import qualified Flowbox.Math.Index as I
+import qualified Flowbox.Math.Index                as I
 
 import Data.Array.Accelerate
 import Data.Array.Accelerate.Array.Sugar
 import Data.Array.Accelerate.Smart
 import Data.Array.Accelerate.Tuple
-import Control.Monad (ap)
-import Data.Typeable (Typeable)
-import Data.Profunctor
+import Control.Monad                     (ap)
+import Data.Typeable                     (Typeable)
+import Data.Profunctor                   (Profunctor(..))
 
-import           Math.Coordinate.Coordinate
 import qualified Math.Coordinate.Cartesian as Cartesian
 import           Math.Space.Space
+
 
 
 -- == Generator type ==
@@ -41,8 +41,8 @@ data Generator a b = Generator { canvas :: Grid (Exp Int)
                                } deriving Functor
 
 type CartesianGenerator a = Generator (Cartesian.Point2 a)
-type DiscreteGenerator = CartesianGenerator (Exp Int)
-type ContinousGenerator = CartesianGenerator (Exp Double)
+type DiscreteGenerator    = CartesianGenerator (Exp Int)
+type ContinousGenerator   = CartesianGenerator (Exp Double)
 
 unitGenerator :: (a -> b) -> Generator a b
 unitGenerator = Generator 1
@@ -67,7 +67,7 @@ canvasT f (Generator cnv gen) = Generator (f cnv) gen
 
 instance I.Boundable (DiscreteGenerator b) (Exp Int) b where
     unsafeIndex2D = runGenerator
-    boundary     = canvas
+    boundary      = canvas
 
 -- == Gradient tick type ==
 

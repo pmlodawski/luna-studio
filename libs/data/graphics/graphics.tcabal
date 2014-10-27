@@ -13,8 +13,7 @@ Library
   GHC-Options:            -Wall -O2
   Default-Extensions:     DoAndIfThenElse,
                           NoImplicitPrelude,
-                          TemplateHaskell,
-                          OverloadedStrings
+                          TemplateHaskell
   Default-Language:       Haskell2010
 
   Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
@@ -68,8 +67,7 @@ Executable test_generator
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          TemplateHaskell,
-                          OverloadedStrings
+                          TemplateHaskell
   Default-Language:       Haskell2010
 
   if flag(cuda)
@@ -103,8 +101,7 @@ Executable test_curves
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          TemplateHaskell,
-                          OverloadedStrings
+                          TemplateHaskell
   Default-Language:       Haskell2010
 
   if flag(cuda)
@@ -142,8 +139,7 @@ Executable test_func
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          TemplateHaskell,
-                          OverloadedStrings
+                          TemplateHaskell
   Default-Language:       Haskell2010
 
   if flag(cuda)

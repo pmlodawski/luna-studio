@@ -9,12 +9,11 @@
 module Main where
 
 import Data.ByteString.Lazy.Char8
-import Flowbox.Prelude            hiding (putStrLn)
+import Flowbox.Prelude            hiding (putStrLn, view)
 
-import Flowbox.Data.Channel
 import Flowbox.Graphics.Image.Channel hiding (compute)
 import Flowbox.Graphics.Image.View    as V
-import Flowbox.Graphics.Serialization
+import Flowbox.Graphics.Serialization ()
 
 import qualified Data.Array.Accelerate                              as A
 import           Flowbox.Data.Serialization                         (compute, toValue)
@@ -56,11 +55,12 @@ defocusSerialize blurSize = do
     -- Try to serialize the uncomputed array
     try1 <- toValue view
     case try1 of
-        Just msg -> putStrLn "Magic happened! We have a value from an uncomputed array"
+        Just _ -> putStrLn "Magic happened! We have a value from an uncomputed array"
         Nothing -> do
             try2 <- toValue $ compute view -- Try to serialize the computed array
             case try2 of
                 Just msg -> putStrLn $ messagePut msg
                 Nothing -> putStrLn "Something went wrong"
 
+main :: IO ()
 main = defocusSerialize 10

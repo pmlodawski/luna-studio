@@ -9,15 +9,14 @@
 
 module Flowbox.Graphics.Composition.Generators.Sampler where
 
-import Flowbox.Prelude                                      as P hiding (transform)
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Stencil
-import Flowbox.Graphics.Composition.Generators.Filter      (Filter(..), convolve)
+import Flowbox.Graphics.Composition.Generators.Filter     (Filter(..), convolve)
 import Flowbox.Graphics.Utils
-import Flowbox.Math.Matrix                                as M
+import Flowbox.Math.Matrix                                as M hiding (get, size)
+import Flowbox.Prelude                                    as P hiding (filter, transform)
 
-import qualified Data.Array.Accelerate                    as A
-import           Math.Coordinate.Cartesian                (Point2(..))
+import qualified Data.Array.Accelerate     as A
+import           Math.Coordinate.Cartesian (Point2(..))
 
 
 

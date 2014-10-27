@@ -17,18 +17,20 @@ module Flowbox.Graphics.Composition.Dither where
 import qualified Data.Array.Accelerate              as A
 import qualified Data.Array.Accelerate.Array.Sugar  as Sugar
 
-import Data.Vector.Unboxed as VU
+import Data.Vector.Unboxed as VU hiding (update)
 import Foreign.Storable
 
-import Flowbox.Prelude     as P
-import Flowbox.Math.Matrix as M
+import Flowbox.Prelude     as P hiding (ix)
+import Flowbox.Math.Matrix as M hiding (size)
 import Flowbox.Math.Index
 
-import Math.Coordinate.Cartesian
-import Math.Space.Space
+import Math.Coordinate.Cartesian hiding (x, y)
+import Math.Space.Space          hiding (height, width)
 
 import Data.List
 import Data.Function
+
+
 
 -- == Error diffusion table ==
 
@@ -62,8 +64,8 @@ dither bnd dTable bits' img = do
 
             forM_ [0..diffH-1] $ \dy ->
                 forM_ [0..diffW-1] $ \dx -> do
-                    let dither = unsafeIndex2D dTable (Point2 dx dy)
-                    update (x + dx - diffW2) (y + dy) ( + (quant_error * dither))
+                    let dither' = unsafeIndex2D dTable (Point2 dx dy)
+                    update (x + dx - diffW2) (y + dy) ( + (quant_error * dither'))
 
 floydSteinberg :: (Unbox a, Fractional a) => DiffusionTable a
 floydSteinberg = BMatrix [ 0   , 0   , 7/16
@@ -141,9 +143,9 @@ bayerTable n = M.map (\x -> A.fromIntegral x / A.fromIntegral (A.lift maxVal + 1
                     newi = ((i - 1) `div` 4) + 1
 
 bayer :: (Elt a, IsFloating a) => Int -> Matrix2 a -> Matrix2 a
-bayer n mat = M.generate (shape mat) $ \elem@(A.unlift -> Z :. y :. x :: EDIM2) -> 
+bayer n mat = M.generate (shape mat) $ \ix@(A.unlift -> Z :. y :. x :: EDIM2) -> 
         let bayerVal = boundedIndex2D A.Wrap mosaic $ Point2 x y
-            oldpixel = mat M.! elem
+            oldpixel = mat M.! ix
         in A.fromIntegral (A.floor (oldpixel * bits + bayerVal) :: Exp Int) / bits
     where bits   = A.fromIntegral $ A.lift (2 ^ (n - 1) :: Int)
           mosaic = bayerTable n

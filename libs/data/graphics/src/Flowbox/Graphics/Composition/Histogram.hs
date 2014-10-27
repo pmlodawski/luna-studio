@@ -11,8 +11,7 @@ module Flowbox.Graphics.Composition.Histogram where
 
 import qualified Data.Array.Accelerate as A
 
-import           Flowbox.Prelude
-import qualified Flowbox.Math.Matrix    as M
+import           Flowbox.Prelude        hiding (ix)
 import           Flowbox.Math.Numeric
 import qualified Flowbox.Graphics.Utils as U
 

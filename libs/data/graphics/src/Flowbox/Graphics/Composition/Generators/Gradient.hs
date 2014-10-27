@@ -13,11 +13,12 @@ module Flowbox.Graphics.Composition.Generators.Gradient where
 import Flowbox.Prelude                                    as P hiding ((?))
 import Flowbox.Graphics.Composition.Generators.Structures
 
-import Data.Array.Accelerate                              as A
-import Data.List                                          (sort)
+import Data.Array.Accelerate     as A
+import Data.List                 (sort)
 import Math.Coordinate
-import Math.Coordinate.Cartesian                          as Cartesian hiding (x, y, w)
-import Math.Metric
+import Math.Coordinate.Cartesian as Cartesian hiding (x, y, w)
+import Math.Metric               hiding (metric)
+
 
 
 colorMapper :: forall a b c x . (Elt a, Elt b, Elt c, IsFloating a, Num a, Ord a) 
@@ -60,7 +61,7 @@ squareShape  = radialShape Chebyshev
 
 conicalShape :: (Elt a, IsFloating a) => CartesianGenerator (Exp a) (Exp a)
 conicalShape = unitGenerator $ \pixel -> let res = 1 - Cartesian.uncurry atan2 pixel / (2 * pi)
-                                      in min (res A.>* 1 ? (res - 1, res)) 1
+                                         in min (res A.>* 1 ? (res - 1, res)) 1
 
 linearShape :: Fractional a => CartesianGenerator a a
 linearShape = unitGenerator $ \(Point2 x _) -> x
