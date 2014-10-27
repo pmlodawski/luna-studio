@@ -17,15 +17,15 @@
 
 module Flowbox.Graphics.Composition.Generators.Transform where
 
-import Flowbox.Graphics.Prelude                           as P hiding (transform)
-import Flowbox.Math.Matrix                                as M
-import Flowbox.Graphics.Utils.Linear
 import Flowbox.Graphics.Composition.Generators.Structures
+import Flowbox.Graphics.Prelude                           as P hiding (lifted, transform)
+import Flowbox.Graphics.Utils.Linear
 import Flowbox.Graphics.Utils
+import Flowbox.Math.Matrix                                as M
 
 import qualified Data.Array.Accelerate     as A
 import           Math.Coordinate.Cartesian (Point2(..))
-import           Math.Space.Space
+import           Math.Space.Space          hiding (width, height)
 import           Linear                    hiding (normalize, inv33, rotate)
 
 
@@ -108,7 +108,7 @@ coveringGrid f (Grid gw gh) = Grid gw' gh'
           Point2 px3 py3 = f $ Point2 gw gh
           Point2 px4 py4 = f $ Point2 0  gh
 
-cornerPin' :: forall a b . (Elt a, IsFloating a, AccEpsilon a)
+cornerPin' :: forall a. (Elt a, IsFloating a, AccEpsilon a)
            => Grid (Exp a)
            -> (Point2 (Exp a), Point2 (Exp a), Point2 (Exp a), Point2 (Exp a))
            -> Point2 (Exp a) -> Point2 (Exp a)

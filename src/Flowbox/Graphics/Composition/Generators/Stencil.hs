@@ -10,12 +10,12 @@
 module Flowbox.Graphics.Composition.Generators.Stencil where
 
 import Flowbox.Prelude                                    as P hiding (filter)
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Math.Matrix                                as M hiding (stencil)
+import Flowbox.Graphics.Composition.Generators.Structures hiding (value)
+import Flowbox.Math.Matrix                                as M hiding (get, stencil)
 
-import qualified Data.Array.Accelerate                    as A
-import           Math.Coordinate.Cartesian                (Point2(..))
-import           Math.Space.Space
+import qualified Data.Array.Accelerate     as A
+import           Math.Coordinate.Cartesian (Point2(..))
+import           Math.Space.Space          hiding (height, width)
 
 
 
@@ -38,7 +38,7 @@ bilateralStencil :: forall a b c . (Elt a, IsNum a, IsFloating a)
             -> (Exp a -> Exp a -> Exp a) -- domain kernel
             -> (Exp a -> Exp a -> Exp a) -> Exp a
             -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
-bilateralStencil mode (Generator (Grid width height) kernel) domain foldOp initVal (Generator cnv input) = Generator cnv $ \pos ->
+bilateralStencil mode (Generator (Grid width height) kernel) domain foldOp _initVal (Generator cnv input) = Generator cnv $ \pos ->
     let get x' y' = input $ mode pos (Point2 x' y')
 
         testW :: (Exp Int, Exp a, Exp a) -> Exp Bool
@@ -58,6 +58,7 @@ bilateralStencil mode (Generator (Grid width height) kernel) domain foldOp initV
                       where weight = domain (get 0 0) value * kernel (Point2 w h)
                             value = get (w - width `div` 2) (h - height `div` 2)
         (_ :: Exp Int, valueSum :: Exp a, weightSum :: Exp a) = A.unlift $ A.while (A.lift1 testH) (A.lift1 outer) (start 0 0)
+        --                                                                                                     FIXME[mm]: ^ initVal nie powinno być tu?
     in valueSum / weightSum
 
 normStencil :: forall a b c . (Elt a, IsNum a, IsFloating a)

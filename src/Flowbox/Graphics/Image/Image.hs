@@ -4,9 +4,6 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-
 module Flowbox.Graphics.Image.Image (
     Image,
     insert,
@@ -17,12 +14,13 @@ module Flowbox.Graphics.Image.Image (
     singleton
 ) where
 
-import qualified Data.Map                    as Map
-import qualified Data.Set                    as Set
-import           Data.Traversable            (sequence)
-import qualified Flowbox.Graphics.Image.View as View
+import qualified Data.Map                     as Map
+import qualified Data.Set                     as Set
+import qualified Flowbox.Graphics.Image.View  as View
 import           Flowbox.Graphics.Image.Error
-import           Flowbox.Prelude             hiding (views, lookup, sequence, map)
+import           Flowbox.Prelude              hiding (views, lookup, map, view)
+
+
 
 data Image view = Image { _views       :: Map.Map View.Name view
                         , _defaultView :: View.Select
