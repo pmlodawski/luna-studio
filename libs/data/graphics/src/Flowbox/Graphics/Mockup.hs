@@ -41,6 +41,7 @@ import           Flowbox.Graphics.Composition.Generators.Shape
 import           Flowbox.Graphics.Composition.Generators.Stencil
 import           Flowbox.Graphics.Composition.Generators.Structures
 import           Flowbox.Graphics.Composition.Generators.Transform
+import           Flowbox.Graphics.Composition.Histogram
 import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Color
 import           Flowbox.Graphics.Image.Image                         as Image
@@ -54,6 +55,7 @@ import           Flowbox.Prelude                                      as P hidin
 
 import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 import Control.PolyApplicative ((<<*>>))
+
 
 
 testLoadRGBA' :: Value Pure Safe String -> Value IO Safe (Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double))
@@ -578,3 +580,22 @@ radialBlurLuna (variable -> size) (variable -> angle) = onEachChannel process
                   . translate (V2 (-256) (-256))
                   . nearest
                   . fromMatrix A.Clamp
+
+histEqLuna :: Int -> Image RGBA -> Image RGBA
+histEqLuna (variable -> bins) img = img'
+    where rgb = unsafeGetRGB img
+          hsv = M.map Color.liftedConvertColor rgb
+          v   = M.map (\(A.unlift -> Color.HSV _ _ v) -> v) hsv
+          v'  = M.Delayed $ histeq bins (M.accMatrix v)
+          hsv' = M.zipWith (\(A.unlift -> Color.HSV h s _) v -> A.lift $ Color.HSV h s v) hsv v'
+          rgb' = M.map Color.liftedConvertColor hsv'
+          (r, g, b) = M.unzip3 $ M.map (\(A.unlift -> Color.RGB r g b) -> A.lift (r, g, b)) rgb'
+
+          Just view = lookup "rgba" img
+
+          view' = view
+                & View.append (ChannelFloat "r" (FlatData r))
+                & View.append (ChannelFloat "g" (FlatData g))
+                & View.append (ChannelFloat "b" (FlatData b))
+
+          Right img' = Image.update (const $ Just view') "rgba" img

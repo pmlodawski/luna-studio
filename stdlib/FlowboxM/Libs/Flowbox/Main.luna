@@ -251,6 +251,9 @@ def Image.clamp thresholds clamps:
 def Image.radialBlur size angle:
     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
 
+def Image.histEq bins:
+    ```liftF2 histEqLuna #{bins} #{self}```
+
 def main:
     lena = load "./test.png"
     checker = load "./checker.png"
