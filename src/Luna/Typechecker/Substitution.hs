@@ -29,10 +29,12 @@ removeSubstitution = error "Substitution : removeSubstitution"
 addSubstitution :: Tyvar -> Type -> Subst -> Subst
 addSubstitution tyvar t = mappend $ Subst [(tyvar, t)]
 
+addSubstitution` = mappend . singleSubstitution
+
 addSubstitutions :: [(Tyvar, Type)] -> Subst -> Subst
 addSubstitutions ts s = mconcat $ map (\x -> Subst [x]) ts ++ [s]
 
-
+singleSubstitution = mappend mempty
 
 class Types t where
   apply :: Subst -> t -> t
