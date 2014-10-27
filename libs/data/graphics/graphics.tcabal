@@ -118,9 +118,11 @@ Executable test_curves
                   algebraic                ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
+                  JuicyPixels              ,
                   lens                     ,
                   split                    ,
-                  cubicbezier
+                  cubicbezier              ,
+                  vector
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND

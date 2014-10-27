@@ -22,13 +22,13 @@ import Flowbox.Prelude                       hiding ((++))
 
 
 approximateCubicWithQuadratic :: Int -> Double -> CubicBezier Double -> [QuadraticBezier Double]
-approximateCubicWithQuadratic = approximateCubicWithQuadraticStep 0
+approximateCubicWithQuadratic = approximateCubicWithQuadraticStep 1
     where approximateCubicWithQuadraticStep :: Int -> Int -> Double -> CubicBezier Double-> [QuadraticBezier Double]
           approximateCubicWithQuadraticStep step limit eps curve@(CubicBezier pA pB pC pD)
-              | err < eps || step > limit = [approxCruve]
-              | hasInflections = getSubresults subcurvesInf
-              | hasExtrema = getSubresults subcurvesExt
-              | otherwise = getSubresults subcurvesHalf
+              | err < eps || step >= limit = [approxCruve]
+              | hasInflections             = getSubresults subcurvesInf
+              | hasExtrema                 = getSubresults subcurvesExt
+              | otherwise                  = getSubresults subcurvesHalf
               where
                   curve' = fcb2gcb curve
                   hasInflections = not $ null inflections
@@ -38,7 +38,7 @@ approximateCubicWithQuadratic = approximateCubicWithQuadraticStep 0
                   subcurvesExt  = splitN extremas
                   subcurvesInf  = splitN inflections
                   subcurvesHalf = splitN [0.5]
-                  extremas     = sort $ findDerivRoots curve 0 1 0.001
+                  extremas     = sort $ filter (\x -> x > 0 && x < 1) $ findDerivRoots curve 0 1 0.001 -- INFO: 0 and 1 roots cause the splitBezierN to return NaNs
                   --extremas     = sort $ curvatureExtrema curve 0.001
                   inflections  = sort $ Cubic.findBezierInflection curve'
                   --
