@@ -34,7 +34,9 @@ addSubstitution` = mappend . singleSubstitution
 addSubstitutions :: [(Tyvar, Type)] -> Subst -> Subst
 addSubstitutions ts s = mconcat $ map (\x -> Subst [x]) ts ++ [s]
 
-singleSubstitution = mappend mempty
+fromSingleSubstitution = mappend mempty
+
+fromMultipleSubstitions = Subst
 
 class Types t where
   apply :: Subst -> t -> t

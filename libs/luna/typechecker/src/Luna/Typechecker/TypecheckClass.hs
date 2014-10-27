@@ -40,15 +40,15 @@ instance Inference Expr where
   infer env (ELit lit)           = functionResult "infer/Expr:ELit" $
                                    infer env lit
   infer env (EApp f a)           = functionResult "infer/Expr:EApp" $
-                                   do tv <- mkTyID
+                                   do
                                       (sf,tf) <- infer env f
                                       (sa,ta) <- infer (apply sf env) a
+                                      tv <- mkTyID
                                       s3 <- mgu (apply sa tf) (ta `mkTyFun` tv)
                                       return (s3 `mappend` sa `mappend` sf, apply s3 tv)
   infer env (EAbs vid body)      = functionResult "infer/Expr:EAbs" $
                                    do tv <- mkTyID
                                       let env' = expandTypeEnv env vid (Scheme [] tv)
-                                      trace "ya"
                                       (s1,t1) <- infer env' body
                                       return (s1, mkTyFun (apply s1 tv) t1)
   infer env (ELet name val body) = functionResult "infer/Expr:ELet" $
