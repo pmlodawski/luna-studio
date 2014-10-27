@@ -163,11 +163,7 @@ loadImageLuna path = do
 
 saveImageLuna :: FilePath -> Image RGBA -> IO (Image RGBA)
 saveImageLuna path img = do
-    let Just view = lookup "rgba" img
-        Right (Just (ChannelFloat _ (FlatData r))) = View.get view "r"
-        Right (Just (ChannelFloat _ (FlatData g))) = View.get view "g"
-        Right (Just (ChannelFloat _ (FlatData b))) = View.get view "b"
-        Right (Just (ChannelFloat _ (FlatData a))) = View.get view "a"
+    let (r, g, b, a) = unsafeGetChannels img
     testSaveRGBA path r g b a
     return img
 
@@ -194,11 +190,12 @@ onEachRGB f img = img'
 
           (r', g', b') = unzipRGB rgb'
 
-          v1 = View.append (ChannelFloat "r" (FlatData r')) view
-          v2 = View.append (ChannelFloat "g" (FlatData g')) v1
-          v3 = View.append (ChannelFloat "b" (FlatData b')) v2
+          view' = view
+                & View.append (ChannelFloat "r" (FlatData r'))
+                & View.append (ChannelFloat "g" (FlatData g'))
+                & View.append (ChannelFloat "b" (FlatData b'))
 
-          Right img' = Image.update (const $ Just v3) "rgba" img
+          Right img' = Image.update (const $ Just view') "rgba" img
 
 keyer' :: (A.Exp (Color.RGB Double) -> A.Exp Double) -> Image RGBA -> Image RGBA
 keyer' f img = img'
