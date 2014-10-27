@@ -26,8 +26,9 @@ import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  as ProjectManagerSyncGet
 import           Luna.Interpreter.RPC.Handler.Lift
+import qualified Luna.Interpreter.Session.Cache.Invalidate                      as Invalidate
+import qualified Luna.Interpreter.Session.Env                                   as Env
 import           Luna.Interpreter.Session.Session                               (SessionST)
-import qualified Luna.Interpreter.Session.Session                               as Session
 
 
 
@@ -39,12 +40,12 @@ logger = getLoggerIO $(moduleName)
 syncLibManager :: RPC Context SessionST ()
 syncLibManager = do
     pm <- Batch.getProjectManager
-    activeProjectID <- liftSession Session.getProjectID
+    activeProjectID <- liftSession Env.getProjectID
     libs <- case ProjectManager.lab pm activeProjectID of
         Just project -> return $ project ^. Project.libs
         Nothing      -> do logger warning $ "Project " ++ show activeProjectID ++ " not found"
                            return def
-    liftSession $ Session.setLibManager libs
+    liftSession $ Env.setLibManager libs
 
 
 testUpdateNo :: Int32 -> RPC Context SessionST ()
@@ -56,7 +57,7 @@ testUpdateNo updateNo = do
 
 testProjectID :: Project.ID -> RPC Context SessionST ()
 testProjectID projectID = do
-    currentProjectID <- liftSession Session.getProjectID
+    currentProjectID <- liftSession Env.getProjectID
     assertE (projectID == currentProjectID) $
         "Sync.testProjectID : wrong projectID = " ++ show projectID
 
@@ -78,6 +79,8 @@ projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata updateNo) = do
     (projectManager :: ProjectManager) <- hoistEither $ Read.readEither $ decodeP tdata
     Batch.setProjectManager projectManager
     Batch.setUpdateNo updateNo
+    syncLibManager
+    liftSession Invalidate.modifyAll
 
 
 syncIfNeeded :: RPC Context SessionST () -> RPC Context SessionST (Maybe ProjectManagerSyncGet.Request)

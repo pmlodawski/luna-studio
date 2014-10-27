@@ -5,11 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Graph.View.Default.Value where
+module Luna.Graph.Node.Position where
 
 import Flowbox.Prelude
 
 
 
-type Value = String
+type Position = (Float, Float)
 

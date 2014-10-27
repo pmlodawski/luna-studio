@@ -15,9 +15,14 @@ def Int.> a:
 def Int.inc:
     self + 1
 
+def + a b: 
+    a.+ b
+
+def > a b:
+    a.> b
+
 def main:
-    print $ if 1 > 2: 5
-            else: 6
+    print $ 5 + 3
     print $ 1 > 2
     v = Vector 1 2 3
     print $ v

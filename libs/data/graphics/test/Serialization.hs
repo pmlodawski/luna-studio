@@ -16,6 +16,7 @@ import Flowbox.Graphics.Image.View    as V
 import Flowbox.Graphics.Serialization ()
 
 import qualified Data.Array.Accelerate                              as A
+import           Flowbox.Data.Mode                                  ()
 import           Flowbox.Data.Serialization                         (compute, toValue)
 import           Flowbox.Graphics.Composition.Generators.Matrix
 import           Flowbox.Graphics.Composition.Generators.Rasterizer
@@ -53,11 +54,11 @@ defocusSerialize blurSize = do
              $ V.empty "lena"
 
     -- Try to serialize the uncomputed array
-    try1 <- toValue view
+    try1 <- toValue view def
     case try1 of
         Just _ -> putStrLn "Magic happened! We have a value from an uncomputed array"
         Nothing -> do
-            try2 <- toValue $ compute view -- Try to serialize the computed array
+            try2 <- toValue (compute view def) def -- Try to serialize the computed array
             case try2 of
                 Just msg -> putStrLn $ messagePut msg
                 Nothing -> putStrLn "Something went wrong"

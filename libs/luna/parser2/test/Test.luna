@@ -1,8 +1,4 @@
-def print msg:
-    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```
+@AllowOrphans
 
-
-
-
-def main a b c:
-    print a $ b c
+def main:
+    a = [x..y]

@@ -9,6 +9,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE LambdaCase                #-}
 
 module Luna.Pass.Transform.AST.Hash.Hash where
 
@@ -25,6 +26,8 @@ import           Luna.AST.Module           (Module)
 import qualified Luna.AST.Module           as Module
 import           Luna.AST.Pat              (Pat)
 import qualified Luna.AST.Pat              as Pat
+import           Luna.AST.Name             (Name(Name))
+import qualified Luna.AST.Name             as Name
 import           Luna.Pass.Pass            (Pass)
 import qualified Luna.Pass.Pass            as Pass
 
@@ -55,12 +58,12 @@ hashModule mod = Module.traverseM hashModule hashExpr pure hashPat pure pure mod
 
 hashExpr :: Expr.Expr -> HashPass Expr.Expr
 hashExpr ast = case ast of
-    Expr.Function {} -> hashMe
-    Expr.Infix    {} -> hashMe
-    Expr.Accessor {} -> hashMe
+    Expr.Function _ _ name _ _ _ -> (Expr.fname .~ hashName name) <$> continue
+    Expr.Infix    {}             -> hashMe
+    Expr.Accessor _ acc _        -> (Expr.acc .~ hashAcc acc) <$> continue
     Expr.RefType  {} -> hashMe
     _                -> continue
-    where hashMe   = set Expr.name (hashMe2 $ view Expr.name ast) <$> continue
+    where hashMe   = set Expr.name (hashStr $ view Expr.name ast) <$> continue
           continue = Expr.traverseM hashExpr pure hashPat pure pure ast
 
 
@@ -70,11 +73,27 @@ hashPat pat = case pat of
     _              -> Pat.traverseM hashPat pure pure pat
 
 --FIXME [wd]: some reduntant functions here
-hashMe2 :: [Char] -> [Char]
-hashMe2 = concatMap hashMeBody
+hashStr :: String -> String
+hashStr = concatMap hashMeBody
+
+hashAcc :: Expr.Accessor -> Expr.Accessor
+hashAcc acc = case acc of
+    Expr.VarAccessor name -> Expr.VarAccessor $ hashStr name 
+    Expr.ConAccessor name -> Expr.ConAccessor $ hashStr name 
 
 
-hashMeBody :: Char -> [Char]
+hashName :: Name -> Name
+hashName (Name base segments) = Name (hashStr base) (fmap hashNameSeg segments)
+
+
+hashNameSeg :: Name.Segment -> Name.Segment
+hashNameSeg = \case
+    Name.Token s -> Name.Token $ hashStr s
+    Name.Hole    -> Name.Hole
+
+
+
+hashMeBody :: Char -> String
 hashMeBody c
     | (c >= 'a' && c <='z') || (c >= 'A' && c <='Z') = [c]
     | c == '_'                                       = "__"

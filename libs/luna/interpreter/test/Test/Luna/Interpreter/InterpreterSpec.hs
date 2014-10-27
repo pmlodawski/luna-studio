@@ -17,20 +17,20 @@ import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
 import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Test.Luna.Interpreter.Common                as Common
 import qualified Test.Luna.Interpreter.SampleCodes           as SampleCodes
+
 
 
 rootLogger :: Logger
 rootLogger = getLogger ""
 
 
-
 getArgs :: CallPointPath -> Session [CallPointPath]
 getArgs callPointPath = do
-    mainPtr      <- Session.getMainPtr
+    mainPtr      <- Env.getMainPtr
     testCallData <- CallDataPath.fromCallPointPath callPointPath mainPtr
     args         <- Traverse.arguments testCallData
     return $ map CallDataPath.toCallPointPath args
@@ -38,7 +38,7 @@ getArgs callPointPath = do
 
 getSuccessors :: CallPointPath -> Session [CallPointPath]
 getSuccessors callPointPath = do
-    mainPtr      <- Session.getMainPtr
+    mainPtr      <- Env.getMainPtr
     testCallData <- CallDataPath.fromCallPointPath callPointPath mainPtr
     successors   <- Traverse.next testCallData
     return $ map CallDataPath.toCallPointPath successors
@@ -71,73 +71,59 @@ spec = do
         it "finds function arguments" $ do
             --rootLogger setIntLevel 5
             Common.runSession SampleCodes.traverseExample $ do
-                let var_a     = [CallPoint 1 6 ]
-                    var_b     = [CallPoint 1 10]
-                    var_c     = [CallPoint 1 21]
-                    fooCall   = [CallPoint 1 15]
-                    var_e     = [CallPoint 1 15, CallPoint 1 36]
-                    var_n     = [CallPoint 1 15, CallPoint 1 40]
-                    var_d     = [CallPoint 1 15, CallPoint 1 51]
-                    barCall   = [CallPoint 1 15, CallPoint 1 43]
-                    testCall  = [CallPoint 1 15, CallPoint 1 43, CallPoint 1 69]
-                    tuple     = [CallPoint 1 15, CallPoint 1 43, CallPoint 1 (-66)]
-                    printCall = [CallPoint 1 23]
-                varAArgs  <- getArgs var_a
-                varAArgs `shouldBe'` []
-                varBArgs  <- getArgs var_b
-                varBArgs `shouldBe'` []
-                varCArgs  <- getArgs var_c
-                varCArgs `shouldBe'` []
-                varDArgs  <- getArgs var_d
-                varDArgs `shouldBe'` []
-                varEArgs  <- getArgs var_e
-                varEArgs `shouldBe'` []
-                varNArgs  <- getArgs var_n
-                varNArgs `shouldBe'` []
-                testArgs  <- getArgs testCall
-                testArgs  `shouldBe'` [var_c, var_d, var_a, var_b, var_e]
-                tupleArgs <- getArgs tuple
-                tupleArgs `shouldBe'` [var_e, var_d, var_c, var_b, testCall, var_a]
-                fooCallArgs <- getArgs fooCall
-                fooCallArgs `shouldBe'` [var_a, var_b, var_c]
-                barCallArgs <- getArgs barCall
-                barCallArgs `shouldBe'` [var_a, var_b, var_c, var_d, var_e]
-                printCallArgs <- getArgs printCall
-                printCallArgs `shouldBe'` [fooCall]
+                let var_a     = [CallPoint 1 22]
+                    var_b     = [CallPoint 1 26]
+                    var_c     = [CallPoint 1 38]
+                    fooCall   = [CallPoint 1 31]
+                    var_e     = [CallPoint 1 31, CallPoint 1 55]
+                    var_n     = [CallPoint 1 31, CallPoint 1 59]
+                    var_d     = [CallPoint 1 31, CallPoint 1 71]
+                    barCall   = [CallPoint 1 31, CallPoint 1 62]
+                    conMain   = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 122]
+                    testCall  = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 90]
+                    tuple     = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 (-86)]
+                    conMain2  = [CallPoint 1 120]
+                    printCall = [CallPoint 1 41]
+                getArgs var_a     >>= shouldBe' []
+                getArgs var_b     >>= shouldBe' []
+                getArgs var_c     >>= shouldBe' []
+                getArgs var_d     >>= shouldBe' []
+                getArgs var_e     >>= shouldBe' []
+                getArgs var_n     >>= shouldBe' []
+                getArgs conMain   >>= shouldBe' []
+                getArgs testCall  >>= shouldBe' [conMain, var_c, var_d, var_a, var_b, var_e]
+                getArgs tuple     >>= shouldBe' [var_e, var_d, var_c, var_b, testCall, var_a]
+                getArgs fooCall   >>= shouldBe' [var_a, var_b, var_c]
+                getArgs barCall   >>= shouldBe' [var_a, var_b, var_c, var_d, var_e]
+                getArgs conMain2  >>= shouldBe' []
+                getArgs printCall >>= shouldBe' [conMain2, fooCall]
 
         it "finds node successors" $ do
             --putStrLn =<< ppShow <$> Common.readCode SampleCodes.traverseExample
             Common.runSession SampleCodes.traverseExample $ do
-                let var_a     = [CallPoint 1 6 ]
-                    var_b     = [CallPoint 1 10]
-                    var_c     = [CallPoint 1 21]
-                    fooCall   = [CallPoint 1 15]
-                    var_e     = [CallPoint 1 15, CallPoint 1 36]
-                    var_n     = [CallPoint 1 15, CallPoint 1 40]
-                    var_d     = [CallPoint 1 15, CallPoint 1 51]
-                    barCall   = [CallPoint 1 15, CallPoint 1 43]
-                    testCall  = [CallPoint 1 15, CallPoint 1 43, CallPoint 1 69]
-                    tuple     = [CallPoint 1 15, CallPoint 1 43, CallPoint 1 (-66)]
-                    printCall = [CallPoint 1 23]
-                varASuccs  <- getSuccessors var_a
-                varASuccs  `shouldMatchList'` [var_b, testCall, barCall]
-                varBSuccs  <- getSuccessors var_b
-                varBSuccs  `shouldMatchList'` [var_c, testCall, barCall]
-                varCSuccs  <- getSuccessors var_c
-                varCSuccs  `shouldMatchList'` [var_e, testCall, barCall]
-                varDSuccs  <- getSuccessors var_d
-                varDSuccs  `shouldMatchList'` [testCall, barCall]
-                varESuccs  <- getSuccessors var_e
-                varESuccs  `shouldMatchList'` [var_n, testCall, barCall]
-                varNSuccs  <- getSuccessors var_n
-                varNSuccs  `shouldMatchList'` [var_d]
-                testCallSuccs <- getSuccessors testCall
-                testCallSuccs `shouldMatchList'` [barCall]
-                tupleSuccs <- getSuccessors tuple
-                tupleSuccs `shouldMatchList'` [barCall]
-                barCallSuccs <- getSuccessors barCall
-                barCallSuccs `shouldMatchList'` [fooCall]
-                fooCallSuccs <- getSuccessors fooCall
-                fooCallSuccs `shouldMatchList'` [printCall]
-                printCallSuccs <- getSuccessors printCall
-                printCallSuccs `shouldMatchList'` [[]]
+                let var_a     = [CallPoint 1 22]
+                    var_b     = [CallPoint 1 26]
+                    var_c     = [CallPoint 1 38]
+                    fooCall   = [CallPoint 1 31]
+                    var_e     = [CallPoint 1 31, CallPoint 1 55]
+                    var_n     = [CallPoint 1 31, CallPoint 1 59]
+                    var_d     = [CallPoint 1 31, CallPoint 1 71]
+                    barCall   = [CallPoint 1 31, CallPoint 1 62]
+                    conMain   = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 122]
+                    testCall  = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 90]
+                    tuple     = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 (-86)]
+                    conMain2  = [CallPoint 1 120]
+                    printCall = [CallPoint 1 41]
+                getSuccessors var_a     >>= shouldMatchList' [var_b, barCall]
+                getSuccessors var_b     >>= shouldMatchList' [var_c, barCall]
+                getSuccessors var_c     >>= shouldMatchList' [var_e, barCall]
+                getSuccessors var_e     >>= shouldMatchList' [var_n, barCall]
+                getSuccessors var_n     >>= shouldMatchList' [var_d]
+                getSuccessors var_d     >>= shouldMatchList' [conMain, barCall]
+                getSuccessors conMain   >>= shouldMatchList' [testCall]
+                getSuccessors testCall  >>= shouldMatchList' [barCall]
+                getSuccessors tuple     >>= shouldMatchList' [barCall]
+                getSuccessors barCall   >>= shouldMatchList' [fooCall]
+                getSuccessors fooCall   >>= shouldMatchList' [conMain2] 
+                getSuccessors conMain2  >>= shouldMatchList' [printCall]
+                getSuccessors printCall >>= shouldMatchList' [[]]

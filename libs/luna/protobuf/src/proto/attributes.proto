@@ -7,11 +7,20 @@
 
 package generated.proto.attributes;
 
+import "nodedefault.proto";
+
 
 
 message Flags {
-    optional bool io   = 1 [default = false];
-    optional bool omit = 2 [default = false];
+    optional bool  omit                 = 1 [default = false];
+    optional bool  astFolded            = 2;
+    optional bool  astAssignment        = 3;
+    optional bool  graphFolded          = 4;
+    optional bool  grouped              = 5;
+    optional bool  defaultNodeGenerated = 6;
+    optional bool  graphViewGenerated   = 7;
+    optional float nodePositionX        = 8;
+    optional float nodePositionY        = 9;
 }
 
 message Attributes {
@@ -27,6 +36,7 @@ message Attributes {
 }
 
 message Properties {
-    optional Flags      flags = 1;
-    optional Attributes attributes = 2;
+    optional Flags       flags       = 1;
+    optional generated.proto.nodedefault.DefaultsMap defaultsMap = 2;
+    optional Attributes  attributes  = 3;
 }

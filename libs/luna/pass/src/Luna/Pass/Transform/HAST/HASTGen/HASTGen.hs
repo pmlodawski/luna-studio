@@ -356,9 +356,9 @@ genExpr ast = case ast of
     LExpr.Assignment   _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
     LExpr.RecordUpdate _ src selectors expr  -> genExpr $ (setSteps sels) expr
                                                 where setter sel exp val = flip (LExpr.App 0) [Arg.Unnamed 0 val]
-                                                                         $ LExpr.Accessor 0 (Naming.mkSetName sel) exp
+                                                                         $ LExpr.Accessor 0 (LExpr.VarAccessor $ Naming.mkSetName sel) exp
                                                       getter sel exp     = flip (LExpr.App 0) []
-                                                                         $ LExpr.Accessor 0 sel exp
+                                                                         $ LExpr.Accessor 0 (LExpr.VarAccessor sel) exp
                                                       getSel sel           = foldl (flip($)) src (fmap getter (reverse sel))
                                                       setStep       (x:xs) = setter x (getSel xs)
                                                       setSteps args@(_:[]) = setStep args
@@ -380,23 +380,31 @@ genExpr ast = case ast of
     --LExpr.App          _ src args            -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (mkRTuple <$> mapM genCallExpr args)
     --LExpr.App          _ src args            -> foldr (<*>) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) [return $ HExpr.VarE "xxx"]) 
     LExpr.App          _ src args            -> HExpr.AppE (HExpr.VarE "call") <$> foldl (flip (<*>)) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) (map genCallExpr $ fmap (view Arg.arg) args)) 
-    LExpr.Accessor     _ name dst            -> HExpr.AppE <$> (pure $ mkMemberGetter name) <*> genExpr dst --(get0 <$> genExpr dst))
+    LExpr.Accessor     _ acc dst             -> HExpr.AppE <$> (pure $ mkMemberGetter $ view LExpr.accName acc) <*> genExpr dst --(get0 <$> genExpr dst))
     LExpr.TypeAlias    _ srcType dstType     -> case srcType of
                                                     LType.Con _ segments                    -> HExpr.TySynD (last segments) [] <$> genType' dstType
                                                     LType.App _ (LType.Con _ segments) args -> HExpr.TySynD (last segments) <$> mapM genType' args <*> genType' dstType
     LExpr.TypeDef      _ srcType dstType     -> case srcType of
                                                     LType.Con _ segments                    -> HExpr.NewTypeD (last segments) [] <$> (HExpr.Con (last segments) . (:[]) <$> genType' dstType)
                                                     LType.App _ (LType.Con _ segments) args -> HExpr.NewTypeD (last segments) <$> mapM genType' args <*> (HExpr.Con (last segments) . (:[]) <$> genType' dstType)
-    LExpr.List         _ items               -> do
-                                                let liftEl el = case el of
-                                                        LExpr.RangeFromTo {} -> el
-                                                        LExpr.RangeFrom   {} -> el
-                                                        _                    -> LExpr.List 0 [el]
-                                                    (arrMod, elmod) = if any isRange items
-                                                        then (HExpr.AppE (HExpr.Var "concatPure"), liftEl)
-                                                        else (Prelude.id, Prelude.id)
+    LExpr.List         _ items               -> if (length items == 1) && (isRange $ items!!0)
+                                                    then mkVal . HExpr.ListE <$> mapM genExpr [items!!0]
+                                                    else if isThereRange then Pass.fail "Arrays with multiple sections are not supported yet!"
+                                                                         else mkVal . HExpr.ListE <$> mapM genExpr items
+                                                where isThereRange = any isRange items
 
-                                                mkVal . arrMod . HExpr.ListE <$> mapM (genExpr . elmod) items
+    -- FIXME[wd]: poprawic generacje list - multisection.
+    --LExpr.List         _ items               -> mkVal . arrMod . HExpr.ListE <$> mapM (genExpr . elmod) items
+    --                                            where liftEl el = case el of
+    --                                                      LExpr.RangeFromTo {} -> el
+    --                                                      LExpr.RangeFrom   {} -> el
+    --                                                      _                    -> LExpr.List 0 [el]
+    --                                                  (arrMod, elmod) = if any isRange items
+    --                                                      then (HExpr.AppE (HExpr.Var "concatPure"), liftEl)
+    --                                                      else (Prelude.id, Prelude.id)
+
+                                                
+
     LExpr.RangeFromTo _ start end            -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start
     LExpr.Ref         _ dst                  -> genExpr dst
@@ -542,6 +550,6 @@ genLit lit = case lit of
     LLit.String  _ str      -> mkLit "String" (HLit.String  str)
     LLit.Char    _ char     -> mkLit "Char"   (HLit.Char    char)
     --_ -> fail $ show lit
-    --where mkLit cons hast = return $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
-    where mkLit cons hast = return $ HExpr.Lit hast
+    where mkLit cons hast = return $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
+    --where mkLit cons hast = return $ HExpr.Lit hast
 

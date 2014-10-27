@@ -9,16 +9,19 @@
 module Luna.Graph.Properties where
 
 import Flowbox.Prelude
-import Luna.Graph.Attributes (Attributes)
-import Luna.Graph.Flags      (Flags)
+import Luna.Graph.Attributes               (Attributes)
+import Luna.Graph.Flags                    (Flags)
+import Luna.Graph.View.Default.DefaultsMap (DefaultsMap)
 
 
-data Properties = Properties { _flags :: Flags
-                             , _attrs :: Attributes
-                             } deriving (Show, Read, Eq)
+
+data Properties = Properties { _flags       :: Flags
+                             , _defaultsMap :: DefaultsMap
+                             , _attrs       :: Attributes
+                             } deriving (Show, Eq, Read)
 
 makeLenses ''Properties
 
 
 instance Default Properties where
-    def = Properties def def
+    def = Properties def def def

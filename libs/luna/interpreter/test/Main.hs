@@ -77,21 +77,26 @@ class Vector a:
 def print msg:
     ```autoLift1 print #{msg}```
 
-def Int.+ a:
+def Int.add a:
     ```liftF2 (+) #{self} #{a}```
 
-def Int.> a:
+def + a b:
+    a.add b
+
+def > a b:
+    a.gt b
+
+def Int.gt a:
     ```liftF2 (>) #{self} #{a}```
 
 def Int.inc:
     self + 1
 
 def main:
-    #print $ if 1 > 2: 5
-    #        else: 6
-    print (1 > 2)
+    print $ 2 + 2.inc.inc
+    print $ 1 > 2
     v = Vector 1 2 3
-    print v
+    print $ v
 |]
 
 code2 :: Source
@@ -104,21 +109,26 @@ class Vector a:
 def print msg:
     ```autoLift1 print #{msg}```
 
-def Int.+ a:
+def Int.add a:
     ```liftF2 (+) #{self} #{a}```
 
-def Int.> a:
+def + a b:
+    a.add b
+
+def > a b:
+    a.gt b
+
+def Int.gt a:
     ```liftF2 (>) #{self} #{a}```
 
 def Int.inc:
     self + 1
 
 def main:
-    #print $ if 1 > 2: 5
-    #        else: 6
-    print (3 > 2)
+    print $ 2 + 2.inc.inc
+    print $ 3 > 2
     v = Vector 1 2 3
-    print v
+    print $ v
 |]
 
 
@@ -153,15 +163,15 @@ main1 = do
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
     result <- Session.run cfg env [] $ do
-        Session.addReload libID Reload.ReloadLibrary
+        Env.addReload libID Reload.ReloadLibrary
         Executor.processMain
-        print =<< Value.getIfReady [CallPoint libID 54]
+        print =<< Value.getIfReady [CallPoint libID 92]
         putStrLn "--------- 1"
         Executor.processMain
         putStrLn "========= 1"
 
         Cache.dumpAll
-        Invalidate.modifyNode libID 54
+        Invalidate.modifyNode libID 92
         Cache.dumpAll
 
         Executor.processMain
@@ -170,8 +180,8 @@ main1 = do
 
         putStrLn "========= ready ==========1="
         Cache.dumpAll
-        Session.setLibManager libManager2
-        Invalidate.modifyNode libID 54
+        Env.setLibManager libManager2
+        Invalidate.modifyNode libID 92
         putStrLn "========= modified =======2="
         Cache.dumpAll
         putStrLn "========= running ========3="
@@ -179,7 +189,7 @@ main1 = do
         putStrLn "========= finished =======4="
         Cache.dumpAll
 
-        print =<< Value.getIfReady [CallPoint libID 54]
+        print =<< Value.getIfReady [CallPoint libID 92]
     eitherStringToM $ fmapL Error.format result
 
 

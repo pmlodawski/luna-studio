@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Luna.Graph.Node.OutputName (
-    fix,
+    provide,
     fixEmpty,
     fixEmpty',
     generate,
@@ -16,18 +16,24 @@ import qualified Data.Char as Char
 import qualified Data.List as List
 
 import           Flowbox.Prelude
-import           Luna.Graph.Node (Node)
-import qualified Luna.Graph.Node as Node
+import           Luna.Graph.Node            (Node)
+import qualified Luna.Graph.Node            as Node
+import           Luna.Graph.Node.Expr       (NodeExpr)
+import qualified Luna.Graph.Node.Expr       as NodeExpr
+import qualified Luna.Graph.Node.StringExpr as StringExpr
 
 
 
-generate :: String -> Int -> String
-generate base num = mangle base ++ "Result" ++ show num
+generate :: NodeExpr -> Int -> String
+generate nodeExpr num = mangle (exprStr ++ "Result") ++ show num where
+    exprStr = case nodeExpr of
+        NodeExpr.ASTExpr    {}      -> ""
+        NodeExpr.StringExpr strExpr -> StringExpr.toString strExpr
 
 
 fixEmpty :: Node -> Node.ID -> Node
 fixEmpty node nodeID = case node ^. Node.outputName of
-    "" -> fix node nodeID
+    "" -> provide node nodeID
     _  -> node
 
 
@@ -35,11 +41,11 @@ fixEmpty' :: (Node.ID, Node) -> (Node.ID, Node)
 fixEmpty' (nodeID, node) =
     (nodeID, fixEmpty node nodeID)
 
---FIXME[wd]: nazwe zmienic na ensureProperName lub cos co mowi co to robi
-fix :: Node -> Node.ID ->Node
-fix node nodeID = newNode where
-    expr    = node ^. Node.expr
-    newNode = node &  Node.outputName .~ generate expr nodeID
+
+provide :: Node -> Node.ID -> Node
+provide node@(Node.Expr nodeExpr _ _) nodeID =
+    node & Node.outputName .~ generate nodeExpr nodeID
+provide node                   _      = node
 
 
 mangle :: String -> String
