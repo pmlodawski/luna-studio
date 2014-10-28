@@ -20,6 +20,7 @@ import           Luna.Interpreter.Cmd                 (Cmd)
 import qualified Luna.Interpreter.Cmd                 as Cmd
 import qualified Luna.Interpreter.RPC.Handler.Handler as Handler
 import qualified Luna.Interpreter.Version             as Version
+import qualified Flowbox.Initializer.Initializer as Initializer
 
 
 
@@ -54,6 +55,7 @@ run cmd = case cmd of
     Cmd.Run prefix verbose _ -> do
         rootLogger setIntLevel verbose
         cfg       <- Config.load
+        Initializer.initializeIfNeeded cfg
         let busConfig = EP.clientFromConfig cfg
             ctx       = Context.mk cfg
         logger info "Starting rpc server"
