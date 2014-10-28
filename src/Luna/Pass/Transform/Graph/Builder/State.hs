@@ -195,5 +195,6 @@ getGraphFolded :: Node.ID -> GBPass Bool
 getGraphFolded nodeID = do
     foldSetting <- gets (view foldNodes)
     if foldSetting
-        then flip Flags.isSet' (view Flags.graphFolded) <$> getFlags nodeID
+        then Flags.isFolded <$> getFlags nodeID
         else return False
+    
