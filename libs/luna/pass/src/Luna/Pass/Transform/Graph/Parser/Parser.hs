@@ -141,6 +141,7 @@ parseNativeNode nodeID native = do
                     Right (e, _) -> return e
     addExpr nodeID $ replaceNativeVars srcs expr
 
+
 replaceNativeVars :: [Expr] -> Expr -> Expr
 replaceNativeVars srcs native = native & Expr.segments %~ replaceNativeVars' srcs where
     replaceNativeVars' []                      segments                   = segments
@@ -159,6 +160,7 @@ parseAppNode nodeID app = do
                     Right (e, _) -> return e
     ids <- hoistEither =<< ExtractIDs.runExpr expr
     mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
+    State.setGraphFoldTop nodeID $ exprToNodeID expr
     let requiresApp (Expr.Con {}) = True
         requiresApp _             = False
     case srcs of
@@ -169,6 +171,11 @@ parseAppNode nodeID app = do
         f:t                  -> do let acc = Expr.Accessor nodeID app f
                                        e   = Expr.App      IDFixer.unknownID acc t
                                    addExpr nodeID e
+
+exprToNodeID :: Expr -> Node.ID
+exprToNodeID expr = case expr of
+    Expr.App _ src _ -> exprToNodeID src
+    _                -> expr ^. Expr.id
 
 
 parseTupleNode :: Node.ID -> GPPass ()
