@@ -38,7 +38,7 @@ type Logger e = LoggerT e Identity
 
 
 instance (Monad m) => Monad (LoggerT e m) where
-  return x = LoggerT $ return (Right x, [])
+return x = LoggerT $ return (Right x, [])
   m >>= f = LoggerT $ do
     v <- runLoggerT m
     case v of
@@ -89,6 +89,20 @@ isFail :: (Monad m) => LoggerT e m a -> LoggerT e m Bool
 isFail logger = LoggerT $ do
   (ma, s) <- runLoggerT logger
   return (Right (isLeft ma), s)
+
+maybeLogger  :: (Monad m) => b -> (a -> b) -> LoggerT e m a -> LoggerT e m b
+maybeLogger def ff log = LoggerT $ do
+  (ma, s) <- runLoggerT log
+  case ma of
+    Left  mal -> return (Right def,      s)
+    Right mar -> return (Right (ff mar), s)
+
+eitherLogger :: (Monad m) => (a -> c) -> (e -> c) -> LoggerT e m a -> LoggerT e m c
+eitherLogger fa fe log = LoggerT $ do
+  (ma, s) <- runLoggerT log
+  case ma of
+    Left  mal -> return (Right (fa mal), s)
+    Right mar -> return (Right (fe mar), s)
 
 evalLoggerT :: (Monad m) => LoggerT e m a -> m (Either e a)
 evalLoggerT = liftM fst . runLoggerT

@@ -20,8 +20,11 @@ mgu (TVar u)   t                   = varBindRow u t
 mgu t var@(TVar u)                 = mgu var t
 mgu (TRecord row1) (TRecord row2)  = mgu row1 row2
 mgu (TVariant row1) (TVariant ro2) = mgu row1 row2 
+mgu (RowEmpty) (RowEmpty)          = return mempty
+-- TODO intersection for row types without row variables
+-- TODO narrowing coercions when row polymorphism won't work
 mgu (Row (Row { fName, fType, rowTail1 })) (Row (row2@Row {})) = do
-        (fType2, rowTail2, rowInserter) <- rowInserter row2 fName
+        (fType2, rowTail2, rowInserter) <- rowInserter row2 (fName, fType)
         fieldSub <- mgu (apply rowInserter fType) (apply rowInserter fType2)
         let sub =  fieldSub `mappend` rowInserter
         subRest <- mgu (apply sub rowTail1) (apply sub rowTail2)
@@ -30,7 +33,7 @@ mgu t1 t2 = err "no mgu can be find" ("mgu " ++ show t1 ++ " <> " ++ show t2)
 
 occursCheck u t = u `elem` ftv t
 
-rowInserter EmptyRow label = err $ "label " ++ label ++ " connot be inserted"
+rowInserter EmptyRow (label, fType) = err $ "label " ++ label ++ " connot be inserted"
 rowInserter (Row fLabel fType row ) desc@(label, fType)
     | fLabel == label = return (fType, row, mempty)
     | TVar alpha <- row = do
