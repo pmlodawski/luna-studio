@@ -178,6 +178,7 @@ parseAppNode nodeID app = do
                         Right (e, _) -> return e
     ids <- hoistEither =<< ExtractIDs.runExpr expr
     mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
+    State.setGraphFoldTop nodeID $ exprToNodeID expr
     let requiresApp (Expr.Con {}) = True
         requiresApp _             = False
     case srcs of
@@ -188,6 +189,11 @@ parseAppNode nodeID app = do
         f:t                  -> addExpr nodeID $ Expr.App IDFixer.unknownID acc  (fmap (Arg.Unnamed IDFixer.unknownID) t)
                                 where acc = Expr.Accessor nodeID (Expr.mkAccessor app) f
 
+
+exprToNodeID :: Expr -> Node.ID
+exprToNodeID expr = case expr of
+    Expr.App _ src _ -> exprToNodeID src
+    _                -> expr ^. Expr.id
 
 
 parseTupleNode :: Node.ID -> GPPass ()

@@ -170,7 +170,12 @@ setPosition nodeID position =
 
 
 setGraphFolded :: Node.ID -> GPPass ()
-setGraphFolded = modifyFlags (Flags.graphFolded .~ Just True)
+setGraphFolded = modifyFlags (Flags.graphFoldInfo .~ Just Flags.Folded)
+
+
+setGraphFoldTop :: Node.ID -> Node.ID -> GPPass ()
+setGraphFoldTop nodeID topID =
+    modifyFlags (Flags.graphFoldInfo .~ Just (Flags.FoldTop topID)) nodeID
 
 
 doesLastStatementReturn :: GPPass Bool
