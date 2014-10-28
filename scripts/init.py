@@ -151,10 +151,13 @@ def install_from_sources(name, version=None):
                 try_call('cabal clean')
                 try_call('cabal install')
 
-def install_alex_happy(name, version):
+def install_alex_happy(name, version=None):
     try_call('cabal install alex')
     try_call('cabal install happy')
-    return (name + "-" + version)
+    if version:
+        return (name + "-" + version)
+    else:
+        return name
 
 def main():
     if os.path.exists(sboxName):
