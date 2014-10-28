@@ -17,6 +17,7 @@ import Flowbox.Prelude
 import Flowbox.Tools.Conversion.Proto
 
 
+
 encodeList :: Convert a b => [a] -> Seq b
 encodeList = Sequence.fromList . map encode
 

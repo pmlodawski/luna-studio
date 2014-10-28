@@ -8,15 +8,16 @@
 
 module Luna.Graph.Flags where
 
-import Flowbox.Prelude
-import Luna.Graph.Node.Position (Position)
+import           Flowbox.Prelude
+import qualified Luna.AST.Common          as AST
+import           Luna.Graph.Node.Position (Position)
 
 
 
 data Flags = Flags { _omit                 :: Bool
                    , _astFolded            :: Maybe Bool
                    , _astAssignment        :: Maybe Bool
-                   , _graphFolded          :: Maybe Bool
+                   , _graphFoldInfo        :: Maybe FoldInfo
                    , _grouped              :: Maybe Bool
                    , _defaultNodeGenerated :: Maybe Bool
                    , _graphViewGenerated   :: Maybe Bool
@@ -24,7 +25,13 @@ data Flags = Flags { _omit                 :: Bool
                    } deriving (Show, Read, Eq)
 
 
+data FoldInfo = Folded
+              | FoldTop { _id :: AST.ID }
+              deriving (Show, Read, Eq)
+
+
 makeLenses ''Flags
+makeLenses ''FoldInfo
 
 
 instance Default Flags where
@@ -33,3 +40,13 @@ instance Default Flags where
 
 isSet' :: Flags -> (Flags -> Maybe Bool) -> Bool
 isSet' flags getter = getter flags == Just True
+
+
+isFolded :: Flags -> Bool
+isFolded flags = flags ^. graphFoldInfo == Just Folded
+
+
+getFoldTop :: Flags -> Maybe AST.ID
+getFoldTop flags = case flags ^. graphFoldInfo of
+    Just (FoldTop i) -> Just i
+    _                -> Nothing
