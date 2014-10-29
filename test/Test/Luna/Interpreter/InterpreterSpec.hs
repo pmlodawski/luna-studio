@@ -17,20 +17,20 @@ import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
 import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Test.Luna.Interpreter.Common                as Common
 import qualified Test.Luna.Interpreter.SampleCodes           as SampleCodes
+
 
 
 rootLogger :: Logger
 rootLogger = getLogger ""
 
 
-
 getArgs :: CallPointPath -> Session [CallPointPath]
 getArgs callPointPath = do
-    mainPtr      <- Session.getMainPtr
+    mainPtr      <- Env.getMainPtr
     testCallData <- CallDataPath.fromCallPointPath callPointPath mainPtr
     args         <- Traverse.arguments testCallData
     return $ map CallDataPath.toCallPointPath args
@@ -38,7 +38,7 @@ getArgs callPointPath = do
 
 getSuccessors :: CallPointPath -> Session [CallPointPath]
 getSuccessors callPointPath = do
-    mainPtr      <- Session.getMainPtr
+    mainPtr      <- Env.getMainPtr
     testCallData <- CallDataPath.fromCallPointPath callPointPath mainPtr
     successors   <- Traverse.next testCallData
     return $ map CallDataPath.toCallPointPath successors

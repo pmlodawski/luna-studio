@@ -69,5 +69,5 @@ runSession code session = do
     cfg <- Config.load
     (env, libID) <- mkEnv code
 
-    result <- Session.run cfg env [] (Session.addReload libID Reload.ReloadLibrary >> session)
+    result <- Session.run cfg env [] (Env.addReload libID Reload.ReloadLibrary >> session)
     eitherStringToM $ fmapL Error.format result
