@@ -26,7 +26,10 @@ Library
                   StandaloneDeriving,
                   FlexibleContexts,
                   MultiParamTypeClasses,
-                  DefaultSignatures
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  FlexibleInstances,
+                  LambdaCase
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 

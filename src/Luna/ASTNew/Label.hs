@@ -18,7 +18,7 @@ import           GHC.Generics (Generic)
 -- Data types
 ----------------------------------------------------------------------
 
-data Label l a = Label l a deriving (Eq, Generic)
+data Label l a = Label l a deriving (Eq, Generic, Functor)
 
 instance (Show l, Show a) => Show (Label l a) where
     show (Label l a) = "L " ++ show l ++ " " ++ show a

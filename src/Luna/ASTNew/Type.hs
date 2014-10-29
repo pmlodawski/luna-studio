@@ -15,15 +15,13 @@ import Luna.ASTNew.Name (Name, VName, TName, CName, TVName)
 type R f a = f (a f)
 
 data Type f
-    = Data     { _tname    :: TName      , _params  :: [TVName]  }
-    | Module   { _tname    :: TName      , _path    :: [TName]   }
-    | Function { _inputs   :: [RType f]  , _output  :: RType f   }
+    = Function { _inputs   :: [RType f]  , _output  :: RType f   }
     | App      { _src      :: RType f    , _args    :: [RType f] }
     | Var      { _vname    :: VName                              }
     | Tuple    { _items    :: [RType f]                          }
     | List     { _item     :: RType f                            }
-    | Con      { _segments :: [CName]                            }
-    | Unknown 
+    | Con      { _segments :: [TName]                            }
+    | Wildcard 
     deriving (Generic)
 
 
