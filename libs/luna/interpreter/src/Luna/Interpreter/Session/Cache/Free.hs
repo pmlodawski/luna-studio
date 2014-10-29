@@ -22,6 +22,5 @@ freeVarName varName = Session.runAssignment varName "()"
 
 
 freeCacheInfo :: CacheInfo -> Session ()
-freeCacheInfo cacheInfo = do
-    freeVarName $ cacheInfo ^. CacheInfo.recentVarName
+freeCacheInfo cacheInfo =
     mapM_ freeVarName $ Map.elems $ cacheInfo ^. CacheInfo.dependencies
