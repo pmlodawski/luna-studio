@@ -11,28 +11,24 @@ module Luna.ASTNew.Pat where
 import GHC.Generics     (Generic)
 
 import Flowbox.Prelude
-import Luna.ASTNew.Type (RType)
-import Luna.ASTNew.Lit  (Lit)
-import Luna.ASTNew.Name (VName, CName)
+import Luna.ASTNew.Type  (LType)
+import Luna.ASTNew.Lit   (Lit)
+import Luna.ASTNew.Name  (VName, CName)
+import Luna.ASTNew.Label (Label)
 
 
-type RPat f = f (Pat f)
+type LPat a = Label a (Pat a)
+type L      = Label
 
-data Pat f 
-    = App         { _src   :: RPat f    , _args :: [RPat f] }
-    | Typed       { _pat   :: RPat f    , _cls  :: RType f  }
-    | Grouped     { _pat   :: RPat f                        }
-    | Lit         { _lit   :: f Lit                         }
-    | Tuple       { _items :: [RPat f ]                     }
+data Pat a 
+    = App         { _src   :: LPat a    , _args :: [LPat a] }
+    | Typed       { _pat   :: LPat a    , _cls  :: LType a  }
+    | Grouped     { _pat   :: LPat a                        }
+    | Lit         { _lit   :: L a Lit                       }
+    | Tuple       { _items :: [LPat a ]                     }
     | Con         { _cname :: CName                         }
     | Var         { _vname :: VName                         }
     | Wildcard 
     | RecWildcard
-    deriving (Generic)
+    deriving (Generic, Show)
 
-
-----------------------------------------------------------------------
--- Instances
-----------------------------------------------------------------------
-
-deriving instance (Show (RPat f), Show (RType f), Show (f Lit)) => Show (Pat f)

@@ -27,12 +27,15 @@ import qualified Luna.ASTNew.Name as Name
 
 import           Luna.ASTNew.Decl       (Decl)
 import           Luna.ASTNew.Lit        (Lit)
-import           Luna.ASTNew.Pat        (Pat, RPat)
-import           Luna.ASTNew.Type       (Type, RType)
+import           Luna.ASTNew.Pat        (Pat, LPat)
+import           Luna.ASTNew.Type       (Type, LType)
 import           Luna.ASTNew.Native     (Native)
 import           Luna.ASTNew.Name.Multi (MultiName)
 import           Luna.ASTNew.Arg        (Arg)
+import           Luna.ASTNew.Label      (Label)
 
+
+type L = Label
 
 type Selector = [VName]
 
@@ -40,38 +43,38 @@ data App e = Seq   [Named e VName]
            | Infix e e
 
 
-data Named a n = Named   a n
-               | Unnamed a  
+data Named v n = Named   v n
+               | Unnamed v  
                deriving (Show, Eq, Generic, Read)
 
-type RExpr f a   = f (Expr f a)
-type ExprApp f a = f (App (RExpr f a))
-type ExprArg f a = f (Arg f (Expr f a))
-type SubDecl f a = f (Decl f (RExpr f a))
+type LExpr   a v = Label a (Expr a v)
+type ExprApp a v = Label a (App (LExpr a v))
+type ExprArg a v = Label a (Arg a (Expr a v))
+type SubDecl a v = Label a (Decl a (LExpr a v))
 
-data Expr f a
-    = Lambda      { _inputs  :: [ExprArg f a] , _output   :: RType f      , _body   :: [RExpr f a] }
-    | RecUpdt     { _src     :: RExpr f a     , _selector :: Selector     , _expr   :: RExpr f a   }
-    | App         { _src     :: RExpr f a     , _args     :: ExprApp f a                           }
-    | Case        { _expr    :: RExpr f a     , _match    :: [RMatch f a]                          }
-    | Typed       { _cls     :: RType f       , _expr     :: RExpr f a                             }
-    | Assignment  { _dst     :: RPat  f       , _src      :: RExpr f a                             }
-    | Accessor    { _acc     :: Name          , _src      :: RExpr f a                             }
-    | Ref         { _ref     :: RExpr f a                                                          }
-    | List        { _items   :: [RExpr f a]                                                        }
-    | Tuple       { _items   :: [RExpr f a]                                                        }
-    | Grouped     { _expr    :: RExpr f a                                                          }
+data Expr a v
+    = Lambda      { _inputs  :: [ExprArg a v] , _output   :: LType a      , _body   :: [LExpr a v] }
+    | RecUpdt     { _src     :: LExpr a v     , _selector :: Selector     , _expr   :: LExpr a v   }
+    | App         { _src     :: LExpr a v     , _args     :: ExprApp a v                           }
+    | Case        { _expr    :: LExpr a v     , _match    :: [LMatch a v]                          }
+    | Typed       { _cls     :: LType a       , _expr     :: LExpr a v                             }
+    | Assignment  { _dst     :: LPat  a       , _src      :: LExpr a v                             }
+    | Accessor    { _acc     :: Name          , _src      :: LExpr a v                             }
+    | Ref         { _ref     :: LExpr a v                                                          }
+    | List        { _items   :: [LExpr a v]                                                        }
+    | Tuple       { _items   :: [LExpr a v]                                                        }
+    | Grouped     { _expr    :: LExpr a v                                                          }
     | Cons        { _cname   :: CName                                                              }
-    | Decl        { _decl    :: SubDecl f a                                                        }
-    | Lit         { _lit     :: f Lit                                                              }
-    | Native      { _native  :: Native (RExpr f a)                                                 }
-    | Var         { _ident   :: a                                                                  }
+    | Decl        { _decl    :: SubDecl a v                                                        }
+    | Lit         { _lit     :: L a Lit                                                            }
+    | Native      { _native  :: Native (LExpr a v)                                                 }
+    | Var         { _ident   :: v                                                                  }
     | Wildcard
     deriving (Generic)
 
 
 
-data Match f a = Match { _matchPat :: RPat f, _matchBody :: [RExpr f a] }  
-type RMatch f a = f (Match f a)
+data Match  a v = Match { _matchPat :: LPat a, _matchBody :: [LExpr a v] }  
+type LMatch a v = Label a (Match a v)
 
 
