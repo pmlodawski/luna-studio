@@ -54,7 +54,7 @@ createLibrary name path projectID = libManagerOp projectID $ \libManager -> do
 
 
 modifyLibrary :: (Library.ID, Library) -> Project.ID -> Batch ()
-modifyLibrary (libraryID, library) projectID = libraryOp projectID libraryID $ \oldLibrary -> do
+modifyLibrary (libraryID, library) projectID = libraryOp libraryID projectID $ \oldLibrary -> do
     let ast         = oldLibrary ^. Library.ast
         propertyMap = oldLibrary ^. Library.propertyMap
         newLibrary  = library & Library.ast .~ ast
