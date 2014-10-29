@@ -5,19 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
  {-# LANGUAGE UndecidableInstances #-}
+ {-# LANGUAGE OverlappingInstances #-}
 
 module Luna.ASTNew.Traversals.Class where
 
 import           Flowbox.Prelude        hiding (Cons, Traversal, traverse)
 import           GHC.Generics           (Generic)
-import           Luna.ASTNew.Decl       (Decl, LDecl, Cons, ImpTgt)
+import           Luna.ASTNew.Decl       (Decl, LDecl, LCons, ImpTgt)
 import qualified Luna.ASTNew.Decl       as Decl
 import           Luna.ASTNew.Module     (Module)
 import qualified Luna.ASTNew.Module     as Module
-import           Luna.ASTNew.Label      (Label(Label))
-import qualified Luna.ASTNew.Label      as Label
 import           Luna.ASTNew.Arg        (Arg)
-import           Luna.ASTNew.Type       (Type)
+import           Luna.ASTNew.Type       (LType)
 import           Luna.ASTNew.Name       (TName, VName, CName, TVName)
 import           Luna.ASTNew.Name.Multi (MultiName)
 import           Luna.ASTNew.Native     (Native)
@@ -57,23 +56,18 @@ instance Traversal base m TVName    where traverse _ = pure
 instance Traversal base m MultiName where traverse _ = pure
 
 
-------- Label -----
-instance Traversal base m a => Traversal base m (Label l a) where
-    traverse base (Label l a) = fmap (Label l) $ traverse base a
-
-
 ------- Module -----
 
-instance Traversal base m (Decl f e) => DefaultTraversal base m (Module f e) where
+instance Traversal base m (LDecl f e) => DefaultTraversal base m (Module f e) where
     defaultTraverse b (Module.Module path name body) = Module.Module <$> traverse b path <*> traverse b name <*> traverse b body
 
 
 ------- Decl -----
 
-instance ( Traversal base m (Decl f e)
-         , Traversal base m (Cons f e)
+instance ( Traversal base m (LDecl f e)
+         , Traversal base m (LCons f e)
          , Traversal base m (Arg  f e)
-         , Traversal base m (Type f)
+         , Traversal base m (LType f)
          , Traversal base m (Native (LDecl f e))
          , Traversal base m ImpTgt
          , Traversal base m e
@@ -85,5 +79,3 @@ instance ( Traversal base m (Decl f e)
         Decl.TypeAlias   dst src                      -> Decl.TypeAlias   <$> traverse b dst  <*> traverse b src
         Decl.TypeWrapper dst src                      -> Decl.TypeWrapper <$> traverse b dst  <*> traverse b src
         Decl.Native      nat                          -> Decl.Native      <$> traverse b nat
-
-

@@ -568,12 +568,18 @@ data AliasAnalysis = AliasAnalysis
 
 testme ast st = runState (AST.defaultTraverse AliasAnalysis ast) st
 
-instance (MonadState (State.State a) m, Enumerated lab) 
-         => AST.Traversal AliasAnalysis m (Label lab (Decl.Decl f e)) where
-    traverse base l@(Label lab ast) = case ast of
-        Decl.Function path name inputs output body -> State.withScope (Enum.id lab) continue
-        _                                          -> continue
-        where continue = AST.defaultTraverse base l
+
+
+instance AST.Traversal AliasAnalysis m (Module f e) where
+    traverse base m = undefined
+
+--instance (MonadState (State.State a) m, Enumerated lab) 
+--         => AST.Traversal AliasAnalysis m (Label lab (Decl.Decl f e)) where
+--    traverse base l@(Label lab ast) = case ast of
+--        Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withScope (Enum.id lab) continue
+--        _                                          -> continue
+--        where continue = AST.defaultTraverse base l
+--              id       = Enum.id lab
 
 
 --s2Decl d = case Label.element d of
@@ -581,3 +587,4 @@ instance (MonadState (State.State a) m, Enumerated lab)
 --    where id = Label.label d
 
 --    | Function    { _path    :: Path    , _fname    :: MultiName  , _inputs  :: [Arg f e]   , _output :: Maybe (RType f) , _body :: [e] }
+
