@@ -32,7 +32,9 @@ import qualified Luna.AST.Expr                               as Expr
 import           Luna.AST.Module                             (Module)
 import           Luna.Graph.Flags                            (Flags)
 import           Luna.Graph.Graph                            (Graph)
+import           Luna.Graph.PropertyMap                      (PropertyMap)
 import qualified Luna.Graph.PropertyMap                      as PropertyMap
+import           Luna.Graph.View.Default.DefaultsMap         (DefaultsMap)
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
@@ -196,12 +198,23 @@ getGraph defPoint = do
     return (graph, expr ^. Expr.id)
 
 
+getPropertyMap :: Library.ID -> Session PropertyMap
+getPropertyMap libraryID =
+    view Library.propertyMap <$> getLibrary libraryID
+
+
 getFlags :: CallPoint -> Session Flags
 getFlags callPiont = do
     let libraryID = callPiont ^. CallPoint.libraryID
         nodeID    = callPiont ^. CallPoint.nodeID
-    propertyMap <- view Library.propertyMap <$> getLibrary libraryID
-    return $ PropertyMap.getFlags nodeID propertyMap
+    PropertyMap.getFlags nodeID <$> getPropertyMap libraryID
+
+
+getDefaultsMap :: CallPoint -> Session DefaultsMap
+getDefaultsMap callPiont = do
+    let libraryID = callPiont ^. CallPoint.libraryID
+        nodeID    = callPiont ^. CallPoint.nodeID
+    PropertyMap.getDefaultsMap nodeID <$> getPropertyMap libraryID
 
 ---- Env.projectID --------------------------------------------------------
 
