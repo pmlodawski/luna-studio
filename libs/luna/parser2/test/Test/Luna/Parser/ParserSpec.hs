@@ -37,6 +37,10 @@ expressions = [ "\"\"", "\"foo\"", "foo", "foo.bar", "foo.bar 1", "foo.bar.baz"
               , "2 + 5", "10 * (25 + 5)", "Main", "Foo.Bar", "Vector 5", "Foo.Bar(5).Baz"]
 
 
+incorrectExpressions :: [String]
+incorrectExpressions = [";"]
+
+
 patchedParserState :: ASTInfo.ASTInfo
                    -> ParserState.State (Pragma Pragma.ImplicitSelf, 
                                         (Pragma Pragma.AllowOrphans, 
@@ -53,9 +57,15 @@ parseExpression expr = Parser.parseString expr $ Parser.exprParser    (patchedPa
 spec :: Spec
 spec = do
     describe "Parser parse" $ do
-        describe "Checking basic patterns parsing with AllowOrphans enabled" $ do
+        describe "Checking patterns parsing with AllowOrphans enabled" $ do
             forM_ patterns (\pattern -> it ("pattern " ++ show pattern) $ do
                 parsePattern pattern `shouldSatisfy` isRight)
-        describe "Checking basic expresssion parsing with AllowOrphans enabled" $ do
+
+        describe "Checking expresssion parsing with AllowOrphans enabled" $ do
             forM_ expressions (\expr -> it ("expression " ++ show expr) $ do
                 parseExpression expr `shouldSatisfy` isRight)
+
+    describe "Parser does not parse" $ do
+        describe "Checking incorrect expresssion parsing with AllowOrphans enabled" $ do
+            forM_ incorrectExpressions (\expr -> it ("expression " ++ show expr) $ do
+                parseExpression expr `shouldSatisfy` isLeft)

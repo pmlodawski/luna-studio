@@ -21,8 +21,9 @@ import           Luna.Interpreter.Proto.CallPointPath                   ()
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
+import qualified Luna.Interpreter.Session.Env                           as Env
 import           Luna.Interpreter.Session.Session                       (Session, SessionST)
-import qualified Luna.Interpreter.Session.Session                       as Session
+
 
 
 logger :: LoggerIO
@@ -32,7 +33,7 @@ logger = getLoggerIO $(moduleName)
 
 interpreterDo :: Int32 -> Session () -> RPC Context SessionST ()
 interpreterDo projectID op = do
-    activeProjectID <- liftSession Session.getProjectID
+    activeProjectID <- liftSession Env.getProjectID
     when (activeProjectID == decodeP projectID) $ liftSession op
 
 

@@ -18,7 +18,7 @@ import Luna.Graph.View.Default.DefaultsMap (DefaultsMap)
 data Properties = Properties { _flags       :: Flags
                              , _defaultsMap :: DefaultsMap
                              , _attrs       :: Attributes
-                             } deriving (Show, Read, Eq)
+                             } deriving (Show, Eq, Read)
 
 makeLenses ''Properties
 

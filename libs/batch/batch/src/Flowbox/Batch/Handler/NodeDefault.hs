@@ -14,12 +14,12 @@ import qualified Flowbox.Batch.Project.Project       as Project
 import           Flowbox.Prelude
 import           Luna.AST.Control.Crumb              (Breadcrumbs)
 import qualified Luna.Graph.Node                     as Node
+import           Luna.Graph.Node.Expr                (NodeExpr)
+import qualified Luna.Graph.PropertyMap              as PropertyMap
 import           Luna.Graph.View.Default.DefaultsMap (DefaultsMap)
 import qualified Luna.Graph.View.Default.DefaultsMap as DefaultsMap
-import           Luna.Graph.View.Default.Value       (Value)
 import           Luna.Graph.View.PortDescriptor      (PortDescriptor)
 import qualified Luna.Lib.Lib                        as Library
-import qualified Luna.Graph.PropertyMap as PropertyMap
 
 
 
@@ -28,7 +28,7 @@ nodeDefaults nodeID _ libID projectID =
     PropertyMap.getDefaultsMap nodeID <$> Batch.getPropertyMap libID projectID
 
 
-setNodeDefault :: PortDescriptor -> Value
+setNodeDefault :: PortDescriptor -> NodeExpr
                -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setNodeDefault dstPort value nodeID bc libID projectID = do
     propertyMap <- Batch.getPropertyMap libID projectID

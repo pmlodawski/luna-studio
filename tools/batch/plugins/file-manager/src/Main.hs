@@ -11,6 +11,7 @@ import qualified Flowbox.Bus.RPC.Server.Server           as Server
 import qualified Flowbox.Config.Config                   as Config
 import           Flowbox.FileManager.Cmd                 (Cmd)
 import qualified Flowbox.FileManager.Cmd                 as Cmd
+import           Flowbox.FileManager.LocalFileManager    (LocalFileManager (LocalFileManager))
 import qualified Flowbox.FileManager.RPC.Handler.Handler as Handler
 import qualified Flowbox.FileManager.Version             as Version
 import           Flowbox.Options.Applicative             hiding (info)
@@ -21,7 +22,7 @@ import           Flowbox.System.Log.Logger
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+rootLogger = getLogger ""
 
 
 parser :: Parser Cmd
@@ -46,6 +47,6 @@ run cmd = case cmd of
     Cmd.Run {}  -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         endPoints <- EP.clientFromConfig <$> Config.load
-        r <- Server.run endPoints () Handler.handlerMap
+        r <- Server.run endPoints () $ Handler.handlerMap LocalFileManager
         print r
 

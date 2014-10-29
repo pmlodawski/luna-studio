@@ -17,6 +17,7 @@ import           Flowbox.FileManager.Cmd                 (Cmd)
 import qualified Flowbox.FileManager.Cmd                 as Cmd
 import qualified Flowbox.FileManager.Context             as Context
 import qualified Flowbox.FileManager.RPC.Handler.Handler as Handler
+import           Flowbox.FileManager.S3FileManager       (S3FileManager (S3FileManager))
 import qualified Flowbox.FileManager.Version             as Version
 import           Flowbox.Options.Applicative             hiding (info)
 import qualified Flowbox.Options.Applicative             as Opt
@@ -26,7 +27,7 @@ import           Flowbox.System.Log.Logger
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+rootLogger = getLogger ""
 
 
 parser :: Parser Cmd
@@ -54,4 +55,4 @@ run cmd = case cmd of
         endPoints <- EP.clientFromConfig <$> Config.load
         cfg <- Aws.baseConfiguration
         ctx <- Context.mk cfg $ Text.pack $ Cmd.bucket cmd
-        Server.run endPoints ctx Handler.handlerMap >>= eitherStringToM
+        Server.run endPoints ctx (Handler.handlerMap S3FileManager) >>= eitherStringToM

@@ -8,14 +8,17 @@
 
 module Luna.Graph.Node where
 
-import Flowbox.Prelude
-import Luna.Graph.Node.Position (Position)
+import           Flowbox.Prelude
+import           Luna.Graph.Node.Expr       (NodeExpr)
+import qualified Luna.Graph.Node.Expr       as NodeExpr
+import           Luna.Graph.Node.Position   (Position)
+import qualified Luna.Graph.Node.StringExpr as StringExpr
 
 
 
-data Node = Expr     { _expr :: String, _outputName :: String, _pos :: Position }
-          | Inputs   {                                         _pos :: Position }
-          | Outputs  {                                         _pos :: Position }
+data Node = Expr     { _expr :: NodeExpr, _outputName :: String, _pos :: Position }
+          | Inputs   {                                           _pos :: Position }
+          | Outputs  {                                           _pos :: Position }
           deriving (Show, Eq)
 
 
@@ -43,3 +46,8 @@ isOutputs _            = False
 isExpr :: Node -> Bool
 isExpr (Expr {}) = True
 isExpr _         = False
+
+
+exprStr :: Node -> Maybe String
+exprStr (Expr (NodeExpr.StringExpr strExpr)  _ _) = Just $ StringExpr.toString strExpr
+exprStr _                                         = Nothing

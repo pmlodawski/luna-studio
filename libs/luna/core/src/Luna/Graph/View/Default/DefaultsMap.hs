@@ -13,9 +13,9 @@ module Luna.Graph.View.Default.DefaultsMap (
 import Data.Map as X
 
 import qualified Luna.Graph.Node                as Node
-import           Luna.Graph.View.Default.Value  (Value)
+import           Luna.Graph.Node.Expr           (NodeExpr)
 import           Luna.Graph.View.PortDescriptor (PortDescriptor)
 
 
 
-type DefaultsMap = Map PortDescriptor (Node.ID, Value)
+type DefaultsMap = Map PortDescriptor (Node.ID, NodeExpr)
