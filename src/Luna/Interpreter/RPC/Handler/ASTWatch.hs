@@ -310,8 +310,8 @@ graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
         bc        = GraphNodeRemove.bc request
         nodeIDs   = GraphNodeRemove.nodeIDs request
     mapM_ (Cache.modifyNodeSuccessors projectID libraryID bc) nodeIDs
-    sync updateNo $ GraphHandler.nodeRemove request
     mapM_ (Cache.deleteNode projectID libraryID) nodeIDs
+    sync updateNo $ GraphHandler.nodeRemove request
 
 
 graphNodeModify :: GraphNodeModify.Update -> RPC Context SessionST ()
