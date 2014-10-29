@@ -20,8 +20,14 @@ Library
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
-                  TemplateHaskell
-                  TupleSections
+                  TemplateHaskell,
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  FlexibleInstances
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 

@@ -19,13 +19,13 @@ import Luna.ASTNew.Name (VName, CName)
 type RPat f = f (Pat f)
 
 data Pat f 
-    = App         { _src   :: RPat f , _args :: [RPat f] }
-    | Typed       { _pat   :: RPat f , _cls  :: RType f  }
-    | Grouped     { _pat   :: RPat f                     }
-    | Lit         { _lit   :: f Lit                      }
-    | Tuple       { _items :: [RPat f ]                  }
-    | Con         { _cname  :: CName                     }
-    | Var         { _vname  :: VName                     }
+    = App         { _src   :: RPat f    , _args :: [RPat f] }
+    | Typed       { _pat   :: RPat f    , _cls  :: RType f  }
+    | Grouped     { _pat   :: RPat f                        }
+    | Lit         { _lit   :: f Lit                         }
+    | Tuple       { _items :: [RPat f ]                     }
+    | Con         { _cname :: CName                         }
+    | Var         { _vname :: VName                         }
     | Wildcard 
     | RecWildcard
     deriving (Generic)

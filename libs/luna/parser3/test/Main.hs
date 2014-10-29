@@ -32,4 +32,5 @@ main = do
     case r of
         Left  e -> displayIO stdout $ Parser.renderErr e
         --Right a -> (putStrLn $ ppShow (fst a)) >> (putStrLn $ ppShow (snd a))
-        Right a -> (putStrLn $ ppShow (fst a)) >> (putStrLn $ ppShow (view State.namespace $ snd a))
+        Right a -> -- (putStrLn $ ppShow (fst a)) >> (putStrLn $ ppShow (view State.namespace $ snd a))
+                   print $ Parser.testme $ fst a

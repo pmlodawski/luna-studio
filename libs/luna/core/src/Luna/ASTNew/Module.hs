@@ -19,8 +19,7 @@ import Luna.ASTNew.Native (Native)
 
 data Module f e = Module { _path :: [TName]
                          , _name :: TName
-                         , _body :: [Decl f e]
-                         , _mods :: [Module f e] 
+                         , _body :: [RDecl f e]
                          } deriving (Generic)
 
 ----------------------------------------------------------------------

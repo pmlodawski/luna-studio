@@ -7,9 +7,11 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RankNTypes #-}
 
+{-# LANGUAGE OverlappingInstances #-}
+
 module Luna.ASTNew.Decl where
 
-import           Flowbox.Prelude        hiding (Cons)
+import           Flowbox.Prelude        hiding (Cons, traverse)
 import           GHC.Generics           (Generic)
 import           Luna.ASTNew.Type       (RType)
 import           Luna.ASTNew.Name       (Name, VName, TName, CName, TVName)
@@ -21,18 +23,31 @@ import           Luna.ASTNew.Native     (Native)
 import qualified Prelude
 
 data Decl f e
-    = Data        { _tname   :: TName   , params    :: [TVName]  , _cons   :: [RCons f e] , _defs :: [RDecl f e]                }
-    | Function    { _path    :: Path    , _fname    :: MultiName , _inputs :: [Arg f e]   , _output :: RType f   , _body :: [e] }
-    | Import      { _modPath :: Path    , _targets  :: [ImpTgt]                                                                 }
-    | TypeAlias   { _dstType :: RType f , _srcType  :: RType f                                                                  }
-    | TypeWrapper { _dstType :: RType f , _srcType  :: RType f                                                                  }
-    | Native      { _native  :: Native (RDecl f e)                                                                              }
+    = Data        { _tname   :: TName   , params    :: [TVName]   , _cons    :: [RCons f e] , _defs   :: [RDecl f e]                    }
+    | Function    { _path    :: Path    , _fname    :: MultiName  , _inputs  :: [Arg f e]   , _output :: Maybe (RType f) , _body :: [e] }
+    | Import      { _modPath :: Path    , _rename   :: Maybe TName, _targets :: [ImpTgt]                                                }
+    | TypeAlias   { _dstType :: RType f , _srcType  :: RType f                                                                          }
+    | TypeWrapper { _dstType :: RType f , _srcType  :: RType f                                                                          }
+    | Native      { _native  :: Native (RDecl f e)                                                                                      }
+    -- | Foreign     Foreign
     deriving (Generic)
+
+-- !!!
+-- jezeli bedziemy mieli TemplateLuna to chcemy znac kolejnosc deklaracji
+-- bo mozemy chciec dzielic plik po sparsowaniu
+
+--data Foreign a = Foreign Target a
+
+-- ???
+-- moze pozwolic na
+-- import Math: sin :: Double -> Double
+-- wtedy foreigny sa zwyklym wrapperem na Decl
 
 data Cons  f e = Cons   { _consName :: CName   , _fields :: [RField f e]                  } deriving (Generic)
 data Field f e = Field  { _fType    :: RType f , _fName  :: Maybe VName, _fVal :: Maybe e } deriving (Generic)
 -- FIXME[wd]: przeniesc w inne miejsce
-data ImpTgt    = ImpTgt { _impName  :: Name    , _rename :: Maybe Name }
+data ImpTgt    = ImpVar  { _vName  :: VName   , _vRename :: Maybe VName }
+               | ImpType { _tName  :: TName   , _tRename :: Maybe TName }
                | Wildcard deriving (Show, Eq, Generic, Read)
 
 type Path       = [TName]

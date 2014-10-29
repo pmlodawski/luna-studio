@@ -12,6 +12,9 @@
 
 {-# LANGUAGE ScopedTypeVariables        #-}
 
+
+--{-# LANGUAGE OverlappingInstances #-}
+
 module Luna.Parser.Parser where
 
 
@@ -91,7 +94,16 @@ import qualified Luna.ASTNew.Lit    as Lit
 import           Luna.ASTNew.Arg    (Arg(Arg))
 import qualified Luna.ASTNew.Native as Native
 
+import qualified Luna.ASTNew.Traversals as AST
+
 infixl 4 <$!>
+
+
+
+vName = Name.V <$> varOp
+tName = Name.T <$> Tok.typeIdent
+
+anyName = vName <|> tName
 
 
 labeled p = do
@@ -151,7 +163,7 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 
 
 tuple         p = Tok.parens (sepBy p Tok.separator)
-qualifiedPath p = sepBy1_ng p Tok.accessor
+qualifiedPath p = sepBy1_ng p Tok.accessor <?> "qualified path"
 extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
                       <*> (namePattern <?> "function name")
 
@@ -234,155 +246,98 @@ unit p = do
 
 ----- Modules -----
 
-pModule name path = element $ \id -> do
-                    State.withScope id (Module <$> pure path 
-                                               <*> pure name 
-                                               <*> Indent.withPos (moduleBlock pModuleBody)
-                                               <*> pure [])
-
-
-pModuleBody = choice [ func
-                     , pData
-                     ]
+pModule name path = Module <$> pure path 
+                           <*> pure name 
+                           <*> Indent.withPos (moduleBlock $ labeled moduleBody)
+                    where moduleBody = choice [ imp, func, cls, typeAlias, typeWrapper ] <?> "module body"
 
 
 ----- Imports -----
 
-pImport = Decl.Import <$  Tok.kwImport
-                      <*> qualifiedPath Tok.typeIdent
-                      <*  Tok.indBlockBegin
-                      <*> (try (appID Expr.Wildcard <* Tok.importAll) <|> identE)
-                      <*> (     try (Just <$ Tok.kwAs <*> (anyIdent <?> "import name"))
-                            <|> pure Nothing
-                          )
-                      <?> "import"
+imp = Decl.Import <$  Tok.kwImport
+                  <*> (qualifiedPath Tok.typeIdent <?> "import path")
+                  <*> ((Just <$ Tok.kwAs <*> Tok.typeIdent) <|> pure Nothing)
+                  <*> (blockBegin importTarget <|> pure [])
+                  <?> "import declaration"
 
-Import      { _modPath :: Path    , _targets  :: [ImpTgt]  }
-ImpTgt    = ImpTgt { _impName  :: Name    , _rename :: Maybe Name                    } deriving (Show, Eq, Generic, Read)
-
-dokonczyc importy
-
---pImportNative   = appID Expr.ImportNative  <*  Tok.kwImport <*> nativeE
+importTarget =   body Decl.ImpVar varOp 
+             <|> body Decl.ImpType Tok.typeIdent
+             where body c p = c <$> p <*> ((Just <$ Tok.kwAs <*> p) <|> pure Nothing)
 
 
+----- type aliases ------
 
---pModule name path = element $ \id -> do
---                    State.withScope id (pure $ Expr.NOP id)
-
-
-
-
-
---data Module f e = Module { _path :: [TName]
---                         , _name :: TName
---                         , _body :: [Decl f e]
---                         , _mods :: [Module f e] 
---                         } deriving (Generic)
+typeAlias = Decl.TypeAlias <$  Tok.kwAlias 
+                           <*> (typeT <?> "new type") 
+                           <*  Tok.assignment 
+                           <*> (typeT <?> "base type")
+                           <?> "type alias"
 
 
---data Module = Module { _id          :: ID
---                     , _cls         :: Type
---                     , _imports     :: [Expr]
---                     , _classes     :: [Expr]
---                     , _typeAliases :: [Expr]
---                     , _typeDefs    :: [Expr]
---                     , _fields      :: [Expr]
---                     , _methods     :: [Expr]
---                     , _modules     :: [Module]
---                     } deriving (Show, Generic, Read, Eq)
+----- type wrappers ------
+
+typeWrapper = Decl.TypeWrapper <$  Tok.kwType 
+                               <*> (typeT <?> "new type") 
+                               <*  Tok.assignment 
+                               <*> (typeT <?> "base type")
+                               <?> "type wrapper"
 
 
-func = element $ \id -> do
-    Tok.kwDef
-    (extPath, name) <- extensionPath
-    --x <- namePattern
-    return ()
-    --State.regVarName id (view Name.base name)
-    State.withScope id $ -- pure $ Label (0::Int) ()
-        Decl.Function <$> pure extPath
-                      <*> pure name
+----- functions -----
 
-                      <*> (argList pArg <?> "function argument list")
-                      <*> (try (Tok.arrow *> typeT) <|> labeled (pure Type.Unknown))
-                      <*> (char ':' *> stage1Body2)
-
-
---closeDefinition d = do
---    ncons <- if length dcons == 1
---              then do let tpname = d ^. (Expr.cls . Type.name)
---                      State.regVarName (view Expr.id d) tpname
---                      return $ [defc & Expr.name .~ tpname]
---              else return $ init dcons
---    return $ d & Expr.cons .~ ncons
---    where dcons = d ^. Expr.cons
---          defc  = last dcons
+func = Decl.Function <$  Tok.kwDef
+                     <*> extPath
+                     <*> name
+                     <*> (argList arg <?> "function argument list")
+                     <*> outType
+                     <*> body
+    where extPath = ((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure []
+          name    = namePattern <?> "function name"
+          outType = (Just <$> try (Tok.arrow *> typeT)) <|> pure Nothing
+          body    = char ':' *> stage1Body2
 
 
---pData            = closeDefinition =<< pDataT
-pData            = pDataT
+----- classes -----
 
-pDataT = element $ \id -> do
-    Tok.kwClass
-    (name, isNative) <- ( (,True)  <$> Tok.betweenNative Tok.typeIdent) 
-                    <|> ( (,False) <$> Tok.typeIdent)
-                    <?> "class name"
-
-    let d = Decl.Data <$> pure name
-                      <*> (many (TVName <$> Tok.typeVarIdent <?> "class parameter"))
-                      <*  blockStart
-                      <*> dataStruct
-                      <*> blockBodyOpt dataDecl 
-                      <*  blockEnd
-                      <?> "class definition"
-
-        dataStruct =   blockBody' (labeled cons) 
-                   <|> ((:[]) <$> labeled (defCons $ Name.convert name))
-
-    if isNative then (Decl.Native . Native.AST) <$> labeled d
-                else d
+cls = do
+    name <- Tok.kwClass *> (Tok.typeIdent <?> "class name")
+    Decl.Data <$> pure name
+              <*> params
+              <*  blockStart
+              <*> constructors name
+              <*> bodyBlock
+              <*  blockEnd
+              <?> "class definition"
+      where params         = many (TVName <$> Tok.typeVarIdent <?> "class parameter")
+            defCons      n = Decl.Cons n <$> (concat <$> many fields)
+            constructors n =   blockBody' (labeled cons) 
+                           <|> ((:[]) <$> labeled (defCons $ Name.convert n))
+            bodyBlock      = blockBodyOpt $ labeled clsBody 
+            clsBody        = choice [ func, cls, typeAlias, typeWrapper ] <?> "class body"
 
 
+cons         = Decl.Cons <$> Tok.conIdent 
+                         <*> (concat <$> blockBeginFields fields)
+                         <?> "data constructor definition"
 
-defCons name = Decl.Cons name <$> (concat <$> many fields)
 
-cons = element $ \id -> do
-    name <- Tok.conIdent
-    --State.regVarName id name
-    Decl.Cons name <$> (concat <$> blockBeginFields fields)
-                      -- <??$> blockBegin pConDBody
-                      <?> "data constructor definition"
+fields = do
+         (names, cls) <- try ((,) <$> fieldList      <*> typed)
+                         <|> ((,) <$> pure [Nothing] <*> termT)
+         
+         sequence $ fmap (labeled.pure) 
+                  $ zipWith3 Field (repeat cls) names (repeat Nothing)
+
+         where fieldList = sepBy1 (Just <$> Tok.varIdent) Tok.separator
+
 
 
 
 typed = Tok.typeDecl *> termT
 
-field = do
-    (name, cls) <-  ((,) <$> (Just <$> Tok.varIdent) <*> typed) 
-                <|> ((,) <$> pure Nothing <*> termT)
-    -- FIXME[wd]: assignment expr
-    --Field cls name <$> (Tok.assignment *> (Just <$> expr) <|> pure Nothing)
-    Field cls name <$> pure Nothing
 
-fields = do
-    (names, cls) <- try ((,) <$> sepBy1 (Just <$> Tok.varIdent) Tok.separator <*> typed)
-                    <|> ((,) <$> pure [Nothing] <*> termT)
-
-    sequence $ fmap (labeled.pure) 
-             $ zipWith3 Field (repeat cls) (names) (repeat Nothing)
-
-
-dataDecl       = labeled $ choice [ func
-                                --, pCombine Expr.addFieldDC fields
-                                , pData
-                                --, cons
-                                ]
-                <?> "class body"
-
-
-
-
-pArg            = Arg <$> argPattern
-                      <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
+arg            = Arg <$> argPattern
+                     <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
 
 stage1DefArg = Tok.tokenBlock (many alphaNum)
 
@@ -417,11 +372,11 @@ appT        = labeled (Type.App <$> appBaseT <*> many1 termT)
 argListT    = braces (sepBy2 typeT Tok.separator) <|> ((:[]) <$> typeSingle) <?> "type argument list"
 funcT       = labeled (Type.Function <$> argListT <* Tok.arrow <*> typeT)
 
-varT        = labeled (Type.Var     <$> Tok.typeVarIdent)
-conT        = labeled (Type.Con     <$> qualifiedPath Tok.conIdent)
-tupleT      = labeled (Type.Tuple   <$> tuple typeT)
-listT       = labeled (Type.List    <$> Tok.brackets typeT)
-wildT       = labeled (Type.Unknown <$  Tok.wildcard)
+varT        = labeled (Type.Var      <$> Tok.typeVarIdent)
+conT        = labeled (Type.Con      <$> qualifiedPath Tok.typeIdent)
+tupleT      = labeled (Type.Tuple    <$> tuple typeT)
+listT       = labeled (Type.List     <$> Tok.brackets typeT)
+wildT       = labeled (Type.Wildcard <$  Tok.wildcard)
 
 appBaseT    = choice [ varT, conT
                      ]
@@ -606,4 +561,16 @@ parseString     input p = handleResult  $  parseFromString     p (parserDelta pa
 parseByteString input p = handleResult  $  parseFromByteString p (parserDelta parserName) input
 
 
+data AliasAnalysis = AliasAnalysis
 
+testme ast = runState (AST.defaultTraverse AliasAnalysis ast) (0 :: Int)
+
+instance AST.Traversal AliasAnalysis m (Decl.Decl f e) where
+    traverse = undefined
+
+
+--s2Decl d = case Label.element d of
+--    Decl.Function path name inputs output body -> State.regVarName id (view Name.base name) *> 
+--    where id = Label.label d
+
+--    | Function    { _path    :: Path    , _fname    :: MultiName  , _inputs  :: [Arg f e]   , _output :: Maybe (RType f) , _body :: [e] }
