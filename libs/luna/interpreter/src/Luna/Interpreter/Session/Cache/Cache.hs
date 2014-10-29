@@ -11,6 +11,7 @@ module Luna.Interpreter.Session.Cache.Cache where
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
+import qualified System.Mem as Mem
 
 import           Flowbox.Control.Error
 import qualified Flowbox.Data.MapForest                      as MapForest
@@ -148,3 +149,11 @@ deleteAll = do
 getCacheInfo :: CallPointPath -> Session CacheInfo
 getCacheInfo callPointPath = Env.cachedLookup callPointPath
     <??&> Error.CacheError $(loc) (concat ["Object ", show callPointPath, " is not in cache."])
+
+
+performGC :: Session ()
+performGC = do
+    logger info "Running GC"
+    Session.runStmt "performGC"
+    liftIO $ Mem.performGC
+
