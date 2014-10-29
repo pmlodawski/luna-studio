@@ -85,6 +85,7 @@ import qualified Luna.ASTNew.Decl   as Decl
 import           Luna.ASTNew.Decl   (Field(Field))
 import qualified Luna.ASTNew.Module as Module
 import           Luna.ASTNew.Module (Module(Module))
+import qualified Luna.ASTNew.Label  as Label
 import           Luna.ASTNew.Label  (Label(Label))
 import qualified Luna.ASTNew.Type   as Type
 import           Luna.ASTNew.Type   (Type)
@@ -565,11 +566,11 @@ data AliasAnalysis = AliasAnalysis
 
 testme ast st = runState (AST.defaultTraverse AliasAnalysis ast) st
 
-instance AST.Traversal AliasAnalysis m (Decl.Decl f e) where
-    traverse base d = case d of
-        Decl.Function path name inputs output body -> State.withScope id continue
+instance AST.Traversal AliasAnalysis m (Label id (Decl.Decl f e)) where
+    traverse base l@(Label lab ast) = case ast of
+        Decl.Function path name inputs output body -> continue
         _                                          -> continue
-        where continue = AST.defaultTraverse base d
+        where continue = AST.defaultTraverse base l
 
 
 --s2Decl d = case Label.element d of

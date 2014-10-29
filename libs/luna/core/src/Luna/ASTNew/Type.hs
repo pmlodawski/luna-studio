@@ -9,27 +9,21 @@
 module Luna.ASTNew.Type where
 
 import Flowbox.Prelude
-import GHC.Generics     (Generic)
-import Luna.ASTNew.Name (Name, VName, TName, CName, TVName)
+import GHC.Generics      (Generic)
+import Luna.ASTNew.Name  (Name, VName, TName, CName, TVName)
+import Luna.ASTNew.Label (Label)
 
-type R f a = f (a f)
 
-data Type f
-    = Function { _inputs   :: [RType f]  , _output  :: RType f   }
-    | App      { _src      :: RType f    , _args    :: [RType f] }
+data Type a
+    = Function { _inputs   :: [LType a]  , _output  :: LType a   }
+    | App      { _src      :: LType a    , _args    :: [LType a] }
     | Var      { _vname    :: VName                              }
-    | Tuple    { _items    :: [RType f]                          }
-    | List     { _item     :: RType f                            }
+    | Tuple    { _items    :: [LType a]                          }
+    | List     { _item     :: LType a                            }
     | Con      { _segments :: [TName]                            }
     | Wildcard 
-    deriving (Generic)
+    deriving (Generic, Show)
 
 
-type RType f = R f Type
+type LType a = Label a (Type a)
 
-
-----------------------------------------------------------------------
--- Instances
-----------------------------------------------------------------------
-
-deriving instance (Show (f (Type f))) => Show (Type f)

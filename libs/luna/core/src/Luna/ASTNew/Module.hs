@@ -8,22 +8,16 @@
 
 module Luna.ASTNew.Module where
 
-import GHC.Generics     (Generic)
+import GHC.Generics      (Generic)
 import Flowbox.Prelude
-import Luna.ASTNew.Name   (TName)
-import Luna.ASTNew.Decl   (RDecl, RCons, Decl, Field)
-import Luna.ASTNew.Pat    (RPat)
-import Luna.ASTNew.Type   (RType)
-import Luna.ASTNew.Native (Native)
+
+import Luna.ASTNew.Name  (TName)
+import Luna.ASTNew.Decl  (LDecl)
+import Luna.ASTNew.Label (Label)
 
 
 data Module f e = Module { _path :: [TName]
                          , _name :: TName
-                         , _body :: [RDecl f e]
-                         } deriving (Generic)
+                         , _body :: [LDecl f e]
+                         } deriving (Generic, Show)
 
-----------------------------------------------------------------------
--- Instances
-----------------------------------------------------------------------
-
-deriving instance (Show (f (Decl f e)), Show (f (Field f e)), Show (RPat f), Show (RType f), Show (Native (RDecl f e)), Show (RCons f e), Show e) => Show (Module f e)
