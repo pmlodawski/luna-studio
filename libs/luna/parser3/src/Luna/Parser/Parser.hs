@@ -11,6 +11,7 @@
 {-# LANGUAGE DeriveDataTypeable        #-}
 
 {-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 
 --{-# LANGUAGE OverlappingInstances #-}
@@ -96,9 +97,10 @@ import           Luna.ASTNew.Arg    (Arg(Arg))
 import qualified Luna.ASTNew.Native as Native
 
 import qualified Luna.ASTNew.Traversals as AST
+import qualified Luna.ASTNew.Enum       as Enum
+import           Luna.ASTNew.Enum       (Enumerated, IDTag(IDTag))
 
 infixl 4 <$!>
-
 
 
 vName = Name.V <$> varOp
@@ -109,7 +111,7 @@ anyName = vName <|> tName
 
 labeled p = do
     id <- nextID
-    fmap (Label id) p
+    fmap (Label $ IDTag id) p
 
 
 (<$!>) :: Monad m => (a -> b) -> m a -> m b
@@ -566,9 +568,10 @@ data AliasAnalysis = AliasAnalysis
 
 testme ast st = runState (AST.defaultTraverse AliasAnalysis ast) st
 
-instance AST.Traversal AliasAnalysis m (Label id (Decl.Decl f e)) where
+instance (MonadState (State.State a) m, Enumerated lab) 
+         => AST.Traversal AliasAnalysis m (Label lab (Decl.Decl f e)) where
     traverse base l@(Label lab ast) = case ast of
-        Decl.Function path name inputs output body -> continue
+        Decl.Function path name inputs output body -> State.withScope (Enum.id lab) continue
         _                                          -> continue
         where continue = AST.defaultTraverse base l
 

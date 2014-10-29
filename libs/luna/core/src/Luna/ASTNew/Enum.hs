@@ -5,24 +5,24 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FunctionalDependencies#-}
-{-# LANGUAGE FlexibleInstances#-}
 
-module Luna.ASTNew.Label where
+module Luna.ASTNew.Enum where
 
-import           Flowbox.Prelude
-import           GHC.Generics (Generic)
+import Flowbox.Prelude
+import GHC.Generics    (Generic)
 
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
-data Label l a = Label { _label :: l, _element :: a } deriving (Eq, Generic, Functor)
+type ID = Int
 
-makeLenses ''Label
+data IDTag = IDTag ID deriving (Show, Eq, Generic)
 
-instance (Show l, Show a) => Show (Label l a) where
-    show (Label l a) = "L " ++ show l ++ " " ++ show a
+class Enumerated a where
+    id :: a -> ID
 
-
+instance Enumerated IDTag where
+    id (IDTag i) = i
+    
