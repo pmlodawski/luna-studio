@@ -33,4 +33,4 @@ main = do
         Left  e -> displayIO stdout $ Parser.renderErr e
         --Right a -> (putStrLn $ ppShow (fst a)) >> (putStrLn $ ppShow (snd a))
         Right a -> -- (putStrLn $ ppShow (fst a)) >> (putStrLn $ ppShow (view State.namespace $ snd a))
-                   print $ Parser.testme $ fst a
+                   putStrLn $ ppShow $ Parser.testme (fst a) Parser.defState

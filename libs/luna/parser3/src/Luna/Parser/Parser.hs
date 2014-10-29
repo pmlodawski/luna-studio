@@ -563,10 +563,13 @@ parseByteString input p = handleResult  $  parseFromByteString p (parserDelta pa
 
 data AliasAnalysis = AliasAnalysis
 
-testme ast = runState (AST.defaultTraverse AliasAnalysis ast) (0 :: Int)
+testme ast st = runState (AST.defaultTraverse AliasAnalysis ast) st
 
 instance AST.Traversal AliasAnalysis m (Decl.Decl f e) where
-    traverse = undefined
+    traverse base d = case d of
+        Decl.Function path name inputs output body -> State.withScope id continue
+        _                                          -> continue
+        where continue = AST.defaultTraverse base d
 
 
 --s2Decl d = case Label.element d of
