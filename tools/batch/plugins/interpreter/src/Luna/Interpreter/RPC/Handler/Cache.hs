@@ -23,7 +23,6 @@ import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
 import           Luna.Interpreter.Session.Data.CallPoint                (CallPoint (CallPoint))
 import qualified Luna.Interpreter.Session.Env                           as Env
-import qualified Luna.Interpreter.Session.Env                           as Env
 import           Luna.Interpreter.Session.Session                       (Session, SessionST)
 
 
