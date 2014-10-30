@@ -11,9 +11,12 @@ module Luna.Interpreter.Session.Env.State where
 import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import           Data.Map                   (Map)
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 import           Data.Monoid                ((<>))
+import           Data.Set                   (Set)
+import qualified Data.Set                   as Set
 
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
@@ -32,6 +35,7 @@ import qualified Luna.AST.Expr                               as Expr
 import           Luna.AST.Module                             (Module)
 import           Luna.Graph.Flags                            (Flags)
 import           Luna.Graph.Graph                            (Graph)
+import qualified Luna.Graph.Node                             as Node
 import           Luna.Graph.PropertyMap                      (PropertyMap)
 import qualified Luna.Graph.PropertyMap                      as PropertyMap
 import           Luna.Graph.View.Default.DefaultsMap         (DefaultsMap)
@@ -102,6 +106,26 @@ setAllReady flag = modify $ Env.allReady .~ flag
 
 getAllReady :: Session Bool
 getAllReady = gets $ view Env.allReady
+
+---- Env.dependentNodes ---------------------------------------------------
+
+getDependentNodes :: Session (Map CallPoint (Set Node.ID))
+getDependentNodes = gets $ view Env.dependentNodes
+
+
+getDependentNodesOf :: CallPoint -> Session (Set Node.ID)
+getDependentNodesOf callPoint =
+    Maybe.fromMaybe def . Map.lookup callPoint <$> getDependentNodes
+
+insertDependentNode :: CallPoint -> Node.ID -> Session ()
+insertDependentNode callPoint nodeID =
+    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+        alter = Just . Set.insert nodeID . Maybe.fromMaybe def
+
+
+deleteDependentNodes :: CallPoint -> Session ()
+deleteDependentNodes callPoint =
+    modify (Env.dependentNodes %~ Map.delete callPoint)
 
 ---- Env.defaultSerializationMode -----------------------------------------
 
@@ -204,16 +228,16 @@ getPropertyMap libraryID =
 
 
 getFlags :: CallPoint -> Session Flags
-getFlags callPiont = do
-    let libraryID = callPiont ^. CallPoint.libraryID
-        nodeID    = callPiont ^. CallPoint.nodeID
+getFlags callPoint = do
+    let libraryID = callPoint ^. CallPoint.libraryID
+        nodeID    = callPoint ^. CallPoint.nodeID
     PropertyMap.getFlags nodeID <$> getPropertyMap libraryID
 
 
 getDefaultsMap :: CallPoint -> Session DefaultsMap
-getDefaultsMap callPiont = do
-    let libraryID = callPiont ^. CallPoint.libraryID
-        nodeID    = callPiont ^. CallPoint.nodeID
+getDefaultsMap callPoint = do
+    let libraryID = callPoint ^. CallPoint.libraryID
+        nodeID    = callPoint ^. CallPoint.nodeID
     PropertyMap.getDefaultsMap nodeID <$> getPropertyMap libraryID
 
 ---- Env.projectID --------------------------------------------------------

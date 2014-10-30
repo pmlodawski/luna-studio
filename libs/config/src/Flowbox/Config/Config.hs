@@ -87,10 +87,10 @@ data Section = Root       { path :: String
                           }
              | Bus        {  serverControlEndPoint :: String
                           ,  serverPullEndPoint    :: String
-                          ,  serverPubEndPointt    :: String
+                          ,  serverPubEndPoint     :: String
                           ,  clientControlEndPoint :: String
                           ,  clientPullEndPoint    :: String
-                          ,  clientPubEndPointt    :: String
+                          ,  clientPubEndPoint     :: String
                           }
              deriving (Show)
 
@@ -162,10 +162,10 @@ load = do
                )
            <*> ( Bus      <$> readConf "bus.serverControlEndPoint"
                           <*> readConf "bus.serverPullEndPoint"
-                          <*> readConf "bus.serverPubEndPointt"
+                          <*> readConf "bus.serverPubEndPoint"
                           <*> readConf "bus.clientControlEndPoint"
                           <*> readConf "bus.clientPullEndPoint"
-                          <*> readConf "bus.clientPubEndPointt"
+                          <*> readConf "bus.clientPubEndPoint"
                )
 
 -- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.flowbox - defaultowy config?)

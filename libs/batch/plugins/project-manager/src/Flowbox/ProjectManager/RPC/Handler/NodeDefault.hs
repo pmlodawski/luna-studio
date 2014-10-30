@@ -48,9 +48,9 @@ set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectI
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchND.setNodeDefault dstPort value nodeID bc libID projectID
-    updateNo <- Batch.getUpdateNo
-    return $ NodeDefaultSet.Update request updateNo
+    defaultID <- BatchND.setNodeDefault dstPort value nodeID bc libID projectID
+    updateNo  <- Batch.getUpdateNo
+    return $ NodeDefaultSet.Update request (encodeP defaultID) updateNo
 
 
 remove :: NodeDefaultRemove.Request -> RPC Context IO NodeDefaultRemove.Update

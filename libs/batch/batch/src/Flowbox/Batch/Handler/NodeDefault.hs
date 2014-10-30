@@ -29,7 +29,7 @@ nodeDefaults nodeID _ libID projectID =
 
 
 setNodeDefault :: PortDescriptor -> NodeExpr
-               -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+               -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node.ID
 setNodeDefault dstPort value nodeID bc libID projectID = do
     propertyMap <- Batch.getPropertyMap libID projectID
     maxID <- Batch.getMaxID libID projectID
@@ -37,6 +37,7 @@ setNodeDefault dstPort value nodeID bc libID projectID = do
     Batch.setPropertyMap newPM libID projectID
     --TODO[PM] : Temporary fix
     Batch.graphViewOp bc libID projectID $ \gv pm -> return ((gv, pm), ())
+    return maxID
 
 
 
