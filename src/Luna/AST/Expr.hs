@@ -32,6 +32,7 @@ import qualified Luna.AST.Type                   as Type
 import qualified Data.Char                       as Char
 
 
+
 type Lit         = Lit.Lit
 type Pat         = Pat.Pat
 type Traversal m = (Functor m, Applicative m, Monad m)
@@ -87,14 +88,14 @@ data Accessor = VarAccessor { _accName :: String }
 
 mkAccessor :: String -> Accessor
 mkAccessor ""       = VarAccessor ""
-mkAccessor s@(x:xs) = ($ s) $ if Char.isLower x then VarAccessor else ConAccessor
+mkAccessor s@(x:xs) = ($ s) $ if Char.isUpper x then ConAccessor else VarAccessor
 
 
 instance QShow Expr
-makeLenses (''Expr)
+makeLenses ''Expr
 
 instance QShow Accessor
-makeLenses (''Accessor)
+makeLenses ''Accessor
 
 
 shiftArg1 f t1 x = f x t1

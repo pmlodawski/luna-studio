@@ -4,22 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE UndecidableInstances #-}
-
-module Luna.ASTNew.Module where
+module Luna.ASTNew.Unit where
 
 import GHC.Generics      (Generic)
 import Flowbox.Prelude
 
-import Luna.ASTNew.Name  (TName)
-import Luna.ASTNew.Decl  (LDecl)
-import Luna.ASTNew.Label (Label)
-
-
-data Module a e = Module { _path :: [TName]
-                         , _name :: TName
-                         , _body :: [LDecl a e]
-                         } deriving (Generic, Show)
-
-
-type LModule a e = Label a (Module a e)
+data Unit a = Unit a deriving (Generic, Show)

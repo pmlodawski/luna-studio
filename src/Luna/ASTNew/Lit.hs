@@ -13,7 +13,10 @@ import           Luna.ASTNew.Lit.Number (Number)
 
 import           Prelude (Show, Eq, Read)
 import qualified Prelude
+import           Luna.ASTNew.Label (Label)
 
+
+type LLit a = Label a Lit
 
 data Lit = Char    { _char :: Prelude.Char   }
          | String  { _str  :: Prelude.String }
