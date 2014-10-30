@@ -8,12 +8,16 @@
 
 module Luna.Interpreter.Session.Env.Env where
 
+import Data.Map (Map)
+import Data.Set (Set)
+
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Data.MapForest                      (MapForest)
 import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Data.SetForest                      (SetForest)
 import           Flowbox.Prelude
 import           Generated.Proto.Data.Value                  (Value)
+import qualified Luna.Graph.Node                             as Node
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
@@ -27,6 +31,7 @@ data Env = Env { _cached                   :: MapForest CallPoint CacheInfo
                , _watchPoints              :: SetForest CallPoint
                , _reloadMap                :: ReloadMap
                , _allReady                 :: Bool
+               , _dependentNodes           :: Map CallPoint (Set Node.ID)
                , _defaultSerializationMode :: Mode
                , _serializationModes       :: MapForest CallPoint Mode
                , _libManager               :: LibManager
@@ -41,7 +46,7 @@ makeLenses ''Env
 
 mk :: LibManager -> Maybe Project.ID -> Maybe DefPoint
    -> (Project.ID -> CallPointPath -> Maybe Value -> IO ()) -> Env
-mk = Env def def def False def def
+mk = Env def def def False def def def
 
 
 instance Default Env where

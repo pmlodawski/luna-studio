@@ -11,6 +11,7 @@ module Luna.Interpreter.Session.Cache.Cache where
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
+import qualified Data.Set            as Set
 
 import           Flowbox.Control.Error
 import qualified Flowbox.Data.MapForest                      as MapForest
@@ -18,7 +19,6 @@ import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Graph.Node                             as Node
-import qualified Luna.Graph.View.Default.DefaultsMap         as DefaultsMap
 import qualified Luna.Interpreter.Session.Cache.Free         as Free
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo (CacheInfo))
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
@@ -119,11 +119,13 @@ put callDataPath predVarNames varName = do
 deleteNode :: Library.ID -> Node.ID -> Session ()
 deleteNode libraryID nodeID = do
     logger info $ "Cleaning node: " ++ show (libraryID, nodeID)
-    let matchNode k _ = last k == CallPoint libraryID nodeID
+    let callPoint     = CallPoint libraryID nodeID
+        matchNode k _ = last k == callPoint
     matching <- MapForest.find matchNode <$> Env.getCached
     mapM_ delete' matching
-    defaultsMap <- Env.getDefaultsMap $ CallPoint libraryID nodeID
-    mapM_ (deleteNode libraryID . fst) $ DefaultsMap.elems defaultsMap
+    dependent <- Env.getDependentNodesOf callPoint
+    Env.deleteDependentNodes callPoint
+    mapM_ (deleteNode libraryID) $ Set.toList dependent
 
 
 delete :: CallPointPath -> Session ()
