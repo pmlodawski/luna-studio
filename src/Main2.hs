@@ -51,7 +51,7 @@ $(generateFieldAccessors 'Main [])
 -- ===================================================================
 
 -- ====== Method: Main.print ====== --
-memDef_Main_print (_v_22, (_v_4, ())) = do {
+memDef_Main_print (_v_43, (_v_4, ())) = do {
      val ();
      polyJoin . liftF1 (Value . fmap Safe . print) $  _v_4;
      
@@ -59,10 +59,28 @@ memDef_Main_print (_v_22, (_v_4, ())) = do {
 memSig_Main_print = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
 $(registerMethod ''Main "print")
 
--- ====== Method: Main.main ====== --
-memDef_Main_main (_v_24, ()) = do {
+-- ====== Method: Int._62 ====== --
+memDef_Int__62 (_v_45, (_v_11, ())) = do {
      val ();
-     call (appNext (val [rangeFromTo (val (1 :: Int)) (val (10 :: Int))]) (member (Proxy :: Proxy "print") (call cons_Main)));
+     liftF2 (>)  _v_45 _v_11;
+     
+}
+memSig_Int__62 = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
+$(registerMethod ''Int "_62")
+
+-- ====== Method: Main._62 ====== --
+memDef_Main__62 (_v_47, (_v_19, (_v_21, ()))) = do {
+     val ();
+     call (appNext _v_21 (member (Proxy :: Proxy "_62") _v_19));
+     
+}
+memSig_Main__62 = ((mkArg :: NParam "self"), ((mkArg :: Param), ((mkArg :: Param), ())))
+$(registerMethod ''Main "_62")
+
+-- ====== Method: Main.main ====== --
+memDef_Main_main (_v_49, ()) = do {
+     val ();
+     call (appNext (call (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) (member (Proxy :: Proxy "_62") (call cons_Main))))) (member (Proxy :: Proxy "print") (call cons_Main)));
      
 }
 memSig_Main_main = ((mkArg :: NParam "self"), ())
