@@ -82,6 +82,7 @@ currentScope :: Breadcrumbs -> [String]
 currentScope (Crumb.Module   m   : t) = m : currentScope t
 currentScope (Crumb.Class    c   : t) = c : currentScope t
 currentScope (Crumb.Function _ _ : _) = []
+currentScope (Crumb.Lambda   _   : _) = []
 currentScope []                       = []
 
 

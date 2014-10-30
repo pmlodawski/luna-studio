@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Luna.SampleCodes where
+module Test.Luna.Sample.Code where
 
 import Text.RawString.QQ
 
@@ -29,6 +29,8 @@ def main
 def main:
     1
 |], named "simple infix" [r|
+def Int.+ a
+
 def main:
     1 + 2
 |], named "simple assignment 1" [r|
@@ -50,19 +52,13 @@ def main:
     x = 0
     y = 1
     (z, v) = (x, y)
-|], named "simple assignment 5" [r|
+|], {-named "assignment with patterns" [r|
 def main:
     x = 0
     y = 1
     (z, v) = (x, y)
     h = (z, v)
-|], named "assignment with patterns" [r|
-def main:
-    x = 0
-    y = 1
-    (z, v) = (x, y)
-    h = (z, v)
-|], named "assignment" [r|
+|], -}  named "assignment" [r|
 def foo
 
 def main arg1 arg2:
@@ -72,6 +68,7 @@ def main arg1 arg2:
 |], named "following calls" [r|
 def foo
 def bar
+def Int.+ a
 
 def main:
     1 + 2
@@ -148,15 +145,23 @@ def main arg arg2:
     print arg2
     self.bla "kota" "albo nie"
 |], named "constructors 1" [r|
+class Foo
+
 def main arg:
-    Main.foo 1 2 3
+    Foo.foo 1 2 3
 |], named "constructors 2" [r|
+class Foo
+
 def main arg:
     Foo 1 2 3
 |], named "constructors 3" [r|
+class Foo
+
 def main arg:
     Foo arg.boo 1
 |], named "constructors 4" [r|
+class Foo
+class My
 def gap
 
 def main arg:
@@ -164,11 +169,23 @@ def main arg:
 |], named "tuples 1" [r|
 def main arg:
     (1, 2)
-    3
+    3, 4
+    5
 |], named "tuples 2" [r|
 def main arg:
     x = 4
     y = 1, x
+|], named "tuples 3" [r|
+def print msg
+
+def main:
+    print (1, 2)
+|], named "tuples 4" [r|
+def print msg
+
+def main:
+    x = 1
+    print (x, 2)
 |], named "lists" [r|
 def main arg:
     x = 4
@@ -206,19 +223,26 @@ sampleLambdas = [
     , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 6]
     , [r|
 def main:
-    f = a : a + 1
+    f = a : a , 1
 |]), ( "lambda with context"
     , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 12]
     , [r|
 def main arg:
     x = 15
-    f = a : a + 1 + x + arg
+    f = a : a , 1 , x , arg
 |])
     ]
 
 
 emptyMain :: Code
-emptyMain = "def main"
+emptyMain = [r|
+def main
+def foo
+def bar
+def baz
+def gaz
+def a
+|]
 
 
 zipperTestModule :: Code
@@ -227,11 +251,11 @@ class Vector a:
     x,y,z :: a
 
     def test a b:
-        (a,b, c : c + a + b)
+        (a,b, c : c, a, b)
 
     class Inner:
         def inner a b:
-            a + b
+            a, b
 
 def main:
     v = Vector 1 2 3
