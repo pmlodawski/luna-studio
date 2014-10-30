@@ -27,3 +27,4 @@ dumpBindings = do
     logger trace "== declared variables =="
     mapM_ (logger trace . dshow dflags) bindings
     logger trace "========================"
+
