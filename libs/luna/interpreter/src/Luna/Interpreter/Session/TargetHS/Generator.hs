@@ -19,8 +19,8 @@ import qualified Luna.AST.Type                            as Type
 import qualified Luna.Data.Source                         as Source
 import           Luna.Interpreter.Session.Data.DefPoint   (DefPoint)
 import qualified Luna.Interpreter.Session.Data.DefPoint   as DefPoint
+import qualified Luna.Interpreter.Session.Env             as Env
 import           Luna.Interpreter.Session.Session         (Session)
-import qualified Luna.Interpreter.Session.Session         as Session
 import qualified Luna.Pass.Analysis.Alias.Alias           as Analysis.Alias
 import qualified Luna.Pass.CodeGen.HSC.HSC                as HSC
 import qualified Luna.Pass.Transform.AST.Hash.Hash        as Hash
@@ -39,14 +39,14 @@ emptyModule = Module.mk def $ Type.Module def "Main" []
 
 genAll :: Session [String]
 genAll = do
-    mainPtr <- Session.getMainPtr
-    ast     <- Session.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
+    mainPtr <- Env.getMainPtr
+    ast     <- Env.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
     genCode (dropWhile (not . (== "-- body --"))) ast
 
 
 genClass :: DefPoint -> Session [String]
 genClass defPoint = do
-    expr <- Session.getClass defPoint
+    expr <- Env.getClass defPoint
     let ast = emptyModule & Module.classes .~ [expr]
     genCode (dropWhile (not . (== "-- body --"))) ast
 
@@ -55,8 +55,8 @@ genFunctions :: Session [String]
 genFunctions = do
     --expr <- Session.getFunction defPoint
     --let ast = emptyModule & Module.methods .~ [expr]
-    mainPtr <- Session.getMainPtr
-    ast     <- Session.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
+    mainPtr <- Env.getMainPtr
+    ast     <- Env.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
     genCode ( List.filter (not . (\a -> List.isPrefixOf "data " a || List.isPrefixOf "$(generateFieldAccessors" a))
              . dropWhile   (not . (== "-- body --"))
             --dropWhile   (not . (== "-- ====== Method: Vector.test ====== --"))
@@ -66,11 +66,11 @@ genFunctions = do
 
 genCode :: ([String] -> [String]) -> Module -> Session [String]
 genCode selector ast = do
-    aliasInfo <- Session.runPass $(loc) $ Analysis.Alias.run ast
-    hash      <- Session.runPass $(loc) $ Hash.run ast
-    ssa       <- Session.runPass $(loc) $ SSA.run aliasInfo hash
-    hast      <- Session.runPass $(loc) $ HASTGen.run ssa
-    srcs      <- Session.runPass $(loc) $ HSC.run hast
+    aliasInfo <- Env.runPass $(loc) $ Analysis.Alias.run ast
+    hash      <- Env.runPass $(loc) $ Hash.run ast
+    ssa       <- Env.runPass $(loc) $ SSA.run aliasInfo hash
+    hast      <- Env.runPass $(loc) $ HASTGen.run ssa
+    srcs      <- Env.runPass $(loc) $ HSC.run hast
     return $ map (unlines . selector . lines . view Source.code) srcs
 
 

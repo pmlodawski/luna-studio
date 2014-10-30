@@ -16,7 +16,7 @@ message FileSystem {
                 required string path = 1;
             }
             message Status {
-                required string path = 1;
+                required Request request = 1;
             }
         }
         message Upload {
@@ -24,7 +24,7 @@ message FileSystem {
                 required string path = 1;
             }
             message Status {
-                required string path = 1;
+                required Request request = 1;
             }
         }
         message Create {
@@ -32,7 +32,7 @@ message FileSystem {
                 required string path = 1;
             }
             message Update {
-                required string path = 1;
+                required Request request = 1;
             }
         }
         message Exists {
@@ -40,8 +40,8 @@ message FileSystem {
                 required string path = 1;
             }
             message Status {
-                required bool exists = 1;
-                required string path = 2;
+                required Request request = 1;
+                required bool    exists  = 2;
             }
         }
         message List {
@@ -49,8 +49,8 @@ message FileSystem {
                 required string path = 1;
             }
             message Status {
-                repeated string items = 1;
-                required string path = 2;
+                required Request request = 1;
+                repeated string  items   = 2;
             }
         }
         message Remove {
@@ -58,7 +58,7 @@ message FileSystem {
                 required string path = 1;
             }
             message Update {
-                required string path = 1;
+                required Request request = 1;
             }
         }
         message Copy {
@@ -67,8 +67,7 @@ message FileSystem {
                 required string dst = 2;
             }
             message Update { 
-                required string src = 1;
-                required string dst = 2;
+                required Request request = 1;
             }
         }
         message Move {
@@ -77,8 +76,7 @@ message FileSystem {
                 required string dst = 2;
             }
             message Update { 
-                required string src = 1;
-                required string dst = 2;
+                required Request request = 1;
             }
         }
     }
@@ -88,7 +86,7 @@ message FileSystem {
                 required string path = 1;
             }
             message Status {
-                required string path = 1;
+                required Request request = 1;
             }
         }
         message Upload {
@@ -96,7 +94,7 @@ message FileSystem {
                 required string path = 1;
             }
             message Status {
-                required string path = 1;
+                required Request request = 1;
             }
         }
         message Exists {
@@ -104,8 +102,8 @@ message FileSystem {
                 required string path = 1;
             }
             message Status {
-                required bool exists = 1;
-                required string path = 2;
+                required Request request = 1;
+                required bool exists = 2;
             }
         }
         message Remove {
@@ -113,7 +111,7 @@ message FileSystem {
                 required string path = 1;
             }
             message Update {
-                required string path = 1;
+                required Request request = 1;
             }
         }
         message Copy {
@@ -122,8 +120,7 @@ message FileSystem {
                 required string dst = 2;
             }
             message Update { 
-                required string src = 1;
-                required string dst = 2;
+                required Request request = 1;
             }
         }
         message Move {
@@ -132,13 +129,21 @@ message FileSystem {
                 required string dst = 2;
             }
             message Update { 
-                required string src = 1;
-                required string dst = 2;
+                required Request request = 1;
             }
         }
     }
 }
 message FileManager {
+    message Resolve {
+        message Request {
+            required string path = 1;
+        }
+        message Status {
+            required Request request      = 1;
+            required string  resolvedPath = 2;
+        }
+    }
     message Ping {
         message Request { }
         message Status  { 

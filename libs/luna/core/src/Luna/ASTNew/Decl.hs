@@ -44,7 +44,7 @@ data Decl a e
 -- import Math: sin :: Double -> Double
 -- wtedy foreigny sa zwyklym wrapperem na Decl
 
-data Cons  a e = Cons   { _consName :: CName   , _fields :: [RField a e]                  } deriving (Show, Generic)
+data Cons  a e = Cons   { _consName :: CName   , _fields :: [LField a e]                  } deriving (Show, Generic)
 data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VName, _fVal :: Maybe e } deriving (Show, Generic)
 -- FIXME[wd]: przeniesc w inne miejsce
 data ImpTgt    = ImpVar  { _vName  :: VName   , _vRename :: Maybe VName }
@@ -54,6 +54,6 @@ data ImpTgt    = ImpVar  { _vName  :: VName   , _vRename :: Maybe VName }
 type Path       = [TName]
 type LCons  a e = Label a (Cons a e)
 type LDecl  a e = Label a (Decl a e)
-type RField a e = Label a (Field a e)
+type LField a e = Label a (Field a e)
 
 

@@ -39,6 +39,7 @@ Library
                   flowbox-serialization       ,
                   flowbox-utils               ,
                   imagemagick   >= 0.0.3.6    ,
+                  JuicyPixels                 ,
                   lifted-base                 ,
                   linear                      ,
                   linear-accelerate           ,
@@ -52,7 +53,8 @@ Library
                   system-filepath             ,
                   template-haskell            ,
                   transformers                ,
-                  vector
+                  vector                      ,
+                  luna-target-ghchs
 
 -- == test generator ==
 

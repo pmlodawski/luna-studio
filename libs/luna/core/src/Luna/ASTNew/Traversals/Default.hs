@@ -4,6 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- Please think twice if you have strong reason to touch this file. 
+-- Fragile, can explode in your face and you will not know about it!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
  {-# LANGUAGE UndecidableInstances #-}
  {-# LANGUAGE OverlappingInstances #-}
 
@@ -22,3 +28,7 @@ instance DefaultTraversal base m a => Traversal base m a where traverse = defaul
 ----- Label -----
 instance Traversal base m a => Traversal base m (Label l a) where
     traverse base (Label l a) = fmap (Label l) $ traverse base a
+
+
+instance Traversal base m a => DefaultTraversal base m (Label l a) where
+    defaultTraverse b (Label l a) = Label l <$> traverse b a

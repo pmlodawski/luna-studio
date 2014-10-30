@@ -27,7 +27,8 @@ Library
                   MultiParamTypeClasses,
                   DefaultSignatures,
                   DeriveFunctor,
-                  FlexibleInstances
+                  FlexibleInstances,
+                  ConstraintKinds
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 

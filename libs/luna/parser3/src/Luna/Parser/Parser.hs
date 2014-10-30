@@ -64,8 +64,6 @@ import           Data.Maybe                   (fromJust)
 import qualified Luna.AST.Arg                 as Arg
 import qualified Data.List                    as List
 import qualified Luna.Parser.Pragma           as Pragma
-import           Luna.Parser.Unit             (Unit(Unit))
-import qualified Luna.Parser.Unit             as Unit
 
 import           Text.EditDistance            --(defaultEditCosts, levenshteinDistance, EditCosts, Costs(..))
 import           Text.PhoneticCode.Phonix     (phonix)
@@ -85,7 +83,8 @@ import qualified Luna.AST.Expr as Expr
 import qualified Luna.ASTNew.Decl   as Decl
 import           Luna.ASTNew.Decl   (Field(Field))
 import qualified Luna.ASTNew.Module as Module
-import           Luna.ASTNew.Module (Module(Module))
+import           Luna.ASTNew.Module (Module(Module), LModule)
+import           Luna.ASTNew.Unit   (Unit(Unit))
 import qualified Luna.ASTNew.Label  as Label
 import           Luna.ASTNew.Label  (Label(Label))
 import qualified Luna.ASTNew.Type   as Type
@@ -246,6 +245,8 @@ unit p = do
 -- Definitions
 -----------------------------------------------------------
 
+
+pUnit p = Unit <$> labeled p
 
 ----- Modules -----
 
@@ -540,7 +541,7 @@ appSt = State.conf %~ appConf
 parseGen p st = run (bundleResult (unit p)) st
 
 --moduleParser modPath = parseGen (upToEnd $ func)
-moduleParser modPath = parseGen (upToEnd $ pModule (last modPath) (init modPath))
+moduleParser modPath = parseGen (upToEnd $ pUnit $ pModule (last modPath) (init modPath))
 --exprParser           = parseGen (upToEnd expr)
 --patternParser        = parseGen (upToEnd pattern)
 --typeParser           = parseGen (upToEnd typeT)
@@ -566,20 +567,37 @@ parseByteString input p = handleResult  $  parseFromByteString p (parserDelta pa
 
 data AliasAnalysis = AliasAnalysis
 
-testme ast st = runState (AST.defaultTraverse AliasAnalysis ast) st
+testme ast st = runState (AST.traverse AliasAnalysis ast) st
 
 
+type AACtx m lab e a = (MonadState (State.State a) m, Enumerated lab, AST.DefaultTraversal AliasAnalysis m e)
 
-instance AST.Traversal AliasAnalysis m (Module f e) where
-    traverse base m = undefined
+instance AACtx m lab e a => AST.Traversal AliasAnalysis m (LModule lab e) where
+    traverse base x@(Label lab m) = State.withScope id continue
+        where continue = AST.defaultTraverse base x
+              id       = Enum.id lab
 
---instance (MonadState (State.State a) m, Enumerated lab) 
---         => AST.Traversal AliasAnalysis m (Label lab (Decl.Decl f e)) where
---    traverse base l@(Label lab ast) = case ast of
---        Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withScope (Enum.id lab) continue
---        _                                          -> continue
---        where continue = AST.defaultTraverse base l
---              id       = Enum.id lab
+instance AACtx m lab e a => AST.Traversal AliasAnalysis m (Decl.LDecl lab e) where
+    traverse base x@(Label lab ast) = case ast of
+        Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withScope id continue
+        _                                          -> continue
+        where continue = AST.defaultTraverse base x
+              id       = Enum.id lab
+
+
+            --instance (MonadState (State.State a) m, Enumerated lab) => AST.Traversal AliasAnalysis m (Label lab (Module f e)) where
+            --    traverse base x@(Label lab m) = State.withScope id continue
+            --        where continue = AST.defaultTraverse base x
+            --              id       = Enum.id lab
+
+            --instance (MonadState (State.State a) m, Enumerated lab) 
+            --         => AST.Traversal AliasAnalysis m (Label lab (Decl.Decl f e)) where
+            --    traverse base x@(Label lab ast) = case ast of
+            --        --Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withScope id continue
+            --        --_                                          -> continue
+            --        _                                          -> undefined
+            --        where continue = AST.defaultTraverse base x
+            --              id       = Enum.id lab
 
 
 --s2Decl d = case Label.element d of

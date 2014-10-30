@@ -32,11 +32,11 @@ type MinIDPass result = Pass IDState result
 
 
 run :: Module -> Pass.Result AST.ID
-run = (Pass.run_ (Pass.Info "MinID") State.make) . analyseModule
+run = Pass.run_ (Pass.Info "MinID") State.make . analyseModule
 
 
 runExpr :: Expr -> Pass.Result AST.ID
-runExpr = (Pass.run_ (Pass.Info "MinID") State.make) . analyseExpr
+runExpr = Pass.run_ (Pass.Info "MinID") State.make . analyseExpr
 
 
 analyseModule :: Module -> MinIDPass AST.ID

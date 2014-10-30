@@ -113,6 +113,8 @@ example = Source.Source ["Main"] $
                     --, "def foo a b:"
                     --, "    print a"
                     --, "    print b"
+                    --, "def > a b:"
+                    --, "    a.> b"
 
                     , "def main:"
                     --, "    a = Vector [] [] []"

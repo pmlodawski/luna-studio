@@ -4,13 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.FileManager.RPC.Handler.File where
 
-import qualified Flowbox.AWS.S3.File                                        as File
 import           Flowbox.Bus.RPC.RPC                                        (RPC)
-import           Flowbox.FileManager.Context                                (Context)
-import qualified Flowbox.FileManager.Context                                as Context
+import           Flowbox.FileManager.FileManager                            (FileManager)
+import qualified Flowbox.FileManager.FileManager                            as FileManager
 import           Flowbox.Prelude                                            hiding (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -29,51 +30,57 @@ import qualified Generated.Proto.FileManager.FileSystem.File.Upload.Status  as U
 
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.FileManager.RPC.Handler.File"
+logger :: LoggerIO
+logger = getLoggerIO $(moduleName)
 
 ------ public api -------------------------------------------------
 
 
-upload :: Upload.Request -> RPC Context IO Upload.Status
-upload (Upload.Request tpath) = do
+upload :: FileManager fm ctx => fm
+       -> Upload.Request -> RPC ctx IO Upload.Status
+upload fm request@(Upload.Request tpath) = do
     let path = decodeP tpath
-    Context.run $ File.upload "." path
-    return $ Upload.Status tpath
+    FileManager.uploadFile fm path
+    return $ Upload.Status request
 
 
-fetch :: Fetch.Request -> RPC Context IO Fetch.Status
-fetch (Fetch.Request tpath) = do
+fetch :: FileManager fm ctx => fm
+      -> Fetch.Request -> RPC ctx IO Fetch.Status
+fetch fm request@(Fetch.Request tpath) = do
     let path = decodeP tpath
-    Context.run $ File.fetch "." path
-    return $ Fetch.Status tpath
+    FileManager.fetchFile fm path
+    return $ Fetch.Status request
 
 
-exists :: Exists.Request -> RPC Context IO Exists.Status
-exists (Exists.Request tpath) = do
+exists :: FileManager fm ctx => fm
+       -> Exists.Request -> RPC ctx IO Exists.Status
+exists fm request@(Exists.Request tpath) = do
     let path = decodeP tpath
-    e <- Context.run $ File.exists path
-    return $ Exists.Status e tpath
+    e <- FileManager.fileExists fm path
+    return $ Exists.Status request e
 
 
-remove :: Remove.Request -> RPC Context IO Remove.Update
-remove (Remove.Request tpath) = do
+remove :: FileManager fm ctx => fm
+       -> Remove.Request -> RPC ctx IO Remove.Update
+remove fm request@(Remove.Request tpath) = do
     let path = decodeP tpath
-    Context.run $ File.remove path
-    return $ Remove.Update tpath
+    FileManager.removeFile fm path
+    return $ Remove.Update request
 
 
-copy :: Copy.Request -> RPC Context IO Copy.Update
-copy (Copy.Request tsrc tdst) = do
+copy :: FileManager fm ctx => fm
+     -> Copy.Request -> RPC ctx IO Copy.Update
+copy fm request@(Copy.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    Context.run $ File.copy src dst
-    return $ Copy.Update tsrc tdst
+    FileManager.copyFile fm src dst
+    return $ Copy.Update request
 
 
-move :: Move.Request -> RPC Context IO Move.Update
-move (Move.Request tsrc tdst) = do
+move :: FileManager fm ctx => fm
+     -> Move.Request -> RPC ctx IO Move.Update
+move fm request@(Move.Request tsrc tdst) = do
     let src = decodeP tsrc
         dst = decodeP tdst
-    Context.run $ File.rename src dst
-    return $ Move.Update tsrc tdst
+    FileManager.moveFile fm src dst
+    return $ Move.Update request

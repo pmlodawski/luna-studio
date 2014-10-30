@@ -7,10 +7,13 @@
 
 package generated.proto.data;
 
-message Value {
-    extensions 100 to max;
+import "enums-type.proto";
 
+
+
+message Value {
     enum Type {
+        Error      = 13;
         EmptyTuple = 0;
         Int        = 1;
         Char       = 2;
@@ -20,9 +23,22 @@ message Value {
         Double     = 6;
         Matrix     = 7;
         View       = 8;
+        Point      = 9;
+        Tangent    = 10;
+        Vertex     = 11;
+        Curve      = 12;
     }
 
     required Type type = 1;
+    extensions 100 to max;
+}
+
+
+message ErrorData {
+    extend Value {
+        optional ErrorData data = 113;
+    }
+    required string message = 1;
 }
 
 message EmptyTupleData {
@@ -30,7 +46,6 @@ message EmptyTupleData {
         optional EmptyTupleData data = 100;
     }
 }
-
 
 message IntData {
     extend Value {
@@ -107,4 +122,43 @@ message ViewData {
     required MatrixData green = 2;
     required MatrixData blue  = 3;
     optional MatrixData alpha = 4;
+}
+
+// ===   GUI Curve Model   ===
+
+message PointData {
+    extend Value {
+        optional PointData data = 109;
+    }
+
+    optional double x = 1;
+    optional double y = 2;
+}
+
+message TangentData {
+    extend Value {
+        optional TangentData data = 110;
+    }
+
+    optional double weight   = 1;
+    optional double angle    = 2;
+    optional bool   isLinear = 3;
+}
+
+message VertexData {
+    extend Value {
+        optional VertexData data = 111;
+    }
+
+    optional PointData point      = 1;
+    optional TangentData handleIn  = 2;
+    optional TangentData handleOut = 3;
+}
+
+message CurveData {
+    extend Value {
+        optional CurveData data = 112;
+    }
+
+    repeated VertexData vertices = 1;
 }

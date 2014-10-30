@@ -29,7 +29,8 @@ Library
                   DefaultSignatures,
                   DeriveFunctor,
                   FlexibleInstances,
-                  LambdaCase
+                  LambdaCase,
+                  ConstraintKinds
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 

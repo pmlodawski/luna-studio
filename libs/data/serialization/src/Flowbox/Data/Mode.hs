@@ -4,17 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TemplateHaskell #-}
+module Flowbox.Data.Mode (
+    module X,
+    def,
+) where
 
-module Luna.Parser.Unit where
-
-import           Flowbox.Prelude
-import           Luna.AST.Common                 (ID)
-
+import Flowbox.Prelude
+import Generated.Proto.Mode.Mode as X
 
 
-data Unit a = Unit ID a deriving Show
-
+instance Default Mode where
+    def = Mode Nothing

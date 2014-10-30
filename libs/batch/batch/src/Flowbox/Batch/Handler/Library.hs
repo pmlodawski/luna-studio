@@ -13,7 +13,7 @@ import qualified System.Process as Process
 
 import           Flowbox.Batch.Batch               (Batch, gets)
 import qualified Flowbox.Batch.Batch               as Batch
-import           Flowbox.Batch.Handler.Common      (libManagerOp)
+import           Flowbox.Batch.Handler.Common      (libManagerOp, libraryOp)
 import qualified Flowbox.Batch.Handler.Common      as Batch
 import qualified Flowbox.Batch.Project.Project     as Project
 import           Flowbox.Control.Error
@@ -47,10 +47,19 @@ libraryByID = Batch.getLibrary
 
 
 createLibrary :: String -> UniPath -> Project.ID -> Batch (Library.ID, Library)
-createLibrary name path projectID = libManagerOp projectID (\libManager -> do
+createLibrary name path projectID = libManagerOp projectID $ \libManager -> do
     let library                = Library.make name path [name]
         (newLibManager, libraryID) = LibManager.insNewNode library libManager
-    return (newLibManager, (libraryID, library)))
+    return (newLibManager, (libraryID, library))
+
+
+modifyLibrary :: (Library.ID, Library) -> Project.ID -> Batch ()
+modifyLibrary (libraryID, library) projectID = libraryOp libraryID projectID $ \oldLibrary -> do
+    let ast         = oldLibrary ^. Library.ast
+        propertyMap = oldLibrary ^. Library.propertyMap
+        newLibrary  = library & Library.ast .~ ast
+                              & Library.propertyMap .~ propertyMap
+    return (newLibrary, ())
 
 
 loadLibrary :: UniPath -> Project.ID -> Batch (Library.ID, Library)
