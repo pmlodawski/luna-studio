@@ -342,12 +342,13 @@ graphNodeDefaultRemove (GraphNodeDefaultRemove.Update request updateNo) = do
 
 
 graphNodeDefaultSet :: GraphNodeDefaultSet.Update -> RPC Context SessionST ()
-graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
+graphNodeDefaultSet (GraphNodeDefaultSet.Update request defNodeID updateNo) = do
     sync updateNo $ NodeDefaultHandler.set request
     let projectID = GraphNodeDefaultSet.projectID request
         libraryID = GraphNodeDefaultSet.libraryID request
         nodeID    = GraphNodeDefaultSet.nodeID request
-    Cache.modifyNode projectID libraryID nodeID
+    Cache.modifyNode projectID libraryID nodeID 
+    Cache.insertDependentNode projectID libraryID nodeID defNodeID
 
 
 graphNodePropertiesSet :: GraphNodePropertiesSet.Update -> RPC Context SessionST ()

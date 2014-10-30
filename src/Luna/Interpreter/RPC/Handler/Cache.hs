@@ -21,6 +21,8 @@ import           Luna.Interpreter.Proto.CallPointPath                   ()
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
+import           Luna.Interpreter.Session.Data.CallPoint                (CallPoint (CallPoint))
+import qualified Luna.Interpreter.Session.Env                           as Env
 import qualified Luna.Interpreter.Session.Env                           as Env
 import           Luna.Interpreter.Session.Session                       (Session, SessionST)
 
@@ -76,3 +78,9 @@ modifyNodeSuccessors projectID libraryID tbc nodeID = do
 deleteNode :: Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
 deleteNode projectID libraryID nodeID =
     interpreterDo projectID $ Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
+
+
+insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
+insertDependentNode projectID libraryID nodeID depID = do
+    let callPoint = CallPoint (decodeP libraryID) (decodeP nodeID)
+    interpreterDo projectID $ Env.insertDependentNode callPoint $ decodeP depID
