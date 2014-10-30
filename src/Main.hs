@@ -4,13 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Main where
 
 import qualified Flowbox.Bus.EndPoint                 as EP
 import qualified Flowbox.Bus.RPC.Pipes                as Pipes
 import qualified Flowbox.Config.Config                as Config
 import           Flowbox.Control.Error
+import qualified Flowbox.Initializer.Initializer      as Initializer
 import           Flowbox.Options.Applicative          hiding (info)
 import qualified Flowbox.Options.Applicative          as Opt
 import           Flowbox.Prelude
@@ -20,8 +22,7 @@ import           Luna.Interpreter.Cmd                 (Cmd)
 import qualified Luna.Interpreter.Cmd                 as Cmd
 import qualified Luna.Interpreter.RPC.Handler.Handler as Handler
 import qualified Luna.Interpreter.Version             as Version
-import qualified Flowbox.Initializer.Initializer as Initializer
-
+import           System.Remote.Monitoring
 
 
 rootLogger :: Logger
@@ -53,6 +54,7 @@ run :: Cmd -> IO ()
 run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run prefix verbose _ -> do
+        forkServer "localhost" 8000
         rootLogger setIntLevel verbose
         cfg       <- Config.load
         Initializer.initializeIfNeeded cfg
