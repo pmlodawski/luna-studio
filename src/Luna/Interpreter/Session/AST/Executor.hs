@@ -35,6 +35,7 @@ import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import           Luna.Interpreter.Session.Data.Hash         (Hash)
 import           Luna.Interpreter.Session.Data.VarName      (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
+import qualified Luna.Interpreter.Session.Debug             as Debug
 import qualified Luna.Interpreter.Session.Env               as Env
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
@@ -57,6 +58,7 @@ processMain = do
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
     Cache.dumpAll
+    Debug.dumpBindings
 
 
 processNodeIfNeeded :: CallDataPath -> Session ()

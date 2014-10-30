@@ -12,21 +12,17 @@ import qualified GHC
 import qualified GhcMonad
 import qualified HscTypes
 import qualified InstEnv
-import qualified Outputable
 import           Text.Show.Pretty (ppShow)
 
 import Flowbox.Prelude
 import Flowbox.System.Log.Logger
-import Luna.Interpreter.Session.Session (Session)
+import Luna.Interpreter.Session.GHC.Util (dshow)
+import Luna.Interpreter.Session.Session  (Session)
 
 
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
-
-
-dshow :: Outputable.Outputable a => GHC.DynFlags -> a -> String
-dshow dflags = Outputable.showSDoc dflags . Outputable.ppr
 
 
 type ClsInstSelector = GHC.DynFlags -> InstEnv.ClsInst -> Bool
