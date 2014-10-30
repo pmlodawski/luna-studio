@@ -65,6 +65,7 @@ initialize config imports = do
     setHardcodedExtensions
     setImports $ "Data.Word"
                : "Luna.Target.HS"
+               : "System.Mem"
                : imports
     runDecls Helpers.hash
 
