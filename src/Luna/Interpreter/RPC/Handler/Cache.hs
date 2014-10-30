@@ -39,11 +39,15 @@ interpreterDo projectID op = do
 
 
 deleteAll :: Int32 -> RPC Context SessionST ()
-deleteAll projectID = interpreterDo projectID Cache.deleteAll
+deleteAll projectID = interpreterDo projectID $ do
+    Cache.deleteAll
+    Cache.performGC
 
 
 modifyAll :: Int32 -> RPC Context SessionST ()
-modifyAll projectID = interpreterDo projectID Invalidate.modifyAll
+modifyAll projectID = interpreterDo projectID $ do
+    Invalidate.modifyAll
+    Cache.performGC
 
 
 modifyLibrary :: Int32 -> Int32 -> RPC Context SessionST ()
@@ -76,7 +80,9 @@ modifyNodeSuccessors projectID libraryID tbc nodeID = do
 
 deleteNode :: Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
 deleteNode projectID libraryID nodeID =
-    interpreterDo projectID $ Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
+    interpreterDo projectID $ do 
+        Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
+        Cache.performGC
 
 
 insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
