@@ -9,6 +9,8 @@ type Constraint = S.Set Label
 singleConstraint :: Label -> Constraint
 singleConstraint = S.singleton
 
+noConstraints = mempty
+
 instance Types Tyrow where
     ftv (Row { _, fType, record }) = ftv fType `union` ftv record
     ftv RowEmpty = []

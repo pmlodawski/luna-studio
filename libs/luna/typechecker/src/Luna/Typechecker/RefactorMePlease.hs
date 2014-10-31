@@ -11,4 +11,8 @@ import Control.Monad.Trans
 
 
 mkTyID :: TILogger Type
-mkTyID = (TVar . Tyvar . TyID . show) <$> lift getNextID
+mkTyID = mkTyIdWithConstraints noConstraints
+
+mkTyIdWithConstraints :: Constraints -> TILogger Type
+mkTyIdWithConstraints constraints = (TVar . Tyvar . TyID . show) <$> lift getNextID where
+    tyvar varId = Tyvar varId constraints

@@ -21,12 +21,11 @@ mgu t var@(TVar u)                 = mgu var t
 mgu (TRecord row1) (TRecord row2)  = mgu row1 row2
 mgu (TVariant row1) (TVariant ro2) = mgu row1 row2 
 mgu (RowEmpty) (RowEmpty)          = return mempty
--- TODO intersection for row types without row variables
 -- TODO narrowing coercions when row polymorphism won't work
 mgu (Row (Row { fName, fType, rowTail1 })) (Row (row2@Row {})) = do
-        (fType2, rowTail2, rowInserter) <- rowInserter row2 (fName, fType)
-        fieldSub <- mgu (apply rowInserter fType) (apply rowInserter fType2)
-        let sub =  fieldSub `mappend` rowInserter
+        (fType2, rowTail2, rowInserterS) <- rowInserter row2 (fName, fType)
+        fieldSub <- mgu (apply rowInserterS fType) (apply rowInserterS fType2)
+        let sub =  fieldSub `mappend` rowInserterS
         subRest <- mgu (apply sub rowTail1) (apply sub rowTail2)
         return $ subRest `mappend` sub
 mgu t1 t2 = err "no mgu can be find" ("mgu " ++ show t1 ++ " <> " ++ show t2)
@@ -37,7 +36,7 @@ rowInserter EmptyRow (label, fType) = err $ "label " ++ label ++ " connot be ins
 rowInserter (Row fLabel fType row ) desc@(label, fType)
     | fLabel == label = return (fType, row, mempty)
     | TVar alpha <- row = do
-          newRowVar <- newTyVarWith (singleConstraint label) 'r'
+          newRowVar <- mkTyIdWithConstraints (singleConstraint label)
           -- varBindRow will find recursive rows, because of lack constraints
           sub <- varBindRow alpha $ Row label fType newRowVar
           return (fType, apply sub $ Row fLabel fType newRowVar, sub)
@@ -49,14 +48,9 @@ rowInserter (Row fLabel fType row ) desc@(label, fType)
 unionConstraints u v
   | u == v    = return nullSubst
   | otherwise =
-         let c = (constraint u) `S.union` (constraint v)
-         r <- newTyVarWith c 'r'
+         let c = (constraint u) `mappend` (constraint v)
+         r <- mkTyIdWithConstraints c
          return $ fromMultipleSubstitions [ (u, r), (v, r) ]
-
--- TODO this should be removed
-varBind u t | t == TVar u        = return mempty
-            | occursCheck u t    = err "variable occurs-check"
-            | otherwise          = varBindRow u t
 
 -- | If one tries to bind together recursively defined rows, then the
 -- intersection of declared methods and constraints won't be empty and it
@@ -65,20 +59,21 @@ varBindRow u t | t == TVar u     = unionConstraints (TVar u) t -- return mempty
                | occursCheck u t = err "row occurs-check"
                | otherwise       =
     -- check whether t has labels for which u has lack constraints
-    case S.toList (constraints `S.intersection` definedLabels) of 
+    case overlappingLabels of 
         [] | Nothing <- rowVariable -> return s1
            | Just r1 <- rowVariable -> do
                -- merge lack constraints
-               let newConst = ls `S.union` (constraint r1)
-               r2 <- newTyVarWith newConst 'r'
+               let newConst = ls `mappend` (constraint r1)
+               r2 <- mkTyIdWithConstraints newConst
                let s2 = fromSingleSubstitution (r1, r2)
                return $ s2 `mappend` s1
         labels             -> err $ "repeated label(s): " ++ show labels
     where
-        constraints = constraint u
-        (definedLabels, rowVariable) = first getLabels $ typeToTypeList t
-        s1 = fromSingleSubstitution (u, t)
-        getLabels = S.fromList . map (\(fLabel, fType) -> fLabel)
+      overlappingLabels = S.toList (constraints `S.intersection` definedLabels)
+      constraints = constraint u
+      (definedLabels, rowVariable) = first getLabels $ typeToTypeList t
+      s1 = fromSingleSubstitution (u, t)
+      getLabels = S.fromList . map (\(fLabel, fType) -> fLabel)
 
 getRowVariable tTy = let (_, value) = typeToTypeList tTy in value
 
