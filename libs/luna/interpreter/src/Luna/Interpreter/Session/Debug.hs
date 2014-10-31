@@ -13,7 +13,7 @@ import Flowbox.Prelude
 import Flowbox.System.Log.Logger
 import Luna.Interpreter.Session.GHC.Util (dshow)
 import Luna.Interpreter.Session.Session  (Session)
-
+import qualified HscTypes
 
 
 logger :: LoggerIO
@@ -25,6 +25,6 @@ dumpBindings = do
     bindings <- lift2 GHC.getBindings
     dflags   <- lift2 GHC.getSessionDynFlags
     logger trace "== declared variables =="
-    mapM_ (logger trace . dshow dflags) bindings
+    mapM_ (logger trace . dshow dflags . HscTypes.tyThingAvailInfo) bindings
     logger trace "========================"
 

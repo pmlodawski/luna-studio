@@ -26,7 +26,7 @@ import           System.Remote.Monitoring
 
 
 rootLogger :: Logger
-rootLogger = getLogger ""
+rootLogger = getLogger "Luna"
 
 
 logger :: LoggerIO

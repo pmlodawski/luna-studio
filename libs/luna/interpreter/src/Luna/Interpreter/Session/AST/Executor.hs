@@ -204,5 +204,5 @@ evalFunction stringExpr callDataPath argsVarNames = do
         let varName = VarName.mk hash callPointPath
         Session.runAssignment varName tmpVarName
         Cache.put callDataPath argsVarNames varName
-        Value.reportIfVisible callPointPath varName
+        Value.reportIfVisible callPointPath
         return (hash, varName)
