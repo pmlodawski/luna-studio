@@ -22,11 +22,11 @@ import GHC.Generics        (Generic)
 
 import           Flowbox.Generics.Deriving.QShow
 
-import           Luna.ASTNew.Name (Name, VName, TName, CName, TVName)
+import           Luna.ASTNew.Name (Name, VName, TName, CName, TVName, NameBase)
 import qualified Luna.ASTNew.Name as Name
 
 import           Luna.ASTNew.Decl       (Decl)
-import           Luna.ASTNew.Lit        (Lit)
+import           Luna.ASTNew.Lit        (LLit)
 import           Luna.ASTNew.Pat        (Pat, LPat)
 import           Luna.ASTNew.Type       (Type, LType)
 import           Luna.ASTNew.Native     (Native)
@@ -35,22 +35,23 @@ import           Luna.ASTNew.Arg        (Arg)
 import           Luna.ASTNew.Label      (Label)
 
 
-type L = Label
-
 type Selector = [VName]
 
-data App e = Seq   [Named e VName]
+data App e = Seq   [Named VName e]
            | Infix e e
+           deriving (Show, Eq, Generic, Read)
 
 
-data Named v n = Named   v n
+data Named n v = Named   n v
                | Unnamed v  
                deriving (Show, Eq, Generic, Read)
 
 type LExpr   a v = Label a (Expr a v)
-type ExprApp a v = Label a (App (LExpr a v))
+type ExprApp a v = App (LExpr a v)
 type ExprArg a v = Label a (Arg a (Expr a v))
 type SubDecl a v = Label a (Decl a (LExpr a v))
+
+
 
 data Expr a v
     = Lambda      { _inputs  :: [ExprArg a v] , _output   :: LType a      , _body   :: [LExpr a v] }
@@ -59,22 +60,32 @@ data Expr a v
     | Case        { _expr    :: LExpr a v     , _match    :: [LMatch a v]                          }
     | Typed       { _cls     :: LType a       , _expr     :: LExpr a v                             }
     | Assignment  { _dst     :: LPat  a       , _src      :: LExpr a v                             }
-    | Accessor    { _acc     :: Name          , _src      :: LExpr a v                             }
+    | Accessor    { _acc     :: NameBase      , _src      :: LExpr a v                             }
     | Ref         { _ref     :: LExpr a v                                                          }
-    | List        { _items   :: [LExpr a v]                                                        }
+    | List        { _elems   :: LList a (LExpr a v)                                                }
     | Tuple       { _items   :: [LExpr a v]                                                        }
     | Grouped     { _expr    :: LExpr a v                                                          }
     | Cons        { _cname   :: CName                                                              }
     | Decl        { _decl    :: SubDecl a v                                                        }
-    | Lit         { _lit     :: L a Lit                                                            }
+    | Lit         { _lit     :: LLit a                                                             }
     | Native      { _native  :: Native (LExpr a v)                                                 }
     | Var         { _ident   :: v                                                                  }
     | Wildcard
-    deriving (Generic)
+    deriving (Show, Eq, Generic, Read)
 
 
 
-data Match  a v = Match { _matchPat :: LPat a, _matchBody :: [LExpr a v] }  
+data Match  a v = Match { _matchPat :: LPat a, _matchBody :: [LExpr a v] } deriving (Show, Eq, Generic, Read)
 type LMatch a v = Label a (Match a v)
 
+
+data List e = SeqList [e]
+            | RangeList (Sequence e)
+            deriving (Show, Eq, Generic, Read)
+
+type LList a e = Label a (List e)
+
+data Sequence a = Linear    a   (Maybe a)
+                | Geometric a a (Maybe a)
+                deriving (Show, Eq, Generic, Read)
 

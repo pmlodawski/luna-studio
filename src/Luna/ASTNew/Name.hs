@@ -44,6 +44,10 @@ data Name = V  VName
           | TV TVName
           deriving (Show, Eq, Generic, Read)
 
+data NameBase = VarName  VName
+              | TypeName TName
+              deriving (Show, Eq, Generic, Read)
+
 newtype VName  = VName  String deriving (Show, Eq, Generic, Read)
 newtype TName  = TName  String deriving (Show, Eq, Generic, Read)
 newtype CName  = CName  String deriving (Show, Eq, Generic, Read)
