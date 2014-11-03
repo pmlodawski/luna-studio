@@ -1,17 +1,12 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Luna.Typechecker.AST.Expr (
     Expr(..)
   ) where
 
-import Luna.Typechecker.IDs     (VarID)
-import Luna.Typechecker.AST.Lit (Lit)
+-- luna-core
+import Luna.ASTNew.Expr
 
 
-
-data Expr = EVar VarID
-          | ELit Lit
-          | EApp Expr  Expr
-          | EAbs VarID Expr
-          | ELet VarID Expr Expr
-
-instance Show Expr where
+instance Show (Expr f a) where
   show _ = "<expr>"

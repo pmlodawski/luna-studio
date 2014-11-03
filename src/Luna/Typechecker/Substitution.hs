@@ -6,6 +6,9 @@ module Luna.Typechecker.Substitution (
 import Luna.Typechecker.IDs       (TyID)
 import Luna.Typechecker.Type.Type (Type(..),Tyvar)
 
+-- luna-logger
+import Logger
+
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -39,11 +42,12 @@ class Types t where
   ftv :: t -> [Tyvar]
 
 instance Types Type where
-  apply (Subst s) (TVar tyv) = fromMaybe (TVar tyv) (lookup tyv s)
+  --apply (Subst s) (TVar tyv) = fromMaybe (TVar tyv) (lookup tyv s)
   apply _ t = t
-  ftv (TVar tyv) = [tyv]
-  ftv (TConst _) = []
-  ftv (TAp t1 t2) = ftv t1 `union` ftv t2
+  --ftv (TVar tyv) = [tyv]
+  --ftv (TConst _) = []
+  --ftv (TAp t1 t2) = ftv t1 `union` ftv t2
+  ftv _ = []
 
 instance (Types a) => Types [a] where
   apply = error "Substitution.hs : instance Types [a] : apply"
