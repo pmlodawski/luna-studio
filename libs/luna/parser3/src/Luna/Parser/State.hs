@@ -33,11 +33,11 @@ import qualified Luna.AST.AST                 as AST
 
 
 
-data State a = State { _conf          :: Config a
+data State a e v conf = State { _conf          :: Config conf
                      , _info          :: ASTInfo
                      , _opFixity      :: OperatorMap
                      , _sourceMap     :: SourceMap
-                     , _namespace     :: Namespace
+                     , _namespace     :: Namespace a e v
                      , _adhocReserved :: [String]
                      , _comments      :: IDMap [Comment]
                      } deriving (Show)
@@ -49,7 +49,7 @@ makeLenses ''State
 -- Utils
 ------------------------------------------------------------------------
 
-mk :: ASTInfo -> State ()
+mk :: ASTInfo -> State a e v ()
 mk i = def & info .~ i
 
 addReserved words = adhocReserved %~ (++words)
@@ -113,7 +113,7 @@ registerID id = do
 -- Instances
 ------------------------------------------------------------------------
 
-instance a~() => Default (State a) where
+instance conf~() => Default (State a e v conf) where
         def = State def def def def def def def
 
 

@@ -21,14 +21,13 @@ import           Luna.ASTNew.Label      (Label(Label))
 
 
 ----- Basic -----
-instance DefaultTraversal base m a => Traversal base m a where traverse = defaultTraverse
---instance DefaultTraversal base m a where defaultTraverse _ = pure
+instance DefaultTraversal base m a b => Traversal base m a b where traverseM = defaultTraverseM
 
 
 ----- Label -----
-instance Traversal base m a => Traversal base m (Label l a) where
-    traverse base (Label l a) = fmap (Label l) $ traverse base a
+instance Traversal base m a b => Traversal base m (Label l a) (Label l b) where
+    traverseM base (Label l a) = fmap (Label l) $ traverseM base a
 
 
-instance Traversal base m a => DefaultTraversal base m (Label l a) where
-    defaultTraverse b (Label l a) = Label l <$> traverse b a
+instance Traversal base m a b => DefaultTraversal base m (Label l a) (Label l b) where
+    defaultTraverseM b (Label l a) = Label l <$> traverseM b a

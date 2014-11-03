@@ -17,7 +17,7 @@ import Luna.ASTNew.Label (Label)
 
 
 
-data Arg  a v = Arg { _pat :: LPat a, _value :: Maybe v } deriving Show
+data Arg  a v = Arg { _pat :: LPat a, _value :: Maybe v } deriving (Show, Eq, Generic, Read)
 type LArg a v = Label a (Arg a v)
 
 

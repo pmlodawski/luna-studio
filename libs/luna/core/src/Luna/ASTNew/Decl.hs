@@ -31,7 +31,7 @@ data Decl a e
     | TypeWrapper { _dstType :: LType a , _srcType  :: LType a                                                                          }
     | Native      { _native  :: Native (LDecl a e)                                                                                      }
     -- | Foreign     Foreign
-    deriving (Show, Generic)
+    deriving (Show, Eq, Generic, Read)
 
 -- !!!
 -- jezeli bedziemy mieli TemplateLuna to chcemy znac kolejnosc deklaracji
@@ -44,8 +44,8 @@ data Decl a e
 -- import Math: sin :: Double -> Double
 -- wtedy foreigny sa zwyklym wrapperem na Decl
 
-data Cons  a e = Cons   { _consName :: CName   , _fields :: [LField a e]                  } deriving (Show, Generic)
-data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VName, _fVal :: Maybe e } deriving (Show, Generic)
+data Cons  a e = Cons   { _consName :: CName   , _fields :: [LField a e]                  } deriving (Show, Eq, Generic, Read)
+data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VName, _fVal :: Maybe e } deriving (Show, Eq, Generic, Read)
 -- FIXME[wd]: przeniesc w inne miejsce
 data ImpTgt    = ImpVar  { _vName  :: VName   , _vRename :: Maybe VName }
                | ImpType { _tName  :: TName   , _tRename :: Maybe TName }
@@ -57,3 +57,4 @@ type LDecl  a e = Label a (Decl a e)
 type LField a e = Label a (Field a e)
 
 
+makeLenses ''Decl

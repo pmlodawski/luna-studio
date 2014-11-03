@@ -1,23 +1,2 @@
-import Flowbox:Std
-
-import Std.Math as M
-
-
-import Math: Vector as V
-
-
-class Vector a:
-    x
-
-def foo x y z:
-    x
-
-
-alias Day = Int a
-
-
-
-
-
-
-    
+def foo:
+    foo

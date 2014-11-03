@@ -16,18 +16,18 @@ import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Prelude           hiding (id)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.AST              (AST, ID)
-import qualified Luna.AST.AST              as AST
-import           Luna.AST.Expr             (Expr)
-import qualified Luna.AST.Expr             as Expr
-import           Luna.AST.Lit              (Lit)
-import qualified Luna.AST.Lit              as Lit
-import           Luna.AST.Module           (Module)
-import qualified Luna.AST.Module           as Module
-import           Luna.AST.Pat              (Pat)
-import qualified Luna.AST.Pat              as Pat
-import           Luna.AST.Type             (Type)
-import qualified Luna.AST.Type             as Type
+import           Luna.ASTNew.AST              (AST, ID)
+import qualified Luna.ASTNew.AST              as AST
+import           Luna.ASTNew.Expr             (Expr)
+import qualified Luna.ASTNew.Expr             as Expr
+import           Luna.ASTNew.Lit              (Lit)
+import qualified Luna.ASTNew.Lit              as Lit
+import           Luna.ASTNew.Module           (Module)
+import qualified Luna.ASTNew.Module           as Module
+import           Luna.ASTNew.Pat              (Pat)
+import qualified Luna.ASTNew.Pat              as Pat
+import           Luna.ASTNew.Type             (Type)
+import qualified Luna.ASTNew.Type             as Type
 import           Luna.Data.AliasInfo       (AliasInfo)
 import qualified Luna.Data.AliasInfo       as AliasInfo
 import           Luna.Data.Namespace       (Namespace)
@@ -45,10 +45,10 @@ logger = getLogger "Luna.Data.Namespace.State"
 
 --makeLenses (''VAState)
 
-type NamespaceMonad m = (MonadState Namespace m, Applicative m)
+type NamespaceMonad a e v m = (MonadState (Namespace a e v) m, Applicative m)
 
 
-getAliasInfo :: NamespaceMonad m => m AliasInfo
+--getAliasInfo :: NamespaceMonad m => m AliasInfo
 getAliasInfo = view Namespace.info <$> get
 
 --getCurrentID :: NamespaceMonad m => m (Maybe ID)
@@ -61,11 +61,11 @@ getAliasInfo = view Namespace.info <$> get
 scopeID = Namespace.head <$> get
 
 
-putAliasInfo :: NamespaceMonad m => AliasInfo -> m ()
+--putAliasInfo :: NamespaceMonad m => AliasInfo -> m ()
 putAliasInfo info = modify (Namespace.info .~ info)
 
 
-modifyAliasInfo :: NamespaceMonad m => (AliasInfo -> AliasInfo) -> m ()
+--modifyAliasInfo :: NamespaceMonad m => (AliasInfo -> AliasInfo) -> m ()
 modifyAliasInfo f = do
     info <- getAliasInfo
     putAliasInfo $ f info
@@ -102,49 +102,49 @@ popScope = modify $ Namespace.popScope
 withScope id p = pushScope id *> p <* popScope
 
 
-withParentID :: NamespaceMonad m => m f -> m f
+withParentID :: NamespaceMonad a e v m => m f -> m f
 withParentID f = do pid <- popID
                     out <- f
                     pushID pid
                     return out
 
-----switchID :: NamespaceMonad m => ID -> m ()
+----switchID :: NamespaceMonad a e v m => ID -> m ()
 ----switchID id = modify (currentID .~ id)
 
-regModule :: NamespaceMonad m => Module -> m ()
-regModule = regElBy AST.Module Module.id
+regModule :: NamespaceMonad a e v m => Module a e -> m ()
+regModule = undefined -- regElBy AST.Module Module.id
 
-regExpr :: NamespaceMonad m => Expr -> m ()
-regExpr = regElBy AST.Expr Expr.id
+regExpr :: NamespaceMonad a e v m => Expr a v -> m ()
+regExpr = undefined -- regElBy AST.Expr Expr.id
 
-regLit :: NamespaceMonad m => Lit -> m ()
-regLit = regElBy AST.Lit Lit.id
+regLit :: NamespaceMonad a e v m => Lit -> m ()
+regLit = undefined -- regElBy AST.Lit Lit.id
 
-regPat :: NamespaceMonad m => Pat -> m ()
-regPat = regElBy AST.Pat Pat.id
+regPat :: NamespaceMonad a e v m => Pat a -> m ()
+regPat = undefined -- regElBy AST.Pat Pat.id
 
-regType :: NamespaceMonad m => Type -> m ()
-regType = regElBy AST.Type Type.id
+regType :: NamespaceMonad a e v m => Type a -> m ()
+regType = undefined -- regElBy AST.Type Type.id
 
 
 regElBy fCon fID el = regAST id (fCon el) *> regID id
     where id = el ^. fID
 
 
-regID :: NamespaceMonad m => ID -> m ()
+regID :: NamespaceMonad a e v m => ID -> m ()
 regID id = do
     mpid <- scopeID
     withJust mpid (\pid -> modifyAliasInfo $ AliasInfo.parent %~ IntMap.insert id pid)
 
 
---registerAST :: NamespaceMonad m => ID -> AST -> m ()
+--registerAST :: NamespaceMonad a e v m => ID -> AST -> m ()
 regAST id ast = modifyAliasInfo $ AliasInfo.regAST id ast
 
 
-regVarName :: NamespaceMonad m => String -> ID -> m ()
+regVarName :: NamespaceMonad a e v m => String -> ID -> m ()
 regVarName = regName AliasInfo.varnames
 
-regTypeName :: NamespaceMonad m => String -> ID -> m ()
+regTypeName :: NamespaceMonad a e v m => String -> ID -> m ()
 regTypeName = regName AliasInfo.typenames
 
 
@@ -159,7 +159,7 @@ regName lens name id = do
                   a2      = a & AliasInfo.scope.at cid ?~ varRel2
 
 
-regParentVarName :: NamespaceMonad m => String -> ID -> m ()
+regParentVarName :: NamespaceMonad a e v m => String -> ID -> m ()
 regParentVarName = withParentID .: regVarName
 
 

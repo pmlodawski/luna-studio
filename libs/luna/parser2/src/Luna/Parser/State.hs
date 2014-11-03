@@ -33,7 +33,7 @@ import qualified Luna.AST.AST                 as AST
 
 
 
-data State a = State { _conf          :: Config a
+data State conf = State { _conf          :: Config conf
                      , _info          :: ASTInfo
                      , _opFixity      :: OperatorMap
                      , _sourceMap     :: SourceMap

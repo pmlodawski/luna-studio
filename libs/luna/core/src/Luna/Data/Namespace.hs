@@ -26,8 +26,8 @@ import qualified Luna.AST.AST        as AST
 -- Data types
 ----------------------------------------------------------------------
 
-data Namespace = Namespace { _stack :: [ID]
-                           , _info :: AliasInfo
+data Namespace a e v = Namespace { _stack :: [ID]
+                           , _info :: AliasInfo a e v
                            } deriving (Show, Eq, Generic, Read)
 
 
@@ -41,12 +41,12 @@ makeLenses ''Namespace
 --lookup name ns = ns^.scope.nameMap.at name
 
 
-head :: Namespace -> Maybe ID
+head :: Namespace a e v -> Maybe ID
 head (Namespace (id:_) _) = Just id
 head _                    = Nothing
 
 
-pushScope :: ID -> Namespace -> Namespace
+pushScope :: ID -> Namespace a e v -> Namespace a e v
 pushScope id ns@(Namespace st inf) = ns
                                    & pushID id
                                    & info .~ ninfo
@@ -57,17 +57,17 @@ pushScope id ns@(Namespace st inf) = ns
               Just pid -> fromJust $ Map.lookup pid scopes
           scope  = Map.insert id pScope scopes
 
-popScope :: Namespace -> Namespace
+popScope :: Namespace a e v -> Namespace a e v
 popScope = snd . popID
 
-pushID :: ID -> Namespace -> Namespace
+pushID :: ID -> Namespace a e v -> Namespace a e v
 pushID id = stack %~ (id:)
 
-popID :: Namespace -> (ID, Namespace)
+popID :: Namespace a e v -> (ID, Namespace a e v)
 popID ns = (id, ns & stack .~ ids)
     where (id:ids) = view stack ns
 
-bindVar :: ID -> String -> Namespace -> Either () Namespace
+bindVar :: ID -> String -> Namespace a e v -> Either () (Namespace a e v)
 bindVar id name ns = 
     case head ns of
         Nothing  -> Left ()
@@ -108,7 +108,7 @@ regParent id pid = info %~ Alias.regParent id pid
 --    popScope
 --    return ret
 
-modAlias :: (AliasInfo -> AliasInfo) -> Namespace -> Namespace
+modAlias :: (AliasInfo a e v -> AliasInfo a' e' v') -> Namespace a e v -> Namespace a' e' v'
 modAlias f = info %~ f
 
 ------------------------------------------------------------------------
@@ -118,10 +118,10 @@ modAlias f = info %~ f
 --instance Default Scope where
 --    def = Scope def
 
-instance Default Namespace where
+instance Default (Namespace a e v) where
     def = Namespace def def
 
-instance Monoid Namespace where
+instance Monoid (Namespace a e v) where
     mempty      = Namespace mempty mempty
     mappend a b = Namespace (mappend (a ^. stack) (b ^. stack))
                             (mappend (a ^. info)  (b ^. info))

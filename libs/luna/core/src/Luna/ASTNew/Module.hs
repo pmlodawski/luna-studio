@@ -19,7 +19,7 @@ import Luna.ASTNew.Label (Label)
 data Module a e = Module { _path :: [TName]
                          , _name :: TName
                          , _body :: [LDecl a e]
-                         } deriving (Generic, Show)
+                         } deriving (Show, Eq, Generic, Read)
 
 
 type LModule a e = Label a (Module a e)
