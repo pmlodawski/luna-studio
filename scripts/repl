@@ -18,10 +18,16 @@ import signal
 import argparse
 
 
+class SplitByColon(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values.split(':'))
+
+
 def main():
     argparser = argparse.ArgumentParser(description="Run REPL from sandbox",
                                         epilog="Note that the old syntax for selecting packages is deprecated.")
-    argparser.add_argument('packages',       nargs='*',           help="packages to preload")
+    argparser.add_argument('packages',       nargs='*',           help="Packages to preload")
+    argparser.add_argument('-i',             action=SplitByColon, help="Append a colon-separated list of dirs to the search path")
     argparser.add_argument('--with-prelude', action='store_true', help="Do not add `-XNoImplicitPrelude` to GHCi options")
     args = argparser.parse_args()
 
@@ -46,7 +52,8 @@ def main():
         noprelude = "-XNoImplicitPrelude"
         if args.with_prelude:
             noprelude = ""
-        cmd = "cabal --sandbox={pkg.sbox}/cabal.sandbox.config exec ghci -- {noprelude}".format(**locals())
+        searchpath = ' '.join('-i'+d for d in args.i or [])
+        cmd = "cabal --sandbox={pkg.sbox}/cabal.sandbox.config exec ghci -- {noprelude} {searchpath}".format(**locals())
         print "Executing command:", cmd
         call(cmd, shell=True)
         signal.signal(signal.SIGINT, old_action)         # restore original signal handler
