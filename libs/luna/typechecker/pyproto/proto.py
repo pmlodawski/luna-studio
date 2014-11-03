@@ -102,15 +102,17 @@ class Record:
         self.fields[l] = t
 
         with suppress_attr(self, "extend", "nop"):  # symulacja czegoś w stylu kolorowania w DFS -- by uniknąć nieskończonej rekursji
-            pass
-            # for c in self.children:
+            for cp, var in self.children:
+                var.extend(l,t)
+                if all(l in alt for alt in cp.rest.alternatives):
+                    cp.extend(l,t)
             #     print("NORMALIZING CHILD", c)
             #     c.extend(l, t)
             #     c.reduce_tailvariant()  # TODO: znajduje wspólne elementy, wyciąga
                 # self.rest.restrict(l)  # TODO: chyba nie trzeba skoro i tak jest rekursja?
-            # for c in self.parents:
             #     print("NORMALIZING PARENT", c)
-                # c.extend(l, t) # nie tak, zbyt mocne. rozszerz tylko swój variant
+            for c in self.parents:
+                c.extend(l, t) # nie tak, zbyt mocne. rozszerz tylko swój variant
                 # c.reduce_tailvariant()  # TODO: znajduje wspólne elementy, wyciąga
 
     def __str__(self):
@@ -146,8 +148,8 @@ class Record:
         # TODO: czy lacks się zgadzają
         deep_lacks = list(self.lacks())
         for fld in self.fields:
-            if fld not in deep_lacks:
-                return False, fld, list(self.lacks())
+            if fld in deep_lacks:
+                return False
 
         # czy nie ma czegoś co jest z tyłu a powinno być z przodu
         if any(all(fld in list(var)  # jeżeli jakikolwiek atrybut jest wspólny dla wszystkich tail-wariantów
@@ -165,14 +167,34 @@ class Record:
         res = Record(fields={k: self.fields[k] for k in common_keys},
                      rest=Variant(var_a, var_b),
                      parents=[self, rec_b])
-        self.children.append(res)
-        rec_b.children.append(res)
+        self.children.append((res, var_a))
+        rec_b.children.append((res, var_b))
         return res
+
+    def print_info(self, varname, prefix=""):
+        lel = ("\n" + prefix + "      :             ")
+        print("{prefix}{varname:5} = {0}\n"
+                    "{prefix}      : normalized: {1}\n"
+                    "{prefix}      : lacks:      {2}\n"
+                    "{prefix}      : parents:    {3}\n"
+                    "{prefix}      : children:   {4}\n"
+            .format(str(self),
+                    self.normalized(),
+                    ", ".join(self.lacks()) or "∅",
+                    lel.join(str(x) for x in self.parents) or "∅",
+                    lel.join(str(var) + lel + "    ∈    " + str(x) for x,var in self.children) or "∅",
+                    **locals()))
+        if self.rest.alternatives:
+            print("{prefix}      : alternatives:".format(prefix=prefix))
+            for i, alt in enumerate(self.rest.alternatives):
+                # print("{prefix}      :> VAR {0}".format(i, prefix=prefix))
+                alt.print_info("…", prefix=prefix+"      :>")
 
 
 class Lacks:
     def __init__(self, *args):
-        self.args = list(args)  # TODO dict
+        self.args = set(args)
+        self.alternatives = []
 
     def lacks(self):
         yield from self.args
@@ -181,13 +203,13 @@ class Lacks:
         yield from ()
 
     def __str__(self):
-        return "r{0}".format(" ".join("⑊" + str(x) for x in sorted(self.args)))
+        return "r{0}".format(" ".join("⑊" + str(x) for x in sorted(list(self.args))))
 
     def __bool__(self):
         return self.lacks and True or False
 
     def add_lacks(self, l):
-        self.args.append(l)
+        self.args.update(l)
 
 
 class Variant:
@@ -213,44 +235,117 @@ class Variant:
 
 # --------------------------------------------------------------------------------
 
+def step(name):
+    print("############################## {0:<10} ##############################".format(name.upper()))
 
 def main():
+    step("a = {x,y}")
     a = Record(fields={'x': TypeConst('Int'),
                        'y': TypeMono()})
+    a.print_info("a")
+
+    step("b = {x,z}")
     b = Record(fields={'x': TypeMono(),
                        'z': TypeMono()})
-    print("#### UNION ####")
-    c = a.union(b)
+    a.print_info("a")
+    b.print_info("b")
 
-    # c.selection('m')
-    print("#### a.selection('p') ####")
-    a.selection('p')
-    # print("#### b.selection('p') ####")
-    # b.selection('p')
+    step("e = {x,w}")
+    e = Record(fields={'x': TypeMono(),
+                       'w': TypeMono()})
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+
+    step("c = a ⋂ b")
+    c = a.union(b)
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+
+    step("c.m")
+    c.selection('m')
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+
+    step("f = a ⋂ e")
+    f = a.union(e)
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+    f.print_info("f")
     
-    c_v1 = c.rest.alternatives[0]
-    c_v2 = c.rest.alternatives[1]
-    print("a = {a}"
-          "\n    normalized: {0}"
-          "\n    lacks:      {1}"
-          .format(a.normalized(), ", ".join(a.lacks()) or '--', **locals()))
-    print("b = {b}"
-          "\n    normalized: {0}"
-          "\n    lacks:      {1}"
-          .format(b.normalized(), ", ".join(b.lacks()) or '--', **locals()))
-    print("c = {c}"
-          "\n    normalized: {0}"
-          "\n    lacks:      {1}"
-          .format(c.normalized(), ", ".join(c.lacks()) or '--', **locals()))
-    print("--------------------------------------------------------------------------------")
-    print("c var2 = {c_v1}"
-          "\n    normalized: {0}"
-          "\n    lacks:      {1}"
-          .format(c_v1.normalized(), ", ".join(c_v1.lacks()) or '--', **locals()))
-    print("c var2 = {c_v2}"
-          "\n    normalized: {0}"
-          "\n    lacks:      {1}"
-          .format(c_v2.normalized(), ", ".join(c_v2.lacks()) or '--', **locals()))
+    step("a.p")
+    a.selection('p')
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+    f.print_info("f")
+
+    step("b.p")
+    b.selection('p')
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+    f.print_info("f")
+
+    step("f.q")
+    f.selection('p')
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+    f.print_info("f")
+
+    step("g = f ⋂ c")
+    g = f.union(c)
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+    f.print_info("f")
+    g.print_info("g")
+
+    step("g.r")
+    g.selection('r')
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+    f.print_info("f")
+    g.print_info("g")
+
+
+    
+    # c_v1 = c.rest.alternatives[0]
+    # c_v2 = c.rest.alternatives[1]
+    # print("a = {a}"
+    #       "\n    normalized: {0}"
+    #       "\n    lacks:      {1}"
+    #       .format(a.normalized(), ", ".join(a.lacks()) or '--', **locals()))
+    # print("b = {b}"
+    #       "\n    normalized: {0}"
+    #       "\n    lacks:      {1}"
+    #       .format(b.normalized(), ", ".join(b.lacks()) or '--', **locals()))
+    # print("c = {c}"
+    #       "\n    normalized: {0}"
+    #       "\n    lacks:      {1}"
+    #       .format(c.normalized(), ", ".join(c.lacks()) or '--', **locals()))
+    # print("--------------------------------------------------------------------------------")
+    # print("c var2 = {c_v1}"
+    #       "\n    normalized: {0}"
+    #       "\n    lacks:      {1}"
+    #       .format(c_v1.normalized(), ", ".join(c_v1.lacks()) or '--', **locals()))
+    # print("c var2 = {c_v2}"
+    #       "\n    normalized: {0}"
+    #       "\n    lacks:      {1}"
+    #       .format(c_v2.normalized(), ", ".join(c_v2.lacks()) or '--', **locals()))
 
 
 if __name__ == '__main__':
