@@ -1,5 +1,5 @@
 module Luna.Typechecker.TIMonad (
-    TI(..),
+    TI,
     TCLoggerT, TILogger,
     runTILogger, getNextID
   ) where

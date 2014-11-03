@@ -8,11 +8,12 @@ Build-Type:     Simple
 
 
 Library
-  GHC-Options:        -Wall -Werror -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     src
   Build-Depends:      base
                     , containers
                     , deepseq
+                    , luna-core
                     , luna-logger
                     , mtl
                     , transformers
@@ -26,6 +27,8 @@ Executable luna-typechecker-tests
   Main-Is:            Main.hs
   Build-Depends:      base
                     , hspec
+                    , luna-core
                     , luna-logger
                     , luna-typechecker
+                    , mtl
                     , transformers
