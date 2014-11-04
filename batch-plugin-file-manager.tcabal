@@ -31,4 +31,5 @@ Executable file-manager
                     protocol-buffers-fork,
                     text,
                     transformers,
+                    unix-compat,
                     zeromq4-haskell >= 0.4
