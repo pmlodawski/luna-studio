@@ -12,7 +12,11 @@
 {-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE ViewPatterns              #-}
 
-module Flowbox.Graphics.Mockup where
+module Flowbox.Graphics.Mockup (
+      module Flowbox.Graphics.Mockup
+    , module Math.Metric
+    , A.Boundary(..)
+) where
 
 import qualified Codec.Picture.Png                 as Juicy
 import qualified Codec.Picture.Types               as Juicy
@@ -291,10 +295,20 @@ conicalLuna = gradientLuna conicalShape
 squareLuna :: Int -> Image RGBA
 squareLuna side = gradientLuna squareShape side side
 
-gradientLuna :: forall e a.
-                      (IsFloating a, Elt a, A.Lift Exp e,
+diamondLuna :: Int -> Int -> Image RGBA
+diamondLuna = gradientLuna diamondShape
+
+radialShapeLuna :: (Metric a (Point2 (Exp Double)) (Exp Double), MetricCoord a Cartesian)
+                => a -> Int -> Int -> Image RGBA
+radialShapeLuna metric w h = gradientLuna (radialShape metric) w h
+
+linearShapeLuna :: Int -> Int -> Image RGBA
+linearShapeLuna = gradientLuna linearShape
+
+gradientLuna :: forall e.
+                      (A.Lift Exp e,
                        A.Plain e ~ Int) =>
-                      Generator (Point2 (Exp a)) (Exp Double) -> e -> e -> Image RGBA
+                      Generator (Point2 (Exp Double)) (Exp Double) -> e -> e -> Image RGBA
 gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
     where grad = rasterizer $ monosampler $ gradientGenerator
 
