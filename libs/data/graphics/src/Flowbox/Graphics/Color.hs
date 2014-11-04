@@ -13,7 +13,6 @@ module Flowbox.Graphics.Color (
 ) where
 	
 import           Flowbox.Graphics.Color.Conversion          as X
-import           Flowbox.Graphics.Color.Internal            as X
 import           Flowbox.Graphics.Color.CMY                 as X
 import           Flowbox.Graphics.Color.CMY.Conversion      as X
 import           Flowbox.Graphics.Color.CMYK                as X
