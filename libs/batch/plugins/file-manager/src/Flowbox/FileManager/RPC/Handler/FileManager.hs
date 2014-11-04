@@ -19,6 +19,8 @@ import qualified Generated.Proto.FileManager.FileManager.Ping.Request    as Ping
 import qualified Generated.Proto.FileManager.FileManager.Ping.Status     as Ping
 import qualified Generated.Proto.FileManager.FileManager.Resolve.Request as Resolve
 import qualified Generated.Proto.FileManager.FileManager.Resolve.Status  as Resolve
+import qualified Generated.Proto.FileManager.FileSystem.Stat.Request     as Stat
+import qualified Generated.Proto.FileManager.FileSystem.Stat.Status      as Stat
 
 
 
@@ -39,3 +41,10 @@ resolve fm request@(Resolve.Request tpath) = do
     let path = decodeP tpath
     resolved <- FileManager.resolvePath fm path
     return $ Resolve.Status request $ encodeP resolved
+
+
+stat :: FileManager fm ctx => fm
+     -> Stat.Request -> RPC ctx IO Stat.Status
+stat fm request@(Stat.Request tpath) = do
+    let path = decodeP tpath
+    Stat.Status request <$> FileManager.stat fm path

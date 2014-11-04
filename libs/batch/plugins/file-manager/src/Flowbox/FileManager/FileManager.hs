@@ -9,17 +9,19 @@
 
 module Flowbox.FileManager.FileManager where
 
-import Flowbox.Bus.RPC.RPC (RPC)
-import Flowbox.Prelude
-
+import           Flowbox.Bus.RPC.RPC                         (RPC)
+import           Flowbox.Prelude
+import qualified Generated.Proto.FileManager.FileSystem.Item as Gen
 
 
 class FileManager fm ctx where
+    stat            :: fm -> FilePath -> RPC ctx IO Gen.Item
+
     uploadDirectory :: fm -> FilePath -> RPC ctx IO ()
     fetchDirectory  :: fm -> FilePath -> RPC ctx IO ()
     createDirectory :: fm -> FilePath -> RPC ctx IO ()
     directoryExists :: fm -> FilePath -> RPC ctx IO Bool
-    listDirectory   :: fm -> FilePath -> RPC ctx IO [FilePath]
+    listDirectory   :: fm -> FilePath -> RPC ctx IO [Gen.Item]
     removeDirectory :: fm -> FilePath -> RPC ctx IO ()
     copyDirectory   :: fm -> FilePath -> FilePath -> RPC ctx IO ()
     moveDirectory   :: fm -> FilePath -> FilePath -> RPC ctx IO ()

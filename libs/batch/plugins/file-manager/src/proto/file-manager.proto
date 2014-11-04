@@ -10,6 +10,28 @@ package generated.proto.fileManager;
 
 
 message FileSystem {
+    message Item {
+        enum Cls {
+            File      = 1;
+            Directory = 2;
+            Other     = 3;
+        }
+        required Cls   cls  = 1;
+        optional int64 size = 2;
+        optional int64 accessTime       = 3;
+        optional int64 modifiedTime     = 4;
+        optional int64 statusChangeTime = 5;
+    }
+
+    message Stat {
+        message Request {
+            required string path = 1;
+        }
+        message Status {
+            required Request request = 1;
+            required Item    item    = 2;
+        }
+    }
     message Directory {
         message Fetch {
             message Request {
@@ -50,7 +72,7 @@ message FileSystem {
             }
             message Status {
                 required Request request = 1;
-                repeated string  items   = 2;
+                repeated Item    items   = 2;
             }
         }
         message Remove {

@@ -8,6 +8,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.FileManager.RPC.Handler.Directory where
+import qualified Data.Sequence as Sequence
 
 import           Flowbox.Bus.RPC.RPC                                             (RPC)
 import           Flowbox.FileManager.FileManager                                 (FileManager)
@@ -76,7 +77,7 @@ list :: FileManager fm ctx => fm
 list fm request@(List.Request tpath) = do
     let path = decodeP tpath
     contents <- FileManager.listDirectory fm path
-    return $ List.Status request (encodeListP contents)
+    return $ List.Status request $ Sequence.fromList contents
 
 
 remove :: FileManager fm ctx => fm

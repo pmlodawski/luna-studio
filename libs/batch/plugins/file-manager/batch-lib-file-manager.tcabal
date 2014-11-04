@@ -24,6 +24,7 @@ Library
                      `findmodules('src', '.*\.hs')`
 
     Build-Depends:  base,
+                    containers,
                     directory,
                     flowbox-bus,
                     flowbox-config,
