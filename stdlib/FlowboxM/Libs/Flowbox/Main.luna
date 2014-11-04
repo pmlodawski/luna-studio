@@ -139,6 +139,21 @@ def circular width height:
 def conical width height:
     ```liftF2 conicalLuna #{width} #{height}```
 
+def diamond width height:
+    ```liftF2 diamondLuna #{width} #{height}```
+
+def radial metric width height:
+    ```liftF3 radialShapeLuna #{metric} #{width} #{height}```
+
+def linear width height:
+    ```liftF2 linearShapeLuna #{width} #{height}```
+
+class ```Metric```:
+    Chebyshev
+    Euclidean
+    Minkowski: p :: Double
+    Taxicab
+
 def square side:
     ```liftF1 squareLuna #{side}```
 
