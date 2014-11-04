@@ -1,9 +1,11 @@
 @AllowOrphans
 
+import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image```
 import ```Flowbox.Graphics.Image.Merge (AlphaBlend(..))```
 import ```Flowbox.Graphics.Composition.Generators.Keyer```
+
 
 class Vector a:
     x,y,z :: a
@@ -268,6 +270,18 @@ def Image.radialBlur size angle:
 
 def Image.histEq bins:
     ```liftF2 histEqLuna #{bins} #{self}```
+
+def Image.dither bound diffusionTable bits:
+    ```autoLift4 ditherLuna #{bound} #{bits} #{diffusionTable} #{self}```
+
+def Image.bayer bits:
+    ```liftF2 orderedDitherLuna #{bits} #{self}```
+
+class ```Boundary```:
+    Clamp
+    Mirror
+    Wrap
+    Constant: a :: Double
 
 def main:
     lena = load "./test.png"

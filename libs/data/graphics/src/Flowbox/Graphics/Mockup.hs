@@ -28,9 +28,11 @@ import           Data.Char                         (toLower)
 import qualified Data.Vector.Storable              as SV
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
+import           Math.Metric
 import           Linear                            (V2(..))
 
 import qualified Flowbox.Graphics.Color                               as Color
+import           Flowbox.Graphics.Composition.Dither
 import           Flowbox.Graphics.Composition.Generators.Filter
 import           Flowbox.Graphics.Composition.Generators.Filter       as Conv
 import           Flowbox.Graphics.Composition.Generators.Gradient
@@ -610,3 +612,23 @@ histEqLuna (variable -> bins) img = img'
                 & View.append (ChannelFloat "b" (FlatData b))
 
           Right img' = Image.update (const $ Just view') "rgba" img
+
+ditherLuna :: A.Boundary (MValue Double) -> Int -> DiffusionTable Double -> Image RGBA -> IO (Image RGBA)
+ditherLuna boundary bits table img = do
+    let (r, g, b, a) = unsafeGetChannels img
+        ditherMethod = dither boundary table bits
+    r' <- mutableProcess run ditherMethod r
+    g' <- mutableProcess run ditherMethod g
+    b' <- mutableProcess run ditherMethod b
+
+    let Just view = lookup "rgba" img
+        view' = view
+              & View.append (ChannelFloat "r" (FlatData r'))
+              & View.append (ChannelFloat "g" (FlatData g'))
+              & View.append (ChannelFloat "b" (FlatData b'))
+        Right img' = Image.update (const $ Just view') "rgba" img
+
+    return img'
+
+orderedDitherLuna :: Int -> Image RGBA -> Image RGBA
+orderedDitherLuna bits = onEachChannel $ bayer bits
