@@ -25,7 +25,7 @@ data LocalFileManager = LocalFileManager
 
 
 getFileStatus :: FilePath -> IO Gen.Item
-getFileStatus = fmap toGen . Files.getFileStatus
+getFileStatus name = toGen name <$> Files.getFileStatus name
 
 
 instance FileManager LocalFileManager () where
