@@ -7,16 +7,17 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Luna.Interpreter.Session.TargetHS.Bindings where
 
+import qualified Data.List as List
 import qualified GHC
 import qualified GhcMonad
 import qualified HscTypes
-import qualified Data.List as List
+import qualified Linker
 
-import Flowbox.Prelude
-import Flowbox.System.Log.Logger
+import Flowbox.Prelude                   hiding (matching)
+import Flowbox.System.Log.Logger         as L
 import Luna.Interpreter.Session.GHC.Util (dshow)
 import Luna.Interpreter.Session.Session  (Session)
-import Debug.Trace
+
 
 
 logger :: LoggerIO
@@ -24,15 +25,30 @@ logger = getLoggerIO $(moduleName)
 
 
 bindingMatch :: GHC.DynFlags -> String -> HscTypes.TyThing -> Bool
-bindingMatch dflags name binding = traceShow (name, bname, cname, result) result
-    where 
-      result = bname == name || cname == '.':name
-      bname = dshow dflags $ HscTypes.tyThingAvailInfo binding
-      cname = List.dropWhile (/= '.') bname
+bindingMatch dflags name binding = result where
+    result = bname == name || cname == '.':name
+    bname = dshow dflags $ HscTypes.tyThingAvailInfo binding
+    cname = List.dropWhile (/= '.') bname
 
 
 remove :: String -> Session ()
-remove name = lift2 $ do
+remove name = do
+    dflags <- lift2 $ GHC.getSessionDynFlags
+    hscEnv <- lift2 $ GhcMonad.getSession
+    let ic_tythings = HscTypes.ic_tythings $ HscTypes.hsc_IC hscEnv
+        matching    = filter (bindingMatch dflags name) ic_tythings
+
+    logger info $ "Deleting " ++ show (length matching) ++ " bindings"
+    GhcMonad.liftIO $ Linker.deleteFromLinkEnv $ map GHC.getName matching
+    remove_ic_tythings name
+    --GhcMonad.liftIO $ do
+    --    pls <-  Linker.saveLinkerGlobals
+    --    let closure_env = Linker.closure_env pls
+    --    print $ dshow dflags closure_env
+
+
+remove_ic_tythings :: String -> Session ()
+remove_ic_tythings name = lift2 $ do
     dflags <- GHC.getSessionDynFlags
     GhcMonad.modifySession $ \hscEnv -> let
         hsc_IC       = HscTypes.hsc_IC       hscEnv
@@ -41,4 +57,4 @@ remove name = lift2 $ do
         hsc_IC'      = hsc_IC {HscTypes.ic_tythings = ic_tythings'}
         in hscEnv { HscTypes.hsc_IC = hsc_IC'}
 
- 
+
