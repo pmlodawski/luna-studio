@@ -271,8 +271,31 @@ def Image.radialBlur size angle:
 def Image.histEq bins:
     ```liftF2 histEqLuna #{bins} #{self}```
 
-def Image.dither bound diffusionTable bits:
-    ```autoLift4 ditherLuna #{bound} #{bits} #{diffusionTable} #{self}```
+class Dithering:
+    FloydSteinberg
+    Brukes
+    Fan
+    JarvisJudiceNinke
+    Stucki
+    Sierra2
+    Sierra3
+    Atkinson
+    ShiauFan4
+    ShiauFan5
+
+# def Image.dither bound diffusionMethod bits:
+#     diffusionTable = case diffusionMethod:
+#         FloydSteinberg:    ```val floydSteinberg```
+#         Brukes:            ```val brukes```
+#         Fan:               ```val fan```
+#         JarvisJudiceNinke: ```val jarvisJudiceNinke```
+#         Stucki:            ```val stucki```
+#         Sierra2:           ```val sierra2```
+#         Sierra3:           ```val sierra3```
+#         Atkinson:          ```val atkinson```
+#         ShiauFan4:         ```val shiauFan4```
+#         ShiauFan5:         ```val shiauFan5```
+#     ```autoLift4 ditherLuna #{bound} #{bits} #{diffusionTable} #{self}```
 
 def Image.bayer bits:
     ```liftF2 orderedDitherLuna #{bits} #{self}```
