@@ -353,6 +353,13 @@ rotateCenterLuna (VPS (variable -> angle)) = rasterizer . monosampler . rotateCe
 translateLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image RGBA -> Image RGBA
 translateLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . translate (V2 x y) . nearest . fromMatrix boundary
 
+scaleToLuna :: A.Boundary (A.Exp Double) -> Int -> Int -> Image RGBA -> Image RGBA
+scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . scale (Grid x y) . nearest . fromMatrix boundary
+
+scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image RGBA -> Image RGBA
+scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
+    where f = fmap A.truncate . scale (V2 x y) . asFloating
+
 hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
