@@ -632,3 +632,6 @@ ditherLuna boundary bits table img = do
 
 orderedDitherLuna :: Int -> Image RGBA -> Image RGBA
 orderedDitherLuna bits = onEachChannel $ bayer bits
+
+constantBoundaryWrapper :: a -> A.Boundary (MValue a)
+constantBoundaryWrapper v = A.Constant $ MValue (return v) (const $ return ())
