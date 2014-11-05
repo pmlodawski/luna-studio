@@ -3,26 +3,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE CPP #-}
 
 module Flowbox.System.Directory.Directory (
-    copyDirectoryRecursive,
-    copyFile,
-    createDirectory,
-    createDirectoryIfMissing,
-    doesFileExist,
-    doesDirectoryExist,
-    getCurrentDirectory,
-    getDirectoryRecursive,
-    getTemporaryDirectory,
-    getTmpDirectoryWithPrefix,
-    listDirectory,
-    removeDirectoryRecursive,
-    removeFile,
-    renameDirectory,
-    renameFile,
-    setCurrentDirectory,
-    touchFile,
-    withTmpDirectory,
+    module Flowbox.System.Directory.Directory,
     module System.Directory,
 ) where
 
@@ -31,7 +15,11 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.List              as List
 import           System.Directory       hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getCurrentDirectory, getTemporaryDirectory, removeDirectoryRecursive, removeFile, renameDirectory, renameFile, setCurrentDirectory)
 import qualified System.Directory       as Directory
+import           System.FilePath        ((</>))
 import qualified System.IO              as IO
+#ifdef mingw32_HOST_OS
+import qualified System.Win32 as Win32
+#endif
 
 import           Flowbox.Prelude        hiding (children)
 import qualified Flowbox.System.Random  as Random

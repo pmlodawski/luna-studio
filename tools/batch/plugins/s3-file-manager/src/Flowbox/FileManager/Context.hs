@@ -31,5 +31,5 @@ mk cfg bucket = do
 
 run :: S3 a -> RPC Context IO a
 run s3 = do
-    ctx <- lift $ get
+    ctx <- lift get
     safeLiftIO $ S3.runS3env ctx s3
