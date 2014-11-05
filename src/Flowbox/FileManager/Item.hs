@@ -13,11 +13,12 @@ import qualified System.PosixCompat.Files as Files
 import           Flowbox.Prelude
 import qualified Generated.Proto.FileManager.FileSystem.Item     as Gen
 import qualified Generated.Proto.FileManager.FileSystem.Item.Cls as Gen
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
 
-toGen :: FileStatus -> Gen.Item
-toGen status = Gen.Item cls (Just size) (Just access) (Just modified) (Just statusChange) where
+toGen :: FilePath -> FileStatus -> Gen.Item
+toGen name status = Gen.Item cls (encodePJ name) (Just size) (Just access) (Just modified) (Just statusChange) where
     cls | Files.isDirectory status   = Gen.Directory
         | Files.isRegularFile status = Gen.File
         | otherwise                  = Gen.Other
