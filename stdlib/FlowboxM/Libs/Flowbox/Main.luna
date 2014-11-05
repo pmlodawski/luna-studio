@@ -135,6 +135,9 @@ def Image.laplacian kernelSize centerVal sideVal:
 def Image.rotate phi:
     ```liftF1 (onEachChannel $ rotateCenterLuna #{phi}) #{self}```
 
+def Image.translate boundary x y:
+    ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
+
 def circular width height:
     ```liftF2 circularLuna #{width} #{height}```
 

@@ -350,6 +350,9 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 rotateCenterLuna :: VPS Double -> Matrix2 Double -> Matrix2 Double
 rotateCenterLuna (VPS (variable -> angle)) = rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
 
+translateLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image RGBA -> Image RGBA
+translateLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . translate (V2 x y) . nearest . fromMatrix boundary
+
 hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
