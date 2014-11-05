@@ -15,7 +15,6 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.List              as List
 import           System.Directory       hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getCurrentDirectory, getTemporaryDirectory, removeDirectoryRecursive, removeFile, renameDirectory, renameFile, setCurrentDirectory)
 import qualified System.Directory       as Directory
-import           System.FilePath        ((</>))
 import qualified System.IO              as IO
 #ifdef mingw32_HOST_OS
 import qualified System.Win32 as Win32

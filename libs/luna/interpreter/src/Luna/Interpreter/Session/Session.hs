@@ -169,7 +169,7 @@ runDecls decls = do
 
 runAssignment :: String -> String -> Session ()
 runAssignment asigned asignee =
-    runDecls $ asigned ++ " = " ++ asignee
+    runStmt $ "let " ++ asigned ++ " = " ++ asignee
 
 
 interpret :: Typeable a => String -> Session a
