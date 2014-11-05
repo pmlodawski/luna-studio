@@ -11,11 +11,12 @@ import qualified Flowbox.AWS.S3.Utils                            as S3
 import           Flowbox.Prelude
 import qualified Generated.Proto.FileManager.FileSystem.Item     as Gen
 import qualified Generated.Proto.FileManager.FileSystem.Item.Cls as Gen
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
 -- TODO [PM] : implement me
 
 toGen :: FilePath -> Gen.Item
-toGen path = Gen.Item cls Nothing Nothing Nothing Nothing where
-    cls | S3.isDirectory path   = Gen.Directory
-        | otherwise             = Gen.File
+toGen name = Gen.Item cls (encodePJ name) Nothing Nothing Nothing Nothing where
+    cls | S3.isDirectory name = Gen.Directory
+        | otherwise           = Gen.File
