@@ -25,7 +25,7 @@ import           Flowbox.Prelude
 getAppDataDirectory :: IO FilePath
 getAppDataDirectory = do
 #if defined(mingw32_HOST_OS)
-    Win32.sHGetFolderPath nullPtr Win32.cSIDL_APPDATA nullPtr 0
+    Win32.sHGetFolderPath Win32.nullPtr Win32.cSIDL_APPDATA Win32.nullPtr 0
 #else
     home <- X.getHomeDirectory
     return $ home </> ".local" </> "share"
