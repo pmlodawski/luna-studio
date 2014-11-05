@@ -41,6 +41,7 @@ import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
 
@@ -196,13 +197,14 @@ evalFunction stringExpr callDataPath argsVarNames = do
                               then "val (" ++ name ++" :: Int)"
                               else "val " ++ name
             Tuple       -> "val (" ++ List.intercalate "," args ++ ")"
-        expression    = tmpVarName ++ " <- " ++ operation
-
+        expression = tmpVarName ++ " <- " ++ operation
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
+        Bindings.remove tmpVarName
         Session.runStmt expression
         hash <- Hash.compute tmpVarName
         let varName = VarName.mk hash callPointPath
+        Bindings.remove varName
         Session.runAssignment varName tmpVarName
         Cache.put callDataPath argsVarNames varName
-        Value.reportIfVisible callPointPath varName
+        Value.reportIfVisible callPointPath
         return (hash, varName)

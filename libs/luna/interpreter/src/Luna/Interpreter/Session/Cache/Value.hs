@@ -76,8 +76,8 @@ getWithStatus callPointPath = do
                 (Status.NonCacheable, _    ) -> returnNothing NonCacheable
 
 
-reportIfVisible :: CallPointPath -> VarName -> Session ()
-reportIfVisible callPointPath varName = do
+reportIfVisible :: CallPointPath -> Session ()
+reportIfVisible callPointPath = do
     flags <- Env.getFlags $ last callPointPath
     unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
          || Flags.isSet' flags (view Flags.graphViewGenerated  )

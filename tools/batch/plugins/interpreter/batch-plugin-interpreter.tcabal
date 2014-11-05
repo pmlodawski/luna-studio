@@ -26,6 +26,7 @@ Executable interpreter
                     bytestring,
                     containers,
                     either,
+                    ekg,
                     errors,
                     exceptions,
                     flowbox-batch,

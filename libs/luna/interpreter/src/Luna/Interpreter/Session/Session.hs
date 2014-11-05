@@ -65,6 +65,7 @@ initialize config imports = do
     setHardcodedExtensions
     setImports $ "Data.Word"
                : "Luna.Target.HS"
+               : "System.Mem"
                : imports
     runDecls Helpers.hash
 
@@ -168,7 +169,7 @@ runDecls decls = do
 
 runAssignment :: String -> String -> Session ()
 runAssignment asigned asignee =
-    runDecls $ asigned ++ " = " ++ asignee
+    runStmt $ "let " ++ asigned ++ " = " ++ asignee
 
 
 interpret :: Typeable a => String -> Session a
