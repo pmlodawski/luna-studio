@@ -138,6 +138,12 @@ def Image.rotate phi:
 def Image.translate boundary x y:
     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
 
+def Image.scaleTo boundary x y:
+    ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
+
+def Image.scale boundary x y:
+    ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
+
 def circular width height:
     ```liftF2 circularLuna #{width} #{height}```
 
