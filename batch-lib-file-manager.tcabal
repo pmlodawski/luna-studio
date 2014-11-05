@@ -25,7 +25,6 @@ Library
 
     Build-Depends:  base,
                     containers,
-                    directory,
                     flowbox-bus,
                     flowbox-config,
                     flowbox-utils,
