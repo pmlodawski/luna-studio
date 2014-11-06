@@ -228,7 +228,7 @@ main3 = do
         Session.runStmt "a <- newForeignPtr nullFunPtr nullPtr"
         Session.runStmt "performGC"
         liftIO $ Concurrent.threadDelay 3000000
-        Bindings.remove "a"
+        lift2 $ Bindings.remove "a"
         Session.runStmt "performGC"
         liftIO $ Concurrent.threadDelay 3000000
         Session.runStmt "print 4"

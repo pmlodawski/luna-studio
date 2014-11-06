@@ -18,11 +18,11 @@ import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 
 
 freeVarName :: VarName -> Session ()
-freeVarName varName = do
+freeVarName varName = lift2 $ do
     --Session.runAssignment varName "()"
     Bindings.remove varName
-    Bindings.remove "_tmp"
-    Bindings.remove "it"
+    --Bindings.remove "_tmp"
+    --Bindings.remove "it"
 
 
 freeCacheInfo :: CacheInfo -> Session ()

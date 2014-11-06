@@ -9,6 +9,7 @@ module Luna.Interpreter.Session.TargetHS.Bindings where
 
 import qualified Data.List as List
 import qualified GHC
+import           GhcMonad  (GhcMonad)
 import qualified GhcMonad
 import qualified HscTypes
 import qualified Linker
@@ -16,7 +17,6 @@ import qualified Linker
 import Flowbox.Prelude                   hiding (matching)
 import Flowbox.System.Log.Logger         as L
 import Luna.Interpreter.Session.GHC.Util (dshow)
-import Luna.Interpreter.Session.Session  (Session)
 
 
 
@@ -31,10 +31,10 @@ bindingMatch dflags name binding = result where
     cname = List.dropWhile (/= '.') bname
 
 
-remove :: String -> Session ()
+remove :: GhcMonad m => String -> m ()
 remove name = do
-    dflags <- lift2 $ GHC.getSessionDynFlags
-    hscEnv <- lift2 $ GhcMonad.getSession
+    dflags <- GHC.getSessionDynFlags
+    hscEnv <- GhcMonad.getSession
     let ic_tythings = HscTypes.ic_tythings $ HscTypes.hsc_IC hscEnv
         matching    = filter (bindingMatch dflags name) ic_tythings
 
@@ -47,8 +47,8 @@ remove name = do
     --    print $ dshow dflags closure_env
 
 
-remove_ic_tythings :: String -> Session ()
-remove_ic_tythings name = lift2 $ do
+remove_ic_tythings :: GhcMonad m => String -> m ()
+remove_ic_tythings name = do
     dflags <- GHC.getSessionDynFlags
     GhcMonad.modifySession $ \hscEnv -> let
         hsc_IC       = HscTypes.hsc_IC       hscEnv
@@ -56,5 +56,3 @@ remove_ic_tythings name = lift2 $ do
         ic_tythings' = filter (not . bindingMatch dflags name) ic_tythings
         hsc_IC'      = hsc_IC {HscTypes.ic_tythings = ic_tythings'}
         in hscEnv { HscTypes.hsc_IC = hsc_IC'}
-
-
