@@ -26,6 +26,7 @@ import qualified Luna.AST.Control.Focus                                        a
 import qualified Luna.AST.Control.Zipper                                       as Zipper
 import           Luna.AST.Module                                               (Module)
 import qualified Luna.AST.Module                                               as Module
+import           Luna.AST.Name                                                 (Name (Name))
 import qualified Luna.AST.Name                                                 as Name
 import qualified Luna.AST.Type                                                 as Type
 import           Luna.Data.Source                                              (Source (Source))
@@ -231,7 +232,7 @@ main3 = do
     (libManager , libID) <- readSource code
 
     let env = Env.mk libManager (Just 0)
-                (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
+                (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name "main" []) []])
                 (curry $ curry print)
 
     result <- Session.run cfg env [] $ do
