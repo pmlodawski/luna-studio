@@ -17,7 +17,7 @@ Executable interpreter
     Other-Modules:  Paths_batch_plugin_interpreter
     Main-Is:        Main.hs
 
-    GHC-Options:    -Wall -O2 -threaded
+    GHC-Options:    -Wall -O2 -threaded -with-rtsopts=-T
 
     Extensions:     NoImplicitPrelude
 
