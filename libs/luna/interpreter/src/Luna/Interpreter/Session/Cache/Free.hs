@@ -18,7 +18,7 @@ import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 
 
 freeVarName :: VarName -> Session ()
-freeVarName varName = lift2 $ do
+freeVarName varName = lift2 $
     --Session.runAssignment varName "()"
     Bindings.remove varName
     --Bindings.remove "_tmp"

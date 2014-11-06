@@ -49,6 +49,7 @@ import           Luna.Interpreter.Session.Env.Env            (Env)
 import qualified Luna.Interpreter.Session.Env.Env            as Env
 import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Error              as Error
+import qualified Luna.Interpreter.Session.Memory.Config      as Memory
 import           Luna.Interpreter.Session.TargetHS.Reload    (Reload, ReloadMap)
 import           Luna.Lib.Lib                                (Library)
 import qualified Luna.Lib.Lib                                as Library
@@ -162,6 +163,15 @@ insertSerializationMode callPointPath mode =
 deleteSerializationMode :: CallPointPath -> Session ()
 deleteSerializationMode callPointPath =
     modify (Env.serializationModes %~ MapForest.delete callPointPath)
+
+---- Env.memoryConfig -----------------------------------------------------
+
+getMemoryConfig :: Session Memory.Config
+getMemoryConfig = gets $ view Env.memoryConfig
+
+
+setMemoryConfig :: Memory.Config -> Session ()
+setMemoryConfig memoryConfig = modify $ Env.memoryConfig .~ memoryConfig
 
 ---- Env.libManager -------------------------------------------------------
 

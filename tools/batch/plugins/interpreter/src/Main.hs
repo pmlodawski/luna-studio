@@ -54,7 +54,7 @@ run :: Cmd -> IO ()
 run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run prefix verbose _ -> do
-        forkServer "localhost" 8000
+        _ <- forkServer "localhost" 8000
         rootLogger setIntLevel verbose
         cfg       <- Config.load
         Initializer.initializeIfNeeded cfg

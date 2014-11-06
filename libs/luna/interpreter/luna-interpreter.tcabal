@@ -16,7 +16,7 @@ Library
   Other-Modules:  Paths_luna_interpreter
   if flag(debug)
     GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2 -threaded
+  GHC-Options:    -Wall -O2 -threaded -with-rtsopts=-T
   Extensions:     NoImplicitPrelude
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
@@ -48,7 +48,7 @@ Executable luna-interpreter-test
 
   if flag(debug)
     GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2
+  GHC-Options:    -Wall -O2 -threaded -with-rtsopts=-T
 
   Extensions:     NoImplicitPrelude
 
@@ -69,7 +69,7 @@ Test-Suite tests
   Type:           exitcode-stdio-1.0
   Main-Is:        Spec.hs
   Hs-Source-Dirs: test
-  GHC-Options:    -Wall -threaded -O2
+  GHC-Options:    -Wall -O2 -threaded -with-rtsopts=-T
   Extensions:     NoImplicitPrelude
   Build-Depends:  base,
                   errors,
