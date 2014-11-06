@@ -1,23 +1,23 @@
 
 
 
--- *------------------------------------------------
--- * Specification of the generic HM(X)
--- * type inference system in Haskell
--- * 
--- * This instance deals with Ohori style records
--- *------------------------------------------------
+-- # *------------------------------------------------
+-- # * Specification of the generic HM(X)
+-- # * type inference system in Haskell
+-- # * 
+-- # * This instance deals with Ohori style records
+-- # *------------------------------------------------
 
 
 
 module Main where
 
--- *------------------------------------------------
--- * Category: DATA DECLARATIONS
--- *------------------------------------------------
+-- # *------------------------------------------------
+-- # * Category: DATA DECLARATIONS
+-- # *------------------------------------------------
 
 
--- The type language
+-- # The type language
 
 type TVar       = Int 
 type Var        = Int
@@ -29,10 +29,10 @@ data Type       = TV TVar
                     deriving (Show,Eq)
 
 
--- Note, record fields are sorted wrt field label
+-- # Note, record fields are sorted wrt field label
 
 
--- The constraint language
+-- # The constraint language
 
 data Predicate  = TRUE
                 | Type `Subsume` Type
@@ -44,53 +44,53 @@ data Constraint = C [Predicate]
                      deriving Show
 
 
--- FILL IN: extend type and constraint language
+-- # FILL IN: extend type and constraint language
 
 
--- Type schemes
+-- # Type schemes
 
 data TypeScheme = Mono Type
                 | Poly [TVar] Constraint Type
                      deriving Show
 
--- Substitutions and type environments
+-- # Substitutions and type environments
 
 type Subst      = [(TVar, Type)]
 
 type Typo       = [(Var,TypeScheme)]
 
--- The term language
+-- # The term language
 
 data Term       = Id Var | Abs Var Term | App Term Term 
                 | Let Var Term Term
                      deriving Show
 
--- The error monad
+-- # The error monad
 
 data E a        = Suc a | Err String
                      deriving Show
 
--- The type inference monad - a typing problem consists of a three tuple
+-- # The type inference monad - a typing problem consists of a three tuple
 
 data TP a = TP ( (TVar, Subst, Constraint) -> 
                  E (TVar, Subst, Constraint, a))
 
 
--- *----------------------------------------
--- * Category: CLASS DECLARATIONS
--- *----------------------------------------
+-- # *----------------------------------------
+-- # * Category: CLASS DECLARATIONS
+-- # *----------------------------------------
 
 
 class TypesAndConstraints c where
  apply :: Subst -> c -> TP c
  tv    :: c -> [TVar]
 
--- apply -- applies a substitution to either a type or constraint
--- tv -- computes the free type variables
+-- # apply -- applies a substitution to either a type or constraint
+-- # tv -- computes the free type variables
 
--- *-----------------------------------------
--- * Category: INSTANCE DECLARATIONS
--- *-----------------------------------------
+-- # *-----------------------------------------
+-- # * Category: INSTANCE DECLARATIONS
+-- # *-----------------------------------------
 
 
 instance TypesAndConstraints Predicate where
@@ -148,13 +148,13 @@ instance TypesAndConstraints TypeScheme where
   tv (Mono t)               = tv t
 
 
--- FILL IN: instance declarations in case of extended type and
---          constraint language
+-- # FILL IN: instance declarations in case of extended type and
+-- #          constraint language
 
 
--- *--------------------------------------------------
--- * Category: MONAD DECLARATIONS
--- *--------------------------------------------------
+-- # *--------------------------------------------------
+-- # * Category: MONAD DECLARATIONS
+-- # *--------------------------------------------------
 
 
 unTP (TP a) = a
@@ -164,7 +164,7 @@ instance Monad TP where
  m >>= k = TP ( \ (n,s,c) -> 
                      case unTP (m) (n,s,c) of 
                        Suc (n',s',c',x) -> unTP (k x) (n',s',c')
-                       Err s	          -> Err s )
+                       Err s            -> Err s )
  return x = TP ( \ (n,s,c) -> return (n,s,c,x) )
 
 
@@ -179,9 +179,9 @@ report_error :: String -> a -> TP a
 report_error msg x =  TP ( \ (n,s,c) -> Err msg)
 
 
--- *---------------------------------------
--- * Category: INITIALIZATIONS
--- *---------------------------------------
+-- # *---------------------------------------
+-- # * Category: INITIALIZATIONS
+-- # *---------------------------------------
 
 
 null_subst :: Subst
@@ -189,7 +189,7 @@ null_subst = []
 
 init_typo :: Typo
 
--- FILL IN: initial type environment
+-- # FILL IN: initial type environment
 
 true_cons :: Constraint
 true_cons = C [TRUE]
@@ -202,12 +202,12 @@ new_tvar n = n + 1
 
 
 
--- *--------------------------------------
--- * Category: Core type inferencer
--- *--------------------------------------
+-- # *--------------------------------------
+-- # * Category: Core type inferencer
+-- # *--------------------------------------
 
 
--- primitives for lists
+-- # primitives for lists
 
 without :: [TVar] -> [TVar] -> [TVar]
 without [] a    = []
@@ -216,7 +216,7 @@ without (x:a) b = if elem x b then without a b
 
 
 
--- primitives for dealing with constraints
+-- # primitives for dealing with constraints
 
 add_cons :: Constraint -> Constraint -> Constraint
 add_cons (C p1) (C p2)               = C (p1 ++ p2)
@@ -227,16 +227,16 @@ add_cons (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)
 
 projection :: Constraint -> [TVar] -> Constraint
 
--- FILL IN: definition of projection on constraints.
---          Projection might vary depending on different 
---          kinds of constraint systems. A standard
---          definition can be found below.
+-- # FILL IN: definition of projection on constraints.
+-- #          Projection might vary depending on different 
+-- #          kinds of constraint systems. A standard
+-- #          definition can be found below.
 
---          projection (C p) tvl         = Proj tvl p
---          projection (Proj tv1 p) tv2 = Proj (tv1 ++ tv2) p 
+-- #          projection (C p) tvl         = Proj tvl p
+-- #          projection (Proj tv1 p) tv2 = Proj (tv1 ++ tv2) p 
 
 
--- lifted functions
+-- # lifted functions
 
 
 tv_typo :: Typo -> [TVar]
@@ -249,7 +249,7 @@ add_constraint c1 =
 
 
 
--- handling of type variables and type environments
+-- # handling of type variables and type environments
 
 newtvar :: TP TVar
 newtvar = TP (\ (n,s,c) -> return (new_tvar n,s,c,n) )
@@ -266,7 +266,7 @@ mylookup ((x,t):xs) y =
 
 
 
--- instantiation and generalization
+-- # instantiation and generalization
 
 
 
@@ -297,20 +297,20 @@ gen :: Typo -> Type -> TP TypeScheme
 gen env t =
  TP ( \ (n,s,c) -> return (n,s, projection c (fv t c env), Poly (fv t c env) c t) ) 
                       where fv t1 c1 env1 = without ((tv t1) ++ (tv c1)) (tv_typo env1)
->
 
 
--- constraint solver
+
+-- # constraint solver
 
 
 
 cs :: (Subst, Constraint) -> TP (Subst, Constraint)
 
 
--- that's what you need to supply
+-- # that's what you need to supply
 
 
--- incorporating the constraint solver into monad TP
+-- # incorporating the constraint solver into monad TP
 
 normalize :: Type -> TP Type
 normalize a = do s <- get_subst
@@ -331,12 +331,12 @@ return_result :: Subst -> Constraint -> Type -> TP Type
 return_result s c t = TP ( \ (n,s',c') -> return (n,s,c,t))
 
 
--- type inference
+-- # type inference
 
 tp :: (Typo, Term) -> TP Type
 tp (env, Id x) =  do a <- inst env x
                      normalize a
---        
+-- #        
 tp (env, Abs x e) = do a <- newtvar
                        b <- tp (insert env (x, Mono (TV a)), e)
                        normalize ((TV a) `Fun` b)
@@ -352,23 +352,23 @@ tp (env, Let x e e') = do a <- tp (env, e)
                           b <- gen env a
                           tp ((insert env (x, b)), e')
 
--- top-level program
+-- # top-level program
 
 infer :: Term -> E (TVar, Subst, Constraint, Type)
 infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
---          
+-- #          
 
 
 
--- *------------------------------------------
--- * Category: Record instance
--- *------------------------------------------
+-- # *------------------------------------------
+-- # * Category: Record instance
+-- # *------------------------------------------
 
 
 
 init_typo = []
 
--- Invariant: all constraints are true, hence projection is always trivial
+-- # Invariant: all constraints are true, hence projection is always trivial
 
 projection _ _ = true_cons
 
@@ -384,7 +384,7 @@ cs (s, C c) =
      else report_error "inconsistent constraint" (null_subst, C [TRUE])
 
 
--- divide predicates into record predicates and equality predicates
+-- # divide predicates into record predicates and equality predicates
 
 extract_predicates :: [Predicate] -> TP ([Predicate],[Predicate])
 extract_predicates [] = return ([],[])
@@ -411,7 +411,7 @@ closure (s, r, e) =
         _    -> report_error "closure:uncompatible constraint" (null_subst, [])
 
 
--- create subsumptions based on a label type of a particular record
+-- # create subsumptions based on a label type of a particular record
 
 extract1 :: [Predicate] -> TP [Predicate]
 extract1 [] = return []
@@ -425,7 +425,7 @@ get_extract1 [] _ _          = report_error "extract1:field label not found -> i
 get_extract1 ((l,t):f) l' t' = if l == l' then return (t `Subsume` t')
                                else get_extract1 f l' t'
 
--- Create subsumptions for each label based on all constraints for a particular label and record. All equations for a particular label in a record must be satisfied
+-- # Create subsumptions for each label based on all constraints for a particular label and record. All equations for a particular label in a record must be satisfied
 
 extract2 :: [Predicate] -> TP [Predicate]
 extract2 [] = return []
@@ -437,9 +437,9 @@ extract2 (_:p) = extract2 p
 
 get_extract2 [] _ _ _ = return []
 get_extract2 ((Reckind a l a'):p) t l' t' = if (l == l') && (a == t) 
->					      then do e <- get_extract2 p t l' t' 
->						      return ((a' `Subsume` t'):e)
-                                            else get_extract2 p t l' t'
+               then do e <- get_extract2 p t l' t' 
+                       return ((a' `Subsume` t'):e)
+               else get_extract2 p t l' t'
 get_extract2 (_:p) t l t'                 = get_extract2 p t l t'
 
 
@@ -453,14 +453,14 @@ check_consistency (_:p) = check_consistency p
 
 
 
--- simplification of constraints
+-- # simplification of constraints
 
 simplify :: Constraint -> TP Constraint
 simplify (C p) = do p' <- simplify_predicate p
                     return (C p')
 
 
--- simplification of predicates
+-- # simplification of predicates
 
 simplify_predicate :: [Predicate] -> TP [Predicate]
 simplify_predicate [] = return []
@@ -476,7 +476,7 @@ simplify_predicate (x:p) =
            else return (x:p')
 
 
--- assumption, there are only equ predicates
+-- # assumption, there are only equ predicates
 
 do_unify :: (Subst, [Predicate]) -> TP Subst
 do_unify (s, []) = return s
@@ -500,18 +500,18 @@ unify (s, t, TV x) = unify (s, TV x, t)
 unify (s, t1 `Fun` t1', t2 `Fun` t2') = do s' <- unify (s, t1, t2)
                                            unify (s', t1', t2')
 unify (s, Record f, Record f') = g (s,f,f') where
-     		 g (s, [], []) = return s
-               g (s, (l,t):f, (l',t'):f') =
-                        if l == l'
-                        then do s' <- unify(s,t,t')
-                                g(s',f,f')
-                        else report_error "not matching record" null_subst
+          g (s, [], []) = return s
+          g (s, (l,t):f, (l',t'):f') =
+                   if l == l'
+                   then do s' <- unify(s,t,t')
+                           g(s',f,f')
+                   else report_error "not matching record" null_subst
 unify (s, _, _)  = report_error "unify:uncompatible type" null_subst
 
 
 
 
--- test cases
+-- # test cases
 
 test = infer (App (Abs 1 (Id 1)) (Abs 2 (Id 2)))
 
@@ -537,10 +537,10 @@ rec1 = unTP (tp ([(100, Mono (Record [(200, TV 300),(201, TV 301)])),
 
 
 rec2 = cs(null_subst, ( C [(Reckind (TV 100) 200 ((TV 300) `Fun` (TV 300))),
->		              (Reckind (TV 100) 200 (TV 301))]))
+                 (Reckind (TV 100) 200 (TV 301))]))
 
 rec3 = cs(null_subst, (C  [(Reckind (TV 100) 200 ((TV 300) `Fun` (TV 301))),
->		              (Reckind (TV 100) 200 ((TV 302) `Fun` (TV 302)))]))
+                 (Reckind (TV 100) 200 ((TV 302) `Fun` (TV 302)))]))
 
 
 
