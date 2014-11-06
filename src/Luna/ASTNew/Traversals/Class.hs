@@ -78,11 +78,11 @@ instance DefaultTraversal base m String String where defaultTraverseM _ = pure
 
 -- ----- basic AST types -----
 
-instance Traversal base m TName     TName     where traverseM _ = pure
-instance Traversal base m VName     VName     where traverseM _ = pure
-instance Traversal base m CName     CName     where traverseM _ = pure
-instance Traversal base m TVName    TVName    where traverseM _ = pure
-instance Traversal base m MultiName MultiName where traverseM _ = pure
+instance Traversal base m TName         TName         where traverseM _ = pure
+instance Traversal base m VName         VName         where traverseM _ = pure
+instance Traversal base m CName         CName         where traverseM _ = pure
+instance Traversal base m TVName        TVName        where traverseM _ = pure
+instance Traversal base m (MultiName a) (MultiName a) where traverseM _ = pure
 
 
 -- ----- Unit -----

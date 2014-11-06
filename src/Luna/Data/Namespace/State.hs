@@ -95,11 +95,13 @@ popID = do
 --withID :: NamespaceMonad m => ID -> m f -> m f
 --withID id f = pushID id *> f <* popID
 
-pushScope id = modify $ Namespace.pushScope id
+pushNewScope id = modify $ Namespace.pushNewScope id
+pushScope    id = modify $ Namespace.pushScope id
 
 popScope = modify $ Namespace.popScope
 
-withScope id p = pushScope id *> p <* popScope
+withNewScope id p = pushNewScope id *> p <* popScope
+withScope    id p = pushScope    id *> p <* popScope
 
 
 withParentID :: NamespaceMonad a e v m => m f -> m f

@@ -14,7 +14,7 @@ module Luna.ASTNew.Decl where
 import Flowbox.Prelude        hiding (Cons, traverse)
 import GHC.Generics           (Generic)
 import Luna.ASTNew.Type       (LType)
-import Luna.ASTNew.Name       (Name, VName, TName, CName, TVName)
+import Luna.ASTNew.Name       (VName, TName, CName, TVName)
 import Luna.ASTNew.Name.Multi (MultiName)
 import Luna.ASTNew.Arg        (Arg)
 import Luna.ASTNew.Native     (Native)
@@ -23,9 +23,11 @@ import Luna.ASTNew.Label      (Label)
 
 import qualified Prelude
 
+type Name = MultiName String
+
 data Decl a e
     = Data        { _tname   :: TName   , params    :: [TVName]   , _cons    :: [LCons a e] , _defs   :: [LDecl a e]                    }
-    | Function    { _path    :: Path    , _fname    :: MultiName  , _inputs  :: [Arg a e]   , _output :: Maybe (LType a) , _body :: [e] }
+    | Function    { _path    :: Path    , _fname    :: Name       , _inputs  :: [Arg a e]   , _output :: Maybe (LType a) , _body :: [e] }
     | Import      { _modPath :: Path    , _rename   :: Maybe TName, _targets :: [ImpTgt]                                                }
     | TypeAlias   { _dstType :: LType a , _srcType  :: LType a                                                                          }
     | TypeWrapper { _dstType :: LType a , _srcType  :: LType a                                                                          }
