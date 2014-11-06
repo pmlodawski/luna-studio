@@ -19,7 +19,7 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude
   
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Main\.hs)')`
+  Exposed-modules: `findmodules('src', '.*\.hs')`
                    
   Build-Depends:  base,
                   flowbox-config,

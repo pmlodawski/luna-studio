@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.Library where
 
 import qualified Flowbox.Batch.Handler.Common                                  as Batch
@@ -22,6 +23,8 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Load.Request   a
 import qualified Generated.Proto.ProjectManager.Project.Library.Load.Update    as Load
 import qualified Generated.Proto.ProjectManager.Project.Library.Lookup.Request as Lookup
 import qualified Generated.Proto.ProjectManager.Project.Library.Lookup.Status  as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Library.Modify.Request as Modify
+import qualified Generated.Proto.ProjectManager.Project.Library.Modify.Update  as Modify
 import qualified Generated.Proto.ProjectManager.Project.Library.Store.Request  as Store
 import qualified Generated.Proto.ProjectManager.Project.Library.Store.Status   as Store
 import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Request as Unload
@@ -31,7 +34,7 @@ import           Luna.Data.Serialize.Proto.Conversion.Library                  (
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Library"
+logger = getLoggerIO $(moduleName)
 
 -------- public api -------------------------------------------------
 
@@ -63,6 +66,15 @@ create request@(Create.Request tname tpath tprojectID) = do
     newLibrary <- BatchL.createLibrary name path projectID
     updateNo <- Batch.getUpdateNo
     return $ Create.Update request (encode newLibrary) updateNo
+
+
+modify :: Modify.Request -> RPC Context IO Modify.Update
+modify request@(Modify.Request tlibrary tprojectID) = do
+    library <- decodeE tlibrary
+    let projectID = decodeP tprojectID
+    BatchL.modifyLibrary library projectID
+    updateNo <- Batch.getUpdateNo
+    return $ Modify.Update request updateNo
 
 
 load :: Load.Request -> RPC Context IO Load.Update

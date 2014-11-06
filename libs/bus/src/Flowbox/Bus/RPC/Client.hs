@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Flowbox.Bus.RPC.Client where
 
@@ -30,7 +31,7 @@ import qualified Flowbox.Text.ProtocolBuffers  as Proto
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.RPC.Client"
+logger = getLoggerIO $(moduleName)
 
 
 isCorrelationIDValid :: Message.CorrelationID -> MessageFrame -> Bool

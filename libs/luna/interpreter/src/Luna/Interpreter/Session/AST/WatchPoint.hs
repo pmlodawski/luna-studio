@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Luna.Interpreter.Session.AST.WatchPoint where
 
 import Control.Monad.State
@@ -20,7 +21,7 @@ import           Luna.Interpreter.Session.Session            (Session)
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Interpreter.Session.AST.WatchPoint"
+logger = getLoggerIO $(moduleName)
 
 
 add :: CallPointPath -> Session ()

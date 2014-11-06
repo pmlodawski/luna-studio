@@ -28,12 +28,30 @@ Executable luna
   Build-Depends:  base,
                   containers,
                   flowbox-config,
+                  flowbox-utils,
                   luna-core,
                   luna-pass,
                   luna-distribution,
                   luna-initializer,
-                  flowbox-utils,
                   MissingH,
                   optparse-applicative < 0.10, 
                   timeit
 -- FIXME: update optparse-applicative to newer version
+
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: src, test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  directory,
+                  flowbox-config,
+                  flowbox-utils,
+                  hspec,
+                  luna-core,
+                  luna-initializer,
+                  luna-pass,
+                  process,
+                  raw-strings-qq

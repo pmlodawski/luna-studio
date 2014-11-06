@@ -20,8 +20,8 @@ import           Flowbox.Graphics.Color.HSL
 import           Flowbox.Graphics.Color.HSV
 import           Flowbox.Graphics.Color.RGB
 import           Flowbox.Graphics.Color.RGBA
-import           Flowbox.Graphics.Color.YUV
-import           Flowbox.Graphics.Color.YUV_HD
+import           Flowbox.Graphics.Color.YCbCr
+import           Flowbox.Graphics.Color.YCbCr_HD
 import           Flowbox.Prelude
 
 
@@ -53,8 +53,8 @@ instance ColorConvert HSL CMYK where
 instance ColorConvert CMY CMYK where
     convertColor = helperColorConverter toCMYK
 
-instance ColorConvert YUV CMYK where
+instance ColorConvert YCbCr CMYK where
     convertColor = helperColorConverter toCMYK
 
-instance ColorConvert YUV_HD CMYK where
+instance ColorConvert YCbCr_HD CMYK where
     convertColor = helperColorConverter toCMYK

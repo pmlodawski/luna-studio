@@ -4,41 +4,44 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.Project where
 
 import qualified Data.Sequence as Sequence
 
-import qualified Flowbox.Batch.Handler.Common                           as Batch
-import qualified Flowbox.Batch.Handler.Project                          as BatchP
-import           Flowbox.Batch.Project.Project                          (Project)
-import qualified Flowbox.Batch.Project.Project                          as Project
-import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
-import           Flowbox.Bus.RPC.RPC                                    (RPC)
-import           Flowbox.Prelude                                        hiding (Context)
-import           Flowbox.ProjectManager.Context                         (Context)
+import qualified Flowbox.Batch.Handler.Common                              as Batch
+import qualified Flowbox.Batch.Handler.Project                             as BatchP
+import           Flowbox.Batch.Project.Project                             (Project)
+import qualified Flowbox.Batch.Project.Project                             as Project
+import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project    ()
+import           Flowbox.Bus.RPC.RPC                                       (RPC)
+import           Flowbox.Prelude                                           hiding (Context)
+import           Flowbox.ProjectManager.Context                            (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.ProjectManager.Project.Close.Request   as Close
-import qualified Generated.Proto.ProjectManager.Project.Close.Update    as Close
-import qualified Generated.Proto.ProjectManager.Project.Create.Request  as Create
-import qualified Generated.Proto.ProjectManager.Project.Create.Update   as Create
-import qualified Generated.Proto.ProjectManager.Project.List.Request    as List
-import qualified Generated.Proto.ProjectManager.Project.List.Status     as List
-import qualified Generated.Proto.ProjectManager.Project.Lookup.Request  as Lookup
-import qualified Generated.Proto.ProjectManager.Project.Lookup.Status   as Lookup
-import qualified Generated.Proto.ProjectManager.Project.Modify.Request  as Modify
-import qualified Generated.Proto.ProjectManager.Project.Modify.Update   as Modify
-import qualified Generated.Proto.ProjectManager.Project.Open.Request    as Open
-import qualified Generated.Proto.ProjectManager.Project.Open.Update     as Open
-import qualified Generated.Proto.ProjectManager.Project.Store.Request   as Store
-import qualified Generated.Proto.ProjectManager.Project.Store.Status    as Store
-import           Luna.Data.Serialize.Proto.Conversion.Attributes        ()
-import qualified Luna.Lib.Manager                                       as LibManager
+import qualified Generated.Proto.ProjectManager.Project.Close.Request      as Close
+import qualified Generated.Proto.ProjectManager.Project.Close.Update       as Close
+import qualified Generated.Proto.ProjectManager.Project.Create.Request     as Create
+import qualified Generated.Proto.ProjectManager.Project.Create.Update      as Create
+import qualified Generated.Proto.ProjectManager.Project.FileExists.Request as FileExists
+import qualified Generated.Proto.ProjectManager.Project.FileExists.Status  as FileExists
+import qualified Generated.Proto.ProjectManager.Project.List.Request       as List
+import qualified Generated.Proto.ProjectManager.Project.List.Status        as List
+import qualified Generated.Proto.ProjectManager.Project.Lookup.Request     as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Lookup.Status      as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Modify.Request     as Modify
+import qualified Generated.Proto.ProjectManager.Project.Modify.Update      as Modify
+import qualified Generated.Proto.ProjectManager.Project.Open.Request       as Open
+import qualified Generated.Proto.ProjectManager.Project.Open.Update        as Open
+import qualified Generated.Proto.ProjectManager.Project.Store.Request      as Store
+import qualified Generated.Proto.ProjectManager.Project.Store.Status       as Store
+import           Luna.Data.Serialize.Proto.Conversion.Attributes           ()
+import qualified Luna.Lib.Manager                                          as LibManager
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Project"
+logger = getLoggerIO $(moduleName)
 
 ------ public api -------------------------------------------------
 
@@ -90,3 +93,9 @@ store :: Store.Request -> RPC Context IO Store.Status
 store request@(Store.Request tprojectID) = do
     BatchP.storeProject $ decodeP tprojectID
     return $ Store.Status request
+
+
+fileExists :: FileExists.Request -> RPC Context IO FileExists.Status
+fileExists request@(FileExists.Request path) = do
+    exists <- BatchP.projectFileExists $ decodeP path
+    return $ FileExists.Status request exists

@@ -16,6 +16,7 @@ import           System.Console.ANSI (Color (..), ColorIntensity (..), ConsoleLa
 import qualified System.Console.ANSI as ANSI
 
 
+
 data Style = Style { layer     :: ConsoleLayer
                    , intensity :: ColorIntensity
                    , color     :: Color

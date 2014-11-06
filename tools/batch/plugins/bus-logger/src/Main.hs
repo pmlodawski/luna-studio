@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main where
 
 import qualified Data.List as List
@@ -22,11 +24,11 @@ import           Flowbox.System.Log.Logger
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+rootLogger = getLogger ""
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.Logger"
+logger = getLoggerIO $(moduleName)
 
 
 parser :: Parser Cmd

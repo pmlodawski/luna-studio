@@ -60,3 +60,6 @@ storeProject projectID = do
     project <- Batch.getProject projectID
     liftIO $ ProjectSerialization.storeProject project
 
+
+projectFileExists :: UniPath -> Batch Bool
+projectFileExists = liftIO . ProjectSerialization.projectFileExists

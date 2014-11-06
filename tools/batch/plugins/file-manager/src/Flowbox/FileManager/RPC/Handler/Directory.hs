@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.FileManager.RPC.Handler.Directory where
 
@@ -35,7 +36,7 @@ import qualified Generated.Proto.FileManager.FileSystem.Directory.Upload.Status 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.FileManager.RPC.Handler.Directory"
+logger = getLoggerIO $(moduleName)
 
 ------ public api -------------------------------------------------
 

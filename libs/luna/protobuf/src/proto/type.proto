@@ -11,14 +11,14 @@ package generated.proto.type;
 
 message Type {
     enum Cls {
-        Unknown = 1;
-        Var     = 2;
-        Tuple   = 3;
-        Data    = 4;
-        Module  = 5;
-        Lambda  = 6;
-        Con_    = 7;
-        App     = 8;
+        Unknown  = 1;
+        Var      = 2;
+        Tuple    = 3;
+        Data     = 4;
+        Module   = 5;
+        Function = 6;
+        Con_     = 7;
+        App      = 8;
     }
     required Cls   cls = 1;
     optional int32 id  = 2 [default = -1];
@@ -52,8 +52,8 @@ message Module {
     repeated string path     = 2;
 }
 
-message Lambda {
-    extend Type { optional Lambda ext = 105; }
+message Function {
+    extend Type { optional Function ext = 105; }
     repeated Type   inputs   = 2;
     optional Type   outputs  = 3;
 }

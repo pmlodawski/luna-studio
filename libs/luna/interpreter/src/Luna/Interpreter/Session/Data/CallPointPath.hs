@@ -12,6 +12,3 @@ import Luna.Interpreter.Session.Data.CallPoint (CallPoint)
 
 
 type CallPointPath  = [CallPoint]
-
-
-

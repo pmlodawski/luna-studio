@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE TupleSections             #-}
 
 module Luna.Pass.Pass where
@@ -38,7 +39,7 @@ data Info = Info { name :: String
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Pass"
+logger = getLogger $(moduleName)
 
 
 type PassError = String

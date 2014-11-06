@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 module Luna.Interpreter.RPC.Handler.Sync where
 
 import           Data.Int  (Int32)
@@ -25,25 +26,25 @@ import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  as ProjectManagerSyncGet
 import           Luna.Interpreter.RPC.Handler.Lift
+import qualified Luna.Interpreter.Session.Env                                   as Env
 import           Luna.Interpreter.Session.Session                               (SessionST)
-import qualified Luna.Interpreter.Session.Session                               as Session
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Sync"
+logger = getLoggerIO $(moduleName)
 
 --- helpers ---------------------------------------------------------------
 
 syncLibManager :: RPC Context SessionST ()
 syncLibManager = do
     pm <- Batch.getProjectManager
-    activeProjectID <- liftSession Session.getProjectID
+    activeProjectID <- liftSession Env.getProjectID
     libs <- case ProjectManager.lab pm activeProjectID of
         Just project -> return $ project ^. Project.libs
         Nothing      -> do logger warning $ "Project " ++ show activeProjectID ++ " not found"
                            return def
-    liftSession $ Session.setLibManager libs
+    liftSession $ Env.setLibManager libs
 
 
 testUpdateNo :: Int32 -> RPC Context SessionST ()
@@ -55,7 +56,7 @@ testUpdateNo updateNo = do
 
 testProjectID :: Project.ID -> RPC Context SessionST ()
 testProjectID projectID = do
-    currentProjectID <- liftSession Session.getProjectID
+    currentProjectID <- liftSession Env.getProjectID
     assertE (projectID == currentProjectID) $
         "Sync.testProjectID : wrong projectID = " ++ show projectID
 

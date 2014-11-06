@@ -9,6 +9,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Build.Build where
 
@@ -53,7 +54,7 @@ import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      a
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Pass.Build.Build"
+logger = getLoggerIO $(moduleName)
 
 
 srcFolder :: String
@@ -144,16 +145,10 @@ run :: BuildConfig -> ASTModule.Module -> ASTInfo -> Bool -> Pass.Result ()
 run buildConfig ast astInfo implicitSelf = runEitherT $ do
     let diag    = BuildConfig.diag buildConfig
         allLibs = "base"
-                : "containers"
-                -- : "flowboxM-core"
-                : "flowbox-graphics"
                 : "luna-target-ghchs"
                 : "template-haskell"
-                -- : "accelerate"
                 : BuildConfig.libs buildConfig
-                ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
-                      then ["flowboxM-stdlib"]
-                      else []
+                ++ ["flowboxM-stdlib" | BuildConfig.name buildConfig /= "flowboxM-stdlib"]
     hsc <- hoistEither =<< prepareSources diag ast astInfo implicitSelf
     case BuildConfig.buildDir buildConfig of
         Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig hsc allLibs
@@ -194,8 +189,7 @@ parseFile :: UniPath -> UniPath -> Pass.Result (ASTModule.Module, SourceMap, AST
 parseFile rootPath filePath = runEitherT $ do
     logger debug $ "Compiling file '" ++ UniPath.toUnixString filePath ++ "'"
     source <- hoistEither =<< FileReader.run rootPath filePath
-    result <- hoistEither =<< TxtParser.run source
-    return result
+    hoistEither =<< TxtParser.run source
 
 
 formatSource :: Source -> Source

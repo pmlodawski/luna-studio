@@ -34,6 +34,6 @@ Executable instance-manager
                     flowbox-utils,
                     network,
                     optparse-applicative,
-                    protocol-buffers,
+                    protocol-buffers-fork,
                     text,
                     transformers

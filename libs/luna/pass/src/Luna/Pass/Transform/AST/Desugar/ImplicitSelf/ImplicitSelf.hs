@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf where
 
@@ -24,7 +25,7 @@ import           Luna.Pass.Transform.AST.Desugar.General.State (DesugarState)
 import qualified Luna.Pass.Transform.AST.Desugar.General.State as State
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.ImplicitSelf.ImplicitSelf"
+logger = getLoggerIO $(moduleName)
 
 
 type DesugarPass result = Pass DesugarState result
@@ -39,7 +40,7 @@ desugar mod = (,) <$> desugarModule mod <*> State.getInfo
 
 
 desugarModule :: Module -> DesugarPass Module
-desugarModule mod = Module.traverseM desugarModule desugarExpr pure pure pure mod
+desugarModule mod = Module.traverseM desugarModule desugarExpr pure pure pure pure mod
 
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
@@ -48,6 +49,6 @@ desugarExpr ast = case ast of
                         where selfArg = Expr.Arg <$> State.genID <*> selfPat <*> pure Nothing
                               selfPat = Pat.Var <$> State.genID <*> pure "self"
     _                -> continue
-    where continue  = Expr.traverseM desugarExpr pure pure pure ast
+    where continue  = Expr.traverseM desugarExpr pure pure pure pure ast
 
 

@@ -3,11 +3,11 @@ module Luna.Typechecker.Type.Scheme (
     instantiate
   ) where
 
-import Luna.Typechecker.IDs
-import Luna.Typechecker.Substitution
-import Luna.Typechecker.TIMonad
-import Luna.Typechecker.Type.Type
-import Luna.Typechecker.RefactorMePlease
+import Luna.Typechecker.IDs              (TyID)
+import Luna.Typechecker.Substitution     (Subst(..),Types(..),removeSubstitution)
+import Luna.Typechecker.TIMonad          (TILogger)
+import Luna.Typechecker.Type.Type        (Type,Tyvar(..))
+import Luna.Typechecker.RefactorMePlease (mkTyID)
 
 import Data.Monoid
 
@@ -22,7 +22,7 @@ instance Types Scheme where
   ftv   = error "Type.Scheme : Types Scheme : ftv"
 
 instance Show Scheme where
-  show (Scheme vars t) = "<scheme>"
+  show (Scheme _ _) = "<scheme>"
 
 
 instantiate :: Scheme -> TILogger Type

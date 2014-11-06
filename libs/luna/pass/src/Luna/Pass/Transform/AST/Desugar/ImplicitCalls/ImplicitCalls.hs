@@ -8,11 +8,13 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls where
 
 import           Flowbox.Prelude                               hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
+import qualified Luna.AST.Arg                                  as Arg
 import qualified Luna.AST.Expr                                 as Expr
 import           Luna.AST.Module                               (Module)
 import qualified Luna.AST.Module                               as Module
@@ -26,7 +28,7 @@ import qualified Luna.Pass.Transform.AST.Desugar.General.State as DS
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.ImplicitCalls.ImplicitCalls"
+logger = getLoggerIO $(moduleName)
 
 
 type DesugarPass result = Pass DesugarState result
@@ -41,19 +43,24 @@ desugar mod = (,) <$> desugarModule mod <*> DS.getInfo
 
 
 desugarModule :: Module -> DesugarPass Module
-desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure mod
+desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure pure mod
 
+--TODO[wd]: convert to traverses!
+desugarArg :: Arg.Arg Expr.Expr -> DesugarPass (Arg.Arg Expr.Expr)
+desugarArg a = case a of
+    Arg.Unnamed id      arg -> fmap (Arg.Unnamed id)      $ desugarExpr arg
+    Arg.Named   id name arg -> fmap (Arg.Named   id name) $ desugarExpr arg
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExpr ast = case ast of
     Expr.Con      {}                           -> Expr.App <$> DS.genID <*> continue <*> pure []
-    Expr.App      id src args                  -> Expr.App id <$> omitNextExpr src <*> mapM desugarExpr args
+    Expr.App      id src args                  -> Expr.App id <$> omitNextExpr src <*> mapM desugarArg args
     Expr.Accessor id name dst                  -> Expr.App <$> DS.genID <*> continue <*> pure []
     Expr.Import   {}                           -> omitAll
     _                                          -> continue
     where continue  = desugarExprGeneral ast
-          omitNext  = Expr.traverseM omitNextExpr pure desugarPat pure ast
-          omitAll   = Expr.traverseM omitAllExpr pure desugarPat pure ast
+          omitNext  = Expr.traverseM omitNextExpr pure desugarPat pure pure ast
+          omitAll   = Expr.traverseM omitAllExpr pure desugarPat pure pure ast
 
 
 omitNextExpr :: Expr.Expr -> DesugarPass Expr.Expr
@@ -64,12 +71,12 @@ desugarExprGeneral :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExprGeneral ast = case ast of
     Expr.Ref      {}                           -> omitAll
     _                                          -> continue
-    where continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
-          omitAll   = Expr.traverseM omitAllExpr pure desugarPat pure ast
+    where continue  = Expr.traverseM desugarExpr pure desugarPat pure pure ast
+          omitAll   = Expr.traverseM omitAllExpr pure desugarPat pure pure ast
 
 omitAllExpr :: Expr.Expr -> DesugarPass Expr.Expr
 omitAllExpr ast = continue
-    where continue = Expr.traverseM omitAllExpr pure desugarPat pure ast
+    where continue = Expr.traverseM omitAllExpr pure desugarPat pure pure ast
 
 
 desugarPat :: Pat -> DesugarPass Pat

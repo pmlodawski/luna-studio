@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.AWS.AccountManager where
 
@@ -32,7 +33,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.AccountManager"
+logger = getLoggerIO $(moduleName)
 
 
 type Error = String
@@ -75,7 +76,7 @@ start :: Database -> AWS.Credential -> Region -> User.Name -> IO (IPv4, Instance
 start database credential region userName = do
     logger info $ "Starting session for username=" ++ show userName
     [inst] <- Instance.retrieve database credential region userName Request.mk
-    ip <- fromJust $ Types.instanceIpAddress inst
+    ip <- fromJustM $ Types.instanceIpAddress inst
     return (ip, Types.instanceId inst)
 
 

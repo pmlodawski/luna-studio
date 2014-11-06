@@ -5,7 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TypeOperators       #-}
-{-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Composition.Generators.Sampler where
@@ -35,7 +34,7 @@ multisampler kernel = convolve msampler kernel
 nearest :: (Elt e, IsFloating e) => DiscreteGenerator (Exp e) -> CartesianGenerator (Exp e) (Exp e)
 nearest = transform $ fmap A.floor
 
-interpolator :: forall e .(Elt e, IsFloating e) => Filter e -> DiscreteGenerator (Exp e) -> CartesianGenerator (Exp e) (Exp e)
+interpolator :: forall e . (Elt e, IsFloating e) => Filter (Exp e) -> DiscreteGenerator (Exp e) -> CartesianGenerator (Exp e) (Exp e)
 interpolator filter (Generator cnv input) = Generator cnv $ \pos@(Point2 x y) ->
     let get x' y' = input $ fmap A.floor pos + Point2 x' y'
         size = A.floor $ window filter

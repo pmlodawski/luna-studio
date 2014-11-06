@@ -78,30 +78,43 @@ type Remove' t set = IfThenElse (Contains set t) (Remove t set) set
 
 
 class InsertClass a s1 s2 | a s1 -> s2
-    where insert :: a -> s1 -> s2
+  where insert :: a -> s1 -> s2
 
 instance InsertClass a () (a,()) where
-    insert a _ = (a,())
+  insert a _ = (a,())
 
 instance InsertClass a (a,xs) (a,xs) where
-    insert a (_,xs) = (a,xs)
+  insert a (_,xs) = (a,xs)
 
 instance InsertClass a xs out => InsertClass a (x,xs) (x,out) where
-    insert a (x,xs) = (x, insert a xs)
+  insert a (x,xs) = (x, insert a xs)
+
 
 
 class Lookup s a where 
-    lookup :: s -> Maybe a
+  lookup :: s -> Maybe a
 
 instance Lookup () a where
-    lookup _ = Nothing
+  lookup _ = Nothing
 
 instance Lookup (a,xs) a where
-    lookup (x,_) = Just x
+  lookup (x,_) = Just x
 
 instance Lookup xs a => Lookup (x,xs) a where
-    lookup (_,xs) = lookup xs
+  lookup (_,xs) = lookup xs
 
+
+class Modify s a where 
+  modify :: (a -> a) -> s -> s
+
+instance Modify () a where
+  modify _ = id
+
+instance Modify (a,xs) a where
+  modify f (a,xs) = (f a, xs)
+
+instance Modify xs a => Modify (x,xs) a where
+  modify f (x,xs) = (x, modify f xs)
 
 --teq :: a -> a -> a
 --teq = const

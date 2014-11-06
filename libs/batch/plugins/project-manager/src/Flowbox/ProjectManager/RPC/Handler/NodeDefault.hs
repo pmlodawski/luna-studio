@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.NodeDefault where
 
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
@@ -20,12 +21,13 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Request    as NodeDefaultSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Update     as NodeDefaultSet
 import           Luna.Data.Serialize.Proto.Conversion.Crumb                                                    ()
+import           Luna.Data.Serialize.Proto.Conversion.Graph                                                    ()
 import           Luna.Data.Serialize.Proto.Conversion.NodeDefault                                              ()
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.NodeDefault"
+logger = getLoggerIO $(moduleName)
 
 
 get :: NodeDefaultGet.Request -> RPC Context IO NodeDefaultGet.Status
@@ -40,9 +42,9 @@ get request@(NodeDefaultGet.Request tnodeID tbc tlibID tprojectID _) = do
 
 set :: NodeDefaultSet.Request -> RPC Context IO NodeDefaultSet.Update
 set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID _) = do
-    bc <- decodeE tbc
+    bc    <- decodeE tbc
+    value <- decodeE tvalue
     let dstPort   = decodeListP tdstPort
-        value     = decodeP tvalue
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID

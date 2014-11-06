@@ -14,6 +14,7 @@ import           Control.Applicative
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, drop, id, mod)
 import           GHC.Generics                    (Generic)
+import           Luna.AST.Arg                    (Arg)
 import           Luna.AST.Common                 (ID)
 import           Luna.AST.Expr                   (Expr)
 import qualified Luna.AST.Expr                   as Expr
@@ -74,8 +75,8 @@ addTypeDef :: Expr -> Module -> Module
 addTypeDef td mod = mod & typeDefs %~ (td:)
 
 
-traverseM :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Module -> m Module
-traverseM fmod fexp ftype _{-fpat-} _{-flit-} mod = case mod of
+traverseM :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> (Arg Expr -> m (Arg Expr)) -> Module -> m Module
+traverseM fmod fexp ftype _{-fpat-} _{-flit-} _{-farg-} mod = case mod of
     Module     id' cls' imports' classes' typeAliases' typeDefs'
                fields' methods' modules'     ->  Module id'
                                              <$> ftype cls'
@@ -89,8 +90,8 @@ traverseM fmod fexp ftype _{-fpat-} _{-flit-} mod = case mod of
     where fexpMap = mapM fexp
           fmodMap = mapM fmod
 
-traverseM_ :: Traversal m => (Module -> m a) -> (Expr -> m b) -> (Type -> m c) -> (Pat -> m d) -> (Lit -> m e) -> Module -> m ()
-traverseM_ fmod fexp ftype _{-fpat-} _{-flit-} mod = case mod of
+traverseM_ :: Traversal m => (Module -> m a) -> (Expr -> m b) -> (Type -> m c) -> (Pat -> m d) -> (Lit -> m e) -> (Arg Expr -> m f) -> Module -> m ()
+traverseM_ fmod fexp ftype _{-fpat-} _{-flit-} _{-farg-} mod = case mod of
     Module     _ cls' imports' classes' typeAliases' typeDefs'
                fields' methods' modules'     -> drop
                                              <* ftype cls'
@@ -106,10 +107,10 @@ traverseM_ fmod fexp ftype _{-fpat-} _{-flit-} mod = case mod of
           fmodMap = mapM_ fmod
 
 
-traverseMR :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Module -> m Module
-traverseMR fmod fexp ftype fpat flit = tfmod where
-    tfmod m = fmod =<< traverseM tfmod tfexp tftype tfpat flit m
-    tfexp   = Expr.traverseMR fexp ftype fpat flit
+traverseMR :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> (Arg Expr -> m (Arg Expr)) -> Module -> m Module
+traverseMR fmod fexp ftype fpat flit farg = tfmod where
+    tfmod m = fmod =<< traverseM tfmod tfexp tftype tfpat flit farg m
+    tfexp   = Expr.traverseMR fexp ftype fpat flit farg
     tfpat   = Pat.traverseMR fpat ftype flit
     tftype  = Type.traverseMR ftype
 

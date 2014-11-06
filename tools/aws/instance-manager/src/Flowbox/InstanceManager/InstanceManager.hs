@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.InstanceManager.InstanceManager where
 
@@ -27,7 +28,7 @@ userName = "flowbox"
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.InstanceManager.InstanceManager"
+logger = getLoggerIO $(moduleName)
 
 
 getCredential :: Cmd.Options -> IO AWS.Credential

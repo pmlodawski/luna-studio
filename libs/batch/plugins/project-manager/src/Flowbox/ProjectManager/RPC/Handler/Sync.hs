@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.Sync where
 
 import qualified Flowbox.Batch.Handler.Common                                   as Batch
@@ -18,7 +19,7 @@ import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Sync"
+logger = getLoggerIO $(moduleName)
 
 ------ public api -------------------------------------------------
 

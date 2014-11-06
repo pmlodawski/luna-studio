@@ -28,5 +28,5 @@ Executable broker
                     flowbox-config,
                     flowbox-utils,
                     transformers,
-                    protocol-buffers,
+                    protocol-buffers-fork,
                     zeromq4-haskell >= 0.4

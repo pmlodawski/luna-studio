@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.PluginManager.RPC.Client where
 
@@ -46,7 +47,7 @@ import qualified Generated.Proto.PluginManager.PluginManager.Ping.Status  as Pin
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.RPC.Client"
+logger = getLoggerIO $(moduleName)
 
 
 restrictSingleResult :: Proto.Serializable result => [result] -> Bus result

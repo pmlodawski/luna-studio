@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Source.File.Writer where
 
@@ -30,7 +31,7 @@ type FRPass result = Pass Pass.NoState result
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Source.File.Writer"
+logger = getLogger $(moduleName)
 
 
 run :: UniPath -> String -> Source -> Pass.Result ()

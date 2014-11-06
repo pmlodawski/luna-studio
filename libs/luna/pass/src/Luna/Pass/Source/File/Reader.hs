@@ -8,6 +8,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Source.File.Reader where
 
@@ -31,7 +32,7 @@ type FRPass result = Pass Pass.NoState result
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Source.File.Reader"
+logger = getLogger $(moduleName)
 
 
 run :: UniPath -> UniPath -> Pass.Result Source

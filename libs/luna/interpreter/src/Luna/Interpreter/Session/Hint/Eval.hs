@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE MagicHash       #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.Session.Hint.Eval where
 
@@ -14,8 +15,13 @@ import qualified GHC
 import qualified GHC.Exts      as Exts
 
 import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 import qualified Luna.Interpreter.Session.Hint.Util as Util
 
+
+
+logger :: LoggerIO
+logger = getLoggerIO $(moduleName)
 
 
 interpret :: (GHC.GhcMonad m, Typeable a) => String -> m a
@@ -29,6 +35,7 @@ interpret' :: (GHC.GhcMonad m, Typeable a) => String -> a -> m a
 interpret' expr wit = do
     let typeStr = show $ Typeable.typeOf wit
         typedExpr = concat [parens expr, " :: ", typeStr]
+    logger trace typedExpr
     exprVal <- GHC.compileExpr typedExpr
     return (Exts.unsafeCoerce# exprVal :: a)
 

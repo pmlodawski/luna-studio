@@ -7,13 +7,15 @@
 
 package generated.proto.nodedefault;
 
+import "graph.proto";
+
 
 
 message DefaultsMap {
     message Entry {
-        repeated int32  key    = 1;
-        optional int32  nodeID = 2;
-        optional string value  = 3;
+        repeated int32 key    = 1;
+        optional int32 nodeID = 2;
+        optional generated.proto.graph.NodeExpr value  = 3;
     }
 
     repeated Entry map = 1;

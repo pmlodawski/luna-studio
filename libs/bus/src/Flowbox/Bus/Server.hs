@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Bus.Server where
 
@@ -29,7 +30,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.Server"
+logger = getLoggerIO $(moduleName)
 
 
 run :: BusEndPoints -> [Topic] -> (Message -> IO [Message]) -> IO (Either Bus.Error ())

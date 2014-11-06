@@ -19,4 +19,3 @@ data CallPoint = CallPoint { _libraryID :: Library.ID
                            } deriving (Show, Ord, Eq)
 
 makeLenses (''CallPoint)
-

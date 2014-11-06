@@ -40,12 +40,12 @@ find pre input = A.filter (A./=* bogusValue) $ A.scatterIf zeroToSizeInt input p
     zeroToSizeInt = A.enumFromN inputSize (0 :: A.Exp Int)
     zeroToSize = A.enumFromN inputSize 0
     ignored    = A.fill inputSize bogusValue
-    bogusValue = (-1)
+    bogusValue = -1
     inputSize  = A.index1 $ A.size input
 
 -- | Given vectors with X and Y coordinates, compute values at given points. Uses linear interpolation.
 interp1 :: (A.Elt e, A.IsFloating e) => A.Acc (A.Vector e) -> A.Acc (A.Vector e) -> A.Acc (A.Vector e) -> A.Acc (A.Vector e)
-interp1 x v xi = smap (\xi' -> lininterp1 x v xi') xi
+interp1 x v = smap $ lininterp1 x v
 
 lininterp1 :: (A.Elt e, A.IsFloating e)
            => A.Acc (A.Vector e) -> A.Acc (A.Vector e) -> A.Exp e -> A.Exp e

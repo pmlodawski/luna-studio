@@ -9,16 +9,26 @@
 module Luna.Graph.Flags where
 
 import Flowbox.Prelude
+import Luna.Graph.Node.Position (Position)
 
 
 
-data Flags = Flags { _io   :: Bool
-                   , _omit :: Bool
+data Flags = Flags { _omit                 :: Bool
+                   , _astFolded            :: Maybe Bool
+                   , _astAssignment        :: Maybe Bool
+                   , _graphFolded          :: Maybe Bool
+                   , _defaultNodeGenerated :: Maybe Bool
+                   , _graphViewGenerated   :: Maybe Bool
+                   , _nodePosition         :: Maybe Position
                    } deriving (Show, Read, Eq)
 
 
-makeLenses (''Flags)
+makeLenses ''Flags
 
 
 instance Default Flags where
-    def = Flags False False
+    def = Flags False Nothing Nothing Nothing Nothing Nothing Nothing
+
+
+isSet' :: Flags -> (Flags -> Maybe Bool) -> Bool
+isSet' flags getter = getter flags == Just True

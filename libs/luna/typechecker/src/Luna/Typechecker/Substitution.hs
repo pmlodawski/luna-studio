@@ -3,8 +3,11 @@ module Luna.Typechecker.Substitution (
     removeSubstitution, addSubstitution, addSubstitutions
   ) where
 
-import Luna.Typechecker.IDs
-import Luna.Typechecker.Type.Type
+import Luna.Typechecker.IDs       (TyID)
+import Luna.Typechecker.Type.Type (Type(..),Tyvar)
+
+-- luna-logger
+import Logger
 
 import Data.List
 import Data.Maybe
@@ -29,30 +32,23 @@ removeSubstitution = error "Substitution : removeSubstitution"
 addSubstitution :: Tyvar -> Type -> Subst -> Subst
 addSubstitution tyvar t = mappend $ Subst [(tyvar, t)]
 
-addSubstitution` = mappend . singleSubstitution
-
 addSubstitutions :: [(Tyvar, Type)] -> Subst -> Subst
 addSubstitutions ts s = mconcat $ map (\x -> Subst [x]) ts ++ [s]
 
-fromSingleSubstitution = mappend mempty
 
-fromMultipleSubstitions = Subst
 
 class Types t where
   apply :: Subst -> t -> t
   ftv :: t -> [Tyvar]
 
 instance Types Type where
-  ftv (TVar tyv) = [tyv]
-  ftv (TConst _) = []
-  ftv (TAp t1 t2) = ftv t1 `union` ftv t2
-  ftv (TRow row) = ftv row
-  apply (Subst s) (TVar tyv) = fromMaybe (TVar tyv) (lookup tyv s)
-  apply s (TAp t1 t2) = TAp (apply s t1) (apply s t2)
-  apply s (TRow row) = TRow $ apply s row
-  apply s t = t
+  --apply (Subst s) (TVar tyv) = fromMaybe (TVar tyv) (lookup tyv s)
+  apply _ t = t
+  --ftv (TVar tyv) = [tyv]
+  --ftv (TConst _) = []
+  --ftv (TAp t1 t2) = ftv t1 `union` ftv t2
+  ftv _ = []
 
 instance (Types a) => Types [a] where
   apply = error "Substitution.hs : instance Types [a] : apply"
   ftv = nub . concatMap ftv
-

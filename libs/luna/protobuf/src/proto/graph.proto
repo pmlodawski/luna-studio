@@ -7,6 +7,7 @@
 
 package generated.proto.graph;
 
+import "expr.proto";
 
 
 message Node {
@@ -15,12 +16,12 @@ message Node {
         Inputs  = 2;
         Outputs = 3;
     }
-    required Cls    cls  = 1;
-    optional int32  id   = 2 [default = -1];
-    optional string expr = 3;
-    optional string outputName = 5 [default = ""];
-    optional float  x = 6;
-    optional float  y = 7;
+    required Cls      cls  = 1;
+    optional int32    id   = 2 [default = -1];
+    optional NodeExpr expr = 3;
+    optional string   outputName = 5 [default = ""];
+    optional float    x = 6;
+    optional float    y = 7;
 }
 
 message Edge {
@@ -33,4 +34,15 @@ message Edge {
 message Graph {
     repeated Node nodes = 1;
     repeated Edge edges = 2;
+}
+
+message NodeExpr {
+    enum Cls {
+        String  = 1;
+        ASTExpr = 2;
+    }
+
+    required Cls cls = 1;
+    optional string                    str  = 2;
+    optional generated.proto.expr.Expr expr = 3;
 }

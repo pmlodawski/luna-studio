@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.AccountManager.Handler.User where
 
 import           Flowbox.AccountManager.Context                      (Context)
@@ -23,7 +24,7 @@ import qualified Generated.Proto.AccountManager.User.Register.Result as User_Reg
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AccountManager.Handler.User"
+logger = getLoggerIO $(moduleName)
 
 -------- public api -------------------------------------------------
 

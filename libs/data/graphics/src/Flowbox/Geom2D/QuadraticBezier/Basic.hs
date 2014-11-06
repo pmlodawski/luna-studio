@@ -17,6 +17,8 @@ import           Geom2D.CubicBezier.Basic
 import Flowbox.Geom2D.CubicBezier.Basic
 import Flowbox.Prelude hiding ((++))
 
+
+
 data QuadraticBezier = QuadraticBezier { quadraticC0 :: Point
                                        , quadraticC1 :: Point
                                        , quadraticC2 :: Point
@@ -25,14 +27,11 @@ data QuadraticBezier = QuadraticBezier { quadraticC0 :: Point
 approximateCubicWithQuadratic :: Int -> Double -> CubicBezier -> [QuadraticBezier]
 approximateCubicWithQuadratic = approximateCubicWithQuadraticStep 0
     where approximateCubicWithQuadraticStep :: Int -> Int -> Double -> CubicBezier-> [QuadraticBezier]
-          approximateCubicWithQuadraticStep step limit eps curve@(CubicBezier pA pB pC pD) =
-              if err < eps || step > limit
-                  then [approxCruve]
-                  else if hasInflections
-                      then getSubresults subcurvesInf
-                      else if hasExtrema
-                          then getSubresults subcurvesExt
-                          else getSubresults subcurvesHalf
+          approximateCubicWithQuadraticStep step limit eps curve@(CubicBezier pA pB pC pD)
+              | err < eps || step > limit = [approxCruve]
+              | hasInflections = getSubresults subcurvesInf
+              | hasExtrema = getSubresults subcurvesExt
+              | otherwise = getSubresults subcurvesHalf
               where
                   hasInflections = not $ null inflections
                   hasExtrema     = not $ null extremas
@@ -50,13 +49,13 @@ approximateCubicWithQuadratic = approximateCubicWithQuadraticStep 0
                   approx a b c      = QuadraticBezier a (approxControl a b) (approxEnd a b c)
                   approxControl a b = (3 *^ b ^-^ a) ^/ 2
                   approxEnd a b c   = a ^-^ 3 *^ b ^+^ 3 *^ c
-                  err = ((sqrt 3) / 18) * d
+                  err = (sqrt 3 / 18) * d
                   d   = vectorDistance c0 c1
 
 convertCubicsToQuadratics :: [CubicBezier] -> Int -> Double -> Acc (Array (Z :. Int) ((Double, Double), (Double, Double), (Double, Double)))
 convertCubicsToQuadratics cubics steps eps = curves'
-    where curves' = A.use $ A.fromList (Z :. (length curves)) $ fmap convert curves
-          curves  = foldr (++) [] $ fmap (approximateCubicWithQuadratic steps eps) cubics
+    where curves' = A.use $ A.fromList (Z :. length curves) $ fmap convert curves
+          curves  = concat $ fmap (approximateCubicWithQuadratic steps eps) cubics
           convert (QuadraticBezier p0 p1 p2) = let
                   Point p0x p0y = p0
                   Point p1x p1y = p1

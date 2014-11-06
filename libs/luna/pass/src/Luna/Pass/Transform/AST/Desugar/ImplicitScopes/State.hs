@@ -23,7 +23,7 @@ import Flowbox.System.Log.Logger hiding (info)
 import Control.Monad.State (MonadState, get, modify)
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes.State"
+logger = getLogger $(moduleName)
 
 
 data State = State { _astInfo   :: ASTInfo

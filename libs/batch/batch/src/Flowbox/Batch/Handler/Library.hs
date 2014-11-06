@@ -13,7 +13,7 @@ import qualified System.Process as Process
 
 import           Flowbox.Batch.Batch               (Batch, gets)
 import qualified Flowbox.Batch.Batch               as Batch
-import           Flowbox.Batch.Handler.Common      (libManagerOp)
+import           Flowbox.Batch.Handler.Common      (libManagerOp, libraryOp)
 import qualified Flowbox.Batch.Handler.Common      as Batch
 import qualified Flowbox.Batch.Project.Project     as Project
 import           Flowbox.Control.Error
@@ -26,12 +26,12 @@ import qualified Luna.Data.ASTInfo                 as ASTInfo
 import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
 import           Luna.Lib.Lib                      (Library)
 import qualified Luna.Lib.Lib                      as Library
+import qualified Luna.Lib.Loader                   as LibLoader
 import qualified Luna.Lib.Manager                  as LibManager
 import qualified Luna.Pass.Build.Build             as Build
 import           Luna.Pass.Build.BuildConfig       (BuildConfig (BuildConfig))
 import qualified Luna.Pass.Build.BuildConfig       as BuildConfig
 import qualified Luna.Pass.Build.Diagnostics       as Diagnostics
-
 
 
 loggerIO :: LoggerIO
@@ -47,15 +47,24 @@ libraryByID = Batch.getLibrary
 
 
 createLibrary :: String -> UniPath -> Project.ID -> Batch (Library.ID, Library)
-createLibrary name path projectID = libManagerOp projectID (\libManager -> do
+createLibrary name path projectID = libManagerOp projectID $ \libManager -> do
     let library                = Library.make name path [name]
         (newLibManager, libraryID) = LibManager.insNewNode library libManager
-    return (newLibManager, (libraryID, library)))
+    return (newLibManager, (libraryID, library))
+
+
+modifyLibrary :: (Library.ID, Library) -> Project.ID -> Batch ()
+modifyLibrary (libraryID, library) projectID = libraryOp projectID libraryID $ \oldLibrary -> do
+    let ast         = oldLibrary ^. Library.ast
+        propertyMap = oldLibrary ^. Library.propertyMap
+        newLibrary  = library & Library.ast .~ ast
+                              & Library.propertyMap .~ propertyMap
+    return (newLibrary, ())
 
 
 loadLibrary :: UniPath -> Project.ID -> Batch (Library.ID, Library)
 loadLibrary path projectID = libManagerOp projectID
-    (liftIO . LibManager.loadLibrary path)
+    (liftIO . LibLoader.loadLibrary path)
 
 
 unloadLibrary :: Library.ID -> Project.ID -> Batch ()

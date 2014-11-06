@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Main where
 
@@ -39,7 +40,7 @@ rootLogger = getLogger "Flowbox"
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.DBPool"
+logger = getLoggerIO $(moduleName)
 
 
 region :: Region

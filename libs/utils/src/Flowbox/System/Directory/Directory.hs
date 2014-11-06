@@ -168,6 +168,7 @@ touchFile upath = do
 withTmpDirectory :: MonadIO m => String -> (UniPath -> m a) -> m a
 withTmpDirectory prefix operation = do
     tmpDir <- liftIO $ getTmpDirectoryWithPrefix prefix
+    liftIO $ createDirectoryIfMissing True tmpDir
     result <- operation tmpDir
     liftIO $ removeDirectoryRecursive tmpDir
     return result

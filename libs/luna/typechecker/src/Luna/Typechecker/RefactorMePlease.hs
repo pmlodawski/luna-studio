@@ -2,17 +2,14 @@ module Luna.Typechecker.RefactorMePlease (
     mkTyID
   ) where
 
-import Luna.Typechecker.IDs
-import Luna.Typechecker.TIMonad
-import Luna.Typechecker.Type.Type
+import Luna.Typechecker.IDs       (TyID(..))
+import Luna.Typechecker.TIMonad   (TILogger,getNextID)
+import Luna.Typechecker.Type.Type (Type(..),Tyvar(..))
 
 import Control.Applicative
 import Control.Monad.Trans
 
 
-mkTyID :: TILogger Type
-mkTyID = mkTyIdWithConstraints noConstraints
 
-mkTyIdWithConstraints :: Constraints -> TILogger Type
-mkTyIdWithConstraints constraints = (TVar . Tyvar . TyID . show) <$> lift getNextID where
-    tyvar varId = Tyvar varId constraints
+mkTyID :: TILogger Type
+mkTyID = (TVar . Tyvar . TyID . show) <$> lift getNextID

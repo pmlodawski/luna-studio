@@ -10,26 +10,11 @@ module Luna.Graph.Attributes.Naming where
 import Flowbox.Prelude
 
 
+
 true :: String
 true = "True"
 
 
-defaultNodeGenerated :: String
-defaultNodeGenerated = "DefaultNode-generated"
-
-
-astFolded :: String
-astFolded = "AST-folded"
-
-
-astAssignment :: String
-astAssignment = "AST-assignment"
-
-
-nodePosition :: String
-nodePosition = "Node-position"
-
-
-graphViewGenerated :: String
-graphViewGenerated = "GraphView-generated"
+false :: String
+false = "False"
 

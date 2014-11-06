@@ -41,9 +41,9 @@ instance Monoid SourcePos where
 instance Monoid SourceRange where
     mempty          = SourceRange mempty mempty
     mappend sr1 sr2 = SourceRange begin' end'
-        where begin' = case (begin sr1) of
-                       Nothing -> (begin sr2)
+        where begin' = case begin sr1 of
+                       Nothing -> begin sr2
                        Just v  -> Just v
-              end'   = case (end sr2) of
-                       Nothing -> (end sr1)
+              end'   = case end sr2 of
+                       Nothing -> end sr1
                        Just v  -> Just v

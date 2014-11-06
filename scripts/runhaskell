@@ -1,0 +1,76 @@
+#!/usr/bin/env python2.7
+
+###########################################################################
+## Copyright (C) Flowbox, Inc / All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2014
+###########################################################################
+
+from   config.packages import pkgDb
+import sys
+import os
+import os.path
+from   subprocess      import call
+import utils.errors    as     errors
+from   utils.colors    import print_info, print_error
+import signal
+import argparse
+from   contextlib      import contextmanager
+import re
+
+@contextmanager
+def changed_wd(wdir):
+    origin = os.getcwd()
+    os.chdir(wdir)
+    yield origin
+    os.chdir(origin)
+
+@contextmanager
+def signal_handler(sig, handler):
+    old_action = signal.signal(sig, handler)
+    yield old_action
+    signal.signal(sig, old_action)
+
+def get_sandbox_pkgconf(pkg):
+    candidates = [candidate
+                  for candidate in os.listdir(pkg.sbox)
+                  if re.match('(x86)(_64)?-(.*)-(\d+\.\d+\.\d+)-packages.conf.d', candidate)
+                 ]
+    try:
+        [result] = candidates
+        return pkg.sbox + "/" + result
+    except ValueError, e:
+        print_error("There are many candidate sandbox directories for '{pkg.name}', can't decide on my own.\nIn sandbox directory {pkg.sbox}".format(**locals()))
+        print_error("Candidates: '" + "', '".join(candidates) + "'")
+        raise e
+
+
+def main():
+    sboxEnv   = "FDEV_TARGETS"
+
+    argparser = argparse.ArgumentParser(description="runhaskell from sandbox")
+    try: argparser.add_argument('packages', nargs='*', default=os.environ[sboxEnv].split(":"),
+                                help="packages to preload. Default is taken from ENV['FDEV_TARGETS']")
+    except KeyError, e:
+        print_error("Flowbox development environment not initialized.")
+        raise e
+    args = argparser.parse_args()
+
+    with changed_wd(os.path.dirname(os.path.realpath(__file__))):
+        pkgs = [pkgDb[name] for name in args.packages]
+        root_package = pkgs[0]
+        args_packages = " ".join("-package-db=" + get_sandbox_pkgconf(pkg) for pkg in pkgs)
+
+        cmd = "runhaskell " + args_packages
+
+        print_info("Starting runhaskell.")
+        print_info("CWD:     " + os.environ["PWD"])
+        print_info("Command: " + cmd)
+
+        with signal_handler(signal.SIGINT, signal.SIG_IGN):
+            call(cmd, shell=True)
+
+
+if __name__ == "__main__":
+    main()

@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.AWS.EC2.Control.DBPool.Monitor where
 
@@ -39,7 +40,7 @@ import           Flowbox.System.Log.Logger             hiding (error)
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.EC2.Control.DBPool.Monitor"
+logger = getLoggerIO $(moduleName)
 
 
 nearEndGapTime :: Time.NominalDiffTime

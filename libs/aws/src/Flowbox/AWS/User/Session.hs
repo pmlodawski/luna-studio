@@ -26,7 +26,7 @@ import qualified Generated.Proto.Session.Session                as Gen
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.AWS.Session"
+logger = getLoggerIO $(moduleName)
 
 
 type ID = Int

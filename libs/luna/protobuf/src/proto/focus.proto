@@ -17,6 +17,7 @@ message Focus {
         ModuleFocus   = 1;
         ClassFocus    = 2;
         FunctionFocus = 3;
+        LambdaFocus   = 4;
     }
     required Cls cls = 1;
 
@@ -36,4 +37,9 @@ message ClassFocus {
 message FunctionFocus {
     extend Focus { optional FunctionFocus ext = 102; }
     optional generated.proto.expr.Expr f = 1;
+}
+
+message LambdaFocus {
+    extend Focus { optional LambdaFocus ext = 103; }
+    optional generated.proto.expr.Expr l = 1;
 }

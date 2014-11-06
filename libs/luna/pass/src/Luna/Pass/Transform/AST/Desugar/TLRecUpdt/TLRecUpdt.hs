@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt where
 
@@ -26,7 +27,7 @@ import qualified Luna.Pass.Transform.AST.Desugar.General.State as DS
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.TLRecUpdt.TLRecUpdt"
+logger = getLoggerIO $(moduleName)
 
 
 type DesugarPass result = Pass DesugarState result
@@ -41,7 +42,7 @@ desugar mod = (,) <$> desugarModule mod <*> DS.getInfo
 
 
 desugarModule :: Module -> DesugarPass Module
-desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure mod
+desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat pure pure mod
 
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
@@ -54,7 +55,7 @@ desugarExpr ast = case ast of
     where ftype     = pure
           fexpMap   = mapM desugarExpr
           fexpTLMap = mapM desugarFuncTLExpr
-          continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
+          continue  = Expr.traverseM desugarExpr pure desugarPat pure pure ast
           --omitNext  = Expr.traverseM omitExpr pure desugarPat pure ast
 
 desugarFuncTLExpr :: Expr.Expr -> DesugarPass Expr.Expr
@@ -66,7 +67,7 @@ desugarFuncTLExpr ast = case ast of
 
 omitExpr :: Expr.Expr -> DesugarPass Expr.Expr
 omitExpr ast = continue
-    where continue = Expr.traverseM desugarExpr pure desugarPat pure ast
+    where continue = Expr.traverseM desugarExpr pure desugarPat pure pure ast
 
 
 desugarPat :: Pat -> DesugarPass Pat

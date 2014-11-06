@@ -8,6 +8,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
 module Luna.Data.Serialize.Proto.Conversion.Attributes where
@@ -24,6 +25,7 @@ import qualified Generated.Proto.Attributes.Attributes.Space          as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue as Gen
 import qualified Generated.Proto.Attributes.Flags                     as Gen
 import qualified Generated.Proto.Attributes.Properties                as Gen
+import           Luna.Data.Serialize.Proto.Conversion.NodeDefault     ()
 import           Luna.Graph.Attributes                                (Attributes)
 import qualified Luna.Graph.Attributes                                as Attributes
 import           Luna.Graph.Flags                                     (Flags (Flags))
@@ -32,11 +34,12 @@ import           Luna.Graph.Properties                                (Propertie
 
 
 instance Convert Flags Gen.Flags where
-    encode (Flags io omit) = Gen.Flags (Just io) (Just omit)
-    decode (Gen.Flags mio momit) = do
-        io   <- mio   <?> "Failed to decode Flags: 'io' field is missing"
+    encode (Flags omit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated position) =
+        Gen.Flags (Just omit) astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated (fmap fst position) (fmap snd position)
+    decode (Gen.Flags momit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated  mpositionX mpositionY) = do
         omit <- momit <?> "Failed to decode Flags: 'omit' field is missing"
-        return $ Flags io omit
+        let position = (,) <$> mpositionX <*> mpositionY
+        return $ Flags omit astFolded astAssignment graphFolded defaultNodeGenerated graphViewGenerated  position
 
 
 instance ConvertPure Attributes Gen.Attributes where
@@ -55,8 +58,10 @@ instance ConvertPure (String, String) Gen.KeyValue where
 
 
 instance Convert Properties Gen.Properties where
-    encode (Properties flags attributes) = Gen.Properties (encodeJ flags) (encodePJ attributes)
-    decode (Gen.Properties mflags mattributes) = do
-        flags      <- mflags      <?> "Failed to decode Properties: 'flags' field is missing"
-        attributes <- mattributes <?> "Failed to decode Properties: 'attributes' field is missing"
-        Properties <$> decode flags <*> pure (decodeP attributes)
+    encode (Properties flags defautsMap attributes) =
+        Gen.Properties (encodeJ flags) (encodeJ defautsMap) (encodePJ attributes)
+    decode (Gen.Properties mflags mtdefaultsMap mattributes) = do
+        flags      <- mflags        <?> "Failed to decode Properties: 'flags' field is missing"
+        defautsMap <- mtdefaultsMap <?> "Failed to decode Properties: 'defautsMap' field is missing"
+        attributes <- mattributes   <?> "Failed to decode Properties: 'attributes' field is missing"
+        Properties <$> decode flags <*> decode defautsMap <*> pure (decodeP attributes)

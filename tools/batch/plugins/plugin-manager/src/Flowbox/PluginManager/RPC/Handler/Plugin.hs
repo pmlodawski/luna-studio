@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.PluginManager.RPC.Handler.Plugin where
 
 import Control.Monad.Trans.State
@@ -38,7 +39,7 @@ import qualified Generated.Proto.PluginManager.Plugin.Stop.Update     as Stop
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.RPC.Handler.Plugin"
+logger = getLoggerIO $(moduleName)
 
 -------- public api -------------------------------------------------
 

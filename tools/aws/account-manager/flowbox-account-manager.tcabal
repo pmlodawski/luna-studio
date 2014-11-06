@@ -36,7 +36,7 @@ Executable account-manager
                     network,
                     optparse-applicative < 0.10, 
                     postgresql-simple,
-                    protocol-buffers,
+                    protocol-buffers-fork,
                     text,
                     transformers
 -- FIXME: update optparse-applicative to newer version

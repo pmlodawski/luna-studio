@@ -4,13 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.RPC.Handler.Value where
 
-import           Data.ByteString.Lazy (ByteString)
-import           Data.IORef           (IORef)
-import qualified Data.IORef           as IORef
-import qualified Pipes.Concurrent     as Pipes
+import           Data.IORef       (IORef)
+import qualified Data.IORef       as IORef
+import qualified Pipes.Concurrent as Pipes
 
 import qualified Flowbox.Batch.Project.Project                         as Project
 import           Flowbox.Bus.Data.Flag                                 (Flag)
@@ -24,6 +24,7 @@ import           Flowbox.ProjectManager.Context                        (Context)
 import           Flowbox.System.Log.Logger                             hiding (error)
 import qualified Flowbox.Text.ProtocolBuffers                          as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import           Generated.Proto.Data.Value                            (Value)
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Request as Value
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Update  as Value
 import           Luna.Interpreter.Proto.CallPoint                      ()
@@ -39,7 +40,7 @@ import           Luna.Interpreter.Session.Session                      (SessionS
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.RPC.Handler.Value"
+logger = getLoggerIO $(moduleName)
 
 
 
@@ -53,11 +54,11 @@ get (Value.Request tcallPointPath) = do
 
 reportOutputValue :: IORef Message.CorrelationID
                   -> Pipes.Output (Message, Message.CorrelationID, Flag)
-                  -> Project.ID -> CallPointPath -> ByteString -> IO ()
+                  -> Project.ID -> CallPointPath -> Maybe Value -> IO ()
 reportOutputValue crlRef output projectID callPointPath value = do
     crl <- IORef.readIORef crlRef
     let tcallPointPath = encode (projectID, callPointPath)
-        response = Value.Update tcallPointPath (encodeP Value.Ready) (Just value)
+        response = Value.Update tcallPointPath (encodeP Value.Ready) value
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response
         packet   = (msg, crl, Flag.Disable)

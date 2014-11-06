@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 import Control.Monad.RWS          hiding (join)
 import Control.Monad.Trans.Either
@@ -22,7 +23,7 @@ import qualified Luna.Pass.General.Luna.Luna       as Luna
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox"
+logger = getLoggerIO $(moduleName)
 
 
 main :: IO ()

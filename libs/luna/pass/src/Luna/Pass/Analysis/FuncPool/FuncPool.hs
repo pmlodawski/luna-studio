@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Pass.Analysis.FuncPool.FuncPool where
 
@@ -29,8 +30,10 @@ import qualified Luna.Pass.Analysis.FuncPool.Pool as Pool
 import           Luna.Pass.Pass                   (Pass)
 import qualified Luna.Pass.Pass                   as Pass
 
+
+
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.FuncPool.FuncPool"
+logger = getLogger $(moduleName)
 
 
 type FPPass result = Pass Pool result
@@ -42,7 +45,7 @@ run = (Pass.run_ (Pass.Info "FuncPool") Pool.empty) . fpMod
 
 fpMod :: Module -> FPPass Pool
 fpMod mod = do
-    Module.traverseM_ fpMod fpExpr fpType fpPat pure mod
+    Module.traverseM_ fpMod fpExpr fpType fpPat pure pure mod
     get
 
 
@@ -54,7 +57,7 @@ fpExpr ast = case ast of
     _                                     -> continue
     where
         register  = Pool.register (ast ^. Expr.name) *> continue
-        continue  = Expr.traverseM_ fpExpr fpType fpPat pure ast
+        continue  = Expr.traverseM_ fpExpr fpType fpPat pure pure ast
 
 
 fpPat :: Pat -> FPPass ()

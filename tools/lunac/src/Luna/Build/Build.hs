@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Build.Build where
 
@@ -28,7 +29,7 @@ import           Luna.Pass.Build.Diagnostics     (Diagnostics (Diagnostics))
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Lunac.Build"
+logger = getLogger $(moduleName)
 
 
 

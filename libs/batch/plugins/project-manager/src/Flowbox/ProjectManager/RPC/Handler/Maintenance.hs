@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.Maintenance where
 
 import           Flowbox.Bus.RPC.RPC                                        (RPC)
@@ -15,7 +16,7 @@ import qualified Generated.Proto.ProjectManager.ProjectManager.Ping.Status  as P
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.RPC.Handler.Maintenance"
+logger = getLoggerIO $(moduleName)
 
 ------ public api -------------------------------------------------
 

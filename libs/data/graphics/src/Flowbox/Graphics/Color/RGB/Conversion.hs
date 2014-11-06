@@ -4,9 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-orphans  #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
 
 module Flowbox.Graphics.Color.RGB.Conversion where
 
@@ -19,8 +19,8 @@ import           Flowbox.Graphics.Color.HSL
 import           Flowbox.Graphics.Color.HSV
 import           Flowbox.Graphics.Color.RGB
 import           Flowbox.Graphics.Color.RGBA
-import           Flowbox.Graphics.Color.YUV
-import           Flowbox.Graphics.Color.YUV_HD
+import           Flowbox.Graphics.Color.YCbCr
+import           Flowbox.Graphics.Color.YCbCr_HD
 import           Flowbox.Graphics.Utils
 import           Flowbox.Prelude
 
@@ -70,25 +70,33 @@ instance ColorConvert CMYK RGB where
               b' = (1 - y') * k''
               k'' = 1 - k'
 
-instance ColorConvert YUV RGB where
-    convertColor (YUV y' u' v') = RGB r' g' b'
-        where r' = y' + 1.13983 * v'
-              g' = y' - 0.39465 * u' - 0.58060 * v'
-              b' = y' + 2.03211 * u'
+instance ColorConvert YCbCr RGB where
+    convertColor (YCbCr y' cb cr) = RGB r' g' b'
+        where r' = y' + cr
+              g' = y' - (kby / kgy) * cb - (kry / kgy) * cr
+              b' = y' + cb
+              kry = 0.299
+              kby = 0.114
+              kgy = 1 - kry - kby
 
-instance ColorConvert YUV_HD RGB where
-    convertColor (YUV_HD y' u' v') = RGB r' g' b'
-        where r' = y' + 1.28033 * v'
-              g' = y' - 0.21482 * u' - 0.38059 * v'
-              b' = y' + 2.12798 * u'
+instance ColorConvert YCbCr_HD RGB where
+    convertColor (YCbCr_HD y' cb cr) = RGB r' g' b'
+        where r' = y' + cr
+              g' = y' - (kby / kgy) * cb - (kry / kgy) * cr
+              b' = y' + cb
+              kry = 0.2126
+              kby = 0.0722
+              kgy = 1 - kry - kby
 
 -- = Helpers
 
 helperHsvHsl :: (Elt a, Elt (Plain b), IsNum a, IsScalar a, Lift Exp b, Num b) => Exp a -> b -> b -> Exp (Plain b, Plain b, Plain b)
-helperHsvHsl i x z = cond (i ==* 0) (A.lift (x,   z,   x*0))
-                   $ cond (i ==* 1) (A.lift (z,   x,   x*0))
-                   $ cond (i ==* 2) (A.lift (x*0, x,   z))
-                   $ cond (i ==* 3) (A.lift (x*0, z,   x))
-                   $ cond (i ==* 4) (A.lift (z,   x*0, x))
-                   $ cond (i ==* 5) (A.lift (x,   x*0, z))
-                   $ A.lift (x,   z,   x*0)
+helperHsvHsl i x z = caseof i ([
+                         ((==* 0), (A.lift (x,   z,   x*0)))
+                       , ((==* 1), (A.lift (z,   x,   x*0)))
+                       , ((==* 2), (A.lift (x*0, x,   z)))
+                       , ((==* 3), (A.lift (x*0, z,   x)))
+                       , ((==* 4), (A.lift (z,   x*0, x)))
+                       , ((==* 5), (A.lift (x,   x*0, z)))
+                     ])
+                     (A.lift (x,   z,   x*0))

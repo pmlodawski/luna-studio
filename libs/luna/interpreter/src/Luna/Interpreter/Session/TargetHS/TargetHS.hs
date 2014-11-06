@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.Session.TargetHS.TargetHS where
 
@@ -14,6 +15,7 @@ import qualified DynFlags as GHC
 import           Flowbox.Prelude                             hiding (perform)
 import           Flowbox.System.Log.Logger
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
+import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Interpreter.Session.TargetHS.Generator as Generator
@@ -23,7 +25,7 @@ import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Luna.Interpreter.Session.TargetHS.Reload"
+logger = getLoggerIO $(moduleName)
 
 
 enabledFlags :: [GHC.ExtensionFlag]
@@ -47,7 +49,7 @@ disabledFlags = [GHC.Opt_MonomorphismRestriction]
 
 
 runDecls :: [String] -> Session ()
-runDecls = Session.withFlags enabledFlags disabledFlags . mapM_ Session.runDecls
+runDecls = Session.withExtensionFlags enabledFlags disabledFlags . mapM_ Session.runDecls
 
 
 reloadAll :: Session ()
@@ -70,7 +72,7 @@ reloadClass defPoint = Session.atomically $ Instances.cleanFunctions
 
 reload :: Session ()
 reload = do
-    reloads <- Session.getReloads
+    reloads <- Env.getReloads
     logger debug $ "Reloading: " ++ show reloads
     let perform (libID, Reload.ReloadClasses items) =
             mapM_ (reloadClass . DefPoint libID . view Reload.breadcrumbs) (Set.toList items) >> reloadFunctions
@@ -78,5 +80,5 @@ reload = do
         perform (libID, Reload.ReloadLibrary    ) = reloadAll
         perform (libID, Reload.NoReload         ) = return ()
     mapM_ perform $ Map.toList reloads
-    Session.cleanReloads
+    Env.cleanReloads
 

@@ -7,11 +7,14 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Luna.Pass.Transform.AST.IDFixer.IDFixer where
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import           Luna.AST.Arg                          (Arg)
+import qualified Luna.AST.Arg                          as Arg
 import qualified Luna.AST.Common                       as AST
 import           Luna.AST.Control.Focus                (Focus)
 import qualified Luna.AST.Control.Focus                as Focus
@@ -33,7 +36,7 @@ import qualified Luna.Pass.Transform.AST.IDFixer.State as State
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer"
+logger = getLogger $(moduleName)
 
 
 type IDFixerPass result = Pass IDFixerState result
@@ -74,7 +77,7 @@ fixFocus = Focus.traverseM fixModule fixExpr
 
 fixModule :: Module -> IDFixerPass Module
 fixModule m = do n <- State.fixID $ m ^. Module.id
-                 Module.traverseM fixModule fixExpr fixType fixPat fixLit $ m & Module.id .~ n
+                 Module.traverseM fixModule fixExpr fixType fixPat fixLit fixArg $ m & Module.id .~ n
 
 
 fixExpr' :: Expr -> IDFixerPass (Expr, AST.ID)
@@ -83,7 +86,7 @@ fixExpr' e = (,) <$> fixExpr e <*> State.getMaxID
 
 fixExpr :: Expr -> IDFixerPass Expr
 fixExpr e = do n <- State.fixID $ e ^. Expr.id
-               Expr.traverseM fixExpr fixType fixPat fixLit $ e & Expr.id .~ n
+               Expr.traverseM fixExpr fixType fixPat fixLit fixArg $ e & Expr.id .~ n
 
 
 fixPat :: Pat -> IDFixerPass Pat
@@ -101,9 +104,22 @@ fixLit l = do n <- State.fixID $ l ^. Lit.id
               return $ l & Lit.id .~ n
 
 
+fixArg :: Arg a -> IDFixerPass (Arg a)
+fixArg a = do n <- State.fixID $ a ^. Arg.id
+              return $ a & Arg.id .~ n
+
+
 clearIDs :: AST.ID -> Module -> Module
 clearIDs zero x = runIdentity (Module.traverseMR (return . set Module.id zero)
                                                  (return . set   Expr.id zero)
                                                  (return . set   Type.id zero)
                                                  (return . set    Pat.id zero)
-                                                 (return . set    Lit.id zero) x)
+                                                 (return . set    Lit.id zero)
+                                                 (return . set    Arg.id zero) x)
+
+clearExprIDs :: AST.ID -> Expr -> Expr
+clearExprIDs zero x = runIdentity (Expr.traverseMR (return . set   Expr.id zero)
+                                                   (return . set   Type.id zero)
+                                                   (return . set    Pat.id zero)
+                                                   (return . set    Lit.id zero)
+                                                   (return . set    Arg.id zero) x)

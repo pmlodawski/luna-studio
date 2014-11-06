@@ -15,7 +15,6 @@ module Flowbox.Geom2D.Accelerate.Basic where
 import           Data.Array.Accelerate
 import           Data.Array.Accelerate.Smart
 import           Data.Array.Accelerate.Tuple
-import           Data.Array.Accelerate.Type
 import           Data.Array.Accelerate.Array.Sugar
 import           Data.Typeable
 
