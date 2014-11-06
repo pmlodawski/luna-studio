@@ -44,7 +44,7 @@ handlerMap fm callback = HandlerMap.fromList
     , ("filesystem.file.remove.request"     , respond update $ FileHandler.remove  fm)
     , ("filesystem.file.copy.request"       , respond update $ FileHandler.copy    fm)
     , ("filesystem.file.move.request"       , respond update $ FileHandler.move    fm)
-    , ("filemanager.stat.request"           , respond status $ FileManager.stat    fm)
+    , ("filesystem.stat.request"            , respond status $ FileManager.stat    fm)
     , ("filemanager.resolve.request"        , respond status $ FileManager.resolve fm)
     , ("filemanager.ping.request"           , respond status $ FileManager.ping      )
     ]
