@@ -74,10 +74,3 @@ varBindRow u t | t == TVar u     = unionConstraints (TVar u) t -- return mempty
       (definedLabels, rowVariable) = first getLabels $ typeToTypeList t
       s1 = fromSingleSubstitution (u, t)
       getLabels = S.fromList . map (\(fLabel, fType) -> fLabel)
-
-getRowVariable tTy = let (_, value) = typeToTypeList tTy in value
-
-typeToTypeList (TVar v) = ([], Just v)
-typeToTypeList RowEmpty = ([], Nothing)
-typeToTypeList (Row l t r) = ((l, t):ls, mv) where
-  (ls, mv) = typeToTypeList r
