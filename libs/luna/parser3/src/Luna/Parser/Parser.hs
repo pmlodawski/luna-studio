@@ -223,7 +223,7 @@ element m = do
 
 
 
-container m = element $ \id -> State.withScope id $ m id
+container m = element $ \id -> State.withNewScope id $ m id
 
 
 
@@ -244,8 +244,8 @@ unit p = do
     --FIXME[WD] : change id to datatype
     let id = -666 
     --id <- nextID
-    --Unit id <$> State.withScope id p
-    State.withScope id p
+    --Unit id <$> State.withNewScope id p
+    State.withNewScope id p
 
 
 -----------------------------------------------------------
@@ -563,7 +563,7 @@ optableE = [
            where
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure op))
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure op))
-              operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.App (label id2 $ Expr.Var op) 
+              operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.App (label id2 $ Expr.Var $ MultiName.single $ op) 
                                                                                 (Expr.Infix l r)
                                           ) <$> nextID <*> nextID)
 
@@ -612,24 +612,24 @@ callBuilder2 src@(Label lab expr) argsx = case expr of
 --                                   else base ++ " " ++ join " " segments
 
 --mkFuncParser func = State.withReserved (segNames segments) $ tok (Expr.app <$> tok (pure $ Expr.funcVar name) <*> argParser)
---mkFuncParser func = State.withReserved (segNames segments) $ tok (Expr.App <$> tok (pure $ Expr.funcVar name) <*> argParser)
---    where name          = Expr._fname func
---          argExpr       = argE expr
---          exprApp a b   = (++) <$> a <*> b
---          segParsers    = fmap segParser segments
---          argParser     = foldr exprApp (pure []) segParsers
---          (MultiName base segments) = name
+mkFuncParser func = State.withReserved (segNames segments) $  labeled (Expr.App <$> labeled (pure $ Expr.Var name) <*> (Expr.Seq <$> argParser))
+    where name          = Decl._fname func
+          argExpr       = argE expr
+          exprApp a b   = (++) <$> a <*> b
+          segParsers    = fmap segParser segments
+          argParser     = foldr exprApp (pure []) segParsers
+          (MultiName base segments) = name
 
---          segParser seg = case seg of
---              MultiName.Hole    -> (:[]) <$> argExpr
---              MultiName.Token s -> []    <$  Tok.symbol s
+          segParser seg = case seg of
+              MultiName.Hole    -> (:[]) <$> argExpr
+              MultiName.Token s -> []    <$  Tok.symbol s
 
---          segNames = segNames' []
---          segNames' names s = case s of
---              []   -> names
---              x:xs -> case x of
---                  MultiName.Token n -> segNames' (n:names) xs
---                  MultiName.Hole    -> segNames' names     xs
+          segNames = segNames' []
+          segNames' names s = case s of
+              []   -> names
+              x:xs -> case x of
+                  MultiName.Token n -> segNames' (n:names) xs
+                  MultiName.Hole    -> segNames' names     xs
 
 notReserved p = do
     rsv  <- view State.adhocReserved <$> get
@@ -644,8 +644,8 @@ varE   = do
     ast  <- lookupAST name
     case ast of
         -- FIXME[wd]: dopiero przy dwuprzebiegowym parserze bedziemy mieli wieloczlonowe funkcje rekurencyjne
-        Just(AST.Decl func@(Decl.Function {})) -> labeled . pure $ Expr.Var name -- mkFuncParser func -- FIXME - function jest deklaracją!
-        _                                      -> labeled . pure $ Expr.Var name
+        Just(AST.Decl func@(Decl.Function {})) -> mkFuncParser func -- FIXME - function jest deklaracją!
+        _                                      -> labeled . pure $ Expr.Var (MultiName.single name)
                           
 
 lookupAST name = do
@@ -666,7 +666,9 @@ lookupAST name = do
                     then return Nothing
                     else case Pragma.lookup pragmaSet of
                         Pragma.Defined Pragma.AllowOrphans -> return Nothing
-                        _                                  -> fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
+                        _                                  -> do
+                                                              x <- get
+                                                              fail $ "name '" ++ name ++ "' is not defined" ++ msgTip ++ "XXX: " ++ show x
                         where scopedNames = Map.keys varnames
                               simWords    = findSimWords name scopedNames
                               msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
@@ -696,7 +698,7 @@ findSimWords word words = fmap snd simPairs
 
     
 --varE   = appID $ Expr.var <*> Tok.varIdent
-varOpE = labeled $ Expr.Var  <$> try (Tok.parens varOp)
+varOpE = labeled $ (Expr.Var . MultiName.single)  <$> try (Tok.parens varOp)
 conE   = labeled $ Expr.Cons <$> Tok.conIdent
 
 identE = choice [ varE
@@ -706,11 +708,6 @@ identE = choice [ varE
 
 ---
 
-
---listE = choice [ try $ appID Expr.RangeFromTo <*> opE <* Tok.range <*> opE
---               , try $ appID Expr.RangeFrom   <*> opE <* Tok.range
---               , opE
---               ]
 
 
 listE = Expr.List <$> labeled (Tok.brackets listTypes)
@@ -830,13 +827,14 @@ appSt = State.conf %~ appConf
 -- Section parsing
 -----------------------------------------------------------
 -- Usage example: parseExpr (fileFeed "test.txt")
-
 parseGen p st = run (bundleResult (unit p)) st
+parseGen2 p st = run (bundleResult p) st
 
 --moduleParser modPath = parseGen (upToEnd $ func)
 moduleParser modPath = parseGen (upToEnd $ pUnit $ pModule (last modPath) (init modPath))
 --exprParser           = parseGen (upToEnd expr)
 exprBlockParser      = parseGen (upToEnd $ indBlock expr)
+exprBlockParser2      = parseGen2 (upToEnd $ indBlock expr)
 --patternParser        = parseGen (upToEnd pattern)
 --typeParser           = parseGen (upToEnd typeT)
 
@@ -868,7 +866,7 @@ testme ast st = runState (aaunit ast) st
 --type AACtx m lab e a = (MonadState (State.State a) m, Enumerated lab, AST.DefaultTraversal AliasAnalysis m e e)
 
 --instance AACtx m lab e a => AST.Traversal AliasAnalysis m (LModule lab e) (LModule lab e) where
---    traverseM base x@(Label lab (Module path name body)) = State.withScope id continue -- State.regVarName id (Name.fromName name) *> State.withScope id continue
+--    traverseM base x@(Label lab (Module path name body)) = State.withNewScope id continue -- State.regVarName id (Name.fromName name) *> State.withNewScope id continue
 --        where continue =  mapM registerHeaders body
 --                       -- *> AST.defaultTraverseM base x
 --                       *> traverseMod x
@@ -876,24 +874,39 @@ testme ast st = runState (aaunit ast) st
 
             --instance AACtx m lab e a => AST.Traversal AliasAnalysis m (Decl.LDecl lab e) (Decl.LDecl lab e) where
             --    traverseM base x@(Label lab ast) = case ast of
-            --        Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withScope id continue
+            --        Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withNewScope id continue
             --        _                                          -> continue
             --        where continue = AST.defaultTraverseM base x
             --              id       = Enum.id lab
 
 aaunit (Unit mod) = Unit <$> aatest mod
 
-aatest x@(Label lab (Module path name body)) = State.withScope id continue -- State.regVarName id (Name.fromName name) *> State.withScope id continue
+aatest x@(Label lab (Module path name body)) = State.withNewScope id continue -- State.regVarName id (Name.fromName name) *> State.withNewScope id continue
         where continue =  mapM registerHeaders body
                        -- *> AST.defaultTraverseM base x
-                       *> traverseMod x
+                        *> traverseMod x
               id       = Enum.id lab
 
 
 registerHeaders (Label lab decl) = case decl of
-    Decl.Function _ name _ _ _  -> State.regVarName  id (view MultiName.base name)
-    Decl.Data     name _ cons _ -> State.regTypeName id (Name.fromName name) *> mapM_ registerCons cons
-    _                           -> pure ()
+    Decl.Function _ name inputs _ _  -> State.regVarName id (view MultiName.base name)
+                                     <* State.withNewScope  id (mapM registerArg inputs)
+    Decl.Data     name _ cons _      -> State.regTypeName id (Name.fromName name) *> mapM_ registerCons cons
+    _                                -> pure ()
+    where id = Enum.id lab
+
+registerArg (Arg pat value) = registerPat pat
+
+registerPat (Label lab pat) = case pat of
+    Pat.App         src   args -> return ()
+    Pat.Typed       pat   cls  -> return ()
+    Pat.Grouped     pat        -> return ()
+    Pat.Lit         lit        -> return ()
+    Pat.Tuple       items      -> return ()
+    Pat.Con         name       -> return ()
+    Pat.Var         name       -> State.regVarName id (Name.fromName name)
+    Pat.Wildcard               -> return ()
+    Pat.RecWildcard            -> return ()
     where id = Enum.id lab
 
 registerCons (Label lab (Decl.Cons name fields)) = State.regVarName (Enum.id lab) (Name.fromName name)
@@ -903,14 +916,18 @@ traverseMod (Label lab (Module path name body)) = (Label lab) . (Module path nam
 --traverseDecl :: Decl.LDecl t String -> f (Decl.LDecl a String)
 traverseDecl (Label lab decl) = fmap (Label lab) $ case decl of
     Decl.Function path name inputs output body -> do
-        subparse <- parseString (unlines body) <$> (exprBlockParser <$> get)
+        subparse <- State.withScope id (parseString (unlines body) <$> (exprBlockParser2 <$> get))
         case subparse of
             Left e      -> fail $ show e
-            Right (e,_) -> return $ Decl.Function path name [] output e
+            Right (e,_) -> return $ Decl.Function path name (map fixInputMockup inputs) output e
     Decl.Data        name params cons defs -> return $ Decl.Data        name params [] []
     Decl.Import      path rename targets   -> return $ Decl.Import      path rename targets
     Decl.TypeAlias   dst src               -> return $ Decl.TypeAlias   dst src
     Decl.TypeWrapper dst src               -> return $ Decl.TypeWrapper dst src
+    where id = Enum.id lab
+
+
+fixInputMockup (Arg pat val) = Arg pat Nothing
 
 --registerClassHeaders (Label lab decl) = case decl of
 --    Decl.Data       cls cons _ _ -> register' id cls cons
@@ -920,14 +937,14 @@ traverseDecl (Label lab decl) = fmap (Label lab) $ case decl of
 
 
     --instance (MonadState (State.State a) m, Enumerated lab) => AST.Traversal AliasAnalysis m (Label lab (Module f e)) where
-    --    traverse base x@(Label lab m) = State.withScope id continue
+    --    traverse base x@(Label lab m) = State.withNewScope id continue
     --        where continue = AST.defaultTraverse base x
     --              id       = Enum.id lab
 
     --instance (MonadState (State.State a) m, Enumerated lab) 
     --         => AST.Traversal AliasAnalysis m (Label lab (Decl.Decl f e)) where
     --    traverse base x@(Label lab ast) = case ast of
-    --        --Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withScope id continue
+    --        --Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withNewScope id continue
     --        --_                                          -> continue
     --        _                                          -> undefined
     --        where continue = AST.defaultTraverse base x

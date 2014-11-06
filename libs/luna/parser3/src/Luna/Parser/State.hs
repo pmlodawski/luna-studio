@@ -64,8 +64,9 @@ regParent id pid = mapStateVal $ namespace %~ Namespace.regParent id pid
 
 registerAST id ast = mapStateVal $ namespace %~ Namespace.regAST id ast
 
-pushScope id = mapStateVal $ namespace %~ Namespace.pushScope id
-popScope     = mapStateVal $ namespace %~ Namespace.popScope
+pushNewScope id = mapStateVal $ namespace %~ Namespace.pushNewScope id
+pushScope    id = mapStateVal $ namespace %~ Namespace.pushScope id
+popScope        = mapStateVal $ namespace %~ Namespace.popScope
 
 regVarName id name = do
     pid <- getPid
@@ -87,11 +88,19 @@ withReserved words p = do
     return ret
 
 
+withNewScope id p = do
+    pushNewScope id
+    ret <- p
+    popScope
+    return ret
+
+    
 withScope id p = do
     pushScope id
     ret <- p
     popScope
     return ret
+
 
 
 getPid = do

@@ -22,7 +22,7 @@ import GHC.Generics        (Generic)
 
 import           Flowbox.Generics.Deriving.QShow
 
-import           Luna.ASTNew.Name (Name, VName, TName, CName, TVName, NameBase)
+import           Luna.ASTNew.Name (VName, TName, CName, TVName, NameBase)
 import qualified Luna.ASTNew.Name as Name
 
 import           Luna.ASTNew.Decl       (Decl)
@@ -34,6 +34,8 @@ import           Luna.ASTNew.Name.Multi (MultiName)
 import           Luna.ASTNew.Arg        (Arg)
 import           Luna.ASTNew.Label      (Label)
 
+
+type Name = MultiName String
 
 type Selector = [VName]
 

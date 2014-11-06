@@ -45,9 +45,9 @@ head :: Namespace a e v -> Maybe ID
 head (Namespace (id:_) _) = Just id
 head _                    = Nothing
 
-
-pushScope :: ID -> Namespace a e v -> Namespace a e v
-pushScope id ns@(Namespace st inf) = ns
+-- FIXME[wd]: dodac asserty!
+pushNewScope :: ID -> Namespace a e v -> Namespace a e v
+pushNewScope id ns@(Namespace st inf) = ns
                                    & pushID id
                                    & info .~ ninfo
     where ninfo  = inf & Alias.scope .~ scope
@@ -56,6 +56,10 @@ pushScope id ns@(Namespace st inf) = ns
               Nothing  -> def
               Just pid -> fromJust $ Map.lookup pid scopes
           scope  = Map.insert id pScope scopes
+
+-- FIXME[wd]: dodac asserty!
+pushScope :: ID -> Namespace a e v -> Namespace a e v
+pushScope = pushID
 
 popScope :: Namespace a e v -> Namespace a e v
 popScope = snd . popID

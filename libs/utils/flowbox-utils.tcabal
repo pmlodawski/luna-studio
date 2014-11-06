@@ -15,7 +15,8 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
                   OverloadedStrings,
-                  TypeSynonymInstances
+                  TypeSynonymInstances,
+                  FlexibleInstances
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 

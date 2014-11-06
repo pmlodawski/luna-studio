@@ -1,2 +1,8 @@
-def foo:
-    foo
+def (if then else) cond ok fail:
+    case cond:
+        True: ok
+        False: fail
+
+def foo x y z:
+    self + 1
+
