@@ -132,7 +132,8 @@ buildNode astFolded monadicBind outName expr = do
         Expr.List       _ items                 -> addNode i (NodeExpr.StringExpr StringExpr.List) items
         Expr.Native     _ segments              -> addNode i (NodeExpr.StringExpr $ StringExpr.Native $ showNative expr) $ filter isNativeVar segments
         Expr.Wildcard   _                       -> left $ "GraphBuilder.buildNode: Unexpected Expr.Wildcard with id=" ++ show i
-        Expr.Grouped    _ grouped               -> addNode i (NodeExpr.StringExpr StringExpr.Grouped) [grouped]
+        Expr.Grouped    _ grouped               -> State.setGrouped (grouped ^. Expr.id) 
+                                                >> buildNode astFolded monadicBind outName grouped
         _                                       -> showAndAddNode
     where
         buildVar i name = do
@@ -164,7 +165,7 @@ buildNode astFolded monadicBind outName expr = do
         buildApp i src args = do
             graphFolded <- State.getGraphFolded i
             if graphFolded
-                then do minID <- hoistEither =<< MinID.runExpr src
+                then do minID  <- hoistEither =<< MinID.runExpr expr
                         addNode' minID (mkNodeExpr expr) []
                 else do srcID <- buildNode astFolded False outName src
                         s     <- State.gvmNodeMapLookUp srcID
