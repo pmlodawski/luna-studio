@@ -3,10 +3,11 @@ module Luna.Typechecker.TypeEnv (
     mkTypeEnv, getTypeEnv, expandTypeEnv,
   ) where
 
-import Luna.Typechecker.Assumptions
-import Luna.Typechecker.IDs
-import Luna.Typechecker.Substitution
-import Luna.Typechecker.Type
+import Luna.Typechecker.Assumptions  (Assumptions,expandAssumptions,mkAssumptions,searchAssumptions)
+import Luna.Typechecker.IDs          (VarID)
+import Luna.Typechecker.Substitution (Types(..))
+import Luna.Typechecker.Type.Scheme  (Scheme)
+
 
 
 newtype TypeEnv = TypeEnv Assumptions

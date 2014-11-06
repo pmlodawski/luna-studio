@@ -1,17 +1,18 @@
 module Luna.Typechecker.TIMonad (
-    TI(..),
+    TI,
     TCLoggerT, TILogger,
-    module Logger,
     runTILogger, getNextID
   ) where
 
 
-import Luna.Typechecker.Substitution
-import Logger
+import Luna.Typechecker.Substitution (Subst)
 
-import Control.Applicative (Applicative(..))
-import Control.Monad (ap)
+import Logger (LoggerT(..),Log)
+
+import Control.Applicative
+import Control.Monad
 import Data.Monoid
+
 
 
 type TCLoggerT = LoggerT String
@@ -19,7 +20,7 @@ type TILogger = LoggerT String TI
 
 newtype TI a = TI { runTI :: Subst -> Int -> (Subst, Int, a) }
 
-
+runTILogger :: (Show e) => LoggerT e TI a -> (Subst, Int, (Either e a, [Log e]))
 runTILogger x = runTI (runLoggerT x) mempty 0
 
 

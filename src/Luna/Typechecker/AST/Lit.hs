@@ -2,18 +2,14 @@ module Luna.Typechecker.AST.Lit (
     Lit(..)
   ) where
 
-
-import Text.Printf
-
-
-data Lit = LitChar   Char
-         | LitDouble Double
-         | LitInt    Integer
-         | LitStr    String
+-- luna-core
+import Luna.ASTNew.Lit
 
 
-instance Show Lit where
-  show (LitChar   c) = printf "'%c'" c
-  show (LitDouble f) = printf "%.3f" f
-  show (LitInt    i) = show i
-  show (LitStr    s) = show s
+
+--instance Show Lit where
+--  show _ = "<lit>"
+  --show (LitChar   c) = printf "'%c'" c
+  --show (LitDouble f) = printf "%.3f" f
+  --show (LitInt    i) = show i
+  --show (LitStr    s) = show s
