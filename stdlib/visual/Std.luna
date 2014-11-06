@@ -1,4 +1,7 @@
 
+def null a:
+    a
+
 def print self msg::String:
     ```autoLift1 print #{msg}```
 

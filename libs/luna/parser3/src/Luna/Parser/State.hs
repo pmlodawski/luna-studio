@@ -33,11 +33,11 @@ import qualified Luna.AST.AST                 as AST
 
 
 
-data State a = State { _conf          :: Config a
+data State a e v conf = State { _conf          :: Config conf
                      , _info          :: ASTInfo
                      , _opFixity      :: OperatorMap
                      , _sourceMap     :: SourceMap
-                     , _namespace     :: Namespace
+                     , _namespace     :: Namespace a e v
                      , _adhocReserved :: [String]
                      , _comments      :: IDMap [Comment]
                      } deriving (Show)
@@ -49,7 +49,7 @@ makeLenses ''State
 -- Utils
 ------------------------------------------------------------------------
 
-mk :: ASTInfo -> State ()
+mk :: ASTInfo -> State a e v ()
 mk i = def & info .~ i
 
 addReserved words = adhocReserved %~ (++words)
@@ -64,8 +64,9 @@ regParent id pid = mapStateVal $ namespace %~ Namespace.regParent id pid
 
 registerAST id ast = mapStateVal $ namespace %~ Namespace.regAST id ast
 
-pushScope id = mapStateVal $ namespace %~ Namespace.pushScope id
-popScope     = mapStateVal $ namespace %~ Namespace.popScope
+pushNewScope id = mapStateVal $ namespace %~ Namespace.pushNewScope id
+pushScope    id = mapStateVal $ namespace %~ Namespace.pushScope id
+popScope        = mapStateVal $ namespace %~ Namespace.popScope
 
 regVarName id name = do
     pid <- getPid
@@ -87,11 +88,19 @@ withReserved words p = do
     return ret
 
 
+withNewScope id p = do
+    pushNewScope id
+    ret <- p
+    popScope
+    return ret
+
+    
 withScope id p = do
     pushScope id
     ret <- p
     popScope
     return ret
+
 
 
 getPid = do
@@ -113,7 +122,7 @@ registerID id = do
 -- Instances
 ------------------------------------------------------------------------
 
-instance a~() => Default (State a) where
+instance conf~() => Default (State a e v conf) where
         def = State def def def def def def def
 
 

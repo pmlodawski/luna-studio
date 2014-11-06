@@ -14,6 +14,8 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                               (Context)
 import           Flowbox.System.Log.Logger                                                    hiding (error)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.Interpreter.Interpreter.Abort.Request                        as Abort
+import qualified Generated.Proto.Interpreter.Interpreter.Abort.Status                         as Abort
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Request                   as GetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Status                    as GetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Request                 as GetProjectID
@@ -122,6 +124,10 @@ ping :: Ping.Request -> RPC Context SessionST Ping.Status
 ping request = do
     logger info "Ping received"
     return $ Ping.Status request
+
+
+abort :: Abort.Request -> RPC Context SessionST Abort.Status
+abort = return . Abort.Status
 
 
 getDefaultSerializationMode :: GetDefaultSMode.Request -> RPC Context SessionST GetDefaultSMode.Status

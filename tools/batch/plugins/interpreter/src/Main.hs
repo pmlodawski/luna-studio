@@ -20,6 +20,7 @@ import           Luna.Interpreter.Cmd                 (Cmd)
 import qualified Luna.Interpreter.Cmd                 as Cmd
 import qualified Luna.Interpreter.RPC.Handler.Handler as Handler
 import qualified Luna.Interpreter.Version             as Version
+import qualified Flowbox.Initializer.Initializer as Initializer
 
 
 
@@ -36,7 +37,7 @@ parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Run
            <$> strOption  (long "prefix" <> short 'p' <> metavar "PREFIX" <> value "" <> help "Prefix used by this plugin manager (e.g. client, main, etc.")
            <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
-           <*> switch    ( long "no-color"          <> help "Disable color output" )
+           <*> switch     (long "no-color"            <> help "Disable color output")
 
 
 opts :: ParserInfo Cmd
@@ -54,6 +55,7 @@ run cmd = case cmd of
     Cmd.Run prefix verbose _ -> do
         rootLogger setIntLevel verbose
         cfg       <- Config.load
+        Initializer.initializeIfNeeded cfg
         let busConfig = EP.clientFromConfig cfg
             ctx       = Context.mk cfg
         logger info "Starting rpc server"

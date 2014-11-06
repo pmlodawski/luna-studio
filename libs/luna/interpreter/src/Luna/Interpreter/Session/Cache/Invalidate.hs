@@ -43,9 +43,9 @@ logger = getLoggerIO $(moduleName)
 
 modifyAll :: Session ()
 modifyAll = do
-    logger info "Mark modified: everything"
     modifyMatching $ const . const True
     libIDs <- LibManager.nodes <$> Env.getLibManager
+    logger info $ "Mark modified: everything " ++ show libIDs
     --Env.addReload (head libIDs) Reload.ReloadLibrary
     mapM_ (`Env.addReload` Reload.ReloadLibrary) libIDs
 

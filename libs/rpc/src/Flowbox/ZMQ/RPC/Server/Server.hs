@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.ZMQ.RPC.Server.Server where
 
@@ -22,8 +23,9 @@ import           Flowbox.ZMQ.RPC.Handler                        (RPCHandler)
 import qualified Flowbox.ZMQ.RPC.Server.Processor               as Processor
 
 
+
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.ZMQ.RPC.Server"
+loggerIO = getLoggerIO $(moduleName)
 
 
 run :: Proto.Serializable request
@@ -31,9 +33,8 @@ run :: Proto.Serializable request
 run workerCount endpoint handler = ZMQ.runZMQ $ serve workerCount endpoint handler
 
 
-
 handleCalls :: (ZMQ.Receiver t, ZMQ.Sender t, Proto.Serializable request)
-                => ZMQ.Socket z t -> RPCHandler request -> ZMQ z ()
+            => ZMQ.Socket z t -> RPCHandler request -> ZMQ z ()
 handleCalls socket handler = forM_ [1..] $ handleCall socket handler
 
 

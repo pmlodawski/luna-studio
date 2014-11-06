@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.Session.Cache.Value where
@@ -19,9 +20,11 @@ import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
 import           Generated.Proto.Data.Value                  (Value)
+import qualified Luna.Graph.Flags                            as Flags
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
 import qualified Luna.Interpreter.Session.Cache.Status       as Status
+import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
 import qualified Luna.Interpreter.Session.Env                as Env
@@ -38,10 +41,9 @@ logger = getLoggerIO $(moduleName)
 
 getIfReady :: CallPointPath -> Session (Maybe Value)
 getIfReady callPointPath = do
+    varName   <- foldedReRoute callPointPath
     cacheInfo <- Cache.getCacheInfo callPointPath
-    let varName = cacheInfo ^. CacheInfo.recentVarName
-        status  = cacheInfo ^. CacheInfo.status
-
+    let status = cacheInfo ^. CacheInfo.status
     assertE (status == Status.Ready) $ Error.CacheError $(loc) $ concat ["Object ", show callPointPath, " is not computed yet."]
     get varName callPointPath
 
@@ -56,12 +58,10 @@ data Status = Ready
 
 getWithStatus :: CallPointPath -> Session (Status, Maybe Value)
 getWithStatus callPointPath = do
-    mcacheInfo <- Env.cachedLookup callPointPath
-    case mcacheInfo of
+    varName <- foldedReRoute callPointPath
+    Env.cachedLookup callPointPath >>= \case
         Nothing        -> return (NotInCache, Nothing)
         Just cacheInfo -> do
-            let varName = cacheInfo ^. CacheInfo.recentVarName
-
             allReady <- Env.getAllReady
             let returnBytes status = do
                     value <- get varName callPointPath
@@ -74,6 +74,15 @@ getWithStatus callPointPath = do
                 (Status.Modified,     _    ) -> returnBytes   Modified
                 (Status.Affected,     _    ) -> returnBytes   Modified
                 (Status.NonCacheable, _    ) -> returnNothing NonCacheable
+
+
+reportIfVisible :: CallPointPath -> VarName -> Session ()
+reportIfVisible callPointPath varName = do
+    flags <- Env.getFlags $ last callPointPath
+    unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
+         || Flags.isSet' flags (view Flags.graphViewGenerated  )
+         || Flags.isFolded flags                               ) $
+        foldedReRoute callPointPath >>= report callPointPath
 
 
 report :: CallPointPath -> VarName -> Session ()
@@ -104,3 +113,16 @@ get varName callPointPath = do
         _      <- GHC.runStmt computeExpr GHC.RunToCompletion
         action <- HEval.interpret toValueExpr
         liftIO $ action mode
+
+
+foldedReRoute :: CallPointPath -> Session VarName
+foldedReRoute callPointPath = do
+    let callPointLast = last callPointPath
+        callPointInit = init callPointPath
+    mfoldTop <- Flags.getFoldTop <$> Env.getFlags callPointLast
+    let newCallPointPath = case mfoldTop of
+            Nothing     -> callPointPath
+            Just nodeID -> callPointInit
+                        ++ [callPointLast & CallPoint.nodeID .~ nodeID]
+    cacheInfo <- Cache.getCacheInfo newCallPointPath
+    return $ cacheInfo ^. CacheInfo.recentVarName

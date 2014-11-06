@@ -161,7 +161,6 @@ data VarType = Lit    String
 
 varType :: StringExpr -> VarType
 varType  StringExpr.Id                 = Id
-varType  StringExpr.Grouped            = Id
 varType  StringExpr.Tuple              = Tuple
 varType (StringExpr.Native name      ) = Native name
 varType (StringExpr.Expr   []        ) = Prelude.error "varType : empty expression"
@@ -203,5 +202,5 @@ evalFunction stringExpr callDataPath argsVarNames = do
         let varName = VarName.mk hash callPointPath
         Session.runAssignment varName tmpVarName
         Cache.put callDataPath argsVarNames varName
-        Value.report callPointPath varName
+        Value.reportIfVisible callPointPath varName
         return (hash, varName)

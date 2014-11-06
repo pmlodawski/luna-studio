@@ -40,13 +40,12 @@ run endPoints topics process = Bus.runBus endPoints $ handleLoop topics process
 handleLoop :: [Topic] -> (Message -> IO [Message]) -> Bus ()
 handleLoop topics process = do
     mapM_ Bus.subscribe topics
-    _ <- forever $ handle process
-    return ()
+    void $ forever $ handle process
 
 
 handle :: (Message -> IO [Message]) -> Bus ()
 handle process = do
-    (MessageFrame msg crlID _ _) <- Bus.receive
+    MessageFrame msg crlID _ _ <- Bus.receive
     liftIO $ logger debug $ "Received request: " ++ (msg ^. Message.topic)
     response <- liftIO $ process msg
     unless (null response) $ do
@@ -61,13 +60,12 @@ runState endPoints topics s process = Bus.runBus endPoints $ handleLoopState top
 handleLoopState :: [Topic] -> s -> (Message -> StateT s IO [Message]) -> Bus ()
 handleLoopState topics s process = do
     mapM_ Bus.subscribe topics
-    _ <- BusT.runBusT $ runStateT (forever $ handleState process) s
-    return ()
+    void $ BusT.runBusT $ runStateT (forever $ handleState process) s
 
 
 handleState :: (Message -> StateT s IO [Message]) -> StateT s BusT ()
 handleState process = do
-    (MessageFrame msg crlID _ _) <- lift $ BusT Bus.receive
+    MessageFrame msg crlID _ _ <- lift $ BusT Bus.receive
     liftIO $ logger debug $ "Received request: " ++ (msg ^. Message.topic)
     response <- hoist liftIO $ process msg
     lift $ BusT $ unless (null response) $ do

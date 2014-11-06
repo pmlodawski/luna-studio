@@ -103,9 +103,6 @@ example = Source.Source ["Main"] $
                     , "def Int.> a:"
                     , "    ```liftF2 (>) #{self} #{a}```"
 
-                    , "def Int.> a:"
-                    , "    ```liftF2 (>) #{self} #{a}```"
-
                     ----, "class Vector:"
                     ----, "    x,y,z :: [Vector]"
                     --, "def Int.+ a:"
@@ -116,8 +113,8 @@ example = Source.Source ["Main"] $
                     --, "def foo a b:"
                     --, "    print a"
                     --, "    print b"
-                    , "def > a b:"
-                    , "    a.> b"
+                    --, "def > a b:"
+                    --, "    a.> b"
 
                     , "def main:"
                     --, "    a = Vector [] [] []"

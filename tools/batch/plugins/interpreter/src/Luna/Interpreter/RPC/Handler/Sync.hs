@@ -26,6 +26,7 @@ import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  as ProjectManagerSyncGet
 import           Luna.Interpreter.RPC.Handler.Lift
+import qualified Luna.Interpreter.Session.Cache.Invalidate                      as Invalidate
 import qualified Luna.Interpreter.Session.Env                                   as Env
 import           Luna.Interpreter.Session.Session                               (SessionST)
 
@@ -78,6 +79,8 @@ projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata updateNo) = do
     (projectManager :: ProjectManager) <- hoistEither $ Read.readEither $ decodeP tdata
     Batch.setProjectManager projectManager
     Batch.setUpdateNo updateNo
+    syncLibManager
+    liftSession Invalidate.modifyAll
 
 
 syncIfNeeded :: RPC Context SessionST () -> RPC Context SessionST (Maybe ProjectManagerSyncGet.Request)

@@ -15,8 +15,8 @@ import GHC.Generics
 
 data Native e = Code [NativeSegment]
               | AST e
-              deriving (Show)
+              deriving (Show, Eq, Generic, Read)
 
 data NativeSegment = Str { _code :: String }
                    | Var { _name :: String } 
-                   deriving (Show)
+                   deriving (Show, Eq, Generic, Read)

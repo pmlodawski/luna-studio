@@ -18,23 +18,11 @@ import           GHC.Generics (Generic)
 -- Data types
 ----------------------------------------------------------------------
 
-data Label l a = Label l a deriving (Eq, Generic)
+data Label l a = Label { _label :: l, _element :: a } deriving (Eq, Generic, Read, Functor)
+
+makeLenses ''Label
 
 instance (Show l, Show a) => Show (Label l a) where
     show (Label l a) = "L " ++ show l ++ " " ++ show a
 
-----------------------------------------------------------------------
--- Type classes
-----------------------------------------------------------------------
 
-class Labeled t l a | t -> l a where
-    label   :: t -> l
-    element :: t -> a
-
-----------------------------------------------------------------------
--- Instances
-----------------------------------------------------------------------
-
-instance Labeled (Label l a) l a where
-    label   (Label l _) = l
-    element (Label _ a) = a

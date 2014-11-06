@@ -109,6 +109,7 @@ vaExpr el = regExpr el *> case el of
     Expr.ConD       {}              -> continue
     Expr.Field      id name _ _     -> regVarName name id *> continue
     Expr.Assignment id pat dst      -> vaExpr dst <* vaPat pat
+    Expr.Import     {}              -> return ()
     _                  -> continue
     where continue = Expr.traverseM_ vaExpr vaType vaPat vaLit pure el
           id       = el ^.  Expr.id
