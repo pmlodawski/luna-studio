@@ -32,6 +32,7 @@ import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
 
 
 
@@ -76,8 +77,8 @@ getWithStatus callPointPath = do
                 (Status.NonCacheable, _    ) -> returnNothing NonCacheable
 
 
-reportIfVisible :: CallPointPath -> VarName -> Session ()
-reportIfVisible callPointPath varName = do
+reportIfVisible :: CallPointPath -> Session ()
+reportIfVisible callPointPath = do
     flags <- Env.getFlags $ last callPointPath
     unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
          || Flags.isSet' flags (view Flags.graphViewGenerated  )
@@ -96,8 +97,9 @@ report callPointPath varName = do
 get :: VarName -> CallPointPath -> Session (Maybe Value)
 get varName callPointPath = do
     mode <- Env.getSerializationMode callPointPath
-    let toValueExpr = "toValue " ++ varName
-        computeExpr = concat [varName, " <- return $ compute ", varName, " def"]
+    let tmpName = "_tmp"
+        toValueExpr = "toValue " ++ tmpName
+        computeExpr = concat [tmpName, " <- return $ compute ", varName, " def"]
 
         excHandler :: Catch.SomeException -> MGHC.Ghc (Maybe Value)
         excHandler exc = do
@@ -110,8 +112,10 @@ get varName callPointPath = do
                         , "Generated.Proto.Data.Value" ]
                         $ lift2 $ flip Catch.catch excHandler $ do
         logger trace computeExpr
+        Bindings.remove tmpName
         _      <- GHC.runStmt computeExpr GHC.RunToCompletion
         action <- HEval.interpret toValueExpr
+        Bindings.remove tmpName
         liftIO $ action mode
 
 
