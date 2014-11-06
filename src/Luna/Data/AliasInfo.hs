@@ -16,8 +16,8 @@ import GHC.Generics        (Generic)
 
 import           Data.IntMap  (IntMap)
 import           Data.Map     (Map)
-import           Luna.AST.AST (AST, ID)
-import qualified Luna.AST.AST as AST
+import           Luna.ASTNew.AST (AST, ID)
+import qualified Luna.ASTNew.AST as AST
 import qualified Data.Maps    as Map
 
 
@@ -39,11 +39,11 @@ data Scope = Scope { _varnames  :: Map String ID
 makeLenses (''Scope)
 
 
-data AliasInfo = AliasInfo  { _scope   :: IDMap Scope
+data AliasInfo a e v = AliasInfo  { _scope   :: IDMap Scope
                             , _alias   :: IDMap ID
                             , _orphans :: IDMap Error
                             , _parent  :: IDMap ID
-                            , _ast     :: IDMap AST
+                            , _ast     :: IDMap (AST a e v)
                             } deriving (Show, Eq, Generic, Read)
 
 makeLenses (''AliasInfo)
@@ -77,7 +77,7 @@ instance Monoid Scope where
                         (mappend (a ^. typenames) (b ^. typenames))
 
 
-instance Monoid AliasInfo where
+instance Monoid (AliasInfo a e v) where
     mempty      = AliasInfo mempty mempty mempty mempty mempty
     mappend a b = AliasInfo (mappend (a ^. scope)   (b ^. scope))
                             (mappend (a ^. alias)   (b ^. alias))
@@ -89,5 +89,5 @@ instance Monoid AliasInfo where
 instance Default Scope where
     def = Scope def def
 
-instance Default AliasInfo where
+instance Default (AliasInfo a e v) where
     def = AliasInfo def def def def def

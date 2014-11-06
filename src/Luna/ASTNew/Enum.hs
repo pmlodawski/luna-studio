@@ -6,17 +6,23 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveGeneric #-}
 
-module Luna.ASTNew.Native where
-
+module Luna.ASTNew.Enum where
 
 import Flowbox.Prelude
-import GHC.Generics
+import GHC.Generics    (Generic)
 
 
-data Native e = Code [NativeSegment]
-              | AST e
-              deriving (Show, Eq, Generic, Read)
+----------------------------------------------------------------------
+-- Data types
+----------------------------------------------------------------------
 
-data NativeSegment = Str { _code :: String }
-                   | Var { _name :: String } 
-                   deriving (Show, Eq, Generic, Read)
+type ID = Int
+
+data IDTag = IDTag ID deriving (Show, Eq, Generic)
+
+class Enumerated a where
+    id :: a -> ID
+
+instance Enumerated IDTag where
+    id (IDTag i) = i
+    

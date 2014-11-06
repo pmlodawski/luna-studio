@@ -27,52 +27,52 @@ import           Data.List         (intersperse)
 -- Data types
 ----------------------------------------------------------------------
 
-data MultiName = MultiName { _base :: String, _segments :: [Segment] }
+data MultiName a = MultiName { _base :: a, _segments :: [Segment a] }
           deriving (Show, Eq, Generic, Read, Ord)
 
-data Segment = Token String
-             | Hole
-             deriving (Show, Eq, Generic, Read, Ord)
+data Segment a = Token a
+               | Hole
+               deriving (Show, Eq, Generic, Read, Ord)
 
 makeLenses ''MultiName
-instance QShow MultiName
-instance QShow Segment
+instance QShow a => QShow (MultiName a)
+instance QShow a => QShow (Segment a)
 
 
-single :: String -> MultiName
+single :: a -> MultiName a
 single = flip MultiName []
 
-multi :: String -> [Segment] -> MultiName
+multi :: a -> [Segment a] -> MultiName a
 multi = MultiName
 
 
-isSingle :: MultiName -> Bool
+isSingle :: MultiName a -> Bool
 isSingle = null . view segments
 
 
-isMulti :: MultiName -> Bool
+isMulti :: MultiName a -> Bool
 isMulti = not . isSingle
 
-segmentShow :: Segment -> String
+segmentShow :: StrRepr a => Segment a -> String
 segmentShow name = case name of
-    Token s -> s
+    Token s -> strRepr s
     Hole    -> "_"
 
-toStr :: MultiName -> String
+toStr :: StrRepr a => MultiName a -> String
 toStr n = if isSingle n
-    then n^.base
-    else (n^.base) ++ (' ' : join " " (fmap segmentShow $ n^.segments))
+    then strRepr $ n^.base
+    else (strRepr $ n^.base) ++ (' ' : join " " (fmap segmentShow $ n^.segments))
 
 
-unified :: MultiName -> String
+unified :: StrRepr a => MultiName a -> String
 unified n = if isSingle n
-    then n^.base
-    else (n^.base) ++ ('_' : join "_" (fmap segmentShow $ n^.segments))
+    then strRepr $ n^.base
+    else (strRepr $ n^.base) ++ ('_' : join "_" (fmap segmentShow $ n^.segments))
 
 
 -- close the definition, check if name holes are defined explicite
 -- define Holes otherwise
-close :: MultiName -> MultiName
+close :: Eq a => MultiName a -> MultiName a
 close n@(MultiName base segments) = case Hole `elem` segments of
     True  -> n
     False -> case null segments of
