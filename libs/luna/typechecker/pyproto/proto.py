@@ -64,6 +64,7 @@ class TypeMono(Type):  # OPTIMIZATION: zaimplementować jako las drzew rozłącz
 # --------------------------------------------------------------------------------
 
 
+# TODO NonExtensibleRecord
 class Record:
     def __init__(self, fields=None, rest=None, parents=None):
         self.fields = fields or {}
@@ -191,6 +192,20 @@ class Record:
                 alt.print_info("…", prefix=prefix+"      :>")
 
 
+class NonExtensibleRecord(Record):
+    def __init__(self, fields):
+        super().__init__(fields, rest=None, parents=None)
+
+    def extend(self, l, t):
+        return self.fields[l].union(t)
+
+    def add_lacks(self, l):
+        if l in self.lacks():
+            pass
+        else:
+            raise Error("aaaa")
+
+
 class Lacks:
     def __init__(self, *args):
         self.args = set(args)
@@ -296,7 +311,7 @@ def main():
     f.print_info("f")
 
     step("f.q")
-    f.selection('p')
+    f.selection('q')
     a.print_info("a")
     b.print_info("b")
     e.print_info("e")
@@ -314,6 +329,34 @@ def main():
 
     step("g.r")
     g.selection('r')
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+    f.print_info("f")
+    g.print_info("g")
+
+    step("e.m")
+    e.selection('m')
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+    f.print_info("f")
+    g.print_info("g")
+
+    step("e.n")
+    e.selection('n')
+    a.print_info("a")
+    b.print_info("b")
+    e.print_info("e")
+    c.print_info("c")
+    f.print_info("f")
+    g.print_info("g")
+
+
+    step("g.s")
+    g.selection('s')
     a.print_info("a")
     b.print_info("b")
     e.print_info("e")
