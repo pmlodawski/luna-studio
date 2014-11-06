@@ -8,49 +8,51 @@ Build-Type:     Simple
 
 
 Library
-  Hs-Source-Dirs: src
+    Hs-Source-Dirs: src
 
-  GHC-Options:    -Wall -O2
+    GHC-Options:    -Wall -O2
 
-  Extensions:     DoAndIfThenElse,
-                  NoImplicitPrelude,
-                  OverloadedStrings,
-                  TypeSynonymInstances
+    Extensions:     DoAndIfThenElse,
+                    NoImplicitPrelude,
+                    OverloadedStrings,
+                    TypeSynonymInstances
 
-  Exposed-modules: `findmodules('src', '.*\.hs')`
+    Exposed-modules: `findmodules('src', '.*\.hs')`
 
-  Build-Depends:  aeson >= 0.7.0.5,
-                  base,
-                  ansi-terminal,
-                  bytestring,
-                  containers,
-                  data-default,
-                  directory,
-                  dlist,
-                  either,
-                  errors,
-                  fgl,
-                  filepath,
-                  generic-deriving,
-                  hslogger,
-                  lens,
-                  MissingH,
-                  mmorph,
-                  monad-loops,
-                  mtl,
-                  optparse-applicative,
-                  pretty,
-                  pretty-show,
-                  process,
-                  protocol-buffers-fork,
-                  split,
-                  template-haskell,
-                  text,
-                  time,
-                  transformers,
-                  template-haskell,
-                  QuickCheck,
-                  hspec
+    Build-Depends:  aeson >= 0.7.0.5,
+                    base,
+                    ansi-terminal,
+                    bytestring,
+                    containers,
+                    data-default,
+                    directory,
+                    dlist,
+                    either,
+                    errors,
+                    fgl,
+                    filepath,
+                    generic-deriving,
+                    hslogger,
+                    hspec,
+                    lens,
+                    MissingH,
+                    mmorph,
+                    monad-loops,
+                    mtl,
+                    optparse-applicative,
+                    pretty,
+                    pretty-show,
+                    process,
+                    protocol-buffers-fork,
+                    split,
+                    template-haskell,
+                    text,
+                    time,
+                    transformers,
+                    template-haskell,
+                    QuickCheck
+  if os(windows)
+    Build-Depends:  Win32
 
 -- FIXME [MU] : aeson >= 0.7.0.5 fixes compilation error on Windows
 

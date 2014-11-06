@@ -26,7 +26,6 @@ Library
   Build-Depends:  base,
                   bytestring,
                   containers,
-                  directory,
                   either,
                   flowbox-config,
                   luna-core,

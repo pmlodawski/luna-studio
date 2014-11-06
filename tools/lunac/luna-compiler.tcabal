@@ -46,7 +46,6 @@ Test-Suite tests
   GHC-Options:    -Wall -threaded -O2
   Extensions:     NoImplicitPrelude
   Build-Depends:  base,
-                  directory,
                   flowbox-config,
                   flowbox-utils,
                   hspec,

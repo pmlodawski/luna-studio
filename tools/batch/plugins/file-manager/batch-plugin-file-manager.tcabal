@@ -22,7 +22,6 @@ Executable file-manager
 
     Build-Depends:  base,
                     batch-lib-file-manager,
-                    directory,
                     flowbox-bus,
                     flowbox-config,
                     flowbox-utils,
@@ -31,4 +30,5 @@ Executable file-manager
                     protocol-buffers-fork,
                     text,
                     transformers,
+                    unix-compat,
                     zeromq4-haskell >= 0.4

@@ -25,7 +25,7 @@ clientFromConfig :: Config -> BusEndPoints
 clientFromConfig config = BusEndPoints ctrl pull pub where
     ctrl = Config.clientControlEndPoint bus
     pull = Config.clientPullEndPoint    bus
-    pub  = Config.clientPubEndPointt    bus
+    pub  = Config.clientPubEndPoint     bus
     bus  = Config.bus config
 
 
@@ -33,5 +33,5 @@ serverFromConfig :: Config -> BusEndPoints
 serverFromConfig config = BusEndPoints ctrl pull pub where
     ctrl = Config.serverControlEndPoint bus
     pull = Config.serverPullEndPoint    bus
-    pub  = Config.serverPubEndPointt    bus
+    pub  = Config.serverPubEndPoint     bus
     bus  = Config.bus config

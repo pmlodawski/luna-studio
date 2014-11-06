@@ -10,9 +10,10 @@
 
 module Main where
 
-import Data.List         (intercalate)
-import Text.RawString.QQ
-import Text.Show.Pretty
+import qualified Control.Concurrent as Concurrent
+import           Data.List          (intercalate)
+import           Text.RawString.QQ
+import           Text.Show.Pretty
 
 import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
@@ -39,6 +40,7 @@ import           Luna.Interpreter.Session.Data.DefPoint                        (
 import qualified Luna.Interpreter.Session.Env                                  as Env
 import qualified Luna.Interpreter.Session.Error                                as Error
 import qualified Luna.Interpreter.Session.Session                              as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings                    as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.Reload                      as Reload
 import           Luna.Lib.Lib                                                  (Library (Library))
 import qualified Luna.Lib.Lib                                                  as Library
@@ -221,6 +223,29 @@ main2 = do
     logger info "empty"
     printHsSrc $ Module.mk 0 $ Type.Module 1 "Main" []
 
+main3 :: IO ()
+main3 = do
+    rootLogger setIntLevel 5
+    cfg <- Config.load
+
+    (libManager , libID) <- readSource code
+
+    let env = Env.mk libManager (Just 0)
+                (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
+                (curry $ curry print)
+
+    result <- Session.run cfg env [] $ do
+        Session.setImports ["Foreign.Ptr", "Foreign.ForeignPtr", "System.Mem"]
+        Session.runStmt "a <- newForeignPtr nullFunPtr nullPtr"
+        Session.runStmt "performGC"
+        liftIO $ Concurrent.threadDelay 3000000
+        lift2 $ Bindings.remove "a"
+        Session.runStmt "performGC"
+        liftIO $ Concurrent.threadDelay 3000000
+        Session.runStmt "print 4"
+    eitherStringToM $ fmapL Error.format result
+
+
 printHsSrc :: Module -> IO ()
 printHsSrc ast = eitherStringToM' $ runEitherT $ do
     aliasInfo <- EitherT $ Analysis.Alias.run ast
@@ -236,6 +261,6 @@ showSrc src = ">>> file '" ++ intercalate "/" (src ^. Source.path) ++ "':\n\n"
              ++ hsShow (src ^. Source.code)
 
 main :: IO ()
-main = main1
+main = main3
 
 --serialize parameters type

@@ -30,7 +30,6 @@ Library
                     containers,
                     conduit >= 1.1.0,
                     conduit-extra >= 1.1.0,
-                    directory,
                     either,
                     errors,
                     exceptions,
