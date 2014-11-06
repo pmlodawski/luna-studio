@@ -197,14 +197,16 @@ evalFunction stringExpr callDataPath argsVarNames = do
                               then "val (" ++ name ++" :: Int)"
                               else "val " ++ name
             Tuple       -> "val (" ++ List.intercalate "," args ++ ")"
-        expression = tmpVarName ++ " <- " ++ operation
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
-        Bindings.remove tmpVarName
-        Session.runStmt expression
+
+        Session.runAssignment' tmpVarName operation
+
         hash <- Hash.compute tmpVarName
         let varName = VarName.mk hash callPointPath
-        Bindings.remove varName
+
         Session.runAssignment varName tmpVarName
+        lift2 $ Bindings.remove tmpVarName
+
         Cache.put callDataPath argsVarNames varName
         Value.reportIfVisible callPointPath
         return (hash, varName)
