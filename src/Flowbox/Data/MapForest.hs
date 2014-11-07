@@ -23,15 +23,11 @@ data Level k v = Level { _value     :: Maybe v
 type MapForest k v = Map k (Level k v)
 
 
-makeLenses(''Level)
+makeLenses ''Level
 
 
 empty :: MapForest k v
 empty = Map.empty
-
-
-insert :: Ord k => [k] -> v -> MapForest k v -> MapForest k v
-insert k v = insert' k (Just v)
 
 
 toList :: MapForest k v -> [([k], v)]
@@ -46,6 +42,24 @@ elems :: MapForest k v -> [v]
 elems = map snd . toList
 
 
+member :: Ord k => [k] -> MapForest k v -> Bool
+member = Maybe.isJust .: lookup
+
+
+lookup :: Ord k => [k] -> MapForest k v -> Maybe v
+lookup k forest = sub k forest >>= view value
+
+
+-- | Insert value v under path [k]
+insert :: Ord k => [k] -> v -> MapForest k v -> MapForest k v
+insert k = insert' k . Just
+
+
+delete :: Ord k => [k] -> MapForest k v -> MapForest k v
+delete k forest = fixForest $ insert' k Nothing forest
+
+
+-- | Find entries that match predicate
 find :: ([k] -> v -> Bool) -> MapForest k v -> [([k], v)]
 find predicate = concatMap (find' []) . Map.toList where
     find' key (k, level) = case level ^. value of
@@ -57,6 +71,12 @@ find predicate = concatMap (find' []) . Map.toList where
             newKey = key ++ [k]
             others = concatMap (find' newKey) $ Map.toList $ level ^. subForest
 
+alter :: Ord k => (Maybe v -> Maybe v) -> [k] -> MapForest k v -> MapForest k v
+alter fun k forest = insert' k (fun $ lookup k forest ) forest
+
+{--------------------------------------------------------------------
+  MapForest internals
+--------------------------------------------------------------------}
 
 insert' :: Ord k => [k] -> Maybe v -> MapForest k v -> MapForest k v
 insert' []    _ forest = forest
@@ -68,25 +88,12 @@ insert' (h:t) v forest = case Map.lookup h forest of
     Nothing    -> Map.insert h (Level Nothing $ insert' t v Map.empty) forest
 
 
-lookup :: Ord k => [k] -> MapForest k v -> Maybe v
-lookup k forest = sub k forest >>= view value
-
-
-member :: Ord k => [k] -> MapForest k v -> Bool
-member = Maybe.isJust .: lookup
-
-
 sub :: Ord k => [k] -> MapForest k v -> Maybe (Level k v)
 sub []    _      = Nothing
 sub [k]   forest = Map.lookup k forest
 sub (h:t) forest = case Map.lookup h forest of
     Just level -> sub t $ level ^. subForest
     _          -> Nothing
-
-
-hasChildren :: Ord k => [k] -> MapForest k v -> Bool
-hasChildren [] forest = not $ Map.null forest
-hasChildren k  forest = Maybe.isJust $ sub k forest
 
 
 fixEntry :: Ord k => (k, Level k v) -> Maybe (k, Level k v)
@@ -104,13 +111,8 @@ fixForest = Map.fromList
           . Map.toList
 
 
-delete :: Ord k => [k] -> MapForest k v -> MapForest k v
-delete k forest = fixForest $ insert' k Nothing forest
-
-
 draw :: (Show k, Show v) => MapForest k v -> String
 draw = unlines . map (unlines . drawTree) . Map.toList where
-
     shift first other = zipWith (++) (first : repeat other)
 
     drawTree (k, level) = show (k, level ^. value) : drawSubTrees (Map.toList $ level ^. subForest)
