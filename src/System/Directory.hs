@@ -30,3 +30,13 @@ getAppDataDirectory = do
     home <- X.getHomeDirectory
     return $ home </> ".local" </> "share"
 #endif
+
+
+getLocalAppDataDirectory :: IO FilePath
+getLocalAppDataDirectory = do
+#if defined(mingw32_HOST_OS)
+    Win32.sHGetFolderPath Win32.nullPtr Win32.cSIDL_LOCAL_APPDATA Win32.nullPtr 0
+#else
+    home <- X.getHomeDirectory
+    return $ home </> ".local" </> "share"
+#endif
