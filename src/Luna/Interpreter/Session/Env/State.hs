@@ -140,28 +140,37 @@ setDefaultSerializationMode mode =
 
 ---- Env.serializationModes -----------------------------------------------
 
-getSerializationModes :: Session (MapForest CallPoint Mode)
-getSerializationModes = gets $ view Env.serializationModes
+getSerializationModesMap :: Session (MapForest CallPoint (Set Mode))
+getSerializationModesMap = gets $ view Env.serializationModes
 
 
-lookupSerializationMode :: CallPointPath -> Session (Maybe Mode)
-lookupSerializationMode callPointPath =
-    MapForest.lookup callPointPath <$> getSerializationModes
+lookupSerializationModes :: CallPointPath -> Session (Maybe (Set Mode))
+lookupSerializationModes callPointPath =
+    MapForest.lookup callPointPath <$> getSerializationModesMap
 
 
-getSerializationMode :: CallPointPath -> Session Mode
-getSerializationMode callPointPath = do
-    mode <- lookupSerializationMode callPointPath
-    Maybe.maybe getDefaultSerializationMode return mode
+getSerializationModes :: CallPointPath -> Session (Set Mode)
+getSerializationModes callPointPath = do
+    modes <- lookupSerializationModes callPointPath
+    Maybe.maybe (Set.singleton <$> getDefaultSerializationMode) return modes
 
 
-insertSerializationMode :: CallPointPath -> Mode -> Session ()
-insertSerializationMode callPointPath mode =
-    modify (Env.serializationModes %~ MapForest.insert callPointPath mode)
+insertSerializationModes :: CallPointPath -> Set Mode -> Session ()
+insertSerializationModes callPointPath modes =
+    modify (Env.serializationModes %~ MapForest.alter ins callPointPath) where
+        ins  Nothing = Just modes
+        ins (Just s) = Just $ Set.union s modes
 
 
-deleteSerializationMode :: CallPointPath -> Session ()
-deleteSerializationMode callPointPath =
+deleteSerializationModes :: CallPointPath -> Set Mode -> Session ()
+deleteSerializationModes callPointPath modes =
+    modify (Env.serializationModes %~ MapForest.alter del callPointPath) where
+        del  Nothing = Just modes
+        del (Just s) = Just $ Set.difference s modes
+
+
+clearSerializationModes :: CallPointPath -> Session ()
+clearSerializationModes callPointPath =
     modify (Env.serializationModes %~ MapForest.delete callPointPath)
 
 ---- Env.memoryConfig -----------------------------------------------------
@@ -278,5 +287,5 @@ setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
 
 ---- Env.resultCallback ---------------------------------------------------
 
-getResultCallBack :: Session (Project.ID -> CallPointPath -> Maybe Value -> IO ())
+getResultCallBack :: Session (Project.ID -> CallPointPath -> [Value] -> IO ())
 getResultCallBack = gets $ view Env.resultCallBack

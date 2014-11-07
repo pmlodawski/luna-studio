@@ -34,12 +34,12 @@ data Env = Env { _cached                   :: MapForest CallPoint CacheInfo
                , _allReady                 :: Bool
                , _dependentNodes           :: Map CallPoint (Set Node.ID)
                , _defaultSerializationMode :: Mode
-               , _serializationModes       :: MapForest CallPoint Mode
+               , _serializationModes       :: MapForest CallPoint (Set Mode)
                , _memoryConfig             :: Memory.Config
                , _libManager               :: LibManager
                , _projectID                :: Maybe Project.ID
                , _mainPtr                  :: Maybe DefPoint
-               , _resultCallBack           :: Project.ID -> CallPointPath -> Maybe Value -> IO ()
+               , _resultCallBack           :: Project.ID -> CallPointPath -> [Value] -> IO ()
                }
 
 
@@ -47,7 +47,7 @@ makeLenses ''Env
 
 
 mk :: LibManager -> Maybe Project.ID -> Maybe DefPoint
-   -> (Project.ID -> CallPointPath -> Maybe Value -> IO ()) -> Env
+   -> (Project.ID -> CallPointPath -> [Value] -> IO ()) -> Env
 mk = Env def def def False def def def def
 
 
