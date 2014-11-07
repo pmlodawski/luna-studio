@@ -65,11 +65,12 @@ toUnixString path = case head l of
 expand :: MonadIO m => UniPath -> m UniPath
 expand [] = return empty
 expand (x:xs) = liftIO $ case x of
-    Var "~"           -> expandRest   Directory.getHomeDirectory
-    Var "$APPFLOWBOX" -> expandRest $ Directory.getAppUserDataDirectory "flowbox"
-    Var "$APPDATA"    -> expandRest   Directory.getAppDataDirectory
-    Var "$TEMP"       -> expandRest   Directory.getTemporaryDirectory
-    Var "$DOCUMENTS"  -> expandRest   Directory.getUserDocumentsDirectory
+    Var "~"             -> expandRest   Directory.getHomeDirectory
+    Var "$APPFLOWBOX"   -> expandRest $ Directory.getAppUserDataDirectory "flowbox"
+    Var "$APPDATA"      -> expandRest   Directory.getAppDataDirectory
+    Var "$LOCALAPPDATA" -> expandRest   Directory.getLocalAppDataDirectory
+    Var "$TEMP"         -> expandRest   Directory.getTemporaryDirectory
+    Var "$DOCUMENTS"    -> expandRest   Directory.getUserDocumentsDirectory
     _       -> (:) x <$> expand xs
     where expandRest fvar = do
               var <- fvar
