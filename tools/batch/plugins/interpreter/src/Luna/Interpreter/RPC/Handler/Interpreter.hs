@@ -42,6 +42,10 @@ import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Request 
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Update                as WatchPointAdd
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Request              as WatchPointList
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Status               as WatchPointList
+import qualified Generated.Proto.Interpreter.Interpreter.Memory.GetLimits.Request            as MemoryGetLimits
+import qualified Generated.Proto.Interpreter.Interpreter.Memory.SetLimits.Request            as MemorySetLimits
+import qualified Generated.Proto.Interpreter.Interpreter.Memory.SetLimits.Update            as MemorySetLimits
+import qualified Generated.Proto.Interpreter.Interpreter.Memory.GetLimits.Status            as MemoryGetLimits
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Request            as WatchPointRemove
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update             as WatchPointRemove
 import           Luna.Interpreter.Proto.CallPointPath                                         ()
@@ -53,7 +57,7 @@ import qualified Luna.Interpreter.Session.AST.Executor                          
 import qualified Luna.Interpreter.Session.AST.WatchPoint                                      as WatchPoint
 import qualified Luna.Interpreter.Session.Env                                                 as Env
 import           Luna.Interpreter.Session.Session                                             (SessionST)
-
+import qualified Luna.Interpreter.Session.Memory as Memory
 
 
 logger :: LoggerIO
@@ -164,3 +168,16 @@ deleteSerializationMode request@(DeleteSMode.Request tcallPointPath) = do
     Sync.testProjectID projectID
     liftSession $ Env.deleteSerializationMode callPointPath
     return $ DeleteSMode.Update request
+
+
+getMemoryLimits :: MemoryGetLimits.Request -> RPC Context SessionST MemoryGetLimits.Status
+getMemoryLimits request = do
+    memConfig <- liftSession Env.getMemoryConfig
+    return $ MemoryGetLimits.Status request (memConfig ^. Memory.memoryUpperLimit) 
+                                            (memConfig ^. Memory.memoryLowerLimit)
+
+
+setMemoryLimits :: MemorySetLimits.Request -> RPC Context SessionST MemorySetLimits.Update
+setMemoryLimits request@(MemorySetLimits.Request upper lower) = do
+    liftSession $ Env.setMemoryConfig $ Memory.Config upper lower
+    return $ MemorySetLimits.Update request
