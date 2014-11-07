@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE CPP   #-}
 module Main where
 
 import qualified Flowbox.Bus.EndPoint                 as EP
@@ -22,7 +23,10 @@ import           Luna.Interpreter.Cmd                 (Cmd)
 import qualified Luna.Interpreter.Cmd                 as Cmd
 import qualified Luna.Interpreter.RPC.Handler.Handler as Handler
 import qualified Luna.Interpreter.Version             as Version
+#if !defined(mingw32_HOST_OS)
 import           System.Remote.Monitoring
+#endif
+
 
 
 rootLogger :: Logger
@@ -54,7 +58,9 @@ run :: Cmd -> IO ()
 run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run prefix verbose _ -> do
+#if !defined(mingw32_HOST_OS)
         _ <- forkServer "localhost" 8000
+#endif
         rootLogger setIntLevel verbose
         cfg       <- Config.load
         Initializer.initializeIfNeeded cfg
