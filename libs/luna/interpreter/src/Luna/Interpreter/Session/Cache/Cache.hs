@@ -11,6 +11,8 @@ module Luna.Interpreter.Session.Cache.Cache where
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
+import qualified Data.Set            as Set
+import qualified System.Mem as Mem
 
 import           Flowbox.Control.Error
 import qualified Flowbox.Data.MapForest                      as MapForest
@@ -117,9 +119,14 @@ put callDataPath predVarNames varName = do
 
 deleteNode :: Library.ID -> Node.ID -> Session ()
 deleteNode libraryID nodeID = do
-    let matchNode k _ = last k == CallPoint libraryID nodeID
+    logger info $ "Cleaning node: " ++ show (libraryID, nodeID)
+    let callPoint     = CallPoint libraryID nodeID
+        matchNode k _ = last k == callPoint
     matching <- MapForest.find matchNode <$> Env.getCached
     mapM_ delete' matching
+    dependent <- Env.getDependentNodesOf callPoint
+    Env.deleteDependentNodes callPoint
+    mapM_ (deleteNode libraryID) $ Set.toList dependent
 
 
 delete :: CallPointPath -> Session ()
@@ -144,3 +151,11 @@ deleteAll = do
 getCacheInfo :: CallPointPath -> Session CacheInfo
 getCacheInfo callPointPath = Env.cachedLookup callPointPath
     <??&> Error.CacheError $(loc) (concat ["Object ", show callPointPath, " is not in cache."])
+
+
+performGC :: Session ()
+performGC = do
+    logger info "Running GC"
+    Session.runStmt "performGC"
+    liftIO $ Mem.performGC
+
