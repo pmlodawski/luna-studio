@@ -159,13 +159,18 @@ posterizeLuna (VPS (variable -> colors)) = posterize colors
 loadImageLuna :: FilePath -> IO (Image RGBA)
 loadImageLuna path = do
     (r, g, b, a) <- testLoadRGBA path
-    let view = View.empty "rgba"
-             & View.append (ChannelFloat "r" . FlatData $ r)
-             & View.append (ChannelFloat "g" . FlatData $ g)
-             & View.append (ChannelFloat "b" . FlatData $ b)
-             & View.append (ChannelFloat "a" . FlatData $ a)
+    let view = insertChannelFloats (View.empty "rgba") [
+                   ("rgba.r", r)
+                 , ("rgba.g", g)
+                 , ("rgba.b", b)
+                 , ("rgba.a", a)
+               ]
         image = singleton view
     return image
+
+insertChannelFloats :: View v => v -> [(String, Matrix2 Double)] -> v
+insertChannelFloats view chans = foldr f view chans
+    where f (name, chan) acc = View.append (ChannelFloat name . FlatData $ chan) acc
 
 saveImageLuna :: FilePath -> Image RGBA -> IO (Image RGBA)
 saveImageLuna path img = do
@@ -196,10 +201,11 @@ onEachRGB f img = img'
 
           (r', g', b') = unzipRGB rgb'
 
-          view' = view
-                & View.append (ChannelFloat "r" (FlatData r'))
-                & View.append (ChannelFloat "g" (FlatData g'))
-                & View.append (ChannelFloat "b" (FlatData b'))
+          view' = insertChannelFloats view [
+                      ("rgba.r", r')
+                    , ("rgba.g", g')
+                    , ("rgba.b", b')
+                  ]
 
           Right img' = Image.update (const $ Just view') "rgba" img
 
@@ -209,7 +215,7 @@ keyer' f img = img'
           Just view = lookup "rgba" img
           alpha = M.map f rgb
 
-          view' = View.append (ChannelFloat "a" (FlatData alpha)) view
+          view' = insertChannelFloats view [("rgba.a", alpha)]
 
           Right img' = Image.update (const $ Just view') "rgba" img
 
@@ -222,10 +228,10 @@ unsafeGetRGB img = rgb
 unsafeGetChannels :: Image RGBA -> (M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double)
 unsafeGetChannels img = (r, g, b, a)
     where Just view = lookup "rgba" img
-          Right (Just (ChannelFloat _ (FlatData r))) = View.get view "r"
-          Right (Just (ChannelFloat _ (FlatData g))) = View.get view "g"
-          Right (Just (ChannelFloat _ (FlatData b))) = View.get view "b"
-          Right (Just (ChannelFloat _ (FlatData a))) = View.get view "a"
+          Right (Just (ChannelFloat _ (FlatData r))) = View.get view "rgba.r"
+          Right (Just (ChannelFloat _ (FlatData g))) = View.get view "rgba.g"
+          Right (Just (ChannelFloat _ (FlatData b))) = View.get view "rgba.b"
+          Right (Just (ChannelFloat _ (FlatData a))) = View.get view "rgba.a"
 
 keyerLuna :: VPS KeyerMode -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> Image RGBA -> Image RGBA
 keyerLuna (VPS mode) (VPS (variable -> a)) (VPS (variable -> b)) (VPS (variable -> c)) (VPS (variable -> d)) img =
@@ -239,7 +245,7 @@ differenceKeyer' f background foreground = img'
           alpha = M.map (A.uncurry f) $ M.zip backgroundRGB foregroundRGB
 
           Just view = lookup "rgba" foreground
-          view' = View.append (ChannelFloat "a" (FlatData alpha)) view
+          view' = insertChannelFloats view [("rgba.a", alpha)]
 
           Right img' = Image.update (const $ Just view') "rgba" foreground
 
@@ -323,11 +329,12 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
 channelToImageRGBA :: Matrix2 Double -> Image RGBA
 channelToImageRGBA m = image
     where image = singleton view
-          view = View.empty "rgba"
-               & View.append (ChannelFloat "r" . FlatData $ m)
-               & View.append (ChannelFloat "g" . FlatData $ m)
-               & View.append (ChannelFloat "b" . FlatData $ m)
-               & View.append (ChannelFloat "a" . FlatData $ alpha)
+          view = insertChannelFloats (View.empty "rgba") [
+                     ("rgba.r", m)
+                   , ("rgba.g", m)
+                   , ("rgba.b", m)
+                   , ("rgba.a", alpha)
+                 ]
 
           alpha :: Matrix2 Double
           alpha = M.generate (M.shape m) (const 1)
@@ -503,11 +510,12 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
     XOR                 -> processMerge $ Merge.threeWayMerge             Merge.xor
     where processMerge f = img'
               where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 a1 a2
-                    view' = view
-                          & View.append (ChannelFloat "r" (FlatData $ rasterizer $ r))
-                          & View.append (ChannelFloat "g" (FlatData $ rasterizer $ g))
-                          & View.append (ChannelFloat "b" (FlatData $ rasterizer $ b))
-                          & View.append (ChannelFloat "a" (FlatData $ rasterizer $ a))
+                    view' = insertChannelFloats view [
+                                ("rgba.r", rasterizer $ r)
+                              , ("rgba.g", rasterizer $ g)
+                              , ("rgba.b", rasterizer $ b)
+                              , ("rgba.a", rasterizer $ a)
+                            ]
                     Right img' = Image.update (const $ Just view') "rgba" img1
           Just view = lookup "rgba" img1
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (fromMatrix (A.Constant 0))
@@ -516,11 +524,12 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
 onGenerator f img = img'
     where (r, g, b, a) = unsafeGetChannels img & over each (rasterizer . f . fromMatrix (A.Constant 0))
           Just view = lookup "rgba" img
-          view' = view
-                & View.append (ChannelFloat "r" (FlatData r))
-                & View.append (ChannelFloat "g" (FlatData g))
-                & View.append (ChannelFloat "b" (FlatData b))
-                & View.append (ChannelFloat "a" (FlatData a))
+          view' = insertChannelFloats view [
+                      ("rgba.r", r)
+                    , ("rgba.g", g)
+                    , ("rgba.b", b)
+                    , ("rgba.a", a)
+                  ]
           Right img' = Image.update (const $ Just view') "rgba" img
 
 erodeLuna :: Int -> Image RGBA -> Image RGBA
@@ -549,11 +558,12 @@ withAlpha f img = img'
           b' = M.zipWith f b a
 
           Just view = lookup "rgba" img
-          view' = view
-                & View.append (ChannelFloat "r" (FlatData r'))
-                & View.append (ChannelFloat "g" (FlatData g'))
-                & View.append (ChannelFloat "b" (FlatData b'))
-                & View.append (ChannelFloat "a" (FlatData a))
+          view' = insertChannelFloats view [
+                      ("rgba.r", r')
+                    , ("rgba.g", g')
+                    , ("rgba.b", b')
+                    , ("rgba.a", a)
+                  ]
           Right img' = Image.update (const $ Just view') "rgba" img
 
 invertLuna :: Image RGBA -> Image RGBA
@@ -616,10 +626,11 @@ histEqLuna (variable -> bins) img = img'
 
           Just view = lookup "rgba" img
 
-          view' = view
-                & View.append (ChannelFloat "r" (FlatData r))
-                & View.append (ChannelFloat "g" (FlatData g))
-                & View.append (ChannelFloat "b" (FlatData b))
+          view' = insertChannelFloats view [
+                      ("rgba.r", r)
+                    , ("rgba.g", g)
+                    , ("rgba.b", b)
+                  ]
 
           Right img' = Image.update (const $ Just view') "rgba" img
 
@@ -632,10 +643,11 @@ ditherLuna boundary bits table img = do
     b' <- mutableProcess run ditherMethod b
 
     let Just view = lookup "rgba" img
-        view' = view
-              & View.append (ChannelFloat "r" (FlatData r'))
-              & View.append (ChannelFloat "g" (FlatData g'))
-              & View.append (ChannelFloat "b" (FlatData b'))
+        view' = insertChannelFloats view [
+                      ("rgba.r", r')
+                    , ("rgba.g", g')
+                    , ("rgba.b", b')
+                  ]
         Right img' = Image.update (const $ Just view') "rgba" img
 
     return img'
