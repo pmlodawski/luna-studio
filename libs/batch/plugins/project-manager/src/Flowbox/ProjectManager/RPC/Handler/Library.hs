@@ -96,8 +96,8 @@ unload request@(Unload.Request tlibID tprojectID) = do
 
 
 store :: Store.Request -> RPC Context IO Store.Status
-store request@(Store.Request tlibID tprojectID) = do
+store request@(Store.Request tlibID tprojectID mtpath) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchL.storeLibrary libID projectID
+    BatchL.storeLibrary libID projectID $ fmap decodeP mtpath
     return $ Store.Status request

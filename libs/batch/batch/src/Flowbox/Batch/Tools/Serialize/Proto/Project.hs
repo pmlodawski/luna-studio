@@ -13,6 +13,7 @@ module Flowbox.Batch.Tools.Serialize.Proto.Project (
 ) where
 
 import qualified Data.ByteString.Lazy as ByteString
+import qualified Data.Maybe           as Maybe
 import           System.IO
 import qualified Text.ProtocolBuffers as Proto
 
@@ -49,9 +50,9 @@ getProject h = runScript $ do
     return project
 
 
-storeProject :: Project -> IO ()
-storeProject project = do
-    let filepath = UniPath.append projectFile $ project ^. Project.path
+storeProject :: Project -> Maybe UniPath -> IO ()
+storeProject project mpath = do
+    let filepath = Maybe.fromMaybe (UniPath.append projectFile $ project ^. Project.path) mpath
         sproject = Serializable filepath (saveProject project)
     Serializer.serialize sproject
 

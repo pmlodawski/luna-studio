@@ -90,8 +90,8 @@ close request@(Close.Request tprojectID) = do
 
 
 store :: Store.Request -> RPC Context IO Store.Status
-store request@(Store.Request tprojectID) = do
-    BatchP.storeProject $ decodeP tprojectID
+store request@(Store.Request tprojectID mtpath) = do
+    BatchP.storeProject (decodeP tprojectID) $ fmap decodeP mtpath
     return $ Store.Status request
 
 
