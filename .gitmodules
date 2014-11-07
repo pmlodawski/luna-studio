@@ -35,6 +35,3 @@
 [submodule "third-party/cuda"]
 	path = third-party/cuda
 	url = https://github.com/srutownik/cuda.git
-[submodule "third-party/win32"]
-	path = third-party/win32
-	url = https://github.com/flowbox-public/win32.git
