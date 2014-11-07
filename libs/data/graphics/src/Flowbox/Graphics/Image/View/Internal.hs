@@ -15,6 +15,7 @@ module Flowbox.Graphics.Image.View.Internal (
 ) where
 
 import           Data.Set        hiding (map)
+import           Data.List       as List (foldl')
 import           Data.List.Split
 import qualified Data.Map        as Map hiding (map)
 
@@ -47,14 +48,14 @@ get :: View v => v -> Channel.Name -> Image.Result (Maybe Channel)
 get v descriptor = case result of
     Left _    -> Left $ ChannelLookupError descriptor
     Right val -> Right val
-    where result  = P.foldr f z nodes >>= ChanTree.get
-          f p acc = acc >>= ChanTree.lookup p
+    where result  = List.foldl' f z nodes >>= ChanTree.get
+          f tree name = tree >>= ChanTree.lookup name
           z       = ChanTree.zipper $ channels v
           nodes   = splitOn "." descriptor
 
 append :: View view => Channel -> view -> view
 append chan v = set (ChanTree.tree result') v
-    where result = P.foldl go z (init nodes) >>= insert (last nodes) (Just chan) >>= ChanTree.top
+    where result  = List.foldl' go z (init nodes) >>= insert (last nodes) (Just chan) >>= ChanTree.top
           result' = case result of
               Right res -> res
               Left err  -> errorShitWentWrong $ "append (" ++ show err ++ ") "
