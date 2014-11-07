@@ -4,28 +4,39 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
 module Flowbox.FileManager.LocalFileManager where
 
-import qualified System.Directory as Directory
+import           Control.Exception (SomeException, catch)
+import qualified System.Directory  as Directory
 
 import           Flowbox.Control.Error
 import           Flowbox.FileManager.FileManager
-import           Flowbox.FileManager.Item                    (toGen)
-import           Flowbox.Prelude                             hiding (Context)
-import qualified Flowbox.System.Directory.Directory          as FDirectory
-import qualified Flowbox.System.UniPath                      as UniPath
-import qualified Generated.Proto.FileManager.FileSystem.Item as Gen
-import qualified System.PosixCompat.Files                    as Files
-
+import           Flowbox.FileManager.Item                        (toGen)
+import           Flowbox.Prelude
+import qualified Flowbox.System.Directory.Directory              as FDirectory
+import qualified Flowbox.System.UniPath                          as UniPath
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.FileManager.FileSystem.Item     as Gen
+import qualified Generated.Proto.FileManager.FileSystem.Item.Cls as Gen
+import qualified System.PosixCompat.Files                        as Files
 
 
 data LocalFileManager = LocalFileManager
 
 
 getFileStatus :: FilePath -> IO Gen.Item
-getFileStatus name = toGen name <$> Files.getFileStatus name
+getFileStatus name =
+    catch (toGen name <$> Files.getFileStatus name) $ \(_ :: SomeException) -> do
+        cls <- Directory.doesFileExist name >>= \case
+            True  -> return Gen.File
+            False -> Directory.doesDirectoryExist name >>= \case
+                True  -> return Gen.Directory
+                False -> return Gen.Other
+        return $ Gen.Item cls (encodePJ name) Nothing Nothing Nothing Nothing
 
 
 instance FileManager LocalFileManager () where
