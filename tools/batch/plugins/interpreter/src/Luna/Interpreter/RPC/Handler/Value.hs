@@ -10,6 +10,7 @@ module Luna.Interpreter.RPC.Handler.Value where
 
 import           Data.IORef       (IORef)
 import qualified Data.IORef       as IORef
+import qualified Data.Sequence    as Sequence
 import qualified Pipes.Concurrent as Pipes
 
 import qualified Flowbox.Batch.Project.Project                         as Project
@@ -43,22 +44,21 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-
 get :: Value.Request -> RPC Context SessionST Value.Update
 get (Value.Request tcallPointPath) = do
     (projectID, callPointPath) <- decodeE tcallPointPath
     Sync.testProjectID projectID
     (status, bytes) <- liftSession $ Value.getWithStatus callPointPath
-    return $ Value.Update tcallPointPath (encodeP status) bytes
+    return $ Value.Update tcallPointPath (encodeP status) $ Sequence.fromList bytes
 
 
 reportOutputValue :: IORef Message.CorrelationID
                   -> Pipes.Output (Message, Message.CorrelationID, Flag)
-                  -> Project.ID -> CallPointPath -> Maybe Value -> IO ()
-reportOutputValue crlRef output projectID callPointPath value = do
+                  -> Project.ID -> CallPointPath -> [Value] -> IO ()
+reportOutputValue crlRef output projectID callPointPath values = do
     crl <- IORef.readIORef crlRef
     let tcallPointPath = encode (projectID, callPointPath)
-        response = Value.Update tcallPointPath (encodeP Value.Ready) value
+        response = Value.Update tcallPointPath (encodeP Value.Ready) $ Sequence.fromList values
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response
         packet   = (msg, crl, Flag.Disable)

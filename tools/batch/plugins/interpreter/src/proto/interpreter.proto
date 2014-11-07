@@ -85,19 +85,28 @@ message Interpreter {
             }
             message Status {
                 required Request request = 1;
-                optional generated.proto.mode.Mode mode = 2;
+                repeated generated.proto.mode.Mode mode = 2;
             }
         }
-        message Set {
+        message Insert {
             message Request {
                 required CallPointPath    callPointPath = 1;
-                required generated.proto.mode.Mode mode = 2;
+                repeated generated.proto.mode.Mode mode = 2;
             }
             message Update {
                 required Request request = 1;
             }
         }
         message Delete {
+            message Request {
+                required CallPointPath callPointPath = 1;
+                repeated generated.proto.mode.Mode mode = 2;
+            }
+            message Update {
+                required Request request = 1;
+            }
+        }
+        message Clear {
             message Request {
                 required CallPointPath callPointPath = 1;
             }
@@ -149,7 +158,7 @@ message Interpreter {
         message Update {
             required CallPointPath      callPointPath = 1;
             required Status                    status = 2;
-            optional generated.proto.data.Value value = 3;
+            repeated generated.proto.data.Value value = 3;
         }
     }
     message Abort {
