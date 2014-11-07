@@ -164,4 +164,23 @@ message Interpreter {
             required Request request = 1;
         }
     }
+    message Memory {
+        message SetLimits {
+            message Request {
+                required int64 upper = 1;
+                required int64 lower = 2;
+            }
+            message Update {
+                required Request request = 1;
+            }
+        }
+        message GetLimits {
+            message Request { }
+            message Status {
+                required Request request = 1;
+                required int64   upper   = 2;
+                required int64   lower   = 3;
+            }
+        }
+    }
 }
