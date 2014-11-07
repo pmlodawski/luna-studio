@@ -81,6 +81,7 @@ message Project {
     message Store {
         message Request {
             required int32 projectID = 1;
+            optional string path     = 2;
         }
         message Status {
             required Request request = 1;
@@ -160,8 +161,9 @@ message Project {
         }
         message Store {
             message Request {
-                required int32 libraryID = 1;
-                required int32 projectID = 2;
+                required int32  libraryID = 1;
+                required int32  projectID = 2;
+                optional string path      = 3;
             }
             message Status {
                 required Request request = 1;
