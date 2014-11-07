@@ -12,6 +12,7 @@ module Luna.Data.Serialize.Proto.Library (
 ) where
 
 import qualified Data.ByteString.Lazy as ByteString
+import qualified Data.Maybe           as Maybe
 import qualified System.IO            as IO
 import qualified Text.ProtocolBuffers as Proto
 
@@ -47,9 +48,9 @@ getLib h = runScript $ do
     return library
 
 
-storeLibrary :: Library -> IO ()
-storeLibrary lib = do
-    let libpath = lib ^. Library.path
+storeLibrary :: Library -> Maybe UniPath -> IO ()
+storeLibrary lib mpath = do
+    let libpath = Maybe.fromMaybe (lib ^. Library.path) mpath
         slib    = Serializable libpath (saveLib lib)
     Serializer.serialize slib
     loggerIO debug "Library saved succesfully"
