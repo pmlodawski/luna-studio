@@ -9,11 +9,12 @@ module Luna.Interpreter.Session.Debug where
 
 import qualified GHC
 
-import Flowbox.Prelude
-import Flowbox.System.Log.Logger
-import Luna.Interpreter.Session.GHC.Util (dshow)
-import Luna.Interpreter.Session.Session  (Session)
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 import qualified HscTypes
+import           Luna.Interpreter.Session.GHC.Util (dshow)
+import           Luna.Interpreter.Session.Session  (Session)
+
 
 
 logger :: LoggerIO

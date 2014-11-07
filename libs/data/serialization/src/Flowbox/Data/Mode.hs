@@ -8,7 +8,7 @@
 
 module Flowbox.Data.Mode (
     module X,
-    def,
+    module Flowbox.Data.Mode,
 ) where
 
 import Flowbox.Prelude

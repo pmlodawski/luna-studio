@@ -55,10 +55,10 @@ closeProject projectID = Batch.projectManagerOp (\projectManager ->
     return (ProjectManager.delNode projectID projectManager, ()))
 
 
-storeProject :: Project.ID -> Batch ()
-storeProject projectID = do
+storeProject :: Project.ID -> (Maybe UniPath) -> Batch ()
+storeProject projectID mpath = do
     project <- Batch.getProject projectID
-    liftIO $ ProjectSerialization.storeProject project
+    liftIO $ ProjectSerialization.storeProject project mpath
 
 
 projectFileExists :: UniPath -> Batch Bool

@@ -45,5 +45,5 @@ main_inner = Luna.run $ do
     let name = "Std"
         path = UniPath.fromUnixString "~/.flowbox/visual/stdlib.lunalib"
         library = Library name path ast PropertyMap.empty
-    liftIO $ LibSerialization.storeLibrary library
+    liftIO $ LibSerialization.storeLibrary library Nothing
     return ()

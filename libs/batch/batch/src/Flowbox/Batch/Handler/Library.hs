@@ -72,10 +72,10 @@ unloadLibrary libraryID projectID = libManagerOp projectID (\libManager ->
     return (LibManager.delNode libraryID libManager, ()))
 
 
-storeLibrary :: Library.ID -> Project.ID -> Batch ()
-storeLibrary libraryID projectID = do
+storeLibrary :: Library.ID -> Project.ID -> (Maybe UniPath) -> Batch ()
+storeLibrary libraryID projectID mpath = do
     library <- Batch.getLibrary libraryID projectID
-    liftIO $ LibSerialization.storeLibrary library
+    liftIO $ LibSerialization.storeLibrary library mpath
 
 
 -- TODO [PM] : More remote arguments needed

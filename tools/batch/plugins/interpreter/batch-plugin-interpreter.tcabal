@@ -17,7 +17,7 @@ Executable interpreter
     Other-Modules:  Paths_batch_plugin_interpreter
     Main-Is:        Main.hs
 
-    GHC-Options:    -Wall -O2 -threaded
+    GHC-Options:    -Wall -O2 -threaded -with-rtsopts=-T
 
     Extensions:     NoImplicitPrelude
 
@@ -26,7 +26,6 @@ Executable interpreter
                     bytestring,
                     containers,
                     either,
-                    ekg,
                     errors,
                     exceptions,
                     flowbox-batch,
@@ -48,3 +47,7 @@ Executable interpreter
                     protocol-buffers-fork,
                     transformers,
                     zeromq4-haskell >= 0.4
+
+  if !os(windows)
+    Build-Depends:  ekg
+                    

@@ -22,6 +22,7 @@ import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
+import qualified Luna.Interpreter.Session.Memory.Config      as Memory
 import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 import           Luna.Lib.Manager                            (LibManager)
 
@@ -33,11 +34,12 @@ data Env = Env { _cached                   :: MapForest CallPoint CacheInfo
                , _allReady                 :: Bool
                , _dependentNodes           :: Map CallPoint (Set Node.ID)
                , _defaultSerializationMode :: Mode
-               , _serializationModes       :: MapForest CallPoint Mode
+               , _serializationModes       :: MapForest CallPoint (Set Mode)
+               , _memoryConfig             :: Memory.Config
                , _libManager               :: LibManager
                , _projectID                :: Maybe Project.ID
                , _mainPtr                  :: Maybe DefPoint
-               , _resultCallBack           :: Project.ID -> CallPointPath -> Maybe Value -> IO ()
+               , _resultCallBack           :: Project.ID -> CallPointPath -> [Value] -> IO ()
                }
 
 
@@ -45,8 +47,8 @@ makeLenses ''Env
 
 
 mk :: LibManager -> Maybe Project.ID -> Maybe DefPoint
-   -> (Project.ID -> CallPointPath -> Maybe Value -> IO ()) -> Env
-mk = Env def def def False def def def
+   -> (Project.ID -> CallPointPath -> [Value] -> IO ()) -> Env
+mk = Env def def def False def def def def
 
 
 instance Default Env where

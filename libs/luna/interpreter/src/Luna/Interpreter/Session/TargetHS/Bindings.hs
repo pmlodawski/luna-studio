@@ -40,15 +40,15 @@ remove name = do
 
     logger info $ "Deleting " ++ show (length matching) ++ " bindings"
     GhcMonad.liftIO $ Linker.deleteFromLinkEnv $ map GHC.getName matching
-    remove_ic_tythings name
+    removeIcTythings name
     --GhcMonad.liftIO $ do
     --    pls <-  Linker.saveLinkerGlobals
     --    let closure_env = Linker.closure_env pls
     --    print $ dshow dflags closure_env
 
 
-remove_ic_tythings :: GhcMonad m => String -> m ()
-remove_ic_tythings name = do
+removeIcTythings :: GhcMonad m => String -> m ()
+removeIcTythings name = do
     dflags <- GHC.getSessionDynFlags
     GhcMonad.modifySession $ \hscEnv -> let
         hsc_IC       = HscTypes.hsc_IC       hscEnv
