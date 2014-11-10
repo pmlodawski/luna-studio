@@ -6,15 +6,20 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Graphics.Image.View.Internal (
-    View (..),
+    View,
     Name,
     ChanTree,
     Select (..),
     get,
-    append
+    append,
+    name,
+    channels,
+    set,
+    empty,
+    map
 ) where
 
-import           Data.Set        hiding (map)
+import           Data.Set        hiding (map, empty)
 import           Data.List       as List (foldl')
 import           Data.List.Split
 import qualified Data.Map        as Map hiding (map)
@@ -25,26 +30,29 @@ import           Flowbox.Graphics.Image.Error   (Error(..))
 import qualified Flowbox.Graphics.Image.Error   as Image
 import           Flowbox.Graphics.Image.Channel (Channel(..))
 import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Prelude                as P hiding (set, map)
+import           Flowbox.Prelude                as P hiding (set, map, empty)
 
 
 
-type Name = String
+type Name     = String
 type ChanTree = ChannelTree Channel.Name Channel
-type Select = Set Name
+type Select   = Set Name
 
-class View v where
-    name     :: v -> Name -- Lens' v Name
-    channels :: v -> ChanTree -- Lens' v (ChannelTree Channel.Name Channel)
-    --viewBounds :: Bounds
-    --pixelAspectRatio :: AspectRatio
-    --
-    empty    :: Name -> v
-    set      :: ChanTree -> v -> v
-    map      :: (Channel -> Channel) -> v -> v
-    map f v = set (fmap f (channels v)) v
+data View = View { name     :: Name
+                 , channels :: ChanTree
+                 }
+          deriving (Show)
 
-get :: View v => v -> Channel.Name -> Image.Result (Maybe Channel)
+set :: ChanTree -> View -> View
+set t (View name _) = View name t
+
+empty :: Name -> View
+empty name = View name ChanTree.empty
+
+map :: (Channel -> Channel) -> View -> View
+map f v = set (fmap f (channels v)) v
+
+get :: View -> Channel.Name -> Image.Result (Maybe Channel)
 get v descriptor = case result of
     Left _    -> Left $ ChannelLookupError descriptor
     Right val -> Right val
@@ -53,7 +61,7 @@ get v descriptor = case result of
           z       = ChanTree.zipper $ channels v
           nodes   = splitOn "." descriptor
 
-append :: View view => Channel -> view -> view
+append :: Channel -> View -> View
 append chan v = set (ChanTree.tree result') v
     where result  = List.foldl' go z (init nodes) >>= insert (last nodes) (Just chan) >>= ChanTree.top
           result' = case result of
@@ -73,7 +81,7 @@ append chan v = set (ChanTree.tree result') v
           nodes      = splitOn "." descriptor
           descriptor = Channel.name chan
 
-mapWithWhitelist :: View view => (Channel -> Channel) -> Channel.Select -> view -> view
+mapWithWhitelist :: (Channel -> Channel) -> Channel.Select -> View -> View
 mapWithWhitelist f whitelist = map lambda
     where lambda chan = if Channel.name chan `elem` whitelist
                             then f chan
