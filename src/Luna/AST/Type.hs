@@ -11,8 +11,7 @@
 
 module Luna.AST.Type where
 
-import qualified Data.List    as List
-import           GHC.Generics
+import GHC.Generics
 
 import Flowbox.Generics.Deriving.QShow
 import Flowbox.Prelude                 hiding (Traversal, drop, id)
@@ -64,17 +63,6 @@ traverseM_ ftype t = case t of
 
 traverseMR :: Traversal m => (Type -> m Type) -> Type -> m Type
 traverseMR ftype t = traverseM (traverseMR ftype) t >>= ftype
-
-
-lunaShow :: Type -> String
-lunaShow t = case t of
-    Unknown _               -> "Unknown"
-    Var     _ name'         -> name'
-    Tuple   _ items'        -> "{" ++ List.intercalate ", " strs ++ "}" where
-                                   strs = map lunaShow items'
-    --Class   _ name' params' -> name' ++ " " ++ (List.intercalate " " params')
-    --Module  _ path'         -> List.intercalate "." path'
-    Con     _ segments'     -> List.intercalate "." segments'
 
 
 mkModule :: ID -> [String] -> Type
