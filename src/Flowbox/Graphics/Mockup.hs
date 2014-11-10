@@ -156,7 +156,7 @@ saturateLuna (VPS (variable -> s)) = A.lift1 $ (saturate s :: Color.RGB (A.Exp D
 posterizeLuna :: VPS Double -> A.Exp Double -> A.Exp Double
 posterizeLuna (VPS (variable -> colors)) = posterize colors
 
-loadImageLuna :: FilePath -> IO (Image RGBA)
+loadImageLuna :: FilePath -> IO Image
 loadImageLuna path = do
     (r, g, b, a) <- testLoadRGBA path
     let view = insertChannelFloats (View.empty "rgba") [
@@ -168,30 +168,30 @@ loadImageLuna path = do
         image = singleton view
     return image
 
-insertChannelFloats :: View v => v -> [(String, Matrix2 Double)] -> v
+insertChannelFloats :: View -> [(String, Matrix2 Double)] -> View
 insertChannelFloats view chans = foldr f view chans
     where f (name, chan) acc = View.append (ChannelFloat name . FlatData $ chan) acc
 
-saveImageLuna :: FilePath -> Image RGBA -> IO (Image RGBA)
+saveImageLuna :: FilePath -> Image -> IO Image
 saveImageLuna path img = do
     let (r, g, b, a) = unsafeGetChannels img
     testSaveRGBA path r g b a
     return img
 
-onEachChannel :: (Matrix2 Double -> Matrix2 Double) -> Image RGBA -> Image RGBA
+onEachChannel :: (Matrix2 Double -> Matrix2 Double) -> Image -> Image
 onEachChannel f img = res
     where res = Image.map (View.map fChan) img
           fChan :: Channel -> Channel
           fChan (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ f)
 
-onEachValue :: (A.Exp Double -> A.Exp Double) -> Image RGBA -> Image RGBA
+onEachValue :: (A.Exp Double -> A.Exp Double) -> Image -> Image
 onEachValue f img = res
     where res = Image.map (View.map f') img
 
           f' :: Channel -> Channel
           f' (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ (M.map f))
 
-onEachRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image RGBA -> Image RGBA
+onEachRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image -> Image
 onEachRGB f img = img'
     where rgb = unsafeGetRGB img
           Just view = lookup "rgba" img
@@ -209,7 +209,7 @@ onEachRGB f img = img'
 
           Right img' = Image.update (const $ Just view') "rgba" img
 
-keyer' :: (A.Exp (Color.RGB Double) -> A.Exp Double) -> Image RGBA -> Image RGBA
+keyer' :: (A.Exp (Color.RGB Double) -> A.Exp Double) -> Image -> Image
 keyer' f img = img'
     where rgb = unsafeGetRGB img
           Just view = lookup "rgba" img
@@ -219,13 +219,13 @@ keyer' f img = img'
 
           Right img' = Image.update (const $ Just view') "rgba" img
 
-unsafeGetRGB :: Image RGBA -> M.Matrix2 (Color.RGB Double)
+unsafeGetRGB :: Image -> M.Matrix2 (Color.RGB Double)
 unsafeGetRGB img = rgb
     where (r, g, b, _) = unsafeGetChannels img
 
           rgb = M.zipWith3 (\x y z -> A.lift $ Color.RGB x y z) r g b
 
-unsafeGetChannels :: Image RGBA -> (M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double)
+unsafeGetChannels :: Image -> (M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double)
 unsafeGetChannels img = (r, g, b, a)
     where Just view = lookup "rgba" img
           Right (Just (ChannelFloat _ (FlatData r))) = View.get view "rgba.r"
@@ -233,11 +233,11 @@ unsafeGetChannels img = (r, g, b, a)
           Right (Just (ChannelFloat _ (FlatData b))) = View.get view "rgba.b"
           Right (Just (ChannelFloat _ (FlatData a))) = View.get view "rgba.a"
 
-keyerLuna :: VPS KeyerMode -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> Image RGBA -> Image RGBA
+keyerLuna :: VPS KeyerMode -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> Image -> Image
 keyerLuna (VPS mode) (VPS (variable -> a)) (VPS (variable -> b)) (VPS (variable -> c)) (VPS (variable -> d)) img =
     keyer' (keyer mode (A.lift $ (a, b, c, d))) img
 
-differenceKeyer' :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double) -> A.Exp Double) -> Image RGBA -> Image RGBA -> Image RGBA
+differenceKeyer' :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double) -> A.Exp Double) -> Image -> Image -> Image
 differenceKeyer' f background foreground = img'
     where backgroundRGB = unsafeGetRGB background
           foregroundRGB = unsafeGetRGB foreground
@@ -249,7 +249,7 @@ differenceKeyer' f background foreground = img'
 
           Right img' = Image.update (const $ Just view') "rgba" foreground
 
-differenceKeyerLuna :: VPS Double -> VPS Double -> Image RGBA -> Image RGBA -> Image RGBA
+differenceKeyerLuna :: VPS Double -> VPS Double -> Image -> Image -> Image
 differenceKeyerLuna (VPS (variable -> offset)) (VPS (variable -> gain)) background foreground = img'
     where diff = differenceKeyer offset gain
           img' = differenceKeyer' diff background foreground
@@ -258,8 +258,8 @@ cornerPinLuna :: VPS Double -> VPS Double
               -> VPS Double -> VPS Double
               -> VPS Double -> VPS Double
               -> VPS Double -> VPS Double
-              -> Image RGBA
-              -> Image RGBA
+              -> Image
+              -> Image
 cornerPinLuna (VPS (variable -> p1x)) (VPS (variable -> p1y))
               (VPS (variable -> p2x)) (VPS (variable -> p2y))
               (VPS (variable -> p3x)) (VPS (variable -> p3y))
@@ -271,7 +271,7 @@ cornerPinLuna (VPS (variable -> p1x)) (VPS (variable -> p1y))
           p3 = Point2 p3x p3y
           p4 = Point2 p4x p4y
 
-gaussianLuna :: VPS Int -> Image RGBA -> Image RGBA
+gaussianLuna :: VPS Int -> Image -> Image
 gaussianLuna (VPS (variable -> kernelSize)) img = img'
     where img' = onEachChannel process img
           hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
@@ -279,7 +279,7 @@ gaussianLuna (VPS (variable -> kernelSize)) img = img'
           p = pipe A.Clamp
           process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
 
-gaussianLuna' :: Int -> Image RGBA -> Image RGBA
+gaussianLuna' :: Int -> Image -> Image
 gaussianLuna' (variable -> kernelSize) img = img'
     where img' = onEachChannel process img
           hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
@@ -287,36 +287,36 @@ gaussianLuna' (variable -> kernelSize) img = img'
           p = pipe A.Clamp
           process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
 
-laplacianLuna :: VPS Int -> VPS Double -> VPS Double -> Image RGBA -> Image RGBA
+laplacianLuna :: VPS Int -> VPS Double -> VPS Double -> Image -> Image
 laplacianLuna (VPS (variable -> kernSize)) (VPS (variable -> crossVal)) (VPS (variable -> sideVal)) img = img'
     where img' = onEachChannel process img
           process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
           flt = laplacian crossVal sideVal $ pure kernSize
           p = pipe A.Clamp
 
-circularLuna :: Int -> Int -> Image RGBA
+circularLuna :: Int -> Int -> Image
 circularLuna = gradientLuna circularShape
 
-conicalLuna :: Int -> Int -> Image RGBA
+conicalLuna :: Int -> Int -> Image
 conicalLuna = gradientLuna conicalShape
 
-squareLuna :: Int -> Image RGBA
+squareLuna :: Int -> Image
 squareLuna side = gradientLuna squareShape side side
 
-diamondLuna :: Int -> Int -> Image RGBA
+diamondLuna :: Int -> Int -> Image
 diamondLuna = gradientLuna diamondShape
 
 radialShapeLuna :: (Metric a (Point2 (Exp Double)) (Exp Double), MetricCoord a Cartesian)
-                => a -> Int -> Int -> Image RGBA
+                => a -> Int -> Int -> Image
 radialShapeLuna metric w h = gradientLuna (radialShape metric) w h
 
-linearShapeLuna :: Int -> Int -> Image RGBA
+linearShapeLuna :: Int -> Int -> Image
 linearShapeLuna = gradientLuna linearShape
 
 gradientLuna :: forall e.
                       (A.Lift Exp e,
                        A.Plain e ~ Int) =>
-                      Generator (Point2 (Exp Double)) (Exp Double) -> e -> e -> Image RGBA
+                      Generator (Point2 (Exp Double)) (Exp Double) -> e -> e -> Image
 gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
     where grad = rasterizer $ monosampler $ gradientGenerator
 
@@ -326,7 +326,7 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
           weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
           mapper = flip colorMapper weightFun
 
-channelToImageRGBA :: Matrix2 Double -> Image RGBA
+channelToImageRGBA :: Matrix2 Double -> Image
 channelToImageRGBA m = image
     where image = singleton view
           view = insertChannelFloats (View.empty "rgba") [
@@ -339,16 +339,16 @@ channelToImageRGBA m = image
           alpha :: Matrix2 Double
           alpha = M.generate (M.shape m) (const 1)
 
-perlinLuna :: Double -> Int -> Int -> Image RGBA
+perlinLuna :: Double -> Int -> Int -> Image
 perlinLuna (variable -> z) = noiseLuna (perlinNoise z)
 
-billowLuna :: Double -> Int -> Int -> Image RGBA
+billowLuna :: Double -> Int -> Int -> Image
 billowLuna (variable -> z) = noiseLuna (billowNoise z)
 
 noiseLuna :: forall e a.
                    (IsFloating a, Elt a, A.Lift Exp e,
                     A.Plain e ~ Int) =>
-                   CartesianGenerator (Exp a) (Exp Double) -> e -> e -> Image RGBA
+                   CartesianGenerator (Exp a) (Exp Double) -> e -> e -> Image
 noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA noise'
     where noise' = rasterizer $ monosampler $ noiseGenerator
 
@@ -357,13 +357,13 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 rotateCenterLuna :: VPS Double -> Matrix2 Double -> Matrix2 Double
 rotateCenterLuna (VPS (variable -> angle)) = rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
 
-translateLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image RGBA -> Image RGBA
+translateLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
 translateLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . translate (V2 x y) . nearest . fromMatrix boundary
 
-scaleToLuna :: A.Boundary (A.Exp Double) -> Int -> Int -> Image RGBA -> Image RGBA
+scaleToLuna :: A.Boundary (A.Exp Double) -> Int -> Int -> Image -> Image
 scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . scale (Grid x y) . nearest . fromMatrix boundary
 
-scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image RGBA -> Image RGBA
+scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
 scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
     where f = fmap A.truncate . scale (V2 x y) . asFloating
 
@@ -385,8 +385,8 @@ hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
 hsvToolLuna' :: Double -> Double -> Double -> Double
              -> Double -> Double -> Double -> Double
              -> Double -> Double -> Double -> Double
-             -> Image RGBA
-             -> Image RGBA
+             -> Image
+             -> Image
 hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
              (variable -> hueRotation) (variable -> hueRolloff)
              (variable -> saturationRangeStart) (variable -> saturationRangeEnd)
@@ -400,7 +400,7 @@ hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
 -- test :: VPS Double -> VPS Double -> VPS Double -> VPS Double
 --      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
 --      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
---      -> VPS (Image RGBA) -> VPS (Image RGBA)
+--      -> VPS (Image) -> VPS (Image)
 test = liftF13 hsvToolLuna'
 
 liftF13 fun a b c d e f g h i j k l m = do
@@ -472,7 +472,7 @@ data MergeMode = Atop
            | XOR
            deriving (Show)
 
-mergeLuna :: MergeMode -> Merge.AlphaBlend -> Image RGBA -> Image RGBA -> Image RGBA
+mergeLuna :: MergeMode -> Merge.AlphaBlend -> Image -> Image -> Image
 mergeLuna mode alphaBlend img1 img2 = case mode of
     Atop                -> processMerge $ Merge.threeWayMerge             Merge.atop
     Average             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.average
@@ -532,25 +532,25 @@ onGenerator f img = img'
                   ]
           Right img' = Image.update (const $ Just view') "rgba" img
 
-erodeLuna :: Int -> Image RGBA -> Image RGBA
+erodeLuna :: Int -> Image -> Image
 erodeLuna (variable -> size) = onGenerator $ erode $ pure size
 
-dilateLuna :: Int -> Image RGBA -> Image RGBA
+dilateLuna :: Int -> Image -> Image
 dilateLuna (variable -> size) = onGenerator $ dilate $ pure size
 
-closeLuna :: Int -> Image RGBA -> Image RGBA
+closeLuna :: Int -> Image -> Image
 closeLuna (variable -> size) = onGenerator $ closing $ pure size
 
-openLuna :: Int -> Image RGBA -> Image RGBA
+openLuna :: Int -> Image -> Image
 openLuna (variable -> size) = onGenerator $ opening $ pure size
 
-premultiplyLuna :: Image RGBA -> Image RGBA
+premultiplyLuna :: Image -> Image
 premultiplyLuna img = (*) `withAlpha` img
 
-unpremultiplyLuna :: Image RGBA -> Image RGBA
+unpremultiplyLuna :: Image -> Image
 unpremultiplyLuna img = (/) `withAlpha` img
 
-withAlpha :: (A.Exp Double -> A.Exp Double -> A.Exp Double) -> Image RGBA -> Image RGBA
+withAlpha :: (A.Exp Double -> A.Exp Double -> A.Exp Double) -> Image -> Image
 withAlpha f img = img'
     where (r, g, b, a) = unsafeGetChannels img
           r' = M.zipWith f r a
@@ -566,20 +566,20 @@ withAlpha f img = img'
                   ]
           Right img' = Image.update (const $ Just view') "rgba" img
 
-invertLuna :: Image RGBA -> Image RGBA
+invertLuna :: Image -> Image
 invertLuna = onEachValue invert
 
-colorMatrixLuna :: ColorMatrix Color.RGB Double -> Image RGBA -> Image RGBA
+colorMatrixLuna :: ColorMatrix Color.RGB Double -> Image -> Image
 colorMatrixLuna matrix = onEachRGB (A.lift1 $ (colorMatrix :: ColorMatrix Color.RGB Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)) matrix)
 
-clampLuna :: Double -> Double -> Double -> Double -> Image RGBA -> Image RGBA
+clampLuna :: Double -> Double -> Double -> Double -> Image -> Image
 clampLuna (variable -> thLo) (variable -> thHi) (variable -> clampLo) (variable -> clampHi) =
     onEachValue (clamp (Range thLo thHi) (Just $ Range clampLo clampHi))
 
-multiplyLuna :: Double -> Image RGBA -> Image RGBA
+multiplyLuna :: Double -> Image -> Image
 multiplyLuna (variable -> v) = onEachValue (*v)
 
-gammaLuna :: Double -> Image RGBA -> Image RGBA
+gammaLuna :: Double -> Image -> Image
 gammaLuna (variable -> v) = onEachValue (gamma v)
 
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
@@ -596,7 +596,7 @@ toPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 angle' radius') ->
         radius = (radius' / ch) * (sqrt $ cw * cw + ch * ch)
     in gen (Point2 (radius * cos angle) (radius * sin angle))
 
-radialBlurLuna :: Int -> Double -> Image RGBA -> Image RGBA
+radialBlurLuna :: Int -> Double -> Image -> Image
 radialBlurLuna (variable -> size) (variable -> angle) = onEachChannel process
     where kern = monosampler
                $ rotateCenter angle
@@ -614,7 +614,7 @@ radialBlurLuna (variable -> size) (variable -> angle) = onEachChannel process
                   . nearest
                   . fromMatrix A.Clamp
 
-histEqLuna :: Int -> Image RGBA -> Image RGBA
+histEqLuna :: Int -> Image -> Image
 histEqLuna (variable -> bins) img = img'
     where rgb = unsafeGetRGB img
           hsv = M.map Color.liftedConvertColor rgb
@@ -634,7 +634,7 @@ histEqLuna (variable -> bins) img = img'
 
           Right img' = Image.update (const $ Just view') "rgba" img
 
-ditherLuna :: A.Boundary (MValue Double) -> Int -> DiffusionTable Double -> Image RGBA -> IO (Image RGBA)
+ditherLuna :: A.Boundary (MValue Double) -> Int -> DiffusionTable Double -> Image -> IO Image
 ditherLuna boundary bits table img = do
     let (r, g, b, a) = unsafeGetChannels img
         ditherMethod = dither boundary table bits
@@ -652,7 +652,7 @@ ditherLuna boundary bits table img = do
 
     return img'
 
-orderedDitherLuna :: Int -> Image RGBA -> Image RGBA
+orderedDitherLuna :: Int -> Image -> Image
 orderedDitherLuna bits = onEachChannel $ bayer bits
 
 constantBoundaryWrapper :: a -> A.Boundary (MValue a)
