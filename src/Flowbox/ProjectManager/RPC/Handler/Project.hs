@@ -23,8 +23,6 @@ import qualified Generated.Proto.ProjectManager.Project.Close.Request      as Cl
 import qualified Generated.Proto.ProjectManager.Project.Close.Update       as Close
 import qualified Generated.Proto.ProjectManager.Project.Create.Request     as Create
 import qualified Generated.Proto.ProjectManager.Project.Create.Update      as Create
-import qualified Generated.Proto.ProjectManager.Project.FileExists.Request as FileExists
-import qualified Generated.Proto.ProjectManager.Project.FileExists.Status  as FileExists
 import qualified Generated.Proto.ProjectManager.Project.List.Request       as List
 import qualified Generated.Proto.ProjectManager.Project.List.Status        as List
 import qualified Generated.Proto.ProjectManager.Project.Lookup.Request     as Lookup
@@ -62,7 +60,7 @@ lookup request@(Lookup.Request tprojectID) = do
 
 create :: Create.Request -> RPC Context IO Create.Update
 create request@(Create.Request tname tpath tattributes) = do
-    let name = decodeP tname
+    let name = fmap decodeP tname
         path = decodeP tpath
         attributes = decodeP tattributes
     newProject <- BatchP.createProject name path attributes
@@ -93,9 +91,3 @@ store :: Store.Request -> RPC Context IO Store.Status
 store request@(Store.Request tprojectID mtpath) = do
     BatchP.storeProject (decodeP tprojectID) $ fmap decodeP mtpath
     return $ Store.Status request
-
-
-fileExists :: FileExists.Request -> RPC Context IO FileExists.Status
-fileExists request@(FileExists.Request path) = do
-    exists <- BatchP.projectFileExists $ decodeP path
-    return $ FileExists.Status request exists

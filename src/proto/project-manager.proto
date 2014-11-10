@@ -40,7 +40,7 @@ message Project {
     }
     message Create {
         message Request {
-            required string name = 1;
+            optional string name = 1;
             required string path = 2;
             required generated.proto.attributes.Attributes attributes = 3;
         }
@@ -85,15 +85,6 @@ message Project {
         }
         message Status {
             required Request request = 1;
-        }
-    }
-    message FileExists {
-        message Request {
-            required string path = 1;
-        }
-        message Status {
-            required Request request = 1;
-            required bool    exists  = 2;
         }
     }
     message Library {
