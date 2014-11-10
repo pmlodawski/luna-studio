@@ -9,7 +9,6 @@
 module Flowbox.Batch.Tools.Serialize.Proto.Project (
     storeProject,
     restoreProject,
-    projectFileExists
 ) where
 
 import qualified Data.ByteString.Lazy as ByteString
@@ -33,9 +32,6 @@ import qualified Luna.Lib.Manager                                       as LibMa
 
 
 
-projectFile :: String
-projectFile = "project.flowbox"
-
 
 saveProject :: Project -> Handle -> IO ()
 saveProject project h =
@@ -52,20 +48,13 @@ getProject h = runScript $ do
 
 storeProject :: Project -> Maybe UniPath -> IO ()
 storeProject project mpath = do
-    let filepath = Maybe.fromMaybe (UniPath.append projectFile $ project ^. Project.path) mpath
+    let filepath = Maybe.fromMaybe (project ^. Project.path) mpath
         sproject = Serializable filepath (saveProject project)
     Serializer.serialize sproject
 
 
 restoreProject :: UniPath -> IO Project
-restoreProject upath = do
-    let filepath = UniPath.append projectFile upath
-        dproject = Deserializable filepath getProject
+restoreProject filepath = do
+    let dproject = Deserializable filepath getProject
     project <- Serializer.deserialize dproject
-    return $ project & Project.path .~ upath
-
-
-projectFileExists :: UniPath -> IO Bool
-projectFileExists upath = do
-    expandedPath <- UniPath.expand $ UniPath.append projectFile upath
-    Directory.doesFileExist expandedPath
+    return $ project & Project.path .~ filepath
