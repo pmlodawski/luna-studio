@@ -27,18 +27,17 @@ import           Luna.Lib.Manager                               (LibManager)
 instance Convert (Project.ID, Project) (Gen.Project, LibManager) where
     encode (projectID, project) = (tproject, libs) where
         Project name path libPaths libs attrs = project
-        tname      = encodePJ name
+        tname      = fmap encodeP name
         tpath      = encodePJ path
         tlibPaths  = encodeListP libPaths
         tattrs     = encodePJ attrs
         tprojectID = encodePJ projectID
         tproject   = Gen.Project tname tpath tlibPaths tattrs tprojectID
-    decode (Gen.Project mtname mtpath tlibPaths mtattrs mtprojectID, libs) = do
-        tname       <- mtname      <?> "Failed to decode Project: 'name' field is missing"
+    decode (Gen.Project tname mtpath tlibPaths mtattrs mtprojectID, libs) = do
         tpath       <- mtpath      <?> "Failed to decode Project: 'path' field is missing"
         tattrs      <- mtattrs     <?> "Failed to decode Project: 'attrs' field is missing"
         tprojectID  <- mtprojectID <?> "Failed to decode Project: 'id' field is missing"
-        let name      = decodeP tname
+        let name      = fmap decodeP tname
             path      = decodeP tpath
             libPaths  = decodeListP tlibPaths
             attrs     = decodeP tattrs
