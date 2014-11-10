@@ -46,7 +46,7 @@ type PassError = String
 
 type PassT state result m = ESRT PassError Info state m result
 
-type Pass state result = (MonadIO m) => ESRT PassError Info state m result
+type Pass state result = (Functor m, MonadIO m) => ESRT PassError Info state m result
 
 type Result result = (Functor m, MonadIO m) => m (Either PassError result)
 
