@@ -68,11 +68,11 @@ loadLibrary path projectID = libManagerOp projectID
 
 
 unloadLibrary :: Library.ID -> Project.ID -> Batch ()
-unloadLibrary libraryID projectID = libManagerOp projectID (\libManager ->
-    return (LibManager.delNode libraryID libManager, ()))
+unloadLibrary libraryID projectID = libManagerOp projectID $ \libManager ->
+    return (LibManager.delNode libraryID libManager, ())
 
 
-storeLibrary :: Library.ID -> Project.ID -> (Maybe UniPath) -> Batch ()
+storeLibrary :: Library.ID -> Project.ID -> Maybe UniPath -> Batch ()
 storeLibrary libraryID projectID mpath = do
     library <- Batch.getLibrary libraryID projectID
     liftIO $ LibSerialization.storeLibrary library mpath

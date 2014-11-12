@@ -11,24 +11,23 @@ import Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import qualified Luna.Pass.Transform.SimpleText.Parser.Parser as Parser
-import qualified Test.Luna.AST.Common                         as Common
-import qualified Test.Luna.Pass.Transform.Graph.Common        as Common
-import qualified Test.Luna.Sample.Code                        as SampleCode
 import qualified Luna.Pass.Transform.SimpleText.Builder.Builder as Builder
+import qualified Luna.Pass.Transform.SimpleText.Parser.Parser   as Parser
+import qualified Test.Luna.AST.Common                           as Common
+import qualified Test.Luna.Pass.Transform.Graph.Common          as Common
+import qualified Test.Luna.Sample.Code                          as SampleCode
 
 
 backAndForth :: String -> IO ()
 backAndForth code = do
     targetExpr <- Common.getMain =<< Common.getAST code
     emptyExpr  <- Common.getMain =<< Common.getAST SampleCode.emptyMain
-    let pm = def
     --putStrLn code
-    (expr2, pm2) <- eitherToM' $ Parser.run code pm emptyExpr
+    expr2 <- eitherToM' $ Parser.run code emptyExpr
     --prettyPrint expr2
     --prettyPrint pm2
     expr2 `shouldBe` targetExpr
-    (code3, _, _) <- eitherToM' $ Builder.run pm2 def expr2
+    (code3, _) <- eitherToM' $ Builder.run def expr2
     code3 `shouldBe` code
     return ()
 

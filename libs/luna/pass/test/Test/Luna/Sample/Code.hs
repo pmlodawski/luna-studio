@@ -33,7 +33,7 @@ def main:
     1
 |], named "simple infix" [r|
 def main:
-    1 + 2
+    1.+ 2
 |], named "simple assignment 1" [r|
 def main:
     x = 0
@@ -110,6 +110,9 @@ def main arg1 arg2:
     tuple = self.mkTuple arg1 arg2
     self.foo tuple
     tuple
+|], named "simple infix 2" [r|
+def main:
+    1 + 2
 |], named "following calls" [r|
 def foo
 def bar

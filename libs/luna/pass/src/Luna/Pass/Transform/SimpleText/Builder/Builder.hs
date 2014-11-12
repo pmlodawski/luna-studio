@@ -14,7 +14,6 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Luna.AST.Expr                                     (Expr)
 import           Luna.Data.ASTInfo                                 (ASTInfo)
-import           Luna.Graph.PropertyMap                            (PropertyMap)
 import           Luna.Pass.Pass                                    (Pass)
 import qualified Luna.Pass.Pass                                    as Pass
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.Undo as Undo.ImplicitSelf
@@ -29,11 +28,11 @@ logger = getLogger $(moduleName)
 type STBPass result = Pass Pass.NoState result
 
 
-run :: PropertyMap -> ASTInfo -> Expr -> Pass.Result (String, PropertyMap, ASTInfo)
-run = Pass.run_ (Pass.Info "SimpleTextBuilder") Pass.NoState .:. fun2text
+run ::  ASTInfo -> Expr -> Pass.Result (String, ASTInfo)
+run = Pass.run_ (Pass.Info "SimpleTextBuilder") Pass.NoState .: fun2text
 
 
-fun2text :: PropertyMap -> ASTInfo -> Expr -> STBPass (String, PropertyMap, ASTInfo)
-fun2text propertyMap astInfo expr = do
+fun2text :: ASTInfo -> Expr -> STBPass (String, ASTInfo)
+fun2text astInfo expr = do
     (expr, astInfo) <- EitherT $ Undo.ImplicitSelf.runExpr astInfo expr
-    return (lunaShow expr, propertyMap, astInfo)
+    return (lunaShow expr, astInfo)
