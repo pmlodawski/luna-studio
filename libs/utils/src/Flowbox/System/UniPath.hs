@@ -149,18 +149,22 @@ basePath path = normalise $ case last $ normalise path of
 
 
 extension :: UniPath -> String
-extension path = FilePath.takeExtension (toUnixString path)
+extension = FilePath.takeExtension . toUnixString
 
 
-setExtension :: String -> UniPath -> UniPath
-setExtension ext path =
+addExtension :: String -> UniPath -> UniPath
+addExtension ext path =
     normalise $ path ++ [Up] ++ [Node $ fileName path ++ ext]
 
 
+replaceExtension :: String -> UniPath -> UniPath
+replaceExtension ext = fromUnixString . FilePath.replaceExtension ext . toUnixString
+
+
 dropExtension :: UniPath -> UniPath
-dropExtension path = fromUnixString $ FilePath.dropExtension $ toUnixString path
+dropExtension = fromUnixString . FilePath.dropExtension . toUnixString
 
 
 makeRelative :: UniPath -> UniPath -> UniPath
-makeRelative path1 path2 =
-    fromUnixString $ FilePath.makeRelative (toUnixString path1) (toUnixString path2)
+makeRelative path1 =
+    fromUnixString . FilePath.makeRelative (toUnixString path1) . toUnixString

@@ -11,9 +11,8 @@
 
 module Luna.AST.Pat where
 
-import           Control.Applicative
-import qualified Data.List           as List
-import           GHC.Generics
+import Control.Applicative
+import GHC.Generics
 
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, drop, id)
@@ -88,25 +87,6 @@ traverseMR :: Traversal m => (Pat -> m Pat) -> (Type -> m Type) -> (Lit -> m Lit
 traverseMR fpat ftype flit = tfpat where
     tfpat p = fpat =<< traverseM tfpat tftype flit p
     tftype  = Type.traverseMR ftype
-
-
--- FIXME[PM]: make typeclass, gather all similiar lunaShows and move somewhere else
-lunaShow :: Pat -> String
-lunaShow p = case p of
-    Var      _ name'      -> name'
-    Lit      _ value'     -> Lit.lunaShow value'
-    Tuple    _ items'     -> List.intercalate ", " strs where
-                                   strs = map lunaShow items'
-    Con      _ name'      -> name'
-    App      _ src' args' -> srcStr ++ " " ++ unwords argStrs where
-                                   argStrs = map lunaShow args'
-                                   srcStr  = lunaShow src'
-    Typed    _ pat' cls'  -> patStr ++ " :: " ++ typeStr where
-                                   patStr = lunaShow pat'
-                                   typeStr = Type.lunaShow cls'
-    Grouped  _ pat'       -> concat ["(", lunaShow pat', ")"]
-    Wildcard _            -> "_"
-    RecWildcard _         -> ".."
 
 
 ----------------------------------------------------------------------

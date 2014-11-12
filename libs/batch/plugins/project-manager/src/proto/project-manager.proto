@@ -41,7 +41,7 @@ message Project {
     }
     message Create {
         message Request {
-            required string name = 1;
+            optional string name = 1;
             required string path = 2;
             required generated.proto.attributes.Attributes attributes = 3;
         }
@@ -86,15 +86,6 @@ message Project {
         }
         message Status {
             required Request request = 1;
-        }
-    }
-    message FileExists {
-        message Request {
-            required string path = 1;
-        }
-        message Status {
-            required Request request = 1;
-            required bool    exists  = 2;
         }
     }
     message Library {
@@ -242,7 +233,7 @@ message Project {
                         }
                     }
                 }
-            }
+            } // Project.Library.AST.Module
             message Data {
                 message Add {
                     message Request {
@@ -314,7 +305,7 @@ message Project {
                     }
 
                 }
-            }
+            } // Project.Library.AST.Data
             message Function {
                 message Add {
                     message Request {
@@ -384,7 +375,7 @@ message Project {
                             required int32 updateNo  = 2;
                         }
                     }
-                }
+                } // Project.Library.AST.Function.Modify
                 message Graph {
                     message Get {
                         message Request {
@@ -510,7 +501,7 @@ message Project {
                                     required int32 updateNo  = 2;
                                 }
                             }
-                        }
+                        } // Project.Library.AST.Function.Graph.Node.Default
                         message Properties {
                             message Get {
                                 message Request   {
@@ -539,8 +530,8 @@ message Project {
                                     required int32 updateNo  = 2;
                                 }
                             }
-                        }
-                    }
+                        } // Project.Library.AST.Function.Graph.Node.Properties
+                    } // Project.Library.AST.Function.Graph.Node
                     message Connect {
                         message Request {
                             required int32 srcNodeID = 1;
@@ -556,7 +547,7 @@ message Project {
                             required Request request = 1;
                             required int32 updateNo  = 2;
                         }
-                    }
+                    } // Project.Library.AST.Function.Graph.Connect
                     message Disconnect {
                         message Request {
                             required int32 srcNodeID = 1;
@@ -572,9 +563,9 @@ message Project {
                             required Request request = 1;
                             required int32 updateNo  = 2;
                         }
-                    }
-                }
-            }
+                    } // Project.Library.AST.Function.Graph.Disconnect
+                } // Project.Library.AST.Function.Graph
+            } // Project.Library.AST.Function
             message Remove {
                 message Request {
                     required generated.proto.crumb.Breadcrumbs bc = 1;
@@ -586,7 +577,7 @@ message Project {
                     required Request request = 1;
                     required int32 updateNo  = 2;
                 }
-            }
+            } // Project.Library.AST.Remove
             message Resolve {
                 message Request {
                     required string name = 1;
@@ -599,8 +590,33 @@ message Project {
                     required Request request = 1;
                     repeated generated.proto.crumb.ASTPtr astptr = 2;
                 }
-            }
-
+            } // Project.Library.AST.Resolve
+            message Code {
+                message Get {
+                    message Request {
+                        required generated.proto.crumb.Breadcrumbs bc = 1;
+                        required int32 libraryID = 2;
+                        required int32 projectID = 3;
+                        required int32 _astID    = 4;
+                    }
+                    message Status {
+                        required Request request = 1;
+                        required string  code    = 2;
+                    }
+                }
+                message Set {
+                    message Request {
+                        required string code = 1;
+                        required generated.proto.crumb.Breadcrumbs bc = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                        required int32 _astID    = 5;
+                    }
+                    message Update {
+                        required Request request = 1;
+                    }
+                }
+            } // Project.Library.AST.Code
             message Properties {
                 message Get {
                     message Request   {
@@ -625,10 +641,10 @@ message Project {
                         required int32 updateNo =  2;
                     }
                 }
-            }
-        }
-    }
-}
+            } // Project.Library.AST.Properties
+        } // Project.Library.AST
+    } // Project.Library
+} // Project
 
 message ProjectManager {
     message Ping {

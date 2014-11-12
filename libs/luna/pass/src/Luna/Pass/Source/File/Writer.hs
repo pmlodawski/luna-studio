@@ -39,7 +39,7 @@ run = (Pass.run_ (Pass.Info "FileWriter") Pass.NoState) .:. writeSource
 
 
 module2path :: [String] -> String -> UniPath
-module2path m ext = UniPath.setExtension ext $ UniPath.fromList m
+module2path m ext = UniPath.addExtension ext $ UniPath.fromList m
 
 
 writeSource :: UniPath -> String -> Source -> FRPass ()

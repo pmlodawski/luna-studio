@@ -22,27 +22,15 @@ type Name = String
 type Code = String
 
 
-sampleCodes :: [(Name, Code)]
-sampleCodes = [named "empty" [r|
+singleFun :: [(Name, Code)]
+singleFun = [named "empty" [r|
 def main
 |], named "simple return" [r|
 def main:
     1
-|], named "simple infix" [r|
-def Int.+ a
-
-def main:
-    1 + 2
 |], named "simple assignment 1" [r|
 def main:
     x = 0
-|], named "simple assignment 2" [r|
-def print
-
-def main:
-    x = 0
-    y = x
-    print y
 |], named "simple assignment 3" [r|
 def main:
     x = 0
@@ -58,7 +46,50 @@ def main:
     y = 1
     (z, v) = (x, y)
     h = (z, v)
-|], -}  named "assignment" [r|
+|], -} named "accessors 2" [r|
+def main arg:
+    arg.bar.baz
+    2
+|], named "accessors 5" [r|
+def main arg:
+    x = 4
+    x.zooo 43
+|], named "ranges" [r|
+def main arg:
+    x = (1, [1..10], [9..])
+|], named "tuples 1" [r|
+def main arg:
+    (1, 2)
+    3, 4
+    5
+|], named "tuples 2" [r|
+def main arg:
+    x = 4
+    y = 1, x
+|], named "native code" [r|
+def main arg:
+    ```autoLift1 print #{arg}```
+|]]
+
+
+
+sampleCodes :: [(Name, Code)]
+sampleCodes = singleFun ++ manyFun
+
+manyFun :: [(Name, Code)]
+manyFun = [named "simple infix" [r|
+def Int.+ a
+
+def main:
+    1 + 2
+|], named "simple assignment 2" [r|
+def print
+
+def main:
+    x = 0
+    y = x
+    print y
+|], named "assignment" [r|
 def foo
 
 def main arg1 arg2:
@@ -86,10 +117,6 @@ def foo
 def main:
     foo.bar.baz
     2
-|], named "accessors 2" [r|
-def main arg:
-    arg.bar.baz
-    2
 |], named "accessors 3" [r|
 def x
 
@@ -103,10 +130,6 @@ def main arg:
     x
     x.y
     x.z
-|], named "accessors 5" [r|
-def main arg:
-    x = 4
-    x.zooo 43
 |], named "accessors 6" [r|
 def foo
 
@@ -134,9 +157,6 @@ def foo
 
 def main arg:
     x = foo.bar(arg, 15, arg, [19..]).baz arg 2
-|], named "ranges" [r|
-def main arg:
-    x = (1, [1..10], [9..])
 |], named "prints" [r|
 def print
 
@@ -166,15 +186,6 @@ def gap
 
 def main arg:
     Foo arg.boo My gap
-|], named "tuples 1" [r|
-def main arg:
-    (1, 2)
-    3, 4
-    5
-|], named "tuples 2" [r|
-def main arg:
-    x = 4
-    y = 1, x
 |], named "tuples 3" [r|
 def print msg
 
@@ -190,9 +201,6 @@ def main:
 def main arg:
     x = 4
     y = [1, x]
-|], named "native code" [r|
-def main arg:
-    ```autoLift1 print #{arg}```
 |], named "hello world" [r|
 def print msg:
     ```autoLift1 print #{msg}```
