@@ -51,7 +51,7 @@ process' expr = (,) <$> processExpr expr <*> State.getInfo
 
 
 processModule :: Module -> DesugarPass Module
-processModule mod = Module.traverseM processModule processExpr pure pure pure mod
+processModule = Module.traverseM processModule processExpr pure pure pure
 
 
 processExpr :: Expr.Expr -> DesugarPass Expr.Expr

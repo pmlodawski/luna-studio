@@ -49,7 +49,7 @@ logger = getLogger $(moduleName)
 
 
 run :: Graph -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)
-run gr pm = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr pm) . graph2expr
+run gr pm = Pass.run_ (Pass.Info "GraphParser") (State.make gr pm) . graph2expr
 
 
 graph2expr :: Expr -> GPPass (Expr, PropertyMap)
