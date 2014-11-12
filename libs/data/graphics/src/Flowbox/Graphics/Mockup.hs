@@ -4,10 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveFunctor             #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE PatternSynonyms           #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE StandaloneDeriving        #-}
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE ViewPatterns              #-}
@@ -273,14 +275,6 @@ cornerPinLuna (variable -> p1x) (variable -> p1y)
 
 gaussianLuna :: Int -> Image -> Image
 gaussianLuna (variable -> kernelSize) img = img'
-    where img' = onEachChannel process img
-          hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
-          vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
-          p = pipe A.Clamp
-          process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
-
-gaussianLuna' :: Int -> Image -> Image
-gaussianLuna' (variable -> kernelSize) img = img'
     where img' = onEachChannel process img
           hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
           vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
@@ -601,8 +595,10 @@ histEqLuna (variable -> bins) img = img'
 
           Right img' = Image.update (const $ Just view') "rgba" img
 
-ditherLuna :: A.Boundary (MValue Double) -> Int -> DiffusionTable Double -> Image -> IO Image
-ditherLuna boundary bits table img = do
+deriving instance Functor A.Boundary
+
+ditherLuna :: A.Boundary Double -> Int -> DiffusionTable Double -> Image -> IO Image
+ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
     let (r, g, b, a) = unsafeGetChannels img
         ditherMethod = dither boundary table bits
     r' <- mutableProcess run ditherMethod r
@@ -622,8 +618,8 @@ ditherLuna boundary bits table img = do
 orderedDitherLuna :: Int -> Image -> Image
 orderedDitherLuna bits = onEachChannel $ bayer bits
 
-constantBoundaryWrapper :: a -> A.Boundary (MValue a)
-constantBoundaryWrapper v = A.Constant $ MValue (return v) (const $ return ())
+constantBoundaryWrapper :: a -> MValue a
+constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
 
 liftF6 a b c d e f g = do
