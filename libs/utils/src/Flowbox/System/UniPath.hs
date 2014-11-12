@@ -32,12 +32,8 @@ data PathItem = Node String
 type UniPath = [PathItem]
 
 
-empty :: UniPath
-empty = []
-
-
 fromUnixString :: String -> UniPath
-fromUnixString []           = empty
+fromUnixString []           = def
 fromUnixString spath@(x:xs) = let
     split a = StringUtils.split "/" $ StringUtils.replace "\\" "/" a
     in case x of
@@ -63,7 +59,7 @@ toUnixString path = case head l of
 
 
 expand :: MonadIO m => UniPath -> m UniPath
-expand [] = return empty
+expand [] = return def
 expand (x:xs) = liftIO $ case x of
     Var "~"              -> expandRest   Directory.getHomeDirectory
     Var "$APPFLOWBOX"    -> expandRest $ Directory.getAppFlowbox
@@ -80,7 +76,7 @@ expand (x:xs) = liftIO $ case x of
 
 
 fromList :: [String] -> UniPath
-fromList = foldr prepend empty
+fromList = foldr prepend def
 
 
 toList :: UniPath -> [String]
@@ -153,7 +149,7 @@ extension = FilePath.takeExtension . toUnixString
 
 
 addExtension :: String -> UniPath -> UniPath
-addExtension ext path = 
+addExtension ext path =
     normalise $ path ++ [Up] ++ [Node $ fileName path ++ ext]
 
 

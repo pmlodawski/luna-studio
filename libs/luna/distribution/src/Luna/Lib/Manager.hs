@@ -7,15 +7,12 @@
 
 module Luna.Lib.Manager (
     module Flowbox.Data.Graph,
-    LibManager,
-    empty,
-
-    loadLibrary,
+    module Luna.Lib.Manager,
 ) where
 
-import           Flowbox.Data.Graph                hiding (Edge, empty)
+import           Flowbox.Data.Graph                hiding (Edge, delNode, empty, insNewNode, lab, labNodes, updateNode)
 import qualified Flowbox.Data.Graph                as Graph
-import           Flowbox.Prelude                   hiding (empty)
+import           Flowbox.Prelude
 import           Flowbox.System.UniPath            (UniPath)
 import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
 import           Luna.Lib.Edge                     (Edge)
@@ -27,12 +24,28 @@ import qualified Luna.Lib.Lib                      as Library
 type LibManager = Graph Library Edge
 
 
-empty :: LibManager
-empty = Graph.empty
-
-
 loadLibrary :: UniPath -> LibManager -> IO (LibManager, (Library.ID, Library))
 loadLibrary apath libManager = do
     library <- LibSerialization.restoreLibrary apath
     let (newLibManager, libID) = insNewNode library libManager
     return (newLibManager, (libID, library))
+
+
+lab :: LibManager -> Library.ID -> Maybe Library
+lab lm = Graph.lab lm . Library.toInt
+
+
+labNodes :: LibManager -> [(Library.ID, Library)]
+labNodes = over (mapped . _1) Library.ID . Graph.labNodes
+
+
+updateNode :: (Library.ID, Library) -> LibManager -> LibManager
+updateNode lib = Graph.updateNode (_1 %~ Library.toInt $ lib)
+
+
+insNewNode :: Library -> LibManager -> (LibManager, Library.ID)
+insNewNode lib lm = _2 %~ Library.ID $ Graph.insNewNode lib lm
+
+
+delNode :: Library.ID -> LibManager -> LibManager
+delNode libraryID = Graph.delNode $ Library.toInt libraryID
