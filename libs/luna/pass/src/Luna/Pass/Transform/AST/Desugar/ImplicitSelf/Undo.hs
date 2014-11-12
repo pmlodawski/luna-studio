@@ -10,11 +10,12 @@
 {-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE TemplateHaskell           #-}
 
-module Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf where
+module Luna.Pass.Transform.AST.Desugar.ImplicitSelf.Undo where
 
 import           Flowbox.Prelude                               hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 import qualified Luna.AST.Expr                                 as Expr
+import  Luna.AST.Expr                                 (Expr)
 import           Luna.AST.Module                               (Module)
 import qualified Luna.AST.Module                               as Module
 import qualified Luna.AST.Pat                                  as Pat
@@ -34,23 +35,32 @@ type DesugarPass result = Pass DesugarState result
 
 
 run :: ASTInfo -> Module -> Pass.Result (Module, ASTInfo)
-run inf = (Pass.run_ (Pass.Info "Desugar.ImplicitSelf") $ State.mk inf) . desugar
+run inf = Pass.run_ (Pass.Info "Desugar.ImplicitSelf.Undo") (State.mk inf) . process
 
 
-desugar :: Module -> DesugarPass (Module, ASTInfo)
-desugar mod = (,) <$> desugarModule mod <*> State.getInfo
+runExpr :: ASTInfo -> Expr -> Pass.Result (Expr, ASTInfo)
+runExpr inf = Pass.run_ (Pass.Info "Desugar.ImplicitSelf.Undo") (State.mk inf) . process'
 
 
-desugarModule :: Module -> DesugarPass Module
-desugarModule mod = Module.traverseM desugarModule desugarExpr pure pure pure mod
+process :: Module -> DesugarPass (Module, ASTInfo)
+process mod = (,) <$> processModule mod <*> State.getInfo
 
 
-desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
-desugarExpr ast = case ast of
-    Expr.Function {} -> (\self -> ast & Expr.inputs %~ (self:)) <$> selfArg
-                        where selfArg = Expr.Arg <$> State.genID <*> selfPat <*> pure Nothing
-                              selfPat = Pat.Var <$> State.genID <*> pure "self"
+process' :: Expr -> DesugarPass (Expr, ASTInfo)
+process' expr = (,) <$> processExpr expr <*> State.getInfo
+
+
+processModule :: Module -> DesugarPass Module
+processModule mod = Module.traverseM processModule processExpr pure pure pure mod
+
+
+processExpr :: Expr.Expr -> DesugarPass Expr.Expr
+processExpr ast = case ast of
+    Expr.Function {} -> return $ ast & Expr.inputs %~ deleteSelf
+                        where deleteSelf [] = []
+                              deleteSelf (Expr.Arg _ (Pat.Var _ "self") Nothing : t) = t
+                              deleteSelf other = other
     _                -> continue
-    where continue  = Expr.traverseM desugarExpr pure pure pure ast
+    where continue  = Expr.traverseM processExpr pure pure pure ast
 
 

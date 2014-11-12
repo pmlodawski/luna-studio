@@ -39,7 +39,7 @@ instance LunaShow Expr where
         Expr.Function _ path name inputs output body -> ["def "
                                                         , if null path then "" else (List.intercalate "." path ++ ".") 
                                                         , name
-                                                        , " "
+                                                        , [' ' | not $ null inputs]
                                                         , List.intercalate " " $ map lunaShow inputs
                                                         , if isUnknown output then "" else " -> " ++ lunaShow output
                                                         , if null body then "" else ":\n    " ++ List.intercalate "\n    " (map lunaShow body)

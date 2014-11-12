@@ -22,7 +22,11 @@ type Code = String
 
 
 sampleCodes :: [(Name, Code)]
-sampleCodes = [named "empty" [r|
+sampleCodes = singleFun ++ manyFun
+
+
+singleFun :: [(Name, Code)]
+singleFun = [named "empty" [r|
 def main
 |], named "simple return" [r|
 def main:
@@ -33,13 +37,6 @@ def main:
 |], named "simple assignment 1" [r|
 def main:
     x = 0
-|], named "simple assignment 2" [r|
-def print
-
-def main:
-    x = 0
-    y = x
-    print y
 |], named "simple assignment 3" [r|
 def main:
     x = 0
@@ -61,6 +58,51 @@ def main:
     y = 1
     {z, v} = {x, y}
     h = {z, v}
+|], named "accessors 2" [r|
+def main arg:
+    arg.bar.baz
+    2
+|], named "accessors 5" [r|
+def main arg:
+    x = 4
+    x.zooo 43
+|], named "ranges" [r|
+def main arg:
+    x = {1, [1..10], [9..]}
+|], named "constructors 1" [r|
+def main arg:
+    Main.foo 1 2 3
+|], named "constructors 2" [r|
+def main arg:
+    Foo 1 2 3
+|], named "constructors 3" [r|
+def main arg:
+    Foo arg.boo 1
+|], named "tuples 1" [r|
+def main arg:
+    {1, 2}
+    3
+|], named "tuples 2" [r|
+def main arg:
+    x = 4
+    y = {1, x}
+|], named "lists" [r|
+def main arg:
+    x = 4
+    y = [1, x]
+|], named "native code" [r|
+def main arg:
+    ```autoLift1 print #{arg}```
+|]]
+
+manyFun :: [(Name, Code)]
+manyFun = [named "simple assignment 2" [r|
+def print
+
+def main:
+    x = 0
+    y = x
+    print y
 |], named "assignment" [r|
 def foo
 
@@ -88,10 +130,6 @@ def foo
 def main:
     foo.bar.baz
     2
-|], named "accessors 2" [r|
-def main arg:
-    arg.bar.baz
-    2
 |], named "accessors 3" [r|
 def x
 
@@ -105,10 +143,6 @@ def main arg:
     x
     x.y
     x.z
-|], named "accessors 5" [r|
-def main arg:
-    x = 4
-    x.zooo 43
 |], named "accessors 6" [r|
 def foo
 
@@ -136,9 +170,6 @@ def foo
 
 def main arg:
     x = foo.bar(arg, 15, arg, [19..]).baz arg 2
-|], named "ranges" [r|
-def main arg:
-    x = {1, [1..10], [9..]}
 |], named "prints" [r|
 def print
 
@@ -146,35 +177,11 @@ def main arg arg2:
     print arg
     print arg2
     self.bla "kota" "albo nie"
-|], named "constructors 1" [r|
-def main arg:
-    Main.foo 1 2 3
-|], named "constructors 2" [r|
-def main arg:
-    Foo 1 2 3
-|], named "constructors 3" [r|
-def main arg:
-    Foo arg.boo 1
 |], named "constructors 4" [r|
 def gap
 
 def main arg:
     Foo arg.boo My gap
-|], named "tuples 1" [r|
-def main arg:
-    {1, 2}
-    3
-|], named "tuples 2" [r|
-def main arg:
-    x = 4
-    y = {1, x}
-|], named "lists" [r|
-def main arg:
-    x = 4
-    y = [1, x]
-|], named "native code" [r|
-def main arg:
-    ```autoLift1 print #{arg}```
 |]]
 
 ---------------------------------------------------------------------------
