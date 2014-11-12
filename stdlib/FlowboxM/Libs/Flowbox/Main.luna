@@ -1,5 +1,6 @@
 @AllowOrphans
 
+import ```Flowbox.Graphics.Color as Color```
 import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image```
@@ -292,22 +293,64 @@ class Dithering:
     ShiauFan4
     ShiauFan5
 
-# def Image.dither bound diffusionMethod bits:
-#     diffusionTable = case diffusionMethod:
-#         FloydSteinberg:    ```val floydSteinberg```
-#         Brukes:            ```val brukes```
-#         Fan:               ```val fan```
-#         JarvisJudiceNinke: ```val jarvisJudiceNinke```
-#         Stucki:            ```val stucki```
-#         Sierra2:           ```val sierra2```
-#         Sierra3:           ```val sierra3```
-#         Atkinson:          ```val atkinson```
-#         ShiauFan4:         ```val shiauFan4```
-#         ShiauFan5:         ```val shiauFan5```
-#     ```autoLift4 ditherLuna #{bound} #{bits} #{diffusionTable} #{self}```
+def Image.dither bound diffusionMethod bits:
+    # diffusionTable = case diffusionMethod:
+    #     FloydSteinberg:    ```val floydSteinberg```
+    #     Brukes:            ```val brukes```
+    #     Fan:               ```val fan```
+    #     JarvisJudiceNinke: ```val jarvisJudiceNinke```
+    #     Stucki:            ```val stucki```
+    #     Sierra2:           ```val sierra2```
+    #     Sierra3:           ```val sierra3```
+    #     Atkinson:          ```val atkinson```
+    #     ShiauFan4:         ```val shiauFan4```
+    #     ShiauFan5:         ```val shiauFan5```
+    # ```autoLift4 ditherLuna #{bound} #{bits} #{diffusionTable} #{self}```
+    ```autoLift4 ditherLuna #{bound} #{bits} (val floydSteinberg) #{self}```
 
 def Image.bayer bits:
     ```liftF2 orderedDitherLuna #{bits} #{self}```
+
+class RGBAPixel:
+    r, g, b, a :: Double
+
+# def Image.colorGrade blackpoint whitepoint lift gain multiply offset gamma:
+#     blackpointR = blackpoint.r
+#     blackpointG = blackpoint.g
+#     blackpointB = blackpoint.b
+#     blackpointA = blackpoint.a
+#     whitepointR = whitepoint.r
+#     whitepointG = whitepoint.g
+#     whitepointB = whitepoint.b
+#     whitepointA = whitepoint.a
+#     liftR = lift.r
+#     liftG = lift.g
+#     liftB = lift.b
+#     liftA = lift.a
+#     gainR = gain.r
+#     gainG = gain.g
+#     gainB = gain.b
+#     gainA = gain.a
+#     multiplyR = multiply.r
+#     multiplyG = multiply.g
+#     multiplyB = multiply.b
+#     multiplyA = multiply.a
+#     offsetR = offset.r
+#     offsetG = offset.g
+#     offsetB = offset.b
+#     offsetA = offset.a
+#     gammaR = gamma.r
+#     gammaG = gamma.g
+#     gammaB = gamma.b
+#     gammaA = gamma.a
+#     ```liftF8 gradeLuna' (Color.RGBA #{blackpointR} #{blackpointG} #{blackpointB} #{blackpointA})
+#                          (Color.RGBA #{whitepointR} #{whitepointG} #{whitepointB} #{whitepointA})
+#                          (Color.RGBA #{liftR} #{liftG} #{liftB} #{liftA})
+#                          (Color.RGBA #{gainR} #{gainG} #{gainB} #{gainA})
+#                          (Color.RGBA #{multiplyR} #{multiplyG} #{multiplyB} #{multiplyA})
+#                          (Color.RGBA #{offsetR} #{offsetG} #{offsetB} #{offsetA})
+#                          (Color.RGBA #{gammaR} #{gammaG} #{gammaB} #{gammaA})
+#                          #{self}```
 
 class ```Boundary```:
     Clamp
