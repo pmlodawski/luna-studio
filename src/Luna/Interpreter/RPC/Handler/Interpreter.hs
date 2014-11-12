@@ -33,14 +33,14 @@ import qualified Generated.Proto.Interpreter.Interpreter.Ping.Request           
 import qualified Generated.Proto.Interpreter.Interpreter.Ping.Status                          as Ping
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Request                          as Run
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Update                           as Run
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Clear.Request      as ClearSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Clear.Update       as ClearSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultGet.Request as GetDefaultSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultGet.Status  as GetDefaultSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultSet.Request as SetDefaultSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultSet.Update  as SetDefaultSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Request     as DeleteSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Update      as DeleteSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DeleteAll.Request  as DeleteAllSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DeleteAll.Update   as DeleteAllSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Get.Request        as GetSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Get.Status         as GetSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Insert.Request     as InsertSMode
@@ -177,12 +177,12 @@ deleteSerializationMode request@(DeleteSMode.Request tcallPointPath modes) = do
     return $ DeleteSMode.Update request
 
 
-clearSerializationMode :: ClearSMode.Request -> RPC Context SessionST ClearSMode.Update
-clearSerializationMode request@(ClearSMode.Request tcallPointPath) = do
+deleteAllSerializationMode :: DeleteAllSMode.Request -> RPC Context SessionST DeleteAllSMode.Update
+deleteAllSerializationMode request@(DeleteAllSMode.Request tcallPointPath) = do
     (projectID, callPointPath) <- decodeE tcallPointPath
     Sync.testProjectID projectID
     liftSession $ Env.clearSerializationModes callPointPath
-    return $ ClearSMode.Update request
+    return $ DeleteAllSMode.Update request
 
 
 getMemoryLimits :: MemoryGetLimits.Request -> RPC Context SessionST MemoryGetLimits.Status
