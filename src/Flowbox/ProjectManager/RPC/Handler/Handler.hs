@@ -48,7 +48,6 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectModifyRequest                                   , call Topic.update ProjectHandler.modify)
     , (Topic.projectCloseRequest                                    , call Topic.update ProjectHandler.close)
     , (Topic.projectStoreRequest                                    , call Topic.status ProjectHandler.store)
-    , (Topic.projectFileExistsRequest                               , call Topic.status ProjectHandler.fileExists)
     , (Topic.projectLibraryListRequest                              , call Topic.status LibraryHandler.list)
     , (Topic.projectLibraryLookupRequest                            , call Topic.status LibraryHandler.lookup)
     , (Topic.projectLibraryCreateRequest                            , call Topic.update LibraryHandler.create)
@@ -88,6 +87,8 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest , call Topic.update PropertiesHandler.setNodeProperties)
     , (Topic.projectLibraryAstPropertiesGetRequest                  , call Topic.status PropertiesHandler.getASTProperties)
     , (Topic.projectLibraryAstPropertiesSetRequest                  , call Topic.update PropertiesHandler.setASTProperties)
+    , (Topic.projectLibraryAstCodeGetRequest                        , call Topic.status ASTHandler.codeGet)
+    , (Topic.projectLibraryAstCodeSetRequest                        , call Topic.update ASTHandler.codeSet)
     , (Topic.projectmanagerSyncGetRequest                           , call Topic.status SyncHandler.syncGet)
     , (Topic.projectmanagerPingRequest                              , call Topic.status MaintenanceHandler.ping)
     ]
