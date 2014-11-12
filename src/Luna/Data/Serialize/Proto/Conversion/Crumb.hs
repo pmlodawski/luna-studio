@@ -24,6 +24,7 @@ import qualified Generated.Proto.Crumb.Crumb.Cls                as GenCls
 import           Luna.AST.Control.Crumb                         (Breadcrumbs)
 import           Luna.AST.Control.Crumb                         (Crumb)
 import qualified Luna.AST.Control.Crumb                         as Crumb
+import           Luna.Data.Serialize.Proto.Conversion.Library   ()
 import qualified Luna.Lib.Lib                                   as Lib
 
 
