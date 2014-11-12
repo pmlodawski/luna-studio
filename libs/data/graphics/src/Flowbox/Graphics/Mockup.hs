@@ -93,13 +93,13 @@ saveImageJuicy file matrix = do
 pattern VPS x = Value (Pure (Safe x))
 type VPS x = Value Pure Safe x
 
-defocus :: VPS Int -> Matrix2 Double -> Matrix2 Double
-defocus (VPS size) = process
+defocus :: Int -> Image -> Image
+defocus size = onEachChannel process
     where kernel = ellipse (pure $ variable size) 1 (0 :: A.Exp Double)
           process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
-motionBlur :: VPS Int -> VPS Double -> Matrix2 Double -> Matrix2 Double
-motionBlur (VPS size) (VPS angle) = process
+motionBlur :: Int -> Double -> Image -> Image
+motionBlur size angle = onEachChannel process
     where kernel = monosampler
                  $ rotateCenter (variable angle)
                  $ nearest
@@ -109,12 +109,12 @@ motionBlur (VPS size) (VPS angle) = process
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
 rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
 
-bilateral :: VPS Double
-          -> VPS Double
-          -> VPS Int
-          -> Matrix2 Double
-          -> Matrix2 Double
-bilateral (VPS psigma) (VPS csigma) (VPS (variable -> size)) = process
+bilateral :: Double
+          -> Double
+          -> Int
+          -> Image
+          -> Image
+bilateral psigma csigma (variable -> size) = onEachChannel process
     where p = pipe A.Clamp
           spatial :: Generator (Point2 (Exp Int)) (Exp Double)
           spatial = Generator (pure $ variable size) $ \(Point2 x y) ->
@@ -123,38 +123,38 @@ bilateral (VPS psigma) (VPS csigma) (VPS (variable -> size)) = process
           domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
           process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
-offsetLuna :: VPS Double -> A.Exp Double -> A.Exp Double
-offsetLuna (VPS (variable -> v)) = offset v
+offsetLuna :: Double -> Image -> Image
+offsetLuna (variable -> v) = onEachValue $ offset v
 
-contrastLuna :: VPS Double -> A.Exp Double -> A.Exp Double
-contrastLuna (VPS (variable -> v)) = contrast v
+contrastLuna :: Double -> Image -> Image
+contrastLuna (variable -> v) = onEachValue $ contrast v
 
-exposureLuna :: VPS Double -> VPS Double -> A.Exp Double -> A.Exp Double
-exposureLuna (VPS (variable -> blackpoint)) (VPS (variable -> ex)) = exposure blackpoint ex
+exposureLuna :: Double -> Double -> Image -> Image
+exposureLuna (variable -> blackpoint) (variable -> ex) = onEachValue $ exposure blackpoint ex
 
-colorCorrectLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)
-colorCorrectLuna (VPS (variable -> saturation'))
-                 (VPS (variable -> contrast'))
-                 (VPS (variable -> gamma'))
-                 (VPS (variable -> gain'))
-                 (VPS (variable -> offset')) =
-                    colorCorrect saturation' contrast' gamma' gain' offset'
+colorCorrectLuna :: Double -> Double -> Double -> Double -> Double -> Image -> Image
+colorCorrectLuna (variable -> saturation')
+                 (variable -> contrast')
+                 (variable -> gamma')
+                 (variable -> gain')
+                 (variable -> offset') =
+                    onEachRGB $ colorCorrect saturation' contrast' gamma' gain' offset'
 
-gradeLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> A.Exp Double -> A.Exp Double
-gradeLuna (VPS (variable -> blackpoint))
-          (VPS (variable -> whitepoint))
-          (VPS (variable -> lift))
-          (VPS (variable -> gain))
-          (VPS (variable -> multiply'))
-          (VPS (variable -> offset'))
-          (VPS (variable -> gamma')) =
-            grade blackpoint whitepoint lift gain multiply' offset' gamma'
+gradeLuna :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> Image -> Image
+gradeLuna (variable -> blackpoint)
+          (variable -> whitepoint)
+          (variable -> lift)
+          (variable -> gain)
+          (variable -> multiply')
+          (variable -> offset')
+          (variable -> gamma') =
+            onEachValue $ grade blackpoint whitepoint lift gain multiply' offset' gamma'
 
-saturateLuna :: VPS Double -> A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)
-saturateLuna (VPS (variable -> s)) = A.lift1 $ (saturate s :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
+saturateLuna :: Double -> Image -> Image
+saturateLuna (variable -> s) = onEachRGB $ A.lift1 $ (saturate s :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
 
-posterizeLuna :: VPS Double -> A.Exp Double -> A.Exp Double
-posterizeLuna (VPS (variable -> colors)) = posterize colors
+posterizeLuna :: Double -> Image -> Image
+posterizeLuna (variable -> colors) = onEachValue $ posterize colors
 
 loadImageLuna :: FilePath -> IO Image
 loadImageLuna path = do
@@ -233,8 +233,8 @@ unsafeGetChannels img = (r, g, b, a)
           Right (Just (ChannelFloat _ (FlatData b))) = View.get view "rgba.b"
           Right (Just (ChannelFloat _ (FlatData a))) = View.get view "rgba.a"
 
-keyerLuna :: VPS KeyerMode -> VPS Double -> VPS Double -> VPS Double -> VPS Double -> Image -> Image
-keyerLuna (VPS mode) (VPS (variable -> a)) (VPS (variable -> b)) (VPS (variable -> c)) (VPS (variable -> d)) img =
+keyerLuna :: KeyerMode -> Double -> Double -> Double -> Double -> Image -> Image
+keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
     keyer' (keyer mode (A.lift $ (a, b, c, d))) img
 
 differenceKeyer' :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double) -> A.Exp Double) -> Image -> Image -> Image
@@ -249,21 +249,21 @@ differenceKeyer' f background foreground = img'
 
           Right img' = Image.update (const $ Just view') "rgba" foreground
 
-differenceKeyerLuna :: VPS Double -> VPS Double -> Image -> Image -> Image
-differenceKeyerLuna (VPS (variable -> offset)) (VPS (variable -> gain)) background foreground = img'
+differenceKeyerLuna :: Double -> Double -> Image -> Image -> Image
+differenceKeyerLuna (variable -> offset) (variable -> gain) background foreground = img'
     where diff = differenceKeyer offset gain
           img' = differenceKeyer' diff background foreground
 
-cornerPinLuna :: VPS Double -> VPS Double
-              -> VPS Double -> VPS Double
-              -> VPS Double -> VPS Double
-              -> VPS Double -> VPS Double
+cornerPinLuna :: Double -> Double
+              -> Double -> Double
+              -> Double -> Double
+              -> Double -> Double
               -> Image
               -> Image
-cornerPinLuna (VPS (variable -> p1x)) (VPS (variable -> p1y))
-              (VPS (variable -> p2x)) (VPS (variable -> p2y))
-              (VPS (variable -> p3x)) (VPS (variable -> p3y))
-              (VPS (variable -> p4x)) (VPS (variable -> p4y)) img = img'
+cornerPinLuna (variable -> p1x) (variable -> p1y)
+              (variable -> p2x) (variable -> p2y)
+              (variable -> p3x) (variable -> p3y)
+              (variable -> p4x) (variable -> p4y) img = img'
     where img' = onEachChannel process img
           process = rasterizer . monosampler . cornerPin (p1, p2, p3, p4) . nearest . fromMatrix (A.Constant 0)
           p1 = Point2 p1x p1y
@@ -271,8 +271,8 @@ cornerPinLuna (VPS (variable -> p1x)) (VPS (variable -> p1y))
           p3 = Point2 p3x p3y
           p4 = Point2 p4x p4y
 
-gaussianLuna :: VPS Int -> Image -> Image
-gaussianLuna (VPS (variable -> kernelSize)) img = img'
+gaussianLuna :: Int -> Image -> Image
+gaussianLuna (variable -> kernelSize) img = img'
     where img' = onEachChannel process img
           hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
           vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
@@ -287,8 +287,8 @@ gaussianLuna' (variable -> kernelSize) img = img'
           p = pipe A.Clamp
           process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
 
-laplacianLuna :: VPS Int -> VPS Double -> VPS Double -> Image -> Image
-laplacianLuna (VPS (variable -> kernSize)) (VPS (variable -> crossVal)) (VPS (variable -> sideVal)) img = img'
+laplacianLuna :: Int -> Double -> Double -> Image -> Image
+laplacianLuna (variable -> kernSize) (variable -> crossVal) (variable -> sideVal) img = img'
     where img' = onEachChannel process img
           process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
           flt = laplacian crossVal sideVal $ pure kernSize
@@ -354,8 +354,8 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 
           noiseGenerator = scale (Grid width height) noise
 
-rotateCenterLuna :: VPS Double -> Matrix2 Double -> Matrix2 Double
-rotateCenterLuna (VPS (variable -> angle)) = rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
+rotateCenterLuna :: Double -> Image -> Image
+rotateCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
 
 translateLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
 translateLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . translate (V2 x y) . nearest . fromMatrix boundary
@@ -402,39 +402,6 @@ hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
 --      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
 --      -> VPS (Image) -> VPS (Image)
 test = liftF13 hsvToolLuna'
-
-liftF13 fun a b c d e f g h i j k l m = do
-    a' <- a
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    h' <- h
-    i' <- i
-    j' <- j
-    k' <- k
-    l' <- l
-    m' <- m
-    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
-            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
-
-liftF12 fun a b c d e f g h i j k l = do
-    a' <- a
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    h' <- h
-    i' <- i
-    j' <- j
-    k' <- k
-    l' <- l
-    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
-            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l'
 
 data MergeMode = Atop
            | Average
@@ -657,3 +624,69 @@ orderedDitherLuna bits = onEachChannel $ bayer bits
 
 constantBoundaryWrapper :: a -> A.Boundary (MValue a)
 constantBoundaryWrapper v = A.Constant $ MValue (return v) (const $ return ())
+
+
+liftF6 a b c d e f g = do
+    b' <- b
+    c' <- c
+    d' <- d
+    e' <- e
+    f' <- f
+    g' <- g
+    val a <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g'
+
+liftF8 a b c d e f g h i = do
+    b' <- b
+    c' <- c
+    d' <- d
+    e' <- e
+    f' <- f
+    g' <- g
+    h' <- h
+    i' <- i
+    val a <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g' <<*>> h' <<*>> i'
+
+liftF9 a b c d e f g h i j = do
+    b' <- b
+    c' <- c
+    d' <- d
+    e' <- e
+    f' <- f
+    g' <- g
+    h' <- h
+    i' <- i
+    j' <- j
+    val a <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g' <<*>> h' <<*>> i' <<*>> j'
+
+liftF12 fun a b c d e f g h i j k l = do
+    a' <- a
+    b' <- b
+    c' <- c
+    d' <- d
+    e' <- e
+    f' <- f
+    g' <- g
+    h' <- h
+    i' <- i
+    j' <- j
+    k' <- k
+    l' <- l
+    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
+            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l'
+
+liftF13 fun a b c d e f g h i j k l m = do
+    a' <- a
+    b' <- b
+    c' <- c
+    d' <- d
+    e' <- e
+    f' <- f
+    g' <- g
+    h' <- h
+    i' <- i
+    j' <- j
+    k' <- k
+    l' <- l
+    m' <- m
+    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
+            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'

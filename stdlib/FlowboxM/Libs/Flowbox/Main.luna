@@ -57,34 +57,34 @@ def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
 def Image.defocus radius:
-    ```liftF1 (onEachChannel $ defocus #{radius}) #{self}```
+    ```liftF2 defocus #{radius} #{self}```
 
 def Image.motionBlur size angle:
-    ```liftF1 (onEachChannel $ motionBlur #{size} #{angle}) #{self}```
+    ```liftF3 motionBlur #{size} #{angle} #{self}```
 
 def Image.bilateral psigma csigma size:
-    ```liftF1 (onEachChannel $ bilateral #{psigma} #{csigma} #{size}) #{self}```
+    ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
 
 def Image.offset value:
-    ```liftF1 (onEachValue $ offsetLuna #{value}) #{self}```
+    ```liftF2 offsetLuna #{value} #{self}```
 
 def Image.contrast value:
-    ```liftF1 (onEachValue $ contrastLuna #{value}) #{self}```
+    ```liftF2 contrastLuna #{value} #{self}```
 
 def Image.exposure blackpoint ex:
-    ```liftF1 (onEachValue $ exposureLuna #{blackpoint} #{ex}) #{self}```
+    ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
 def Image.colorCorrect saturation contrast gamma gain offset:
-    ```liftF1 (onEachRGB $ colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset}) #{self}```
+    ```liftF6 colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
 
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
-    ```liftF1 (onEachValue $ gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma}) #{self}```
+    ```liftF8 gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 def Image.saturate saturation:
-    ```liftF1 (onEachRGB $ saturateLuna #{saturation}) #{self}```
+    ```liftF2 saturateLuna #{saturation} #{self}```
 
 def Image.posterize colors:
-    ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
+    ```liftF2 posterizeLuna #{colors} #{self}```
 
 class ```Bool```:
     True
@@ -103,10 +103,10 @@ class ```KeyerMode```:
     Min
 
 def Image.key mode a b c d:
-    ```liftF1 (keyerLuna #{mode} #{a} #{b} #{c} #{d}) #{self}```
+    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
 
 def Image.differenceKey offset gain background:
-    ```liftF2 (differenceKeyerLuna #{offset} #{gain}) #{background} #{self}```
+    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
 
 class Point a:
     x,y :: a
@@ -121,19 +121,19 @@ def Image.cornerPin p1 p2 p3 p4:
     p4x = p4.x
     p4y = p4.y
 
-    ```liftF1 (cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y}) #{self}```
+    ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
 # def Image.blur kernelSize:
 #     ```liftF1 (gaussianLuna #{kernelSize}) #{self}```
 
 def Image.blur kernelSize:
-    ```liftF2 gaussianLuna' #{kernelSize} #{self}```
+    ```liftF2 gaussianLuna #{kernelSize} #{self}```
 
 def Image.laplacian kernelSize centerVal sideVal:
-    ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
+    ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
 def Image.rotate phi:
-    ```liftF1 (onEachChannel $ rotateCenterLuna #{phi}) #{self}```
+    ```liftF2 rotateCenterLuna #{phi} #{self}```
 
 def Image.translate boundary x y:
     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
