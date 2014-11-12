@@ -7,4 +7,3 @@
 
 {-# LANGUAGE ImplicitPrelude #-}
 {-# OPTIONS_GHC -F -pgmF hspec-discover #-}
-
