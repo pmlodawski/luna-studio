@@ -8,13 +8,10 @@
 
 module Flowbox.Batch.Project.Project where
 
-import           Flowbox.Prelude        hiding (empty)
-import           Flowbox.System.UniPath (UniPath)
-import qualified Flowbox.System.UniPath as UniPath
-import           Luna.Graph.Attributes  (Attributes)
-import qualified Luna.Graph.Attributes  as Attributes
-import           Luna.Lib.Manager       (LibManager)
-import qualified Luna.Lib.Manager       as LibManager
+import Flowbox.Prelude
+import Flowbox.System.UniPath (UniPath)
+import Luna.Graph.Attributes  (Attributes)
+import Luna.Lib.Manager       (LibManager)
 
 
 
@@ -28,14 +25,15 @@ data Project = Project { _name     :: Maybe String
 makeLenses ''Project
 
 
-type ID = Int
+newtype ID = ID { toInt :: Int }
+           deriving (Show)
 
 
-empty :: Project
-empty = Project Nothing UniPath.empty [] LibManager.empty Attributes.empty
+instance Default Project where
+    def = Project Nothing def def def def
 
 
 make :: Maybe String -> UniPath -> Attributes -> Project
-make name' path' attrs' = empty & name  .~ name'
-                                & path  .~ path'
-                                & attrs .~ attrs'
+make name' path' attrs' = def & name  .~ name'
+                              & path  .~ path'
+                              & attrs .~ attrs'
