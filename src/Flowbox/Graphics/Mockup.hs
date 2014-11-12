@@ -621,6 +621,48 @@ orderedDitherLuna bits = onEachChannel $ bayer bits
 constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
+gradeLuna' :: Color.RGBA Double
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Image
+           -> Image
+gradeLuna' (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
+           (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA)
+           (fmap variable -> Color.RGBA liftR liftG liftB liftA)
+           (fmap variable -> Color.RGBA gainR gainG gainB gainA)
+           (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
+           (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
+           (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) =
+             onImageRGBA (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
+                         (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
+                         (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
+                         (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+
+onImageRGBA :: (A.Exp Double -> A.Exp Double)
+            -> (A.Exp Double -> A.Exp Double)
+            -> (A.Exp Double -> A.Exp Double)
+            -> (A.Exp Double -> A.Exp Double)
+            -> Image
+            -> Image
+onImageRGBA fr fg fb fa img = img'
+    where (r, g, b, a) = unsafeGetChannels img
+          r' = M.map fr r
+          g' = M.map fg g
+          b' = M.map fb b
+          a' = M.map fa a
+
+          Just view = lookup "rgba" img
+          view' = insertChannelFloats view [
+                      ("rgba.r", r')
+                    , ("rgba.g", g')
+                    , ("rgba.b", b')
+                    , ("rgba.a", a')
+                    ]
+          Right img' = Image.update (const $ Just view') "rgba" img
 
 liftF6 a b c d e f g = do
     b' <- b
