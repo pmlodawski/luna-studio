@@ -43,7 +43,7 @@ type STPPass result = Pass Pass.NoState result
 
 
 run :: String -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)
-run = (Pass.run_ (Pass.Info "SimpleTextParser") Pass.NoState) .:. text2fun
+run = Pass.run_ (Pass.Info "SimpleTextParser") Pass.NoState .:. text2fun
 
 
 text2fun :: String -> PropertyMap -> Expr -> STPPass (Expr, PropertyMap)

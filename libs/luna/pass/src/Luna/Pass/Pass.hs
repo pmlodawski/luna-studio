@@ -58,7 +58,7 @@ data NoState = NoState deriving Show
 
 
 runRaw :: ESRT err env state m result -> env -> state -> m (Either err result, state)
-runRaw pass env state = flip runReaderT env $ flip runStateT state $ (runEitherT) pass
+runRaw pass env state = flip runReaderT env $ flip runStateT state $ runEitherT pass
 
 
 run :: Monad m => env -> state -> ESRT err env state m result -> m (Either err (result, state))

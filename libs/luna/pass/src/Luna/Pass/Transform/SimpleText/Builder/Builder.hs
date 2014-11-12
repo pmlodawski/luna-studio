@@ -30,7 +30,7 @@ type STBPass result = Pass Pass.NoState result
 
 
 run :: PropertyMap -> ASTInfo -> Expr -> Pass.Result (String, PropertyMap, ASTInfo)
-run = (Pass.run_ (Pass.Info "SimpleTextBuilder") Pass.NoState) .:. fun2text
+run = Pass.run_ (Pass.Info "SimpleTextBuilder") Pass.NoState .:. fun2text
 
 
 fun2text :: PropertyMap -> ASTInfo -> Expr -> STBPass (String, PropertyMap, ASTInfo)

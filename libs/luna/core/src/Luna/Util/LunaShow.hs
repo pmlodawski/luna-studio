@@ -29,7 +29,7 @@ class LunaShow ast where
 instance LunaShow Expr where
     lunaShow expr = concat $ case expr of
         Expr.Accessor     _ name     dst  -> [lunaShow dst, ".", name]
-        Expr.App          _ src      args -> [List.intercalate " " $ map lunaShow $ src:args]
+        Expr.App          _ src      args -> [unwords $ map lunaShow $ src:args]
         --Expr.AppCons_     _ args
         Expr.Assignment   _ pat      dst  -> [lunaShow pat, " = ", lunaShow dst]
         --Expr.RecordUpdate _ name     selectors expr
@@ -37,20 +37,20 @@ instance LunaShow Expr where
         --Expr.ConD         _ name     fields
         Expr.Con          _ name          -> [name]
         Expr.Function _ path name inputs output body -> ["def "
-                                                        , if null path then "" else (List.intercalate "." path ++ ".") 
+                                                        , if null path then "" else List.intercalate "." path ++ "." 
                                                         , name
                                                         , [' ' | not $ null inputs]
-                                                        , List.intercalate " " $ map lunaShow inputs
+                                                        , unwords $ map lunaShow inputs
                                                         , if isUnknown output then "" else " -> " ++ lunaShow output
                                                         , if null body then "" else ":\n    " ++ List.intercalate "\n    " (map lunaShow body)
                                                         , "\n"
                                                         ]
-        Expr.Grouped      _ expr'         -> ["(", lunaShow expr', ")"]
+        Expr.Grouped      _ grouped       -> ["(", lunaShow grouped, ")"]
         --Expr.Import       _ path     target    rename
         --Expr.Infix        _ name     src       dst
-        Expr.List         _ items         -> ["[", List.intercalate ", " (map lunaShow items), "]"]
+        Expr.List         _ items         -> ["[", List.intercalate ", " $ map lunaShow items, "]"]
         Expr.Lit          _ lvalue        -> [lunaShow lvalue]
-        Expr.Tuple        _ items         -> ["{", List.intercalate ", " (map lunaShow items), "}"]
+        Expr.Tuple        _ items         -> ["{", List.intercalate ", " $ map lunaShow items, "}"]
         --Expr.Typed        _ cls      expr
         Expr.Var          _ name          -> [name]
         Expr.Wildcard     _               -> ["_"]
@@ -63,7 +63,7 @@ instance LunaShow Expr where
         Expr.NativeVar    _ name          -> ["#{", name, "}"]
         --Expr.Case         _ expr     match
         --Expr.Match        _ pat      body
-        _ -> error $ show expr
+        _ -> error $ "lunaShow: Not implemented: " ++ show expr
         where 
             isUnknown (Type.Unknown {}) = True
             isUnknown _                 = False
@@ -72,35 +72,36 @@ instance LunaShow Expr where
 
 instance LunaShow Lit where
     lunaShow lit = case lit of
-        Lit.Char    _ char' -> '\'' : char' : "'"
-        Lit.String  _ str'  -> '\"' : str' ++ "\""
-        Lit.Integer _ str'  -> str'
-        Lit.Float   _ str'  -> str'
+        Lit.Char    _ char -> '\'' : char : "'"
+        Lit.String  _ str  -> '\"' : str ++ "\""
+        Lit.Integer _ str  -> str
+        Lit.Float   _ str  -> str
 
 
 instance LunaShow Pat where
     lunaShow p = case p of
-        Pat.Var      _ name'      -> name'
-        Pat.Lit      _ value'     -> lunaShow value'
-        Pat.Tuple    _ items'     -> "{" ++ List.intercalate ", " strs ++ "}" where
-                                       strs = map lunaShow items'
-        Pat.Con      _ name'      -> name'
-        Pat.App      _ src' args' -> srcStr ++ " " ++ unwords argStrs where
-                                       argStrs = map lunaShow args'
-                                       srcStr  = lunaShow src'
-        Pat.Typed    _ pat' cls'  -> patStr ++ " :: " ++ typeStr where
-                                       patStr = lunaShow pat'
-                                       typeStr = lunaShow cls'
-        Pat.Wildcard _            -> "_"
-        Pat.RecWildcard _         -> ".."
+        Pat.Var      _ name      -> name
+        Pat.Lit      _ value     -> lunaShow value
+        Pat.Tuple    _ items     -> "{" ++ List.intercalate ", " strs ++ "}" where
+                                       strs = map lunaShow items
+        Pat.Con      _ name      -> name
+        Pat.App      _ src args  -> srcStr ++ " " ++ unwords argStrs where
+                                       argStrs = map lunaShow args
+                                       srcStr  = lunaShow src
+        Pat.Typed    _ pat cls   -> patStr ++ " :: " ++ typeStr where
+                                       patStr = lunaShow pat
+                                       typeStr = lunaShow cls
+        Pat.Wildcard _           -> "_"
+        Pat.RecWildcard _        -> ".."
 
 
 instance LunaShow Type where
     lunaShow t = case t of
-        Type.Unknown _               -> "Unknown"
-        Type.Var     _ name'         -> name'
-        Type.Tuple   _ items'        -> "{" ++ List.intercalate ", " strs ++ "}" where
-                                       strs = map lunaShow items'
-        --Type.Class   _ name' params' -> name' ++ " " ++ (List.intercalate " " params')
+        Type.Unknown _           -> "Unknown"
+        Type.Var     _ name      -> name
+        Type.Tuple   _ items     -> "{" ++ List.intercalate ", " strs ++ "}" where
+                                       strs = map lunaShow items
+        --Type.Class   _ name params' -> name ++ " " ++ (List.intercalate " " params')
         --Type.Module  _ path'         -> List.intercalate "." path'
-        Type.Con     _ segments'     -> List.intercalate "." segments'
+        Type.Con     _ segments' -> List.intercalate "." segments'
+        _ -> error $ "lunaShow: Not implemented: " ++ show t
