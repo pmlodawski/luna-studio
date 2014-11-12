@@ -26,7 +26,7 @@ makeLenses ''Project
 
 
 newtype ID = ID { toInt :: Int }
-           deriving (Show)
+           deriving (Show, Ord, Eq)
 
 
 instance Default Project where
