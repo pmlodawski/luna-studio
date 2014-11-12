@@ -106,7 +106,7 @@ message Interpreter {
                 required Request request = 1;
             }
         }
-        message Clear {
+        message DeleteAll {
             message Request {
                 required CallPointPath callPointPath = 1;
             }
