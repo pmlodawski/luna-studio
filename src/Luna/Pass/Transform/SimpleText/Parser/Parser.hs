@@ -21,7 +21,6 @@ import qualified Luna.AST.Control.Zipper                                       a
 import           Luna.AST.Expr                                                 (Expr)
 import qualified Luna.AST.Expr                                                 as Expr
 import           Luna.Data.Source                                              (Source (Source))
-import           Luna.Graph.PropertyMap                                        (PropertyMap)
 import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
 import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
 import           Luna.Pass.Pass                                                (Pass)
@@ -42,12 +41,12 @@ logger = getLogger $(moduleName)
 type STPPass result = Pass Pass.NoState result
 
 
-run :: String -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)
-run = Pass.run_ (Pass.Info "SimpleTextParser") Pass.NoState .:. text2fun
+run :: String -> Expr -> Pass.Result Expr
+run = Pass.run_ (Pass.Info "SimpleTextParser") Pass.NoState .: text2fun
 
 
-text2fun :: String -> PropertyMap -> Expr -> STPPass (Expr, PropertyMap)
-text2fun code propertyMap expr = do
+text2fun :: String -> Expr -> STPPass Expr
+text2fun code expr = do
     let main = "Main"
     (ast, _, astInfo) <- EitherT $ TxtParser.run $ Source [main] code
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitSelf.run astInfo ast
@@ -61,7 +60,6 @@ text2fun code propertyMap expr = do
         name = expr ^. Expr.name
         bc   = [Crumb.Module main, Crumb.Function name path]
     focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
-    e <- Focus.getFunction focus <??> "SimpleText.Parser.text2fun : Target is not a function"
+    Focus.getFunction focus <??> "SimpleText.Parser.text2fun : Target is not a function"
 
-    return (e, propertyMap)
     --FIXME [PM] : assign proper ids! Current ones may conflict with other from the rest of module
