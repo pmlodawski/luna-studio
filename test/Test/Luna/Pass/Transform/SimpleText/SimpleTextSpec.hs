@@ -14,7 +14,6 @@ import           Flowbox.Prelude
 import qualified Luna.Pass.Transform.SimpleText.Parser.Parser as Parser
 import qualified Test.Luna.AST.Common                         as Common
 import qualified Test.Luna.Pass.Transform.Graph.Common        as Common
-import           Test.Luna.Sample.Code                        (sampleCodes)
 import qualified Test.Luna.Sample.Code                        as SampleCode
 import qualified Luna.Pass.Transform.SimpleText.Builder.Builder as Builder
 
@@ -29,7 +28,7 @@ backAndForth code = do
     --prettyPrint expr2
     --prettyPrint pm2
     expr2 `shouldBe` targetExpr
-    (code3, pm3) <- eitherToM' $ Builder.run pm2 expr2
+    (code3, _, _) <- eitherToM' $ Builder.run pm2 def expr2
     code3 `shouldBe` code
     return ()
 
@@ -42,4 +41,4 @@ spec :: Spec
 spec = do
     describe "text <-> ast conversion" $ do
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth $ tail code) sampleCodes
+                backAndForth $ tail code) SampleCode.singleFun
