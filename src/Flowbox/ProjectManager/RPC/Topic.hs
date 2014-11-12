@@ -51,6 +51,8 @@ projectLibraryAstFunctionGraphNodePropertiesGetRequest = "project.library.ast.fu
 projectLibraryAstFunctionGraphNodePropertiesSetRequest = "project.library.ast.function.graph.node.properties.set.request"
 projectLibraryAstPropertiesGetRequest                  = "project.library.ast.properties.get.request"
 projectLibraryAstPropertiesSetRequest                  = "project.library.ast.properties.set.request"
+projectLibraryAstCodeGetRequest                        = "project.library.ast.code.get.request"
+projectLibraryAstCodeSetRequest                        = "project.library.ast.code.set.request"
 
 projectmanagerSyncGetRequest = "projectmanager.sync.get.request"
 projectmanagerPingRequest    = "projectmanager.ping.request"

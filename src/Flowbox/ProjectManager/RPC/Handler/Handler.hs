@@ -87,6 +87,8 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest , call Topic.update PropertiesHandler.setNodeProperties)
     , (Topic.projectLibraryAstPropertiesGetRequest                  , call Topic.status PropertiesHandler.getASTProperties)
     , (Topic.projectLibraryAstPropertiesSetRequest                  , call Topic.update PropertiesHandler.setASTProperties)
+    , (Topic.projectLibraryAstCodeGetRequest                        , call Topic.status ASTHandler.codeGet)
+    , (Topic.projectLibraryAstCodeSetRequest                        , call Topic.update ASTHandler.codeSet)
     , (Topic.projectmanagerSyncGetRequest                           , call Topic.status SyncHandler.syncGet)
     , (Topic.projectmanagerPingRequest                              , call Topic.status MaintenanceHandler.ping)
     ]
