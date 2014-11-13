@@ -67,17 +67,16 @@ updateNode (nodeID, newNode) bc libID projectID = do
 
 
 updateNodeInPlace :: (Node.ID, Node) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-updateNodeInPlace (nodeID, newNode) bc libID projectID = Batch.graphViewOp bc libID projectID (\graph propertyMap -> do
+updateNodeInPlace (nodeID, newNode) bc libID projectID = Batch.graphViewOp bc libID projectID $ \graph propertyMap -> do
     let fixedNode = OutputName.fixEmpty newNode nodeID
         newGraph  = GraphView.updateNode (nodeID, fixedNode) graph
-    return ((newGraph, propertyMap), ()))
-
+    return ((newGraph, propertyMap), ())
 
 
 removeNodes :: [Node.ID] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 removeNodes nodeIDs bc libID projectID = do
     (graph, propertyMap) <- Batch.getGraphView bc libID projectID
-    forM_ nodeIDs (\nodeID -> GraphView.gelem nodeID graph `assertE` ("Wrong 'nodeID' = " ++ show nodeID))
+    forM_ nodeIDs (\nodeID -> (nodeID >= 0 && GraphView.gelem nodeID graph) `assertE` ("Wrong 'nodeID' = " ++ show nodeID))
     let newGraph = GraphView.delNodes nodeIDs graph
         newPropertyMap = foldl (flip PropertyMap.delete) propertyMap nodeIDs
     Batch.setGraphView (newGraph, newPropertyMap) bc libID projectID

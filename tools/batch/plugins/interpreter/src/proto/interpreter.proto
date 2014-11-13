@@ -106,7 +106,7 @@ message Interpreter {
                 required Request request = 1;
             }
         }
-        message Clear {
+        message DeleteAll {
             message Request {
                 required CallPointPath callPointPath = 1;
             }
@@ -156,9 +156,9 @@ message Interpreter {
             required CallPointPath callPointPath = 1;
         }
         message Update {
-            required CallPointPath      callPointPath = 1;
-            required Status                    status = 2;
-            repeated generated.proto.data.Value value = 3;
+            required CallPointPath              callPointPath = 1;
+            required Status                            status = 2;
+            repeated generated.proto.mode.ModeValue modeValue = 3;
         }
     }
     message Abort {

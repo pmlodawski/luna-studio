@@ -19,6 +19,7 @@ import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoi
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Session            (Session)
+import qualified Luna.Lib.Lib                                as Library
 import qualified Test.Luna.Interpreter.Common                as Common
 import qualified Test.Luna.Interpreter.SampleCodes           as SampleCodes
 
@@ -71,19 +72,20 @@ spec = do
         it "finds function arguments" $ do
             --rootLogger setIntLevel 5
             Common.runSession SampleCodes.traverseExample $ do
-                let var_a     = [CallPoint 1 22]
-                    var_b     = [CallPoint 1 26]
-                    var_c     = [CallPoint 1 38]
-                    fooCall   = [CallPoint 1 31]
-                    var_e     = [CallPoint 1 31, CallPoint 1 55]
-                    var_n     = [CallPoint 1 31, CallPoint 1 59]
-                    var_d     = [CallPoint 1 31, CallPoint 1 71]
-                    barCall   = [CallPoint 1 31, CallPoint 1 62]
-                    conMain   = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 122]
-                    testCall  = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 90]
-                    tuple     = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 (-86)]
-                    conMain2  = [CallPoint 1 120]
-                    printCall = [CallPoint 1 41]
+                let lib1      = Library.ID 1
+                    var_a     = [CallPoint lib1 22]
+                    var_b     = [CallPoint lib1 26]
+                    var_c     = [CallPoint lib1 38]
+                    fooCall   = [CallPoint lib1 31]
+                    var_e     = [CallPoint lib1 31, CallPoint lib1 55]
+                    var_n     = [CallPoint lib1 31, CallPoint lib1 59]
+                    var_d     = [CallPoint lib1 31, CallPoint lib1 71]
+                    barCall   = [CallPoint lib1 31, CallPoint lib1 62]
+                    conMain   = [CallPoint lib1 31, CallPoint lib1 62, CallPoint lib1 122]
+                    testCall  = [CallPoint lib1 31, CallPoint lib1 62, CallPoint lib1 90]
+                    tuple     = [CallPoint lib1 31, CallPoint lib1 62, CallPoint lib1 (-86)]
+                    conMain2  = [CallPoint lib1 120]
+                    printCall = [CallPoint lib1 41]
                 getArgs var_a     >>= shouldBe' []
                 getArgs var_b     >>= shouldBe' []
                 getArgs var_c     >>= shouldBe' []
@@ -101,19 +103,20 @@ spec = do
         it "finds node successors" $ do
             --putStrLn =<< ppShow <$> Common.readCode SampleCodes.traverseExample
             Common.runSession SampleCodes.traverseExample $ do
-                let var_a     = [CallPoint 1 22]
-                    var_b     = [CallPoint 1 26]
-                    var_c     = [CallPoint 1 38]
-                    fooCall   = [CallPoint 1 31]
-                    var_e     = [CallPoint 1 31, CallPoint 1 55]
-                    var_n     = [CallPoint 1 31, CallPoint 1 59]
-                    var_d     = [CallPoint 1 31, CallPoint 1 71]
-                    barCall   = [CallPoint 1 31, CallPoint 1 62]
-                    conMain   = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 122]
-                    testCall  = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 90]
-                    tuple     = [CallPoint 1 31, CallPoint 1 62, CallPoint 1 (-86)]
-                    conMain2  = [CallPoint 1 120]
-                    printCall = [CallPoint 1 41]
+                let lib1      = Library.ID 1
+                    var_a     = [CallPoint lib1 22]
+                    var_b     = [CallPoint lib1 26]
+                    var_c     = [CallPoint lib1 38]
+                    fooCall   = [CallPoint lib1 31]
+                    var_e     = [CallPoint lib1 31, CallPoint lib1 55]
+                    var_n     = [CallPoint lib1 31, CallPoint lib1 59]
+                    var_d     = [CallPoint lib1 31, CallPoint lib1 71]
+                    barCall   = [CallPoint lib1 31, CallPoint lib1 62]
+                    conMain   = [CallPoint lib1 31, CallPoint lib1 62, CallPoint lib1 122]
+                    testCall  = [CallPoint lib1 31, CallPoint lib1 62, CallPoint lib1 90]
+                    tuple     = [CallPoint lib1 31, CallPoint lib1 62, CallPoint lib1 (-86)]
+                    conMain2  = [CallPoint lib1 120]
+                    printCall = [CallPoint lib1 41]
                 getSuccessors var_a     >>= shouldMatchList' [var_b, barCall]
                 getSuccessors var_b     >>= shouldMatchList' [var_c, barCall]
                 getSuccessors var_c     >>= shouldMatchList' [var_e, barCall]
@@ -124,6 +127,6 @@ spec = do
                 getSuccessors testCall  >>= shouldMatchList' [barCall]
                 getSuccessors tuple     >>= shouldMatchList' [barCall]
                 getSuccessors barCall   >>= shouldMatchList' [fooCall]
-                getSuccessors fooCall   >>= shouldMatchList' [conMain2] 
+                getSuccessors fooCall   >>= shouldMatchList' [conMain2]
                 getSuccessors conMain2  >>= shouldMatchList' [printCall]
                 getSuccessors printCall >>= shouldMatchList' [[]]

@@ -73,9 +73,9 @@ handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
     , (Topic.interpreterSerializationModeDefaultGetRequest , respond Topic.status Interpreter.getDefaultSerializationMode)
     , (Topic.interpreterSerializationModeDefaultSetRequest , respond Topic.update Interpreter.setDefaultSerializationMode)
     , (Topic.interpreterSerializationModeGetRequest        , respond Topic.status Interpreter.getSerializationMode       )
-    , (Topic.interpreterSerializationModeInsertRequest     , respond Topic.update Interpreter.insertSerializationMode       )
-    , (Topic.interpreterSerializationModeClearRequest      , respond Topic.update Interpreter.clearSerializationMode       )
+    , (Topic.interpreterSerializationModeInsertRequest     , respond Topic.update Interpreter.insertSerializationMode    )
     , (Topic.interpreterSerializationModeDeleteRequest     , respond Topic.update Interpreter.deleteSerializationMode    )
+    , (Topic.interpreterSerializationModeDeleteAllRequest  , respond Topic.update Interpreter.deleteAllSerializationMode )
     , (Topic.interpreterMemoryGetLimitsRequest             , respond Topic.status Interpreter.getMemoryLimits)
     , (Topic.interpreterMemorySetLimitsRequest             , respond Topic.update Interpreter.setMemoryLimits)
 

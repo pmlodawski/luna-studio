@@ -83,7 +83,7 @@ buildLibrary :: Library.ID -> Project.ID -> Batch ()
 buildLibrary libraryID projectID = do
     cfg         <- gets (view Batch.config)
     projectPath <- view Project.path <$> Batch.getProject projectID
-    library     <- Batch.getLibrary projectID libraryID
+    library     <- Batch.getLibrary libraryID projectID
     let ast         = library ^. Library.ast
         name        = library ^. Library.name
         version     = Version [1][]      -- TODO [PM] : hardcoded version
@@ -98,7 +98,7 @@ buildLibrary libraryID projectID = do
         buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
         bldCfg      = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
 
-    maxID <- Batch.getMaxID projectID libraryID
+    maxID <- Batch.getMaxID libraryID projectID
     EitherT $ Build.run bldCfg ast (ASTInfo.mk maxID) False
 
 

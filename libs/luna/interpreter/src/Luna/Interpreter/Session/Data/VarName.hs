@@ -12,7 +12,7 @@ import           Flowbox.Prelude
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.Hash          (Hash)
-
+import qualified Luna.Lib.Lib                                as Library
 
 
 type VarName = String
@@ -20,6 +20,6 @@ type VarName = String
 
 mk :: Maybe Hash -> CallPointPath -> VarName
 mk mhash callPointPath = concatMap gen callPointPath ++ hash where
-    gen callPoint = "_" ++ show (abs (callPoint ^. CallPoint.libraryID))
+    gen callPoint = "_" ++ show (abs $ Library.toInt (callPoint ^. CallPoint.libraryID))
                  ++ "_" ++ show (abs (callPoint ^. CallPoint.nodeID))
     hash = '_' : Maybe.maybe "nohash" show  mhash

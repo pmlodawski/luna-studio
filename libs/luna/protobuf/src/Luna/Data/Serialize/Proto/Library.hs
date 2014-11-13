@@ -36,7 +36,7 @@ loggerIO = getLoggerIO "Flowbox.Luna.Tools.Serialize.Proto.Lib"
 
 saveLib :: Library -> IO.Handle -> IO ()
 saveLib library h = do
-    let tlibrary = encode (-1 :: Int, library) :: Gen.Library
+    let tlibrary = encode (Library.ID $ -1, library) :: Gen.Library
     ByteString.hPut h $ Proto.messagePut tlibrary
 
 
@@ -44,7 +44,7 @@ getLib :: IO.Handle -> IO Library
 getLib h = runScript $ do
     binary              <- scriptIO $ ByteString.hGetContents h
     (tlibrary, _)       <- tryRight $ Proto.messageGet binary
-    (_ :: Int, library) <- tryRight $ decode tlibrary
+    (_ :: Library.ID, library) <- tryRight $ decode tlibrary
     return library
 
 
@@ -54,7 +54,6 @@ storeLibrary lib mpath = do
         slib    = Serializable libpath (saveLib lib)
     Serializer.serialize slib
     loggerIO debug "Library saved succesfully"
-
 
 
 restoreLibrary :: UniPath -> IO Library
