@@ -10,7 +10,7 @@ module Luna.Lib.Manager (
     module Luna.Lib.Manager,
 ) where
 
-import           Flowbox.Data.Graph                hiding (Edge, delNode, empty, insNewNode, lab, labNodes, updateNode)
+import           Flowbox.Data.Graph                hiding (Edge, delNode, empty, insNewNode, lab, labNodes, nodes, updateNode)
 import qualified Flowbox.Data.Graph                as Graph
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath            (UniPath)
@@ -37,6 +37,10 @@ lab lm = Graph.lab lm . Library.toInt
 
 labNodes :: LibManager -> [(Library.ID, Library)]
 labNodes = over (mapped . _1) Library.ID . Graph.labNodes
+
+
+nodes :: LibManager -> [Library.ID]
+nodes = map Library.ID . Graph.nodes
 
 
 updateNode :: (Library.ID, Library) -> LibManager -> LibManager
