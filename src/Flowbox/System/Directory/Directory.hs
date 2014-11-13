@@ -107,7 +107,8 @@ getTmpDirectoryWithPrefix :: String -> IO UniPath
 getTmpDirectoryWithPrefix prefix = do
     systemTmp <- getTemporaryDirectory
     guid      <- Random.newGUID
-    return $ UniPath.append guid $ UniPath.append prefix systemTmp
+    return $ UniPath.append (if null prefix then guid else prefix ++ "-" ++ guid) 
+                            systemTmp
 
 
 listDirectory :: FilePath -> IO [FilePath]
