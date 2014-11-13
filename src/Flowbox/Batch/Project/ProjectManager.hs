@@ -13,7 +13,7 @@ module Flowbox.Batch.Project.ProjectManager (
 import           Flowbox.Batch.Project.Project               (Project)
 import qualified Flowbox.Batch.Project.Project               as Project
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
-import           Flowbox.Data.Graph                          hiding (Edge, delNode, insNewNode, lab, labNodes, updateNode)
+import           Flowbox.Data.Graph                          hiding (Edge, delNode, insNewNode, lab, labNodes, nodes, updateNode)
 import qualified Flowbox.Data.Graph                          as Graph
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath                      (UniPath)
@@ -36,6 +36,10 @@ lab pm = Graph.lab pm . Project.toInt
 
 labNodes :: ProjectManager -> [(Project.ID, Project)]
 labNodes = over (mapped . _1) Project.ID . Graph.labNodes
+
+
+nodes :: ProjectManager -> [Project.ID]
+nodes = map Project.ID . Graph.nodes
 
 
 updateNode :: (Project.ID, Project) -> ProjectManager -> ProjectManager
