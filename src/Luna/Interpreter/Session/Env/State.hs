@@ -25,7 +25,6 @@ import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
-import           Generated.Proto.Data.Value                  (Value)
 import qualified Luna.AST.Common                             as AST
 import           Luna.AST.Control.Focus                      (Focus)
 import qualified Luna.AST.Control.Focus                      as Focus
@@ -287,5 +286,5 @@ setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
 
 ---- Env.resultCallback ---------------------------------------------------
 
-getResultCallBack :: Session (Project.ID -> CallPointPath -> [Value] -> IO ())
+getResultCallBack :: Session Env.ResultCallBack
 getResultCallBack = gets $ view Env.resultCallBack

@@ -19,8 +19,8 @@ import qualified Flowbox.Data.Error                          as ValueError
 import qualified Flowbox.Data.Serialization                  as Serialization
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (loc)
-import           Flowbox.System.Log.Logger
-import           Generated.Proto.Data.Value                  (Value)
+import           Flowbox.System.Log.Logger                   as L
+import           Generated.Proto.Mode.ModeValue              (ModeValue (ModeValue))
 import qualified Luna.Graph.Flags                            as Flags
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
@@ -41,7 +41,7 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-getIfReady :: CallPointPath -> Session [Value]
+getIfReady :: CallPointPath -> Session [ModeValue]
 getIfReady callPointPath = do
     varName   <- foldedReRoute callPointPath
     cacheInfo <- Cache.getCacheInfo callPointPath
@@ -58,7 +58,7 @@ data Status = Ready
             deriving (Show, Eq)
 
 
-getWithStatus :: CallPointPath -> Session (Status, [Value])
+getWithStatus :: CallPointPath -> Session (Status, [ModeValue])
 getWithStatus callPointPath = do
     varName <- foldedReRoute callPointPath
     Env.cachedLookup callPointPath >>= \case
@@ -96,17 +96,19 @@ report callPointPath varName = do
         resultCB projectID callPointPath results
 
 
-get :: VarName -> CallPointPath -> Session [Value]
+get :: VarName -> CallPointPath -> Session [ModeValue]
 get varName callPointPath = do
     modes <- Env.getSerializationModes callPointPath
     let tmpName = "_tmp"
         toValueExpr = "toValue " ++ tmpName
         computeExpr = concat [tmpName, " <- return $ compute ", varName, " def"]
 
-        excHandler :: Catch.SomeException -> MGHC.Ghc [Value]
+        excHandler :: Catch.SomeException -> MGHC.Ghc [ModeValue]
         excHandler exc = do
-            logger warning $ show exc
-            liftIO $ maybeToList <$> Serialization.toValue (ValueError.Error $ show exc) def
+            logger L.error $ show exc
+            val <- liftIO (Serialization.toValue (ValueError.Error $ show exc) def)
+            return $ map (\mode -> ModeValue mode val) $ Set.toList modes
+
     Session.withImports [ "Flowbox.Data.Serialization"
                         , "Flowbox.Data.Mode"
                         , "Flowbox.Graphics.Serialization"
@@ -118,7 +120,7 @@ get varName callPointPath = do
         _      <- GHC.runStmt computeExpr GHC.RunToCompletion
         action <- HEval.interpret toValueExpr
         Bindings.remove tmpName
-        liftIO $ mapM action $ Set.toList modes
+        liftIO $ mapM (\mode -> ModeValue mode <$> action mode) $ Set.toList modes
 
 
 foldedReRoute :: CallPointPath -> Session VarName

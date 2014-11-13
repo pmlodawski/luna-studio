@@ -49,8 +49,7 @@ readCode code = eitherStringToM' $ runEitherT $ do
     (ast, _astInfo)   <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
     _aliasInfo        <- EitherT $ Analysis.Alias.run ast
     let path = UniPath.fromUnixString "."
-    return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty)
-           $ LibManager.empty
+    return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty) def
 
 
 mkEnv :: String -> IO (Env, Library.ID)

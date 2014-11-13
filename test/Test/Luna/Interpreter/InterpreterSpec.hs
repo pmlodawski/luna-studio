@@ -19,6 +19,7 @@ import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoi
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Session            (Session)
+import qualified Luna.Lib.Lib                                as Library
 import qualified Test.Luna.Interpreter.Common                as Common
 import qualified Test.Luna.Interpreter.SampleCodes           as SampleCodes
 
@@ -70,17 +71,18 @@ spec = do
         it "finds function arguments" $ do
             --rootLogger setIntLevel 5
             Common.runSession SampleCodes.traverseExample $ do
-                let var_a     = [CallPoint 1 6 ]
-                    var_b     = [CallPoint 1 10]
-                    var_c     = [CallPoint 1 21]
-                    fooCall   = [CallPoint 1 15]
-                    var_e     = [CallPoint 1 15, CallPoint 1 36]
-                    var_n     = [CallPoint 1 15, CallPoint 1 40]
-                    var_d     = [CallPoint 1 15, CallPoint 1 51]
-                    barCall   = [CallPoint 1 15, CallPoint 1 43]
-                    testCall  = [CallPoint 1 15, CallPoint 1 43, CallPoint 1 69]
-                    tuple     = [CallPoint 1 15, CallPoint 1 43, CallPoint 1 (-66)]
-                    printCall = [CallPoint 1 23]
+                let lib1      = Library.ID 1
+                    var_a     = [CallPoint lib1 6 ]
+                    var_b     = [CallPoint lib1 10]
+                    var_c     = [CallPoint lib1 21]
+                    fooCall   = [CallPoint lib1 15]
+                    var_e     = [CallPoint lib1 15, CallPoint lib1 36]
+                    var_n     = [CallPoint lib1 15, CallPoint lib1 40]
+                    var_d     = [CallPoint lib1 15, CallPoint lib1 51]
+                    barCall   = [CallPoint lib1 15, CallPoint lib1 43]
+                    testCall  = [CallPoint lib1 15, CallPoint lib1 43, CallPoint lib1 69]
+                    tuple     = [CallPoint lib1 15, CallPoint lib1 43, CallPoint lib1 (-66)]
+                    printCall = [CallPoint lib1 23]
                 varAArgs  <- getArgs var_a
                 varAArgs `shouldBe'` []
                 varBArgs  <- getArgs var_b
@@ -107,17 +109,18 @@ spec = do
         it "finds node successors" $ do
             --putStrLn =<< ppShow <$> Common.readCode SampleCodes.traverseExample
             Common.runSession SampleCodes.traverseExample $ do
-                let var_a     = [CallPoint 1 6 ]
-                    var_b     = [CallPoint 1 10]
-                    var_c     = [CallPoint 1 21]
-                    fooCall   = [CallPoint 1 15]
-                    var_e     = [CallPoint 1 15, CallPoint 1 36]
-                    var_n     = [CallPoint 1 15, CallPoint 1 40]
-                    var_d     = [CallPoint 1 15, CallPoint 1 51]
-                    barCall   = [CallPoint 1 15, CallPoint 1 43]
-                    testCall  = [CallPoint 1 15, CallPoint 1 43, CallPoint 1 69]
-                    tuple     = [CallPoint 1 15, CallPoint 1 43, CallPoint 1 (-66)]
-                    printCall = [CallPoint 1 23]
+                let lib1      = Library.ID 1
+                    var_a     = [CallPoint lib1 6 ]
+                    var_b     = [CallPoint lib1 10]
+                    var_c     = [CallPoint lib1 21]
+                    fooCall   = [CallPoint lib1 15]
+                    var_e     = [CallPoint lib1 15, CallPoint lib1 36]
+                    var_n     = [CallPoint lib1 15, CallPoint lib1 40]
+                    var_d     = [CallPoint lib1 15, CallPoint lib1 51]
+                    barCall   = [CallPoint lib1 15, CallPoint lib1 43]
+                    testCall  = [CallPoint lib1 15, CallPoint lib1 43, CallPoint lib1 69]
+                    tuple     = [CallPoint lib1 15, CallPoint lib1 43, CallPoint lib1 (-66)]
+                    printCall = [CallPoint lib1 23]
                 varASuccs  <- getSuccessors var_a
                 varASuccs  `shouldMatchList'` [var_b, testCall, barCall]
                 varBSuccs  <- getSuccessors var_b
