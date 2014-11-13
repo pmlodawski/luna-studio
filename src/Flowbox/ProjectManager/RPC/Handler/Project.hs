@@ -76,7 +76,7 @@ open request@(Open.Request tpath) = do
 
 modify :: Modify.Request -> RPC Context IO Modify.Update
 modify request@(Modify.Request tproject) = do
-    projectWithID <- decodeE (tproject, LibManager.empty) :: RPC Context IO (Project.ID, Project)
+    projectWithID <- decodeE (tproject, def) :: RPC Context IO (Project.ID, Project)
     BatchP.updateProject projectWithID
     Modify.Update request <$> Batch.getUpdateNo
 
