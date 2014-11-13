@@ -15,6 +15,7 @@ import           Data.List          (intercalate)
 import           Text.RawString.QQ
 import           Text.Show.Pretty
 
+import qualified Flowbox.Batch.Project.Project                                 as Project
 import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -136,8 +137,7 @@ readSource source = eitherStringToM' $ runEitherT $ do
     _aliasInfo        <- EitherT $ Analysis.Alias.run ast
 
     let path = UniPath.fromUnixString "."
-    return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty)
-           $ LibManager.empty
+    return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty) def
 
 
 main1 :: IO ()
@@ -148,7 +148,7 @@ main1 = do
     (libManager , libID) <- readSource code
     (libManager2, _    ) <- readSource code2
 
-    let env = Env.mk libManager (Just 0)
+    let env = Env.mk libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
                 (curry $ curry print)
 
@@ -219,7 +219,7 @@ main3 = do
 
     (libManager , libID) <- readSource code
 
-    let env = Env.mk libManager (Just 0)
+    let env = Env.mk libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
                 (curry $ curry print)
 

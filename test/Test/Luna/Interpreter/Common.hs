@@ -7,6 +7,7 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module Test.Luna.Interpreter.Common where
 
+import qualified Flowbox.Batch.Project.Project                                 as Project
 import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -57,7 +58,7 @@ mkEnv code = do
     (libManager, libID) <- readCode code
 
     let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
-        env      = Env.mk libManager (Just 0) (Just defPoint) $ const $ const (void . return)-- curry print
+        env      = Env.mk libManager (Just $ Project.ID 0) (Just defPoint) $ const $ const (void . return)-- curry print
     return (env, libID)
 
 
