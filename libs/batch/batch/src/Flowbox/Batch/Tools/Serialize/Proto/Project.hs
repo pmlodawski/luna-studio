@@ -54,3 +54,4 @@ restoreProject filepath = do
     let dproject = Deserializable filepath getProject
     project <- Serializer.deserialize dproject
     return $ project & Project.path .~ filepath
+

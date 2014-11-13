@@ -16,7 +16,7 @@ import           Flowbox.Data.MapForest                      (MapForest)
 import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Data.SetForest                      (SetForest)
 import           Flowbox.Prelude
-import           Generated.Proto.Data.Value                  (Value)
+import           Generated.Proto.Mode.ModeValue              (ModeValue)
 import qualified Luna.Graph.Node                             as Node
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
@@ -26,6 +26,9 @@ import qualified Luna.Interpreter.Session.Memory.Config      as Memory
 import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 import           Luna.Lib.Manager                            (LibManager)
 
+
+
+type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> IO ()
 
 
 data Env = Env { _cached                   :: MapForest CallPoint CacheInfo
@@ -39,7 +42,7 @@ data Env = Env { _cached                   :: MapForest CallPoint CacheInfo
                , _libManager               :: LibManager
                , _projectID                :: Maybe Project.ID
                , _mainPtr                  :: Maybe DefPoint
-               , _resultCallBack           :: Project.ID -> CallPointPath -> [Value] -> IO ()
+               , _resultCallBack           :: ResultCallBack
                }
 
 
@@ -47,7 +50,7 @@ makeLenses ''Env
 
 
 mk :: LibManager -> Maybe Project.ID -> Maybe DefPoint
-   -> (Project.ID -> CallPointPath -> [Value] -> IO ()) -> Env
+   -> ResultCallBack -> Env
 mk = Env def def def False def def def def
 
 
