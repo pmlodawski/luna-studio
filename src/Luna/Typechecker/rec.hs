@@ -397,6 +397,13 @@ extract_predicates ((Reckind t l t'):p) =
           return ((Reckind t l t'):r, e)
 
 
+-- # Algorithm description:
+-- 1) find solution for all equations
+-- 2) try to apply substitution from 1) to all record constraints
+-- 3) we can only solve plain constraints, without projections
+-- 4) extract all equations from Record constraints (l:t in r)
+-- 5) extract all equations for the same label in different constraints
+-- 6) simplify constraints
 
 closure ::  (Subst,[Predicate],[Predicate]) -> TP (Subst,[Predicate])
 closure (s, r, e) =
