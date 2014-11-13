@@ -141,6 +141,9 @@ regID id = do
 regAST id ast = modifyAliasInfo $ AliasInfo.regAST id ast
 
 
+regOrphan = modifyAliasInfo .: AliasInfo.regOrphan
+
+
 regVarName :: NamespaceMonad m => String -> ID -> m ()
 regVarName = regName AliasInfo.varnames
 
@@ -162,11 +165,18 @@ regName lens name id = do
 regParentVarName :: NamespaceMonad m => String -> ID -> m ()
 regParentVarName = withParentID .: regVarName
 
-
 bindVar id name = do
     ns <- get
     case Namespace.bindVar id name ns of
-        Left _    -> logger L.error $ "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+        Left _    -> fail $ "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+        Right ns' -> put ns'
+
+tryBindVar id name = do
+    ns <- get
+    case Namespace.bindVar id name ns of
+        Left _    -> do let errMsg = "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+                        logger L.error errMsg
+                        regOrphan id $ AliasInfo.LookupError errMsg 
         Right ns' -> put ns'
 
 

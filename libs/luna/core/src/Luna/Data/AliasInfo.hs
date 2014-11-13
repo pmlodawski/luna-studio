@@ -58,6 +58,8 @@ regAST     id a    = ast    %~ Map.insert id a
 regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
     (vnmap, tnmap) = scopeLookup pid info
 
+regOrphan id err = orphans %~ Map.insert id err
+
 regTypeName pid id name info = setScope info pid $ Scope vnmap (tnmap & at name ?~ id) where
     (vnmap, tnmap) = scopeLookup pid info
 
