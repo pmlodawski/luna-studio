@@ -25,7 +25,6 @@ import           Flowbox.ProjectManager.Context                        (Context)
 import           Flowbox.System.Log.Logger                             hiding (error)
 import qualified Flowbox.Text.ProtocolBuffers                          as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import           Generated.Proto.Data.Value                            (Value)
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Request as Value
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Update  as Value
 import           Luna.Interpreter.Proto.CallPoint                      ()
@@ -36,6 +35,7 @@ import qualified Luna.Interpreter.RPC.Handler.Sync                     as Sync
 import qualified Luna.Interpreter.RPC.Topic                            as Topic
 import qualified Luna.Interpreter.Session.Cache.Value                  as Value
 import           Luna.Interpreter.Session.Data.CallPointPath           (CallPointPath)
+import           Luna.Interpreter.Session.Env.Env                      (ResultCallBack)
 import           Luna.Interpreter.Session.Session                      (SessionST)
 
 
@@ -54,7 +54,7 @@ get (Value.Request tcallPointPath) = do
 
 reportOutputValue :: IORef Message.CorrelationID
                   -> Pipes.Output (Message, Message.CorrelationID, Flag)
-                  -> Project.ID -> CallPointPath -> [Value] -> IO ()
+                  -> ResultCallBack
 reportOutputValue crlRef output projectID callPointPath values = do
     crl <- IORef.readIORef crlRef
     let tcallPointPath = encode (projectID, callPointPath)
