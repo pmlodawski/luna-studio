@@ -29,6 +29,7 @@ import qualified Generated.Proto.Crumb.Lambda                   as GenLambda
 import qualified Generated.Proto.Crumb.Module                   as GenModule
 import           Luna.AST.Control.Crumb                         (Breadcrumbs, Crumb)
 import qualified Luna.AST.Control.Crumb                         as Crumb
+import           Luna.Data.Serialize.Proto.Conversion.Library   ()
 import           Luna.Data.Serialize.Proto.Conversion.Name      ()
 import qualified Luna.Lib.Lib                                   as Lib
 import qualified Text.ProtocolBuffers.Extensions                as Extensions
