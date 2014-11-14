@@ -33,7 +33,8 @@ importPaths = [ '/usr/include'
 imports = "-I " + ' -I '.join(importPaths)
 
 def main():
-    proto_paths = [os.path.realpath(path) for path in glob(rootPath + '/**/*.proto')]
+    proto_paths = [os.path.realpath(path) for path in glob(rootPath + '/libs'  + '/**/*.proto')
+                                                    + glob(rootPath + '/tools' + '/**/*.proto')]
     mod_proto_paths = filter(is_modified, proto_paths)
 
     if mod_proto_paths:
