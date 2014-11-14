@@ -53,5 +53,5 @@ quitRun queueInfo = MVar.modifyMVarMasked_ queueInfo $ \qidata ->
 overrideRun :: QueueInfo -> Message.CorrelationID -> Concurrent.ThreadId -> IO ()
 overrideRun queueInfo crl threadId = MVar.modifyMVarMasked_ queueInfo $ \qidata -> do
     if qidata ^. isExecuting 
-        then Abort.abort threadId >> return (qidata & isExecuting .~ False)
+        then {- Abort.abort threadId >> -} return (qidata & isExecuting .~ False)
         else return (qidata & skipUntil .~ Just crl)
