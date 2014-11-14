@@ -4,7 +4,7 @@
 -- # *------------------------------------------------
 -- # * Specification of the generic HM(X)
 -- # * type inference system in Haskell
--- # * 
+-- # *
 -- # * This instance deals with Ohori style records
 -- # *------------------------------------------------
 
@@ -19,12 +19,12 @@ module Main where
 
 -- # The type language
 
-type TVar       = Int 
+type TVar       = Int
 type Var        = Int
 type Fieldlabel = Var
 type Field      = (Fieldlabel, Type)
-data Type       = TV TVar 
-                | Type `Fun` Type 
+data Type       = TV TVar
+                | Type `Fun` Type
                 | Record [Field]
                     deriving (Show,Eq)
 
@@ -61,7 +61,7 @@ type Typo       = [(Var,TypeScheme)]
 
 -- # The term language
 
-data Term       = Id Var | Abs Var Term | App Term Term 
+data Term       = Id Var | Abs Var Term | App Term Term
                 | Let Var Term Term
                      deriving Show
 
@@ -72,7 +72,7 @@ data E a        = Suc a | Err String
 
 -- # The type inference monad - a typing problem consists of a three tuple
 
-data TP a = TP ( (TVar, Subst, Constraint) -> 
+data TP a = TP ( (TVar, Subst, Constraint) ->
                  E (TVar, Subst, Constraint, a))
 
 
@@ -106,7 +106,7 @@ instance TypesAndConstraints Predicate where
   tv (Reckind t l t')       = (tv t) ++ (tv t')
 
 instance TypesAndConstraints c => TypesAndConstraints [c] where
-  apply s  = mapM (apply s) 
+  apply s  = mapM (apply s)
   tv  a    = foldl f [] a where
                        f z x = z ++ (tv x)
 
@@ -143,7 +143,7 @@ instance TypesAndConstraints TypeScheme where
                                   t' <- apply s t
                                   return (Poly tvl c' t')
   apply s (Mono t)          = do t' <- apply s t
-                                 return (Mono t')                  
+                                 return (Mono t')
   tv (Poly tvl c t)          = without ((tv t) ++ (tv c)) tvl
   tv (Mono t)               = tv t
 
@@ -161,8 +161,8 @@ unTP (TP a) = a
 
 
 instance Monad TP where
- m >>= k = TP ( \ (n,s,c) -> 
-                     case unTP (m) (n,s,c) of 
+ m >>= k = TP ( \ (n,s,c) ->
+                     case unTP (m) (n,s,c) of
                        Suc (n',s',c',x) -> unTP (k x) (n',s',c')
                        Err s            -> Err s )
  return x = TP ( \ (n,s,c) -> return (n,s,c,x) )
@@ -222,18 +222,18 @@ add_cons :: Constraint -> Constraint -> Constraint
 add_cons (C p1) (C p2)               = C (p1 ++ p2)
 add_cons (C p1) (Proj tv p2)         = Proj tv (p1 ++ p2)
 add_cons (Proj tv p1) (C p2)         = Proj tv (p1 ++ p2)
-add_cons (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)   
+add_cons (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)
 
 
 projection :: Constraint -> [TVar] -> Constraint
 
 -- # FILL IN: definition of projection on constraints.
--- #          Projection might vary depending on different 
+-- #          Projection might vary depending on different
 -- #          kinds of constraint systems. A standard
 -- #          definition can be found below.
 
 -- #          projection (C p) tvl         = Proj tvl p
--- #          projection (Proj tv1 p) tv2 = Proj (tv1 ++ tv2) p 
+-- #          projection (Proj tv1 p) tv2 = Proj (tv1 ++ tv2) p
 
 
 -- # lifted functions
@@ -262,7 +262,7 @@ mylookup [] y =
     Err "undeclared variable"
 mylookup ((x,t):xs) y =
       if x == y then return t
-      else mylookup xs y 
+      else mylookup xs y
 
 
 
@@ -276,7 +276,7 @@ rename s x = do newtv <- newtvar
                 return ((x, TV newtv):s')
 
 inst :: Typo -> Var -> TP Type
-inst env x = 
+inst env x =
    case mylookup env x of
      Suc ts -> case ts of
                 Mono t        -> return t
@@ -295,8 +295,9 @@ inst env x =
 
 gen :: Typo -> Type -> TP TypeScheme
 gen env t =
- TP ( \ (n,s,c) -> return (n,s, projection c (fv t c env), Poly (fv t c env) c t) ) 
+ TP ( \ (n,s,c) -> return (n,s, projection c freeVars, Poly freeVars c t) )
                       where fv t1 c1 env1 = without ((tv t1) ++ (tv c1)) (tv_typo env1)
+                            freeVars = fv t c env
 
 
 
@@ -336,7 +337,7 @@ return_result s c t = TP ( \ (n,s',c') -> return (n,s,c,t))
 tp :: (Typo, Term) -> TP Type
 tp (env, Id x) =  do a <- inst env x
                      normalize a
--- #        
+-- #
 tp (env, Abs x e) = do a <- newtvar
                        b <- tp (insert env (x, Mono (TV a)), e)
                        normalize ((TV a) `Fun` b)
@@ -356,7 +357,7 @@ tp (env, Let x e e') = do a <- tp (env, e)
 
 infer :: Term -> E (TVar, Subst, Constraint, Type)
 infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
--- #          
+-- #
 
 
 
@@ -365,18 +366,16 @@ infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
 -- # *------------------------------------------
 
 
-
 init_typo = []
 
--- # Invariant: all constraints are true, hence projection is always trivial
+projection :: Constraint -> [TVar] -> Constraint
+projection (C p) tvl         = Proj tvl p
+projection (Proj tv1 p) tv2  = Proj (tv1 ++ tv2) p
 
-projection _ _ = true_cons
-
-
-
-cs (s, C c) =
+cs (s, C c)        = cs (s, Proj [] c)
+cs (s, Proj tvl c) =
  do (r,e) <- extract_predicates c
-    (s,r') <- closure (s,r,e)
+    (s,r') <- closure (s,r,e, tvl)
     b <- check_consistency r'
     if b then do c' <- apply s (C c)
                  c'' <- simplify c'
@@ -405,17 +404,43 @@ extract_predicates ((Reckind t l t'):p) =
 -- 5) extract all equations for the same label in different constraints
 -- 6) simplify constraints
 
-closure ::  (Subst,[Predicate],[Predicate]) -> TP (Subst,[Predicate])
-closure (s, r, e) =
+closure ::  (Subst,[Predicate],[Predicate], [TVar]) -> TP (Subst,[Predicate])
+closure (s, r, e, []) =
    do s' <- do_unify(s,e)
-      c <- apply s' (C r)
+      c <- apply s' r
       case c of
-        C p1 -> do  e1 <- extract1 p1
-                    e2 <- extract2 p1
-                    p2 <- simplify_predicate (e1 ++ e2)
-                    if p2 == [] then return (s',p1)
-                     else closure (s', p1, p2)
-        _    -> report_error "closure:uncompatible constraint" (null_subst, [])
+        -- | no existential types, solve similarly as Ohori's records
+        Proj [] p1 -> do e1 <- extract1 p1
+                         e2 <- extract2 p1
+                         p2 <- simplify_predicate (e1 ++ e2)
+                         if null p2 then return (s',p1)
+                          else closure (s', p1, p2)
+        _          -> report_error "closure:uncompatible constraint" (null_subst, [])
+
+closure (s, r ,e, exVars) =
+    do let r = Proj exVars r
+           e = Proj exVars e
+           (eq, quantified, mixed) = extractQuantifiedEquations e
+       s' <- do_unify (s, eq)
+       s'' <- do_unify (s', quantified)
+       mixed' <- apply s'' mixed
+       r <- apply s'' r
+       r1 <- return $ extractFromExs r
+
+extractQuantifiedEquations :: Constraint -> ([Predicate], [Predicate], [Predicate])
+extractQuantifiedEquations (C pred) = (pred, [], [])
+extractQuantifiedEquations (Proj vars pred) = foldl extract ([], [], []) pred where
+  extract (a, b, c) eq@(t `Subsume` t') | elem t vars && elem t' vars = (a, eq:b, c)
+                                        | elem t vars || elem t' vars = (a, b, eq:c)
+                                        | otherwise                   = (eq:a, b, c)
+
+extractFromExs (Proj [] pred) = []
+extractFromExs (Proj vars pred) = foldl extract [] pred
+    where extract res contr@(Reckind (TV var) fLabel fType) =
+              if elem var vars then contr:res else res
+          extract res _ = res
+
+extractEquationsWithExistentials (Proj )
 
 
 -- # create subsumptions based on a label type of a particular record
@@ -424,8 +449,8 @@ extract1 :: [Predicate] -> TP [Predicate]
 extract1 [] = return []
 extract1 ((Reckind (Record f) l t):p) =
     do e <- get_extract1 f l t
-       e' <- extract1 p 
-       return (e:e')      
+       e' <- extract1 p
+       return (e:e')
 extract1 (_:p) = extract1 p
 
 get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" ((TV 0) `Subsume` (TV 0))
@@ -436,15 +461,15 @@ get_extract1 ((l,t):f) l' t' = if l == l' then return (t `Subsume` t')
 
 extract2 :: [Predicate] -> TP [Predicate]
 extract2 [] = return []
-extract2 ((Reckind t l t'):p) = 
+extract2 ((Reckind t l t'):p) =
     do e <- extract2 p
        e' <- get_extract2 p t l t'
-       return (e ++ e') 
+       return (e ++ e')
 extract2 (_:p) = extract2 p
 
 get_extract2 [] _ _ _ = return []
-get_extract2 ((Reckind a l a'):p) t l' t' = if (l == l') && (a == t) 
-               then do e <- get_extract2 p t l' t' 
+get_extract2 ((Reckind a l a'):p) t l' t' = if (l == l') && (a == t)
+               then do e <- get_extract2 p t l' t'
                        return ((a' `Subsume` t'):e)
                else get_extract2 p t l' t'
 get_extract2 (_:p) t l t'                 = get_extract2 p t l t'
@@ -472,9 +497,10 @@ simplify (C p) = do p' <- simplify_predicate p
 simplify_predicate :: [Predicate] -> TP [Predicate]
 simplify_predicate [] = return []
 simplify_predicate ((t `Subsume` t'):p) =
-        do if t == t' then simplify_predicate p
-            else do p' <- simplify_predicate p
-                    return ((t `Subsume` t'):p')
+        if t == t'
+          then simplify_predicate p
+          else do p' <- simplify_predicate p
+                  return ((t `Subsume` t'):p')
 simplify_predicate ((Reckind (Record f) l t'):p) =
        simplify_predicate p
 simplify_predicate (x:p) =
@@ -499,7 +525,7 @@ unify (s, TV x, TV y) =
    if x == y then return s
    else do t <- apply s (TV x)
            return ((y, t):s)
-unify (s, TV x, t) = 
+unify (s, TV x, t) =
             do t'' <- apply s t
                if elem x (tv t'') then report_error "occurs check fails" null_subst
                 else return ((x, t''):s)
