@@ -3,7 +3,8 @@
 import ```Flowbox.Graphics.Color as Color```
 import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
-import ```Flowbox.Graphics.Image.Image```
+import ```Flowbox.Graphics.Image.Image as Image```
+import ```Flowbox.Graphics.Image.View as View```
 import ```Flowbox.Graphics.Image.Merge (AlphaBlend(..))```
 import ```Flowbox.Graphics.Composition.Generators.Keyer```
 
@@ -362,10 +363,10 @@ def Image.edgeDetect edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
 def Image.view name:
-    ```liftF1 lookup #{name} #{self}```
+    ```liftF2 Image.lookup #{name} #{self}```
 
 def View.channel name:
-    ```liftF1 View.get #{self} #{name}```
+    ```liftF2 View.get #{self} #{name}```
 
 
 def main:
