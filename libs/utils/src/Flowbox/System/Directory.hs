@@ -9,3 +9,4 @@ module Flowbox.System.Directory (
 ) where
 
 import Flowbox.System.Directory.Directory as X
+import Flowbox.System.Directory.Locations as X
