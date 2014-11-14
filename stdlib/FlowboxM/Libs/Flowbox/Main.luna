@@ -361,6 +361,12 @@ class ```Boundary```:
 def Image.edgeDetect edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
+def Image.view name:
+    ```liftF1 lookup #{name} #{self}```
+
+def View.channel name:
+    ```liftF1 View.get #{self} #{name}```
+
 
 def main:
     lena = load "./test.png"
