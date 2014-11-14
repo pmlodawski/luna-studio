@@ -4,9 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE CPP   #-}
 module Main where
 
 import qualified Flowbox.Bus.EndPoint                 as EP
@@ -24,7 +24,7 @@ import qualified Luna.Interpreter.Cmd                 as Cmd
 import qualified Luna.Interpreter.RPC.Handler.Handler as Handler
 import qualified Luna.Interpreter.Version             as Version
 #if !defined(mingw32_HOST_OS)
-import           System.Remote.Monitoring
+import System.Remote.Monitoring
 #endif
 
 
@@ -67,5 +67,7 @@ run cmd = case cmd of
         let busConfig = EP.clientFromConfig cfg
             ctx       = Context.mk cfg
         logger info "Starting rpc server"
-        Pipes.run busConfig (Handler.handlerMap prefix) >>= Handler.run cfg prefix ctx >>= eitherToM
+        Pipes.run busConfig (Handler.topics prefix)
+            >>= Handler.run cfg prefix ctx
+            >>= eitherToM
 

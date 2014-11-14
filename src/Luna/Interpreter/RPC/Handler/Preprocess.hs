@@ -12,6 +12,9 @@
 module Luna.Interpreter.RPC.Handler.Preprocess where
 
 import           Control.Monad (forever)
+import           Data.Map      (Map)
+import qualified Data.Map      as Map
+import           Data.Maybe    (fromMaybe)
 import           Pipes         (liftIO)
 import qualified Pipes
 
@@ -19,27 +22,43 @@ import           Flowbox.Bus.Data.Message           (Message)
 import qualified Flowbox.Bus.Data.Message           as Message
 import           Flowbox.Bus.Data.Prefix            (Prefix)
 import qualified Flowbox.Bus.Data.Prefix            as Prefix
+import           Flowbox.Bus.Data.Topic             (Topic)
 import qualified Flowbox.Control.Concurrent         as Concurrent
 import           Flowbox.Prelude                    hiding (Context, error)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Interpreter.RPC.Handler.Abort as Abort
+import           Luna.Interpreter.RPC.QueueInfo     (QueueInfo)
+import qualified Luna.Interpreter.RPC.QueueInfo     as QueueInfo
 import qualified Luna.Interpreter.RPC.Topic         as Topic
-
 
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
+type ProprocessorAction = QueueInfo -> Message.CorrelationID -> Concurrent.ThreadId -> IO ()
 
-preprocess :: Prefix -> Concurrent.ThreadId
+
+preprocess :: Prefix -> QueueInfo -> Concurrent.ThreadId
            -> Pipes.Pipe (Message, Message.CorrelationID)
                          (Message, Message.CorrelationID)
                          IO ()
-preprocess prefix threadId = forever $ do
+preprocess prefix queueInfo threadId = forever $ do
     packet <- Pipes.await
-    when ((packet ^. _1 . Message.topic)
-            == Prefix.prefixify prefix Topic.interpreterAbortRequest) $
-        liftIO $ Abort.abort threadId
+    let topic  = packet ^. _1 . Message.topic
+        crl    = packet ^. _2
+        action = fromMaybe defaultAction
+               $ Map.lookup topic
+               $ preprocessorActions prefix
+    liftIO $ action queueInfo crl threadId
     Pipes.yield packet
 
 
+preprocessorActions :: Prefix -> Map Topic ProprocessorAction
+preprocessorActions prefix = Map.fromList $ Prefix.prefixifyTopics prefix
+    [ (Topic.interpreterAbortRequest, \_ _ threadId -> Abort.abort threadId)
+    , (Topic.interpreterRunRequest  , QueueInfo.overrideRun)
+    ]
+
+
+defaultAction :: ProprocessorAction
+defaultAction = const (const (void . return))
