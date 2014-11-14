@@ -1,5 +1,7 @@
 @AllowOrphans
 
+import ```Data.Maybe (fromJust)```
+
 import ```Flowbox.Graphics.Color as Color```
 import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
@@ -364,6 +366,16 @@ def Image.edgeDetect edgeOperator:
 
 def Image.view name:
     ```liftF2 Image.lookup #{name} #{self}```
+
+def Maybe.unwrap:
+    ```liftF1 fromJust #{self}```
+
+class ```Either``` a b:
+    Left: l :: a
+    Right: r :: b
+
+def Either.unwrap:
+    ```liftF1 (either (error "unwrap called on Left") id) #{self}```
 
 def View.channel name:
     ```liftF2 View.get #{self} #{name}```
