@@ -46,7 +46,7 @@ import           Flowbox.Graphics.Composition.Generators.Pipe
 import           Flowbox.Graphics.Composition.Generators.Rasterizer
 import           Flowbox.Graphics.Composition.Generators.Sampler
 import           Flowbox.Graphics.Composition.Generators.Shape
-import           Flowbox.Graphics.Composition.Generators.Stencil
+import           Flowbox.Graphics.Composition.Generators.Stencil      as Stencil
 import           Flowbox.Graphics.Composition.Generators.Structures
 import           Flowbox.Graphics.Composition.Generators.Transform
 import           Flowbox.Graphics.Composition.Histogram
@@ -728,3 +728,11 @@ liftF13 fun a b c d e f g h i j k l m = do
     m' <- m
     val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
             <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
+
+edgeDetect :: Matrix2 Double -> Image -> Image
+edgeDetect edgeOperator img = img'
+    where alphas = onGenerator (Stencil.stencil (+) (unsafeFromMatrix edgeOperator) (+) 0) img
+          (r, g, b, _) = unsafeGetChannels alphas
+          alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
+          Just view = lookup "rgba" img
+          Right img' = Image.update (const $ Just $ insertChannelFloats view [("rgba.a", alphaSum)]) "rgba" img

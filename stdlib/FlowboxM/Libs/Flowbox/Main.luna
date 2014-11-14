@@ -358,6 +358,10 @@ class ```Boundary```:
     Wrap
     Constant: a :: Double
 
+def Image.edgeDetect edgeOperator:
+    ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
+
+
 def main:
     lena = load "./test.png"
     checker = load "./checker.png"
