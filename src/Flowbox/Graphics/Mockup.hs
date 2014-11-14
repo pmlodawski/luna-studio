@@ -729,8 +729,8 @@ liftF13 fun a b c d e f g h i j k l m = do
     val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
             <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
 
-edgeDetect :: Matrix2 Double -> Image -> Image
-edgeDetect edgeOperator img = img'
+edgeDetectLuna :: Matrix2 Double -> Image -> Image
+edgeDetectLuna edgeOperator img = img'
     where alphas = onGenerator (Stencil.stencil (+) (unsafeFromMatrix edgeOperator) (+) 0) img
           (r, g, b, _) = unsafeGetChannels alphas
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
