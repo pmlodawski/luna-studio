@@ -111,7 +111,7 @@ projectOpen (ProjectOpen.Update _ project _) = do
 projectClose :: ProjectClose.Update -> RPC Context SessionST ()
 projectClose (ProjectClose.Update request updateNo) = do
     sync updateNo $ ProjectHandler.close request
-    Cache.modifyAll $ ProjectClose.projectID request
+    Cache.closeProject $ ProjectClose.projectID request
 
 
 projectModify :: ProjectModify.Update -> RPC Context SessionST ()
@@ -347,7 +347,7 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request defNodeID updateNo) = do
     let projectID = GraphNodeDefaultSet.projectID request
         libraryID = GraphNodeDefaultSet.libraryID request
         nodeID    = GraphNodeDefaultSet.nodeID request
-    Cache.modifyNode projectID libraryID nodeID 
+    Cache.modifyNode projectID libraryID nodeID
     Cache.insertDependentNode projectID libraryID nodeID defNodeID
 
 
