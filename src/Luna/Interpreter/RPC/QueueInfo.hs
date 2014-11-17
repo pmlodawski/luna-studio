@@ -11,9 +11,12 @@ module Luna.Interpreter.RPC.QueueInfo where
 import           Control.Concurrent.MVar (MVar)
 import qualified Control.Concurrent.MVar as MVar
 
-import qualified Flowbox.Bus.Data.Message   as Message
-import qualified Flowbox.Control.Concurrent as Concurrent
+import qualified Flowbox.Bus.Data.Message           as Message
+import qualified Flowbox.Control.Concurrent         as Concurrent
 import           Flowbox.Prelude
+import qualified Luna.Interpreter.RPC.Handler.Abort as Abort
+import qualified Luna.Interpreter.Session.Env       as Env
+
 
 
 type QueueInfo = MVar QueueInfoData
@@ -49,8 +52,8 @@ quitRun queueInfo = MVar.modifyMVarMasked_ queueInfo $ \qidata ->
     return $ qidata & isExecuting .~ False
 
 
-overrideRun :: QueueInfo -> Message.CorrelationID -> Concurrent.ThreadId -> IO ()
-overrideRun queueInfo crl _{-threadId-} = MVar.modifyMVarMasked_ queueInfo $ \qidata -> do
+overrideRun :: QueueInfo -> Message.CorrelationID -> Env.FragileMVar -> Concurrent.ThreadId -> IO ()
+overrideRun queueInfo crl fm threadId = MVar.modifyMVarMasked_ queueInfo $ \qidata ->
     if qidata ^. isExecuting
-        then {- Abort.abort threadId >> -} return (qidata & isExecuting .~ False)
+        then Abort.abort fm threadId >>  return (qidata & isExecuting .~ False)
         else return (qidata & skipUntil .~ Just crl)
