@@ -1,8 +1,20 @@
 @AllowOrphans
 
 import ```Data.Maybe (fromJust)```
+import ```qualified Data.Array.Accelerate as A```
 
 import ```Flowbox.Graphics.Color as Color```
+import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
+import ```Flowbox.Graphics.Color.Companding.Cineon```
+import ```Flowbox.Graphics.Color.Companding.Gamma```
+import ```Flowbox.Graphics.Color.Companding.LStar```
+import ```Flowbox.Graphics.Color.Companding.Panalog```
+import ```Flowbox.Graphics.Color.Companding.PLogLin```
+import ```Flowbox.Graphics.Color.Companding.Rec709```
+import ```Flowbox.Graphics.Color.Companding.REDLog```
+import ```Flowbox.Graphics.Color.Companding.SLog```
+import ```Flowbox.Graphics.Color.Companding.SRGB```
+import ```Flowbox.Graphics.Color.Companding.ViperLog```
 import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image as Image```
@@ -380,6 +392,26 @@ def Either.unwrap:
 def View.channel name:
     ```liftF2 View.get #{self} #{name}```
 
+class ```Gamma```:
+    AlexaV3LogC
+    Cineon
+    Gamma: a :: Double
+    LStar
+    Panalog
+    PLogLin
+    Rec709
+    REDLog
+    SLog
+    SRGBGamma
+    ViperLog
+
+def Image.gammaToLinear gamma:
+    realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
+    ```liftF2 gammaToLinearLuna #{realGamma} #{self}```
+
+def Image.gammaFromLinear gamma:
+    realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
+    ```liftF2 gammaFromLinearLuna #{realGamma} #{self}```
 
 def main:
     lena = load "./test.png"

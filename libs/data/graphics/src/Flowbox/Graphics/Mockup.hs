@@ -34,6 +34,7 @@ import           Math.Metric
 import           Linear                            (V2(..))
 
 import qualified Flowbox.Graphics.Color                               as Color
+import qualified Flowbox.Graphics.Color.Companding                    as Gamma
 import           Flowbox.Graphics.Composition.Dither
 import           Flowbox.Graphics.Composition.Generators.Filter
 import           Flowbox.Graphics.Composition.Generators.Filter       as Conv
@@ -736,3 +737,9 @@ edgeDetectLuna edgeOperator img = img'
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
           Just view = lookup "rgba" img
           Right img' = Image.update (const $ Just $ insertChannelFloats view [("rgba.a", alphaSum)]) "rgba" img
+
+gammaToLinearLuna :: Gamma.Companding a (A.Exp Double) => a -> Image -> Image
+gammaToLinearLuna companding = onEachValue $ (Gamma.toLinear companding :: A.Exp Double -> A.Exp Double)
+
+gammaFromLinearLuna :: Gamma.Companding a (A.Exp Double) => a -> Image -> Image
+gammaFromLinearLuna companding = onEachValue $ Gamma.fromLinear companding
