@@ -11,10 +11,12 @@ module Luna.Interpreter.Session.Memory.Status where
 import           Data.Int  (Int64)
 import qualified GHC.Stats as Stats
 
-import           Flowbox.Control.Error                  (liftIO)
+import           Flowbox.Control.Error                  (safeLiftIO')
 import           Flowbox.Prelude
+import           Flowbox.Source.Location                (loc)
 import           Luna.Interpreter.Session.Env.State     (Session)
 import qualified Luna.Interpreter.Session.Env.State     as Session
+import qualified Luna.Interpreter.Session.Error         as Error
 import           Luna.Interpreter.Session.Memory.Config (Config)
 import qualified Luna.Interpreter.Session.Memory.Config as Config
 
@@ -47,4 +49,4 @@ currentBytesUsed = Stats.currentBytesUsed <$> Stats.getGCStats
 
 status :: Session Status
 status = fromResidency <$> Session.getMemoryConfig
-                       <*> liftIO currentBytesUsed
+                       <*> safeLiftIO' (Error.IOError $(loc)) currentBytesUsed

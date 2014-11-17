@@ -8,6 +8,7 @@
 
 module Luna.Interpreter.Session.Env.State where
 
+import qualified Control.Concurrent.MVar    as MVar
 import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
@@ -18,6 +19,7 @@ import           Data.Monoid                ((<>))
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 
+import           Control.Monad.Catch                         (bracket_)
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
 import           Flowbox.Data.MapForest                      (MapForest)
@@ -56,7 +58,6 @@ import           Luna.Lib.Manager                            (LibManager)
 import qualified Luna.Lib.Manager                            as LibManager
 import qualified Luna.Pass.Analysis.Alias.Alias              as Alias
 import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
-
 
 
 type SessionST = StateT Env MGHC.Ghc
@@ -106,6 +107,17 @@ setAllReady flag = modify $ Env.allReady .~ flag
 
 getAllReady :: Session Bool
 getAllReady = gets $ view Env.allReady
+
+---- Env.fragileOperation -------------------------------------------------
+
+getFragile :: Session Env.FragileMVar
+getFragile = gets $ view Env.fragileOperation
+
+
+fragile :: Session a -> Session a
+fragile action = do
+    f <- getFragile
+    lift (bracket_ (liftIO $ MVar.takeMVar f) (liftIO $ MVar.putMVar f ()) $ runEitherT action) >>= hoistEither
 
 ---- Env.dependentNodes ---------------------------------------------------
 

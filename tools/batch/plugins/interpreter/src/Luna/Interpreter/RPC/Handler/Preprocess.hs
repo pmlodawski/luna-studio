@@ -30,35 +30,39 @@ import qualified Luna.Interpreter.RPC.Handler.Abort as Abort
 import           Luna.Interpreter.RPC.QueueInfo     (QueueInfo)
 import qualified Luna.Interpreter.RPC.QueueInfo     as QueueInfo
 import qualified Luna.Interpreter.RPC.Topic         as Topic
+import qualified Luna.Interpreter.Session.Env       as Env
+
 
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
-type ProprocessorAction = QueueInfo -> Message.CorrelationID -> Concurrent.ThreadId -> IO ()
+
+type ProprocessorAction = QueueInfo -> Message.CorrelationID
+                       -> Env.FragileMVar -> Concurrent.ThreadId -> IO ()
 
 
-preprocess :: Prefix -> QueueInfo -> Concurrent.ThreadId
+preprocess :: Prefix -> QueueInfo -> Env.FragileMVar -> Concurrent.ThreadId
            -> Pipes.Pipe (Message, Message.CorrelationID)
                          (Message, Message.CorrelationID)
                          IO ()
-preprocess prefix queueInfo threadId = forever $ do
+preprocess prefix queueInfo fm threadId = forever $ do
     packet <- Pipes.await
     let topic  = packet ^. _1 . Message.topic
         crl    = packet ^. _2
         action = fromMaybe defaultAction
                $ Map.lookup topic
                $ preprocessorActions prefix
-    liftIO $ action queueInfo crl threadId
+    liftIO $ action queueInfo crl fm threadId
     Pipes.yield packet
 
 
 preprocessorActions :: Prefix -> Map Topic ProprocessorAction
 preprocessorActions prefix = Map.fromList $ Prefix.prefixifyTopics prefix
-    [ (Topic.interpreterAbortRequest, \_ _ threadId -> Abort.abort threadId)
+    [ (Topic.interpreterAbortRequest, \_ _ fm threadId -> Abort.abort fm threadId)
     , (Topic.interpreterRunRequest  , QueueInfo.overrideRun)
     ]
 
 
 defaultAction :: ProprocessorAction
-defaultAction = const (const (void . return))
+defaultAction = const (const (const (void . return)))
