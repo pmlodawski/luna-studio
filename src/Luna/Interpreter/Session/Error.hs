@@ -33,6 +33,7 @@ data Error = RunError          { _location :: Location, _callPointPath :: CallPo
            | NameResolverError { _location :: Location, _errStr        :: ErrorStr            }
            | PassError         { _location :: Location, _errStr        :: ErrorStr            }
            | OtherError        { _location :: Location, _errStr        :: ErrorStr            }
+           | IOError           { _location :: Location, _exception     :: SomeException}
            deriving (Show)
 
 makeLenses ''Error

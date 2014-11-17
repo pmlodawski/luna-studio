@@ -148,7 +148,7 @@ main1 = do
     (libManager , libID) <- readSource code
     (libManager2, _    ) <- readSource code2
 
-    let env = Env.mk libManager (Just $ Project.ID 0)
+    env <- Env.mk libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
                 (curry $ curry print)
 
@@ -184,7 +184,6 @@ main1 = do
     eitherStringToM $ fmapL Error.format result
 
 
-
 main2 :: IO ()
 main2 = do
     rootLogger setIntLevel 5
@@ -212,6 +211,7 @@ main2 = do
     logger info "empty"
     printHsSrc $ Module.mk 0 $ Type.Module 1 "Main" []
 
+
 main3 :: IO ()
 main3 = do
     rootLogger setIntLevel 5
@@ -219,7 +219,7 @@ main3 = do
 
     (libManager , libID) <- readSource code
 
-    let env = Env.mk libManager (Just $ Project.ID 0)
+    env <- Env.mk libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
                 (curry $ curry print)
 
