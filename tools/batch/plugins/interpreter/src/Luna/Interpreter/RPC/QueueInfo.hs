@@ -14,7 +14,6 @@ import qualified Control.Concurrent.MVar as MVar
 import qualified Flowbox.Bus.Data.Message   as Message
 import qualified Flowbox.Control.Concurrent as Concurrent
 import           Flowbox.Prelude
-import qualified Luna.Interpreter.RPC.Handler.Abort as Abort
 
 
 type QueueInfo = MVar QueueInfoData
@@ -36,7 +35,7 @@ mk = MVar.newMVar def
 
 
 enterRun :: QueueInfo -> Message.CorrelationID -> IO ()
-enterRun queueInfo crl = MVar.modifyMVarMasked_ queueInfo $ \qidata -> 
+enterRun queueInfo crl = MVar.modifyMVarMasked_ queueInfo $ \qidata ->
     case qidata ^. skipUntil of
         Just targetCrl -> if targetCrl == crl
                             then return $ qidata & skipUntil   .~ Nothing
@@ -51,7 +50,7 @@ quitRun queueInfo = MVar.modifyMVarMasked_ queueInfo $ \qidata ->
 
 
 overrideRun :: QueueInfo -> Message.CorrelationID -> Concurrent.ThreadId -> IO ()
-overrideRun queueInfo crl threadId = MVar.modifyMVarMasked_ queueInfo $ \qidata -> do
-    if qidata ^. isExecuting 
+overrideRun queueInfo crl _{-threadId-} = MVar.modifyMVarMasked_ queueInfo $ \qidata -> do
+    if qidata ^. isExecuting
         then {- Abort.abort threadId >> -} return (qidata & isExecuting .~ False)
         else return (qidata & skipUntil .~ Just crl)
