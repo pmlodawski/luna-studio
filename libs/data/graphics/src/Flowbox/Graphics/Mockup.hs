@@ -18,6 +18,7 @@ module Flowbox.Graphics.Mockup (
       module Flowbox.Graphics.Mockup
     , module Math.Metric
     , A.Boundary(..)
+    , readFromEXR
 ) where
 
 import qualified Codec.Picture.Png                 as Juicy
@@ -55,6 +56,7 @@ import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Color
 import           Flowbox.Graphics.Image.Image                         as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
+import           Flowbox.Graphics.Image.IO.OpenEXR                    (readFromEXR)
 import           Flowbox.Graphics.Image.Merge                         (AlphaBlend(..))
 import qualified Flowbox.Graphics.Image.Merge                         as Merge
 import           Flowbox.Graphics.Image.View                          as View

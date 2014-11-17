@@ -41,10 +41,8 @@ singleton :: View.View -> Image
 singleton view = Image (Map.singleton name view) (Set.singleton name)
     where name = View.name view
 
-insert :: View.Name -> View.View -> Image -> Either Error Image
-insert key value img = if View.name value == key
-                             then return $ over views (Map.insert key value) img
-                             else Left InvalidMap
+insert :: View.View -> Image -> Image
+insert view img = over views (Map.insert (View.name view) view) img
 
 delete :: View.Name -> Image -> Image
 delete key img = Image (Map.delete key $ img ^. views)
@@ -55,8 +53,8 @@ lookup key img = Map.lookup key (img ^. views)
 
 update :: (View.View -> Maybe View.View) -> View.Name -> Image -> Either Error Image
 update f key img = case lookup key img >>= f of
-    Just newval -> insert key newval img
-    Nothing     -> return $ delete key img
+    Just newval -> pure $ insert newval img
+    Nothing     -> pure $ delete key img
 
 map :: (View.View -> View.View) -> Image -> Image --Either Error (Image v)
 map lambda (Image vs dv) = Image (Map.map lambda vs) dv
