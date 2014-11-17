@@ -271,6 +271,10 @@ getProjectIDMaybe = gets (view Env.projectID)
 setProjectID :: Project.ID -> Session ()
 setProjectID projectID = modify (Env.projectID .~ Just projectID)
 
+
+unsetProjectID :: Session ()
+unsetProjectID = modify $ Env.projectID .~ Nothing
+
 ---- Env.mainPtr ----------------------------------------------------------
 
 getMainPtr :: Session DefPoint
