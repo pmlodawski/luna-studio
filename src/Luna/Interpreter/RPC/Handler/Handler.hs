@@ -147,8 +147,10 @@ interpret :: Prefix -> QueueInfo
                         (Pipes.SafeT (StateT Context SessionST)) ()
 interpret prefix queueInfo crlRef = forever $ do
     (message, crl) <- Pipes.await
+    logger trace $ "Received message " ++ (message ^. Message.topic)
     liftIO $ IORef.writeIORef crlRef crl
     results <- lift2 $ Processor.process (handlerMap prefix queueInfo crl) message
+    logger trace $ "Sending " ++ show (length results) ++ " result"
     let send []    = return ()
         send [r]   = Pipes.yield (r, crl, Flag.Enable)
         send (r:t) = Pipes.yield (r, crl, Flag.Disable) >> send t
