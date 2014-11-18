@@ -7,6 +7,7 @@
  {-# LANGUAGE NoMonomorphismRestriction #-}
  {-# LANGUAGE UndecidableInstances #-}
  {-# LANGUAGE OverlappingInstances #-}
+ {-# LANGUAGE FunctionalDependencies #-}
 
 module Luna.ASTNew.Traversals.Class where
 
@@ -34,28 +35,28 @@ import           Luna.ASTNew.Lit        (LLit, Lit)
 -- Type classes
 ----------------------------------------------------------------------
 
-type MonoTraversal base m a = Traversal base m a a
-type DropTraversal base m a = Traversal base m a ()
+--type MonoTraversal base m a = Traversal base m a a
+--type DropTraversal base m a = Traversal base m a ()
 
-class Traversal base m a b where
+class Traversal base m a b | base a -> b where
     traverseM :: (Monad m, Applicative m) => base -> a -> m b
 
 
-class DefaultTraversal base m a b where
+class DefaultTraversal base m a b | base a -> b where
     defaultTraverseM :: (Monad m, Applicative m) => base -> a -> m b
 
 
-monoTraverseM :: (MonoTraversal base m a, Applicative m, Monad m) => base -> a -> m a
-monoTraverseM = traverseM
+--monoTraverseM :: (MonoTraversal base m a, Applicative m, Monad m) => base -> a -> m a
+--monoTraverseM = traverseM
 
-dropTraverseM :: (DropTraversal base m a, Applicative m, Monad m) => base -> a -> m ()
-dropTraverseM = traverseM
+--dropTraverseM :: (DropTraversal base m a, Applicative m, Monad m) => base -> a -> m ()
+--dropTraverseM = traverseM
 
 traverse :: Traversal base Identity a b => base -> a -> b
 traverse base = runIdentity . traverseM base
 
-monoTraverse :: Traversal base Identity a a => base -> a -> a
-monoTraverse = traverse
+--monoTraverse :: Traversal base Identity a a => base -> a -> a
+--monoTraverse = traverse
 
 
 ----------------------------------------------------------------------
@@ -93,20 +94,20 @@ instance Traversal base m a b => DefaultTraversal base m (Unit a) (Unit b) where
 
 -- ----- Module -----
 
-instance Traversal base m (LDecl f e) (LDecl f e) => DefaultTraversal base m (Module f e) (Module f e) where
+instance Traversal base m (LDecl f e) (LDecl f' e') => DefaultTraversal base m (Module f e) (Module f' e') where
     defaultTraverseM b (Module path name body) = Module <$> traverseM b path <*> traverseM b name <*> traverseM b body
 
 
 -- ----- Decl -----
 
-instance ( Traversal base m (LDecl a e)          (LDecl a f)
-         , Traversal base m (LCons a e)          (LCons a f)
-         , Traversal base m (Arg  a e)           (Arg  a f)
-         , Traversal base m (LType a)            (LType a)
-         , Traversal base m (Native (LDecl a e)) (Native (LDecl a f))
+instance ( Traversal base m (LDecl a e)          (LDecl a' e')
+         , Traversal base m (LCons a e)          (LCons a' e')
+         , Traversal base m (Arg  a e)           (Arg   a' e')
+         , Traversal base m (LType a)            (LType a'   )
+         , Traversal base m (Native (LDecl a e)) (Native (LDecl a' e'))
          , Traversal base m ImpTgt               ImpTgt
-         , Traversal base m e f
-         ) => DefaultTraversal base m (Decl a e) (Decl a f) where
+         , Traversal base m e e'
+         ) => DefaultTraversal base m (Decl a e) (Decl a' e') where
     defaultTraverseM b = \case
         Decl.Data        name params cons defs        -> Decl.Data        <$> traverseM b name <*> traverseM b params <*> traverseM b cons    <*> traverseM b defs
         Decl.Function    path name inputs output body -> Decl.Function    <$> traverseM b path <*> traverseM b name   <*> traverseM b inputs  <*> traverseM b output <*> traverseM b body
@@ -115,12 +116,12 @@ instance ( Traversal base m (LDecl a e)          (LDecl a f)
         Decl.TypeWrapper dst src                      -> Decl.TypeWrapper <$> traverseM b dst  <*> traverseM b src
         Decl.Native      nat                          -> Decl.Native      <$> traverseM b nat
 
-instance Traversal base m (Decl.LField a e) (Decl.LField a e) => DefaultTraversal base m (Decl.Cons a e) (Decl.Cons a e) where
+instance Traversal base m (Decl.LField a e) (Decl.LField a' e') => DefaultTraversal base m (Decl.Cons a e) (Decl.Cons a' e') where
     defaultTraverseM b (Decl.Cons name fields) = Decl.Cons <$> traverseM b name <*> traverseM b fields
 
-instance ( Traversal base m (LType a) (LType a)
-         , Traversal base m e f) 
-         => DefaultTraversal base m (Decl.Field a e) (Decl.Field a f) where
+instance ( Traversal base m (LType a) (LType a')
+         , Traversal base m e e') 
+         => DefaultTraversal base m (Decl.Field a e) (Decl.Field a' e') where
     defaultTraverseM b (Decl.Field tp name val) = Decl.Field <$> traverseM b tp <*> traverseM b name <*> traverseM b val
 
 
@@ -130,7 +131,7 @@ instance DefaultTraversal base m Decl.ImpTgt Decl.ImpTgt where
 
 -- ----- Type -----
 
-instance (Traversal base m (LType a) (LType a)) => DefaultTraversal base m (Type a) (Type a) where
+instance (Traversal base m (LType a) (LType a')) => DefaultTraversal base m (Type a) (Type a') where
     defaultTraverseM b = \case
         Type.Function inputs output -> Type.Function <$> traverseM b inputs <*> traverseM b output
         Type.App      src args      -> Type.App      <$> traverseM b src    <*> traverseM b args
@@ -143,9 +144,9 @@ instance (Traversal base m (LType a) (LType a)) => DefaultTraversal base m (Type
 
 -- ----- Arg -----
 
-instance ( Traversal base m (LPat a) (LPat a)
-         , Traversal base m v g) 
-         => DefaultTraversal base m (Arg a v) (Arg a g) where
+instance ( Traversal base m (LPat a) (LPat a')
+         , Traversal base m v v') 
+         => DefaultTraversal base m (Arg a v) (Arg a' v') where
     defaultTraverseM b (Arg pat value) = Arg <$> traverseM b pat <*> traverseM b value
 
 
@@ -157,10 +158,10 @@ instance DefaultTraversal base m (Native e) (Native e)
 
 -- ----- Pat -----
 
-instance ( Traversal base m (LPat a)  (LPat a)
-         , Traversal base m (LLit a)  (LLit a)
-         , Traversal base m (LType a) (LType a)
-         ) => DefaultTraversal base m (Pat a) (Pat a) where
+instance ( Traversal base m (LPat a)  (LPat  a')
+         , Traversal base m (LLit a)  (LLit  a')
+         , Traversal base m (LType a) (LType a')
+         ) => DefaultTraversal base m (Pat a) (Pat a') where
     defaultTraverseM b = \case
         Pat.App         src   args -> Pat.App         <$> traverseM b src   <*> traverseM b args
         Pat.Typed       pat   cls  -> Pat.Typed       <$> traverseM b pat   <*> traverseM b cls
