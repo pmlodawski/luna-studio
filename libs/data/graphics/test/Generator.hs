@@ -353,6 +353,9 @@ bilateralTest psigma csigma size = do
     let process x = rasterizer $ id `p` bilateralStencil (+) spatial domain (+) 0 `p` id $ fromMatrix A.Clamp x
     forAllChannels "lena.png" process
 
+medianTest :: IO ()
+medianTest = do
+    forAllChannels "lena.bmp" median
 
 main :: IO ()
 main = do
