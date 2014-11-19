@@ -27,7 +27,8 @@ data Library = Library { _name        :: String
 
 makeLenses ''Library
 
-type ID  = Int
+newtype ID = ID { toInt :: Int }
+           deriving (Show, Ord, Eq)
 
 
 make :: String -> UniPath -> [String] -> Library

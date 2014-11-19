@@ -32,10 +32,12 @@ import           Luna.Data.AliasInfo       (AliasInfo)
 import qualified Luna.Data.AliasInfo       as AliasInfo
 import           Luna.Data.Namespace       (Namespace)
 import qualified Luna.Data.Namespace       as Namespace
+import           Flowbox.System.Log.Logger as L
 
 
-logger :: Logger
-logger = getLogger "Luna.Data.Namespace.State"
+
+logger :: LoggerIO
+logger = getLoggerIO $(moduleName)
 
 
 --data VAState = VAState { _info    :: AliasInfo
@@ -129,6 +131,9 @@ regType :: NamespaceMonad a e v m => Type a -> m ()
 regType = undefined -- regElBy AST.Type Type.id
 
 
+regOrphan = modifyAliasInfo .: AliasInfo.regOrphan
+
+
 regElBy fCon fID el = regAST id (fCon el) *> regID id
     where id = el ^. fID
 
@@ -164,11 +169,18 @@ regName lens name id = do
 regParentVarName :: NamespaceMonad a e v m => String -> ID -> m ()
 regParentVarName = withParentID .: regVarName
 
-
 bindVar id name = do
     ns <- get
     case Namespace.bindVar id name ns of
         Left _    -> fail $ "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+        Right ns' -> put ns'
+
+tryBindVar id name = do
+    ns <- get
+    case Namespace.bindVar id name ns of
+        Left _    -> do let errMsg = "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+                        logger L.error errMsg
+                        regOrphan id $ AliasInfo.LookupError errMsg 
         Right ns' -> put ns'
 
 
