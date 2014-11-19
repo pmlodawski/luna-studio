@@ -21,6 +21,8 @@ import           Math.Coordinate.Cartesian                (Point2(..))
 
 
 
+type Sampler e = ContinousGenerator (Exp e) -> DiscreteGenerator (Exp e)
+
 monosampler :: (Elt a, IsNum a) => CartesianGenerator (Exp a) e -> DiscreteGenerator e
 monosampler = transform $ fmap A.fromIntegral
 
