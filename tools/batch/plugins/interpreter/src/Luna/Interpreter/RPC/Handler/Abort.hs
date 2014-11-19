@@ -16,9 +16,10 @@ import qualified Control.Monad.Catch    as Catch
 import           Data.Typeable          (Typeable)
 import           Pipes                  (MonadIO)
 
-import qualified Flowbox.Control.Concurrent as Concurrent
-import           Flowbox.Prelude            hiding (Context, error)
+import qualified Flowbox.Control.Concurrent   as Concurrent
+import           Flowbox.Prelude              hiding (Context, error)
 import           Flowbox.System.Log.Logger
+import qualified Luna.Interpreter.Session.Env as Env
 
 
 
@@ -38,8 +39,8 @@ handleAbort =
     flip Catch.catch $ \AbortException -> logger info "Nothing to abort"
 
 
-abort :: Concurrent.ThreadId -> IO ()
-abort threadId = do
+abort :: Env.FragileMVar -> Concurrent.ThreadId -> IO ()
+abort fm threadId = Concurrent.withMVar fm $ const $ do
     logger warning "Abort requested."
     Concurrent.throwTo threadId AbortException
 

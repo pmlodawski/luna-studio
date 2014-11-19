@@ -8,12 +8,15 @@
 {-# LANGUAGE TupleSections   #-}
 module Luna.Interpreter.RPC.Handler.Interpreter where
 
-import qualified Data.Foldable as Foldable
-import qualified Data.Maybe    as Maybe
-import qualified Data.Sequence as Sequence
-import qualified Data.Set      as Set
+import           Control.Monad.Catch (bracket_)
+import qualified Data.Foldable       as Foldable
+import qualified Data.Maybe          as Maybe
+import qualified Data.Sequence       as Sequence
+import qualified Data.Set            as Set
 
+import qualified Flowbox.Bus.Data.Message                                                     as Message
 import           Flowbox.Bus.RPC.RPC                                                          (RPC)
+import           Flowbox.Control.Error
 import qualified Flowbox.Data.SetForest                                                       as SetForest
 import           Flowbox.Prelude                                                              hiding (Context)
 import           Flowbox.ProjectManager.Context                                               (Context)
@@ -60,11 +63,15 @@ import           Luna.Interpreter.Proto.DefPoint                                
 import qualified Luna.Interpreter.RPC.Handler.Cache                                           as Cache
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.RPC.Handler.Sync                                            as Sync
+import           Luna.Interpreter.RPC.QueueInfo                                               (QueueInfo)
+import qualified Luna.Interpreter.RPC.QueueInfo                                               as QueueInfo
 import qualified Luna.Interpreter.Session.AST.Executor                                        as Executor
 import qualified Luna.Interpreter.Session.AST.WatchPoint                                      as WatchPoint
 import qualified Luna.Interpreter.Session.Env                                                 as Env
+import qualified Luna.Interpreter.Session.Error                                               as Error
 import qualified Luna.Interpreter.Session.Memory                                              as Memory
 import           Luna.Interpreter.Session.Session                                             (SessionST)
+
 
 
 logger :: LoggerIO
@@ -102,9 +109,12 @@ setMainPtr request@(SetMainPtr.Request tmainPtr) = do
     return $ SetMainPtr.Update request
 
 
-run :: Run.Request -> RPC Context SessionST Run.Update
-run request = do
-    liftSession Executor.processMain
+run :: QueueInfo -> Message.CorrelationID -> Run.Request -> RPC Context SessionST Run.Update
+run queueInfo crl request = do
+    r <- lift $ bracket_ (liftIO $ QueueInfo.enterRun queueInfo crl)
+            (liftIO $ QueueInfo.quitRun queueInfo) $
+            liftSession' Executor.processMain
+    hoistEither $ fmapL Error.format r
     return $ Run.Update request
 
 

@@ -50,6 +50,10 @@ modifyAll projectID = interpreterDo projectID $ do
     Cache.performCleaning
 
 
+closeProject :: Int32 -> RPC Context SessionST ()
+closeProject projectID = interpreterDo projectID $ Env.unsetProjectID
+
+
 modifyLibrary :: Int32 -> Int32 -> RPC Context SessionST ()
 modifyLibrary projectID =
     interpreterDo projectID . Invalidate.modifyLibrary . decodeP

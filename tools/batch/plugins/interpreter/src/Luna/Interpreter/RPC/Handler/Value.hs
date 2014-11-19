@@ -13,7 +13,6 @@ import qualified Data.IORef       as IORef
 import qualified Data.Sequence    as Sequence
 import qualified Pipes.Concurrent as Pipes
 
-import qualified Flowbox.Batch.Project.Project                         as Project
 import           Flowbox.Bus.Data.Flag                                 (Flag)
 import qualified Flowbox.Bus.Data.Flag                                 as Flag
 import           Flowbox.Bus.Data.Message                              (Message (Message))
@@ -34,7 +33,6 @@ import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.RPC.Handler.Sync                     as Sync
 import qualified Luna.Interpreter.RPC.Topic                            as Topic
 import qualified Luna.Interpreter.Session.Cache.Value                  as Value
-import           Luna.Interpreter.Session.Data.CallPointPath           (CallPointPath)
 import           Luna.Interpreter.Session.Env.Env                      (ResultCallBack)
 import           Luna.Interpreter.Session.Session                      (SessionST)
 
