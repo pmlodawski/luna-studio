@@ -38,15 +38,3 @@ getLocalAppDataDirectory = do
     home <- Directory.getHomeDirectory
     return $ home </> ".local" </> "share"
 #endif
-
-
-getAppDotFlowbox :: IO FilePath
-getAppDotFlowbox = do
-    home <- Directory.getHomeDirectory
-    return $ home </> ".flowbox"
-
-
-getAppFlowbox :: IO FilePath
-getAppFlowbox = do
-    home <- Directory.getHomeDirectory
-    return $ home </> "flowbox"
