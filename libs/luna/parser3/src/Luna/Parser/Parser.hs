@@ -102,7 +102,6 @@ import qualified Luna.ASTNew.Enum       as Enum
 import           Luna.ASTNew.Enum       (Enumerated, IDTag(IDTag))
 import qualified Luna.ASTNew.Unit       as Unit
 
-import qualified Luna.ASTNew.Traversals as Traversal
 
 import qualified Data.TypeLevel.Set as TLSet
 
@@ -869,17 +868,21 @@ defaultTraverseM = AST.defaultTraverseM AliasAnalysis
 testme ast st = runState (traverseM ast) st
 
 
-type AACtx m lab e a conf v = (Enumerated lab, TLSet.Lookup conf (Pragma.Pragma Pragma.AllowOrphans),
-                              MonadState (State a e v conf) m, Show conf, Show v, Show e, Show a, Functor m) 
+--type AACtx m lab e a conf v = (Enumerated lab, TLSet.Lookup conf (Pragma.Pragma Pragma.AllowOrphans),
+--                              MonadState (State a e v conf) m, Show conf, Show v, Show e, Show a, Functor m) 
 
+type AACtx m lab e s conf v = (Enumerated lab, MonadState (State s e v conf) m, Applicative m)
 
-instance AACtx m lab e a conf v => AST.Traversal AliasAnalysis m (LModule lab String) (LModule lab (LExpr IDTag (MultiName String))) where
+instance (AACtx m lab e s conf v, AST.Traversal AliasAnalysis m a a)
+    => AST.Traversal AliasAnalysis m (LModule lab a) (LModule lab a) where
     traverseM _ = aatest
 
-instance AACtx m lab e a conf v => AST.Traversal AliasAnalysis m (LDecl lab String) (LDecl lab (LExpr IDTag (MultiName String))) where
+instance (AACtx m lab e s conf v, AST.Traversal AliasAnalysis m a a)
+      => AST.Traversal AliasAnalysis m (LDecl lab a) (LDecl lab a) where
     traverseM _ = traverseDecl
 
-instance AACtx m lab e a conf v => AST.Traversal AliasAnalysis m (LPat lab) (LPat lab) where
+instance AACtx m lab e s conf v
+      => AST.Traversal AliasAnalysis m (LPat lab) (LPat lab) where
     traverseM _ = registerPat
 
 
@@ -887,15 +890,25 @@ instance AACtx m lab e a conf v => AST.Traversal AliasAnalysis m (LPat lab) (LPa
 aaunit (Unit mod) = Unit <$> aatest mod
 
 aatest mod@(Label lab (Module path name body)) = State.withNewScope id continue
-        where continue =  mapM registerHeaders body
-                        *> defaultTraverseM mod
+        where continue =  registerDecls body
+                       *> defaultTraverseM mod
               id       = Enum.id lab
 
 
+registerDecls decls =  mapM registerHeaders  decls
+                    *> mapM registerDataDecl decls
+
+
+registerDataDecl (Label lab decl) = case decl of
+    Decl.Data     name _ cons defs   -> State.withNewScope id (registerDecls defs) *> pure ()
+    _                                -> pure ()
+    where id = Enum.id lab
+
 registerHeaders (Label lab decl) = case decl of
     Decl.Function _ name inputs _ _  -> State.regVarName id (view MultiName.base name)
-                                     <* State.withNewScope  id (traverseM inputs)
-    Decl.Data     name _ cons _      -> State.regTypeName id (Name.fromName name) *> mapM_ registerCons cons
+                                     <* State.withNewScope id (traverseM inputs)
+    Decl.Data     name _ cons _      -> State.regTypeName id (Name.fromName name) 
+                                     <* mapM_ registerCons cons
     _                                -> pure ()
     where id = Enum.id lab
 
@@ -908,7 +921,14 @@ registerPat p@(Label lab pat) = case pat of
 registerCons (Label lab (Decl.Cons name fields)) = State.regVarName (Enum.id lab) (Name.fromName name)
 
 
-traverseDecl (Label lab decl) = fmap (Label lab) $ case decl of
+traverseDecl d@(Label lab decl) = case decl of
+    Decl.Function path name inputs output body -> State.withNewScope id $ defaultTraverseM d
+    _ -> continue
+    where id       = Enum.id lab
+          continue = defaultTraverseM d
+
+
+traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
     Decl.Function path name inputs output body -> do
         subAST  <- subparse (unlines body)
         inputs' <- mapM subparseArg inputs

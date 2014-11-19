@@ -38,6 +38,7 @@ import           Luna.ASTNew.Lit        (LLit, Lit)
 --type MonoTraversal base m a = Traversal base m a a
 --type DropTraversal base m a = Traversal base m a ()
 
+
 class Traversal base m a b | base a -> b where
     traverseM :: (Monad m, Applicative m) => base -> a -> m b
 
