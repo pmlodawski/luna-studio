@@ -26,6 +26,7 @@ import           Flowbox.Config.Config                      (Config)
 import qualified Flowbox.Config.Config                      as Config
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                    (loc)
+import           Flowbox.System.FilePath                    (expand')
 import           Flowbox.System.Log.Logger                  as Logger
 import           Luna.Interpreter.Session.Env               (Env, Session, SessionST)
 import           Luna.Interpreter.Session.Error             (Error)
@@ -44,17 +45,20 @@ type Import = String
 
 
 run :: Config -> Env -> [Import] -> Session a -> IO (Either Error a)
-run config env imports session =
-    MGHC.runGhc (Just $ Config.topDir $ Config.ghcS config) $
+run config env imports session = do
+    topDir <- liftIO $ expand' $ Config.topDir $ Config.ghcS config
+    MGHC.runGhc (Just topDir) $
         evalStateT (runEitherT (initialize config imports >> session)) env
 
 
 initialize :: Config -> [Import] -> Session ()
 initialize config imports = do
+    globalPkgDb <- liftIO $ expand' $ Config.pkgDb $ Config.global config
+    localPkgDb  <- liftIO $ expand' $ Config.pkgDb $ Config.local config
     let isNotUser GHC.UserPkgConf = False
         isNotUser _ = True
-        extraPkgConfs p = [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
-                          , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
+        extraPkgConfs p = [ GHC.PkgConfFile globalPkgDb
+                          , GHC.PkgConfFile localPkgDb
                           ] ++ filter isNotUser p
     flags <- lift2 GHC.getSessionDynFlags
     _  <- lift2 $ GHC.setSessionDynFlags flags
