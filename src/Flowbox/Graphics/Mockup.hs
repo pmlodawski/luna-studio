@@ -787,3 +787,25 @@ interpolateChannelsLuna (fmap variable -> boundary) (toInterpolator . fmap varia
           interpolate c@ChannelGenerator{} = c
 
           toGen = interpol . fromMatrix boundary
+
+toMultisampler :: Grid (Exp Int) -> InterpolationFilter (Exp Double) -> Sampler Double
+toMultisampler grid = \case
+    NearestNeighbour -> monosampler
+    Box              -> multisampler $ normalize $ toMatrix grid box
+    Basic            -> multisampler $ normalize $ toMatrix grid basic
+    Triangle         -> multisampler $ normalize $ toMatrix grid triangle
+    Bell             -> multisampler $ normalize $ toMatrix grid bell
+    BSpline          -> multisampler $ normalize $ toMatrix grid bspline
+    Lanczos a        -> multisampler $ normalize $ toMatrix grid $ lanczos a
+    Polynomial a b   -> multisampler $ normalize $ toMatrix grid $ polynomial a b
+    Mitchell         -> multisampler $ normalize $ toMatrix grid mitchell
+    CatmullRom       -> multisampler $ normalize $ toMatrix grid catmulRom
+    Gauss a          -> multisampler $ normalize $ toMatrix grid $ gauss a
+    Dirac a          -> multisampler $ normalize $ toMatrix grid $ dirac a
+
+multisampleChannelsLuna :: Grid Int -> InterpolationFilter Double -> Image -> Image
+multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap variable -> sampler :: Sampler Double) = Image.map (View.map multisample)
+    where multisample (ChannelGenerator name gen) = ChannelFloat name $ FlatData . rasterizer . sampler $ gen
+          --                                                            FIXME[MM]: ^ we don't want this here,
+          --                                                                         but ChannelGenerator requires ContinousGenerator :/
+          multisample channel                     = channel
