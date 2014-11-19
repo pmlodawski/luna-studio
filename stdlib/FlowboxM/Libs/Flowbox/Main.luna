@@ -416,6 +416,24 @@ def Image.gammaFromLinear gamma:
     realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
     ```liftF2 gammaFromLinearLuna #{realGamma} #{self}```
 
+class ```InterpolationFilter```:
+    NearestNeighbour
+    Box
+    Basic
+    Triangle
+    Bell
+    BSpline
+    Lanczos: a :: Double
+    Polynomial: a, b :: Double
+    Mitchell
+    CatmullRom
+    Gauss: a :: Double
+    Dirac: a :: Double
+
+def Image.interpolate boundary filter:
+    ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
+
+
 def main:
     lena = load "./test.png"
     checker = load "./checker.png"
