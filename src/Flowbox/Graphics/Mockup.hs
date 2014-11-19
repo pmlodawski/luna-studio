@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveFunctor             #-}
 {-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE PatternSynonyms           #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
@@ -745,3 +746,44 @@ gammaToLinearLuna companding = onEachValue $ (Gamma.toLinear companding :: A.Exp
 
 gammaFromLinearLuna :: Gamma.Companding a (A.Exp Double) => a -> Image -> Image
 gammaFromLinearLuna companding = onEachValue $ Gamma.fromLinear companding
+
+medianLuna :: Int -> Image -> Image
+medianLuna size img = undefined
+
+data InterpolationFilter a = NearestNeighbour
+                           | Box
+                           | Basic
+                           | Triangle
+                           | Bell
+                           | BSpline
+                           | Lanczos a
+                           | Polynomial a a
+                           | Mitchell
+                           | CatmullRom
+                           | Gauss a
+                           | Dirac a
+                           deriving (Show, Functor)
+
+toSampler :: (Elt e, IsFloating e) => InterpolationFilter (Exp e) -> DiscreteGenerator (Exp e) -> CartesianGenerator (Exp e) (Exp e)
+toSampler = \case
+    NearestNeighbour -> nearest
+    Box              -> interpolator box
+    Basic            -> interpolator basic
+    Triangle         -> interpolator triangle
+    Bell             -> interpolator bell
+    BSpline          -> interpolator bspline
+    Lanczos a        -> interpolator $ lanczos a
+    Polynomial a b   -> interpolator $ polynomial a b
+    Mitchell         -> interpolator mitchell
+    CatmullRom       -> interpolator catmulRom
+    Gauss a          -> interpolator $ gauss a
+    Dirac a          -> interpolator $ dirac a
+
+interpolateChannelsLuna :: A.Boundary Double -> InterpolationFilter Double -> Image -> Image
+interpolateChannelsLuna (fmap variable -> boundary) (toSampler . fmap variable -> sampler) = Image.map (View.map interpolate)
+    where interpolate (ChannelFloat name (FlatData mat)) = ChannelGenerator name $ toGen $ mat
+          interpolate (ChannelInt   name (FlatData mat)) = ChannelGenerator name $ toGen . M.map A.fromIntegral $ mat
+          interpolate (ChannelBit   name (FlatData mat)) = ChannelGenerator name $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
+          interpolate c@ChannelGenerator{} = c
+
+          toGen = sampler . fromMatrix boundary
