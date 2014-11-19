@@ -12,11 +12,12 @@
 
 module Flowbox.System.UniPath where
 
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import qualified Data.List              as List
-import qualified Data.String.Utils      as StringUtils
-import qualified System.Directory       as Directory
-import qualified System.FilePath        as FilePath
+import           Control.Monad.IO.Class             (MonadIO, liftIO)
+import qualified Data.List                          as List
+import qualified Data.String.Utils                  as StringUtils
+import qualified Flowbox.System.Directory.Locations as Directory
+import qualified System.Directory                   as Directory
+import qualified System.FilePath                    as FilePath
 
 import Flowbox.Prelude hiding (empty)
 
@@ -32,12 +33,8 @@ data PathItem = Node String
 type UniPath = [PathItem]
 
 
-empty :: UniPath
-empty = []
-
-
 fromUnixString :: String -> UniPath
-fromUnixString []           = empty
+fromUnixString []           = def
 fromUnixString spath@(x:xs) = let
     split a = StringUtils.split "/" $ StringUtils.replace "\\" "/" a
     in case x of
@@ -63,19 +60,24 @@ toUnixString path = case head l of
 
 
 expand :: MonadIO m => UniPath -> m UniPath
-expand [] = return empty
+expand [] = return def
 expand (x:xs) = liftIO $ case x of
-        Var "~"        -> do home <- Directory.getHomeDirectory
-                             rest <- expand xs
-                             return $ fromUnixString home ++ rest
-        Var "$APPDATA" -> do home <- Directory.getAppUserDataDirectory "flowbox"
-                             rest <- expand xs
-                             return $ fromUnixString home ++ rest
-        _       -> (:) x <$> expand xs
+    Var "~"              -> expandRest   Directory.getHomeDirectory
+    Var "$APPFLOWBOX"    -> expandRest $ Directory.getAppFlowbox
+    Var "$APPDOTFLOWBOX" -> expandRest $ Directory.getAppDotFlowbox
+    Var "$APPDATA"       -> expandRest   Directory.getAppDataDirectory
+    Var "$LOCALAPPDATA"  -> expandRest   Directory.getLocalAppDataDirectory
+    Var "$TEMP"          -> expandRest   Directory.getTemporaryDirectory
+    Var "$DOCUMENTS"     -> expandRest   Directory.getUserDocumentsDirectory
+    _       -> (:) x <$> expand xs
+    where expandRest fvar = do
+              var <- fvar
+              rest <- expand xs
+              return $ fromUnixString var ++ rest
 
 
 fromList :: [String] -> UniPath
-fromList = foldr prepend empty
+fromList = foldr prepend def
 
 
 toList :: UniPath -> [String]
@@ -144,18 +146,22 @@ basePath path = normalise $ case last $ normalise path of
 
 
 extension :: UniPath -> String
-extension path = FilePath.takeExtension (toUnixString path)
+extension = FilePath.takeExtension . toUnixString
 
 
-setExtension :: String -> UniPath -> UniPath
-setExtension ext path =
+addExtension :: String -> UniPath -> UniPath
+addExtension ext path =
     normalise $ path ++ [Up] ++ [Node $ fileName path ++ ext]
 
 
+replaceExtension :: String -> UniPath -> UniPath
+replaceExtension ext = fromUnixString . FilePath.replaceExtension ext . toUnixString
+
+
 dropExtension :: UniPath -> UniPath
-dropExtension path = fromUnixString $ FilePath.dropExtension $ toUnixString path
+dropExtension = fromUnixString . FilePath.dropExtension . toUnixString
 
 
 makeRelative :: UniPath -> UniPath -> UniPath
-makeRelative path1 path2 =
-    fromUnixString $ FilePath.makeRelative (toUnixString path1) (toUnixString path2)
+makeRelative path1 =
+    fromUnixString . FilePath.makeRelative (toUnixString path1) . toUnixString
