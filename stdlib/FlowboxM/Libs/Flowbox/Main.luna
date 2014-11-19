@@ -392,6 +392,9 @@ def Either.unwrap:
 def View.channel name:
     ```liftF2 View.get #{self} #{name}```
 
+def readEXR filePath:
+    ```autoLift1 readFromEXR #{filePath}```
+
 class ```Gamma```:
     AlexaV3LogC
     Cineon
