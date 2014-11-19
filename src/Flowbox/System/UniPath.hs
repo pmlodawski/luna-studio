@@ -63,8 +63,6 @@ expand :: MonadIO m => UniPath -> m UniPath
 expand [] = return def
 expand (x:xs) = liftIO $ case x of
     Var "~"              -> expandRest   Directory.getHomeDirectory
-    Var "$APPFLOWBOX"    -> expandRest $ Directory.getAppFlowbox
-    Var "$APPDOTFLOWBOX" -> expandRest $ Directory.getAppDotFlowbox
     Var "$APPDATA"       -> expandRest   Directory.getAppDataDirectory
     Var "$LOCALAPPDATA"  -> expandRest   Directory.getLocalAppDataDirectory
     Var "$TEMP"          -> expandRest   Directory.getTemporaryDirectory
