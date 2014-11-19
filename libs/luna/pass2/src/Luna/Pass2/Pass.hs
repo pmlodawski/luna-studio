@@ -11,7 +11,7 @@
 {-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE TupleSections             #-}
 
-module Luna.Pass.Pass where
+module Luna.Pass2.Pass where
 
 import Control.Monad.Reader
 import Control.Monad.State        hiding (fail, state)
@@ -81,3 +81,8 @@ runHoist_ env state pass = fst <$> runHoist env state pass
 
 fail :: Monad m => e -> EitherT e m a
 fail = left
+
+
+
+
+--data Pass

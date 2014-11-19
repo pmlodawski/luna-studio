@@ -12,6 +12,7 @@ module Luna.Interpreter.Session.Session (
     module Luna.Interpreter.Session.Session,
 ) where
 
+import           Control.Monad.Catch        (bracket)
 import qualified Control.Monad.Catch        as Catch
 import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
@@ -21,17 +22,17 @@ import           Data.Typeable              (Typeable)
 import qualified DynFlags                   as GHC
 import qualified GHC
 
-import           Flowbox.Config.Config              (Config)
-import qualified Flowbox.Config.Config              as Config
+import           Flowbox.Config.Config                      (Config)
+import qualified Flowbox.Config.Config                      as Config
 import           Flowbox.Prelude
-import           Flowbox.Source.Location            (loc)
-import           Flowbox.System.Log.Logger          as Logger
-import           Luna.Interpreter.Session.Env       (Env, Session, SessionST)
-import           Luna.Interpreter.Session.Error     (Error)
-import qualified Luna.Interpreter.Session.Error     as Error
-import qualified Luna.Interpreter.Session.Helpers   as Helpers
-import qualified Luna.Interpreter.Session.Hint.Eval as HEval
-
+import           Flowbox.Source.Location                    (loc)
+import           Flowbox.System.Log.Logger                  as Logger
+import           Luna.Interpreter.Session.Env               (Env, Session, SessionST)
+import           Luna.Interpreter.Session.Error             (Error)
+import qualified Luna.Interpreter.Session.Error             as Error
+import qualified Luna.Interpreter.Session.Helpers           as Helpers
+import qualified Luna.Interpreter.Session.Hint.Eval         as HEval
+import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 
 
 logger :: LoggerIO
@@ -65,6 +66,7 @@ initialize config imports = do
     setHardcodedExtensions
     setImports $ "Data.Word"
                : "Luna.Target.HS"
+               : "System.Mem"
                : imports
     runDecls Helpers.hash
 
@@ -99,19 +101,17 @@ withExtensionFlags enable disable action = sandboxDynFlags $ do
 
 
 sandboxDynFlags :: Session a -> Session a
-sandboxDynFlags action = do
-    flags  <- lift2 GHC.getSessionDynFlags
-    result <- action
-    _ <- lift2 $ GHC.setSessionDynFlags flags
-    return result
+sandboxDynFlags action =
+    hoistEither =<< lift (bracket (lift   GHC.getSessionDynFlags)
+                                  (lift . GHC.setSessionDynFlags)
+                                  (const $ runEitherT action))
 
 
 sandboxContext :: Session a -> Session a
-sandboxContext action = do
-    context <- lift2 GHC.getContext
-    result  <- action
-    lift2 $ GHC.setContext context
-    return result
+sandboxContext action =
+    hoistEither =<< lift (bracket (lift   GHC.getContext)
+                                  (lift . GHC.setContext)
+                                  (const $ runEitherT action))
 
 
 location :: String
@@ -131,11 +131,13 @@ interceptSourceErrors ghc = do
 
 interceptErrors :: MGHC.Ghc a -> Session a
 interceptErrors ghc = do
+    sessionBackup <- lift2 GHC.getSession
     let handler :: Catch.SomeException -> MGHC.Ghc (Either Error a)
         handler otherErr = do
             let errDat = Error.OtherError $(loc) $ show otherErr
                 errMsg = Error.format errDat
             logger Logger.error errMsg
+            GHC.setSession sessionBackup
             return $ Left errDat
     r <- lift2 $ Catch.catch (Right <$> ghc) handler
     hoistEither r
@@ -167,8 +169,15 @@ runDecls decls = do
 
 
 runAssignment :: String -> String -> Session ()
-runAssignment asigned asignee =
-    runDecls $ asigned ++ " = " ++ asignee
+runAssignment asigned asignee = do
+    lift2 $ Bindings.remove asigned
+    runStmt $ asigned ++ " <- return $ " ++ asignee
+
+
+runAssignment' :: String -> String -> Session ()
+runAssignment' asigned asignee = do
+    lift2 $ Bindings.remove asigned
+    runStmt $ asigned ++ " <- " ++ asignee
 
 
 interpret :: Typeable a => String -> Session a

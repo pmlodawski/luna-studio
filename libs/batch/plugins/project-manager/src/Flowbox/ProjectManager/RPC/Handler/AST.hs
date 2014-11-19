@@ -14,6 +14,10 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                                    (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request               as CodeGet
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                as CodeGet
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request               as CodeSet
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Update                as CodeSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request               as AddData
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                as AddData
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request    as ModifyDataClasses
@@ -251,3 +255,22 @@ functionOutputModify request@(ModifyFunctionOutput.Request toutput tbc tlibID tp
     BatchAST.updateFunctionOutput output bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyFunctionOutput.Update request updateNo
+
+
+codeGet :: CodeGet.Request -> RPC Context IO CodeGet.Status
+codeGet request@(CodeGet.Request tbc tlibID tprojectID _) = do
+    bc <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    code <- Batch.getCode bc libID projectID
+    return $ CodeGet.Status request $ encodeP code
+
+
+codeSet :: CodeSet.Request -> RPC Context IO CodeSet.Update
+codeSet request@(CodeSet.Request tcode tbc tlibID tprojectID _) = do
+    bc <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+        code      = decodeP tcode
+    Batch.setCode code bc libID projectID
+    return $ CodeSet.Update request

@@ -71,7 +71,7 @@ reloadClass defPoint = Session.atomically $ Instances.cleanFunctions
 
 
 reload :: Session ()
-reload = do
+reload = Env.fragile $ do
     reloads <- Env.getReloads
     logger debug $ "Reloading: " ++ show reloads
     let perform (libID, Reload.ReloadClasses items) =

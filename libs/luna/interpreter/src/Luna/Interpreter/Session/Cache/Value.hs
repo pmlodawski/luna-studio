@@ -11,6 +11,7 @@ module Luna.Interpreter.Session.Cache.Value where
 
 import qualified Control.Monad.Catch as Catch
 import qualified Control.Monad.Ghc   as MGHC
+import qualified Data.Set            as Set
 import qualified GHC
 
 import           Flowbox.Control.Error
@@ -18,8 +19,8 @@ import qualified Flowbox.Data.Error                          as ValueError
 import qualified Flowbox.Data.Serialization                  as Serialization
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (loc)
-import           Flowbox.System.Log.Logger
-import           Generated.Proto.Data.Value                  (Value)
+import           Flowbox.System.Log.Logger                   as L
+import           Generated.Proto.Mode.ModeValue              (ModeValue (ModeValue))
 import qualified Luna.Graph.Flags                            as Flags
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
@@ -32,6 +33,7 @@ import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
 
 
 
@@ -39,7 +41,7 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-getIfReady :: CallPointPath -> Session (Maybe Value)
+getIfReady :: CallPointPath -> Session [ModeValue]
 getIfReady callPointPath = do
     varName   <- foldedReRoute callPointPath
     cacheInfo <- Cache.getCacheInfo callPointPath
@@ -56,17 +58,17 @@ data Status = Ready
             deriving (Show, Eq)
 
 
-getWithStatus :: CallPointPath -> Session (Status, Maybe Value)
+getWithStatus :: CallPointPath -> Session (Status, [ModeValue])
 getWithStatus callPointPath = do
     varName <- foldedReRoute callPointPath
     Env.cachedLookup callPointPath >>= \case
-        Nothing        -> return (NotInCache, Nothing)
+        Nothing        -> return (NotInCache, [])
         Just cacheInfo -> do
             allReady <- Env.getAllReady
             let returnBytes status = do
                     value <- get varName callPointPath
                     return (status, value)
-                returnNothing status = return (status, Nothing)
+                returnNothing status = return (status, [])
 
             case (cacheInfo ^. CacheInfo.status, allReady) of
                 (Status.Ready,        True ) -> returnBytes   Ready
@@ -76,8 +78,8 @@ getWithStatus callPointPath = do
                 (Status.NonCacheable, _    ) -> returnNothing NonCacheable
 
 
-reportIfVisible :: CallPointPath -> VarName -> Session ()
-reportIfVisible callPointPath varName = do
+reportIfVisible :: CallPointPath -> Session ()
+reportIfVisible callPointPath = do
     flags <- Env.getFlags $ last callPointPath
     unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
          || Flags.isSet' flags (view Flags.graphViewGenerated  )
@@ -89,20 +91,25 @@ report :: CallPointPath -> VarName -> Session ()
 report callPointPath varName = do
     resultCB  <- Env.getResultCallBack
     projectID <- Env.getProjectID
-    result    <- get varName callPointPath
-    safeLiftIO' (Error.CallbackError $(loc)) $ resultCB projectID callPointPath result
+    results   <- get varName callPointPath
+    safeLiftIO' (Error.CallbackError $(loc)) $
+        resultCB projectID callPointPath results
 
 
-get :: VarName -> CallPointPath -> Session (Maybe Value)
+get :: VarName -> CallPointPath -> Session [ModeValue]
 get varName callPointPath = do
-    mode <- Env.getSerializationMode callPointPath
-    let toValueExpr = "toValue " ++ varName
-        computeExpr = concat [varName, " <- return $ compute ", varName, " def"]
+    modes <- Env.getSerializationModes callPointPath
+    let tmpName = "_tmp"
+        toValueExpr = "toValue " ++ tmpName
+        computeExpr = concat [tmpName, " <- return $ compute ", varName, " def"]
 
-        excHandler :: Catch.SomeException -> MGHC.Ghc (Maybe Value)
+        excHandler :: Catch.SomeException -> MGHC.Ghc [ModeValue]
         excHandler exc = do
-            logger warning $ show exc
-            liftIO $ Serialization.toValue (ValueError.Error $ show exc) mode
+            logger L.error $ show exc
+            val <- liftIO (Serialization.toValue (ValueError.Error $ show exc) def)
+            return $ map (\mode -> ModeValue mode val) $ Set.toList modes
+
+
     Session.withImports [ "Flowbox.Data.Serialization"
                         , "Flowbox.Data.Mode"
                         , "Flowbox.Graphics.Serialization"
@@ -110,9 +117,11 @@ get varName callPointPath = do
                         , "Generated.Proto.Data.Value" ]
                         $ lift2 $ flip Catch.catch excHandler $ do
         logger trace computeExpr
+        Bindings.remove tmpName
         _      <- GHC.runStmt computeExpr GHC.RunToCompletion
         action <- HEval.interpret toValueExpr
-        liftIO $ action mode
+        Bindings.remove tmpName
+        liftIO $ mapM (\mode -> ModeValue mode <$> action mode) $ Set.toList modes
 
 
 foldedReRoute :: CallPointPath -> Session VarName
