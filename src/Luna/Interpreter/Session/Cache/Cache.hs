@@ -169,5 +169,5 @@ performGC :: Session ()
 performGC = do
     logger info "Running GC"
     Session.runStmt "performGC"
-    liftIO Mem.performGC
+    safeLiftIO' (Error.IOError $(loc)) Mem.performGC
 
