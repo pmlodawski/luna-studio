@@ -433,6 +433,9 @@ class ```InterpolationFilter```:
 def Image.interpolate boundary filter:
     ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
 
+def Image.multisample grid filter:
+    ```liftF3 multisampleChannelsLuna #{grid} #{filter} #{self}```
+
 
 def main:
     lena = load "./test.png"
