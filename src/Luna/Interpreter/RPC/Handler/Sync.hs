@@ -37,7 +37,7 @@ logger = getLoggerIO $(moduleName)
 
 --- helpers ---------------------------------------------------------------
 
-syncLibManager :: RPC Context SessionST ()
+syncLibManager :: RPC Context (SessionST mm) ()
 syncLibManager = do
     pm <- Batch.getProjectManager
     activeProjectID <- liftSession Env.getProjectID
@@ -48,25 +48,25 @@ syncLibManager = do
     liftSession $ Env.setLibManager libs
 
 
-testUpdateNo :: Int32 -> RPC Context SessionST ()
+testUpdateNo :: Int32 -> RPC Context (SessionST mm) ()
 testUpdateNo updateNo = do
     localUpdateNo <- Batch.getUpdateNo
     assertE (updateNo == localUpdateNo) $
         "UpdateNo does not match (local: " ++ show localUpdateNo ++ ", remote: " ++ show updateNo ++ ")"
 
 
-testProjectID :: Project.ID -> RPC Context SessionST ()
+testProjectID :: Project.ID -> RPC Context (SessionST mm) ()
 testProjectID projectID = do
     currentProjectID <- liftSession Env.getProjectID
     assertE (projectID == currentProjectID) $
         "Sync.testProjectID : wrong projectID = " ++ show projectID
 
 
-hoistSessionST :: RPC Context IO a -> RPC Context SessionST a
+hoistSessionST :: RPC Context IO a -> RPC Context (SessionST mm) a
 hoistSessionST = hoist (hoist liftIO)
 
 
-sync :: Int32 -> RPC Context IO a -> RPC Context SessionST ()
+sync :: Int32 -> RPC Context IO a -> RPC Context (SessionST mm) ()
 sync updateNo syncOp = do
     hoistSessionST $ void syncOp
     testUpdateNo updateNo
@@ -74,7 +74,7 @@ sync updateNo syncOp = do
 
 --- handlers --------------------------------------------------------------
 
-projectmanagerSyncGet :: ProjectManagerSyncGet.Status -> RPC Context SessionST ()
+projectmanagerSyncGet :: ProjectManagerSyncGet.Status -> RPC Context (SessionST mm) ()
 projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata updateNo) = do
     (projectManager :: ProjectManager) <- hoistEither $ Read.readEither $ decodeP tdata
     Batch.setProjectManager projectManager
@@ -83,7 +83,7 @@ projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata updateNo) = do
     liftSession Invalidate.modifyAll
 
 
-syncIfNeeded :: RPC Context SessionST () -> RPC Context SessionST (Maybe ProjectManagerSyncGet.Request)
+syncIfNeeded :: RPC Context (SessionST mm) () -> RPC Context (SessionST mm) (Maybe ProjectManagerSyncGet.Request)
 syncIfNeeded rpc = do
     result <- lift $ runEitherT rpc
     case result of
@@ -92,5 +92,5 @@ syncIfNeeded rpc = do
                        return $ Just ProjectManagerSyncGet.Request
 
 
-syncRequest :: RPC Context SessionST ProjectManagerSyncGet.Request
+syncRequest :: RPC Context (SessionST mm) ProjectManagerSyncGet.Request
 syncRequest = return ProjectManagerSyncGet.Request
