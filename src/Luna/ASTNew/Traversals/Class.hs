@@ -8,6 +8,7 @@
  {-# LANGUAGE UndecidableInstances #-}
  {-# LANGUAGE OverlappingInstances #-}
  {-# LANGUAGE FunctionalDependencies #-}
+ {-# LANGUAGE GADTs #-}
 
 module Luna.ASTNew.Traversals.Class where
 
@@ -74,8 +75,12 @@ instance Traversal base m a b => Traversal base m (Maybe a) (Maybe b) where
         Just a  -> fmap Just $ traverseM base a
         Nothing -> pure Nothing
 
-instance Traversal base m String String        where traverseM _ = pure
+instance Traversal        base m String String where traverseM        _ = pure
 instance DefaultTraversal base m String String where defaultTraverseM _ = pure
+
+-- boje sie to wlaczyc - to moze duzo poprawic ale moze tez rozpierniczyc
+instance (a~b) => DefaultTraversal base m a b where defaultTraverseM _ = pure
+
 
 
 -- ----- basic AST types -----
