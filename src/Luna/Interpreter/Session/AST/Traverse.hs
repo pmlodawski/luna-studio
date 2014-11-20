@@ -40,7 +40,7 @@ import           Luna.Interpreter.Session.Session           (Session)
 
 
 
-arguments :: CallDataPath -> Session [CallDataPath]
+arguments :: CallDataPath -> Session mm [CallDataPath]
 arguments []           = return []
 arguments callDataPath =
     Maybe.catMaybes <$> mapM (globalPredecessor callDataPath)
@@ -54,7 +54,7 @@ inDataConnections callDataPath = Graph.lprelData graph nodeID where
     nodeID = last callDataPath ^. CallData.callPoint . CallPoint.nodeID
 
 
-globalPredecessor :: CallDataPath -> (Node.ID, Node, Edge) -> Session (Maybe CallDataPath)
+globalPredecessor :: CallDataPath -> (Node.ID, Node, Edge) -> Session mm (Maybe CallDataPath)
 globalPredecessor []           _                    = return Nothing
 globalPredecessor callDataPath (nodeID, node, edge) = do
     let upperLevel = init callDataPath
@@ -66,14 +66,14 @@ globalPredecessor callDataPath (nodeID, node, edge) = do
         _           -> return $ Just $ CallDataPath.updateNode callDataPath node nodeID
 
 
-matchPredecessor :: CallDataPath -> Edge -> Session (Node.ID, Node, Edge)
+matchPredecessor :: CallDataPath -> Edge -> Session mm (Node.ID, Node, Edge)
 matchPredecessor callDataPath edge =
     List.find (flip Edge.match edge . view _3) (inDataConnections callDataPath)
         <??> Error.GraphError $(loc) "Incorrectly connected graph"
 
 
 
-into' :: CallDataPath -> Session (Maybe DefPoint)
+into' :: CallDataPath -> Session mm (Maybe DefPoint)
 into' callDataPath = do
     let callData  = last callDataPath
         libraryID = callData ^. CallData.callPoint . CallPoint.libraryID
@@ -84,7 +84,7 @@ into' callDataPath = do
         Nothing   -> return Nothing
 
 
-into :: CallDataPath -> Session [CallDataPath]
+into :: CallDataPath -> Session mm [CallDataPath]
 into callDataPath = do
     mdefPoint <- into' callDataPath
     case mdefPoint of
@@ -96,7 +96,7 @@ up :: CallDataPath -> CallDataPath
 up = init
 
 
---next :: CallDataPath -> Session [CallDataPath]
+--next :: CallDataPath -> Session mm [CallDataPath]
 --next []           = return []
 --next callDataPath = do
 --    let callData  = last callDataPath
@@ -106,13 +106,13 @@ up = init
 --    concat <$> mapM (globalSuccessors callDataPath) sucl
 
 
---globalSuccessors :: CallDataPath -> (Node.ID, Node)  -> Session [CallDataPath]
+--globalSuccessors :: CallDataPath -> (Node.ID, Node)  -> Session mm [CallDataPath]
 --globalSuccessors prevCallDataPath (nodeID, node) = do
 --    let callDataPath = CallDataPath.updateNode prevCallDataPath node nodeID
 --    inner <- into callDataPath
 --    return $ callDataPath : inner
 
-next :: CallDataPath -> Session [CallDataPath]
+next :: CallDataPath -> Session mm [CallDataPath]
 next []           = return []
 next callDataPath = do
     let callData  = last callDataPath
@@ -125,7 +125,7 @@ next callDataPath = do
         else List.nub . concat <$> mapM (globalSuccessors callDataPath) lsucl
 
 
-globalSuccessors :: CallDataPath -> (Node.ID, Node, Edge)  -> Session [CallDataPath]
+globalSuccessors :: CallDataPath -> (Node.ID, Node, Edge)  -> Session mm [CallDataPath]
 globalSuccessors prevCallDataPath (_     , Node.Outputs {}, _   ) = return [init prevCallDataPath]
 globalSuccessors prevCallDataPath (nodeID, node           , edge) = do
     let callDataPath = CallDataPath.updateNode prevCallDataPath node nodeID

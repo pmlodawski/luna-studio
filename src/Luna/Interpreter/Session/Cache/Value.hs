@@ -41,7 +41,7 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-getIfReady :: CallPointPath -> Session [ModeValue]
+getIfReady :: CallPointPath -> Session mm [ModeValue]
 getIfReady callPointPath = do
     varName   <- foldedReRoute callPointPath
     cacheInfo <- Cache.getCacheInfo callPointPath
@@ -58,7 +58,7 @@ data Status = Ready
             deriving (Show, Eq)
 
 
-getWithStatus :: CallPointPath -> Session (Status, [ModeValue])
+getWithStatus :: CallPointPath -> Session mm (Status, [ModeValue])
 getWithStatus callPointPath = do
     varName <- foldedReRoute callPointPath
     Env.cachedLookup callPointPath >>= \case
@@ -78,7 +78,7 @@ getWithStatus callPointPath = do
                 (Status.NonCacheable, _    ) -> returnNothing NonCacheable
 
 
-reportIfVisible :: CallPointPath -> Session ()
+reportIfVisible :: CallPointPath -> Session mm ()
 reportIfVisible callPointPath = do
     flags <- Env.getFlags $ last callPointPath
     unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
@@ -87,7 +87,7 @@ reportIfVisible callPointPath = do
         foldedReRoute callPointPath >>= report callPointPath
 
 
-report :: CallPointPath -> VarName -> Session ()
+report :: CallPointPath -> VarName -> Session mm ()
 report callPointPath varName = do
     resultCB  <- Env.getResultCallBack
     projectID <- Env.getProjectID
@@ -96,7 +96,7 @@ report callPointPath varName = do
         resultCB projectID callPointPath results
 
 
-get :: VarName -> CallPointPath -> Session [ModeValue]
+get :: VarName -> CallPointPath -> Session mm [ModeValue]
 get varName callPointPath = do
     modes <- Env.getSerializationModes callPointPath
     let tmpName = "_tmp"
@@ -107,7 +107,7 @@ get varName callPointPath = do
         excHandler exc = do
             logger L.error $ show exc
             val <- liftIO (Serialization.toValue (ValueError.Error $ show exc) def)
-            return $ map (\mode -> ModeValue mode val) $ Set.toList modes
+            return $ map (`ModeValue` val) $ Set.toList modes
 
 
     Session.withImports [ "Flowbox.Data.Serialization"
@@ -124,7 +124,7 @@ get varName callPointPath = do
         liftIO $ mapM (\mode -> ModeValue mode <$> action mode) $ Set.toList modes
 
 
-foldedReRoute :: CallPointPath -> Session VarName
+foldedReRoute :: CallPointPath -> Session mm VarName
 foldedReRoute callPointPath = do
     let callPointLast = last callPointPath
         callPointInit = init callPointPath

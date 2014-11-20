@@ -24,7 +24,7 @@ import qualified Luna.Pass.Analysis.NameResolver        as NameResolver
 
 
 
-fromName :: String -> Breadcrumbs -> Library.ID -> Session (Maybe DefPoint)
+fromName :: String -> Breadcrumbs -> Library.ID -> Session mm (Maybe DefPoint)
 fromName name parentBC libraryID = do
     libManager <- Env.getLibManager
     results    <- Env.runPass $(loc) $ NameResolver.run name parentBC libraryID libManager
