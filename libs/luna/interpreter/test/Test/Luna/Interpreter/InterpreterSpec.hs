@@ -12,24 +12,24 @@ import Test.Hspec
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Luna.Interpreter.Session.AST.Executor       as Executor
-import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
-import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
-import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
-import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import qualified Luna.Interpreter.Session.Env                as Env
-import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Lib.Lib                                as Library
-import qualified Test.Luna.Interpreter.Common                as Common
-import qualified Test.Luna.Interpreter.SampleCodes           as SampleCodes
-
+import qualified Luna.Interpreter.Session.AST.Executor             as Executor
+import qualified Luna.Interpreter.Session.AST.Traverse             as Traverse
+import qualified Luna.Interpreter.Session.Data.CallDataPath        as CallDataPath
+import           Luna.Interpreter.Session.Data.CallPoint           (CallPoint (CallPoint))
+import           Luna.Interpreter.Session.Data.CallPointPath       (CallPointPath)
+import qualified Luna.Interpreter.Session.Env                      as Env
+import           Luna.Interpreter.Session.Memory.Manager.NoManager (NoManager (NoManager))
+import           Luna.Interpreter.Session.Session                  (Session)
+import qualified Luna.Lib.Lib                                      as Library
+import qualified Test.Luna.Interpreter.Common                      as Common
+import qualified Test.Luna.Interpreter.SampleCodes                 as SampleCodes
 
 
 rootLogger :: Logger
 rootLogger = getLogger ""
 
 
-getArgs :: CallPointPath -> Session [CallPointPath]
+getArgs :: CallPointPath -> Session mm [CallPointPath]
 getArgs callPointPath = do
     mainPtr      <- Env.getMainPtr
     testCallData <- CallDataPath.fromCallPointPath callPointPath mainPtr
@@ -37,7 +37,7 @@ getArgs callPointPath = do
     return $ map CallDataPath.toCallPointPath args
 
 
-getSuccessors :: CallPointPath -> Session [CallPointPath]
+getSuccessors :: CallPointPath -> Session mm [CallPointPath]
 getSuccessors callPointPath = do
     mainPtr      <- Env.getMainPtr
     testCallData <- CallDataPath.fromCallPointPath callPointPath mainPtr
@@ -59,19 +59,20 @@ shouldMatchList' = liftIO .: shouldMatchList
 
 spec :: Spec
 spec = do
+    let mm = NoManager
     describe "interpreter" $ do
         mapM_ (\(name, code) -> it ("executes example - " ++ name) $ do
             --rootLogger setIntLevel 5
-            Common.runSession code Executor.processMain) SampleCodes.sampleCodes
+            Common.runSession mm code Executor.processMain) SampleCodes.sampleCodes
 
         mapM_ (\(name, code) -> it ("executes example 5 times - " ++ name) $ do
             --rootLogger setIntLevel 5
-            Common.runSession code $ replicateM_ 5 Executor.processMain) $ SampleCodes.sampleCodes
+            Common.runSession mm code $ replicateM_ 5 Executor.processMain) $ SampleCodes.sampleCodes
 
     describe "AST traverse" $ do
         it "finds function arguments" $ do
             --rootLogger setIntLevel 5
-            Common.runSession SampleCodes.traverseExample $ do
+            Common.runSession mm SampleCodes.traverseExample $ do
                 let lib1      = Library.ID 1
                     var_a     = [CallPoint lib1 22]
                     var_b     = [CallPoint lib1 26]
@@ -102,7 +103,7 @@ spec = do
 
         it "finds node successors" $ do
             --putStrLn =<< ppShow <$> Common.readCode SampleCodes.traverseExample
-            Common.runSession SampleCodes.traverseExample $ do
+            Common.runSession mm SampleCodes.traverseExample $ do
                 let lib1      = Library.ID 1
                     var_a     = [CallPoint lib1 22]
                     var_b     = [CallPoint lib1 26]

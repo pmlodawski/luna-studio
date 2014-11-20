@@ -37,21 +37,21 @@ emptyModule :: Module
 emptyModule = Module.mk def $ Type.Module def "Main" []
 
 
-genAll :: Session [String]
+genAll :: Session mm [String]
 genAll = do
     mainPtr <- Env.getMainPtr
     ast     <- Env.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
     genCode (dropWhile (not . (== "-- body --"))) ast
 
 
-genClass :: DefPoint -> Session [String]
+genClass :: DefPoint -> Session mm [String]
 genClass defPoint = do
     expr <- Env.getClass defPoint
     let ast = emptyModule & Module.classes .~ [expr]
     genCode (dropWhile (not . (== "-- body --"))) ast
 
 
-genFunctions :: Session [String]
+genFunctions :: Session mm [String]
 genFunctions = do
     --expr <- Session.getFunction defPoint
     --let ast = emptyModule & Module.methods .~ [expr]
@@ -64,7 +64,7 @@ genFunctions = do
             ) ast
 
 
-genCode :: ([String] -> [String]) -> Module -> Session [String]
+genCode :: ([String] -> [String]) -> Module -> Session mm [String]
 genCode selector ast = do
     aliasInfo <- Env.runPass $(loc) $ Analysis.Alias.run ast
     hash      <- Env.runPass $(loc) $ Hash.run ast

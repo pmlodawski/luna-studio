@@ -31,35 +31,38 @@ import           Luna.Lib.Manager                            (LibManager)
 
 
 type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> IO ()
-type FragileMVar = MVar ()
+type FragileMVar    = MVar ()
 
-data Env = Env { _cached                   :: MapForest CallPoint CacheInfo
-               , _watchPoints              :: SetForest CallPoint
-               , _reloadMap                :: ReloadMap
-               , _allReady                 :: Bool
-               , _fragileOperation         :: FragileMVar
-               , _dependentNodes           :: Map CallPoint (Set Node.ID)
+data Env memoryManager = Env { _cached                   :: MapForest CallPoint CacheInfo
+                             , _watchPoints              :: SetForest CallPoint
+                             , _reloadMap                :: ReloadMap
+                             , _allReady                 :: Bool
+                             , _fragileOperation         :: FragileMVar
+                             , _dependentNodes           :: Map CallPoint (Set Node.ID)
 
-               , _defaultSerializationMode :: Mode
-               , _serializationModes       :: MapForest CallPoint (Set Mode)
-               , _memoryConfig             :: Memory.Config
+                             , _defaultSerializationMode :: Mode
+                             , _serializationModes       :: MapForest CallPoint (Set Mode)
+                             , _memoryConfig             :: Memory.Config
+                             , _memoryManager            :: memoryManager
 
-               , _libManager               :: LibManager
-               , _projectID                :: Maybe Project.ID
-               , _mainPtr                  :: Maybe DefPoint
-               , _resultCallBack           :: ResultCallBack
-               }
+                             , _libManager               :: LibManager
+                             , _projectID                :: Maybe Project.ID
+                             , _mainPtr                  :: Maybe DefPoint
+                             , _resultCallBack           :: ResultCallBack
+                             }
 
 
 makeLenses ''Env
 
 
-mk :: LibManager -> Maybe Project.ID -> Maybe DefPoint
-   -> ResultCallBack -> IO Env
-mk libManager' projectID' mainPtr' resultCallBack' = do
+mk :: memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoint
+   -> ResultCallBack -> IO (Env memoryManager)
+mk memoryManager'  libManager' projectID' mainPtr' resultCallBack' = do
     fo <- MVar.newMVar ()
-    return $ Env def def def False fo def  def def def  libManager' projectID' mainPtr' resultCallBack'
+    return $ Env def def def False fo def
+                 def def def
+                 memoryManager' libManager' projectID' mainPtr' resultCallBack'
 
 
-mkDef :: IO Env
-mkDef = mk def def def (const (const (void . return)))
+mkDef :: memoryManager -> IO (Env memoryManager)
+mkDef memoryManager' = mk memoryManager' def def def (const (const (void . return)))

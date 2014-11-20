@@ -36,22 +36,22 @@ import qualified Luna.Interpreter.Session.Hint.Eval         as HEval
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 
 
+
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
-
 
 
 type Import = String
 
 
-run :: Config -> Env -> [Import] -> Session a -> IO (Either Error a)
+run :: Config -> Env mm -> [Import] -> Session mm a -> IO (Either Error a)
 run config env imports session = do
     topDir <- liftIO $ expand' $ Config.topDir $ Config.ghcS config
     MGHC.runGhc (Just topDir) $
         evalStateT (runEitherT (initialize config imports >> session)) env
 
 
-initialize :: Config -> [Import] -> Session ()
+initialize :: Config -> [Import] -> Session mm ()
 initialize config imports = do
     globalPkgDb <- liftIO $ expand' $ Config.pkgDb $ Config.global config
     localPkgDb  <- liftIO $ expand' $ Config.pkgDb $ Config.local config
@@ -75,43 +75,43 @@ initialize config imports = do
     runDecls Helpers.hash
 
 
-setImports :: [Import] -> Session ()
+setImports :: [Import] -> Session mm ()
 setImports = lift2 . GHC.setContext . map (GHC.IIDecl . GHC.simpleImportDecl . GHC.mkModuleName)
 
 
-withImports :: [Import] -> Session a -> Session a
+withImports :: [Import] -> Session mm a -> Session mm a
 withImports imports action = sandboxContext $ do
     setImports imports
     action
 
 
-setFlags :: [GHC.ExtensionFlag] -> Session ()
+setFlags :: [GHC.ExtensionFlag] -> Session mm ()
 setFlags flags = lift2 $ do
     current <- GHC.getSessionDynFlags
     void $ GHC.setSessionDynFlags $ foldl GHC.xopt_set current flags
 
 
-unsetFlags :: [GHC.ExtensionFlag] -> Session ()
+unsetFlags :: [GHC.ExtensionFlag] -> Session mm ()
 unsetFlags flags = lift2 $ do
     current <- GHC.getSessionDynFlags
     void $ GHC.setSessionDynFlags $ foldl GHC.xopt_unset current flags
 
 
-withExtensionFlags :: [GHC.ExtensionFlag] -> [GHC.ExtensionFlag] -> Session a -> Session a
+withExtensionFlags :: [GHC.ExtensionFlag] -> [GHC.ExtensionFlag] -> Session mm a -> Session mm a
 withExtensionFlags enable disable action = sandboxDynFlags $ do
     setFlags enable
     unsetFlags disable
     action
 
 
-sandboxDynFlags :: Session a -> Session a
+sandboxDynFlags :: Session mm a -> Session mm a
 sandboxDynFlags action =
     hoistEither =<< lift (bracket (lift   GHC.getSessionDynFlags)
                                   (lift . GHC.setSessionDynFlags)
                                   (const $ runEitherT action))
 
 
-sandboxContext :: Session a -> Session a
+sandboxContext :: Session mm a -> Session mm a
 sandboxContext action =
     hoistEither =<< lift (bracket (lift   GHC.getContext)
                                   (lift . GHC.setContext)
@@ -122,7 +122,7 @@ location :: String
 location = "<target ghc-hs interactive>"
 
 
-interceptSourceErrors :: MGHC.Ghc a -> Session a
+interceptSourceErrors :: MGHC.Ghc a -> Session mm a
 interceptSourceErrors ghc = do
     let handler srcErr = do
             let errDat = Error.SourceError $(loc) srcErr
@@ -133,7 +133,7 @@ interceptSourceErrors ghc = do
     hoistEither r
 
 
-interceptErrors :: MGHC.Ghc a -> Session a
+interceptErrors :: MGHC.Ghc a -> Session mm a
 interceptErrors ghc = do
     sessionBackup <- lift2 GHC.getSession
     let handler :: Catch.SomeException -> MGHC.Ghc (Either Error a)
@@ -147,7 +147,7 @@ interceptErrors ghc = do
     hoistEither r
 
 
-atomically :: Session a -> Session a
+atomically :: Session mm a -> Session mm a
 atomically f = do
     sessionBackup <- lift2 GHC.getSession
     result <- lift $ runEitherT f
@@ -156,7 +156,7 @@ atomically f = do
     hoistEither result
 
 
-runStmt :: String -> Session ()
+runStmt :: String -> Session mm ()
 runStmt stmt = do
     logger trace stmt
     result <- interceptErrors $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
@@ -166,34 +166,34 @@ runStmt stmt = do
         GHC.RunBreak {}     -> left $ Error.OtherError  $(loc) "Run break"
 
 
-runDecls :: String -> Session ()
+runDecls :: String -> Session mm ()
 runDecls decls = do
     logger trace decls
     void $ interceptErrors $ GHC.runDeclsWithLocation location 1 decls
 
 
-runAssignment :: String -> String -> Session ()
+runAssignment :: String -> String -> Session mm ()
 runAssignment asigned asignee = do
     lift2 $ Bindings.remove asigned
     runStmt $ asigned ++ " <- return $ " ++ asignee
 
 
-runAssignment' :: String -> String -> Session ()
+runAssignment' :: String -> String -> Session mm ()
 runAssignment' asigned asignee = do
     lift2 $ Bindings.remove asigned
     runStmt $ asigned ++ " <- " ++ asignee
 
 
-interpret :: Typeable a => String -> Session a
+interpret :: Typeable a => String -> Session mm a
 interpret = interceptErrors . HEval.interpret
 
 
-setHardcodedExtensions :: Session ()
+setHardcodedExtensions :: Session mm ()
 setHardcodedExtensions =
     setFlags [ GHC.Opt_DataKinds ]
 
 
---reifySession :: (GHC.Session -> Env -> IO a) -> Session a
+--reifySession :: (GHC.Session -> Env -> IO a) -> Session mm a
 --reifySession f = lift2 . f' =<< get where
 --    --f' :: Env -> GHC.Ghc a
 --    f' env' = GHC.reifyGhc (f'' env')
@@ -201,4 +201,4 @@ setHardcodedExtensions =
 --    f'' = flip f
 
 
---reflectSession :: GHC.Session -> Env -> Session a -> IO a
+--reflectSession :: GHC.Session -> Env -> Session mm a -> IO a
