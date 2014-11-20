@@ -13,6 +13,7 @@ import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import           Data.Default               (Default)
 
+import Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import Luna.Interpreter.Session.Env.Env            (Env)
 import Luna.Interpreter.Session.Error              (Error)
 import Luna.Interpreter.Session.Memory.Data.Status (Status)
@@ -24,6 +25,6 @@ type Session   m a = EitherT Error (SessionST m) a
 
 
 class Default mm => MemoryManager mm where
-    clean  :: mm -> Status -> Session mm ()
-
-    cleanIfNeeded :: mm -> Session mm ()
+    clean         :: Status        -> Session mm ()
+    reportUse     :: CallPointPath -> Session mm ()
+    cleanIfNeeded :: Session mm ()

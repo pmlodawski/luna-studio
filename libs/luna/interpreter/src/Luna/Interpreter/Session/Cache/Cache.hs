@@ -156,9 +156,7 @@ getCacheInfo callPointPath = Env.cachedLookup callPointPath
 
 
 performCleaning :: MemoryManager mm => Session mm ()
-performCleaning = do
-    performGC
-    Memory.cleanIfNeeded =<< Env.getMemoryManager
+performCleaning = Memory.cleanIfNeeded
 
 
 performGC :: Session mm ()
