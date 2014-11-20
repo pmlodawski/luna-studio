@@ -8,13 +8,18 @@
 
 module Luna.Interpreter.Session.Env.State where
 
+import qualified Control.Concurrent.MVar    as MVar
 import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import           Data.Map                   (Map)
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 import           Data.Monoid                ((<>))
+import           Data.Set                   (Set)
+import qualified Data.Set                   as Set
 
+import           Control.Monad.Catch                         (bracket_)
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
 import           Flowbox.Data.MapForest                      (MapForest)
@@ -22,7 +27,6 @@ import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
-import           Generated.Proto.Data.Value                  (Value)
 import qualified Luna.AST.Common                             as AST
 import           Luna.AST.Control.Focus                      (Focus)
 import qualified Luna.AST.Control.Focus                      as Focus
@@ -32,7 +36,10 @@ import qualified Luna.AST.Expr                               as Expr
 import           Luna.AST.Module                             (Module)
 import           Luna.Graph.Flags                            (Flags)
 import           Luna.Graph.Graph                            (Graph)
+import qualified Luna.Graph.Node                             as Node
+import           Luna.Graph.PropertyMap                      (PropertyMap)
 import qualified Luna.Graph.PropertyMap                      as PropertyMap
+import           Luna.Graph.View.Default.DefaultsMap         (DefaultsMap)
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
@@ -43,6 +50,7 @@ import           Luna.Interpreter.Session.Env.Env            (Env)
 import qualified Luna.Interpreter.Session.Env.Env            as Env
 import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Error              as Error
+import qualified Luna.Interpreter.Session.Memory.Config      as Memory
 import           Luna.Interpreter.Session.TargetHS.Reload    (Reload, ReloadMap)
 import           Luna.Lib.Lib                                (Library)
 import qualified Luna.Lib.Lib                                as Library
@@ -50,7 +58,6 @@ import           Luna.Lib.Manager                            (LibManager)
 import qualified Luna.Lib.Manager                            as LibManager
 import qualified Luna.Pass.Analysis.Alias.Alias              as Alias
 import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
-
 
 
 type SessionST = StateT Env MGHC.Ghc
@@ -101,6 +108,37 @@ setAllReady flag = modify $ Env.allReady .~ flag
 getAllReady :: Session Bool
 getAllReady = gets $ view Env.allReady
 
+---- Env.fragileOperation -------------------------------------------------
+
+getFragile :: Session Env.FragileMVar
+getFragile = gets $ view Env.fragileOperation
+
+
+fragile :: Session a -> Session a
+fragile action = do
+    f <- getFragile
+    lift (bracket_ (liftIO $ MVar.takeMVar f) (liftIO $ MVar.putMVar f ()) $ runEitherT action) >>= hoistEither
+
+---- Env.dependentNodes ---------------------------------------------------
+
+getDependentNodes :: Session (Map CallPoint (Set Node.ID))
+getDependentNodes = gets $ view Env.dependentNodes
+
+
+getDependentNodesOf :: CallPoint -> Session (Set Node.ID)
+getDependentNodesOf callPoint =
+    Maybe.fromMaybe def . Map.lookup callPoint <$> getDependentNodes
+
+insertDependentNode :: CallPoint -> Node.ID -> Session ()
+insertDependentNode callPoint nodeID =
+    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+        alter = Just . Set.insert nodeID . Maybe.fromMaybe def
+
+
+deleteDependentNodes :: CallPoint -> Session ()
+deleteDependentNodes callPoint =
+    modify (Env.dependentNodes %~ Map.delete callPoint)
+
 ---- Env.defaultSerializationMode -----------------------------------------
 
 getDefaultSerializationMode :: Session Mode
@@ -113,29 +151,47 @@ setDefaultSerializationMode mode =
 
 ---- Env.serializationModes -----------------------------------------------
 
-getSerializationModes :: Session (MapForest CallPoint Mode)
-getSerializationModes = gets $ view Env.serializationModes
+getSerializationModesMap :: Session (MapForest CallPoint (Set Mode))
+getSerializationModesMap = gets $ view Env.serializationModes
 
 
-lookupSerializationMode :: CallPointPath -> Session (Maybe Mode)
-lookupSerializationMode callPointPath =
-    MapForest.lookup callPointPath <$> getSerializationModes
+lookupSerializationModes :: CallPointPath -> Session (Maybe (Set Mode))
+lookupSerializationModes callPointPath =
+    MapForest.lookup callPointPath <$> getSerializationModesMap
 
 
-getSerializationMode :: CallPointPath -> Session Mode
-getSerializationMode callPointPath = do
-    mode <- lookupSerializationMode callPointPath
-    Maybe.maybe getDefaultSerializationMode return mode
+getSerializationModes :: CallPointPath -> Session (Set Mode)
+getSerializationModes callPointPath = do
+    modes <- lookupSerializationModes callPointPath
+    Maybe.maybe (Set.singleton <$> getDefaultSerializationMode) return modes
 
 
-insertSerializationMode :: CallPointPath -> Mode -> Session ()
-insertSerializationMode callPointPath mode =
-    modify (Env.serializationModes %~ MapForest.insert callPointPath mode)
+insertSerializationModes :: CallPointPath -> Set Mode -> Session ()
+insertSerializationModes callPointPath modes =
+    modify (Env.serializationModes %~ MapForest.alter ins callPointPath) where
+        ins  Nothing = Just modes
+        ins (Just s) = Just $ Set.union s modes
 
 
-deleteSerializationMode :: CallPointPath -> Session ()
-deleteSerializationMode callPointPath =
+deleteSerializationModes :: CallPointPath -> Set Mode -> Session ()
+deleteSerializationModes callPointPath modes =
+    modify (Env.serializationModes %~ MapForest.alter del callPointPath) where
+        del  Nothing = Just modes
+        del (Just s) = Just $ Set.difference s modes
+
+
+clearSerializationModes :: CallPointPath -> Session ()
+clearSerializationModes callPointPath =
     modify (Env.serializationModes %~ MapForest.delete callPointPath)
+
+---- Env.memoryConfig -----------------------------------------------------
+
+getMemoryConfig :: Session Memory.Config
+getMemoryConfig = gets $ view Env.memoryConfig
+
+
+setMemoryConfig :: Memory.Config -> Session ()
+setMemoryConfig memoryConfig = modify $ Env.memoryConfig .~ memoryConfig
 
 ---- Env.libManager -------------------------------------------------------
 
@@ -196,12 +252,23 @@ getGraph defPoint = do
     return (graph, expr ^. Expr.id)
 
 
+getPropertyMap :: Library.ID -> Session PropertyMap
+getPropertyMap libraryID =
+    view Library.propertyMap <$> getLibrary libraryID
+
+
 getFlags :: CallPoint -> Session Flags
-getFlags callPiont = do
-    let libraryID = callPiont ^. CallPoint.libraryID
-        nodeID    = callPiont ^. CallPoint.nodeID
-    propertyMap <- view Library.propertyMap <$> getLibrary libraryID
-    return $ PropertyMap.getFlags nodeID propertyMap
+getFlags callPoint = do
+    let libraryID = callPoint ^. CallPoint.libraryID
+        nodeID    = callPoint ^. CallPoint.nodeID
+    PropertyMap.getFlags nodeID <$> getPropertyMap libraryID
+
+
+getDefaultsMap :: CallPoint -> Session DefaultsMap
+getDefaultsMap callPoint = do
+    let libraryID = callPoint ^. CallPoint.libraryID
+        nodeID    = callPoint ^. CallPoint.nodeID
+    PropertyMap.getDefaultsMap nodeID <$> getPropertyMap libraryID
 
 ---- Env.projectID --------------------------------------------------------
 
@@ -215,6 +282,10 @@ getProjectIDMaybe = gets (view Env.projectID)
 
 setProjectID :: Project.ID -> Session ()
 setProjectID projectID = modify (Env.projectID .~ Just projectID)
+
+
+unsetProjectID :: Session ()
+unsetProjectID = modify $ Env.projectID .~ Nothing
 
 ---- Env.mainPtr ----------------------------------------------------------
 
@@ -231,5 +302,5 @@ setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
 
 ---- Env.resultCallback ---------------------------------------------------
 
-getResultCallBack :: Session (Project.ID -> CallPointPath -> Maybe Value -> IO ())
+getResultCallBack :: Session Env.ResultCallBack
 getResultCallBack = gets $ view Env.resultCallBack

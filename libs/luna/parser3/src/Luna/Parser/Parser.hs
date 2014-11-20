@@ -80,10 +80,11 @@ import qualified Text.Parsers.Indent as Indent
 
 
 import qualified Luna.ASTNew.Expr as Expr
+import           Luna.ASTNew.Expr (LExpr, Expr(Expr))
 
 
 import qualified Luna.ASTNew.Decl   as Decl
-import           Luna.ASTNew.Decl   (Field(Field))
+import           Luna.ASTNew.Decl   (LDecl, Field(Field))
 import qualified Luna.ASTNew.Module as Module
 import           Luna.ASTNew.Module (Module(Module), LModule)
 import           Luna.ASTNew.Unit   (Unit(Unit))
@@ -92,7 +93,7 @@ import           Luna.ASTNew.Label  (Label(Label))
 import qualified Luna.ASTNew.Type   as Type
 import           Luna.ASTNew.Type   (Type)
 import qualified Luna.ASTNew.Pat    as Pat
-import           Luna.ASTNew.Pat    (Pat)
+import           Luna.ASTNew.Pat    (LPat, Pat)
 import qualified Luna.ASTNew.Lit    as Lit
 import           Luna.ASTNew.Arg    (Arg(Arg))
 import qualified Luna.ASTNew.Native as Native
@@ -101,6 +102,8 @@ import qualified Luna.ASTNew.Enum       as Enum
 import           Luna.ASTNew.Enum       (Enumerated, IDTag(IDTag))
 import qualified Luna.ASTNew.Unit       as Unit
 
+
+import qualified Data.TypeLevel.Set as TLSet
 
 infixl 4 <$!>
 
@@ -859,75 +862,93 @@ parseByteString input p = handleResult  $  parseFromByteString p (parserDelta pa
 
 data AliasAnalysis = AliasAnalysis
 
---testme ast st = runState (AST.monoTraverseM AliasAnalysis ast) st
-testme ast st = runState (aaunit ast) st
+traverseM        = AST.traverseM        AliasAnalysis
+defaultTraverseM = AST.defaultTraverseM AliasAnalysis
+
+testme ast st = runState (traverseM ast) st
 
 
---type AACtx m lab e a = (MonadState (State.State a) m, Enumerated lab, AST.DefaultTraversal AliasAnalysis m e e)
+--type AACtx m lab e a conf v = (Enumerated lab, TLSet.Lookup conf (Pragma.Pragma Pragma.AllowOrphans),
+--                              MonadState (State a e v conf) m, Show conf, Show v, Show e, Show a, Functor m) 
 
---instance AACtx m lab e a => AST.Traversal AliasAnalysis m (LModule lab e) (LModule lab e) where
---    traverseM base x@(Label lab (Module path name body)) = State.withNewScope id continue -- State.regVarName id (Name.fromName name) *> State.withNewScope id continue
---        where continue =  mapM registerHeaders body
---                       -- *> AST.defaultTraverseM base x
---                       *> traverseMod x
---              id       = Enum.id lab
+type AACtx m lab e s conf v = (Enumerated lab, MonadState (State s e v conf) m, Applicative m)
 
-            --instance AACtx m lab e a => AST.Traversal AliasAnalysis m (Decl.LDecl lab e) (Decl.LDecl lab e) where
-            --    traverseM base x@(Label lab ast) = case ast of
-            --        Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withNewScope id continue
-            --        _                                          -> continue
-            --        where continue = AST.defaultTraverseM base x
-            --              id       = Enum.id lab
+instance (AACtx m lab e s conf v, AST.Traversal AliasAnalysis m a a)
+    => AST.Traversal AliasAnalysis m (LModule lab a) (LModule lab a) where
+    traverseM _ = aatest
+
+instance (AACtx m lab e s conf v, AST.Traversal AliasAnalysis m a a)
+      => AST.Traversal AliasAnalysis m (LDecl lab a) (LDecl lab a) where
+    traverseM _ = traverseDecl
+
+instance AACtx m lab e s conf v
+      => AST.Traversal AliasAnalysis m (LPat lab) (LPat lab) where
+    traverseM _ = registerPat
+
+
 
 aaunit (Unit mod) = Unit <$> aatest mod
 
-aatest x@(Label lab (Module path name body)) = State.withNewScope id continue -- State.regVarName id (Name.fromName name) *> State.withNewScope id continue
-        where continue =  mapM registerHeaders body
-                       -- *> AST.defaultTraverseM base x
-                        *> traverseMod x
+aatest mod@(Label lab (Module path name body)) = State.withNewScope id continue
+        where continue =  registerDecls body
+                       *> defaultTraverseM mod
               id       = Enum.id lab
 
 
-registerHeaders (Label lab decl) = case decl of
-    Decl.Function _ name inputs _ _  -> State.regVarName id (view MultiName.base name)
-                                     <* State.withNewScope  id (mapM registerArg inputs)
-    Decl.Data     name _ cons _      -> State.regTypeName id (Name.fromName name) *> mapM_ registerCons cons
+registerDecls decls =  mapM registerHeaders  decls
+                    *> mapM registerDataDecl decls
+
+
+registerDataDecl (Label lab decl) = case decl of
+    Decl.Data     name _ cons defs   -> State.withNewScope id (registerDecls defs) *> pure ()
     _                                -> pure ()
     where id = Enum.id lab
 
-registerArg (Arg pat value) = registerPat pat
-
-registerPat (Label lab pat) = case pat of
-    Pat.App         src   args -> return ()
-    Pat.Typed       pat   cls  -> return ()
-    Pat.Grouped     pat        -> return ()
-    Pat.Lit         lit        -> return ()
-    Pat.Tuple       items      -> return ()
-    Pat.Con         name       -> return ()
-    Pat.Var         name       -> State.regVarName id (Name.fromName name)
-    Pat.Wildcard               -> return ()
-    Pat.RecWildcard            -> return ()
+registerHeaders (Label lab decl) = case decl of
+    Decl.Function _ name inputs _ _  -> State.regVarName id (view MultiName.base name)
+                                     <* State.withNewScope id (traverseM inputs)
+    Decl.Data     name _ cons _      -> State.regTypeName id (Name.fromName name) 
+                                     <* mapM_ registerCons cons
+    _                                -> pure ()
     where id = Enum.id lab
+
+registerPat p@(Label lab pat) = case pat of
+    Pat.Var         name       -> State.regVarName id (Name.fromName name) *> continue
+    _                          -> continue
+    where id = Enum.id lab
+          continue = defaultTraverseM p 
 
 registerCons (Label lab (Decl.Cons name fields)) = State.regVarName (Enum.id lab) (Name.fromName name)
 
-traverseMod (Label lab (Module path name body)) = (Label lab) . (Module path name) <$> mapM traverseDecl body
 
---traverseDecl :: Decl.LDecl t String -> f (Decl.LDecl a String)
-traverseDecl (Label lab decl) = fmap (Label lab) $ case decl of
+traverseDecl d@(Label lab decl) = case decl of
+    Decl.Function path name inputs output body -> State.withNewScope id $ defaultTraverseM d
+    _ -> continue
+    where id       = Enum.id lab
+          continue = defaultTraverseM d
+
+
+traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
     Decl.Function path name inputs output body -> do
-        subparse <- State.withScope id (parseString (unlines body) <$> (exprBlockParser2 <$> get))
-        case subparse of
-            Left e      -> fail $ show e
-            Right (e,_) -> return $ Decl.Function path name (map fixInputMockup inputs) output e
+        subAST  <- subparse (unlines body)
+        inputs' <- mapM subparseArg inputs
+        return $ Decl.Function path name inputs' output subAST
     Decl.Data        name params cons defs -> return $ Decl.Data        name params [] []
     Decl.Import      path rename targets   -> return $ Decl.Import      path rename targets
     Decl.TypeAlias   dst src               -> return $ Decl.TypeAlias   dst src
     Decl.TypeWrapper dst src               -> return $ Decl.TypeWrapper dst src
     where id = Enum.id lab
+          subparse expr = do 
+              result <- State.withScope id (parseString expr <$> (exprBlockParser2 <$> get))
+              case result of
+                  Left e      -> fail   $ show e
+                  Right (e,_) -> return $ e
+          -- FIXME [wd]: inny parser powinine parsowac argumenty poniewaz nie zawieraja wielu linii i nie moga zawierac wielu exproessionow!
+          --             zatem wyciaganie pierwszego elementu jest szybkim obejsciem
+          subparseArg (Arg pat val) = Arg pat . (fmap (!!0)) <$> mapM subparse val 
 
 
-fixInputMockup (Arg pat val) = Arg pat Nothing
+
 
 --registerClassHeaders (Label lab decl) = case decl of
 --    Decl.Data       cls cons _ _ -> register' id cls cons

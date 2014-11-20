@@ -20,6 +20,7 @@ module Flowbox.Prelude(
 
 import           Control.Applicative       as X
 import           Control.Lens              as X
+import           Data.String               as X (IsString(fromString))
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import           Control.Monad.Trans       (lift)
@@ -29,6 +30,7 @@ import           Data.Foldable             (forM_)
 import           Data.Monoid               as X (Monoid, mappend, mempty)
 import qualified Data.Traversable          as Traversable
 import           Data.String.Repr          as X (StrRepr, strRepr)
+import           Text.Show.Pretty          (ppShow)
 
 import           Prelude hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
@@ -50,6 +52,8 @@ putStr   = liftIO . Prelude.putStr
 putStrLn :: MonadIO m => String -> m ()
 putStrLn = liftIO . Prelude.putStrLn
 
+prettyPrint :: (MonadIO m, Show s) => s -> m ()
+prettyPrint = putStrLn . ppShow
 
 --instance (Typeable a) => Show (IO a) where
 --    show e = '(' : (show . typeOf) e ++ ")"

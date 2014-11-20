@@ -4,18 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
-
-module Flowbox.Batch.FileSystem.Item where
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 import Flowbox.Prelude
-import Flowbox.System.UniPath (UniPath)
 
 
-
-data Item = File      { _path :: UniPath, _size :: Int }
-          | Directory { _path :: UniPath, _size :: Int }
-          | Other     { _path :: UniPath, _size :: Int }
-          deriving (Show)
-
-makeLenses ''Item
+main = print "end"

@@ -1,3 +1,8 @@
+class Vector a:
+    Scalar: x :: a
+
+    def test: 5
+
 def (if then else) cond ok fail:
     case cond:
         True: ok
