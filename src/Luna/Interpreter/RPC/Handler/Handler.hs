@@ -21,42 +21,41 @@ import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
 import qualified Pipes.Safe                as Pipes
 
-import           Flowbox.Bus.Data.Flag                             (Flag)
-import qualified Flowbox.Bus.Data.Flag                             as Flag
-import           Flowbox.Bus.Data.Message                          (Message)
-import qualified Flowbox.Bus.Data.Message                          as Message
-import           Flowbox.Bus.Data.Prefix                           (Prefix)
-import qualified Flowbox.Bus.Data.Prefix                           as Prefix
-import           Flowbox.Bus.Data.Topic                            (status, update, (/+))
-import           Flowbox.Bus.Data.Topic                            (Topic)
-import qualified Flowbox.Bus.Data.Topic                            as Topic
-import           Flowbox.Bus.RPC.HandlerMap                        (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap                        as HandlerMap
-import           Flowbox.Bus.RPC.RPC                               (RPC)
-import qualified Flowbox.Bus.RPC.Server.Processor                  as Processor
-import           Flowbox.Config.Config                             (Config)
-import qualified Flowbox.Control.Concurrent                        as Concurrent
-import           Flowbox.Prelude                                   hiding (Context, error)
-import           Flowbox.ProjectManager.Context                    (Context)
-import qualified Flowbox.ProjectManager.RPC.Topic                  as Topic
+import           Flowbox.Bus.Data.Flag                       (Flag)
+import qualified Flowbox.Bus.Data.Flag                       as Flag
+import           Flowbox.Bus.Data.Message                    (Message)
+import qualified Flowbox.Bus.Data.Message                    as Message
+import           Flowbox.Bus.Data.Prefix                     (Prefix)
+import qualified Flowbox.Bus.Data.Prefix                     as Prefix
+import           Flowbox.Bus.Data.Topic                      (status, update, (/+))
+import           Flowbox.Bus.Data.Topic                      (Topic)
+import qualified Flowbox.Bus.Data.Topic                      as Topic
+import           Flowbox.Bus.RPC.HandlerMap                  (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap                  as HandlerMap
+import           Flowbox.Bus.RPC.RPC                         (RPC)
+import qualified Flowbox.Bus.RPC.Server.Processor            as Processor
+import           Flowbox.Config.Config                       (Config)
+import qualified Flowbox.Control.Concurrent                  as Concurrent
+import           Flowbox.Prelude                             hiding (Context, error)
+import           Flowbox.ProjectManager.Context              (Context)
+import qualified Flowbox.ProjectManager.RPC.Topic            as Topic
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers                      as Proto
-import qualified Luna.Interpreter.RPC.Handler.Abort                as Abort
-import qualified Luna.Interpreter.RPC.Handler.ASTWatch             as ASTWatch
-import qualified Luna.Interpreter.RPC.Handler.Interpreter          as Interpreter
-import qualified Luna.Interpreter.RPC.Handler.Preprocess           as Preprocess
-import qualified Luna.Interpreter.RPC.Handler.Sync                 as Sync
-import qualified Luna.Interpreter.RPC.Handler.Value                as Value
-import           Luna.Interpreter.RPC.QueueInfo                    (QueueInfo)
-import qualified Luna.Interpreter.RPC.QueueInfo                    as QueueInfo
-import qualified Luna.Interpreter.RPC.Topic                        as Topic
-import qualified Luna.Interpreter.Session.Env                      as Env
-import           Luna.Interpreter.Session.Error                    (Error)
-import           Luna.Interpreter.Session.Memory.Manager           (MemoryManager)
-import           Luna.Interpreter.Session.Memory.Manager.NoManager (NoManager (NoManager))
-import           Luna.Interpreter.Session.Session                  (SessionST)
-import qualified Luna.Interpreter.Session.Session                  as Session
-
+import qualified Flowbox.Text.ProtocolBuffers                as Proto
+import qualified Luna.Interpreter.RPC.Handler.Abort          as Abort
+import qualified Luna.Interpreter.RPC.Handler.ASTWatch       as ASTWatch
+import qualified Luna.Interpreter.RPC.Handler.Interpreter    as Interpreter
+import qualified Luna.Interpreter.RPC.Handler.Preprocess     as Preprocess
+import qualified Luna.Interpreter.RPC.Handler.Sync           as Sync
+import qualified Luna.Interpreter.RPC.Handler.Value          as Value
+import           Luna.Interpreter.RPC.QueueInfo              (QueueInfo)
+import qualified Luna.Interpreter.RPC.QueueInfo              as QueueInfo
+import qualified Luna.Interpreter.RPC.Topic                  as Topic
+import qualified Luna.Interpreter.Session.Env                as Env
+import           Luna.Interpreter.Session.Error              (Error)
+import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
+import           Luna.Interpreter.Session.Memory.Manager.LRU (LRU)
+import           Luna.Interpreter.Session.Session            (SessionST)
+import qualified Luna.Interpreter.Session.Session            as Session
 
 
 logger :: LoggerIO
@@ -67,7 +66,7 @@ topics :: Prefix -> [Topic]
 topics prefix = HandlerMap.topics $ handlerMap prefix undefined undefined
 
 
-type MM = NoManager
+type MM = LRU
 
 
 handlerMap :: Prefix -> QueueInfo -> Message.CorrelationID -> HandlerMap Context (SessionST MM)
