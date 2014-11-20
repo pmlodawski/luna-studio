@@ -32,10 +32,12 @@ import           Luna.Data.AliasInfo       (AliasInfo)
 import qualified Luna.Data.AliasInfo       as AliasInfo
 import           Luna.Data.Namespace       (Namespace)
 import qualified Luna.Data.Namespace       as Namespace
+import           Flowbox.System.Log.Logger as L
 
 
-logger :: Logger
-logger = getLogger "Luna.Data.Namespace.State"
+
+logger :: LoggerIO
+logger = getLoggerIO $(moduleName)
 
 
 --data VAState = VAState { _info    :: AliasInfo
@@ -129,11 +131,14 @@ regType :: NamespaceMonad a e v m => Type a -> m ()
 regType = undefined -- regElBy AST.Type Type.id
 
 
+regOrphan = modifyAliasInfo .: AliasInfo.regOrphan
+
+
 regElBy fCon fID el = regAST id (fCon el) *> regID id
     where id = el ^. fID
 
 
-regID :: NamespaceMonad a e v m => ID -> m ()
+--regID :: NamespaceMonad a e v m => ID -> m ()
 regID id = do
     mpid <- scopeID
     withJust mpid (\pid -> modifyAliasInfo $ AliasInfo.parent %~ IntMap.insert id pid)
@@ -143,14 +148,14 @@ regID id = do
 regAST id ast = modifyAliasInfo $ AliasInfo.regAST id ast
 
 
-regVarName :: NamespaceMonad a e v m => String -> ID -> m ()
+--regVarName :: NamespaceMonad a e v m => ID -> String -> m ()
 regVarName = regName AliasInfo.varnames
 
-regTypeName :: NamespaceMonad a e v m => String -> ID -> m ()
+regTypeName :: NamespaceMonad a e v m => ID -> String -> m ()
 regTypeName = regName AliasInfo.typenames
 
 
-regName lens name id = do
+regName lens id name = do
     a    <- getAliasInfo
     mcid <- scopeID
     case mcid of
@@ -161,14 +166,21 @@ regName lens name id = do
                   a2      = a & AliasInfo.scope.at cid ?~ varRel2
 
 
-regParentVarName :: NamespaceMonad a e v m => String -> ID -> m ()
+regParentVarName :: NamespaceMonad a e v m => ID -> String -> m ()
 regParentVarName = withParentID .: regVarName
-
 
 bindVar id name = do
     ns <- get
     case Namespace.bindVar id name ns of
         Left _    -> fail $ "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+        Right ns' -> put ns'
+
+tryBindVar id name = do
+    ns <- get
+    case Namespace.bindVar id name ns of
+        Left _    -> do let errMsg = "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+                        logger L.error errMsg
+                        regOrphan id $ AliasInfo.LookupError errMsg 
         Right ns' -> put ns'
 
 

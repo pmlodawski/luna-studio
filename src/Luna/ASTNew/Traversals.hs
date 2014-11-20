@@ -10,76 +10,77 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE GADTs #-}
 
-module Luna.ASTNew.Traversals where -- (module X) where
+module Luna.ASTNew.Traversals (module X) where
 
---import Luna.ASTNew.Traversals.Class   as X
---import Luna.ASTNew.Traversals.Default as X
+import Luna.ASTNew.Traversals.Class   as X
+import Luna.ASTNew.Traversals.Default as X
 
-import           Flowbox.Prelude        hiding (Traversal)
-import           Control.Applicative
+--import           Flowbox.Prelude        hiding (Traversal)
+--import           Control.Applicative
 
-import           Luna.ASTNew.Decl       (Decl, LDecl, LCons, ImpTgt)
-import qualified Luna.ASTNew.Decl       as Decl
-import           Luna.ASTNew.Module     (Module(Module))
-import qualified Luna.ASTNew.Module     as Module
-import           Luna.ASTNew.Unit       (Unit(Unit))
-import           Luna.ASTNew.Arg        (Arg(Arg))
-import qualified Luna.ASTNew.Type       as Type
-import           Luna.ASTNew.Type       (LType, Type)
-import           Luna.ASTNew.Expr       (Expr)
-import           Luna.ASTNew.Name       (TName, VName, CName, TVName)
-import           Luna.ASTNew.Name.Multi (MultiName)
-import           Luna.ASTNew.Native     (Native)
-import           Luna.ASTNew.Label      (Label(Label))
-import qualified Luna.ASTNew.Pat        as Pat
-import           Luna.ASTNew.Pat        (Pat, LPat)
-import           Luna.ASTNew.Lit        (LLit, Lit)
+--import           Luna.ASTNew.Decl       (Decl, LDecl, LCons, ImpTgt)
+--import qualified Luna.ASTNew.Decl       as Decl
+--import           Luna.ASTNew.Module     (Module(Module))
+--import qualified Luna.ASTNew.Module     as Module
+--import           Luna.ASTNew.Unit       (Unit(Unit))
+--import           Luna.ASTNew.Arg        (Arg(Arg))
+--import qualified Luna.ASTNew.Type       as Type
+--import           Luna.ASTNew.Type       (LType, Type)
+--import           Luna.ASTNew.Expr       (Expr)
+--import           Luna.ASTNew.Name       (TName, VName, CName, TVName)
+--import           Luna.ASTNew.Name.Multi (MultiName)
+--import           Luna.ASTNew.Native     (Native)
+--import           Luna.ASTNew.Label      (Label(Label))
+--import qualified Luna.ASTNew.Pat        as Pat
+--import           Luna.ASTNew.Pat        (Pat, LPat)
+--import           Luna.ASTNew.Lit        (LLit, Lit)
 
-data Conf m a e v a' e' v' 
-   = Conf { decl :: Decl a e -> m (Decl a' e' )
-          , expr :: Expr a v -> m (Expr a' v')
-          , lit  :: Lit      -> m Lit
-          , pat  :: Pat  a   -> m (Pat  a')
-          , tp   :: Type a   -> m (Type a')
-          } 
+--data Conf a e v a' e' v' m
+--   = Conf { decl :: Label a (Decl a e) -> m (Label a' (Decl a' e' ))
+--          , expr :: Label a (Expr a v) -> m (Label a' (Expr a' v'))
+--          , lit  :: Label a (Lit     ) -> m (Label a' Lit)
+--          , pat  :: Label a (Pat  a  ) -> m (Label a' (Pat  a'))
+--          , tp   :: Label a (Type a  ) -> m (Label a' (Type a'))
+--          } 
 
-class Traversal cfg a m b | cfg a -> b where
-    traverseM :: (Monad m, Applicative m) => cfg -> a -> m b
+--class Traversal cfg a m b | cfg a -> b where
+--    traverseM :: (Monad m, Applicative m) => cfg m -> a -> m b
 
-traverseDecl cfg = \case
-    Decl.Data        name params cons defs        -> Decl.Data        <$> traverseM cfg name <*> traverseM cfg params <*> traverseM cfg cons    <*> traverseM cfg defs
-    Decl.Function    path name inputs output body -> Decl.Function    <$> traverseM cfg path <*> traverseM cfg name   <*> traverseM cfg inputs  <*> traverseM cfg output <*> traverseM cfg body
-    Decl.Import      path rename targets          -> Decl.Import      <$> traverseM cfg path <*> traverseM cfg rename <*> traverseM cfg targets
-    Decl.TypeAlias   dst src                      -> Decl.TypeAlias   <$> traverseM cfg dst  <*> traverseM cfg src
-    Decl.TypeWrapper dst src                      -> Decl.TypeWrapper <$> traverseM cfg dst  <*> traverseM cfg src
-    Decl.Native      nat                          -> Decl.Native      <$> traverseM cfg nat
-
-
-traverseType cfg = \case
-    Type.Function inputs output -> Type.Function <$> traverseM cfg inputs <*> traverseM cfg output
-    Type.App      src args      -> Type.App      <$> traverseM cfg src    <*> traverseM cfg args
-    Type.Var      name          -> Type.Var      <$> traverseM cfg name
-    Type.Tuple    items         -> Type.Tuple    <$> traverseM cfg items
-    Type.List     item          -> Type.List     <$> traverseM cfg item
-    Type.Con      segments      -> Type.Con      <$> traverseM cfg segments
-    Type.Wildcard               -> pure Type.Wildcard
+--traverseDecl cfg (Label l d) = fmap (Label l) $ case d of
+--    Decl.Data        name params cons defs        -> Decl.Data        <$> traverseM cfg name <*> traverseM cfg params <*> traverseM cfg cons    <*> traverseM cfg defs
+--    Decl.Function    path name inputs output body -> Decl.Function    <$> traverseM cfg path <*> traverseM cfg name   <*> traverseM cfg inputs  <*> traverseM cfg output <*> traverseM cfg body
+--    Decl.Import      path rename targets          -> Decl.Import      <$> traverseM cfg path <*> traverseM cfg rename <*> traverseM cfg targets
+--    Decl.TypeAlias   dst src                      -> Decl.TypeAlias   <$> traverseM cfg dst  <*> traverseM cfg src
+--    Decl.TypeWrapper dst src                      -> Decl.TypeWrapper <$> traverseM cfg dst  <*> traverseM cfg src
+--    Decl.Native      nat                          -> Decl.Native      <$> traverseM cfg nat
 
 
-instance (a1~a2, e1~e2) => Traversal (Conf m a1 e1 v1 a' e' v') (Decl a2 e2) m (Decl a' e') where traverseM = decl
-instance (a1~a2, v1~v2) => Traversal (Conf m a1 e1 v1 a' e' v') (Expr a2 v2) m (Expr a' v') where traverseM = expr
-instance (a1~a2)        => Traversal (Conf m a1 e1 v1 a' e' v') (Pat  a2)   m (Pat  a')    where traverseM = pat
-instance (a1~a2)        => Traversal (Conf m a1 e1 v1 a' e' v') (Type a2)   m (Type a')    where traverseM = tp
-instance Traversal (Conf m a1 e1 v1 a' e' v') Lit        m Lit          where traverseM = lit
-instance Traversal (Conf m a1 e1 v1 a' e' v') TName      m TName        where traverseM _ = pure
-instance Traversal (Conf m a1 e1 v1 a' e' v') ImpTgt     m ImpTgt       where traverseM _ = pure
-instance Traversal (Conf m a1 e1 v1 a' e' v') (Arg x y)  m (Arg x y)    where traverseM _ = pure
-instance Traversal (Conf m a1 e1 v1 a' e' v') Decl.Name  m Decl.Name    where traverseM _ = pure
-instance Traversal (Conf m a1 e1 v1 a' e' v') (Maybe x)  m (Maybe x)    where traverseM _ = pure
-instance (Traversal (Conf m a1 e1 v1 a' e' v') x m x') => Traversal (Conf m a1 e1 v1 a' e' v') [x] m [x'] where traverseM cfg = mapM (traverseM cfg)
-instance Traversal (Conf m a1 e1 v1 a' e' v') (Native x) m (Native x)   where traverseM _ = pure
-instance Traversal (Conf m a1 e1 v1 a' e' v') x m x' => Traversal (Conf m a1 e1 v1 a' e' v') (Label l x) m (Label l x')  where traverseM cfg (Label l x) = (fmap (Label l) $ traverseM cfg x)
+--traverseType cfg = \case
+--    Type.Function inputs output -> Type.Function <$> traverseM cfg inputs <*> traverseM cfg output
+--    Type.App      src args      -> Type.App      <$> traverseM cfg src    <*> traverseM cfg args
+--    Type.Var      name          -> Type.Var      <$> traverseM cfg name
+--    Type.Tuple    items         -> Type.Tuple    <$> traverseM cfg items
+--    Type.List     item          -> Type.List     <$> traverseM cfg item
+--    Type.Con      segments      -> Type.Con      <$> traverseM cfg segments
+--    Type.Wildcard               -> pure Type.Wildcard
 
-defcfg = Conf { decl = traverseDecl defcfg }
+
+--instance (a1~a2, e1~e2) => Traversal (Conf a1 e1 v1 a' e' v') (Label a1 (Decl a2 e2)) m (Label a' (Decl a' e')) where traverseM = decl
+--instance (a1~a2, v1~v2) => Traversal (Conf a1 e1 v1 a' e' v') (Label a1 (Expr a2 v2)) m (Label a' (Expr a' v')) where traverseM = expr
+--instance (a1~a2)        => Traversal (Conf a1 e1 v1 a' e' v') (Label a1 (Pat  a2)   ) m (Label a' (Pat  a')   ) where traverseM = pat
+--instance (a1~a2)        => Traversal (Conf a1 e1 v1 a' e' v') (Label a1 (Type a2)   ) m (Label a' (Type a')   ) where traverseM = tp
+--instance Traversal  (Conf a1 e1 v1 a' e' v') (Label a1 Lit)        m (Label a' Lit)          where traverseM = lit
+--instance Traversal  (Conf a1 e1 v1 a' e' v') TName      m TName        where traverseM _ = pure
+--instance Traversal  (Conf a1 e1 v1 a' e' v') TVName     m TVName       where traverseM _ = pure
+--instance Traversal  (Conf a1 e1 v1 a' e' v') ImpTgt     m ImpTgt       where traverseM _ = pure
+--instance Traversal  (Conf a1 e1 v1 a' e' v') (Arg x y)  m (Arg x y)    where traverseM _ = pure
+--instance Traversal  (Conf a1 e1 v1 a' e' v') Decl.Name  m Decl.Name    where traverseM _ = pure
+--instance Traversal  (Conf a1 e1 v1 a' e' v') (Maybe x)  m (Maybe x)    where traverseM _ = pure
+--instance (Traversal (Conf a1 e1 v1 a' e' v') x m x') => Traversal (Conf a1 e1 v1 a' e' v') [x] m [x'] where traverseM cfg = mapM (traverseM cfg)
+--instance Traversal  (Conf a1 e1 v1 a' e' v') (Native x) m (Native x)   where traverseM _ = pure
+----instance Traversal (Conf m a1 e1 v1 a' e' v') x m x' => Traversal (Conf m a1 e1 v1 a' e' v') (Label l x) m (Label l x')  where traverseM cfg (Label l x) = (fmap (Label l) $ traverseM cfg x)
+
+--defcfg = Conf { decl = traverseDecl defcfg }
 
 --instance Default (Conf m a e v a' e' v') where
 --    def = defcfg

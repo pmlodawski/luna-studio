@@ -40,11 +40,11 @@ makeLenses (''Scope)
 
 
 data AliasInfo a e v = AliasInfo  { _scope   :: IDMap Scope
-                            , _alias   :: IDMap ID
-                            , _orphans :: IDMap Error
-                            , _parent  :: IDMap ID
-                            , _ast     :: IDMap (AST a e v)
-                            } deriving (Show, Eq, Generic, Read)
+                                  , _alias   :: IDMap ID
+                                  , _orphans :: IDMap Error
+                                  , _parent  :: IDMap ID
+                                  , _ast     :: IDMap (AST a e v)
+                                  } deriving (Show, Eq, Generic, Read)
 
 makeLenses (''AliasInfo)
 
@@ -57,6 +57,8 @@ regParent  id pid  = parent %~ Map.insert id pid
 regAST     id a    = ast    %~ Map.insert id a
 regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
     (vnmap, tnmap) = scopeLookup pid info
+
+regOrphan id err = orphans %~ Map.insert id err
 
 regTypeName pid id name info = setScope info pid $ Scope vnmap (tnmap & at name ?~ id) where
     (vnmap, tnmap) = scopeLookup pid info
