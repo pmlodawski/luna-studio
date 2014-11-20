@@ -38,7 +38,7 @@ toCallPointPath :: CallDataPath -> CallPointPath
 toCallPointPath = map (view CallData.callPoint)
 
 
-addLevel :: CallDataPath -> DefPoint -> Session [CallDataPath]
+addLevel :: CallDataPath -> DefPoint -> Session mm [CallDataPath]
 addLevel callDataPath defPoint = do
     (graph, defID) <- Env.getGraph defPoint
     let createDataPath = append callDataPath defPoint defID graph
@@ -50,7 +50,7 @@ append callDataPath defPoint parentDefID parentGraph n =
     callDataPath ++ [CallData.mk defPoint parentDefID parentGraph n]
 
 
-fromCallPointPath :: CallPointPath -> DefPoint -> Session CallDataPath
+fromCallPointPath :: CallPointPath -> DefPoint -> Session mm CallDataPath
 fromCallPointPath []            _              = return []
 fromCallPointPath (callPoint:t) parentDefPoint = do
     (graph, defID) <- Env.getGraph parentDefPoint

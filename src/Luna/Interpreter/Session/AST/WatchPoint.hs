@@ -5,6 +5,7 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.AST.WatchPoint where
 
 import Control.Monad.State
@@ -24,13 +25,13 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-add :: CallPointPath -> Session ()
+add :: CallPointPath -> Session mm ()
 add callPath = modify (Env.watchPoints %~ SetForest.insert callPath)
 
 
-delete :: CallPointPath -> Session ()
+delete :: CallPointPath -> Session mm ()
 delete callPath = modify (Env.watchPoints %~ SetForest.delete callPath)
 
 
-all :: Session (SetForest CallPoint)
+all :: Session mm (SetForest CallPoint)
 all = gets (view Env.watchPoints)

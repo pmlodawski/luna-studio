@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+
 module Luna.Interpreter.Session.Cache.Free where
 
 import qualified Data.Map as Map
@@ -17,14 +18,11 @@ import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 
 
 
-freeVarName :: VarName -> Session ()
+freeVarName :: VarName -> Session mm ()
 freeVarName varName = lift2 $
-    --Session.runAssignment varName "()"
     Bindings.remove varName
-    --Bindings.remove "_tmp"
-    --Bindings.remove "it"
 
 
-freeCacheInfo :: CacheInfo -> Session ()
+freeCacheInfo :: CacheInfo -> Session mm ()
 freeCacheInfo cacheInfo =
     mapM_ freeVarName $ Map.elems $ cacheInfo ^. CacheInfo.dependencies
