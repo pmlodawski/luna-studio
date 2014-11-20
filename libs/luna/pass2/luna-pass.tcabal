@@ -21,7 +21,12 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
                   TemplateHaskell,
-                  OverloadedStrings
+                  OverloadedStrings,
+                  TupleSections,
+                  ConstraintKinds,
+                  FlexibleInstances,
+                  MultiParamTypeClasses,
+                  FlexibleContexts
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
@@ -52,7 +57,8 @@ Executable luna-pass-test
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
                   NoImplicitPrelude
-                  OverloadedStrings
+                  OverloadedStrings,
+                  TupleSections
 
   Build-Depends:  base,
                   luna-pass,
@@ -65,7 +71,11 @@ Executable luna-pass-test
                   dlist,
                   MissingH,
                   transformers,
-                  timeit
+                  timeit,
+                  HList,
+                  containers,
+                  errors,
+                  fgl
 
 
 Test-Suite tests

@@ -40,11 +40,11 @@ makeLenses (''Scope)
 
 
 data AliasInfo a e v = AliasInfo  { _scope   :: IDMap Scope
-                            , _alias   :: IDMap ID
-                            , _orphans :: IDMap Error
-                            , _parent  :: IDMap ID
-                            , _ast     :: IDMap (AST a e v)
-                            } deriving (Show, Eq, Generic, Read)
+                                  , _alias   :: IDMap ID
+                                  , _orphans :: IDMap Error
+                                  , _parent  :: IDMap ID
+                                  , _ast     :: IDMap (AST a e v)
+                                  } deriving (Show, Eq, Generic, Read)
 
 makeLenses (''AliasInfo)
 

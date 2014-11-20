@@ -46,9 +46,9 @@ type PassError = String
 
 type PassT state result m = ESRT PassError Info state m result
 
-type Pass state result = (MonadIO m) => ESRT PassError Info state m result
+type Pass state result = (Functor m, MonadIO m) => ESRT PassError Info state m result
 
-type Result result = (Functor m, MonadIO m) => m (Either PassError result)
+type Result m result = (Functor m, MonadIO m) => m (Either PassError result)
 
 type ResultT m = EitherT PassError m
 
@@ -58,7 +58,7 @@ data NoState = NoState deriving Show
 
 
 runRaw :: ESRT err env state m result -> env -> state -> m (Either err result, state)
-runRaw pass env state = flip runReaderT env $ flip runStateT state $ (runEitherT) pass
+runRaw pass env state = flip runReaderT env $ flip runStateT state $ runEitherT pass
 
 
 run :: Monad m => env -> state -> ESRT err env state m result -> m (Either err (result, state))
@@ -82,7 +82,86 @@ runHoist_ env state pass = fst <$> runHoist env state pass
 fail :: Monad m => e -> EitherT e m a
 fail = left
 
+--run ::  PassMonad s m => Info -> state -> Transformer state b -> Result m (b, state)
+--run inf s f = do
+--    logPassExec inf
+--    runLogic inf s f
+
+
+--run_ :: PassMonad outstate m => Info -> state -> Transformer state b -> Result m b
+--run_ inf s f = do
+--    (result, _) <- run inf s f
+--    return result
+
+
+--runTRaw :: Info -> s -> TransformerT s a m b -> m (Either a b, s, LogList)
+--runTRaw inf s f = runRWST (runEitherT f) inf s
+
+
+--runT :: PassMonad ns m => Info -> s -> TransformerT s PassError (ResultT m) b  -> Result m (b,s)
+--runT inf s f = do
+--    runLogicT inf s f
+
+
+--runT_ :: PassMonad ns m => Info -> s -> TransformerT s PassError (ResultT m) b  -> Result m b
+--runT_ inf s f = do
+--    logPassExec inf
+--    (result, _) <- runT inf s f
+--    return result
+
+
+--run'_ :: PassMonad outstate m => Info -> state -> Transformer state b -> Result m state
+--run'_ inf s f = do
+--    (_, state') <- runLogic inf s f
+--    return state'
+
+
+--fail :: PassMonad s m => String -> ResultT m a
+--fail msg = do
+--    inf <- ask
+--    logger error $ "Pass error [" ++ name inf ++ "]: " ++ msg
+--    left msg
+
+
+--runLogicT :: PassMonad ns m => Info -> s -> TransformerT s PassError (ResultT m) b  -> Result m (b,s)
+--runLogicT inf s f = do
+--    out <- runRWST (runEitherT f) inf s
+--    hoistLogic out
+
+
+--runLogic :: PassMonad s m => Info -> state -> Transformer state b -> Result m (b, state)
+--runLogic inf s f = hoistLogic $ runRWS (runEitherT f) inf s
+
+
+--hoistLogic :: MonadWriter LogList m => (Either PassError r, s, LogList) -> Result m (r, s)
+--hoistLogic (result', state', logs') = do
+--    let out = case result' of
+--                  Left  e  -> Left e
+--                  Right r  -> Right (r, state')
+--    Logger.append logs'
+--    hoistEither out
+
+
+--logPassExec :: LogWriter m => Info -> m ()
+--logPassExec inf = logger debug $ "Running pass: " ++ name inf
 
 
 
---data Pass
+            --newtype Data = Data String deriving (Show, Eq, Ord)
+
+            --passData = Data . filter (/=' ') . fmap toLower
+
+            --instance IsString Data where
+            --    fromString = passData
+
+
+            --data Pass a = Pass { _inputs  :: [Data]
+            --                   , _outputs :: [Data]
+            --                   , _func    :: a
+            --                   }
+
+            --instance Show (Pass a) where
+            --    show (Pass i o _) = "Pass " ++ show i ++ " " ++ show o
+
+            --makeLenses ''Pass
+

@@ -138,7 +138,7 @@ regElBy fCon fID el = regAST id (fCon el) *> regID id
     where id = el ^. fID
 
 
-regID :: NamespaceMonad a e v m => ID -> m ()
+--regID :: NamespaceMonad a e v m => ID -> m ()
 regID id = do
     mpid <- scopeID
     withJust mpid (\pid -> modifyAliasInfo $ AliasInfo.parent %~ IntMap.insert id pid)
@@ -148,14 +148,14 @@ regID id = do
 regAST id ast = modifyAliasInfo $ AliasInfo.regAST id ast
 
 
-regVarName :: NamespaceMonad a e v m => String -> ID -> m ()
+--regVarName :: NamespaceMonad a e v m => ID -> String -> m ()
 regVarName = regName AliasInfo.varnames
 
-regTypeName :: NamespaceMonad a e v m => String -> ID -> m ()
+regTypeName :: NamespaceMonad a e v m => ID -> String -> m ()
 regTypeName = regName AliasInfo.typenames
 
 
-regName lens name id = do
+regName lens id name = do
     a    <- getAliasInfo
     mcid <- scopeID
     case mcid of
@@ -166,7 +166,7 @@ regName lens name id = do
                   a2      = a & AliasInfo.scope.at cid ?~ varRel2
 
 
-regParentVarName :: NamespaceMonad a e v m => String -> ID -> m ()
+regParentVarName :: NamespaceMonad a e v m => ID -> String -> m ()
 regParentVarName = withParentID .: regVarName
 
 bindVar id name = do
