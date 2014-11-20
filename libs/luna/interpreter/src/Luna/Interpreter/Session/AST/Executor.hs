@@ -51,7 +51,7 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-processMain :: Session ()
+processMain :: Session mm ()
 processMain = do
     TargetHS.reload
     mainPtr  <- Env.getMainPtr
@@ -62,13 +62,13 @@ processMain = do
     Debug.dumpBindings
 
 
-processNodeIfNeeded :: CallDataPath -> Session ()
+processNodeIfNeeded :: CallDataPath -> Session mm ()
 processNodeIfNeeded callDataPath =
     whenM (Cache.isDirty $ CallDataPath.toCallPointPath callDataPath)
           (processNode callDataPath)
 
 
-processNode :: CallDataPath -> Session ()
+processNode :: CallDataPath -> Session mm ()
 processNode callDataPath = do
     arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
@@ -88,7 +88,7 @@ processNode callDataPath = do
         else mapM_ processNodeIfNeeded children
 
 
-executeOutputs :: CallDataPath -> [VarName] -> Session ()
+executeOutputs :: CallDataPath -> [VarName] -> Session mm ()
 executeOutputs callDataPath argsVarNames = do
     let argsCount  = length $ Traverse.inDataConnections callDataPath
         stringExpr = if argsCount == 1 then StringExpr.Id else StringExpr.Tuple
@@ -96,7 +96,7 @@ executeOutputs callDataPath argsVarNames = do
         execute (init callDataPath) stringExpr  argsVarNames
 
 
-executeNode :: CallDataPath -> [VarName] -> Session ()
+executeNode :: CallDataPath -> [VarName] -> Session mm ()
 executeNode callDataPath argsVarNames = do
     let node       = last callDataPath ^. CallData.node
 
@@ -108,12 +108,12 @@ executeNode callDataPath argsVarNames = do
     execute callDataPath stringExpr argsVarNames
 
 
-executeAssignment :: CallDataPath -> [VarName] -> Session ()
+executeAssignment :: CallDataPath -> [VarName] -> Session mm ()
 executeAssignment callDataPath [argsVarName] =
     execute callDataPath StringExpr.Id [argsVarName] -- TODO [PM] : handle Luna's pattern matching
 
 
-execute :: CallDataPath -> StringExpr -> [VarName] -> Session ()
+execute :: CallDataPath -> StringExpr -> [VarName] -> Session mm ()
 execute callDataPath stringExpr argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
@@ -176,7 +176,7 @@ varType (StringExpr.Expr   name@(h:_))
     | otherwise                                          = Var name
 
 
-evalFunction :: StringExpr -> CallDataPath -> [VarName] -> Session (Maybe Hash, VarName)
+evalFunction :: StringExpr -> CallDataPath -> [VarName] -> Session mm (Maybe Hash, VarName)
 evalFunction stringExpr callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"

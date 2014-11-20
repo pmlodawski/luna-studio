@@ -5,6 +5,7 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.Hash where
 
 import           Flowbox.Prelude
@@ -19,5 +20,5 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-compute :: String -> Session (Maybe Hash)
+compute :: String -> Session mm (Maybe Hash)
 compute varName = Session.interpret $ "hash " ++ varName

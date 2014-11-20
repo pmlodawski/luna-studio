@@ -39,6 +39,7 @@ import           Luna.Interpreter.Session.Data.CallPoint                       (
 import           Luna.Interpreter.Session.Data.DefPoint                        (DefPoint (DefPoint))
 import qualified Luna.Interpreter.Session.Env                                  as Env
 import qualified Luna.Interpreter.Session.Error                                as Error
+import           Luna.Interpreter.Session.Memory.Manager.NoManager             (NoManager (NoManager))
 import qualified Luna.Interpreter.Session.Session                              as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings                    as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.Reload                      as Reload
@@ -148,7 +149,7 @@ main1 = do
     (libManager , libID) <- readSource code
     (libManager2, _    ) <- readSource code2
 
-    env <- Env.mk libManager (Just $ Project.ID 0)
+    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
                 (curry $ curry print)
 
@@ -219,7 +220,7 @@ main3 = do
 
     (libManager , libID) <- readSource code
 
-    env <- Env.mk libManager (Just $ Project.ID 0)
+    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
                 (curry $ curry print)
 

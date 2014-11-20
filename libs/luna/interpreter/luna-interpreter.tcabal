@@ -24,6 +24,7 @@ Library
     Build-Depends:  base,
                     bytestring,
                     containers,
+                    data-default,
                     data-hash,
                     either,
                     exceptions,

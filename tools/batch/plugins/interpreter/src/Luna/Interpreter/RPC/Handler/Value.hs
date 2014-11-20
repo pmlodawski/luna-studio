@@ -42,7 +42,7 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-get :: Value.Request -> RPC Context SessionST Value.Update
+get :: Value.Request -> RPC Context (SessionST mm) Value.Update
 get (Value.Request tcallPointPath) = do
     (projectID, callPointPath) <- decodeE tcallPointPath
     Sync.testProjectID projectID
