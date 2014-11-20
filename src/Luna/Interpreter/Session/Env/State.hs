@@ -63,17 +63,15 @@ import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
 ---- Env.cached -----------------------------------------------------------
 
 getCached :: Session mm (MapForest CallPoint CacheInfo)
-getCached = gets (view Env.cached)
+getCached = gets $ view Env.cached
 
 
 cachedInsert :: CallPointPath -> CacheInfo -> Session mm ()
-cachedInsert callPointPath cacheInfo =
-    modify (Env.cached %~ MapForest.insert callPointPath cacheInfo)
+cachedInsert = (modify . over Env.cached) .: MapForest.insert
 
 
 cachedDelete :: CallPointPath -> Session mm ()
-cachedDelete callPointPath =
-    modify $ Env.cached %~ MapForest.delete callPointPath
+cachedDelete = modify . over Env.cached . MapForest.delete
 
 
 cachedLookup :: CallPointPath -> Session mm (Maybe CacheInfo)
@@ -97,7 +95,7 @@ cleanReloads = modify (Env.reloadMap .~ mempty)
 ---- Env.allReady ---------------------------------------------------------
 
 setAllReady :: Bool -> Session mm ()
-setAllReady flag = modify $ Env.allReady .~ flag
+setAllReady = modify . set Env.allReady
 
 
 getAllReady :: Session mm Bool
@@ -131,8 +129,7 @@ insertDependentNode callPoint nodeID =
 
 
 deleteDependentNodes :: CallPoint -> Session mm ()
-deleteDependentNodes callPoint =
-    modify (Env.dependentNodes %~ Map.delete callPoint)
+deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
 
 ---- Env.defaultSerializationMode -----------------------------------------
 
@@ -141,8 +138,7 @@ getDefaultSerializationMode = gets $ view Env.defaultSerializationMode
 
 
 setDefaultSerializationMode :: Mode -> Session mm ()
-setDefaultSerializationMode mode =
-    modify (Env.defaultSerializationMode .~ mode)
+setDefaultSerializationMode = modify . set Env.defaultSerializationMode
 
 ---- Env.serializationModes -----------------------------------------------
 
@@ -176,8 +172,7 @@ deleteSerializationModes callPointPath modes =
 
 
 clearSerializationModes :: CallPointPath -> Session mm ()
-clearSerializationModes callPointPath =
-    modify (Env.serializationModes %~ MapForest.delete callPointPath)
+clearSerializationModes = modify . over Env.serializationModes . MapForest.delete
 
 ---- Env.memoryConfig -----------------------------------------------------
 
@@ -186,17 +181,21 @@ getMemoryConfig = gets $ view Env.memoryConfig
 
 
 setMemoryConfig :: Memory.Config -> Session mm ()
-setMemoryConfig memoryConfig = modify $ Env.memoryConfig .~ memoryConfig
+setMemoryConfig = modify . set Env.memoryConfig
 
 ---- Env.memoryManager ----------------------------------------------------
 
 getMemoryManager :: Session mm mm
 getMemoryManager = gets $ view Env.memoryManager
 
+
+updateMemoryManager :: (mm -> mm) -> Session mm ()
+updateMemoryManager = modify . over Env.memoryManager
+
 ---- Env.libManager -------------------------------------------------------
 
 setLibManager :: LibManager -> Session mm ()
-setLibManager libManager = modify $ Env.libManager .~ libManager
+setLibManager = modify . set Env.libManager
 
 
 getLibManager :: Session mm LibManager
@@ -281,7 +280,7 @@ getProjectIDMaybe = gets (view Env.projectID)
 
 
 setProjectID :: Project.ID -> Session mm ()
-setProjectID projectID = modify (Env.projectID .~ Just projectID)
+setProjectID = modify . set Env.projectID . Just
 
 
 unsetProjectID :: Session mm ()
