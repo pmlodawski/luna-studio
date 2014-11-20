@@ -20,6 +20,7 @@ module Flowbox.Prelude(
 
 import           Control.Applicative       as X
 import           Control.Lens              as X
+import           Data.String               as X (IsString(fromString))
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import           Control.Monad.Trans       (lift)

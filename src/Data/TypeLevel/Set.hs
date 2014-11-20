@@ -22,6 +22,7 @@ import Data.TypeLevel.Bool
 import Prelude hiding (lookup)
 
 type Empty = ()
+empty = ()
 
 type family Insert t set where
   Insert t ()    = (t,())
