@@ -4,9 +4,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE ViewPatterns        #-}
+{-# OPTIONS_GHC -fcontext-stack=200 #-}
 
 module Main where
 
@@ -31,6 +33,7 @@ import Flowbox.Geom2D.Accelerate.CubicBezier
 import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection
 
 import Flowbox.Math.Matrix as M
+import Flowbox.Math.BitonicSorterGenerator
 import Flowbox.Graphics.Utils
 
 import qualified Data.Array.Accelerate              as A
@@ -357,7 +360,13 @@ medianTest :: IO ()
 medianTest = do
     forAllChannels "lena.bmp" median
 
+realMedianTest :: IO ()
+realMedianTest = forAllChannels "lena.png" $ \matrix ->
+    let stencil = $(generateGetNthFromTuple 24 49) . $(generateBitonicNetworkTuple 7 7)
+    in  M.stencil stencil A.Wrap matrix
+
 main :: IO ()
 main = do
-  print "Szatan"
-    --ditherTest
+    print "Szatan"
+    realMedianTest
+    print "szatan"
