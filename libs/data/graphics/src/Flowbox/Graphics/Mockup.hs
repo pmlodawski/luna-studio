@@ -18,6 +18,7 @@
 module Flowbox.Graphics.Mockup (
       module Flowbox.Graphics.Mockup
     , module Math.Metric
+    , module Math.Space.Space
     , A.Boundary(..)
     , readFromEXR
 ) where
