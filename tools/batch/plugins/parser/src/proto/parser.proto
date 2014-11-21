@@ -19,8 +19,8 @@ message Parse {
             required string str = 1;
         }
         message Status {
-            required generated.proto.expr.Expr expr = 1;
-            required string str = 2;
+            required Request request = 1;
+            required generated.proto.expr.Expr expr = 2;
         }   
     }
     message Pat {
@@ -28,8 +28,8 @@ message Parse {
             required string str = 1;
         }
         message Status {
-            required generated.proto.pat.Pat pat = 1;
-            required string str = 2;
+            required Request request = 1;
+            required generated.proto.pat.Pat pat = 2;
         }   
     }
     message Type {
@@ -37,8 +37,8 @@ message Parse {
             required string str = 1;
         }
         message Status {
-            required generated.proto.type.Type type = 1;
-            required string str = 2;
+            required Request request = 1;
+            required generated.proto.type.Type type = 2;
         }   
     }
     message NodeExpr {
@@ -46,9 +46,19 @@ message Parse {
             required string str = 1;
         }
         message Status {
-            required generated.proto.expr.Expr expr = 1;
-            required string str = 2;
+            required Request request = 1;
+            required generated.proto.expr.Expr expr = 2;
         }   
+    }
+}
+
+message MkText {
+    message Request {
+        required generated.proto.expr.Expr expr = 1;
+    }
+    message Status {
+        required Request request = 1;
+        required string  code    = 2;
     }
 }
 
