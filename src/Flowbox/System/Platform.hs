@@ -48,7 +48,4 @@ dependent lin win other = case os of
 
 addExeOnWindows :: UniPath -> UniPath
 addExeOnWindows path = dependent path windowsPath path where
-    exe = ".exe"
-    windowsPath = if UniPath.extension path == exe
-        then path
-        else UniPath.setExtension exe path
+    windowsPath = UniPath.replaceExtension ".exe" path
