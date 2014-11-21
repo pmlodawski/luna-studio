@@ -51,10 +51,10 @@ delete key img = Image (Map.delete key $ img ^. views)
 lookup :: View.Name -> Image -> Maybe View.View
 lookup key img = Map.lookup key (img ^. views)
 
-update :: (View.View -> Maybe View.View) -> View.Name -> Image -> Either Error Image
+update :: (View.View -> Maybe View.View) -> View.Name -> Image -> Image
 update f key img = case lookup key img >>= f of
-    Just newval -> pure $ insert newval img
-    Nothing     -> pure $ delete key img
+    Just newval -> insert newval img
+    Nothing     -> delete key img
 
 map :: (View.View -> View.View) -> Image -> Image --Either Error (Image v)
 map lambda (Image vs dv) = Image (Map.map lambda vs) dv

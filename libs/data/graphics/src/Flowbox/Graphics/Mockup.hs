@@ -813,7 +813,7 @@ multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap vari
           multisample channel                     = channel
 
 -- FIXME[MM]: will remove the whole view if removing fails - it should somehow propagate the error
-removeChannelLuna :: String -> String -> Image -> Image.Result Image
+removeChannelLuna :: String -> String -> Image -> Image
 removeChannelLuna viewName channelName = Image.update f viewName
     where f view = case View.remove channelName view of
                   Left _ -> Nothing
@@ -823,3 +823,7 @@ getChannelLuna :: String -> String -> Image -> Image.Result (Maybe Channel)
 getChannelLuna viewName channelName img = case Image.lookup viewName img of
     Just view -> View.get view channelName
     _         -> Left $ Image.ViewLookupError viewName
+
+insertChannelLuna :: String -> Channel -> Image -> Image
+insertChannelLuna viewName chan img = Image.update f viewName
+    where f = View.append chan
