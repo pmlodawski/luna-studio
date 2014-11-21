@@ -175,7 +175,7 @@ tryBindVar id name = do
     ns <- get
     case Namespace.bindVar id name ns of
         Left _    -> do let errMsg = "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
-                        logger L.error errMsg
+                        logger warning errMsg
                         regOrphan id $ AliasInfo.LookupError errMsg 
         Right ns' -> put ns'
 
