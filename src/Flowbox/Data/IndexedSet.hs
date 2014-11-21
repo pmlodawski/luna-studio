@@ -63,3 +63,9 @@ toList (IndexedSet (set, _)) = map snd
                              $ sortBy (comparing fst)
                              $ map unEntry
                              $ Set.toList set
+
+
+fromList :: Ord a => [a] -> IndexedSet a
+fromList list = iset where
+    set = Set.fromList $ map Entry $ zip [0..] list
+    iset = IndexedSet (set, Set.size set)
