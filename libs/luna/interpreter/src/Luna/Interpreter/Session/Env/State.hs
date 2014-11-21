@@ -192,6 +192,10 @@ getMemoryManager = gets $ view Env.memoryManager
 updateMemoryManager :: (mm -> mm) -> Session mm ()
 updateMemoryManager = modify . over Env.memoryManager
 
+
+setMemoryManager :: mm -> Session mm ()
+setMemoryManager = modify . set Env.memoryManager
+
 ---- Env.libManager -------------------------------------------------------
 
 setLibManager :: LibManager -> Session mm ()
