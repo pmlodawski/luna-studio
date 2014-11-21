@@ -392,6 +392,12 @@ def Either.unwrap:
 def View.channel name:
     ```liftF2 View.get #{self} #{name}```
 
+def View.append channel:
+    ```liftF2 View.append #{channel} #{self}```
+
+def View.remove name:
+    ```liftF2 View.remove #{name} #{self}```
+
 def Image.removeChannel viewName channelName:
     ```liftF3 removeChannelLuna #{viewName} #{channelName} #{self}```
 
@@ -400,6 +406,12 @@ def Image.getChannel viewName channelName:
 
 def Image.insertChannel viewName channel:
     ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
+
+def Image.view name:
+    ```liftF2 Image.lookup #{name} #{self}```
+
+def Image.deleteView name:
+    ```liftF2 Image.delete #{name} #{self}```
 
 def readEXR filePath:
     ```autoLift1 readFromEXR #{filePath}```
