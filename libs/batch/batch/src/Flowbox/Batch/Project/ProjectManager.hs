@@ -7,26 +7,20 @@
 
 module Flowbox.Batch.Project.ProjectManager (
     module Flowbox.Data.Graph,
-    ProjectManager,
-    empty,
-    openProject,
+    module Flowbox.Batch.Project.ProjectManager,
 ) where
 
 import           Flowbox.Batch.Project.Project               (Project)
 import qualified Flowbox.Batch.Project.Project               as Project
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
-import           Flowbox.Data.Graph                          hiding (Edge, Graph, empty)
-import qualified Flowbox.Data.Graph                          as DG
-import           Flowbox.Prelude                             hiding (empty)
+import           Flowbox.Data.Graph                          hiding (Edge, delNode, insNewNode, lab, labNodes, nodes, updateNode)
+import qualified Flowbox.Data.Graph                          as Graph
+import           Flowbox.Prelude
 import           Flowbox.System.UniPath                      (UniPath)
 
 
 
-type ProjectManager = DG.Graph Project ()
-
-
-empty :: ProjectManager
-empty = DG.empty
+type ProjectManager = Graph Project ()
 
 
 openProject :: ProjectManager -> UniPath -> IO (ProjectManager, (Project.ID, Project))
@@ -36,3 +30,25 @@ openProject projectManager ppath = do
     return (newProjectManager, (projectID, project))
 
 
+lab :: ProjectManager -> Project.ID -> Maybe Project
+lab pm = Graph.lab pm . Project.toInt
+
+
+labNodes :: ProjectManager -> [(Project.ID, Project)]
+labNodes = over (mapped . _1) Project.ID . Graph.labNodes
+
+
+nodes :: ProjectManager -> [Project.ID]
+nodes = map Project.ID . Graph.nodes
+
+
+updateNode :: (Project.ID, Project) -> ProjectManager -> ProjectManager
+updateNode project = Graph.updateNode (_1 %~ Project.toInt $ project)
+
+
+insNewNode :: Project -> ProjectManager -> (ProjectManager, Project.ID)
+insNewNode project pm = _2 %~ Project.ID $ Graph.insNewNode project pm
+
+
+delNode :: Project.ID -> ProjectManager -> ProjectManager
+delNode projectID = Graph.delNode $ Project.toInt projectID

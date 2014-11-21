@@ -15,7 +15,7 @@ import           Control.Monad.State (MonadState, get, modify, put)
 import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Prelude           hiding (id)
-import           Flowbox.System.Log.Logger
+import           Flowbox.System.Log.Logger as L
 import           Luna.AST.AST              (AST, ID)
 import qualified Luna.AST.AST              as AST
 import           Luna.AST.Expr             (Expr)
@@ -34,8 +34,8 @@ import           Luna.Data.Namespace       (Namespace)
 import qualified Luna.Data.Namespace       as Namespace
 
 
-logger :: Logger
-logger = getLogger "Luna.Data.Namespace.State"
+logger :: LoggerIO
+logger = getLoggerIO $(moduleName)
 
 
 --data VAState = VAState { _info    :: AliasInfo
@@ -141,6 +141,9 @@ regID id = do
 regAST id ast = modifyAliasInfo $ AliasInfo.regAST id ast
 
 
+regOrphan = modifyAliasInfo .: AliasInfo.regOrphan
+
+
 regVarName :: NamespaceMonad m => String -> ID -> m ()
 regVarName = regName AliasInfo.varnames
 
@@ -162,11 +165,18 @@ regName lens name id = do
 regParentVarName :: NamespaceMonad m => String -> ID -> m ()
 regParentVarName = withParentID .: regVarName
 
-
 bindVar id name = do
     ns <- get
     case Namespace.bindVar id name ns of
         Left _    -> fail $ "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+        Right ns' -> put ns'
+
+tryBindVar id name = do
+    ns <- get
+    case Namespace.bindVar id name ns of
+        Left _    -> do let errMsg = "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+                        logger warning errMsg
+                        regOrphan id $ AliasInfo.LookupError errMsg 
         Right ns' -> put ns'
 
 

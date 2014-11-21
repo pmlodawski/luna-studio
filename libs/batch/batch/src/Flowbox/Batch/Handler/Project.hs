@@ -29,7 +29,7 @@ projectByID :: Project.ID -> Batch Project
 projectByID = Batch.getProject
 
 
-createProject :: String -> UniPath -> Attributes -> Batch (Project.ID, Project)
+createProject :: Maybe String -> UniPath -> Attributes -> Batch (Project.ID, Project)
 createProject name path attributes = Batch.projectManagerOp (\projectManager -> do
     expandedPath <- UniPath.expand path
     let project            = Project.make name expandedPath attributes
@@ -55,11 +55,7 @@ closeProject projectID = Batch.projectManagerOp (\projectManager ->
     return (ProjectManager.delNode projectID projectManager, ()))
 
 
-storeProject :: Project.ID -> Batch ()
-storeProject projectID = do
+storeProject :: Project.ID -> Maybe UniPath -> Batch ()
+storeProject projectID mpath = do
     project <- Batch.getProject projectID
-    liftIO $ ProjectSerialization.storeProject project
-
-
-projectFileExists :: UniPath -> Batch Bool
-projectFileExists = liftIO . ProjectSerialization.projectFileExists
+    liftIO $ ProjectSerialization.storeProject project mpath

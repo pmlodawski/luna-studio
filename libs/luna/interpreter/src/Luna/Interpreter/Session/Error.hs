@@ -33,14 +33,15 @@ data Error = RunError          { _location :: Location, _callPointPath :: CallPo
            | NameResolverError { _location :: Location, _errStr        :: ErrorStr            }
            | PassError         { _location :: Location, _errStr        :: ErrorStr            }
            | OtherError        { _location :: Location, _errStr        :: ErrorStr            }
+           | IOError           { _location :: Location, _exception     :: SomeException}
            deriving (Show)
 
-makeLenses(''Error)
+makeLenses ''Error
 
 
 format :: Error -> String
 format err = Location.format (err ^. location) ++ " : " ++ case err of
-    RunError _ cpp ie -> concat ["RunError ", show cpp, " inner error:\n", format ie] 
+    RunError _ cpp ie -> concat ["RunError ", show cpp, " inner error:\n", format ie]
     GhcRunError   _ e -> show e
     CallbackError _ e -> show e
     SourceError   _ s -> show s

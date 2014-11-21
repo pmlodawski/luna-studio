@@ -16,7 +16,8 @@ Executable project-manager
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
-
+    GHC-Prof-Options: -fprof-auto 
+                    "-with-rtsopts=-N -p -s -h -i0.1 -xc"
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,

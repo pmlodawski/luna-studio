@@ -22,8 +22,6 @@ Executable luna
   GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
-                  OverloadedStrings
                   NoImplicitPrelude
   Build-Depends:  base,
                   containers,

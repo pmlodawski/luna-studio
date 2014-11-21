@@ -7,8 +7,14 @@
 
 package generated.proto.mode;
 
+import "data.proto";
 
 
 message Mode {
     optional int32 someDummyParam = 6546;
+}
+
+message ModeValue {
+    required generated.proto.mode.Mode   mode = 1;
+    optional generated.proto.data.Value value = 2;
 }

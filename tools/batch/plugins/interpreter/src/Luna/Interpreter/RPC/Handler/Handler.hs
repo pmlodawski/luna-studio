@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds    #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts   #-}
 {-# LANGUAGE RankNTypes         #-}
 {-# LANGUAGE TemplateHaskell    #-}
 
@@ -20,36 +21,41 @@ import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
 import qualified Pipes.Safe                as Pipes
 
-import           Flowbox.Bus.Data.Flag                    (Flag)
-import qualified Flowbox.Bus.Data.Flag                    as Flag
-import           Flowbox.Bus.Data.Message                 (Message)
-import qualified Flowbox.Bus.Data.Message                 as Message
-import           Flowbox.Bus.Data.Prefix                  (Prefix)
-import qualified Flowbox.Bus.Data.Prefix                  as Prefix
-import           Flowbox.Bus.Data.Topic                   (status, update, (/+))
-import qualified Flowbox.Bus.Data.Topic                   as Topic
-import           Flowbox.Bus.RPC.HandlerMap               (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap               as HandlerMap
-import           Flowbox.Bus.RPC.RPC                      (RPC)
-import qualified Flowbox.Bus.RPC.Server.Processor         as Processor
-import           Flowbox.Config.Config                    (Config)
-import qualified Flowbox.Control.Concurrent               as Concurrent
-import           Flowbox.Prelude                          hiding (Context, error)
-import           Flowbox.ProjectManager.Context           (Context)
-import qualified Flowbox.ProjectManager.RPC.Topic         as Topic
+import           Flowbox.Bus.Data.Flag                             (Flag)
+import qualified Flowbox.Bus.Data.Flag                             as Flag
+import           Flowbox.Bus.Data.Message                          (Message)
+import qualified Flowbox.Bus.Data.Message                          as Message
+import           Flowbox.Bus.Data.Prefix                           (Prefix)
+import qualified Flowbox.Bus.Data.Prefix                           as Prefix
+import           Flowbox.Bus.Data.Topic                            (status, update, (/+))
+import           Flowbox.Bus.Data.Topic                            (Topic)
+import qualified Flowbox.Bus.Data.Topic                            as Topic
+import           Flowbox.Bus.RPC.HandlerMap                        (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap                        as HandlerMap
+import           Flowbox.Bus.RPC.RPC                               (RPC)
+import qualified Flowbox.Bus.RPC.Server.Processor                  as Processor
+import           Flowbox.Config.Config                             (Config)
+import qualified Flowbox.Control.Concurrent                        as Concurrent
+import           Flowbox.Prelude                                   hiding (Context, error)
+import           Flowbox.ProjectManager.Context                    (Context)
+import qualified Flowbox.ProjectManager.RPC.Topic                  as Topic
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers             as Proto
-import qualified Luna.Interpreter.RPC.Handler.Abort       as Abort
-import qualified Luna.Interpreter.RPC.Handler.ASTWatch    as ASTWatch
-import qualified Luna.Interpreter.RPC.Handler.Interpreter as Interpreter
-import qualified Luna.Interpreter.RPC.Handler.Preprocess  as Preprocess
-import qualified Luna.Interpreter.RPC.Handler.Sync        as Sync
-import qualified Luna.Interpreter.RPC.Handler.Value       as Value
-import qualified Luna.Interpreter.RPC.Topic               as Topic
-import qualified Luna.Interpreter.Session.Env             as Env
-import           Luna.Interpreter.Session.Error           (Error)
-import           Luna.Interpreter.Session.Session         (SessionST)
-import qualified Luna.Interpreter.Session.Session         as Session
+import qualified Flowbox.Text.ProtocolBuffers                      as Proto
+import qualified Luna.Interpreter.RPC.Handler.Abort                as Abort
+import qualified Luna.Interpreter.RPC.Handler.ASTWatch             as ASTWatch
+import qualified Luna.Interpreter.RPC.Handler.Interpreter          as Interpreter
+import qualified Luna.Interpreter.RPC.Handler.Preprocess           as Preprocess
+import qualified Luna.Interpreter.RPC.Handler.Sync                 as Sync
+import qualified Luna.Interpreter.RPC.Handler.Value                as Value
+import           Luna.Interpreter.RPC.QueueInfo                    (QueueInfo)
+import qualified Luna.Interpreter.RPC.QueueInfo                    as QueueInfo
+import qualified Luna.Interpreter.RPC.Topic                        as Topic
+import qualified Luna.Interpreter.Session.Env                      as Env
+import           Luna.Interpreter.Session.Error                    (Error)
+import           Luna.Interpreter.Session.Memory.Manager           (MemoryManager)
+import           Luna.Interpreter.Session.Memory.Manager.NoManager (NoManager (NoManager))
+import           Luna.Interpreter.Session.Session                  (SessionST)
+import qualified Luna.Interpreter.Session.Session                  as Session
 
 
 
@@ -57,23 +63,34 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-handlerMap :: Prefix -> HandlerMap Context SessionST
-handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
-    [ (Topic.interpreterSetProjectIDRequest         , respond Topic.update Interpreter.setProjectID    )
-    , (Topic.interpreterGetProjectIDRequest         , respond Topic.status Interpreter.getProjectID    )
-    , (Topic.interpreterSetMainPtrRequest           , respond Topic.update Interpreter.setMainPtr      )
-    , (Topic.interpreterGetMainPtrRequest           , respond Topic.status Interpreter.getMainPtr      )
-    , (Topic.interpreterRunRequest                  , respond Topic.update Interpreter.run             )
-    , (Topic.interpreterWatchPointAddRequest        , respond Topic.update Interpreter.watchPointAdd   )
-    , (Topic.interpreterWatchPointRemoveRequest     , respond Topic.update Interpreter.watchPointRemove)
-    , (Topic.interpreterWatchPointListRequest       , respond Topic.status Interpreter.watchPointList  )
-    , (Topic.interpreterValueRequest                , respond Topic.update Value.get                   )
-    , (Topic.interpreterPingRequest                 , respond Topic.status Interpreter.ping            )
-    , (Topic.interpreterAbortRequest                , respond Topic.status Interpreter.abort           )
-    , (Topic.interpreterSerializationModeDefaultGet , respond Topic.status Interpreter.getDefaultSerializationMode)
-    , (Topic.interpreterSerializationModeDefaultSet , respond Topic.update Interpreter.setDefaultSerializationMode)
-    , (Topic.interpreterSerializationModeGet        , respond Topic.status Interpreter.getSerializationMode       )
-    , (Topic.interpreterSerializationModeSet        , respond Topic.update Interpreter.setSerializationMode       )
+topics :: Prefix -> [Topic]
+topics prefix = HandlerMap.topics $ handlerMap prefix undefined undefined
+
+
+type MM = NoManager
+
+
+handlerMap :: Prefix -> QueueInfo -> Message.CorrelationID -> HandlerMap Context (SessionST MM)
+handlerMap prefix queueInfo crl callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
+    [ (Topic.interpreterSetProjectIDRequest                , respond Topic.update   Interpreter.setProjectID     )
+    , (Topic.interpreterGetProjectIDRequest                , respond Topic.status   Interpreter.getProjectID     )
+    , (Topic.interpreterSetMainPtrRequest                  , respond Topic.update   Interpreter.setMainPtr       )
+    , (Topic.interpreterGetMainPtrRequest                  , respond Topic.status   Interpreter.getMainPtr       )
+    , (Topic.interpreterRunRequest                         , respond Topic.update $ Interpreter.run queueInfo crl)
+    , (Topic.interpreterWatchPointAddRequest               , respond Topic.update   Interpreter.watchPointAdd    )
+    , (Topic.interpreterWatchPointRemoveRequest            , respond Topic.update   Interpreter.watchPointRemove )
+    , (Topic.interpreterWatchPointListRequest              , respond Topic.status   Interpreter.watchPointList   )
+    , (Topic.interpreterValueRequest                       , respond Topic.update   Value.get                    )
+    , (Topic.interpreterPingRequest                        , respond Topic.status   Interpreter.ping             )
+    , (Topic.interpreterAbortRequest                       , respond Topic.status   Interpreter.abort            )
+    , (Topic.interpreterSerializationModeDefaultGetRequest , respond Topic.status   Interpreter.getDefaultSerializationMode)
+    , (Topic.interpreterSerializationModeDefaultSetRequest , respond Topic.update   Interpreter.setDefaultSerializationMode)
+    , (Topic.interpreterSerializationModeGetRequest        , respond Topic.status   Interpreter.getSerializationMode       )
+    , (Topic.interpreterSerializationModeInsertRequest     , respond Topic.update   Interpreter.insertSerializationMode    )
+    , (Topic.interpreterSerializationModeDeleteRequest     , respond Topic.update   Interpreter.deleteSerializationMode    )
+    , (Topic.interpreterSerializationModeDeleteAllRequest  , respond Topic.update   Interpreter.deleteAllSerializationMode )
+    , (Topic.interpreterMemoryGetLimitsRequest             , respond Topic.status   Interpreter.getMemoryLimits)
+    , (Topic.interpreterMemorySetLimitsRequest             , respond Topic.update   Interpreter.setMemoryLimits)
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
@@ -115,13 +132,16 @@ handlerMap prefix callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
 
         --query topic = callback (const topic) . Processor.singleResult
 
-        call0 :: Proto.Serializable a => (a -> RPC Context SessionST ()) -> StateT Context SessionST [Message]
+        call0 :: Proto.Serializable a
+              => (a -> RPC Context (SessionST MM) ()) -> StateT Context (SessionST MM) [Message]
         call0 = callback id . Processor.noResult
 
-        optionalSync :: Proto.Serializable a => (a -> RPC Context SessionST ()) -> StateT Context SessionST [Message]
+        optionalSync :: Proto.Serializable a
+                     => (a -> RPC Context (SessionST MM) ()) -> StateT Context (SessionST MM) [Message]
         optionalSync = callback (const Topic.projectmanagerSyncGetRequest) . Processor.optResult . (.) Sync.syncIfNeeded
 
-        requiredSync :: Proto.Serializable a => (a -> RPC Context SessionST ()) -> StateT Context SessionST [Message]
+        requiredSync :: Proto.Serializable a
+                     => (a -> RPC Context (SessionST MM) ()) -> StateT Context (SessionST MM) [Message]
         requiredSync fun = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> fun args >> Sync.syncRequest)
 
 
@@ -129,15 +149,18 @@ extraImports :: [Session.Import]
 extraImports = ["FlowboxM.Libs.Flowbox.Std"]
 
 
-interpret :: Prefix
+interpret :: MemoryManager MM
+          => Prefix -> QueueInfo
           -> IORef Message.CorrelationID
           -> Pipes.Pipe (Message, Message.CorrelationID)
                         (Message, Message.CorrelationID, Flag)
-                        (Pipes.SafeT (StateT Context SessionST)) ()
-interpret prefix crlRef = forever $ do
+                        (Pipes.SafeT (StateT Context (SessionST MM))) ()
+interpret prefix queueInfo crlRef = forever $ do
     (message, crl) <- Pipes.await
+    logger trace $ "Received message " ++ (message ^. Message.topic)
     liftIO $ IORef.writeIORef crlRef crl
-    results <- lift2 $ Processor.process (handlerMap prefix) message
+    results <- lift2 $ Processor.process (handlerMap prefix queueInfo crl) message
+    logger trace $ "Sending " ++ show (length results) ++ " result"
     let send []    = return ()
         send [r]   = Pipes.yield (r, crl, Flag.Enable)
         send (r:t) = Pipes.yield (r, crl, Flag.Disable) >> send t
@@ -151,15 +174,16 @@ run :: Config -> Prefix -> Context
 run cfg prefix ctx (input, output) = do
     crlRef              <- IORef.newIORef def
     interpreterThreadId <- Concurrent.myThreadId
+    queueInfo           <- QueueInfo.mk
     (output1, input1)   <- Pipes.spawn Pipes.Unbounded
-    let env = def & Env.resultCallBack .~ Value.reportOutputValue crlRef output
+    env <- (Env.resultCallBack .~ Value.reportOutputValue crlRef output) <$> Env.mkDef def
     Concurrent.forkIO_ $ Pipes.runEffect $
             Pipes.fromInput input
-        >-> Preprocess.preprocess prefix interpreterThreadId
+        >-> Preprocess.preprocess prefix queueInfo (env ^. Env.fragileOperation) interpreterThreadId
         >-> Pipes.toOutput output1
-    Session.run cfg env extraImports $ lift $ flip evalStateT ctx $ forever $
-         Pipes.runSafeT $ Pipes.runEffect $ Abort.handleAbort $
+    Session.run cfg env extraImports $ lift $ flip evalStateT ctx $
+        Pipes.runSafeT $ Pipes.runEffect $ Abort.handleAbort $
                 Pipes.fromInput input1
-            >-> interpret prefix crlRef
+            >-> interpret prefix queueInfo crlRef
             >-> Pipes.toOutput output
 

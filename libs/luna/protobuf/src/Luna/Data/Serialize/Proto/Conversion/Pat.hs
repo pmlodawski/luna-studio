@@ -27,6 +27,7 @@ import qualified Generated.Proto.Pat.Pat.Cls                    as GenCls
 import qualified Generated.Proto.Pat.RecWildcard                as GenRecWildcard
 import qualified Generated.Proto.Pat.Tuple                      as GenTuple
 import qualified Generated.Proto.Pat.Typed                      as GenTyped
+import qualified Generated.Proto.Pat.Grouped                      as GenGrouped
 import qualified Generated.Proto.Pat.Var                        as GenVar
 import qualified Generated.Proto.Pat.Wildcard                   as GenWildcard
 import qualified Luna.AST.Common                                as AST
@@ -46,6 +47,7 @@ instance Convert Pat Gen.Pat where
         Pat.App   i src args -> genPat GenCls.App   i GenApp.ext   $ GenApp.App     (encodeJ src) (encodeList args)
         Pat.Typed i pat cls  -> genPat GenCls.Typed i GenTyped.ext $ GenTyped.Typed (encodeJ pat) (encodeJ cls)
         Pat.Wildcard i       -> genPat GenCls.Wildcard    i GenWildcard.ext    GenWildcard.Wildcard
+        Pat.Grouped  i pat   -> genPat GenCls.Grouped     i GenGrouped.ext   $ GenGrouped.Grouped $ encodeJ pat
         Pat.RecWildcard i    -> genPat GenCls.RecWildcard i GenRecWildcard.ext GenRecWildcard.RecWildcard
         where
             genPat :: GenCls.Cls -> AST.ID -> Extensions.Key Maybe Gen.Pat v -> v -> Gen.Pat
@@ -55,35 +57,22 @@ instance Convert Pat Gen.Pat where
     decode p@(Gen.Pat cls mtid _) = do
         i <- decodeP <$> mtid <?> "Failed to decode Pat: 'id' field is missing"
         case cls of
-           GenCls.Var      -> do ext <- getExt GenVar.ext
-                                 GenVar.Var mtname <- ext <?> "Failed to decode Pat.Var: extension is missing"
-                                 tname <- mtname <?> "Failed to decode Pat.Var: 'name' field is missing"
-                                 pure $ Pat.Var i (decodeP tname)
-           GenCls.Lit      -> do ext <- getExt GenLit.ext
-                                 GenLit.Lit mtvalue <- ext <?> "Failed to decode Pat.Lit: extension is missing"
-                                 tvalue <- mtvalue <?> "Failed to decode Pat.Lit: 'value' field is missing"
-                                 Pat.Lit i <$> decode tvalue
-           GenCls.Tuple    -> do ext <- getExt GenTuple.ext
-                                 GenTuple.Tuple titems <- ext <?> "Failed to decode Pat.Tuple: extension is missing"
-                                 Pat.Tuple i <$> decodeList titems
-           GenCls.Con_     -> do ext <- getExt GenCon_.ext
-                                 GenCon_.Con_ mtname <- ext <?> "Failed to decode Pat.Con: extension is missing"
-                                 tname <- mtname <?> "Failed to decode Pat.Con: 'name' field is missing"
-                                 pure $ Pat.Con i (decodeP tname)
-           GenCls.App      -> do ext <- getExt GenApp.ext
-                                 GenApp.App mtsrc targs <- ext <?> "Failed to decode Pat.App: extension is missing"
-                                 tsrc <- mtsrc <?> "Failed to decode Pat.App: 'src' field is missing"
-                                 Pat.App i <$> decode tsrc <*> decodeList targs
-           GenCls.Typed    -> do ext <- getExt GenTyped.ext
-                                 GenTyped.Typed mtpat mttype <- ext <?> "Failed to decode Pat.Typed: extension is missing"
-                                 tpat  <- mtpat  <?> "Failed to decode Pat.Typed: 'pat' field is missing"
-                                 ttype <- mttype <?> "Failed to decode Pat.Typed: 'type' field is missing"
-                                 Pat.Typed i <$> decode tpat <*> decode ttype
-           GenCls.Wildcard -> do ext <- getExt GenWildcard.ext
-                                 GenWildcard.Wildcard <- ext <?> "Failed to decode Pat.Wildcard: extension is missing"
+           GenCls.Var      -> do GenVar.Var name <- getExt GenVar.ext "Pat.Var"
+                                 Pat.Var i <$> decodePJ name (missing "Pat.Var" "name")
+           GenCls.Lit      -> do GenLit.Lit value <- getExt GenLit.ext "Pat.Lit"
+                                 Pat.Lit i <$> decodeJ value (missing "Pat.Lit" "value")
+           GenCls.Tuple    -> do GenTuple.Tuple items <- getExt GenTuple.ext "Pat.Tuple"
+                                 Pat.Tuple i <$> decodeList items
+           GenCls.Con_     -> do GenCon_.Con_ name <- getExt GenCon_.ext "Pat.Con_"
+                                 Pat.Con i <$> decodePJ name (missing "Pat.Con_" "name")
+           GenCls.App      -> do GenApp.App src args <- getExt GenApp.ext "Pat.App"
+                                 Pat.App i <$> decodeJ src (missing "Pat.App" "src") <*> decodeList args
+           GenCls.Typed    -> do GenTyped.Typed pat type_ <- getExt GenTyped.ext "Pat.Typed"
+                                 Pat.Typed i <$> decodeJ pat (missing "Pat.Typed" "pat")
+                                             <*> decodeJ type_ (missing "Pat.Typed" "type")
+           GenCls.Wildcard -> do GenWildcard.Wildcard <- getExt GenWildcard.ext "Pat.Wildcard"
                                  pure $ Pat.Wildcard i
            GenCls.RecWildcard -> do
-                                 ext <- getExt GenRecWildcard.ext
-                                 GenRecWildcard.RecWildcard <- ext <?> "Failed to decode Pat.RecWildcard: extension is missing"
+                                 GenRecWildcard.RecWildcard <- getExt GenRecWildcard.ext "Pat.RecWildcard"
                                  pure $ Pat.RecWildcard i
-       where getExt = flip Extensions.getExt p
+      where getExt key datatype = Extensions.getExt key p <?&> missing datatype "extension"

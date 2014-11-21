@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Main where
@@ -22,7 +23,10 @@ import           Luna.Interpreter.Cmd                 (Cmd)
 import qualified Luna.Interpreter.Cmd                 as Cmd
 import qualified Luna.Interpreter.RPC.Handler.Handler as Handler
 import qualified Luna.Interpreter.Version             as Version
-import           System.Remote.Monitoring
+#if !defined(mingw32_HOST_OS)
+import System.Remote.Monitoring
+#endif
+
 
 
 rootLogger :: Logger
@@ -54,12 +58,16 @@ run :: Cmd -> IO ()
 run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run prefix verbose _ -> do
-        forkServer "localhost" 8000
+#if !defined(mingw32_HOST_OS)
+        _ <- forkServer "localhost" 8000
+#endif
         rootLogger setIntLevel verbose
         cfg       <- Config.load
         Initializer.initializeIfNeeded cfg
         let busConfig = EP.clientFromConfig cfg
             ctx       = Context.mk cfg
         logger info "Starting rpc server"
-        Pipes.run busConfig (Handler.handlerMap prefix) >>= Handler.run cfg prefix ctx >>= eitherToM
+        Pipes.run busConfig (Handler.topics prefix)
+            >>= Handler.run cfg prefix ctx
+            >>= eitherToM
 

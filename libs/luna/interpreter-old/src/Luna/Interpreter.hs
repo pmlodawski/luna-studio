@@ -11,7 +11,6 @@ module Luna.Interpreter where
 import           Control.Concurrent.Chan (Chan)
 import qualified Control.Concurrent.Chan as Chan
 import           Control.Monad           (forever)
-import           DynFlags                (PkgConfRef (PkgConfFile))
 import qualified DynFlags                as GHC
 import           GHC                     (Ghc, GhcMonad)
 import qualified GHC                     as GHC
@@ -20,6 +19,7 @@ import           MonadUtils              (liftIO)
 import           Flowbox.Config.Config     (Config)
 import qualified Flowbox.Config.Config     as Config
 import           Flowbox.Prelude           hiding (error)
+import           Flowbox.System.FilePath   (expand')
 import           Flowbox.System.Log.Logger
 
 
@@ -30,10 +30,12 @@ logger = getLoggerIO $(moduleName)
 
 initialize :: GhcMonad m => Config -> m ()
 initialize config = do
+    globalPkgDb <- liftIO $ expand' $ Config.pkgDb $ Config.global config
+    localPkgDb  <- liftIO $ expand' $ Config.pkgDb $ Config.local config
     let isNotUser GHC.UserPkgConf = False
         isNotUser _ = True
-        extraPkgConfs p = [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
-                          , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
+        extraPkgConfs p = [ GHC.PkgConfFile globalPkgDb
+                          , GHC.PkgConfFile localPkgDb
                           ] ++ filter isNotUser p
     flags <- GHC.getSessionDynFlags
     _ <- GHC.setSessionDynFlags flags
@@ -73,7 +75,8 @@ setImports = GHC.setContext . map (GHC.IIDecl . GHC.simpleImportDecl . GHC.mkMod
 compileAndRun :: GhcMonad m => [String] -> String -> String -> m ()
 compileAndRun imports declarations stmt = do
     GHC.setTargets []
-    GHC.load GHC.LoadAllTargets
+    whenM (GHC.failed <$> GHC.load GHC.LoadAllTargets) $
+        fail "Failed to load all targets"
     setImports imports
     _  <- GHC.runDecls declarations
     rr <- GHC.runStmt stmt GHC.RunToCompletion
@@ -87,7 +90,9 @@ compileAndRun imports declarations stmt = do
 
 
 run :: Config -> Ghc a -> IO a
-run config r = GHC.runGhc (Just $ Config.topDir $ Config.ghcS config) r
+run config r = do
+    topDir <- liftIO $ expand' $ Config.topDir $ Config.ghcS config
+    GHC.runGhc (Just topDir) r
 
 
 runSource :: Config -> [String] -> String -> String -> IO ()

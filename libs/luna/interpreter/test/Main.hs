@@ -15,6 +15,7 @@ import           Data.List          (intercalate)
 import           Text.RawString.QQ
 import           Text.Show.Pretty
 
+import qualified Flowbox.Batch.Project.Project                                 as Project
 import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -40,6 +41,7 @@ import           Luna.Interpreter.Session.Data.CallPoint                       (
 import           Luna.Interpreter.Session.Data.DefPoint                        (DefPoint (DefPoint))
 import qualified Luna.Interpreter.Session.Env                                  as Env
 import qualified Luna.Interpreter.Session.Error                                as Error
+import           Luna.Interpreter.Session.Memory.Manager.NoManager             (NoManager (NoManager))
 import qualified Luna.Interpreter.Session.Session                              as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings                    as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.Reload                      as Reload
@@ -148,8 +150,7 @@ readSource source = eitherStringToM' $ runEitherT $ do
     _aliasInfo        <- EitherT $ Analysis.Alias.run ast
 
     let path = UniPath.fromUnixString "."
-    return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty)
-           $ LibManager.empty
+    return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty) def
 
 
 main1 :: IO ()
@@ -160,7 +161,7 @@ main1 = do
     (libManager , libID) <- readSource code
     (libManager2, _    ) <- readSource code2
 
-    let env = Env.mk libManager (Just 0)
+    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
                 (curry $ curry print)
 
@@ -196,7 +197,6 @@ main1 = do
     eitherStringToM $ fmapL Error.format result
 
 
-
 main2 :: IO ()
 main2 = do
     rootLogger setIntLevel 5
@@ -224,6 +224,7 @@ main2 = do
     logger info "empty"
     printHsSrc $ Module.mk 0 $ Type.Module 1 "Main" []
 
+
 main3 :: IO ()
 main3 = do
     rootLogger setIntLevel 5
@@ -231,7 +232,7 @@ main3 = do
 
     (libManager , libID) <- readSource code
 
-    let env = Env.mk libManager (Just 0)
+    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name "main" []) []])
                 (curry $ curry print)
 
