@@ -9,7 +9,9 @@
 module Control.Category.Dot.TH where
 
 import Language.Haskell.TH
-import Prelude
+import Prelude             hiding (max, min)
+
+
 
 
 

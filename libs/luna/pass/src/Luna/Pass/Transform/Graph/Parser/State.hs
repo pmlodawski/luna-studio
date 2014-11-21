@@ -53,7 +53,7 @@ data GPState = GPState { _body        :: [Expr]
                        , _propertyMap :: PropertyMap
                        } deriving (Show)
 
-makeLenses(''GPState)
+makeLenses ''GPState
 
 
 type GPPass result = Pass GPState result

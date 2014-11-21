@@ -12,8 +12,6 @@ module Flowbox.Batch.Batch (
 , module Flowbox.Batch.Batch
 ) where
 
-
-
 import Control.Monad.State        as X
 import Control.Monad.Trans.Either as X
 import Data.Int                   (Int32)
@@ -35,7 +33,7 @@ data BatchEnv = BatchEnv { _config         :: Config
                          } deriving (Show)
 
 
-makeLenses(''BatchEnv)
+makeLenses ''BatchEnv
 
 
 runBatch :: BatchEnv -> Batch a -> IO (Either Error a)

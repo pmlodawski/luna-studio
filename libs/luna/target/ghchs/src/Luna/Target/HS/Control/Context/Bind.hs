@@ -104,6 +104,7 @@ polyMonadCtxBind = (>>>~)
 polyMonadCtxBind_ :: m1 a -> m2 c -> XOut m1 m2 c <= PolyMonadCtx m1 m2
 polyMonadCtxBind_ a b = a >>>~ (\_ -> b)
 
+
 type family XArg m a where
     XArg (MonadCtx env1 set1 m1 s1)    a = a
     XArg (Value m s)                   a = (Value Pure s a)

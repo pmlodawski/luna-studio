@@ -47,7 +47,7 @@ class AutoLift a b | a -> b where
 liftF0 f = val f
 liftF1 f t1 = do
     t1' <- t1
-    val f <<*>> t1
+    val f <<*>> t1'
 
 --liftF1'x t1 = do
 --    t1' <- t1
@@ -58,7 +58,7 @@ liftF1 f t1 = do
 liftF2 f t1 t2 = do
     t1' <- t1
     t2' <- t2
-    val f <<*>> t1 <<*>> t2
+    val f <<*>> t1' <<*>> t2'
 
 --testi2 a b = a >>>~ (\_ -> b)
 --{-# INLINE testi2 #-}
@@ -72,7 +72,7 @@ liftF3 f t1 t2 t3 = do
     t1' <- t1
     t2' <- t2
     t3' <- t3
-    val f <<*>> t1 <<*>> t2 <<*>> t3
+    val f <<*>> t1' <<*>> t2' <<*>> t3'
 
 
 liftF4 f t1 t2 t3 t4 = do
@@ -80,7 +80,7 @@ liftF4 f t1 t2 t3 t4 = do
     t2' <- t2
     t3' <- t3
     t4' <- t4
-    val f <<*>> t1 <<*>> t2 <<*>> t3 <<*>> t4
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4'
 
 liftF5 f t1 t2 t3 t4 t5 = do
     t1' <- t1
@@ -88,7 +88,7 @@ liftF5 f t1 t2 t3 t4 t5 = do
     t3' <- t3
     t4' <- t4
     t5' <- t5
-    val f <<*>> t1 <<*>> t2 <<*>> t3 <<*>> t4 <<*>> t5
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5'
 
 
 liftCons0 = curryTuple1 . const . liftF0

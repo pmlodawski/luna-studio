@@ -13,8 +13,6 @@ module Luna.Lib.Manager (
 import           Flowbox.Data.Graph                hiding (Edge, delNode, empty, insNewNode, lab, labNodes, nodes, updateNode)
 import qualified Flowbox.Data.Graph                as Graph
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath            (UniPath)
-import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
 import           Luna.Lib.Edge                     (Edge)
 import           Luna.Lib.Lib                      (Library)
 import qualified Luna.Lib.Lib                      as Library
@@ -22,13 +20,6 @@ import qualified Luna.Lib.Lib                      as Library
 
 
 type LibManager = Graph Library Edge
-
-
-loadLibrary :: UniPath -> LibManager -> IO (LibManager, (Library.ID, Library))
-loadLibrary apath libManager = do
-    library <- LibSerialization.restoreLibrary apath
-    let (newLibManager, libID) = insNewNode library libManager
-    return (newLibManager, (libID, library))
 
 
 lab :: LibManager -> Library.ID -> Maybe Library

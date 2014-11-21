@@ -32,6 +32,7 @@ makeLenses ''Config
 ----------------------------------------------------------------------
 
 registerPragma p conf = conf & pragmaSet %~ Pragma.register p
+setPragma   p conf    = conf & pragmaSet %~ Pragma.set p
 
 ----------------------------------------------------------------------
 -- Instances

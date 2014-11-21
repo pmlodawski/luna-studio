@@ -19,6 +19,7 @@ import Luna.Target.HS.Data
 import Luna.Target.HS.Host.Lift
 import Control.Monad.Shuffle
 import Control.PolyMonad
+import Flowbox.Utils
 
 checkVal = join . fmap printCheck . toIOEnv
 
@@ -29,7 +30,9 @@ rangeFromTo' a b = if a <= b then [a..b]
                              else [a,a-1..b]
 
 -- FIXME[wd]: update
---rangeFromTo = liftF2 rangeFromTo'
+rangeFromTo = liftF2 (fmap val `dot2` rangeFromTo')
+
+concatPure = (fmap.fmap) val . fmap concat . sequence
 
 --concatPure = (fmap.fmap.fmap) val . (fmap.fmap) concat . (fmap sequence) . sequence
 

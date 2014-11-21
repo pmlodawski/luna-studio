@@ -7,6 +7,7 @@
 
 module Luna.Target.HS (module X) where
 
+import Control.PolyMonad               as X
 import Data.TupleList                  as X ((//))
 import Data.Typeable                   as X (Proxy (..), Typeable)
 import GHC.Generics                    as X
@@ -16,8 +17,4 @@ import Luna.Target.HS.Host             as X
 import Luna.Target.HS.Host.Rebindable  as X
 import Luna.Target.HS.TH               as X
 import Luna.Target.HS.Utils.BaseMonads as X
-import Luna.Target.HS.Host.Rebindable  as X
-import Data.Typeable                   as X (Typeable, Proxy(..))
-import Data.TupleList                  as X ((//))
-import GHC.Generics                    as X
-import Control.PolyMonad               as X
+

@@ -14,8 +14,8 @@ module Luna.Pass.Transform.AST.Desugar.ImplicitSelf.Undo where
 
 import           Flowbox.Prelude                               hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
+import           Luna.AST.Expr                                 (Expr)
 import qualified Luna.AST.Expr                                 as Expr
-import  Luna.AST.Expr                                 (Expr)
 import           Luna.AST.Module                               (Module)
 import qualified Luna.AST.Module                               as Module
 import qualified Luna.AST.Pat                                  as Pat
@@ -51,7 +51,7 @@ process' expr = (,) <$> processExpr expr <*> State.getInfo
 
 
 processModule :: Module -> DesugarPass Module
-processModule = Module.traverseM processModule processExpr pure pure pure
+processModule = Module.traverseM processModule processExpr pure pure pure pure
 
 
 processExpr :: Expr.Expr -> DesugarPass Expr.Expr
@@ -61,6 +61,6 @@ processExpr ast = case ast of
                               deleteSelf (Expr.Arg _ (Pat.Var _ "self") Nothing : t) = t
                               deleteSelf other = other
     _                -> continue
-    where continue  = Expr.traverseM processExpr pure pure pure ast
+    where continue  = Expr.traverseM processExpr pure pure pure pure ast
 
 

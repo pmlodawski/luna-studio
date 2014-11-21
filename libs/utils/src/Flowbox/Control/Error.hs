@@ -17,6 +17,7 @@ import           Control.Error             as X hiding (runScript)
 import qualified Control.Exception         as Exc
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import           Control.Monad.Trans.Class (MonadTrans)
+import qualified Data.Maybe                as Maybe
 
 import Flowbox.Prelude
 
@@ -31,37 +32,32 @@ runScript s = do
 
 infixl 4 <?.>
 (<?.>) :: Monad m => Maybe b -> String -> m b
-val <?.> m = case val of
-    Just v  -> return v
-    Nothing -> fail m
+val <?.> m = Maybe.maybe (fail m) return val
+
 
 infixl 4 <??&.>
 (<??&.>) :: Monad m => m (Maybe b) -> String -> m b
-action <??&.> m = do
-    val <- action
-    case val of
-        Just v  -> return v
-        Nothing -> fail m
+val <??&.> m = Maybe.maybe (fail m) return =<< val
+
 
 infixl 4 <?>
 (<?>) :: Maybe b -> a -> Either a b
-val <?> m = case val of
-    Just v  -> Right v
-    Nothing -> Left  m
+val <?> m = Maybe.maybe (Left m) Right val
+
+
+infixl 4 <?&>
+(<?&>) :: Either a (Maybe b) -> a -> Either a b
+val <?&> m = Maybe.maybe (Left m) Right =<< val
+
 
 infixl 4 <??>
 (<??>) :: Monad m => Maybe b -> a -> EitherT a m b
-val <??> m = case val of
-    Just v  -> return v
-    Nothing -> left   m
+val <??> m = Maybe.maybe (left m) return val
+
 
 infixl 4 <??&>
 (<??&>) :: Monad m => EitherT a m (Maybe b) -> a -> EitherT a m b
-action <??&> m = do
-    val <- action
-    case val of
-        Just v  -> return v
-        Nothing -> left m
+val <??&> m = Maybe.maybe (left m) return =<< val
 
 
 assertIO :: Monad m => Bool -> String -> m ()

@@ -54,7 +54,7 @@ data GBState = GBState { _graph        :: Graph
                        , _prevoiusNode :: Node.ID
                        } deriving (Show)
 
-makeLenses(''GBState)
+makeLenses ''GBState
 
 
 type GBPass result = Pass GBState result
@@ -145,7 +145,7 @@ setPropertyMap pm = modify (set propertyMap pm)
 
 aaLookUp :: AST.ID -> GBPass (Maybe AST.ID)
 aaLookUp astID = do aa' <- getAAMap
-                    return $ IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap
+                    return $ IntMap.lookup astID $ aa' ^. AliasInfo.alias
 
 
 nodeMapLookUp :: AST.ID -> GBPass (Maybe (Node.ID, Port))
@@ -197,4 +197,7 @@ getGraphFolded nodeID = do
     if foldSetting
         then Flags.isFolded <$> getFlags nodeID
         else return False
-    
+
+
+setGrouped :: Node.ID -> GBPass ()
+setGrouped = modifyFlags (Flags.grouped .~ Just True) 

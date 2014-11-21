@@ -35,25 +35,25 @@ programs = [
 
 def main:
     1
-|] "", 
+|] "",
 
-    Program "hello world" [r| 
+    Program "hello world" [r|
 
 def putStrLn msg:
     ```autoLift1 putStrLn #{msg}```
 
-def main: 
+def main:
     putStrLn "Hello World!"
 
 |] [r|Hello World!
-|], 
+|],
 
     Program "Vector 1 2 3" [r|
 
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -64,18 +64,40 @@ def main:
 |] [r|Vector 1 2 3
 |],
 
-    Program "Vector, if, Int.+ and Int.>" [r|
+    Program "Int.>" [r|
+
+def print msg:
+    ```autoLift1 print #{msg}```
+
+def > a b:
+    a.> b
+
+def Int.> a:
+    ```liftF2 (>) #{self} #{a}```
+
+def main:
+    print $ 1 > 2
+|] [r|False
+|],
+
+    Program "Vector, Int.+ and Int.>" [r|
 
 class Vector a:
     x,y,z :: a
     def test a b:
-        {a,b}
+        a,b
 
 def print msg:
     ```autoLift1 print #{msg}```
 
 def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
+
+def + a b:
+    a.+ b
+
+def > a b:
+    a.> b
 
 def Int.> a:
     ```liftF2 (>) #{self} #{a}```
@@ -84,8 +106,7 @@ def Int.inc:
     self + 1
 
 def main:
-    print $ if 1 > 2: 5
-            else: 6
+    print $ 2 + 2.inc.inc
     print $ 1 > 2
     v = Vector 1 2 3
     print $ v

@@ -46,7 +46,7 @@ run = Pass.run_ (Pass.Info "SimpleTextParser") Pass.NoState .: text2fun
 
 
 text2fun :: String -> Expr -> STPPass Expr
-text2fun code expr = do
+text2fun code (Expr.Function _ path fname _ _ _) = do
     let main = "Main"
     (ast, _, astInfo) <- EitherT $ TxtParser.run $ Source [main] code
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitSelf.run astInfo ast
@@ -56,9 +56,7 @@ text2fun code expr = do
     ast               <- EitherT $ Transform.DepSort.run callGraph aliasInfo ast
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitScopes.run astInfo aliasInfo ast
     (ast, _astInfo)   <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
-    let path = expr ^. Expr.path
-        name = expr ^. Expr.name
-        bc   = [Crumb.Module main, Crumb.Function name path]
+    let bc   = [Crumb.Module main, Crumb.Function fname path]
     focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
     Focus.getFunction focus <??> "SimpleText.Parser.text2fun : Target is not a function"
 

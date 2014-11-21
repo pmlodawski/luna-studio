@@ -20,6 +20,8 @@ import qualified Data.Maybe                 as Maybe
 import           Flowbox.Prelude                         hiding (error, mapM, mapM_)
 import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Log.Logger
+import           Luna.AST.Arg                            (Arg)
+import qualified Luna.AST.Arg                            as Arg
 import qualified Luna.AST.Common                         as AST
 import           Luna.AST.Expr                           (Expr)
 import qualified Luna.AST.Expr                           as Expr
@@ -118,7 +120,7 @@ buildNode astFolded monadicBind outName expr = do
     case expr of
         Expr.Assignment _ pat dst               -> buildAssignment i pat dst
         Expr.App        _ src args              -> buildApp i src args
-        Expr.Accessor   _ name dst              -> addExprNode  i name [dst]
+        Expr.Accessor   _ acc dst               -> addExprNode  i (view Expr.accName acc) [dst]
         Expr.Infix      _ name src dst          -> addExprNode  i name [src, dst]
         Expr.Var        _ name                  -> buildVar i name
         Expr.NativeVar  _ name                  -> buildVar i name
@@ -130,6 +132,8 @@ buildNode astFolded monadicBind outName expr = do
         Expr.List       _ items                 -> addNode i (NodeExpr.StringExpr StringExpr.List) items
         Expr.Native     _ segments              -> addNode i (NodeExpr.StringExpr $ StringExpr.Native $ showNative expr) $ filter isNativeVar segments
         Expr.Wildcard   _                       -> left $ "GraphBuilder.buildNode: Unexpected Expr.Wildcard with id=" ++ show i
+        Expr.Grouped    _ grouped               -> State.setGrouped (grouped ^. Expr.id)
+                                                >> buildNode astFolded monadicBind outName grouped
         _                                       -> showAndAddNode
     where
         buildVar i name = do
@@ -166,7 +170,7 @@ buildNode astFolded monadicBind outName expr = do
                 else do srcID <- buildNode astFolded False outName src
                         s     <- State.gvmNodeMapLookUp srcID
                         case s of
-                           Just (srcNID, _) -> buildAndConnectMany True True Nothing srcNID args 1
+                           Just (srcNID, _) -> buildAndConnectMany True True Nothing srcNID (fmap (view Arg.arg) args) 1
                            Nothing          -> return ()
                         connectMonadic srcID
                         return srcID
@@ -195,7 +199,6 @@ buildNode astFolded monadicBind outName expr = do
 
         isNativeVar (Expr.NativeVar {}) = True
         isNativeVar _                   = False
-
 
 
 buildArg :: Bool -> Bool -> Maybe String -> Expr -> GBPass (Maybe AST.ID)
@@ -235,6 +238,7 @@ buildPat p = case p of
     Pat.App      _ _ args -> List.concat <$> mapM buildPat args
     Pat.Typed    _ pat _  -> buildPat pat
     Pat.Wildcard i        -> return [i]
+    Pat.Grouped  _ pat    -> buildPat pat
 
 
 showNative :: Expr -> String

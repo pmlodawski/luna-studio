@@ -16,6 +16,7 @@ import qualified Luna.AST.Control.Focus  as Focus
 import qualified Luna.AST.Control.Zipper as Zipper
 import qualified Luna.AST.Expr           as Expr
 import           Luna.AST.Module         (Module)
+import qualified Luna.AST.Name           as Name
 import qualified Test.Luna.AST.Common    as Common
 import qualified Test.Luna.Sample.Code   as SampleCode
 
@@ -36,7 +37,7 @@ spec = do
             ast <- getAST
             zipper <- eitherToM $ Zipper.focusBreadcrumbs'
                         [ Crumb.Module   "Main"
-                        , Crumb.Function "main" []
+                        , Crumb.Function (Name.single "main") []
                         ] ast
             let focus = Zipper.getFocus  zipper
             Expr.Function {} <- Focus.getFunction focus <?.> "Not a function"
@@ -68,7 +69,7 @@ spec = do
             zipper <- eitherToM $ Zipper.focusBreadcrumbs'
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
-                        , Crumb.Function "test" []
+                        , Crumb.Function (Name.single "test") []
                         ] ast
             let focus = Zipper.getFocus  zipper
             Expr.Function {} <- Focus.getFunction focus <?.> "Not a function"
@@ -80,7 +81,7 @@ spec = do
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
                         , Crumb.Class    "Inner"
-                        , Crumb.Function "inner" []
+                        , Crumb.Function (Name.single "inner") []
                         ] ast
             let focus = Zipper.getFocus  zipper
             Expr.Function {} <- Focus.getFunction focus <?.> "Not a function"
@@ -91,8 +92,8 @@ spec = do
             zipper <- eitherToM $ Zipper.focusBreadcrumbs'
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
-                        , Crumb.Function "test" []
-                        , Crumb.Lambda   18
+                        , Crumb.Function (Name.single "test") []
+                        , Crumb.Lambda   19
                         ] ast
             let focus = Zipper.getFocus  zipper
             Expr.Lambda {} <- Focus.getLambda focus <?.> "Not a lambda"
