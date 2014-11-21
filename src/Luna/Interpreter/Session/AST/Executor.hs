@@ -1,4 +1,4 @@
----------------------------------------------------------------------------
+--------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Flowbox Team <contact@flowbox.io>, 2014
 -- Proprietary and confidential
@@ -180,7 +180,7 @@ evalFunction :: StringExpr -> CallDataPath -> [VarName] -> Session mm (Maybe Has
 evalFunction stringExpr callDataPath argsVarNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        nameHash      = Hash.hashMe2 $ StringExpr.toString stringExpr
+        nameHash      = Hash.hashStr $ StringExpr.toString stringExpr
 
         mkArg arg = "(Value (Pure "  ++ arg ++ "))"
         args      = map mkArg argsVarNames

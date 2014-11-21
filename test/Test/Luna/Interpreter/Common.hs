@@ -13,6 +13,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.System.UniPath                                        as UniPath
 import qualified Luna.AST.Control.Crumb                                        as Crumb
+import qualified Luna.AST.Name                                                 as Name
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Graph.PropertyMap                                        as PropertyMap
 import           Luna.Interpreter.Session.Data.DefPoint                        (DefPoint (DefPoint))
@@ -55,8 +56,8 @@ readCode code = eitherStringToM' $ runEitherT $ do
 mkEnv :: mm -> String -> IO (Env mm, Library.ID)
 mkEnv mm code = do
     (libManager, libID) <- readCode code
-
-    let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function "main" []])
+    --putStrLn $ ppShow libManager
+    let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
     env <- Env.mk mm libManager (Just $ Project.ID 0) (Just defPoint) $ const $ const (void . return)-- curry print
     return (env, libID)
 
