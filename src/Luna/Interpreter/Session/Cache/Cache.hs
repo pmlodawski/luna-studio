@@ -14,7 +14,7 @@ import qualified Data.Maybe          as Maybe
 import qualified Data.Set            as Set
 import qualified System.Mem          as Mem
 
-import           Flowbox.Control.Error
+import           Flowbox.Control.Error                       hiding (err)
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.Source.Location                     (loc)
@@ -93,7 +93,7 @@ setRecentVarName varName = modifyCacheInfo (CacheInfo.recentVarName .~ varName)
 modifyCacheInfo :: (CacheInfo -> CacheInfo) -> CallPointPath ->  Session mm ()
 modifyCacheInfo f callPointPath = onCacheInfo
     (Env.cachedInsert callPointPath . f)
-    (return ())
+    (left $ Error.OtherError $(loc) $ "Cannot find callPointPath = " ++ show callPointPath)
     callPointPath
 
 
@@ -142,6 +142,17 @@ delete' :: (CallPointPath, CacheInfo) -> Session mm ()
 delete' (callPointPath, cacheInfo) = do
     Free.freeCacheInfo cacheInfo
     Env.cachedDelete callPointPath
+
+
+deleteVarName :: CallPointPath -> VarName -> Session mm ()
+deleteVarName callPointPath varName = onCacheInfo del err callPointPath where
+    err = left $ Error.OtherError $(loc) $ "Cannot find callPointPath = " ++ show callPointPath
+    del cacheInfo = do
+        if cacheInfo ^. CacheInfo.recentVarName == varName
+            then Env.cachedDelete callPointPath
+            else Env.cachedInsert callPointPath
+               $ CacheInfo.dependencies %~ Map.filter (/= varName) $ cacheInfo
+        Free.freeVarName varName
 
 
 deleteAll :: Session mm ()
