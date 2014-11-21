@@ -32,6 +32,7 @@ Library
                   bytestring                  ,
                   containers                  ,
                   cubicbezier                 ,
+                  diagrams                    ,
                   distributive                ,
                   either                      ,
                   errors                      ,
