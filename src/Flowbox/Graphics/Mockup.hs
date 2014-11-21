@@ -818,3 +818,8 @@ removeChannelLuna viewName channelName = Image.update f viewName
     where f view = case View.remove channelName view of
                   Left _ -> Nothing
                   Right v -> Just v
+
+getChannelLuna :: String -> String -> Image -> Image.Result (Maybe Channel)
+getChannelLuna viewName channelName img = case Image.lookup viewName img of
+    Just view -> View.get view channelName
+    _         -> Left $ Image.ViewLookupError viewName
