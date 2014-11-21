@@ -44,6 +44,7 @@ singleton view = Image (Map.singleton name view) (Set.singleton name)
 insert :: View.View -> Image -> Image
 insert view img = over views (Map.insert (View.name view) view) img
 
+-- FIXME[MM]: shouldn't it throw if view is non-existant?
 delete :: View.Name -> Image -> Image
 delete key img = Image (Map.delete key $ img ^. views)
                        (Set.delete key $ img ^. defaultView)
