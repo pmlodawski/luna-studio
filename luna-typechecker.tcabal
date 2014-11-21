@@ -15,7 +15,8 @@ Library
                     , deepseq
                     , luna-core
                     , luna-logger
-                    , mtl
+                    , luna-parser
+                    , mtl >= 2.2.1
                     , transformers
   Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
 
@@ -29,6 +30,7 @@ Executable luna-typechecker-tests
                     , hspec
                     , luna-core
                     , luna-logger
+                    , luna-parser
                     , luna-typechecker
-                    , mtl
+                    , mtl >= 2.2.1
                     , transformers
