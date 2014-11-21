@@ -21,6 +21,7 @@ message Pat {
         App         = 5;
         Typed       = 6;
         Wildcard    = 7;
+        Grouped     = 9;
         RecWildcard = 8;
     }
     required Cls   cls = 1;
@@ -41,7 +42,7 @@ message Lit {
 
 message Tuple {
     extend Pat { optional Tuple ext = 102; }
-    repeated Pat   items = 2;
+    repeated Pat items = 2;
 }
 
 message Con_ {
@@ -51,13 +52,13 @@ message Con_ {
 
 message App {
     extend Pat { optional App ext = 104; }
-    optional Pat   src  = 2;
-    repeated Pat   args = 3;
+    optional Pat src  = 2;
+    repeated Pat args = 3;
 }
 
 message Typed {
     extend Pat { optional Typed ext = 105; }
-    optional Pat   pat = 2;
+    optional Pat pat = 2;
     optional generated.proto.type.Type cls = 3;
 }
 
@@ -65,6 +66,10 @@ message Wildcard {
     extend Pat { optional Wildcard ext = 106; }
 }
 
+message Grouped {
+    extend Pat { optional Grouped ext = 109; }
+    optional Pat pat = 2;
+}
 
 message RecWildcard {
     extend Pat { optional RecWildcard ext = 107; }
