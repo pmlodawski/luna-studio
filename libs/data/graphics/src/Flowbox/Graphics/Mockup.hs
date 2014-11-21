@@ -57,6 +57,7 @@ import           Flowbox.Graphics.Composition.Histogram
 import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Color
 import           Flowbox.Graphics.Image.Image                         as Image
+import           Flowbox.Graphics.Image.Error                         as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
 import           Flowbox.Graphics.Image.IO.OpenEXR                    (readFromEXR)
 import           Flowbox.Graphics.Image.Merge                         (AlphaBlend(..))
@@ -810,3 +811,10 @@ multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap vari
           --                                                            FIXME[MM]: ^ we don't want this here,
           --                                                                         but ChannelGenerator requires ContinousGenerator :/
           multisample channel                     = channel
+
+-- FIXME[MM]: will remove the whole view if removing fails - it should somehow propagate the error
+removeChannelLuna :: String -> String -> Image -> Image.Result Image
+removeChannelLuna viewName channelName = Image.update f viewName
+    where f view = case View.remove channelName view of
+                  Left _ -> Nothing
+                  Right v -> Just v

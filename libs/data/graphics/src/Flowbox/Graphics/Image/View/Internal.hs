@@ -16,7 +16,8 @@ module Flowbox.Graphics.Image.View.Internal (
     channels,
     set,
     empty,
-    map
+    map,
+    remove
 ) where
 
 import           Data.Set        hiding (map, empty)
@@ -56,10 +57,7 @@ get :: View -> Channel.Name -> Image.Result (Maybe Channel)
 get v descriptor = case result of
     Left _    -> Left $ ChannelLookupError descriptor
     Right val -> Right val
-    where result  = List.foldl' f z nodes >>= ChanTree.get
-          f tree name = tree >>= ChanTree.lookup name
-          z       = ChanTree.zipper $ channels v
-          nodes   = splitOn "." descriptor
+    where result = gotoChannel descriptor v >>= ChanTree.get
 
 append :: Channel -> View -> View
 append chan v = set (ChanTree.tree result') v
@@ -80,6 +78,20 @@ append chan v = set (ChanTree.tree result') v
           z          = ChanTree.zipper $ channels v
           nodes      = splitOn "." descriptor
           descriptor = Channel.name chan
+
+remove :: Name -> View -> Image.Result View
+remove name view = case gotoChannel name view of
+    Left _    -> Left $ ChannelLookupError name
+    Right val -> case ChanTree.delete val of
+        Left _     -> Left $ ChannelLookupError "can it really happen?"
+        Right tree -> pure $ set (ChanTree.tree $ ChanTree.top' tree) view
+
+gotoChannel :: Name -> View -> ChanTree.ZipperResult Channel.Name Channel
+gotoChannel name view = result
+    where result        = List.foldl' go startingPoint nodes
+          go tree name' = tree >>= ChanTree.lookup name'
+          startingPoint = ChanTree.zipper $ channels view
+          nodes         = splitOn "." name
 
 mapWithWhitelist :: (Channel -> Channel) -> Channel.Select -> View -> View
 mapWithWhitelist f whitelist = map lambda
