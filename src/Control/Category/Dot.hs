@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Control.Category.Dot where
 
