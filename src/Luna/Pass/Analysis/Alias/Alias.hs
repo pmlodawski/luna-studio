@@ -26,7 +26,7 @@ import qualified Luna.AST.Pat                   as Pat
 import           Luna.AST.Type                  (Type)
 import qualified Luna.AST.Type                  as Type
 import           Luna.Data.AliasInfo            (AliasInfo)
-import           Luna.Data.Namespace.State      (regModule, withScope, getAliasInfo, regExpr, regPat, regType, regLit, regVarName, bindVar, regTypeName)
+import           Luna.Data.Namespace.State      (regModule, withScope, getAliasInfo, regExpr, regPat, regType, regLit, regVarName, tryBindVar, regTypeName)
 import           Luna.Pass.Pass                 (Pass)
 import qualified Luna.Pass.Pass                 as Pass
 import qualified Luna.Data.Namespace            as Namespace
@@ -102,10 +102,10 @@ vaExpr el = regExpr el *> case el of
     Expr.Data       {}              -> withScope id continue
     Expr.DataNative {}              -> withScope id continue
     Expr.Function   id _ name _ _ _ -> withScope id continue
-    Expr.Var        id name         -> bindVar id name
-    Expr.FuncVar    id name         -> bindVar id (Name.unified name)
-    Expr.NativeVar  id name         -> bindVar id name
-    Expr.Con        id name         -> bindVar id name
+    Expr.Var        id name         -> tryBindVar id name
+    Expr.FuncVar    id name         -> tryBindVar id (Name.unified name)
+    Expr.NativeVar  id name         -> tryBindVar id name
+    Expr.Con        id name         -> tryBindVar id name
     Expr.ConD       {}              -> continue
     Expr.Field      id name _ _     -> regVarName name id *> continue
     Expr.Assignment id pat dst      -> vaExpr dst <* vaPat pat
