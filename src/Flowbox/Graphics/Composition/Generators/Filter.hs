@@ -166,7 +166,7 @@ closing size = dilate size . erode size
 median :: forall a . (A.Stencil A.DIM2 a (A.Stencil3x3 a), A.IsFloating a)
        => M.Matrix2 a -> M.Matrix2 a
 median array = M.stencil stencil A.Mirror array where
-  stencil = $(B.generateGetNthFromTuple 24 49) . $(B.generateBitonicNetworkTuple 7 7)
+  stencil = $(B.generateGetNthFromTuple 4 9) . $(B.generateBitonicNetworkTuple 3 3)
 
 stencilTest :: forall a . (A.Stencil A.DIM2 a (A.Stencil3x3 a), A.IsFloating a)
        => M.Matrix2 a -> M.Matrix2 a
