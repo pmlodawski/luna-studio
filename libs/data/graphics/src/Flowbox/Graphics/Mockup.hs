@@ -215,7 +215,7 @@ onEachRGB f img = img'
                     , ("rgba.b", b')
                   ]
 
-          Right img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.update (const $ Just view') "rgba" img
 
 keyer' :: (A.Exp (Color.RGB Double) -> A.Exp Double) -> Image -> Image
 keyer' f img = img'
@@ -225,7 +225,7 @@ keyer' f img = img'
 
           view' = insertChannelFloats view [("rgba.a", alpha)]
 
-          Right img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.update (const $ Just view') "rgba" img
 
 unsafeGetRGB :: Image -> M.Matrix2 (Color.RGB Double)
 unsafeGetRGB img = rgb
@@ -255,7 +255,7 @@ differenceKeyer' f background foreground = img'
           Just view = lookup "rgba" foreground
           view' = insertChannelFloats view [("rgba.a", alpha)]
 
-          Right img' = Image.update (const $ Just view') "rgba" foreground
+          img' = Image.update (const $ Just view') "rgba" foreground
 
 differenceKeyerLuna :: Double -> Double -> Image -> Image -> Image
 differenceKeyerLuna (variable -> offset) (variable -> gain) background foreground = img'
@@ -483,7 +483,7 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
                               , ("rgba.b", rasterizer $ b)
                               , ("rgba.a", rasterizer $ a)
                             ]
-                    Right img' = Image.update (const $ Just view') "rgba" img1
+                    img' = Image.update (const $ Just view') "rgba" img1
           Just view = lookup "rgba" img1
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (fromMatrix (A.Constant 0))
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (fromMatrix (A.Constant 0))
@@ -497,7 +497,7 @@ onGenerator f img = img'
                     , ("rgba.b", b)
                     , ("rgba.a", a)
                   ]
-          Right img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.update (const $ Just view') "rgba" img
 
 erodeLuna :: Int -> Image -> Image
 erodeLuna (variable -> size) = onGenerator $ erode $ pure size
@@ -531,7 +531,7 @@ withAlpha f img = img'
                     , ("rgba.b", b')
                     , ("rgba.a", a)
                   ]
-          Right img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.update (const $ Just view') "rgba" img
 
 invertLuna :: Image -> Image
 invertLuna = onEachValue invert
@@ -599,7 +599,7 @@ histEqLuna (variable -> bins) img = img'
                     , ("rgba.b", b)
                   ]
 
-          Right img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.update (const $ Just view') "rgba" img
 
 deriving instance Functor A.Boundary
 
@@ -617,7 +617,7 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
                     , ("rgba.g", g')
                     , ("rgba.b", b')
                   ]
-        Right img' = Image.update (const $ Just view') "rgba" img
+        img' = Image.update (const $ Just view') "rgba" img
 
     return img'
 
@@ -668,7 +668,7 @@ onImageRGBA fr fg fb fa img = img'
                     , ("rgba.b", b')
                     , ("rgba.a", a')
                     ]
-          Right img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.update (const $ Just view') "rgba" img
 
 liftF6 a b c d e f g = do
     b' <- b
@@ -741,7 +741,7 @@ edgeDetectLuna edgeOperator img = img'
           (r, g, b, _) = unsafeGetChannels alphas
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
           Just view = lookup "rgba" img
-          Right img' = Image.update (const $ Just $ insertChannelFloats view [("rgba.a", alphaSum)]) "rgba" img
+          img' = Image.update (const $ Just $ insertChannelFloats view [("rgba.a", alphaSum)]) "rgba" img
 
 gammaToLinearLuna :: Gamma.Companding a (A.Exp Double) => a -> Image -> Image
 gammaToLinearLuna companding = onEachValue $ (Gamma.toLinear companding :: A.Exp Double -> A.Exp Double)
@@ -825,5 +825,5 @@ getChannelLuna viewName channelName img = case Image.lookup viewName img of
     _         -> Left $ Image.ViewLookupError viewName
 
 insertChannelLuna :: String -> Channel -> Image -> Image
-insertChannelLuna viewName chan img = Image.update f viewName
-    where f = View.append chan
+insertChannelLuna viewName chan = Image.update f viewName
+    where f = Just . View.append chan

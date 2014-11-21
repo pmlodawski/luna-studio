@@ -398,6 +398,9 @@ def Image.removeChannel viewName channelName:
 def Image.getChannel viewName channelName:
     ```liftF3 getChannelLuna #{viewName} #{channelName} #{self}```
 
+def Image.insertChannel viewName channel:
+    ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
+
 def readEXR filePath:
     ```autoLift1 readFromEXR #{filePath}```
 
