@@ -29,6 +29,7 @@ Executable parser
                     flowbox-batch,
                     flowbox-bus,
                     flowbox-config,
+                    luna-core,
                     luna-parser,
                     luna-protobuf,
                     flowbox-utils,
