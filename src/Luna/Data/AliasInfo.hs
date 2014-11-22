@@ -39,12 +39,11 @@ data Scope = Scope { _varnames  :: Map String ID
 makeLenses (''Scope)
 
 
-data AliasInfo a e v = AliasInfo  { _scope   :: IDMap Scope
-                                  , _alias   :: IDMap ID
-                                  , _orphans :: IDMap Error
-                                  , _parent  :: IDMap ID
-                                  , _ast     :: IDMap (AST a e v)
-                                  } deriving (Show, Eq, Generic, Read)
+data AliasInfo = AliasInfo  { _scope   :: IDMap Scope
+                            , _alias   :: IDMap ID
+                            , _orphans :: IDMap Error
+                            , _parent  :: IDMap ID
+                            } deriving (Show, Eq, Generic, Read)
 
 makeLenses (''AliasInfo)
 
@@ -54,7 +53,6 @@ makeLenses (''AliasInfo)
 ----------------------------------------------------------------------
 
 regParent  id pid  = parent %~ Map.insert id pid
-regAST     id a    = ast    %~ Map.insert id a
 regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
     (vnmap, tnmap) = scopeLookup pid info
 
@@ -79,17 +77,16 @@ instance Monoid Scope where
                         (mappend (a ^. typenames) (b ^. typenames))
 
 
-instance Monoid (AliasInfo a e v) where
-    mempty      = AliasInfo mempty mempty mempty mempty mempty
+instance Monoid AliasInfo where
+    mempty      = AliasInfo mempty mempty mempty mempty
     mappend a b = AliasInfo (mappend (a ^. scope)   (b ^. scope))
                             (mappend (a ^. alias)   (b ^. alias))
                             (mappend (a ^. orphans) (b ^. orphans))
                             (mappend (a ^. parent)  (b ^. parent))
-                            (mappend (a ^. ast)     (b ^. ast))
 
 
 instance Default Scope where
-    def = Scope def def
+    def = mempty
 
-instance Default (AliasInfo a e v) where
-    def = AliasInfo def def def def def
+instance Default AliasInfo where
+    def = mempty

@@ -8,6 +8,7 @@
  {-# LANGUAGE UndecidableInstances #-}
  {-# LANGUAGE OverlappingInstances #-}
  {-# LANGUAGE FunctionalDependencies #-}
+ -- {-# LANGUAGE IncoherentInstances #-}
  {-# LANGUAGE GADTs #-}
 
 module Luna.ASTNew.Traversals.Class where
@@ -43,9 +44,18 @@ import           Luna.ASTNew.Lit        (LLit, Lit)
 class Traversal base m a b | base a -> b where
     traverseM :: (Monad m, Applicative m) => base -> a -> m b
 
+class MonoTraversal2 base m a where
+    monoTraverseM :: (Monad m, Applicative m) => base -> a -> m a
+
 
 class DefaultTraversal base m a b | base a -> b where
     defaultTraverseM :: (Monad m, Applicative m) => base -> a -> m b
+
+type MonoTraversal base m a = Traversal base m a a
+
+defaultMonoTraverseM :: (DefaultTraversal base m a a, Monad m, Applicative m) 
+                     => base -> a -> m a
+defaultMonoTraverseM = defaultTraverseM
 
 
 --monoTraverseM :: (MonoTraversal base m a, Applicative m, Monad m) => base -> a -> m a
@@ -77,11 +87,6 @@ instance Traversal base m a b => Traversal base m (Maybe a) (Maybe b) where
 
 instance Traversal        base m String String where traverseM        _ = pure
 instance DefaultTraversal base m String String where defaultTraverseM _ = pure
-
--- boje sie to wlaczyc - to moze duzo poprawic ale moze tez rozpierniczyc
-instance (a~b) => DefaultTraversal base m a b where defaultTraverseM _ = pure
-
-
 
 -- ----- basic AST types -----
 
