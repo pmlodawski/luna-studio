@@ -32,7 +32,6 @@ putLibrary :: Library -> Bool -> IO ()
 putLibrary library global = do
     installPath <- Path.installPath global
     let storePath = UniPath.append (mkLibraryFileName $ library ^. Library.name) installPath
-    print storePath
     LibSerialization.storeLibrary library $ Just storePath
 
 
