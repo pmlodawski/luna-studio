@@ -47,7 +47,7 @@ logger = getLoggerIO $(moduleName)
 
 --makeLenses (''VAState)
 
-type NamespaceMonad a e v m = (MonadState (Namespace a e v) m, Applicative m)
+type NamespaceMonad m = (MonadState Namespace m, Applicative m)
 
 
 --getAliasInfo :: NamespaceMonad m => m AliasInfo
@@ -106,52 +106,46 @@ withNewScope id p = pushNewScope id *> p <* popScope
 withScope    id p = pushScope    id *> p <* popScope
 
 
-withParentID :: NamespaceMonad a e v m => m f -> m f
+withParentID :: NamespaceMonad m => m f -> m f
 withParentID f = do pid <- popID
                     out <- f
                     pushID pid
                     return out
 
-----switchID :: NamespaceMonad a e v m => ID -> m ()
+----switchID :: NamespaceMonad m => ID -> m ()
 ----switchID id = modify (currentID .~ id)
 
-regModule :: NamespaceMonad a e v m => Module a e -> m ()
+regModule :: NamespaceMonad m => Module a e -> m ()
 regModule = undefined -- regElBy AST.Module Module.id
 
-regExpr :: NamespaceMonad a e v m => Expr a v -> m ()
+regExpr :: NamespaceMonad m => Expr a v -> m ()
 regExpr = undefined -- regElBy AST.Expr Expr.id
 
-regLit :: NamespaceMonad a e v m => Lit -> m ()
+regLit :: NamespaceMonad m => Lit -> m ()
 regLit = undefined -- regElBy AST.Lit Lit.id
 
-regPat :: NamespaceMonad a e v m => Pat a -> m ()
+regPat :: NamespaceMonad m => Pat a -> m ()
 regPat = undefined -- regElBy AST.Pat Pat.id
 
-regType :: NamespaceMonad a e v m => Type a -> m ()
+regType :: NamespaceMonad m => Type a -> m ()
 regType = undefined -- regElBy AST.Type Type.id
 
 
 regOrphan = modifyAliasInfo .: AliasInfo.regOrphan
 
 
-regElBy fCon fID el = regAST id (fCon el) *> regID id
-    where id = el ^. fID
 
-
---regID :: NamespaceMonad a e v m => ID -> m ()
+--regID :: NamespaceMonad m => ID -> m ()
 regID id = do
     mpid <- scopeID
     withJust mpid (\pid -> modifyAliasInfo $ AliasInfo.parent %~ IntMap.insert id pid)
 
 
---registerAST :: NamespaceMonad a e v m => ID -> AST -> m ()
-regAST id ast = modifyAliasInfo $ AliasInfo.regAST id ast
 
-
---regVarName :: NamespaceMonad a e v m => ID -> String -> m ()
+--regVarName :: NamespaceMonad m => ID -> String -> m ()
 regVarName = regName AliasInfo.varnames
 
-regTypeName :: NamespaceMonad a e v m => ID -> String -> m ()
+regTypeName :: NamespaceMonad m => ID -> String -> m ()
 regTypeName = regName AliasInfo.typenames
 
 
@@ -166,7 +160,7 @@ regName lens id name = do
                   a2      = a & AliasInfo.scope.at cid ?~ varRel2
 
 
-regParentVarName :: NamespaceMonad a e v m => ID -> String -> m ()
+regParentVarName :: NamespaceMonad m => ID -> String -> m ()
 regParentVarName = withParentID .: regVarName
 
 bindVar id name = do

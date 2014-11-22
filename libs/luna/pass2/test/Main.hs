@@ -4,13 +4,44 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TemplateHaskell           #-}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
+import System.Environment (getArgs)
 import Flowbox.Prelude
+import qualified Luna.Parser.Parser as Parser
+import           Text.PrettyPrint.ANSI.Leijen (displayIO, linebreak, renderPretty, (<>))
+import Data.Default
+import           System.IO                    (stdout)
+import           Text.Show.Pretty
+import qualified Luna.Parser.State as State
+import qualified Luna.Parser.State as ParserState
+
+import qualified Luna.Data.ASTInfo  as ASTInfo
+import qualified Luna.Parser.Pragma as Pragma
+import qualified Luna.Data.Config   as Config
+import           Luna.ASTNew.Name   (TName(TName))
+import qualified Luna.Pass2.Analysis.Alias as AA
+
+--patchedParserState info' = def
+--    & ParserState.info .~ info'
+--    & ParserState.conf .~ parserConf
+--    where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
 
 
-main = print "end"
+--parsePattern    pat  = Parser.parseString pat  $ Parser.patternParser (patchedParserState $ ASTInfo.mk 0)
+--parseExpression expr = Parser.parseString expr $ Parser.exprParser    (patchedParserState $ ASTInfo.mk 0)
+
+
+main = do
+    args <- getArgs
+    let path = args !! 0
+
+    r <- Parser.parseFile path $ Parser.moduleParser [TName "x"] Parser.defState
+    --r <- Parser.parseFile path $ Parser.exprParser (patchedParserState $ ASTInfo.mk 0)
+    case r of
+        Left  e -> displayIO stdout $ Parser.renderErr e
+        --Right a -> (putStrLn $ ppShow (fst a)) >> (putStrLn $ ppShow (snd a))
+        Right a -> do -- (putStrLn $ ppShow (fst a)) >> (putStrLn $ ppShow (view State.namespace $ snd a))
+                   putStrLn $ ppShow $ (fst a) -- Parser.testme (fst a) Parser.defState
+                   let ast = (fst a)
+                   aa <- AA.run ast
+                   putStrLn $ ppShow $ aa

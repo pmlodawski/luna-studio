@@ -26,8 +26,8 @@ import qualified Luna.AST.AST        as AST
 -- Data types
 ----------------------------------------------------------------------
 
-data Namespace a e v = Namespace { _stack :: [ID]
-                           , _info :: AliasInfo a e v
+data Namespace = Namespace { _stack :: [ID]
+                           , _info :: AliasInfo
                            } deriving (Show, Eq, Generic, Read)
 
 
@@ -41,12 +41,12 @@ makeLenses ''Namespace
 --lookup name ns = ns^.scope.nameMap.at name
 
 
-head :: Namespace a e v -> Maybe ID
+head :: Namespace -> Maybe ID
 head (Namespace (id:_) _) = Just id
 head _                    = Nothing
 
 -- FIXME[wd]: dodac asserty!
-pushNewScope :: ID -> Namespace a e v -> Namespace a e v
+pushNewScope :: ID -> Namespace -> Namespace
 pushNewScope id ns@(Namespace st inf) = ns
                                    & pushID id
                                    & info .~ ninfo
@@ -58,20 +58,20 @@ pushNewScope id ns@(Namespace st inf) = ns
           scope  = Map.insert id pScope scopes
 
 -- FIXME[wd]: dodac asserty!
-pushScope :: ID -> Namespace a e v -> Namespace a e v
+pushScope :: ID -> Namespace -> Namespace
 pushScope = pushID
 
-popScope :: Namespace a e v -> Namespace a e v
+popScope :: Namespace -> Namespace
 popScope = snd . popID
 
-pushID :: ID -> Namespace a e v -> Namespace a e v
+pushID :: ID -> Namespace -> Namespace
 pushID id = stack %~ (id:)
 
-popID :: Namespace a e v -> (ID, Namespace a e v)
+popID :: Namespace -> (ID, Namespace)
 popID ns = (id, ns & stack .~ ids)
     where (id:ids) = view stack ns
 
-bindVar :: ID -> String -> Namespace a e v -> Either () (Namespace a e v)
+bindVar :: ID -> String -> Namespace -> Either () (Namespace)
 bindVar id name ns = 
     case head ns of
         Nothing  -> Left ()
@@ -80,9 +80,6 @@ bindVar id name ns =
             Just (Alias.Scope varnames typenames) -> case (varnames^.at name) of 
                 Nothing    -> Left ()
                 Just dstID -> Right (ns & info . Alias.alias . at id ?~ dstID)
-
-
-regAST id ast = info %~ Alias.regAST id (AST.wrap ast)
 
 
 
@@ -112,7 +109,7 @@ regParent id pid = info %~ Alias.regParent id pid
 --    popScope
 --    return ret
 
-modAlias :: (AliasInfo a e v -> AliasInfo a' e' v') -> Namespace a e v -> Namespace a' e' v'
+modAlias :: (AliasInfo-> AliasInfo) -> Namespace -> Namespace
 modAlias f = info %~ f
 
 ------------------------------------------------------------------------
@@ -122,10 +119,10 @@ modAlias f = info %~ f
 --instance Default Scope where
 --    def = Scope def
 
-instance Default (Namespace a e v) where
+instance Default Namespace where
     def = Namespace def def
 
-instance Monoid (Namespace a e v) where
+instance Monoid Namespace where
     mempty      = Namespace mempty mempty
     mappend a b = Namespace (mappend (a ^. stack) (b ^. stack))
                             (mappend (a ^. info)  (b ^. info))

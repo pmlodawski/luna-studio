@@ -75,7 +75,10 @@ Executable luna-pass-test
                   HList,
                   containers,
                   errors,
-                  fgl
+                  fgl,
+                  ansi-wl-pprint,
+                  data-default,
+                  pretty-show
 
 
 Test-Suite tests

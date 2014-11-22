@@ -46,13 +46,15 @@ type PassError = String
 
 type PassT state result m = ESRT PassError Info state m result
 
-type Pass state result = (Functor m, MonadIO m) => ESRT PassError Info state m result
+type Pass err state m = ESRT err Info state m
 
-type Result m result = (Functor m, MonadIO m) => m (Either PassError result)
+type Result m err result = (PassMonad m) => m (Either PassError result)
 
 type ResultT m = EitherT PassError m
 
 type ESRT err env state m = EitherT err (StateT state (ReaderT env m))
+
+type PassMonad m = (Functor m, MonadIO m, Applicative m)
 
 data NoState = NoState deriving Show
 
