@@ -21,8 +21,8 @@ module Flowbox.Prelude(
 import           Control.Applicative       as X
 import           Control.Lens              as X
 import           Data.String               as X (IsString(fromString))
+import           Control.Monad.IO.Class    as X (MonadIO, liftIO)
 import           Control.Monad             (unless, void, when)
-import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import           Control.Monad.Trans       (lift)
 import           Control.Monad.Trans.Class (MonadTrans)
 import           Data.Default              as X
