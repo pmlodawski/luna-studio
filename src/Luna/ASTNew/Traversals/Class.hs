@@ -44,6 +44,9 @@ import           Luna.ASTNew.Lit        (LLit, Lit)
 class Traversal base m a b | base a -> b where
     traverseM :: (Monad m, Applicative m) => base -> a -> m b
 
+class Traversal2 base m a b | base a -> b where
+    traverseM2 :: (Monad m, Applicative m) => base -> a -> m b
+
 class MonoTraversal2 base m a where
     monoTraverseM :: (Monad m, Applicative m) => base -> a -> m a
 
@@ -80,8 +83,16 @@ traverse base = runIdentity . traverseM base
 instance (Monad m, Traversal base m a b) => Traversal base m [a] [b] where
     traverseM base a = mapM (traverseM base) a
 
+instance (Monad m, Traversal base m a b) => DefaultTraversal base m [a] [b] where
+    defaultTraverseM base a = mapM (traverseM base) a
+
 instance Traversal base m a b => Traversal base m (Maybe a) (Maybe b) where
     traverseM base = \case
+        Just a  -> fmap Just $ traverseM base a
+        Nothing -> pure Nothing
+
+instance Traversal base m a b => DefaultTraversal base m (Maybe a) (Maybe b) where
+    defaultTraverseM base = \case
         Just a  -> fmap Just $ traverseM base a
         Nothing -> pure Nothing
 
