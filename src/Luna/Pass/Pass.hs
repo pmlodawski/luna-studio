@@ -54,9 +54,10 @@ data NoState = NoState deriving Show
 run :: env -> state -> RWSTE env [String] state err m result -> EitherT err m (result, state, [String])
 run env state pass = runRWST pass env state
 
-run0_ (Pass n d s f)       = run_ (Info n) s f
-run1_ (Pass n d s f) t1    = run_ (Info n) s (f t1)
-run2_ (Pass n d s f) t1 t2 = run_ (Info n) s (f t1 t2)
+run0_ (Pass n d s f)          = run_ (Info n) s f
+run1_ (Pass n d s f) t1       = run_ (Info n) s (f t1)
+run2_ (Pass n d s f) t1 t2    = run_ (Info n) s (f t1 t2)
+run3_ (Pass n d s f) t1 t2 t3 = run_ (Info n) s (f t1 t2 t3)
 
 run_ :: (Monad m, Functor m) => env -> state -> RWSTE env [String] state err m result -> EitherT err m result
 run_ env state pass = (\(x,_,_)->x) <$> run env state pass
