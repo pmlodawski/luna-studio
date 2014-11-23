@@ -10,7 +10,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverlappingInstances #-}
 
-module Luna.Pass2.Transform.Parse.Stage2 where
+module Luna.Pass2.Transform.Parse.Stage1 where
 
 import           Flowbox.Prelude              hiding (Traversal)
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
@@ -48,6 +48,13 @@ import qualified Luna.Data.Namespace.State    as State
 import           Luna.Data.Namespace.State    (regVarName, regTypeName, withNewScope)
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
+import           Data.ByteString              (ByteString)
+import           Text.PrettyPrint.ANSI.Leijen (Doc, displayS, renderPretty)
+import Control.Monad.Trans.Either
+import Control.Monad.Trans.Class (lift)
+import Luna.Data.Source (Source(Source), Medium, Code(Code))
+import qualified Luna.Data.Source as Source
+
 
 ----------------------------------------------------------------------
 -- Base types
@@ -55,7 +62,7 @@ import qualified Luna.Parser.State            as ParserState
 
 data Stage2 = Stage2
 
-type Stage2Pass             m     = PassMonad Namespace m
+type Stage2Pass             m     = PassMonad () m
 type Stage2Ctx              lab m = (Enumerated lab, PassCtx m)
 type Stage2Traversal        m a b = (PassCtx m, AST.Traversal        Stage2 (Stage2Pass m) a b)
 type Stage2DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage2 (Stage2Pass m) a b)
@@ -64,53 +71,20 @@ type ResultExpr = LExpr IDTag (MultiName String)
 
 
 ------------------------------------------------------------------------
----- Utils functions
-------------------------------------------------------------------------
-
-traverseM :: (Stage2Traversal m a b) => a -> Stage2Pass m b
-traverseM = AST.traverseM Stage2
-
-defaultTraverseM :: (Stage2DefaultTraversal m a b) => a -> Stage2Pass m b
-defaultTraverseM = AST.defaultTraverseM Stage2
-
-
-------------------------------------------------------------------------
 ---- Pass functions
 ------------------------------------------------------------------------
 
-pass :: Stage2DefaultTraversal m a b => Pass Namespace (Namespace -> a -> Stage2Pass m b)
-pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias analysis" mempty passRunner
+pass :: MonadIO m => Pass () (Source Medium -> Stage2Pass m (Unit (LModule IDTag String)))
+pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias analysis" ()
+       passRunner
 
-passRunner s ast = put s *> defaultTraverseM ast
+passRunner src = do
+    (Source name (Code code)) <- Source.read src
+    lift . hoistEither . fmap fst . (tmpFixErrorParse (Parser.moduleParser [TName name] Parser.defState)) $ code
 
-traverseDecl2Pass :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
-traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
-    Decl.Function path name inputs output body -> do
-        subAST  <- subparse (unlines body)
-        inputs' <- mapM subparseArg inputs
-        return $ Decl.Function path name inputs' output subAST
-    Decl.Data        name params cons defs -> return $ Decl.Data        name params [] []
-    Decl.Import      path rename targets   -> return $ Decl.Import      path rename targets
-    Decl.TypeAlias   dst src               -> return $ Decl.TypeAlias   dst src
-    Decl.TypeWrapper dst src               -> return $ Decl.TypeWrapper dst src
-    where id = Enum.id lab
-          subparse expr = do
-              result <- State.withScope id $ do 
-                  ns <- get
-                  let pstate = Parser.defState & set ParserState.namespace ns 
-                  return $ Parser.parseString expr $ Parser.exprBlockParser2 pstate
-              case result of
-                  Left e      -> fail   $ show e
-                  Right (e,_) -> return $ e
-          -- FIXME [wd]: inny parser powinine parsowac argumenty poniewaz nie zawieraja wielu linii i nie moga zawierac wielu exproessionow!
-          --             zatem wyciaganie pierwszego elementu jest szybkim obejsciem
-          subparseArg (Arg pat val) = Arg pat . (fmap (!!0)) <$> mapM subparse val 
+tmpFixErrorParse a b = case Parser.parseByteString2 a b of
+    Left doc -> Left $ showWidth 40 doc
+    Right r  -> Right r
 
-
-----------------------------------------------------------------------
--- Instances
-----------------------------------------------------------------------
-
-instance Stage2Ctx lab m => AST.Traversal Stage2 (Stage2Pass m) (LDecl lab String) (LDecl lab ResultExpr) where
-    traverseM _ = traverseDecl2Pass
-
+showWidth :: Int -> Doc -> String
+showWidth w x   = displayS (renderPretty 0.4 w x) ""

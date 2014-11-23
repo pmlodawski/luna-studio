@@ -21,8 +21,14 @@ import qualified Luna.Data.Config   as Config
 import           Luna.ASTNew.Name   (TName(TName))
 import qualified Luna.Pass2.Analysis.Alias as AA
 import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
+import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
 import           Luna.Data.Namespace (Namespace(Namespace))
-
+import qualified Luna.Pass2.Pass as Pass
+import Control.Monad.Trans.Either
+import Control.Monad.Trans.Class (lift)
+import qualified Data.ByteString as ByteStr
+import Luna.Data.Source (Source(Source), Medium(File), Code(Code))
+import qualified Luna.Data.Source as Source
 --patchedParserState info' = def
 --    & ParserState.info .~ info'
 --    & ParserState.conf .~ parserConf
@@ -36,19 +42,13 @@ import           Luna.Data.Namespace (Namespace(Namespace))
 main = do
     args <- getArgs
     let path = args !! 0
+        src  = Source "Main" (File path)
 
-    r <- Parser.parseFile path $ Parser.moduleParser [TName "x"] Parser.defState
-    --r <- Parser.parseFile path $ Parser.exprParser (patchedParserState $ ASTInfo.mk 0)
-    case r of
-        Left  e -> displayIO stdout $ Parser.renderErr e
-        --Right a -> (putStrLn $ ppShow (fst a)) >> (putStrLn $ ppShow (snd a))
-        Right a -> do -- (putStrLn $ ppShow (fst a)) >> (putStrLn $ ppShow (view State.namespace $ snd a))
-                   putStrLn $ ppShow $ (fst a) -- Parser.testme (fst a) Parser.defState
-                   let ast = (fst a)
-                   aa <- AA.run ast
-                   case aa of
-                       Left e  -> fail "error optaining aa"
-                       Right a -> do
-                           putStrLn $ ppShow $ a
-                           s2 <- Stage2.run (Namespace [0] a) ast
-                           putStrLn $ ppShow s2
+
+    result <- runEitherT $ do
+        ast  <- Pass.run1_ Stage1.pass src
+        aa   <- Pass.run1_ AA.pass ast
+        s2   <- Pass.run2_ Stage2.pass (Namespace [] aa) ast
+        return s2
+    putStrLn $ ppShow result
+    return ()

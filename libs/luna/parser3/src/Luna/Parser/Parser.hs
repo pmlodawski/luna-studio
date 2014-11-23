@@ -859,7 +859,7 @@ parseFile       path  p = handleResult <$> parseFromFile       p (parserDelta pa
 parseString     input p = handleResult  $  parseFromString     p (parserDelta parserName) input
 parseByteString input p = handleResult  $  parseFromByteString p (parserDelta parserName) input
 
-
+parseByteString2 p input = handleResult  $  parseFromByteString p (parserDelta parserName) input
                 --data AliasAnalysis = AliasAnalysis
 
                 --traverseM        = AST.traverseM        AliasAnalysis

@@ -43,7 +43,8 @@ Library
                   MissingH,
                   split,
                   transformers,
-                  ansi-wl-pprint
+                  ansi-wl-pprint,
+                  bytestring
 
 
 Executable luna-pass-test
@@ -78,7 +79,8 @@ Executable luna-pass-test
                   fgl,
                   ansi-wl-pprint,
                   data-default,
-                  pretty-show
+                  pretty-show,
+                  bytestring
 
 
 Test-Suite tests
