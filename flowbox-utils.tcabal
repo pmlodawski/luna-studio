@@ -51,7 +51,8 @@ Library
                     time,
                     transformers,
                     template-haskell,
-                    QuickCheck
+                    QuickCheck,
+                    unordered-containers
   if os(windows)
     Build-Depends:  Win32
 

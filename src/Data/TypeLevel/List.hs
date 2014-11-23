@@ -20,9 +20,9 @@
 --{-# LANGUAGE DysfunctionalDependencies #-}
 
 
-module Data.TypeLevel.Set (
+module Data.TypeLevel.List (
     module X,
-    module Data.TypeLevel.Set
+    module Data.TypeLevel.List
 )where
 
 import GHC.TypeLits

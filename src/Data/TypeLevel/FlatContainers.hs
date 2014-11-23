@@ -8,6 +8,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverlappingInstances #-}
 
 
 module Data.TypeLevel.FlatContainers where
@@ -42,8 +43,9 @@ class Modify s a where
 instance Modify () a where
   modify _ = id
 
+instance Modify xs a => Modify (x,xs) a where
+  modify f (x,xs) = (x, modify f xs)
+  
 instance Modify (a,xs) a where
   modify f (a,xs) = (f a, xs)
 
-instance Modify xs a => Modify (x,xs) a where
-  modify f (x,xs) = (x, modify f xs)
