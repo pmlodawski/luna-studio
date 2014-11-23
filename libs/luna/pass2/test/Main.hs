@@ -20,6 +20,8 @@ import qualified Luna.Parser.Pragma as Pragma
 import qualified Luna.Data.Config   as Config
 import           Luna.ASTNew.Name   (TName(TName))
 import qualified Luna.Pass2.Analysis.Alias as AA
+import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
+import           Luna.Data.Namespace (Namespace(Namespace))
 
 --patchedParserState info' = def
 --    & ParserState.info .~ info'
@@ -44,4 +46,9 @@ main = do
                    putStrLn $ ppShow $ (fst a) -- Parser.testme (fst a) Parser.defState
                    let ast = (fst a)
                    aa <- AA.run ast
-                   putStrLn $ ppShow $ aa
+                   case aa of
+                       Left e  -> fail "error optaining aa"
+                       Right a -> do
+                           putStrLn $ ppShow $ a
+                           s2 <- Stage2.run (Namespace [0] a) ast
+                           putStrLn $ ppShow s2

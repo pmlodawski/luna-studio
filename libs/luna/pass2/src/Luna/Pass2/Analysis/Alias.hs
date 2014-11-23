@@ -34,7 +34,7 @@ import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
 import qualified Luna.ASTNew.Name.Multi       as MultiName
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
-import           Luna.Pass2.Pass              (Pass, PassMonad)
+import           Luna.Pass2.Pass              (PassMonad, PassCtx)
 import qualified Luna.Pass2.Pass              as Pass
 
 import qualified Luna.Data.Namespace          as Namespace
@@ -53,18 +53,18 @@ import           Luna.Data.Namespace.State    (regVarName, regTypeName, withNewS
 data AliasAnalysis = AliasAnalysis
 
 type VAError           = String
-type VAPass m          = Pass VAError Namespace m
-type VAMonoCtx lab m a = (PassMonad m, Enumerated lab, MonoTraversal m a)
+type VAPass m          = PassMonad VAError Namespace m
+type VAMonoCtx lab m a = (PassCtx m, Enumerated lab, MonoTraversal m a)
 type MonoTraversal m a = AST.MonoTraversal AliasAnalysis (VAPass m) a
 
 ----------------------------------------------------------------------
 -- Utils functions
 ----------------------------------------------------------------------
 
-traverseM :: (AST.MonoTraversal AliasAnalysis m a, PassMonad m) => a -> m a
+traverseM :: (AST.MonoTraversal AliasAnalysis m a, PassCtx m) => a -> m a
 traverseM = AST.traverseM AliasAnalysis
 
-defaultTraverseM :: (AST.DefaultTraversal AliasAnalysis m a a, PassMonad m) => a -> m a
+defaultTraverseM :: (AST.DefaultTraversal AliasAnalysis m a a, PassCtx m) => a -> m a
 defaultTraverseM = AST.defaultMonoTraverseM AliasAnalysis
 
 ----------------------------------------------------------------------
@@ -100,9 +100,7 @@ aaDecl d@(Label lab decl) = case decl of
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
-registerDecls :: VAMonoCtx lab m a => ,
-
-[LDecl lab a] -> VAPass m ()
+registerDecls :: VAMonoCtx lab m a => [LDecl lab a] -> VAPass m ()
 registerDecls decls =  mapM_ registerHeaders  decls
                     *> mapM_ registerDataDecl decls
 

@@ -44,4 +44,6 @@ Library
                   parsers,
                   transformers,
                   mtl,
-                  assert
+                  assert,
+                  HMap,
+                  either
