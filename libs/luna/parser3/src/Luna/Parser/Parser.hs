@@ -819,7 +819,8 @@ appConf = Config.registerPragma (undefined :: Pragma.TabLength)
 -- FIXME[wd]: logika powina byc przeniesiona na system pluginow
 defConfig = appConf def
 -- FIXME[wd]: debugowo ustawione wartosci typow
-defState  = (def :: State ()) & State.conf .~ defConfig
+emptyState = def :: State ()
+defState  = emptyState & State.conf .~ defConfig
 
 
 appSt = State.conf %~ appConf

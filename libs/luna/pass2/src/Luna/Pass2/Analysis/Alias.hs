@@ -27,6 +27,8 @@ import qualified Luna.ASTNew.Label  as Label
 import           Luna.ASTNew.Label  (Label(Label))
 import qualified Luna.ASTNew.Type   as Type
 import           Luna.ASTNew.Type   (Type)
+import           Luna.ASTNew.Expr   (LExpr, Expr)
+import qualified Luna.ASTNew.Expr   as Expr
 import qualified Luna.ASTNew.Pat    as Pat
 import           Luna.ASTNew.Pat    (LPat, Pat)
 import qualified Luna.ASTNew.Lit    as Lit
@@ -102,6 +104,12 @@ aaDecl d@(Label lab decl) = case decl of
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
+aaExpr :: AACtx lab m v => (LExpr lab v) -> AAPass m (LExpr lab v)
+aaExpr e@(Label lab expr) = case expr of
+    _ -> continue
+    where id       = Enum.id lab
+          continue = defaultTraverseM e
+
 registerDecls :: AACtx lab m a => [LDecl lab a] -> AAPass m ()
 registerDecls decls =  mapM_ registerHeaders  decls
                     *> mapM_ registerDataDecl decls
@@ -132,6 +140,9 @@ instance AACtx lab m a => AST.Traversal AliasAnalysis (AAPass m) (LModule lab a)
 
 instance AACtx lab m a => AST.Traversal AliasAnalysis (AAPass m) (LDecl lab a) (LDecl lab a) where
     traverseM _ = aaDecl
+
+instance AACtx lab m v => AST.Traversal AliasAnalysis (AAPass m) (LExpr lab v) (LExpr lab v) where
+    traverseM _ = aaExpr
 
 instance (PassCtx m, Enumerated lab) => AST.Traversal AliasAnalysis (AAPass m) (LPat lab) (LPat lab) where
     traverseM _ = aaPat

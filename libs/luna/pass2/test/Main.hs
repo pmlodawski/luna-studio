@@ -46,10 +46,14 @@ main = do
 
 
     result <- runEitherT $ do
-        ast1  <- Pass.run1_ Stage1.pass src
-        aa1   <- Pass.run1_ AA.pass ast1
-        ast2  <- Pass.run2_ Stage2.pass (Namespace [] aa1) ast1
-        aa2   <- Pass.run1_ AA.pass ast2
-        return aa2
-    putStrLn $ ppShow result
+        (ast1, astinfo) <- Pass.run1_ Stage1.pass src
+        aa1             <- Pass.run1_ AA.pass ast1
+        ast2            <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo ast1
+        aa2             <- Pass.run1_ AA.pass ast2
+        return (ast2,aa2)
+
+    case result of
+        Left e      -> putStrLn $ ppShow e
+        Right (x,y) -> putStrLn (ppShow x) 
+                    >> putStrLn (ppShow y)
     return ()

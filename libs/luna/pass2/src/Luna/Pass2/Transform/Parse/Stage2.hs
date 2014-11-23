@@ -43,6 +43,7 @@ import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.AliasInfo          (AliasInfo)
+import           Luna.Data.ASTInfo            (ASTInfo)
 
 import qualified Luna.Data.Namespace.State    as State 
 import           Luna.Data.Namespace.State    (regVarName, regTypeName, withNewScope)
@@ -55,7 +56,7 @@ import qualified Luna.Parser.State            as ParserState
 
 data Stage2 = Stage2
 
-type Stage2Pass             m     = PassMonad Namespace m
+type Stage2Pass             m     = PassMonad (ParserState.State ()) m
 type Stage2Ctx              lab m = (Enumerated lab, PassCtx m)
 type Stage2Traversal        m a b = (PassCtx m, AST.Traversal        Stage2 (Stage2Pass m) a b)
 type Stage2DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage2 (Stage2Pass m) a b)
@@ -78,10 +79,13 @@ defaultTraverseM = AST.defaultTraverseM Stage2
 ---- Pass functions
 ------------------------------------------------------------------------
 
-pass :: Stage2DefaultTraversal m a b => Pass Namespace (Namespace -> a -> Stage2Pass m b)
-pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias analysis" mempty passRunner
+pass :: Stage2DefaultTraversal m a b => Pass (ParserState.State ()) (Namespace -> ASTInfo -> a -> Stage2Pass m b)
+pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias analysis" undefined passRunner
 
-passRunner s ast = put s *> defaultTraverseM ast
+-- FIXME[wd]: using emptyState just to make it working
+--            we should use here state constructed from config optained from stage1
+--            but stage-1 should NOT result in whole ParserState - the data should be separated
+passRunner ns info ast = put (Parser.emptyState & set ParserState.namespace ns & set ParserState.info info) *> defaultTraverseM ast 
 
 traverseDecl2Pass :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
 traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
@@ -95,10 +99,9 @@ traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
     Decl.TypeWrapper dst src               -> return $ Decl.TypeWrapper dst src
     where id = Enum.id lab
           subparse expr = do
-              result <- State.withScope id $ do 
-                  ns <- get
-                  let pstate = Parser.defState & set ParserState.namespace ns 
-                  return $ Parser.parseString expr $ Parser.exprBlockParser2 pstate
+              result <- ParserState.withScope id $ do 
+                  pstate <- get
+                  return $ Parser.parseString expr $ Parser.exprBlockParser2 (pstate)
               case result of
                   Left e      -> fail   $ show e
                   Right (e,_) -> return $ e

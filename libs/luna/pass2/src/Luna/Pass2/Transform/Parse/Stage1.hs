@@ -43,6 +43,7 @@ import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.AliasInfo          (AliasInfo)
+import           Luna.Data.ASTInfo            (ASTInfo)
 
 import qualified Luna.Data.Namespace.State    as State 
 import           Luna.Data.Namespace.State    (regVarName, regTypeName, withNewScope)
@@ -74,13 +75,15 @@ type ResultExpr = LExpr IDTag (MultiName String)
 ---- Pass functions
 ------------------------------------------------------------------------
 
-pass :: MonadIO m => Pass () (Source Medium -> Stage2Pass m (Unit (LModule IDTag String)))
+pass :: MonadIO m => Pass () (Source Medium -> Stage2Pass m (Unit (LModule IDTag String), ASTInfo))
 pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias analysis" ()
        passRunner
 
 passRunner src = do
     (Source name (Code code)) <- Source.read src
-    lift . hoistEither . fmap fst . (tmpFixErrorParse (Parser.moduleParser [TName name] Parser.defState)) $ code
+    result <- lift . hoistEither . (tmpFixErrorParse (Parser.moduleParser [TName name] Parser.defState)) $ code
+    let astinfo = view ParserState.info $ snd result
+    return $ (fst result, astinfo)
 
 tmpFixErrorParse a b = case Parser.parseByteString2 a b of
     Left doc -> Left $ showWidth 40 doc
