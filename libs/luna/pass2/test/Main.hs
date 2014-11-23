@@ -23,7 +23,7 @@ import qualified Luna.Pass2.Analysis.Alias as AA
 import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
 import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
 import           Luna.Data.Namespace (Namespace(Namespace))
-import qualified Luna.Pass2.Pass as Pass
+import qualified Luna.Pass as Pass
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Class (lift)
 import qualified Data.ByteString as ByteStr
@@ -46,9 +46,10 @@ main = do
 
 
     result <- runEitherT $ do
-        ast  <- Pass.run1_ Stage1.pass src
-        aa   <- Pass.run1_ AA.pass ast
-        s2   <- Pass.run2_ Stage2.pass (Namespace [] aa) ast
-        return s2
+        ast1  <- Pass.run1_ Stage1.pass src
+        aa1   <- Pass.run1_ AA.pass ast1
+        ast2  <- Pass.run2_ Stage2.pass (Namespace [] aa1) ast1
+        aa2   <- Pass.run1_ AA.pass ast2
+        return aa2
     putStrLn $ ppShow result
     return ()

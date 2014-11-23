@@ -8,8 +8,9 @@
  {-# LANGUAGE UndecidableInstances #-}
  {-# LANGUAGE OverlappingInstances #-}
  {-# LANGUAGE FunctionalDependencies #-}
- -- {-# LANGUAGE IncoherentInstances #-}
  {-# LANGUAGE GADTs #-}
+
+  {-# LANGUAGE DysfunctionalDependencies #-}
 
 module Luna.ASTNew.Traversals.Class where
 
@@ -22,7 +23,7 @@ import qualified Luna.ASTNew.Decl       as Decl
 import           Luna.ASTNew.Module     (Module(Module))
 import qualified Luna.ASTNew.Module     as Module
 import           Luna.ASTNew.Unit       (Unit(Unit))
-import           Luna.ASTNew.Arg        (Arg(Arg))
+import           Luna.ASTNew.Arg        (LArg, Arg(Arg))
 import qualified Luna.ASTNew.Type       as Type
 import           Luna.ASTNew.Type       (LType, Type)
 import           Luna.ASTNew.Name       (TName, VName, CName, TVName)
@@ -32,6 +33,9 @@ import           Luna.ASTNew.Label      (Label(Label))
 import qualified Luna.ASTNew.Pat        as Pat
 import           Luna.ASTNew.Pat        (Pat, LPat)
 import           Luna.ASTNew.Lit        (LLit, Lit)
+import qualified Luna.ASTNew.Expr       as Expr
+import           Luna.ASTNew.Expr       (LExpr, Expr)
+import           Luna.ASTNew.Name       (NameBase)
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -106,6 +110,7 @@ instance Traversal base m VName         VName         where traverseM _ = pure
 instance Traversal base m CName         CName         where traverseM _ = pure
 instance Traversal base m TVName        TVName        where traverseM _ = pure
 instance Traversal base m (MultiName a) (MultiName a) where traverseM _ = pure
+instance Traversal base m NameBase      NameBase      where traverseM _ = pure
 
 
 -- ----- Unit -----
@@ -194,6 +199,77 @@ instance ( Traversal base m (LPat a)  (LPat  a')
         Pat.Var         name       -> Pat.Var         <$> traverseM b name
         Pat.Wildcard               -> pure Pat.Wildcard   
         Pat.RecWildcard            -> pure Pat.RecWildcard
+
+
+-- ----- Expr -----
+
+instance ( Traversal base m v v'
+         , Traversal base m (Native (LExpr lab v)) (Native (LExpr lab' v'))
+         , Traversal base m (LLit lab) (LLit lab')
+         , Traversal base m (Expr.SubDecl lab v) (Expr.SubDecl lab' v')
+         , Traversal base m (Expr.LList lab (LExpr lab v)) (Expr.LList lab' (LExpr lab' v'))
+         , Traversal base m (LPat lab) (LPat lab')
+         , Traversal base m (Expr.LMatch lab v) (Expr.LMatch lab' v')
+         , Traversal base m (Expr.ExprApp lab v) (Expr.ExprApp lab' v')
+         , Traversal base m (LExpr lab v) (LExpr lab' v')
+         , Traversal base m (LType lab) (LType lab')
+         , Traversal base m (LArg lab (Expr lab v)) (LArg lab' (Expr lab' v'))
+         ) => DefaultTraversal base m (Expr lab v) (Expr lab' v') where
+    defaultTraverseM b = \case
+        Expr.Lambda      inputs  output   body -> Expr.Lambda      <$> traverseM b inputs <*> traverseM b output   <*> traverseM b body
+        Expr.RecUpdt     src     selector expr -> Expr.RecUpdt     <$> traverseM b src    <*> traverseM b selector <*> traverseM b expr
+        Expr.App         src     args          -> Expr.App         <$> traverseM b src    <*> traverseM b args         
+        Expr.Case        expr    match         -> Expr.Case        <$> traverseM b expr   <*> traverseM b match        
+        Expr.Typed       cls     expr          -> Expr.Typed       <$> traverseM b cls    <*> traverseM b expr         
+        Expr.Assignment  dst     src           -> Expr.Assignment  <$> traverseM b dst    <*> traverseM b src          
+        Expr.Accessor    acc     src           -> Expr.Accessor    <$> traverseM b acc    <*> traverseM b src          
+        Expr.Ref         ref                   -> Expr.Ref         <$> traverseM b ref                  
+        Expr.List        elems                 -> Expr.List        <$> traverseM b elems                
+        Expr.Tuple       items                 -> Expr.Tuple       <$> traverseM b items                
+        Expr.Grouped     expr                  -> Expr.Grouped     <$> traverseM b expr                 
+        Expr.Cons        cname                 -> Expr.Cons        <$> traverseM b cname                
+        Expr.Decl        decl                  -> Expr.Decl        <$> traverseM b decl                 
+        Expr.Lit         lit                   -> Expr.Lit         <$> traverseM b lit                  
+        Expr.Native      native                -> Expr.Native      <$> traverseM b native               
+        Expr.Var         ident                 -> Expr.Var         <$> traverseM b ident                
+        Expr.Wildcard                          -> pure Expr.Wildcard                         
+
+
+instance ( Traversal base m (LPat lab) (LPat lab')
+         , Traversal base m (LExpr lab v) (LExpr lab' v')
+         ) => DefaultTraversal base m (Expr.Match lab v) (Expr.Match lab' v') where
+    defaultTraverseM b (Expr.Match pat body) = Expr.Match <$> traverseM b pat <*> traverseM b body
+
+
+instance ( Traversal base m (Expr.Named VName a) (Expr.Named VName a')
+         , Traversal base m a a'
+         ) => DefaultTraversal base m (Expr.App a) (Expr.App a') where
+    defaultTraverseM b = \case
+        Expr.Seq   ops -> Expr.Seq   <$> traverseM b ops
+        Expr.Infix l r -> Expr.Infix <$> traverseM b l <*> traverseM b r
+
+
+instance ( Traversal base m n n'
+         , Traversal base m v v'
+         ) => DefaultTraversal base m (Expr.Named n v) (Expr.Named n' v') where
+    defaultTraverseM b = \case
+        Expr.Named   n v -> Expr.Named   <$> traverseM b n <*> traverseM b v
+        Expr.Unnamed   v -> Expr.Unnamed <$> traverseM b v
+
+
+instance ( Traversal base m e e'
+         , Traversal base m (Expr.Sequence e) (Expr.Sequence e')
+         ) => DefaultTraversal base m (Expr.List e) (Expr.List e') where
+    defaultTraverseM b = \case
+        Expr.SeqList   els -> Expr.SeqList   <$> traverseM b els
+        Expr.RangeList s   -> Expr.RangeList <$> traverseM b s
+
+
+instance (Traversal base m a a') => DefaultTraversal base m (Expr.Sequence a) (Expr.Sequence a') where
+    defaultTraverseM b = \case
+        Expr.Linear    a   ma -> Expr.Linear    <$> traverseM b a                   <*> traverseM b ma
+        Expr.Geometric l r ma -> Expr.Geometric <$> traverseM b l <*> traverseM b r <*> traverseM b ma
+
 
 
 

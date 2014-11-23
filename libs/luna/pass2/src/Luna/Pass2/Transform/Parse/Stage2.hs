@@ -36,8 +36,8 @@ import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
 import qualified Luna.ASTNew.Name.Multi       as MultiName
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
-import           Luna.Pass2.Pass              (Pass(Pass), PassMonad, PassCtx)
-import qualified Luna.Pass2.Pass              as Pass
+import           Luna.Pass              (Pass(Pass), PassMonad, PassCtx)
+import qualified Luna.Pass              as Pass
 
 import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
