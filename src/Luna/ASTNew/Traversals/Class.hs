@@ -164,7 +164,7 @@ instance ( Traversal base m (LPat a) (LPat a')
 
 -- ----- Native -----
 
-instance DefaultTraversal base m (Native e) (Native e) 
+instance Traversal base m e e' => DefaultTraversal base m (Native e) (Native e') 
 
 
 -- ----- Pat -----
