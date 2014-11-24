@@ -38,7 +38,7 @@ f2d :: Real a => a -> Double
 f2d = fromRational . toRational
 
 
-makeSegments :: (Show a, Real a) => [Point2 a] -> [Segment Closed R2]
+makeSegments :: Real a => [Point2 a] -> [Segment Closed R2]
 makeSegments = combine
     where combine [] = []
           combine [_] = []
@@ -57,7 +57,7 @@ makeSegments = combine
               in bezier3 (fix b) (fix c) (fix d) : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer: unsupported ammount of points"
 
-rasterizeVector :: (Show a, Real a) => Int -> Int -> Bool -> [Point2 a] -> Image View.RGBA
+rasterizeVector :: Real a => Int -> Int -> Bool -> [Point2 a] -> Image View.RGBA
 rasterizeVector w h closed points = makeRGBA $ unsafePerformIO rasterize
     where Point2 (f2d -> ox) (f2d -> oy) = head points
           h' = fromIntegral h

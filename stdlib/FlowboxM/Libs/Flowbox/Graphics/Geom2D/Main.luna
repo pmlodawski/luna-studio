@@ -9,10 +9,14 @@ class ```Bool```:
 class ```Point2``` a:
     x,y :: a
 
-# class ```Maybe``` a:
-#     Just:
-#         unwarp :: a
-#     Nothing
+class ```Maybe``` a:
+    Just:
+        unwarp :: a
+    Nothing
+
+class VectorPath a:
+    points :: [Point2 a]
+    closed :: Bool
 
 alias Path = String
 

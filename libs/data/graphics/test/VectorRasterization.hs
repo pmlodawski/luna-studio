@@ -50,21 +50,21 @@ makeSegments = combine
 main = do
     let closed = True
         (w,h)  = (512, 512) :: (Int, Int)
-        --coords = [ 212, 209
-        --         , 211, 114, 329, 109, 338, 210
-        --         , 450, 211, 456, 331, 343, 330
-        --         --, 341, 447, 220, 445, 224, 334
-        --         ]
-        coords = [ 0, 0
-                 , 100, 0, 100, 100, 0, 100
+        coords = [ 212, 209
+                 , 211, 114, 329, 109, 338, 210
+                 , 450, 211, 456, 331, 343, 330
+                 --, 341, 447, 220, 445, 224, 334
                  ]
-        --points' = [ Point2 212 209
-        --          , Point2 211 114, Point2 329 109, Point2 338 210
-        --          , Point2 450 211, Point2 456 331, Point2 343 330
-        --          ]
-        points' = [ Point2 0 0
-                  , Point2 100 0, Point2 100 100, Point2 0 100
+        --coords = [ 0, 0
+        --         , 100, 0, 100, 100, 0, 100
+        --         ]
+        points' = [ Point2 212 209
+                  , Point2 211 114, Point2 329 109, Point2 338 210
+                  , Point2 450 211, Point2 456 331, Point2 343 330
                   ]
+        --points' = [ Point2 0 0
+        --          , Point2 100 0, Point2 100 100, Point2 0 100
+        --          ]
         points = makePoints coords
         origin = head points
         segments = makeSegments points
