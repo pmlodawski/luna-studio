@@ -16,6 +16,7 @@ import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
 import qualified Luna.Interpreter.Session.Env                as Env
+import qualified Luna.Interpreter.Session.Env.State          as Session
 import           Luna.Interpreter.Session.Memory.Manager
 import qualified Luna.Interpreter.Session.Memory.Status      as Status
 
@@ -40,12 +41,11 @@ instance Default LRU where
 
 instance MemoryManager LRU where
     reportUse cpp varName = Env.updateMemoryManager (recentlyUsed %~ IndexedSet.insert (cpp, varName))
-
+    reportDelete cpp varName = Env.updateMemoryManager (recentlyUsed %~ IndexedSet.delete (cpp, varName))
     clean status = do
         logger info "Cleaning memory..."
         lru <- view recentlyUsed <$> Env.getMemoryManager
         let lruList = IndexedSet.toList lru
-        print lruList
         performCleaning lruList
         logger warning $ show status
         logger info "Cleaning memory...quitting"
@@ -54,8 +54,10 @@ instance MemoryManager LRU where
         when (Status.isUpperLimitExceeded status) $
             clean status
 
+
 performCleaning :: [Entry] -> Session LRU ()
-performCleaning [] = logger warning "Cleaning requested but no items to clean!"
+performCleaning [] = do logger warning "Cleaning requested but no items to clean!"
+                        Env.setMemoryManager $ LRU IndexedSet.empty
 performCleaning entries@(h:t) = do
     limitExceeded <- Status.isLowerLimitExceeded'
     if limitExceeded

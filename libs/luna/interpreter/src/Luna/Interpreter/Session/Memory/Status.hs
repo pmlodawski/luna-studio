@@ -38,6 +38,7 @@ isUpperLimitExceeded _                              = False
 
 
 isLowerLimitExceeded :: Status -> Bool
+isLowerLimitExceeded (Status.UpperLimitExceeded {}) = True
 isLowerLimitExceeded (Status.LowerLimitExceeded {}) = True
 isLowerLimitExceeded _                              = False
 
