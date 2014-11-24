@@ -22,55 +22,60 @@ import           Diagrams.TrailLike
 import           Graphics.Rendering.Cairo hiding (translate)
 --import           Graphics.Rendering.Cairo
 
+import           Flowbox.Geom2D.Rasterizer hiding (makePoints, makeSegments)
 import           Flowbox.Graphics.Image.IO.BMP
+import           Flowbox.Graphics.Mockup (saveImageLuna)
 import           Flowbox.Prelude hiding ((#))
 
 
 
 --def = FileOptions (400,400) PNG
 
-makePoints h = combine
+makePoints = combine
     where combine [] = []
-          combine (x:y:xs) = (x,fromIntegral h - y) : combine xs
+          combine (x:y:xs) = (x,y) : combine xs
           combine _ = error "unsupported ammount of coordinates"
 
 makeSegments = combine
     where combine [] = []
           combine [_] = []
-          combine (o':c1':c2':x':xs) = let
-                  o  = r2 o'
-                  c1 = r2 c1'
-                  c2 = r2 c2'
-                  x  = r2 x'
-              in bezier3 (c1 ^-^ o) (c2 ^-^ o) (x ^-^ o) : combine (x':xs)
+          combine (a':b':c':d':xs) = let
+                  a = r2 a'
+                  b = r2 b'
+                  c = r2 c'
+                  d = r2 d'
+            in bezier3 (b ^-^ a) (c ^-^ a) (d ^-^ a) : combine (d':xs)
           combine _ = error "unsupported ammount of points"
 
 main = do
     let closed = True
         (w,h)  = (512, 512) :: (Int, Int)
-        coords = [ 212, 209
-                 , 211, 114, 329, 109, 338, 210
-                 , 450, 211, 456, 331, 343, 330
-                 --, 341, 447, 220, 445, 224, 334
+        --coords = [ 212, 209
+        --         , 211, 114, 329, 109, 338, 210
+        --         , 450, 211, 456, 331, 343, 330
+        --         --, 341, 447, 220, 445, 224, 334
+        --         ]
+        coords = [ 0, 0
+                 , 100, 0, 100, 100, 0, 100
                  ]
-        points = makePoints h coords
+        --points' = [ Point2 212 209
+        --          , Point2 211 114, Point2 329 109, Point2 338 210
+        --          , Point2 450 211, Point2 456 331, Point2 343 330
+        --          ]
+        points' = [ Point2 0 0
+                  , Point2 100 0, Point2 100 100, Point2 0 100
+                  ]
+        points = makePoints coords
         origin = head points
         segments = makeSegments points
-        --myDiagram = (circle 10 # translate (r2 (50, 30)) :: Diagram B R2)
-        --myDiagram = fromSegments
-        --            [ bézier3 (r2 (211-212, 114-209)) (r2 (329-212, 109-209)) (r2 (338-212, 210-209))
-        --            , bézier3 (r2 (450-338, 211-210)) (r2 (456-338, 331-210)) (r2 (343-338, 330-210))
-        --            ]
-        --             # translate (r2 (212,209))
-        --trail = strokeLoop $ closeLine $ fromSegments segments
-        --trail = strokeLoop $ glueLine $ fromSegments segments
-        --trail = fromSegments segments
         path = fromSegments segments
         myDiagram = case closed of
             False -> path # translate (r2 origin) # lw (Output 1) # lc white
             True -> (strokeLoop.closeLine) path # translate (r2 origin) # fc white
         (_, r) = renderDia Cairo (CairoOptions "foo.png" (Dims (fromIntegral w) (fromIntegral h)) RenderOnly True) (myDiagram :: Diagram Cairo R2)
 
+    --print "TEST:"
+    --print myDiagram
     surface <- createImageSurface FormatARGB32 w h
     renderWith surface r
     --surfaceWriteToPNG surface "foo.png"
@@ -78,8 +83,10 @@ main = do
     bs <- imageSurfaceGetData surface
     ar <- fromByteString (Z :. w :. h) ((), bs) :: IO (Array DIM2 Word32)
 
-    --let img = makeRGBA ar
     writeImageToBMP "foo.bmp" ar
+
+    let img = rasterizeVector w h closed points'
+    saveImageLuna "foo2.png" img
 
     return ()
 
