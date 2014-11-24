@@ -12,15 +12,20 @@ import "nodedefault.proto";
 
 
 message Flags {
-    optional bool  omit                 = 1 [default = false];
-    optional bool  astFolded            = 2;
-    optional bool  astAssignment        = 3;
-    optional bool  graphFolded          = 4;
-    optional bool  grouped              = 5;
-    optional bool  defaultNodeGenerated = 6;
-    optional bool  graphViewGenerated   = 7;
-    optional float nodePositionX        = 8;
-    optional float nodePositionY        = 9;
+    optional bool     omit                 = 1 [default = false];
+    optional bool     astFolded            = 2;
+    optional bool     astAssignment        = 3;
+    optional FoldInfo foldInfo             = 4;
+    optional bool     grouped              = 5;
+    optional bool     defaultNodeGenerated = 6;
+    optional bool     graphViewGenerated   = 7;
+    optional float    nodePositionX        = 8;
+    optional float    nodePositionY        = 9;
+}
+
+message FoldInfo {
+    optional bool folded = 1;
+    optional int32 id    = 2;
 }
 
 message Attributes {

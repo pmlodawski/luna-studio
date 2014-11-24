@@ -13,6 +13,7 @@
 module Luna.Data.Serialize.Proto.Conversion.Library where
 
 import           Control.Applicative
+import           Data.Int            (Int32)
 import           Data.IntMap         (IntMap)
 import qualified Data.IntMap         as IntMap
 
@@ -27,10 +28,16 @@ import           Luna.Data.Serialize.Proto.Conversion.Attributes      ()
 import           Luna.Data.Serialize.Proto.Conversion.Module          ()
 import           Luna.Graph.Properties                                (Properties)
 import           Luna.Lib.Lib                                         (Library (Library))
+import qualified Luna.Lib.Lib                                         as Library
 
 
 
-instance Convert (Int, Library) Gen.Library where
+instance ConvertPure Library.ID Int32 where
+    encodeP = encodeP . Library.toInt
+    decodeP = Library.ID . decodeP
+
+
+instance Convert (Library.ID, Library) Gen.Library where
     encode (i, Library name path ast propertyMap) =
         Gen.Library (encodePJ i) (encodePJ name) (encodePJ path) (encodeJ ast) (encodeJ propertyMap)
     decode (Gen.Library mtid mtname mtpath mtast mtpropertyMap) = do
