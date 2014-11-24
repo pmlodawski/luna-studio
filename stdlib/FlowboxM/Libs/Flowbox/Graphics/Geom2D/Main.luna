@@ -23,7 +23,7 @@ def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
 def rasterizePath w h closed points:
-	```liftF4 rasterizeVector #{w} #{h} #{closed} #{points}```
+	```liftF4 rasterizeVectorLuna #{w} #{h} #{closed} #{points}```
 
 
 
@@ -37,5 +37,5 @@ def main:
              , Point2 450 211, Point2 456 331, Point2 343 330
              ]
     print points
-    # img = rasterizePath 512 512 True points
-    # img.save "test.png"
+    img = rasterizePath 512 512 True points
+    img.save "test.png"

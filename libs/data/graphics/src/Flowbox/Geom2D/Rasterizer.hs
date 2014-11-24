@@ -37,31 +37,38 @@ import           Flowbox.Prelude hiding ((#))
 f2d :: Real a => a -> Double
 f2d = fromRational . toRational
 
-makeSegments :: Real a => a -> [Point2 a] -> [Segment Closed R2]
-makeSegments (f2d -> h) = combine
+
+makeSegments :: (Show a, Real a) => [Point2 a] -> [Segment Closed R2]
+makeSegments = combine
     where combine [] = []
           combine [_] = []
-          combine (s':c1':c2':e':xs) = let
-                  Point2 (f2d -> sx)  (f2d -> sy)  = s'
-                  Point2 (f2d -> c1x) (f2d -> c1y) = c1'
-                  Point2 (f2d -> c2x) (f2d -> c2y) = c1'
-                  Point2 (f2d -> ex)  (f2d -> ey)  = e'
-                  s  = r2 ( sx  , h - sy  )
-                  c1 = r2 ( c1x , h - c1y )
-                  c2 = r2 ( c2x , h - c2y )
-                  e  = r2 ( ex  , h - ey  )
-              in bezier3 (c1 ^-^ s) (c2 ^-^ s) (e ^-^ s) : combine (e':xs)
+          combine (a':b':c':d':xs) = let
+                  Point2 (f2d -> ax) (f2d -> ay) = a'
+                  Point2 (f2d -> bx) (f2d -> by) = b'
+                  Point2 (f2d -> cx) (f2d -> cy) = c'
+                  Point2 (f2d -> dx) (f2d -> dy) = d'
+                  a = r2 ( ax , ay )
+                  b = r2 ( bx , by )
+                  c = r2 ( cx , cy )
+                  d = r2 ( dx , dy )
+                  --fix p = (r2 (0,h)) ^-^ (p ^-^ a)
+                  fix p = p ^-^ a
+              --in bezier3 (b ^-^ a) (c ^-^ a) (d ^-^ a) : combine (d':xs)
+              in bezier3 (fix b) (fix c) (fix d) : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer: unsupported ammount of points"
 
-rasterizeVector :: Real a => Int -> Int -> Bool -> [Point2 a] -> Image View.RGBA
+rasterizeVector :: (Show a, Real a) => Int -> Int -> Bool -> [Point2 a] -> Image View.RGBA
 rasterizeVector w h closed points = makeRGBA $ unsafePerformIO rasterize
     where Point2 (f2d -> ox) (f2d -> oy) = head points
+          h' = fromIntegral h
           rasterize = do
-              let path = fromSegments $ makeSegments (fromIntegral h) points
+              let path = fromSegments $ makeSegments points
                   diagram = case closed of
-                      False -> path                        # translate (r2 (ox,oy)) # lc white # lw (Output 1)
-                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # fc white
+                      False -> path                        # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # lc white # lw (Output 1)
+                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white
                   (_, r) = renderDia Cairo (CairoOptions "" (Dims (fromIntegral w) (fromIntegral h)) RenderOnly True) (diagram :: Diagram Cairo R2)
+              --print "MODULE:"
+              --print diagram
               surface <- createImageSurface FormatARGB32 w h
               renderWith surface r
               bs <- imageSurfaceGetData surface

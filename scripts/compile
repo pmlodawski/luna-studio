@@ -52,7 +52,7 @@ def main():
     cabalConf = "cabal.config"
     os.chdir(rootPath)
 
-    cabalExec = "python " + os.path.join(rootPath, "third-party/HaskellBooster/python/cabal!")
+    cabalExec = os.path.join(rootPath, "third-party/HaskellBooster/shell/cabal!")
 
     platformFix(sboxName)
     pkgNames = []

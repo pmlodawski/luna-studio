@@ -20,6 +20,7 @@ import qualified Data.Vector.Storable       as SV
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
 
+import           Flowbox.Geom2D.Rasterizer
 import qualified Flowbox.Graphics.Color                             as Color
 import           Flowbox.Graphics.Composition.Generators.Filter
 import           Flowbox.Graphics.Composition.Generators.Filter     as Conv
@@ -254,3 +255,8 @@ laplacianLuna (VPS (variable -> kernSize)) (VPS (variable -> crossVal)) (VPS (va
           process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
           flt = laplacian crossVal sideVal $ pure kernSize
           p = pipe A.Clamp
+
+--rasterizeVectorLuna :: Real a => Int -> Int -> Bool -> [Value Pure Safe (Point2 a)] -> Image RGBA
+--rasterizeVectorLuna w h closed points = rasterizeVector w h closed $ fmap extract points
+--    where extract (Value (Pure (Safe p))) = p
+
