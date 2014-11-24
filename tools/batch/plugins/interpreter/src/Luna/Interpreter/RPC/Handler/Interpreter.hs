@@ -71,6 +71,7 @@ import qualified Luna.Interpreter.Session.Env                                   
 import qualified Luna.Interpreter.Session.Error                                               as Error
 import qualified Luna.Interpreter.Session.Memory                                              as Memory
 import           Luna.Interpreter.Session.Memory.Manager                                      (MemoryManager)
+import qualified Luna.Interpreter.Session.Memory.Manager                                      as Manager
 import           Luna.Interpreter.Session.Session                                             (SessionST)
 
 
@@ -110,11 +111,13 @@ setMainPtr request@(SetMainPtr.Request tmainPtr) = do
     return $ SetMainPtr.Update request
 
 
-run :: QueueInfo -> Message.CorrelationID -> Run.Request -> RPC Context (SessionST mm) Run.Update
+run :: MemoryManager mm
+    => QueueInfo -> Message.CorrelationID -> Run.Request -> RPC Context (SessionST mm) Run.Update
 run queueInfo crl request = do
     r <- lift $ bracket_ (liftIO $ QueueInfo.enterRun queueInfo crl)
             (liftIO $ QueueInfo.quitRun queueInfo) $
-            liftSession' Executor.processMain
+            liftSession' $ do Manager.cleanIfNeeded
+                              Executor.processMain
     hoistEither $ fmapL Error.format r
     return $ Run.Update request
 
