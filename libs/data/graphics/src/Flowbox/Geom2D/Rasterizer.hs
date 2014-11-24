@@ -8,7 +8,10 @@
 {-# LANGUAGE ViewPatterns              #-}
 {-# LANGUAGE TypeOperators             #-}
 
-module Flowbox.Geom2D.Rasterizer where
+module Flowbox.Geom2D.Rasterizer (
+    module Flowbox.Geom2D.Rasterizer,
+    Point2(..)
+) where
 
 import           Data.Array.Accelerate (Array)
 import           Data.Array.Accelerate.IO
@@ -50,10 +53,9 @@ makeSegments (f2d -> h) = combine
               in bezier3 (c1 ^-^ s) (c2 ^-^ s) (e ^-^ s) : combine (e':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer: unsupported ammount of points"
 
-rasterizeVector :: Real a => DIM2 -> Bool -> [Point2 a] -> Image View.RGBA
-rasterizeVector sh closed points = makeRGBA $ unsafePerformIO rasterize
-    where Z :. w :. h = sh -- :: Z :. Int :. Int
-          Point2 (f2d -> ox) (f2d -> oy) = head points
+rasterizeVector :: Real a => Int -> Int -> Bool -> [Point2 a] -> Image View.RGBA
+rasterizeVector w h closed points = makeRGBA $ unsafePerformIO rasterize
+    where Point2 (f2d -> ox) (f2d -> oy) = head points
           rasterize = do
               let path = fromSegments $ makeSegments (fromIntegral h) points
                   diagram = case closed of
@@ -63,4 +65,4 @@ rasterizeVector sh closed points = makeRGBA $ unsafePerformIO rasterize
               surface <- createImageSurface FormatARGB32 w h
               renderWith surface r
               bs <- imageSurfaceGetData surface
-              fromByteString sh ((), bs)
+              fromByteString (Z:.w:.h) ((), bs)
