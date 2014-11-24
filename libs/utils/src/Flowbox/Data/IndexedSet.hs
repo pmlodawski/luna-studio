@@ -12,12 +12,15 @@ import           Data.Ord  (comparing)
 import           Data.Set  (Set)
 import qualified Data.Set  as Set
 
-import Flowbox.Prelude hiding (set)
+import Flowbox.Prelude hiding (empty, set)
 
 
 
 newtype IndexedSet a = IndexedSet (Set (Entry a), Int)
                      deriving (Eq, Show)
+
+instance Default (IndexedSet a) where
+    def = empty
 
 
 newtype Entry a = Entry { unEntry :: (Int, a) }
@@ -26,7 +29,6 @@ newtype Entry a = Entry { unEntry :: (Int, a) }
 
 instance Eq a => Eq (Entry a) where
     (Entry (_, a)) == (Entry (_, b)) = a == b
-
 
 instance Ord a => Ord (Entry a) where
     compare (Entry (_, a)) (Entry (_, b)) = compare a b
@@ -61,3 +63,9 @@ toList (IndexedSet (set, _)) = map snd
                              $ sortBy (comparing fst)
                              $ map unEntry
                              $ Set.toList set
+
+
+fromList :: Ord a => [a] -> IndexedSet a
+fromList list = iset where
+    set = Set.fromList $ map Entry $ zip [0..] list
+    iset = IndexedSet (set, Set.size set)

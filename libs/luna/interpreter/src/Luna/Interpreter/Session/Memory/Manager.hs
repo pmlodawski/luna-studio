@@ -11,8 +11,10 @@ module Luna.Interpreter.Session.Memory.Manager where
 import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import           Data.Default               (Default)
 
+import Flowbox.Prelude
+import Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import Luna.Interpreter.Session.Data.VarName       (VarName)
 import Luna.Interpreter.Session.Env.Env            (Env)
 import Luna.Interpreter.Session.Error              (Error)
 import Luna.Interpreter.Session.Memory.Data.Status (Status)
@@ -24,6 +26,15 @@ type Session   m a = EitherT Error (SessionST m) a
 
 
 class Default mm => MemoryManager mm where
-    clean  :: mm -> Status -> Session mm ()
+    reportUse        :: CallPointPath -> VarName -> Session mm ()
+    reportUseMany    :: [(CallPointPath, VarName)] -> Session mm ()
+    reportDelete     :: CallPointPath -> VarName   -> Session mm ()
+    reportDeleteMany :: [(CallPointPath, VarName)] -> Session mm ()
+    clean            :: Status        -> Session mm ()
+    cleanIfNeeded    :: Session mm ()
 
-    cleanIfNeeded :: mm -> Session mm ()
+    reportUseMany []    = return ()
+    reportUseMany (h:t) = uncurry reportUse h >> reportUseMany t
+
+    reportDeleteMany []    = return ()
+    reportDeleteMany (h:t) = uncurry reportDelete h >> reportDeleteMany t
