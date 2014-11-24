@@ -17,6 +17,7 @@ import qualified Data.List                          as List
 import qualified Data.String.Utils                  as StringUtils
 import qualified Flowbox.System.Directory.Locations as Directory
 import qualified System.Directory                   as Directory
+import qualified System.Environment                 as Environment
 import qualified System.FilePath                    as FilePath
 
 import Flowbox.Prelude hiding (empty)
@@ -67,6 +68,7 @@ expand (x:xs) = liftIO $ case x of
     Var "$LOCALAPPDATA"  -> expandRest   Directory.getLocalAppDataDirectory
     Var "$TEMP"          -> expandRest   Directory.getTemporaryDirectory
     Var "$DOCUMENTS"     -> expandRest   Directory.getUserDocumentsDirectory
+    Var ('$':name)       -> expandRest $ Environment.getEnv name
     _       -> (:) x <$> expand xs
     where expandRest fvar = do
               var <- fvar
