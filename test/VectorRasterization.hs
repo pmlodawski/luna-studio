@@ -17,6 +17,7 @@ import           Diagrams.Prelude
 import           Diagrams.Backend.Cairo
 import           Diagrams.Backend.Cairo.Internal
 import           Diagrams.Segment
+import           Diagrams.Trail
 import           Diagrams.TrailLike
 import           Graphics.Rendering.Cairo hiding (translate)
 --import           Graphics.Rendering.Cairo
@@ -45,7 +46,8 @@ makeSegments = combine
           combine _ = error "unsupported ammount of points"
 
 main = do
-    let (w,h)  = (512, 512) :: (Int, Int)
+    let closed = True
+        (w,h)  = (512, 512) :: (Int, Int)
         coords = [ 212, 209
                  , 211, 114, 329, 109, 338, 210
                  , 450, 211, 456, 331, 343, 330
@@ -60,8 +62,14 @@ main = do
         --            , bézier3 (r2 (450-338, 211-210)) (r2 (456-338, 331-210)) (r2 (343-338, 330-210))
         --            ]
         --             # translate (r2 (212,209))
-        myDiagram = fromSegments segments # translate (r2 origin) # lw (Output 1.5) # lc white # bg white
-        (_, r) = renderDia Cairo (CairoOptions "foo.png" (Width $ fromIntegral w) RenderOnly True) (myDiagram :: Diagram Cairo R2)
+        --trail = strokeLoop $ closeLine $ fromSegments segments
+        --trail = strokeLoop $ glueLine $ fromSegments segments
+        --trail = fromSegments segments
+        path = fromSegments segments
+        myDiagram = case closed of
+            False -> path # translate (r2 origin) # lw (Output 1) # lc white
+            True -> (strokeLoop.closeLine) path # translate (r2 origin) # fc white
+        (_, r) = renderDia Cairo (CairoOptions "foo.png" (Dims (fromIntegral w) (fromIntegral h)) RenderOnly True) (myDiagram :: Diagram Cairo R2)
 
     surface <- createImageSurface FormatARGB32 w h
     renderWith surface r
@@ -71,6 +79,7 @@ main = do
     ar <- fromByteString (Z :. w :. h) ((), bs) :: IO (Array DIM2 Word32)
 
     --let img = makeRGBA ar
+    writeImageToBMP "foo.bmp" ar
 
     return ()
 

@@ -6,15 +6,27 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ViewPatterns              #-}
+{-# LANGUAGE TypeOperators             #-}
 
 module Flowbox.Geom2D.Rasterizer where
 
+import           Data.Array.Accelerate (Array)
+import           Data.Array.Accelerate.IO
 import           Data.VectorSpace
+import           Data.Word
+import           Diagrams.Backend.Cairo
+import           Diagrams.Backend.Cairo.Internal
 import           Diagrams.Segment
 import           Diagrams.Prelude
+import           Graphics.Rendering.Cairo hiding (translate)
+import           System.IO.Unsafe
 
 import           Math.Coordinate.Cartesian (Point2(..))
-import           Flowbox.Prelude
+import           Flowbox.Graphics.Image.Image   (Image)
+import           Flowbox.Graphics.Image.IO.BMP
+import qualified Flowbox.Graphics.Image.View    as View
+import           Flowbox.Math.Matrix
+import           Flowbox.Prelude hiding ((#))
 
 
 
@@ -38,3 +50,17 @@ makeSegments (f2d -> h) = combine
               in bezier3 (c1 ^-^ s) (c2 ^-^ s) (e ^-^ s) : combine (e':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer: unsupported ammount of points"
 
+rasterizeVector :: Real a => DIM2 -> Bool -> [Point2 a] -> Image View.RGBA
+rasterizeVector sh closed points = makeRGBA $ unsafePerformIO rasterize
+    where Z :. w :. h = sh -- :: Z :. Int :. Int
+          Point2 (f2d -> ox) (f2d -> oy) = head points
+          rasterize = do
+              let path = fromSegments $ makeSegments (fromIntegral h) points
+                  diagram = case closed of
+                      False -> path                        # translate (r2 (ox,oy)) # lc white # lw (Output 1)
+                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # fc white
+                  (_, r) = renderDia Cairo (CairoOptions "" (Dims (fromIntegral w) (fromIntegral h)) RenderOnly True) (diagram :: Diagram Cairo R2)
+              surface <- createImageSurface FormatARGB32 w h
+              renderWith surface r
+              bs <- imageSurfaceGetData surface
+              fromByteString sh ((), bs)
