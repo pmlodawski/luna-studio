@@ -3,8 +3,8 @@ import ```Flowbox.Graphics.Image.Image```
 import ```Flowbox.Geom2D.Rasterizer```
 
 class ```Bool```:
-	True
-	False
+    True
+    False
 
 class ```Point2``` a:
     x,y :: a
@@ -26,8 +26,8 @@ def load path:
 def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
-def rasterizePath w h closed points:
-	```liftF4 rasterizeVectorLuna #{w} #{h} #{closed} #{points}```
+def rasterizePath w h closed pointsA pointsB:
+    ```liftF4 rasterizeVectorLuna #{w} #{h} #{closed} #{pointsA}```
 
 
 
@@ -43,3 +43,10 @@ def main:
     print points
     img = rasterizePath 512 512 True points
     img.save "test.png"
+
+# class Wrapper:
+#     list :: [Int]
+
+# def main:
+#     list = [1,2,3]
+#     wrapper = Wrapper list
