@@ -52,7 +52,7 @@ def main():
     cabalConf = "cabal.config"
     os.chdir(rootPath)
 
-    cabalExec = os.path.join(rootPath, "third-party/HaskellBooster/shell/cabal!")
+    cabalExec = "python " + os.path.join(rootPath, "third-party/HaskellBooster/python/cabal!")
 
     platformFix(sboxName)
     pkgNames = []
@@ -69,7 +69,7 @@ def main():
 
         pkgNames = os.environ[sboxEnv].split(":")
 
-    pkgs = [pkgDb[name] for name in pkgNames]
+    pkgs = [pkgDb[name.replace("\\", "/")] for name in pkgNames]
 
     print_info("Running gencabal")
     ret = call('python2.7 scripts/gencabal', shell=True)

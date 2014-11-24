@@ -15,6 +15,7 @@ module Luna.Data.Serialize.Proto.Conversion.Attributes where
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Map      as Map
+import qualified Data.Maybe    as Maybe
 import qualified Data.Sequence as Sequence
 
 import           Flowbox.Control.Error
@@ -24,22 +25,25 @@ import qualified Generated.Proto.Attributes.Attributes                as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space          as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue as Gen
 import qualified Generated.Proto.Attributes.Flags                     as Gen
+import qualified Generated.Proto.Attributes.FoldInfo                  as Gen
 import qualified Generated.Proto.Attributes.Properties                as Gen
 import           Luna.Data.Serialize.Proto.Conversion.NodeDefault     ()
 import           Luna.Graph.Attributes                                (Attributes)
 import qualified Luna.Graph.Attributes                                as Attributes
 import           Luna.Graph.Flags                                     (Flags (Flags))
+import qualified Luna.Graph.Flags                                     as Flags
 import           Luna.Graph.Properties                                (Properties (Properties))
 
 
 
 instance Convert Flags Gen.Flags where
-    encode (Flags       omit  astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated position) =
-        Gen.Flags (Just omit) astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated (fmap fst position) (fmap snd position)
-    decode (Gen.Flags   momit astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated  mpositionX mpositionY) = do
+    encode (Flags       omit  astFolded astAssignment graphFoldInfo grouped defaultNodeGenerated graphViewGenerated position) =
+        Gen.Flags (Just omit) astFolded astAssignment (fmap encode graphFoldInfo) grouped defaultNodeGenerated graphViewGenerated (fmap fst position) (fmap snd position)
+    decode (Gen.Flags   momit astFolded astAssignment tgraphFoldInfo grouped defaultNodeGenerated graphViewGenerated  mpositionX mpositionY) = do
         omit <- momit <?> "Failed to decode Flags: 'omit' field is missing"
         let position = (,) <$> mpositionX <*> mpositionY
-        return $ Flags omit astFolded astAssignment graphFolded grouped defaultNodeGenerated graphViewGenerated  position
+        graphFoldInfo <- Maybe.maybe (return Nothing) (fmap Just . decode) tgraphFoldInfo
+        return $ Flags omit astFolded astAssignment graphFoldInfo grouped defaultNodeGenerated graphViewGenerated  position
 
 
 instance ConvertPure Attributes Gen.Attributes where
@@ -65,3 +69,11 @@ instance Convert Properties Gen.Properties where
         defautsMap <- mtdefaultsMap <?> "Failed to decode Properties: 'defautsMap' field is missing"
         attributes <- mattributes   <?> "Failed to decode Properties: 'attributes' field is missing"
         Properties <$> decode flags <*> decode defautsMap <*> pure (decodeP attributes)
+
+
+instance Convert Flags.FoldInfo Gen.FoldInfo where
+    encode  Flags.Folded     = Gen.FoldInfo (Just True) Nothing
+    encode (Flags.FoldTop i) = Gen.FoldInfo Nothing $ encodePJ i
+    decode (Gen.FoldInfo (Just True) _) = return Flags.Folded
+    decode (Gen.FoldInfo _ (Just i)   ) = return $ Flags.FoldTop $ decodeP i
+    decode _                            = Left "Failed to decode FoldInfo"

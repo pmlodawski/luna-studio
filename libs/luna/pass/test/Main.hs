@@ -97,12 +97,13 @@ logger = getLoggerIO $(moduleName)
 example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
-                    --, "@AllowOrphans"
-                    , "def print msg:"
-                    , "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
+                    , "@AllowOrphans"
+                    , "import Flowbox:Std"
+                    --, "def print msg:"
+                    --, "    ```polyJoin . liftF1 (Value . fmap Safe . print) $ #{msg}```"
 
-                    , "def Int.> a:"
-                    , "    ```liftF2 (>) #{self} #{a}```"
+                    --, "def Int.> a:"
+                    --, "    ```liftF2 (>) #{self} #{a}```"
 
                     ----, "class Vector:"
                     ----, "    x,y,z :: [Vector]"
@@ -114,14 +115,15 @@ example = Source.Source ["Main"] $
                     --, "def foo a b:"
                     --, "    print a"
                     --, "    print b"
-                    , "def > a b:"
-                    , "    a.> b"
+                    --, "def > a b:"
+                    --, "    a.> b"
 
                     , "def main:"
                     --, "    a = Vector [] [] []"
                     --, "    print [1..5]"
                     --, "    foo 1 2"
-                    , "    print $ 1 > 2"
+                    --, "    print $ 1 > 2"
+                    , "    1"
                     ]
 
 

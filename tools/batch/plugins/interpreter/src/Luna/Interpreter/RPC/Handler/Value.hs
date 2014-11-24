@@ -10,9 +10,9 @@ module Luna.Interpreter.RPC.Handler.Value where
 
 import           Data.IORef       (IORef)
 import qualified Data.IORef       as IORef
+import qualified Data.Sequence    as Sequence
 import qualified Pipes.Concurrent as Pipes
 
-import qualified Flowbox.Batch.Project.Project                         as Project
 import           Flowbox.Bus.Data.Flag                                 (Flag)
 import qualified Flowbox.Bus.Data.Flag                                 as Flag
 import           Flowbox.Bus.Data.Message                              (Message (Message))
@@ -24,7 +24,6 @@ import           Flowbox.ProjectManager.Context                        (Context)
 import           Flowbox.System.Log.Logger                             hiding (error)
 import qualified Flowbox.Text.ProtocolBuffers                          as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import           Generated.Proto.Data.Value                            (Value)
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Request as Value
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Update  as Value
 import           Luna.Interpreter.Proto.CallPoint                      ()
@@ -34,7 +33,7 @@ import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.RPC.Handler.Sync                     as Sync
 import qualified Luna.Interpreter.RPC.Topic                            as Topic
 import qualified Luna.Interpreter.Session.Cache.Value                  as Value
-import           Luna.Interpreter.Session.Data.CallPointPath           (CallPointPath)
+import           Luna.Interpreter.Session.Env.Env                      (ResultCallBack)
 import           Luna.Interpreter.Session.Session                      (SessionST)
 
 
@@ -43,22 +42,21 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-
-get :: Value.Request -> RPC Context SessionST Value.Update
+get :: Value.Request -> RPC Context (SessionST mm) Value.Update
 get (Value.Request tcallPointPath) = do
     (projectID, callPointPath) <- decodeE tcallPointPath
     Sync.testProjectID projectID
     (status, bytes) <- liftSession $ Value.getWithStatus callPointPath
-    return $ Value.Update tcallPointPath (encodeP status) bytes
+    return $ Value.Update tcallPointPath (encodeP status) $ Sequence.fromList bytes
 
 
 reportOutputValue :: IORef Message.CorrelationID
                   -> Pipes.Output (Message, Message.CorrelationID, Flag)
-                  -> Project.ID -> CallPointPath -> Maybe Value -> IO ()
-reportOutputValue crlRef output projectID callPointPath value = do
+                  -> ResultCallBack
+reportOutputValue crlRef output projectID callPointPath values = do
     crl <- IORef.readIORef crlRef
     let tcallPointPath = encode (projectID, callPointPath)
-        response = Value.Update tcallPointPath (encodeP Value.Ready) value
+        response = Value.Update tcallPointPath (encodeP Value.Ready) $ Sequence.fromList values
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response
         packet   = (msg, crl, Flag.Disable)

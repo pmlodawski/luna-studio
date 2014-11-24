@@ -19,6 +19,7 @@ import Flowbox.Prelude
 import Flowbox.Tools.Conversion.Proto
 
 
+
 instance ConvertPure String Proto.Utf8 where
     encodeP = Proto.uFromString
     decodeP = Proto.uToString

@@ -1,30 +1,37 @@
 [submodule "third-party/accelerate"]
     path = third-party/accelerate
-    url = git@github.com:AccelerateHS/accelerate.git
-[submodule "third-party/accelerate-cuda"]
-    path = third-party/accelerate-cuda
-    url = git@github.com:AccelerateHS/accelerate-cuda.git
+    url = https://github.com/AccelerateHS/accelerate.git
 [submodule "third-party/accelerate-io"]
     path = third-party/accelerate-io
-    url = git@github.com:AccelerateHS/accelerate-io.git
+    url = https://github.com/AccelerateHS/accelerate-io.git
 [submodule "third-party/algebraic"]
     path = third-party/algebraic
-    url = git@github.com:wdanilo/algebraic.git
+    url = https://github.com/wdanilo/algebraic.git
 [submodule "third-party/HaskellBooster"]
     path = third-party/HaskellBooster
-    url = git@github.com:wdanilo/HaskellBooster.git
+    url = https://github.com/wdanilo/HaskellBooster.git
 [submodule "tools/graphics/webghci"]
     path = tools/graphics/webghci
-    url = git@github.com:flowbox-public/WebGHCI.git
+    url = https://github.com/flowbox-public/WebGHCI.git
 [submodule "third-party/imagemagick"]
     path = third-party/imagemagick
-    url = git@github.com:flowbox-public/imagemagick.git
+    url = https://github.com/flowbox-public/imagemagick.git
 [submodule "libs/data/graphics/test/samples"]
     path = libs/data/graphics/test/samples
-    url = git@github.com:flowbox-public/ImageProcessingSamples.git
+    url = https://github.com/flowbox-public/ImageProcessingSamples.git
 [submodule "third-party/accelerate-fft"]
     path = third-party/accelerate-fft
-    url = git@github.com:AccelerateHS/accelerate-fft.git
+    url = https://github.com/AccelerateHS/accelerate-fft.git
 [submodule "third-party/mainland-pretty"]
     path = third-party/mainland-pretty
-    url = git@github.com:flowbox-public/mainland-pretty.git
+    url = https://github.com/flowbox-public/mainland-pretty.git
+[submodule "third-party/cufft"]
+    path = third-party/cufft
+    url = https://github.com/srutownik/cufft.git
+[submodule "third-party/accelerate-cuda"]
+    path = third-party/accelerate-cuda
+    url = https://github.com/srutownik/accelerate-cuda.git
+    branch = release/0.15
+[submodule "third-party/cuda"]
+	path = third-party/cuda
+	url = https://github.com/srutownik/cuda.git

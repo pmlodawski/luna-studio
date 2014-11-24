@@ -16,5 +16,9 @@ import           Luna.Interpreter.Session.Session (Session, SessionST)
 
 
 
-liftSession :: Session a -> RPC Context SessionST a
+liftSession :: Session mm a -> RPC Context (SessionST mm) a
 liftSession a = hoistEither . fmapL Error.format =<< lift2 (runEitherT a)
+
+
+--liftSession :: Session a -> RPC Context SessionST a
+liftSession' a = lift (runEitherT a)

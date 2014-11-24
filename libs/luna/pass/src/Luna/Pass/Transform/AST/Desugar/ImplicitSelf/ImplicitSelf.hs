@@ -24,6 +24,8 @@ import qualified Luna.Pass.Pass                                as Pass
 import           Luna.Pass.Transform.AST.Desugar.General.State (DesugarState)
 import qualified Luna.Pass.Transform.AST.Desugar.General.State as State
 
+
+
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
@@ -32,7 +34,7 @@ type DesugarPass result = Pass DesugarState result
 
 
 run :: ASTInfo -> Module -> Pass.Result (Module, ASTInfo)
-run inf = (Pass.run_ (Pass.Info "Desugar.ImplicitSelf") $ State.mk inf) . desugar
+run inf = Pass.run_ (Pass.Info "Desugar.ImplicitSelf") (State.mk inf) . desugar
 
 
 desugar :: Module -> DesugarPass (Module, ASTInfo)
@@ -40,7 +42,7 @@ desugar mod = (,) <$> desugarModule mod <*> State.getInfo
 
 
 desugarModule :: Module -> DesugarPass Module
-desugarModule mod = Module.traverseM desugarModule desugarExpr pure pure pure pure mod
+desugarModule = Module.traverseM desugarModule desugarExpr pure pure pure pure
 
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr

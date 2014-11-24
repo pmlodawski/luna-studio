@@ -23,10 +23,10 @@ def main():
     sboxEnv   = "FDEV_TARGETS"
     os.chdir(rootPath)
 
-    cabalExec = os.path.join(rootPath, "third-party/HaskellBooster/shell/cabal!")
+    cabalExec = "python " + os.path.join(rootPath, "third-party/HaskellBooster/python/cabal!")
 
     pkgNames = []
-    args = ["--show-details=streaming"]
+    args = [] #["--show-details=streaming"]
     for arg in sys.argv[1:]:
         if arg.startswith('--pkgs='):
             pkgNames = arg[7:].split(',')

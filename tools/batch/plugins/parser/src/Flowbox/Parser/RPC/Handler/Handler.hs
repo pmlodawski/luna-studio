@@ -35,6 +35,7 @@ handlerMap callback = HandlerMap.fromList
     , ("parse.pat.request"     , respond status ParserHandler.parsePat     )
     , ("parse.type.request"    , respond status ParserHandler.parseType    )
     , ("parse.nodeexpr.request", respond status ParserHandler.parseNodeExpr)
+    , ("mktext.request"        , respond status ParserHandler.mkText)
     , ("parser.ping.request"   , respond status ParserHandler.ping)
     ]
     where

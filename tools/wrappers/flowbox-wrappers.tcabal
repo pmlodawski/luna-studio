@@ -7,10 +7,10 @@ cabal-version:      >=1.8
 executable cabal
   hs-source-dirs:   src
   main-is:          Cabal.hs
-  ghc-options:      -O2 -main-is Cabal
+  ghc-options:      -O2 -Wall -main-is Cabal
   build-depends:    base,
-                    directory,
                     flowbox-config,
+                    flowbox-utils,
                     process,
                     system-filepath,
                     text
@@ -18,10 +18,10 @@ executable cabal
 executable ghc
   hs-source-dirs:   src
   main-is:          Ghc.hs
-  ghc-options:      -O2 -main-is Ghc
+  ghc-options:      -O2 -Wall -main-is Ghc
   build-depends:    base,
-                    directory,
                     flowbox-config,
+                    flowbox-utils,
                     process,
                     system-filepath,
                     text
@@ -29,10 +29,10 @@ executable ghc
 executable ghci
   hs-source-dirs:   src
   main-is:          Ghci.hs
-  ghc-options:      -O2 -main-is Ghci
+  ghc-options:      -O2 -Wall -main-is Ghci
   build-depends:    base,
-                    directory,
                     flowbox-config,
+                    flowbox-utils,
                     process,
                     system-filepath,
                     text
@@ -40,10 +40,10 @@ executable ghci
 executable ghc-pkg
   hs-source-dirs:   src
   main-is:          GhcPkg.hs
-  ghc-options:      -O2 -main-is GhcPkg
+  ghc-options:      -O2 -Wall -main-is GhcPkg
   build-depends:    base,
-                    directory,
                     flowbox-config,
+                    flowbox-utils,
                     MissingH,
                     process,
                     system-filepath,
@@ -52,10 +52,10 @@ executable ghc-pkg
 executable hsc2hs
   hs-source-dirs:   src
   main-is:          Hsc2Hs.hs
-  ghc-options:      -O2 -main-is Hsc2Hs
+  ghc-options:      -O2 -Wall -main-is Hsc2Hs
   build-depends:    base,
-                    directory,
                     flowbox-config,
+                    flowbox-utils,
                     process,
                     system-filepath,
                     text

@@ -12,6 +12,7 @@ module Luna.Data.Serialize.Proto.Library (
 ) where
 
 import qualified Data.ByteString.Lazy as ByteString
+import qualified Data.Maybe           as Maybe
 import qualified System.IO            as IO
 import qualified Text.ProtocolBuffers as Proto
 
@@ -35,7 +36,7 @@ loggerIO = getLoggerIO "Flowbox.Luna.Tools.Serialize.Proto.Lib"
 
 saveLib :: Library -> IO.Handle -> IO ()
 saveLib library h = do
-    let tlibrary = encode (-1 :: Int, library) :: Gen.Library
+    let tlibrary = encode (Library.ID $ -1, library) :: Gen.Library
     ByteString.hPut h $ Proto.messagePut tlibrary
 
 
@@ -43,17 +44,16 @@ getLib :: IO.Handle -> IO Library
 getLib h = runScript $ do
     binary              <- scriptIO $ ByteString.hGetContents h
     (tlibrary, _)       <- tryRight $ Proto.messageGet binary
-    (_ :: Int, library) <- tryRight $ decode tlibrary
+    (_ :: Library.ID, library) <- tryRight $ decode tlibrary
     return library
 
 
-storeLibrary :: Library -> IO ()
-storeLibrary lib = do
-    let libpath = lib ^. Library.path
+storeLibrary :: Library -> Maybe UniPath -> IO ()
+storeLibrary lib mpath = do
+    let libpath = Maybe.fromMaybe (lib ^. Library.path) mpath
         slib    = Serializable libpath (saveLib lib)
     Serializer.serialize slib
     loggerIO debug "Library saved succesfully"
-
 
 
 restoreLibrary :: UniPath -> IO Library

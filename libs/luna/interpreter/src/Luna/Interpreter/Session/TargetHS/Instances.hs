@@ -5,6 +5,7 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.TargetHS.Instances where
 
 import qualified FamInstEnv
@@ -12,12 +13,12 @@ import qualified GHC
 import qualified GhcMonad
 import qualified HscTypes
 import qualified InstEnv
-import qualified Outputable
 import           Text.Show.Pretty (ppShow)
 
 import Flowbox.Prelude
 import Flowbox.System.Log.Logger
-import Luna.Interpreter.Session.Session (Session)
+import Luna.Interpreter.Session.GHC.Util (dshow)
+import Luna.Interpreter.Session.Session  (Session)
 
 
 
@@ -25,27 +26,23 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-dshow :: Outputable.Outputable a => GHC.DynFlags -> a -> String
-dshow dflags = Outputable.showSDoc dflags . Outputable.ppr
-
-
 type ClsInstSelector = GHC.DynFlags -> InstEnv.ClsInst -> Bool
 type FamInstSelector = GHC.DynFlags -> FamInstEnv.FamInst -> Bool
 
 
-cleanFunctions :: Session ()
+cleanFunctions :: Session mm ()
 cleanFunctions = clean clsInstFilter famInstFilter where
     clsInstFilter dflags inst = dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Func.Func.Func"
                              && dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Struct.Mem.HasMem"
     famInstFilter = const $ const True
 
 
-cleanAll :: Session ()
+cleanAll :: Session mm ()
 cleanAll = clean true true where
     true = const $ const True
 
 
-clean :: ClsInstSelector -> FamInstSelector -> Session ()
+clean :: ClsInstSelector -> FamInstSelector -> Session mm ()
 clean clsInstFilter famInstFilter = lift2 $ do
     dflags <- GHC.getSessionDynFlags
 
@@ -61,7 +58,7 @@ clean clsInstFilter famInstFilter = lift2 $ do
         in hscEnv { HscTypes.hsc_IC = hsc_IC'}
 
 
-printInstances :: Session ()
+printInstances :: Session mm ()
 printInstances = lift2 $ do
     dflags <- GHC.getSessionDynFlags
     GhcMonad.withSession $ \hscEnv -> do
@@ -92,5 +89,5 @@ printInstances = lift2 $ do
 
                             ) ++ "\n" ++ dshow dflags i
 
-        putStrLn  famInstances
-        putStrLn  clsInstances
+        putStrLn famInstances
+        putStrLn clsInstances

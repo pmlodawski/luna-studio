@@ -22,8 +22,6 @@ Executable luna
   GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
-                  OverloadedStrings
                   NoImplicitPrelude
   Build-Depends:  base,
                   containers,
@@ -46,7 +44,6 @@ Test-Suite tests
   GHC-Options:    -Wall -threaded -O2
   Extensions:     NoImplicitPrelude
   Build-Depends:  base,
-                  directory,
                   flowbox-config,
                   flowbox-utils,
                   hspec,

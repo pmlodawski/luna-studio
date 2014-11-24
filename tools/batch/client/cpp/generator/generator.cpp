@@ -268,6 +268,8 @@ struct ArgWrapper
 		FieldDescriptor::Type type = arg->type();
 		switch(type)
 		{
+		case FieldDescriptor::TYPE_INT64:
+			return "long long";
 		case FieldDescriptor::TYPE_DOUBLE:
 			return "double";
 		case FieldDescriptor::TYPE_BOOL:
@@ -355,7 +357,8 @@ struct MethodWrapper
 	std::string prepareRet, returnRet, useRet, useRetAsync, defineRet;
 
 	std::vector<int> collapsedArgs;
-	std::string collapsedName; 
+	std::string collapsedName;
+	std::vector<std::string> names;
 
 	MethodWrapper(std::string topic, std::string name, const FileDescriptor *file, const Descriptor *top, 
 				  std::shared_ptr<const AgentWrapper> agent)
@@ -411,7 +414,6 @@ struct MethodWrapper
 	std::string translateArguments() 
 	{
 		std::vector<std::string> argsTxt;
-		std::vector<std::string> names;
 		for(int i = 0; i < (int)argsFields.size(); i++)
 		{
 			auto &arg = argsFields.at(i);
@@ -493,7 +495,7 @@ struct MethodWrapper
 
 					const int index = 4 + packContainsAstId - collapsedArgs.size() + j;
 					static const std::vector<std::string> names = { "nodeID", "defID", "libID", "projID", "defID" };
-					const auto derefedArg = collapsedName + "." + names[index];
+					const auto derefedArg = this->names[i]/*collapsedName*/ + "." + names[index];
 
 					if(index == 1)
 					{

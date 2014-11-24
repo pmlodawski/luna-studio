@@ -4,7 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
+
 module Flowbox.Parser.RPC.Handler.Parser where
 
 import qualified Flowbox.Batch.Handler.Parser                   as BatchP
@@ -12,6 +14,8 @@ import           Flowbox.Bus.RPC.RPC                            (RPC)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.Parser.MkText.Request          as MkText
+import qualified Generated.Proto.Parser.MkText.Status           as MkText
 import qualified Generated.Proto.Parser.Parse.Expr.Request      as ParseExpr
 import qualified Generated.Proto.Parser.Parse.Expr.Status       as ParseExpr
 import qualified Generated.Proto.Parser.Parse.NodeExpr.Request  as ParseNodeExpr
@@ -22,10 +26,11 @@ import qualified Generated.Proto.Parser.Parse.Type.Request      as ParseType
 import qualified Generated.Proto.Parser.Parse.Type.Status       as ParseType
 import qualified Generated.Proto.Parser.Parser.Ping.Request     as Ping
 import qualified Generated.Proto.Parser.Parser.Ping.Status      as Ping
+import           Luna.AST.Expr                                  (Expr)
 import           Luna.Data.Serialize.Proto.Conversion.Crumb     ()
 import           Luna.Data.Serialize.Proto.Conversion.Expr      ()
 import           Luna.Data.Serialize.Proto.Conversion.Pat       ()
-
+import           Luna.Util.LunaShow                             (lunaShow)
 
 
 logger :: LoggerIO
@@ -34,35 +39,37 @@ logger = getLoggerIO $(moduleName)
 -------- public api -------------------------------------------------
 
 parseExpr :: ParseExpr.Request -> RPC () IO ParseExpr.Status
-parseExpr (ParseExpr.Request tstr) = do
-    logger info "called parseExpr"
+parseExpr request@(ParseExpr.Request tstr) = do
     let str = decodeP tstr
     expr <- BatchP.parseExpr str
-    return $ ParseExpr.Status (encode expr) tstr
+    return $ ParseExpr.Status request (encode expr)
 
 
 parsePat :: ParsePat.Request -> RPC () IO ParsePat.Status
-parsePat (ParsePat.Request tstr) = do
-    logger info "called parsePat"
+parsePat request@(ParsePat.Request tstr) = do
     let str = decodeP tstr
     pat <- BatchP.parsePat str
-    return $ ParsePat.Status (encode pat) tstr
+    return $ ParsePat.Status request(encode pat)
 
 
 parseType :: ParseType.Request -> RPC () IO ParseType.Status
-parseType (ParseType.Request tstr) = do
-    logger info "called parseType"
+parseType request@(ParseType.Request tstr) = do
     let str = decodeP tstr
     pat <- BatchP.parseType str
-    return $ ParseType.Status (encode pat) tstr
+    return $ ParseType.Status request (encode pat)
 
 
 parseNodeExpr :: ParseNodeExpr.Request -> RPC () IO ParseNodeExpr.Status
-parseNodeExpr (ParseNodeExpr.Request tstr) = do
-    logger info "called parseExpr"
+parseNodeExpr request@(ParseNodeExpr.Request tstr) = do
     let str = decodeP tstr
     expr <- BatchP.parseNodeExpr str
-    return $ ParseNodeExpr.Status (encode expr) tstr
+    return $ ParseNodeExpr.Status request (encode expr)
+
+
+mkText :: MkText.Request -> RPC () IO MkText.Status
+mkText request@(MkText.Request texpr) = do
+    expr <- decodeE texpr
+    return $ MkText.Status request $ encodeP $ lunaShow (expr :: Expr)
 
 
 ping :: Ping.Request -> RPC () IO Ping.Status

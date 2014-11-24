@@ -77,8 +77,8 @@ import qualified Text.ProtocolBuffers.Extensions                as Extensions
 instance Convert Expr Gen.Expr where
     encode t = case t of
         Expr.Accessor   i acc' dst -> do let (cls, acc) = case acc' of
-                                                Expr.ConAccessor acc -> (GenAccessorCls.Con, acc)
-                                                Expr.VarAccessor acc -> (GenAccessorCls.Var, acc)
+                                                Expr.ConAccessor acc_ -> (GenAccessorCls.Con, acc_)
+                                                Expr.VarAccessor acc_ -> (GenAccessorCls.Var, acc_)
                                          genExpr GenCls.Accessor i GenAccessor.ext $ GenAccessor.Accessor
                                             cls (encodePJ acc) (encodeJ dst)
         Expr.App        i src args -> genExpr GenCls.App i GenApp.ext $ GenApp.App
@@ -168,9 +168,9 @@ instance Convert Expr Gen.Expr where
             genExpr cls i key ext = Extensions.putExt key (Just ext)
                                   $ Gen.Expr cls (encodePJ i) $ Extensions.ExtField Map.empty
 
-    decode t@(Gen.Expr cls mtid _) = do
+    decode t@(Gen.Expr cls_ mtid _) = do
         i <- decodePJ mtid (missing "Expr" "id")
-        case cls of
+        case cls_ of
             GenCls.Accessor -> do
                 GenAccessor.Accessor aclst name dst <- getExt GenAccessor.ext "Expr.Accessor"
                 let acls = case aclst of
