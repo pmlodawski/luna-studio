@@ -20,7 +20,6 @@ import qualified Data.Maybe                 as Maybe
 import           Flowbox.Prelude                         hiding (error, mapM, mapM_)
 import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Arg                            (Arg)
 import qualified Luna.AST.Arg                            as Arg
 import qualified Luna.AST.Common                         as AST
 import           Luna.AST.Expr                           (Expr)
