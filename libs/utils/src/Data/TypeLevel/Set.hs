@@ -14,11 +14,15 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverlappingInstances #-}
 
-module Data.TypeLevel.Set where
+module Data.TypeLevel.Set (
+    module X,
+    module Data.TypeLevel.Set
+)where
 
 import GHC.TypeLits
 import Data.Typeable
 import Data.TypeLevel.Bool
+import Data.TypeLevel.FlatContainers as X
 import Prelude hiding (lookup)
 
 type Empty = ()
@@ -33,11 +37,6 @@ type family Remove t set where
   Remove t (t,x) = x
   Remove t (a,x) = (a,Remove t x)
 
-type family Contains set t where
-  Contains ()    t = False
-  Contains (t,x) t = True
-  Contains (a,x) t = Contains x t
-
 type family Union set1 set2 where
   Union s ()    = s
   Union s (t,x) = Union (Insert t s) x
@@ -48,11 +47,7 @@ type family Difference set1 set2 where
 
 type family XOR set1 set2 where
   XOR s ()     = s
-  XOR s (x,xs) = IfThenElse (Contains s x) (XOR (Remove x s) xs) (x, XOR s xs)
-
-type family IfThenElse cond a b where
-  IfThenElse True  a b = a
-  IfThenElse False a b = b
+  XOR s (x,xs) = If (Contains s x) (XOR (Remove x s) xs) (x, XOR s xs)
 
 type family IsSubset set1 set2 where
   IsSubset () s    = True
@@ -60,7 +55,7 @@ type family IsSubset set1 set2 where
 
 type family Intersection set1 set2 where
   Intersection s () = ()
-  Intersection s (t,x) = IfThenElse (Contains s t) (t, Intersection s x) (Intersection s x)
+  Intersection s (t,x) = If (Contains s t) (t, Intersection s x) (Intersection s x)
 
 type family IsEmpty set where
   IsEmpty () = True
@@ -75,7 +70,7 @@ type family SumProxy a b where
 
 type IsSuperset a b = IsSubset b a
 
-type Remove' t set = IfThenElse (Contains set t) (Remove t set) set
+type Remove' t set = If (Contains set t) (Remove t set) set
 
 
 class InsertClass a s1 s2 | a s1 -> s2
@@ -92,30 +87,6 @@ instance InsertClass a xs out => InsertClass a (x,xs) (x,out) where
 
 
 
-class Lookup s a where 
-  lookup :: s -> Maybe a
-
-instance Lookup () a where
-  lookup _ = Nothing
-
-instance Lookup (a,xs) a where
-  lookup (x,_) = Just x
-
-instance Lookup xs a => Lookup (x,xs) a where
-  lookup (_,xs) = lookup xs
-
-
-class Modify s a where 
-  modify :: (a -> a) -> s -> s
-
-instance Modify () a where
-  modify _ = id
-
-instance Modify (a,xs) a where
-  modify f (a,xs) = (f a, xs)
-
-instance Modify xs a => Modify (x,xs) a where
-  modify f (x,xs) = (x, modify f xs)
 
 --teq :: a -> a -> a
 --teq = const

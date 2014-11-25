@@ -44,4 +44,8 @@ Library
                   parsers,
                   transformers,
                   mtl,
-                  assert
+                  assert,
+                  HMap,
+                  either,
+                  bytestring,
+                  utf8-string

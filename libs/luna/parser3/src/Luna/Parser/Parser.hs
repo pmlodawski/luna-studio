@@ -653,7 +653,7 @@ varE   = do
 
 lookupAST name = do
     scope  <- State.getScope
-    astMap <- State.getASTMap
+    --astMap <- State.getASTMap
     pid    <- State.getPid
 
     pragmaSet <- view (State.conf . Config.pragmaSet) <$> get
@@ -664,7 +664,7 @@ lookupAST name = do
                 -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
                 -- poprawka: Nothing zostanie rowniez zwrocone przy ustawionej fladze
                 -- poprawka: Nothing zostanie rowniez zwrocone przy "self"
-                Just dstID -> return $ Map.lookup dstID astMap 
+                Just dstID -> return Nothing --return $ Map.lookup dstID astMap 
                 Nothing    -> if (name == "self") 
                     then return Nothing
                     else case Pragma.lookup pragmaSet of
@@ -819,7 +819,8 @@ appConf = Config.registerPragma (undefined :: Pragma.TabLength)
 -- FIXME[wd]: logika powina byc przeniesiona na system pluginow
 defConfig = appConf def
 -- FIXME[wd]: debugowo ustawione wartosci typow
-defState  = (def :: State () () String ()) & State.conf .~ defConfig
+emptyState = def :: State ()
+defState  = emptyState & State.conf .~ defConfig
 
 
 appSt = State.conf %~ appConf
@@ -859,93 +860,93 @@ parseFile       path  p = handleResult <$> parseFromFile       p (parserDelta pa
 parseString     input p = handleResult  $  parseFromString     p (parserDelta parserName) input
 parseByteString input p = handleResult  $  parseFromByteString p (parserDelta parserName) input
 
+parseByteString2 p input = handleResult  $  parseFromByteString p (parserDelta parserName) input
+                --data AliasAnalysis = AliasAnalysis
 
-data AliasAnalysis = AliasAnalysis
+                --traverseM        = AST.traverseM        AliasAnalysis
+                --defaultTraverseM = AST.defaultTraverseM AliasAnalysis
 
-traverseM        = AST.traverseM        AliasAnalysis
-defaultTraverseM = AST.defaultTraverseM AliasAnalysis
-
-testme ast st = runState (traverseM ast) st
-
-
---type AACtx m lab e a conf v = (Enumerated lab, TLSet.Lookup conf (Pragma.Pragma Pragma.AllowOrphans),
---                              MonadState (State a e v conf) m, Show conf, Show v, Show e, Show a, Functor m) 
-
-type AACtx m lab e s conf v = (Enumerated lab, MonadState (State s e v conf) m, Applicative m)
-
-instance (AACtx m lab e s conf v, AST.Traversal AliasAnalysis m a a)
-    => AST.Traversal AliasAnalysis m (LModule lab a) (LModule lab a) where
-    traverseM _ = aatest
-
-instance (AACtx m lab e s conf v, AST.Traversal AliasAnalysis m a a)
-      => AST.Traversal AliasAnalysis m (LDecl lab a) (LDecl lab a) where
-    traverseM _ = traverseDecl
-
-instance AACtx m lab e s conf v
-      => AST.Traversal AliasAnalysis m (LPat lab) (LPat lab) where
-    traverseM _ = registerPat
+testme ast st = ast -- runState (traverseM ast) st
 
 
+                ----type AACtx m lab e a conf v = (Enumerated lab, TLSet.Lookup conf (Pragma.Pragma Pragma.AllowOrphans),
+                ----                              MonadState (State a e v conf) m, Show conf, Show v, Show e, Show a, Functor m) 
 
-aaunit (Unit mod) = Unit <$> aatest mod
+                --type AACtx m lab e s conf v = (Enumerated lab, MonadState (State s e v conf) m, Applicative m)
 
-aatest mod@(Label lab (Module path name body)) = State.withNewScope id continue
-        where continue =  registerDecls body
-                       *> defaultTraverseM mod
-              id       = Enum.id lab
+                --instance (AACtx m lab e s conf v, AST.Traversal AliasAnalysis m a a)
+                --    => AST.Traversal AliasAnalysis m (LModule lab a) (LModule lab a) where
+                --    traverseM _ = aatest
 
+                --instance (AACtx m lab e s conf v, AST.Traversal AliasAnalysis m a a)
+                --      => AST.Traversal AliasAnalysis m (LDecl lab a) (LDecl lab a) where
+                --    traverseM _ = traverseDecl
 
-registerDecls decls =  mapM registerHeaders  decls
-                    *> mapM registerDataDecl decls
-
-
-registerDataDecl (Label lab decl) = case decl of
-    Decl.Data     name _ cons defs   -> State.withNewScope id (registerDecls defs) *> pure ()
-    _                                -> pure ()
-    where id = Enum.id lab
-
-registerHeaders (Label lab decl) = case decl of
-    Decl.Function _ name inputs _ _  -> State.regVarName id (view MultiName.base name)
-                                     <* State.withNewScope id (traverseM inputs)
-    Decl.Data     name _ cons _      -> State.regTypeName id (Name.fromName name) 
-                                     <* mapM_ registerCons cons
-    _                                -> pure ()
-    where id = Enum.id lab
-
-registerPat p@(Label lab pat) = case pat of
-    Pat.Var         name       -> State.regVarName id (Name.fromName name) *> continue
-    _                          -> continue
-    where id = Enum.id lab
-          continue = defaultTraverseM p 
-
-registerCons (Label lab (Decl.Cons name fields)) = State.regVarName (Enum.id lab) (Name.fromName name)
+                --instance AACtx m lab e s conf v
+                --      => AST.Traversal AliasAnalysis m (LPat lab) (LPat lab) where
+                --    traverseM _ = registerPat
 
 
-traverseDecl d@(Label lab decl) = case decl of
-    Decl.Function path name inputs output body -> State.withNewScope id $ defaultTraverseM d
-    _ -> continue
-    where id       = Enum.id lab
-          continue = defaultTraverseM d
+
+                --aaunit (Unit mod) = Unit <$> aatest mod
+
+                --aatest mod@(Label lab (Module path name body)) = State.withNewScope id continue
+                --        where continue =  registerDecls body
+                --                       *> defaultTraverseM mod
+                --              id       = Enum.id lab
 
 
-traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
-    Decl.Function path name inputs output body -> do
-        subAST  <- subparse (unlines body)
-        inputs' <- mapM subparseArg inputs
-        return $ Decl.Function path name inputs' output subAST
-    Decl.Data        name params cons defs -> return $ Decl.Data        name params [] []
-    Decl.Import      path rename targets   -> return $ Decl.Import      path rename targets
-    Decl.TypeAlias   dst src               -> return $ Decl.TypeAlias   dst src
-    Decl.TypeWrapper dst src               -> return $ Decl.TypeWrapper dst src
-    where id = Enum.id lab
-          subparse expr = do 
-              result <- State.withScope id (parseString expr <$> (exprBlockParser2 <$> get))
-              case result of
-                  Left e      -> fail   $ show e
-                  Right (e,_) -> return $ e
-          -- FIXME [wd]: inny parser powinine parsowac argumenty poniewaz nie zawieraja wielu linii i nie moga zawierac wielu exproessionow!
-          --             zatem wyciaganie pierwszego elementu jest szybkim obejsciem
-          subparseArg (Arg pat val) = Arg pat . (fmap (!!0)) <$> mapM subparse val 
+                --registerDecls decls =  mapM registerHeaders  decls
+                --                    *> mapM registerDataDecl decls
+
+
+                --registerDataDecl (Label lab decl) = case decl of
+                --    Decl.Data     name _ cons defs   -> State.withNewScope id (registerDecls defs) *> pure ()
+                --    _                                -> pure ()
+                --    where id = Enum.id lab
+
+                --registerHeaders (Label lab decl) = case decl of
+                --    Decl.Function _ name inputs _ _  -> State.regVarName id (view MultiName.base name)
+                --                                     <* State.withNewScope id (traverseM inputs)
+                --    Decl.Data     name _ cons _      -> State.regTypeName id (Name.fromName name) 
+                --                                     <* mapM_ registerCons cons
+                --    _                                -> pure ()
+                --    where id = Enum.id lab
+
+                --registerPat p@(Label lab pat) = case pat of
+                --    Pat.Var         name       -> State.regVarName id (Name.fromName name) *> continue
+                --    _                          -> continue
+                --    where id = Enum.id lab
+                --          continue = defaultTraverseM p 
+
+                --registerCons (Label lab (Decl.Cons name fields)) = State.regVarName (Enum.id lab) (Name.fromName name)
+
+
+                --traverseDecl d@(Label lab decl) = case decl of
+                --    Decl.Function path name inputs output body -> State.withNewScope id $ defaultTraverseM d
+                --    _ -> continue
+                --    where id       = Enum.id lab
+                --          continue = defaultTraverseM d
+
+
+                --traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
+                --    Decl.Function path name inputs output body -> do
+                --        subAST  <- subparse (unlines body)
+                --        inputs' <- mapM subparseArg inputs
+                --        return $ Decl.Function path name inputs' output subAST
+                --    Decl.Data        name params cons defs -> return $ Decl.Data        name params [] []
+                --    Decl.Import      path rename targets   -> return $ Decl.Import      path rename targets
+                --    Decl.TypeAlias   dst src               -> return $ Decl.TypeAlias   dst src
+                --    Decl.TypeWrapper dst src               -> return $ Decl.TypeWrapper dst src
+                --    where id = Enum.id lab
+                --          subparse expr = do 
+                --              result <- State.withScope id (parseString expr <$> (exprBlockParser2 <$> get))
+                --              case result of
+                --                  Left e      -> fail   $ show e
+                --                  Right (e,_) -> return $ e
+                --          -- FIXME [wd]: inny parser powinine parsowac argumenty poniewaz nie zawieraja wielu linii i nie moga zawierac wielu exproessionow!
+                --          --             zatem wyciaganie pierwszego elementu jest szybkim obejsciem
+                --          subparseArg (Arg pat val) = Arg pat . (fmap (!!0)) <$> mapM subparse val 
 
 
 

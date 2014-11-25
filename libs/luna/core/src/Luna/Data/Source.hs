@@ -8,39 +8,40 @@
 
 module Luna.Data.Source where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
+import qualified Data.ByteString as ByteString
+import           Data.ByteString (ByteString)
+import qualified Data.ByteString.UTF8          as UTF8
 
 
+----------------------------------------------------------------------
+-- Data types
+----------------------------------------------------------------------
 
-data Source = Source { _path :: [String]
-                     , _code :: String
-                     } deriving (Show)
+data Source a = Source { _modName :: String, _src :: a}
+              deriving (Show, Functor)
+
+data Medium = File       { _path :: String     }
+            | ByteString { _bs   :: ByteString }
+            | String     { _str  :: String     }
+            deriving (Show)
+
+data Code = Code { _code :: ByteString }
+          deriving Show
 
 makeLenses ''Source
+makeLenses ''Medium
+makeLenses ''Code
 
 
+----------------------------------------------------------------------
+-- Utils
+----------------------------------------------------------------------
 
-transCode :: (String -> String) -> Source -> Source
-transCode = (code %~ )
-
-
-
---{-# LANGUAGE TemplateHaskell #-}
-
---module Luna.Data.Source where
-
---import Flowbox.Prelude
---import qualified Data.ByteString.UTF8 as UTF8
+read :: (MonadIO m, Functor m) => Source Medium -> m (Source Code)
+read (Source name src) = (fmap $ Source name . Code) $ case src of
+    File       path -> liftIO $ ByteString.readFile path
+    ByteString bs   -> return $ bs
+    String     str  -> return $ UTF8.fromString str
 
 
-
---data Source = File       { _path  :: String          }
---            | String     { _input :: String          }
---            | ByteString { _input :: UTF8.ByteString }
---            deriving (Show)
-
---makeLenses(''Source)
-
-
-----transCode :: (String -> String) -> Source -> Source
-----transCode = (code %~ )
