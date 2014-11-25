@@ -7,24 +7,23 @@ Build-Type:     Simple
 
 
 
-Library
-  GHC-Options:        -Wall -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+Executable luna-typechecker
+  GHC-Options:        -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     src
+  Main-Is:            Main.hs
   Build-Depends:      base
-                    , containers
-                    , deepseq
+                    , either
                     , lens
                     , luna-core
                     , luna-logger
+                    , luna-parser
+                    , luna-pass
                     , mtl
                     , transformers
-  Exposed-Modules:    Luna.Typechecker.REC
-  --Exposed-Modules:    findmodules('src', '.*\.hs$', exclude='(.*Main\.hs, .*REC\.hs, .*HMX\.hs)')
-
 
 
 Executable luna-typechecker-tests
-  GHC-Options:        -Wall -fhpc -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     test
   Main-Is:            Main.hs
   Build-Depends:      base
@@ -35,6 +34,5 @@ Executable luna-typechecker-tests
                     , luna-logger
                     , luna-parser
                     , luna-pass
-                    , luna-typechecker
                     , mtl
                     , transformers
