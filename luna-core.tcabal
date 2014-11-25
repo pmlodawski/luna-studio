@@ -26,7 +26,11 @@ Library
                   StandaloneDeriving,
                   FlexibleContexts,
                   MultiParamTypeClasses,
-                  DefaultSignatures
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  FlexibleInstances,
+                  LambdaCase,
+                  ConstraintKinds
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
@@ -40,4 +44,8 @@ Library
                   parsers,
                   transformers,
                   mtl,
-                  assert
+                  assert,
+                  HMap,
+                  either,
+                  bytestring,
+                  utf8-string

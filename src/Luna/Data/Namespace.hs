@@ -45,9 +45,9 @@ head :: Namespace -> Maybe ID
 head (Namespace (id:_) _) = Just id
 head _                    = Nothing
 
-
-pushScope :: ID -> Namespace -> Namespace
-pushScope id ns@(Namespace st inf) = ns
+-- FIXME[wd]: dodac asserty!
+pushNewScope :: ID -> Namespace -> Namespace
+pushNewScope id ns@(Namespace st inf) = ns
                                    & pushID id
                                    & info .~ ninfo
     where ninfo  = inf & Alias.scope .~ scope
@@ -56,6 +56,10 @@ pushScope id ns@(Namespace st inf) = ns
               Nothing  -> def
               Just pid -> fromJust $ Map.lookup pid scopes
           scope  = Map.insert id pScope scopes
+
+-- FIXME[wd]: dodac asserty!
+pushScope :: ID -> Namespace -> Namespace
+pushScope = pushID
 
 popScope :: Namespace -> Namespace
 popScope = snd . popID
@@ -67,7 +71,7 @@ popID :: Namespace -> (ID, Namespace)
 popID ns = (id, ns & stack .~ ids)
     where (id:ids) = view stack ns
 
-bindVar :: ID -> String -> Namespace -> Either () Namespace
+bindVar :: ID -> String -> Namespace -> Either () (Namespace)
 bindVar id name ns = 
     case head ns of
         Nothing  -> Left ()
@@ -76,9 +80,6 @@ bindVar id name ns =
             Just (Alias.Scope varnames typenames) -> case (varnames^.at name) of 
                 Nothing    -> Left ()
                 Just dstID -> Right (ns & info . Alias.alias . at id ?~ dstID)
-
-
-regAST id ast = info %~ Alias.regAST id (AST.wrap ast)
 
 
 
@@ -108,7 +109,7 @@ regParent id pid = info %~ Alias.regParent id pid
 --    popScope
 --    return ret
 
-modAlias :: (AliasInfo -> AliasInfo) -> Namespace -> Namespace
+modAlias :: (AliasInfo-> AliasInfo) -> Namespace -> Namespace
 modAlias f = info %~ f
 
 ------------------------------------------------------------------------

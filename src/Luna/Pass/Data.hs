@@ -4,25 +4,28 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FunctionalDependencies#-}
-{-# LANGUAGE FlexibleInstances#-}
 
-module Luna.ASTNew.Label where
+module Luna.Pass.Data where
 
 import           Flowbox.Prelude
-import           GHC.Generics (Generic)
+import qualified Data.HTSet.HTSet as HTSet
+import           Data.HTSet.HTSet (HTSet)
 
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
-data Label l a = Label { _label :: l, _element :: a } deriving (Eq, Generic, Read, Functor)
+data DataInfo = DataInfo { _name :: String
+                         , _desc :: String
+                         } deriving (Show)
 
-makeLenses ''Label
+data PassData a = PassData { _info :: DataInfo
+                           } 
 
-instance (Show l, Show a) => Show (Label l a) where
-    show (Label l a) = "L " ++ show l ++ " " ++ show a
+makeLenses ''DataInfo
+makeLenses ''PassData
+
+
 
 
