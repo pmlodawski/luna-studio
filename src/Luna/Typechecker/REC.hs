@@ -10,7 +10,7 @@
 
 
 
-module Main where
+module Luna.Typechecker.REC where
 
 -- *------------------------------------------------
 -- * Category: DATA DECLARATIONS
@@ -164,7 +164,7 @@ instance Monad TP where
  m >>= k = TP ( \ (n,s,c) -> 
                      case unTP (m) (n,s,c) of 
                        Suc (n',s',c',x) -> unTP (k x) (n',s',c')
-                       Err s	          -> Err s )
+                       Err s            -> Err s )
  return x = TP ( \ (n,s,c) -> return (n,s,c,x) )
 
 
@@ -297,7 +297,7 @@ gen :: Typo -> Type -> TP TypeScheme
 gen env t =
  TP ( \ (n,s,c) -> return (n,s, projection c (fv t c env), Poly (fv t c env) c t) ) 
                       where fv t1 c1 env1 = without ((tv t1) ++ (tv c1)) (tv_typo env1)
->
+
 
 
 -- constraint solver
@@ -437,9 +437,9 @@ extract2 (_:p) = extract2 p
 
 get_extract2 [] _ _ _ = return []
 get_extract2 ((Reckind a l a'):p) t l' t' = if (l == l') && (a == t) 
->					      then do e <- get_extract2 p t l' t' 
->						      return ((a' `Subsume` t'):e)
-                                            else get_extract2 p t l' t'
+                then do e <- get_extract2 p t l' t' 
+                        return ((a' `Subsume` t'):e)
+                else get_extract2 p t l' t'
 get_extract2 (_:p) t l t'                 = get_extract2 p t l t'
 
 
@@ -500,8 +500,8 @@ unify (s, t, TV x) = unify (s, TV x, t)
 unify (s, t1 `Fun` t1', t2 `Fun` t2') = do s' <- unify (s, t1, t2)
                                            unify (s', t1', t2')
 unify (s, Record f, Record f') = g (s,f,f') where
-     		 g (s, [], []) = return s
-               g (s, (l,t):f, (l',t'):f') =
+          g (s, [], []) = return s
+          g (s, (l,t):f, (l',t'):f') =
                         if l == l'
                         then do s' <- unify(s,t,t')
                                 g(s',f,f')
@@ -537,10 +537,10 @@ rec1 = unTP (tp ([(100, Mono (Record [(200, TV 300),(201, TV 301)])),
 
 
 rec2 = cs(null_subst, ( C [(Reckind (TV 100) 200 ((TV 300) `Fun` (TV 300))),
->		              (Reckind (TV 100) 200 (TV 301))]))
+                  (Reckind (TV 100) 200 (TV 301))]))
 
 rec3 = cs(null_subst, (C  [(Reckind (TV 100) 200 ((TV 300) `Fun` (TV 301))),
->		              (Reckind (TV 100) 200 ((TV 302) `Fun` (TV 302)))]))
+                  (Reckind (TV 100) 200 ((TV 302) `Fun` (TV 302)))]))
 
 
 

@@ -18,6 +18,7 @@ Library
                     , luna-logger
                     , mtl
                     , transformers
+  Exposed-Modules:    Luna.Typechecker.REC
   --Exposed-Modules:    findmodules('src', '.*\.hs$', exclude='(.*Main\.hs, .*REC\.hs, .*HMX\.hs)')
 
 
