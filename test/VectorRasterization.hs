@@ -22,6 +22,7 @@ import           Diagrams.TrailLike
 import           Graphics.Rendering.Cairo hiding (translate)
 --import           Graphics.Rendering.Cairo
 
+import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.Rasterizer hiding (makePoints, makeSegments)
 import           Flowbox.Graphics.Image.IO.BMP
 import           Flowbox.Graphics.Mockup (saveImageLuna)
@@ -58,9 +59,13 @@ main = do
         --coords = [ 0, 0
         --         , 100, 0, 100, 100, 0, 100
         --         ]
-        points' = [ Point2 212 209
-                  , Point2 211 114, Point2 329 109, Point2 338 210
-                  , Point2 450 211, Point2 456 331, Point2 343 330
+        --points' = [ Point2 212 209
+        --          , Point2 211 114, Point2 329 109, Point2 338 210
+        --          , Point2 450 211, Point2 456 331, Point2 343 330
+        --          ]
+        points' = [ ControlPoint (Point2 212 209) Nothing                             (Just $ Point2 (211-212) (114-209))
+                  , ControlPoint (Point2 338 210) (Just $ Point2 (329-338) (109-210)) (Just $ Point2 (450-338) (211-210))
+                  , ControlPoint (Point2 343 330) (Just $ Point2 (456-343) (331-330)) Nothing
                   ]
         --points' = [ Point2 0 0
         --          , Point2 100 0, Point2 100 100, Point2 0 100
