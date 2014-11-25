@@ -263,3 +263,6 @@ unpackLunaList = fmap extract
 
 rasterizeVectorLuna :: Real a => Int -> Int -> Bool -> [Value Pure Safe (ControlPoint a)] -> Image RGBA
 rasterizeVectorLuna w h closed points = rasterizeVector w h closed $ unpackLunaList points
+
+test :: Int
+test = undefined
