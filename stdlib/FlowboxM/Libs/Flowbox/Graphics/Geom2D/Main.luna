@@ -15,12 +15,13 @@ class ```Maybe``` a:
 class ```Point2``` a:
     x,y :: a
 
-class ```ControlPoint``` a:
+# class ```ControlPoint``` a:
+#     point :: Point2 a
+#     handleIn, handleOut :: Maybe (Point2 a)
+
+class ControlPoint2 a:
     point :: Point2 a
     handleIn, handleOut :: Maybe (Point2 a)
-
-# class ControlPoint a:
-
 
 alias Path = String
 
@@ -33,20 +34,28 @@ def Image.save path:
 def rasterizePath w h closed pointsA pointsB:
     ```liftF4 rasterizeVectorLuna #{w} #{h} #{closed} #{pointsA}```
 
-
+def test obj:
+    ```liftF1 test #{obj}```
 
 def print msg:
     ```autoLift1 print #{msg}```
 
 def main:
     print "- - - vector rasterization test - - -"
-    points = [ Point2 212 209
-             , Point2 211 114, Point2 329 109, Point2 338 210
-             , Point2 450 211, Point2 456 331, Point2 343 330
-             ]
-    print points
-    img = rasterizePath 512 512 True points []
-    img.save "test.png"
+    # point = ControlPoint (Point2 212 209) Nothing (Just $ Point2 (211-212) (114-209)
+    # points = [ ControlPoint (Point2 212 209) Nothing                             (Just $ Point2 (211-212) (114-209))
+    #          , ControlPoint (Point2 338 210) (Just $ Point2 (329-338) (109-210)) (Just $ Point2 (450-338) (211-210))
+    #          , ControlPoint (Point2 343 330) (Just $ Point2 (456-343) (331-330)) Nothing
+    #          ]
+    point = ControlPoint2 (Point2 212 209) Nothing (Just $ Point2 (-1) (-95))
+    print point
+    # points = [ ControlPoint (Point2 212 209) Nothing                             (Just $ Point2 (-1) (-95))
+    #          , ControlPoint (Point2 338 210) (Just $ Point2 (-9) (-101)) (Just $ Point2 (112) (1))
+    #          , ControlPoint (Point2 343 330) (Just $ Point2 (113) (1)) Nothing
+    #          ]
+    # print points
+    # img = rasterizePath 512 512 True points []
+    # img.save "test.png"
 
 # class Wrapper:
 #     list :: [Int]
