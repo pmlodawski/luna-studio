@@ -25,7 +25,6 @@ import qualified Luna.AST.Arg                            as Arg
 import qualified Luna.AST.Common                         as AST
 import           Luna.AST.Expr                           (Expr)
 import qualified Luna.AST.Expr                           as Expr
-import qualified Luna.AST.Lit                            as Lit
 import           Luna.AST.Pat                            (Pat)
 import qualified Luna.AST.Pat                            as Pat
 import qualified Luna.AST.Type                           as Type
@@ -42,6 +41,7 @@ import qualified Luna.Pass.Analysis.ID.MinID             as MinID
 import qualified Luna.Pass.Pass                          as Pass
 import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
+import           Luna.Util.LunaShow                      (lunaShow)
 
 
 
@@ -125,14 +125,15 @@ buildNode astFolded monadicBind outName expr = do
         Expr.Var        _ name                  -> buildVar i name
         Expr.NativeVar  _ name                  -> buildVar i name
         Expr.Con        _ name                  -> addExprNode  i name []
-        Expr.Lit        _ lvalue                -> addExprNode  i (Lit.lunaShow lvalue) []
+        Expr.Lit        _ lvalue                -> addExprNode  i (lunaShow lvalue) []
         Expr.Tuple      _ items                 -> addNode  i (NodeExpr.StringExpr StringExpr.Tuple) items
         Expr.List       _ [Expr.RangeFromTo {}] -> showAndAddNode
         Expr.List       _ [Expr.RangeFrom   {}] -> showAndAddNode
         Expr.List       _ items                 -> addNode i (NodeExpr.StringExpr StringExpr.List) items
         Expr.Native     _ segments              -> addNode i (NodeExpr.StringExpr $ StringExpr.Native $ showNative expr) $ filter isNativeVar segments
         Expr.Wildcard   _                       -> left $ "GraphBuilder.buildNode: Unexpected Expr.Wildcard with id=" ++ show i
-        Expr.Grouped    _ grouped               -> addNode i (NodeExpr.StringExpr StringExpr.Grouped) [grouped]
+        Expr.Grouped    _ grouped               -> State.setGrouped (grouped ^. Expr.id)
+                                                >> buildNode astFolded monadicBind outName grouped
         _                                       -> showAndAddNode
     where
         buildVar i name = do
@@ -142,7 +143,7 @@ buildNode astFolded monadicBind outName expr = do
                 else addExprNode i name []
 
         buildAssignment i pat dst = do
-            let patStr = Pat.lunaShow pat
+            let patStr = lunaShow pat
             realPat <- isRealPat pat dst
             if realPat
                 then do patIDs <- buildPat pat
@@ -164,7 +165,7 @@ buildNode astFolded monadicBind outName expr = do
         buildApp i src args = do
             graphFolded <- State.getGraphFolded i
             if graphFolded
-                then do minID <- hoistEither =<< MinID.runExpr src
+                then do minID  <- hoistEither =<< MinID.runExpr expr
                         addNode' minID (mkNodeExpr expr) []
                 else do srcID <- buildNode astFolded False outName src
                         s     <- State.gvmNodeMapLookUp srcID
@@ -190,7 +191,7 @@ buildNode astFolded monadicBind outName expr = do
             connectMonadic i
             return i
 
-        mkNodeExpr           = NodeExpr.StringExpr . StringExpr.fromString . showExpr
+        mkNodeExpr           = NodeExpr.StringExpr . StringExpr.fromString . lunaShow
         connectMonadic i     = when monadicBind $ State.connectMonadic i
         assignment           = Maybe.isJust outName
         genName nodeExpr num = Maybe.fromMaybe (OutputName.generate nodeExpr num) outName
@@ -238,43 +239,6 @@ buildPat p = case p of
     Pat.Typed    _ pat _  -> buildPat pat
     Pat.Wildcard i        -> return [i]
     Pat.Grouped  _ pat    -> buildPat pat
-
-
-showArg :: Arg Expr -> String
-showArg arg = case arg of
-    --Arg.Named _ name a ->
-    Arg.Unnamed _ a -> showExpr a
-
-
-showExpr :: Expr -> String
-showExpr expr = concat $ case expr of
-    Expr.Accessor     _ acc      dst  -> [showExpr dst, ".", view Expr.accName acc]
-    Expr.App          _ src      args -> [List.intercalate " " $ showExpr src : map showArg args]
-    --Expr.AppCons_     _ args
-    --Expr.Assignment   _ pat      dst  -> concat [Pat.lunaShow pat, " = ", showExpr dst]
-    --Expr.RecordUpdate _ name     selectors expr
-    --Expr.Data         _ cls      cons      classes methods
-    --Expr.ConD         _ name     fields
-    Expr.Con          _ name          -> [name]
-    --Expr.Function     _ path     name      inputs  output  body
-    Expr.Grouped      _ expr'         -> ["(", showExpr expr', ")"]
-    --Expr.Import       _ path     target    rename
-    --Expr.Infix        _ name     src       dst
-    Expr.List         _ items         -> ["[", List.intercalate ", " (map showExpr items), "]"]
-    Expr.Lit          _ lvalue        -> [Lit.lunaShow lvalue]
-    Expr.Tuple        _ items         -> [List.intercalate ", " (map showExpr items)]
-    --Expr.Typed        _ cls      expr
-    Expr.Var          _ name          -> [name]
-    Expr.Wildcard     _               -> ["_"]
-    Expr.RangeFromTo  _ start    end  -> [showExpr start, "..", showExpr end]
-    Expr.RangeFrom    _ start         -> [showExpr start, ".."]
-    --Expr.Field        _ name     cls       value
-    --Expr.Arg          _ pat      value
-    Expr.Native       _ segments      -> ["```", concatMap showExpr segments, "```"]
-    Expr.NativeCode   _ code          -> [code]
-    Expr.NativeVar    _ name          -> ["#{", name, "}"]
-    --Expr.Case         _ expr     match
-    --Expr.Match        _ pat      body
 
 
 showNative :: Expr -> String
