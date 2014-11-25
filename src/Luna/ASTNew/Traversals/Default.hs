@@ -12,6 +12,7 @@
 
  {-# LANGUAGE UndecidableInstances #-}
  {-# LANGUAGE OverlappingInstances #-}
+-- {-# LANGUAGE IncoherentInstances #-}
 
 module Luna.ASTNew.Traversals.Default where
 
