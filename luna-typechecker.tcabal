@@ -13,11 +13,12 @@ Library
   Build-Depends:      base
                     , containers
                     , deepseq
+                    , lens
                     , luna-core
                     , luna-logger
                     , mtl
                     , transformers
-  Exposed-Modules:    `findmodules('src', '.*\.hs$', exclude='(.*Main\.hs)')`
+  --Exposed-Modules:    findmodules('src', '.*\.hs$', exclude='(.*Main\.hs, .*REC\.hs, .*HMX\.hs)')
 
 
 
@@ -26,9 +27,13 @@ Executable luna-typechecker-tests
   Hs-Source-Dirs:     test
   Main-Is:            Main.hs
   Build-Depends:      base
+                    , either
                     , hspec
+                    , lens
                     , luna-core
                     , luna-logger
+                    , luna-parser
+                    , luna-pass
                     , luna-typechecker
                     , mtl
                     , transformers
