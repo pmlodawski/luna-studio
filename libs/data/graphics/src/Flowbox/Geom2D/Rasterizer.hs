@@ -13,10 +13,9 @@ module Flowbox.Geom2D.Rasterizer (
     Point2(..)
 ) where
 
-import           Data.Array.Accelerate (Array)
 import           Data.Array.Accelerate.IO
+import           Data.Maybe
 import           Data.VectorSpace
-import           Data.Word
 import           Diagrams.Backend.Cairo
 import           Diagrams.Backend.Cairo.Internal
 import           Diagrams.Segment
@@ -25,6 +24,7 @@ import           Graphics.Rendering.Cairo hiding (translate)
 import           System.IO.Unsafe
 
 import           Math.Coordinate.Cartesian (Point2(..))
+import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Graphics.Image.Image   (Image)
 import           Flowbox.Graphics.Image.IO.BMP
 import qualified Flowbox.Graphics.Image.View    as View
@@ -38,34 +38,43 @@ f2d :: Real a => a -> Double
 f2d = fromRational . toRational
 
 
-makeSegments :: Real a => [Point2 a] -> [Segment Closed R2]
-makeSegments = combine
-    where combine [] = []
-          combine [_] = []
-          combine (a':b':c':d':xs) = let
-                  Point2 (f2d -> ax) (f2d -> ay) = a'
-                  Point2 (f2d -> bx) (f2d -> by) = b'
-                  Point2 (f2d -> cx) (f2d -> cy) = c'
-                  Point2 (f2d -> dx) (f2d -> dy) = d'
-                  a = r2 ( ax , ay )
-                  b = r2 ( bx , by )
-                  c = r2 ( cx , cy )
-                  d = r2 ( dx , dy )
-                  --fix p = (r2 (0,h)) ^-^ (p ^-^ a)
-                  fix p = p ^-^ a
-              --in bezier3 (b ^-^ a) (c ^-^ a) (d ^-^ a) : combine (d':xs)
-              in bezier3 (fix b) (fix c) (fix d) : combine (d':xs)
+makeSegments :: Real a => [ControlPoint a] -> [Segment Closed R2]
+makeSegments points = combine points
+    where combine []  = []
+          combine [a'] = let
+                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
+                  ControlPoint (Point2 dx dy) c' _ = f2d' $ head points
+                  Point2 bx by = unpack b'
+                  Point2 cx cy = unpack c'
+                  a = r2 (ax , ay)
+                  b = r2 (bx , by)
+                  c = r2 (cx , cy)
+                  d = r2 (dx , dy)
+              in [bezier3 b (d ^+^ c ^-^ a) (d ^-^ a)]
+          combine (a':d':xs) = let
+                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
+                  ControlPoint (Point2 dx dy) c' _ = f2d' d'
+                  Point2 bx by = unpack b'
+                  Point2 cx cy = unpack c'
+                  a = r2 (ax , ay)
+                  b = r2 (bx , by)
+                  c = r2 (cx , cy)
+                  d = r2 (dx , dy)
+              in bezier3 b (d ^+^ c ^-^ a) (d ^-^ a) : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer: unsupported ammount of points"
+          --step
+          f2d'   = fmap f2d
+          unpack = fromMaybe (Point2 0 0)
 
-rasterizeVector :: Real a => Int -> Int -> Bool -> [Point2 a] -> Image View.RGBA
+rasterizeVector :: Real a => Int -> Int -> Bool -> [ControlPoint a] -> Image View.RGBA
 rasterizeVector w h closed points = makeRGBA $ unsafePerformIO rasterize
-    where Point2 (f2d -> ox) (f2d -> oy) = head points
+    where ControlPoint (Point2 ox oy) _ _ = fmap f2d $ head points
           h' = fromIntegral h
           rasterize = do
               let path = fromSegments $ makeSegments points
                   diagram = case closed of
                       False -> path                        # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # lc white # lw (Output 1)
-                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white
+                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white # lw (Output 0)
                   (_, r) = renderDia Cairo (CairoOptions "" (Dims (fromIntegral w) (fromIntegral h)) RenderOnly True) (diagram :: Diagram Cairo R2)
               --print "MODULE:"
               --print diagram
