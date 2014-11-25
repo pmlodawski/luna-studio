@@ -36,15 +36,22 @@ def main():
     proto_paths = [os.path.realpath(path) for path in glob(rootPath + '/libs'  + '/**/*.proto')
                                                     + glob(rootPath + '/tools' + '/**/*.proto')]
     mod_proto_paths = filter(is_modified, proto_paths)
+    mod_dirnames = map(os.path.dirname, mod_proto_paths)
 
-    if mod_proto_paths:
+    marked_proto_paths = []
+    for mod_dirname in mod_dirnames:
+        marked_proto_paths += filter(lambda x : x.startswith(mod_dirname), proto_paths)
+
+
+
+    if marked_proto_paths:
         prepare_cpp_dir()
         for path in proto_paths:
             run_protoc(path)
 
-    for path in mod_proto_paths:
+    for path in marked_proto_paths:
         prepare_hs_dir(path)
-    for path in mod_proto_paths:
+    for path in marked_proto_paths:
         run_hprotoc(path)
         mark_modified(path)
 
