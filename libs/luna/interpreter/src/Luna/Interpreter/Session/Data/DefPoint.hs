@@ -18,5 +18,5 @@ data DefPoint = DefPoint { _libraryID   :: Library.ID
                          , _breadcrumbs :: Breadcrumbs
                          } deriving (Show, Ord, Eq)
 
-makeLenses(''DefPoint)
+makeLenses ''DefPoint
 

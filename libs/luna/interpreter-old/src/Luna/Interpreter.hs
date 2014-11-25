@@ -11,7 +11,6 @@ module Luna.Interpreter where
 import           Control.Concurrent.Chan (Chan)
 import qualified Control.Concurrent.Chan as Chan
 import           Control.Monad           (forever)
-import           DynFlags                (PkgConfRef (PkgConfFile))
 import qualified DynFlags                as GHC
 import           GHC                     (Ghc, GhcMonad)
 import qualified GHC                     as GHC
@@ -73,7 +72,8 @@ setImports = GHC.setContext . map (GHC.IIDecl . GHC.simpleImportDecl . GHC.mkMod
 compileAndRun :: GhcMonad m => [String] -> String -> String -> m ()
 compileAndRun imports declarations stmt = do
     GHC.setTargets []
-    GHC.load GHC.LoadAllTargets
+    whenM (GHC.failed <$> GHC.load GHC.LoadAllTargets) $
+        fail "Failed to load all targets"
     setImports imports
     _  <- GHC.runDecls declarations
     rr <- GHC.runStmt stmt GHC.RunToCompletion

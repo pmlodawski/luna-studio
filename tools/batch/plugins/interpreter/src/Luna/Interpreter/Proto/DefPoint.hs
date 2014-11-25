@@ -12,13 +12,15 @@
 
 module Luna.Interpreter.Proto.DefPoint where
 
-import qualified Flowbox.Batch.Project.Project                  as Project
+import qualified Flowbox.Batch.Project.Project                          as Project
+import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Interpreter.DefPoint           as Gen
-import           Luna.Data.Serialize.Proto.Conversion.Crumb     ()
-import           Luna.Interpreter.Session.Data.DefPoint         (DefPoint (DefPoint))
+import qualified Generated.Proto.Interpreter.DefPoint                   as Gen
+import           Luna.Data.Serialize.Proto.Conversion.Crumb             ()
+import           Luna.Data.Serialize.Proto.Conversion.Library           ()
+import           Luna.Interpreter.Session.Data.DefPoint                 (DefPoint (DefPoint))
 
 
 

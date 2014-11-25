@@ -58,7 +58,7 @@ logger = getLogger $(moduleName)
 
 
 run :: Graph -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)
-run gr pm = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr pm) . graph2expr
+run gr pm = Pass.run_ (Pass.Info "GraphParser") (State.make gr pm) . graph2expr
 
 
 graph2expr :: Expr -> GPPass (Expr, PropertyMap)
@@ -91,7 +91,6 @@ parseExprNode nodeID nodeExpr = case nodeExpr of
         StringExpr.Tuple          -> parseTupleNode   nodeID
         StringExpr.Pattern pat    -> parsePatNode     nodeID pat
         StringExpr.Native  native -> parseNativeNode  nodeID native
-        StringExpr.Grouped        -> parseGroupedNode nodeID
         _                         -> parseAppNode     nodeID $ StringExpr.toString strExpr
     NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
 
@@ -179,6 +178,7 @@ parseAppNode nodeID app = do
                         Right (e, _) -> return e
     ids <- hoistEither =<< ExtractIDs.runExpr expr
     mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
+    State.setGraphFoldTop nodeID $ exprToNodeID expr
     let requiresApp (Expr.Con {}) = True
         requiresApp _             = False
     case srcs of
@@ -190,13 +190,17 @@ parseAppNode nodeID app = do
                                 where acc = Expr.Accessor nodeID (Expr.mkAccessor app) f
 
 
+exprToNodeID :: Expr -> Node.ID
+exprToNodeID expr = case expr of
+    Expr.App _ src _ -> exprToNodeID src
+    _                -> expr ^. Expr.id
+
 
 parseTupleNode :: Node.ID -> GPPass ()
 parseTupleNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = Expr.Tuple nodeID srcs
     addExpr nodeID e
-
 
 
 parseGroupedNode :: Node.ID -> GPPass ()
@@ -220,13 +224,14 @@ parseASTExprNode nodeID = addExpr nodeID . IDFixer.clearExprIDs IDFixer.unknownI
 
 
 addExpr :: Node.ID -> Expr -> GPPass ()
-addExpr nodeID e = do
+addExpr nodeID expr' = do
     graph <- State.getGraph
 
     flags <- State.getFlags nodeID
     let folded         = Flags.isSet' flags $ view Flags.astFolded
         assignment     = Flags.isSet' flags $ view Flags.astAssignment
         defaultNodeGen = Flags.isSet' flags $ view Flags.defaultNodeGenerated
+        grouped        = Flags.isSet' flags $ view Flags.grouped
 
     let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
         assignmentCount = length $ List.filter assignmentEdge
@@ -235,18 +240,22 @@ addExpr nodeID e = do
         connectedToOutput = List.any (Node.isOutputs . view _2)
                           $ Graph.lsuclData graph nodeID
 
+        expr = if grouped
+            then Expr.Grouped IDFixer.unknownID expr'
+            else expr'
+
     if (folded && assignmentCount == 1) || defaultNodeGen
-        then State.addToNodeMap (nodeID, Port.All) e
+        then State.addToNodeMap (nodeID, Port.All) expr
         else if assignment || assignmentCount > 1
             then do outName <- State.getNodeOutputName nodeID
                     let p = Pat.Var IDFixer.unknownID outName
                         v = Expr.Var IDFixer.unknownID outName
-                        a = Expr.Assignment IDFixer.unknownID p e
+                        a = Expr.Assignment IDFixer.unknownID p expr
                     State.addToNodeMap (nodeID, Port.All) v
                     State.addToBody a
-            else do State.addToNodeMap (nodeID, Port.All) e
+            else do State.addToNodeMap (nodeID, Port.All) expr
                     unless (connectedToOutput || assignmentCount == 1 ) $
-                        State.addToBody e
+                        State.addToBody expr
 
 
 isOperator :: String -> Bool

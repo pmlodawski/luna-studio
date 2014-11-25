@@ -45,7 +45,6 @@ optResult :: MonadIO m => (a -> m (Maybe b)) -> a -> m [b]
 optResult f a = liftM Maybe.maybeToList $ f a
 
 
-
 process :: (Catch.MonadCatch m, MonadIO m, Functor m)
         => HandlerMap s m -> Message -> StateT s m [Message]
 process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where

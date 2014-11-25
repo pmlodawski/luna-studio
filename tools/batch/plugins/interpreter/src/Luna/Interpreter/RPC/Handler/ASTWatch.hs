@@ -111,7 +111,7 @@ projectOpen (ProjectOpen.Update _ project _) = do
 projectClose :: ProjectClose.Update -> RPC Context SessionST ()
 projectClose (ProjectClose.Update request updateNo) = do
     sync updateNo $ ProjectHandler.close request
-    Cache.modifyAll $ ProjectClose.projectID request
+    Cache.closeProject $ ProjectClose.projectID request
 
 
 projectModify :: ProjectModify.Update -> RPC Context SessionST ()
@@ -310,8 +310,8 @@ graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
         bc        = GraphNodeRemove.bc request
         nodeIDs   = GraphNodeRemove.nodeIDs request
     mapM_ (Cache.modifyNodeSuccessors projectID libraryID bc) nodeIDs
-    sync updateNo $ GraphHandler.nodeRemove request
     mapM_ (Cache.deleteNode projectID libraryID) nodeIDs
+    sync updateNo $ GraphHandler.nodeRemove request
 
 
 graphNodeModify :: GraphNodeModify.Update -> RPC Context SessionST ()
@@ -342,12 +342,13 @@ graphNodeDefaultRemove (GraphNodeDefaultRemove.Update request updateNo) = do
 
 
 graphNodeDefaultSet :: GraphNodeDefaultSet.Update -> RPC Context SessionST ()
-graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
+graphNodeDefaultSet (GraphNodeDefaultSet.Update request defNodeID updateNo) = do
     sync updateNo $ NodeDefaultHandler.set request
     let projectID = GraphNodeDefaultSet.projectID request
         libraryID = GraphNodeDefaultSet.libraryID request
         nodeID    = GraphNodeDefaultSet.nodeID request
     Cache.modifyNode projectID libraryID nodeID
+    Cache.insertDependentNode projectID libraryID nodeID defNodeID
 
 
 graphNodePropertiesSet :: GraphNodePropertiesSet.Update -> RPC Context SessionST ()

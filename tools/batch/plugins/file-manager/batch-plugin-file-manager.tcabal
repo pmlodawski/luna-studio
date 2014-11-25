@@ -12,8 +12,7 @@ Flag Debug
 
 
 Executable file-manager
-    Hs-Source-Dirs: dist/gen
-                    src
+    Hs-Source-Dirs: src
     Other-Modules:  Paths_batch_plugin_file_manager
     Main-Is:        Main.hs
 
@@ -22,6 +21,7 @@ Executable file-manager
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
+                    batch-lib-file-manager,
                     directory,
                     flowbox-bus,
                     flowbox-config,
@@ -31,4 +31,5 @@ Executable file-manager
                     protocol-buffers-fork,
                     text,
                     transformers,
+                    unix-compat,
                     zeromq4-haskell >= 0.4

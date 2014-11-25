@@ -54,7 +54,7 @@ createLibrary name path projectID = libManagerOp projectID $ \libManager -> do
 
 
 modifyLibrary :: (Library.ID, Library) -> Project.ID -> Batch ()
-modifyLibrary (libraryID, library) projectID = libraryOp projectID libraryID $ \oldLibrary -> do
+modifyLibrary (libraryID, library) projectID = libraryOp libraryID projectID $ \oldLibrary -> do
     let ast         = oldLibrary ^. Library.ast
         propertyMap = oldLibrary ^. Library.propertyMap
         newLibrary  = library & Library.ast .~ ast
@@ -68,14 +68,14 @@ loadLibrary path projectID = libManagerOp projectID
 
 
 unloadLibrary :: Library.ID -> Project.ID -> Batch ()
-unloadLibrary libraryID projectID = libManagerOp projectID (\libManager ->
-    return (LibManager.delNode libraryID libManager, ()))
+unloadLibrary libraryID projectID = libManagerOp projectID $ \libManager ->
+    return (LibManager.delNode libraryID libManager, ())
 
 
-storeLibrary :: Library.ID -> Project.ID -> Batch ()
-storeLibrary libraryID projectID = do
+storeLibrary :: Library.ID -> Project.ID -> Maybe UniPath -> Batch ()
+storeLibrary libraryID projectID mpath = do
     library <- Batch.getLibrary libraryID projectID
-    liftIO $ LibSerialization.storeLibrary library
+    liftIO $ LibSerialization.storeLibrary library mpath
 
 
 -- TODO [PM] : More remote arguments needed
@@ -83,7 +83,7 @@ buildLibrary :: Library.ID -> Project.ID -> Batch ()
 buildLibrary libraryID projectID = do
     cfg         <- gets (view Batch.config)
     projectPath <- view Project.path <$> Batch.getProject projectID
-    library     <- Batch.getLibrary projectID libraryID
+    library     <- Batch.getLibrary libraryID projectID
     let ast         = library ^. Library.ast
         name        = library ^. Library.name
         version     = Version [1][]      -- TODO [PM] : hardcoded version
@@ -98,7 +98,7 @@ buildLibrary libraryID projectID = do
         buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
         bldCfg      = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
 
-    maxID <- Batch.getMaxID projectID libraryID
+    maxID <- Batch.getMaxID libraryID projectID
     EitherT $ Build.run bldCfg ast (ASTInfo.mk maxID) False
 
 

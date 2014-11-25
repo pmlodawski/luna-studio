@@ -34,24 +34,57 @@ importPaths = [ '/usr/include'
 imports = "-I " + ' -I '.join(importPaths)
 
 def main():
-    proto_paths = [os.path.realpath(path) for path in glob(rootPath + '/**/*.proto')]
-    prepare_cpp_dir()
-    for path in proto_paths:
+    proto_paths = [os.path.realpath(path) for path in glob(rootPath + '/libs'  + '/**/*.proto')
+                                                    + glob(rootPath + '/tools' + '/**/*.proto')]
+    mod_proto_paths = filter(is_modified, proto_paths)
+
+    if mod_proto_paths:
+        prepare_cpp_dir()
+        for path in proto_paths:
+            run_protoc(path)
+
+    for path in mod_proto_paths:
         prepare_hs_dir(path)
-    for path in proto_paths:
-        run_protoc(path)
+    for path in mod_proto_paths:
+        run_hprotoc(path)
+        mark_modified(path)
+
+def is_modified(path): 
+    fileModification = str(os.path.getmtime(path))
+    lastModification = None
+    timestampPath = timestamp_path(path)
+    if os.path.isfile(timestampPath):
+        with open(timestampPath, 'r') as f: 
+            lastModification = lastModification = f.read()
+    return lastModification == None or lastModification < fileModification
+
+def mark_modified(path):
+    fileModification = os.path.getmtime(path)
+    timestampPath = timestamp_path(path)
+    timestampDir  = os.path.dirname(timestampPath)
+    if not os.path.isdir(timestampDir):
+        os.makedirs(timestampDir)
+    with open(timestampPath, 'w') as f: f.write(str(fileModification))
+
+def timestamp_path(path):
+    return os.path.join(rootPath, os.path.join('dist/proto-timestamps', os.path.relpath(path, rootPath)))[:-6]
+
+
+def run_hprotoc(proto_path):
+    proto_dir  = os.path.dirname(proto_path)
+    hs_gen_dir = os.path.join(proto_dir, '../../dist/gen')
+    proto_name = os.path.basename(proto_path)
+    args = ' ' + imports + ' -I ' + proto_dir + ' ' + proto_path
+    try_call('hprotoc -d ' + hs_gen_dir + args)
 
 def run_protoc(proto_path):
     proto_dir  = os.path.dirname(proto_path)
     hs_gen_dir = os.path.join(proto_dir, '../../dist/gen')
     proto_name = os.path.basename(proto_path)
-
     args = ' ' + imports + ' -I ' + proto_dir + ' ' + proto_path
-
     for cpp_gen_dir in cpp_gen_dirs:
         try_call('protoc --cpp_out=' + cpp_gen_dir + args)
 
-    try_call('hprotoc -d ' + hs_gen_dir + args)
 
 def prepare_hs_dir(proto_path):
     proto_dir  = os.path.dirname(proto_path)

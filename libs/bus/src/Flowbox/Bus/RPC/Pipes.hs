@@ -21,9 +21,8 @@ import           Flowbox.Bus.Data.Flag         (Flag)
 import           Flowbox.Bus.Data.Message      (Message)
 import qualified Flowbox.Bus.Data.Message      as Message
 import qualified Flowbox.Bus.Data.MessageFrame as MessageFrame
+import           Flowbox.Bus.Data.Topic        (Topic)
 import           Flowbox.Bus.EndPoint          (BusEndPoints)
-import           Flowbox.Bus.RPC.HandlerMap    (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap    as HandlerMap
 import           Flowbox.Control.Concurrent    (forkIO_)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude               hiding (error)
@@ -49,14 +48,14 @@ consume = forever $ do
     void $ lift $ BusT $ Bus.reply crl flag msg
 
 
-run :: BusEndPoints -> HandlerMap s m
+run :: BusEndPoints -> [Topic]
     -> IO (Pipes.Input  (Message, Message.CorrelationID),
            Pipes.Output (Message, Message.CorrelationID, Flag))
-run endPoints handlerMap = do
+run endPoints topics = do
     (output1, input1) <- Pipes.spawn Pipes.Single
     (output2, input2) <- Pipes.spawn Pipes.Single
     let forkPipesThread fun = forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
-                            mapM_ Bus.subscribe $ HandlerMap.topics handlerMap
+                            mapM_ Bus.subscribe topics
                             BusT.runBusT $ Pipes.runEffect fun
     forkPipesThread $ produce >-> Pipes.toOutput output1
     forkPipesThread $ Pipes.fromInput input2 >-> consume

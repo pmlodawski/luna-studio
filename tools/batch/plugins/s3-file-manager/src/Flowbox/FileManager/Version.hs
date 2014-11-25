@@ -19,4 +19,4 @@ full = fileManager
 
 
 fileManager :: Bool -> String
-fileManager numeric = (if numeric then "" else "Flowbox file manager version ") ++ Version.showVersion Config.version
+fileManager numeric = (if numeric then "" else "Flowbox S3 file manager version ") ++ Version.showVersion Config.version

@@ -12,8 +12,7 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: dist/gen,
-                  src
+  Hs-Source-Dirs: src
   Other-Modules:  Paths_luna_interpreter_old
   if flag(debug)
     GHC-Options:  -csacc

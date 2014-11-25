@@ -35,11 +35,13 @@ import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import           Luna.Interpreter.Session.Data.Hash         (Hash)
 import           Luna.Interpreter.Session.Data.VarName      (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
+import qualified Luna.Interpreter.Session.Debug             as Debug
 import qualified Luna.Interpreter.Session.Env               as Env
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
 
@@ -57,6 +59,7 @@ processMain = do
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
     Cache.dumpAll
+    Debug.dumpBindings
 
 
 processNodeIfNeeded :: CallDataPath -> Session ()
@@ -161,7 +164,6 @@ data VarType = Lit    String
 
 varType :: StringExpr -> VarType
 varType  StringExpr.Id                 = Id
-varType  StringExpr.Grouped            = Id
 varType  StringExpr.Tuple              = Tuple
 varType (StringExpr.Native name      ) = Native name
 varType (StringExpr.Expr   []        ) = Prelude.error "varType : empty expression"
@@ -195,13 +197,16 @@ evalFunction stringExpr callDataPath argsVarNames = do
                               then "val (" ++ name ++" :: Int)"
                               else "val " ++ name
             Tuple       -> "val (" ++ List.intercalate "," args ++ ")"
-        expression    = tmpVarName ++ " <- " ++ operation
-
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
-        Session.runStmt expression
+
+        Session.runAssignment' tmpVarName operation
+
         hash <- Hash.compute tmpVarName
         let varName = VarName.mk hash callPointPath
+
         Session.runAssignment varName tmpVarName
+        lift2 $ Bindings.remove tmpVarName
+
         Cache.put callDataPath argsVarNames varName
-        Value.report callPointPath varName
+        Value.reportIfVisible callPointPath
         return (hash, varName)

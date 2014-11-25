@@ -99,7 +99,7 @@ opChars  = "!#$%&*+/<=>?\\^|-~"
 opLetter = oneOf opChars
 opStart  = opLetter
 
-operator = opToken ((:) <$> opStart <*> many opLetter <?> "operator")
+operator = fmap fromString $ opToken ((:) <$> opStart <*> many opLetter <?> "operator")
 
 identStyle = IdentifierStyle
   { _styleName      = "identifier"

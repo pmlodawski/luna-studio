@@ -11,31 +11,35 @@ module Luna.Interpreter.Session.Cache.Cache where
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
+import qualified Data.Set            as Set
+import qualified System.Mem          as Mem
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Data.MapForest                      as MapForest
-import           Flowbox.Prelude                             hiding (matching)
-import           Flowbox.Source.Location                     (loc)
+import qualified Flowbox.Data.MapForest                            as MapForest
+import           Flowbox.Prelude                                   hiding (matching)
+import           Flowbox.Source.Location                           (loc)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Graph.Node                             as Node
-import qualified Luna.Interpreter.Session.Cache.Free         as Free
-import           Luna.Interpreter.Session.Cache.Info         (CacheInfo (CacheInfo))
-import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
-import           Luna.Interpreter.Session.Cache.Status       (CacheStatus)
-import qualified Luna.Interpreter.Session.Cache.Status       as CacheStatus
-import qualified Luna.Interpreter.Session.Data.CallData      as CallData
-import           Luna.Interpreter.Session.Data.CallDataPath  (CallDataPath)
-import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
-import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
-import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Luna.Interpreter.Session.Data.Hash          (Hash)
-import           Luna.Interpreter.Session.Data.VarName       (VarName)
-import qualified Luna.Interpreter.Session.Data.VarName       as VarName
-import qualified Luna.Interpreter.Session.Env                as Env
-import qualified Luna.Interpreter.Session.Error              as Error
-import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Interpreter.Session.Session            as Session
-import qualified Luna.Lib.Lib                                as Library
+import qualified Luna.Graph.Node                                   as Node
+import qualified Luna.Interpreter.Session.Cache.Free               as Free
+import           Luna.Interpreter.Session.Cache.Info               (CacheInfo (CacheInfo))
+import qualified Luna.Interpreter.Session.Cache.Info               as CacheInfo
+import           Luna.Interpreter.Session.Cache.Status             (CacheStatus)
+import qualified Luna.Interpreter.Session.Cache.Status             as CacheStatus
+import qualified Luna.Interpreter.Session.Data.CallData            as CallData
+import           Luna.Interpreter.Session.Data.CallDataPath        (CallDataPath)
+import qualified Luna.Interpreter.Session.Data.CallDataPath        as CallDataPath
+import           Luna.Interpreter.Session.Data.CallPoint           (CallPoint (CallPoint))
+import           Luna.Interpreter.Session.Data.CallPointPath       (CallPointPath)
+import           Luna.Interpreter.Session.Data.Hash                (Hash)
+import           Luna.Interpreter.Session.Data.VarName             (VarName)
+import qualified Luna.Interpreter.Session.Data.VarName             as VarName
+import qualified Luna.Interpreter.Session.Env                      as Env
+import qualified Luna.Interpreter.Session.Error                    as Error
+import qualified Luna.Interpreter.Session.Memory                   as Memory
+import           Luna.Interpreter.Session.Memory.Manager.NoManager (NoManager (NoManager))
+import           Luna.Interpreter.Session.Session                  (Session)
+import qualified Luna.Interpreter.Session.Session                  as Session
+import qualified Luna.Lib.Lib                                      as Library
 
 
 
@@ -117,9 +121,14 @@ put callDataPath predVarNames varName = do
 
 deleteNode :: Library.ID -> Node.ID -> Session ()
 deleteNode libraryID nodeID = do
-    let matchNode k _ = last k == CallPoint libraryID nodeID
+    logger info $ "Cleaning node: " ++ show (libraryID, nodeID)
+    let callPoint     = CallPoint libraryID nodeID
+        matchNode k _ = last k == callPoint
     matching <- MapForest.find matchNode <$> Env.getCached
     mapM_ delete' matching
+    dependent <- Env.getDependentNodesOf callPoint
+    Env.deleteDependentNodes callPoint
+    mapM_ (deleteNode libraryID) $ Set.toList dependent
 
 
 delete :: CallPointPath -> Session ()
@@ -144,3 +153,21 @@ deleteAll = do
 getCacheInfo :: CallPointPath -> Session CacheInfo
 getCacheInfo callPointPath = Env.cachedLookup callPointPath
     <??&> Error.CacheError $(loc) (concat ["Object ", show callPointPath, " is not in cache."])
+
+
+performCleaning :: Session ()
+performCleaning = performCleaningWithManager NoManager
+
+
+performCleaningWithManager :: Memory.MemoryManager mm => mm -> Session ()
+performCleaningWithManager mm = do
+    performGC
+    Memory.cleanIfNeeded mm
+
+
+performGC :: Session ()
+performGC = do
+    logger info "Running GC"
+    Session.runStmt "performGC"
+    safeLiftIO' (Error.IOError $(loc)) Mem.performGC
+

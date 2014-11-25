@@ -16,26 +16,28 @@ import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Prelude           hiding (id)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.AST              (AST, ID)
-import qualified Luna.AST.AST              as AST
-import           Luna.AST.Expr             (Expr)
-import qualified Luna.AST.Expr             as Expr
-import           Luna.AST.Lit              (Lit)
-import qualified Luna.AST.Lit              as Lit
-import           Luna.AST.Module           (Module)
-import qualified Luna.AST.Module           as Module
-import           Luna.AST.Pat              (Pat)
-import qualified Luna.AST.Pat              as Pat
-import           Luna.AST.Type             (Type)
-import qualified Luna.AST.Type             as Type
+import           Luna.ASTNew.AST              (AST, ID)
+import qualified Luna.ASTNew.AST              as AST
+import           Luna.ASTNew.Expr             (Expr)
+import qualified Luna.ASTNew.Expr             as Expr
+import           Luna.ASTNew.Lit              (Lit)
+import qualified Luna.ASTNew.Lit              as Lit
+import           Luna.ASTNew.Module           (Module)
+import qualified Luna.ASTNew.Module           as Module
+import           Luna.ASTNew.Pat              (Pat)
+import qualified Luna.ASTNew.Pat              as Pat
+import           Luna.ASTNew.Type             (Type)
+import qualified Luna.ASTNew.Type             as Type
 import           Luna.Data.AliasInfo       (AliasInfo)
 import qualified Luna.Data.AliasInfo       as AliasInfo
 import           Luna.Data.Namespace       (Namespace)
 import qualified Luna.Data.Namespace       as Namespace
+import           Flowbox.System.Log.Logger as L
 
 
-logger :: Logger
-logger = getLogger "Luna.Data.Namespace.State"
+
+logger :: LoggerIO
+logger = getLoggerIO $(moduleName)
 
 
 --data VAState = VAState { _info    :: AliasInfo
@@ -48,7 +50,7 @@ logger = getLogger "Luna.Data.Namespace.State"
 type NamespaceMonad m = (MonadState Namespace m, Applicative m)
 
 
-getAliasInfo :: NamespaceMonad m => m AliasInfo
+--getAliasInfo :: NamespaceMonad m => m AliasInfo
 getAliasInfo = view Namespace.info <$> get
 
 --getCurrentID :: NamespaceMonad m => m (Maybe ID)
@@ -61,11 +63,11 @@ getAliasInfo = view Namespace.info <$> get
 scopeID = Namespace.head <$> get
 
 
-putAliasInfo :: NamespaceMonad m => AliasInfo -> m ()
+--putAliasInfo :: NamespaceMonad m => AliasInfo -> m ()
 putAliasInfo info = modify (Namespace.info .~ info)
 
 
-modifyAliasInfo :: NamespaceMonad m => (AliasInfo -> AliasInfo) -> m ()
+--modifyAliasInfo :: NamespaceMonad m => (AliasInfo -> AliasInfo) -> m ()
 modifyAliasInfo f = do
     info <- getAliasInfo
     putAliasInfo $ f info
@@ -95,11 +97,13 @@ popID = do
 --withID :: NamespaceMonad m => ID -> m f -> m f
 --withID id f = pushID id *> f <* popID
 
-pushScope id = modify $ Namespace.pushScope id
+pushNewScope id = modify $ Namespace.pushNewScope id
+pushScope    id = modify $ Namespace.pushScope id
 
 popScope = modify $ Namespace.popScope
 
-withScope id p = pushScope id *> p <* popScope
+withNewScope id p = pushNewScope id *> p <* popScope
+withScope    id p = pushScope    id *> p <* popScope
 
 
 withParentID :: NamespaceMonad m => m f -> m f
@@ -111,44 +115,41 @@ withParentID f = do pid <- popID
 ----switchID :: NamespaceMonad m => ID -> m ()
 ----switchID id = modify (currentID .~ id)
 
-regModule :: NamespaceMonad m => Module -> m ()
-regModule = regElBy AST.Module Module.id
+regModule :: NamespaceMonad m => Module a e -> m ()
+regModule = undefined -- regElBy AST.Module Module.id
 
-regExpr :: NamespaceMonad m => Expr -> m ()
-regExpr = regElBy AST.Expr Expr.id
+regExpr :: NamespaceMonad m => Expr a v -> m ()
+regExpr = undefined -- regElBy AST.Expr Expr.id
 
 regLit :: NamespaceMonad m => Lit -> m ()
-regLit = regElBy AST.Lit Lit.id
+regLit = undefined -- regElBy AST.Lit Lit.id
 
-regPat :: NamespaceMonad m => Pat -> m ()
-regPat = regElBy AST.Pat Pat.id
+regPat :: NamespaceMonad m => Pat a -> m ()
+regPat = undefined -- regElBy AST.Pat Pat.id
 
-regType :: NamespaceMonad m => Type -> m ()
-regType = regElBy AST.Type Type.id
-
-
-regElBy fCon fID el = regAST id (fCon el) *> regID id
-    where id = el ^. fID
+regType :: NamespaceMonad m => Type a -> m ()
+regType = undefined -- regElBy AST.Type Type.id
 
 
-regID :: NamespaceMonad m => ID -> m ()
+regOrphan = modifyAliasInfo .: AliasInfo.regOrphan
+
+
+
+--regID :: NamespaceMonad m => ID -> m ()
 regID id = do
     mpid <- scopeID
     withJust mpid (\pid -> modifyAliasInfo $ AliasInfo.parent %~ IntMap.insert id pid)
 
 
---registerAST :: NamespaceMonad m => ID -> AST -> m ()
-regAST id ast = modifyAliasInfo $ AliasInfo.regAST id ast
 
-
-regVarName :: NamespaceMonad m => String -> ID -> m ()
+--regVarName :: NamespaceMonad m => ID -> String -> m ()
 regVarName = regName AliasInfo.varnames
 
-regTypeName :: NamespaceMonad m => String -> ID -> m ()
+regTypeName :: NamespaceMonad m => ID -> String -> m ()
 regTypeName = regName AliasInfo.typenames
 
 
-regName lens name id = do
+regName lens id name = do
     a    <- getAliasInfo
     mcid <- scopeID
     case mcid of
@@ -159,14 +160,21 @@ regName lens name id = do
                   a2      = a & AliasInfo.scope.at cid ?~ varRel2
 
 
-regParentVarName :: NamespaceMonad m => String -> ID -> m ()
+regParentVarName :: NamespaceMonad m => ID -> String -> m ()
 regParentVarName = withParentID .: regVarName
-
 
 bindVar id name = do
     ns <- get
     case Namespace.bindVar id name ns of
         Left _    -> fail $ "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+        Right ns' -> put ns'
+
+tryBindVar id name = do
+    ns <- get
+    case Namespace.bindVar id name ns of
+        Left _    -> do let errMsg = "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+                        logger L.error errMsg
+                        regOrphan id $ AliasInfo.LookupError errMsg 
         Right ns' -> put ns'
 
 

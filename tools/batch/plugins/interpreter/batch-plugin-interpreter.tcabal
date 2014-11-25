@@ -17,8 +17,9 @@ Executable interpreter
     Other-Modules:  Paths_batch_plugin_interpreter
     Main-Is:        Main.hs
 
-    GHC-Options:    -Wall -O2 -threaded
-
+    GHC-Options:    -Wall -O2 -threaded -with-rtsopts=-T
+    GHC-Prof-Options: -fprof-auto
+                      "-with-rtsopts=-N -p -s -h -i0.1 -xc"
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
@@ -27,10 +28,12 @@ Executable interpreter
                     containers,
                     either,
                     errors,
+                    exceptions,
                     flowbox-batch,
                     flowbox-bus,
                     flowbox-config,
                     luna-core,
+                    luna-initializer,
                     luna-interpreter,
                     luna-protobuf,
                     flowbox-utils,
@@ -41,6 +44,11 @@ Executable interpreter
                     optparse-applicative,
                     pipes,
                     pipes-concurrency,
+                    pipes-safe,
                     protocol-buffers-fork,
                     transformers,
                     zeromq4-haskell >= 0.4
+
+  if !os(windows)
+    Build-Depends:  ekg
+                    
