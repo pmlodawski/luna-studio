@@ -196,6 +196,11 @@ exprToNodeID expr = case expr of
     _                -> expr ^. Expr.id
 
 
+setNodeID :: Node.ID -> Expr -> Expr
+setNodeID nodeID expr@(Expr.App _ src _) = expr & Expr.src .~ setNodeID nodeID src
+setNodeID nodeID expr                    = expr & Expr.id  .~ nodeID
+
+
 parseTupleNode :: Node.ID -> GPPass ()
 parseTupleNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
@@ -219,8 +224,10 @@ parseListNode nodeID = do
 
 
 parseASTExprNode :: Node.ID -> Expr -> GPPass ()
-parseASTExprNode nodeID = addExpr nodeID . IDFixer.clearExprIDs IDFixer.unknownID
-
+parseASTExprNode nodeID = addExpr nodeID
+                        -- . set Expr.id nodeID
+                        . setNodeID nodeID
+                        . IDFixer.clearExprIDs IDFixer.unknownID
 
 
 addExpr :: Node.ID -> Expr -> GPPass ()
