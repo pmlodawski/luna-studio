@@ -10,11 +10,107 @@
 
 
 
-module Luna.Typechecker.REC where
+module Main where
+
+
+import qualified Luna.Pass as Pass
+import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
+import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
+import           Luna.Data.Namespace (Namespace(Namespace))
+import Luna.Data.Source (Source(Source), Medium(String), Code(Code))
+import qualified Luna.Pass2.Analysis.Alias as AA
+
+
+import Control.Monad.Trans.Either
+import Control.Applicative
+import Control.Monad
+
+import Control.Lens hiding (without)
+import Data.List (intercalate)
+
+
+printer :: (Show a) => String -> a -> IO ()
+printer x y = do  f_print [Bold,White] "\n--------------------------------------------------------------------------------"
+                  putStr "> "
+                  f_print [Yellow] x
+                  f_print [Bold,White] "--------------------------------------------------------------------------------\n"
+                  print y
+section :: IO () -> IO ()
+section sec = do  sec
+                  f_print [Bold, White] "\n\n################################################################################\n\n"
+
+
+typecheck :: TypecheckerResult
+typecheck = Done
+
+
+data TypecheckerResult = Done
+                       | Partial
+                       | Fail
+
+
+test_foo :: String 
+test_foo = unlines  [ "def foo a b:"
+                    , "  a + b"
+                    , ""
+                    , "def bar:"
+                    , "  456"
+                    ]
+
+main :: IO ()
+main = do section $ do
+            f_print [Bold,Green] "MAIN"
+            putStrLn "YO"
+          section $ do
+            let src = Source "ModTestString" (String test_foo)
+            east <- runEitherT $ do
+              (ast1, astinfo) <- Pass.run1_ Stage1.pass src
+              aa1             <- Pass.run1_ AA.pass ast1
+              ast2            <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo ast1
+              aa2             <- Pass.run1_ AA.pass ast2
+              return (ast2,aa2)
+            putStrLn "YAYA"
+            case east of 
+              Left _    -> f_print [Red, Bold] "some error, sorry"
+              Right ast -> f_print [Red, Bold] "some error, sorry"
+
+
+
+data PrintAttrs = Black
+                | Red
+                | Green
+                | Yellow
+                | Blue
+                | Magenta
+                | Cyan
+                | White
+                | Bold
+
+attrtonum :: PrintAttrs -> Int
+attrtonum Black   = 30
+attrtonum Red     = 31
+attrtonum Green   = 32
+attrtonum Yellow  = 33
+attrtonum Blue    = 34
+attrtonum Magenta = 35
+attrtonum Cyan    = 36
+attrtonum White   = 37
+attrtonum Bold    = 1
+
+f_print :: [PrintAttrs] -> String -> IO ()
+f_print fs x = do let fmt = intercalate ";" (map (show.attrtonum) fs)
+                  putStr $ "\x1b[" ++ fmt ++ "m"
+                  putStr x
+                  putStrLn "\x1b[0m"
+
+
+
 
 -- *------------------------------------------------
 -- * Category: DATA DECLARATIONS
 -- *------------------------------------------------
+
+
 
 
 -- The type language

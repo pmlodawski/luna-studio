@@ -23,33 +23,35 @@ guard :shell, :version => 2, :cli => "--color" do
         puts "                          ____  ____  ____  ____  ____\n                         (_  _)(  __)/ ___)(_  _)/ ___)\n                           )(   ) _) \\___ \\  )(  \\___ \\\n                          (__) (____)(____/ (__) (____/".cyan
         puts "--------------------------------------------------------------------------------".cyan
         system("rm -f luna-typechecker-tests.tix")
-        if system("./dist/dist-sandbox-*/build/luna-typechecker-tests/luna-typechecker-tests")
+        system("./dist/dist-sandbox-*/build/luna-typechecker-tests/luna-typechecker-tests")
+        system("./dist/dist-sandbox-*/build/luna-typechecker/luna-typechecker")
+        # if system("./dist/dist-sandbox-*/build/luna-typechecker-tests/luna-typechecker-tests")
         
-            # # coverage
-            # puts "--------------------------------------------------------------------------------".cyan
-            # puts "                  ___  __   _  _  ____  ____   __    ___  ____ \n                 / __)/  \\ / )( \\(  __)(  _ \\ / _\\  / __)(  __)\n                ( (__(  O )\\ \\/ / ) _)  )   //    \\( (_ \\ ) _)\n                 \\___)\\__/  \\__/ (____)(__\\_)\\_/\\_/ \\___/(____)".cyan
-            # puts "--------------------------------------------------------------------------------".cyan
-            # system("rm -rf hpc_report")
+        #     # # coverage
+        #     # puts "--------------------------------------------------------------------------------".cyan
+        #     # puts "                  ___  __   _  _  ____  ____   __    ___  ____ \n                 / __)/  \\ / )( \\(  __)(  _ \\ / _\\  / __)(  __)\n                ( (__(  O )\\ \\/ / ) _)  )   //    \\( (_ \\ ) _)\n                 \\___)\\__/  \\__/ (____)(__\\_)\\_/\\_/ \\___/(____)".cyan
+        #     # puts "--------------------------------------------------------------------------------".cyan
+        #     # system("rm -rf hpc_report")
 
-            # hpc_excluded_modules = ((Dir.glob("test/**/*Spec.hs")
-            #                             .map { |k| k.gsub("test/", "")
-            #                                         .gsub(".hs","")
-            #                                         .gsub("/",".")
-            #                                  }
-            #                         ) << "Main"
-            #                        ).map{|k| "--exclude=#{k}" }.join(" ")
-            # coverage_cmd = "hpc markup luna-typechecker-tests --destdir=hpc_report --exclude=Logger #{hpc_excluded_modules} > /dev/null"
-            # puts "> #{coverage_cmd}"
-            # system(coverage_cmd)
-            # puts "Report written to 'hpc_report'"
+        #     # hpc_excluded_modules = ((Dir.glob("test/**/*Spec.hs")
+        #     #                             .map { |k| k.gsub("test/", "")
+        #     #                                         .gsub(".hs","")
+        #     #                                         .gsub("/",".")
+        #     #                                  }
+        #     #                         ) << "Main"
+        #     #                        ).map{|k| "--exclude=#{k}" }.join(" ")
+        #     # coverage_cmd = "hpc markup luna-typechecker-tests --destdir=hpc_report --exclude=Logger #{hpc_excluded_modules} > /dev/null"
+        #     # puts "> #{coverage_cmd}"
+        #     # system(coverage_cmd)
+        #     # puts "Report written to 'hpc_report'"
 
 
-            # # linting
-            # puts "--------------------------------------------------------------------------------".cyan
-            # puts "                      __    __  __ _  ____  __  __ _   ___\n                     (  )  (  )(  ( \\(_  _)(  )(  ( \\ / __)\n                     / (_/\\ )( /    /  )(   )( /    /( (_ \\\n                     \\____/(__)\\_)__) (__) (__)\\_)__) \\___/".cyan
-            # puts "--------------------------------------------------------------------------------".cyan
-            # system("pushd ..; hlint typechecker --report; popd")
-        end
+        #     # # linting
+        #     # puts "--------------------------------------------------------------------------------".cyan
+        #     # puts "                      __    __  __ _  ____  __  __ _   ___\n                     (  )  (  )(  ( \\(_  _)(  )(  ( \\ / __)\n                     / (_/\\ )( /    /  )(   )( /    /( (_ \\\n                     \\____/(__)\\_)__) (__) (__)\\_)__) \\___/".cyan
+        #     # puts "--------------------------------------------------------------------------------".cyan
+        #     # system("pushd ..; hlint typechecker --report; popd")
+        # end
     end
   end
   watch(%r{^runtest.hs$}) do |m|
