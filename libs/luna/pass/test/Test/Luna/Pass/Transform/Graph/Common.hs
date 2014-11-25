@@ -32,6 +32,10 @@ named :: a -> b -> (a, b)
 named = (,)
 
 
+named3 :: a -> b -> c -> (a, b, c)
+named3 = (,,)
+
+
 mainBC :: Breadcrumbs
 mainBC = [Crumb.Module "Main", Crumb.Function (Name.single "main") []]
 
