@@ -20,6 +20,7 @@ import qualified Data.Vector.Storable       as SV
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
 
+import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.Rasterizer
 import qualified Flowbox.Graphics.Color                             as Color
 import           Flowbox.Graphics.Composition.Generators.Filter
@@ -260,5 +261,5 @@ unpackLunaList :: [Value Pure Safe a] -> [a]
 unpackLunaList = fmap extract
     where extract (Value (Pure (Safe p))) = p
 
-rasterizeVectorLuna :: Real a => Int -> Int -> Bool -> [Value Pure Safe (Point2 a)] -> Image RGBA
+rasterizeVectorLuna :: Real a => Int -> Int -> Bool -> [Value Pure Safe (ControlPoint a)] -> Image RGBA
 rasterizeVectorLuna w h closed points = rasterizeVector w h closed $ unpackLunaList points

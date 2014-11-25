@@ -35,7 +35,7 @@ import Utils
 generateControls :: [Double] -> [ControlPoint Double]
 generateControls = combine
     where combine [] = []
-          combine (x1:y1:x2:y2:x3:y3:xs) = ControlPoint (Point2 x2 y2) (Point2 (x1-x2) (y1-y2)) (Point2 (x3-x2) (y3-y2)) : combine xs
+          combine (x1:y1:x2:y2:x3:y3:xs) = ControlPoint (Point2 x2 y2) (Just $ Point2 (x1-x2) (y1-y2)) (Just $ Point2 (x3-x2) (y3-y2)) : combine xs
           combine _ = error "unsupported ammount of coordinates"
 
 generatePath :: [ControlPoint Double] -> Path Double
