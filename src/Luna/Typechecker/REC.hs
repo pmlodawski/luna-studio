@@ -383,6 +383,8 @@ cs (s, C c) =
                  return (s, c'')
      else report_error "inconsistent constraint" (null_subst, C [TRUE])
 
+renameBoundVars (Proj tvl c) =
+    do 
 
 -- # divide predicates into record predicates and equality predicates
 
@@ -403,12 +405,57 @@ closure (s, r, e) =
    do s' <- do_unify(s,e)
       c <- apply s' (C r)
       case c of
-        C p1 -> do  e1 <- extract1 p1
-                    e2 <- extract2 p1
-                    p2 <- simplify_predicate (e1 ++ e2)
-                    if p2 == [] then return (s',p1)
+        -- | no existential types, solve similarly as Ohori's records
+        C p1 -> do e1 <- extract1 p1
+                   e2 <- extract2 p1
+                   p2 <- simplify_predicate (e1 ++ e2)
+                   if null p2 then return (s',p1)
                      else closure (s', p1, p2)
         _    -> report_error "closure:uncompatible constraint" (null_subst, [])
+
+-- # Algorithm description:
+-- 1) solve equations between existentials to simplify
+-- 2) solve equations for variables and concrete types
+-- 3) find transitive closure for mixed equations (i.e. Exists b.(a<=b,
+-- b<=c) to (a<=c))
+-- 4) solve equations from previous point
+-- 5) check whether all equations can be simplified, if not return to 1 
+closure (s, r, e, exVars) =
+    do let e = Proj exVars e
+       (eq, quantified, mixed) = extractQuantifiedEquations e
+       -- qS <- do_unify (s, quantified)
+       (r', e') <- getTransitiveClosure (Proj exVars mixed) (mixed ++ quantified) r
+       let transC = e' ++ e
+       normalS <- do_unify (s, transC)
+       let newR = r' ++ r
+       r'' <- apply normalS newR
+       e1 <- extract1 newR
+       e2 <- extract2 newR
+       p2 <- simplify_predicate (e1 ++ e2)
+       if null p2 then return (normalS, r'')
+           else return closure (normalS, r'',p2)
+
+getTransitiveClosure (Proj vars mixed) mixAndQuants predicates = foldl extract ([], []) mixed where
+  extract res (t `Subsume` t') | elem t vars = traverseConstraints t t' mixAndQuants predicates res
+                               | otherwise = res
+
+traverseConstraints base trans eq pred result = 
+    where equations = filter (trans ==) 
+
+extractQuantifiedEquations :: Constraint -> ([Predicate], [Predicate], [Predicate])
+extractQuantifiedEquations (C pred) = (pred, [], [])
+extractQuantifiedEquations (Proj vars pred) = foldl extract ([], [], []) pred where
+  extract (a, b, c) eq@(t `Subsume` t') | elem t vars && elem t' vars = (a, eq:b, c)
+                                        | elem t vars || elem t' vars = (a, b, eq:c)
+                                        | otherwise                   = (eq:a, b, c)
+
+extractFromExs (Proj [] pred) = []
+extractFromExs (Proj vars pred) = foldl extract [] pred
+    where extract res contr@(Reckind (TV var) fLabel fType) =
+              if elem var vars then contr:res else res
+          extract res _ = res
+
+extractEquationsWithExistentials (Proj )
 
 
 -- # create subsumptions based on a label type of a particular record
