@@ -26,8 +26,8 @@ instance Default Config where
 
 
 defaultMemoryUpperLimit :: Int64
-defaultMemoryUpperLimit = 1000000000
+defaultMemoryUpperLimit = 1000 * 10^6
 
 
 defaultMemoryLowerLimit :: Int64
-defaultMemoryLowerLimit =  800000000
+defaultMemoryLowerLimit =  800 * 10^6

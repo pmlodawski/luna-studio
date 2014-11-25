@@ -23,15 +23,19 @@ data NoManager = NoManager
                deriving (Show)
 
 
+instance Default NoManager where
+    def = NoManager
+
+
 instance MemoryManager NoManager where
-    clean _ status = do
+    reportUse    _ _ = return ()
+    reportDelete _ _ = return ()
+    clean status = do
         logger warning "Cleaning memory - not implemented"
         logger warning $ show status
 
-    cleanIfNeeded mm = do
+    cleanIfNeeded = do
         status <- Status.status
         when (Status.isUpperLimitExceeded status) $
-            clean mm status
+            clean status
 
-instance Default NoManager where
-    def = NoManager

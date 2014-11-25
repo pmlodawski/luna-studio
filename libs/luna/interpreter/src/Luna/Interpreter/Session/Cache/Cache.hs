@@ -14,7 +14,7 @@ import qualified Data.Maybe          as Maybe
 import qualified Data.Set            as Set
 import qualified System.Mem          as Mem
 
-import           Flowbox.Control.Error
+import           Flowbox.Control.Error                       hiding (err)
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.Source.Location                     (loc)
@@ -37,6 +37,8 @@ import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
 import           Luna.Interpreter.Session.Memory             (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory             as Memory
+import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
+import qualified Luna.Interpreter.Session.Memory.Manager     as Manager
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Lib.Lib                                as Library
@@ -93,6 +95,7 @@ setRecentVarName varName = modifyCacheInfo (CacheInfo.recentVarName .~ varName)
 modifyCacheInfo :: (CacheInfo -> CacheInfo) -> CallPointPath ->  Session mm ()
 modifyCacheInfo f callPointPath = onCacheInfo
     (Env.cachedInsert callPointPath . f)
+    --FIXME (left $ Error.OtherError $(loc) $ "Cannot find callPointPath = " ++ show callPointPath)
     (return ())
     callPointPath
 
@@ -119,7 +122,7 @@ put callDataPath predVarNames varName = do
     Env.cachedInsert callPointPath cacheInfo
 
 
-deleteNode :: Library.ID -> Node.ID -> Session mm ()
+deleteNode :: MemoryManager mm => Library.ID -> Node.ID -> Session mm ()
 deleteNode libraryID nodeID = do
     logger info $ "Cleaning node: " ++ show (libraryID, nodeID)
     let callPoint     = CallPoint libraryID nodeID
@@ -131,20 +134,34 @@ deleteNode libraryID nodeID = do
     mapM_ (deleteNode libraryID) $ Set.toList dependent
 
 
-delete :: CallPointPath -> Session mm ()
+delete :: MemoryManager mm => CallPointPath -> Session mm ()
 delete callPointPath = do
     logger info $ "Cleaning cached value: " ++ show callPointPath
     cacheInfo <- getCacheInfo callPointPath
     delete' (callPointPath, cacheInfo)
 
 
-delete' :: (CallPointPath, CacheInfo) -> Session mm ()
+delete' :: MemoryManager mm => (CallPointPath, CacheInfo) -> Session mm ()
 delete' (callPointPath, cacheInfo) = do
     Free.freeCacheInfo cacheInfo
     Env.cachedDelete callPointPath
+    Manager.reportDeleteMany $ zip (repeat callPointPath) $ Map.elems $ cacheInfo ^. CacheInfo.dependencies
 
 
-deleteAll :: Session mm ()
+deleteVarName :: CallPointPath -> VarName -> Session mm ()
+deleteVarName callPointPath varName = do
+    print =<< Env.getCached
+    onCacheInfo del err callPointPath where
+        err = left $ Error.OtherError $(loc) $ "Cannot find callPointPath = " ++ show callPointPath
+        del cacheInfo = do
+            if cacheInfo ^. CacheInfo.recentVarName == varName
+                then Env.cachedDelete callPointPath
+                else Env.cachedInsert callPointPath
+                   $ CacheInfo.dependencies %~ Map.filter (/= varName) $ cacheInfo
+            Free.freeVarName varName
+
+
+deleteAll :: MemoryManager mm => Session mm ()
 deleteAll = do
     logger info "Cleaning all cached values"
     mapM_ delete' =<< MapForest.toList <$> Env.getCached
@@ -153,12 +170,6 @@ deleteAll = do
 getCacheInfo :: CallPointPath -> Session mm CacheInfo
 getCacheInfo callPointPath = Env.cachedLookup callPointPath
     <??&> Error.CacheError $(loc) (concat ["Object ", show callPointPath, " is not in cache."])
-
-
-performCleaning :: MemoryManager mm => Session mm ()
-performCleaning = do
-    performGC
-    Memory.cleanIfNeeded =<< Env.getMemoryManager
 
 
 performGC :: Session mm ()

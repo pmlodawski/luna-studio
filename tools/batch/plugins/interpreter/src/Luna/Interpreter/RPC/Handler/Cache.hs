@@ -24,6 +24,7 @@ import qualified Luna.Interpreter.Session.Cache.Invalidate              as Inval
 import           Luna.Interpreter.Session.Data.CallPoint                (CallPoint (CallPoint))
 import qualified Luna.Interpreter.Session.Env                           as Env
 import           Luna.Interpreter.Session.Memory.Manager                (MemoryManager)
+import qualified Luna.Interpreter.Session.Memory.Manager                as Manager
 import           Luna.Interpreter.Session.Session                       (Session, SessionST)
 
 
@@ -42,13 +43,13 @@ interpreterDo projectID op = do
 deleteAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
 deleteAll projectID = interpreterDo projectID $ do
     Cache.deleteAll
-    Cache.performCleaning
+    Manager.cleanIfNeeded
 
 
 modifyAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
 modifyAll projectID = interpreterDo projectID $ do
     Invalidate.modifyAll
-    Cache.performCleaning
+    Manager.cleanIfNeeded
 
 
 closeProject :: Int32 -> RPC Context (SessionST mm) ()
@@ -87,7 +88,7 @@ deleteNode :: MemoryManager mm => Int32 -> Int32 -> Int32 -> RPC Context (Sessio
 deleteNode projectID libraryID nodeID =
     interpreterDo projectID $ do
         Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
-        Cache.performCleaning
+        Manager.cleanIfNeeded
 
 
 insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context (SessionST mm) ()
