@@ -26,6 +26,7 @@ import qualified Luna.Interpreter.Session.Env                           as Env
 import           Luna.Interpreter.Session.Memory.Manager                (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager                as Manager
 import           Luna.Interpreter.Session.Session                       (Session, SessionST)
+import qualified         Luna.Interpreter.Session.Memory.GPU as GPUMemory
 
 
 
@@ -44,12 +45,14 @@ deleteAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
 deleteAll projectID = interpreterDo projectID $ do
     Cache.deleteAll
     Manager.cleanIfNeeded
+    GPUMemory.performGC
 
 
 modifyAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
 modifyAll projectID = interpreterDo projectID $ do
     Invalidate.modifyAll
     Manager.cleanIfNeeded
+    GPUMemory.performGC
 
 
 closeProject :: Int32 -> RPC Context (SessionST mm) ()
@@ -89,6 +92,7 @@ deleteNode projectID libraryID nodeID =
     interpreterDo projectID $ do
         Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
         Manager.cleanIfNeeded
+        GPUMemory.performGC
 
 
 insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context (SessionST mm) ()
