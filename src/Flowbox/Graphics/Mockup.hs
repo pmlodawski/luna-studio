@@ -257,12 +257,21 @@ laplacianLuna (VPS (variable -> kernSize)) (VPS (variable -> crossVal)) (VPS (va
           flt = laplacian crossVal sideVal $ pure kernSize
           p = pipe A.Clamp
 
+unpackLunaVar :: Value Pure Safe a -> a
+unpackLunaVar (Value (Pure (Safe a))) = a
+
 unpackLunaList :: [Value Pure Safe a] -> [a]
-unpackLunaList = fmap extract
-    where extract (Value (Pure (Safe p))) = p
+unpackLunaList = fmap unpackLunaVar
 
-rasterizeVectorLuna :: Real a => Int -> Int -> Bool -> [Value Pure Safe (ControlPoint a)] -> Image RGBA
-rasterizeVectorLuna w h closed points = rasterizeVector w h closed $ unpackLunaList points
+type ControlPoint2 a = ( Value Pure Safe (Point2 a)
+                       , Value Pure Safe (Maybe (Point2 a))
+                       , Value Pure Safe (Maybe (Point2 a))
+                       )
 
-test :: Int
+rasterizeVectorLuna :: Real a => Int -> Int -> Bool -> [Value Pure Safe (ControlPoint2 a)] -> Image RGBA
+rasterizeVectorLuna w h closed points = rasterizeVector w h closed $ fmap convert $ unpackLunaList points
+    where convert :: ControlPoint2 a -> ControlPoint a
+          convert (unpackLunaVar -> a, unpackLunaVar -> b, unpackLunaVar -> c) = ControlPoint a b c
+
+test :: Int -> Int
 test = undefined
