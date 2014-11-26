@@ -104,7 +104,7 @@ traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
                   return $ Parser.parseString expr $ Parser.exprBlockParser2 (pstate)
               case result of
                   Left e      -> fail   $ show e
-                  Right (e,_) -> return $ e
+                  Right (e,s) -> put s *> pure e
           -- FIXME [wd]: inny parser powinine parsowac argumenty poniewaz nie zawieraja wielu linii i nie moga zawierac wielu exproessionow!
           --             zatem wyciaganie pierwszego elementu jest szybkim obejsciem
           subparseArg (Arg pat val) = Arg pat . (fmap (!!0)) <$> mapM subparse val 
