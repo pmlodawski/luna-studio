@@ -31,5 +31,6 @@ Executable bus-logger
                     mtl,
                     optparse-applicative,
                     protocol-buffers-fork,
+                    time,
                     transformers,
                     zeromq4-haskell >= 0.4
