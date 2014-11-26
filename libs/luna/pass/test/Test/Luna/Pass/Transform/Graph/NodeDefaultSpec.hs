@@ -12,12 +12,13 @@ import Flowbox.Control.Error
 import Test.Hspec
 
 import           Flowbox.Prelude
+import qualified Luna.Graph.View.GraphView                    as GraphView
 import qualified Luna.Pass.Transform.GraphView.Defaults       as Defaults
+import qualified Test.Luna.Pass.Transform.Graph.Common        as Common
 import qualified Test.Luna.Pass.Transform.Graph.GraphViewSpec as GVTest
+import qualified Test.Luna.AST.Common                    as Common
+import qualified Test.Luna.Sample.Code                   as SampleCode
 import           Test.Luna.Sample.NodeDefault                 (sampleGraphs)
---import qualified Luna.Graph.View.GraphView             as GraphView
---import qualified Test.Luna.Pass.Transform.Graph.GraphSpec     as GTest
---import qualified Test.Luna.Pass.Transform.Graph.Common as Common
 
 
 
@@ -41,5 +42,19 @@ spec = do
                 grpAddedRemoved `shouldBe` grpAddedRemovedRemoved
                 uncurry GVTest.backAndForth2 grpAdded
                 --(graph, prop) <- eitherStringToM $ uncurry GraphView.toGraph grpAdded
-                --GTest.backAndForth2 Common.mainBC graph prop
+                --let bc = Common.mainBC
+                --emptyAst  <- Common.getAST SampleCode.emptyMain
+                --(ast, pm) <- Common.getExpr bc graph prop emptyAst
+                --prettyPrint (ast, pm)
+                --cAdded'    <- Common.getGraph bc pm ast
+                --prettyPrint cAdded'
+                --let cAdded = uncurry GraphView.fromGraph cAdded'
+
+                --let cAddedRemoved = uncurry Defaults.removeDefaults cAdded 
+                ----prettyPrint grp
+                ----print "=================="
+                ----prettyPrint cAdded
+                ----print "------------------"
+                ----prettyPrint cAddedRemoved
+                --grp `shouldBe` cAddedRemoved
 
