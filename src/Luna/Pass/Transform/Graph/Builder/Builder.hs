@@ -163,13 +163,12 @@ buildNode astFolded monadicBind outName expr = do
 
         buildApp i src args = do
             graphFolded <- State.getGraphFolded i
-            generated   <- State.getDefaultGenerated i
+            minID  <- hoistEither =<< MinID.runExpr expr
+            generated   <- State.getDefaultGenerated minID
             if graphFolded
-                then do minID  <- hoistEither =<< MinID.runExpr expr
-                        addNode' minID (mkNodeStrExpr expr) []
+                then addNode' minID (mkNodeStrExpr expr) []
                 else if generated
-                    then do minID  <- hoistEither =<< MinID.runExpr expr
-                            addNode' minID (mkNodeAstExpr expr) []
+                    then addNode' minID (mkNodeAstExpr expr) []
                     else do srcID <- buildNode astFolded False outName src
                             s     <- State.gvmNodeMapLookUp srcID
                             case s of
