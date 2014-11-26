@@ -27,11 +27,11 @@
     url = https://github.com/flowbox-public/mainland-pretty.git
 [submodule "third-party/cufft"]
     path = third-party/cufft
-    url = https://github.com/srutownik/cufft.git
+    url = https://github.com/flowbox-public/cufft.git
 [submodule "third-party/accelerate-cuda"]
     path = third-party/accelerate-cuda
-    url = https://github.com/srutownik/accelerate-cuda.git
+    url = https://github.com/flowbox-public/accelerate-cuda.git
     branch = release/0.15
 [submodule "third-party/cuda"]
 	path = third-party/cuda
-	url = https://github.com/srutownik/cuda.git
+	url = https://github.com/flowbox-public/cuda.git
