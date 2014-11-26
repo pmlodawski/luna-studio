@@ -10,8 +10,9 @@
 
 module Flowbox.FileManager.LocalFileManager where
 
-import           Control.Exception (SomeException, catch)
-import qualified System.Directory  as Directory
+import           Control.Exception        (SomeException, catch)
+import qualified System.Directory         as Directory
+import qualified System.PosixCompat.Files as Files
 
 import           Flowbox.Control.Error
 import           Flowbox.FileManager.FileManager
@@ -22,7 +23,6 @@ import qualified Flowbox.System.UniPath                          as UniPath
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.FileManager.FileSystem.Item     as Gen
 import qualified Generated.Proto.FileManager.FileSystem.Item.Cls as Gen
-import qualified System.PosixCompat.Files                        as Files
 
 
 data LocalFileManager = LocalFileManager
