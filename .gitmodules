@@ -28,9 +28,6 @@
 [submodule "third-party/linear-accelerate"]
     path = third-party/linear-accelerate
     url = https://github.com/flowbox-public/linear-accelerate.git
-[submodule "accelerate-cuda"]
-	path = accelerate-cuda
-	url = https://github.com/AccelerateHS/accelerate-cuda.git
 [submodule "third-party/accelerate-cuda"]
-	path = third-party/accelerate-cuda
-	url = https://github.com/AccelerateHS/accelerate-cuda.git
+    path = third-party/accelerate-cuda
+    url = https://github.com/AccelerateHS/accelerate-cuda.git
