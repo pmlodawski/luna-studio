@@ -28,7 +28,7 @@ type ClientID  = ID
 
 data CorrelationID = CorrelationID { _clientID  :: ClientID
                                    , _messageID :: RequestID
-                                   } deriving (Read, Show, Eq)
+                                   } deriving (Read, Show, Eq, Ord)
 
 
 data Message = Message { _topic   :: Topic
