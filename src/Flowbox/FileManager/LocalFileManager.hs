@@ -12,6 +12,7 @@ module Flowbox.FileManager.LocalFileManager where
 
 import           Control.Exception        (SomeException, catch)
 import qualified System.Directory         as Directory
+import qualified System.FilePath          as FilePath
 import qualified System.PosixCompat.Files as Files
 
 import           Flowbox.Control.Error
@@ -45,7 +46,7 @@ instance FileManager LocalFileManager () where
     fetchDirectory  _ _ = return ()
     createDirectory _   = safeLiftIO . Directory.createDirectory
     directoryExists _   = safeLiftIO . Directory.doesDirectoryExist
-    listDirectory   _ p = safeLiftIO $ mapM getFileStatus
+    listDirectory   _ p = safeLiftIO $ mapM (getFileStatus . FilePath.combine p )
                                    =<< Directory.getDirectoryContents p
     removeDirectory _   = safeLiftIO . Directory.removeDirectory
     copyDirectory   _ src dst = safeLiftIO $ FDirectory.copyDirectoryRecursive
