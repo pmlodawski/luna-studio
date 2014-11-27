@@ -35,6 +35,8 @@ import qualified Luna.Data.Namespace       as Namespace
 import           Flowbox.System.Log.Logger as L
 
 
+import Debug.Trace
+
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
@@ -149,6 +151,23 @@ regParent :: NamespaceMonad m => ID -> m ()
 regParent id = do
     ns <- scopeID
     withJust ns (\pid -> modifyAliasInfo (AliasInfo.parent %~ IntMap.insert id pid))
+
+
+regAlias :: NamespaceMonad m => ID -> String -> m ()
+regAlias id name = do
+    ns <- get
+    ai <- getAliasInfo
+    aux ns (ns ^. Namespace.stack)
+  where 
+    aux ns (sid:sids) = do  case ns ^. Namespace.info . AliasInfo.scope . at sid of 
+                              Just scope -> case scope ^. AliasInfo.varnames . at name of
+                                              Just tid  -> traceShow ("TRACE DONE, FOUND " ++ show name ++ ":" ++ show id ++ " in "  ++ show sid ++ " ---> " ++ show tid) (fin ns (ns ^. Namespace.info) tid)
+                                              Nothing -> traceShow ("TRACE CONT, NOT FOUND " ++ show name ++ ":" ++ show id ++ " in "  ++ show sid) (aux ns sids)
+                              Nothing    -> traceShow ("TRACE CONT, NOT FOUND SCOPE " ++ show sid) (return ())
+    aux ns [] = traceShow ("TRACE DONE, NOT FOUND " ++ show name ++ ":" ++ show id) (return ())  -- orphan?
+    fin ns a tid = do let a' = a & AliasInfo.alias.at id ?~ tid
+                          ns' = set Namespace.info a' ns
+                      put ns'
 
 regTypeName :: NamespaceMonad m => ID -> String -> m ()
 regTypeName = regName AliasInfo.typenames

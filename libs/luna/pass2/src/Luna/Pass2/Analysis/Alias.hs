@@ -47,7 +47,7 @@ import           Luna.Data.Namespace          (Namespace)
 import           Luna.Data.AliasInfo          (AliasInfo)
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regParent, regVarName, regTypeName, withNewScope)
+import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regTypeName, withNewScope)
 import qualified Luna.Parser.State            as ParserState
 
 
@@ -106,9 +106,11 @@ aaDecl d@(Label lab decl) = case decl of
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
-aaExpr :: AACtx lab m v => (LExpr lab v) -> AAPass m (LExpr lab v)
+-- TODO [kgdk]: remove the MultiName String constraint
+aaExpr :: (AACtx lab m (MultiName.MultiName String)) => (LExpr lab (MultiName.MultiName String)) -> AAPass m (LExpr lab (MultiName.MultiName String))
 aaExpr e@(Label lab expr) = case expr of
-    var@(Expr.Var {})        -> regParent id *> continue
+    var@(Expr.Var idnt )     -> do let name = idnt ^. MultiName.base
+                                   regParent id *> regAlias id name *> continue
     _                        -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e
@@ -144,7 +146,8 @@ instance AACtx lab m a => AST.Traversal AliasAnalysis (AAPass m) (LModule lab a)
 instance AACtx lab m a => AST.Traversal AliasAnalysis (AAPass m) (LDecl lab a) (LDecl lab a) where
     traverseM _ = aaDecl
 
-instance AACtx lab m v => AST.Traversal AliasAnalysis (AAPass m) (LExpr lab v) (LExpr lab v) where
+-- TODO [kgdk]: remove the MultiName String constraint
+instance (AACtx lab m v, v~(MultiName.MultiName String)) => AST.Traversal AliasAnalysis (AAPass m) (LExpr lab v) (LExpr lab v) where
     traverseM _ = aaExpr
 
 instance (PassCtx m, Enumerated lab) => AST.Traversal AliasAnalysis (AAPass m) (LPat lab) (LPat lab) where
