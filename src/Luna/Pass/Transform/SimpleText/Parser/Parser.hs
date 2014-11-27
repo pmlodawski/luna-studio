@@ -46,7 +46,7 @@ run = Pass.run_ (Pass.Info "SimpleTextParser") Pass.NoState .: text2fun
 
 
 text2fun :: String -> Expr -> STPPass Expr
-text2fun code (Expr.Function _ path fname _ _ _) = do
+text2fun code (Expr.Function i path fname _ _ _) = do
     let main = "Main"
     (ast, _, astInfo) <- EitherT $ TxtParser.run $ Source [main] code
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitSelf.run astInfo ast
@@ -58,6 +58,6 @@ text2fun code (Expr.Function _ path fname _ _ _) = do
     (ast, _astInfo)   <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
     let bc   = [Crumb.Module main, Crumb.Function fname path]
     focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
-    Focus.getFunction focus <??> "SimpleText.Parser.text2fun : Target is not a function"
+    set Expr.id i <$> (Focus.getFunction focus <??> "SimpleText.Parser.text2fun : Target is not a function")
 
     --FIXME [PM] : assign proper ids! Current ones may conflict with other from the rest of module
