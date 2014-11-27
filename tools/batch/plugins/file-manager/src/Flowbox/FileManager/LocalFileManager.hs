@@ -49,7 +49,7 @@ instance FileManager LocalFileManager () where
     directoryExists _   = safeLiftIO . Directory.doesDirectoryExist
     listDirectory   _ p = safeLiftIO $ mapM (getFileStatus . FilePath.combine p )
                                    =<< Directory.getDirectoryContents p
-    removeDirectory _   = safeLiftIO . Directory.removeDirectory
+    removeDirectory _   = safeLiftIO . Directory.removeDirectoryRecursive
     copyDirectory   _ src dst = safeLiftIO $ FDirectory.copyDirectoryRecursive
                                      (UniPath.fromUnixString src)
                                      (UniPath.fromUnixString dst)
