@@ -145,6 +145,11 @@ regID id = do
 --regVarName :: NamespaceMonad m => ID -> String -> m ()
 regVarName = regName AliasInfo.varnames
 
+regParent :: NamespaceMonad m => ID -> m ()
+regParent id = do
+    ns <- scopeID
+    withJust ns (\pid -> modifyAliasInfo (AliasInfo.parent %~ IntMap.insert id pid))
+
 regTypeName :: NamespaceMonad m => ID -> String -> m ()
 regTypeName = regName AliasInfo.typenames
 

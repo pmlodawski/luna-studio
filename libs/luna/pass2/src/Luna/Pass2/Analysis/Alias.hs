@@ -47,7 +47,7 @@ import           Luna.Data.Namespace          (Namespace)
 import           Luna.Data.AliasInfo          (AliasInfo)
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regVarName, regTypeName, withNewScope)
+import           Luna.Data.Namespace.State    (regParent, regVarName, regTypeName, withNewScope)
 import qualified Luna.Parser.State            as ParserState
 
 
@@ -92,7 +92,9 @@ aaMod mod@(Label lab (Module path name body)) = withNewScope id continue
 
 aaPat :: (PassCtx m, Enumerated lab) => LPat lab -> AAPass m (LPat lab)
 aaPat p@(Label lab pat) = case pat of
-    Pat.Var         name       -> regVarName id (Name.fromName name) *> continue
+    Pat.Var         name       -> regVarName id (Name.fromName name)
+                                  *> regParent id
+                                  *> continue
     _                          -> continue
     where id = Enum.id lab
           continue = defaultTraverseM p 
@@ -106,7 +108,8 @@ aaDecl d@(Label lab decl) = case decl of
 
 aaExpr :: AACtx lab m v => (LExpr lab v) -> AAPass m (LExpr lab v)
 aaExpr e@(Label lab expr) = case expr of
-    _ -> continue
+    var@(Expr.Var {})        -> regParent id *> continue
+    _                        -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e
 
