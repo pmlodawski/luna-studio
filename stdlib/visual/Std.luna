@@ -128,7 +128,9 @@ class ```Point2``` a:
 # alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
 # alias Path a         = (Bool, [ControlPoint a])
 # alias Shape a        = [Path a]
-# alias Mask a         = (Path a, Maybe (Path a))
+alias Mask a         = (Path a, Maybe (Path a))
+
+alias MaskD = Mask Float
 
 def controlPoint point handleIn handleOut:
     (point, handleIn, handleOut)
@@ -142,5 +144,5 @@ def shape paths:
 def mask path feather:
     (path, feather)
 
-def rasterizeMask w::Int h::Int m:
+def rasterizeMask w::Int h::Int m::MaskD:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
