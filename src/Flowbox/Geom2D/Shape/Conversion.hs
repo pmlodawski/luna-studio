@@ -23,7 +23,7 @@ import Math.Coordinate.Cartesian (Point2(..))
 
 toQuadratics :: Shape Double -> [QuadraticPath Double]
 toQuadratics (Shape paths) = fmap makeQuadratics paths
-    where makeQuadratics (Path points closed) = (closed, convertCubicsToQuadratics 10 0.001 $ makeCubics points closed)
+    where makeQuadratics (Path closed points) = (closed, convertCubicsToQuadratics 10 0.001 $ makeCubics points closed)
           makeCubics points closed = foldr appendCubic (ifClosed points closed) $ segments points
           appendCubic pointPair cubics = makeCubic pointPair : cubics
           extract = fromMaybe (Point2 0 0)
