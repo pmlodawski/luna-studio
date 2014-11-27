@@ -39,7 +39,7 @@ generateControls = combine
           combine _ = error "unsupported ammount of coordinates"
 
 generatePath :: [ControlPoint Double] -> Path Double
-generatePath = flip Path True
+generatePath = Path True
 
 --saveImageLuna :: FilePath -> Image RGBA -> IO (Image RGBA)
 --saveImageLuna path img = do

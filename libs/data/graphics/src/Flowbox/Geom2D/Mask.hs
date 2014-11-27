@@ -4,20 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Geom2D.Path where
+module Flowbox.Geom2D.Mask where
 
-import Flowbox.Geom2D.ControlPoint
+import Flowbox.Geom2D.Path
 import Flowbox.Prelude
 
-data Path a = Path { isClosed      :: Bool
-                   , controlPoints :: [ControlPoint a]
+data Mask a = Mask { path    :: Path a
+                   , feather :: Maybe (Path a)
                    } deriving (Eq, Ord, Show)
 
-instance Functor Path where
-    fmap f (Path closed points) = Path closed $ (fmap.fmap) f points
+instance Functor Mask where
+    fmap f (Mask a b) = Mask (fmap f a) ((fmap.fmap) f b)
 
---instance Applicative Path where
---    pure a = Path (pure a) False
+--instance Applicative Shape where
+--    pure a = Shape (pure a)
 --    {-# INLINE pure #-}
---    Path a <*> Path b = Path (a <*> b)
+--    Shape a <*> Shape b = Shape (a <*> b)
 --    {-# INLINE (<*>) #-}
