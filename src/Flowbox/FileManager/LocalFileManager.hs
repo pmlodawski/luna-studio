@@ -26,6 +26,7 @@ import qualified Generated.Proto.FileManager.FileSystem.Item     as Gen
 import qualified Generated.Proto.FileManager.FileSystem.Item.Cls as Gen
 
 
+
 data LocalFileManager = LocalFileManager
 
 
@@ -44,7 +45,7 @@ instance FileManager LocalFileManager () where
     stat            _   = safeLiftIO . getFileStatus
     uploadDirectory _ _ = return ()
     fetchDirectory  _ _ = return ()
-    createDirectory _   = safeLiftIO . Directory.createDirectory
+    createDirectory _   = safeLiftIO . Directory.createDirectoryIfMissing True
     directoryExists _   = safeLiftIO . Directory.doesDirectoryExist
     listDirectory   _ p = safeLiftIO $ mapM (getFileStatus . FilePath.combine p )
                                    =<< Directory.getDirectoryContents p
