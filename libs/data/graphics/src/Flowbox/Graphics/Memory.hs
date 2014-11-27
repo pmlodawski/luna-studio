@@ -5,12 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
+module Flowbox.Graphics.Memory (
+    module X,
+) where
 
-module Control.PolyApplicative where
-
-
-
-class PolyApplicative m1 m2 m3 | m1 m2 -> m3 where
-    (<<*>>) :: m1 (a -> b) -> m2 a -> m3 b
+import Data.Array.Accelerate.CUDA as X (performGC, unsafeFreeArrays)

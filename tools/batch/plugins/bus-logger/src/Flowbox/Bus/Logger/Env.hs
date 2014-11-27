@@ -4,13 +4,23 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
+module Flowbox.Bus.Logger.Env where
 
-module Control.PolyApplicative where
+import Data.Map        (Map)
+import Data.Time.Clock (UTCTime)
+
+import qualified Flowbox.Bus.Data.Message as Message
+import           Flowbox.Prelude
 
 
 
-class PolyApplicative m1 m2 m3 | m1 m2 -> m3 where
-    (<<*>>) :: m1 (a -> b) -> m2 a -> m3 b
+data Env = Env { _times :: Map Message.CorrelationID UTCTime }
+
+makeLenses ''Env
+
+
+instance Default Env where
+    def = Env def
+

@@ -19,6 +19,7 @@ import           Luna.Graph.Node.Expr                    (NodeExpr)
 import qualified Luna.Graph.Node.Expr                    as NodeExpr
 import qualified Luna.Graph.Node.StringExpr              as StringExpr
 import qualified Luna.Graph.Port                         as Port
+import           Luna.Graph.PropertyMap                  (PropertyMap)
 import           Luna.Pass.Transform.AST.IDFixer.IDFixer (clearIDs)
 import qualified Test.Luna.AST.Common                    as Common
 import qualified Test.Luna.Pass.Transform.Graph.Common   as Common
@@ -62,18 +63,18 @@ backAndForth bc code = do
     pm3    `shouldBe` pm2
 
 
-backAndForth2 :: Breadcrumbs -> Graph -> IO ()
-backAndForth2 bc graph = backAndForth2' bc graph graph
+backAndForth2 :: Breadcrumbs -> Graph -> PropertyMap -> IO ()
+backAndForth2 bc graph initPM = backAndForth2' bc graph graph initPM
 
 
-backAndForth2' :: Breadcrumbs -> Graph -> Graph -> IO ()
-backAndForth2' bc providedGraph expectedGraph = do
+backAndForth2' :: Breadcrumbs -> Graph -> Graph -> PropertyMap -> IO ()
+backAndForth2' bc providedGraph expectedGraph initPM = do
     emptyAst  <- Common.getAST SampleCode.emptyMain
-    (ast, pm) <- Common.getExpr bc providedGraph def emptyAst
+    (ast, pm) <- Common.getExpr bc providedGraph initPM emptyAst
     --printLn
-    --print ast
+    --prettyPrint ast
     --printLn
-    --print pm
+    --prettyPrint pm
     --printLn
     (resultGraph, _pm2) <- Common.getGraph bc pm ast
     resultGraph `shouldBe` expectedGraph
@@ -93,9 +94,9 @@ spec = do
 
     describe "graph <-> ast conversion" $ do
         mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth2 Common.mainBC graph) sampleGraphs
+                backAndForth2 Common.mainBC graph def) sampleGraphs
         mapM_ (\(name, providedGraph, expectedGraph) -> it ("fixes buggy graphs - " ++ name) $
-                backAndForth2' Common.mainBC providedGraph expectedGraph) buggyGraphs
+                backAndForth2' Common.mainBC providedGraph expectedGraph def) buggyGraphs
 
 
     describe "graph sort alghorithm" $ do
