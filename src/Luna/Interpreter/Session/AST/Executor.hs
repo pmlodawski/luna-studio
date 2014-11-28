@@ -172,13 +172,14 @@ data VarType = Lit    String
              | Var    String
              | Native String
              | Tuple
+             | List
              | Id
              deriving Show
-
 
 varType :: StringExpr -> VarType
 varType  StringExpr.Id                 = Id
 varType  StringExpr.Tuple              = Tuple
+varType  StringExpr.List               = List
 varType (StringExpr.Native name      ) = Native name
 varType (StringExpr.Expr   []        ) = Prelude.error "varType : empty expression"
 varType (StringExpr.Expr   name@(h:_))
@@ -188,7 +189,7 @@ varType (StringExpr.Expr   name@(h:_))
     | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit name
     | Char.isUpper h                                     = Con name
     | otherwise                                          = Var name
-
+varType other = Prelude.error $ show other
 
 evalFunction :: MemoryManager mm
              => StringExpr -> CallDataPath -> [(CallPointPath, VarName)] -> Session mm (Maybe Hash, VarName)
@@ -196,7 +197,8 @@ evalFunction stringExpr callDataPath argsData = do
     let argsVarNames = map snd argsData
         callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        nameHash      = Hash.hashStr $ StringExpr.toString stringExpr
+        nameStr       = StringExpr.toString stringExpr
+        nameHash      = if nameStr == "Point2" then "Point2" else Hash.hashStr $ StringExpr.toString stringExpr
 
         mkArg arg = "(Value (Pure "  ++ arg ++ "))"
         args      = map mkArg argsVarNames
@@ -205,6 +207,7 @@ evalFunction stringExpr callDataPath argsData = do
 
         self      = head argsVarNames
         operation = "toIOEnv $ fromValue $ " ++ case varType stringExpr of
+            List        -> "val [" ++ List.intercalate "," args ++ "]"
             Id          -> mkArg self
             Native name -> genNative name
             Con    _    -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
