@@ -54,10 +54,10 @@ f2d = fromRational . toRational
 unpackP :: Num a => Maybe (Point2 a) -> Point2 a
 unpackP = fromMaybe (Point2 0 0)
 
-makeSegments :: Real a => [ControlPoint a] -> [Segment Closed R2]
-makeSegments points = combine points
+makeSegments :: Real a => Bool -> [ControlPoint a] -> [Segment Closed R2]
+makeSegments closed points = combine points
     where combine []  = []
-          combine [a'] = let
+          combine [a'] = if not closed then [] else let
                   ControlPoint (Point2 ax ay) _ b' = f2d' a'
                   ControlPoint (Point2 dx dy) c' _ = f2d' $ head points
                   Point2 bx by = unpackP b'
@@ -99,7 +99,7 @@ pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
     where ControlPoint (Point2 ox oy) _ _ = fmap f2d $ head points
           h' = fromIntegral h
           rasterize = do
-              let path = fromSegments $ makeSegments points
+              let path = fromSegments $ makeSegments closed points
                   diagram = case closed of
                       False -> path                        # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # lc white # lw (Output 1)
                       True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white # lw (Output 0)
@@ -112,7 +112,8 @@ pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
 pathToMatrix :: Real a => Int -> Int -> Path a -> Matrix2 Double
 pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
     where extractArr arr = Delayed $ A.map extractVal $ A.use arr
-          extractVal rgba = (A.fromIntegral $ rgba .&. 0xFF) / 255
+          extractVal :: M.Exp RGBA32 -> M.Exp Double
+          extractVal rgba = (A.fromIntegral $ (rgba `div` 0x1000000) .&. 0xFF) / 255
 
 rasterizeMask :: Real a => Int -> Int -> Mask a -> Matrix2 Double
 rasterizeMask w h (Mask path' feather') = path
@@ -139,9 +140,10 @@ rasterizeMask w h (Mask path' feather') = path
               in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
 
 matrixToImage :: Matrix2 Double -> Image View.RGBA
-matrixToImage (Channel.FlatData -> m) = Image.singleton view
-    where view = View.append (Channel.ChannelFloat "r" m)
-               $ View.append (Channel.ChannelFloat "g" m)
-               $ View.append (Channel.ChannelFloat "b" m)
-               $ View.append (Channel.ChannelFloat "a" m)
+matrixToImage a = Image.singleton view
+    where view = View.append (Channel.ChannelFloat "r" $ Channel.FlatData w)
+               $ View.append (Channel.ChannelFloat "g" $ Channel.FlatData w)
+               $ View.append (Channel.ChannelFloat "b" $ Channel.FlatData w)
+               $ View.append (Channel.ChannelFloat "a" $ Channel.FlatData a)
                $ View.empty "rgba"
+          w = M.map (\_ -> 1) a
