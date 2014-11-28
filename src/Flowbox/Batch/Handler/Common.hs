@@ -32,6 +32,7 @@ import           Luna.AST.Control.Focus                                      (Fo
 import qualified Luna.AST.Control.Focus                                      as Focus
 import qualified Luna.AST.Control.Zipper                                     as Zipper
 import           Luna.AST.Expr                                               (Expr)
+import qualified Luna.AST.Expr                                               as Expr
 import           Luna.AST.Module                                             (Module)
 import qualified Luna.Data.ASTInfo                                           as ASTInfo
 import qualified Luna.Data.Source                                            as Source
@@ -249,7 +250,7 @@ setCode code bc libraryID projectID = do
     newExpr <- EitherT $ STParser.run code expr
     maxID   <- getMaxID libraryID projectID
     fixedExpr <- EitherT $ IDFixer.runExpr maxID Nothing True newExpr
-    setFunctionFocus fixedExpr bc libraryID projectID
+    setFunctionFocus (Expr.id .~ (newExpr ^. Expr.id) $ fixedExpr) bc libraryID projectID
 
 
 gcPropertyMap :: Library.ID -> Project.ID -> Batch ()
