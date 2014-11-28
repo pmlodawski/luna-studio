@@ -135,6 +135,9 @@ alias MaskD = Mask Float
 def point self::Std x y:
     Point2 x y
 
+def nopoint self::Std:
+    ```val (Nothing :: Maybe (Point2 Double))```
+
 def controlPoint point handleIn handleOut:
     (point, handleIn, handleOut)
 

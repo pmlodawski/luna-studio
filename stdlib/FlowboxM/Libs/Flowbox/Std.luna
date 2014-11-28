@@ -123,6 +123,9 @@ class ```Point2``` a:
 def point x y:
     Point2 x y
 
+def nopoint:
+    ```val (Nothing :: Maybe (Point2 Double))```
+
 # class ```ControlPoint``` a:
 # class ControlPoint a:
 #     point               :: Point2 a
