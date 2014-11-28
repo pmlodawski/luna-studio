@@ -79,7 +79,7 @@ def main:
              ]
     m = mask (path True points) Nothing # second list is empty if the paths are the same
 
-    img = rasterizeMask 512 512 m
+    img = rasterizeMask 640 480 m
 
     img.save "test.png"
 
