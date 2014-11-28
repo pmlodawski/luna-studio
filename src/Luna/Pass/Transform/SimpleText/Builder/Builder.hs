@@ -34,5 +34,5 @@ run = Pass.run_ (Pass.Info "SimpleTextBuilder") Pass.NoState .: fun2text
 
 fun2text :: ASTInfo -> Expr -> STBPass (String, ASTInfo)
 fun2text astInfo expr = do
-    (expr, astInfo) <- EitherT $ Undo.ImplicitSelf.runExpr astInfo expr
-    return (lunaShow expr, astInfo)
+    (expr', astInfo') <- EitherT $ Undo.ImplicitSelf.runExpr astInfo expr
+    return (lunaShow expr', astInfo')

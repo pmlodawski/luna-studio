@@ -20,7 +20,6 @@ import qualified Data.Maybe                 as Maybe
 import           Flowbox.Prelude                         hiding (error, mapM, mapM_)
 import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Arg                            (Arg)
 import qualified Luna.AST.Arg                            as Arg
 import qualified Luna.AST.Common                         as AST
 import           Luna.AST.Expr                           (Expr)
@@ -164,25 +163,31 @@ buildNode astFolded monadicBind outName expr = do
 
         buildApp i src args = do
             graphFolded <- State.getGraphFolded i
+            minID  <- hoistEither =<< MinID.runExpr expr
+            generated   <- State.getDefaultGenerated minID
             if graphFolded
-                then do minID  <- hoistEither =<< MinID.runExpr expr
-                        addNode' minID (mkNodeExpr expr) []
-                else do srcID <- buildNode astFolded False outName src
-                        s     <- State.gvmNodeMapLookUp srcID
-                        case s of
-                           Just (srcNID, _) -> buildAndConnectMany True True Nothing srcNID (fmap (view Arg.arg) args) 1
-                           Nothing          -> return ()
-                        connectMonadic srcID
-                        return srcID
+                then addNode' minID (mkNodeStrExpr expr) []
+                else if generated
+                    then addNode' minID (mkNodeAstExpr expr) []
+                    else do srcID <- buildNode astFolded False outName src
+                            s     <- State.gvmNodeMapLookUp srcID
+                            case s of
+                               Just (srcNID, _) -> buildAndConnectMany True True Nothing srcNID (fmap (view Arg.arg) args) 1
+                               Nothing          -> return ()
+                            connectMonadic srcID
+                            return srcID
 
 
         addExprNode i name = addNode i (NodeExpr.StringExpr $ StringExpr.Expr name)
 
         addNode i nodeExpr args = do
             graphFolded <- State.getGraphFolded i
+            generated   <- State.getDefaultGenerated i
             if graphFolded
-                then addNode' i (mkNodeExpr expr) []
-                else addNode' i nodeExpr args
+                then addNode' i (mkNodeStrExpr expr) []
+                else if generated
+                    then addNode' i (mkNodeAstExpr expr) []
+                    else addNode' i nodeExpr args
 
         addNode' i nodeExpr args = do
             let node = Node.Expr nodeExpr (genName nodeExpr i)
@@ -190,12 +195,12 @@ buildNode astFolded monadicBind outName expr = do
             buildAndConnectMany True True Nothing i args 0
             connectMonadic i
             return i
-
-        mkNodeExpr           = NodeExpr.StringExpr . StringExpr.fromString . lunaShow
+        mkNodeAstExpr        = NodeExpr.ASTExpr
+        mkNodeStrExpr        = NodeExpr.StringExpr . StringExpr.fromString . lunaShow
         connectMonadic i     = when monadicBind $ State.connectMonadic i
         assignment           = Maybe.isJust outName
         genName nodeExpr num = Maybe.fromMaybe (OutputName.generate nodeExpr num) outName
-        showAndAddNode       = addNode (expr ^. Expr.id) (mkNodeExpr expr) []
+        showAndAddNode       = addNode (expr ^. Expr.id) (mkNodeStrExpr expr) []
 
         isNativeVar (Expr.NativeVar {}) = True
         isNativeVar _                   = False

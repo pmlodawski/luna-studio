@@ -7,11 +7,13 @@
 
 module Test.Luna.Pass.Transform.Graph.GraphViewSpec where
 
+import Control.Monad (forM_)
 import Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Luna.AST.Control.Crumb                (Breadcrumbs)
+import           Luna.Graph.PropertyMap                (PropertyMap)
 import           Luna.Graph.View.GraphView             (GraphView)
 import qualified Luna.Graph.View.GraphView             as GraphView
 import qualified Test.Luna.AST.Common                  as Common
@@ -32,19 +34,18 @@ backAndForth bc code = do
     pm    `shouldBe` pm3
 
 
-backAndForth2 :: GraphView -> IO ()
-backAndForth2 graphview = do
-    let emptyPM = def
+backAndForth2 :: GraphView -> PropertyMap -> IO ()
+backAndForth2 graphview initPM = do
     --printLn
     --print graphview
-    (graph, pm) <- eitherStringToM $ GraphView.toGraph graphview emptyPM
+    (graph, pm) <- eitherStringToM $ GraphView.toGraph graphview initPM
     --printLn
     --print graph
     --printLn
     let (graphview2, pm2) = GraphView.fromGraph graph pm
 
     graphview2 `shouldBe` graphview
-    pm2        `shouldBe` emptyPM
+    pm2        `shouldBe` initPM
 
 
 main :: IO ()
@@ -54,10 +55,11 @@ main = hspec spec
 spec :: Spec
 spec = do
     describe "code -> graph <-> graphview conversion" $ do
-        mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth Common.mainBC code) sampleCodes
-
+        forM_ sampleCodes $ \(name, code) ->
+            it ("returns the same when converting back and forth - " ++ name) $
+                backAndForth Common.mainBC code
 
     describe "graphview <-> graph conversion" $ do
-        mapM_ (\(name, gv) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth2 gv) sampleGraphs
+        forM_ sampleGraphs $ \(name, gv) ->
+            it ("returns the same when converting back and forth - " ++ name) $
+                backAndForth2 gv def
