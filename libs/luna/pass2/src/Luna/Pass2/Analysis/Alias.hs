@@ -16,31 +16,31 @@ module Luna.Pass2.Analysis.Alias where
 import           Flowbox.Prelude
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
 import qualified Luna.ASTNew.Traversals       as AST
-import qualified Luna.ASTNew.Enum       as Enum
-import           Luna.ASTNew.Enum       (Enumerated, IDTag(IDTag))
-import qualified Luna.ASTNew.Decl   as Decl
-import           Luna.ASTNew.Decl   (LDecl, Field(Field))
-import qualified Luna.ASTNew.Module as Module
-import           Luna.ASTNew.Module (Module(Module), LModule)
-import           Luna.ASTNew.Unit   (Unit(Unit))
-import qualified Luna.ASTNew.Label  as Label
-import           Luna.ASTNew.Label  (Label(Label))
-import qualified Luna.ASTNew.Type   as Type
-import           Luna.ASTNew.Type   (Type)
-import           Luna.ASTNew.Expr   (LExpr, Expr)
-import qualified Luna.ASTNew.Expr   as Expr
-import qualified Luna.ASTNew.Pat    as Pat
-import           Luna.ASTNew.Pat    (LPat, Pat)
-import qualified Luna.ASTNew.Lit    as Lit
-import           Luna.ASTNew.Arg    (Arg(Arg))
-import qualified Luna.ASTNew.Native as Native
+import qualified Luna.ASTNew.Enum             as Enum
+import           Luna.ASTNew.Enum             (Enumerated, IDTag(IDTag))
+import qualified Luna.ASTNew.Decl             as Decl
+import           Luna.ASTNew.Decl             (LDecl, Field(Field))
+import qualified Luna.ASTNew.Module           as Module
+import           Luna.ASTNew.Module           (Module(Module), LModule)
+import           Luna.ASTNew.Unit             (Unit(Unit))
 import           Luna.ASTNew.NameBase         (NameBase(nameBase))
+import qualified Luna.ASTNew.Label            as Label
+import           Luna.ASTNew.Label            (Label(Label))
+import qualified Luna.ASTNew.Type             as Type
+import           Luna.ASTNew.Type             (Type)
+import           Luna.ASTNew.Expr             (LExpr, Expr)
+import qualified Luna.ASTNew.Expr             as Expr
+import qualified Luna.ASTNew.Pat              as Pat
+import           Luna.ASTNew.Pat              (LPat, Pat)
+import qualified Luna.ASTNew.Lit              as Lit
+import           Luna.ASTNew.Arg              (Arg(Arg))
+import qualified Luna.ASTNew.Native           as Native
 import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
 import qualified Luna.ASTNew.Name.Multi       as MultiName
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
-import           Luna.Pass              (Pass(Pass), PassMonad, PassCtx)
-import qualified Luna.Pass              as Pass
+import           Luna.Pass                    (Pass(Pass), PassMonad, PassCtx)
+import qualified Luna.Pass                    as Pass
 
 import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
