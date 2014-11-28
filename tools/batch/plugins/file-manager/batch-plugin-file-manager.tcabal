@@ -23,6 +23,7 @@ Executable file-manager
     Build-Depends:  base,
                     batch-lib-file-manager,
                     directory,
+                    filepath,
                     flowbox-bus,
                     flowbox-config,
                     flowbox-utils,

@@ -104,3 +104,45 @@ def Image.blur self::Image kernelSize::Int:
 def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
     ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
 
+# GEOM
+
+class ```Point2``` a:
+    x,y :: a
+
+# class ```ControlPoint``` a:
+# class ControlPoint a:
+#     point               :: Point2 a
+#     handleIn, handleOut :: Maybe (Point2 a)
+
+# class ```Path``` a:
+#     closed   :: Bool
+#     vertices :: [ControlPoint a]
+
+# class ```Shape``` a:
+#     paths :: [Path a]
+
+# class ```Mask``` a:
+#     path    :: Path a
+#     feather :: Maybe (Path a)
+
+# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
+# alias Path a         = (Bool, [ControlPoint a])
+# alias Shape a        = [Path a]
+alias Mask a         = (Path a, Maybe (Path a))
+
+alias MaskD = Mask Float
+
+def controlPoint point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def path closed vertices:
+    (closed, vertices)
+
+def shape paths:
+    paths
+
+def mask path feather:
+    (path, feather)
+
+def rasterizeMask w::Int h::Int m::MaskD:
+    ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```

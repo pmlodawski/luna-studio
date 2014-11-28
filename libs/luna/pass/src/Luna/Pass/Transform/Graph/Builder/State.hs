@@ -191,6 +191,14 @@ setPosition nodeID pos = do
     setGraph $ Graph.updateNode (nodeID, node & Node.pos .~ pos) graph'
 
 
+getDefaultGenerated :: Node.ID -> GBPass Bool
+getDefaultGenerated nodeID = do
+    foldSetting <- gets (view foldNodes)
+    if foldSetting
+        then flip Flags.isSet' (view Flags.defaultNodeGenerated) <$> getFlags nodeID
+        else return False
+
+
 getGraphFolded :: Node.ID -> GBPass Bool
 getGraphFolded nodeID = do
     foldSetting <- gets (view foldNodes)
@@ -200,4 +208,4 @@ getGraphFolded nodeID = do
 
 
 setGrouped :: Node.ID -> GBPass ()
-setGrouped = modifyFlags (Flags.grouped .~ Just True) 
+setGrouped = modifyFlags (Flags.grouped .~ Just True)

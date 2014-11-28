@@ -41,7 +41,7 @@ instance (Condition a, Ord a, Num a) => Num (Filter a) where
     negate (Filter w a) = Filter w $ \t -> negate (a t)
     abs (Filter w a)    = Filter w $ \t -> abs (a t)
     signum (Filter w a) = Filter w $ \t -> signum (a t)
-    fromInteger x       = Filter 1 $ \t -> fromInteger x
+    fromInteger x       = Filter 1 $ const $ fromInteger x
 
 -- == Helper functions ==
 

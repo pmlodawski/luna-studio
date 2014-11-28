@@ -1,0 +1,92 @@
+import ```Flowbox.Graphics.Mockup```
+import ```Flowbox.Graphics.Image.Image```
+import ```Flowbox.Geom2D.ControlPoint```
+import ```Flowbox.Geom2D.Rasterizer```
+
+class ```Bool```:
+    True
+    False
+
+def Int.- a:
+    ```liftF2 (-) #{self} #{a}```
+
+class ```Maybe``` a:
+    Just:
+        unwarp :: a
+    Nothing
+
+class ```Point2``` a:
+    x,y :: a
+
+# class ```ControlPoint``` a:
+# class ControlPoint a:
+#     point               :: Point2 a
+#     handleIn, handleOut :: Maybe (Point2 a)
+
+# class ```Path``` a:
+#     closed   :: Bool
+#     vertices :: [ControlPoint a]
+
+# class ```Shape``` a:
+#     paths :: [Path a]
+
+# class ```Mask``` a:
+#     path    :: Path a
+#     feather :: Maybe (Path a)
+
+# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
+# alias Path a         = (Bool, [ControlPoint a])
+# alias Shape a        = [Path a]
+# alias Mask a         = (Path a, Maybe (Path a))
+
+def controlPoint point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def path closed vertices:
+    (closed, vertices)
+
+def shape paths:
+    paths
+
+def mask path feather:
+    (path, feather)
+
+alias Path = String
+
+def load path:
+    ```autoLift1 loadImageLuna #{path}```
+
+def Image.save path:
+    ```autoLift2 saveImageLuna #{path} #{self}```
+
+def rasterizeMask w h m:
+    ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
+
+def print msg:
+    ```autoLift1 print #{msg}```
+
+def test obj:
+    ```liftF1 test #{obj}```
+
+def main:
+    print "- - - vector rasterization test - - -"
+    points = [ controlPoint (Point2 212 209) Nothing (Just $ Point2 (211.-212) (114.-209))
+             , controlPoint (Point2 338 210) (Just $ Point2 (329.-338) (109.-210)) (Just $ Point2 (450.-338) (211.-210))
+             , controlPoint (Point2 343 330) (Just $ Point2 (456.-343) (331.-330)) Nothing
+             ]
+    m = mask (path True points) Nothing # second list is empty if the paths are the same
+
+    img = rasterizeMask 512 512 m
+
+    img.save "test.png"
+
+    # [1,2,3].each x:
+    #     print x
+    #     5
+
+# class Wrapper:
+#     list :: [Int]
+
+# def main:
+#     list = [1,2,3]
+#     wrapper = Wrapper list

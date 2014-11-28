@@ -4,11 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Geom2D.Path.Basic where
 
---import Math.Coordinate.Cartesian (Point2(..))
+module Flowbox.Geom2D.Conversion where
+
+import           Geom2D
+
+import Math.Coordinate.Cartesian  (Point2(..))
+import Flowbox.Prelude
 
 
+fp2gp :: Point2 Double -> Point
+fp2gp (Point2 x y) = Point x y
 
-data PathJoin a = JoinLine a
-			    | JoinQuadratic a
+gp2fp :: Point -> Point2 Double
+gp2fp (Point x y) = Point2 x y

@@ -13,8 +13,7 @@ Library
   GHC-Options:            -Wall -O2
   Default-Extensions:     DoAndIfThenElse,
                           NoImplicitPrelude,
-                          TemplateHaskell,
-                          OverloadedStrings
+                          TemplateHaskell
   Default-Language:       Haskell2010
 
   Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
@@ -31,8 +30,11 @@ Library
                   algebraic       > 0.1            ,
                   bmp                              ,
                   bytestring                       ,
+                  cairo                            ,
                   containers                       ,
                   cubicbezier                      ,
+                  diagrams-cairo                   ,
+                  diagrams-lib                     ,
                   distributive                     ,
                   either                           ,
                   errors                           ,
@@ -55,6 +57,7 @@ Library
                   template-haskell                 ,
                   transformers                     ,
                   vector                           ,
+                  vector-space                     ,
                   luna-target-ghchs
 
 -- == test generator ==
@@ -71,8 +74,7 @@ Executable test_generator
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          TemplateHaskell,
-                          OverloadedStrings
+                          TemplateHaskell
   Default-Language:       Haskell2010
 
   if flag(cuda)
@@ -92,13 +94,13 @@ Executable test_generator
                   split                    ,
                   vector
 
--- == test bezier ==
+-- == test shape and bezier (curves) ==
 
-Executable test_bezier
+Executable test_curves
   if !flag(cuda)
     buildable: False
 
-  Main-Is:        Bezier.hs
+  Main-Is:        Curves.hs
   Hs-Source-Dirs: test
 
   Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
@@ -106,8 +108,7 @@ Executable test_bezier
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          TemplateHaskell,
-                          OverloadedStrings
+                          TemplateHaskell
   Default-Language:       Haskell2010
 
   if flag(cuda)
@@ -121,9 +122,11 @@ Executable test_bezier
                   algebraic                ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
+                  JuicyPixels              ,
                   lens                     ,
                   split                    ,
-                  cubicbezier
+                  cubicbezier              ,
+                  vector
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -143,8 +146,7 @@ Executable test_func
 
   Default-Extensions:     NoImplicitPrelude,
                           DoAndIfThenElse,
-                          TemplateHaskell,
-                          OverloadedStrings
+                          TemplateHaskell
   Default-Language:       Haskell2010
 
   if flag(cuda)
@@ -260,5 +262,44 @@ Executable test_serialization
                   flowbox-utils            ,
                   JuicyPixels              ,
                   protocol-buffers-fork    ,
+                  split                    ,
+                  vector
+
+
+-- == test vector rasterization ==
+
+Executable test_vector_rasterization
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        VectorRasterization.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.15.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  bytestring               ,
+                  cairo                    ,
+                  vector-space             ,
+                  diagrams                 ,
+                  diagrams-lib             ,
+                  diagrams-cairo           ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  QuickCheck               ,
                   split                    ,
                   vector

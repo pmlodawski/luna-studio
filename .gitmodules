@@ -28,6 +28,13 @@
 [submodule "third-party/linear-accelerate"]
     path = third-party/linear-accelerate
     url = https://github.com/flowbox-public/linear-accelerate.git
+[submodule "third-party/cufft"]
+    path = third-party/cufft
+    url = https://github.com/flowbox-public/cufft.git
+[submodule "third-party/cuda"]
+    path = third-party/cuda
+    url = https://github.com/flowbox-public/cuda.git
 [submodule "third-party/accelerate-cuda"]
-    path = third-party/accelerate-cuda
-    url = https://github.com/AccelerateHS/accelerate-cuda.git
+	path = third-party/accelerate-cuda
+	url = https://github.com/flowbox-public/accelerate-cuda.git
+	branch = backports/0.16

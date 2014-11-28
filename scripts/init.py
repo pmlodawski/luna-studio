@@ -195,16 +195,16 @@ def main():
     try_call('cd && cabal update')
 
     # we need to be sure that cabal supports sandboxes
-    checkInstall("cabal", installUsing="cabal install cabal-install", chckf=checkCabalVersion)
+    checkInstall("cabal", installUsing="cabal install cabal-install && rm ~/.ghc -r", chckf=checkCabalVersion)
 
     ### sandbox related stuff
 
-    if not os.path.exists(distPath):
-        os.mkdir(distPath)
-        print_info ("Creating root sandbox")
-        createSandbox(sboxRootPath)
-        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        print "TODO: FINISH SANDBOX SUPPORT"
+    # if not os.path.exists(distPath):
+    #     os.mkdir(distPath)
+    #     print_info ("Creating root sandbox")
+    #     createSandbox(sboxRootPath)
+    #     print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    #     print "TODO: FINISH SANDBOX SUPPORT"
 
     checkCabalPkg("happy")
     checkCabalPkg("alex")

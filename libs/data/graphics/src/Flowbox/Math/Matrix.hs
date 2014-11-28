@@ -4,15 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE RankNTypes             #-}
-{-# LANGUAGE RecordWildCards        #-}
-{-# LANGUAGE ScopedTypeVariables    #-}
-{-# LANGUAGE TypeFamilies           #-}
-{-# LANGUAGE TypeOperators          #-}
-{-# LANGUAGE TypeSynonymInstances   #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 
 module Flowbox.Math.Matrix (
     module Flowbox.Math.Matrix,
@@ -45,7 +45,7 @@ module Flowbox.Math.Matrix (
 
 import qualified Data.Array.Accelerate                 as A
 import qualified Data.Array.Accelerate.Array.Sugar     as Sugar
-import qualified Data.Array.Accelerate.Data.Complex    as A
+import           Data.Array.Accelerate.Data.Complex    ()
 import qualified Data.Array.Accelerate.Math.FFT        as A
 import qualified Data.Array.Accelerate.Math.DFT.Centre as A
 import qualified Data.Array.Accelerate.IO              as A
@@ -57,8 +57,9 @@ import Data.Complex                        (mkPolar)
 import Data.Vector.Storable.Mutable hiding (set)
 import Foreign.Ptr
 
-import Flowbox.Prelude as P hiding (use, (<*), (?), (++), map, zipWith, set)
+import Flowbox.Prelude as P hiding (use, (<*), (?), (++), map, zipWith, set, pred, ix)
 import Flowbox.Math.Index
+
 
 
 data Matrix ix a = Raw (A.Array ix a)

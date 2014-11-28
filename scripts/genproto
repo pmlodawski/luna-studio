@@ -17,10 +17,10 @@ from utils.colors import print_error, print_info
 from utils.errors import fatal
 
 
+
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 cpp_gen_dirs = [os.path.join(rootPath, 'tools/batch/client/cpp/generated')]
-
 
 importPaths = [ '/usr/include'
               , '/usr/local/include'
@@ -30,23 +30,31 @@ importPaths = [ '/usr/include'
               , os.path.join(rootPath, 'libs/aws/src/proto')
               , os.path.join(rootPath, 'libs/data/serialization/src/proto')
               ]
+
 imports = "-I " + ' -I '.join(importPaths)
+
 
 def main():
     proto_paths = [os.path.realpath(path) for path in glob(rootPath + '/libs'  + '/**/*.proto')
                                                     + glob(rootPath + '/tools' + '/**/*.proto')]
     mod_proto_paths = filter(is_modified, proto_paths)
+    mod_dirnames = map(os.path.dirname, mod_proto_paths)
 
-    if mod_proto_paths:
+    marked_proto_paths = []
+    for mod_dirname in mod_dirnames:
+        marked_proto_paths += filter(lambda x : x.startswith(mod_dirname), proto_paths)
+
+    if marked_proto_paths:
         prepare_cpp_dir()
         for path in proto_paths:
             run_protoc(path)
 
-    for path in mod_proto_paths:
+    for path in marked_proto_paths:
         prepare_hs_dir(path)
-    for path in mod_proto_paths:
+    for path in marked_proto_paths:
         run_hprotoc(path)
         mark_modified(path)
+
 
 def is_modified(path): 
     fileModification = str(os.path.getmtime(path))
@@ -57,6 +65,7 @@ def is_modified(path):
             lastModification = lastModification = f.read()
     return lastModification == None or lastModification < fileModification
 
+
 def mark_modified(path):
     fileModification = os.path.getmtime(path)
     timestampPath = timestamp_path(path)
@@ -64,6 +73,7 @@ def mark_modified(path):
     if not os.path.isdir(timestampDir):
         os.makedirs(timestampDir)
     with open(timestampPath, 'w') as f: f.write(str(fileModification))
+
 
 def timestamp_path(path):
     return os.path.join(rootPath, os.path.join('dist/proto-timestamps', os.path.relpath(path, rootPath)))[:-6]
@@ -75,6 +85,7 @@ def run_hprotoc(proto_path):
     proto_name = os.path.basename(proto_path)
     args = ' ' + imports + ' -I ' + proto_dir + ' ' + proto_path
     try_call('hprotoc -d ' + hs_gen_dir + args)
+
 
 def run_protoc(proto_path):
     proto_dir  = os.path.dirname(proto_path)
@@ -88,17 +99,18 @@ def run_protoc(proto_path):
 def prepare_hs_dir(proto_path):
     proto_dir  = os.path.dirname(proto_path)
     hs_gen_dir = '../../dist/gen'
-
     shutil.rmtree(os.path.join(proto_dir, hs_gen_dir), True)
+
 
 def prepare_cpp_dir():
     for cpp_gen_dir in cpp_gen_dirs:
         shutil.rmtree(cpp_gen_dir, True)
         os.makedirs(cpp_gen_dir)
 
+
 def try_call(cmd):
     print_info("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
 
-main()
 
+main()
