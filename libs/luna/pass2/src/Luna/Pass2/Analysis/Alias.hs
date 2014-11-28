@@ -34,6 +34,7 @@ import           Luna.ASTNew.Pat    (LPat, Pat)
 import qualified Luna.ASTNew.Lit    as Lit
 import           Luna.ASTNew.Arg    (Arg(Arg))
 import qualified Luna.ASTNew.Native as Native
+import           Luna.ASTNew.NameBase         (NameBase(nameBase))
 import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
 import qualified Luna.ASTNew.Name.Multi       as MultiName
 import qualified Luna.ASTNew.Name             as Name
@@ -135,16 +136,6 @@ registerHeaders (Label lab decl) = case decl of
     where id = Enum.id lab
           registerCons (Label lab (Decl.Cons name fields)) = regVarName (Enum.id lab) (Name.fromName name)
 
-
-
-class NameBase a where
-  nameBase :: a -> String
-
-instance NameBase (MultiName.MultiName String) where
-  nameBase name = name ^. MultiName.base
-
-instance (Show l, Show a) => NameBase (Label l a) where
-  nameBase (Label l _) = show l
 
 ----------------------------------------------------------------------
 -- Instances
