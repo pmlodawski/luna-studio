@@ -120,6 +120,9 @@ def Image.laplacian kernelSize centerVal sideVal:
 class ```Point2``` a:
     x,y :: a
 
+def point x y:
+    Point2 x y
+
 # class ```ControlPoint``` a:
 # class ControlPoint a:
 #     point               :: Point2 a

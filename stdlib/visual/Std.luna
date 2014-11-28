@@ -132,6 +132,9 @@ alias Mask a         = (Path a, Maybe (Path a))
 
 alias MaskD = Mask Float
 
+def point self::Std x y:
+    Point2 x y
+
 def controlPoint point handleIn handleOut:
     (point, handleIn, handleOut)
 
