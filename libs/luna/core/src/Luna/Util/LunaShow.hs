@@ -31,14 +31,16 @@ import qualified Luna.AST.Type       as Type
 
 
 
-data ShowContext = ShowContext { _accessorContent :: Bool }
+data ShowContext = ShowContext { _accessorContent :: Bool 
+                               , _implicitGrouped :: Bool
+                               }
                                deriving Show
 
 makeLenses ''ShowContext
 
 
 instance Default ShowContext where
-    def = ShowContext False
+    def = ShowContext False False
 
 
 class LunaShow ast where
