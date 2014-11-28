@@ -214,7 +214,7 @@ evalFunction stringExpr callDataPath argsData = do
             Var    _    -> "call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
             Lit    name -> if Maybe.isJust (Read.readMaybe name :: Maybe Int)
                               then "val (" ++ name ++" :: Int)"
-                              else "val " ++ name
+                              else "val (" ++ name ++ ")"
             Tuple       -> "val (" ++ List.intercalate "," args ++ ")"
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
 
