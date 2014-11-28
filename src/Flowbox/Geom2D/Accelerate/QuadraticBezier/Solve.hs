@@ -5,12 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve where
 
 import Data.Array.Accelerate as A
+import Math.Coordinate.Cartesian (Point2(..))
 
+import Flowbox.Geom2D.Accelerate.QuadraticBezier ()
+import Flowbox.Geom2D.QuadraticBezier
 import Flowbox.Graphics.Utils hiding (sign)
+import Flowbox.Graphics.Utils.Accelerate as A
 import Flowbox.Prelude
 
 
@@ -36,9 +41,8 @@ solveCubic a b c = A.cond (d >=* 0) opt1 opt3
           n = sin v' * 1.732050808
           v' = acos (-sqrt ((-27) / p3) * q / 2) / 3
 
-distanceFromQuadratic :: Exp (Double, Double) -> Exp (Double, Double) -> Exp (Double, Double) -> Exp (Double, Double) -> Exp Double
-distanceFromQuadratic p0 p1 p2 p = A.cond (n A.>* 1)
-    --(getLength res0)
+distanceFromQuadratic :: Exp (Point2 Double) -> Exp (QuadraticBezier Double) -> Exp Double
+distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond (n A.>* 1)
     (min (getLength res0) $ min (getLength res1) (getLength res2))
     (getLength res0)
     where (n :: Exp Int, res :: Exp (Double, Double, Double)) = A.unlift res'
@@ -50,35 +54,24 @@ distanceFromQuadratic p0 p1 p2 p = A.cond (n A.>* 1)
           c = sC + dot d' sc
           d = dot d' sd
           --
-          d' = p0 `minus` p
+          d' = p0 - p
           --
           sA = 1 / dot sc sc
           sB = 3 * dot sd sc
           sC = 2 * dot sd sd
-          sb = (p1 `minus` p0) `mult` 2
-          sc = p0 `minus` (p1 `mult` 2) `plus` p2
-          sd = p1 `minus` p0
+          sb = (p1 - p0) `mult` 2
+          sc = p0 - (p1 `mult` 2) + p2
+          sd = p1 - p0
           --
           getLength r = let
                   t = clamp' 0 1 r
-                  pos = p0 `plus` ((sb `plus` (sc `mult` t)) `mult` t)
-              in len $ pos `minus` p
+                  pos = p0 + ((sb + (sc `mult` t)) `mult` t)
+              in len $ pos - p
           len o = sqrt $ dot o o
           --
-          dot o q = let
-                  (ox, oy) = getCoords o
-                  (qx, qy) = getCoords q
-              in ox * qx + oy * qy
-          minus = math (-)
-          plus = math (+)
-          math f o q = let
-                  (ox, oy) = getCoords o
-                  (qx, qy) = getCoords q
-              in A.lift (f ox qx, f oy qy)
-          mult = math' (*)
-          math' f o q = let
-                  (ox, oy) = getCoords o
-              in A.lift (f ox q, f oy q)
-          getCoords o = let
-                  (ox, oy) = A.unlift o :: (Exp Double, Exp Double)
-              in (ox, oy)
+          dot (Point2 ox oy) (Point2 qx qy) = ox * qx + oy * qy
+          mult x y = fmap (*y) x
+
+-- TODO: [KM] make a version of this working on CubicBezier (and doing the conversion to a list of Quadratics inside it)
+distanceFromQuadratics :: Exp (Point2 Double) -> Acc (Vector (QuadraticBezier Double)) -> Exp Double
+distanceFromQuadratics p a = A.sfoldl min 1e20 A.index0 $ A.smap (distanceFromQuadratic p) a

@@ -295,10 +295,9 @@ convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask (convertPath a) (fma
 
 --convert
 
-rasterizeMaskLuna :: Real a => Int -> Int -> Mask2 a -> Image RGBA
-rasterizeMaskLuna w h (convertMask -> m) = rasterizeVector w h closed $ points
---rasterizeMaskLuna w h m = undefined --rasterizeVector w h closed $ points
-    where Mask (Path closed points) _ = m
+--rasterizeMaskLuna :: Real a => Int -> Int -> Mask2 a -> Image RGBA
+--rasterizeMaskLuna w h (convertMask -> m) = rasterizeVector w h closed $ points
+    --where Mask (Path closed points) _ = m
 
 test :: Int -> Int
 test = undefined
