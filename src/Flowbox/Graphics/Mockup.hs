@@ -39,6 +39,11 @@ import           Linear                            (V2(..))
 import qualified Flowbox.Graphics.Color                               as Color
 import qualified Flowbox.Graphics.Color.Companding                    as Gamma
 import           Flowbox.Graphics.Composition.Dither
+import           Flowbox.Geom2D.ControlPoint
+import           Flowbox.Geom2D.Path
+import qualified Flowbox.Geom2D.Shape                                 as GShape
+import           Flowbox.Geom2D.Mask
+import           Flowbox.Geom2D.Rasterizer
 import           Flowbox.Graphics.Composition.Generators.Filter
 import           Flowbox.Graphics.Composition.Generators.Filter       as Conv
 import           Flowbox.Graphics.Composition.Generators.Gradient
@@ -827,3 +832,47 @@ getChannelLuna viewName channelName img = case Image.lookup viewName img of
 insertChannelLuna :: String -> Channel -> Image -> Image
 insertChannelLuna viewName chan = Image.update f viewName
     where f = Just . View.append chan
+
+type ControlPoint2 a = ( VPS (Point2 a)
+                       , VPS (Maybe (Point2 a))
+                       , VPS (Maybe (Point2 a))
+                       )
+
+type Path2 a = ( VPS Bool
+               , VPS [VPS (ControlPoint2 a)]
+               )
+
+type Shape2 a = [VPS (Path2 a)]
+
+type Mask2 a = ( VPS (Path2 a)
+               , VPS (Maybe (Path2 a))
+               )
+
+unpackLunaVar :: VPS a -> a
+unpackLunaVar (Value (Pure (Safe a))) = a
+
+unpackLunaList :: [VPS a] -> [a]
+unpackLunaList = fmap unpackLunaVar
+
+convertControlPoint :: ControlPoint2 a -> ControlPoint a
+convertControlPoint (unpackLunaVar -> a, unpackLunaVar -> b, unpackLunaVar -> c) = ControlPoint a b c
+
+convertPath :: Path2 a -> Path a
+convertPath (unpackLunaVar -> a, unpackLunaList.unpackLunaVar -> b) = Path a (fmap convertControlPoint b)
+
+convertShape :: Shape2 a -> GShape.Shape a
+convertShape (unpackLunaList -> a) = GShape.Shape (fmap convertPath a)
+
+convertMask :: Mask2 a -> Mask a
+convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask (convertPath a) (fmap convertPath b)
+
+--convert
+
+rasterizeMaskLuna :: Real a => Int -> Int -> Mask2 a -> Image RGBA
+rasterizeMaskLuna w h (convertMask -> m) = rasterizeVector w h closed $ points
+--rasterizeMaskLuna w h m = undefined --rasterizeVector w h closed $ points
+    where Mask (Path closed points) _ = m
+
+test :: Int -> Int
+test = undefined
+

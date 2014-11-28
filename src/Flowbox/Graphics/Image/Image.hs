@@ -4,9 +4,6 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Flowbox.Graphics.Image.Image (
     Image(..),
     insert,
@@ -19,7 +16,6 @@ module Flowbox.Graphics.Image.Image (
 
 import qualified Data.Map                     as Map
 import qualified Data.Set                     as Set
-import           Data.Traversable             (sequence)
 import           Flowbox.Graphics.Image.Error
 import qualified Flowbox.Graphics.Image.View  as View
 import           Flowbox.Prelude              hiding (lookup, map, sequence, views)

@@ -4,14 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Main where
 
-import Flowbox.Prelude
+module Flowbox.Graphics.Memory (
+    module X,
+) where
 
-
-
-main :: IO ()
-main = do
-    print "- - - = = =   Func Test  = = = - - -"
-
-    --let func = bsplineLinearFromPoints
+import Data.Array.Accelerate.CUDA as X (performGC, unsafeFreeArrays)

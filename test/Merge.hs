@@ -4,13 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE CPP          #-}
-{-# LANGUAGE BangPatterns #-}
-
 module Main where
 
-import Flowbox.Prelude hiding (zoom, constant, transform, from, min, max, over, under)
-import Flowbox.Graphics.Composition.Generators.Filter
+import Flowbox.Prelude                                    hiding (zoom, transform, from, min, max, over, under)
 import Flowbox.Graphics.Composition.Generators.Matrix
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 import Flowbox.Graphics.Composition.Generators.Sampler
@@ -19,17 +15,19 @@ import Flowbox.Graphics.Image.Merge
 
 import qualified Data.Array.Accelerate as A
 import           Data.Foldable
-import           Math.Space.Space
-import           System.IO             (hSetBuffering, stdout, BufferMode(..))
 
 import Utils
 
+
+
+merge :: FilePath -> BlendMode Double -> AlphaBlend -> IO ()
 merge file mode alphaBlending = do
     (r1, g1, b1, a1) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/lena_alpha.png"
     (r2, g2, b2, a2) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/checker.png"
     let (r, g, b, a) = map4 (rasterizer . monosampler) $ threeWayMerge' alphaBlending mode r1 g1 b1 r2 g2 b2 a1 a2
     testSaveRGBA'' file r g b a
 
+merge' :: FilePath -> ComplicatedBlendMode Double -> IO ()
 merge' file mode = do
     (r1, g1, b1, a1) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/lena_alpha.png"
     (r2, g2, b2, a2) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/checker.png"
@@ -121,23 +119,17 @@ advancedMergesNames = [
 
 main :: IO ()
 main = do
-    hSetBuffering stdout NoBuffering
     putStrLn "Merge test"
 
     putStrLn "Simple merges with Adobe"
     forM_ (zip simpleMergesNames simpleMerges) $ \(m, n) -> do
-        putStr $ "Merge " ++ m ++ "..."
-        merge ("samples/merge/" ++ m ++ ".png") n Adobe
-        putStrLn " DONE"
+        merge (m ++ ".png") n Adobe
 
     putStrLn "Simple merges with Custom"
     forM_ (zip simpleMergesNames simpleMerges) $ \(m, n) -> do
-        putStr $ "Merge " ++ m ++ "..."
-        merge ("samples/merge/" ++ m ++ "_alphablend.png") n Custom
-        putStrLn " DONE"
+        merge (m ++ "_alphablend.png") n Custom
 
     putStrLn "Complicated merges"
     forM_ (zip advancedMergesNames advancedMerges) $ \(m, n) -> do
-        putStr $ "Merge " ++ m ++ "..."
-        merge' ("samples/merge/" ++ m ++ ".png") n
-        putStrLn " DONE"
+        merge' (m ++ ".png") n
+

@@ -4,14 +4,18 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Main where
+module Flowbox.Geom2D.Shape where
 
+import Flowbox.Geom2D.Path
 import Flowbox.Prelude
 
+data Shape a = Shape { pathList :: [Path a] } deriving (Eq, Ord, Show)
 
+instance Functor Shape where
+    fmap f (Shape points) = Shape ((fmap.fmap) f points)
 
-main :: IO ()
-main = do
-    print "- - - = = =   Func Test  = = = - - -"
-
-    --let func = bsplineLinearFromPoints
+--instance Applicative Shape where
+--    pure a = Shape (pure a)
+--    {-# INLINE pure #-}
+--    Shape a <*> Shape b = Shape (a <*> b)
+--    {-# INLINE (<*>) #-}
