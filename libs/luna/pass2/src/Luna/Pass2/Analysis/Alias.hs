@@ -106,11 +106,11 @@ aaDecl d@(Label lab decl) = case decl of
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
--- TODO [kgdk]: remove the MultiName String constraint
-aaExpr :: (AACtx lab m (MultiName.MultiName String)) => (LExpr lab (MultiName.MultiName String)) -> AAPass m (LExpr lab (MultiName.MultiName String))
+aaExpr :: (AACtx lab m a, NameBase a) => (LExpr lab a) -> AAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
-    var@(Expr.Var idnt )     -> do let name = idnt ^. MultiName.base
-                                   regParent id *> regAlias id name *> continue
+    var@(Expr.Var idnt )     -> regParent id
+                                *> regAlias id (nameBase idnt)
+                                *> continue
     _                        -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e
@@ -136,6 +136,16 @@ registerHeaders (Label lab decl) = case decl of
           registerCons (Label lab (Decl.Cons name fields)) = regVarName (Enum.id lab) (Name.fromName name)
 
 
+
+class NameBase a where
+  nameBase :: a -> String
+
+instance NameBase (MultiName.MultiName String) where
+  nameBase name = name ^. MultiName.base
+
+instance (Show l, Show a) => NameBase (Label l a) where
+  nameBase (Label l _) = show l
+
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
@@ -146,8 +156,7 @@ instance AACtx lab m a => AST.Traversal AliasAnalysis (AAPass m) (LModule lab a)
 instance AACtx lab m a => AST.Traversal AliasAnalysis (AAPass m) (LDecl lab a) (LDecl lab a) where
     traverseM _ = aaDecl
 
--- TODO [kgdk]: remove the MultiName String constraint
-instance (AACtx lab m v, v~(MultiName.MultiName String)) => AST.Traversal AliasAnalysis (AAPass m) (LExpr lab v) (LExpr lab v) where
+instance (AACtx lab m v, NameBase v) => AST.Traversal AliasAnalysis (AAPass m) (LExpr lab v) (LExpr lab v) where
     traverseM _ = aaExpr
 
 instance (PassCtx m, Enumerated lab) => AST.Traversal AliasAnalysis (AAPass m) (LPat lab) (LPat lab) where
