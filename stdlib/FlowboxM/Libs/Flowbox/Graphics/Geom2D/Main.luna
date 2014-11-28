@@ -39,6 +39,9 @@ class ```Point2``` a:
 # alias Shape a        = [Path a]
 # alias Mask a         = (Path a, Maybe (Path a))
 
+def point x y:
+    Point2 x y
+
 def controlPoint point handleIn handleOut:
     (point, handleIn, handleOut)
 
@@ -70,9 +73,9 @@ def test obj:
 
 def main:
     print "- - - vector rasterization test - - -"
-    points = [ controlPoint (Point2 212 209) Nothing (Just $ Point2 (211.-212) (114.-209))
-             , controlPoint (Point2 338 210) (Just $ Point2 (329.-338) (109.-210)) (Just $ Point2 (450.-338) (211.-210))
-             , controlPoint (Point2 343 330) (Just $ Point2 (456.-343) (331.-330)) Nothing
+    points = [ controlPoint (point 212 209) Nothing (Just $ point (211.-212) (114.-209))
+             , controlPoint (point 338 210) (Just $ point (329.-338) (109.-210)) (Just $ point (450.-338) (211.-210))
+             , controlPoint (point 343 330) (Just $ point (456.-343) (331.-330)) Nothing
              ]
     m = mask (path True points) Nothing # second list is empty if the paths are the same
 
