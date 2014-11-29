@@ -42,7 +42,7 @@ import           Flowbox.Graphics.Composition.Dither
 import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.Path
 import qualified Flowbox.Geom2D.Shape                                 as GShape
-import           Flowbox.Geom2D.Mask
+import qualified Flowbox.Geom2D.Mask as Mask
 import           Flowbox.Geom2D.Rasterizer
 import           Flowbox.Graphics.Composition.Generators.Filter
 import           Flowbox.Graphics.Composition.Generators.Filter       as Conv
@@ -863,16 +863,16 @@ convertPath (unpackLunaVar -> a, unpackLunaList.unpackLunaVar -> b) = Path a (fm
 convertShape :: Shape2 a -> GShape.Shape a
 convertShape (unpackLunaList -> a) = GShape.Shape (fmap convertPath a)
 
-convertMask :: Mask2 a -> Mask a
-convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask (convertPath a) (fmap convertPath b)
+convertMask :: Mask2 a -> Mask.Mask a
+convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a) (fmap convertPath b)
 
 --convert
 
-rasterizeMaskLuna :: Real a => Int -> Int -> Mask2 a -> Image RGBA
+rasterizeMaskLuna :: Real a => Int -> Int -> Mask2 a -> Image
 rasterizeMaskLuna w h (convertMask -> m) = rasterizeVector w h closed $ points
 --rasterizeMaskLuna w h m = undefined --rasterizeVector w h closed $ points
-    where Mask (Path closed points) _ = m
+    where Mask.Mask (Path closed points) _ = m
 
-test :: Int -> Int
-test = undefined
+--test :: Int -> Int
+--test = undefined
 

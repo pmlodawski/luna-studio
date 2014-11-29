@@ -92,7 +92,7 @@ class HProject(Project):
 class AllProject(Project):
     def targets(self):
         # It is needed to omit non-project entries with no path (like @all)
-        return [project for project in pkgDb.values() if project.path]  
+        return [project for project in pkgDb.values() if project.path]
 
 pkgDb = \
        { '@all'                                : AllProject ('@all', deps = [])
@@ -104,7 +104,7 @@ pkgDb = \
        , 'libs/config'                         : HProject   ('flowbox-config'               , os.path.join ('libs' , 'config')                              , 'libs'    , ['libs/utils'])
        , 'libs/data/codec/exr'                 : HProject   ('openexr'                      , os.path.join ('libs' , 'data', 'codec', 'exr')                , 'libs'    , [], flags=Flags([Flag('--with-gcc=g++')]))
        , 'libs/data/dynamics/particles'        : HProject   ('particle'                     , os.path.join ('libs' , 'data', 'dynamics', 'particles')       , 'libs'    , [])
-       , 'libs/data/graphics'                  : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'data', 'graphics')                    , 'libs'    , ['third-party/algebraic', 'third-party/accelerate', 'third-party/accelerate-cuda', 'third-party/accelerate-io', 'third-party/accelerate-fft', 'third-party/imagemagick', 'libs/utils', 'libs/num-conversion', 'libs/data/serialization', 'third-party/linear-accelerate', 'libs/luna/target/ghchs', 'libs/data/codec/exr'], flags=Flags([Flag("--with-gcc=gcc-4.9", [systems.DARWIN]), Flag("-fcuda")])) # FIXME [kl]: The fcuda flag is a temporary solution for the strange cabal behavior
+       , 'libs/data/graphics'                  : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'data', 'graphics')                    , 'libs'    , ['third-party/accelerate', 'third-party/accelerate-cuda', 'third-party/accelerate-io', 'third-party/accelerate-fft', 'third-party/algebraic', 'third-party/imagemagick', 'libs/utils', 'libs/num-conversion', 'libs/data/serialization', 'third-party/linear-accelerate', 'libs/luna/target/ghchs', 'libs/data/codec/exr'], flags=Flags([Flag("--with-gcc=g++", [systems.LINUX]),Flag("--with-gcc=gcc-4.9", [systems.DARWIN]), Flag("-fcuda")])) # FIXME [kl]: The fcuda flag is a temporary solution for the strange cabal behavior
        , 'libs/data/accelerate/thrust'         : HProject   ('accelerate-thrust'            , os.path.join ('libs' , 'data', 'accelerate', 'thrust')        , 'libs'    , ['third-party/accelerate', 'third-party/accelerate-cuda'])
        , 'libs/data/serialization'             : HProject   ('flowbox-serialization'        , os.path.join ('libs' , 'data', 'serialization')               , 'libs'    , ['libs/utils', 'libs/luna/target/ghchs'])
        , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])

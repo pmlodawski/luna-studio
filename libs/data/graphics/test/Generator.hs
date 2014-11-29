@@ -28,7 +28,8 @@ import Flowbox.Graphics.Composition.Generators.Transform
 import Flowbox.Graphics.Composition.Dither
 import Flowbox.Graphics.Image.Color (LinearGenerator(..), crosstalk)
 import Flowbox.Geom2D.Accelerate.CubicBezier
-import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection
+import Flowbox.Geom2D.Accelerate.CubicBezier.Solve
+import Flowbox.Geom2D.CubicBezier
 
 import Flowbox.Math.Matrix as M
 import Flowbox.Math.BitonicSorterGenerator
@@ -115,7 +116,7 @@ upscalingTest flt = do
 
 downscalingTest :: Filter (Exp Float) -> IO ()
 downscalingTest flt = do
-    let process = rasterizer 
+    let process = rasterizer
                 . monosampler
                 . scale (200 :: Grid (Exp Int))
                 . interpolator flt
