@@ -66,7 +66,7 @@ makeSegments points = combine points
           f2d'   = fmap f2d
           unpack = fromMaybe (Point2 0 0)
 
-rasterizeVector :: Real a => Int -> Int -> Bool -> [ControlPoint a] -> Image View.RGBA
+rasterizeVector :: Real a => Int -> Int -> Bool -> [ControlPoint a] -> Image
 rasterizeVector w h closed points = makeRGBA $ unsafePerformIO rasterize
     where ControlPoint (Point2 ox oy) _ _ = fmap f2d $ head points
           h' = fromIntegral h
