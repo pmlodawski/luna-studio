@@ -867,5 +867,4 @@ convertMask :: Mask2 a -> Mask.Mask a
 convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a) (fmap convertPath b)
 
 rasterizeMaskLuna :: Real a => Int -> Int -> Mask2 a -> Image
-rasterizeMaskLuna w h (convertMask -> m) = rasterizeVector w h closed $ points
-    where Mask.Mask (Path closed points) _ = m
+rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
