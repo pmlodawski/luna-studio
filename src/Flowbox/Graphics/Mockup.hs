@@ -866,13 +866,6 @@ convertShape (unpackLunaList -> a) = GShape.Shape (fmap convertPath a)
 convertMask :: Mask2 a -> Mask.Mask a
 convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a) (fmap convertPath b)
 
---convert
-
 rasterizeMaskLuna :: Real a => Int -> Int -> Mask2 a -> Image
 rasterizeMaskLuna w h (convertMask -> m) = rasterizeVector w h closed $ points
---rasterizeMaskLuna w h m = undefined --rasterizeVector w h closed $ points
     where Mask.Mask (Path closed points) _ = m
-
---test :: Int -> Int
---test = undefined
-
