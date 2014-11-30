@@ -104,12 +104,13 @@ parseArg inputsID (input, no) = case input of
 buildOutput :: Node.ID -> Expr -> GBPass ()
 buildOutput outputID expr = do
     case expr of
-        Expr.Assignment {}             -> void $ buildNode    False True Nothing expr
-        Expr.Tuple   _ items           -> buildAndConnectMany True  True Nothing outputID items 0
-        Expr.Grouped _ (v@Expr.Var {}) -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
-        Expr.Grouped _  v              -> buildAndConnect     False True Nothing outputID (v, Port.Num 0)
-        Expr.Var {}                    -> buildAndConnect     True  True Nothing outputID (expr, Port.All)
-        _                              -> buildAndConnect     False True Nothing outputID (expr, Port.All)
+        Expr.Assignment {}                  -> void $ buildNode    False True Nothing expr
+        Expr.Tuple   _ items                -> buildAndConnectMany True  True Nothing outputID items 0
+        Expr.Grouped _ (Expr.Tuple _ items) -> buildAndConnectMany True  True Nothing outputID items 0
+        Expr.Grouped _ (v@Expr.Var {})      -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
+        Expr.Grouped _  v                   -> buildAndConnect     False True Nothing outputID (v, Port.Num 0)
+        Expr.Var {}                         -> buildAndConnect     True  True Nothing outputID (expr, Port.All)
+        _                                   -> buildAndConnect     False True Nothing outputID (expr, Port.All)
     State.connectMonadic outputID
 
 
@@ -131,10 +132,19 @@ buildNode astFolded monadicBind outName expr = do
         Expr.List       _ items                 -> addNode i (NodeExpr.StringExpr StringExpr.List) items
         Expr.Native     _ segments              -> addNode i (NodeExpr.StringExpr $ StringExpr.Native $ showNative expr) $ filter isNativeVar segments
         Expr.Wildcard   _                       -> left $ "GraphBuilder.buildNode: Unexpected Expr.Wildcard with id=" ++ show i
-        Expr.Grouped    _ grouped               -> State.setGrouped (grouped ^. Expr.id)
-                                                >> buildNode astFolded monadicBind outName grouped
+        Expr.Grouped    _ grouped               -> buildGrouped i grouped
         _                                       -> showAndAddNode
     where
+
+        buildGrouped i grouped = do
+           graphFolded <- State.getGraphFolded i
+           generated   <- State.getDefaultGenerated i
+           if graphFolded 
+               then addNode' i (mkNodeStrExpr expr) []
+               else if generated
+                   then addNode' i (mkNodeAstExpr expr) []
+                   else State.setGrouped (grouped ^. Expr.id) >> buildNode astFolded monadicBind outName grouped
+                   
         buildVar i name = do
             isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp i
             if astFolded && isBound

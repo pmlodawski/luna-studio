@@ -132,6 +132,12 @@ alias Mask a         = (Path a, Maybe (Path a))
 
 alias MaskD = Mask Float
 
+def point self::Std x y:
+    Point2 x y
+
+def nopoint self::Std:
+    ```val (Nothing :: Maybe (Point2 Double))```
+
 def controlPoint point handleIn handleOut:
     (point, handleIn, handleOut)
 
@@ -144,5 +150,5 @@ def shape paths:
 def mask path feather:
     (path, feather)
 
-def rasterizeMask w::Int h::Int m::MaskD:
+def rasterizeMask self::Std w::Int h::Int m::MaskD:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```

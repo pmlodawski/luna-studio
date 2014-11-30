@@ -112,7 +112,7 @@ parseOutputsNode nodeID = do
     inPorts <- State.inboundPorts nodeID
     case (srcs, inPorts) of
         ([], _)               -> whenM State.doesLastStatementReturn $
-                                   State.setOutput $ Expr.Tuple IDFixer.unknownID []
+                                   State.setOutput $ Expr.Grouped IDFixer.unknownID $ Expr.Tuple IDFixer.unknownID []
         ([src], [Port.Num 0]) -> State.setOutput $ Expr.Grouped IDFixer.unknownID src
         ([src], _           ) -> State.setOutput src
         _                     -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
