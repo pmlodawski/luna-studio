@@ -571,3 +571,6 @@ def Image.testF a b c d:
 
 def Image.testFB a b c d e:
     ```liftF5 (testF6 #{a}) #{b} #{c} #{d} #{e} #{self}```
+
+def Image.testFC a b c d e f g:
+    ```liftF5 (testF8 #{a} #{b} #{c}) #{d} #{e} #{f} #{g} #{self}```

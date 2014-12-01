@@ -191,6 +191,9 @@ def Image.testF self::Image a::Color b::Color c::Color d::Color:
 def Image.testFB self::Image a::Color b::Color c::Color d::Color e::Color:
     ```liftF5 (testF6 #{a}) #{b} #{c} #{d} #{e} #{self}```
 
+def Image.testFC self::Image a::Color b::Color c::Color d::Color e::Color f::Color g::Color:
+    ```liftF5 (testF8 #{a} #{b} #{c}) #{d} #{e} #{f} #{g} #{self}```
+
 def Image.gammaToLinear self::Image gamma::Gamma:
     ```liftF2 gammaToLinearLuna #{gamma} #{self}```
 
