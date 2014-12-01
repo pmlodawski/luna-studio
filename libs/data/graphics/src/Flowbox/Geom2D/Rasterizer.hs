@@ -51,27 +51,56 @@ import           Flowbox.Prelude hiding ((#), use)
 f2d :: Real a => a -> Double
 f2d = fromRational . toRational
 
-unpackP :: Num a => Maybe (Point2 a) -> Point2 a
-unpackP = fromMaybe (Point2 0 0)
+-- TODO[1]: revert to this version when the wrapping model for handling GUI's use-case gets implemented
+--unpackP :: Num a => Maybe (Point2 a) -> Point2 a
+--unpackP = fromMaybe (Point2 0 0)
+unpackP :: Fractional a => Point2 a -> Point2 a -> Maybe (Point2 a) -> Point2 a
+unpackP a b = fromMaybe ((b - a)/3)
 
-makeSegments :: Real a => Bool -> [ControlPoint a] -> [Segment Closed R2]
+-- TODO[1]
+--makeSegments :: Real a => Bool -> [ControlPoint a] -> [Segment Closed R2]
+--makeSegments closed points = combine points
+--    where combine []  = []
+--          combine [a'] = if not closed then [] else let
+--                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
+--                  ControlPoint (Point2 dx dy) c' _ = f2d' $ head points
+--                  Point2 bx by = unpackP b'
+--                  Point2 cx cy = unpackP c'
+--                  a = r2 (ax , ay)
+--                  b = r2 (bx , by)
+--                  c = r2 (cx , cy)
+--                  d = r2 (dx , dy)
+--              in [bezier3 b (d ^+^ c ^-^ a) (d ^-^ a)]
+--          combine (a':d':xs) = let
+--                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
+--                  ControlPoint (Point2 dx dy) c' _ = f2d' d'
+--                  Point2 bx by = unpackP b'
+--                  Point2 cx cy = unpackP c'
+--                  a = r2 (ax , ay)
+--                  b = r2 (bx , by)
+--                  c = r2 (cx , cy)
+--                  d = r2 (dx , dy)
+--              in bezier3 b (d ^+^ c ^-^ a) (d ^-^ a) : combine (d':xs)
+--          combine _ = error "Flowbox.Geom2D.Rasterizer.makeSegments: unsupported ammount of points"
+--          f2d' = fmap f2d
+makeSegments :: (Real a, Fractional a) => Bool -> [ControlPoint a] -> [Segment Closed R2]
 makeSegments closed points = combine points
     where combine []  = []
           combine [a'] = if not closed then [] else let
-                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
-                  ControlPoint (Point2 dx dy) c' _ = f2d' $ head points
-                  Point2 bx by = unpackP b'
-                  Point2 cx cy = unpackP c'
+                  ControlPoint pa@(Point2 ax ay) _ b' = f2d' a'
+                  ControlPoint pd@(Point2 dx dy) c' _ = f2d' $ head points
+                  Point2 bx by = unpackP pa pd b'
+                  Point2 cx cy = unpackP pd pa c'
                   a = r2 (ax , ay)
                   b = r2 (bx , by)
                   c = r2 (cx , cy)
                   d = r2 (dx , dy)
               in [bezier3 b (d ^+^ c ^-^ a) (d ^-^ a)]
           combine (a':d':xs) = let
-                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
-                  ControlPoint (Point2 dx dy) c' _ = f2d' d'
-                  Point2 bx by = unpackP b'
-                  Point2 cx cy = unpackP c'
+                  ControlPoint pa@(Point2 ax ay) _ b' = f2d' a'
+                  ControlPoint pd@(Point2 dx dy) c' _ = f2d' d'
+                  Point2 bx by = unpackP pa pd b'
+                  Point2 cx cy = unpackP pd pa c'
                   a = r2 (ax , ay)
                   b = r2 (bx , by)
                   c = r2 (cx , cy)
@@ -80,21 +109,38 @@ makeSegments closed points = combine points
           combine _ = error "Flowbox.Geom2D.Rasterizer.makeSegments: unsupported ammount of points"
           f2d' = fmap f2d
 
---makeCubics :: Real a => [ControlPoint a] -> [CubicBezier a]
-makeCubics :: Real a => Path a -> [CubicBezier a]
+-- TODO[1]
+--makeCubics :: Real a => Path a -> [CubicBezier a]
+--makeCubics (Path closed points) = combine points
+--    where combine [] = []
+--          combine [a'] = if not closed then [] else let
+--                  ControlPoint a _ (unpackP -> b) = a'
+--                  ControlPoint d (unpackP -> c) _ = head points
+--              in [CubicBezier a (a+b) (d+c) d]
+--          combine (a':d':xs) = let
+--                  ControlPoint a _ (unpackP -> b) = a'
+--                  ControlPoint d (unpackP -> c) _ = d'
+--              in CubicBezier a (a+b) (d+c) d : combine (d':xs)
+--          combine _ = error "Flowbox.Geom2D.Rasterizer.makeCubics: unsupported ammount of points"
+makeCubics :: (Real a, Fractional a) => Path a -> [CubicBezier a]
 makeCubics (Path closed points) = combine points
     where combine [] = []
           combine [a'] = if not closed then [] else let
-                  ControlPoint a _ (unpackP -> b) = a'
-                  ControlPoint d (unpackP -> c) _ = head points
+                  ControlPoint a _ b' = a'
+                  ControlPoint d c' _ = head points
+                  b = unpackP a d b'
+                  c = unpackP d a c'
               in [CubicBezier a (a+b) (d+c) d]
           combine (a':d':xs) = let
-                  ControlPoint a _ (unpackP -> b) = a'
-                  ControlPoint d (unpackP -> c) _ = d'
+                  ControlPoint a _ b' = a'
+                  ControlPoint d c' _ = d'
+                  b = unpackP a d b'
+                  c = unpackP d a c'
               in CubicBezier a (a+b) (d+c) d : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer.makeCubics: unsupported ammount of points"
 
-pathToRGBA32 :: Real a => Int -> Int -> Path a -> A.Array DIM2 RGBA32
+
+pathToRGBA32 :: (Real a, Fractional a) => Int -> Int -> Path a -> A.Array DIM2 RGBA32
 pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
     where ControlPoint (Point2 ox oy) _ _ = fmap f2d $ head points
           h' = fromIntegral h
@@ -109,13 +155,13 @@ pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
               bs <- imageSurfaceGetData surface
               fromByteString (Z:.h:.w) ((), bs)
 
-pathToMatrix :: Real a => Int -> Int -> Path a -> Matrix2 Double
+pathToMatrix :: (Real a, Fractional a) => Int -> Int -> Path a -> Matrix2 Double
 pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
     where extractArr arr = Delayed $ A.map extractVal $ A.use arr
           extractVal :: M.Exp RGBA32 -> M.Exp Double
           extractVal rgba = (A.fromIntegral $ (rgba `div` 0x1000000) .&. 0xFF) / 255
 
-rasterizeMask :: Real a => Int -> Int -> Mask a -> Matrix2 Double
+rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
 rasterizeMask w h (Mask path' feather') = path
     --case feather' of
     --    Nothing -> path
