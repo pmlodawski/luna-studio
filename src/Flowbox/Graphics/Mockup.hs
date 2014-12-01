@@ -21,6 +21,7 @@ module Flowbox.Graphics.Mockup (
     , module Math.Space.Space
     , A.Boundary(..)
     , readFromEXR
+    , variable
 ) where
 
 import qualified Codec.Picture.Png                 as Juicy
@@ -59,6 +60,7 @@ import           Flowbox.Graphics.Composition.Generators.Stencil      as Stencil
 import           Flowbox.Graphics.Composition.Generators.Structures
 import           Flowbox.Graphics.Composition.Generators.Transform
 import           Flowbox.Graphics.Composition.Histogram
+import qualified Flowbox.Graphics.Composition.Raster                  as Raster
 import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Color
 import           Flowbox.Graphics.Image.Image                         as Image
@@ -298,6 +300,15 @@ laplacianLuna (variable -> kernSize) (variable -> crossVal) (variable -> sideVal
           process x = rasterizer $ id `p` Conv.filter 1 flt `p` id $ fromMatrix A.Clamp x
           flt = laplacian crossVal sideVal $ pure kernSize
           p = pipe A.Clamp
+
+constantLuna :: Int -> Int -> Color.RGBA Double -> Image
+constantLuna (variable -> width) (variable -> height) (Color.RGBA (variable -> r) (variable -> g) (variable -> b) (variable -> a)) =
+    Raster.constant (A.index2 height width) chans
+    where chans = [ ("rgba.r", r)
+                  , ("rgba.g", g)
+                  , ("rgba.b", b)
+                  , ("rgba.a", a)
+                  ]
 
 circularLuna :: Int -> Int -> Image
 circularLuna = gradientLuna circularShape
