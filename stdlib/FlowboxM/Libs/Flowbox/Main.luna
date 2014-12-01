@@ -96,8 +96,8 @@ def Image.exposure blackpoint ex:
 def Image.colorCorrect saturation contrast gamma gain offset:
     ```liftF6 colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
 
-def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
-    ```liftF8 gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
+# def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+#     ```liftF8 gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 def Image.saturate saturation:
     ```liftF2 saturateLuna #{saturation} #{self}```
@@ -340,43 +340,8 @@ alias Color = RGBA Double
 class RGBAPixel:
     r, g, b, a :: Double
 
-# def Image.colorGrade blackpoint whitepoint lift gain multiply offset gamma:
-#     blackpointR = blackpoint.r
-#     blackpointG = blackpoint.g
-#     blackpointB = blackpoint.b
-#     blackpointA = blackpoint.a
-#     whitepointR = whitepoint.r
-#     whitepointG = whitepoint.g
-#     whitepointB = whitepoint.b
-#     whitepointA = whitepoint.a
-#     liftR = lift.r
-#     liftG = lift.g
-#     liftB = lift.b
-#     liftA = lift.a
-#     gainR = gain.r
-#     gainG = gain.g
-#     gainB = gain.b
-#     gainA = gain.a
-#     multiplyR = multiply.r
-#     multiplyG = multiply.g
-#     multiplyB = multiply.b
-#     multiplyA = multiply.a
-#     offsetR = offset.r
-#     offsetG = offset.g
-#     offsetB = offset.b
-#     offsetA = offset.a
-#     gammaR = gamma.r
-#     gammaG = gamma.g
-#     gammaB = gamma.b
-#     gammaA = gamma.a
-#     ```liftF8 gradeLuna' (Color.RGBA #{blackpointR} #{blackpointG} #{blackpointB} #{blackpointA})
-#                          (Color.RGBA #{whitepointR} #{whitepointG} #{whitepointB} #{whitepointA})
-#                          (Color.RGBA #{liftR} #{liftG} #{liftB} #{liftA})
-#                          (Color.RGBA #{gainR} #{gainG} #{gainB} #{gainA})
-#                          (Color.RGBA #{multiplyR} #{multiplyG} #{multiplyB} #{multiplyA})
-#                          (Color.RGBA #{offsetR} #{offsetG} #{offsetB} #{offsetA})
-#                          (Color.RGBA #{gammaR} #{gammaG} #{gammaB} #{gammaA})
-#                          #{self}```
+def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+    ```liftF8 gradeLuna' #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 class ```Boundary```:
     Clamp
