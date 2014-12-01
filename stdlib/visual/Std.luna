@@ -61,11 +61,11 @@ def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
 def Image.offset self::Image value::Color:
     ```liftF2 offsetLuna #{value} #{self}```
 
-def Image.contrast self::Image value::Float:
-    ```liftF1 (onEachValue $ contrastLuna #{value}) #{self}```
+def Image.contrast self::Image value::Color:
+    ```liftF2 contrastLuna #{value} #{self}```
 
-def Image.exposure self::Image blackpoint::Float ex::Float:
-    ```liftF1 (onEachValue $ exposureLuna #{blackpoint} #{ex}) #{self}```
+def Image.exposure self::Image blackpoint::Color ex::Color:
+    ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
 def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color:
     ```liftF8 gradeLuna' #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```

@@ -141,19 +141,16 @@ bilateral psigma csigma (variable -> size) = onEachChannel process
 offsetLuna :: Color.RGBA Double -> Image -> Image
 offsetLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (offset r) (offset g) (offset b) (offset a)
 
-contrastLuna :: Double -> Image -> Image
-contrastLuna (variable -> v) = onEachValue $ contrast v
+contrastLuna :: Color.RGBA Double -> Image -> Image
+contrastLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (contrast r) (contrast g) (contrast b) (contrast a)
 
-exposureLuna :: Double -> Double -> Image -> Image
-exposureLuna (variable -> blackpoint) (variable -> ex) = onEachValue $ exposure blackpoint ex
-
--- colorCorrectLuna :: Double -> Double -> Double -> Double -> Double -> Image -> Image
--- colorCorrectLuna (variable -> saturation')
---                  (variable -> contrast')
---                  (variable -> gamma')
---                  (variable -> gain')
---                  (variable -> offset') =
---                     onEachRGB $ colorCorrect saturation' contrast' gamma' gain' offset'
+exposureLuna :: Color.RGBA Double -> Color.RGBA Double -> Image -> Image
+exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
+             (fmap variable -> Color.RGBA exR exG exB exA) =
+                 onImageRGBA (exposure blackpointR exR)
+                             (exposure blackpointG exG)
+                             (exposure blackpointB exB)
+                             (exposure blackpointA exA)
 
 gradeLuna :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> Image -> Image
 gradeLuna (variable -> blackpoint)
