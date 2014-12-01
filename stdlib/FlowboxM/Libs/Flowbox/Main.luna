@@ -3,6 +3,7 @@
 import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
+import ```Flowbox.Geom2D.Rasterizer```
 import ```Flowbox.Graphics.Color as Color```
 import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
 import ```Flowbox.Graphics.Color.Companding.Cineon```

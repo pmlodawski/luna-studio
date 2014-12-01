@@ -152,3 +152,29 @@ def mask path feather:
 
 def rasterizeMask self::Std w::Int h::Int m::MaskD:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
+
+# COLORS
+
+class ```RGBA``` a:
+    rgbaR, rgbaG, rgbaB, rgbaA :: a
+
+alias Color = RGBA Double
+
+def constant self::Std width::Int height::Int color::Color:
+    ```liftF3 constantLuna #{width} #{height} #{color}```
+
+class ```Gamma``` a:
+    Gamma: a :: Double
+    Cineon
+    LStar
+    REDLog
+    SLog
+    SRGBGamma
+
+# alias GammaF = Gamma Double
+
+def Image.gammaToLinear self::Image gamma::Gamma Float:
+    ```liftF2 gammaToLinearLuna #{gamma} #{self}```
+
+def Image.gammaFromLinear self::Image gamma::Gamma Float:
+    ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
