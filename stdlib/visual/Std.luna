@@ -182,6 +182,12 @@ class ```Gamma``` a:
 
 # alias GammaF = Gamma Double
 
+def Image.gradeB self::Image blackpoint::Float whitepoint::Float lift::Float gain::Float multiply::Float offset::Float gamma::Float:
+    ```liftF5 (gradeLuna #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
+
+def Image.testF self::Image a::Color b::Color c::Color d::Color:
+    ```liftF5 testF5 #{a} #{b} #{c} #{d} #{self}```
+
 def Image.gammaToLinear self::Image gamma::Gamma:
     ```liftF2 gammaToLinearLuna #{gamma} #{self}```
 

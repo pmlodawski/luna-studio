@@ -562,3 +562,9 @@ def View.map f:
 #
 #                OTHER
 #
+
+def Image.gradeB blackpoint whitepoint lift gain multiply offset gamma:
+    ```liftF5 (gradeLuna #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
+
+def Image.testF a b c d:
+    ```liftF5 testF5 #{a} #{b} #{c} #{d} #{self}```

@@ -152,10 +152,10 @@ exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB bl
                              (exposure blackpointB exB)
                              (exposure blackpointA exA)
 
-gradeLuna :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> Image -> Image
-gradeLuna (variable -> blackpoint)
-          (variable -> whitepoint)
-          (variable -> lift)
+gradeLuna :: VPS Double -> VPS Double -> VPS Double -> Double -> Double -> Double -> Double -> Image -> Image
+gradeLuna (VPS (variable -> blackpoint))
+          (VPS (variable -> whitepoint))
+          (VPS (variable -> lift))
           (variable -> gain)
           (variable -> multiply')
           (variable -> offset')
@@ -925,3 +925,11 @@ convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a)
 
 rasterizeMaskLuna :: (Real a, Fractional a) => Int -> Int -> Mask2 a -> Image
 rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
+
+testF5 :: Color.RGBA Double
+       -> Color.RGBA Double
+       -> Color.RGBA Double
+       -> Color.RGBA Double
+       -> Image
+       -> Int
+testF5 _ _ _ _ _ = 5
