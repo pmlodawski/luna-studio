@@ -138,8 +138,8 @@ bilateral psigma csigma (variable -> size) = onEachChannel process
           domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
           process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
-offsetLuna :: Double -> Image -> Image
-offsetLuna (variable -> v) = onEachValue $ offset v
+offsetLuna :: Color.RGBA Double -> Image -> Image
+offsetLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (offset r) (offset g) (offset b) (offset a)
 
 contrastLuna :: Double -> Image -> Image
 contrastLuna (variable -> v) = onEachValue $ contrast v

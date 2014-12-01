@@ -55,8 +55,8 @@ def Image.motionBlur self::Image size::Int angle::Float:
 def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
     ```liftF1 (onEachChannel $ bilateral #{psigma} #{csigma} #{size}) #{self}```
 
-def Image.offset self::Image value::Float:
-    ```liftF1 (onEachValue $ offsetLuna #{value}) #{self}```
+def Image.offset self::Image value::Color:
+    ```liftF2 offsetLuna #{value} #{self}```
 
 def Image.contrast self::Image value::Float:
     ```liftF1 (onEachValue $ contrastLuna #{value}) #{self}```
