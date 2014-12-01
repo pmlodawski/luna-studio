@@ -64,6 +64,9 @@ def Int.inc:
 def Int.dec:
     self - 1
 
+def Double.acc:
+    ```liftF1 variable #{self}```
+
 alias Path = String
 
 def load path:
@@ -159,6 +162,9 @@ def Image.scaleTo boundary x y:
 
 def Image.scale boundary x y:
     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
+
+def constant width height color:
+    ```liftF3 constantLuna #{width} #{height} #{color}```
 
 def circular width height:
     ```liftF2 circularLuna #{width} #{height}```
@@ -326,6 +332,11 @@ def Image.dither bound diffusionMethod bits:
 def Image.bayer bits:
     ```liftF2 orderedDitherLuna #{bits} #{self}```
 
+class ```RGBA``` a:
+    rgbaR, rgbaG, rgbaB, rgbaA :: a
+
+alias Color = RGBA Double
+
 class RGBAPixel:
     r, g, b, a :: Double
 
@@ -446,12 +457,12 @@ class ```Gamma```:
     ViperLog
 
 def Image.gammaToLinear gamma:
-    realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
-    ```liftF2 gammaToLinearLuna #{realGamma} #{self}```
+    # realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
+    ```liftF2 gammaToLinearLuna #{gamma} #{self}```
 
 def Image.gammaFromLinear gamma:
-    realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
-    ```liftF2 gammaFromLinearLuna #{realGamma} #{self}```
+    # realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
+    ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
 
 class ```InterpolationFilter```:
     NearestNeighbour
@@ -475,16 +486,17 @@ def Image.multisample grid filter:
 
 
 def main:
-    lena = load "./test.png"
-    checker = load "./checker.png"
-    lena = lena.merge Plus Adobe checker
+    lena = constant 640 480 (RGBA 0.5 0.5 0.5 1.0)
+    # lena = load "./test.png"
+    # checker = load "./checker.png"
+    # lena = lena.merge Plus Adobe checker
     lena.save "./out.png"
 
-    circul = Main.circular 720 480
-    circul.save "./out.png"
+    # circul = Main.circular 720 480
+    # circul.save "./out.png"
 
-    conical = Main.conical 1280 720
-    conical.save "./out.png"
+    # conical = Main.conical 1280 720
+    # conical.save "./out.png"
 
-    p = Main.billow 0.0 1280 720
-    p.save "./out.png"
+    # p = Main.billow 0.0 1280 720
+    # p.save "./out.png"
