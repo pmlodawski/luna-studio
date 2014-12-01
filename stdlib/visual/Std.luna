@@ -58,14 +58,14 @@ def Image.motionBlur self::Image size::Int angle::Float:
 def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
     ```liftF1 (onEachChannel $ bilateral #{psigma} #{csigma} #{size}) #{self}```
 
-def Image.offset self::Image value::Float:
-    ```liftF1 (onEachValue $ offsetLuna #{value}) #{self}```
+def Image.offset self::Image value::Color:
+    ```liftF2 offsetLuna #{value} #{self}```
 
-def Image.contrast self::Image value::Float:
-    ```liftF1 (onEachValue $ contrastLuna #{value}) #{self}```
+def Image.contrast self::Image value::Color:
+    ```liftF2 contrastLuna #{value} #{self}```
 
-def Image.exposure self::Image blackpoint::Float ex::Float:
-    ```liftF1 (onEachValue $ exposureLuna #{blackpoint} #{ex}) #{self}```
+def Image.exposure self::Image blackpoint::Color ex::Color:
+    ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
 def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color:
     ```liftF8 gradeLuna' #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
@@ -78,6 +78,12 @@ def Image.saturate self::Image saturation::Float:
 
 def Image.posterize self::Image colors::Float:
     ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
+
+def Image.multiply val::Color:
+    ```liftF2 multiplyLuna #{val} #{self}```
+
+def Image.gamma val::Color:
+    ```liftF2 gammaLuna #{val} #{self}```
 
 
 def Image.key self::Image mode a::Float b::Float c::Float d::Float:

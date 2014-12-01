@@ -138,22 +138,19 @@ bilateral psigma csigma (variable -> size) = onEachChannel process
           domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
           process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
-offsetLuna :: Double -> Image -> Image
-offsetLuna (variable -> v) = onEachValue $ offset v
+offsetLuna :: Color.RGBA Double -> Image -> Image
+offsetLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (offset r) (offset g) (offset b) (offset a)
 
-contrastLuna :: Double -> Image -> Image
-contrastLuna (variable -> v) = onEachValue $ contrast v
+contrastLuna :: Color.RGBA Double -> Image -> Image
+contrastLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (contrast r) (contrast g) (contrast b) (contrast a)
 
-exposureLuna :: Double -> Double -> Image -> Image
-exposureLuna (variable -> blackpoint) (variable -> ex) = onEachValue $ exposure blackpoint ex
-
--- colorCorrectLuna :: Double -> Double -> Double -> Double -> Double -> Image -> Image
--- colorCorrectLuna (variable -> saturation')
---                  (variable -> contrast')
---                  (variable -> gamma')
---                  (variable -> gain')
---                  (variable -> offset') =
---                     onEachRGB $ colorCorrect saturation' contrast' gamma' gain' offset'
+exposureLuna :: Color.RGBA Double -> Color.RGBA Double -> Image -> Image
+exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
+             (fmap variable -> Color.RGBA exR exG exB exA) =
+                 onImageRGBA (exposure blackpointR exR)
+                             (exposure blackpointG exG)
+                             (exposure blackpointB exB)
+                             (exposure blackpointA exA)
 
 gradeLuna :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> Image -> Image
 gradeLuna (variable -> blackpoint)
@@ -559,11 +556,11 @@ clampLuna :: Double -> Double -> Double -> Double -> Image -> Image
 clampLuna (variable -> thLo) (variable -> thHi) (variable -> clampLo) (variable -> clampHi) =
     onEachValue (clamp (Range thLo thHi) (Just $ Range clampLo clampHi))
 
-multiplyLuna :: Double -> Image -> Image
-multiplyLuna (variable -> v) = onEachValue (*v)
+multiplyLuna :: Color.RGBA Double -> Image -> Image
+multiplyLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (*r) (*g) (*b) (*a)
 
-gammaLuna :: Double -> Image -> Image
-gammaLuna (variable -> v) = onEachValue (gamma v)
+gammaLuna :: Color.RGBA Double -> Image -> Image
+gammaLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (gamma r) (gamma g) (gamma b) (gamma a)
 
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
 fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
