@@ -74,11 +74,9 @@ colorCorrect :: forall a. (Elt a, IsFloating a)
              -> Exp a       -- ^ gamma
              -> Exp a       -- ^ gain
              -> Exp a       -- ^ offset
-             -> Exp (RGB a) -- ^ input pixel
-             -> Exp (RGB a)
-colorCorrect = (((A.lift1 .) .) .) . colorCorrect'
-    where colorCorrect' :: Exp a -> Exp a -> Exp a -> Exp a -> RGB (Exp a) -> RGB (Exp a)
-          colorCorrect' contrast' gamma' gain' offset' pix' = pix' & each %~ (offset offset' . gain'' gain' . U.gamma gamma' . contrast contrast')
+             -> Exp a       -- ^ input value
+             -> Exp a
+colorCorrect contrast' gamma' gain' offset' = offset offset' . gain'' gain' . U.gamma gamma' . contrast contrast'
               where gain'' b x = b * x -- U.gain is broken, tested with Nuke that it's simply multiplication
 
 -- NOTE[mm]: pretty sure Nuke uses HSL colorspace for saturation manipulation. There are slight differences still,
