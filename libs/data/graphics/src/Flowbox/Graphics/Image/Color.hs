@@ -70,18 +70,16 @@ grade blackpoint whitepoint lift gain multiply' offset' gamma =
 	U.gamma gamma . offset offset' . multiply multiply' . inversePointsConvert lift gain . pointsConvert blackpoint whitepoint
 
 colorCorrect :: forall a. (Elt a, IsFloating a)
-             => Exp a       -- ^ saturation
-             -> Exp a       -- ^ contrast
+             => Exp a       -- ^ contrast
              -> Exp a       -- ^ gamma
              -> Exp a       -- ^ gain
              -> Exp a       -- ^ offset
              -> Exp (RGB a) -- ^ input pixel
              -> Exp (RGB a)
-colorCorrect = ((((A.lift1 .) .) .) .) . colorCorrect'
-    where colorCorrect' :: Exp a -> Exp a -> Exp a -> Exp a -> Exp a -> RGB (Exp a) -> RGB (Exp a)
-          colorCorrect' saturation' contrast' gamma' gain' offset' pix' = saturated & each %~ (offset offset' . gain'' gain' . U.gamma gamma' . contrast contrast')
-              where saturated  = toHSV pix' & (\(HSV h s v) -> HSV h (s * saturation') v) & toRGB
-                    gain'' b x = b * x -- U.gain is broken, tested with Nuke that it's simply multiplication
+colorCorrect = (((A.lift1 .) .) .) . colorCorrect'
+    where colorCorrect' :: Exp a -> Exp a -> Exp a -> Exp a -> RGB (Exp a) -> RGB (Exp a)
+          colorCorrect' contrast' gamma' gain' offset' pix' = pix' & each %~ (offset offset' . gain'' gain' . U.gamma gamma' . contrast contrast')
+              where gain'' b x = b * x -- U.gain is broken, tested with Nuke that it's simply multiplication
 
 -- NOTE[mm]: pretty sure Nuke uses HSL colorspace for saturation manipulation. There are slight differences still,
 --           but operating on HSV looks unalike to Nuke.

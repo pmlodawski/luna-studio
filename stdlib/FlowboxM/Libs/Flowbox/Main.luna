@@ -93,8 +93,8 @@ def Image.contrast value:
 def Image.exposure blackpoint ex:
     ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
-def Image.colorCorrect saturation contrast gamma gain offset:
-    ```liftF6 colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
+# def Image.colorCorrect saturation contrast gamma gain offset:
+#     ```liftF6 colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
 
 # def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
 #     ```liftF8 gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
@@ -342,6 +342,9 @@ class RGBAPixel:
 
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF8 gradeLuna' #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
+
+def Image.colorCorrect saturation contrast gamma gain offset:
+    ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
 
 class ```Boundary```:
     Clamp
