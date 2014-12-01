@@ -310,8 +310,8 @@ def Image.multiply val:
 def Image.gamma val:
     ```liftF2 gammaLuna #{val} #{self}```
 
-# def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
-#     ```liftF8 gradeLuna' #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
+def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 def Image.colorCorrect saturation contrast gamma gain offset:
     ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
@@ -562,15 +562,3 @@ def View.map f:
 #
 #                OTHER
 #
-
-def Image.gradeB blackpoint whitepoint lift gain multiply offset gamma:
-    ```liftF5 (gradeLuna #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
-
-def Image.testF a b c d:
-    ```liftF5 testF5 #{a} #{b} #{c} #{d} #{self}```
-
-def Image.testFB a b c d e:
-    ```liftF5 (testF6 #{a}) #{b} #{c} #{d} #{e} #{self}```
-
-def Image.testFC a b c d e f g:
-    ```liftF5 (testF8 #{a} #{b} #{c}) #{d} #{e} #{f} #{g} #{self}```

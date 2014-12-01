@@ -68,7 +68,7 @@ def Image.exposure self::Image blackpoint::Color ex::Color:
     ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
 def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color:
-    ```liftF8 gradeLuna' #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
+    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 def Image.colorCorrect self::Image saturation::Color contrast::Color gamma::Color gain::Color offset::Color:
     ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
@@ -181,18 +181,6 @@ class ```Gamma``` a:
     SRGBGamma
 
 # alias GammaF = Gamma Double
-
-def Image.gradeB self::Image blackpoint::Float whitepoint::Float lift::Float gain::Float multiply::Float offset::Float gamma::Float:
-    ```liftF5 (gradeLuna #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
-
-def Image.testF self::Image a::Color b::Color c::Color d::Color:
-    ```liftF5 testF5 #{a} #{b} #{c} #{d} #{self}```
-
-def Image.testFB self::Image a::Color b::Color c::Color d::Color e::Color:
-    ```liftF5 (testF6 #{a}) #{b} #{c} #{d} #{e} #{self}```
-
-def Image.testFC self::Image a::Color b::Color c::Color d::Color e::Color f::Color g::Color:
-    ```liftF5 (testF8 #{a} #{b} #{c}) #{d} #{e} #{f} #{g} #{self}```
 
 def Image.gammaToLinear self::Image gamma::Gamma:
     ```liftF2 gammaToLinearLuna #{gamma} #{self}```
