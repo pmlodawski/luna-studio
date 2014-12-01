@@ -926,37 +926,45 @@ convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a)
 rasterizeMaskLuna :: (Real a, Fractional a) => Int -> Int -> Mask2 a -> Image
 rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
 
-testF5 :: Color.RGBA Double
-       -> Color.RGBA Double
-       -> Color.RGBA Double
-       -> Color.RGBA Double
-       -> Image
-       -> Int
-testF5 _ _ _ _ _ = 5
+gradeLunaColor :: VPS (Color.RGBA Double)
+               -> VPS (Color.RGBA Double)
+               -> VPS (Color.RGBA Double)
+               -> Color.RGBA Double
+               -> Color.RGBA Double
+               -> Color.RGBA Double
+               -> Color.RGBA Double
+               -> Image
+               -> Image
+gradeLunaColor (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
+               (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
+               (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
+               (fmap variable -> Color.RGBA gainR gainG gainB gainA)
+               (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
+               (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
+               (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA)
+               = onEach (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
+                        (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
+                        (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
+                        (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
 
-testF6 :: VPS (Color.RGBA Double)
-       -> Color.RGBA Double
-       -> Color.RGBA Double
-       -> Color.RGBA Double
-       -> Color.RGBA Double
-       -> Image
-       -> Int
-testF6 _ _ _ _ _ _ = 6
-
-testF8 :: VPS (Color.RGBA Double)
-       -> VPS (Color.RGBA Double)
-       -> VPS (Color.RGBA Double)
-       -> Color.RGBA Double
-       -> Color.RGBA Double
-       -> Color.RGBA Double
-       -> Color.RGBA Double
+-- TODO: might be a good idea to try and do something better than creating a new Image
+onEach :: (A.Exp Double -> A.Exp Double)
+       -> (A.Exp Double -> A.Exp Double)
+       -> (A.Exp Double -> A.Exp Double)
+       -> (A.Exp Double -> A.Exp Double)
        -> Image
        -> Image
-testF8 _ _ _ _ _ _ _ _ = Raster.constant (A.index2 (100::Exp Int) (100::Exp Int)) chans
-    where chans = [ ("rgba.r", r)
-                  , ("rgba.g", r)
-                  , ("rgba.b", r)
-                  , ("rgba.a", a)
-                  ]
-          r = 0.5 :: Exp Double
-          a = 1.0 :: Exp Double
+onEach fr fg fb fa img = Image.singleton view
+    where Just rgba = Image.lookup "rgba" img
+          unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+          r = unpackMat $ View.get rgba "rgba.r"
+          g = unpackMat $ View.get rgba "rgba.g"
+          b = unpackMat $ View.get rgba "rgba.b"
+          --a = unpackMat $ View.get rgba "rgba.a"
+          Right (Just a) = View.get rgba "rgba.a"
+          makeChan name f c = ChannelFloat name (FlatData $ M.map f c)
+          view = View.append (makeChan "rgba.r" fr r)
+               $ View.append (makeChan "rgba.g" fg g)
+               $ View.append (makeChan "rgba.b" fb b)
+               $ View.append a
+               $ View.empty "rgba"
