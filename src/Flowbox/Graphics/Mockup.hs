@@ -664,6 +664,43 @@ gradeLuna' (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blac
                          (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
                          (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
 
+colorCorrectLuna' :: Color.RGBA Double
+                  -> Color.RGBA Double
+                  -> Color.RGBA Double
+                  -> Color.RGBA Double
+                  -> Color.RGBA Double
+                  -> Image
+                  -> Image
+colorCorrectLuna' (fmap variable -> Color.RGBA saturationR saturationG saturationB saturationA)
+                  (fmap variable -> Color.RGBA contrastR contrastG contrastB contrastA)
+                  (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA)
+                  (fmap variable -> Color.RGBA gainR gainG gainB gainA)
+                  (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA) img =
+                      onImageRGBA (colorCorrect contrastR gammaR gainR offsetR)
+                                  (colorCorrect contrastG gammaG gainG offsetG)
+                                  (colorCorrect contrastB gammaB gainB offsetB)
+                                  (colorCorrect contrastA gammaA gainA offsetA) saturated
+    where (r, g, b, a) = unsafeGetChannels img
+          rgb = unsafeGetRGB img
+
+          rgbRsaturated = toHSV rgb & (\HSV h s v -> HSV h (s * saturationR) v) & toRGB
+          rgbGsaturated = toHSV rgb & (\HSV h s v -> HSV h (s * saturationG) v) & toRGB
+          rgbBsaturated = toHSV rgb & (\HSV h s v -> HSV h (s * saturationB) v) & toRGB
+
+          rSaturated = M.map (\(A.unlift -> Color.RGBA r _ _ _) -> r) rgbRsaturated
+          gSaturated = M.map (\(A.unlift -> Color.RGBA _ g _ _) -> g) rgbGsaturated
+          bSaturated = M.map (\(A.unlift -> Color.RGBA _ _ b _) -> b) rgbBsaturated
+
+          Just view = lookup "rgba" img
+
+          view' = insertChannelFloats [
+                    ("rgba.r", rSaturated)
+                  , ("rgba.g", gSaturated)
+                  , ("rgba.b", bSaturated)
+                  ]
+
+          saturated = Image.update (const $ Just view') "rgba" img
+
 onImageRGBA :: (A.Exp Double -> A.Exp Double)
             -> (A.Exp Double -> A.Exp Double)
             -> (A.Exp Double -> A.Exp Double)
