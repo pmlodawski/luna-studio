@@ -79,6 +79,12 @@ def Image.saturate self::Image saturation::Float:
 def Image.posterize self::Image colors::Float:
     ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
 
+def Image.multiply val::Color:
+    ```liftF2 multiplyLuna #{val} #{self}```
+
+def Image.gamma val::Color:
+    ```liftF2 gammaLuna #{val} #{self}```
+
 
 def Image.key self::Image mode a::Float b::Float c::Float d::Float:
     ```liftF1 (keyerLuna #{mode} #{a} #{b} #{c} #{d}) #{self}```
