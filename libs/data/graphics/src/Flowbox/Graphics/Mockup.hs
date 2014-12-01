@@ -302,7 +302,7 @@ laplacianLuna (variable -> kernSize) (variable -> crossVal) (variable -> sideVal
           p = pipe A.Clamp
 
 constantLuna :: Int -> Int -> Color.RGBA Double -> Image
-constantLuna (variable -> width) (variable -> height) (Color.RGBA (variable -> r) (variable -> g) (variable -> b) (variable -> a)) =
+constantLuna (variable -> width) (variable -> height) (fmap variable -> Color.RGBA r g b a) =
     Raster.constant (A.index2 height width) chans
     where chans = [ ("rgba.r", r)
                   , ("rgba.g", g)
@@ -877,5 +877,5 @@ convertShape (unpackLunaList -> a) = GShape.Shape (fmap convertPath a)
 convertMask :: Mask2 a -> Mask.Mask a
 convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a) (fmap convertPath b)
 
-rasterizeMaskLuna :: Real a => Int -> Int -> Mask2 a -> Image
+rasterizeMaskLuna :: (Real a, Fractional a) => Int -> Int -> Mask2 a -> Image
 rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
