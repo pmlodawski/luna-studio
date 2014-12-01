@@ -147,13 +147,13 @@ contrastLuna (variable -> v) = onEachValue $ contrast v
 exposureLuna :: Double -> Double -> Image -> Image
 exposureLuna (variable -> blackpoint) (variable -> ex) = onEachValue $ exposure blackpoint ex
 
-colorCorrectLuna :: Double -> Double -> Double -> Double -> Double -> Image -> Image
-colorCorrectLuna (variable -> saturation')
-                 (variable -> contrast')
-                 (variable -> gamma')
-                 (variable -> gain')
-                 (variable -> offset') =
-                    onEachRGB $ colorCorrect saturation' contrast' gamma' gain' offset'
+-- colorCorrectLuna :: Double -> Double -> Double -> Double -> Double -> Image -> Image
+-- colorCorrectLuna (variable -> saturation')
+--                  (variable -> contrast')
+--                  (variable -> gamma')
+--                  (variable -> gain')
+--                  (variable -> offset') =
+--                     onEachRGB $ colorCorrect saturation' contrast' gamma' gain' offset'
 
 gradeLuna :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> Image -> Image
 gradeLuna (variable -> blackpoint)
@@ -683,17 +683,20 @@ colorCorrectLuna' (fmap variable -> Color.RGBA saturationR saturationG saturatio
     where (r, g, b, a) = unsafeGetChannels img
           rgb = unsafeGetRGB img
 
-          rgbRsaturated = toHSV rgb & (\HSV h s v -> HSV h (s * saturationR) v) & toRGB
-          rgbGsaturated = toHSV rgb & (\HSV h s v -> HSV h (s * saturationG) v) & toRGB
-          rgbBsaturated = toHSV rgb & (\HSV h s v -> HSV h (s * saturationB) v) & toRGB
+          rgbRsaturated = M.map (A.lift1 (saturateOnHSV saturationR)) rgb
+          rgbGsaturated = M.map (A.lift1 (saturateOnHSV saturationG)) rgb
+          rgbBsaturated = M.map (A.lift1 (saturateOnHSV saturationB)) rgb
 
-          rSaturated = M.map (\(A.unlift -> Color.RGBA r _ _ _) -> r) rgbRsaturated
-          gSaturated = M.map (\(A.unlift -> Color.RGBA _ g _ _) -> g) rgbGsaturated
-          bSaturated = M.map (\(A.unlift -> Color.RGBA _ _ b _) -> b) rgbBsaturated
+          saturateOnHSV :: A.Exp Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)
+          saturateOnHSV sat pix = Color.toHSV pix & (\(Color.HSV h s v) -> Color.HSV h (s * saturationG) v) & Color.toRGB
+
+          rSaturated = M.map (\(A.unlift -> Color.RGB r _ _) -> r) rgbRsaturated
+          gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
+          bSaturated = M.map (\(A.unlift -> Color.RGB _ _ b) -> b) rgbBsaturated
 
           Just view = lookup "rgba" img
 
-          view' = insertChannelFloats [
+          view' = insertChannelFloats view [
                     ("rgba.r", rSaturated)
                   , ("rgba.g", gSaturated)
                   , ("rgba.b", bSaturated)
