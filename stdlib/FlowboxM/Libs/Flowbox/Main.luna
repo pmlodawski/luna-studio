@@ -311,7 +311,8 @@ def Image.gamma val:
     ```liftF2 gammaLuna #{val} #{self}```
 
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
-    ```liftF8 gradeLuna' #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
+    # ```liftF8 gradeLuna' #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
+    ```liftF5 (gradeLuna' #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 def Image.colorCorrect saturation contrast gamma gain offset:
     ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
@@ -570,8 +571,15 @@ def View.map f:
 #
 
 def main:
-    lena = constant 640 480 (RGBA 0.5 0.5 0.5 1.0)
-    # lena = load "./test.png"
+    black = RGBA 0.0 0.0 0.0 1.0
+    white = RGBA 1.0 1.0 1.0 1.0
+    gray  = RGBA 0.5 0.5 0.5 1.0
+    test = RGBA 0.1 0.1 0.1 0.1
+    # lena = constant 640 480 gray
+    lena = load "./test.png"
+    # grade: blackpoint whitepoint lift gain multiply offset gamma
+    lena = lena.grade test white black white white black white
+    # lena = lena.grade black white black white
     # checker = load "./checker.png"
     # lena = lena.merge Plus Adobe checker
     lena.save "./out.png"

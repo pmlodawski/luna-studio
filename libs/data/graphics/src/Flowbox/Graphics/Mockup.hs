@@ -643,18 +643,18 @@ orderedDitherLuna bits = onEachChannel $ bayer bits
 constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
-gradeLuna' :: Color.RGBA Double
-           -> Color.RGBA Double
-           -> Color.RGBA Double
+gradeLuna' :: VPS (Color.RGBA Double)
+           -> VPS (Color.RGBA Double)
+           -> VPS (Color.RGBA Double)
            -> Color.RGBA Double
            -> Color.RGBA Double
            -> Color.RGBA Double
            -> Color.RGBA Double
            -> Image
            -> Image
-gradeLuna' (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
-           (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA)
-           (fmap variable -> Color.RGBA liftR liftG liftB liftA)
+gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
+           (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
+           (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
            (fmap variable -> Color.RGBA gainR gainG gainB gainA)
            (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
            (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
@@ -726,14 +726,23 @@ onImageRGBA fr fg fb fa img = img'
                     ]
           img' = Image.update (const $ Just view') "rgba" img
 
-liftF6 a b c d e f g = do
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    val a <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g'
+liftF6 f t1 t2 t3 t4 t5 t6 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    t5' <- t5
+    t6' <- t6
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6'
+
+--liftF6 a b c d e f g = do
+--    b' <- b
+--    c' <- c
+--    d' <- d
+--    e' <- e
+--    f' <- f
+--    g' <- g
+--    val a <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g'
 
 liftF8 a b c d e f g h i = do
     b' <- b
