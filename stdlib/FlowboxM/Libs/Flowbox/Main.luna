@@ -3,7 +3,6 @@
 import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
-import ```Flowbox.Geom2D.Rasterizer```
 import ```Flowbox.Graphics.Color as Color```
 import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
 import ```Flowbox.Graphics.Color.Companding.Cineon```
@@ -22,6 +21,7 @@ import ```Flowbox.Graphics.Image.Image as Image```
 import ```Flowbox.Graphics.Image.View as View```
 import ```Flowbox.Graphics.Image.Merge (AlphaBlend(..))```
 import ```Flowbox.Graphics.Composition.Generators.Keyer```
+import ```Flowbox.Geom2D.Rasterizer```
 
 #
 #                STD
@@ -105,8 +105,54 @@ def Double.acc:
 #                GEOM
 #
 
+# TODO: convert cornerPin to use Point2
 class Point a:
     x,y :: a
+
+class ```Point2``` a:
+    x,y :: a
+
+def point x y:
+    Point2 x y
+
+def nopoint:
+    ```val (Nothing :: Maybe (Point2 Double))```
+
+# class ```ControlPoint``` a:
+# class ControlPoint a:
+#     point               :: Point2 a
+#     handleIn, handleOut :: Maybe (Point2 a)
+
+# class ```Path``` a:
+#     closed   :: Bool
+#     vertices :: [ControlPoint a]
+
+# class ```Shape``` a:
+#     paths :: [Path a]
+
+# class ```Mask``` a:
+#     path    :: Path a
+#     feather :: Maybe (Path a)
+
+# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
+# alias Path a         = (Bool, [ControlPoint a])
+# alias Shape a        = [Path a]
+# alias Mask a         = (Path a, Maybe (Path a))
+
+def controlPoint point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def path closed vertices:
+    (closed, vertices)
+
+def shape paths:
+    paths
+
+def mask path feather:
+    (path, feather)
+
+def rasterizeMask w h m:
+    ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
 
 
 
