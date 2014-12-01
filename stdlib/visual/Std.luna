@@ -38,6 +38,9 @@ def Int.>= self::Int a::Int:
 # def Int.dec:
 #     self.sub 1
 
+def Double.acc:
+    ```liftF1 variable #{self}```
+
 alias Path = String
 
 def load self::Std path::Path:
@@ -173,8 +176,8 @@ class ```Gamma``` a:
 
 # alias GammaF = Gamma Double
 
-def Image.gammaToLinear self::Image gamma::Gamma Float:
+def Image.gammaToLinear self::Image gamma::Gamma:
     ```liftF2 gammaToLinearLuna #{gamma} #{self}```
 
-def Image.gammaFromLinear self::Image gamma::Gamma Float:
+def Image.gammaFromLinear self::Image gamma::Gamma:
     ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
