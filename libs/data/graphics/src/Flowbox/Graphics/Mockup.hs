@@ -951,5 +951,12 @@ testF8 :: VPS (Color.RGBA Double)
        -> Color.RGBA Double
        -> Color.RGBA Double
        -> Image
-       -> Int
-testF8 _ _ _ _ _ _ _ _ = 8
+       -> Image
+testF8 _ _ _ _ _ _ _ _ = Raster.constant (A.index2 (100::Exp Int) (100::Exp Int)) chans
+    where chans = [ ("rgba.r", r)
+                  , ("rgba.g", r)
+                  , ("rgba.b", r)
+                  , ("rgba.a", a)
+                  ]
+          r = 0.5 :: Exp Double
+          a = 1.0 :: Exp Double

@@ -590,7 +590,8 @@ def main:
     # grade: blackpoint whitepoint lift gain multiply offset gamma
     lena = lena.grade test white black white white black white
     out = lena.testFC black white gray test black white gray
-    print out
+    # print out
+    out.save "./outT.png"
     lena = lena.gradeB 0.1 1.0 0.0 1.0 1.0 0.0 1.0
     # lena = lena.grade black white black white
     # checker = load "./checker.png"
