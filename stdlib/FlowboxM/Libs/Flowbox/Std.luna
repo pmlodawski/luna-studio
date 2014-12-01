@@ -568,3 +568,6 @@ def Image.gradeB blackpoint whitepoint lift gain multiply offset gamma:
 
 def Image.testF a b c d:
     ```liftF5 testF5 #{a} #{b} #{c} #{d} #{self}```
+
+def Image.testFB a b c d e:
+    ```liftF5 (testF6 #{a}) #{b} #{c} #{d} #{e} #{self}```

@@ -933,3 +933,12 @@ testF5 :: Color.RGBA Double
        -> Image
        -> Int
 testF5 _ _ _ _ _ = 5
+
+testF6 :: VPS (Color.RGBA Double)
+       -> Color.RGBA Double
+       -> Color.RGBA Double
+       -> Color.RGBA Double
+       -> Color.RGBA Double
+       -> Image
+       -> Int
+testF6 _ _ _ _ _ _ = 6

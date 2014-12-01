@@ -188,6 +188,9 @@ def Image.gradeB self::Image blackpoint::Float whitepoint::Float lift::Float gai
 def Image.testF self::Image a::Color b::Color c::Color d::Color:
     ```liftF5 testF5 #{a} #{b} #{c} #{d} #{self}```
 
+def Image.testFB self::Image a::Color b::Color c::Color d::Color e::Color:
+    ```liftF5 (testF6 #{a}) #{b} #{c} #{d} #{e} #{self}```
+
 def Image.gammaToLinear self::Image gamma::Gamma:
     ```liftF2 gammaToLinearLuna #{gamma} #{self}```
 
