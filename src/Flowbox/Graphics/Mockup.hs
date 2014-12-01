@@ -556,11 +556,11 @@ clampLuna :: Double -> Double -> Double -> Double -> Image -> Image
 clampLuna (variable -> thLo) (variable -> thHi) (variable -> clampLo) (variable -> clampHi) =
     onEachValue (clamp (Range thLo thHi) (Just $ Range clampLo clampHi))
 
-multiplyLuna :: Double -> Image -> Image
-multiplyLuna (variable -> v) = onEachValue (*v)
+multiplyLuna :: Color.RGBA Double -> Image -> Image
+multiplyLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (*r) (*g) (*b) (*a)
 
-gammaLuna :: Double -> Image -> Image
-gammaLuna (variable -> v) = onEachValue (gamma v)
+gammaLuna :: Color.RGBA Double -> Image -> Image
+gammaLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (gamma r) (gamma g) (gamma b) (gamma a)
 
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
 fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
