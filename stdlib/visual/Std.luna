@@ -64,11 +64,11 @@ def Image.contrast self::Image value::Float:
 def Image.exposure self::Image blackpoint::Float ex::Float:
     ```liftF1 (onEachValue $ exposureLuna #{blackpoint} #{ex}) #{self}```
 
-def Image.colorCorrect self::Image saturation::Float contrast::Float gamma::Float gain::Float offset::Float:
-    ```liftF1 (onEachRGB $ colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset}) #{self}```
+def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color:
+    ```liftF8 gradeLuna' #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-def Image.grade self::Image blackpoint::Float whitepoint::Float lift::Float gain::Float multiply::Float offset::Float gamma::Float:
-    ```liftF1 (onEachValue $ gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma}) #{self}```
+def Image.colorCorrect self::Image saturation::Color contrast::Color gamma::Color gain::Color offset::Color:
+    ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
 
 def Image.saturate self::Image saturation::Float:
     ```liftF1 (onEachRGB $ saturateLuna #{saturation}) #{self}```
