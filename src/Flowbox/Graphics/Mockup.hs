@@ -942,3 +942,14 @@ testF6 :: VPS (Color.RGBA Double)
        -> Image
        -> Int
 testF6 _ _ _ _ _ _ = 6
+
+testF8 :: VPS (Color.RGBA Double)
+       -> VPS (Color.RGBA Double)
+       -> VPS (Color.RGBA Double)
+       -> Color.RGBA Double
+       -> Color.RGBA Double
+       -> Color.RGBA Double
+       -> Color.RGBA Double
+       -> Image
+       -> Int
+testF8 _ _ _ _ _ _ _ _ = 8
