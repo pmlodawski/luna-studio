@@ -4,7 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Image.IO.OpenEXR where
+module Flowbox.Graphics.Image.IO.OpenEXR (
+      readFromEXR
+    ) where
 
 import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as A
