@@ -162,8 +162,30 @@ gradeLuna (VPS (variable -> blackpoint))
           (variable -> gamma') =
             onEachValue $ grade blackpoint whitepoint lift gain multiply' offset' gamma'
 
-saturateLuna :: Double -> Image -> Image
-saturateLuna (variable -> s) = onEachRGB $ A.lift1 $ (saturate s :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
+saturateLuna :: Color.RGBA Double -> Image -> Image
+saturateLuna (fmap variable -> Color.RGBA saturationR saturationG saturationB saturationA) img = saturated
+    where rgb = unsafeGetRGB img
+
+          rgbRsaturated = M.map (A.lift1 (saturateOnHSV saturationR)) rgb
+          rgbGsaturated = M.map (A.lift1 (saturateOnHSV saturationG)) rgb
+          rgbBsaturated = M.map (A.lift1 (saturateOnHSV saturationB)) rgb
+
+          saturateOnHSV :: A.Exp Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)
+          saturateOnHSV sat pix = Color.toHSL pix & (\(Color.HSL h s l) -> Color.HSL h (s * sat) l) & Color.toRGB
+
+          rSaturated = M.map (\(A.unlift -> Color.RGB r _ _) -> r) rgbRsaturated
+          gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
+          bSaturated = M.map (\(A.unlift -> Color.RGB _ _ b) -> b) rgbBsaturated
+
+          Just view = lookup "rgba" img
+
+          view' = insertChannelFloats view [
+                    ("rgba.r", rSaturated)
+                  , ("rgba.g", gSaturated)
+                  , ("rgba.b", bSaturated)
+                  ]
+
+          saturated = Image.update (const $ Just view') "rgba" img
 
 posterizeLuna :: Double -> Image -> Image
 posterizeLuna (variable -> colors) = onEachValue $ posterize colors
@@ -677,15 +699,14 @@ colorCorrectLuna' (fmap variable -> Color.RGBA saturationR saturationG saturatio
                                   (colorCorrect contrastG gammaG gainG offsetG)
                                   (colorCorrect contrastB gammaB gainB offsetB)
                                   (colorCorrect contrastA gammaA gainA offsetA) saturated
-    where (r, g, b, a) = unsafeGetChannels img
-          rgb = unsafeGetRGB img
+    where rgb = unsafeGetRGB img
 
           rgbRsaturated = M.map (A.lift1 (saturateOnHSV saturationR)) rgb
           rgbGsaturated = M.map (A.lift1 (saturateOnHSV saturationG)) rgb
           rgbBsaturated = M.map (A.lift1 (saturateOnHSV saturationB)) rgb
 
           saturateOnHSV :: A.Exp Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)
-          saturateOnHSV sat pix = Color.toHSV pix & (\(Color.HSV h s v) -> Color.HSV h (s * saturationG) v) & Color.toRGB
+          saturateOnHSV sat pix = Color.toHSV pix & (\(Color.HSV h s v) -> Color.HSV h (s * sat) v) & Color.toRGB
 
           rSaturated = M.map (\(A.unlift -> Color.RGB r _ _) -> r) rgbRsaturated
           gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
