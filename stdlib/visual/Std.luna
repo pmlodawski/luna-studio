@@ -46,8 +46,8 @@ alias Path = String
 def load self::Std path::Path:
     ```autoLift1 loadImageLuna #{path}```
 
-def readFromEXR self::Std path::Path:
-    ```autoLift1 readFromEXRLuna #{path}```
+def readEXR self::Std filePath::Path:
+    ```autoLift1 readFromEXRLuna #{filePath}```
 
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
@@ -206,7 +206,7 @@ def Image.merge self::Image mode::MergeMode alphaBlendMode::AlphaBlend img::Imag
 alias ImgMask = Maybe Image
 
 def noImgMask self::Std:
-    ```val (Nothing :: Maybe Image)```
+    ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
 def Image.rotate self::Image phi::Float:
     ```liftF2 rotateCenterLuna #{phi} #{self}```
