@@ -222,7 +222,7 @@ def imageSingleton view:
     ```liftF1 Image.singleton #{view}```
 
 def readEXR filePath:
-    ```autoLift1 readFromEXR #{filePath}```
+    ```autoLift1 readFromEXRLuna #{filePath}```
 
 
 
@@ -569,17 +569,20 @@ def View.map f:
 #
 
 def main:
-    black = RGBA 0.0 0.0 0.0 1.0
-    white = RGBA 1.0 1.0 1.0 1.0
-    gray  = RGBA 0.5 0.5 0.5 1.0
-    test = RGBA 0.1 0.1 0.1 0.1
+    # black = RGBA 0.0 0.0 0.0 1.0
+    # white = RGBA 1.0 1.0 1.0 1.0
+    # gray  = RGBA 0.5 0.5 0.5 1.0
+    # test = RGBA 0.1 0.1 0.1 0.1
     # lena = constant 640 480 gray
-    lena = load "./test.png"
+    # lena = load "./test.png"
     # grade: blackpoint whitepoint lift gain multiply offset gamma
-    lena = lena.grade test white black white white black white
+    # lena = lena.grade test white black white white black white
     # checker = load "./checker.png"
     # lena = lena.merge Plus Adobe checker
-    lena.save "./out.png"
+    # lena.save "./out.png"
+
+    jet = readEXR "./jet.exr"
+    jet.save "./jet.png"
 
     # circul = Main.circular 720 480
     # circul.save "./out.png"

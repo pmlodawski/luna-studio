@@ -20,7 +20,6 @@ module Flowbox.Graphics.Mockup (
     , module Math.Metric
     , module Math.Space.Space
     , A.Boundary(..)
-    , readFromEXR
     , variable
 ) where
 
@@ -31,6 +30,7 @@ import qualified Data.Array.Accelerate.Array.Sugar as A
 import           Data.Array.Accelerate.CUDA
 import qualified Data.Array.Accelerate.IO          as A
 import           Data.Char                         (toLower)
+import           Data.Maybe
 import qualified Data.Vector.Storable              as SV
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
@@ -989,3 +989,6 @@ onEach fr fg fb fa img = Image.singleton view
                $ View.append (makeChan "rgba.b" fb b)
                $ View.append a
                $ View.empty "rgba"
+
+readFromEXRLuna :: FilePath -> IO Image
+readFromEXRLuna path = fmap fromJust $ readFromEXR path
