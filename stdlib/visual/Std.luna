@@ -46,6 +46,9 @@ alias Path = String
 def load self::Std path::Path:
     ```autoLift1 loadImageLuna #{path}```
 
+def readFromEXR self::Std path::Path:
+    ```autoLift1 readFromEXR #{path}```
+
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
