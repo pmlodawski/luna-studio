@@ -73,7 +73,7 @@ def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain
 def Image.colorCorrect self::Image saturation::Color contrast::Color gamma::Color gain::Color offset::Color:
     ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
 
-def Image.saturate self::Image saturation::Float:
+def Image.saturate self::Image saturation::Color:
     ```liftF1 (onEachRGB $ saturateLuna #{saturation}) #{self}```
 
 def Image.posterize self::Image colors::Float:
@@ -84,7 +84,6 @@ def Image.multiply val::Color:
 
 def Image.gamma val::Color:
     ```liftF2 gammaLuna #{val} #{self}```
-
 
 def Image.key self::Image mode a::Float b::Float c::Float d::Float:
     ```liftF1 (keyerLuna #{mode} #{a} #{b} #{c} #{d}) #{self}```
