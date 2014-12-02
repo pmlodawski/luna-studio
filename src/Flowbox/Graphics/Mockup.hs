@@ -57,7 +57,7 @@ import           Flowbox.Graphics.Composition.Generators.Rasterizer
 import           Flowbox.Graphics.Composition.Generators.Sampler
 import           Flowbox.Graphics.Composition.Generators.Shape
 import           Flowbox.Graphics.Composition.Generators.Stencil      as Stencil
-import           Flowbox.Graphics.Composition.Generators.Structures
+import           Flowbox.Graphics.Composition.Generators.Structures   as S
 import           Flowbox.Graphics.Composition.Generators.Transform
 import           Flowbox.Graphics.Composition.Histogram
 import qualified Flowbox.Graphics.Composition.Raster                  as Raster
@@ -139,18 +139,18 @@ bilateral psigma csigma (variable -> size) = onEachChannel process
           process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
 offsetLuna :: Color.RGBA Double -> Image -> Image
-offsetLuna (fmap variable -> Color.RGBA r g b a) = onEach (offset r) (offset g) (offset b) (offset a)
+offsetLuna (fmap variable -> Color.RGBA r g b a) = onEach (offset r) (offset g) (offset b) id -- (offset a)
 
 contrastLuna :: Color.RGBA Double -> Image -> Image
-contrastLuna (fmap variable -> Color.RGBA r g b a) = onEach (contrast r) (contrast g) (contrast b) (contrast a)
+contrastLuna (fmap variable -> Color.RGBA r g b a) = onEach (contrast r) (contrast g) (contrast b) id -- (contrast a)
 
 exposureLuna :: Color.RGBA Double -> Color.RGBA Double -> Image -> Image
 exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
              (fmap variable -> Color.RGBA exR exG exB exA) =
                  onEach (exposure blackpointR exR)
-                             (exposure blackpointG exG)
-                             (exposure blackpointB exB)
-                             (exposure blackpointA exA)
+                        (exposure blackpointG exG)
+                        (exposure blackpointB exB)
+                        id -- (exposure blackpointA exA)
 
 gradeLuna :: VPS Double -> VPS Double -> VPS Double -> Double -> Double -> Double -> Double -> Image -> Image
 gradeLuna (VPS (variable -> blackpoint))
@@ -391,16 +391,76 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 
 rotateCenterLuna :: Double -> Image -> Image
 rotateCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
+--rotateCenterLuna :: Double -> Maybe (VPS Image) -> Image -> Image
+--rotateCenterLuna (variable -> angle) mask = onEachMatrix process process process process
+--    where process :: Matrix2 Double -> Matrix2 Double
+--          process = rasterizer . t . gen
+--          gen = fromMatrix (A.Constant (0 :: Exp Double))
+--          t :: DiscreteGenerator (Exp Double) -> DiscreteGenerator (Exp Double)
+--          t = S.transform p
+--          t = monosampler . rotateCenter (p pt) . nearest
+--          p :: Point2 (Exp Int) -> Point2 (Exp Int)
+--          p pt = rotateCenter (handle pt) pt
+--          handle pt = case mask of
+--              Nothing      -> angle
+--              Just (VPS m) -> let
+--                      Just rgba = Image.lookup "rgba" m
+--                      unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+--                      m' = unpackMat $ View.get rgba "rgba.r"
+--                      Generator _ str = gen m'
+--                      mult pt x = (str pt) * x
+--                  in mult pt angle
 
-translateLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
-translateLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . translate (V2 x y) . nearest . fromMatrix boundary
+--translateLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
+--translateLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . translate (V2 x y) . nearest . fromMatrix boundary
+translateLuna :: Int -> Int -> Maybe (VPS Image) -> Image -> Image
+translateLuna (variable -> x) (variable -> y) mask = onEachMatrix process process process process
+    where v = V2 x (-y)
+          process :: Matrix2 Double -> Matrix2 Double
+          process = rasterizer . t . gen
+          gen = fromMatrix (A.Constant (0 :: Exp Double))
+          t :: DiscreteGenerator (Exp Double) -> DiscreteGenerator (Exp Double)
+          t = S.transform p
+          p :: Point2 (Exp Int) -> Point2 (Exp Int)
+          p pt = translate (handle pt) pt
+          handle pt = case mask of
+              Nothing      -> v
+              Just (VPS m) -> let
+                      Just rgba = Image.lookup "rgba" m
+                      unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+                      m' = unpackMat $ View.get rgba "rgba.r"
+                      Generator _ str = gen m'
+                      mult pt x = A.round $ (str pt) * A.fromIntegral x
+                  in (fmap (mult pt) v)
 
 scaleToLuna :: A.Boundary (A.Exp Double) -> Int -> Int -> Image -> Image
 scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . scale (Grid x y) . nearest . fromMatrix boundary
 
-scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
-scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
-    where f = fmap A.truncate . scale (V2 x y) . asFloating
+--scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
+--scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
+--    where f = fmap A.truncate . scale (V2 x y) . asFloating
+scaleLuna :: Double -> Double -> Maybe (VPS Image) -> Image -> Image
+scaleLuna (variable -> x) (variable -> y) mask = onEachMatrix process process process process
+    where v = V2 x y
+          process :: Matrix2 Double -> Matrix2 Double
+          process = rasterizer . monosampler . t . interpolator (Conv.catmulRom) . gen
+          --f = canvasT $ fmap A.truncate . scale (V2 x y) . asFloating
+          gen = fromMatrix (A.Constant (0 :: Exp Double))
+          t :: CartesianGenerator (Exp Double) (Exp Double) -> CartesianGenerator (Exp Double) (Exp Double)
+          t = onCenter (S.transform p)
+          p :: Point2 (Exp Double) -> Point2 (Exp Double)
+          p pt = scale (handle pt) pt
+          handle :: Point2 (Exp Double) -> V2 (Exp Double)
+          handle pt = case mask of
+              Nothing      -> v
+              Just (VPS m) -> let
+                      Just rgba = Image.lookup "rgba" m
+                      unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+                      m' = unpackMat $ View.get rgba "rgba.r"
+                      Generator _ str = gen m'
+                      mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
+                      mult pt x = str (fmap A.floor pt) * x
+                  in (fmap (mult pt) v)
 
 hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
@@ -579,10 +639,10 @@ clampLuna (variable -> thLo) (variable -> thHi) (variable -> clampLo) (variable 
     onEachValue (clamp (Range thLo thHi) (Just $ Range clampLo clampHi))
 
 multiplyLuna :: Color.RGBA Double -> Image -> Image
-multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEach (*r) (*g) (*b) (*a)
+multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEach (*r) (*g) (*b) id -- (*a)
 
 gammaLuna :: Color.RGBA Double -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) = onEach (gamma r) (gamma g) (gamma b) (gamma a)
+gammaLuna (fmap variable -> Color.RGBA r g b a) = onEach (gamma r) (gamma g) (gamma b) id -- (gamma a)
 
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
 fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
@@ -679,9 +739,9 @@ gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB
            (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
            (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) =
              onEach (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
-                         (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
-                         (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
-                         (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+                    (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
+                    (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
+                    id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
 
 colorCorrectLuna' :: Color.RGBA Double
                   -> Color.RGBA Double
@@ -696,9 +756,10 @@ colorCorrectLuna' (fmap variable -> Color.RGBA saturationR saturationG saturatio
                   (fmap variable -> Color.RGBA gainR gainG gainB gainA)
                   (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA) img =
                       onEach (colorCorrect contrastR gammaR gainR offsetR)
-                                  (colorCorrect contrastG gammaG gainG offsetG)
-                                  (colorCorrect contrastB gammaB gainB offsetB)
-                                  (colorCorrect contrastA gammaA gainA offsetA) saturated
+                             (colorCorrect contrastG gammaG gainG offsetG)
+                             (colorCorrect contrastB gammaB gainB offsetB)
+                             id -- (colorCorrect contrastA gammaA gainA offsetA) saturated
+                             saturated
     where rgb = unsafeGetRGB img
 
           rgbRsaturated = M.map (A.lift1 (saturateOnHSV saturationR)) rgb
@@ -966,7 +1027,7 @@ gradeLunaColor (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpo
                = onEach (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
                         (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
                         (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
-                        (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+                        id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
 
 -- TODO: might be a good idea to try and do something better than creating a new Image
 onEach :: (A.Exp Double -> A.Exp Double)
@@ -981,14 +1042,38 @@ onEach fr fg fb fa img = Image.singleton view
           r = unpackMat $ View.get rgba "rgba.r"
           g = unpackMat $ View.get rgba "rgba.g"
           b = unpackMat $ View.get rgba "rgba.b"
-          --a = unpackMat $ View.get rgba "rgba.a"
-          Right (Just a) = View.get rgba "rgba.a"
+          a = unpackMat $ View.get rgba "rgba.a"
+          --Right (Just a) = View.get rgba "rgba.a"
           makeChan name f c = ChannelFloat name (FlatData $ M.map f c)
           view = View.append (makeChan "rgba.r" fr r)
                $ View.append (makeChan "rgba.g" fg g)
                $ View.append (makeChan "rgba.b" fb b)
-               $ View.append a
+               $ View.append (makeChan "rgba.a" fa a)
+               -- $ View.append a
+               $ View.empty "rgba"
+
+onEachMatrix :: (Matrix2 Double -> Matrix2 Double)
+             -> (Matrix2 Double -> Matrix2 Double)
+             -> (Matrix2 Double -> Matrix2 Double)
+             -> (Matrix2 Double -> Matrix2 Double)
+             -> Image
+             -> Image
+onEachMatrix fr fg fb fa img = Image.singleton view
+    where Just rgba = Image.lookup "rgba" img
+          unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+          r = unpackMat $ View.get rgba "rgba.r"
+          g = unpackMat $ View.get rgba "rgba.g"
+          b = unpackMat $ View.get rgba "rgba.b"
+          a = unpackMat $ View.get rgba "rgba.a"
+          --Right (Just a) = View.get rgba "rgba.a"
+          makeChan name f c = ChannelFloat name (FlatData $ f c)
+          view = View.append (makeChan "rgba.r" fr r)
+               $ View.append (makeChan "rgba.g" fg g)
+               $ View.append (makeChan "rgba.b" fb b)
+               $ View.append (makeChan "rgba.a" fa a)
+               -- $ View.append a
                $ View.empty "rgba"
 
 readFromEXRLuna :: FilePath -> IO Image
 readFromEXRLuna path = fmap fromJust $ readFromEXR path
+

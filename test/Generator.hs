@@ -379,13 +379,13 @@ maskedTransformationsTest = do
         p pt = translate (fmap (mult pt) v) pt
         mult pt x = A.round $ (str pt) * A.fromIntegral x
         Generator _ str = gen m
-        process :: Matrix2 Double -> DiscreteGenerator (Exp Double)
-        process = t . gen
-        genR = process r
-        genG = process g
-        genB = process b
-        genA = process a
-    testSaveRGBA' "out.png" (rasterizer genR) (rasterizer genG) (rasterizer genB) (rasterizer genA)
+        process :: Matrix2 Double -> Matrix2 Double -- DiscreteGenerator (Exp Double)
+        process = rasterizer . t . gen
+        --genR = process r
+        --genG = process g
+        --genB = process b
+        --genA = process a
+    testSaveRGBA' "out.png" (process r) (process g) (process b) (process a)
 
 main :: IO ()
 main = do
