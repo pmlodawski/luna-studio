@@ -6,8 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.Graphics.Image.IO.OpenEXR where
 
-import qualified Data.Array.Accelerate as A
-import           Control.Monad         (forM)
+import qualified Data.Array.Accelerate    as A
+import qualified Data.Array.Accelerate.IO as A
+import qualified Data.Vector.Storable     as SV
+import           Control.Monad            (forM)
+import           GHC.Float                as GHC (float2Double)
 
 import           Flowbox.Codec.EXR
 import           Flowbox.Graphics.Image.Channel
@@ -18,34 +21,40 @@ import qualified Flowbox.Graphics.Image.View    as View
 import           Flowbox.Math.Matrix            as M
 import           Flowbox.Prelude
 
-import GHC.Float
-
 
 
 readFromEXR :: FilePath -> IO (Maybe Image)
 readFromEXR path = do
-	exr <- openEXRFile path
-	case exr of
-		Just file -> do
-			partsNum <- getParts file
-			parts <- forM [0..partsNum-1] $ readEXRPart file
+    exr <- openEXRFile path
+    case exr of
+        Just file -> do
+            partsNum <- getParts file
+            parts <- forM [0..partsNum-1] $ readEXRPart file
 
-			return $ Just $ makeImage parts
-		_         -> return Nothing
+            return $ makeImage parts
+        _         -> return Nothing
 
 
 readEXRPart :: EXRFile -> Int -> IO View
 readEXRPart exr part = do
-	channelsNames <- getChannels exr part
-	channels <- forM channelsNames $ \name -> do
-		floatArray <- readScanlineChannelA exr part name
-		return $ ChannelFloat name (FlatData $ M.map realToFrac $ Raw floatArray)
+    channelsNames <- getChannels exr part
+    channels <- forM channelsNames $ \name -> do
+        floatArray <- readScanlineChannelA exr part name
+        let doubleArray = convertToDouble floatArray
+        return $ ChannelFloat name (FlatData $ Raw doubleArray)
 
-	partName <- maybe "" id <$> getPartName exr part
-	return $ makeView partName channels
+    partName <- maybe "" id <$> getPartName exr part
+    return $ makeView partName channels
 
 makeView :: String -> [Channel] -> View
 makeView name channels = foldr View.append (View.empty name) channels
 
-makeImage :: [View] -> Image
-makeImage (x:xs) = foldr Image.insert (Image.singleton x) xs
+makeImage :: [View] -> Maybe Image
+makeImage (x:xs) = Just $ foldr Image.insert (Image.singleton x) xs
+makeImage _      = Nothing
+
+convertToDouble :: A.Shape sh => A.Array sh Float -> A.Array sh Double
+convertToDouble matrix = doubleMatrix
+    where ((), floatVector) = A.toVectors matrix
+          doubleVector = SV.map GHC.float2Double floatVector
+          doubleMatrix = A.fromVectors (A.arrayShape matrix) ((), doubleVector)
