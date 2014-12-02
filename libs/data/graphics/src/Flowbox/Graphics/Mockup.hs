@@ -139,15 +139,15 @@ bilateral psigma csigma (variable -> size) = onEachChannel process
           process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
 offsetLuna :: Color.RGBA Double -> Image -> Image
-offsetLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (offset r) (offset g) (offset b) (offset a)
+offsetLuna (fmap variable -> Color.RGBA r g b a) = onEach (offset r) (offset g) (offset b) (offset a)
 
 contrastLuna :: Color.RGBA Double -> Image -> Image
-contrastLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (contrast r) (contrast g) (contrast b) (contrast a)
+contrastLuna (fmap variable -> Color.RGBA r g b a) = onEach (contrast r) (contrast g) (contrast b) (contrast a)
 
 exposureLuna :: Color.RGBA Double -> Color.RGBA Double -> Image -> Image
 exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
              (fmap variable -> Color.RGBA exR exG exB exA) =
-                 onImageRGBA (exposure blackpointR exR)
+                 onEach (exposure blackpointR exR)
                              (exposure blackpointG exG)
                              (exposure blackpointB exB)
                              (exposure blackpointA exA)
@@ -557,10 +557,10 @@ clampLuna (variable -> thLo) (variable -> thHi) (variable -> clampLo) (variable 
     onEachValue (clamp (Range thLo thHi) (Just $ Range clampLo clampHi))
 
 multiplyLuna :: Color.RGBA Double -> Image -> Image
-multiplyLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (*r) (*g) (*b) (*a)
+multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEach (*r) (*g) (*b) (*a)
 
 gammaLuna :: Color.RGBA Double -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) = onImageRGBA (gamma r) (gamma g) (gamma b) (gamma a)
+gammaLuna (fmap variable -> Color.RGBA r g b a) = onEach (gamma r) (gamma g) (gamma b) (gamma a)
 
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
 fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
@@ -656,7 +656,7 @@ gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB
            (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
            (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
            (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) =
-             onImageRGBA (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
+             onEach (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
                          (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
                          (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
                          (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
@@ -673,7 +673,7 @@ colorCorrectLuna' (fmap variable -> Color.RGBA saturationR saturationG saturatio
                   (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA)
                   (fmap variable -> Color.RGBA gainR gainG gainB gainA)
                   (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA) img =
-                      onImageRGBA (colorCorrect contrastR gammaR gainR offsetR)
+                      onEach (colorCorrect contrastR gammaR gainR offsetR)
                                   (colorCorrect contrastG gammaG gainG offsetG)
                                   (colorCorrect contrastB gammaB gainB offsetB)
                                   (colorCorrect contrastA gammaA gainA offsetA) saturated
