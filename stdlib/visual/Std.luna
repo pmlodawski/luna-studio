@@ -50,13 +50,13 @@ def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
 def Image.defocus self::Image radius::Int:
-    ```liftF1 (onEachChannel $ defocus #{radius}) #{self}```
+    ```liftF2 defocus #{radius} #{self}```
 
 def Image.motionBlur self::Image size::Int angle::Float:
-    ```liftF1 (onEachChannel $ motionBlur #{size} #{angle}) #{self}```
+    ```liftF3 motionBlur #{size} #{angle} #{self}```
 
 def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
-    ```liftF1 (onEachChannel $ bilateral #{psigma} #{csigma} #{size}) #{self}```
+    ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
 
 def Image.offset self::Image value::Color:
     ```liftF2 offsetLuna #{value} #{self}```
@@ -74,10 +74,10 @@ def Image.colorCorrect self::Image saturation::Color contrast::Color gamma::Colo
     ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
 
 def Image.saturate self::Image saturation::Color:
-    ```liftF1 (onEachRGB $ saturateLuna #{saturation}) #{self}```
+    ```liftF2 saturateLuna #{saturation} #{self}```
 
 def Image.posterize self::Image colors::Float:
-    ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
+    ```liftF2 posterizeLuna #{colors} #{self}```
 
 def Image.multiply val::Color:
     ```liftF2 multiplyLuna #{val} #{self}```
@@ -86,10 +86,55 @@ def Image.gamma val::Color:
     ```liftF2 gammaLuna #{val} #{self}```
 
 def Image.key self::Image mode a::Float b::Float c::Float d::Float:
-    ```liftF1 (keyerLuna #{mode} #{a} #{b} #{c} #{d}) #{self}```
+    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
 
 def Image.differenceKey self::Image offset::Float gain::Float background::Image:
-    ```liftF2 (differenceKeyerLuna #{offset} #{gain}) #{background} #{self}```
+    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
+
+def Image.premultiply self::Image:
+    ```liftF1 premultiplyLuna #{self}```
+
+def Image.unpremultiply self::Image:
+    ```liftF1 unpremultiplyLuna #{self}```
+
+def Image.invert self::Image:
+    ```liftF1 invertLuna #{self}```
+
+def Image.histEq self::Image bins::Int:
+    ```liftF2 histEqLuna #{bins} #{self}```
+
+alias Threshold = (Float, Float)
+alias Clamp = (Float, Float)
+
+#TODO: support for Maybe but handled in haskell
+def Image.clamp self::Image thresholds::Threshold clamps::Clamp:
+    # clamps powinno być Maybe ale wymaga pattern-matchingu klas
+    thresholdLo = thresholds.lo
+    thresholdHi = thresholds.hi
+    clampLo = clamps.lo
+    clampHi = clamps.hi
+    ```liftF5 clampLuna #{thresholdLo} #{thresholdHi} #{clampLo} #{clampHi} #{self}```
+
+def Image.erode self::Image size::Int:
+    ```liftF2 erodeLuna #{size} #{self}```
+
+def Image.dilate self::Image size::Int:
+    ```liftF2 dilateLuna #{size} #{self}```
+
+def Image.open self::Image size::Int:
+    ```liftF2 openLuna #{size} #{self}```
+
+def Image.close self::Image size::Int:
+    ```liftF2 closeLuna #{size} #{self}```
+
+def Image.radialBlur self::Image size::Int angle::Float:
+    ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
+
+def Image.edgeDetect self::Image edgeOperator:
+    ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
+
+def Image.bayer self::Image bits::Int:
+    ```liftF2 orderedDitherLuna #{bits} #{self}```
 
 class Point:
     x,y :: Double
@@ -104,13 +149,27 @@ def Image.cornerPin self::Image p1::Point p2::Point p3::Point p4::Point:
     p4x = p4.x
     p4y = p4.y
 
-    ```liftF1 (cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y}) #{self}```
+    ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
 def Image.blur self::Image kernelSize::Int:
-    ```liftF1 (gaussianLuna #{kernelSize}) #{self}```
+    ```liftF2 gaussianLuna #{kernelSize} #{self}```
 
 def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
-    ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
+    ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
+
+# VIEW
+
+def View.channel self::View name::String:
+    ```liftF2 View.get #{self} #{name}```
+
+def View.append self::View channel::String:
+    ```liftF2 View.append #{channel} #{self}```
+
+def View.remove self::View name::String:
+    ```liftF2 View.remove #{name} #{self}```
+
+def View.map self::View f:
+    ```liftF2 View.map #{f} #{self}```
 
 # GEOM
 
