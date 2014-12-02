@@ -10,17 +10,18 @@ module Flowbox.Graphics.Image.IO.OpenEXR (
 
 import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as A
+import           Data.Char                (toLower)
 import qualified Data.Vector.Storable     as SV
 import           Control.Monad            (forM)
 import           GHC.Float                as GHC (float2Double)
 
-import           Flowbox.Codec.EXR
+import           Flowbox.Codec.EXR              hiding (name)
 import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Image   (Image)
 import qualified Flowbox.Graphics.Image.Image   as Image
 import           Flowbox.Graphics.Image.View    (View)
 import qualified Flowbox.Graphics.Image.View    as View
-import           Flowbox.Math.Matrix            as M
+import           Flowbox.Math.Matrix            as M hiding (any, (++))
 import           Flowbox.Prelude
 
 
@@ -43,10 +44,24 @@ readEXRPart exr part = do
     channels <- forM channelsNames $ \name -> do
         floatArray <- readScanlineChannelA exr part name
         let doubleArray = convertToDouble floatArray
-        return $ ChannelFloat name (FlatData $ Raw doubleArray)
+        return $ ChannelFloat (convertToLunaName name) (FlatData $ Raw doubleArray)
 
-    partName <- maybe "" id <$> getPartName exr part
-    return $ makeView partName channels
+    let newChannels = addAlphaIfAbsent channels
+
+    partName <- maybe "rgba" id <$> getPartName exr part
+    return $ makeView partName newChannels
+
+addAlphaIfAbsent :: [Channel] -> [Channel]
+addAlphaIfAbsent channels@(x:_) = if alphaPresent then channels else alpha : channels
+    where alphaPresent = any (\chan -> name chan == "rgba.a") channels
+
+          ChannelFloat _ (FlatData matrix) = x
+
+          alpha = ChannelFloat "rgba.a" $ FlatData $ M.fill (M.shape matrix) 1.0
+
+convertToLunaName :: String -> String
+convertToLunaName [name] = "rgba." ++ [toLower name]
+convertToLunaName name   = name
 
 makeView :: String -> [Channel] -> View
 makeView name channels = foldr View.append (View.empty name) channels
