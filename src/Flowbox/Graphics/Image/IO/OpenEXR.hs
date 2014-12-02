@@ -15,13 +15,13 @@ import qualified Data.Vector.Storable     as SV
 import           Control.Monad            (forM)
 import           GHC.Float                as GHC (float2Double)
 
-import           Flowbox.Codec.EXR
+import           Flowbox.Codec.EXR              hiding (name)
 import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Image   (Image)
 import qualified Flowbox.Graphics.Image.Image   as Image
 import           Flowbox.Graphics.Image.View    (View)
 import qualified Flowbox.Graphics.Image.View    as View
-import           Flowbox.Math.Matrix            as M hiding ((++))
+import           Flowbox.Math.Matrix            as M hiding (any, (++))
 import           Flowbox.Prelude
 
 
@@ -46,8 +46,18 @@ readEXRPart exr part = do
         let doubleArray = convertToDouble floatArray
         return $ ChannelFloat (convertToLunaName name) (FlatData $ Raw doubleArray)
 
+    let newChannels = addAlphaIfAbsent channels
+
     partName <- maybe "rgba" id <$> getPartName exr part
-    return $ makeView partName channels
+    return $ makeView partName newChannels
+
+addAlphaIfAbsent :: [Channel] -> [Channel]
+addAlphaIfAbsent channels@(x:_) = if alphaPresent then channels else alpha : channels
+    where alphaPresent = any (\chan -> name chan == "rgba.a") channels
+
+          ChannelFloat _ (FlatData matrix) = x
+
+          alpha = ChannelFloat "rgba.a" $ FlatData $ M.fill (M.shape matrix) 1.0
 
 convertToLunaName :: String -> String
 convertToLunaName [name] = "rgba." ++ [toLower name]
