@@ -160,6 +160,47 @@ def Image.blur self::Image kernelSize::Int:
 def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
+class ```MergeMode```:
+    Atop
+    Average
+    ColorBurn
+    ColorDodge
+    ConjointOver
+    Copy
+    Difference
+    DisjointOver
+    DivideBySource
+    DivideByDestination
+    Exclusion
+    From
+    Geometric
+    HardLight
+    Hypot
+    In
+    Mask
+    Matte
+    Minus
+    Multiply
+    Out
+    Over
+    Overlay
+    Plus
+    Screen
+    SoftLight
+    SoftLightPegtop
+    SoftLightIllusions
+    Stencil
+    Under
+    XOR
+
+class ```AlphaBlend```:
+    Adobe
+    Custom
+
+def Image.merge self::Image mode::MergeMode alphaBlendMode::AlphaBlend img::Image:
+    ```liftF4 mergeLuna #{mode} #{alphaBlendMode} #{self} #{img}```
+
+
 # VIEW
 
 def View.channel self::View name::String:
