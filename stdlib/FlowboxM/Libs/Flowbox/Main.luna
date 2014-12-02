@@ -365,15 +365,23 @@ def Image.laplacian kernelSize centerVal sideVal:
 
 def Image.rotate phi:
     ```liftF2 rotateCenterLuna #{phi} #{self}```
+# def Image.rotate phi m:
+#     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
 
-def Image.translate boundary x y:
-    ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
+# def Image.translate boundary x y:
+#     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
+def Image.translate x y m:
+    ```liftF4 translateLuna #{x} #{y} #{m} #{self}```
 
 def Image.scaleTo boundary x y:
     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
+# def Image.scaleTo x y m:
+#     ```liftF4 scaleToLuna #{x} #{y} #{m} #{self}```
 
-def Image.scale boundary x y:
-    ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
+# def Image.scale boundary x y:
+#     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
+def Image.scale x y m:
+    ```liftF4 scaleLuna #{x} #{y} #{m} #{self}```
 
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```
@@ -582,7 +590,11 @@ def main:
     # lena.save "./out.png"
 
     jet = readEXR "./jet.exr"
+    translated = jet.translate (-182) (-60) Nothing
     jet.save "./jet.png"
+    translated.save "./jet-translated.png"
+    scaled = translated.scale 1.2 2.0 Nothing
+    scaled.save "./jet-scaled.png"
 
     # circul = Main.circular 720 480
     # circul.save "./out.png"

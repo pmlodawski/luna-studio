@@ -28,7 +28,7 @@ monosampler = transform $ fmap A.fromIntegral
 multisampler :: (Elt e, IsNum e, IsFloating e) => Matrix2 e -> CartesianGenerator (Exp e) (Exp e) -> DiscreteGenerator (Exp e)
 multisampler kernel = convolve msampler kernel
     where fi = fmap A.fromIntegral
-          msampler point offset = fi point + subpixel * fi offset 
+          msampler point offset = fi point + subpixel * fi offset
           Z :. h :. w = A.unlift $ shape kernel
           subpixel = Point2 (1 / (A.fromIntegral w - 1)) (1 / (A.fromIntegral h - 1))
 
