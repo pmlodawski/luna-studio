@@ -38,6 +38,7 @@ Library
                   distributive                     ,
                   either                           ,
                   errors                           ,
+                  filepath                         ,
                   flowbox-serialization            ,
                   flowbox-utils                    ,
                   imagemagick   >= 0.0.3.6         ,

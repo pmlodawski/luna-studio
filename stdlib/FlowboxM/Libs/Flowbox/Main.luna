@@ -172,6 +172,8 @@ class ```RGBA``` a:
 
 alias Color = RGBA Double
 
+alias ColorCC = (Color, Color, Color, Color, Color)
+
 class ```Gamma```:
     AlexaV3LogC
     Cineon
@@ -192,7 +194,7 @@ class ```Gamma```:
 #
 
 def load path:
-    ```autoLift1 loadImageLuna #{path}```
+    ```autoLift1 realReadLuna #{path}```
 
 def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```
@@ -227,9 +229,6 @@ def Image.insertView view:
 
 def imageSingleton view:
     ```liftF1 Image.singleton #{view}```
-
-def readEXR filePath:
-    ```autoLift1 readFromEXRLuna #{filePath}```
 
 
 
@@ -319,15 +318,16 @@ def Image.gamma val:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-def Image.colorCorrect masterSaturation masterContrast masterGamma masterGain masterOffset
-                       shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
-                       midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
-                       highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
-    ```liftF21 colorCorrectLuna' #{masterSaturation} #{masterContrast} #{masterGamma} #{masterGain} #{masterOffset}
-                                 #{shadowsSaturation} #{shadowsContrast} #{shadowsGamma} #{shadowsGain} #{shadowsOffset}
-                                 #{midtonesSaturation} #{midtonesContrast} #{midtonesGamma} #{midtonesGain} #{midtonesOffset}
-                                 #{highlightsSaturation} #{highlightsContrast} #{highlightsGamma} #{highlightsGain} #{highlightsOffset}
-                                 #{self}```
+def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
+    # ```liftF21 colorCorrectLuna' #{masterSaturation} #{masterContrast} #{masterGamma} #{masterGain} #{masterOffset}
+    #                              #{shadowsSaturation} #{shadowsContrast} #{shadowsGamma} #{shadowsGain} #{shadowsOffset}
+    #                              #{midtonesSaturation} #{midtonesContrast} #{midtonesGamma} #{midtonesGain} #{midtonesOffset}
+    #                              #{highlightsSaturation} #{highlightsContrast} #{highlightsGamma} #{highlightsGain} #{highlightsOffset}
+    #                              #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -378,14 +378,14 @@ def Image.laplacian kernelSize centerVal sideVal:
     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
 def Image.rotate phi:
-    ```liftF2 rotateCenterLuna #{phi} #{self}```
+    ```liftF2 turnCenterLuna #{phi} #{self}```
 # def Image.rotate phi m:
 #     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
 
 # def Image.translate boundary x y:
 #     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-def Image.translate x y m:
-    ```liftF4 translateLuna #{x} #{y} #{m} #{self}```
+def Image.translate x y:
+    ```liftF3 translateLuna #{x} #{y} #{self}```
 
 def Image.scaleTo boundary x y:
     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
@@ -394,8 +394,11 @@ def Image.scaleTo boundary x y:
 
 # def Image.scale boundary x y:
 #     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
-def Image.scale x y m:
-    ```liftF4 scaleLuna #{x} #{y} #{m} #{self}```
+def Image.scaleCenter x y:
+    ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+
+def Image.scale x y:
+    ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```
@@ -584,6 +587,8 @@ def View.map f:
 #                OTHER
 #
 
+def testCC a:
+    ```liftF1 testColorCC #{a}```
 
 
 #
@@ -594,25 +599,36 @@ def main:
     black = RGBA 0.0 0.0 0.0 1.0
     white = RGBA 1.0 1.0 1.0 1.0
     # gray  = RGBA 0.5 0.5 0.5 1.0
-    test = RGBA 0.1 0.1 0.1 0.1
     # lena = constant 640 480 gray
-    # lena = load "./test.png"
+    lena = load "./lena.png"
     # grade: blackpoint whitepoint lift gain multiply offset gamma
     # lena = lena.grade test white black white white black white
     # checker = load "./checker.png"
     # lena = lena.merge Plus Adobe checker
     # lena.save "./out.png"
 
-    jet = readEXR "./jet.exr"
-    jet = jet.colorCorrect white white white white test
-                           white white white white black
-                           white white white white black
-                           white white white white black
+    # jet = load "./jet.exr"
+    test = constant 512 512 (RGBA 0.045 0.045 0.045 1.0)
+    test.save "./input.png"
+    # test = load "./lena.png"
+    testC1 = (RGBA 0.1 0.1 0.1 1.0)
+    testC2 = (RGBA 2.0 2.0 2.0 1.0)
+    testC3 = (RGBA 3.0 3.0 3.0 1.0)
+    test = test.colorCorrect (white, white, white, white, testC1)
+                             (white, white, white, white, black)
+                             (white, white, white, white, black)
+                             (white, white, white, white, black)
     # translated = jet.translate (-182) (-60) noImgMask
-    jet.save "./jet.png"
+    test.save "./out.png"
     # translated.save "./jet-translated.png"
     # scaled = translated.scale 1.2 2.0 noImgMask
     # scaled.save "./jet-scaled.png"
+
+    # test = testCC (white, white, white, white, test)
+    # test.save "./test.png"
+
+    # jet = readEXR "./jet.exr"
+    # jet.save "./jet.png"
 
     # circul = Main.circular 720 480
     # circul.save "./out.png"
