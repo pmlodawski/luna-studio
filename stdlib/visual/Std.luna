@@ -44,10 +44,7 @@ def Double.acc:
 alias Path = String
 
 def load self::Std path::Path:
-    ```autoLift1 loadImageLuna #{path}```
-
-def readEXR self::Std filePath::Path:
-    ```autoLift1 readFromEXRLuna #{filePath}```
+    ```autoLift1 realReadLuna #{path}```
 
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```

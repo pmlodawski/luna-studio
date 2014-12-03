@@ -36,6 +36,7 @@ import           Math.Coordinate.Cartesian
 import           Math.Space.Space
 import           Math.Metric
 import           Linear                            (V2(..))
+import           System.FilePath                   as FilePath
 
 import qualified Flowbox.Graphics.Color                               as Color
 import qualified Flowbox.Graphics.Color.Companding                    as Gamma
@@ -1081,3 +1082,6 @@ onEachMatrix fr fg fb fa img = Image.singleton view
 readFromEXRLuna :: FilePath -> IO Image
 readFromEXRLuna path = fmap fromJust $ readFromEXR path
 
+realReadLuna :: FilePath -> IO Image
+realReadLuna path | ".exr" <- FilePath.takeExtension path = readFromEXRLuna path
+                  | otherwise                             = loadImageLuna path
