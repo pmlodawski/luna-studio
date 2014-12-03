@@ -286,6 +286,8 @@ class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
 alias Color = RGBA Double
+alias ColorBlack = RGBA Double
+alias ColorWhite = RGBA Double
 
 alias ColorCC = (Color, Color, Color, Color, Color)
 
