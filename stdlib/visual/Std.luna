@@ -104,16 +104,10 @@ def Image.histEq self::Image bins::Int:
     ```liftF2 histEqLuna #{bins} #{self}```
 
 alias Threshold = (Float, Float)
-alias Clamp = (Float, Float)
+alias Clamp = Maybe (Float, Float)
 
-#TODO: support for Maybe but handled in haskell
 def Image.clamp self::Image thresholds::Threshold clamps::Clamp:
-    # clamps powinno być Maybe ale wymaga pattern-matchingu klas
-    thresholdLo = thresholds.lo
-    thresholdHi = thresholds.hi
-    clampLo = clamps.lo
-    clampHi = clamps.hi
-    ```liftF5 clampLuna #{thresholdLo} #{thresholdHi} #{clampLo} #{clampHi} #{self}```
+    ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
 
 def Image.erode self::Image size::Int:
     ```liftF2 erodeLuna #{size} #{self}```

@@ -644,9 +644,11 @@ invertLuna = onEachValue invert
 colorMatrixLuna :: ColorMatrix Color.RGB Double -> Image -> Image
 colorMatrixLuna matrix = onEachRGB (A.lift1 $ (colorMatrix :: ColorMatrix Color.RGB Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)) matrix)
 
-clampLuna :: Double -> Double -> Double -> Double -> Image -> Image
-clampLuna (variable -> thLo) (variable -> thHi) (variable -> clampLo) (variable -> clampHi) =
-    onEachValue (clamp (Range thLo thHi) (Just $ Range clampLo clampHi))
+clampLuna :: (VPS Double, VPS Double) -> Maybe (VPS Double, VPS Double) -> Image -> Image
+clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =
+    case clamps of
+        Just (VPS clampLo, VPS clampHi) -> onEachValue $ clamp (Range thLo thHi) $ Just $ Range (variable clampLo) (variable clampHi)
+        _                               -> onEachValue $ clamp (Range thLo thHi) Nothing
 
 multiplyLuna :: Color.RGBA Double -> Image -> Image
 multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEach (*r) (*g) (*b) id -- (*a)

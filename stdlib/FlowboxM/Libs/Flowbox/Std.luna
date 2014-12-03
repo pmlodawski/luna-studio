@@ -266,14 +266,8 @@ def Image.gammaFromLinear gamma:
     # realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
     ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
 
-#TODO: support for Maybe but handled in haskell
 def Image.clamp thresholds clamps:
-    # clamps powinno być Maybe ale wymaga pattern-matchingu klas
-    thresholdLo = thresholds.lo
-    thresholdHi = thresholds.hi
-    clampLo = clamps.lo
-    clampHi = clamps.hi
-    ```liftF5 clampLuna #{thresholdLo} #{thresholdHi} #{clampLo} #{clampHi} #{self}```
+    ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
 
 def Image.offset value:
     ```liftF2 offsetLuna #{value} #{self}```
