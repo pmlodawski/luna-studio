@@ -379,8 +379,11 @@ def Image.scaleTo boundary x y:
 
 # def Image.scale boundary x y:
 #     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
+def Image.scaleCenter x y:
+    ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+
 def Image.scale x y:
-    ```liftF3 scaleLuna #{x} #{y} #{self}```
+    ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```

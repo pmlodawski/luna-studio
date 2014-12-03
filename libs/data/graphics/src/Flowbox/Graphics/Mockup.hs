@@ -29,6 +29,7 @@ import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Array.Sugar as A
 import           Data.Array.Accelerate.CUDA
 import qualified Data.Array.Accelerate.IO          as A
+import           Data.Bool
 import           Data.Char                         (toLower)
 import           Data.Maybe
 import qualified Data.Vector.Storable              as SV
@@ -446,8 +447,8 @@ scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterize
 --scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
 --    where f = fmap A.truncate . scale (V2 x y) . asFloating
 --scaleLuna :: Double -> Double -> Maybe (VPS Image) -> Image -> Image
-scaleLuna :: Double -> Double -> Image -> Image
-scaleLuna (variable -> x) (variable -> y) = onEachMatrix process process process process
+scaleLuna :: Bool -> Double -> Double -> Image -> Image
+scaleLuna centered (variable -> x) (variable -> y) = onEachMatrix process process process process
     where v = V2 x y
           mask = Nothing
           process :: Matrix2 Double -> Matrix2 Double
@@ -455,7 +456,8 @@ scaleLuna (variable -> x) (variable -> y) = onEachMatrix process process process
           --f = canvasT $ fmap A.truncate . scale (V2 x y) . asFloating
           gen = fromMatrix (A.Constant (0 :: Exp Double))
           t :: CartesianGenerator (Exp Double) (Exp Double) -> CartesianGenerator (Exp Double) (Exp Double)
-          t = onCenter (S.transform p)
+          t = bool tp (onCenter tp) centered
+          tp = S.transform p
           p :: Point2 (Exp Double) -> Point2 (Exp Double)
           p pt = scale (handle pt) pt
           handle :: Point2 (Exp Double) -> V2 (Exp Double)
