@@ -206,7 +206,7 @@ def noImgMask self::Std:
     ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
 def Image.rotate self::Image phi::Float:
-    ```liftF2 rotateCenterLuna #{phi} #{self}```
+    ```liftF2 turnCenterLuna #{phi} #{self}```
 
 def Image.translate self::Image x::Int y::Int:
     ```liftF3 translateLuna #{x} #{y} #{self}```

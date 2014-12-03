@@ -366,7 +366,7 @@ def Image.laplacian kernelSize centerVal sideVal:
     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
 def Image.rotate phi:
-    ```liftF2 rotateCenterLuna #{phi} #{self}```
+    ```liftF2 turnCenterLuna #{phi} #{self}```
 # def Image.rotate phi m:
 #     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
 

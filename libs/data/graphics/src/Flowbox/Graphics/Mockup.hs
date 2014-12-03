@@ -390,8 +390,11 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 
           noiseGenerator = scale (Grid width height) noise
 
-rotateCenterLuna :: Double -> Image -> Image
-rotateCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
+turnCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
+turnCenter = onCenter . rotate
+
+turnCenterLuna :: Double -> Image -> Image
+turnCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . turnCenter angle . nearest . fromMatrix (A.Constant 0)
 --rotateCenterLuna :: Double -> Maybe (VPS Image) -> Image -> Image
 --rotateCenterLuna (variable -> angle) mask = onEachMatrix process process process process
 --    where process :: Matrix2 Double -> Matrix2 Double
