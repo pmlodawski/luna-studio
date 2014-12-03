@@ -1,5 +1,7 @@
 @AllowOrphans
 
+# ```{-# OPTIONS_GHC -fcontext-stack25 #-}```
+
 import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
@@ -317,8 +319,15 @@ def Image.gamma val:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-def Image.colorCorrect saturation contrast gamma gain offset:
-    ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
+def Image.colorCorrect masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF21 colorCorrectLuna' #{masterSaturation} #{masterContrast} #{masterGamma} #{masterGain} #{masterOffset}
+                                 #{shadowsSaturation} #{shadowsContrast} #{shadowsGamma} #{shadowsGain} #{shadowsOffset}
+                                 #{midtonesSaturation} #{midtonesContrast} #{midtonesGamma} #{midtonesGain} #{midtonesOffset}
+                                 #{highlightsSaturation} #{highlightsContrast} #{highlightsGamma} #{highlightsGain} #{highlightsOffset}
+                                 #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -582,10 +591,10 @@ def View.map f:
 #
 
 def main:
-    # black = RGBA 0.0 0.0 0.0 1.0
-    # white = RGBA 1.0 1.0 1.0 1.0
+    black = RGBA 0.0 0.0 0.0 1.0
+    white = RGBA 1.0 1.0 1.0 1.0
     # gray  = RGBA 0.5 0.5 0.5 1.0
-    # test = RGBA 0.1 0.1 0.1 0.1
+    test = RGBA 0.1 0.1 0.1 0.1
     # lena = constant 640 480 gray
     # lena = load "./test.png"
     # grade: blackpoint whitepoint lift gain multiply offset gamma
@@ -595,11 +604,15 @@ def main:
     # lena.save "./out.png"
 
     jet = readEXR "./jet.exr"
-    translated = jet.translate (-182) (-60) noImgMask
+    jet = jet.colorCorrect white white white white test
+                           white white white white black
+                           white white white white black
+                           white white white white black
+    # translated = jet.translate (-182) (-60) noImgMask
     jet.save "./jet.png"
-    translated.save "./jet-translated.png"
-    scaled = translated.scale 1.2 2.0 noImgMask
-    scaled.save "./jet-scaled.png"
+    # translated.save "./jet-translated.png"
+    # scaled = translated.scale 1.2 2.0 noImgMask
+    # scaled.save "./jet-scaled.png"
 
     # circul = Main.circular 720 480
     # circul.save "./out.png"

@@ -56,7 +56,8 @@ genSection header generator d = if null d
 
 genModule :: HExpr -> [Source]
 genModule (HExpr.Module path ext imports body) = sources where
-    modcode =  genSection    "extensions"     genExt  ext
+    modcode =  genSection    "options"        genOpt  ["-fcontext-stack=25"]
+            ++ genSection    "extensions"     genExt  ext
             ++ sectionHeader "module"         ++ header
             ++ genSection    "imports"        genExpr imports
             ++ genSection    "body"           genExpr body
@@ -66,6 +67,8 @@ genModule (HExpr.Module path ext imports body) = sources where
                where header = "module " ++ join "." path ++ " where" ++ eol ++ eol
     sources = [Source path modcode]
 
+genOpt :: String -> String
+genOpt opt = "{-# OPTIONS_GHC " ++ opt ++ " #-}"
 
 genExt :: Extension -> String
 genExt ext = "{-# LANGUAGE " ++ show ext ++ " #-}"
