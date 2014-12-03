@@ -44,10 +44,7 @@ def Double.acc:
 alias Path = String
 
 def load self::Std path::Path:
-    ```autoLift1 loadImageLuna #{path}```
-
-def readFromEXR self::Std path::Path:
-    ```autoLift1 readFromEXRLuna #{path}```
+    ```autoLift1 realReadLuna #{path}```
 
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
@@ -206,16 +203,16 @@ def Image.merge self::Image mode::MergeMode alphaBlendMode::AlphaBlend img::Imag
 alias ImgMask = Maybe Image
 
 def noImgMask self::Std:
-    ```val (Nothing :: Maybe Image)```
+    ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
 def Image.rotate self::Image phi::Float:
     ```liftF2 rotateCenterLuna #{phi} #{self}```
 
-def Image.translate self::Image x::Int y::Int m::ImgMask:
-    ```liftF4 translateLuna #{x} #{y} #{m} #{self}```
+def Image.translate self::Image x::Int y::Int:
+    ```liftF3 translateLuna #{x} #{y} #{self}```
 
-def Image.scale self::Image x::Float y::Float m::ImgMask:
-    ```liftF4 scaleLuna #{x} #{y} #{m} #{self}```
+def Image.scale self::Image x::Float y::Float:
+    ```liftF3 scaleLuna #{x} #{y} #{self}```
 
 # VIEW
 

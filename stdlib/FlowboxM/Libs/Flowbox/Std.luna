@@ -187,7 +187,7 @@ class ```Gamma```:
 #
 
 def load path:
-    ```autoLift1 loadImageLuna #{path}```
+    ```autoLift1 realReadLuna #{path}```
 
 def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```
@@ -222,10 +222,6 @@ def Image.insertView view:
 
 def imageSingleton view:
     ```liftF1 Image.singleton #{view}```
-
-# TODO: fix loading EXRs - probably by converting the input array to a vector, then converting floats to doubles and back to an array with doubles
-def readEXR filePath:
-    ```autoLift1 readFromEXRLuna #{filePath}```
 
 
 
@@ -373,8 +369,8 @@ def Image.rotate phi:
 
 # def Image.translate boundary x y:
 #     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-def Image.translate x y m:
-    ```liftF4 translateLuna #{x} #{y} #{m} #{self}```
+def Image.translate x y:
+    ```liftF3 translateLuna #{x} #{y} #{self}```
 
 def Image.scaleTo boundary x y:
     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
@@ -383,8 +379,8 @@ def Image.scaleTo boundary x y:
 
 # def Image.scale boundary x y:
 #     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
-def Image.scale x y m:
-    ```liftF4 scaleLuna #{x} #{y} #{m} #{self}```
+def Image.scale x y:
+    ```liftF3 scaleLuna #{x} #{y} #{self}```
 
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```

@@ -36,6 +36,7 @@ import           Math.Coordinate.Cartesian
 import           Math.Space.Space
 import           Math.Metric
 import           Linear                            (V2(..))
+import           System.FilePath                   as FilePath
 
 import qualified Flowbox.Graphics.Color                               as Color
 import qualified Flowbox.Graphics.Color.Companding                    as Gamma
@@ -413,9 +414,11 @@ rotateCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler 
 
 --translateLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
 --translateLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . translate (V2 x y) . nearest . fromMatrix boundary
-translateLuna :: Int -> Int -> Maybe (VPS Image) -> Image -> Image
-translateLuna (variable -> x) (variable -> y) mask = onEachMatrix process process process process
+--translateLuna :: Int -> Int -> Maybe (VPS Image) -> Image -> Image
+translateLuna :: Int -> Int -> Image -> Image
+translateLuna (variable -> x) (variable -> y) = onEachMatrix process process process process
     where v = V2 x (-y)
+          mask = Nothing
           process :: Matrix2 Double -> Matrix2 Double
           process = rasterizer . t . gen
           gen = fromMatrix (A.Constant (0 :: Exp Double))
@@ -439,9 +442,11 @@ scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterize
 --scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
 --scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
 --    where f = fmap A.truncate . scale (V2 x y) . asFloating
-scaleLuna :: Double -> Double -> Maybe (VPS Image) -> Image -> Image
-scaleLuna (variable -> x) (variable -> y) mask = onEachMatrix process process process process
+--scaleLuna :: Double -> Double -> Maybe (VPS Image) -> Image -> Image
+scaleLuna :: Double -> Double -> Image -> Image
+scaleLuna (variable -> x) (variable -> y) = onEachMatrix process process process process
     where v = V2 x y
+          mask = Nothing
           process :: Matrix2 Double -> Matrix2 Double
           process = rasterizer . monosampler . t . interpolator (Conv.catmulRom) . gen
           --f = canvasT $ fmap A.truncate . scale (V2 x y) . asFloating
@@ -1077,6 +1082,10 @@ onEachMatrix fr fg fb fa img = Image.singleton view
 readFromEXRLuna :: FilePath -> IO Image
 readFromEXRLuna path = fmap fromJust $ readFromEXR path
 
+realReadLuna :: FilePath -> IO Image
+realReadLuna path | ".exr" <- FilePath.takeExtension path = readFromEXRLuna path
+                  | otherwise                             = loadImageLuna path
+
 type ColorD = Color.RGBA Double
 pattern ColorD r g b a = Color.RGBA r g b a
 type Color5 = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
@@ -1084,3 +1093,4 @@ type Color5 = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
 testColorCC :: Color5 -> Image
 testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
     constantLuna 512 512 $ Color.RGBA (r*x) (g*x) (b*x) (a*x)
+
