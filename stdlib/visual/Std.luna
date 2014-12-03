@@ -287,6 +287,8 @@ class ```RGBA``` a:
 
 alias Color = RGBA Double
 
+alias ColorCC = (Color, Color, Color, Color, Color)
+
 def constant self::Std width::Int height::Int color::Color:
     ```liftF3 constantLuna #{width} #{height} #{color}```
 
@@ -305,3 +307,6 @@ def Image.gammaToLinear self::Image gamma::Gamma:
 
 def Image.gammaFromLinear self::Image gamma::Gamma:
     ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
+
+def testCC self::Std a::ColorCC:
+    ```liftF1 testColorCC #{a}```

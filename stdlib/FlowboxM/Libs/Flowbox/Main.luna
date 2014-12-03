@@ -170,6 +170,8 @@ class ```RGBA``` a:
 
 alias Color = RGBA Double
 
+alias ColorCC = (Color, Color, Color, Color, Color)
+
 class ```Gamma```:
     AlexaV3LogC
     Cineon
@@ -575,6 +577,8 @@ def View.map f:
 #                OTHER
 #
 
+def testCC a:
+    ```liftF1 testColorCC #{a}```
 
 
 #
@@ -583,9 +587,9 @@ def View.map f:
 
 def main:
     # black = RGBA 0.0 0.0 0.0 1.0
-    # white = RGBA 1.0 1.0 1.0 1.0
+    white = RGBA 1.0 1.0 1.0 1.0
     # gray  = RGBA 0.5 0.5 0.5 1.0
-    # test = RGBA 0.1 0.1 0.1 0.1
+    test = RGBA 0.1 0.1 0.1 0.1
     # lena = constant 640 480 gray
     # lena = load "./test.png"
     # grade: blackpoint whitepoint lift gain multiply offset gamma
@@ -594,12 +598,11 @@ def main:
     # lena = lena.merge Plus Adobe checker
     # lena.save "./out.png"
 
-    jet = readEXR "./jet.exr"
-    translated = jet.translate (-182) (-60) noImgMask
-    jet.save "./jet.png"
-    translated.save "./jet-translated.png"
-    scaled = translated.scale 1.2 2.0 noImgMask
-    scaled.save "./jet-scaled.png"
+    test = testCC (white, white, white, white, test)
+    test.save "./test.png"
+
+    # jet = readEXR "./jet.exr"
+    # jet.save "./jet.png"
 
     # circul = Main.circular 720 480
     # circul.save "./out.png"
