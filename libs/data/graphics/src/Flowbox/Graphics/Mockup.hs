@@ -1088,3 +1088,12 @@ readFromEXRLuna path = fmap fromJust $ readFromEXR path
 realReadLuna :: FilePath -> IO Image
 realReadLuna path | ".exr" <- FilePath.takeExtension path = readFromEXRLuna path
                   | otherwise                             = loadImageLuna path
+
+type ColorD = Color.RGBA Double
+pattern ColorD r g b a = Color.RGBA r g b a
+type Color5 = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
+
+testColorCC :: Color5 -> Image
+testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
+    constantLuna 512 512 $ Color.RGBA (r*x) (g*x) (b*x) (a*x)
+

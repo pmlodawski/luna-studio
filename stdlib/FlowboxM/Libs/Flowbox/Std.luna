@@ -165,6 +165,8 @@ class ```RGBA``` a:
 
 alias Color = RGBA Double
 
+alias ColorCC = (Color, Color, Color, Color, Color)
+
 class ```Gamma```:
     AlexaV3LogC
     Cineon
@@ -566,3 +568,6 @@ def View.map f:
 #
 #                OTHER
 #
+
+def testCC a:
+    ```liftF1 testColorCC #{a}```
