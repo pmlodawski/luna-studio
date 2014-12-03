@@ -67,7 +67,7 @@ def Image.contrast self::Image value::Color:
 def Image.exposure self::Image blackpoint::Color ex::Color:
     ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
-def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color:
+def Image.grade self::Image blackpoint::ColorBlack whitepoint::ColorWhite lift::ColorBlack gain::ColorWhite multiply::ColorWhite offset::ColorBlack gamma::ColorWhite:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 def Image.colorCorrect self::Image saturation::Color contrast::Color gamma::Color gain::Color offset::Color:
