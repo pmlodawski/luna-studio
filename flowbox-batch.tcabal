@@ -31,7 +31,6 @@ Library
                   luna-core,
                   luna-distribution,
                   luna-initializer,
-                  luna-interpreter-old,
                   luna-parser,
                   luna-pass,
                   luna-protobuf,
