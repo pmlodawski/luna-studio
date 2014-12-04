@@ -41,6 +41,10 @@ nodeByID :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node
 nodeByID = Batch.getNode
 
 
+nodesByIDs :: [Node.ID] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(Node.ID, Maybe Node)]
+nodesByIDs = Batch.getNodes
+
+
 addNode :: Node -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node.ID
 addNode node bc libID projectID = do
     (graph, propertyMap) <- Batch.getGraphView bc libID projectID
