@@ -402,6 +402,20 @@ message Project {
                             required generated.proto.graph.Node node = 2;
                         }
                     }
+                    message LookupMany {
+                        message Request {
+                            repeated int32 nodeIDs   = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Status {
+                            required Request request = 1;
+                            repeated generated.proto.graph.Node found    = 2;
+                            repeated int32                      notFound = 3;
+                        }
+                    }
                     message Node {
                         message Add {
                             message Request {
