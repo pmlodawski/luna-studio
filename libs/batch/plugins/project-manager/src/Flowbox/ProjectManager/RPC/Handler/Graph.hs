@@ -8,6 +8,8 @@
 {-# LANGUAGE TemplateHaskell     #-}
 module Flowbox.ProjectManager.RPC.Handler.Graph where
 
+import qualified Data.Either as Either
+
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
@@ -23,6 +25,8 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Status                 as GetGraph
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Request             as Lookup
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Status              as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.LookupMany.Request             as LookupMany
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.LookupMany.Status              as LookupMany
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request           as NodeAdd
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update            as NodeAdd
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Request        as NodeModify
@@ -58,6 +62,21 @@ lookup request@(Lookup.Request tnodeID tbc tlibID tprojectID _) = do
         projectID = decodeP tprojectID
     node  <- BatchG.nodeByID nodeID bc libID projectID
     return $ Lookup.Status request (encode (nodeID, node))
+
+
+lookupMany :: LookupMany.Request -> RPC Context IO LookupMany.Status
+lookupMany request@(LookupMany.Request tnodeIDs tbc tlibID tprojectID _) = do
+    bc <- decodeE tbc
+    let nodeIDs   = decodeListP tnodeIDs
+        libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    nodes  <- BatchG.nodesByIDs nodeIDs bc libID projectID
+    let select (nodeID, Just node) = Right (nodeID, node)
+        select (nodeID, Nothing  ) = Left nodeID
+        items    = map select nodes
+        found    = Either.rights items
+        notFound = Either.lefts items
+    return $ LookupMany.Status request (encodeList found) (encodeListP notFound)
 
 
 nodeAdd :: NodeAdd.Request -> RPC Context IO NodeAdd.Update

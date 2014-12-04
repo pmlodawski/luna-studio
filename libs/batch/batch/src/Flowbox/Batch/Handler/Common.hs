@@ -280,6 +280,12 @@ getNode nodeID bc libraryID projectID = do
     (graphView, _) <- getGraphView bc libraryID projectID
     Graph.lab graphView nodeID <??> ("Wrong 'nodeID' = " ++ show nodeID)
 
+
+getNodes :: [Node.ID] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(Node.ID, Maybe Node)]
+getNodes nodeIDs bc libraryID projectID = do
+    (graphView, _) <- getGraphView bc libraryID projectID
+    return $ map (\nodeID -> (nodeID, Graph.lab graphView nodeID)) nodeIDs
+
 ---------------------------------------------------------------------------
 
 getMaxID :: Library.ID -> Project.ID -> Batch AST.ID

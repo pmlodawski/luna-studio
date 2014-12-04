@@ -40,6 +40,7 @@ projectLibraryAstFunctionGraphGetRequest               = "project.library.ast.fu
 projectLibraryAstFunctionGraphConnectRequest           = "project.library.ast.function.graph.connect.request"
 projectLibraryAstFunctionGraphDisconnectRequest        = "project.library.ast.function.graph.disconnect.request"
 projectLibraryAstFunctionGraphLookupRequest            = "project.library.ast.function.graph.lookup.request"
+projectLibraryAstFunctionGraphLookupManyRequest        = "project.library.ast.function.graph.lookupmany.request"
 projectLibraryAstFunctionGraphNodeAddRequest           = "project.library.ast.function.graph.node.add.request"
 projectLibraryAstFunctionGraphNodeRemoveRequest        = "project.library.ast.function.graph.node.remove.request"
 projectLibraryAstFunctionGraphNodeModifyRequest        = "project.library.ast.function.graph.node.modify.request"

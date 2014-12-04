@@ -76,6 +76,7 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryAstFunctionGraphConnectRequest           , call Topic.update GraphHandler.connect)
     , (Topic.projectLibraryAstFunctionGraphDisconnectRequest        , call Topic.update GraphHandler.disconnect)
     , (Topic.projectLibraryAstFunctionGraphLookupRequest            , call Topic.status GraphHandler.lookup)
+    , (Topic.projectLibraryAstFunctionGraphLookupManyRequest        , call Topic.status GraphHandler.lookupMany)
     , (Topic.projectLibraryAstFunctionGraphNodeAddRequest           , call Topic.update GraphHandler.nodeAdd)
     , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        , call Topic.update GraphHandler.nodeRemove)
     , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        , call Topic.update GraphHandler.nodeModify)
