@@ -35,8 +35,6 @@ import           Luna.Interpreter.Session.Data.VarName       (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName       as VarName
 import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
-import           Luna.Interpreter.Session.Memory             (MemoryManager)
-import qualified Luna.Interpreter.Session.Memory             as Memory
 import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager     as Manager
 import           Luna.Interpreter.Session.Session            (Session)

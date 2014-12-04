@@ -25,7 +25,7 @@ import qualified GHC
 import           Flowbox.Config.Config                      (Config)
 import qualified Flowbox.Config.Config                      as Config
 import           Flowbox.Prelude
-import           Flowbox.Source.Location                    (loc)
+import           Flowbox.Source.Location                    (Location, loc)
 import           Flowbox.System.FilePath                    (expand')
 import           Flowbox.System.Log.Logger                  as Logger
 import           Luna.Interpreter.Session.Env               (Env, Session, SessionST)
@@ -133,12 +133,12 @@ interceptSourceErrors ghc = do
     hoistEither r
 
 
-interceptErrors :: MGHC.Ghc a -> Session mm a
-interceptErrors ghc = do
+interceptErrors :: Location -> MGHC.Ghc a -> Session mm a
+interceptErrors loc' ghc = do
     sessionBackup <- lift2 GHC.getSession
     let handler :: Catch.SomeException -> MGHC.Ghc (Either Error a)
         handler otherErr = do
-            let errDat = Error.OtherError $(loc) $ show otherErr
+            let errDat = Error.OtherError loc' $ show otherErr
                 errMsg = Error.format errDat
             logger Logger.error errMsg
             GHC.setSession sessionBackup
@@ -159,7 +159,7 @@ atomically f = do
 runStmt :: String -> Session mm ()
 runStmt stmt = do
     logger trace stmt
-    result <- interceptErrors $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
+    result <- interceptErrors $(loc) $ GHC.runStmtWithLocation location 1 stmt GHC.RunToCompletion
     case result of
         GHC.RunOk _         -> return ()
         GHC.RunException ex -> left $ Error.GhcRunError $(loc) ex
@@ -169,7 +169,7 @@ runStmt stmt = do
 runDecls :: String -> Session mm ()
 runDecls decls = do
     logger trace decls
-    void $ interceptErrors $ GHC.runDeclsWithLocation location 1 decls
+    void $ interceptErrors $(loc) $ GHC.runDeclsWithLocation location 1 decls
 
 
 runAssignment :: String -> String -> Session mm ()
@@ -185,7 +185,7 @@ runAssignment' asigned asignee = do
 
 
 interpret :: Typeable a => String -> Session mm a
-interpret = interceptErrors . HEval.interpret
+interpret = interceptErrors $(loc) . HEval.interpret
 
 
 setHardcodedExtensions :: Session mm ()
