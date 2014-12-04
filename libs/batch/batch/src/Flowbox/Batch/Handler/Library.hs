@@ -119,7 +119,3 @@ runLibrary libraryID projectID = do
     --loggerIO debug exitMsg
     --return (library, stdOut ++ stdErr ++ "\n" ++ "Program exited with " ++ (show errorCode) ++ " code"))
     void $ liftIO $ Process.runCommand command
-
-
-interpretLibrary :: Library.ID -> Project.ID -> Batch ()
-interpretLibrary = Batch.interpretLibrary

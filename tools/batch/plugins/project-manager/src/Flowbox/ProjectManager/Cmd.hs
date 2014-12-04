@@ -11,9 +11,8 @@ import Flowbox.Prelude
 
 
 
-data Cmd = Run { autoInterpereter :: Bool
-               , verbose          :: Int
-               , noColor          :: Bool
+data Cmd = Run { verbose :: Int
+               , noColor :: Bool
                }
          | Version
          deriving Show
