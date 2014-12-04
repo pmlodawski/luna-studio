@@ -639,7 +639,7 @@ withAlpha f img = img'
           img' = Image.update (const $ Just view') "rgba" img
 
 invertLuna :: Image -> Image
-invertLuna = onEachValue invert
+invertLuna = onEach invert invert invert id
 
 colorMatrixLuna :: ColorMatrix Color.RGB Double -> Image -> Image
 colorMatrixLuna matrix = onEachRGB (A.lift1 $ (colorMatrix :: ColorMatrix Color.RGB Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)) matrix)
