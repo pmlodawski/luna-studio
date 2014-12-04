@@ -29,6 +29,7 @@ import Flowbox.Prelude
 
 
 loadImage :: FilePath -> IO (Either MagickWandException (A.Array A.DIM2 A.RGBA32))
+loadImage ""       = fail "Unable to load image from empty path"
 loadImage filename = tryMagick $ Magick.withMagickWandGenesis $ do
     (_, mWand) <- Magick.magickWand
     Magick.readImage mWand $ decodeString filename
