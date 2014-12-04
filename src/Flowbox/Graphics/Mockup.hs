@@ -1089,9 +1089,14 @@ onEachMatrix fr fg fb fa img = Image.singleton view
 readFromEXRLuna :: FilePath -> IO Image
 readFromEXRLuna path = fmap fromJust $ readFromEXR path
 
+extension :: FilePath -> (FilePath, String)
+extension path = (path, P.map toLower $ FilePath.takeExtension path)
+
+pattern ImageEXR path <- (extension -> (path, ".exr"))
+
 realReadLuna :: FilePath -> IO Image
-realReadLuna path | ".exr" <- FilePath.takeExtension path = readFromEXRLuna path
-                  | otherwise                             = loadImageLuna path
+realReadLuna (ImageEXR path) = readFromEXRLuna path
+realReadLuna path            = loadImageLuna path
 
 type ColorD = Color.RGBA Double
 pattern ColorD r g b a = Color.RGBA r g b a
