@@ -30,8 +30,8 @@ Library
                     flowbox-utils,
                     mtl,
                     optparse-applicative,
-                    protocol-buffers-descriptor-fork,
-                    protocol-buffers-fork,
+                    protocol-buffers-descriptor,
+                    protocol-buffers,
                     text,
                     transformers,
                     zeromq4-haskell >= 0.4

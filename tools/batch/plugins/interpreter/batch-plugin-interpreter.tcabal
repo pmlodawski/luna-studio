@@ -45,7 +45,7 @@ Executable interpreter
                     pipes,
                     pipes-concurrency,
                     pipes-safe,
-                    protocol-buffers-fork,
+                    protocol-buffers,
                     transformers,
                     zeromq4-haskell >= 0.4
 

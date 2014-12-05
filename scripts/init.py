@@ -214,7 +214,7 @@ def main():
 
     checkCabalPkg("gtk2hs-buildtools", installUsing=install_alex_happy, check="gtk2hsC2hs")
 
-    checkCabalPkg("hprotoc-fork", check="hprotoc") # FIXME [KL]: Temporary fix for hprotoc
+    checkCabalPkg("hprotoc")
 
     print_info ("Generating Protocol Buffers files using genproto")
     path = os.path.join(rootPath, 'scripts', 'genproto')

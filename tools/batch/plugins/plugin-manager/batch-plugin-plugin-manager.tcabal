@@ -33,7 +33,7 @@ Executable plugin-manager
                     MissingH,
                     mtl,
                     optparse-applicative,
-                    protocol-buffers-fork,
+                    protocol-buffers,
                     process >= 1.2,
                     text,
                     transformers,

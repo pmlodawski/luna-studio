@@ -48,8 +48,8 @@ Library
                   monad-control               ,
                   mtl                         ,
                   profunctors                 ,
-                  protocol-buffers-fork            ,
-                  protocol-buffers-descriptor-fork ,
+                  protocol-buffers            ,
+                  protocol-buffers-descriptor ,
                   resourcet                   ,
                   split                       ,
                   system-filepath             ,
@@ -260,7 +260,7 @@ Executable test_serialization
                   flowbox-serialization    ,
                   flowbox-utils            ,
                   JuicyPixels              ,
-                  protocol-buffers-fork    ,
+                  protocol-buffers    ,
                   split                    ,
                   vector
 

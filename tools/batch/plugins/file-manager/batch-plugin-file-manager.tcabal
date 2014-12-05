@@ -29,7 +29,7 @@ Executable file-manager
                     flowbox-utils,
                     mtl,
                     optparse-applicative,
-                    protocol-buffers-fork,
+                    protocol-buffers,
                     text,
                     transformers,
                     unix-compat,

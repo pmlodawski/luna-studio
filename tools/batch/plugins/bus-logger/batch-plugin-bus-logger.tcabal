@@ -30,7 +30,7 @@ Executable bus-logger
                     flowbox-utils,
                     mtl,
                     optparse-applicative,
-                    protocol-buffers-fork,
+                    protocol-buffers,
                     time,
                     transformers,
                     zeromq4-haskell >= 0.4

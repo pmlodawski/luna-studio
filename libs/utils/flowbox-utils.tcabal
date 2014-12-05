@@ -43,7 +43,7 @@ Library
                     pretty,
                     pretty-show,
                     process,
-                    protocol-buffers-fork,
+                    protocol-buffers,
                     split,
                     template-haskell,
                     text,
