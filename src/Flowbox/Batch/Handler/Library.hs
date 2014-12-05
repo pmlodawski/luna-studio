@@ -46,9 +46,9 @@ libraryByID :: Library.ID -> Project.ID -> Batch Library
 libraryByID = Batch.getLibrary
 
 
-createLibrary :: String -> UniPath -> Project.ID -> Batch (Library.ID, Library)
-createLibrary name path projectID = libManagerOp projectID $ \libManager -> do
-    let library                = Library.make name path [name]
+createLibrary :: String -> Version -> UniPath -> Project.ID -> Batch (Library.ID, Library)
+createLibrary name version path projectID = libManagerOp projectID $ \libManager -> do
+    let library                = Library.make name version path [name]
         (newLibManager, libraryID) = LibManager.insNewNode library libManager
     return (newLibManager, (libraryID, library))
 
