@@ -59,11 +59,12 @@ lookup request@(Lookup.Request tlibID tprojectID) = do
 
 
 create :: Create.Request -> RPC Context IO Create.Update
-create request@(Create.Request tname tpath tprojectID) = do
+create request@(Create.Request tname tversion tpath tprojectID) = do
     let projectID = decodeP tprojectID
         name      = decodeP tname
+        version   = decodeP tversion
         path      = decodeP tpath
-    newLibrary <- BatchL.createLibrary name path projectID
+    newLibrary <- BatchL.createLibrary name version path projectID
     updateNo <- Batch.getUpdateNo
     return $ Create.Update request (encode newLibrary) updateNo
 
