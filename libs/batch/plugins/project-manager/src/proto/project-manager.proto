@@ -19,6 +19,7 @@ import "name.proto";
 import "nodedefault.proto";
 import "project.proto";
 import "type.proto";
+import "version.proto";
 
 
 
@@ -111,6 +112,7 @@ message Project {
         message Create {
             message Request {
                 required string name      = 1;
+                required generated.proto.version.Version version = 4;
                 required string path      = 2;
                 required int32  projectID = 3;
             }
