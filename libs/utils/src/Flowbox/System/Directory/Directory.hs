@@ -13,7 +13,7 @@ module Flowbox.System.Directory.Directory (
 import           Control.Applicative
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.List              as List
-import           System.Directory       hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getCurrentDirectory, getTemporaryDirectory, removeDirectoryRecursive, removeFile, renameDirectory, renameFile, setCurrentDirectory)
+import           System.Directory       hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getCurrentDirectory, getDirectoryContents, getTemporaryDirectory, removeDirectoryRecursive, removeFile, renameDirectory, renameFile, setCurrentDirectory)
 import qualified System.Directory       as Directory
 import qualified System.IO              as IO
 #ifdef mingw32_HOST_OS
@@ -87,6 +87,12 @@ getCurrentDirectory :: IO UniPath
 getCurrentDirectory = UniPath.fromUnixString <$> Directory.getCurrentDirectory
 
 
+getDirectoryContents :: UniPath -> IO [FilePath]
+getDirectoryContents upath = do
+    path <- UniPath.expand upath
+    Directory.getDirectoryContents $ UniPath.toUnixString path
+
+
 getDirectoryRecursive :: UniPath -> IO [UniPath]
 getDirectoryRecursive upath = do
     path  <- UniPath.expand upath
@@ -107,7 +113,7 @@ getTmpDirectoryWithPrefix :: String -> IO UniPath
 getTmpDirectoryWithPrefix prefix = do
     systemTmp <- getTemporaryDirectory
     guid      <- Random.newGUID
-    return $ UniPath.append (if null prefix then guid else prefix ++ "-" ++ guid) 
+    return $ UniPath.append (if null prefix then guid else prefix ++ "-" ++ guid)
                             systemTmp
 
 
