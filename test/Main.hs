@@ -18,6 +18,7 @@ import           Text.Show.Pretty
 import qualified Flowbox.Batch.Project.Project                                 as Project
 import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
+import           Flowbox.Data.Version                                          ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                        as UniPath
@@ -150,7 +151,7 @@ readSource source = eitherStringToM' $ runEitherT $ do
     _aliasInfo        <- EitherT $ Analysis.Alias.run ast
 
     let path = UniPath.fromUnixString "."
-    return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty) def
+    return $ LibManager.insNewNode (Library "Main" def path ast PropertyMap.empty) def
 
 
 main1 :: IO ()
