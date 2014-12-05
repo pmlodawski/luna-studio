@@ -42,8 +42,8 @@ Library
                   parsec,
                   pretty-show,
                   process,
-                  protocol-buffers-fork,
-                  protocol-buffers-descriptor-fork,
+                  protocol-buffers,
+                  protocol-buffers-descriptor,
                   text,
                   timeit,
                   transformers
