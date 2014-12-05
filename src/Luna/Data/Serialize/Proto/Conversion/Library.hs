@@ -26,6 +26,7 @@ import qualified Generated.Proto.Library.Library.PropertyMap.KeyValue as Gen
 import qualified Luna.AST.Common                                      as AST
 import           Luna.Data.Serialize.Proto.Conversion.Attributes      ()
 import           Luna.Data.Serialize.Proto.Conversion.Module          ()
+import           Luna.Data.Serialize.Proto.Conversion.Version         ()
 import           Luna.Graph.Properties                                (Properties)
 import           Luna.Lib.Lib                                         (Library (Library))
 import qualified Luna.Lib.Lib                                         as Library
@@ -38,17 +39,18 @@ instance ConvertPure Library.ID Int32 where
 
 
 instance Convert (Library.ID, Library) Gen.Library where
-    encode (i, Library name path ast propertyMap) =
-        Gen.Library (encodePJ i) (encodePJ name) (encodePJ path) (encodeJ ast) (encodeJ propertyMap)
-    decode (Gen.Library mtid mtname mtpath mtast mtpropertyMap) = do
+    encode (i, Library name version path ast propertyMap) =
+        Gen.Library (encodePJ i) (encodePJ name) (encodePJ version) (encodePJ path) (encodeJ ast) (encodeJ propertyMap)
+    decode (Gen.Library mtid mtname mtversion mtpath mtast mtpropertyMap) = do
         i            <- decodeP <$> mtid   <?> "Failed to decode Library: 'id' field is missing"
         name         <- decodeP <$> mtname <?> "Failed to decode Library: 'name' field is missing"
+        version      <- decodeP <$> mtversion <?> "Failed to decode Library: 'version' field is missing"
         path         <- decodeP <$> mtpath <?> "Failed to decode Library: 'path' field is missing"
         tpropertyMap <- mtpropertyMap <?> "Failed to decode Library: 'propertyMap' field is missing"
         tast         <- mtast   <?> "Failed to decode Library: 'ast' field is missing"
         ast          <- decode tast
         propertyMap  <- decode tpropertyMap
-        pure (i, Library name path ast propertyMap)
+        pure (i, Library name version path ast propertyMap)
 
 
 instance Convert (IntMap Properties) Gen.PropertyMap where
