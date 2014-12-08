@@ -10,7 +10,3 @@ module Flowbox.Graphics.Image.View (
 ) where
 
 import Flowbox.Graphics.Image.View.Internal     as X
-import Flowbox.Graphics.Image.View.RGB          as X
-import Flowbox.Graphics.Image.View.RGBA         as X
-import Flowbox.Graphics.Image.View.Convert.RGB  as X
-import Flowbox.Graphics.Image.View.Convert.RGBA as X

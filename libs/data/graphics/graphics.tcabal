@@ -1,5 +1,5 @@
 Name:                   flowbox-graphics
-Version:                0.15.0.0
+Version:                0.16.0.0
 Cabal-version:          >= 1.20
 Tested-with:            GHC == 7.8.*
 Build-type:             Custom
@@ -21,42 +21,44 @@ Library
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*     ,
-                  accelerate     == 0.15.*    ,
-                  accelerate-io  == 0.15.*    ,
-                  accelerate-fft == 0.15.*    ,
-                  algebraic       > 0.1       ,
-                  bmp                         ,
-                  bytestring                  ,
-                  cairo                       ,
-                  containers                  ,
-                  cubicbezier                 ,
-                  diagrams-cairo              ,
-                  diagrams-lib                ,
-                  distributive                ,
-                  either                      ,
-                  errors                      ,
-                  flowbox-serialization       ,
-                  flowbox-utils               ,
-                  imagemagick   >= 0.0.3.6    ,
-                  JuicyPixels                 ,
-                  lifted-base                 ,
-                  linear                      ,
-                  linear-accelerate           ,
-                  monad-control               ,
-                  mtl                         ,
-                  profunctors                 ,
-                  protocol-buffers            ,
-                  protocol-buffers-descriptor ,
-                  resourcet                   ,
-                  split                       ,
-                  system-filepath             ,
-                  template-haskell            ,
-                  transformers                ,
-                  vector                      ,
-                  vector-space                ,
+  Build-Depends:  base           == 4.7.*          ,
+                  accelerate     == 0.16.*         ,
+                  accelerate-io  == 0.16.*         ,
+                  accelerate-fft == 0.16.*         ,
+                  algebraic       > 0.1            ,
+                  bmp                              ,
+                  bytestring                       ,
+                  cairo                            ,
+                  containers                       ,
+                  cubicbezier                      ,
+                  diagrams-cairo                   ,
+                  diagrams-lib                     ,
+                  distributive                     ,
+                  either                           ,
+                  errors                           ,
+                  filepath                         ,
+                  flowbox-serialization            ,
+                  flowbox-utils                    ,
+                  imagemagick   >= 0.0.3.6         ,
+                  JuicyPixels                      ,
+                  lifted-base                      ,
+                  linear                           ,
+                  linear-accelerate                ,
+                  monad-control                    ,
+                  mtl                              ,
+                  openexr                          ,
+                  profunctors                      ,
+                  protocol-buffers-fork            ,
+                  protocol-buffers-descriptor-fork ,
+                  resourcet                        ,
+                  split                            ,
+                  system-filepath                  ,
+                  template-haskell                 ,
+                  transformers                     ,
+                  vector                           ,
+                  vector-space                     ,
                   luna-target-ghchs
 
 -- == test generator ==
@@ -78,7 +80,7 @@ Executable test_generator
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
   Build-Depends:  base           == 4.7.*  ,
                   linear                   ,
@@ -112,7 +114,7 @@ Executable test_curves
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
   Build-Depends:  base           == 4.7.*  ,
                   linear                   ,
@@ -129,7 +131,7 @@ Executable test_curves
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
 -- == test func model ==
 
@@ -150,7 +152,7 @@ Executable test_func
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
   Build-Depends:  base           == 4.7.*  ,
                   linear                   ,
@@ -165,7 +167,7 @@ Executable test_func
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
 -- == test merge ==
 
@@ -184,7 +186,7 @@ Executable test_merge
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
   Build-Depends:  base           == 4.7.*  ,
                   linear                   ,
@@ -200,7 +202,7 @@ Executable test_merge
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
 -- == test color ==
 
@@ -219,7 +221,7 @@ Executable test_color
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
   Build-Depends:  base           == 4.7.*  ,
                   linear                   ,
@@ -249,7 +251,7 @@ Executable test_serialization
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
   Build-Depends:  algebraic                ,
                   accelerate               ,
@@ -282,7 +284,7 @@ Executable test_vector_rasterization
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
-    Build-Depends:      accelerate-cuda  == 0.15.*
+    Build-Depends:      accelerate-cuda  == 0.16.*
 
   Build-Depends:  base           == 4.7.*  ,
                   linear                   ,

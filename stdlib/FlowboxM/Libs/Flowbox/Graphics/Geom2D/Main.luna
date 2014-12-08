@@ -10,6 +10,9 @@ class ```Bool```:
 def Int.- a:
     ```liftF2 (-) #{self} #{a}```
 
+def Double.- a:
+    ```liftF2 (-) #{self} #{a}```
+
 class ```Maybe``` a:
     Just:
         unwarp :: a
@@ -73,9 +76,9 @@ def test obj:
 
 def main:
     print "- - - vector rasterization test - - -"
-    points = [ controlPoint (point 212 209) Nothing (Just $ point (211.-212) (114.-209))
-             , controlPoint (point 338 210) (Just $ point (329.-338) (109.-210)) (Just $ point (450.-338) (211.-210))
-             , controlPoint (point 343 330) (Just $ point (456.-343) (331.-330)) Nothing
+    points = [ controlPoint (point 212.0 209.0) Nothing (Just $ point (211.0.-212.0) (114.0.-209.0))
+             , controlPoint (point 338.0 210.0) (Just $ point (329.0.-338.0) (109.0.-210.0)) (Just $ point (450.0.-338.0) (211.0.-210.0))
+             , controlPoint (point 343.0 330.0) (Just $ point (456.0.-343.0) (331.0.-330.0)) Nothing
              ]
     m = mask (path True points) Nothing # second list is empty if the paths are the same
 

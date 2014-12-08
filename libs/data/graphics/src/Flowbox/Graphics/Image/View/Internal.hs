@@ -6,15 +6,22 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Graphics.Image.View.Internal (
-    View(..),
+    View,
     Name,
     ChanTree,
     Select,
     get,
-    append
+    append,
+    name,
+    channels,
+    set,
+    empty,
+    map,
+    remove
 ) where
 
-import           Data.Set        hiding (insert, map)
+import           Data.Set        hiding (map, empty)
+import           Data.List       as List (foldl')
 import           Data.List.Split
 
 import           Flowbox.Data.Channel           (ChannelTree(..))
@@ -23,37 +30,37 @@ import           Flowbox.Graphics.Image.Error   (Error(..))
 import qualified Flowbox.Graphics.Image.Error   as Image
 import           Flowbox.Graphics.Image.Channel (Channel(..))
 import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Prelude                as P hiding (set, map)
+import           Flowbox.Prelude                as P hiding (set, map, empty)
 
 
 
-type Name = String
+type Name     = String
 type ChanTree = ChannelTree Channel.Name Channel
-type Select = Set Name
+type Select   = Set Name
 
-class View v where
-    name     :: v -> Name -- Lens' v Name
-    channels :: v -> ChanTree -- Lens' v (ChannelTree Channel.Name Channel)
-    --viewBounds :: Bounds
-    --pixelAspectRatio :: AspectRatio
-    --
-    empty    :: Name -> v
-    set      :: ChanTree -> v -> v
-    map      :: (Channel -> Channel) -> v -> v
-    map f v = set (fmap f (channels v)) v
+data View = View { name     :: Name
+                 , channels :: ChanTree
+                 }
+          deriving (Show)
 
-get :: View v => v -> Channel.Name -> Image.Result (Maybe Channel)
+set :: ChanTree -> View -> View
+set t (View name _) = View name t
+
+empty :: Name -> View
+empty name = View name ChanTree.empty
+
+map :: (Channel -> Channel) -> View -> View
+map f v = set (fmap f (channels v)) v
+
+get :: View -> Channel.Name -> Image.Result (Maybe Channel)
 get v descriptor = case result of
     Left _    -> Left $ ChannelLookupError descriptor
     Right val -> Right val
-    where result  = P.foldr f z nodes >>= ChanTree.get
-          f p acc = acc >>= ChanTree.lookup p
-          z       = ChanTree.zipper $ channels v
-          nodes   = splitOn "." descriptor
+    where result = gotoChannel descriptor v >>= ChanTree.get
 
-append :: View view => Channel -> view -> view
+append :: Channel -> View -> View
 append chan v = set (ChanTree.tree result') v
-    where result = P.foldl go z (init nodes) >>= insert (last nodes) (Just chan) >>= ChanTree.top
+    where result  = List.foldl' go z (init nodes) >>= insert (last nodes) (Just chan) >>= ChanTree.top
           result' = case result of
               Right res -> res
               Left err  -> errorShitWentWrong $ "append (" ++ show err ++ ") "
@@ -71,7 +78,21 @@ append chan v = set (ChanTree.tree result') v
           nodes      = splitOn "." descriptor
           descriptor = Channel.name chan
 
-mapWithWhitelist :: View view => (Channel -> Channel) -> Channel.Select -> view -> view
+remove :: Name -> View -> Image.Result View
+remove name view = case gotoChannel name view of
+    Left _    -> Left $ ChannelLookupError name
+    Right val -> case ChanTree.delete val of
+        Left _     -> Left $ ChannelLookupError "can it really happen?"
+        Right tree -> pure $ set (ChanTree.tree $ ChanTree.top' tree) view
+
+gotoChannel :: Name -> View -> ChanTree.ZipperResult Channel.Name Channel
+gotoChannel name view = result
+    where result        = List.foldl' go startingPoint nodes
+          go tree name' = tree >>= ChanTree.lookup name'
+          startingPoint = ChanTree.zipper $ channels view
+          nodes         = splitOn "." name
+
+mapWithWhitelist :: (Channel -> Channel) -> Channel.Select -> View -> View
 mapWithWhitelist f whitelist = map lambda
     where lambda chan = if Channel.name chan `elem` whitelist
                             then f chan
