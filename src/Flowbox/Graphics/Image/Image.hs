@@ -20,14 +20,12 @@ import           Flowbox.Graphics.Image.Error
 import qualified Flowbox.Graphics.Image.View  as View
 import           Flowbox.Prelude              hiding (lookup, map, sequence, views)
 
-
-
-data Image view = Image { _views       :: Map.Map View.Name view
-                        , _defaultView :: View.Select
-                        } deriving (Show)
+data Image = Image { _views       :: Map.Map View.Name View.View
+                   , _defaultView :: View.Select
+                   } deriving (Show)
 makeLenses ''Image
 
-image :: View.View v => Map.Map View.Name v -> View.Select -> Either Error (Image v)
+image :: Map.Map View.Name View.View -> View.Select -> Either Error Image
 image imgviews defaultview = if defaultview `Set.isSubsetOf` Map.keysSet imgviews
                                 then newimg
                                 else Left InvalidMap
@@ -35,27 +33,26 @@ image imgviews defaultview = if defaultview `Set.isSubsetOf` Map.keysSet imgview
           newimg = if keysMatchingNames then return $ Image imgviews defaultview
                                         else Left InvalidMap
 
-singleton :: View.View v => v -> Image v
+singleton :: View.View -> Image
 singleton view = Image (Map.singleton name view) (Set.singleton name)
     where name = View.name view
 
-insert :: View.View v => View.Name -> v -> Image v -> Either Error (Image v)
-insert key value img = if View.name value == key
-                             then return $ over views (Map.insert key value) img
-                             else Left InvalidMap
+insert :: View.View -> Image -> Image
+insert view img = over views (Map.insert (View.name view) view) img
 
-delete :: View.View v => View.Name -> Image v -> Image v
+-- FIXME[MM]: shouldn't it throw if view is non-existant?
+delete :: View.Name -> Image -> Image
 delete key img = Image (Map.delete key $ img ^. views)
                        (Set.delete key $ img ^. defaultView)
 
-lookup :: View.View v => View.Name -> Image v -> Maybe v
+lookup :: View.Name -> Image -> Maybe View.View
 lookup key img = Map.lookup key (img ^. views)
 
-update :: View.View v => (v -> Maybe v) -> View.Name -> Image v -> Either Error (Image v)
+update :: (View.View -> Maybe View.View) -> View.Name -> Image -> Image
 update f key img = case lookup key img >>= f of
-    Just newval -> insert key newval img
-    Nothing     -> return $ delete key img
+    Just newval -> insert newval img
+    Nothing     -> delete key img
 
-map :: View.View v => (v -> v) -> Image v -> Image v --Either Error (Image v)
-map lambda (Image vs dv) = Image (Map.map lambda $ vs) dv
+map :: (View.View -> View.View) -> Image -> Image --Either Error (Image v)
+map lambda (Image vs dv) = Image (Map.map lambda vs) dv
 --map lambda img = image (Map.map lambda $ img ^.views) (img ^. defaultView)

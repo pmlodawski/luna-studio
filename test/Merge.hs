@@ -22,16 +22,16 @@ import Utils
 
 merge :: FilePath -> BlendMode Double -> AlphaBlend -> IO ()
 merge file mode alphaBlending = do
-    (r1, g1, b1, a1) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "lena_premult.png"
-    (r2, g2, b2, a2) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "checker_premult.png"
-    let (r, g, b, a) = map4 (rasterizer . transform (fmap A.fromIntegral)) $ threeWayMerge' r1 g1 b1 r2 g2 b2 a1 a2 alphaBlending mode
+    (r1, g1, b1, a1) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/lena_alpha.png"
+    (r2, g2, b2, a2) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/checker.png"
+    let (r, g, b, a) = map4 (rasterizer . monosampler) $ threeWayMerge' alphaBlending mode r1 g1 b1 r2 g2 b2 a1 a2
     testSaveRGBA'' file r g b a
 
 merge' :: FilePath -> ComplicatedBlendMode Double -> IO ()
 merge' file mode = do
-    (r1, g1, b1, a1) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "lena_premult.png"
-    (r2, g2, b2, a2) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "checker_premult.png"
-    let (r, g, b, a) = map4 (rasterizer . transform (fmap A.fromIntegral)) $ threeWayMerge r1 g1 b1 r2 g2 b2 a1 a2 mode
+    (r1, g1, b1, a1) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/lena_alpha.png"
+    (r2, g2, b2, a2) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/checker.png"
+    let (r, g, b, a) = map4 (rasterizer . monosampler) $ threeWayMerge mode r1 g1 b1 r2 g2 b2 a1 a2
     testSaveRGBA'' file r g b a
 
 simpleMerges :: [BlendMode Double]
@@ -120,6 +120,7 @@ advancedMergesNames = [
 main :: IO ()
 main = do
     putStrLn "Merge test"
+
     putStrLn "Simple merges with Adobe"
     forM_ (zip simpleMergesNames simpleMerges) $ \(m, n) -> do
         merge (m ++ ".png") n Adobe
@@ -131,3 +132,4 @@ main = do
     putStrLn "Complicated merges"
     forM_ (zip advancedMergesNames advancedMerges) $ \(m, n) -> do
         merge' (m ++ ".png") n
+

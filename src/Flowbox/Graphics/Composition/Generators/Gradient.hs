@@ -21,7 +21,7 @@ import Math.Metric               hiding (metric)
 
 
 
-colorMapper :: forall a b c x . (Elt a, Elt b, Elt c, IsFloating a, Num a, Ord a) 
+colorMapper :: forall a b c x . (Elt a, Elt b, Elt c, IsFloating a, Num a, Ord a)
             => [Tick a b c] -> (Exp a -> Exp b -> Exp c -> Exp b -> Exp c -> Exp a) -> Generator x (Exp a) -> Generator x (Exp a)
 colorMapper ticks weightFun shapeGenerator = Generator (canvas shapeGenerator) $ \pixel ->
     let zippedTicks = A.zip accticks $ A.tail accticks
@@ -34,7 +34,7 @@ colorMapper ticks weightFun shapeGenerator = Generator (canvas shapeGenerator) $
 
         findColor acc positions = (gradPos >=* aPos &&* gradPos A.<* nPos) ? (newColor, acc)
             where (actualPos, nextPos) = unlift positions :: (Exp (Tick a b c), Exp (Tick a b c))
-                  aPos = unlift actualPos ^. position 
+                  aPos = unlift actualPos ^. position
                   aVal = unlift actualPos ^. value
                   aWei = unlift actualPos ^. weight
 
@@ -65,3 +65,6 @@ conicalShape = unitGenerator $ \pixel -> let res = 1 - Cartesian.uncurry atan2 p
 
 linearShape :: Fractional a => CartesianGenerator a a
 linearShape = unitGenerator $ \(Point2 x _) -> x
+
+gaussianShape :: Floating a => CartesianGenerator a a
+gaussianShape = unitGenerator $ \(Point2 x _) -> cos x

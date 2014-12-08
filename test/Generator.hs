@@ -6,7 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE ViewPatterns        #-}
+{-# OPTIONS_GHC -fcontext-stack=200 #-}
 
 module Main where
 
@@ -24,11 +26,14 @@ import Flowbox.Graphics.Composition.Generators.Stencil    as Stencil
 import Flowbox.Graphics.Composition.Generators.Structures as S
 import Flowbox.Graphics.Composition.Generators.Transform
 import Flowbox.Graphics.Composition.Dither
-import Flowbox.Graphics.Image.Color                       (LinearGenerator(..), crosstalk)
-import Flowbox.Geom2D.CubicBezier
+import Flowbox.Graphics.Image.Color (LinearGenerator(..), crosstalk)
+import Flowbox.Geom2D.Accelerate.CubicBezier
 import Flowbox.Geom2D.Accelerate.CubicBezier.Solve
-import Flowbox.Math.Matrix                                as M hiding (shape, size)
-import Flowbox.Graphics.Utils                             hiding (gain)
+import Flowbox.Geom2D.CubicBezier
+
+import Flowbox.Math.Matrix as M
+import Flowbox.Math.BitonicSorterGenerator
+import Flowbox.Graphics.Utils
 
 import qualified Data.Array.Accelerate              as A
 import           Data.Array.Accelerate.Data.Complex ()
@@ -63,6 +68,7 @@ gradientsTest = do
 
     let alphas = [Tick 0.0 1.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
     let gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
+    let grays  = [Tick 0.0 0.0 1.0, Tick 0.5 1.0 1.0, Tick 1.0 0.0 1.0] :: [Tick Float Float Float]
 
     let weightFun tickPos val1 _weight1 val2 _weight2 = mix tickPos val1 val2
     let mapper = flip colorMapper weightFun
@@ -75,11 +81,13 @@ gradientsTest = do
     let grad6 t = center $ mapper t $ radialShape (Minkowski 3)
     let grad7 t = mapper t $ linearShape
     let grad8   = center . rotate (45 * pi / 180) $ mapper gray conicalShape
+    let grad9 t = center $ mapper t $ gaussianShape
 
-    let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) monosampler [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
-    --let raster t = rasterizer $ monosampler $ scaleTo (Grid 720 480) $ grad4 t
-    testSaveRGBA' "out.png" (raster reds) (raster greens) (raster blues) (raster alphas)
+    --let raster t = gridRasterizer (Grid 720 480) (Grid 4 2) monosampler [grad1 t, grad2 t, grad3 t, grad4 t, grad5 t, grad6 t, grad7 t, grad8]
+    --testSaveRGBA' "out.png" (raster reds) (raster greens) (raster blues) (raster alphas)
 
+    let raster t = rasterizer $ monosampler $ scale (Grid 512 512) $ grad9 t
+    testSaveRGBA' "out.png" (raster grays) (raster grays) (raster grays) (raster alphas)
 
 --
 -- Draws single conical gradient rotated 84deg
@@ -111,7 +119,7 @@ upscalingTest flt = do
 
 downscalingTest :: Filter (Exp Float) -> IO ()
 downscalingTest flt = do
-    let process = rasterizer 
+    let process = rasterizer
                 . monosampler
                 . scale (200 :: Grid (Exp Int))
                 . interpolator flt
@@ -350,8 +358,38 @@ bilateralTest psigma csigma size = do
     let process x = rasterizer $ id `p` bilateralStencil (+) spatial domain (+) 0 `p` id $ fromMatrix A.Clamp x
     forAllChannels "lena.png" process
 
+medianTest :: IO ()
+medianTest = do
+    forAllChannels "lena.bmp" median
+
+realMedianTest :: IO ()
+realMedianTest = forAllChannels "lena.png" $ \matrix ->
+    let stencil = $(generateGetNthFromTuple 24 49) . $(generateBitonicNetworkTuple 7 7)
+    in  M.stencil stencil A.Wrap matrix
+
+maskedTransformationsTest :: IO ()
+maskedTransformationsTest = do
+    (r, g, b, a) <- testLoadRGBA' "lena.png"
+    (m, _, _, _) <- testLoadRGBA' "mask-gradient-cos.png"
+    let v = V2 0 50 :: V2 (Exp Int)
+        gen = fromMatrix (A.Constant (0 :: Exp Double))
+        t :: DiscreteGenerator (Exp Double) -> DiscreteGenerator (Exp Double)
+        t = S.transform p
+        p :: Point2 (Exp Int) -> Point2 (Exp Int)
+        p pt = translate (fmap (mult pt) v) pt
+        mult pt x = A.round $ (str pt) * A.fromIntegral x
+        Generator _ str = gen m
+        process :: Matrix2 Double -> Matrix2 Double -- DiscreteGenerator (Exp Double)
+        process = rasterizer . t . gen
+        --genR = process r
+        --genG = process g
+        --genB = process b
+        --genA = process a
+    testSaveRGBA' "out.png" (process r) (process g) (process b) (process a)
 
 main :: IO ()
 main = do
-  print "Szatan"
-    --ditherTest
+    print "Szatan"
+    maskedTransformationsTest
+    --gradientsTest
+    print "szatan"

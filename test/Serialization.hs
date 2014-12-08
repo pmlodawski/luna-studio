@@ -46,7 +46,7 @@ defocusSerialize blurSize = do
     let alpha = ChannelFloat "a" (FlatData $ process a)
 
     -- Construct a view
-    let view :: RGBA
+    let view :: View
         view = V.append alpha
              $ V.append blue
              $ V.append green
