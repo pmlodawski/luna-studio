@@ -26,6 +26,7 @@ import           Data.Map.Lazy
 
 import           Flowbox.Data.Mode                    (Mode)
 import           Flowbox.Data.Serialization           (Serializable (..), mkValue)
+import           Flowbox.Graphics.Composition.Generators.Sampler (Sampler, monosampler)
 import qualified Flowbox.Graphics.Image.Channel       as I
 import qualified Flowbox.Graphics.Image.Image         as Img
 import qualified Flowbox.Graphics.Image.View          as I
@@ -36,9 +37,14 @@ import qualified Generated.Proto.Data.Value.Type      as Value
 import qualified Generated.Proto.Data.ViewData        as ViewData
 
 import qualified Data.Array.Accelerate.CUDA as CUDA
+
+
+
 serializationBackend :: M.Backend                    -- TODO [KL, PM]: Do something with that
 serializationBackend = CUDA.run                      --
 
+defaultSampler :: Sampler Double                     -- TODO [MM]: ^ and this too
+defaultSampler = monosampler
 
 
 class MatType a where
@@ -74,41 +80,28 @@ instance ( ByteStrings (A.EltRepr a) ~ ((), ByteString)
 
     compute a _ = M.compute serializationBackend a
 
-serializeChan :: I.View v => v -> String -> Mode -> IO (Maybe MatrixData.MatrixData)
-serializeChan v x mode = case join . hush . I.get v $ x of
-    Just c -> case c of
-        I.ChannelFloat _ (I.FlatData mat) -> serialize mat mode
-        I.ChannelInt   _ (I.FlatData mat) -> serialize mat mode
-        I.ChannelBit   _ (I.FlatData mat) -> serialize mat mode
+serializeChanFromView :: I.View -> String -> Mode -> IO (Maybe MatrixData.MatrixData)
+serializeChanFromView v x mode = case join . hush . I.get v $ x of
+    Just c -> serializeChan c mode
     Nothing -> return Nothing
+    where serializeChan chan m = case chan of
+              I.ChannelFloat     _ (I.FlatData mat) -> serialize mat m
+              I.ChannelInt       _ (I.FlatData mat) -> serialize mat m
+              I.ChannelBit       _ (I.FlatData mat) -> serialize mat m
+              gen@I.ChannelGenerator{}              -> serializeChan (I.compute serializationBackend defaultSampler gen) mode
 
-instance Serializable I.RGBA ViewData.ViewData where
+instance Serializable I.View ViewData.ViewData where
     serialize v mode = do
-        red   <- serializeChan v "r" mode -- TODO [KM]: Change to rgba.r etc..
-        green <- serializeChan v "g" mode
-        blue  <- serializeChan v "b" mode
-        alpha <- serializeChan v "a" mode
+        red   <- serializeChanFromView v "rgba.r" mode
+        green <- serializeChanFromView v "rgba.g" mode
+        blue  <- serializeChanFromView v "rgba.b" mode
+        alpha <- serializeChanFromView v "rgba.a" mode
         return $ liftM4 ViewData.ViewData red green blue (Just alpha)
 
     toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
-    compute a _    = I.map (I.compute serializationBackend) a
+    compute a _    = I.map (I.compute serializationBackend defaultSampler) a
 
-instance Serializable I.RGB ViewData.ViewData where
-    serialize v mode = do
-        red   <- serializeChan v "r" mode
-        green <- serializeChan v "g" mode
-        blue  <- serializeChan v "b" mode
-        return $ liftM4 ViewData.ViewData red green blue Nothing
-
-    toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
-    compute a _    = I.map (I.compute serializationBackend) a
-
-instance Serializable (Img.Image I.RGB) ViewData.ViewData where
+instance Serializable Img.Image ViewData.ViewData where
     serialize (Img.Image views _) = serialize (snd $ findMin views)
     toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
-    compute a _    = Img.map (I.map $ I.compute serializationBackend) a
-
-instance Serializable (Img.Image I.RGBA) ViewData.ViewData where
-    serialize (Img.Image views _) = serialize (snd $ findMin views)
-    toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
-    compute a _    = Img.map (I.map $ I.compute serializationBackend) a
+    compute a _    = Img.map (I.map $ I.compute serializationBackend defaultSampler) a
