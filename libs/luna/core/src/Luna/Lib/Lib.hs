@@ -26,7 +26,7 @@ data Library = Library { _name        :: String
                        , _path        :: UniPath
                        , _ast         :: Module
                        , _propertyMap :: PropertyMap
-                       } deriving (Show, Read)
+                       } deriving (Show, Read, Eq)
 
 makeLenses ''Library
 
