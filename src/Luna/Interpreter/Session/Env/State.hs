@@ -131,15 +131,6 @@ insertDependentNode callPoint nodeID =
 deleteDependentNodes :: CallPoint -> Session mm ()
 deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
 
----- Env.defaultSerializationMode -----------------------------------------
-
-getDefaultSerializationMode :: Session mm Mode
-getDefaultSerializationMode = gets $ view Env.defaultSerializationMode
-
-
-setDefaultSerializationMode :: Mode -> Session mm ()
-setDefaultSerializationMode = modify . set Env.defaultSerializationMode
-
 ---- Env.serializationModes -----------------------------------------------
 
 getSerializationModesMap :: Session mm (MapForest CallPoint (Set Mode))
@@ -152,9 +143,8 @@ lookupSerializationModes callPointPath =
 
 
 getSerializationModes :: CallPointPath -> Session mm (Set Mode)
-getSerializationModes callPointPath = do
-    modes <- lookupSerializationModes callPointPath
-    Maybe.maybe (Set.singleton <$> getDefaultSerializationMode) return modes
+getSerializationModes callPointPath = 
+    Maybe.fromMaybe Set.empty <$> lookupSerializationModes callPointPath
 
 
 insertSerializationModes :: CallPointPath -> Set Mode -> Session mm ()
