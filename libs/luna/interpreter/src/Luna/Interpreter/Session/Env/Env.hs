@@ -40,7 +40,6 @@ data Env memoryManager = Env { _cached                   :: MapForest CallPoint 
                              , _fragileOperation         :: FragileMVar
                              , _dependentNodes           :: Map CallPoint (Set Node.ID)
 
-                             , _defaultSerializationMode :: Mode
                              , _serializationModes       :: MapForest CallPoint (Set Mode)
                              , _memoryConfig             :: Memory.Config
                              , _memoryManager            :: memoryManager
@@ -60,8 +59,8 @@ mk :: memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoint
 mk memoryManager'  libManager' projectID' mainPtr' resultCallBack' = do
     fo <- MVar.newMVar ()
     return $ Env def def def False fo def
-                 def def def
-                 memoryManager' libManager' projectID' mainPtr' resultCallBack'
+                 def def memoryManager' 
+                 libManager' projectID' mainPtr' resultCallBack'
 
 
 mkDef :: memoryManager -> IO (Env memoryManager)

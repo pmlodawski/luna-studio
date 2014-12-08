@@ -36,10 +36,6 @@ import qualified Generated.Proto.Interpreter.Interpreter.Ping.Request           
 import qualified Generated.Proto.Interpreter.Interpreter.Ping.Status                          as Ping
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Request                          as Run
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Update                           as Run
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultGet.Request as GetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultGet.Status  as GetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultSet.Request as SetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultSet.Update  as SetDefaultSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Request     as DeleteSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Update      as DeleteSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DeleteAll.Request  as DeleteAllSMode
@@ -153,18 +149,6 @@ ping request = do
 
 abort :: Abort.Request -> RPC Context (SessionST mm) Abort.Status
 abort = return . Abort.Status
-
-
-getDefaultSerializationMode :: GetDefaultSMode.Request -> RPC Context (SessionST mm) GetDefaultSMode.Status
-getDefaultSerializationMode request = do
-    mode <- liftSession Env.getDefaultSerializationMode
-    return $ GetDefaultSMode.Status request mode
-
-
-setDefaultSerializationMode :: SetDefaultSMode.Request -> RPC Context (SessionST mm) SetDefaultSMode.Update
-setDefaultSerializationMode request@(SetDefaultSMode.Request mode) = do
-    liftSession $ Env.setDefaultSerializationMode mode
-    return $ SetDefaultSMode.Update request
 
 
 getSerializationMode :: GetSMode.Request -> RPC Context (SessionST mm) GetSMode.Status
