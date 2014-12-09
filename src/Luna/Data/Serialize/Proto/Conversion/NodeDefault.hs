@@ -28,13 +28,13 @@ import           Luna.Graph.View.PortDescriptor                 (PortDescriptor)
 
 
 instance Convert DefaultsMap Gen.DefaultsMap where
-    encode = Gen.DefaultsMap . encodeList . Map.toList
-    decode (Gen.DefaultsMap items) = Map.fromList <$> decodeList items
+    encode = Gen.DefaultsMap . encode . Map.toList
+    decode (Gen.DefaultsMap items) = Map.fromList <$> decode items
 
 
 instance Convert (PortDescriptor, (Node.ID, NodeExpr)) Gen.Entry where
-    encode (inPort, (nodeID, value)) = Gen.Entry (encodeListP inPort) (encodePJ nodeID) (encodeJ value)
+    encode (inPort, (nodeID, value)) = Gen.Entry (encodeP inPort) (encodePJ nodeID) (encodeJ value)
     decode (Gen.Entry inPort mnodeID mvalue) = do
         nodeID <- decodeP <$> mnodeID <?> "Failed to decode DefaultsMap.Entry: 'nodeID' field is missing"
         value  <- decode  =<< mvalue  <?> "Failed to decode DefaultsMap.Entry: 'value' field is missing"
-        return (decodeListP inPort, (nodeID, value))
+        return (decodeP inPort, (nodeID, value))

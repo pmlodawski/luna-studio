@@ -23,10 +23,10 @@ import qualified Luna.AST.Name                                  as Name
 
 
 instance Convert Name Gen.Name where
-    encode (Name base segments) = Gen.Name (encodePJ base) (encodeList segments)
+    encode (Name base segments) = Gen.Name (encodePJ base) (encode segments)
     decode (Gen.Name base segments) =
         Name <$> decodePJ base (missing "Name" "base")
-             <*> decodeList segments
+             <*> decode segments
 
 
 instance Convert Name.Segment Gen.Segment where

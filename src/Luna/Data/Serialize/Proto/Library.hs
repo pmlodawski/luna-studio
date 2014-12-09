@@ -42,9 +42,9 @@ saveLib library h = do
 
 getLib :: IO.Handle -> IO Library
 getLib h = runScript $ do
-    binary              <- scriptIO $ ByteString.hGetContents h
-    (tlibrary, _)       <- tryRight $ Proto.messageGet binary
-    (_ :: Library.ID, library) <- tryRight $ decode tlibrary
+    binary                       <- scriptIO $ ByteString.hGetContents h
+    (tlibrary :: Gen.Library, _) <- tryRight $ Proto.messageGet binary
+    (_ :: Library.ID, library)   <- tryRight $ decode tlibrary
     return library
 
 
