@@ -19,5 +19,5 @@ import qualified Generated.Proto.Version.Version                as Gen
 
 
 instance ConvertPure Version Gen.Version where
-    encodeP (Version branch tags)     = Gen.Version (encodeListP branch) (encodeListP tags)
-    decodeP (Gen.Version branch tags) = Version     (decodeListP branch) (decodeListP tags)
+    encodeP (Version branch tags)     = Gen.Version (encodeP branch) (encodeP tags)
+    decodeP (Gen.Version branch tags) = Version     (decodeP branch) (decodeP tags)

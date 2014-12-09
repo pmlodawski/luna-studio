@@ -133,7 +133,7 @@ resolve request@(ResolveDefinition.Request tname tbc tlibID tprojectID _) = do
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     results <- BatchAST.resolveDefinition name bc libID projectID
-    return $ ResolveDefinition.Status request (encodeList results)
+    return $ ResolveDefinition.Status request (encode results)
 
 
 moduleClsModify :: ModifyModuleCls.Request -> RPC Context IO ModifyModuleCls.Update
@@ -149,7 +149,7 @@ moduleClsModify request@(ModifyModuleCls.Request tcls tbc tlibID tprojectID _) =
 
 moduleImportsModify :: ModifyModuleImports.Request -> RPC Context IO ModifyModuleImports.Update
 moduleImportsModify request@(ModifyModuleImports.Request timports tbc tlibID tprojectID _) = do
-    imports <- decodeListE timports
+    imports <- decodeE timports
     bc      <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -160,7 +160,7 @@ moduleImportsModify request@(ModifyModuleImports.Request timports tbc tlibID tpr
 
 moduleFieldsModify :: ModifyModuleFields.Request -> RPC Context IO ModifyModuleFields.Update
 moduleFieldsModify request@(ModifyModuleFields.Request tfields tbc tlibID tprojectID _) = do
-    fields <- decodeListE tfields
+    fields <- decodeE tfields
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -182,7 +182,7 @@ dataClsModify request@(ModifyDataCls.Request tcls tbc tlibID tprojectID _) = do
 
 dataConsModify :: ModifyDataCons.Request -> RPC Context IO ModifyDataCons.Update
 dataConsModify request@(ModifyDataCons.Request tcons tbc tlibID tprojectID _) = do
-    cons <- decodeListE tcons
+    cons <- decodeE tcons
     bc   <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -193,7 +193,7 @@ dataConsModify request@(ModifyDataCons.Request tcons tbc tlibID tprojectID _) = 
 
 dataClassesModify :: ModifyDataClasses.Request -> RPC Context IO ModifyDataClasses.Update
 dataClassesModify request@(ModifyDataClasses.Request tclasses tbc tlibID tprojectID _) = do
-    classes <- decodeListE tclasses
+    classes <- decodeE tclasses
     bc      <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -204,7 +204,7 @@ dataClassesModify request@(ModifyDataClasses.Request tclasses tbc tlibID tprojec
 
 dataMethodsModify :: ModifyDataMethods.Request -> RPC Context IO ModifyDataMethods.Update
 dataMethodsModify request@(ModifyDataMethods.Request tmethods tbc tlibID tprojectID _) = do
-    methods <- decodeListE tmethods
+    methods <- decodeE tmethods
     bc      <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -227,7 +227,7 @@ functionNameModify request@(ModifyFunctionName.Request tname tbc tlibID tproject
 functionPathModify :: ModifyFunctionPath.Request -> RPC Context IO ModifyFunctionPath.Update
 functionPathModify request@(ModifyFunctionPath.Request tpath tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
-    let path      = decodeListP tpath
+    let path      = decodeP tpath
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchAST.updateFunctionPath path bc libID projectID
@@ -237,7 +237,7 @@ functionPathModify request@(ModifyFunctionPath.Request tpath tbc tlibID tproject
 
 functionInputsModify :: ModifyFunctionInputs.Request -> RPC Context IO ModifyFunctionInputs.Update
 functionInputsModify request@(ModifyFunctionInputs.Request tinputs tbc tlibID tprojectID _) = do
-    inputs <- decodeListE tinputs
+    inputs <- decodeE tinputs
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID

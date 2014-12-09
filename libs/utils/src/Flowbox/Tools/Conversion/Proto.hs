@@ -5,8 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Flowbox.Tools.Conversion.Proto where
 
@@ -24,7 +23,7 @@ missing :: String -> String -> Error
 missing datatype field = concat ["Failed to decode ", datatype, ": '", field, "'is missing"]
 
 
-class Convert a b | a -> b where
+class Convert a b where
     encode :: a -> b
     decode :: b -> Either Error a
 
@@ -41,7 +40,7 @@ class Convert a b | a -> b where
     decodeJE = hoistEither .: decodeJ
 
 
-class ConvertPure a b | a -> b where
+class ConvertPure a b where
     encodeP :: a -> b
     decodeP :: b -> a
 

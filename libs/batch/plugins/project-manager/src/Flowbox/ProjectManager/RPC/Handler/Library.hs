@@ -47,7 +47,7 @@ list :: List.Request -> RPC Context IO List.Status
 list request@(List.Request tprojectID) = do
     let projectID = decodeP tprojectID
     libs <- BatchL.libraries projectID
-    return $ List.Status request (shrinkLibrary <$> encodeList libs)
+    return $ List.Status request (shrinkLibrary <$> encode libs)
 
 
 lookup :: Lookup.Request -> RPC Context IO Lookup.Status

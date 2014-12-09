@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Tools.Serialize.Proto.Conversion.Basic (
-        module Flowbox.Tools.Conversion.Proto,
-        module Flowbox.Tools.Serialize.Proto.Conversion.List,
+        module X,
 ) where
 
-import Flowbox.Tools.Conversion.Proto
+import Flowbox.Tools.Conversion.Proto                   as X
 import Flowbox.Tools.Serialize.Proto.Conversion.Int     ()
-import Flowbox.Tools.Serialize.Proto.Conversion.List
+import Flowbox.Tools.Serialize.Proto.Conversion.List    ()
+import Flowbox.Tools.Serialize.Proto.Conversion.Set     ()
 import Flowbox.Tools.Serialize.Proto.Conversion.String  ()
 import Flowbox.Tools.Serialize.Proto.Conversion.UniPath ()

@@ -23,13 +23,13 @@ import           Luna.Data.Serialize.Proto.Conversion.Type      ()
 
 instance Convert Module Gen.Module where
     encode (Module i cls imports classes typeAliases typeDefs fields methods modules) =
-        Gen.Module (encodePJ i) (encodeJ cls) (encodeList imports)
-                   (encodeList classes)  (encodeList typeAliases)
-                   (encodeList typeDefs) (encodeList fields)
-                   (encodeList methods)  (encodeList modules)
+        Gen.Module (encodePJ i) (encodeJ cls) (encode imports)
+                   (encode classes)  (encode typeAliases)
+                   (encode typeDefs) (encode fields)
+                   (encode methods)  (encode modules)
     decode (Gen.Module i cls imports classes typeAliases typeDefs fields methods modules) =
         Module <$> decodePJ i   (missing "Module" "id" )
                <*> decodeJ  cls (missing "Module" "cls")
-               <*> decodeList imports  <*> decodeList classes <*> decodeList typeAliases
-               <*> decodeList typeDefs <*> decodeList fields  <*> decodeList methods
-               <*> decodeList modules
+               <*> decode imports  <*> decode classes <*> decode typeAliases
+               <*> decode typeDefs <*> decode fields  <*> decode methods
+               <*> decode modules
