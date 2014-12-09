@@ -35,7 +35,7 @@ instance Convert (Project.ID, Project) (Gen.Project, LibManager) where
         Project name path libPaths libs attrs = project
         tname      = fmap encodeP name
         tpath      = encodePJ path
-        tlibPaths  = encodeListP libPaths
+        tlibPaths  = encodeP libPaths
         tattrs     = encodePJ attrs
         tprojectID = encodePJ projectID
         tproject   = Gen.Project tname tpath tlibPaths tattrs tprojectID
@@ -45,7 +45,7 @@ instance Convert (Project.ID, Project) (Gen.Project, LibManager) where
         tprojectID  <- mtprojectID <?> "Failed to decode Project: 'id' field is missing"
         let name      = fmap decodeP tname
             path      = decodeP tpath
-            libPaths  = decodeListP tlibPaths
+            libPaths  = decodeP tlibPaths
             attrs     = decodeP tattrs
             projectID = decodeP tprojectID
             project   = Project name path libPaths libs attrs
