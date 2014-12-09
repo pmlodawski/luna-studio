@@ -21,6 +21,7 @@ using namespace google::protobuf;
 
 const path outputDirectory = path("..") / "generated";
 
+
 void formatOutput(std::ostream &out, std::string contents)
 {
 	auto hlp = contents;
@@ -695,14 +696,15 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 {
 	std::vector<MethodWrapper> methods;
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::projectManager::Project::descriptor());
-	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::fileManager::FileSystem::descriptor());
-	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::Plugin::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::interpreter::Interpreter::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::fileManager::FileManager::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::projectManager::ProjectManager::descriptor());
-	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parser::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::Plugin::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::PluginManager::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::MkText::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parser::descriptor());
 	return methods;
 }
 
@@ -737,7 +739,12 @@ void generate(path outputFile)
 		auto formattedText = formatFile(preformattedFile);
 		std::cout << "Formatting output " << outfile << std::endl;
 		boost::filesystem::ofstream out(outfile);
-		assert(out);
+		if(!out)
+		{
+			cerr << "ERROR: cannot write output to location" << outfile.native() << std::endl;
+			exit(EXIT_FAILURE);
+		}
+
 		formatOutput(out, formattedText);
 	};
 
@@ -765,6 +772,14 @@ struct PackageDeserializer
 
 
 typedef std::unique_ptr<google::protobuf::Message> MessagePtr;
+
+template<typename T>
+bool ParseFromString(const std::string &inputString, std::unique_ptr<T> &outMessage)
+{
+	google::protobuf::io::CodedInputStream input(reinterpret_cast<const uint8_t*>(inputString.data()), inputString.size());
+	input.SetTotalBytesLimit(500000000, -1);
+	return outMessage->ParseFromCodedStream(&input);
+}
 
 std::function<bool(const std::string &)> PackageDeserializer::ignorePredicate = [](const std::string &topic)
 		{
@@ -804,7 +819,7 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 			[](crstring contents)
 			{
 				auto ret = make_unique<%namespace%::%method%>();
-				ret->ParseFromString(contents);
+				ParseFromString(contents, ret);
 				return ret;
 			}
 		},
@@ -855,7 +870,16 @@ void MessageDispatcher::dispatch(const BusMessage &message, IDispatchee &dispatc
 
 
 	if(!boost::ends_with(message.topic, ".request"))
-		logWarning("Not dispatching message %s.", message.topic);;
+	{
+		if(auto error = std::dynamic_pointer_cast<const generated::proto::rpc::Exception>(message.msg))
+		{ 
+			logWarning("Not dispatching message %s with error %s.", message.topic, error->message());
+		}
+		else
+		{
+			logWarning("Not dispatching message %s.", message.topic);;
+		}
+	}
 }
 
 void IBusMessagesReceiver::handle(const BusMessage &message)
@@ -930,5 +954,6 @@ int main()
 	generate(outputDirectory / "ProjectManager");
 	generateDeserializers();
 	generateDispatcher();
+	std::cout << "Successfully ending...\n";
 	return EXIT_SUCCESS;
 }
