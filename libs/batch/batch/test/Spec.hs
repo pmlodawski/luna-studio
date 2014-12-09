@@ -4,10 +4,6 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies #-}
 
-module Flowbox.Graphics.Color.Internal where
-
-
-
---type family Color c :: *
+{-# LANGUAGE ImplicitPrelude #-}
+{-# OPTIONS_GHC -F -pgmF hspec-discover #-}

@@ -92,7 +92,7 @@ class HProject(Project):
 class AllProject(Project):
     def targets(self):
         # It is needed to omit non-project entries with no path (like @all)
-        return [project for project in pkgDb.values() if project.path]  
+        return [project for project in pkgDb.values() if project.path]
 
 pkgDb = \
        { '@all'                                : AllProject ('@all', deps = [])
@@ -104,15 +104,15 @@ pkgDb = \
        , 'libs/config'                         : HProject   ('flowbox-config'               , os.path.join ('libs' , 'config')                              , 'libs'    , ['libs/utils'])
        , 'libs/data/codec/exr'                 : HProject   ('openexr'                      , os.path.join ('libs' , 'data', 'codec', 'exr')                , 'libs'    , [], flags=Flags([Flag('--with-gcc=g++')]))
        , 'libs/data/dynamics/particles'        : HProject   ('particle'                     , os.path.join ('libs' , 'data', 'dynamics', 'particles')       , 'libs'    , [])
-       , 'libs/data/graphics'                  : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'data', 'graphics')                    , 'libs'    , ['third-party/algebraic', 'third-party/accelerate', 'third-party/accelerate-cuda', 'third-party/accelerate-io', 'third-party/accelerate-fft', 'third-party/imagemagick', 'libs/utils', 'libs/num-conversion', 'libs/data/serialization'], flags=Flags([Flag("--with-gcc=gcc-4.9", [systems.DARWIN]), Flag("-fcuda")])) # FIXME [kl]: The fcuda flag is a temporary solution for the strange cabal behavior
+       , 'libs/data/graphics'                  : HProject   ('flowbox-graphics'             , os.path.join ('libs' , 'data', 'graphics')                    , 'libs'    , ['third-party/accelerate', 'third-party/accelerate-cuda', 'third-party/accelerate-io', 'third-party/accelerate-fft', 'third-party/algebraic', 'third-party/imagemagick', 'libs/utils', 'libs/num-conversion', 'libs/data/serialization', 'third-party/linear-accelerate', 'libs/luna/target/ghchs', 'libs/data/codec/exr'], flags=Flags([Flag("--with-gcc=g++", [systems.LINUX]),Flag("--with-gcc=gcc-4.9", [systems.DARWIN]), Flag("-fcuda")])) # FIXME [kl]: The fcuda flag is a temporary solution for the strange cabal behavior
        , 'libs/data/accelerate/thrust'         : HProject   ('accelerate-thrust'            , os.path.join ('libs' , 'data', 'accelerate', 'thrust')        , 'libs'    , ['third-party/accelerate', 'third-party/accelerate-cuda'])
        , 'libs/data/serialization'             : HProject   ('flowbox-serialization'        , os.path.join ('libs' , 'data', 'serialization')               , 'libs'    , ['libs/utils', 'libs/luna/target/ghchs'])
        , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
        , 'libs/luna/parser'                    : HProject   ('luna-parser'                  , os.path.join ('libs' , 'luna', 'parser')                      , 'libs'    , ['libs/utils', 'libs/luna/core'])
        , 'libs/luna/parser2'                   : HProject   ('luna-parser'                  , os.path.join ('libs' , 'luna', 'parser2')                     , 'libs'    , ['libs/utils', 'libs/luna/core'])
-       , 'libs/luna/distribution'              : HProject   ('luna-distribution'            , os.path.join ('libs' , 'luna', 'distribution')                , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core'])
+       , 'libs/luna/distribution'              : HProject   ('luna-distribution'            , os.path.join ('libs' , 'luna', 'distribution')                , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/protobuf'])
        , 'libs/luna/pass'                      : HProject   ('luna-pass'                    , os.path.join ('libs' , 'luna', 'pass')                        , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/distribution', 'libs/config', 'libs/luna/target/ghchs', 'libs/luna/parser2'])
-       , 'libs/luna/protobuf'                  : HProject   ('luna-protobuf'                , os.path.join ('libs' , 'luna', 'protobuf')                    , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/distribution', 'libs/config'])
+       , 'libs/luna/protobuf'                  : HProject   ('luna-protobuf'                , os.path.join ('libs' , 'luna', 'protobuf')                    , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/config'])
        , 'libs/luna/interpreter'               : HProject   ('luna-interpreter'             , os.path.join ('libs' , 'luna', 'interpreter')                 , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/pass', 'libs/batch/batch', 'libs/data/serialization'])
        , 'libs/luna/interpreter-old'           : HProject   ('luna-interpreter-old'         , os.path.join ('libs' , 'luna', 'interpreter-old')             , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/pass'])
        , 'libs/luna/initializer'               : HProject   ('luna-initializer'             , os.path.join ('libs' , 'luna', 'initializer')                 , 'libs'    , ['libs/utils', 'libs/config'])
@@ -139,12 +139,11 @@ pkgDb = \
 
        , 'third-party/algebraic'               : HProject   ('algebraic'                    , os.path.join ('third-party', 'algebraic')                     , 'third-party', ['third-party/accelerate'])
        , 'third-party/accelerate'              : HProject   ('accelerate'                   , os.path.join ('third-party', 'accelerate')                    , 'third-party', [])
-       , 'third-party/accelerate-cuda'         : HProject   ('accelerate-cuda'              , os.path.join ('third-party', 'accelerate-cuda')               , 'third-party', ['third-party/mainland-pretty', 'third-party/cuda'], flags=Flags([Flag('-fdebug')])) # [KL] accelerate debug flag is necessary to dump generated CUDA kernels
-       , 'third-party/cuda'                    : HProject   ('cuda'                         , os.path.join ('third-party', 'cuda')                          , 'third-party', [])
-       , 'third-party/accelerate-fft'          : HProject   ('accelerate-fft'               , os.path.join ('third-party', 'accelerate-fft')                , 'third-party', ['third-party/cufft'])
-       , 'third-party/cufft'                   : HProject   ('cufft'                        , os.path.join ('third-party', 'cufft')                         , 'third-party', [])
+       , 'third-party/accelerate-cuda'         : HProject   ('accelerate-cuda'              , os.path.join ('third-party', 'accelerate-cuda')               , 'third-party', ['third-party/mainland-pretty'], flags=Flags([Flag('-fdebug')])) # [KL] accelerate debug flag is necessary to dump generated CUDA kernels
+       , 'third-party/accelerate-fft'          : HProject   ('accelerate-fft'               , os.path.join ('third-party', 'accelerate-fft')                , 'third-party', [])
        , 'third-party/accelerate-io'           : HProject   ('accelerate-io'                , os.path.join ('third-party', 'accelerate-io')                 , 'third-party', [])
        , 'third-party/imagemagick'             : HProject   ('imagemagick'                  , os.path.join ('third-party', 'imagemagick')                   , 'third-party', []) # [KL] temporary fix until imagemagick is fixed
+       , 'third-party/linear-accelerate'       : HProject   ('linear-accelerate'            , os.path.join ('third-party', 'linear-accelerate')             , 'third-party', ['third-party/accelerate']) # [MM] not so temporary fix, included because of too strict upper bound on accelerate
        , 'third-party/mainland-pretty'         : HProject   ('mainland-pretty'              , os.path.join ('third-party', 'mainland-pretty')               , 'third-party', []) # [MM] temporary fix until mainland-pretty relaxes upper bound on text to allow version 1.2
        }
 

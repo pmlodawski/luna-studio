@@ -24,8 +24,8 @@ import           Luna.Interpreter.Session.Data.CallPointPath    (CallPointPath)
 
 instance Convert (Project.ID, CallPointPath) Gen.CallPointPath where
     encode (projectID, callPointPath) =
-        Gen.CallPointPath (encodePJ projectID) (encodeList callPointPath)
+        Gen.CallPointPath (encodePJ projectID) (encode callPointPath)
     decode (Gen.CallPointPath mtprojectID tpath) = do
         projectID <- decodeP <$> mtprojectID <?> "Failed to decode CallPointPath: 'projectID' field is missing"
-        path      <- decodeList tpath
+        path      <- decode tpath
         return (projectID, path)

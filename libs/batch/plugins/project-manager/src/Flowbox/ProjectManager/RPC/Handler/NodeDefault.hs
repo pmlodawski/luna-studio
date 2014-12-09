@@ -44,7 +44,7 @@ set :: NodeDefaultSet.Request -> RPC Context IO NodeDefaultSet.Update
 set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID _) = do
     bc    <- decodeE tbc
     value <- decodeE tvalue
-    let dstPort   = decodeListP tdstPort
+    let dstPort   = decodeP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -56,7 +56,7 @@ set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectI
 remove :: NodeDefaultRemove.Request -> RPC Context IO NodeDefaultRemove.Update
 remove request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
-    let dstPort   = decodeListP tdstPort
+    let dstPort   = decodeP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID

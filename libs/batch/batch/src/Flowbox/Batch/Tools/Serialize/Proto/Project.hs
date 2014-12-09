@@ -26,19 +26,19 @@ import qualified Flowbox.System.IO.Serializer                           as Seria
 import           Flowbox.System.UniPath                                 (UniPath)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Project.Project                        as Gen
-
+import           Luna.Lib.Manager                                       (LibManager)
 
 
 saveProject :: Project -> Handle -> IO ()
 saveProject project h =
-    ByteString.hPut h $ Proto.messagePut $ encode (Project.ID $ -1, project) ^. _1
+    ByteString.hPut h $ Proto.messagePut $ (encode (Project.ID $ -1, project) :: (Gen.Project, LibManager)) ^. _1
 
 
 getProject :: Handle -> IO Project
 getProject h = runScript $ do
     bytes                        <- scriptIO $ ByteString.hGetContents h
     (tproject :: Gen.Project, _) <- tryRight $ Proto.messageGet bytes
-    (_ :: Project.ID, project)   <- tryRight $ decode (tproject, def)
+    (_ :: Project.ID, project)   <- tryRight $ decode (tproject, def :: LibManager)
     return project
 
 

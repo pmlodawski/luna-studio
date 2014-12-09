@@ -39,7 +39,7 @@ import qualified Text.ProtocolBuffers.Extensions                as Extensions
 instance Convert Crumb Gen.Crumb where
     encode crumb = case crumb of
         Crumb.Function name path -> genCrumb GenCls.Function GenFunction.ext $ GenFunction.Function
-                                      (encodeJ name) (encodeListP path)
+                                      (encodeJ name) (encodeP path)
         Crumb.Class    name      -> genCrumb GenCls.Class  GenClass.ext  $ GenClass.Class   (encodePJ name)
         Crumb.Module   name      -> genCrumb GenCls.Module GenModule.ext $ GenModule.Module (encodePJ name)
         Crumb.Lambda   i         -> genCrumb GenCls.Lambda GenLambda.ext $ GenLambda.Lambda (encodePJ i)
@@ -51,7 +51,7 @@ instance Convert Crumb Gen.Crumb where
         GenCls.Function -> do
             GenFunction.Function name path <- getExt GenFunction.ext "Crumb.Function"
             Crumb.Function <$> decodeJ name (missing "Crumb.Function" "name")
-                           <*> pure (decodeListP path)
+                           <*> pure (decodeP path)
         GenCls.Class    -> do
             GenClass.Class name <- getExt GenClass.ext "Crumb.Class"
             Crumb.Class <$> decodePJ name (missing "Crumb.Class" "name")
@@ -65,8 +65,8 @@ instance Convert Crumb Gen.Crumb where
 
 
 instance Convert Breadcrumbs Gen.Breadcrumbs where
-    encode = Gen.Breadcrumbs . encodeList
-    decode (Gen.Breadcrumbs b) = decodeList b
+    encode = Gen.Breadcrumbs . encode
+    decode (Gen.Breadcrumbs b) = decode b
 
 
 instance Convert (Breadcrumbs, Lib.ID) Gen.ASTPtr where

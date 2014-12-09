@@ -10,6 +10,7 @@ module Test.Luna.Interpreter.Common where
 import qualified Flowbox.Batch.Project.Project                                 as Project
 import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
+import           Flowbox.Data.Version                                          ()
 import           Flowbox.Prelude
 import qualified Flowbox.System.UniPath                                        as UniPath
 import qualified Luna.AST.Control.Crumb                                        as Crumb
@@ -50,7 +51,7 @@ readCode code = eitherStringToM' $ runEitherT $ do
     (ast, _astInfo)   <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
     _aliasInfo        <- EitherT $ Analysis.Alias.run ast
     let path = UniPath.fromUnixString "."
-    return $ LibManager.insNewNode (Library "Main" path ast PropertyMap.empty) def
+    return $ LibManager.insNewNode (Library "Main" def path ast PropertyMap.empty) def
 
 
 mkEnv :: mm -> String -> IO (Env mm, Library.ID)
