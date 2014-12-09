@@ -96,7 +96,7 @@ list prefix = do
     let topic = Prefix.prefixify prefix Topic.pluginListRequest
     results <- Client.query topic List.Request
     r <- restrictSingleResult results
-    a <- lift $ hoistEither $ decodeList $ List.list r
+    a <- lift $ hoistEither $ decode $ List.list r
     return $ map snd (a :: [(Plugin.ID, PluginInfo)])
 
 
