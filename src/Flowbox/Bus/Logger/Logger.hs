@@ -30,6 +30,7 @@ import           Flowbox.Prelude                                hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified  Generated.Proto.Bus.Exception as Gen
 
 
 
@@ -64,7 +65,7 @@ logMessage = do
                 content = msg ^. Message.message
                 errorMsg = case Proto.messageGet' content of
                     Left err        -> "(cannot parse error message: " ++ err ++ ")"
-                    Right exception -> case (decodeP exception) ^. Exception.msg of
+                    Right exception -> case (decodeP (exception :: Gen.Exception)) ^. Exception.msg of
                         Nothing           -> "(exception without message)"
                         Just exceptionMsg -> exceptionMsg
             if Topic.error `isSuffixOf` topic
