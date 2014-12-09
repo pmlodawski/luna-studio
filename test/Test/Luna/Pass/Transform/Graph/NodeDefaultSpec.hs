@@ -7,18 +7,18 @@
 
 module Test.Luna.Pass.Transform.Graph.NodeDefaultSpec where
 
-import Control.Monad         (forM_)
-import Flowbox.Control.Error
+import Control.Monad (forM_)
 import Test.Hspec
 
 import           Flowbox.Prelude
-import qualified Luna.Graph.View.GraphView                    as GraphView
 import qualified Luna.Pass.Transform.GraphView.Defaults       as Defaults
-import qualified Test.Luna.Pass.Transform.Graph.Common        as Common
 import qualified Test.Luna.Pass.Transform.Graph.GraphViewSpec as GVTest
-import qualified Test.Luna.AST.Common                    as Common
-import qualified Test.Luna.Sample.Code                   as SampleCode
 import           Test.Luna.Sample.NodeDefault                 (sampleGraphs)
+--import Flowbox.Control.Error
+--import qualified Luna.Graph.View.GraphView                    as GraphView
+--import qualified Test.Luna.Pass.Transform.Graph.Common        as Common
+--import qualified Test.Luna.AST.Common                    as Common
+--import qualified Test.Luna.Sample.Code                   as SampleCode
 
 
 
@@ -50,7 +50,7 @@ spec = do
                 --prettyPrint cAdded'
                 --let cAdded = uncurry GraphView.fromGraph cAdded'
 
-                --let cAddedRemoved = uncurry Defaults.removeDefaults cAdded 
+                --let cAddedRemoved = uncurry Defaults.removeDefaults cAdded
                 ----prettyPrint grp
                 ----print "=================="
                 ----prettyPrint cAdded
