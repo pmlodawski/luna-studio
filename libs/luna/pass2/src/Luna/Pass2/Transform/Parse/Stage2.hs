@@ -79,13 +79,15 @@ defaultTraverseM = AST.defaultTraverseM Stage2
 ---- Pass functions
 ------------------------------------------------------------------------
 
-pass :: Stage2DefaultTraversal m a b => Pass (ParserState.State ()) (Namespace -> ASTInfo -> a -> Stage2Pass m b)
+pass :: Stage2DefaultTraversal m a b => Pass (ParserState.State ()) (Namespace -> ASTInfo -> a -> Stage2Pass m (b,ASTInfo))
 pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias analysis" undefined passRunner
 
 -- FIXME[wd]: using emptyState just to make it working
 --            we should use here state constructed from config optained from stage1
 --            but stage-1 should NOT result in whole ParserState - the data should be separated
-passRunner ns info ast = put (Parser.emptyState & set ParserState.namespace ns & set ParserState.info info) *> defaultTraverseM ast 
+passRunner ns info ast = do
+    put (Parser.emptyState & set ParserState.namespace ns & set ParserState.info info)
+    (,) <$> defaultTraverseM ast <*> (view ParserState.info <$> get)
 
 traverseDecl2Pass :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
 traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of

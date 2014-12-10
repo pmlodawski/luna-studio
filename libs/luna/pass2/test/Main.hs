@@ -22,6 +22,7 @@ import           Luna.ASTNew.Name   (TName(TName))
 import qualified Luna.Pass2.Analysis.Alias as AA
 import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
 import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
+import qualified Luna.Pass2.Transform.Desugar.ImplicitSelf as ImplSelf
 import           Luna.Data.Namespace (Namespace(Namespace))
 import qualified Luna.Pass as Pass
 import Control.Monad.Trans.Either
@@ -46,11 +47,12 @@ main = do
 
 
     result <- runEitherT $ do
-        (ast1, astinfo) <- Pass.run1_ Stage1.pass src
-        aa1             <- Pass.run1_ AA.pass ast1
-        ast2            <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo ast1
-        aa2             <- Pass.run1_ AA.pass ast2
-        return (ast2,aa2)
+        (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
+        (ast2, astinfo2) <- Pass.run2_ ImplSelf.pass astinfo1 ast1
+        aa1              <- Pass.run1_ AA.pass ast2
+        (ast3, astinfo3) <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo2 ast2
+        aa2              <- Pass.run1_ AA.pass ast3
+        return (ast3,aa2)
 
     case result of
         Left e      -> putStrLn $ ppShow e
