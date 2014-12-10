@@ -135,8 +135,7 @@ const std::string methodDefinition = R"(
 
 	auto retrieveAnswer = [](const BusMessage &bm)
 	{
-		auto ret = make_unique<AnswerType>();
-		ret->ParseFromString(bm.contents);
+		auto ret = std::static_pointer_cast<AnswerType>(bm.msg);
 		return ret;
 	};
 
@@ -568,7 +567,7 @@ struct MethodWrapper
 			{
 				returnedTypeAsync = returnedType;
 				useRetAsync = "*ret";
-				returnedType = "std::unique_ptr<" + returnedType + ">";
+				returnedType = "std::shared_ptr<const " + returnedType + ">";
 			}
 			
 			if(field->is_repeated())
@@ -598,7 +597,7 @@ struct MethodWrapper
 		else
 		{
 			returnedType = agent->nameSpace + "::" + name + "_" + result->name();
- 			returnedType = "std::unique_ptr<" + returnedType + ">";
+ 			returnedType = "std::shared_ptr<const " + returnedType + ">";
 // 			prepareRet = returnedType + " retHlp;\n";
 			prepareRet += "ret = std::move(answer);";
 			returnRet = "return ret;";
@@ -774,9 +773,11 @@ struct PackageDeserializer
 typedef std::unique_ptr<google::protobuf::Message> MessagePtr;
 
 template<typename T>
-bool ParseFromString(const std::string &inputString, std::unique_ptr<T> &outMessage)
+bool ParseFromBuffer(const boost::asio::const_buffer &contents, std::unique_ptr<T> &outMessage)
 {
-	google::protobuf::io::CodedInputStream input(reinterpret_cast<const uint8_t*>(inputString.data()), inputString.size());
+	const auto size = boost::asio::buffer_size(contents);
+	const auto data = boost::asio::buffer_cast<const uint8_t*>(contents);
+	google::protobuf::io::CodedInputStream input(data, size);
 	input.SetTotalBytesLimit(500000000, -1);
 	return outMessage->ParseFromCodedStream(&input);
 }
@@ -788,7 +789,7 @@ std::function<bool(const std::string &)> PackageDeserializer::ignorePredicate = 
 
 std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(const BusMessage &message)
 {
-	static const std::map<std::string, std::function<MessagePtr(crstring)>> deserializers = 
+	static const std::map<std::string, std::function<MessagePtr(const boost::asio::const_buffer &)>> deserializers = 
 	{
 %deserializers%
 	};
@@ -799,9 +800,12 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 
 	if(boost::algorithm::ends_with(message.topic, ".error"))
 	{
+		const auto size = boost::asio::buffer_size(message.contents);
+		const auto data = boost::asio::buffer_cast<const char*>(message.contents);
+
 		auto ret = make_unique<generated::proto::rpc::Exception>();
-		ret->set_message(message.contents);
-//TODO //FIXME Why move is needed?
+		ret->set_message(std::string(data, size));
+		//TODO //FIXME Why move is needed?
 		return std::move(ret);
 	}
 
@@ -816,10 +820,10 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 	std::string deserialize = R"(
 		{
 			"%topic%", 
-			[](crstring contents)
+			[](const boost::asio::const_buffer &contents)
 			{
 				auto ret = make_unique<%namespace%::%method%>();
-				ParseFromString(contents, ret);
+				ParseFromBuffer(contents, ret);
 				return ret;
 			}
 		},
