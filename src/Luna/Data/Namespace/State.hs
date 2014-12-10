@@ -4,9 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 
 module Luna.Data.Namespace.State where
@@ -154,12 +155,20 @@ regParent id = do
 regAlias :: NamespaceMonad m => ID -> String -> m ()
 regAlias ident name = do
     aliasMap  <- view AliasInfo.alias <$> getAliasInfo
-    aliasMap' <- withCurrentScope_ (registerAlias ident name aliasMap)
-    modify (set (Namespace.info.AliasInfo.alias) aliasMap')
+    aliasInfo <- getAliasInfo
+    aliasInfo' <- withCurrentScopeID_ (\scopeId -> AliasInfo.registerAlias ident name scopeId aliasInfo)
+    modify (set (Namespace.info) aliasInfo')
+
+
+withCurrentScopeID_ :: NamespaceMonad m => (ID -> Maybe a) -> m a
+withCurrentScopeID_ action = withCurrentScopeID action >>= maybe (fail "Cannot obtain current scope") return
+
+withCurrentScopeID :: NamespaceMonad m => (ID -> Maybe a) -> m (Maybe a)
+withCurrentScopeID action = scopeID >>= maybe (return Nothing) (return . action)
 
 
 withCurrentScope_ :: NamespaceMonad m => (AliasInfo.Scope -> Maybe a) -> m a
-withCurrentScope_ action = withCurrentScope action >>= maybe (fail "No scope") return
+withCurrentScope_ action = withCurrentScope action >>= maybe (fail "Cannot obtain current scope") return
 
 
 withCurrentScope :: NamespaceMonad m => (AliasInfo.Scope -> Maybe a) -> m (Maybe a)
@@ -167,19 +176,9 @@ withCurrentScope action = getCurrentScope >>= maybe (return Nothing) (return . a
 
 
 getCurrentScope :: NamespaceMonad m => m (Maybe AliasInfo.Scope)
-getCurrentScope = (Namespace.head <$> get) >>= \case
-    Just currentScopeId -> view (AliasInfo.scope . at currentScopeId) <$> getAliasInfo
-    Nothing             -> return Nothing
-
-registerAlias :: ID                         -- ^ Variable that we seek aliases of: ID
-              -> String                     -- ^ Variable that we seek aliases of: Name
-              -> AliasInfo.IDMap ID         -- ^ The map of aliases
-              -> AliasInfo.Scope            -- ^ The current scope of the variable
-              -> Maybe (AliasInfo.IDMap ID) -- ^ New map of aliases if succeeded
-registerAlias ident name aliasMap scope =
-    case scope ^. AliasInfo.varnames . at name of
-        Just tid -> Just (aliasMap & at ident ?~ tid)
-        Nothing  -> Nothing
+getCurrentScope = scopeID >>= \case
+    Just (currentScopeId :: ID) -> view (AliasInfo.scope . at currentScopeId) <$> getAliasInfo
+    Nothing                     -> return Nothing
 
 
 regTypeName :: NamespaceMonad m => ID -> String -> m ()

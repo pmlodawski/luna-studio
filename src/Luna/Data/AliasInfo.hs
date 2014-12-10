@@ -67,6 +67,18 @@ scopeLookup pid info = case Map.lookup pid (_scope info) of
         Nothing          -> (mempty, mempty)
         Just (Scope v t) -> (v,t)
 
+registerAlias :: ID              -- ^ Variable that we seek aliases of: ID
+              -> String          -- ^ Variable that we seek aliases of: Name
+              -> ID              -- ^ Current scope ID
+              -> AliasInfo
+              -> Maybe AliasInfo -- ^ New map of aliases if succeeded
+registerAlias ident name scopeID aliasInfo = updateAliasInfo <$> getVariableID
+  where
+    updateAliasInfo :: ID -> AliasInfo
+    updateAliasInfo tid = aliasInfo & alias . at ident ?~ tid
+    getVariableID :: Maybe ID
+    getVariableID = aliasInfo ^? scope . ix scopeID . varnames . ix name
+
 ------------------------------------------------------------------------
 -- Instances
 ------------------------------------------------------------------------
