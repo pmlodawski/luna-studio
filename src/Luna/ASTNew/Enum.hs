@@ -21,8 +21,10 @@ type ID = Int
 data IDTag = IDTag ID deriving (Show, Eq, Generic)
 
 class Enumerated a where
-    id :: a -> ID
+    id  :: a -> ID
+    tag :: ID -> a
 
 instance Enumerated IDTag where
     id (IDTag i) = i
+    tag          = IDTag
     

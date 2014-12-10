@@ -28,7 +28,7 @@ import qualified Data.Maps    as Map
 type IDMap = IntMap
 
 
-data Error  = LookupError {key :: String}
+data Error  = LookupError { key :: String }
             deriving (Show, Eq, Generic, Read)
 
 

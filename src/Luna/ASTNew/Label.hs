@@ -22,6 +22,7 @@ data Label l a = Label { _label :: l, _element :: a } deriving (Eq, Generic, Rea
 
 makeLenses ''Label
 
+
 instance (Show l, Show a) => Show (Label l a) where
     show (Label l a) = "L " ++ show l ++ " " ++ show a
 
