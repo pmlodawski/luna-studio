@@ -25,11 +25,11 @@ rootLogger = getLogger "Flowbox"
 
 
 startParser :: Opt.Parser Cmd.Command
-startParser = Cmd.Start <$> ( Cmd.StartOptions <$> strOption ( long "ami"     <> short 'a' <> value (Config.ami     def) <> metavar "ami-id"       <> help ("Specify AMI to run, default is " ++ (Config.ami def)))
-                                               <*> strOption ( long "machine" <> short 'm' <> value (Config.machine def) <> metavar "machine-type" <> help ("Specify machine type to run, default is " ++ (Config.machine def)))
+startParser = Cmd.Start <$> ( Cmd.StartOptions <$> strOption ( long "ami"     <> short 'a' <> value (Config.ami     def) <> metavar "ami-id"       <> help ("Specify AMI to run, default is " ++ Config.ami def))
+                                               <*> strOption ( long "machine" <> short 'm' <> value (Config.machine def) <> metavar "machine-type" <> help ("Specify machine type to run, default is " ++ Config.machine def))
                                                <*> credOption
-                                               <*> strOption ( long "key"     <> short 'k' <> value (Config.keyName def) <> metavar "key-pair-name" <> help ("Specify key pair name for a created machine, default is " ++ (Config.keyName def)))
-                          )
+                                               <*> strOption ( long "key"     <> short 'k' <> value (Config.keyName def) <> metavar "key-pair-name" <> help ("Specify key pair name for a created machine, default is " ++ Config.keyName def))
+                            )
 
 
 stopParser :: Opt.Parser Cmd.Command
@@ -47,8 +47,7 @@ getParser = Cmd.Get <$> ( Cmd.GetOptions <$> credOption )
 
 
 versionParser :: Opt.Parser Cmd.Command
-versionParser = Cmd.Version <$> (Cmd.VersionOptions <$> switch ( long "numeric"  <> help "print only numeric version" )
-                                )
+versionParser = Cmd.Version <$> (Cmd.VersionOptions <$> switch ( long "numeric"  <> help "print only numeric version" ))
 
 
 parser :: Opt.Parser Cmd.Prog
@@ -58,14 +57,14 @@ parser = Cmd.Prog <$> subparser ( command "start"     (Opt.info startParser     
                                <> command "terminate" (Opt.info terminateParser (progDesc "Terminate EC2 instance and lose all saved data on its local storage"))
                                <> command "version"   (Opt.info versionParser   (progDesc "Print instance-manager version"))
                                 )
-                  <*> strOption ( long "region" <> short 'r' <> value (Config.region def) <> metavar "region" <> help ("Specify AWS region, default is " ++ (Config.region def)))
+                  <*> strOption ( long "region" <> short 'r' <> value (Config.region def) <> metavar "region" <> help ("Specify AWS region, default is " ++ Config.region def))
                   <*> switch    ( long "no-color" <> hidden <> help "disable color output" )
                   <*> optIntFlag Nothing 'v' 3 2 "verbose level [0-5], default 3"
                   <**> helper
 
 
 credOption :: Opt.Parser String
-credOption = strOption ( long "cred" <> short 'c' <> value (Config.credentialPath def) <> metavar "path" <> help ("Path to a file with AWS credentials, default is " ++ (Config.credentialPath def)))
+credOption = strOption ( long "cred" <> short 'c' <> value (Config.credentialPath def) <> metavar "path" <> help ("Path to a file with AWS credentials, default is " ++ Config.credentialPath def))
 
 
 opts :: Opt.ParserInfo Cmd.Prog
@@ -73,7 +72,7 @@ opts = Opt.info parser (fullDesc <> Opt.progDesc "Flowbox Instance Manager - Ama
 
 
 helper :: Opt.Parser (a -> a)
-helper = Opt.abortOption Opt.ShowHelpText $ (long "help" <> short 'h' <> help "show this help text")
+helper = Opt.abortOption Opt.ShowHelpText (long "help" <> short 'h' <> help "show this help text")
 
 
 main :: IO ()
