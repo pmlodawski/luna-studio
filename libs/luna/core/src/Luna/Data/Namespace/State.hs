@@ -154,18 +154,19 @@ regParent id = do
 
 regAlias :: NamespaceMonad m => ID -> String -> m ()
 regAlias ident name = do
-    aliasMap  <- view AliasInfo.alias <$> getAliasInfo
     aliasInfo <- getAliasInfo
-    aliasInfo' <- withCurrentScopeID_ (\scopeId -> AliasInfo.registerAlias ident name scopeId aliasInfo)
-    modify (set (Namespace.info) aliasInfo')
+    -- TODO [kgdk]: remove Just
+    aliasInfo' <- withCurrentScopeID_ (\scopeId -> Just $ AliasInfo.regAlias ident name scopeId aliasInfo)
+    modify $ Namespace.info .~ aliasInfo'
 
+
+-- TODO [kgdk]: użyć …ScopeID z …Scope, by codebase był wspólny
 
 withCurrentScopeID_ :: NamespaceMonad m => (ID -> Maybe a) -> m a
 withCurrentScopeID_ action = withCurrentScopeID action >>= maybe (fail "Cannot obtain current scope") return
 
 withCurrentScopeID :: NamespaceMonad m => (ID -> Maybe a) -> m (Maybe a)
 withCurrentScopeID action = scopeID >>= maybe (return Nothing) (return . action)
-
 
 withCurrentScope_ :: NamespaceMonad m => (AliasInfo.Scope -> Maybe a) -> m a
 withCurrentScope_ action = withCurrentScope action >>= maybe (fail "Cannot obtain current scope") return
