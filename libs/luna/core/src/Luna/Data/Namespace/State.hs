@@ -35,8 +35,6 @@ import qualified Luna.Data.Namespace       as Namespace
 import           Flowbox.System.Log.Logger as L
 
 
-import Debug.Trace
-
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
@@ -149,25 +147,40 @@ regVarName = regName AliasInfo.varnames
 
 regParent :: NamespaceMonad m => ID -> m ()
 regParent id = do
-    ns <- scopeID
-    withJust ns (\pid -> modifyAliasInfo (AliasInfo.parent %~ IntMap.insert id pid))
+    scopeID <- scopeID
+    withJust scopeID (\pid -> modifyAliasInfo (AliasInfo.parent %~ IntMap.insert id pid))
 
 
 regAlias :: NamespaceMonad m => ID -> String -> m ()
-regAlias id name = do
-    ns <- get
-    ai <- getAliasInfo
-    aux ns (ns ^. Namespace.stack)
-  where 
-    aux ns (sid:sids) = do  case ns ^. Namespace.info . AliasInfo.scope . at sid of 
-                              Just scope -> case scope ^. AliasInfo.varnames . at name of
-                                              Just tid  -> traceShow ("TRACE DONE, FOUND " ++ show name ++ ":" ++ show id ++ " in "  ++ show sid ++ " ---> " ++ show tid) (fin ns (ns ^. Namespace.info) tid)
-                                              Nothing -> traceShow ("TRACE CONT, NOT FOUND " ++ show name ++ ":" ++ show id ++ " in "  ++ show sid) (aux ns sids)
-                              Nothing    -> traceShow ("TRACE CONT, NOT FOUND SCOPE " ++ show sid) (return ())
-    aux ns [] = traceShow ("TRACE DONE, NOT FOUND " ++ show name ++ ":" ++ show id) (return ())  -- orphan?
-    fin ns a tid = do let a' = a & AliasInfo.alias.at id ?~ tid
-                          ns' = set Namespace.info a' ns
-                      put ns'
+regAlias ident name = do
+    aliasMap  <- view AliasInfo.alias <$> getAliasInfo
+    aliasMap' <- withCurrentScope_ (registerAlias ident name aliasMap)
+    modify (set (Namespace.info.AliasInfo.alias) aliasMap')
+
+
+withCurrentScope_ :: NamespaceMonad m => (AliasInfo.Scope -> Maybe a) -> m a
+withCurrentScope_ action = withCurrentScope action >>= maybe (fail "No scope") return
+
+
+withCurrentScope :: NamespaceMonad m => (AliasInfo.Scope -> Maybe a) -> m (Maybe a)
+withCurrentScope action = getCurrentScope >>= maybe (return Nothing) (return . action)
+
+
+getCurrentScope :: NamespaceMonad m => m (Maybe AliasInfo.Scope)
+getCurrentScope = (Namespace.head <$> get) >>= \case
+    Just currentScopeId -> view (AliasInfo.scope . at currentScopeId) <$> getAliasInfo
+    Nothing             -> return Nothing
+
+registerAlias :: ID                         -- ^ Variable that we seek aliases of: ID
+              -> String                     -- ^ Variable that we seek aliases of: Name
+              -> AliasInfo.IDMap ID         -- ^ The map of aliases
+              -> AliasInfo.Scope            -- ^ The current scope of the variable
+              -> Maybe (AliasInfo.IDMap ID) -- ^ New map of aliases if succeeded
+registerAlias ident name aliasMap scope =
+    case scope ^. AliasInfo.varnames . at name of
+        Just tid -> Just (aliasMap & at ident ?~ tid)
+        Nothing  -> Nothing
+
 
 regTypeName :: NamespaceMonad m => ID -> String -> m ()
 regTypeName = regName AliasInfo.typenames
