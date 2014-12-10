@@ -36,25 +36,13 @@ strExpr = NodeExpr.StringExpr . StringExpr.Expr
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
     ast         <- Common.getAST code
-    putStrLn "== getGraph"
-    (graph, pm) <- Common.getGraph bc def ast
-    printLn
-    prettyPrint ast
-    printLn
-    prettyPrint graph
-    printLn
-    prettyPrint pm
-    printLn
-    putStrLn "== getExpr"
+    --putStrLn "== getGraph"
+    (graph , pm) <- Common.getGraph bc def ast
+    --prettyPrint (ast, graph, pm) >> putStrLn "== getExpr"
     (ast2  , pm2) <- Common.getExpr bc graph pm ast
-    prettyPrint ast2
-    printLn
-    prettyPrint pm2
-    printLn
-    putStrLn "== getGraph"
+    --prettyPrint (ast2, pm2) >> putStrLn "== getGraph"
     (graph3, pm3) <- Common.getGraph bc pm2 ast2
-    print pm3
-    printLn
+    --print pm3 >> printLn
     expr  <- Common.getMain (clearIDs 0 ast)
     expr2 <- Common.getMain (clearIDs 0 ast2)
 
