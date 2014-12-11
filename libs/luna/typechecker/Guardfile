@@ -4,7 +4,7 @@ require 'open3'
 
 $run_docgen   = false
 $run_main     = true
-$run_tests    = true
+$run_tests    = false
 $run_linting  = false
 $run_coverage = false
 
@@ -41,7 +41,7 @@ def haskellguard trigger
 
     command "../../../dist/bin/libs/luna-typechecker" if $run_main
 
-    if $run_test and command "../../../dist/bin/libs/luna-typechecker-tests"
+    if $run_tests and command "../../../dist/bin/libs/luna-typechecker-tests"
 
       if $run_coverage
         section "coverage", "rm -rf hpc_report"
@@ -69,7 +69,9 @@ def nocolourcodes(arg)
 end
 
 def command(cmd, inp=nil)
+  puts "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".blue
   puts "$ #{cmd}".blue
+  puts "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".blue
 
   start = Time.now
   stdout, stderr, status = Open3.capture3(cmd, :stdin_data=>inp)
@@ -88,15 +90,19 @@ def command(cmd, inp=nil)
   end
 
   if stdout
+    puts "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".green
     puts "STDOUT  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".green
-    puts nocolourcodes(stdout).green
+    puts "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".green
+    puts stdout
   else
     puts "STDOUT: none  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".green
   end
 
   if stderr
+    puts "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".red
     puts "STDERR  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".red
-    puts nocolourcodes(stderr).red
+    puts "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".red
+    puts stderr
   end
 
   status.exitstatus
