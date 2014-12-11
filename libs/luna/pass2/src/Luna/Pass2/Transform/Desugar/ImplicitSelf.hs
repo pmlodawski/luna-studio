@@ -42,11 +42,9 @@ import qualified Luna.Pass              as Pass
 import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
-import           Luna.Data.AliasInfo          (AliasInfo)
 import           Luna.Data.ASTInfo            (ASTInfo, genID)
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regVarName, regTypeName, withNewScope)
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
 
@@ -60,8 +58,6 @@ type ISPass                 m   = PassMonad ASTInfo m
 type ISCtx              lab m a = (Enumerated lab, ISTraversal m a)
 type ISTraversal            m a = (PassCtx m, AST.Traversal        ImplSelf (ISPass m) a a)
 type ISDefaultTraversal     m a = (PassCtx m, AST.DefaultTraversal ImplSelf (ISPass m) a a)
-
-type ResultExpr = LExpr IDTag (MultiName String)
 
 
 ------------------------------------------------------------------------

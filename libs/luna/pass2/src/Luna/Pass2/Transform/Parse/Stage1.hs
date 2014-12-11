@@ -42,11 +42,9 @@ import qualified Luna.Pass              as Pass
 import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
-import           Luna.Data.AliasInfo          (AliasInfo)
 import           Luna.Data.ASTInfo            (ASTInfo)
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regVarName, regTypeName, withNewScope)
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
 import           Data.ByteString              (ByteString)
@@ -55,6 +53,7 @@ import Control.Monad.Trans.Either
 import Control.Monad.Trans.Class (lift)
 import Luna.Data.Source (Source(Source), Medium, Code(Code))
 import qualified Luna.Data.Source as Source
+import           Data.String             (IsString, fromString)
 
 
 ----------------------------------------------------------------------
@@ -68,7 +67,7 @@ type Stage2Ctx              lab m = (Enumerated lab, PassCtx m)
 type Stage2Traversal        m a b = (PassCtx m, AST.Traversal        Stage2 (Stage2Pass m) a b)
 type Stage2DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage2 (Stage2Pass m) a b)
 
-type ResultExpr = LExpr IDTag (MultiName String)
+type ResultExpr = LExpr IDTag MultiName
 
 
 ------------------------------------------------------------------------
@@ -81,7 +80,7 @@ pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias 
 
 passRunner src = do
     (Source name (Code code)) <- Source.read src
-    result <- lift . hoistEither . (tmpFixErrorParse (Parser.moduleParser [TName name] Parser.defState)) $ code
+    result <- lift . hoistEither . (tmpFixErrorParse (Parser.moduleParser [TName $ fromString name] Parser.defState)) $ code
     let astinfo = view ParserState.info $ snd result
     return $ (fst result, astinfo)
 

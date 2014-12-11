@@ -53,16 +53,19 @@ import           Text.Parser.LookAhead
 import           Data.Char                    (isSpace)
 import qualified Data.ByteString as ByteStr
 import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
+import qualified Luna.ASTNew.Name.Pattern     as NamePattern
+import           Luna.ASTNew.Name.Pattern     (NamePattern)
 import qualified Luna.ASTNew.Name.Multi       as MultiName
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
 
 import qualified Luna.Data.Namespace          as Namespace
-import qualified Luna.Data.AliasInfo          as Alias
+import qualified Luna.Data.StructInfo          as StructInfo
 import qualified Luna.ASTNew.AST              as AST
 import qualified Luna.ASTNew.Traversals       as AST
 import qualified Data.Maps                    as Map
 import           Data.Maybe                   (fromJust)
+import qualified Flowbox.Data.MapForest       as MapForest
 import qualified Luna.AST.Arg                 as Arg
 import qualified Data.List                    as List
 import qualified Luna.Parser.Pragma           as Pragma
@@ -70,6 +73,7 @@ import qualified Luna.Parser.Pragma           as Pragma
 import           Text.EditDistance            --(defaultEditCosts, levenshteinDistance, EditCosts, Costs(..))
 import           Text.PhoneticCode.Phonix     (phonix)
 import           Data.Function                (on)
+import           Data.List                    (sort)
 
 import qualified Data.IntMap  as IntMap
 
@@ -180,11 +184,16 @@ qualifiedPath p = sepBy1_ng p Tok.accessor <?> "qualified path"
 extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
                       <*> (namePattern <?> "function name")
 
-namePattern =   (MultiName.single <$> varOp)
-            <|> Tok.parens (MultiName.close <$> (MultiName.multi <$> Tok.varIdent <*> many1 namePatSeg))
+namePattern =   (NamePattern.single <$> varOp)
+            <|> Tok.parens (NamePattern.close <$> (NamePattern.multi <$> Tok.varIdent <*> many1 namePatSeg))
 
-namePatSeg =   (MultiName.Token <$> Tok.varIdent)
-           <|> (MultiName.Hole  <$  Tok.nameWildcard)
+namePatSeg =   (NamePattern.Token <$> Tok.varIdent)
+           <|> (NamePattern.Hole  <$  Tok.nameWildcard)
+
+
+--namePattern =   (MultiName.single <$> varOp)
+--            <|> Tok.parens (MultiName.multi <$> Tok.varIdent <*> many1 Tok.varIdent)
+
 
 argList       p = try (sepBy2 p Tok.separator) <|> many p <?> "argument list"
 argList'      p = braces (sepBy2 p Tok.separator) <|> ((:[]) <$> p) <?> "argument list"
@@ -454,11 +463,12 @@ charL   = labeled (Lit.Char   <$> Tok.charLiteral)
 stringL = labeled (Lit.String <$> Tok.stringLiteral)
 numL    = labeled (Lit.Number <$> Tok.numberL)
 
-
+-- FIXME [wd]: last parsed char is poorly written with '_' workaround when no char is available
 prevParsedChar = do
     Caret delta bs <- careting
-    --return ' '
-    return $ (UTF8.toString bs !! (max 0 . fromIntegral $ column delta - 1))
+    let idx = max 0 . fromIntegral $ column delta - 1
+        txt = UTF8.toString bs
+    return $ if idx > length txt then '_' else txt !! idx
 
 lastLexemeEmpty = do
     prevChar <- prevParsedChar
@@ -599,7 +609,7 @@ callBuilder2 src@(Label lab expr) argsx = case expr of
 --    return ret
 
 
-
+-- OLDER:
 --mkFuncParser func defparser = case name of
 --    (Name base segments) -> multiparser
 --    _                          -> defparser
@@ -614,25 +624,26 @@ callBuilder2 src@(Label lab expr) argsx = case expr of
 --          fname = if null segments then base 
 --                                   else base ++ " " ++ join " " segments
 
+-- NEWER:
 --mkFuncParser func = State.withReserved (segNames segments) $ tok (Expr.app <$> tok (pure $ Expr.funcVar name) <*> argParser)
-mkFuncParser func = State.withReserved (segNames segments) $  labeled (Expr.App <$> labeled (pure $ Expr.Var name) <*> (Expr.Seq <$> argParser))
-    where name          = Decl._fname func
-          argExpr       = argE expr
-          exprApp a b   = (++) <$> a <*> b
-          segParsers    = fmap segParser segments
-          argParser     = foldr exprApp (pure []) segParsers
-          (MultiName base segments) = name
+--mkFuncParser func = State.withReserved (segNames segments) $  labeled (Expr.App <$> labeled (pure $ Expr.Var name) <*> (Expr.Seq <$> argParser))
+--    where name          = Name.fromName $ Decl._fname func
+--          argExpr       = argE expr
+--          exprApp a b   = (++) <$> a <*> b
+--          segParsers    = fmap segParser segments
+--          argParser     = foldr exprApp (pure []) segParsers
+--          (MultiName base segments) = name
 
-          segParser seg = case seg of
-              MultiName.Hole    -> (:[]) <$> argExpr
-              MultiName.Token s -> []    <$  Tok.symbol s
+--          segParser seg = case seg of
+--              MultiName.Hole    -> (:[]) <$> argExpr
+--              MultiName.Token s -> []    <$  Tok.symbol s
 
-          segNames = segNames' []
-          segNames' names s = case s of
-              []   -> names
-              x:xs -> case x of
-                  MultiName.Token n -> segNames' (n:names) xs
-                  MultiName.Hole    -> segNames' names     xs
+--          segNames = segNames' []
+--          segNames' names s = case s of
+--              []   -> names
+--              x:xs -> case x of
+--                  MultiName.Token n -> segNames' (n:names) xs
+--                  MultiName.Hole    -> segNames' names     xs
 
 notReserved p = do
     rsv  <- view State.adhocReserved <$> get
@@ -647,36 +658,48 @@ varE   = do
     ast  <- lookupAST name
     case ast of
         -- FIXME[wd]: dopiero przy dwuprzebiegowym parserze bedziemy mieli wieloczlonowe funkcje rekurencyjne
-        Just(AST.Decl func@(Decl.Function {})) -> mkFuncParser func -- FIXME - function jest deklaracją!
+        --Just(AST.Decl func@(Decl.Function {})) -> mkFuncParser func -- FIXME - function jest deklaracją!
         _                                      -> labeled . pure $ Expr.Var (MultiName.single name)
                           
 
 lookupAST name = do
     scope  <- State.getScope
-    --astMap <- State.getASTMap
+    structInfo <- State.getStructInfo
+    let namePatterns = view StructInfo.namePatterns structInfo
     pid    <- State.getPid
 
+
     pragmaSet <- view (State.conf . Config.pragmaSet) <$> get
-        
-    case Map.lookup pid scope of
-            Nothing                    -> fail "Internal parser error [1]"
-            Just (Alias.Scope varnames typenames) -> case Map.lookup name varnames of
-                -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
-                -- poprawka: Nothing zostanie rowniez zwrocone przy ustawionej fladze
-                -- poprawka: Nothing zostanie rowniez zwrocone przy "self"
-                Just dstID -> return Nothing --return $ Map.lookup dstID astMap 
-                Nothing    -> if (name == "self") 
-                    then return Nothing
-                    else case Pragma.lookup pragmaSet of
-                        Pragma.Defined Pragma.AllowOrphans -> return Nothing
-                        _                                  -> do
-                                                              x <- get
-                                                              fail $ "name '" ++ name ++ "' is not defined" ++ msgTip ++ "XXX: " ++ show x
-                        where scopedNames = Map.keys varnames
-                              simWords    = findSimWords name scopedNames
-                              msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
-                                                              else ""
+
+    return Nothing
+
+    --case Map.lookup pid scope of
+    --        Nothing                    -> fail "Internal parser error [1]"
+    --        Just (StructInfo.Scope varnames typenames) -> do
+    --            let possibleIDs      = MapForest.subElems name varnames
+    --                possiblePatterns = fmap (flip Map.lookup namePatterns) possibleIDs
+
+    --            fail $ "SUBFORESTS: " ++ name ++ ": "++ show (reverse $ sort possiblePatterns)
+    --            -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
+    --            -- poprawka: Nothing zostanie rowniez zwrocone przy ustawionej fladze
+    --            -- poprawka: Nothing zostanie rowniez zwrocone przy "self"
+    --            --_ -> return Nothing
+    --            --Just dstID -> return Nothing --return $ Map.lookup dstID astMap 
+    --            --Nothing    -> if (name == "self") 
+    --            --    then return Nothing
+    --            --    else case Pragma.lookup pragmaSet of
+    --            --        Pragma.Defined Pragma.AllowOrphans -> return Nothing
+    --            --        _                                  -> do
+    --            --                                              x <- get
+    --            --                                              fail $ "name '" ++ name ++ "' is not defined" ++ msgTip ++ "XXX: " ++ show x
+    --            --        where scopedNames = Map.keys varnames
+    --            --              simWords    = findSimWords name scopedNames
+    --            --              msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
+    --            --                                              else ""
                           
+
+
+
 
 editCosts = EditCosts { deletionCosts      = ConstantCost 10
                       , insertionCosts     = ConstantCost 10
@@ -981,7 +1004,7 @@ testme ast st = ast -- runState (traverseM ast) st
 
 
 
-    --vaMod :: Module -> VAPass AliasInfo
+    --vaMod :: Module -> VAPass StructInfo
     --vaMod el@(Module.Module id cls imports classes typeAliases typeDefs fields methods modules) = do
     --    regModule el
     --    withScope id $ regVarName name id *> continue

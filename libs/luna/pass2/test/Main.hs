@@ -19,7 +19,7 @@ import qualified Luna.Data.ASTInfo  as ASTInfo
 import qualified Luna.Parser.Pragma as Pragma
 import qualified Luna.Data.Config   as Config
 import           Luna.ASTNew.Name   (TName(TName))
-import qualified Luna.Pass2.Analysis.Alias as AA
+import qualified Luna.Pass2.Analysis.Struct as SA
 import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
 import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
 import qualified Luna.Pass2.Transform.Desugar.ImplicitSelf as ImplSelf
@@ -45,14 +45,14 @@ main = do
     let path = args !! 0
         src  = Source "Main" (File path)
 
-
     result <- runEitherT $ do
         (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
         (ast2, astinfo2) <- Pass.run2_ ImplSelf.pass astinfo1 ast1
-        aa1              <- Pass.run1_ AA.pass ast2
-        (ast3, astinfo3) <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo2 ast2
-        aa2              <- Pass.run1_ AA.pass ast3
-        return (ast3,aa2)
+        sa1              <- Pass.run1_ SA.pass ast2
+        --return (ast2, sa1)
+        (ast3, astinfo3) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo2 ast2
+        sa2              <- Pass.run1_ SA.pass ast3
+        return (ast3,sa2)
 
     case result of
         Left e      -> putStrLn $ ppShow e

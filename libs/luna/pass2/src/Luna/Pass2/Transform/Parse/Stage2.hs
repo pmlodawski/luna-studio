@@ -42,11 +42,9 @@ import qualified Luna.Pass              as Pass
 import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
-import           Luna.Data.AliasInfo          (AliasInfo)
 import           Luna.Data.ASTInfo            (ASTInfo)
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regVarName, regTypeName, withNewScope)
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
 
@@ -61,7 +59,7 @@ type Stage2Ctx              lab m = (Enumerated lab, PassCtx m)
 type Stage2Traversal        m a b = (PassCtx m, AST.Traversal        Stage2 (Stage2Pass m) a b)
 type Stage2DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage2 (Stage2Pass m) a b)
 
-type ResultExpr = LExpr IDTag (MultiName String)
+type ResultExpr = LExpr IDTag MultiName
 
 
 ------------------------------------------------------------------------

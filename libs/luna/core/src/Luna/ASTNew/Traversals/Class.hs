@@ -36,7 +36,7 @@ import           Luna.ASTNew.Lit        (LLit, Lit)
 import qualified Luna.ASTNew.Expr       as Expr
 import           Luna.ASTNew.Expr       (LExpr, Expr)
 import           Luna.ASTNew.Name       (NameBase)
-
+import           Luna.ASTNew.Name.Pattern     (NamePattern)
 ----------------------------------------------------------------------
 -- Type classes
 ----------------------------------------------------------------------
@@ -63,7 +63,6 @@ type MonoTraversal base m a = Traversal base m a a
 defaultMonoTraverseM :: (DefaultTraversal base m a a, Monad m, Applicative m) 
                      => base -> a -> m a
 defaultMonoTraverseM = defaultTraverseM
-
 
 --monoTraverseM :: (MonoTraversal base m a, Applicative m, Monad m) => base -> a -> m a
 --monoTraverseM = traverseM
@@ -105,12 +104,13 @@ instance DefaultTraversal base m String String where defaultTraverseM _ = pure
 
 -- ----- basic AST types -----
 
-instance Traversal base m TName         TName         where traverseM _ = pure
-instance Traversal base m VName         VName         where traverseM _ = pure
-instance Traversal base m CName         CName         where traverseM _ = pure
-instance Traversal base m TVName        TVName        where traverseM _ = pure
-instance Traversal base m (MultiName a) (MultiName a) where traverseM _ = pure
-instance Traversal base m NameBase      NameBase      where traverseM _ = pure
+instance Traversal base m TName       TName       where traverseM _ = pure
+instance Traversal base m VName       VName       where traverseM _ = pure
+instance Traversal base m CName       CName       where traverseM _ = pure
+instance Traversal base m TVName      TVName      where traverseM _ = pure
+instance Traversal base m MultiName   MultiName   where traverseM _ = pure
+instance Traversal base m NamePattern NamePattern where traverseM _ = pure
+instance Traversal base m NameBase    NameBase    where traverseM _ = pure
 
 
 -- ----- Unit -----

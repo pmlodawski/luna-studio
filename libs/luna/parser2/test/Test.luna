@@ -1,3 +1,7 @@
-def foo x:
-    self + x
+def if: 2
 
+def (if then else) cond ok fail: 
+	1
+
+def foo x y z:
+	if x then y else z

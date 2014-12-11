@@ -4,9 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 
 module Luna.Data.Namespace.State where
@@ -28,21 +29,21 @@ import           Luna.ASTNew.Pat              (Pat)
 import qualified Luna.ASTNew.Pat              as Pat
 import           Luna.ASTNew.Type             (Type)
 import qualified Luna.ASTNew.Type             as Type
-import           Luna.Data.AliasInfo       (AliasInfo)
-import qualified Luna.Data.AliasInfo       as AliasInfo
+import           Luna.Data.StructInfo       (StructInfo)
+import qualified Luna.Data.StructInfo       as StructInfo
 import           Luna.Data.Namespace       (Namespace)
 import qualified Luna.Data.Namespace       as Namespace
 import           Flowbox.System.Log.Logger as L
-
-
-import Debug.Trace
-
+import qualified Flowbox.Data.MapForest    as MapForest
+import           Luna.ASTNew.Name.Multi    (MultiName)
+import qualified Luna.ASTNew.Name.Multi    as MultiName
+import           Luna.ASTNew.Name.Pattern  (NamePattern)
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
---data VAState = VAState { _info    :: AliasInfo
+--data VAState = VAState { _info    :: StructInfo
 --                       , _idStack :: [ID]
 --                       }
 --             deriving (Show)
@@ -52,8 +53,8 @@ logger = getLoggerIO $(moduleName)
 type NamespaceMonad m = (MonadState Namespace m, Applicative m)
 
 
---getAliasInfo :: NamespaceMonad m => m AliasInfo
-getAliasInfo = view Namespace.info <$> get
+--getStructInfo :: NamespaceMonad m => m StructInfo
+getStructInfo = view Namespace.info <$> get
 
 --getCurrentID :: NamespaceMonad m => m (Maybe ID)
 --getCurrentID = do stack <- view idStack <$> get
@@ -65,14 +66,14 @@ getAliasInfo = view Namespace.info <$> get
 scopeID = Namespace.head <$> get
 
 
---putAliasInfo :: NamespaceMonad m => AliasInfo -> m ()
-putAliasInfo info = modify (Namespace.info .~ info)
+--putStructInfo :: NamespaceMonad m => StructInfo -> m ()
+putStructInfo info = modify (Namespace.info .~ info)
 
 
---modifyAliasInfo :: NamespaceMonad m => (AliasInfo -> AliasInfo) -> m ()
-modifyAliasInfo f = do
-    info <- getAliasInfo
-    putAliasInfo $ f info
+--modifyStructInfo :: NamespaceMonad m => (StructInfo -> StructInfo) -> m ()
+modifyStructInfo f = do
+    info <- getStructInfo
+    putStructInfo $ f info
 
 
 
@@ -133,93 +134,110 @@ regType :: NamespaceMonad m => Type a -> m ()
 regType = undefined -- regElBy AST.Type Type.id
 
 
-regOrphan = modifyAliasInfo .: AliasInfo.regOrphan
+regOrphan = modifyStructInfo .: StructInfo.regOrphan
 
 
 
 --regID :: NamespaceMonad m => ID -> m ()
 regID id = do
     mpid <- scopeID
-    withJust mpid (\pid -> modifyAliasInfo $ AliasInfo.parent %~ IntMap.insert id pid)
+    withJust mpid (\pid -> modifyStructInfo $ StructInfo.parent %~ IntMap.insert id pid)
 
 
+regVarName :: NamespaceMonad m => ID -> MultiName -> m ()
+regVarName = regName StructInfo.varnames
 
---regVarName :: NamespaceMonad m => ID -> String -> m ()
-regVarName = regName AliasInfo.varnames
+
+regNamePattern :: NamespaceMonad m => ID -> NamePattern -> m ()
+regNamePattern id namePattern = modifyStructInfo (StructInfo.namePatterns %~ IntMap.insert id namePattern)
 
 regParent :: NamespaceMonad m => ID -> m ()
 regParent id = do
-    ns <- scopeID
-    withJust ns (\pid -> modifyAliasInfo (AliasInfo.parent %~ IntMap.insert id pid))
+    scopeID <- scopeID
+    withJust scopeID (\pid -> modifyStructInfo (StructInfo.parent %~ IntMap.insert id pid))
 
 
-regAlias :: NamespaceMonad m => ID -> String -> m ()
-regAlias id name = do
-    ns <- get
-    ai <- getAliasInfo
-    aux ns (ns ^. Namespace.stack)
-  where 
-    aux ns (sid:sids) = do  case ns ^. Namespace.info . AliasInfo.scope . at sid of 
-                              Just scope -> case scope ^. AliasInfo.varnames . at name of
-                                              Just tid  -> traceShow ("TRACE DONE, FOUND " ++ show name ++ ":" ++ show id ++ " in "  ++ show sid ++ " ---> " ++ show tid) (fin ns (ns ^. Namespace.info) tid)
-                                              Nothing -> traceShow ("TRACE CONT, NOT FOUND " ++ show name ++ ":" ++ show id ++ " in "  ++ show sid) (aux ns sids)
-                              Nothing    -> traceShow ("TRACE CONT, NOT FOUND SCOPE " ++ show sid) (return ())
-    aux ns [] = traceShow ("TRACE DONE, NOT FOUND " ++ show name ++ ":" ++ show id) (return ())  -- orphan?
-    fin ns a tid = do let a' = a & AliasInfo.alias.at id ?~ tid
-                          ns' = set Namespace.info a' ns
-                      put ns'
+regAlias :: NamespaceMonad m => ID -> MultiName -> m ()
+regAlias ident name = do
+    structInfo <- getStructInfo
+    -- TODO [kgdk]: remove Just
+    structInfo' <- withCurrentScopeID_ (\scopeId -> Just $ StructInfo.regAlias ident name scopeId structInfo)
+    modify $ Namespace.info .~ structInfo'
 
-regTypeName :: NamespaceMonad m => ID -> String -> m ()
-regTypeName = regName AliasInfo.typenames
+
+-- TODO [kgdk]: użyć …ScopeID z …Scope, by codebase był wspólny
+
+withCurrentScopeID_ :: NamespaceMonad m => (ID -> Maybe a) -> m a
+withCurrentScopeID_ action = withCurrentScopeID action >>= maybe (fail "Cannot obtain current scope") return
+
+withCurrentScopeID :: NamespaceMonad m => (ID -> Maybe a) -> m (Maybe a)
+withCurrentScopeID action = scopeID >>= maybe (return Nothing) (return . action)
+
+withCurrentScope_ :: NamespaceMonad m => (StructInfo.Scope -> Maybe a) -> m a
+withCurrentScope_ action = withCurrentScope action >>= maybe (fail "Cannot obtain current scope") return
+
+
+withCurrentScope :: NamespaceMonad m => (StructInfo.Scope -> Maybe a) -> m (Maybe a)
+withCurrentScope action = getCurrentScope >>= maybe (return Nothing) (return . action)
+
+
+getCurrentScope :: NamespaceMonad m => m (Maybe StructInfo.Scope)
+getCurrentScope = scopeID >>= \case
+    Just (currentScopeId :: ID) -> view (StructInfo.scope . at currentScopeId) <$> getStructInfo
+    Nothing                     -> return Nothing
+
+
+regTypeName :: NamespaceMonad m => ID -> MultiName -> m ()
+regTypeName = regName StructInfo.typenames
 
 
 regName lens id name = do
-    a    <- getAliasInfo
+    a    <- getStructInfo
     mcid <- scopeID
     case mcid of
         Nothing  -> fail "Unable to get current id"
-        Just cid -> putAliasInfo a2
-            where varRel  = a ^. (AliasInfo.scope . (ix cid))
-                  varRel2 = varRel & lens.at name ?~ id
-                  a2      = a & AliasInfo.scope.at cid ?~ varRel2
+        Just cid -> putStructInfo a2
+            where varRel  = a ^. (StructInfo.scope . ix cid)
+                  varRel2 = varRel & lens %~ (MapForest.insert (MultiName.toList name) id)
+                  a2      = a & StructInfo.scope.at cid ?~ varRel2
 
 
-regParentVarName :: NamespaceMonad m => ID -> String -> m ()
-regParentVarName = withParentID .: regVarName
+--regParentVarName :: NamespaceMonad m => ID -> String -> m ()
+--regParentVarName = withParentID .: regVarName
 
-bindVar id name = do
-    ns <- get
-    case Namespace.bindVar id name ns of
-        Left _    -> fail $ "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
-        Right ns' -> put ns'
+--bindVar id name = do
+--    ns <- get
+--    case Namespace.bindVar id name ns of
+--        Left _    -> fail $ "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+--        Right ns' -> put ns'
 
-tryBindVar id name = do
-    ns <- get
-    case Namespace.bindVar id name ns of
-        Left _    -> do let errMsg = "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
-                        logger L.error errMsg
-                        regOrphan id $ AliasInfo.LookupError errMsg 
-        Right ns' -> put ns'
+--tryBindVar id name = do
+--    ns <- get
+--    case Namespace.bindVar id name ns of
+--        Left _    -> do let errMsg = "Unable to bind variable " ++ name -- FIXME[wd]: nicer error messages
+--                        logger L.error errMsg
+--                        regOrphan id name
+--        Right ns' -> put ns'
 
 
 --bindVar :: NamespaceMonad m => ID -> String -> m ()
 --bindVar id name = do
 --    mcid <- getCurrentID
---    withJust mcid (\cid -> modifyAliasInfo (bindVarRec id cid name))
+--    withJust mcid (\cid -> modifyStructInfo (bindVarRec id cid name))
 
 
---bindVarRec :: ID -> ID -> String -> AliasInfo -> AliasInfo
+--bindVarRec :: ID -> ID -> String -> StructInfo -> StructInfo
 --bindVarRec id ctxID name a = case dstIDLookup of
 --    Just dstID -> updateAliasMap dstID
 --    Nothing    -> case mPid of
 --                  Just pid -> bindVarRec id pid name a
---                  Nothing  -> updateInvalidMap $ AliasInfo.LookupError name
+--                  Nothing  -> updateInvalidMap $ StructInfo.LookupError name
 --    where dstIDLookup          = varnames ^. at name
---          mPid                 = (a ^. AliasInfo.parent) ^. at ctxID
---          varRel               = a ^. AliasInfo.scope.ix ctxID
---          varnames             = varRel ^. AliasInfo.varnames
---          updateAliasMap val   = a & AliasInfo.alias.at id ?~ val
---          updateInvalidMap val = a & AliasInfo.orphans.at id ?~ val
+--          mPid                 = (a ^. StructInfo.parent) ^. at ctxID
+--          varRel               = a ^. StructInfo.scope.ix ctxID
+--          varnames             = varRel ^. StructInfo.varnames
+--          updateAliasMap val   = a & StructInfo.alias.at id ?~ val
+--          updateInvalidMap val = a & StructInfo.orphans.at id ?~ val
 
 
 

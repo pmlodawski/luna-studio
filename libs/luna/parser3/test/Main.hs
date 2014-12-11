@@ -12,6 +12,8 @@ import qualified Luna.Data.ASTInfo  as ASTInfo
 import qualified Luna.Parser.Pragma as Pragma
 import qualified Luna.Data.Config   as Config
 import           Luna.ASTNew.Name   (TName(TName))
+import           Data.String             (IsString, fromString)
+
 
 patchedParserState info' = def
     & ParserState.info .~ info'
@@ -27,7 +29,7 @@ main = do
     args <- getArgs
     let path = args !! 0
 
-    r <- Parser.parseFile path $ Parser.moduleParser [TName "x"] Parser.defState
+    r <- Parser.parseFile path $ Parser.moduleParser [TName $ fromString "x"] Parser.defState
     --r <- Parser.parseFile path $ Parser.exprParser (patchedParserState $ ASTInfo.mk 0)
     case r of
         Left  e -> displayIO stdout $ Parser.renderErr e

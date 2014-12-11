@@ -11,7 +11,7 @@
 
 {-# LANGUAGE TypeFamilies #-}
 
-module Luna.Pass2.Analysis.Alias where
+module Luna.Pass2.Analysis.Struct where
 
 import           Flowbox.Prelude
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
@@ -45,53 +45,53 @@ import qualified Luna.Pass                    as Pass
 import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
-import           Luna.Data.AliasInfo          (AliasInfo)
+import           Luna.Data.StructInfo         (StructInfo)
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regTypeName, withNewScope)
+import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regNamePattern, regTypeName, withNewScope)
 import qualified Luna.Parser.State            as ParserState
-
+import qualified Luna.ASTNew.Name.Pattern     as NamePattern
 
 ----------------------------------------------------------------------
 -- Base types
 ----------------------------------------------------------------------
 
-data AliasAnalysis = AliasAnalysis
+data StructAnalysis = StructAnalysis
 
-type AAPass                 m   = PassMonad Namespace m
-type AACtx              lab m a = (Enumerated lab, AATraversal m a)
-type AATraversal            m a = (PassCtx m, AST.Traversal        AliasAnalysis (AAPass m) a a)
-type AADefaultTraversal     m a = (PassCtx m, AST.DefaultTraversal AliasAnalysis (AAPass m) a a)
+type SAPass                 m   = PassMonad Namespace m
+type SACtx              lab m a = (Enumerated lab, SATraversal m a)
+type SATraversal            m a = (PassCtx m, AST.Traversal        StructAnalysis (SAPass m) a a)
+type SADefaultTraversal     m a = (PassCtx m, AST.DefaultTraversal StructAnalysis (SAPass m) a a)
 
 ----------------------------------------------------------------------
 -- Utils functions
 ----------------------------------------------------------------------
 
-traverseM :: (AATraversal m a) => a -> AAPass m a
-traverseM = AST.traverseM AliasAnalysis
+traverseM :: (SATraversal m a) => a -> SAPass m a
+traverseM = AST.traverseM StructAnalysis
 
-defaultTraverseM :: (AADefaultTraversal m a) => a -> AAPass m a
-defaultTraverseM = AST.defaultTraverseM AliasAnalysis
+defaultTraverseM :: (SADefaultTraversal m a) => a -> SAPass m a
+defaultTraverseM = AST.defaultTraverseM StructAnalysis
 
 ----------------------------------------------------------------------
 -- Pass functions
 ----------------------------------------------------------------------
 
-pass :: (Monoid s, AADefaultTraversal m a) => Pass s (a -> AAPass m AliasInfo)
+pass :: (Monoid s, SADefaultTraversal m a) => Pass s (a -> SAPass m StructInfo)
 pass = Pass "Alias analysis" 
             "Basic alias analysis that results in scope, alias, orphans and parent mapping information" 
             mempty aaUnit
 
-aaUnit :: AADefaultTraversal m a => a -> AAPass m AliasInfo
+aaUnit :: SADefaultTraversal m a => a -> SAPass m StructInfo
 aaUnit ast = defaultTraverseM ast *> (view Namespace.info <$> get)
 
-aaMod :: AACtx lab m a => LModule lab a -> AAPass m (LModule lab a)
+aaMod :: SACtx lab m a => LModule lab a -> SAPass m (LModule lab a)
 aaMod mod@(Label lab (Module path name body)) = withNewScope id continue
     where continue =  registerDecls body
                    *> defaultTraverseM mod
           id       = Enum.id lab
 
-aaPat :: (PassCtx m, Enumerated lab) => LPat lab -> AAPass m (LPat lab)
+aaPat :: (PassCtx m, Enumerated lab) => LPat lab -> SAPass m (LPat lab)
 aaPat p@(Label lab pat) = case pat of
     Pat.Var         name       -> regVarName id (Name.fromName name)
                                   *> regParent id
@@ -100,39 +100,41 @@ aaPat p@(Label lab pat) = case pat of
     where id = Enum.id lab
           continue = defaultTraverseM p 
 
-aaDecl :: AACtx lab m a => (LDecl lab a) -> AAPass m (LDecl lab a)
+aaDecl :: SACtx lab m a => (LDecl lab a) -> SAPass m (LDecl lab a)
 aaDecl d@(Label lab decl) = case decl of
     Decl.Function path name inputs output body -> withNewScope id $ defaultTraverseM d
     _                                          -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
-aaExpr :: (AACtx lab m a, NameBase a) => (LExpr lab a) -> AAPass m (LExpr lab a)
+-- FIXME [wd]: remove the assumption that a is MultiName. variables should always contain name as MultiName!
+aaExpr :: (SACtx lab m a, a~MultiName) => (LExpr lab a) -> SAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
-    var@(Expr.Var idnt )     -> regParent id
-                                *> regAlias id (nameBase idnt)
-                                *> continue
-    _                        -> continue
+    var@(Expr.Var name)     -> regParent id
+                               *> regAlias id name
+                               *> continue
+    _                       -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e
 
-registerDecls :: AACtx lab m a => [LDecl lab a] -> AAPass m ()
+registerDecls :: SACtx lab m a => [LDecl lab a] -> SAPass m ()
 registerDecls decls =  mapM_ registerHeaders  decls
                     *> mapM_ registerDataDecl decls
 
-registerDataDecl :: AACtx lab m a => LDecl lab a -> AAPass m ()
+registerDataDecl :: SACtx lab m a => LDecl lab a -> SAPass m ()
 registerDataDecl (Label lab decl) = case decl of
     Decl.Data     name _ cons defs   -> withNewScope id (registerDecls defs) *> pure ()
     _                                -> pure ()
     where id = Enum.id lab
 
-registerHeaders :: AACtx lab m a => LDecl lab a -> AAPass m ()
+registerHeaders :: SACtx lab m a => LDecl lab a -> SAPass m ()
 registerHeaders (Label lab decl) = case decl of
-    Decl.Function _ name inputs _ _  -> regVarName id (view MultiName.base name)
-                                     <* withNewScope id (defaultTraverseM inputs)
-    Decl.Data     name _ cons _      -> regTypeName id (Name.fromName name) 
-                                     <* mapM_ registerCons cons
-    _                                -> pure ()
+    Decl.Function _ namePat inputs _ _  -> regVarName id (NamePattern.toName namePat)
+                                        <* regNamePattern id namePat
+                                        <* withNewScope id (defaultTraverseM inputs)
+    Decl.Data     name _ cons _         -> regTypeName id (Name.fromName name) 
+                                        <* mapM_ registerCons cons
+    _                                   -> pure ()
     where id = Enum.id lab
           registerCons (Label lab (Decl.Cons name fields)) = regVarName (Enum.id lab) (Name.fromName name)
 
@@ -141,14 +143,14 @@ registerHeaders (Label lab decl) = case decl of
 -- Instances
 ----------------------------------------------------------------------
 
-instance AACtx lab m a => AST.Traversal AliasAnalysis (AAPass m) (LModule lab a) (LModule lab a) where
+instance SACtx lab m a => AST.Traversal StructAnalysis (SAPass m) (LModule lab a) (LModule lab a) where
     traverseM _ = aaMod
 
-instance AACtx lab m a => AST.Traversal AliasAnalysis (AAPass m) (LDecl lab a) (LDecl lab a) where
+instance SACtx lab m a => AST.Traversal StructAnalysis (SAPass m) (LDecl lab a) (LDecl lab a) where
     traverseM _ = aaDecl
 
-instance (AACtx lab m v, NameBase v) => AST.Traversal AliasAnalysis (AAPass m) (LExpr lab v) (LExpr lab v) where
+instance (SACtx lab m v, v~MultiName) => AST.Traversal StructAnalysis (SAPass m) (LExpr lab v) (LExpr lab v) where
     traverseM _ = aaExpr
 
-instance (PassCtx m, Enumerated lab) => AST.Traversal AliasAnalysis (AAPass m) (LPat lab) (LPat lab) where
+instance (PassCtx m, Enumerated lab) => AST.Traversal StructAnalysis (SAPass m) (LPat lab) (LPat lab) where
     traverseM _ = aaPat

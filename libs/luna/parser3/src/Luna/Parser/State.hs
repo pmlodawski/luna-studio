@@ -28,19 +28,19 @@ import qualified Luna.AST.IDMap       as IDMap
 import qualified Data.Maps            as Map
 import           Luna.AST.Comment     (Comment(..))
 import           Flowbox.Control.Monad.State (mapStateVal, get, put)
-import qualified Luna.Data.AliasInfo          as Alias
+import qualified Luna.Data.StructInfo          as StructInfo
 import qualified Luna.AST.AST                 as AST
 
 
 
 data State conf = State { _conf          :: Config conf
-                     , _info          :: ASTInfo
-                     , _opFixity      :: OperatorMap
-                     , _sourceMap     :: SourceMap
-                     , _namespace     :: Namespace
-                     , _adhocReserved :: [String]
-                     , _comments      :: IDMap [Comment]
-                     } deriving (Show)
+                        , _info          :: ASTInfo
+                        , _opFixity      :: OperatorMap
+                        , _sourceMap     :: SourceMap
+                        , _namespace     :: Namespace
+                        , _adhocReserved :: [String]
+                        , _comments      :: IDMap [Comment]
+                        } deriving (Show)
 
 makeLenses ''State
 
@@ -68,13 +68,15 @@ popScope        = mapStateVal $ namespace %~ Namespace.popScope
 
 regVarName id name = do
     pid <- getPid
-    withAlias $ Alias.regVarName pid id name
+    withStructInfo $ StructInfo.regVarName pid id name
 
 regTypeName id name = do
     pid <- getPid
-    withAlias $ Alias.regTypeName pid id name
+    withStructInfo $ StructInfo.regTypeName pid id name
 
-withAlias f = mapStateVal (namespace . Namespace.info %~ f)
+withStructInfo f = mapStateVal (namespace . Namespace.info %~ f)
+
+getStructInfo = view (namespace . Namespace.info) <$> get
 
 withReserved words p = do
     s <- get
@@ -100,15 +102,14 @@ withScope id p = do
     return ret
 
 
-
 getPid = do
     mpid <- Namespace.head . view namespace <$> get
     case mpid of
         Nothing  -> fail "Internal parser error. Cannot optain pid."
         Just pid -> return pid
 
-getScope  = view (namespace . Namespace.info . Alias.scope) <$> get
---getASTMap = view (namespace . Namespace.info . Alias.ast) <$> get
+getScope  = view (namespace . Namespace.info . StructInfo.scope) <$> get
+--getASTMap = view (namespace . Namespace.info . StructInfo.ast) <$> get
 
 
 

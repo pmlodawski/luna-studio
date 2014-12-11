@@ -10,7 +10,7 @@
 {-# LANGUAGE DeriveGeneric             #-}
 
 
-module Luna.ASTNew.Name.Multi where
+module Luna.ASTNew.Name.Pattern where
 
 
 import GHC.Generics (Generic)
@@ -22,71 +22,48 @@ import           Flowbox.Generics.Deriving.QShow
 import           Data.String.Utils (join)
 import           Data.List         (intersperse)
 import           Data.String             (IsString, fromString)
+import           Luna.ASTNew.Name.Multi (MultiName(MultiName))
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
-data MultiName = MultiName { _base :: String, _segments :: [String] }
+data NamePattern = NamePattern String [Segment]
           deriving (Show, Eq, Generic, Read, Ord)
 
 data Segment = Token String
              | Hole
              deriving (Show, Eq, Generic, Read, Ord)
 
-makeLenses ''MultiName
-instance QShow (MultiName)
+instance QShow (NamePattern)
 instance QShow (Segment)
 
 
+single :: String -> NamePattern
+single = flip NamePattern []
 
-toList :: MultiName -> [String]
-toList (MultiName b s) = b:s
-
-single :: String -> MultiName
-single = flip MultiName []
-
-multi :: String -> [String] -> MultiName
-multi = MultiName
+multi :: String -> [Segment] -> NamePattern
+multi = NamePattern
 
 
-isSingle :: MultiName -> Bool
-isSingle = null . view segments
-
-
-isMulti :: MultiName -> Bool
-isMulti = not . isSingle
-
-segmentShow :: Segment -> String
-segmentShow name = case name of
-    Token s -> strRepr s
-    Hole    -> "_"
-
-toStr :: MultiName -> String
-toStr n = if isSingle n
-    then strRepr $ n^.base
-    else (strRepr $ n^.base) ++ (' ' : join " " (n^.segments))
-
-
-unified :: MultiName -> String
-unified n = if isSingle n
-    then strRepr $ n^.base
-    else (strRepr $ n^.base) ++ ('_' : join "_" (n^.segments))
-
+toName :: NamePattern -> MultiName
+toName (NamePattern base segments) = MultiName base $ reverse $ go [] segments
+    where go x []           = x
+          go x (Hole:xs)    = go x xs
+          go x (Token n:xs) = go (n:x) xs
 
 -- close the definition, check if name holes are defined explicite
 -- define Holes otherwise
---close :: MultiName -> MultiName
---close n@(MultiName base segments) = case Hole `elem` segments of
---    True  -> n
---    False -> case null segments of
---        True  -> n
---        False -> MultiName base $ (Hole : intersperse Hole segments)
-
+close :: NamePattern -> NamePattern
+close n@(NamePattern base segments) = case Hole `elem` segments of
+    True  -> n
+    False -> case null segments of
+        True  -> n
+        False -> NamePattern base $ (Hole : intersperse Hole segments)
 
 
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
 
-instance IsString MultiName  where fromString = single
+instance IsString NamePattern  where fromString = single
