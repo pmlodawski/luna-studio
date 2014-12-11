@@ -19,6 +19,7 @@ Executable luna-typechecker
                     , luna-parser
                     , luna-pass
                     , mtl
+                    , pretty-show
                     , transformers
 
 
