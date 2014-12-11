@@ -129,9 +129,9 @@ def Image.edgeDetect self::Image edgeOperator:
 
 def Image.bayer self::Image bits::Int:
     ```liftF2 orderedDitherLuna #{bits} #{self}```
-
-class Point:
-    x,y :: Double
+    
+class ```Point``` x y:
+    Point: x,y :: Double
 
 def Image.cornerPin self::Image p1::Point p2::Point p3::Point p4::Point:
     p1x = p1.x
