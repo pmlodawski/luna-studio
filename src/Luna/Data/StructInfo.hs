@@ -7,11 +7,13 @@
 
 {-# LANGUAGE TemplateHaskell #-}
 
-module Luna.Data.AliasInfo where
+module Luna.Data.StructInfo where
 
 import Flowbox.Prelude
 
 import GHC.Generics        (Generic)
+
+import Data.Maybe (fromJust)
 
 
 import           Data.IntMap  (IntMap)
@@ -19,7 +21,12 @@ import           Data.Map     (Map)
 import           Luna.ASTNew.AST (AST, ID)
 import qualified Luna.ASTNew.AST as AST
 import qualified Data.Maps    as Map
-
+import           Luna.ASTNew.Name.Multi (MultiName)
+import qualified Luna.ASTNew.Name.Multi as MultiName
+import qualified Flowbox.Data.MapForest as MapForest
+import           Flowbox.Data.MapForest (MapForest)
+import           Control.Monad          (join)
+import           Luna.ASTNew.Name.Pattern (NamePattern)
 
 ----------------------------------------------------------------------
 -- Data types
@@ -27,25 +34,31 @@ import qualified Data.Maps    as Map
 
 type IDMap = IntMap
 
+type NameMap v = MapForest String v
 
-data Error  = LookupError { key :: String }
+type BaseName = String
+
+data Error  = LookupError {key :: String}
             deriving (Show, Eq, Generic, Read)
 
 
-data Scope = Scope { _varnames  :: Map String ID
-                   , _typenames :: Map String ID 
+data Scope = Scope { _varnames  :: NameMap ID
+                   , _typenames :: NameMap ID 
                    } deriving (Show, Eq, Generic, Read)
 
 makeLenses (''Scope)
 
 
-data AliasInfo = AliasInfo  { _scope   :: IDMap Scope
-                            , _alias   :: IDMap ID
-                            , _orphans :: IDMap Error
-                            , _parent  :: IDMap ID
-                            } deriving (Show, Eq, Generic, Read)
+type ScopeID = ID
 
-makeLenses (''AliasInfo)
+data StructInfo = StructInfo { _scope        :: IDMap Scope
+                             , _alias        :: IDMap ID
+                             , _orphans      :: IDMap MultiName
+                             , _parent       :: IDMap ID
+                             , _namePatterns :: IDMap NamePattern
+                             } deriving (Show, Eq, Generic, Read)
+
+makeLenses (''StructInfo)
 
 
 ----------------------------------------------------------------------
@@ -58,6 +71,8 @@ regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) 
 
 regOrphan id err = orphans %~ Map.insert id err
 
+regNamePattern id namePattern = namePatterns %~ Map.insert id namePattern
+
 regTypeName pid id name info = setScope info pid $ Scope vnmap (tnmap & at name ?~ id) where
     (vnmap, tnmap) = scopeLookup pid info
 
@@ -66,6 +81,14 @@ setScope info id s = info & scope.at id ?~ s
 scopeLookup pid info = case Map.lookup pid (_scope info) of
         Nothing          -> (mempty, mempty)
         Just (Scope v t) -> (v,t)
+
+
+regAlias :: ID -> MultiName -> ScopeID -> StructInfo -> StructInfo
+regAlias id name scopeID structInfo = case mvid of
+    Just vid -> structInfo & alias   . at id ?~ vid
+    Nothing  -> structInfo & orphans . at id ?~ name
+    where vnames = structInfo ^? scope . ix scopeID . varnames
+          mvid   = join $ fmap (MapForest.lookup $ MultiName.toList name) vnames
 
 ------------------------------------------------------------------------
 -- Instances
@@ -77,16 +100,17 @@ instance Monoid Scope where
                         (mappend (a ^. typenames) (b ^. typenames))
 
 
-instance Monoid AliasInfo where
-    mempty      = AliasInfo mempty mempty mempty mempty
-    mappend a b = AliasInfo (mappend (a ^. scope)   (b ^. scope))
-                            (mappend (a ^. alias)   (b ^. alias))
-                            (mappend (a ^. orphans) (b ^. orphans))
-                            (mappend (a ^. parent)  (b ^. parent))
+instance Monoid StructInfo where
+    mempty      = StructInfo mempty mempty mempty mempty mempty
+    mappend a b = StructInfo (mappend (a ^. scope)         (b ^. scope))
+                             (mappend (a ^. alias)         (b ^. alias))
+                             (mappend (a ^. orphans)       (b ^. orphans))
+                             (mappend (a ^. parent)        (b ^. parent))
+                             (mappend (a ^. namePatterns)  (b ^. namePatterns))
 
 
 instance Default Scope where
     def = mempty
 
-instance Default AliasInfo where
+instance Default StructInfo where
     def = mempty

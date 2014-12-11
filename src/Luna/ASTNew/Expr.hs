@@ -35,8 +35,6 @@ import           Luna.ASTNew.Arg        (Arg)
 import           Luna.ASTNew.Label      (Label)
 
 
-type Name = MultiName String
-
 type Selector = [VName]
 
 data App e = Seq   [Named VName e]

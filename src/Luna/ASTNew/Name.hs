@@ -19,6 +19,8 @@ import           Data.String             (IsString, fromString)
 
 import           Luna.ASTNew.Name.Rules  as X
 import qualified Luna.ASTNew.Name.Assert as Assert
+import qualified Luna.ASTNew.Name.Multi  as MultiName
+import           Luna.ASTNew.Name.Multi (MultiName(MultiName))
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -31,8 +33,8 @@ class Convert a b where
 
 
 class NameClass n where
-    toName   :: String -> n
-    fromName :: n      -> String
+    toName   :: MultiName -> n
+    fromName :: n      -> MultiName
 
 ----------------------------------------------------------------------
 -- Data types
@@ -48,10 +50,10 @@ data NameBase = VarName  VName
               | TypeName TName
               deriving (Show, Eq, Generic, Read)
 
-newtype VName  = VName  String deriving (Show, Eq, Generic, Read)
-newtype TName  = TName  String deriving (Show, Eq, Generic, Read)
-newtype CName  = CName  String deriving (Show, Eq, Generic, Read)
-newtype TVName = TVName String deriving (Show, Eq, Generic, Read)
+newtype VName  = VName  MultiName deriving (Show, Eq, Generic, Read)
+newtype TName  = TName  MultiName deriving (Show, Eq, Generic, Read)
+newtype CName  = CName  MultiName deriving (Show, Eq, Generic, Read)
+newtype TVName = TVName MultiName deriving (Show, Eq, Generic, Read)
 
 vname  (Assert.isVName  -> s) = VName  s
 tname  (Assert.isTName  -> s) = TName  s
@@ -63,10 +65,10 @@ tvname (Assert.isTVName -> s) = TVName s
 -- Instances
 ----------------------------------------------------------------------
 
-instance IsString VName  where fromString = vname
-instance IsString TName  where fromString = tname
-instance IsString CName  where fromString = cname
-instance IsString TVName where fromString = tvname
+instance IsString VName  where fromString = vname  . MultiName.single
+instance IsString TName  where fromString = tname  . MultiName.single
+instance IsString CName  where fromString = cname  . MultiName.single
+instance IsString TVName where fromString = tvname . MultiName.single
 
 instance NameClass VName where
     toName             = VName

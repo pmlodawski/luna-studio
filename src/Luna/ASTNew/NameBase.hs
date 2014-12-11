@@ -6,6 +6,7 @@ module Luna.ASTNew.NameBase (
 import           Flowbox.Prelude
 import           Luna.ASTNew.Label      (Label(Label))
 import qualified Luna.ASTNew.Name.Multi as MultiName
+import           Luna.ASTNew.Name.Multi (MultiName)
 
 
 class NameBase a where
@@ -13,7 +14,7 @@ class NameBase a where
   nameBase :: a -> String
 
 
-instance NameBase (MultiName.MultiName String) where
+instance NameBase MultiName where
   nameBase name = name ^. MultiName.base
 
 instance (Show l, Show a) => NameBase (Label l a) where
