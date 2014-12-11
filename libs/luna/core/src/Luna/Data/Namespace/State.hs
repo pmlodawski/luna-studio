@@ -4,10 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE ConstraintKinds  #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 
 module Luna.Data.Namespace.State where
@@ -35,6 +34,8 @@ import           Luna.Data.Namespace       (Namespace)
 import qualified Luna.Data.Namespace       as Namespace
 import           Flowbox.System.Log.Logger as L
 
+
+import Debug.Trace
 
 
 logger :: LoggerIO
@@ -148,39 +149,25 @@ regVarName = regName AliasInfo.varnames
 
 regParent :: NamespaceMonad m => ID -> m ()
 regParent id = do
-    scopeID <- scopeID
-    withJust scopeID (\pid -> modifyAliasInfo (AliasInfo.parent %~ IntMap.insert id pid))
+    ns <- scopeID
+    withJust ns (\pid -> modifyAliasInfo (AliasInfo.parent %~ IntMap.insert id pid))
 
 
 regAlias :: NamespaceMonad m => ID -> String -> m ()
-regAlias ident name = do
-    aliasInfo <- getAliasInfo
-    -- TODO [kgdk]: remove Just
-    aliasInfo' <- withCurrentScopeID_ (\scopeId -> Just $ AliasInfo.regAlias ident name scopeId aliasInfo)
-    modify $ Namespace.info .~ aliasInfo'
-
-
--- TODO [kgdk]: użyć …ScopeID z …Scope, by codebase był wspólny
-
-withCurrentScopeID_ :: NamespaceMonad m => (ID -> Maybe a) -> m a
-withCurrentScopeID_ action = withCurrentScopeID action >>= maybe (fail "Cannot obtain current scope") return
-
-withCurrentScopeID :: NamespaceMonad m => (ID -> Maybe a) -> m (Maybe a)
-withCurrentScopeID action = scopeID >>= maybe (return Nothing) (return . action)
-
-withCurrentScope_ :: NamespaceMonad m => (AliasInfo.Scope -> Maybe a) -> m a
-withCurrentScope_ action = withCurrentScope action >>= maybe (fail "Cannot obtain current scope") return
-
-
-withCurrentScope :: NamespaceMonad m => (AliasInfo.Scope -> Maybe a) -> m (Maybe a)
-withCurrentScope action = getCurrentScope >>= maybe (return Nothing) (return . action)
-
-
-getCurrentScope :: NamespaceMonad m => m (Maybe AliasInfo.Scope)
-getCurrentScope = scopeID >>= \case
-    Just (currentScopeId :: ID) -> view (AliasInfo.scope . at currentScopeId) <$> getAliasInfo
-    Nothing                     -> return Nothing
-
+regAlias id name = do
+    ns <- get
+    ai <- getAliasInfo
+    aux ns (ns ^. Namespace.stack)
+  where 
+    aux ns (sid:sids) = do  case ns ^. Namespace.info . AliasInfo.scope . at sid of 
+                              Just scope -> case scope ^. AliasInfo.varnames . at name of
+                                              Just tid  -> traceShow ("TRACE DONE, FOUND " ++ show name ++ ":" ++ show id ++ " in "  ++ show sid ++ " ---> " ++ show tid) (fin ns (ns ^. Namespace.info) tid)
+                                              Nothing -> traceShow ("TRACE CONT, NOT FOUND " ++ show name ++ ":" ++ show id ++ " in "  ++ show sid) (aux ns sids)
+                              Nothing    -> traceShow ("TRACE CONT, NOT FOUND SCOPE " ++ show sid) (return ())
+    aux ns [] = traceShow ("TRACE DONE, NOT FOUND " ++ show name ++ ":" ++ show id) (return ())  -- orphan?
+    fin ns a tid = do let a' = a & AliasInfo.alias.at id ?~ tid
+                          ns' = set Namespace.info a' ns
+                      put ns'
 
 regTypeName :: NamespaceMonad m => ID -> String -> m ()
 regTypeName = regName AliasInfo.typenames

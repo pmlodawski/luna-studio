@@ -13,8 +13,6 @@ import Flowbox.Prelude
 
 import GHC.Generics        (Generic)
 
-import Data.Maybe (fromJust)
-
 
 import           Data.IntMap  (IntMap)
 import           Data.Map     (Map)
@@ -30,20 +28,16 @@ import qualified Data.Maps    as Map
 type IDMap = IntMap
 
 
-type Varname = String
-
 data Error  = LookupError {key :: String}
             deriving (Show, Eq, Generic, Read)
 
 
-data Scope = Scope { _varnames  :: Map Varname ID
+data Scope = Scope { _varnames  :: Map String ID
                    , _typenames :: Map String ID 
                    } deriving (Show, Eq, Generic, Read)
 
 makeLenses (''Scope)
 
-
-type ScopeID = ID
 
 data AliasInfo = AliasInfo  { _scope   :: IDMap Scope
                             , _alias   :: IDMap ID
@@ -72,15 +66,6 @@ setScope info id s = info & scope.at id ?~ s
 scopeLookup pid info = case Map.lookup pid (_scope info) of
         Nothing          -> (mempty, mempty)
         Just (Scope v t) -> (v,t)
-
--- TODO [kgdk]: lol fromJust
-regAlias :: ID -> Varname -> ScopeID -> AliasInfo -> AliasInfo
-regAlias ident name scopeID aliasInfo = fromJust (updateAliasInfo <$> getVariableID)
-    where updateAliasInfo :: ID -> AliasInfo
-          -- TODO [kgdk]: dodawać do orfanów
-          updateAliasInfo tid = aliasInfo & alias . at ident ?~ tid
-          getVariableID :: Maybe ID
-          getVariableID = aliasInfo ^? scope . ix scopeID . varnames . ix name
 
 ------------------------------------------------------------------------
 -- Instances
