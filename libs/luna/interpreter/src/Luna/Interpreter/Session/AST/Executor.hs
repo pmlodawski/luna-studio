@@ -56,6 +56,7 @@ logger = getLoggerIO $(moduleName)
 
 processMain :: MemoryManager mm => Session mm ()
 processMain = do
+    Env.cleanProfileInfos
     TargetHS.reload
     mainPtr  <- Env.getMainPtr
     children <- CallDataPath.addLevel [] mainPtr
@@ -63,6 +64,7 @@ processMain = do
     Env.setAllReady True
     Cache.dumpAll
     Debug.dumpBindings
+    print =<< Env.getProfileInfos
 
 
 processNodeIfNeeded :: MemoryManager mm
@@ -74,7 +76,7 @@ processNodeIfNeeded callDataPath =
 
 processNode :: MemoryManager mm
             => CallDataPath -> Session mm ()
-processNode callDataPath = do
+processNode callDataPath = Env.profile (CallDataPath.toCallPointPath callDataPath) $ do
     arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
         node      = callData ^. CallData.node
