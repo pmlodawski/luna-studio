@@ -1,4 +1,8 @@
-
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 
 -- *------------------------------------------------
@@ -34,12 +38,70 @@ import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
 import           Text.Show.Pretty                  (ppShow)
 
 
+import qualified Luna.ASTNew.Traversals       as AST
+import           Luna.ASTNew.Decl             (LDecl)
+import qualified Luna.Parser.State            as ParserState
+import           Luna.Pass                    (PassMonad, PassCtx, Pass(Pass))
+import           Luna.ASTNew.Enum             (Enumerated, IDTag(IDTag))
+import           Luna.ASTNew.Expr             (LExpr, Expr)
+import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
+import           Luna.ASTNew.Module           (Module(Module), LModule)
+import           Data.Monoid                  (Monoid, mempty)
+import           Control.Monad.State          (put, get, modify)
+
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans.Either
 
 import Control.Lens hiding (without)
 import Data.List    (intercalate)
+
+
+
+
+data StageTypechecker = StageTypechecker
+
+type StageTypecheckerPass             m       = PassMonad [Int] m
+type StageTypecheckerCtx              lab m a = (Enumerated lab, StageTypecheckerTraversal m a)
+type StageTypecheckerTraversal        m   a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
+type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
+
+
+traverseM :: (StageTypecheckerTraversal m a) => a -> StageTypecheckerPass m a
+traverseM = AST.traverseM StageTypechecker
+
+defaultTraverseM :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m a
+defaultTraverseM = AST.defaultTraverseM StageTypechecker
+
+
+tcpass :: (Monoid s, StageTypecheckerDefaultTraversal m a) => Pass s (a -> StageTypecheckerPass m [Int])
+tcpass = Pass "Typechecker"
+              "Performs typechecking"
+              mempty
+              tcUnit
+
+instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LModule lab a) (LModule lab a) where
+  traverseM _ = tcMod
+
+instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab a) (LDecl lab a) where
+  traverseM _ = tcDecl
+
+
+tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
+tcDecl decl = do
+  x <- get
+  put (789:x)
+  defaultTraverseM decl
+
+tcMod :: (StageTypecheckerCtx lab m a) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
+tcMod mod = modify (456:) *> defaultTraverseM mod
+
+tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m [Int]
+tcUnit ast = modify (123123:) *> defaultTraverseM ast *> get
+
+
+
+
 
 
 printer :: (Show a) => String -> a -> IO ()
@@ -70,8 +132,11 @@ test_foo :: String
 test_foo = unlines  [ "def foo a b:"
                     , "  a + b"
                     , ""
+                    , "def + x y:"
+                    , "  x"
+                    , ""
                     , "def bar:"
-                    , "  456"
+                    , "  foo 456 456"
                     ]
 
 main :: IO ()
@@ -83,15 +148,17 @@ main = do f_print [Bold,Green] "MAIN"
             aa1             <- Pass.run1_ AA.pass ast1
             ast2            <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo ast1
             aa2             <- Pass.run1_ AA.pass ast2
+            foo             <- Pass.run1_ tcpass ast2
 
-            return (ast2,aa2)
+            return (ast2,aa2,foo)
 
           case east of
             Left _                  -> f_print [Red, Bold] "some error, sorry"
-            Right (Unit.Unit ast, ast_info) -> do
+            Right (Unit.Unit ast, ast_info, foo) -> do
               section $ do
                 printer_aux "AST"      (ppShow ast)
                 printer_aux "AST INFO" (ppShow ast_info)
+                printer_aux "FOO"      (ppShow foo)
 
               --let ast_label  = ast ^. Label.label
               --    ast_module = ast ^. Label.element
