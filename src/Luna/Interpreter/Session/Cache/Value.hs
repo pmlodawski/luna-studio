@@ -99,29 +99,32 @@ report callPointPath varName = do
 get :: VarName -> CallPointPath -> Session mm [ModeValue]
 get varName callPointPath = do
     modes <- Env.getSerializationModes callPointPath
-    let tmpName = "_tmp"
-        toValueExpr = "toValue " ++ tmpName
-        computeExpr = concat [tmpName, " <- return $ compute ", varName, " def"]
+    if Set.null modes 
+        then logger debug "No serialization modes set" >> return []
+        else do 
+            let tmpName = "_tmp"
+                toValueExpr = "toValue " ++ tmpName
+                computeExpr = concat [tmpName, " <- return $ compute ", varName, " def"]
 
-        excHandler :: Catch.SomeException -> MGHC.Ghc [ModeValue]
-        excHandler exc = do
-            logger L.error $ show exc
-            val <- liftIO (Serialization.toValue (ValueError.Error $ show exc) def)
-            return $ map (`ModeValue` val) $ Set.toList modes
+                excHandler :: Catch.SomeException -> MGHC.Ghc [ModeValue]
+                excHandler exc = do
+                    logger L.error $ show exc
+                    val <- liftIO (Serialization.toValue (ValueError.Error $ show exc) def)
+                    return $ map (`ModeValue` val) $ Set.toList modes
 
 
-    Session.withImports [ "Flowbox.Data.Serialization"
-                        , "Flowbox.Data.Mode"
-                        , "Flowbox.Graphics.Serialization"
-                        , "Prelude"
-                        , "Generated.Proto.Data.Value" ]
-                        $ lift2 $ flip Catch.catch excHandler $ do
-        logger trace computeExpr
-        Bindings.remove tmpName
-        _      <- GHC.runStmt computeExpr GHC.RunToCompletion
-        action <- HEval.interpret toValueExpr
-        Bindings.remove tmpName
-        liftIO $ mapM (\mode -> ModeValue mode <$> action mode) $ Set.toList modes
+            Session.withImports [ "Flowbox.Data.Serialization"
+                                , "Flowbox.Data.Mode"
+                                , "Flowbox.Graphics.Serialization"
+                                , "Prelude"
+                                , "Generated.Proto.Data.Value" ]
+                                $ lift2 $ flip Catch.catch excHandler $ do
+                logger trace computeExpr
+                Bindings.remove tmpName
+                _      <- GHC.runStmt computeExpr GHC.RunToCompletion
+                action <- HEval.interpret toValueExpr
+                Bindings.remove tmpName
+                liftIO $ mapM (\mode -> ModeValue mode <$> action mode) $ Set.toList modes
 
 
 foldedReRoute :: CallPointPath -> Session mm VarName
