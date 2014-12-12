@@ -88,10 +88,7 @@ instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageT
 
 
 tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
-tcDecl decl = do
-  x <- get
-  put (789:x)
-  defaultTraverseM decl
+tcDecl decl = modify (789:) *> defaultTraverseM decl
 
 tcMod :: (StageTypecheckerCtx lab m a) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
 tcMod mod = modify (456:) *> defaultTraverseM mod
