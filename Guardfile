@@ -8,11 +8,20 @@ $run_tests    = false
 $run_linting  = false
 $run_coverage = false
 
+$lastbuild    = Time.now
+
 
 guard :shell, :version => 2, :cli => "--color" do
   watch(%r{^(test|src)/.+\.l?hs$}) do |m|
-    section "haskell file change"
-    haskellguard m
+    if File.mtime(m[0]) < $lastbuild
+      puts "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".green
+      puts "File #{m[0]} modified before last build, so rebuilding is unnecessary".green
+      puts "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".green
+    else
+      $lastbuild = Time.now
+      section "haskell file change"
+      haskellguard m
+    end
   end
 
   watch(%r{^.*\.tcabal$}) do |m|
@@ -27,6 +36,7 @@ guard :shell, :version => 2, :cli => "--color" do
 end
 
 
+
 def haskellguard trigger
   puts "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *".yellow
   puts "TRIGGER: #{trigger}".yellow
@@ -34,7 +44,7 @@ def haskellguard trigger
   puts ""
 
   section "building"
-  if command("~/flowbox.io/flowbox/scripts/compile")
+  if command("~/flowbox.io/flowbox/scripts/compile -j9")
 
     section "documentation", "cabal haddock --html"  if $run_docgen
     section "tests",         "rm -f luna-typechecker-tests.tix", "../../../dist/bin/libs/luna-typechecker"  if $run_tests
@@ -105,7 +115,7 @@ def command(cmd, inp=nil)
     puts stderr
   end
 
-  status.exitstatus
+  status.exitstatus === 0
 end
 
 
