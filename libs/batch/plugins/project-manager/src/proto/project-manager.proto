@@ -221,6 +221,32 @@ message Project {
                             required int32 updateNo  = 2;
                         }
                     }
+                    message TypeAliases {
+                        message Request {
+                            repeated generated.proto.expr.Expr typeAliases = 1;
+                            required generated.proto.crumb.Breadcrumbs bc  = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message TypeDefs {
+                        message Request {
+                            repeated generated.proto.expr.Expr typeDefs   = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
                     message Fields {
                         message Request {
                             repeated generated.proto.expr.Expr fields     = 1;
