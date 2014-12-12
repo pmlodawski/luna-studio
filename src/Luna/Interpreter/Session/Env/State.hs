@@ -15,6 +15,8 @@ import           Data.Map                   (Map)
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 import           Data.Monoid                ((<>))
+import           Data.MultiSet              (MultiSet)
+import qualified Data.MultiSet              as MultiSet
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 
@@ -133,32 +135,32 @@ deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
 
 ---- Env.serializationModes -----------------------------------------------
 
-getSerializationModesMap :: Session mm (MapForest CallPoint (Set Mode))
+getSerializationModesMap :: Session mm (MapForest CallPoint (MultiSet Mode))
 getSerializationModesMap = gets $ view Env.serializationModes
 
 
-lookupSerializationModes :: CallPointPath -> Session mm (Maybe (Set Mode))
+lookupSerializationModes :: CallPointPath -> Session mm (Maybe (MultiSet Mode))
 lookupSerializationModes callPointPath =
     MapForest.lookup callPointPath <$> getSerializationModesMap
 
 
-getSerializationModes :: CallPointPath -> Session mm (Set Mode)
-getSerializationModes callPointPath = 
-    Maybe.fromMaybe Set.empty <$> lookupSerializationModes callPointPath
+getSerializationModes :: CallPointPath -> Session mm (MultiSet Mode)
+getSerializationModes callPointPath =
+    Maybe.fromMaybe MultiSet.empty <$> lookupSerializationModes callPointPath
 
 
-insertSerializationModes :: CallPointPath -> Set Mode -> Session mm ()
+insertSerializationModes :: CallPointPath -> MultiSet Mode -> Session mm ()
 insertSerializationModes callPointPath modes =
     modify (Env.serializationModes %~ MapForest.alter ins callPointPath) where
         ins  Nothing = Just modes
-        ins (Just s) = Just $ Set.union s modes
+        ins (Just s) = Just $ MultiSet.union s modes
 
 
-deleteSerializationModes :: CallPointPath -> Set Mode -> Session mm ()
+deleteSerializationModes :: CallPointPath -> MultiSet Mode -> Session mm ()
 deleteSerializationModes callPointPath modes =
     modify (Env.serializationModes %~ MapForest.alter del callPointPath) where
         del  Nothing = Just modes
-        del (Just s) = Just $ Set.difference s modes
+        del (Just s) = Just $ MultiSet.difference s modes
 
 
 clearSerializationModes :: CallPointPath -> Session mm ()
