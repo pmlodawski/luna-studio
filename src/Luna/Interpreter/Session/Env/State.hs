@@ -50,6 +50,8 @@ import           Luna.Interpreter.Session.Env.Session        (Session)
 import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Memory.Config      as Memory
+import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
+import qualified Luna.Interpreter.Session.ProfileInfo        as ProfileInfo
 import           Luna.Interpreter.Session.TargetHS.Reload    (Reload, ReloadMap)
 import           Luna.Lib.Lib                                (Library)
 import qualified Luna.Lib.Lib                                as Library
@@ -122,6 +124,7 @@ getDependentNodesOf :: CallPoint -> Session mm (Set Node.ID)
 getDependentNodesOf callPoint =
     Maybe.fromMaybe def . Map.lookup callPoint <$> getDependentNodes
 
+
 insertDependentNode :: CallPoint -> Node.ID -> Session mm ()
 insertDependentNode callPoint nodeID =
     modify (Env.dependentNodes %~ Map.alter alter callPoint) where
@@ -130,6 +133,28 @@ insertDependentNode callPoint nodeID =
 
 deleteDependentNodes :: CallPoint -> Session mm ()
 deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
+
+---- Env.profileInfos -----------------------------------------------------
+
+cleanProfileInfos :: Session mm ()
+cleanProfileInfos = modify $ Env.profileInfos .~ def
+
+
+getProfileInfos :: Session mm (MapForest CallPoint ProfileInfo)
+getProfileInfos = gets $ view Env.profileInfos
+
+
+insertProfileInfo :: CallPointPath -> ProfileInfo -> Session mm ()
+insertProfileInfo callPointPath info =
+    modify (Env.profileInfos %~ MapForest.insert callPointPath info)
+
+
+profile :: CallPointPath -> Session mm a -> Session mm a
+profile callPointPath action = do
+    (r, info) <- ProfileInfo.profile action
+    insertProfileInfo callPointPath info
+    return r
+
 
 ---- Env.defaultSerializationMode -----------------------------------------
 
