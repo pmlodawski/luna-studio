@@ -21,6 +21,7 @@ using namespace google::protobuf;
 
 const path outputDirectory = path("..") / "generated";
 
+
 void formatOutput(std::ostream &out, std::string contents)
 {
 	auto hlp = contents;
@@ -134,8 +135,7 @@ const std::string methodDefinition = R"(
 
 	auto retrieveAnswer = [](const BusMessage &bm)
 	{
-		auto ret = make_unique<AnswerType>();
-		ret->ParseFromString(bm.contents);
+		auto ret = std::static_pointer_cast<AnswerType>(bm.msg);
 		return ret;
 	};
 
@@ -567,7 +567,7 @@ struct MethodWrapper
 			{
 				returnedTypeAsync = returnedType;
 				useRetAsync = "*ret";
-				returnedType = "std::unique_ptr<" + returnedType + ">";
+				returnedType = "std::shared_ptr<const " + returnedType + ">";
 			}
 			
 			if(field->is_repeated())
@@ -597,7 +597,7 @@ struct MethodWrapper
 		else
 		{
 			returnedType = agent->nameSpace + "::" + name + "_" + result->name();
- 			returnedType = "std::unique_ptr<" + returnedType + ">";
+ 			returnedType = "std::shared_ptr<const " + returnedType + ">";
 // 			prepareRet = returnedType + " retHlp;\n";
 			prepareRet += "ret = std::move(answer);";
 			returnRet = "return ret;";
@@ -695,14 +695,15 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 {
 	std::vector<MethodWrapper> methods;
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::projectManager::Project::descriptor());
-	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::fileManager::FileSystem::descriptor());
-	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::Plugin::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::interpreter::Interpreter::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::fileManager::FileManager::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::projectManager::ProjectManager::descriptor());
-	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parser::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::Plugin::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::PluginManager::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::MkText::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parser::descriptor());
 	return methods;
 }
 
@@ -737,7 +738,12 @@ void generate(path outputFile)
 		auto formattedText = formatFile(preformattedFile);
 		std::cout << "Formatting output " << outfile << std::endl;
 		boost::filesystem::ofstream out(outfile);
-		assert(out);
+		if(!out)
+		{
+			cerr << "ERROR: cannot write output to location" << outfile.native() << std::endl;
+			exit(EXIT_FAILURE);
+		}
+
 		formatOutput(out, formattedText);
 	};
 
@@ -766,6 +772,16 @@ struct PackageDeserializer
 
 typedef std::unique_ptr<google::protobuf::Message> MessagePtr;
 
+template<typename T>
+bool ParseFromBuffer(const boost::asio::const_buffer &contents, std::unique_ptr<T> &outMessage)
+{
+	const auto size = boost::asio::buffer_size(contents);
+	const auto data = boost::asio::buffer_cast<const uint8_t*>(contents);
+	google::protobuf::io::CodedInputStream input(data, size);
+	input.SetTotalBytesLimit(500000000, -1);
+	return outMessage->ParseFromCodedStream(&input);
+}
+
 std::function<bool(const std::string &)> PackageDeserializer::ignorePredicate = [](const std::string &topic)
 		{
 			return boost::starts_with(topic, "builder.") || boost::starts_with(topic, "test.") || boost::starts_with(topic, "projectmanager.sync.");
@@ -773,7 +789,7 @@ std::function<bool(const std::string &)> PackageDeserializer::ignorePredicate = 
 
 std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(const BusMessage &message)
 {
-	static const std::map<std::string, std::function<MessagePtr(crstring)>> deserializers = 
+	static const std::map<std::string, std::function<MessagePtr(const boost::asio::const_buffer &)>> deserializers = 
 	{
 %deserializers%
 	};
@@ -784,9 +800,12 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 
 	if(boost::algorithm::ends_with(message.topic, ".error"))
 	{
+		const auto size = boost::asio::buffer_size(message.contents);
+		const auto data = boost::asio::buffer_cast<const char*>(message.contents);
+
 		auto ret = make_unique<generated::proto::rpc::Exception>();
-		ret->set_message(message.contents);
-//TODO //FIXME Why move is needed?
+		ret->set_message(std::string(data, size));
+		//TODO //FIXME Why move is needed?
 		return std::move(ret);
 	}
 
@@ -801,10 +820,10 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 	std::string deserialize = R"(
 		{
 			"%topic%", 
-			[](crstring contents)
+			[](const boost::asio::const_buffer &contents)
 			{
 				auto ret = make_unique<%namespace%::%method%>();
-				ret->ParseFromString(contents);
+				ParseFromBuffer(contents, ret);
 				return ret;
 			}
 		},
@@ -855,7 +874,16 @@ void MessageDispatcher::dispatch(const BusMessage &message, IDispatchee &dispatc
 
 
 	if(!boost::ends_with(message.topic, ".request"))
-		logWarning("Not dispatching message %s.", message.topic);;
+	{
+		if(auto error = std::dynamic_pointer_cast<const generated::proto::rpc::Exception>(message.msg))
+		{ 
+			logWarning("Not dispatching message %s with error %s.", message.topic, error->message());
+		}
+		else
+		{
+			logWarning("Not dispatching message %s.", message.topic);;
+		}
+	}
 }
 
 void IBusMessagesReceiver::handle(const BusMessage &message)
@@ -930,5 +958,6 @@ int main()
 	generate(outputDirectory / "ProjectManager");
 	generateDeserializers();
 	generateDispatcher();
+	std::cout << "Successfully ending...\n";
 	return EXIT_SUCCESS;
 }

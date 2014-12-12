@@ -72,9 +72,9 @@ instance Convert (Int, Node) Gen.Node where
 
 instance Convert Graph Gen.Graph where
     encode graph =
-        Gen.Graph (encodeList $ Graph.labNodes graph) (encodeList $ Graph.labEdges graph)
+        Gen.Graph (encode $ Graph.labNodes graph) (encode $ Graph.labEdges graph)
     decode (Gen.Graph tnodes tedges) =
-        Graph.mkGraph <$> decodeList tnodes <*> decodeList tedges
+        Graph.mkGraph <$> decode tnodes <*> decode tedges
 
 
 instance ConvertPure Port (Maybe Int32) where

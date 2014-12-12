@@ -4,25 +4,22 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Flowbox.Tools.Serialize.Proto.Conversion.List where
+module Flowbox.Tools.Serialize.Proto.Conversion.Set where
 
-import qualified Data.Foldable as Foldable
+import           Data.IntSet   (IntSet)
+import qualified Data.IntSet   as IntSet
 import           Data.Sequence (Seq)
-import qualified Data.Sequence as Sequence
 
 import Flowbox.Prelude
 import Flowbox.Tools.Conversion.Proto
+import Flowbox.Tools.Serialize.Proto.Conversion.List ()
 
 
 
-instance Convert a b => Convert [a] (Seq b) where
-    encode = Sequence.fromList . map encode
-    decode = mapM decode . Foldable.toList
-
-
-instance ConvertPure a b => ConvertPure [a] (Seq b) where
-    encodeP = Sequence.fromList . map encodeP
-    decodeP = map decodeP . Foldable.toList
+instance ConvertPure Int b => ConvertPure IntSet (Seq b) where
+    encodeP = encodeP . IntSet.toList
+    decodeP = IntSet.fromList . decodeP

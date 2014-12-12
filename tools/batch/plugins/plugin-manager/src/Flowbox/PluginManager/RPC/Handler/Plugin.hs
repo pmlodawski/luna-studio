@@ -67,7 +67,7 @@ list request = do
     ctx <- lift get
     let plugins = Context.plugins ctx
     pluginInfos <- safeLiftIO $ mapM PluginHandle.info $ PluginMap.elems plugins
-    return $ List.Status request (encodeList $ zip (PluginMap.keys plugins) pluginInfos)
+    return $ List.Status request (encode $ zip (PluginMap.keys plugins) pluginInfos)
 
 
 -- TODO [PM] : Duplikacja kodu

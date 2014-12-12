@@ -54,8 +54,8 @@ instance Convert (Library.ID, Library) Gen.Library where
 
 
 instance Convert (IntMap Properties) Gen.PropertyMap where
-    encode pm = Gen.PropertyMap $ encodeList $ IntMap.toList pm
-    decode (Gen.PropertyMap items) = IntMap.fromList <$> decodeList items
+    encode pm = Gen.PropertyMap $ encode $ IntMap.toList pm
+    decode (Gen.PropertyMap items) = IntMap.fromList <$> decode items
 
 
 instance Convert (AST.ID, Properties) Gen.KeyValue where

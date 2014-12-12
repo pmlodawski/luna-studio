@@ -138,7 +138,7 @@ watchPointList :: WatchPointList.Request -> RPC Context (SessionST mm) WatchPoin
 watchPointList request = do
     list      <- liftSession $ SetForest.toList <$> WatchPoint.all
     projectID <- liftSession Env.getProjectID
-    return $ WatchPointList.Status request $ encodeList $ map (projectID,) list
+    return $ WatchPointList.Status request $ encode $ map (projectID,) list
 
 
 ping :: Ping.Request -> RPC Context (SessionST mm) Ping.Status
