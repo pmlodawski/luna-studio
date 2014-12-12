@@ -7,60 +7,64 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.AST where
 
-import qualified Flowbox.Batch.Handler.AST                                                         as BatchAST
-import qualified Flowbox.Batch.Handler.Common                                                      as Batch
-import           Flowbox.Bus.RPC.RPC                                                               (RPC)
-import           Flowbox.Prelude                                                                   hiding (Context, cons)
-import           Flowbox.ProjectManager.Context                                                    (Context)
+import qualified Flowbox.Batch.Handler.AST                                                            as BatchAST
+import qualified Flowbox.Batch.Handler.Common                                                         as Batch
+import           Flowbox.Bus.RPC.RPC                                                                  (RPC)
+import           Flowbox.Prelude                                                                      hiding (Context, cons)
+import           Flowbox.ProjectManager.Context                                                       (Context)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request               as CodeGet
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                as CodeGet
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request               as CodeSet
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Update                as CodeSet
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request               as AddData
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                as AddData
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request    as ModifyDataClasses
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Update     as ModifyDataClasses
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Request        as ModifyDataCls
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Update         as ModifyDataCls
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cons.Request       as ModifyDataCons
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cons.Update        as ModifyDataCons
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Methods.Request    as ModifyDataMethods
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Methods.Update     as ModifyDataMethods
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request           as AddFunction
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Update            as AddFunction
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Inputs.Request as ModifyFunctionInputs
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Inputs.Update  as ModifyFunctionInputs
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Name.Request   as ModifyFunctionName
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Name.Update    as ModifyFunctionName
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Output.Request as ModifyFunctionOutput
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Output.Update  as ModifyFunctionOutput
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Path.Request   as ModifyFunctionPath
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Path.Update    as ModifyFunctionPath
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Request                    as Definitions
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Status                     as Definitions
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Add.Request             as AddModule
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Add.Update              as AddModule
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Cls.Request      as ModifyModuleCls
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Cls.Update       as ModifyModuleCls
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Fields.Request   as ModifyModuleFields
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Fields.Update    as ModifyModuleFields
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Imports.Request  as ModifyModuleImports
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Imports.Update   as ModifyModuleImports
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Request                 as Remove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Update                  as Remove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                as ResolveDefinition
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                 as ResolveDefinition
-import qualified Luna.AST.Control.Crumb                                                            as Crumb
-import qualified Luna.AST.Expr                                                                     as Expr
-import qualified Luna.AST.Module                                                                   as Module
-import qualified Luna.AST.Type                                                                     as Type
-import           Luna.Data.Serialize.Proto.Conversion.Crumb                                        ()
-import           Luna.Data.Serialize.Proto.Conversion.Expr                                         ()
-import           Luna.Data.Serialize.Proto.Conversion.Focus                                        ()
-import           Luna.Data.Serialize.Proto.Conversion.Module                                       ()
-import           Luna.Data.Serialize.Proto.Conversion.Name                                         ()
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request                  as CodeSet
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Update                   as CodeSet
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request                  as AddData
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                   as AddData
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request       as ModifyDataClasses
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Update        as ModifyDataClasses
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Request           as ModifyDataCls
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Update            as ModifyDataCls
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cons.Request          as ModifyDataCons
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cons.Update           as ModifyDataCons
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Methods.Request       as ModifyDataMethods
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Methods.Update        as ModifyDataMethods
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request              as AddFunction
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Update               as AddFunction
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Inputs.Request    as ModifyFunctionInputs
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Inputs.Update     as ModifyFunctionInputs
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Name.Request      as ModifyFunctionName
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Name.Update       as ModifyFunctionName
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Output.Request    as ModifyFunctionOutput
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Output.Update     as ModifyFunctionOutput
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Path.Request      as ModifyFunctionPath
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Modify.Path.Update       as ModifyFunctionPath
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Request                       as Definitions
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Status                        as Definitions
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Add.Request                as AddModule
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Add.Update                 as AddModule
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Cls.Request         as ModifyModuleCls
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Cls.Update          as ModifyModuleCls
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Fields.Request      as ModifyModuleFields
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Fields.Update       as ModifyModuleFields
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Imports.Request     as ModifyModuleImports
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Imports.Update      as ModifyModuleImports
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.TypeAliases.Request as ModifyModuleTypeAliases
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.TypeAliases.Update  as ModifyModuleTypeAliases
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.TypeDefs.Request    as ModifyModuleTypeDefs
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.TypeDefs.Update     as ModifyModuleTypeDefs
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Request                    as Remove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Update                     as Remove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                   as ResolveDefinition
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                    as ResolveDefinition
+import qualified Luna.AST.Control.Crumb                                                               as Crumb
+import qualified Luna.AST.Expr                                                                        as Expr
+import qualified Luna.AST.Module                                                                      as Module
+import qualified Luna.AST.Type                                                                        as Type
+import           Luna.Data.Serialize.Proto.Conversion.Crumb                                           ()
+import           Luna.Data.Serialize.Proto.Conversion.Expr                                            ()
+import           Luna.Data.Serialize.Proto.Conversion.Focus                                           ()
+import           Luna.Data.Serialize.Proto.Conversion.Module                                          ()
+import           Luna.Data.Serialize.Proto.Conversion.Name                                            ()
 
 
 
@@ -156,6 +160,28 @@ moduleImportsModify request@(ModifyModuleImports.Request timports tbc tlibID tpr
     BatchAST.updateModuleImports imports bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyModuleImports.Update request updateNo
+
+
+moduleTypeAliasesModify :: ModifyModuleTypeAliases.Request -> RPC Context IO ModifyModuleTypeAliases.Update
+moduleTypeAliasesModify request@(ModifyModuleTypeAliases.Request tfields tbc tlibID tprojectID _) = do
+    fields <- decodeE tfields
+    bc     <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.updateModuleFields fields bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ ModifyModuleTypeAliases.Update request updateNo
+
+
+moduleTypeDefsModify :: ModifyModuleTypeDefs.Request -> RPC Context IO ModifyModuleTypeDefs.Update
+moduleTypeDefsModify request@(ModifyModuleTypeDefs.Request tfields tbc tlibID tprojectID _) = do
+    fields <- decodeE tfields
+    bc     <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.updateModuleFields fields bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ ModifyModuleTypeDefs.Update request updateNo
 
 
 moduleFieldsModify :: ModifyModuleFields.Request -> RPC Context IO ModifyModuleFields.Update
