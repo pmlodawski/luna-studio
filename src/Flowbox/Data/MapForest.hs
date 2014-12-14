@@ -20,6 +20,8 @@ data Node k v = Node { _value    :: Maybe v
                      , _children :: MapForest k v
                      } deriving (Show, Read, Eq, Ord)
 
+type Path k = [k]
+
 type MapForest k v = Map k (Node k v)
 
 
@@ -30,16 +32,16 @@ empty :: MapForest k v
 empty = Map.empty
 
 -- FIXME [pm]: wd: this implementation looks like an inefficient one
-toList :: MapForest k v -> [([k], v)]
-toList = find (const . const True)
+elems :: MapForest k v -> [(Path k, v)]
+elems = find (const . const True)
 
 
-keys :: MapForest k v -> [[k]]
-keys = map fst . toList
+keys :: MapForest k v -> [Path k]
+keys = map fst . elems
 
 
-elems :: MapForest k v -> [v]
-elems = map snd . toList
+vals :: MapForest k v -> [v]
+vals = map snd . elems
 
 
 member :: Ord k => [k] -> MapForest k v -> Bool
@@ -49,7 +51,12 @@ member = Maybe.isJust .: lookup
 lookup :: Ord k => [k] -> MapForest k v -> Maybe v
 lookup k forest = subPathNode k forest >>= view value
 
-subElems :: Ord k => k -> MapForest k v -> [v]
+subVals :: Ord k => k -> MapForest k v -> [v]
+subVals k forest = case fmap vals (focus k forest) of
+    Just els -> els
+    Nothing  -> []
+
+subElems :: Ord k => k -> MapForest k v -> [(Path k,v)]
 subElems k forest = case fmap elems (focus k forest) of
     Just els -> els
     Nothing  -> []
@@ -64,7 +71,7 @@ delete k forest = fixForest $ insert' k Nothing forest
 
 
 -- | Find entries that match predicate
-find :: ([k] -> v -> Bool) -> MapForest k v -> [([k], v)]
+find :: ([k] -> v -> Bool) -> MapForest k v -> [(Path k, v)]
 find predicate = concatMap (find' []) . Map.toList where
     find' key (k, level) = case level ^. value of
         Just v -> if predicate newKey v
