@@ -30,10 +30,11 @@ import qualified Luna.ASTNew.Pat    as Pat
 import           Luna.ASTNew.Pat    (LPat, Pat)
 import           Luna.ASTNew.Expr   (LExpr, Expr)
 import qualified Luna.ASTNew.Lit    as Lit
-import           Luna.ASTNew.Arg    (Arg(Arg))
+import           Luna.ASTNew.Name.Pattern2  (Arg(Arg))
+--import           Luna.ASTNew.Arg    (Arg(Arg))
 import qualified Luna.ASTNew.Native as Native
-import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
-import qualified Luna.ASTNew.Name.Multi       as MultiName
+import           Luna.ASTNew.Name.Path        (NamePath(NamePath))
+import qualified Luna.ASTNew.Name.Path        as NamePath
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
 import           Luna.Pass              (Pass(Pass), PassMonad, PassCtx)
@@ -59,7 +60,7 @@ type Stage2Ctx              lab m = (Enumerated lab, PassCtx m)
 type Stage2Traversal        m a b = (PassCtx m, AST.Traversal        Stage2 (Stage2Pass m) a b)
 type Stage2DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage2 (Stage2Pass m) a b)
 
-type ResultExpr = LExpr IDTag MultiName
+type ResultExpr = LExpr IDTag NamePath
 
 
 ------------------------------------------------------------------------
@@ -87,12 +88,13 @@ passRunner ns info ast = do
     put (Parser.emptyState & set ParserState.namespace ns & set ParserState.info info)
     (,) <$> defaultTraverseM ast <*> (view ParserState.info <$> get)
 
+-- FIXME[wd]
 traverseDecl2Pass :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
 traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
-    Decl.Function path name inputs output body -> do
-        subAST  <- subparse (unlines body)
-        inputs' <- mapM subparseArg inputs
-        return $ Decl.Function path name inputs' output subAST
+    Decl.Function path sig output body -> do
+        subAST <- subparse (unlines body)
+        sig'   <- mapM subparseArg sig
+        return $ Decl.Function path sig' output subAST
     Decl.Data        name params cons defs -> return $ Decl.Data        name params [] []
     Decl.Import      path rename targets   -> return $ Decl.Import      path rename targets
     Decl.TypeAlias   dst src               -> return $ Decl.TypeAlias   dst src
@@ -101,13 +103,20 @@ traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
           subparse expr = do
               result <- ParserState.withScope id $ do 
                   pstate <- get
-                  return $ Parser.parseString expr $ Parser.exprBlockParser2 (pstate)
+                  return $ Parser.parseString expr $ Parser.exprBlockParser2 pstate
               case result of
                   Left e      -> fail   $ show e
                   Right (e,s) -> put s *> pure e
-          -- FIXME [wd]: inny parser powinine parsowac argumenty poniewaz nie zawieraja wielu linii i nie moga zawierac wielu exproessionow!
-          --             zatem wyciaganie pierwszego elementu jest szybkim obejsciem
-          subparseArg (Arg pat val) = Arg pat . (fmap (!!0)) <$> mapM subparse val 
+
+          subparse2 expr = do
+              result <- ParserState.withScope id $ do 
+                  pstate <- get
+                  return $ Parser.parseString expr $ Parser.exprParser2 pstate
+              case result of
+                  Left e      -> fail   $ show e
+                  Right (e,s) -> put s *> pure e
+          -- FIXME [wd]: just clean and make nicer code
+          subparseArg (Arg pat mexpr) = Arg pat <$> mapM subparse2 mexpr 
 
 
 ----------------------------------------------------------------------

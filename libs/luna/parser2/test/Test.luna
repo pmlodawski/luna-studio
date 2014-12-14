@@ -1,7 +1,10 @@
-def if: 2
+def `if` cond `then` ok `else` fail: 1
 
-def (if then else) cond ok fail: 
-	1
+def `if` cond `then` ok: 2
 
-def foo x y z:
-	if x then y else z
+# def `if` cond: 3
+
+def test x:
+    if x then 1 else self
+
+

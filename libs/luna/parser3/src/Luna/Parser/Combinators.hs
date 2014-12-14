@@ -65,7 +65,8 @@ sepBy2_ng p sep = (:) <$> p <*> try(sep *> sepBy1_ng p sep)
 many1 p = (:) <$> p <*> many p
 
 
-maybe p = try (Just <$> p) <|> pure Nothing
+maybe p = try (just p) <|> pure Nothing
+just p = Just <$> p
 
 
 applyAll x (f : fs) = applyAll (f x) fs

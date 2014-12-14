@@ -35,8 +35,8 @@ import           Luna.ASTNew.Pat              (LPat, Pat)
 import qualified Luna.ASTNew.Lit              as Lit
 import           Luna.ASTNew.Arg              (Arg(Arg))
 import qualified Luna.ASTNew.Native           as Native
-import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
-import qualified Luna.ASTNew.Name.Multi       as MultiName
+import           Luna.ASTNew.Name.Path        (NamePath(NamePath))
+import qualified Luna.ASTNew.Name.Path        as NamePath
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
 import           Luna.Pass                    (Pass(Pass), PassMonad, PassCtx)
@@ -48,9 +48,10 @@ import           Luna.Data.Namespace          (Namespace)
 import           Luna.Data.StructInfo         (StructInfo)
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regNamePattern, regTypeName, withNewScope)
+import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regArgPatDesc, regTypeName, withNewScope)
 import qualified Luna.Parser.State            as ParserState
-import qualified Luna.ASTNew.Name.Pattern     as NamePattern
+--import qualified Luna.ASTNew.Name.Pattern     as NamePattern
+import qualified Luna.ASTNew.Name.Pattern2    as NamePattern
 
 ----------------------------------------------------------------------
 -- Base types
@@ -102,13 +103,13 @@ aaPat p@(Label lab pat) = case pat of
 
 aaDecl :: SACtx lab m a => (LDecl lab a) -> SAPass m (LDecl lab a)
 aaDecl d@(Label lab decl) = case decl of
-    Decl.Function path name inputs output body -> withNewScope id $ defaultTraverseM d
-    _                                          -> continue
+    Decl.Function _ _ _ _ -> withNewScope id $ defaultTraverseM d
+    _                     -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
--- FIXME [wd]: remove the assumption that a is MultiName. variables should always contain name as MultiName!
-aaExpr :: (SACtx lab m a, a~MultiName) => (LExpr lab a) -> SAPass m (LExpr lab a)
+-- FIXME [wd]: remove the assumption that a is NamePath. variables should always contain name as NamePath!
+aaExpr :: (SACtx lab m a, a~NamePath) => (LExpr lab a) -> SAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
     var@(Expr.Var name)     -> regParent id
                                *> regAlias id name
@@ -127,11 +128,12 @@ registerDataDecl (Label lab decl) = case decl of
     _                                -> pure ()
     where id = Enum.id lab
 
+-- FIXME[wd]
 registerHeaders :: SACtx lab m a => LDecl lab a -> SAPass m ()
 registerHeaders (Label lab decl) = case decl of
-    Decl.Function _ namePat inputs _ _  -> regVarName id (NamePattern.toName namePat)
-                                        <* regNamePattern id namePat
-                                        <* withNewScope id (defaultTraverseM inputs)
+    Decl.Function _ sig _ _  -> regVarName id (NamePattern.toNamePath sig)
+                             <* regArgPatDesc id (NamePattern.toDesc sig)
+                                        -- <* withNewScope id (defaultTraverseM inputs)
     Decl.Data     name _ cons _         -> regTypeName id (Name.fromName name) 
                                         <* mapM_ registerCons cons
     _                                   -> pure ()
@@ -149,7 +151,7 @@ instance SACtx lab m a => AST.Traversal StructAnalysis (SAPass m) (LModule lab a
 instance SACtx lab m a => AST.Traversal StructAnalysis (SAPass m) (LDecl lab a) (LDecl lab a) where
     traverseM _ = aaDecl
 
-instance (SACtx lab m v, v~MultiName) => AST.Traversal StructAnalysis (SAPass m) (LExpr lab v) (LExpr lab v) where
+instance (SACtx lab m v, v~NamePath) => AST.Traversal StructAnalysis (SAPass m) (LExpr lab v) (LExpr lab v) where
     traverseM _ = aaExpr
 
 instance (PassCtx m, Enumerated lab) => AST.Traversal StructAnalysis (SAPass m) (LPat lab) (LPat lab) where

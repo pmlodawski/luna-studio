@@ -52,10 +52,10 @@ import           Text.Parser.Expression
 import           Text.Parser.LookAhead
 import           Data.Char                    (isSpace)
 import qualified Data.ByteString as ByteStr
-import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
-import qualified Luna.ASTNew.Name.Pattern     as NamePattern
-import           Luna.ASTNew.Name.Pattern     (NamePattern)
-import qualified Luna.ASTNew.Name.Multi       as MultiName
+import           Luna.ASTNew.Name.Path        (NamePath(NamePath))
+import qualified Luna.ASTNew.Name.Path        as NamePath
+import qualified Luna.ASTNew.Name.Pattern2    as NamePat
+import           Luna.ASTNew.Name.Pattern2    (NamePat(NamePat), Segment(Segment))
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
 
@@ -64,7 +64,7 @@ import qualified Luna.Data.StructInfo          as StructInfo
 import qualified Luna.ASTNew.AST              as AST
 import qualified Luna.ASTNew.Traversals       as AST
 import qualified Data.Maps                    as Map
-import           Data.Maybe                   (fromJust)
+import           Data.Maybe                   (isJust, fromJust)
 import qualified Flowbox.Data.MapForest       as MapForest
 import qualified Luna.AST.Arg                 as Arg
 import qualified Data.List                    as List
@@ -73,7 +73,7 @@ import qualified Luna.Parser.Pragma           as Pragma
 import           Text.EditDistance            --(defaultEditCosts, levenshteinDistance, EditCosts, Costs(..))
 import           Text.PhoneticCode.Phonix     (phonix)
 import           Data.Function                (on)
-import           Data.List                    (sort)
+import           Data.List                    (sort, sortBy)
 
 import qualified Data.IntMap  as IntMap
 
@@ -108,6 +108,7 @@ import qualified Luna.ASTNew.Unit       as Unit
 
 
 import qualified Data.TypeLevel.Set as TLSet
+import           Data.Tuple.Select
 
 infixl 4 <$!>
 
@@ -118,8 +119,6 @@ vName = Name.V <$> varOp
 tName = Name.T <$> Tok.typeIdent
 
 anyName = vName <|> tName
-
-just p = Just <$> p
 
 labeled p = do
     id <- nextID
@@ -181,18 +180,18 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 
 tuple         p = Tok.parens (sepBy p Tok.separator)
 qualifiedPath p = sepBy1_ng p Tok.accessor <?> "qualified path"
-extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
-                      <*> (namePattern <?> "function name")
+--extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
+--                      <*> (namePattern <?> "function name")
 
-namePattern =   (NamePattern.single <$> varOp)
-            <|> Tok.parens (NamePattern.close <$> (NamePattern.multi <$> Tok.varIdent <*> many1 namePatSeg))
+--namePattern =   (NamePat.single <$> varOp)
+--            <|> Tok.parens (NamePat.close <$> (NamePat.multi <$> Tok.varIdent <*> many1 namePatSeg))
 
-namePatSeg =   (NamePattern.Token <$> Tok.varIdent)
-           <|> (NamePattern.Hole  <$  Tok.nameWildcard)
+--namePatSeg =   (NamePat.Token <$> Tok.varIdent)
+--           <|> (NamePat.Hole  <$  Tok.nameWildcard)
 
 
---namePattern =   (MultiName.single <$> varOp)
---            <|> Tok.parens (MultiName.multi <$> Tok.varIdent <*> many1 Tok.varIdent)
+--namePattern =   (NamePath.single <$> varOp)
+--            <|> Tok.parens (NamePath.multi <$> Tok.varIdent <*> many1 Tok.varIdent)
 
 
 argList       p = try (sepBy2 p Tok.separator) <|> many p <?> "argument list"
@@ -201,7 +200,6 @@ list          p = Tok.brackets (sepBy p Tok.separator)
 anyIdent        = choice [ Tok.varIdent, Tok.typeIdent ]
 
 varOp           = Tok.varIdent <|> Tok.operator
-
 
 
 getASTInfo = view State.info <$> get
@@ -309,16 +307,28 @@ typeWrapper = Decl.TypeWrapper <$  Tok.kwType
                                <?> "type wrapper"
 
 
+
 ----- functions -----
+
+sigVarOp = Tok.explicitName Tok.varIdent <|> Tok.operator
+
+funcSig = try multiSig <|> singleSig
+
+singleSig = NamePat Nothing <$> singleSigSegment <*> pure []
+multiSig  = NamePat <$> maybe arg <*> multiSigSegment <*> many multiSigSegment
+
+singleSigSegment = Segment <$> Tok.varIdent <*> many arg
+multiSigSegment  = Segment <$> sigVarOp <*> many arg
+
+arg = NamePat.Arg <$> argPattern
+                 <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
 
 func = Decl.Function <$  Tok.kwDef
                      <*> extPath
-                     <*> name
-                     <*> (argList arg <?> "function argument list")
+                     <*> funcSig
                      <*> outType
                      <*> body
     where extPath = ((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure []
-          name    = namePattern <?> "function name"
           outType = (Just <$> try (Tok.arrow *> typeT)) <|> pure Nothing
           body    = char ':' *> stage1Body2
 
@@ -362,8 +372,6 @@ fields = do
 typed = Tok.typeDecl *> termT
 
 
-arg            = Arg <$> argPattern
-                     <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
 
 stage1DefArg = Tok.tokenBlock (many alphaNum)
 
@@ -576,7 +584,7 @@ optableE = [
            where
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure op))
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure op))
-              operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.App (label id2 $ Expr.Var $ MultiName.single $ op) 
+              operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.App (label id2 $ Expr.Var $ NamePath.single $ op) 
                                                                                 (Expr.Infix l r)
                                           ) <$> nextID <*> nextID)
 
@@ -632,18 +640,46 @@ callBuilder2 src@(Label lab expr) argsx = case expr of
 --          exprApp a b   = (++) <$> a <*> b
 --          segParsers    = fmap segParser segments
 --          argParser     = foldr exprApp (pure []) segParsers
---          (MultiName base segments) = name
+--          (NamePath base segments) = name
 
 --          segParser seg = case seg of
---              MultiName.Hole    -> (:[]) <$> argExpr
---              MultiName.Token s -> []    <$  Tok.symbol s
+--              NamePath.Hole    -> (:[]) <$> argExpr
+--              NamePath.Token s -> []    <$  Tok.symbol s
 
 --          segNames = segNames' []
 --          segNames' names s = case s of
 --              []   -> names
 --              x:xs -> case x of
---                  MultiName.Token n -> segNames' (n:names) xs
---                  MultiName.Hole    -> segNames' names     xs
+--                  NamePath.Token n -> segNames' (n:names) xs
+--                  NamePath.Hole    -> segNames' names     xs
+
+
+-- parse all patterns starting with the longest match and going down
+-- if everything fails, try parsing again the longest one to show nice error message
+mkFuncParsers (a:as) x =   try (foldl (\a b -> try a <|> b) (mkFuncParser x a) (fmap (mkFuncParser x) as))
+                       <|> mkFuncParser x a -- nice error messages
+    
+
+appArg p = try (Expr.AppArg <$> just Tok.varIdent <* Tok.assignment <*> p) <|> (Expr.AppArg Nothing <$> p)
+
+mkFuncParser baseVar (id, mpatt) = case mpatt of
+    Nothing                                      -> baseVar
+    Just patt@(NamePat.ArgPatDesc pfx base segs) -> State.withReserved segNames 
+                                                  $ labeled $ Expr.App2 <$> pattParser
+        where NamePat.SegmentDesc baseName baseDefs = base
+              segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
+              argExpr          = appArg expr
+              segNames         = NamePat.segmentNames patt
+              pattParser       = NamePat Nothing <$> baseParser   <*> mapM segParser segs
+              baseParser       = NamePat.Segment <$> baseMultiVar <*> defsParser baseDefs
+              baseMultiVar     = labeled . pure $ Expr.Var (NamePat.toNamePath patt)
+              defsParser defs  = fmap takeJustArgs $ mapM argParser defs
+              takeJustArgs     = fmap fromJust . filter isJust 
+              argParser needed = if needed then just  argExpr
+                                           else maybe argExpr
+
+
+toTEST = labeled $ Expr.Lit     <$> literal
 
 notReserved p = do
     rsv  <- view State.adhocReserved <$> get
@@ -657,46 +693,35 @@ varE   = do
     name <- try $ notReserved Tok.varIdent
     ast  <- lookupAST name
     case ast of
-        -- FIXME[wd]: dopiero przy dwuprzebiegowym parserze bedziemy mieli wieloczlonowe funkcje rekurencyjne
-        --Just(AST.Decl func@(Decl.Function {})) -> mkFuncParser func -- FIXME - function jest deklaracją!
-        _                                      -> labeled . pure $ Expr.Var (MultiName.single name)
+        Just possibleDescs -> mkFuncParsers possibleDescs (labeled . pure $ Expr.Var (NamePath.single name))
+        Nothing            -> labeled . pure $ Expr.Var (NamePath.single name)
                           
 
 lookupAST name = do
-    scope  <- State.getScope
+    scope      <- State.getScope
     structInfo <- State.getStructInfo
-    let namePatterns = view StructInfo.namePatterns structInfo
-    pid    <- State.getPid
+    pid        <- State.getPid
+    --pragmaSet <- view (State.conf . Config.pragmaSet) <$> get
+    let argPatts = view StructInfo.argPats structInfo
 
+    case Map.lookup pid scope of
+            Nothing                    -> fail "Internal parser error [1]"
+            Just (StructInfo.Scope varnames typenames) -> do
+                let possibleElems = reverse $ sortBy (compare `on` (length . fst))
+                                  $ MapForest.subElems name varnames
+                    possibleIDs   = map snd possibleElems
+                    possiblePatts = fmap (flip Map.lookup argPatts) possibleIDs
+                    possibleDescs = zip possibleIDs possiblePatts
 
-    pragmaSet <- view (State.conf . Config.pragmaSet) <$> get
-
-    return Nothing
-
-    --case Map.lookup pid scope of
-    --        Nothing                    -> fail "Internal parser error [1]"
-    --        Just (StructInfo.Scope varnames typenames) -> do
-    --            let possibleIDs      = MapForest.subElems name varnames
-    --                possiblePatterns = fmap (flip Map.lookup namePatterns) possibleIDs
-
-    --            fail $ "SUBFORESTS: " ++ name ++ ": "++ show (reverse $ sort possiblePatterns)
-    --            -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
-    --            -- poprawka: Nothing zostanie rowniez zwrocone przy ustawionej fladze
-    --            -- poprawka: Nothing zostanie rowniez zwrocone przy "self"
-    --            --_ -> return Nothing
-    --            --Just dstID -> return Nothing --return $ Map.lookup dstID astMap 
-    --            --Nothing    -> if (name == "self") 
-    --            --    then return Nothing
-    --            --    else case Pragma.lookup pragmaSet of
-    --            --        Pragma.Defined Pragma.AllowOrphans -> return Nothing
-    --            --        _                                  -> do
-    --            --                                              x <- get
-    --            --                                              fail $ "name '" ++ name ++ "' is not defined" ++ msgTip ++ "XXX: " ++ show x
-    --            --        where scopedNames = Map.keys varnames
-    --            --              simWords    = findSimWords name scopedNames
-    --            --              msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
-    --            --                                              else ""
-                          
+                case possibleDescs of
+                    [] -> if (name == "self")
+                          then return Nothing
+                          else fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
+                               where scopedNames = "self" : ((fmap $ join " ") $ MapForest.keys varnames)
+                                     simWords    = findSimWords name scopedNames
+                                     msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
+                                                                     else ""
+                    x  -> return $ Just x
 
 
 
@@ -724,7 +749,7 @@ findSimWords word words = fmap snd simPairs
 
     
 --varE   = appID $ Expr.var <*> Tok.varIdent
-varOpE = labeled $ (Expr.Var . MultiName.single)  <$> try (Tok.parens varOp)
+varOpE = labeled $ (Expr.Var . NamePath.single)  <$> try (Tok.parens varOp)
 conE   = labeled $ Expr.Cons <$> Tok.conIdent
 
 identE = choice [ varE
@@ -861,7 +886,8 @@ parseGen2 p st = run (bundleResult p) st
 moduleParser modPath = parseGen (upToEnd $ pUnit $ pModule (last modPath) (init modPath))
 --exprParser           = parseGen (upToEnd expr)
 exprBlockParser      = parseGen (upToEnd $ indBlock expr)
-exprBlockParser2      = parseGen2 (upToEnd $ indBlock expr)
+exprBlockParser2     = parseGen2 (upToEnd $ indBlock expr)
+exprParser2          = parseGen2 (upToEnd expr)
 --patternParser        = parseGen (upToEnd pattern)
 --typeParser           = parseGen (upToEnd typeT)
 
@@ -929,7 +955,7 @@ testme ast st = ast -- runState (traverseM ast) st
                 --    where id = Enum.id lab
 
                 --registerHeaders (Label lab decl) = case decl of
-                --    Decl.Function _ name inputs _ _  -> State.regVarName id (view MultiName.base name)
+                --    Decl.Function _ name inputs _ _  -> State.regVarName id (view NamePath.base name)
                 --                                     <* State.withNewScope id (traverseM inputs)
                 --    Decl.Data     name _ cons _      -> State.regTypeName id (Name.fromName name) 
                 --                                     <* mapM_ registerCons cons
@@ -989,7 +1015,7 @@ testme ast st = ast -- runState (traverseM ast) st
     --instance (MonadState (State.State a) m, Enumerated lab) 
     --         => AST.Traversal AliasAnalysis m (Label lab (Decl.Decl f e)) where
     --    traverse base x@(Label lab ast) = case ast of
-    --        --Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withNewScope id continue
+    --        --Decl.Function path name inputs output body -> State.regVarName id (view NamePath.base name) *> State.withNewScope id continue
     --        --_                                          -> continue
     --        _                                          -> undefined
     --        where continue = AST.defaultTraverse base x
@@ -1000,7 +1026,7 @@ testme ast st = ast -- runState (traverseM ast) st
 --    Decl.Function path name inputs output body -> State.regVarName id (view Name.base name) *> 
 --    where id = Label.label d
 
---    | Function    { _path    :: Path    , _fname    :: MultiName  , _inputs  :: [Arg f e]   , _output :: Maybe (RType f) , _body :: [e] }
+--    | Function    { _path    :: Path    , _fname    :: NamePath  , _inputs  :: [Arg f e]   , _output :: Maybe (RType f) , _body :: [e] }
 
 
 

@@ -32,8 +32,6 @@ import           Luna.ASTNew.Expr   (LExpr, Expr)
 import qualified Luna.ASTNew.Lit    as Lit
 import           Luna.ASTNew.Arg    (Arg(Arg))
 import qualified Luna.ASTNew.Native as Native
-import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
-import qualified Luna.ASTNew.Name.Multi       as MultiName
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
 import           Luna.Pass              (Pass(Pass), PassMonad, PassCtx)
@@ -66,8 +64,6 @@ type Stage2Pass             m     = PassMonad () m
 type Stage2Ctx              lab m = (Enumerated lab, PassCtx m)
 type Stage2Traversal        m a b = (PassCtx m, AST.Traversal        Stage2 (Stage2Pass m) a b)
 type Stage2DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage2 (Stage2Pass m) a b)
-
-type ResultExpr = LExpr IDTag MultiName
 
 
 ------------------------------------------------------------------------

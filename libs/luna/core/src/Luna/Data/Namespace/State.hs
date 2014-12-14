@@ -17,27 +17,28 @@ import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Prelude           hiding (id)
 import           Flowbox.System.Log.Logger
-import           Luna.ASTNew.AST              (AST, ID)
-import qualified Luna.ASTNew.AST              as AST
-import           Luna.ASTNew.Expr             (Expr)
-import qualified Luna.ASTNew.Expr             as Expr
-import           Luna.ASTNew.Lit              (Lit)
-import qualified Luna.ASTNew.Lit              as Lit
-import           Luna.ASTNew.Module           (Module)
-import qualified Luna.ASTNew.Module           as Module
-import           Luna.ASTNew.Pat              (Pat)
-import qualified Luna.ASTNew.Pat              as Pat
-import           Luna.ASTNew.Type             (Type)
-import qualified Luna.ASTNew.Type             as Type
-import           Luna.Data.StructInfo       (StructInfo)
-import qualified Luna.Data.StructInfo       as StructInfo
+import           Luna.ASTNew.AST           (AST, ID)
+import qualified Luna.ASTNew.AST           as AST
+import           Luna.ASTNew.Expr          (Expr)
+import qualified Luna.ASTNew.Expr          as Expr
+import           Luna.ASTNew.Lit           (Lit)
+import qualified Luna.ASTNew.Lit           as Lit
+import           Luna.ASTNew.Module        (Module)
+import qualified Luna.ASTNew.Module        as Module
+import           Luna.ASTNew.Pat           (Pat)
+import qualified Luna.ASTNew.Pat           as Pat
+import           Luna.ASTNew.Type          (Type)
+import qualified Luna.ASTNew.Type          as Type
+import           Luna.Data.StructInfo      (StructInfo)
+import qualified Luna.Data.StructInfo      as StructInfo
 import           Luna.Data.Namespace       (Namespace)
 import qualified Luna.Data.Namespace       as Namespace
 import           Flowbox.System.Log.Logger as L
 import qualified Flowbox.Data.MapForest    as MapForest
-import           Luna.ASTNew.Name.Multi    (MultiName)
-import qualified Luna.ASTNew.Name.Multi    as MultiName
+import           Luna.ASTNew.Name.Path     (NamePath)
+import qualified Luna.ASTNew.Name.Path     as NamePath
 import           Luna.ASTNew.Name.Pattern  (NamePattern)
+import           Luna.ASTNew.Name.Pattern2 (ArgPatDesc)
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
@@ -144,12 +145,12 @@ regID id = do
     withJust mpid (\pid -> modifyStructInfo $ StructInfo.parent %~ IntMap.insert id pid)
 
 
-regVarName :: NamespaceMonad m => ID -> MultiName -> m ()
+regVarName :: NamespaceMonad m => ID -> NamePath -> m ()
 regVarName = regName StructInfo.varnames
 
 
-regNamePattern :: NamespaceMonad m => ID -> NamePattern -> m ()
-regNamePattern id namePattern = modifyStructInfo (StructInfo.namePatterns %~ IntMap.insert id namePattern)
+regArgPatDesc :: NamespaceMonad m => ID -> ArgPatDesc -> m ()
+regArgPatDesc id argPat = modifyStructInfo (StructInfo.argPats %~ IntMap.insert id argPat)
 
 regParent :: NamespaceMonad m => ID -> m ()
 regParent id = do
@@ -157,7 +158,7 @@ regParent id = do
     withJust scopeID (\pid -> modifyStructInfo (StructInfo.parent %~ IntMap.insert id pid))
 
 
-regAlias :: NamespaceMonad m => ID -> MultiName -> m ()
+regAlias :: NamespaceMonad m => ID -> NamePath -> m ()
 regAlias ident name = do
     structInfo <- getStructInfo
     -- TODO [kgdk]: remove Just
@@ -187,7 +188,7 @@ getCurrentScope = scopeID >>= \case
     Nothing                     -> return Nothing
 
 
-regTypeName :: NamespaceMonad m => ID -> MultiName -> m ()
+regTypeName :: NamespaceMonad m => ID -> NamePath -> m ()
 regTypeName = regName StructInfo.typenames
 
 
@@ -198,7 +199,7 @@ regName lens id name = do
         Nothing  -> fail "Unable to get current id"
         Just cid -> putStructInfo a2
             where varRel  = a ^. (StructInfo.scope . ix cid)
-                  varRel2 = varRel & lens %~ (MapForest.insert (MultiName.toList name) id)
+                  varRel2 = varRel & lens %~ (MapForest.insert (NamePath.toList name) id)
                   a2      = a & StructInfo.scope.at cid ?~ varRel2
 
 

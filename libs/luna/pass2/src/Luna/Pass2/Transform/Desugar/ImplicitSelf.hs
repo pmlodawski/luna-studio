@@ -30,14 +30,11 @@ import qualified Luna.ASTNew.Pat              as Pat
 import           Luna.ASTNew.Pat              (LPat, Pat)
 import           Luna.ASTNew.Expr             (LExpr, Expr)
 import qualified Luna.ASTNew.Lit              as Lit
-import           Luna.ASTNew.Arg              (Arg(Arg))
 import qualified Luna.ASTNew.Native           as Native
-import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
-import qualified Luna.ASTNew.Name.Multi       as MultiName
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
-import           Luna.Pass              (Pass(Pass), PassMonad, PassCtx)
-import qualified Luna.Pass              as Pass
+import           Luna.Pass                    (Pass(Pass), PassMonad, PassCtx)
+import qualified Luna.Pass                    as Pass
 
 import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
@@ -47,6 +44,7 @@ import           Luna.Data.ASTInfo            (ASTInfo, genID)
 import qualified Luna.Data.Namespace.State    as State 
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
+import           Luna.ASTNew.Name.Pattern2    (NamePat(NamePat), Segment(Segment), Arg(Arg))
 
 ----------------------------------------------------------------------
 -- Base types
@@ -84,10 +82,12 @@ passRunner astInfo ast = do
 
 isDecl :: (ISCtx lab m a) => (LDecl lab a) -> ISPass m (LDecl lab a)
 isDecl e@(Label lab expr) = case expr of
-    Decl.Function path name inputs output body -> do
+    Decl.Function path sig output body -> do
         argId <- genID
-        let selfArg = Arg (Label (Enum.tag argId) $ Pat.Var "self") Nothing
-        return $ Label lab $ Decl.Function path name (selfArg : inputs) output body
+        let NamePat pfx (Segment name args) segs = sig
+            selfArg = Arg (Label (Enum.tag argId) $ Pat.Var "self") Nothing
+            nsig    = NamePat pfx (Segment name $ selfArg : args) segs
+        return $ Label lab $ Decl.Function path nsig output body
     _ -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e 

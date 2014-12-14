@@ -47,15 +47,16 @@ main = do
 
     result <- runEitherT $ do
         (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
-        (ast2, astinfo2) <- Pass.run2_ ImplSelf.pass astinfo1 ast1
-        sa1              <- Pass.run1_ SA.pass ast2
-        --return (ast2, sa1)
-        (ast3, astinfo3) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo2 ast2
+        --return (ast2, astinfo2)
+        sa1              <- Pass.run1_ SA.pass ast1
+        (ast2, astinfo2) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo1 ast1
+        (ast3, astinfo3) <- Pass.run2_ ImplSelf.pass astinfo2 ast2
         sa2              <- Pass.run1_ SA.pass ast3
-        return (ast3,sa2)
+        return (ast3, sa2)
+        --return (ast3,sa2)
 
     case result of
-        Left e      -> putStrLn $ ppShow e
+        Left e      -> putStrLn e
         Right (x,y) -> putStrLn (ppShow x) 
                     >> putStrLn (ppShow y)
     return ()
