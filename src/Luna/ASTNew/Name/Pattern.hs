@@ -22,7 +22,7 @@ import           Flowbox.Generics.Deriving.QShow
 import           Data.String.Utils (join)
 import           Data.List         (intersperse)
 import           Data.String             (IsString, fromString)
-import           Luna.ASTNew.Name.Multi (MultiName(MultiName))
+import           Luna.ASTNew.Name.Path (NamePath(NamePath))
 
 ----------------------------------------------------------------------
 -- Data types
@@ -39,6 +39,17 @@ instance QShow (NamePattern)
 instance QShow (Segment)
 
 
+--data NamePattern2 arg = NamePattern2 { _prefix   :: Maybe arg
+--                                     , _base     :: Segment2 SegmentName arg
+--                                     , _segments :: [Segment2 SegmentName arg]
+--                                     }
+
+--data Segment2 base arg = Segment2 base [arg]
+
+
+--data ArgPattern a e = ArgPattern (LPat a) (Maybe e) 
+
+
 single :: String -> NamePattern
 single = flip NamePattern []
 
@@ -46,8 +57,8 @@ multi :: String -> [Segment] -> NamePattern
 multi = NamePattern
 
 
-toName :: NamePattern -> MultiName
-toName (NamePattern base segments) = MultiName base $ reverse $ go [] segments
+toName :: NamePattern -> NamePath
+toName (NamePattern base segments) = NamePath base $ reverse $ go [] segments
     where go x []           = x
           go x (Hole:xs)    = go x xs
           go x (Token n:xs) = go (n:x) xs

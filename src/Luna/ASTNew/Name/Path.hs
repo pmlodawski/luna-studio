@@ -10,7 +10,7 @@
 {-# LANGUAGE DeriveGeneric             #-}
 
 
-module Luna.ASTNew.Name.Multi where
+module Luna.ASTNew.Name.Path where
 
 
 import GHC.Generics (Generic)
@@ -27,34 +27,34 @@ import           Data.String             (IsString, fromString)
 -- Data types
 ----------------------------------------------------------------------
 
-data MultiName = MultiName { _base :: String, _segments :: [String] }
+data NamePath = NamePath { _base :: String, _segments :: [String] }
           deriving (Show, Eq, Generic, Read, Ord)
 
 data Segment = Token String
              | Hole
              deriving (Show, Eq, Generic, Read, Ord)
 
-makeLenses ''MultiName
-instance QShow (MultiName)
+makeLenses ''NamePath
+instance QShow (NamePath)
 instance QShow (Segment)
 
 
 
-toList :: MultiName -> [String]
-toList (MultiName b s) = b:s
+toList :: NamePath -> [String]
+toList (NamePath b s) = b:s
 
-single :: String -> MultiName
-single = flip MultiName []
+single :: String -> NamePath
+single = flip NamePath []
 
-multi :: String -> [String] -> MultiName
-multi = MultiName
+multi :: String -> [String] -> NamePath
+multi = NamePath
 
 
-isSingle :: MultiName -> Bool
+isSingle :: NamePath -> Bool
 isSingle = null . view segments
 
 
-isMulti :: MultiName -> Bool
+isMulti :: NamePath -> Bool
 isMulti = not . isSingle
 
 segmentShow :: Segment -> String
@@ -62,13 +62,13 @@ segmentShow name = case name of
     Token s -> strRepr s
     Hole    -> "_"
 
-toStr :: MultiName -> String
+toStr :: NamePath -> String
 toStr n = if isSingle n
     then strRepr $ n^.base
     else (strRepr $ n^.base) ++ (' ' : join " " (n^.segments))
 
 
-unified :: MultiName -> String
+unified :: NamePath -> String
 unified n = if isSingle n
     then strRepr $ n^.base
     else (strRepr $ n^.base) ++ ('_' : join "_" (n^.segments))
@@ -76,12 +76,12 @@ unified n = if isSingle n
 
 -- close the definition, check if name holes are defined explicite
 -- define Holes otherwise
---close :: MultiName -> MultiName
---close n@(MultiName base segments) = case Hole `elem` segments of
+--close :: NamePath -> NamePath
+--close n@(NamePath base segments) = case Hole `elem` segments of
 --    True  -> n
 --    False -> case null segments of
 --        True  -> n
---        False -> MultiName base $ (Hole : intersperse Hole segments)
+--        False -> NamePath base $ (Hole : intersperse Hole segments)
 
 
 
@@ -89,4 +89,4 @@ unified n = if isSingle n
 -- Instances
 ----------------------------------------------------------------------
 
-instance IsString MultiName  where fromString = single
+instance IsString NamePath  where fromString = single

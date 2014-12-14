@@ -12,7 +12,7 @@ module Luna.ASTNew.Lit.Number where
 
 import           Control.Lens
 import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Prelude                 (Eq, Maybe, Maybe (Just, Nothing), Read, Show, concat, (++))
+import           Flowbox.Prelude                 (Eq, Ord, Maybe, Maybe (Just, Nothing), Read, Show, concat, (++))
 import qualified Flowbox.Prelude                 as P
 import           GHC.Generics
 
@@ -20,12 +20,12 @@ import           GHC.Generics
 
 data Sign = Positive
           | Negative
-          deriving (Show, Eq, Generic, Read)
+          deriving (Show, Eq, Ord, Generic, Read)
 
 
 data Repr = Float   { _int :: P.String, _frac :: P.String }
           | Decimal { _int :: P.String }
-          deriving (Show, Eq, Generic, Read)
+          deriving (Show, Eq, Ord, Generic, Read)
 
 
 type Base = P.Int
@@ -35,7 +35,7 @@ data Number = Number { _base :: Base
                      , _exp  :: Maybe Number
                      , _sign :: Sign
                      }
-            deriving (Show, Eq, Generic, Read)
+            deriving (Show, Eq, Ord, Generic, Read)
 
 
 instance QShow Sign

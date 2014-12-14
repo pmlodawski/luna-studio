@@ -19,8 +19,8 @@ import           Data.String             (IsString, fromString)
 
 import           Luna.ASTNew.Name.Rules  as X
 import qualified Luna.ASTNew.Name.Assert as Assert
-import qualified Luna.ASTNew.Name.Multi  as MultiName
-import           Luna.ASTNew.Name.Multi (MultiName(MultiName))
+import qualified Luna.ASTNew.Name.Path  as NamePath
+import           Luna.ASTNew.Name.Path (NamePath(NamePath))
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -33,8 +33,8 @@ class Convert a b where
 
 
 class NameClass n where
-    toName   :: MultiName -> n
-    fromName :: n      -> MultiName
+    toName   :: NamePath -> n
+    fromName :: n      -> NamePath
 
 ----------------------------------------------------------------------
 -- Data types
@@ -44,16 +44,16 @@ data Name = V  VName
           | T  TName
           | C  CName
           | TV TVName
-          deriving (Show, Eq, Generic, Read)
+          deriving (Show, Eq, Ord, Generic, Read)
 
 data NameBase = VarName  VName
               | TypeName TName
-              deriving (Show, Eq, Generic, Read)
+              deriving (Show, Eq, Ord, Generic, Read)
 
-newtype VName  = VName  MultiName deriving (Show, Eq, Generic, Read)
-newtype TName  = TName  MultiName deriving (Show, Eq, Generic, Read)
-newtype CName  = CName  MultiName deriving (Show, Eq, Generic, Read)
-newtype TVName = TVName MultiName deriving (Show, Eq, Generic, Read)
+newtype VName  = VName  NamePath deriving (Show, Eq, Ord, Generic, Read)
+newtype TName  = TName  NamePath deriving (Show, Eq, Ord, Generic, Read)
+newtype CName  = CName  NamePath deriving (Show, Eq, Ord, Generic, Read)
+newtype TVName = TVName NamePath deriving (Show, Eq, Ord, Generic, Read)
 
 vname  (Assert.isVName  -> s) = VName  s
 tname  (Assert.isTName  -> s) = TName  s
@@ -65,10 +65,10 @@ tvname (Assert.isTVName -> s) = TVName s
 -- Instances
 ----------------------------------------------------------------------
 
-instance IsString VName  where fromString = vname  . MultiName.single
-instance IsString TName  where fromString = tname  . MultiName.single
-instance IsString CName  where fromString = cname  . MultiName.single
-instance IsString TVName where fromString = tvname . MultiName.single
+instance IsString VName  where fromString = vname  . NamePath.single
+instance IsString TName  where fromString = tname  . NamePath.single
+instance IsString CName  where fromString = cname  . NamePath.single
+instance IsString TVName where fromString = tvname . NamePath.single
 
 instance NameClass VName where
     toName             = VName
