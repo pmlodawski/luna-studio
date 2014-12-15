@@ -16,26 +16,26 @@ import Control.Applicative
 import Data.Int            (Int32)
 
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Graph.Edge                     as Gen
-import qualified Generated.Proto.Graph.Graph                    as Gen
-import qualified Generated.Proto.Graph.Node                     as Gen
-import qualified Generated.Proto.Graph.Node.Cls                 as GenNode
-import qualified Generated.Proto.Graph.NodeExpr                 as Gen
-import qualified Generated.Proto.Graph.NodeExpr.Cls             as GenNodeExpr
-import           Luna.Data.Serialize.Proto.Conversion.Expr      ()
-import           Luna.Graph.Edge                                (Edge)
-import qualified Luna.Graph.Edge                                as Edge
-import           Luna.Graph.Graph                               (Graph)
-import qualified Luna.Graph.Graph                               as Graph
-import           Luna.Graph.Node                                (Node)
-import qualified Luna.Graph.Node                                as Node
-import           Luna.Graph.Node.Expr                           (NodeExpr)
-import qualified Luna.Graph.Node.Expr                           as NodeExpr
-import qualified Luna.Graph.Node.StringExpr                     as StringExpr
-import           Luna.Graph.Port                                (Port)
-import qualified Luna.Graph.Port                                as Port
+import qualified Generated.Proto.Graph.Edge                as Gen
+import qualified Generated.Proto.Graph.Graph               as Gen
+import qualified Generated.Proto.Graph.Node                as Gen
+import qualified Generated.Proto.Graph.Node.Cls            as GenNode
+import qualified Generated.Proto.Graph.NodeExpr            as Gen
+import qualified Generated.Proto.Graph.NodeExpr.Cls        as GenNodeExpr
+import           Luna.Data.Serialize.Proto.Conversion.Expr ()
+import           Luna.Graph.Edge                           (Edge)
+import qualified Luna.Graph.Edge                           as Edge
+import           Luna.Graph.Graph                          (Graph)
+import qualified Luna.Graph.Graph                          as Graph
+import           Luna.Graph.Node                           (Node)
+import qualified Luna.Graph.Node                           as Node
+import           Luna.Graph.Node.Expr                      (NodeExpr)
+import qualified Luna.Graph.Node.Expr                      as NodeExpr
+import qualified Luna.Graph.Node.StringExpr                as StringExpr
+import           Luna.Graph.Port                           (Port)
+import qualified Luna.Graph.Port                           as Port
 
 
 

@@ -26,6 +26,7 @@ import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
 import qualified Luna.Interpreter.Session.Memory.Config      as Memory
+import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
 import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 import           Luna.Lib.Manager                            (LibManager)
 
@@ -40,6 +41,7 @@ data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheI
                              , _allReady           :: Bool
                              , _fragileOperation   :: FragileMVar
                              , _dependentNodes     :: Map CallPoint (Set Node.ID)
+                             , _profileInfos       :: MapForest CallPoint ProfileInfo
 
                              , _serializationModes :: MapForest CallPoint (MultiSet Mode)
                              , _memoryConfig       :: Memory.Config
@@ -59,7 +61,7 @@ mk :: memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoint
    -> ResultCallBack -> IO (Env memoryManager)
 mk memoryManager'  libManager' projectID' mainPtr' resultCallBack' = do
     fo <- MVar.newMVar ()
-    return $ Env def def def False fo def
+    return $ Env def def def False fo def def
                  def def memoryManager'
                  libManager' projectID' mainPtr' resultCallBack'
 

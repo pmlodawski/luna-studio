@@ -19,6 +19,7 @@ import           Flowbox.Bus.Data.Prefix                                  (Prefi
 import qualified Flowbox.Bus.Data.Prefix                                  as Prefix
 import qualified Flowbox.Bus.RPC.Client                                   as Client
 import qualified Flowbox.Control.Monad.Loops                              as Loops
+import           Flowbox.Data.Convert
 import           Flowbox.PluginManager.Plugin.Info                        (PluginInfo)
 import           Flowbox.PluginManager.Plugin.Plugin                      (Plugin)
 import qualified Flowbox.PluginManager.Plugin.Plugin                      as Plugin
@@ -27,7 +28,6 @@ import qualified Flowbox.PluginManager.RPC.Topic                          as Top
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                             as Proto
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.PluginManager.Plugin.Add.Request         as Add
 import qualified Generated.Proto.PluginManager.Plugin.Add.Update          as Add
 import qualified Generated.Proto.PluginManager.Plugin.List.Request        as List

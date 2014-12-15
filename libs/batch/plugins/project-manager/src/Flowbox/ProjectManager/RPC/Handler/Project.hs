@@ -15,10 +15,10 @@ import           Flowbox.Batch.Project.Project                          (Project
 import qualified Flowbox.Batch.Project.Project                          as Project
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Bus.RPC.RPC                                    (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                        hiding (Context)
 import           Flowbox.ProjectManager.Context                         (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Project.Project                        as Gen
 import qualified Generated.Proto.ProjectManager.Project.Close.Request   as Close
 import qualified Generated.Proto.ProjectManager.Project.Close.Update    as Close

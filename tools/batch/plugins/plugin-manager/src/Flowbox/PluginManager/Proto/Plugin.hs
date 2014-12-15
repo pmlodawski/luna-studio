@@ -13,15 +13,15 @@
 module Flowbox.PluginManager.Proto.Plugin where
 
 import           Flowbox.Control.Error
-import           Flowbox.PluginManager.Plugin.Info              (PluginInfo (PluginInfo))
-import qualified Flowbox.PluginManager.Plugin.Info              as PluginInfo
-import           Flowbox.PluginManager.Plugin.Plugin            (Plugin (Plugin))
-import qualified Flowbox.PluginManager.Plugin.Plugin            as Plugin
-import           Flowbox.Prelude                                hiding (id)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Plugin.Plugin                  as Gen
-import qualified Generated.Proto.Plugin.PluginInfo              as Gen
-import qualified Generated.Proto.Plugin.Status                  as Gen
+import           Flowbox.Data.Convert
+import           Flowbox.PluginManager.Plugin.Info   (PluginInfo (PluginInfo))
+import qualified Flowbox.PluginManager.Plugin.Info   as PluginInfo
+import           Flowbox.PluginManager.Plugin.Plugin (Plugin (Plugin))
+import qualified Flowbox.PluginManager.Plugin.Plugin as Plugin
+import           Flowbox.Prelude                     hiding (id)
+import qualified Generated.Proto.Plugin.Plugin       as Gen
+import qualified Generated.Proto.Plugin.PluginInfo   as Gen
+import qualified Generated.Proto.Plugin.Status       as Gen
 
 
 

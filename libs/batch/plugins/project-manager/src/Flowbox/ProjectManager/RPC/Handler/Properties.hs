@@ -10,10 +10,10 @@ module Flowbox.ProjectManager.RPC.Handler.Properties where
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
 import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Request as GetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Status  as GetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request as SetNodeProperties

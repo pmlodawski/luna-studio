@@ -26,6 +26,8 @@ import           Flowbox.Control.Error
 import           Flowbox.Data.MapForest                      (MapForest)
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Data.Mode                           (Mode)
+import           Flowbox.Data.SetForest                      (SetForest)
+import qualified Flowbox.Data.SetForest                      as SetForest
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
 import qualified Luna.AST.Common                             as AST
@@ -52,6 +54,8 @@ import           Luna.Interpreter.Session.Env.Session        (Session)
 import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Memory.Config      as Memory
+import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
+import qualified Luna.Interpreter.Session.ProfileInfo        as ProfileInfo
 import           Luna.Interpreter.Session.TargetHS.Reload    (Reload, ReloadMap)
 import           Luna.Lib.Lib                                (Library)
 import qualified Luna.Lib.Lib                                as Library
@@ -80,6 +84,22 @@ cachedLookup :: CallPointPath -> Session mm (Maybe CacheInfo)
 cachedLookup callPointPath = MapForest.lookup callPointPath <$> getCached
 
 ---- Env.watchPoints ------------------------------------------------------
+
+addWatchPoint :: CallPointPath -> Session mm ()
+addWatchPoint callPath = modify (Env.watchPoints %~ SetForest.insert callPath)
+
+
+deleteWatchPoint :: CallPointPath -> Session mm ()
+deleteWatchPoint callPath = modify (Env.watchPoints %~ SetForest.delete callPath)
+
+
+cleanWatchPoints :: Session mm ()
+cleanWatchPoints = modify (Env.watchPoints .~ def)
+
+
+getWatchPoints :: Session mm (SetForest CallPoint)
+getWatchPoints = gets (view Env.watchPoints)
+
 ---- Env.reloadMap --------------------------------------------------------
 
 addReload :: Library.ID -> Reload -> Session mm ()
@@ -124,6 +144,7 @@ getDependentNodesOf :: CallPoint -> Session mm (Set Node.ID)
 getDependentNodesOf callPoint =
     Maybe.fromMaybe def . Map.lookup callPoint <$> getDependentNodes
 
+
 insertDependentNode :: CallPoint -> Node.ID -> Session mm ()
 insertDependentNode callPoint nodeID =
     modify (Env.dependentNodes %~ Map.alter alter callPoint) where
@@ -132,6 +153,30 @@ insertDependentNode callPoint nodeID =
 
 deleteDependentNodes :: CallPoint -> Session mm ()
 deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
+
+
+cleanDependentNodes :: Session mm ()
+cleanDependentNodes = modify (Env.dependentNodes .~ def)
+---- Env.profileInfos -----------------------------------------------------
+
+cleanProfileInfos :: Session mm ()
+cleanProfileInfos = modify $ Env.profileInfos .~ def
+
+
+getProfileInfos :: Session mm (MapForest CallPoint ProfileInfo)
+getProfileInfos = gets $ view Env.profileInfos
+
+
+insertProfileInfo :: CallPointPath -> ProfileInfo -> Session mm ()
+insertProfileInfo callPointPath info =
+    modify (Env.profileInfos %~ MapForest.insert callPointPath info)
+
+
+profile :: CallPointPath -> Session mm a -> Session mm a
+profile callPointPath action = do
+    (r, info) <- ProfileInfo.profile action
+    insertProfileInfo callPointPath info
+    return r
 
 ---- Env.serializationModes -----------------------------------------------
 
@@ -163,8 +208,12 @@ deleteSerializationModes callPointPath modes =
         del (Just s) = Just $ MultiSet.difference s modes
 
 
-clearSerializationModes :: CallPointPath -> Session mm ()
-clearSerializationModes = modify . over Env.serializationModes . MapForest.delete
+deleteAllSerializationModes :: CallPointPath -> Session mm ()
+deleteAllSerializationModes = modify . over Env.serializationModes . MapForest.delete
+
+
+cleanSerializationModes :: Session mm ()
+cleanSerializationModes = modify (Env.serializationModes .~ def)
 
 ---- Env.memoryConfig -----------------------------------------------------
 
@@ -299,3 +348,12 @@ setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
 
 getResultCallBack :: Session mm Env.ResultCallBack
 getResultCallBack = gets $ view Env.resultCallBack
+
+---------------------------------------------------------------------------
+
+cleanEnv :: Session mm ()
+cleanEnv = cleanWatchPoints
+        >> cleanDependentNodes
+        >> cleanProfileInfos
+        >> cleanSerializationModes
+

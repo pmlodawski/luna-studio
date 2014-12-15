@@ -12,9 +12,9 @@
 
 module Luna.Data.Serialize.Proto.Conversion.Version where
 
-import           Data.Version                                   (Version (Version))
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Version.Version                as Gen
+import           Data.Version                    (Version (Version))
+import           Flowbox.Data.Convert
+import qualified Generated.Proto.Version.Version as Gen
 
 
 

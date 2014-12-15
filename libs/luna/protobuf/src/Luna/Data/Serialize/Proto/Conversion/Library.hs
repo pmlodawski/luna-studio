@@ -18,8 +18,8 @@ import           Data.IntMap         (IntMap)
 import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Library.Library                      as Gen
 import qualified Generated.Proto.Library.Library.PropertyMap          as Gen
 import qualified Generated.Proto.Library.Library.PropertyMap.KeyValue as Gen

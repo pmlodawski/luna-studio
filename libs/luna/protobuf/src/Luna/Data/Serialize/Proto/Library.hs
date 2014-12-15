@@ -17,16 +17,16 @@ import qualified System.IO            as IO
 import qualified Text.ProtocolBuffers as Proto
 
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.System.IO.Serializer                   (Deserializable (Deserializable), Serializable (Serializable))
-import qualified Flowbox.System.IO.Serializer                   as Serializer
+import           Flowbox.System.IO.Serializer                 (Deserializable (Deserializable), Serializable (Serializable))
+import qualified Flowbox.System.IO.Serializer                 as Serializer
 import           Flowbox.System.Log.Logger
-import           Flowbox.System.UniPath                         (UniPath)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Library.Library                as Gen
-import           Luna.Data.Serialize.Proto.Conversion.Library   ()
-import           Luna.Lib.Lib                                   (Library)
-import qualified Luna.Lib.Lib                                   as Library
+import           Flowbox.System.UniPath                       (UniPath)
+import qualified Generated.Proto.Library.Library              as Gen
+import           Luna.Data.Serialize.Proto.Conversion.Library ()
+import           Luna.Lib.Lib                                 (Library)
+import qualified Luna.Lib.Lib                                 as Library
 
 
 

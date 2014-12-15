@@ -10,11 +10,11 @@
 module Flowbox.FileManager.RPC.Handler.File where
 
 import           Flowbox.Bus.RPC.RPC                                        (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.FileManager.FileManager                            (FileManager)
 import qualified Flowbox.FileManager.FileManager                            as FileManager
 import           Flowbox.Prelude                                            hiding (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.FileManager.FileSystem.File.Copy.Request   as Copy
 import qualified Generated.Proto.FileManager.FileSystem.File.Copy.Update    as Copy
 import qualified Generated.Proto.FileManager.FileSystem.File.Exists.Request as Exists

@@ -7,7 +7,7 @@
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes       #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.ZMQ.RPC.Server.Processor where
 
@@ -17,17 +17,17 @@ import           Data.ByteString                 (ByteString)
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Flowbox.Prelude                                hiding (error)
+import           Flowbox.Data.Convert
+import           Flowbox.Prelude                   hiding (error)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Text.ProtocolBuffers                   (Int32, Serializable)
-import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import           Flowbox.ZMQ.RPC.Handler                        (RPCHandler)
-import qualified Flowbox.ZMQ.RPC.RPC                            as RPC
-import           Generated.Proto.Rpc.Exception                  (Exception (Exception))
-import qualified Generated.Proto.Rpc.Exception                  as Exception
-import           Generated.Proto.Rpc.Response                   (Response (Response))
-import qualified Generated.Proto.Rpc.Response.Type              as ResponseType
+import           Flowbox.Text.ProtocolBuffers      (Int32, Serializable)
+import qualified Flowbox.Text.ProtocolBuffers      as Proto
+import           Flowbox.ZMQ.RPC.Handler           (RPCHandler)
+import qualified Flowbox.ZMQ.RPC.RPC               as RPC
+import           Generated.Proto.Rpc.Exception     (Exception (Exception))
+import qualified Generated.Proto.Rpc.Exception     as Exception
+import           Generated.Proto.Rpc.Response      (Response (Response))
+import qualified Generated.Proto.Rpc.Response.Type as ResponseType
 
 
 
