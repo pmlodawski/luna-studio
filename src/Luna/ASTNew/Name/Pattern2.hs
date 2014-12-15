@@ -71,6 +71,9 @@ toDesc (NamePat pfx base segments) = ArgPatDesc (pfxToDesc pfx) (smntToDesc base
           pfxToDesc  Nothing             = True
 
 
+mapSegmentBase f (Segment base arg) = Segment (f base) arg
+
+mapSegments f (NamePat pfx base segs) = NamePat pfx (f base) (fmap f segs)
 
 class NamePatternClass p s | p -> s where
     segments     :: p -> [s]
