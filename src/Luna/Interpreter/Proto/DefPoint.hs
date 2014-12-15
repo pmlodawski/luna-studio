@@ -14,9 +14,8 @@ module Luna.Interpreter.Proto.DefPoint where
 
 import qualified Flowbox.Batch.Project.Project                          as Project
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
-import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Interpreter.DefPoint                   as Gen
 import           Luna.Data.Serialize.Proto.Conversion.Crumb             ()
 import           Luna.Data.Serialize.Proto.Conversion.Library           ()
@@ -25,12 +24,8 @@ import           Luna.Interpreter.Session.Data.DefPoint                 (DefPoin
 
 
 instance Convert (Project.ID, DefPoint) Gen.DefPoint where
-    encode (projectID, DefPoint libraryID bc) = Gen.DefPoint tprojectID tlibraryID tbc where
-        tprojectID = encodePJ projectID
-        tlibraryID = encodePJ libraryID
-        tbc        = encodeJ  bc
-    decode (Gen.DefPoint mtprojectID mtlibraryID mtbc) = do
-        projectID <- decodeP <$> mtprojectID <?> "Failed to decode DefPoint: 'projectID' field is missing"
-        libraryID <- decodeP <$> mtlibraryID <?> "Failed to decode DefPoint: 'libraryID' field is missing"
-        bc        <- decode =<< (mtbc        <?> "Failed to decode DefPoint: 'breadcrumbs' field is missing")
-        return (projectID, DefPoint libraryID bc)
+    encode (projectID, DefPoint libraryID bc) =
+        Gen.DefPoint (encodeP projectID) (encodeP libraryID) (encode bc)
+    decode (Gen.DefPoint projectID libraryID tbc) = do
+        bc <- decode tbc
+        return (decodeP projectID, DefPoint (decodeP libraryID) bc)

@@ -12,19 +12,12 @@
 
 module Luna.Interpreter.Proto.CallPoint where
 
-import           Flowbox.Control.Error
-import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Interpreter.CallPoint          as Gen
-import           Luna.Interpreter.Session.Data.CallPoint        (CallPoint (CallPoint))
+import           Flowbox.Data.Convert
+import qualified Generated.Proto.Interpreter.CallPoint   as Gen
+import           Luna.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
 
 
 
-instance Convert CallPoint Gen.CallPoint where
-    encode (CallPoint libraryID nodeID) = Gen.CallPoint tlibraryID tnodeID where
-        tlibraryID = encodePJ libraryID
-        tnodeID    = encodePJ nodeID
-    decode (Gen.CallPoint mtlibraryID mtnodeID) = do
-        libraryID <- decodeP <$> mtlibraryID <?> "Failed to decode CallPoint: 'libraryID' field is missing"
-        nodeID    <- decodeP <$> mtnodeID    <?> "Failed to decode CallPoint: 'nodeID' field is missing"
-        return $ CallPoint libraryID nodeID
+instance ConvertPure CallPoint Gen.CallPoint where
+    encodeP (CallPoint     libraryID nodeID) = Gen.CallPoint (encodeP libraryID) (encodeP nodeID)
+    decodeP (Gen.CallPoint libraryID nodeID) = CallPoint     (decodeP libraryID) (decodeP nodeID)
