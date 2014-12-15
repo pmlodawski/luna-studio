@@ -49,6 +49,20 @@ data SegmentDesc = SegmentDesc SegmentName [Bool] deriving (Show, Eq, Generic, R
 
 data ArgPatDesc = ArgPatDesc Bool SegmentDesc [SegmentDesc] deriving (Show, Eq, Generic, Read, Ord)
 
+
+appendArg  arg  = appendArgs [arg]
+appendArgs nargs (Segment base args) = Segment base (args ++ nargs)
+
+appendLastSegmentArg  arg  = appendLastSegmentArgs [arg]
+appendLastSegmentArgs nargs (NamePat pfx base segs) = case segs of
+    [] -> NamePat pfx (appendArgs nargs base) segs
+    _  -> NamePat pfx base (init segs ++ [appendArgs nargs $ last segs])
+
+
+withLastSegment f (NamePat pfx base segs) = case segs of
+    [] -> NamePat pfx (f base) segs
+    _  -> NamePat pfx base (init segs ++ [f $ last segs])
+
 toDesc :: ArgPat pat expr -> ArgPatDesc
 toDesc (NamePat pfx base segments) = ArgPatDesc (pfxToDesc pfx) (smntToDesc base) (fmap smntToDesc segments)
     where smntToDesc (Segment base args) = SegmentDesc base $ fmap argToDesc args

@@ -234,7 +234,6 @@ instance ( Traversal base m v v'
          , Traversal base m (Expr.LList lab (LExpr lab v)) (Expr.LList lab' (LExpr lab' v'))
          , Traversal base m (LPat lab) (LPat lab')
          , Traversal base m (Expr.LMatch lab v) (Expr.LMatch lab' v')
-         , Traversal base m (Expr.ExprApp lab v) (Expr.ExprApp lab' v')
          , Traversal base m (LExpr lab v) (LExpr lab' v')
          , Traversal base m (LType lab) (LType lab')
          , Traversal base m (LArg lab (Expr lab v)) (LArg lab' (Expr lab' v'))
@@ -243,8 +242,7 @@ instance ( Traversal base m v v'
     defaultTraverseM b = \case
         Expr.Lambda      inputs  output   body -> Expr.Lambda      <$> traverseM b inputs <*> traverseM b output   <*> traverseM b body
         Expr.RecUpdt     src     selector expr -> Expr.RecUpdt     <$> traverseM b src    <*> traverseM b selector <*> traverseM b expr
-        Expr.App         src     args          -> Expr.App         <$> traverseM b src    <*> traverseM b args         
-        Expr.App2        app                   -> Expr.App2        <$> traverseM b app
+        Expr.App         app                   -> Expr.App         <$> traverseM b app
         Expr.Case        expr    match         -> Expr.Case        <$> traverseM b expr   <*> traverseM b match        
         Expr.Typed       cls     expr          -> Expr.Typed       <$> traverseM b cls    <*> traverseM b expr         
         Expr.Assignment  dst     src           -> Expr.Assignment  <$> traverseM b dst    <*> traverseM b src          
@@ -270,22 +268,6 @@ instance ( Traversal base m (LPat lab) (LPat lab')
          , Traversal base m (LExpr lab v) (LExpr lab' v')
          ) => DefaultTraversal base m (Expr.Match lab v) (Expr.Match lab' v') where
     defaultTraverseM b (Expr.Match pat body) = Expr.Match <$> traverseM b pat <*> traverseM b body
-
-
-instance ( Traversal base m (Expr.Named VName a) (Expr.Named VName a')
-         , Traversal base m a a'
-         ) => DefaultTraversal base m (Expr.App a) (Expr.App a') where
-    defaultTraverseM b = \case
-        Expr.Seq   ops -> Expr.Seq   <$> traverseM b ops
-        Expr.Infix l r -> Expr.Infix <$> traverseM b l <*> traverseM b r
-
-
-instance ( Traversal base m n n'
-         , Traversal base m v v'
-         ) => DefaultTraversal base m (Expr.Named n v) (Expr.Named n' v') where
-    defaultTraverseM b = \case
-        Expr.Named   n v -> Expr.Named   <$> traverseM b n <*> traverseM b v
-        Expr.Unnamed   v -> Expr.Unnamed <$> traverseM b v
 
 
 instance ( Traversal base m e e'
