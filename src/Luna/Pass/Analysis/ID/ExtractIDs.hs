@@ -19,6 +19,8 @@ import           Luna.AST.Control.Focus         (Focus)
 import           Luna.AST.Expr                  (Expr)
 import           Luna.AST.Module                (Module)
 import           Luna.AST.Pat                   (Pat)
+import           Luna.Graph.Node.Expr           (NodeExpr)
+import qualified Luna.Graph.Node.Expr           as NodeExpr
 import           Luna.Pass.Analysis.ID.State    (IDState)
 import qualified Luna.Pass.Analysis.ID.State    as State
 import qualified Luna.Pass.Analysis.ID.Traverse as IDTraverse
@@ -34,20 +36,30 @@ logger = getLogger $(moduleName)
 type ExtractIDPass result = Pass IDState result
 
 
+runPass :: (Monad m, Functor m)
+        => Pass.ESRT err Pass.Info IDState m result
+        -> m (Either err result)
+runPass = Pass.run_ (Pass.Info "ExtractIDs") State.make
+
+
 run :: Focus -> Pass.Result IntSet
-run = Pass.run_ (Pass.Info "ExtractIDs") State.make . analyseFocus
+run = runPass . analyseFocus
 
 
 runExpr :: Expr -> Pass.Result IntSet
-runExpr = Pass.run_ (Pass.Info "ExtractIDs") State.make . analyseExpr
+runExpr = runPass . analyseExpr
 
 
 runModule :: Module -> Pass.Result IntSet
-runModule = Pass.run_ (Pass.Info "ExtractIDs") State.make . analyseModule
+runModule = runPass . analyseModule
 
 
 runPat :: Pat -> Pass.Result IntSet
-runPat = Pass.run_ (Pass.Info "ExtractIDs") State.make . analysePat
+runPat = runPass . analysePat
+
+
+runNodeExpr :: NodeExpr -> Pass.Result IntSet
+runNodeExpr = runPass . analyseNodeExpr
 
 
 analyseFocus :: Focus -> ExtractIDPass IntSet
@@ -64,3 +76,8 @@ analyseModule e = IDTraverse.traverseModule State.appendID e >> State.getIDs
 
 analysePat :: Pat -> ExtractIDPass IntSet
 analysePat p = IDTraverse.traversePat State.appendID p >> State.getIDs
+
+
+analyseNodeExpr :: NodeExpr -> ExtractIDPass IntSet
+analyseNodeExpr (NodeExpr.ASTExpr expr) = analyseExpr expr
+analyseNodeExpr _                       = return def
