@@ -16,6 +16,7 @@ import qualified Text.Read                  as Read
 
 import           Flowbox.Control.Error                       (catchEither)
 import qualified Flowbox.Data.List                           as List
+import           Flowbox.Data.MapForest                      (MapForest)
 import           Flowbox.Prelude                             as Prelude hiding (children, inside)
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
@@ -32,6 +33,7 @@ import qualified Luna.Interpreter.Session.Cache.Value        as Value
 import qualified Luna.Interpreter.Session.Data.CallData      as CallData
 import           Luna.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
+import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.Hash          (Hash)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
@@ -42,6 +44,7 @@ import qualified Luna.Interpreter.Session.Error              as Error
 import qualified Luna.Interpreter.Session.Hash               as Hash
 import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager     as Manager
+import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
@@ -54,8 +57,12 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-processMain :: MemoryManager mm => Session mm ()
-processMain = do
+processMain :: MemoryManager mm => Session mm (MapForest CallPoint ProfileInfo)
+processMain = processMain_ >> Env.getProfileInfos
+
+
+processMain_ :: MemoryManager mm => Session mm ()
+processMain_ = do
     Env.cleanProfileInfos
     TargetHS.reload
     mainPtr  <- Env.getMainPtr
@@ -64,7 +71,6 @@ processMain = do
     Env.setAllReady True
     Cache.dumpAll
     Debug.dumpBindings
-    print =<< Env.getProfileInfos
 
 
 processNodeIfNeeded :: MemoryManager mm
