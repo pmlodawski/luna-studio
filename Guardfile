@@ -44,7 +44,7 @@ def haskellguard trigger
   puts ""
 
   section "building"
-  if command("~/flowbox.io/flowbox/scripts/compile -j9")
+  if command("../../../scripts/compile -j9")
 
     section "documentation", "cabal haddock --html"  if $run_docgen
     section "tests",         "rm -f luna-typechecker-tests.tix", "../../../dist/bin/libs/luna-typechecker"  if $run_tests
