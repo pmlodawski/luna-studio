@@ -17,22 +17,22 @@ import           Control.Applicative
 import qualified Data.Map            as Map
 
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Crumb.ASTPtr                   as Gen
-import qualified Generated.Proto.Crumb.Breadcrumbs              as Gen
-import qualified Generated.Proto.Crumb.Class                    as GenClass
-import qualified Generated.Proto.Crumb.Crumb                    as Gen
-import qualified Generated.Proto.Crumb.Crumb.Cls                as GenCls
-import qualified Generated.Proto.Crumb.Function                 as GenFunction
-import qualified Generated.Proto.Crumb.Lambda                   as GenLambda
-import qualified Generated.Proto.Crumb.Module                   as GenModule
-import           Luna.AST.Control.Crumb                         (Breadcrumbs, Crumb)
-import qualified Luna.AST.Control.Crumb                         as Crumb
-import           Luna.Data.Serialize.Proto.Conversion.Library   ()
-import           Luna.Data.Serialize.Proto.Conversion.Name      ()
-import qualified Luna.Lib.Lib                                   as Lib
-import qualified Text.ProtocolBuffers.Extensions                as Extensions
+import qualified Generated.Proto.Crumb.ASTPtr                 as Gen
+import qualified Generated.Proto.Crumb.Breadcrumbs            as Gen
+import qualified Generated.Proto.Crumb.Class                  as GenClass
+import qualified Generated.Proto.Crumb.Crumb                  as Gen
+import qualified Generated.Proto.Crumb.Crumb.Cls              as GenCls
+import qualified Generated.Proto.Crumb.Function               as GenFunction
+import qualified Generated.Proto.Crumb.Lambda                 as GenLambda
+import qualified Generated.Proto.Crumb.Module                 as GenModule
+import           Luna.AST.Control.Crumb                       (Breadcrumbs, Crumb)
+import qualified Luna.AST.Control.Crumb                       as Crumb
+import           Luna.Data.Serialize.Proto.Conversion.Library ()
+import           Luna.Data.Serialize.Proto.Conversion.Name    ()
+import qualified Luna.Lib.Lib                                 as Lib
+import qualified Text.ProtocolBuffers.Extensions              as Extensions
 
 
 

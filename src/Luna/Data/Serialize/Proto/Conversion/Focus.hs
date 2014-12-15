@@ -17,18 +17,18 @@ import qualified Data.Map                        as Map
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Focus.ClassFocus               as GenClass
-import qualified Generated.Proto.Focus.Focus                    as Gen
-import qualified Generated.Proto.Focus.Focus.Cls                as GenCls
-import qualified Generated.Proto.Focus.FunctionFocus            as GenFunction
-import qualified Generated.Proto.Focus.LambdaFocus              as GenLambda
-import qualified Generated.Proto.Focus.ModuleFocus              as GenModule
-import           Luna.AST.Control.Focus                         (Focus)
-import qualified Luna.AST.Control.Focus                         as Focus
-import           Luna.Data.Serialize.Proto.Conversion.Expr      ()
-import           Luna.Data.Serialize.Proto.Conversion.Module    ()
+import qualified Generated.Proto.Focus.ClassFocus            as GenClass
+import qualified Generated.Proto.Focus.Focus                 as Gen
+import qualified Generated.Proto.Focus.Focus.Cls             as GenCls
+import qualified Generated.Proto.Focus.FunctionFocus         as GenFunction
+import qualified Generated.Proto.Focus.LambdaFocus           as GenLambda
+import qualified Generated.Proto.Focus.ModuleFocus           as GenModule
+import           Luna.AST.Control.Focus                      (Focus)
+import qualified Luna.AST.Control.Focus                      as Focus
+import           Luna.Data.Serialize.Proto.Conversion.Expr   ()
+import           Luna.Data.Serialize.Proto.Conversion.Module ()
 
 
 

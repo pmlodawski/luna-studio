@@ -13,25 +13,25 @@
 module Luna.Data.Serialize.Proto.Conversion.Type where
 
 import           Control.Applicative
-import qualified Data.Map                                       as Map
+import qualified Data.Map                        as Map
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Type.App                       as GenApp
-import qualified Generated.Proto.Type.Con_                      as GenCon_
-import qualified Generated.Proto.Type.Data                      as GenData
-import qualified Generated.Proto.Type.Function                  as GenFunction
-import qualified Generated.Proto.Type.List                      as GenList
-import qualified Generated.Proto.Type.Module                    as GenModule
-import qualified Generated.Proto.Type.Tuple                     as GenTuple
-import qualified Generated.Proto.Type.Type                      as Gen
-import qualified Generated.Proto.Type.Type.Cls                  as GenCls
-import qualified Generated.Proto.Type.Unknown                   as GenUnknown
-import qualified Generated.Proto.Type.Var                       as GenVar
-import qualified Luna.AST.Common                                as AST
-import           Luna.AST.Type                                  (Type)
-import qualified Luna.AST.Type                                  as Type
-import qualified Text.ProtocolBuffers.Extensions                as Extensions
+import qualified Generated.Proto.Type.App        as GenApp
+import qualified Generated.Proto.Type.Con_       as GenCon_
+import qualified Generated.Proto.Type.Data       as GenData
+import qualified Generated.Proto.Type.Function   as GenFunction
+import qualified Generated.Proto.Type.List       as GenList
+import qualified Generated.Proto.Type.Module     as GenModule
+import qualified Generated.Proto.Type.Tuple      as GenTuple
+import qualified Generated.Proto.Type.Type       as Gen
+import qualified Generated.Proto.Type.Type.Cls   as GenCls
+import qualified Generated.Proto.Type.Unknown    as GenUnknown
+import qualified Generated.Proto.Type.Var        as GenVar
+import qualified Luna.AST.Common                 as AST
+import           Luna.AST.Type                   (Type)
+import qualified Luna.AST.Type                   as Type
+import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 
 
