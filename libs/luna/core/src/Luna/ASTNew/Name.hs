@@ -21,6 +21,7 @@ import           Luna.ASTNew.Name.Rules  as X
 import qualified Luna.ASTNew.Name.Assert as Assert
 import qualified Luna.ASTNew.Name.Path  as NamePath
 import           Luna.ASTNew.Name.Path (NamePath(NamePath))
+import           Luna.ASTNew.Name.Hash (Hashable, hash)
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -95,3 +96,5 @@ instance Convert VName  VName
 instance Convert TName  TName
 instance Convert CName  CName
 instance Convert TVName TVName
+
+instance Hashable VName where hash (VName name) = hash name

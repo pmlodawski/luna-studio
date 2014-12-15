@@ -30,8 +30,8 @@ import           Flowbox.Prelude              hiding (noneOf, maybe, element, co
 import qualified Flowbox.Prelude              as Prelude
 import qualified Luna.Data.ASTInfo            as ASTInfo
 import qualified Luna.Parser.Token            as Tok
-import qualified Luna.Parser.State            as State
-import           Luna.Parser.State            (State)
+import qualified Luna.Parser.State            as ParserState
+import           Luna.Parser.State            (ParserState)
 import           System.Environment           (getArgs)
 import           System.IO                    (IOMode (ReadMode), hClose, openFile)
 import           System.IO                    (stdout)
@@ -59,7 +59,8 @@ import           Luna.ASTNew.Name.Pattern2    (NamePat(NamePat), Segment(Segment
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
 
-import qualified Luna.Data.Namespace          as Namespace
+--import qualified Luna.Data.Namespace          as Namespace
+import qualified Luna.Data.Namespace.State    as Namespace
 import qualified Luna.Data.StructInfo          as StructInfo
 import qualified Luna.ASTNew.AST              as AST
 import qualified Luna.ASTNew.Traversals       as AST
@@ -120,9 +121,13 @@ tName = Name.T <$> Tok.typeIdent
 
 anyName = vName <|> tName
 
-labeled p = do
+labeled p = withLabeled (const p)
+
+                          
+withLabeled f = do
     id <- nextID
-    fmap (label id) p
+    fmap (label id) $ f id
+
 
 label id = Label $ IDTag id
 
@@ -202,9 +207,9 @@ anyIdent        = choice [ Tok.varIdent, Tok.typeIdent ]
 varOp           = Tok.varIdent <|> Tok.operator
 
 
-getASTInfo = view State.info <$> get
+getASTInfo = view ParserState.info <$> get
 
-putASTInfo info = modify (State.info .~ info)
+putASTInfo info = modify (ParserState.info .~ info)
 
 nextID = do
     info <- getASTInfo
@@ -226,21 +231,21 @@ postfixM name fun       = Postfix (Tok.reservedOp name *>        fun)
 
 element m = do
     id <- nextID
-    State.registerID id
+    ParserState.registerID id
     ast <- m id
-    --State.registerAST id ast
+    --ParserState.registerAST id ast
     return ast
 
 
 
-container m = element $ \id -> State.withNewScope id $ m id
+container m = element $ \id -> ParserState.withNewScope id $ m id
 
 
 
 
 --regVarName m id = do
 --    ast <- m id
---    State.regVarName id (AST.name ast)
+--    ParserState.regVarName id (AST.name ast)
 --    return ast
 
 
@@ -254,8 +259,8 @@ unit p = do
     --FIXME[WD] : change id to datatype
     let id = -666 
     --id <- nextID
-    --Unit id <$> State.withNewScope id p
-    State.withNewScope id p
+    --Unit id <$> ParserState.withNewScope id p
+    ParserState.withNewScope id p
 
 
 -----------------------------------------------------------
@@ -446,7 +451,16 @@ termBase t = choice [ try (labeled (Pat.Grouped <$> Tok.parens patTup))
                     ]
               <?> "pattern term"
 
-varP       = labeled (Pat.Var         <$> Tok.varIdent)
+varP       = withLabeled $ \id -> do
+                name <- Tok.varIdent
+                let np = NamePath.single name
+                Namespace.regVarName id np
+                return $ Pat.Var $ fromString name
+
+
+
+--labeled (Pat.Var         <$> Tok.varIdent)
+
 litP       = labeled (Pat.Lit         <$> literal)
 implTupleP = labeled (Pat.Tuple       <$> sepBy2 patCon Tok.separator)
 wildP      = labeled (Pat.Wildcard    <$  Tok.wildcard)
@@ -671,7 +685,7 @@ appArg p = try (Expr.AppArg <$> just Tok.varIdent <* Tok.assignment <*> p) <|> (
 
 mkFuncParser baseVar (id, mpatt) = case mpatt of
     Nothing                                      -> baseVar
-    Just patt@(NamePat.ArgPatDesc pfx base segs) -> State.withReserved segNames 
+    Just patt@(NamePat.ArgPatDesc pfx base segs) -> ParserState.withReserved segNames 
                                                   $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
               segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
@@ -687,7 +701,7 @@ mkFuncParser baseVar (id, mpatt) = case mpatt of
 
 
 notReserved p = do
-    rsv  <- view State.adhocReserved <$> get
+    rsv  <- view ParserState.adhocReserved <$> get
     name <- p
     if name `elem` rsv then fail $ "'" ++ name ++ "' is a reserved word"
                        else return name
@@ -699,14 +713,18 @@ varE   = do
     ast  <- lookupAST name
     case ast of
         Just possibleDescs -> mkFuncParsers possibleDescs (labeled . pure $ Expr.Var (NamePath.single name))
-        Nothing            -> labeled . pure $ Expr.Var (NamePath.single name)
-                          
+        Nothing            -> withLabeled $ \id -> do
+                                  let np = NamePath.single name
+                                  Namespace.regVarName id np
+                                  return $ Expr.Var np
+
+
 
 lookupAST name = do
-    scope      <- State.getScope
-    structInfo <- State.getStructInfo
-    pid        <- State.getPid
-    --pragmaSet <- view (State.conf . Config.pragmaSet) <$> get
+    scope      <- ParserState.getScope
+    structInfo <- ParserState.getStructInfo
+    pid        <- ParserState.getPid
+    --pragmaSet <- view (ParserState.conf . Config.pragmaSet) <$> get
     let argPatts = view StructInfo.argPats structInfo
 
     case Map.lookup pid scope of
@@ -872,11 +890,11 @@ appConf = Config.registerPragma (undefined :: Pragma.TabLength)
 -- FIXME[wd]: logika powina byc przeniesiona na system pluginow
 defConfig = appConf def
 -- FIXME[wd]: debugowo ustawione wartosci typow
-emptyState = def :: State ()
-defState  = emptyState & State.conf .~ defConfig
+emptyState = def :: ParserState ()
+defState  = emptyState & ParserState.conf .~ defConfig
 
 
-appSt = State.conf %~ appConf
+appSt = ParserState.conf %~ appConf
 
 --st = def {State._conf = conf}
 

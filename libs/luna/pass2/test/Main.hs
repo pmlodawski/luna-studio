@@ -23,6 +23,8 @@ import qualified Luna.Pass2.Analysis.Struct as SA
 import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
 import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
 import qualified Luna.Pass2.Transform.Desugar.ImplicitSelf as ImplSelf
+import qualified Luna.Pass2.Transform.Hash                 as Hash
+import qualified Luna.Pass2.Transform.SSA                  as SSA
 import           Luna.Data.Namespace (Namespace(Namespace))
 import qualified Luna.Pass as Pass
 import Control.Monad.Trans.Either
@@ -52,11 +54,13 @@ main = do
         (ast2, astinfo2) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo1 ast1
         (ast3, astinfo3) <- Pass.run2_ ImplSelf.pass astinfo2 ast2
         sa2              <- Pass.run1_ SA.pass ast3
-        return (ast3, sa2)
+        ast4             <- Pass.run1_ Hash.pass ast3
+        ast5             <- Pass.run1_ SSA.pass ast4
+        return ast4
+        --return (ast4, sa2)
         --return (ast3,sa2)
 
     case result of
-        Left e      -> putStrLn e
-        Right (x,y) -> putStrLn (ppShow x) 
-                    >> putStrLn (ppShow y)
+        Left  e -> putStrLn e
+        Right r -> putStrLn (ppShow r) 
     return ()

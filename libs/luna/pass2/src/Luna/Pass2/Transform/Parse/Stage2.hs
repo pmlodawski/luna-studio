@@ -48,6 +48,7 @@ import           Luna.Data.ASTInfo            (ASTInfo)
 import qualified Luna.Data.Namespace.State    as State 
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
+import           Luna.Parser.State            (ParserState)
 
 ----------------------------------------------------------------------
 -- Base types
@@ -55,7 +56,7 @@ import qualified Luna.Parser.State            as ParserState
 
 data Stage2 = Stage2
 
-type Stage2Pass             m     = PassMonad (ParserState.State ()) m
+type Stage2Pass             m     = PassMonad (ParserState ()) m
 type Stage2Ctx              lab m = (Enumerated lab, PassCtx m)
 type Stage2Traversal        m a b = (PassCtx m, AST.Traversal        Stage2 (Stage2Pass m) a b)
 type Stage2DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage2 (Stage2Pass m) a b)
@@ -78,7 +79,7 @@ defaultTraverseM = AST.defaultTraverseM Stage2
 ---- Pass functions
 ------------------------------------------------------------------------
 
-pass :: Stage2DefaultTraversal m a b => Pass (ParserState.State ()) (Namespace -> ASTInfo -> a -> Stage2Pass m (b,ASTInfo))
+pass :: Stage2DefaultTraversal m a b => Pass (ParserState ()) (Namespace -> ASTInfo -> a -> Stage2Pass m (b,ASTInfo))
 pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias analysis" undefined passRunner
 
 -- FIXME[wd]: using emptyState just to make it working

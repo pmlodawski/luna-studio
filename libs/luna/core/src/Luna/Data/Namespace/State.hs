@@ -12,7 +12,7 @@
 
 module Luna.Data.Namespace.State where
 
-import           Control.Monad.State (MonadState, get, modify, put)
+import           Control.Monad.State (MonadState)
 import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Prelude           hiding (id)
@@ -29,9 +29,9 @@ import           Luna.ASTNew.Pat           (Pat)
 import qualified Luna.ASTNew.Pat           as Pat
 import           Luna.ASTNew.Type          (Type)
 import qualified Luna.ASTNew.Type          as Type
-import           Luna.Data.StructInfo      (StructInfo)
+import           Luna.Data.StructInfo      (StructInfo, StructInfoMonad)
 import qualified Luna.Data.StructInfo      as StructInfo
-import           Luna.Data.Namespace       (Namespace)
+import           Luna.Data.Namespace       (Namespace, NamespaceMonad)
 import qualified Luna.Data.Namespace       as Namespace
 import           Flowbox.System.Log.Logger as L
 import qualified Flowbox.Data.MapForest    as MapForest
@@ -51,54 +51,54 @@ logger = getLoggerIO $(moduleName)
 
 --makeLenses (''VAState)
 
-type NamespaceMonad m = (MonadState Namespace m, Applicative m)
+type NamespaceState m = (Monad m, Applicative m, NamespaceMonad m, StructInfoMonad m)
 
 
---getStructInfo :: NamespaceMonad m => m StructInfo
-getStructInfo = view Namespace.info <$> get
-
---getCurrentID :: NamespaceMonad m => m (Maybe ID)
+--getCurrentID :: NamespaceState m => m (Maybe ID)
 --getCurrentID = do stack <- view idStack <$> get
 --                  return $ case stack of
 --                      []    -> Nothing
 --                      (x:_) -> Just x
 
+modify f = do
+    ns <- Namespace.get
+    Namespace.put $ f ns
 
-scopeID = Namespace.head <$> get
+scopeID = Namespace.head <$> Namespace.get
 
 
---putStructInfo :: NamespaceMonad m => StructInfo -> m ()
+--putStructInfo :: NamespaceState m => StructInfo -> m ()
 putStructInfo info = modify (Namespace.info .~ info)
 
 
---modifyStructInfo :: NamespaceMonad m => (StructInfo -> StructInfo) -> m ()
+--modifyStructInfo :: NamespaceState m => (StructInfo -> StructInfo) -> m ()
 modifyStructInfo f = do
-    info <- getStructInfo
+    info <- StructInfo.get
     putStructInfo $ f info
 
 
 
---pushID :: NamespaceMonad m => ID -> m ()
+--pushID :: NamespaceState m => ID -> m ()
 pushID id = modify $ Namespace.pushID id
 
---popID :: NamespaceMonad m => m ID
+--popID :: NamespaceState m => m ID
 popID = do
-    (id, ns') <- Namespace.popID <$> get
-    put ns'
+    (id, ns') <- Namespace.popID <$> Namespace.get
+    Namespace.put ns'
     return id
 
 
 
---pushID :: NamespaceMonad m => ID -> m ()
+--pushID :: NamespaceState m => ID -> m ()
 --pushID id = modify (idStack %~ (id:))
 
---popID :: NamespaceMonad m => m ID
+--popID :: NamespaceState m => m ID
 --popID = do (id:ids) <- view idStack <$> get
 --           modify (idStack .~ ids)
 --           return id
 
 
---withID :: NamespaceMonad m => ID -> m f -> m f
+--withID :: NamespaceState m => ID -> m f -> m f
 --withID id f = pushID id *> f <* popID
 
 pushNewScope id = modify $ Namespace.pushNewScope id
@@ -110,28 +110,28 @@ withNewScope id p = pushNewScope id *> p <* popScope
 withScope    id p = pushScope    id *> p <* popScope
 
 
-withParentID :: NamespaceMonad m => m f -> m f
+withParentID :: NamespaceState m => m f -> m f
 withParentID f = do pid <- popID
                     out <- f
                     pushID pid
                     return out
 
-----switchID :: NamespaceMonad m => ID -> m ()
+----switchID :: NamespaceState m => ID -> m ()
 ----switchID id = modify (currentID .~ id)
 
-regModule :: NamespaceMonad m => Module a e -> m ()
+regModule :: NamespaceState m => Module a e -> m ()
 regModule = undefined -- regElBy AST.Module Module.id
 
-regExpr :: NamespaceMonad m => Expr a v -> m ()
+regExpr :: NamespaceState m => Expr a v -> m ()
 regExpr = undefined -- regElBy AST.Expr Expr.id
 
-regLit :: NamespaceMonad m => Lit -> m ()
+regLit :: NamespaceState m => Lit -> m ()
 regLit = undefined -- regElBy AST.Lit Lit.id
 
-regPat :: NamespaceMonad m => Pat a -> m ()
+regPat :: NamespaceState m => Pat a -> m ()
 regPat = undefined -- regElBy AST.Pat Pat.id
 
-regType :: NamespaceMonad m => Type a -> m ()
+regType :: NamespaceState m => Type a -> m ()
 regType = undefined -- regElBy AST.Type Type.id
 
 
@@ -139,61 +139,59 @@ regOrphan = modifyStructInfo .: StructInfo.regOrphan
 
 
 
---regID :: NamespaceMonad m => ID -> m ()
+--regID :: NamespaceState m => ID -> m ()
 regID id = do
     mpid <- scopeID
     withJust mpid (\pid -> modifyStructInfo $ StructInfo.parent %~ IntMap.insert id pid)
 
 
-regVarName :: NamespaceMonad m => ID -> NamePath -> m ()
+regVarName :: NamespaceState m => ID -> NamePath -> m ()
 regVarName = regName StructInfo.varnames
 
 
-regArgPatDesc :: NamespaceMonad m => ID -> ArgPatDesc -> m ()
+regArgPatDesc :: NamespaceState m => ID -> ArgPatDesc -> m ()
 regArgPatDesc id argPat = modifyStructInfo (StructInfo.argPats %~ IntMap.insert id argPat)
 
-regParent :: NamespaceMonad m => ID -> m ()
+regParent :: NamespaceState m => ID -> m ()
 regParent id = do
     scopeID <- scopeID
     withJust scopeID (\pid -> modifyStructInfo (StructInfo.parent %~ IntMap.insert id pid))
 
 
-regAlias :: NamespaceMonad m => ID -> NamePath -> m ()
+regAlias :: NamespaceState m => ID -> NamePath -> m ()
 regAlias ident name = do
-    structInfo <- getStructInfo
+    structInfo <- StructInfo.get
     -- TODO [kgdk]: remove Just
     structInfo' <- withCurrentScopeID_ (\scopeId -> Just $ StructInfo.regAlias ident name scopeId structInfo)
     modify $ Namespace.info .~ structInfo'
 
 
--- TODO [kgdk]: użyć …ScopeID z …Scope, by codebase był wspólny
-
-withCurrentScopeID_ :: NamespaceMonad m => (ID -> Maybe a) -> m a
+withCurrentScopeID_ :: NamespaceState m => (ID -> Maybe a) -> m a
 withCurrentScopeID_ action = withCurrentScopeID action >>= maybe (fail "Cannot obtain current scope") return
 
-withCurrentScopeID :: NamespaceMonad m => (ID -> Maybe a) -> m (Maybe a)
+withCurrentScopeID :: NamespaceState m => (ID -> Maybe a) -> m (Maybe a)
 withCurrentScopeID action = scopeID >>= maybe (return Nothing) (return . action)
 
-withCurrentScope_ :: NamespaceMonad m => (StructInfo.Scope -> Maybe a) -> m a
+withCurrentScope_ :: NamespaceState m => (StructInfo.Scope -> Maybe a) -> m a
 withCurrentScope_ action = withCurrentScope action >>= maybe (fail "Cannot obtain current scope") return
 
 
-withCurrentScope :: NamespaceMonad m => (StructInfo.Scope -> Maybe a) -> m (Maybe a)
+withCurrentScope :: NamespaceState m => (StructInfo.Scope -> Maybe a) -> m (Maybe a)
 withCurrentScope action = getCurrentScope >>= maybe (return Nothing) (return . action)
 
 
-getCurrentScope :: NamespaceMonad m => m (Maybe StructInfo.Scope)
+getCurrentScope :: NamespaceState m => m (Maybe StructInfo.Scope)
 getCurrentScope = scopeID >>= \case
-    Just (currentScopeId :: ID) -> view (StructInfo.scope . at currentScopeId) <$> getStructInfo
+    Just (currentScopeId :: ID) -> view (StructInfo.scope . at currentScopeId) <$> StructInfo.get
     Nothing                     -> return Nothing
 
 
-regTypeName :: NamespaceMonad m => ID -> NamePath -> m ()
+regTypeName :: NamespaceState m => ID -> NamePath -> m ()
 regTypeName = regName StructInfo.typenames
 
 
 regName lens id name = do
-    a    <- getStructInfo
+    a    <- StructInfo.get
     mcid <- scopeID
     case mcid of
         Nothing  -> fail "Unable to get current id"
@@ -203,7 +201,12 @@ regName lens id name = do
                   a2      = a & StructInfo.scope.at cid ?~ varRel2
 
 
---regParentVarName :: NamespaceMonad m => ID -> String -> m ()
+test x y = do
+    a    <- StructInfo.get
+    mcid <- scopeID
+    return ()
+
+--regParentVarName :: NamespaceState m => ID -> String -> m ()
 --regParentVarName = withParentID .: regVarName
 
 --bindVar id name = do
@@ -221,7 +224,7 @@ regName lens id name = do
 --        Right ns' -> put ns'
 
 
---bindVar :: NamespaceMonad m => ID -> String -> m ()
+--bindVar :: NamespaceState m => ID -> String -> m ()
 --bindVar id name = do
 --    mcid <- getCurrentID
 --    withJust mcid (\cid -> modifyStructInfo (bindVarRec id cid name))
@@ -250,3 +253,5 @@ regName lens id name = do
 --    mempty      = VAState mempty mempty
 --    mappend a b = VAState (mappend (a ^. aa)      (b ^. aa))
 --                          (mappend (a ^. idStack) (b ^. idStack))
+
+

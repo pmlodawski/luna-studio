@@ -8,6 +8,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverlappingInstances #-}
 
 module Luna.Parser.State where
 
@@ -20,36 +21,36 @@ import qualified Luna.Data.Config     as Config
 import           Luna.Data.Config     (Config)
 import           Luna.Parser.Operator (OperatorMap)
 import qualified Luna.Data.Namespace  as Namespace
-import           Luna.Data.Namespace  (Namespace)
+import           Luna.Data.Namespace  (Namespace, NamespaceMonad)
 import qualified Data.List            as List
 import qualified Luna.AST.Common      as AST
 import           Luna.AST.IDMap       (IDMap)
 import qualified Luna.AST.IDMap       as IDMap
 import qualified Data.Maps            as Map
 import           Luna.AST.Comment     (Comment(..))
-import           Flowbox.Control.Monad.State (mapStateVal, get, put)
-import qualified Luna.Data.StructInfo          as StructInfo
-import qualified Luna.AST.AST                 as AST
+import           Flowbox.Control.Monad.State (mapStateVal, get, put, StateT)
+import qualified Flowbox.Control.Monad.State as State
+import qualified Luna.Data.StructInfo        as StructInfo
+import qualified Luna.AST.AST                as AST
 
+data ParserState conf 
+   = ParserState { _conf          :: Config conf
+                 , _info          :: ASTInfo
+                 , _opFixity      :: OperatorMap
+                 , _sourceMap     :: SourceMap
+                 , _namespace     :: Namespace
+                 , _adhocReserved :: [String]
+                 , _comments      :: IDMap [Comment]
+                 } deriving (Show)
 
-
-data State conf = State { _conf          :: Config conf
-                        , _info          :: ASTInfo
-                        , _opFixity      :: OperatorMap
-                        , _sourceMap     :: SourceMap
-                        , _namespace     :: Namespace
-                        , _adhocReserved :: [String]
-                        , _comments      :: IDMap [Comment]
-                        } deriving (Show)
-
-makeLenses ''State
+makeLenses ''ParserState
 
 
 ------------------------------------------------------------------------
 -- Utils
 ------------------------------------------------------------------------
 
-mk :: ASTInfo -> State ()
+mk :: ASTInfo -> ParserState ()
 mk i = def & info .~ i
 
 addReserved words = adhocReserved %~ (++words)
@@ -121,8 +122,14 @@ registerID id = do
 -- Instances
 ------------------------------------------------------------------------
 
-instance conf~() => Default (State conf) where
-        def = State def def def def def def def
+instance conf~() => Default (ParserState conf) where
+        def = ParserState def def def def def def def
 
+
+instance (Functor m, Monad m) => NamespaceMonad (StateT (ParserState conf) m) where
+    get = view namespace <$> State.get
+    put ns = do
+        s <- get
+        State.put $ set namespace ns s
 
 

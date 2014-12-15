@@ -22,6 +22,8 @@ import           Flowbox.Generics.Deriving.QShow
 import           Data.String.Utils (join)
 import           Data.List         (intersperse)
 import           Data.String             (IsString, fromString)
+import           Luna.ASTNew.Name.Hash (Hashable, hash)
+
 
 ----------------------------------------------------------------------
 -- Data types
@@ -90,3 +92,6 @@ unified n = if isSingle n
 ----------------------------------------------------------------------
 
 instance IsString NamePath  where fromString = single
+
+instance Hashable NamePath where
+	hash (NamePath base segs) = hash base ++ concat (fmap hash segs)

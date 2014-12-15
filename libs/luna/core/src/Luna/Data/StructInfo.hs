@@ -27,6 +27,7 @@ import qualified Flowbox.Data.MapForest as MapForest
 import           Flowbox.Data.MapForest (MapForest)
 import           Control.Monad          (join)
 import           Luna.ASTNew.Name.Pattern2 (ArgPatDesc)
+import           Control.Monad.RWS         (RWST)
 
 ----------------------------------------------------------------------
 -- Data types
@@ -63,6 +64,14 @@ data StructInfo = StructInfo { _scope   :: IDMap Scope
 
 makeLenses (''StructInfo)
 
+----------------------------------------------------------------------
+-- Type classes
+----------------------------------------------------------------------
+
+class StructInfoMonad m where
+    get :: m StructInfo
+    put :: StructInfo -> m ()
+
 
 ----------------------------------------------------------------------
 -- Utils
@@ -93,6 +102,7 @@ regAlias id name scopeID structInfo = case mvid of
     where vnames = structInfo ^? scope . ix scopeID . varnames
           mvid   = join $ fmap (MapForest.lookup $ NamePath.toList name) vnames
 
+
 ------------------------------------------------------------------------
 -- Instances
 ------------------------------------------------------------------------
@@ -117,3 +127,8 @@ instance Default Scope where
 
 instance Default StructInfo where
     def = mempty
+
+
+
+--instance StructInfoMonad (RWST ) where
+--    func = 
