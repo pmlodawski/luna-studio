@@ -20,13 +20,14 @@ import           Flowbox.Batch.Project.Project                          (Project
 import qualified Flowbox.Batch.Project.Project                          as Project
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
 import           Flowbox.System.IO.Serializer                           (Deserializable (..), Serializable (..))
 import qualified Flowbox.System.IO.Serializer                           as Serializer
 import           Flowbox.System.UniPath                                 (UniPath)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Project.Project                        as Gen
 import           Luna.Lib.Manager                                       (LibManager)
+
 
 
 saveProject :: Project -> Handle -> IO ()

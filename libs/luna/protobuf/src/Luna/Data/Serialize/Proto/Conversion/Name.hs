@@ -12,13 +12,13 @@
 
 module Luna.Data.Serialize.Proto.Conversion.Name where
 
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Name.Name                      as Gen
-import qualified Generated.Proto.Name.Segment                   as Gen
-import qualified Generated.Proto.Name.Segment.Cls               as Gen
-import           Luna.AST.Name                                  (Name (Name))
-import qualified Luna.AST.Name                                  as Name
+import qualified Generated.Proto.Name.Name        as Gen
+import qualified Generated.Proto.Name.Segment     as Gen
+import qualified Generated.Proto.Name.Segment.Cls as Gen
+import           Luna.AST.Name                    (Name (Name))
+import qualified Luna.AST.Name                    as Name
 
 
 

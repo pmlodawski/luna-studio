@@ -12,20 +12,15 @@
 
 module Luna.Interpreter.Proto.CallPointPath where
 
-import qualified Flowbox.Batch.Project.Project                  as Project
-import           Flowbox.Control.Error
-import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Interpreter.CallPointPath      as Gen
-import           Luna.Interpreter.Proto.CallPoint               ()
-import           Luna.Interpreter.Session.Data.CallPointPath    (CallPointPath)
+import qualified Flowbox.Batch.Project.Project                          as Project
+import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
+import           Flowbox.Data.Convert
+import qualified Generated.Proto.Interpreter.CallPointPath              as Gen
+import           Luna.Interpreter.Proto.CallPoint                       ()
+import           Luna.Interpreter.Session.Data.CallPointPath            (CallPointPath)
 
 
 
-instance Convert (Project.ID, CallPointPath) Gen.CallPointPath where
-    encode (projectID, callPointPath) =
-        Gen.CallPointPath (encodePJ projectID) (encode callPointPath)
-    decode (Gen.CallPointPath mtprojectID tpath) = do
-        projectID <- decodeP <$> mtprojectID <?> "Failed to decode CallPointPath: 'projectID' field is missing"
-        path      <- decode tpath
-        return (projectID, path)
+instance ConvertPure (Project.ID, CallPointPath) Gen.CallPointPath where
+    encodeP (projectID, callPointPath) = Gen.CallPointPath (encodeP projectID) (encodeP callPointPath)
+    decodeP (Gen.CallPointPath projectID path) = (decodeP projectID, decodeP path)

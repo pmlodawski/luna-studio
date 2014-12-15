@@ -169,19 +169,19 @@ main1 = do
     putStrLn $ ppShow $ LibManager.lab libManager libID
     result <- Session.run cfg env [] $ do
         Env.addReload libID Reload.ReloadLibrary
-        Executor.processMain
+        Executor.processMain_
         print =<< Value.getIfReady [CallPoint libID 92]
         putStrLn "--------- 1"
-        Executor.processMain
+        Executor.processMain_
         putStrLn "========= 1"
 
         Cache.dumpAll
         Invalidate.modifyNode libID 92
         Cache.dumpAll
 
-        Executor.processMain
+        Executor.processMain_
         putStrLn "--------- 2"
-        Executor.processMain
+        Executor.processMain_
 
         putStrLn "========= ready ==========1="
         Cache.dumpAll
@@ -190,7 +190,7 @@ main1 = do
         putStrLn "========= modified =======2="
         Cache.dumpAll
         putStrLn "========= running ========3="
-        Executor.processMain
+        Executor.processMain_
         putStrLn "========= finished =======4="
         Cache.dumpAll
 

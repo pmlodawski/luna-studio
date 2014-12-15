@@ -19,10 +19,10 @@ import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project         
 import           Flowbox.Bus.RPC.RPC                                            (RPC)
 import           Flowbox.Control.Error                                          hiding (err)
 import           Flowbox.Control.Monad.Morph
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                hiding (Context, error, op)
 import           Flowbox.ProjectManager.Context                                 (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  as ProjectManagerSyncGet
 import           Luna.Interpreter.RPC.Handler.Lift

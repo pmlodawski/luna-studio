@@ -14,19 +14,25 @@ import "mode.proto";
 
 
 message CallPoint {
-    optional int32 libraryID = 1;
-    optional int32 nodeID    = 2;
+    required int32 libraryID = 1;
+    required int32 nodeID    = 2;
 }
 
 message CallPointPath {
-    optional int32 projectID = 1;
+    required int32 projectID = 1;
     repeated CallPoint calls = 2;
 }
 
 message DefPoint {
-    optional int32 projectID = 1;
-    optional int32 libraryID = 2;
-    optional generated.proto.crumb.Breadcrumbs breadcrumbs = 3;
+    required int32 projectID = 1;
+    required int32 libraryID = 2;
+    required generated.proto.crumb.Breadcrumbs breadcrumbs = 3;
+}
+
+message ProfileInfo {
+    required CallPointPath callPointPath = 1;
+    required double        cpuTime       = 2;
+    required int64         realTime      = 3;
 }
 
 enum Status {
@@ -141,14 +147,15 @@ message Interpreter {
     message GetMainPtr {
         message Request { }
         message Status {
-            required Request request = 1;
+            required Request  request = 1;
             optional DefPoint mainPtr = 2;
         }
     }
     message Run {
         message Request { }
         message Update  { 
-            required Request request = 1;
+            required Request     request      = 1;
+            repeated ProfileInfo profileInfos = 2;
         }
     }
     message Value {
@@ -156,9 +163,9 @@ message Interpreter {
             required CallPointPath callPointPath = 1;
         }
         message Update {
-            required CallPointPath              callPointPath = 1;
-            required Status                            status = 2;
-            repeated generated.proto.mode.ModeValue modeValue = 3;
+            required CallPointPath                  callPointPath = 1;
+            required Status                         status        = 2;
+            repeated generated.proto.mode.ModeValue modeValue     = 3;
         }
     }
     message Abort {

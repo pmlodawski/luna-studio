@@ -19,8 +19,8 @@ import qualified Data.Maybe    as Maybe
 import qualified Data.Sequence as Sequence
 
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Attributes.Attributes                as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space          as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue as Gen

@@ -14,11 +14,11 @@ module Luna.Data.Serialize.Proto.Conversion.Module where
 
 import Control.Applicative
 
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Module.Module                  as Gen
-import           Luna.AST.Module                                (Module (Module))
-import           Luna.Data.Serialize.Proto.Conversion.Expr      ()
-import           Luna.Data.Serialize.Proto.Conversion.Type      ()
+import           Flowbox.Data.Convert
+import qualified Generated.Proto.Module.Module             as Gen
+import           Luna.AST.Module                           (Module (Module))
+import           Luna.Data.Serialize.Proto.Conversion.Expr ()
+import           Luna.Data.Serialize.Proto.Conversion.Type ()
 
 
 instance Convert Module Gen.Module where

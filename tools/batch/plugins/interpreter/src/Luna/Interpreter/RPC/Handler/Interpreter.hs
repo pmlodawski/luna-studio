@@ -17,11 +17,12 @@ import qualified Data.Set            as Set
 import qualified Flowbox.Bus.Data.Message                                                     as Message
 import           Flowbox.Bus.RPC.RPC                                                          (RPC)
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
+import qualified Flowbox.Data.MapForest                                                       as MapForest
 import qualified Flowbox.Data.SetForest                                                       as SetForest
 import           Flowbox.Prelude                                                              hiding (Context)
 import           Flowbox.ProjectManager.Context                                               (Context)
 import           Flowbox.System.Log.Logger                                                    hiding (error)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Interpreter.Interpreter.Abort.Request                        as Abort
 import qualified Generated.Proto.Interpreter.Interpreter.Abort.Status                         as Abort
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Request                   as GetMainPtr
@@ -60,6 +61,7 @@ import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Reque
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update             as WatchPointRemove
 import           Luna.Interpreter.Proto.CallPointPath                                         ()
 import           Luna.Interpreter.Proto.DefPoint                                              ()
+import           Luna.Interpreter.Proto.ProfileInfo                                           ()
 import qualified Luna.Interpreter.RPC.Handler.Cache                                           as Cache
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.RPC.Handler.Sync                                            as Sync
@@ -118,13 +120,15 @@ run queueInfo crl request = do
             (liftIO $ QueueInfo.quitRun queueInfo) $
             liftSession' $ do Manager.cleanIfNeeded
                               Executor.processMain
-    hoistEither $ fmapL Error.format r
-    return $ Run.Update request
+    projectID <- liftSession Env.getProjectID
+    profileInfo <- hoistEither $ fmapL Error.format r
+    let tprofileInfo = encodeP $ map (_1 %~ (projectID, )) $ MapForest.toList profileInfo
+    return $ Run.Update request tprofileInfo
 
 
 watchPointAdd :: WatchPointAdd.Request -> RPC Context (SessionST mm) WatchPointAdd.Update
 watchPointAdd request@(WatchPointAdd.Request tcallPointPath) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     liftSession $ WatchPoint.add callPointPath
     return $ WatchPointAdd.Update request
@@ -132,7 +136,7 @@ watchPointAdd request@(WatchPointAdd.Request tcallPointPath) = do
 
 watchPointRemove :: WatchPointRemove.Request -> RPC Context (SessionST mm) WatchPointRemove.Update
 watchPointRemove request@(WatchPointRemove.Request tcallPointPath) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     liftSession $ WatchPoint.delete callPointPath
     return $ WatchPointRemove.Update request
@@ -142,7 +146,7 @@ watchPointList :: WatchPointList.Request -> RPC Context (SessionST mm) WatchPoin
 watchPointList request = do
     list      <- liftSession $ SetForest.toList <$> WatchPoint.all
     projectID <- liftSession Env.getProjectID
-    return $ WatchPointList.Status request $ encode $ map (projectID,) list
+    return $ WatchPointList.Status request $ encodeP $ map (projectID,) list
 
 
 ping :: Ping.Request -> RPC Context (SessionST mm) Ping.Status
@@ -169,7 +173,7 @@ setDefaultSerializationMode request@(SetDefaultSMode.Request mode) = do
 
 getSerializationMode :: GetSMode.Request -> RPC Context (SessionST mm) GetSMode.Status
 getSerializationMode request@(GetSMode.Request tcallPointPath) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     modes <- liftSession $ Env.lookupSerializationModes callPointPath
     return $ GetSMode.Status request $ Sequence.fromList $ Maybe.maybe [] Set.toList modes
@@ -177,7 +181,7 @@ getSerializationMode request@(GetSMode.Request tcallPointPath) = do
 
 insertSerializationMode :: InsertSMode.Request -> RPC Context (SessionST mm) InsertSMode.Update
 insertSerializationMode request@(InsertSMode.Request tcallPointPath modes) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     liftSession $ Env.insertSerializationModes callPointPath $ Set.fromList $ Foldable.toList modes
     return $ InsertSMode.Update request
@@ -185,7 +189,7 @@ insertSerializationMode request@(InsertSMode.Request tcallPointPath modes) = do
 
 deleteSerializationMode :: DeleteSMode.Request -> RPC Context (SessionST mm) DeleteSMode.Update
 deleteSerializationMode request@(DeleteSMode.Request tcallPointPath modes) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     liftSession $ Env.deleteSerializationModes callPointPath $ Set.fromList $ Foldable.toList modes
     return $ DeleteSMode.Update request
@@ -193,7 +197,7 @@ deleteSerializationMode request@(DeleteSMode.Request tcallPointPath modes) = do
 
 deleteAllSerializationMode :: DeleteAllSMode.Request -> RPC Context (SessionST mm) DeleteAllSMode.Update
 deleteAllSerializationMode request@(DeleteAllSMode.Request tcallPointPath) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     liftSession $ Env.clearSerializationModes callPointPath
     return $ DeleteAllSMode.Update request

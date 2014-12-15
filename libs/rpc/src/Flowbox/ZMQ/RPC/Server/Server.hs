@@ -7,7 +7,7 @@
 {-# LANGUAGE ConstraintKinds     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Flowbox.ZMQ.RPC.Server.Server where
 
@@ -15,12 +15,12 @@ import           Control.Monad       (forM_)
 import           System.ZMQ4.Monadic (ZMQ)
 import qualified System.ZMQ4.Monadic as ZMQ
 
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import           Flowbox.ZMQ.RPC.Handler                        (RPCHandler)
-import qualified Flowbox.ZMQ.RPC.Server.Processor               as Processor
+import qualified Flowbox.Text.ProtocolBuffers     as Proto
+import           Flowbox.ZMQ.RPC.Handler          (RPCHandler)
+import qualified Flowbox.ZMQ.RPC.Server.Processor as Processor
 
 
 

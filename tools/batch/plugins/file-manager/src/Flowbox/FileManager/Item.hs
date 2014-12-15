@@ -4,16 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Flowbox.FileManager.Item where
 
 import           System.PosixCompat.Files (FileStatus)
 import qualified System.PosixCompat.Files as Files
 
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
 import qualified Generated.Proto.FileManager.FileSystem.Item     as Gen
 import qualified Generated.Proto.FileManager.FileSystem.Item.Cls as Gen
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
 
@@ -22,7 +23,7 @@ toGen name status = Gen.Item cls (encodePJ name) (Just size) (Just access) (Just
     cls | Files.isDirectory status   = Gen.Directory
         | Files.isRegularFile status = Gen.File
         | otherwise                  = Gen.Other
-    size         = fromIntegral            $ Files.fileSize         status
-    access       = fromIntegral $ fromEnum $ Files.accessTime       status
-    modified     = fromIntegral $ fromEnum $ Files.modificationTime status
-    statusChange = fromIntegral $ fromEnum $ Files.statusChangeTime status
+    size         = encodeP $ Files.fileSize         status
+    access       = encodeP $ Files.accessTime       status
+    modified     = encodeP $ Files.modificationTime status
+    statusChange = encodeP $ Files.statusChangeTime status
