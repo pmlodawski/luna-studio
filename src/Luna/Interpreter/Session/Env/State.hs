@@ -23,6 +23,8 @@ import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
 import           Flowbox.Data.MapForest                      (MapForest)
 import qualified Flowbox.Data.MapForest                      as MapForest
+import qualified Flowbox.Data.SetForest                      as SetForest
+import  Flowbox.Data.SetForest                      ( SetForest)
 import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
@@ -80,6 +82,22 @@ cachedLookup :: CallPointPath -> Session mm (Maybe CacheInfo)
 cachedLookup callPointPath = MapForest.lookup callPointPath <$> getCached
 
 ---- Env.watchPoints ------------------------------------------------------
+
+addWatchPoint :: CallPointPath -> Session mm ()
+addWatchPoint callPath = modify (Env.watchPoints %~ SetForest.insert callPath)
+
+
+deleteWatchPoint :: CallPointPath -> Session mm ()
+deleteWatchPoint callPath = modify (Env.watchPoints %~ SetForest.delete callPath)
+
+
+cleanWatchPoints :: Session mm ()
+cleanWatchPoints = modify (Env.watchPoints .~ def)
+
+
+getWatchPoints :: Session mm (SetForest CallPoint)
+getWatchPoints = gets (view Env.watchPoints)
+
 ---- Env.reloadMap --------------------------------------------------------
 
 addReload :: Library.ID -> Reload -> Session mm ()
@@ -134,6 +152,9 @@ insertDependentNode callPoint nodeID =
 deleteDependentNodes :: CallPoint -> Session mm ()
 deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
 
+
+cleanDependentNodes :: Session mm ()
+cleanDependentNodes = modify (Env.dependentNodes .~ def)
 ---- Env.profileInfos -----------------------------------------------------
 
 cleanProfileInfos :: Session mm ()
@@ -196,8 +217,12 @@ deleteSerializationModes callPointPath modes =
         del (Just s) = Just $ Set.difference s modes
 
 
-clearSerializationModes :: CallPointPath -> Session mm ()
-clearSerializationModes = modify . over Env.serializationModes . MapForest.delete
+deleteAllSerializationModes :: CallPointPath -> Session mm ()
+deleteAllSerializationModes = modify . over Env.serializationModes . MapForest.delete
+
+
+cleanSerializationModes :: Session mm ()
+cleanSerializationModes = modify (Env.serializationModes .~ def)
 
 ---- Env.memoryConfig -----------------------------------------------------
 
@@ -332,3 +357,12 @@ setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
 
 getResultCallBack :: Session mm Env.ResultCallBack
 getResultCallBack = gets $ view Env.resultCallBack
+
+---------------------------------------------------------------------------
+
+cleanEnv :: Session mm ()
+cleanEnv = cleanWatchPoints
+        >> cleanDependentNodes
+        >> cleanProfileInfos
+        >> cleanSerializationModes
+
