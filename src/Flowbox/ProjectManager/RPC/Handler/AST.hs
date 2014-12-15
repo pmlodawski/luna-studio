@@ -10,10 +10,10 @@ module Flowbox.ProjectManager.RPC.Handler.AST where
 import qualified Flowbox.Batch.Handler.AST                                                            as BatchAST
 import qualified Flowbox.Batch.Handler.Common                                                         as Batch
 import           Flowbox.Bus.RPC.RPC                                                                  (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                      hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                       (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request                  as CodeSet
