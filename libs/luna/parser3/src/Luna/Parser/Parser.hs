@@ -503,12 +503,10 @@ opTE base = buildExpressionParser optableE (appE base)
 tupleE p = p <??> ((\id xs x -> label id $ Expr.Tuple (x:xs)) <$> nextID <* Tok.separator <*> sepBy1 p Tok.separator)
 
 --appE base = p <??> (appID (\i a s -> Expr.App i s a) <*> many1 (argE p)) where 
-appE base = p <??> ((\i a s -> label i $ callBuilder2 s a) <$> nextID <*> many1 (argE p)) where 
+appE base = p <??> ((\i a s -> label i $ callBuilder2 s a) <$> nextID <*> many1 (appArg p)) where 
     p = termE base
 
 
-
-argE p = try ((Expr.Named <$> Tok.varIdent <* Tok.assignment <*> p)) <|> ((Expr.Unnamed <$> p))
 
 termE base = base <??> (flip applyAll <$> many1 (termBaseE base))  ------  many1 (try $ recUpdE))
 
@@ -538,8 +536,8 @@ accE      = try( (\id a b -> label id $ Expr.Accessor a b) <$> nextID <*> accBas
 
 parensE p = Tok.parens (p <|> (labeled (Expr.Tuple <$> pure []))) -- checks for empty tuple
 
-callList      p = Expr.Seq <$> Tok.parens (sepBy p Tok.separator)
-callTermE p = (\id a b-> label id (Expr.App b a)) <$ lastLexemeEmpty <*> nextID <*> callList (argE p)
+callList     p = Tok.parens (sepBy p Tok.separator)
+callTermE p = (\id a b-> label id (Expr.app b a)) <$ lastLexemeEmpty <*> nextID <*> callList (appArg p)
 
 
 entBaseE        = entConsE entComplexE
@@ -578,29 +576,38 @@ optableE = [
            , [ operator4 ">"                                  AssocLeft ]
            , [ operator4 "=="                                 AssocLeft ]
            , [ operator4 "in"                                 AssocLeft ]
-           , [ binaryM   "$"  (callBuilder <$> nextID)        AssocLeft ]
+           , [ binaryM   "$"  (callBuilder <$> nextID)       AssocLeft ]
            , [ postfixM  "::" ((\id a b -> label id (Expr.Typed a b)) <$> nextID <*> typeT) ]
            ]
            where
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure op))
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure op))
-              operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.App (label id2 $ Expr.Var $ NamePath.single $ op) 
-                                                                                (Expr.Infix l r)
-                                          ) <$> nextID <*> nextID)
+              --operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.appInfix (label id2 $ Expr.Var $ NamePath.single $ op) l [r]
+              --                            ) <$> nextID <*> nextID)
 
+              operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.appInfix (label id2 $ Expr.Var $ NamePath.single $ op) (Expr.unnamed l) [Expr.unnamed r]
+                                          ) <$> nextID <*> nextID)
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure ('~':op)))
               --operator2 op = binaryM op (binaryMatchE <$>  ( appID Expr.App <*> (appID Expr.Accessor <*> pure "add" <*> ... ) )  )
               --operator2 op = binaryM op ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 op x) [y]) <$> genID <*> genID)
               --operator3 op = binaryM op ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 "contains" y) [x]) <$> genID <*> genID)
 
+--callBuilder id src@(Label lab expr) arg = label id $ case expr of
+--    Expr.App src' (Expr.Seq args) -> Expr.App src' (Expr.Seq $ args ++ [Expr.Unnamed arg])
+--    _                             -> Expr.App src (Expr.Seq $ [Expr.Unnamed arg])
+
+--callBuilder2 src@(Label lab expr) argsx = case expr of
+--    Expr.App src' (Expr.Seq args) -> Expr.App src' (Expr.Seq $ args ++ argsx)
+--    _                             -> Expr.App src  (Expr.Seq argsx)
+
 callBuilder id src@(Label lab expr) arg = label id $ case expr of
-    Expr.App src' (Expr.Seq args) -> Expr.App src' (Expr.Seq $ args ++ [Expr.Unnamed arg])
-    _                             -> Expr.App src (Expr.Seq $ [Expr.Unnamed arg])
+    Expr.App app -> Expr.App $ NamePat.appendLastSegmentArgs args app
+    _             -> Expr.app src args
+    where args = [Expr.unnamed arg]
 
-callBuilder2 src@(Label lab expr) argsx = case expr of
-    Expr.App src' (Expr.Seq args) -> Expr.App src' (Expr.Seq $ args ++ argsx)
-    _                             -> Expr.App src  (Expr.Seq argsx)
-
+callBuilder2 src@(Label lab expr) args = case expr of
+    Expr.App app -> Expr.App $ NamePat.appendLastSegmentArgs args app
+    _             -> Expr.app src args
 
 --callBuilder id id2 src arg = case arg of
 --    Expr.App id' src' args -> Expr.App id' src (Arg.Named id2 "X!" src' : args)
@@ -665,21 +672,19 @@ appArg p = try (Expr.AppArg <$> just Tok.varIdent <* Tok.assignment <*> p) <|> (
 mkFuncParser baseVar (id, mpatt) = case mpatt of
     Nothing                                      -> baseVar
     Just patt@(NamePat.ArgPatDesc pfx base segs) -> State.withReserved segNames 
-                                                  $ labeled $ Expr.App2 <$> pattParser
+                                                  $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
               segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
-              argExpr          = appArg expr
-              segNames         = NamePat.segmentNames patt
-              pattParser       = NamePat Nothing <$> baseParser   <*> mapM segParser segs
-              baseParser       = NamePat.Segment <$> baseMultiVar <*> defsParser baseDefs
-              baseMultiVar     = labeled . pure $ Expr.Var (NamePat.toNamePath patt)
-              defsParser defs  = fmap takeJustArgs $ mapM argParser defs
-              takeJustArgs     = fmap fromJust . filter isJust 
-              argParser needed = if needed then just  argExpr
-                                           else maybe argExpr
+              argExpr         = appArg expr
+              segNames        = NamePat.segmentNames patt
+              pattParser      = NamePat Nothing <$> baseParser   <*> mapM segParser segs
+              baseParser      = NamePat.Segment <$> baseMultiVar <*> defsParser baseDefs
+              baseMultiVar    = labeled . pure $ Expr.Var (NamePat.toNamePath patt)
+              defsParser defs = fmap takeJustArgs $ mapM argParser defs
+              takeJustArgs    = fmap fromJust . filter isJust 
+              argParser req   = if req then just  argExpr
+                                       else maybe argExpr
 
-
-toTEST = labeled $ Expr.Lit     <$> literal
 
 notReserved p = do
     rsv  <- view State.adhocReserved <$> get

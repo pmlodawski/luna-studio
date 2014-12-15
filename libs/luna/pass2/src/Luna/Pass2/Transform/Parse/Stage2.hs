@@ -18,7 +18,7 @@ import qualified Luna.ASTNew.Traversals       as AST
 import qualified Luna.ASTNew.Enum       as Enum
 import           Luna.ASTNew.Enum       (Enumerated, IDTag(IDTag))
 import qualified Luna.ASTNew.Decl   as Decl
-import           Luna.ASTNew.Decl   (LDecl, Field(Field))
+import           Luna.ASTNew.Decl   (LDecl, Field(Field), LField)
 import qualified Luna.ASTNew.Module as Module
 import           Luna.ASTNew.Module (Module(Module), LModule)
 import           Luna.ASTNew.Unit   (Unit(Unit))
@@ -88,14 +88,15 @@ passRunner ns info ast = do
     put (Parser.emptyState & set ParserState.namespace ns & set ParserState.info info)
     (,) <$> defaultTraverseM ast <*> (view ParserState.info <$> get)
 
--- FIXME[wd]
-traverseDecl2Pass :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
-traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
+
+traverseDecl :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
+traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
     Decl.Function path sig output body -> do
         subAST <- subparse (unlines body)
         sig'   <- mapM subparseArg sig
         return $ Decl.Function path sig' output subAST
-    Decl.Data        name params cons defs -> return $ Decl.Data        name params [] []
+    Decl.Data        name params cons defs -> Decl.Data name params <$> defaultTraverseM cons 
+                                                                    <*> defaultTraverseM defs
     Decl.Import      path rename targets   -> return $ Decl.Import      path rename targets
     Decl.TypeAlias   dst src               -> return $ Decl.TypeAlias   dst src
     Decl.TypeWrapper dst src               -> return $ Decl.TypeWrapper dst src
@@ -108,21 +109,28 @@ traverseDecl2Pass (Label lab decl) = fmap (Label lab) $ case decl of
                   Left e      -> fail   $ show e
                   Right (e,s) -> put s *> pure e
 
-          subparse2 expr = do
+          -- FIXME [wd]: just clean and make nicer code
+          subparseArg (Arg pat mexpr) = Arg pat <$> mapM (subparseInlineExpr id) mexpr
+
+subparseInlineExpr id expr = do
               result <- ParserState.withScope id $ do 
                   pstate <- get
                   return $ Parser.parseString expr $ Parser.exprParser2 pstate
               case result of
                   Left e      -> fail   $ show e
                   Right (e,s) -> put s *> pure e
-          -- FIXME [wd]: just clean and make nicer code
-          subparseArg (Arg pat mexpr) = Arg pat <$> mapM subparse2 mexpr 
 
+traverseField :: Stage2Ctx lab m => LField lab String -> Stage2Pass m (LField lab ResultExpr)
+traverseField (Label lab (Field tp name val)) = (Label lab . Field tp name) <$> mapM (subparseInlineExpr id) val
+    where id = Enum.id lab
 
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
 
 instance Stage2Ctx lab m => AST.Traversal Stage2 (Stage2Pass m) (LDecl lab String) (LDecl lab ResultExpr) where
-    traverseM _ = traverseDecl2Pass
+    traverseM _ = traverseDecl
+
+instance Stage2Ctx lab m => AST.Traversal Stage2 (Stage2Pass m) (LField lab String) (LField lab ResultExpr) where
+    traverseM _ = traverseField
 

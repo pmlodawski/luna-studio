@@ -112,8 +112,11 @@ aaDecl d@(Label lab decl) = case decl of
 aaExpr :: (SACtx lab m a, a~NamePath) => (LExpr lab a) -> SAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
     var@(Expr.Var name)     -> regParent id
-                               *> regAlias id name
-                               *> continue
+                            *> regAlias id name
+                            *> continue
+    cons@(Expr.Cons name)   -> regParent id
+                            *> regAlias id (Name.fromName name)
+                            *> continue
     _                       -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e
@@ -128,12 +131,10 @@ registerDataDecl (Label lab decl) = case decl of
     _                                -> pure ()
     where id = Enum.id lab
 
--- FIXME[wd]
 registerHeaders :: SACtx lab m a => LDecl lab a -> SAPass m ()
 registerHeaders (Label lab decl) = case decl of
     Decl.Function _ sig _ _  -> regVarName id (NamePattern.toNamePath sig)
                              <* regArgPatDesc id (NamePattern.toDesc sig)
-                                        -- <* withNewScope id (defaultTraverseM inputs)
     Decl.Data     name _ cons _         -> regTypeName id (Name.fromName name) 
                                         <* mapM_ registerCons cons
     _                                   -> pure ()
