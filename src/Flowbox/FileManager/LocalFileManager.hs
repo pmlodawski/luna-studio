@@ -16,12 +16,12 @@ import qualified System.FilePath          as FilePath
 import qualified System.PosixCompat.Files as Files
 
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.FileManager.FileManager
 import           Flowbox.FileManager.Item                        (toGen)
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory              as FDirectory
 import qualified Flowbox.System.UniPath                          as UniPath
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.FileManager.FileSystem.Item     as Gen
 import qualified Generated.Proto.FileManager.FileSystem.Item.Cls as Gen
 
