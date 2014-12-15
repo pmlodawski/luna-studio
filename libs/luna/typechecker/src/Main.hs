@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 
 -- *------------------------------------------------
@@ -48,20 +49,25 @@ import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
 import           Luna.ASTNew.Module           (Module(Module), LModule)
 import           Data.Monoid                  (Monoid, mempty)
 import           Control.Monad.State          (put, get, modify)
+import           Luna.ASTNew.NameBase         (nameBase)
+import qualified Luna.ASTNew.Pat              as Pat
+import qualified Luna.ASTNew.Arg              as Arg
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans.Either
 
 import Control.Lens hiding (without)
-import Data.List    (intercalate)
+import Data.List    (intercalate,intersperse)
 
 
 
 
 data StageTypechecker = StageTypechecker
 
-type StageTypecheckerPass             m       = PassMonad [Int] m
+type StageTypecheckerState = [String]
+
+type StageTypecheckerPass             m       = PassMonad StageTypecheckerState m
 type StageTypecheckerCtx              lab m a = (Enumerated lab, StageTypecheckerTraversal m a)
 type StageTypecheckerTraversal        m   a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
 type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
@@ -74,7 +80,7 @@ defaultTraverseM :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypechec
 defaultTraverseM = AST.defaultTraverseM StageTypechecker
 
 
-tcpass :: (Monoid s, StageTypecheckerDefaultTraversal m a) => Pass s (a -> StageTypecheckerPass m [Int])
+tcpass :: (Monoid s, StageTypecheckerDefaultTraversal m a) => Pass s (a -> StageTypecheckerPass m StageTypecheckerState)
 tcpass = Pass "Typechecker"
               "Performs typechecking"
               mempty
@@ -88,13 +94,27 @@ instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageT
 
 
 tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
-tcDecl decl = modify (789:) *> defaultTraverseM decl
+tcDecl all@(Label.Label lab decl) = do
+    case decl of
+      fun@Decl.Data{}                         -> modify ("Data"                         :)
+      fun@Decl.Function{ Decl._fname = fname, Decl._inputs = inputs }
+                                              -> do let args = map mapArg inputs
+                                                    modify (("Function " ++ nameBase fname ++ " " ++ intercalate " " args):)
+      fun@Decl.Import{}                       -> modify ("Import"                       :)
+      fun@Decl.TypeAlias{}                    -> modify ("TypeAlias"                    :)
+      fun@Decl.TypeWrapper{}                  -> modify ("TypeWrapper"                  :)
+      fun@Decl.Native{}                       -> modify ("Native"                       :)
+    defaultTraverseM all
+  where
+    --mapArg :: Arg.Arg lab a -> String
+    mapArg Arg.Arg{Arg._pat = (Label.Label _ (Pat.Var {Pat._vname = (Name.VName vname)}))}  = show vname
+    mapArg _                                                                                = "?"
 
 tcMod :: (StageTypecheckerCtx lab m a) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
-tcMod mod = modify (456:) *> defaultTraverseM mod
+tcMod mod = modify ("456":) *> defaultTraverseM mod
 
-tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m [Int]
-tcUnit ast = modify (123123:) *> defaultTraverseM ast *> get
+tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m StageTypecheckerState
+tcUnit ast = modify ("123123":) *> defaultTraverseM ast *> get
 
 
 
@@ -145,17 +165,17 @@ main = do f_print [Bold,Green] "MAIN"
             aa1             <- Pass.run1_ AA.pass ast1
             ast2            <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo ast1
             aa2             <- Pass.run1_ AA.pass ast2
-            foo             <- Pass.run1_ tcpass ast2
+            constraints     <- Pass.run1_ tcpass ast2
 
-            return (ast2,aa2,foo)
+            return (ast2,aa2,constraints)
 
           case east of
             Left _                  -> f_print [Red, Bold] "some error, sorry"
-            Right (Unit.Unit ast, ast_info, foo) -> do
+            Right (Unit.Unit ast, ast_info, constraints) -> do
               section $ do
                 printer_aux "AST"      (ppShow ast)
                 printer_aux "AST INFO" (ppShow ast_info)
-                printer_aux "FOO"      (ppShow foo)
+                printer_aux "CONSTR"   (ppShow constraints)
 
               --let ast_label  = ast ^. Label.label
               --    ast_module = ast ^. Label.element
@@ -247,9 +267,9 @@ type Typo       = [(Var,TypeScheme)]
 
 -- The term language
 
-data Term       = Id Var | Abs Var Term | App Term Term
-                | Let Var Term Term
-                     deriving Show
+--data Term       = Id Var | Abs Var Term | App Term Term
+--                | Let Var Term Term
+--                     deriving Show
 
 -- The error monad
 
@@ -517,32 +537,32 @@ return_result :: Subst -> Constraint -> Type -> TP Type
 return_result s c t = TP ( \ (n,s',c') -> return (n,s,c,t))
 
 
--- type inference
+---- type inference
 
-tp :: (Typo, Term) -> TP Type
-tp (env, Id x) =  do a <- inst env x
-                     normalize a
---
-tp (env, Abs x e) = do a <- newtvar
-                       b <- tp (insert env (x, Mono (TV a)), e)
-                       normalize ((TV a) `Fun` b)
+--tp :: (Typo, Term) -> TP Type
+--tp (env, Id x) =  do a <- inst env x
+--                     normalize a
+----
+--tp (env, Abs x e) = do a <- newtvar
+--                       b <- tp (insert env (x, Mono (TV a)), e)
+--                       normalize ((TV a) `Fun` b)
 
-tp (env, App e e') = do a <- newtvar
-                        t <- tp (env, e)
-                        t' <- tp (env, e')
-                        add_constraint (C [t `Subsume` (t' `Fun` TV a)])
-                        normalize (TV a)
+--tp (env, App e e') = do a <- newtvar
+--                        t <- tp (env, e)
+--                        t' <- tp (env, e')
+--                        add_constraint (C [t `Subsume` (t' `Fun` TV a)])
+--                        normalize (TV a)
 
 
-tp (env, Let x e e') = do a <- tp (env, e)
-                          b <- gen env a
-                          tp ((insert env (x, b)), e')
+--tp (env, Let x e e') = do a <- tp (env, e)
+--                          b <- gen env a
+--                          tp ((insert env (x, b)), e')
 
--- top-level program
+---- top-level program
 
-infer :: Term -> E (TVar, Subst, Constraint, Type)
-infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
---
+--infer :: Term -> E (TVar, Subst, Constraint, Type)
+--infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
+----
 
 
 
@@ -699,27 +719,27 @@ unify (s, _, _)  = report_error "unify:uncompatible type" null_subst
 
 -- test cases
 
-test = infer (App (Abs 1 (Id 1)) (Abs 2 (Id 2)))
+--test = infer (App (Abs 1 (Id 1)) (Abs 2 (Id 2)))
 
-test1 = infer (Abs 1 (Abs 2 (Id 1)))
+--test1 = infer (Abs 1 (Abs 2 (Id 1)))
 
-test2 = infer (Abs 1 (Id 1))
+--test2 = infer (Abs 1 (Id 1))
 
-test3 = infer (Abs 1 (App (Id 1) (Id 1)))
+--test3 = infer (Abs 1 (App (Id 1) (Id 1)))
 
-test4 = infer (Let 1 (Abs 2 (Id 2)) (App (Id 1) (Abs 3 (Id 3))))
+--test4 = infer (Let 1 (Abs 2 (Id 2)) (App (Id 1) (Abs 3 (Id 3))))
 
-test5 = infer (Let 1 (Abs 2 (Id 2)) (Id 1))
+--test5 = infer (Let 1 (Abs 2 (Id 2)) (Id 1))
 
-test6 = infer (Let 1 (Abs 2 (Id 2)) (App (Id 1) (Id 1)))
+--test6 = infer (Let 1 (Abs 2 (Id 2)) (App (Id 1) (Id 1)))
 
-test7 = unTP (tp ([(1, Poly [0] (C []) ((TV 0) `Fun` (TV 0)))], App (Id 1) (Id 1))) (init_tvar, null_subst, true_cons)
+--test7 = unTP (tp ([(1, Poly [0] (C []) ((TV 0) `Fun` (TV 0)))], App (Id 1) (Id 1))) (init_tvar, null_subst, true_cons)
 
 
-rec1 = unTP (tp ([(100, Mono (Record [(200, TV 300),(201, TV 301)])),
-            (101, Poly [302,303] ( C [Reckind (TV 302) 201 (TV 303)]) ((TV 302) `Fun` (TV 303)))],
-           App (Id 101) (Id 100)))
-           (init_tvar, null_subst, true_cons)
+--rec1 = unTP (tp ([(100, Mono (Record [(200, TV 300),(201, TV 301)])),
+--            (101, Poly [302,303] ( C [Reckind (TV 302) 201 (TV 303)]) ((TV 302) `Fun` (TV 303)))],
+--           App (Id 101) (Id 100)))
+--           (init_tvar, null_subst, true_cons)
 
 
 rec2 = cs(null_subst, ( C [(Reckind (TV 100) 200 ((TV 300) `Fun` (TV 300))),
