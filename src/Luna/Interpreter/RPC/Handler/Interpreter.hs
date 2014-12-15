@@ -68,7 +68,6 @@ import qualified Luna.Interpreter.RPC.Handler.Sync                              
 import           Luna.Interpreter.RPC.QueueInfo                                               (QueueInfo)
 import qualified Luna.Interpreter.RPC.QueueInfo                                               as QueueInfo
 import qualified Luna.Interpreter.Session.AST.Executor                                        as Executor
-import qualified Luna.Interpreter.Session.AST.WatchPoint                                      as WatchPoint
 import qualified Luna.Interpreter.Session.Env                                                 as Env
 import qualified Luna.Interpreter.Session.Error                                               as Error
 import qualified Luna.Interpreter.Session.Memory                                              as Memory
@@ -130,7 +129,7 @@ watchPointAdd :: WatchPointAdd.Request -> RPC Context (SessionST mm) WatchPointA
 watchPointAdd request@(WatchPointAdd.Request tcallPointPath) = do
     let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ WatchPoint.add callPointPath
+    liftSession $ Env.addWatchPoint callPointPath
     return $ WatchPointAdd.Update request
 
 
@@ -138,13 +137,13 @@ watchPointRemove :: WatchPointRemove.Request -> RPC Context (SessionST mm) Watch
 watchPointRemove request@(WatchPointRemove.Request tcallPointPath) = do
     let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ WatchPoint.delete callPointPath
+    liftSession $ Env.deleteWatchPoint callPointPath
     return $ WatchPointRemove.Update request
 
 
 watchPointList :: WatchPointList.Request -> RPC Context (SessionST mm) WatchPointList.Status
 watchPointList request = do
-    list      <- liftSession $ SetForest.toList <$> WatchPoint.all
+    list      <- liftSession $ SetForest.toList <$> Env.getWatchPoints
     projectID <- liftSession Env.getProjectID
     return $ WatchPointList.Status request $ encodeP $ map (projectID,) list
 
@@ -199,7 +198,7 @@ deleteAllSerializationMode :: DeleteAllSMode.Request -> RPC Context (SessionST m
 deleteAllSerializationMode request@(DeleteAllSMode.Request tcallPointPath) = do
     let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ Env.clearSerializationModes callPointPath
+    liftSession $ Env.deleteAllSerializationModes callPointPath
     return $ DeleteAllSMode.Update request
 
 

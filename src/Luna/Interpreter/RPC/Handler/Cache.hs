@@ -44,6 +44,7 @@ interpreterDo projectID op = do
 deleteAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
 deleteAll projectID = interpreterDo projectID $ do
     Cache.deleteAll
+    Env.cleanEnv
     Manager.cleanIfNeeded
     GPUMemory.performGC
 
@@ -56,7 +57,7 @@ modifyAll projectID = interpreterDo projectID $ do
 
 
 closeProject :: Int32 -> RPC Context (SessionST mm) ()
-closeProject projectID = interpreterDo projectID $ Env.unsetProjectID
+closeProject projectID = interpreterDo projectID $ Env.unsetProjectID >> Env.cleanEnv
 
 
 modifyLibrary :: Int32 -> Int32 -> RPC Context (SessionST mm) ()
