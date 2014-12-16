@@ -26,6 +26,7 @@ import           Luna.Graph.Node.StringExpr                  (StringExpr)
 import qualified Luna.Graph.Node.StringExpr                  as StringExpr
 import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
+import qualified Luna.Interpreter.Session.Cache.Free         as Free
 import qualified Luna.Interpreter.Session.Cache.Invalidate   as Invalidate
 import qualified Luna.Interpreter.Session.Cache.Status       as CacheStatus
 import qualified Luna.Interpreter.Session.Cache.Value        as Value
@@ -34,16 +35,19 @@ import           Luna.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Data.Hash          (Hash)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName       as VarName
 import qualified Luna.Interpreter.Session.Debug              as Debug
 import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
+import qualified Luna.Interpreter.Session.Hash               as Hash
 import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager     as Manager
 import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS  as TargetHS
 import qualified Luna.Pass.Transform.AST.Hash.Hash           as Hash
 
@@ -133,10 +137,41 @@ execute :: MemoryManager mm
         => CallDataPath -> StringExpr -> [(CallPointPath, VarName)] -> Session mm ()
 execute callDataPath stringExpr args = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-    status <- Cache.status callPointPath
+        argVarNames   = map snd args
+    status       <- Cache.status        callPointPath
+    prevVarName  <- Cache.recentVarName callPointPath
+    boundVarName <- Cache.dependency argVarNames callPointPath
+    let execFunction = evalFunction stringExpr callDataPath args
+
+        executeModified = do
+            (hash, varName) <- execFunction
+            if varName /= prevVarName
+                then if boundVarName /= Just varName
+                    then do logger debug "processing modified node - result value differs"
+                            mapM_ Free.freeVarName boundVarName
+                            Invalidate.markSuccessors callDataPath CacheStatus.Modified
+
+                    else do logger debug "processing modified node - result value differs but is cached"
+                            Invalidate.markSuccessors callDataPath CacheStatus.Affected
+                else if Maybe.isNothing hash
+                    then do logger debug "processing modified node - result value non hashable"
+                            Invalidate.markSuccessors callDataPath CacheStatus.Modified
+                    else logger debug "processing modified node - result value is same"
+
+        executeAffected = case boundVarName of
+            Nothing    -> do
+                logger debug "processing affected node - result never bound"
+                _ <- execFunction
+                Invalidate.markSuccessors callDataPath CacheStatus.Modified
+            Just bound -> do
+                logger debug "processing affected node - result rebound"
+                Cache.setRecentVarName bound callPointPath
+                Invalidate.markSuccessors callDataPath CacheStatus.Affected
+
     case status of
-        CacheStatus.Modified     -> evalFunction stringExpr callDataPath args
-                                 >> Invalidate.markSuccessors callDataPath CacheStatus.Modified
+        CacheStatus.Affected     -> executeAffected
+        CacheStatus.Modified     -> executeModified
+        CacheStatus.NonCacheable -> executeModified
         CacheStatus.Ready        -> left $ Error.OtherError $(loc) "something went wrong : status = Ready"
 
 
@@ -164,13 +199,12 @@ varType (StringExpr.Expr   name@(h:_))
     | otherwise                                          = Var name
 varType other = Prelude.error $ show other
 
-
 evalFunction :: MemoryManager mm
-             => StringExpr -> CallDataPath -> [(CallPointPath, VarName)] -> Session mm ()
+             => StringExpr -> CallDataPath -> [(CallPointPath, VarName)] -> Session mm (Maybe Hash, VarName)
 evalFunction stringExpr callDataPath argsData = do
     let argsVarNames = map snd argsData
         callPointPath = CallDataPath.toCallPointPath callDataPath
-        varName       = VarName.mk callPointPath
+        tmpVarName    = "_tmp"
         nameStr       = StringExpr.toString stringExpr
         nameHash      = if nameStr == "Point2" then "Point2" else Hash.hashStr $ StringExpr.toString stringExpr
 
@@ -192,9 +226,16 @@ evalFunction stringExpr callDataPath argsData = do
             Tuple       -> "val (" ++ List.intercalate "," args ++ ")"
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
 
-        Session.runAssignment' varName operation
+        Session.runAssignment' tmpVarName operation
+
+        hash <- Hash.compute tmpVarName
+        let varName = VarName.mk hash callPointPath
+
+        Session.runAssignment varName tmpVarName
+        lift2 $ Bindings.remove tmpVarName
 
         Cache.put callDataPath argsVarNames varName
         Value.reportIfVisible callPointPath
         Manager.reportUseMany argsData
         Manager.reportUse callPointPath varName
+        return (hash, varName)
