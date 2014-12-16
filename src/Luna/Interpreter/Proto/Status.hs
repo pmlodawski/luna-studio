@@ -23,10 +23,12 @@ import qualified Luna.Interpreter.Session.Cache.Value       as Value
 instance ConvertPure Status Gen.Status where
     encodeP Value.Ready        = Gen.Ready
     encodeP Value.Modified     = Gen.Modified
+    encodeP Value.NonCacheable = Gen.NonCacheable
     encodeP Value.NotInCache   = Gen.NotInCache
     encodeP Value.Unknown      = Gen.Unknown
 
     decodeP Gen.Ready        = Value.Ready
     decodeP Gen.Modified     = Value.Modified
+    decodeP Gen.NonCacheable = Value.NonCacheable
     decodeP Gen.NotInCache   = Value.NotInCache
     decodeP Gen.Unknown      = Value.Unknown
