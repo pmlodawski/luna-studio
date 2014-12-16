@@ -38,7 +38,6 @@ message ProfileInfo {
 enum Status {
     Ready        = 1;
     Modified     = 2;
-    NonCacheable = 3;
     NotInCache   = 4;
     Unknown      = 5;
 }
