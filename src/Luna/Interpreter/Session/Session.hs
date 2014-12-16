@@ -31,7 +31,6 @@ import           Flowbox.System.Log.Logger                  as Logger
 import           Luna.Interpreter.Session.Env               (Env, Session, SessionST)
 import           Luna.Interpreter.Session.Error             (Error)
 import qualified Luna.Interpreter.Session.Error             as Error
-import qualified Luna.Interpreter.Session.Helpers           as Helpers
 import qualified Luna.Interpreter.Session.Hint.Eval         as HEval
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 
@@ -72,7 +71,6 @@ initialize config imports = do
                : "Luna.Target.HS"
                : "System.Mem"
                : imports
-    runDecls Helpers.hash
 
 
 setImports :: [Import] -> Session mm ()
