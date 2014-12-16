@@ -30,6 +30,7 @@ import           Luna.Interpreter.Session.Data.CallDataPath  (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Data.Hash          (Hash)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName       as VarName
 import qualified Luna.Interpreter.Session.Env                as Env
@@ -46,9 +47,9 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-dump :: CallPointPath -> Session mm ()
-dump callPointPath = do
-    let varName = VarName.mk callPointPath
+dump :: CallPointPath -> Maybe Hash -> Session mm ()
+dump callPointPath mhash = do
+    let varName = VarName.mk mhash callPointPath
     logger debug $ "Dumping " ++ varName
     Session.runStmt $ "print " ++ varName
 
@@ -106,11 +107,15 @@ put :: CallDataPath -> [VarName] -> VarName -> Session mm ()
 put callDataPath predVarNames varName = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     mcacheInfo <- Env.cachedLookup callPointPath
-    let existingDeps  = Maybe.maybe Map.empty (view CacheInfo.dependencies) mcacheInfo
-        dependencies  = Map.insert predVarNames varName existingDeps
-        cacheInfo     = CacheInfo (last callDataPath ^. CallData.parentDefID)
-                                  (last callDataPath ^. CallData.parentBC)
-                                  CacheStatus.Ready varName dependencies
+    oldStatus  <- status callPointPath
+    let updatedStatus = if oldStatus == CacheStatus.NonCacheable
+                            then oldStatus
+                            else CacheStatus.Ready
+        existingDeps = Maybe.maybe Map.empty (view CacheInfo.dependencies) mcacheInfo
+        dependencies = Map.insert predVarNames varName existingDeps
+        cacheInfo    = CacheInfo (last callDataPath ^. CallData.parentDefID)
+                                 (last callDataPath ^. CallData.parentBC)
+                                 updatedStatus varName dependencies
 
     Env.cachedInsert callPointPath cacheInfo
 

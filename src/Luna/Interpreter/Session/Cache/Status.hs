@@ -12,4 +12,6 @@ import Flowbox.Prelude
 
 data CacheStatus = Ready
                  | Modified
+                 | Affected
+                 | NonCacheable
                  deriving (Show, Eq)

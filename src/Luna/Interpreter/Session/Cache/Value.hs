@@ -52,6 +52,7 @@ getIfReady callPointPath = do
 
 data Status = Ready
             | Modified
+            | NonCacheable
             | NotInCache
             | Unknown
             deriving (Show, Eq)
@@ -67,11 +68,14 @@ getWithStatus callPointPath = do
             let returnBytes status = do
                     value <- get varName callPointPath
                     return (status, value)
+                returnNothing status = return (status, [])
 
             case (cacheInfo ^. CacheInfo.status, allReady) of
                 (Status.Ready,        True ) -> returnBytes   Ready
                 (Status.Ready,        False) -> returnBytes   Unknown
                 (Status.Modified,     _    ) -> returnBytes   Modified
+                (Status.Affected,     _    ) -> returnBytes   Modified
+                (Status.NonCacheable, _    ) -> returnNothing NonCacheable
 
 
 reportIfVisible :: CallPointPath -> Session mm ()
