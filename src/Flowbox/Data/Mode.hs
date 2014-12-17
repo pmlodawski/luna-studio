@@ -13,7 +13,7 @@ module Flowbox.Data.Mode (
 
 import Flowbox.Prelude
 import Generated.Proto.Mode.Mode as X
-
+import Data.Sequence
 
 instance Default Mode where
-    def = Mode Nothing
+    def = Mode Data.Sequence.empty
