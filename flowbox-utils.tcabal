@@ -16,7 +16,8 @@ Library
                     NoImplicitPrelude,
                     OverloadedStrings,
                     TypeSynonymInstances,
-                    FlexibleInstances
+                    FlexibleInstances,
+                    LambdaCase
 
     Exposed-modules: `findmodules('src', '.*\.hs')`
 
