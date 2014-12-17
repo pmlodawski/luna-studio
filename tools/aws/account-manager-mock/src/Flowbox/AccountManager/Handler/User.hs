@@ -10,9 +10,9 @@ module Flowbox.AccountManager.Handler.User where
 import           Flowbox.AccountManager.Context                      (Context)
 import qualified Flowbox.AccountManager.Context                      as Context
 import qualified Flowbox.AWS.AccountManager                          as AccountManager
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                     hiding (Context, error)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import           Flowbox.ZMQ.RPC.RPC                                 (RPC)
 import qualified Generated.Proto.AccountManager.User.Login.Args      as User_Login
 import qualified Generated.Proto.AccountManager.User.Login.Result    as User_Login

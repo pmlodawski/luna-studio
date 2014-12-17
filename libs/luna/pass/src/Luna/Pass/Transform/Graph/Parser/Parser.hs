@@ -112,7 +112,7 @@ parseOutputsNode nodeID = do
     inPorts <- State.inboundPorts nodeID
     case (srcs, inPorts) of
         ([], _)               -> whenM State.doesLastStatementReturn $
-                                   State.setOutput $ Expr.Tuple IDFixer.unknownID []
+                                   State.setOutput $ Expr.Grouped IDFixer.unknownID $ Expr.Tuple IDFixer.unknownID []
         ([src], [Port.Num 0]) -> State.setOutput $ Expr.Grouped IDFixer.unknownID src
         ([src], _           ) -> State.setOutput src
         _                     -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
@@ -196,6 +196,11 @@ exprToNodeID expr = case expr of
     _                -> expr ^. Expr.id
 
 
+setNodeID :: Node.ID -> Expr -> Expr
+setNodeID nodeID expr@(Expr.App _ src _) = expr & Expr.src .~ setNodeID nodeID src
+setNodeID nodeID expr                    = expr & Expr.id  .~ nodeID
+
+
 parseTupleNode :: Node.ID -> GPPass ()
 parseTupleNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
@@ -210,7 +215,6 @@ parseGroupedNode nodeID = do
     addExpr nodeID e
 
 
-
 parseListNode :: Node.ID -> GPPass ()
 parseListNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
@@ -219,8 +223,10 @@ parseListNode nodeID = do
 
 
 parseASTExprNode :: Node.ID -> Expr -> GPPass ()
-parseASTExprNode nodeID = addExpr nodeID . IDFixer.clearExprIDs IDFixer.unknownID
-
+parseASTExprNode nodeID = addExpr nodeID
+                        -- . set Expr.id nodeID
+                        . setNodeID nodeID
+                        . IDFixer.clearExprIDs IDFixer.unknownID
 
 
 addExpr :: Node.ID -> Expr -> GPPass ()

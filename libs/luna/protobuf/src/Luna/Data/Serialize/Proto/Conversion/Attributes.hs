@@ -19,8 +19,8 @@ import qualified Data.Maybe    as Maybe
 import qualified Data.Sequence as Sequence
 
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Attributes.Attributes                as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space          as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue as Gen
@@ -64,11 +64,10 @@ instance ConvertPure (String, String) Gen.KeyValue where
 instance Convert Properties Gen.Properties where
     encode (Properties flags defautsMap attributes) =
         Gen.Properties (encodeJ flags) (encodeJ defautsMap) (encodePJ attributes)
-    decode (Gen.Properties mflags mtdefaultsMap mattributes) = do
-        flags      <- mflags        <?> "Failed to decode Properties: 'flags' field is missing"
-        defautsMap <- mtdefaultsMap <?> "Failed to decode Properties: 'defautsMap' field is missing"
-        attributes <- mattributes   <?> "Failed to decode Properties: 'attributes' field is missing"
-        Properties <$> decode flags <*> decode defautsMap <*> pure (decodeP attributes)
+    decode (Gen.Properties flags defaultsMap attributes) = do
+        Properties <$> decodeJ flags (missing "Properties" "flags")
+                   <*> decodeJ defaultsMap (missing "Properties" "defaultsMap")
+                   <*> decodePJ attributes (missing "Properties" "attributes")
 
 
 instance Convert Flags.FoldInfo Gen.FoldInfo where

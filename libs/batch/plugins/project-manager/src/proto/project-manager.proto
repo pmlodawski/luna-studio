@@ -19,6 +19,7 @@ import "name.proto";
 import "nodedefault.proto";
 import "project.proto";
 import "type.proto";
+import "version.proto";
 
 
 
@@ -111,6 +112,7 @@ message Project {
         message Create {
             message Request {
                 required string name      = 1;
+                required generated.proto.version.Version version = 4;
                 required string path      = 2;
                 required int32  projectID = 3;
             }
@@ -209,6 +211,32 @@ message Project {
                     message Imports {
                         message Request {
                             repeated generated.proto.expr.Expr imports    = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message TypeAliases {
+                        message Request {
+                            repeated generated.proto.expr.Expr typeAliases = 1;
+                            required generated.proto.crumb.Breadcrumbs bc  = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message TypeDefs {
+                        message Request {
+                            repeated generated.proto.expr.Expr typeDefs   = 1;
                             required generated.proto.crumb.Breadcrumbs bc = 2;
                             required int32 libraryID = 3;
                             required int32 projectID = 4;
@@ -400,6 +428,20 @@ message Project {
                         message Status {
                             required Request request = 1;
                             required generated.proto.graph.Node node = 2;
+                        }
+                    }
+                    message LookupMany {
+                        message Request {
+                            repeated int32 nodeIDs   = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Status {
+                            required Request request = 1;
+                            repeated generated.proto.graph.Node found    = 2;
+                            repeated int32                      notFound = 3;
                         }
                     }
                     message Node {

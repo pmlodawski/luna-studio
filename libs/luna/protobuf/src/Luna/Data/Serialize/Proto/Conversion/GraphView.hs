@@ -15,28 +15,28 @@ module Luna.Data.Serialize.Proto.Conversion.GraphView where
 import Control.Applicative
 
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Graphview.EdgeView             as Gen
-import qualified Generated.Proto.Graphview.GraphView            as Gen
-import           Luna.Data.Serialize.Proto.Conversion.Graph     ()
-import           Luna.Graph.View.EdgeView                       (EdgeView (EdgeView))
-import           Luna.Graph.View.GraphView                      (GraphView)
-import qualified Luna.Graph.View.GraphView                      as GraphView
+import qualified Generated.Proto.Graphview.EdgeView         as Gen
+import qualified Generated.Proto.Graphview.GraphView        as Gen
+import           Luna.Data.Serialize.Proto.Conversion.Graph ()
+import           Luna.Graph.View.EdgeView                   (EdgeView (EdgeView))
+import           Luna.Graph.View.GraphView                  (GraphView)
+import qualified Luna.Graph.View.GraphView                  as GraphView
 
 
 
 instance Convert (Int, Int, EdgeView) Gen.EdgeView where
     encode (nodeSrc, nodeDst, EdgeView portSrc portDst) =
-        Gen.EdgeView (encodePJ nodeSrc) (encodePJ nodeDst) (encodeListP portSrc) (encodeListP portDst)
+        Gen.EdgeView (encodePJ nodeSrc) (encodePJ nodeDst) (encodeP portSrc) (encodeP portDst)
     decode (Gen.EdgeView mtnodeSrc mtnodeDst tportSrc tportDst) = do
         tnodeSrc <- mtnodeSrc <?> "Failed to decode EdgeView: 'srcNode' field is missing"
         tnodeDst <- mtnodeDst <?> "Failed to decode EdgeView: 'dstNode' field is missing"
-        return (decodeP tnodeSrc, decodeP tnodeDst, EdgeView (decodeListP tportSrc) (decodeListP tportDst))
+        return (decodeP tnodeSrc, decodeP tnodeDst, EdgeView (decodeP tportSrc) (decodeP tportDst))
 
 
 instance Convert GraphView Gen.GraphView where
     encode graph =
-        Gen.GraphView (encodeList $ GraphView.labNodes graph) (encodeList $ GraphView.labEdges graph)
+        Gen.GraphView (encode $ GraphView.labNodes graph) (encode $ GraphView.labEdges graph)
     decode (Gen.GraphView tnodes tedges) =
-        GraphView.mkGraph <$> decodeList tnodes <*> decodeList tedges
+        GraphView.mkGraph <$> decode tnodes <*> decode tedges

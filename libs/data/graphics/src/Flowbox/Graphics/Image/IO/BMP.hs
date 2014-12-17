@@ -21,17 +21,17 @@ import           Flowbox.Prelude
 
 
 
-readFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image View.RGBA))
+readFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error Image)
 readFromBMP file = liftIO $ do
     rawData <- A.readImageFromBMP file
     return $ makeRGBA <$> rawData
 
-makeRGBA :: A.Array A.DIM2 A.Word32 -> Image View.RGBA
+makeRGBA :: A.Array A.DIM2 A.Word32 -> Image
 makeRGBA array = image
     where word32Matrix   = Matrix.Raw array
           unpackedMatrix = Matrix.map unpack32 word32Matrix
           colors         = Matrix.unzip4 unpackedMatrix
-          (r, g, b, a)   = colors & each %~ Channel.FlatData . Matrix.map A.fromIntegral
+          (r, g, b, a)   = colors & each %~ Channel.FlatData . Matrix.map (\x -> A.fromIntegral x / 255)
           finalView      = View.append (Channel.ChannelFloat "r" r) $
                            View.append (Channel.ChannelFloat "g" g) $
                            View.append (Channel.ChannelFloat "b" b) $

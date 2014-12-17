@@ -42,7 +42,8 @@ parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Run
            <$> strOption  (long "prefix" <> short 'p' <> metavar "PREFIX" <> value "" <> help "Prefix used by this plugin manager (e.g. client, main, etc.")
            <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
-           <*> switch     (long "no-color"            <> help "Disable color output")
+           <*> switch     (long "no-color"           <> help "Disable color output")
+           <*> optIntFlag (Just "monitor") 'm' 0 8000 "Specify remote monitoring port"
 
 
 opts :: ParserInfo Cmd
@@ -57,9 +58,9 @@ main = execParser opts >>= run
 run :: Cmd -> IO ()
 run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
-    Cmd.Run prefix verbose _ -> do
+    Cmd.Run prefix verbose _ monitor -> do
 #if !defined(mingw32_HOST_OS)
-        _ <- forkServer "localhost" 8000
+        when (monitor /= 0) $ void $ forkServer "localhost" monitor
 #endif
         rootLogger setIntLevel verbose
         cfg       <- Config.load

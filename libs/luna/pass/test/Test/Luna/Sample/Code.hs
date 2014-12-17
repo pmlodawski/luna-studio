@@ -46,11 +46,14 @@ def main:
     y = 1
     (z, v) = (x, y)
     h = (z, v)
-|], -} named "accessors 2" [r|
+|], -} named "single accessors 1" [r|
 def main arg:
     arg.bar.baz
     2
-|], named "accessors 5" [r|
+|], named "single accessors 2" [r|
+def main arg:
+    arg.bar(5, "1").baz 7.foo
+|], named "single accessors 3" [r|
 def main arg:
     x = 4
     x.zooo 43

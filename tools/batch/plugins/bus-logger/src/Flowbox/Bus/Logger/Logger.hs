@@ -7,21 +7,30 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.Bus.Logger.Logger where
 
-import Control.Monad (forever)
-import Data.List     (isSuffixOf)
+import           Control.Monad             (forever)
+import           Control.Monad.Trans.State
+import           Data.List                 (isSuffixOf)
+import qualified Data.Map                  as Map
+import qualified Data.Maybe                as Maybe
+import qualified Data.Time.Clock           as Clock
 
-import           Flowbox.Bus.Bus                                (Bus)
-import qualified Flowbox.Bus.Bus                                as Bus
-import qualified Flowbox.Bus.Data.Exception                     as Exception
-import qualified Flowbox.Bus.Data.Message                       as Message
-import           Flowbox.Bus.Data.MessageFrame                  (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic                         (Topic)
-import qualified Flowbox.Bus.Data.Topic                         as Topic
-import           Flowbox.Bus.EndPoint                           (BusEndPoints)
-import           Flowbox.Prelude                                hiding (error)
+import qualified Flowbox.Bus.Bus               as Bus
+import           Flowbox.Bus.BusT              (BusT)
+import qualified Flowbox.Bus.BusT              as Bus
+import qualified Flowbox.Bus.Data.Exception    as Exception
+import qualified Flowbox.Bus.Data.Message      as Message
+import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
+import           Flowbox.Bus.Data.Topic        (Topic)
+import qualified Flowbox.Bus.Data.Topic        as Topic
+import           Flowbox.Bus.EndPoint          (BusEndPoints)
+import           Flowbox.Bus.Logger.Env        (Env)
+import qualified Flowbox.Bus.Logger.Env        as Env
+import           Flowbox.Control.Error         (liftIO)
+import           Flowbox.Data.Convert
+import           Flowbox.Prelude               hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Flowbox.Text.ProtocolBuffers  as Proto
+import qualified Generated.Proto.Bus.Exception as Gen
 
 
 
@@ -30,34 +39,46 @@ logger = getLoggerIO $(moduleName)
 
 
 run :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
-run ep topics = Bus.runBus ep $ do logger info $ "Subscribing to topics: " ++ show topics
-                                   mapM_ Bus.subscribe topics
-                                   forever logMessage
+run ep topics = Bus.runBus ep $ do
+    logger info $ "Subscribing to topics: " ++ show topics
+    mapM_ Bus.subscribe topics
+    Bus.runBusT $ evalStateT (forever logMessage) def
 
 
-logMessage :: Bus ()
-logMessage = do msgFrame <- Bus.receive'
-                case msgFrame of
-                    Left err -> logger error $ "Unparseable message: " ++ err
-                    Right (MessageFrame msg crlID senderID lastFrame) -> do
-                        let topic  = msg ^. Message.topic
-                            logMsg = show senderID
-                                   ++ " -> "
-                                   ++ show crlID
-                                   ++ " (last = "
-                                   ++ show lastFrame
-                                   ++ ")"
-                                   ++ "\t:: "
-                                   ++ topic
-                            content = msg ^. Message.message
-                            errorMsg = case Proto.messageGet' content of
-                                Left err        -> "(cannot parse error message: " ++ err ++ ")"
-                                Right exception -> case (decodeP exception) ^. Exception.msg of
-                                    Nothing           -> "(exception without message)"
-                                    Just exceptionMsg -> exceptionMsg
-                        if Topic.error `isSuffixOf` topic
-                            then do logger error logMsg
-                                    logger error errorMsg
-                            else logger info  logMsg
+logMessage :: StateT Env BusT ()
+logMessage = do
+    msgFrame <- lift $ Bus.BusT Bus.receive'
+    case msgFrame of
+        Left err -> logger error $ "Unparseable message: " ++ err
+        Right (MessageFrame msg crlID senderID lastFrame) -> do
+            time <- measureTime crlID
+            let topic  = msg ^. Message.topic
+                logMsg = show senderID
+                       ++ " -> "
+                       ++ show crlID
+                       ++ " (last = "
+                       ++ show lastFrame
+                       ++ ")"
+                       ++ "\t:: "
+                       ++ topic
+                       ++ Maybe.maybe  "" (\t -> " [" ++ show t ++ "]") time
+                content = msg ^. Message.message
+                errorMsg = case Proto.messageGet' content of
+                    Left err        -> "(cannot parse error message: " ++ err ++ ")"
+                    Right exception -> case (decodeP (exception :: Gen.Exception)) ^. Exception.msg of
+                        Nothing           -> "(exception without message)"
+                        Just exceptionMsg -> exceptionMsg
+            if Topic.error `isSuffixOf` topic
+                then do logger error logMsg
+                        logger error errorMsg
+                else logger info  logMsg
 
 
+measureTime :: Message.CorrelationID -> StateT Env BusT (Maybe Clock.NominalDiffTime)
+measureTime crlID = do
+    stop  <- liftIO Clock.getCurrentTime
+    times <- gets $ view Env.times
+    modify $ Env.times %~ Map.insert crlID stop
+    return $ case Map.lookup crlID times of
+        Nothing    -> Nothing
+        Just start -> Just $ Clock.diffUTCTime stop start

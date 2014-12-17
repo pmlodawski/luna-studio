@@ -48,29 +48,29 @@ disabledFlags :: [GHC.ExtensionFlag]
 disabledFlags = [GHC.Opt_MonomorphismRestriction]
 
 
-runDecls :: [String] -> Session ()
+runDecls :: [String] -> Session mm()
 runDecls = Session.withExtensionFlags enabledFlags disabledFlags . mapM_ Session.runDecls
 
 
-reloadAll :: Session ()
+reloadAll :: Session mm()
 reloadAll = Session.atomically $ Instances.cleanAll
                              >>  Generator.genAll
                              >>= runDecls
 
 
-reloadFunctions :: Session ()
+reloadFunctions :: Session mm()
 reloadFunctions = Session.atomically $ Instances.cleanFunctions
                                    >>  Generator.genFunctions
                                    >>= runDecls
 
 
-reloadClass :: DefPoint -> Session ()
+reloadClass :: DefPoint -> Session mm()
 reloadClass defPoint = Session.atomically $ Instances.cleanFunctions
                                         >>  Generator.genClass defPoint
                                         >>= runDecls
 
 
-reload :: Session ()
+reload :: Session mm()
 reload = Env.fragile $ do
     reloads <- Env.getReloads
     logger debug $ "Reloading: " ++ show reloads

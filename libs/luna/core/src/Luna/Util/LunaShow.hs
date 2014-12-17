@@ -5,13 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Luna.Util.LunaShow where
 
 import qualified Data.List  as List
 import qualified Data.Maybe as Maybe
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude hiding (simple)
 import           Luna.AST.Arg        (Arg)
 import qualified Luna.AST.Arg        as Arg
 import           Luna.AST.Expr       (Expr)
@@ -28,46 +29,61 @@ import           Luna.AST.Type       (Type)
 import qualified Luna.AST.Type       as Type
 
 
+data ShowContext = ShowContext { _accessorContent :: Bool }
+                               deriving Show
+
+makeLenses ''ShowContext
+
+
+instance Default ShowContext where
+    def = ShowContext False
+
 
 class LunaShow ast where
-    lunaShow :: ast -> String
+    lunaShow  ::                ast -> String
+    lunaShow  = code . lunaShowC def
+    lunaShowC :: ShowContext -> ast -> CodeBuilder String
 
 
 instance LunaShow Expr where
-    lunaShow expr = concat $ case expr of
-        Expr.Accessor     _ acc      dst  -> [lunaShow dst, ".", view Expr.accName acc]
-        Expr.App          _ src      args -> [unwords $ lunaShow src : map lunaShow args]
+    lunaShowC context expr =  case expr of
+        Expr.Accessor     _ acc      dst  -> simple  [csLunaShow (context & accessorContent .~ True) dst, ".", view Expr.accName acc]
+        Expr.App          _ src      args -> app $ csLunaShow context src : if f
+                                                then ["(", List.intercalate ", " $ map (csLunaShow $ accessorContent .~ False $ context) args, ")"]
+                                                else [unwords $ "" : (map (csLunaShow $ accessorContent .~ False $ context) $ args)]
+                                             where app = if null args || f then simple else complex
+                                                   f = context ^. accessorContent && length args > 1
         --Expr.AppCons_     _ args
-        Expr.Assignment   _ pat      dst  -> [lunaShow pat, " = ", lunaShow dst]
+        Expr.Assignment   _ pat      dst  -> simple  [csLunaShow context pat, " = ", cLunaShow context dst]
         --Expr.RecordUpdate _ name     selectors expr
         --Expr.Data         _ cls      cons      classes methods
         --Expr.ConD         _ name     fields
-        Expr.Con          _ name          -> [name]
-        Expr.Function _ path name inputs output body -> ["def "
-                                                        , if null path then "" else List.intercalate "." path ++ "."
-                                                        , lunaShow name
-                                                        , [' ' | not $ null inputs]
-                                                        , unwords $ map lunaShow inputs
-                                                        , if isUnknown output then "" else " -> " ++ lunaShow output
-                                                        , if null body then "" else ":\n    " ++ List.intercalate "\n    " (map lunaShow body)
-                                                        , "\n"
-                                                        ]
-        Expr.Grouped      _ grouped       -> ["(", lunaShow grouped, ")"]
+        Expr.Con          _ name          -> simple  [name]
+        Expr.Function _ path name inputs output body -> simple  ["def "
+                                                                , if null path then "" else List.intercalate "." path ++ "."
+                                                                , csLunaShow context name
+                                                                , [' ' | not $ null inputs]
+                                                                , unwords $ map (csLunaShow context) inputs
+                                                                , if isUnknown output then "" else " -> " ++ csLunaShow context output
+                                                                , if null body then "" else ":\n    " ++ List.intercalate "\n    " (map (cLunaShow context) body)
+                                                                , "\n"
+                                                                ]
+        Expr.Grouped      _ grouped       -> simple  ["(", cLunaShow context grouped, ")"]
         --Expr.Import       _ path     target    rename
         --Expr.Infix        _ name     src       dst
-        Expr.List         _ items         -> ["[", List.intercalate ", " $ map lunaShow items, "]"]
-        Expr.Lit          _ lvalue        -> [lunaShow lvalue]
-        Expr.Tuple        _ items         -> [List.intercalate ", " $ map lunaShow items]
+        Expr.List         _ items         -> simple  ["[", List.intercalate ", " $ map (csLunaShow context) items, "]"]
+        Expr.Lit          _ lvalue        -> simple  [csLunaShow context lvalue]
+        Expr.Tuple        _ items         -> complex [List.intercalate ", " $ map (csLunaShow context) items]
         --Expr.Typed        _ cls      expr
-        Expr.Var          _ name          -> [name]
-        Expr.Wildcard     _               -> ["_"]
-        Expr.RangeFromTo  _ start    end  -> [lunaShow start, "..", lunaShow end]
-        Expr.RangeFrom    _ start         -> [lunaShow start, ".."]
+        Expr.Var          _ name          -> simple  [name]
+        Expr.Wildcard     _               -> simple  ["_"]
+        Expr.RangeFromTo  _ start    end  -> simple  [csLunaShow context start, "..", csLunaShow context end]
+        Expr.RangeFrom    _ start         -> simple  [csLunaShow context start, ".."]
         --Expr.Field        _ name     cls       value
-        Expr.Arg          _ pat value     -> [lunaShow pat, Maybe.maybe "" (\e -> '=':lunaShow e) value]
-        Expr.Native       _ segments      -> ["```", concatMap lunaShow segments, "```"]
-        Expr.NativeCode   _ code          -> [code]
-        Expr.NativeVar    _ name          -> ["#{", name, "}"]
+        Expr.Arg          _ pat value     -> simple  [csLunaShow context pat, Maybe.maybe "" (\e -> '=':csLunaShow context e) value]
+        Expr.Native       _ segments      -> simple  ["```", concatMap (csLunaShow context) segments, "```"]
+        Expr.NativeCode   _ code          -> simple  [code]
+        Expr.NativeVar    _ name          -> simple  ["#{", name, "}"]
         --Expr.Case         _ expr     match
         --Expr.Match        _ pat      body
         _ -> error $ "lunaShow: Not implemented: " ++ show expr
@@ -77,54 +93,87 @@ instance LunaShow Expr where
 
 
 instance LunaShow (Arg Expr) where
-    lunaShow arg = case arg of
+    lunaShowC context arg = case arg of
         --Arg.Named _ name a ->
-        Arg.Unnamed _ a -> lunaShow a
+        Arg.Unnamed _ a -> pure $ csLunaShow context a
 
 
 instance LunaShow Name where
-    lunaShow name = name ^. Name.base
+    lunaShowC context name = pure $ name ^. Name.base
 
 
 instance LunaShow Lit where
-    lunaShow lit = case lit of
+    lunaShowC context lit = pure $ case lit of
         Lit.Char    _ char -> '\'' : char : "'"
         Lit.String  _ str  -> '\"' : str ++ "\""
-        Lit.Number  _ num  -> lunaShow num
+        Lit.Number  _ num  -> csLunaShow context num
 
 
 instance LunaShow Number where
-    lunaShow (Number base' repr' exp' sign') = concat [showSign sign', showRepr repr', showExp base' exp'] where
+    lunaShowC context (Number base' repr' exp' sign') = simple  [showSign sign', showRepr repr', showExp base' exp'] where
         showSign Number.Positive = ""
         showSign Number.Negative = "-"
         showRepr (Number.Float int' frac') = concat [int', ".", frac']
         showRepr (Number.Decimal int')     = int'
         showExp _ Nothing = ""
         -- FIXME [PM] : Implement other bases than 10 and 16!
-        showExp 10 (Just num) = "E" ++ lunaShow num
-        showExp 16 (Just num) = "P" ++ lunaShow num
+        showExp 10 (Just num) = "E" ++ csLunaShow context num
+        showExp 16 (Just num) = "P" ++ csLunaShow context num
 
 
 instance LunaShow Pat where
-    lunaShow p = concat $ case p of
+    lunaShowC context p = simple  $ case p of
         Pat.Var      _ name      -> [name]
-        Pat.Lit      _ value     -> [lunaShow value]
-        Pat.Tuple    _ items     -> [List.intercalate ", " $ map lunaShow items]
+        Pat.Lit      _ value     -> [csLunaShow context value]
+        Pat.Tuple    _ items     -> [List.intercalate ", " $ map (csLunaShow context) items]
         Pat.Con      _ name      -> [name]
-        Pat.App      _ src args  -> [lunaShow src, " ", unwords $ map lunaShow args]
-        Pat.Typed    _ pat cls   -> [lunaShow pat, " :: ", lunaShow cls]
-        Pat.Grouped  _ pat       -> ["(", lunaShow pat, ")"]
+        Pat.App      _ src args  -> [csLunaShow context src, " ", unwords $ map (csLunaShow context) args]
+        Pat.Typed    _ pat cls   -> [csLunaShow context pat, " :: ", csLunaShow context cls]
+        Pat.Grouped  _ pat       -> ["(", csLunaShow context pat, ")"]
         Pat.Wildcard _           -> ["_"]
         Pat.RecWildcard _        -> [".."]
 
 
 instance LunaShow Type where
-    lunaShow t = concat $ case t of
+    lunaShowC context t = simple  $ case t of
         Type.Unknown _           -> ["Unknown"]
         Type.Var     _ name      -> [name]
-        Type.Tuple   _ items     -> ["(", List.intercalate ", " $ map lunaShow items, ")"]
-        Type.List    _ item      -> ["[", lunaShow item, "]"]
+        Type.Tuple   _ items     -> ["(", List.intercalate ", " $ map (csLunaShow context) items, ")"]
+        Type.List    _ item      -> ["[", csLunaShow context item, "]"]
         --Type.Class   _ name params' -> name ++ " " ++ (List.intercalate " " params')
         --Type.Module  _ path'         -> List.intercalate "." path'
         Type.Con     _ segments  -> [List.intercalate "." segments]
         _ -> error $ "lunaShow: Not implemented: " ++ show t
+
+
+data CodeBuilder a = Simple  { code :: a }
+                   | Complex { code :: a }
+
+instance Functor CodeBuilder where
+    fmap f builder = builder { code = f $ code builder }
+
+instance Applicative CodeBuilder where
+    pure = Simple
+    l <*> r = case l of
+        Simple f -> case r of
+            Simple  v -> Simple  $ f v
+            Complex v -> Complex $ f v
+        Complex f -> Complex $ f (code r)
+
+simplify :: CodeBuilder String -> CodeBuilder String
+simplify c = case c of
+    Simple {} -> c
+    Complex v -> Simple $ "(" ++ v ++ ")"
+
+
+cLunaShow :: LunaShow a => ShowContext -> a -> String
+cLunaShow = code .: lunaShowC
+
+csLunaShow :: LunaShow a => ShowContext -> a -> String
+csLunaShow = (code . simplify) .: lunaShowC
+
+simple :: [String] -> CodeBuilder String
+simple = pure . concat
+
+complex :: [String] -> CodeBuilder String
+complex = Complex . concat

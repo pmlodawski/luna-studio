@@ -19,6 +19,7 @@ import           MonadUtils              (liftIO)
 import           Flowbox.Config.Config     (Config)
 import qualified Flowbox.Config.Config     as Config
 import           Flowbox.Prelude           hiding (error)
+import           Flowbox.System.FilePath   (expand')
 import           Flowbox.System.Log.Logger
 
 
@@ -29,10 +30,12 @@ logger = getLoggerIO $(moduleName)
 
 initialize :: GhcMonad m => Config -> m ()
 initialize config = do
+    globalPkgDb <- liftIO $ expand' $ Config.pkgDb $ Config.global config
+    localPkgDb  <- liftIO $ expand' $ Config.pkgDb $ Config.local config
     let isNotUser GHC.UserPkgConf = False
         isNotUser _ = True
-        extraPkgConfs p = [ GHC.PkgConfFile $ Config.pkgDb $ Config.global config
-                          , GHC.PkgConfFile $ Config.pkgDb $ Config.local config
+        extraPkgConfs p = [ GHC.PkgConfFile globalPkgDb
+                          , GHC.PkgConfFile localPkgDb
                           ] ++ filter isNotUser p
     flags <- GHC.getSessionDynFlags
     _ <- GHC.setSessionDynFlags flags
@@ -87,7 +90,9 @@ compileAndRun imports declarations stmt = do
 
 
 run :: Config -> Ghc a -> IO a
-run config r = GHC.runGhc (Just $ Config.topDir $ Config.ghcS config) r
+run config r = do
+    topDir <- liftIO $ expand' $ Config.topDir $ Config.ghcS config
+    GHC.runGhc (Just topDir) r
 
 
 runSource :: Config -> [String] -> String -> String -> IO ()

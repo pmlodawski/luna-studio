@@ -15,10 +15,11 @@ import           Flowbox.Batch.Project.Project                          (Project
 import qualified Flowbox.Batch.Project.Project                          as Project
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Bus.RPC.RPC                                    (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                        hiding (Context)
 import           Flowbox.ProjectManager.Context                         (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.Project.Project                        as Gen
 import qualified Generated.Proto.ProjectManager.Project.Close.Request   as Close
 import qualified Generated.Proto.ProjectManager.Project.Close.Update    as Close
 import qualified Generated.Proto.ProjectManager.Project.Create.Request  as Create
@@ -34,7 +35,7 @@ import qualified Generated.Proto.ProjectManager.Project.Open.Update     as Open
 import qualified Generated.Proto.ProjectManager.Project.Store.Request   as Store
 import qualified Generated.Proto.ProjectManager.Project.Store.Status    as Store
 import           Luna.Data.Serialize.Proto.Conversion.Attributes        ()
-import qualified Luna.Lib.Manager                                       as LibManager
+import           Luna.Lib.Manager                                       (LibManager)
 
 
 
@@ -43,10 +44,13 @@ logger = getLoggerIO $(moduleName)
 
 ------ public api -------------------------------------------------
 
+encodeProject :: (Project.ID, Project) -> (Gen.Project, LibManager)
+encodeProject = encode
+
 list :: List.Request -> RPC Context IO List.Status
 list request = do
     projects <- BatchP.projects
-    let tprojects       = map (\a -> encode a ^. _1) projects
+    let tprojects       = map (\a -> (encodeProject a) ^. _1) projects
         tprojectsVector = Sequence.fromList tprojects
     return $ List.Status request tprojectsVector
 
@@ -55,7 +59,7 @@ lookup :: Lookup.Request -> RPC Context IO Lookup.Status
 lookup request@(Lookup.Request tprojectID) = do
     let projectID = decodeP tprojectID
     project <- BatchP.projectByID projectID
-    return $ Lookup.Status request $ encode (projectID, project) ^. _1
+    return $ Lookup.Status request $ (encodeProject (projectID, project)) ^. _1
 
 
 create :: Create.Request -> RPC Context IO Create.Update
@@ -64,19 +68,19 @@ create request@(Create.Request tname tpath tattributes) = do
         path = decodeP tpath
         attributes = decodeP tattributes
     newProject <- BatchP.createProject name path attributes
-    Create.Update request (encode newProject ^. _1) <$> Batch.getUpdateNo
+    Create.Update request (encodeProject newProject ^. _1) <$> Batch.getUpdateNo
 
 
 open :: Open.Request -> RPC Context IO Open.Update
 open request@(Open.Request tpath) = do
     let upath = decodeP tpath
     (projectID, project) <- BatchP.openProject upath
-    Open.Update request (encode (projectID, project) ^. _1) <$> Batch.getUpdateNo
+    Open.Update request ((encodeProject (projectID, project)) ^. _1) <$> Batch.getUpdateNo
 
 
 modify :: Modify.Request -> RPC Context IO Modify.Update
 modify request@(Modify.Request tproject) = do
-    projectWithID <- decodeE (tproject, def) :: RPC Context IO (Project.ID, Project)
+    projectWithID <- decodeE (tproject, def :: LibManager) :: RPC Context IO (Project.ID, Project)
     BatchP.updateProject projectWithID
     Modify.Update request <$> Batch.getUpdateNo
 

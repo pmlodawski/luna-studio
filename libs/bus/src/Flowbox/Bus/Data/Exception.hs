@@ -11,9 +11,9 @@
 
 module Flowbox.Bus.Data.Exception where
 
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Bus.Exception                  as Gen
+import qualified Generated.Proto.Bus.Exception as Gen
 
 
 

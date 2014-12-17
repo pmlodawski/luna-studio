@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds    #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts   #-}
 {-# LANGUAGE RankNTypes         #-}
 {-# LANGUAGE TemplateHaskell    #-}
 
@@ -20,40 +21,41 @@ import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
 import qualified Pipes.Safe                as Pipes
 
-import           Flowbox.Bus.Data.Flag                    (Flag)
-import qualified Flowbox.Bus.Data.Flag                    as Flag
-import           Flowbox.Bus.Data.Message                 (Message)
-import qualified Flowbox.Bus.Data.Message                 as Message
-import           Flowbox.Bus.Data.Prefix                  (Prefix)
-import qualified Flowbox.Bus.Data.Prefix                  as Prefix
-import           Flowbox.Bus.Data.Topic                   (status, update, (/+))
-import           Flowbox.Bus.Data.Topic                   (Topic)
-import qualified Flowbox.Bus.Data.Topic                   as Topic
-import           Flowbox.Bus.RPC.HandlerMap               (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap               as HandlerMap
-import           Flowbox.Bus.RPC.RPC                      (RPC)
-import qualified Flowbox.Bus.RPC.Server.Processor         as Processor
-import           Flowbox.Config.Config                    (Config)
-import qualified Flowbox.Control.Concurrent               as Concurrent
-import           Flowbox.Prelude                          hiding (Context, error)
-import           Flowbox.ProjectManager.Context           (Context)
-import qualified Flowbox.ProjectManager.RPC.Topic         as Topic
+import           Flowbox.Bus.Data.Flag                       (Flag)
+import qualified Flowbox.Bus.Data.Flag                       as Flag
+import           Flowbox.Bus.Data.Message                    (Message)
+import qualified Flowbox.Bus.Data.Message                    as Message
+import           Flowbox.Bus.Data.Prefix                     (Prefix)
+import qualified Flowbox.Bus.Data.Prefix                     as Prefix
+import           Flowbox.Bus.Data.Topic                      (status, update, (/+))
+import           Flowbox.Bus.Data.Topic                      (Topic)
+import qualified Flowbox.Bus.Data.Topic                      as Topic
+import           Flowbox.Bus.RPC.HandlerMap                  (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap                  as HandlerMap
+import           Flowbox.Bus.RPC.RPC                         (RPC)
+import qualified Flowbox.Bus.RPC.Server.Processor            as Processor
+import           Flowbox.Config.Config                       (Config)
+import qualified Flowbox.Control.Concurrent                  as Concurrent
+import           Flowbox.Prelude                             hiding (Context, error)
+import           Flowbox.ProjectManager.Context              (Context)
+import qualified Flowbox.ProjectManager.RPC.Topic            as Topic
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers             as Proto
-import qualified Luna.Interpreter.RPC.Handler.Abort       as Abort
-import qualified Luna.Interpreter.RPC.Handler.ASTWatch    as ASTWatch
-import qualified Luna.Interpreter.RPC.Handler.Interpreter as Interpreter
-import qualified Luna.Interpreter.RPC.Handler.Preprocess  as Preprocess
-import qualified Luna.Interpreter.RPC.Handler.Sync        as Sync
-import qualified Luna.Interpreter.RPC.Handler.Value       as Value
-import           Luna.Interpreter.RPC.QueueInfo           (QueueInfo)
-import qualified Luna.Interpreter.RPC.QueueInfo           as QueueInfo
-import qualified Luna.Interpreter.RPC.Topic               as Topic
-import qualified Luna.Interpreter.Session.Env             as Env
-import           Luna.Interpreter.Session.Error           (Error)
-import           Luna.Interpreter.Session.Session         (SessionST)
-import qualified Luna.Interpreter.Session.Session         as Session
-
+import qualified Flowbox.Text.ProtocolBuffers                as Proto
+import qualified Luna.Interpreter.RPC.Handler.Abort          as Abort
+import qualified Luna.Interpreter.RPC.Handler.ASTWatch       as ASTWatch
+import qualified Luna.Interpreter.RPC.Handler.Interpreter    as Interpreter
+import qualified Luna.Interpreter.RPC.Handler.Preprocess     as Preprocess
+import qualified Luna.Interpreter.RPC.Handler.Sync           as Sync
+import qualified Luna.Interpreter.RPC.Handler.Value          as Value
+import           Luna.Interpreter.RPC.QueueInfo              (QueueInfo)
+import qualified Luna.Interpreter.RPC.QueueInfo              as QueueInfo
+import qualified Luna.Interpreter.RPC.Topic                  as Topic
+import qualified Luna.Interpreter.Session.Env                as Env
+import           Luna.Interpreter.Session.Error              (Error)
+import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
+import           Luna.Interpreter.Session.Memory.Manager.LRU (LRU)
+import           Luna.Interpreter.Session.Session            (SessionST)
+import qualified Luna.Interpreter.Session.Session            as Session
 
 
 logger :: LoggerIO
@@ -64,7 +66,10 @@ topics :: Prefix -> [Topic]
 topics prefix = HandlerMap.topics $ handlerMap prefix undefined undefined
 
 
-handlerMap :: Prefix -> QueueInfo -> Message.CorrelationID -> HandlerMap Context SessionST
+type MM = LRU
+
+
+handlerMap :: Prefix -> QueueInfo -> Message.CorrelationID -> HandlerMap Context (SessionST MM)
 handlerMap prefix queueInfo crl callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
     [ (Topic.interpreterSetProjectIDRequest                , respond Topic.update   Interpreter.setProjectID     )
     , (Topic.interpreterGetProjectIDRequest                , respond Topic.status   Interpreter.getProjectID     )
@@ -126,13 +131,16 @@ handlerMap prefix queueInfo crl callback = HandlerMap.fromList $ Prefix.prefixif
 
         --query topic = callback (const topic) . Processor.singleResult
 
-        call0 :: Proto.Serializable a => (a -> RPC Context SessionST ()) -> StateT Context SessionST [Message]
+        call0 :: Proto.Serializable a
+              => (a -> RPC Context (SessionST MM) ()) -> StateT Context (SessionST MM) [Message]
         call0 = callback id . Processor.noResult
 
-        optionalSync :: Proto.Serializable a => (a -> RPC Context SessionST ()) -> StateT Context SessionST [Message]
+        optionalSync :: Proto.Serializable a
+                     => (a -> RPC Context (SessionST MM) ()) -> StateT Context (SessionST MM) [Message]
         optionalSync = callback (const Topic.projectmanagerSyncGetRequest) . Processor.optResult . (.) Sync.syncIfNeeded
 
-        requiredSync :: Proto.Serializable a => (a -> RPC Context SessionST ()) -> StateT Context SessionST [Message]
+        requiredSync :: Proto.Serializable a
+                     => (a -> RPC Context (SessionST MM) ()) -> StateT Context (SessionST MM) [Message]
         requiredSync fun = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> fun args >> Sync.syncRequest)
 
 
@@ -140,11 +148,12 @@ extraImports :: [Session.Import]
 extraImports = ["FlowboxM.Libs.Flowbox.Std"]
 
 
-interpret :: Prefix -> QueueInfo
+interpret :: MemoryManager MM
+          => Prefix -> QueueInfo
           -> IORef Message.CorrelationID
           -> Pipes.Pipe (Message, Message.CorrelationID)
                         (Message, Message.CorrelationID, Flag)
-                        (Pipes.SafeT (StateT Context SessionST)) ()
+                        (Pipes.SafeT (StateT Context (SessionST MM))) ()
 interpret prefix queueInfo crlRef = forever $ do
     (message, crl) <- Pipes.await
     logger trace $ "Received message " ++ (message ^. Message.topic)
@@ -166,7 +175,7 @@ run cfg prefix ctx (input, output) = do
     interpreterThreadId <- Concurrent.myThreadId
     queueInfo           <- QueueInfo.mk
     (output1, input1)   <- Pipes.spawn Pipes.Unbounded
-    env <- (Env.resultCallBack .~ Value.reportOutputValue crlRef output) <$> Env.mkDef
+    env <- (Env.resultCallBack .~ Value.reportOutputValue crlRef output) <$> Env.mkDef def
     Concurrent.forkIO_ $ Pipes.runEffect $
             Pipes.fromInput input
         >-> Preprocess.preprocess prefix queueInfo (env ^. Env.fragileOperation) interpreterThreadId

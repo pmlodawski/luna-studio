@@ -24,6 +24,7 @@ Library
     Build-Depends:  base,
                     bytestring,
                     containers,
+                    data-default,
                     data-hash,
                     either,
                     exceptions,
@@ -39,6 +40,7 @@ Library
                     mtl,
                     pretty-show,
                     raw-strings-qq,
+                    time,
                     transformers
 
 

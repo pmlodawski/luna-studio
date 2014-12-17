@@ -38,53 +38,100 @@ def Int.>= self::Int a::Int:
 # def Int.dec:
 #     self.sub 1
 
+def Double.acc:
+    ```liftF1 variable #{self}```
+
 alias Path = String
 
 def load self::Std path::Path:
-    ```autoLift1 loadImageLuna #{path}```
+    ```autoLift1 realReadLuna #{path}```
 
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
 def Image.defocus self::Image radius::Int:
-    ```liftF1 (onEachChannel $ defocus #{radius}) #{self}```
+    ```liftF2 defocus #{radius} #{self}```
 
 def Image.motionBlur self::Image size::Int angle::Float:
-    ```liftF1 (onEachChannel $ motionBlur #{size} #{angle}) #{self}```
+    ```liftF3 motionBlur #{size} #{angle} #{self}```
 
 def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
-    ```liftF1 (onEachChannel $ bilateral #{psigma} #{csigma} #{size}) #{self}```
+    ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
 
-def Image.offset self::Image value::Float:
-    ```liftF1 (onEachValue $ offsetLuna #{value}) #{self}```
+def Image.offset self::Image value::Color:
+    ```liftF2 offsetLuna #{value} #{self}```
 
-def Image.contrast self::Image value::Float:
-    ```liftF1 (onEachValue $ contrastLuna #{value}) #{self}```
+def Image.contrast self::Image value::Color:
+    ```liftF2 contrastLuna #{value} #{self}```
 
-def Image.exposure self::Image blackpoint::Float ex::Float:
-    ```liftF1 (onEachValue $ exposureLuna #{blackpoint} #{ex}) #{self}```
+def Image.exposure self::Image blackpoint::Color ex::Color:
+    ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
-def Image.colorCorrect self::Image saturation::Float contrast::Float gamma::Float gain::Float offset::Float:
-    ```liftF1 (onEachRGB $ colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset}) #{self}```
+def Image.grade self::Image blackpoint::ColorBlack whitepoint::ColorWhite lift::ColorBlack gain::ColorWhite multiply::ColorWhite offset::ColorBlack gamma::ColorWhite:
+    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-def Image.grade self::Image blackpoint::Float whitepoint::Float lift::Float gain::Float multiply::Float offset::Float gamma::Float:
-    ```liftF1 (onEachValue $ gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma}) #{self}```
+def Image.colorCorrect self::Image saturation::Color contrast::Color gamma::Color gain::Color offset::Color:
+    ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
 
-def Image.saturate self::Image saturation::Float:
-    ```liftF1 (onEachRGB $ saturateLuna #{saturation}) #{self}```
+def Image.saturate self::Image saturation::Color:
+    ```liftF2 saturateLuna #{saturation} #{self}```
 
 def Image.posterize self::Image colors::Float:
-    ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
+    ```liftF2 posterizeLuna #{colors} #{self}```
 
+def Image.multiply val::Color:
+    ```liftF2 multiplyLuna #{val} #{self}```
+
+def Image.gamma val::Color:
+    ```liftF2 gammaLuna #{val} #{self}```
 
 def Image.key self::Image mode a::Float b::Float c::Float d::Float:
-    ```liftF1 (keyerLuna #{mode} #{a} #{b} #{c} #{d}) #{self}```
+    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
 
 def Image.differenceKey self::Image offset::Float gain::Float background::Image:
-    ```liftF2 (differenceKeyerLuna #{offset} #{gain}) #{background} #{self}```
+    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
 
-class Point:
-    x,y :: Double
+def Image.premultiply self::Image:
+    ```liftF1 premultiplyLuna #{self}```
+
+def Image.unpremultiply self::Image:
+    ```liftF1 unpremultiplyLuna #{self}```
+
+def Image.invert self::Image:
+    ```liftF1 invertLuna #{self}```
+
+def Image.histEq self::Image bins::Int:
+    ```liftF2 histEqLuna #{bins} #{self}```
+
+alias Threshold = (Float, Float)
+alias Clamp = Maybe (Float, Float)
+
+def Image.clamp self::Image thresholds::Threshold clamps::Clamp:
+    ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
+
+def Image.erode self::Image size::Int:
+    ```liftF2 erodeLuna #{size} #{self}```
+
+def Image.dilate self::Image size::Int:
+    ```liftF2 dilateLuna #{size} #{self}```
+
+def Image.open self::Image size::Int:
+    ```liftF2 openLuna #{size} #{self}```
+
+def Image.close self::Image size::Int:
+    ```liftF2 closeLuna #{size} #{self}```
+
+def Image.radialBlur self::Image size::Int angle::Float:
+    ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
+
+def Image.edgeDetect self::Image edgeOperator:
+    ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
+
+def Image.bayer self::Image bits::Int:
+    ```liftF2 orderedDitherLuna #{bits} #{self}```
+    
+class ```Point``` x y:
+    Point: x,y :: Double
 
 def Image.cornerPin self::Image p1::Point p2::Point p3::Point p4::Point:
     p1x = p1.x
@@ -96,11 +143,166 @@ def Image.cornerPin self::Image p1::Point p2::Point p3::Point p4::Point:
     p4x = p4.x
     p4y = p4.y
 
-    ```liftF1 (cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y}) #{self}```
+    ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
 def Image.blur self::Image kernelSize::Int:
-    ```liftF1 (gaussianLuna #{kernelSize}) #{self}```
+    ```liftF2 gaussianLuna #{kernelSize} #{self}```
 
 def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
-    ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
+    ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
+class ```MergeMode```:
+    Atop
+    Average
+    ColorBurn
+    ColorDodge
+    ConjointOver
+    Copy
+    Difference
+    DisjointOver
+    DivideBySource
+    DivideByDestination
+    Exclusion
+    From
+    Geometric
+    HardLight
+    Hypot
+    In
+    Mask
+    Matte
+    Minus
+    Multiply
+    Out
+    Over
+    Overlay
+    Plus
+    Screen
+    SoftLight
+    SoftLightPegtop
+    SoftLightIllusions
+    Stencil
+    Under
+    XOR
+
+class ```AlphaBlend```:
+    Adobe
+    Custom
+
+def Image.merge self::Image mode::MergeMode alphaBlendMode::AlphaBlend img::Image:
+    ```liftF4 mergeLuna #{mode} #{alphaBlendMode} #{self} #{img}```
+
+
+# TRANSFORMATIONS
+
+alias ImgMask = Maybe Image
+
+def noImgMask self::Std:
+    ```val (Nothing :: Maybe (Value Pure Safe Image))```
+
+def Image.rotate self::Image phi::Float:
+    ```liftF2 turnCenterLuna #{phi} #{self}```
+
+def Image.translate self::Image x::Int y::Int:
+    ```liftF3 translateLuna #{x} #{y} #{self}```
+
+def Image.scaleCenter self::Image x::Float  y::Float:
+    ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+
+def Image.scale self::Image x::Float y::Float:
+    ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+
+# VIEW
+
+def View.channel self::View name::String:
+    ```liftF2 View.get #{self} #{name}```
+
+def View.append self::View channel::String:
+    ```liftF2 View.append #{channel} #{self}```
+
+def View.remove self::View name::String:
+    ```liftF2 View.remove #{name} #{self}```
+
+def View.map self::View f:
+    ```liftF2 View.map #{f} #{self}```
+
+# GEOM
+
+class ```Point2``` a:
+    x,y :: a
+
+# class ```ControlPoint``` a:
+# class ControlPoint a:
+#     point               :: Point2 a
+#     handleIn, handleOut :: Maybe (Point2 a)
+
+# class ```Path``` a:
+#     closed   :: Bool
+#     vertices :: [ControlPoint a]
+
+# class ```Shape``` a:
+#     paths :: [Path a]
+
+# class ```Mask``` a:
+#     path    :: Path a
+#     feather :: Maybe (Path a)
+
+# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
+# alias Path a         = (Bool, [ControlPoint a])
+# alias Shape a        = [Path a]
+alias Mask a         = (Path a, Maybe (Path a))
+
+alias MaskD = Mask Float
+
+def point self::Std x y:
+    Point2 x y
+
+def nopoint self::Std:
+    ```val (Nothing :: Maybe (Point2 Double))```
+
+def controlPoint point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def path closed vertices:
+    (closed, vertices)
+
+def shape paths:
+    paths
+
+def mask path feather:
+    (path, feather)
+
+def rasterizeMask self::Std w::Int h::Int m::MaskD:
+    ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
+
+# COLORS
+
+class ```RGBA``` a:
+    rgbaR, rgbaG, rgbaB, rgbaA :: a
+
+alias Color = RGBA Double
+alias ColorBlack = RGBA Double
+alias ColorWhite = RGBA Double
+
+alias ColorCC = (Color, Color, Color, Color, Color)
+
+def constant self::Std width::Int height::Int color::Color:
+    ```liftF3 constantLuna #{width} #{height} #{color}```
+
+class ```Gamma``` a:
+    Gamma: a :: Double
+    Cineon
+    LStar
+    REDLog
+    SLog
+    SRGBGamma
+
+# alias GammaF = Gamma Double
+
+def Image.gammaToLinear self::Image gamma::Gamma:
+    ```liftF2 gammaToLinearLuna #{gamma} #{self}```
+
+def Image.gammaFromLinear self::Image gamma::Gamma:
+    ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
+
+def testCC self::Std a::ColorCC:
+    ```liftF1 testColorCC #{a}```

@@ -41,7 +41,7 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-modifyAll :: Session ()
+modifyAll :: Session mm ()
 modifyAll = do
     modifyMatching $ const . const True
     libIDs <- LibManager.nodes <$> Env.getLibManager
@@ -50,7 +50,7 @@ modifyAll = do
     mapM_ (`Env.addReload` Reload.ReloadLibrary) libIDs
 
 
-modifyLibrary :: Library.ID -> Session ()
+modifyLibrary :: Library.ID -> Session mm ()
 modifyLibrary libraryID = do
     let matchLib k _ = last k ^. CallPoint.libraryID == libraryID
     logger info $ "Mark modified: library " ++ show libraryID
@@ -58,7 +58,7 @@ modifyLibrary libraryID = do
     Env.addReload libraryID Reload.ReloadLibrary
 
 
---modifyDef :: Library.ID -> AST.ID -> Session ()
+--modifyDef :: Library.ID -> AST.ID -> Session mm ()
 --modifyDef libraryID defID = do
 --    let matchDef k v = last k ^. CallPoint.libraryID == libraryID
 --                         && v ^. CacheInfo.defID     == defID
@@ -66,7 +66,7 @@ modifyLibrary libraryID = do
 --    modifyMatching matchDef
 
 
-modifyBreadcrumbsRec :: Library.ID -> Breadcrumbs -> Session ()
+modifyBreadcrumbsRec :: Library.ID -> Breadcrumbs -> Session mm ()
 modifyBreadcrumbsRec libraryID bc = do
     let matchBC k v = last k ^. CallPoint.libraryID   == libraryID
                         && List.isPrefixOf bc (v ^. CacheInfo.breadcrumbs)
@@ -75,7 +75,7 @@ modifyBreadcrumbsRec libraryID bc = do
     Env.addReload libraryID Reload.ReloadLibrary
 
 
-modifyBreadcrumbs :: Library.ID -> Breadcrumbs -> Session ()
+modifyBreadcrumbs :: Library.ID -> Breadcrumbs -> Session mm ()
 modifyBreadcrumbs libraryID bc = do
     let matchBC k v = last k ^. CallPoint.libraryID == libraryID
                         && v ^. CacheInfo.breadcrumbs == bc
@@ -89,7 +89,7 @@ modifyBreadcrumbs libraryID bc = do
             else Reload.ReloadLibrary
 
 
-modifyNode :: Library.ID -> Node.ID -> Session ()
+modifyNode :: Library.ID -> Node.ID -> Session mm ()
 modifyNode libraryID nodeID = do
     let matchNode k _ = last k == CallPoint libraryID nodeID
     logger info $ "Mark modified: node " ++ show (libraryID, nodeID)
@@ -97,7 +97,7 @@ modifyNode libraryID nodeID = do
     Env.addReload libraryID Reload.ReloadFunctions
 
 
-modifyNodeSuccessors :: Library.ID -> Breadcrumbs -> Node.ID -> Session ()
+modifyNodeSuccessors :: Library.ID -> Breadcrumbs -> Node.ID -> Session mm ()
 modifyNodeSuccessors libraryID bc nodeID = do
     logger info $ concat ["Mark modified: node ", show (libraryID, nodeID), " successors"]
     graph <- fst <$> Env.getGraph (DefPoint libraryID bc)
@@ -106,21 +106,21 @@ modifyNodeSuccessors libraryID bc nodeID = do
     Env.addReload libraryID Reload.ReloadFunctions
 
 
-modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session ()
+modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session mm ()
 modifyMatching predicate = do
     matching <- MapForest.find predicate <$> Env.getCached
     mapM_ (setParentsStatus CacheStatus.Modified . fst) matching
     Env.setAllReady False
 
 
-setParentsStatus :: CacheStatus -> CallPointPath -> Session ()
+setParentsStatus :: CacheStatus -> CallPointPath -> Session mm ()
 setParentsStatus _      []            = return ()
 setParentsStatus status callPointPath = do
     Cache.setStatus status callPointPath
     setParentsStatus status $ init callPointPath
 
 
-markSuccessors :: CallDataPath -> CacheStatus -> Session ()
+markSuccessors :: CallDataPath -> CacheStatus -> Session mm ()
 markSuccessors callDataPath status =
     Traverse.next callDataPath >>=
     mapM_ (setParentsStatus status . CallDataPath.toCallPointPath)

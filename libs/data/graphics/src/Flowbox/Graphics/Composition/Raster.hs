@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
 
@@ -24,17 +24,17 @@ import           Flowbox.Prelude
 
 
 
-constant :: View.View v => Exp A.DIM2 -> [(Channel.Name, Exp Double)] -> Image v
+constant :: Exp A.DIM2 -> [(Channel.Name, Exp Double)] -> Image
 constant sh = Image.singleton . foldr appendChannel (View.empty "rgba")
     where appendChannel (name, value) = View.append (Channel.ChannelFloat name . Channel.FlatData $ Matrix.fill sh value)
 
 type CheckerboardColors f a = (f a, f a, f a, f a)
 type CheckerboardLine f a = (f a, Exp Double)
 
-checkerboard :: (View.View v, Color.ColorConvert c Color.RGB)
+checkerboard :: (Color.ColorConvert c Color.RGB)
              => Exp A.DIM2 -> Exp Double -> CheckerboardColors c (Exp Double)
              -> CheckerboardLine c (Exp Double) -> CheckerboardLine c (Exp Double)
-             -> Image v
+             -> Image
 checkerboard sh size (color1, color2, color3, color4) (lineColor, lineWidth) (lineColorCenter, lineWidthCenter) =
     Image.singleton $ foldr appendChannel (View.empty "rgba") ["rgba.r", "rgba.g", "rgba.b", "rgba.a"]
     where appendChannel name = View.append (Channel.ChannelFloat name . Channel.FlatData $ Matrix.generate sh (calculateValue name))

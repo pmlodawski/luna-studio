@@ -5,11 +5,13 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Interpreter.Session.Memory.Manager.NoManager where
 
-import Flowbox.Prelude
-import Flowbox.System.Log.Logger               as Logger
-import Luna.Interpreter.Session.Memory.Manager
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger               as Logger
+import           Luna.Interpreter.Session.Memory.Manager
+import qualified Luna.Interpreter.Session.Memory.Status  as Status
 
 
 
@@ -21,7 +23,19 @@ data NoManager = NoManager
                deriving (Show)
 
 
+instance Default NoManager where
+    def = NoManager
+
+
 instance MemoryManager NoManager where
-    clean _ status = do
+    reportUse    _ _ = return ()
+    reportDelete _ _ = return ()
+    clean status = do
         logger warning "Cleaning memory - not implemented"
         logger warning $ show status
+
+    cleanIfNeeded = do
+        status <- Status.status
+        when (Status.isUpperLimitExceeded status) $
+            clean status
+

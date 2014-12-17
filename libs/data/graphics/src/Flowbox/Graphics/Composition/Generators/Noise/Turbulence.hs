@@ -8,7 +8,6 @@ module Flowbox.Graphics.Composition.Generators.Noise.Turbulence where
 
 import qualified Data.Array.Accelerate     as A
 import qualified Math.Coordinate.Cartesian as Cartesian
-import           Math.Space.Space          (Grid)
 
 import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Prelude

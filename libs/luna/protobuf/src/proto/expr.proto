@@ -11,7 +11,7 @@ import "lit.proto";
 import "name.proto";
 import "pat.proto";
 import "type.proto";
-// last used id = 36 / 136
+// last used id = 37 / 137
 
 message Expr {
     enum Cls {
@@ -39,6 +39,7 @@ message Expr {
         Tuple        = 18;
         Typed        = 19;
         Var          = 20;
+        FuncVar      = 37;
         Wildcard     = 21;
 
         RangeFromTo  = 22;
@@ -208,6 +209,11 @@ message Typed {
 message Var {
     extend Expr { optional Var ext = 115; }
     optional string name = 1;
+}
+
+message FuncVar {
+    extend Expr { optional FuncVar ext = 137; }
+    optional generated.proto.name.Name fname = 1;
 }
 
 message Wildcard {

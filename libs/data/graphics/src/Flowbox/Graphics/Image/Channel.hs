@@ -4,11 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE RankNTypes    #-}
 
 module Flowbox.Graphics.Image.Channel where
 
-import Flowbox.Math.Matrix as M
+import Flowbox.Graphics.Composition.Generators.Rasterizer
+import Flowbox.Graphics.Composition.Generators.Sampler
+import Flowbox.Graphics.Composition.Generators.Structures
+import Flowbox.Math.Matrix as M hiding ((++))
 import Flowbox.Prelude
 
 
@@ -16,23 +20,30 @@ import Flowbox.Prelude
 type Name = String
 type Select = [Name]
 
-data Channel = ChannelFloat Name (ChannelData Double)
-             | ChannelInt   Name (ChannelData Int)
-             | ChannelBit   Name (ChannelData Bool)
-             deriving (Show)
+data Channel = ChannelFloat     Name (ChannelData Double)
+             | ChannelInt       Name (ChannelData Int)
+             | ChannelBit       Name (ChannelData Bool)
+             | ChannelGenerator Name (ContinousGenerator (Exp Double))
 
-data ChannelData a = FlatData { _matrix     :: Matrix2 a
-                              --, dataBounds :: Bounds
-                              }
-                              deriving (Show)
+data ChannelData a = FlatData { _matrix :: Matrix2 a }
+                   deriving Show
+
 makeLenses ''ChannelData
 
-name :: Channel -> Name
-name (ChannelFloat n _) = n
-name (ChannelInt   n _) = n
-name (ChannelBit   n _) = n
+instance Show Channel where
+    show c = "Channel {name = \"" ++ name c ++ "\"}"
 
-compute :: Backend -> Channel -> Channel
-compute b (ChannelFloat n (FlatData mat)) = ChannelFloat n . FlatData . M.compute b $ mat
-compute b (ChannelInt   n (FlatData mat)) = ChannelInt   n . FlatData . M.compute b $ mat
-compute b (ChannelBit   n (FlatData mat)) = ChannelBit   n . FlatData . M.compute b $ mat
+name :: Channel -> Name
+name (ChannelFloat     n _) = n
+name (ChannelInt       n _) = n
+name (ChannelBit       n _) = n
+name (ChannelGenerator n _) = n
+
+compute :: Backend -> Sampler Double -> Channel -> Channel
+compute b _ (ChannelFloat     n d) = ChannelFloat n . computeFlatData b $ d
+compute b _ (ChannelInt       n d) = ChannelInt   n . computeFlatData b $ d
+compute b _ (ChannelBit       n d) = ChannelBit   n . computeFlatData b $ d
+compute b s (ChannelGenerator n g) = ChannelFloat n . FlatData . rasterizer . s $ g
+
+computeFlatData :: (Elt e) => Backend -> ChannelData e -> ChannelData e
+computeFlatData b = over matrix $ M.compute b

@@ -48,7 +48,6 @@ def main():
         print_info ("Starting ghci for %s" % pkg.name)
         old_action = signal.signal(signal.SIGINT, signal.SIG_IGN)
         os.chdir(os.environ["PWD"])
-
         noprelude = "-XNoImplicitPrelude"
         if args.with_prelude:
             noprelude = ""

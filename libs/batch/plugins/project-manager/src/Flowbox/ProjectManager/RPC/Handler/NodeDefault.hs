@@ -10,10 +10,10 @@ module Flowbox.ProjectManager.RPC.Handler.NodeDefault where
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
 import qualified Flowbox.Batch.Handler.NodeDefault                                                             as BatchND
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Request    as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Status     as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Remove.Request as NodeDefaultRemove
@@ -44,7 +44,7 @@ set :: NodeDefaultSet.Request -> RPC Context IO NodeDefaultSet.Update
 set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID _) = do
     bc    <- decodeE tbc
     value <- decodeE tvalue
-    let dstPort   = decodeListP tdstPort
+    let dstPort   = decodeP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -56,7 +56,7 @@ set request@(NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectI
 remove :: NodeDefaultRemove.Request -> RPC Context IO NodeDefaultRemove.Update
 remove request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
-    let dstPort   = decodeListP tdstPort
+    let dstPort   = decodeP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
