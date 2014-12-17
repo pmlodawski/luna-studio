@@ -38,7 +38,8 @@ import qualified Luna.Data.HAST.Expr                         as HExpr
 import qualified Luna.Data.HAST.Lit                          as HLit
 import qualified Luna.Data.HAST.Module                       as HModule
 import qualified Luna.Data.HAST.Extension                    as HExtension
-import qualified Luna.Data.HAST.Comment                      as HComment
+--import qualified Luna.Data.HAST.Comment                      as HComment
+import           Luna.Data.HAST.Comment (Comment(H1, H2, H3, H4, H5))
 
 import           Luna.Pass                    (Pass(Pass), PassMonad)
 import qualified Luna.Pass                    as Pass
@@ -53,6 +54,7 @@ import           Luna.ASTNew.Name.Pattern2    (NamePat(NamePat), Segment(Segment
 import qualified Luna.ASTNew.Name.Pattern2    as NamePat
 
 import qualified Luna.Pass2.Target.HS.HASTGen.State as State
+import           Luna.Pass2.Target.HS.HASTGen.State (addComment, setModule, getModule)
 
 
 
@@ -106,15 +108,14 @@ genModule (Label lab (Module path name body)) = do
                 $ HModule.addExt HExtension.TemplateHaskell
                 $ HModule.addExt HExtension.UndecidableInstances
                 $ HModule.addExt HExtension.ViewPatterns
-                $ HModule.mk (["TEST"])
-                -- $ HModule.mk (path ++ [name])
+                $ HModule.mk (fmap fromString $ path ++ [name])
         --params  = view LType.params cls
         --modCon  = LExpr.ConD 0 name fields
         --modConName = Naming.modCon name
     
-    State.setModule mod
+    setModule mod
     
-    --State.addComment $ HExpr.Comment $ HComment.H1 $ "Data types"
+    addComment $ H1 "Data types"
     --genCon' cls modCon stdDerivings
     --State.addComment $ HExpr.Comment $ HComment.H5 $ "Other data types"
     --mapM_ genExpr classes
