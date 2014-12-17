@@ -40,6 +40,7 @@ Executable interpreter
                     flowbox-serialization,
                     MissingH,
                     mmorph,
+                    multiset,
                     mtl,
                     optparse-applicative,
                     pipes,
