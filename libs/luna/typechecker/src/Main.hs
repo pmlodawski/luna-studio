@@ -172,17 +172,9 @@ main = do f_print [Bold,Green] "MAIN"
                               tmp `seq` return tmp
           f_print [Cyan] "Passes"
           let src = Source "Maintest_luna" (String maintest_luna)
-          --east <- runEitherT $ do
-          --  (ast1, astinfo) <- Pass.run1_ Stage1.pass src
-          --  aa1             <- Pass.run1_ AA.pass ast1
-          --  ast2            <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo ast1
-          --  aa2             <- Pass.run1_ AA.pass ast2
-          --  constraints     <- Pass.run1_ tcpass ast2
 
-          --  return (ast2,aa2,constraints)
           result <- runEitherT $ do
             (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
-            --return (ast2, astinfo2)
             sa1              <- Pass.run1_ SA.pass ast1
             (ast2, astinfo2) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo1 ast1
             (ast3, astinfo3) <- Pass.run2_ ImplSelf.pass astinfo2 ast2
@@ -192,24 +184,35 @@ main = do f_print [Bold,Green] "MAIN"
             ast5             <- Pass.run1_ SSA.pass ast4
             hast             <- Pass.run1_ HASTGen.pass ast5
             hsc              <- Pass.run1_ HSC.pass hast
-            --return ast4
-            --return (ast4, sa2)
-            return ((ast5,sa2, hast), hsc, constraints)
+            return  ( (ast1, astinfo1)
+                    , sa1
+                    , (ast2, astinfo2)
+                    , (ast3, astinfo3)
+                    , constraints
+                    , sa2
+                    , ast4
+                    , ast5
+                    , hast
+                    , hsc
+                    )
 
           case result of
             Left _                      -> f_print [Red, Bold] "some error, sorry"
-            Right (r, hsc, constraints) -> do
+            Right ( (ast1, astinfo1), sa1, (ast2, astinfo2), (ast3, astinfo3), constraints, sa2, ast4, ast5, hast, hsc ) -> do
               section $ do
-                printer_aux "AST (R)"        (ppShow r)
-                printer_aux "AST INFO (HSC)" (unpack hsc)
-                printer_aux "CONSTR"         (ppShow constraints)
-
-              --let ast_label  = ast ^. Label.label
-              --    ast_module = ast ^. Label.element
-
-              --section $ do
-              --  printer_aux "LABEL"  (ppShow ast_label)
-              --  printer_aux "MODULE" (ppShow ast_module)
+                printer_aux " 1.1. ast1"        $ ppShow $ ast1
+                printer_aux " 1.2. astinfo1"    $ ppShow $ astinfo1
+                printer_aux " 2.   sa1"         $ ppShow $ sa1
+                printer_aux " 3.1. ast2"        $ ppShow $ ast2
+                printer_aux " 3.2. astinfo2"    $ ppShow $ astinfo2
+                printer_aux " 4.1. ast3"        $ ppShow $ ast3
+                printer_aux " 4.2. astinfo3"    $ ppShow $ astinfo3
+                printer_aux " 5.   constraints" $ ppShow $ constraints
+                printer_aux " 6.   sa2"         $ ppShow $ sa2
+                printer_aux " 7.   ast4"        $ ppShow $ ast4
+                printer_aux " 8.   ast5"        $ ppShow $ ast5
+                printer_aux " 9.   hast"        $ ppShow $ hast
+                printer_aux "10.   hsc"         $ unpack $ hsc
 
 
 
