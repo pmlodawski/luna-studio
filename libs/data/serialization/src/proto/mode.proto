@@ -9,9 +9,8 @@ package generated.proto.mode;
 
 import "data.proto";
 
-
 message Mode {
-    optional int32 someDummyParam = 6546;
+	repeated generated.proto.data.ChannelDescription channels = 1;
 }
 
 message ModeValue {
