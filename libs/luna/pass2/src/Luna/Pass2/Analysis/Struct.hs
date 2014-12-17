@@ -111,15 +111,20 @@ aaDecl d@(Label lab decl) = case decl of
 -- FIXME [wd]: remove the assumption that a is NamePath. variables should always contain name as NamePath!
 aaExpr :: (SACtx lab m a, a~NamePath) => (LExpr lab a) -> SAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
-    var@(Expr.Var name)     -> regParent id
-                            *> regAlias id name
-                            *> continue
-    cons@(Expr.Cons name)   -> regParent id
-                            *> regAlias id (Name.fromName name)
-                            *> continue
-    _                       -> continue
+    var@(Expr.Var name)        -> regParent id
+                               *> regAlias id name
+                               *> continue
+    cons@(Expr.Cons name)      -> regParent id
+                               *> regAlias id (Name.fromName name)
+                               *> continue
+    Expr.RecUpdt name sel expr -> regParent  id
+                               *> regAlias   id (Name.fromName name)
+                               *> regVarName id (Name.fromName name)
+                               *> continue
+    _                          -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e
+
 
 registerDecls :: SACtx lab m a => [LDecl lab a] -> SAPass m ()
 registerDecls decls =  mapM_ registerHeaders  decls

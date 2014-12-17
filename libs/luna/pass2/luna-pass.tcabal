@@ -21,12 +21,12 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
                   TemplateHaskell,
-                  OverloadedStrings,
                   TupleSections,
                   ConstraintKinds,
                   FlexibleInstances,
                   MultiParamTypeClasses,
-                  FlexibleContexts
+                  FlexibleContexts,
+                  LambdaCase
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
@@ -44,7 +44,8 @@ Library
                   split,
                   transformers,
                   ansi-wl-pprint,
-                  bytestring
+                  bytestring,
+                  text
 
 
 Executable luna-pass-test
@@ -80,7 +81,8 @@ Executable luna-pass-test
                   ansi-wl-pprint,
                   data-default,
                   pretty-show,
-                  bytestring
+                  bytestring,
+                  text
 
 
 Test-Suite tests

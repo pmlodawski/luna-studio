@@ -50,4 +50,5 @@ Library
                   HMap,
                   either,
                   bytestring,
-                  utf8-string
+                  utf8-string,
+                  text

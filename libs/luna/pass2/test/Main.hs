@@ -25,6 +25,8 @@ import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
 import qualified Luna.Pass2.Transform.Desugar.ImplicitSelf as ImplSelf
 import qualified Luna.Pass2.Transform.Hash                 as Hash
 import qualified Luna.Pass2.Transform.SSA                  as SSA
+import qualified Luna.Pass2.Target.HS.HASTGen              as HASTGen
+import qualified Luna.Pass2.Target.HS.HSC                  as HSC
 import           Luna.Data.Namespace (Namespace(Namespace))
 import qualified Luna.Pass as Pass
 import Control.Monad.Trans.Either
@@ -32,6 +34,10 @@ import Control.Monad.Trans.Class (lift)
 import qualified Data.ByteString as ByteStr
 import Luna.Data.Source (Source(Source), Medium(File), Code(Code))
 import qualified Luna.Data.Source as Source
+import Data.Text.Lazy (unpack)
+
+
+
 --patchedParserState info' = def
 --    & ParserState.info .~ info'
 --    & ParserState.conf .~ parserConf
@@ -56,11 +62,14 @@ main = do
         sa2              <- Pass.run1_ SA.pass ast3
         ast4             <- Pass.run1_ Hash.pass ast3
         ast5             <- Pass.run1_ SSA.pass ast4
-        return ast4
+        hast             <- Pass.run1_ HASTGen.pass ast5
+        hsc              <- Pass.run1_ HSC.pass hast
+        --return ast4
         --return (ast4, sa2)
-        --return (ast3,sa2)
+        return ((ast5,sa2, hast), hsc)
 
     case result of
         Left  e -> putStrLn e
-        Right r -> putStrLn (ppShow r) 
+        Right (r,hsc) -> putStrLn (ppShow r)
+                      *> putStrLn (unpack hsc)
     return ()

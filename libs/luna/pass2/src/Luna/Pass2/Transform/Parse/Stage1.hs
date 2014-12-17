@@ -76,7 +76,7 @@ pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias 
 
 passRunner src = do
     (Source name (Code code)) <- Source.read src
-    result <- lift . hoistEither . (tmpFixErrorParse (Parser.moduleParser [TName $ fromString name] Parser.defState)) $ code
+    result <- lift . hoistEither . (tmpFixErrorParse (Parser.moduleParser [name] Parser.defState)) $ code
     let astinfo = view ParserState.info $ snd result
     return $ (fst result, astinfo)
 

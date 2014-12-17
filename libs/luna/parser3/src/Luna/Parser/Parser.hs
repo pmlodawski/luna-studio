@@ -26,7 +26,7 @@ import qualified Data.ByteString              as B
 import qualified Data.ByteString.UTF8         as UTF8
 import           Data.CharSet.ByteSet         as S
 import           Data.Default
-import           Flowbox.Prelude              hiding (noneOf, maybe, element, cons)
+import           Flowbox.Prelude              hiding (noneOf, maybe, element, cons, (<>))
 import qualified Flowbox.Prelude              as Prelude
 import qualified Luna.Data.ASTInfo            as ASTInfo
 import qualified Luna.Parser.Token            as Tok
@@ -500,13 +500,32 @@ lastLexemeEmpty = do
 -----------------------------------------------------------
 -- Expressions
 -----------------------------------------------------------
-expr       = exprT entBaseE
+expr       = tlExpr entBaseE
 
-exprSimple = exprT pEntBaseSimpleE
+exprSimple = tlExpr pEntBaseSimpleE
 
-exprT base =   try (labeled (Expr.Assignment <$> pattern <* (Tok.reservedOp "=") <*> opTupleTE base)) -- FIXME
-           <|> opTupleTE base
-           <?> "expression"
+
+-- === Top Level pattern, variable, record updates chains === --
+
+tlRecUpdt    = assignSeg $ Expr.RecUpdt    <$> varOp <*> many1 recAcc
+tlExprPat    = assignSeg $ Expr.Assignment <$> pattern
+tlExprPatVar = assignSeg $ Expr.Assignment <$> varP
+
+assignSeg p = p <* Tok.assignment
+
+tlExprExtHead =   try tlExprPat
+              <|> tlExprBasicHead
+
+tlExprBasicHead =  try tlExprPatVar
+               <|> try tlRecUpdt
+
+tlExprParser head base =   (labeled $ head <*> tlExprBasic base)
+                       <|> opTupleTE base
+
+tlExpr      = tlExprParser tlExprExtHead
+tlExprBasic = tlExprParser tlExprBasicHead
+
+-- === / === --
 
 
 opE       = opTE entBaseE
@@ -525,8 +544,7 @@ appE base = p <??> ((\i a s -> label i $ callBuilder2 s a) <$> nextID <*> many1 
 termE base = base <??> (flip applyAll <$> many1 (termBaseE base))  ------  many1 (try $ recUpdE))
 
 
-termBaseE p = choice [ try recUpdE
-                     , accE
+termBaseE p = choice [ accE
                      , callTermE p
                      ]
 
@@ -537,8 +555,6 @@ accBaseE  = (Tok.accessor *> nameBase)
 nameBase =   (Name.VarName  <$> varOp)
          <|> (Name.TypeName <$> Tok.conIdent)
 
-
-recUpdE   = (\id sel expr src -> label id (Expr.RecUpdt src sel expr)) <$> nextID <*> many1 recAcc <* Tok.assignment <*> exprSimple
 
 accE      = try( (\id a b -> label id $ Expr.Accessor a b) <$> nextID <*> accBaseE) -- needed by the syntax [1..10]
 
@@ -557,7 +573,7 @@ callTermE p = (\id a b-> label id (Expr.app b a)) <$ lastLexemeEmpty <*> nextID 
 entBaseE        = entConsE entComplexE
 pEntBaseSimpleE = entConsE entSimpleE
 
-entConsE base = choice [ try $ labeled (Expr.Grouped <$> parensE (exprT base))
+entConsE base = choice [ try $ labeled (Expr.Grouped <$> parensE (tlExpr base))
                        , base
                        ]
 

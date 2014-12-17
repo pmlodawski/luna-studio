@@ -119,22 +119,6 @@ withParentID f = do pid <- popID
 ----switchID :: NamespaceState m => ID -> m ()
 ----switchID id = modify (currentID .~ id)
 
-regModule :: NamespaceState m => Module a e -> m ()
-regModule = undefined -- regElBy AST.Module Module.id
-
-regExpr :: NamespaceState m => Expr a v -> m ()
-regExpr = undefined -- regElBy AST.Expr Expr.id
-
-regLit :: NamespaceState m => Lit -> m ()
-regLit = undefined -- regElBy AST.Lit Lit.id
-
-regPat :: NamespaceState m => Pat a -> m ()
-regPat = undefined -- regElBy AST.Pat Pat.id
-
-regType :: NamespaceState m => Type a -> m ()
-regType = undefined -- regElBy AST.Type Type.id
-
-
 regOrphan = modifyStructInfo .: StructInfo.regOrphan
 
 

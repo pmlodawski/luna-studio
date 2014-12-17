@@ -29,7 +29,7 @@ main = do
     args <- getArgs
     let path = args !! 0
 
-    r <- Parser.parseFile path $ Parser.moduleParser [TName $ fromString "x"] Parser.defState
+    r <- Parser.parseFile path $ Parser.moduleParser ["x"] Parser.defState
     --r <- Parser.parseFile path $ Parser.exprParser (patchedParserState $ ASTInfo.mk 0)
     case r of
         Left  e -> displayIO stdout $ Parser.renderErr e
