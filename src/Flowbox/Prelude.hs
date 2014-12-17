@@ -21,17 +21,18 @@ module Flowbox.Prelude(
 
 import           Control.Applicative       as X
 import           Control.Lens              as X
-import           Data.String               as X (IsString(fromString))
-import           Control.Monad.IO.Class    as X (MonadIO, liftIO)
-import           Data.Monoid               as X (Monoid, mempty, mappend, mconcat, (<>))
+import           Data.Default              as X
 import           GHC.Generics              as X (Generic)
+import           Data.String.Repr          as X (StrRepr, strRepr)
+import           Control.Monad.IO.Class    as X (MonadIO, liftIO)
+import           Data.String               as X (IsString(fromString))
+import           Data.Monoid               as X (Monoid, mempty, mappend, mconcat, (<>))
+import           GHC.Exts                  as X (IsList, Item, fromList, fromListN, toList)
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.Trans       (lift)
 import           Control.Monad.Trans.Class (MonadTrans)
-import           Data.Default              as X
 import           Data.Foldable             (forM_)
 import qualified Data.Traversable          as Traversable
-import           Data.String.Repr          as X (StrRepr, strRepr)
 import           Text.Show.Pretty          (ppShow)
 import           Data.List                 (intersperse)
 
