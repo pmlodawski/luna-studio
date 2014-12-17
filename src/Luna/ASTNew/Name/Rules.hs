@@ -10,7 +10,7 @@ module Luna.ASTNew.Name.Rules where
 
 import Flowbox.Prelude
 import qualified Data.Char as Char
-
+import           Luna.ASTNew.Name.Path (NamePath(NamePath))
 
 ----------------------------------------------------------------------
 -- Const rules
@@ -28,13 +28,13 @@ isTName   = isUpperName
 isCName   = isUpperName
 isTVName  = isLowerName
 
-isOpName n = n `subsetOf` opChars
+isOpName (NamePath n _) = n `subsetOf` opChars
 
-isLowerName []    = False
-isLowerName (c:_) = Char.isLower c || c == '_'
+isLowerName (NamePath [] _)    = False
+isLowerName (NamePath (c:_) _) = Char.isLower c || c == '_'
 
-isUpperName []    = False
-isUpperName (c:_) = Char.isUpper c
+isUpperName (NamePath [] _)    = False
+isUpperName (NamePath (c:_) _) = Char.isUpper c
 
 
 ----------------------------------------------------------------------

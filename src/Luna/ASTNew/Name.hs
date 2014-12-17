@@ -19,6 +19,9 @@ import           Data.String             (IsString, fromString)
 
 import           Luna.ASTNew.Name.Rules  as X
 import qualified Luna.ASTNew.Name.Assert as Assert
+import qualified Luna.ASTNew.Name.Path  as NamePath
+import           Luna.ASTNew.Name.Path (NamePath(NamePath))
+import           Luna.ASTNew.Name.Hash (Hashable, hash)
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -31,8 +34,8 @@ class Convert a b where
 
 
 class NameClass n where
-    toName   :: String -> n
-    fromName :: n      -> String
+    toName   :: NamePath -> n
+    fromName :: n      -> NamePath
 
 ----------------------------------------------------------------------
 -- Data types
@@ -42,16 +45,16 @@ data Name = V  VName
           | T  TName
           | C  CName
           | TV TVName
-          deriving (Show, Eq, Generic, Read)
+          deriving (Show, Eq, Ord, Generic, Read)
 
 data NameBase = VarName  VName
               | TypeName TName
-              deriving (Show, Eq, Generic, Read)
+              deriving (Show, Eq, Ord, Generic, Read)
 
-newtype VName  = VName  String deriving (Show, Eq, Generic, Read)
-newtype TName  = TName  String deriving (Show, Eq, Generic, Read)
-newtype CName  = CName  String deriving (Show, Eq, Generic, Read)
-newtype TVName = TVName String deriving (Show, Eq, Generic, Read)
+newtype VName  = VName  NamePath deriving (Show, Eq, Ord, Generic, Read)
+newtype TName  = TName  NamePath deriving (Show, Eq, Ord, Generic, Read)
+newtype CName  = CName  NamePath deriving (Show, Eq, Ord, Generic, Read)
+newtype TVName = TVName NamePath deriving (Show, Eq, Ord, Generic, Read)
 
 vname  (Assert.isVName  -> s) = VName  s
 tname  (Assert.isTName  -> s) = TName  s
@@ -63,10 +66,10 @@ tvname (Assert.isTVName -> s) = TVName s
 -- Instances
 ----------------------------------------------------------------------
 
-instance IsString VName  where fromString = vname
-instance IsString TName  where fromString = tname
-instance IsString CName  where fromString = cname
-instance IsString TVName where fromString = tvname
+instance IsString VName  where fromString = vname  . NamePath.single
+instance IsString TName  where fromString = tname  . NamePath.single
+instance IsString CName  where fromString = cname  . NamePath.single
+instance IsString TVName where fromString = tvname . NamePath.single
 
 instance NameClass VName where
     toName             = VName
@@ -93,3 +96,5 @@ instance Convert VName  VName
 instance Convert TName  TName
 instance Convert CName  CName
 instance Convert TVName TVName
+
+instance Hashable VName where hash (VName name) = hash name

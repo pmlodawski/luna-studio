@@ -12,6 +12,8 @@ import           Luna.Data.HAST.Comment   (Comment)
 import           Luna.Data.HAST.Deriving  (Deriving)
 import           Luna.Data.HAST.Extension (Extension)
 import qualified Luna.Data.HAST.Lit       as Lit
+import           Data.Text.Lazy (Text)
+
 
 type Lit = Lit.Lit
 
@@ -21,44 +23,44 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | TupleP     { items :: [Expr]                                                          }
           | ListE      { items :: [Expr]                                                          }
           | ListT      { item  :: Expr                                                            }
-          | StringLit  { litval :: String                                                         }
-          | Var        { name :: String                                                           }
-          | VarE       { name :: String                                                           }
-          | VarT       { name :: String                                                           }
+          | StringLit  { litval :: Text                                                         }
+          | Var        { name :: Text                                                           }
+          | VarE       { name :: Text                                                           }
+          | VarT       { name :: Text                                                           }
           | LitT       { lval :: Lit                                                              }
           | Typed      { cls       :: Expr     , expr      :: Expr                                }
           | TypedP     { cls       :: Expr     , expr      :: Expr                                }
           | TypedE     { cls       :: Expr     , expr      :: Expr                                }
-          | TySynD     { name      :: String   , paramsE   :: [Expr]      , dstType   :: Expr     } -- FIXME: paramsE -> params
-          | Function   { name      :: String   , pats      :: [Expr]      , expr      :: Expr     }
+          | TySynD     { name      :: Text   , paramsE   :: [Expr]      , dstType   :: Expr     } -- FIXME: paramsE -> params
+          | Function   { name      :: Text   , pats      :: [Expr]      , expr      :: Expr     }
           | Lambda     { paths     :: [Expr]   , expr      :: Expr                                }
           | LetBlock   { exprs     :: [Expr]   , result    :: Expr                                }
           | LetExpr    { expr      :: Expr                                                        }
           | DoBlock    { exprs :: [Expr]                                                          }
-          | DataD      { name      :: String   , params    :: [String]    , cons      :: [Expr] , derivings :: [Deriving]   }
-          | NewTypeD   { name      :: String   , paramsE   :: [Expr]      , con       :: Expr     } -- FIXME: paramsE -> params
+          | DataD      { name      :: Text   , params    :: [Text]    , cons      :: [Expr] , derivings :: [Deriving]   }
+          | NewTypeD   { name      :: Text   , paramsE   :: [Expr]      , con       :: Expr     } -- FIXME: paramsE -> params
           | InstanceD  { tp        :: Expr     , decs      :: [Expr]                              }
-          | Con        { name      :: String   , fields    :: [Expr]                              }
-          | ConE       { qname :: [String]                                                        }
-          | ConT       { name :: String                                                           }
-          | ConP       { name :: String                                                           }
+          | Con        { name      :: Text   , fields    :: [Expr]                              }
+          | ConE       { qname :: [Text]                                                        }
+          | ConT       { name :: Text                                                           }
+          | ConP       { name :: Text                                                           }
           | CondE      { cond :: Expr , success :: [Expr], failure :: [Expr]                      }
-          | RecUpdE    { expr :: Expr , name :: String, val :: Expr}
-          -- | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr] , thexpressions :: [Expr] }
-          | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , body  :: [Expr]}
-          | Import     { qualified :: Bool     , segments  :: [String]    , rename    :: Maybe String                           }
-          | ImportNative { code :: String                                                      }
+          | RecUpdE    { expr :: Expr , name :: Text, val :: Expr}
+          -- | Module     { path      :: [Text] , ext       :: [Extension] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr] , thexpressions :: [Expr] }
+          | Module     { path      :: [Text] , ext       :: [Extension] , imports   :: [Expr]   , body  :: [Expr]}
+          | Import     { qualified :: Bool     , segments  :: [Text]    , rename    :: Maybe Text                           }
+          | ImportNative { code :: Text                                                      }
           | AppE       { src       :: Expr     , dst       :: Expr                                }
           | AppT       { src       :: Expr     , dst       :: Expr                                }
           | AppP       { src       :: Expr     , dst       :: Expr                                }
-          | Infix      { name      :: String   , src       :: Expr        , dst          :: Expr  }
+          | Infix      { name      :: Text   , src       :: Expr        , dst          :: Expr  }
           | Lit        { lval :: Lit                                                              }
-          | Native     { code :: String                                                           }
+          | Native     { code :: Text                                                           }
           | THE        { expr :: Expr                                                             }
           | CaseE      { expr :: Expr, matches :: [Expr]                                          }
           | Match      { pat :: Expr, matchBody :: Expr }
           | Comment    { comment :: Comment }
-          | ViewP      { name :: String, dst :: Expr} 
+          | ViewP      { name :: Text, dst :: Expr} 
           | WildP
           | RecWildP
           | NOP
