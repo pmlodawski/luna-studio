@@ -70,21 +70,6 @@ message Interpreter {
         }
     }
     message SerializationMode {
-        message DefaultGet {
-            message Request { }
-            message Status {
-                required Request request = 1;
-                required generated.proto.mode.Mode mode = 2;
-            }
-        }
-        message DefaultSet {
-            message Request {
-                required generated.proto.mode.Mode mode = 1;
-            }
-            message Update {
-                required Request request = 1;
-            }
-        }
         message Get {
             message Request {
                 required CallPointPath callPointPath = 1;
