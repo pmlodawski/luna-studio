@@ -53,6 +53,12 @@ guard :shell, :version => 2, :cli => "--color" do
       command "./playground" if command("ghc playground.hs")
     end
   end
+
+  watch(%r{^src/Maintest.luna$}) do |m|
+    lastbuildguard(m[0]) do
+      section "Luna file change", "../../../dist/bin/libs/luna-typechecker"
+    end
+  end
 end
 
 
