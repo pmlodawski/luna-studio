@@ -71,27 +71,24 @@ def command(cmd, inp=nil)
   finish = Time.now
   diff = finish - start
 
-  if status.exitstatus === 0
-    puts "  exit code: #{status.exitstatus}".black
-  else
-    puts "  exit code: #{status.exitstatus}".light_white
+  if diff > 5 then puts ("  * ".blue + ("exec time: %.2f sec" % diff))
+              else puts ("  * ".blue + ("exec time: %.2f sec" % diff).black)
   end
 
-  if diff > 5
-    diff = "%.2f" % diff
-    puts "  exec time: #{diff} sec"
+  if status.exitstatus === 0 then puts ("  * ".blue + "exit code: #{status.exitstatus}".black)
+                             else puts ("  * ".blue + "exit code: #{status.exitstatus}".light_white)
   end
 
   if stdout
-    puts "STDOUT".starsallaround.green
-    puts stdout
+    puts "* * STDOUT".starsallaround.green
+    puts stdout.each_line.map {|l| "  * ".green + l}.join
   else
-    puts "STDOUT: none".starsallaround.green
+    puts "* * STDOUT: none".starsallaround.green
   end
 
   unless stderr.empty?
-    puts "STDERR".starsallaround.red
-    puts stderr
+    puts "* * STDERR".starsallaround.red
+    puts stderr.each_line.map {|l| "  * ".red + l}.join
   end
 
   status.exitstatus === 0
