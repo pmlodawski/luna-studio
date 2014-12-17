@@ -12,23 +12,21 @@
 
 module Luna.Data.Serialize.Proto.Conversion.Name where
 
-import qualified Data.Map as Map
-
-import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Name.Name                      as Gen
-import           Luna.AST.Name                                  (Name (Name))
-import qualified Luna.AST.Name                                  as Name
-import qualified    Generated.Proto.Name.Segment as Gen
+import qualified Generated.Proto.Name.Name        as Gen
+import qualified Generated.Proto.Name.Segment     as Gen
 import qualified Generated.Proto.Name.Segment.Cls as Gen
+import           Luna.AST.Name                    (Name (Name))
+import qualified Luna.AST.Name                    as Name
+
 
 
 instance Convert Name Gen.Name where
-    encode (Name base segments) = Gen.Name (encodePJ base) (encodeList segments)
+    encode (Name base segments) = Gen.Name (encodePJ base) (encode segments)
     decode (Gen.Name base segments) =
         Name <$> decodePJ base (missing "Name" "base")
-             <*> decodeList segments
+             <*> decode segments
 
 
 instance Convert Name.Segment Gen.Segment where

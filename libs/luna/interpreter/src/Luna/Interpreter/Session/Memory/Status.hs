@@ -8,45 +8,55 @@
 
 module Luna.Interpreter.Session.Memory.Status where
 
-import           Data.Int  (Int64)
-import qualified GHC.Stats as Stats
+import           Data.Int   (Int64)
+import qualified GHC.Stats  as Stats
+import qualified System.Mem as Mem
 
-import           Flowbox.Control.Error                  (safeLiftIO')
+import           Flowbox.Control.Error                       (safeLiftIO')
 import           Flowbox.Prelude
-import           Flowbox.Source.Location                (loc)
-import           Luna.Interpreter.Session.Env.State     (Session)
-import qualified Luna.Interpreter.Session.Env.State     as Session
-import qualified Luna.Interpreter.Session.Error         as Error
-import           Luna.Interpreter.Session.Memory.Config (Config)
-import qualified Luna.Interpreter.Session.Memory.Config as Config
+import           Flowbox.Source.Location                     (loc)
+import           Luna.Interpreter.Session.Env.Session        (Session)
+import qualified Luna.Interpreter.Session.Env.State          as Session
+import qualified Luna.Interpreter.Session.Error              as Error
+import           Luna.Interpreter.Session.Memory.Config      (Config)
+import qualified Luna.Interpreter.Session.Memory.Config      as Config
+import           Luna.Interpreter.Session.Memory.Data.Status (Status)
+import qualified Luna.Interpreter.Session.Memory.Data.Status as Status
 
-
-
-data Status = BelowLimits        { _residency :: Int64 }
-            | LowerLimitExceeded { _residency :: Int64 }
-            | UpperLimitExceeded { _residency :: Int64 }
-            deriving (Show)
-
-makeLenses ''Status
 
 
 fromResidency :: Config -> Int64 -> Status
 fromResidency config res
-    | res > config ^. Config.memoryUpperLimit = UpperLimitExceeded res
-    | res > config ^. Config.memoryLowerLimit = LowerLimitExceeded res
-    | otherwise                               = BelowLimits        res
+    | res > config ^. Config.memoryUpperLimit = Status.UpperLimitExceeded res
+    | res > config ^. Config.memoryLowerLimit = Status.LowerLimitExceeded res
+    | otherwise                               = Status.BelowLimits        res
 
 
 isUpperLimitExceeded :: Status -> Bool
-isUpperLimitExceeded (UpperLimitExceeded {}) = True
-isUpperLimitExceeded _                       = False
+isUpperLimitExceeded (Status.UpperLimitExceeded {}) = True
+isUpperLimitExceeded _                              = False
 
+
+isLowerLimitExceeded :: Status -> Bool
+isLowerLimitExceeded (Status.UpperLimitExceeded {}) = True
+isLowerLimitExceeded (Status.LowerLimitExceeded {}) = True
+isLowerLimitExceeded _                              = False
+
+
+isUpperLimitExceeded' :: Session mm Bool
+isUpperLimitExceeded' = isUpperLimitExceeded <$> status
+
+
+isLowerLimitExceeded' :: Session mm Bool
+isLowerLimitExceeded' = isLowerLimitExceeded <$> status
 
 
 currentBytesUsed :: IO Int64
-currentBytesUsed = Stats.currentBytesUsed <$> Stats.getGCStats
+currentBytesUsed = do
+    Mem.performGC
+    Stats.currentBytesUsed <$> Stats.getGCStats
 
 
-status :: Session Status
+status :: Session mm Status
 status = fromResidency <$> Session.getMemoryConfig
                        <*> safeLiftIO' (Error.IOError $(loc)) currentBytesUsed

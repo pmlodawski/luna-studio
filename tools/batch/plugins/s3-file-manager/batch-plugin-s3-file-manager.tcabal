@@ -35,7 +35,7 @@ Executable s3-file-manager
                     MissingH,
                     mtl,
                     optparse-applicative,
-                    protocol-buffers-fork,
+                    protocol-buffers,
                     text,
                     transformers >= 0.4,
                     zeromq4-haskell >= 0.4

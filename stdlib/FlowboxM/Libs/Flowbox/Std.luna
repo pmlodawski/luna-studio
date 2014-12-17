@@ -1,8 +1,64 @@
+@AllowOrphans
+
+import ```Data.Maybe (fromJust)```
+import ```qualified Data.Array.Accelerate as A```
+
+import ```Flowbox.Graphics.Color as Color```
+import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
+import ```Flowbox.Graphics.Color.Companding.Cineon```
+import ```Flowbox.Graphics.Color.Companding.Gamma```
+import ```Flowbox.Graphics.Color.Companding.LStar```
+import ```Flowbox.Graphics.Color.Companding.Panalog```
+import ```Flowbox.Graphics.Color.Companding.PLogLin```
+import ```Flowbox.Graphics.Color.Companding.Rec709```
+import ```Flowbox.Graphics.Color.Companding.REDLog```
+import ```Flowbox.Graphics.Color.Companding.SLog```
+import ```Flowbox.Graphics.Color.Companding.SRGB```
+import ```Flowbox.Graphics.Color.Companding.ViperLog```
+import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
-import ```Flowbox.Graphics.Image.Image```
+import ```Flowbox.Graphics.Image.Image as Image```
+import ```Flowbox.Graphics.Image.View as View```
+import ```Flowbox.Graphics.Image.Merge (AlphaBlend(..))```
 import ```Flowbox.Graphics.Composition.Generators.Keyer```
+import ```Flowbox.Geom2D.Rasterizer```
 
+#
+#                STD
+#
 
+class ```Bool```:
+    True
+    False
+
+class ```Maybe``` a:
+    Just:
+        unwrap :: a
+    Nothing
+
+class ```Either``` a b:
+    Left: l :: a
+    Right: r :: b
+
+def Either.unwrap:
+    ```liftF1 (either (error "unwrap called on Left") id) #{self}```
+
+class Range:
+    lo, hi :: Double
+
+alias FilePath = String
+
+class ```Metric```:
+    Chebyshev
+    Euclidean
+    Minkowski: p :: Double
+    Taxicab
+
+class ```Boundary```:
+    Clamp
+    # Mirror # WARN: does not work yet
+    Wrap
+    Constant: a :: Double
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -34,59 +90,255 @@ def Int.<= a:
 def Int.>= a:
     ```liftF2 (>=) #{self} #{a}```
 
-# def Int.inc:
-#     self.add 1
+def Int.inc:
+    self + 1
 
-# def Int.dec:
-#     self.sub 1
+def Int.dec:
+    self - 1
 
-alias Path = String
+def Double.acc:
+    ```liftF1 variable #{self}```
+
+
+
+#
+#                GEOM
+#
+
+# TODO: convert cornerPin to use Point2
+class Point a:
+    x,y :: a
+
+class ```Point2``` a:
+    x,y :: a
+
+def point x y:
+    Point2 x y
+
+def nopoint:
+    ```val (Nothing :: Maybe (Point2 Double))```
+
+# class ```ControlPoint``` a:
+# class ControlPoint a:
+#     point               :: Point2 a
+#     handleIn, handleOut :: Maybe (Point2 a)
+
+# class ```Path``` a:
+#     closed   :: Bool
+#     vertices :: [ControlPoint a]
+
+# class ```Shape``` a:
+#     paths :: [Path a]
+
+# class ```Mask``` a:
+#     path    :: Path a
+#     feather :: Maybe (Path a)
+
+# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
+# alias Path a         = (Bool, [ControlPoint a])
+# alias Shape a        = [Path a]
+# alias Mask a         = (Path a, Maybe (Path a))
+
+def controlPoint point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def path closed vertices:
+    (closed, vertices)
+
+def shape paths:
+    paths
+
+def mask path feather:
+    (path, feather)
+
+def rasterizeMask w h m:
+    ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
+
+
+
+#
+#                COLOR
+#
+
+class ```RGBA``` a:
+    rgbaR, rgbaG, rgbaB, rgbaA :: a
+
+alias Color = RGBA Double
+alias ColorBlack = RGBA Double
+alias ColorWhite = RGBA Double
+
+alias ColorCC = (Color, Color, Color, Color, Color)
+
+class ```Gamma```:
+    AlexaV3LogC
+    Cineon
+    Gamma: a :: Double
+    LStar
+    Panalog
+    PLogLin
+    Rec709
+    REDLog
+    SLog
+    SRGBGamma
+    ViperLog
+
+
+
+#
+#                IMAGE
+#
 
 def load path:
-    ```autoLift1 loadImageLuna #{path}```
+    ```autoLift1 realReadLuna #{path}```
 
 def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
-def Image.defocus radius:
-    ```liftF1 (onEachChannel $ defocus #{radius}) #{self}```
+def Image.view name:
+    ```liftF2 Image.lookup #{name} #{self}```
 
-def Image.motionBlur size angle:
-    ```liftF1 (onEachChannel $ motionBlur #{size} #{angle}) #{self}```
+# can't use this because of no matrix support in Luna?
+# def Image.colorMatrix matrix:
+#     ```liftF2 colorMatrixLuna #{matrix} #{self}```
 
-def Image.bilateral psigma csigma size:
-    ```liftF1 (onEachChannel $ bilateral #{psigma} #{csigma} #{size}) #{self}```
+def Image.removeChannel viewName channelName:
+    ```liftF3 removeChannelLuna #{viewName} #{channelName} #{self}```
+
+def Image.getChannel viewName channelName:
+    ```liftF3 getChannelLuna #{viewName} #{channelName} #{self}```
+
+def Image.insertChannel viewName channel:
+    ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
+
+def Image.deleteView name:
+    ```liftF2 Image.delete #{name} #{self}```
+
+def Image.map f:
+    ```liftF2 Image.map #{f} #{self}```
+
+def Image.updateView f viewName:
+    ```liftF3 Image.update #{f} #{viewName} #{self}```
+
+def Image.insertView view:
+    ```liftF2 Image.insert #{view} #{self}```
+
+def imageSingleton view:
+    ```liftF1 Image.singleton #{view}```
+
+
+
+#
+#                IMAGE - CONSTANTS
+#
+
+def constant width height color:
+    ```liftF3 constantLuna #{width} #{height} #{color}```
+
+def circular width height:
+    ```liftF2 circularLuna #{width} #{height}```
+
+def conical width height:
+    ```liftF2 conicalLuna #{width} #{height}```
+
+def diamond width height:
+    ```liftF2 diamondLuna #{width} #{height}```
+
+def radial metric width height:
+    ```liftF3 radialShapeLuna #{metric} #{width} #{height}```
+
+def linear width height:
+    ```liftF2 linearShapeLuna #{width} #{height}```
+
+def square side:
+    ```liftF1 squareLuna #{side}```
+
+
+
+#
+#                IMAGE - COLOR CORRECTION
+#
+
+def Image.gammaToLinear gamma:
+    # realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
+    ```liftF2 gammaToLinearLuna #{gamma} #{self}```
+
+def Image.gammaFromLinear gamma:
+    # realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
+    ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
+
+def Image.clamp thresholds clamps:
+    ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
 
 def Image.offset value:
-    ```liftF1 (onEachValue $ offsetLuna #{value}) #{self}```
+    ```liftF2 offsetLuna #{value} #{self}```
 
 def Image.contrast value:
-    ```liftF1 (onEachValue $ contrastLuna #{value}) #{self}```
+    ```liftF2 contrastLuna #{value} #{self}```
 
 def Image.exposure blackpoint ex:
-    ```liftF1 (onEachValue $ exposureLuna #{blackpoint} #{ex}) #{self}```
-
-def Image.colorCorrect saturation contrast gamma gain offset:
-    ```liftF1 (onEachRGB $ colorCorrectLuna #{saturation} #{contrast} #{gamma} #{gain} #{offset}) #{self}```
-
-def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
-    ```liftF1 (onEachValue $ gradeLuna #{blackpoint} #{whitepoint} #{lift} #{gain} #{multiply} #{offset} #{gamma}) #{self}```
+    ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
 def Image.saturate saturation:
-    ```liftF1 (onEachRGB $ saturateLuna #{saturation}) #{self}```
+    ```liftF2 saturateLuna #{saturation} #{self}```
+
+def Image.hsvTool hueRange hueRotation hueRolloff
+            saturationRange saturationAdjustment saturationRolloff
+            brightnessRange brightnessAdjustment brightnessRolloff:
+    hueRangeStart = hueRange.lo
+    hueRangeEnd   = hueRange.hi
+    saturationRangeStart = saturationRange.lo
+    saturationRangeEnd   = saturationRange.hi
+    brightnessRangeStart = brightnessRange.lo
+    brightnessRangeEnd   = brightnessRange.hi
+
+    # ```liftF1 (onEachRGB $ hsvToolLuna #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+    #                        #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
+    #                        #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff}) #{self}```
+    ```test #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+              #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
+              #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff} #{self}```
+
+def Image.multiply val:
+    ```liftF2 multiplyLuna #{val} #{self}```
+
+def Image.gamma val:
+    ```liftF2 gammaLuna #{val} #{self}```
+
+def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
+
+def Image.colorCorrect saturation contrast gamma gain offset:
+    ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
+
+def Image.premultiply:
+    ```liftF1 premultiplyLuna #{self}```
+
+def Image.unpremultiply:
+    ```liftF1 unpremultiplyLuna #{self}```
+
+def Image.invert:
+    ```liftF1 invertLuna #{self}```
+
+def Image.histEq bins:
+    ```liftF2 histEqLuna #{bins} #{self}```
+
+
+
+#
+#                IMAGE - FILTERS & TRANSFORMATIONS
+#
 
 def Image.posterize colors:
-    ```liftF1 (onEachValue $ posterizeLuna #{colors}) #{self}```
+    ```liftF2 posterizeLuna #{colors} #{self}```
 
+def Image.defocus radius:
+    ```liftF2 defocus #{radius} #{self}```
 
-def Image.key mode a b c d:
-    ```liftF1 (keyerLuna #{mode} #{a} #{b} #{c} #{d}) #{self}```
+def Image.motionBlur size angle:
+    ```liftF3 motionBlur #{size} #{angle} #{self}```
 
-def Image.differenceKey offset gain background:
-    ```liftF2 (differenceKeyerLuna #{offset} #{gain}) #{background} #{self}```
-
-class Point a:
-    x,y :: a
+def Image.bilateral psigma csigma size:
+    ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
 
 def Image.cornerPin p1 p2 p3 p4:
     p1x = p1.x
@@ -98,11 +350,223 @@ def Image.cornerPin p1 p2 p3 p4:
     p4x = p4.x
     p4y = p4.y
 
-    ```liftF1 (cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y}) #{self}```
+    ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
 def Image.blur kernelSize:
-    ```liftF1 (gaussianLuna #{kernelSize}) #{self}```
+    ```liftF2 gaussianLuna #{kernelSize} #{self}```
 
 def Image.laplacian kernelSize centerVal sideVal:
-    ```liftF1 (laplacianLuna #{kernelSize} #{centerVal} #{sideVal}) #{self}```
+    ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
+def Image.rotate phi:
+    ```liftF2 turnCenterLuna #{phi} #{self}```
+# def Image.rotate phi m:
+#     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
+
+# def Image.translate boundary x y:
+#     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
+def Image.translate x y:
+    ```liftF3 translateLuna #{x} #{y} #{self}```
+
+def Image.scaleTo boundary x y:
+    ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
+# def Image.scaleTo x y m:
+#     ```liftF4 scaleToLuna #{x} #{y} #{m} #{self}```
+
+# def Image.scale boundary x y:
+#     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
+def Image.scaleCenter x y:
+    ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+
+def Image.scale x y:
+    ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+
+def Image.erode size:
+    ```liftF2 erodeLuna #{size} #{self}```
+
+def Image.dilate size:
+    ```liftF2 dilateLuna #{size} #{self}```
+
+def Image.open size:
+    ```liftF2 openLuna #{size} #{self}```
+
+def Image.close size:
+    ```liftF2 closeLuna #{size} #{self}```
+
+def Image.radialBlur size angle:
+    ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
+
+def Image.edgeDetect edgeOperator:
+    ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
+
+class ```InterpolationFilter```:
+    NearestNeighbour
+    Box
+    Basic
+    Triangle
+    Bell
+    BSpline
+    Lanczos: a :: Double
+    Polynomial: a, b :: Double
+    Mitchell
+    CatmullRom
+    Gauss: a :: Double
+    Dirac: a :: Double
+
+def Image.interpolate boundary filter:
+    ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
+
+def Image.multisample grid filter:
+    ```liftF3 multisampleChannelsLuna #{grid} #{filter} #{self}```
+
+
+
+#
+#                IMAGE - MERGE
+#
+
+class ```MergeMode```:
+    Atop
+    Average
+    ColorBurn
+    ColorDodge
+    ConjointOver
+    Copy
+    Difference
+    DisjointOver
+    DivideBySource
+    DivideByDestination
+    Exclusion
+    From
+    Geometric
+    HardLight
+    Hypot
+    In
+    Mask
+    Matte
+    # Max
+    # Min
+    Minus
+    Multiply
+    Out
+    Over
+    Overlay
+    Plus
+    Screen
+    SoftLight
+    SoftLightPegtop
+    SoftLightIllusions
+    Stencil
+    Under
+    XOR
+
+class ```AlphaBlend```:
+    Adobe
+    Custom
+
+def Image.merge mode alphaBlendMode img:
+    ```liftF4 mergeLuna #{mode} #{alphaBlendMode} #{self} #{img}```
+
+
+
+#
+#                IMAGE - NOISE
+#
+
+def perlin z width height:
+    ```liftF3 perlinLuna #{z} #{width} #{height}```
+
+def billow z width height:
+    ```liftF3 billowLuna #{z} #{width} #{height}```
+
+
+
+#
+#                IMAGE - DITHERING
+#
+
+class Dithering:
+    FloydSteinberg
+    Brukes
+    Fan
+    JarvisJudiceNinke
+    Stucki
+    Sierra2
+    Sierra3
+    Atkinson
+    ShiauFan4
+    ShiauFan5
+
+# TODO: apply some pattern matching in haskell to work around the problem of passing luna functions into haskell
+def Image.dither bound diffusionMethod bits:
+    # diffusionTable = case diffusionMethod:
+    #     FloydSteinberg:    ```val floydSteinberg```
+    #     Brukes:            ```val brukes```
+    #     Fan:               ```val fan```
+    #     JarvisJudiceNinke: ```val jarvisJudiceNinke```
+    #     Stucki:            ```val stucki```
+    #     Sierra2:           ```val sierra2```
+    #     Sierra3:           ```val sierra3```
+    #     Atkinson:          ```val atkinson```
+    #     ShiauFan4:         ```val shiauFan4```
+    #     ShiauFan5:         ```val shiauFan5```
+    # ```autoLift4 ditherLuna #{bound} #{bits} #{diffusionTable} #{self}```
+    ```autoLift4 ditherLuna #{bound} #{bits} (val floydSteinberg) #{self}```
+
+def Image.bayer bits:
+    ```liftF2 orderedDitherLuna #{bits} #{self}```
+
+
+
+#
+#                IMAGE - KEYING
+#
+
+class ```KeyerMode```:
+    Red
+    Green
+    Blue
+    Redscreen
+    Greenscreen
+    Bluescreen
+    Saturation
+    Luminance
+    Max
+    Min
+
+def Image.key mode a b c d:
+    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
+
+def Image.differenceKey offset gain background:
+    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
+
+
+
+#
+#                VIEW
+#
+
+def View.channel name:
+    ```liftF2 View.get #{self} #{name}```
+
+def View.append channel:
+    ```liftF2 View.append #{channel} #{self}```
+
+def View.remove name:
+    ```liftF2 View.remove #{name} #{self}```
+
+def View.map f:
+    ```liftF2 View.map #{f} #{self}```
+
+# TODO: fix the bug with this
+# def View.whitelistMap f nameSet:
+#     ```liftF3 View.mapWithWhitelist #{f} #{nameSet} #{self}```
+
+
+
+#
+#                OTHER
+#
+
+def testCC a:
+    ```liftF1 testColorCC #{a}```

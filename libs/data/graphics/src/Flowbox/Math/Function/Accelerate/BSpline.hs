@@ -19,10 +19,11 @@ import           Data.Array.Accelerate.Tuple
 import           Data.Array.Accelerate.Array.Sugar
 import           Data.Typeable
 
-import Math.Coordinate.Cartesian (Point2(..))
-import Flowbox.Geom2D.Accelerate.CubicBezier (CubicBezier(..))
-import Flowbox.Geom2D.Accelerate.CubicBezier.Intersection
-import Flowbox.Prelude hiding (lift, (!!), (?), (<*), fst, snd)
+import Math.Coordinate.Cartesian                   (Point2(..))
+import Flowbox.Geom2D.CubicBezier
+import Flowbox.Geom2D.Accelerate.CubicBezier       ()
+import Flowbox.Geom2D.Accelerate.CubicBezier.Solve
+import Flowbox.Prelude                             hiding (lift, (!!), (?), (<*), fst, snd)
 
 
 

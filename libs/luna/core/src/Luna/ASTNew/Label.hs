@@ -18,9 +18,10 @@ import           GHC.Generics (Generic)
 -- Data types
 ----------------------------------------------------------------------
 
-data Label l a = Label { _label :: l, _element :: a } deriving (Eq, Generic, Read, Functor)
+data Label l a = Label { _label :: l, _element :: a } deriving (Eq, Ord, Generic, Read, Functor)
 
 makeLenses ''Label
+
 
 instance (Show l, Show a) => Show (Label l a) where
     show (Label l a) = "L " ++ show l ++ " " ++ show a

@@ -12,7 +12,6 @@ import           Flowbox.Prelude
 
 import GHC.Generics     (Generic)
 import Luna.ASTNew.Pat  (LPat)
-import Luna.ASTNew.Name (VName)
 import Luna.ASTNew.Label (Label)
 
 

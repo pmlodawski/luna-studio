@@ -16,9 +16,10 @@ import Flowbox.Prelude
 data Cmd = Run { _prefix  :: Prefix
                , _verbose :: Int
                , _noColor :: Bool
+               , _monitor :: Int
                }
          | Version
          deriving Show
 
 
-makeLenses(''Cmd)
+makeLenses ''Cmd

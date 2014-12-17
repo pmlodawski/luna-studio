@@ -19,11 +19,11 @@ import           Flowbox.Bus.Data.Message                              (Message 
 import qualified Flowbox.Bus.Data.Message                              as Message
 import           Flowbox.Bus.Data.Topic                                (update, (/+))
 import           Flowbox.Bus.RPC.RPC                                   (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                       hiding (Context)
 import           Flowbox.ProjectManager.Context                        (Context)
 import           Flowbox.System.Log.Logger                             hiding (error)
 import qualified Flowbox.Text.ProtocolBuffers                          as Proto
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Request as Value
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Update  as Value
 import           Luna.Interpreter.Proto.CallPoint                      ()
@@ -42,9 +42,9 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-get :: Value.Request -> RPC Context SessionST Value.Update
+get :: Value.Request -> RPC Context (SessionST mm) Value.Update
 get (Value.Request tcallPointPath) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     (status, bytes) <- liftSession $ Value.getWithStatus callPointPath
     return $ Value.Update tcallPointPath (encodeP status) $ Sequence.fromList bytes
@@ -55,7 +55,7 @@ reportOutputValue :: IORef Message.CorrelationID
                   -> ResultCallBack
 reportOutputValue crlRef output projectID callPointPath values = do
     crl <- IORef.readIORef crlRef
-    let tcallPointPath = encode (projectID, callPointPath)
+    let tcallPointPath = encodeP (projectID, callPointPath)
         response = Value.Update tcallPointPath (encodeP Value.Ready) $ Sequence.fromList values
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response

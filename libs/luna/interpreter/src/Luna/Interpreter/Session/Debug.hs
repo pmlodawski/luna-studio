@@ -21,7 +21,7 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-dumpBindings :: Session ()
+dumpBindings :: Session mm ()
 dumpBindings = do
     bindings <- lift2 GHC.getBindings
     dflags   <- lift2 GHC.getSessionDynFlags

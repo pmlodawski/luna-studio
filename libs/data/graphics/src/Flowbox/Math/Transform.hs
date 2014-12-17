@@ -12,11 +12,11 @@ import Math.Coordinate.Cartesian (Point2(..))
 import Control.Category
 import Data.Monoid
 
-import Linear.V1
 import Linear.V2
 import Linear.V3
-import Linear.Vector (Additive(..))
 import Linear.Matrix
+
+
 
 newtype TransMatrix a = TransMatrix {
     matrix :: M33 a

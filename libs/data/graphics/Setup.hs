@@ -66,9 +66,9 @@ rgbProfileGen _ _ = PreProcessor {
                 , ""
                 , "    fromXYZ (XYZ x y z) = " ++ name ++ " $ RGB r g b"
                 , "        where Linear.V3 r g b = m Linear.!* xyz"
-                , "              m = Linear.V3 (Linear.V3 " ++ parens invM11 ++ " " ++ parens invM22 ++ " " ++ parens invM33 ++ ")"
-                , "                            (Linear.V3 " ++ parens invM11 ++ " " ++ parens invM22 ++ " " ++ parens invM33 ++ ")"
-                , "                            (Linear.V3 " ++ parens invM11 ++ " " ++ parens invM22 ++ " " ++ parens invM33 ++ ")"
+                , "              m = Linear.V3 (Linear.V3 " ++ parens invM11 ++ " " ++ parens invM12 ++ " " ++ parens invM13 ++ ")"
+                , "                            (Linear.V3 " ++ parens invM21 ++ " " ++ parens invM22 ++ " " ++ parens invM23 ++ ")"
+                , "                            (Linear.V3 " ++ parens invM31 ++ " " ++ parens invM32 ++ " " ++ parens invM33 ++ ")"
                 , "              xyz = Linear.V3 x y z"
                 , ""
                 , "    whitepoint _ = " ++ whitepoint

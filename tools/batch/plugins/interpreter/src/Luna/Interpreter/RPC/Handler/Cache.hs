@@ -12,10 +12,10 @@ import Data.Int (Int32)
 
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Bus.RPC.RPC                                    (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                        hiding (Context, error, op)
 import           Flowbox.ProjectManager.Context                         (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Crumb.Breadcrumbs                      as Gen
 import           Luna.Interpreter.Proto.CallPointPath                   ()
 import           Luna.Interpreter.RPC.Handler.Lift
@@ -23,6 +23,9 @@ import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
 import           Luna.Interpreter.Session.Data.CallPoint                (CallPoint (CallPoint))
 import qualified Luna.Interpreter.Session.Env                           as Env
+import qualified Luna.Interpreter.Session.Memory.GPU                    as GPUMemory
+import           Luna.Interpreter.Session.Memory.Manager                (MemoryManager)
+import qualified Luna.Interpreter.Session.Memory.Manager                as Manager
 import           Luna.Interpreter.Session.Session                       (Session, SessionST)
 
 
@@ -32,64 +35,68 @@ logger = getLoggerIO $(moduleName)
 
 --- helpers ---------------------------------------------------------------
 
-interpreterDo :: Int32 -> Session () -> RPC Context SessionST ()
+interpreterDo :: Int32 -> Session mm () -> RPC Context (SessionST mm) ()
 interpreterDo projectID op = do
     activeProjectID <- liftSession Env.getProjectID
     when (activeProjectID == decodeP projectID) $ liftSession op
 
 
-deleteAll :: Int32 -> RPC Context SessionST ()
+deleteAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
 deleteAll projectID = interpreterDo projectID $ do
     Cache.deleteAll
-    Cache.performCleaning
+    Env.cleanEnv
+    Manager.cleanIfNeeded
+    GPUMemory.performGC
 
 
-modifyAll :: Int32 -> RPC Context SessionST ()
+modifyAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
 modifyAll projectID = interpreterDo projectID $ do
     Invalidate.modifyAll
-    Cache.performCleaning
+    Manager.cleanIfNeeded
+    GPUMemory.performGC
 
 
-closeProject :: Int32 -> RPC Context SessionST ()
-closeProject projectID = interpreterDo projectID $ Env.unsetProjectID
+closeProject :: Int32 -> RPC Context (SessionST mm) ()
+closeProject projectID = interpreterDo projectID $ Env.unsetProjectID >> Env.cleanEnv
 
 
-modifyLibrary :: Int32 -> Int32 -> RPC Context SessionST ()
+modifyLibrary :: Int32 -> Int32 -> RPC Context (SessionST mm) ()
 modifyLibrary projectID =
     interpreterDo projectID . Invalidate.modifyLibrary . decodeP
 
 
-modifyBreadcrumbsRec :: Int32 -> Int32 -> Gen.Breadcrumbs -> RPC Context SessionST ()
+modifyBreadcrumbsRec :: Int32 -> Int32 -> Gen.Breadcrumbs -> RPC Context (SessionST mm) ()
 modifyBreadcrumbsRec projectID libraryID tbc = do
     bc <- decodeE tbc
     interpreterDo projectID $ Invalidate.modifyBreadcrumbsRec (decodeP libraryID) bc
 
 
-modifyBreadcrumbs :: Int32 -> Int32 -> Gen.Breadcrumbs -> RPC Context SessionST ()
+modifyBreadcrumbs :: Int32 -> Int32 -> Gen.Breadcrumbs -> RPC Context (SessionST mm) ()
 modifyBreadcrumbs projectID libraryID tbc = do
     bc <- decodeE tbc
     interpreterDo projectID $ Invalidate.modifyBreadcrumbs (decodeP libraryID) bc
 
 
-modifyNode :: Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
+modifyNode :: Int32 -> Int32 -> Int32 -> RPC Context (SessionST mm) ()
 modifyNode projectID libraryID nodeID =
     interpreterDo projectID $ Invalidate.modifyNode (decodeP libraryID) (decodeP nodeID)
 
 
-modifyNodeSuccessors :: Int32 -> Int32 -> Gen.Breadcrumbs -> Int32 -> RPC Context SessionST ()
+modifyNodeSuccessors :: Int32 -> Int32 -> Gen.Breadcrumbs -> Int32 -> RPC Context (SessionST mm) ()
 modifyNodeSuccessors projectID libraryID tbc nodeID = do
     bc <- decodeE tbc
     interpreterDo projectID $ Invalidate.modifyNodeSuccessors (decodeP libraryID) bc (decodeP nodeID)
 
 
-deleteNode :: Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
+deleteNode :: MemoryManager mm => Int32 -> Int32 -> Int32 -> RPC Context (SessionST mm) ()
 deleteNode projectID libraryID nodeID =
     interpreterDo projectID $ do
         Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
-        Cache.performCleaning
+        Manager.cleanIfNeeded
+        GPUMemory.performGC
 
 
-insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context SessionST ()
+insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context (SessionST mm) ()
 insertDependentNode projectID libraryID nodeID depID = do
     let callPoint = CallPoint (decodeP libraryID) (decodeP nodeID)
     interpreterDo projectID $ Env.insertDependentNode callPoint $ decodeP depID

@@ -10,11 +10,11 @@
 module Flowbox.FileManager.RPC.Handler.FileManager where
 
 import           Flowbox.Bus.RPC.RPC                                     (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.FileManager.FileManager                         (FileManager)
 import qualified Flowbox.FileManager.FileManager                         as FileManager
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.FileManager.FileManager.Ping.Request    as Ping
 import qualified Generated.Proto.FileManager.FileManager.Ping.Status     as Ping
 import qualified Generated.Proto.FileManager.FileManager.Resolve.Request as Resolve

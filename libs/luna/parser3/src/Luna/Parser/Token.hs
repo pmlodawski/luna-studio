@@ -190,6 +190,8 @@ typeDecl      = symbol "::"
 importAll     = symbol '*'
 assignment    = symbol '='
 nativeSym     = symbol "```"
+nameStart     = symbol '`'
+nameEnd       = symbol '`'
 range         = symbol ".."
 ref           = symbol '@'
 pragma        = symbol '@'
@@ -315,3 +317,5 @@ parens = nesting . between (symbol '(') (symbol ')')
 brackets = nesting . between (symbol '[') (symbol ']')
 
 braces = nesting . between (symbol '{') (symbol '}')
+
+explicitName = between nameStart nameEnd

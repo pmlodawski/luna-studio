@@ -4,20 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TypeFamilies           #-}
 
 module Flowbox.Math.Index where
 
 import           Flowbox.Graphics.Prelude as P
 import qualified Data.Array.Accelerate    as A
 
-import Math.Coordinate.Cartesian
-import Math.Space.Space
+import Math.Coordinate.Cartesian hiding (x, y)
+import Math.Space.Space          hiding (height, width)
 
 
 

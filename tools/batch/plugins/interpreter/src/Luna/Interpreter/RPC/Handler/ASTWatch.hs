@@ -85,6 +85,7 @@ import qualified Generated.Proto.ProjectManager.Project.Open.Update             
 import           Luna.Interpreter.Proto.CallPointPath                                                          ()
 import qualified Luna.Interpreter.RPC.Handler.Cache                                                            as Cache
 import           Luna.Interpreter.RPC.Handler.Sync                                                             (sync)
+import           Luna.Interpreter.Session.Memory.Manager                                                       (MemoryManager)
 import           Luna.Interpreter.Session.Session                                                              (SessionST)
 
 
@@ -95,31 +96,31 @@ logger = getLoggerIO $(moduleName)
 
 --- handlers --------------------------------------------------------------
 
-projectCreate :: ProjectCreate.Update -> RPC Context SessionST ()
+projectCreate :: MemoryManager mm => ProjectCreate.Update -> RPC Context (SessionST mm) ()
 projectCreate (ProjectCreate.Update request project updateNo) = do
     sync updateNo $ ProjectHandler.create request
     projectID <- Gen.Project.id project <??> "ASTWatch.projectCreate : 'projectID' field is missing"
     Cache.modifyAll projectID
 
 
-projectOpen :: ProjectOpen.Update -> RPC Context SessionST ()
+projectOpen :: MemoryManager mm => ProjectOpen.Update -> RPC Context (SessionST mm) ()
 projectOpen (ProjectOpen.Update _ project _) = do
     projectID <- Gen.Project.id project <??> "ASTWatch.projectOpen : 'projectID' field is missing"
     Cache.modifyAll projectID
 
 
-projectClose :: ProjectClose.Update -> RPC Context SessionST ()
+projectClose :: ProjectClose.Update -> RPC Context (SessionST mm) ()
 projectClose (ProjectClose.Update request updateNo) = do
     sync updateNo $ ProjectHandler.close request
     Cache.closeProject $ ProjectClose.projectID request
 
 
-projectModify :: ProjectModify.Update -> RPC Context SessionST ()
+projectModify :: ProjectModify.Update -> RPC Context (SessionST mm) ()
 projectModify (ProjectModify.Update request updateNo) =
     sync updateNo $ ProjectHandler.modify request
 
 
-libraryCreate :: LibraryCreate.Update -> RPC Context SessionST ()
+libraryCreate :: LibraryCreate.Update -> RPC Context (SessionST mm) ()
 libraryCreate (LibraryCreate.Update request library updateNo) = do
     sync updateNo $ LibraryHandler.create request
     let projectID = LibraryCreate.projectID request
@@ -127,14 +128,14 @@ libraryCreate (LibraryCreate.Update request library updateNo) = do
     Cache.modifyLibrary projectID libraryID
 
 
-libraryLoad :: LibraryLoad.Update -> RPC Context SessionST ()
+libraryLoad :: LibraryLoad.Update -> RPC Context (SessionST mm) ()
 libraryLoad (LibraryLoad.Update request library _) = do
     let projectID = LibraryLoad.projectID request
     libraryID <- Gen.Library.id library <??> "ASTWatch.libraryLoad : 'libraryID' field is missing"
     Cache.modifyLibrary projectID libraryID
 
 
-libraryUnload :: LibraryUnload.Update -> RPC Context SessionST ()
+libraryUnload :: LibraryUnload.Update -> RPC Context (SessionST mm) ()
 libraryUnload (LibraryUnload.Update request updateNo) = do
     sync updateNo $ LibraryHandler.unload request
     let projectID = LibraryUnload.projectID request
@@ -142,7 +143,7 @@ libraryUnload (LibraryUnload.Update request updateNo) = do
     Cache.modifyLibrary projectID libraryID
 
 
-astRemove :: ASTRemove.Update -> RPC Context SessionST ()
+astRemove :: ASTRemove.Update -> RPC Context (SessionST mm) ()
 astRemove (ASTRemove.Update request updateNo) = do
     sync updateNo $ ASTHandler.remove request
     let projectID = ASTRemove.projectID request
@@ -151,7 +152,7 @@ astRemove (ASTRemove.Update request updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astModuleAdd :: ASTModuleAdd.Update -> RPC Context SessionST ()
+astModuleAdd :: ASTModuleAdd.Update -> RPC Context (SessionST mm) ()
 astModuleAdd (ASTModuleAdd.Update request _ bc updateNo) = do
     sync updateNo $ ASTHandler.moduleAdd request
     let projectID = ASTModuleAdd.projectID request
@@ -159,7 +160,7 @@ astModuleAdd (ASTModuleAdd.Update request _ bc updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astModuleModifyCls :: ASTModuleModifyCls.Update -> RPC Context SessionST ()
+astModuleModifyCls :: ASTModuleModifyCls.Update -> RPC Context (SessionST mm) ()
 astModuleModifyCls (ASTModuleModifyCls.Update request updateNo) = do
     sync updateNo $ ASTHandler.moduleClsModify request
     let projectID = ASTModuleModifyCls.projectID request
@@ -168,7 +169,7 @@ astModuleModifyCls (ASTModuleModifyCls.Update request updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astModuleModifyFields :: ASTModuleModifyFields.Update -> RPC Context SessionST ()
+astModuleModifyFields :: ASTModuleModifyFields.Update -> RPC Context (SessionST mm) ()
 astModuleModifyFields (ASTModuleModifyFields.Update request updateNo) = do
     sync updateNo $ ASTHandler.moduleFieldsModify request
     let projectID = ASTModuleModifyFields.projectID request
@@ -177,7 +178,7 @@ astModuleModifyFields (ASTModuleModifyFields.Update request updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astModuleModifyImports :: ASTModuleModifyImports.Update -> RPC Context SessionST ()
+astModuleModifyImports :: ASTModuleModifyImports.Update -> RPC Context (SessionST mm) ()
 astModuleModifyImports (ASTModuleModifyImports.Update request updateNo) = do
     sync updateNo $ ASTHandler.moduleImportsModify request
     let projectID = ASTModuleModifyImports.projectID request
@@ -186,7 +187,7 @@ astModuleModifyImports (ASTModuleModifyImports.Update request updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astDataAdd :: ASTDataAdd.Update -> RPC Context SessionST ()
+astDataAdd :: ASTDataAdd.Update -> RPC Context (SessionST mm) ()
 astDataAdd (ASTDataAdd.Update request _ bc updateNo) = do
     sync updateNo $ ASTHandler.dataAdd request
     let projectID = ASTDataAdd.projectID request
@@ -194,7 +195,7 @@ astDataAdd (ASTDataAdd.Update request _ bc updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astDataModifyClasses :: ASTDataModifyClasses.Update -> RPC Context SessionST ()
+astDataModifyClasses :: ASTDataModifyClasses.Update -> RPC Context (SessionST mm) ()
 astDataModifyClasses (ASTDataModifyClasses.Update request updateNo) = do
     sync updateNo $ ASTHandler.dataClassesModify request
     let projectID = ASTDataModifyClasses.projectID request
@@ -202,7 +203,7 @@ astDataModifyClasses (ASTDataModifyClasses.Update request updateNo) = do
         bc        = ASTDataModifyClasses.bc request
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
-astDataModifyCls :: ASTDataModifyCls.Update -> RPC Context SessionST ()
+astDataModifyCls :: ASTDataModifyCls.Update -> RPC Context (SessionST mm) ()
 astDataModifyCls (ASTDataModifyCls.Update request updateNo) = do
     sync updateNo $ ASTHandler.dataClsModify request
     let projectID = ASTDataModifyCls.projectID request
@@ -211,7 +212,7 @@ astDataModifyCls (ASTDataModifyCls.Update request updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astDataModifyCons :: ASTDataModifyCons.Update -> RPC Context SessionST ()
+astDataModifyCons :: ASTDataModifyCons.Update -> RPC Context (SessionST mm) ()
 astDataModifyCons (ASTDataModifyCons.Update request updateNo) = do
     sync updateNo $ ASTHandler.dataConsModify request
     let projectID = ASTDataModifyCons.projectID request
@@ -219,7 +220,7 @@ astDataModifyCons (ASTDataModifyCons.Update request updateNo) = do
         bc        = ASTDataModifyCons.bc request
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
-astDataModifyMethods :: ASTDataModifyMethods.Update -> RPC Context SessionST ()
+astDataModifyMethods :: ASTDataModifyMethods.Update -> RPC Context (SessionST mm) ()
 astDataModifyMethods (ASTDataModifyMethods.Update request updateNo) = do
     sync updateNo $ ASTHandler.dataMethodsModify request
     let projectID = ASTDataModifyMethods.projectID request
@@ -227,7 +228,7 @@ astDataModifyMethods (ASTDataModifyMethods.Update request updateNo) = do
         bc        = ASTDataModifyMethods.bc request
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
-astFunctionAdd :: ASTFunctionAdd.Update -> RPC Context SessionST ()
+astFunctionAdd :: ASTFunctionAdd.Update -> RPC Context (SessionST mm) ()
 astFunctionAdd (ASTFunctionAdd.Update request _ bc updateNo) = do
     sync updateNo $ ASTHandler.functionAdd request
     let projectID = ASTFunctionAdd.projectID request
@@ -235,7 +236,7 @@ astFunctionAdd (ASTFunctionAdd.Update request _ bc updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astFunctionModifyInputs :: ASTFunctionModifyInputs.Update -> RPC Context SessionST ()
+astFunctionModifyInputs :: ASTFunctionModifyInputs.Update -> RPC Context (SessionST mm) ()
 astFunctionModifyInputs (ASTFunctionModifyInputs.Update request updateNo) = do
     sync updateNo $ ASTHandler.functionInputsModify request
     let projectID = ASTFunctionModifyInputs.projectID request
@@ -244,7 +245,7 @@ astFunctionModifyInputs (ASTFunctionModifyInputs.Update request updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astFunctionModifyName :: ASTFunctionModifyName.Update -> RPC Context SessionST ()
+astFunctionModifyName :: ASTFunctionModifyName.Update -> RPC Context (SessionST mm) ()
 astFunctionModifyName (ASTFunctionModifyName.Update request updateNo) = do
     sync updateNo $ ASTHandler.functionNameModify request
     let projectID = ASTFunctionModifyName.projectID request
@@ -253,7 +254,7 @@ astFunctionModifyName (ASTFunctionModifyName.Update request updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astFunctionModifyOutput :: ASTFunctionModifyOutput.Update -> RPC Context SessionST ()
+astFunctionModifyOutput :: ASTFunctionModifyOutput.Update -> RPC Context (SessionST mm) ()
 astFunctionModifyOutput (ASTFunctionModifyOutput.Update request updateNo) = do
     sync updateNo $ ASTHandler.functionOutputModify request
     let projectID = ASTFunctionModifyOutput.projectID request
@@ -262,7 +263,7 @@ astFunctionModifyOutput (ASTFunctionModifyOutput.Update request updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astFunctionModifyPath :: ASTFunctionModifyPath.Update -> RPC Context SessionST ()
+astFunctionModifyPath :: ASTFunctionModifyPath.Update -> RPC Context (SessionST mm) ()
 astFunctionModifyPath (ASTFunctionModifyPath.Update request updateNo) = do
     sync updateNo $ ASTHandler.functionPathModify request
     let projectID = ASTFunctionModifyPath.projectID request
@@ -271,12 +272,12 @@ astFunctionModifyPath (ASTFunctionModifyPath.Update request updateNo) = do
     Cache.modifyBreadcrumbsRec projectID libraryID bc
 
 
-astPropertiesSet :: ASTPropertiesSet.Update -> RPC Context SessionST ()
+astPropertiesSet :: ASTPropertiesSet.Update -> RPC Context (SessionST mm) ()
 astPropertiesSet (ASTPropertiesSet.Update request updateNo) =
     sync updateNo $ PropertiesHandler.setASTProperties request
 
 
-graphConnect :: GraphConnect.Update -> RPC Context SessionST ()
+graphConnect :: GraphConnect.Update -> RPC Context (SessionST mm) ()
 graphConnect (GraphConnect.Update request updateNo) = do
     sync updateNo $ GraphHandler.connect request
     let projectID = GraphConnect.projectID request
@@ -285,7 +286,7 @@ graphConnect (GraphConnect.Update request updateNo) = do
     Cache.modifyNode projectID libraryID dstID
 
 
-graphDisconnect :: GraphDisconnect.Update -> RPC Context SessionST ()
+graphDisconnect :: GraphDisconnect.Update -> RPC Context (SessionST mm) ()
 graphDisconnect (GraphDisconnect.Update request updateNo) = do
     sync updateNo $ GraphHandler.disconnect request
     let projectID = GraphDisconnect.projectID request
@@ -294,7 +295,7 @@ graphDisconnect (GraphDisconnect.Update request updateNo) = do
     Cache.modifyNode projectID libraryID dstID
 
 
-graphNodeAdd :: GraphNodeAdd.Update -> RPC Context SessionST ()
+graphNodeAdd :: GraphNodeAdd.Update -> RPC Context (SessionST mm) ()
 graphNodeAdd (GraphNodeAdd.Update request node updateNo) = do
     sync updateNo $ GraphHandler.nodeAdd request
     let projectID = GraphNodeAdd.projectID request
@@ -303,7 +304,7 @@ graphNodeAdd (GraphNodeAdd.Update request node updateNo) = do
     Cache.modifyNode projectID libraryID nodeID
 
 
-graphNodeRemove :: GraphNodeRemove.Update -> RPC Context SessionST ()
+graphNodeRemove :: MemoryManager mm => GraphNodeRemove.Update -> RPC Context (SessionST mm) ()
 graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
     let projectID = GraphNodeRemove.projectID request
         libraryID = GraphNodeRemove.libraryID request
@@ -314,7 +315,7 @@ graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
     sync updateNo $ GraphHandler.nodeRemove request
 
 
-graphNodeModify :: GraphNodeModify.Update -> RPC Context SessionST ()
+graphNodeModify :: GraphNodeModify.Update -> RPC Context (SessionST mm) ()
 graphNodeModify (GraphNodeModify.Update request node updateNo) = do
     sync updateNo $ GraphHandler.nodeModify request
     let projectID = GraphNodeModify.projectID request
@@ -323,7 +324,7 @@ graphNodeModify (GraphNodeModify.Update request node updateNo) = do
     Cache.modifyNode projectID libraryID nodeID
 
 
-graphNodeModifyInPlace :: GraphNodeModifyInPlace.Update -> RPC Context SessionST ()
+graphNodeModifyInPlace :: GraphNodeModifyInPlace.Update -> RPC Context (SessionST mm) ()
 graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
     sync updateNo $ GraphHandler.nodeModifyInPlace request
     let projectID = GraphNodeModifyInPlace.projectID request
@@ -332,7 +333,7 @@ graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
     Cache.modifyNode projectID libraryID nodeID
 
 
-graphNodeDefaultRemove :: GraphNodeDefaultRemove.Update -> RPC Context SessionST ()
+graphNodeDefaultRemove :: GraphNodeDefaultRemove.Update -> RPC Context (SessionST mm) ()
 graphNodeDefaultRemove (GraphNodeDefaultRemove.Update request updateNo) = do
     sync updateNo $ NodeDefaultHandler.remove request
     let projectID = GraphNodeDefaultRemove.projectID request
@@ -341,7 +342,7 @@ graphNodeDefaultRemove (GraphNodeDefaultRemove.Update request updateNo) = do
     Cache.modifyNode projectID libraryID nodeID
 
 
-graphNodeDefaultSet :: GraphNodeDefaultSet.Update -> RPC Context SessionST ()
+graphNodeDefaultSet :: GraphNodeDefaultSet.Update -> RPC Context (SessionST mm) ()
 graphNodeDefaultSet (GraphNodeDefaultSet.Update request defNodeID updateNo) = do
     sync updateNo $ NodeDefaultHandler.set request
     let projectID = GraphNodeDefaultSet.projectID request
@@ -351,6 +352,6 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request defNodeID updateNo) = do
     Cache.insertDependentNode projectID libraryID nodeID defNodeID
 
 
-graphNodePropertiesSet :: GraphNodePropertiesSet.Update -> RPC Context SessionST ()
+graphNodePropertiesSet :: GraphNodePropertiesSet.Update -> RPC Context (SessionST mm) ()
 graphNodePropertiesSet (GraphNodePropertiesSet.Update request updateNo) =
     sync updateNo $ PropertiesHandler.setNodeProperties request

@@ -25,7 +25,6 @@ import qualified Luna.ASTNew.Enum       as Enum
 import qualified Luna.ASTNew.Label      as Label
 import qualified Luna.ASTNew.Module     as Module
 import qualified Luna.ASTNew.Name       as Name
-import qualified Luna.ASTNew.Name.Multi as Multi
 import qualified Luna.ASTNew.Unit       as Unit
 
 
@@ -33,7 +32,7 @@ import qualified Luna.ASTNew.Unit       as Unit
 import           Luna.Data.Namespace               (Namespace (Namespace))
 import           Luna.Data.Source                  (Code (Code), Medium (String), Source (Source))
 import qualified Luna.Pass                         as Pass
-import qualified Luna.Pass2.Analysis.Alias         as AA
+import qualified Luna.Pass2.Analysis.Struct        as AA
 import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
 import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
 import           Text.Show.Pretty                  (ppShow)
@@ -45,13 +44,19 @@ import qualified Luna.Parser.State            as ParserState
 import           Luna.Pass                    (PassMonad, PassCtx, Pass(Pass))
 import           Luna.ASTNew.Enum             (Enumerated, IDTag(IDTag))
 import           Luna.ASTNew.Expr             (LExpr, Expr)
-import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
 import           Luna.ASTNew.Module           (Module(Module), LModule)
 import           Data.Monoid                  (Monoid, mempty)
 import           Control.Monad.State          (put, get, modify)
 import           Luna.ASTNew.NameBase         (nameBase)
 import qualified Luna.ASTNew.Pat              as Pat
 import qualified Luna.ASTNew.Arg              as Arg
+import Data.Text.Lazy (unpack)
+import qualified Luna.Pass2.Analysis.Struct as SA
+import qualified Luna.Pass2.Transform.Hash                 as Hash
+import qualified Luna.Pass2.Target.HS.HASTGen              as HASTGen
+import qualified Luna.Pass2.Target.HS.HSC                  as HSC
+import qualified Luna.Pass2.Transform.SSA                  as SSA
+import qualified Luna.Pass2.Transform.Desugar.ImplicitSelf as ImplSelf
 
 import Control.Applicative
 import Control.Monad
@@ -97,9 +102,10 @@ tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m
 tcDecl all@(Label.Label lab decl) = do
     case decl of
       fun@Decl.Data{}                         -> modify ("Data"                         :)
-      fun@Decl.Function{ Decl._fname = fname, Decl._inputs = inputs }
-                                              -> do let args = map mapArg inputs
-                                                    modify (("Function " ++ nameBase fname ++ " " ++ intercalate " " args):)
+      fun@Decl.Function{} -> modify ("Function" :)
+      -- fun@Decl.Function{ Decl._fname = fname, Decl._inputs = inputs }
+                                              -- -> do let args = map mapArg inputs
+                                              --      modify (("Function " ++ nameBase fname ++ " " ++ intercalate " " args):)
       fun@Decl.Import{}                       -> modify ("Import"                       :)
       fun@Decl.TypeAlias{}                    -> modify ("TypeAlias"                    :)
       fun@Decl.TypeWrapper{}                  -> modify ("TypeWrapper"                  :)
@@ -148,37 +154,55 @@ data TypecheckerResult = Done
                        | Fail
 
 
-test_foo :: String
-test_foo = unlines  [ "def foo a b:"
-                    , "  a + b"
-                    , ""
-                    , "def + x y:"
-                    , "  x"
-                    , ""
-                    , "def bar:"
-                    , "  foo 456 456"
-                    ]
+--test_foo :: String
+--test_foo = unlines  [ "def foo a b:"
+--                    , "  a + b"
+--                    , ""
+--                    , "def + x y:"
+--                    , "  x"
+--                    , ""
+--                    , "def bar:"
+--                    , "  foo 456 456"
+--                    ]
 
 main :: IO ()
 main = do f_print [Bold,Green] "MAIN"
-          putStrLn "YO"
-          let src = Source "ModTestString" (String test_foo)
-          east <- runEitherT $ do
-            (ast1, astinfo) <- Pass.run1_ Stage1.pass src
-            aa1             <- Pass.run1_ AA.pass ast1
-            ast2            <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo ast1
-            aa2             <- Pass.run1_ AA.pass ast2
-            constraints     <- Pass.run1_ tcpass ast2
+          f_print [Cyan] "Reading `src/Maintest.luna`"
+          maintest_luna <- do tmp <- readFile "src/Maintest.luna"
+                              tmp `seq` return tmp
+          f_print [Cyan] "Passes"
+          let src = Source "Maintest_luna" (String maintest_luna)
+          --east <- runEitherT $ do
+          --  (ast1, astinfo) <- Pass.run1_ Stage1.pass src
+          --  aa1             <- Pass.run1_ AA.pass ast1
+          --  ast2            <- Pass.run3_ Stage2.pass (Namespace [] aa1) astinfo ast1
+          --  aa2             <- Pass.run1_ AA.pass ast2
+          --  constraints     <- Pass.run1_ tcpass ast2
 
-            return (ast2,aa2,constraints)
+          --  return (ast2,aa2,constraints)
+          result <- runEitherT $ do
+            (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
+            --return (ast2, astinfo2)
+            sa1              <- Pass.run1_ SA.pass ast1
+            (ast2, astinfo2) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo1 ast1
+            (ast3, astinfo3) <- Pass.run2_ ImplSelf.pass astinfo2 ast2
+            constraints      <- Pass.run1_ tcpass ast3
+            sa2              <- Pass.run1_ SA.pass ast3
+            ast4             <- Pass.run1_ Hash.pass ast3
+            ast5             <- Pass.run1_ SSA.pass ast4
+            hast             <- Pass.run1_ HASTGen.pass ast5
+            hsc              <- Pass.run1_ HSC.pass hast
+            --return ast4
+            --return (ast4, sa2)
+            return ((ast5,sa2, hast), hsc, constraints)
 
-          case east of
-            Left _                  -> f_print [Red, Bold] "some error, sorry"
-            Right (Unit.Unit ast, ast_info, constraints) -> do
+          case result of
+            Left _                      -> f_print [Red, Bold] "some error, sorry"
+            Right (r, hsc, constraints) -> do
               section $ do
-                printer_aux "AST"      (ppShow ast)
-                printer_aux "AST INFO" (ppShow ast_info)
-                printer_aux "CONSTR"   (ppShow constraints)
+                printer_aux "AST (R)"        (ppShow r)
+                printer_aux "AST INFO (HSC)" (unpack hsc)
+                printer_aux "CONSTR"         (ppShow constraints)
 
               --let ast_label  = ast ^. Label.label
               --    ast_module = ast ^. Label.element

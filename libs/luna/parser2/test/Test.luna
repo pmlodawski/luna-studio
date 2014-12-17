@@ -1,14 +1,8 @@
 class Vector a:
-    Scalar: x :: a
+    x,y,z :: a
 
-    def test: 5
+def main v:
+    v.x = 100
+    v 1
 
-def (if then else) cond ok fail:
-    case cond:
-        True: ok
-        False: fail
-    ww = 10
-
-def foo x y z:
-    self + 1
 

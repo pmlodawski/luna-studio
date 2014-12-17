@@ -26,12 +26,12 @@ import qualified Data.ByteString              as B
 import qualified Data.ByteString.UTF8         as UTF8
 import           Data.CharSet.ByteSet         as S
 import           Data.Default
-import           Flowbox.Prelude              hiding (noneOf, maybe, element, cons)
+import           Flowbox.Prelude              hiding (noneOf, maybe, element, cons, (<>))
 import qualified Flowbox.Prelude              as Prelude
 import qualified Luna.Data.ASTInfo            as ASTInfo
 import qualified Luna.Parser.Token            as Tok
-import qualified Luna.Parser.State            as State
-import           Luna.Parser.State            (State)
+import qualified Luna.Parser.State            as ParserState
+import           Luna.Parser.State            (ParserState)
 import           System.Environment           (getArgs)
 import           System.IO                    (IOMode (ReadMode), hClose, openFile)
 import           System.IO                    (stdout)
@@ -52,17 +52,21 @@ import           Text.Parser.Expression
 import           Text.Parser.LookAhead
 import           Data.Char                    (isSpace)
 import qualified Data.ByteString as ByteStr
-import           Luna.ASTNew.Name.Multi       (MultiName(MultiName))
-import qualified Luna.ASTNew.Name.Multi       as MultiName
+import           Luna.ASTNew.Name.Path        (NamePath(NamePath))
+import qualified Luna.ASTNew.Name.Path        as NamePath
+import qualified Luna.ASTNew.Name.Pattern2    as NamePat
+import           Luna.ASTNew.Name.Pattern2    (NamePat(NamePat), Segment(Segment))
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
 
-import qualified Luna.Data.Namespace          as Namespace
-import qualified Luna.Data.AliasInfo          as Alias
+--import qualified Luna.Data.Namespace          as Namespace
+import qualified Luna.Data.Namespace.State    as Namespace
+import qualified Luna.Data.StructInfo          as StructInfo
 import qualified Luna.ASTNew.AST              as AST
 import qualified Luna.ASTNew.Traversals       as AST
 import qualified Data.Maps                    as Map
-import           Data.Maybe                   (fromJust)
+import           Data.Maybe                   (isJust, fromJust)
+import qualified Flowbox.Data.MapForest       as MapForest
 import qualified Luna.AST.Arg                 as Arg
 import qualified Data.List                    as List
 import qualified Luna.Parser.Pragma           as Pragma
@@ -70,6 +74,7 @@ import qualified Luna.Parser.Pragma           as Pragma
 import           Text.EditDistance            --(defaultEditCosts, levenshteinDistance, EditCosts, Costs(..))
 import           Text.PhoneticCode.Phonix     (phonix)
 import           Data.Function                (on)
+import           Data.List                    (sort, sortBy)
 
 import qualified Data.IntMap  as IntMap
 
@@ -104,6 +109,7 @@ import qualified Luna.ASTNew.Unit       as Unit
 
 
 import qualified Data.TypeLevel.Set as TLSet
+import           Data.Tuple.Select
 
 infixl 4 <$!>
 
@@ -115,11 +121,13 @@ tName = Name.T <$> Tok.typeIdent
 
 anyName = vName <|> tName
 
-just p = Just <$> p
+labeled p = withLabeled (const p)
 
-labeled p = do
+                          
+withLabeled f = do
     id <- nextID
-    fmap (label id) p
+    fmap (label id) $ f id
+
 
 label id = Label $ IDTag id
 
@@ -177,14 +185,19 @@ request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 
 tuple         p = Tok.parens (sepBy p Tok.separator)
 qualifiedPath p = sepBy1_ng p Tok.accessor <?> "qualified path"
-extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
-                      <*> (namePattern <?> "function name")
+--extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
+--                      <*> (namePattern <?> "function name")
 
-namePattern =   (MultiName.single <$> varOp)
-            <|> Tok.parens (MultiName.close <$> (MultiName.multi <$> Tok.varIdent <*> many1 namePatSeg))
+--namePattern =   (NamePat.single <$> varOp)
+--            <|> Tok.parens (NamePat.close <$> (NamePat.multi <$> Tok.varIdent <*> many1 namePatSeg))
 
-namePatSeg =   (MultiName.Token <$> Tok.varIdent)
-           <|> (MultiName.Hole  <$  Tok.nameWildcard)
+--namePatSeg =   (NamePat.Token <$> Tok.varIdent)
+--           <|> (NamePat.Hole  <$  Tok.nameWildcard)
+
+
+--namePattern =   (NamePath.single <$> varOp)
+--            <|> Tok.parens (NamePath.multi <$> Tok.varIdent <*> many1 Tok.varIdent)
+
 
 argList       p = try (sepBy2 p Tok.separator) <|> many p <?> "argument list"
 argList'      p = braces (sepBy2 p Tok.separator) <|> ((:[]) <$> p) <?> "argument list"
@@ -194,10 +207,9 @@ anyIdent        = choice [ Tok.varIdent, Tok.typeIdent ]
 varOp           = Tok.varIdent <|> Tok.operator
 
 
+getASTInfo = view ParserState.info <$> get
 
-getASTInfo = view State.info <$> get
-
-putASTInfo info = modify (State.info .~ info)
+putASTInfo info = modify (ParserState.info .~ info)
 
 nextID = do
     info <- getASTInfo
@@ -219,21 +231,21 @@ postfixM name fun       = Postfix (Tok.reservedOp name *>        fun)
 
 element m = do
     id <- nextID
-    State.registerID id
+    ParserState.registerID id
     ast <- m id
-    --State.registerAST id ast
+    --ParserState.registerAST id ast
     return ast
 
 
 
-container m = element $ \id -> State.withNewScope id $ m id
+container m = element $ \id -> ParserState.withNewScope id $ m id
 
 
 
 
 --regVarName m id = do
 --    ast <- m id
---    State.regVarName id (AST.name ast)
+--    ParserState.regVarName id (AST.name ast)
 --    return ast
 
 
@@ -247,8 +259,8 @@ unit p = do
     --FIXME[WD] : change id to datatype
     let id = -666 
     --id <- nextID
-    --Unit id <$> State.withNewScope id p
-    State.withNewScope id p
+    --Unit id <$> ParserState.withNewScope id p
+    ParserState.withNewScope id p
 
 
 -----------------------------------------------------------
@@ -300,16 +312,28 @@ typeWrapper = Decl.TypeWrapper <$  Tok.kwType
                                <?> "type wrapper"
 
 
+
 ----- functions -----
+
+sigVarOp = Tok.explicitName Tok.varIdent <|> Tok.operator
+
+funcSig = try multiSig <|> singleSig
+
+singleSig = NamePat Nothing <$> singleSigSegment <*> pure []
+multiSig  = NamePat <$> maybe arg <*> multiSigSegment <*> many multiSigSegment
+
+singleSigSegment = Segment <$> Tok.varIdent <*> many arg
+multiSigSegment  = Segment <$> sigVarOp <*> many arg
+
+arg = NamePat.Arg <$> argPattern
+                 <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
 
 func = Decl.Function <$  Tok.kwDef
                      <*> extPath
-                     <*> name
-                     <*> (argList arg <?> "function argument list")
+                     <*> funcSig
                      <*> outType
                      <*> body
     where extPath = ((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure []
-          name    = namePattern <?> "function name"
           outType = (Just <$> try (Tok.arrow *> typeT)) <|> pure Nothing
           body    = char ':' *> stage1Body2
 
@@ -353,8 +377,6 @@ fields = do
 typed = Tok.typeDecl *> termT
 
 
-arg            = Arg <$> argPattern
-                     <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
 
 stage1DefArg = Tok.tokenBlock (many alphaNum)
 
@@ -429,7 +451,16 @@ termBase t = choice [ try (labeled (Pat.Grouped <$> Tok.parens patTup))
                     ]
               <?> "pattern term"
 
-varP       = labeled (Pat.Var         <$> Tok.varIdent)
+varP       = withLabeled $ \id -> do
+                name <- Tok.varIdent
+                let np = NamePath.single name
+                Namespace.regVarName id np
+                return $ Pat.Var $ fromString name
+
+
+
+--labeled (Pat.Var         <$> Tok.varIdent)
+
 litP       = labeled (Pat.Lit         <$> literal)
 implTupleP = labeled (Pat.Tuple       <$> sepBy2 patCon Tok.separator)
 wildP      = labeled (Pat.Wildcard    <$  Tok.wildcard)
@@ -454,11 +485,12 @@ charL   = labeled (Lit.Char   <$> Tok.charLiteral)
 stringL = labeled (Lit.String <$> Tok.stringLiteral)
 numL    = labeled (Lit.Number <$> Tok.numberL)
 
-
+-- FIXME [wd]: last parsed char is poorly written with '_' workaround when no char is available
 prevParsedChar = do
     Caret delta bs <- careting
-    --return ' '
-    return $ (UTF8.toString bs !! (max 0 . fromIntegral $ column delta - 1))
+    let idx = max 0 . fromIntegral $ column delta - 1
+        txt = UTF8.toString bs
+    return $ if idx > length txt then '_' else txt !! idx
 
 lastLexemeEmpty = do
     prevChar <- prevParsedChar
@@ -468,13 +500,32 @@ lastLexemeEmpty = do
 -----------------------------------------------------------
 -- Expressions
 -----------------------------------------------------------
-expr       = exprT entBaseE
+expr       = tlExpr entBaseE
 
-exprSimple = exprT pEntBaseSimpleE
+exprSimple = tlExpr pEntBaseSimpleE
 
-exprT base =   try (labeled (Expr.Assignment <$> pattern <* (Tok.reservedOp "=") <*> opTupleTE base)) -- FIXME
-           <|> opTupleTE base
-           <?> "expression"
+
+-- === Top Level pattern, variable, record updates chains === --
+
+tlRecUpdt    = assignSeg $ Expr.RecUpdt    <$> varOp <*> many1 recAcc
+tlExprPat    = assignSeg $ Expr.Assignment <$> pattern
+tlExprPatVar = assignSeg $ Expr.Assignment <$> varP
+
+assignSeg p = p <* Tok.assignment
+
+tlExprExtHead =   try tlExprPat
+              <|> tlExprBasicHead
+
+tlExprBasicHead =  try tlExprPatVar
+               <|> try tlRecUpdt
+
+tlExprParser head base =   (labeled $ head <*> tlExprBasic base)
+                       <|> opTupleTE base
+
+tlExpr      = tlExprParser tlExprExtHead
+tlExprBasic = tlExprParser tlExprBasicHead
+
+-- === / === --
 
 
 opE       = opTE entBaseE
@@ -485,18 +536,15 @@ opTE base = buildExpressionParser optableE (appE base)
 tupleE p = p <??> ((\id xs x -> label id $ Expr.Tuple (x:xs)) <$> nextID <* Tok.separator <*> sepBy1 p Tok.separator)
 
 --appE base = p <??> (appID (\i a s -> Expr.App i s a) <*> many1 (argE p)) where 
-appE base = p <??> ((\i a s -> label i $ callBuilder2 s a) <$> nextID <*> many1 (argE p)) where 
+appE base = p <??> ((\i a s -> label i $ callBuilder2 s a) <$> nextID <*> many1 (appArg p)) where 
     p = termE base
 
 
 
-argE p = try ((Expr.Named <$> Tok.varIdent <* Tok.assignment <*> p)) <|> ((Expr.Unnamed <$> p))
-
 termE base = base <??> (flip applyAll <$> many1 (termBaseE base))  ------  many1 (try $ recUpdE))
 
 
-termBaseE p = choice [ try recUpdE
-                     , accE
+termBaseE p = choice [ accE
                      , callTermE p
                      ]
 
@@ -508,8 +556,6 @@ nameBase =   (Name.VarName  <$> varOp)
          <|> (Name.TypeName <$> Tok.conIdent)
 
 
-recUpdE   = (\id sel expr src -> label id (Expr.RecUpdt src sel expr)) <$> nextID <*> many1 recAcc <* Tok.assignment <*> exprSimple
-
 accE      = try( (\id a b -> label id $ Expr.Accessor a b) <$> nextID <*> accBaseE) -- needed by the syntax [1..10]
 
 
@@ -520,14 +566,14 @@ accE      = try( (\id a b -> label id $ Expr.Accessor a b) <$> nextID <*> accBas
 
 parensE p = Tok.parens (p <|> (labeled (Expr.Tuple <$> pure []))) -- checks for empty tuple
 
-callList      p = Expr.Seq <$> Tok.parens (sepBy p Tok.separator)
-callTermE p = (\id a b-> label id (Expr.App b a)) <$ lastLexemeEmpty <*> nextID <*> callList (argE p)
+callList     p = Tok.parens (sepBy p Tok.separator)
+callTermE p = (\id a b-> label id (Expr.app b a)) <$ lastLexemeEmpty <*> nextID <*> callList (appArg p)
 
 
 entBaseE        = entConsE entComplexE
 pEntBaseSimpleE = entConsE entSimpleE
 
-entConsE base = choice [ try $ labeled (Expr.Grouped <$> parensE (exprT base))
+entConsE base = choice [ try $ labeled (Expr.Grouped <$> parensE (tlExpr base))
                        , base
                        ]
 
@@ -560,29 +606,38 @@ optableE = [
            , [ operator4 ">"                                  AssocLeft ]
            , [ operator4 "=="                                 AssocLeft ]
            , [ operator4 "in"                                 AssocLeft ]
-           , [ binaryM   "$"  (callBuilder <$> nextID)        AssocLeft ]
+           , [ binaryM   "$"  (callBuilder <$> nextID)       AssocLeft ]
            , [ postfixM  "::" ((\id a b -> label id (Expr.Typed a b)) <$> nextID <*> typeT) ]
            ]
            where
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure op))
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure op))
-              operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.App (label id2 $ Expr.Var $ MultiName.single $ op) 
-                                                                                (Expr.Infix l r)
-                                          ) <$> nextID <*> nextID)
+              --operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.appInfix (label id2 $ Expr.Var $ NamePath.single $ op) l [r]
+              --                            ) <$> nextID <*> nextID)
 
+              operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.appInfix (label id2 $ Expr.Var $ NamePath.single $ op) (Expr.unnamed l) [Expr.unnamed r]
+                                          ) <$> nextID <*> nextID)
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure ('~':op)))
               --operator2 op = binaryM op (binaryMatchE <$>  ( appID Expr.App <*> (appID Expr.Accessor <*> pure "add" <*> ... ) )  )
               --operator2 op = binaryM op ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 op x) [y]) <$> genID <*> genID)
               --operator3 op = binaryM op ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 "contains" y) [x]) <$> genID <*> genID)
 
+--callBuilder id src@(Label lab expr) arg = label id $ case expr of
+--    Expr.App src' (Expr.Seq args) -> Expr.App src' (Expr.Seq $ args ++ [Expr.Unnamed arg])
+--    _                             -> Expr.App src (Expr.Seq $ [Expr.Unnamed arg])
+
+--callBuilder2 src@(Label lab expr) argsx = case expr of
+--    Expr.App src' (Expr.Seq args) -> Expr.App src' (Expr.Seq $ args ++ argsx)
+--    _                             -> Expr.App src  (Expr.Seq argsx)
+
 callBuilder id src@(Label lab expr) arg = label id $ case expr of
-    Expr.App src' (Expr.Seq args) -> Expr.App src' (Expr.Seq $ args ++ [Expr.Unnamed arg])
-    _                             -> Expr.App src (Expr.Seq $ [Expr.Unnamed arg])
+    Expr.App app -> Expr.App $ NamePat.appendLastSegmentArgs args app
+    _             -> Expr.app src args
+    where args = [Expr.unnamed arg]
 
-callBuilder2 src@(Label lab expr) argsx = case expr of
-    Expr.App src' (Expr.Seq args) -> Expr.App src' (Expr.Seq $ args ++ argsx)
-    _                             -> Expr.App src  (Expr.Seq argsx)
-
+callBuilder2 src@(Label lab expr) args = case expr of
+    Expr.App app -> Expr.App $ NamePat.appendLastSegmentArgs args app
+    _             -> Expr.app src args
 
 --callBuilder id id2 src arg = case arg of
 --    Expr.App id' src' args -> Expr.App id' src (Arg.Named id2 "X!" src' : args)
@@ -599,7 +654,7 @@ callBuilder2 src@(Label lab expr) argsx = case expr of
 --    return ret
 
 
-
+-- OLDER:
 --mkFuncParser func defparser = case name of
 --    (Name base segments) -> multiparser
 --    _                          -> defparser
@@ -614,28 +669,55 @@ callBuilder2 src@(Label lab expr) argsx = case expr of
 --          fname = if null segments then base 
 --                                   else base ++ " " ++ join " " segments
 
+-- NEWER:
 --mkFuncParser func = State.withReserved (segNames segments) $ tok (Expr.app <$> tok (pure $ Expr.funcVar name) <*> argParser)
-mkFuncParser func = State.withReserved (segNames segments) $  labeled (Expr.App <$> labeled (pure $ Expr.Var name) <*> (Expr.Seq <$> argParser))
-    where name          = Decl._fname func
-          argExpr       = argE expr
-          exprApp a b   = (++) <$> a <*> b
-          segParsers    = fmap segParser segments
-          argParser     = foldr exprApp (pure []) segParsers
-          (MultiName base segments) = name
+--mkFuncParser func = State.withReserved (segNames segments) $  labeled (Expr.App <$> labeled (pure $ Expr.Var name) <*> (Expr.Seq <$> argParser))
+--    where name          = Name.fromName $ Decl._fname func
+--          argExpr       = argE expr
+--          exprApp a b   = (++) <$> a <*> b
+--          segParsers    = fmap segParser segments
+--          argParser     = foldr exprApp (pure []) segParsers
+--          (NamePath base segments) = name
 
-          segParser seg = case seg of
-              MultiName.Hole    -> (:[]) <$> argExpr
-              MultiName.Token s -> []    <$  Tok.symbol s
+--          segParser seg = case seg of
+--              NamePath.Hole    -> (:[]) <$> argExpr
+--              NamePath.Token s -> []    <$  Tok.symbol s
 
-          segNames = segNames' []
-          segNames' names s = case s of
-              []   -> names
-              x:xs -> case x of
-                  MultiName.Token n -> segNames' (n:names) xs
-                  MultiName.Hole    -> segNames' names     xs
+--          segNames = segNames' []
+--          segNames' names s = case s of
+--              []   -> names
+--              x:xs -> case x of
+--                  NamePath.Token n -> segNames' (n:names) xs
+--                  NamePath.Hole    -> segNames' names     xs
+
+
+-- parse all patterns starting with the longest match and going down
+-- if everything fails, try parsing again the longest one to show nice error message
+mkFuncParsers (a:as) x =   try (foldl (\a b -> try a <|> b) (mkFuncParser x a) (fmap (mkFuncParser x) as))
+                       <|> mkFuncParser x a -- nice error messages
+    
+
+appArg p = try (Expr.AppArg <$> just Tok.varIdent <* Tok.assignment <*> p) <|> (Expr.AppArg Nothing <$> p)
+
+mkFuncParser baseVar (id, mpatt) = case mpatt of
+    Nothing                                      -> baseVar
+    Just patt@(NamePat.ArgPatDesc pfx base segs) -> ParserState.withReserved segNames 
+                                                  $ labeled $ Expr.App <$> pattParser
+        where NamePat.SegmentDesc baseName baseDefs = base
+              segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
+              argExpr         = appArg expr
+              segNames        = NamePat.segmentNames patt
+              pattParser      = NamePat Nothing <$> baseParser   <*> mapM segParser segs
+              baseParser      = NamePat.Segment <$> baseMultiVar <*> defsParser baseDefs
+              baseMultiVar    = labeled . pure $ Expr.Var (NamePat.toNamePath patt)
+              defsParser defs = fmap takeJustArgs $ mapM argParser defs
+              takeJustArgs    = fmap fromJust . filter isJust 
+              argParser req   = if req then just  argExpr
+                                       else maybe argExpr
+
 
 notReserved p = do
-    rsv  <- view State.adhocReserved <$> get
+    rsv  <- view ParserState.adhocReserved <$> get
     name <- p
     if name `elem` rsv then fail $ "'" ++ name ++ "' is a reserved word"
                        else return name
@@ -646,37 +728,42 @@ varE   = do
     name <- try $ notReserved Tok.varIdent
     ast  <- lookupAST name
     case ast of
-        -- FIXME[wd]: dopiero przy dwuprzebiegowym parserze bedziemy mieli wieloczlonowe funkcje rekurencyjne
-        Just(AST.Decl func@(Decl.Function {})) -> mkFuncParser func -- FIXME - function jest deklaracją!
-        _                                      -> labeled . pure $ Expr.Var (MultiName.single name)
-                          
+        Just possibleDescs -> mkFuncParsers possibleDescs (labeled . pure $ Expr.Var (NamePath.single name))
+        Nothing            -> withLabeled $ \id -> do
+                                  let np = NamePath.single name
+                                  Namespace.regVarName id np
+                                  return $ Expr.Var np
+
+
 
 lookupAST name = do
-    scope  <- State.getScope
-    --astMap <- State.getASTMap
-    pid    <- State.getPid
+    scope      <- ParserState.getScope
+    structInfo <- ParserState.getStructInfo
+    pid        <- ParserState.getPid
+    --pragmaSet <- view (ParserState.conf . Config.pragmaSet) <$> get
+    let argPatts = view StructInfo.argPats structInfo
 
-    pragmaSet <- view (State.conf . Config.pragmaSet) <$> get
-        
     case Map.lookup pid scope of
             Nothing                    -> fail "Internal parser error [1]"
-            Just (Alias.Scope varnames typenames) -> case Map.lookup name varnames of
-                -- FIXME[wd]: zwracamy maybe. Nothing zostanie zwrocone przy rekurencji. Poprawic przy dwuprzebiegowym parserze
-                -- poprawka: Nothing zostanie rowniez zwrocone przy ustawionej fladze
-                -- poprawka: Nothing zostanie rowniez zwrocone przy "self"
-                Just dstID -> return Nothing --return $ Map.lookup dstID astMap 
-                Nothing    -> if (name == "self") 
-                    then return Nothing
-                    else case Pragma.lookup pragmaSet of
-                        Pragma.Defined Pragma.AllowOrphans -> return Nothing
-                        _                                  -> do
-                                                              x <- get
-                                                              fail $ "name '" ++ name ++ "' is not defined" ++ msgTip ++ "XXX: " ++ show x
-                        where scopedNames = Map.keys varnames
-                              simWords    = findSimWords name scopedNames
-                              msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
-                                                              else ""
-                          
+            Just (StructInfo.Scope varnames typenames) -> do
+                let possibleElems = reverse $ sortBy (compare `on` (length . fst))
+                                  $ MapForest.subElems name varnames
+                    possibleIDs   = map snd possibleElems
+                    possiblePatts = fmap (flip Map.lookup argPatts) possibleIDs
+                    possibleDescs = zip possibleIDs possiblePatts
+
+                case possibleDescs of
+                    [] -> if (name == "self")
+                          then return Nothing
+                          else fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
+                               where scopedNames = "self" : ((fmap $ join " ") $ MapForest.keys varnames)
+                                     simWords    = findSimWords name scopedNames
+                                     msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
+                                                                     else ""
+                    x  -> return $ Just x
+
+
+
 
 editCosts = EditCosts { deletionCosts      = ConstantCost 10
                       , insertionCosts     = ConstantCost 10
@@ -701,7 +788,7 @@ findSimWords word words = fmap snd simPairs
 
     
 --varE   = appID $ Expr.var <*> Tok.varIdent
-varOpE = labeled $ (Expr.Var . MultiName.single)  <$> try (Tok.parens varOp)
+varOpE = labeled $ (Expr.Var . NamePath.single)  <$> try (Tok.parens varOp)
 conE   = labeled $ Expr.Cons <$> Tok.conIdent
 
 identE = choice [ varE
@@ -819,11 +906,11 @@ appConf = Config.registerPragma (undefined :: Pragma.TabLength)
 -- FIXME[wd]: logika powina byc przeniesiona na system pluginow
 defConfig = appConf def
 -- FIXME[wd]: debugowo ustawione wartosci typow
-emptyState = def :: State ()
-defState  = emptyState & State.conf .~ defConfig
+emptyState = def :: ParserState ()
+defState  = emptyState & ParserState.conf .~ defConfig
 
 
-appSt = State.conf %~ appConf
+appSt = ParserState.conf %~ appConf
 
 --st = def {State._conf = conf}
 
@@ -838,7 +925,8 @@ parseGen2 p st = run (bundleResult p) st
 moduleParser modPath = parseGen (upToEnd $ pUnit $ pModule (last modPath) (init modPath))
 --exprParser           = parseGen (upToEnd expr)
 exprBlockParser      = parseGen (upToEnd $ indBlock expr)
-exprBlockParser2      = parseGen2 (upToEnd $ indBlock expr)
+exprBlockParser2     = parseGen2 (upToEnd $ indBlock expr)
+exprParser2          = parseGen2 (upToEnd expr)
 --patternParser        = parseGen (upToEnd pattern)
 --typeParser           = parseGen (upToEnd typeT)
 
@@ -906,7 +994,7 @@ testme ast st = ast -- runState (traverseM ast) st
                 --    where id = Enum.id lab
 
                 --registerHeaders (Label lab decl) = case decl of
-                --    Decl.Function _ name inputs _ _  -> State.regVarName id (view MultiName.base name)
+                --    Decl.Function _ name inputs _ _  -> State.regVarName id (view NamePath.base name)
                 --                                     <* State.withNewScope id (traverseM inputs)
                 --    Decl.Data     name _ cons _      -> State.regTypeName id (Name.fromName name) 
                 --                                     <* mapM_ registerCons cons
@@ -966,7 +1054,7 @@ testme ast st = ast -- runState (traverseM ast) st
     --instance (MonadState (State.State a) m, Enumerated lab) 
     --         => AST.Traversal AliasAnalysis m (Label lab (Decl.Decl f e)) where
     --    traverse base x@(Label lab ast) = case ast of
-    --        --Decl.Function path name inputs output body -> State.regVarName id (view MultiName.base name) *> State.withNewScope id continue
+    --        --Decl.Function path name inputs output body -> State.regVarName id (view NamePath.base name) *> State.withNewScope id continue
     --        --_                                          -> continue
     --        _                                          -> undefined
     --        where continue = AST.defaultTraverse base x
@@ -977,11 +1065,11 @@ testme ast st = ast -- runState (traverseM ast) st
 --    Decl.Function path name inputs output body -> State.regVarName id (view Name.base name) *> 
 --    where id = Label.label d
 
---    | Function    { _path    :: Path    , _fname    :: MultiName  , _inputs  :: [Arg f e]   , _output :: Maybe (RType f) , _body :: [e] }
+--    | Function    { _path    :: Path    , _fname    :: NamePath  , _inputs  :: [Arg f e]   , _output :: Maybe (RType f) , _body :: [e] }
 
 
 
-    --vaMod :: Module -> VAPass AliasInfo
+    --vaMod :: Module -> VAPass StructInfo
     --vaMod el@(Module.Module id cls imports classes typeAliases typeDefs fields methods modules) = do
     --    regModule el
     --    withScope id $ regVarName name id *> continue

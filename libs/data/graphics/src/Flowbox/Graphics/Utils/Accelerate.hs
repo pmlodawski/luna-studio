@@ -28,7 +28,7 @@ index3 :: A.Exp Int -> A.Exp Int -> A.Exp Int -> A.Exp A.DIM3
 index3 x y z = A.lift $ A.Z A.:. x A.:. y A.:. z
 
 -- | Sequential map function
-smap :: forall e sh. (A.Elt e, A.Shape sh) => (A.Exp e -> A.Exp e) -> A.Acc (A.Array sh e) -> A.Acc (A.Array sh e)
+smap :: forall a e sh. (A.Elt a, A.Elt e, A.Shape sh) => (A.Exp a -> A.Exp e) -> A.Acc (A.Array sh a) -> A.Acc (A.Array sh e)
 smap f arr = A.reshape inputSize $ A.asnd $ A.awhile condition step initialState
   where inputSize    = A.shape arr
         condition v  = A.unit $ A.the (A.afst v) A.<* n
@@ -81,7 +81,7 @@ deriveAccelerate t = do
                     (name, _, _type) : xs -> appT (wrapper alen xs) (return _type)
 
     let tFullType = fullTypeConstructor varT
-    
+
     let eltReprFamily =  [d|type instance EltRepr $tFullType = EltRepr $eltReprTuple
                             type instance EltRepr' $tFullType = EltRepr' $eltReprTuple
                            |]
@@ -100,7 +100,7 @@ deriveAccelerate t = do
                     (name : xs) -> appE (wrapper xs) (varE name)
 
     eltConstr <- cxt $ genConstraints ''Elt typeParams $ \className name -> classP className [varT name]
-    let eltInstance = [d| instance Elt $tFullType where 
+    let eltInstance = [d| instance Elt $tFullType where
                                 eltType _ = eltType (undefined :: $eltReprTuple)
                                 eltType' _ = eltType (undefined :: $eltReprTuple)
                                 toElt p = case toElt p of { $patternTuple -> $expressionData }
@@ -115,10 +115,10 @@ deriveAccelerate t = do
                                     toTuple t = case toTuple t of { $patternTuple -> $expressionData }
                             |]
 
-    eltPlainConstr <- cxt $ genConstraints ''Elt typeParams $ 
+    eltPlainConstr <- cxt $ genConstraints ''Elt typeParams $
         \className name -> classP className [appT (conT ''A.Plain) $ varT name]
 
-    liftExpConstr <- cxt $ genConstraints ''A.Lift typeParams $ 
+    liftExpConstr <- cxt $ genConstraints ''A.Lift typeParams $
         \className name -> classP className [conT ''A.Exp, varT name]
 
     let tFullPlainType = fullTypeConstructor (\name -> appT (conT ''A.Plain) $ varT name)
@@ -126,7 +126,7 @@ deriveAccelerate t = do
     let accTupleLift = wrapper (reverse paramNames)
             where wrapper accsr = case accsr of
                     []          -> conE 'NilTup
-                    (name : xs) -> infixE (Just $ wrapper xs) 
+                    (name : xs) -> infixE (Just $ wrapper xs)
                                           (conE 'SnocTup)
                                           (Just $ appE (varE 'A.lift) (varE name))
 
@@ -139,19 +139,19 @@ deriveAccelerate t = do
     let genEqConstraints p = case p of
             []                      -> []
             ((n1, PlainTV n2) : xs) -> equalP (varT n2) (appT (conT ''A.Exp) (varT n1)) : genEqConstraints xs
-    
+
     let typeParamNames = zip (fmap (mkName . pure) ['a'..]) typeParams
     expEqConstr <- cxt $ genEqConstraints typeParamNames
     unliftEltConstr <- cxt $ genConstraints ''Elt (fmap (PlainTV . fst) typeParamNames) $
         \className name -> classP className [varT name]
-    
+
 
     let genUnlift :: Name -> ExpQ
         genUnlift t = wrapper $ zip accessors [0 .. length accessors]
             where genTupIdx 0 = conE 'ZeroTupIdx
                   genTupIdx n = appE (conE 'SuccTupIdx) (genTupIdx $ n - 1)
                   wrapper [] = conE valueConstructorName
-                  wrapper (((name, _, _), nr) : xs) = 
+                  wrapper (((name, _, _), nr) : xs) =
                         appE (wrapper xs) (appE (conE 'Exp) (infixE (Just $ genTupIdx nr)
                                                                       (conE 'Prj)
                                                                       (Just $ varE t)))
@@ -195,7 +195,7 @@ deriveEach t = do
                                                (Just $ appE (varE f) (varE name))
 
     let freeVariable = varT $ mkName "fr"
-    let singularType = appT (conT typeName) freeVariable 
+    let singularType = appT (conT typeName) freeVariable
     [d| instance Each $singularType $singularType $freeVariable $freeVariable where
             each f $patternData = $(genEach 'f)
             {-# INLINE each #-}

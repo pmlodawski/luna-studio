@@ -41,6 +41,10 @@ nodeByID :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node
 nodeByID = Batch.getNode
 
 
+nodesByIDs :: [Node.ID] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(Node.ID, Maybe Node)]
+nodesByIDs = Batch.getNodes
+
+
 addNode :: Node -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node.ID
 addNode node bc libID projectID = do
     (graph, propertyMap) <- Batch.getGraphView bc libID projectID
@@ -49,7 +53,6 @@ addNode node bc libID projectID = do
         fixedNode = OutputName.fixEmpty node newID
         newGraph  = GraphView.insNode (newID, fixedNode) graph
     Batch.setGraphView (newGraph, propertyMap) bc libID projectID
-    Batch.safeInterpretLibrary libID projectID
     return newID
 
 
@@ -62,7 +65,6 @@ updateNode (nodeID, newNode) bc libID projectID = do
         newGraph  = GraphView.replaceNode (newID, fixedNode) nodeID graph
         newPropertyMap = PropertyMap.move nodeID newID propertyMap
     Batch.setGraphView (newGraph, newPropertyMap) bc libID projectID
-    Batch.safeInterpretLibrary libID projectID
     return newID
 
 
@@ -80,7 +82,6 @@ removeNodes nodeIDs bc libID projectID = do
     let newGraph = GraphView.delNodes nodeIDs graph
         newPropertyMap = foldl (flip PropertyMap.delete) propertyMap nodeIDs
     Batch.setGraphView (newGraph, newPropertyMap) bc libID projectID
-    Batch.safeInterpretLibrary libID projectID
 
 
 connect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
@@ -92,7 +93,6 @@ connect srcNodeID srcPort dstNodeID dstPort bc libID projectID = do
     GraphView.isNotAlreadyConnected graph dstNodeID dstPort `assertE` "Unable to connect: Port is already connected"
     let newGraph = GraphView.insEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) graph
     Batch.setGraphView (newGraph, propertyMap) bc libID projectID
-    Batch.safeInterpretLibrary libID projectID
 
 
 disconnect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
@@ -103,4 +103,3 @@ disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID = do
     GraphView.gelem dstNodeID graph `assertE` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
     let newGraph = GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) graph
     Batch.setGraphView (newGraph, propertyMap) bc libID projectID
-    Batch.safeInterpretLibrary libID projectID

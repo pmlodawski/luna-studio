@@ -4,20 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-
 module Main where
 
-import Geom2D
-import Geom2D.CubicBezier.Basic
-
-import Flowbox.Math.Function.Model 	   as Func
-import Flowbox.Math.Function.Construct as Func
 import Flowbox.Prelude
+
+
 
 main :: IO ()
 main = do
     print "- - - = = =   Func Test  = = = - - -"
 
     --let func = bsplineLinearFromPoints
-
-    return ()

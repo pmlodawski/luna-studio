@@ -16,21 +16,21 @@ import qualified Data.Map   as Map
 import qualified Data.Maybe as Maybe
 
 import           Flowbox.Control.Error
-import           Flowbox.Prelude                                hiding (exp)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Lit.Decimal                    as GenDecimal
-import qualified Generated.Proto.Lit.Float                      as GenFloat
-import qualified Generated.Proto.Lit.Lit                        as Gen
-import qualified Generated.Proto.Lit.Lit.Cls                    as Gen
-import qualified Generated.Proto.Lit.Number                     as GenNumber
-import qualified Generated.Proto.Lit.Repr                       as Gen
-import qualified Generated.Proto.Lit.Repr.Cls                   as GenCls
-import qualified Generated.Proto.Lit.Sign                       as Gen
-import           Luna.AST.Lit                                   (Lit)
-import qualified Luna.AST.Lit                                   as Lit
-import           Luna.AST.Lit.Number                            (Number (Number))
-import qualified Luna.AST.Lit.Number                            as Number
-import qualified Text.ProtocolBuffers.Extensions                as Extensions
+import           Flowbox.Data.Convert
+import           Flowbox.Prelude                 hiding (exp)
+import qualified Generated.Proto.Lit.Decimal     as GenDecimal
+import qualified Generated.Proto.Lit.Float       as GenFloat
+import qualified Generated.Proto.Lit.Lit         as Gen
+import qualified Generated.Proto.Lit.Lit.Cls     as Gen
+import qualified Generated.Proto.Lit.Number      as GenNumber
+import qualified Generated.Proto.Lit.Repr        as Gen
+import qualified Generated.Proto.Lit.Repr.Cls    as GenCls
+import qualified Generated.Proto.Lit.Sign        as Gen
+import           Luna.AST.Lit                    (Lit)
+import qualified Luna.AST.Lit                    as Lit
+import           Luna.AST.Lit.Number             (Number (Number))
+import qualified Luna.AST.Lit.Number             as Number
+import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 
 

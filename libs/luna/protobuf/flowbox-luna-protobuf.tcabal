@@ -26,11 +26,12 @@ Library
                    `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
-                  protocol-buffers-fork,
-                  protocol-buffers-descriptor-fork,
+                  bytestring,
+                  containers,
+                  filepath,
                   flowbox-utils,
                   luna-core,
                   luna-distribution,
-                  containers,
-                  bytestring
+                  protocol-buffers,
+                  protocol-buffers-descriptor
 

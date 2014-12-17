@@ -10,6 +10,7 @@ import Control.Monad.RWS          hiding (join)
 import Control.Monad.Trans.Either
 import System.TimeIt
 
+import           Flowbox.Data.Version              ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Log.Logger         as Logger
@@ -44,6 +45,6 @@ main_inner = Luna.run $ do
                                                    (UniPath.fromUnixString filePath)
     let name = "Std"
         path = UniPath.fromUnixString "~/.flowbox/visual/stdlib.lunalib"
-        library = Library name path ast PropertyMap.empty
+        library = Library name def path ast PropertyMap.empty
     liftIO $ LibSerialization.storeLibrary library Nothing
     return ()

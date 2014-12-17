@@ -7,6 +7,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Flowbox.Prelude(
     module Flowbox.Prelude,
@@ -22,15 +23,17 @@ import           Control.Applicative       as X
 import           Control.Lens              as X
 import           Data.String               as X (IsString(fromString))
 import           Control.Monad.IO.Class    as X (MonadIO, liftIO)
+import           Data.Monoid               as X (Monoid, mempty, mappend, mconcat, (<>))
+import           GHC.Generics              as X (Generic)
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.Trans       (lift)
 import           Control.Monad.Trans.Class (MonadTrans)
 import           Data.Default              as X
 import           Data.Foldable             (forM_)
-import           Data.Monoid               as X (Monoid, mappend, mempty)
 import qualified Data.Traversable          as Traversable
 import           Data.String.Repr          as X (StrRepr, strRepr)
 import           Text.Show.Pretty          (ppShow)
+import           Data.List                 (intersperse)
 
 import           Prelude hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
@@ -168,3 +171,15 @@ unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM predicate a = do
     bool <- predicate
     unless bool a
+
+
+mjoin :: Monoid a => a -> [a] -> a
+mjoin delim l = mconcat (intersperse delim l)
+
+
+show' :: (Show a, IsString s) => a -> s
+show' = fromString . Prelude.show
+
+
+class Convertible a b where
+    convert :: a -> b

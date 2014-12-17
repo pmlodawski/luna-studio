@@ -7,6 +7,8 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE OverlappingInstances      #-}
 
 module Luna.Data.Namespace where
 
@@ -17,21 +19,32 @@ import qualified Data.Maps           as Map
 import           Data.Maybe          (fromJust)
 import           Flowbox.Prelude     hiding (head, id)
 import           Luna.AST.AST        (ID)
-import           Luna.Data.AliasInfo (AliasInfo)
-import qualified Luna.Data.AliasInfo as Alias
+import           Luna.Data.StructInfo (StructInfo, StructInfoMonad)
+import qualified Luna.Data.StructInfo as StructInfo
 import           Data.Maybe          (fromJust)
 import qualified Luna.AST.AST        as AST
+import           Control.Monad.RWS   (RWST)
+import qualified Control.Monad.RWS   as RWST
+import            Control.Monad.Trans.Class (lift, MonadTrans)
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
 data Namespace = Namespace { _stack :: [ID]
-                           , _info :: AliasInfo
+                           , _info  :: StructInfo
                            } deriving (Show, Eq, Generic, Read)
 
 
 makeLenses ''Namespace
+
+----------------------------------------------------------------------
+-- Type classes
+----------------------------------------------------------------------
+
+class NamespaceMonad m where
+    get :: m Namespace
+    put :: Namespace -> m ()
 
 ----------------------------------------------------------------------
 -- Utils
@@ -50,8 +63,8 @@ pushNewScope :: ID -> Namespace -> Namespace
 pushNewScope id ns@(Namespace st inf) = ns
                                    & pushID id
                                    & info .~ ninfo
-    where ninfo  = inf & Alias.scope .~ scope
-          scopes = view Alias.scope inf
+    where ninfo  = inf & StructInfo.scope .~ scope
+          scopes = view StructInfo.scope inf
           pScope = case head ns of
               Nothing  -> def
               Just pid -> fromJust $ Map.lookup pid scopes
@@ -71,18 +84,18 @@ popID :: Namespace -> (ID, Namespace)
 popID ns = (id, ns & stack .~ ids)
     where (id:ids) = view stack ns
 
-bindVar :: ID -> String -> Namespace -> Either () (Namespace)
-bindVar id name ns = 
-    case head ns of
-        Nothing  -> Left ()
-        Just pid -> case view (info.Alias.scope.at pid) ns of
-            Nothing    -> Left ()
-            Just (Alias.Scope varnames typenames) -> case (varnames^.at name) of 
-                Nothing    -> Left ()
-                Just dstID -> Right (ns & info . Alias.alias . at id ?~ dstID)
+--bindVar :: ID -> String -> Namespace -> Either () (Namespace)
+--bindVar id name ns = 
+--    case head ns of
+--        Nothing  -> Left ()
+--        Just pid -> case view (info.StructInfo.scope.at pid) ns of
+--            Nothing    -> Left ()
+--            Just (StructInfo.Scope varnames typenames) -> case (varnames^.at name) of 
+--                Nothing    -> Left ()
+--                Just dstID -> Right (ns & info . StructInfo.StructInfo . at id ?~ dstID)
 
 
-regParent id pid = info %~ Alias.regParent id pid
+regParent id pid = info %~ StructInfo.regParent id pid
 
 
 
@@ -108,8 +121,8 @@ regParent id pid = info %~ Alias.regParent id pid
 --    popScope
 --    return ret
 
-modAlias :: (AliasInfo-> AliasInfo) -> Namespace -> Namespace
-modAlias f = info %~ f
+modStructInfo :: (StructInfo -> StructInfo) -> Namespace -> Namespace
+modStructInfo f = info %~ f
 
 ------------------------------------------------------------------------
 ---- Instances
@@ -126,3 +139,22 @@ instance Monoid Namespace where
     mappend a b = Namespace (mappend (a ^. stack) (b ^. stack))
                             (mappend (a ^. info)  (b ^. info))
                             
+
+instance (Monad m, Monoid w) => NamespaceMonad (RWST r w Namespace m) where
+    get = RWST.get
+    put = RWST.put
+
+-- default instances
+
+instance (MonadTrans t, NamespaceMonad m, Monad m) => NamespaceMonad (t m) where
+    get = lift get
+    put = lift . put
+
+
+instance (Monad m, NamespaceMonad m) => StructInfoMonad m where
+    get = do 
+        ns <- get
+        return $ ns ^. info
+    put i = do
+        ns <- get
+        put (ns & info .~ i)
