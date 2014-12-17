@@ -5,14 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE ConstraintKinds           #-}
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE TemplateHaskell           #-}
-{-# LANGUAGE TupleSections             #-}
-{-# LANGUAGE OverloadedStrings         #-}
-{-# LANGUAGE MultiParamTypeClasses         #-}
 
 module Data.Text.CodeBuilder where
 
@@ -22,15 +15,17 @@ import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Builder as Text
 import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
-
+import           Data.Text.Builder.Poly   (ToTextBuilder, toTextBuilder)
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
-data CodeType a = Simple  { code :: a }
-                | Complex { code :: a }
+data CodeType a = Simple  { _code :: a }
+                | Complex { _code :: a }
+                deriving (Show, Eq, Generic, Read, Functor)
 
+makeLenses ''CodeType
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -43,18 +38,18 @@ class CodeBuilder c where
 class Generator g where
     generate :: CodeBuilder a => g -> a
 
-class ToTextBuilder a where
-    toTextBuilder :: a -> Text.Builder
-
 
 ----------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------
 
 simplify :: CodeBuilder a => (CodeType Text.Builder) -> a
-simplify = \case
+simplify = simplifyWith (\c -> "(" <> c <> ")")
+
+simplifyWith :: CodeBuilder a => (Text.Builder -> Text.Builder) -> (CodeType Text.Builder) -> a
+simplifyWith f = \case
     Simple  c -> simple c
-    Complex c -> simple $ "(" <> c <> ")"
+    Complex c -> simple $ f c
 
 simple' :: (ToTextBuilder a, CodeBuilder c) => a -> c
 simple'  = simple.toTextBuilder
@@ -71,14 +66,12 @@ sgenmap = map sgenerate
 sgenerate :: (Generator g, CodeBuilder a) => g -> a
 sgenerate = simplify.generate
 
+
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
 
 -- basic
-
-instance Functor CodeType where
-    fmap f builder = builder { code = f $ code builder }
 
 instance Applicative CodeType where
     pure = Simple
@@ -86,7 +79,7 @@ instance Applicative CodeType where
         Simple f -> case r of
             Simple  v -> Simple  $ f v
             Complex v -> Complex $ f v
-        Complex f -> Complex $ f (code r)
+        Complex f -> Complex $ f (r ^. code)
 
 
 -- CodeBuilder
@@ -98,18 +91,6 @@ instance CodeBuilder (CodeType Text.Builder) where
 instance CodeBuilder Text.Builder where
     simple   = id
     complex  = id
-
-
--- ToTextBuilder
-
-instance ToTextBuilder Text where
-    toTextBuilder = fromLazyText
-
-instance ToTextBuilder String where
-    toTextBuilder = fromString
-
-instance ToTextBuilder Text.Builder where
-    toTextBuilder = id
 
 
 -- Convertible

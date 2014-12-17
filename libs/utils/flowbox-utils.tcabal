@@ -12,12 +12,21 @@ Library
 
     GHC-Options:    -Wall -O2
 
-    Extensions:     DoAndIfThenElse,
-                    NoImplicitPrelude,
-                    OverloadedStrings,
-                    TypeSynonymInstances,
-                    FlexibleInstances,
-                    LambdaCase
+    Extensions:   DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings,
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  DeriveFoldable,
+                  FlexibleInstances,
+                  LambdaCase,
+                  ConstraintKinds
 
     Exposed-modules: `findmodules('src', '.*\.hs')`
 

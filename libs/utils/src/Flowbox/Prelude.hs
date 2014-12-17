@@ -24,6 +24,7 @@ import           Control.Lens              as X
 import           Data.String               as X (IsString(fromString))
 import           Control.Monad.IO.Class    as X (MonadIO, liftIO)
 import           Data.Monoid               as X (Monoid, mempty, mappend, mconcat, (<>))
+import           GHC.Generics              as X (Generic)
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.Trans       (lift)
 import           Control.Monad.Trans.Class (MonadTrans)
