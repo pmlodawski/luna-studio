@@ -4,48 +4,66 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Flowbox.Data.Version where
+module Flowbox.Data.Version (
+    module Flowbox.Data.Version,
+    module X,
+) where
 
+import           Control.Arrow (first)
 import           Data.Aeson
-import           Data.Map          (Map)
-import qualified Data.Map          as Map
-import           Data.String.Utils (join)
-import           Flowbox.Prelude
+import           Data.Map      (Map)
+import qualified Data.Map      as Map
+import           Data.Version  as X
 import           GHC.Generics
+import qualified Text.ParserCombinators.ReadP as ReadP
+
+import Flowbox.Prelude
+
+
+
+newtype Name = Name { toString :: String }
 
 
 data Versioned el = Versioned { base    :: el
                               , version :: Version
-                              } deriving (Read, Eq, Generic, Ord)
-
-data Version = Version { branch :: [Int]
-                       , tags   :: [String]
-                       } deriving (Read, Eq, Generic, Ord)
+                              } deriving (Eq, Generic, Ord)
 
 
 partition :: Int -> [Version] -> Map [Int] [Version]
-partition i = foldl (\m xs -> Map.insertWith (++) (take i $ branch xs) [xs] m) mempty
+partition i = foldl (\m xs -> Map.insertWith (++) (take i $ versionBranch xs) [xs] m) mempty
 
-showBranch :: [Int] -> String
-showBranch b = join "." (map show b)
+
+readVersionMaybe :: String -> Maybe Version
+readVersionMaybe s = case [ x | (x,"") <- ReadP.readP_to_S parseVersion $ s] of
+    [x] -> Just x
+    _   -> Nothing
 
 ------------------------------------------------------------------------
 -- INSTANCES
 ------------------------------------------------------------------------
 
-instance Show Version where
-    show v = showBranch (branch v) ++ join "" (map ("-"++) $ tags v)
+deriving instance Generic Version
+
+instance Show Name where
+    show = toString
+
+instance Read Name where
+    readsPrec n = map (first Name) . readsPrec n . quote
+        where quote s = '"' : s ++ ['"']
 
 instance Show el => Show (Versioned el) where
-    show (Versioned el v) = show el ++ "-" ++ show v
+    show (Versioned el v) = show el ++ "-" ++ showVersion v
 
 instance Default Version where
-    def = Version { branch = [0,1,0]
-                  , tags   = def
+    def = Version { versionBranch = [0,1,0]
+                  , versionTags   = def
                   }
 
 instance ToJSON Version
 instance FromJSON Version
+
 
