@@ -114,7 +114,10 @@ tcMod :: (StageTypecheckerCtx lab m a) => LModule lab a -> StageTypecheckerPass 
 tcMod mod = modify ("456":) *> defaultTraverseM mod
 
 tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m StageTypecheckerState
-tcUnit ast = modify ("123123":) *> defaultTraverseM ast *> get
+tcUnit ast = do
+  modify ("123123":)
+  defaultTraverseM ast
+  get
 
 
 

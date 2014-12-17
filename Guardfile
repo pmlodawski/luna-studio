@@ -45,6 +45,14 @@ guard :shell, :version => 2, :cli => "--color" do
       command "../../../scripts/runhaskell", File.read("runtest.hs")
     end
   end
+
+  watch(%r{^playground.hs$}) do |m|
+    lastbuildguard(m[0]) do
+      section "playground file change"
+      # command "../../../scripts/runhaskell", File.read("playground.hs")
+      command "./playground" if command("ghc playground.hs")
+    end
+  end
 end
 
 
