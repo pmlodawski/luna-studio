@@ -9,10 +9,9 @@ module Luna.AST.Import(
     Import(..),
 ) where
 
-import Flowbox.Data.Path
 import Flowbox.Prelude
 
 
 
-data Import = Import {path :: Path, name :: String} deriving (Show)
+data Import = Import {path :: [String], name :: String} deriving (Show)
 
