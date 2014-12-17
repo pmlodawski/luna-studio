@@ -18,38 +18,38 @@
 module Main where
 
 
-import qualified Luna.Parser.Parser as Parser
+--import qualified Luna.Parser.Parser as Parser
 
-import qualified Luna.ASTNew.Decl       as Decl
-import qualified Luna.ASTNew.Enum       as Enum
-import qualified Luna.ASTNew.Label      as Label
-import qualified Luna.ASTNew.Module     as Module
-import qualified Luna.ASTNew.Name       as Name
-import qualified Luna.ASTNew.Unit       as Unit
+--import qualified Luna.ASTNew.Decl       as Decl
+--import qualified Luna.ASTNew.Enum       as Enum
+--import qualified Luna.ASTNew.Label      as Label
+--import qualified Luna.ASTNew.Module     as Module
+--import qualified Luna.ASTNew.Name       as Name
+--import qualified Luna.ASTNew.Unit       as Unit
 
 
 
 import           Luna.Data.Namespace               (Namespace (Namespace))
-import           Luna.Data.Source                  (Code (Code), Medium (String), Source (Source))
+import           Luna.Data.Source                  (Medium (String), Source (Source))
 import qualified Luna.Pass                         as Pass
-import qualified Luna.Pass2.Analysis.Struct        as AA
+--import qualified Luna.Pass2.Analysis.Struct        as AA
 import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
 import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
 import           Text.Show.Pretty                  (ppShow)
 
 
-import qualified Luna.ASTNew.Traversals       as AST
-import           Luna.ASTNew.Decl             (LDecl)
-import qualified Luna.Parser.State            as ParserState
-import           Luna.Pass                    (PassMonad, PassCtx, Pass(Pass))
-import           Luna.ASTNew.Enum             (Enumerated, IDTag(IDTag))
-import           Luna.ASTNew.Expr             (LExpr, Expr)
-import           Luna.ASTNew.Module           (Module(Module), LModule)
-import           Data.Monoid                  (Monoid, mempty)
-import           Control.Monad.State          (put, get, modify)
-import           Luna.ASTNew.NameBase         (nameBase)
-import qualified Luna.ASTNew.Pat              as Pat
-import qualified Luna.ASTNew.Arg              as Arg
+--import qualified Luna.ASTNew.Traversals       as AST
+--import           Luna.ASTNew.Decl             (LDecl)
+--import qualified Luna.Parser.State            as ParserState
+--import           Luna.Pass                    (PassMonad, PassCtx, Pass(Pass))
+--import           Luna.ASTNew.Enum             (Enumerated, IDTag(IDTag))
+--import           Luna.ASTNew.Expr             (LExpr, Expr)
+--import           Luna.ASTNew.Module           (Module(Module), LModule)
+--import           Data.Monoid                  (Monoid, mempty)
+--import           Control.Monad.State          (put, get, modify)
+--import           Luna.ASTNew.NameBase         (nameBase)
+--import qualified Luna.ASTNew.Pat              as Pat
+--import qualified Luna.ASTNew.Arg              as Arg
 import Data.Text.Lazy (unpack)
 import qualified Luna.Pass2.Analysis.Struct as SA
 import qualified Luna.Pass2.Transform.Hash                 as Hash
@@ -58,17 +58,17 @@ import qualified Luna.Pass2.Target.HS.HSC                  as HSC
 import qualified Luna.Pass2.Transform.SSA                  as SSA
 import qualified Luna.Pass2.Transform.Desugar.ImplicitSelf as ImplSelf
 
-import Control.Applicative
-import Control.Monad
+--import Control.Applicative
+--import Control.Monad
 import Control.Monad.Trans.Either
 
-import Control.Lens hiding (without)
-import Data.List    (intercalate,intersperse)
+--import Control.Lens hiding (without)
+import Data.List    (intercalate)
 
 
 -- TODO [kgdk]
 import Inference as FooInfer
-import Solver    as FooSolver
+--import Solver    as FooSolver
 
 
 

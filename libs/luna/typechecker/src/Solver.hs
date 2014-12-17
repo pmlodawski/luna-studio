@@ -1,7 +1,8 @@
 module Solver where
 
 
-
+import Control.Applicative
+import Control.Monad
 
 -- The type language
 
@@ -142,7 +143,7 @@ instance TypesAndConstraints TypeScheme where
 -- * Category: MONAD DECLARATIONS
 -- *--------------------------------------------------
 
-
+unTP :: TP t -> (TVar, Subst, Constraint) -> E (TVar, Subst, Constraint, t)
 unTP (TP a) = a
 
 
@@ -150,8 +151,19 @@ instance Monad TP where
  m >>= k = TP ( \ (n,s,c) ->
                      case unTP (m) (n,s,c) of
                        Suc (n',s',c',x) -> unTP (k x) (n',s',c')
-                       Err s            -> Err s )
+                       Err se           -> Err se )
  return x = TP ( \ (n,s,c) -> return (n,s,c,x) )
+
+
+instance Functor TP where
+  fmap f m = TP $ \(n,s,c) ->
+                     case unTP (m) (n,s,c) of
+                       Suc (n',s',c',x) -> Suc (n',s',c',f x)
+                       Err se           -> Err se
+
+instance Applicative TP where
+  pure = return
+  (<*>) = ap
 
 
 instance Monad E where
@@ -159,6 +171,15 @@ instance Monad E where
            Suc a -> k a
            Err s -> Err s
  return x = Suc x
+
+instance Functor E where
+  fmap f m = case m of
+           Suc a -> Suc (f a)
+           Err s -> Err s
+
+instance Applicative E where
+  pure = return
+  (<*>) = ap
 
 
 report_error :: String -> a -> TP a
@@ -206,8 +227,8 @@ without (x:a) b = if elem x b then without a b
 
 add_cons :: Constraint -> Constraint -> Constraint
 add_cons (C p1) (C p2)               = C (p1 ++ p2)
-add_cons (C p1) (Proj tv p2)         = Proj tv (p1 ++ p2)
-add_cons (Proj tv p1) (C p2)         = Proj tv (p1 ++ p2)
+add_cons (C p1) (Proj tvr p2)        = Proj tvr (p1 ++ p2)
+add_cons (Proj tvr p1) (C p2)        = Proj tvr (p1 ++ p2)
 add_cons (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)
 
 
@@ -331,13 +352,13 @@ projection _ _ = true_cons
 
 cs (s, C c) =
  do (r,e) <- extract_predicates c
-    (s,r') <- closure (s,r,e)
+    (s',r') <- closure (s,r,e)
     b <- check_consistency r'
-    if b then do c' <- apply s (C c)
+    if b then do c' <- apply s' (C c)
                  c'' <- simplify c'
-                 return (s, c'')
+                 return (s', c'')
      else report_error "inconsistent constraint" (null_subst, C [TRUE])
-
+cs _ = error "this case was not taken into account in original HM(Rec)"
 
 -- divide predicates into record predicates and equality predicates
 
@@ -375,7 +396,7 @@ extract1 ((Reckind (Record f) l t):p) =
        e' <- extract1 p
        return (e:e')
 extract1 (_:p) = extract1 p
-
+get_extract1 :: Eq a => [(a, Type)] -> a -> Type -> TP Predicate
 get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" ((TV 0) `Subsume` (TV 0))
 get_extract1 ((l,t):f) l' t' = if l == l' then return (t `Subsume` t')
                                else get_extract1 f l' t'
@@ -389,7 +410,7 @@ extract2 ((Reckind t l t'):p) =
        e' <- get_extract2 p t l t'
        return (e ++ e')
 extract2 (_:p) = extract2 p
-
+get_extract2 :: Monad m => [Predicate] -> Type -> Fieldlabel -> Type -> m [Predicate]
 get_extract2 [] _ _ _ = return []
 get_extract2 ((Reckind a l a'):p) t l' t' = if (l == l') && (a == t)
                 then do e <- get_extract2 p t l' t'
@@ -413,7 +434,7 @@ check_consistency (_:p) = check_consistency p
 simplify :: Constraint -> TP Constraint
 simplify (C p) = do p' <- simplify_predicate p
                     return (C p')
-
+simplify _ = error "this case was not taken into account in original HM(Rec)"
 
 -- simplification of predicates
 
@@ -455,12 +476,13 @@ unify (s, t, TV x) = unify (s, TV x, t)
 unify (s, t1 `Fun` t1', t2 `Fun` t2') = do s' <- unify (s, t1, t2)
                                            unify (s', t1', t2')
 unify (s, Record f, Record f') = g (s,f,f') where
-          g (s, [], []) = return s
-          g (s, (l,t):f, (l',t'):f') =
+          g (ss, [], []) = return ss
+          g (ss, (l,t):ff, (l',t'):ff') =
                         if l == l'
-                        then do s' <- unify(s,t,t')
-                                g(s',f,f')
+                        then do ss' <- unify(ss,t,t')
+                                g(ss',ff,ff')
                         else report_error "not matching record" null_subst
+          g _ = error "this case was not taken into account in original HM(Rec)"
 unify (s, _, _)  = report_error "unify:uncompatible type" null_subst
 
 
@@ -498,7 +520,7 @@ unify (s, _, _)  = report_error "unify:uncompatible type" null_subst
 --            (101, Poly [302,303] ( C [Reckind (TV 302) 201 (TV 303)]) ((TV 302) `Fun` (TV 303)))],
 --           App (Id 101) (Id 100)))
 --           (init_tvar, null_subst, true_cons)
-
+rec2, rec3 :: TP (Subst, Constraint)
 rec2 = cs(null_subst, ( C [(Reckind (TV 100) 200 ((TV 300) `Fun` (TV 300))),
                   (Reckind (TV 100) 200 (TV 301))]))
 
