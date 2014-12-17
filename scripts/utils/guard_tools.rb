@@ -87,7 +87,7 @@ def command(cmd, inp=nil)
     puts "STDOUT: none".starsallaround.green
   end
 
-  if stderr
+  unless stderr.empty?
     puts "STDERR".starsallaround.red
     puts stderr
   end
