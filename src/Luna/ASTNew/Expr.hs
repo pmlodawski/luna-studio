@@ -46,7 +46,7 @@ type ArgName = String
 
 data Expr a v
     = Lambda      { _inputs  :: [ExprArg a v] , _output   :: LType a      , _body   :: [LExpr a v] }
-    | RecUpdt     { _src     :: LExpr a v     , _selector :: Selector     , _expr   :: LExpr a v   }
+    | RecUpdt     { _vname   :: VName         , _selector :: Selector     , _expr   :: LExpr a v   }
     | App         (ExprApp a v)
     | Case        { _expr    :: LExpr a v     , _match    :: [LMatch a v]                          }
     | Typed       { _cls     :: LType a       , _expr     :: LExpr a v                             }

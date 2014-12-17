@@ -13,15 +13,16 @@ module Luna.Data.HAST.Module (
 import Flowbox.Prelude
 import Luna.Data.HAST.Expr
 import Luna.Data.HAST.Extension (Extension)
+import           Data.Text.Lazy (Text)
 
 
 empty :: Expr
 empty = Module [] [] [] []
 
-mk :: [String] -> Expr
+mk :: [Text] -> Expr
 mk path' = Module path' [] [] []
 
-addImport :: [String] -> Expr -> Expr
+addImport :: [Text] -> Expr -> Expr
 addImport path' mod' = mod' { imports = Import False path' Nothing : imports mod' }
 
 addExt :: Extension -> Expr -> Expr
