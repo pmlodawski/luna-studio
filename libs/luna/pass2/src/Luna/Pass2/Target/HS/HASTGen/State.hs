@@ -18,6 +18,7 @@ import qualified Luna.AST.Expr         as LExpr
 import qualified Luna.AST.Type         as LType
 import qualified Luna.Data.HAST.Expr   as HExpr
 import qualified Luna.Data.HAST.Module as Module
+import           Luna.Data.HAST.Comment (Comment)
 
 import Flowbox.System.Log.Logger
 
@@ -102,10 +103,11 @@ addFunction fun = do
     m <- getModule
     setModule $ m { Module.body = Module.body m ++ [fun] }
 
-addComment :: GenStateM m => HExpr -> m ()
+addComment :: GenStateM m => Comment -> m ()
 addComment c = do
+    let expr = HExpr.Comment c
     m <- getModule
-    setModule $ m { Module.body = Module.body m ++ [c] }
+    setModule $ m { Module.body = Module.body m ++ [expr] }
 
 
 addTHExpression :: GenStateM m => HExpr -> m ()

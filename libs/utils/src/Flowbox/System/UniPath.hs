@@ -20,7 +20,7 @@ import qualified System.Directory                   as Directory
 import qualified System.Environment                 as Environment
 import qualified System.FilePath                    as FilePath
 
-import Flowbox.Prelude hiding (empty)
+import Flowbox.Prelude hiding (empty, fromList, toList)
 
 
 
@@ -90,6 +90,18 @@ toList = fmap str where
             Empty    -> ""
             Var v    -> v
 
+-- FIXME[wd]: poprawic caly UniPath !!! kawalek refactoru:
+--instance IsList UniPath where
+--    type (Item UniPath) = String
+--    fromList  = foldr prepend def
+--    toList    = fmap str where
+--        str item = case item of
+--                Node txt -> txt
+--                Root txt -> txt
+--                Up       -> ".."
+--                Current  -> "."
+--                Empty    -> ""
+--                Var v    -> v
 
 append :: String -> UniPath -> UniPath
 append snode path = path ++ [toPathItem snode]
