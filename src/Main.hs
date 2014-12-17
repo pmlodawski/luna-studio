@@ -6,110 +6,51 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 
--- *------------------------------------------------
--- * Specification of the generic HM(X)
--- * type inference system in Haskell
--- *
--- * This instance deals with Ohori style records
--- *------------------------------------------------
-
-
-
 module Main where
 
 
---import qualified Luna.Parser.Parser as Parser
+import            Luna.Data.Namespace                       (Namespace (Namespace))
+import            Luna.Data.Source                          (Medium (String), Source (Source))
 
---import qualified Luna.ASTNew.Decl       as Decl
---import qualified Luna.ASTNew.Enum       as Enum
---import qualified Luna.ASTNew.Label      as Label
---import qualified Luna.ASTNew.Module     as Module
---import qualified Luna.ASTNew.Name       as Name
---import qualified Luna.ASTNew.Unit       as Unit
+import qualified  Luna.Pass                                 as Pass
+import qualified  Luna.Pass2.Analysis.Struct                as P2SA
+import qualified  Luna.Pass2.Target.HS.HASTGen              as P2HASTGen
+import qualified  Luna.Pass2.Target.HS.HSC                  as P2HSC
+import qualified  Luna.Pass2.Transform.Desugar.ImplicitSelf as P2ImplSelf
+import qualified  Luna.Pass2.Transform.Hash                 as P2Hash
+import qualified  Luna.Pass2.Transform.Parse.Stage1         as P2Stage1
+import qualified  Luna.Pass2.Transform.Parse.Stage2         as P2Stage2
+import qualified  Luna.Pass2.Transform.SSA                  as P2SSA
 
-
-
-import           Luna.Data.Namespace               (Namespace (Namespace))
-import           Luna.Data.Source                  (Medium (String), Source (Source))
-import qualified Luna.Pass                         as Pass
---import qualified Luna.Pass2.Analysis.Struct        as AA
-import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
-import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
-import           Text.Show.Pretty                  (ppShow)
-
-
---import qualified Luna.ASTNew.Traversals       as AST
---import           Luna.ASTNew.Decl             (LDecl)
---import qualified Luna.Parser.State            as ParserState
---import           Luna.Pass                    (PassMonad, PassCtx, Pass(Pass))
---import           Luna.ASTNew.Enum             (Enumerated, IDTag(IDTag))
---import           Luna.ASTNew.Expr             (LExpr, Expr)
---import           Luna.ASTNew.Module           (Module(Module), LModule)
---import           Data.Monoid                  (Monoid, mempty)
---import           Control.Monad.State          (put, get, modify)
---import           Luna.ASTNew.NameBase         (nameBase)
---import qualified Luna.ASTNew.Pat              as Pat
---import qualified Luna.ASTNew.Arg              as Arg
-import Data.Text.Lazy (unpack)
-import qualified Luna.Pass2.Analysis.Struct as SA
-import qualified Luna.Pass2.Transform.Hash                 as Hash
-import qualified Luna.Pass2.Target.HS.HASTGen              as HASTGen
-import qualified Luna.Pass2.Target.HS.HSC                  as HSC
-import qualified Luna.Pass2.Transform.SSA                  as SSA
-import qualified Luna.Pass2.Transform.Desugar.ImplicitSelf as ImplSelf
-
---import Control.Applicative
---import Control.Monad
-import Control.Monad.Trans.Either
-
---import Control.Lens hiding (without)
-import Data.List    (intercalate)
+import            Control.Monad.Trans.Either
+import            Data.List                                 (intercalate)
+import            Data.Text.Lazy                            (unpack)
+import            Text.Show.Pretty                          (ppShow)
 
 
 -- TODO [kgdk]
 import Inference as FooInfer
---import Solver    as FooSolver
-
-
-
-
-
-
-
-printer :: (Show a) => String -> a -> IO ()
-printer x y = printer_aux x (show y)
-
-printer_aux :: String -> String -> IO ()
-printer_aux x y = do  f_print [Bold,White] "\n--------------------------------------------------------------------------------"
-                      putStr "> "
-                      f_print [Yellow] x
-                      f_print [Bold,White] "--------------------------------------------------------------------------------\n"
-                      putStrLn y
-
-section :: IO () -> IO ()
-section sec = do  sec
-                  f_print [Bold, White] "\n\n################################################################################\n\n"
 
 
 main :: IO ()
 main = do f_print [Bold,Green] "MAIN"
-          f_print [Cyan] "Reading `src/Maintest.luna`"
+          f_print [Cyan] "…reading `src/Maintest.luna`"
           maintest_luna <- do tmp <- readFile "src/Maintest.luna"
                               tmp `seq` return tmp
-          f_print [Cyan] "Passes"
+          f_print [Cyan] "…passes"
           let src = Source "Maintest_luna" (String maintest_luna)
 
           result <- runEitherT $ do
-            (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
-            sa1              <- Pass.run1_ SA.pass ast1
-            (ast2, astinfo2) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo1 ast1
-            (ast3, astinfo3) <- Pass.run2_ ImplSelf.pass astinfo2 ast2
+            (ast1, astinfo1) <- Pass.run1_ P2Stage1.pass src
+            sa1              <- Pass.run1_ P2SA.pass ast1
+            (ast2, astinfo2) <- Pass.run3_ P2Stage2.pass (Namespace [] sa1) astinfo1 ast1
+            (ast3, astinfo3) <- Pass.run2_ P2ImplSelf.pass astinfo2 ast2
             constraints      <- Pass.run1_ FooInfer.tcpass ast3
-            sa2              <- Pass.run1_ SA.pass ast3
-            ast4             <- Pass.run1_ Hash.pass ast3
-            ast5             <- Pass.run1_ SSA.pass ast4
-            hast             <- Pass.run1_ HASTGen.pass ast5
-            hsc              <- Pass.run1_ HSC.pass hast
+            sa2              <- Pass.run1_ P2SA.pass ast3
+            ast4             <- Pass.run1_ P2Hash.pass ast3
+            ast5             <- Pass.run1_ P2SSA.pass ast4
+            hast             <- Pass.run1_ P2HASTGen.pass ast5
+            hsc              <- Pass.run1_ P2HSC.pass hast
             return  ( (ast1, astinfo1)
                     , sa1
                     , (ast2, astinfo2)
@@ -126,20 +67,19 @@ main = do f_print [Bold,Green] "MAIN"
             Left _                      -> f_print [Red, Bold] "some error, sorry"
             Right ( (ast1, astinfo1), sa1, (ast2, astinfo2), (ast3, astinfo3), constraints, sa2, ast4, ast5, hast, hsc ) -> do
               section $ do
-                printer_aux " 1.1. ast1"        $ ppShow $ ast1
-                printer_aux " 1.2. astinfo1"    $ ppShow $ astinfo1
-                printer_aux " 2.   sa1"         $ ppShow $ sa1
-                printer_aux " 3.1. ast2"        $ ppShow $ ast2
-                printer_aux " 3.2. astinfo2"    $ ppShow $ astinfo2
-                printer_aux " 4.1. ast3"        $ ppShow $ ast3
-                printer_aux " 4.2. astinfo3"    $ ppShow $ astinfo3
-                printer_aux " 5.   constraints" $ ppShow $ constraints
-                printer_aux " 6.   sa2"         $ ppShow $ sa2
-                printer_aux " 7.   ast4"        $ ppShow $ ast4
-                printer_aux " 8.   ast5"        $ ppShow $ ast5
-                printer_aux " 9.   hast"        $ ppShow $ hast
-                printer_aux "10.   hsc"         $ unpack $ hsc
-
+                writeAST " 1.1. Transform.Parse.Stage1         : ast1"        $ ppShow $ ast1
+                writeAST " 1.2. Transform.Parse.Stage1         : astinfo1"    $ ppShow $ astinfo1
+                writeAST " 2.   Analysis.Struct                : sa1"         $ ppShow $ sa1
+                writeAST " 3.1. Transform.Parse.Stage2         : ast2"        $ ppShow $ ast2
+                writeAST " 3.2. Transform.Parse.Stage2         : astinfo2"    $ ppShow $ astinfo2
+                writeAST " 4.1. Transform.Desugar.ImplicitSelf : ast3"        $ ppShow $ ast3
+                writeAST " 4.2. Transform.Desugar.ImplicitSelf : astinfo3"    $ ppShow $ astinfo3
+                writeAST " 5.   Typechecker                    : constraints" $ ppShow $ constraints
+                writeAST " 6.   Pass2.Analysis.Struct          : sa2"         $ ppShow $ sa2
+                writeAST " 7.   Transform.Hash                 : ast4"        $ ppShow $ ast4
+                writeAST " 8.   Transform.SSA                  : ast5"        $ ppShow $ ast5
+                writeAST " 9.   Target.HS.HASTGen              : hast"        $ ppShow $ hast
+                writeAST "10.   Target.HS.HSC                  : hsc"         $ unpack $ hsc
 
 
 data PrintAttrs = Black
@@ -151,6 +91,26 @@ data PrintAttrs = Black
                 | Cyan
                 | White
                 | Bold
+
+writeAST :: FilePath -> String -> IO ()
+writeAST path str = do
+  let filepath = "tmp/" ++ path
+  writeFile filepath str
+  f_print [Cyan] $ "…writing " ++ show filepath
+
+printer :: (Show a) => String -> a -> IO ()
+printer x y = printer_aux x (show y)
+
+printer_aux :: String -> String -> IO ()
+printer_aux x y = do  f_print [Bold,White] "\n--------------------------------------------------------------------------------"
+                      putStr "> "
+                      f_print [Yellow] x
+                      f_print [Bold,White] "--------------------------------------------------------------------------------\n"
+                      putStrLn y
+
+section :: IO () -> IO ()
+section sec = do  sec
+                  f_print [Bold, White] "\n\n################################################################################\n\n"
 
 attrtonum :: PrintAttrs -> Int
 attrtonum Black   = 30
@@ -168,50 +128,4 @@ f_print fs x = do let fmt = intercalate ";" (map (show.attrtonum) fs)
                   putStr $ "\x1b[" ++ fmt ++ "m"
                   putStr x
                   putStrLn "\x1b[0m"
-
-
-
-
--- *------------------------------------------------
--- * Category: DATA DECLARATIONS
--- *------------------------------------------------
-
-
-
-
-
----- type inference
-
---tp :: (Typo, Term) -> TP Type
---tp (env, Id x) =  do a <- inst env x
---                     normalize a
-----
---tp (env, Abs x e) = do a <- newtvar
---                       b <- tp (insert env (x, Mono (TV a)), e)
---                       normalize ((TV a) `Fun` b)
-
---tp (env, App e e') = do a <- newtvar
---                        t <- tp (env, e)
---                        t' <- tp (env, e')
---                        add_constraint (C [t `Subsume` (t' `Fun` TV a)])
---                        normalize (TV a)
-
-
---tp (env, Let x e e') = do a <- tp (env, e)
---                          b <- gen env a
---                          tp ((insert env (x, b)), e')
-
----- top-level program
-
---infer :: Term -> E (TVar, Subst, Constraint, Type)
---infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
-----
-
-
-
-
-
-
-
-
 

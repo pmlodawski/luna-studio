@@ -5,56 +5,29 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
+
+-- *------------------------------------------------
+-- * Specification of the generic HM(X)
+-- * type inference system in Haskell
+-- *
+-- * This instance deals with Ohori style records
+-- *------------------------------------------------
+
+
 module Inference where
 
 
---import qualified Luna.Parser.Parser as Parser
+import            Luna.Pass               (PassMonad, PassCtx, Pass(Pass))
+import qualified  Luna.ASTNew.Decl        as Decl
+import            Luna.ASTNew.Decl        (LDecl)
+import            Luna.ASTNew.Enum        (Enumerated)
+import qualified  Luna.ASTNew.Label       as Label
+import            Luna.ASTNew.Module      (LModule)
+import qualified  Luna.ASTNew.Traversals  as AST
 
-import qualified Luna.ASTNew.Decl       as Decl
---import qualified Luna.ASTNew.Enum       as Enum
-import qualified Luna.ASTNew.Label      as Label
---import qualified Luna.ASTNew.Module     as Module
---import qualified Luna.ASTNew.Name       as Name
---import qualified Luna.ASTNew.Unit       as Unit
-
-
-
---import           Luna.Data.Namespace               (Namespace (Namespace))
---import           Luna.Data.Source                  (Code (Code), Medium (String), Source (Source))
---import qualified Luna.Pass                         as Pass
---import qualified Luna.Pass2.Analysis.Struct        as AA
---import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
---import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
---import           Text.Show.Pretty                  (ppShow)
-
-import qualified Luna.ASTNew.Traversals       as AST
-import           Luna.ASTNew.Decl             (LDecl)
---import qualified Luna.Parser.State            as ParserState
-import           Luna.Pass                    (PassMonad, PassCtx, Pass(Pass))
-import           Luna.ASTNew.Enum             (Enumerated)
---import           Luna.ASTNew.Expr             (LExpr, Expr)
-import           Luna.ASTNew.Module           (LModule)
-import           Data.Monoid                  (Monoid, mempty)
-import           Control.Monad.State          (get, modify)
---import           Luna.ASTNew.NameBase         (nameBase)
---import qualified Luna.ASTNew.Pat              as Pat
---import qualified Luna.ASTNew.Arg              as Arg
---import Data.Text.Lazy (unpack)
---import qualified Luna.Pass2.Analysis.Struct as SA
---import qualified Luna.Pass2.Transform.Hash                 as Hash
---import qualified Luna.Pass2.Target.HS.HASTGen              as HASTGen
---import qualified Luna.Pass2.Target.HS.HSC                  as HSC
---import qualified Luna.Pass2.Transform.SSA                  as SSA
---import qualified Luna.Pass2.Transform.Desugar.ImplicitSelf as ImplSelf
-
-import Control.Applicative
---import Control.Monad
---import Control.Monad.Trans.Either
-
---import Control.Lens hiding (without)
---import Data.List    (intercalate,intersperse)
-
-
+import            Control.Applicative
+import            Control.Monad.State     (get, modify)
+import            Data.Monoid             (Monoid, mempty)
 
 
 data StageTypechecker = StageTypechecker
@@ -112,3 +85,34 @@ tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m 
 tcUnit ast = do
   modify ("123123":)
   defaultTraverseM ast *> get
+
+
+
+---- type inference
+
+--tp :: (Typo, Term) -> TP Type
+--tp (env, Id x) =  do a <- inst env x
+--                     normalize a
+----
+--tp (env, Abs x e) = do a <- newtvar
+--                       b <- tp (insert env (x, Mono (TV a)), e)
+--                       normalize ((TV a) `Fun` b)
+
+--tp (env, App e e') = do a <- newtvar
+--                        t <- tp (env, e)
+--                        t' <- tp (env, e')
+--                        add_constraint (C [t `Subsume` (t' `Fun` TV a)])
+--                        normalize (TV a)
+
+
+--tp (env, Let x e e') = do a <- tp (env, e)
+--                          b <- gen env a
+--                          tp ((insert env (x, b)), e')
+
+---- top-level program
+
+--infer :: Term -> E (TVar, Subst, Constraint, Type)
+--infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
+----
+
+

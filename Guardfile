@@ -17,6 +17,23 @@ $run_main     = true
 $run_tests    = false
 $run_linting  = false
 $run_coverage = false
+$output       = [ 
+                  # " 1.1. Transform.Parse.Stage1         : ast1",
+                  # " 1.2. Transform.Parse.Stage1         : astinfo1",
+                  # " 2.   Analysis.Struct                : sa1",
+                  # " 3.1. Transform.Parse.Stage2         : ast2",
+                  # " 3.2. Transform.Parse.Stage2         : astinfo2",
+                  " 4.1. Transform.Desugar.ImplicitSelf : ast3",
+                  " 4.2. Transform.Desugar.ImplicitSelf : astinfo3",
+                  " 5.   Typechecker                    : constraints",
+                  # " 6.   Pass2.Analysis.Struct          : sa2",
+                  # " 7.   Transform.Hash                 : ast4",
+                  # " 8.   Transform.SSA                  : ast5",
+                  # " 9.   Target.HS.HASTGen              : hast",
+                  # "10.   Target.HS.HSC                  : hsc",
+                ]
+
+$output_dir   = "tmp/"
 
 
 
@@ -56,7 +73,8 @@ guard :shell, :version => 2, :cli => "--color" do
 
   watch(%r{^src/Maintest.luna$}) do |m|
     lastbuildguard(m[0]) do
-      section "Luna file change", "../../../dist/bin/libs/luna-typechecker"
+      section "Luna file change"
+      command "../../../dist/bin/libs/luna-typechecker"
     end
   end
 end
@@ -96,7 +114,20 @@ def haskellguard trigger
 
       section "linting", "pushd ..; hlint typechecker --report; popd"  if $run_linting
     end
+
+    show_output
+
   end
 end
 
 
+def show_output
+  $output.map do |file|
+    puts "\n"
+    puts "".linefill.white.bold
+    puts file.yellow
+    puts "".linefill.white.bold
+    puts "\n"
+    puts (File.read ($output_dir + file))
+  end
+end
