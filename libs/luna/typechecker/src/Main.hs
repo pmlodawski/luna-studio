@@ -14,8 +14,8 @@ import            Luna.Data.Source                          (Medium (String), So
 
 import qualified  Luna.Pass                                 as Pass
 import qualified  Luna.Pass2.Analysis.Struct                as P2SA
-import qualified  Luna.Pass2.Target.HS.HASTGen              as P2HASTGen
-import qualified  Luna.Pass2.Target.HS.HSC                  as P2HSC
+--import qualified  Luna.Pass2.Target.HS.HASTGen              as P2HASTGen
+--import qualified  Luna.Pass2.Target.HS.HSC                  as P2HSC
 import qualified  Luna.Pass2.Transform.Desugar.ImplicitSelf as P2ImplSelf
 import qualified  Luna.Pass2.Transform.Hash                 as P2Hash
 import qualified  Luna.Pass2.Transform.Parse.Stage1         as P2Stage1
@@ -25,7 +25,7 @@ import qualified  Luna.Pass2.Transform.SSA                  as P2SSA
 import            Control.Monad.IO.Class                    (liftIO)
 import            Control.Monad.Trans.Either
 import            Data.List                                 (intercalate)
-import            Data.Text.Lazy                            (unpack)
+--import            Data.Text.Lazy                            (unpack)
 import            Text.Show.Pretty                          (ppShow)
 
 
@@ -45,12 +45,12 @@ main = do f_print [Bold,Green] "MAIN"
             sa1              <- Pass.run1_ P2SA.pass ast1
             (ast2, astinfo2) <- Pass.run3_ P2Stage2.pass (Namespace [] sa1) astinfo1 ast1
             (ast3, astinfo3) <- Pass.run2_ P2ImplSelf.pass astinfo2 ast2
-            constraints      <- Pass.run1_ FooInfer.tcpass ast3
             sa2              <- Pass.run1_ P2SA.pass ast3
+            constraints      <- Pass.run2_ FooInfer.tcpass ast3 sa2
             ast4             <- Pass.run1_ P2Hash.pass ast3
             ast5             <- Pass.run1_ P2SSA.pass ast4
-            hast             <- Pass.run1_ P2HASTGen.pass ast5
-            hsc              <- Pass.run1_ P2HSC.pass hast
+            --hast             <- Pass.run1_ P2HASTGen.pass ast5
+            --hsc              <- Pass.run1_ P2HSC.pass hast
             liftIO $ section $ do
                 writeAST " 1.1. Transform.Parse.Stage1         : ast1"        $ ppShow $ ast1
                 writeAST " 1.2. Transform.Parse.Stage1         : astinfo1"    $ ppShow $ astinfo1
@@ -59,12 +59,12 @@ main = do f_print [Bold,Green] "MAIN"
                 writeAST " 3.2. Transform.Parse.Stage2         : astinfo2"    $ ppShow $ astinfo2
                 writeAST " 4.1. Transform.Desugar.ImplicitSelf : ast3"        $ ppShow $ ast3
                 writeAST " 4.2. Transform.Desugar.ImplicitSelf : astinfo3"    $ ppShow $ astinfo3
-                writeAST " 5.   Typechecker                    : constraints" $ ppShow $ constraints
-                writeAST " 6.   Pass2.Analysis.Struct          : sa2"         $ ppShow $ sa2
+                writeAST " 5.   Pass2.Analysis.Struct          : sa2"         $ ppShow $ sa2
+                writeAST " 6.   Typechecker                    : constraints" $ ppShow $ constraints
                 writeAST " 7.   Transform.Hash                 : ast4"        $ ppShow $ ast4
                 writeAST " 8.   Transform.SSA                  : ast5"        $ ppShow $ ast5
-                writeAST " 9.   Target.HS.HASTGen              : hast"        $ ppShow $ hast
-                writeAST "10.   Target.HS.HSC                  : hsc"         $ unpack $ hsc
+                --writeAST " 9.   Target.HS.HASTGen              : hast"        $ ppShow $ hast
+                --writeAST "10.   Target.HS.HSC                  : hsc"         $ unpack $ hsc
             return  ()
 
           case result of

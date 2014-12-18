@@ -79,11 +79,11 @@ def command(cmd, inp=nil)
                              else puts ("  * ".blue + "exit code: #{status.exitstatus}".light_white)
   end
 
-  if stdout
+  unless stdout.empty?
     puts "* * STDOUT".starsallaround.green
     puts stdout.each_line.map {|l| "  * ".green + l}.join
   else
-    puts "* * STDOUT: none".starsallaround.green
+    puts "  * ".green + "STDOUT: none".black
   end
 
   unless stderr.empty?

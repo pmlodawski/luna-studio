@@ -27,8 +27,8 @@ $output       = [
                   # " 3.2. Transform.Parse.Stage2         : astinfo2",
                   " 4.1. Transform.Desugar.ImplicitSelf : ast3",
                   " 4.2. Transform.Desugar.ImplicitSelf : astinfo3",
-                  " 5.   Typechecker                    : constraints",
-                  # " 6.   Pass2.Analysis.Struct          : sa2",
+                  " 5.   Pass2.Analysis.Struct          : sa2",
+                  " 6.   Typechecker                    : constraints",
                   # " 7.   Transform.Hash                 : ast4",
                   # " 8.   Transform.SSA                  : ast5",
                   # " 9.   Target.HS.HASTGen              : hast",
@@ -95,6 +95,7 @@ def haskellguard trigger
     section "documentation", "cabal haddock --html"                                                         if $run_docgen
     section "tests",         "rm -f luna-typechecker-tests.tix", "../../../dist/bin/libs/luna-typechecker"  if $run_tests
 
+    command "rm -f #{$output_dir}*"
     command "../../../dist/bin/libs/luna-typechecker"                                                       if $run_main
 
     if $run_tests and command "../../../dist/bin/libs/luna-typechecker-tests"
