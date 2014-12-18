@@ -30,7 +30,7 @@ import qualified Luna.ASTNew.Pat    as Pat
 import           Luna.ASTNew.Pat    (LPat, Pat)
 import           Luna.ASTNew.Expr   (LExpr, Expr)
 import qualified Luna.ASTNew.Lit    as Lit
-import           Luna.ASTNew.Name.Pattern2  (Arg(Arg))
+import           Luna.ASTNew.Name.Pattern  (Arg(Arg))
 --import           Luna.ASTNew.Arg    (Arg(Arg))
 import qualified Luna.ASTNew.Native as Native
 import           Luna.ASTNew.Name.Path        (NamePath(NamePath))

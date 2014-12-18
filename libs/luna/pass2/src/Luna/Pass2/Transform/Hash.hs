@@ -44,8 +44,8 @@ import           Luna.Data.ASTInfo            (ASTInfo, genID)
 import qualified Luna.Data.Namespace.State    as State 
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
-import           Luna.ASTNew.Name.Pattern2    (NamePat(NamePat), Segment(Segment), Arg(Arg))
-import qualified Luna.ASTNew.Name.Pattern2    as NamePat
+import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment), Arg(Arg))
+import qualified Luna.ASTNew.Name.Pattern     as NamePat
 import           Luna.ASTNew.Name.Hash        (hash)
 
 ----------------------------------------------------------------------
@@ -91,7 +91,7 @@ hashSegment = NamePat.mapSegmentBase hash
 
 hashPat :: (MonadIO m, Applicative m, Enumerated lab) => LPat lab -> HPass m (LPat lab)
 hashPat ast@(Label lab pat) = case pat of
-    Pat.Var name -> return . Label lab . Pat.Var $ fromString $ hash name
+    Pat.Var name -> return . Label lab . Pat.Var $ fromText $ hash name
     _            -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM ast

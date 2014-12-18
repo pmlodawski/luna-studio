@@ -37,8 +37,7 @@ import           Flowbox.System.Log.Logger as L
 import qualified Flowbox.Data.MapForest    as MapForest
 import           Luna.ASTNew.Name.Path     (NamePath)
 import qualified Luna.ASTNew.Name.Path     as NamePath
-import           Luna.ASTNew.Name.Pattern  (NamePattern)
-import           Luna.ASTNew.Name.Pattern2 (ArgPatDesc)
+import           Luna.ASTNew.Name.Pattern  (ArgPatDesc)
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)

@@ -54,8 +54,8 @@ import           Luna.Data.Namespace          (Namespace)
 import           Luna.Data.ASTInfo            (ASTInfo, genID)
 
 import qualified Luna.Parser.Parser           as Parser
-import           Luna.ASTNew.Name.Pattern2    (NamePat(NamePat), Segment(Segment), Arg(Arg))
-import qualified Luna.ASTNew.Name.Pattern2    as NamePat
+import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment), Arg(Arg))
+import qualified Luna.ASTNew.Name.Pattern     as NamePat
 
 import qualified Luna.Pass2.Target.HS.HASTGen.State as State
 import           Luna.Pass2.Target.HS.HASTGen.State (addComment, setModule, getModule)

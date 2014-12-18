@@ -14,14 +14,14 @@ module Luna.ASTNew.Name.Hash where
 
 import Flowbox.Prelude
 import Data.Char           (ord)
-
+import Data.Text.Lazy as Text
 
 ----------------------------------------------------------------------
 -- Type classes
 ----------------------------------------------------------------------
 
-class Hashable a where
-    hash :: a -> String
+class Hashable a b where
+    hash :: a -> b
     
 
 ----------------------------------------------------------------------
@@ -62,18 +62,21 @@ hashReadableChar = \case
     '?'  -> "qmark"
     '\'' -> "squote"
     '"'  -> "dquote"
-    c    -> show $ ord c
+    c    -> fromString . show $ ord c
 
 
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
 
-instance Hashable Char where
+instance Hashable Char String where
     hash c
        | (c >= 'a' && c <='z') || (c >= 'A' && c <='Z') = [c]
        | c == '_'                                       = "__"
        | otherwise                                      = "_" ++ hashReadableChar c
 
-instance Hashable String where
-    hash = concatMap hash
+
+instance Hashable Text Text where
+    hash t = Text.fromChunks . fmap (fromString . hash) $ Text.unpack t
+
+

@@ -49,3 +49,6 @@ instance Lexical Char where
 
 instance Lexical String where
     lex = string
+
+instance Lexical Text where
+    lex s = fromString <$> lex (toString s)
