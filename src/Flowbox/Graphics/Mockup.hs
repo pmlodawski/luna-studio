@@ -744,8 +744,7 @@ gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB
              onEach (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
                     (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
                     (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
-                    id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
-         
+                    id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)         
 
 colorCorrectLuna' :: Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
@@ -777,12 +776,12 @@ colorCorrectLuna' (fmap variable -> Color.RGBA masterSaturationR masterSaturatio
                   (fmap variable -> Color.RGBA highlightsGainR highlightsGainG highlightsGainB highlightsGainA)
                   (fmap variable -> Color.RGBA highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA)
 
-                  img =
-                      onEach (correct correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
+                  img = onEach 
+                             (correct correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
                              (correct correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
                              (correct correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
-                             id -- (colorCorrect contrastA gammaA gainA offsetA) saturated
-                             saturated
+                             id ------(colorCorrect contrastA gammaA gainA offsetA) saturated
+                             img --saturated
     where curveShadows    = A.lift $ CubicBezier (Point2 (0::Double) 1) (Point2 0.03 1) (Point2 0.06 0) (Point2 0.09 0) :: Exp (CubicBezier Double)
           curveHighlights = A.lift $ CubicBezier (Point2 0.5 (0::Double)) (Point2 (2/3) 0) (Point2 (5/6) 1) (Point2 1 1) :: Exp (CubicBezier Double)
           strShadows x    = A.cond (x A.<=* 0) 1
@@ -812,7 +811,7 @@ colorCorrectLuna' (fmap variable -> Color.RGBA masterSaturationR masterSaturatio
                   coeffShadows    = strShadows x
                   coeffHighlights = strHighlights x
                   coeffMidtones   = 1 - coeffShadows - coeffHighlights
-              in master x + coeffShadows * shadows x + coeffMidtones * midtones x + coeffHighlights * highlights x
+              in master x + coeffShadows * shadows x + coeffMidtones * midtones x + coeffHighlights * highlights x  -- TODO tu jest kiszka. Sumujemy ze soba dwa poprawne orazki. Powinnismy brac wynik z jednego z nich (master) i dopiero wtedy aplikowac zmiany na S H i M
 
           rgb = unsafeGetRGB img
 
