@@ -59,7 +59,7 @@ import qualified Luna.ASTNew.Name.Path        as NamePath
 import qualified Luna.ASTNew.Name.Pattern     as NamePat
 import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment))
 import qualified Luna.ASTNew.Name             as Name
-import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
+import           Luna.ASTNew.Name             (VName, vname, TName, tname, TVName, tvname)
 
 --import qualified Luna.Data.Namespace          as Namespace
 import qualified Luna.Data.Namespace.State    as Namespace
@@ -351,7 +351,7 @@ cls = do
               <*> bodyBlock
               <*  blockEnd
               <?> "class definition"
-      where params         = many (TVName <$> Tok.typeVarIdent <?> "class parameter")
+      where params         = many (tvname <$> Tok.typeVarIdent <?> "class parameter")
             defCons      n = Decl.Cons n <$> (concat <$> many fields)
             constructors n =   blockBody' (labeled cons) 
                            <|> ((:[]) <$> labeled (defCons $ convert n))
@@ -618,7 +618,7 @@ optableE = [
               --                            ) <$> nextID <*> nextID)
 
               --FIXME[wd]: remove fromText call after moving Tokenizer to Text
-              operator4 op = binaryM (fromText op) ( (\id1 id2 l r -> label id1 $ Expr.appInfix (label id2 $ Expr.Var $ NamePath.single $ op) (Expr.unnamed l) [Expr.unnamed r]
+              operator4 op = binaryM (fromText op) ( (\id1 id2 l r -> label id1 $ Expr.appInfix (label id2 $ Expr.Var $ Expr.Variable (vname $ NamePath.single op) ()) (Expr.unnamed l) [Expr.unnamed r]
                                                    ) <$> nextID <*> nextID)
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure ('~':op)))
               --operator2 op = binaryM op (binaryMatchE <$>  ( appID Expr.App <*> (appID Expr.Accessor <*> pure "add" <*> ... ) )  )
@@ -712,7 +712,7 @@ mkFuncParser baseVar (id, mpatt) = case mpatt of
               segNames        = NamePat.segmentNames patt
               pattParser      = NamePat Nothing <$> baseParser   <*> mapM segParser segs
               baseParser      = NamePat.Segment <$> baseMultiVar <*> defsParser baseDefs
-              baseMultiVar    = labeled . pure $ Expr.Var (NamePat.toNamePath patt)
+              baseMultiVar    = labeled . pure $ Expr.Var $ Expr.Variable (vname $ NamePat.toNamePath patt) ()
               defsParser defs = fmap takeJustArgs $ mapM argParser defs
               takeJustArgs    = fmap fromJust . filter isJust 
               argParser req   = if req then just  argExpr
@@ -731,11 +731,11 @@ varE   = do
     name <- try $ notReserved Tok.varIdent
     ast  <- lookupAST name
     case ast of
-        Just possibleDescs -> mkFuncParsers possibleDescs (labeled . pure $ Expr.Var (NamePath.single name))
+        Just possibleDescs -> mkFuncParsers possibleDescs (labeled . pure $ Expr.Var $ Expr.Variable (vname $ NamePath.single name) ())
         Nothing            -> withLabeled $ \id -> do
                                   let np = NamePath.single name
                                   Namespace.regVarName id np
-                                  return $ Expr.Var np
+                                  return $ Expr.Var $ Expr.Variable (vname np) ()
 
 
 
@@ -791,7 +791,7 @@ findSimWords word words = fmap snd simPairs
 
     
 --varE   = appID $ Expr.var <*> Tok.varIdent
-varOpE = labeled $ (Expr.Var . NamePath.single)  <$> try (Tok.parens varOp)
+varOpE = labeled $ (Expr.Var . (flip Expr.Variable ()) . vname . NamePath.single)  <$> try (Tok.parens varOp)
 conE   = labeled $ Expr.Cons <$> Tok.conIdent
 
 identE = choice [ varE

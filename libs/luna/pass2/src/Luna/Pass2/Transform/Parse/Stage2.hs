@@ -61,7 +61,7 @@ type Stage2Ctx              lab m = (Enumerated lab, PassCtx m)
 type Stage2Traversal        m a b = (PassCtx m, AST.Traversal        Stage2 (Stage2Pass m) a b)
 type Stage2DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage2 (Stage2Pass m) a b)
 
-type ResultExpr = LExpr IDTag NamePath
+type ResultExpr = LExpr IDTag ()
 
 
 ------------------------------------------------------------------------

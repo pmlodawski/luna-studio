@@ -165,9 +165,9 @@ instance Generator HComment where
 
 instance Generator HLit.Lit where
     generate lit = simple $ case lit of
-        HLit.Integer val -> convert $ escapeNegative val
-        HLit.Int     val -> convert $ escapeNegative val
-        HLit.Float   val -> convert $ escapeNegative val
+        HLit.Integer val -> convert $ escapeNegative (toList val)
+        HLit.Int     val -> convert $ escapeNegative (toList val)
+        HLit.Float   val -> convert $ escapeNegative (toList val)
         HLit.String  val -> "\"" <> convert val   <> "\""
         HLit.Char    val -> "'"  <> convert [val] <> "'"
         where escapeNegative num@('-':_) = "(" <> num <> ")"

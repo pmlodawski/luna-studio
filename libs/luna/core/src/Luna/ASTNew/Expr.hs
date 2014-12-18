@@ -59,11 +59,14 @@ data Expr a v
     | Decl        { _decl    :: SubDecl a v                                                        }
     | Lit         { _lit     :: LLit a                                                             }
     | Native      { _native  :: Native (LExpr a v)                                                 }
-    | Var         { _ident   :: v                                                                  }
+    | Var         { _ident   :: Variable v                                                                  }
     | Wildcard
     deriving (Show, Eq, Generic, Read)
 
 data AppArg e = AppArg (Maybe ArgName) e deriving (Show, Eq, Generic, Read)
+
+data Variable v = Variable VNameP v deriving (Show, Eq, Generic, Read)
+
 type ExprApp a v = NamePat (LExpr a v) (AppArg (LExpr a v))
 
 app src args          = App $ NamePat Nothing    (Segment src args) []

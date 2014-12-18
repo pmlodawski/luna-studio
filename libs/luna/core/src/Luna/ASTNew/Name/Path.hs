@@ -80,3 +80,6 @@ instance Hashable NamePath Text where
 
 instance ToText NamePath where
     toText (NamePath base segs) = base <> mjoin " " (mempty : segs)
+
+instance ToString NamePath where
+	toString = toString . toText

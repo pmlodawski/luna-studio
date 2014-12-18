@@ -23,7 +23,6 @@ import           Luna.ASTNew.Decl             (LDecl, Field(Field))
 import qualified Luna.ASTNew.Module           as Module
 import           Luna.ASTNew.Module           (Module(Module), LModule)
 import           Luna.ASTNew.Unit             (Unit(Unit))
-import           Luna.ASTNew.NameBase         (NameBase(nameBase))
 import qualified Luna.ASTNew.Label            as Label
 import           Luna.ASTNew.Label            (Label(Label))
 import qualified Luna.ASTNew.Type             as Type
@@ -109,19 +108,19 @@ aaDecl d@(Label lab decl) = case decl of
           continue = defaultTraverseM d
 
 -- FIXME [wd]: remove the assumption that a is NamePath. variables should always contain name as NamePath!
-aaExpr :: (SACtx lab m a, a~NamePath) => (LExpr lab a) -> SAPass m (LExpr lab a)
+aaExpr :: SACtx lab m a => (LExpr lab a) -> SAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
-    var@(Expr.Var name)        -> regParent id
-                               *> regAlias id name
-                               *> continue
-    cons@(Expr.Cons name)      -> regParent id
-                               *> regAlias id (unwrap name)
-                               *> continue
-    Expr.RecUpdt name sel expr -> regParent  id
-                               *> regAlias   id (unwrap name)
-                               *> regVarName id (unwrap name)
-                               *> continue
-    _                          -> continue
+    var@(Expr.Var (Expr.Variable name _)) -> regParent id
+                                          *> regAlias id (unwrap name)
+                                          *> continue
+    cons@(Expr.Cons name)                 -> regParent id
+                                          *> regAlias id (unwrap name)
+                                          *> continue
+    Expr.RecUpdt name sel expr            -> regParent  id
+                                          *> regAlias   id (unwrap name)
+                                          *> regVarName id (unwrap name)
+                                          *> continue
+    _                                     -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e
 
@@ -157,7 +156,7 @@ instance SACtx lab m a => AST.Traversal StructAnalysis (SAPass m) (LModule lab a
 instance SACtx lab m a => AST.Traversal StructAnalysis (SAPass m) (LDecl lab a) (LDecl lab a) where
     traverseM _ = aaDecl
 
-instance (SACtx lab m v, v~NamePath) => AST.Traversal StructAnalysis (SAPass m) (LExpr lab v) (LExpr lab v) where
+instance SACtx lab m v => AST.Traversal StructAnalysis (SAPass m) (LExpr lab v) (LExpr lab v) where
     traverseM _ = aaExpr
 
 instance (PassCtx m, Enumerated lab) => AST.Traversal StructAnalysis (SAPass m) (LPat lab) (LPat lab) where

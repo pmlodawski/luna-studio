@@ -59,7 +59,7 @@ import qualified Luna.ASTNew.Name.Pattern     as NamePat
 
 import qualified Luna.Pass2.Target.HS.HASTGen.State as State
 import           Luna.Pass2.Target.HS.HASTGen.State (addComment, setModule, getModule)
-
+import           Luna.ASTNew.Name.Hash              (hash)
 
 
 ----------------------------------------------------------------------
@@ -159,8 +159,7 @@ genCons name params cons derivings makeDataType = do
     let conDecls = fmap (view Label.element) cons
 
         genMyCon (Decl.Cons conName fields) = HExpr.Con (fromString $ toString conName) <$> pure [] -- mapM genExpr fields
-    --let clsConName = "Cls_" ++ name
-    --    consClsHE  = HExpr.Con clsConName mempty
+    
         
     --    --FIXME[wd]: to powinno byc zrobione ladniej - z nowym AST!
     --    getName el = case el of
@@ -169,24 +168,31 @@ genCons name params cons derivings makeDataType = do
 
     --    genMyCon (LExpr.ConD _ conName fields) = HExpr.Con conName <$> mapM genExpr fields
 
-    --    genConData (LExpr.ConD _ conName fields) = do
-    --        let conSigName = Naming.mkMemSig clsConName conName
-    --            conDefName = Naming.mkMemDef clsConName conName
-    --        GenState.addComment $ HExpr.Comment $ HComment.H3 $ name ++ "." ++ conName ++ " constructor"
-    --        GenState.addFunction $ HExpr.Function (Naming.con conName) [] (mkAppE [HExpr.VarE "member", mkProxyE conName, mkVal (HExpr.VarE clsConName)])
-    --        GenState.addFunction $ HExpr.Function conSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length fields) paramSig))
-    --        GenState.addFunction $ HExpr.Function conDefName [] (HExpr.AppE (HExpr.VarE $ "liftCons" ++ show (length fields)) (HExpr.VarE conName))
-    --        GenState.addTHExpression $ thRegisterMethod clsConName conName
-    --        GenState.addTHExpression $ thGenerateFieldAccessors conName (fmap getName fields)
+    --genConData (Decl.Cons conName fields) = do
+    --    let conSigName = Naming.mkMemSig clsConName conName
+    --        conDefName = Naming.mkMemDef clsConName conName
+    --    GenState.addComment $ HExpr.Comment $ HComment.H3 $ name ++ "." ++ conName ++ " constructor"
+    --    GenState.addFunction $ HExpr.Function (Naming.con conName) [] (mkAppE [HExpr.VarE "member", mkProxyE conName, mkVal (HExpr.VarE clsConName)])
+    --    GenState.addFunction $ HExpr.Function conSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length fields) paramSig))
+    --    GenState.addFunction $ HExpr.Function conDefName [] (HExpr.AppE (HExpr.VarE $ "liftCons" ++ show (length fields)) (HExpr.VarE conName))
+    --    GenState.addTHExpression $ thRegisterMethod clsConName conName
+    --    GenState.addTHExpression $ thGenerateFieldAccessors conName (fmap getName fields)
 
     
-    addComment . H2 $ toString name ++ " type"
+    addComment . H2 $ toText name <> " type"
     consE <- mapM genMyCon conDecls
     if makeDataType then State.addDataType $ HExpr.DataD (fromString $ toString name) (fmap (fromString . toString) params) consE derivings
                     else State.addComment  $ H5 "datatype provided externally"
-    --GenState.addDataType $ HExpr.DataD clsConName mempty [consClsHE] derivings
+    addClsDataType name derivings
     --mapM_ genConData cons
 
+addClsDataType name derivings = do
+    let clsConName = "Cls_" <> hash name
+        consClsHE  = HExpr.Con clsConName mempty
+    State.addDataType $ HExpr.DataD clsConName mempty [consClsHE] derivings
+
+
+--data Cons  a e = Cons   { _consName :: CNameP   , _fields :: [LField a e]                  } deriving (Show, Eq, Generic, Read)
 
 
 

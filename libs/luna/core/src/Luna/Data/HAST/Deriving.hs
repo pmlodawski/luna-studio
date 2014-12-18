@@ -24,10 +24,10 @@ data Deriving = Eq
               deriving (Show)
 
 
-genCode :: [Deriving] -> String
+genCode :: [Deriving] -> Text
 genCode d = case d of
         [] -> ""
-        _  -> " deriving (" ++ join ", " (map show d) ++ ")"
+        _  -> " deriving (" <> mjoin ", " (map (fromString . show) d) <> ")"
 
 
 
