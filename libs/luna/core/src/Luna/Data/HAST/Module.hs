@@ -23,7 +23,7 @@ mk :: [Text] -> Expr
 mk path' = Module path' [] [] []
 
 addImport :: [Text] -> Expr -> Expr
-addImport path' mod' = mod' { imports = Import False path' Nothing : imports mod' }
+addImport path' mod' = mod' { _imports = Import False path' Nothing : _imports mod' }
 
 addExt :: Extension -> Expr -> Expr
-addExt ext' mod' = mod' { ext = ext' : ext mod' }
+addExt ext' mod' = mod' { _ext = ext' : _ext mod' }

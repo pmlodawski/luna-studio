@@ -30,7 +30,8 @@ Library
                   QuickCheck,
                   lens,
                   flowbox-utils,
-                  tuple
+                  tuple,
+                  text
 
 
 

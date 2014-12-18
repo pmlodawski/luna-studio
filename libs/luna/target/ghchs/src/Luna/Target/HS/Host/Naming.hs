@@ -8,8 +8,13 @@
 {-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE NoImplicitPrelude         #-}
+{-# LANGUAGE OverloadedStrings         #-}
+
 
 module Luna.Target.HS.Host.Naming where
+
+import Flowbox.Prelude
 
 import Language.Haskell.TH
 

@@ -65,55 +65,55 @@ getModule = mod <$> get
 addDataType :: GenStateM m => HExpr -> m ()
 addDataType dt = do
     m <- getModule
-    setModule $ m { Module.body = Module.body m ++ [dt]}
+    setModule $ m { Module._body = Module._body m ++ [dt]}
 
 
 addInstance :: GenStateM m => HExpr -> m ()
 addInstance inst = do
     m <- getModule
-    setModule $ m { Module.body = Module.body m ++ [inst]}
+    setModule $ m { Module._body = Module._body m ++ [inst]}
 
 
 addNewType :: GenStateM m => HExpr -> m ()
 addNewType dt = do
     m <- getModule
-    setModule $ m { Module.body = Module.body m ++ [dt] }
+    setModule $ m { Module._body = Module._body m ++ [dt] }
 
 
 addTypeAlias :: GenStateM m => HExpr -> m ()
 addTypeAlias el = do
     m <- getModule
-    setModule $ m { Module.body = Module.body m ++ [el] }
+    setModule $ m { Module._body = Module._body m ++ [el] }
 
 
 addTypeDef :: GenStateM m => HExpr -> m ()
 addTypeDef el = do
     m <- getModule
-    setModule $ m { Module.body = Module.body m ++ [el] }
+    setModule $ m { Module._body = Module._body m ++ [el] }
 
 
 addImport :: GenStateM m => HExpr -> m ()
 addImport imp = do
     m <- getModule
-    setModule $ m { Module.imports = imp : Module.imports m }
+    setModule $ m { Module._imports = imp : Module._imports m }
 
 
 addFunction :: GenStateM m => HExpr -> m ()
 addFunction fun = do
     m <- getModule
-    setModule $ m { Module.body = Module.body m ++ [fun] }
+    setModule $ m { Module._body = Module._body m ++ [fun] }
 
 addComment :: GenStateM m => Comment -> m ()
 addComment c = do
     let expr = HExpr.Comment c
     m <- getModule
-    setModule $ m { Module.body = Module.body m ++ [expr] }
+    setModule $ m { Module._body = Module._body m ++ [expr] }
 
 
 addTHExpression :: GenStateM m => HExpr -> m ()
 addTHExpression e = do
     m <- getModule
-    setModule $ m { Module.body = Module.body m ++ [e] }
+    setModule $ m { Module._body = Module._body m ++ [e] }
 
 
 
