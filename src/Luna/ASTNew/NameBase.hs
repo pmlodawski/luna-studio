@@ -12,7 +12,7 @@ import qualified  Luna.ASTNew.Pat       as Pat
 
 
 class NameBase a where
-  -- | Retrieve the human readable name. In case of variables, it's their usual name as opposed to internal schemes: NamePath or ID.
+  -- | Retrieve the name.
   nameBase :: a -> Text
 
 
