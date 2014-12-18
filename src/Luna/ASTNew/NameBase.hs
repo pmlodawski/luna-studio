@@ -21,23 +21,3 @@ instance NameBase NamePath where
 
 instance (Show l, Show a) => NameBase (Label l a) where
   nameBase lab = lab ^. label . to show . to fromString
-
-instance NameBase (Pat.Pat lab) where
-  nameBase (Pat.Var {Pat._vname = vname}) = nameBase vname
-  -- Wojtek, zabijesz mnie za to :D Ale nie jestem pewny jak to ma być wyświetlane,
-  -- a że w tej sekundzie tylko to do debugu leci to... /KGądek
-  nameBase (Pat.App      {}) = "<nameBase for (Pat.Pat lab):App>"
-  nameBase (Pat.Typed    {}) = "<nameBase for (Pat.Pat lab):Typed>"
-  nameBase (Pat.Grouped  {}) = "<nameBase for (Pat.Pat lab):Grouped>"
-  nameBase (Pat.Lit      {}) = "<nameBase for (Pat.Pat lab):Lit>"
-  nameBase (Pat.Tuple    {}) = "<nameBase for (Pat.Pat lab):Tuple>"
-  nameBase (Pat.Con      {}) = "<nameBase for (Pat.Pat lab):Con>"
-  nameBase (Pat.Var      {}) = "<nameBase for (Pat.Pat lab):Var>"
-  nameBase (Pat.Wildcard {}) = "<nameBase for (Pat.Pat lab):Wildcard>"
-  nameBase (Pat.RecWildcard) = "<nameBase for (Pat.Pat lab):RecWildcard>"
-
-
-instance (NameBase a) => NameBase (Name.VName  a) where nameBase (Name.VName  np) = nameBase np
-instance (NameBase a) => NameBase (Name.TName  a) where nameBase (Name.TName  np) = nameBase np
-instance (NameBase a) => NameBase (Name.CName  a) where nameBase (Name.CName  np) = nameBase np
-instance (NameBase a) => NameBase (Name.TVName a) where nameBase (Name.TVName np) = nameBase np
