@@ -745,6 +745,7 @@ gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB
                     (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
                     (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
                     id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+         
 
 colorCorrectLuna' :: Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
