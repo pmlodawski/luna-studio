@@ -22,20 +22,18 @@ import GHC.Generics        (Generic)
 
 import           Flowbox.Generics.Deriving.QShow
 
-import           Luna.ASTNew.Name (VName, TName, CName, TVName, NameBase)
-import qualified Luna.ASTNew.Name as Name
-
-import           Luna.ASTNew.Decl       (Decl)
-import           Luna.ASTNew.Lit        (LLit)
-import           Luna.ASTNew.Pat        (Pat, LPat)
-import           Luna.ASTNew.Type       (Type, LType)
-import           Luna.ASTNew.Native     (Native)
-import           Luna.ASTNew.Arg        (Arg)
-import           Luna.ASTNew.Label      (Label)
-import           Luna.ASTNew.Name.Pattern2 (NamePat(NamePat), Segment(Segment))
+import Luna.ASTNew.Name       (VNameP, TNameP, CNameP, TVNameP, NameBaseP)
+import Luna.ASTNew.Decl       (Decl)
+import Luna.ASTNew.Lit        (LLit)
+import Luna.ASTNew.Pat        (Pat, LPat)
+import Luna.ASTNew.Type       (Type, LType)
+import Luna.ASTNew.Native     (Native)
+import Luna.ASTNew.Arg        (Arg)
+import Luna.ASTNew.Label      (Label)
+import Luna.ASTNew.Name.Pattern2 (NamePat(NamePat), Segment(Segment))
 
 
-type Selector = [VName]
+type Selector = [VNameP]
 
 type LExpr   a v = Label a (Expr a v)
 type ExprArg a v = Label a (Arg a (Expr a v))
@@ -46,17 +44,17 @@ type ArgName = String
 
 data Expr a v
     = Lambda      { _inputs  :: [ExprArg a v] , _output   :: LType a      , _body   :: [LExpr a v] }
-    | RecUpdt     { _vname   :: VName         , _selector :: Selector     , _expr   :: LExpr a v   }
+    | RecUpdt     { _vname   :: VNameP        , _selector :: Selector     , _expr   :: LExpr a v   }
     | App         (ExprApp a v)
     | Case        { _expr    :: LExpr a v     , _match    :: [LMatch a v]                          }
     | Typed       { _cls     :: LType a       , _expr     :: LExpr a v                             }
     | Assignment  { _dst     :: LPat  a       , _src      :: LExpr a v                             }
-    | Accessor    { _acc     :: NameBase      , _src      :: LExpr a v                             }
+    | Accessor    { _acc     :: NameBaseP     , _src     :: LExpr a v                              }
     | Ref         { _ref     :: LExpr a v                                                          }
     | List        { _elems   :: LList a (LExpr a v)                                                }
     | Tuple       { _items   :: [LExpr a v]                                                        }
     | Grouped     { _expr    :: LExpr a v                                                          }
-    | Cons        { _cname   :: CName                                                              }
+    | Cons        { _cname   :: CNameP                                                             }
     | Decl        { _decl    :: SubDecl a v                                                        }
     | Lit         { _lit     :: LLit a                                                             }
     | Native      { _native  :: Native (LExpr a v)                                                 }

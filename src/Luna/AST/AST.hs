@@ -24,25 +24,25 @@ import Luna.AST.Type   (Type)
 
 
 data AST = Module { fromModule :: Module }
-         | Expr   { fromExpr :: Expr   }
-         | Lit    { fromLit :: Lit    }
-         | Pat    { fromPat :: Pat    }
-         | Type   { fromType :: Type   }
+         | Expr   { fromExpr   :: Expr   }
+         | Lit    { fromLit    :: Lit    }
+         | Pat    { fromPat    :: Pat    }
+         | Type   { fromType   :: Type   }
          deriving (Show, Eq, Read)
 
 
-class Wrapper a b where
-    wrap :: a -> b
+class ASTWrapper a b where
+    astWrap :: a -> b
 
 
-instance Wrapper Module AST where
-    wrap = Module
+instance ASTWrapper Module AST where
+    astWrap = Module
 
-instance Wrapper Expr AST where
-    wrap = Expr
+instance ASTWrapper Expr AST where
+    astWrap = Expr
 
-instance Wrapper Pat AST where
-    wrap = Pat
+instance ASTWrapper Pat AST where
+    astWrap = Pat
 
 
 

@@ -37,7 +37,7 @@ instance NameBase (Pat.Pat lab) where
   nameBase (Pat.RecWildcard) = "<nameBase for (Pat.Pat lab):RecWildcard>"
 
 
-instance NameBase Name.VName  where nameBase (Name.VName  np) = nameBase np
-instance NameBase Name.TName  where nameBase (Name.TName  np) = nameBase np
-instance NameBase Name.CName  where nameBase (Name.CName  np) = nameBase np
-instance NameBase Name.TVName where nameBase (Name.TVName np) = nameBase np
+instance (NameBase a) => NameBase (Name.VName  a) where nameBase (Name.VName  np) = nameBase np
+instance (NameBase a) => NameBase (Name.TName  a) where nameBase (Name.TName  np) = nameBase np
+instance (NameBase a) => NameBase (Name.CName  a) where nameBase (Name.CName  np) = nameBase np
+instance (NameBase a) => NameBase (Name.TVName a) where nameBase (Name.TVName np) = nameBase np
