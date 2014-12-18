@@ -15,7 +15,7 @@ require '../../../scripts/utils/guard_tools.rb'
 $run_docgen   = false
 $run_main     = true
 $run_tests    = false
-$run_linting  = false
+$run_linting  = true
 $run_coverage = false
 
 # Those parts of output are printed after the typechecker has run
@@ -36,6 +36,16 @@ $output       = [
                 ]
 $output_dir   = "tmp/"
 
+#
+$hlint_ignore = [
+                  "Use camelCase",
+                  "Use mappend",
+                ]
+$hlint_opts   = [
+                  "--hint=Generalise",
+                  "--report"
+                ]
+$hlint_path   = "typechecker/src/*.hs"
 
 
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -114,8 +124,13 @@ def haskellguard trigger
         puts "Report written to 'hpc_report'"
       end
 
-      section "linting", "pushd ..; hlint typechecker --report; popd"  if $run_linting
     end
+
+if $run_linting
+  opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
+  opts = opts.join(" ")
+  section "linting", "pushd ..; hlint #{$hlint_path} #{opts}; popd"
+end
 
     show_output
 

@@ -70,8 +70,8 @@ tcDecl :: (HumanName (Pat.Pat lab), StageTypecheckerCtx lab m a) => LDecl lab a 
 tcDecl ldecl@(Label.Label lab decl) = do
     case decl of
       fun@Decl.Function{ Decl._sig = sig@Pat.NamePat{ Pat._base = (Pat.Segment name args) } }
-                                              -> do let argsS = map mapArg args
-                                                    modify (("Function " ++ unpack name ++ " " ++ intercalate " " argsS) :)
+                                              -> do let argsS = fmap mapArg args
+                                                    modify (("Function " ++ unpack name ++ " " ++ unwords argsS) :)
       fun@Decl.Data{}                         -> modify ("Data"                         :)
       fun@Decl.Import{}                       -> modify ("Import"                       :)
       fun@Decl.TypeAlias{}                    -> modify ("TypeAlias"                    :)
