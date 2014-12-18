@@ -1,10 +1,10 @@
 module HumanName (HumanName(humanName)) where
 
 import qualified  Luna.ASTNew.Name          as Name
-import            Luna.ASTNew.Name.Path     (NamePath)
-import            Luna.ASTNew.NameBase      (NameBase(nameBase))
+import            Luna.ASTNew.Name.Path     (NamePath, base)
 import qualified  Luna.ASTNew.Pat           as Pat
 
+import            Control.Lens
 import            Data.Text.Lazy            (Text, pack)
 
 class HumanName a where
@@ -30,4 +30,4 @@ instance (HumanName a) => HumanName (Name.CName  a) where humanName (Name.CName 
 instance (HumanName a) => HumanName (Name.TVName a) where humanName (Name.TVName np) = humanName np
 
 instance HumanName NamePath where
-  humanName = nameBase
+  humanName name = name ^. base

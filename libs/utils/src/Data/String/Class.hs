@@ -15,7 +15,8 @@ module Data.String.Class (
 
 import Prelude
 import Data.String as X (IsString (fromString))
-
+import qualified Data.Text.Lazy as LText
+import qualified Data.Text      as Text
 
 ------------------------------------------------------------------------
 -- Type classes
@@ -34,6 +35,12 @@ class ToString a where
 
 instance ToString String where
     toString = id
+
+instance ToString LText.Text where
+    toString = LText.unpack
+
+instance ToString Text.Text where
+    toString = Text.unpack
 
 instance Show a => ToString a where
     toString = show

@@ -123,6 +123,7 @@ instance Traversal base m a b => DefaultTraversal base m (Maybe a) (Maybe b) whe
         Just a  -> fmap Just $ traverseM base a
         Nothing -> pure Nothing
 
+instance Traversal        base m ()     ()     where traverseM _ = pure
 instance Traversal        base m String String where traverseM _ = pure
 instance Traversal        base m Text   Text   where traverseM _ = pure
 --instance DefaultTraversal base m String String where defaultTraverseM _ = pure
@@ -239,6 +240,7 @@ instance ( Traversal base m v v'
          , Traversal base m (LType lab) (LType lab')
          , Traversal base m (LArg lab (Expr lab v)) (LArg lab' (Expr lab' v'))
          , Traversal base m (NamePat (LExpr lab v) (Expr.AppArg (LExpr lab v))) (NamePat (LExpr lab' v') (Expr.AppArg (LExpr lab' v')))
+         , Traversal base m (Expr.Variable v) (Expr.Variable v')
          ) => DefaultTraversal base m (Expr lab v) (Expr lab' v') where
     defaultTraverseM b = \case
         Expr.Lambda      inputs  output   body -> Expr.Lambda      <$> traverseM b inputs <*> traverseM b output   <*> traverseM b body
@@ -258,6 +260,10 @@ instance ( Traversal base m v v'
         Expr.Native      native                -> Expr.Native      <$> traverseM b native               
         Expr.Var         ident                 -> Expr.Var         <$> traverseM b ident                
         Expr.Wildcard                          -> pure Expr.Wildcard                         
+
+
+instance DefaultTraversal base m (Expr.Variable e) (Expr.Variable e) where
+    defaultTraverseM _ = pure
 
 
 instance Traversal base m e e'

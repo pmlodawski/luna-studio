@@ -109,4 +109,7 @@ instance Convertible (TName  a) (TName  a) where convert = rewrap
 instance Convertible (CName  a) (CName  a) where convert = rewrap
 instance Convertible (TVName a) (TVName a) where convert = rewrap
 
-instance Hashable a b => Hashable (VName a) b where hash = hash . unwrap
+instance Hashable a b => Hashable (VName  a) b where hash = hash . unwrap
+instance Hashable a b => Hashable (TName  a) b where hash = hash . unwrap
+instance Hashable a b => Hashable (CName  a) b where hash = hash . unwrap
+instance Hashable a b => Hashable (TVName a) b where hash = hash . unwrap
