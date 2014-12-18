@@ -80,7 +80,7 @@ def command(cmd, inp=nil)
   end
 
   unless stdout.empty?
-    puts "* * STDOUT".starsallaround.green
+    puts "* * STDOUT".starfill.green
     puts stdout.each_line.map {|l| "  * ".green + l}.join
   else
     puts "  * ".green + "STDOUT: none".black
