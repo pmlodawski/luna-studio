@@ -11,11 +11,11 @@ import           Luna.ASTNew.Name.Path (NamePath)
 
 class NameBase a where
   -- | Retrieve the human readable name. In case of variables, it's their usual name as opposed to internal schemes: NamePath or ID.
-  nameBase :: a -> String
+  nameBase :: a -> Text
 
 
 instance NameBase NamePath where
   nameBase name = name ^. NamePath.base
 
 instance (Show l, Show a) => NameBase (Label l a) where
-  nameBase (Label l _) = show l
+  nameBase (Label l _) = fromString $ show l

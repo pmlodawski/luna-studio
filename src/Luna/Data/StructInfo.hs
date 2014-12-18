@@ -26,7 +26,7 @@ import qualified Luna.ASTNew.Name.Path  as NamePath
 import qualified Flowbox.Data.MapForest as MapForest
 import           Flowbox.Data.MapForest (MapForest)
 import           Control.Monad          (join)
-import           Luna.ASTNew.Name.Pattern2 (ArgPatDesc)
+import           Luna.ASTNew.Name.Pattern (ArgPatDesc)
 import           Control.Monad.RWS         (RWST)
 
 ----------------------------------------------------------------------
@@ -35,11 +35,9 @@ import           Control.Monad.RWS         (RWST)
 
 type IDMap = IntMap
 
-type NameMap v = MapForest String v
+type NameMap v = MapForest Text v
 
-type BaseName = String
-
-data Error  = LookupError {key :: String}
+data Error  = LookupError {key :: Text}
             deriving (Show, Eq, Generic, Read)
 
 
