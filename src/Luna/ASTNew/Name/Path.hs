@@ -76,17 +76,6 @@ unified n = if isSingle n
     else (strRepr $ n^.base) ++ ('_' : join "_" (n^.segments))
 
 
--- close the definition, check if name holes are defined explicite
--- define Holes otherwise
---close :: NamePath -> NamePath
---close n@(NamePath base segments) = case Hole `elem` segments of
---    True  -> n
---    False -> case null segments of
---        True  -> n
---        False -> NamePath base $ (Hole : intersperse Hole segments)
-
-
-
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
@@ -95,3 +84,6 @@ instance IsString NamePath  where fromString = single
 
 instance Hashable NamePath where
 	hash (NamePath base segs) = hash base ++ concat (fmap hash segs)
+
+instance ToString NamePath where
+    toString (NamePath base segs) = base <> mjoin " " segs
