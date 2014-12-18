@@ -7,19 +7,19 @@
 
 {-# LANGUAGE DefaultSignatures #-}
 
-module Data.Wrap where
+module Data.Wrapper where
 
 import Control.Monad.Trans
 import Prelude
 
-class Wrap m where
+class Wrapper m where
     wrap   :: a   -> m a
     unwrap :: m a -> a
 
     default wrap :: Monad m => a -> m a
     wrap = return
 
-class WrapT t where
+class WrapperT t where
     wrapT   :: m a   -> t m a
     unwrapT :: t m a -> m a
 
