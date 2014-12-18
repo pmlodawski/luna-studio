@@ -25,7 +25,6 @@ import qualified  Luna.ASTNew.Label         as Label
 import qualified  Luna.ASTNew.Module        as Module
 import            Luna.ASTNew.Module        (LModule)
 import qualified  Luna.ASTNew.Name.Pattern  as Pat
-import            Luna.ASTNew.NameBase      (NameBase(nameBase))
 import qualified  Luna.ASTNew.Pat           as Pat
 import qualified  Luna.ASTNew.Traversals    as AST
 
@@ -33,6 +32,8 @@ import            Control.Monad.State       (get, modify)
 import            Data.List                 (intercalate)
 import            Data.Monoid               (Monoid, mempty)
 import            Data.Text.Lazy            (unpack)
+
+import            HumanName                 (HumanName(humanName))
 
 
 data StageTypechecker = StageTypechecker
@@ -58,14 +59,14 @@ tcpass = Pass "Typechecker"
               mempty
               tcUnit
 
-instance (StageTypecheckerCtx lab m a, NameBase (Pat.Pat lab)) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LModule lab a) (LModule lab a) where
+instance (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LModule lab a) (LModule lab a) where
     traverseM _ = tcMod
 
-instance (StageTypecheckerCtx lab m a, NameBase (Pat.Pat lab)) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab a) (LDecl lab a) where
+instance (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab a) (LDecl lab a) where
     traverseM _ = tcDecl
 
 
-tcDecl :: (NameBase (Pat.Pat lab), StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
+tcDecl :: (HumanName (Pat.Pat lab), StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
 tcDecl ldecl@(Label.Label lab decl) = do
     case decl of
       fun@Decl.Function{ Decl._sig = sig@Pat.NamePat{ Pat._base = (Pat.Segment name args) } }
@@ -78,10 +79,10 @@ tcDecl ldecl@(Label.Label lab decl) = do
       fun@Decl.Native{}                       -> modify ("Native"                       :)
     defaultTraverseM ldecl
   where
-    mapArg :: (NameBase (Pat.Pat lab)) => Pat.Arg (Pat.LPat lab) a -> String
-    mapArg (Pat.Arg (Label.Label _ arg) _) = unpack $ nameBase arg
+    mapArg :: (HumanName (Pat.Pat lab)) => Pat.Arg (Pat.LPat lab) a -> String
+    mapArg (Pat.Arg (Label.Label _ arg) _) = unpack $ humanName arg
 
-tcMod :: (StageTypecheckerCtx lab m a, NameBase (Pat.Pat lab)) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
+tcMod :: (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
 tcMod lmodule@(Label.Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) = do
     modify (("Module " ++ intercalate "." (path ++ [name])):)
     defaultTraverseM lmodule
@@ -120,5 +121,6 @@ tcUnit ast _ = do
 --infer :: Term -> E (TVar, Subst, Constraint, Type)
 --infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
 ----
+
 
 
