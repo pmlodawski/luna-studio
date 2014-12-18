@@ -76,6 +76,18 @@ instance ToString a => ToString (TName  a) where toString = toString . unwrap
 instance ToString a => ToString (CName  a) where toString = toString . unwrap
 instance ToString a => ToString (TVName a) where toString = toString . unwrap
 
+instance FromText (VName  NamePath) where fromText = vname  . fromText
+instance FromText (TName  NamePath) where fromText = tname  . fromText
+instance FromText (CName  NamePath) where fromText = cname  . fromText
+instance FromText (TVName NamePath) where fromText = tvname . fromText
+
+instance ToText a => ToText (VName  a) where toText = toText . unwrap
+instance ToText a => ToText (TName  a) where toText = toText . unwrap
+instance ToText a => ToText (CName  a) where toText = toText . unwrap
+instance ToText a => ToText (TVName a) where toText = toText . unwrap
+
+
+
 instance Wrapper VName  where wrap             = VName
                               unwrap (VName a) = a
 instance Wrapper TName  where wrap             = TName
@@ -97,4 +109,4 @@ instance Convertible (TName  a) (TName  a) where convert = rewrap
 instance Convertible (CName  a) (CName  a) where convert = rewrap
 instance Convertible (TVName a) (TVName a) where convert = rewrap
 
-instance Hashable a => Hashable (VName a) where hash = hash . unwrap
+instance Hashable a b => Hashable (VName a) b where hash = hash . unwrap

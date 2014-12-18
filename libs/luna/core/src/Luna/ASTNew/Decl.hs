@@ -13,15 +13,14 @@ module Luna.ASTNew.Decl where
 
 import Flowbox.Prelude hiding (Cons, traverse)
 
-import GHC.Generics              (Generic)
-import Luna.ASTNew.Type          (LType)
-import Luna.ASTNew.Name          (VNameP, TNameP, CNameP, TVNameP)
-import Luna.ASTNew.Arg           (Arg)
-import Luna.ASTNew.Native        (Native)
-import Luna.ASTNew.Label         (Label)
-import Luna.ASTNew.Name.Pattern  (NamePattern)
-import Luna.ASTNew.Pat           (LPat)
-import Luna.ASTNew.Name.Pattern2 (ArgPat)
+import GHC.Generics             (Generic)
+import Luna.ASTNew.Type         (LType)
+import Luna.ASTNew.Name         (VNameP, TNameP, CNameP, TVNameP)
+import Luna.ASTNew.Arg          (Arg)
+import Luna.ASTNew.Native       (Native)
+import Luna.ASTNew.Label        (Label)
+import Luna.ASTNew.Pat          (LPat)
+import Luna.ASTNew.Name.Pattern (ArgPat)
 
 import qualified Prelude
 

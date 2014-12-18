@@ -13,14 +13,14 @@ import qualified  Luna.ASTNew.Pat       as Pat
 
 class NameBase a where
   -- | Retrieve the human readable name. In case of variables, it's their usual name as opposed to internal schemes: NamePath or ID.
-  nameBase :: a -> String
+  nameBase :: a -> Text
 
 
 instance NameBase NamePath where
   nameBase name = name ^. NamePath.base
 
-instance (Show l) => NameBase (Label l a) where
-  nameBase lab = lab ^. label . to show
+instance (Show l, Show a) => NameBase (Label l a) where
+  nameBase lab = lab ^. label . to show . to fromString
 
 instance NameBase (Pat.Pat lab) where
   nameBase (Pat.Var {Pat._vname = vname}) = nameBase vname

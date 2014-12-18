@@ -39,7 +39,7 @@ data ParserState conf
                  , _opFixity      :: OperatorMap
                  , _sourceMap     :: SourceMap
                  , _namespace     :: Namespace
-                 , _adhocReserved :: [String]
+                 , _adhocReserved :: [Text]
                  , _comments      :: IDMap [Comment]
                  } deriving (Show)
 

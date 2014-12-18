@@ -8,6 +8,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE FunctionalDependencies    #-}
 
 
 module Luna.ASTNew.Name.Pattern where
@@ -23,58 +24,80 @@ import           Data.String.Utils (join)
 import           Data.List         (intersperse)
 import           Data.String             (IsString, fromString)
 import           Luna.ASTNew.Name.Path (NamePath(NamePath))
+import           Data.Maybe (isNothing)
+import           Data.Foldable (Foldable)
+
+----------------------------------------------------------------------
+-- Type classes
+----------------------------------------------------------------------
+
+class NamePatternClass p s | p -> s where
+    segments     :: p -> [s]
+    segmentNames :: p -> [SegmentName]
+    toNamePath   :: p -> NamePath
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
-data NamePattern = NamePattern String [Segment]
-          deriving (Show, Eq, Generic, Read, Ord)
+data NamePat base arg = NamePat { _prefix   :: Maybe arg
+                                , _base     :: Segment base arg
+                                , _segments :: [Segment SegmentName arg]
+                                } deriving (Show, Eq, Generic, Read, Ord, Functor, Traversable, Foldable)
 
-data Segment = Token String
-             | Hole
-             deriving (Show, Eq, Generic, Read, Ord)
+data Segment base arg = Segment     base [arg]                     deriving (Show, Eq, Generic, Read, Ord, Functor, Traversable, Foldable)
+data Arg     pat expr = Arg         pat (Maybe expr)               deriving (Show, Eq, Generic, Read, Ord)
+data SegmentDesc      = SegmentDesc SegmentName [Bool]             deriving (Show, Eq, Generic, Read, Ord)
+data ArgPatDesc       = ArgPatDesc  Bool SegmentDesc [SegmentDesc] deriving (Show, Eq, Generic, Read, Ord)
 
-instance QShow (NamePattern)
-instance QShow (Segment)
+type ArgPat  pat expr = NamePat     SegmentName (Arg pat expr)
+type SegmentName      = Text
 
+----------------------------------------------------------------------
+-- Utils
+----------------------------------------------------------------------
 
---data NamePattern2 arg = NamePattern2 { _prefix   :: Maybe arg
---                                     , _base     :: Segment2 SegmentName arg
---                                     , _segments :: [Segment2 SegmentName arg]
---                                     }
+appendArg  arg  = appendArgs [arg]
+appendArgs nargs (Segment base args) = Segment base (args ++ nargs)
 
---data Segment2 base arg = Segment2 base [arg]
-
-
---data ArgPattern a e = ArgPattern (LPat a) (Maybe e) 
-
-
-single :: String -> NamePattern
-single = flip NamePattern []
-
-multi :: String -> [Segment] -> NamePattern
-multi = NamePattern
+appendLastSegmentArg  arg  = appendLastSegmentArgs [arg]
+appendLastSegmentArgs nargs (NamePat pfx base segs) = case segs of
+    [] -> NamePat pfx (appendArgs nargs base) segs
+    _  -> NamePat pfx base (init segs ++ [appendArgs nargs $ last segs])
 
 
-toName :: NamePattern -> NamePath
-toName (NamePattern base segments) = NamePath base $ reverse $ go [] segments
-    where go x []           = x
-          go x (Hole:xs)    = go x xs
-          go x (Token n:xs) = go (n:x) xs
+withLastSegment f (NamePat pfx base segs) = case segs of
+    [] -> NamePat pfx (f base) segs
+    _  -> NamePat pfx base (init segs ++ [f $ last segs])
 
--- close the definition, check if name holes are defined explicite
--- define Holes otherwise
-close :: NamePattern -> NamePattern
-close n@(NamePattern base segments) = case Hole `elem` segments of
-    True  -> n
-    False -> case null segments of
-        True  -> n
-        False -> NamePattern base $ (Hole : intersperse Hole segments)
+toDesc :: ArgPat pat expr -> ArgPatDesc
+toDesc (NamePat pfx base segments) = ArgPatDesc (pfxToDesc pfx) (smntToDesc base) (fmap smntToDesc segments)
+    where smntToDesc (Segment base args) = SegmentDesc base $ fmap argToDesc args
+          argToDesc  (Arg _ mexpr)       = isNothing mexpr
+          pfxToDesc  (Just arg)          = argToDesc arg
+          pfxToDesc  Nothing             = True
+
+
+mapSegmentBase f (Segment base arg) = Segment (f base) arg
+
+mapSegments f (NamePat pfx base segs) = NamePat pfx (f base) (fmap f segs)
 
 
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
 
-instance IsString NamePattern  where fromString = single
+instance NamePatternClass (NamePat SegmentName arg) (Segment SegmentName arg) where
+    segments (NamePat _ base segs) = base : segs
+    segmentNames = fmap sgmtName . segments 
+        where sgmtName (Segment base _) = base
+    toNamePath (NamePat _ base segs) = NamePath (sgmtName base) (fmap sgmtName segs)
+        where sgmtName (Segment base _) = base
+
+instance NamePatternClass ArgPatDesc SegmentDesc where
+    segments (ArgPatDesc _ base segs) = base : segs 
+    segmentNames = fmap sgmtName . segments 
+        where sgmtName (SegmentDesc base _) = base
+    toNamePath (ArgPatDesc _ base segs) = NamePath (sgmtName base) (fmap sgmtName segs)
+        where sgmtName (SegmentDesc base _) = base
+

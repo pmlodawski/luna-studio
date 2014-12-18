@@ -51,7 +51,7 @@ import qualified Luna.Data.Namespace.State    as State
 import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regArgPatDesc, regTypeName, withNewScope)
 import qualified Luna.Parser.State            as ParserState
 --import qualified Luna.ASTNew.Name.Pattern     as NamePattern
-import qualified Luna.ASTNew.Name.Pattern2    as NamePattern
+import qualified Luna.ASTNew.Name.Pattern     as NamePattern
 
 ----------------------------------------------------------------------
 -- Base types

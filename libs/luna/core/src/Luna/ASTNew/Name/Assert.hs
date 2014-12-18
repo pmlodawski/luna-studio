@@ -10,15 +10,16 @@ module Luna.ASTNew.Name.Assert where
 
 import Flowbox.Prelude
 
-import Control.Exception.Assert (byPred, assert)
-import Data.Char.Class          (LetterCase, isLower, isUpper)
-import Luna.ASTNew.Name.Path    (NamePath(NamePath))
+import           Control.Exception.Assert (byPred, assert)
+import           Data.Char.Class          (LetterCase, isLower, isUpper)
+import           Luna.ASTNew.Name.Path    (NamePath(NamePath))
+import qualified Data.Text.Lazy           as Text
 
 ----------------------------------------------------------------------
 -- Wrappers
 ----------------------------------------------------------------------
 
-newtype VarName = VarName String deriving (Show)
+newtype VarName = VarName Text deriving (Show)
 
 
 ----------------------------------------------------------------------
@@ -55,8 +56,9 @@ instance LetterCase NamePath where
 
 
 instance LetterCase VarName where
-    isLower (VarName name@(start:_)) = isLower name || start == '_'
-    isUpper (VarName name)           = isUpper name
+    isUpper (VarName name) = isUpper name
+    isLower (VarName name) = isLower name || start == '_'
+    	where start = head $ toString name
 
 
 instance OpName Char where
@@ -64,6 +66,9 @@ instance OpName Char where
 
 instance OpName String where
     isOpName = null . filter (not . isOpName)
+
+instance OpName Text where
+    isOpName = Text.null . Text.filter (not . isOpName)
 
 instance OpName NamePath where
 	isOpName (NamePath base _) = isOpName base

@@ -30,6 +30,8 @@ import           Data.Monoid               as X (Monoid, mempty, mappend, mconca
 import           GHC.Exts                  as X (IsList, Item, fromList, fromListN, toList)
 import           Data.Wrapper              as X (Wrapper(wrap,unwrap), WrapperT(wrapT, unwrapT), rewrap)
 import           Data.Convertible          as X (Convertible(convert))
+import           Data.Text.Class           as X (ToText(toText), FromText(fromText), IsText)
+import           Data.Text.Lazy            as X (Text)
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.Trans       (lift)
 import           Control.Monad.Trans.Class (MonadTrans)

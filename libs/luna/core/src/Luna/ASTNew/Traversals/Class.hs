@@ -14,30 +14,31 @@
 
 module Luna.ASTNew.Traversals.Class where
 
-import           Flowbox.Prelude        hiding (Cons, Traversal, traverse)
-import           GHC.Generics           (Generic)
-import           Control.Monad.Identity (runIdentity)
+import Flowbox.Prelude hiding (Cons, Traversal, traverse)
 
-import           Luna.ASTNew.Decl       (Decl, LDecl, LCons, ImpTgt)
-import qualified Luna.ASTNew.Decl       as Decl
-import           Luna.ASTNew.Module     (Module(Module))
-import qualified Luna.ASTNew.Module     as Module
-import           Luna.ASTNew.Unit       (Unit(Unit))
-import           Luna.ASTNew.Arg        (LArg, Arg(Arg))
-import qualified Luna.ASTNew.Type       as Type
-import           Luna.ASTNew.Type       (LType, Type)
-import           Luna.ASTNew.Name       (TName, VName, CName, TVName)
-import           Luna.ASTNew.Name.Path  (NamePath)
-import           Luna.ASTNew.Native     (Native)
-import           Luna.ASTNew.Label      (Label(Label))
-import qualified Luna.ASTNew.Pat        as Pat
-import           Luna.ASTNew.Pat        (Pat, LPat)
-import           Luna.ASTNew.Lit        (LLit, Lit)
-import qualified Luna.ASTNew.Expr       as Expr
-import           Luna.ASTNew.Expr       (LExpr, Expr)
-import           Luna.ASTNew.Name       (NameBase)
-import           Luna.ASTNew.Name.Pattern2 (NamePat(NamePat), Segment(Segment), SegmentName)
-import qualified Luna.ASTNew.Name.Pattern2 as Pattern2
+import Control.Monad.Identity (runIdentity)
+
+import           Luna.ASTNew.Decl         (Decl, LDecl, LCons, ImpTgt)
+import qualified Luna.ASTNew.Decl         as Decl
+import           Luna.ASTNew.Module       (Module(Module))
+import qualified Luna.ASTNew.Module       as Module
+import           Luna.ASTNew.Unit         (Unit(Unit))
+import           Luna.ASTNew.Arg          (LArg, Arg(Arg))
+import qualified Luna.ASTNew.Type         as Type
+import           Luna.ASTNew.Type         (LType, Type)
+import           Luna.ASTNew.Name         (TName, VName, CName, TVName)
+import           Luna.ASTNew.Name.Path    (NamePath)
+import           Luna.ASTNew.Native       (Native)
+import           Luna.ASTNew.Label        (Label(Label))
+import qualified Luna.ASTNew.Pat          as Pat
+import           Luna.ASTNew.Pat          (Pat, LPat)
+import           Luna.ASTNew.Lit          (LLit, Lit)
+import qualified Luna.ASTNew.Expr         as Expr
+import           Luna.ASTNew.Expr         (LExpr, Expr)
+import           Luna.ASTNew.Name         (NameBase)
+import           Luna.ASTNew.Name.Pattern (NamePat(NamePat), Segment(Segment), SegmentName)
+import qualified Luna.ASTNew.Name.Pattern as Pattern
+import Data.Text.Lazy           (Text)
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -97,8 +98,8 @@ instance ( Traversal base m arg arg'
 
 instance ( Traversal base m pat pat'
          , Traversal base m expr expr'
-         ) => DefaultTraversal base m (Pattern2.Arg pat expr) (Pattern2.Arg pat' expr') where
-    defaultTraverseM b (Pattern2.Arg pat expr) = Pattern2.Arg <$> traverseM b pat <*> traverseM b expr
+         ) => DefaultTraversal base m (Pattern.Arg pat expr) (Pattern.Arg pat' expr') where
+    defaultTraverseM b (Pattern.Arg pat expr) = Pattern.Arg <$> traverseM b pat <*> traverseM b expr
 
 
 --instance Class Data where
@@ -122,8 +123,9 @@ instance Traversal base m a b => DefaultTraversal base m (Maybe a) (Maybe b) whe
         Just a  -> fmap Just $ traverseM base a
         Nothing -> pure Nothing
 
-instance Traversal        base m String String where traverseM        _ = pure
-instance DefaultTraversal base m String String where defaultTraverseM _ = pure
+instance Traversal        base m String String where traverseM _ = pure
+instance Traversal        base m Text   Text   where traverseM _ = pure
+--instance DefaultTraversal base m String String where defaultTraverseM _ = pure
 
 -- ----- basic AST types -----
 

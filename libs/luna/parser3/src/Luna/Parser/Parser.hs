@@ -12,6 +12,7 @@
 
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE OverloadedStrings          #-}
 
 
 --{-# LANGUAGE OverlappingInstances #-}
@@ -26,7 +27,7 @@ import qualified Data.ByteString              as B
 import qualified Data.ByteString.UTF8         as UTF8
 import           Data.CharSet.ByteSet         as S
 import           Data.Default
-import           Flowbox.Prelude              hiding (noneOf, maybe, element, cons, (<>))
+import           Flowbox.Prelude              hiding (noneOf, maybe, element, cons)
 import qualified Flowbox.Prelude              as Prelude
 import qualified Luna.Data.ASTInfo            as ASTInfo
 import qualified Luna.Parser.Token            as Tok
@@ -37,7 +38,8 @@ import           System.IO                    (IOMode (ReadMode), hClose, openFi
 import           System.IO                    (stdout)
 import           Text.Parser.Token.Highlight
 import           Text.Parser.Token.Style
-import           Text.PrettyPrint.ANSI.Leijen (displayIO, linebreak, renderPretty, (<>))
+import           Text.PrettyPrint.ANSI.Leijen (displayIO, linebreak, renderPretty)
+import qualified Text.PrettyPrint.ANSI.Leijen as Leijen
 import           Text.RawString.QQ
 import           Text.Trifecta                hiding (parseFromFile, parseByteString, parseString)
 import qualified Text.Trifecta                as Trifecta
@@ -54,8 +56,8 @@ import           Data.Char                    (isSpace)
 import qualified Data.ByteString as ByteStr
 import           Luna.ASTNew.Name.Path        (NamePath(NamePath))
 import qualified Luna.ASTNew.Name.Path        as NamePath
-import qualified Luna.ASTNew.Name.Pattern2    as NamePat
-import           Luna.ASTNew.Name.Pattern2    (NamePat(NamePat), Segment(Segment))
+import qualified Luna.ASTNew.Name.Pattern     as NamePat
+import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment))
 import qualified Luna.ASTNew.Name             as Name
 import           Luna.ASTNew.Name             (TName(TName), TVName(TVName))
 
@@ -455,7 +457,7 @@ varP       = withLabeled $ \id -> do
                 name <- Tok.varIdent
                 let np = NamePath.single name
                 Namespace.regVarName id np
-                return $ Pat.Var $ fromString name
+                return $ Pat.Var (fromText name)
 
 
 
@@ -615,8 +617,9 @@ optableE = [
               --operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.appInfix (label id2 $ Expr.Var $ NamePath.single $ op) l [r]
               --                            ) <$> nextID <*> nextID)
 
-              operator4 op = binaryM op ( (\id1 id2 l r -> label id1 $ Expr.appInfix (label id2 $ Expr.Var $ NamePath.single $ op) (Expr.unnamed l) [Expr.unnamed r]
-                                          ) <$> nextID <*> nextID)
+              --FIXME[wd]: remove fromText call after moving Tokenizer to Text
+              operator4 op = binaryM (fromText op) ( (\id1 id2 l r -> label id1 $ Expr.appInfix (label id2 $ Expr.Var $ NamePath.single $ op) (Expr.unnamed l) [Expr.unnamed r]
+                                                   ) <$> nextID <*> nextID)
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure ('~':op)))
               --operator2 op = binaryM op (binaryMatchE <$>  ( appID Expr.App <*> (appID Expr.Accessor <*> pure "add" <*> ... ) )  )
               --operator2 op = binaryM op ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 op x) [y]) <$> genID <*> genID)
@@ -719,7 +722,7 @@ mkFuncParser baseVar (id, mpatt) = case mpatt of
 notReserved p = do
     rsv  <- view ParserState.adhocReserved <$> get
     name <- p
-    if name `elem` rsv then fail $ "'" ++ name ++ "' is a reserved word"
+    if name `elem` rsv then fail $ fromText $ "'" <> name <> "' is a reserved word"
                        else return name
 
 
@@ -755,11 +758,11 @@ lookupAST name = do
                 case possibleDescs of
                     [] -> if (name == "self")
                           then return Nothing
-                          else fail $ "name '" ++ name ++ "' is not defined" ++ msgTip
-                               where scopedNames = "self" : ((fmap $ join " ") $ MapForest.keys varnames)
+                          else fail . fromText $ "name '" <> name <> "' is not defined" <> msgTip
+                               where scopedNames = "self" : ((fmap $ mjoin " ") $ MapForest.keys varnames)
                                      simWords    = findSimWords name scopedNames
-                                     msgTip = if length simWords > 0 then ", perhaps you ment one of {" ++ join ", " (fmap show simWords) ++ "}"
-                                                                     else ""
+                                     msgTip      = if length simWords > 0 then ", perhaps you ment one of {" <> mjoin ", " (fmap (fromString . show) simWords) <> "}"
+                                                                          else ""
                     x  -> return $ Just x
 
 
@@ -779,7 +782,7 @@ editCosts2 = EditCosts { deletionCosts     = ConstantCost 10
 
 findSimWords word words = fmap snd simPairs
     --where dist a b = levenshteinDistance editCosts (phonix a) (phonix b)
-    where dist a b = levenshteinDistance editCosts2 a b
+    where dist a b = levenshteinDistance editCosts2 (toString a) (toString b)
           simWords = fmap (dist word) words
           simPairs = filter ((<20).fst) 
                    $ List.sortBy (compare `on` fst) 
@@ -893,7 +896,7 @@ end = (Tok.spaces <?> "") <* (eof <?> "")
 
 upToEnd p = Tok.spaces *> p <* end
 
-renderErr e = renderPretty 0.8 80 $ e <> linebreak
+renderErr e = renderPretty 0.8 80 $ e Leijen.<> linebreak
 
 -----------------------------------------------------------
 -- Pragmas
