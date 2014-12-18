@@ -126,11 +126,11 @@ def haskellguard trigger
 
     end
 
-if $run_linting
-  opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
-  opts = opts.join(" ")
-  section "linting", "pushd ..; hlint #{$hlint_path} #{opts}; popd"
-end
+    if $run_linting
+      opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
+      opts = opts.join(" ")
+      section "linting", "pushd ..; hlint #{$hlint_path} #{opts}; popd"
+    end
 
     show_output
 
