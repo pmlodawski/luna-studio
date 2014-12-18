@@ -29,13 +29,13 @@ import           Luna.ASTNew.Name.Hash (Hashable, hash)
 
 class Convert a b where
     convert :: a -> b
-    default convert :: (NameClass a, NameClass b) => a -> b
+    default convert :: (IsName a, IsName b) => a -> b
     convert = toName . fromName
 
 
-class NameClass n where
+class IsName n where
     toName   :: NamePath -> n
-    fromName :: n      -> NamePath
+    fromName :: n        -> NamePath
 
 ----------------------------------------------------------------------
 -- Data types
@@ -71,19 +71,24 @@ instance IsString TName  where fromString = tname  . NamePath.single
 instance IsString CName  where fromString = cname  . NamePath.single
 instance IsString TVName where fromString = tvname . NamePath.single
 
-instance NameClass VName where
+instance ToString VName  where toString (VName  n) = toString n
+instance ToString TName  where toString (TName  n) = toString n
+instance ToString CName  where toString (CName  n) = toString n
+instance ToString TVName where toString (TVName n) = toString n
+
+instance IsName VName where
     toName             = VName
     fromName (VName n) = n
 
-instance NameClass TName where
+instance IsName TName where
     toName             = TName
     fromName (TName n) = n
 
-instance NameClass CName where
+instance IsName CName where
     toName             = CName
     fromName (CName n) = n
 
-instance NameClass TVName where
+instance IsName TVName where
     toName              = TVName
     fromName (TVName n) = n
 

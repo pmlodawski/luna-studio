@@ -35,14 +35,14 @@ data AST a e v = Module { fromModule :: Module a e }
                deriving (Show, Eq, Generic, Read)
 
 
-class Wrapper a b where
-    wrap :: a -> b
+class ASTWrapper a b where
+    astWrap :: a -> b
 
 
-instance (a~a', e~e') => Wrapper (Module a e) (AST a' e' v ) where wrap = Module
-instance (a~a', e~e') => Wrapper (Decl   a e) (AST a' e' v ) where wrap = Decl
-instance (a~a', v~v') => Wrapper (Expr   a v) (AST a' e  v') where wrap = Expr
-instance                 Wrapper (Lit       ) (AST a  e  v ) where wrap = Lit
-instance (a~a')       => Wrapper (Pat    a  ) (AST a' e  v ) where wrap = Pat
-instance (a~a')       => Wrapper (Type   a  ) (AST a' e  v ) where wrap = Type
+instance (a~a', e~e') => ASTWrapper (Module a e) (AST a' e' v ) where astWrap = Module
+instance (a~a', e~e') => ASTWrapper (Decl   a e) (AST a' e' v ) where astWrap = Decl
+instance (a~a', v~v') => ASTWrapper (Expr   a v) (AST a' e  v') where astWrap = Expr
+instance                 ASTWrapper (Lit       ) (AST a  e  v ) where astWrap = Lit
+instance (a~a')       => ASTWrapper (Pat    a  ) (AST a' e  v ) where astWrap = Pat
+instance (a~a')       => ASTWrapper (Type   a  ) (AST a' e  v ) where astWrap = Type
 
