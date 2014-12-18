@@ -8,14 +8,16 @@
 
 module Luna.ASTNew.Pat where
 
-import GHC.Generics     (Generic)
-
 import Flowbox.Prelude
-import Luna.ASTNew.Type  (LType)
-import Luna.ASTNew.Lit   (Lit)
-import Luna.ASTNew.Name  (VName, CName)
-import Luna.ASTNew.Label (Label)
 
+import           Luna.ASTNew.Type      (LType)
+import           Luna.ASTNew.Lit       (Lit)
+import qualified Luna.ASTNew.Name      as Name
+import           Luna.ASTNew.Label     (Label)
+import           Luna.ASTNew.Name.Path (NamePath)
+
+type VName = Name.VName NamePath
+type CName = Name.CName NamePath
 
 type LPat a = Label a (Pat a)
 type L      = Label
