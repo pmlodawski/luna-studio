@@ -139,6 +139,7 @@ instance QShow Float   where qshowsPrec = showsPrec
 instance QShow String  where qshowsPrec = showsPrec
 instance QShow Bool    where qshowsPrec = showsPrec
 instance QShow Integer where qshowsPrec = showsPrec
+instance QShow Text    where qshowsPrec = showsPrec
 
 intersperse :: a -> [a] -> [a]
 intersperse _ []    = []

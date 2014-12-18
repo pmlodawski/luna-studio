@@ -9,16 +9,17 @@
 module Data.Char.Class where
 
 import Flowbox.Prelude
-import qualified Data.Char as Char
-
+import qualified Data.Char      as Char
+import qualified Data.Text.Lazy as LText
+import qualified Data.Text      as Text
 
 ----------------------------------------------------------------------
 -- Type classes
 ----------------------------------------------------------------------
 
 class LetterCase a where
-	isLower :: a -> Bool
-	isUpper :: a -> Bool
+    isLower :: a -> Bool
+    isUpper :: a -> Bool
 
 
 ----------------------------------------------------------------------
@@ -26,9 +27,17 @@ class LetterCase a where
 ----------------------------------------------------------------------
 
 instance LetterCase Char where
-	isLower = Char.isLower
-	isUpper = Char.isUpper
-	
+    isLower = Char.isLower
+    isUpper = Char.isUpper
+    
 instance LetterCase String where
-	isLower = isLower . head
-	isUpper = isUpper . head
+    isLower = isLower . head
+    isUpper = isUpper . head
+
+instance LetterCase LText.Text where
+    isLower = isLower . head . toList
+    isUpper = isUpper . head . toList
+
+instance LetterCase Text.Text where
+    isLower = isLower . head . toList
+    isUpper = isUpper . head . toList

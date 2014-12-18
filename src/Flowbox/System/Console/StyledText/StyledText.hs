@@ -8,7 +8,6 @@
 
 module Flowbox.System.Console.StyledText.StyledText where
 
-import qualified Data.Text           as T
 import           GHC.IO.Handle.Types (Handle)
 import qualified System.Console.ANSI as ANSI
 import           System.IO           (stderr, stdout)
@@ -16,8 +15,9 @@ import           System.IO           (stderr, stdout)
 import           Flowbox.Prelude                         hiding (print)
 import           Flowbox.System.Console.StyledText.Style (Style (Style))
 import qualified Flowbox.System.Console.StyledText.Style as Style
+import qualified Data.Text.Lazy                          as Text
 
-data Element = TextElement T.Text
+data Element = TextElement Text
              | StylePush Style
              | StylePop
              deriving (Show)
@@ -34,7 +34,7 @@ printErr = hPrintStack stderr []
 hPrintStack :: Handle -> [Style] -> StyledText -> IO ()
 hPrintStack _ _ []     = putStrLn ""
 hPrintStack handler stack (x:xs) = case x of
-    TextElement txt    -> putStr (T.unpack txt) *> printStack stack xs
+    TextElement txt    -> putStr (Text.unpack txt) *> printStack stack xs
     StylePush s        -> ANSI.hSetSGR handler (Style.toSGR s) *> printStack (s:stack) xs
     StylePop           -> case stack of
                           _:s:ss -> ANSI.hSetSGR handler (Style.toSGR s)             *> printStack (s:ss) xs
@@ -50,11 +50,7 @@ clearFormatting (x:xs) = case x of
     _             -> clearFormatting xs
 
 
-toText :: StyledText -> T.Text
-toText [] = ""
-toText (x:xs) = case x of
-    TextElement txt -> txt ++ toText xs
-    _               -> toText xs
+
 
 beginBlack :: StyledText
 beginBlack = [StylePush $ Style Style.Foreground Style.Vivid Style.Black]
@@ -121,4 +117,11 @@ instance IsString Element where
 instance IsString StyledText where
     fromString "" = []
     fromString s  = [fromString s]
+
+instance ToText StyledText where
+    toText [] = ""
+    toText (x:xs) = case x of
+        TextElement txt -> txt ++ toText xs
+        _               -> toText xs
+
 
