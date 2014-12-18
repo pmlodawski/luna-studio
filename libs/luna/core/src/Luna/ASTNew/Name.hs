@@ -7,54 +7,49 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Luna.ASTNew.Name (
-    module Luna.ASTNew.Name,
-    module X
-) where
+module Luna.ASTNew.Name where
 
 import           Flowbox.Prelude
 
 import           GHC.Generics
 import           Data.String             (IsString, fromString)
 
-import           Luna.ASTNew.Name.Rules  as X
 import qualified Luna.ASTNew.Name.Assert as Assert
-import qualified Luna.ASTNew.Name.Path  as NamePath
-import           Luna.ASTNew.Name.Path (NamePath(NamePath))
-import           Luna.ASTNew.Name.Hash (Hashable, hash)
+import qualified Luna.ASTNew.Name.Path   as NamePath
+import           Luna.ASTNew.Name.Path   (NamePath(NamePath))
+import           Luna.ASTNew.Name.Hash   (Hashable, hash)
 
 ----------------------------------------------------------------------
--- Type classes
+-- Utils
 ----------------------------------------------------------------------
 
-class Convert a b where
-    convert :: a -> b
-    default convert :: (IsName a, IsName b) => a -> b
-    convert = toName . fromName
-
-
-class IsName n where
-    toName   :: NamePath -> n
-    fromName :: n        -> NamePath
+unsafeConvert :: (Wrapper m, Wrapper n) => m a -> n a
+unsafeConvert = rewrap
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
-data Name = V  VName
-          | T  TName
-          | C  CName
-          | TV TVName
-          deriving (Show, Eq, Ord, Generic, Read)
+data Name a = V  (VName  a)
+            | T  (TName  a)
+            | C  (CName  a)
+            | TV (TVName a)
+            deriving (Show, Eq, Ord, Generic, Read, Functor)
 
-data NameBase = VarName  VName
-              | TypeName TName
-              deriving (Show, Eq, Ord, Generic, Read)
+data NameBase a = VarName  (VName a)
+                | TypeName (TName a)
+                deriving (Show, Eq, Ord, Generic, Read, Functor)
 
-newtype VName  = VName  NamePath deriving (Show, Eq, Ord, Generic, Read)
-newtype TName  = TName  NamePath deriving (Show, Eq, Ord, Generic, Read)
-newtype CName  = CName  NamePath deriving (Show, Eq, Ord, Generic, Read)
-newtype TVName = TVName NamePath deriving (Show, Eq, Ord, Generic, Read)
+newtype VName  a = VName  a deriving (Show, Eq, Ord, Generic, Read, Functor)
+newtype TName  a = TName  a deriving (Show, Eq, Ord, Generic, Read, Functor)
+newtype CName  a = CName  a deriving (Show, Eq, Ord, Generic, Read, Functor)
+newtype TVName a = TVName a deriving (Show, Eq, Ord, Generic, Read, Functor)
+
+type VNameP    = VName  NamePath
+type TNameP    = TName  NamePath
+type CNameP    = CName  NamePath
+type TVNameP   = TVName NamePath
+type NameBaseP = NameBase NamePath
 
 vname  (Assert.isVName  -> s) = VName  s
 tname  (Assert.isTName  -> s) = TName  s
@@ -66,40 +61,40 @@ tvname (Assert.isTVName -> s) = TVName s
 -- Instances
 ----------------------------------------------------------------------
 
-instance IsString VName  where fromString = vname  . NamePath.single
-instance IsString TName  where fromString = tname  . NamePath.single
-instance IsString CName  where fromString = cname  . NamePath.single
-instance IsString TVName where fromString = tvname . NamePath.single
+instance IsString (VName  NamePath) where fromString = vname  . fromString
+instance IsString (TName  NamePath) where fromString = tname  . fromString
+instance IsString (CName  NamePath) where fromString = cname  . fromString
+instance IsString (TVName NamePath) where fromString = tvname . fromString
 
-instance ToString VName  where toString (VName  n) = toString n
-instance ToString TName  where toString (TName  n) = toString n
-instance ToString CName  where toString (CName  n) = toString n
-instance ToString TVName where toString (TVName n) = toString n
+instance IsString (VName  String)   where fromString = vname 
+instance IsString (TName  String)   where fromString = tname 
+instance IsString (CName  String)   where fromString = cname 
+instance IsString (TVName String)   where fromString = tvname
 
-instance IsName VName where
-    toName             = VName
-    fromName (VName n) = n
+instance ToString a => ToString (VName  a) where toString = toString . unwrap
+instance ToString a => ToString (TName  a) where toString = toString . unwrap
+instance ToString a => ToString (CName  a) where toString = toString . unwrap
+instance ToString a => ToString (TVName a) where toString = toString . unwrap
 
-instance IsName TName where
-    toName             = TName
-    fromName (TName n) = n
+instance Wrapper VName  where wrap             = VName
+                              unwrap (VName a) = a
+instance Wrapper TName  where wrap             = TName
+                              unwrap (TName a) = a
+instance Wrapper CName  where wrap             = CName
+                              unwrap (CName a) = a
+instance Wrapper TVName where wrap             = TVName
+                              unwrap (TVName a) = a
 
-instance IsName CName where
-    toName             = CName
-    fromName (CName n) = n
 
-instance IsName TVName where
-    toName              = TVName
-    fromName (TVName n) = n
+-- only possible conversions
+instance Convertible (VName  a) (TVName a) where convert = rewrap
+instance Convertible (TVName a) (VName  a) where convert = rewrap
+instance Convertible (CName  a) (TName  a) where convert = rewrap
+instance Convertible (TName  a) (CName  a) where convert = rewrap
 
-instance Convert VName  TVName
-instance Convert TVName VName
-instance Convert CName  TName
-instance Convert TName  CName
+instance Convertible (VName  a) (VName  a) where convert = rewrap
+instance Convertible (TName  a) (TName  a) where convert = rewrap
+instance Convertible (CName  a) (CName  a) where convert = rewrap
+instance Convertible (TVName a) (TVName a) where convert = rewrap
 
-instance Convert VName  VName
-instance Convert TName  TName
-instance Convert CName  CName
-instance Convert TVName TVName
-
-instance Hashable VName where hash (VName name) = hash name
+instance Hashable a => Hashable (VName a) where hash = hash . unwrap

@@ -127,13 +127,12 @@ instance DefaultTraversal base m String String where defaultTraverseM _ = pure
 
 -- ----- basic AST types -----
 
-instance Traversal base m TName       TName       where traverseM _ = pure
-instance Traversal base m VName       VName       where traverseM _ = pure
-instance Traversal base m CName       CName       where traverseM _ = pure
-instance Traversal base m TVName      TVName      where traverseM _ = pure
-instance Traversal base m NamePath   NamePath   where traverseM _ = pure
---instance Traversal base m NamePat NamePat where traverseM _ = pure
-instance Traversal base m NameBase    NameBase    where traverseM _ = pure
+instance Traversal base m (TName    a) (TName    a) where traverseM _ = pure
+instance Traversal base m (VName    a) (VName    a) where traverseM _ = pure
+instance Traversal base m (CName    a) (CName    a) where traverseM _ = pure
+instance Traversal base m (TVName   a) (TVName   a) where traverseM _ = pure
+instance Traversal base m (NameBase a) (NameBase a) where traverseM _ = pure
+instance Traversal base m NamePath     NamePath     where traverseM _ = pure
 
 
 -- ----- Unit -----

@@ -94,7 +94,7 @@ aaMod mod@(Label lab (Module path name body)) = withNewScope id continue
 
 aaPat :: (PassCtx m, Enumerated lab) => LPat lab -> SAPass m (LPat lab)
 aaPat p@(Label lab pat) = case pat of
-    Pat.Var         name       -> regVarName id (Name.fromName name)
+    Pat.Var         name       -> regVarName id (unwrap name)
                                   *> regParent id
                                   *> continue
     _                          -> continue
@@ -115,11 +115,11 @@ aaExpr e@(Label lab expr) = case expr of
                                *> regAlias id name
                                *> continue
     cons@(Expr.Cons name)      -> regParent id
-                               *> regAlias id (Name.fromName name)
+                               *> regAlias id (unwrap name)
                                *> continue
     Expr.RecUpdt name sel expr -> regParent  id
-                               *> regAlias   id (Name.fromName name)
-                               *> regVarName id (Name.fromName name)
+                               *> regAlias   id (unwrap name)
+                               *> regVarName id (unwrap name)
                                *> continue
     _                          -> continue
     where id       = Enum.id lab
@@ -140,11 +140,11 @@ registerHeaders :: SACtx lab m a => LDecl lab a -> SAPass m ()
 registerHeaders (Label lab decl) = case decl of
     Decl.Function _ sig _ _  -> regVarName id (NamePattern.toNamePath sig)
                              <* regArgPatDesc id (NamePattern.toDesc sig)
-    Decl.Data     name _ cons _         -> regTypeName id (Name.fromName name) 
+    Decl.Data     name _ cons _         -> regTypeName id (unwrap name) 
                                         <* mapM_ registerCons cons
     _                                   -> pure ()
     where id = Enum.id lab
-          registerCons (Label lab (Decl.Cons name fields)) = regVarName (Enum.id lab) (Name.fromName name)
+          registerCons (Label lab (Decl.Cons name fields)) = regVarName (Enum.id lab) (unwrap name)
 
 
 ----------------------------------------------------------------------

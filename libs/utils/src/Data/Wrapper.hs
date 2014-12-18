@@ -12,6 +12,11 @@ module Data.Wrapper where
 import Control.Monad.Trans
 import Prelude
 
+
+----------------------------------------------------------------------------------
+-- Type classes
+----------------------------------------------------------------------------------
+
 class Wrapper m where
     wrap   :: a   -> m a
     unwrap :: m a -> a
@@ -27,5 +32,9 @@ class WrapperT t where
     wrapT = lift
 
 
+----------------------------------------------------------------------------------
+-- Utils
+----------------------------------------------------------------------------------
 
-
+rewrap :: (Wrapper m, Wrapper n) => m a -> n a
+rewrap = wrap . unwrap
