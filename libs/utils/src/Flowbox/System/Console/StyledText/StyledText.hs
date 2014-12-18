@@ -8,7 +8,6 @@
 
 module Flowbox.System.Console.StyledText.StyledText where
 
-import           Data.String         (IsString, fromString)
 import qualified Data.Text           as T
 import           GHC.IO.Handle.Types (Handle)
 import qualified System.Console.ANSI as ANSI

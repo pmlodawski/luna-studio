@@ -1,8 +1,3 @@
 class Vector a:
     x,y,z :: a
 
-def main v:
-    v.x = 100
-    v 1
-
-

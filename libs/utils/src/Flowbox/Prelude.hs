@@ -25,9 +25,11 @@ import           Data.Default              as X
 import           GHC.Generics              as X (Generic)
 import           Data.String.Repr          as X (StrRepr, strRepr)
 import           Control.Monad.IO.Class    as X (MonadIO, liftIO)
-import           Data.String               as X (IsString(fromString))
+import           Data.String.Class         as X (ToString(toString), IsString(fromString))
 import           Data.Monoid               as X (Monoid, mempty, mappend, mconcat, (<>))
 import           GHC.Exts                  as X (IsList, Item, fromList, fromListN, toList)
+import           Data.Wrapper              as X (Wrapper(wrap,unwrap), WrapperT(wrapT, unwrapT), rewrap)
+import           Data.Convertible          as X (Convertible(convert))
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.Trans       (lift)
 import           Control.Monad.Trans.Class (MonadTrans)
@@ -182,5 +184,3 @@ show' :: (Show a, IsString s) => a -> s
 show' = fromString . Prelude.show
 
 
-class Convertible a b where
-    convert :: a -> b

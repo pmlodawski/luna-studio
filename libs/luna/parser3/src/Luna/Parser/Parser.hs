@@ -352,7 +352,7 @@ cls = do
       where params         = many (TVName <$> Tok.typeVarIdent <?> "class parameter")
             defCons      n = Decl.Cons n <$> (concat <$> many fields)
             constructors n =   blockBody' (labeled cons) 
-                           <|> ((:[]) <$> labeled (defCons $ Name.convert n))
+                           <|> ((:[]) <$> labeled (defCons $ convert n))
             bodyBlock      = blockBodyOpt $ labeled clsBody 
             clsBody        = choice [ func, cls, typeAlias, typeWrapper ] <?> "class body"
 

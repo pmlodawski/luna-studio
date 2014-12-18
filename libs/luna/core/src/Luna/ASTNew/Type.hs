@@ -9,18 +9,19 @@
 module Luna.ASTNew.Type where
 
 import Flowbox.Prelude
-import GHC.Generics      (Generic)
-import Luna.ASTNew.Name  (Name, VName, TName, CName, TVName)
-import Luna.ASTNew.Label (Label)
+
+import Luna.ASTNew.Label     (Label)
+import Luna.ASTNew.Name.Path (NamePath)
+import Luna.ASTNew.Name      (VNameP, TNameP)
 
 
 data Type a
     = Function { _inputs   :: [LType a]  , _output  :: LType a   }
     | App      { _src      :: LType a    , _args    :: [LType a] }
-    | Var      { _vname    :: VName                              }
+    | Var      { _vname    :: VNameP                             }
     | Tuple    { _items    :: [LType a]                          }
     | List     { _item     :: LType a                            }
-    | Con      { _segments :: [TName]                            }
+    | Con      { _segments :: [TNameP]                           }
     | Wildcard 
     deriving (Show, Eq, Ord, Generic, Read)
 

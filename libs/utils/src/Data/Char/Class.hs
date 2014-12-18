@@ -6,39 +6,29 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Luna.ASTNew.Name.Rules where
+module Data.Char.Class where
 
 import Flowbox.Prelude
 import qualified Data.Char as Char
-import           Luna.ASTNew.Name.Path (NamePath(NamePath))
-
-----------------------------------------------------------------------
--- Const rules
-----------------------------------------------------------------------
-
-opChars  = "!#$%&*+/<=>?\\^|-~"
 
 
 ----------------------------------------------------------------------
--- Rule checking
+-- Type classes
 ----------------------------------------------------------------------
 
-isVName n = isLowerName n || isOpName n
-isTName   = isUpperName
-isCName   = isUpperName
-isTVName  = isLowerName
-
-isOpName (NamePath n _) = n `subsetOf` opChars
-
-isLowerName (NamePath [] _)    = False
-isLowerName (NamePath (c:_) _) = Char.isLower c || c == '_'
-
-isUpperName (NamePath [] _)    = False
-isUpperName (NamePath (c:_) _) = Char.isUpper c
+class LetterCase a where
+	isLower :: a -> Bool
+	isUpper :: a -> Bool
 
 
 ----------------------------------------------------------------------
--- Utils
+-- Instances
 ----------------------------------------------------------------------
 
-xs `subsetOf` ys = null $ filter (not . (`elem` ys)) xs
+instance LetterCase Char where
+	isLower = Char.isLower
+	isUpper = Char.isUpper
+	
+instance LetterCase String where
+	isLower = isLower . head
+	isUpper = isUpper . head
