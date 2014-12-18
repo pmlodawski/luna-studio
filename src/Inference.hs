@@ -51,7 +51,7 @@ defaultTraverseM :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypechec
 defaultTraverseM = AST.defaultTraverseM StageTypechecker
 
 
-tcpass :: (Monoid s, StageTypecheckerDefaultTraversal m a) => Pass s (a -> StageTypecheckerPass m StageTypecheckerState)
+tcpass :: (Monoid s, StageTypecheckerDefaultTraversal m a) => Pass s (a -> t -> StageTypecheckerPass m StageTypecheckerState)
 tcpass = Pass "Typechecker"
               "Performs typechecking"
               mempty
@@ -85,8 +85,8 @@ tcMod lmodule@(Label.Label _ Module.Module {Module._path = path, Module._name = 
     modify (("Module " ++ intercalate "." (path ++ [name])):)
     defaultTraverseM lmodule
 
-tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m StageTypecheckerState
-tcUnit ast = do
+tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> t -> StageTypecheckerPass m StageTypecheckerState
+tcUnit ast _ = do
     modify ("First!" :)
     _ <- defaultTraverseM ast
     get
