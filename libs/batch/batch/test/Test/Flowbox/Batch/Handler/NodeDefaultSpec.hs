@@ -32,6 +32,7 @@ import           Luna.Graph.Node                   (Node)
 import qualified Luna.Graph.Node                   as Node
 import qualified Luna.Graph.Node.Expr              as NodeExpr
 import qualified Luna.Graph.Node.StringExpr        as StringExpr
+import           Flowbox.System.Log.Logger
 
 
 
@@ -53,10 +54,16 @@ stringNode :: String -> Node
 stringNode str = Node.Expr (NodeExpr.StringExpr $ StringExpr.fromString str) def def
 
 
+rootLogger :: Logger
+rootLogger = getLogger ""
+
+
+
 spec :: Spec
 spec = do
     describe "node defaults" $
         it "sample use case" $ do
+            --rootLogger setIntLevel 5
             runBatch $ do
                 (projectID, _) <- Project.createProject (Just "TestProject") (UniPath.fromUnixString "/tmp/test.project") def
                 (libraryID, _) <- Library.createLibrary "Main" def (UniPath.fromUnixString "/tmp/test.lunalib") projectID
@@ -68,6 +75,9 @@ spec = do
                 _              <- AST.addFunction testFun [Crumb.Module "Main"] libraryID projectID
 
                 printID        <- Graph.addNode (stringNode "print") mainBC libraryID projectID
+                putStrLn "= 1 ======================="
+                prettyPrint   =<< Batch.getLibrary libraryID projectID
+                putStrLn "= 2 ======================="
                 let printDef   = NodeExpr.ASTExpr $ Expr.App 0 (Expr.Accessor 0 (Expr.mkAccessor "foo") $
                                                                                  Expr.List 0 [ Expr.App 0 (Expr.Con 0 "Foo") [Arg.Unnamed 0 $ Expr.Lit 0 $ Lit.String 0 "fooo"]])
                                                                [ Arg.Unnamed 0 $ Expr.App 0 (Expr.Con 0 "Bar") [Arg.Unnamed 0 $ Expr.Lit 0 $ Lit.String 0 "bar"]
@@ -77,6 +87,7 @@ spec = do
                 printDefID     <- NodeDefault.setNodeDefault [0] printDef printID mainBC libraryID projectID
                 prettyPrint   =<< Batch.getLibrary libraryID projectID
                 testID         <- Graph.addNode (stringNode "test") mainBC libraryID projectID
+                putStrLn "= 3 ======================="
                 prettyPrint   =<< Batch.getLibrary libraryID projectID
                 --fun1           <- Batch.getFunctionFocus mainBC libraryID projectID
                 --prettyPrint   =<< Batch.getLibrary libraryID projectID
