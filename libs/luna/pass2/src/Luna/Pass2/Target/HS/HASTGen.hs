@@ -59,11 +59,13 @@ import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment
 import qualified Luna.ASTNew.Name.Pattern     as NamePat
 
 import qualified Luna.Pass2.Target.HS.HASTGen.State as State
-import           Luna.Pass2.Target.HS.HASTGen.State (addComment, setModule, getModule)
+import           Luna.Pass2.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx)
 import           Luna.ASTNew.Name.Hash              (Hashable, hash)
 --import qualified Luna.Target.HS.Host.NamingOld                          as Naming
 import qualified Luna.Target.HS.Host.Naming2 as Naming
-
+import qualified Luna.Data.HAST.Builder.TH    as TH
+import qualified Luna.Data.HAST.Builder.Utils as HUtils
+import qualified Luna.ASTNew.Name.Pattern as NamePattern
 
 ----------------------------------------------------------------------
 -- Base types
@@ -144,9 +146,9 @@ genModule (Label lab (Module path name body)) = do
     ---- DataType
     ----consTH
     
-    ----State.addTHExpression $ thGenerateAccessors name
-    ----State.addTHExpression $ thRegisterAccessors name
-    ----State.addTHExpression $ thInstsAccessors name
+    ----regTHExpr $ thGenerateAccessors name
+    ----regTHExpr $ thRegisterAccessors name
+    ----regTHExpr $ thInstsAccessors name
 
     --State.addComment $ HExpr.Comment $ HComment.H1 $ "Module methods"
     --mapM_ genExpr methods
@@ -154,39 +156,38 @@ genModule (Label lab (Module path name body)) = do
     --mapM_ (genExpr >=> State.addImport) imports
     --when (name == "Main") $ do
     --    State.addComment $ HExpr.Comment $ HComment.H1 $ "Main module wrappers"
-    --    State.addFunction $ mainf modConName
+    --    regFunc $ mainf modConName
     State.getModule
 
 genCons :: (Monad m, Applicative m, MonadState State.GenState m)
         => Text -> [Text] -> [Decl.LCons a e] -> [Deriving] -> Bool -> m ()
 genCons name params cons derivings makeDataType = do
-    let conDecls = fmap (view Label.element) cons
-        clsConName = "Cls_" <> hash name
-        genMyCon (Decl.Cons conName fields) = HExpr.Con (fromString $ toString conName) <$> pure [] -- mapM genExpr fields
+    let conDecls   = fmap (view Label.element) cons
+        clsConName = Naming.mkCls name
+        genMyCon (Decl.Cons conName fields) = HExpr.Con (fromString $ toString conName) 
+                                           <$> pure [] -- FIXME[wd]: mapM genExpr fields
     
-        
-    --    --FIXME[wd]: to powinno byc zrobione ladniej - z nowym AST!
-    --    getName el = case el of
-    --        LExpr.Field {} -> Just $ view LExpr.name el
-    --        _              -> Nothing
-
-    --    genMyCon (LExpr.ConD _ conName fields) = HExpr.Con conName <$> mapM genExpr fields
+        getName (Label _ (Decl.Field _ mname _)) = fmap convVar mname
 
         genConData (Decl.Cons (convVar -> conName) fields) = do
-            let conSigName = Naming.mkMemSig clsConName conName
+            let fieldNum   = length fields
+                conSigName = Naming.mkMemSig clsConName conName
                 conDefName = Naming.mkMemDef clsConName conName
-                consFunction = HExpr.Function (Naming.con conName) [] 
-                             $ HExpr.app (HExpr.VarE Naming.member) 
-                                         [HExpr.proxy conName, HExpr.val (HExpr.VarE clsConName)]
+                cons       = HExpr.val (Naming.mkCons conName)
+                           $ HExpr.app (HExpr.VarE Naming.member) 
+                                       [HExpr.proxy conName, HExpr.AppE HUtils.val (HExpr.VarE clsConName)]
+                consSig    = HExpr.val conSigName
+                           $ HExpr.rtuple (selfSig : replicate fieldNum paramSig)
+                consDef    = HExpr.val conDefName
+                           $ HExpr.AppE (HExpr.VarE $ liftCons fieldNum)
+                                        (HExpr.VarE conName)
 
             addComment . H3 $ dotname [name, conName] <> " constructor"
-            State.addFunction consFunction
-            --State.addFunction $ HExpr.Function conSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length fields) paramSig))
-            --State.addFunction $ HExpr.Function conDefName [] (HExpr.AppE (HExpr.VarE $ "liftCons" ++ show (length fields)) (HExpr.VarE conName))
-            --State.addTHExpression $ thRegisterMethod clsConName conName
-            --State.addTHExpression $ thGenerateFieldAccessors conName (fmap getName fields)
+            mapM regFunc [cons, consSig, consDef]
+            regTHExpr $ TH.mkMethod clsConName conName
+            regTHExpr $ TH.mkFieldAccessors conName (fmap getName fields)
 
-    
+
     addComment . H2 $ name <> " type"
     consE <- mapM genMyCon conDecls
     if makeDataType then State.addDataType $ HExpr.DataD name params consE derivings
@@ -194,10 +195,18 @@ genCons name params cons derivings makeDataType = do
     addClsDataType clsConName derivings
     mapM_ genConData conDecls
 
+
+
 addClsDataType clsConName derivings = do
     let consClsHE  = HExpr.Con clsConName mempty
     State.addDataType $ HExpr.DataD clsConName mempty [consClsHE] derivings
 
+
+liftCons num = "liftCons" <> fromString (show num)
+mkArg = HExpr.Var "mkArg"
+paramSig = HExpr.TypedE (HExpr.VarT "Param") mkArg
+selfSig = HExpr.TypedE (HExpr.AppT (HExpr.VarT "NParam") (HExpr.LitT $ HLit.String Naming.self)) 
+        $ mkArg
 
 --data Cons  a e = Cons   { _consName :: CNameP   , _fields :: [LField a e]                  } deriving (Show, Eq, Generic, Read)
 
@@ -213,42 +222,63 @@ seqApp f a as = foldl f a as
 
 
 
-genDecl :: Monad m => LDecl a e -> PassResult m HExpr
+genDecl :: Monad m => LDecl a e -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
-    Decl.Data name params cons defs -> do
-        genCons (convVar name) (fmap convVar params) cons stdDerivings True
-        return $ HExpr.NOP
+    Decl.Data (convVar -> name) params cons defs -> withCtx name $ do
+        genCons name (fmap convVar params) cons stdDerivings True
+        addComment $ H3 $ name <> " methods"
+        --mapM_ genExpr methods
+    
+    Decl.Function (fmap convVar -> path) sig output body -> do
+        ctx <- getCtx
+        let tpName = if (null path)
+            then ctx
+            else Just (path!!0) -- FIXME[wd]: needs name resolver
+                                -- in case of defining extensionmethod inside of a class
+                                -- maybe it should have limited scope to all classes inside that one?
+            argNum     = length (NamePattern.segments sig)
+            name       = hash sig
+            --memDefName = Naming.mkMemDef tpName name
+            --memSigName = Naming.mkMemSig tpName name
+        --let tpName = 
 
+        let pfx = case tpName of
+                       Nothing -> ""
+                       Just x  -> x <> "."
+        addComment $ H2 $ "Method: " <> pfx <> name
+        return ()
 
-
-
-    --LExpr.Data _ cls cons _classes methods -> do
-    --                                       let name        = view LType.name   cls
-    --                                           params      = view LType.params cls
-
-    --                                       GenState.setCls cls
-
-    --                                       --consTuples <- mapM (genCon name) cons
-    --                                       --let consE  = map fst consTuples
-    --                                       --    consTH = map snd consTuples
-
-    --                                       --let dt = HExpr.DataD name params consE stdDerivings
-    --                                       --GenState.addDataType dt
-                                           
-
-    --                                       --sequence_ consTH
-    --                                       --mapM (flip (genCon' cls) stdDerivings) cons
-
-    --                                       genCons cls cons stdDerivings True
-
-    --                                       --GenState.addTHExpression $ thGenerateAccessors name
-    --                                       --GenState.addTHExpression $ thRegisterAccessors name
-    --                                       --GenState.addTHExpression $ thInstsAccessors name
-    --                                       GenState.addComment $ HExpr.Comment $ HComment.H3 $ name ++ " methods"
-
-    --                                       mapM_ genExpr methods
-
-    --                                       return $ HExpr.NOP
+    --LExpr.Function _ path name
+    --                 inputs output body  -> do
+    --       let name2 = Name.unified name
+    --       cls <- State.getCls
+    --       let tpName = if (null path)
+    --               then cls ^. LType.name
+    --               else (path!!0) -- FIXME[wd]: needs name resolver
+    --           argNum     = length inputs
+    --           memDefName      = Naming.mkMemDef tpName name2
+    --           memSigName      = Naming.mkMemSig tpName name2
+    --       when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
+    --       State.addComment $ HExpr.Comment $ HComment.H2 $ "Method: " ++ tpName ++ "." ++ name2
+    --       -----------------------------------------
+    --       -- FIXME[wd]: genFuncSig is naive, it should not handle such cases as (a::Int)::Int
+    --       --            it should be implemented using State monad, so HASTGen has to change
+    --       --            the architecture a little bit
+    --       sigTerms <- mapM genFuncSig inputs
+    --       let hInputs   = map fst sigTerms
+    --       let typeHints = concat $ map snd sigTerms
+    --       --logger error (show typeHints)
+    --       let mkTypeHint (id,e) = HExpr.AppE (HExpr.AppE (HExpr.VarE "typeMatch") (HExpr.VarE $ "_v_" ++ show id))
+    --                                          (HExpr.Typed e $ HExpr.VarE "undefined")
+    --           hTypeHints = map mkTypeHint typeHints
+    --       -----------------------------------------
+    --       let fBody = (((emptyHExpr : hTypeHints) ++ ) <$> genFuncBody body output)                                   
+    --       -- hInputs
+    --       f <- HExpr.Function memDefName [foldr biTuple (HExpr.Tuple []) hInputs] <$> (HExpr.DoBlock <$> fBody)
+    --       regFunc f
+    --       regFunc $ HExpr.Function memSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length inputs - 1) paramSig))
+    --       regTHExpr $ thRegisterMethod tpName name2
+    --       return f
 
 
 genExpr :: Monad m => LExpr a v -> PassResult m HExpr
@@ -260,7 +290,7 @@ genExpr ast = undefined -- case ast of
     --                 inputs output body  -> do
     --                                        let name2 = Name.unified name
 
-    --                                        cls <- GenState.getCls
+    --                                        cls <- State.getCls
     --                                        let tpName = if (null path)
     --                                                then cls ^. LType.name
     --                                                else (path!!0) -- FIXME[wd]: needs name resolver
@@ -271,7 +301,7 @@ genExpr ast = undefined -- case ast of
 
     --                                        when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
-    --                                        GenState.addComment $ HExpr.Comment $ HComment.H2 $ "Method: " ++ tpName ++ "." ++ name2
+    --                                        State.addComment $ HExpr.Comment $ HComment.H2 $ "Method: " ++ tpName ++ "." ++ name2
 
     --                                        -----------------------------------------
     --                                        -- FIXME[wd]: genFuncSig is naive, it should not handle such cases as (a::Int)::Int
@@ -291,11 +321,11 @@ genExpr ast = undefined -- case ast of
                                                 
     --                                        -- hInputs
     --                                        f <- HExpr.Function memDefName [foldr biTuple (HExpr.Tuple []) hInputs] <$> (HExpr.DoBlock <$> fBody)
-    --                                        GenState.addFunction f
+    --                                        regFunc f
 
-    --                                        GenState.addFunction $ HExpr.Function memSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length inputs - 1) paramSig))
+    --                                        regFunc $ HExpr.Function memSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length inputs - 1) paramSig))
 
-    --                                        GenState.addTHExpression $ thRegisterMethod tpName name2
+    --                                        regTHExpr $ thRegisterMethod tpName name2
 
     --                                        return f
 
@@ -319,16 +349,16 @@ genExpr ast = undefined -- case ast of
     --                                            cfName     = mkCFLName fname
     --                                            argNum     = length inputs
 
-    --                                        --GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] [Deriving.Show]
+    --                                        --State.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] [Deriving.Show]
 
     --                                        f  <-   HExpr.Assignment (HExpr.Var fname)
     --                                                <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
     --                                                                   <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
     --                                                    )
-    --                                        --GenState.addFunction f
+    --                                        --regFunc f
 
-    --                                        --GenState.addTHExpression $ thRegisterFunction fname argNum []
-    --                                        --GenState.addTHExpression $ thClsCallInsts fname argNum (0::Int)
+    --                                        --regTHExpr $ thRegisterFunction fname argNum []
+    --                                        --regTHExpr $ thClsCallInsts fname argNum (0::Int)
 
     --                                        --return $ HExpr.Var hName
     --                                        return $ HExpr.LetExpr HExpr.NOP
@@ -351,14 +381,14 @@ genExpr ast = undefined -- case ast of
     --                                       let name        = view LType.name   cls
     --                                           params      = view LType.params cls
 
-    --                                       GenState.setCls cls
+    --                                       State.setCls cls
 
     --                                       --consTuples <- mapM (genCon name) cons
     --                                       --let consE  = map fst consTuples
     --                                       --    consTH = map snd consTuples
 
     --                                       --let dt = HExpr.DataD name params consE stdDerivings
-    --                                       --GenState.addDataType dt
+    --                                       --State.addDataType dt
                                            
 
     --                                       --sequence_ consTH
@@ -366,10 +396,10 @@ genExpr ast = undefined -- case ast of
 
     --                                       genCons cls cons stdDerivings True
 
-    --                                       --GenState.addTHExpression $ thGenerateAccessors name
-    --                                       --GenState.addTHExpression $ thRegisterAccessors name
-    --                                       --GenState.addTHExpression $ thInstsAccessors name
-    --                                       GenState.addComment $ HExpr.Comment $ HComment.H3 $ name ++ " methods"
+    --                                       --regTHExpr $ thGenerateAccessors name
+    --                                       --regTHExpr $ thRegisterAccessors name
+    --                                       --regTHExpr $ thInstsAccessors name
+    --                                       State.addComment $ HExpr.Comment $ HComment.H3 $ name ++ " methods"
 
     --                                       mapM_ genExpr methods
 
@@ -379,7 +409,7 @@ genExpr ast = undefined -- case ast of
     --                                       let name        = view LType.name   cls
     --                                           params      = view LType.params cls
 
-    --                                       GenState.setCls cls
+    --                                       State.setCls cls
     --                                       genCons cls cons stdDerivings False
     --                                       mapM_ genExpr methods
     --                                       return $ HExpr.NOP
@@ -402,11 +432,11 @@ genExpr ast = undefined -- case ast of
     --LExpr.Lit          _ value               -> mkVal <$> genLit value
     --LExpr.Tuple        _ items               -> mkVal . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     --LExpr.Field        _ name fcls _         -> genType' fcls
-    --                                           --cls <- GenState.getCls
+    --                                           --cls <- State.getCls
     --                                           --let clsName = view LType.name cls
     --                                           --genTypedSafe HExpr.Typed fcls <*> pure (HExpr.Var $ Naming.mkPropertyName clsName name)
     ----LExpr.Field        _ name fcls _         -> do
-    ----                                           cls <- GenState.getCls
+    ----                                           cls <- State.getCls
     ----                                           let clsName = view LType.name cls
     ----                                           genTypedSafe HExpr.Typed fcls <*> pure (HExpr.Var $ Naming.mkPropertyName clsName name)
     ----LExpr.App          _ src args             -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
@@ -460,20 +490,20 @@ genExpr ast = undefined -- case ast of
 --            LExpr.Field {} -> Just $ view LExpr.name el
 --            _              -> Nothing
 
---    GenState.addComment $ HExpr.Comment $ HComment.H3 $ tpName ++ "." ++ conName ++ " constructor"
+--    State.addComment $ HExpr.Comment $ HComment.H3 $ tpName ++ "." ++ conName ++ " constructor"
 
 --    consE  <- HExpr.Con conName <$> mapM genExpr fields
 
---    GenState.addDataType $ HExpr.DataD conName params [consE] derivings
---    GenState.addDataType $ HExpr.DataD clsConName mempty [consClsHE] derivings
+--    State.addDataType $ HExpr.DataD conName params [consE] derivings
+--    State.addDataType $ HExpr.DataD clsConName mempty [consClsHE] derivings
 
---    GenState.addFunction $ HExpr.Function (Naming.con conName) [] (mkAppE [HExpr.VarE "member", mkProxyE conName, mkVal (HExpr.VarE clsConName)])
+--    regFunc $ HExpr.Function (Naming.con conName) [] (mkAppE [HExpr.VarE "member", mkProxyE conName, mkVal (HExpr.VarE clsConName)])
     
---    GenState.addFunction $ HExpr.Function conSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length fields) paramSig))
---    GenState.addFunction $ HExpr.Function conDefName [] (HExpr.AppE (HExpr.VarE $ "liftCons" ++ show (length fields)) (HExpr.VarE conName))
---    GenState.addTHExpression $ thRegisterMethod clsConName conName
+--    regFunc $ HExpr.Function conSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length fields) paramSig))
+--    regFunc $ HExpr.Function conDefName [] (HExpr.AppE (HExpr.VarE $ "liftCons" ++ show (length fields)) (HExpr.VarE conName))
+--    regTHExpr $ thRegisterMethod clsConName conName
 
---    GenState.addTHExpression $ thGenerateFieldAccessors conName (fmap getName fields)
+--    regTHExpr $ thGenerateFieldAccessors conName (fmap getName fields)
 
 
 --hashDecl :: (PassCtx lab m a) => LDecl lab a -> Pass m (LDecl lab a)

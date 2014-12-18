@@ -52,10 +52,13 @@ mkMemSig = mkMemRef "Sig"
 mkMemDef = mkMemRef "Def"
 
 
-modCon = con -- . mkModName
 
-con = ("cons_" <>)
+mkCons = ("cons_" <>)
 
 mkModName = ("Module" <>)
 
 member = "member"
+
+self = "self"
+
+mkCls = ("Cls_" <>)

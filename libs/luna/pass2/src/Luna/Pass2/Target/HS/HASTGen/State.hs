@@ -32,34 +32,52 @@ type HExpr = HExpr.Expr
 type LExpr = LExpr.Expr
 --type LType = LType.Type
 
-data GenState = GenState { mod :: HExpr
-                         --, cls :: LType
+data GenState = GenState { _mod :: HExpr
+                         , _ctx :: [Text]
                          }
 
-type GenStateM m = (MonadState GenState m, Functor m)
+makeLenses ''GenState
+
+type GenStateM m = (Applicative m, MonadState GenState m, Functor m)
 
 
 --empty :: GenState
 --empty = GenState HExpr.Undefined (LType.Unknown 0)
 
+popList []     = Nothing
+poplist (x:xs) = Just (x,xs)
 
---setCls :: GenStateM m => LType -> m()
---setCls c = do
---    s <- get
---    put s { cls = c }
+pushCtx :: GenStateM m => Text -> m()
+pushCtx c = modify (ctx %~ (c:))
 
---getCls :: GenStateM m => m LType
---getCls = cls <$> get
+popCtx :: GenStateM m => m (Maybe Text)
+popCtx = do
+    s <- get
+    let stack = view ctx s
+    case stack of
+        []     -> return Nothing
+        (x:xs) -> put (s & ctx .~ xs) *> return (Just x)
+
+getCtxStack :: GenStateM m => m [Text]
+getCtxStack = view ctx <$> get
+
+getCtx :: GenStateM m => m (Maybe Text)
+getCtx = do
+    stack <- getCtxStack
+    case stack of
+        []     -> return Nothing
+        (x:xs) -> return $ Just x
+
+withCtx :: GenStateM m => Text -> m a -> m a
+withCtx name m = pushCtx name *> m <* popCtx 
 
 
 setModule :: GenStateM m => HExpr -> m ()
-setModule m = do
-    s <- get
-    put s { mod = m }
+setModule m = modify (mod .~ m)
 
 
 getModule :: GenStateM m => m HExpr
-getModule = mod <$> get
+getModule = view mod <$> get
 
 
 addDataType :: GenStateM m => HExpr -> m ()
@@ -98,8 +116,8 @@ addImport imp = do
     setModule $ m { Module._imports = imp : Module._imports m }
 
 
-addFunction :: GenStateM m => HExpr -> m ()
-addFunction fun = do
+regFunc :: GenStateM m => HExpr -> m ()
+regFunc fun = do
     m <- getModule
     setModule $ m { Module._body = Module._body m ++ [fun] }
 
@@ -110,12 +128,12 @@ addComment c = do
     setModule $ m { Module._body = Module._body m ++ [expr] }
 
 
-addTHExpression :: GenStateM m => HExpr -> m ()
-addTHExpression e = do
+regTHExpr :: GenStateM m => HExpr -> m ()
+regTHExpr e = do
     m <- getModule
     setModule $ m { Module._body = Module._body m ++ [e] }
 
 
 
 instance Default GenState where
-    def = GenState HExpr.Undefined
+    def = GenState HExpr.Undefined def

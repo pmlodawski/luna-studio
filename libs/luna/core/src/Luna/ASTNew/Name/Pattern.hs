@@ -26,6 +26,7 @@ import           Data.String             (IsString, fromString)
 import           Luna.ASTNew.Name.Path (NamePath(NamePath))
 import           Data.Maybe (isNothing)
 import           Data.Foldable (Foldable)
+import           Luna.ASTNew.Name.Hash (Hashable, hash)
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -101,3 +102,7 @@ instance NamePatternClass ArgPatDesc SegmentDesc where
     toNamePath (ArgPatDesc _ base segs) = NamePath (sgmtName base) (fmap sgmtName segs)
         where sgmtName (SegmentDesc base _) = base
 
+instance Hashable base Text => Hashable (NamePat base arg) Text where
+    hash (NamePat _ base segs) = mjoin "_" $ segNames
+        where fSegment f (Segment base _) = f base
+              segNames = fSegment hash base : fmap (fSegment hash) segs
