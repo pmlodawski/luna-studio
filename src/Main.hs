@@ -22,14 +22,14 @@ import qualified  Luna.Pass2.Transform.Parse.Stage1         as P2Stage1
 import qualified  Luna.Pass2.Transform.Parse.Stage2         as P2Stage2
 import qualified  Luna.Pass2.Transform.SSA                  as P2SSA
 
+import            Control.Monad.IO.Class                    (liftIO)
 import            Control.Monad.Trans.Either
 import            Data.List                                 (intercalate)
 import            Data.Text.Lazy                            (unpack)
 import            Text.Show.Pretty                          (ppShow)
 
 
--- TODO [kgdk]
-import Inference as FooInfer
+import            Inference                                 as FooInfer
 
 
 main :: IO ()
@@ -51,22 +51,7 @@ main = do f_print [Bold,Green] "MAIN"
             ast5             <- Pass.run1_ P2SSA.pass ast4
             hast             <- Pass.run1_ P2HASTGen.pass ast5
             hsc              <- Pass.run1_ P2HSC.pass hast
-            return  ( (ast1, astinfo1)
-                    , sa1
-                    , (ast2, astinfo2)
-                    , (ast3, astinfo3)
-                    , constraints
-                    , sa2
-                    , ast4
-                    , ast5
-                    , hast
-                    , hsc
-                    )
-
-          case result of
-            Left _                      -> f_print [Red, Bold] "some error, sorry"
-            Right ( (ast1, astinfo1), sa1, (ast2, astinfo2), (ast3, astinfo3), constraints, sa2, ast4, ast5, hast, hsc ) -> do
-              section $ do
+            liftIO $ section $ do
                 writeAST " 1.1. Transform.Parse.Stage1         : ast1"        $ ppShow $ ast1
                 writeAST " 1.2. Transform.Parse.Stage1         : astinfo1"    $ ppShow $ astinfo1
                 writeAST " 2.   Analysis.Struct                : sa1"         $ ppShow $ sa1
@@ -80,17 +65,12 @@ main = do f_print [Bold,Green] "MAIN"
                 writeAST " 8.   Transform.SSA                  : ast5"        $ ppShow $ ast5
                 writeAST " 9.   Target.HS.HASTGen              : hast"        $ ppShow $ hast
                 writeAST "10.   Target.HS.HSC                  : hsc"         $ unpack $ hsc
+            return  ()
 
+          case result of
+            Left _   -> f_print [Red, Bold] "some error, sorry"
+            Right () -> return ()
 
-data PrintAttrs = Black
-                | Red
-                | Green
-                | Yellow
-                | Blue
-                | Magenta
-                | Cyan
-                | White
-                | Bold
 
 writeAST :: FilePath -> String -> IO ()
 writeAST path str = do
@@ -102,15 +82,31 @@ printer :: (Show a) => String -> a -> IO ()
 printer x y = printer_aux x (show y)
 
 printer_aux :: String -> String -> IO ()
-printer_aux x y = do  f_print [Bold,White] "\n--------------------------------------------------------------------------------"
+printer_aux x y = do  f_print [Bold,White] "\n-----------------------------------------------------------------------------"
                       putStr "> "
                       f_print [Yellow] x
-                      f_print [Bold,White] "--------------------------------------------------------------------------------\n"
+                      f_print [Bold,White] "-----------------------------------------------------------------------------\n"
                       putStrLn y
 
 section :: IO () -> IO ()
 section sec = do  sec
-                  f_print [Bold, White] "\n\n################################################################################\n\n"
+                  f_print [Bold, White] "\n\n#############################################################################\n\n"
+
+f_print :: [PrintAttrs] -> String -> IO ()
+f_print fs x = do let fmt = intercalate ";" (map (show.attrtonum) fs)
+                  putStr $ "\x1b[" ++ fmt ++ "m"
+                  putStr x
+                  putStrLn "\x1b[0m"
+
+data PrintAttrs = Black
+                | Red
+                | Green
+                | Yellow
+                | Blue
+                | Magenta
+                | Cyan
+                | White
+                | Bold
 
 attrtonum :: PrintAttrs -> Int
 attrtonum Black   = 30
@@ -122,10 +118,3 @@ attrtonum Magenta = 35
 attrtonum Cyan    = 36
 attrtonum White   = 37
 attrtonum Bold    = 1
-
-f_print :: [PrintAttrs] -> String -> IO ()
-f_print fs x = do let fmt = intercalate ";" (map (show.attrtonum) fs)
-                  putStr $ "\x1b[" ++ fmt ++ "m"
-                  putStr x
-                  putStrLn "\x1b[0m"
-
