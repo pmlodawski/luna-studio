@@ -58,16 +58,15 @@ tcpass = Pass "Typechecker"
               tcUnit
 
 instance (StageTypecheckerCtx lab m a, NameBase (Pat.Pat lab)) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LModule lab a) (LModule lab a) where
-  traverseM _ = tcMod
+    traverseM _ = tcMod
 
 instance (StageTypecheckerCtx lab m a, NameBase (Pat.Pat lab)) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab a) (LDecl lab a) where
-  traverseM _ = tcDecl
+    traverseM _ = tcDecl
 
 
 tcDecl :: (NameBase (Pat.Pat lab), StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
 tcDecl ldecl@(Label.Label lab decl) = do
     case decl of
-      --fun@Decl.Function{} -> modify ("Function" :)
       fun@Decl.Function{ Decl._sig = sig@Pat2.NamePat{ Pat2._base = (Pat2.Segment name args) } }
                                               -> do let argsS = map mapArg args
                                                     modify (("Function " ++ name ++ " " ++ intercalate " " argsS) :)
@@ -80,20 +79,17 @@ tcDecl ldecl@(Label.Label lab decl) = do
   where
     mapArg :: (NameBase (Pat.Pat lab)) => Pat2.Arg (Pat.LPat lab) a -> String
     mapArg (Pat2.Arg (Label.Label _ arg) _) = nameBase arg
-  --  --mapArg :: Arg.Arg lab a -> String
-  --  mapArg Arg.Arg{Arg._pat = (Label.Label _ (Pat.Var {Pat._vname = (Name.VName vname)}))}  = show vname
-  --  mapArg _                                                                                = "?"
 
 tcMod :: (StageTypecheckerCtx lab m a, NameBase (Pat.Pat lab)) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
 tcMod lmodule@(Label.Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) = do
-  modify (("Module " ++ intercalate "." (path ++ [name])):)
-  defaultTraverseM lmodule
+    modify (("Module " ++ intercalate "." (path ++ [name])):)
+    defaultTraverseM lmodule
 
 tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m StageTypecheckerState
 tcUnit ast = do
-  modify ("First!" :)
-  _ <- defaultTraverseM ast
-  get
+    modify ("First!" :)
+    _ <- defaultTraverseM ast
+    get
 
 
 

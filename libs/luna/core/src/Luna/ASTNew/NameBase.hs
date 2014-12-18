@@ -4,7 +4,7 @@ module Luna.ASTNew.NameBase (
 
 
 import            Flowbox.Prelude
-import            Luna.ASTNew.Label     (Label(Label))
+import            Luna.ASTNew.Label     (Label, label)
 import qualified  Luna.ASTNew.Name      as Name
 import qualified  Luna.ASTNew.Name.Path as NamePath
 import            Luna.ASTNew.Name.Path (NamePath)
@@ -20,7 +20,7 @@ instance NameBase NamePath where
   nameBase name = name ^. NamePath.base
 
 instance (Show l) => NameBase (Label l a) where
-  nameBase (Label l _) = show l
+  nameBase lab = lab ^. label . to show
 
 instance NameBase (Pat.Pat lab) where
   nameBase (Pat.Var {Pat._vname = vname}) = nameBase vname
