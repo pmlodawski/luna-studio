@@ -101,13 +101,13 @@ instance TypesAndConstraints Predicate where
                                  t1' <- apply s t'
                                  return (Reckind t1 l t1')
   tv TRUE                   = []
-  tv (t1 `Subsume` t2)      = (tv t1) ++ (tv t2)
-  tv (Reckind t l t')       = (tv t) ++ (tv t')
+  tv (t1 `Subsume` t2)      = tv t1 ++ tv t2
+  tv (Reckind t l t')       = tv t ++ tv t'
 
 instance TypesAndConstraints c => TypesAndConstraints [c] where
   apply s  = mapM (apply s)
-  tv  a    = foldl f [] a where
-                       f z x = z ++ (tv x)
+  tv       = foldl f [] where
+                       f z x = z ++ tv x
 
 instance TypesAndConstraints Constraint where
      apply s (C p)            = do p' <- apply s p
@@ -132,9 +132,9 @@ instance TypesAndConstraints Type where
                                                      return (Record ((l,t'):f''))
                                     _          -> report_error "apply:uncompatible types" (Record [])
   tv (TV tvl)                = [tvl]
-  tv (t1 `Fun` t2)          = (tv t1) ++ (tv t2)
+  tv (t1 `Fun` t2)          = tv t1 ++ tv t2
   tv (Record [])            = []
-  tv (Record ((l,t):f))     = (tv t) ++ (tv (Record f))
+  tv (Record ((l,t):f))     = tv t ++ tv (Record f)
 
 
 instance TypesAndConstraints TypeScheme where
@@ -143,7 +143,7 @@ instance TypesAndConstraints TypeScheme where
                                   return (Poly tvl c' t')
   apply s (Mono t)          = do t' <- apply s t
                                  return (Mono t')
-  tv (Poly tvl c t)          = without ((tv t) ++ (tv c)) tvl
+  tv (Poly tvl c t)          = without (tv t ++ tv c) tvl
   tv (Mono t)               = tv t
 
 
@@ -161,7 +161,7 @@ unTP (TP a) = a
 
 instance Monad TP where
  m >>= k = TP ( \ (n,s,c) ->
-                     case unTP (m) (n,s,c) of
+                     case unTP m (n,s,c) of
                        Suc (n',s',c',x) -> unTP (k x) (n',s',c')
                        Err se           -> Err se )
  return x = TP ( \ (n,s,c) -> return (n,s,c,x) )
@@ -169,7 +169,7 @@ instance Monad TP where
 
 instance Functor TP where
   fmap f m = TP $ \(n,s,c) ->
-                     case unTP (m) (n,s,c) of
+                     case unTP m (n,s,c) of
                        Suc (n',s',c',x) -> Suc (n',s',c',f x)
                        Err se           -> Err se
 
@@ -182,7 +182,7 @@ instance Monad E where
  m >>= k = case m of
            Suc a -> k a
            Err s -> Err s
- return x = Suc x
+ return  = Suc
 
 instance Functor E where
   fmap f m = case m of
@@ -230,8 +230,8 @@ new_tvar n = n + 1
 
 without :: [TVar] -> [TVar] -> [TVar]
 without [] a    = []
-without (x:a) b = if elem x b then without a b
-                  else x:(without a b)
+without (x:a) b = if x `elem` b then without a b
+                  else x : without a b
 
 
 
@@ -259,8 +259,8 @@ projection :: Constraint -> [TVar] -> Constraint
 
 
 tv_typo :: Typo -> [TVar]
-tv_typo env = foldl f [] env where
-          f z (v,ts) = z ++ (tv ts)
+tv_typo = foldl f [] where
+          f z (v,ts) = z ++ tv ts
 
 add_constraint :: Constraint -> TP ()
 add_constraint c1 =
@@ -315,7 +315,7 @@ inst env x =
 gen :: Typo -> Type -> TP TypeScheme
 gen env t =
  TP ( \ (n,s,c) -> return (n,s, projection c (fv t c env), Poly (fv t c env) c t) )
-                      where fv t1 c1 env1 = without ((tv t1) ++ (tv c1)) (tv_typo env1)
+                      where fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
 
 
 
@@ -380,9 +380,9 @@ extract_predicates (TRUE:p) = extract_predicates p
 extract_predicates ((t `Subsume` t'):p) =
        do (r,e) <- extract_predicates p
           return (r, (t `Subsume` t'):e)
-extract_predicates ((Reckind t l t'):p) =
+extract_predicates (Reckind t l t' : p) =
        do (r,e) <- extract_predicates p
-          return ((Reckind t l t'):r, e)
+          return ( Reckind t l t' : r, e)
 
 
 
@@ -394,7 +394,7 @@ closure (s, r, e) =
         C p1 -> do  e1 <- extract1 p1
                     e2 <- extract2 p1
                     p2 <- simplify_predicate (e1 ++ e2)
-                    if p2 == [] then return (s',p1)
+                    if null p2 then return (s',p1)
                      else closure (s', p1, p2)
         _    -> report_error "closure:uncompatible constraint" (null_subst, [])
 
@@ -403,13 +403,13 @@ closure (s, r, e) =
 
 extract1 :: [Predicate] -> TP [Predicate]
 extract1 [] = return []
-extract1 ((Reckind (Record f) l t):p) =
+extract1 (Reckind (Record f) l t : p) =
     do e <- get_extract1 f l t
        e' <- extract1 p
        return (e:e')
 extract1 (_:p) = extract1 p
 get_extract1 :: Eq a => [(a, Type)] -> a -> Type -> TP Predicate
-get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" ((TV 0) `Subsume` (TV 0))
+get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" (TV 0 `Subsume` TV 0)
 get_extract1 ((l,t):f) l' t' = if l == l' then return (t `Subsume` t')
                                else get_extract1 f l' t'
 
@@ -417,14 +417,14 @@ get_extract1 ((l,t):f) l' t' = if l == l' then return (t `Subsume` t')
 
 extract2 :: [Predicate] -> TP [Predicate]
 extract2 [] = return []
-extract2 ((Reckind t l t'):p) =
+extract2 (Reckind t l t' : p) =
     do e <- extract2 p
        e' <- get_extract2 p t l t'
        return (e ++ e')
 extract2 (_:p) = extract2 p
 get_extract2 :: Monad m => [Predicate] -> Type -> Fieldlabel -> Type -> m [Predicate]
 get_extract2 [] _ _ _ = return []
-get_extract2 ((Reckind a l a'):p) t l' t' = if (l == l') && (a == t)
+get_extract2 (Reckind a l a' : p) t l' t' = if (l == l') && (a == t)
                 then do e <- get_extract2 p t l' t'
                         return ((a' `Subsume` t'):e)
                 else get_extract2 p t l' t'
@@ -434,10 +434,10 @@ get_extract2 (_:p) t l t'                 = get_extract2 p t l t'
 
 check_consistency :: [Predicate] -> TP Bool
 check_consistency [] = return True
-check_consistency ((Reckind (Record f) l t'):p) = check_consistency p
-check_consistency ((Reckind (TV a) l t'): p) = check_consistency p
-check_consistency ((Reckind _ l t'):p) = return False
-check_consistency (_:p) = check_consistency p
+check_consistency (Reckind (Record f) l t' : p) = check_consistency p
+check_consistency (Reckind (TV a) l t'     : p) = check_consistency p
+check_consistency (Reckind _ l t'          : p) = return False
+check_consistency (_                       : p) = check_consistency p
 
 
 
@@ -453,25 +453,26 @@ simplify _ = error "this case was not taken into account in original HM(Rec)"
 simplify_predicate :: [Predicate] -> TP [Predicate]
 simplify_predicate [] = return []
 simplify_predicate ((t `Subsume` t'):p) =
-        do if t == t' then simplify_predicate p
-            else do p' <- simplify_predicate p
-                    return ((t `Subsume` t'):p')
-simplify_predicate ((Reckind (Record f) l t'):p) =
+  if t == t'  then simplify_predicate p
+              else do p' <- simplify_predicate p
+                      return ((t `Subsume` t'):p')
+simplify_predicate (Reckind (Record f) l t' : p) =
        simplify_predicate p
 simplify_predicate (x:p) =
        do p' <- simplify_predicate p
-          if elem x p' then return p'
-           else return (x:p')
+          return (if x `elem` p' then p' else x : p')
+
+
 
 
 -- assumption, there are only equ predicates
 
 do_unify :: (Subst, [Predicate]) -> TP Subst
 do_unify (s, []) = return s
-do_unify (s, ((t `Subsume` t'):p)) =
+do_unify (s, t `Subsume` t' : p) =
    do s' <- unify(s,t,t')
       do_unify (s',p)
-do_unify (s, (_:p)) = report_error "do_unify: predicate list not in normal form" null_subst
+do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal form" null_subst
 
 
 
@@ -482,7 +483,7 @@ unify (s, TV x, TV y) =
            return ((y, t):s)
 unify (s, TV x, t) =
             do t'' <- apply s t
-               if elem x (tv t'') then report_error "occurs check fails" null_subst
+               if x `elem` tv t'' then report_error "occurs check fails" null_subst
                 else return ((x, t''):s)
 unify (s, t, TV x) = unify (s, TV x, t)
 unify (s, t1 `Fun` t1', t2 `Fun` t2') = do s' <- unify (s, t1, t2)
@@ -533,8 +534,10 @@ unify (s, _, _)  = report_error "unify:uncompatible type" null_subst
 --           App (Id 101) (Id 100)))
 --           (init_tvar, null_subst, true_cons)
 rec2, rec3 :: TP (Subst, Constraint)
-rec2 = cs(null_subst, ( C [(Reckind (TV 100) 200 ((TV 300) `Fun` (TV 300))),
-                  (Reckind (TV 100) 200 (TV 301))]))
+rec2 = cs(null_subst, C [ Reckind (TV 100) 200 (TV 300 `Fun` TV 300)
+                        , Reckind (TV 100) 200 (TV 301)
+                        ])
 
-rec3 = cs(null_subst, (C  [(Reckind (TV 100) 200 ((TV 300) `Fun` (TV 301))),
-                  (Reckind (TV 100) 200 ((TV 302) `Fun` (TV 302)))]))
+rec3 = cs(null_subst, C [ Reckind (TV 100) 200 (TV 300 `Fun` TV 301)
+                        , Reckind (TV 100) 200 (TV 302 `Fun` TV 302)
+                        ])
