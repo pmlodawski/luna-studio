@@ -26,6 +26,7 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | RecUpdE      { _expr      :: Expr     , _name      :: Text        , _val     :: Expr                                  }
           | Import       { _qualified :: Bool     , _segments  :: [Text]      , _rename  :: Maybe Text                            }
           | Infix        { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                  }
+          | InfixR       { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                  }
           | Assignment   { _src       :: Expr     , _dst       :: Expr                                                            }
           | Arrow        { _src       :: Expr     , _dst       :: Expr                                                            }
           | Typed        { _cls       :: Expr     , _expr      :: Expr                                                            }
@@ -69,5 +70,12 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
 
 
 proxy name = Typed (AppT (VarT "Proxy") (Lit $ Lit.String name)) $ VarE "Proxy"
-val        = AppE (Var "val")
 app        = foldl AppE 
+rtuple = foldr cons (Tuple [])
+    where cons = InfixR "<:>"
+
+
+val = flip Function mempty
+
+
+
