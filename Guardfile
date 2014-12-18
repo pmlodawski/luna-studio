@@ -17,6 +17,8 @@ $run_main     = true
 $run_tests    = false
 $run_linting  = false
 $run_coverage = false
+
+# Those parts of output are printed after the typechecker has run
 $output       = [ 
                   # " 1.1. Transform.Parse.Stage1         : ast1",
                   # " 1.2. Transform.Parse.Stage1         : astinfo1",
@@ -32,7 +34,6 @@ $output       = [
                   # " 9.   Target.HS.HASTGen              : hast",
                   # "10.   Target.HS.HSC                  : hsc",
                 ]
-
 $output_dir   = "tmp/"
 
 
