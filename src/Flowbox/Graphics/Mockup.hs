@@ -777,11 +777,11 @@ colorCorrectLuna' (fmap variable -> Color.RGBA masterSaturationR masterSaturatio
                   (fmap variable -> Color.RGBA highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA)
 
                   img = onEach 
-                             (correct correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
-                             (correct correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
-                             (correct correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
-                             id ------(colorCorrect contrastA gammaA gainA offsetA) saturated
-                             img --saturated
+                             (correct' correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
+                             (correct' correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
+                             (correct' correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
+                             id
+                             saturated
     where curveShadows    = A.lift $ CubicBezier (Point2 (0::Double) 1) (Point2 0.03 1) (Point2 0.06 0) (Point2 0.09 0) :: Exp (CubicBezier Double)
           curveHighlights = A.lift $ CubicBezier (Point2 0.5 (0::Double)) (Point2 (2/3) 0) (Point2 (5/6) 1) (Point2 1 1) :: Exp (CubicBezier Double)
           strShadows x    = A.cond (x A.<=* 0) 1
@@ -807,25 +807,32 @@ colorCorrectLuna' (fmap variable -> Color.RGBA masterSaturationR masterSaturatio
           correctHighlightsG = colorCorrect highlightsContrastG highlightsGammaG highlightsGainG highlightsOffsetG
           correctHighlightsB = colorCorrect highlightsContrastB highlightsGammaB highlightsGainB highlightsOffsetB
 
-          correct master shadows midtones highlights x = let
+          correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x)
+
+          correct'' shadows midtones highlights x = let
                   coeffShadows    = strShadows x
                   coeffHighlights = strHighlights x
                   coeffMidtones   = 1 - coeffShadows - coeffHighlights
-              in master x + coeffShadows * shadows x + coeffMidtones * midtones x + coeffHighlights * highlights x  -- TODO tu jest kiszka. Sumujemy ze soba dwa poprawne orazki. Powinnismy brac wynik z jednego z nich (master) i dopiero wtedy aplikowac zmiany na S H i M
+              in coeffShadows * shadows x + coeffMidtones * midtones x + coeffHighlights * highlights x  
 
           rgb = unsafeGetRGB img
 
-          rgbRsaturated = M.map (A.lift1 (saturateOnHSV masterSaturationR shadowsSaturationR midtonesSaturationR highlightsSaturationR)) rgb
-          rgbGsaturated = M.map (A.lift1 (saturateOnHSV masterSaturationG shadowsSaturationG midtonesSaturationG highlightsSaturationG)) rgb
-          rgbBsaturated = M.map (A.lift1 (saturateOnHSV masterSaturationB shadowsSaturationB midtonesSaturationB highlightsSaturationB)) rgb
+          rgbRsaturated = M.map (A.lift1 (saturateOnHSV' masterSaturationR shadowsSaturationR midtonesSaturationR highlightsSaturationR)) rgb
+          rgbGsaturated = M.map (A.lift1 (saturateOnHSV' masterSaturationG shadowsSaturationG midtonesSaturationG highlightsSaturationG)) rgb
+          rgbBsaturated = M.map (A.lift1 (saturateOnHSV' masterSaturationB shadowsSaturationB midtonesSaturationB highlightsSaturationB)) rgb
 
-          saturateOnHSV :: A.Exp Double -> A.Exp Double -> A.Exp Double -> A.Exp Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)
-          saturateOnHSV masterSat shadowsSat midtonesSat highlightsSat pix =
+          saturateOnHSV' :: A.Exp Double -> A.Exp Double -> A.Exp Double -> A.Exp Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)
+          saturateOnHSV' masterSat shadowsSat midtonesSat highlightsSat pix =
+              Color.toHSV pix & (\(Color.HSV h s v) -> 
+                  saturateOnHSV'' shadowsSat midtonesSat highlightsSat $ Color.toRGB $ Color.HSV h (s * (masterSat)) v) 
+
+          saturateOnHSV'' :: A.Exp Double -> A.Exp Double -> A.Exp Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)
+          saturateOnHSV'' shadowsSat midtonesSat highlightsSat pix =
               Color.toHSV pix & (\(Color.HSV h s v) -> let
                       coeffShadows    = strShadows v
                       coeffHighlights = strHighlights v
                       coeffMidtones = 1 - coeffShadows - coeffHighlights
-                  in Color.HSV h (s * (masterSat + coeffShadows * shadowsSat + coeffMidtones + midtonesSat + coeffHighlights * highlightsSat)) v) & Color.toRGB
+                  in Color.HSV h (s * (coeffShadows * shadowsSat + coeffMidtones * midtonesSat + coeffHighlights * highlightsSat)) v) & Color.toRGB 
 
           rSaturated = M.map (\(A.unlift -> Color.RGB r _ _) -> r) rgbRsaturated
           gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
