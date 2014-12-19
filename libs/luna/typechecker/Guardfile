@@ -55,14 +55,14 @@ $hlint_path   = "typechecker/src/*.hs"
 guard :shell, :version => 2, :cli => "--color" do
   watch(%r{^(test|src)/.+\.l?hs$}) do |m|
     lastbuildguard(m[0]) do
-      section "haskell file change"
+      section "haskell file"
       haskellguard m  # refactored out
     end
   end
 
   watch(%r{^.*\.tcabal$}) do |m|
     lastbuildguard(m[0]) do
-      section "tcabal file change"
+      section "tcabal file"
       haskellguard m  # refactored out
     end
   end
@@ -77,7 +77,6 @@ guard :shell, :version => 2, :cli => "--color" do
   watch(%r{^playground.hs$}) do |m|
     lastbuildguard(m[0]) do
       section "playground file change"
-      # command "../../../scripts/runhaskell", File.read("playground.hs")
       command "./playground" if command("ghc playground.hs")
     end
   end
