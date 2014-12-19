@@ -27,7 +27,7 @@ Library
                     data-default,
                     directory,
                     dlist,
-                    either,
+                    either >= 4.3.2,
                     errors,
                     fgl,
                     filepath,
