@@ -56,16 +56,25 @@ guard :shell, :version => 2, :cli => "--color" do
   watch(%r{^(test|src)/.+\.l?hs$}) do |m|
     lastbuildguard(m[0]) do
       section "haskell file"
-      haskellguard m  # refactored out
+      show_output if haskell_action m
     end
   end
 
   watch(%r{^.*\.tcabal$}) do |m|
     lastbuildguard(m[0]) do
       section "tcabal file"
-      haskellguard m  # refactored out
+      show_output if haskell_action m
     end
   end
+
+  watch(%r{^src/Maintest.luna$}) do |m|
+    lastbuildguard(m[0]) do
+      section "Luna file change"
+      show_output if command "../../../dist/bin/libs/luna-typechecker"
+    end
+  end
+
+  # playgrounds
 
   watch(%r{^runtest.hs$}) do |m|
     lastbuildguard(m[0]) do
@@ -80,13 +89,6 @@ guard :shell, :version => 2, :cli => "--color" do
       command "./playground" if command("ghc playground.hs")
     end
   end
-
-  watch(%r{^src/Maintest.luna$}) do |m|
-    lastbuildguard(m[0]) do
-      section "Luna file change"
-      command "../../../dist/bin/libs/luna-typechecker"
-    end
-  end
 end
 
 
@@ -95,7 +97,7 @@ end
 # ACTIONS  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-def haskellguard trigger
+def haskell_action trigger
   puts "TRIGGER: #{trigger}".starsaround.yellow + "\n"
 
   section "building"
@@ -130,9 +132,6 @@ def haskellguard trigger
       opts = opts.join(" ")
       section "linting", "pushd ..; hlint #{$hlint_path} #{opts}; popd"
     end
-
-    show_output
-
   end
 end
 
@@ -142,7 +141,11 @@ def show_output
     puts "*".starfill.yellow
     puts ("* * ".yellow + file.white.bold)
     puts "*".starfill.yellow
-    file_cont = (File.read ($output_dir + file))
-    puts file_cont.each_line.map {|l| "  * ".cyan + l}.join
+    if File.exists?($output_dir + file)
+      file_cont = (File.read ($output_dir + file))
+      puts file_cont.each_line.map {|l| "  * ".yellow + l}.join
+    else
+      puts "* * FILE DOESN'T EXIST: ".red + file
+    end
   end
 end
