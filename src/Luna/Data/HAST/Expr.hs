@@ -71,6 +71,7 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
 
 proxy name = Typed (AppT (VarT "Proxy") (Lit $ Lit.String name)) $ VarE "Proxy"
 app        = foldl AppE 
+appP       = foldl AppP
 rtuple = foldr cons (Tuple [])
     where cons = InfixR "<:>"
 
