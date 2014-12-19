@@ -62,3 +62,5 @@ member = "member"
 self = "self"
 
 mkCls = ("Cls_" <>)
+
+mkVar    = ("_" <>)

@@ -102,8 +102,8 @@ aaPat p@(Label lab pat) = case pat of
 
 aaDecl :: SACtx lab m a => (LDecl lab a) -> SAPass m (LDecl lab a)
 aaDecl d@(Label lab decl) = case decl of
-    Decl.Function _ _ _ _ -> withNewScope id $ defaultTraverseM d
-    _                     -> continue
+    Decl.Func {} -> withNewScope id $ defaultTraverseM d
+    _            -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
@@ -137,11 +137,11 @@ registerDataDecl (Label lab decl) = case decl of
 
 registerHeaders :: SACtx lab m a => LDecl lab a -> SAPass m ()
 registerHeaders (Label lab decl) = case decl of
-    Decl.Function _ sig _ _  -> regVarName id (NamePattern.toNamePath sig)
+    Decl.Func _ sig _ _     -> regVarName id (NamePattern.toNamePath sig)
                              <* regArgPatDesc id (NamePattern.toDesc sig)
-    Decl.Data     name _ cons _         -> regTypeName id (unwrap name) 
-                                        <* mapM_ registerCons cons
-    _                                   -> pure ()
+    Decl.Data name _ cons _ -> regTypeName id (unwrap name) 
+                            <* mapM_ registerCons cons
+    _                       -> pure ()
     where id = Enum.id lab
           registerCons (Label lab (Decl.Cons name fields)) = regVarName (Enum.id lab) (unwrap name)
 

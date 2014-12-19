@@ -285,11 +285,11 @@ pModule name path = Module <$> pure path
 
 ----- Imports -----
 
-imp = Decl.Import <$  Tok.kwImport
-                  <*> (qualifiedPath Tok.typeIdent <?> "import path")
-                  <*> ((Just <$ Tok.kwAs <*> Tok.typeIdent) <|> pure Nothing)
-                  <*> (blockBegin importTarget <|> pure [])
-                  <?> "import declaration"
+imp = Decl.Imp <$  Tok.kwImport
+               <*> (qualifiedPath Tok.typeIdent <?> "import path")
+               <*> ((Just <$ Tok.kwAs <*> Tok.typeIdent) <|> pure Nothing)
+               <*> (blockBegin importTarget <|> pure [])
+               <?> "import declaration"
 
 importTarget =   body Decl.ImpVar varOp 
              <|> body Decl.ImpType Tok.typeIdent
@@ -298,20 +298,20 @@ importTarget =   body Decl.ImpVar varOp
 
 ----- type aliases ------
 
-typeAlias = Decl.TypeAlias <$  Tok.kwAlias 
-                           <*> (typeT <?> "new type") 
-                           <*  Tok.assignment 
-                           <*> (typeT <?> "base type")
-                           <?> "type alias"
+typeAlias = Decl.TpAls <$  Tok.kwAlias 
+                       <*> (typeT <?> "new type") 
+                       <*  Tok.assignment 
+                       <*> (typeT <?> "base type")
+                       <?> "type alias"
 
 
 ----- type wrappers ------
 
-typeWrapper = Decl.TypeWrapper <$  Tok.kwType 
-                               <*> (typeT <?> "new type") 
-                               <*  Tok.assignment 
-                               <*> (typeT <?> "base type")
-                               <?> "type wrapper"
+typeWrapper = Decl.TpWrp <$  Tok.kwType 
+                         <*> (typeT <?> "new type") 
+                         <*  Tok.assignment 
+                         <*> (typeT <?> "base type")
+                         <?> "type wrapper"
 
 
 
@@ -330,11 +330,11 @@ multiSigSegment  = Segment <$> sigVarOp <*> many arg
 arg = NamePat.Arg <$> argPattern
                  <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
 
-func = Decl.Function <$  Tok.kwDef
-                     <*> extPath
-                     <*> funcSig
-                     <*> outType
-                     <*> body
+func = Decl.Func <$  Tok.kwDef
+                 <*> extPath
+                 <*> funcSig
+                 <*> outType
+                 <*> body
     where extPath = ((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure []
           outType = (Just <$> try (Tok.arrow *> typeT)) <|> pure Nothing
           body    = char ':' *> stage1Body2

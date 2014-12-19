@@ -84,12 +84,12 @@ passRunner astInfo ast = do
 
 isDecl :: (ISCtx lab m a) => (LDecl lab a) -> ISPass m (LDecl lab a)
 isDecl e@(Label lab expr) = case expr of
-    Decl.Function path sig output body -> do
+    Decl.Func path sig output body -> do
         argId <- genID
         let NamePat pfx (Segment name args) segs = sig
             selfArg = Arg (Label (Enum.tag argId) $ Pat.Var "self") Nothing
             nsig    = NamePat pfx (Segment name $ selfArg : args) segs
-        return $ Label lab $ Decl.Function path nsig output body
+        return $ Label lab $ Decl.Func path nsig output body
     _ -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e 

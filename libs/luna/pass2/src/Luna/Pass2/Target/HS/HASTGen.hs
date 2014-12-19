@@ -26,10 +26,10 @@ import           Luna.ASTNew.Module           (Module(Module), LModule)
 import           Luna.ASTNew.Unit             (Unit(Unit))
 import qualified Luna.ASTNew.Label            as Label
 import           Luna.ASTNew.Label            (Label(Label))
---import qualified Luna.ASTNew.Type             as Type
---import           Luna.ASTNew.Type             (Type)
---import qualified Luna.ASTNew.Pat              as Pat
---import           Luna.ASTNew.Pat              (LPat, Pat)
+import qualified Luna.ASTNew.Type             as Type
+import           Luna.ASTNew.Type             (Type)
+import qualified Luna.ASTNew.Pat              as Pat
+import           Luna.ASTNew.Pat              (LPat, Pat)
 import           Luna.ASTNew.Expr             (LExpr, Expr)
 import qualified Luna.ASTNew.Expr             as Expr
 --import qualified Luna.ASTNew.Lit              as Lit
@@ -203,10 +203,10 @@ addClsDataType clsConName derivings = do
 
 
 liftCons num = "liftCons" <> fromString (show num)
-mkArg = HExpr.Var "mkArg"
+mkArg    = HExpr.Var "mkArg"
 paramSig = HExpr.TypedE (HExpr.VarT "Param") mkArg
-selfSig = HExpr.TypedE (HExpr.AppT (HExpr.VarT "NParam") (HExpr.LitT $ HLit.String Naming.self)) 
-        $ mkArg
+selfSig  = HExpr.TypedE (HExpr.AppT (HExpr.VarT "NParam") (HExpr.LitT $ HLit.String Naming.self)) 
+         $ mkArg
 
 --data Cons  a e = Cons   { _consName :: CNameP   , _fields :: [LField a e]                  } deriving (Show, Eq, Generic, Read)
 
@@ -217,11 +217,6 @@ convVar = hash . unwrap
 
 
 
-seqApp :: (a -> a -> a) -> a -> [a] -> a
-seqApp f a as = foldl f a as
-
-
-
 genDecl :: Monad m => LDecl a e -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
     Decl.Data (convVar -> name) params cons defs -> withCtx name $ do
@@ -229,7 +224,7 @@ genDecl ast@(Label lab decl) = case decl of
         addComment $ H3 $ name <> " methods"
         --mapM_ genExpr methods
     
-    Decl.Function (fmap convVar -> path) sig output body -> do
+    Decl.Func (fmap convVar -> path) sig output body -> do
         ctx <- getCtx
         let tpName = if (null path)
             then ctx
@@ -240,6 +235,8 @@ genDecl ast@(Label lab decl) = case decl of
             name       = hash sig
             --memDefName = Naming.mkMemDef tpName name
             --memSigName = Naming.mkMemSig tpName name
+        when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
+
         --let tpName = 
 
         let pfx = case tpName of
@@ -279,6 +276,67 @@ genDecl ast@(Label lab decl) = case decl of
     --       regFunc $ HExpr.Function memSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length inputs - 1) paramSig))
     --       regTHExpr $ thRegisterMethod tpName name2
     --       return f
+
+
+--genFuncSig sig = 
+
+--genType :: Bool -> LType -> GenPass HExpr
+--genType safeTyping t = case t of
+--    LType.Var     _ name     -> return $ thandler (HExpr.Var  name)
+--    LType.Con     _ segments -> return $ thandler (HExpr.ConE segments)
+
+--    LType.Tuple   _ items    -> HExpr.Tuple <$> mapM (genType safeTyping) items
+--    LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType safeTyping src) (mapM (genType safeTyping) args)
+--    LType.Unknown _          -> logger critical "Cannot generate code for unknown type1" *> Pass.fail "Cannot generate code for unknown type"
+--    --_                        -> fail $ show t
+--    where mtype    = HExpr.VarT $ if safeTyping then "Pure" else "m_" ++ show (view LType.id t)
+--          stype    = HExpr.VarT $ if safeTyping then "Safe" else "s_" ++ show (view LType.id t)
+--          thandler = HExpr.AppT mtype . HExpr.AppT stype
+
+
+genPat p = case p of
+    Pat.App         src args -> HExpr.appP (ugenPat src) (fmap ugenPat args)
+    Pat.Var         name     -> HExpr.Var (Naming.mkVar $ convVar name)
+    --Pat.Typed       pat cls  -> genTypedP cls <*> genPat pat
+    Pat.Tuple       items    -> (HExpr.ViewP $ "extractTuple" <> (fromString $ show (length items))) . HExpr.TupleP $ fmap ugenPat items
+    --Pat.Lit         value    -> genLit value
+    Pat.Wildcard             -> HExpr.WildP
+    Pat.RecWildcard          -> HExpr.RecWildP
+    Pat.Con         name     -> HExpr.ConP $ convVar name
+    Pat.Grouped     p'       -> ugenPat p'
+    where ugenPat = genPat . unwrap
+    --_ -> fail $ show p
+
+
+--data Pat a 
+--    = App         { _src   :: LPat a    , _args :: [LPat a] }
+--    | Typed       { _pat   :: LPat a    , _cls  :: LType a  }
+--    | Grouped     { _pat   :: LPat a                        }
+--    | Lit         { _lit   :: L a Lit                       }
+--    | Tuple       { _items :: [LPat a ]                     }
+--    | Con         { _cname :: CName                         }
+--    | Var         { _vname :: VName                         }
+--    | Wildcard 
+--    | RecWildcard
+--    deriving (Show, Eq, Generic, Read, Ord)
+
+
+
+genType = \case
+    Type.Var      name            -> thandler $ HExpr.Var  (convVar name)
+    Type.Con      segments        -> thandler $ HExpr.ConE (fmap convVar segments)
+    Type.Tuple    items           -> HExpr.Tuple $ fmap ugenType items
+    Type.App      src      args   -> HExpr.app (ugenType src) (fmap ugenType args)
+    --Type.Function inputs   output -> 
+    --Type.List     item            -> 
+    --Type.Wildcard                 -> 
+    where ugenType = genType . unwrap
+          mtype    = HExpr.VarT $ "m_" <> fromString (show (777::Int))
+          stype    = HExpr.VarT $ "s_" <> fromString (show (777::Int))
+          thandler = HExpr.AppT mtype . HExpr.AppT stype
+
+
+
 
 
 genExpr :: Monad m => LExpr a v -> PassResult m HExpr

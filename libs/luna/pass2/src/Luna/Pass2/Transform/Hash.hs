@@ -80,9 +80,9 @@ pass = Pass "Hash" "Hashesh names removing all special characters" () defaultTra
 
 hashDecl :: (HCtx lab m a) => LDecl lab a -> HPass m (LDecl lab a)
 hashDecl ast@(Label lab decl) = case decl of
-    Decl.Function path sig output body -> return . Label lab
-                                        $ Decl.Function path (NamePat.mapSegments hashSegment sig) output body
-    _                                  -> continue
+    Decl.Func path sig output body -> return . Label lab
+                                   $ Decl.Func path (NamePat.mapSegments hashSegment sig) output body
+    _                              -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM ast
 
