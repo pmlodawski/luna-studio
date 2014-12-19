@@ -4,13 +4,14 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 
 module Main where
 
 
 import            Luna.Data.Namespace                       (Namespace (Namespace))
-import            Luna.Data.Source                          (Medium (String), Source (Source))
+import            Luna.Data.Source                          (Medium (Text), Source (Source))
 
 import qualified  Luna.Pass                                 as Pass
 import qualified  Luna.Pass2.Analysis.Struct                as P2SA
@@ -25,7 +26,7 @@ import qualified  Luna.Pass2.Transform.SSA                  as P2SSA
 import            Control.Monad.IO.Class                    (liftIO)
 import            Control.Monad.Trans.Either
 import            Data.List                                 (intercalate)
---import            Data.Text.Lazy                            (unpack)
+import            Data.Text.Lazy                            (pack)
 import            Text.Show.Pretty                          (ppShow)
 
 
@@ -38,7 +39,7 @@ main = do f_print [Bold,Green] "MAIN"
           maintest_luna <- do tmp <- readFile "src/Maintest.luna"
                               tmp `seq` return tmp
           f_print [Cyan] "…passes"
-          let src = Source "Maintest_luna" (String maintest_luna)
+          let src = Source "Maintest_luna" (Text $ pack maintest_luna)
 
           result <- runEitherT $ do
             (ast1, astinfo1) <- Pass.run1_ P2Stage1.pass src
