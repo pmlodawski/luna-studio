@@ -24,16 +24,16 @@ import Luna.ASTNew.Name.Pattern (ArgPat)
 
 import qualified Prelude
 
-type FuncSignature a e = ArgPat (LPat a) e
+type FuncSig a e = ArgPat (LPat a) e
 
 
 data Decl a e
-    = Data        { _tname   :: TNameP   , params    :: [TVNameP]          , _cons    :: [LCons a e]     , _defs   :: [LDecl a e]                    }
-    | Function    { _path    :: Path    , _sig      :: FuncSignature a e , _output  :: Maybe (LType a) , _body :: [e]           }
-    | Import      { _modPath :: Path    , _rename   :: Maybe TNameP       , _targets :: [ImpTgt]                                                }
-    | TypeAlias   { _dstType :: LType a , _srcType  :: LType a                                                                           }
-    | TypeWrapper { _dstType :: LType a , _srcType  :: LType a                                                                           }
-    | Native      { _native  :: Native (LDecl a e)                                                                                       }
+    = Data   { _tname   :: TNameP  , params    :: [TVNameP]    , _cons    :: [LCons a e]     , _defs   :: [LDecl a e] }
+    | Func   { _path    :: Path    , _sig      :: FuncSig a e  , _output  :: Maybe (LType a) , _body :: [e]           }
+    | Imp    { _modPath :: Path    , _rename   :: Maybe TNameP , _targets :: [ImpTgt]                                 }
+    | TpAls  { _dstType :: LType a , _srcType  :: LType a                                                             }
+    | TpWrp  { _dstType :: LType a , _srcType  :: LType a                                                             }
+    | Native { _native  :: Native (LDecl a e)                                                                         }
     -- | Foreign     Foreign
     deriving (Show, Eq, Generic, Read)
 
