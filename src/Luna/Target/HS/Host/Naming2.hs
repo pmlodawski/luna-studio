@@ -44,8 +44,8 @@ classFunc   = mkName "Func"
 funcGetFunc = mkName "getFunc"
 
 
-mkMemRef base typeName methodName = "mem" <> base <> "_"
-                                          <> typeName <> "_"
+mkMemRef base typeName methodName = "mem" <> base       <> "_"
+                                          <> typeName   <> "_"
                                           <> methodName
 
 mkMemSig = mkMemRef "Sig"
