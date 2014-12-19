@@ -16,8 +16,8 @@ import Luna.ASTNew.Decl  (LDecl)
 import Luna.ASTNew.Label (Label)
 
 
-data Module a e = Module { _path :: [String]
-                         , _name :: String
+data Module a e = Module { _path :: [Text]
+                         , _name :: Text
                          , _body :: [LDecl a e]
                          } deriving (Show, Eq, Generic, Read)
 

@@ -80,7 +80,7 @@ passRunner src = do
     let astinfo = view ParserState.info $ snd result
     return $ (fst result, astinfo)
 
-tmpFixErrorParse a b = case Parser.parseByteString2 a b of
+tmpFixErrorParse a b = case Parser.parseText2 a b of
     Left doc -> Left $ showWidth 40 doc
     Right r  -> Right r
 

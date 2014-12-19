@@ -99,15 +99,15 @@ instance Wrapper TVName where wrap             = TVName
 
 
 -- only possible conversions
-instance Convertible (VName  a) (TVName a) where convert = rewrap
-instance Convertible (TVName a) (VName  a) where convert = rewrap
-instance Convertible (CName  a) (TName  a) where convert = rewrap
-instance Convertible (TName  a) (CName  a) where convert = rewrap
+instance Convertible (VName  a) (TVName a) where safeConvert = Right . rewrap
+instance Convertible (TVName a) (VName  a) where safeConvert = Right . rewrap
+instance Convertible (CName  a) (TName  a) where safeConvert = Right . rewrap
+instance Convertible (TName  a) (CName  a) where safeConvert = Right . rewrap
 
-instance Convertible (VName  a) (VName  a) where convert = rewrap
-instance Convertible (TName  a) (TName  a) where convert = rewrap
-instance Convertible (CName  a) (CName  a) where convert = rewrap
-instance Convertible (TVName a) (TVName a) where convert = rewrap
+instance Convertible (VName  a) (VName  a) where safeConvert = Right . rewrap
+instance Convertible (TName  a) (TName  a) where safeConvert = Right . rewrap
+instance Convertible (CName  a) (CName  a) where safeConvert = Right . rewrap
+instance Convertible (TVName a) (TVName a) where safeConvert = Right . rewrap
 
 instance Hashable a b => Hashable (VName  a) b where hash = hash . unwrap
 instance Hashable a b => Hashable (TName  a) b where hash = hash . unwrap

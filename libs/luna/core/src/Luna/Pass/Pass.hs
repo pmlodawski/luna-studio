@@ -62,8 +62,8 @@ run3_ (Pass n d s f) t1 t2 t3 = run_ (Info n) s (f t1 t2 t3)
 run_ :: (Monad m, Functor m) => env -> state -> RWSTE env [String] state err m result -> EitherT err m result
 run_ env state pass = (\(x,_,_)->x) <$> run env state pass
 
-fail :: Monad m => e -> EitherT e m a
-fail = left
+fail :: (Monad m, Monoid w) => e -> RWSTE r w s e m a
+fail = lift . left
 
 
 

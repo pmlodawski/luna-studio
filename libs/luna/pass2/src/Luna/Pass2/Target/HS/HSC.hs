@@ -115,7 +115,8 @@ instance Generator HExpr where
         HExpr.Lambda   signature expr         -> simple  $ "(\\" <> spaceJoin ("" : sgenmap signature) <> " -> " <> sgenerate expr <> ")"
         HExpr.LetBlock exprs result           -> simple  $ "let { " <> mjoin "; " (genmap exprs) <> " } in " <> generate result
         HExpr.LetExpr  expr                   -> simple  $ "let " <> generate expr
-        HExpr.Infix    name src dst           -> complex $ sgenerate src <> " " <> convert name <> " " <> sgenerate dst
+        HExpr.Infix    name src dst           -> complex $ generate src  <> " " <> convert name <> " " <> sgenerate dst
+        HExpr.InfixR   name src dst           -> complex $ sgenerate src <> " " <> convert name <> " " <> generate dst
         HExpr.NOP                             -> simple  $ "nop"
         HExpr.Assignment src dst              -> simple  $ generate src <> " = " <> generate dst
         HExpr.Arrow      src dst              -> simple  $ generate src <> " <- " <> generate dst

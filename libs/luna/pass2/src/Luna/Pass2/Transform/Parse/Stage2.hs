@@ -80,7 +80,7 @@ defaultTraverseM = AST.defaultTraverseM Stage2
 ------------------------------------------------------------------------
 
 pass :: Stage2DefaultTraversal m a b => Pass (ParserState ()) (Namespace -> ASTInfo -> a -> Stage2Pass m (b,ASTInfo))
-pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias analysis" undefined passRunner
+pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and structural analysis" undefined passRunner
 
 -- FIXME[wd]: using emptyState just to make it working
 --            we should use here state constructed from config optained from stage1
@@ -92,15 +92,14 @@ passRunner ns info ast = do
 
 traverseDecl :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
 traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
-    Decl.Function path sig output body -> do
-        subAST <- subparse (unlines body)
-        sig'   <- mapM subparseArg sig
-        return $ Decl.Function path sig' output subAST
-    Decl.Data        name params cons defs -> Decl.Data name params <$> defaultTraverseM cons 
-                                                                    <*> defaultTraverseM defs
-    Decl.Import      path rename targets   -> return $ Decl.Import      path rename targets
-    Decl.TypeAlias   dst src               -> return $ Decl.TypeAlias   dst src
-    Decl.TypeWrapper dst src               -> return $ Decl.TypeWrapper dst src
+    Decl.Func  path sig output body  -> do subAST <- subparse (unlines body)
+                                           sig'   <- mapM subparseArg sig
+                                           return $ Decl.Func path sig' output subAST
+    Decl.Data  name params cons defs -> Decl.Data name params <$> defaultTraverseM cons 
+                                                              <*> defaultTraverseM defs
+    Decl.Imp   path rename targets   -> return $ Decl.Imp   path rename targets
+    Decl.TpAls dst src               -> return $ Decl.TpAls dst src
+    Decl.TpWrp dst src               -> return $ Decl.TpWrp dst src
     where id = Enum.id lab
           subparse expr = do
               result <- ParserState.withScope id $ do 

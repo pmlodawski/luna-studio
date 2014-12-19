@@ -69,14 +69,14 @@ instance (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => AST.Traversal
 tcDecl :: (HumanName (Pat.Pat lab), StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
 tcDecl ldecl@(Label.Label lab decl) = do
     case decl of
-      fun@Decl.Function{ Decl._sig = sig@Pat.NamePat{ Pat._base = (Pat.Segment name args) } }
-                                              -> do let argsS = fmap mapArg args
-                                                    modify (("Function " ++ unpack name ++ " " ++ unwords argsS) :)
-      fun@Decl.Data{}                         -> modify ("Data"                         :)
-      fun@Decl.Import{}                       -> modify ("Import"                       :)
-      fun@Decl.TypeAlias{}                    -> modify ("TypeAlias"                    :)
-      fun@Decl.TypeWrapper{}                  -> modify ("TypeWrapper"                  :)
-      fun@Decl.Native{}                       -> modify ("Native"                       :)
+      fun@Decl.Func{ Decl._sig = sig@Pat.NamePat{ Pat._base = (Pat.Segment name args) } }
+                         -> do let argsS = fmap mapArg args
+                               modify (("Function " ++ unpack name ++ " " ++ unwords argsS) :)
+      fun@Decl.Data{}    -> modify ("Data"                         :)
+      fun@Decl.Imp{}     -> modify ("Import"                       :)
+      fun@Decl.TpAls{}   -> modify ("TypeAlias"                    :)
+      fun@Decl.TpWrp{}   -> modify ("TypeWrapper"                  :)
+      fun@Decl.Native{}  -> modify ("Native"                       :)
     defaultTraverseM ldecl
   where
     mapArg :: (HumanName (Pat.Pat lab)) => Pat.Arg (Pat.LPat lab) a -> String
@@ -84,7 +84,7 @@ tcDecl ldecl@(Label.Label lab decl) = do
 
 tcMod :: (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
 tcMod lmodule@(Label.Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) = do
-    modify (("Module " ++ intercalate "." (path ++ [name])):)
+    modify (("Module " ++ intercalate "." (fmap unpack (path ++ [name]))):)
     defaultTraverseM lmodule
 
 tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> t -> StageTypecheckerPass m StageTypecheckerState

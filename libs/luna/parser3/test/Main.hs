@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import System.Environment (getArgs)
 import Flowbox.Prelude
 import qualified Luna.Parser.Parser as Parser

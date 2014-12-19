@@ -156,17 +156,17 @@ instance ( Traversal base m (LDecl a e)          (LDecl a' e')
          , Traversal base m (LCons a e)          (LCons a' e')
          , Traversal base m (Arg  a e)           (Arg   a' e')
          , Traversal base m (LType a)            (LType a'   )
-         , Traversal base m (Native (LDecl a e)) (Native (LDecl a' e'))
          , Traversal base m ImpTgt               ImpTgt
+         , Traversal base m (Native (LDecl a e)) (Native (LDecl a' e'))
+         , Traversal base m (Decl.FuncSig a e)   (Decl.FuncSig a' e')
          , Traversal base m e e'
-         , Traversal base m (Decl.FuncSignature a e) (Decl.FuncSignature a' e')
          ) => DefaultTraversal base m (Decl a e) (Decl a' e') where
     defaultTraverseM b = \case
         Decl.Data        name params cons defs -> Decl.Data        <$> traverseM b name <*> traverseM b params <*> traverseM b cons    <*> traverseM b defs
-        Decl.Function    path sig output body  -> Decl.Function    <$> traverseM b path <*> traverseM b sig    <*> traverseM b output <*> traverseM b body
-        Decl.Import      path rename targets   -> Decl.Import      <$> traverseM b path <*> traverseM b rename <*> traverseM b targets
-        Decl.TypeAlias   dst src               -> Decl.TypeAlias   <$> traverseM b dst  <*> traverseM b src
-        Decl.TypeWrapper dst src               -> Decl.TypeWrapper <$> traverseM b dst  <*> traverseM b src
+        Decl.Func        path sig output body  -> Decl.Func        <$> traverseM b path <*> traverseM b sig    <*> traverseM b output <*> traverseM b body
+        Decl.Imp         path rename targets   -> Decl.Imp         <$> traverseM b path <*> traverseM b rename <*> traverseM b targets
+        Decl.TpAls       dst src               -> Decl.TpAls       <$> traverseM b dst  <*> traverseM b src
+        Decl.TpWrp       dst src               -> Decl.TpWrp       <$> traverseM b dst  <*> traverseM b src
         Decl.Native      nat                   -> Decl.Native      <$> traverseM b nat
 
 instance Traversal base m (Decl.LField a e) (Decl.LField a' e') => DefaultTraversal base m (Decl.Cons a e) (Decl.Cons a' e') where

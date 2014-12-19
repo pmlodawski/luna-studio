@@ -113,6 +113,8 @@ import qualified Luna.ASTNew.Unit       as Unit
 import qualified Data.TypeLevel.Set as TLSet
 import           Data.Tuple.Select
 
+import qualified Data.Text.Lazy.Encoding as Text
+
 infixl 4 <$!>
 
 
@@ -285,11 +287,11 @@ pModule name path = Module <$> pure path
 
 ----- Imports -----
 
-imp = Decl.Import <$  Tok.kwImport
-                  <*> (qualifiedPath Tok.typeIdent <?> "import path")
-                  <*> ((Just <$ Tok.kwAs <*> Tok.typeIdent) <|> pure Nothing)
-                  <*> (blockBegin importTarget <|> pure [])
-                  <?> "import declaration"
+imp = Decl.Imp <$  Tok.kwImport
+               <*> (qualifiedPath Tok.typeIdent <?> "import path")
+               <*> ((Just <$ Tok.kwAs <*> Tok.typeIdent) <|> pure Nothing)
+               <*> (blockBegin importTarget <|> pure [])
+               <?> "import declaration"
 
 importTarget =   body Decl.ImpVar varOp 
              <|> body Decl.ImpType Tok.typeIdent
@@ -298,20 +300,20 @@ importTarget =   body Decl.ImpVar varOp
 
 ----- type aliases ------
 
-typeAlias = Decl.TypeAlias <$  Tok.kwAlias 
-                           <*> (typeT <?> "new type") 
-                           <*  Tok.assignment 
-                           <*> (typeT <?> "base type")
-                           <?> "type alias"
+typeAlias = Decl.TpAls <$  Tok.kwAlias 
+                       <*> (typeT <?> "new type") 
+                       <*  Tok.assignment 
+                       <*> (typeT <?> "base type")
+                       <?> "type alias"
 
 
 ----- type wrappers ------
 
-typeWrapper = Decl.TypeWrapper <$  Tok.kwType 
-                               <*> (typeT <?> "new type") 
-                               <*  Tok.assignment 
-                               <*> (typeT <?> "base type")
-                               <?> "type wrapper"
+typeWrapper = Decl.TpWrp <$  Tok.kwType 
+                         <*> (typeT <?> "new type") 
+                         <*  Tok.assignment 
+                         <*> (typeT <?> "base type")
+                         <?> "type wrapper"
 
 
 
@@ -330,11 +332,11 @@ multiSigSegment  = Segment <$> sigVarOp <*> many arg
 arg = NamePat.Arg <$> argPattern
                  <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
 
-func = Decl.Function <$  Tok.kwDef
-                     <*> extPath
-                     <*> funcSig
-                     <*> outType
-                     <*> body
+func = Decl.Func <$  Tok.kwDef
+                 <*> extPath
+                 <*> funcSig
+                 <*> outType
+                 <*> body
     where extPath = ((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure []
           outType = (Just <$> try (Tok.arrow *> typeT)) <|> pure Nothing
           body    = char ':' *> stage1Body2
@@ -941,6 +943,8 @@ parserDelta name = Directed (UTF8.fromString name) 0 0 0 0
 
 parseFromByteString = Trifecta.parseByteString
 
+parseFromText p delta txt = Trifecta.parseByteString p delta (convert $ Text.encodeUtf8 txt)
+
 parseFromString p delta input = parseFromByteString p delta (UTF8.fromString input)
 
 parseFromFile p delta path = do
@@ -952,6 +956,7 @@ parseString     input p = handleResult  $  parseFromString     p (parserDelta pa
 parseByteString input p = handleResult  $  parseFromByteString p (parserDelta parserName) input
 
 parseByteString2 p input = handleResult  $  parseFromByteString p (parserDelta parserName) input
+parseText2 p input = handleResult  $  parseFromText p (parserDelta parserName) input
                 --data AliasAnalysis = AliasAnalysis
 
                 --traverseM        = AST.traverseM        AliasAnalysis
