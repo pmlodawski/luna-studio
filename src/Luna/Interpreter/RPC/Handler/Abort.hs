@@ -36,11 +36,11 @@ instance Exception AbortException
 
 handleAbort :: (Catch.MonadCatch m, MonadIO m) => m () -> m ()
 handleAbort =
-    flip Catch.catch $ \AbortException -> logger info "Nothing to abort"
+    flip Catch.catch $ \AbortException -> return () --logger info "Nothing to abort"
 
 
 abort :: Env.FragileMVar -> Concurrent.ThreadId -> IO ()
 abort fm threadId = Concurrent.withMVar fm $ const $ do
-    logger warning "Abort requested."
+    --logger warning "Abort requested."
     Concurrent.throwTo threadId AbortException
 
