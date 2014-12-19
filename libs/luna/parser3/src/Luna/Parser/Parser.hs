@@ -113,6 +113,8 @@ import qualified Luna.ASTNew.Unit       as Unit
 import qualified Data.TypeLevel.Set as TLSet
 import           Data.Tuple.Select
 
+import qualified Data.Text.Lazy.Encoding as Text
+
 infixl 4 <$!>
 
 
@@ -941,6 +943,8 @@ parserDelta name = Directed (UTF8.fromString name) 0 0 0 0
 
 parseFromByteString = Trifecta.parseByteString
 
+parseFromText p delta txt = Trifecta.parseByteString p delta (convert $ Text.encodeUtf8 txt)
+
 parseFromString p delta input = parseFromByteString p delta (UTF8.fromString input)
 
 parseFromFile p delta path = do
@@ -952,6 +956,7 @@ parseString     input p = handleResult  $  parseFromString     p (parserDelta pa
 parseByteString input p = handleResult  $  parseFromByteString p (parserDelta parserName) input
 
 parseByteString2 p input = handleResult  $  parseFromByteString p (parserDelta parserName) input
+parseText2 p input = handleResult  $  parseFromText p (parserDelta parserName) input
                 --data AliasAnalysis = AliasAnalysis
 
                 --traverseM        = AST.traverseM        AliasAnalysis

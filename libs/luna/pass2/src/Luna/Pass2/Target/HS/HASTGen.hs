@@ -65,7 +65,8 @@ import           Luna.ASTNew.Name.Hash              (Hashable, hash)
 import qualified Luna.Target.HS.Host.Naming2 as Naming
 import qualified Luna.Data.HAST.Builder.TH    as TH
 import qualified Luna.Data.HAST.Builder.Utils as HUtils
-import qualified Luna.ASTNew.Name.Pattern as NamePattern
+import qualified Luna.ASTNew.Name.Pattern as NamePat
+import           Luna.ASTNew.Name.Pattern (NamePat)
 
 ----------------------------------------------------------------------
 -- Base types
@@ -108,7 +109,7 @@ stdDerivings = [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
 
 
 genModule :: Monad m => LModule a e -> PassResult m HExpr
-genModule (Label lab (Module path name body)) = do
+genModule (Label lab (Module path name body)) = withCtx name $ do
     let mod     = HModule.addImport ["Luna", "Target", "HS"]
                 $ HModule.addExt HExtension.DataKinds
                 $ HModule.addExt HExtension.DeriveDataTypeable
@@ -122,13 +123,12 @@ genModule (Label lab (Module path name body)) = do
                 $ HModule.addExt HExtension.TemplateHaskell
                 $ HModule.addExt HExtension.UndecidableInstances
                 $ HModule.addExt HExtension.ViewPatterns
-                $ HModule.mk (fmap fromString $ path ++ [name])
+                $ HModule.mk (path <> [name])
         --params  = view LType.params cls
         --modCon  = LExpr.ConD 0 name fields
         --modConName = Naming.modCon name
     
-    setModule mod
-    
+    State.setModule mod
     mapM_ genDecl body
     --addComment $ H1 "Data types"
     --genCon' cls modCon stdDerivings
@@ -227,22 +227,30 @@ genDecl ast@(Label lab decl) = case decl of
     Decl.Func (fmap convVar -> path) sig output body -> do
         ctx <- getCtx
         let tpName = if (null path)
-            then ctx
-            else Just (path!!0) -- FIXME[wd]: needs name resolver
-                                -- in case of defining extensionmethod inside of a class
-                                -- maybe it should have limited scope to all classes inside that one?
-            argNum     = length (NamePattern.segments sig)
+            then case ctx of
+                Nothing -> ""
+                Just n  -> n
+            else (path!!0) -- FIXME[wd]: needs name resolver
+                           -- in case of defining extensionmethod inside of a class
+                           -- maybe it should have limited scope to all classes inside that one?
+            argNum     = length (NamePat.segments sig)
             name       = hash sig
-            --memDefName = Naming.mkMemDef tpName name
-            --memSigName = Naming.mkMemSig tpName name
+            memDefName = Naming.mkMemDef tpName name
+            memSigName = Naming.mkMemSig tpName name
         when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
         --let tpName = 
 
         let pfx = case tpName of
-                       Nothing -> ""
-                       Just x  -> x <> "."
+                       "" -> ""
+                       s  -> s <> "."
         addComment $ H2 $ "Method: " <> pfx <> name
+
+        let func = HExpr.Function memDefName [HExpr.rtuple []] (HExpr.DoBlock [])
+        regFunc func
+        --let f = HExpr.Function memDefName [Expr.rtuple hInputs] <$> (HExpr.DoBlock <$> fBody)
+
+
         return ()
 
     --LExpr.Function _ path name
@@ -277,8 +285,8 @@ genDecl ast@(Label lab decl) = case decl of
     --       regTHExpr $ thRegisterMethod tpName name2
     --       return f
 
-
---genFuncSig sig = 
+--genFuncSig :: Decl.FuncSig a e -> HExpr
+--genFuncSig (NamePat pfx base segs) = undefined
 
 --genType :: Bool -> LType -> GenPass HExpr
 --genType safeTyping t = case t of
@@ -339,7 +347,7 @@ genType = \case
 
 
 
-genExpr :: Monad m => LExpr a v -> PassResult m HExpr
+genExpr :: LExpr a v -> HExpr
 genExpr ast = undefined -- case ast of
     --LExpr.Var      _ name                -> pure $ HExpr.Var $ mkVarName name
     --LExpr.FuncVar  _ name                -> pure $ HExpr.Var $ mkVarName $ Name.unified name

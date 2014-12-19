@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE OverloadedStrings #-}
+
 import System.Environment (getArgs)
 import Flowbox.Prelude
 import qualified Luna.Parser.Parser as Parser
@@ -51,7 +53,7 @@ import Data.Text.Lazy (unpack)
 main = do
     args <- getArgs
     let path = args !! 0
-        src  = Source "Main" (File path)
+        src  = Source "Main" (File $ fromString path)
 
     result <- runEitherT $ do
         (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
@@ -66,7 +68,7 @@ main = do
         hsc              <- Pass.run1_ HSC.pass hast
         --return ast4
         --return (ast4, sa2)
-        return ((ast5,sa2, hast), hsc)
+        return ((ast5, sa2, hast), hsc)
 
     case result of
         Left  e -> putStrLn e
