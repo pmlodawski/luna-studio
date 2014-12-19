@@ -28,7 +28,7 @@ end
 # any harm. If I'm mistaken... well... Sorry :<
 
 class String
-  @@linefill_length = 81
+  @@linefill_length = 101
 
   def starfill
     x = self
