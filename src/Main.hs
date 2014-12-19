@@ -52,20 +52,19 @@ main = do f_print [Bold,Green] "MAIN"
             ast5             <- Pass.run1_ P2SSA.pass ast4
             --hast             <- Pass.run1_ P2HASTGen.pass ast5
             --hsc              <- Pass.run1_ P2HSC.pass hast
-            liftIO $ section $ do
-                writeAST " 1.1. Transform.Parse.Stage1         : ast1"        $ ppShow ast1
-                writeAST " 1.2. Transform.Parse.Stage1         : astinfo1"    $ ppShow astinfo1
-                writeAST " 2.   Analysis.Struct                : sa1"         $ ppShow sa1
-                writeAST " 3.1. Transform.Parse.Stage2         : ast2"        $ ppShow ast2
-                writeAST " 3.2. Transform.Parse.Stage2         : astinfo2"    $ ppShow astinfo2
-                writeAST " 4.1. Transform.Desugar.ImplicitSelf : ast3"        $ ppShow ast3
-                writeAST " 4.2. Transform.Desugar.ImplicitSelf : astinfo3"    $ ppShow astinfo3
-                writeAST " 5.   Pass2.Analysis.Struct          : sa2"         $ ppShow sa2
-                writeAST " 6.   Typechecker                    : constraints" $ ppShow constraints
-                writeAST " 7.   Transform.Hash                 : ast4"        $ ppShow ast4
-                writeAST " 8.   Transform.SSA                  : ast5"        $ ppShow ast5
-                --writeAST " 9.   Target.HS.HASTGen              : hast"        $ ppShow $ hast
-                --writeAST "10.   Target.HS.HSC                  : hsc"         $ unpack $ hsc
+            liftIO $ writeAST " 1.1. Transform.Parse.Stage1         : ast1"        $ ppShow ast1
+            liftIO $ writeAST " 1.2. Transform.Parse.Stage1         : astinfo1"    $ ppShow astinfo1
+            liftIO $ writeAST " 2.   Analysis.Struct                : sa1"         $ ppShow sa1
+            liftIO $ writeAST " 3.1. Transform.Parse.Stage2         : ast2"        $ ppShow ast2
+            liftIO $ writeAST " 3.2. Transform.Parse.Stage2         : astinfo2"    $ ppShow astinfo2
+            liftIO $ writeAST " 4.1. Transform.Desugar.ImplicitSelf : ast3"        $ ppShow ast3
+            liftIO $ writeAST " 4.2. Transform.Desugar.ImplicitSelf : astinfo3"    $ ppShow astinfo3
+            liftIO $ writeAST " 5.   Pass2.Analysis.Struct          : sa2"         $ ppShow sa2
+            liftIO $ writeAST " 6.   Typechecker                    : constraints" $ ppShow constraints
+            liftIO $ writeAST " 7.   Transform.Hash                 : ast4"        $ ppShow ast4
+            liftIO $ writeAST " 8.   Transform.SSA                  : ast5"        $ ppShow ast5
+            -- liftIO $ writeAST " 9.   Target.HS.HASTGen              : hast"        $ ppShow $ hast
+            -- liftIO $ writeAST "10.   Target.HS.HSC                  : hsc"         $ unpack $ hsc
             return  ()
 
           case result of
