@@ -62,7 +62,8 @@ Library
                     transformers,
                     template-haskell,
                     QuickCheck,
-                    unordered-containers
+                    unordered-containers,
+                    convertible
   if os(windows)
     Build-Depends:  Win32
 

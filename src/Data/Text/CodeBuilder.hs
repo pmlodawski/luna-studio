@@ -95,15 +95,15 @@ instance CodeBuilder Text.Builder where
 
 -- Convertible
 
-instance Convertible Text Text.Builder where
-    convert = fromLazyText
+--instance Convertible Text Text.Builder where
+--    convert = fromLazyText
 
-instance Convertible String Text.Builder where
-    convert = fromString
+--instance Convertible String Text.Builder where
+--    convert = fromString
 
-instance Convertible Text.Builder Text.Builder where
-    convert = id
+--instance Convertible Text.Builder Text.Builder where
+--    convert = id
 
-instance Convertible a b => Convertible [a] [b] where
-    convert = fmap convert
+--instance Convertible a b => Convertible [a] [b] where
+--    convert = fmap convert
 
