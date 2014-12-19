@@ -196,7 +196,6 @@ setGraph (newGraph, newPM) bc libraryID projectID = do
     logger trace $ ppShow newPM
     expr <- getFunctionFocus bc libraryID projectID
     (ast, newPM2)  <- EitherT $ GraphParser.run newGraph newPM expr
-
     newMaxID <- EitherT $ MaxID.runExpr ast
     fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
     logger debug $ show newGraph

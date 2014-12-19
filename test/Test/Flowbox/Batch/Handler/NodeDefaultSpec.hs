@@ -8,31 +8,37 @@
 
 module Test.Flowbox.Batch.Handler.NodeDefaultSpec where
 
+import Data.List  ((\\))
 import Test.Hspec
 
-import qualified Flowbox.Batch.Batch               as Batch
-import qualified Flowbox.Batch.Handler.AST         as AST
-import qualified Flowbox.Batch.Handler.Common      as Batch
-import qualified Flowbox.Batch.Handler.Graph       as Graph
-import qualified Flowbox.Batch.Handler.Library     as Library
-import qualified Flowbox.Batch.Handler.NodeDefault as NodeDefault
-import qualified Flowbox.Batch.Handler.Project     as Project
-import qualified Flowbox.Config.Config             as Config
+import qualified Flowbox.Batch.Batch                       as Batch
+import qualified Flowbox.Batch.Handler.AST                 as Batch
+import qualified Flowbox.Batch.Handler.Common              as Batch
+import qualified Flowbox.Batch.Handler.Graph               as Batch
+import qualified Flowbox.Batch.Handler.Library             as Batch
+import qualified Flowbox.Batch.Handler.NodeDefault         as Batch
+import qualified Flowbox.Batch.Handler.Project             as Batch
+import qualified Flowbox.Config.Config                     as Config
 import           Flowbox.Control.Error
-import           Flowbox.Data.Version              ()
+import qualified Flowbox.Data.Graph                        as Graph
+import           Flowbox.Data.Version                      ()
 import           Flowbox.Prelude
-import qualified Flowbox.System.UniPath            as UniPath
-import qualified Luna.AST.Arg                      as Arg
-import qualified Luna.AST.Control.Crumb            as Crumb
-import qualified Luna.AST.Expr                     as Expr
-import qualified Luna.AST.Lit                      as Lit
-import qualified Luna.AST.Name                     as Name
-import qualified Luna.AST.Type                     as Type
-import           Luna.Graph.Node                   (Node)
-import qualified Luna.Graph.Node                   as Node
-import qualified Luna.Graph.Node.Expr              as NodeExpr
-import qualified Luna.Graph.Node.StringExpr        as StringExpr
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.System.UniPath                    as UniPath
+import qualified Luna.AST.Arg                              as Arg
+import qualified Luna.AST.Control.Crumb                    as Crumb
+import qualified Luna.AST.Expr                             as Expr
+import qualified Luna.AST.Lit                              as Lit
+import qualified Luna.AST.Name                             as Name
+import qualified Luna.AST.Type                             as Type
+import qualified Luna.Graph.Flags                          as Flags
+import           Luna.Graph.Node                           (Node)
+import qualified Luna.Graph.Node                           as Node
+import qualified Luna.Graph.Node.Expr                      as NodeExpr
+import qualified Luna.Graph.Node.StringExpr                as StringExpr
+import qualified Luna.Graph.PropertyMap                    as PropertyMap
+import qualified Luna.Pass.Analysis.Alias.Alias            as Alias
+import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 
 
 
@@ -58,45 +64,45 @@ rootLogger :: Logger
 rootLogger = getLogger ""
 
 
+shouldSatisfy' :: (MonadIO m, Show a) => a -> (a -> Bool) -> m ()
+shouldSatisfy' = liftIO .: shouldSatisfy
+
 
 spec :: Spec
 spec = do
     describe "node defaults" $
-        it "sample use case" $ do
+        it "generated nodes are marked generated" $ do
             --rootLogger setIntLevel 5
             runBatch $ do
-                (projectID, _) <- Project.createProject (Just "TestProject") (UniPath.fromUnixString "/tmp/test.project") def
-                (libraryID, _) <- Library.createLibrary "Main" def (UniPath.fromUnixString "/tmp/test.lunalib") projectID
+                (projectID, _) <- Batch.createProject (Just "TestProject") (UniPath.fromUnixString "/tmp/test.project") def
+                (libraryID, _) <- Batch.createLibrary "Main" def (UniPath.fromUnixString "/tmp/test.lunalib") projectID
                 let mainFun    = Expr.Function 0 [] (Name.single "main" ) [] (Type.Unknown 0) []
                     mainBC     = [Crumb.Module "Main", Crumb.Function (Name.single "main") []]
-                _              <- AST.addFunction mainFun [Crumb.Module "Main"] libraryID projectID
+                _              <- Batch.addFunction mainFun [Crumb.Module "Main"] libraryID projectID
                 let testFun    = Expr.Function 0 [] (Name.single "test" ) [] (Type.Unknown 0) []
                     testBC     = [Crumb.Module "Main", Crumb.Function (Name.single "test") []]
-                _              <- AST.addFunction testFun [Crumb.Module "Main"] libraryID projectID
+                _              <- Batch.addFunction testFun [Crumb.Module "Main"] libraryID projectID
 
-                printID        <- Graph.addNode (stringNode "print") mainBC libraryID projectID
-                putStrLn "= 1 ======================="
-                prettyPrint   =<< Batch.getLibrary libraryID projectID
-                putStrLn "= 2 ======================="
+                printID        <- Batch.addNode (stringNode "print") mainBC libraryID projectID
+                --putStrLn "= 1 ======================="
+                --prettyPrint   =<< Batch.getLibrary libraryID projectID
+                --putStrLn "= 2 ======================="
                 let printDef   = NodeExpr.ASTExpr $ Expr.App 0 (Expr.Accessor 0 (Expr.mkAccessor "foo") $
                                                                                  Expr.List 0 [ Expr.App 0 (Expr.Con 0 "Foo") [Arg.Unnamed 0 $ Expr.Lit 0 $ Lit.String 0 "fooo"]])
                                                                [ Arg.Unnamed 0 $ Expr.App 0 (Expr.Con 0 "Bar") [Arg.Unnamed 0 $ Expr.Lit 0 $ Lit.String 0 "bar"]
                                                                , Arg.Unnamed 0 $ Expr.Lit 0 $ Lit.String 0 "a"
                                                                , Arg.Unnamed 0 $ Expr.Lit 0 $ Lit.String 0 "b"
                                                                ]
-                printDefID     <- NodeDefault.setNodeDefault [0] printDef printID mainBC libraryID projectID
-                prettyPrint   =<< Batch.getLibrary libraryID projectID
-                testID         <- Graph.addNode (stringNode "test") mainBC libraryID projectID
-                putStrLn "= 3 ======================="
-                prettyPrint   =<< Batch.getLibrary libraryID projectID
-                --fun1           <- Batch.getFunctionFocus mainBC libraryID projectID
-                --prettyPrint   =<< Batch.getLibrary libraryID projectID
-                --library1       <- Batch.getLibrary libraryID projectID
-                --testID         <- Graph.addNode (stringNode "test") testBC libraryID projectID
-                --fun2           <- Batch.getFunctionFocus mainBC libraryID projectID
-                --fun1 `shouldBe'` fun2
-                --prettyPrint   =<< Batch.getLibrary libraryID projectID
-                --library2       <- Batch.getLibrary libraryID projectID
-                --graph          <- Graph.nodesGraph mainBC libraryID projectID
-                --library1 `shouldBe'` library2
-                return ()
+                    anotherDef = NodeExpr.ASTExpr $ Expr.List 0 []
+                anotherDefID   <- Batch.setNodeDefault [0] anotherDef printID mainBC libraryID projectID
+                printDefID     <- Batch.setNodeDefault [0] printDef printID mainBC libraryID projectID
+                testID         <- Batch.addNode (stringNode "test") mainBC libraryID projectID
+                ast            <- Batch.getAST libraryID projectID
+                propertyMap    <- Batch.getPropertyMap libraryID projectID
+                expr           <- Batch.getFunctionFocus mainBC libraryID projectID
+                aa             <- EitherT $ Alias.run ast
+                (graph, pm)    <- EitherT $ GraphBuilder.run aa propertyMap False expr
+                let nodes              = Graph.nodes graph
+                    generatedNodes     = nodes \\ [-3,-2, printID, testID]
+                    isGenerated nodeID = Flags.isDefaultNodeGenerated $ PropertyMap.getFlags nodeID pm
+                mapM_ (`shouldSatisfy'` isGenerated) generatedNodes
