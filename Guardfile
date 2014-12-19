@@ -140,11 +140,10 @@ end
 
 def show_output
   $output.map do |file|
-    puts "\n"
-    puts "".linefill.white.bold
-    puts file.yellow
-    puts "".linefill.white.bold
-    puts "\n"
-    puts (File.read ($output_dir + file))
+    puts "*".starfill.yellow
+    puts ("* * ".yellow + file.white.bold)
+    puts "*".starfill.yellow
+    file_cont = (File.read ($output_dir + file))
+    puts file_cont.each_line.map {|l| "  * ".cyan + l}.join
   end
 end
