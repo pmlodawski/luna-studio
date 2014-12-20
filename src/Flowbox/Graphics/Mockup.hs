@@ -782,7 +782,8 @@ colorCorrectLuna' (fmap variable -> Color.RGBA masterSaturationR masterSaturatio
                              (correct' correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
                              id
                              saturated
-    where curveShadows    = A.lift $ CubicBezier (Point2 (0::Double) 1) (Point2 0.03 1) (Point2 0.06 0) (Point2 0.09 0) :: Exp (CubicBezier Double)
+    where 
+          curveShadows    = A.lift $ CubicBezier (Point2 (0::Double) 1) (Point2 0.03 1) (Point2 0.06 0) (Point2 0.09 0) :: Exp (CubicBezier Double)
           curveHighlights = A.lift $ CubicBezier (Point2 0.5 (0::Double)) (Point2 (2/3) 0) (Point2 (5/6) 1) (Point2 1 1) :: Exp (CubicBezier Double)
           strShadows x    = A.cond (x A.<=* 0) 1
                           $ A.cond (x A.>=* 0.09) 0
