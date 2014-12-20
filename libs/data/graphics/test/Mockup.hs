@@ -19,44 +19,50 @@ import Utils
 input, output :: String
 input = "RGB.png"
 output = "out.png"
+output1 = "out1.png"
 
 
 main :: IO ()
 main = do
     putStrLn "Mockup test"
     image <- loadImageLuna $ "samples/" P.++ input
+    let out1 = onEach (+0.1) (+0.1) (+0.1) id image -- nie dziala OnEach!
+    
+    saveImageLuna output1 out1
+
+    image <- loadImageLuna $ "samples/" P.++ input
     let neutralSCGG = RGBA 1 1 1 0 :: RGBA Double
     let neutralOff  = RGBA 0 0 0 0 :: RGBA Double
-    let gamma1		= RGBA 2 2 2 2 :: RGBA Double
-    let gain1		= RGBA 2 2 2 2 :: RGBA Double
-    let sat1 		= RGBA 2 2 2 2 :: RGBA Double
+    let gamma1      = RGBA 2 2 2 2 :: RGBA Double
+    let gain1       = RGBA 2 2 2 2 :: RGBA Double
+    let sat1        = RGBA 2 2 2 2 :: RGBA Double
     let contrast1   = RGBA 1.2 1.2 1.2 1.2 :: RGBA Double
-    let offset1		= RGBA 0.1 0.1 0.1 0.1 :: RGBA Double
+    let offset1     = RGBA 0.1 0.1 0.1 0.1 :: RGBA Double
     let out = colorCorrectLuna' 
-		    	neutralSCGG
-		    	neutralSCGG
-		    	neutralSCGG
-		    	neutralSCGG
-		    	offset1
+                neutralSCGG
+                neutralSCGG
+                neutralSCGG
+                neutralSCGG
+                offset1
 
-		    	neutralSCGG 
-		    	neutralSCGG 
-		    	neutralSCGG 
-		    	neutralSCGG 
-		    	neutralOff 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralOff 
 
-		    	neutralSCGG 
-		    	neutralSCGG 
-		    	neutralSCGG 
-		    	neutralSCGG 
-		    	neutralOff 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralOff 
 
-		    	neutralSCGG 
-		    	neutralSCGG 
-		    	neutralSCGG 
-		    	neutralSCGG 
-		    	neutralOff 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralOff 
 
-		    	image
+                image
     saveImageLuna output out
     putStrLn "Done"
