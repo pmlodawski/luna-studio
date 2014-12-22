@@ -16,34 +16,33 @@ import           Control.Monad.Trans.Either
 import qualified Data.IntSet                as IntSet
 import qualified Data.List                  as List
 
-import           Flowbox.Prelude                         hiding (error, folded, mapM, mapM_)
+import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Arg                            as Arg
-import           Luna.AST.Expr                           (Expr)
-import qualified Luna.AST.Expr                           as Expr
-import           Luna.AST.Pat                            (Pat)
-import qualified Luna.AST.Pat                            as Pat
-import           Luna.Data.ASTInfo                       (ASTInfo)
-import qualified Luna.Data.ASTInfo                       as ASTInfo
-import qualified Luna.Data.Config                        as Config
-import qualified Luna.Graph.Flags                        as Flags
-import           Luna.Graph.Graph                        (Graph)
-import qualified Luna.Graph.Graph                        as Graph
-import           Luna.Graph.Node                         (Node)
-import qualified Luna.Graph.Node                         as Node
-import           Luna.Graph.Node.Expr                    (NodeExpr)
-import qualified Luna.Graph.Node.Expr                    as NodeExpr
-import qualified Luna.Graph.Node.StringExpr              as StringExpr
-import qualified Luna.Graph.Port                         as Port
-import           Luna.Graph.PropertyMap                  (PropertyMap)
-import qualified Luna.Parser.Parser                      as Parser
-import qualified Luna.Parser.Token                       as Tok
-import qualified Luna.Pass.Analysis.ID.ExtractIDs        as ExtractIDs
-import qualified Luna.Pass.Pass                          as Pass
-import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer as IDFixer
-import qualified Luna.Pass.Transform.AST.IDFixer.State   as IDFixer
-import           Luna.Pass.Transform.Graph.Parser.State  (GPPass)
-import qualified Luna.Pass.Transform.Graph.Parser.State  as State
+import qualified Luna.AST.Arg                           as Arg
+import           Luna.AST.Expr                          (Expr)
+import qualified Luna.AST.Expr                          as Expr
+import           Luna.AST.Pat                           (Pat)
+import qualified Luna.AST.Pat                           as Pat
+import           Luna.Data.ASTInfo                      (ASTInfo)
+import qualified Luna.Data.ASTInfo                      as ASTInfo
+import qualified Luna.Data.Config                       as Config
+import qualified Luna.Graph.Flags                       as Flags
+import           Luna.Graph.Graph                       (Graph)
+import qualified Luna.Graph.Graph                       as Graph
+import           Luna.Graph.Node                        (Node)
+import qualified Luna.Graph.Node                        as Node
+import           Luna.Graph.Node.Expr                   (NodeExpr)
+import qualified Luna.Graph.Node.Expr                   as NodeExpr
+import qualified Luna.Graph.Node.StringExpr             as StringExpr
+import qualified Luna.Graph.Port                        as Port
+import           Luna.Graph.PropertyMap                 (PropertyMap)
+import qualified Luna.Parser.Parser                     as Parser
+import qualified Luna.Parser.Token                      as Tok
+import qualified Luna.Pass.Analysis.ID.ExtractIDs       as ExtractIDs
+import qualified Luna.Pass.Pass                         as Pass
+import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
+import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
+import qualified Luna.Pass.Transform.Graph.Parser.State as State
 
 --FIXME[wd]: following imports should be removed after moving to plugin based structure
 --           including all use cases. Nothing should modify Parser.State explicitly!
@@ -224,9 +223,7 @@ parseListNode nodeID = do
 
 parseASTExprNode :: Node.ID -> Expr -> GPPass ()
 parseASTExprNode nodeID = addExpr nodeID
-                        -- . set Expr.id nodeID
                         . setNodeID nodeID
-                        . IDFixer.clearExprIDs IDFixer.unknownID
 
 
 addExpr :: Node.ID -> Expr -> GPPass ()
