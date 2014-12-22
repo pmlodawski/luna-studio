@@ -9,9 +9,9 @@
 module Luna.Interpreter.Session.Cache.Cache where
 
 import           Control.Monad.State hiding (mapM, mapM_)
+import qualified Data.IntSet         as IntSet
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
-import qualified Data.Set            as Set
 import qualified System.Mem          as Mem
 
 import           Flowbox.Control.Error                       hiding (err)
@@ -55,7 +55,10 @@ dump callPointPath mhash = do
 
 
 dumpAll :: Session mm ()
-dumpAll = logger trace =<< MapForest.draw <$> Env.getCached
+dumpAll = do
+    logger trace =<< MapForest.draw <$> Env.getCached
+    logger trace "====================="
+    logger trace =<< show <$> Env.getDependentNodes
 
 
 isDirty :: CallPointPath -> Session mm Bool
@@ -129,7 +132,7 @@ deleteNode libraryID nodeID = do
     mapM_ delete' matching
     dependent <- Env.getDependentNodesOf callPoint
     Env.deleteDependentNodes callPoint
-    mapM_ (deleteNode libraryID) $ Set.toList dependent
+    mapM_ (deleteNode libraryID) $ IntSet.toList dependent
 
 
 delete :: MemoryManager mm => CallPointPath -> Session mm ()

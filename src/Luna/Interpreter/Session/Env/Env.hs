@@ -10,9 +10,9 @@ module Luna.Interpreter.Session.Env.Env where
 
 import           Control.Concurrent.MVar (MVar)
 import qualified Control.Concurrent.MVar as MVar
+import           Data.IntSet             (IntSet)
 import           Data.Map                (Map)
 import           Data.MultiSet           (MultiSet)
-import           Data.Set                (Set)
 
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Data.MapForest                      (MapForest)
@@ -20,7 +20,6 @@ import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Data.SetForest                      (SetForest)
 import           Flowbox.Prelude
 import           Generated.Proto.Mode.ModeValue              (ModeValue)
-import qualified Luna.Graph.Node                             as Node
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
@@ -40,7 +39,7 @@ data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheI
                              , _reloadMap          :: ReloadMap
                              , _allReady           :: Bool
                              , _fragileOperation   :: FragileMVar
-                             , _dependentNodes     :: Map CallPoint (Set Node.ID)
+                             , _dependentNodes     :: Map CallPoint IntSet
                              , _profileInfos       :: MapForest CallPoint ProfileInfo
 
                              , _serializationModes :: MapForest CallPoint (MultiSet Mode)
