@@ -11,6 +11,50 @@ Flag Debug
     Default:        False
 
 
+Library
+    Hs-Source-Dirs: dist/gen
+                    src  
+    Other-Modules:  Paths_batch_plugin_interpreter
+    GHC-Options:    -Wall -O2 -threaded -dynamic -shared -fPIC
+    Extensions:     NoImplicitPrelude
+
+    Exposed-modules: `findmodules('src', '.*\.hs')`
+                     `findmodules('dist/gen', '.*\.hs')`
+
+    Build-Depends:  base,
+                    batch-lib-project-manager,
+                    bytestring,
+                    containers,
+                    either,
+                    errors,
+                    exceptions,
+                    flowbox-batch,
+                    flowbox-bus,
+                    flowbox-config,
+                    luna-core,
+                    luna-initializer,
+                    luna-interpreter,
+                    luna-pass,
+                    luna-protobuf,
+                    flowbox-utils,
+                    flowbox-serialization,
+                    MissingH,
+                    mmorph,
+                    multiset,
+                    mtl,
+                    optparse-applicative,
+                    pipes,
+                    pipes-concurrency,
+                    pipes-safe,
+                    protocol-buffers,
+                    protocol-buffers-descriptor,
+                    transformers,
+                    zeromq4-haskell >= 0.4
+
+  if !os(windows)
+    Build-Depends:  ekg
+
+
 Executable interpreter
     Hs-Source-Dirs: dist/gen
                     src
