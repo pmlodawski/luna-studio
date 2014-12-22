@@ -52,7 +52,7 @@ mkMemSig = mkMemRef "Sig"
 mkMemDef = mkMemRef "Def"
 
 
-
+mkModCons = mkCons
 mkCons = ("cons_" <>)
 
 mkModName = ("Module" <>)
@@ -64,3 +64,6 @@ self = "self"
 mkCls = ("Cls_" <>)
 
 mkVar    = ("_" <>)
+
+
+setter = ("set_" <>)
