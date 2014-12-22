@@ -26,7 +26,7 @@ main :: IO ()
 main = do
     putStrLn "Mockup test"
     image <- loadImageLuna $ "samples/" P.++ input
-    let out1 = onEach (+0.1) (+0.1) (+0.1) id image -- nie dziala OnEach!
+    let out1 = onEach (+0.1) (+0.1) (+0.1) id image
     
     saveImageLuna output1 out1
 
@@ -64,5 +64,59 @@ main = do
                 neutralOff 
 
                 image
-    saveImageLuna output out
+
+    let out2 = colorCorrectLuna'
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 1 1 1 1 :: RGBA Double)
+                (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+
+                (RGBA 1.7 1.7 1.7 1.7 :: RGBA Double)
+                (RGBA 0.56 0.56 0.56 0.56 :: RGBA Double)
+                (RGBA 1.25 1.25 1.25 1.25 :: RGBA Double)
+                (RGBA 0.62 0.62 0.62 0.62 :: RGBA Double)
+                (RGBA 0.02 0.02 0.02 0.02 :: RGBA Double)
+
+                (RGBA 0.56 0.56 0.56 0.56 :: RGBA Double)
+                (RGBA 1.1 1.1 1.1 1.1 :: RGBA Double)
+                (RGBA 1.35 1.35 1.35 1.35 :: RGBA Double)
+                (RGBA 0.5 0.5 0.5 0.5 :: RGBA Double)
+                (RGBA 0.015 0.015 0.015 0.015 :: RGBA Double)
+
+                (RGBA 0.58 0.58 0.58 0.58 :: RGBA Double)
+                (RGBA 1.45 1.45 1.45 1.45 :: RGBA Double)
+                (RGBA 0.76 0.76 0.76 0.76 :: RGBA Double)
+                (RGBA 1.45 1.45 1.45 1.45 :: RGBA Double)
+                (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+                image
+
+    let out3 = colorCorrectLuna'
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 1 1 1 1 :: RGBA Double)
+                (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralOff 
+
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralOff 
+
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralOff 
+                image
+
+
+    saveImageLuna output out3
     putStrLn "Done"
