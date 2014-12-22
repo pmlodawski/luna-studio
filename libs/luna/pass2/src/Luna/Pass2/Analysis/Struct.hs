@@ -8,6 +8,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 {-# LANGUAGE TypeFamilies #-}
 
@@ -44,13 +45,14 @@ import qualified Luna.Pass                    as Pass
 import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
-import           Luna.Data.StructInfo         (StructInfo)
+import           Luna.Data.StructInfo         (StructInfo, OriginInfo(OriginInfo))
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regArgPatDesc, regTypeName, withNewScope)
+import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regNamePatDesc, regTypeName, withNewScope)
 import qualified Luna.Parser.State            as ParserState
 --import qualified Luna.ASTNew.Name.Pattern     as NamePattern
 import qualified Luna.ASTNew.Name.Pattern     as NamePattern
+import           Luna.ASTNew.Foreign          (Foreign(Foreign))
 
 ----------------------------------------------------------------------
 -- Base types
@@ -86,14 +88,14 @@ aaUnit :: SADefaultTraversal m a => a -> SAPass m StructInfo
 aaUnit ast = defaultTraverseM ast *> (view Namespace.info <$> get)
 
 aaMod :: SACtx lab m a => LModule lab a -> SAPass m (LModule lab a)
-aaMod mod@(Label lab (Module path name body)) = withNewScope id continue
+aaMod mod@(Label lab (Module _ body)) = withNewScope id continue
     where continue =  registerDecls body
                    *> defaultTraverseM mod
           id       = Enum.id lab
 
 aaPat :: (PassCtx m, Enumerated lab) => LPat lab -> SAPass m (LPat lab)
 aaPat p@(Label lab pat) = case pat of
-    Pat.Var         name       -> regVarName id (unwrap name)
+    Pat.Var         name       -> regVarName (OriginInfo "dupa" id) (unwrap name)
                                   *> regParent id
                                   *> continue
     _                          -> continue
@@ -107,7 +109,6 @@ aaDecl d@(Label lab decl) = case decl of
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
--- FIXME [wd]: remove the assumption that a is NamePath. variables should always contain name as NamePath!
 aaExpr :: SACtx lab m a => (LExpr lab a) -> SAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
     var@(Expr.Var (Expr.Variable name _)) -> regParent id
@@ -116,9 +117,9 @@ aaExpr e@(Label lab expr) = case expr of
     cons@(Expr.Cons name)                 -> regParent id
                                           *> regAlias id (unwrap name)
                                           *> continue
-    Expr.RecUpdt name sel expr            -> regParent  id
+    Expr.RecUpd name _                    -> regParent  id
                                           *> regAlias   id (unwrap name)
-                                          *> regVarName id (unwrap name)
+                                          *> regVarName (OriginInfo "dupa" id) (unwrap name)
                                           *> continue
     _                                     -> continue
     where id       = Enum.id lab
@@ -131,20 +132,28 @@ registerDecls decls =  mapM_ registerHeaders  decls
 
 registerDataDecl :: SACtx lab m a => LDecl lab a -> SAPass m ()
 registerDataDecl (Label lab decl) = case decl of
-    Decl.Data     name _ cons defs   -> withNewScope id (registerDecls defs) *> pure ()
-    _                                -> pure ()
+    Decl.Data (Decl.DataDecl name _ cons defs) -> withNewScope id (registerDecls defs) *> pure ()
+    _                                          -> pure ()
     where id = Enum.id lab
 
 registerHeaders :: SACtx lab m a => LDecl lab a -> SAPass m ()
 registerHeaders (Label lab decl) = case decl of
-    Decl.Func _ sig _ _     -> regVarName id (NamePattern.toNamePath sig)
-                             <* regArgPatDesc id (NamePattern.toDesc sig)
-    Decl.Data name _ cons _ -> regTypeName id (unwrap name) 
-                            <* mapM_ registerCons cons
-    _                       -> pure ()
+    Decl.Func    fdecl -> regFuncDecl id fdecl
+    Decl.Data    ddecl -> regDataDecl id ddecl
+    Decl.Foreign fdecl -> regForeignDecl id fdecl
+    _               -> pure ()
     where id = Enum.id lab
-          registerCons (Label lab (Decl.Cons name fields)) = regVarName (Enum.id lab) (unwrap name)
+          
+regForeignDecl id (Foreign tgt fdecl) = case fdecl of
+    Decl.FData ddecl -> regDataDecl id ddecl
+    Decl.FFunc fdecl -> regFuncDecl id fdecl
 
+regFuncDecl id (Decl.FuncDecl _ sig _ _) =  regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
+                                         <* regNamePatDesc id (NamePattern.toDesc sig)
+
+regDataDecl id (Decl.DataDecl name _ cons _) =  regTypeName (OriginInfo "dupa" id) (unwrap name) 
+                                             <* mapM_ registerCons cons
+    where registerCons (Label lab (Decl.Cons name fields)) = regVarName (OriginInfo "dupa" (Enum.id lab)) (unwrap name)
 
 ----------------------------------------------------------------------
 -- Instances

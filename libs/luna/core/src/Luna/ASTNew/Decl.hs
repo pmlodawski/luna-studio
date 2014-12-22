@@ -16,32 +16,50 @@ import Flowbox.Prelude hiding (Cons, traverse)
 import GHC.Generics             (Generic)
 import Luna.ASTNew.Type         (LType)
 import Luna.ASTNew.Name         (VNameP, TNameP, CNameP, TVNameP)
-import Luna.ASTNew.Arg          (Arg)
 import Luna.ASTNew.Native       (Native)
 import Luna.ASTNew.Label        (Label)
 import Luna.ASTNew.Pat          (LPat)
 import Luna.ASTNew.Name.Pattern (ArgPat)
+import Luna.ASTNew.Foreign      (Foreign)
+import Luna.ASTNew.Label        (Label(Label))
 
 import qualified Prelude
 
-type FuncSig a e = ArgPat (LPat a) e
+type FuncSig a e = ArgPat a e
 
+type FuncOutput a = Maybe (LType a)
+
+type DataParams = [TVNameP]
+
+type ForeignCode = Text
+
+noParams = []
+noBody   = []
+noFields = []
 
 data Decl a e
-    = Data   { _tname   :: TNameP  , params    :: [TVNameP]    , _cons    :: [LCons a e]     , _defs   :: [LDecl a e] }
-    | Func   { _path    :: Path    , _sig      :: FuncSig a e  , _output  :: Maybe (LType a) , _body :: [e]           }
+    = Data   (DataDecl a e)
+    | Func   (FuncDecl a e [e])
     | Imp    { _modPath :: Path    , _rename   :: Maybe TNameP , _targets :: [ImpTgt]                                 }
     | TpAls  { _dstType :: LType a , _srcType  :: LType a                                                             }
     | TpWrp  { _dstType :: LType a , _srcType  :: LType a                                                             }
-    | Native { _native  :: Native (LDecl a e)                                                                         }
-    -- | Foreign     Foreign
+    | Foreign (Foreign (ForeignDecl a e))
+    deriving (Show, Eq, Generic, Read)
+
+
+data FuncDecl a e body = FuncDecl Path (FuncSig a e) (FuncOutput a) body      deriving (Show, Eq, Generic, Read)
+data DataDecl a e      = DataDecl TNameP DataParams [LCons a e] [LDecl a e]   deriving (Show, Eq, Generic, Read)
+
+data ForeignDecl a e
+    = FData (DataDecl a e)
+    | FFunc (FuncDecl a e ForeignCode)
     deriving (Show, Eq, Generic, Read)
 
 -- !!!
 -- jezeli bedziemy mieli TemplateLuna to chcemy znac kolejnosc deklaracji
 -- bo mozemy chciec dzielic plik po sparsowaniu
 
---data Foreign a = Foreign Target a
+
 
 -- ???
 -- moze pozwolic na
@@ -62,3 +80,9 @@ type LField a e = Label a (Field a e)
 
 
 makeLenses ''Decl
+
+
+
+
+singleData name = Data (DataDecl name noParams [Label 0 modCons] noBody)
+    where modCons = Cons (convert name) noFields

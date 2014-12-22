@@ -107,16 +107,15 @@ instance Generator HExpr where
         HExpr.Con      name fields            -> simple  $ convert name <> spaceJoin ("" : sgenmap fields)
         HExpr.CondE    cond sucess failure    -> complex $ "ifThenElse' " <> sgenerate cond <> (simplify.buildDoBlock) sucess <> (simplify.buildDoBlock) failure
         HExpr.RecUpdE  expr name val          -> complex $ sgenerate expr <> " { " <> convert name <> " = " <> generate val <> "}"
-        HExpr.Typed    cls  expr              -> complex $ generate expr <> " :: " <> generate cls
-        HExpr.TypedP   cls  expr              -> complex $ generate expr <> " :: " <> generate cls
-        HExpr.TypedE   cls  expr              -> complex $ generate expr <> " :: " <> generate cls
+        HExpr.Typed    expr cls               -> complex $ generate expr <> " :: " <> generate cls
+        HExpr.TypedP   expr cls               -> complex $ generate expr <> " :: " <> generate cls
+        HExpr.TypedE   expr cls               -> complex $ generate expr <> " :: " <> generate cls
         HExpr.TySynD   name params dstType    -> complex $ "type " <> convert name <> " " <> spaceJoin (sgenmap params) <> " = " <> generate dstType
         HExpr.Function name signature expr    -> simple  $ convert name <> spaceJoin ("" : genmap signature) <> " = " <> generate expr
         HExpr.Lambda   signature expr         -> simple  $ "(\\" <> spaceJoin ("" : sgenmap signature) <> " -> " <> sgenerate expr <> ")"
         HExpr.LetBlock exprs result           -> simple  $ "let { " <> mjoin "; " (genmap exprs) <> " } in " <> generate result
         HExpr.LetExpr  expr                   -> simple  $ "let " <> generate expr
-        HExpr.Infix    name src dst           -> complex $ generate src  <> " " <> convert name <> " " <> sgenerate dst
-        HExpr.InfixR   name src dst           -> complex $ sgenerate src <> " " <> convert name <> " " <> generate dst
+        HExpr.Infix    name src dst           -> complex $ sgenerate src  <> " " <> convert name <> " " <> sgenerate dst
         HExpr.NOP                             -> simple  $ "nop"
         HExpr.Assignment src dst              -> simple  $ generate src <> " = " <> generate dst
         HExpr.Arrow      src dst              -> simple  $ generate src <> " <- " <> generate dst

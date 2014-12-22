@@ -64,12 +64,12 @@ import           Luna.ASTNew.Name             (VName, vname, TName, tname, TVNam
 --import qualified Luna.Data.Namespace          as Namespace
 import qualified Luna.Data.Namespace.State    as Namespace
 import qualified Luna.Data.StructInfo          as StructInfo
+import           Luna.Data.StructInfo         (OriginInfo(OriginInfo))
 import qualified Luna.ASTNew.AST              as AST
 import qualified Luna.ASTNew.Traversals       as AST
 import qualified Data.Maps                    as Map
 import           Data.Maybe                   (isJust, fromJust)
 import qualified Flowbox.Data.MapForest       as MapForest
-import qualified Luna.AST.Arg                 as Arg
 import qualified Data.List                    as List
 import qualified Luna.Parser.Pragma           as Pragma
 
@@ -77,6 +77,7 @@ import           Text.EditDistance            --(defaultEditCosts, levenshteinDi
 import           Text.PhoneticCode.Phonix     (phonix)
 import           Data.Function                (on)
 import           Data.List                    (sort, sortBy)
+import           Luna.ASTNew.Name.Path (QualPath(QualPath))
 
 import qualified Data.IntMap  as IntMap
 
@@ -114,6 +115,9 @@ import qualified Data.TypeLevel.Set as TLSet
 import           Data.Tuple.Select
 
 import qualified Data.Text.Lazy.Encoding as Text
+
+import           Luna.ASTNew.Foreign (Foreign(Foreign))
+import qualified Luna.ASTNew.Foreign as Foreign
 
 infixl 4 <$!>
 
@@ -279,11 +283,11 @@ decl = choice [ imp, func, cls, typeAlias, typeWrapper ]
 
 ----- Modules -----
 
-pModule name path = Module <$> pure path 
-                           <*> pure name 
-                           <*> Indent.withPos (moduleBlock $ labeled moduleBody)
-                    where moduleBody = decl <?> "module body"
-
+pModule name path = do
+    let qpath = (QualPath path name)
+    ParserState.setModPath qpath
+    Module qpath <$> Indent.withPos (moduleBlock $ labeled moduleBody)
+    where moduleBody = decl <?> "module body"
 
 ----- Imports -----
 
@@ -329,30 +333,39 @@ multiSig  = NamePat <$> maybe arg <*> multiSigSegment <*> many multiSigSegment
 singleSigSegment = Segment <$> Tok.varIdent <*> many arg
 multiSigSegment  = Segment <$> sigVarOp <*> many arg
 
-arg = NamePat.Arg <$> argPattern
-                 <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
+arg = Arg <$> argPattern
+          <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
 
-func = Decl.Func <$  Tok.kwDef
-                 <*> extPath
-                 <*> funcSig
-                 <*> outType
-                 <*> body
+foreign p = Foreign <$ Tok.kwForeign <*> foreignTarget <*> p 
+
+foreignTarget =   Foreign.Haskell <$ Tok.kwFHaskell
+              <|> Foreign.CPP     <$ Tok.kwFCPP
+
+func =   Decl.Foreign <$> foreign (Decl.FFunc <$> funcDecl (char ':' *> (fromString . concat <$> stage1Body2)))
+     <|> Decl.Func    <$> funcDecl (char ':' *> stage1Body2)
+
+funcDecl body = Decl.FuncDecl <$  Tok.kwDef
+                         <*> extPath
+                         <*> funcSig
+                         <*> outType
+                         <*> body
     where extPath = ((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure []
           outType = (Just <$> try (Tok.arrow *> typeT)) <|> pure Nothing
-          body    = char ':' *> stage1Body2
 
 
 ----- classes -----
 
-cls = do
+cls = Decl.Data <$> dataDecl
+
+dataDecl = do
     name <- Tok.kwClass *> (Tok.typeIdent <?> "class name")
-    Decl.Data <$> pure name
-              <*> params
-              <*  blockStart
-              <*> constructors name
-              <*> bodyBlock
-              <*  blockEnd
-              <?> "class definition"
+    Decl.DataDecl <$> pure name
+                  <*> params
+                  <*  blockStart
+                  <*> constructors name
+                  <*> bodyBlock
+                  <*  blockEnd
+                  <?> "class definition"
       where params         = many (tvname <$> Tok.typeVarIdent <?> "class parameter")
             defCons      n = Decl.Cons n <$> (concat <$> many fields)
             constructors n =   blockBody' (labeled cons) 
@@ -387,7 +400,7 @@ stage1DefArg = Tok.tokenBlock (many alphaNum)
 stage1BodyInner = (many1 $ noneOf "\n\r")
 stage1Body = (:) <$> stage1BodyInner <*> (try (spaces *> Indent.checkIndented *> stage1Body) <|> pure [[]])
 
-stage1Body2 = ((:) <$> (try ((++) <$> Tok.spaces <* Indent.checkIndented <*> stage1BodyInner)) <*> stage1Body2) <|> pure [[]]
+stage1Body2 = ((:) <$> (try ((<>) <$> Tok.spaces <* Indent.checkIndented <*> stage1BodyInner)) <*> stage1Body2) <|> pure [[]]
 
 --stage1Block = (++) <$> Tok.spaces <* Ident.checkIndented <*> Indent.withPos (indBlockBody p)
 --stage1Body2 = (:) <$> (try (Tok.spaces <* Indent.checkIndented <* stage1BodyInner) <|> pure []) <*> stage1Body2
@@ -458,7 +471,8 @@ termBase t = choice [ try (labeled (Pat.Grouped <$> Tok.parens patTup))
 varP       = withLabeled $ \id -> do
                 name <- Tok.varIdent
                 let np = NamePath.single name
-                Namespace.regVarName id np
+                path <- ParserState.getModPath
+                Namespace.regVarName (OriginInfo path id) np
                 return $ Pat.Var (fromText name)
 
 
@@ -511,7 +525,7 @@ exprSimple = tlExpr pEntBaseSimpleE
 
 -- === Top Level pattern, variable, record updates chains === --
 
-tlRecUpdt    = assignSeg $ Expr.RecUpdt    <$> varOp <*> many1 recAcc
+tlRecUpd     = assignSeg $ (\vop accs expr -> Expr.RecUpd vop [Expr.FieldUpd accs expr]) <$> varOp <*> many1 recAcc
 tlExprPat    = assignSeg $ Expr.Assignment <$> pattern
 tlExprPatVar = assignSeg $ Expr.Assignment <$> varP
 
@@ -521,7 +535,7 @@ tlExprExtHead =   try tlExprPat
               <|> tlExprBasicHead
 
 tlExprBasicHead =  try tlExprPatVar
-               <|> try tlRecUpdt
+               <|> try tlRecUpd
 
 tlExprParser head base =   (labeled $ head <*> tlExprBasic base)
                        <|> opTupleTE base
@@ -705,9 +719,9 @@ mkFuncParsers (a:as) x =   try (foldl (\a b -> try a <|> b) (mkFuncParser x a) (
 appArg p = try (Expr.AppArg <$> just Tok.varIdent <* Tok.assignment <*> p) <|> (Expr.AppArg Nothing <$> p)
 
 mkFuncParser baseVar (id, mpatt) = case mpatt of
-    Nothing                                      -> baseVar
-    Just patt@(NamePat.ArgPatDesc pfx base segs) -> ParserState.withReserved segNames 
-                                                  $ labeled $ Expr.App <$> pattParser
+    Nothing                                       -> baseVar
+    Just patt@(NamePat.NamePatDesc pfx base segs) -> ParserState.withReserved segNames 
+                                                   $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
               segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
               argExpr         = appArg expr
@@ -736,7 +750,8 @@ varE   = do
         Just possibleDescs -> mkFuncParsers possibleDescs (labeled . pure $ Expr.Var $ Expr.Variable (vname $ NamePath.single name) ())
         Nothing            -> withLabeled $ \id -> do
                                   let np = NamePath.single name
-                                  Namespace.regVarName id np
+                                  path <- ParserState.getModPath
+                                  Namespace.regVarName (OriginInfo path id) np
                                   return $ Expr.Var $ Expr.Variable (vname np) ()
 
 
@@ -753,7 +768,7 @@ lookupAST name = do
             Just (StructInfo.Scope varnames typenames) -> do
                 let possibleElems = reverse $ sortBy (compare `on` (length . fst))
                                   $ MapForest.subElems name varnames
-                    possibleIDs   = map snd possibleElems
+                    possibleIDs   = fmap (view StructInfo.target . snd) possibleElems
                     possiblePatts = fmap (flip Map.lookup argPatts) possibleIDs
                     possibleDescs = zip possibleIDs possiblePatts
 
@@ -805,7 +820,7 @@ identE = choice [ varE
 
 
 
-listE = Expr.List <$> labeled (Tok.brackets listTypes)
+listE = Expr.List <$> Tok.brackets listTypes
 
 listTypes = choice [ try $ Expr.RangeList <$> rangeList opE
                    ,       Expr.SeqList   <$> sepBy opE Tok.separator

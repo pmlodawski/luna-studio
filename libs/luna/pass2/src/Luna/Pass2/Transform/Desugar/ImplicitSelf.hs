@@ -20,7 +20,7 @@ import qualified Luna.ASTNew.Traversals       as AST
 import qualified Luna.ASTNew.Enum             as Enum
 import           Luna.ASTNew.Enum             (Enumerated, IDTag(IDTag))
 import qualified Luna.ASTNew.Decl             as Decl
-import           Luna.ASTNew.Decl             (LDecl, Field(Field))
+import           Luna.ASTNew.Decl             (Decl, LDecl, Field(Field))
 import qualified Luna.ASTNew.Module           as Module
 import           Luna.ASTNew.Module           (Module(Module), LModule)
 import           Luna.ASTNew.Unit             (Unit(Unit))
@@ -46,7 +46,8 @@ import           Luna.Data.ASTInfo            (ASTInfo, genID)
 import qualified Luna.Data.Namespace.State    as State 
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
-import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment), Arg(Arg))
+import           Luna.ASTNew.Arg              (Arg(Arg))
+import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment))
 
 ----------------------------------------------------------------------
 -- Base types
@@ -54,10 +55,10 @@ import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment
 
 data ImplSelf = ImplSelf
 
-type ISPass                 m   = PassMonad ASTInfo m
-type ISCtx              lab m a = (Enumerated lab, ISTraversal m a)
-type ISTraversal            m a = (PassCtx m, AST.Traversal        ImplSelf (ISPass m) a a)
-type ISDefaultTraversal     m a = (PassCtx m, AST.DefaultTraversal ImplSelf (ISPass m) a a)
+type ISPass                 m     = PassMonad ASTInfo m
+type ISCtx                  m lab = (Monad m, Enumerated lab)
+type ISTraversal            m a   = (PassCtx m, AST.Traversal        ImplSelf (ISPass m) a a)
+type ISDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal ImplSelf (ISPass m) a a)
 
 
 ------------------------------------------------------------------------
@@ -82,23 +83,18 @@ passRunner astInfo ast = do
     put astInfo
     (,) <$> defaultTraverseM ast <*> get
 
-isDecl :: (ISCtx lab m a) => (LDecl lab a) -> ISPass m (LDecl lab a)
-isDecl e@(Label lab expr) = case expr of
-    Decl.Func path sig output body -> do
-        argId <- genID
-        let NamePat pfx (Segment name args) segs = sig
-            selfArg = Arg (Label (Enum.tag argId) $ Pat.Var "self") Nothing
-            nsig    = NamePat pfx (Segment name $ selfArg : args) segs
-        return $ Label lab $ Decl.Func path nsig output body
-    _ -> continue
-    where id       = Enum.id lab
-          continue = defaultTraverseM e 
-
+isFuncDecl :: ISCtx m lab => Decl.FuncDecl lab e body -> ISPass m (Decl.FuncDecl lab e body)
+isFuncDecl (Decl.FuncDecl path sig output body) = do
+    argId <- genID
+    let NamePat pfx (Segment name args) segs = sig
+        selfArg = Arg (Label (Enum.tag argId) $ Pat.Var "self") Nothing
+        nsig    = NamePat pfx (Segment name $ selfArg : args) segs
+    return $ Decl.FuncDecl path nsig output body
 
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
 
-instance ISCtx lab m a => AST.Traversal ImplSelf (ISPass m) (LDecl lab a) (LDecl lab a) where
-    traverseM _ = isDecl
+instance ISCtx m lab => AST.Traversal ImplSelf (ISPass m) (Decl.FuncDecl lab e body) (Decl.FuncDecl lab e body) where
+    traverseM _ = isFuncDecl
 

@@ -44,7 +44,6 @@ import           Luna.Data.ASTInfo            (ASTInfo, genID)
 import qualified Luna.Data.Namespace.State    as State 
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
-import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment), Arg(Arg))
 import qualified Luna.ASTNew.Name.Pattern     as NamePat
 import           Luna.ASTNew.Name.Hash        (hash)
 
@@ -80,8 +79,9 @@ pass = Pass "Hash" "Hashesh names removing all special characters" () defaultTra
 
 hashDecl :: (HCtx lab m a) => LDecl lab a -> HPass m (LDecl lab a)
 hashDecl ast@(Label lab decl) = case decl of
-    Decl.Func path sig output body -> return . Label lab
-                                   $ Decl.Func path (NamePat.mapSegments hashSegment sig) output body
+    Decl.Func (Decl.FuncDecl path sig output body)
+                                   -> return . Label lab . Decl.Func
+                                    $ Decl.FuncDecl path (NamePat.mapSegments hashSegment sig) output body
     _                              -> continue
     where id       = Enum.id lab
           continue = defaultTraverseM ast

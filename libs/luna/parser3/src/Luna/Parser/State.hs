@@ -9,6 +9,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Luna.Parser.State where
 
@@ -32,6 +33,7 @@ import           Flowbox.Control.Monad.State (mapStateVal, get, put, StateT)
 import qualified Flowbox.Control.Monad.State as State
 import qualified Luna.Data.StructInfo        as StructInfo
 import qualified Luna.AST.AST                as AST
+import           Luna.ASTNew.Name.Path       (QualPath)
 
 data ParserState conf 
    = ParserState { _conf          :: Config conf
@@ -41,6 +43,7 @@ data ParserState conf
                  , _namespace     :: Namespace
                  , _adhocReserved :: [Text]
                  , _comments      :: IDMap [Comment]
+                 , _modPath       :: QualPath
                  } deriving (Show)
 
 makeLenses ''ParserState
@@ -102,6 +105,11 @@ withScope id p = do
     popScope
     return ret
 
+getModPath = view modPath <$> get
+
+setModPath mp = do
+    s <- get
+    put $ set modPath mp s
 
 getPid = do
     mpid <- Namespace.head . view namespace <$> get
@@ -122,8 +130,9 @@ registerID id = do
 -- Instances
 ------------------------------------------------------------------------
 
+-- FIXME[wd]: "Unnamed" string is an ugly hack for now
 instance conf~() => Default (ParserState conf) where
-        def = ParserState def def def def def def def
+        def = ParserState def def def def def def def "Unnamed"
 
 
 instance (Functor m, Monad m) => NamespaceMonad (StateT (ParserState conf) m) where

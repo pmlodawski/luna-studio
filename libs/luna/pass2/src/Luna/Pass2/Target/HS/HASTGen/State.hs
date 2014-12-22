@@ -19,6 +19,7 @@ import qualified Luna.AST.Type         as LType
 import qualified Luna.Data.HAST.Expr   as HExpr
 import qualified Luna.Data.HAST.Module as Module
 import           Luna.Data.HAST.Comment (Comment)
+import           Luna.ASTNew.Name.Path  (QualPath)
 
 import Flowbox.System.Log.Logger
 
@@ -33,7 +34,7 @@ type LExpr = LExpr.Expr
 --type LType = LType.Type
 
 data GenState = GenState { _mod :: HExpr
-                         , _ctx :: [Text]
+                         , _ctx :: [QualPath]
                          }
 
 makeLenses ''GenState
@@ -47,10 +48,10 @@ type GenStateM m = (Applicative m, MonadState GenState m, Functor m)
 popList []     = Nothing
 poplist (x:xs) = Just (x,xs)
 
-pushCtx :: GenStateM m => Text -> m()
+pushCtx :: GenStateM m => QualPath -> m()
 pushCtx c = modify (ctx %~ (c:))
 
-popCtx :: GenStateM m => m (Maybe Text)
+popCtx :: GenStateM m => m (Maybe QualPath)
 popCtx = do
     s <- get
     let stack = view ctx s
@@ -58,17 +59,17 @@ popCtx = do
         []     -> return Nothing
         (x:xs) -> put (s & ctx .~ xs) *> return (Just x)
 
-getCtxStack :: GenStateM m => m [Text]
+getCtxStack :: GenStateM m => m [QualPath]
 getCtxStack = view ctx <$> get
 
-getCtx :: GenStateM m => m (Maybe Text)
+getCtx :: GenStateM m => m (Maybe QualPath)
 getCtx = do
     stack <- getCtxStack
     case stack of
         []     -> return Nothing
         (x:xs) -> return $ Just x
 
-withCtx :: GenStateM m => Text -> m a -> m a
+withCtx :: GenStateM m => QualPath -> m a -> m a
 withCtx name m = pushCtx name *> m <* popCtx 
 
 

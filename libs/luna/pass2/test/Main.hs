@@ -6,11 +6,12 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 import System.Environment (getArgs)
 import Flowbox.Prelude
 import qualified Luna.Parser.Parser as Parser
-import           Text.PrettyPrint.ANSI.Leijen (displayIO, linebreak, renderPretty, (<>))
+import           Text.PrettyPrint.ANSI.Leijen (displayIO, linebreak, renderPretty)
 import Data.Default
 import           System.IO                    (stdout)
 import           Text.Show.Pretty
@@ -34,9 +35,10 @@ import qualified Luna.Pass as Pass
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Class (lift)
 import qualified Data.ByteString as ByteStr
-import Luna.Data.Source (Source(Source), Medium(File), Code(Code))
+import Luna.Data.Source (Source(Source), File(File), Code(Code))
 import qualified Luna.Data.Source as Source
 import Data.Text.Lazy (unpack)
+import           Flowbox.Text.Show.Hs                                          (hsShow)
 
 
 
@@ -50,28 +52,52 @@ import Data.Text.Lazy (unpack)
 --parseExpression expr = Parser.parseString expr $ Parser.exprParser    (patchedParserState $ ASTInfo.mk 0)
 
 
+header txt = "\n-------- " <> txt <> " --------"
+printHeader = putStrLn . header
+
+ppPrint = putStrLn . ppShow
+
 main = do
     args <- getArgs
     let path = args !! 0
         src  = Source "Main" (File $ fromString path)
 
     result <- runEitherT $ do
+        printHeader "Stage1"
         (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
-        --return (ast2, astinfo2)
+
+        printHeader "SA"
         sa1              <- Pass.run1_ SA.pass ast1
+
+        printHeader "Stage2"
         (ast2, astinfo2) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo1 ast1
+        
+        printHeader "ImplSelf"
         (ast3, astinfo3) <- Pass.run2_ ImplSelf.pass astinfo2 ast2
+        ppPrint ast3
+
+        printHeader "SA"
         sa2              <- Pass.run1_ SA.pass ast3
+
+        printHeader "Hash"
         ast4             <- Pass.run1_ Hash.pass ast3
+
+        printHeader "SSA"
         ast5             <- Pass.run1_ SSA.pass ast4
+        ppPrint ast5
+
+        printHeader "HAST"
         hast             <- Pass.run1_ HASTGen.pass ast5
+        ppPrint hast
+
+        printHeader "HSC"
         hsc              <- Pass.run1_ HSC.pass hast
-        --return ast4
-        --return (ast4, sa2)
-        return ((ast5, sa2, hast), hsc)
+        putStrLn (hsShow $ unpack hsc)
+
 
     case result of
         Left  e -> putStrLn e
-        Right (r,hsc) -> putStrLn (ppShow r)
-                      *> putStrLn (unpack hsc)
+        Right _ -> return ()
     return ()
+
+
