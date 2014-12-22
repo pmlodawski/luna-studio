@@ -8,9 +8,12 @@
 import sys
 
 from colors import print_error
+from errors import handle_out
 from subprocess import call
 from utils.colors      import print_error, formatQuestion
 
+def autocall(cmd_argv):
+    handle_out(call(cmd_argv))
 
 def ask(question, silent=False):
     if silent:
