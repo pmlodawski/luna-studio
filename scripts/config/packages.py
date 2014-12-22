@@ -99,7 +99,7 @@ class CoreLunaPlatform(Project):
         return [project for project in corePkgDb.values() if project.path]
 
 corePkgDb = \
-       { 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/distribution', 'libs/luna/initializer', 'libs/luna/interpreter-old', 'libs/luna/pass', 'libs/luna/protobuf'])
+       { 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/distribution', 'libs/luna/initializer', 'libs/luna/pass2', 'libs/luna/protobuf'])
        , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
        , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , [])
        , 'libs/luna/typechecker'               : HProject   ('luna-typechecker'             , os.path.join ('libs' , 'luna', 'typechecker')                 , 'libs'    , ['libs/logger', 'libs/luna/core', 'libs/luna/parser3', 'libs/luna/pass2'])
@@ -110,7 +110,6 @@ pkgDb = dict(corePkgDb, **{
          '@all'                                : AllProject ('@all', deps = [])
        , '@core'                               : CoreLunaPlatform ('@core', deps = [])
        , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/utils', 'libs/rpc'])
-       , 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/utils', 'libs/config', 'libs/luna/core', 'libs/luna/distribution', 'libs/luna/initializer', 'libs/luna/pass', 'libs/luna/protobuf'])
        , 'libs/batch/plugins/project-manager'  : HProject   ('batch-lib-project-manager'    , os.path.join ('libs' , 'batch', 'plugins', 'project-manager') , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna/core', 'libs/batch/batch'])
        , 'libs/batch/plugins/file-manager'     : HProject   ('batch-lib-file-manager'       , os.path.join ('libs' , 'batch', 'plugins', 'file-manager')    , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'libs/bus'                            : HProject   ('flowbox-bus'                  , os.path.join ('libs' , 'bus')                                 , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc'])
