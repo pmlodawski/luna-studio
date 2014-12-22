@@ -124,6 +124,34 @@ message ViewData {
     optional MatrixData alpha = 4;
 }
 
+message ChannelDescription {
+	enum ChannelID {
+		Other = 5;
+		RGBA = 6;
+		Red = 1;
+		Green = 2;
+		Blue = 3;
+		Alpha = 4;
+	}
+	
+	optional MatrixData.Type dataType = 1;
+	required ChannelID id = 2;
+	optional string name = 3;
+}
+
+message Channel {
+	required ChannelDescription description = 1;
+	required MatrixData data = 2;
+}
+
+message ChannelData {
+	extend Value {
+		optional ChannelData data = 114;
+	}
+	
+	repeated Channel channels = 1;
+}
+
 // ===   GUI Curve Model   ===
 
 message PointData {
