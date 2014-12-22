@@ -11,14 +11,14 @@ module Luna.Interpreter.Session.Env.State where
 import qualified Control.Concurrent.MVar    as MVar
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import           Data.IntSet                (IntSet)
+import qualified Data.IntSet                as IntSet
 import           Data.Map                   (Map)
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 import           Data.Monoid                ((<>))
 import           Data.MultiSet              (MultiSet)
 import qualified Data.MultiSet              as MultiSet
-import           Data.Set                   (Set)
-import qualified Data.Set                   as Set
 
 import           Control.Monad.Catch                         (bracket_)
 import qualified Flowbox.Batch.Project.Project               as Project
@@ -136,11 +136,11 @@ fragile action = do
 
 ---- Env.dependentNodes ---------------------------------------------------
 
-getDependentNodes :: Session mm (Map CallPoint (Set Node.ID))
+getDependentNodes :: Session mm (Map CallPoint IntSet)
 getDependentNodes = gets $ view Env.dependentNodes
 
 
-getDependentNodesOf :: CallPoint -> Session mm (Set Node.ID)
+getDependentNodesOf :: CallPoint -> Session mm IntSet
 getDependentNodesOf callPoint =
     Maybe.fromMaybe def . Map.lookup callPoint <$> getDependentNodes
 
@@ -148,11 +148,23 @@ getDependentNodesOf callPoint =
 insertDependentNode :: CallPoint -> Node.ID -> Session mm ()
 insertDependentNode callPoint nodeID =
     modify (Env.dependentNodes %~ Map.alter alter callPoint) where
-        alter = Just . Set.insert nodeID . Maybe.fromMaybe def
+        alter = Just . IntSet.insert nodeID . Maybe.fromMaybe def
+
+
+insertDependentNodes :: CallPoint -> IntSet -> Session mm ()
+insertDependentNodes callPoint nodeIDs =
+    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+        alter = Just . IntSet.union nodeIDs . Maybe.fromMaybe def
 
 
 deleteDependentNodes :: CallPoint -> Session mm ()
 deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
+
+
+deleteDependentNode :: CallPoint -> Node.ID -> Session mm ()
+deleteDependentNode callPoint nodeID =
+    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+        alter = Just . IntSet.delete nodeID . Maybe.fromMaybe def
 
 
 cleanDependentNodes :: Session mm ()

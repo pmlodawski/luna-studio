@@ -35,6 +35,7 @@ Executable interpreter
                     luna-core,
                     luna-initializer,
                     luna-interpreter,
+                    luna-pass,
                     luna-protobuf,
                     flowbox-utils,
                     flowbox-serialization,

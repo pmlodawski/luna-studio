@@ -525,7 +525,6 @@ message Project {
                                 }
                                 message Update {
                                     required Request request = 1;
-                                    required int32 defaultID = 3;
                                     required int32 updateNo  = 2;
                                 }
                             }
