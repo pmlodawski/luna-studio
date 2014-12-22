@@ -27,6 +27,9 @@ instance (Show l, Show a) => Show (Label l a) where
     show (Label l a) = "L " ++ show l ++ " " ++ show a
 
 
-instance Default l => Wrapper (Label l) where
+instance Default l => Wrap (Label l) where
 	wrap   = Label def
+
+instance Unwrap (Label l) where
 	unwrap = view element
+

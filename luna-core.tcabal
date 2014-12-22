@@ -32,7 +32,8 @@ Library
                   DeriveFoldable,
                   FlexibleInstances,
                   LambdaCase,
-                  ConstraintKinds
+                  ConstraintKinds,
+                  GeneralizedNewtypeDeriving
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
