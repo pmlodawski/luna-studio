@@ -238,7 +238,7 @@ genExpr ast = case ast of
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
-                                            GenState.addComment $ HExpr.Comment $ HComment.H2 $ "Method: " ++ tpName ++ "." ++ name2
+                                            GenState.addComment $ HExpr.Comment $ HComment.H4 $ "Method: " ++ tpName ++ "." ++ name2
 
                                             -----------------------------------------
                                             -- FIXME[wd]: genFuncSig is naive, it should not handle such cases as (a::Int)::Int
