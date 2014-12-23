@@ -21,13 +21,14 @@ import           Data.Map     (Map)
 import           Luna.ASTNew.AST (AST, ID)
 import qualified Luna.ASTNew.AST as AST
 import qualified Data.Maps    as Map
-import           Luna.ASTNew.Name.Path  (NamePath)
+import           Luna.ASTNew.Name.Path  (NamePath, QualPath)
 import qualified Luna.ASTNew.Name.Path  as NamePath
 import qualified Flowbox.Data.MapForest as MapForest
 import           Flowbox.Data.MapForest (MapForest)
 import           Control.Monad          (join)
-import           Luna.ASTNew.Name.Pattern (ArgPatDesc)
+import           Luna.ASTNew.Name.Pattern (NamePatDesc)
 import           Control.Monad.RWS         (RWST)
+import qualified Luna.ASTNew.Module as Module
 
 ----------------------------------------------------------------------
 -- Data types
@@ -41,25 +42,31 @@ data Error  = LookupError {key :: Text}
             deriving (Show, Eq, Generic, Read)
 
 
---data NameDesc = NameDesc ID (Maybe ArgPatDesc)
+--data NameDesc = NameDesc ID (Maybe NamePatDesc)
 
 
-data Scope = Scope { _varnames  :: NameMap ID
-                   , _typenames :: NameMap ID 
+data Scope = Scope { _varnames  :: NameMap OriginInfo
+                   , _typenames :: NameMap OriginInfo 
                    } deriving (Show, Eq, Generic, Read)
 
-makeLenses (''Scope)
+
 
 
 type ScopeID = ID
 
-data StructInfo = StructInfo { _scope   :: IDMap Scope
-                             , _alias   :: IDMap ID
-                             , _orphans :: IDMap NamePath
-                             , _parent  :: IDMap ID
-                             , _argPats :: IDMap ArgPatDesc
+data OriginInfo = OriginInfo { _mod    :: QualPath
+                             , _target :: ID
                              } deriving (Show, Eq, Generic, Read)
 
+data StructInfo = StructInfo { _scope   :: IDMap Scope
+                             , _alias   :: IDMap OriginInfo
+                             , _orphans :: IDMap NamePath
+                             , _parent  :: IDMap ID
+                             , _argPats :: IDMap NamePatDesc
+                             } deriving (Show, Eq, Generic, Read)
+
+makeLenses (''Scope)
+makeLenses (''OriginInfo)
 makeLenses (''StructInfo)
 
 ----------------------------------------------------------------------

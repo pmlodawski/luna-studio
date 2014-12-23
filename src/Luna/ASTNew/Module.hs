@@ -14,11 +14,11 @@ import Flowbox.Prelude
 import Luna.ASTNew.Name  (TName)
 import Luna.ASTNew.Decl  (LDecl)
 import Luna.ASTNew.Label (Label)
+import Luna.ASTNew.Name.Path (QualPath)
 
 
-data Module a e = Module { _path :: [Text]
-                         , _name :: Text
-                         , _body :: [LDecl a e]
+data Module a e = Module { _mpath :: QualPath
+                         , _body  :: [LDecl a e]
                          } deriving (Show, Eq, Generic, Read)
 
 

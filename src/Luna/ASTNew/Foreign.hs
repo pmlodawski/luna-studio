@@ -4,20 +4,18 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE UndecidableInstances #-}
 
-module Luna.ASTNew.Arg where
+module Luna.ASTNew.Foreign where
 
-import           Flowbox.Prelude
+import Flowbox.Prelude
 
-import GHC.Generics     (Generic)
-import Luna.ASTNew.Pat  (LPat)
-import Luna.ASTNew.Label (Label)
+import qualified Prelude
 
 
+data Foreign a = Foreign Target a
+               deriving (Show, Eq, Generic, Read, Functor, Traversable, Foldable)
 
-data Arg  a v = Arg { _pat :: LPat a, _val :: Maybe v } deriving (Show, Eq, Generic, Read)
-type LArg a v = Label a (Arg a v)
 
-
-makeLenses ''Arg
+data Target = Haskell
+            | CPP
+            deriving (Show, Eq, Generic, Read)

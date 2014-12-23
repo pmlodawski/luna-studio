@@ -27,7 +27,7 @@ import           Luna.ASTNew.Arg          (LArg, Arg(Arg))
 import qualified Luna.ASTNew.Type         as Type
 import           Luna.ASTNew.Type         (LType, Type)
 import           Luna.ASTNew.Name         (TName, VName, CName, TVName)
-import           Luna.ASTNew.Name.Path    (NamePath)
+import           Luna.ASTNew.Name.Path    (NamePath, QualPath)
 import           Luna.ASTNew.Native       (Native)
 import           Luna.ASTNew.Label        (Label(Label))
 import qualified Luna.ASTNew.Pat          as Pat
@@ -38,6 +38,9 @@ import           Luna.ASTNew.Expr         (LExpr, Expr)
 import           Luna.ASTNew.Name         (NameBase)
 import           Luna.ASTNew.Name.Pattern (NamePat(NamePat), Segment(Segment), SegmentName)
 import qualified Luna.ASTNew.Name.Pattern as Pattern
+import           Luna.ASTNew.Foreign      (Foreign(Foreign))
+import qualified Luna.ASTNew.Foreign      as Foreign
+
 import Data.Text.Lazy           (Text)
 
 ----------------------------------------------------------------------
@@ -76,6 +79,9 @@ defaultMonoTraverseM = defaultTraverseM
 traverse :: Traversal base Identity a b => base -> a -> b
 traverse base = runIdentity . traverseM base
 
+
+
+
 --monoTraverse :: Traversal base Identity a a => base -> a -> a
 --monoTraverse = traverse
 
@@ -96,14 +102,6 @@ instance ( Traversal base m arg arg'
          ) => DefaultTraversal base m (Segment sbase arg) (Segment sbase' arg') where
     defaultTraverseM b (Segment base args) = Segment <$> traverseM b base <*> traverseM b args
 
-instance ( Traversal base m pat pat'
-         , Traversal base m expr expr'
-         ) => DefaultTraversal base m (Pattern.Arg pat expr) (Pattern.Arg pat' expr') where
-    defaultTraverseM b (Pattern.Arg pat expr) = Pattern.Arg <$> traverseM b pat <*> traverseM b expr
-
-
---instance Class Data where
---    func = 
 
 -- ----- basic types -----
 
@@ -124,7 +122,7 @@ instance Traversal base m a b => DefaultTraversal base m (Maybe a) (Maybe b) whe
         Nothing -> pure Nothing
 
 instance Traversal        base m ()     ()     where traverseM _ = pure
-instance Traversal        base m String String where traverseM _ = pure
+instance Traversal        base m Char   Char   where traverseM _ = pure
 instance Traversal        base m Text   Text   where traverseM _ = pure
 --instance DefaultTraversal base m String String where defaultTraverseM _ = pure
 
@@ -146,9 +144,14 @@ instance Traversal base m a b => DefaultTraversal base m (Unit a) (Unit b) where
 
 -- ----- Module -----
 
-instance Traversal base m (LDecl f e) (LDecl f' e') => DefaultTraversal base m (Module f e) (Module f' e') where
-    defaultTraverseM b (Module path name body) = Module <$> traverseM b path <*> traverseM b name <*> traverseM b body
+instance ( Traversal base m (LDecl f e) (LDecl f' e')
+         , Traversal base m QualPath QualPath
+         ) => DefaultTraversal base m (Module f e) (Module f' e') where
+    defaultTraverseM b (Module path body) = Module <$> traverseM b path <*> traverseM b body
 
+
+instance DefaultTraversal base m QualPath QualPath where
+    defaultTraverseM _ = pure
 
 -- ----- Decl -----
 
@@ -157,17 +160,20 @@ instance ( Traversal base m (LDecl a e)          (LDecl a' e')
          , Traversal base m (Arg  a e)           (Arg   a' e')
          , Traversal base m (LType a)            (LType a'   )
          , Traversal base m ImpTgt               ImpTgt
-         , Traversal base m (Native (LDecl a e)) (Native (LDecl a' e'))
          , Traversal base m (Decl.FuncSig a e)   (Decl.FuncSig a' e')
          , Traversal base m e e'
+         , Traversal base m (Decl.DataDecl a e) (Decl.DataDecl a' e')
+         , Traversal base m (Decl.FuncDecl a e [e]) (Decl.FuncDecl a' e' [e'])
+         , Traversal base m (Foreign (Decl.ForeignDecl a e)) (Foreign (Decl.ForeignDecl a' e'))
          ) => DefaultTraversal base m (Decl a e) (Decl a' e') where
     defaultTraverseM b = \case
-        Decl.Data        name params cons defs -> Decl.Data        <$> traverseM b name <*> traverseM b params <*> traverseM b cons    <*> traverseM b defs
-        Decl.Func        path sig output body  -> Decl.Func        <$> traverseM b path <*> traverseM b sig    <*> traverseM b output <*> traverseM b body
+        Decl.Data        ddecl                 -> Decl.Data        <$> traverseM b ddecl
+        Decl.Func        fdecl                 -> Decl.Func        <$> traverseM b fdecl
         Decl.Imp         path rename targets   -> Decl.Imp         <$> traverseM b path <*> traverseM b rename <*> traverseM b targets
         Decl.TpAls       dst src               -> Decl.TpAls       <$> traverseM b dst  <*> traverseM b src
         Decl.TpWrp       dst src               -> Decl.TpWrp       <$> traverseM b dst  <*> traverseM b src
-        Decl.Native      nat                   -> Decl.Native      <$> traverseM b nat
+        Decl.Foreign     fdecl                 -> Decl.Foreign     <$> traverseM b fdecl
+
 
 instance Traversal base m (Decl.LField a e) (Decl.LField a' e') => DefaultTraversal base m (Decl.Cons a e) (Decl.Cons a' e') where
     defaultTraverseM b (Decl.Cons name fields) = Decl.Cons <$> traverseM b name <*> traverseM b fields
@@ -178,9 +184,43 @@ instance ( Traversal base m (LType a) (LType a')
     defaultTraverseM b (Decl.Field tp name val) = Decl.Field <$> traverseM b tp <*> traverseM b name <*> traverseM b val
 
 
+instance ( Traversal base m (Label a (Decl.Cons a e)) (Label a' (Decl.Cons a' e'))
+         , Traversal base m (Label a (Decl a e)) (Label a' (Decl a' e'))
+         ) => DefaultTraversal base m (Decl.DataDecl a e) (Decl.DataDecl a' e') where
+    defaultTraverseM b (Decl.DataDecl name params cons defs) = Decl.DataDecl <$> traverseM b name <*> traverseM b params <*> traverseM b cons <*> traverseM b defs
+
+
+instance ( Traversal base m (Decl.FuncSig a e) (Decl.FuncSig a' e')
+         , Traversal base m (Label a (Type a)) (Label a' (Type a'))
+         , Traversal base m body body'
+         ) => DefaultTraversal base m (Decl.FuncDecl a e body) (Decl.FuncDecl a' e' body') where
+    defaultTraverseM b (Decl.FuncDecl path sig output body) = Decl.FuncDecl <$> traverseM b path <*> traverseM b sig <*> traverseM b output <*> traverseM b body
+
+
 instance DefaultTraversal base m Decl.ImpTgt Decl.ImpTgt where
     defaultTraverseM _ = pure
 
+
+instance ( Traversal base m (Decl.DataDecl a e) (Decl.DataDecl a' e')
+         , Traversal base m (Decl.FuncDecl a e Decl.ForeignCode) (Decl.FuncDecl a' e' Decl.ForeignCode)
+         ) => DefaultTraversal base m (Decl.ForeignDecl a e) (Decl.ForeignDecl a' e') where
+    defaultTraverseM b = \case
+        Decl.FData ddecl -> Decl.FData <$> traverseM b ddecl
+        Decl.FFunc fdecl -> Decl.FFunc <$> traverseM b fdecl
+
+
+-- ----- Foreign -----
+
+
+
+instance ( Traversal base m Foreign.Target Foreign.Target
+         , Traversal base m a a'
+         ) => DefaultTraversal base m (Foreign a) (Foreign a') where
+    defaultTraverseM b (Foreign target a) = Foreign <$> traverseM b target <*> traverseM b a
+
+
+instance DefaultTraversal base m (Foreign.Target) (Foreign.Target) where
+    defaultTraverseM _ = pure
 
 -- ----- Type -----
 
@@ -233,7 +273,7 @@ instance ( Traversal base m v v'
          , Traversal base m (Native (LExpr lab v)) (Native (LExpr lab' v'))
          , Traversal base m (LLit lab) (LLit lab')
          , Traversal base m (Expr.SubDecl lab v) (Expr.SubDecl lab' v')
-         , Traversal base m (Expr.LList lab (LExpr lab v)) (Expr.LList lab' (LExpr lab' v'))
+         , Traversal base m (Expr.List (LExpr lab v)) (Expr.List (LExpr lab' v'))
          , Traversal base m (LPat lab) (LPat lab')
          , Traversal base m (Expr.LMatch lab v) (Expr.LMatch lab' v')
          , Traversal base m (LExpr lab v) (LExpr lab' v')
@@ -241,10 +281,11 @@ instance ( Traversal base m v v'
          , Traversal base m (LArg lab (Expr lab v)) (LArg lab' (Expr lab' v'))
          , Traversal base m (NamePat (LExpr lab v) (Expr.AppArg (LExpr lab v))) (NamePat (LExpr lab' v') (Expr.AppArg (LExpr lab' v')))
          , Traversal base m (Expr.Variable v) (Expr.Variable v')
+         , Traversal base m (Expr.FieldUpd lab v) (Expr.FieldUpd lab' v')
          ) => DefaultTraversal base m (Expr lab v) (Expr lab' v') where
     defaultTraverseM b = \case
         Expr.Lambda      inputs  output   body -> Expr.Lambda      <$> traverseM b inputs <*> traverseM b output   <*> traverseM b body
-        Expr.RecUpdt     src     selector expr -> Expr.RecUpdt     <$> traverseM b src    <*> traverseM b selector <*> traverseM b expr
+        Expr.RecUpd      src     fupds         -> Expr.RecUpd      <$> traverseM b src    <*> traverseM b fupds
         Expr.App         app                   -> Expr.App         <$> traverseM b app
         Expr.Case        expr    match         -> Expr.Case        <$> traverseM b expr   <*> traverseM b match        
         Expr.Typed       cls     expr          -> Expr.Typed       <$> traverseM b cls    <*> traverseM b expr         
@@ -264,6 +305,11 @@ instance ( Traversal base m v v'
 
 instance DefaultTraversal base m (Expr.Variable e) (Expr.Variable e) where
     defaultTraverseM _ = pure
+
+
+instance Traversal base m (LExpr a v) (LExpr a' v')
+         => DefaultTraversal base m (Expr.FieldUpd a v) (Expr.FieldUpd a' v') where
+    defaultTraverseM b (Expr.FieldUpd sel expr) = Expr.FieldUpd <$> traverseM b sel <*> traverseM b expr
 
 
 instance Traversal base m e e'
