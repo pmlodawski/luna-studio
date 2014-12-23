@@ -7,6 +7,8 @@
 {-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
+
 module Main where
 
 import qualified Flowbox.Bus.EndPoint                 as EP
@@ -50,6 +52,11 @@ opts :: ParserInfo Cmd
 opts = Opt.info (helper <*> parser)
                 (Opt.fullDesc <> Opt.header (Version.full False))
 
+
+foreign export ccall runInterpreter :: IO ()
+
+runInterpreter :: IO ()
+runInterpreter = main
 
 main :: IO ()
 main = execParser opts >>= run
