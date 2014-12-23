@@ -53,9 +53,10 @@ opts = Opt.info (helper <*> parser)
                 (Opt.fullDesc <> Opt.header (Version.full False))
 
 
-foreign export ccall main2 :: IO ()
+foreign export ccall runInterpreter :: IO ()
 
-main2 = main
+runInterpreter :: IO ()
+runInterpreter = main
 
 main :: IO ()
 main = execParser opts >>= run
