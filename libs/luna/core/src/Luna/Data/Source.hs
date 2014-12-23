@@ -8,49 +8,48 @@
 
 module Luna.Data.Source where
 
-import           Flowbox.Prelude hiding (readFile)
+import           Flowbox.Prelude hiding (readFile, Text)
 import qualified Data.ByteString as ByteString
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.UTF8          as UTF8
 import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           Data.ByteString.Lazy (toStrict)
 import           Data.Text.Lazy.IO (readFile)
+import qualified Data.Text.Lazy as T
+
+
+----------------------------------------------------------------------
+-- Type classes
+----------------------------------------------------------------------
+
+class SourceReader m a where
+    read :: Monad m => Source a -> m (Source Code)
+
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
-data Source a = Source { _modName :: Text, _src :: a}
-              deriving (Show, Functor)
+data Source a = Source { _modName :: T.Text, _src :: a} deriving (Show, Functor)
 
-data Medium = File       { _path :: Text       }
-            -- | ByteString { _bs   :: ByteString }
-            | Text       { _txt  :: Text       }
-            deriving (Show)
-
-data Code = Code { _code :: Text }
-          deriving Show
+newtype File = File { _path :: T.Text } deriving (Show)
+newtype Text = Text { _txt  :: T.Text } deriving (Show)
+newtype Code = Code { _code :: T.Text } deriving (Show)
 
 makeLenses ''Source
-makeLenses ''Medium
+makeLenses ''File
+makeLenses ''Text
 makeLenses ''Code
 
-
 ----------------------------------------------------------------------
--- Utils
+-- Instances
 ----------------------------------------------------------------------
 
---read :: (MonadIO m, Functor m) => Source Medium -> m (Source Code)
---read (Source name src) = (fmap $ Source name . Code) $ case src of
---    File       path -> liftIO $ ByteString.readFile (toString path)
---    ByteString bs   -> return $ bs
---    Text       txt  -> return . toStrict $ encodeUtf8 txt
+instance (Functor m, MonadIO m) => SourceReader m File where
+    read (Source name src) = (fmap $ Source name . Code) 
+                           $ liftIO $ readFile (toString $ view path src)
 
 
-read :: (MonadIO m, Functor m) => Source Medium -> m (Source Code)
-read (Source name src) = (fmap $ Source name . Code) $ case src of
-    File       path -> liftIO $ readFile (toString path)
-    --ByteString bs   -> return $ bs
-    Text       txt  -> return txt
-
+instance SourceReader m Text where
+    read (Source name src) = return . Source name . Code $ view txt src
 

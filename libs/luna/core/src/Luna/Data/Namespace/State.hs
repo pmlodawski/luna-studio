@@ -29,7 +29,7 @@ import           Luna.ASTNew.Pat           (Pat)
 import qualified Luna.ASTNew.Pat           as Pat
 import           Luna.ASTNew.Type          (Type)
 import qualified Luna.ASTNew.Type          as Type
-import           Luna.Data.StructInfo      (StructInfo, StructInfoMonad)
+import           Luna.Data.StructInfo      (StructInfo, StructInfoMonad, OriginInfo)
 import qualified Luna.Data.StructInfo      as StructInfo
 import           Luna.Data.Namespace       (Namespace, NamespaceMonad)
 import qualified Luna.Data.Namespace       as Namespace
@@ -37,7 +37,7 @@ import           Flowbox.System.Log.Logger as L
 import qualified Flowbox.Data.MapForest    as MapForest
 import           Luna.ASTNew.Name.Path     (NamePath)
 import qualified Luna.ASTNew.Name.Path     as NamePath
-import           Luna.ASTNew.Name.Pattern  (ArgPatDesc)
+import           Luna.ASTNew.Name.Pattern  (NamePatDesc)
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
@@ -128,12 +128,12 @@ regID id = do
     withJust mpid (\pid -> modifyStructInfo $ StructInfo.parent %~ IntMap.insert id pid)
 
 
-regVarName :: NamespaceState m => ID -> NamePath -> m ()
+regVarName :: NamespaceState m => OriginInfo -> NamePath -> m ()
 regVarName = regName StructInfo.varnames
 
 
-regArgPatDesc :: NamespaceState m => ID -> ArgPatDesc -> m ()
-regArgPatDesc id argPat = modifyStructInfo (StructInfo.argPats %~ IntMap.insert id argPat)
+regNamePatDesc :: NamespaceState m => ID -> NamePatDesc -> m ()
+regNamePatDesc id argPat = modifyStructInfo (StructInfo.argPats %~ IntMap.insert id argPat)
 
 regParent :: NamespaceState m => ID -> m ()
 regParent id = do
@@ -169,7 +169,7 @@ getCurrentScope = scopeID >>= \case
     Nothing                     -> return Nothing
 
 
-regTypeName :: NamespaceState m => ID -> NamePath -> m ()
+regTypeName :: NamespaceState m => OriginInfo -> NamePath -> m ()
 regTypeName = regName StructInfo.typenames
 
 

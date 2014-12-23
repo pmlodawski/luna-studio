@@ -1,6 +1,7 @@
-class Vector a:
-    x,y,z :: a
 
-def foo x:
-    1
 
+foreign haskell def print s:
+    polyJoin . liftF1 (Value . fmap Safe . print) $ _s
+
+def main:
+    print 5

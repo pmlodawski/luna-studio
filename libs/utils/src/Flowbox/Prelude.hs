@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Flowbox.Prelude(
     module Flowbox.Prelude,
@@ -19,27 +19,28 @@ module Flowbox.Prelude(
     lift
 ) where
 
-import           Control.Applicative                as X
-import           Control.Lens                       as X
-import           Control.Monad                      (unless, void, when)
-import           Control.Monad.IO.Class             as X (MonadIO, liftIO)
-import           Control.Monad.Trans                (lift)
-import           Control.Monad.Trans.Class          (MonadTrans)
-import           Data.Convertible                   as X (Convertible (safeConvert), convert)
+import           Control.Applicative       as X
+import           Control.Lens              as X
+import           Data.Default              as X
+import           GHC.Generics              as X (Generic)
+import           Data.String.Repr          as X (StrRepr, strRepr)
+import           Control.Monad.IO.Class    as X (MonadIO, liftIO)
+import           Data.String.Class         as X (ToString(toString), IsString(fromString))
+import           Data.Monoid               as X (Monoid, mempty, mappend, mconcat, (<>))
+import           GHC.Exts                  as X (IsList, Item, fromList, fromListN, toList)
+import           Data.Wrapper              as X (Wrap(wrap), Unwrap(unwrap), WrapT(wrapT), UnwrapT(unwrapT), Wrapper, WrapperT, rewrap)
+import           Data.Convertible          as X (Convertible(safeConvert), convert)
+import           Data.Text.Class           as X (ToText(toText), FromText(fromText), IsText)
+import           Data.Text.Lazy            as X (Text)
+import           Data.Foldable             as X (Foldable)
 import           Data.Convertible.Instances.Missing as X
-import           Data.Default                       as X
-import           Data.Foldable                      (forM_)
-import           Data.List                          (intersperse)
-import           Data.Monoid                        as X (Monoid, mappend, mconcat, mempty, (<>))
-import           Data.String.Class                  as X (IsString (fromString), ToString (toString))
-import           Data.String.Repr                   as X (StrRepr, strRepr)
-import           Data.Text.Class                    as X (FromText (fromText), IsText, ToText (toText))
-import           Data.Text.Lazy                     as X (Text)
-import qualified Data.Traversable                   as Traversable
-import           Data.Wrapper                       as X (Wrapper (wrap, unwrap), WrapperT (wrapT, unwrapT), rewrap)
-import           GHC.Exts                           as X (IsList, Item, fromList, fromListN, toList)
-import           GHC.Generics                       as X (Generic)
-import           Text.Show.Pretty                   (ppShow)
+import           Control.Monad             (unless, void, when)
+import           Control.Monad.Trans       (lift)
+import           Control.Monad.Trans.Class (MonadTrans)
+import           Data.Foldable             (forM_)
+import qualified Data.Traversable          as Traversable
+import           Text.Show.Pretty          (ppShow)
+import           Data.List                 (intersperse)
 
 import           Prelude hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude

@@ -12,7 +12,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 
-module Luna.Pass2.Transform.Desugar.ImplicitSelf where
+module Luna.Pass2.Transform.Desugar.ImplicitScopes where
 
 import           Flowbox.Prelude              hiding (Traversal)
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
@@ -31,6 +31,7 @@ import           Luna.ASTNew.Type             (Type)
 import qualified Luna.ASTNew.Pat              as Pat
 import           Luna.ASTNew.Pat              (LPat, Pat)
 import           Luna.ASTNew.Expr             (LExpr, Expr)
+import qualified Luna.ASTNew.Expr             as Expr
 import qualified Luna.ASTNew.Lit              as Lit
 import qualified Luna.ASTNew.Native           as Native
 import qualified Luna.ASTNew.Name             as Name
@@ -48,17 +49,27 @@ import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
 import           Luna.ASTNew.Arg              (Arg(Arg))
 import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment))
+import           Luna.Data.StructInfo         (StructInfo)
+import qualified Luna.Data.StructInfo         as StructInfo
+import Control.Monad (join)
 
 ----------------------------------------------------------------------
 -- Base types
 ----------------------------------------------------------------------
 
-data ImplSelf = ImplSelf
+data PassState = PassState { _astInfo    :: ASTInfo 
+                           , _structInfo :: StructInfo 
+                           } deriving (Show)
 
-type ISPass                 m     = PassMonad ASTInfo m
-type ISCtx                  m lab = (Monad m, Enumerated lab)
-type ISTraversal            m a   = (PassCtx m, AST.Traversal        ImplSelf (ISPass m) a a)
-type ISDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal ImplSelf (ISPass m) a a)
+
+makeLenses ''PassState
+
+data ImplScopes = ImplScopes
+
+type ISPass                 m     = PassMonad PassState m
+type ISCtx              lab m a   = (Monad m, Enumerated lab, ISTraversal m a, Num lab)
+type ISTraversal            m a   = (PassCtx m, AST.Traversal        ImplScopes (ISPass m) a a)
+type ISDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal ImplScopes (ISPass m) a a)
 
 
 ------------------------------------------------------------------------
@@ -66,35 +77,43 @@ type ISDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal ImplSelf (I
 ------------------------------------------------------------------------
 
 traverseM :: (ISTraversal m a) => a -> ISPass m a
-traverseM = AST.traverseM ImplSelf
+traverseM = AST.traverseM ImplScopes
 
 defaultTraverseM :: (ISDefaultTraversal m a) => a -> ISPass m a
-defaultTraverseM = AST.defaultTraverseM ImplSelf
+defaultTraverseM = AST.defaultTraverseM ImplScopes
 
 
 ------------------------------------------------------------------------
 ---- Pass functions
 ------------------------------------------------------------------------
 
-pass :: ISDefaultTraversal m a => Pass ASTInfo (ASTInfo -> a -> ISPass m (a, ASTInfo))
+pass :: ISDefaultTraversal m a => Pass PassState (ASTInfo -> StructInfo -> a -> ISPass m (a, ASTInfo))
 pass = Pass "Implicit self" "Desugars AST by adding implicit self function parameters" undefined passRunner
 
-passRunner astInfo ast = do
-    put astInfo
-    (,) <$> defaultTraverseM ast <*> get
+passRunner ai si ast = do
+    put $ PassState ai si
+    (,) <$> defaultTraverseM ast <*> (view astInfo <$> get)
 
-isFuncDecl :: ISCtx m lab => Decl.FuncDecl lab e body -> ISPass m (Decl.FuncDecl lab e body)
-isFuncDecl (Decl.FuncDecl path sig output body) = do
-    argId <- genID
-    let NamePat pfx (Segment name args) segs = sig
-        selfArg = Arg (Label (Enum.tag argId) $ Pat.Var "self") Nothing
-        nsig    = NamePat pfx (Segment name $ selfArg : args) segs
-    return $ Decl.FuncDecl path nsig output body
+exprScopes :: ISCtx lab m a => LExpr lab a -> ISPass m (LExpr lab a)
+exprScopes ast@(Label lab e) = case e of
+	Expr.Var (Expr.Variable name v) -> do
+		si <- view structInfo <$> get
+		let parentMap = view StructInfo.parent si
+		    aliasMap  = view StructInfo.alias si
+		    pid       = view (at id) parentMap
+		    tgt       = fmap (view StructInfo.target) $ view (at id) aliasMap
+		    tgtPid    = join $ fmap (\tid -> view (at tid) parentMap) tgt
+
+		if pid == tgtPid then return ast
+                         else return $ Label (-888) $ Expr.Accessor (convert name) (Label lab $ Expr.Var $ Expr.Variable "self" v)
+	_                               -> continue
+	where continue = defaultTraverseM ast
+	      id       = Enum.id lab
 
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
 
-instance ISCtx m lab => AST.Traversal ImplSelf (ISPass m) (Decl.FuncDecl lab e body) (Decl.FuncDecl lab e body) where
-    traverseM _ = isFuncDecl
+instance ISCtx lab m a => AST.Traversal ImplScopes (ISPass m) (LExpr lab a) (LExpr lab a) where
+    traverseM _ = exprScopes
 

@@ -27,6 +27,7 @@ import           Luna.ASTNew.Name.Path (NamePath(NamePath))
 import           Data.Maybe (isNothing)
 import           Data.Foldable (Foldable)
 import           Luna.ASTNew.Name.Hash (Hashable, hash)
+import           Luna.ASTNew.Arg (Arg(Arg))
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -47,11 +48,10 @@ data NamePat base arg = NamePat { _prefix   :: Maybe arg
                                 } deriving (Show, Eq, Generic, Read, Ord, Functor, Traversable, Foldable)
 
 data Segment base arg = Segment     base [arg]                     deriving (Show, Eq, Generic, Read, Ord, Functor, Traversable, Foldable)
-data Arg     pat expr = Arg         pat (Maybe expr)               deriving (Show, Eq, Generic, Read, Ord)
+type ArgPat  a v      = NamePat     SegmentName (Arg a v)
+data NamePatDesc      = NamePatDesc  Bool SegmentDesc [SegmentDesc] deriving (Show, Eq, Generic, Read, Ord)
 data SegmentDesc      = SegmentDesc SegmentName [Bool]             deriving (Show, Eq, Generic, Read, Ord)
-data ArgPatDesc       = ArgPatDesc  Bool SegmentDesc [SegmentDesc] deriving (Show, Eq, Generic, Read, Ord)
 
-type ArgPat  pat expr = NamePat     SegmentName (Arg pat expr)
 type SegmentName      = Text
 
 ----------------------------------------------------------------------
@@ -71,10 +71,10 @@ withLastSegment f (NamePat pfx base segs) = case segs of
     [] -> NamePat pfx (f base) segs
     _  -> NamePat pfx base (init segs ++ [f $ last segs])
 
-toDesc :: ArgPat pat expr -> ArgPatDesc
-toDesc (NamePat pfx base segments) = ArgPatDesc (pfxToDesc pfx) (smntToDesc base) (fmap smntToDesc segments)
+toDesc :: ArgPat a v -> NamePatDesc
+toDesc (NamePat pfx base segments) = NamePatDesc (pfxToDesc pfx) (smntToDesc base) (fmap smntToDesc segments)
     where smntToDesc (Segment base args) = SegmentDesc base $ fmap argToDesc args
-          argToDesc  (Arg _ mexpr)       = isNothing mexpr
+          argToDesc  (Arg _ e)           = isNothing e
           pfxToDesc  (Just arg)          = argToDesc arg
           pfxToDesc  Nothing             = True
 
@@ -82,6 +82,19 @@ toDesc (NamePat pfx base segments) = ArgPatDesc (pfxToDesc pfx) (smntToDesc base
 mapSegmentBase f (Segment base arg) = Segment (f base) arg
 
 mapSegments f (NamePat pfx base segs) = NamePat pfx (f base) (fmap f segs)
+
+
+segArgs (Segment _ args) = args
+
+segBase (Segment base _) = base
+
+args :: NamePat base arg -> [arg]
+args (NamePat pfx base segs) = allArgs
+    where postArgs = segArgs base ++ concat (fmap segArgs segs)
+          allArgs  = case pfx of
+              Just a  -> a : postArgs
+              Nothing -> postArgs
+
 
 
 ----------------------------------------------------------------------
@@ -95,11 +108,11 @@ instance NamePatternClass (NamePat SegmentName arg) (Segment SegmentName arg) wh
     toNamePath (NamePat _ base segs) = NamePath (sgmtName base) (fmap sgmtName segs)
         where sgmtName (Segment base _) = base
 
-instance NamePatternClass ArgPatDesc SegmentDesc where
-    segments (ArgPatDesc _ base segs) = base : segs 
+instance NamePatternClass NamePatDesc SegmentDesc where
+    segments (NamePatDesc _ base segs) = base : segs 
     segmentNames = fmap sgmtName . segments 
         where sgmtName (SegmentDesc base _) = base
-    toNamePath (ArgPatDesc _ base segs) = NamePath (sgmtName base) (fmap sgmtName segs)
+    toNamePath (NamePatDesc _ base segs) = NamePath (sgmtName base) (fmap sgmtName segs)
         where sgmtName (SegmentDesc base _) = base
 
 instance Hashable base Text => Hashable (NamePat base arg) Text where

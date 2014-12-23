@@ -44,24 +44,27 @@ type SubDecl a v = Label a (Decl a (LExpr a v))
 type ArgName = Text 
 
 data Expr a v
-    = Lambda      { _inputs  :: [ExprArg a v] , _output   :: LType a      , _body   :: [LExpr a v] }
-    | RecUpdt     { _vname   :: VNameP        , _selector :: Selector     , _expr   :: LExpr a v   }
+    = Lambda      { _inputs  :: [ExprArg a v] , _output    :: LType a        , _body   :: [LExpr a v] }
+    | RecUpd      { _vname   :: VNameP        , _fieldUpds :: [FieldUpd a v]                          }
+    | Case        { _expr    :: LExpr a v     , _match     :: [LMatch a v]                            }
+    | Typed       { _cls     :: LType a       , _expr      :: LExpr a v                               }
+    | Assignment  { _dst     :: LPat  a       , _src       :: LExpr a v                               }
+    | Accessor    { _acc     :: NameBaseP     , _src       :: LExpr a v                               }
+    | Ref         { _ref     :: LExpr a v                                                             }
+    | Tuple       { _items   :: [LExpr a v]                                                           }
+    | Grouped     { _expr    :: LExpr a v                                                             }
+    | Cons        { _cname   :: CNameP                                                                }
+    | Decl        { _decl    :: SubDecl a v                                                           }
+    | Lit         { _lit     :: LLit a                                                                }
+    | Native      { _native  :: Native (LExpr a v)                                                    }
+    | Var         { _ident   :: Variable v                                                            }
+    | List        (List (LExpr a v))
     | App         (ExprApp a v)
-    | Case        { _expr    :: LExpr a v     , _match    :: [LMatch a v]                          }
-    | Typed       { _cls     :: LType a       , _expr     :: LExpr a v                             }
-    | Assignment  { _dst     :: LPat  a       , _src      :: LExpr a v                             }
-    | Accessor    { _acc     :: NameBaseP     , _src      :: LExpr a v                              }
-    | Ref         { _ref     :: LExpr a v                                                          }
-    | List        { _elems   :: LList a (LExpr a v)                                                }
-    | Tuple       { _items   :: [LExpr a v]                                                        }
-    | Grouped     { _expr    :: LExpr a v                                                          }
-    | Cons        { _cname   :: CNameP                                                             }
-    | Decl        { _decl    :: SubDecl a v                                                        }
-    | Lit         { _lit     :: LLit a                                                             }
-    | Native      { _native  :: Native (LExpr a v)                                                 }
-    | Var         { _ident   :: Variable v                                                                  }
     | Wildcard
     deriving (Show, Eq, Generic, Read)
+
+
+data FieldUpd a v = FieldUpd { _selector :: Selector, _updExpr :: LExpr a v } deriving (Show, Eq, Generic, Read)
 
 data AppArg e = AppArg (Maybe ArgName) e deriving (Show, Eq, Generic, Read)
 

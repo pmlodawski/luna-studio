@@ -30,7 +30,7 @@ import qualified Luna.ASTNew.Pat    as Pat
 import           Luna.ASTNew.Pat    (LPat, Pat)
 import           Luna.ASTNew.Expr   (LExpr, Expr)
 import qualified Luna.ASTNew.Lit    as Lit
-import           Luna.ASTNew.Name.Pattern  (Arg(Arg))
+import           Luna.ASTNew.Arg    (Arg(Arg))
 --import           Luna.ASTNew.Arg    (Arg(Arg))
 import qualified Luna.ASTNew.Native as Native
 import           Luna.ASTNew.Name.Path        (NamePath(NamePath))
@@ -92,15 +92,20 @@ passRunner ns info ast = do
 
 traverseDecl :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
 traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
-    Decl.Func  path sig output body  -> do subAST <- subparse (unlines body)
-                                           sig'   <- mapM subparseArg sig
-                                           return $ Decl.Func path sig' output subAST
-    Decl.Data  name params cons defs -> Decl.Data name params <$> defaultTraverseM cons 
-                                                              <*> defaultTraverseM defs
+    Decl.Func (Decl.FuncDecl path sig output body) 
+                                     -> do subAST <- subparse (unlines body)
+                                           sig'   <- mapM (subparseArg id) sig
+                                           return . Decl.Func $ Decl.FuncDecl path sig' output subAST
+    Decl.Data (Decl.DataDecl name params cons defs)
+                                     -> Decl.Data <$> (Decl.DataDecl name params <$> defaultTraverseM cons 
+                                                                                 <*> defaultTraverseM defs
+                                                      )
     Decl.Imp   path rename targets   -> return $ Decl.Imp   path rename targets
     Decl.TpAls dst src               -> return $ Decl.TpAls dst src
     Decl.TpWrp dst src               -> return $ Decl.TpWrp dst src
-    where id = Enum.id lab
+    Decl.Foreign fdecl               -> Decl.Foreign <$> mapM (traverseFDecl id) fdecl
+    where id       = Enum.id lab
+          --continue = defaultTraverseM e 
           subparse expr = do
               result <- ParserState.withScope id $ do 
                   pstate <- get
@@ -109,8 +114,8 @@ traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
                   Left e      -> fail   $ show e
                   Right (e,s) -> put s *> pure e
 
-          -- FIXME [wd]: just clean and make nicer code
-          subparseArg (Arg pat mexpr) = Arg pat <$> mapM (subparseInlineExpr id) mexpr
+-- FIXME [wd]: just clean and make nicer code
+subparseArg id (Arg pat mexpr) = Arg pat <$> mapM (subparseInlineExpr id) mexpr
 
 subparseInlineExpr id expr = do
               result <- ParserState.withScope id $ do 
@@ -119,6 +124,18 @@ subparseInlineExpr id expr = do
               case result of
                   Left e      -> fail   $ show e
                   Right (e,s) -> put s *> pure e
+
+
+--traverseDecl :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
+traverseFDecl id = \case
+    Decl.FFunc (Decl.FuncDecl path sig output body) 
+                                     -> do sig'   <- mapM (subparseArg id) sig
+                                           return . Decl.FFunc $ Decl.FuncDecl path sig' output body
+    Decl.FData (Decl.DataDecl name params cons defs)
+                                     -> Decl.FData <$> (Decl.DataDecl name params <$> defaultTraverseM cons 
+                                                                                 <*> defaultTraverseM defs
+                                                      )
+
 
 traverseField :: Stage2Ctx lab m => LField lab String -> Stage2Pass m (LField lab ResultExpr)
 traverseField (Label lab (Field tp name val)) = (Label lab . Field tp name) <$> mapM (subparseInlineExpr id) val

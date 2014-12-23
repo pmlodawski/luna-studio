@@ -17,12 +17,19 @@ mkMethod tpName funcName = Expr.THE $ Expr.app (Expr.Var "registerMethod")
                          ]
 
 mkFieldAccessors conName fieldNames = Expr.THE $ Expr.app (Expr.Var "generateFieldAccessors")
-                                                [ Expr.Var   $ varNameRef conName
-                                                , Expr.ListE $ fmap mconv fieldNames
-                                                ]
+                                               [ Expr.Var   $ varNameRef conName
+                                               , Expr.ListE $ fmap mconv fieldNames
+                                               ]
     where mconv v = case v of
                     Just a  -> Expr.AppE (Expr.VarE "Just") (Expr.Lit $ Lit.String a)
                     Nothing -> Expr.VarE "Nothing"
+
+
+registerMethod tpName funcName = Expr.THE $ Expr.app (Expr.Var "registerMethod")
+                               [ Expr.Var $ typeNameRef tpName
+                               , Expr.Lit $ Lit.String funcName
+                               ]
+
 
 typeNameRef = ("''" <>)
 varNameRef  = ("'"  <>)

@@ -44,7 +44,7 @@ import           Luna.Data.ASTInfo            (ASTInfo, genID)
 import qualified Luna.Data.Namespace.State    as State 
 import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
-import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment), Arg(Arg))
+import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment))
 import qualified Luna.ASTNew.Name.Pattern     as NamePat
 
 ----------------------------------------------------------------------

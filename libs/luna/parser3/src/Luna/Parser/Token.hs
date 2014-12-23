@@ -46,7 +46,7 @@ spaceLine = satisfy isSpaceLine <?> "space"
 lineSpaces = many spaceLine <?> "white space"
 
 reservedIdents :: [String]
-reservedIdents = ["alias", "as", "case", "class", "def", "from", "interface", "import", "in", "type"]
+reservedIdents = ["alias", "as", "case", "class", "def", "foreign", "from", "interface", "import", "in", "type"]
 
 --ident s = ident s <* Indent.indented
 
@@ -215,8 +215,10 @@ kwIf        = reservedIdent "if"
 kwInterface = reservedIdent "interface"
 kwImport    = reservedIdent "import"
 kwType      = reservedIdent "type"
+kwForeign   = reservedIdent "foreign"
 
-
+kwFHaskell = reservedIdent "haskell"
+kwFCPP     = reservedIdent "c++"
 
 ----------------------------------------------------------------------
 -- Numbers

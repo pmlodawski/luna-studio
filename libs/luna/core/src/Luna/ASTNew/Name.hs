@@ -88,14 +88,18 @@ instance ToText a => ToText (TVName a) where toText = toText . unwrap
 
 
 
-instance Wrapper VName  where wrap             = VName
-                              unwrap (VName a) = a
-instance Wrapper TName  where wrap             = TName
-                              unwrap (TName a) = a
-instance Wrapper CName  where wrap             = CName
-                              unwrap (CName a) = a
-instance Wrapper TVName where wrap             = TVName
-                              unwrap (TVName a) = a
+instance Wrap   VName  where wrap              = VName
+instance Wrap   TName  where wrap              = TName
+instance Wrap   CName  where wrap              = CName
+instance Wrap   TVName where wrap              = TVName
+instance Unwrap VName  where unwrap (VName  a) = a
+instance Unwrap TName  where unwrap (TName  a) = a
+instance Unwrap CName  where unwrap (CName  a) = a
+instance Unwrap TVName where unwrap (TVName a) = a
+instance Unwrap NameBase where 
+    unwrap = \case
+        VarName  a -> unwrap a
+        TypeName a -> unwrap a
 
 
 -- only possible conversions
@@ -109,7 +113,11 @@ instance Convertible (TName  a) (TName  a) where safeConvert = Right . rewrap
 instance Convertible (CName  a) (CName  a) where safeConvert = Right . rewrap
 instance Convertible (TVName a) (TVName a) where safeConvert = Right . rewrap
 
-instance Hashable a b => Hashable (VName  a) b where hash = hash . unwrap
-instance Hashable a b => Hashable (TName  a) b where hash = hash . unwrap
-instance Hashable a b => Hashable (CName  a) b where hash = hash . unwrap
-instance Hashable a b => Hashable (TVName a) b where hash = hash . unwrap
+instance Convertible (VName a) (NameBase a) where safeConvert = Right . VarName
+instance Convertible (TName a) (NameBase a) where safeConvert = Right . TypeName
+
+instance Hashable a b => Hashable (VName    a) b where hash = hash . unwrap
+instance Hashable a b => Hashable (TName    a) b where hash = hash . unwrap
+instance Hashable a b => Hashable (CName    a) b where hash = hash . unwrap
+instance Hashable a b => Hashable (TVName   a) b where hash = hash . unwrap
+instance Hashable a b => Hashable (NameBase a) b where hash = hash . unwrap

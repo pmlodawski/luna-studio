@@ -12,7 +12,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 
-module Luna.Pass2.Transform.Desugar.ImplicitSelf where
+module Luna.Pass2.Transform.Desugar.ImplicitCalls where
 
 import           Flowbox.Prelude              hiding (Traversal)
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
@@ -31,6 +31,7 @@ import           Luna.ASTNew.Type             (Type)
 import qualified Luna.ASTNew.Pat              as Pat
 import           Luna.ASTNew.Pat              (LPat, Pat)
 import           Luna.ASTNew.Expr             (LExpr, Expr)
+import qualified Luna.ASTNew.Expr             as Expr
 import qualified Luna.ASTNew.Lit              as Lit
 import qualified Luna.ASTNew.Native           as Native
 import qualified Luna.ASTNew.Name             as Name
@@ -48,17 +49,23 @@ import qualified Luna.Parser.Parser           as Parser
 import qualified Luna.Parser.State            as ParserState
 import           Luna.ASTNew.Arg              (Arg(Arg))
 import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment))
+import           Luna.Data.StructInfo         (StructInfo)
+import qualified Luna.Data.StructInfo         as StructInfo
+import Control.Monad (join)
 
 ----------------------------------------------------------------------
 -- Base types
 ----------------------------------------------------------------------
 
-data ImplSelf = ImplSelf
+data ImplCalls = ImplCalls
+data ImplCallsOmit = ImplCallsOmit
 
 type ISPass                 m     = PassMonad ASTInfo m
-type ISCtx                  m lab = (Monad m, Enumerated lab)
-type ISTraversal            m a   = (PassCtx m, AST.Traversal        ImplSelf (ISPass m) a a)
-type ISDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal ImplSelf (ISPass m) a a)
+type ISCtx              lab m a   = (Monad m, Enumerated lab, ISTraversal m a, ISTraversalOmit m a, Num lab)
+type ISTraversal            m a   = (PassCtx m, AST.Traversal        ImplCalls (ISPass m) a a)
+type ISTraversalOmit        m a   = (PassCtx m, AST.Traversal        ImplCallsOmit (ISPass m) a a)
+type ISDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal ImplCalls (ISPass m) a a)
+type ISDefaultTraversalOmit m a   = (PassCtx m, AST.DefaultTraversal ImplCallsOmit (ISPass m) a a)
 
 
 ------------------------------------------------------------------------
@@ -66,10 +73,13 @@ type ISDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal ImplSelf (I
 ------------------------------------------------------------------------
 
 traverseM :: (ISTraversal m a) => a -> ISPass m a
-traverseM = AST.traverseM ImplSelf
+traverseM = AST.traverseM ImplCalls
 
 defaultTraverseM :: (ISDefaultTraversal m a) => a -> ISPass m a
-defaultTraverseM = AST.defaultTraverseM ImplSelf
+defaultTraverseM = AST.defaultTraverseM ImplCalls
+
+defaultTraverseOmitM :: (ISDefaultTraversalOmit m a) => a -> ISPass m a
+defaultTraverseOmitM = AST.defaultTraverseM ImplCallsOmit
 
 
 ------------------------------------------------------------------------
@@ -77,24 +87,33 @@ defaultTraverseM = AST.defaultTraverseM ImplSelf
 ------------------------------------------------------------------------
 
 pass :: ISDefaultTraversal m a => Pass ASTInfo (ASTInfo -> a -> ISPass m (a, ASTInfo))
-pass = Pass "Implicit self" "Desugars AST by adding implicit self function parameters" undefined passRunner
+pass = Pass "Implicit calls" "Desugars AST by adding implicit calls" undefined passRunner
 
-passRunner astInfo ast = do
-    put astInfo
+passRunner ai ast = do
+    put ai
     (,) <$> defaultTraverseM ast <*> get
 
-isFuncDecl :: ISCtx m lab => Decl.FuncDecl lab e body -> ISPass m (Decl.FuncDecl lab e body)
-isFuncDecl (Decl.FuncDecl path sig output body) = do
-    argId <- genID
-    let NamePat pfx (Segment name args) segs = sig
-        selfArg = Arg (Label (Enum.tag argId) $ Pat.Var "self") Nothing
-        nsig    = NamePat pfx (Segment name $ selfArg : args) segs
-    return $ Decl.FuncDecl path nsig output body
+exprScopes :: ISCtx lab m a => LExpr lab a -> ISPass m (LExpr lab a)
+exprScopes ast@(Label lab e) = case e of
+    Expr.Cons     {} -> Label 999 <$> (Expr.app <$> continue <*> pure [])
+    Expr.Accessor {} -> Label 999 <$> (Expr.app <$> continue <*> pure [])
+    Expr.App      {} -> defaultTraverseOmitM ast -- Label 999 <$> (Expr.app <$> defaultTraverseOmitM ast <*> pure [])
+    _                -> continue
+    where continue = defaultTraverseM ast
+          id       = Enum.id lab
+
+
+exprScopesOmit :: ISCtx lab m a => LExpr lab a -> ISPass m (LExpr lab a)
+exprScopesOmit = defaultTraverseM
 
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
 
-instance ISCtx m lab => AST.Traversal ImplSelf (ISPass m) (Decl.FuncDecl lab e body) (Decl.FuncDecl lab e body) where
-    traverseM _ = isFuncDecl
+instance ISCtx lab m a => AST.Traversal ImplCalls (ISPass m) (LExpr lab a) (LExpr lab a) where
+    traverseM _ = exprScopes
+
+
+instance ISCtx lab m a => AST.Traversal ImplCallsOmit (ISPass m) (LExpr lab a) (LExpr lab a) where
+    traverseM _ = exprScopesOmit
 

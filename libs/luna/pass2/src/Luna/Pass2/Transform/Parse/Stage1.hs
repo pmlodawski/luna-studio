@@ -49,7 +49,7 @@ import           Data.ByteString              (ByteString)
 import           Text.PrettyPrint.ANSI.Leijen (Doc, displayS, renderPretty)
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Class (lift)
-import Luna.Data.Source (Source(Source), Medium, Code(Code))
+import Luna.Data.Source (Source(Source), SourceReader, Code(Code))
 import qualified Luna.Data.Source as Source
 import           Data.String             (IsString, fromString)
 
@@ -58,20 +58,20 @@ import           Data.String             (IsString, fromString)
 -- Base types
 ----------------------------------------------------------------------
 
-data Stage2 = Stage2
+data Stage1 = Stage1
 
-type Stage2Pass             m     = PassMonad () m
-type Stage2Ctx              lab m = (Enumerated lab, PassCtx m)
-type Stage2Traversal        m a b = (PassCtx m, AST.Traversal        Stage2 (Stage2Pass m) a b)
-type Stage2DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage2 (Stage2Pass m) a b)
+type Stage1Pass             m     = PassMonad () m
+type Stage1Ctx              lab m = (Enumerated lab, PassCtx m)
+type Stage1Traversal        m a b = (PassCtx m, AST.Traversal        Stage1 (Stage1Pass m) a b)
+type Stage1DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage1 (Stage1Pass m) a b)
 
 
 ------------------------------------------------------------------------
 ---- Pass functions
 ------------------------------------------------------------------------
 
-pass :: MonadIO m => Pass () (Source Medium -> Stage2Pass m (Unit (LModule IDTag String), ASTInfo))
-pass = Pass "Parser stage-2" "Parses expressions based on AST stage-1 and alias analysis" ()
+pass :: (MonadIO m, SourceReader (Stage1Pass m) a) => Pass () (Source a -> Stage1Pass m (Unit (LModule IDTag String), ASTInfo))
+pass = Pass "Parser stage-1" "Parses declarations without parsing expressions" ()
        passRunner
 
 passRunner src = do
