@@ -478,8 +478,8 @@ genExpr (Label lab expr) = case expr of
               genField (Expr.FieldUpd sels expr) = genExpr $ setSteps (reverse sels) expr
     Expr.Lit          value               -> mkVal <$> genLit value
     Expr.Tuple        items               -> mkVal . HExpr.Tuple <$> mapM genExpr items
-    Expr.App npat@(NamePat pfx base args)        -> foldl (flip (<*>)) (genExpr $ NamePat.segBase base) $ (fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) (fmap genArg $ NamePat.args npat)
-                                                    where genArg (Expr.AppArg mname expr) = nameMod mname <*> (genExpr expr)
+    Expr.App npat@(NamePat pfx base args)        -> HExpr.AppE (HExpr.VarE "call") <$> (foldl (flip (<*>)) (genExpr $ NamePat.segBase base) $ (fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) (fmap genArg $ NamePat.args npat))
+                                                    where genArg (Expr.AppArg mname expr) = (genExpr expr) -- nameMod mname <*> (genExpr expr)
                                                           nameMod mname = case mname of
                                                               Nothing -> return $ HExpr.AppE (HExpr.VarE "unnamed")
                                                               Just n  -> Pass.fail "No suppert for named args yet!" -- return $ HExpr.AppE (HExpr.VarE "named")

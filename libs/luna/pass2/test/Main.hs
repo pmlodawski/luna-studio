@@ -30,6 +30,8 @@ import qualified Luna.Pass2.Transform.Hash                 as Hash
 import qualified Luna.Pass2.Transform.SSA                  as SSA
 import qualified Luna.Pass2.Target.HS.HASTGen              as HASTGen
 import qualified Luna.Pass2.Target.HS.HSC                  as HSC
+import qualified Luna.Pass2.Transform.Desugar.ImplicitScopes as ImplScopes
+import qualified Luna.Pass2.Transform.Desugar.ImplicitCalls as ImplCalls
 import           Luna.Data.Namespace (Namespace(Namespace))
 import qualified Luna.Pass as Pass
 import Control.Monad.Trans.Either
@@ -64,30 +66,38 @@ main = do
 
     result <- runEitherT $ do
         printHeader "Stage1"
-        (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
+        (ast, astinfo) <- Pass.run1_ Stage1.pass src
 
         printHeader "SA"
-        sa1              <- Pass.run1_ SA.pass ast1
+        sa              <- Pass.run1_ SA.pass ast
 
         printHeader "Stage2"
-        (ast2, astinfo2) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo1 ast1
+        (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
         
         printHeader "ImplSelf"
-        (ast3, astinfo3) <- Pass.run2_ ImplSelf.pass astinfo2 ast2
-        ppPrint ast3
+        (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
+        ppPrint ast
 
         printHeader "SA"
-        sa2              <- Pass.run1_ SA.pass ast3
+        sa              <- Pass.run1_ SA.pass ast
+
+        printHeader "ImplScopes"
+        (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
+        ppPrint ast
+
+        printHeader "ImplCalls"
+        (ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+        ppPrint ast
 
         printHeader "Hash"
-        ast4             <- Pass.run1_ Hash.pass ast3
+        ast             <- Pass.run1_ Hash.pass ast
 
         printHeader "SSA"
-        ast5             <- Pass.run1_ SSA.pass ast4
-        ppPrint ast5
+        ast             <- Pass.run1_ SSA.pass ast
+        ppPrint ast
 
         printHeader "HAST"
-        hast             <- Pass.run1_ HASTGen.pass ast5
+        hast             <- Pass.run1_ HASTGen.pass ast
         ppPrint hast
 
         printHeader "HSC"
