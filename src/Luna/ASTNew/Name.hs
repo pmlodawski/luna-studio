@@ -113,6 +113,9 @@ instance Convertible (TName  a) (TName  a) where safeConvert = Right . rewrap
 instance Convertible (CName  a) (CName  a) where safeConvert = Right . rewrap
 instance Convertible (TVName a) (TVName a) where safeConvert = Right . rewrap
 
+instance Convertible (VName a) (NameBase a) where safeConvert = Right . VarName
+instance Convertible (TName a) (NameBase a) where safeConvert = Right . TypeName
+
 instance Hashable a b => Hashable (VName    a) b where hash = hash . unwrap
 instance Hashable a b => Hashable (TName    a) b where hash = hash . unwrap
 instance Hashable a b => Hashable (CName    a) b where hash = hash . unwrap
