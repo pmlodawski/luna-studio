@@ -119,3 +119,5 @@ instance Hashable base Text => Hashable (NamePat base arg) Text where
     hash (NamePat _ base segs) = mjoin "_" $ segNames
         where fSegment f (Segment base _) = f base
               segNames = fSegment hash base : fmap (fSegment hash) segs
+
+
