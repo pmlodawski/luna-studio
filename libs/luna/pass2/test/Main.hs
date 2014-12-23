@@ -70,6 +70,7 @@ main = do
 
         printHeader "SA"
         sa              <- Pass.run1_ SA.pass ast
+        ppPrint sa
 
         printHeader "Stage2"
         (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
@@ -80,6 +81,7 @@ main = do
 
         printHeader "SA"
         sa              <- Pass.run1_ SA.pass ast
+        ppPrint sa
 
         printHeader "ImplScopes"
         (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
@@ -89,8 +91,8 @@ main = do
         (ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
         ppPrint ast
 
-        printHeader "Hash"
-        ast             <- Pass.run1_ Hash.pass ast
+        --printHeader "Hash"
+        --ast             <- Pass.run1_ Hash.pass ast
 
         printHeader "SSA"
         ast             <- Pass.run1_ SSA.pass ast

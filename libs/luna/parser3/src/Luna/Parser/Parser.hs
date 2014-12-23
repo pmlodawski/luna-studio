@@ -357,25 +357,29 @@ funcDecl body = Decl.FuncDecl <$  Tok.kwDef
 
 cls = Decl.Data <$> dataDecl
 
+withBlock p = blockStart *> p <* blockEnd
+
+rapp1 a f = f a
+rapp2 a b f = f a b
+
 dataDecl = do
     name <- Tok.kwClass *> (Tok.typeIdent <?> "class name")
-    Decl.DataDecl <$> pure name
+    Decl.DataDecl <$> pure name 
                   <*> params
-                  <*  blockStart
-                  <*> constructors name
-                  <*> bodyBlock
-                  <*  blockEnd
-                  <?> "class definition"
+                  <**> ( try (withBlock ((rapp2) <$> constructors name <*> bodyBlock))
+                         <|> ((rapp2) <$> defConsList name <*> pure [])
+                       )
+            <?> "class definition"
       where params         = many (tvname <$> Tok.typeVarIdent <?> "class parameter")
             defCons      n = Decl.Cons n <$> (concat <$> many fields)
-            constructors n =   blockBody' (labeled cons) 
-                           <|> ((:[]) <$> labeled (defCons $ convert n))
+            defConsList  n = ((:[]) <$> labeled (defCons $ convert n))
+            constructors n =   blockBody' (labeled cons) <|> defConsList n
             bodyBlock      = blockBodyOpt $ labeled clsBody 
             clsBody        = choice [ func, cls, typeAlias, typeWrapper ] <?> "class body"
 
 
 cons         = Decl.Cons <$> Tok.conIdent 
-                         <*> (concat <$> blockBeginFields fields)
+                         <*> ((concat <$> blockBeginFields fields) <|> pure [])
                          <?> "data constructor definition"
 
 
@@ -520,7 +524,8 @@ lastLexemeEmpty = do
 -----------------------------------------------------------
 expr       = tlExpr entBaseE
 
-exprSimple = tlExpr pEntBaseSimpleE
+--FIXME[wd]: exprSimple is broken - it includes func calls. Using pEntBaseSimpleE for now
+--exprSimple = tlExpr pEntBaseSimpleE
 
 
 -- === Top Level pattern, variable, record updates chains === --
@@ -724,7 +729,7 @@ mkFuncParser baseVar (id, mpatt) = case mpatt of
                                                    $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
               segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
-              argExpr         = appArg expr
+              argExpr         = appArg pEntBaseSimpleE
               segNames        = NamePat.segmentNames patt
               pattParser      = NamePat Nothing <$> baseParser   <*> mapM segParser segs
               baseParser      = NamePat.Segment <$> baseMultiVar <*> defsParser baseDefs
@@ -826,11 +831,11 @@ listTypes = choice [ try $ Expr.RangeList <$> rangeList opE
                    ,       Expr.SeqList   <$> sepBy opE Tok.separator
                    ]
 
-rangeList p =   (Expr.Geometric <$> p <* Tok.separator <*> p <*> endLimit)
+rangeList p =   (Expr.Geometric <$> p <* Tok.range <*> p <*> endLimit)
             <|> (Expr.Linear    <$> p <*> endLimit)
             where endLimit = try (Tok.range *> just p) <|> pure Nothing
 
-caseE     = labeled (Expr.Case <$ Tok.kwCase <*> exprSimple <*> (blockBegin caseBodyE <|> return []))
+caseE     = labeled (Expr.Case <$ Tok.kwCase <*> pEntBaseSimpleE <*> (blockBegin caseBodyE <|> return []))
 caseBodyE = labeled (Expr.Match <$> pattern <*> exprBlock)
 
 

@@ -88,7 +88,9 @@ isFuncDecl (Decl.FuncDecl path sig output body) = do
     argId <- genID
     let NamePat pfx (Segment name args) segs = sig
         selfArg = Arg (Label (Enum.tag argId) $ Pat.Var "self") Nothing
-        nsig    = NamePat pfx (Segment name $ selfArg : args) segs
+        nsig    = case pfx of
+        	          Nothing    -> NamePat pfx (Segment name $ selfArg : args) segs
+        	          Just parg  -> NamePat (Just selfArg) (Segment name $ parg : args) segs
     return $ Decl.FuncDecl path nsig output body
 
 ----------------------------------------------------------------------
