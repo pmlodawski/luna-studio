@@ -14,11 +14,11 @@ module Main where
 
 
 import qualified Luna.Pass as Pass
-import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
-import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
+import qualified Luna.Pass.Transform.Parse.Stage2 as Stage2
+import qualified Luna.Pass.Transform.Parse.Stage1 as Stage1
 import           Luna.Data.Namespace (Namespace(Namespace))
 import Luna.Data.Source (Source(Source), Medium(String), Code(Code))
-import qualified Luna.Pass2.Analysis.Alias as AA
+import qualified Luna.Pass.Analysis.Alias as AA
 
 
 import Control.Monad.Trans.Either
