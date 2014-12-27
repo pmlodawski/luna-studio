@@ -32,6 +32,7 @@ module Test.Luna.Comp.SamplesSpec where
 
 import Prelude
 import Flowbox.Test.QuickCheck
+import Flowbox.Utils
 
 
 ------------------------------------------------------------------------
