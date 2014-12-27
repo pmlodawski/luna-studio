@@ -1,0 +1,14 @@
+class Vector a
+
+foreign haskell def print s:
+    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+
+
+foreign haskell def Int.+ a:
+    liftF2 (+) self a
+
+def a + b:
+    a.+ b
+
+def main:
+    print (1 + 2)

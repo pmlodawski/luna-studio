@@ -18,7 +18,6 @@ import qualified Luna.Graph.View.GraphView             as GraphView
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 
 
-
 strExpr :: String -> NodeExpr
 strExpr = NodeExpr.StringExpr . StringExpr.Expr
 

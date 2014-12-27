@@ -21,12 +21,7 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
                   TemplateHaskell,
-                  TupleSections,
-                  ConstraintKinds,
-                  FlexibleInstances,
-                  MultiParamTypeClasses,
-                  FlexibleContexts,
-                  LambdaCase
+                  OverloadedStrings
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
@@ -34,6 +29,8 @@ Library
                   containers,
                   either,
                   luna-core,
+                  luna-distribution,
+                  luna-parser,
                   luna-target-ghchs,
                   flowbox-config,
                   flowbox-utils,
@@ -41,9 +38,7 @@ Library
                   MissingH,
                   split,
                   transformers,
-                  ansi-wl-pprint,
-                  bytestring,
-                  text
+                  ansi-wl-pprint
 
 
 Executable luna-pass-test
@@ -57,28 +52,20 @@ Executable luna-pass-test
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
                   NoImplicitPrelude
-                  OverloadedStrings,
-                  TupleSections
+                  OverloadedStrings
 
   Build-Depends:  base,
                   luna-pass,
                   luna-core,
+                  luna-distribution,
+                  luna-parser,
                   flowbox-utils,
                   mtl,
                   either,
                   dlist,
                   MissingH,
                   transformers,
-                  timeit,
-                  HList,
-                  containers,
-                  errors,
-                  fgl,
-                  ansi-wl-pprint,
-                  data-default,
-                  pretty-show,
-                  bytestring,
-                  text
+                  timeit
 
 
 Test-Suite tests
