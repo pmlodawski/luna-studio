@@ -52,4 +52,12 @@ Library
                   either,
                   bytestring,
                   utf8-string,
-                  text
+                  text,
+                  trifecta,
+                  charset,
+                  unordered-containers,
+                  ansi-wl-pprint,
+                  raw-strings-qq,
+                  phonetic-code,
+                  edit-distance,
+                  tuple

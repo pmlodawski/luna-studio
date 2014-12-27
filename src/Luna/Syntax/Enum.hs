@@ -4,18 +4,23 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+module Luna.Syntax.Enum where
 
-module Luna.Data.SourceMap (
-    module Luna.Data.SourceMap,
-    module Data.Map
-)where
-
-import Data.Map
 import Flowbox.Prelude
 
-import Luna.Data.SourcePos (SourceRange)
+----------------------------------------------------------------------
+-- Data types
+----------------------------------------------------------------------
 
 type ID = Int
 
-type SourceMap = Map ID SourceRange
+newtype IDTag = IDTag ID deriving (Show, Eq, Generic, Num)
 
+class Enumerated a where
+    id  :: a -> ID
+    tag :: ID -> a
+
+instance Enumerated IDTag where
+    id (IDTag i) = i
+    tag          = IDTag
+    

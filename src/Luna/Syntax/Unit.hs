@@ -4,18 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+module Luna.Syntax.Unit where
 
-module Luna.Data.SourceMap (
-    module Luna.Data.SourceMap,
-    module Data.Map
-)where
-
-import Data.Map
+import GHC.Generics      (Generic)
 import Flowbox.Prelude
 
-import Luna.Data.SourcePos (SourceRange)
-
-type ID = Int
-
-type SourceMap = Map ID SourceRange
-
+data Unit a = Unit a deriving (Generic, Show)
