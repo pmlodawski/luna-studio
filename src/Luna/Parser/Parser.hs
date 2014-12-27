@@ -119,7 +119,9 @@ import qualified Data.Text.Lazy.Encoding as Text
 import           Luna.Syntax.Foreign (Foreign(Foreign))
 import qualified Luna.Syntax.Foreign as Foreign
 
-infixl 4 <$!>
+import Luna.Parser.Type
+
+import Luna.Parser.Builder (labeled, label, nextID, qualifiedPath, withLabeled)
 
 
 mtry p = try p <|> pure mempty
@@ -129,70 +131,16 @@ tName = Name.T <$> Tok.typeIdent
 
 anyName = vName <|> tName
 
-labeled p = withLabeled (const p)
-
-                          
-withLabeled f = do
-    id <- nextID
-    fmap (label id) $ f id
-
-
-label id = Label $ IDTag id
-
-
-(<$!>) :: Monad m => (a -> b) -> m a -> m b
-f <$!> ma = do
-  a <- ma
-  return $! f a
-
-mytoken :: CharParsing m => m Char
-mytoken = noneOf $ ['\0'..'\31'] ++ "()<>@,;:\\\"/[]?={} \t" ++ ['\128'..'\255']
-
-isHSpace :: Char -> Bool
-isHSpace c = c == ' ' || c == '\t'
-
-skipHSpaces :: CharParsing m => m ()
-skipHSpaces = skipSome (satisfy isHSpace)
-
-data Request = Request {
-      requestMethod   :: String
-    , requestUri      :: String
-    , requestProtocol :: String
-    } deriving (Eq, Ord, Show)
-
-requestLine :: (Monad m, TokenParsing m) => m Request
-requestLine = Request <$!> (highlight ReservedIdentifier (some mytoken) <?> "request method")
-                       <*  skipHSpaces
-                       <*> (highlight Identifier (some (satisfy (not . isHSpace))) <?> "url")
-                       <*  skipHSpaces
-                       <*> (try (highlight ReservedIdentifier (string "HTTP/" *> many httpVersion <* endOfLine)) <?> "protocol")
-  where
-    httpVersion :: (Monad m, CharParsing m) => m Char
-    httpVersion = satisfy $ \c -> c == '1' || c == '0' || c == '.' || c == '9'
-
-endOfLine :: CharParsing m => m ()
-endOfLine = (string "\r\n" *> pure ()) <|> (char '\n' *> pure ())
-
-data Header = Header {
-      headerName  :: String
-    , headerValue :: [String]
-    } deriving (Eq, Ord, Show)
-
-messageHeader :: (Monad m, TokenParsing m) => m Header
-messageHeader = (\h b c -> Header h (b : c))
-            <$!> (highlight ReservedIdentifier (some mytoken)  <?> "header name")
-             <*  highlight Operator (char ':') <* skipHSpaces
-             <*> (highlight Identifier (manyTill anyChar endOfLine) <?> "header value")
-             <*> (many (skipHSpaces *> manyTill anyChar endOfLine) <?> "blank line")
-
-request :: (Monad m, TokenParsing m) => m (Request, [Header])
-request = (,) <$> requestLine <*> many messageHeader <* endOfLine
 
 
 
 
-tuple         p = Tok.parens (sepBy p Tok.separator)
-qualifiedPath p = sepBy1_ng p Tok.accessor <?> "qualified path"
+
+
+
+
+
+
 --extensionPath   = (,) <$> (((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure [])
 --                      <*> (namePattern <?> "function name")
 
@@ -215,17 +163,9 @@ anyIdent        = choice [ Tok.varIdent, Tok.typeIdent ]
 varOp           = Tok.varIdent <|> Tok.operator
 
 
-getASTInfo = view ParserState.info <$> get
-
-putASTInfo info = modify (ParserState.info .~ info)
-
-nextID = do
-    info <- getASTInfo
-    putASTInfo $ ASTInfo.incID info
-    return $ info ^. ASTInfo.lastID
 
 
-appID a = a <$> nextID
+
 
 
 binary   name fun assoc = Infix   (Tok.reservedOp name *> return fun) assoc
@@ -410,43 +350,6 @@ stage1Body2 = ((:) <$> (try ((<>) <$> Tok.spaces <* Indent.checkIndented <*> sta
 --stage1Body2 = (:) <$> (try (Tok.spaces <* Indent.checkIndented <* stage1BodyInner) <|> pure []) <*> stage1Body2
 --dokonczyc bo nie ma wciec
 
------------------------------------------------------------
--- Types
------------------------------------------------------------
-
-typeT       = choice [ try funcT
-                     , typeSingle
-                     ] <?> "type"
-
-typeSingle  = choice [ try appT
-                     , termT 
-                     ] <?> "type"
-
-termT       = choice [ try $ Tok.parens typeT 
-                     , entT 
-                     ] <?> "type term"
-
-appT        = labeled (Type.App <$> appBaseT <*> many1 termT)
-
-
-argListT    = braces (sepBy2 typeT Tok.separator) <|> ((:[]) <$> typeSingle) <?> "type argument list"
-funcT       = labeled (Type.Function <$> argListT <* Tok.arrow <*> typeT)
-
-varT        = labeled (Type.Var      <$> Tok.typeVarIdent)
-conT        = labeled (Type.Con      <$> qualifiedPath Tok.typeIdent)
-tupleT      = labeled (Type.Tuple    <$> tuple typeT)
-listT       = labeled (Type.List     <$> Tok.brackets typeT)
-wildT       = labeled (Type.Wildcard <$  Tok.wildcard)
-
-appBaseT    = choice [ varT, conT
-                     ]
-
-entT        = choice [ varT
-                     , conT
-                     , tupleT
-                     , listT
-                     , wildT
-                     ]
 
 
 -----------------------------------------------------------
