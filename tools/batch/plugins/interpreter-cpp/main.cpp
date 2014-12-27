@@ -5,15 +5,22 @@
 // Flowbox Team <contact@flowbox.io>, 2014
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto.mode;
+// Tester.cpp
+#include "HsFFI.h"
+#include "../interpreter/dist/dist-sandbox-2a78fc06/build/Main_stub.h"
+#include <stdio.h>
 
-import "data.proto";
 
-message Mode {
-	repeated generated.proto.data.ChannelDescription channels = 1;
+extern "C" {
+    void HsStart();
+    void HsEnd();
 }
 
-message ModeValue {
-    required generated.proto.mode.Mode   mode = 1;
-    optional generated.proto.data.Value value = 2;
+int main()
+{
+    HsStart();
+    // can now safely call functions from the DLL
+    runInterpreter();
+    HsEnd();
+    return 0;
 }

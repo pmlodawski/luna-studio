@@ -5,15 +5,20 @@
 // Flowbox Team <contact@flowbox.io>, 2014
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto.mode;
+// StartEnd.c
+#include <Rts.h>
 
-import "data.proto";
+void HsStart()
+{
+   int argc = 4;
+   char* argv[] = {"ghcDll", "-v5", "+RTS", "-T", NULL}; // argv must end with NULL
 
-message Mode {
-	repeated generated.proto.data.ChannelDescription channels = 1;
+   // Initialize Haskell runtime
+   char** args = argv;
+   hs_init(&argc, &args);
 }
 
-message ModeValue {
-    required generated.proto.mode.Mode   mode = 1;
-    optional generated.proto.data.Value value = 2;
+void HsEnd()
+{
+   hs_exit();
 }

@@ -12,8 +12,9 @@
 module Luna.Pass.Transform.Graph.GCNodeProperties.GCNodeProperties where
 
 import           Control.Monad.State
-import           Data.IntSet         ((\\))
-import qualified Data.IntSet         as IntSet
+import           Data.IntSet                         ((\\))
+import qualified Data.IntSet                         as IntSet
+import qualified Luna.Graph.View.Default.DefaultsMap as DefaultsMap
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -41,9 +42,13 @@ run = Pass.run_ (Pass.Info "GCNodeProperties") Pass.NoState .: gcIds
 gcIds :: Module -> PropertyMap -> GCNodePropertiesPass PropertyMap
 gcIds module_ propertyMap = do
     ids <- hoistEither =<< ExtractIDs.runModule module_
-    let existingIds = IntSet.union ids $ IntSet.map (* (-1)) ids
-        pmIds       = PropertyMap.keysSet propertyMap
-        orphans     = pmIds \\ existingIds
+    let existingIds      = IntSet.union ids $ IntSet.map (* (-1)) ids
+        defaultsMaps     = map (flip PropertyMap.getDefaultsMap propertyMap) $ IntSet.toList existingIds
+        defaults         = concatMap DefaultsMap.elems defaultsMaps
+        defaultsIds      = IntSet.fromList $ map fst defaults
+    defaultsContentIds <- hoistEither =<< ExtractIDs.runNodeExprs (map snd defaults)
+    let pmIds       = PropertyMap.keysSet propertyMap
+        orphans     = pmIds \\ IntSet.unions [existingIds, defaultsContentIds, defaultsIds]
     when (not $ IntSet.null orphans) $
-        logger warning $ concat ["GCNodePropertiesPass: found ", show $ IntSet.size orphans, " orphaned ids: ", show orphans] 
+        logger warning $ concat ["GCNodePropertiesPass: found ", show $ IntSet.size orphans, " orphaned ids: ", show orphans]
     return $ foldr PropertyMap.delete propertyMap $ IntSet.toList orphans
