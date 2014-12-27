@@ -12,7 +12,7 @@
 
 {-# LANGUAGE TypeFamilies #-}
 
-module Luna.Pass2.Analysis.Struct where
+module Luna.Pass.Analysis.Struct where
 
 import           Flowbox.Prelude
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)

@@ -10,7 +10,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverlappingInstances #-}
 
-module Luna.Pass2.Transform.SSA where
+module Luna.Pass.Transform.SSA where
 
 import           Flowbox.Prelude              hiding (Traversal)
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)

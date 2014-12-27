@@ -70,8 +70,8 @@ import qualified Data.IntSet as IntSet
 --import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
 
 
-import           Luna.Pass2.Pass (Pass(Pass))
-import qualified Luna.Pass2.Pass as Pass
+import           Luna.Pass.Pass (Pass(Pass))
+import qualified Luna.Pass.Pass as Pass
 import           Control.Monad.Trans.Either
 import           Control.Error.Util (note)
 

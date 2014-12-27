@@ -22,16 +22,16 @@ import qualified Luna.Data.ASTInfo  as ASTInfo
 import qualified Luna.Parser.Pragma as Pragma
 import qualified Luna.Data.Config   as Config
 import           Luna.Syntax.Name   (TName(TName))
-import qualified Luna.Pass2.Analysis.Struct as SA
-import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
-import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
-import qualified Luna.Pass2.Transform.Desugar.ImplicitSelf as ImplSelf
-import qualified Luna.Pass2.Transform.Hash                 as Hash
-import qualified Luna.Pass2.Transform.SSA                  as SSA
-import qualified Luna.Pass2.Target.HS.HASTGen              as HASTGen
-import qualified Luna.Pass2.Target.HS.HSC                  as HSC
-import qualified Luna.Pass2.Transform.Desugar.ImplicitScopes as ImplScopes
-import qualified Luna.Pass2.Transform.Desugar.ImplicitCalls as ImplCalls
+import qualified Luna.Pass.Analysis.Struct as SA
+import qualified Luna.Pass.Transform.Parse.Stage2 as Stage2
+import qualified Luna.Pass.Transform.Parse.Stage1 as Stage1
+import qualified Luna.Pass.Transform.Desugar.ImplicitSelf as ImplSelf
+import qualified Luna.Pass.Transform.Hash                 as Hash
+import qualified Luna.Pass.Transform.SSA                  as SSA
+import qualified Luna.Pass.Target.HS.HASTGen              as HASTGen
+import qualified Luna.Pass.Target.HS.HSC                  as HSC
+import qualified Luna.Pass.Transform.Desugar.ImplicitScopes as ImplScopes
+import qualified Luna.Pass.Transform.Desugar.ImplicitCalls as ImplCalls
 import           Luna.Data.Namespace (Namespace(Namespace))
 import qualified Luna.Pass as Pass
 import Control.Monad.Trans.Either

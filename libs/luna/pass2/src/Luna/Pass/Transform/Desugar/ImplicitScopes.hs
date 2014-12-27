@@ -12,7 +12,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 
-module Luna.Pass2.Transform.Desugar.ImplicitScopes where
+module Luna.Pass.Transform.Desugar.ImplicitScopes where
 
 import           Flowbox.Prelude              hiding (Traversal)
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)

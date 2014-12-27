@@ -36,9 +36,14 @@ def segSub(path, pat, s):
 def pathSub(path, pat, s):
     return re.sub(pat,s,path)
 
-pat = re.compile(r'(?P<imp>import\s+)(?P<qual>(qualified\s+)?)(?P<path>[a-zA-Z0-9.]+)', re.MULTILINE)
+impPat = re.compile(r'(?P<imp>import\s+)(?P<qual>(qualified\s+)?)(?P<path>[a-zA-Z0-9.]+)', re.MULTILINE)
+modPat = re.compile(r'(?P<mod>module\s+)(?P<path>[a-zA-Z0-9.]+)', re.MULTILINE)
 
-def run(oldPath, newPath, input):
-    def process(match):
+def run(oldPath, newPath, txt):
+    def impProc(match):
         return match.group('imp') + match.group('qual') + pathSub(match.group('path'), oldPath, newPath)
-    return pat.sub(process, input)
+    def modProc(match):
+        return match.group('mod') + pathSub(match.group('path'), oldPath, newPath)
+    txt = impPat.sub(impProc, txt)
+    txt = modPat.sub(modProc, txt)
+    return txt

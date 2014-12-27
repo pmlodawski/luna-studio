@@ -9,7 +9,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
 
-module Luna.Pass2.Target.HS.HASTGen.State where
+module Luna.Pass.Target.HS.HASTGen.State where
 
 import Control.Monad.State
 

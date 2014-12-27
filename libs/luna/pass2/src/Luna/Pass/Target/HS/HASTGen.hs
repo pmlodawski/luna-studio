@@ -12,7 +12,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Luna.Pass2.Target.HS.HASTGen where
+module Luna.Pass.Target.HS.HASTGen where
 
 import           Flowbox.Prelude              hiding (Traversal)
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
@@ -63,8 +63,8 @@ import qualified Luna.Parser.Parser           as Parser
 import           Luna.Syntax.Name.Pattern     (NamePat(NamePat), Segment(Segment))
 import qualified Luna.Syntax.Name.Pattern     as NamePat
 
-import qualified Luna.Pass2.Target.HS.HASTGen.State as State
-import           Luna.Pass2.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx)
+import qualified Luna.Pass.Target.HS.HASTGen.State as State
+import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx)
 import           Luna.Syntax.Name.Hash              (Hashable, hash)
 --import qualified Luna.Target.HS.Host.NamingOld                          as Naming
 import qualified Luna.Target.HS.Host.Naming2 as Naming

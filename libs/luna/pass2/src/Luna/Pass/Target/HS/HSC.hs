@@ -13,7 +13,7 @@
 {-# LANGUAGE TupleSections             #-}
 {-# LANGUAGE OverloadedStrings         #-}
 
-module Luna.Pass2.Target.HS.HSC where
+module Luna.Pass.Target.HS.HSC where
 
 import           Flowbox.Prelude          hiding (cons, simple)
 import qualified Luna.Data.HAST.Comment   as HComment
