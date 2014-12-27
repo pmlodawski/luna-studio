@@ -153,7 +153,7 @@ opStyle = IdentifierStyle
 --identifier :: (TokenParsing m, Monad m) => m String
 --identifier = ident identStyle
 
-
+varOp           = varIdent <|> operator
 --varIdent :: (TokenParsing m, Monad m, Indent.MonadIndentState Indent.State m) => m String
 varIdent = ident varStyle
 
