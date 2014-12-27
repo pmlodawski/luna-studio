@@ -21,7 +21,7 @@ import qualified Luna.Parser.State as ParserState
 import qualified Luna.Data.ASTInfo  as ASTInfo
 import qualified Luna.Parser.Pragma as Pragma
 import qualified Luna.Data.Config   as Config
-import           Luna.ASTNew.Name   (TName(TName))
+import           Luna.Syntax.Name   (TName(TName))
 import qualified Luna.Pass2.Analysis.Struct as SA
 import qualified Luna.Pass2.Transform.Parse.Stage2 as Stage2
 import qualified Luna.Pass2.Transform.Parse.Stage1 as Stage1
