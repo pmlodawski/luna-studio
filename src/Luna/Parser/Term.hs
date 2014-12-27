@@ -31,7 +31,7 @@ import           Luna.Syntax.Name.Pattern     (NamePat(NamePat))
 
 import           Text.Parser.Expression (Assoc(AssocLeft), Operator(Infix, Prefix, Postfix), buildExpressionParser)
 import qualified Luna.Parser.Pattern as Pat
-import qualified Luna.Parser.Type    as Type
+import           Luna.Parser.Type    (typic)
 import           Luna.Parser.Literal (literal)
 import qualified Luna.Syntax.Name    as Name
 import qualified Data.ByteString.UTF8         as UTF8
@@ -65,10 +65,6 @@ postfixM name fun       = Postfix (Tok.reservedOp name *>        fun)
 
 
 
-
-
-
-
 expr       = tlExpr entBaseE
 
 --FIXME[wd]: exprSimple is broken - it includes func calls. Using pEntBaseSimpleE for now
@@ -79,7 +75,7 @@ expr       = tlExpr entBaseE
 
 tlRecUpd     = assignSeg $ (\vop accs expr -> Expr.RecUpd vop [Expr.FieldUpd accs expr]) <$> Tok.varOp <*> many1 recAcc
 tlExprPat    = assignSeg $ Expr.Assignment <$> pattern
-tlExprPatVar = assignSeg $ Expr.Assignment <$> Pat.varP
+tlExprPatVar = assignSeg $ Expr.Assignment <$> Pat.var
 
 assignSeg p = p <* Tok.assignment
 
@@ -131,9 +127,6 @@ accE      = try( (\id a b -> label id $ Expr.Accessor a b) <$> nextID <*> accBas
 
 
 
-
-
-
 parensE p = Tok.parens (p <|> (labeled (Expr.Tuple <$> pure []))) -- checks for empty tuple
 
 callList     p = Tok.parens (sepBy p Tok.separator)
@@ -177,7 +170,7 @@ optableE = [
            , [ operator4 "=="                                 AssocLeft ]
            , [ operator4 "in"                                 AssocLeft ]
            , [ binaryM   "$"  (callBuilder <$> nextID)       AssocLeft ]
-           , [ postfixM  "::" ((\id a b -> label id (Expr.Typed a b)) <$> nextID <*> Type.typeT) ]
+           , [ postfixM  "::" ((\id a b -> label id (Expr.Typed a b)) <$> nextID <*> typic) ]
            ]
            where
               --operator op = binaryM op (binaryMatchE <$> (appID Expr.Infix <*> pure op))
