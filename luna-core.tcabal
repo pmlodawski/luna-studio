@@ -60,4 +60,5 @@ Library
                   raw-strings-qq,
                   phonetic-code,
                   edit-distance,
-                  tuple
+                  tuple,
+                  optparse-applicative
