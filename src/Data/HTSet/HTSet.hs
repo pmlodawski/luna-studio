@@ -1,6 +1,8 @@
 {-# LANGUAGE   GADTs #-} 
 {-# LANGUAGE   DeriveDataTypeable #-} 
 {-# LANGUAGE   ScopedTypeVariables #-} 
+{-# LANGUAGE   ViewPatterns #-} 
+{-# LANGUAGE   FunctionalDependencies #-} 
 
 
 
@@ -17,17 +19,28 @@ import Data.Maybe (fromJust)
 import Control.Monad (liftM)
 import Data.Type.Hide (HideType(HideType), unsafeFromHideType)
 import Data.Monoid
+import Data.Default
 
 
 data Key a = Key deriving Show
+
+class IsKey a b | a -> b where
+    toKey :: a -> Key b
+
+    default toKey :: a -> Key b
+    toKey = const Key
+
+
+instance IsKey (Key a) a where
+    toKey = id
 
 newtype HTSet = HTSet (HashMap TypeRep (Weak HideType)) 
 
 
 lookup set = lookupKey Key set
 
-lookupKey :: Typeable a => Key a -> HTSet -> Maybe a
-lookupKey (Key :: Key a) (HTSet m) =  (fmap getVal (M.lookup key m) :: Maybe a) where
+lookupKey :: (IsKey k a, Typeable a) => k -> HTSet -> Maybe a
+lookupKey (toKey -> Key :: Key a) (HTSet m) =  (fmap getVal (M.lookup key m) :: Maybe a) where
   key = typeOf (undefined :: a)
   -- we know it is alive, how else did we get the key?
   getVal v = (keepAlive key unsafeFromHideType) -- keep key alive till unsafeFromHideType 
@@ -38,7 +51,7 @@ lookupKey (Key :: Key a) (HTSet m) =  (fmap getVal (M.lookup key m) :: Maybe a) 
   keepAlive k f x = k `seq` (f x)
 
 
-insertKey :: Typeable a => Key a -> a -> HTSet -> HTSet
+insertKey :: (IsKey k a, Typeable a) => k -> a -> HTSet -> HTSet
 insertKey _ = insert
 
 insert :: Typeable a => a -> HTSet -> HTSet
@@ -55,21 +68,24 @@ instance Monoid HTSet where
   mempty                      = HTSet M.empty
   mappend (HTSet a) (HTSet b) = HTSet $ M.union a b
 
+instance Default HTSet where
+  def = mempty
 
-data A a = A a deriving (Typeable, Show)
-data B = B Int deriving (Typeable, Show)
-data C = C Int deriving (Typeable, Show)
 
-kA = Key :: Key (A Int)
-kB = Key :: Key (A Float)
-kC = Key :: Key C
+--data A a = A a deriving (Typeable, Show)
+--data B = B Int deriving (Typeable, Show)
+--data C = C Int deriving (Typeable, Show)
 
-main = do
-    let m = HTSet
-        m2 = insertKey kA (A 10) 
-           $ insert (A (11::Float)) 
-           $ insertKey kC (C 12) 
-           $ mempty
+--kA = Key :: Key (A Int)
+--kB = Key :: Key (A Float)
+--kC = Key :: Key C
 
-    print $ (lookup m2 :: Maybe (A Float))
-    print "end"
+--main = do
+--    let m = HTSet
+--        m2 = insertKey kA (A 10) 
+--           $ insert (A (11::Float)) 
+--           $ insertKey kC (C 12) 
+--           $ mempty
+
+--    print $ (lookup m2 :: Maybe (A Float))
+--    print "end"
