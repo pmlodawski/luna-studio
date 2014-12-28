@@ -33,6 +33,7 @@ import           Data.Convertible          as X (Convertible(safeConvert), conve
 import           Data.Text.Class           as X (ToText(toText), FromText(fromText), IsText)
 import           Data.Text.Lazy            as X (Text)
 import           Data.Foldable             as X (Foldable)
+import           Data.Typeable             as X (Typeable)
 import           Data.Convertible.Instances.Missing as X
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.Trans       (lift)
