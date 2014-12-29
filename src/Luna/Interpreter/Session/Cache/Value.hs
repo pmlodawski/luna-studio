@@ -21,7 +21,6 @@ import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger                   as L
 import           Generated.Proto.Mode.ModeValue              (ModeValue (ModeValue))
-import qualified Luna.Graph.Flags                            as Flags
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
 import qualified Luna.Interpreter.Session.Cache.Status       as Status
@@ -34,6 +33,7 @@ import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
+import qualified Luna.Syntax.Graph.Flags                     as Flags
 
 
 

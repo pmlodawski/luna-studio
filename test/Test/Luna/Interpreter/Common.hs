@@ -16,7 +16,6 @@ import qualified Flowbox.System.UniPath                                        a
 import qualified Luna.AST.Control.Crumb                                        as Crumb
 import qualified Luna.AST.Name                                                 as Name
 import           Luna.Data.Source                                              (Source (Source))
-import qualified Luna.Graph.PropertyMap                                        as PropertyMap
 import           Luna.Interpreter.Session.Data.DefPoint                        (DefPoint (DefPoint))
 import           Luna.Interpreter.Session.Env                                  (Env)
 import qualified Luna.Interpreter.Session.Env                                  as Env
@@ -36,6 +35,7 @@ import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes a
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
 import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
 import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
+import qualified Luna.Syntax.Graph.PropertyMap                                 as PropertyMap
 
 
 
