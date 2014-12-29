@@ -18,8 +18,6 @@ import qualified Luna.Data.ASTInfo    as ASTInfo
 import           Luna.Data.ASTInfo    (ASTInfo)
 import           Luna.Data.SourceMap  (SourceMap)
 import qualified Luna.Data.SourceMap  as SourceMap
-import qualified Luna.Data.Config     as Config
-import           Luna.Data.Config     (Config)
 import           Luna.Parser.Operator (OperatorMap)
 import qualified Luna.Data.Namespace  as Namespace
 import           Luna.Data.Namespace  (Namespace, NamespaceMonad)
@@ -31,16 +29,14 @@ import qualified Flowbox.Control.Monad.State as State
 import qualified Luna.Data.StructInfo        as StructInfo
 import           Luna.Syntax.Name.Path       (QualPath)
 
-data ParserState conf 
-   = ParserState { _conf          :: Config conf
-                 , _info          :: ASTInfo
-                 , _opFixity      :: OperatorMap
-                 , _sourceMap     :: SourceMap
-                 , _namespace     :: Namespace
-                 , _adhocReserved :: [Text]
-                 --, _comments      :: IDMap [Comment]
-                 , _modPath       :: QualPath
-                 } deriving (Show)
+data ParserState= ParserState { _info          :: ASTInfo
+                              , _opFixity      :: OperatorMap
+                              , _sourceMap     :: SourceMap
+                              , _namespace     :: Namespace
+                              , _adhocReserved :: [Text]
+                              --, _comments      :: IDMap [Comment]
+                              , _modPath       :: QualPath
+                              } deriving (Show)
 
 makeLenses ''ParserState
 
@@ -49,7 +45,7 @@ makeLenses ''ParserState
 -- Utils
 ------------------------------------------------------------------------
 
-mk :: ASTInfo -> ParserState ()
+mk :: ASTInfo -> ParserState
 mk i = def & info .~ i
 
 addReserved words = adhocReserved %~ (++words)
@@ -127,11 +123,11 @@ registerID id = do
 ------------------------------------------------------------------------
 
 -- FIXME[wd]: "Unnamed" string is an ugly hack for now
-instance conf~() => Default (ParserState conf) where
-        def = ParserState def def def def def def "Unnamed"
+instance conf~() => Default ParserState where
+        def = ParserState def def def def def "Unnamed"
 
 
-instance (Functor m, Monad m) => NamespaceMonad (StateT (ParserState conf) m) where
+instance (Functor m, Monad m) => NamespaceMonad (StateT ParserState m) where
     get = view namespace <$> State.get
     put ns = do
         s <- get
