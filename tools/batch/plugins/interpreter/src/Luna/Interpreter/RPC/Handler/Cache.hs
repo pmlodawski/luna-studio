@@ -10,6 +10,8 @@ module Luna.Interpreter.RPC.Handler.Cache where
 
 import Data.Int (Int32)
 
+import Luna.Data.Serialize.Proto.Conversion.Library ()
+import Luna.Data.Serialize.Proto.Conversion.Crumb ()
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Bus.RPC.RPC                                    (RPC)
 import           Flowbox.Data.Convert
