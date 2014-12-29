@@ -32,7 +32,8 @@ import           Data.Wrapper              as X (Wrap(wrap), Unwrap(unwrap), Wra
 import           Data.Convertible          as X (Convertible(safeConvert), convert)
 import           Data.Text.Class           as X (ToText(toText), FromText(fromText), IsText)
 import           Data.Text.Lazy            as X (Text)
-import           Data.Foldable             as X (Foldable)
+import           Data.Foldable             as X (Foldable, traverse_)
+import           Data.Typeable             as X (Typeable)
 import           Data.Convertible.Instances.Missing as X
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.Trans       (lift)
