@@ -6,16 +6,18 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Luna.Interpreter.Session.Data.CallPoint where
+module Luna.Syntax.Graph.Node.Expr where
 
-import           Flowbox.Prelude
-import qualified Luna.Lib.Lib           as Library
-import qualified Luna.Syntax.Graph.Node as Node
+import Flowbox.Prelude
+import Luna.Syntax.Expr                  (Expr)
+import Luna.Syntax.Graph.Node.StringExpr (StringExpr)
 
 
 
-data CallPoint = CallPoint { _libraryID :: Library.ID
-                           , _nodeID    :: Node.ID
-                           } deriving (Show, Ord, Eq)
+data NodeExpr a v = StringExpr { _strExpr :: StringExpr }
+                  | ASTExpr    { _expr :: Expr a v      }
+                  deriving (Show, Eq, Read)
 
-makeLenses ''CallPoint
+
+
+makeLenses ''NodeExpr

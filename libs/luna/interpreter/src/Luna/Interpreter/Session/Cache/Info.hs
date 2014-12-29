@@ -11,10 +11,10 @@ module Luna.Interpreter.Session.Cache.Info where
 import Data.Map (Map)
 
 import           Flowbox.Prelude
-import qualified Luna.AST.Common                       as AST
 import           Luna.AST.Control.Crumb                (Breadcrumbs)
 import           Luna.Interpreter.Session.Cache.Status (CacheStatus)
 import           Luna.Interpreter.Session.Data.VarName (VarName)
+import qualified Luna.Syntax.AST                       as AST
 
 
 

@@ -22,26 +22,11 @@ import qualified Flowbox.Batch.Project.ProjectManager                        as 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                                             hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Common                                             as AST
 import           Luna.AST.Control.Crumb                                      (Breadcrumbs)
 import           Luna.AST.Control.Focus                                      (Focus)
 import qualified Luna.AST.Control.Focus                                      as Focus
 import qualified Luna.AST.Control.Zipper                                     as Zipper
-import           Luna.AST.Expr                                               (Expr)
-import qualified Luna.AST.Expr                                               as Expr
 import           Luna.AST.Module                                             (Module)
-import           Luna.Graph.Graph                                            (Graph)
-import qualified Luna.Graph.Graph                                            as Graph
-import           Luna.Graph.Node                                             (Node)
-import qualified Luna.Graph.Node                                             as Node
-import           Luna.Graph.Node.Expr                                        (NodeExpr)
-import           Luna.Graph.PropertyMap                                      (PropertyMap)
-import qualified Luna.Graph.PropertyMap                                      as PropertyMap
-import           Luna.Graph.View.Default.DefaultsMap                         (DefaultsMap)
-import qualified Luna.Graph.View.Default.DefaultsMap                         as DefaultsMap
-import           Luna.Graph.View.GraphView                                   (GraphView)
-import qualified Luna.Graph.View.GraphView                                   as GraphView
-import           Luna.Graph.View.PortDescriptor                              (PortDescriptor)
 import           Luna.Lib.Lib                                                (Library)
 import qualified Luna.Lib.Lib                                                as Library
 import           Luna.Lib.Manager                                            (LibManager)
@@ -55,6 +40,21 @@ import qualified Luna.Pass.Transform.Graph.Parser.Parser                     as 
 import qualified Luna.Pass.Transform.GraphView.Defaults                      as Defaults
 import qualified Luna.Pass.Transform.SimpleText.Builder.Builder              as STBuilder
 import qualified Luna.Pass.Transform.SimpleText.Parser.Parser                as STParser
+import qualified Luna.Syntax.AST                                             as AST
+import           Luna.Syntax.Expr                                            (Expr)
+import qualified Luna.Syntax.Expr                                            as Expr
+import           Luna.Syntax.Graph.Graph                                     (Graph)
+import qualified Luna.Syntax.Graph.Graph                                     as Graph
+import           Luna.Syntax.Graph.Node                                      (Node)
+import qualified Luna.Syntax.Graph.Node                                      as Node
+import           Luna.Syntax.Graph.Node.Expr                                 (NodeExpr)
+import           Luna.Syntax.Graph.PropertyMap                               (PropertyMap)
+import qualified Luna.Syntax.Graph.PropertyMap                               as PropertyMap
+import           Luna.Syntax.Graph.View.Default.DefaultsMap                  (DefaultsMap)
+import qualified Luna.Syntax.Graph.View.Default.DefaultsMap                  as DefaultsMap
+import           Luna.Syntax.Graph.View.GraphView                            (GraphView)
+import qualified Luna.Syntax.Graph.View.GraphView                            as GraphView
+import           Luna.Syntax.Graph.View.PortDescriptor                       (PortDescriptor)
 
 
 

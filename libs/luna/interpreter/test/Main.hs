@@ -33,7 +33,6 @@ import qualified Luna.AST.Name                                                 a
 import qualified Luna.AST.Type                                                 as Type
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Data.Source                                              as Source
-import qualified Luna.Graph.PropertyMap                                        as PropertyMap
 import qualified Luna.Interpreter.Session.AST.Executor                         as Executor
 import qualified Luna.Interpreter.Session.Cache.Cache                          as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate                     as Invalidate
@@ -62,6 +61,7 @@ import qualified Luna.Pass.Transform.AST.Hash.Hash                             a
 import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
 import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
+import qualified Luna.Syntax.Graph.PropertyMap                                 as PropertyMap
 
 
 

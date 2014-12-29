@@ -57,7 +57,6 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Updat
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                   as ResolveDefinition
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                    as ResolveDefinition
 import qualified Luna.AST.Control.Crumb                                                               as Crumb
-import qualified Luna.AST.Expr                                                                        as Expr
 import qualified Luna.AST.Module                                                                      as Module
 import qualified Luna.AST.Type                                                                        as Type
 import           Luna.Data.Serialize.Proto.Conversion.Crumb                                           ()
@@ -65,6 +64,7 @@ import           Luna.Data.Serialize.Proto.Conversion.Expr                      
 import           Luna.Data.Serialize.Proto.Conversion.Focus                                           ()
 import           Luna.Data.Serialize.Proto.Conversion.Module                                          ()
 import           Luna.Data.Serialize.Proto.Conversion.Name                                            ()
+import qualified Luna.Syntax.Expr                                                                     as Expr
 
 
 
