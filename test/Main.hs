@@ -16,10 +16,10 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Log.Logger         as Logger
 import qualified Flowbox.System.UniPath            as UniPath
 import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
-import qualified Luna.Graph.PropertyMap            as PropertyMap
 import           Luna.Lib.Lib                      (Library (Library))
 import qualified Luna.Pass.Build.Build             as Build
 import qualified Luna.Pass.General.Luna.Luna       as Luna
+import qualified Luna.Syntax.Graph.PropertyMap     as PropertyMap
 
 
 

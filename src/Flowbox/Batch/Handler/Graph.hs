@@ -10,22 +10,22 @@ module Flowbox.Batch.Handler.Graph where
 
 import Control.Monad (forM_)
 
-import           Flowbox.Batch.Batch            (Batch)
-import qualified Flowbox.Batch.Handler.Common   as Batch
-import qualified Flowbox.Batch.Project.Project  as Project
-import           Flowbox.Control.Error          (assertE)
-import           Flowbox.Prelude                hiding (error)
+import           Flowbox.Batch.Batch                   (Batch)
+import qualified Flowbox.Batch.Handler.Common          as Batch
+import qualified Flowbox.Batch.Project.Project         as Project
+import           Flowbox.Control.Error                 (assertE)
+import           Flowbox.Prelude                       hiding (error)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Control.Crumb         (Breadcrumbs)
-import           Luna.Graph.Node                (Node)
-import qualified Luna.Graph.Node                as Node
-import qualified Luna.Graph.Node.OutputName     as OutputName
-import qualified Luna.Graph.PropertyMap         as PropertyMap
-import           Luna.Graph.View.EdgeView       (EdgeView (EdgeView))
-import           Luna.Graph.View.GraphView      (GraphView)
-import qualified Luna.Graph.View.GraphView      as GraphView
-import           Luna.Graph.View.PortDescriptor (PortDescriptor)
-import qualified Luna.Lib.Lib                   as Library
+import           Luna.AST.Control.Crumb                (Breadcrumbs)
+import qualified Luna.Lib.Lib                          as Library
+import           Luna.Syntax.Graph.Node                (Node)
+import qualified Luna.Syntax.Graph.Node                as Node
+import qualified Luna.Syntax.Graph.Node.OutputName     as OutputName
+import qualified Luna.Syntax.Graph.PropertyMap         as PropertyMap
+import           Luna.Syntax.Graph.View.EdgeView       (EdgeView (EdgeView))
+import           Luna.Syntax.Graph.View.GraphView      (GraphView)
+import qualified Luna.Syntax.Graph.View.GraphView      as GraphView
+import           Luna.Syntax.Graph.View.PortDescriptor (PortDescriptor)
 
 
 
