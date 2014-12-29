@@ -79,10 +79,10 @@ def Image.saturate self::Image saturation::Color:
 def Image.posterize self::Image colors::Float:
     ```liftF2 posterizeLuna #{colors} #{self}```
 
-def Image.multiply val::Color:
+def Image.multiply self::Image val::Color:
     ```liftF2 multiplyLuna #{val} #{self}```
 
-def Image.gamma val::Color:
+def Image.gamma self::Image val::Color:
     ```liftF2 gammaLuna #{val} #{self}```
 
 def Image.key self::Image mode a::Float b::Float c::Float d::Float:
@@ -129,7 +129,7 @@ def Image.edgeDetect self::Image edgeOperator:
 
 def Image.bayer self::Image bits::Int:
     ```liftF2 orderedDitherLuna #{bits} #{self}```
-    
+
 class ```Point``` x y:
     Point: x,y :: Double
 
