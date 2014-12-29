@@ -129,7 +129,7 @@ def Image.edgeDetect self::Image edgeOperator:
 
 def Image.bayer self::Image bits::Int:
     ```liftF2 orderedDitherLuna #{bits} #{self}```
-    
+
 class ```Point``` x y:
     Point: x,y :: Double
 
@@ -205,11 +205,17 @@ def Image.rotate self::Image phi::Float:
 def Image.translate self::Image x::Int y::Int:
     ```liftF3 translateLuna #{x} #{y} #{self}```
 
-def Image.scaleCenter self::Image x::Float  y::Float:
+def Image.scaleCenter self::Image x::Float y::Float:
     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
 
 def Image.scale self::Image x::Float y::Float:
     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+
+def Image.transform self::Image trans::TransformD:
+    ```liftF2 transformLuna #{trans} #{self}```
+
+def Image.crop self::Image rect::RectanleD:
+    ```liftF2 cropLuna #{rect} #{self}```
 
 # VIEW
 
@@ -229,6 +235,30 @@ def View.map self::View f:
 
 class ```Point2``` a:
     x,y :: a
+
+class ```Rectangle``` a:
+    pA,pB :: Point2 a
+
+class ```SkewOrder```:
+    SkewXY
+    SkewYX
+
+class ```Skew``` a:
+    point :: Point2 a
+    order :: SkewOrder
+
+class ```Transform``` a:
+    translate :: Point2 a
+    rotate    :: a
+    scale     :: Point2 a
+    skew      :: Skew a
+    center    :: Point2 a
+
+alias RectangleF = Rectangle Float
+alias RectangleD = Rectangle Double
+
+alias TransformF = Transform Float
+alias TransformD = Transform Double
 
 # class ```ControlPoint``` a:
 # class ControlPoint a:
