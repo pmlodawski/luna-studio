@@ -34,7 +34,8 @@ Library
                   LambdaCase,
                   ConstraintKinds,
                   GeneralizedNewtypeDeriving,
-                  DeriveDataTypeable
+                  DeriveDataTypeable,
+                  EmptyDataDecls
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 

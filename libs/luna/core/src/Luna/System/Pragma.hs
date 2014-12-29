@@ -62,7 +62,7 @@ import qualified Data.HMap               as HMap
 import           Data.Typeable
 import           Control.Monad.State
 import           Prelude                 ()
-import           Text.Parser.Char        (noneOf, CharParsing)
+import           Text.Parser.Char        (string, noneOf, CharParsing)
 import           Text.Parser.Token
 import           Text.Parser.Combinators (try)
 import           Data.Proxy.Utils
@@ -83,17 +83,18 @@ data Lookup a = Defined a
 -- Pragma
 ----------------------------------------------------------------------
 
+type family PragmaVal t a :: *
+
 type    ParseCtx    m = (TokenParsing m, CharParsing m, Monad m)
 newtype ParseRule t a = ParseRule { fromRule :: ParseCtx m => Pragma t a -> m a }
 data    Pragma    t a = Pragma    { _name    :: String
                                   , _parser  :: ParseRule t a
                                   } deriving (Typeable)
-
 makeLenses ''Pragma
 
 -- Tells what should happen when pragma is succesfully parsed
-class PragmaCons t a out | t a -> out where
-    pragmaCons :: Pragma t a -> a -> out
+class PragmaCons t where
+    pragmaCons :: Pragma t a -> a -> PragmaVal t a
 
 
 -- == Utils ==
@@ -103,12 +104,14 @@ pragma = def :: (Read a, Typeable a) => Pragma t a
 
 -- == Instances ==
 
+instance (val ~ PragmaVal t a) => HTSet.IsKey (Pragma t a) (PragmaStack val)
+
 instance Typeable a => Show (Pragma t a) where
     show a = "Pragma " ++ show (view name a)
 
 instance (Typeable a, Read a) => Default (Pragma t a) where
     def = Pragma { _name   = takeWhile (/= ' ') . show . typeOf $ (undefined :: a)
-                 , _parser = ParseRule $ (\a -> read . ((view name a) ++) <$> many (noneOf "\n"))
+                 , _parser = ParseRule $ (\a -> (read .: (++)) <$> string (view name a) <*> many (noneOf "\n"))
                  }
 
 ----------------------------------------------------------------------
@@ -135,7 +138,7 @@ data PragmaSet = PragmaSet { _values  :: HTSet
 
 makeLenses ''PragmaSet
 
-type PragmaSetCtx t a s rep = (HasPragmaSet s, HTSet.IsKey (Pragma t a) (PragmaStack rep), Typeable rep)
+type PragmaSetCtx t a s rep = (HasPragmaSet s, rep~PragmaVal t a, Typeable rep)
 
 -- == Utils ==
 
@@ -159,18 +162,13 @@ instance Show PragmaSet where
 
 -- == Utils ==
 
-pushHTSet k a set = case HTSet.lookupKey k set of
-    Nothing -> HTSet.insertKey k (PragmaStack [a]) set
-    Just (PragmaStack as) -> HTSet.insertKey k (PragmaStack (a:as)) set
-
 -- For now all parsed pragmas are pushed to the stack 
-createSetTransform :: (PragmaCons t a rep, HTSet.IsKey (Pragma t a) (PragmaStack rep), Typeable rep) 
-                   => Pragma t a -> PragmaSetTransform
+createSetTransform :: (rep~PragmaVal t a, PragmaCons t, Typeable rep) => Pragma t a -> PragmaSetTransform
 createSetTransform p = PragmaSetTransform $ do
     a <- fromRule (p^.parser) p
     return $ pushPragma p (pragmaCons p a)
 
-parsePragmas :: (HasPragmaSet s) => s -> PragmaSetTransform
+parsePragmas :: HasPragmaSet s => s -> PragmaSetTransform
 parsePragmas s = PragmaSetTransform $ foldr (<|>) (fail "No matching pragma definition") . fmap (try.unSetTrans) . Map.elems . view (pragmaSet.parsers) $ s
 
 lookupPragmaStack :: PragmaSetCtx t a s rep => Pragma t a -> s -> Maybe (PragmaStack rep)
@@ -179,10 +177,16 @@ lookupPragmaStack p = HTSet.lookupKey p . view (pragmaSet.values)
 setPragma :: PragmaSetCtx t a s rep => Pragma t a -> rep -> s -> s
 setPragma p a = setPragmaStack p (PragmaStack [a])
 
-pushPragma :: (PragmaCons t a rep, PragmaSetCtx t a s rep) => Pragma t a -> rep -> s -> s
+pushPragma :: PragmaSetCtx t a s rep => Pragma t a -> rep -> s -> s
 pushPragma p a ps = flip (setPragmaStack p) ps $ case lookupPragmaStack p ps of
     Nothing -> fromList [a]
     Just s  -> fromList $ a : toList s
+
+
+pushPragma2 :: PragmaSetCtx t a s rep => Pragma t a -> rep -> s -> Maybe s
+pushPragma2 p a ps = case lookupPragmaStack p ps of
+    Nothing -> Nothing
+    Just s  -> Just $ setPragmaStack p (fromList $ a : toList s) ps
 
 popPragma :: PragmaSetCtx t a s rep => Pragma t a -> s -> Lookup (rep, s)
 popPragma p ps = case lookupPragmaStack p ps of
@@ -201,7 +205,7 @@ lookupPragma p ps = case lookupPragmaStack p ps of
         []   -> Undefined
         x:xs -> Defined x
 
-registerPragma :: (PragmaCons t a rep, PragmaSetCtx t a s rep) => Pragma t a -> s -> s
+registerPragma :: (PragmaSetCtx t a s rep, PragmaCons t) => Pragma t a -> s -> s
 registerPragma p s = setPragmaStack p mempty s
                    & (pragmaSet.parsers) %~ Map.insert (p^.name) (createSetTransform p)
 
@@ -210,10 +214,7 @@ registerPragma p s = setPragmaStack p mempty s
 -- SwitchPragma
 ----------------------------------------------------------------------
 
-data Switch = Enabled
-            | Disabled
-            deriving (Show, Typeable, Eq, Ord)
-
+data Switch         = Enabled | Disabled deriving (Show, Typeable, Eq, Ord)
 type SwitchPragma a = Pragma Switch a
 
 -- == Utils ==
@@ -229,7 +230,22 @@ disablePragma p = pushPragma p Disabled
 instance Default Switch where
     def = Enabled
 
-instance HTSet.IsKey (SwitchPragma a) (PragmaStack Switch)
-
-instance PragmaCons Switch a Switch where
+instance PragmaCons Switch where
     pragmaCons _ = const Enabled
+
+type instance PragmaVal Switch a = Switch
+
+
+----------------------------------------------------------------------
+-- ValPragma
+----------------------------------------------------------------------
+
+data Val
+type ValPragma a = Pragma Val a
+
+-- == Instances ==
+
+instance PragmaCons Val where
+    pragmaCons _ = id
+
+type instance PragmaVal Val a = a
