@@ -18,17 +18,17 @@ import Data.Maybe (fromJust)
 
 import           Data.IntMap  (IntMap)
 import           Data.Map     (Map)
-import           Luna.ASTNew.AST (AST, ID)
-import qualified Luna.ASTNew.AST as AST
+import           Luna.Syntax.AST (AST, ID)
+import qualified Luna.Syntax.AST as AST
 import qualified Data.Maps    as Map
-import           Luna.ASTNew.Name.Path  (NamePath, QualPath)
-import qualified Luna.ASTNew.Name.Path  as NamePath
+import           Luna.Syntax.Name.Path  (NamePath, QualPath)
+import qualified Luna.Syntax.Name.Path  as NamePath
 import qualified Flowbox.Data.MapForest as MapForest
 import           Flowbox.Data.MapForest (MapForest)
 import           Control.Monad          (join)
-import           Luna.ASTNew.Name.Pattern (NamePatDesc)
+import           Luna.Syntax.Name.Pattern (NamePatDesc)
 import           Control.Monad.RWS         (RWST)
-import qualified Luna.ASTNew.Module as Module
+import qualified Luna.Syntax.Module as Module
 
 ----------------------------------------------------------------------
 -- Data types

@@ -1,7 +1,0 @@
-
-
-foreign haskell def print s:
-    polyJoin . liftF1 (Value . fmap Safe . print) $ _s
-
-def main:
-    print 5

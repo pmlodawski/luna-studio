@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+{-# LANGUAGE TupleSections #-}
 
 module Test.Luna.AST.Common where
 
