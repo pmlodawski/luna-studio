@@ -33,7 +33,8 @@ Library
                   FlexibleInstances,
                   LambdaCase,
                   ConstraintKinds,
-                  GeneralizedNewtypeDeriving
+                  GeneralizedNewtypeDeriving,
+                  DeriveDataTypeable
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
