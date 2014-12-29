@@ -20,7 +20,7 @@ import qualified Luna.Parser.State as ParserState
 
 import qualified Luna.Data.ASTInfo  as ASTInfo
 import qualified Luna.Parser.Pragma as Pragma
-import qualified Luna.Data.Config   as Config
+import qualified Luna.Parser.Parser as Parser
 import           Luna.Syntax.Name   (TName(TName))
 import qualified Luna.Pass.Analysis.Struct as SA
 import qualified Luna.Pass.Transform.Parse.Stage2 as Stage2
@@ -42,16 +42,7 @@ import qualified Luna.Data.Source as Source
 import Data.Text.Lazy (unpack)
 import           Flowbox.Text.Show.Hs                                          (hsShow)
 
-
-
---patchedParserState info' = def
---    & ParserState.info .~ info'
---    & ParserState.conf .~ parserConf
---    where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
-
-
---parsePattern    pat  = Parser.parseString pat  $ Parser.patternParser (patchedParserState $ ASTInfo.mk 0)
---parseExpression expr = Parser.parseString expr $ Parser.exprParser    (patchedParserState $ ASTInfo.mk 0)
+import Luna.System.Session as Session
 
 
 header txt = "\n-------- " <> txt <> " --------"
@@ -64,52 +55,56 @@ main = do
     let path = args !! 0
         src  = Source "Main" (File $ fromString path)
 
-    result <- runEitherT $ do
-        printHeader "Stage1"
-        (ast, astinfo) <- Pass.run1_ Stage1.pass src
+    Session.defrunT $ do
 
-        printHeader "SA"
-        sa              <- Pass.run1_ SA.pass ast
-        ppPrint sa
+        Parser.init
 
-        printHeader "Stage2"
-        (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
-        
-        printHeader "ImplSelf"
-        (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-        ppPrint ast
+        result <- runEitherT $ do
+            printHeader "Stage1"
+            (ast, astinfo) <- Pass.run1_ Stage1.pass src
 
-        printHeader "SA"
-        sa              <- Pass.run1_ SA.pass ast
-        ppPrint sa
+            printHeader "SA"
+            sa              <- Pass.run1_ SA.pass ast
+            ppPrint sa
 
-        printHeader "ImplScopes"
-        (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
-        ppPrint ast
+            printHeader "Stage2"
+            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
+            
+            printHeader "ImplSelf"
+            (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
+            ppPrint ast
 
-        printHeader "ImplCalls"
-        (ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
-        ppPrint ast
+            printHeader "SA"
+            sa              <- Pass.run1_ SA.pass ast
+            ppPrint sa
 
-        --printHeader "Hash"
-        --ast             <- Pass.run1_ Hash.pass ast
+            printHeader "ImplScopes"
+            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
+            ppPrint ast
 
-        printHeader "SSA"
-        ast             <- Pass.run1_ SSA.pass ast
-        ppPrint ast
+            printHeader "ImplCalls"
+            (ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+            ppPrint ast
 
-        printHeader "HAST"
-        hast             <- Pass.run1_ HASTGen.pass ast
-        ppPrint hast
+            --printHeader "Hash"
+            --ast             <- Pass.run1_ Hash.pass ast
 
-        printHeader "HSC"
-        hsc              <- Pass.run1_ HSC.pass hast
-        putStrLn (hsShow $ unpack hsc)
+            printHeader "SSA"
+            ast             <- Pass.run1_ SSA.pass ast
+            ppPrint ast
+
+            printHeader "HAST"
+            hast             <- Pass.run1_ HASTGen.pass ast
+            ppPrint hast
+
+            printHeader "HSC"
+            hsc              <- Pass.run1_ HSC.pass hast
+            putStrLn (hsShow $ unpack hsc)
 
 
-    case result of
-        Left  e -> putStrLn e
-        Right _ -> return ()
-    return ()
+        case result of
+            Left  e -> putStrLn e
+            Right _ -> return ()
+        return ()
 
 
