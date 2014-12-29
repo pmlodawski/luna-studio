@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 
@@ -32,9 +33,10 @@ import qualified  Luna.ASTNew.Pat           as Pat
 import qualified  Luna.ASTNew.Traversals    as AST
 
 import            Control.Applicative       ((<$>))
-import            Control.Monad.State       (get, modify)
+import            Control.Lens
+import            Control.Monad.State       (MonadState, get, modify)
 import            Data.List                 (intercalate)
-import            Data.Monoid               (Monoid, mempty)
+import            Data.Monoid               (Monoid(..))
 import            Data.Text.Lazy            (unpack)
 
 import            HumanName                 (HumanName(humanName))
@@ -42,7 +44,18 @@ import            HumanName                 (HumanName(humanName))
 
 data StageTypechecker = StageTypechecker
 
-type StageTypecheckerState = [String]
+data StageTypecheckerState = StageTypecheckerState { _str :: [String] }
+
+instance Show StageTypecheckerState where
+  show StageTypecheckerState{ _str = strings } = show strings
+
+instance Monoid StageTypecheckerState where
+  mempty = StageTypecheckerState{ _str = [] }
+  mappend StageTypecheckerState{ _str = s1 } StageTypecheckerState{ _str = s2 } = StageTypecheckerState{ _str = s1 ++ s2 }
+
+makeLenses ''StageTypecheckerState
+
+
 
 type StageTypecheckerPass             m       = PassMonad StageTypecheckerState m
 type StageTypecheckerCtx              lab m a = (Enumerated lab, StageTypecheckerTraversal m a)
@@ -73,14 +86,14 @@ tcExpr lexpr@(Label lab expr) = do
     case expr of 
       Expr.Var { Expr._ident = (Expr.Variable vname _) }
           -> do let hn = unpack . humanName $ vname
-                modify (("Var         " ++ hn) :)
+                pushString (("Var         " ++ hn) )
       Expr.Assignment { Expr._dst = (Label _ dst), Expr._src = (Label _ src) }
           -> do case (dst, src) of
                   (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
-                      modify (("Assignment " ++ (unpack . humanName $ dst_vname) ++ " <- " ++ (unpack . humanName $ src_vname)) :)
-                  _ -> modify ("Some assignment..." : )
+                      pushString (("Assignment " ++ (unpack . humanName $ dst_vname) ++ " <- " ++ (unpack . humanName $ src_vname)) )
+                  _ -> pushString ("Some assignment..."  )
       Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label _ (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)})
-          -> modify (("Application " ++ (unpack . humanName $ basename) ++ " ( " ++ intercalate " " (map mapArg args) ++ " )") : )
+          -> pushString (("Application " ++ (unpack . humanName $ basename) ++ " ( " ++ intercalate " " (map mapArg args) ++ " )")  )
       _   -> return ()
     defaultTraverseM lexpr
   where
@@ -95,23 +108,30 @@ tcDecl ldecl@(Label lab decl) = do
                     , Decl._body = body
                     }
           -> do let argsS = fmap mapArg args
-                modify (("Function    " ++ unpack name ++ " " ++ unwords argsS) :)
-      _                  -> return ()
-    defaultTraverseM ldecl
+                pushString (("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " START") )
+                x <- defaultTraverseM ldecl
+                pushString (("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " END") )
+                return x
+      _   -> defaultTraverseM ldecl
   where
     mapArg :: (HumanName (Pat.Pat lab)) => NamePat.Arg (Pat.LPat lab) a -> String
     mapArg (NamePat.Arg (Label _ arg) _) = unpack $ humanName arg
 
 tcMod :: (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
 tcMod lmodule@(Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) = do
-    modify (("Module      " ++ intercalate "." (fmap unpack (path ++ [name]))):)
+    pushString (("Module      " ++ intercalate "." (fmap unpack (path ++ [name]))))
     defaultTraverseM lmodule
 
 tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> t -> StageTypecheckerPass m StageTypecheckerState
 tcUnit ast _ = do
-    modify ("First!" :)
+    pushString ("First!" )
     _ <- defaultTraverseM ast
-    reverse <$> get
+    get
+
+
+pushString :: (MonadState StageTypecheckerState m) => String -> m ()
+pushString s = str %= (s:)
+
 
 
 
