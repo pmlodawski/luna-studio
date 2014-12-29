@@ -44,6 +44,7 @@ import qualified Flowbox.Graphics.Color.Companding                    as Gamma
 import           Flowbox.Graphics.Composition.Dither
 import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.Path
+import           Flowbox.Geom2D.Rectangle
 import qualified Flowbox.Geom2D.Shape                                 as GShape
 import qualified Flowbox.Geom2D.Mask as Mask
 import           Flowbox.Geom2D.Rasterizer
@@ -80,6 +81,19 @@ import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fr
 import Control.PolyApplicative ((<<*>>))
 
 
+
+data SkewOrder = SkewXY | SkewYX
+
+data Skew a = Skew { _skewPoint :: Point2 a
+                   , _skewOrder :: SkewOrder
+                   }
+
+data Transform a = Transform { _translate :: Point2 a
+                             , _rotate    :: a
+                             , _scale     :: Point2 a
+                             , _skew      :: Skew a
+                             , _center    :: Point2 a
+                             }
 
 testLoadRGBA' :: Value Pure Safe String -> Value IO Safe (Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double))
 testLoadRGBA' path = autoLift1 ((fmap.fmap) (over each val) $ testLoadRGBA) path
@@ -471,6 +485,12 @@ scaleLuna centered (variable -> x) (variable -> y) = onEachMatrix process proces
                       mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
                       mult pt x = str (fmap A.floor pt) * x
                   in (fmap (mult pt) v)
+
+transformLuna :: Transform Double -> Image -> Image
+transformLuna _ img = img
+
+cropLuna :: Rectangle Double -> Image -> Image
+cropLuna _ img = img
 
 hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
