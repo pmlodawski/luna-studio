@@ -16,8 +16,8 @@ module Luna.Lib.Lib where
 --import           Luna.AST.Module        (Module)
 --import qualified Luna.AST.Module        as Module
 --import qualified Luna.AST.Type          as Type
---import           Luna.Graph.PropertyMap (PropertyMap)
---import qualified Luna.Graph.PropertyMap as PropertyMap
+--import           Luna.Syntax.Graph.PropertyMap (PropertyMap)
+--import qualified Luna.Syntax.Graph.PropertyMap as PropertyMap
 
 
 
