@@ -17,27 +17,27 @@ import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Prelude           hiding (id)
 import           Flowbox.System.Log.Logger
-import           Luna.ASTNew.AST           (AST, ID)
-import qualified Luna.ASTNew.AST           as AST
-import           Luna.ASTNew.Expr          (Expr)
-import qualified Luna.ASTNew.Expr          as Expr
-import           Luna.ASTNew.Lit           (Lit)
-import qualified Luna.ASTNew.Lit           as Lit
-import           Luna.ASTNew.Module        (Module)
-import qualified Luna.ASTNew.Module        as Module
-import           Luna.ASTNew.Pat           (Pat)
-import qualified Luna.ASTNew.Pat           as Pat
-import           Luna.ASTNew.Type          (Type)
-import qualified Luna.ASTNew.Type          as Type
+import           Luna.Syntax.AST           (AST, ID)
+import qualified Luna.Syntax.AST           as AST
+import           Luna.Syntax.Expr          (Expr)
+import qualified Luna.Syntax.Expr          as Expr
+import           Luna.Syntax.Lit           (Lit)
+import qualified Luna.Syntax.Lit           as Lit
+import           Luna.Syntax.Module        (Module)
+import qualified Luna.Syntax.Module        as Module
+import           Luna.Syntax.Pat           (Pat)
+import qualified Luna.Syntax.Pat           as Pat
+import           Luna.Syntax.Type          (Type)
+import qualified Luna.Syntax.Type          as Type
 import           Luna.Data.StructInfo      (StructInfo, StructInfoMonad, OriginInfo)
 import qualified Luna.Data.StructInfo      as StructInfo
 import           Luna.Data.Namespace       (Namespace, NamespaceMonad)
 import qualified Luna.Data.Namespace       as Namespace
 import           Flowbox.System.Log.Logger as L
 import qualified Flowbox.Data.MapForest    as MapForest
-import           Luna.ASTNew.Name.Path     (NamePath)
-import qualified Luna.ASTNew.Name.Path     as NamePath
-import           Luna.ASTNew.Name.Pattern  (NamePatDesc)
+import           Luna.Syntax.Name.Path     (NamePath)
+import qualified Luna.Syntax.Name.Path     as NamePath
+import           Luna.Syntax.Name.Pattern  (NamePatDesc)
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
