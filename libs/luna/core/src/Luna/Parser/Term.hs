@@ -36,6 +36,8 @@ import           Luna.Parser.Literal (literal)
 import qualified Luna.Syntax.Name    as Name
 import qualified Data.ByteString.UTF8         as UTF8
 import           Data.Char                    (isSpace)
+import qualified Luna.System.Session as Session
+import qualified Luna.System.Pragma  as Pragma
 
 
 import Text.Trifecta.Rendering (Caret(Caret))

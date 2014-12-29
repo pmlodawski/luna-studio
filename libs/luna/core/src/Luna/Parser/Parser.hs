@@ -1,10 +1,3 @@
----------------------------------------------------------------------------
--- Copyright (C) Flowbox, Inc - All Rights Reserved
--- Unauthorized copying of this file, via any medium is strictly prohibited
--- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2014
----------------------------------------------------------------------------
-
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE QuasiQuotes               #-}
@@ -14,9 +7,19 @@
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Luna.Parser.Parser
+-- Copyright   :  (C) 2014 Flowbox
+-- License     :  AllRightsReserved
+-- Maintainer  :  Wojciech Daniło <wojciech.danilo@gmail.com>
+-- Stability   :  stable
+-- Portability :  portable
+-----------------------------------------------------------------------------
+
 module Luna.Parser.Parser where
 
-import Flowbox.Prelude 
+import Flowbox.Prelude hiding (init)
 
 import           Text.Parser.Combinators 
 import qualified Data.ByteString.UTF8         as UTF8
@@ -34,11 +37,10 @@ import qualified Text.Trifecta.Parser as Trifecta
 import qualified Luna.Parser.State  as ParserState
 import           Luna.Parser.State  (ParserState)
 import qualified Luna.Parser.Token  as Tok
-import qualified Luna.Data.Config   as Config
-import qualified Luna.Pragma.Pragma as Pragma
 import qualified Luna.Parser.Pragma as Pragma
 import qualified Luna.Parser.Indent as Indent
 
+import qualified Data.List as List
 
 import Luna.Parser.Type
 import Luna.Parser.Pattern
@@ -49,7 +51,6 @@ import Luna.Parser.Decl
 import Luna.Parser.Module
 
 import Luna.Parser.Builder (labeled, label, nextID, qualifiedPath, withLabeled)
-
 
 
 
@@ -77,20 +78,19 @@ renderErr e = renderPretty 0.8 80 $ e Leijen.<> linebreak
 -- Pragmas
 -----------------------------------------------------------
 
-appConf = Config.registerPragma (undefined :: Pragma.TabLength)
-        . Config.registerPragma (undefined :: Pragma.AllowOrphans)
-        . Config.registerPragma (undefined :: Pragma.ImplicitSelf)
+appConf = id
 
 -- FIXME[wd]: logika powina byc przeniesiona na system pluginow
 defConfig = appConf def
 -- FIXME[wd]: debugowo ustawione wartosci typow
-emptyState = def :: ParserState ()
-defState  = emptyState & ParserState.conf .~ defConfig
+emptyState = def :: ParserState
+defState  = emptyState
 
-
-appSt = ParserState.conf %~ appConf
 
 --st = def {State._conf = conf}
+
+
+
 
 -----------------------------------------------------------
 -- Section parsing
@@ -100,7 +100,7 @@ parseGen p st = run (bundleResult (unit p)) st
 parseGen2 p st = run (bundleResult p) st
 
 --moduleParser modPath = parseGen (upToEnd $ func)
-moduleParser modPath = parseGen (upToEnd $ pUnit $ pModule (last modPath) (init modPath))
+moduleParser modPath = parseGen (upToEnd $ pUnit $ pModule (List.last modPath) (List.init modPath))
 --exprParser           = parseGen (upToEnd expr)
 exprBlockParser      = parseGen (upToEnd $ indBlock expr)
 exprBlockParser2     = parseGen2 (upToEnd $ indBlock expr)
@@ -136,3 +136,6 @@ parseText2 p input = handleResult  $  parseFromText p (parserDelta parserName) i
                 --defaultTraverseM = AST.defaultTraverseM AliasAnalysis
 
 testme ast st = ast -- runState (traverseM ast) st
+
+
+init = Pragma.init

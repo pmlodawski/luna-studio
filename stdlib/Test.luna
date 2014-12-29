@@ -7,6 +7,9 @@ foreign haskell def print s:
 foreign haskell def Int.+ a:
     liftF2 (+) self a
 
+def test x:
+	y
+
 def a + b:
     a.+ b
 

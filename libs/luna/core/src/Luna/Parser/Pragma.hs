@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE DeriveDataTypeable        #-}
 
 
@@ -13,22 +14,20 @@ module Luna.Parser.Pragma where
 import           Data.Typeable
 
 import           Flowbox.Prelude
-import           Luna.Pragma.Pragma           (IsPragma)
+import           Luna.System.Session (registerPragma, enablePragma, disablePragma)
+import           Luna.System.Pragma  (pragma, SwitchPragma)
 
 
-------------------------------------------------------------------------
--- Data Types
-------------------------------------------------------------------------
 
-data TabLength    = TabLength Int deriving (Show, Typeable, Read)
-data AllowOrphans = AllowOrphans  deriving (Show, Typeable, Read)
-data ImplicitSelf = ImplicitSelf  deriving (Show, Typeable, Read)
+data ImplicitSelf = ImplicitSelf deriving (Show, Read, Typeable)
+data OrphanNames  = OrphanNames   deriving (Show, Read, Typeable)
 
+implicitSelf = pragma :: SwitchPragma ImplicitSelf
+orphanNames  = pragma :: SwitchPragma OrphanNames
 
-------------------------------------------------------------------------
--- Instances
-------------------------------------------------------------------------
+init = do
+    registerPragma implicitSelf
+    registerPragma orphanNames
 
-instance IsPragma TabLength
-instance IsPragma AllowOrphans
-instance IsPragma ImplicitSelf
+    enablePragma   implicitSelf
+    disablePragma  orphanNames
