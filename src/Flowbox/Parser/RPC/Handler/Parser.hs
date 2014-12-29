@@ -26,10 +26,10 @@ import qualified Generated.Proto.Parser.Parse.Type.Request     as ParseType
 import qualified Generated.Proto.Parser.Parse.Type.Status      as ParseType
 import qualified Generated.Proto.Parser.Parser.Ping.Request    as Ping
 import qualified Generated.Proto.Parser.Parser.Ping.Status     as Ping
-import           Luna.AST.Expr                                 (Expr)
 import           Luna.Data.Serialize.Proto.Conversion.Crumb    ()
 import           Luna.Data.Serialize.Proto.Conversion.Expr     ()
 import           Luna.Data.Serialize.Proto.Conversion.Pat      ()
+import           Luna.Syntax.Expr                              (Expr)
 import           Luna.Util.LunaShow                            (lunaShow)
 
 
