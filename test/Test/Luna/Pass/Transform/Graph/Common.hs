@@ -15,16 +15,16 @@ import           Luna.AST.Control.Crumb                    (Breadcrumbs)
 import qualified Luna.AST.Control.Crumb                    as Crumb
 import qualified Luna.AST.Control.Focus                    as Focus
 import qualified Luna.AST.Control.Zipper                   as Zipper
-import           Luna.AST.Expr                             (Expr)
 import           Luna.AST.Module                           (Module)
 import qualified Luna.AST.Name                             as Name
-import           Luna.Graph.Graph                          (Graph)
-import           Luna.Graph.PropertyMap                    (PropertyMap)
 import qualified Luna.Pass.Analysis.Alias.Alias            as Analysis.Alias
 import qualified Luna.Pass.Analysis.ID.MaxID               as MaxID
 import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer   as IDFixer
 import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
+import           Luna.Syntax.Expr                          (Expr)
+import           Luna.Syntax.Graph.Graph                   (Graph)
+import           Luna.Syntax.Graph.PropertyMap             (PropertyMap)
 
 
 

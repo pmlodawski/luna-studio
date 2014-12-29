@@ -14,11 +14,11 @@ import           Flowbox.Prelude
 import qualified Luna.AST.Control.Crumb  as Crumb
 import qualified Luna.AST.Control.Focus  as Focus
 import qualified Luna.AST.Control.Zipper as Zipper
-import qualified Luna.AST.Expr           as Expr
 import           Luna.AST.Module         (Module)
 import qualified Luna.AST.Name           as Name
-import qualified Test.Luna.AST.Common    as Common
+import qualified Luna.Syntax.Expr        as Expr
 import qualified Test.Luna.Sample.Code   as SampleCode
+import qualified Test.Luna.Syntax.AST    as Common
 
 
 
