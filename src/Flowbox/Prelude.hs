@@ -35,6 +35,7 @@ import           Data.Text.Lazy            as X (Text)
 import           Data.Foldable             as X (Foldable, traverse_)
 import           Data.Typeable             as X (Typeable)
 import           Data.Convertible.Instances.Missing as X
+import           Data.Default.Instances.Missing     as X
 import           Control.Monad             (unless, void, when)
 import           Control.Monad.Trans       (lift)
 import           Control.Monad.Trans.Class (MonadTrans)
