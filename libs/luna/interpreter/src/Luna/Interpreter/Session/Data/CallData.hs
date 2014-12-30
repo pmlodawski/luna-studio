@@ -9,11 +9,11 @@
 module Luna.Interpreter.Session.Data.CallData where
 
 import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb                  (Breadcrumbs)
 import           Luna.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
 import           Luna.Interpreter.Session.Data.DefPoint  (DefPoint)
 import qualified Luna.Interpreter.Session.Data.DefPoint  as DefPoint
 import qualified Luna.Syntax.AST                         as AST
+import           Luna.Syntax.Control.Crumb               (Breadcrumbs)
 import           Luna.Syntax.Graph.Graph                 (Graph)
 import           Luna.Syntax.Graph.Node                  (Node)
 import qualified Luna.Syntax.Graph.Node                  as Node

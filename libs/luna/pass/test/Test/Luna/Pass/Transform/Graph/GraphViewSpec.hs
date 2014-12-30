@@ -9,9 +9,9 @@ module Test.Luna.Pass.Transform.Graph.GraphViewSpec where
 
 import Test.Hspec
 
-import           Flowbox.Prelude
+import Flowbox.Prelude
 --import           Flowbox.Control.Error
---import           Luna.AST.Control.Crumb                (Breadcrumbs)
+--import           Luna.Syntax.Control.Crumb                (Breadcrumbs)
 --import           Luna.Syntax.Graph.View.GraphView      (GraphView)
 --import qualified Luna.Syntax.Graph.View.GraphView      as GraphView
 --import qualified Test.Luna.Pass.Transform.Graph.Common as Common

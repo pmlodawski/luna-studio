@@ -16,8 +16,8 @@ import qualified Flowbox.Batch.Project.Project         as Project
 import           Flowbox.Control.Error                 (assertE)
 import           Flowbox.Prelude                       hiding (error)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Control.Crumb                (Breadcrumbs)
 import qualified Luna.Lib.Lib                          as Library
+import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
 import           Luna.Syntax.Graph.Node                (Node)
 import qualified Luna.Syntax.Graph.Node                as Node
 import qualified Luna.Syntax.Graph.Node.OutputName     as OutputName

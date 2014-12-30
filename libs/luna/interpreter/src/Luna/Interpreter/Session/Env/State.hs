@@ -30,9 +30,6 @@ import           Flowbox.Data.SetForest                      (SetForest)
 import qualified Flowbox.Data.SetForest                      as SetForest
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
-import           Luna.AST.Control.Focus                      (Focus)
-import qualified Luna.AST.Control.Focus                      as Focus
-import qualified Luna.AST.Control.Zipper                     as Zipper
 import           Luna.AST.Module                             (Module)
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
@@ -55,6 +52,9 @@ import qualified Luna.Lib.Manager                            as LibManager
 import qualified Luna.Pass.Analysis.Alias.Alias              as Alias
 import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
 import qualified Luna.Syntax.AST                             as AST
+import           Luna.Syntax.Control.Focus                   (Focus)
+import qualified Luna.Syntax.Control.Focus                   as Focus
+import qualified Luna.Syntax.Control.Zipper                  as Zipper
 import           Luna.Syntax.Expr                            (Expr)
 import qualified Luna.Syntax.Expr                            as Expr
 import           Luna.Syntax.Graph.Flags                     (Flags)

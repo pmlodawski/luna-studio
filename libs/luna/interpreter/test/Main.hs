@@ -23,9 +23,6 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                        as UniPath
 import           Flowbox.Text.Show.Hs                                          (hsShow)
-import qualified Luna.AST.Control.Crumb                                        as Crumb
-import qualified Luna.AST.Control.Focus                                        as Focus
-import qualified Luna.AST.Control.Zipper                                       as Zipper
 import           Luna.AST.Module                                               (Module)
 import qualified Luna.AST.Module                                               as Module
 import           Luna.AST.Name                                                 (Name (Name))
@@ -61,6 +58,9 @@ import qualified Luna.Pass.Transform.AST.Hash.Hash                             a
 import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
 import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
+import qualified Luna.Syntax.Control.Crumb                                     as Crumb
+import qualified Luna.Syntax.Control.Focus                                     as Focus
+import qualified Luna.Syntax.Control.Zipper                                    as Zipper
 import qualified Luna.Syntax.Graph.PropertyMap                                 as PropertyMap
 
 

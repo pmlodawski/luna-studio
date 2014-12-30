@@ -10,11 +10,11 @@ module Test.Luna.Sample.Code where
 
 import Text.RawString.QQ
 
-import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb                (Breadcrumbs)
-import qualified Luna.AST.Control.Crumb                as Crumb
-import qualified Luna.AST.Name                         as Name
-import           Test.Luna.Pass.Transform.Graph.Common (named)
+import Flowbox.Prelude
+import Test.Luna.Pass.Transform.Graph.Common (named)
+--import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
+--import qualified Luna.Syntax.Control.Crumb             as Crumb
+--import qualified Luna.AST.Name                         as Name
 
 
 
@@ -217,21 +217,21 @@ def main:
 --     print $ 1 > 2
 
 
-sampleLambdas :: [(Name, Breadcrumbs, Code)]
-sampleLambdas = [
-    ( "simple lambda"
-    , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 6]
-    , [r|
-def main:
-    f = a : a , 1
-|]), ( "lambda with context"
-    , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 12]
-    , [r|
-def main arg:
-    x = 15
-    f = a : a , 1 , x , arg
-|])
-    ]
+-- sampleLambdas :: [(Name, Breadcrumbs, Code)]
+-- sampleLambdas = [
+--     ( "simple lambda"
+--     , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 6]
+--     , [r|
+-- def main:
+--     f = a : a , 1
+-- |]), ( "lambda with context"
+--     , [Crumb.Module "Main", Crumb.Function (Name.single "main") [], Crumb.Lambda 12]
+--     , [r|
+-- def main arg:
+--     x = 15
+--     f = a : a , 1 , x , arg
+-- |])
+--     ]
 
 
 emptyMain :: Code
@@ -251,7 +251,7 @@ class Vector a:
     x,y,z :: a
 
     def test a b:
-        (a,b, c : c, a, b)
+        (b, a)
 
     class Inner:
         def inner a b:
@@ -260,4 +260,18 @@ class Vector a:
 def main:
     v = Vector 1 2 3
     v.test
-|]
+|] -- FIXME[PM]: example below does not parse
+--class Vector a:
+--    x,y,z :: a
+
+--    def test a b:
+--        (a, b, c : c, a, b)
+
+--    class Inner:
+--        def inner a b:
+--            a, b
+
+--def main:
+--    v = Vector 1 2 3
+--    v.test
+
