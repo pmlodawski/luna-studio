@@ -23,3 +23,7 @@ data Module a e = Module { _mpath :: QualPath
 
 
 type LModule a e = Label a (Module a e)
+
+
+instance (Default a, Default e) => Default (Module a e) where
+    def = Module def def
