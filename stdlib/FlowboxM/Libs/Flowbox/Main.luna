@@ -274,18 +274,18 @@ def Image.gammaFromLinear gamma:
 def Image.clamp thresholds clamps:
     ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
 
-def Image.offset value:
-    ```liftF2 offsetLuna #{value} #{self}```
+def Image.offset value matte:
+    ```liftF3 offsetLuna #{value} #{matte} #{self}```
 
-def Image.contrast value:
-    ```liftF2 contrastLuna #{value} #{self}```
+def Image.contrast value matte:
+    ```liftF3 contrastLuna #{value} #{matte} #{self}```
 
-def Image.exposure blackpoint ex:
-    ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
+def Image.exposure blackpoint ex matte:
+    ```liftF4 exposureLuna #{blackpoint} #{ex} #{matte} #{self}```
 
 def Image.saturate saturation:
     ```liftF2 saturateLuna #{saturation} #{self}```
-
+    
 def Image.hsvTool hueRange hueRotation hueRolloff
             saturationRange saturationAdjustment saturationRolloff
             brightnessRange brightnessAdjustment brightnessRolloff:
@@ -309,8 +309,8 @@ def Image.multiply val:
 def Image.gamma val:
     ```liftF2 gammaLuna #{val} #{self}```
 
-def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
-    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
+def Image.grade blackpoint whitepoint lift gain multiply offset matte gamma:
+    ```liftF6 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
 def Image.colorCorrect saturation contrast gamma gain offset:
     ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
@@ -357,7 +357,7 @@ def Image.cornerPin p1 p2 p3 p4:
 
     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
-def Image.blur kernelSize:
+def Image.blur kernelSize matte:
     ```liftF2 gaussianLuna #{kernelSize} #{self}```
 
 def Image.laplacian kernelSize centerVal sideVal:
