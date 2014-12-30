@@ -63,4 +63,5 @@ Library
                   phonetic-code,
                   edit-distance,
                   tuple,
-                  optparse-applicative
+                  optparse-applicative,
+                  zippers

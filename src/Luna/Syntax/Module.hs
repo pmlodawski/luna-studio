@@ -22,6 +22,8 @@ data Module a e = Module { _mpath :: QualPath
                          } deriving (Show, Eq, Generic, Read)
 
 
+makeLenses ''Module
+
 type LModule a e = Label a (Module a e)
 
 
