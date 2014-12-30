@@ -4,17 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
 
 module Flowbox.Graphics.Shader.Pipe ( pipe ) where
 
-import Flowbox.Prelude                                    as P hiding (transform)
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Matrix
-import Flowbox.Graphics.Composition.Generators.Rasterizer
+import Flowbox.Graphics.Shader.Matrix
+import Flowbox.Graphics.Shader.Rasterizer
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Prelude                    as P hiding (transform)
 
-import Flowbox.Math.Matrix                                as M hiding (ftrans)
+import Flowbox.Math.Matrix as M hiding (ftrans)
 
 
 pipe :: Elt a => Boundary (Exp a)

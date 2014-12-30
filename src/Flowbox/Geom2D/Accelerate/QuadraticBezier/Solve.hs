@@ -9,13 +9,13 @@
 
 module Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve where
 
-import Data.Array.Accelerate as A
-import Math.Coordinate.Cartesian (Point2(..))
+import Data.Array.Accelerate     as A
+import Math.Coordinate.Cartesian (Point2 (..))
 
 import Flowbox.Geom2D.Accelerate.QuadraticBezier ()
 import Flowbox.Geom2D.QuadraticBezier
-import Flowbox.Graphics.Utils hiding (sign)
-import Flowbox.Graphics.Utils.Accelerate as A
+import Flowbox.Graphics.Utils.Accelerate         as A
+import Flowbox.Graphics.Utils.Utils              hiding (sign)
 import Flowbox.Prelude
 
 

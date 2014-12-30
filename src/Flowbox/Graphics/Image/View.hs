@@ -20,17 +20,17 @@ module Flowbox.Graphics.Image.View (
     remove
 ) where
 
-import           Data.Set        hiding (map, empty)
-import           Data.List       as List (foldl')
-import           Data.List.Split
+import Data.List       as List (foldl')
+import Data.List.Split
+import Data.Set        hiding (empty, map)
 
-import           Flowbox.Data.Channel           (ChannelTree(..))
-import qualified Flowbox.Data.Channel           as ChanTree
-import           Flowbox.Graphics.Image.Error   (Error(..))
-import qualified Flowbox.Graphics.Image.Error   as Image
-import           Flowbox.Graphics.Image.Channel (Channel(..))
+import           Flowbox.Data.MapTree           (MapTree (..))
+import qualified Flowbox.Data.MapTree           as MapTree
+import           Flowbox.Graphics.Image.Channel (Channel (..))
 import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Prelude                as P hiding (set, map, empty)
+import           Flowbox.Graphics.Image.Error   (Error (..))
+import qualified Flowbox.Graphics.Image.Error   as Image
+import           Flowbox.Prelude                as P hiding (empty, map, set)
 
 
 

@@ -26,10 +26,10 @@ import           Data.Map.Lazy
 
 import           Flowbox.Data.Mode                    (Mode)
 import           Flowbox.Data.Serialization           (Serializable (..), mkValue)
-import           Flowbox.Graphics.Composition.Generators.Sampler (Sampler, monosampler)
 import qualified Flowbox.Graphics.Image.Channel       as I
 import qualified Flowbox.Graphics.Image.Image         as Img
 import qualified Flowbox.Graphics.Image.View          as I
+import           Flowbox.Graphics.Shader.Sampler      (Sampler, monosampler)
 import qualified Flowbox.Math.Matrix                  as M
 import qualified Generated.Proto.Data.MatrixData      as MatrixData
 import qualified Generated.Proto.Data.MatrixData.Type as MatrixData

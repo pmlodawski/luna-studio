@@ -7,13 +7,13 @@
 module Flowbox.Graphics.Composition.Generator.Shape where
 
 
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Prelude    hiding (transform)
-import Flowbox.Math.Index hiding (canvas)
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Math.Index             hiding (canvas)
+import Flowbox.Prelude                hiding (transform)
 
-import Math.Space.Space
-import Math.Coordinate.Cartesian hiding (x, y, w)
 import Data.Array.Accelerate     as A hiding (constant)
+import Math.Coordinate.Cartesian hiding (w, x, y)
+import Math.Space.Space
 
 
 
@@ -26,7 +26,7 @@ rectangle cnv interior exterior = bound (Constant exterior) $ constant cnv inter
 ellipse :: Elt b => Grid (Exp Int) -> Exp b -> Exp b -> DiscreteGenerator (Exp b)
 ellipse cnv@(Grid w h) interior exterior = Generator cnv $ \(Point2 x y) ->
     let rx = (w `div` 2)
-    	rx2 = rx * rx
+        rx2 = rx * rx
         ry = (h `div` 2)
         ry2 = ry * ry
         x2 = (x - rx) * (x - rx)

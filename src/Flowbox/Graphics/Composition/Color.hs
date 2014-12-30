@@ -25,11 +25,11 @@ import qualified Data.Array.Accelerate       as A
 import           Data.Array.Accelerate.Tuple (IsTuple, TupleRepr, fromTuple, toTuple)
 import           Data.Array.Accelerate.Type  (IsScalar)
 
-import           Flowbox.Graphics.Composition.Generators.Structures
-import           Flowbox.Graphics.Color
-import qualified Flowbox.Graphics.Utils                             as U
-import           Flowbox.Math.Matrix                                as M
-import           Flowbox.Prelude                                    as P hiding (lift)
+import           Flowbox.Graphics.Color.Color
+import           Flowbox.Graphics.Shader.Shader
+import qualified Flowbox.Graphics.Utils.Utils   as U
+import           Flowbox.Math.Matrix            as M
+import           Flowbox.Prelude                as P hiding (lift)
 
 
 

@@ -13,10 +13,10 @@
 
 module Flowbox.Graphics.Composition.Filter where
 
-import Flowbox.Graphics.Composition.Generators.Shape
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Stencil
-import Flowbox.Graphics.Composition.Generators.Matrix
+import Flowbox.Graphics.Composition.Generator.Shape
+import Flowbox.Graphics.Shader.Matrix
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Graphics.Shader.Stencil
 
 import           Flowbox.Graphics.Prelude            as P hiding (filter)
 import           Flowbox.Math.Matrix                 as M hiding (stencil)

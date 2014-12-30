@@ -8,10 +8,10 @@ module Flowbox.Graphics.Composition.Merge where
 
 import qualified Data.Array.Accelerate as A
 
-import           Flowbox.Graphics.Composition.Generators.Structures
-import qualified Flowbox.Graphics.Utils                             as U
-import           Flowbox.Prelude                                    hiding (min, max)
-import qualified Flowbox.Prelude                                    as P
+import           Flowbox.Graphics.Shader.Shader
+import qualified Flowbox.Graphics.Utils.Utils   as U
+import           Flowbox.Prelude                hiding (max, min)
+import qualified Flowbox.Prelude                as P
 
 
 
