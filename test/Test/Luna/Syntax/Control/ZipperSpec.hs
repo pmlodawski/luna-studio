@@ -4,38 +4,67 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TypeOperators #-}
 
-module Test.Luna.AST.Control.ZipperSpec where
+module Test.Luna.Syntax.Control.ZipperSpec where
 
+import Control.Zipper
 import Test.Hspec
+import qualified Data.List as List
 
 import           Flowbox.Prelude
+import qualified Luna.Syntax.Enum        as Enum
+import           Luna.Syntax.Expr        (LExpr)
+import qualified Luna.Syntax.Label       as Label
+import           Luna.Syntax.Module      (LModule)
+import qualified Luna.Syntax.Module      as Module
+import qualified Test.Luna.Sample.Code   as SampleCode
+import qualified Test.Luna.Syntax.Common as Common
 --import           Flowbox.Control.Error
---import qualified Luna.AST.Control.Crumb  as Crumb
---import qualified Luna.AST.Control.Focus  as Focus
---import qualified Luna.AST.Control.Zipper as Zipper
---import           Luna.AST.Module         (Module)
+--import qualified Luna.Syntax.Control.Crumb  as Crumb
+--import qualified Luna.Syntax.Control.Focus  as Focus
+--import qualified Luna.Syntax.Control.Zipper as Zipper
 --import qualified Luna.AST.Name           as Name
 --import qualified Luna.Syntax.Expr        as Expr
---import qualified Test.Luna.Sample.Code   as SampleCode
---import qualified Test.Luna.Syntax.AST    as Common
 
 
+f :: Maybe a -> Maybe a
+f = id
 
 main :: IO ()
 main = hspec spec
 
 
---getAST :: IO Module
---getAST = Common.getAST SampleCode.zipperTestModule
+getAST :: IO (LModule Enum.IDTag (LExpr Enum.IDTag ()))
+getAST = Common.getAST SampleCode.zipperTestModule
 
 
+zipTo :: (a -> Bool) -> Zipper h j [a] -> Maybe (Zipper h j [a] :>> a)
+zipTo predicate z = do 
+    i <- List.findIndex predicate $ z ^. focus
+    fromWithin traverse z & moveTo i
+ 
 spec :: Spec
 spec = do
     describe "AST zippers" $ do
-        it "" pending
-    --    it "focus and defocus on function in module" $ do
-    --        ast <- getAST
+        --it "" pending
+        it "focus and defocus on function in module" $ do
+            ast <- getAST
+            let z = zipper ast
+                  & downward (Label.element . Module.body)
+                z' = fromWithin traverse z
+                    & moveTo 1
+                   <&> view focus 
+
+                predicate = const True
+
+            prettyPrint $ view focus $ z
+            putStrLn "==============="
+            prettyPrint $ f z'
+            putStrLn "==============="
+            prettyPrint $ f (zipTo predicate z <&> view focus)
+
+            pending
     --        zipper <- eitherToM $ Zipper.focusBreadcrumbs'
     --                    [ Crumb.Module   "Main"
     --                    , Crumb.Function (Name.single "main") []

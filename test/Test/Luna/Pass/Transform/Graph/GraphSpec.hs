@@ -9,8 +9,8 @@ module Test.Luna.Pass.Transform.Graph.GraphSpec where
 
 import Test.Hspec
 
-import           Flowbox.Prelude
---import           Luna.AST.Control.Crumb                  (Breadcrumbs)
+import Flowbox.Prelude
+--import           Luna.Syntax.Control.Crumb                  (Breadcrumbs)
 --import           Luna.Pass.Transform.AST.IDFixer.IDFixer (clearIDs)
 --import qualified Luna.Syntax.Graph.Edge                  as Edge
 --import           Luna.Syntax.Graph.Graph                 (Graph)

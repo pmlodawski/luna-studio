@@ -11,10 +11,10 @@ module Test.Luna.Pass.Transform.Graph.Common where
 
 --import           Flowbox.Control.Error
 --import           Flowbox.Prelude
---import           Luna.AST.Control.Crumb                    (Breadcrumbs)
---import qualified Luna.AST.Control.Crumb                    as Crumb
---import qualified Luna.AST.Control.Focus                    as Focus
---import qualified Luna.AST.Control.Zipper                   as Zipper
+--import           Luna.Syntax.Control.Crumb                    (Breadcrumbs)
+--import qualified Luna.Syntax.Control.Crumb                    as Crumb
+--import qualified Luna.Syntax.Control.Focus                    as Focus
+--import qualified Luna.Syntax.Control.Zipper                   as Zipper
 --import           Luna.AST.Module                           (Module)
 --import qualified Luna.AST.Name                             as Name
 --import qualified Luna.Pass.Analysis.Alias.Alias            as Analysis.Alias
@@ -28,8 +28,8 @@ module Test.Luna.Pass.Transform.Graph.Common where
 
 
 
---named :: a -> b -> (a, b)
---named = (,)
+named :: a -> b -> (a, b)
+named = (,)
 
 
 --mainBC :: Breadcrumbs
