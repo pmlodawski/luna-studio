@@ -13,7 +13,6 @@ import           Flowbox.Control.Error
 import           Flowbox.Data.Version                                          ()
 import           Flowbox.Prelude
 import qualified Flowbox.System.UniPath                                        as UniPath
-import qualified Luna.AST.Control.Crumb                                        as Crumb
 import qualified Luna.AST.Name                                                 as Name
 import           Luna.Data.Source                                              (Source (Source))
 import           Luna.Interpreter.Session.Data.DefPoint                        (DefPoint (DefPoint))
@@ -35,6 +34,7 @@ import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes a
 import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
 import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
 import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
+import qualified Luna.Syntax.Control.Crumb                                     as Crumb
 import qualified Luna.Syntax.Graph.PropertyMap                                 as PropertyMap
 
 
