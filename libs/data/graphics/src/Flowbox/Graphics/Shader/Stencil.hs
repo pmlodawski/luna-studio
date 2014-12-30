@@ -4,17 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
 
 module Flowbox.Graphics.Shader.Stencil where
 
-import Flowbox.Prelude                                    as P hiding (filter)
-import Flowbox.Graphics.Composition.Generators.Structures hiding (value)
-import Flowbox.Math.Matrix                                as M hiding (get, stencil)
+import Flowbox.Graphics.Shader.Shader hiding (value)
+import Flowbox.Math.Matrix            as M hiding (get, stencil)
+import Flowbox.Prelude                as P hiding (filter)
 
 import qualified Data.Array.Accelerate     as A
-import           Math.Coordinate.Cartesian (Point2(..))
+import           Math.Coordinate.Cartesian (Point2 (..))
 import           Math.Space.Space          hiding (height, width)
 
 

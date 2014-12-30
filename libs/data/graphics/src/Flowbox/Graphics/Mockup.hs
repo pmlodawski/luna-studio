@@ -39,7 +39,7 @@ import           Math.Metric
 import           Linear                            (V2(..))
 import           System.FilePath                   as FilePath
 
-import qualified Flowbox.Graphics.Color                               as Color
+import qualified Flowbox.Graphics.Color.Color                         as Color
 import qualified Flowbox.Graphics.Color.Companding                    as Gamma
 import           Flowbox.Graphics.Composition.Dither
 import           Flowbox.Geom2D.ControlPoint
@@ -48,32 +48,32 @@ import           Flowbox.Geom2D.Rectangle
 import qualified Flowbox.Geom2D.Shape                                 as GShape
 import qualified Flowbox.Geom2D.Mask as Mask
 import           Flowbox.Geom2D.Rasterizer
-import           Flowbox.Graphics.Composition.Generators.Filter
-import           Flowbox.Graphics.Composition.Generators.Filter       as Conv
-import           Flowbox.Graphics.Composition.Generators.Gradient
-import           Flowbox.Graphics.Composition.Generators.Keyer
-import           Flowbox.Graphics.Composition.Generators.Matrix
-import           Flowbox.Graphics.Composition.Generators.Noise.Billow
-import           Flowbox.Graphics.Composition.Generators.Noise.Perlin
-import           Flowbox.Graphics.Composition.Generators.Pipe
-import           Flowbox.Graphics.Composition.Generators.Rasterizer
-import           Flowbox.Graphics.Composition.Generators.Sampler
-import           Flowbox.Graphics.Composition.Generators.Shape
-import           Flowbox.Graphics.Composition.Generators.Stencil      as Stencil
-import           Flowbox.Graphics.Composition.Generators.Structures   as S
-import           Flowbox.Graphics.Composition.Generators.Transform
+import           Flowbox.Graphics.Composition.Filter
+import           Flowbox.Graphics.Composition.Filter       as Conv
+import           Flowbox.Graphics.Composition.Generator.Gradient
+import           Flowbox.Graphics.Composition.Keyer
+import           Flowbox.Graphics.Shader.Matrix
+import           Flowbox.Graphics.Composition.Generator.Noise.Billow
+import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
+import           Flowbox.Graphics.Shader.Pipe
+import           Flowbox.Graphics.Shader.Rasterizer
+import           Flowbox.Graphics.Shader.Sampler
+import           Flowbox.Graphics.Composition.Generator.Shape
+import           Flowbox.Graphics.Shader.Stencil      as Stencil
+import           Flowbox.Graphics.Shader.Shader   as S
+import           Flowbox.Graphics.Composition.Transform
 import           Flowbox.Graphics.Composition.Histogram
-import qualified Flowbox.Graphics.Composition.Raster                  as Raster
+import qualified Flowbox.Graphics.Composition.Generator.Raster                  as Raster
 import           Flowbox.Graphics.Image.Channel
-import           Flowbox.Graphics.Image.Color
+import           Flowbox.Graphics.Composition.Color
 import           Flowbox.Graphics.Image.Image                         as Image
 import           Flowbox.Graphics.Image.Error                         as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
 import           Flowbox.Graphics.Image.IO.OpenEXR                    (readFromEXR)
-import           Flowbox.Graphics.Image.Merge                         (AlphaBlend(..))
-import qualified Flowbox.Graphics.Image.Merge                         as Merge
+import           Flowbox.Graphics.Composition.Merge                         (AlphaBlend(..))
+import qualified Flowbox.Graphics.Composition.Merge                         as Merge
 import           Flowbox.Graphics.Image.View                          as View
-import           Flowbox.Graphics.Utils
+import           Flowbox.Graphics.Utils.Utils
 import           Flowbox.Math.Matrix                                  as M
 import           Flowbox.Prelude                                      as P hiding (lookup)
 

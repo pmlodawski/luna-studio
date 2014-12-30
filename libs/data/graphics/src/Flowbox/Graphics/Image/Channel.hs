@@ -9,10 +9,10 @@
 
 module Flowbox.Graphics.Image.Channel where
 
-import Flowbox.Graphics.Composition.Generators.Rasterizer
-import Flowbox.Graphics.Composition.Generators.Sampler
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Math.Matrix as M hiding ((++))
+import Flowbox.Graphics.Shader.Rasterizer
+import Flowbox.Graphics.Shader.Sampler
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Math.Matrix 				  as M hiding ((++))
 import Flowbox.Prelude
 
 

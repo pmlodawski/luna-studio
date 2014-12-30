@@ -17,16 +17,16 @@
 
 module Flowbox.Graphics.Composition.Transform where
 
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Prelude                           as P hiding (lifted, transform)
+import Flowbox.Graphics.Prelude       as P hiding (lifted, transform)
+import Flowbox.Graphics.Shader.Shader
 import Flowbox.Graphics.Utils.Linear
-import Flowbox.Graphics.Utils
-import Flowbox.Math.Matrix                                as M
+import Flowbox.Graphics.Utils.Utils
+import Flowbox.Math.Matrix            as M
 
 import qualified Data.Array.Accelerate     as A
-import           Math.Coordinate.Cartesian (Point2(..))
-import           Math.Space.Space          hiding (width, height)
-import           Linear                    hiding (normalize, inv33, rotate)
+import           Linear                    hiding (inv33, normalize, rotate)
+import           Math.Coordinate.Cartesian (Point2 (..))
+import           Math.Space.Space          hiding (height, width)
 
 
 

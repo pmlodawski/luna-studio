@@ -5,29 +5,28 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ViewPatterns              #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE ViewPatterns              #-}
 
 module Flowbox.Geom2D.Rasterizer (
     module Flowbox.Geom2D.Rasterizer,
     Point2(..)
 ) where
 
-import           Data.Array.Accelerate ((&&*), (||*), (==*), (>*))
-import qualified Data.Array.Accelerate as A
+import           Data.Array.Accelerate           ((&&*), (==*), (>*), (||*))
+import qualified Data.Array.Accelerate           as A
 import           Data.Array.Accelerate.IO
-import           Data.Bits                  ((.&.))
+import           Data.Bits                       ((.&.))
 import           Data.Maybe
 import           Data.VectorSpace
 import           Diagrams.Backend.Cairo
 import           Diagrams.Backend.Cairo.Internal
+import           Diagrams.Prelude                hiding (Path)
 import           Diagrams.Segment
-import           Diagrams.Prelude hiding (Path)
-import           Graphics.Rendering.Cairo hiding (translate, Path)
+import           Graphics.Rendering.Cairo        hiding (Path, translate)
 import           System.IO.Unsafe
 
-import           Math.Coordinate.Cartesian (Point2(..))
 import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
 import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.CubicBezier
@@ -35,15 +34,16 @@ import           Flowbox.Geom2D.Mask
 import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.QuadraticBezier
 import           Flowbox.Geom2D.QuadraticBezier.Conversion
-import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Graphics.Image.Image   (Image)
-import qualified Flowbox.Graphics.Image.Image as Image
+import qualified Flowbox.Graphics.Image.Channel                  as Channel
+import           Flowbox.Graphics.Image.Image                    (Image)
+import qualified Flowbox.Graphics.Image.Image                    as Image
 import           Flowbox.Graphics.Image.IO.BMP
-import qualified Flowbox.Graphics.Image.View    as View
-import qualified Flowbox.Graphics.Utils as U
-import           Flowbox.Math.Matrix (Matrix(..), Matrix2, Z(..), DIM2, (:.)(..))
-import qualified Flowbox.Math.Matrix as M
-import           Flowbox.Prelude hiding ((#), use)
+import qualified Flowbox.Graphics.Image.View                     as View
+import qualified Flowbox.Graphics.Utils.Utils                    as U
+import           Flowbox.Math.Matrix                             ((:.) (..), DIM2, Matrix (..), Matrix2, Z (..))
+import qualified Flowbox.Math.Matrix                             as M
+import           Flowbox.Prelude                                 hiding (use, ( # ))
+import           Math.Coordinate.Cartesian                       (Point2 (..))
 
 
 

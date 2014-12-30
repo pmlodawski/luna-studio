@@ -4,19 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
 
 module Flowbox.Graphics.Shader.Sampler where
 
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Filter     (Filter(..), convolve)
-import Flowbox.Graphics.Utils
-import Flowbox.Math.Matrix                                as M hiding (get, size)
-import Flowbox.Prelude                                    as P hiding (filter, transform)
+import Flowbox.Graphics.Composition.Filter (Filter (..), convolve)
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Graphics.Utils.Utils
+import Flowbox.Math.Matrix                 as M hiding (get, size)
+import Flowbox.Prelude                     as P hiding (filter, transform)
 
 import qualified Data.Array.Accelerate     as A
-import           Math.Coordinate.Cartesian (Point2(..))
+import           Math.Coordinate.Cartesian (Point2 (..))
 
 
 

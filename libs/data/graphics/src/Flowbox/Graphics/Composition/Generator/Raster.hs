@@ -13,12 +13,12 @@ module Flowbox.Graphics.Composition.Generator.Raster where
 import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
 
-import qualified Flowbox.Graphics.Color         as Color
+import qualified Flowbox.Graphics.Color.Color   as Color
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Image   (Image)
 import qualified Flowbox.Graphics.Image.Image   as Image
 import qualified Flowbox.Graphics.Image.View    as View
-import qualified Flowbox.Graphics.Utils         as Utils
+import qualified Flowbox.Graphics.Utils.Utils   as Utils
 import qualified Flowbox.Math.Matrix            as Matrix
 import           Flowbox.Prelude
 

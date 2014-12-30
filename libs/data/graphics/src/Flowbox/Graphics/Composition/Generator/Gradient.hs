@@ -10,8 +10,8 @@
 
 module Flowbox.Graphics.Composition.Generator.Gradient where
 
-import Flowbox.Prelude                                    as P hiding ((?))
-import Flowbox.Graphics.Composition.Generators.Structures
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Prelude                as P hiding ((?))
 
 import Data.Array.Accelerate     as A
 import Data.List                 (sort)

@@ -5,7 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE CPP                 #-}
-{-# LANGUAGE BangPatterns        #-}
 {-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
@@ -16,14 +15,14 @@ import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as AIO
 
 #ifdef ACCELERATE_CUDA_BACKEND
-import           Data.Array.Accelerate.CUDA        (run)
+import Data.Array.Accelerate.CUDA (run)
 #else
-import           Data.Array.Accelerate.Interpreter (run)
+import Data.Array.Accelerate.Interpreter (run)
 #endif
 
 import           Flowbox.Graphics.Composition.Histogram
-import qualified Flowbox.Graphics.Utils                 as U
 import           Flowbox.Graphics.Utils.Accelerate
+import qualified Flowbox.Graphics.Utils.Utils           as U
 import qualified Flowbox.Math.Numeric                   as Num
 import           Flowbox.Prelude
 
@@ -31,7 +30,7 @@ import           Flowbox.Prelude
 
 
 rotation :: A.Acc (A.Array A.DIM2 Float)
-rotation = A.map (/ sqrt 2) $ A.use $ A.fromList (A.Z A.:. 6 A.:. 3) 
+rotation = A.map (/ sqrt 2) $ A.use $ A.fromList (A.Z A.:. 6 A.:. 3)
          [  0.427019, -0.112186,  0.897256
          ,  0.886757, -0.142236, -0.439807
          , -0.176963, -0.983455, -0.038744
@@ -54,7 +53,7 @@ smax h p = A.fold1 max $ bigG h A.++ bigR p
 -- rhoGi :: A.Acc (A.Array A.DIM2 Float)
 rhoGi h p = A.reshape (A.index2 6 (256 :: A.Exp Int))
      $ A.asnd
-     $ A.awhile 
+     $ A.awhile
          (\v -> A.unit $ A.the (A.afst v) A.<* 6)
          rhoGiStep
          (A.lift (A.unit $ A.constant 0, emptyVector))
@@ -62,12 +61,12 @@ rhoGi h p = A.reshape (A.index2 6 (256 :: A.Exp Int))
    rhoGiStep :: A.Acc (A.Scalar Int, A.Vector Int) -> A.Acc (A.Scalar Int, A.Vector Int)
    rhoGiStep (A.unlift -> (it', vec) :: (A.Acc (A.Scalar Int), A.Acc (A.Vector Int))) =
      let currentIteration = A.the it'
- 
+
          currentMin = smin h p A.!! currentIteration
          currentMax = smax h p A.!! currentIteration
- 
+
          sliceG = A.slice (bigG h) (A.lift $ A.Z A.:. currentIteration A.:. A.All)
- 
+
      in  A.lift ( A.unit (currentIteration + 1)
                 , vec A.++ histogram' (histogram currentMin currentMax 256 sliceG)
                 )

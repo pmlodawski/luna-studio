@@ -5,14 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Composition.Keyer where
 
 import qualified Data.Array.Accelerate as A
 
-import Flowbox.Graphics.Color
-import Flowbox.Graphics.Utils (clamp')
+import Flowbox.Graphics.Color.Color
+import Flowbox.Graphics.Utils.Utils (clamp')
 import Flowbox.Prelude
 
 
