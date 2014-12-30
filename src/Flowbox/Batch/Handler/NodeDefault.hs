@@ -13,9 +13,9 @@ import qualified Flowbox.Batch.Handler.Common               as Batch
 import qualified Flowbox.Batch.Project.Project              as Project
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb                     (Breadcrumbs)
 import qualified Luna.Lib.Lib                               as Library
 import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer    as IDFixer
+import           Luna.Syntax.Control.Crumb                  (Breadcrumbs)
 import qualified Luna.Syntax.Graph.Flags                    as Flags
 import qualified Luna.Syntax.Graph.Node                     as Node
 import           Luna.Syntax.Graph.Node.Expr                (NodeExpr)

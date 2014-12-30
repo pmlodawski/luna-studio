@@ -26,12 +26,12 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                    as UniPath
 import qualified Luna.AST.Arg                              as Arg
-import qualified Luna.AST.Control.Crumb                    as Crumb
 import qualified Luna.AST.Lit                              as Lit
 import qualified Luna.AST.Name                             as Name
 import qualified Luna.AST.Type                             as Type
 import qualified Luna.Pass.Analysis.Alias.Alias            as Alias
 import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
+import qualified Luna.Syntax.Control.Crumb                 as Crumb
 import qualified Luna.Syntax.Expr                          as Expr
 import qualified Luna.Syntax.Graph.Flags                   as Flags
 import           Luna.Syntax.Graph.Node                    (Node)
