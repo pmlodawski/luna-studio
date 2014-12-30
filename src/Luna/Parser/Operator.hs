@@ -13,8 +13,6 @@ import           Flowbox.Prelude
 import           Luna.Data.ASTInfo   (ASTInfo)
 import           Luna.Data.SourceMap (SourceMap)
 import qualified Luna.Data.SourceMap as SourceMap
-import qualified Luna.Data.Config    as Config
-import           Luna.Data.Config    (Config)
 import qualified Data.Map            as Map
 import           Data.Map            (Map)
 

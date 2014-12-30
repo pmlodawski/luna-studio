@@ -3,6 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE GADTs #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -24,7 +25,7 @@ import           Control.Monad          (MonadPlus)
 import           Control.Monad.Identity (Identity, runIdentity)
 import           Luna.System.Pragma     (HasPragmaSet(pragmaSet), PragmaSet)
 import qualified Luna.System.Pragma     as Pragma
-import           Luna.System.Pragma     (Pragma)
+import           Luna.System.Pragma     (Pragma, SwitchPragma, PragmaCons, PragmaVal)
 
 ----------------------------------------------------------------------
 -- Session
@@ -36,8 +37,8 @@ type    Session a    = SessionT Identity a
 newtype SessionT m a = SessionT { unSessionT :: StateT Config m a } 
                      deriving (Monad, MonadIO, MonadPlus, Applicative, Alternative, Functor)
 
-type SessionCtx m   = (SessionMonad m, Functor m, Applicative m)
-type PragmaCtx  m a = (SessionCtx m, Typeable a)
+type SessionCtx m         = (SessionMonad m, Functor m, Applicative m)
+type PragmaCtx  m a t rep = (SessionCtx m, PragmaCons t, rep~PragmaVal t a, Typeable rep)
 
 -- == Instances ==
 
@@ -64,28 +65,43 @@ withSession f = do
 withSession_ :: SessionCtx m => (Config -> Config) -> m ()
 withSession_ f = withSession_ f *> pure ()
 
-runSessionT :: SessionT m a -> Config -> m (a, Config)
-runSessionT = runStateT . unSessionT
+runT :: SessionT m a -> Config -> m (a, Config)
+runT = runStateT . unSessionT
 
-runSession :: Session a -> Config -> (a,Config)
-runSession = runIdentity .: runSessionT
+run :: Session a -> Config -> (a,Config)
+run = runIdentity .: runT
+
+defrunT :: SessionT m a -> m (a, Config)
+defrunT = flip runT def
+
+defrun :: Session a -> (a, Config)
+defrun = flip run def
 
 -- Pragmas
 
-pushPragma :: PragmaCtx m a => Pragma a -> a -> m Config
+registerPragma :: PragmaCtx m a t rep => Pragma t a -> m Config
+registerPragma = withSession . Pragma.registerPragma
+
+pushPragma :: PragmaCtx m a t rep => Pragma t a -> rep -> m Config
 pushPragma = withSession .: Pragma.pushPragma
 
-setPragma :: PragmaCtx m a => Pragma a -> a -> m Config
+setPragma :: PragmaCtx m a t rep => Pragma t a -> rep -> m Config
 setPragma = withSession .: Pragma.setPragma
 
-lookupPragma :: PragmaCtx m a => Pragma a -> m (Pragma.Lookup a)
+lookupPragma :: PragmaCtx m a t rep => Pragma t a -> m (Pragma.Lookup rep)
 lookupPragma p = Pragma.lookupPragma p <$> get
 
-popPragma :: PragmaCtx m a => Pragma a -> m (Pragma.Lookup a)
+popPragma :: PragmaCtx m a t rep => Pragma t a -> m (Pragma.Lookup rep)
 popPragma p = do 
     lup <- Pragma.popPragma p <$> get
     traverse_ (put.snd) lup
     return $ fmap fst lup
+
+enablePragma :: (SessionCtx m, Typeable a) => SwitchPragma a -> m Config
+enablePragma = withSession . Pragma.enablePragma
+
+disablePragma :: (SessionCtx m, Typeable a) => SwitchPragma a -> m Config
+disablePragma = withSession . Pragma.disablePragma
 
 ----------------------------------------------------------------------
 -- Config
