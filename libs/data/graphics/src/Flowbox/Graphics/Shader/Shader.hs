@@ -14,7 +14,7 @@
 {-# LANGUAGE UndecidableInstances  #-}
 {-# LANGUAGE FlexibleContexts      #-}
 
-module Flowbox.Graphics.Composition.Generators.Structures where
+module Flowbox.Graphics.Shader.Shader where
 
 import           Flowbox.Graphics.Prelude          hiding (transform)
 import qualified Flowbox.Prelude                   as P (Eq(..), Ord(..)) -- unfortunately required for the tick sorting
@@ -36,9 +36,9 @@ import           Math.Space.Space
 
 -- == Generator type ==
 
-data Generator a b = Generator { canvas :: Grid (Exp Int)
-                               , runGenerator :: a -> b
-                               } deriving Functor
+data Shader a b = Shader { canvas :: Grid (Exp Int)
+                         , runGenerator :: a -> b
+                         } deriving Functor
 
 type CartesianGenerator a = Generator (Cartesian.Point2 a)
 type DiscreteGenerator    = CartesianGenerator (Exp Int)

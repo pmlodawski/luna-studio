@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Graphics.Composition.Generators.Gradient where
+module Flowbox.Graphics.Composition.Generator.Gradient where
 
 import Flowbox.Prelude                                    as P hiding ((?))
 import Flowbox.Graphics.Composition.Generators.Structures

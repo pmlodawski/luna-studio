@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Image.Merge where
+module Flowbox.Graphics.Composition.Merge where
 
 import qualified Data.Array.Accelerate as A
 
@@ -122,7 +122,7 @@ colorDodge overlay background = (overlay A.==* 1.0) A.? (1, min 1 (background / 
 -- it takes a pixel from A. Nuke does the same thing.
 conjointOver :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
 conjointOver overlay alphaOverlay background alphaBackground =
-    (alphaOverlay A.>=* alphaBackground) A.? 
+    (alphaOverlay A.>=* alphaBackground) A.?
         (overlay,
         overlay + background * U.invert alphaOverlay / alphaBackground)
 

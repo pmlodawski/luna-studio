@@ -7,7 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
 
-module Flowbox.Graphics.Composition.Generators.Keyer where
+module Flowbox.Graphics.Composition.Keyer where
 
 import qualified Data.Array.Accelerate as A
 

@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Graphics.Composition.Generators.Stencil where
+module Flowbox.Graphics.Shader.Stencil where
 
 import Flowbox.Prelude                                    as P hiding (filter)
 import Flowbox.Graphics.Composition.Generators.Structures hiding (value)

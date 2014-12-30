@@ -8,7 +8,7 @@
 {-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Graphics.Composition.Generators.Rasterizer where
+module Flowbox.Graphics.Shader.Rasterizer where
 
 import Flowbox.Prelude                                    as P
 import Flowbox.Graphics.Composition.Generators.Structures
@@ -27,7 +27,7 @@ rasterizer (Generator (Grid width' height') gen) = generate (A.index2 height' wi
     where wrapper (A.unlift . A.unindex2 -> (y, x)) = gen (Point2 x y)
 
 gridRasterizer :: forall a e . (Elt e, Elt a, IsFloating a)
-               => Grid (Exp Int) -> Grid (Exp Int) 
+               => Grid (Exp Int) -> Grid (Exp Int)
                -> (CartesianGenerator (Exp a) (Exp e) -> DiscreteGenerator (Exp e))
                -> [CartesianGenerator (Exp a) (Exp e)] -> Matrix2 e
 gridRasterizer space grid sampler generators = generate (A.index2 (height space) (width space)) wrapper

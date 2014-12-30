@@ -15,7 +15,7 @@
 {-# LANGUAGE UndecidableInstances   #-}
 {-# LANGUAGE ViewPatterns           #-}
 
-module Flowbox.Graphics.Composition.Generators.Transform where
+module Flowbox.Graphics.Composition.Transform where
 
 import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Graphics.Prelude                           as P hiding (lifted, transform)

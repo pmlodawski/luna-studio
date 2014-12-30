@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Composition.Generators.Noise.Internal where
+module Flowbox.Graphics.Composition.Generator.Noise.Internal where
 
 import qualified Data.Array.Accelerate as A
 import           Data.Bits             ((.&.), xor)
@@ -14,7 +14,7 @@ import Flowbox.Prelude
 
 
 data Quality = Fast | Standard | Best
-             deriving (Enum, Show) 
+             deriving (Enum, Show)
 
 
 

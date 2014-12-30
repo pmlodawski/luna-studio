@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Composition.Generators.Noise.Perlin where
+module Flowbox.Graphics.Composition.Generator.Noise.Perlin where
 
 import qualified Data.Array.Accelerate      as A
 import           Data.Bits                  ((.&.))
