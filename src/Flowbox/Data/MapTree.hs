@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ViewPatterns #-}
 
-module Flowbox.Data.Channel where
+module Flowbox.Data.MapTree where
 
 import qualified Data.Map as Map
 
@@ -14,14 +14,14 @@ import           Flowbox.Prelude
 
 
 
-data ChannelTree name value = ChannelTree  { channel  :: Maybe value
-                                           , children :: Map.Map name (ChannelTree name value)
-                                           }
-                            | EmptyNode
-                            deriving (Show)
+data MapTree name value = MapTree  { channel  :: Maybe value
+                                   , children :: Map.Map name (ChannelTree name value)
+                                   }
+                        | EmptyNode
+                        deriving (Show)
 --makeLenses ''ChannelTree
 
-data Crumb name value = Crumb name (Maybe value) (Map.Map name (ChannelTree name value)) 
+data Crumb name value = Crumb name (Maybe value) (Map.Map name (ChannelTree name value))
                       | Snapshot (ChannelTree name value)
                       deriving (Show)
 
@@ -118,7 +118,7 @@ paste :: Zipper name value -> ZipperResult name value
 paste (_, [])                               = Left PasteWithoutCopy
 paste (EmptyNode, bs@(last -> Snapshot st)) = Right (st, init bs)
 paste (EmptyNode, _)                        = Left PasteWithoutCopy
-paste (_, _)                                = Left PasteToExisting 
+paste (_, _)                                = Left PasteToExisting
 
 -- = Value =
 

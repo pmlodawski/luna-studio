@@ -7,11 +7,11 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
-module Flowbox.Graphics.Color (
+module Flowbox.Graphics.Color.Color (
     module Flowbox.Graphics.Color,
     module X
 ) where
-	
+
 import           Flowbox.Graphics.Color.Conversion          as X
 import           Flowbox.Graphics.Color.CMY                 as X
 import           Flowbox.Graphics.Color.CMY.Conversion      as X

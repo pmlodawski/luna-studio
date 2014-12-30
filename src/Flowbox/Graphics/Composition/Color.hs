@@ -9,7 +9,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
 
-module Flowbox.Graphics.Image.Color (
+module Flowbox.Graphics.Composition.Color (
     module Flowbox.Graphics.Image.Color,
     U.Range(..),
     U.bias,
@@ -326,5 +326,5 @@ crosstalk redBezier greenBezier blueBezier
                                                       in  runBezier blueRedBezier blueColor
 
           blueToGreen = Generator (canvas blue) $ \x -> let blueColor = runGenerator blue x
-                                                        in  runBezier blueGreenBezier blueColor 
+                                                        in  runBezier blueGreenBezier blueColor
 

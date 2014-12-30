@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Graphics.Composition.Generators.Sampler where
+module Flowbox.Graphics.Shader.Sampler where
 
 import Flowbox.Graphics.Composition.Generators.Structures
 import Flowbox.Graphics.Composition.Generators.Filter     (Filter(..), convolve)

@@ -13,7 +13,7 @@
 {-# LANGUAGE UndecidableInstances  #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Flowbox.Graphics.Utils where
+module Flowbox.Graphics.Utils.Utils where
 
 import Data.Array.Accelerate as A
 import Data.Typeable

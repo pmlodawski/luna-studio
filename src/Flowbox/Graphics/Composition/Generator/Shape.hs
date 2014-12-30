@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Composition.Generators.Shape where
+module Flowbox.Graphics.Composition.Generator.Shape where
 
 
 import Flowbox.Graphics.Composition.Generators.Structures
@@ -18,13 +18,13 @@ import Data.Array.Accelerate     as A hiding (constant)
 
 
 constant :: Grid (Exp Int) -> b -> Generator a b
-constant cnv a = Generator cnv $ const a 
+constant cnv a = Generator cnv $ const a
 
 rectangle :: Elt b => Grid (Exp Int) -> Exp b -> Exp b -> DiscreteGenerator (Exp b)
 rectangle cnv interior exterior = bound (Constant exterior) $ constant cnv interior
 
 ellipse :: Elt b => Grid (Exp Int) -> Exp b -> Exp b -> DiscreteGenerator (Exp b)
-ellipse cnv@(Grid w h) interior exterior = Generator cnv $ \(Point2 x y) -> 
+ellipse cnv@(Grid w h) interior exterior = Generator cnv $ \(Point2 x y) ->
     let rx = (w `div` 2)
     	rx2 = rx * rx
         ry = (h `div` 2)

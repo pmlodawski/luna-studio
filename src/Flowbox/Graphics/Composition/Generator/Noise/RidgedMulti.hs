@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TypeOperators #-}
 
-module Flowbox.Graphics.Composition.Generators.Noise.RidgedMulti where
+module Flowbox.Graphics.Composition.Generator.Noise.RidgedMulti where
 
 import qualified Data.Array.Accelerate     as A
 import           Data.Bits                 ((.&.))

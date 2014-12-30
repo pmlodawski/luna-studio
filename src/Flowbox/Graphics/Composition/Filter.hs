@@ -11,7 +11,7 @@
 {-# LANGUAGE ConstraintKinds      #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Flowbox.Graphics.Composition.Generators.Filter where
+module Flowbox.Graphics.Composition.Filter where
 
 import Flowbox.Graphics.Composition.Generators.Shape
 import Flowbox.Graphics.Composition.Generators.Structures
@@ -71,7 +71,7 @@ triangle :: (Num a, Condition a, Ord a) => Filter a
 triangle = Filter 1 $ \(abs -> t) -> if' (t < 1) (1 - t) 0
 
 bell :: (Fractional a, Condition a, Ord a) => Filter a
-bell = Filter 1.5 $ \(abs -> t) -> if' (t < 0.5) (0.75 - t * t) 
+bell = Filter 1.5 $ \(abs -> t) -> if' (t < 0.5) (0.75 - t * t)
                                  $ if' (t < 1.5) (0.5 * ((t - 1.5) * (t - 1.5)))
                                  0.0
 
@@ -81,7 +81,7 @@ bspline = Filter 2.0 $ \(abs -> t) -> if' (t < 1.0) ((0.5 * t * t * t) - t * t +
                                     0.0
 
 lanczos :: (Floating a, Condition a, Ord a) => a -> Filter a
-lanczos a = Filter a $ \(abs -> t) -> if' (t <=  1e-6) 1.0 
+lanczos a = Filter a $ \(abs -> t) -> if' (t <=  1e-6) 1.0
                                     $ if' (t < a) ((a * sin (pi * t) * sin (pi * t / a)) / (pi * pi * t * t))
                                     0.0
 
@@ -113,8 +113,8 @@ dirac sigma = Filter 1.0 $ \(abs -> t) -> exp (- (t * t) / (sigma * sigma)) / (s
 laplacian :: (Elt a, IsFloating a) => Exp a -> Exp a -> Grid (Exp Int) -> Matrix2 a
 laplacian cross side (fmap (1+).(2*) -> Grid sizex sizey) = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
     let center = A.fromIntegral (sizex + sizey - 2) * cross + A.fromIntegral ((sizex - 1) * (sizey - 1)) * side
-    in  if' (x == sizex `div` 2) 
-            (if' (y == sizey `div` 2) (-center) cross) 
+    in  if' (x == sizex `div` 2)
+            (if' (y == sizey `div` 2) (-center) cross)
             (if' (y == sizey `div` 2) cross     side)
 
 -- == Constant sized kernels ==

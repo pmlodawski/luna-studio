@@ -7,19 +7,19 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Graphics.Composition.Generators.Pipe ( pipe ) where
+module Flowbox.Graphics.Shader.Pipe ( pipe ) where
 
 import Flowbox.Prelude                                    as P hiding (transform)
 import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Matrix 
+import Flowbox.Graphics.Composition.Generators.Matrix
 import Flowbox.Graphics.Composition.Generators.Rasterizer
 
 import Flowbox.Math.Matrix                                as M hiding (ftrans)
 
 
-pipe :: Elt a => Boundary (Exp a) 
-                -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)) 
-                -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)) 
+pipe :: Elt a => Boundary (Exp a)
+                -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a))
+                -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a))
                 -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
 pipe bn a b gen = fromMatrix bn $ (ftrans bn a >-> ftrans bn b) (rasterizer gen)
 
