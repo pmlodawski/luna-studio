@@ -17,10 +17,10 @@ import           Math.Coordinate.Cartesian (Point2 (..))
 import           Math.Space.Space
 
 
-unsafeFromMatrix :: Elt e => Matrix2 e -> DiscreteGenerator (Exp e)
-unsafeFromMatrix mat = Generator cnv $ \(Point2 x y) -> mat M.! A.index2 y x
+unsafeFromMatrix :: Elt e => Matrix2 e -> DiscreteShader (Exp e)
+unsafeFromMatrix mat = Shader cnv $ \(Point2 x y) -> mat M.! A.index2 y x
     where Z :. h :. w = A.unlift $ shape mat :: EDIM2
           cnv = Grid w h
 
-fromMatrix :: Elt e => Boundary (Exp e) -> Matrix2 e -> DiscreteGenerator (Exp e)
+fromMatrix :: Elt e => Boundary (Exp e) -> Matrix2 e -> DiscreteShader (Exp e)
 fromMatrix b mat = bound b $ unsafeFromMatrix mat

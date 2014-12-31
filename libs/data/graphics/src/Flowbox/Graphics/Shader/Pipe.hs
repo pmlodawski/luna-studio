@@ -18,10 +18,10 @@ import Flowbox.Math.Matrix as M hiding (ftrans)
 
 
 pipe :: Elt a => Boundary (Exp a)
-                -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a))
-                -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a))
-                -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+                -> (DiscreteShader (Exp a) -> DiscreteShader (Exp a))
+                -> (DiscreteShader (Exp a) -> DiscreteShader (Exp a))
+                ->  DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 pipe bn a b gen = fromMatrix bn $ (ftrans bn a >-> ftrans bn b) (rasterizer gen)
 
-ftrans :: Elt a => Boundary (Exp a) -> (DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)) -> Matrix2 a -> Matrix2 a
+ftrans :: Elt a => Boundary (Exp a) -> (DiscreteShader (Exp a) -> DiscreteShader (Exp a)) -> Matrix2 a -> Matrix2 a
 ftrans bn f a = rasterizer $ f (fromMatrix bn a)

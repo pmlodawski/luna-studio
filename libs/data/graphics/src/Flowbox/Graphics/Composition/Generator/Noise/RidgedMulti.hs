@@ -13,20 +13,20 @@ import           Data.Bits                 ((.&.))
 import qualified Math.Coordinate.Cartesian as Cartesian
 
 import Flowbox.Graphics.Composition.Generator.Noise.Internal
-import Flowbox.Graphics.Shader.Shader                        hiding (value)
-import Flowbox.Prelude                                       hiding (ix)
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Prelude
 
 
 
-ridgedMultiNoise :: A.Exp Double -> ContinousGenerator (A.Exp Double)
-ridgedMultiNoise z = unitGenerator $ runGenerator $ ridgedMultiGen Standard 1.0 2.0 6 30 0 1.0 1.0 2.0 z
+ridgedMultiNoise :: A.Exp Double -> ContinousShader (A.Exp Double)
+ridgedMultiNoise z = unitShader $ runShader $ ridgedMultiGen Standard 1.0 2.0 6 30 0 1.0 1.0 2.0 z
 
 ridgedMultiGen :: Quality -> A.Exp Double -> A.Exp Double ->
                   A.Exp Int -> A.Exp Int -> A.Exp Int ->
                   A.Exp Double -> A.Exp Double -> A.Exp Double ->
                   A.Exp Double ->
-                  ContinousGenerator (A.Exp Double)
-ridgedMultiGen quality freq lac octaveCount maxOctave seed exponent' offset gain z = unitGenerator $ \point ->
+                  ContinousShader (A.Exp Double)
+ridgedMultiGen quality freq lac octaveCount maxOctave seed exponent' offset gain z = unitShader $ \point ->
     let finalValue = value $
               A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
 
@@ -50,7 +50,7 @@ ridgedMultiGen quality freq lac octaveCount maxOctave seed exponent' offset gain
                   signalValue = curWeight * ((offset - abs (signal unliftedPoint' oz curOctave)) ** 2)
                   unliftedPoint' = A.unlift point'
 
-        spectralWeights = A.generate (A.index1 maxOctave) $ \ix ->
-            let A.Z A.:. i = A.unlift ix :: A.Z A.:. A.Exp Int
+        spectralWeights = A.generate (A.index1 maxOctave) $ \idx ->
+            let A.Z A.:. i = A.unlift idx :: A.Z A.:. A.Exp Int
             in (lac ** A.fromIntegral i) ** (-exponent')
     in (finalValue * 1.25) - 1.0

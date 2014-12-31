@@ -32,15 +32,15 @@ union a b = a + b - (a * b)
 
 -- FIXME [KL]: Bounding box now is taken from the overlay generator
 basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
-                             => Generator x (A.Exp a) -- ^ Overlay / Source / Foreground / A
-                             -> Generator x (A.Exp a) -- ^ Overlay alpha
-                             -> Generator x (A.Exp a) -- ^ Background / Destination / B
-                             -> Generator x (A.Exp a) -- ^ Background alpha
+                             => Shader x (A.Exp a) -- ^ Overlay / Source / Foreground / A
+                             -> Shader x (A.Exp a) -- ^ Overlay alpha
+                             -> Shader x (A.Exp a) -- ^ Background / Destination / B
+                             -> Shader x (A.Exp a) -- ^ Background alpha
                              -> AlphaBlend            -- ^ Specifies if the same blending method is used on alpha channels
                              -> BlendMode a           -- ^ Function used for blending
-                             -> Generator x (A.Exp a) -- ^ Merge result
-basicColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOverlay) (Generator _ background) (Generator _ alphaBackground) alphaBlend blend =
-    Generator cnv $ \p ->
+                             -> Shader x (A.Exp a) -- ^ Merge result
+basicColorCompositingFormula (Shader cnv overlay) (Shader _ alphaOverlay) (Shader _ background) (Shader _ alphaBackground) alphaBlend blend =
+    Shader cnv $ \p ->
     let alphaResult p' = case alphaBlend of
             Adobe  -> alphaOverlay p' `union` alphaBackground p'
             Custom -> alphaOverlay p' `blend` alphaBackground p'
@@ -50,15 +50,15 @@ basicColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOverlay) 
 -- FIXME [KL]: Bounding box now is taken from the overlay generator
 threeWayMerge :: (A.Elt a, A.IsFloating a)
               => ComplicatedBlendMode a
-              -> Generator x (A.Exp a) -- ^ A.R
-              -> Generator x (A.Exp a) -- ^ A.G
-              -> Generator x (A.Exp a) -- ^ A.B
-              -> Generator x (A.Exp a) -- ^ B.R
-              -> Generator x (A.Exp a) -- ^ B.G
-              -> Generator x (A.Exp a) -- ^ B.B
-              -> Generator x (A.Exp a) -- ^ A.A
-              -> Generator x (A.Exp a) -- ^ B.A
-              -> (Generator x (A.Exp a), Generator x (A.Exp a), Generator x (A.Exp a), Generator x (A.Exp a))
+              -> Shader x (A.Exp a) -- ^ A.R
+              -> Shader x (A.Exp a) -- ^ A.G
+              -> Shader x (A.Exp a) -- ^ A.B
+              -> Shader x (A.Exp a) -- ^ B.R
+              -> Shader x (A.Exp a) -- ^ B.G
+              -> Shader x (A.Exp a) -- ^ B.B
+              -> Shader x (A.Exp a) -- ^ A.A
+              -> Shader x (A.Exp a) -- ^ B.A
+              -> (Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a))
 threeWayMerge blend ar ag ab br bg bb aa ba =
     (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, ba)
     where merge ov aov bgnd abgnd = complicatedColorCompositingFormula ov aov bgnd abgnd blend
@@ -67,32 +67,32 @@ threeWayMerge blend ar ag ab br bg bb aa ba =
 threeWayMerge' :: (A.Elt a, A.IsFloating a)
               => AlphaBlend
               -> BlendMode a
-              -> Generator x (A.Exp a) -- ^ A.R
-              -> Generator x (A.Exp a) -- ^ A.G
-              -> Generator x (A.Exp a) -- ^ A.B
-              -> Generator x (A.Exp a) -- ^ B.R
-              -> Generator x (A.Exp a) -- ^ B.G
-              -> Generator x (A.Exp a) -- ^ B.B
-              -> Generator x (A.Exp a) -- ^ A.A
-              -> Generator x (A.Exp a) -- ^ B.A
-              -> (Generator x (A.Exp a), Generator x (A.Exp a), Generator x (A.Exp a), Generator x (A.Exp a))
+              -> Shader x (A.Exp a) -- ^ A.R
+              -> Shader x (A.Exp a) -- ^ A.G
+              -> Shader x (A.Exp a) -- ^ A.B
+              -> Shader x (A.Exp a) -- ^ B.R
+              -> Shader x (A.Exp a) -- ^ B.G
+              -> Shader x (A.Exp a) -- ^ B.B
+              -> Shader x (A.Exp a) -- ^ A.A
+              -> Shader x (A.Exp a) -- ^ B.A
+              -> (Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a))
 threeWayMerge' alphaBlend blend ar ag ab br bg bb aa ba =
   (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, mergeAlpha aa ba)
   where merge ov aov bgnd abgnd = basicColorCompositingFormula ov aov bgnd abgnd alphaBlend blend
-        mergeAlpha (Generator cnv aa') (Generator _ ba') = Generator cnv $ \p -> case alphaBlend of
+        mergeAlpha (Shader cnv aa') (Shader _ ba') = Shader cnv $ \p -> case alphaBlend of
             Adobe  -> aa' p `union` ba' p
             Custom -> aa' p `blend` ba' p
 
 -- FIXME [KL]: Bounding box now is taken from the overlay generator
 complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
-                                   => Generator x (A.Exp a)
-                                   -> Generator x (A.Exp a)
-                                   -> Generator x (A.Exp a)
-                                   -> Generator x (A.Exp a)
+                                   => Shader x (A.Exp a)
+                                   -> Shader x (A.Exp a)
+                                   -> Shader x (A.Exp a)
+                                   -> Shader x (A.Exp a)
                                    -> ComplicatedBlendMode a
-                                   -> Generator x (A.Exp a)
-complicatedColorCompositingFormula (Generator cnv overlay) (Generator _ alphaOverlay) (Generator _ background) (Generator _ alphaBackground) blend =
-    Generator cnv $ \p -> blend (overlay p) (alphaOverlay p) (background p) (alphaBackground p)
+                                   -> Shader x (A.Exp a)
+complicatedColorCompositingFormula (Shader cnv overlay) (Shader _ alphaOverlay) (Shader _ background) (Shader _ alphaBackground) blend =
+    Shader cnv $ \p -> blend (overlay p) (alphaOverlay p) (background p) (alphaBackground p)
 
 liftBlend :: (A.Elt a, A.IsFloating a) => BlendMode a -> ComplicatedBlendMode a
 liftBlend blend overlay _ background _ = blend overlay background
