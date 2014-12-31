@@ -19,13 +19,13 @@ import Flowbox.Graphics.Shader.Shader
 import Flowbox.Graphics.Shader.Stencil
 
 import           Flowbox.Graphics.Prelude            as P hiding (filter)
-import           Flowbox.Math.Matrix                 as M hiding (stencil)
+import           Flowbox.Math.Matrix                 as M hiding (size, stencil)
 import qualified Flowbox.Math.Matrix                 as M (stencil)
 import           Flowbox.Math.BitonicSorterGenerator as B
-import           Data.Array.Accelerate               as A hiding (filter, stencil, constant)
+import           Data.Array.Accelerate               as A hiding (constant, filter, scatter, size, stencil)
 
 import Math.Space.Space
-import Math.Coordinate.Cartesian                (Point2(..))
+import Math.Coordinate.Cartesian (Point2(..))
 
 
 -- == Filter datatype ==
@@ -46,11 +46,11 @@ instance (Condition a, Ord a, Num a) => Num (Filter a) where
 -- == Helper functions ==
 
 toMatrix :: (Elt a, IsFloating a) => Grid (Exp Int) -> Filter (Exp a) -> Matrix2 a
-toMatrix (Grid sizex sizey) filter = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
-    let sx = 2 * window filter / A.fromIntegral sizex
-        sy = 2 * window filter / A.fromIntegral sizey
-        vx = apply filter $ A.fromIntegral (x - sizex `div` 2) * sx
-        vy = apply filter $ A.fromIntegral (y - sizey `div` 2) * sy
+toMatrix (Grid sizex sizey) filt = M.generate (A.index2 sizey sizex) $ \(A.unlift -> Z :. y :. x :: EDIM2) ->
+    let sx = 2 * window filt / A.fromIntegral sizex
+        sy = 2 * window filt / A.fromIntegral sizey
+        vx = apply filt $ A.fromIntegral (x - sizex `div` 2) * sx
+        vy = apply filt $ A.fromIntegral (y - sizey `div` 2) * sy
     in vx * vy
 
 normalize :: (Elt a, IsFloating a) => Matrix2 a -> Matrix2 a
@@ -141,37 +141,37 @@ scharr = M.fromList (Z :. 3 :. 3) [  -3, 0, 3
 -- == General convolutions ==
 
 convolve :: (IsNum a, Elt a) => (Point2 c -> Point2 (Exp Int) -> Point2 b)
-         -> Matrix2 a -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
+         -> Matrix2 a -> CartesianShader b (Exp a) -> CartesianShader c (Exp a)
 convolve mode kernel = stencil mode (unsafeFromMatrix kernel) (+) 0
 
-filter :: (Elt a, IsNum a) => Exp Int -> Matrix2 a -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+filter :: (Elt a, IsNum a) => Exp Int -> Matrix2 a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 filter scatter = convolve $ \point offset -> point + pure scatter * offset
 
 -- == Morphological filters
 
-dilate :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+dilate :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 dilate size = stencil (+) (constant size 1) max (-1e20)
 
-erode :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+erode :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 erode size = stencil (+) (constant size 1) min 1e20
 
-opening :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+opening :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 opening size = erode size . dilate size
 
-closing :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteGenerator (Exp a) -> DiscreteGenerator (Exp a)
+closing :: (IsFloating a, Elt a) => Grid (Exp Int) -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 closing size = dilate size . erode size
 
 -- == Median ==
 
 median :: forall a . (A.Stencil A.DIM2 a (A.Stencil3x3 a), A.IsFloating a)
        => M.Matrix2 a -> M.Matrix2 a
-median array = M.stencil stencil A.Mirror array where
-  stencil = $(B.generateGetNthFromTuple 4 9) . $(B.generateBitonicNetworkTuple 3 3)
+median array = M.stencil stencil' A.Mirror array where
+  stencil' = $(B.generateGetNthFromTuple 4 9) . $(B.generateBitonicNetworkTuple 3 3)
 
 stencilTest :: forall a . (A.Stencil A.DIM2 a (A.Stencil3x3 a), A.IsFloating a)
        => M.Matrix2 a -> M.Matrix2 a
-stencilTest array = M.stencil stencil A.Mirror array
-    where stencil ((v0, v1, v2)
+stencilTest array = M.stencil stencil' A.Mirror array
+    where stencil' ((v0, v1, v2)
                   ,(v3, v4, v5)
                   ,(v6, v7, v8)) = (v0 + v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8) / 9
 

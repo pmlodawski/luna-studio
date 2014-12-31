@@ -10,7 +10,7 @@
 {-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Composition.Color (
-    module Flowbox.Graphics.Image.Color,
+    module Flowbox.Graphics.Composition.Color,
     U.Range(..),
     U.bias,
     U.clamp',
@@ -23,7 +23,7 @@ module Flowbox.Graphics.Composition.Color (
 
 import qualified Data.Array.Accelerate       as A
 import           Data.Array.Accelerate.Tuple (IsTuple, TupleRepr, fromTuple, toTuple)
-import           Data.Array.Accelerate.Type  (IsScalar)
+--import           Data.Array.Accelerate.Type  (IsScalar)
 
 import           Flowbox.Graphics.Color.Color
 import           Flowbox.Graphics.Shader.Shader
@@ -271,60 +271,60 @@ mul4x4 ((a, b, c, d), (e, f, g, h), (i, j, k, l), (m, n, o, p)) pix = toTuple ((
           w' = m * x + n * y + o * z + p * w
 
 
-data LinearGenerator a = LinearGenerator { runBezier :: a -> a }
+data LinearShader a = LinearShader { runBezier :: a -> a }
 
 crosstalk :: (A.Elt a, A.IsFloating a)
-          => LinearGenerator (A.Exp a) -- ^ red channel curve
-          -> LinearGenerator (A.Exp a) -- ^ green channel curve
-          -> LinearGenerator (A.Exp a) -- ^ blue channel curve
-          -> LinearGenerator (A.Exp a) -- ^ r->g curve
-          -> LinearGenerator (A.Exp a) -- ^ r->b curve
-          -> LinearGenerator (A.Exp a) -- ^ g->r curve
-          -> LinearGenerator (A.Exp a) -- ^ g->b curve
-          -> LinearGenerator (A.Exp a) -- ^ b->r curve
-          -> LinearGenerator (A.Exp a) -- ^ b->g curve
-          -> Generator x (A.Exp a)         -- ^ r channel
-          -> Generator x (A.Exp a)         -- ^ g channel
-          -> Generator x (A.Exp a)         -- ^ b channel
-          -> (Generator x (A.Exp a), Generator x (A.Exp a), Generator x (A.Exp a))
+          => LinearShader (A.Exp a) -- ^ red channel curve
+          -> LinearShader (A.Exp a) -- ^ green channel curve
+          -> LinearShader (A.Exp a) -- ^ blue channel curve
+          -> LinearShader (A.Exp a) -- ^ r->g curve
+          -> LinearShader (A.Exp a) -- ^ r->b curve
+          -> LinearShader (A.Exp a) -- ^ g->r curve
+          -> LinearShader (A.Exp a) -- ^ g->b curve
+          -> LinearShader (A.Exp a) -- ^ b->r curve
+          -> LinearShader (A.Exp a) -- ^ b->g curve
+          -> Shader x (A.Exp a)         -- ^ r channel
+          -> Shader x (A.Exp a)         -- ^ g channel
+          -> Shader x (A.Exp a)         -- ^ b channel
+          -> (Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a))
 crosstalk redBezier greenBezier blueBezier
           redGreenBezier redBlueBezier
           greenRedBezier greenBlueBezier
           blueRedBezier blueGreenBezier
           red green blue = (newRed, newGreen, newBlue)
-    where newRed   = Generator (canvas red)   $ \x ->
-              runGenerator redBeziered x + runGenerator greenToRed x + runGenerator blueToRed x
+    where newRed   = Shader (canvas red)   $ \x ->
+              runShader redBeziered x + runShader greenToRed x + runShader blueToRed x
 
-          newGreen = Generator (canvas green) $ \x ->
-              runGenerator greenBeziered x + runGenerator redToGreen x + runGenerator blueToGreen x
+          newGreen = Shader (canvas green) $ \x ->
+              runShader greenBeziered x + runShader redToGreen x + runShader blueToGreen x
 
-          newBlue  = Generator (canvas blue)  $ \x ->
-              runGenerator blueBeziered x + runGenerator redToBlue x + runGenerator greenToBlue x
+          newBlue  = Shader (canvas blue)  $ \x ->
+              runShader blueBeziered x + runShader redToBlue x + runShader greenToBlue x
 
-          redBeziered = Generator (canvas red) $ \x -> let redColor = runGenerator red x
-                                                       in  runBezier redBezier redColor
+          redBeziered = Shader (canvas red) $ \x -> let redColor = runShader red x
+                                                    in  runBezier redBezier redColor
 
-          redToGreen = Generator (canvas red) $ \x -> let redColor = runGenerator red x
-                                                      in  runBezier redGreenBezier redColor
+          redToGreen = Shader (canvas red) $ \x -> let redColor = runShader red x
+                                                   in  runBezier redGreenBezier redColor
 
-          redToBlue = Generator (canvas red) $ \x -> let redColor = runGenerator red x
-                                                     in  runBezier redBlueBezier redColor
+          redToBlue = Shader (canvas red) $ \x -> let redColor = runShader red x
+                                                  in  runBezier redBlueBezier redColor
 
-          greenBeziered = Generator (canvas green) $ \x -> let greenColor = runGenerator green x
-                                                           in  runBezier greenBezier greenColor
+          greenBeziered = Shader (canvas green) $ \x -> let greenColor = runShader green x
+                                                        in  runBezier greenBezier greenColor
 
-          greenToRed = Generator (canvas green) $ \x -> let greenColor = runGenerator green x
-                                                        in  runBezier greenRedBezier greenColor
+          greenToRed = Shader (canvas green) $ \x -> let greenColor = runShader green x
+                                                     in  runBezier greenRedBezier greenColor
 
-          greenToBlue = Generator (canvas green) $ \x -> let greenColor = runGenerator green x
-                                                         in  runBezier greenBlueBezier greenColor
+          greenToBlue = Shader (canvas green) $ \x -> let greenColor = runShader green x
+                                                      in  runBezier greenBlueBezier greenColor
 
-          blueBeziered = Generator (canvas blue) $ \x -> let blueColor = runGenerator blue x
-                                                         in  runBezier blueBezier blueColor
+          blueBeziered = Shader (canvas blue) $ \x -> let blueColor = runShader blue x
+                                                      in  runBezier blueBezier blueColor
 
-          blueToRed = Generator (canvas blue) $ \x -> let blueColor = runGenerator blue x
-                                                      in  runBezier blueRedBezier blueColor
+          blueToRed = Shader (canvas blue) $ \x -> let blueColor = runShader blue x
+                                                   in  runBezier blueRedBezier blueColor
 
-          blueToGreen = Generator (canvas blue) $ \x -> let blueColor = runGenerator blue x
-                                                        in  runBezier blueGreenBezier blueColor
+          blueToGreen = Shader (canvas blue) $ \x -> let blueColor = runShader blue x
+                                                     in  runBezier blueGreenBezier blueColor
 

@@ -17,14 +17,14 @@ import Math.Space.Space
 
 
 
-constant :: Grid (Exp Int) -> b -> Generator a b
-constant cnv a = Generator cnv $ const a
+constant :: Grid (Exp Int) -> b -> Shader a b
+constant cnv a = Shader cnv $ const a
 
-rectangle :: Elt b => Grid (Exp Int) -> Exp b -> Exp b -> DiscreteGenerator (Exp b)
+rectangle :: Elt b => Grid (Exp Int) -> Exp b -> Exp b -> DiscreteShader (Exp b)
 rectangle cnv interior exterior = bound (Constant exterior) $ constant cnv interior
 
-ellipse :: Elt b => Grid (Exp Int) -> Exp b -> Exp b -> DiscreteGenerator (Exp b)
-ellipse cnv@(Grid w h) interior exterior = Generator cnv $ \(Point2 x y) ->
+ellipse :: Elt b => Grid (Exp Int) -> Exp b -> Exp b -> DiscreteShader (Exp b)
+ellipse cnv@(Grid w h) interior exterior = Shader cnv $ \(Point2 x y) ->
     let rx = (w `div` 2)
         rx2 = rx * rx
         ry = (h `div` 2)
@@ -33,5 +33,5 @@ ellipse cnv@(Grid w h) interior exterior = Generator cnv $ \(Point2 x y) ->
         y2 = (y - ry) * (y - ry)
     in A.cond ((x2 * ry2 + y2 * rx2) A.<=* (rx2 * ry2)) interior exterior
 
-bound :: Elt t => Boundary (Exp t) -> DiscreteGenerator (Exp t) -> DiscreteGenerator (Exp t)
-bound b gen = Generator (canvas gen) (boundedIndex2D b gen)
+bound :: Elt t => Boundary (Exp t) -> DiscreteShader (Exp t) -> DiscreteShader (Exp t)
+bound b gen = Shader (canvas gen) (boundedIndex2D b gen)

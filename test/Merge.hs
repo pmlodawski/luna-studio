@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import Flowbox.Prelude                                    hiding (zoom, transform, from, min, max, over, under)
-import Flowbox.Graphics.Composition.Generators.Matrix
-import Flowbox.Graphics.Composition.Generators.Rasterizer
-import Flowbox.Graphics.Composition.Generators.Sampler
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Image.Merge
+import Flowbox.Graphics.Composition.Merge
+import Flowbox.Graphics.Shader.Matrix
+import Flowbox.Graphics.Shader.Rasterizer
+import Flowbox.Graphics.Shader.Sampler
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Prelude                    hiding (from, max, min, over, transform, under, zoom)
 
 import qualified Data.Array.Accelerate as A
 import           Data.Foldable

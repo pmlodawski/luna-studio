@@ -8,21 +8,22 @@ module Flowbox.Graphics.Image.IO.OpenEXR (
       readFromEXR
     ) where
 
+import           Control.Monad            (forM)
 import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as A
 import           Data.Char                (toLower)
 import qualified Data.Vector.Storable     as SV
-import           Control.Monad            (forM)
 import           GHC.Float                as GHC (float2Double)
 
-import           Flowbox.Codec.EXR              hiding (name)
-import           Flowbox.Graphics.Image.Channel
+import           Flowbox.Codec.EXR              hiding (channels, name, x)
+import           Flowbox.Graphics.Image.Channel (Channel (..), ChannelData (..))
+import qualified Flowbox.Graphics.Image.Channel as Chan
 import           Flowbox.Graphics.Image.Image   (Image)
 import qualified Flowbox.Graphics.Image.Image   as Image
 import           Flowbox.Graphics.Image.View    (View)
 import qualified Flowbox.Graphics.Image.View    as View
 import           Flowbox.Math.Matrix            as M hiding (any, (++))
-import           Flowbox.Prelude
+import           Flowbox.Prelude                hiding (parts)
 
 
 
@@ -52,8 +53,9 @@ readEXRPart exr part = do
     return $ makeView partName newChannels
 
 addAlphaIfAbsent :: [Channel] -> [Channel]
+addAlphaIfAbsent [] = errorShitWentWrong $ "addAlphaIfAbsent (found an empty list) "
 addAlphaIfAbsent channels@(x:_) = if alphaPresent then channels else alpha : channels
-    where alphaPresent = any (\chan -> name chan == "rgba.a") channels
+    where alphaPresent = any (\chan -> Chan.name chan == "rgba.a") channels
 
           ChannelFloat _ (FlatData matrix) = x
 
@@ -75,3 +77,12 @@ convertToDouble matrix = doubleMatrix
     where ((), floatVector) = A.toVectors matrix
           doubleVector = SV.map GHC.float2Double floatVector
           doubleMatrix = A.fromVectors (A.arrayShape matrix) ((), doubleVector)
+
+-- == HELPERS == for error reporting
+
+errorShitWentWrong :: String -> a
+errorShitWentWrong fun =
+  error (thisModule ++ fun ++ ": Oh come on! No way this could happen!")
+
+thisModule :: String
+thisModule = "Flowbox.Graphics.Image.IO.OpenEXR."

@@ -43,22 +43,21 @@ module Flowbox.Math.Matrix (
     A.Z(..)
 ) where
 
-import qualified Data.Array.Accelerate                 as A
-import qualified Data.Array.Accelerate.Array.Sugar     as Sugar
-import           Data.Array.Accelerate.Data.Complex    ()
-import qualified Data.Array.Accelerate.Math.FFT        as A
-import qualified Data.Array.Accelerate.Math.DFT.Centre as A
-import qualified Data.Array.Accelerate.IO              as A
+import qualified Data.Array.Accelerate              as A
+import qualified Data.Array.Accelerate.Array.Sugar  as Sugar
+import           Data.Array.Accelerate.Data.Complex ()
+--import qualified Data.Array.Accelerate.Math.FFT        as A -- INFO: don't remove, will get useful when part of the functionalities get uncommented
+--import qualified Data.Array.Accelerate.Math.DFT.Centre as A -- INFO: same as above
+import qualified Data.Array.Accelerate.IO as A
 
 import qualified Math.Coordinate.Cartesian as Cartesian
 import qualified Math.Space.Space          as Space
 
-import Data.Complex                        (mkPolar)
 import Data.Vector.Storable.Mutable hiding (set)
 import Foreign.Ptr
 
-import Flowbox.Prelude as P hiding (use, (<*), (?), (++), map, zipWith, set, pred, ix)
 import Flowbox.Math.Index
+import Flowbox.Prelude    as P hiding (ix, map, pred, set, use, zipWith, (++), (<*), (?))
 
 
 
