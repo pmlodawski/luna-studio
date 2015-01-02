@@ -49,6 +49,7 @@ import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS  as TargetHS
+import qualified Luna.Interpreter.Session.Var                as Var
 import qualified Luna.Pass.Transform.AST.Hash.Hash           as Hash
 
 
@@ -181,6 +182,7 @@ data VarType = Lit    String
              | Native String
              | Tuple
              | List
+             | SpecialVar String
              | Id
              deriving Show
 
@@ -195,6 +197,7 @@ varType (StringExpr.Expr   name@(h:_))
     | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit name
     | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit name
     | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit name
+    | name == Var.timeRef                                = SpecialVar Var.timeVar
     | Char.isUpper h                                     = Con name
     | otherwise                                          = Var name
 varType other = Prelude.error $ show other
@@ -215,15 +218,16 @@ evalFunction stringExpr callDataPath argsData = do
 
         self      = head argsVarNames
         operation = "toIOEnv $ fromValue $ " ++ case varType stringExpr of
-            List        -> "val [" ++ List.intercalate "," args ++ "]"
-            Id          -> mkArg self
-            Native name -> genNative name
-            Con    _    -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
-            Var    _    -> "call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
-            Lit    name -> if Maybe.isJust (Read.readMaybe name :: Maybe Int)
-                              then "val (" ++ name ++" :: Int)"
-                              else "val (" ++ name ++ ")"
-            Tuple       -> "val (" ++ List.intercalate "," args ++ ")"
+            List            -> "val [" ++ List.intercalate "," args ++ "]"
+            Id              -> mkArg self
+            Native name     -> genNative name
+            Con    _        -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
+            Var    _        -> "call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
+            Lit    name     -> if Maybe.isJust (Read.readMaybe name :: Maybe Int)
+                                  then "val (" ++ name ++" :: Int)"
+                                  else "val (" ++ name ++ ")"
+            Tuple           -> "val (" ++ List.intercalate "," args ++ ")"
+            SpecialVar name -> name
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
 
         Session.runAssignment' tmpVarName operation
