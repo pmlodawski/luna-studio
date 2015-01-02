@@ -40,7 +40,7 @@ handleAbort =
 
 
 abort :: Env.FragileMVar -> Concurrent.ThreadId -> IO ()
-abort fm threadId = Concurrent.withMVar fm $ const $ do
+abort fm threadId = Concurrent.withMVar fm $ const $
     --logger warning "Abort requested."
     Concurrent.throwTo threadId AbortException
 

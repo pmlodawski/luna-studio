@@ -10,8 +10,6 @@ module Luna.Interpreter.RPC.Handler.Cache where
 
 import Data.Int (Int32)
 
-import Luna.Data.Serialize.Proto.Conversion.Library ()
-import Luna.Data.Serialize.Proto.Conversion.Crumb ()
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Bus.RPC.RPC                                    (RPC)
 import           Flowbox.Data.Convert
@@ -19,6 +17,8 @@ import           Flowbox.Prelude                                        hiding (
 import           Flowbox.ProjectManager.Context                         (Context)
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.Crumb.Breadcrumbs                      as Gen
+import           Luna.Data.Serialize.Proto.Conversion.Crumb             ()
+import           Luna.Data.Serialize.Proto.Conversion.Library           ()
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
@@ -42,7 +42,7 @@ interpreterDo projectID = interpreterDo' projectID . liftSession
 interpreterDo' :: Int32 -> RPC Context (SessionST mm) () -> RPC Context (SessionST mm) ()
 interpreterDo' projectID op = do
     activeProjectID <- liftSession Env.getProjectID
-    when (activeProjectID == decodeP projectID) $ op
+    when (activeProjectID == decodeP projectID) op
 
 
 deleteAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
