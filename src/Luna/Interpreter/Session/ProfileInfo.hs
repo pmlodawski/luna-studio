@@ -31,6 +31,6 @@ profile action = do
     r      <- action
     end    <- liftIO CPU.getCPUTime
     end'   <- liftIO Clock.getCurrentTime
-    let info = ProfileInfo ((fromIntegral     (end - start)) / (10^12))
-                           ( Clock.diffUTCTime end'  start')
+    let info = ProfileInfo (fromIntegral     (end - start)  / (10^12))
+                           (Clock.diffUTCTime end'  start')
     return (r, info)
