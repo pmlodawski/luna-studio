@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE EmptyDataDecls         #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
@@ -20,9 +21,9 @@ import           Data.Word
 import qualified Luna.Target.HS.Control.Error.Data as Data
 import           Prelude                           hiding (print)
 
-
-
--- see https://www.haskell.org/haskellwiki/GHC/AdvancedOverlap
+---------------------------------------------------------------------------
+---- Based on https://www.haskell.org/haskellwiki/GHC/AdvancedOverlap -----
+---------------------------------------------------------------------------
 
 class Hash a where
     hash :: a -> Maybe Word64
@@ -36,22 +37,6 @@ instance (HashPred a flag, Hash' flag a) => Hash a where
 
 -- overlapping instances are used only for HashPred
 class HashPred a flag | a->flag where {}
-
-                                  -- Used only if the other
-                                  -- instances don't apply
-instance TypeCast flag HFalse => HashPred a flag
-
-instance HashPred Bool  HTrue
-instance HashPred Char  HTrue
-instance HashPred Int   HTrue
-instance HashPred Float HTrue
-instance HashPred String HTrue
-instance HashPred a flag => HashPred [a] flag
-instance HashPred a flag => HashPred (Data.Safe a) flag
---  ...etc...
-instance Hash' HTrue a => Hash' HTrue (Data.Safe a) where
-    hash' v (Data.Safe a) = hash' v a
-
 
 data HTrue    -- Just two
 data HFalse   -- distinct types
@@ -70,3 +55,25 @@ instance TypeCast'' t  a b => TypeCast' t a b where typeCast'      = typeCast''
 instance TypeCast'' () a a                    where typeCast'' _ x = x
 
 
+instance TypeCast flag HFalse => HashPred a flag -- Used only if the other instances don't apply
+
+---------------------------------------------------------------------------
+---- instances for each Data.Hashable is defined --------------------------
+---------------------------------------------------------------------------
+
+instance HashPred Bool  HTrue
+instance HashPred Char  HTrue
+instance HashPred Int   HTrue
+instance HashPred Float HTrue
+instance HashPred String HTrue
+instance HashPred a flag => HashPred [a] flag
+instance HashPred a flag => HashPred (Data.Safe a) flag
+-- etc ...
+
+---------------------------------------------------------------------------
+---- custom DHash.Hashable instances --------------------------------------
+---------------------------------------------------------------------------
+
+instance DHash.Hashable a => DHash.Hashable (Data.Safe a) where
+    hash (Data.Safe a) = DHash.hash a
+-- etc ...
