@@ -20,21 +20,24 @@ import Utils
 
 
 
-merge :: FilePath -> BlendMode Double -> AlphaBlend -> IO ()
+type DtC = DiscreteShader (A.Exp Float) -> ContinuousShader (A.Exp Float)
+type CtD = ContinuousShader (A.Exp Float) -> DiscreteShader (A.Exp Float)
+
+merge :: FilePath -> BlendMode Float -> AlphaBlend -> IO ()
 merge file mode alphaBlending = do
-    (r1, g1, b1, a1) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/lena_alpha.png"
-    (r2, g2, b2, a2) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/checker.png"
-    let (r, g, b, a) = map4 (rasterizer . monosampler) $ threeWayMerge' alphaBlending mode r1 g1 b1 r2 g2 b2 a1 a2
+    (r1, g1, b1, a1) <- map4 ((nearest :: DtC) . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/lena_alpha.png"
+    (r2, g2, b2, a2) <- map4 ((nearest :: DtC) . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/checker.png"
+    let (r, g, b, a) = map4 (rasterizer . (monosampler :: CtD)) $ threeWayMerge' alphaBlending mode r1 g1 b1 r2 g2 b2 a1 a2
     testSaveRGBA'' file r g b a
 
-merge' :: FilePath -> ComplicatedBlendMode Double -> IO ()
+merge' :: FilePath -> ComplicatedBlendMode Float -> IO ()
 merge' file mode = do
-    (r1, g1, b1, a1) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/lena_alpha.png"
-    (r2, g2, b2, a2) <- map4 (nearest . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/checker.png"
-    let (r, g, b, a) = map4 (rasterizer . monosampler) $ threeWayMerge mode r1 g1 b1 r2 g2 b2 a1 a2
+    (r1, g1, b1, a1) <- map4 ((nearest :: DtC) . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/lena_alpha.png"
+    (r2, g2, b2, a2) <- map4 ((nearest :: DtC) . fromMatrix A.Wrap) <$> testLoadRGBA' "samples/checker.png"
+    let (r, g, b, a) = map4 (rasterizer . (monosampler :: CtD)) $ threeWayMerge mode r1 g1 b1 r2 g2 b2 a1 a2
     testSaveRGBA'' file r g b a
 
-simpleMerges :: [BlendMode Double]
+simpleMerges :: [BlendMode Float]
 simpleMerges = [
       average
     , colorDodge
@@ -87,7 +90,7 @@ simpleMergesNames = [
     , "softLightPhotoshop"
     ]
 
-advancedMerges :: [ComplicatedBlendMode Double]
+advancedMerges :: [ComplicatedBlendMode Float]
 advancedMerges = [
       atop
     , conjointOver

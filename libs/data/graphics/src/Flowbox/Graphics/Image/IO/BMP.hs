@@ -31,7 +31,7 @@ makeRGBA array = image
     where word32Matrix   = Matrix.Raw array
           unpackedMatrix = Matrix.map unpack32 word32Matrix
           colors         = Matrix.unzip4 unpackedMatrix
-          (r, g, b, a)   = colors & each %~ Channel.FlatData . Matrix.map (\x -> A.fromIntegral x / 255)
+          (r, g, b, a)   = colors & each %~ Channel.MatrixData . Matrix.map (\x -> A.fromIntegral x / 255)
           finalView      = View.append (Channel.ChannelFloat "r" r) $
                            View.append (Channel.ChannelFloat "g" g) $
                            View.append (Channel.ChannelFloat "b" b) $

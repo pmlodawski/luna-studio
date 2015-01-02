@@ -220,7 +220,7 @@ loadImageLuna path = do
 
 insertChannelFloats :: View -> [(String, Matrix2 Double)] -> View
 insertChannelFloats view chans = foldr f view chans
-    where f (name, chan) acc = View.append (ChannelFloat name . FlatData $ chan) acc
+    where f (name, chan) acc = View.append (ChannelFloat name . MatrixData $ chan) acc
 
 saveImageLuna :: FilePath -> Image -> IO Image
 saveImageLuna path img = do
@@ -232,14 +232,14 @@ onEachChannel :: (Matrix2 Double -> Matrix2 Double) -> Image -> Image
 onEachChannel f img = res
     where res = Image.map (View.map fChan) img
           fChan :: Channel -> Channel
-          fChan (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ f)
+          fChan (ChannelFloat name (asMatrix -> MatrixData flatdata)) = ChannelFloat name $ (MatrixData . f) flatdata
 
 onEachValue :: (A.Exp Double -> A.Exp Double) -> Image -> Image
 onEachValue f img = res
     where res = Image.map (View.map f') img
 
           f' :: Channel -> Channel
-          f' (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ (M.map f))
+          f' (ChannelFloat name (asMatrix -> MatrixData flatdata)) = ChannelFloat name $ (MatrixData . (M.map f)) flatdata
 
 onEachRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image -> Image
 onEachRGB f img = img'
@@ -278,10 +278,10 @@ unsafeGetRGB img = rgb
 unsafeGetChannels :: Image -> (M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double)
 unsafeGetChannels img = (r, g, b, a)
     where Just view = lookup "rgba" img
-          Right (Just (ChannelFloat _ (FlatData r))) = View.get view "rgba.r"
-          Right (Just (ChannelFloat _ (FlatData g))) = View.get view "rgba.g"
-          Right (Just (ChannelFloat _ (FlatData b))) = View.get view "rgba.b"
-          Right (Just (ChannelFloat _ (FlatData a))) = View.get view "rgba.a"
+          Right (Just (ChannelFloat _ (asMatrix -> MatrixData r))) = View.get view "rgba.r"
+          Right (Just (ChannelFloat _ (asMatrix -> MatrixData g))) = View.get view "rgba.g"
+          Right (Just (ChannelFloat _ (asMatrix -> MatrixData b))) = View.get view "rgba.b"
+          Right (Just (ChannelFloat _ (asMatrix -> MatrixData a))) = View.get view "rgba.a"
 
 keyerLuna :: KeyerMode -> Double -> Double -> Double -> Double -> Image -> Image
 keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
@@ -424,7 +424,7 @@ turnCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . 
 --              Nothing      -> angle
 --              Just (VPS m) -> let
 --                      Just rgba = Image.lookup "rgba" m
---                      unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+--                      unpackMat (Right (Just (ChannelFloat _ (MatrixData c)))) = c
 --                      m' = unpackMat $ View.get rgba "rgba.r"
 --                      Shader _ str = gen m'
 --                      mult pt x = (str pt) * x
@@ -448,14 +448,16 @@ translateLuna (variable -> x) (variable -> y) = onEachMatrix process process pro
               Nothing      -> v
               Just (VPS m) -> let
                       Just rgba = Image.lookup "rgba" m
-                      unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+                      unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
                       m' = unpackMat $ View.get rgba "rgba.r"
                       Shader _ str = gen m'
                       mult pt x = A.round $ (str pt) * A.fromIntegral x
                   in (fmap (mult pt) v)
 
 scaleToLuna :: A.Boundary (A.Exp Double) -> Int -> Int -> Image -> Image
-scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . scale (Grid x y) . nearest . fromMatrix boundary
+scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . foo
+    where foo :: Matrix2 Double -> ContinuousShader (A.Exp Double)
+          foo = scale (Grid x y) . nearest . fromMatrix boundary
 
 --scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
 --scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
@@ -479,7 +481,7 @@ scaleLuna centered (variable -> x) (variable -> y) = onEachMatrix process proces
               Nothing      -> v
               Just (VPS m) -> let
                       Just rgba = Image.lookup "rgba" m
-                      unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+                      unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
                       m' = unpackMat $ View.get rgba "rgba.r"
                       Shader _ str = gen m'
                       mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
@@ -698,12 +700,14 @@ radialBlurLuna (variable -> size) (variable -> angle) = onEachChannel process
                $ rectangle (Grid size 1) 1 0
           process = rasterizer
                   . monosampler
-                  . translate (V2 (256) (256))
+                  . foo
+          foo :: Matrix2 Double -> ContinuousShader (Exp Double)
+          foo     = translate (V2 (256) (256))
                   . fromPolarMapping
                   . nearest
                   . normStencil (+) kern (+) 0
                   . monosampler
-                  . toPolarMapping
+                  . (toPolarMapping :: ContinuousShader (Exp Double) -> ContinuousShader (Exp Double))
                   . translate (V2 (-256) (-256))
                   . nearest
                   . fromMatrix A.Clamp
@@ -957,14 +961,15 @@ toInterpolator = \case
     Gauss a          -> interpolator $ gauss a
     Dirac a          -> interpolator $ dirac a
 
-interpolateChannelsLuna :: A.Boundary Double -> InterpolationFilter Double -> Image -> Image
-interpolateChannelsLuna (fmap variable -> boundary) (toInterpolator . fmap variable -> interpol) = Image.map (View.map interpolate)
-    where interpolate (ChannelFloat name (FlatData mat)) = ChannelShader name $ toGen $ mat
-          interpolate (ChannelInt   name (FlatData mat)) = ChannelShader name $ toGen . M.map A.fromIntegral $ mat
-          interpolate (ChannelBit   name (FlatData mat)) = ChannelShader name $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
-          interpolate c@ChannelShader{} = c
+-- TODO[KM]: ask someone what is this function supposed to do? now it might be obsolete to pattern match on MatrixData and perform M.map, doing this through Shaders would probably be a better idea
+-- TODO^:    commented out for now(the boundary can't be explicitly typed here, we can have different data – why even try to interpolate all channels at the same time?)
+--interpolateChannelsLuna :: A.Boundary Double -> InterpolationFilter Double -> Image -> Image
+--interpolateChannelsLuna (fmap variable -> boundary) (toInterpolator . fmap variable -> interpol) = Image.map (View.map interpolate)
+--    where interpolate (ChannelFloat name (asMatrix -> MatrixData mat)) = ChannelFloat name $ ContinuousData $ toGen $ mat
+--          interpolate (ChannelInt   name (asMatrix -> MatrixData mat)) = ChannelInt   name $ ContinuousData $ toGen . M.map A.fromIntegral $ mat
+--          interpolate (ChannelBit   name (asMatrix -> MatrixData mat)) = ChannelBit   name $ ContinuousData $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
 
-          toGen = interpol . fromMatrix boundary
+--          toGen = interpol . fromMatrix boundary
 
 toMultisampler :: Grid (Exp Int) -> InterpolationFilter (Exp Double) -> Sampler Double
 toMultisampler grid = \case
@@ -983,9 +988,10 @@ toMultisampler grid = \case
 
 multisampleChannelsLuna :: Grid Int -> InterpolationFilter Double -> Image -> Image
 multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap variable -> sampler :: Sampler Double) = Image.map (View.map multisample)
-    where multisample (ChannelShader name gen) = ChannelFloat name $ FlatData . rasterizer . sampler $ gen
+    where multisample (ChannelFloat name (asContinuous -> ContinuousData gen)) = ChannelFloat name $ MatrixData . rasterizer . sampler $ gen
           --                                                            FIXME[MM]: ^ we don't want this here,
-          --                                                                         but ChannelShader requires ContinousShader :/
+          --                                                                         but ChannelShader requires ContinuousShader :/
+          --                                                            FIXME[KM]: ^ I've changed the structure of Channels so we might have to talk about this
           multisample channel                     = channel
 
 -- FIXME[MM]: will remove the whole view if removing fails - it should somehow propagate the error
@@ -1062,6 +1068,7 @@ gradeLunaColor (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpo
                         id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
 
 -- TODO: might be a good idea to try and do something better than creating a new Image
+-- TODO[KM]: maybe do something about that M.map?
 onEach :: (A.Exp Double -> A.Exp Double)
        -> (A.Exp Double -> A.Exp Double)
        -> (A.Exp Double -> A.Exp Double)
@@ -1070,13 +1077,13 @@ onEach :: (A.Exp Double -> A.Exp Double)
        -> Image
 onEach fr fg fb fa img = Image.singleton view
     where Just rgba = Image.lookup "rgba" img
-          unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+          unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
           r = unpackMat $ View.get rgba "rgba.r"
           g = unpackMat $ View.get rgba "rgba.g"
           b = unpackMat $ View.get rgba "rgba.b"
           a = unpackMat $ View.get rgba "rgba.a"
           --Right (Just a) = View.get rgba "rgba.a"
-          makeChan name f c = ChannelFloat name (FlatData $ M.map f c)
+          makeChan name f c = ChannelFloat name $ asMatrix . MatrixData $ M.map f c
           view = View.append (makeChan "rgba.r" fr r)
                $ View.append (makeChan "rgba.g" fg g)
                $ View.append (makeChan "rgba.b" fb b)
@@ -1092,13 +1099,13 @@ onEachMatrix :: (Matrix2 Double -> Matrix2 Double)
              -> Image
 onEachMatrix fr fg fb fa img = Image.singleton view
     where Just rgba = Image.lookup "rgba" img
-          unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+          unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
           r = unpackMat $ View.get rgba "rgba.r"
           g = unpackMat $ View.get rgba "rgba.g"
           b = unpackMat $ View.get rgba "rgba.b"
           a = unpackMat $ View.get rgba "rgba.a"
           --Right (Just a) = View.get rgba "rgba.a"
-          makeChan name f c = ChannelFloat name (FlatData $ f c)
+          makeChan name f c = ChannelFloat name $ asMatrix . MatrixData $ f c
           view = View.append (makeChan "rgba.r" fr r)
                $ View.append (makeChan "rgba.g" fg g)
                $ View.append (makeChan "rgba.b" fb b)

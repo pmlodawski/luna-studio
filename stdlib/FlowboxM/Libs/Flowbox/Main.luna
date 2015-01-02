@@ -3,7 +3,7 @@
 import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
-import ```Flowbox.Graphics.Color as Color```
+import ```Flowbox.Graphics.Color.Color as Color```
 import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
 import ```Flowbox.Graphics.Color.Companding.Cineon```
 import ```Flowbox.Graphics.Color.Companding.Gamma```
@@ -19,8 +19,8 @@ import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image as Image```
 import ```Flowbox.Graphics.Image.View as View```
-import ```Flowbox.Graphics.Image.Merge (AlphaBlend(..))```
-import ```Flowbox.Graphics.Composition.Generators.Keyer```
+import ```Flowbox.Graphics.Composition.Merge (AlphaBlend(..))```
+import ```Flowbox.Graphics.Composition.Keyer```
 import ```Flowbox.Geom2D.Rasterizer```
 import ```Flowbox.Geom2D.Rectangle```
 
@@ -443,8 +443,8 @@ class ```InterpolationFilter```:
     Gauss: a :: Double
     Dirac: a :: Double
 
-def Image.interpolate boundary filter:
-    ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
+# def Image.interpolate boundary filter:
+#     ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
 
 def Image.multisample grid filter:
     ```liftF3 multisampleChannelsLuna #{grid} #{filter} #{self}```

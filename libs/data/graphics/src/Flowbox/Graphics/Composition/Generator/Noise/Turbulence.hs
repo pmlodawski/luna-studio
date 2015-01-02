@@ -14,13 +14,13 @@ import Flowbox.Prelude
 
 
 
-turbulence :: (A.Exp Double -> ContinousShader (A.Exp Double)) ->
-              (A.Exp Double -> ContinousShader (A.Exp Double)) ->
-              (A.Exp Double -> ContinousShader (A.Exp Double)) ->
-              (A.Exp Double -> ContinousShader (A.Exp Double)) ->
+turbulence :: (A.Exp Double -> ContinuousShader (A.Exp Double)) ->
+              (A.Exp Double -> ContinuousShader (A.Exp Double)) ->
+              (A.Exp Double -> ContinuousShader (A.Exp Double)) ->
+              (A.Exp Double -> ContinuousShader (A.Exp Double)) ->
               A.Exp Double ->
               A.Exp Double ->
-              ContinousShader (A.Exp Double)
+              ContinuousShader (A.Exp Double)
 turbulence xFun yFun zFun sourceFun power z = unitShader $ \point ->
     let x0 = Cartesian.x point + (12414.0 / 65536.0)
         y0 = Cartesian.y point + (65124.0 / 65536.0)

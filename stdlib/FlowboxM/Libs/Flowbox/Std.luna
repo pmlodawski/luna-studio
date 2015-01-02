@@ -438,8 +438,8 @@ class ```InterpolationFilter```:
     Gauss: a :: Double
     Dirac: a :: Double
 
-def Image.interpolate boundary filter:
-    ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
+# def Image.interpolate boundary filter:
+#     ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
 
 def Image.multisample grid filter:
     ```liftF3 multisampleChannelsLuna #{grid} #{filter} #{self}```
