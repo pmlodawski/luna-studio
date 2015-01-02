@@ -10,6 +10,7 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 module Flowbox.Graphics.Serialization where
 
@@ -85,10 +86,11 @@ serializeChanFromView v x mode = case join . hush . I.get v $ x of
     Just c -> serializeChan c mode
     Nothing -> return Nothing
     where serializeChan chan m = case chan of
-              I.ChannelFloat     _ (I.FlatData mat) -> serialize mat m
-              I.ChannelInt       _ (I.FlatData mat) -> serialize mat m
-              I.ChannelBit       _ (I.FlatData mat) -> serialize mat m
-              gen@I.ChannelShader{}                 -> serializeChan (I.compute serializationBackend defaultSampler gen) mode
+              I.ChannelFloat     _ (I.asMatrix -> I.MatrixData mat) -> serialize mat m
+              I.ChannelInt       _ (I.asMatrix -> I.MatrixData mat) -> serialize mat m
+              I.ChannelBit       _ (I.asMatrix -> I.MatrixData mat) -> serialize mat m
+              --gen@I.ChannelShader{}                               -> serializeChan (I.compute serializationBackend defaultSampler gen) mode
+              --INFO[KM]: the above line is probably obsolete since serialize mat will serialize the matrix, although it might be necessary to update some `compute` functions to handle the computation of the Shaders
 
 instance Serializable I.View ViewData.ViewData where
     serialize v mode = do

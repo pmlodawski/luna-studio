@@ -18,14 +18,14 @@ import Flowbox.Prelude
 
 
 
-ridgedMultiNoise :: A.Exp Double -> ContinousShader (A.Exp Double)
+ridgedMultiNoise :: A.Exp Double -> ContinuousShader (A.Exp Double)
 ridgedMultiNoise z = unitShader $ runShader $ ridgedMultiGen Standard 1.0 2.0 6 30 0 1.0 1.0 2.0 z
 
 ridgedMultiGen :: Quality -> A.Exp Double -> A.Exp Double ->
                   A.Exp Int -> A.Exp Int -> A.Exp Int ->
                   A.Exp Double -> A.Exp Double -> A.Exp Double ->
                   A.Exp Double ->
-                  ContinousShader (A.Exp Double)
+                  ContinuousShader (A.Exp Double)
 ridgedMultiGen quality freq lac octaveCount maxOctave seed exponent' offset gain z = unitShader $ \point ->
     let finalValue = value $
               A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
