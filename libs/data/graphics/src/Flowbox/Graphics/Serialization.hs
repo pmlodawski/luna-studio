@@ -13,7 +13,7 @@
 
 module Flowbox.Graphics.Serialization where
 
-import Flowbox.Graphics.Prelude
+import Flowbox.Graphics.Prelude hiding (views)
 
 import           Control.Error.Util
 import           Control.Monad
@@ -26,10 +26,10 @@ import           Data.Map.Lazy
 
 import           Flowbox.Data.Mode                    (Mode)
 import           Flowbox.Data.Serialization           (Serializable (..), mkValue)
-import           Flowbox.Graphics.Composition.Generators.Sampler (Sampler, monosampler)
 import qualified Flowbox.Graphics.Image.Channel       as I
 import qualified Flowbox.Graphics.Image.Image         as Img
 import qualified Flowbox.Graphics.Image.View          as I
+import           Flowbox.Graphics.Shader.Sampler      (Sampler, monosampler)
 import qualified Flowbox.Math.Matrix                  as M
 import qualified Generated.Proto.Data.MatrixData      as MatrixData
 import qualified Generated.Proto.Data.MatrixData.Type as MatrixData
@@ -88,7 +88,7 @@ serializeChanFromView v x mode = case join . hush . I.get v $ x of
               I.ChannelFloat     _ (I.FlatData mat) -> serialize mat m
               I.ChannelInt       _ (I.FlatData mat) -> serialize mat m
               I.ChannelBit       _ (I.FlatData mat) -> serialize mat m
-              gen@I.ChannelGenerator{}              -> serializeChan (I.compute serializationBackend defaultSampler gen) mode
+              gen@I.ChannelShader{}                 -> serializeChan (I.compute serializationBackend defaultSampler gen) mode
 
 instance Serializable I.View ViewData.ViewData where
     serialize v mode = do

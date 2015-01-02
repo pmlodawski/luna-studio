@@ -214,7 +214,7 @@ def Image.scale self::Image x::Float y::Float:
 def Image.transform self::Image trans::TransformD:
     ```liftF2 transformLuna #{trans} #{self}```
 
-def Image.crop self::Image rect::RectanleD:
+def Image.crop self::Image rect::RectangleD:
     ```liftF2 cropLuna #{rect} #{self}```
 
 # VIEW

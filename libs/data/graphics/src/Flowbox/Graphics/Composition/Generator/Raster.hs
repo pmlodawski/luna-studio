@@ -8,17 +8,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
 
-module Flowbox.Graphics.Composition.Raster where
+module Flowbox.Graphics.Composition.Generator.Raster where
 
 import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
 
-import qualified Flowbox.Graphics.Color         as Color
+import qualified Flowbox.Graphics.Color.Color   as Color
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Image   (Image)
 import qualified Flowbox.Graphics.Image.Image   as Image
 import qualified Flowbox.Graphics.Image.View    as View
-import qualified Flowbox.Graphics.Utils         as Utils
+import qualified Flowbox.Graphics.Utils.Utils   as Utils
 import qualified Flowbox.Math.Matrix            as Matrix
 import           Flowbox.Prelude
 
@@ -38,7 +38,7 @@ checkerboard :: (Color.ColorConvert c Color.RGB)
 checkerboard sh size (color1, color2, color3, color4) (lineColor, lineWidth) (lineColorCenter, lineWidthCenter) =
     Image.singleton $ foldr appendChannel (View.empty "rgba") ["rgba.r", "rgba.g", "rgba.b", "rgba.a"]
     where appendChannel name = View.append (Channel.ChannelFloat name . Channel.FlatData $ Matrix.generate sh (calculateValue name))
-          
+
           A.Z A.:. h A.:. w = A.unlift sh :: Matrix.EDIM2
           w' = A.fromIntegral w
           h' = A.fromIntegral h

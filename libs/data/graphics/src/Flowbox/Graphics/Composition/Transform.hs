@@ -15,18 +15,18 @@
 {-# LANGUAGE UndecidableInstances   #-}
 {-# LANGUAGE ViewPatterns           #-}
 
-module Flowbox.Graphics.Composition.Generators.Transform where
+module Flowbox.Graphics.Composition.Transform where
 
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Prelude                           as P hiding (lifted, transform)
+import Flowbox.Graphics.Prelude       as P hiding (lifted, transform)
+import Flowbox.Graphics.Shader.Shader
 import Flowbox.Graphics.Utils.Linear
-import Flowbox.Graphics.Utils
-import Flowbox.Math.Matrix                                as M
+import Flowbox.Graphics.Utils.Utils
+import Flowbox.Math.Matrix            as M
 
 import qualified Data.Array.Accelerate     as A
-import           Math.Coordinate.Cartesian (Point2(..))
-import           Math.Space.Space          hiding (width, height)
-import           Linear                    hiding (normalize, inv33, rotate)
+import           Linear                    hiding (inv33, normalize, rotate)
+import           Math.Coordinate.Cartesian (Point2 (..))
+import           Math.Space.Space          hiding (height, width)
 
 
 
@@ -57,23 +57,23 @@ instance Fractional a => Scale (V2 a) (Point2 a) where
      scale (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
 
 
--- == Instances for CartesianGenerator ==
-instance Num a => Translate (CartesianGenerator a b) a where
+-- == Instances for CartesianShader ==
+instance Num a => Translate (CartesianShader a b) a where
     translate = transform . translate
 
-instance Floating a => Rotate (CartesianGenerator a b) a where
+instance Floating a => Rotate (CartesianShader a b) a where
     rotate = transform . rotate
 
-instance (Fractional a, a ~ a0) => Scale (V2 a0) (CartesianGenerator a b) where
+instance (Fractional a, a ~ a0) => Scale (V2 a0) (CartesianShader a b) where
     scale = transform . scale
 
-instance (Elt a, IsFloating a, c ~ Exp Int) => Scale (Grid c) (CartesianGenerator (Exp a) b) where
-    scale newCnv gen@(Generator oldCnv _) = resize newCnv $ scale (V2 (nw / ow) (nh / oh)) gen
+instance (Elt a, IsFloating a, c ~ Exp Int) => Scale (Grid c) (CartesianShader (Exp a) b) where
+    scale newCnv gen@(Shader oldCnv _) = resize newCnv $ scale (V2 (nw / ow) (nh / oh)) gen
         where Grid nw nh = fmap A.fromIntegral newCnv :: Grid (Exp a)
               Grid ow oh = fmap A.fromIntegral oldCnv :: Grid (Exp a)
 
-instance (Elt a, IsFloating a, AccEpsilon a) => CornerPin (CartesianGenerator (Exp a) b) (Exp a) where
-    cornerPin points gen@(Generator (asFloating -> cnv) _) = transform (cornerPin' cnv points) gen
+instance (Elt a, IsFloating a, AccEpsilon a) => CornerPin (CartesianShader (Exp a) b) (Exp a) where
+    cornerPin points gen@(Shader (asFloating -> cnv) _) = transform (cornerPin' cnv points) gen
 
 
 -- == Instances for Grid (Exp Int) ==
@@ -88,13 +88,13 @@ instance (Elt a, IsFloating a, AccEpsilon a) => CornerPin (Grid (Exp a)) (Exp a)
 
 
 -- == Utils ==
-onCenter :: ( a ~ Generator p1 r1, b ~ Generator p2 r2
+onCenter :: ( a ~ Shader p1 r1, b ~ Shader p2 r2
             , Translate a (Exp res1), Translate b (Exp res2)
             , Elt res1, Elt res2, IsFloating res1, IsFloating res2
             ) => (a -> b) -> a -> b
-onCenter f gen@(Generator (asFloating -> Grid ow oh) _) = translate newcenter newgen
+onCenter f gen@(Shader (asFloating -> Grid ow oh) _) = translate newcenter newgen
     where oldcenter = V2 (-ow / 2) (-oh / 2)
-          newgen@(Generator (asFloating -> Grid nw nh) _) = f $ translate oldcenter gen
+          newgen@(Shader (asFloating -> Grid nw nh) _) = f $ translate oldcenter gen
           newcenter = V2 (nw / 2) (nh / 2)
 
 coveringGrid :: (Num a, Num b, Condition b, Ord b)
