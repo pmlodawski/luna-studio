@@ -40,10 +40,10 @@ defocusSerialize blurSize = do
     let kern = ellipse (pure $ variable blurSize) 1 0
     let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix A.Clamp x
 
-    let red   = ChannelFloat "r" (FlatData $ process r) -- process introduces delayed computation
-    let green = ChannelFloat "g" (FlatData $ process g)
-    let blue  = ChannelFloat "b" (FlatData $ process b)
-    let alpha = ChannelFloat "a" (FlatData $ process a)
+    let red   = ChannelFloat "r" (MatrixData $ process r) -- process introduces delayed computation
+    let green = ChannelFloat "g" (MatrixData $ process g)
+    let blue  = ChannelFloat "b" (MatrixData $ process b)
+    let alpha = ChannelFloat "a" (MatrixData $ process a)
 
     -- Construct a view
     let view :: View

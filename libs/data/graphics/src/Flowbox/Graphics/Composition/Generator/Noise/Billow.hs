@@ -16,13 +16,13 @@ import Flowbox.Prelude
 
 
 
-billowNoise :: A.Exp Double -> ContinousShader (A.Exp Double)
+billowNoise :: A.Exp Double -> ContinuousShader (A.Exp Double)
 billowNoise z = unitShader $ runShader $ billowGen Standard 1.0 2.0 6 0.5 0 z
 
 billowGen :: Quality -> A.Exp Double -> A.Exp Double ->
              A.Exp Int -> A.Exp Double -> A.Exp Int ->
              A.Exp Double ->
-             ContinousShader (A.Exp Double)
+             ContinuousShader (A.Exp Double)
 billowGen quality freq lac octaveCount persistence seed z = unitShader $ \point ->
     0.5 + value (A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int)))
     where value args = val

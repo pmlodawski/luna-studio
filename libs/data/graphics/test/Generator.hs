@@ -164,7 +164,7 @@ morphologyTest size = do
     let morph3 c = nearest $ dilate  v $ l c -- Top left
     let morph4 c = nearest $ erode   v $ l c -- Top right
 
-    let process chan = gridRasterizer 512 (Grid 2 2) monosampler [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
+    let process chan = gridRasterizer 512 (Grid 2 2) (monosampler :: ContinuousShader (Exp Float) -> DiscreteShader (Exp Float)) [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
     forAllChannels "lena.bmp" process
 
 
@@ -210,12 +210,12 @@ radialBlur size angle = do
              $ nearest
              $ rectangle (Grid (variable size) 1) 1 0
     let process x = rasterizer
-                  $ monosampler
+                  $ (monosampler :: ContinuousShader (Exp Float) -> DiscreteShader (Exp Float))
                   $ translate (V2 (256) (256))
                   $ fromPolarMapping
                   $ nearest
                   $ normStencil (+) kern (+) 0
-                  $ monosampler
+                  $ (monosampler :: ContinuousShader (Exp Float) -> DiscreteShader (Exp Float))
                   $ toPolarMapping
                   $ translate (V2 (-256) (-256))
                   $ nearest
