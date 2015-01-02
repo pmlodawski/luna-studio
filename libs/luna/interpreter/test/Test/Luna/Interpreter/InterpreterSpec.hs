@@ -63,11 +63,11 @@ spec = do
     describe "interpreter" $ do
         mapM_ (\(name, code) -> it ("executes example - " ++ name) $ do
             --rootLogger setIntLevel 5
-            Common.runSession mm code Executor.processMain) SampleCodes.sampleCodes
+            Common.runSession mm code Executor.processMain_) SampleCodes.sampleCodes
 
         mapM_ (\(name, code) -> it ("executes example 5 times - " ++ name) $ do
             --rootLogger setIntLevel 5
-            Common.runSession mm code $ replicateM_ 5 Executor.processMain) $ SampleCodes.sampleCodes
+            Common.runSession mm code $ replicateM_ 5 Executor.processMain_) $ SampleCodes.sampleCodes
 
     describe "AST traverse" $ do
         it "finds function arguments" $ do

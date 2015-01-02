@@ -7,8 +7,6 @@
 module Luna.Interpreter.Session.Var where
 
 import           Flowbox.Prelude
-import           Luna.Graph.Node.StringExpr       (StringExpr)
-import qualified Luna.Graph.Node.StringExpr       as StringExpr
 import           Luna.Interpreter.Session.Env     (Session)
 import qualified Luna.Interpreter.Session.Session as Session
 
@@ -22,5 +20,4 @@ timeRef = "Time#"
 
 
 timeSet :: Float -> Session mm ()
-timeSet time = do
-    Session.runAssignment timeVar $ show time
+timeSet = Session.runAssignment timeVar . show

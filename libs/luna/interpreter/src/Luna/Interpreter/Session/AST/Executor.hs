@@ -223,11 +223,11 @@ evalFunction stringExpr callDataPath argsData = do
             Native name     -> genNative name
             Con    _        -> "call" ++ appArgs args ++ " $ cons_" ++ nameHash
             Var    _        -> "call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
-            Lit    name     -> if Maybe.isJust (Read.readMaybe name :: Maybe Int)
-                                  then "val (" ++ name ++" :: Int)"
-                                  else "val (" ++ name ++ ")"
+            Lit    name     -> "val (" ++ name ++ if Maybe.isJust (Read.readMaybe name :: Maybe Int)
+                                  then " :: Int)"
+                                  else ")"
             Tuple           -> "val (" ++ List.intercalate "," args ++ ")"
-            SpecialVar name -> name
+            SpecialVar name -> "val (" ++ name ++ ")"
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
 
         Session.runAssignment' tmpVarName operation
