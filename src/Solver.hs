@@ -90,6 +90,19 @@ instance MonadTrans TPT where
       x <- ma
       return $ Suc (n,s,c,x)
 
+instance (Monad m, Functor m) => Functor (TPT m) where
+  fmap f m = TPT $ \(n,s,c) -> do res <- unTPT m (n,s,c)
+                                  case res of
+                                    Suc (n',s',c',x) -> return $ Suc (n',s',c',f x)
+                                    (Err se)         -> return $ Err se
+
+instance (Monad m, Applicative m) => Applicative (TPT m) where
+  pure  = return
+  (<*>) = ap
+
+instance (MonadIO m) => MonadIO (TPT m) where
+  liftIO = lift . liftIO
+
 
 -- *----------------------------------------
 -- * Category: CLASS DECLARATIONS
