@@ -17,7 +17,7 @@ import Utils
 
 
 input, output :: String
-input = "RGB.png"
+input = "lena.png"
 output = "out.png"
 output1 = "out1.png"
 
@@ -92,11 +92,11 @@ main = do
                 image
 
     let out3 = colorCorrectLuna'
-                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-                (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
-                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-                (RGBA 1 1 1 1 :: RGBA Double)
-                (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+                (RGBA 2 2 2 2 :: RGBA Double)
+                (RGBA 0.5 0.5 0.5 0.5 :: RGBA Double)
+                (RGBA 2 2 2 2 :: RGBA Double)
+                (RGBA 0.2 0.2 0.2 0.2 :: RGBA Double)
+                (RGBA 0 0 0 0 :: RGBA Double)
 
                 neutralSCGG 
                 neutralSCGG 
@@ -117,6 +117,34 @@ main = do
                 neutralOff 
                 image
 
+    let out4 = colorCorrectLuna'
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralSCGG 
+                neutralOff
+
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 1 1 1 1 :: RGBA Double)
+                (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 1 1 1 1 :: RGBA Double)
+                (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
+                (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
+                (RGBA 1 1 1 1 :: RGBA Double)
+                (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+                image
+
+    saveImageLuna "master.png" out3
+    saveImageLuna "hms.png" out4
 
     saveImageLuna output out3
     putStrLn "Done"
