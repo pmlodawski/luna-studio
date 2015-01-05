@@ -162,7 +162,7 @@ abort = return . Abort.Status
 varTimeSet :: VarTimeSet.Request -> RPC Context (SessionST mm) VarTimeSet.Update
 varTimeSet request@(VarTimeSet.Request time) = do
     liftSession $ do Env.setTimeVar time
-                     Invalidate.modifyAll --FIXME[PM]
+                     Invalidate.modifyTimeRefs
     return $ VarTimeSet.Update request
 
 
