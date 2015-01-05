@@ -29,6 +29,7 @@ import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Array.Sugar as A
 import           Data.Array.Accelerate.CUDA
 import qualified Data.Array.Accelerate.IO          as A
+import           Data.Bool
 import           Data.Char                         (toLower)
 import           Data.Maybe
 import qualified Data.Vector.Storable              as SV
@@ -36,6 +37,7 @@ import           Math.Coordinate.Cartesian
 import           Math.Space.Space
 import           Math.Metric
 import           Linear                            (V2(..))
+import           System.FilePath                   as FilePath
 
 import qualified Flowbox.Graphics.Color                               as Color
 import qualified Flowbox.Graphics.Color.Companding                    as Gamma
@@ -82,6 +84,15 @@ import Control.PolyApplicative ((<<*>>))
 
 
 
+pattern VPS x = Value (Pure (Safe x))
+type VPS x = Value Pure Safe x
+
+type ColorD = Color.RGBA Double
+pattern ColorD r g b a = Color.RGBA r g b a
+type Color5 = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
+
+
+
 testLoadRGBA' :: Value Pure Safe String -> Value IO Safe (Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double))
 testLoadRGBA' path = autoLift1 ((fmap.fmap) (over each val) $ testLoadRGBA) path
 
@@ -107,9 +118,6 @@ saveImageJuicy file matrix = do
     let ((), vec) = A.toVectors matrix
         A.Z A.:. h A.:. w = A.arrayShape matrix
     Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8)
-
-pattern VPS x = Value (Pure (Safe x))
-type VPS x = Value Pure Safe x
 
 defocus :: Int -> Image -> Image
 defocus size = onEachChannel process
@@ -392,8 +400,11 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 
           noiseGenerator = scale (Grid width height) noise
 
-rotateCenterLuna :: Double -> Image -> Image
-rotateCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . rotateCenter angle . nearest . fromMatrix (A.Constant 0)
+turnCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
+turnCenter = onCenter . rotate
+
+turnCenterLuna :: Double -> Image -> Image
+turnCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . turnCenter angle . nearest . fromMatrix (A.Constant 0)
 --rotateCenterLuna :: Double -> Maybe (VPS Image) -> Image -> Image
 --rotateCenterLuna (variable -> angle) mask = onEachMatrix process process process process
 --    where process :: Matrix2 Double -> Matrix2 Double
@@ -416,9 +427,11 @@ rotateCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler 
 
 --translateLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
 --translateLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . translate (V2 x y) . nearest . fromMatrix boundary
-translateLuna :: Int -> Int -> Maybe (VPS Image) -> Image -> Image
-translateLuna (variable -> x) (variable -> y) mask = onEachMatrix process process process process
+--translateLuna :: Int -> Int -> Maybe (VPS Image) -> Image -> Image
+translateLuna :: Int -> Int -> Image -> Image
+translateLuna (variable -> x) (variable -> y) = onEachMatrix process process process process
     where v = V2 x (-y)
+          mask = Nothing
           process :: Matrix2 Double -> Matrix2 Double
           process = rasterizer . t . gen
           gen = fromMatrix (A.Constant (0 :: Exp Double))
@@ -442,15 +455,18 @@ scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterize
 --scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
 --scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
 --    where f = fmap A.truncate . scale (V2 x y) . asFloating
-scaleLuna :: Double -> Double -> Maybe (VPS Image) -> Image -> Image
-scaleLuna (variable -> x) (variable -> y) mask = onEachMatrix process process process process
+--scaleLuna :: Double -> Double -> Maybe (VPS Image) -> Image -> Image
+scaleLuna :: Bool -> Double -> Double -> Image -> Image
+scaleLuna centered (variable -> x) (variable -> y) = onEachMatrix process process process process
     where v = V2 x y
+          mask = Nothing
           process :: Matrix2 Double -> Matrix2 Double
           process = rasterizer . monosampler . t . interpolator (Conv.catmulRom) . gen
           --f = canvasT $ fmap A.truncate . scale (V2 x y) . asFloating
           gen = fromMatrix (A.Constant (0 :: Exp Double))
           t :: CartesianGenerator (Exp Double) (Exp Double) -> CartesianGenerator (Exp Double) (Exp Double)
-          t = onCenter (S.transform p)
+          t = bool tp (onCenter tp) centered
+          tp = S.transform p
           p :: Point2 (Exp Double) -> Point2 (Exp Double)
           p pt = scale (handle pt) pt
           handle :: Point2 (Exp Double) -> V2 (Exp Double)
@@ -746,41 +762,42 @@ gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB
                     (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
                     id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)         
 
-colorCorrectLuna' :: Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
-                  -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
-                  -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
-                  -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+colorCorrectLuna' :: Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                  -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                  -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                  -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Image
                   -> Image
-colorCorrectLuna' (fmap variable -> Color.RGBA masterSaturationR masterSaturationG masterSaturationB masterSaturationA)
-                  (fmap variable -> Color.RGBA masterContrastR masterContrastG masterContrastB masterContrastA)
-                  (fmap variable -> Color.RGBA masterGammaR masterGammaG masterGammaB masterGammaA)
-                  (fmap variable -> Color.RGBA masterGainR masterGainG masterGainB masterGainA)
-                  (fmap variable -> Color.RGBA masterOffsetR masterOffsetG masterOffsetB masterOffsetA)
 
-                  (fmap variable -> Color.RGBA shadowsSaturationR shadowsSaturationG shadowsSaturationB shadowsSaturationA)
-                  (fmap variable -> Color.RGBA shadowsContrastR shadowsContrastG shadowsContrastB shadowsContrastA)
-                  (fmap variable -> Color.RGBA shadowsGammaR shadowsGammaG shadowsGammaB shadowsGammaA)
-                  (fmap variable -> Color.RGBA shadowsGainR shadowsGainG shadowsGainB shadowsGainA)
-                  (fmap variable -> Color.RGBA shadowsOffsetR shadowsOffsetG shadowsOffsetB shadowsOffsetA)
-
-                  (fmap variable -> Color.RGBA midtonesSaturationR midtonesSaturationG midtonesSaturationB midtonesSaturationA)
-                  (fmap variable -> Color.RGBA midtonesContrastR midtonesContrastG midtonesContrastB midtonesContrastA)
-                  (fmap variable -> Color.RGBA midtonesGammaR midtonesGammaG midtonesGammaB midtonesGammaA)
-                  (fmap variable -> Color.RGBA midtonesGainR midtonesGainG midtonesGainB midtonesGainA)
-                  (fmap variable -> Color.RGBA midtonesOffsetR midtonesOffsetG midtonesOffsetB midtonesOffsetA)
-
-                  (fmap variable -> Color.RGBA highlightsSaturationR highlightsSaturationG highlightsSaturationB highlightsSaturationA)
-                  (fmap variable -> Color.RGBA highlightsContrastR highlightsContrastG highlightsContrastB highlightsContrastA)
-                  (fmap variable -> Color.RGBA highlightsGammaR highlightsGammaG highlightsGammaB highlightsGammaA)
-                  (fmap variable -> Color.RGBA highlightsGainR highlightsGainG highlightsGainB highlightsGainA)
-                  (fmap variable -> Color.RGBA highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA)
-
-                  img = onEach 
-                             (correct' correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
-                             (correct' correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
-                             (correct' correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
-                             id
+colorCorrectLuna' ( VPS (fmap variable -> ColorD masterSaturationR masterSaturationG masterSaturationB masterSaturationA)
+                  , VPS (fmap variable -> ColorD masterContrastR masterContrastG masterContrastB masterContrastA)
+                  , VPS (fmap variable -> ColorD masterGammaR masterGammaG masterGammaB masterGammaA)
+                  , VPS (fmap variable -> ColorD masterGainR masterGainG masterGainB masterGainA)
+                  , VPS (fmap variable -> ColorD masterOffsetR masterOffsetG masterOffsetB masterOffsetA)
+                  )
+                  ( VPS (fmap variable -> ColorD shadowsSaturationR shadowsSaturationG shadowsSaturationB shadowsSaturationA)
+                  , VPS (fmap variable -> ColorD shadowsContrastR shadowsContrastG shadowsContrastB shadowsContrastA)
+                  , VPS (fmap variable -> ColorD shadowsGammaR shadowsGammaG shadowsGammaB shadowsGammaA)
+                  , VPS (fmap variable -> ColorD shadowsGainR shadowsGainG shadowsGainB shadowsGainA)
+                  , VPS (fmap variable -> ColorD shadowsOffsetR shadowsOffsetG shadowsOffsetB shadowsOffsetA)
+                  )
+                  ( VPS (fmap variable -> ColorD midtonesSaturationR midtonesSaturationG midtonesSaturationB midtonesSaturationA)
+                  , VPS (fmap variable -> ColorD midtonesContrastR midtonesContrastG midtonesContrastB midtonesContrastA)
+                  , VPS (fmap variable -> ColorD midtonesGammaR midtonesGammaG midtonesGammaB midtonesGammaA)
+                  , VPS (fmap variable -> ColorD midtonesGainR midtonesGainG midtonesGainB midtonesGainA)
+                  , VPS (fmap variable -> ColorD midtonesOffsetR midtonesOffsetG midtonesOffsetB midtonesOffsetA)
+                  )
+                  ( VPS (fmap variable -> ColorD highlightsSaturationR highlightsSaturationG highlightsSaturationB highlightsSaturationA)
+                  , VPS (fmap variable -> ColorD highlightsContrastR highlightsContrastG highlightsContrastB highlightsContrastA)
+                  , VPS (fmap variable -> ColorD highlightsGammaR highlightsGammaG highlightsGammaB highlightsGammaA)
+                  , VPS (fmap variable -> ColorD highlightsGainR highlightsGainG highlightsGainB highlightsGainA)
+                  , VPS (fmap variable -> ColorD highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA)
+                  )
+                  img =
+                      onEach (correct correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
+                             (correct correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
+                             (correct correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
+                             id -- (colorCorrect contrastA gammaA gainA offsetA) saturated
                              saturated
     where 
           curveShadows    = A.lift $ CubicBezier (Point2 (0::Double) 1) (Point2 0.03 1) (Point2 0.06 0) (Point2 0.09 0) :: Exp (CubicBezier Double)
@@ -796,17 +813,17 @@ colorCorrectLuna' (fmap variable -> Color.RGBA masterSaturationR masterSaturatio
           correctMasterG = colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
           correctMasterB = colorCorrect masterContrastB masterGammaB masterGainB masterOffsetB
 
-          correctShadowsR = colorCorrect shadowsContrastR shadowsGammaR shadowsGainR shadowsOffsetR
-          correctShadowsG = colorCorrect shadowsContrastG shadowsGammaG shadowsGainG shadowsOffsetG
-          correctShadowsB = colorCorrect shadowsContrastB shadowsGammaB shadowsGainB shadowsOffsetB
+          correctShadowsR = colorCorrect (shadowsContrastR-1) (shadowsGammaR-1) (shadowsGainR-1) shadowsOffsetR
+          correctShadowsG = colorCorrect (shadowsContrastG-1) (shadowsGammaG-1) (shadowsGainG-1) shadowsOffsetG
+          correctShadowsB = colorCorrect (shadowsContrastB-1) (shadowsGammaB-1) (shadowsGainB-1) shadowsOffsetB
 
-          correctMidtonesR = colorCorrect midtonesContrastR midtonesGammaR midtonesGainR midtonesOffsetR
-          correctMidtonesG = colorCorrect midtonesContrastG midtonesGammaG midtonesGainG midtonesOffsetG
-          correctMidtonesB = colorCorrect midtonesContrastB midtonesGammaB midtonesGainB midtonesOffsetB
+          correctMidtonesR = colorCorrect (midtonesContrastR-1) (midtonesGammaR-1) (midtonesGainR-1) midtonesOffsetR
+          correctMidtonesG = colorCorrect (midtonesContrastG-1) (midtonesGammaG-1) (midtonesGainG-1) midtonesOffsetG
+          correctMidtonesB = colorCorrect (midtonesContrastB-1) (midtonesGammaB-1) (midtonesGainB-1) midtonesOffsetB
 
-          correctHighlightsR = colorCorrect highlightsContrastR highlightsGammaR highlightsGainR highlightsOffsetR
-          correctHighlightsG = colorCorrect highlightsContrastG highlightsGammaG highlightsGainG highlightsOffsetG
-          correctHighlightsB = colorCorrect highlightsContrastB highlightsGammaB highlightsGainB highlightsOffsetB
+          correctHighlightsR = colorCorrect (highlightsContrastR-1) (highlightsGammaR-1) (highlightsGainR-1) highlightsOffsetR
+          correctHighlightsG = colorCorrect (highlightsContrastG-1) (highlightsGammaG-1) (highlightsGainG-1) highlightsOffsetG
+          correctHighlightsB = colorCorrect (highlightsContrastB-1) (highlightsGammaB-1) (highlightsGainB-1) highlightsOffsetB
 
           correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x)
 
@@ -1166,4 +1183,12 @@ onEachMatrix fr fg fb fa img = Image.singleton view
 
 readFromEXRLuna :: FilePath -> IO Image
 readFromEXRLuna path = fmap fromJust $ readFromEXR path
+
+realReadLuna :: FilePath -> IO Image
+realReadLuna path | ".exr" <- FilePath.takeExtension path = readFromEXRLuna path
+                  | otherwise                             = loadImageLuna path
+
+testColorCC :: Color5 -> Image
+testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
+    constantLuna 512 512 $ Color.RGBA (r*x) (g*x) (b*x) (a*x)
 
