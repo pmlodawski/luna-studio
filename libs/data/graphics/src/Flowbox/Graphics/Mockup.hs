@@ -97,6 +97,13 @@ data Transform a = Transform { _translate :: Point2 a
                              , _center    :: Point2 a
                              }
 
+pattern VPS x = Value (Pure (Safe x))
+type VPS x = Value Pure Safe x
+
+type ColorD = Color.RGBA Double
+pattern ColorD r g b a = Color.RGBA r g b a
+type Color5 = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
+
 testLoadRGBA' :: Value Pure Safe String -> Value IO Safe (Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double))
 testLoadRGBA' path = autoLift1 ((fmap.fmap) (over each val) $ testLoadRGBA) path
 
@@ -122,6 +129,7 @@ saveImageJuicy file matrix = do
     let ((), vec) = A.toVectors matrix
         A.Z A.:. h A.:. w = A.arrayShape matrix
     Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8)
+
 
 defocus :: Int -> Image -> Image
 defocus size = onEachChannel process
