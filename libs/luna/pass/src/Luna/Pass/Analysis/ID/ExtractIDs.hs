@@ -62,6 +62,10 @@ runNodeExpr :: NodeExpr -> Pass.Result IntSet
 runNodeExpr = runPass . analyseNodeExpr
 
 
+runNodeExprs :: [NodeExpr] -> Pass.Result IntSet
+runNodeExprs = runPass . analyseNodeExprs
+
+
 analyseFocus :: Focus -> ExtractIDPass IntSet
 analyseFocus m = IDTraverse.traverseFocus State.appendID m >> State.getIDs
 
@@ -81,3 +85,9 @@ analysePat p = IDTraverse.traversePat State.appendID p >> State.getIDs
 analyseNodeExpr :: NodeExpr -> ExtractIDPass IntSet
 analyseNodeExpr (NodeExpr.ASTExpr expr) = analyseExpr expr
 analyseNodeExpr _                       = return def
+
+
+analyseNodeExprs :: [NodeExpr] -> ExtractIDPass IntSet
+analyseNodeExprs []                        = State.getIDs
+analyseNodeExprs (NodeExpr.ASTExpr expr:t) = analyseExpr expr >> analyseNodeExprs t
+analyseNodeExprs (_                    :t) = analyseNodeExprs t

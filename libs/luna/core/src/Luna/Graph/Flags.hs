@@ -46,6 +46,9 @@ isFolded :: Flags -> Bool
 isFolded flags = flags ^. graphFoldInfo == Just Folded
 
 
+isDefaultNodeGenerated :: Flags -> Bool
+isDefaultNodeGenerated = flip isSet' (view defaultNodeGenerated)
+
 getFoldTop :: Flags -> Maybe AST.ID
 getFoldTop flags = case flags ^. graphFoldInfo of
     Just (FoldTop i) -> Just i

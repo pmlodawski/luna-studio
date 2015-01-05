@@ -11,6 +11,8 @@ module Luna.Interpreter.Session.Env.State where
 import qualified Control.Concurrent.MVar    as MVar
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import           Data.IntSet                (IntSet)
+import qualified Data.IntSet                as IntSet
 import           Data.Map                   (Map)
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
@@ -38,6 +40,7 @@ import           Luna.AST.Expr                               (Expr)
 import qualified Luna.AST.Expr                               as Expr
 import           Luna.AST.Module                             (Module)
 import           Luna.Graph.Flags                            (Flags)
+import qualified Luna.Graph.Flags                            as Flags
 import           Luna.Graph.Graph                            (Graph)
 import qualified Luna.Graph.Node                             as Node
 import           Luna.Graph.PropertyMap                      (PropertyMap)
@@ -136,11 +139,11 @@ fragile action = do
 
 ---- Env.dependentNodes ---------------------------------------------------
 
-getDependentNodes :: Session mm (Map CallPoint (Set Node.ID))
+getDependentNodes :: Session mm (Map CallPoint IntSet)
 getDependentNodes = gets $ view Env.dependentNodes
 
 
-getDependentNodesOf :: CallPoint -> Session mm (Set Node.ID)
+getDependentNodesOf :: CallPoint -> Session mm IntSet
 getDependentNodesOf callPoint =
     Maybe.fromMaybe def . Map.lookup callPoint <$> getDependentNodes
 
@@ -148,15 +151,28 @@ getDependentNodesOf callPoint =
 insertDependentNode :: CallPoint -> Node.ID -> Session mm ()
 insertDependentNode callPoint nodeID =
     modify (Env.dependentNodes %~ Map.alter alter callPoint) where
-        alter = Just . Set.insert nodeID . Maybe.fromMaybe def
+        alter = Just . IntSet.insert nodeID . Maybe.fromMaybe def
+
+
+insertDependentNodes :: CallPoint -> IntSet -> Session mm ()
+insertDependentNodes callPoint nodeIDs =
+    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+        alter = Just . IntSet.union nodeIDs . Maybe.fromMaybe def
 
 
 deleteDependentNodes :: CallPoint -> Session mm ()
 deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
 
 
+deleteDependentNode :: CallPoint -> Node.ID -> Session mm ()
+deleteDependentNode callPoint nodeID =
+    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+        alter = Just . IntSet.delete nodeID . Maybe.fromMaybe def
+
+
 cleanDependentNodes :: Session mm ()
 cleanDependentNodes = modify (Env.dependentNodes .~ def)
+
 ---- Env.profileInfos -----------------------------------------------------
 
 cleanProfileInfos :: Session mm ()
@@ -175,8 +191,34 @@ insertProfileInfo callPointPath info =
 profile :: CallPointPath -> Session mm a -> Session mm a
 profile callPointPath action = do
     (r, info) <- ProfileInfo.profile action
-    insertProfileInfo callPointPath info
+    whenVisible callPointPath $ insertProfileInfo callPointPath info
     return r
+
+---- Env.timeVar ----------------------------------------------------------
+
+getTimeVar :: Session mm Float
+getTimeVar = gets $ view Env.timeVar
+
+
+setTimeVar :: Float -> Session mm ()
+setTimeVar = modify . set Env.timeVar
+
+---- Env.timeRefs ---------------------------------------------------------
+
+insertTimeRef :: CallPoint -> Session mm ()
+insertTimeRef callPoint = modify (Env.timeRefs %~ Set.insert callPoint)
+
+
+deleteTimeRef :: CallPoint -> Session mm ()
+deleteTimeRef callPoint = modify (Env.timeRefs %~ Set.delete callPoint)
+
+
+getTimeRefs :: Session mm (Set CallPoint)
+getTimeRefs = gets $ view Env.timeRefs
+
+
+cleanTimeRefs :: Session mm ()
+cleanTimeRefs = modify $ Env.timeRefs .~ def
 
 ---- Env.serializationModes -----------------------------------------------
 
@@ -351,8 +393,19 @@ getResultCallBack = gets $ view Env.resultCallBack
 
 ---------------------------------------------------------------------------
 
+whenVisible :: CallPointPath -> Session mm () -> Session mm ()
+whenVisible callPointPath action = do
+    flags <- getFlags $ last callPointPath
+    unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
+         || Flags.isSet' flags (view Flags.graphViewGenerated  )
+         || Flags.isFolded flags                               )
+        action
+
+---------------------------------------------------------------------------
+
 cleanEnv :: Session mm ()
 cleanEnv = cleanWatchPoints
+        >> cleanTimeRefs
         >> cleanDependentNodes
         >> cleanProfileInfos
         >> cleanSerializationModes

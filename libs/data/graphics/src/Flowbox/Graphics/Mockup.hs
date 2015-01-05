@@ -39,7 +39,7 @@ import           Math.Metric
 import           Linear                            (V2(..))
 import           System.FilePath                   as FilePath
 
-import qualified Flowbox.Graphics.Color                               as Color
+import qualified Flowbox.Graphics.Color.Color                         as Color
 import qualified Flowbox.Graphics.Color.Companding                    as Gamma
 import           Flowbox.Graphics.Composition.Dither
 import           Flowbox.Geom2D.Accelerate.CubicBezier
@@ -47,35 +47,36 @@ import           Flowbox.Geom2D.Accelerate.CubicBezier.Solve          as CubicSo
 import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.CubicBezier
 import           Flowbox.Geom2D.Path
+import           Flowbox.Geom2D.Rectangle
 import qualified Flowbox.Geom2D.Shape                                 as GShape
 import qualified Flowbox.Geom2D.Mask as Mask
 import           Flowbox.Geom2D.Rasterizer
-import           Flowbox.Graphics.Composition.Generators.Filter
-import           Flowbox.Graphics.Composition.Generators.Filter       as Conv
-import           Flowbox.Graphics.Composition.Generators.Gradient
-import           Flowbox.Graphics.Composition.Generators.Keyer
-import           Flowbox.Graphics.Composition.Generators.Matrix
-import           Flowbox.Graphics.Composition.Generators.Noise.Billow
-import           Flowbox.Graphics.Composition.Generators.Noise.Perlin
-import           Flowbox.Graphics.Composition.Generators.Pipe
-import           Flowbox.Graphics.Composition.Generators.Rasterizer
-import           Flowbox.Graphics.Composition.Generators.Sampler
-import           Flowbox.Graphics.Composition.Generators.Shape
-import           Flowbox.Graphics.Composition.Generators.Stencil      as Stencil
-import           Flowbox.Graphics.Composition.Generators.Structures   as S
-import           Flowbox.Graphics.Composition.Generators.Transform
+import           Flowbox.Graphics.Composition.Filter
+import           Flowbox.Graphics.Composition.Filter       as Conv
+import           Flowbox.Graphics.Composition.Generator.Gradient
+import           Flowbox.Graphics.Composition.Keyer
+import           Flowbox.Graphics.Shader.Matrix
+import           Flowbox.Graphics.Composition.Generator.Noise.Billow
+import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
+import           Flowbox.Graphics.Shader.Pipe
+import           Flowbox.Graphics.Shader.Rasterizer
+import           Flowbox.Graphics.Shader.Sampler
+import           Flowbox.Graphics.Composition.Generator.Shape
+import           Flowbox.Graphics.Shader.Stencil      as Stencil
+import           Flowbox.Graphics.Shader.Shader   as S
+import           Flowbox.Graphics.Composition.Transform
 import           Flowbox.Graphics.Composition.Histogram
-import qualified Flowbox.Graphics.Composition.Raster                  as Raster
+import qualified Flowbox.Graphics.Composition.Generator.Raster                  as Raster
 import           Flowbox.Graphics.Image.Channel
-import           Flowbox.Graphics.Image.Color
+import           Flowbox.Graphics.Composition.Color
 import           Flowbox.Graphics.Image.Image                         as Image
 import           Flowbox.Graphics.Image.Error                         as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
 import           Flowbox.Graphics.Image.IO.OpenEXR                    (readFromEXR)
-import           Flowbox.Graphics.Image.Merge                         (AlphaBlend(..))
-import qualified Flowbox.Graphics.Image.Merge                         as Merge
+import           Flowbox.Graphics.Composition.Merge                         (AlphaBlend(..))
+import qualified Flowbox.Graphics.Composition.Merge                         as Merge
 import           Flowbox.Graphics.Image.View                          as View
-import           Flowbox.Graphics.Utils
+import           Flowbox.Graphics.Utils.Utils
 import           Flowbox.Math.Matrix                                  as M
 import           Flowbox.Prelude                                      as P hiding (lookup)
 
@@ -83,15 +84,18 @@ import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fr
 import Control.PolyApplicative ((<<*>>))
 
 
+data SkewOrder = SkewXY | SkewYX
 
-pattern VPS x = Value (Pure (Safe x))
-type VPS x = Value Pure Safe x
+data Skew a = Skew { _skewPoint :: Point2 a
+                   , _skewOrder :: SkewOrder
+                   }
 
-type ColorD = Color.RGBA Double
-pattern ColorD r g b a = Color.RGBA r g b a
-type Color5 = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
-
-
+data Transform a = Transform { _translate :: Point2 a
+                             , _rotate    :: a
+                             , _scale     :: Point2 a
+                             , _skew      :: Skew a
+                             , _center    :: Point2 a
+                             }
 
 testLoadRGBA' :: Value Pure Safe String -> Value IO Safe (Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double), Value Pure Safe (Matrix2 Double))
 testLoadRGBA' path = autoLift1 ((fmap.fmap) (over each val) $ testLoadRGBA) path
@@ -132,7 +136,7 @@ motionBlur size angle = onEachChannel process
                  $ rectangle (Grid (variable size) 1) 1 0
           process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
--- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
+-- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
 rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
 
 bilateral :: Double
@@ -142,8 +146,8 @@ bilateral :: Double
           -> Image
 bilateral psigma csigma (variable -> size) = onEachChannel process
     where p = pipe A.Clamp
-          spatial :: Generator (Point2 (Exp Int)) (Exp Double)
-          spatial = Generator (pure $ variable size) $ \(Point2 x y) ->
+          spatial :: Shader (Point2 (Exp Int)) (Exp Double)
+          spatial = Shader (pure $ variable size) $ \(Point2 x y) ->
               let dst = sqrt . A.fromIntegral $ (x - size `div` 2) * (x - size `div` 2) + (y - size `div` 2) * (y - size `div` 2)
               in apply (gauss $ variable psigma) dst
           domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
@@ -215,7 +219,7 @@ loadImageLuna path = do
 
 insertChannelFloats :: View -> [(String, Matrix2 Double)] -> View
 insertChannelFloats view chans = foldr f view chans
-    where f (name, chan) acc = View.append (ChannelFloat name . FlatData $ chan) acc
+    where f (name, chan) acc = View.append (ChannelFloat name . MatrixData $ chan) acc
 
 saveImageLuna :: FilePath -> Image -> IO Image
 saveImageLuna path img = do
@@ -227,14 +231,14 @@ onEachChannel :: (Matrix2 Double -> Matrix2 Double) -> Image -> Image
 onEachChannel f img = res
     where res = Image.map (View.map fChan) img
           fChan :: Channel -> Channel
-          fChan (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ f)
+          fChan (ChannelFloat name (asMatrix -> MatrixData flatdata)) = ChannelFloat name $ (MatrixData . f) flatdata
 
 onEachValue :: (A.Exp Double -> A.Exp Double) -> Image -> Image
 onEachValue f img = res
     where res = Image.map (View.map f') img
 
           f' :: Channel -> Channel
-          f' (ChannelFloat name flatdata) = ChannelFloat name (flatdata & matrix %~ (M.map f))
+          f' (ChannelFloat name (asMatrix -> MatrixData flatdata)) = ChannelFloat name $ (MatrixData . (M.map f)) flatdata
 
 onEachRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image -> Image
 onEachRGB f img = img'
@@ -273,10 +277,10 @@ unsafeGetRGB img = rgb
 unsafeGetChannels :: Image -> (M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double)
 unsafeGetChannels img = (r, g, b, a)
     where Just view = lookup "rgba" img
-          Right (Just (ChannelFloat _ (FlatData r))) = View.get view "rgba.r"
-          Right (Just (ChannelFloat _ (FlatData g))) = View.get view "rgba.g"
-          Right (Just (ChannelFloat _ (FlatData b))) = View.get view "rgba.b"
-          Right (Just (ChannelFloat _ (FlatData a))) = View.get view "rgba.a"
+          Right (Just (ChannelFloat _ (asMatrix -> MatrixData r))) = View.get view "rgba.r"
+          Right (Just (ChannelFloat _ (asMatrix -> MatrixData g))) = View.get view "rgba.g"
+          Right (Just (ChannelFloat _ (asMatrix -> MatrixData b))) = View.get view "rgba.b"
+          Right (Just (ChannelFloat _ (asMatrix -> MatrixData a))) = View.get view "rgba.a"
 
 keyerLuna :: KeyerMode -> Double -> Double -> Double -> Double -> Image -> Image
 keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
@@ -362,11 +366,11 @@ linearShapeLuna = gradientLuna linearShape
 gradientLuna :: forall e.
                       (A.Lift Exp e,
                        A.Plain e ~ Int) =>
-                      Generator (Point2 (Exp Double)) (Exp Double) -> e -> e -> Image
+                      Shader (Point2 (Exp Double)) (Exp Double) -> e -> e -> Image
 gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
-    where grad = rasterizer $ monosampler $ gradientGenerator
+    where grad = rasterizer $ monosampler $ gradientShader
 
-          gradientGenerator = scale (Grid width height) $ translate (V2 0.5 0.5) $ mapper gray gradient
+          gradientShader = scale (Grid width height) $ translate (V2 0.5 0.5) $ mapper gray gradient
           gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Double Double Double]
 
           weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
@@ -394,13 +398,13 @@ billowLuna (variable -> z) = noiseLuna (billowNoise z)
 noiseLuna :: forall e a.
                    (IsFloating a, Elt a, A.Lift Exp e,
                     A.Plain e ~ Int) =>
-                   CartesianGenerator (Exp a) (Exp Double) -> e -> e -> Image
+                   CartesianShader (Exp a) (Exp Double) -> e -> e -> Image
 noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA noise'
-    where noise' = rasterizer $ monosampler $ noiseGenerator
+    where noise' = rasterizer $ monosampler $ noiseShader
 
-          noiseGenerator = scale (Grid width height) noise
+          noiseShader = scale (Grid width height) noise
 
-turnCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
+turnCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
 turnCenter = onCenter . rotate
 
 turnCenterLuna :: Double -> Image -> Image
@@ -410,7 +414,7 @@ turnCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . 
 --    where process :: Matrix2 Double -> Matrix2 Double
 --          process = rasterizer . t . gen
 --          gen = fromMatrix (A.Constant (0 :: Exp Double))
---          t :: DiscreteGenerator (Exp Double) -> DiscreteGenerator (Exp Double)
+--          t :: DiscreteShader (Exp Double) -> DiscreteShader (Exp Double)
 --          t = S.transform p
 --          t = monosampler . rotateCenter (p pt) . nearest
 --          p :: Point2 (Exp Int) -> Point2 (Exp Int)
@@ -419,9 +423,9 @@ turnCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . 
 --              Nothing      -> angle
 --              Just (VPS m) -> let
 --                      Just rgba = Image.lookup "rgba" m
---                      unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+--                      unpackMat (Right (Just (ChannelFloat _ (MatrixData c)))) = c
 --                      m' = unpackMat $ View.get rgba "rgba.r"
---                      Generator _ str = gen m'
+--                      Shader _ str = gen m'
 --                      mult pt x = (str pt) * x
 --                  in mult pt angle
 
@@ -435,7 +439,7 @@ translateLuna (variable -> x) (variable -> y) = onEachMatrix process process pro
           process :: Matrix2 Double -> Matrix2 Double
           process = rasterizer . t . gen
           gen = fromMatrix (A.Constant (0 :: Exp Double))
-          t :: DiscreteGenerator (Exp Double) -> DiscreteGenerator (Exp Double)
+          t :: DiscreteShader (Exp Double) -> DiscreteShader (Exp Double)
           t = S.transform p
           p :: Point2 (Exp Int) -> Point2 (Exp Int)
           p pt = translate (handle pt) pt
@@ -443,14 +447,16 @@ translateLuna (variable -> x) (variable -> y) = onEachMatrix process process pro
               Nothing      -> v
               Just (VPS m) -> let
                       Just rgba = Image.lookup "rgba" m
-                      unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+                      unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
                       m' = unpackMat $ View.get rgba "rgba.r"
-                      Generator _ str = gen m'
+                      Shader _ str = gen m'
                       mult pt x = A.round $ (str pt) * A.fromIntegral x
                   in (fmap (mult pt) v)
 
 scaleToLuna :: A.Boundary (A.Exp Double) -> Int -> Int -> Image -> Image
-scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . scale (Grid x y) . nearest . fromMatrix boundary
+scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . foo
+    where foo :: Matrix2 Double -> ContinuousShader (A.Exp Double)
+          foo = scale (Grid x y) . nearest . fromMatrix boundary
 
 --scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
 --scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
@@ -464,7 +470,7 @@ scaleLuna centered (variable -> x) (variable -> y) = onEachMatrix process proces
           process = rasterizer . monosampler . t . interpolator (Conv.catmulRom) . gen
           --f = canvasT $ fmap A.truncate . scale (V2 x y) . asFloating
           gen = fromMatrix (A.Constant (0 :: Exp Double))
-          t :: CartesianGenerator (Exp Double) (Exp Double) -> CartesianGenerator (Exp Double) (Exp Double)
+          t :: CartesianShader (Exp Double) (Exp Double) -> CartesianShader (Exp Double) (Exp Double)
           t = bool tp (onCenter tp) centered
           tp = S.transform p
           p :: Point2 (Exp Double) -> Point2 (Exp Double)
@@ -474,12 +480,18 @@ scaleLuna centered (variable -> x) (variable -> y) = onEachMatrix process proces
               Nothing      -> v
               Just (VPS m) -> let
                       Just rgba = Image.lookup "rgba" m
-                      unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+                      unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
                       m' = unpackMat $ View.get rgba "rgba.r"
-                      Generator _ str = gen m'
+                      Shader _ str = gen m'
                       mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
                       mult pt x = str (fmap A.floor pt) * x
                   in (fmap (mult pt) v)
+
+transformLuna :: Transform Double -> Image -> Image
+transformLuna _ img = img
+
+cropLuna :: Rectangle Double -> Image -> Image
+cropLuna _ img = img
 
 hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
@@ -602,7 +614,7 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (fromMatrix (A.Constant 0))
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (fromMatrix (A.Constant 0))
 
-onGenerator f img = img'
+onShader f img = img'
     where (r, g, b, a) = unsafeGetChannels img & over each (rasterizer . f . fromMatrix (A.Constant 0))
           Just view = lookup "rgba" img
           view' = insertChannelFloats view [
@@ -614,16 +626,16 @@ onGenerator f img = img'
           img' = Image.update (const $ Just view') "rgba" img
 
 erodeLuna :: Int -> Image -> Image
-erodeLuna (variable -> size) = onGenerator $ erode $ pure size
+erodeLuna (variable -> size) = onShader $ erode $ pure size
 
 dilateLuna :: Int -> Image -> Image
-dilateLuna (variable -> size) = onGenerator $ dilate $ pure size
+dilateLuna (variable -> size) = onShader $ dilate $ pure size
 
 closeLuna :: Int -> Image -> Image
-closeLuna (variable -> size) = onGenerator $ closing $ pure size
+closeLuna (variable -> size) = onShader $ closing $ pure size
 
 openLuna :: Int -> Image -> Image
-openLuna (variable -> size) = onGenerator $ opening $ pure size
+openLuna (variable -> size) = onShader $ opening $ pure size
 
 premultiplyLuna :: Image -> Image
 premultiplyLuna img = (*) `withAlpha` img
@@ -665,15 +677,15 @@ multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEach (*r) (*g) (*b) id --
 gammaLuna :: Color.RGBA Double -> Image -> Image
 gammaLuna (fmap variable -> Color.RGBA r g b a) = onEach (gamma r) (gamma g) (gamma b) id -- (gamma a)
 
-fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
-fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
+fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianShader (Exp a) (Exp e) -> CartesianShader (Exp a) (Exp e)
+fromPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 x y) ->
     let Grid cw ch = fmap A.fromIntegral cnv
         radius = (sqrt $ x * x + y * y) / (sqrt $ cw * cw + ch * ch)
         angle  = atan2 y x / (2 * pi)
     in gen (Point2 (angle * cw) (radius * ch))
 
-toPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
-toPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 angle' radius') ->
+toPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianShader (Exp a) (Exp e) -> CartesianShader (Exp a) (Exp e)
+toPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 angle' radius') ->
     let Grid cw ch = fmap A.fromIntegral cnv
         angle = (angle' / cw) * 2 * pi
         radius = (radius' / ch) * (sqrt $ cw * cw + ch * ch)
@@ -687,12 +699,14 @@ radialBlurLuna (variable -> size) (variable -> angle) = onEachChannel process
                $ rectangle (Grid size 1) 1 0
           process = rasterizer
                   . monosampler
-                  . translate (V2 (256) (256))
+                  . foo
+          foo :: Matrix2 Double -> ContinuousShader (Exp Double)
+          foo     = translate (V2 (256) (256))
                   . fromPolarMapping
                   . nearest
                   . normStencil (+) kern (+) 0
                   . monosampler
-                  . toPolarMapping
+                  . (toPolarMapping :: ContinuousShader (Exp Double) -> ContinuousShader (Exp Double))
                   . translate (V2 (-256) (-256))
                   . nearest
                   . fromMatrix A.Clamp
@@ -990,7 +1004,7 @@ liftF13 fun a b c d e f g h i j k l m = do
 
 edgeDetectLuna :: Matrix2 Double -> Image -> Image
 edgeDetectLuna edgeOperator img = img'
-    where alphas = onGenerator (Stencil.stencil (+) (unsafeFromMatrix edgeOperator) (+) 0) img
+    where alphas = onShader (Stencil.stencil (+) (unsafeFromMatrix edgeOperator) (+) 0) img
           (r, g, b, _) = unsafeGetChannels alphas
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
           Just view = lookup "rgba" img
@@ -1019,7 +1033,7 @@ data InterpolationFilter a = NearestNeighbour
                            | Dirac a
                            deriving (Show, Functor)
 
-toInterpolator :: (Elt e, IsFloating e) => InterpolationFilter (Exp e) -> DiscreteGenerator (Exp e) -> CartesianGenerator (Exp e) (Exp e)
+toInterpolator :: (Elt e, IsFloating e) => InterpolationFilter (Exp e) -> DiscreteShader (Exp e) -> CartesianShader (Exp e) (Exp e)
 toInterpolator = \case
     NearestNeighbour -> nearest
     Box              -> interpolator box
@@ -1034,14 +1048,15 @@ toInterpolator = \case
     Gauss a          -> interpolator $ gauss a
     Dirac a          -> interpolator $ dirac a
 
-interpolateChannelsLuna :: A.Boundary Double -> InterpolationFilter Double -> Image -> Image
-interpolateChannelsLuna (fmap variable -> boundary) (toInterpolator . fmap variable -> interpol) = Image.map (View.map interpolate)
-    where interpolate (ChannelFloat name (FlatData mat)) = ChannelGenerator name $ toGen $ mat
-          interpolate (ChannelInt   name (FlatData mat)) = ChannelGenerator name $ toGen . M.map A.fromIntegral $ mat
-          interpolate (ChannelBit   name (FlatData mat)) = ChannelGenerator name $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
-          interpolate c@ChannelGenerator{} = c
+-- TODO[KM]: ask someone what is this function supposed to do? now it might be obsolete to pattern match on MatrixData and perform M.map, doing this through Shaders would probably be a better idea
+-- TODO^:    commented out for now(the boundary can't be explicitly typed here, we can have different data – why even try to interpolate all channels at the same time?)
+--interpolateChannelsLuna :: A.Boundary Double -> InterpolationFilter Double -> Image -> Image
+--interpolateChannelsLuna (fmap variable -> boundary) (toInterpolator . fmap variable -> interpol) = Image.map (View.map interpolate)
+--    where interpolate (ChannelFloat name (asMatrix -> MatrixData mat)) = ChannelFloat name $ ContinuousData $ toGen $ mat
+--          interpolate (ChannelInt   name (asMatrix -> MatrixData mat)) = ChannelInt   name $ ContinuousData $ toGen . M.map A.fromIntegral $ mat
+--          interpolate (ChannelBit   name (asMatrix -> MatrixData mat)) = ChannelBit   name $ ContinuousData $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
 
-          toGen = interpol . fromMatrix boundary
+--          toGen = interpol . fromMatrix boundary
 
 toMultisampler :: Grid (Exp Int) -> InterpolationFilter (Exp Double) -> Sampler Double
 toMultisampler grid = \case
@@ -1060,9 +1075,10 @@ toMultisampler grid = \case
 
 multisampleChannelsLuna :: Grid Int -> InterpolationFilter Double -> Image -> Image
 multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap variable -> sampler :: Sampler Double) = Image.map (View.map multisample)
-    where multisample (ChannelGenerator name gen) = ChannelFloat name $ FlatData . rasterizer . sampler $ gen
+    where multisample (ChannelFloat name (asContinuous -> ContinuousData gen)) = ChannelFloat name $ MatrixData . rasterizer . sampler $ gen
           --                                                            FIXME[MM]: ^ we don't want this here,
-          --                                                                         but ChannelGenerator requires ContinousGenerator :/
+          --                                                                         but ChannelShader requires ContinuousShader :/
+          --                                                            FIXME[KM]: ^ I've changed the structure of Channels so we might have to talk about this
           multisample channel                     = channel
 
 -- FIXME[MM]: will remove the whole view if removing fails - it should somehow propagate the error
@@ -1139,6 +1155,7 @@ gradeLunaColor (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpo
                         id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
 
 -- TODO: might be a good idea to try and do something better than creating a new Image
+-- TODO[KM]: maybe do something about that M.map?
 onEach :: (A.Exp Double -> A.Exp Double)
        -> (A.Exp Double -> A.Exp Double)
        -> (A.Exp Double -> A.Exp Double)
@@ -1147,13 +1164,13 @@ onEach :: (A.Exp Double -> A.Exp Double)
        -> Image
 onEach fr fg fb fa img = Image.singleton view
     where Just rgba = Image.lookup "rgba" img
-          unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+          unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
           r = unpackMat $ View.get rgba "rgba.r"
           g = unpackMat $ View.get rgba "rgba.g"
           b = unpackMat $ View.get rgba "rgba.b"
           a = unpackMat $ View.get rgba "rgba.a"
           --Right (Just a) = View.get rgba "rgba.a"
-          makeChan name f c = ChannelFloat name (FlatData $ M.map f c)
+          makeChan name f c = ChannelFloat name $ asMatrix . MatrixData $ M.map f c
           view = View.append (makeChan "rgba.r" fr r)
                $ View.append (makeChan "rgba.g" fg g)
                $ View.append (makeChan "rgba.b" fb b)
@@ -1169,13 +1186,13 @@ onEachMatrix :: (Matrix2 Double -> Matrix2 Double)
              -> Image
 onEachMatrix fr fg fb fa img = Image.singleton view
     where Just rgba = Image.lookup "rgba" img
-          unpackMat (Right (Just (ChannelFloat _ (FlatData c)))) = c
+          unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
           r = unpackMat $ View.get rgba "rgba.r"
           g = unpackMat $ View.get rgba "rgba.g"
           b = unpackMat $ View.get rgba "rgba.b"
           a = unpackMat $ View.get rgba "rgba.a"
           --Right (Just a) = View.get rgba "rgba.a"
-          makeChan name f c = ChannelFloat name (FlatData $ f c)
+          makeChan name f c = ChannelFloat name $ asMatrix . MatrixData $ f c
           view = View.append (makeChan "rgba.r" fr r)
                $ View.append (makeChan "rgba.g" fg g)
                $ View.append (makeChan "rgba.b" fb b)

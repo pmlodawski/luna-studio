@@ -4,17 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Composition.Generators.Noise.Internal where
+module Flowbox.Graphics.Composition.Generator.Noise.Internal where
 
 import qualified Data.Array.Accelerate as A
-import           Data.Bits             ((.&.), xor)
+import           Data.Bits             (xor, (.&.))
 
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (index, ix)
 
 
 
 data Quality = Fast | Standard | Best
-             deriving (Enum, Show) 
+             deriving (Enum, Show)
 
 
 
@@ -64,9 +64,9 @@ gradientCoherentNoise quality seed x y z = linear iy0 iy1 zs
     z1 = z0 + 1
 
     scurveMapFun = case quality of
-    	Fast     -> id
-    	Standard -> scurve3
-    	Best     -> scurve5
+        Fast     -> id
+        Standard -> scurve3
+        Best     -> scurve5
 
     xs = scurveMapFun (x - A.fromIntegral x0)
     ys = scurveMapFun (y - A.fromIntegral y0)

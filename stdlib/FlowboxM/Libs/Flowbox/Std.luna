@@ -3,7 +3,7 @@
 import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
-import ```Flowbox.Graphics.Color as Color```
+import ```Flowbox.Graphics.Color.Color as Color```
 import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
 import ```Flowbox.Graphics.Color.Companding.Cineon```
 import ```Flowbox.Graphics.Color.Companding.Gamma```
@@ -19,9 +19,10 @@ import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image as Image```
 import ```Flowbox.Graphics.Image.View as View```
-import ```Flowbox.Graphics.Image.Merge (AlphaBlend(..))```
-import ```Flowbox.Graphics.Composition.Generators.Keyer```
+import ```Flowbox.Graphics.Composition.Merge (AlphaBlend(..))```
+import ```Flowbox.Graphics.Composition.Keyer```
 import ```Flowbox.Geom2D.Rasterizer```
+import ```Flowbox.Geom2D.Rectangle```
 
 #
 #                STD
@@ -111,6 +112,24 @@ class Point a:
 
 class ```Point2``` a:
     x,y :: a
+
+class ```Rectangle``` a:
+    pA,pB :: Point2 a
+
+class ```SkewOrder```:
+    SkewXY
+    SkewYX
+
+class ```Skew``` a:
+    point :: Point2 a
+    order :: SkewOrder
+
+class ```Transform``` a:
+    translate :: Point2 a
+    rotate    :: a
+    scale     :: Point2 a
+    skew      :: Skew a
+    center    :: Point2 a
 
 def point x y:
     Point2 x y
@@ -381,6 +400,12 @@ def Image.scaleCenter x y:
 def Image.scale x y:
     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
+def Image.transform trans:
+    ```liftF2 transformLuna #{trans} #{self}```
+
+def Image.crop rect:
+    ```liftF2 cropLuna #{rect} #{self}```
+
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```
 
@@ -413,8 +438,8 @@ class ```InterpolationFilter```:
     Gauss: a :: Double
     Dirac: a :: Double
 
-def Image.interpolate boundary filter:
-    ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
+# def Image.interpolate boundary filter:
+#     ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
 
 def Image.multisample grid filter:
     ```liftF3 multisampleChannelsLuna #{grid} #{filter} #{self}```

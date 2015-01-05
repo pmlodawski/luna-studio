@@ -4,26 +4,26 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Composition.Generators.Noise.Perlin where
+module Flowbox.Graphics.Composition.Generator.Noise.Perlin where
 
-import qualified Data.Array.Accelerate      as A
-import           Data.Bits                  ((.&.))
-import qualified Math.Coordinate.Cartesian  as Cartesian
+import qualified Data.Array.Accelerate     as A
+import           Data.Bits                 ((.&.))
+import qualified Math.Coordinate.Cartesian as Cartesian
 
-import Flowbox.Graphics.Composition.Generators.Noise.Internal
-import Flowbox.Graphics.Composition.Generators.Structures     hiding (value)
+import Flowbox.Graphics.Composition.Generator.Noise.Internal
+import Flowbox.Graphics.Shader.Shader
 import Flowbox.Prelude
 
 
 
-perlinNoise :: A.Exp Double -> ContinousGenerator (A.Exp Double)
-perlinNoise z = unitGenerator $ runGenerator $ perlinGen Standard 1.0 2.0 6 0.5 0 z
+perlinNoise :: A.Exp Double -> ContinuousShader (A.Exp Double)
+perlinNoise z = unitShader $ runShader $ perlinGen Standard 1.0 2.0 6 0.5 0 z
 
 perlinGen :: Quality -> A.Exp Double -> A.Exp Double ->
              A.Exp Int -> A.Exp Double -> A.Exp Int ->
              A.Exp Double ->
-             ContinousGenerator (A.Exp Double)
-perlinGen quality freq lac octaveCount persistence seed z = unitGenerator $ \point ->
+             ContinuousShader (A.Exp Double)
+perlinGen quality freq lac octaveCount persistence seed z = unitShader $ \point ->
     value $ A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
     where value args = val
               where (val, _, _, _, _) =

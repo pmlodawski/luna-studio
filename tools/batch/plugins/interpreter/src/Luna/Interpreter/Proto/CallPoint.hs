@@ -13,8 +13,9 @@
 module Luna.Interpreter.Proto.CallPoint where
 
 import           Flowbox.Data.Convert
-import qualified Generated.Proto.Interpreter.CallPoint   as Gen
-import           Luna.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
+import qualified Generated.Proto.Interpreter.CallPoint        as Gen
+import           Luna.Data.Serialize.Proto.Conversion.Library ()
+import           Luna.Interpreter.Session.Data.CallPoint      (CallPoint (CallPoint))
 
 
 
