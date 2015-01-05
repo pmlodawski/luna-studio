@@ -794,9 +794,9 @@ colorCorrectLuna' ( VPS (fmap variable -> ColorD masterSaturationR masterSaturat
                   , VPS (fmap variable -> ColorD highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA)
                   )
                   img =
-                      onEach (correct correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
-                             (correct correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
-                             (correct correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
+                      onEach (correct' correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
+                             (correct' correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
+                             (correct' correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
                              id -- (colorCorrect contrastA gammaA gainA offsetA) saturated
                              saturated
     where 
