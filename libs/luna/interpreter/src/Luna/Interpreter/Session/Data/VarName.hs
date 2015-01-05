@@ -7,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Luna.Interpreter.Session.Data.VarName where
 
-import qualified Data.Maybe as Maybe
+import qualified Data.List as List
 
 import           Flowbox.Prelude
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
@@ -18,7 +18,7 @@ import qualified Luna.Lib.Lib                                as Library
 
 
 data VarName = VarName { _callPointPath :: CallPointPath
-                       , _hash          :: Maybe Hash
+                       , _hash          :: [Hash]
                        } deriving (Show, Eq, Ord)
 
 
@@ -30,8 +30,9 @@ instance Default VarName where
 
 
 toString :: VarName -> String
-toString varName = concatMap gen (varName ^. callPointPath) ++ hashStr where
+toString varName = concatMap gen (varName ^. callPointPath) ++ hashStr (varName ^. hash) where
     gen callPoint = "_" ++ show (abs $ Library.toInt (callPoint ^. CallPoint.libraryID))
                  ++ "_" ++ show (abs (callPoint ^. CallPoint.nodeID))
-    hashStr = '_' : Maybe.maybe "nohash" show (varName ^. hash)
+    hashStr [] = "_nohash"
+    hashStr h  = '_' : List.intercalate "_" (map show h)
 
