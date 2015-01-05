@@ -44,10 +44,7 @@ def Double.acc:
 alias Path = String
 
 def load self::Std path::Path:
-    ```autoLift1 loadImageLuna #{path}```
-
-def readFromEXR self::Std path::Path:
-    ```autoLift1 readFromEXRLuna #{path}```
+    ```autoLift1 realReadLuna #{path}```
 
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
@@ -206,16 +203,19 @@ def Image.merge self::Image mode::MergeMode alphaBlendMode::AlphaBlend img::Imag
 alias ImgMask = Maybe Image
 
 def noImgMask self::Std:
-    ```val (Nothing :: Maybe Image)```
+    ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
 def Image.rotate self::Image phi::Float:
-    ```liftF2 rotateCenterLuna #{phi} #{self}```
+    ```liftF2 turnCenterLuna #{phi} #{self}```
 
-def Image.translate self::Image x::Int y::Int m::ImgMask:
-    ```liftF4 translateLuna #{x} #{y} #{m} #{self}```
+def Image.translate self::Image x::Int y::Int:
+    ```liftF3 translateLuna #{x} #{y} #{self}```
 
-def Image.scale self::Image x::Float y::Float m::ImgMask:
-    ```liftF4 scaleLuna #{x} #{y} #{m} #{self}```
+def Image.scaleCenter self::Image x::Float  y::Float:
+    ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+
+def Image.scale self::Image x::Float y::Float:
+    ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
 # VIEW
 
@@ -287,6 +287,8 @@ class ```RGBA``` a:
 
 alias Color = RGBA Double
 
+alias ColorCC = (Color, Color, Color, Color, Color)
+
 def constant self::Std width::Int height::Int color::Color:
     ```liftF3 constantLuna #{width} #{height} #{color}```
 
@@ -305,3 +307,6 @@ def Image.gammaToLinear self::Image gamma::Gamma:
 
 def Image.gammaFromLinear self::Image gamma::Gamma:
     ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
+
+def testCC self::Std a::ColorCC:
+    ```liftF1 testColorCC #{a}```
