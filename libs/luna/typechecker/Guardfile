@@ -67,10 +67,10 @@ guard :shell, :version => 2, :cli => "--color" do
     end
   end
 
-  watch(%r{^src/Maintest.luna$}) do |m|
+  watch(%r{^test/resources/Maintest.luna$}) do |m|
     lastbuildguard(m[0]) do
       section "Luna file change"
-      show_output if command "../../../dist/bin/libs/luna-typechecker"
+      show_output if command "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna"
     end
   end
 
@@ -103,11 +103,11 @@ def haskell_action trigger
   section "building"
   if command("../../../scripts/compile -j9")
 
-    section "documentation", "cabal haddock --html"                                                         if $run_docgen
-    section "tests",         "rm -f luna-typechecker-tests.tix", "../../../dist/bin/libs/luna-typechecker"  if $run_tests
+    section "documentation", "cabal haddock --html" if $run_docgen
+    section "tests",         "rm -f luna-typechecker-tests.tix", "../../../dist/bin/libs/luna-typechecker-test" if $run_tests
 
     command "rm -f #{$output_dir}*"
-    command "../../../dist/bin/libs/luna-typechecker"                                                       if $run_main
+    command "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna" if $run_main
 
     if $run_tests and command "../../../dist/bin/libs/luna-typechecker-tests"
 
