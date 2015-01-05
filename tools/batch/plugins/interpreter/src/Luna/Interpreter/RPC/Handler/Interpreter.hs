@@ -73,7 +73,6 @@ import qualified Luna.Interpreter.Session.Memory                                
 import           Luna.Interpreter.Session.Memory.Manager                                     (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager                                     as Manager
 import           Luna.Interpreter.Session.Session                                            (SessionST)
-import qualified Luna.Interpreter.Session.Var                                                as Var
 
 
 
@@ -160,7 +159,7 @@ abort = return . Abort.Status
 
 varTimeSet :: VarTimeSet.Request -> RPC Context (SessionST mm) VarTimeSet.Update
 varTimeSet request@(VarTimeSet.Request time) = do
-    liftSession $ do Var.timeSet time
+    liftSession $ do Env.setTimeVar time
                      Invalidate.modifyAll --FIXME[PM]
     return $ VarTimeSet.Update request
 
