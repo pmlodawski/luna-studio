@@ -9,6 +9,7 @@ module Luna.Interpreter.Session.Cache.Invalidate where
 
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.List           as List
+import qualified Data.Set            as Set
 
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude                             hiding (matching)
@@ -58,6 +59,12 @@ modifyLibrary libraryID = do
     Env.addReload libraryID Reload.ReloadLibrary
 
 
+modifyTimeRefs :: Session mm ()
+modifyTimeRefs = do
+    timeRefs <- Set.toList <$> Env.getTimeRefs
+    mapM_ modifyCallPoint timeRefs
+
+
 --modifyDef :: Library.ID -> AST.ID -> Session mm ()
 --modifyDef libraryID defID = do
 --    let matchDef k v = last k ^. CallPoint.libraryID == libraryID
@@ -87,6 +94,10 @@ modifyBreadcrumbs libraryID bc = do
         else if Crumb.isFunction lastBC
             then Reload.ReloadFunctions
             else Reload.ReloadLibrary
+
+
+modifyCallPoint :: CallPoint -> Session mm ()
+modifyCallPoint (CallPoint libraryID nodeID) = modifyNode libraryID nodeID
 
 
 modifyNode :: Library.ID -> Node.ID -> Session mm ()
@@ -125,3 +136,6 @@ markSuccessors callDataPath status =
     Traverse.next callDataPath >>=
     mapM_ (setParentsStatus status . CallDataPath.toCallPointPath)
 
+
+modifyCallPointPath :: CallPointPath -> Session mm ()
+modifyCallPointPath = Cache.setStatus CacheStatus.Modified

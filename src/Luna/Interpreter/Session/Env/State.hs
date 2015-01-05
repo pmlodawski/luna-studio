@@ -19,6 +19,8 @@ import qualified Data.Maybe                 as Maybe
 import           Data.Monoid                ((<>))
 import           Data.MultiSet              (MultiSet)
 import qualified Data.MultiSet              as MultiSet
+import           Data.Set                   (Set)
+import qualified Data.Set                   as Set
 
 import           Control.Monad.Catch                         (bracket_)
 import qualified Flowbox.Batch.Project.Project               as Project
@@ -200,6 +202,23 @@ getTimeVar = gets $ view Env.timeVar
 setTimeVar :: Float -> Session mm ()
 setTimeVar = modify . set Env.timeVar
 
+---- Env.timeRefs ---------------------------------------------------------
+
+insertTimeRef :: CallPoint -> Session mm ()
+insertTimeRef callPoint = modify (Env.timeRefs %~ Set.insert callPoint)
+
+
+deleteTimeRef :: CallPoint -> Session mm ()
+deleteTimeRef callPoint = modify (Env.timeRefs %~ Set.delete callPoint)
+
+
+getTimeRefs :: Session mm (Set CallPoint)
+getTimeRefs = gets $ view Env.timeRefs
+
+
+cleanTimeRefs :: Session mm ()
+cleanTimeRefs = modify $ Env.timeRefs .~ def
+
 ---- Env.serializationModes -----------------------------------------------
 
 getSerializationModesMap :: Session mm (MapForest CallPoint (MultiSet Mode))
@@ -375,6 +394,7 @@ getResultCallBack = gets $ view Env.resultCallBack
 
 cleanEnv :: Session mm ()
 cleanEnv = cleanWatchPoints
+        >> cleanTimeRefs
         >> cleanDependentNodes
         >> cleanProfileInfos
         >> cleanSerializationModes

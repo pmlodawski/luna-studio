@@ -49,6 +49,7 @@ import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS  as TargetHS
+import qualified Luna.Interpreter.Session.Var                as Var
 import qualified Luna.Pass.Transform.AST.Hash.Hash           as Hash
 
 
@@ -197,7 +198,7 @@ varType (StringExpr.Expr   name@(h:_))
     | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit name
     | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit name
     | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit name
-    | name == "Time#"                                    = TimeVar
+    | name == Var.timeRef                                = TimeVar
     | Char.isUpper h                                     = Con name
     | otherwise                                          = Var name
 varType other = Prelude.error $ show other
