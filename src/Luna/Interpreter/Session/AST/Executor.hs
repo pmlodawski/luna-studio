@@ -34,7 +34,6 @@ import qualified Luna.Interpreter.Session.Data.CallData     as CallData
 import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint    (CallPoint)
-import           Luna.Interpreter.Session.Data.Hash         (Hash)
 import           Luna.Interpreter.Session.Data.VarName      (VarName (VarName))
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
 import qualified Luna.Interpreter.Session.Debug             as Debug
@@ -138,7 +137,7 @@ execute callDataPath stringExpr varNames = do
     let execFunction = evalFunction stringExpr callDataPath varNames
 
         executeModified = do
-            (hash, varName) <- execFunction
+            varName <- execFunction
             if varName /= prevVarName
                 then if boundVarName /= Just varName
                     then do logger debug "processing modified node - result value differs"
@@ -147,7 +146,7 @@ execute callDataPath stringExpr varNames = do
 
                     else do logger debug "processing modified node - result value differs but is cached"
                             Invalidate.markSuccessors callDataPath CacheStatus.Affected
-                else if Maybe.isNothing hash
+                else if null $ varName ^. VarName.hash
                     then do logger debug "processing modified node - result value non hashable"
                             Invalidate.markSuccessors callDataPath CacheStatus.Modified
                     else logger debug "processing modified node - result value is same"
@@ -198,7 +197,7 @@ varType other = Prelude.error $ show other
 
 
 evalFunction :: MemoryManager mm
-             => StringExpr -> CallDataPath -> [VarName] -> Session mm (Maybe Hash, VarName)
+             => StringExpr -> CallDataPath -> [VarName] -> Session mm VarName
 evalFunction stringExpr callDataPath varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
@@ -224,7 +223,7 @@ evalFunction stringExpr callDataPath varNames = do
         TimeVar     -> (++) "toIOEnv $ fromValue $ val (" . show <$> Env.getTimeVar
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment' tmpVarName operation
-        hash <- Hash.compute tmpVarName
+        hash <- Hash.computeInherit tmpVarName varNames
         let varName = VarName callPointPath hash
         Session.runAssignment (VarName.toString varName) tmpVarName
         lift2 $ Bindings.remove tmpVarName
@@ -232,4 +231,4 @@ evalFunction stringExpr callDataPath varNames = do
         Value.reportIfVisible callPointPath
         Manager.reportUseMany varNames
         Manager.reportUse varName
-        return (hash, varName)
+        return varName

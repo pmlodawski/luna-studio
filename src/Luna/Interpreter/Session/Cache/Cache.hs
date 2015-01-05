@@ -47,9 +47,9 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-dump :: CallPointPath -> Maybe Hash -> Session mm ()
-dump callPointPath mhash = do
-    let varName = VarName callPointPath mhash
+dump :: CallPointPath -> [Hash] -> Session mm ()
+dump callPointPath hash = do
+    let varName = VarName callPointPath hash
     logger debug $ "Dumping " ++ VarName.toString varName
     Session.runStmt $ "print " ++ VarName.toString varName
 
