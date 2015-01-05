@@ -11,6 +11,7 @@ module Solver where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Trans
 
 import Data.Functor.Identity
 
@@ -73,8 +74,21 @@ data E a        = Suc a | Err String
 
 -- The type inference monad - a typing problem consists of a three tuple
 
-data TP a = TP ( (TVar, Subst, Constraint) ->
-                 E (TVar, Subst, Constraint, a))
+
+data TPT m a = TPT { unTPT :: (TVar, Subst, Constraint) -> m (E (TVar, Subst, Constraint, a)) }
+
+
+instance (Monad m) => Monad (TPT m) where
+  return x = TPT $ \(n,s,c) -> return $ Suc (n,s,c,x)
+  m >>= fn = TPT $ \(n,s,c) -> do res <- unTPT m (n,s,c)
+                                  case res of
+                                    Suc (n',s',c',x) -> unTPT (fn x) (n',s',c')
+                                    (Err se)         -> return $ Err se
+
+instance MonadTrans TPT where
+  lift ma = TPT $ \(n,s,c) -> do
+      x <- ma
+      return $ Suc (n,s,c,x)
 
 
 -- *----------------------------------------
@@ -83,7 +97,7 @@ data TP a = TP ( (TVar, Subst, Constraint) ->
 
 
 class TypesAndConstraints c where
- apply :: Subst -> c -> TP c
+ apply :: (Monad m) => Subst -> c -> TPT m c
  tv    :: c -> [TVar]
 
 -- apply -- applies a substitution to either a type or constraint
@@ -157,28 +171,6 @@ instance TypesAndConstraints TypeScheme where
 -- * Category: MONAD DECLARATIONS
 -- *--------------------------------------------------
 
-unTP :: TP t -> (TVar, Subst, Constraint) -> E (TVar, Subst, Constraint, t)
-unTP (TP a) = a
-
-
-instance Monad TP where
- m >>= k = TP ( \ (n,s,c) ->
-                     case unTP m (n,s,c) of
-                       Suc (n',s',c',x) -> unTP (k x) (n',s',c')
-                       Err se           -> Err se )
- return x = TP ( \ (n,s,c) -> return (n,s,c,x) )
-
-
-instance Functor TP where
-  fmap f m = TP $ \(n,s,c) ->
-                     case unTP m (n,s,c) of
-                       Suc (n',s',c',x) -> Suc (n',s',c',f x)
-                       Err se           -> Err se
-
-instance Applicative TP where
-  pure = return
-  (<*>) = ap
-
 
 instance Monad E where
  m >>= k = case m of
@@ -196,8 +188,8 @@ instance Applicative E where
   (<*>) = ap
 
 
-report_error :: String -> a -> TP a
-report_error msg x =  TP ( \ (n,s,c) -> Err msg)
+report_error :: (Monad m) => String -> a -> TPT m a
+report_error msg x =  TPT ( \ (n,s,c) -> return $ Err msg)
 
 
 -- *---------------------------------------
@@ -264,16 +256,16 @@ tv_typo :: Typo -> [TVar]
 tv_typo = foldl f [] where
           f z (v,ts) = z ++ tv ts
 
-add_constraint :: Constraint -> TP ()
+add_constraint :: (Monad m) => Constraint -> TPT m ()
 add_constraint c1 =
-     TP (\ (n,s,c) -> return (n,s,add_cons c c1,()))
+     TPT (\ (n,s,c) -> return $ return (n,s,add_cons c c1,()))
 
 
 
 -- handling of type variables and type environments
 
-newtvar :: TP TVar
-newtvar = TP (\ (n,s,c) -> return (new_tvar n,s,c,n) )
+newtvar :: (Monad m) => TPT m TVar
+newtvar = TPT (\ (n,s,c) -> return $ return (new_tvar n,s,c,n) )
 
 insert :: Typo -> (Var, TypeScheme) -> Typo
 insert a (x,t) = (x,t):a
@@ -291,12 +283,12 @@ mylookup ((x,t):xs) y =
 
 
 
-rename :: TP Subst -> TVar -> TP Subst
+rename :: (Monad m) => TPT m Subst -> TVar -> TPT m Subst
 rename s x = do newtv <- newtvar
                 s' <- s
                 return ((x, TV newtv):s')
 
-inst :: Typo -> Var -> TP Type
+inst :: (Monad m) => Typo -> Var -> TPT m Type
 inst env x =
    case mylookup env x of
      Suc ts -> case ts of
@@ -314,9 +306,9 @@ inst env x =
 
 
 
-gen :: Typo -> Type -> TP TypeScheme
+gen :: (Monad m) => Typo -> Type -> TPT m TypeScheme
 gen env t =
- TP ( \ (n,s,c) -> return (n,s, projection c (fv t c env), Poly (fv t c env) c t) )
+ TPT ( \ (n,s,c) -> return $ return (n,s, projection c (fv t c env), Poly (fv t c env) c t) )
                       where fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
 
 
@@ -325,15 +317,15 @@ gen env t =
 
 
 
-cs :: (Subst, Constraint) -> TP (Subst, Constraint)
+cs :: (Monad m) => (Subst, Constraint) -> TPT m (Subst, Constraint)
 
 
 -- that's what you need to supply
 
 
--- incorporating the constraint solver into monad TP
+-- incorporating the constraint solver into monad TPT
 
-normalize :: Type -> TP Type
+normalize :: (Monad m) => Type -> TPT m Type
 normalize a = do s <- get_subst
                  c <- get_cons
                  (s',c') <- cs (s,c)
@@ -342,14 +334,14 @@ normalize a = do s <- get_subst
 
 
 
-get_subst :: TP Subst
-get_subst = TP ( \ (n,s,c) -> return (n,s,c,s))
+get_subst :: (Monad m) => TPT m Subst
+get_subst = TPT ( \ (n,s,c) -> return $ return (n,s,c,s))
 
-get_cons :: TP Constraint
-get_cons = TP ( \ (n,s,c) -> return (n,s,c,c))
+get_cons :: (Monad m) => TPT m Constraint
+get_cons = TPT ( \ (n,s,c) -> return $ return (n,s,c,c))
 
-return_result :: Subst -> Constraint -> Type -> TP Type
-return_result s c t = TP ( \ (n,s',c') -> return (n,s,c,t))
+return_result :: (Monad m) => Subst -> Constraint -> Type -> TPT m Type
+return_result s c t = TPT ( \ (n,s',c') -> return $ return (n,s,c,t))
 
 
 
@@ -376,7 +368,7 @@ cs _ = error "this case was not taken into account in original HM(Rec)"
 
 -- divide predicates into record predicates and equality predicates
 
-extract_predicates :: [Predicate] -> TP ([Predicate],[Predicate])
+extract_predicates :: (Monad m) => [Predicate] -> TPT m ([Predicate],[Predicate])
 extract_predicates [] = return ([],[])
 extract_predicates (TRUE:p) = extract_predicates p
 extract_predicates ((t `Subsume` t'):p) =
@@ -388,7 +380,7 @@ extract_predicates (Reckind t l t' : p) =
 
 
 
-closure ::  (Subst,[Predicate],[Predicate]) -> TP (Subst,[Predicate])
+closure :: (Monad m) => (Subst,[Predicate],[Predicate]) -> TPT m (Subst,[Predicate])
 closure (s, r, e) =
    do s' <- do_unify(s,e)
       c <- apply s' (C r)
@@ -403,21 +395,22 @@ closure (s, r, e) =
 
 -- create subsumptions based on a label type of a particular record
 
-extract1 :: [Predicate] -> TP [Predicate]
+extract1 :: (Monad m) => [Predicate] -> TPT m [Predicate]
 extract1 [] = return []
 extract1 (Reckind (Record f) l t : p) =
     do e <- get_extract1 f l t
        e' <- extract1 p
        return (e:e')
 extract1 (_:p) = extract1 p
-get_extract1 :: Eq a => [(a, Type)] -> a -> Type -> TP Predicate
+
+get_extract1 :: (Monad m) => Eq a => [(a, Type)] -> a -> Type -> TPT m Predicate
 get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" (TV 0 `Subsume` TV 0)
 get_extract1 ((l,t):f) l' t' = if l == l' then return (t `Subsume` t')
                                else get_extract1 f l' t'
 
 -- Create subsumptions for each label based on all constraints for a particular label and record. All equations for a particular label in a record must be satisfied
 
-extract2 :: [Predicate] -> TP [Predicate]
+extract2 :: (Monad m) => [Predicate] -> TPT m [Predicate]
 extract2 [] = return []
 extract2 (Reckind t l t' : p) =
     do e <- extract2 p
@@ -434,7 +427,7 @@ get_extract2 (_:p) t l t'                 = get_extract2 p t l t'
 
 
 
-check_consistency :: [Predicate] -> TP Bool
+check_consistency :: (Monad m) => [Predicate] -> TPT m Bool
 check_consistency [] = return True
 check_consistency (Reckind (Record f) l t' : p) = check_consistency p
 check_consistency (Reckind (TV a) l t'     : p) = check_consistency p
@@ -445,14 +438,14 @@ check_consistency (_                       : p) = check_consistency p
 
 -- simplification of constraints
 
-simplify :: Constraint -> TP Constraint
+simplify :: (Monad m) =>  Constraint -> TPT m Constraint
 simplify (C p) = do p' <- simplify_predicate p
                     return (C p')
 simplify _ = error "this case was not taken into account in original HM(Rec)"
 
 -- simplification of predicates
 
-simplify_predicate :: [Predicate] -> TP [Predicate]
+simplify_predicate :: (Monad m) => [Predicate] -> TPT m [Predicate]
 simplify_predicate [] = return []
 simplify_predicate ((t `Subsume` t'):p) =
   if t == t'  then simplify_predicate p
@@ -469,7 +462,7 @@ simplify_predicate (x:p) =
 
 -- assumption, there are only equ predicates
 
-do_unify :: (Subst, [Predicate]) -> TP Subst
+do_unify :: (Monad m) =>  (Subst, [Predicate]) -> TPT m Subst
 do_unify (s, []) = return s
 do_unify (s, t `Subsume` t' : p) =
    do s' <- unify(s,t,t')
@@ -478,7 +471,7 @@ do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal for
 
 
 
-unify :: (Subst, Type, Type) -> TP Subst
+unify :: (Monad m) => (Subst, Type, Type) -> TPT m Subst
 unify (s, TV x, TV y) =
    if x == y then return s
    else do t <- apply s (TV x)
@@ -535,7 +528,7 @@ unify (s, _, _)  = report_error "unify:uncompatible type" null_subst
 --            (101, Poly [302,303] ( C [Reckind (TV 302) 201 (TV 303)]) ((TV 302) `Fun` (TV 303)))],
 --           App (Id 101) (Id 100)))
 --           (init_tvar, null_subst, true_cons)
-rec2, rec3 :: TP (Subst, Constraint)
+rec2, rec3 :: TPT Identity (Subst, Constraint)
 rec2 = cs(null_subst, C [ Reckind (TV 100) 200 (TV 300 `Fun` TV 300)
                         , Reckind (TV 100) 200 (TV 301)
                         ])

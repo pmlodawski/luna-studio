@@ -92,14 +92,14 @@ tcExpr lexpr@(Label lab expr) = do
     case expr of 
       Expr.Var { Expr._ident = (Expr.Variable vname _) }
           -> do let hn = unpack . humanName $ vname
-                pushString (("Var         " ++ hn) )
+                pushString ("Var         " ++ hn)
       Expr.Assignment { Expr._dst = (Label _ dst), Expr._src = (Label _ src) }
-          -> do case (dst, src) of
-                  (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
-                      pushString (("Assignment  " ++ (unpack . humanName $ dst_vname) ++ " <- " ++ (unpack . humanName $ src_vname)) )
-                  _ -> pushString ("Some assignment..."  )
+          ->  case (dst, src) of
+                (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
+                    pushString ("Assignment  " ++ (unpack . humanName $ dst_vname) ++ " <- " ++ (unpack . humanName $ src_vname))
+                _ -> pushString "Some assignment..."
       Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label _ (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)})
-          -> pushString (("Application " ++ (unpack . humanName $ basename) ++ " ( " ++ intercalate " " (fmap mapArg args) ++ " )")  )
+          -> pushString ("Application " ++ (unpack . humanName $ basename) ++ " ( " ++ unwords (fmap mapArg args) ++ " )")
       _   -> return ()
     defaultTraverseM lexpr
   where
@@ -108,15 +108,15 @@ tcExpr lexpr@(Label lab expr) = do
     -- mapArg (Label _ (Expr.Var { Expr._ident = (Expr.Variable vname _) })) = unpack . humanName $ vname
 
 tcDecl :: (HumanName (Pat.Pat lab), StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
-tcDecl ldecl@(Label lab decl) = do
+tcDecl ldecl@(Label lab decl) =
     case decl of
       fun@Decl.Func { Decl._sig  = sig@NamePat.NamePat{ NamePat._base = (NamePat.Segment name args) }
                     , Decl._body = body
                     }
           -> do let argsS = fmap mapArg args
-                pushString (("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " START") )
+                pushString ("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " START")
                 x <- defaultTraverseM ldecl
-                pushString (("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " END") )
+                pushString ("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " END")
                 return x
       _   -> defaultTraverseM ldecl
   where
@@ -125,12 +125,12 @@ tcDecl ldecl@(Label lab decl) = do
 
 tcMod :: (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
 tcMod lmodule@(Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) = do
-    pushString (("Module      " ++ intercalate "." (fmap unpack (path ++ [name]))))
+    pushString ("Module      " ++ intercalate "." (fmap unpack (path ++ [name])))
     defaultTraverseM lmodule
 
 tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> t -> StageTypecheckerPass m StageTypecheckerState
 tcUnit ast _ = do
-    pushString ("First!" )
+    pushString "First!"
     _ <- defaultTraverseM ast
     str %= reverse
     get
