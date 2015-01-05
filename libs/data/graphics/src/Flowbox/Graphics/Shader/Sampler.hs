@@ -20,7 +20,7 @@ import           Math.Coordinate.Cartesian (Point2 (..))
 
 
 
-type Sampler e = ContinousShader (Exp e) -> DiscreteShader (Exp e)
+type Sampler e = ContinuousShader (Exp e) -> DiscreteShader (Exp e)
 
 monosampler :: (Elt a, IsNum a) => CartesianShader (Exp a) e -> DiscreteShader e
 monosampler = transform $ fmap A.fromIntegral
@@ -32,7 +32,7 @@ multisampler kernel = convolve msampler kernel
           Z :. h :. w = A.unlift $ shape kernel
           subpixel = Point2 (1 / (A.fromIntegral w - 1)) (1 / (A.fromIntegral h - 1))
 
-nearest :: (Elt e, IsFloating e) => DiscreteShader (Exp e) -> CartesianShader (Exp e) (Exp e)
+nearest :: (Elt a, Elt e, IsFloating a) => DiscreteShader (Exp e) -> CartesianShader (Exp a) (Exp e)
 nearest = transform $ fmap A.floor
 
 interpolator :: forall e . (Elt e, IsFloating e) => Filter (Exp e) -> DiscreteShader (Exp e) -> CartesianShader (Exp e) (Exp e)

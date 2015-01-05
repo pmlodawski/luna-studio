@@ -16,13 +16,13 @@ import Flowbox.Prelude
 
 
 
-perlinNoise :: A.Exp Double -> ContinousShader (A.Exp Double)
+perlinNoise :: A.Exp Double -> ContinuousShader (A.Exp Double)
 perlinNoise z = unitShader $ runShader $ perlinGen Standard 1.0 2.0 6 0.5 0 z
 
 perlinGen :: Quality -> A.Exp Double -> A.Exp Double ->
              A.Exp Int -> A.Exp Double -> A.Exp Int ->
              A.Exp Double ->
-             ContinousShader (A.Exp Double)
+             ContinuousShader (A.Exp Double)
 perlinGen quality freq lac octaveCount persistence seed z = unitShader $ \point ->
     value $ A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
     where value args = val

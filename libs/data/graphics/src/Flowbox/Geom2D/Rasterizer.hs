@@ -187,9 +187,9 @@ rasterizeMask w h (Mask path' feather') = path
 
 matrixToImage :: Matrix2 Double -> Image
 matrixToImage a = Image.singleton view
-    where view = View.append (Channel.ChannelFloat "rgba.r" $ Channel.FlatData w)
-               $ View.append (Channel.ChannelFloat "rgba.g" $ Channel.FlatData w)
-               $ View.append (Channel.ChannelFloat "rgba.b" $ Channel.FlatData w)
-               $ View.append (Channel.ChannelFloat "rgba.a" $ Channel.FlatData a)
+    where view = View.append (Channel.ChannelFloat "rgba.r" $ Channel.MatrixData w)
+               $ View.append (Channel.ChannelFloat "rgba.g" $ Channel.MatrixData w)
+               $ View.append (Channel.ChannelFloat "rgba.b" $ Channel.MatrixData w)
+               $ View.append (Channel.ChannelFloat "rgba.a" $ Channel.MatrixData a)
                $ View.empty "rgba"
           w = M.map (\_ -> 1) a
