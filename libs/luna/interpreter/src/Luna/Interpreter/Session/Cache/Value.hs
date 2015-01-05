@@ -80,17 +80,8 @@ getWithStatus callPointPath = do
 
 reportIfVisible :: CallPointPath -> Session mm ()
 reportIfVisible callPointPath = do
-    whenVisible callPointPath $
+    Env.whenVisible callPointPath $
         foldedReRoute callPointPath >>= report callPointPath
-
-
-whenVisible :: CallPointPath -> Session mm () -> Session mm ()
-whenVisible callPointPath action = do
-    flags <- Env.getFlags $ last callPointPath
-    unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
-         || Flags.isSet' flags (view Flags.graphViewGenerated  )
-         || Flags.isFolded flags                               )
-        action
 
 
 report :: CallPointPath -> VarName -> Session mm ()
