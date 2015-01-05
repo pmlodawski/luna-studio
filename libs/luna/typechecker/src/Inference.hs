@@ -45,25 +45,29 @@ import            Solver
 
 data StageTypechecker = StageTypechecker
 
-data StageTypecheckerState
-   = StageTypecheckerState  { _str      :: [String]
-                            , _nextTVar :: TVar
-                            , _subst    :: Subst
-                            , _constr   :: Constraint
-                            }
+data StageTypecheckerState = StageTypecheckerState
+                                  { _str      :: [String]
+                                  --, _nextTVar :: TVar
+                                  --, _subst    :: Subst
+                                  --, _constr   :: Constraint
+                                  }
+
+instance Monoid StageTypecheckerState where
+  mempty = StageTypecheckerState  { _str      = []
+                                  --, _nextTVar = init_tvar
+                                  --, _subst    = null_subst
+                                  --, _constr   = true_cons
+                                  }
+  mappend StageTypecheckerState{ _str = s1 } StageTypecheckerState{ _str = s2 } = StageTypecheckerState{ _str = s1 ++ s2 }
 
 instance Show StageTypecheckerState where
   show StageTypecheckerState{ _str = strings } = show strings
-
-instance Monoid StageTypecheckerState where
-  mempty = StageTypecheckerState{ _str = [] }
-  mappend StageTypecheckerState{ _str = s1 } StageTypecheckerState{ _str = s2 } = StageTypecheckerState{ _str = s1 ++ s2 }
 
 makeLenses ''StageTypecheckerState
 
 
 
-type StageTypecheckerPass             m       = PassMonad StageTypecheckerState m
+type StageTypecheckerPass             m       = PassMonad StageTypecheckerState (TPT m)
 type StageTypecheckerCtx              lab m a = (Enumerated lab, StageTypecheckerTraversal m a)
 type StageTypecheckerTraversal        m   a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
 type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
@@ -133,6 +137,10 @@ tcUnit ast _ = do
     pushString "First!"
     _ <- defaultTraverseM ast
     str %= reverse
+    ggg <- get
+    --rrr <- ask
+    --_
+    --let tpt' = unTPT tpt (init_tvar, null_subst, true_cons)
     get
 
 

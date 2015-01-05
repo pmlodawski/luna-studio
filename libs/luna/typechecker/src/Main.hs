@@ -35,6 +35,7 @@ import            Text.Show.Pretty                          (ppShow)
 
 
 import            Inference                                 as FooInfer
+import            Solver                                    (E(..), unTPT, init_tvar, null_subst, true_cons)
 
 
 main :: IO ()
@@ -50,13 +51,14 @@ main =
         [Cyan] `colouredPrint` "…passes"
         let src = Source (pack file) (Text $ pack file_contents)
 
-        result <- runEitherT $ do
+        result <- (flip unTPT (init_tvar, null_subst, true_cons)) . runEitherT $ do
           (ast1, astinfo1) <- Pass.run1_ P2Stage1.pass src
           sa1              <- Pass.run1_ P2SA.pass ast1
           (ast2, astinfo2) <- Pass.run3_ P2Stage2.pass (Namespace [] sa1) astinfo1 ast1
           (ast3, astinfo3) <- Pass.run2_ P2ImplSelf.pass astinfo2 ast2
           sa2              <- Pass.run1_ P2SA.pass ast3
           constraints      <- Pass.run2_ FooInfer.tcpass ast3 sa2
+          -- \s -> unTPT s (init_tvar, null_subst, true_cons)
           ast4             <- Pass.run1_ P2Hash.pass ast3
           ast5             <- Pass.run1_ P2SSA.pass ast4
           --hast             <- Pass.run1_ P2HASTGen.pass ast5
@@ -77,8 +79,12 @@ main =
           return  ()
 
         case result of
-          Left _   -> [Red, Bold] `colouredPrint` "some error, sorry"
-          Right () -> return ()
+          Err se                  -> [Red, Bold]  `colouredPrint` "some TC error, sorry"
+          Suc (n, s, c, Left _  ) -> [Red, Bold]  `colouredPrint` "some error, sorry"
+          Suc (n, s, c, Right ()) -> do
+            [White]      `colouredPrint` "Next TVar: " ++ (show n)
+            [White]      `colouredPrint` "Subst:     " ++ (show s)
+            [White]      `colouredPrint` "Constr:    " ++ (show c)
 
 writeAST :: (MonadIO m) => FilePath -> String -> m ()
 writeAST path str = liftIO $ do
