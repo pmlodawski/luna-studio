@@ -30,12 +30,14 @@ import           Luna.Interpreter.Session.Data.AbortException (AbortException (A
 import qualified Luna.Interpreter.Session.Data.CallPoint      as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath  (CallPointPath)
 import           Luna.Interpreter.Session.Data.VarName        (VarName)
+import qualified Luna.Interpreter.Session.Data.VarName        as VarName
 import qualified Luna.Interpreter.Session.Env                 as Env
 import qualified Luna.Interpreter.Session.Error               as Error
 import qualified Luna.Interpreter.Session.Hint.Eval           as HEval
 import           Luna.Interpreter.Session.Session             (Session)
 import qualified Luna.Interpreter.Session.Session             as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings   as Bindings
+
 
 
 logger :: LoggerIO
@@ -102,7 +104,7 @@ get varName callPointPath = do
         else do
             let tmpName = "_tmp"
                 toValueExpr = "toValue " ++ tmpName
-                computeExpr = concat [tmpName, " <- return $ compute ", varName, " def"]
+                computeExpr = concat [tmpName, " <- return $ compute ", VarName.toString varName, " def"]
 
                 excHandler :: Catch.SomeException -> MGHC.Ghc [ModeValue]
                 excHandler exc = case Catch.fromException exc of

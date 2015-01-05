@@ -13,6 +13,7 @@ import           Flowbox.Prelude
 import           Luna.Interpreter.Session.Cache.Info        (CacheInfo)
 import qualified Luna.Interpreter.Session.Cache.Info        as CacheInfo
 import           Luna.Interpreter.Session.Data.VarName      (VarName)
+import qualified Luna.Interpreter.Session.Data.VarName      as VarName
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 
@@ -20,7 +21,7 @@ import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 
 freeVarName :: VarName -> Session mm ()
 freeVarName varName = lift2 $
-    Bindings.remove varName
+    Bindings.remove $ VarName.toString varName
 
 
 freeCacheInfo :: CacheInfo -> Session mm ()
