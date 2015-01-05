@@ -4,41 +4,41 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
 
-module Flowbox.Graphics.Composition.Generators.Stencil where
+module Flowbox.Graphics.Shader.Stencil where
 
-import Flowbox.Prelude                                    as P hiding (filter)
-import Flowbox.Graphics.Composition.Generators.Structures hiding (value)
-import Flowbox.Math.Matrix                                as M hiding (get, stencil)
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Math.Matrix            as M hiding (get, stencil)
+import Flowbox.Prelude                as P hiding (filter)
 
 import qualified Data.Array.Accelerate     as A
-import           Math.Coordinate.Cartesian (Point2(..))
+import           Math.Coordinate.Cartesian (Point2 (..))
 import           Math.Space.Space          hiding (height, width)
 
 
 
 stencil :: forall a b c . (Elt a, IsNum a)
         => (Point2 c -> Point2 (Exp Int) -> Point2 b)
-        -> DiscreteGenerator (Exp a) -- kernel generator
+        -> DiscreteShader (Exp a) -- kernel generator
         -> (Exp a -> Exp a -> Exp a) -> Exp a
-        -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
-stencil mode (Generator (Grid width height) kernel) foldOp initVal (Generator cnv input) = Generator cnv $ \pos ->
+        -> CartesianShader b (Exp a) -> CartesianShader c (Exp a)
+stencil mode (Shader (Grid width height) kernel) foldOp initVal (Shader cnv input) = Shader cnv $ \pos ->
     let get x' y' = input $ mode pos (Point2 x' y')
         outer :: (Exp Int, Exp a) -> (Exp Int, Exp a)
         outer (h, acc) = (h + 1, A.snd $ A.while (\e -> A.fst e A.<* width) (A.lift1 inner) (A.lift (0 :: Exp Int, acc)))
             where inner :: (Exp Int, Exp a) -> (Exp Int, Exp a)
-                  inner (w, acc) = (w + 1, acc `foldOp` (kernel (Point2 w h) * get (w - width `div` 2) (h - height `div` 2)))
+                  inner (w, acc') = (w + 1, acc' `foldOp` (kernel (Point2 w h) * get (w - width `div` 2) (h - height `div` 2)))
     in A.snd $ A.while (\e -> A.fst e A.<* height) (A.lift1 outer) (A.lift (0 :: Exp Int, initVal))
 
 bilateralStencil :: forall a b c . (Elt a, IsNum a, IsFloating a)
             => (Point2 c -> Point2 (Exp Int) -> Point2 b)
-            -> DiscreteGenerator (Exp a) -- spatial kernel generator
+            -> DiscreteShader (Exp a) -- spatial kernel generator
             -> (Exp a -> Exp a -> Exp a) -- domain kernel
             -> (Exp a -> Exp a -> Exp a) -> Exp a
-            -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
-bilateralStencil mode (Generator (Grid width height) kernel) domain foldOp _initVal (Generator cnv input) = Generator cnv $ \pos ->
+            -> CartesianShader b (Exp a) -> CartesianShader c (Exp a)
+bilateralStencil mode (Shader (Grid width height) kernel) domain foldOp _initVal (Shader cnv input) = Shader cnv $ \pos ->
     let get x' y' = input $ mode pos (Point2 x' y')
 
         testW :: (Exp Int, Exp a, Exp a) -> Exp Bool
@@ -54,7 +54,7 @@ bilateralStencil mode (Generator (Grid width height) kernel) domain foldOp _init
         outer (h, accV, accW) = (h + 1, resV, resW)
             where (_ :: Exp Int, resV :: Exp a, resW :: Exp a) = A.unlift $ A.while (A.lift1 testW) (A.lift1 inner) (start accV accW)
                   inner :: (Exp Int, Exp a, Exp a) -> (Exp Int, Exp a, Exp a)
-                  inner (w, accV, accW) = (w + 1, accV `foldOp` (weight * value), accW + weight)
+                  inner (w, accV', accW') = (w + 1, accV' `foldOp` (weight * value), accW' + weight)
                       where weight = domain (get 0 0) value * kernel (Point2 w h)
                             value = get (w - width `div` 2) (h - height `div` 2)
         (_ :: Exp Int, valueSum :: Exp a, weightSum :: Exp a) = A.unlift $ A.while (A.lift1 testH) (A.lift1 outer) (start 0 0)
@@ -63,7 +63,7 @@ bilateralStencil mode (Generator (Grid width height) kernel) domain foldOp _init
 
 normStencil :: forall a b c . (Elt a, IsNum a, IsFloating a)
             => (Point2 c -> Point2 (Exp Int) -> Point2 b)
-            -> DiscreteGenerator (Exp a) -- spatial kernel generator
+            -> DiscreteShader (Exp a) -- spatial kernel generator
             -> (Exp a -> Exp a -> Exp a) -> Exp a
-            -> CartesianGenerator b (Exp a) -> CartesianGenerator c (Exp a)
+            -> CartesianShader b (Exp a) -> CartesianShader c (Exp a)
 normStencil mode gen = bilateralStencil mode gen $ \_ _ -> 1

@@ -4,32 +4,32 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ViewPatterns        #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Graphics.Composition.Generators.Rasterizer where
+module Flowbox.Graphics.Shader.Rasterizer where
 
-import Flowbox.Prelude                                    as P
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Graphics.Composition.Generators.Transform
-import Flowbox.Math.Matrix                                as M
+import Flowbox.Graphics.Composition.Transform
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Math.Matrix                    as M
+import Flowbox.Prelude                        as P
 
 import qualified Data.Array.Accelerate     as A
-import           Math.Space.Space
-import           Math.Coordinate.Cartesian (Point2(..))
 import           Data.Monoid
+import           Math.Coordinate.Cartesian (Point2 (..))
+import           Math.Space.Space
 
 
 
-rasterizer :: Elt e => DiscreteGenerator (Exp e) -> Matrix2 e
-rasterizer (Generator (Grid width' height') gen) = generate (A.index2 height' width') wrapper
+rasterizer :: Elt e => DiscreteShader (Exp e) -> Matrix2 e
+rasterizer (Shader (Grid width' height') gen) = generate (A.index2 height' width') wrapper
     where wrapper (A.unlift . A.unindex2 -> (y, x)) = gen (Point2 x y)
 
 gridRasterizer :: forall a e . (Elt e, Elt a, IsFloating a)
-               => Grid (Exp Int) -> Grid (Exp Int) 
-               -> (CartesianGenerator (Exp a) (Exp e) -> DiscreteGenerator (Exp e))
-               -> [CartesianGenerator (Exp a) (Exp e)] -> Matrix2 e
+               => Grid (Exp Int) -> Grid (Exp Int)
+               -> (CartesianShader (Exp a) (Exp e) -> DiscreteShader (Exp e))
+               -> [CartesianShader (Exp a) (Exp e)] -> Matrix2 e
 gridRasterizer space grid sampler generators = generate (A.index2 (height space) (width space)) wrapper
     where cell = div <$> space <*> grid
           rasterized = mconcat $ P.map (flatten . rasterizer . sampler . scale cell) generators :: Vector e

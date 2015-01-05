@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE ViewPatterns #-}
+
 module Flowbox.Graphics.Image.Image (
     Image(..),
     insert,
@@ -11,34 +13,36 @@ module Flowbox.Graphics.Image.Image (
     lookup,
     update,
     map,
-    singleton
+    singleton,
+    image
 ) where
 
 import qualified Data.Map                     as Map
 import qualified Data.Set                     as Set
 import           Flowbox.Graphics.Image.Error
 import qualified Flowbox.Graphics.Image.View  as View
-import           Flowbox.Prelude              hiding (lookup, map, sequence, views)
+import           Flowbox.Prelude              hiding (lookup, map, sequence, view, views)
 
 data Image = Image { _views       :: Map.Map View.Name View.View
                    , _defaultView :: View.Select
                    } deriving (Show)
+
 makeLenses ''Image
 
 image :: Map.Map View.Name View.View -> View.Select -> Either Error Image
 image imgviews defaultview = if defaultview `Set.isSubsetOf` Map.keysSet imgviews
                                 then newimg
                                 else Left InvalidMap
-    where keysMatchingNames = Map.foldrWithKey (\k v acc -> acc && View.name v == k) True imgviews
+    where keysMatchingNames = Map.foldrWithKey (\k v acc -> acc && (v ^. View.name) == k) True imgviews
           newimg = if keysMatchingNames then return $ Image imgviews defaultview
                                         else Left InvalidMap
 
 singleton :: View.View -> Image
 singleton view = Image (Map.singleton name view) (Set.singleton name)
-    where name = View.name view
+    where name = view ^. View.name
 
 insert :: View.View -> Image -> Image
-insert view img = over views (Map.insert (View.name view) view) img
+insert view img = over views (Map.insert (view ^. View.name) view) img
 
 -- FIXME[MM]: shouldn't it throw if view is non-existant?
 delete :: View.Name -> Image -> Image
