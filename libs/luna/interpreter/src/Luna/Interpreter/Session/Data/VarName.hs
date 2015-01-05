@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 module Luna.Interpreter.Session.Data.VarName where
 
 import qualified Data.Maybe as Maybe
@@ -15,11 +16,22 @@ import           Luna.Interpreter.Session.Data.Hash          (Hash)
 import qualified Luna.Lib.Lib                                as Library
 
 
-type VarName = String
+
+data VarName = VarName { _callPointPath :: CallPointPath
+                       , _hash          :: Maybe Hash
+                       } deriving (Show, Eq, Ord)
 
 
-mk :: Maybe Hash -> CallPointPath -> VarName
-mk mhash callPointPath = concatMap gen callPointPath ++ hash where
+makeLenses ''VarName
+
+
+instance Default VarName where
+    def = VarName def def
+
+
+toString :: VarName -> String
+toString varName = concatMap gen (varName ^. callPointPath) ++ hashStr where
     gen callPoint = "_" ++ show (abs $ Library.toInt (callPoint ^. CallPoint.libraryID))
                  ++ "_" ++ show (abs (callPoint ^. CallPoint.nodeID))
-    hash = '_' : Maybe.maybe "nohash" show  mhash
+    hashStr = '_' : Maybe.maybe "nohash" show (varName ^. hash)
+

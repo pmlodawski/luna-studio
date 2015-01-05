@@ -14,43 +14,42 @@ import qualified Data.Char                  as Char
 import qualified Data.Maybe                 as Maybe
 import qualified Text.Read                  as Read
 
-import           Flowbox.Control.Error                       (catchEither)
-import qualified Flowbox.Data.List                           as List
-import           Flowbox.Data.MapForest                      (MapForest)
-import           Flowbox.Prelude                             as Prelude hiding (children, inside)
-import           Flowbox.Source.Location                     (loc)
+import           Flowbox.Control.Error                      (catchEither)
+import qualified Flowbox.Data.List                          as List
+import           Flowbox.Data.MapForest                     (MapForest)
+import           Flowbox.Prelude                            as Prelude hiding (children, inside)
+import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Graph.Node                             as Node
-import qualified Luna.Graph.Node.Expr                        as NodeExpr
-import           Luna.Graph.Node.StringExpr                  (StringExpr)
-import qualified Luna.Graph.Node.StringExpr                  as StringExpr
-import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
-import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
-import qualified Luna.Interpreter.Session.Cache.Free         as Free
-import qualified Luna.Interpreter.Session.Cache.Invalidate   as Invalidate
-import qualified Luna.Interpreter.Session.Cache.Status       as CacheStatus
-import qualified Luna.Interpreter.Session.Cache.Value        as Value
-import qualified Luna.Interpreter.Session.Data.CallData      as CallData
-import           Luna.Interpreter.Session.Data.CallDataPath  (CallDataPath)
-import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
-import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
-import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Luna.Interpreter.Session.Data.Hash          (Hash)
-import           Luna.Interpreter.Session.Data.VarName       (VarName)
-import qualified Luna.Interpreter.Session.Data.VarName       as VarName
-import qualified Luna.Interpreter.Session.Debug              as Debug
-import qualified Luna.Interpreter.Session.Env                as Env
-import qualified Luna.Interpreter.Session.Error              as Error
-import qualified Luna.Interpreter.Session.Hash               as Hash
-import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
-import qualified Luna.Interpreter.Session.Memory.Manager     as Manager
-import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
-import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Interpreter.Session.Session            as Session
-import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
-import qualified Luna.Interpreter.Session.TargetHS.TargetHS  as TargetHS
-import qualified Luna.Interpreter.Session.Var                as Var
-import qualified Luna.Pass.Transform.AST.Hash.Hash           as Hash
+import qualified Luna.Graph.Node                            as Node
+import qualified Luna.Graph.Node.Expr                       as NodeExpr
+import           Luna.Graph.Node.StringExpr                 (StringExpr)
+import qualified Luna.Graph.Node.StringExpr                 as StringExpr
+import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
+import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
+import qualified Luna.Interpreter.Session.Cache.Free        as Free
+import qualified Luna.Interpreter.Session.Cache.Invalidate  as Invalidate
+import qualified Luna.Interpreter.Session.Cache.Status      as CacheStatus
+import qualified Luna.Interpreter.Session.Cache.Value       as Value
+import qualified Luna.Interpreter.Session.Data.CallData     as CallData
+import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
+import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
+import           Luna.Interpreter.Session.Data.CallPoint    (CallPoint)
+import           Luna.Interpreter.Session.Data.Hash         (Hash)
+import           Luna.Interpreter.Session.Data.VarName      (VarName (VarName))
+import qualified Luna.Interpreter.Session.Data.VarName      as VarName
+import qualified Luna.Interpreter.Session.Debug             as Debug
+import qualified Luna.Interpreter.Session.Env               as Env
+import qualified Luna.Interpreter.Session.Error             as Error
+import qualified Luna.Interpreter.Session.Hash              as Hash
+import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
+import qualified Luna.Interpreter.Session.Memory.Manager    as Manager
+import           Luna.Interpreter.Session.ProfileInfo       (ProfileInfo)
+import           Luna.Interpreter.Session.Session           (Session)
+import qualified Luna.Interpreter.Session.Session           as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
+import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
+import qualified Luna.Interpreter.Session.Var               as Var
+import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
 
 
 
@@ -74,23 +73,18 @@ processMain_ = do
     Debug.dumpBindings
 
 
-processNodeIfNeeded :: MemoryManager mm
-                    => CallDataPath -> Session mm ()
+processNodeIfNeeded :: MemoryManager mm => CallDataPath -> Session mm ()
 processNodeIfNeeded callDataPath =
     whenM (Cache.isDirty $ CallDataPath.toCallPointPath callDataPath)
           (processNode callDataPath)
 
 
-processNode :: MemoryManager mm
-            => CallDataPath -> Session mm ()
+processNode :: MemoryManager mm => CallDataPath -> Session mm ()
 processNode callDataPath = Env.profile (CallDataPath.toCallPointPath callDataPath) $ do
     arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
         node      = callData ^. CallData.node
-        mkArg cpp = do
-            varName <- Cache.recentVarName cpp
-            return (cpp, varName)
-    args <- mapM (mkArg . CallDataPath.toCallPointPath) arguments
+    varNames <- mapM (Cache.recentVarName . CallDataPath.toCallPointPath) arguments
 
     children <- Traverse.into callDataPath
     if null children
@@ -98,26 +92,26 @@ processNode callDataPath = Env.profile (CallDataPath.toCallPointPath callDataPat
             Node.Inputs  {} ->
                 return ()
             Node.Outputs {} ->
-                executeOutputs callDataPath args
+                executeOutputs callDataPath varNames
             Node.Expr (NodeExpr.StringExpr (StringExpr.Pattern {})) _ _ ->
-                executeAssignment callDataPath args
+                executeAssignment callDataPath varNames
             Node.Expr {}                                                ->
-                executeNode       callDataPath args
+                executeNode       callDataPath varNames
         else mapM_ processNodeIfNeeded children
 
 
 executeOutputs :: MemoryManager mm
-               => CallDataPath -> [(CallPointPath, VarName)] -> Session mm ()
-executeOutputs callDataPath args = do
+               => CallDataPath -> [VarName] -> Session mm ()
+executeOutputs callDataPath varNames = do
     let argsCount  = length $ Traverse.inDataConnections callDataPath
         stringExpr = if argsCount == 1 then StringExpr.Id else StringExpr.Tuple
     when (length callDataPath > 1) $
-        execute (init callDataPath) stringExpr  args
+        execute (init callDataPath) stringExpr varNames
 
 
 executeNode :: MemoryManager mm
-            => CallDataPath -> [(CallPointPath, VarName)] -> Session mm ()
-executeNode callDataPath args = do
+            => CallDataPath -> [VarName] -> Session mm ()
+executeNode callDataPath varNames = do
     let node       = last callDataPath ^. CallData.node
 
     stringExpr <- case node of
@@ -125,24 +119,23 @@ executeNode callDataPath args = do
             return stringExpr
         _                                              ->
             left $ Error.GraphError $(loc) "Wrong node type"
-    execute callDataPath stringExpr args
+    execute callDataPath stringExpr varNames
 
 
 executeAssignment :: MemoryManager mm
-                  => CallDataPath -> [(CallPointPath, VarName)] -> Session mm ()
-executeAssignment callDataPath [arg] =
-    execute callDataPath StringExpr.Id [arg] -- TODO [PM] : handle Luna's pattern matching
+                  => CallDataPath -> [VarName] -> Session mm ()
+executeAssignment callDataPath [varName] =
+    execute callDataPath StringExpr.Id [varName] -- TODO [PM] : handle Luna's pattern matching
 
 
 execute :: MemoryManager mm
-        => CallDataPath -> StringExpr -> [(CallPointPath, VarName)] -> Session mm ()
-execute callDataPath stringExpr args = do
+        => CallDataPath -> StringExpr -> [VarName] -> Session mm ()
+execute callDataPath stringExpr varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-        argVarNames   = map snd args
     status       <- Cache.status        callPointPath
     prevVarName  <- Cache.recentVarName callPointPath
-    boundVarName <- Cache.dependency argVarNames callPointPath
-    let execFunction = evalFunction stringExpr callDataPath args
+    boundVarName <- Cache.dependency varNames callPointPath
+    let execFunction = evalFunction stringExpr callDataPath varNames
 
         executeModified = do
             (hash, varName) <- execFunction
@@ -205,20 +198,19 @@ varType other = Prelude.error $ show other
 
 
 evalFunction :: MemoryManager mm
-             => StringExpr -> CallDataPath -> [(CallPointPath, VarName)] -> Session mm (Maybe Hash, VarName)
-evalFunction stringExpr callDataPath argsData = do
-    let argsVarNames = map snd argsData
-        callPointPath = CallDataPath.toCallPointPath callDataPath
+             => StringExpr -> CallDataPath -> [VarName] -> Session mm (Maybe Hash, VarName)
+evalFunction stringExpr callDataPath varNames = do
+    let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
         nameStr       = StringExpr.toString stringExpr
         nameHash      = if nameStr == "Point2" then "Point2" else Hash.hashStr $ StringExpr.toString stringExpr
 
-        mkArg arg = "(Value (Pure "  ++ arg ++ "))"
-        args      = map mkArg argsVarNames
+        mkArg arg = "(Value (Pure "  ++ VarName.toString arg ++ "))"
+        args      = map mkArg varNames
         appArgs a = if null a then "" else " $ appNext " ++ List.intercalate " $ appNext " (reverse a)
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
 
-        self      = head argsVarNames
+        self      = head varNames
     operation <- case varType stringExpr of
         List        -> return $ "toIOEnv $ fromValue $ val [" ++ List.intercalate "," args ++ "]"
         Id          -> return $ "toIOEnv $ fromValue $ " ++ mkArg self
@@ -231,17 +223,13 @@ evalFunction stringExpr callDataPath argsData = do
         Tuple       -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
         TimeVar     -> (++) "toIOEnv $ fromValue $ val (" . show <$> Env.getTimeVar
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
-
         Session.runAssignment' tmpVarName operation
-
         hash <- Hash.compute tmpVarName
-        let varName = VarName.mk hash callPointPath
-
-        Session.runAssignment varName tmpVarName
+        let varName = VarName callPointPath hash
+        Session.runAssignment (VarName.toString varName) tmpVarName
         lift2 $ Bindings.remove tmpVarName
-
-        Cache.put callDataPath argsVarNames varName
+        Cache.put callDataPath varNames varName
         Value.reportIfVisible callPointPath
-        Manager.reportUseMany argsData
-        Manager.reportUse callPointPath varName
+        Manager.reportUseMany varNames
+        Manager.reportUse varName
         return (hash, varName)
