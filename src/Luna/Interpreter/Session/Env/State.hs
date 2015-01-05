@@ -169,6 +169,7 @@ deleteDependentNode callPoint nodeID =
 
 cleanDependentNodes :: Session mm ()
 cleanDependentNodes = modify (Env.dependentNodes .~ def)
+
 ---- Env.profileInfos -----------------------------------------------------
 
 cleanProfileInfos :: Session mm ()
@@ -189,6 +190,15 @@ profile callPointPath action = do
     (r, info) <- ProfileInfo.profile action
     insertProfileInfo callPointPath info
     return r
+
+---- Env.timeVar ----------------------------------------------------------
+
+getTimeVar :: Session mm Float
+getTimeVar = gets $ view Env.timeVar
+
+
+setTimeVar :: Float -> Session mm ()
+setTimeVar = modify . set Env.timeVar
 
 ---- Env.serializationModes -----------------------------------------------
 
