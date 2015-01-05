@@ -40,6 +40,7 @@ import           Luna.AST.Expr                               (Expr)
 import qualified Luna.AST.Expr                               as Expr
 import           Luna.AST.Module                             (Module)
 import           Luna.Graph.Flags                            (Flags)
+import qualified Luna.Graph.Flags                            as Flags
 import           Luna.Graph.Graph                            (Graph)
 import qualified Luna.Graph.Node                             as Node
 import           Luna.Graph.PropertyMap                      (PropertyMap)
@@ -190,7 +191,7 @@ insertProfileInfo callPointPath info =
 profile :: CallPointPath -> Session mm a -> Session mm a
 profile callPointPath action = do
     (r, info) <- ProfileInfo.profile action
-    insertProfileInfo callPointPath info
+    whenVisible callPointPath $ insertProfileInfo callPointPath info
     return r
 
 ---- Env.timeVar ----------------------------------------------------------
@@ -389,6 +390,16 @@ setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
 
 getResultCallBack :: Session mm Env.ResultCallBack
 getResultCallBack = gets $ view Env.resultCallBack
+
+---------------------------------------------------------------------------
+
+whenVisible :: CallPointPath -> Session mm () -> Session mm ()
+whenVisible callPointPath action = do
+    flags <- getFlags $ last callPointPath
+    unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
+         || Flags.isSet' flags (view Flags.graphViewGenerated  )
+         || Flags.isFolded flags                               )
+        action
 
 ---------------------------------------------------------------------------
 
