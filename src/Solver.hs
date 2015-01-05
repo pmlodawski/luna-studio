@@ -12,6 +12,8 @@ module Solver where
 import Control.Applicative
 import Control.Monad
 
+import Data.Functor.Identity
+
 -- *------------------------------------------------
 -- * Category: DATA DECLARATIONS
 -- *------------------------------------------------

@@ -40,11 +40,17 @@ import            Data.Monoid               (Monoid(..))
 import            Data.Text.Lazy            (unpack)
 
 import            HumanName                 (HumanName(humanName))
+import            Solver
 
 
 data StageTypechecker = StageTypechecker
 
-data StageTypecheckerState = StageTypecheckerState { _str :: [String] }
+data StageTypecheckerState
+   = StageTypecheckerState  { _str      :: [String]
+                            , _nextTVar :: TVar
+                            , _subst    :: Subst
+                            , _constr   :: Constraint
+                            }
 
 instance Show StageTypecheckerState where
   show StageTypecheckerState{ _str = strings } = show strings
@@ -90,10 +96,10 @@ tcExpr lexpr@(Label lab expr) = do
       Expr.Assignment { Expr._dst = (Label _ dst), Expr._src = (Label _ src) }
           -> do case (dst, src) of
                   (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
-                      pushString (("Assignment " ++ (unpack . humanName $ dst_vname) ++ " <- " ++ (unpack . humanName $ src_vname)) )
+                      pushString (("Assignment  " ++ (unpack . humanName $ dst_vname) ++ " <- " ++ (unpack . humanName $ src_vname)) )
                   _ -> pushString ("Some assignment..."  )
       Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label _ (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)})
-          -> pushString (("Application " ++ (unpack . humanName $ basename) ++ " ( " ++ intercalate " " (map mapArg args) ++ " )")  )
+          -> pushString (("Application " ++ (unpack . humanName $ basename) ++ " ( " ++ intercalate " " (fmap mapArg args) ++ " )")  )
       _   -> return ()
     defaultTraverseM lexpr
   where
@@ -126,11 +132,13 @@ tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> t -> StageTypecheckerPa
 tcUnit ast _ = do
     pushString ("First!" )
     _ <- defaultTraverseM ast
+    str %= reverse
     get
 
 
 pushString :: (MonadState StageTypecheckerState m) => String -> m ()
 pushString s = str %= (s:)
+
 
 
 
