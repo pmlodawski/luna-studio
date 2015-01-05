@@ -9,12 +9,9 @@
 
 module Flowbox.Batch.Handler.Common where
 
-import           Control.Exception  (IOException)
-import qualified Control.Exception  as Exception
-import           Control.Monad.RWS
-import           Data.Int           (Int32)
-import qualified System.Environment as Environment
-import           Text.Show.Pretty
+import Control.Monad.RWS
+import Data.Int          (Int32)
+import Text.Show.Pretty
 
 import           Flowbox.Batch.Batch                                         (Batch)
 import qualified Flowbox.Batch.Batch                                         as Batch
@@ -22,7 +19,6 @@ import           Flowbox.Batch.Project.Project                               (Pr
 import qualified Flowbox.Batch.Project.Project                               as Project
 import           Flowbox.Batch.Project.ProjectManager                        (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                        as ProjectManager
-import qualified Flowbox.Control.Concurrent                                  as Concurrent
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                                             hiding (error)
 import           Flowbox.System.Log.Logger
@@ -34,8 +30,6 @@ import qualified Luna.AST.Control.Zipper                                     as 
 import           Luna.AST.Expr                                               (Expr)
 import qualified Luna.AST.Expr                                               as Expr
 import           Luna.AST.Module                                             (Module)
-import qualified Luna.Data.ASTInfo                                           as ASTInfo
-import qualified Luna.Data.Source                                            as Source
 import           Luna.Graph.Graph                                            (Graph)
 import qualified Luna.Graph.Graph                                            as Graph
 import           Luna.Graph.Node                                             (Node)
@@ -43,15 +37,12 @@ import qualified Luna.Graph.Node                                             as 
 import           Luna.Graph.PropertyMap                                      (PropertyMap)
 import           Luna.Graph.View.GraphView                                   (GraphView)
 import qualified Luna.Graph.View.GraphView                                   as GraphView
-import qualified Luna.Interpreter                                            as Interpreter
 import           Luna.Lib.Lib                                                (Library)
 import qualified Luna.Lib.Lib                                                as Library
 import           Luna.Lib.Manager                                            (LibManager)
 import qualified Luna.Lib.Manager                                            as LibManager
 import qualified Luna.Pass.Analysis.Alias.Alias                              as Alias
 import qualified Luna.Pass.Analysis.ID.MaxID                                 as MaxID
-import qualified Luna.Pass.Build.Build                                       as Build
-import qualified Luna.Pass.Build.Diagnostics                                 as Diagnostics
 import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer                     as IDFixer
 import qualified Luna.Pass.Transform.Graph.Builder.Builder                   as GraphBuilder
 import qualified Luna.Pass.Transform.Graph.GCNodeProperties.GCNodeProperties as GCNodeProperties
@@ -64,28 +55,6 @@ import qualified Luna.Pass.Transform.SimpleText.Parser.Parser                as 
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
-
-
-safeInterpretLibrary :: Library.ID -> Project.ID -> Batch ()
-safeInterpretLibrary libraryID projectID = do
-    args <- liftIO Environment.getArgs
-    batch  <- get
-    when ("--auto-interpreter" `elem` args) $
-            liftIO $ Concurrent.forkIO_ $ Exception.catch
-                                 (eitherStringToM =<< Batch.runBatch batch (interpretLibrary libraryID projectID))
-                                 (\e -> logger error $ "Interpret failed: " ++ show (e :: IOException))
-
-
-interpretLibrary :: Library.ID -> Project.ID -> Batch ()
-interpretLibrary libraryID projectID = do
-    let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
-        imports = ["Luna.Target.HS", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
-    ast <- getAST libraryID projectID
-    cfg <- gets (view Batch.config)
-    maxID <- EitherT $ MaxID.run ast
-    [hsc] <- EitherT $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
-    let code = unlines $ dropWhile (not . (== "-- body --")) (lines $ hsc ^. Source.code)
-    liftIO $ Interpreter.runSource cfg imports code "main"
 
 
 increaseUpdateNo :: Batch ()
@@ -279,6 +248,12 @@ getNode :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node
 getNode nodeID bc libraryID projectID = do
     (graphView, _) <- getGraphView bc libraryID projectID
     Graph.lab graphView nodeID <??> ("Wrong 'nodeID' = " ++ show nodeID)
+
+
+getNodes :: [Node.ID] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(Node.ID, Maybe Node)]
+getNodes nodeIDs bc libraryID projectID = do
+    (graphView, _) <- getGraphView bc libraryID projectID
+    return $ map (\nodeID -> (nodeID, Graph.lab graphView nodeID)) nodeIDs
 
 ---------------------------------------------------------------------------
 

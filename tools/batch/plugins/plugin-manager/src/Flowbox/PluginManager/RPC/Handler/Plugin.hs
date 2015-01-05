@@ -11,6 +11,7 @@ import Control.Monad.Trans.State
 
 import           Flowbox.Bus.RPC.RPC                                  (RPC)
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
 import           Flowbox.PluginManager.Context                        (Context)
 import qualified Flowbox.PluginManager.Context                        as Context
 import           Flowbox.PluginManager.Plugin.Handle                  (PluginHandle)
@@ -20,7 +21,6 @@ import qualified Flowbox.PluginManager.Plugin.Plugin                  as Plugin
 import           Flowbox.PluginManager.Proto.Plugin                   ()
 import           Flowbox.Prelude                                      hiding (Context, error, id)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.PluginManager.Plugin.Add.Request     as Add
 import qualified Generated.Proto.PluginManager.Plugin.Add.Update      as Add
 import qualified Generated.Proto.PluginManager.Plugin.List.Request    as List
@@ -67,7 +67,7 @@ list request = do
     ctx <- lift get
     let plugins = Context.plugins ctx
     pluginInfos <- safeLiftIO $ mapM PluginHandle.info $ PluginMap.elems plugins
-    return $ List.Status request (encodeList $ zip (PluginMap.keys plugins) pluginInfos)
+    return $ List.Status request (encode $ zip (PluginMap.keys plugins) pluginInfos)
 
 
 -- TODO [PM] : Duplikacja kodu

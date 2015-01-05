@@ -14,6 +14,9 @@ import qualified Flowbox.System.UniPath   as UniPath
 
 
 
+data Location = Local | Global deriving (Read, Show, Eq)
+
+
 libData :: String
 libData = "libdata"
 
@@ -54,7 +57,6 @@ searchPaths = do
     return $ map mkLibData $ local : [globalRoot]
 
 
-installPath :: Bool -> IO UniPath
-installPath global = mkLibData <$> if global
-    then return globalRoot
-    else localRoot
+installPath :: Location -> IO UniPath
+installPath Local  = mkLibData <$> localRoot
+installPath Global = mkLibData <$> return globalRoot

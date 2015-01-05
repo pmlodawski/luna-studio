@@ -67,7 +67,7 @@ def Image.contrast self::Image value::Color:
 def Image.exposure self::Image blackpoint::Color ex::Color:
     ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
-def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color:
+def Image.grade self::Image blackpoint::ColorBlack whitepoint::ColorWhite lift::ColorBlack gain::ColorWhite multiply::ColorWhite offset::ColorBlack gamma::ColorWhite:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 def Image.colorCorrect self::Image saturation::Color contrast::Color gamma::Color gain::Color offset::Color:
@@ -104,16 +104,10 @@ def Image.histEq self::Image bins::Int:
     ```liftF2 histEqLuna #{bins} #{self}```
 
 alias Threshold = (Float, Float)
-alias Clamp = (Float, Float)
+alias Clamp = Maybe (Float, Float)
 
-#TODO: support for Maybe but handled in haskell
 def Image.clamp self::Image thresholds::Threshold clamps::Clamp:
-    # clamps powinno być Maybe ale wymaga pattern-matchingu klas
-    thresholdLo = thresholds.lo
-    thresholdHi = thresholds.hi
-    clampLo = clamps.lo
-    clampHi = clamps.hi
-    ```liftF5 clampLuna #{thresholdLo} #{thresholdHi} #{clampLo} #{clampHi} #{self}```
+    ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
 
 def Image.erode self::Image size::Int:
     ```liftF2 erodeLuna #{size} #{self}```
@@ -135,9 +129,9 @@ def Image.edgeDetect self::Image edgeOperator:
 
 def Image.bayer self::Image bits::Int:
     ```liftF2 orderedDitherLuna #{bits} #{self}```
-
-class Point:
-    x,y :: Double
+    
+class ```Point``` x y:
+    Point: x,y :: Double
 
 def Image.cornerPin self::Image p1::Point p2::Point p3::Point p4::Point:
     p1x = p1.x
@@ -286,6 +280,8 @@ class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
 alias Color = RGBA Double
+alias ColorBlack = RGBA Double
+alias ColorWhite = RGBA Double
 
 alias ColorCC = (Color, Color, Color, Color, Color)
 

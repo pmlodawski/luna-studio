@@ -82,8 +82,6 @@ handlerMap prefix queueInfo crl callback = HandlerMap.fromList $ Prefix.prefixif
     , (Topic.interpreterValueRequest                       , respond Topic.update   Value.get                    )
     , (Topic.interpreterPingRequest                        , respond Topic.status   Interpreter.ping             )
     , (Topic.interpreterAbortRequest                       , respond Topic.status   Interpreter.abort            )
-    , (Topic.interpreterSerializationModeDefaultGetRequest , respond Topic.status   Interpreter.getDefaultSerializationMode)
-    , (Topic.interpreterSerializationModeDefaultSetRequest , respond Topic.update   Interpreter.setDefaultSerializationMode)
     , (Topic.interpreterSerializationModeGetRequest        , respond Topic.status   Interpreter.getSerializationMode       )
     , (Topic.interpreterSerializationModeInsertRequest     , respond Topic.update   Interpreter.insertSerializationMode    )
     , (Topic.interpreterSerializationModeDeleteRequest     , respond Topic.update   Interpreter.deleteSerializationMode    )

@@ -10,10 +10,10 @@ module Flowbox.ProjectManager.RPC.Handler.Library where
 import qualified Flowbox.Batch.Handler.Common                                  as Batch
 import qualified Flowbox.Batch.Handler.Library                                 as BatchL
 import           Flowbox.Bus.RPC.RPC                                           (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Library.Library                               as Gen
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request as Create
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Update  as Create
@@ -47,7 +47,7 @@ list :: List.Request -> RPC Context IO List.Status
 list request@(List.Request tprojectID) = do
     let projectID = decodeP tprojectID
     libs <- BatchL.libraries projectID
-    return $ List.Status request (shrinkLibrary <$> encodeList libs)
+    return $ List.Status request (shrinkLibrary <$> encode libs)
 
 
 lookup :: Lookup.Request -> RPC Context IO Lookup.Status
@@ -59,11 +59,12 @@ lookup request@(Lookup.Request tlibID tprojectID) = do
 
 
 create :: Create.Request -> RPC Context IO Create.Update
-create request@(Create.Request tname tpath tprojectID) = do
+create request@(Create.Request tname tversion tpath tprojectID) = do
     let projectID = decodeP tprojectID
         name      = decodeP tname
+        version   = decodeP tversion
         path      = decodeP tpath
-    newLibrary <- BatchL.createLibrary name path projectID
+    newLibrary <- BatchL.createLibrary name version path projectID
     updateNo <- Batch.getUpdateNo
     return $ Create.Update request (encode newLibrary) updateNo
 

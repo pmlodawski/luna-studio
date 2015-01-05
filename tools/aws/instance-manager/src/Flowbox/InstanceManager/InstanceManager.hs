@@ -8,8 +8,9 @@
 
 module Flowbox.InstanceManager.InstanceManager where
 
-import qualified AWS           as AWS
+import qualified AWS
 import qualified AWS.EC2.Types as Types
+import qualified Data.Maybe    as Maybe
 import qualified Data.Text     as Text
 
 import qualified Flowbox.AWS.EC2.Control.Simple.Instance as Instance
@@ -36,15 +37,12 @@ getCredential = AWS.loadCredentialFromFile . Cmd.credentialPath
 
 
 instanceIP :: Types.Instance -> String
-instanceIP inst = case Types.instanceIpAddress inst of
-    Just ip -> show ip
-    Nothing -> "(no ip)"
+instanceIP inst = Maybe.maybe "(no ip)" show $ Types.instanceIpAddress inst
 
 
 printInstance :: Types.Instance -> IO ()
-printInstance inst = putStrLn $ (Text.unpack $ Types.instanceId inst)
-                             ++ " "
-                             ++ instanceIP inst
+printInstance inst = putStrLn $ concat
+    [Text.unpack $ Types.instanceId inst, " ", instanceIP inst]
 
 
 start :: Region -> Cmd.Options -> IO ()
@@ -56,7 +54,7 @@ start region options = do
                                  , Types.runInstancesRequestKeyName      = Just $ Text.pack $ Cmd.keyName options
                                  }
         Instance.getOrStartWait userName request
-    let command = "ssh -i " ++ Cmd.keyName options ++ " ec2-user@" ++ instanceIP inst
+    let command = "ssh -i " ++ Cmd.keyName options ++ ".pem ec2-user@" ++ instanceIP inst
     logger info $ "You can login using command " ++ show command
     printInstance inst
 
@@ -67,9 +65,9 @@ stop region options = do
     EC2.runEC2inRegion credential region $ do
         instances <- filter Management.ready <$> Instance.findInstances
         let instanceIDs = map Types.instanceId instances
-        if length instances == 0
-            then logger info $ "No instances to stop."
-            else do logger info $ "Stopping " ++ (show $ length instances) ++ " instances."
+        if null instances
+            then logger info "No instances to stop."
+            else do logger info $ "Stopping " ++ show (length instances) ++ " instances."
                     _ <- EC2.stopInstances instanceIDs $ Cmd.force options
                     return ()
 
@@ -77,7 +75,7 @@ stop region options = do
 get :: Region -> Cmd.Options -> IO ()
 get region options = do
     credential <- getCredential options
-    instances <- EC2.runEC2inRegion credential region $ Instance.findInstances
+    instances <- EC2.runEC2inRegion credential region Instance.findInstances
     mapM_ printInstance $ filter Management.ready instances
 
 
@@ -87,8 +85,8 @@ terminate region options = do
     EC2.runEC2inRegion credential region $ do
         instances <- Instance.findInstances
         let instanceIDs = map Types.instanceId instances
-        if length instances == 0
-            then logger info $ "No instances to terminate."
-            else do logger info $ "Terminating " ++ (show $ length instances) ++ " instances."
+        if null instances
+            then logger info "No instances to terminate."
+            else do logger info $ "Terminating " ++ show (length instances) ++ " instances."
                     _ <- EC2.terminateInstances instanceIDs
                     return ()

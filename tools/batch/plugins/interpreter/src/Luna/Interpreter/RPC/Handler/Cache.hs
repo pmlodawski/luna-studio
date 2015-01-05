@@ -12,10 +12,10 @@ import Data.Int (Int32)
 
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Bus.RPC.RPC                                    (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                        hiding (Context, error, op)
 import           Flowbox.ProjectManager.Context                         (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Crumb.Breadcrumbs                      as Gen
 import           Luna.Interpreter.Proto.CallPointPath                   ()
 import           Luna.Interpreter.RPC.Handler.Lift
@@ -23,10 +23,10 @@ import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
 import           Luna.Interpreter.Session.Data.CallPoint                (CallPoint (CallPoint))
 import qualified Luna.Interpreter.Session.Env                           as Env
+import qualified Luna.Interpreter.Session.Memory.GPU                    as GPUMemory
 import           Luna.Interpreter.Session.Memory.Manager                (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager                as Manager
 import           Luna.Interpreter.Session.Session                       (Session, SessionST)
-import qualified         Luna.Interpreter.Session.Memory.GPU as GPUMemory
 
 
 
@@ -44,6 +44,7 @@ interpreterDo projectID op = do
 deleteAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
 deleteAll projectID = interpreterDo projectID $ do
     Cache.deleteAll
+    Env.cleanEnv
     Manager.cleanIfNeeded
     GPUMemory.performGC
 
@@ -56,7 +57,7 @@ modifyAll projectID = interpreterDo projectID $ do
 
 
 closeProject :: Int32 -> RPC Context (SessionST mm) ()
-closeProject projectID = interpreterDo projectID $ Env.unsetProjectID
+closeProject projectID = interpreterDo projectID $ Env.unsetProjectID >> Env.cleanEnv
 
 
 modifyLibrary :: Int32 -> Int32 -> RPC Context (SessionST mm) ()

@@ -28,6 +28,6 @@ Library
                   errors,
                   flowbox-utils,
                   luna-target-ghchs,
-                  protocol-buffers-fork,
-                  protocol-buffers-descriptor-fork
+                  protocol-buffers,
+                  protocol-buffers-descriptor
 

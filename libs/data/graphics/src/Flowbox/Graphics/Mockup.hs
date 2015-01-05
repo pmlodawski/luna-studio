@@ -648,14 +648,16 @@ withAlpha f img = img'
           img' = Image.update (const $ Just view') "rgba" img
 
 invertLuna :: Image -> Image
-invertLuna = onEachValue invert
+invertLuna = onEach invert invert invert id
 
 colorMatrixLuna :: ColorMatrix Color.RGB Double -> Image -> Image
 colorMatrixLuna matrix = onEachRGB (A.lift1 $ (colorMatrix :: ColorMatrix Color.RGB Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)) matrix)
 
-clampLuna :: Double -> Double -> Double -> Double -> Image -> Image
-clampLuna (variable -> thLo) (variable -> thHi) (variable -> clampLo) (variable -> clampHi) =
-    onEachValue (clamp (Range thLo thHi) (Just $ Range clampLo clampHi))
+clampLuna :: (VPS Double, VPS Double) -> Maybe (VPS Double, VPS Double) -> Image -> Image
+clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =
+    case clamps of
+        Just (VPS clampLo, VPS clampHi) -> onEachValue $ clamp (Range thLo thHi) $ Just $ Range (variable clampLo) (variable clampHi)
+        _                               -> onEachValue $ clamp (Range thLo thHi) Nothing
 
 multiplyLuna :: Color.RGBA Double -> Image -> Image
 multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEach (*r) (*g) (*b) id -- (*a)
@@ -1184,9 +1186,14 @@ onEachMatrix fr fg fb fa img = Image.singleton view
 readFromEXRLuna :: FilePath -> IO Image
 readFromEXRLuna path = fmap fromJust $ readFromEXR path
 
+extension :: FilePath -> (FilePath, String)
+extension path = (path, P.map toLower $ FilePath.takeExtension path)
+
+pattern ImageEXR path <- (extension -> (path, ".exr"))
+
 realReadLuna :: FilePath -> IO Image
-realReadLuna path | ".exr" <- FilePath.takeExtension path = readFromEXRLuna path
-                  | otherwise                             = loadImageLuna path
+realReadLuna (ImageEXR path) = readFromEXRLuna path
+realReadLuna path            = loadImageLuna path
 
 testColorCC :: Color5 -> Image
 testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =

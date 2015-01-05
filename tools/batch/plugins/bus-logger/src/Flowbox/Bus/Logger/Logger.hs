@@ -14,22 +14,23 @@ import qualified Data.Map                  as Map
 import qualified Data.Maybe                as Maybe
 import qualified Data.Time.Clock           as Clock
 
-import qualified Flowbox.Bus.Bus                                as Bus
-import           Flowbox.Bus.BusT                               (BusT)
-import qualified Flowbox.Bus.BusT                               as Bus
-import qualified Flowbox.Bus.Data.Exception                     as Exception
-import qualified Flowbox.Bus.Data.Message                       as Message
-import           Flowbox.Bus.Data.MessageFrame                  (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic                         (Topic)
-import qualified Flowbox.Bus.Data.Topic                         as Topic
-import           Flowbox.Bus.EndPoint                           (BusEndPoints)
-import           Flowbox.Bus.Logger.Env                         (Env)
-import qualified Flowbox.Bus.Logger.Env                         as Env
-import           Flowbox.Control.Error                          (liftIO)
-import           Flowbox.Prelude                                hiding (error)
+import qualified Flowbox.Bus.Bus               as Bus
+import           Flowbox.Bus.BusT              (BusT)
+import qualified Flowbox.Bus.BusT              as Bus
+import qualified Flowbox.Bus.Data.Exception    as Exception
+import qualified Flowbox.Bus.Data.Message      as Message
+import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
+import           Flowbox.Bus.Data.Topic        (Topic)
+import qualified Flowbox.Bus.Data.Topic        as Topic
+import           Flowbox.Bus.EndPoint          (BusEndPoints)
+import           Flowbox.Bus.Logger.Env        (Env)
+import qualified Flowbox.Bus.Logger.Env        as Env
+import           Flowbox.Control.Error         (liftIO)
+import           Flowbox.Data.Convert
+import           Flowbox.Prelude               hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Flowbox.Text.ProtocolBuffers  as Proto
+import qualified Generated.Proto.Bus.Exception as Gen
 
 
 
@@ -64,7 +65,7 @@ logMessage = do
                 content = msg ^. Message.message
                 errorMsg = case Proto.messageGet' content of
                     Left err        -> "(cannot parse error message: " ++ err ++ ")"
-                    Right exception -> case (decodeP exception) ^. Exception.msg of
+                    Right exception -> case (decodeP (exception :: Gen.Exception)) ^. Exception.msg of
                         Nothing           -> "(exception without message)"
                         Just exceptionMsg -> exceptionMsg
             if Topic.error `isSuffixOf` topic

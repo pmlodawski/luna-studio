@@ -8,10 +8,10 @@
 module Flowbox.FileManager.Item where
 
 import qualified Flowbox.AWS.S3.Utils                            as S3
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
 import qualified Generated.Proto.FileManager.FileSystem.Item     as Gen
 import qualified Generated.Proto.FileManager.FileSystem.Item.Cls as Gen
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
 -- TODO [PM] : implement me

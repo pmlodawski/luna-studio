@@ -11,17 +11,18 @@ module Luna.Interpreter.RPC.Handler.Interpreter where
 import           Control.Monad.Catch (bracket_)
 import qualified Data.Foldable       as Foldable
 import qualified Data.Maybe          as Maybe
+import qualified Data.MultiSet       as MultiSet
 import qualified Data.Sequence       as Sequence
-import qualified Data.Set            as Set
 
 import qualified Flowbox.Bus.Data.Message                                                     as Message
 import           Flowbox.Bus.RPC.RPC                                                          (RPC)
 import           Flowbox.Control.Error
+import           Flowbox.Data.Convert
+import qualified Flowbox.Data.MapForest                                                       as MapForest
 import qualified Flowbox.Data.SetForest                                                       as SetForest
 import           Flowbox.Prelude                                                              hiding (Context)
 import           Flowbox.ProjectManager.Context                                               (Context)
 import           Flowbox.System.Log.Logger                                                    hiding (error)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Interpreter.Interpreter.Abort.Request                        as Abort
 import qualified Generated.Proto.Interpreter.Interpreter.Abort.Status                         as Abort
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Request                   as GetMainPtr
@@ -36,10 +37,6 @@ import qualified Generated.Proto.Interpreter.Interpreter.Ping.Request           
 import qualified Generated.Proto.Interpreter.Interpreter.Ping.Status                          as Ping
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Request                          as Run
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Update                           as Run
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultGet.Request as GetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultGet.Status  as GetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultSet.Request as SetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultSet.Update  as SetDefaultSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Request     as DeleteSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Update      as DeleteSMode
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DeleteAll.Request  as DeleteAllSMode
@@ -60,13 +57,13 @@ import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Reque
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update             as WatchPointRemove
 import           Luna.Interpreter.Proto.CallPointPath                                         ()
 import           Luna.Interpreter.Proto.DefPoint                                              ()
+import           Luna.Interpreter.Proto.ProfileInfo                                           ()
 import qualified Luna.Interpreter.RPC.Handler.Cache                                           as Cache
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.RPC.Handler.Sync                                            as Sync
 import           Luna.Interpreter.RPC.QueueInfo                                               (QueueInfo)
 import qualified Luna.Interpreter.RPC.QueueInfo                                               as QueueInfo
 import qualified Luna.Interpreter.Session.AST.Executor                                        as Executor
-import qualified Luna.Interpreter.Session.AST.WatchPoint                                      as WatchPoint
 import qualified Luna.Interpreter.Session.Env                                                 as Env
 import qualified Luna.Interpreter.Session.Error                                               as Error
 import qualified Luna.Interpreter.Session.Memory                                              as Memory
@@ -118,31 +115,33 @@ run queueInfo crl request = do
             (liftIO $ QueueInfo.quitRun queueInfo) $
             liftSession' $ do Manager.cleanIfNeeded
                               Executor.processMain
-    hoistEither $ fmapL Error.format r
-    return $ Run.Update request
+    projectID <- liftSession Env.getProjectID
+    profileInfo <- hoistEither $ fmapL Error.format r
+    let tprofileInfo = encodeP $ map (_1 %~ (projectID, )) $ MapForest.toList profileInfo
+    return $ Run.Update request tprofileInfo
 
 
 watchPointAdd :: WatchPointAdd.Request -> RPC Context (SessionST mm) WatchPointAdd.Update
 watchPointAdd request@(WatchPointAdd.Request tcallPointPath) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ WatchPoint.add callPointPath
+    liftSession $ Env.addWatchPoint callPointPath
     return $ WatchPointAdd.Update request
 
 
 watchPointRemove :: WatchPointRemove.Request -> RPC Context (SessionST mm) WatchPointRemove.Update
 watchPointRemove request@(WatchPointRemove.Request tcallPointPath) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ WatchPoint.delete callPointPath
+    liftSession $ Env.deleteWatchPoint callPointPath
     return $ WatchPointRemove.Update request
 
 
 watchPointList :: WatchPointList.Request -> RPC Context (SessionST mm) WatchPointList.Status
 watchPointList request = do
-    list      <- liftSession $ SetForest.toList <$> WatchPoint.all
+    list      <- liftSession $ SetForest.toList <$> Env.getWatchPoints
     projectID <- liftSession Env.getProjectID
-    return $ WatchPointList.Status request $ encodeList $ map (projectID,) list
+    return $ WatchPointList.Status request $ encodeP $ map (projectID,) list
 
 
 ping :: Ping.Request -> RPC Context (SessionST mm) Ping.Status
@@ -155,47 +154,35 @@ abort :: Abort.Request -> RPC Context (SessionST mm) Abort.Status
 abort = return . Abort.Status
 
 
-getDefaultSerializationMode :: GetDefaultSMode.Request -> RPC Context (SessionST mm) GetDefaultSMode.Status
-getDefaultSerializationMode request = do
-    mode <- liftSession Env.getDefaultSerializationMode
-    return $ GetDefaultSMode.Status request mode
-
-
-setDefaultSerializationMode :: SetDefaultSMode.Request -> RPC Context (SessionST mm) SetDefaultSMode.Update
-setDefaultSerializationMode request@(SetDefaultSMode.Request mode) = do
-    liftSession $ Env.setDefaultSerializationMode mode
-    return $ SetDefaultSMode.Update request
-
-
 getSerializationMode :: GetSMode.Request -> RPC Context (SessionST mm) GetSMode.Status
 getSerializationMode request@(GetSMode.Request tcallPointPath) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     modes <- liftSession $ Env.lookupSerializationModes callPointPath
-    return $ GetSMode.Status request $ Sequence.fromList $ Maybe.maybe [] Set.toList modes
+    return $ GetSMode.Status request $ Sequence.fromList $ Maybe.maybe [] MultiSet.toList modes
 
 
 insertSerializationMode :: InsertSMode.Request -> RPC Context (SessionST mm) InsertSMode.Update
 insertSerializationMode request@(InsertSMode.Request tcallPointPath modes) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ Env.insertSerializationModes callPointPath $ Set.fromList $ Foldable.toList modes
+    liftSession $ Env.insertSerializationModes callPointPath $ MultiSet.fromList $ Foldable.toList modes
     return $ InsertSMode.Update request
 
 
 deleteSerializationMode :: DeleteSMode.Request -> RPC Context (SessionST mm) DeleteSMode.Update
 deleteSerializationMode request@(DeleteSMode.Request tcallPointPath modes) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ Env.deleteSerializationModes callPointPath $ Set.fromList $ Foldable.toList modes
+    liftSession $ Env.deleteSerializationModes callPointPath $ MultiSet.fromList $ Foldable.toList modes
     return $ DeleteSMode.Update request
 
 
 deleteAllSerializationMode :: DeleteAllSMode.Request -> RPC Context (SessionST mm) DeleteAllSMode.Update
 deleteAllSerializationMode request@(DeleteAllSMode.Request tcallPointPath) = do
-    (projectID, callPointPath) <- decodeE tcallPointPath
+    let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ Env.clearSerializationModes callPointPath
+    liftSession $ Env.deleteAllSerializationModes callPointPath
     return $ DeleteAllSMode.Update request
 
 

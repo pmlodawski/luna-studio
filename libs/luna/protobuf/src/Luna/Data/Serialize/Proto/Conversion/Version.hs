@@ -5,21 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-module Flowbox.Tools.Serialize.Proto.Conversion.Int where
 
-import Data.Int (Int32)
+module Luna.Data.Serialize.Proto.Conversion.Version where
 
-import           Flowbox.Prelude
-import qualified Flowbox.Tools.Conversion.Common as Common
-import           Flowbox.Tools.Conversion.Proto
+import           Data.Version                    (Version (Version))
+import           Flowbox.Data.Convert
+import qualified Generated.Proto.Version.Version as Gen
 
 
 
-instance ConvertPure Int Int32 where
-    encodeP = Common.itoi32
-    decodeP = Common.i32toi
-
+instance ConvertPure Version Gen.Version where
+    encodeP (Version branch tags)     = Gen.Version (encodeP branch) (encodeP tags)
+    decodeP (Gen.Version branch tags) = Version     (decodeP branch) (decodeP tags)

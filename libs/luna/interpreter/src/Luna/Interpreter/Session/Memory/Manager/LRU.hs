@@ -16,7 +16,6 @@ import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.VarName       (VarName)
 import qualified Luna.Interpreter.Session.Env                as Env
-import qualified Luna.Interpreter.Session.Env.State          as Session
 import           Luna.Interpreter.Session.Memory.Manager
 import qualified Luna.Interpreter.Session.Memory.Status      as Status
 

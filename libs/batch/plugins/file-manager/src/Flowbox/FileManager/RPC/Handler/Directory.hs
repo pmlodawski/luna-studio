@@ -11,11 +11,11 @@ module Flowbox.FileManager.RPC.Handler.Directory where
 import qualified Data.Sequence as Sequence
 
 import           Flowbox.Bus.RPC.RPC                                             (RPC)
+import           Flowbox.Data.Convert
 import           Flowbox.FileManager.FileManager                                 (FileManager)
 import qualified Flowbox.FileManager.FileManager                                 as FileManager
 import           Flowbox.Prelude                                                 hiding (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.FileManager.FileSystem.Directory.Copy.Request   as Copy
 import qualified Generated.Proto.FileManager.FileSystem.Directory.Copy.Update    as Copy
 import qualified Generated.Proto.FileManager.FileSystem.Directory.Create.Request as Create

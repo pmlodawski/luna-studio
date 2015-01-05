@@ -11,12 +11,13 @@ module Flowbox.Bus.Data.Message where
 
 import Data.ByteString (ByteString)
 
-import           Flowbox.Bus.Data.Exception                     (Exception (Exception))
-import           Flowbox.Bus.Data.Topic                         (Topic, (/+))
-import qualified Flowbox.Bus.Data.Topic                         as Topic
+import           Flowbox.Bus.Data.Exception    (Exception (Exception))
+import           Flowbox.Bus.Data.Topic        (Topic, (/+))
+import qualified Flowbox.Bus.Data.Topic        as Topic
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Flowbox.Text.ProtocolBuffers  as Proto
+import qualified Generated.Proto.Bus.Exception as Gen
 
 
 
@@ -49,5 +50,4 @@ mk topic' data_ = Message topic' $ Proto.messagePut' data_ where
 
 
 mkError :: Topic -> String -> [Message]
-mkError topic' = mkList . mk (topic' /+ Topic.error) . encodeP . Exception . Just
-
+mkError topic' = mkList . mk (topic' /+ Topic.error) . (encodeP . Exception . Just :: String -> Gen.Exception)
