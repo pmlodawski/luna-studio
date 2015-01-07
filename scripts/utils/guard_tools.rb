@@ -15,8 +15,9 @@ def lastbuildguard(trigger, &block)
     puts "File #{trigger} modified before last build, so rebuilding is unnecessary".starsaround.green
   else
     $lastbuild = Time.now
-    puts "Building at #{$lastbuild}"
+    puts "\nBuilding at #{$lastbuild}\n"
     block.call()
+    puts "\nBuild finished at #{Time.now}\n"
   end
 end
 
