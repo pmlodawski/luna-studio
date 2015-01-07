@@ -38,11 +38,11 @@ $output_dir   = "tmp/"
 
 #
 $hlint_ignore = [
-                  "Use camelCase",
-                  "Use mappend",
+                  # "Use camelCase",
+                  # "Use mappend",
                 ]
 $hlint_opts   = [
-                  "--hint=Generalise",
+                  # "--hint=Generalise",
                   "--report"
                 ]
 $hlint_path   = "typechecker/src/*.hs"

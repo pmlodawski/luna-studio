@@ -1,10 +1,11 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 
 -- *------------------------------------------------
@@ -36,14 +37,21 @@ import            Control.Applicative
 import            Control.Lens              hiding (without)
 import            Control.Monad.State
 import            Data.List                 (intercalate)
-import            Data.Monoid
+import            Data.Monoid               hiding ((<>))
 import            Data.Text.Lazy            (unpack)
+import qualified  Text.PrettyPrint          as PP
+import            Text.PrettyPrint          (($+$),(<+>), (<>))
 
 import            HumanName                 (HumanName(humanName))
 import            Solver
 
 
 data StageTypechecker = StageTypechecker
+
+prettyComma = PP.hsep . PP.punctuate (PP.char ',')
+
+prettyNullable [] = PP.char '∅'
+prettyNullable xs = foldl ($+$) PP.empty xs
 
 -- #############################################################################
 -- #############################################################################
@@ -59,11 +67,25 @@ type TVar       = Int
 type Var        = Int
 type Fieldlabel = Var
 type Field      = (Fieldlabel, Type)
+
+prettyTVar tv         = PP.text "τ_" <> PP.int tv
+prettyVar             = PP.int
+prettyFieldlabel      = PP.int
+prettyField (fl, ty)  = prettyFieldlabel fl <> PP.char ':' <> prettyType ty
+
 data Type       = TV TVar
                 | Type `Fun` Type
                 | Record [Field]
                     deriving (Show,Eq)
 
+prettyType (TV tv)        = prettyTVar tv
+prettyType (t1 `Fun` t2)  = PP.parens $ prettyType t1
+                                    <+> PP.char '→'
+                                    <+> prettyType t2
+prettyType (Record fs)    = PP.braces
+                          $ PP.hsep
+                          $ PP.punctuate (PP.char ',')
+                          $ map prettyField fs
 
 -- Note, record fields are sorted wrt field label
 
@@ -75,9 +97,24 @@ data Predicate  = TRUE
                 | Reckind Type Fieldlabel Type
                     deriving (Show,Eq)
 
+prettyPred TRUE                 = PP.char '⊤'
+prettyPred (ty1 `Subsume` ty2)  =  prettyType ty1
+                                <> PP.char '≼'
+                                <> prettyType ty2
+prettyPred (Reckind rty fl fty) =  prettyField (fl, fty)
+                                <> PP.char 'ϵ'
+                                <> prettyType rty
+
 data Constraint = C [Predicate]
                 | Proj [TVar] [Predicate]
                      deriving Show
+
+prettyConstr (C ps)         = PP.hsep
+                            $ PP.punctuate (PP.char ',')
+                            $ map prettyPred ps
+prettyConstr (Proj tvs ps)  = PP.char '∃'
+                          <+> (prettyComma (map prettyTVar tvs) <> PP.char '.')
+                          <+> (prettyComma (map prettyPred ps))
 
 
 -- FILL IN: extend type and constraint language
@@ -89,11 +126,30 @@ data TypeScheme = Mono Type
                 | Poly [TVar] Constraint Type
                      deriving Show
 
+prettyTypeScheme (Mono ty)        = prettyType ty
+prettyTypeScheme (Poly tvs cs ty) = PP.char '∀'
+                                <+> (PP.brackets (prettyComma (map prettyTVar tvs)) <> PP.char '.')
+                                <+> prettyConstr cs
+                                <+> PP.char '⇒'
+                                <+> prettyType ty
+
 -- Substitutions and type environments
 
-type Subst      = [(TVar, Type)]
+type Subst = [(TVar, Type)]
 
-type Typo       = [(Var,TypeScheme)]
+prettySubst s | null substs = prettyNullable []
+              | otherwise   = prettyComma substs
+  where prettySubst1 (tv, ty) = PP.parens $ prettyTVar tv
+                                        <+> PP.char '↣'
+                                        <+> prettyType ty
+        substs = map prettySubst1 s
+
+type Typo = [(Var,TypeScheme)]
+
+prettyTypo = prettyNullable . map prettyTypo1
+  where prettyTypo1 (v,ts) =  prettyVar v
+                          <+> PP.text " :: "
+                          <+> prettyTypeScheme ts
 
 -- The term language
 
@@ -116,7 +172,26 @@ data StageTypecheckerState
 makeLenses ''StageTypecheckerState
 
 instance Show StageTypecheckerState where
-  show StageTypecheckerState{ _str = strings } = show strings
+  show = PP.render . prettyState
+
+prettyState :: StageTypecheckerState -> PP.Doc
+prettyState StageTypecheckerState{..} = str_field
+                                    $+$ constr_field
+                                    $+$ typo_field
+                                    $+$ subst_field
+                                    $+$ nextTVar_field
+  where
+    str_field      = PP.text "Debug       :" <+> prettyNullable (map PP.text _str)
+    constr_field   = PP.text "Constraints :" <+> prettyConstr   _constr
+    nextTVar_field = PP.text "TVars used  :" <+> PP.int         _nextTVar
+    typo_field     = PP.text "Type env    :" <+> prettyTypo     _typo
+    subst_field    = PP.text "Substs      :" <+> prettySubst    _subst
+
+
+    
+
+
+
 
 instance Monoid StageTypecheckerState where
   mempty = StageTypecheckerState  { _str      = []
@@ -132,6 +207,9 @@ instance Monoid StageTypecheckerState where
                                         , _subst    = []
                                         , _constr   = C [TRUE]
                                         }
+
+
+
 
 
 
@@ -164,18 +242,18 @@ tcExpr lexpr@(Label lab expr) = do
     case expr of 
       Expr.Var { Expr._ident = (Expr.Variable vname _) }
           -> do let hn = unpack . humanName $ vname
-                pushString (("Var         " ++ hn) )
+                pushString ("Var         " ++ hn)
                 --env <- use typo -- TODO
                 --a <- inst env 0 -- TODO
                 --normalize a
                 --return ()
       Expr.Assignment { Expr._dst = (Label _ dst), Expr._src = (Label _ src) }
-          -> do case (dst, src) of
-                  (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
-                      pushString (("Assignment  " ++ (unpack . humanName $ dst_vname) ++ " <- " ++ (unpack . humanName $ src_vname)) )
-                  _ -> pushString ("Some assignment..."  )
+          ->  case (dst, src) of
+                (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
+                    pushString ("Assignment  " ++ (unpack . humanName $ dst_vname) ++ " <- " ++ (unpack . humanName $ src_vname)) 
+                _ -> pushString "Some assignment..."
       Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label _ (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)})
-          -> pushString (("Application " ++ (unpack . humanName $ basename) ++ " ( " ++ intercalate " " (fmap mapArg args) ++ " )")  )
+          -> pushString ("Application " ++ (unpack . humanName $ basename) ++ " ( " ++ unwords (fmap mapArg args) ++ " )")  
       _   -> return ()
     defaultTraverseM lexpr
   where
@@ -184,15 +262,15 @@ tcExpr lexpr@(Label lab expr) = do
     -- mapArg (Label _ (Expr.Var { Expr._ident = (Expr.Variable vname _) })) = unpack . humanName $ vname
 
 tcDecl :: (HumanName (Pat.Pat lab), StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
-tcDecl ldecl@(Label lab decl) = do
+tcDecl ldecl@(Label lab decl) =
     case decl of
       fun@Decl.Func { Decl._sig  = sig@NamePat.NamePat{ NamePat._base = (NamePat.Segment name args) }
                     , Decl._body = body
                     }
           -> do let argsS = fmap mapArg args
-                pushString (("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " START") )
+                pushString ("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " START") 
                 x <- defaultTraverseM ldecl
-                pushString (("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " END") )
+                pushString ("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " END") 
                 return x
       _   -> defaultTraverseM ldecl
   where
@@ -201,12 +279,12 @@ tcDecl ldecl@(Label lab decl) = do
 
 tcMod :: (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
 tcMod lmodule@(Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) = do
-    pushString (("Module      " ++ intercalate "." (fmap unpack (path ++ [name]))))
+    pushString ("Module      " ++ intercalate "." (fmap unpack (path ++ [name])))
     defaultTraverseM lmodule
 
 tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> t -> StageTypecheckerPass m StageTypecheckerState
 tcUnit ast _ = do
-    pushString ("First!" )
+    pushString "First!"
     _ <- defaultTraverseM ast
     str %= reverse
     get
@@ -457,7 +535,7 @@ tv_typo = foldl f [] where
           f z (v,ts) = z ++ tv ts
 
 add_constraint :: (Monad m) => Constraint -> StageTypecheckerPass m ()
-add_constraint c1 = do
+add_constraint c1 =
     constr %= flip add_cons c1
      --TP (\ (n,s,c) -> return (n,s,add_cons c c1,()))
 
@@ -544,12 +622,12 @@ normalize a = do s <- get_subst
 
 
 get_subst :: (Monad m) =>   StageTypecheckerPass m Subst
-get_subst = do
+get_subst =
   use subst
 --get_subst = TP ( \ (n,s,c) -> return (n,s,c,s))
 
 get_cons :: (Monad m) =>   StageTypecheckerPass m Constraint
-get_cons = do
+get_cons =
   use constr
 --get_cons = TP ( \ (n,s,c) -> return (n,s,c,c))
 
