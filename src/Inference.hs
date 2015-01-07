@@ -206,7 +206,7 @@ pushString s = str %= (s:)
 
 ---- type inference
 
---tp :: (Typo, Term) -> TP Type
+--tp :: (Monad m) =>  (Typo, Term) ->  StageTypecheckerPass m Type
 --tp (env, Id x) =  do a <- inst env x
 --                     normalize a
 ----
@@ -244,13 +244,13 @@ pushString s = str %= (s:)
 
 -- The error monad
 
-data E a        = Suc a | Err String
-                     deriving Show
+--data E a        = Suc a | Err String
+--                     deriving Show
 
--- The type inference monad - a typing problem consists of a three tuple
+---- The type inference monad - a typing problem consists of a three tuple
 
-data TP a = TP ( (TVar, Subst, Constraint) ->
-                 E (TVar, Subst, Constraint, a))
+--data TP a = TP ( (TVar, Subst, Constraint) ->
+--                 E (TVar, Subst, Constraint, a))
 
 
 -- *----------------------------------------
@@ -259,7 +259,7 @@ data TP a = TP ( (TVar, Subst, Constraint) ->
 
 
 class TypesAndConstraints c where
- apply :: Subst -> c -> TP c
+ apply :: (Monad m) =>  Subst -> c -> StageTypecheckerPass m c
  tv    :: c -> [TVar]
 
 -- apply -- applies a substitution to either a type or constraint
@@ -333,47 +333,48 @@ instance TypesAndConstraints TypeScheme where
 -- * Category: MONAD DECLARATIONS
 -- *--------------------------------------------------
 
-unTP :: TP t -> (TVar, Subst, Constraint) -> E (TVar, Subst, Constraint, t)
-unTP (TP a) = a
+--unTP :: (Monad m) =>   StageTypecheckerPass m t -> (TVar, Subst, Constraint) -> E (TVar, Subst, Constraint, t)
+--unTP (TP a) = a
 
 
-instance Monad TP where
- m >>= k = TP ( \ (n,s,c) ->
-                     case unTP m (n,s,c) of
-                       Suc (n',s',c',x) -> unTP (k x) (n',s',c')
-                       Err se           -> Err se )
- return x = TP ( \ (n,s,c) -> return (n,s,c,x) )
+--instance Monad TP where
+-- m >>= k = TP ( \ (n,s,c) ->
+--                     case unTP m (n,s,c) of
+--                       Suc (n',s',c',x) -> unTP (k x) (n',s',c')
+--                       Err se           -> Err se )
+-- return x = TP ( \ (n,s,c) -> return (n,s,c,x) )
 
 
-instance Functor TP where
-  fmap f m = TP $ \(n,s,c) ->
-                     case unTP m (n,s,c) of
-                       Suc (n',s',c',x) -> Suc (n',s',c',f x)
-                       Err se           -> Err se
+--instance Functor TP where
+--  fmap f m = TP $ \(n,s,c) ->
+--                     case unTP m (n,s,c) of
+--                       Suc (n',s',c',x) -> Suc (n',s',c',f x)
+--                       Err se           -> Err se
 
-instance Applicative TP where
-  pure = return
-  (<*>) = ap
-
-
-instance Monad E where
- m >>= k = case m of
-           Suc a -> k a
-           Err s -> Err s
- return  = Suc
-
-instance Functor E where
-  fmap f m = case m of
-           Suc a -> Suc (f a)
-           Err s -> Err s
-
-instance Applicative E where
-  pure = return
-  (<*>) = ap
+--instance Applicative TP where
+--  pure = return
+--  (<*>) = ap
 
 
-report_error :: String -> a -> TP a
-report_error msg x =  TP ( \ (n,s,c) -> Err msg)
+--instance Monad E where
+-- m >>= k = case m of
+--           Suc a -> k a
+--           Err s -> Err s
+-- return  = Suc
+
+--instance Functor E where
+--  fmap f m = case m of
+--           Suc a -> Suc (f a)
+--           Err s -> Err s
+
+--instance Applicative E where
+--  pure = return
+--  (<*>) = ap
+
+
+report_error :: (Monad m) =>  String -> a ->  StageTypecheckerPass m a
+report_error msg x = fail msg
+-- report_error msg x = TP ( \ (n,s,c) -> Err msg)
 
 
 -- *---------------------------------------
@@ -440,26 +441,26 @@ tv_typo :: Typo -> [TVar]
 tv_typo = foldl f [] where
           f z (v,ts) = z ++ tv ts
 
-add_constraint :: Constraint -> TP ()
-add_constraint c1 =
-     TP (\ (n,s,c) -> return (n,s,add_cons c c1,()))
+add_constraint :: (Monad m) => Constraint -> StageTypecheckerPass m ()
+add_constraint c1 = do
+    constr %= flip add_cons c1
+     --TP (\ (n,s,c) -> return (n,s,add_cons c c1,()))
 
 
 
 -- handling of type variables and type environments
 
-newtvar :: TP TVar
-newtvar = TP (\ (n,s,c) -> return (new_tvar n,s,c,n) )
+newtvar :: (Monad m) => StageTypecheckerPass m TVar
+newtvar = do
+    n <- use nextTVar
+    nextTVar += 1
+    return n
+-- newtvar = TP (\ (n,s,c) -> return (new_tvar n,s,c,n) )
 
 insert :: Typo -> (Var, TypeScheme) -> Typo
 insert a (x,t) = (x,t):a
 
-mylookup :: Typo -> Var -> E TypeScheme
-mylookup [] y =
-    Err "undeclared variable"
-mylookup ((x,t):xs) y =
-      if x == y then return t
-      else mylookup xs y
+
 
 
 
@@ -467,33 +468,42 @@ mylookup ((x,t):xs) y =
 
 
 
-rename :: TP Subst -> TVar -> TP Subst
+rename :: (Monad m) =>  (Monad m) => StageTypecheckerPass m Subst -> TVar ->  StageTypecheckerPass m Subst
 rename s x = do newtv <- newtvar
                 s' <- s
                 return ((x, TV newtv):s')
 
-inst :: Typo -> Var -> TP Type
+inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
 inst env x =
    case mylookup env x of
-     Suc ts -> case ts of
-                Mono t        -> return t
-                Poly tvl c t  -> do s' <- foldl rename (return null_subst) tvl
-                                    c' <- apply s' c
-                                    t' <- apply s' t
-                                    add_constraint c'
-                                    return t'
-     Err _  -> do ntv <- newtvar
-                  report_error "undeclared variable" (TV ntv)
+     Just ts -> case ts of
+                  Mono t        -> return t
+                  Poly tvl c t  -> do s' <- foldl rename (return null_subst) tvl
+                                      c' <- apply s' c
+                                      t' <- apply s' t
+                                      add_constraint c'
+                                      return t'
+     Nothing -> do  ntv <- newtvar
+                    report_error "undeclared variable" (TV ntv)
+  where
+    mylookup :: Typo -> Var -> Maybe TypeScheme
+    mylookup [] y = Nothing
+    mylookup ((x,t):xs) y =
+          if x == y then return t
+                    else mylookup xs y
 
 
 
 
-
-
-gen :: Typo -> Type -> TP TypeScheme
-gen env t =
- TP ( \ (n,s,c) -> return (n,s, projection c (fv t c env), Poly (fv t c env) c t) )
-                      where fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
+gen :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
+gen env t = do
+    c     <- use constr
+    --let c = true_cons
+    constr .= projection c (fv t c env)
+    return $ Poly (fv t c env) c t
+  where
+    fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
+-- TP ( \ (n,s,c) -> return (n,s, projection c (fv t c env), Poly (fv t c env) c t) )
 
 
 
@@ -501,7 +511,7 @@ gen env t =
 
 
 
-cs :: (Subst, Constraint) -> TP (Subst, Constraint)
+
 
 
 -- that's what you need to supply
@@ -509,7 +519,7 @@ cs :: (Subst, Constraint) -> TP (Subst, Constraint)
 
 -- incorporating the constraint solver into monad TP
 
-normalize :: Type -> TP Type
+normalize :: (Monad m) =>  Type ->  StageTypecheckerPass m Type
 normalize a = do s <- get_subst
                  c <- get_cons
                  (s',c') <- cs (s,c)
@@ -518,14 +528,22 @@ normalize a = do s <- get_subst
 
 
 
-get_subst :: TP Subst
-get_subst = TP ( \ (n,s,c) -> return (n,s,c,s))
+get_subst :: (Monad m) =>   StageTypecheckerPass m Subst
+get_subst = do
+  use subst
+--get_subst = TP ( \ (n,s,c) -> return (n,s,c,s))
 
-get_cons :: TP Constraint
-get_cons = TP ( \ (n,s,c) -> return (n,s,c,c))
+get_cons :: (Monad m) =>   StageTypecheckerPass m Constraint
+get_cons = do
+  use constr
+--get_cons = TP ( \ (n,s,c) -> return (n,s,c,c))
 
-return_result :: Subst -> Constraint -> Type -> TP Type
-return_result s c t = TP ( \ (n,s',c') -> return (n,s,c,t))
+return_result :: (Monad m) =>  Subst -> Constraint -> Type ->  StageTypecheckerPass m Type
+return_result s c t = do
+  subst  .= s
+  constr .= c
+  return t
+--return_result s c t = TP ( \ (n,s',c') -> return (n,s,c,t))
 
 
 
@@ -539,7 +557,7 @@ init_typo = []
 projection _ _ = true_cons
 
 
-
+cs :: (Monad m) =>  (Subst, Constraint) -> StageTypecheckerPass m (Subst, Constraint)
 cs (s, C c) =
  do (r,e) <- extract_predicates c
     (s',r') <- closure (s,r,e)
@@ -552,7 +570,7 @@ cs _ = error "this case was not taken into account in original HM(Rec)"
 
 -- divide predicates into record predicates and equality predicates
 
-extract_predicates :: [Predicate] -> TP ([Predicate],[Predicate])
+extract_predicates :: (Monad m) =>  [Predicate] ->  StageTypecheckerPass m ([Predicate],[Predicate])
 extract_predicates [] = return ([],[])
 extract_predicates (TRUE:p) = extract_predicates p
 extract_predicates ((t `Subsume` t'):p) =
@@ -564,7 +582,7 @@ extract_predicates (Reckind t l t' : p) =
 
 
 
-closure ::  (Subst,[Predicate],[Predicate]) -> TP (Subst,[Predicate])
+closure :: (Monad m) =>   (Subst,[Predicate],[Predicate]) ->  StageTypecheckerPass m (Subst,[Predicate])
 closure (s, r, e) =
    do s' <- do_unify(s,e)
       c <- apply s' (C r)
@@ -579,21 +597,21 @@ closure (s, r, e) =
 
 -- create subsumptions based on a label type of a particular record
 
-extract1 :: [Predicate] -> TP [Predicate]
+extract1 :: (Monad m) =>  [Predicate] ->  StageTypecheckerPass m [Predicate]
 extract1 [] = return []
 extract1 (Reckind (Record f) l t : p) =
     do e <- get_extract1 f l t
        e' <- extract1 p
        return (e:e')
 extract1 (_:p) = extract1 p
-get_extract1 :: Eq a => [(a, Type)] -> a -> Type -> TP Predicate
+get_extract1 :: (Monad m) =>  Eq a => [(a, Type)] -> a -> Type ->  StageTypecheckerPass m Predicate
 get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" (TV 0 `Subsume` TV 0)
 get_extract1 ((l,t):f) l' t' = if l == l' then return (t `Subsume` t')
                                else get_extract1 f l' t'
 
 -- Create subsumptions for each label based on all constraints for a particular label and record. All equations for a particular label in a record must be satisfied
 
-extract2 :: [Predicate] -> TP [Predicate]
+extract2 :: (Monad m) =>  [Predicate] ->  StageTypecheckerPass m [Predicate]
 extract2 [] = return []
 extract2 (Reckind t l t' : p) =
     do e <- extract2 p
@@ -610,7 +628,7 @@ get_extract2 (_:p) t l t'                 = get_extract2 p t l t'
 
 
 
-check_consistency :: [Predicate] -> TP Bool
+check_consistency :: (Monad m) =>  [Predicate] ->  StageTypecheckerPass m Bool
 check_consistency [] = return True
 check_consistency (Reckind (Record f) l t' : p) = check_consistency p
 check_consistency (Reckind (TV a) l t'     : p) = check_consistency p
@@ -621,14 +639,14 @@ check_consistency (_                       : p) = check_consistency p
 
 -- simplification of constraints
 
-simplify :: Constraint -> TP Constraint
+simplify :: (Monad m) =>  Constraint ->  StageTypecheckerPass m Constraint
 simplify (C p) = do p' <- simplify_predicate p
                     return (C p')
 simplify _ = error "this case was not taken into account in original HM(Rec)"
 
 -- simplification of predicates
 
-simplify_predicate :: [Predicate] -> TP [Predicate]
+simplify_predicate :: (Monad m) =>  [Predicate] ->  StageTypecheckerPass m [Predicate]
 simplify_predicate [] = return []
 simplify_predicate ((t `Subsume` t'):p) =
   if t == t'  then simplify_predicate p
@@ -645,7 +663,7 @@ simplify_predicate (x:p) =
 
 -- assumption, there are only equ predicates
 
-do_unify :: (Subst, [Predicate]) -> TP Subst
+do_unify :: (Monad m) =>  (Subst, [Predicate]) ->  StageTypecheckerPass m Subst
 do_unify (s, []) = return s
 do_unify (s, t `Subsume` t' : p) =
    do s' <- unify(s,t,t')
@@ -654,7 +672,7 @@ do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal for
 
 
 
-unify :: (Subst, Type, Type) -> TP Subst
+unify :: (Monad m) =>  (Subst, Type, Type) ->  StageTypecheckerPass m Subst
 unify (s, TV x, TV y) =
    if x == y then return s
    else do t <- apply s (TV x)
@@ -711,11 +729,11 @@ unify (s, _, _)  = report_error "unify:uncompatible type" null_subst
 --            (101, Poly [302,303] ( C [Reckind (TV 302) 201 (TV 303)]) ((TV 302) `Fun` (TV 303)))],
 --           App (Id 101) (Id 100)))
 --           (init_tvar, null_subst, true_cons)
-rec2, rec3 :: TP (Subst, Constraint)
-rec2 = cs(null_subst, C [ Reckind (TV 100) 200 (TV 300 `Fun` TV 300)
-                        , Reckind (TV 100) 200 (TV 301)
-                        ])
+--rec2, rec3 :: (Monad m) =>   StageTypecheckerPass m (Subst, Constraint)
+--rec2 = cs(null_subst, C [ Reckind (TV 100) 200 (TV 300 `Fun` TV 300)
+--                        , Reckind (TV 100) 200 (TV 301)
+--                        ])
 
-rec3 = cs(null_subst, C [ Reckind (TV 100) 200 (TV 300 `Fun` TV 301)
-                        , Reckind (TV 100) 200 (TV 302 `Fun` TV 302)
-                        ])
+--rec3 = cs(null_subst, C [ Reckind (TV 100) 200 (TV 300 `Fun` TV 301)
+--                        , Reckind (TV 100) 200 (TV 302 `Fun` TV 302)
+--                        ])
