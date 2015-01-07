@@ -73,7 +73,7 @@ message Interpreter {
         message Time {
             message Set {
                 message Request {
-                    required float value = 1;
+                    required double value = 1;
                 }
                 message Update {
                     required Request request = 1;
@@ -83,7 +83,7 @@ message Interpreter {
                 message Request { }
                 message Status {
                     required Request request = 1;
-                    required float   value   = 2;
+                    required double  value   = 2;
                 }
             }
         }
