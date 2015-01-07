@@ -28,8 +28,8 @@ instance Default NoManager where
 
 
 instance MemoryManager NoManager where
-    reportUse    _ _ = return ()
-    reportDelete _ _ = return ()
+    reportUse    _ = return ()
+    reportDelete _ = return ()
     clean status = do
         logger warning "Cleaning memory - not implemented"
         logger warning $ show status

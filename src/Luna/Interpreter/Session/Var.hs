@@ -7,17 +7,20 @@
 module Luna.Interpreter.Session.Var where
 
 import           Flowbox.Prelude
-import           Luna.Interpreter.Session.Env     (Session)
-import qualified Luna.Interpreter.Session.Session as Session
+import           Luna.Graph.Node.Expr       (NodeExpr)
+import qualified Luna.Graph.Node.Expr       as NodeExpr
+import qualified Luna.Graph.Node.StringExpr as StringExpr
 
-
-timeVar :: String
-timeVar = "time"
 
 
 timeRef :: String
-timeRef = "Time#"
+timeRef = "time"
 
 
-timeSet :: Float -> Session mm ()
-timeSet = Session.runAssignment timeVar . show
+timeNodeExpr :: NodeExpr
+timeNodeExpr = NodeExpr.StringExpr
+             $ StringExpr.fromString timeRef
+
+
+isTimeRefNodeExpr :: NodeExpr -> Bool
+isTimeRefNodeExpr = (==) timeNodeExpr
