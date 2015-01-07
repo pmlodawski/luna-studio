@@ -108,19 +108,30 @@ type Typo       = [(Var,TypeScheme)]
 
 data StageTypecheckerState
    = StageTypecheckerState  { _str      :: [String]
+                            , _typo     :: Typo
                             , _nextTVar :: TVar
                             , _subst    :: Subst
                             , _constr   :: Constraint
                             }
+makeLenses ''StageTypecheckerState
 
 instance Show StageTypecheckerState where
   show StageTypecheckerState{ _str = strings } = show strings
 
 instance Monoid StageTypecheckerState where
-  mempty = StageTypecheckerState{ _str = [] }
-  mappend StageTypecheckerState{ _str = s1 } StageTypecheckerState{ _str = s2 } = StageTypecheckerState{ _str = s1 ++ s2 }
-
-makeLenses ''StageTypecheckerState
+  mempty = StageTypecheckerState  { _str      = []
+                                  , _typo     = []       -- init_typo
+                                  , _nextTVar = 0        -- init_tvar
+                                  , _subst    = []       -- null_subst
+                                  , _constr   = C [TRUE] -- true_cons
+                                  }
+  --mappend StageTypecheckerState{ _str = s1, _typo , _nextTVar , _subst , _constr } StageTypecheckerState{ _str = s2, _typo , _nextTVar , _subst , _constr } = StageTypecheckerState{ _str = s1 ++ s2 }
+  mappend s1 s2 = StageTypecheckerState { _str      = s1^.str  ++ s2^.str
+                                        , _typo     = []
+                                        , _nextTVar = 0
+                                        , _subst    = []
+                                        , _constr   = C [TRUE]
+                                        }
 
 
 
@@ -154,6 +165,10 @@ tcExpr lexpr@(Label lab expr) = do
       Expr.Var { Expr._ident = (Expr.Variable vname _) }
           -> do let hn = unpack . humanName $ vname
                 pushString (("Var         " ++ hn) )
+                --env <- use typo -- TODO
+                --a <- inst env 0 -- TODO
+                --normalize a
+                --return ()
       Expr.Assignment { Expr._dst = (Label _ dst), Expr._src = (Label _ src) }
           -> do case (dst, src) of
                   (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
@@ -373,7 +388,7 @@ instance TypesAndConstraints TypeScheme where
 
 
 report_error :: (Monad m) =>  String -> a ->  StageTypecheckerPass m a
-report_error msg x = fail msg
+report_error msg x = fail $ "LUNA ERROR: " ++ msg
 -- report_error msg x = TP ( \ (n,s,c) -> Err msg)
 
 
