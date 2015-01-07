@@ -43,7 +43,7 @@ data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheI
                              , _dependentNodes     :: Map CallPoint IntSet
                              , _profileInfos       :: MapForest CallPoint ProfileInfo
 
-                             , _timeVar            :: Float
+                             , _timeVar            :: Double
                              , _timeRefs           :: Set CallPoint
 
                              , _serializationModes :: MapForest CallPoint (MultiSet Mode)
