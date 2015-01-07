@@ -220,7 +220,7 @@ evalFunction stringExpr callDataPath varNames = do
                                                                                   then " :: Int)"
                                                                                   else ")"
         Tuple       -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
-        TimeVar     -> (++) "toIOEnv $ fromValue $ val (" . show <$> Env.getTimeVar
+        TimeVar     -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment' tmpVarName operation
         hash <- Hash.computeInherit tmpVarName varNames

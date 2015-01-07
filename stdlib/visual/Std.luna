@@ -336,3 +336,6 @@ def Image.gammaFromLinear self::Image gamma::Gamma:
 
 def testCC self::Std a::ColorCC:
     ```liftF1 testColorCC #{a}```
+
+def time self::Std:
+    0.0

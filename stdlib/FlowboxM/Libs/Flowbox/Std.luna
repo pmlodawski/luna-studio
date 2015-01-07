@@ -595,3 +595,8 @@ def View.map f:
 
 def testCC a:
     ```liftF1 testColorCC #{a}```
+
+alias Time=Double
+
+def time:
+    0.0
