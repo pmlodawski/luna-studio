@@ -272,6 +272,8 @@ struct ArgWrapper
 			return "long long";
 		case FieldDescriptor::TYPE_DOUBLE:
 			return "double";
+                case FieldDescriptor::TYPE_FLOAT:
+                        return "float";
 		case FieldDescriptor::TYPE_BOOL:
 			return "bool";
 		case FieldDescriptor::TYPE_INT32:

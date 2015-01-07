@@ -13,6 +13,7 @@ import qualified Control.Concurrent.MVar as MVar
 import           Data.IntSet             (IntSet)
 import           Data.Map                (Map)
 import           Data.MultiSet           (MultiSet)
+import           Data.Set                (Set)
 
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Data.MapForest                      (MapForest)
@@ -42,6 +43,9 @@ data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheI
                              , _dependentNodes     :: Map CallPoint IntSet
                              , _profileInfos       :: MapForest CallPoint ProfileInfo
 
+                             , _timeVar            :: Double
+                             , _timeRefs           :: Set CallPoint
+
                              , _serializationModes :: MapForest CallPoint (MultiSet Mode)
                              , _memoryConfig       :: Memory.Config
                              , _memoryManager      :: memoryManager
@@ -61,6 +65,7 @@ mk :: memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoint
 mk memoryManager'  libManager' projectID' mainPtr' resultCallBack' = do
     fo <- MVar.newMVar ()
     return $ Env def def def False fo def def
+                 def def
                  def def memoryManager'
                  libManager' projectID' mainPtr' resultCallBack'
 

@@ -11,27 +11,19 @@
 
 module Luna.Interpreter.RPC.Handler.Abort where
 
-import           Control.Exception.Base (Exception)
-import qualified Control.Monad.Catch    as Catch
-import           Data.Typeable          (Typeable)
-import           Pipes                  (MonadIO)
+import qualified Control.Monad.Catch as Catch
+import           Pipes               (MonadIO)
 
-import qualified Flowbox.Control.Concurrent   as Concurrent
-import           Flowbox.Prelude              hiding (Context, error)
+import qualified Flowbox.Control.Concurrent                   as Concurrent
+import           Flowbox.Prelude                              hiding (Context, error)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Interpreter.Session.Env as Env
+import           Luna.Interpreter.Session.Data.AbortException (AbortException (AbortException))
+import qualified Luna.Interpreter.Session.Env                 as Env
 
 
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
-
-
-
-data AbortException = AbortException
-    deriving (Show, Typeable)
-
-instance Exception AbortException
 
 
 handleAbort :: (Catch.MonadCatch m, MonadIO m) => m () -> m ()

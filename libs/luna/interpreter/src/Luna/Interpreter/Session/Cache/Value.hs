@@ -9,31 +9,34 @@
 
 module Luna.Interpreter.Session.Cache.Value where
 
-import qualified Control.Monad.Catch as Catch
-import qualified Control.Monad.Ghc   as MGHC
-import qualified Data.MultiSet       as MultiSet
+import           Control.Exception.Base (throw)
+import qualified Control.Monad.Catch    as Catch
+import qualified Control.Monad.Ghc      as MGHC
+import qualified Data.MultiSet          as MultiSet
 import qualified GHC
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Data.Error                          as ValueError
-import qualified Flowbox.Data.Serialization                  as Serialization
+import qualified Flowbox.Data.Error                           as ValueError
+import qualified Flowbox.Data.Serialization                   as Serialization
 import           Flowbox.Prelude
-import           Flowbox.Source.Location                     (loc)
-import           Flowbox.System.Log.Logger                   as L
-import           Generated.Proto.Mode.ModeValue              (ModeValue (ModeValue))
-import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
-import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
-import qualified Luna.Interpreter.Session.Cache.Status       as Status
-import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
-import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Luna.Interpreter.Session.Data.VarName       (VarName)
-import qualified Luna.Interpreter.Session.Env                as Env
-import qualified Luna.Interpreter.Session.Error              as Error
-import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
-import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Interpreter.Session.Session            as Session
-import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
-import qualified Luna.Syntax.Graph.Flags                     as Flags
+import           Flowbox.Source.Location                      (loc)
+import           Flowbox.System.Log.Logger                    as L
+import           Generated.Proto.Mode.ModeValue               (ModeValue (ModeValue))
+import qualified Luna.Graph.Flags                             as Flags
+import qualified Luna.Interpreter.Session.Cache.Cache         as Cache
+import qualified Luna.Interpreter.Session.Cache.Info          as CacheInfo
+import qualified Luna.Interpreter.Session.Cache.Status        as Status
+import           Luna.Interpreter.Session.Data.AbortException (AbortException (AbortException))
+import qualified Luna.Interpreter.Session.Data.CallPoint      as CallPoint
+import           Luna.Interpreter.Session.Data.CallPointPath  (CallPointPath)
+import           Luna.Interpreter.Session.Data.VarName        (VarName)
+import qualified Luna.Interpreter.Session.Data.VarName        as VarName
+import qualified Luna.Interpreter.Session.Env                 as Env
+import qualified Luna.Interpreter.Session.Error               as Error
+import qualified Luna.Interpreter.Session.Hint.Eval           as HEval
+import           Luna.Interpreter.Session.Session             (Session)
+import qualified Luna.Interpreter.Session.Session             as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings   as Bindings
 
 
 
@@ -80,10 +83,7 @@ getWithStatus callPointPath = do
 
 reportIfVisible :: CallPointPath -> Session mm ()
 reportIfVisible callPointPath = do
-    flags <- Env.getFlags $ last callPointPath
-    unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
-         || Flags.isSet' flags (view Flags.graphViewGenerated  )
-         || Flags.isFolded flags                               ) $
+    Env.whenVisible callPointPath $
         foldedReRoute callPointPath >>= report callPointPath
 
 
@@ -104,13 +104,15 @@ get varName callPointPath = do
         else do
             let tmpName = "_tmp"
                 toValueExpr = "toValue " ++ tmpName
-                computeExpr = concat [tmpName, " <- return $ compute ", varName, " def"]
+                computeExpr = concat [tmpName, " <- return $ compute ", VarName.toString varName, " def"]
 
                 excHandler :: Catch.SomeException -> MGHC.Ghc [ModeValue]
-                excHandler exc = do
-                    logger L.error $ show exc
-                    val <- liftIO (Serialization.toValue (ValueError.Error $ show exc) def)
-                    return $ map (`ModeValue` val) $ MultiSet.distinctElems modes
+                excHandler exc = case Catch.fromException exc of
+                    Just AbortException -> throw AbortException
+                    Nothing -> do
+                        logger L.error $ show exc
+                        val <- liftIO (Serialization.toValue (ValueError.Error $ show exc) def)
+                        return $ map (`ModeValue` val) $ MultiSet.distinctElems modes
 
 
             Session.withImports [ "Flowbox.Data.Serialization"

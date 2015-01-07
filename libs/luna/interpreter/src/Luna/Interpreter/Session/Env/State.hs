@@ -19,6 +19,8 @@ import qualified Data.Maybe                 as Maybe
 import           Data.Monoid                ((<>))
 import           Data.MultiSet              (MultiSet)
 import qualified Data.MultiSet              as MultiSet
+import           Data.Set                   (Set)
+import qualified Data.Set                   as Set
 
 import           Control.Monad.Catch                         (bracket_)
 import qualified Flowbox.Batch.Project.Project               as Project
@@ -31,6 +33,7 @@ import qualified Flowbox.Data.SetForest                      as SetForest
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
 import           Luna.AST.Module                             (Module)
+import qualified Luna.Syntax.Graph.Flags                            as Flags
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
@@ -169,6 +172,7 @@ deleteDependentNode callPoint nodeID =
 
 cleanDependentNodes :: Session mm ()
 cleanDependentNodes = modify (Env.dependentNodes .~ def)
+
 ---- Env.profileInfos -----------------------------------------------------
 
 cleanProfileInfos :: Session mm ()
@@ -187,8 +191,34 @@ insertProfileInfo callPointPath info =
 profile :: CallPointPath -> Session mm a -> Session mm a
 profile callPointPath action = do
     (r, info) <- ProfileInfo.profile action
-    insertProfileInfo callPointPath info
+    whenVisible callPointPath $ insertProfileInfo callPointPath info
     return r
+
+---- Env.timeVar ----------------------------------------------------------
+
+getTimeVar :: Session mm Double
+getTimeVar = gets $ view Env.timeVar
+
+
+setTimeVar :: Double -> Session mm ()
+setTimeVar = modify . set Env.timeVar
+
+---- Env.timeRefs ---------------------------------------------------------
+
+insertTimeRef :: CallPoint -> Session mm ()
+insertTimeRef callPoint = modify (Env.timeRefs %~ Set.insert callPoint)
+
+
+deleteTimeRef :: CallPoint -> Session mm ()
+deleteTimeRef callPoint = modify (Env.timeRefs %~ Set.delete callPoint)
+
+
+getTimeRefs :: Session mm (Set CallPoint)
+getTimeRefs = gets $ view Env.timeRefs
+
+
+cleanTimeRefs :: Session mm ()
+cleanTimeRefs = modify $ Env.timeRefs .~ def
 
 ---- Env.serializationModes -----------------------------------------------
 
@@ -363,8 +393,19 @@ getResultCallBack = gets $ view Env.resultCallBack
 
 ---------------------------------------------------------------------------
 
+whenVisible :: CallPointPath -> Session mm () -> Session mm ()
+whenVisible callPointPath action = do
+    flags <- getFlags $ last callPointPath
+    unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
+         || Flags.isSet' flags (view Flags.graphViewGenerated  )
+         || Flags.isFolded flags                               )
+        action
+
+---------------------------------------------------------------------------
+
 cleanEnv :: Session mm ()
 cleanEnv = cleanWatchPoints
+        >> cleanTimeRefs
         >> cleanDependentNodes
         >> cleanProfileInfos
         >> cleanSerializationModes

@@ -45,7 +45,7 @@ readEXRPart exr part = do
     channels <- forM channelsNames $ \name -> do
         floatArray <- readScanlineChannelA exr part name
         let doubleArray = convertToDouble floatArray
-        return $ ChannelFloat (convertToLunaName name) (FlatData $ Raw doubleArray)
+        return $ ChannelFloat (convertToLunaName name) (MatrixData $ Raw doubleArray)
 
     let newChannels = addAlphaIfAbsent channels
 
@@ -57,9 +57,9 @@ addAlphaIfAbsent [] = errorShitWentWrong $ "addAlphaIfAbsent (found an empty lis
 addAlphaIfAbsent channels@(x:_) = if alphaPresent then channels else alpha : channels
     where alphaPresent = any (\chan -> Chan.name chan == "rgba.a") channels
 
-          ChannelFloat _ (FlatData matrix) = x
+          ChannelFloat _ (MatrixData matrix) = x
 
-          alpha = ChannelFloat "rgba.a" $ FlatData $ M.fill (M.shape matrix) 1.0
+          alpha = ChannelFloat "rgba.a" $ MatrixData $ M.fill (M.shape matrix) 1.0
 
 convertToLunaName :: String -> String
 convertToLunaName [name] = "rgba." ++ [toLower name]

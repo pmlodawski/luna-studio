@@ -49,6 +49,8 @@ import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Request     
 import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Update                   as SetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Request                as SetProjectID
 import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Update                 as SetProjectID
+import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Get.Request                as VarTimeGet
+import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Get.Status                 as VarTimeGet
 import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Set.Request                as VarTimeSet
 import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Set.Update                 as VarTimeSet
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Request              as WatchPointAdd
@@ -73,7 +75,6 @@ import qualified Luna.Interpreter.Session.Memory                                
 import           Luna.Interpreter.Session.Memory.Manager                                     (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager                                     as Manager
 import           Luna.Interpreter.Session.Session                                            (SessionST)
-import qualified Luna.Interpreter.Session.Var                                                as Var
 
 
 
@@ -160,9 +161,13 @@ abort = return . Abort.Status
 
 varTimeSet :: VarTimeSet.Request -> RPC Context (SessionST mm) VarTimeSet.Update
 varTimeSet request@(VarTimeSet.Request time) = do
-    liftSession $ do Var.timeSet time
-                     Invalidate.modifyAll --FIXME[PM]
+    liftSession $ do Env.setTimeVar time
+                     Invalidate.modifyTimeRefs
     return $ VarTimeSet.Update request
+
+
+varTimeGet :: VarTimeGet.Request -> RPC Context (SessionST mm) VarTimeGet.Status
+varTimeGet request = VarTimeGet.Status request <$> liftSession Env.getTimeVar
 
 
 getSerializationMode :: GetSMode.Request -> RPC Context (SessionST mm) GetSMode.Status
