@@ -14,7 +14,7 @@ import qualified Luna.Graph.Node.StringExpr as StringExpr
 
 
 timeRef :: String
-timeRef = "Time#"
+timeRef = "time"
 
 
 timeNodeExpr :: NodeExpr
