@@ -1,5 +1,3 @@
-# przenieść do resource
-
 def + a b:
   xyz = b
   xyz

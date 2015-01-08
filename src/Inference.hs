@@ -18,10 +18,10 @@
 
 module Inference where
 
-
 import            Luna.Pass                 (PassMonad, PassCtx, Pass(Pass))
 import qualified  Luna.ASTNew.Decl          as Decl
 import            Luna.ASTNew.Decl          (LDecl)
+import qualified  Luna.ASTNew.Enum          as Enum
 import            Luna.ASTNew.Enum          (Enumerated)
 import qualified  Luna.ASTNew.Expr          as Expr
 import            Luna.ASTNew.Expr          (LExpr)
@@ -32,6 +32,8 @@ import            Luna.ASTNew.Module        (LModule)
 import qualified  Luna.ASTNew.Name.Pattern  as NamePat
 import qualified  Luna.ASTNew.Pat           as Pat
 import qualified  Luna.ASTNew.Traversals    as AST
+import qualified  Luna.Data.StructInfo      as SI
+import            Luna.Data.StructInfo      (StructInfo)
 
 import            Control.Applicative
 import            Control.Lens              hiding (without)
@@ -163,6 +165,7 @@ data StageTypecheckerState
                             , _nextTVar :: TVar
                             , _subst    :: Subst
                             , _constr   :: Constraint
+                            , _sa       :: StructInfo
                             }
 makeLenses ''StageTypecheckerState
 
@@ -197,7 +200,7 @@ prettyState StageTypecheckerState{..} = str_field
 
 
 type StageTypecheckerPass             m       = PassMonad StageTypecheckerState m
-type StageTypecheckerCtx              lab m a = (Enumerated lab, StageTypecheckerTraversal m a)
+type StageTypecheckerCtx              lab m a = (HumanName (Pat.Pat lab), Enumerated lab, StageTypecheckerTraversal m a)
 type StageTypecheckerTraversal        m   a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
 type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
 
@@ -209,7 +212,7 @@ defaultTraverseM :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypechec
 defaultTraverseM = AST.defaultTraverseM StageTypechecker
 
 
-tcpass :: (StageTypecheckerDefaultTraversal m a) => Pass StageTypecheckerState (a -> t -> StageTypecheckerPass m StageTypecheckerState)
+tcpass :: (StageTypecheckerDefaultTraversal m a) => Pass StageTypecheckerState (a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState)
 tcpass = Pass "Typechecker"
               "Performs typechecking"
               StageTypecheckerState { _str = [], _typo = [], _nextTVar = 0, _subst = [], _constr = C [TRUE] }
@@ -223,46 +226,60 @@ instance (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => AST.Traversal
 tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
 tcExpr lexpr@(Label lab expr) = do
     case expr of 
-      Expr.Var { Expr._ident = (Expr.Variable vname _) }
-          -> do let hn = unpack . humanName $ vname
-                pushString ("Var         " ++ hn)
-      Expr.Assignment { Expr._dst = (Label _ dst), Expr._src = (Label _ src) }
-          ->  case (dst, src) of
-                (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
-                    pushString ("Assignment  " ++ (unpack . humanName $ dst_vname) ++ " <- " ++ (unpack . humanName $ src_vname)) 
-                _ -> pushString "Some assignment..."
-      Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label _ (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)})
-          -> pushString ("Application " ++ (unpack . humanName $ basename) ++ " ( " ++ unwords (fmap mapArg args) ++ " )")  
+      Expr.Var { Expr._ident = (Expr.Variable vname _) } ->
+        do  let hn = unpack . humanName $ vname
+            hn_id <- getTargetID lab
+            pushString ("Var         " ++ hn ++ hn_id)
+      Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) } ->
+            case (dst, src) of
+              (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
+                  do  t_id <- getTargetID labt
+                      s_id <- getTargetID labs
+                      pushString ("Assignment  " ++ (unpack . humanName $ dst_vname) ++ t_id ++ " ⬸ " ++ (unpack . humanName $ src_vname) ++ s_id) 
+              _ -> pushString "Some assignment..."
+      Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label labb (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)}) -> do
+        do  base_id <- getTargetID labb
+            args_id <- unwords <$> mapM mapArg args
+            pushString ("Application " ++ (unpack . humanName $ basename) ++ base_id ++ " ( " ++ args_id ++ " )")
       _   -> return ()
     defaultTraverseM lexpr
   where
-    mapArg :: Expr.AppArg (LExpr lab a) -> String
-    mapArg (Expr.AppArg _ (Label _ (Expr.Var { Expr._ident = (Expr.Variable vname _) } ))) = unpack . humanName $ vname
+    mapArg :: (Enumerated lab, Monad m) => Expr.AppArg (LExpr lab a) -> StageTypecheckerPass m String
+    mapArg (Expr.AppArg _ (Label laba (Expr.Var { Expr._ident = (Expr.Variable vname _) } ))) = do
+      arg_id <- getTargetID laba
+      return $ (unpack . humanName $ vname) ++ arg_id
+    --mapArg (Expr.AppArg _ (Label laba (Expr.Var { Expr._ident = (Expr.Variable vname _) } ))) = (unpack . humanName $ vname) ++ "|" ++ (show.Enum.id) laba
     -- mapArg (Label _ (Expr.Var { Expr._ident = (Expr.Variable vname _) })) = unpack . humanName $ vname
 
-tcDecl :: (HumanName (Pat.Pat lab), StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
+tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
 tcDecl ldecl@(Label lab decl) =
     case decl of
       fun@Decl.Func { Decl._sig  = sig@NamePat.NamePat{ NamePat._base = (NamePat.Segment name args) }
                     , Decl._body = body
                     }
-          -> do let argsS = fmap mapArg args
-                pushString ("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " START")
+          -> do name_ids <- getTargetID lab
+                args_ids <- unwords <$> mapM mapArg args
+                pushString ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " START")
                 x <- defaultTraverseM ldecl
-                pushString ("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " END") 
+                pushString ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " END") 
                 return x
       _   -> defaultTraverseM ldecl
   where
-    mapArg :: (HumanName (Pat.Pat lab)) => NamePat.Arg (Pat.LPat lab) a -> String
-    mapArg (NamePat.Arg (Label _ arg) _) = unpack $ humanName arg
+    mapArg :: (Enumerated lab, Monad m) => NamePat.Arg (Pat.LPat lab) a -> StageTypecheckerPass m String
+    mapArg (NamePat.Arg (Label lab arg) _) = do
+      arg_id <- getTargetID lab
+      return $ (unpack $ humanName arg) ++ arg_id
+    --mapArg :: (Enumerated lab, HumanName (Pat.Pat lab)) => NamePat.Arg (Pat.LPat lab) a -> String
+    --mapArg (NamePat.Arg (Label lab arg) _) = (unpack $ humanName arg) ++ "|" ++ (show $ Enum.id lab)
 
-tcMod :: (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
+tcMod :: (StageTypecheckerCtx lab m a) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
 tcMod lmodule@(Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) = do
     pushString ("Module      " ++ intercalate "." (fmap unpack (path ++ [name])))
     defaultTraverseM lmodule
 
-tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> t -> StageTypecheckerPass m StageTypecheckerState
-tcUnit ast _ = do
+tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState
+tcUnit ast structAnalysis = do
+    sa .= structAnalysis
     pushString "First!"
     _ <- defaultTraverseM ast
     str %= reverse
@@ -272,6 +289,14 @@ tcUnit ast _ = do
 pushString :: (MonadState StageTypecheckerState m) => String -> m ()
 pushString s = str %= (s:)
 
+
+getTargetID :: (Enumerated lab, Monad m) => lab -> StageTypecheckerPass m String
+getTargetID lab = do
+                      target <- sa . SI.alias . at labID & use
+                      case target of
+                        Nothing     -> return $ "|" ++ show labID ++ "⊲"
+                        Just labtID -> return $ "|" ++ show labID ++ "⊳" ++ show labtID
+  where labID = Enum.id lab
 
 
 
