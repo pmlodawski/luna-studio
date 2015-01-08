@@ -164,7 +164,7 @@ prettyTypo = prettyNullable . map prettyTypo1
 
 data StageTypecheckerState
    = StageTypecheckerState  { _str      :: [String]
-                            , _typo     :: Typo
+                            , _typo     :: [Typo]
                             , _nextTVar :: TVar
                             , _subst    :: Subst
                             , _constr   :: Constraint
@@ -184,7 +184,7 @@ prettyState StageTypecheckerState{..} = str_field
     str_field      = PP.text "Debug       :" <+> prettyNullable (map PP.text _str)
     constr_field   = PP.text "Constraints :" <+> prettyConstr   _constr
     nextTVar_field = PP.text "TVars used  :" <+> PP.int         _nextTVar
-    typo_field     = PP.text "Type env    :" <+> prettyTypo     _typo
+    typo_field     = PP.text "Type env    :" <+> prettyNullable (map (PP.parens . prettyTypo) _typo)
     subst_field    = PP.text "Substs      :" <+> prettySubst    _subst
 
 
@@ -243,10 +243,6 @@ tcExpr lexpr@(Label lab expr) = do
       Expr.Var { Expr._ident = (Expr.Variable vname _) }
           -> do let hn = unpack . humanName $ vname
                 pushString ("Var         " ++ hn)
-                --env <- use typo -- TODO
-                --a <- inst env 0 -- TODO
-                --normalize a
-                --return ()
       Expr.Assignment { Expr._dst = (Label _ dst), Expr._src = (Label _ src) }
           ->  case (dst, src) of
                 (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
@@ -268,7 +264,7 @@ tcDecl ldecl@(Label lab decl) =
                     , Decl._body = body
                     }
           -> do let argsS = fmap mapArg args
-                pushString ("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " START") 
+                pushString ("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " START")
                 x <- defaultTraverseM ldecl
                 pushString ("Function    " ++ unpack name ++ " " ++ unwords argsS ++ " END") 
                 return x
