@@ -37,7 +37,6 @@ import            Control.Applicative
 import            Control.Lens              hiding (without)
 import            Control.Monad.State
 import            Data.List                 (intercalate)
-import            Data.Monoid               hiding ((<>))
 import            Data.Text.Lazy            (unpack)
 import qualified  Text.PrettyPrint          as PP
 import            Text.PrettyPrint          (($+$),(<+>), (<>))
@@ -82,10 +81,10 @@ prettyType (TV tv)        = prettyTVar tv
 prettyType (t1 `Fun` t2)  = PP.parens $ prettyType t1
                                     <+> PP.char '→'
                                     <+> prettyType t2
-prettyType (Record fs)    = PP.braces
-                          $ PP.hsep
-                          $ PP.punctuate (PP.char ',')
-                          $ map prettyField fs
+prettyType (Record fs)  = PP.braces
+                        $ PP.hsep
+                        $ PP.punctuate (PP.char ',')
+                        $ map prettyField fs
 
 -- Note, record fields are sorted wrt field label
 
@@ -98,23 +97,19 @@ data Predicate  = TRUE
                     deriving (Show,Eq)
 
 prettyPred TRUE                 = PP.char '⊤'
-prettyPred (ty1 `Subsume` ty2)  =  prettyType ty1
-                                <> PP.char '≼'
-                                <> prettyType ty2
-prettyPred (Reckind rty fl fty) =  prettyField (fl, fty)
-                                <> PP.char 'ϵ'
-                                <> prettyType rty
+prettyPred (ty1 `Subsume` ty2)  = prettyType ty1        <> PP.char '≼' <> prettyType ty2
+prettyPred (Reckind rty fl fty) = prettyField (fl, fty) <> PP.char 'ϵ' <> prettyType rty
 
 data Constraint = C [Predicate]
                 | Proj [TVar] [Predicate]
-                     deriving Show
+                deriving (Show)
 
 prettyConstr (C ps)         = PP.hsep
                             $ PP.punctuate (PP.char ',')
                             $ map prettyPred ps
 prettyConstr (Proj tvs ps)  = PP.char '∃'
                           <+> (prettyComma (map prettyTVar tvs) <> PP.char '.')
-                          <+> (prettyComma (map prettyPred ps))
+                          <+> prettyComma (map prettyPred ps)
 
 
 -- FILL IN: extend type and constraint language
@@ -124,7 +119,7 @@ prettyConstr (Proj tvs ps)  = PP.char '∃'
 
 data TypeScheme = Mono Type
                 | Poly [TVar] Constraint Type
-                     deriving Show
+                deriving (Show)
 
 prettyTypeScheme (Mono ty)        = prettyType ty
 prettyTypeScheme (Poly tvs cs ty) = PP.char '∀'
@@ -171,8 +166,7 @@ data StageTypecheckerState
                             }
 makeLenses ''StageTypecheckerState
 
-instance Show StageTypecheckerState where
-  show = PP.render . prettyState
+instance Show StageTypecheckerState where show = PP.render . prettyState
 
 prettyState :: StageTypecheckerState -> PP.Doc
 prettyState StageTypecheckerState{..} = str_field
@@ -193,20 +187,9 @@ prettyState StageTypecheckerState{..} = str_field
 
 
 
-instance Monoid StageTypecheckerState where
-  mempty = StageTypecheckerState  { _str      = []
-                                  , _typo     = []       -- init_typo
-                                  , _nextTVar = 0        -- init_tvar
-                                  , _subst    = []       -- null_subst
-                                  , _constr   = C [TRUE] -- true_cons
-                                  }
-  --mappend StageTypecheckerState{ _str = s1, _typo , _nextTVar , _subst , _constr } StageTypecheckerState{ _str = s2, _typo , _nextTVar , _subst , _constr } = StageTypecheckerState{ _str = s1 ++ s2 }
-  mappend s1 s2 = StageTypecheckerState { _str      = s1^.str  ++ s2^.str
-                                        , _typo     = []
-                                        , _nextTVar = 0
-                                        , _subst    = []
-                                        , _constr   = C [TRUE]
-                                        }
+--instance Monoid StageTypecheckerState where
+--  mempty        = StageTypecheckerState { _str = []                  , _typo     = [] , _nextTVar = 0 , _subst    = [] , _constr   = C [TRUE] }
+--  mappend s1 s2 = StageTypecheckerState { _str = s1^.str  ++ s2^.str , _typo     = [] , _nextTVar = 0 , _subst    = [] , _constr   = C [TRUE] }
 
 
 
@@ -226,10 +209,10 @@ defaultTraverseM :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypechec
 defaultTraverseM = AST.defaultTraverseM StageTypechecker
 
 
-tcpass :: (Monoid s, StageTypecheckerDefaultTraversal m a) => Pass s (a -> t -> StageTypecheckerPass m StageTypecheckerState)
+tcpass :: (StageTypecheckerDefaultTraversal m a) => Pass StageTypecheckerState (a -> t -> StageTypecheckerPass m StageTypecheckerState)
 tcpass = Pass "Typechecker"
               "Performs typechecking"
-              mempty
+              StageTypecheckerState { _str = [], _typo = [], _nextTVar = 0, _subst = [], _constr = C [TRUE] }
               tcUnit
 
 instance (StageTypecheckerCtx lab m a, HumanName (Pat.Pat lab)) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LModule lab a)  (LModule lab a) where traverseM _ = tcMod
