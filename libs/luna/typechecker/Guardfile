@@ -26,7 +26,7 @@ $output       = [
                   # " 3.1. Transform.Parse.Stage2         : ast2",
                   # " 3.2. Transform.Parse.Stage2         : astinfo2",
                   " 4.1. Transform.Desugar.ImplicitSelf : ast3",
-                  " 4.2. Transform.Desugar.ImplicitSelf : astinfo3",
+                  # " 4.2. Transform.Desugar.ImplicitSelf : astinfo3",
                   " 5.   Pass2.Analysis.Struct          : sa2",
                   " 6.   Typechecker                    : constraints",
                   # " 7.   Transform.Hash                 : ast4",
