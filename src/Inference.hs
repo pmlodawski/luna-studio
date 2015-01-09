@@ -2,9 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 
@@ -18,171 +16,42 @@
 
 module Inference where
 
-import            Luna.Pass                 (PassMonad, PassCtx, Pass(Pass))
-import qualified  Luna.ASTNew.Decl          as Decl
-import            Luna.ASTNew.Decl          (LDecl)
-import qualified  Luna.ASTNew.Enum          as Enum
-import            Luna.ASTNew.Enum          (Enumerated)
-import qualified  Luna.ASTNew.Expr          as Expr
-import            Luna.ASTNew.Expr          (LExpr)
-import qualified  Luna.ASTNew.Label         as Label
-import            Luna.ASTNew.Label         (Label(Label))
-import qualified  Luna.ASTNew.Module        as Module
-import            Luna.ASTNew.Module        (LModule)
-import qualified  Luna.ASTNew.Name.Pattern  as NamePat
-import qualified  Luna.ASTNew.Pat           as Pat
-import qualified  Luna.ASTNew.Traversals    as AST
-import qualified  Luna.Data.StructInfo      as SI
-import            Luna.Data.StructInfo      (StructInfo)
+import            Luna.Pass                     (PassMonad, PassCtx, Pass(Pass))
+import qualified  Luna.ASTNew.Decl              as Decl
+import            Luna.ASTNew.Decl              (LDecl)
+import qualified  Luna.ASTNew.Enum              as Enum
+import            Luna.ASTNew.Enum              (Enumerated)
+import qualified  Luna.ASTNew.Expr              as Expr
+import            Luna.ASTNew.Expr              (LExpr)
+import qualified  Luna.ASTNew.Label             as Label
+import            Luna.ASTNew.Label             (Label(Label))
+import qualified  Luna.ASTNew.Module            as Module
+import            Luna.ASTNew.Module            (LModule)
+import qualified  Luna.ASTNew.Name.Pattern      as NamePat
+import qualified  Luna.ASTNew.Pat               as Pat
+import qualified  Luna.ASTNew.Traversals        as AST
+import qualified  Luna.Data.StructInfo          as SI
+import            Luna.Data.StructInfo          (StructInfo)
 
 import            Control.Applicative
-import            Control.Lens              hiding (without)
+import            Control.Lens                  hiding (without)
 import            Control.Monad.State
-import            Data.List                 (intercalate)
-import            Data.Text.Lazy            (unpack)
-import qualified  Text.PrettyPrint          as PP
-import            Text.PrettyPrint          (($+$),(<+>), (<>))
+import            Data.List                     (intercalate)
+import            Data.Text.Lazy                (unpack)
+import qualified  Text.PrettyPrint              as PP
+import            Text.PrettyPrint              (($+$),(<+>), (<>))
 
-import            HumanName                 (HumanName(humanName))
+import            HumanName                     (HumanName(humanName))
 import            Solver
+import            Luna.Typechecker.Data
+import            Luna.Typechecker.StageTypecheckerState
 
 
-data StageTypechecker = StageTypechecker
-
-prettyComma = PP.hsep . PP.punctuate (PP.char ',')
-
-prettyNullable [] = PP.char '∅'
-prettyNullable xs = foldl ($+$) PP.empty xs
-
--- #############################################################################
--- #############################################################################
--- #############################################################################
--- #############################################################################
--- *------------------------------------------------
--- * Category: DATA DECLARATIONS
--- *------------------------------------------------
-
--- The type language
-
-type TVar       = Int
-type Var        = Int
-type Fieldlabel = Var
-type Field      = (Fieldlabel, Type)
-
-prettyTVar tv         = PP.text "τ_" <> PP.int tv
-prettyVar             = PP.int
-prettyFieldlabel      = PP.int
-prettyField (fl, ty)  = prettyFieldlabel fl <> PP.char ':' <> prettyType ty
-
-data Type       = TV TVar
-                | Type `Fun` Type
-                | Record [Field]
-                    deriving (Show,Eq)
-
-prettyType (TV tv)        = prettyTVar tv
-prettyType (t1 `Fun` t2)  = PP.parens $ prettyType t1
-                                    <+> PP.char '→'
-                                    <+> prettyType t2
-prettyType (Record fs)  = PP.braces
-                        $ PP.hsep
-                        $ PP.punctuate (PP.char ',')
-                        $ map prettyField fs
-
--- Note, record fields are sorted wrt field label
 
 
--- The constraint language
-
-data Predicate  = TRUE
-                | Type `Subsume` Type
-                | Reckind Type Fieldlabel Type
-                    deriving (Show,Eq)
-
-prettyPred TRUE                 = PP.char '⊤'
-prettyPred (ty1 `Subsume` ty2)  = prettyType ty1        <> PP.char '≼' <> prettyType ty2
-prettyPred (Reckind rty fl fty) = prettyField (fl, fty) <> PP.char 'ϵ' <> prettyType rty
-
-data Constraint = C [Predicate]
-                | Proj [TVar] [Predicate]
-                deriving (Show)
-
-prettyConstr (C ps)         = PP.hsep
-                            $ PP.punctuate (PP.char ',')
-                            $ map prettyPred ps
-prettyConstr (Proj tvs ps)  = PP.char '∃'
-                          <+> (prettyComma (map prettyTVar tvs) <> PP.char '.')
-                          <+> prettyComma (map prettyPred ps)
 
 
--- FILL IN: extend type and constraint language
 
-
--- Type schemes
-
-data TypeScheme = Mono Type
-                | Poly [TVar] Constraint Type
-                deriving (Show)
-
-prettyTypeScheme (Mono ty)        = prettyType ty
-prettyTypeScheme (Poly tvs cs ty) = PP.char '∀'
-                                <+> (PP.brackets (prettyComma (map prettyTVar tvs)) <> PP.char '.')
-                                <+> prettyConstr cs
-                                <+> PP.char '⇒'
-                                <+> prettyType ty
-
--- Substitutions and type environments
-
-type Subst = [(TVar, Type)]
-
-prettySubst s | null substs = prettyNullable []
-              | otherwise   = prettyComma substs
-  where prettySubst1 (tv, ty) = PP.parens $ prettyTVar tv
-                                        <+> PP.char '↣'
-                                        <+> prettyType ty
-        substs = map prettySubst1 s
-
-type Typo = [(Var,TypeScheme)]
-
-prettyTypo = prettyNullable . map prettyTypo1
-  where prettyTypo1 (v,ts) =  prettyVar v
-                          <+> PP.text " :: "
-                          <+> prettyTypeScheme ts
-
--- The term language
-
---data Term       = Id Var | Abs Var Term | App Term Term
---                | Let Var Term Term
---                     deriving Show
--- #############################################################################
--- #############################################################################
--- #############################################################################
--- #############################################################################
-
-
-data StageTypecheckerState
-   = StageTypecheckerState  { _str      :: [String]
-                            , _typo     :: [Typo]
-                            , _nextTVar :: TVar
-                            , _subst    :: Subst
-                            , _constr   :: Constraint
-                            , _sa       :: StructInfo
-                            }
-makeLenses ''StageTypecheckerState
-
-instance Show StageTypecheckerState where show = PP.render . prettyState
-
-prettyState :: StageTypecheckerState -> PP.Doc
-prettyState StageTypecheckerState{..} = str_field
-                                    $+$ constr_field
-                                    $+$ typo_field
-                                    $+$ subst_field
-                                    $+$ nextTVar_field
-  where
-    str_field      = PP.text "Debug       :" <+> prettyNullable (map PP.text _str)
-    constr_field   = PP.text "Constraints :" <+> prettyConstr   _constr
-    nextTVar_field = PP.text "TVars used  :" <+> PP.int         _nextTVar
-    typo_field     = PP.text "Type env    :" <+> prettyNullable (map (PP.parens . prettyTypo) _typo)
-    subst_field    = PP.text "Substs      :" <+> prettySubst    _subst
 
 
     
@@ -199,10 +68,7 @@ prettyState StageTypecheckerState{..} = str_field
 
 
 
-type StageTypecheckerPass             m       = PassMonad StageTypecheckerState m
-type StageTypecheckerCtx              lab m a = (HumanName (Pat.Pat lab), Enumerated lab, StageTypecheckerTraversal m a)
-type StageTypecheckerTraversal        m   a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
-type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
+
 
 
 traverseM :: (StageTypecheckerTraversal m a) => a -> StageTypecheckerPass m a
@@ -237,7 +103,7 @@ tcExpr lexpr@(Label lab expr) = do
                       s_id <- getTargetID labs
                       pushString ("Assignment  " ++ (unpack . humanName $ dst_vname) ++ t_id ++ " ⬸ " ++ (unpack . humanName $ src_vname) ++ s_id) 
               _ -> pushString "Some assignment..."
-      Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label labb (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)}) -> do
+      Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label labb (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)}) ->
         do  base_id <- getTargetID labb
             args_id <- unwords <$> mapM mapArg args
             pushString ("Application " ++ (unpack . humanName $ basename) ++ base_id ++ " ( " ++ args_id ++ " )")
@@ -268,7 +134,7 @@ tcDecl ldecl@(Label lab decl) =
     mapArg :: (Enumerated lab, Monad m) => NamePat.Arg (Pat.LPat lab) a -> StageTypecheckerPass m String
     mapArg (NamePat.Arg (Label lab arg) _) = do
       arg_id <- getTargetID lab
-      return $ (unpack $ humanName arg) ++ arg_id
+      return $ unpack (humanName arg) ++ arg_id
     --mapArg :: (Enumerated lab, HumanName (Pat.Pat lab)) => NamePat.Arg (Pat.LPat lab) a -> String
     --mapArg (NamePat.Arg (Label lab arg) _) = (unpack $ humanName arg) ++ "|" ++ (show $ Enum.id lab)
 
