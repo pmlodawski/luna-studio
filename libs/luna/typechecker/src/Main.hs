@@ -34,7 +34,8 @@ import            Text.Show.Pretty                          (ppShow)
 
 
 import            Inference                                 as FooInfer
-import            Luna.Typechecker.Debug.PrettyConsole      (PrintAttrs(..), colouredPrint, writeFileM)
+import            Luna.Typechecker.Debug.PrettyData
+import            Luna.Typechecker.Debug.ConsoleColours
 
 
 main :: IO ()
