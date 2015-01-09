@@ -33,13 +33,13 @@ data PrintAttrs = Black
 
 
 instance Show PrintAttrs where
-  show Black   = show 30
-  show Red     = show 31
-  show Green   = show 32
-  show Yellow  = show 33
-  show Blue    = show 34
-  show Magenta = show 35
-  show Cyan    = show 36
-  show White   = show 37
-  show Bold    = show 1
+  show Black   = show (30 :: Int)
+  show Red     = show (31 :: Int)
+  show Green   = show (32 :: Int)
+  show Yellow  = show (33 :: Int)
+  show Blue    = show (34 :: Int)
+  show Magenta = show (35 :: Int)
+  show Cyan    = show (36 :: Int)
+  show White   = show (37 :: Int)
+  show Bold    = show (1  :: Int)
 

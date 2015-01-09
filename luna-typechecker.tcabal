@@ -8,7 +8,7 @@ Build-Type:     Simple
 
 
 Executable luna-typechecker
-  GHC-Options:        -Wall -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -Werror -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     src
   Main-Is:            Main.hs
   Build-Depends:      base
@@ -26,7 +26,7 @@ Executable luna-typechecker
 
 
 Executable luna-typechecker-tests
-  GHC-Options:        -Wall -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+  GHC-Options:        -Wall -Werror -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
   Hs-Source-Dirs:     test
   Main-Is:            Main.hs
   Build-Depends:      base

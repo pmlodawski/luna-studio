@@ -18,18 +18,19 @@ module Luna.Typechecker.StageTypecheckerState (
 
 
 import            Control.Lens                      (makeLenses)
-import            Control.Monad.IO.Class            (MonadIO, liftIO)
 import            Text.PrettyPrint
 
-import            Luna.Pass                         (PassMonad, PassCtx, Pass(Pass))
-import            Luna.Data.StructInfo              (StructInfo)
 import            Luna.ASTNew.Enum                  (Enumerated)
 import qualified  Luna.ASTNew.Traversals            as AST
 import qualified  Luna.ASTNew.Pat                   as Pat
+import            Luna.Data.StructInfo              (StructInfo)
+import            Luna.Pass                         (PassMonad, PassCtx)
 
 import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo)
-import            Luna.Typechecker.Debug.HumanName  (HumanName(humanName))
-import            Luna.Typechecker.Debug.PrettyData (prettyConstr, prettyNullable, prettySubst, prettyTypo)
+import            Luna.Typechecker.Debug.HumanName  (HumanName)
+import            Luna.Typechecker.Debug.PrettyData (
+                      prettyConstr, prettyNullable, prettySubst, prettyTypo
+                  )
 
 
 
