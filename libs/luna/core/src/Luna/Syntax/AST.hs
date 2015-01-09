@@ -32,7 +32,7 @@ data AST a e v = Module { fromModule :: Module a e }
                | Lit    { fromLit    :: Lit        }
                | Pat    { fromPat    :: Pat    a   }
                | Type   { fromType   :: Type   a   }
-               deriving (Show, Eq, Generic, Read)
+               deriving (Show, Generic)
 
 
 class ASTWrapper a b where

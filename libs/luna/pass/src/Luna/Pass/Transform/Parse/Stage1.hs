@@ -53,6 +53,7 @@ import Luna.Data.Source (Source(Source), SourceReader, Code(Code))
 import qualified Luna.Data.Source as Source
 import           Data.String             (IsString, fromString)
 
+import           Luna.System.Session as Session
 
 ----------------------------------------------------------------------
 -- Base types
@@ -70,11 +71,12 @@ type Stage1DefaultTraversal m a b = (PassCtx m, AST.DefaultTraversal Stage1 (Sta
 ---- Pass functions
 ------------------------------------------------------------------------
 
-pass :: (MonadIO m, SourceReader (Stage1Pass m) a) => Pass () (Source a -> Stage1Pass m (Unit (LModule IDTag String), ASTInfo))
+pass :: (MonadIO m, SourceReader (Stage1Pass m) a, PassCtx m) => Pass () (Source a -> Stage1Pass m (Unit (LModule IDTag String), ASTInfo))
 pass = Pass "Parser stage-1" "Parses declarations without parsing expressions" ()
        passRunner
 
 passRunner src = do
+    x <- Session.get
     (Source name (Code code)) <- Source.read src
     result <- lift . hoistEither . (tmpFixErrorParse (Parser.moduleParser [name] Parser.defState)) $ code
     let astinfo = view ParserState.info $ snd result

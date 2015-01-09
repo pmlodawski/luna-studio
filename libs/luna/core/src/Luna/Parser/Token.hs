@@ -196,7 +196,7 @@ nameStart     = symbol '`'
 nameEnd       = symbol '`'
 range         = symbol ".."
 ref           = symbol '@'
-pragma        = symbol '@'
+pragma        = symbol '%'
 terminator    = symbol ';' <?> "terminator"
 
 lineComStart        = lex '#'

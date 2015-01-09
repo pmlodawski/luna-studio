@@ -3,6 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE GADTs #-}
 
 -----------------------------------------------------------------------------
@@ -25,7 +26,8 @@ import           Control.Monad          (MonadPlus)
 import           Control.Monad.Identity (Identity, runIdentity)
 import           Luna.System.Pragma     (HasPragmaSet(pragmaSet), PragmaSet)
 import qualified Luna.System.Pragma     as Pragma
-import           Luna.System.Pragma     (Pragma, SwitchPragma, PragmaCons, PragmaVal)
+import           Luna.System.Pragma     (Pragma, SwitchPragma, PragmaCons, PragmaVal, RegisterError, AccessError, LookupError, IsPragma, PragmaDef, PragmaInst)
+import           Control.Monad.Trans    (MonadTrans)
 
 ----------------------------------------------------------------------
 -- Session
@@ -37,8 +39,8 @@ type    Session a    = SessionT Identity a
 newtype SessionT m a = SessionT { unSessionT :: StateT Config m a } 
                      deriving (Monad, MonadIO, MonadPlus, Applicative, Alternative, Functor)
 
-type SessionCtx m         = (SessionMonad m, Functor m, Applicative m)
-type PragmaCtx  m a t rep = (SessionCtx m, PragmaCons t, rep~PragmaVal t a, Typeable rep)
+type SessionCtx m     = (SessionMonad m, Functor m, Applicative m)
+type Ctx        t m a = (SessionCtx m, IsPragma a, PragmaCons t)
 
 -- == Instances ==
 
@@ -54,16 +56,13 @@ instance Monad m => SessionMonad (SessionT m) where
     get = SessionT $ State.get
     put = SessionT . State.put
 
+instance (MonadTrans t, SessionMonad m, Monad (t m)) => SessionMonad (t m) where
+    get = lift get
+    put = lift . put
+
+
 -- == Utils ==
 
-withSession :: SessionCtx m => (Config -> Config) -> m Config
-withSession f = do
-    out <- f <$> get
-    put out
-    return out
-
-withSession_ :: SessionCtx m => (Config -> Config) -> m ()
-withSession_ f = withSession_ f *> pure ()
 
 runT :: SessionT m a -> Config -> m (a, Config)
 runT = runStateT . unSessionT
@@ -77,31 +76,35 @@ defrunT = flip runT def
 defrun :: Session a -> (a, Config)
 defrun = flip run def
 
--- Pragmas
+withSession :: (SessionCtx m, Traversable t) => (Config -> t Config) -> m (t Config)
+withSession f = do
+    out <- f <$> get
+    traverse put out
+    return out
 
-registerPragma :: PragmaCtx m a t rep => Pragma t a -> m Config
-registerPragma = withSession . Pragma.registerPragma
+registerPragma :: Ctx t m a => PragmaDef t a -> m (Either RegisterError Config)
+registerPragma = withSession . Pragma.register
 
-pushPragma :: PragmaCtx m a t rep => Pragma t a -> rep -> m Config
-pushPragma = withSession .: Pragma.pushPragma
+pushPragma :: Ctx t m a => PragmaDef t a -> PragmaVal t a -> m (Either AccessError Config)
+pushPragma = withSession .: Pragma.push
 
-setPragma :: PragmaCtx m a t rep => Pragma t a -> rep -> m Config
-setPragma = withSession .: Pragma.setPragma
+setPragma :: Ctx t m a => PragmaDef t a -> PragmaVal t a -> m (Either AccessError Config)
+setPragma = withSession .: Pragma.set
 
-lookupPragma :: PragmaCtx m a t rep => Pragma t a -> m (Pragma.Lookup rep)
-lookupPragma p = Pragma.lookupPragma p <$> get
+lookupPragma :: Ctx t m a => PragmaDef t a -> m (Either LookupError (PragmaInst t a))
+lookupPragma p = Pragma.lookup p <$> get
 
-popPragma :: PragmaCtx m a t rep => Pragma t a -> m (Pragma.Lookup rep)
+popPragma :: Ctx t m a => PragmaDef t a -> m (Either LookupError (PragmaInst t a))
 popPragma p = do 
-    lup <- Pragma.popPragma p <$> get
+    lup <- Pragma.pop p <$> get
     traverse_ (put.snd) lup
     return $ fmap fst lup
 
-enablePragma :: (SessionCtx m, Typeable a) => SwitchPragma a -> m Config
-enablePragma = withSession . Pragma.enablePragma
+enablePragma :: (SessionCtx m, Typeable a, IsPragma a) => SwitchPragma a -> m (Either AccessError Config)
+enablePragma = withSession . Pragma.enable
 
-disablePragma :: (SessionCtx m, Typeable a) => SwitchPragma a -> m Config
-disablePragma = withSession . Pragma.disablePragma
+disablePragma :: (SessionCtx m, Typeable a, IsPragma a) => SwitchPragma a -> m (Either AccessError Config)
+disablePragma = withSession . Pragma.disable
 
 ----------------------------------------------------------------------
 -- Config

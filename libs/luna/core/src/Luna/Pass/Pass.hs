@@ -20,7 +20,7 @@ import Control.Monad.Trans.Either
 import Flowbox.Prelude           hiding (error, fail)
 import Flowbox.System.Log.Logger
 import Control.Monad.Trans.RWS (RWST, runRWST)
-
+import Luna.System.Session     (SessionMonad)
 
 
 data Info = Info { name :: String
@@ -46,12 +46,12 @@ type ResultT m = EitherT PassError m
 type ESRT err env state m = EitherT err (StateT state (ReaderT env m))
 type RWSTE r w s e m = RWST r w s (EitherT e m)
 
-type PassCtx m = (Functor m, MonadIO m, Applicative m)
+type PassCtx m = (Functor m, MonadIO m, Applicative m, SessionMonad m)
 
 data NoState = NoState deriving Show
 
 
-run :: env -> state -> RWSTE env [String] state err m result -> EitherT err m (result, state, [String])
+run :: SessionMonad m => env -> state -> RWSTE env [String] state err m result -> EitherT err m (result, state, [String])
 run env state pass = runRWST pass env state
 
 run0_ (Pass n d s f)          = run_ (Info n) s f
@@ -59,7 +59,7 @@ run1_ (Pass n d s f) t1       = run_ (Info n) s (f t1)
 run2_ (Pass n d s f) t1 t2    = run_ (Info n) s (f t1 t2)
 run3_ (Pass n d s f) t1 t2 t3 = run_ (Info n) s (f t1 t2 t3)
 
-run_ :: (Monad m, Functor m) => env -> state -> RWSTE env [String] state err m result -> EitherT err m result
+run_ :: (Monad m, Functor m, SessionMonad m) => env -> state -> RWSTE env [String] state err m result -> EitherT err m result
 run_ env state pass = (\(x,_,_)->x) <$> run env state pass
 
 fail :: (Monad m, Monoid w) => e -> RWSTE r w s e m a

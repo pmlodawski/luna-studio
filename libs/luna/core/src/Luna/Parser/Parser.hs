@@ -37,21 +37,22 @@ import qualified Text.Trifecta.Parser as Trifecta
 import qualified Luna.Parser.State  as ParserState
 import           Luna.Parser.State  (ParserState)
 import qualified Luna.Parser.Token  as Tok
-import qualified Luna.Parser.Pragma as Pragma
+--import qualified Luna.Parser.Pragma as Pragma
 import qualified Luna.Parser.Indent as Indent
 
 import qualified Data.List as List
 
-import Luna.Parser.Type
-import Luna.Parser.Pattern
-import Luna.Parser.Literal
-import Luna.Parser.Struct
-import Luna.Parser.Term
-import Luna.Parser.Decl
-import Luna.Parser.Module
+import qualified Luna.Parser.Type    as Type
+import qualified Luna.Parser.Pattern as Pattern
+import qualified Luna.Parser.Literal as Literal
+import qualified Luna.Parser.Struct  as Struct
+import qualified Luna.Parser.Term    as Term
+import qualified Luna.Parser.Decl    as Decl
+import qualified Luna.Parser.Module  as Module
 
 import Luna.Parser.Builder (labeled, label, nextID, qualifiedPath, withLabeled)
-
+import           Luna.System.Session (registerPragma, enablePragma, disablePragma)
+import           Luna.System.Pragma  (pragma, SwitchPragma, IsPragma)
 
 
 -----------------------------------------------------------
@@ -96,15 +97,15 @@ defState  = emptyState
 -- Section parsing
 -----------------------------------------------------------
 -- Usage example: parseExpr (fileFeed "test.txt")
-parseGen p st = run (bundleResult (unit p)) st
+parseGen p st = run (bundleResult (Module.unit p)) st
 parseGen2 p st = run (bundleResult p) st
 
 --moduleParser modPath = parseGen (upToEnd $ func)
-moduleParser modPath = parseGen (upToEnd $ pUnit $ pModule (List.last modPath) (List.init modPath))
+moduleParser modPath = parseGen (upToEnd $ Module.pUnit $ Module.pModule (List.last modPath) (List.init modPath))
 --exprParser           = parseGen (upToEnd expr)
-exprBlockParser      = parseGen (upToEnd $ indBlock expr)
-exprBlockParser2     = parseGen2 (upToEnd $ indBlock expr)
-exprParser2          = parseGen2 (upToEnd expr)
+exprBlockParser      = parseGen (upToEnd $ Struct.indBlock Term.expr)
+exprBlockParser2     = parseGen2 (upToEnd $ Struct.indBlock Term.expr)
+exprParser2          = parseGen2 (upToEnd Term.expr)
 --patternParser        = parseGen (upToEnd pattern)
 --typeParser           = parseGen (upToEnd typeT)
 
@@ -138,4 +139,23 @@ parseText2 p input = handleResult  $  parseFromText p (parserDelta parserName) i
 testme ast st = ast -- runState (traverseM ast) st
 
 
-init = Pragma.init
+-----------------------------------------------------------
+-- Pragmas & initialization
+-----------------------------------------------------------
+
+data ImplicitSelf = ImplicitSelf deriving (Show, Read, Typeable)
+instance IsPragma ImplicitSelf
+implicitSelf = pragma :: SwitchPragma ImplicitSelf
+
+
+data OrphanNames  = OrphanNames   deriving (Show, Read, Typeable)
+instance IsPragma OrphanNames
+orphanNames  = pragma :: SwitchPragma OrphanNames
+
+
+init = do
+    registerPragma implicitSelf
+    registerPragma orphanNames
+
+    enablePragma   implicitSelf
+    disablePragma  orphanNames

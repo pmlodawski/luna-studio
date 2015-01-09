@@ -89,7 +89,7 @@ hashDecl ast@(Label lab decl) = case decl of
 hashSegment = NamePat.mapSegmentBase hash
 
 
-hashPat :: (MonadIO m, Applicative m, Enumerated lab) => LPat lab -> HPass m (LPat lab)
+hashPat :: (MonadIO m, Applicative m, Enumerated lab, PassCtx m) => LPat lab -> HPass m (LPat lab)
 hashPat ast@(Label lab pat) = case pat of
     Pat.Var name -> return . Label lab . Pat.Var $ fromText $ hash name
     _            -> continue
@@ -104,7 +104,7 @@ hashPat ast@(Label lab pat) = case pat of
 instance (HCtx lab m a) => AST.Traversal Hash (HPass m) (LDecl lab a) (LDecl lab a) where
     traverseM _ = hashDecl
 
-instance (MonadIO m, Applicative m, Enumerated lab) => AST.Traversal Hash (HPass m) (LPat lab) (LPat lab) where
+instance (MonadIO m, Applicative m, Enumerated lab, PassCtx m) => AST.Traversal Hash (HPass m) (LPat lab) (LPat lab) where
     traverseM _ = hashPat
 
 
