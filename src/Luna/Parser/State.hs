@@ -28,12 +28,14 @@ import           Flowbox.Control.Monad.State (mapStateVal, get, put, StateT)
 import qualified Flowbox.Control.Monad.State as State
 import qualified Luna.Data.StructInfo        as StructInfo
 import           Luna.Syntax.Name.Path       (QualPath)
+import           Luna.System.Pragma          (PragmaSet)
 
 data ParserState= ParserState { _info          :: ASTInfo
                               , _opFixity      :: OperatorMap
                               , _sourceMap     :: SourceMap
                               , _namespace     :: Namespace
                               , _adhocReserved :: [Text]
+                              , __pragmaSet    :: PragmaSet
                               --, _comments      :: IDMap [Comment]
                               , _modPath       :: QualPath
                               } deriving (Show)
@@ -124,7 +126,7 @@ registerID id = do
 
 -- FIXME[wd]: "Unnamed" string is an ugly hack for now
 instance conf~() => Default ParserState where
-        def = ParserState def def def def def "Unnamed"
+        def = ParserState def def def def def def "Unnamed"
 
 
 instance (Functor m, Monad m) => NamespaceMonad (StateT ParserState m) where

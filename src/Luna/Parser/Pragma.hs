@@ -14,20 +14,9 @@ module Luna.Parser.Pragma where
 import           Data.Typeable
 
 import           Flowbox.Prelude
-import           Luna.System.Session (registerPragma, enablePragma, disablePragma)
-import           Luna.System.Pragma  (pragma, SwitchPragma)
+
+import qualified Luna.Parser.Token       as Tok
 
 
 
-data ImplicitSelf = ImplicitSelf deriving (Show, Read, Typeable)
-data OrphanNames  = OrphanNames   deriving (Show, Read, Typeable)
-
-implicitSelf = pragma :: SwitchPragma ImplicitSelf
-orphanNames  = pragma :: SwitchPragma OrphanNames
-
-init = do
-    registerPragma implicitSelf
-    registerPragma orphanNames
-
-    enablePragma   implicitSelf
-    disablePragma  orphanNames
+pragma = Tok.pragma

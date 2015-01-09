@@ -4,6 +4,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -13,13 +14,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Luna.System.Pragma
+-- Module      :  Luna.System.PragmaDef
 -- Copyright   :  (C) 2014 Flowbox
 -- License     :  AllRightsReserved
 -- Maintainer  :  Wojciech Daniło <wojciech.danilo@gmail.com>
@@ -32,33 +35,57 @@
 -- in PragmaSet's. Each PragmaSet contains PragmaStack, which handles
 -- such operations as push or pop for pragmas.
 --
--- Each pragma defines its name, which is automatically taken from type name
--- if not provided manually and parsing rules
 --
 -- @
--- data ImplicitSelf = ImplicitSelf
---                   deriving (Show, Read, Typeable)
+-- data ImplicitSelf = ImplicitSelf deriving (Show, Read, Typeable)
+-- data TabSize      = TabSize Int  deriving (Show, Read, Typeable)
 -- 
--- implicitSelf = pragma :: SwitchPragma ImplicitSelf
+-- instance IsPragma ImplicitSelf
+-- instance IsPragma TabSize
+-- 
+-- 
+-- implicitSelf = pragma                :: SwitchPragma ImplicitSelf
+-- tabSize      = pragmaDef (TabSize 4) :: ValPragma    TabSize
+-- 
+-- handleErr = \case
+--     Right a -> return a
+--     Left  e -> fail $ show e
 -- 
 -- main = do
---     let ps = enablePragma implicitSelf
---            $ registerPragma implicitSelf
---            $ (def :: PragmaSet)
+--     ps <- return (def :: PragmaSet)
+--     ps <- handleErr $ register implicitSelf ps
+--     ps <- handleErr $ register tabSize ps
 -- 
---     print $ lookupPragma implicitSelf ps
+--     ps <- handleErr $ push tabSize (TabSize 8) ps
+-- 
+--     print $ lookup implicitSelf ps
+--     print $ lookup tabSize ps
+-- 
+--     ps <- handleErr $ enable implicitSelf ps
+--     ps <- handleErr $ pop_ tabSize ps
+-- 
+--     print $ lookup implicitSelf ps
+--     print $ lookup tabSize ps
 -- @
 --
--- Pragmas with arguments are supported by default.
+-- outputs:
+--
+-- @
+-- Left  (Error LookupUndefined "Switch")
+-- Right (Pragma { _name = "Val"   , _defVal = Just (TabSize 4), _val = TabSize 8 })
+-- Right (Pragma { _name = "Switch", _defVal = Nothing         , _val = Enabled   })
+-- Right (Pragma { _name = "Val"   , _defVal = Just (TabSize 4), _val = TabSize 4 })
+-- @
 ----------------------------------------------------------------------------
 
 module Luna.System.Pragma where
 
-import           Flowbox.Prelude hiding (noneOf)
+import           Flowbox.Prelude        as P hiding (noneOf, lookup)
 
-import qualified Data.HTSet.HTSet        as HTSet
-import           Data.HTSet.HTSet        (HTSet)
-import qualified Data.HMap               as HMap
+import qualified Data.HMap.Lazy         as HMap
+import           Data.HMap.Lazy         (HHashMap, H(H), unH)
+import qualified Data.HashMap.Lazy      as HashMap
+import           Data.HashMap.Lazy      (HashMap)
 import           Data.Typeable
 import           Control.Monad.State
 import           Prelude                 ()
@@ -68,87 +95,119 @@ import           Text.Parser.Combinators (try)
 import           Data.Proxy.Utils
 import qualified Data.Map                as Map
 import           Data.Map                (Map)
-
-
-----------------------------------------------------------------------
--- Lookup
-----------------------------------------------------------------------
-
-data Lookup a = Defined a
-              | Undefined
-              | Unregistered
-              deriving (Show, Functor, Foldable)
+import           Control.Monad           (join)
+import           Data.Type.Hide          (HideType(hideType, revealType))
+import           Unsafe.Coerce           (unsafeCoerce)
+import qualified Data.Maps               as Maps
 
 ----------------------------------------------------------------------
--- Pragma
+-- Lookup & status
+----------------------------------------------------------------------
+
+data Error t = Error t Text deriving (Show)
+
+data Unregistered    = Unregistered deriving (Show)
+data Occupied        = Occupied     deriving (Show)
+data LookupErrorType = LookupUnregistered
+                     | LookupUndefined
+                     deriving (Show)
+                     
+type AccessError   = Error Unregistered
+type LookupError   = Error LookupErrorType
+type RegisterError = Error Occupied
+
+class AccessClass a where
+    unregistered :: a
+
+instance AccessClass Unregistered    where unregistered = Unregistered
+instance AccessClass LookupErrorType where unregistered = LookupUnregistered
+
+----------------------------------------------------------------------
+-- PragmaDef
 ----------------------------------------------------------------------
 
 type family PragmaVal t a :: *
 
-type    ParseCtx    m = (TokenParsing m, CharParsing m, Monad m)
-newtype ParseRule t a = ParseRule { fromRule :: ParseCtx m => Pragma t a -> m a }
-data    Pragma    t a = Pragma    { _name    :: String
-                                  , _parser  :: ParseRule t a
-                                  } deriving (Typeable)
+data Pragma t a v = Pragma { _name   :: Text 
+                           , _defVal :: Maybe (PragmaVal t a)
+                           , _val    :: v
+                           } deriving (Functor)
+
+deriving instance (Show (PragmaVal t a), Show v) => Show (Pragma t a v)
+
 makeLenses ''Pragma
 
--- Tells what should happen when pragma is succesfully parsed
-class PragmaCons t where
-    pragmaCons :: Pragma t a -> a -> PragmaVal t a
+type PragmaInst  t a = Pragma t a (PragmaVal t a)
+type PragmaDef   t a = Pragma t a ()
+type PragmaStack t a = Pragma t a [PragmaVal t a]
 
+defOf :: Pragma t a v -> PragmaDef t a
+defOf = fmap $ const ()
+
+-- == Type classes ==
+
+class IsPragma a where
+    parse :: (TokenParsing m, CharParsing m, Monad m) => PragmaDef t a -> m a
+    default parse :: (TokenParsing m, CharParsing m, Monad m, Read a) => PragmaDef t a -> m a
+    parse p = read . toString . (\s -> p^.name <> " " <> fromString s) <$> many (noneOf "\n\r")
+
+-- Tells what should happen when defPragma is succesfully parsed
+class PragmaCons t where
+    pragmaCons :: PragmaDef t a -> a -> PragmaVal t a
 
 -- == Utils ==
 
-pragma :: (Typeable a, Read a) => Pragma t a
-pragma = def :: (Read a, Typeable a) => Pragma t a
+baseTName :: Typeable a => PragmaDef t a -> String
+baseTName (_::PragmaDef t a) = show $ typeOf (undefined :: a)
+
+pragma :: Typeable t => PragmaDef t a
+pragma = def
+
+pragmaDef :: Typeable t => PragmaVal t a -> PragmaDef t a
+pragmaDef (a :: PragmaVal t a) = (def :: PragmaDef t a) & defVal .~ Just a :: PragmaDef t a
+
 
 -- == Instances ==
 
-instance (val ~ PragmaVal t a) => HTSet.IsKey (Pragma t a) (PragmaStack val)
+instance out ~ PragmaStack t a => HMap.IsKey (Pragma t a v) Text out
+    where toKey = HMap.Key . view name
 
-instance Typeable a => Show (Pragma t a) where
-    show a = "Pragma " ++ show (view name a)
-
-instance (Typeable a, Read a) => Default (Pragma t a) where
-    def = Pragma { _name   = takeWhile (/= ' ') . show . typeOf $ (undefined :: a)
-                 , _parser = ParseRule $ (\a -> (read .: (++)) <$> string (view name a) <*> many (noneOf "\n"))
-                 }
+instance (Typeable t, Default val) => Default (Pragma t a val) where
+    def = Pragma (fromString . show $ typeOf (undefined :: t)) def def
 
 ----------------------------------------------------------------------
--- PragmaStack
+-- Type hidding
 ----------------------------------------------------------------------
 
-newtype PragmaStack a = PragmaStack [a] deriving (Show, Typeable, Default, Monoid, Functor)
+data Parsable where
+    Parsable :: (IsPragma a, PragmaCons t) => PragmaStack t a -> Parsable
 
--- == Instances ==
+instance (v~PragmaVal t a, IsPragma a, PragmaCons t) => HideType (Pragma t a [v]) Parsable where
+    hideType                = Parsable
+    revealType (Parsable p) = unsafeCoerce p
 
-instance IsList (PragmaStack a) where
-    type Item (PragmaStack a) = a
-    toList (PragmaStack a)    = a
-    fromList                  = PragmaStack
+
+runParsable :: (TokenParsing m, CharParsing m, Monad m) => Parsable -> m Parsable
+runParsable (Parsable a) = fmap Parsable (runPragmaStack a)
+    where runPragmaStack :: (TokenParsing m, CharParsing m, Monad m, IsPragma a, PragmaCons t) => PragmaStack t a -> m (PragmaStack t a)
+          -- For now all parsed pragmas are replace the stack 
+          runPragmaStack p@(Pragma n d as) = (\a -> Pragma n d [a]) . pragmaCons (defOf p) <$> parse (defOf p)
 
 ----------------------------------------------------------------------
 -- PragmaSet
 ----------------------------------------------------------------------
 
-newtype PragmaSetTransform = PragmaSetTransform { unSetTrans :: (Monad m, TokenParsing m) => m (PragmaSet -> PragmaSet) }
-data PragmaSet = PragmaSet { _values  :: HTSet
-                           , _parsers :: Map String PragmaSetTransform
-                           }
-
+newtype PragmaSet = PragmaSet { _values :: H (HashMap Text) Parsable }
 makeLenses ''PragmaSet
 
-type PragmaSetCtx t a s rep = (HasPragmaSet s, rep~PragmaVal t a, Typeable rep)
-
--- == Utils ==
-
-pragmaNames :: PragmaSet -> [String]
-pragmaNames = Map.keys . view parsers
 
 -- == Instances ==
 
+instance Show PragmaSet where
+    show ps = "PragmaSet " <> show (pragmaNames ps)
+
 instance Default PragmaSet where
-    def = PragmaSet def def
+    def = PragmaSet mempty
 
 -- remove when makeClassy gets fixed (bug: https://github.com/ekmett/lens/issues/512) --
 class HasPragmaSet t where
@@ -156,79 +215,81 @@ class HasPragmaSet t where
 instance HasPragmaSet PragmaSet where pragmaSet = id
 -- / --
 
-instance Show PragmaSet where
-    show ps = "PragmaSet " ++ show (pragmaNames ps)
-
 
 -- == Utils ==
 
--- For now all parsed pragmas are pushed to the stack 
-createSetTransform :: (rep~PragmaVal t a, PragmaCons t, Typeable rep) => Pragma t a -> PragmaSetTransform
-createSetTransform p = PragmaSetTransform $ do
-    a <- fromRule (p^.parser) p
-    return $ pushPragma p (pragmaCons p a)
+parseByName :: (TokenParsing m, CharParsing m, Monad m) => HasPragmaSet s => Text -> s -> Either AccessError (m s)
+parseByName k ps = case lookupByName k ps of
+    Just psable -> Right $ fmap (\a -> P.set lens (H a) ps) (Maps.insert k <$> (runParsable psable) <*> pure base)
+    Nothing     -> Left  $ Error unregistered k
+    where lens   = pragmaSet.values
+          H base = view lens ps
+    
+lookupByName :: HasPragmaSet s => Text -> s -> Maybe Parsable
+lookupByName k = Maps.lookup k . unH . view (pragmaSet . values)
 
-parsePragmas :: HasPragmaSet s => s -> PragmaSetTransform
-parsePragmas s = PragmaSetTransform $ foldr (<|>) (fail "No matching pragma definition") . fmap (try.unSetTrans) . Map.elems . view (pragmaSet.parsers) $ s
+pragmaNames :: PragmaSet -> [Text]
+pragmaNames = HMap.baseKeys . view values
 
-lookupPragmaStack :: PragmaSetCtx t a s rep => Pragma t a -> s -> Maybe (PragmaStack rep)
-lookupPragmaStack p = HTSet.lookupKey p . view (pragmaSet.values)
+--
 
-setPragma :: PragmaSetCtx t a s rep => Pragma t a -> rep -> s -> s
-setPragma p a = setPragmaStack p (PragmaStack [a])
+type PragmaCtx t a s = (HasPragmaSet s, IsPragma a, PragmaCons t)
 
-pushPragma :: PragmaSetCtx t a s rep => Pragma t a -> rep -> s -> s
-pushPragma p a ps = flip (setPragmaStack p) ps $ case lookupPragmaStack p ps of
-    Nothing -> fromList [a]
-    Just s  -> fromList $ a : toList s
+withRegistered :: (PragmaCtx t a s, AccessClass e) => PragmaDef t a -> s -> (PragmaStack t a -> x) -> Either (Error e) x
+withRegistered p ps f = case lookupStack p ps of
+    Nothing -> Left  $ Error unregistered (p^.name)
+    Just s  -> Right $ f s
 
+lookupStack :: PragmaCtx t a s => PragmaDef t a -> s -> Maybe (PragmaStack t a)
+lookupStack p = HMap.lookup p . view (pragmaSet.values)
 
-pushPragma2 :: PragmaSetCtx t a s rep => Pragma t a -> rep -> s -> Maybe s
-pushPragma2 p a ps = case lookupPragmaStack p ps of
-    Nothing -> Nothing
-    Just s  -> Just $ setPragmaStack p (fromList $ a : toList s) ps
+set :: PragmaCtx t a s => PragmaDef t a -> PragmaVal t a -> s -> Either AccessError s
+set p@(Pragma n d _) a ps = withRegistered p ps . const $ setStack p (Pragma n d [a]) ps
 
-popPragma :: PragmaSetCtx t a s rep => Pragma t a -> s -> Lookup (rep, s)
-popPragma p ps = case lookupPragmaStack p ps of
-    Nothing -> Unregistered
-    Just s  -> case toList s of
-        []   -> Undefined
-        x:xs -> Defined (x, setPragmaStack p (fromList xs) ps)
+push :: PragmaCtx t a s => PragmaDef t a -> PragmaVal t a -> s -> Either AccessError s
+push p a ps = withRegistered p ps $ \(Pragma n d s) -> setStack p (Pragma n d (a:s)) ps
 
-setPragmaStack :: PragmaSetCtx t a s rep => Pragma t a -> PragmaStack rep -> s -> s
-setPragmaStack p a = pragmaSet.values %~ HTSet.insertKey p a
+pop :: PragmaCtx t a s => PragmaDef t a -> s -> Either LookupError (PragmaInst t a, s)
+pop p ps = join $ withRegistered p ps $ \(Pragma n d s) -> case s of
+    []   -> Left  $ Error LookupUndefined (p^.name)
+    x:xs -> Right $ (Pragma n d x, setStack p (Pragma n d xs) ps)
 
-lookupPragma :: PragmaSetCtx t a s rep => Pragma t a -> s -> Lookup rep
-lookupPragma p ps = case lookupPragmaStack p ps of
-    Nothing -> Unregistered
-    Just s  -> case toList s of
-        []   -> Undefined
-        x:xs -> Defined x
+pop_ :: PragmaCtx t a s => PragmaDef t a -> s -> Either LookupError s
+pop_ = fmap snd .: pop
 
-registerPragma :: (PragmaSetCtx t a s rep, PragmaCons t) => Pragma t a -> s -> s
-registerPragma p s = setPragmaStack p mempty s
-                   & (pragmaSet.parsers) %~ Map.insert (p^.name) (createSetTransform p)
+setStack :: PragmaCtx t a s => PragmaDef t a -> PragmaStack t a -> s -> s
+setStack p a = pragmaSet.values %~ HMap.insert p a
 
+lookup :: PragmaCtx t a s => PragmaDef t a -> s -> Either LookupError (PragmaInst t a)
+lookup p@(Pragma n d _) ps = case fmap fst $ pop p ps of
+    Right a             -> Right a
+    Left  e@(Error t _) -> case t of 
+        LookupUnregistered -> Left e
+        LookupUndefined    -> case p^.defVal of
+            Nothing -> Left e
+            Just a  -> Right (Pragma n d a)
+
+register :: PragmaCtx t a s => PragmaDef t a -> s -> Either RegisterError s
+register p@(Pragma n d _) s = case lookup p s of
+    Right _ -> Left  $ Error Occupied (p^.name)
+    Left  _ -> Right $ setStack p (Pragma n d mempty) s
 
 ----------------------------------------------------------------------
 -- SwitchPragma
 ----------------------------------------------------------------------
 
 data Switch         = Enabled | Disabled deriving (Show, Typeable, Eq, Ord)
-type SwitchPragma a = Pragma Switch a
+type SwitchPragma a = PragmaDef Switch a
 
 -- == Utils ==
 
-enablePragma :: (HasPragmaSet s, Typeable a) => SwitchPragma a -> s -> s
-enablePragma p = pushPragma p Enabled
+enable :: (HasPragmaSet s, IsPragma a) => SwitchPragma a -> s -> Either AccessError s
+enable p = push p Enabled
 
-disablePragma :: (HasPragmaSet s, Typeable a) => SwitchPragma a -> s -> s
-disablePragma p = pushPragma p Disabled
+disable :: (HasPragmaSet s, IsPragma a) => SwitchPragma a -> s -> Either AccessError s
+disable p = push p Disabled
 
 -- == Instances ==
-
-instance Default Switch where
-    def = Enabled
 
 instance PragmaCons Switch where
     pragmaCons _ = const Enabled
@@ -240,8 +301,8 @@ type instance PragmaVal Switch a = Switch
 -- ValPragma
 ----------------------------------------------------------------------
 
-data Val
-type ValPragma a = Pragma Val a
+data Val = Val deriving (Show, Typeable, Eq, Ord)
+type ValPragma a = PragmaDef Val a
 
 -- == Instances ==
 
@@ -249,3 +310,4 @@ instance PragmaCons Val where
     pragmaCons _ = id
 
 type instance PragmaVal Val a = a
+

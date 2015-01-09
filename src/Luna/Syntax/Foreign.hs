@@ -13,9 +13,9 @@ import qualified Prelude
 
 
 data Foreign a = Foreign Target a
-               deriving (Show, Eq, Generic, Read, Functor, Traversable, Foldable)
+               deriving (Show, Generic, Functor, Traversable, Foldable)
 
 
 data Target = Haskell
             | CPP
-            deriving (Show, Eq, Generic, Read)
+            deriving (Show, Generic)
