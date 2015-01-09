@@ -2,7 +2,8 @@ module Luna.Typechecker.Data (
     TVar, Var,
     Fieldlabel, Field,
     Subst, Typo,
-    Type(..), Predicate(..), Constraint(..), TypeScheme(..)
+    Type(..), Predicate(..), Constraint(..), TypeScheme(..),
+    true_cons, null_subst, init_typo
   ) where
 
 
@@ -35,3 +36,13 @@ data TypeScheme = Mono Type
 type Subst = [(TVar, Type)]
 
 type Typo = [(Var,TypeScheme)]
+
+
+true_cons :: Constraint
+true_cons = C [TRUE]
+
+null_subst :: Subst
+null_subst = []
+
+init_typo :: Typo
+init_typo = []

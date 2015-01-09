@@ -5,8 +5,14 @@
 
 module Luna.Typechecker.StageTypecheckerState (
     StageTypecheckerState(..),
+    StageTypechecker(..),
+    StageTypecheckerPass,
+    StageTypecheckerCtx,
+    StageTypecheckerTraversal,
+    StageTypecheckerDefaultTraversal,
     str, typo, nextTVar, subst, constr, sa,
-    prettyState
+    prettyState,
+    report_error
   ) where
 
 
@@ -19,6 +25,7 @@ import            Luna.Pass                         (PassMonad, PassCtx, Pass(Pa
 import            Luna.Data.StructInfo              (StructInfo)
 import            Luna.ASTNew.Enum                  (Enumerated)
 import qualified  Luna.ASTNew.Traversals            as AST
+import qualified  Luna.ASTNew.Pat                   as Pat
 
 import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo)
 import            Luna.Typechecker.Debug.HumanName  (HumanName(humanName))
@@ -35,6 +42,20 @@ data StageTypecheckerState
                             , _sa       :: StructInfo
                             }
 makeLenses ''StageTypecheckerState
+
+
+data StageTypechecker = StageTypechecker
+
+type StageTypecheckerPass             m       = PassMonad StageTypecheckerState m
+type StageTypecheckerCtx              lab m a = (HumanName (Pat.Pat lab), Enumerated lab, StageTypecheckerTraversal m a)
+type StageTypecheckerTraversal        m   a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
+type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
+
+
+
+report_error :: (Monad m) =>  String -> a ->  StageTypecheckerPass m a
+report_error msg x = fail $ "LUNA ERROR: " ++ msg
+
 
 
 
