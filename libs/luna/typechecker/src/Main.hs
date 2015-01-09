@@ -25,7 +25,6 @@ import qualified  Luna.Pass2.Transform.Parse.Stage2         as P2Stage2
 import qualified  Luna.Pass2.Transform.SSA                  as P2SSA
 
 import            Control.Monad                             (forM_)
-import            Control.Monad.IO.Class                    (MonadIO, liftIO)
 import            Control.Monad.Trans.Either
 import            Data.List                                 (intercalate)
 import            Data.Text.Lazy                            (pack)
@@ -35,6 +34,7 @@ import            Text.Show.Pretty                          (ppShow)
 
 
 import            Inference                                 as FooInfer
+import            PrettyConsole                             (PrintAttrs(..), colouredPrint, writeFileM)
 
 
 main :: IO ()
@@ -60,70 +60,22 @@ main =  getArgs >>= \case
               ast5             <- Pass.run1_ P2SSA.pass ast4
               --hast             <- Pass.run1_ P2HASTGen.pass ast5
               --hsc              <- Pass.run1_ P2HSC.pass hast
-              writeAST " 1.1. Transform.Parse.Stage1         : ast1"        $ ppShow ast1
-              writeAST " 1.2. Transform.Parse.Stage1         : astinfo1"    $ ppShow astinfo1
-              writeAST " 2.   Analysis.Struct                : sa1"         $ ppShow sa1
-              writeAST " 3.1. Transform.Parse.Stage2         : ast2"        $ ppShow ast2
-              writeAST " 3.2. Transform.Parse.Stage2         : astinfo2"    $ ppShow astinfo2
-              writeAST " 4.1. Transform.Desugar.ImplicitSelf : ast3"        $ ppShow ast3
-              writeAST " 4.2. Transform.Desugar.ImplicitSelf : astinfo3"    $ ppShow astinfo3
-              writeAST " 5.   Pass2.Analysis.Struct          : sa2"         $ ppShow sa2
-              writeAST " 6.   Typechecker                    : constraints" $ ppShow constraints
-              writeAST " 7.   Transform.Hash                 : ast4"        $ ppShow ast4
-              writeAST " 8.   Transform.SSA                  : ast5"        $ ppShow ast5
-              -- writeAST " 9.   Target.HS.HASTGen              : hast"        $ ppShow $ hast
-              -- writeAST "10.   Target.HS.HSC                  : hsc"         $ unpack $ hsc
+              writeFileM " 1.1. Transform.Parse.Stage1         : ast1"        $ ppShow ast1
+              writeFileM " 1.2. Transform.Parse.Stage1         : astinfo1"    $ ppShow astinfo1
+              writeFileM " 2.   Analysis.Struct                : sa1"         $ ppShow sa1
+              writeFileM " 3.1. Transform.Parse.Stage2         : ast2"        $ ppShow ast2
+              writeFileM " 3.2. Transform.Parse.Stage2         : astinfo2"    $ ppShow astinfo2
+              writeFileM " 4.1. Transform.Desugar.ImplicitSelf : ast3"        $ ppShow ast3
+              writeFileM " 4.2. Transform.Desugar.ImplicitSelf : astinfo3"    $ ppShow astinfo3
+              writeFileM " 5.   Pass2.Analysis.Struct          : sa2"         $ ppShow sa2
+              writeFileM " 6.   Typechecker                    : constraints" $ ppShow constraints
+              writeFileM " 7.   Transform.Hash                 : ast4"        $ ppShow ast4
+              writeFileM " 8.   Transform.SSA                  : ast5"        $ ppShow ast5
+              -- writeFileM " 9.   Target.HS.HASTGen              : hast"        $ ppShow $ hast
+              -- writeFileM "10.   Target.HS.HSC                  : hsc"         $ unpack $ hsc
               return  ()
 
             case result of
               Left _   -> [Red, Bold] `colouredPrint` "some error, sorry"
               Right () -> return ()
 
-writeAST :: (MonadIO m) => FilePath -> String -> m ()
-writeAST path str = liftIO $ do
-    writeFile filepath str
-    [Cyan] `colouredPrint` "…writing " ++ show filepath
-  where filepath = "tmp/" ++ path
-
-printer :: (Show a) => String -> a -> IO ()
-printer x y = printer_aux x (show y)
-
-printer_aux :: String -> String -> IO ()
-printer_aux x y = do  [Bold,White] `colouredPrint` "\n-----------------------------------------------------------------------------"
-                      putStr "> "
-                      [Yellow] `colouredPrint` x
-                      [Bold,White] `colouredPrint` "-----------------------------------------------------------------------------\n"
-                      putStrLn y
-
-section :: IO () -> IO ()
-section sec = do  sec
-                  [Bold, White] `colouredPrint` "\n\n#############################################################################\n\n"
-
-infix 4 `colouredPrint`
-colouredPrint :: [PrintAttrs] -> String -> IO ()
-colouredPrint fs x = do
-    putStr $ "\x1b[" ++ fmt ++ "m"
-    putStr x
-    putStrLn "\x1b[0m"
-  where fmt = intercalate ";" (fmap (show.attrtonum) fs)
-
-data PrintAttrs = Black
-                | Red
-                | Green
-                | Yellow
-                | Blue
-                | Magenta
-                | Cyan
-                | White
-                | Bold
-
-attrtonum :: PrintAttrs -> Int
-attrtonum Black   = 30
-attrtonum Red     = 31
-attrtonum Green   = 32
-attrtonum Yellow  = 33
-attrtonum Blue    = 34
-attrtonum Magenta = 35
-attrtonum Cyan    = 36
-attrtonum White   = 37
-attrtonum Bold    = 1
