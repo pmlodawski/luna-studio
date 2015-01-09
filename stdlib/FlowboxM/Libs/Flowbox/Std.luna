@@ -235,8 +235,8 @@ def Image.deleteView name:
 def Image.map f:
     ```liftF2 Image.map #{f} #{self}```
 
-def Image.updateView f viewName:
-    ```liftF3 Image.update #{f} #{viewName} #{self}```
+# def Image.updateView f viewName:
+#     ```liftF3 Image.update #{f} #{viewName} #{self}```
 
 def Image.insertView view:
     ```liftF2 Image.insert #{view} #{self}```
