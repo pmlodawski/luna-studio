@@ -1,5 +1,7 @@
 @AllowOrphans
 
+# ```{-# OPTIONS_GHC -fcontext-stack25 #-}```
+
 import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
@@ -225,14 +227,14 @@ def Image.view name:
 # def Image.colorMatrix matrix:
 #     ```liftF2 colorMatrixLuna #{matrix} #{self}```
 
-def Image.removeChannel viewName channelName:
-    ```liftF3 removeChannelLuna #{viewName} #{channelName} #{self}```
+# def Image.removeChannel viewName channelName:
+#     ```liftF3 removeChannelLuna #{viewName} #{channelName} #{self}```
 
 def Image.getChannel viewName channelName:
     ```liftF3 getChannelLuna #{viewName} #{channelName} #{self}```
 
-def Image.insertChannel viewName channel:
-    ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
+# def Image.insertChannel viewName channel:
+#     ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
 
 def Image.deleteView name:
     ```liftF2 Image.delete #{name} #{self}```
@@ -240,8 +242,8 @@ def Image.deleteView name:
 def Image.map f:
     ```liftF2 Image.map #{f} #{self}```
 
-def Image.updateView f viewName:
-    ```liftF3 Image.update #{f} #{viewName} #{self}```
+# def Image.updateView f viewName:
+#     ```liftF3 Image.update #{f} #{viewName} #{self}```
 
 def Image.insertView view:
     ```liftF2 Image.insert #{view} #{self}```
@@ -331,8 +333,16 @@ def Image.gamma val:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-def Image.colorCorrect saturation contrast gamma gain offset:
-    ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
+def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
+    # ```liftF21 colorCorrectLuna' #{masterSaturation} #{masterContrast} #{masterGamma} #{masterGain} #{masterOffset}
+    #                              #{shadowsSaturation} #{shadowsContrast} #{shadowsGamma} #{shadowsGain} #{shadowsOffset}
+    #                              #{midtonesSaturation} #{midtonesContrast} #{midtonesGamma} #{midtonesGain} #{midtonesOffset}
+    #                              #{highlightsSaturation} #{highlightsContrast} #{highlightsGamma} #{highlightsGain} #{highlightsOffset}
+    #                              #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -607,20 +617,36 @@ def testCC a:
 #
 
 def main:
-    # black = RGBA 0.0 0.0 0.0 1.0
+    black = RGBA 0.0 0.0 0.0 1.0
     white = RGBA 1.0 1.0 1.0 1.0
     # gray  = RGBA 0.5 0.5 0.5 1.0
-    test = RGBA 0.1 0.1 0.1 0.1
     # lena = constant 640 480 gray
-    # lena = load "./test.png"
+    lena = load "./lena.png"
     # grade: blackpoint whitepoint lift gain multiply offset gamma
     # lena = lena.grade test white black white white black white
     # checker = load "./checker.png"
     # lena = lena.merge Plus Adobe checker
     # lena.save "./out.png"
 
-    test = testCC (white, white, white, white, test)
-    test.save "./test.png"
+    # jet = load "./jet.exr"
+    test = constant 512 512 (RGBA 0.045 0.045 0.045 1.0)
+    test.save "./input.png"
+    # test = load "./lena.png"
+    testC1 = (RGBA 0.1 0.1 0.1 1.0)
+    testC2 = (RGBA 2.0 2.0 2.0 1.0)
+    testC3 = (RGBA 3.0 3.0 3.0 1.0)
+    test = test.colorCorrect (white, white, white, white, testC1)
+                             (white, white, white, white, black)
+                             (white, white, white, white, black)
+                             (white, white, white, white, black)
+    # translated = jet.translate (-182) (-60) noImgMask
+    test.save "./out.png"
+    # translated.save "./jet-translated.png"
+    # scaled = translated.scale 1.2 2.0 noImgMask
+    # scaled.save "./jet-scaled.png"
+
+    # test = testCC (white, white, white, white, test)
+    # test.save "./test.png"
 
     # jet = readEXR "./jet.exr"
     # jet.save "./jet.png"

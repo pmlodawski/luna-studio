@@ -51,7 +51,7 @@ defocusSerialize blurSize = do
              $ V.append blue
              $ V.append green
              $ V.append red
-             $ V.empty "lena"
+             $ V.Required $ V.empty "lena"
 
     -- Try to serialize the uncomputed array
     --try1 <- toValue view def
