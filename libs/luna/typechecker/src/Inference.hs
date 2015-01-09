@@ -16,59 +16,57 @@
 
 module Inference where
 
-import            Luna.Pass                     (PassMonad, PassCtx, Pass(Pass))
-import qualified  Luna.ASTNew.Decl              as Decl
-import            Luna.ASTNew.Decl              (LDecl)
-import qualified  Luna.ASTNew.Enum              as Enum
-import            Luna.ASTNew.Enum              (Enumerated)
-import qualified  Luna.ASTNew.Expr              as Expr
-import            Luna.ASTNew.Expr              (LExpr)
-import qualified  Luna.ASTNew.Label             as Label
-import            Luna.ASTNew.Label             (Label(Label))
-import qualified  Luna.ASTNew.Module            as Module
-import            Luna.ASTNew.Module            (LModule)
-import qualified  Luna.ASTNew.Name.Pattern      as NamePat
-import qualified  Luna.ASTNew.Pat               as Pat
-import qualified  Luna.ASTNew.Traversals        as AST
-import qualified  Luna.Data.StructInfo          as SI
-import            Luna.Data.StructInfo          (StructInfo)
+import            Luna.Pass                               (PassMonad, PassCtx, Pass(Pass))
+import qualified  Luna.ASTNew.Decl                        as Decl
+import            Luna.ASTNew.Decl                        (LDecl)
+import qualified  Luna.ASTNew.Enum                        as Enum
+import            Luna.ASTNew.Enum                        (Enumerated)
+import qualified  Luna.ASTNew.Expr                        as Expr
+import            Luna.ASTNew.Expr                        (LExpr)
+import qualified  Luna.ASTNew.Label                       as Label
+import            Luna.ASTNew.Label                       (Label(Label))
+import qualified  Luna.ASTNew.Module                      as Module
+import            Luna.ASTNew.Module                      (LModule)
+import qualified  Luna.ASTNew.Name.Pattern                as NamePat
+import qualified  Luna.ASTNew.Pat                         as Pat
+import qualified  Luna.ASTNew.Traversals                  as AST
+import qualified  Luna.Data.StructInfo                    as SI
+import            Luna.Data.StructInfo                    (StructInfo)
 
 import            Control.Applicative
-import            Control.Lens                  hiding (without)
+import            Control.Lens                            hiding (without)
 import            Control.Monad.State
-import            Data.List                     (intercalate)
-import            Data.Text.Lazy                (unpack)
-import qualified  Text.PrettyPrint              as PP
-import            Text.PrettyPrint              (($+$),(<+>), (<>))
+import            Data.List                               (intercalate)
+import            Data.Text.Lazy                          (unpack)
+import qualified  Text.PrettyPrint                        as PP
+import            Text.PrettyPrint                        (($+$),(<+>), (<>))
 
-import            HumanName                     (HumanName(humanName))
+import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Solver
 import            Luna.Typechecker.Data
-import            Luna.Typechecker.StageTypecheckerState
+import            Luna.Typechecker.StageTypecheckerState  
+
+
+data StageTypechecker = StageTypechecker
+
+
+type StageTypecheckerPass             m       = PassMonad StageTypecheckerState m
+type StageTypecheckerCtx              lab m a = (HumanName (Pat.Pat lab), Enumerated lab, StageTypecheckerTraversal m a)
+type StageTypecheckerTraversal        m   a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
+type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
 
 
 
+pushString :: (Monad m) => String -> StageTypecheckerPass m ()
+pushString s = str %= (s:)
 
-
-
-
-
-
-    
-
-
-
-
---instance Monoid StageTypecheckerState where
---  mempty        = StageTypecheckerState { _str = []                  , _typo     = [] , _nextTVar = 0 , _subst    = [] , _constr   = C [TRUE] }
---  mappend s1 s2 = StageTypecheckerState { _str = s1^.str  ++ s2^.str , _typo     = [] , _nextTVar = 0 , _subst    = [] , _constr   = C [TRUE] }
-
-
-
-
-
-
-
+getTargetID :: (Enumerated lab, Monad m) => lab -> StageTypecheckerPass m String
+getTargetID lab = do
+                      target <- sa . SI.alias . at labID & use
+                      case target of
+                        Nothing     -> return $ "|" ++ show labID ++ "⊲"
+                        Just labtID -> return $ "|" ++ show labID ++ "⊳" ++ show labtID
+  where labID = Enum.id lab
 
 
 traverseM :: (StageTypecheckerTraversal m a) => a -> StageTypecheckerPass m a
@@ -150,20 +148,6 @@ tcUnit ast structAnalysis = do
     _ <- defaultTraverseM ast
     str %= reverse
     get
-
-
-pushString :: (MonadState StageTypecheckerState m) => String -> m ()
-pushString s = str %= (s:)
-
-
-getTargetID :: (Enumerated lab, Monad m) => lab -> StageTypecheckerPass m String
-getTargetID lab = do
-                      target <- sa . SI.alias . at labID & use
-                      case target of
-                        Nothing     -> return $ "|" ++ show labID ++ "⊲"
-                        Just labtID -> return $ "|" ++ show labID ++ "⊳" ++ show labtID
-  where labID = Enum.id lab
-
 
 
 

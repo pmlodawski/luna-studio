@@ -1,4 +1,4 @@
-module HumanName (HumanName(humanName)) where
+module Luna.Typechecker.Debug.HumanName (HumanName(humanName)) where
 
 import qualified  Luna.ASTNew.Name          as Name
 import            Luna.ASTNew.Name.Path     (NamePath, base)

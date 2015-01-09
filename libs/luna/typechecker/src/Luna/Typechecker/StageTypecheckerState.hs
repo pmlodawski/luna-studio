@@ -4,31 +4,27 @@
 
 
 module Luna.Typechecker.StageTypecheckerState (
-    StageTypechecker(..),
     StageTypecheckerState(..),
     str, typo, nextTVar, subst, constr, sa,
-    StageTypecheckerPass, StageTypecheckerCtx, StageTypecheckerTraversal, StageTypecheckerDefaultTraversal
+    prettyState
   ) where
 
 
 
-import Control.Lens
-import Text.PrettyPrint
+import            Control.Lens                      (makeLenses)
+import            Control.Monad.IO.Class            (MonadIO, liftIO)
+import            Text.PrettyPrint
 
-import            Luna.Pass                     (PassMonad, PassCtx, Pass(Pass))
-import Luna.Data.StructInfo (StructInfo)
+import            Luna.Pass                         (PassMonad, PassCtx, Pass(Pass))
+import            Luna.Data.StructInfo              (StructInfo)
+import            Luna.ASTNew.Enum                  (Enumerated)
+import qualified  Luna.ASTNew.Traversals            as AST
 
-import Luna.Typechecker.Data (Constraint, Subst, TVar, Typo)
-import Luna.Typechecker.Debug.PrettyData
-import            HumanName                     (HumanName(humanName))
-import            Luna.ASTNew.Enum              (Enumerated)
-import qualified  Luna.ASTNew.Pat               as Pat
-import qualified  Luna.ASTNew.Traversals        as AST
-import Luna.Typechecker.Debug.PrettyData
-
+import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo)
+import            Luna.Typechecker.Debug.HumanName  (HumanName(humanName))
+import            Luna.Typechecker.Debug.PrettyData (prettyConstr, prettyNullable, prettySubst, prettyTypo)
 
 
-data StageTypechecker = StageTypechecker
 
 data StageTypecheckerState
    = StageTypecheckerState  { _str      :: [String]
@@ -38,19 +34,11 @@ data StageTypecheckerState
                             , _constr   :: Constraint
                             , _sa       :: StructInfo
                             }
-
 makeLenses ''StageTypecheckerState
-
-type StageTypecheckerPass             m       = PassMonad StageTypecheckerState m
-type StageTypecheckerCtx              lab m a = (HumanName (Pat.Pat lab), Enumerated lab, StageTypecheckerTraversal m a)
-type StageTypecheckerTraversal        m   a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
-type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
 
 
 
 instance Show StageTypecheckerState where show = render . prettyState
-
-
 
 prettyState :: StageTypecheckerState -> Doc
 prettyState StageTypecheckerState{..} = str_field
