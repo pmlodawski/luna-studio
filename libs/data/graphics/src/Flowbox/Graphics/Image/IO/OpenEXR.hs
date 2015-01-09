@@ -66,7 +66,7 @@ convertToLunaName [name] = "rgba." ++ [toLower name]
 convertToLunaName name   = name
 
 makeView :: String -> [Channel] -> View
-makeView name channels = foldr View.append (View.empty name) channels
+makeView name channels = foldr View.append (View.Required $ View.empty name) channels
 
 makeImage :: [View] -> Maybe Image
 makeImage (x:xs) = Just $ foldr Image.insert (Image.singleton x) xs

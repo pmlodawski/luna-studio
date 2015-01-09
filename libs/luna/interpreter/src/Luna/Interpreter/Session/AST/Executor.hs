@@ -68,7 +68,6 @@ processMain_ = do
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
-    Cache.dumpAll
     Debug.dumpBindings
 
 
@@ -159,6 +158,7 @@ execute callDataPath stringExpr varNames = do
             Just bound -> do
                 logger debug "processing affected node - result rebound"
                 Cache.setRecentVarName bound callPointPath
+                Value.reportIfVisible callPointPath
                 Invalidate.markSuccessors callDataPath CacheStatus.Affected
 
     case status of

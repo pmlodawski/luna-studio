@@ -23,13 +23,13 @@ import qualified Data.Array.Accelerate.Array.Sugar as A
 import           Data.Array.Accelerate.IO
 import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
-import           Data.Map.Lazy
+import           Data.Set
 
 import           Flowbox.Data.Mode                    (Mode)
 import           Flowbox.Data.Serialization           (Serializable (..), mkValue)
-import qualified Flowbox.Graphics.Image.Channel       as I
+import qualified Flowbox.Graphics.Image.Channel       as Chan
 import qualified Flowbox.Graphics.Image.Image         as Img
-import qualified Flowbox.Graphics.Image.View          as I
+import qualified Flowbox.Graphics.Image.View          as V
 import           Flowbox.Graphics.Shader.Sampler      (Sampler, monosampler)
 import qualified Flowbox.Math.Matrix                  as M
 import qualified Generated.Proto.Data.MatrixData      as MatrixData
@@ -81,18 +81,18 @@ instance ( ByteStrings (A.EltRepr a) ~ ((), ByteString)
 
     compute a _ = M.compute serializationBackend a
 
-serializeChanFromView :: I.View -> String -> Mode -> IO (Maybe MatrixData.MatrixData)
-serializeChanFromView v x mode = case join . hush . I.get v $ x of
+serializeChanFromView :: V.View -> String -> Mode -> IO (Maybe MatrixData.MatrixData)
+serializeChanFromView v x mode = case join . hush . V.get v $ x of
     Just c -> serializeChan c mode
     Nothing -> return Nothing
     where serializeChan chan m = case chan of
-              I.ChannelFloat     _ (I.asMatrix -> I.MatrixData mat) -> serialize mat m
-              I.ChannelInt       _ (I.asMatrix -> I.MatrixData mat) -> serialize mat m
-              I.ChannelBit       _ (I.asMatrix -> I.MatrixData mat) -> serialize mat m
+              Chan.ChannelFloat     _ (Chan.asMatrix -> Chan.MatrixData mat) -> serialize mat m
+              Chan.ChannelInt       _ (Chan.asMatrix -> Chan.MatrixData mat) -> serialize mat m
+              Chan.ChannelBit       _ (Chan.asMatrix -> Chan.MatrixData mat) -> serialize mat m
               --gen@I.ChannelShader{}                               -> serializeChan (I.compute serializationBackend defaultSampler gen) mode
               --INFO[KM]: the above line is probably obsolete since serialize mat will serialize the matrix, although it might be necessary to update some `compute` functions to handle the computation of the Shaders
 
-instance Serializable I.View ViewData.ViewData where
+instance Serializable V.View ViewData.ViewData where
     serialize v mode = do
         red   <- serializeChanFromView v "rgba.r" mode
         green <- serializeChanFromView v "rgba.g" mode
@@ -101,9 +101,9 @@ instance Serializable I.View ViewData.ViewData where
         return $ liftM4 ViewData.ViewData red green blue (Just alpha)
 
     toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
-    compute a _    = I.map (I.compute serializationBackend defaultSampler) a
+    compute a _    = V.map (Chan.compute serializationBackend defaultSampler) a
 
 instance Serializable Img.Image ViewData.ViewData where
-    serialize (Img.Image views _) = serialize (snd $ findMin views)
+    serialize (Img.Image views) = serialize $ findMin views
     toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
-    compute a _    = Img.map (I.map $ I.compute serializationBackend defaultSampler) a
+    compute a _    = Img.map (V.map $ Chan.compute serializationBackend defaultSampler) a

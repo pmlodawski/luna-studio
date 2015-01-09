@@ -193,6 +193,10 @@ main1 = do
         Cache.dumpAll
         putStrLn "========= running ========3="
         Executor.processMain_
+        putStrLn "--------- 3"
+        Env.setLibManager libManager
+        Invalidate.modifyNode libID 92
+        Executor.processMain_
         putStrLn "========= finished =======4="
         Cache.dumpAll
 
@@ -284,6 +288,6 @@ showSrc src = ">>> file '" ++ intercalate "/" (src ^. Source.path) ++ "':\n\n"
              ++ hsShow (src ^. Source.code)
 
 main :: IO ()
-main = main4
+main = main1
 
 --serialize parameters type
