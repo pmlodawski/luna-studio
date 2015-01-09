@@ -1,6 +1,0 @@
-def + a b:
-  xyz = b
-  xyz
-
-def bla f a:
-  f a

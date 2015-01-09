@@ -1,6 +1,6 @@
 module Luna.Typechecker.Debug.ConsoleColours (
     PrintAttrs(..),
-    colouredPrint, writeFileM,
+    colouredPrint, writeFileM
   ) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)

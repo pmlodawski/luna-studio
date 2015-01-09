@@ -6,14 +6,6 @@
 -- *------------------------------------------------
 
 
-module Solver where
-
-
-import Control.Applicative
-import Control.Monad
-
-import Data.Functor.Identity
-
-
-
+module Luna.Typechecker.Solver (
+  ) where
 

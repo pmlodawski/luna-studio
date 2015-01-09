@@ -33,9 +33,8 @@ import            System.Environment                        (getArgs)
 import            Text.Show.Pretty                          (ppShow)
 
 
-import            Inference                                 as FooInfer
-import            Luna.Typechecker.Debug.PrettyData
-import            Luna.Typechecker.Debug.ConsoleColours
+import qualified  Luna.Typechecker.Inference                as PTyChk
+import            Luna.Typechecker.Debug.ConsoleColours     (PrintAttrs(..),colouredPrint,writeFileM)
 
 
 main :: IO ()
@@ -56,7 +55,7 @@ main =  getArgs >>= \case
               (ast2, astinfo2) <- Pass.run3_ P2Stage2.pass (Namespace [] sa1) astinfo1 ast1
               (ast3, astinfo3) <- Pass.run2_ P2ImplSelf.pass astinfo2 ast2
               sa2              <- Pass.run1_ P2SA.pass ast3
-              constraints      <- Pass.run2_ FooInfer.tcpass ast3 sa2
+              constraints      <- Pass.run2_ PTyChk.tcpass ast3 sa2
               ast4             <- Pass.run1_ P2Hash.pass ast3
               ast5             <- Pass.run1_ P2SSA.pass ast4
               --hast             <- Pass.run1_ P2HASTGen.pass ast5
