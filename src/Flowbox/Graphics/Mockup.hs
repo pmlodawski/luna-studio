@@ -193,7 +193,7 @@ saturateLuna (fmap variable -> Color.RGBA saturationR saturationG saturationB sa
           gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
           bSaturated = M.map (\(A.unlift -> Color.RGB _ _ b) -> b) rgbBsaturated
 
-          Just view = lookup "rgba" img
+          Right view = lookup "rgba" img
 
           view' = insertChannelFloats view [
                     ("rgba.r", rSaturated)
@@ -201,7 +201,7 @@ saturateLuna (fmap variable -> Color.RGBA saturationR saturationG saturationB sa
                   , ("rgba.b", bSaturated)
                   ]
 
-          saturated = Image.update (const $ Just view') "rgba" img
+          saturated = Image.insert view' img
 
 posterizeLuna :: Double -> Image -> Image
 posterizeLuna (variable -> colors) = onEachValue $ posterize colors
@@ -209,7 +209,7 @@ posterizeLuna (variable -> colors) = onEachValue $ posterize colors
 loadImageLuna :: FilePath -> IO Image
 loadImageLuna path = do
     (r, g, b, a) <- testLoadRGBA path
-    let view = insertChannelFloats (View.empty "rgba") [
+    let view = insertChannelFloats (View.Required $ View.empty "rgba") [
                    ("rgba.r", r)
                  , ("rgba.g", g)
                  , ("rgba.b", b)
@@ -244,7 +244,7 @@ onEachValue f img = res
 onEachRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image -> Image
 onEachRGB f img = img'
     where rgb = unsafeGetRGB img
-          Just view = lookup "rgba" img
+          Right view = lookup "rgba" img
           rgb' = M.map f rgb
 
           unzipRGB = M.unzip3 . M.map (\(A.unlift -> Color.RGB x y z) -> A.lift (x, y, z))
@@ -257,17 +257,17 @@ onEachRGB f img = img'
                     , ("rgba.b", b')
                   ]
 
-          img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.insert view' img
 
 keyer' :: (A.Exp (Color.RGB Double) -> A.Exp Double) -> Image -> Image
 keyer' f img = img'
     where rgb = unsafeGetRGB img
-          Just view = lookup "rgba" img
+          Right view = lookup "rgba" img
           alpha = M.map f rgb
 
           view' = insertChannelFloats view [("rgba.a", alpha)]
 
-          img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.insert view' img
 
 unsafeGetRGB :: Image -> M.Matrix2 (Color.RGB Double)
 unsafeGetRGB img = rgb
@@ -277,7 +277,7 @@ unsafeGetRGB img = rgb
 
 unsafeGetChannels :: Image -> (M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double)
 unsafeGetChannels img = (r, g, b, a)
-    where Just view = lookup "rgba" img
+    where Right view = lookup "rgba" img
           Right (Just (ChannelFloat _ (asMatrix -> MatrixData r))) = View.get view "rgba.r"
           Right (Just (ChannelFloat _ (asMatrix -> MatrixData g))) = View.get view "rgba.g"
           Right (Just (ChannelFloat _ (asMatrix -> MatrixData b))) = View.get view "rgba.b"
@@ -294,10 +294,10 @@ differenceKeyer' f background foreground = img'
 
           alpha = M.map (A.uncurry f) $ M.zip backgroundRGB foregroundRGB
 
-          Just view = lookup "rgba" foreground
+          Right view = lookup "rgba" foreground
           view' = insertChannelFloats view [("rgba.a", alpha)]
 
-          img' = Image.update (const $ Just view') "rgba" foreground
+          img' = Image.insert view' foreground
 
 differenceKeyerLuna :: Double -> Double -> Image -> Image -> Image
 differenceKeyerLuna (variable -> offset) (variable -> gain) background foreground = img'
@@ -380,7 +380,7 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
 channelToImageRGBA :: Matrix2 Double -> Image
 channelToImageRGBA m = image
     where image = singleton view
-          view = insertChannelFloats (View.empty "rgba") [
+          view = insertChannelFloats (Required $ View.empty "rgba") [
                      ("rgba.r", m)
                    , ("rgba.g", m)
                    , ("rgba.b", m)
@@ -447,7 +447,7 @@ translateLuna (variable -> x) (variable -> y) = onEachMatrix process process pro
           handle pt = case mask of
               Nothing      -> v
               Just (VPS m) -> let
-                      Just rgba = Image.lookup "rgba" m
+                      Right rgba = Image.lookup "rgba" m
                       unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
                       m' = unpackMat $ View.get rgba "rgba.r"
                       Shader _ str = gen m'
@@ -480,7 +480,7 @@ scaleLuna centered (variable -> x) (variable -> y) = onEachMatrix process proces
           handle pt = case mask of
               Nothing      -> v
               Just (VPS m) -> let
-                      Just rgba = Image.lookup "rgba" m
+                      Right rgba = Image.lookup "rgba" m
                       unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
                       m' = unpackMat $ View.get rgba "rgba.r"
                       Shader _ str = gen m'
@@ -610,21 +610,21 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
                               , ("rgba.b", rasterizer $ b)
                               , ("rgba.a", rasterizer $ a)
                             ]
-                    img' = Image.update (const $ Just view') "rgba" img1
-          Just view = lookup "rgba" img1
+                    img' = Image.insert view' img1
+          Right view = lookup "rgba" img1
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (fromMatrix (A.Constant 0))
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (fromMatrix (A.Constant 0))
 
 onShader f img = img'
     where (r, g, b, a) = unsafeGetChannels img & over each (rasterizer . f . fromMatrix (A.Constant 0))
-          Just view = lookup "rgba" img
+          Right view = lookup "rgba" img
           view' = insertChannelFloats view [
                       ("rgba.r", r)
                     , ("rgba.g", g)
                     , ("rgba.b", b)
                     , ("rgba.a", a)
                   ]
-          img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.insert view' img
 
 erodeLuna :: Int -> Image -> Image
 erodeLuna (variable -> size) = onShader $ erode $ pure size
@@ -651,14 +651,14 @@ withAlpha f img = img'
           g' = M.zipWith f g a
           b' = M.zipWith f b a
 
-          Just view = lookup "rgba" img
+          Right view = lookup "rgba" img
           view' = insertChannelFloats view [
                       ("rgba.r", r')
                     , ("rgba.g", g')
                     , ("rgba.b", b')
                     , ("rgba.a", a)
                   ]
-          img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.insert view' img
 
 invertLuna :: Image -> Image
 invertLuna = onEach invert invert invert id
@@ -722,7 +722,7 @@ histEqLuna (variable -> bins) img = img'
           rgb' = M.map Color.liftedConvertColor hsv'
           (r, g, b) = M.unzip3 $ M.map (\(A.unlift -> Color.RGB r g b) -> A.lift (r, g, b)) rgb'
 
-          Just view = lookup "rgba" img
+          Right view = lookup "rgba" img
 
           view' = insertChannelFloats view [
                       ("rgba.r", r)
@@ -730,7 +730,7 @@ histEqLuna (variable -> bins) img = img'
                     , ("rgba.b", b)
                   ]
 
-          img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.insert view' img
 
 deriving instance Functor A.Boundary
 
@@ -742,13 +742,13 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
     g' <- mutableProcess run ditherMethod g
     b' <- mutableProcess run ditherMethod b
 
-    let Just view = lookup "rgba" img
+    let Right view = lookup "rgba" img
         view' = insertChannelFloats view [
                       ("rgba.r", r')
                     , ("rgba.g", g')
                     , ("rgba.b", b')
                   ]
-        img' = Image.update (const $ Just view') "rgba" img
+        img' = Image.insert view' img
 
     return img'
 
@@ -809,7 +809,7 @@ colorCorrectLuna' (fmap variable -> Color.RGBA saturationR saturationG saturatio
           gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
           bSaturated = M.map (\(A.unlift -> Color.RGB _ _ b) -> b) rgbBsaturated
 
-          Just view = lookup "rgba" img
+          Right view = lookup "rgba" img
 
           view' = insertChannelFloats view [
                     ("rgba.r", rSaturated)
@@ -817,7 +817,7 @@ colorCorrectLuna' (fmap variable -> Color.RGBA saturationR saturationG saturatio
                   , ("rgba.b", bSaturated)
                   ]
 
-          saturated = Image.update (const $ Just view') "rgba" img
+          saturated = Image.insert view' img
 
 onImageRGBA :: (A.Exp Double -> A.Exp Double)
             -> (A.Exp Double -> A.Exp Double)
@@ -832,14 +832,14 @@ onImageRGBA fr fg fb fa img = img'
           b' = M.map fb b
           a' = M.map fa a
 
-          Just view = lookup "rgba" img
+          Right view = lookup "rgba" img
           view' = insertChannelFloats view [
                       ("rgba.r", r')
                     , ("rgba.g", g')
                     , ("rgba.b", b')
                     , ("rgba.a", a')
                     ]
-          img' = Image.update (const $ Just view') "rgba" img
+          img' = Image.insert view' img
 
 liftF6 f t1 t2 t3 t4 t5 t6 = do
     t1' <- t1
@@ -920,8 +920,8 @@ edgeDetectLuna edgeOperator img = img'
     where alphas = onShader (Stencil.stencil (+) (unsafeFromMatrix edgeOperator) (+) 0) img
           (r, g, b, _) = unsafeGetChannels alphas
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
-          Just view = lookup "rgba" img
-          img' = Image.update (const $ Just $ insertChannelFloats view [("rgba.a", alphaSum)]) "rgba" img
+          Right view = lookup "rgba" img
+          img' = Image.insert (insertChannelFloats view [("rgba.a", alphaSum)]) img
 
 gammaToLinearLuna :: Gamma.Companding a (A.Exp Double) => a -> Image -> Image
 gammaToLinearLuna companding = onEachValue $ (Gamma.toLinear companding :: A.Exp Double -> A.Exp Double)
@@ -995,20 +995,22 @@ multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap vari
           multisample channel                     = channel
 
 -- FIXME[MM]: will remove the whole view if removing fails - it should somehow propagate the error
-removeChannelLuna :: String -> String -> Image -> Image
-removeChannelLuna viewName channelName = Image.update f viewName
-    where f view = case View.remove channelName view of
-                  Left _ -> Nothing
-                  Right v -> Just v
+-- FIXME[KM][iup]: when fixing, we also have take into consideration the change to the Image.update function
+--removeChannelLuna :: String -> String -> Image -> Image
+--removeChannelLuna viewName channelName = Image.update f viewName
+--    where f view = case View.remove channelName view of
+--                  Left _ -> Nothing
+--                  Right v -> Just v
 
 getChannelLuna :: String -> String -> Image -> Image.Result (Maybe Channel)
 getChannelLuna viewName channelName img = case Image.lookup viewName img of
-    Just view -> View.get view channelName
+    Right view -> View.get view channelName
     _         -> Left $ Image.ViewLookupError viewName
 
-insertChannelLuna :: String -> Channel -> Image -> Image
-insertChannelLuna viewName chan = Image.update f viewName
-    where f = Just . View.append chan
+-- FIXME[KM]: [iup]
+--insertChannelLuna :: String -> Channel -> Image -> Image
+--insertChannelLuna viewName chan = Image.update f viewName
+--    where f = Just . View.append chan
 
 type ControlPoint2 a = ( VPS (Point2 a)
                        , VPS (Maybe (Point2 a))
@@ -1076,7 +1078,7 @@ onEach :: (A.Exp Double -> A.Exp Double)
        -> Image
        -> Image
 onEach fr fg fb fa img = Image.singleton view
-    where Just rgba = Image.lookup "rgba" img
+    where Right rgba = Image.lookup "rgba" img
           unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
           r = unpackMat $ View.get rgba "rgba.r"
           g = unpackMat $ View.get rgba "rgba.g"
@@ -1089,7 +1091,7 @@ onEach fr fg fb fa img = Image.singleton view
                $ View.append (makeChan "rgba.b" fb b)
                $ View.append (makeChan "rgba.a" fa a)
                -- $ View.append a
-               $ View.empty "rgba"
+               $ View.Required $ View.empty "rgba"
 
 onEachMatrix :: (Matrix2 Double -> Matrix2 Double)
              -> (Matrix2 Double -> Matrix2 Double)
@@ -1098,7 +1100,7 @@ onEachMatrix :: (Matrix2 Double -> Matrix2 Double)
              -> Image
              -> Image
 onEachMatrix fr fg fb fa img = Image.singleton view
-    where Just rgba = Image.lookup "rgba" img
+    where Right rgba = Image.lookup "rgba" img
           unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
           r = unpackMat $ View.get rgba "rgba.r"
           g = unpackMat $ View.get rgba "rgba.g"
@@ -1111,7 +1113,7 @@ onEachMatrix fr fg fb fa img = Image.singleton view
                $ View.append (makeChan "rgba.b" fb b)
                $ View.append (makeChan "rgba.a" fa a)
                -- $ View.append a
-               $ View.empty "rgba"
+               $ View.Required $ View.empty "rgba"
 
 readFromEXRLuna :: FilePath -> IO Image
 readFromEXRLuna path = fmap fromJust $ readFromEXR path

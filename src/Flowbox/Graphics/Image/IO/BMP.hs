@@ -36,7 +36,7 @@ makeRGBA array = image
                            View.append (Channel.ChannelFloat "g" g) $
                            View.append (Channel.ChannelFloat "b" b) $
                            View.append (Channel.ChannelFloat "a" a) $
-                           View.empty "rgba"
+                           View.Required $ View.empty "rgba"
           image          = Image.singleton finalView
 
 

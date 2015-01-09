@@ -23,7 +23,7 @@ import qualified Data.Array.Accelerate.Array.Sugar as A
 import           Data.Array.Accelerate.IO
 import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
-import           Data.Map.Lazy
+import           Data.Set
 
 import           Flowbox.Data.Mode                    (Mode)
 import           Flowbox.Data.Serialization           (Serializable (..), mkValue)
@@ -104,6 +104,6 @@ instance Serializable V.View ViewData.ViewData where
     compute a _    = V.map (Chan.compute serializationBackend defaultSampler) a
 
 instance Serializable Img.Image ViewData.ViewData where
-    serialize (Img.Image views _) = serialize (snd $ findMin views)
+    serialize (Img.Image views) = serialize $ findMin views
     toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
     compute a _    = Img.map (V.map $ Chan.compute serializationBackend defaultSampler) a
