@@ -98,9 +98,3 @@ deleteNode projectID libraryID nodeID =
         Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
         Manager.cleanIfNeeded
         GPUMemory.performGC
-
-
---insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context (SessionST mm) ()
---insertDependentNode projectID libraryID nodeID depID = do
---    let callPoint = CallPoint (decodeP libraryID) (decodeP nodeID)
---    interpreterDo projectID $ Env.insertDependentNode callPoint $ decodeP depID
