@@ -111,20 +111,17 @@ get varName callPointPath = do
             let distinctModes = MultiSet.distinctElems modes
                 valCache = cinfo ^. CacheInfo.values
             (modValues, valCache') <- foldM (computeLookupValue varName) ([], valCache) distinctModes
-            --newValuesmapM (computeValue varName) distinctModes
             Env.cachedInsert callPointPath $ CacheInfo.values .~ valCache' $ cinfo
             return modValues
 
 
 computeLookupValue :: VarName -> ([ModeValue], CompValueMap) -> Mode -> Session mm ([ModeValue], CompValueMap)
 computeLookupValue varName (modValues, compValMap) mode = do
-    logger trace $ "Cached values: " ++ show (Map.size compValMap)
+    logger trace $ "Cached values count: " ++ show (Map.size compValMap)
     case Map.lookup (varName, mode) compValMap of
         Nothing -> do val <- computeValue varName mode
                       return (ModeValue mode (Just val):modValues, Map.insert (varName, mode) val compValMap)
         justVal ->    return (ModeValue mode justVal:modValues, compValMap)
-    --val <- computeValue varName mode
-    --return (ModeValue mode (Just val):modValues, Map.insert (varName, mode) val compValMap)
 
 
 computeValue :: VarName -> Mode -> Session mm Value

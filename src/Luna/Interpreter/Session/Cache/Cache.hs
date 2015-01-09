@@ -74,7 +74,7 @@ status = onCacheInfo
 
 
 setStatus :: CacheStatus -> CallPointPath -> Session mm ()
-setStatus newStatus = modifyCacheInfo (CacheInfo.status .~ newStatus)
+setStatus newStatus = modifyCacheInfo $ CacheInfo.status .~ newStatus
 
 
 dependency :: [VarName] -> CallPointPath -> Session mm (Maybe VarName)
