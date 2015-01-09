@@ -35,6 +35,3 @@ data TypeScheme = Mono Type
 type Subst = [(TVar, Type)]
 
 type Typo = [(Var,TypeScheme)]
-
-
-
