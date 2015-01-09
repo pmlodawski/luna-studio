@@ -59,7 +59,8 @@ Library
                   transformers                     ,
                   vector                           ,
                   vector-space                     ,
-                  luna-target-ghchs
+                  luna-target-ghchs                ,
+                  Rasterific
 
 -- == test generator ==
 

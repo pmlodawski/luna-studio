@@ -14,6 +14,8 @@ module Flowbox.Geom2D.Rasterizer (
     Point2(..)
 ) where
 
+import           Codec.Picture                   ( PixelRGBA8( .. ))
+import qualified Codec.Picture                   as Juicy
 import           Data.Array.Accelerate           ((&&*), (==*), (>*), (||*))
 import qualified Data.Array.Accelerate           as A
 import           Data.Array.Accelerate.IO
@@ -24,6 +26,8 @@ import           Diagrams.Backend.Cairo
 import           Diagrams.Backend.Cairo.Internal
 import           Diagrams.Prelude                hiding (Path)
 import           Diagrams.Segment
+import qualified Graphics.Rasterific                            as Rasta
+import qualified Graphics.Rasterific.Texture                    as RastaTex
 import           Graphics.Rendering.Cairo        hiding (Path, translate)
 import           System.IO.Unsafe
 
@@ -51,38 +55,41 @@ import           Math.Coordinate.Cartesian                       (Point2 (..))
 f2d :: Real a => a -> Double
 f2d = fromRational . toRational
 
+f2f :: Real a => a -> Float
+f2f = fromRational . toRational
+
 -- TODO[1]: revert to this version when the wrapping model for handling GUI's use-case gets implemented
 --unpackP :: Num a => Maybe (Point2 a) -> Point2 a
 --unpackP = fromMaybe (Point2 0 0)
 unpackP :: Fractional a => Point2 a -> Point2 a -> Maybe (Point2 a) -> Point2 a
 unpackP a b = fromMaybe ((b - a)/3)
 
--- TODO[1]
---makeSegments :: Real a => Bool -> [ControlPoint a] -> [Segment Closed R2]
---makeSegments closed points = combine points
---    where combine []  = []
---          combine [a'] = if not closed then [] else let
---                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
---                  ControlPoint (Point2 dx dy) c' _ = f2d' $ head points
---                  Point2 bx by = unpackP b'
---                  Point2 cx cy = unpackP c'
---                  a = r2 (ax , ay)
---                  b = r2 (bx , by)
---                  c = r2 (cx , cy)
---                  d = r2 (dx , dy)
---              in [bezier3 b (d ^+^ c ^-^ a) (d ^-^ a)]
---          combine (a':d':xs) = let
---                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
---                  ControlPoint (Point2 dx dy) c' _ = f2d' d'
---                  Point2 bx by = unpackP b'
---                  Point2 cx cy = unpackP c'
---                  a = r2 (ax , ay)
---                  b = r2 (bx , by)
---                  c = r2 (cx , cy)
---                  d = r2 (dx , dy)
---              in bezier3 b (d ^+^ c ^-^ a) (d ^-^ a) : combine (d':xs)
---          combine _ = error "Flowbox.Geom2D.Rasterizer.makeSegments: unsupported ammount of points"
---          f2d' = fmap f2d
+
+makeSegmentsNoDia :: (Real a, Fractional a) => Bool -> [ControlPoint a] -> [Rasta.CubicBezier]
+makeSegmentsNoDia closed points = combine points
+    where combine []   = []
+          combine [a'] = if not closed then [] else let
+                  ControlPoint pa@(Point2 ax ay) _ b' = f2f' a'
+                  ControlPoint pd@(Point2 dx dy) c' _ = f2f' $ head points
+                  Point2 bx by = unpackP pa pd b'
+                  Point2 cx cy = unpackP pd pa c'
+                  a = Rasta.V2 ax ay 
+                  b = Rasta.V2 bx by
+                  c = Rasta.V2 cx cy
+                  d = Rasta.V2 dx dy
+              in [Rasta.CubicBezier a b c d]
+          combine (a':d':xs) = let
+                  ControlPoint pa@(Point2 ax ay) _ b' = f2f' a'
+                  ControlPoint pd@(Point2 dx dy) c' _ = f2f' d'
+                  Point2 bx by = unpackP pa pd b'
+                  Point2 cx cy = unpackP pd pa c'
+                  a = Rasta.V2 ax ay
+                  b = Rasta.V2 bx by
+                  c = Rasta.V2 cx cy
+                  d = Rasta.V2 dx dy
+              in Rasta.CubicBezier a b c d : combine (d':xs)
+          f2f' = fmap f2f
+
 makeSegments :: (Real a, Fractional a) => Bool -> [ControlPoint a] -> [Segment Closed R2]
 makeSegments closed points = combine points
     where combine []  = []
@@ -138,6 +145,14 @@ makeCubics (Path closed points) = combine points
                   c = unpackP d a c'
               in CubicBezier a (a+b) (d+c) d : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer.makeCubics: unsupported ammount of points"
+
+pathToRGBA32NoDia :: (Real a, Fractional a) => Int -> Int -> Path a -> A.Array DIM2 RGBA32
+pathToRGBA32NoDia w h (Path closed points) = imgToRGBA32 rasterize
+    where rasterize = Rasta.renderDrawing w h (PixelRGBA8 0 0 0 255) $
+                      Rasta.withTexture (RastaTex.uniformTexture (PixelRGBA8 255 255 255 255)) $ do
+                          let cubics = makeSegmentsNoDia closed points
+                          Rasta.stroke 4 Rasta.JoinRound (Rasta.CapRound, Rasta.CapRound) $ fmap Rasta.CubicBezierPrim cubics
+          imgToRGBA32 (Juicy.Image width height vec) = error ""
 
 
 pathToRGBA32 :: (Real a, Fractional a) => Int -> Int -> Path a -> A.Array DIM2 RGBA32
