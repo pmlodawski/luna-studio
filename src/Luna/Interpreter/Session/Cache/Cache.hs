@@ -114,11 +114,12 @@ put callDataPath predVarNames varName = do
     let updatedStatus = if oldStatus == CacheStatus.NonCacheable
                             then oldStatus
                             else CacheStatus.Ready
-        existingDeps = Maybe.maybe Map.empty (view CacheInfo.dependencies) mcacheInfo
+        existingDeps   = Maybe.maybe def (view CacheInfo.dependencies) mcacheInfo
+        existingValues = Maybe.maybe def (view CacheInfo.values      ) mcacheInfo
         dependencies = Map.insert predVarNames varName existingDeps
         cacheInfo    = CacheInfo (last callDataPath ^. CallData.parentDefID)
                                  (last callDataPath ^. CallData.parentBC)
-                                 updatedStatus varName dependencies
+                                 updatedStatus varName dependencies existingValues
 
     Env.cachedInsert callPointPath cacheInfo
 
