@@ -142,7 +142,7 @@ execute callDataPath stringExpr varNames = do
                 then if boundVarName /= Just varName
                     then do logger debug "processing modified node - result value differs"
                             mapM_ Free.freeVarName boundVarName
-                            Invalidate.markSuccessors callDataPath CacheStatus.Modified
+                            Invalidate.markSuccessors callDataPath CacheStatus.Affected
 
                     else do logger debug "processing modified node - result value differs but is cached"
                             Invalidate.markSuccessors callDataPath CacheStatus.Affected
@@ -159,6 +159,7 @@ execute callDataPath stringExpr varNames = do
             Just bound -> do
                 logger debug "processing affected node - result rebound"
                 Cache.setRecentVarName bound callPointPath
+                Value.reportIfVisible callPointPath
                 Invalidate.markSuccessors callDataPath CacheStatus.Affected
 
     case status of
