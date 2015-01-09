@@ -382,7 +382,9 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
                 liftSession $ do
                     Env.insertDependentNode (CallPoint libraryID nodeID) defID
                     Env.insertDependentNodes (CallPoint libraryID defID) ids
-                    when (Var.isTimeRefNodeExpr defExpr) $
+                    print defExpr
+                    when (Var.isTimeRefNodeExpr defExpr) $ do
+                        print True
                         Env.insertTimeRef (CallPoint libraryID defID)
         CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
 
