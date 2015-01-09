@@ -68,7 +68,6 @@ processMain_ = do
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
-    Cache.dumpAll
     Debug.dumpBindings
 
 
