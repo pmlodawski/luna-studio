@@ -15,7 +15,7 @@ module Flowbox.Graphics.Composition.Color (
     U.bias,
     U.clamp',
     U.clamp,
-    U.gain,
+    --U.gain, its broken!
     U.gamma,
     U.invert,
     U.mix
@@ -39,8 +39,13 @@ offset v = (+v)
 multiply :: (Num a) => a -> a -> a
 multiply v = (*v)
 
-contrast :: (Num a, Fractional a) => a -> a -> a
-contrast v x = (x - 0.5) * v + 0.5
+contrast :: (Num a, Fractional a, Floating a) => a -> a -> a
+contrast v x = ((x/0.18) ** v) * 0.18
+-- [NOTE] Changed so that it works just like in Nuke
+--        Look here: 
+--        https://compositormathematic.wordpress.com/2013/07/06/gamma-contrast/
+--        old version:
+--        contrast v x = (x - 0.5) * v + 0.5 -- that's not how they do it in Nuke
 
 data Colorspace = Linear | Cineon
 

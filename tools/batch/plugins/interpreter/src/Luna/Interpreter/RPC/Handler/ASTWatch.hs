@@ -95,6 +95,7 @@ import           Luna.Interpreter.Session.Data.CallPoint                        
 import qualified Luna.Interpreter.Session.Env                                                                  as Env
 import           Luna.Interpreter.Session.Memory.Manager                                                       (MemoryManager)
 import           Luna.Interpreter.Session.Session                                                              (SessionST)
+import qualified Luna.Interpreter.Session.Var                                                                  as Var
 import qualified Luna.Pass.Analysis.ID.ExtractIDs                                                              as ExtractIDs
 
 
@@ -371,6 +372,8 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
                     Cache.deleteNode libraryID defID
                     mapM_ (Cache.deleteNode libraryID) $ IntSet.toList ids
                     Env.deleteDependentNode (CallPoint libraryID nodeID) defID
+                    when (Var.isTimeRefNodeExpr defExpr) $
+                        Env.deleteTimeRef (CallPoint libraryID defID)
         sync updateNo $ NodeDefaultHandler.set request
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
             Nothing               -> left "ASTWatch.graphNodeDefaultSet"
@@ -379,6 +382,8 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
                 liftSession $ do
                     Env.insertDependentNode (CallPoint libraryID nodeID) defID
                     Env.insertDependentNodes (CallPoint libraryID defID) ids
+                    when (Var.isTimeRefNodeExpr defExpr) $
+                        Env.insertTimeRef (CallPoint libraryID defID)
         CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
 
 

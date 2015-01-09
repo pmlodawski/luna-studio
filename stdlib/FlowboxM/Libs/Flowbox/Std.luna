@@ -326,8 +326,8 @@ def Image.gamma val:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-def Image.colorCorrect saturation contrast gamma gain offset:
-    ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
+# def Image.colorCorrect saturation contrast gamma gain offset:
+#     ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -595,3 +595,8 @@ def View.map f:
 
 def testCC a:
     ```liftF1 testColorCC #{a}```
+
+alias Time=Double
+
+def time:
+    0.0

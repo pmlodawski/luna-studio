@@ -214,7 +214,7 @@ def Image.scale self::Image x::Float y::Float:
 def Image.transform self::Image trans::TransformD:
     ```liftF2 transformLuna #{trans} #{self}```
 
-def Image.crop self::Image rect::RectanleD:
+def Image.crop self::Image rect::RectangleD:
     ```liftF2 cropLuna #{rect} #{self}```
 
 # VIEW
@@ -336,3 +336,6 @@ def Image.gammaFromLinear self::Image gamma::Gamma:
 
 def testCC self::Std a::ColorCC:
     ```liftF1 testColorCC #{a}```
+
+def time self::Std:
+    0.0

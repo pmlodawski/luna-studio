@@ -27,8 +27,7 @@ import           Flowbox.Bus.Data.Message                    (Message)
 import qualified Flowbox.Bus.Data.Message                    as Message
 import           Flowbox.Bus.Data.Prefix                     (Prefix)
 import qualified Flowbox.Bus.Data.Prefix                     as Prefix
-import           Flowbox.Bus.Data.Topic                      (status, update, (/+))
-import           Flowbox.Bus.Data.Topic                      (Topic)
+import           Flowbox.Bus.Data.Topic                      (Topic, status, update, (/+))
 import qualified Flowbox.Bus.Data.Topic                      as Topic
 import           Flowbox.Bus.RPC.HandlerMap                  (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                  as HandlerMap
@@ -82,6 +81,8 @@ handlerMap prefix queueInfo crl callback = HandlerMap.fromList $ Prefix.prefixif
     , (Topic.interpreterValueRequest                       , respond Topic.update   Value.get                    )
     , (Topic.interpreterPingRequest                        , respond Topic.status   Interpreter.ping             )
     , (Topic.interpreterAbortRequest                       , respond Topic.status   Interpreter.abort            )
+    , (Topic.interpreterVarTimeGetRequest                  , respond Topic.status   Interpreter.varTimeGet       )
+    , (Topic.interpreterVarTimeSetRequest                  , respond Topic.update   Interpreter.varTimeSet       )
     , (Topic.interpreterSerializationModeGetRequest        , respond Topic.status   Interpreter.getSerializationMode       )
     , (Topic.interpreterSerializationModeInsertRequest     , respond Topic.update   Interpreter.insertSerializationMode    )
     , (Topic.interpreterSerializationModeDeleteRequest     , respond Topic.update   Interpreter.deleteSerializationMode    )
