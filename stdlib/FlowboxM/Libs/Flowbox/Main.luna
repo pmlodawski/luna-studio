@@ -225,14 +225,14 @@ def Image.view name:
 # def Image.colorMatrix matrix:
 #     ```liftF2 colorMatrixLuna #{matrix} #{self}```
 
-def Image.removeChannel viewName channelName:
-    ```liftF3 removeChannelLuna #{viewName} #{channelName} #{self}```
+# def Image.removeChannel viewName channelName:
+#     ```liftF3 removeChannelLuna #{viewName} #{channelName} #{self}```
 
 def Image.getChannel viewName channelName:
     ```liftF3 getChannelLuna #{viewName} #{channelName} #{self}```
 
-def Image.insertChannel viewName channel:
-    ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
+# def Image.insertChannel viewName channel:
+#     ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
 
 def Image.deleteView name:
     ```liftF2 Image.delete #{name} #{self}```
