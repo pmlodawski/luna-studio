@@ -24,14 +24,11 @@ import qualified  Luna.Pass2.Transform.Parse.Stage1         as P2Stage1
 import qualified  Luna.Pass2.Transform.Parse.Stage2         as P2Stage2
 import qualified  Luna.Pass2.Transform.SSA                  as P2SSA
 
-import            Control.Monad                             (forM_)
 import            Control.Monad.Trans.Either
-import            Data.List                                 (intercalate)
 import            Data.Text.Lazy                            (pack)
 
 import            System.Environment                        (getArgs)
 import            Text.Show.Pretty                          (ppShow)
-
 
 import qualified  Luna.Typechecker.Inference                as PTyChk
 import            Luna.Typechecker.Debug.ConsoleColours     (PrintAttrs(..),colouredPrint,writeFileM)

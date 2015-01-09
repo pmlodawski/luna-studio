@@ -13,8 +13,10 @@ import Luna.Typechecker.Data  (TVar, Var, Fieldlabel, Field, Subst, Typo, Type(.
 
 
 
+prettyComma :: [Doc] -> Doc
 prettyComma = hsep . punctuate (char ',')
 
+prettyNullable :: [Doc] -> Doc
 prettyNullable [] = char '∅'
 prettyNullable xs = foldl ($+$) empty xs
 

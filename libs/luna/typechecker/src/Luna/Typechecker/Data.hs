@@ -44,5 +44,5 @@ true_cons = C [TRUE]
 null_subst :: Subst
 null_subst = []
 
-init_typo :: Typo
+init_typo :: [Typo]
 init_typo = []
