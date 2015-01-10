@@ -43,6 +43,7 @@ import Data.Text.Lazy (unpack)
 import           Flowbox.Text.Show.Hs                                          (hsShow)
 
 import Luna.System.Session as Session
+import qualified Luna.System.Pragma.Store as Pragma
 
 
 header txt = "\n-------- " <> txt <> " --------"
@@ -64,12 +65,14 @@ main = do
             (ast, astinfo) <- Pass.run1_ Stage1.pass src
             ppPrint ast
 
-        --    printHeader "SA"
-        --    sa              <- Pass.run1_ SA.pass ast
-        --    ppPrint sa
+            printHeader "SA"
+            sa              <- Pass.run1_ SA.pass ast
+            ppPrint sa
 
-        --    printHeader "Stage2"
-        --    (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
+            printHeader "Stage2"
+            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
+            ppPrint ast
+            
             
         --    printHeader "ImplSelf"
         --    (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
