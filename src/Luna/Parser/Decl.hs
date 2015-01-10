@@ -45,17 +45,22 @@ importTarget =   body Decl.ImpVar Tok.varOp
 ----- pragmas ------
 
 pragma = do
-    --x <- Pragma.lookupByName "test"
-    Decl.Pragma <$ Tok.pragma <*> pragmaTypes <?> "pragma"
+    Tok.pragma
+    pType <- pragmaTypes
+    name  <- pragmaName
+    Pragma.parseByName name
+    pure $ Decl.Pragma (pType name)
 
-pragmaEnable  = Pragma.Enable  <$ Tok.pragmaEnable  <*> pragmaName
-pragmaDisable = Pragma.Disable <$ Tok.pragmaDisable <*> pragmaName
-pragmaPush    = Pragma.Push    <$ Tok.pragmaPush    <*> pragmaName
-pragmaPop     = Pragma.Pop     <$ Tok.pragmaPop     <*> pragmaName
+pragmaEnable  = Pragma.Enable  <$ Tok.pragmaEnable
+pragmaDisable = Pragma.Disable <$ Tok.pragmaDisable
+pragmaPush    = Pragma.Push    <$ Tok.pragmaPush
+pragmaPop     = Pragma.Pop     <$ Tok.pragmaPop
 
 pragmaTypes = choice [ pragmaEnable, pragmaDisable, pragmaPush, pragmaPop ]
 
-pragmaName = Tok.typeIdent <?> "pragma name"
+pragmaName = do
+    names <- Pragma.pragmaNames
+    foldl (<|>) (fail "Undefined pragma name") $ fmap Tok.symbol names
 
 --switchPragma 
 

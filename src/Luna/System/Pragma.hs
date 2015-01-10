@@ -66,6 +66,7 @@
 -- 
 --     print $ lookup implicitSelf ps
 --     print $ lookup tabSize ps
+--     print $ pragmaNames ps
 -- @
 --
 -- outputs:
@@ -75,6 +76,7 @@
 -- Right (Pragma { _name = "Val"   , _defVal = Just (TabSize 4), _val = TabSize 8 })
 -- Right (Pragma { _name = "Switch", _defVal = Nothing         , _val = Enabled   })
 -- Right (Pragma { _name = "Val"   , _defVal = Just (TabSize 4), _val = TabSize 4 })
+-- ["TabSize","ImplicitSelf"]
 -- @
 ----------------------------------------------------------------------------
 
@@ -160,10 +162,10 @@ class PragmaCons t where
 baseTName :: Typeable a => PragmaDef t a -> String
 baseTName (_::PragmaDef t a) = show $ typeOf (undefined :: a)
 
-pragma :: Typeable t => PragmaDef t a
+pragma :: Typeable a => PragmaDef t a
 pragma = def
 
-pragmaDef :: Typeable t => PragmaVal t a -> PragmaDef t a
+pragmaDef :: Typeable a => PragmaVal t a -> PragmaDef t a
 pragmaDef (a :: PragmaVal t a) = (def :: PragmaDef t a) & defVal .~ Just a :: PragmaDef t a
 
 
@@ -172,8 +174,8 @@ pragmaDef (a :: PragmaVal t a) = (def :: PragmaDef t a) & defVal .~ Just a :: Pr
 instance out ~ PragmaStack t a => HMap.IsKey (Pragma t a v) Text out
     where toKey = HMap.Key . view name
 
-instance (Typeable t, Default val) => Default (Pragma t a val) where
-    def = Pragma (fromString . show $ typeOf (undefined :: t)) def def
+instance (Typeable a, Default val) => Default (Pragma t a val) where
+    def = Pragma (fromString . show $ typeOf (undefined :: a)) def def
 
 ----------------------------------------------------------------------
 -- Type hidding
@@ -234,8 +236,8 @@ parseByName k ps = case lookupByName k ps of
 lookupByName :: HasPragmaMap s => Text -> s -> Maybe HPragma
 lookupByName k = Maps.lookup k . unH . view (pragmaMap . values)
 
-pragmaNames :: PragmaMap -> [Text]
-pragmaNames = HMap.baseKeys . view values
+pragmaNames :: HasPragmaMap s => s -> [Text]
+pragmaNames = HMap.baseKeys . view (pragmaMap . values)
 
 --
 
@@ -296,6 +298,9 @@ enable p = push p Enabled
 disable :: (HasPragmaMap s, IsPragma a) => SwitchPragma a -> s -> Either AccessError s
 disable p = push p Disabled
 
+isEnabled :: Pragma t a Switch -> Bool
+isEnabled = (==Enabled) . view val
+
 -- == Instances ==
 
 instance PragmaCons Switch where
@@ -317,4 +322,5 @@ instance PragmaCons Val where
     pragmaCons _ = id
 
 type instance PragmaVal Val a = a
+
 

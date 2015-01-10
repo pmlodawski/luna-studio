@@ -21,6 +21,8 @@ import qualified Luna.System.Pragma  as Pragma
 import           Luna.System.Pragma
 import           Control.Monad.State (MonadState, StateT, runStateT)
 import qualified Control.Monad.State as State
+import           Text.Parser.Char        (string, noneOf, CharParsing)
+import           Text.Parser.Token
 
 ----------------------------------------------------------------------
 -- PragmaMap
@@ -70,15 +72,26 @@ defrun = flip run def
 type StoreCtx m = MonadPragmaStore m
 type Ctx  t m a = (MonadPragmaStore m, IsPragma a, PragmaCons t)
 
+parseByName :: (TokenParsing m, CharParsing m, MonadPragmaStore m) => Text -> m (Either AccessError ())
+parseByName n = do
+    res <- Pragma.parseByName n <$> get
+    case res of
+        Left  e -> return $ Left e
+        Right p -> Right <$> (put =<< p) 
+
+pragmaNames :: MonadPragmaStore m => m [Text]
+pragmaNames = Pragma.pragmaNames <$> get
+
+lookupByName :: StoreCtx m => Text -> m (Maybe HPragma)
+lookupByName t = Pragma.lookupByName t <$> get
+
+--
+
 withStore :: (MonadPragmaStore m, Traversable t) => (PragmaMap -> t PragmaMap) -> m (t PragmaMap)
 withStore f = do
     out <- f <$> get
     traverse put out
     return out
---
-
-lookupByName :: StoreCtx m => Text -> m (Maybe HPragma)
-lookupByName t = Pragma.lookupByName t <$> get
 
 --
 

@@ -34,14 +34,11 @@ import           Text.Trifecta.Delta (Delta(Directed))
 import           Text.Trifecta.Result (Result(Failure, Success))
 import qualified Text.Trifecta.Parser as Trifecta
 
-import           Text.Trifecta.Combinators (DeltaParsing)
-import           Text.Parser.Token         (TokenParsing)
-import           Text.Parser.Char          (CharParsing)
+
 
 import qualified Luna.Parser.State  as ParserState
 import           Luna.Parser.State  (ParserState)
 import qualified Luna.Parser.Token  as Tok
---import qualified Luna.Parser.Pragma as Pragma
 import           Luna.Parser.Indent (IndentStateT)
 import qualified Luna.Parser.Indent as Indent
 
@@ -56,9 +53,9 @@ import qualified Luna.Parser.Decl    as Decl
 import qualified Luna.Parser.Module  as Module
 
 import Luna.Parser.Builder (labeled, label, nextID, qualifiedPath, withLabeled)
-import           Luna.System.Pragma  (pragma, SwitchPragma, IsPragma)
-import           Luna.System.Pragma.Store (MonadPragmaStore, PragmaStoreT)
-import qualified Luna.System.Pragma.Store as Pragma
+import qualified Luna.Parser.Pragma        as Pragma
+import qualified Luna.System.Pragma.Store  as Pragma
+
 
 import Control.Monad.State (StateT)
 
@@ -147,11 +144,16 @@ parseText   input = handleParsing  (\p delta -> parseFromText   p delta input)
 -- because Trifecta does not provide monad transformer!
 handleParsingM f p = do
     pragmas <- Pragma.get
-    handleResult <$> f (fmap fst $ Pragma.runT p pragmas) (parserDelta parserName)
+    rx <- handleResult <$> f (Pragma.runT p pragmas) (parserDelta parserName)
+    case rx of 
+        Left e                -> return $ Left e
+        Right (res, pragmas') -> Right res <$ Pragma.put pragmas'
 
 handleParsing f p = do
     pragmas <- Pragma.get
-    return $ handleResult $ f (fmap fst $ Pragma.runT p pragmas) (parserDelta parserName)
+    case handleResult $ f (Pragma.runT p pragmas) (parserDelta parserName) of 
+        Left e                -> return $ Left e
+        Right (res, pragmas') -> Right res <$ Pragma.put pragmas'
 
 
 --parseByteString2 p input = handleResult  $  parseFromByteString p (parserDelta parserName) input
@@ -165,28 +167,7 @@ testme ast st = ast -- runState (traverseM ast) st
 
 
 -----------------------------------------------------------
--- Pragmas & initialization
+-- Initialization
 -----------------------------------------------------------
 
-data ImplicitSelf = ImplicitSelf deriving (Show, Read, Typeable)
-instance IsPragma ImplicitSelf
-implicitSelf = pragma :: SwitchPragma ImplicitSelf
-
-
-data OrphanNames  = OrphanNames   deriving (Show, Read, Typeable)
-instance IsPragma OrphanNames
-orphanNames  = pragma :: SwitchPragma OrphanNames
-
-
-init = do
-    Pragma.register implicitSelf
-    Pragma.register orphanNames
-
-    Pragma.enable   implicitSelf
-    Pragma.disable  orphanNames
-
--- :Text.Trifecta.Combinators
-deriving instance (TokenParsing m, DeltaParsing m) => DeltaParsing (PragmaStoreT m)
-deriving instance (TokenParsing m, MonadPlus m)    => TokenParsing (PragmaStoreT m)
-deriving instance (CharParsing m, MonadPlus m)     => CharParsing  (PragmaStoreT m)
-deriving instance (Parsing m, MonadPlus m)         => Parsing      (PragmaStoreT m)
+init = Pragma.init
