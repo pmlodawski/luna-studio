@@ -75,13 +75,15 @@ pass = Pass "Parser stage-1" "Parses declarations without parsing expressions" (
 
 passRunner src = do
     (Source name (Code code)) <- Source.read src
-    result <- lift . hoistEither . (tmpFixErrorParse (Parser.moduleParser [name] Parser.defState)) $ code
+    ps <- tmpFixErrorParse code (Parser.moduleParser [name] Parser.defState)
+    result <- lift . hoistEither $ ps
     let astinfo = view ParserState.info $ snd result
     return $ (fst result, astinfo)
 
-tmpFixErrorParse a b = case Parser.parseText2 a b of
-    Left doc -> Left $ showWidth 40 doc
-    Right r  -> Right r
+tmpFixErrorParse a b = fmap fixme $ Parser.parseText a b where
+    fixme = \case
+        Left doc -> Left $ showWidth 40 doc
+        Right r  -> Right r
 
 showWidth :: Int -> Doc -> String
 showWidth w x   = displayS (renderPretty 0.4 w x) ""
