@@ -51,8 +51,8 @@ import qualified Luna.Parser.Decl    as Decl
 import qualified Luna.Parser.Module  as Module
 
 import Luna.Parser.Builder (labeled, label, nextID, qualifiedPath, withLabeled)
-import           Luna.System.Session (registerPragma, enablePragma, disablePragma)
 import           Luna.System.Pragma  (pragma, SwitchPragma, IsPragma)
+import qualified Luna.System.Pragma.Store as PStore
 
 
 -----------------------------------------------------------
@@ -154,8 +154,8 @@ orphanNames  = pragma :: SwitchPragma OrphanNames
 
 
 init = do
-    registerPragma implicitSelf
-    registerPragma orphanNames
+    PStore.registerPragma implicitSelf
+    PStore.registerPragma orphanNames
 
-    enablePragma   implicitSelf
-    disablePragma  orphanNames
+    PStore.enablePragma   implicitSelf
+    PStore.disablePragma  orphanNames

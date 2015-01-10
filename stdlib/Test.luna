@@ -1,4 +1,4 @@
-% 
+% + ImplicitSelf
 
 foreign haskell def print s:
     polyJoin . liftF1 (Value . fmap Safe . print) $ s

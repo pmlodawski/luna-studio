@@ -196,8 +196,13 @@ nameStart     = symbol '`'
 nameEnd       = symbol '`'
 range         = symbol ".."
 ref           = symbol '@'
-pragma        = symbol '%'
 terminator    = symbol ';' <?> "terminator"
+
+pragma        = symbol '%'
+pragmaEnable  = symbol "+"
+pragmaDisable = symbol "-"
+pragmaPush    = symbol "push"
+pragmaPop     = symbol "pop"
 
 lineComStart        = lex '#'
 mlineComStartLetter = "#["

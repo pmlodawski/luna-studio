@@ -20,6 +20,8 @@ import           Luna.Syntax.Arg          (Arg(Arg))
 import           Luna.Parser.Builder      (qualifiedPath)
 import           Luna.Syntax.Name         (tvname)
 import           Luna.Parser.Pattern      (argPattern)
+import qualified Luna.Syntax.Pragma       as Pragma
+
 --import qualified Luna.Parser.Pragma       as Pragma
 
 import Luna.Parser.Struct (blockBeginFields, blockBodyOpt, blockBody', blockEnd, blockStart, blockBegin)
@@ -43,7 +45,18 @@ importTarget =   body Decl.ImpVar Tok.varOp
 
 ----- pragmas ------
 
-pragma = Decl.PragmaSet <$ Tok.pragma <*> pure def
+pragma = Decl.Pragma <$ Tok.pragma <*> pragmaTypes <?> "pragma"
+
+pragmaEnable  = Pragma.Enable  <$ Tok.pragmaEnable  <*> pragmaName
+pragmaDisable = Pragma.Disable <$ Tok.pragmaDisable <*> pragmaName
+pragmaPush    = Pragma.Push    <$ Tok.pragmaPush    <*> pragmaName
+pragmaPop     = Pragma.Pop     <$ Tok.pragmaPop     <*> pragmaName
+
+pragmaTypes = choice [ pragmaEnable, pragmaDisable, pragmaPush, pragmaPop ]
+
+pragmaName = Tok.typeIdent <?> "pragma name"
+
+--switchPragma 
 
 ----- type aliases ------
 
