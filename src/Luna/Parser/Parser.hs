@@ -34,10 +34,15 @@ import           Text.Trifecta.Delta (Delta(Directed))
 import           Text.Trifecta.Result (Result(Failure, Success))
 import qualified Text.Trifecta.Parser as Trifecta
 
+import           Text.Trifecta.Combinators (DeltaParsing)
+import           Text.Parser.Token         (TokenParsing)
+import           Text.Parser.Char          (CharParsing)
+
 import qualified Luna.Parser.State  as ParserState
 import           Luna.Parser.State  (ParserState)
 import qualified Luna.Parser.Token  as Tok
 --import qualified Luna.Parser.Pragma as Pragma
+import           Luna.Parser.Indent (IndentStateT)
 import qualified Luna.Parser.Indent as Indent
 
 import qualified Data.List as List
@@ -52,8 +57,10 @@ import qualified Luna.Parser.Module  as Module
 
 import Luna.Parser.Builder (labeled, label, nextID, qualifiedPath, withLabeled)
 import           Luna.System.Pragma  (pragma, SwitchPragma, IsPragma)
-import qualified Luna.System.Pragma.Store as PStore
+import           Luna.System.Pragma.Store (MonadPragmaStore, PragmaStoreT)
+import qualified Luna.System.Pragma.Store as Pragma
 
+import Control.Monad.State (StateT)
 
 -----------------------------------------------------------
 -- Utils
@@ -61,7 +68,9 @@ import qualified Luna.System.Pragma.Store as PStore
 
 parserName = "Luna Compiler"
 
+run :: Monad m => IndentStateT Indent.State (StateT s m) a -> s -> m a
 run p st = evalStateT (Indent.parser p) st
+--run p st = fmap fst $ Pragma.runT (evalStateT (Indent.parser p) st) mempty
 
 handleResult r = case r of
     Failure e -> Left e
@@ -125,9 +134,24 @@ parseFromFile p delta path = do
   s <- liftIO $ ByteStr.readFile path
   return $ parseFromByteString p delta s
 
-parseFile       path  p = handleResult <$> parseFromFile       p (parserDelta parserName) path
-parseString     input p = handleResult  $  parseFromString     p (parserDelta parserName) input
-parseByteString input p = handleResult  $  parseFromByteString p (parserDelta parserName) input
+--parseFile       path  p = handleResult <$> parseFromFile       p (parserDelta parserName) path
+--parseString     input p = handleResult  $  parseFromString     p (parserDelta parserName) input
+--parseByteString input p = handleResult  $  parseFromByteString p (parserDelta parserName) input
+
+
+parseFile   path  = handleParsingM (\p delta -> parseFromFile   p delta path)
+parseString input = handleParsing  (\p delta -> parseFromString p delta input)
+
+-- handleParsing is used to put information into the Trifecta
+-- because Trifecta does not provide monad transformer!
+handleParsingM f p = do
+    pragmas <- Pragma.get
+    handleResult <$> f (fmap fst $ Pragma.runT p pragmas) (parserDelta parserName)
+
+handleParsing f p = do
+    pragmas <- Pragma.get
+    return $ handleResult $ f (fmap fst $ Pragma.runT p pragmas) (parserDelta parserName)
+
 
 parseByteString2 p input = handleResult  $  parseFromByteString p (parserDelta parserName) input
 parseText2 p input = handleResult  $  parseFromText p (parserDelta parserName) input
@@ -154,8 +178,14 @@ orphanNames  = pragma :: SwitchPragma OrphanNames
 
 
 init = do
-    PStore.registerPragma implicitSelf
-    PStore.registerPragma orphanNames
+    Pragma.register implicitSelf
+    Pragma.register orphanNames
 
-    PStore.enablePragma   implicitSelf
-    PStore.disablePragma  orphanNames
+    Pragma.enable   implicitSelf
+    Pragma.disable  orphanNames
+
+-- :Text.Trifecta.Combinators
+deriving instance (TokenParsing m, DeltaParsing m) => DeltaParsing (PragmaStoreT m)
+deriving instance (TokenParsing m, MonadPlus m)    => TokenParsing (PragmaStoreT m)
+deriving instance (CharParsing m, MonadPlus m)     => CharParsing  (PragmaStoreT m)
+deriving instance (Parsing m, MonadPlus m)         => Parsing      (PragmaStoreT m)

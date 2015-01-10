@@ -18,7 +18,7 @@ module Luna.System.Pragma.Store where
 import           Flowbox.Prelude     as P hiding (noneOf, lookup)
 
 import qualified Luna.System.Pragma  as Pragma
-import           Luna.System.Pragma  (PragmaMap, PragmaDef, PragmaVal, PragmaInst, RegisterError, AccessError, LookupError, IsPragma, PragmaCons, SwitchPragma)
+import           Luna.System.Pragma
 import           Control.Monad.State (MonadState, StateT, runStateT)
 import qualified Control.Monad.State as State
 
@@ -67,34 +67,41 @@ defrun = flip run def
 
 -- == Pragma utils ==
 
-type Ctx t m a = (MonadPragmaStore m, IsPragma a, PragmaCons t)
+type StoreCtx m = MonadPragmaStore m
+type Ctx  t m a = (MonadPragmaStore m, IsPragma a, PragmaCons t)
 
-withSession :: (MonadPragmaStore m, Traversable t) => (PragmaMap -> t PragmaMap) -> m (t PragmaMap)
-withSession f = do
+withStore :: (MonadPragmaStore m, Traversable t) => (PragmaMap -> t PragmaMap) -> m (t PragmaMap)
+withStore f = do
     out <- f <$> get
     traverse put out
     return out
+--
 
-registerPragma :: Ctx t m a => PragmaDef t a -> m (Either RegisterError PragmaMap)
-registerPragma = withSession . Pragma.register
+lookupByName :: StoreCtx m => Text -> m (Maybe HPragma)
+lookupByName t = Pragma.lookupByName t <$> get
 
-pushPragma :: Ctx t m a => PragmaDef t a -> PragmaVal t a -> m (Either AccessError PragmaMap)
-pushPragma = withSession .: Pragma.push
+--
 
-setPragma :: Ctx t m a => PragmaDef t a -> PragmaVal t a -> m (Either AccessError PragmaMap)
-setPragma = withSession .: Pragma.set
+register :: Ctx t m a => PragmaDef t a -> m (Either RegisterError PragmaMap)
+register = withStore . Pragma.register
 
-lookupPragma :: Ctx t m a => PragmaDef t a -> m (Either LookupError (PragmaInst t a))
-lookupPragma p = Pragma.lookup p <$> get
+push :: Ctx t m a => PragmaDef t a -> PragmaVal t a -> m (Either AccessError PragmaMap)
+push = withStore .: Pragma.push
 
-popPragma :: Ctx t m a => PragmaDef t a -> m (Either LookupError (PragmaInst t a))
-popPragma p = do 
+set :: Ctx t m a => PragmaDef t a -> PragmaVal t a -> m (Either AccessError PragmaMap)
+set = withStore .: Pragma.set
+
+lookup :: Ctx t m a => PragmaDef t a -> m (Either LookupError (PragmaInst t a))
+lookup p = Pragma.lookup p <$> get
+
+pop :: Ctx t m a => PragmaDef t a -> m (Either LookupError (PragmaInst t a))
+pop p = do 
     lup <- Pragma.pop p <$> get
     traverse_ (put.snd) lup
     return $ fmap fst lup
 
-enablePragma :: (IsPragma a, MonadPragmaStore m) => SwitchPragma a -> m (Either AccessError PragmaMap)
-enablePragma = withSession . Pragma.enable
+enable :: (IsPragma a, MonadPragmaStore m) => SwitchPragma a -> m (Either AccessError PragmaMap)
+enable = withStore . Pragma.enable
 
-disablePragma :: (IsPragma a, MonadPragmaStore m) => SwitchPragma a -> m (Either AccessError PragmaMap)
-disablePragma = withSession . Pragma.disable
+disable :: (IsPragma a, MonadPragmaStore m) => SwitchPragma a -> m (Either AccessError PragmaMap)
+disable = withStore . Pragma.disable
