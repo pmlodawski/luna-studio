@@ -22,7 +22,7 @@ import Luna.Syntax.Pat          (LPat)
 import Luna.Syntax.Name.Pattern (ArgPat)
 import Luna.Syntax.Foreign      (Foreign)
 import Luna.Syntax.Label        (Label(Label))
-import Luna.System.Pragma       (PragmaSet)
+import Luna.Syntax.Pragma       (Pragma)
 
 import qualified Prelude
 
@@ -45,7 +45,7 @@ data Decl a e
     | TpAls     { _dstType :: LType a , _srcType  :: LType a                                                             }
     | TpWrp     { _dstType :: LType a , _srcType  :: LType a                                                             }
     | Foreign   (Foreign (ForeignDecl a e))
-    | PragmaSet PragmaSet
+    | Pragma    Pragma
     deriving (Show, Generic)
 
 
@@ -56,6 +56,9 @@ data ForeignDecl a e
     = FData (DataDecl a e)
     | FFunc (FuncDecl a e ForeignCode)
     deriving (Show, Generic)
+
+
+
 
 -- !!!
 -- jezeli bedziemy mieli TemplateLuna to chcemy znac kolejnosc deklaracji

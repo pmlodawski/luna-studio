@@ -22,7 +22,7 @@
 
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Luna.System.PragmaDef
+-- Module      :  Luna.System.Pragma
 -- Copyright   :  (C) 2014 Flowbox
 -- License     :  AllRightsReserved
 -- Maintainer  :  Wojciech Daniło <wojciech.danilo@gmail.com>
@@ -32,7 +32,7 @@
 -- Usage:
 --
 -- Pragmas can be defined as standalone data types and can be registered
--- in PragmaSet's. Each PragmaSet contains PragmaStack, which handles
+-- in PragmaMap's. Each PragmaMap contains PragmaStack, which handles
 -- such operations as push or pop for pragmas.
 --
 --
@@ -52,7 +52,7 @@
 --     Left  e -> fail $ show e
 -- 
 -- main = do
---     ps <- return (def :: PragmaSet)
+--     ps <- return (def :: PragmaMap)
 --     ps <- handleErr $ register implicitSelf ps
 --     ps <- handleErr $ register tabSize ps
 -- 
@@ -179,61 +179,67 @@ instance (Typeable t, Default val) => Default (Pragma t a val) where
 -- Type hidding
 ----------------------------------------------------------------------
 
-data Parsable where
-    Parsable :: (IsPragma a, PragmaCons t) => PragmaStack t a -> Parsable
+data HPragma where
+    HPragma :: (IsPragma a, PragmaCons t) => PragmaStack t a -> HPragma
 
-instance (v~PragmaVal t a, IsPragma a, PragmaCons t) => HideType (Pragma t a [v]) Parsable where
-    hideType                = Parsable
-    revealType (Parsable p) = unsafeCoerce p
+instance (v~PragmaVal t a, IsPragma a, PragmaCons t) => HideType (Pragma t a [v]) HPragma where
+    hideType                = HPragma
+    revealType (HPragma p) = unsafeCoerce p
 
 
-runParsable :: (TokenParsing m, CharParsing m, Monad m) => Parsable -> m Parsable
-runParsable (Parsable a) = fmap Parsable (runPragmaStack a)
+runHPragma :: (TokenParsing m, CharParsing m, Monad m) => HPragma -> m HPragma
+runHPragma (HPragma a) = fmap HPragma (runPragmaStack a)
     where runPragmaStack :: (TokenParsing m, CharParsing m, Monad m, IsPragma a, PragmaCons t) => PragmaStack t a -> m (PragmaStack t a)
           -- For now all parsed pragmas are replace the stack 
           runPragmaStack p@(Pragma n d as) = (\a -> Pragma n d [a]) . pragmaCons (defOf p) <$> parse (defOf p)
 
+metaName :: HPragma -> Text
+metaName (HPragma (Pragma n _ _)) = n
+
+
 ----------------------------------------------------------------------
--- PragmaSet
+-- PragmaMap
 ----------------------------------------------------------------------
 
-newtype PragmaSet = PragmaSet { _values :: H (HashMap Text) Parsable }
-makeLenses ''PragmaSet
+newtype PragmaMap = PragmaMap { _values :: H (HashMap Text) HPragma } deriving (Monoid)
+makeLenses ''PragmaMap
 
+-- remove when makeClassy gets fixed (bug: https://github.com/ekmett/lens/issues/512) --
+class HasPragmaMap t where
+    pragmaMap :: Simple Lens t PragmaMap
+instance HasPragmaMap PragmaMap where pragmaMap = id
+-- / --
+
+class MonadPragmaMap m where
+    getPragmaMap :: m PragmaMap
+    putPragmaMap :: PragmaMap -> m ()
 
 -- == Instances ==
 
-instance Show PragmaSet where
-    show ps = "PragmaSet " <> show (pragmaNames ps)
+instance Show PragmaMap where
+    show ps = "PragmaMap " <> show (pragmaNames ps)
 
-instance Default PragmaSet where
-    def = PragmaSet mempty
-
--- remove when makeClassy gets fixed (bug: https://github.com/ekmett/lens/issues/512) --
-class HasPragmaSet t where
-    pragmaSet :: Simple Lens t PragmaSet
-instance HasPragmaSet PragmaSet where pragmaSet = id
--- / --
-
+instance Default PragmaMap where
+    def = PragmaMap mempty
 
 -- == Utils ==
 
-parseByName :: (TokenParsing m, CharParsing m, Monad m) => HasPragmaSet s => Text -> s -> Either AccessError (m s)
+parseByName :: (TokenParsing m, CharParsing m, Monad m) => HasPragmaMap s => Text -> s -> Either AccessError (m s)
 parseByName k ps = case lookupByName k ps of
-    Just psable -> Right $ fmap (\a -> P.set lens (H a) ps) (Maps.insert k <$> (runParsable psable) <*> pure base)
+    Just psable -> Right $ fmap (\a -> P.set lens (H a) ps) (Maps.insert k <$> (runHPragma psable) <*> pure base)
     Nothing     -> Left  $ Error unregistered k
-    where lens   = pragmaSet.values
+    where lens   = pragmaMap.values
           H base = view lens ps
     
-lookupByName :: HasPragmaSet s => Text -> s -> Maybe Parsable
-lookupByName k = Maps.lookup k . unH . view (pragmaSet . values)
+lookupByName :: HasPragmaMap s => Text -> s -> Maybe HPragma
+lookupByName k = Maps.lookup k . unH . view (pragmaMap . values)
 
-pragmaNames :: PragmaSet -> [Text]
+pragmaNames :: PragmaMap -> [Text]
 pragmaNames = HMap.baseKeys . view values
 
 --
 
-type PragmaCtx t a s = (HasPragmaSet s, IsPragma a, PragmaCons t)
+type PragmaCtx t a s = (HasPragmaMap s, IsPragma a, PragmaCons t)
 
 withRegistered :: (PragmaCtx t a s, AccessClass e) => PragmaDef t a -> s -> (PragmaStack t a -> x) -> Either (Error e) x
 withRegistered p ps f = case lookupStack p ps of
@@ -241,7 +247,7 @@ withRegistered p ps f = case lookupStack p ps of
     Just s  -> Right $ f s
 
 lookupStack :: PragmaCtx t a s => PragmaDef t a -> s -> Maybe (PragmaStack t a)
-lookupStack p = HMap.lookup p . view (pragmaSet.values)
+lookupStack p = HMap.lookup p . view (pragmaMap.values)
 
 set :: PragmaCtx t a s => PragmaDef t a -> PragmaVal t a -> s -> Either AccessError s
 set p@(Pragma n d _) a ps = withRegistered p ps . const $ setStack p (Pragma n d [a]) ps
@@ -258,7 +264,7 @@ pop_ :: PragmaCtx t a s => PragmaDef t a -> s -> Either LookupError s
 pop_ = fmap snd .: pop
 
 setStack :: PragmaCtx t a s => PragmaDef t a -> PragmaStack t a -> s -> s
-setStack p a = pragmaSet.values %~ HMap.insert p a
+setStack p a = pragmaMap.values %~ HMap.insert p a
 
 lookup :: PragmaCtx t a s => PragmaDef t a -> s -> Either LookupError (PragmaInst t a)
 lookup p@(Pragma n d _) ps = case fmap fst $ pop p ps of
@@ -273,6 +279,7 @@ register :: PragmaCtx t a s => PragmaDef t a -> s -> Either RegisterError s
 register p@(Pragma n d _) s = case lookup p s of
     Right _ -> Left  $ Error Occupied (p^.name)
     Left  _ -> Right $ setStack p (Pragma n d mempty) s
+    
 
 ----------------------------------------------------------------------
 -- SwitchPragma
@@ -283,10 +290,10 @@ type SwitchPragma a = PragmaDef Switch a
 
 -- == Utils ==
 
-enable :: (HasPragmaSet s, IsPragma a) => SwitchPragma a -> s -> Either AccessError s
+enable :: (HasPragmaMap s, IsPragma a) => SwitchPragma a -> s -> Either AccessError s
 enable p = push p Enabled
 
-disable :: (HasPragmaSet s, IsPragma a) => SwitchPragma a -> s -> Either AccessError s
+disable :: (HasPragmaMap s, IsPragma a) => SwitchPragma a -> s -> Either AccessError s
 disable p = push p Disabled
 
 -- == Instances ==
