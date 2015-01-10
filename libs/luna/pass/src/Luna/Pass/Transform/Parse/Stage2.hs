@@ -109,7 +109,7 @@ traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
           subparse expr = do
               result <- ParserState.withScope id $ do 
                   pstate <- get
-                  return $ Parser.parseString expr $ Parser.exprBlockParser2 pstate
+                  Parser.parseString expr $ Parser.exprBlockParser2 pstate
               case result of
                   Left e      -> fail   $ show e
                   Right (e,s) -> put s *> pure e
@@ -120,7 +120,7 @@ subparseArg id (Arg pat mexpr) = Arg pat <$> mapM (subparseInlineExpr id) mexpr
 subparseInlineExpr id expr = do
               result <- ParserState.withScope id $ do 
                   pstate <- get
-                  return $ Parser.parseString expr $ Parser.exprParser2 pstate
+                  Parser.parseString expr $ Parser.exprParser2 pstate
               case result of
                   Left e      -> fail   $ show e
                   Right (e,s) -> put s *> pure e
