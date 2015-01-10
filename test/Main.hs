@@ -55,13 +55,9 @@ main = do
     let path = args !! 0
         src  = Source "Main" (File $ fromString path)
 
-    Session.defrunT $ do
+    Session.runT $ do
 
         Parser.init
-
-        x <- Session.get
-
-        print x
 
         result <- runEitherT $ do
             printHeader "Stage1"
