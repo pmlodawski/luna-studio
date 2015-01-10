@@ -104,6 +104,7 @@ traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
     Decl.TpAls dst src               -> return $ Decl.TpAls dst src
     Decl.TpWrp dst src               -> return $ Decl.TpWrp dst src
     Decl.Foreign fdecl               -> Decl.Foreign <$> mapM (traverseFDecl id) fdecl
+    Decl.Pragma p                    -> return $ Decl.Pragma p
     where id       = Enum.id lab
           --continue = defaultTraverseM e 
           subparse expr = do

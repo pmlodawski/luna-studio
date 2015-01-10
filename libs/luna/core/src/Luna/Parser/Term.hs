@@ -37,7 +37,9 @@ import qualified Luna.Syntax.Name    as Name
 import qualified Data.ByteString.UTF8         as UTF8
 import           Data.Char                    (isSpace)
 import qualified Luna.System.Session as Session
-import qualified Luna.System.Pragma  as Pragma
+import qualified Luna.System.Pragma.Store  as Pragma
+import qualified Luna.System.Pragma        as Pragma (isEnabled)
+import qualified Luna.Parser.Pragma        as Pragma
 
 
 import Text.Trifecta.Rendering (Caret(Caret))
@@ -171,7 +173,7 @@ optableE = [
            , [ operator4 ">"                                  AssocLeft ]
            , [ operator4 "=="                                 AssocLeft ]
            , [ operator4 "in"                                 AssocLeft ]
-           , [ binaryM   "$"  (callBuilder <$> nextID)       AssocLeft ]
+           , [ binaryM   "$"  (callBuilder <$> nextID)        AssocLeft ]
            , [ postfixM  "::" ((\id a b -> label id (Expr.Typed a b)) <$> nextID <*> typic) ]
            ]
            where
@@ -256,7 +258,6 @@ lookupAST name = do
     scope      <- ParserState.getScope
     structInfo <- ParserState.getStructInfo
     pid        <- ParserState.getPid
-    --pragmaSet <- view (ParserState.conf . Config.pragmaSet) <$> get
     let argPatts = view StructInfo.argPats structInfo
 
     case Map.lookup pid scope of
@@ -271,10 +272,14 @@ lookupAST name = do
                 case possibleDescs of
                     [] -> if (name == "self")
                           then return Nothing
-                          else fail . fromText $ "name '" <> name <> "' is not defined" <> msgTip
-                               where scopedNames = "self" : ((fmap $ mjoin " ") $ MapForest.keys varnames)
-                                     simWords    = findSimWords name scopedNames
-                                     msgTip      = if length simWords > 0 then ", perhaps you ment one of {" <> mjoin ", " (fmap (fromString . show) simWords) <> "}"
+                          else do
+                              allowOrphans <- Pragma.lookup Pragma.orphanNames
+                              case fmap Pragma.isEnabled allowOrphans of
+                                  Right True -> return Nothing
+                                  _          -> fail . fromText $ "name '" <> name <> "' is not defined" <> msgTip
+                                  where scopedNames = "self" : ((fmap $ mjoin " ") $ MapForest.keys varnames)
+                                        simWords    = findSimWords name scopedNames
+                                        msgTip      = if length simWords > 0 then ", perhaps you ment one of {" <> mjoin ", " (fmap (fromString . show) simWords) <> "}"
                                                                           else ""
                     x  -> return $ Just x
 

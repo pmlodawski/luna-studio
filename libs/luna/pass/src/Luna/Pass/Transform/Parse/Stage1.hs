@@ -82,7 +82,7 @@ passRunner src = do
 
 tmpFixErrorParse a b = fmap fixme $ Parser.parseText a b where
     fixme = \case
-        Left doc -> Left $ showWidth 40 doc
+        Left doc -> Left $ showWidth 200 doc
         Right r  -> Right r
 
 showWidth :: Int -> Doc -> String
