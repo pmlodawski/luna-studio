@@ -141,6 +141,7 @@ parseFromFile p delta path = do
 
 parseFile   path  = handleParsingM (\p delta -> parseFromFile   p delta path)
 parseString input = handleParsing  (\p delta -> parseFromString p delta input)
+parseText   input = handleParsing  (\p delta -> parseFromText   p delta input)
 
 -- handleParsing is used to put information into the Trifecta
 -- because Trifecta does not provide monad transformer!
@@ -153,8 +154,8 @@ handleParsing f p = do
     return $ handleResult $ f (fmap fst $ Pragma.runT p pragmas) (parserDelta parserName)
 
 
-parseByteString2 p input = handleResult  $  parseFromByteString p (parserDelta parserName) input
-parseText2 p input = handleResult  $  parseFromText p (parserDelta parserName) input
+--parseByteString2 p input = handleResult  $  parseFromByteString p (parserDelta parserName) input
+--parseText2 p input = handleResult  $  parseFromText p (parserDelta parserName) input
                 --data AliasAnalysis = AliasAnalysis
 
                 --traverseM        = AST.traverseM        AliasAnalysis
