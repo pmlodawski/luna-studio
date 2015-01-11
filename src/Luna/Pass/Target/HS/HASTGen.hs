@@ -75,6 +75,7 @@ import           Luna.Syntax.Name.Pattern (NamePat)
 import           Data.Maybe (isNothing)
 import qualified Luna.Syntax.Foreign         as Foreign
 import           Luna.Syntax.Foreign         (Foreign(Foreign))
+import qualified Luna.Syntax.Enum            as Enum
 
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -464,25 +465,29 @@ genExpr (Label lab expr) = case expr of
                                                          body'   = (\a -> a ++ [HExpr.Match HExpr.WildP (HExpr.AppE (HExpr.VarE "error") (HExpr.Lit $ HLit.String "TODO (!!!) Main.luna: path/Main.luna:(...,...)-(...,...): Non-exhaustive patterns in case"))]) <$> body
                                                          genMatch (unwrap -> Expr.Match pat body) = HExpr.Match <$> genPat pat <*> (HExpr.DoBlock <$> mapM genExpr body)
 
-    --Expr.Lambda id inputs output body   -> do
-    --                                        let fname      = Naming.mkLamName $ show id
-    --                                            hName      = Naming.mkHandlerFuncName fname
-    --                                            cfName     = mkCFLName fname
-    --                                            argNum     = length inputs
+    Expr.Lambda inputs output body   -> do
+                                            let fname      = Naming.mkLamName $ fromString $ show id
+                                                hName      = Naming.mkHandlerFuncName fname
+                                                --cfName     = mkCFLName fname
+                                                argNum     = length inputs
 
-    --                                        --State.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] [Deriving.Show]
+                                            --State.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] [Deriving.Show]
 
-    --                                        f  <-   HExpr.Assignment (HExpr.Var fname)
-    --                                                <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
-    --                                                                   <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
-    --                                                    )
-    --                                        --regFunc f
+                                            f  <-   HExpr.Assignment (HExpr.Var fname)
+                                                    <$> ( HExpr.Lambda <$> pure [] -- (mapM genExpr inputs)
+                                                                       <*> (HExpr.DoBlock <$> ((HExpr.NOP :) <$> genFuncBody body output))
+                                                        )
 
-    --                                        --regTHExpr $ thRegisterFunction fname argNum []
-    --                                        --regTHExpr $ thClsCallInsts fname argNum (0::Int)
 
-    --                                        --return $ HExpr.Var hName
-    --                                        return $ HExpr.LetExpr HExpr.NOP
+                                            -- using HExpr.NOP instead emptyHExpr (?) for now !
+                                            --regFunc f
+
+                                            --regTHExpr $ thRegisterFunction fname argNum []
+                                            --regTHExpr $ thClsCallInsts fname argNum (0::Int)
+
+                                            --return $ HExpr.Var hName
+                                            return $ HExpr.LetExpr HExpr.NOP
+
     Expr.Grouped expr                      -> genExpr expr
     Expr.Assignment   dst src              -> HExpr.Arrow <$> genPat dst <*> genExpr src
     Expr.RecUpd  name fieldUpdts           -> HExpr.Arrow (HExpr.Var $ Naming.mkVar $ hash name) <$> case fieldUpdts of
@@ -512,6 +517,8 @@ genExpr (Label lab expr) = case expr of
     Expr.Decl _                               -> Pass.fail "Nested declarations are not supported yet"
     Expr.Ref  _                               -> Pass.fail "References are not supported yet"
     p -> Pass.fail $ "Cannot construct: " <> show p
+
+    where id = 789 -- Enum.id lab
 
 
 mkMemberGetter name = HExpr.AppE (HExpr.VarE "member") $ HExpr.proxy name
