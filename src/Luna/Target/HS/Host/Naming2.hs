@@ -97,3 +97,9 @@ mkVar = ("_" <>)
 
 setter :: (Monoid a, IsString a) => a -> a
 setter = ("set_" <>)
+
+mkLamName :: (Monoid a, IsString a) => a -> a
+mkLamName = ("l_" <>)
+
+mkHandlerFuncName :: (Monoid a, IsString a) => a -> a
+mkHandlerFuncName = ("h_" <>)
