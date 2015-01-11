@@ -66,44 +66,43 @@ main = do
             ppPrint ast
 
             printHeader "SA"
-            sa              <- Pass.run1_ SA.pass ast
+            sa             <- Pass.run1_ SA.pass ast
             ppPrint sa
 
             printHeader "Stage2"
             (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
             ppPrint ast
-            
-            
-        --    printHeader "ImplSelf"
-        --    (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-        --    ppPrint ast
 
-        --    printHeader "SA"
-        --    sa              <- Pass.run1_ SA.pass ast
-        --    ppPrint sa
+            printHeader "ImplSelf"
+            (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
+            ppPrint ast
 
-        --    printHeader "ImplScopes"
-        --    (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
-        --    ppPrint ast
+            printHeader "SA"
+            sa             <- Pass.run1_ SA.pass ast
+            ppPrint sa
 
-        --    printHeader "ImplCalls"
-        --    (ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
-        --    ppPrint ast
+            printHeader "ImplScopes"
+            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
+            ppPrint ast
 
-        --    --printHeader "Hash"
-        --    --ast             <- Pass.run1_ Hash.pass ast
+            printHeader "ImplCalls"
+            (ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+            ppPrint ast
 
-        --    printHeader "SSA"
-        --    ast             <- Pass.run1_ SSA.pass ast
-        --    ppPrint ast
+            --printHeader "Hash"
+            --ast             <- Pass.run1_ Hash.pass ast
 
-        --    printHeader "HAST"
-        --    hast             <- Pass.run1_ HASTGen.pass ast
-        --    ppPrint hast
+            printHeader "SSA"
+            ast            <- Pass.run1_ SSA.pass ast
+            ppPrint ast
 
-        --    printHeader "HSC"
-        --    hsc              <- Pass.run1_ HSC.pass hast
-        --    putStrLn (hsShow $ unpack hsc)
+            printHeader "HAST"
+            hast           <- Pass.run1_ HASTGen.pass ast
+            ppPrint hast
+
+            printHeader "HSC"
+            hsc            <- Pass.run1_ HSC.pass hast
+            putStrLn (hsShow $ unpack hsc)
             return ()
 
 

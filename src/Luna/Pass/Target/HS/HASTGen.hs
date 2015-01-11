@@ -76,6 +76,9 @@ import           Data.Maybe (isNothing)
 import qualified Luna.Syntax.Foreign         as Foreign
 import           Luna.Syntax.Foreign         (Foreign(Foreign))
 
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.Maybe (catMaybes)
 
 -- FIXME[wd]: remove (Show ...) after pass implementation
 
@@ -204,13 +207,11 @@ genCons name params cons derivings makeDataType = do
             addComment . H3 $ dotname [name, conName] <> " constructor"
             mapM regFunc [cons, consSig, consDef]
             regTHExpr $ TH.mkMethod clsConName conName
-            regTHExpr $ TH.mkFieldAccessors conName (fmap getName fields)
 
+        getConDesc (Decl.Cons (convVar -> conName) fields) = (conName, fmap getName fields)
+        conDescs   = fmap getConDesc conDecls
+        fieldNames = Set.toList . Set.fromList . catMaybes . concat $ fmap snd conDescs :: [Text]
         genField (Label _ (Decl.Field tp name val)) = genType tp
-
---data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VNameP, _fVal :: Maybe e } deriving (Show, Eq, Generic, Read)
-
-
 
     addComment . H2 $ name <> " type"
     consE <- mapM genData conDecls
@@ -218,6 +219,11 @@ genCons name params cons derivings makeDataType = do
                     else State.addComment  $ H5 "datatype provided externally"
     addClsDataType clsConName derivings
     mapM_ genConData conDecls
+
+    when (not $ null fieldNames) $ do
+        State.addComment . H3 $ name <> " accessors"
+        regTHExpr $ TH.mkFieldAccessors2 name conDescs
+        regTHExpr $ TH.mkRegFieldAccessors name fieldNames
 
 
 
@@ -249,6 +255,7 @@ genDecl ast@(Label lab decl) = case decl of
     
     Decl.Func funcDecl -> genFunc funcDecl genFuncBody True
     Decl.Foreign fdecl -> genForeign fdecl
+    Decl.Pragma     {} -> return ()
 
 genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVarNames = do
     ctx <- getCtx
@@ -478,11 +485,11 @@ genExpr (Label lab expr) = case expr of
     --                                        return $ HExpr.LetExpr HExpr.NOP
     Expr.Grouped expr                      -> genExpr expr
     Expr.Assignment   dst src              -> HExpr.Arrow <$> genPat dst <*> genExpr src
-    Expr.RecUpd  name fieldUpdts           -> case fieldUpdts of
+    Expr.RecUpd  name fieldUpdts           -> HExpr.Arrow (HExpr.Var $ Naming.mkVar $ hash name) <$> case fieldUpdts of
         (fieldUpdt:[]) -> genField fieldUpdt
         _              -> Pass.fail "Multi fields updates are not supported yet"
         where src                  = Label 0 $ Expr.Var $ Expr.Variable name mempty
-              setter exp field val = Label 0 $ Expr.app (Label 0 $ Expr.Accessor (Name.VarName $ fromText . Naming.setter $ hash field) exp) [Expr.AppArg Nothing val]
+              setter exp field val = Label 0 $ Expr.app (Label 0 $ Expr.Accessor (Name.VarName $ fromText . ("set#"<>) $ hash field) exp) [Expr.AppArg Nothing val]
               getter exp field     = Label 0 $ Expr.app (Label 0 $ Expr.Accessor (Name.VarName field) exp) []
               getSel sel           = foldl (flip($)) src (fmap (flip getter) (reverse sel))
               setStep       (x:xs) = setter (getSel xs) x
