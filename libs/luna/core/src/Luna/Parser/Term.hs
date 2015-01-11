@@ -41,6 +41,8 @@ import qualified Luna.System.Pragma.Store  as Pragma
 import qualified Luna.System.Pragma        as Pragma (isEnabled)
 import qualified Luna.Parser.Pragma        as Pragma
 
+import qualified Luna.Parser.Decl          as Decl
+import qualified Luna.Syntax.Label         as Label
 
 import Text.Trifecta.Rendering (Caret(Caret))
 import Text.Trifecta.Combinators (careting)
@@ -144,6 +146,11 @@ entConsE base = choice [ try $ labeled (Expr.Grouped <$> parensE (tlExpr base))
                        , base
                        ]
 
+arg = Decl.arg (view Label.element <$> pEntBaseSimpleE)
+
+lambda = Expr.Lambda <$> lambdaSingleArg <*> pure Nothing <*> exprBlock
+lambdaSingleArg = (:[]) <$> labeled arg
+
 entComplexE = choice[ --labeled (Expr.Decl <$> labeled decl) -- FIXME: zrobic subparsowanie!
                     entSimpleE
                     ]
@@ -152,6 +159,7 @@ entComplexE = choice[ --labeled (Expr.Decl <$> labeled decl) -- FIXME: zrobic su
 entSimpleE = choice[ caseE -- CHECK [wd]: removed try
                    --, condE
                    , labeled $ Expr.Grouped <$> parensE expr
+                   , labeled $ try lambda
                    , identE
                    --, try (labeled Expr.RefType <$  Tok.ref <*> Tok.conIdent) <* Tok.accessor <*> Tok.varOp
                    , labeled $ Expr.Ref     <$  Tok.ref <*> entSimpleE
