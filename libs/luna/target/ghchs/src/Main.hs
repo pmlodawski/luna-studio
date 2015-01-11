@@ -1,3 +1,5 @@
+-------- HSC --------
+-- extensions --
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -28,22 +30,8 @@ cons_Main = member (Proxy :: Proxy "Main") (val Cls_Main)
 memSig_Cls_Main_Main = ((mkArg :: NParam "self"), ())
 memDef_Cls_Main_Main = liftCons0 Main
 $(registerMethod ''Cls_Main "Main")
-$(generateFieldAccessors 'Main [])
 
 -- ------ Main methods ------ --
-
--- ====== Vector type ====== --
-data Vector a = Vector deriving (Show, Eq, Ord, Generic)
-data Cls_Vector  = Cls_Vector deriving (Show, Eq, Ord, Generic)
-
--- ------ Vector.Vector constructor ------ --
-cons_Vector = member (Proxy :: Proxy "Vector") (val Cls_Vector)
-memSig_Cls_Vector_Vector = ((mkArg :: NParam "self"), ())
-memDef_Cls_Vector_Vector = liftCons0 Vector
-$(registerMethod ''Cls_Vector "Vector")
-$(generateFieldAccessors 'Vector [])
-
--- ------ Vector methods ------ --
 
 -- ====== Method: Main.print ====== --
 memDef_Main_print (self, (s, ())) = do {
@@ -63,17 +51,33 @@ memDef_Int__plus (self, (a, ())) = do {
 memSig_Int__plus = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
 $(registerMethod ''Int "_plus")
 
--- ====== Method: Main._plus ====== --
-memDef_Main__plus (_self, (_a, (_b, ()))) = do {
-     call (appNext _b (member (Proxy :: Proxy "_plus") _a));
-     
-}
-memSig_Main__plus = ((mkArg :: NParam "self"), ((mkArg :: Param), ((mkArg :: Param), ())))
-$(registerMethod ''Main "_plus")
+-- ====== Vector type ====== --
+data Vector a = Vector a a a | Scalar a deriving (Show, Eq, Ord, Generic)
+data Cls_Vector  = Cls_Vector deriving (Show, Eq, Ord, Generic)
+
+-- ------ Vector.Vector constructor ------ --
+cons_Vector = member (Proxy :: Proxy "Vector") (val Cls_Vector)
+memSig_Cls_Vector_Vector = ((mkArg :: NParam "self"), ((mkArg :: Param), ((mkArg :: Param), ((mkArg :: Param), ()))))
+memDef_Cls_Vector_Vector = liftCons3 Vector
+$(registerMethod ''Cls_Vector "Vector")
+
+-- ------ Vector.Scalar constructor ------ --
+cons_Scalar = member (Proxy :: Proxy "Scalar") (val Cls_Vector)
+memSig_Cls_Vector_Scalar = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
+memDef_Cls_Vector_Scalar = liftCons1 Scalar
+$(registerMethod ''Cls_Vector "Scalar")
+
+-- ------ Vector accessors ------ --
+$(generateFieldAccessors ''Vector [('Vector, [Just "x", Just "y", Just "z"]), ('Scalar, [Just "x"])])
+$(registerFieldAccessors ''Vector ["x", "y", "z"])
+
+-- ------ Vector methods ------ --
 
 -- ====== Method: Main.main ====== --
 memDef_Main_main (_self, ()) = do {
-     call (appNext (call (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) (member (Proxy :: Proxy "_plus") _self)))) (member (Proxy :: Proxy "print") _self));
+     _v <- call (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) cons_Vector)));
+     _v <- call (appNext (val (10 :: Int)) (member (Proxy :: Proxy "set_x") _v));
+     call (appNext (call (member (Proxy :: Proxy "x") _v)) (member (Proxy :: Proxy "print") _self));
      
 }
 memSig_Main_main = ((mkArg :: NParam "self"), ())

@@ -1,10 +1,14 @@
-% + OrphanNames
-
 foreign haskell def print s:
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
 foreign haskell def Int.+ a:
     liftF2 (+) self a
 
+class Vector a:
+    Vector : x,y,z :: a
+    Scalar : x     :: a
+
 def main:
-    print x
+    v = Vector 1 2 3
+    v.x = 10
+    print (v.x)
