@@ -73,6 +73,7 @@ instance Hashable Char String where
     hash c
        | (c >= 'a' && c <='z') || (c >= 'A' && c <='Z') = [c]
        | c == '_'                                       = "__"
+       | c == '#'                                       = "_" -- FIXME [wd]: just a dirty fix for hast gen
        | otherwise                                      = "_" ++ hashReadableChar c
 
 
