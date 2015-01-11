@@ -44,20 +44,20 @@ type SubDecl a v = Label a (Decl a (LExpr a v))
 type ArgName = Text 
 
 data Expr a v
-    = Lambda      { _inputs  :: [ExprArg a v] , _output    :: LType a        , _body   :: [LExpr a v] }
-    | RecUpd      { _vname   :: VNameP        , _fieldUpds :: [FieldUpd a v]                          }
-    | Case        { _expr    :: LExpr a v     , _match     :: [LMatch a v]                            }
-    | Typed       { _cls     :: LType a       , _expr      :: LExpr a v                               }
-    | Assignment  { _dst     :: LPat  a       , _src       :: LExpr a v                               }
-    | Accessor    { _acc     :: NameBaseP     , _src       :: LExpr a v                               }
-    | Ref         { _ref     :: LExpr a v                                                             }
-    | Tuple       { _items   :: [LExpr a v]                                                           }
-    | Grouped     { _expr    :: LExpr a v                                                             }
-    | Cons        { _cname   :: CNameP                                                                }
-    | Decl        { _decl    :: SubDecl a v                                                           }
-    | Lit         { _lit     :: LLit a                                                                }
-    | Native      { _native  :: Native (LExpr a v)                                                    }
-    | Var         { _ident   :: Variable v                                                            }
+    = Lambda      { _inputs  :: [ExprArg a v] , _output    :: Maybe (LType a) , _body   :: [LExpr a v] }
+    | RecUpd      { _vname   :: VNameP        , _fieldUpds :: [FieldUpd a v]                           }
+    | Case        { _expr    :: LExpr a v     , _match     :: [LMatch a v]                             }
+    | Typed       { _cls     :: LType a       , _expr      :: LExpr a v                                }
+    | Assignment  { _dst     :: LPat  a       , _src       :: LExpr a v                                }
+    | Accessor    { _acc     :: NameBaseP     , _src       :: LExpr a v                                }
+    | Ref         { _ref     :: LExpr a v                                                              }
+    | Tuple       { _items   :: [LExpr a v]                                                            }
+    | Grouped     { _expr    :: LExpr a v                                                              }
+    | Cons        { _cname   :: CNameP                                                                 }
+    | Decl        { _decl    :: SubDecl a v                                                            }
+    | Lit         { _lit     :: LLit a                                                                 }
+    | Native      { _native  :: Native (LExpr a v)                                                     }
+    | Var         { _ident   :: Variable v                                                             }
     | List        (List (LExpr a v))
     | App         (ExprApp a v)
     | Wildcard
