@@ -7,6 +7,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PatternSynonyms       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
@@ -23,6 +24,7 @@ import qualified Data.Array.Accelerate.Array.Sugar as A
 import           Data.Array.Accelerate.IO
 import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
+import           Data.Maybe                        (fromMaybe)
 import           Data.Set
 
 import           Flowbox.Data.Mode                    (Mode)
@@ -104,6 +106,6 @@ instance Serializable V.View ViewData.ViewData where
     compute a _    = V.map (Chan.compute serializationBackend defaultSampler) a
 
 instance Serializable Img.Image ViewData.ViewData where
-    serialize (Img.Image views) = serialize $ findMin views
+    serialize (Img.DefaultView view) = serialize $ fromMaybe (error "Can not serialize an empty view!") view
     toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
     compute a _    = Img.map (V.map $ Chan.compute serializationBackend defaultSampler) a

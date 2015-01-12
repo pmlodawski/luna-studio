@@ -25,7 +25,7 @@ import           Flowbox.Prelude
 
 
 constant :: Exp A.DIM2 -> [(Channel.Name, Exp Double)] -> Image
-constant sh = Image.singleton . foldr appendChannel (View.Required $ View.empty "rgba")
+constant sh = Image.singleton . foldr appendChannel (View.empty "rgba")
     where appendChannel (name, value) = View.append (Channel.ChannelFloat name . Channel.MatrixData $ Matrix.fill sh value)
 
 type CheckerboardColors f a = (f a, f a, f a, f a)
@@ -36,7 +36,7 @@ checkerboard :: (Color.ColorConvert c Color.RGB)
              -> CheckerboardLine c (Exp Double) -> CheckerboardLine c (Exp Double)
              -> Image
 checkerboard sh size (color1, color2, color3, color4) (lineColor, lineWidth) (lineColorCenter, lineWidthCenter) =
-    Image.singleton $ foldr appendChannel (View.Required $ View.empty "rgba") ["rgba.r", "rgba.g", "rgba.b", "rgba.a"]
+    Image.singleton $ foldr appendChannel (View.empty "rgba") ["rgba.r", "rgba.g", "rgba.b", "rgba.a"]
     where appendChannel name = View.append (Channel.ChannelFloat name . Channel.MatrixData $ Matrix.generate sh (calculateValue name))
 
           A.Z A.:. h A.:. w = A.unlift sh :: Matrix.EDIM2
