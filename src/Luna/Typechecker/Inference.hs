@@ -15,19 +15,19 @@ module Luna.Typechecker.Inference (
   ) where
 
 import            Luna.Pass                               (Pass(Pass))
-import qualified  Luna.ASTNew.Decl                        as Decl
-import            Luna.ASTNew.Decl                        (LDecl)
-import qualified  Luna.ASTNew.Enum                        as Enum
-import            Luna.ASTNew.Enum                        (Enumerated)
-import qualified  Luna.ASTNew.Expr                        as Expr
-import            Luna.ASTNew.Expr                        (LExpr)
+import qualified  Luna.Syntax.Decl                        as Decl
+import            Luna.Syntax.Decl                        (LDecl)
+import qualified  Luna.Syntax.Enum                        as Enum
+import            Luna.Syntax.Enum                        (Enumerated)
+import qualified  Luna.Syntax.Expr                        as Expr
+import            Luna.Syntax.Expr                        (LExpr)
 
-import            Luna.ASTNew.Label                       (Label(Label))
-import qualified  Luna.ASTNew.Module                      as Module
-import            Luna.ASTNew.Module                      (LModule)
-import qualified  Luna.ASTNew.Name.Pattern                as NamePat
-import qualified  Luna.ASTNew.Pat                         as Pat
-import qualified  Luna.ASTNew.Traversals                  as AST
+import            Luna.Syntax.Label                       (Label(Label))
+import qualified  Luna.Syntax.Module                      as Module
+import            Luna.Syntax.Module                      (LModule)
+import qualified  Luna.Syntax.Name.Pattern                as NamePat
+import qualified  Luna.Syntax.Pat                         as Pat
+import qualified  Luna.Syntax.Traversals                  as AST
 import qualified  Luna.Data.StructInfo                    as SI
 import            Luna.Data.StructInfo                    (StructInfo)
 
@@ -121,33 +121,35 @@ defaultTraverseM = AST.defaultTraverseM StageTypechecker
 
 
 tcMod :: (StageTypecheckerCtx lab m a) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
-tcMod lmodule@(Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) =
+tcMod lmodule =
+--tcMod lmodule@(Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) =
   do
-    pushString ("Module      " ++ intercalate "." (fmap unpack (path ++ [name])))
+    --pushString ("Module      " ++ intercalate "." (fmap unpack (path ++ [name])))
     defaultTraverseM lmodule
 
 
 tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
 tcDecl ldecl@(Label lab decl) =
-    case decl of
-        fun@Decl.Func { Decl._sig  = sig@NamePat.NamePat{ NamePat._base = (NamePat.Segment name args) }
-                      , Decl._body = body
-                      } ->
-          do  
-            name_ids <- getTargetID lab
-            args_ids <- unwords <$> mapM mapArg args
-            pushString ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " START")
-            x <- defaultTraverseM ldecl
-            pushString ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " END") 
-            return x
-        _ ->
-            defaultTraverseM ldecl
-  where 
-    mapArg :: (Enumerated lab, Monad m) => NamePat.Arg (Pat.LPat lab) a -> StageTypecheckerPass m String
-    mapArg (NamePat.Arg (Label laba arg) _) =
-      do
-        arg_id <- getTargetID laba
-        return $ unpack (humanName arg) ++ arg_id
+    defaultTraverseM ldecl
+  --  case decl of
+  --      fun@Decl.Func { Decl._sig  = sig@NamePat.NamePat{ NamePat._base = (NamePat.Segment name args) }
+  --                    , Decl._body = body
+  --                    } ->
+  --        do  
+  --          name_ids <- getTargetID lab
+  --          args_ids <- unwords <$> mapM mapArg args
+  --          pushString ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " START")
+  --          x <- defaultTraverseM ldecl
+  --          pushString ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " END") 
+  --          return x
+  --      _ ->
+  --          defaultTraverseM ldecl
+  --where 
+  --  mapArg :: (Enumerated lab, Monad m) => NamePat.Arg (Pat.LPat lab) a -> StageTypecheckerPass m String
+  --  mapArg (NamePat.Arg (Label laba arg) _) =
+  --    do
+  --      arg_id <- getTargetID laba
+  --      return $ unpack (humanName arg) ++ arg_id
 
 
 tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)

@@ -20,19 +20,21 @@ $run_coverage = false
 
 # Those parts of output are printed after the typechecker has run
 $output       = [ 
-                  # " 1.1. Transform.Parse.Stage1         : ast1",
-                  # " 1.2. Transform.Parse.Stage1         : astinfo1",
-                  # " 2.   Analysis.Struct                : sa1",
-                  # " 3.1. Transform.Parse.Stage2         : ast2",
-                  # " 3.2. Transform.Parse.Stage2         : astinfo2",
-                  " 4.1. Transform.Desugar.ImplicitSelf : ast3",
-                  # " 4.2. Transform.Desugar.ImplicitSelf : astinfo3",
-                  " 5.   Pass2.Analysis.Struct          : sa2",
-                  " 6.   Typechecker                    : constraints",
-                  # " 7.   Transform.Hash                 : ast4",
-                  # " 8.   Transform.SSA                  : ast5",
-                  # " 9.   Target.HS.HASTGen              : hast",
-                  # "10.   Target.HS.HSC                  : hsc",
+                  " 1.1. Stage1     : ast1",
+                  " 1.2. Stage1     : astinfo1",
+                  " 2.   SA         : sa2",
+                  " 3.1. Stage2     : ast3",
+                  " 3.2. Stage2     : astinfo3",
+                  " 4.1. ImplSelf   : ast4",
+                  " 4.2. ImplSelf   : astinfo4",
+                  " 5.   SA         : sa5",
+                  " 6.1. ImplScopes : ast6",
+                  " 6.2. ImplScopes : astinfo6",
+                  " 7.1. ImplCalls  : ast7",
+                  " 7.2. ImplCalls  : astinfo7",
+                  " 8.   SSA        : ast8",
+                  " 9.   HAST       : hast9",
+                  "10.   HSC        : hsc10",
                 ]
 $output_dir   = "tmp/"
 
