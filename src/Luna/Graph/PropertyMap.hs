@@ -16,7 +16,7 @@ import           Data.IntMap
 import qualified Data.IntMap as IntMap
 import qualified Data.Maybe  as Maybe
 
-import           Flowbox.Prelude                     hiding (set)
+import           Flowbox.Prelude                     as P hiding (set)
 import qualified Luna.Graph.Attributes               as Attributes
 import           Luna.Graph.Flags                    (Flags)
 import qualified Luna.Graph.Node                     as Node
@@ -66,6 +66,10 @@ modifyFlags fun = IntMap.alter update' where
 getDefaultsMap :: Node.ID -> PropertyMap -> DefaultsMap
 getDefaultsMap nodeID propertyMap = Maybe.fromMaybe def $
     view Properties.defaultsMap <$> IntMap.lookup nodeID propertyMap
+
+
+getDefaultsMaps :: PropertyMap -> [(Node.ID, DefaultsMap)]
+getDefaultsMaps = P.map (_2 %~ view Properties.defaultsMap) . IntMap.toList
 
 
 modifyDefaultsMap :: (DefaultsMap -> DefaultsMap) -> Node.ID -> PropertyMap -> PropertyMap
