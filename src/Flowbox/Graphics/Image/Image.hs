@@ -31,7 +31,7 @@ import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Error
 import           Flowbox.Graphics.Image.View  (View(..))
 import qualified Flowbox.Graphics.Image.View  as View
-import           Flowbox.Prelude              hiding (empty, lookup, map, sequence, view, views)
+import           Flowbox.Prelude              hiding (empty, lookup, map, view, views)
 
 
 
@@ -97,7 +97,10 @@ getFromDefault chanName img = case img ^. defaultView of
     Nothing -> Left $ ViewLookupError "- - default view - -"
     Just v  -> View.get v chanName
 
---getChannels :: Channel.Select -> Image ->  Result ([Maybe Channel])
+getChannels :: Channel.Select -> View.Name -> Image ->  Result ([Maybe Channel])
+getChannels chans viewName img = do
+    view     <- lookup viewName img
+    sequence $ fmap (View.get view) $ Set.toList chans
 
 -- == HELPERS ==
 

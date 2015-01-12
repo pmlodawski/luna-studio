@@ -11,6 +11,7 @@
 
 module Flowbox.Graphics.Image.Channel where
 
+import Data.Set
 import Data.Typeable
 
 import Flowbox.Graphics.Shader.Matrix
@@ -23,7 +24,7 @@ import Flowbox.Prelude
 
 
 type Name = String
-type Select = [Name]
+type Select = Set Name
 
 data Channel = ChannelFloat     Name (ChannelData Double) -- TODO[KM]: add a ChannelDouble constructor
              | ChannelInt       Name (ChannelData Int)
