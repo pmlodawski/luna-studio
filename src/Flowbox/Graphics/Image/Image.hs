@@ -20,7 +20,9 @@ module Flowbox.Graphics.Image.Image (
     lookup,
     map,
     get,
-    getFromDefault
+    getFromDefault,
+    getChannels,
+    getChannelsFromDefault
 ) where
 
 import qualified Data.Set as Set
@@ -94,7 +96,7 @@ get chanName viewName img = do
 
 getFromDefault :: Channel.Name -> Image -> Result (Maybe Channel)
 getFromDefault chanName img = case img ^. defaultView of
-    Nothing -> Left $ ViewLookupError "- - default view - -"
+    Nothing -> Left $ ViewLookupError defaultViewName
     Just v  -> View.get v chanName
 
 getChannels :: Channel.Select -> View.Name -> Image ->  Result ([Maybe Channel])
@@ -102,7 +104,16 @@ getChannels chans viewName img = do
     view     <- lookup viewName img
     sequence $ fmap (View.get view) $ Set.toList chans
 
+getChannelsFromDefault :: Channel.Select -> Image ->  Result ([Maybe Channel])
+getChannelsFromDefault chans img = case img ^. defaultView of
+    Nothing -> Left $ ViewLookupError defaultViewName
+    Just v  -> sequence $ fmap (View.get v) $ Set.toList chans
+
+
 -- == HELPERS ==
 
 dummyView :: View.Name -> View
 dummyView name = View.empty name
+
+defaultViewName :: String
+defaultViewName = "- - default view - -"
