@@ -26,9 +26,10 @@ Library
                   DeriveFoldable,
                   FlexibleInstances,
                   LambdaCase,
-                  ConstraintKinds
+                  ConstraintKinds,
+                  GeneralizedNewtypeDeriving
 
-    Exposed-modules: `findmodules('src', '.*\.hs')`
+    Exposed-modules: `findmodules('src', '.*\.hs', exclude='System.Logging')`
 
     Build-Depends:  aeson >= 0.7.0.5,
                     base,
@@ -38,7 +39,7 @@ Library
                     data-default,
                     directory,
                     dlist,
-                    either,
+                    either >= 4.3.2,
                     errors,
                     fgl,
                     filepath,
@@ -63,7 +64,8 @@ Library
                     template-haskell,
                     QuickCheck,
                     unordered-containers,
-                    convertible
+                    convertible,
+                    hashable
   if os(windows)
     Build-Depends:  Win32
 

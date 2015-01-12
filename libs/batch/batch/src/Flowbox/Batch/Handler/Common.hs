@@ -34,9 +34,14 @@ import           Luna.Graph.Graph                                            (Gr
 import qualified Luna.Graph.Graph                                            as Graph
 import           Luna.Graph.Node                                             (Node)
 import qualified Luna.Graph.Node                                             as Node
+import           Luna.Graph.Node.Expr                                        (NodeExpr)
 import           Luna.Graph.PropertyMap                                      (PropertyMap)
+import qualified Luna.Graph.PropertyMap                                      as PropertyMap
+import           Luna.Graph.View.Default.DefaultsMap                         (DefaultsMap)
+import qualified Luna.Graph.View.Default.DefaultsMap                         as DefaultsMap
 import           Luna.Graph.View.GraphView                                   (GraphView)
 import qualified Luna.Graph.View.GraphView                                   as GraphView
+import           Luna.Graph.View.PortDescriptor                              (PortDescriptor)
 import           Luna.Lib.Lib                                                (Library)
 import qualified Luna.Lib.Lib                                                as Library
 import           Luna.Lib.Manager                                            (LibManager)
@@ -123,6 +128,17 @@ setPropertyMap newPropertyMap libraryID projectID = do
     setLibrary (library & Library.propertyMap .~ newPropertyMap) libraryID projectID
 
 
+getDefaultsMap :: Node.ID -> Library.ID -> Project.ID -> Batch DefaultsMap
+getDefaultsMap nodeID libraryID projectID =
+    PropertyMap.getDefaultsMap nodeID <$> getPropertyMap libraryID projectID
+
+
+lookupNodeDefault :: PortDescriptor -> Node.ID -> Library.ID -> Project.ID
+                  -> Batch (Maybe (Node.ID, NodeExpr))
+lookupNodeDefault inPort nodeID libraryID projectID =
+    DefaultsMap.lookup inPort <$> getDefaultsMap nodeID libraryID projectID
+
+
 getAST :: Library.ID -> Project.ID -> Batch  Module
 getAST libraryID projectID =
     view Library.ast <$> getLibrary libraryID projectID
@@ -196,7 +212,6 @@ setGraph (newGraph, newPM) bc libraryID projectID = do
     logger trace $ ppShow newPM
     expr <- getFunctionFocus bc libraryID projectID
     (ast, newPM2)  <- EitherT $ GraphParser.run newGraph newPM expr
-
     newMaxID <- EitherT $ MaxID.runExpr ast
     fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
     logger debug $ show newGraph

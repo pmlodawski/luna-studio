@@ -1,8 +1,8 @@
 module Luna.Typechecker.Debug.HumanName (HumanName(humanName)) where
 
-import qualified  Luna.ASTNew.Name          as Name
-import            Luna.ASTNew.Name.Path     (NamePath, base)
-import qualified  Luna.ASTNew.Pat           as Pat
+import qualified  Luna.Syntax.Name          as Name
+import            Luna.Syntax.Name.Path     (NamePath, base)
+import qualified  Luna.Syntax.Pat           as Pat
 
 import            Control.Lens
 import            Data.Text.Lazy            (Text, pack)

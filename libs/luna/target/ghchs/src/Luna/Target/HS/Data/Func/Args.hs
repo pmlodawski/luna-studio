@@ -56,6 +56,16 @@ type NTParam  name t   = Named name (Typed t Unprovided)
 type TDParam  t a      = Unnamed    (Typed t (Default a))
 type NTDParam name t a = Named name (Typed t (Default a))
 
+-- === Signature utils ===
+
+baseFSigParam = (mkArg :: NParam "self")
+simpleFSig0 = (baseFSigParam, ())
+simpleFSig1 = (baseFSigParam, ((mkArg :: Param), ()))
+simpleFSig2 = (baseFSigParam, ((mkArg :: Param), ((mkArg :: Param), ())))
+simpleFSig3 = (baseFSigParam, ((mkArg :: Param), ((mkArg :: Param), ((mkArg :: Param),()))))
+simpleFSig4 = (baseFSigParam, ((mkArg :: Param), ((mkArg :: Param), ((mkArg :: Param),((mkArg :: Param),())))))
+simpleFSig5 = (baseFSigParam, ((mkArg :: Param), ((mkArg :: Param), ((mkArg :: Param),((mkArg :: Param),((mkArg :: Param),()))))))
+
 
 ----------------------------------------------------------------------------------
 -- MkArg

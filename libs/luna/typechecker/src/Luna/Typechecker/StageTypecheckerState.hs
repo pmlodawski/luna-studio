@@ -20,9 +20,9 @@ module Luna.Typechecker.StageTypecheckerState (
 import            Control.Lens                      (makeLenses)
 import            Text.PrettyPrint
 
-import            Luna.ASTNew.Enum                  (Enumerated)
-import qualified  Luna.ASTNew.Traversals            as AST
-import qualified  Luna.ASTNew.Pat                   as Pat
+import            Luna.Syntax.Enum                  (Enumerated)
+import qualified  Luna.Syntax.Traversals            as AST
+import qualified  Luna.Syntax.Pat                   as Pat
 import            Luna.Data.StructInfo              (StructInfo)
 import            Luna.Pass                         (PassMonad, PassCtx)
 

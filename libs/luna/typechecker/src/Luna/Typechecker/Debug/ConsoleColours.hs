@@ -15,8 +15,8 @@ writeFileM path str = liftIO $ do
 
 
 infix 4 `colouredPrint`
-colouredPrint :: [PrintAttrs] -> String -> IO ()
-colouredPrint fs x = putStrLn formatted_str
+colouredPrint :: (MonadIO m) => [PrintAttrs] -> String -> m ()
+colouredPrint fs x = liftIO $ putStrLn formatted_str
   where fmt           = intercalate ";" $ fmap show fs
         formatted_str = "\x1b[" ++ fmt ++ "m" ++ x ++ "\x1b[0m"
 

@@ -7,7 +7,9 @@
 *~
 *.swp
 *.imports
+*.dll
 out
+a.out
 
 # tags file
 tags

@@ -1,6 +1,0 @@
-class Vector a:
-    x,y,z :: a
-
-def foo x:
-    1
-

@@ -26,12 +26,11 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | RecUpdE      { _expr      :: Expr     , _name      :: Text        , _val     :: Expr                                  }
           | Import       { _qualified :: Bool     , _segments  :: [Text]      , _rename  :: Maybe Text                            }
           | Infix        { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                  }
-          | InfixR       { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                  }
           | Assignment   { _src       :: Expr     , _dst       :: Expr                                                            }
           | Arrow        { _src       :: Expr     , _dst       :: Expr                                                            }
-          | Typed        { _cls       :: Expr     , _expr      :: Expr                                                            }
-          | TypedP       { _cls       :: Expr     , _expr      :: Expr                                                            }
-          | TypedE       { _cls       :: Expr     , _expr      :: Expr                                                            }
+          | Typed        { _expr      :: Expr     , _cls       :: Expr                                                            }
+          | TypedP       { _expr      :: Expr     , _cls       :: Expr                                                            }
+          | TypedE       { _expr      :: Expr     , _cls       :: Expr                                                            }
           | Lambda       { _paths     :: [Expr]   , _expr      :: Expr                                                            }
           | LetBlock     { _exprs     :: [Expr]   , _result    :: Expr                                                            }
           | InstanceD    { _tp        :: Expr     , _decs      :: [Expr]                                                          }
@@ -69,11 +68,12 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           deriving (Show)
 
 
-proxy name = Typed (AppT (VarT "Proxy") (Lit $ Lit.String name)) $ VarE "Proxy"
+proxy name = TypedE (ConE ["Proxy"]) (AppT (ConT "Proxy") (LitT $ Lit.String name))
 app        = foldl AppE 
 appP       = foldl AppP
+
 rtuple = foldr cons (Tuple [])
-    where cons = InfixR "<:>"
+    where cons a b = Tuple [a,b]
 
 
 val = flip Function mempty

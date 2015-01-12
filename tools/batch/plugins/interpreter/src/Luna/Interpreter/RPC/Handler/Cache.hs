@@ -17,11 +17,9 @@ import           Flowbox.Prelude                                        hiding (
 import           Flowbox.ProjectManager.Context                         (Context)
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.Crumb.Breadcrumbs                      as Gen
-import           Luna.Interpreter.Proto.CallPointPath                   ()
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
-import           Luna.Interpreter.Session.Data.CallPoint                (CallPoint (CallPoint))
 import qualified Luna.Interpreter.Session.Env                           as Env
 import qualified Luna.Interpreter.Session.Memory.GPU                    as GPUMemory
 import           Luna.Interpreter.Session.Memory.Manager                (MemoryManager)
@@ -36,9 +34,13 @@ logger = getLoggerIO $(moduleName)
 --- helpers ---------------------------------------------------------------
 
 interpreterDo :: Int32 -> Session mm () -> RPC Context (SessionST mm) ()
-interpreterDo projectID op = do
+interpreterDo projectID = interpreterDo' projectID . liftSession
+
+
+interpreterDo' :: Int32 -> RPC Context (SessionST mm) () -> RPC Context (SessionST mm) ()
+interpreterDo' projectID op = do
     activeProjectID <- liftSession Env.getProjectID
-    when (activeProjectID == decodeP projectID) $ liftSession op
+    when (activeProjectID == decodeP projectID) $ op
 
 
 deleteAll :: MemoryManager mm => Int32 -> RPC Context (SessionST mm) ()
@@ -96,7 +98,7 @@ deleteNode projectID libraryID nodeID =
         GPUMemory.performGC
 
 
-insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context (SessionST mm) ()
-insertDependentNode projectID libraryID nodeID depID = do
-    let callPoint = CallPoint (decodeP libraryID) (decodeP nodeID)
-    interpreterDo projectID $ Env.insertDependentNode callPoint $ decodeP depID
+--insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context (SessionST mm) ()
+--insertDependentNode projectID libraryID nodeID depID = do
+--    let callPoint = CallPoint (decodeP libraryID) (decodeP nodeID)
+--    interpreterDo projectID $ Env.insertDependentNode callPoint $ decodeP depID

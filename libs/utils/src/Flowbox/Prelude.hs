@@ -12,11 +12,7 @@
 module Flowbox.Prelude(
     module Flowbox.Prelude,
     module Prelude,
-    module X,
-    void,
-    when,
-    unless,
-    lift
+    module X
 ) where
 
 import           Control.Applicative       as X
@@ -28,14 +24,15 @@ import           Control.Monad.IO.Class    as X (MonadIO, liftIO)
 import           Data.String.Class         as X (ToString(toString), IsString(fromString))
 import           Data.Monoid               as X (Monoid, mempty, mappend, mconcat, (<>))
 import           GHC.Exts                  as X (IsList, Item, fromList, fromListN, toList)
-import           Data.Wrapper              as X (Wrapper(wrap,unwrap), WrapperT(wrapT, unwrapT), rewrap)
+import           Data.Wrapper              as X (Wrap(wrap), Unwrap(unwrap), WrapT(wrapT), UnwrapT(unwrapT), Wrapper, WrapperT, rewrap)
 import           Data.Convertible          as X (Convertible(safeConvert), convert)
 import           Data.Text.Class           as X (ToText(toText), FromText(fromText), IsText)
 import           Data.Text.Lazy            as X (Text)
+import           Data.Foldable             as X (Foldable, traverse_)
+import           Data.Typeable             as X (Typeable)
+import           Control.Monad             as X (MonadPlus, mplus, mzero, unless, void, when)
+import           Control.Monad.Trans       as X (MonadTrans, lift)
 import           Data.Convertible.Instances.Missing as X
-import           Control.Monad             (unless, void, when)
-import           Control.Monad.Trans       (lift)
-import           Control.Monad.Trans.Class (MonadTrans)
 import           Data.Foldable             (forM_)
 import qualified Data.Traversable          as Traversable
 import           Text.Show.Pretty          (ppShow)

@@ -18,11 +18,9 @@ import GHC.Generics (Generic)
 import qualified Data.Maps           as Map
 import           Data.Maybe          (fromJust)
 import           Flowbox.Prelude     hiding (head, id)
-import           Luna.AST.AST        (ID)
 import           Luna.Data.StructInfo (StructInfo, StructInfoMonad)
 import qualified Luna.Data.StructInfo as StructInfo
 import           Data.Maybe          (fromJust)
-import qualified Luna.AST.AST        as AST
 import           Control.Monad.RWS   (RWST)
 import qualified Control.Monad.RWS   as RWST
 import            Control.Monad.Trans.Class (lift, MonadTrans)
@@ -30,6 +28,7 @@ import            Control.Monad.Trans.Class (lift, MonadTrans)
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
+type ID = Int
 
 data Namespace = Namespace { _stack :: [ID]
                            , _info  :: StructInfo

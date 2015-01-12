@@ -11,21 +11,23 @@ module Luna.Interpreter.Session.Env.State where
 import qualified Control.Concurrent.MVar    as MVar
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import           Data.IntSet                (IntSet)
+import qualified Data.IntSet                as IntSet
 import           Data.Map                   (Map)
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 import           Data.Monoid                ((<>))
-import           Data.Set                   (Set)
-import qualified Data.Set                   as Set
+import           Data.MultiSet              (MultiSet)
+import qualified Data.MultiSet              as MultiSet
 
 import           Control.Monad.Catch                         (bracket_)
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
 import           Flowbox.Data.MapForest                      (MapForest)
 import qualified Flowbox.Data.MapForest                      as MapForest
-import qualified Flowbox.Data.SetForest                      as SetForest
-import  Flowbox.Data.SetForest                      ( SetForest)
 import           Flowbox.Data.Mode                           (Mode)
+import           Flowbox.Data.SetForest                      (SetForest)
+import qualified Flowbox.Data.SetForest                      as SetForest
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
 import qualified Luna.AST.Common                             as AST
@@ -134,11 +136,11 @@ fragile action = do
 
 ---- Env.dependentNodes ---------------------------------------------------
 
-getDependentNodes :: Session mm (Map CallPoint (Set Node.ID))
+getDependentNodes :: Session mm (Map CallPoint IntSet)
 getDependentNodes = gets $ view Env.dependentNodes
 
 
-getDependentNodesOf :: CallPoint -> Session mm (Set Node.ID)
+getDependentNodesOf :: CallPoint -> Session mm IntSet
 getDependentNodesOf callPoint =
     Maybe.fromMaybe def . Map.lookup callPoint <$> getDependentNodes
 
@@ -146,11 +148,23 @@ getDependentNodesOf callPoint =
 insertDependentNode :: CallPoint -> Node.ID -> Session mm ()
 insertDependentNode callPoint nodeID =
     modify (Env.dependentNodes %~ Map.alter alter callPoint) where
-        alter = Just . Set.insert nodeID . Maybe.fromMaybe def
+        alter = Just . IntSet.insert nodeID . Maybe.fromMaybe def
+
+
+insertDependentNodes :: CallPoint -> IntSet -> Session mm ()
+insertDependentNodes callPoint nodeIDs =
+    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+        alter = Just . IntSet.union nodeIDs . Maybe.fromMaybe def
 
 
 deleteDependentNodes :: CallPoint -> Session mm ()
 deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
+
+
+deleteDependentNode :: CallPoint -> Node.ID -> Session mm ()
+deleteDependentNode callPoint nodeID =
+    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+        alter = Just . IntSet.delete nodeID . Maybe.fromMaybe def
 
 
 cleanDependentNodes :: Session mm ()
@@ -176,45 +190,34 @@ profile callPointPath action = do
     insertProfileInfo callPointPath info
     return r
 
-
----- Env.defaultSerializationMode -----------------------------------------
-
-getDefaultSerializationMode :: Session mm Mode
-getDefaultSerializationMode = gets $ view Env.defaultSerializationMode
-
-
-setDefaultSerializationMode :: Mode -> Session mm ()
-setDefaultSerializationMode = modify . set Env.defaultSerializationMode
-
 ---- Env.serializationModes -----------------------------------------------
 
-getSerializationModesMap :: Session mm (MapForest CallPoint (Set Mode))
+getSerializationModesMap :: Session mm (MapForest CallPoint (MultiSet Mode))
 getSerializationModesMap = gets $ view Env.serializationModes
 
 
-lookupSerializationModes :: CallPointPath -> Session mm (Maybe (Set Mode))
+lookupSerializationModes :: CallPointPath -> Session mm (Maybe (MultiSet Mode))
 lookupSerializationModes callPointPath =
     MapForest.lookup callPointPath <$> getSerializationModesMap
 
 
-getSerializationModes :: CallPointPath -> Session mm (Set Mode)
-getSerializationModes callPointPath = do
-    modes <- lookupSerializationModes callPointPath
-    Maybe.maybe (Set.singleton <$> getDefaultSerializationMode) return modes
+getSerializationModes :: CallPointPath -> Session mm (MultiSet Mode)
+getSerializationModes callPointPath =
+    Maybe.fromMaybe MultiSet.empty <$> lookupSerializationModes callPointPath
 
 
-insertSerializationModes :: CallPointPath -> Set Mode -> Session mm ()
+insertSerializationModes :: CallPointPath -> MultiSet Mode -> Session mm ()
 insertSerializationModes callPointPath modes =
     modify (Env.serializationModes %~ MapForest.alter ins callPointPath) where
         ins  Nothing = Just modes
-        ins (Just s) = Just $ Set.union s modes
+        ins (Just s) = Just $ MultiSet.union s modes
 
 
-deleteSerializationModes :: CallPointPath -> Set Mode -> Session mm ()
+deleteSerializationModes :: CallPointPath -> MultiSet Mode -> Session mm ()
 deleteSerializationModes callPointPath modes =
     modify (Env.serializationModes %~ MapForest.alter del callPointPath) where
         del  Nothing = Just modes
-        del (Just s) = Just $ Set.difference s modes
+        del (Just s) = Just $ MultiSet.difference s modes
 
 
 deleteAllSerializationModes :: CallPointPath -> Session mm ()
