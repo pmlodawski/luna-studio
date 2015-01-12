@@ -30,8 +30,7 @@ import           Flowbox.Graphics.Shader.Shader
 import qualified Flowbox.Graphics.Utils.Utils   as U
 import           Flowbox.Math.Matrix            as M
 import           Flowbox.Prelude                as P hiding (lift)
-
-
+import           Flowbox.Math.Function.Accelerate.BSpline           as BSpline
 
 offset :: (Num a) => a -> a -> a
 offset v = (+v)
@@ -73,6 +72,28 @@ inversePointsConvert lift gain pix = (gain - lift) * pix + lift
 grade :: (Num a, Floating a) => a -> a -> a -> a -> a -> a -> a -> a -> a
 grade blackpoint whitepoint lift gain multiply' offset' gamma =
 	U.gamma gamma . offset offset' . multiply multiply' . inversePointsConvert lift gain . pointsConvert blackpoint whitepoint
+
+hueCorrect :: BSpline.BSpline Double -> BSpline.BSpline Double ->
+              BSpline.BSpline Double -> BSpline.BSpline Double -> BSpline.BSpline Double -> 
+              BSpline.BSpline Double -> BSpline.BSpline Double -> BSpline.BSpline Double ->
+              A.Exp (RGB Double) -> A.Exp (RGB Double)
+hueCorrect lum sat r g b rSup gSup bSup rgb = A.lift $ RGB r' g' b'
+  where
+    RGB pr pg pb = A.unlift rgb :: RGB (A.Exp Double)
+    minOfRGB = (pr A.<* pg) A.? ((pb A.<* pr) A.? (pb,pr), (pb A.<* pg) A.? (pb,pg))
+    HSV h _ _ = toHSV (RGB pr pg pb)
+    hue = (6 * h A.>=* 5.0) A.? (6 * h - 5.0, 6 * h + 1.0)
+
+    r' = ((process r hue) . (process lum hue) . (processSup rSup hue minOfRGB)) pr
+    g' = ((process g hue) . (process lum hue) . (processSup gSup hue minOfRGB)) pg
+    b' = ((process b hue) . (process lum hue) . (processSup bSup hue minOfRGB)) pb
+  
+    process :: BSpline.BSpline Double -> A.Exp Double -> A.Exp Double -> A.Exp Double
+    process spline hue v = v * (BSpline.valueAt (A.use spline) hue)
+
+    processSup :: BSpline.BSpline Double -> A.Exp Double -> A.Exp Double -> A.Exp Double -> A.Exp Double
+    processSup spline hue w v = w + (v - w)*(BSpline.valueAt (A.use spline) hue)
+
 
 colorCorrect :: forall a. (Elt a, IsFloating a)
              => Exp a       -- ^ contrast
