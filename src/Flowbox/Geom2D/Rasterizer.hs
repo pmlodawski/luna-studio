@@ -191,5 +191,5 @@ matrixToImage a = Image.singleton view
                $ View.append (Channel.ChannelFloat "rgba.g" $ Channel.MatrixData w)
                $ View.append (Channel.ChannelFloat "rgba.b" $ Channel.MatrixData w)
                $ View.append (Channel.ChannelFloat "rgba.a" $ Channel.MatrixData a)
-               $ View.Required $ View.empty "rgba"
+               $ View.empty "rgba"
           w = M.map (\_ -> 1) a

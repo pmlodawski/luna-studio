@@ -218,7 +218,7 @@ posterizeLuna (variable -> colors) = onEachValue $ posterize colors
 loadImageLuna :: FilePath -> IO Image
 loadImageLuna path = do
     (r, g, b, a) <- testLoadRGBA path
-    let view = insertChannelFloats (View.Required $ View.empty "rgba") [
+    let view = insertChannelFloats (View.empty "rgba") [
                    ("rgba.r", r)
                  , ("rgba.g", g)
                  , ("rgba.b", b)
@@ -389,7 +389,7 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
 channelToImageRGBA :: Matrix2 Double -> Image
 channelToImageRGBA m = image
     where image = singleton view
-          view = insertChannelFloats (Required $ View.empty "rgba") [
+          view = insertChannelFloats (View.empty "rgba") [
                      ("rgba.r", m)
                    , ("rgba.g", m)
                    , ("rgba.b", m)
@@ -1228,7 +1228,7 @@ onEach fr fg fb fa img = Image.singleton view
                $ View.append (makeChan "rgba.b" fb b)
                $ View.append (makeChan "rgba.a" fa a)
                -- $ View.append a
-               $ View.Required $ View.empty "rgba"
+               $ View.empty "rgba"
 
 onEachMatrix :: (Matrix2 Double -> Matrix2 Double)
              -> (Matrix2 Double -> Matrix2 Double)
@@ -1250,7 +1250,7 @@ onEachMatrix fr fg fb fa img = Image.singleton view
                $ View.append (makeChan "rgba.b" fb b)
                $ View.append (makeChan "rgba.a" fa a)
                -- $ View.append a
-               $ View.Required $ View.empty "rgba"
+               $ View.empty "rgba"
 
 readFromEXRLuna :: FilePath -> IO Image
 readFromEXRLuna path = fmap fromJust $ readFromEXR path
