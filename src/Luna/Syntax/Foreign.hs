@@ -5,17 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.SourceMap (
-    module Luna.Data.SourceMap,
-    module Data.Map
-)where
+module Luna.Syntax.Foreign where
 
-import Data.Map
 import Flowbox.Prelude
 
-import Luna.Data.SourcePos (SourceRange)
+import qualified Prelude
 
-type ID = Int
 
-type SourceMap = Map ID SourceRange
+data Foreign a = Foreign Target a
+               deriving (Show, Generic, Functor, Traversable, Foldable)
 
+
+data Target = Haskell
+            | CPP
+            deriving (Show, Generic)

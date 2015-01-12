@@ -4,18 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveGeneric #-}
 
-module Luna.Data.SourceMap (
-    module Luna.Data.SourceMap,
-    module Data.Map
-)where
+module Luna.Syntax.Native where
 
-import Data.Map
+
 import Flowbox.Prelude
+import GHC.Generics
 
-import Luna.Data.SourcePos (SourceRange)
 
-type ID = Int
+data Native e = Code [NativeSegment]
+              | AST e
+              deriving (Show, Generic)
 
-type SourceMap = Map ID SourceRange
-
+data NativeSegment = Str { _code :: String }
+                   | Var { _name :: String } 
+                   deriving (Show, Generic)

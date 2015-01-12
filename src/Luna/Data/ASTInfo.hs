@@ -11,10 +11,9 @@
 module Luna.Data.ASTInfo where
 
 import           Flowbox.Prelude hiding (id)
-import qualified Luna.AST.Common as AST
 import           Control.Monad.RWS (RWST, get, put)
 
-data ASTInfo = ASTInfo { _lastID :: AST.ID } deriving (Show)
+data ASTInfo = ASTInfo { _lastID :: Int } deriving (Show)
 
 makeLenses (''ASTInfo)
 
@@ -23,7 +22,7 @@ incID :: ASTInfo -> ASTInfo
 incID = lastID %~ (+1)
 
 
-mk :: AST.ID -> ASTInfo
+mk :: Int -> ASTInfo
 mk = ASTInfo
 
 

@@ -4,18 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE RankNTypes #-}
 
-module Luna.Data.SourceMap (
-    module Luna.Data.SourceMap,
-    module Data.Map
-)where
+{-# LANGUAGE OverlappingInstances #-}
 
-import Data.Map
-import Flowbox.Prelude
+module Luna.Syntax.Pragma where
 
-import Luna.Data.SourcePos (SourceRange)
+import Flowbox.Prelude hiding (Cons, traverse)
 
-type ID = Int
 
-type SourceMap = Map ID SourceRange
+data Pragma = Enable  Text
+            | Disable Text
+            | Push    Text
+            | Pop     Text
+            deriving (Show, Generic)
+
 

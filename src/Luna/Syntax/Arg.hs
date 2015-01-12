@@ -4,18 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Data.SourceMap (
-    module Luna.Data.SourceMap,
-    module Data.Map
-)where
+module Luna.Syntax.Arg where
 
-import Data.Map
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import Luna.Data.SourcePos (SourceRange)
+import GHC.Generics     (Generic)
+import Luna.Syntax.Pat  (LPat)
+import Luna.Syntax.Label (Label)
 
-type ID = Int
 
-type SourceMap = Map ID SourceRange
 
+data Arg  a v = Arg { _pat :: LPat a, _val :: Maybe v } deriving (Show, Generic)
+type LArg a v = Label a (Arg a v)
+
+
+makeLenses ''Arg
