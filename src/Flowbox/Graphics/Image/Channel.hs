@@ -4,11 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE RankNTypes    #-}
-{-# LANGUAGE ViewPatterns  #-}
+{-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Image.Channel where
+
+import Data.Set
+import Data.Typeable
 
 import Flowbox.Graphics.Shader.Matrix
 import Flowbox.Graphics.Shader.Rasterizer
@@ -20,7 +24,7 @@ import Flowbox.Prelude
 
 
 type Name = String
-type Select = [Name]
+type Select = Set Name
 
 data Channel = ChannelFloat     Name (ChannelData Double) -- TODO[KM]: add a ChannelDouble constructor
              | ChannelInt       Name (ChannelData Int)
@@ -30,8 +34,6 @@ data Channel = ChannelFloat     Name (ChannelData Double) -- TODO[KM]: add a Cha
 data ChannelData a = MatrixData     (Matrix2 a)
                    | DiscreteData   (DiscreteShader (Exp a))
                    | ContinuousData (ContinuousShader (Exp a)) -- TODO[KM]: figure out what to do with the space being parametrised using Double and not Float (most processing should be done with Floats as it is way faster, so what about the Double?)
-
---makeLenses ''ChannelData
 
 instance Show Channel where
     show c = "Channel {name = \"" ++ name c ++ "\", data = " ++ dataType ++ "}"
@@ -44,6 +46,10 @@ instance Show Channel where
                              DiscreteData{}   -> "DiscreteShader"
                              ContinuousData{} -> "ContinousShader"
 
+data Fun = FunFloat  (Exp Float -> Exp Float)
+         | FunDouble (Exp Double -> Exp Double)
+         | FunInt    (Exp Int -> Exp Int)
+         | FunBit    (Exp Bool -> Exp Bool)
 
 name :: Channel -> Name
 name (ChannelFloat     n _) = n
@@ -72,3 +78,16 @@ asContinuous :: (Elt e) => ChannelData e -> ChannelData e
 asContinuous zeData@ContinuousData{} = zeData
 asContinuous (MatrixData zeData)     = ContinuousData $ (nearest . unsafeFromMatrix) zeData
 asContinuous (DiscreteData zeData)   = ContinuousData $ nearest zeData
+
+mapOverData :: Elt a => (Exp a -> Exp a) -> ChannelData a -> ChannelData a
+mapOverData f chanData = case chanData of
+    MatrixData mat        -> MatrixData     $ M.map f mat
+    DiscreteData shader   -> DiscreteData   $ fmap f shader
+    ContinuousData shader -> ContinuousData $ fmap f shader
+
+unsafeMap :: Fun -> Channel -> Channel
+unsafeMap (FunFloat f) _ = undefined -- TODO[KM]: add support for functions working on Floats after migrating to Floats and Doubles
+unsafeMap (FunDouble f) (ChannelFloat n zeData) = ChannelFloat n (mapOverData f zeData)
+unsafeMap (FunInt f)    (ChannelInt n zeData)   = ChannelInt   n (mapOverData f zeData)
+unsafeMap (FunBit f)    (ChannelBit n zeData)   = ChannelBit   n (mapOverData f zeData)
+

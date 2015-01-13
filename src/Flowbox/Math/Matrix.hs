@@ -145,6 +145,9 @@ slice mat fragments = Delayed $ A.slice (accMatrix mat) fragments
 take :: (A.Elt e) => A.Exp Int -> Vector e -> Vector e
 take elems mat = Delayed $ A.take elems (accMatrix mat)
 
+drop :: (A.Elt e) => A.Exp Int -> Vector e -> Vector e
+drop elems mat = Delayed $ A.drop elems (accMatrix mat)
+
 -- == Construction ==
 
 -- = Introduction =
