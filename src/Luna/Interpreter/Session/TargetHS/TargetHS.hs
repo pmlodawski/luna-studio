@@ -12,7 +12,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified DynFlags as GHC
 
-import           Flowbox.Prelude                             hiding (perform)
+import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
 import qualified Luna.Interpreter.Session.Env                as Env
@@ -48,29 +48,29 @@ disabledFlags :: [GHC.ExtensionFlag]
 disabledFlags = [GHC.Opt_MonomorphismRestriction]
 
 
-runDecls :: [String] -> Session mm()
+runDecls :: [String] -> Session mm ()
 runDecls = Session.withExtensionFlags enabledFlags disabledFlags . mapM_ Session.runDecls
 
 
-reloadAll :: Session mm()
+reloadAll :: Session mm ()
 reloadAll = Session.atomically $ Instances.cleanAll
                              >>  Generator.genAll
                              >>= runDecls
 
 
-reloadFunctions :: Session mm()
+reloadFunctions :: Session mm ()
 reloadFunctions = Session.atomically $ Instances.cleanFunctions
                                    >>  Generator.genFunctions
                                    >>= runDecls
 
 
-reloadClass :: DefPoint -> Session mm()
+reloadClass :: DefPoint -> Session m ()
 reloadClass defPoint = Session.atomically $ Instances.cleanFunctions
                                         >>  Generator.genClass defPoint
                                         >>= runDecls
 
 
-reload :: Session mm()
+reload :: Session mm ()
 reload = Env.fragile $ do
     reloads <- Env.getReloads
     logger debug $ "Reloading: " ++ show reloads
