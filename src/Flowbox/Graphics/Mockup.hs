@@ -55,16 +55,16 @@ import           Flowbox.Graphics.Composition.Filter
 import           Flowbox.Graphics.Composition.Filter       as Conv
 import           Flowbox.Graphics.Composition.Generator.Gradient
 import           Flowbox.Graphics.Composition.Keyer
-import           Flowbox.Graphics.Shader.Matrix
+import           Flowbox.Graphics.Shader.Matrix       as Shader
 import           Flowbox.Graphics.Composition.Generator.Noise.Billow
 import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
 import           Flowbox.Graphics.Shader.Pipe
 import           Flowbox.Graphics.Shader.Rasterizer
-import           Flowbox.Graphics.Shader.Sampler
+import           Flowbox.Graphics.Shader.Sampler      as Shader
 import           Flowbox.Graphics.Composition.Generator.Shape
 import           Flowbox.Graphics.Shader.Stencil      as Stencil
-import           Flowbox.Graphics.Shader.Shader   as S
-import           Flowbox.Graphics.Composition.Transform
+import           Flowbox.Graphics.Shader.Shader       as Shader
+import           Flowbox.Graphics.Composition.Transform as Shader
 import           Flowbox.Graphics.Composition.Histogram
 import qualified Flowbox.Graphics.Composition.Generator.Raster                  as Raster
 import           Flowbox.Graphics.Image.Channel                       as Channel
@@ -394,7 +394,7 @@ gradientLuna :: forall e.
 gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
     where grad = rasterizer $ monosampler $ gradientShader
 
-          gradientShader = scale (Grid width height) $ translate (V2 0.5 0.5) $ mapper gray gradient
+          gradientShader = scale (Grid width height) $ Shader.translate (V2 0.5 0.5) $ mapper gray gradient
           gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Double Double Double]
 
           weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
@@ -428,14 +428,29 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 
           noiseShader = scale (Grid width height) noise
 
---translateLuna :: Int -> Int -> Image -> Image
---translateLuna (variable -> x) (variable -> y) = onEach
-
---turnCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
---turnCenter = onCenter . rotate
-
---turnCenterLuna :: Double -> Image -> Image
---turnCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . turnCenter angle . nearest . fromMatrix (A.Constant 0)
+translateLuna :: Int -> Int -> Image -> Image
+translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) = onEachChannel f
+    where v = V2 x (-y)
+          f = \case
+              ChannelFloat name zeData -> ChannelFloat name $ ((\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) . Channel.asContinuous) zeData
+              ChannelInt   name zeData -> ChannelInt name   $ ((\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) . Channel.asContinuous) zeData
+              ChannelBit   name zeData -> ChannelBit name   $ ((\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) . Channel.asContinuous) zeData
+          mask = Nothing
+          p :: Point2 (Exp Double) -> Point2 (Exp Double)
+          p pt = Shader.translate (handle pt) pt
+          handle :: Point2 (Exp Double) -> V2 (Exp Double)
+          handle pt = case mask of
+              Nothing      -> v
+              --TODO[KM]: handle the mask properly (aka. get rid of that ugly pattern match) and uncomment the other case option
+              _ -> v
+              --Just (VPS m) -> let
+              --        Right rgba = Image.lookupPrimary m
+              --        unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
+              --        m' = unpackMat $ View.get rgba "rgba.r"
+              --        Shader _ str = Shader.nearest $ Shader.fromMatrix (A.Constant (0 :: Exp Double)) $ m'
+              --        mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
+              --        mult pt x = str pt * x
+              --    in (fmap (mult pt) v)
 
 --translateLuna :: Int -> Int -> Image -> Image
 --translateLuna (variable -> x) (variable -> y) = onEachMatrix process process process process
@@ -445,7 +460,7 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 --          process = rasterizer . t . gen
 --          gen = fromMatrix (A.Constant (0 :: Exp Double))
 --          t :: DiscreteShader (Exp Double) -> DiscreteShader (Exp Double)
---          t = S.transform p
+--          t = Shader.transform p
 --          p :: Point2 (Exp Int) -> Point2 (Exp Int)
 --          p pt = translate (handle pt) pt
 --          handle pt = case mask of
@@ -457,6 +472,12 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 --                      Shader _ str = gen m'
 --                      mult pt x = A.round $ (str pt) * A.fromIntegral x
 --                  in (fmap (mult pt) v)
+
+--turnCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
+--turnCenter = onCenter . rotate
+
+--turnCenterLuna :: Double -> Image -> Image
+--turnCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . turnCenter angle . nearest . fromMatrix (A.Constant 0)
 
 --scaleToLuna :: A.Boundary (A.Exp Double) -> Int -> Int -> Image -> Image
 --scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . foo
@@ -477,7 +498,7 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 --          gen = fromMatrix (A.Constant (0 :: Exp Double))
 --          t :: CartesianShader (Exp Double) (Exp Double) -> CartesianShader (Exp Double) (Exp Double)
 --          t = bool tp (onCenter tp) centered
---          tp = S.transform p
+--          tp = Shader.transform p
 --          p :: Point2 (Exp Double) -> Point2 (Exp Double)
 --          p pt = scale (handle pt) pt
 --          handle :: Point2 (Exp Double) -> V2 (Exp Double)

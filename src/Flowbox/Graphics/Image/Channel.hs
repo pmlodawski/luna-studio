@@ -29,7 +29,6 @@ type Select = Set Name
 data Channel = ChannelFloat     Name (ChannelData Double) -- TODO[KM]: add a ChannelDouble constructor
              | ChannelInt       Name (ChannelData Int)
              | ChannelBit       Name (ChannelData Bool)
-             -- | ChannelShader    Name (ContinuousShader    (Exp Double))
 
 data ChannelData a = MatrixData     (Matrix2 a)
                    | DiscreteData   (DiscreteShader (Exp a))
@@ -90,4 +89,5 @@ unsafeMap (FunFloat f) _ = undefined -- TODO[KM]: add support for functions work
 unsafeMap (FunDouble f) (ChannelFloat n zeData) = ChannelFloat n (mapOverData f zeData)
 unsafeMap (FunInt f)    (ChannelInt n zeData)   = ChannelInt   n (mapOverData f zeData)
 unsafeMap (FunBit f)    (ChannelBit n zeData)   = ChannelBit   n (mapOverData f zeData)
+unsafeMap _ _ = error "Flowbox.Graphics.Image.Channel.unsafeMap - error: mismatching function type and Channel type"
 
