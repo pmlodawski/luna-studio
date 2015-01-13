@@ -9,13 +9,15 @@ module Flowbox.Graphics.Image.View (
     Name,
     MapTree,
     Select(..),
+    defaultName,
     only,
+    empty,
+    emptyDefault,
     get,
     append,
     name,
     channels,
     set,
-    empty,
     map,
     remove,
     mapWithWhitelist
@@ -49,11 +51,17 @@ data View = View { _name     :: Name
 
 makeLenses ''View
 
+defaultName :: Name
+defaultName = "default"
+
 only :: Name -> Select
 only = Selected . Set.singleton
 
 empty :: Name -> View
 empty name' = View name' MapTree.empty
+
+emptyDefault :: View
+emptyDefault = empty defaultName
 
 set :: ChannelTree -> View -> View
 set t v = v & channels .~ t

@@ -12,12 +12,15 @@ module Flowbox.Graphics.Image.Image (
     pattern DefaultView,
     empty,
     singleton,
+    singletonFromChans,
     views,
     insert,
     insertDefault,
     delete,
     --update,
     lookup,
+    lookupPrimary,
+    lookupDefault,
     map,
     get,
     getFromDefault,
@@ -25,6 +28,7 @@ module Flowbox.Graphics.Image.Image (
     getChannelsFromDefault
 ) where
 
+import           Data.Maybe
 import qualified Data.Set as Set
 import           Flowbox.Data.Set (Set)
 
@@ -38,7 +42,7 @@ import           Flowbox.Prelude              hiding (empty, lookup, map, view, 
 
 
 data Image = Image { _arbitraryViews :: Set View
-                   , _defaultView    :: Maybe View
+                   , _primaryView    :: Maybe View
                    } deriving (Show)
 
 pattern DefaultView view <- Image _ view
@@ -51,8 +55,11 @@ empty = Image Set.empty Nothing
 singleton :: View -> Image
 singleton = Image Set.empty . Just
 
+singletonFromChans :: [Channel] -> Image
+singletonFromChans chans = singleton $ foldr View.append View.emptyDefault chans
+
 views :: Image -> Set View
-views img = maybe views' views'' (img ^. defaultView)
+views img = maybe views' views'' (img ^. primaryView)
     where views'    = img ^. arbitraryViews
           views'' v = Set.insert v views'
 
@@ -60,21 +67,27 @@ insert :: View -> Image -> Image
 insert view img = img & arbitraryViews %~ Set.insert view
 
 insertDefault :: View -> Image -> Image
-insertDefault view img = maybe (img & defaultView .~ Just view) newDefault (img ^. defaultView)
-    where newDefault oldView = insert oldView img & defaultView .~ Just view
+insertDefault view img = maybe (img & primaryView .~ Just view) newDefault (img ^. primaryView)
+    where newDefault oldView = insert oldView img & primaryView .~ Just view
 
 delete :: View.Name -> Image -> Image
-delete name img = maybe (removeView name) handleDefault (img ^. defaultView)
+delete name img = maybe (removeView name) handleDefault (img ^. primaryView)
     where removeView vn   = img & arbitraryViews %~ Set.delete (dummyView vn)
           handleDefault v = if v ^. View.name == name
-                                then img & defaultView .~ Nothing
+                                then img & primaryView .~ Nothing
                                 else removeView name
 
-lookup :: View.Name -> Image -> Result View.View
+lookup :: View.Name -> Image -> Result View
 lookup name img = case Set.lookupIndex (dummyView name) vs of
     Nothing  -> Left $ ViewLookupError name
     Just val -> Right $ Set.elemAt val vs
     where vs = views img
+
+lookupPrimary :: Image -> Result View
+lookupPrimary img = fromMaybe (Left $ ViewLookupError primaryViewTag) $ fmap Right (img ^. primaryView)
+
+lookupDefault :: Image -> Result View
+lookupDefault = lookup View.defaultName
 
 -- TODO[KM]: lookupSelect - just like lookup, but taking View.Select as an argument (should it return a list of Eithers, or Either with a list inside - crashing if any of the names from Select does not exist)
 
@@ -86,7 +99,7 @@ lookup name img = case Set.lookupIndex (dummyView name) vs of
 
 map :: (View.View -> View.View) -> Image -> Image
 map f img = img & arbitraryViews %~ Set.map f
-                & defaultView %~ fmap f
+                & primaryView %~ fmap f
 
 get :: Channel.Name -> View.Name -> Image -> Result (Maybe Channel)
 get chanName viewName img = do
@@ -95,8 +108,8 @@ get chanName viewName img = do
     return channel
 
 getFromDefault :: Channel.Name -> Image -> Result (Maybe Channel)
-getFromDefault chanName img = case img ^. defaultView of
-    Nothing -> Left $ ViewLookupError defaultViewName
+getFromDefault chanName img = case img ^. primaryView of
+    Nothing -> Left $ ViewLookupError primaryViewTag
     Just v  -> View.get v chanName
 
 getChannels :: Channel.Select -> View.Name -> Image ->  Result ([Maybe Channel])
@@ -105,8 +118,8 @@ getChannels chans viewName img = do
     sequence $ fmap (View.get view) $ Set.toList chans
 
 getChannelsFromDefault :: Channel.Select -> Image ->  Result ([Maybe Channel])
-getChannelsFromDefault chans img = case img ^. defaultView of
-    Nothing -> Left $ ViewLookupError defaultViewName
+getChannelsFromDefault chans img = case img ^. primaryView of
+    Nothing -> Left $ ViewLookupError primaryViewTag
     Just v  -> sequence $ fmap (View.get v) $ Set.toList chans
 
 
@@ -115,5 +128,5 @@ getChannelsFromDefault chans img = case img ^. defaultView of
 dummyView :: View.Name -> View
 dummyView name = View.empty name
 
-defaultViewName :: String
-defaultViewName = "- - default view - -"
+primaryViewTag :: String
+primaryViewTag = "- - primary view - -"

@@ -199,17 +199,17 @@ alias ImgMask = Maybe Image
 def noImgMask self::Std:
     ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
-def Image.rotate self::Image phi::Float:
-    ```liftF2 turnCenterLuna #{phi} #{self}```
+# def Image.rotate self::Image phi::Float:
+#     ```liftF2 turnCenterLuna #{phi} #{self}```
 
-def Image.translate self::Image x::Int y::Int:
-    ```liftF3 translateLuna #{x} #{y} #{self}```
+# def Image.translate self::Image x::Int y::Int:
+#     ```liftF3 translateLuna #{x} #{y} #{self}```
 
-def Image.scaleCenter self::Image x::Float y::Float:
-    ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+# def Image.scaleCenter self::Image x::Float y::Float:
+#     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
 
-def Image.scale self::Image x::Float y::Float:
-    ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+# def Image.scale self::Image x::Float y::Float:
+#     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
 def Image.transform self::Image trans::TransformD:
     ```liftF2 transformLuna #{trans} #{self}```

@@ -393,28 +393,28 @@ def Image.blur kernelSize:
 def Image.laplacian kernelSize centerVal sideVal:
     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
-def Image.rotate phi:
-    ```liftF2 turnCenterLuna #{phi} #{self}```
+# def Image.rotate phi:
+#     ```liftF2 turnCenterLuna #{phi} #{self}```
 # def Image.rotate phi m:
 #     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
 
 # def Image.translate boundary x y:
 #     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-def Image.translate x y:
-    ```liftF3 translateLuna #{x} #{y} #{self}```
+# def Image.translate x y:
+#     ```liftF3 translateLuna #{x} #{y} #{self}```
 
-def Image.scaleTo boundary x y:
-    ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
+# def Image.scaleTo boundary x y:
+#     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
 # def Image.scaleTo x y m:
 #     ```liftF4 scaleToLuna #{x} #{y} #{m} #{self}```
 
 # def Image.scale boundary x y:
 #     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
-def Image.scaleCenter x y:
-    ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+# def Image.scaleCenter x y:
+#     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
 
-def Image.scale x y:
-    ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+# def Image.scale x y:
+#     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
 def Image.transform trans:
     ```liftF2 transformLuna #{trans} #{self}```
@@ -632,7 +632,7 @@ def main:
     p5 = point 5.0 1.0
 
     p6 = point 1.0 2.0
-    
+
     h = handle 2 0.0 0.0
 
     c = curve [controlPoint p0 h h, controlPoint p1 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
