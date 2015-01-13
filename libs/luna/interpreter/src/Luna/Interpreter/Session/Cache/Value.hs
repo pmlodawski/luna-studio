@@ -39,7 +39,6 @@ import qualified Luna.Interpreter.Session.Env                 as Env
 import qualified Luna.Interpreter.Session.Error               as Error
 import qualified Luna.Interpreter.Session.Hint.Eval           as HEval
 import           Luna.Interpreter.Session.Session             (Session)
-import qualified Luna.Interpreter.Session.Session             as Session
 
 
 
@@ -125,18 +124,12 @@ computeLookupValue varName (modValues, compValMap) mode = do
 
 
 computeValue :: VarName -> Mode -> Session mm Value
-computeValue varName mode =
-    Session.withImports [ "Flowbox.Data.Serialization"
-                        , "Flowbox.Data.Mode"
-                        , "Flowbox.Graphics.Serialization"
-                        , "Prelude"
-                        , "Generated.Proto.Data.Value" ]
-                        $ lift2 $ flip Catch.catch excHandler $ do
-        logger trace toValueExpr
-        action <- HEval.interpret toValueExpr
-        liftIO $ action mode <??&.> "Internal error"
+computeValue varName mode = lift2 $ flip Catch.catch excHandler $ do
+    logger trace toValueExpr
+    action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
+    liftIO $ action mode <??&.> "Internal error"
     where
-        toValueExpr = concat ["toValue $ compute ", VarName.toString varName, " def"]
+        toValueExpr = "computeValue " ++ VarName.toString varName
 
         excHandler :: Catch.SomeException -> MGHC.Ghc Value
         excHandler exc = case Catch.fromException exc of
