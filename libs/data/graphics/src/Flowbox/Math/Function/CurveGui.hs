@@ -10,6 +10,8 @@ import           Flowbox.Prelude
 import           Flowbox.Math.Function.Accelerate.BSpline
 import           Math.Coordinate.Cartesian                   (Point2(..))
 import qualified Data.Array.Accelerate as A
+import qualified Flowbox.Math.Function.Model as Model
+import qualified Data.Map as Map
 
 type Weight = Double
 type Angle  = Double
@@ -42,12 +44,28 @@ convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (length l)) l :: 
     where
         l = convertToNodeList vertices
 
-        convertToNodeList :: [ControlPoint Double] -> [BSplineNode Double]
-        convertToNodeList (a:b:seg) = safeMap (b:seg) a [processLeftmost a b]
+convertToNodeList :: [ControlPoint Double] -> [BSplineNode Double]
+convertToNodeList l = 
+    let
+        safeMap :: [ControlPoint Double] -> ControlPoint Double -> [BSplineNode Double] -> [BSplineNode Double]
+        safeMap (s:r:seg) l acc = safeMap (r:seg) s ((convertToNode l s r):acc)
+        safeMap (s:[]) l acc = reverse ((processRightmost l s):acc)
+
+        convertSingleElem :: ControlPoint Double -> [BSplineNode Double]
+        convertSingleElem (ControlPoint (Point2 x y) Linear Linear) = [BSplineNode (Point2 x y) (Point2 (x-1) y) (Point2 (x+1) y)]
+
+        convertSingleElem a@(ControlPoint (Point2 x y) _ Linear) = [BSplineNode (Point2 x y) l (-l)]
             where
-                safeMap :: [ControlPoint Double] -> ControlPoint Double -> [BSplineNode Double] -> [BSplineNode Double]
-                safeMap (s:r:seg) l acc = safeMap (r:seg) s ((convertToNode l s r):acc)
-                safeMap (s:[]) l acc = reverse ((processRightmost l s):acc)
+                l = processLeft a a
+
+        convertSingleElem b@(ControlPoint (Point2 x y) Linear _) = [BSplineNode (Point2 x y) (-r) r]
+            where
+                r = processRight b b
+
+        convertSingleElem a@(ControlPoint (Point2 x y) _ _) = [BSplineNode (Point2 x y) l r]
+            where
+                l = processLeft a a
+                r = processRight a a
 
         processLeftmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
         processLeftmost a@(ControlPoint (Point2 x y) Linear _) b = BSplineNode (Point2 x y) (-r) r
@@ -114,3 +132,7 @@ convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (length l)) l :: 
             case d of
                 Up  -> Point2 x (y+w)
                 Down -> Point2 x (y-w)
+    in
+        case l of 
+            (a:b:seg) -> safeMap (b:seg) a [processLeftmost a b]
+            (a:[]) -> convertSingleElem a
