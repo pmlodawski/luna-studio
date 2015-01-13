@@ -30,11 +30,8 @@ Library
                   algebraic       > 0.1            ,
                   bmp                              ,
                   bytestring                       ,
-                  cairo                            ,
                   containers                       ,
                   cubicbezier                      ,
-                  diagrams-cairo                   ,
-                  diagrams-lib                     ,
                   distributive                     ,
                   either                           ,
                   errors                           ,
@@ -59,7 +56,8 @@ Library
                   transformers                     ,
                   vector                           ,
                   vector-space                     ,
-                  luna-target-ghchs
+                  luna-target-ghchs                ,
+                  Rasterific
 
 -- == test generator ==
 
