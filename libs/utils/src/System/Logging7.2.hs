@@ -10,7 +10,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE CPP #-}
+--{-# LANGUAGE CPP #-}
+{-# LANGUAGE ViewPatterns #-}
 
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -28,7 +29,7 @@ import Control.Monad.Identity (Identity, runIdentity)
 import Data.Sequence (Seq, (|>))
 import qualified Data.Text.Lazy as Text
 import Data.Text.Lazy (Text)
-import Control.Lens hiding ((|>), children, LevelData)
+import Control.Lens hiding ((|>), children, LevelData, Level)
 import Control.Monad (when)
 import Control.Monad.Trans (MonadTrans, lift)
 import Data.Foldable (toList)
@@ -213,24 +214,38 @@ printHandler = mkHandler (PrintHandler foo)
 -- Data reading
 ----------------------------------------------------------------------
 
+class LookupDataSet base s where 
+    lookupDataSet :: base -> s -> Data base
+
+instance LookupDataSet base (Data base,as) where
+    lookupDataSet _ (a,_) = a
+
+instance LookupDataSet base as => LookupDataSet base (Data b,as) where
+    lookupDataSet b (_, as) = lookupDataSet b as
+
+
+
 class Lookup base s where 
     lookup :: base -> s -> Data base
 
-instance Lookup base (Data base,as) where
-    lookup _ (a,_) = a
+instance LookupDataSet base l => Lookup base (Log l) where
+    lookup b (unLog -> s) = lookupDataSet b s
 
-instance Lookup base as => Lookup base (Data b,as) where
-    lookup b (_, as) = lookup b as
+instance LookupDataSet base r => Lookup base (RecordBuilder r) where
+    lookup b (fromRecordBuilder -> r) = lookupDataSet b r
+
+--instance Lookup base (Log as) => Lookup base (Log (Data b,as)) where
+--    lookup b (unLog -> (_, as)) = lookup b (Log as)
 
 
 --instance Lookup base as => Lookup base (Data b,as) where
 --    lookup b (_, as) = lookup b as
 
-readData :: Lookup a l => a -> Log l -> DataOf a
-readData a = recData . lookup a . unLog
+readData :: Lookup a l => a -> l -> DataOf a
+readData a = recData . lookup a
 
-readData' :: (RTupleConv r l, Lookup a r) => a -> Log l -> DataOf a
-readData' a = readData a . fmap t2r
+--readData' :: (Lookup a r) => a -> Log l -> DataOf a
+--readData' a = readData a
 
 ----------------------------------------------------------------------
 -- Formatters
@@ -247,7 +262,7 @@ instance Show (Formatter a) where
 
 foo = colorLvlFormatter ("[" <:> Lvl <:> "] ") <:> Msg <:> " !"
 
-colorLvlFormatter f = Formatter (\s -> let (LevelData pr _) = readData' Lvl s in lvlColor pr $ runFormatter f s)
+colorLvlFormatter f = Formatter (\s -> let (LevelData pr _) = readData Lvl s in lvlColor pr $ runFormatter f s)
 
 lvlColor lvl
     | lvl == 0  = id
@@ -277,8 +292,8 @@ instance FormatterBuilder Doc a where
 --instance Lookup Lvl a => FormatterBuilder Lvl (Formatter a) where
 --    buildFormatter a = Formatter $ pprint . readData a
 
-instance (Lookup seg r, PPrint (DataOf seg), RTupleConv r a) => FormatterBuilder seg a where
-    buildFormatter a = Formatter $ pprint . readData' a
+instance (PPrint (DataOf seg), Lookup seg (Log a)) => FormatterBuilder seg a where
+    buildFormatter a = Formatter $ pprint . readData a
 
 instance (a~b) => FormatterBuilder (Formatter a) b where
     buildFormatter = id
@@ -330,8 +345,8 @@ type    Logger s a = LoggerT s Identity a
 
 
 
-class Monad m => MonadLogger log m | m -> log where
-    appendLog :: Log log -> m ()
+class (Monad m, Applicative m) => MonadLogger m where
+    appendLog :: Log (LogFormat m) -> m ()
     flush     :: m ()
     close     :: m ()
 
@@ -341,11 +356,24 @@ class Monad m => MonadLogger log m | m -> log where
     default close :: m ()
     close = return ()
 
-class MonadLogger log m => MonadLoggerHandler h log m | m -> h where
+
+instance (MonadTrans t, MonadLogger m, LogFormat (t m) ~ LogFormat m, Applicative m, Applicative (t m), Monad(t m)) => MonadLogger (t m) where
+    appendLog = lift . appendLog
+
+
+instance MonadLogger IO where
+    appendLog d = putStrLn $ "IOLogger: " ++ msg where
+        msg = readData Msg d
+
+type instance LogFormat IO = (Data Msg,())
+
+
+class MonadLogger m => MonadLoggerHandler h m | m -> h where
     addHandler :: h -> m ()
     -- ... ?
 
-
+instance (MonadTrans t, MonadLoggerHandler h m, MonadLogger (t m)) => MonadLoggerHandler h (t m) where
+    addHandler = lift . addHandler
 
 
 --data Handler s m a = Handler { _base     :: a
@@ -367,7 +395,7 @@ withLogState f = do
     s <- get
     put $ f s
 
-instance (Monad m, Functor m) => MonadLogger s (LoggerT s m) where
+instance (Monad m, Applicative m) => MonadLogger (LoggerT s m) where
     appendLog msg = do
         h <- get
         h' <- runHandler h msg
@@ -377,7 +405,7 @@ instance (Monad m, Functor m) => MonadLogger s (LoggerT s m) where
         s' <- flushHandle s
         put (HandlerWrapper s')
 
-instance (Monad m, Functor m) => MonadLoggerHandler (HandlerWrapper s (LoggerT s m)) s (LoggerT s m) where
+instance (Monad m, Applicative m) => MonadLoggerHandler (HandlerWrapper s (LoggerT s m)) (LoggerT s m) where
     addHandler (HandlerWrapper h) = withLogState (withHandlerWrapper $ addChildHandler h)
 
 
@@ -450,57 +478,93 @@ instance (Functor m, Applicative m, DataGetter y m, LogBuilder () m ys) => LogBu
     buildLog b = fmap Log $ (,) <$> getData <*> (unLog <$> buildLog b)
 
 
+type LogBuilder' a m = LogBuilder a m (LogFormat m)
 
 
+type family LogFormat (m :: * -> *)
+type instance LogFormat (LoggerT log m) = log
 
---instance LogBuilder as (b,()) => LogBuilder (a,as) (b,()) where
---    buildLog = buildLog . fmap snd
+buildLog' :: (Monad m, Applicative m, LogBuilder' a m) => RecordBuilder a -> m (Log (LogFormat m))
+buildLog' = buildLog
 
 
+--log :: (MonadLogger m,
+--      LogBuilder (Data Lvl, (Data Msg, ())) m (LogFormat m),
+--      Applicative m, Show a, Enum a) =>
+--     a -> String -> m ()
 
-
--- getFilters? funkcja monadyczna ?
-log :: ( MonadLogger log m, LogBuilder (Data Lvl, (Data Msg, ())) m a1
-       , RTupleConv a1 log, Show a, Enum a)
-    => a -> String -> m ()
-log pri msg = do
-#ifdef NOLOGS
-    return ()
-#else
-    let lvl = mkLevel pri
-    tlvl <- return $ mkLevel (0 :: Int) -- getLvl
-    when (lvl >= tlvl) $ do
-        log <- buildLog
-             $ appData Lvl lvl
-             $ appData Msg msg
-             $ empty
-        appendLog $ fmap r2t log
-#endif
 
 
 --poprawic filtracje - obecnie linijka 466 jest zhardcodowana
 
 
-debug     = log DEBUG
-info      = log INFO
-notice    = log NOTICE
-warning   = log WARNING
-error     = log ERROR
-critical  = log CRITICAL
-alert     = log ALERT
-panic     = log PANIC
+debug     = simpleLog DEBUG
+info      = simpleLog INFO
+notice    = simpleLog NOTICE
+warning   = simpleLog WARNING
+error     = simpleLog ERROR
+critical  = simpleLog CRITICAL
+alert     = simpleLog ALERT
+panic     = simpleLog PANIC
 
 
 
 --flushM = flushMe =<< get
 
-class LogConstructor m where
-    mkLog :: (Show pri, Enum pri) => pri -> String -> m ()
 
-instance ( MonadLogger log m, LogBuilder (Data Lvl, (Data Msg, ())) (LoggerT log m) a1
-         , RTupleConv a1 log, Functor m) 
-         => LogConstructor (LoggerT log m) where
-    mkLog = log
+
+simpleLog = log empty
+
+log d pri msg = do
+-- #ifdef NOLOGS
+    return ()
+-- #else
+    mkLog $ appData Lvl (mkLevel pri)
+          $ appData Msg msg
+          $ d
+-- #endif
+
+
+
+class LogConstructor d m where
+    mkLog :: MonadLogger m => RecordBuilder d -> m ()
+
+instance (LogBuilder' d m) => LogConstructor d m where
+    mkLog d = do
+        log <- buildLog' d
+        appendLog log
+
+
+
+
+-------------------------------------------------------------------------
+
+
+newtype PriorityLoggerT pri m a = PriorityLoggerT { fromPriorityLoggerT :: StateT pri m a } deriving (Monad, MonadIO, Applicative, Functor, MonadTrans)
+
+type instance LogFormat (PriorityLoggerT pri m) = LogFormat m
+
+
+runPriorityLoggerT pri = fmap fst . flip runStateT pri . fromPriorityLoggerT
+
+
+getPriority = PriorityLoggerT State.get
+
+setPriority :: Monad m => pri -> PriorityLoggerT pri m ()
+setPriority = PriorityLoggerT . State.put
+
+
+
+instance (MonadLogger m, LogConstructor d m, LookupDataSet Lvl d, Enum pri) => LogConstructor d (PriorityLoggerT pri m) where
+    mkLog d = do
+        priLimit <- getPriority
+        let LevelData pri _ = readData Lvl d
+        if (fromEnum priLimit) < pri then lift $ mkLog d
+                                     else return ()
+
+-------------------------------------------------------------------------
+
+
 
 
 
@@ -508,28 +572,31 @@ type StdLogger m a = LoggerX (Lvl, Msg) m a
 
 type StdTypes s = Insert Lvl (Insert Msg s) 
 
-type LoggerX s m a = LoggerT (RTuple2Tuple(MapRTuple Data (StdTypes (Tuple2RTuple s)))) m a
+type LoggerX s m a = LoggerT (MapRTuple Data (StdTypes (Tuple2RTuple s))) m a
 
-type StdLogger2 m a = LoggerX2 (Lvl, Msg) m a
+--type StdLogger2 m a = LoggerX2 (Lvl, Msg) m a
 
-type LoggerX2 s m a = WriterLogger (RTuple2Tuple (MapRTuple Data (StdTypes (Tuple2RTuple s)))) m a
+--type LoggerX2 s m a = WriterLogger (RTuple2Tuple (MapRTuple Data (StdTypes (Tuple2RTuple s)))) m a
 --type LoggerX2 s m a = WriterLogger (MapRTuple Data (StdTypes s)) m a
 
-test2 = do
-    debug "subrutine"
+--test2 = do
+--    debug "subrutine"
 
 test = do
     --let h = flushHandler `addChildHandler` printHandler
     addHandler (HandlerWrapper printHandler)
     debug "running subrutine"
 
-    x <- runWriterLoggerT $ runDupLogger test2
+    --x <- runWriterLoggerT $ runDupLogger test2
 
     --liftIO $ print x
 
     addHandler (HandlerWrapper printHandler)
 
-    debug "debug"
+    debug "debug1"
+    setPriority DEBUG
+
+    debug "debug2"
     info "info"
     warning "warning"
 
@@ -545,57 +612,61 @@ test = do
     return ()
 
 
+--instance Num Level
+
 main = do
-    print =<< (runLoggerT ( test :: StdLogger IO () ))
+    print =<< (runLoggerT ( (runPriorityLoggerT WARNING test) :: StdLogger IO () ))
+    --print =<< (runPriorityLoggerT 1 test)
+    --print =<< (runLoggerT (test :: StdLogger IO () ))
 
     --print =<< (fmap snd $ runWriterLoggerT (test2 :: StdLogger2 IO () ))
     return ()
 
 
-newtype DupLogger m a = DupLogger { unDupLogger :: m a } deriving (Monad, MonadIO, Applicative, Functor)
+        --newtype DupLogger m a = DupLogger { unDupLogger :: m a } deriving (Monad, MonadIO, Applicative, Functor)
 
-instance (MonadTrans t, Monad (t m), MonadLogger log (t m), MonadLogger log m) => MonadLogger log (DupLogger (t m)) where
-    appendLog log = DupLogger $ do
-        appendLog log
-        lift $ appendLog log
+        --instance (MonadTrans t, Monad (t m), MonadLogger log (t m), MonadLogger log m) => MonadLogger log (DupLogger (t m)) where
+        --    appendLog log = DupLogger $ do
+        --        appendLog log
+        --        lift $ appendLog log
 
-runDupLogger = unDupLogger
+        --runDupLogger = unDupLogger
 
-newtype WriterLogger log m a = WriterLogger { unWriterLogger :: StateT (Seq (Log log)) m a } deriving (Monad, MonadIO, Applicative, Functor, MonadTrans)
+        --newtype WriterLogger log m a = WriterLogger { unWriterLogger :: StateT (Seq (Log log)) m a } deriving (Monad, MonadIO, Applicative, Functor, MonadTrans)
 
-instance Monad m => MonadLogger log (WriterLogger log m) where
-    appendLog log = do
-        s <- get2
-        put2 (s |> log)
-    --flush = do
-    --    s <- get2
-    --    lift $ mapM_ appendLog $ toList s
-    --close = flush
-
-
-get2   = WriterLogger State.get
-put2   = WriterLogger . State.put
-
---runWriterLoggerT :: Functor m => WriterLogger log m a -> m a
-runWriterLoggerT = flip runStateT mempty . unWriterLogger . (>> close)
-
---class Monad m => MonadLogger log m | m -> log where
---    appendLog :: Log log -> m ()
---    flush     :: m ()
---    close     :: m ()
-
---    default flush :: m ()
---    flush = return ()
-
---    default close :: m ()
---    close = return ()
+        --instance Monad m => MonadLogger log (WriterLogger log m) where
+        --    appendLog log = do
+        --        s <- get2
+        --        put2 (s |> log)
+        --    --flush = do
+        --    --    s <- get2
+        --    --    lift $ mapM_ appendLog $ toList s
+        --    --close = flush
 
 
+        --get2   = WriterLogger State.get
+        --put2   = WriterLogger . State.put
+
+        ----runWriterLoggerT :: Functor m => WriterLogger log m a -> m a
+        --runWriterLoggerT = flip runStateT mempty . unWriterLogger . (>> close)
+
+        ----class Monad m => MonadLogger log m | m -> log where
+        ----    appendLog :: Log log -> m ()
+        ----    flush     :: m ()
+        ----    close     :: m ()
+
+        ----    default flush :: m ()
+        ----    flush = return ()
+
+        ----    default close :: m ()
+        ----    close = return ()
 
 
 
-instance MonadLoggerHandler h log m => MonadLoggerHandler h log (WriterLogger log m) where
-    addHandler = WriterLogger . lift . addHandler
+
+
+        --instance MonadLoggerHandler h log m => MonadLoggerHandler h log (WriterLogger log m) where
+        --    addHandler = WriterLogger . lift . addHandler
 
 --class CheckData k v set out | k v set -> out where
 
@@ -625,43 +696,43 @@ instance MonadLoggerHandler h log m => MonadLoggerHandler h log (WriterLogger lo
 data OneTuple a = OneTuple a deriving Show
 
 
-class RTupleConv r t | t -> r, r -> t where
-    t2r :: t -> r
-    r2t :: r -> t
+--class RTupleConv r t | t -> r, r -> t where
+--    t2r :: t -> r
+--    r2t :: r -> t
 
-instance RTupleConv () () where
-    t2r = id
-    r2t = id
-instance RTupleConv (a,()) (OneTuple a) where
-    t2r (OneTuple a) = (a,())
-    r2t (a,()) = OneTuple a
-instance RTupleConv (t1,(t2,())) (t1,t2) where
-    t2r (t1,t2) = (t1,(t2,()))
-    r2t (t1,(t2,())) = (t1,t2)
-instance RTupleConv (t1,(t2,(t3,()))) (t1,t2,t3) where
-    t2r (t1,t2,t3) = (t1,(t2,(t3,())))
-    r2t (t1,(t2,(t3,()))) = (t1,t2,t3)
-instance RTupleConv (t1,(t2,(t3,(t4,())))) (t1,t2,t3,t4) where
-    t2r (t1,t2,t3,t4) = (t1,(t2,(t3,(t4,()))))
-    r2t (t1,(t2,(t3,(t4,())))) = (t1,t2,t3,t4)
-instance RTupleConv (t1,(t2,(t3,(t4,(t5,()))))) (t1,t2,t3,t4,t5) where
-    t2r (t1,t2,t3,t4,t5) = (t1,(t2,(t3,(t4,(t5,())))))
-    r2t (t1,(t2,(t3,(t4,(t5,()))))) = (t1,t2,t3,t4,t5)
-instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,())))))) (t1,t2,t3,t4,t5,t6) where
-    t2r (t1,t2,t3,t4,t5,t6) = (t1,(t2,(t3,(t4,(t5,(t6,()))))))
-    r2t (t1,(t2,(t3,(t4,(t5,(t6,())))))) = (t1,t2,t3,t4,t5,t6)
-instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) (t1,t2,t3,t4,t5,t6,t7) where
-    t2r (t1,t2,t3,t4,t5,t6,t7) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,())))))))
-    r2t (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) = (t1,t2,t3,t4,t5,t6,t7)
-instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) (t1,t2,t3,t4,t5,t6,t7,t8) where
-    t2r (t1,t2,t3,t4,t5,t6,t7,t8) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,()))))))))
-    r2t (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) = (t1,t2,t3,t4,t5,t6,t7,t8)
-instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) (t1,t2,t3,t4,t5,t6,t7,t8,t9) where
-    t2r (t1,t2,t3,t4,t5,t6,t7,t8,t9) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,())))))))))
-    r2t (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9)
-instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,())))))))))) (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10) where
-    t2r (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,()))))))))))
-    r2t (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,())))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10)
+--instance RTupleConv () () where
+--    t2r = id
+--    r2t = id
+--instance RTupleConv (a,()) (OneTuple a) where
+--    t2r (OneTuple a) = (a,())
+--    r2t (a,()) = OneTuple a
+--instance RTupleConv (t1,(t2,())) (t1,t2) where
+--    t2r (t1,t2) = (t1,(t2,()))
+--    r2t (t1,(t2,())) = (t1,t2)
+--instance RTupleConv (t1,(t2,(t3,()))) (t1,t2,t3) where
+--    t2r (t1,t2,t3) = (t1,(t2,(t3,())))
+--    r2t (t1,(t2,(t3,()))) = (t1,t2,t3)
+--instance RTupleConv (t1,(t2,(t3,(t4,())))) (t1,t2,t3,t4) where
+--    t2r (t1,t2,t3,t4) = (t1,(t2,(t3,(t4,()))))
+--    r2t (t1,(t2,(t3,(t4,())))) = (t1,t2,t3,t4)
+--instance RTupleConv (t1,(t2,(t3,(t4,(t5,()))))) (t1,t2,t3,t4,t5) where
+--    t2r (t1,t2,t3,t4,t5) = (t1,(t2,(t3,(t4,(t5,())))))
+--    r2t (t1,(t2,(t3,(t4,(t5,()))))) = (t1,t2,t3,t4,t5)
+--instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,())))))) (t1,t2,t3,t4,t5,t6) where
+--    t2r (t1,t2,t3,t4,t5,t6) = (t1,(t2,(t3,(t4,(t5,(t6,()))))))
+--    r2t (t1,(t2,(t3,(t4,(t5,(t6,())))))) = (t1,t2,t3,t4,t5,t6)
+--instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) (t1,t2,t3,t4,t5,t6,t7) where
+--    t2r (t1,t2,t3,t4,t5,t6,t7) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,())))))))
+--    r2t (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) = (t1,t2,t3,t4,t5,t6,t7)
+--instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) (t1,t2,t3,t4,t5,t6,t7,t8) where
+--    t2r (t1,t2,t3,t4,t5,t6,t7,t8) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,()))))))))
+--    r2t (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) = (t1,t2,t3,t4,t5,t6,t7,t8)
+--instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) (t1,t2,t3,t4,t5,t6,t7,t8,t9) where
+--    t2r (t1,t2,t3,t4,t5,t6,t7,t8,t9) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,())))))))))
+--    r2t (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9)
+--instance RTupleConv (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,())))))))))) (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10) where
+--    t2r (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,()))))))))))
+--    r2t (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,())))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10)
 
 type family Tuple2RTuple a where
     Tuple2RTuple ()                               = ()
