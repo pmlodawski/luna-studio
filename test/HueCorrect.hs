@@ -40,7 +40,7 @@ import           Flowbox.Prelude as P hiding (lookup)
 import           Flowbox.Graphics.Image.Image
 import qualified Flowbox.Graphics.Mockup as Mockup
 import           Flowbox.Math.Function.Accelerate.BSpline as BSpline
-import           Flowbox.Math.Function.CurveGui as CurveGui
+import           Flowbox.Math.Function.CurveGUI as CurveGUI
 
 generateConstantCurve :: Double -> [Point2 Double]
 generateConstantCurve n = P.map (\x -> Point2 x n) (P.take 6 $ iterate (+1) 0.0)
@@ -54,15 +54,15 @@ hueCorrectLuna' lum sat r g b rSup gSup bSup img = Mockup.onEachColorRGB (Color.
 
 conversionToBSplineTest1 :: IO ()
 conversionToBSplineTest1 = do
-    let h = CurveGui.Linear
-    let curve = BezierCurve [ CurveGui.ControlPoint (Point2 0.0 1.0) h h
-                            , CurveGui.ControlPoint (Point2 1.0 2.0) h h
-                            , CurveGui.ControlPoint (Point2 2.0 1.0) h h
-                            , CurveGui.ControlPoint (Point2 3.0 2.0) h h
-                            , CurveGui.ControlPoint (Point2 4.0 1.0) h h
-                            , CurveGui.ControlPoint (Point2 5.0 2.0) h h ]
+    let h = CurveGUI.Linear
+    let curve = BezierCurve [ CurveGUI.ControlPoint (Point2 0.0 1.0) h h
+                            , CurveGUI.ControlPoint (Point2 1.0 2.0) h h
+                            , CurveGUI.ControlPoint (Point2 2.0 1.0) h h
+                            , CurveGUI.ControlPoint (Point2 3.0 2.0) h h
+                            , CurveGUI.ControlPoint (Point2 4.0 1.0) h h
+                            , CurveGUI.ControlPoint (Point2 5.0 2.0) h h ]
 
-    let bSpline = CurveGui.convertToBSpline curve
+    let bSpline = CurveGUI.convertToBSpline curve
     print (A.toList bSpline)
 
     let v = [ valueAt (A.use bSpline) (A.constant 1.5)
@@ -75,14 +75,14 @@ conversionToBSplineTest1 = do
 
 conversionToBSplineTest2 :: IO ()
 conversionToBSplineTest2 = do
-    let h = CurveGui.NonLinear 0.5 0.0
-    let curve = BezierCurve [ CurveGui.ControlPoint (Point2 0.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 1.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 2.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 3.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 4.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 5.0 2.0) h h ]
-    let bSpline = CurveGui.convertToBSpline curve
+    let h = CurveGUI.NonLinear 0.5 0.0
+    let curve = BezierCurve [ CurveGUI.ControlPoint (Point2 0.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 1.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 2.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 3.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 4.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 5.0 2.0) h h ]
+    let bSpline = CurveGUI.convertToBSpline curve
 
     print (A.toList bSpline)
 

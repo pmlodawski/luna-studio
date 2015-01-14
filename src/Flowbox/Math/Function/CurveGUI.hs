@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Math.Function.CurveGui where
+module Flowbox.Math.Function.CurveGUI where
 
 import           Flowbox.Prelude
 import           Flowbox.Math.Function.Accelerate.BSpline
@@ -45,7 +45,7 @@ convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (length l)) l :: 
         l = convertToNodeList vertices
 
 convertToNodeList :: [ControlPoint Double] -> [BSplineNode Double]
-convertToNodeList l = 
+convertToNodeList l =
     let
         safeMap :: [ControlPoint Double] -> ControlPoint Double -> [BSplineNode Double] -> [BSplineNode Double]
         safeMap (s:r:seg) l acc = safeMap (r:seg) s ((convertToNode l s r):acc)
@@ -133,6 +133,6 @@ convertToNodeList l =
                 Up  -> Point2 x (y+w)
                 Down -> Point2 x (y-w)
     in
-        case l of 
+        case l of
             (a:b:seg) -> safeMap (b:seg) a [processLeftmost a b]
             (a:[]) -> convertSingleElem a
