@@ -170,7 +170,7 @@ onEachColorRGB f img = img'
                     , ("rgba.b", b')
                   ]
 
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 onEachChannel :: (Channel -> Channel) -> Image -> Image
 onEachChannel f = Image.map $ View.map f
@@ -255,7 +255,7 @@ saturateLuna (fmap variable -> Color.RGBA saturationR saturationG saturationB sa
                   , ("rgba.b", bSaturated)
                   ]
 
-          saturated = Image.insert view' img
+          saturated = Image.insertPrimary view' img
 
 posterizeLuna :: Double -> Image -> Image
 posterizeLuna (variable -> colors) = onEach $ posterize colors
@@ -290,7 +290,7 @@ keyer' f img = img'
 
           view' = insertChannelFloats view [("rgba.a", alpha)]
 
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 unsafeGetRGB :: Image -> M.Matrix2 (Color.RGB Double)
 unsafeGetRGB img = rgb
@@ -320,7 +320,7 @@ differenceKeyer' f background foreground = img'
           Right view = lookupPrimary foreground
           view' = insertChannelFloats view [("rgba.a", alpha)]
 
-          img' = Image.insert view' foreground
+          img' = Image.insertPrimary view' foreground
 
 differenceKeyerLuna :: Double -> Double -> Image -> Image -> Image
 differenceKeyerLuna (variable -> offset) (variable -> gain) background foreground = img'
@@ -635,7 +635,7 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
                               , ("rgba.b", rasterizer $ b)
                               , ("rgba.a", rasterizer $ a)
                             ]
-                    img' = Image.insert view' img1
+                    img' = Image.insertPrimary view' img1
           Right view = lookupPrimary img1
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (fromMatrix (A.Constant 0))
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (fromMatrix (A.Constant 0))
@@ -649,7 +649,7 @@ onShader f img = img'
                     , ("rgba.b", b)
                     , ("rgba.a", a)
                   ]
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 erodeLuna :: Int -> Image -> Image
 erodeLuna (variable -> size) = onShader $ erode $ pure size
@@ -683,7 +683,7 @@ withAlpha f img = img'
                     , ("rgba.b", b')
                     , ("rgba.a", a)
                   ]
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 invertLuna :: Image -> Image
 invertLuna = onEachRGBA invert invert invert id
@@ -755,7 +755,7 @@ histEqLuna (variable -> bins) img = img'
                     , ("rgba.b", b)
                   ]
 
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 deriving instance Functor A.Boundary
 
@@ -773,7 +773,7 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
                     , ("rgba.g", g')
                     , ("rgba.b", b')
                   ]
-        img' = Image.insert view' img
+        img' = Image.insertPrimary view' img
 
     return img'
 
@@ -968,7 +968,7 @@ onImageRGBA fr fg fb fa img = img'
                     , ("rgba.b", b')
                     , ("rgba.a", a')
                     ]
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 liftF6 f t1 t2 t3 t4 t5 t6 = do
     t1' <- t1
@@ -1074,7 +1074,7 @@ edgeDetectLuna edgeOperator img = img'
           (r, g, b, _) = unsafeGetChannels alphas
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
           Right view = lookupPrimary img
-          img' = Image.insert (insertChannelFloats view [("rgba.a", alphaSum)]) img
+          img' = Image.insertPrimary (insertChannelFloats view [("rgba.a", alphaSum)]) img
 
 gammaToLinearLuna :: Gamma.Companding a (A.Exp Double) => a -> Image -> Image
 gammaToLinearLuna companding = onEach $ (Gamma.toLinear companding :: A.Exp Double -> A.Exp Double)
