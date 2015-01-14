@@ -301,10 +301,10 @@ unsafeGetRGB img = rgb
 unsafeGetChannels :: Image -> (M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double)
 unsafeGetChannels img = (r, g, b, a)
     where Right view = lookupPrimary img
-          Right (Just (ChannelFloat _ (asMatrix -> MatrixData r))) = View.get view "rgba.r"
-          Right (Just (ChannelFloat _ (asMatrix -> MatrixData g))) = View.get view "rgba.g"
-          Right (Just (ChannelFloat _ (asMatrix -> MatrixData b))) = View.get view "rgba.b"
-          Right (Just (ChannelFloat _ (asMatrix -> MatrixData a))) = View.get view "rgba.a"
+          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData r))) = View.get view "rgba.r"
+          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData g))) = View.get view "rgba.g"
+          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData b))) = View.get view "rgba.b"
+          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData a))) = View.get view "rgba.a"
 
 keyerLuna :: KeyerMode -> Double -> Double -> Double -> Double -> Image -> Image
 keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
@@ -432,9 +432,9 @@ translateLuna :: Int -> Int -> Image -> Image
 translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) = onEachChannel f
     where v = V2 x (-y)
           f = \case
-              ChannelFloat name zeData -> ChannelFloat name $ ((\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) . Channel.asContinuous) zeData
-              ChannelInt   name zeData -> ChannelInt name   $ ((\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) . Channel.asContinuous) zeData
-              ChannelBit   name zeData -> ChannelBit name   $ ((\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) . Channel.asContinuous) zeData
+              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
+              (Channel.asContinuous -> ChannelBit   name zeData) -> ChannelBit name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
           mask = Nothing
           p :: Point2 (Exp Double) -> Point2 (Exp Double)
           p pt = Shader.translate (handle pt) pt
@@ -445,7 +445,7 @@ translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) 
               _ -> v
               --Just (VPS m) -> let
               --        Right rgba = Image.lookupPrimary m
-              --        unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
+              --        unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c
               --        m' = unpackMat $ View.get rgba "rgba.r"
               --        Shader _ str = Shader.nearest $ Shader.fromMatrix (A.Constant (0 :: Exp Double)) $ m'
               --        mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
@@ -467,7 +467,7 @@ translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) 
 --              Nothing      -> v
 --              Just (VPS m) -> let
 --                      Right rgba = Image.lookupPrimary m
---                      unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
+--                      unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c
 --                      m' = unpackMat $ View.get rgba "rgba.r"
 --                      Shader _ str = gen m'
 --                      mult pt x = A.round $ (str pt) * A.fromIntegral x
@@ -506,7 +506,7 @@ translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) 
 --              Nothing      -> v
 --              Just (VPS m) -> let
 --                      Right rgba = Image.lookupPrimary m
---                      unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
+--                      unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c
 --                      m' = unpackMat $ View.get rgba "rgba.r"
 --                      Shader _ str = gen m'
 --                      mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
@@ -1118,9 +1118,9 @@ toInterpolator = \case
 -- TODO^:    commented out for now(the boundary can't be explicitly typed here, we can have different data – why even try to interpolate all channels at the same time?)
 --interpolateChannelsLuna :: A.Boundary Double -> InterpolationFilter Double -> Image -> Image
 --interpolateChannelsLuna (fmap variable -> boundary) (toInterpolator . fmap variable -> interpol) = Image.map (View.map interpolate)
---    where interpolate (ChannelFloat name (asMatrix -> MatrixData mat)) = ChannelFloat name $ ContinuousData $ toGen $ mat
---          interpolate (ChannelInt   name (asMatrix -> MatrixData mat)) = ChannelInt   name $ ContinuousData $ toGen . M.map A.fromIntegral $ mat
---          interpolate (ChannelBit   name (asMatrix -> MatrixData mat)) = ChannelBit   name $ ContinuousData $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
+--    where interpolate (ChannelFloat name (asMatrixData -> MatrixData mat)) = ChannelFloat name $ ContinuousData $ toGen $ mat
+--          interpolate (ChannelInt   name (asMatrixData -> MatrixData mat)) = ChannelInt   name $ ContinuousData $ toGen . M.map A.fromIntegral $ mat
+--          interpolate (ChannelBit   name (asMatrixData -> MatrixData mat)) = ChannelBit   name $ ContinuousData $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
 
 --          toGen = interpol . fromMatrix boundary
 
@@ -1141,7 +1141,7 @@ toMultisampler grid = \case
 
 multisampleChannelsLuna :: Grid Int -> InterpolationFilter Double -> Image -> Image
 multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap variable -> sampler :: Sampler Double) = Image.map (View.map multisample)
-    where multisample (ChannelFloat name (asContinuous -> ContinuousData gen)) = ChannelFloat name $ MatrixData . rasterizer . sampler $ gen
+    where multisample (asContinuous -> ChannelFloat name (ContinuousData gen)) = ChannelFloat name $ MatrixData . rasterizer . sampler $ gen
           --                                                            FIXME[MM]: ^ we don't want this here,
           --                                                                         but ChannelShader requires ContinuousShader :/
           --                                                            FIXME[KM]: ^ I've changed the structure of Channels so we might have to talk about this
