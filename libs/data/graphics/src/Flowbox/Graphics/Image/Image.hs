@@ -15,7 +15,7 @@ module Flowbox.Graphics.Image.Image (
     singletonFromChans,
     views,
     insert,
-    insertDefault,
+    insertPrimary,
     delete,
     --update,
     lookup,
@@ -71,8 +71,8 @@ views img = maybe views' views'' (img ^. primaryView)
 insert :: View -> Image -> Image
 insert view img = img & arbitraryViews %~ Set.insert view
 
-insertDefault :: View -> Image -> Image
-insertDefault view img = maybe (img & primaryView .~ Just view) newDefault (img ^. primaryView)
+insertPrimary :: View -> Image -> Image
+insertPrimary view img = maybe (img & primaryView .~ Just view) newDefault (img ^. primaryView)
     where newDefault oldView = insert oldView img & primaryView .~ Just view
 
 delete :: View.Name -> Image -> Image
