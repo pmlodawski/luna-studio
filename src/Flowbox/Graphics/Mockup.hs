@@ -165,22 +165,18 @@ onEachMatrix :: (Matrix2 Double -> Matrix2 Double)
              -> (Matrix2 Double -> Matrix2 Double)
              -> Image
              -> Image
-onEachMatrix fr fg fb fa img = Image.singleton view
-    where Right rgba = Image.lookup "rgba" img
-          unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
-          r = unpackMat $ View.get rgba "rgba.r"
-          g = unpackMat $ View.get rgba "rgba.g"
-          b = unpackMat $ View.get rgba "rgba.b"
-          a = unpackMat $ View.get rgba "rgba.a"
-          --Right (Just a) = View.get rgba "rgba.a"
+onEachMatrix fr fg fb fa img = Image.singleton view'
+    where (r,g,b,a) = unsafeGetChannels img
+          Right view = lookupPrimary img
+
           makeChan name f c = ChannelFloat name $ asMatrix . MatrixData $ f c
-          view = View.append (makeChan "rgba.r" fr r)
-               $ View.append (makeChan "rgba.g" fg g)
-               $ View.append (makeChan "rgba.b" fb b)
-               $ View.append (makeChan "rgba.a" fa a)
-               -- $ View.append a
-               $ View.empty "rgba"
-               
+
+          view' = View.append (makeChan "rgba.r" fr r)
+                $ View.append (makeChan "rgba.g" fg g)
+                $ View.append (makeChan "rgba.b" fb b)
+                $ View.append (makeChan "rgba.a" fa a)
+                $ View.empty "rgba"
+
 onEachColorRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image -> Image
 onEachColorRGB f img = img'
     where rgb = unsafeGetRGB img

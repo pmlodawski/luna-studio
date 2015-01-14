@@ -34,7 +34,7 @@ import qualified Data.Array.Accelerate.CUDA as CUDA
 
 main :: IO ()
 main = do
-    print "- - - = = =   Misc Test  = = = - - -"
+    print "- - - = = =   Mattes Test  = = = - - -"
 
     let (w,h)  = (640, 480) :: (Int, Int)
     let closed = True
@@ -51,7 +51,7 @@ main = do
     let fea = Path True feather
     let mask = (Mask.Mask pat (Just fea))
     let matte = VectorMatte mask
-    
+
     let v1 = Color.RGBA 0.2 0.5 0.7 0.0
     let v2 = Color.RGBA 0.5 0.5 0.5 1.0
     let v3 = Color.RGBA 0.23 0.45 0.234 0.34
@@ -66,13 +66,11 @@ main = do
     let img2 = contrastLuna v6 matte img
     let img3 = exposureLuna v1 v5 matte img
     let img4 = gradeLuna' (VPS v1) (VPS v2) (VPS v2) v3 v5 v2 v2 matte img
-    let img5 = gaussianLuna 10 img
 
     saveImageLuna "shape.png" (matrixToImage $ rasterizeMask w h $ (Mask.Mask pat (Just fea)))
     saveImageLuna "lenaWithOffsetApplied.png" img1
     saveImageLuna "lenaWithContrastApplied.png" img2
     saveImageLuna "lenaWithExposureApplied.png" img3
     saveImageLuna "lenaWithGradeApplied.png" img4
-    saveImageLuna "lenaWithBlurApplied.png" img5
 
     print "done"
