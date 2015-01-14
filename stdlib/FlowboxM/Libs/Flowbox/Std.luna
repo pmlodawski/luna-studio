@@ -600,3 +600,6 @@ alias Time=Double
 
 def time:
     0.0
+
+def foo a:
+	a

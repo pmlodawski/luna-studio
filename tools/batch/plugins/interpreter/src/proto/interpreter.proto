@@ -156,7 +156,9 @@ message Interpreter {
         }
     }
     message Run {
-        message Request { }
+        message Request {
+            optional double timeValue = 1;
+        }
         message Update  { 
             required Request     request      = 1;
             repeated ProfileInfo profileInfos = 2;

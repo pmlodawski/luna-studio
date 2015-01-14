@@ -98,3 +98,9 @@ deleteNode projectID libraryID nodeID =
         Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
         Manager.cleanIfNeeded
         GPUMemory.performGC
+
+
+setTimeVar :: Double -> RPC Context (SessionST mm) ()
+setTimeVar time = liftSession $ do
+    Env.setTimeVar time
+    Invalidate.modifyTimeRefs

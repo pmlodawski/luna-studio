@@ -15,7 +15,6 @@ import qualified Control.Monad.Catch    as Catch
 import qualified Control.Monad.Ghc      as MGHC
 import qualified Data.Map               as Map
 import qualified Data.MultiSet          as MultiSet
-import qualified GHC
 
 import           Flowbox.Control.Error
 import qualified Flowbox.Data.Error                           as ValueError
@@ -40,8 +39,6 @@ import qualified Luna.Interpreter.Session.Env                 as Env
 import qualified Luna.Interpreter.Session.Error               as Error
 import qualified Luna.Interpreter.Session.Hint.Eval           as HEval
 import           Luna.Interpreter.Session.Session             (Session)
-import qualified Luna.Interpreter.Session.Session             as Session
-import qualified Luna.Interpreter.Session.TargetHS.Bindings   as Bindings
 
 
 
@@ -119,29 +116,20 @@ computeLookupValue :: VarName -> ([ModeValue], CompValueMap) -> Mode -> Session 
 computeLookupValue varName (modValues, compValMap) mode = do
     logger trace $ "Cached values count: " ++ show (Map.size compValMap)
     case Map.lookup (varName, mode) compValMap of
-        Nothing -> do val <- computeValue varName mode
+        Nothing -> do logger debug "Computing value"
+                      val <- computeValue varName mode
                       return (ModeValue mode (Just val):modValues, Map.insert (varName, mode) val compValMap)
-        justVal ->    return (ModeValue mode justVal:modValues, compValMap)
+        justVal -> do logger debug "Cached value"
+                      return (ModeValue mode justVal:modValues, compValMap)
 
 
 computeValue :: VarName -> Mode -> Session mm Value
-computeValue varName mode =
-    Session.withImports [ "Flowbox.Data.Serialization"
-                        , "Flowbox.Data.Mode"
-                        , "Flowbox.Graphics.Serialization"
-                        , "Prelude"
-                        , "Generated.Proto.Data.Value" ]
-                        $ lift2 $ flip Catch.catch excHandler $ do
-        logger trace computeExpr
-        Bindings.remove tmpName
-        _      <- GHC.runStmt computeExpr GHC.RunToCompletion
-        action <- HEval.interpret toValueExpr
-        Bindings.remove tmpName
-        liftIO $ action mode <??&.> "Internal error"
+computeValue varName mode = lift2 $ flip Catch.catch excHandler $ do
+    logger trace toValueExpr
+    action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
+    liftIO $ action mode <??&.> "Internal error"
     where
-        tmpName = "_tmp"
-        toValueExpr = "toValue " ++ tmpName
-        computeExpr = concat [tmpName, " <- return $ compute ", VarName.toString varName, " def"]
+        toValueExpr = "computeValue " ++ VarName.toString varName
 
         excHandler :: Catch.SomeException -> MGHC.Ghc Value
         excHandler exc = case Catch.fromException exc of
