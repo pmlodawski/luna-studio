@@ -384,8 +384,8 @@ def Image.posterize colors:
 
 # def Image.translate boundary x y:
 #     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-# def Image.translate x y:
-#     ```liftF3 translateLuna #{x} #{y} #{self}```
+def Image.translate x y:
+    ```liftF3 translateLuna #{x} #{y} #{self}```
 
 # def Image.scaleTo boundary x y:
 #     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```

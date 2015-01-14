@@ -202,8 +202,8 @@ def noImgMask self::Std:
 # def Image.rotate self::Image phi::Float:
 #     ```liftF2 turnCenterLuna #{phi} #{self}```
 
-# def Image.translate self::Image x::Int y::Int:
-#     ```liftF3 translateLuna #{x} #{y} #{self}```
+def Image.translate self::Image x::Int y::Int:
+    ```liftF3 translateLuna #{x} #{y} #{self}```
 
 # def Image.scaleCenter self::Image x::Float y::Float:
 #     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
