@@ -9,7 +9,6 @@
 {-# LANGUAGE TemplateHaskell     #-}
 module Luna.Interpreter.RPC.Handler.ASTWatch where
 
-import qualified Data.IntSet                                                                                   as IntSet
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project                                        ()
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
@@ -88,15 +87,10 @@ import qualified Generated.Proto.ProjectManager.Project.Modify.Update           
 import qualified Generated.Proto.ProjectManager.Project.Open.Update                                            as ProjectOpen
 import           Luna.Interpreter.Proto.CallPointPath                                                          ()
 import qualified Luna.Interpreter.RPC.Handler.Cache                                                            as CacheWrapper
-import           Luna.Interpreter.RPC.Handler.Lift
 import           Luna.Interpreter.RPC.Handler.Sync                                                             (sync)
-import qualified Luna.Interpreter.Session.Cache.Cache                                                          as Cache
-import           Luna.Interpreter.Session.Data.CallPoint                                                       (CallPoint (CallPoint))
-import qualified Luna.Interpreter.Session.Env                                                                  as Env
+import qualified Luna.Interpreter.RPC.Handler.Var                                                              as Var
 import           Luna.Interpreter.Session.Memory.Manager                                                       (MemoryManager)
 import           Luna.Interpreter.Session.Session                                                              (SessionST)
-import qualified Luna.Interpreter.Session.Var                                                                  as Var
-import qualified Luna.Pass.Analysis.ID.ExtractIDs                                                              as ExtractIDs
 
 
 
@@ -366,24 +360,11 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
     CacheWrapper.interpreterDo' tprojectID $ do
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
             Nothing               -> return ()
-            Just (defID, defExpr) -> do
-                ids <- hoistEither =<< ExtractIDs.runNodeExpr defExpr
-                liftSession $ do
-                    Cache.deleteNode libraryID defID
-                    mapM_ (Cache.deleteNode libraryID) $ IntSet.toList ids
-                    Env.deleteDependentNode (CallPoint libraryID nodeID) defID
-                    when (Var.isTimeRefNodeExpr defExpr) $
-                        Env.deleteTimeRef (CallPoint libraryID defID)
+            Just (defID, defExpr) -> Var.deleteTimeRef libraryID nodeID defID defExpr
         sync updateNo $ NodeDefaultHandler.set request
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
             Nothing               -> left "ASTWatch.graphNodeDefaultSet"
-            Just (defID, defExpr) -> do
-                ids <- hoistEither =<< ExtractIDs.runNodeExpr defExpr
-                liftSession $ do
-                    Env.insertDependentNode (CallPoint libraryID nodeID) defID
-                    Env.insertDependentNodes (CallPoint libraryID defID) ids
-                    when (Var.isTimeRefNodeExpr defExpr) $
-                        Env.insertTimeRef (CallPoint libraryID defID)
+            Just (defID, defExpr) -> Var.insertTimeRef libraryID nodeID defID defExpr
         CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
 
 
