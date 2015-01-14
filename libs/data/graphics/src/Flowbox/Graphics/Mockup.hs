@@ -80,7 +80,7 @@ import           Flowbox.Graphics.Utils.Utils
 import           Flowbox.Math.Matrix                                  as M
 import           Flowbox.Prelude                                      as P hiding (lookup)
 import           Flowbox.Math.Function.Accelerate.BSpline             as BSpline
-import qualified Flowbox.Math.Function.CurveGui                       as CurveGui
+import qualified Flowbox.Math.Function.CurveGUI                       as CurveGUI
 
 import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 import Control.PolyApplicative ((<<*>>))
@@ -784,43 +784,43 @@ constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
 type Handle = (VPS Int, VPS Double, VPS Double)
-type GuiControlPoint a = (VPS (Point2 a), VPS Handle, VPS Handle)
-type GuiCurve a = [(VPS (GuiControlPoint a))]
+type GUIControlPoint a = (VPS (Point2 a), VPS Handle, VPS Handle)
+type GUICurve a = [(VPS (GUIControlPoint a))]
 
-convertHandle :: Handle -> CurveGui.Handle
+convertHandle :: Handle -> CurveGUI.Handle
 convertHandle (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
     case t of
-        0 -> CurveGui.NonLinear w a
+        0 -> CurveGUI.NonLinear w a
         1 -> case a > 0 of
-                True  -> CurveGui.Vertical w CurveGui.Up
-                False -> CurveGui.Vertical w CurveGui.Down
-        2 -> CurveGui.Linear
+                True  -> CurveGUI.Vertical w CurveGUI.Up
+                False -> CurveGUI.Vertical w CurveGUI.Down
+        2 -> CurveGUI.Linear
 
-convertGuiControlPoint :: GuiControlPoint a -> CurveGui.ControlPoint a
-convertGuiControlPoint (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
-    CurveGui.ControlPoint p (convertHandle hIn) (convertHandle hOut)
+convertGUIControlPoint :: GUIControlPoint a -> CurveGUI.ControlPoint a
+convertGUIControlPoint (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
+    CurveGUI.ControlPoint p (convertHandle hIn) (convertHandle hOut)
 
-convertGuiCurve :: GuiCurve a -> CurveGui.Curve a
-convertGuiCurve (unpackLunaList -> c) = CurveGui.BezierCurve (fmap convertGuiControlPoint c)
+convertGUICurve :: GUICurve a -> CurveGUI.Curve a
+convertGUICurve (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertGUIControlPoint c)
 
-hueCorrectLuna :: VPS (GuiCurve Double) -> VPS (GuiCurve Double) ->
-                  VPS (GuiCurve Double) -> VPS (GuiCurve Double) -> VPS (GuiCurve Double) ->
-                  GuiCurve Double -> GuiCurve Double -> GuiCurve Double ->
-                  -- GuiCurve Double -> sat_thrsh will be added later
+hueCorrectLuna :: VPS (GUICurve Double) -> VPS (GUICurve Double) ->
+                  VPS (GUICurve Double) -> VPS (GUICurve Double) -> VPS (GUICurve Double) ->
+                  GUICurve Double -> GUICurve Double -> GUICurve Double ->
+                  -- GUICurve Double -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
-hueCorrectLuna (VPS (convertGuiCurve-> lum)) (VPS (convertGuiCurve -> sat))
-               (VPS (convertGuiCurve -> r)) (VPS (convertGuiCurve-> g))
-               (VPS (convertGuiCurve -> b)) (convertGuiCurve -> rSup)
-               (convertGuiCurve -> gSup) (convertGuiCurve-> bSup) img
-                    = onEachColorRGB (hueCorrect (CurveGui.convertToBSpline lum)
-                                                 (CurveGui.convertToBSpline sat)
-                                                 (CurveGui.convertToBSpline r)
-                                                 (CurveGui.convertToBSpline g)
-                                                 (CurveGui.convertToBSpline b)
-                                                 (CurveGui.convertToBSpline rSup)
-                                                 (CurveGui.convertToBSpline gSup)
-                                                 (CurveGui.convertToBSpline bSup)
+hueCorrectLuna (VPS (convertGUICurve-> lum)) (VPS (convertGUICurve -> sat))
+               (VPS (convertGUICurve -> r)) (VPS (convertGUICurve-> g))
+               (VPS (convertGUICurve -> b)) (convertGUICurve -> rSup)
+               (convertGUICurve -> gSup) (convertGUICurve-> bSup) img
+                    = onEachColorRGB (hueCorrect (CurveGUI.convertToBSpline lum)
+                                                 (CurveGUI.convertToBSpline sat)
+                                                 (CurveGUI.convertToBSpline r)
+                                                 (CurveGUI.convertToBSpline g)
+                                                 (CurveGUI.convertToBSpline b)
+                                                 (CurveGUI.convertToBSpline rSup)
+                                                 (CurveGUI.convertToBSpline gSup)
+                                                 (CurveGUI.convertToBSpline bSup)
                                      ) img
 
 gradeLuna' :: VPS (Color.RGBA Double)
