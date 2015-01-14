@@ -339,3 +339,9 @@ def testCC self::Std a::ColorCC:
 
 def time self::Std:
     0.0
+
+alias Time = Double
+    
+def foo self::Std a::Time:
+	a
+

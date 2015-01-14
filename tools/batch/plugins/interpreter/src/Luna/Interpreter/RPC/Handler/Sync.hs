@@ -26,6 +26,7 @@ import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Request as ProjectManagerSyncGet
 import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  as ProjectManagerSyncGet
 import           Luna.Interpreter.RPC.Handler.Lift
+import qualified Luna.Interpreter.RPC.Handler.Var                               as Var
 import qualified Luna.Interpreter.Session.Cache.Invalidate                      as Invalidate
 import qualified Luna.Interpreter.Session.Env                                   as Env
 import           Luna.Interpreter.Session.Session                               (SessionST)
@@ -80,6 +81,7 @@ projectmanagerSyncGet (ProjectManagerSyncGet.Status _ tdata updateNo) = do
     Batch.setProjectManager projectManager
     Batch.setUpdateNo updateNo
     syncLibManager
+    Var.rebuildTimeRefs
     liftSession Invalidate.modifyAll
 
 
