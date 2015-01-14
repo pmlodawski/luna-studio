@@ -11,69 +11,70 @@ module Luna.Interpreter.RPC.Handler.Interpreter where
 import           Control.Monad.Catch (bracket_)
 import qualified Data.Foldable       as Foldable
 import qualified Data.Maybe          as Maybe
+import qualified Data.MultiSet       as MultiSet
 import qualified Data.Sequence       as Sequence
-import qualified Data.Set            as Set
 
-import qualified Flowbox.Bus.Data.Message                                                     as Message
-import           Flowbox.Bus.RPC.RPC                                                          (RPC)
+import qualified Flowbox.Bus.Data.Message                                                    as Message
+import           Flowbox.Bus.RPC.RPC                                                         (RPC)
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert
-import qualified Flowbox.Data.MapForest                                                       as MapForest
-import qualified Flowbox.Data.SetForest                                                       as SetForest
-import           Flowbox.Prelude                                                              hiding (Context)
-import           Flowbox.ProjectManager.Context                                               (Context)
-import           Flowbox.System.Log.Logger                                                    hiding (error)
-import qualified Generated.Proto.Interpreter.Interpreter.Abort.Request                        as Abort
-import qualified Generated.Proto.Interpreter.Interpreter.Abort.Status                         as Abort
-import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Request                   as GetMainPtr
-import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Status                    as GetMainPtr
-import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Request                 as GetProjectID
-import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Status                  as GetProjectID
-import qualified Generated.Proto.Interpreter.Interpreter.Memory.GetLimits.Request             as MemoryGetLimits
-import qualified Generated.Proto.Interpreter.Interpreter.Memory.GetLimits.Status              as MemoryGetLimits
-import qualified Generated.Proto.Interpreter.Interpreter.Memory.SetLimits.Request             as MemorySetLimits
-import qualified Generated.Proto.Interpreter.Interpreter.Memory.SetLimits.Update              as MemorySetLimits
-import qualified Generated.Proto.Interpreter.Interpreter.Ping.Request                         as Ping
-import qualified Generated.Proto.Interpreter.Interpreter.Ping.Status                          as Ping
-import qualified Generated.Proto.Interpreter.Interpreter.Run.Request                          as Run
-import qualified Generated.Proto.Interpreter.Interpreter.Run.Update                           as Run
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultGet.Request as GetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultGet.Status  as GetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultSet.Request as SetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DefaultSet.Update  as SetDefaultSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Request     as DeleteSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Update      as DeleteSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DeleteAll.Request  as DeleteAllSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DeleteAll.Update   as DeleteAllSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Get.Request        as GetSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Get.Status         as GetSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Insert.Request     as InsertSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Insert.Update      as InsertSMode
-import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Request                   as SetMainPtr
-import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Update                    as SetMainPtr
-import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Request                 as SetProjectID
-import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Update                  as SetProjectID
-import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Request               as WatchPointAdd
-import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Update                as WatchPointAdd
-import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Request              as WatchPointList
-import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Status               as WatchPointList
-import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Request            as WatchPointRemove
-import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update             as WatchPointRemove
-import           Luna.Interpreter.Proto.CallPointPath                                         ()
-import           Luna.Interpreter.Proto.DefPoint                                              ()
-import           Luna.Interpreter.Proto.ProfileInfo                                           ()
-import qualified Luna.Interpreter.RPC.Handler.Cache                                           as Cache
+import qualified Flowbox.Data.MapForest                                                      as MapForest
+import qualified Flowbox.Data.SetForest                                                      as SetForest
+import           Flowbox.Prelude                                                             hiding (Context)
+import           Flowbox.ProjectManager.Context                                              (Context)
+import           Flowbox.System.Log.Logger                                                   hiding (error)
+import qualified Generated.Proto.Interpreter.Interpreter.Abort.Request                       as Abort
+import qualified Generated.Proto.Interpreter.Interpreter.Abort.Status                        as Abort
+import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Request                  as GetMainPtr
+import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Status                   as GetMainPtr
+import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Request                as GetProjectID
+import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Status                 as GetProjectID
+import qualified Generated.Proto.Interpreter.Interpreter.Memory.GetLimits.Request            as MemoryGetLimits
+import qualified Generated.Proto.Interpreter.Interpreter.Memory.GetLimits.Status             as MemoryGetLimits
+import qualified Generated.Proto.Interpreter.Interpreter.Memory.SetLimits.Request            as MemorySetLimits
+import qualified Generated.Proto.Interpreter.Interpreter.Memory.SetLimits.Update             as MemorySetLimits
+import qualified Generated.Proto.Interpreter.Interpreter.Ping.Request                        as Ping
+import qualified Generated.Proto.Interpreter.Interpreter.Ping.Status                         as Ping
+import qualified Generated.Proto.Interpreter.Interpreter.Run.Request                         as Run
+import qualified Generated.Proto.Interpreter.Interpreter.Run.Update                          as Run
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Request    as DeleteSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Delete.Update     as DeleteSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DeleteAll.Request as DeleteAllSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.DeleteAll.Update  as DeleteAllSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Get.Request       as GetSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Get.Status        as GetSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Insert.Request    as InsertSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Insert.Update     as InsertSMode
+import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Request                  as SetMainPtr
+import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Update                   as SetMainPtr
+import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Request                as SetProjectID
+import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Update                 as SetProjectID
+import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Get.Request                as VarTimeGet
+import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Get.Status                 as VarTimeGet
+import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Set.Request                as VarTimeSet
+import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Set.Update                 as VarTimeSet
+import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Request              as WatchPointAdd
+import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Update               as WatchPointAdd
+import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Request             as WatchPointList
+import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Status              as WatchPointList
+import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Request           as WatchPointRemove
+import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update            as WatchPointRemove
+import           Luna.Interpreter.Proto.CallPointPath                                        ()
+import           Luna.Interpreter.Proto.DefPoint                                             ()
+import           Luna.Interpreter.Proto.ProfileInfo                                          ()
+import qualified Luna.Interpreter.RPC.Handler.Cache                                          as Cache
 import           Luna.Interpreter.RPC.Handler.Lift
-import qualified Luna.Interpreter.RPC.Handler.Sync                                            as Sync
-import           Luna.Interpreter.RPC.QueueInfo                                               (QueueInfo)
-import qualified Luna.Interpreter.RPC.QueueInfo                                               as QueueInfo
-import qualified Luna.Interpreter.Session.AST.Executor                                        as Executor
-import qualified Luna.Interpreter.Session.Env                                                 as Env
-import qualified Luna.Interpreter.Session.Error                                               as Error
-import qualified Luna.Interpreter.Session.Memory                                              as Memory
-import           Luna.Interpreter.Session.Memory.Manager                                      (MemoryManager)
-import qualified Luna.Interpreter.Session.Memory.Manager                                      as Manager
-import           Luna.Interpreter.Session.Session                                             (SessionST)
+import qualified Luna.Interpreter.RPC.Handler.Sync                                           as Sync
+import           Luna.Interpreter.RPC.QueueInfo                                              (QueueInfo)
+import qualified Luna.Interpreter.RPC.QueueInfo                                              as QueueInfo
+import qualified Luna.Interpreter.Session.AST.Executor                                       as Executor
+import qualified Luna.Interpreter.Session.Cache.Invalidate                                   as Invalidate
+import qualified Luna.Interpreter.Session.Env                                                as Env
+import qualified Luna.Interpreter.Session.Error                                              as Error
+import qualified Luna.Interpreter.Session.Memory                                             as Memory
+import           Luna.Interpreter.Session.Memory.Manager                                     (MemoryManager)
+import qualified Luna.Interpreter.Session.Memory.Manager                                     as Manager
+import           Luna.Interpreter.Session.Session                                            (SessionST)
 
 
 
@@ -158,16 +159,15 @@ abort :: Abort.Request -> RPC Context (SessionST mm) Abort.Status
 abort = return . Abort.Status
 
 
-getDefaultSerializationMode :: GetDefaultSMode.Request -> RPC Context (SessionST mm) GetDefaultSMode.Status
-getDefaultSerializationMode request = do
-    mode <- liftSession Env.getDefaultSerializationMode
-    return $ GetDefaultSMode.Status request mode
+varTimeSet :: VarTimeSet.Request -> RPC Context (SessionST mm) VarTimeSet.Update
+varTimeSet request@(VarTimeSet.Request time) = do
+    liftSession $ do Env.setTimeVar time
+                     Invalidate.modifyTimeRefs
+    return $ VarTimeSet.Update request
 
 
-setDefaultSerializationMode :: SetDefaultSMode.Request -> RPC Context (SessionST mm) SetDefaultSMode.Update
-setDefaultSerializationMode request@(SetDefaultSMode.Request mode) = do
-    liftSession $ Env.setDefaultSerializationMode mode
-    return $ SetDefaultSMode.Update request
+varTimeGet :: VarTimeGet.Request -> RPC Context (SessionST mm) VarTimeGet.Status
+varTimeGet request = VarTimeGet.Status request <$> liftSession Env.getTimeVar
 
 
 getSerializationMode :: GetSMode.Request -> RPC Context (SessionST mm) GetSMode.Status
@@ -175,14 +175,14 @@ getSerializationMode request@(GetSMode.Request tcallPointPath) = do
     let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     modes <- liftSession $ Env.lookupSerializationModes callPointPath
-    return $ GetSMode.Status request $ Sequence.fromList $ Maybe.maybe [] Set.toList modes
+    return $ GetSMode.Status request $ Sequence.fromList $ Maybe.maybe [] MultiSet.toList modes
 
 
 insertSerializationMode :: InsertSMode.Request -> RPC Context (SessionST mm) InsertSMode.Update
 insertSerializationMode request@(InsertSMode.Request tcallPointPath modes) = do
     let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ Env.insertSerializationModes callPointPath $ Set.fromList $ Foldable.toList modes
+    liftSession $ Env.insertSerializationModes callPointPath $ MultiSet.fromList $ Foldable.toList modes
     return $ InsertSMode.Update request
 
 
@@ -190,7 +190,7 @@ deleteSerializationMode :: DeleteSMode.Request -> RPC Context (SessionST mm) Del
 deleteSerializationMode request@(DeleteSMode.Request tcallPointPath modes) = do
     let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    liftSession $ Env.deleteSerializationModes callPointPath $ Set.fromList $ Foldable.toList modes
+    liftSession $ Env.deleteSerializationModes callPointPath $ MultiSet.fromList $ Foldable.toList modes
     return $ DeleteSMode.Update request
 
 

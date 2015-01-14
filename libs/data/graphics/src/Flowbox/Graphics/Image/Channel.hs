@@ -4,46 +4,90 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE RankNTypes    #-}
+{-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Image.Channel where
 
-import Flowbox.Graphics.Composition.Generators.Rasterizer
-import Flowbox.Graphics.Composition.Generators.Sampler
-import Flowbox.Graphics.Composition.Generators.Structures
-import Flowbox.Math.Matrix as M hiding ((++))
+import Data.Set
+import Data.Typeable
+
+import Flowbox.Graphics.Shader.Matrix
+import Flowbox.Graphics.Shader.Rasterizer
+import Flowbox.Graphics.Shader.Sampler
+import Flowbox.Graphics.Shader.Shader
+import Flowbox.Math.Matrix                as M hiding ((++))
 import Flowbox.Prelude
 
 
 
 type Name = String
-type Select = [Name]
+type Select = Set Name
 
-data Channel = ChannelFloat     Name (ChannelData Double)
+data Channel = ChannelFloat     Name (ChannelData Double) -- TODO[KM]: add a ChannelDouble constructor
              | ChannelInt       Name (ChannelData Int)
              | ChannelBit       Name (ChannelData Bool)
-             | ChannelGenerator Name (ContinousGenerator (Exp Double))
 
-data ChannelData a = FlatData { _matrix :: Matrix2 a }
-                   deriving Show
-
-makeLenses ''ChannelData
+data ChannelData a = MatrixData     (Matrix2 a)
+                   | DiscreteData   (DiscreteShader (Exp a))
+                   | ContinuousData (ContinuousShader (Exp a)) -- TODO[KM]: figure out what to do with the space being parametrised using Double and not Float (most processing should be done with Floats as it is way faster, so what about the Double?)
 
 instance Show Channel where
-    show c = "Channel {name = \"" ++ name c ++ "\"}"
+    show c = "Channel {name = \"" ++ name c ++ "\", data = " ++ dataType ++ "}"
+        where dataType = case c of
+                             ChannelFloat _ d -> typeOf d
+                             ChannelInt   _ d -> typeOf d
+                             ChannelBit   _ d -> typeOf d
+              typeOf d = case d of
+                             MatrixData{}     -> "Matrix2"
+                             DiscreteData{}   -> "DiscreteShader"
+                             ContinuousData{} -> "ContinousShader"
+
+data Fun = FunFloat  (Exp Float -> Exp Float)
+         | FunDouble (Exp Double -> Exp Double)
+         | FunInt    (Exp Int -> Exp Int)
+         | FunBit    (Exp Bool -> Exp Bool)
 
 name :: Channel -> Name
 name (ChannelFloat     n _) = n
 name (ChannelInt       n _) = n
 name (ChannelBit       n _) = n
-name (ChannelGenerator n _) = n
 
 compute :: Backend -> Sampler Double -> Channel -> Channel
-compute b _ (ChannelFloat     n d) = ChannelFloat n . computeFlatData b $ d
-compute b _ (ChannelInt       n d) = ChannelInt   n . computeFlatData b $ d
-compute b _ (ChannelBit       n d) = ChannelBit   n . computeFlatData b $ d
-compute b s (ChannelGenerator n g) = ChannelFloat n . FlatData . rasterizer . s $ g
+compute b _ (ChannelFloat     n d) = ChannelFloat n . computeData b $ d
+compute b _ (ChannelInt       n d) = ChannelInt   n . computeData b $ d
+compute b _ (ChannelBit       n d) = ChannelBit   n . computeData b $ d
 
-computeFlatData :: (Elt e) => Backend -> ChannelData e -> ChannelData e
-computeFlatData b = over matrix $ M.compute b
+computeData :: (Elt e) => Backend -> ChannelData e -> ChannelData e
+computeData b (asMatrix -> MatrixData matrix) = MatrixData $ M.compute b matrix
+
+asMatrix :: (Elt e) => ChannelData e -> ChannelData e
+asMatrix zeData@MatrixData{}     = zeData
+asMatrix (DiscreteData zeData)   = MatrixData $ rasterizer zeData
+asMatrix (ContinuousData zeData) = MatrixData $ (rasterizer . monosampler) zeData
+
+asDiscrete :: (Elt e) => ChannelData e -> ChannelData e
+asDiscrete zeData@DiscreteData{}   = zeData
+asDiscrete (MatrixData zeData)     = DiscreteData $ unsafeFromMatrix zeData
+asDiscrete (ContinuousData zeData) = DiscreteData $ monosampler zeData
+
+asContinuous :: (Elt e) => ChannelData e -> ChannelData e
+asContinuous zeData@ContinuousData{} = zeData
+asContinuous (MatrixData zeData)     = ContinuousData $ (nearest . unsafeFromMatrix) zeData
+asContinuous (DiscreteData zeData)   = ContinuousData $ nearest zeData
+
+mapOverData :: Elt a => (Exp a -> Exp a) -> ChannelData a -> ChannelData a
+mapOverData f chanData = case chanData of
+    MatrixData mat        -> MatrixData     $ M.map f mat
+    DiscreteData shader   -> DiscreteData   $ fmap f shader
+    ContinuousData shader -> ContinuousData $ fmap f shader
+
+unsafeMap :: Fun -> Channel -> Channel
+unsafeMap (FunFloat f) _ = undefined -- TODO[KM]: add support for functions working on Floats after migrating to Floats and Doubles
+unsafeMap (FunDouble f) (ChannelFloat n zeData) = ChannelFloat n (mapOverData f zeData)
+unsafeMap (FunInt f)    (ChannelInt n zeData)   = ChannelInt   n (mapOverData f zeData)
+unsafeMap (FunBit f)    (ChannelBit n zeData)   = ChannelBit   n (mapOverData f zeData)
+unsafeMap _ _ = error "Flowbox.Graphics.Image.Channel.unsafeMap - error: mismatching function type and Channel type"
+

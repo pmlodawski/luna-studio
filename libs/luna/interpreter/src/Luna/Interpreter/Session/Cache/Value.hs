@@ -9,31 +9,39 @@
 
 module Luna.Interpreter.Session.Cache.Value where
 
-import qualified Control.Monad.Catch as Catch
-import qualified Control.Monad.Ghc   as MGHC
-import qualified Data.Set            as Set
+import           Control.Exception.Base (throw)
+import           Control.Monad          (foldM)
+import qualified Control.Monad.Catch    as Catch
+import qualified Control.Monad.Ghc      as MGHC
+import qualified Data.Map               as Map
+import qualified Data.MultiSet          as MultiSet
 import qualified GHC
 
 import           Flowbox.Control.Error
-import qualified Flowbox.Data.Error                          as ValueError
-import qualified Flowbox.Data.Serialization                  as Serialization
+import qualified Flowbox.Data.Error                           as ValueError
+import qualified Flowbox.Data.Serialization                   as Serialization
 import           Flowbox.Prelude
-import           Flowbox.Source.Location                     (loc)
-import           Flowbox.System.Log.Logger                   as L
-import           Generated.Proto.Mode.ModeValue              (ModeValue (ModeValue))
-import qualified Luna.Graph.Flags                            as Flags
-import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
-import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
-import qualified Luna.Interpreter.Session.Cache.Status       as Status
-import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
-import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Luna.Interpreter.Session.Data.VarName       (VarName)
-import qualified Luna.Interpreter.Session.Env                as Env
-import qualified Luna.Interpreter.Session.Error              as Error
-import qualified Luna.Interpreter.Session.Hint.Eval          as HEval
-import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Interpreter.Session.Session            as Session
-import qualified Luna.Interpreter.Session.TargetHS.Bindings  as Bindings
+import           Flowbox.Source.Location                      (loc)
+import           Flowbox.System.Log.Logger                    as L
+import           Generated.Proto.Data.Value                   (Value)
+import           Generated.Proto.Mode.Mode                    (Mode)
+import           Generated.Proto.Mode.ModeValue               (ModeValue (ModeValue))
+import qualified Luna.Graph.Flags                             as Flags
+import qualified Luna.Interpreter.Session.Cache.Cache         as Cache
+import           Luna.Interpreter.Session.Cache.Info          (CompValueMap)
+import qualified Luna.Interpreter.Session.Cache.Info          as CacheInfo
+import qualified Luna.Interpreter.Session.Cache.Status        as Status
+import           Luna.Interpreter.Session.Data.AbortException (AbortException (AbortException))
+import qualified Luna.Interpreter.Session.Data.CallPoint      as CallPoint
+import           Luna.Interpreter.Session.Data.CallPointPath  (CallPointPath)
+import           Luna.Interpreter.Session.Data.VarName        (VarName)
+import qualified Luna.Interpreter.Session.Data.VarName        as VarName
+import qualified Luna.Interpreter.Session.Env                 as Env
+import qualified Luna.Interpreter.Session.Error               as Error
+import qualified Luna.Interpreter.Session.Hint.Eval           as HEval
+import           Luna.Interpreter.Session.Session             (Session)
+import qualified Luna.Interpreter.Session.Session             as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings   as Bindings
 
 
 
@@ -80,10 +88,7 @@ getWithStatus callPointPath = do
 
 reportIfVisible :: CallPointPath -> Session mm ()
 reportIfVisible callPointPath = do
-    flags <- Env.getFlags $ last callPointPath
-    unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
-         || Flags.isSet' flags (view Flags.graphViewGenerated  )
-         || Flags.isFolded flags                               ) $
+    Env.whenVisible callPointPath $
         foldedReRoute callPointPath >>= report callPointPath
 
 
@@ -99,17 +104,28 @@ report callPointPath varName = do
 get :: VarName -> CallPointPath -> Session mm [ModeValue]
 get varName callPointPath = do
     modes <- Env.getSerializationModes callPointPath
-    let tmpName = "_tmp"
-        toValueExpr = "toValue " ++ tmpName
-        computeExpr = concat [tmpName, " <- return $ compute ", varName, " def"]
+    if MultiSet.null modes
+        then logger debug "No serialization modes set" >> return []
+        else do
+            cinfo <- Env.cachedLookup callPointPath <??&> Error.OtherError $(loc) "Internal error"
+            let distinctModes = MultiSet.distinctElems modes
+                valCache = cinfo ^. CacheInfo.values
+            (modValues, valCache') <- foldM (computeLookupValue varName) ([], valCache) distinctModes
+            Env.cachedInsert callPointPath $ CacheInfo.values .~ valCache' $ cinfo
+            return modValues
 
-        excHandler :: Catch.SomeException -> MGHC.Ghc [ModeValue]
-        excHandler exc = do
-            logger L.error $ show exc
-            val <- liftIO (Serialization.toValue (ValueError.Error $ show exc) def)
-            return $ map (`ModeValue` val) $ Set.toList modes
+
+computeLookupValue :: VarName -> ([ModeValue], CompValueMap) -> Mode -> Session mm ([ModeValue], CompValueMap)
+computeLookupValue varName (modValues, compValMap) mode = do
+    logger trace $ "Cached values count: " ++ show (Map.size compValMap)
+    case Map.lookup (varName, mode) compValMap of
+        Nothing -> do val <- computeValue varName mode
+                      return (ModeValue mode (Just val):modValues, Map.insert (varName, mode) val compValMap)
+        justVal ->    return (ModeValue mode justVal:modValues, compValMap)
 
 
+computeValue :: VarName -> Mode -> Session mm Value
+computeValue varName mode =
     Session.withImports [ "Flowbox.Data.Serialization"
                         , "Flowbox.Data.Mode"
                         , "Flowbox.Graphics.Serialization"
@@ -121,7 +137,19 @@ get varName callPointPath = do
         _      <- GHC.runStmt computeExpr GHC.RunToCompletion
         action <- HEval.interpret toValueExpr
         Bindings.remove tmpName
-        liftIO $ mapM (\mode -> ModeValue mode <$> action mode) $ Set.toList modes
+        liftIO $ action mode <??&.> "Internal error"
+    where
+        tmpName = "_tmp"
+        toValueExpr = "toValue " ++ tmpName
+        computeExpr = concat [tmpName, " <- return $ compute ", VarName.toString varName, " def"]
+
+        excHandler :: Catch.SomeException -> MGHC.Ghc Value
+        excHandler exc = case Catch.fromException exc of
+            Just AbortException -> throw AbortException
+            Nothing -> do
+                logger L.error $ show exc
+                liftIO (Serialization.toValue (ValueError.Error $ show exc) def) <??&.> "Internal error"
+
 
 
 foldedReRoute :: CallPointPath -> Session mm VarName

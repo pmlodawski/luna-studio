@@ -4,55 +4,155 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns    #-}
+
 module Flowbox.Graphics.Image.Image (
-    Image(..),
+    Image,
+    pattern DefaultView,
+    empty,
+    singleton,
+    singletonFromChans,
+    views,
     insert,
+    insertDefault,
     delete,
+    --update,
     lookup,
-    update,
+    lookupPrimary,
+    lookupDefault,
     map,
-    singleton
+    get,
+    getFromPrimary,
+    getChannels,
+    getChannelsFromPrimary,
+    append,
+    appendMulti,
+    appendToPrimary,
+    appendMultiToPrimary
 ) where
 
-import qualified Data.Map                     as Map
-import qualified Data.Set                     as Set
-import           Flowbox.Graphics.Image.Error
-import qualified Flowbox.Graphics.Image.View  as View
-import           Flowbox.Prelude              hiding (lookup, map, sequence, views)
+import           Control.Error.Util (hush)
+import           Data.Maybe
+import qualified Data.Set as Set
+import           Flowbox.Data.Set (Set)
 
-data Image = Image { _views       :: Map.Map View.Name View.View
-                   , _defaultView :: View.Select
+import           Flowbox.Graphics.Image.Channel (Channel(..))
+import qualified Flowbox.Graphics.Image.Channel as Channel
+import           Flowbox.Graphics.Image.Error
+import           Flowbox.Graphics.Image.View  (View(..))
+import qualified Flowbox.Graphics.Image.View  as View
+import           Flowbox.Prelude              hiding (empty, lookup, map, view, views)
+
+
+
+data Image = Image { _arbitraryViews :: Set View
+                   , _primaryView    :: Maybe View
                    } deriving (Show)
+
+pattern DefaultView view <- Image _ view
+
 makeLenses ''Image
 
-image :: Map.Map View.Name View.View -> View.Select -> Either Error Image
-image imgviews defaultview = if defaultview `Set.isSubsetOf` Map.keysSet imgviews
-                                then newimg
-                                else Left InvalidMap
-    where keysMatchingNames = Map.foldrWithKey (\k v acc -> acc && View.name v == k) True imgviews
-          newimg = if keysMatchingNames then return $ Image imgviews defaultview
-                                        else Left InvalidMap
+empty :: Image
+empty = Image Set.empty Nothing
 
-singleton :: View.View -> Image
-singleton view = Image (Map.singleton name view) (Set.singleton name)
-    where name = View.name view
+singleton :: View -> Image
+singleton = Image Set.empty . Just
 
-insert :: View.View -> Image -> Image
-insert view img = over views (Map.insert (View.name view) view) img
+singletonFromChans :: [Channel] -> Image
+singletonFromChans chans = singleton $ foldr View.append View.emptyDefault chans
 
--- FIXME[MM]: shouldn't it throw if view is non-existant?
+views :: Image -> Set View
+views img = maybe views' views'' (img ^. primaryView)
+    where views'    = img ^. arbitraryViews
+          views'' v = Set.insert v views'
+
+insert :: View -> Image -> Image
+insert view img = img & arbitraryViews %~ Set.insert view
+
+insertDefault :: View -> Image -> Image
+insertDefault view img = maybe (img & primaryView .~ Just view) newDefault (img ^. primaryView)
+    where newDefault oldView = insert oldView img & primaryView .~ Just view
+
 delete :: View.Name -> Image -> Image
-delete key img = Image (Map.delete key $ img ^. views)
-                       (Set.delete key $ img ^. defaultView)
+delete name img = maybe (removeView name) handleDefault (img ^. primaryView)
+    where removeView vn   = img & arbitraryViews %~ Set.delete (dummyView vn)
+          handleDefault v = if v ^. View.name == name
+                                then img & primaryView .~ Nothing
+                                else removeView name
 
-lookup :: View.Name -> Image -> Maybe View.View
-lookup key img = Map.lookup key (img ^. views)
+lookup :: View.Name -> Image -> Result View
+lookup name img = case Set.lookupIndex (dummyView name) vs of
+    Nothing  -> Left $ ViewLookupError name
+    Just val -> Right $ Set.elemAt val vs
+    where vs = views img
 
-update :: (View.View -> Maybe View.View) -> View.Name -> Image -> Image
-update f key img = case lookup key img >>= f of
-    Just newval -> insert newval img
-    Nothing     -> delete key img
+lookupPrimary :: Image -> Result View
+lookupPrimary img = fromMaybe (Left $ ViewLookupError primaryViewTag) $ fmap Right (img ^. primaryView)
 
-map :: (View.View -> View.View) -> Image -> Image --Either Error (Image v)
-map lambda (Image vs dv) = Image (Map.map lambda vs) dv
---map lambda img = image (Map.map lambda $ img ^.views) (img ^. defaultView)
+lookupDefault :: Image -> Result View
+lookupDefault = lookup View.defaultName
+
+-- TODO[KM]: lookupSelect - just like lookup, but taking View.Select as an argument (should it return a list of Eithers, or Either with a list inside - crashing if any of the names from Select does not exist)
+
+-- TODO[KM]: figure out what to do about the `f` returning Maybe and lookup going through Either
+--update :: (View.View -> Maybe View.View) -> View.Name -> Image -> Image
+--update f name img = case lookup name img >>= f of
+--    Just newval -> insert newval img
+--    Nothing     -> delete name img
+
+map :: (View -> View) -> Image -> Image
+map f img = img & arbitraryViews %~ Set.map f
+                & primaryView %~ fmap f
+
+--mapPrimaryChannels :: (Channel -> Channel) -> Image -> Image
+--mapPrimaryChannels f img = img
+
+get :: Channel.Name -> View.Name -> Image -> Result (Maybe Channel)
+get chanName viewName img = do
+    view    <- lookup viewName img
+    channel <- View.get view chanName
+    return channel
+
+getFromPrimary :: Channel.Name -> Image -> Result (Maybe Channel)
+getFromPrimary chanName img = case img ^. primaryView of
+    Nothing -> Left $ ViewLookupError primaryViewTag
+    Just v  -> View.get v chanName
+
+getChannels :: Channel.Select -> View.Name -> Image ->  Result ([Maybe Channel])
+getChannels chans viewName img = do
+    view     <- lookup viewName img
+    sequence $ fmap (View.get view) $ Set.toList chans
+
+getChannelsFromPrimary :: Channel.Select -> Image ->  Result ([Maybe Channel])
+getChannelsFromPrimary chans img = case img ^. primaryView of
+    Nothing -> Left $ ViewLookupError primaryViewTag
+    Just v  -> sequence $ fmap (View.get v) $ Set.toList chans
+
+append :: Channel -> View.Name -> Image -> Image
+append chan viewName img = insert (View.append chan view) img
+    where view = fromMaybe (View.empty viewName) $ hush $ lookup viewName img
+
+appendMulti :: [Channel] -> View.Name -> Image -> Image
+appendMulti chans viewName img = insert view' img
+    where view' = foldr View.append view chans
+          view  = fromMaybe (View.empty viewName) $ hush $ lookup viewName img
+
+appendToPrimary :: Channel -> Image -> Image
+appendToPrimary chan img = insert (View.append chan view) img
+    where view = fromMaybe View.emptyDefault (img ^. primaryView)
+
+appendMultiToPrimary :: [Channel] -> Image -> Image
+appendMultiToPrimary chans img = insert view' img
+    where view' = foldr View.append view chans
+          view = fromMaybe View.emptyDefault (img ^. primaryView)
+
+
+-- == HELPERS ==
+
+dummyView :: View.Name -> View
+dummyView name = View.empty name
+
+primaryViewTag :: String
+primaryViewTag = "- - primary view - -"

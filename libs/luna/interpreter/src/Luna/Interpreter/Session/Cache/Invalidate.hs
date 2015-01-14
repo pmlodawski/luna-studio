@@ -9,6 +9,7 @@ module Luna.Interpreter.Session.Cache.Invalidate where
 
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.List           as List
+import qualified Data.Set            as Set
 
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude                             hiding (matching)
@@ -58,6 +59,12 @@ modifyLibrary libraryID = do
     Env.addReload libraryID Reload.ReloadLibrary
 
 
+modifyTimeRefs :: Session mm ()
+modifyTimeRefs = do
+    timeRefs <- Set.toList <$> Env.getTimeRefs
+    mapM_ modifyCallPoint timeRefs
+
+
 --modifyDef :: Library.ID -> AST.ID -> Session mm ()
 --modifyDef libraryID defID = do
 --    let matchDef k v = last k ^. CallPoint.libraryID == libraryID
@@ -89,6 +96,10 @@ modifyBreadcrumbs libraryID bc = do
             else Reload.ReloadLibrary
 
 
+modifyCallPoint :: CallPoint -> Session mm ()
+modifyCallPoint (CallPoint libraryID nodeID) = modifyNode libraryID nodeID
+
+
 modifyNode :: Library.ID -> Node.ID -> Session mm ()
 modifyNode libraryID nodeID = do
     let matchNode k _ = last k == CallPoint libraryID nodeID
@@ -107,9 +118,13 @@ modifyNodeSuccessors libraryID bc nodeID = do
 
 
 modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session mm ()
-modifyMatching predicate = do
+modifyMatching = markMatching CacheStatus.Modified
+
+
+markMatching :: CacheStatus -> (CallPointPath -> CacheInfo -> Bool) -> Session mm ()
+markMatching status predicate = do
     matching <- MapForest.find predicate <$> Env.getCached
-    mapM_ (setParentsStatus CacheStatus.Modified . fst) matching
+    mapM_ (setParentsStatus status . fst) matching
     Env.setAllReady False
 
 
@@ -125,3 +140,6 @@ markSuccessors callDataPath status =
     Traverse.next callDataPath >>=
     mapM_ (setParentsStatus status . CallDataPath.toCallPointPath)
 
+
+modifyCallPointPath :: CallPointPath -> Session mm ()
+modifyCallPointPath = Cache.setStatus CacheStatus.Modified

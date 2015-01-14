@@ -14,8 +14,6 @@ Flag Debug
 Library
     Hs-Source-Dirs: src
     Other-Modules:  Paths_luna_interpreter
-    if flag(debug)
-      GHC-Options:  -csacc
     GHC-Options:    -Wall -O2 -threaded -with-rtsopts=-T
     Extensions:     NoImplicitPrelude
 
@@ -38,6 +36,7 @@ Library
                     luna-distribution,
                     luna-pass,
                     mtl,
+                    multiset,
                     pretty-show,
                     raw-strings-qq,
                     time,
@@ -47,9 +46,6 @@ Library
 Executable luna-interpreter-test
     Main-Is:        Main.hs
     Hs-Source-Dirs: test
-
-    if flag(debug)
-      GHC-Options:  -csacc
     GHC-Options:    -Wall -O2 -threaded -with-rtsopts=-T
     GHC-Prof-Options: -fprof-auto 
                       "-with-rtsopts=-N -p -s -h -i0.1 -xc"

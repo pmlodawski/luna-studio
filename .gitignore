@@ -6,7 +6,9 @@
 *~
 *.swp
 *.imports
+*.dll
 out
+a.out
 
 #generated files
 gen

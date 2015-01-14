@@ -28,6 +28,8 @@ import           Luna.AST.Pat                          (Pat)
 import qualified Luna.AST.Pat                          as Pat
 import           Luna.AST.Type                         (Type)
 import qualified Luna.AST.Type                         as Type
+import           Luna.Graph.Node.Expr                  (NodeExpr)
+import qualified Luna.Graph.Node.Expr                  as NodeExpr
 import           Luna.Pass.Pass                        (Pass)
 import qualified Luna.Pass.Pass                        as Pass
 import           Luna.Pass.Transform.AST.IDFixer.State (IDFixerState)
@@ -71,6 +73,14 @@ runType :: AST.ID -> Maybe AST.ID -> Bool -> Type -> Pass.Result Type
 runType maxID rootID fixAll = runPass maxID rootID fixAll . fixType
 
 
+runNodeExpr :: AST.ID -> Maybe AST.ID -> Bool -> NodeExpr -> Pass.Result NodeExpr
+runNodeExpr maxID rootID fixAll = runPass maxID rootID fixAll . fixNodeExpr
+
+
+runNodeExpr' :: AST.ID -> Maybe AST.ID -> Bool -> NodeExpr -> Pass.Result (NodeExpr, AST.ID)
+runNodeExpr' maxID rootID fixAll = runPass maxID rootID fixAll . fixNodeExpr'
+
+
 fixFocus :: Focus -> IDFixerPass Focus
 fixFocus = Focus.traverseM fixModule fixExpr
 
@@ -107,6 +117,15 @@ fixLit l = do n <- State.fixID $ l ^. Lit.id
 fixArg :: Arg a -> IDFixerPass (Arg a)
 fixArg a = do n <- State.fixID $ a ^. Arg.id
               return $ a & Arg.id .~ n
+
+
+fixNodeExpr :: NodeExpr -> IDFixerPass NodeExpr
+fixNodeExpr (NodeExpr.ASTExpr expr) = NodeExpr.ASTExpr <$> fixExpr expr
+fixNodeExpr stringExpr              = return stringExpr
+
+
+fixNodeExpr' :: NodeExpr -> IDFixerPass (NodeExpr, AST.ID)
+fixNodeExpr' n = (,) <$> fixNodeExpr n <*> State.getMaxID
 
 
 clearIDs :: AST.ID -> Module -> Module
