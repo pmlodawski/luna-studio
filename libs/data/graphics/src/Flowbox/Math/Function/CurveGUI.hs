@@ -56,16 +56,16 @@ convertToNodeList l =
 
         convertSingleElem a@(ControlPoint (Point2 x y) _ Linear) = [BSplineNode (Point2 x y) l (-l)]
             where
-                l = processLeft a a
+                BSplineNode _ l _ = processLeftmost a a
 
-        convertSingleElem b@(ControlPoint (Point2 x y) Linear _) = [BSplineNode (Point2 x y) (-r) r]
+        convertSingleElem a@(ControlPoint (Point2 x y) Linear _) = [BSplineNode (Point2 x y) (-r) r]
             where
-                r = processRight b b
+                BSplineNode _ _ r = processRightmost a a
 
         convertSingleElem a@(ControlPoint (Point2 x y) _ _) = [BSplineNode (Point2 x y) l r]
             where
-                l = processLeft a a
-                r = processRight a a
+                BSplineNode _ l _ = processLeftmost a a
+                BSplineNode _ _ r = processRightmost a a
 
         processLeftmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
         processLeftmost a@(ControlPoint (Point2 x y) Linear _) b = BSplineNode (Point2 x y) (-r) r
