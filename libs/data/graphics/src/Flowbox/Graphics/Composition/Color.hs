@@ -81,8 +81,10 @@ hueCorrect lum sat r g b rSup gSup bSup rgb = A.lift $ RGB r' g' b'
   where
     RGB pr pg pb = A.unlift rgb :: RGB (A.Exp Double)
     minOfRGB = (pr A.<* pg) A.? ((pb A.<* pr) A.? (pb,pr), (pb A.<* pg) A.? (pb,pg))
-    HSV h _ _ = toHSV (RGB pr pg pb)
-    hue = (6 * h A.>=* 5.0) A.? (6 * h - 5.0, 6 * h + 1.0)
+    HSV hue _ _ = toHSV (RGB pr pg pb)
+
+    -- to compare the result of our hueCorrect and the Nuke's one just uncomment the below line
+    -- hue = (6 * h A.>=* 5.0) A.? (6 * h - 5.0, 6 * h + 1.0)
 
     r' = ((process r hue) . (process lum hue) . (processSup rSup hue minOfRGB)) pr
     g' = ((process g hue) . (process lum hue) . (processSup gSup hue minOfRGB)) pg
