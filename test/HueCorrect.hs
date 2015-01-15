@@ -94,6 +94,38 @@ conversionToBSplineTest2 = do
 
     print u
 
+conversionToBSplineTest3 :: IO ()
+conversionToBSplineTest3 = do
+    let h = CurveGUI.Linear
+    let h2 = CurveGUI.NonLinear 1.0 (pi/4)
+    let curve = BezierCurve [CurveGUI.ControlPoint (Point2 0.0 0.0) h2 h]
+    let bSpline = CurveGUI.convertToBSpline curve
+
+    let v = [ valueAt (A.use bSpline) (A.constant (-0.5))
+              ,valueAt (A.use bSpline) (A.constant 0.5)
+              ,valueAt (A.use bSpline) (A.constant 0.0) ]
+    print (A.toList bSpline)
+
+    let u = P.map (head . A.toList . CUDA.run . A.unit) v
+
+    print u
+
+conversionToBSplineTest4 :: IO ()
+conversionToBSplineTest4 = do
+    let h = CurveGUI.Linear
+    let curve = BezierCurve [CurveGUI.ControlPoint (Point2 0.0 0.0) h h]
+    let bSpline = CurveGUI.convertToBSpline curve
+
+    let v = [ valueAt (A.use bSpline) (A.constant (1.0))
+              ,valueAt (A.use bSpline) (A.constant 0.0)
+              ,valueAt (A.use bSpline) (A.constant 1.0) ]
+
+    print (A.toList bSpline)
+
+    let u = P.map (head . A.toList . CUDA.run . A.unit) v
+
+    print u
+
 main :: IO ()
 main = do
     print "- - - = = =   HueCorrect Test  = = = - - -"
@@ -131,5 +163,7 @@ main = do
 
     conversionToBSplineTest1
     conversionToBSplineTest2
+    conversionToBSplineTest3
+    conversionToBSplineTest4
 
     print "done"
