@@ -405,8 +405,8 @@ def Image.blur kernelSize matte:
 
 # def Image.translate boundary x y:
 #     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-# def Image.translate x y:
-#     ```liftF3 translateLuna #{x} #{y} #{self}```
+def Image.translate x y:
+    ```liftF3 translateLuna #{x} #{y} #{self}```
 
 # def Image.scaleTo boundary x y:
 #     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
@@ -649,10 +649,10 @@ def main:
     # lena = constant 640 480 gray
     lena = load "./lena.png"
 
-    lena = lena.hueCorrect c c c c c c2 c c
+    # lena = lena.hueCorrect c c c c c c2 c c
 
-    # translated = jet.translate (-182) (-60) noImgMask
-    lena.save "./out.png"
+    translated = lena.translate (-50) (100)
+    translated.save "./out.png"
 
     # grade: blackpoint whitepoint lift gain multiply offset gamma
     # lena = lena.grade test white black white white black white
@@ -661,16 +661,16 @@ def main:
     # lena.save "./out.png"
 
     # jet = load "./jet.exr"
-    test = constant 512 512 (RGBA 0.045 0.045 0.045 1.0)
-    test.save "./input.png"
+    # test = constant 512 512 (RGBA 0.045 0.045 0.045 1.0)
+    # test.save "./input.png"
     # test = load "./lena.png"
-    testC1 = (RGBA 0.1 0.1 0.1 1.0)
-    testC2 = (RGBA 2.0 2.0 2.0 1.0)
-    testC3 = (RGBA 3.0 3.0 3.0 1.0)
-    test = test.colorCorrect (white, white, white, white, testC1)
-                             (white, white, white, white, black)
-                             (white, white, white, white, black)
-                             (white, white, white, white, black)
+    # testC1 = (RGBA 0.1 0.1 0.1 1.0)
+    # testC2 = (RGBA 2.0 2.0 2.0 1.0)
+    # testC3 = (RGBA 3.0 3.0 3.0 1.0)
+    # test = test.colorCorrect (white, white, white, white, testC1)
+    #                          (white, white, white, white, black)
+    #                          (white, white, white, white, black)
+    #                          (white, white, white, white, black)
 
 
     # translated.save "./jet-translated.png"

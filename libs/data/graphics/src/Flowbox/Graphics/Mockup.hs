@@ -82,7 +82,7 @@ import           Flowbox.Math.Matrix                                  as M
 import           Flowbox.Prelude                                      as P hiding (lookup)
 import qualified Data.Array.Accelerate.CUDA                           as CUDA
 import           Flowbox.Math.Function.Accelerate.BSpline             as BSpline
-import qualified Flowbox.Math.Function.CurveGui                       as CurveGui
+import qualified Flowbox.Math.Function.CurveGUI                       as CurveGUI
 
 import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 import Control.PolyApplicative ((<<*>>))
@@ -193,7 +193,7 @@ onEachColorRGB f img = img'
                     , ("rgba.b", b')
                   ]
 
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 onEachChannel :: (Channel -> Channel) -> Image -> Image
 onEachChannel f = Image.map $ View.map f
@@ -300,7 +300,7 @@ saturateLuna (fmap variable -> Color.RGBA saturationR saturationG saturationB sa
                   , ("rgba.b", bSaturated)
                   ]
 
-          saturated = Image.insert view' img
+          saturated = Image.insertPrimary view' img
 
 posterizeLuna :: Double -> Image -> Image
 posterizeLuna (variable -> colors) = onEach $ posterize colors
@@ -335,7 +335,7 @@ keyer' f img = img'
 
           view' = insertChannelFloats view [("rgba.a", alpha)]
 
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 unsafeGetRGB :: Image -> M.Matrix2 (Color.RGB Double)
 unsafeGetRGB img = rgb
@@ -346,10 +346,10 @@ unsafeGetRGB img = rgb
 unsafeGetChannels :: Image -> (M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double, M.Matrix2 Double)
 unsafeGetChannels img = (r, g, b, a)
     where Right view = lookupPrimary img
-          Right (Just (ChannelFloat _ (asMatrix -> MatrixData r))) = View.get view "rgba.r"
-          Right (Just (ChannelFloat _ (asMatrix -> MatrixData g))) = View.get view "rgba.g"
-          Right (Just (ChannelFloat _ (asMatrix -> MatrixData b))) = View.get view "rgba.b"
-          Right (Just (ChannelFloat _ (asMatrix -> MatrixData a))) = View.get view "rgba.a"
+          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData r))) = View.get view "rgba.r"
+          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData g))) = View.get view "rgba.g"
+          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData b))) = View.get view "rgba.b"
+          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData a))) = View.get view "rgba.a"
 
 keyerLuna :: KeyerMode -> Double -> Double -> Double -> Double -> Image -> Image
 keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
@@ -365,7 +365,7 @@ differenceKeyer' f background foreground = img'
           Right view = lookupPrimary foreground
           view' = insertChannelFloats view [("rgba.a", alpha)]
 
-          img' = Image.insert view' foreground
+          img' = Image.insertPrimary view' foreground
 
 differenceKeyerLuna :: Double -> Double -> Image -> Image -> Image
 differenceKeyerLuna (variable -> offset) (variable -> gain) background foreground = img'
@@ -477,9 +477,9 @@ translateLuna :: Int -> Int -> Image -> Image
 translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) = onEachChannel f
     where v = V2 x (-y)
           f = \case
-              ChannelFloat name zeData -> ChannelFloat name $ ((\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) . Channel.asContinuous) zeData
-              ChannelInt   name zeData -> ChannelInt name   $ ((\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) . Channel.asContinuous) zeData
-              ChannelBit   name zeData -> ChannelBit name   $ ((\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) . Channel.asContinuous) zeData
+              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
+              (Channel.asContinuous -> ChannelBit   name zeData) -> ChannelBit name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
           mask = Nothing
           p :: Point2 (Exp Double) -> Point2 (Exp Double)
           p pt = Shader.translate (handle pt) pt
@@ -490,7 +490,7 @@ translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) 
               _ -> v
               --Just (VPS m) -> let
               --        Right rgba = Image.lookupPrimary m
-              --        unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
+              --        unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c
               --        m' = unpackMat $ View.get rgba "rgba.r"
               --        Shader _ str = Shader.nearest $ Shader.fromMatrix (A.Constant (0 :: Exp Double)) $ m'
               --        mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
@@ -512,7 +512,7 @@ translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) 
 --              Nothing      -> v
 --              Just (VPS m) -> let
 --                      Right rgba = Image.lookupPrimary m
---                      unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
+--                      unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c
 --                      m' = unpackMat $ View.get rgba "rgba.r"
 --                      Shader _ str = gen m'
 --                      mult pt x = A.round $ (str pt) * A.fromIntegral x
@@ -551,7 +551,7 @@ translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) 
 --              Nothing      -> v
 --              Just (VPS m) -> let
 --                      Right rgba = Image.lookupPrimary m
---                      unpackMat (Right (Just (ChannelFloat _ (asMatrix -> MatrixData c)))) = c
+--                      unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c
 --                      m' = unpackMat $ View.get rgba "rgba.r"
 --                      Shader _ str = gen m'
 --                      mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
@@ -680,7 +680,7 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
                               , ("rgba.b", rasterizer $ b)
                               , ("rgba.a", rasterizer $ a)
                             ]
-                    img' = Image.insert view' img1
+                    img' = Image.insertPrimary view' img1
           Right view = lookupPrimary img1
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (fromMatrix (A.Constant 0))
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (fromMatrix (A.Constant 0))
@@ -694,7 +694,7 @@ onShader f img = img'
                     , ("rgba.b", b)
                     , ("rgba.a", a)
                   ]
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 erodeLuna :: Int -> Image -> Image
 erodeLuna (variable -> size) = onShader $ erode $ pure size
@@ -728,7 +728,7 @@ withAlpha f img = img'
                     , ("rgba.b", b')
                     , ("rgba.a", a)
                   ]
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 invertLuna :: Image -> Image
 invertLuna = onEachRGBA invert invert invert id
@@ -800,7 +800,7 @@ histEqLuna (variable -> bins) img = img'
                     , ("rgba.b", b)
                   ]
 
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 deriving instance Functor A.Boundary
 
@@ -818,7 +818,7 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
                     , ("rgba.g", g')
                     , ("rgba.b", b')
                   ]
-        img' = Image.insert view' img
+        img' = Image.insertPrimary view' img
 
     return img'
 
@@ -829,43 +829,43 @@ constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
 type Handle = (VPS Int, VPS Double, VPS Double)
-type GuiControlPoint a = (VPS (Point2 a), VPS Handle, VPS Handle)
-type GuiCurve a = [(VPS (GuiControlPoint a))]
+type GUIControlPoint a = (VPS (Point2 a), VPS Handle, VPS Handle)
+type GUICurve a = [(VPS (GUIControlPoint a))]
 
-convertHandle :: Handle -> CurveGui.Handle
+convertHandle :: Handle -> CurveGUI.Handle
 convertHandle (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
     case t of
-        0 -> CurveGui.NonLinear w a
+        0 -> CurveGUI.NonLinear w a
         1 -> case a > 0 of
-                True  -> CurveGui.Vertical w CurveGui.Up
-                False -> CurveGui.Vertical w CurveGui.Down
-        2 -> CurveGui.Linear
+                True  -> CurveGUI.Vertical w CurveGUI.Up
+                False -> CurveGUI.Vertical w CurveGUI.Down
+        2 -> CurveGUI.Linear
 
-convertGuiControlPoint :: GuiControlPoint a -> CurveGui.ControlPoint a
-convertGuiControlPoint (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
-    CurveGui.ControlPoint p (convertHandle hIn) (convertHandle hOut)
+convertGUIControlPoint :: GUIControlPoint a -> CurveGUI.ControlPoint a
+convertGUIControlPoint (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
+    CurveGUI.ControlPoint p (convertHandle hIn) (convertHandle hOut)
 
-convertGuiCurve :: GuiCurve a -> CurveGui.Curve a
-convertGuiCurve (unpackLunaList -> c) = CurveGui.BezierCurve (fmap convertGuiControlPoint c)
+convertGUICurve :: GUICurve a -> CurveGUI.Curve a
+convertGUICurve (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertGUIControlPoint c)
 
-hueCorrectLuna :: VPS (GuiCurve Double) -> VPS (GuiCurve Double) ->
-                  VPS (GuiCurve Double) -> VPS (GuiCurve Double) -> VPS (GuiCurve Double) ->
-                  GuiCurve Double -> GuiCurve Double -> GuiCurve Double ->
-                  -- GuiCurve Double -> sat_thrsh will be added later
+hueCorrectLuna :: VPS (GUICurve Double) -> VPS (GUICurve Double) ->
+                  VPS (GUICurve Double) -> VPS (GUICurve Double) -> VPS (GUICurve Double) ->
+                  GUICurve Double -> GUICurve Double -> GUICurve Double ->
+                  -- GUICurve Double -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
-hueCorrectLuna (VPS (convertGuiCurve-> lum)) (VPS (convertGuiCurve -> sat))
-               (VPS (convertGuiCurve -> r)) (VPS (convertGuiCurve-> g))
-               (VPS (convertGuiCurve -> b)) (convertGuiCurve -> rSup)
-               (convertGuiCurve -> gSup) (convertGuiCurve-> bSup) img
-                    = onEachColorRGB (hueCorrect (CurveGui.convertToBSpline lum)
-                                                 (CurveGui.convertToBSpline sat)
-                                                 (CurveGui.convertToBSpline r)
-                                                 (CurveGui.convertToBSpline g)
-                                                 (CurveGui.convertToBSpline b)
-                                                 (CurveGui.convertToBSpline rSup)
-                                                 (CurveGui.convertToBSpline gSup)
-                                                 (CurveGui.convertToBSpline bSup)
+hueCorrectLuna (VPS (convertGUICurve-> lum)) (VPS (convertGUICurve -> sat))
+               (VPS (convertGUICurve -> r)) (VPS (convertGUICurve-> g))
+               (VPS (convertGUICurve -> b)) (convertGUICurve -> rSup)
+               (convertGUICurve -> gSup) (convertGUICurve-> bSup) img
+                    = onEachColorRGB (hueCorrect (CurveGUI.convertToBSpline lum)
+                                                 (CurveGUI.convertToBSpline sat)
+                                                 (CurveGUI.convertToBSpline r)
+                                                 (CurveGUI.convertToBSpline g)
+                                                 (CurveGUI.convertToBSpline b)
+                                                 (CurveGUI.convertToBSpline rSup)
+                                                 (CurveGUI.convertToBSpline gSup)
+                                                 (CurveGUI.convertToBSpline bSup)
                                      ) img
 
 gradeLuna' :: VPS (Color.RGBA Double)
@@ -1016,7 +1016,7 @@ onImageRGBA fr fg fb fa img = img'
                     , ("rgba.b", b')
                     , ("rgba.a", a')
                     ]
-          img' = Image.insert view' img
+          img' = Image.insertPrimary view' img
 
 liftF6 f t1 t2 t3 t4 t5 t6 = do
     t1' <- t1
@@ -1122,7 +1122,7 @@ edgeDetectLuna edgeOperator img = img'
           (r, g, b, _) = unsafeGetChannels alphas
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
           Right view = lookupPrimary img
-          img' = Image.insert (insertChannelFloats view [("rgba.a", alphaSum)]) img
+          img' = Image.insertPrimary (insertChannelFloats view [("rgba.a", alphaSum)]) img
 
 gammaToLinearLuna :: Gamma.Companding a (A.Exp Double) => a -> Image -> Image
 gammaToLinearLuna companding = onEach $ (Gamma.toLinear companding :: A.Exp Double -> A.Exp Double)
@@ -1166,9 +1166,9 @@ toInterpolator = \case
 -- TODO^:    commented out for now(the boundary can't be explicitly typed here, we can have different data – why even try to interpolate all channels at the same time?)
 --interpolateChannelsLuna :: A.Boundary Double -> InterpolationFilter Double -> Image -> Image
 --interpolateChannelsLuna (fmap variable -> boundary) (toInterpolator . fmap variable -> interpol) = Image.map (View.map interpolate)
---    where interpolate (ChannelFloat name (asMatrix -> MatrixData mat)) = ChannelFloat name $ ContinuousData $ toGen $ mat
---          interpolate (ChannelInt   name (asMatrix -> MatrixData mat)) = ChannelInt   name $ ContinuousData $ toGen . M.map A.fromIntegral $ mat
---          interpolate (ChannelBit   name (asMatrix -> MatrixData mat)) = ChannelBit   name $ ContinuousData $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
+--    where interpolate (ChannelFloat name (asMatrixData -> MatrixData mat)) = ChannelFloat name $ ContinuousData $ toGen $ mat
+--          interpolate (ChannelInt   name (asMatrixData -> MatrixData mat)) = ChannelInt   name $ ContinuousData $ toGen . M.map A.fromIntegral $ mat
+--          interpolate (ChannelBit   name (asMatrixData -> MatrixData mat)) = ChannelBit   name $ ContinuousData $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
 
 --          toGen = interpol . fromMatrix boundary
 
@@ -1189,7 +1189,7 @@ toMultisampler grid = \case
 
 multisampleChannelsLuna :: Grid Int -> InterpolationFilter Double -> Image -> Image
 multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap variable -> sampler :: Sampler Double) = Image.map (View.map multisample)
-    where multisample (ChannelFloat name (asContinuous -> ContinuousData gen)) = ChannelFloat name $ MatrixData . rasterizer . sampler $ gen
+    where multisample (asContinuous -> ChannelFloat name (ContinuousData gen)) = ChannelFloat name $ MatrixData . rasterizer . sampler $ gen
           --                                                            FIXME[MM]: ^ we don't want this here,
           --                                                                         but ChannelShader requires ContinuousShader :/
           --                                                            FIXME[KM]: ^ I've changed the structure of Channels so we might have to talk about this

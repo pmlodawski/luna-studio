@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Math.Function.CurveGui where
+module Flowbox.Math.Function.CurveGUI where
 
 import           Flowbox.Prelude
 import           Flowbox.Math.Function.Accelerate.BSpline
@@ -45,32 +45,35 @@ convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (length l)) l :: 
         l = convertToNodeList vertices
 
 convertToNodeList :: [ControlPoint Double] -> [BSplineNode Double]
-convertToNodeList l = 
+convertToNodeList l =
     let
         safeMap :: [ControlPoint Double] -> ControlPoint Double -> [BSplineNode Double] -> [BSplineNode Double]
         safeMap (s:r:seg) l acc = safeMap (r:seg) s ((convertToNode l s r):acc)
         safeMap (s:[]) l acc = reverse ((processRightmost l s):acc)
 
+        reflectPoint :: Point2 Double -> Point2 Double -> Point2 Double
+        reflectPoint (Point2 x y) (Point2 x2 y2) = Point2 (2*x - x2) (2*y - y2)
+
         convertSingleElem :: ControlPoint Double -> [BSplineNode Double]
         convertSingleElem (ControlPoint (Point2 x y) Linear Linear) = [BSplineNode (Point2 x y) (Point2 (x-1) y) (Point2 (x+1) y)]
 
-        convertSingleElem a@(ControlPoint (Point2 x y) _ Linear) = [BSplineNode (Point2 x y) l (-l)]
+        convertSingleElem a@(ControlPoint p@(Point2 x y) _ Linear) = [BSplineNode (Point2 x y) l (reflectPoint p l)]
             where
-                l = processLeft a a
+                BSplineNode _ (l@(Point2 lx ly)) _ = processLeftmost a a
 
-        convertSingleElem b@(ControlPoint (Point2 x y) Linear _) = [BSplineNode (Point2 x y) (-r) r]
+        convertSingleElem a@(ControlPoint p@(Point2 x y) Linear _) = [BSplineNode (Point2 x y) (reflectPoint p r) r]
             where
-                r = processRight b b
+                BSplineNode _ _ (r@(Point2 rx ry)) = processRightmost a a
 
         convertSingleElem a@(ControlPoint (Point2 x y) _ _) = [BSplineNode (Point2 x y) l r]
             where
-                l = processLeft a a
-                r = processRight a a
+                BSplineNode _ l _ = processLeftmost a a
+                BSplineNode _ _ r = processRightmost a a
 
         processLeftmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
-        processLeftmost a@(ControlPoint (Point2 x y) Linear _) b = BSplineNode (Point2 x y) (-r) r
+        processLeftmost a@(ControlPoint p@(Point2 x y) Linear _) b = BSplineNode (Point2 x y) (reflectPoint p r) r
             where
-                r = processRight a b
+                r@(Point2 rx ry) = processRight a b
 
         processLeftmost a@(ControlPoint (Point2 x y) (NonLinear w ang) _) b = BSplineNode (Point2 x y) (Point2 lx ly) r
             where
@@ -83,9 +86,9 @@ convertToNodeList l =
                 r = processRight a b
 
         processRightmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
-        processRightmost a b@(ControlPoint (Point2 x y) _ Linear) = BSplineNode (Point2 x y) l (-l)
+        processRightmost a b@(ControlPoint p@(Point2 x y) _ Linear) = BSplineNode (Point2 x y) l (reflectPoint p l)
             where
-                l = processLeft a b
+                l@(Point2 lx ly) = processLeft a b
 
         processRightmost a b@(ControlPoint (Point2 x y) _ (NonLinear w ang)) = BSplineNode (Point2 x y) l (Point2 rx ry)
             where
@@ -133,6 +136,6 @@ convertToNodeList l =
                 Up  -> Point2 x (y+w)
                 Down -> Point2 x (y-w)
     in
-        case l of 
+        case l of
             (a:b:seg) -> safeMap (b:seg) a [processLeftmost a b]
             (a:[]) -> convertSingleElem a
