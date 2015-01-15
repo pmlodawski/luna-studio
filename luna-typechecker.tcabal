@@ -15,7 +15,6 @@ Executable luna-typechecker
                     , either
                     , lens
                     , luna-core
-                    , luna-logger
                     , luna-pass
                     , flowbox-utils
                     , mtl
