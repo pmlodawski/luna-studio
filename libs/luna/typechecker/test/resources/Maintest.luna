@@ -2,5 +2,23 @@ def + a b:
   xyz = b
   xyz
 
-def bla f a:
+def ble f a:
   f a
+
+# class Maybe a:
+#   Just:
+#     val :: a
+#   Nothing
+# 
+# 
+# class Point a:
+#   x,y :: a
+# 
+# class ColourPoint a:
+#   x,y,z :: a
+# 
+# def test:
+#   x = True
+#   case x:
+#     True: Point 1 2
+#     _ : ColourPoint 1 2 3

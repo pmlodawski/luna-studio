@@ -20,21 +20,22 @@ $run_coverage = false
 
 # Those parts of output are printed after the typechecker has run
 $output       = [ 
-                  " 1.1. Stage1     : ast1",
-                  " 1.2. Stage1     : astinfo1",
-                  " 2.   SA         : sa2",
-                  " 3.1. Stage2     : ast3",
-                  " 3.2. Stage2     : astinfo3",
+                  # " 1.1. Stage1     : ast1",
+                  # " 1.2. Stage1     : astinfo1",
+                  # " 2.   SA         : sa2",
+                  # " 3.1. Stage2     : ast3",
+                  # " 3.2. Stage2     : astinfo3",
                   " 4.1. ImplSelf   : ast4",
                   " 4.2. ImplSelf   : astinfo4",
                   " 5.   SA         : sa5",
-                  " 6.1. ImplScopes : ast6",
-                  " 6.2. ImplScopes : astinfo6",
-                  " 7.1. ImplCalls  : ast7",
-                  " 7.2. ImplCalls  : astinfo7",
-                  " 8.   SSA        : ast8",
-                  " 9.   HAST       : hast9",
-                  "10.   HSC        : hsc10",
+                  " 6.   PTyChk     : constraints",
+                  # " 7.1. ImplScopes : ast6",
+                  # " 7.2. ImplScopes : astinfo6",
+                  # " 8.1. ImplCalls  : ast7",
+                  # " 8.2. ImplCalls  : astinfo7",
+                  # " 9.   SSA        : ast8",
+                  # "10.   HAST       : hast9",
+                  # "11.   HSC        : hsc10",
                 ]
 $output_dir   = "tmp/"
 
@@ -109,9 +110,9 @@ def haskell_action trigger
     section "tests",         "rm -f luna-typechecker-tests.tix", "../../../dist/bin/libs/luna-typechecker-test" if $run_tests
 
     command "rm -f #{$output_dir}*"
-    command "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna" if $run_main
+    res = command "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna" if $run_main
 
-    if $run_tests and command "../../../dist/bin/libs/luna-typechecker-tests"
+    if res and $run_tests and command "../../../dist/bin/libs/luna-typechecker-tests"
 
       if $run_coverage
         section "coverage", "rm -rf hpc_report"
@@ -129,7 +130,7 @@ def haskell_action trigger
 
     end
 
-    if $run_linting
+    if res and $run_linting
       opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
       opts = opts.join(" ")
       section "linting", "pushd ..; hlint #{$hlint_path} #{opts}; popd"
