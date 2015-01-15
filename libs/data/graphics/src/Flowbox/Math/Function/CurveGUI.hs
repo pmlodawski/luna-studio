@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Math.Function.CurveGUI where
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude as P
 import           Flowbox.Math.Function.Accelerate.BSpline
 import           Math.Coordinate.Cartesian                   (Point2(..))
 import qualified Data.Array.Accelerate as A
@@ -14,6 +14,7 @@ import qualified Flowbox.Math.Function.Model as Model
 import qualified Data.Map as Map
 
 type Weight = Double
+type Length = Double
 type Angle  = Double
 data Direction = Up | Down deriving(Show, Eq)
 
@@ -29,8 +30,7 @@ data ControlPoint x = ControlPoint { _point  :: Point2 x
 data Handle = NonLinear { _weight :: Weight
                         , _angle  :: Angle
                         }
-            | Vertical  { _weight :: Weight
-                        , _direction :: Direction
+            | Vertical  { _length :: Length
                         }
             | Linear deriving (Show, Eq)
 
@@ -40,7 +40,7 @@ makeLenses ''ControlPoint
 makeLenses ''Handle
 
 convertToBSpline :: Curve Double -> BSpline Double
-convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (length l)) l :: BSpline Double
+convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (P.length l)) l :: BSpline Double
     where
         l = convertToNodeList vertices
 
@@ -112,10 +112,7 @@ convertToNodeList l =
                 lx = x - (x - x2) * w
                 ly = y - (x - lx) * tan(ang)
 
-        processLeft _ (ControlPoint (Point2 x y) (Vertical w d) _) =
-            case d of
-                Up  -> Point2 x (y+w)
-                Down -> Point2 x (y-w)
+        processLeft _ (ControlPoint (Point2 x y) (Vertical w) _) = Point2 x (y+w)
 
         processRight :: ControlPoint Double -> ControlPoint Double -> Point2 Double
         processRight (ControlPoint (Point2 x y) _ Linear) (ControlPoint (Point2 x2 y2) _ _) = Point2 x' y'
@@ -128,11 +125,11 @@ convertToNodeList l =
                 rx = x + (x2 -x) * w
                 ry = y + (rx - x) * tan(ang)
 
-        processRight (ControlPoint (Point2 x y) _ (Vertical w d)) _ =
-            case d of
-                Up  -> Point2 x (y+w)
-                Down -> Point2 x (y-w)
+        processRight (ControlPoint (Point2 x y) _ (Vertical w)) _ = Point2 x (y+w)
     in
         case l of
             (a:b:seg) -> safeMap (b:seg) a [processLeftmost a b]
             (a:[]) -> convertSingleElem a
+
+
+-- == conversion to the FunctionModel

@@ -791,9 +791,7 @@ convertHandle :: Handle -> CurveGUI.Handle
 convertHandle (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
     case t of
         0 -> CurveGUI.NonLinear w a
-        1 -> case a > 0 of
-                True  -> CurveGUI.Vertical w CurveGUI.Up
-                False -> CurveGUI.Vertical w CurveGUI.Down
+        1 -> CurveGUI.Vertical w
         2 -> CurveGUI.Linear
 
 convertGUIControlPoint :: GUIControlPoint a -> CurveGUI.ControlPoint a
