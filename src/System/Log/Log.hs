@@ -1,3 +1,5 @@
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveFunctor #-}
 
 -----------------------------------------------------------------------------
@@ -12,6 +14,28 @@
 
 module System.Log.Log where
 
+import Control.Applicative
+
+
+----------------------------------------------------------------------
+-- Log
+----------------------------------------------------------------------
+
 newtype Log a = Log { fromLog :: a } deriving (Show, Functor)
+
+type family LogFormat (m :: * -> *)
+
+----------------------------------------------------------------------
+-- MonadLogger
+----------------------------------------------------------------------
+
+class (Monad m, Applicative m) => MonadLogger m where
+    appendLog :: Log (LogFormat m) -> m ()
+
+
+
+
+
+
 
 
