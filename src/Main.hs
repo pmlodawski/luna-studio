@@ -12,18 +12,25 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 -- module --
 module Main where
 
 -- imports --
 import Luna.Target.HS
+import Data.Typeable
 
 -- body --
 
+print_DBG val = Value $ fmap Safe $ print val
+
+printT val = print_DBG $ typeOf val
+
+
 -- ====== Main type ====== --
-data Main  = Main deriving (Show, Eq, Ord, Generic)
-data Cls_Main  = Cls_Main deriving (Show, Eq, Ord, Generic)
+data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)
+data Cls_Main  = Cls_Main deriving (Show, Eq, Ord, Generic, Typeable)
 
 -- ------ Main.Main constructor ------ --
 cons_Main = member (Proxy :: Proxy "Main") (val Cls_Main)
@@ -51,57 +58,25 @@ memDef_Int__plus (self, (a, ())) = do {
 memSig_Int__plus = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
 $(registerMethod ''Int "_plus")
 
--- ====== Method: Main._plus ====== --
-memDef_Main__plus (_self, (_a, (_b, ()))) = do {
-     call (appNext _b (member (Proxy :: Proxy "_plus") _a));
+-- ====== Method: Main.main ====== --
+memDef_Main_main (_self, ()) = do {
+    val ();
+    --call (appNext (val []) (member (Proxy :: Proxy "print") _self));
      
 }
-memSig_Main__plus = ((mkArg :: NParam "self"), ((mkArg :: Param), ((mkArg :: Param), ())))
-$(registerMethod ''Main "_plus")
 
--- ====== Vector type ====== --
-data Vector a = Vector a a a | Scalar a deriving (Show, Eq, Ord, Generic)
-data Cls_Vector  = Cls_Vector deriving (Show, Eq, Ord, Generic)
+--foo _self = call (appNext (val []) (member (Proxy :: Proxy "print") _self))
 
--- ------ Vector.Vector constructor ------ --
-cons_Vector = member (Proxy :: Proxy "Vector") (val Cls_Vector)
-memSig_Cls_Vector_Vector = ((mkArg :: NParam "self"), ((mkArg :: Param), ((mkArg :: Param), ((mkArg :: Param), ()))))
-memDef_Cls_Vector_Vector = liftCons3 Vector
-$(registerMethod ''Cls_Vector "Vector")
-
--- ------ Vector.Scalar constructor ------ --
-cons_Scalar = member (Proxy :: Proxy "Scalar") (val Cls_Vector)
-memSig_Cls_Vector_Scalar = ((mkArg :: NParam "self"), ((mkArg :: Param), ()))
-memDef_Cls_Vector_Scalar = liftCons1 Scalar
-$(registerMethod ''Cls_Vector "Scalar")
-
--- ------ Vector accessors ------ --
-$(generateFieldAccessors ''Vector [('Vector, [Just "x", Just "y", Just "z"]), ('Scalar, [Just "x"])])
-$(registerFieldAccessors ''Vector ["x", "y", "z"])
-
--- ------ Vector methods ------ --
-
--- ====== Method: Main.main ====== --
-
---mkLam lam sig = val $ appH (Lam lam) sig
-print_DBG val = Value $ fmap Safe $ print val
-
-memDef_Main_main (_self, ()) = do {
-    _v <- call (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) cons_Vector)));
-
-    let { lam1 = mkLam (\x -> x) ((mkArg :: NParam "self"), ()); };
-    --print_DBG $ call $ appNext (val (1::Int)) lam1
-
-    call $ appNext (val "a") $ member (Proxy :: Proxy "print") _self ;
-
-    _v <- call (appNext (val (10 :: Int)) (member (Proxy :: Proxy "set_x") _v));
-    call (appNext (call (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) (member (Proxy :: Proxy "_plus") _self)))) (member (Proxy :: Proxy "print") _self));
-}
-memSig_Main_main = ((mkArg :: NParam "self"), ())
-$(registerMethod ''Main "main")
+--memSig_Main_main = ((mkArg :: NParam "self"), ())
+-- $(registerMethod ''Main "main")
 
 
 -- ===================================================================
 -- Main module wrappers
 -- ===================================================================
-main = mainMaker cons_Main
+--main = mainMaker cons_Main
+
+
+main = fromValue $ call (appNext (val []) (member (Proxy :: Proxy "print") $ call cons_Main))
+
+--main = fromValue $ call (appNext (val []) (member (Proxy :: Proxy "print") (call cons_Main)))
