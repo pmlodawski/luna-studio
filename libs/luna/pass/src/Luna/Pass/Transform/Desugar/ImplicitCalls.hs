@@ -97,6 +97,7 @@ exprScopes :: ISCtx lab m a => LExpr lab a -> ISPass m (LExpr lab a)
 exprScopes ast@(Label lab e) = case e of
     Expr.Cons     {} -> Label 999 <$> (Expr.app <$> continue <*> pure [])
     Expr.Accessor {} -> Label 999 <$> (Expr.app <$> continue <*> pure [])
+                -- TODO [wd]: ^-- a magic constants :)
     Expr.App      {} -> defaultTraverseOmitM ast -- Label 999 <$> (Expr.app <$> defaultTraverseOmitM ast <*> pure [])
     _                -> continue
     where continue = defaultTraverseM ast
