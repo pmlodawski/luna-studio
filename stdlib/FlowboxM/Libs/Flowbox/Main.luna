@@ -429,6 +429,9 @@ def Image.radialBlur size angle:
 def Image.edgeDetect edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
+def Image.edgeBlur viewName channelName kernelSize edgeMultiplier:
+    ```liftF5 edgeBlur #{viewName} #{channelName} #{kernelSize} #{edgeMultiplier} #{self}```
+
 class ```InterpolationFilter```:
     NearestNeighbour
     Box
