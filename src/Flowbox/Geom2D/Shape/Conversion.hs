@@ -20,7 +20,6 @@ import Flowbox.Prelude
 import Math.Coordinate.Cartesian (Point2(..))
 
 
-
 toQuadratics :: Shape Double -> [QuadraticPath Double]
 toQuadratics (Shape paths) = fmap makeQuadratics paths
     where makeQuadratics (Path closed points) = (closed, convertCubicsToQuadratics 10 0.001 $ makeCubics points closed)
