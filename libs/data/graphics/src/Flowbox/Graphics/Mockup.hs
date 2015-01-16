@@ -138,15 +138,14 @@ motionBlur size angle = onEachChannel process
                  $ rectangle (Grid (variable size) 1) 1 0
           process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
-edgeBlur :: {-- String -> --} Int -> Double -> Image -> Image
-edgeBlur kernelSize edgeMultiplier image =
-    let (r, g, b, a) = unsafeGetChannels image
-        maskEdges = EB.edges (variable edgeMultiplier) r -- TODO: channel choice
-        blurFunc = EB.maskBlur (variable kernelSize) maskEdges
-        -- [resultR, resultG, resultB, resultA] = fmap blurFunc [r,g,b,a]
+edgeBlur :: View.Name -> Channel.Name -> Int -> Double -> Image -> Image
+edgeBlur viewName channelName kernelSize edgeMultiplier image =
+    let --(r, g, b, a) = unsafeGetChannels image
+        Right ch = getChannelLuna viewName channelName image
+        Just (ChannelFloat _ (MatrixData channelMat)) = ch
+        maskEdges = EB.edges (variable edgeMultiplier) channelMat -- TODO: channel choice
+        blurFunc = EB.maskBlur EB.Gauss (variable kernelSize) maskEdges
       in onEachChannel blurFunc image
-
-
 
 
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
