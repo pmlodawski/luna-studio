@@ -135,4 +135,9 @@ convertToNodeList l =
             (a:[]) -> convertSingleElem a
 
 
--- == conversion to the FunctionModel
+
+valueAtSpline :: Curve Double -> Double -> Double
+valueAtSpline (BezierCurve vertices') x = x --foldr
+--    where vertices = convertToNodeList vertices'
+          --foldr :: (a -> b -> b) -> b -> [a] -> b
+
