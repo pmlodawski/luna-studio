@@ -66,7 +66,7 @@ main = do
     saveImageLuna "fooD2.png" imgD
 
     P.putStrLn "Test rasterizeMaskWithFeathers"
-    
+
     let arrD = rasterizeMask w h $ (Mask pat (Just fea))
         imgD = matrixToImage arrD
 
