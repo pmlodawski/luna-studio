@@ -152,7 +152,6 @@ delete' (callPointPath, cacheInfo) = do
 
 deleteVarName :: VarName -> Session mm ()
 deleteVarName varName = do
-    print =<< Env.getCached
     onCacheInfo del err callPointPath
     where
         callPointPath = varName ^. VarName.callPointPath
