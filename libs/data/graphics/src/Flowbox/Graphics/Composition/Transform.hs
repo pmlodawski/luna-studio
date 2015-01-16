@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE PatternSynonyms        #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE TypeOperators          #-}
@@ -17,11 +18,14 @@
 
 module Flowbox.Graphics.Composition.Transform where
 
-import Flowbox.Graphics.Prelude       as P hiding (lifted, transform)
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Graphics.Utils.Linear
-import Flowbox.Graphics.Utils.Utils
-import Flowbox.Math.Matrix            as M
+import           Flowbox.Geom2D.Rectangle
+import           Flowbox.Graphics.Image.Channel (ChannelData(..))
+import qualified Flowbox.Graphics.Image.Channel as Channel
+import           Flowbox.Graphics.Prelude       as P hiding (lifted, transform)
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Graphics.Utils.Linear
+import           Flowbox.Graphics.Utils.Utils
+import           Flowbox.Math.Matrix            as M
 
 import qualified Data.Array.Accelerate     as A
 import           Linear                    hiding (inv33, normalize, rotate)
@@ -138,3 +142,9 @@ cornerPin' (Grid width height) (Point2 x1 y1, Point2 x2 y2, Point2 x3 y3, Point2
                                  (V3 0  0  t2)
 
           matC = matA !*! unsafeInv33 matB
+
+-- TODO[KM]: handle shaders by translating them and changing the canvas size
+crop :: Elt a => Rectangle Int -> ChannelData a -> ChannelData a
+crop (fmap variable . properRect -> Rect xA yA xB yB) (Channel.asMatrixData -> MatrixData matrix) = MatrixData matrix'
+    where matrix' = M.generate (A.index2 (yB - yA) (xB - xA)) gen
+          gen (A.unlift -> (Z :. y :. x)) = matrix M.! A.index2 (yA + y) (xA + x)
