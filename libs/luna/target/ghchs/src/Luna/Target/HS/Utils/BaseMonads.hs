@@ -34,7 +34,7 @@ module Luna.Target.HS.Utils.BaseMonads where
 import Luna.Target.HS.Control.Error
 import Luna.Target.HS.Control.Flow
 import Control.Monad.Trans
-import Control.Monad.Morph
+import Control.Monad.Morph hiding (MonadTrans, lift)
 import Data.Typeable (Typeable)
 import Luna.Target.HS.Control.Context
 import Data.TypeLevel

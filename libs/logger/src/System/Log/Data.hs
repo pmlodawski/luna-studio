@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -25,6 +26,9 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Concurrent     (threadDelay)
 import Control.Applicative    hiding (empty)
 import System.Log.Log         (MonadLogger, LogFormat, Log(Log), fromLog, appendLog)
+import Data.Time.Clock        (getCurrentTime, UTCTime)
+import Control.Lens
+
 
 ----------------------------------------------------------------------
 -- Logging utils
@@ -146,12 +150,10 @@ instance LookupDataSet base as => LookupDataSet base (Data b,as) where
 -- Time --
 
 data Time = Time deriving (Show)
-type instance DataOf Time = Int
+type instance DataOf Time = UTCTime
 
 instance MonadIO m => DataGetter Time m where
-    getData = do liftIO $ print "reading time"
-                 liftIO $ threadDelay 1000000
-                 return $ Data Time 5
+    getData = do liftIO $ Data Time <$> getCurrentTime
 
 -- Msg --
 
@@ -165,3 +167,21 @@ data Lvl = Lvl deriving (Show)
 type instance DataOf Lvl = LevelData
 data LevelData = LevelData Int String deriving (Show, Ord, Eq)
 mkLevel a = LevelData (fromEnum a) (show a)
+
+-- Loc --
+
+type Pos = (Int, Int)
+
+data LocData = LocData { _filename :: String
+                       , _package  :: String
+                       , _module   :: String
+                       , _start    :: Pos
+                       , _end      :: Pos
+                       } deriving Show
+
+mkLoc (f,p,m,s,e) = LocData f p m s e
+
+data Loc = Loc deriving (Show)
+type instance DataOf Loc = LocData
+
+makeLenses ''Loc

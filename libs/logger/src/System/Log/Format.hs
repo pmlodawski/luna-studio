@@ -15,9 +15,12 @@
 
 module System.Log.Format where
 
-import System.Log.Log   (Log)
-import System.Log.Data  (Lvl(Lvl), Msg(Msg), LevelData(LevelData), readData, DataOf, Lookup)
+import System.Log.Log               (Log)
+import System.Log.Data              (Lvl(Lvl), Msg(Msg), Loc(Loc), Time(Time), LocData(LocData), LevelData(LevelData), readData, DataOf, Lookup)
+import Data.Time.Clock              (UTCTime)
+import Data.Time.Format             (formatTime, defaultTimeLocale)
 import Text.PrettyPrint.ANSI.Leijen
+
 
 
 ----------------------------------------------------------------------
@@ -77,11 +80,19 @@ instance Pretty a => PPrint a where
 instance Pretty LevelData where
     pretty (LevelData _ name) = text name
 
+instance Pretty LocData where
+    pretty (LocData _ _ m (l,_) _) = text (m ++ ":" ++ show l)
+
+instance Pretty UTCTime where
+    pretty = text . formatTime defaultTimeLocale "%c"
+
 ----------------------------------------------------------------------
 -- Basic formatters
 ----------------------------------------------------------------------
 
-foo = colorLvlFormatter ("[" <:> Lvl <:> "] ") <:> Msg <:> " !"
+defaultFormatter     = colorLvlFormatter ("[" <:> Lvl <:> "] ") <:> Msg
+defaultTimeFormatter = colorLvlFormatter ("[" <:> Lvl <:> "] ") <:> Time <:> ": " <:> Msg
+defaultFormatterTH   = colorLvlFormatter ("[" <:> Lvl <:> "] ") <:> Loc <:> ": " <:> Msg
 
 -- Color formatter
 
