@@ -83,7 +83,7 @@ makeSegments closed points = combine points
                   ControlPoint pd@(Point2 dx dy) c' _ = f2f' $ head points
                   Point2 bx by = unpackP pa pd b'
                   Point2 cx cy = unpackP pd pa c'
-                  a = Rasta.V2 ax ay 
+                  a = Rasta.V2 ax ay
                   b = Rasta.V2 bx by
                   c = Rasta.V2 cx cy
                   d = Rasta.V2 dx dy
@@ -125,10 +125,10 @@ pathToRGBA32 w h (Path closed points) = imgToRGBA32 rasterize
                           Rasta.withTexture (RastaTex.uniformTexture (PixelRGBA8 255 255 255 255)) $ do
                               let cubics = makeSegments closed points
                               case closed of
-                                  False -> Rasta.stroke 
-                                              4 Rasta.JoinRound (Rasta.CapRound, Rasta.CapRound) $ 
+                                  False -> Rasta.stroke
+                                              4 Rasta.JoinRound (Rasta.CapRound, Rasta.CapRound) $
                                                   fmap (Rasta.transform trans) $ fmap Rasta.CubicBezierPrim cubics
-                                  True  -> Rasta.fill $ 
+                                  True  -> Rasta.fill $
                                               fmap (Rasta.transform trans) $ fmap Rasta.CubicBezierPrim cubics
           imgToRGBA32 :: JuicyTypes.Image PixelRGBA8 -> A.Acc (A.Array DIM2 RGBA32)
           imgToRGBA32 (Juicy.Image width height vec) = A.use $ fromVectors (Z:.h:.w) ((), (unsafeCast vec))
@@ -146,7 +146,7 @@ pathToImageNoFill w h (Path closed points) = rasterize
                                               1 Rasta.JoinRound (Rasta.CapRound, Rasta.CapRound) $
                                                   fmap (Rasta.transform trans) $ fmap Rasta.CubicBezierPrim cubics
                                   True  -> Rasta.stroke
-                                              1 Rasta.JoinRound (Rasta.CapRound, Rasta.CapRound) $ 
+                                              1 Rasta.JoinRound (Rasta.CapRound, Rasta.CapRound) $
                                                   fmap (Rasta.transform trans) $ fmap Rasta.CubicBezierPrim cubics
           trans :: Rasta.Point -> Rasta.Point
           trans (Rasta.V2 x y) = Rasta.V2 x ((y-((fromIntegral h)/2))*(-1)+((fromIntegral h)/2))
@@ -159,113 +159,115 @@ pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
           extractVal rgba = (A.fromIntegral $ (rgba `div` 0x1000000) .&. 0xFF) / 255
 
 --returns vector of coordinates of white pixels.
-pathToVectorNoFill :: (Real a, Fractional a) => Int -> Int -> Path a -> [(Int, Int)]
-pathToVectorNoFill w h path = convert $ cast $ pathToImageNoFill w h path
-    where cast :: JuicyTypes.Image PixelRGBA8 -> S.Vector RGBA32
-          cast (Juicy.Image width height vec) = unsafeCast vec
-          convert :: S.Vector RGBA32 -> [(Int, Int)]
-          convert vec = let 
-                  list = toList' $ S.findIndices (\a -> a > 0) vec
-                  every n xs = case drop (n-1) xs of
-                      (y:ys) -> y : every n ys
-                      [] -> []
-              in every 5 list
-          toList' :: S.Vector Int -> [(Int, Int)]
-          toList' vec = fmap (\a -> (a `div` w, a `mod` w)) $ S.toList vec
+--pathToVectorNoFill :: (Real a, Fractional a) => Int -> Int -> Path a -> [(Int, Int)]
+--pathToVectorNoFill w h path = convert $ cast $ pathToImageNoFill w h path
+--    where cast :: JuicyTypes.Image PixelRGBA8 -> S.Vector RGBA32
+--          cast (Juicy.Image width height vec) = unsafeCast vec
+--          convert :: S.Vector RGBA32 -> [(Int, Int)]
+--          convert vec = let
+--                  list = toList' $ S.findIndices (\a -> a > 0) vec
+--                  every n xs = case drop (n-1) xs of
+--                      (y:ys) -> y : every n ys
+--                      [] -> []
+--              in every 5 list
+--          toList' :: S.Vector Int -> [(Int, Int)]
+--          toList' vec = fmap (\a -> (a `div` w, a `mod` w)) $ S.toList vec
 
-listToDouble :: Int -> Int -> [(Int, Int)] -> Double
-listToDouble w h list = d list w h
-    where d :: [(Int, Int)] -> Int -> Int -> Double
-          d list x y = P.minimum $ cs
-              where
-                  bs = fmap (metric x y) list
-                  cs = bs `using` parList rdeepseq
-          metric :: Int -> Int -> (Int, Int) -> Double
-          metric (P.fromIntegral -> x1) (P.fromIntegral -> y1) ((P.fromIntegral -> x2), (P.fromIntegral -> y2)) = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) -- TODO add sqrt
+--listToDouble :: Int -> Int -> [(Int, Int)] -> Double
+--listToDouble w h list = d list w h
+--    where d :: [(Int, Int)] -> Int -> Int -> Double
+--          d list x y = P.minimum $ cs
+--              where
+--                  bs = fmap (metric x y) list
+--                  cs = bs `using` parList rdeepseq
+--          metric :: Int -> Int -> (Int, Int) -> Double
+--          metric (P.fromIntegral -> x1) (P.fromIntegral -> y1) ((P.fromIntegral -> x2), (P.fromIntegral -> y2)) = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) -- TODO add sqrt
 
 --rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
 --rasterizeMask w h (Mask path' feather') = path
 --    where ptm  = pathToMatrix w h
 --          path = ptm path'
 
-rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
-rasterizeMask w h (Mask path' feather') =
+--rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
+--rasterizeMask w h (Mask path' feather') =
+--    case feather' of
+--        Nothing       -> path
+--        Just feather' -> let
+--                listf = createDList w h feather'
+--                listp = createDList w h path'
+--                fpixMat = M.fromList (Z:.w:.h) listf
+--                ppixMat = M.fromList (Z:.w:.h) listp
+--            in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine path (pathToMatrix w h feather') fpixMat ppixMat
+--    where
+--        path     = pathToMatrix w h path'
+--        createDList :: (Real a, Fractional a) => Int -> Int -> Path a -> [Double]
+--        createDList w h path = let
+--                vec = pathToVectorNoFill w h path
+--                createRows :: Int -> [(Int -> [(Int, Int)] -> Double)]
+--                createRows w = fmap (listToDouble) [1..w]
+--            in (createRows w) <*> [1..h] <*> [vec]
+
+--        combine :: Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> A.Exp A.DIM2 -> A.Exp Double
+--        combine path feather fpixMat ppixMat idx = let
+--                p  = path M.! idx
+--                f  = feather M.! idx
+--                dp = ppixMat M.! idx
+--                df = fpixMat M.! idx
+--            in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
+
+
+--convert :: (Real a, Fractional a) => Path a -> A.Acc (A.Vector (QuadraticBezier Double))
+--convert p = let
+--        a = makeCubics p
+--        quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
+--    in A.use $ A.fromList (Z:.length quads) $ quads
+
+--rasterizeMaskWithFeathers :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
+--rasterizeMaskWithFeathers w h (Mask path' feather') =
+--    case feather' of
+--        Nothing       -> path
+--        Just feather' -> let
+--                feather = ptm feather'
+--                cA      = convert path'
+--                cB      = convert feather'
+--            --in M.generate (A.index2 (A.lift h) (A.lift w)) $ combine feather cA cB
+--            in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
+--    where ptm  = pathToMatrix w h
+--          path = ptm path'
+--          combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
+--          combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
+--                  p  = path M.! idx
+--                  f  = feather M.! idx
+--                  d  = distanceFromQuadratics (A.lift $ Point2 x y)
+--                  dp = d pQ
+--                  df = d fQ
+--              in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
+
+rasterizeMask :: forall a. (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
+rasterizeMask w h (Mask path' feather') = -- path
     case feather' of
-        Nothing       -> path
-        Just feather' -> let
-                listf = createDList w h feather'
-                listp = createDList w h path'
-                fpixMat = M.fromList (Z:.w:.h) listf
-                ppixMat = M.fromList (Z:.w:.h) listp
-            in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine path (pathToMatrix w h feather') fpixMat ppixMat
-    where
-        path     = pathToMatrix w h path'
-        createDList :: (Real a, Fractional a) => Int -> Int -> Path a -> [Double]
-        createDList w h path = let
-                vec = pathToVectorNoFill w h path
-                createRows :: Int -> [(Int -> [(Int, Int)] -> Double)] 
-                createRows w = fmap (listToDouble) [1..w]
-            in (createRows w) <*> [1..h] <*> [vec]
-
-        combine :: Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> Matrix2 Double -> A.Exp A.DIM2 -> A.Exp Double
-        combine path feather fpixMat ppixMat idx = let
-                p  = path M.! idx
-                f  = feather M.! idx
-                dp = ppixMat M.! idx
-                df = fpixMat M.! idx
-            in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
-
-
-convert :: (Real a, Fractional a) => Path a -> A.Acc (A.Vector (QuadraticBezier Double))
-convert p = let
-        a = makeCubics p
-        quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
-    in A.use $ A.fromList (Z:.length quads) $ quads
-
-rasterizeMaskWithFeathers :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
-rasterizeMaskWithFeathers w h (Mask path' feather') =
-    case feather' of
-        Nothing       -> path
+        Nothing -> path
         Just feather' -> let
                 feather = ptm feather'
-                cA      = convert path'
-                cB      = convert feather'
-            --in M.generate (A.index2 (A.lift h) (A.lift w)) $ combine feather cA cB
+                convert :: Path a -> A.Acc (A.Vector (QuadraticBezier Double))
+                convert p = let
+                        a = makeCubics p
+                        quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
+                    in A.use $ A.fromList (Z :. length quads) quads
+                cA = convert path'
+                cB = convert feather'
             in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
     where ptm  = pathToMatrix w h
           path = ptm path'
           combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
-          combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
+          combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) =
+              let
                   p  = path M.! idx
                   f  = feather M.! idx
                   d  = distanceFromQuadratics (A.lift $ Point2 x y)
                   dp = d pQ
                   df = d fQ
-              in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
-
---rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
---rasterizeMask w h (Mask path' feather') = path
-    --case feather' of
-    --    Nothing -> path
-    --    Just feather' -> let
-    --            feather = ptm feather'
-    --            convert :: Real a => Path a -> A.Acc (A.Vector (QuadraticBezier Double))
-    --            convert p = let
-    --                    a = makeCubics p
-    --                in A.use $ A.fromList (Z :. length a) $ convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
-    --            cA = convert path'
-    --            cB = convert feather'
-    --        in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
-    --where ptm  = pathToMatrix w h
-    --      path = ptm path'
-    --      combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
-    --      combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
-    --              p  = path M.! idx
-    --              f  = feather M.! idx
-    --              d  = distanceFromQuadratics (A.lift $ Point2 x y)
-    --              dp = d pQ
-    --              df = d fQ
-    --          in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
+              in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df))
 
 matrixToImage :: Matrix2 Double -> Image
 matrixToImage a = Image.singleton view

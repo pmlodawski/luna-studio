@@ -82,5 +82,7 @@ helper p a = P.minimum $ fmap (distanceFromQuadratic p) $ fmap (A.lift) $ A.toLi
 
 -- TODO: [KM] make a version of this working on CubicBezier (and doing the conversion to a list of Quadratics inside it)
 distanceFromQuadratics :: Exp (Point2 Double) -> Acc (Vector (QuadraticBezier Double)) -> Exp Double
-distanceFromQuadratics p a = helper p a -- FIXME[PO]: SHIT SHiT ShIt
---distanceFromQuadratics p a = A.sfoldl min 1e20 A.index0 $ A.smap (distanceFromQuadratic p) a -- FIXME[KM]: FIX THIS SHIET!
+--distanceFromQuadratics p a = helper p a -- FIXME[PO]: SHIT SHiT ShIt
+distanceFromQuadratics p = A.sfoldl getMin 1e20 A.index0 -- FIXME[KM]: FIX THIS SHIET!
+    where getMin acc curve = min acc $ distanceFromQuadratic p curve
+
