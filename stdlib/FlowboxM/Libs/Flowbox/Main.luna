@@ -181,6 +181,30 @@ def noImgMask:
     ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
 #
+#                MATH and such
+#
+
+def curveGUI vertices:
+    vertices
+
+def controlPointGUI point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def nonLinearHandleGUI weight angle:
+    (0, weight, angle)
+
+def verticalHandleGUI length:
+    (1, length, 0)
+
+def linearHandleGUI:
+    (3, 0, 0)
+
+def getValueAtCurve curve x:
+    ```liftF2 getValueAtCurveGUI #{curve} #{x}```
+
+
+
+#
 #                COLOR
 #
 
@@ -609,14 +633,6 @@ def View.map f:
 
 def testCC a:
     ```liftF1 testColorCC #{a}```
-
-# CurveGUI
-
-def curve vertices:
-    vertices
-
-def handle kind weight angle:
-    (kind, weight, angle)
 
 #
 #                MAIN

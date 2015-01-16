@@ -341,7 +341,28 @@ def time self::Std:
     0.0
 
 alias Time = Double
-    
+
 def foo self::Std a::Time:
 	a
 
+#
+#                MATH and such
+#
+
+def curveGUI vertices:
+    vertices
+
+def controlPointGUI point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def nonLinearHandleGUI weight angle:
+    (0, weight, angle)
+
+def verticalHandleGUI length:
+    (1, length, 0)
+
+def linearHandleGUI:
+    (3, 0, 0)
+
+def getValueAtCurve curve x:
+    ```liftF2 getValueAtCurveGUI #{curve} #{x}```
