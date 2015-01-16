@@ -26,9 +26,6 @@ import Control.PolyMonad
 import Data.TupleList
 
 
-ofType :: a -> a -> a
-ofType = const
-
 u = undefined
 
 p = Proxy
