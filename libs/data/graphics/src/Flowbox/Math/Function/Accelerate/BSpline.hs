@@ -44,7 +44,7 @@ instance Applicative BSplineNode where
 
 valueAt :: forall a. (Elt a, IsFloating a) => Acc (BSpline a) -> Exp a -> Exp a
 valueAt spline x = cond (sLength <* 1) 0
-    $ cond (x <* xA) (lineA x) $ cond (x >* xB) (lineB x)
+    $ cond (x <* xA) lineA $ cond (x >* xB) lineB
         $ snd $ while (\(fst -> v) -> fst v <* sLength - 1 &&* snd v <* x) (lift1 step) $ lift (lift (0 :: Exp Int, xA) :: Exp (Int, a), yA :: Exp a)
     where (unlift -> BSplineNode (Point2 xA yA) (Point2 xHiA yHiA) _) = spline !! 0
           (unlift -> BSplineNode (Point2 xB yB) _ (Point2 xHoB yHoB)) = spline !! (sLength - 1)
@@ -55,13 +55,13 @@ valueAt spline x = cond (sLength <* 1) 0
                         in (lift (i+1, xB'), valueAtX 20 0.000001 (lift $ CubicBezier nodeA handleOutA handleInB nodeB) x)
           -- INFO: if the left handle of the first node is `vertical / of length equal to 0` then the function from -Inf to the first node is treaded as a constant function
           --       the similar rule applies to the right handle of the last node and range from the last node to Inf
-          sLength  = A.size spline
-          lineA x' = xA ==* xHiA ? (yA, aA * x' + bA)
-          aA       = (yHiA - yA) / (xHiA - xA)
-          bA       = yA - aA * xA
-          lineB x' = xB ==* xHoB ? (yB, aB * x' + bB)
-          aB       = (yHoB - yB) / (xHoB - xB)
-          bB       = yB - aB * xB
+          sLength = A.size spline
+          lineA   = xA ==* xHiA ? (yA, aA * x + bA)
+          aA      = (yHiA - yA) / (xHiA - xA)
+          bA      = yA - aA * xA
+          lineB   = xB ==* xHoB ? (yB, aB * x + bB)
+          aB      = (yHoB - yB) / (xHoB - xB)
+          bB      = yB - aB * xB
 
 ----------------------------------------------------------------------------------
 ---- BSplineNode accelerate tuple instances # straight to the tuple with no intermediate (un)lifting
