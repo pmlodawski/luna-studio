@@ -5,6 +5,19 @@ def null a:
 def print self msg::String:
     ```autoLift1 print #{msg}```
 
+class ```Bool```:
+    True
+    False
+
+class ```Maybe``` a:
+    Just:
+        unwrap :: a
+    Nothing
+
+class ```Either``` a b:
+    Left: l :: a
+    Right: r :: b
+
 def Int.+ self::Int a::Int -> Int:
     ```liftF2 (+) #{self} #{a}```
 
