@@ -10,19 +10,26 @@
 module Main where
 
 import           Data.Array.Accelerate hiding (fromIntegral)
+import           Data.Array.Accelerate as A
 import           Data.Array.Accelerate.IO
 import           Data.ByteString hiding (head)
 import           Data.VectorSpace
---import           Graphics.Rendering.Cairo hiding (translate)
---import           Graphics.Rendering.Cairo
 
 import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.Mask
 import           Flowbox.Geom2D.Rasterizer hiding (makePoints, makeSegments)
+import           Flowbox.Geom2D.QuadraticBezier
+import           Flowbox.Geom2D.QuadraticBezier.Conversion
+import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
 import           Flowbox.Graphics.Image.IO.BMP
 import           Flowbox.Graphics.Mockup (saveImageLuna)
-import           Flowbox.Prelude hiding ((#))
+import           Flowbox.Prelude as P hiding ((#))
+import           Flowbox.Math.Matrix
+
+import           Math.Coordinate.Cartesian (Point2 (..))
+
+import           Data.Array.Accelerate.CUDA
 
 
 
@@ -37,27 +44,34 @@ main = do
                    , ControlPoint (Point2 338 (210-40)) (Just $ Point2 (329-338) (109-210)) (Just $ Point2 (450-338) (211-210))
                    , ControlPoint (Point2 343 (330-40)) (Just $ Point2 (456-343) (331-330)) Nothing
                    ]
-        points1  = [ ControlPoint (Point2 212 209) Nothing Nothing
-                   , ControlPoint (Point2 338 210) Nothing Nothing
-                   , ControlPoint (Point2 343 330) Nothing Nothing
-                   ]
-        feather1 = [ ControlPoint (Point2 212 (209-40)) Nothing Nothing
-                   , ControlPoint (Point2 338 (210-40)) Nothing Nothing
-                   , ControlPoint (Point2 343 (330-40)) Nothing Nothing
-                   ]
+        --points1  = [ ControlPoint (Point2 212 209) Nothing Nothing
+        --           , ControlPoint (Point2 338 210) Nothing Nothing
+        --           , ControlPoint (Point2 343 330) Nothing Nothing
+        --           ]
+        --feather1 = [ ControlPoint (Point2 212 (209-40)) Nothing Nothing
+        --           , ControlPoint (Point2 338 (210-40)) Nothing Nothing
+        --           , ControlPoint (Point2 343 (330-40)) Nothing Nothing
+        --           ]
 
     let pat = Path True points
         fea = Path True feather
-        pat1 = Path True points1
-        fea1 = Path True feather1
-        arr = rasterizeMask w h $ (Mask pat (Just fea))
-        img = matrixToImage arr
-        arr4 = rasterizeMask w h $ (Mask pat1 (Just fea1))
-        img4 = matrixToImage arr4
+        --pat1 = Path True points1
+        --fea1 = Path True feather1
 
+    P.putStrLn "Test rasterizeMaskWithFeathers no fea"
 
-    saveImageLuna "foo1.png" img4
-    saveImageLuna "foo2.png" img
+    let arrD = rasterizeMask w h $ (Mask pat Nothing)
+        imgD = matrixToImage arrD
+
+    saveImageLuna "fooD2.png" imgD
+
+    P.putStrLn "Test rasterizeMaskWithFeathers"
+    
+    let arrD = rasterizeMask w h $ (Mask pat (Just fea))
+        imgD = matrixToImage arrD
+
+    saveImageLuna "fooD.png" imgD
+
 
     return ()
 
