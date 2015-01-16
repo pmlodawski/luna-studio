@@ -64,7 +64,7 @@ import           Flowbox.Graphics.Shader.Sampler      as Shader
 import           Flowbox.Graphics.Composition.Generator.Shape
 import           Flowbox.Graphics.Shader.Stencil      as Stencil
 import           Flowbox.Graphics.Shader.Shader       as Shader
-import           Flowbox.Graphics.Composition.Transform as Shader
+import           Flowbox.Graphics.Composition.Transform as Transform
 import           Flowbox.Graphics.Composition.Histogram
 import qualified Flowbox.Graphics.Composition.Generator.Raster                  as Raster
 import           Flowbox.Graphics.Image.Channel                       as Channel
@@ -394,7 +394,7 @@ gradientLuna :: forall e.
 gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
     where grad = rasterizer $ monosampler $ gradientShader
 
-          gradientShader = scale (Grid width height) $ Shader.translate (V2 0.5 0.5) $ mapper gray gradient
+          gradientShader = scale (Grid width height) $ Transform.translate (V2 0.5 0.5) $ mapper gray gradient
           gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Double Double Double]
 
           weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
@@ -437,7 +437,7 @@ translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) 
               (Channel.asContinuous -> ChannelBit   name zeData) -> ChannelBit name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
           mask = Nothing
           p :: Point2 (Exp Double) -> Point2 (Exp Double)
-          p pt = Shader.translate (handle pt) pt
+          p pt = Transform.translate (handle pt) pt
           handle :: Point2 (Exp Double) -> V2 (Exp Double)
           handle pt = case mask of
               Nothing      -> v
@@ -516,7 +516,7 @@ translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) 
 transformLuna :: Transform Double -> Image -> Image
 transformLuna _ img = img
 
-cropLuna :: Rectangle Double -> Image -> Image
+cropLuna :: Rectangle Int -> Image -> Image
 cropLuna _ img = img
 
 hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
