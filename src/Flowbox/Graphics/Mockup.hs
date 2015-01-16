@@ -517,7 +517,11 @@ transformLuna :: Transform Double -> Image -> Image
 transformLuna _ img = img
 
 cropLuna :: Rectangle Int -> Image -> Image
-cropLuna _ img = img
+cropLuna rect = onEachChannel cropChannel
+    where cropChannel = \case
+              ChannelFloat name zeData -> ChannelFloat name $ Transform.crop rect zeData
+              ChannelInt   name zeData -> ChannelInt   name $ Transform.crop rect zeData
+              ChannelBit   name zeData -> ChannelBit   name $ Transform.crop rect zeData
 
 hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
