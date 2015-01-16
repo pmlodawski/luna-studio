@@ -52,6 +52,7 @@ import           Flowbox.Graphics.Composition.Filter
 import           Flowbox.Graphics.Composition.Filter       as Conv
 import           Flowbox.Graphics.Composition.Generator.Gradient
 import           Flowbox.Graphics.Composition.Keyer
+import qualified Flowbox.Graphics.Composition.EdgeBlur                as EB
 import           Flowbox.Graphics.Shader.Matrix
 import           Flowbox.Graphics.Composition.Generator.Noise.Billow
 import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
@@ -136,6 +137,17 @@ motionBlur size angle = onEachChannel process
                  $ nearest
                  $ rectangle (Grid (variable size) 1) 1 0
           process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
+
+edgeBlur :: {-- String -> --} Int -> Double -> Image -> Image
+edgeBlur kernelSize edgeMultiplier image =
+    let (r, g, b, a) = unsafeGetChannels image
+        maskEdges = EB.edges (variable edgeMultiplier) r -- TODO: channel choice
+        blurFunc = EB.maskBlur (variable kernelSize) maskEdges
+        -- [resultR, resultG, resultB, resultA] = fmap blurFunc [r,g,b,a]
+      in onEachChannel blurFunc image
+
+
+
 
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
 rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
