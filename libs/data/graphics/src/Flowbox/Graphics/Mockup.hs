@@ -341,26 +341,18 @@ differenceKeyerLuna (variable -> offset) (variable -> gain) background foregroun
 --          p3 = Point2 p3x p3y
 --          p4 = Point2 p4x p4y
 
---blurLuna :: Int -> Image -> Image
---blurLuna (variable -> kernelSize) = onEachChannel blurChannel
---    where hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
---          vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
---          p = pipe A.Clamp
---          blurChannel = \case
---              (Channel.asDiscrete -> ChannelFloat name zeData) -> ChannelFloat name $ (\(DiscreteData shader) -> DiscreteData $ process shader) zeData
---          process :: Channel -> Channel
---          process x = id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
-
---translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) = onEachChannel f
---    where v = V2 x (-y)
---          mask = Nothing
---          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
---          transformation pt = Transform.translate (strength pt) pt
---          strength :: Point2 (Exp Double) -> V2 (Exp Double)
---          strength pt = case mask of
---              Nothing      -> v
---              --TODO[KM]: handle the mask properly (aka. get rid of that ugly pattern match) and uncomment the other case option
---              _ -> v
+blurLuna :: Int -> Image -> Image
+blurLuna (variable -> kernelSize) = onEachChannel blurChannel
+    where blurChannel = \case
+              (Channel.asDiscreteClamp -> ChannelFloat name zeData) -> ChannelFloat name $ (\(DiscreteData shader) -> DiscreteData $ processFloat shader) zeData
+              (Channel.asDiscreteClamp -> ChannelInt   name zeData) -> ChannelInt   name $ (\(DiscreteData shader) -> DiscreteData $ processInt   shader) zeData
+          processFloat x = id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ x
+          processInt   x = fmap floor $ (id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fmap A.fromIntegral x :: DiscreteShader (Exp Float))
+          p = pipe A.Clamp
+          hmat :: (Elt e, IsFloating e) => Matrix2 e
+          hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
+          vmat :: (Elt e, IsFloating e) => Matrix2 e
+          vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
 
 --laplacianLuna :: Int -> Double -> Double -> Image -> Image
 --laplacianLuna (variable -> kernSize) (variable -> crossVal) (variable -> sideVal) img = img'
@@ -445,7 +437,7 @@ translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) 
           mask = Nothing
           translateChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
           transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
           transformation pt = Transform.translate (strength pt) pt
           strength :: Point2 (Exp Double) -> V2 (Exp Double)

@@ -17,10 +17,11 @@ import Flowbox.Prelude                    as P hiding (transform)
 import Flowbox.Math.Matrix as M hiding (ftrans)
 
 
-pipe :: Elt a => Boundary (Exp a)
-                -> (DiscreteShader (Exp a) -> DiscreteShader (Exp a))
-                -> (DiscreteShader (Exp a) -> DiscreteShader (Exp a))
-                ->  DiscreteShader (Exp a) -> DiscreteShader (Exp a)
+pipe :: Elt a
+     => Boundary (Exp a)
+     -> (DiscreteShader (Exp a) -> DiscreteShader (Exp a))
+     -> (DiscreteShader (Exp a) -> DiscreteShader (Exp a))
+     -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 pipe bn a b gen = fromMatrix bn $ (ftrans bn a >-> ftrans bn b) (rasterizer gen)
 
 ftrans :: Elt a => Boundary (Exp a) -> (DiscreteShader (Exp a) -> DiscreteShader (Exp a)) -> Matrix2 a -> Matrix2 a

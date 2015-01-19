@@ -158,8 +158,8 @@ class ```Point``` x y:
 
 #     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
-# def Image.blur self::Image kernelSize::Int:
-#     ```liftF2 gaussianLuna #{kernelSize} #{self}```
+def Image.blur self::Image kernelSize::Int -> Image:
+    ```liftF2 blurLuna #{kernelSize} #{self}```
 
 # def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
@@ -362,20 +362,25 @@ def foo self::Std a::Time:
 #                MATH and such
 #
 
-def curveGUI vertices:
+alias Point2F = Point2 Float
+alias CurveGUI = [ControlPointGUI]
+alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
+alias HandleGUI = (Int, Float, Float)
+
+def curveGUI self::Std vertices::CurveGUI:
     vertices
 
-def controlPointGUI point handleIn handleOut:
+def controlPointGUI self::Std point::Point2F handleIn::HandleGUI handleOut::HandleGUI:
     (point, handleIn, handleOut)
 
-def nonLinearHandleGUI weight angle:
+def nonLinearHandleGUI self::Std weight::Float angle::Float:
     (0, weight, angle)
 
-def verticalHandleGUI length:
+def verticalHandleGUI self::Std length::Float:
     (1, length, 0)
 
-def linearHandleGUI:
+def linearHandleGUI self::Std:
     (3, 0, 0)
 
-def getValueAtCurve curve x:
+def getValueAtCurve self::Std curve::curveGUI x::Time:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```

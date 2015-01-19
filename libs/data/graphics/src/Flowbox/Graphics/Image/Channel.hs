@@ -78,6 +78,14 @@ asDiscrete chan = case chan of
           asDiscreteData v (MatrixData zeData)     = DiscreteData $ fromMatrix (Constant v) zeData
           asDiscreteData _ (ContinuousData zeData) = DiscreteData $ monosampler zeData
 
+asDiscreteClamp :: Channel -> Channel
+asDiscreteClamp chan = case chan of
+    (ChannelFloat name zeData) -> ChannelFloat name $ asDiscreteData zeData
+    (ChannelInt   name zeData) -> ChannelInt   name $ asDiscreteData zeData
+    where asDiscreteData zeData@DiscreteData{}   = zeData
+          asDiscreteData (MatrixData zeData)     = DiscreteData $ fromMatrix Clamp zeData
+          asDiscreteData (ContinuousData zeData) = DiscreteData $ monosampler zeData
+
 asContinuous :: Channel -> Channel
 asContinuous chan = case chan of
     (ChannelFloat name zeData) -> ChannelFloat name $ asContinuousData (constant 0) zeData
