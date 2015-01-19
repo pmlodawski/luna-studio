@@ -828,36 +828,37 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
-type Handle = (VPS Int, VPS Double, VPS Double)
-type GUIControlPoint a = (VPS (Point2 a), VPS Handle, VPS Handle)
-type GUICurve a = [(VPS (GUIControlPoint a))]
+type HandleGUI = (VPS Int, VPS Double, VPS Double)
+type ControlPointGUI a = (VPS (Point2 a), VPS HandleGUI, VPS HandleGUI)
+type CurveGUI a = [VPS (ControlPointGUI a)]
 
-convertHandle :: Handle -> CurveGUI.Handle
-convertHandle (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
+convertHandleGUI :: HandleGUI -> CurveGUI.Handle
+convertHandleGUI (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
     case t of
         0 -> CurveGUI.NonLinear w a
-        1 -> case a > 0 of
-                True  -> CurveGUI.Vertical w CurveGUI.Up
-                False -> CurveGUI.Vertical w CurveGUI.Down
+        1 -> CurveGUI.Vertical w
         2 -> CurveGUI.Linear
 
-convertGUIControlPoint :: GUIControlPoint a -> CurveGUI.ControlPoint a
-convertGUIControlPoint (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
-    CurveGUI.ControlPoint p (convertHandle hIn) (convertHandle hOut)
+getValueAtCurveGUI :: CurveGUI Double -> Double -> Double
+getValueAtCurveGUI (convertCurveGUI -> curve) = CurveGUI.valueAtSpline curve
 
-convertGUICurve :: GUICurve a -> CurveGUI.Curve a
-convertGUICurve (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertGUIControlPoint c)
+convertControlPointGUI :: ControlPointGUI a -> CurveGUI.ControlPoint a
+convertControlPointGUI (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
+    CurveGUI.ControlPoint p (convertHandleGUI hIn) (convertHandleGUI hOut)
 
-hueCorrectLuna :: VPS (GUICurve Double) -> VPS (GUICurve Double) ->
-                  VPS (GUICurve Double) -> VPS (GUICurve Double) -> VPS (GUICurve Double) ->
-                  GUICurve Double -> GUICurve Double -> GUICurve Double ->
+convertCurveGUI :: CurveGUI a -> CurveGUI.Curve a
+convertCurveGUI (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertControlPointGUI c)
+
+hueCorrectLuna :: VPS (CurveGUI Double) -> VPS (CurveGUI Double) ->
+                  VPS (CurveGUI Double) -> VPS (CurveGUI Double) -> VPS (CurveGUI Double) ->
+                  CurveGUI Double -> CurveGUI Double -> CurveGUI Double ->
                   -- GUICurve Double -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
-hueCorrectLuna (VPS (convertGUICurve-> lum)) (VPS (convertGUICurve -> sat))
-               (VPS (convertGUICurve -> r)) (VPS (convertGUICurve-> g))
-               (VPS (convertGUICurve -> b)) (convertGUICurve -> rSup)
-               (convertGUICurve -> gSup) (convertGUICurve-> bSup) img
+hueCorrectLuna (VPS (convertCurveGUI-> lum)) (VPS (convertCurveGUI -> sat))
+               (VPS (convertCurveGUI -> r)) (VPS (convertCurveGUI-> g))
+               (VPS (convertCurveGUI -> b)) (convertCurveGUI -> rSup)
+               (convertCurveGUI -> gSup) (convertCurveGUI-> bSup) img
                     = onEachColorRGB (hueCorrect (CurveGUI.convertToBSpline lum)
                                                  (CurveGUI.convertToBSpline sat)
                                                  (CurveGUI.convertToBSpline r)

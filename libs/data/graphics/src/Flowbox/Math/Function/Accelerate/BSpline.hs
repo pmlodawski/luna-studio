@@ -53,7 +53,7 @@ valueAt spline x = cond (sLength <* 1) 0
                             (unlift -> BSplineNode nodeA _ handleOutA) = spline !! i
                             (unlift -> BSplineNode nodeB@(Point2 xB' _) handleInB _) = spline !! (i + 1)
                         in (lift (i+1, xB'), valueAtX 20 0.000001 (lift $ CubicBezier nodeA handleOutA handleInB nodeB) x)
-          -- INFO: if the left handle of the first node is vertical then the function from -Inf to the first node is treaded as a constant function
+          -- INFO: if the left handle of the first node is `vertical / of length equal to 0` then the function from -Inf to the first node is treaded as a constant function
           --       the similar rule applies to the right handle of the last node and range from the last node to Inf
           sLength  = A.size spline
           lineA x' = xA ==* xHiA ? (yA, aA * x' + bA)
