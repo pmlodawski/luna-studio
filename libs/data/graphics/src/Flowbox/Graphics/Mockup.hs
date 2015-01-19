@@ -341,13 +341,26 @@ differenceKeyerLuna (variable -> offset) (variable -> gain) background foregroun
 --          p3 = Point2 p3x p3y
 --          p4 = Point2 p4x p4y
 
---gaussianLuna :: Int -> Image -> Image
---gaussianLuna (variable -> kernelSize) img = img'
---    where img' = onEachChannel process img
---          hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
+--blurLuna :: Int -> Image -> Image
+--blurLuna (variable -> kernelSize) = onEachChannel blurChannel
+--    where hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
 --          vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
 --          p = pipe A.Clamp
---          process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
+--          blurChannel = \case
+--              (Channel.asDiscrete -> ChannelFloat name zeData) -> ChannelFloat name $ (\(DiscreteData shader) -> DiscreteData $ process shader) zeData
+--          process :: Channel -> Channel
+--          process x = id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
+
+--translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) = onEachChannel f
+--    where v = V2 x (-y)
+--          mask = Nothing
+--          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+--          transformation pt = Transform.translate (strength pt) pt
+--          strength :: Point2 (Exp Double) -> V2 (Exp Double)
+--          strength pt = case mask of
+--              Nothing      -> v
+--              --TODO[KM]: handle the mask properly (aka. get rid of that ugly pattern match) and uncomment the other case option
+--              _ -> v
 
 --laplacianLuna :: Int -> Double -> Double -> Image -> Image
 --laplacianLuna (variable -> kernSize) (variable -> crossVal) (variable -> sideVal) img = img'
@@ -427,13 +440,12 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 
 --TODO[KM]: refactor this to use V2 as the translation input
 translateLuna :: Int -> Int -> Image -> Image
-translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) = onEachChannel f
+translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) = onEachChannel translateChannel
     where v = V2 x (-y)
           mask = Nothing
-          f = \case
+          translateChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
               (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelBit   name zeData) -> ChannelBit name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
           transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
           transformation pt = Transform.translate (strength pt) pt
           strength :: Point2 (Exp Double) -> V2 (Exp Double)
@@ -456,7 +468,6 @@ rotateLuna (variable -> phi) = onEachChannel rotateChannel
           rotateChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
               (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelBit   name zeData) -> ChannelBit   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
           transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
           transformation pt = Transform.rotate (strength pt) pt
           strength :: Point2 (Exp Double) -> Exp Double
@@ -473,7 +484,6 @@ rotateAtLuna (variable -> phi) (fmap variable -> (Point2 x y)) = onEachChannel r
           rotateChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
               (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelBit   name zeData) -> ChannelBit   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
           transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
           transformation pt = Transform.translate vAfter $ Transform.rotate (strength pt) $ Transform.translate vBefore pt
           strength :: Point2 (Exp Double) -> Exp Double
@@ -488,7 +498,6 @@ scaleLuna (fmap variable -> v) = onEachChannel scaleChannel
           scaleChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
               (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelBit   name zeData) -> ChannelBit   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
           transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
           transformation pt = Transform.scale (strength pt) pt
           strength :: Point2 (Exp Double) -> V2 (Exp Double)
@@ -505,7 +514,6 @@ scaleAtLuna (fmap variable -> v) (fmap variable -> (Point2 x y)) = onEachChannel
           scaleChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
               (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelBit   name zeData) -> ChannelBit   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
           transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
           transformation pt = Transform.translate vAfter $ Transform.scale (strength pt) $ Transform.translate vBefore pt
           strength :: Point2 (Exp Double) -> V2 (Exp Double)
@@ -527,7 +535,6 @@ cropLuna rect = onEachChannel cropChannel
     where cropChannel = \case
               ChannelFloat name zeData -> ChannelFloat name $ Transform.crop rect zeData
               ChannelInt   name zeData -> ChannelInt   name $ Transform.crop rect zeData
-              ChannelBit   name zeData -> ChannelBit   name $ Transform.crop rect zeData
 
 hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double

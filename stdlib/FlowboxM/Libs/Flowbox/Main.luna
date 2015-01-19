@@ -412,7 +412,7 @@ def Image.posterize colors:
 #     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
 # def Image.blur kernelSize:
-#     ```liftF2 gaussianLuna #{kernelSize} #{self}```
+#     ```liftF2 blurLuna #{kernelSize} #{self}```
 
 # def Image.laplacian kernelSize centerVal sideVal:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
