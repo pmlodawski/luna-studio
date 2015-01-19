@@ -17,35 +17,35 @@ type Weight      = Double
 type Angle       = Double
 type Range x     = (x, x)
 
-data Function x y = Function { _segments :: Map x (Maybe (Segment x y)) }
+data FunctionModel x y = FunctionModel { _segments :: Map x (Maybe (FunctionSegment x y)) }
 
-data Segment x y = ContinuousHybrid { _vertices :: Map x (ControlPoint y) }
+data FunctionSegment x y = ContinuousHybrid { _vertices :: Map x (FunctionControlPoint y) }
                  | Lambda           { _lambda   :: x -> y }
                  | Repeater         { _startsAt :: x
-                                    , _function :: Function x y
+                                    , _function :: FunctionModel x y
                                     , _range    :: Range x
                                     }
 
-data ControlPoint y = ControlPoint { _vertexY   :: y
-                                   , _handleIn  :: Maybe Handle
-                                   , _handleOut :: Maybe Handle
+data FunctionControlPoint y = FunctionControlPoint { _vertexY   :: y
+                                   , _handleIn  :: Maybe FunctionHandle
+                                   , _handleOut :: Maybe FunctionHandle
                                    } deriving (Show, Eq)
 
-data Handle = Handle { _weight   :: Weight
+data FunctionHandle = FunctionHandle { _weight   :: Weight
                      , _angle    :: Angle
                      }
             deriving (Show, Eq)
 
-data Point x y = Point { _pointX :: x
+data FunctionPoint x y = FunctionPoint { _pointX :: x
                        , _pointY :: y
                        }
 
-makeLenses ''Point
-makeLenses ''Handle
-makeLenses ''ControlPoint
-makeLenses ''Segment
-makeLenses ''Function
+makeLenses ''FunctionPoint
+makeLenses ''FunctionHandle
+makeLenses ''FunctionControlPoint
+makeLenses ''FunctionSegment
+makeLenses ''FunctionModel
 
 
-hardJoint :: y -> ControlPoint y
-hardJoint y = ControlPoint y Nothing Nothing
+hardJoint :: y -> FunctionControlPoint y
+hardJoint y = FunctionControlPoint y Nothing Nothing
