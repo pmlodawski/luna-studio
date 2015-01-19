@@ -62,17 +62,15 @@ main = do
     let v8 = Color.RGBA 0.0 0.0 0.0 0.0
 
     img <- loadImageLuna "lena.png"
+    let img1 = offsetLuna v3 matte img
+    let img2 = contrastLuna v6 matte img
+    let img3 = exposureLuna v1 v5 matte img
+    let img4 = gradeLuna' (VPS v1) (VPS v2) (VPS v2) v3 v5 v2 v2 matte img
 
-    --uncomment
-    --let img1 = offsetLuna v3 matte img
-    --let img2 = contrastLuna v6 matte img
-    --let img3 = exposureLuna v1 v5 matte img
-    --let img4 = gradeLuna' (VPS v1) (VPS v2) (VPS v2) v3 v5 v2 v2 matte img
-
-    --saveImageLuna "shape.png" (matrixToImage $ rasterizeMask w h $ (Mask.Mask pat (Just fea)))
-    --saveImageLuna "lenaWithOffsetApplied.png" img1
-    --saveImageLuna "lenaWithContrastApplied.png" img2
-    --saveImageLuna "lenaWithExposureApplied.png" img3
-    --saveImageLuna "lenaWithGradeApplied.png" img4
+    saveImageLuna "shape.png" (matrixToImage $ rasterizeMask w h $ (Mask.Mask pat (Just fea)))
+    saveImageLuna "lenaWithOffsetApplied.png" img1
+    saveImageLuna "lenaWithContrastApplied.png" img2
+    saveImageLuna "lenaWithExposureApplied.png" img3
+    saveImageLuna "lenaWithGradeApplied.png" img4
 
     print "done"
