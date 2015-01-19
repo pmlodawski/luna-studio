@@ -159,23 +159,23 @@ onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
           updateChan f = Channel.unsafeMap (Channel.FunDouble f) . getChan
           getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
 
---onEachMatrix :: (Matrix2 Double -> Matrix2 Double)
---             -> (Matrix2 Double -> Matrix2 Double)
---             -> (Matrix2 Double -> Matrix2 Double)
---             -> (Matrix2 Double -> Matrix2 Double)
---             -> Image
---             -> Image
---onEachMatrix fr fg fb fa img = Image.singleton view'
---    where (r,g,b,a) = unsafeGetChannels img
---          Right view = lookupPrimary img
+onEachMatrix :: (Matrix2 Double -> Matrix2 Double)
+             -> (Matrix2 Double -> Matrix2 Double)
+             -> (Matrix2 Double -> Matrix2 Double)
+             -> (Matrix2 Double -> Matrix2 Double)
+             -> Image
+             -> Image
+onEachMatrix fr fg fb fa img = Image.singleton view'
+    where (r,g,b,a) = unsafeGetChannels img
+          Right view = lookupPrimary img
 
---          makeChan name f c = ChannelFloat name (asMatrix (MatrixData (f c)))
+          makeChan name f c = ChannelFloat name $ asMatrix . MatrixData $ f c
 
---          view' = View.append (makeChan "rgba.r" fr r)
---                $ View.append (makeChan "rgba.g" fg g)
---                $ View.append (makeChan "rgba.b" fb b)
---                $ View.append (makeChan "rgba.a" fa a)
---                $ View.empty "rgba"
+          view' = View.append (makeChan "rgba.r" fr r)
+                $ View.append (makeChan "rgba.g" fg g)
+                $ View.append (makeChan "rgba.b" fb b)
+                $ View.append (makeChan "rgba.a" fa a)
+                $ View.empty "rgba"
 
 onEachColorRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image -> Image
 onEachColorRGB f img = img'
@@ -231,77 +231,41 @@ onEachChannel f = Image.map $ View.map f
 --          domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
 --          process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
-delta :: (a -> a) -> a -> a
-delta f x = (f x) - x
-
--- looks strange, but is necessary because of the weird accelerate behaviour 
-aux :: A.Exp Double -> A.Exp Double -> (A.Exp Double -> A.Exp Double) -> A.Exp Double
-aux a b f = (a A.==* 0.0) A.? (b,b + a*(delta f b))
-
--- won't work, no idea what is the reason of that
---aux :: A.Exp Double -> A.Exp Double -> (A.Exp Double -> A.Exp Double) -> A.Exp Double
---aux a b f = b + a*(delta f b)
-
-applyToMatrix :: (A.Exp Double -> A.Exp Double) -> Matrix2 a -> Matrix2 a -> Matrix2 a
+applyToMatrix :: (A.Exp Double -> A.Exp Double) -> Matte.Matte Double -> Matrix2 Double -> Matrix2 Double
 applyToMatrix f matte mat = (M.zipWith (\x -> \y -> (aux x y f)) rasterizedMatte) mat
     where
+        delta :: (Num a, Floating a) => (a -> a) -> a -> a
+        delta f x = (f x) - x
+
+        -- looks strange, but is necessary because of the weird accelerate behaviour 
+        aux :: A.Exp Double -> A.Exp Double -> (A.Exp Double -> A.Exp Double) -> A.Exp Double
+        aux a b f = (a A.==* 0.0) A.? (b,b + a*(delta f b))
+
+        -- won't work, no idea what is the reason of that
+        --aux :: A.Exp Double -> A.Exp Double -> (A.Exp Double -> A.Exp Double) -> A.Exp Double
+        --aux a b f = b + a*(delta f b)
 
         dim = M.arrayShape temporaryBackend mat
         rasterizedMatte = Matte.rasterizeMatte dim matte
 
+offsetLuna :: Color.RGBA Double -> Matte.Matte Double -> Image -> Image
+offsetLuna (fmap variable -> Color.RGBA r g b a) matte =
+    onEachMatrix (offsetMat r) (offsetMat g) (offsetMat b) (offsetMat a)
+    where
+        offsetMat c = applyToMatrix (offset c) matte
 
-apply :: (A.Elt a) => (a -> a) -> Channel -> Matte.Matte -> Channel
-apply f a@(ChannelFloat n1 d1) (ChannelFloat n2 d2) = (ChannelFloat n1 (process d1 d2))
+contrastLuna :: Color.RGBA Double -> Matte.Matte Double -> Image -> Image
+contrastLuna (fmap variable -> Color.RGBA r g b a) matte =
+    onEachMatrix (contrastMat r) (contrastMat g) (contrastMat b) id
+    where
+        contrastMat c = applyToMatrix (contrast c) matte
 
-process (MatrixData d1) matte =
-    case matte of
-        MatrixData m -> MatrixData $ applyToMatrix f d1 d2
-        ContinuousShader m -> ContinuousShader $ applyToMatrix f d1 ()
-process (MatrixData d1)
-
---applyToDiscreteShader :: (A.Exp Double -> A.Exp Double) -> Matte.Matte Double -> DiscreteShader (A.Exp Double) -> DiscreteShader (A.Exp Double)
---applyToDiscreteShader f matte (Shader c sh) =
---  Shader c (\p -> (aux (matteShader p) (sh p) f))
---    where
---        Shader (Grid h w) matteShader = Matte.matteAsDiscreteShader (A.Z A.:. 1 :. 1) matte
-
---applyToContinuousShader :: (A.Exp Double -> A.Exp Double) -> Matte.Matte Double -> ContinuousShader (A.Exp Double) -> ContinuousShader (A.Exp Double)
---applyToContinuousShader f matte (Shader c sh) =
---  Shader c (\p -> (aux (matteShader p) (sh p) f))
---    where
---        Shader (Grid h w) matteShader = Matte.matteAsContinuousShader (A.Z A.:. 1 A.:. 1) matte
-
---applyToChannel :: (A.Exp Double -> A.Exp Double) -> Matte.Matte Double -> Channel -> Channel
---applyToChannel f matte chan =
---    case chan of (ChannelFloat name d) -> ChannelFloat name (processFloat d)
---                 --(ChannelInt name d)   -> ChannelInt name (processInt d)
---                 --(ChannelBit name d)   -> ChannelBit name (processBit d)
---        where
---            processFloat (MatrixData d)   = MatrixData $ applyToMatrix f matte d
---            processInt (DiscreteData d)   = DiscreteData $ applyToDiscreteShader f matte d
---            processBit (ContinuousData d) = ContinuousData $ applyToContinuousShader f matte d
-
--- uncomment
---offsetLuna :: Color.RGBA Double -> Matte.Matte Double -> Image -> Image
---offsetLuna (fmap variable -> Color.RGBA r g b a) matte =
---    onEachMatrix (offsetMat r) (offsetMat g) (offsetMat b) (offsetMat a)
---    where
---        offsetMat c = applyToMatrix (offset c) matte
-
--- uncomment
---contrastLuna :: Color.RGBA Double -> Matte.Matte Double -> Image -> Image
---contrastLuna (fmap variable -> Color.RGBA r g b a) matte =
---    onEachMatrix (contrastMat r) (contrastMat g) (contrastMat b) id
---    where
---        contrastMat c = applyToMatrix (contrast c) matte
-
--- uncomment
---exposureLuna :: Color.RGBA Double -> Color.RGBA Double -> Matte.Matte Double -> Image -> Image
---exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
---             (fmap variable -> Color.RGBA exR exG exB exA) matte =
---                onEachMatrix (exposureMat blackpointR exR) (exposureMat blackpointG exG) (exposureMat blackpointB exB) id 
---                where
---                    exposureMat a b = applyToMatrix (exposure a b) matte
+exposureLuna :: Color.RGBA Double -> Color.RGBA Double -> Matte.Matte Double -> Image -> Image
+exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
+             (fmap variable -> Color.RGBA exR exG exB exA) matte =
+                onEachMatrix (exposureMat blackpointR exR) (exposureMat blackpointG exG) (exposureMat blackpointB exB) id 
+                where
+                    exposureMat a b = applyToMatrix (exposure a b) matte
 
 gradeLuna :: VPS Double -> VPS Double -> VPS Double -> Double -> Double -> Double -> Double -> Image -> Image
 gradeLuna (VPS (variable -> blackpoint))
@@ -904,30 +868,29 @@ hueCorrectLuna (VPS (convertGUICurve-> lum)) (VPS (convertGUICurve -> sat))
                                                  (CurveGUI.convertToBSpline bSup)
                                      ) img
 
--- uncomments
---gradeLuna' :: VPS (Color.RGBA Double)
---           -> VPS (Color.RGBA Double)
---           -> VPS (Color.RGBA Double)
---           -> Color.RGBA Double
---           -> Color.RGBA Double
---           -> Color.RGBA Double
---           -> Color.RGBA Double
---           -> Matte.Matte Double
---           -> Image
---           -> Image
---gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
---           (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
---           (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
---           (fmap variable -> Color.RGBA gainR gainG gainB gainA)
---           (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
---           (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
---           (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) matte =
---             onEachMatrix (gradeMat blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
---                          (gradeMat blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
---                          (gradeMat blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
---                          id --(gradeMat blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
---                where
---                    gradeMat x1 x2 x3 x4 x5 x6 x7 mat = applyToMatrix (grade x1 x2 x3 x4 x5 x6 x7) matte mat
+gradeLuna' :: VPS (Color.RGBA Double)
+           -> VPS (Color.RGBA Double)
+           -> VPS (Color.RGBA Double)
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Matte.Matte Double
+           -> Image
+           -> Image
+gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
+           (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
+           (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
+           (fmap variable -> Color.RGBA gainR gainG gainB gainA)
+           (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
+           (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
+           (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) matte =
+             onEachMatrix (gradeMat blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
+                          (gradeMat blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
+                          (gradeMat blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
+                          id --(gradeMat blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+                where
+                    gradeMat x1 x2 x3 x4 x5 x6 x7 mat = applyToMatrix (grade x1 x2 x3 x4 x5 x6 x7) matte mat
 
 colorCorrectLuna' :: Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
