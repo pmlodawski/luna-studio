@@ -19,8 +19,6 @@ import qualified Flowbox.Graphics.Utils.Accelerate as A
 import           Flowbox.Prelude
 import qualified Flowbox.Prelude                                as P
 
-import qualified Data.Array.Accelerate.CUDA                     as CUDA --TODO remove; only for debug
-import           Debug.Trace
 import qualified Flowbox.Math.Matrix                            as M
 
 
@@ -77,12 +75,8 @@ distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A
           dot (Point2 ox oy) (Point2 qx qy) = ox * qx + oy * qy
           mult x y = fmap (*y) x
 
-helper :: Exp (Point2 Double) -> Acc (Vector (QuadraticBezier Double)) -> Exp Double
-helper p a = P.minimum $ fmap (distanceFromQuadratic p) $ fmap (A.lift) $ A.toList $ CUDA.run a
-
 -- TODO: [KM] make a version of this working on CubicBezier (and doing the conversion to a list of Quadratics inside it)
 distanceFromQuadratics :: Exp (Point2 Double) -> Acc (Vector (QuadraticBezier Double)) -> Exp Double
---distanceFromQuadratics p a = helper p a -- FIXME[PO]: SHIT SHiT ShIt
 distanceFromQuadratics p = A.sfoldl getMin 1e20 A.index0 -- FIXME[KM]: FIX THIS SHIET!
     where getMin acc curve = min acc $ distanceFromQuadratic p curve
 

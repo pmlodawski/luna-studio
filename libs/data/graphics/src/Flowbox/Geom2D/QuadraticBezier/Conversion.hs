@@ -9,6 +9,7 @@
 module Flowbox.Geom2D.QuadraticBezier.Conversion where
 
 import           Data.List
+import           Debug.Trace
 import           Geom2D
 import qualified Geom2D.CubicBezier.Basic as Cubic
 
@@ -54,5 +55,31 @@ approximateCubicWithQuadratic = approximateCubicWithQuadraticStep 1
                   err = (sqrt 3 / 18) * d
                   d   = vectorDistance (fp2gp c0) (fp2gp c1)
 
+approximateCubicWithQuadratic' :: Int -> Double -> CubicBezier Double -> [QuadraticBezier Double]
+approximateCubicWithQuadratic' = approximateCubicWithQuadraticStep 1
+    where approximateCubicWithQuadraticStep :: Int -> Int -> Double -> CubicBezier Double -> [QuadraticBezier Double]
+          approximateCubicWithQuadraticStep step limit eps curve@(CubicBezier pA pB pC pD)
+              | {-err < eps ||-} step >= limit = [approxCurve]
+              | otherwise                  = getSubresults subcurvesHalf
+              where
+                  (QuadraticBezier _ c0 _) = approx pA pB pC -- ok
+                  (QuadraticBezier _ c1 _) = approx pD pC pB -- ok
+                  approxCurve = QuadraticBezier pA ((3 * c1 - pD + 3 * c0 - pA) / 4) pD -- ok
+                  d   = vectorDistance (fp2gp c0) (fp2gp c1) -- distance between control points
+                  err = (sqrt 3 / 18) * d -- this should be precision, but something is fucky (no t^3_max)
+                  approx a b c = QuadraticBezier a (approxControl a b) (approxEnd a b c) -- ok
+                  approxControl a b = (3 * b - a) / 2   -- ok
+                  approxEnd a b c   = a - 3 * b + 3 * c -- ok
+                  inflections  = sort $ filter (\x -> x > 0 && x < 1) $ Cubic.findBezierInflection curve'
+                  hasInflections = {-trace ("running hasInflections with inflections =" ++ show inflections) $-} not $ null inflections
+                  subcurvesInf  = splitN inflections
+                  subcurvesHalf = splitN [0.5] -- not cool, half doesn't seem to be useful here.
+                  getSubresults subcurves = foldr1 (++) $ fmap (approximateCubicWithQuadraticStep (step+1) limit eps) subcurves -- ok
+                  curve' = fcb2gcb curve
+                  splitN w      = fmap gcb2fcb $ Cubic.splitBezierN curve' w -- seems ok
+
+
+
+
 convertCubicsToQuadratics :: Int -> Double -> [CubicBezier Double] -> [QuadraticBezier Double]
-convertCubicsToQuadratics steps eps cubics = concat $ fmap (approximateCubicWithQuadratic steps eps) cubics
+convertCubicsToQuadratics steps eps cubics = concat $ fmap (approximateCubicWithQuadratic' steps eps) cubics
