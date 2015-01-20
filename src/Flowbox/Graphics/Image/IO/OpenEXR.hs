@@ -49,7 +49,7 @@ readEXRPart exr part = do
 
     let newChannels = addAlphaIfAbsent channels
 
-    partName <- maybe "rgba" id <$> getPartName exr part
+    partName <- maybe View.defaultName id <$> getPartName exr part
     return $ makeView partName newChannels
 
 addAlphaIfAbsent :: [Channel] -> [Channel]

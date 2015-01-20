@@ -11,9 +11,9 @@ import			 Flowbox.Prelude
 
 
 
-data Error = ChannelLookupError { chanName :: Channel.Name }
+data Error = ChannelLookupError { _chanName :: Channel.Name }
 		   | ViewLookupError String
-		   | ChannelNameError { chanDescriptor :: Channel.Name, chanName :: Channel.Name }
+		   | ChannelNameError { _chanDescriptor :: Channel.Name, _chanName :: Channel.Name }
 		   | InvalidMap
 
 instance Show Error where
@@ -21,6 +21,6 @@ instance Show Error where
         ChannelLookupError name -> "Channel lookup error: channel \"" ++ name ++ "\" not found"
         ViewLookupError name -> "View lookup error: view \"" ++ name ++ "\" not found"
         ChannelNameError descriptor name -> "Channel naming error: last part of the descriptor '" ++ descriptor ++ "' does not match '" ++ name ++ "'"
-        InvalidMap -> "Map inconsistency error: the map contains values with names not matching their associated keys"
+        InvalidMap -> "Map inconsistency error: the map contains values with names not matching their associated keys" -- TODO[KM]: remove this when the structures associated with Image migrate to using Sets instead of Maps
 
 type Result a = Either Error a
