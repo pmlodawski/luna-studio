@@ -4,18 +4,23 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE ViewPatterns #-}
+
 module Flowbox.Math.Function.CurveGUI where
 
-import           Flowbox.Prelude
+import qualified Data.Array.Accelerate     as A
+import qualified Data.Map                  as Map
+import           Math.Coordinate.Cartesian (Point2(..))
+
+import           Flowbox.Geom2D.CubicBezier               as CubicBezier
+import           Flowbox.Geom2D.CubicBezier.Solve         as CubicBezier
 import           Flowbox.Math.Function.Accelerate.BSpline
-import           Math.Coordinate.Cartesian                   (Point2(..))
-import qualified Data.Array.Accelerate as A
-import qualified Flowbox.Math.Function.Model as Model
-import qualified Data.Map as Map
+import qualified Flowbox.Math.Function.Model              as Model
+import           Flowbox.Prelude                          as P
 
 type Weight = Double
+type Length = Double
 type Angle  = Double
-data Direction = Up | Down deriving(Show, Eq)
 
 newtype CurvesCollection x = CurvesCollection { _curves :: [(x, Curve x)] } deriving (Show)
 
@@ -29,8 +34,7 @@ data ControlPoint x = ControlPoint { _point  :: Point2 x
 data Handle = NonLinear { _weight :: Weight
                         , _angle  :: Angle
                         }
-            | Vertical  { _weight :: Weight
-                        , _direction :: Direction
+            | Vertical  { _length :: Length
                         }
             | Linear deriving (Show, Eq)
 
@@ -40,7 +44,7 @@ makeLenses ''ControlPoint
 makeLenses ''Handle
 
 convertToBSpline :: Curve Double -> BSpline Double
-convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (length l)) l :: BSpline Double
+convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (P.length l)) l :: BSpline Double
     where
         l = convertToNodeList vertices
 
@@ -115,10 +119,7 @@ convertToNodeList l =
                 lx = x - (x - x2) * w
                 ly = y - (x - lx) * tan(ang)
 
-        processLeft _ (ControlPoint (Point2 x y) (Vertical w d) _) =
-            case d of
-                Up  -> Point2 x (y+w)
-                Down -> Point2 x (y-w)
+        processLeft _ (ControlPoint (Point2 x y) (Vertical w) _) = Point2 x (y+w)
 
         processRight :: ControlPoint Double -> ControlPoint Double -> Point2 Double
         processRight (ControlPoint (Point2 x y) _ Linear) (ControlPoint (Point2 x2 y2) _ _) = Point2 x' y'
@@ -131,11 +132,34 @@ convertToNodeList l =
                 rx = x + (x2 -x) * w
                 ry = y + (rx - x) * tan(ang)
 
-        processRight (ControlPoint (Point2 x y) _ (Vertical w d)) _ =
-            case d of
-                Up  -> Point2 x (y+w)
-                Down -> Point2 x (y-w)
+        processRight (ControlPoint (Point2 x y) _ (Vertical w)) _ = Point2 x (y+w)
     in
         case l of
             (a:b:seg) -> safeMap (b:seg) a [processLeftmost a b]
             (a:[]) -> convertSingleElem a
+
+
+
+valueAtSpline :: Curve Double -> Double -> Double
+valueAtSpline (BezierCurve (convertToNodeList -> vertices')) x =
+    if vLength < 1
+        then 0
+        else if x < xL
+            then lineValue xL yL xHiL yHiL
+            else findValue vertices'
+    where vLength  = P.length vertices'
+          BSplineNode (Point2 xL yL) (Point2 xHiL yHiL) _ = P.head vertices'
+          lineValue xA yA xB yB = let
+                  a = (yB - yA) / (xB - xA)
+                  b = yA - a * xA
+              in if xA == xB
+                  then yA
+                  else a * x + b
+          findValue [BSplineNode (Point2 xR yR) _ (Point2 xHoR yHoR)] = lineValue xR yR xHoR yHoR
+          findValue (a:b:xs) = let
+                  BSplineNode pA _ hOutA = a
+                  BSplineNode pB@(Point2 xB _) hInB _ = b
+                  curve = CubicBezier pA hOutA hInB pB
+              in if x < xB
+                  then CubicBezier.valueAtX 10 0.0001 curve x
+                  else findValue $ b:xs

@@ -181,6 +181,35 @@ def noImgMask:
     ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
 #
+#                MATH and such
+#
+
+# alias Point2F = Point2 Float
+# alias CurveGUI = [ControlPointGUI]
+# alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
+# alias HandleGUI = (Int, Float, Float)
+
+def curveGUI vertices:
+    vertices
+
+def controlPointGUI point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def nonLinearHandleGUI weight angle:
+    (0, weight, angle)
+
+def verticalHandleGUI length:
+    (1, length, 0)
+
+def linearHandleGUI:
+    (2, 0, 0)
+
+def getValueAtCurve curve x:
+    ```liftF2 getValueAtCurveGUI #{curve} #{x}```
+
+
+
+#
 #                COLOR
 #
 
@@ -211,6 +240,11 @@ class ```Gamma```:
 #
 #                IMAGE
 #
+
+# class Image
+
+# def Image.empty:
+#     ```liftF0 Image.empty```
 
 def load path:
     ```autoLift1 realReadLuna #{path}```
@@ -387,8 +421,8 @@ def Image.posterize colors:
 
 #     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
-# def Image.blur kernelSize:
-#     ```liftF2 gaussianLuna #{kernelSize} #{self}```
+def Image.blur kernelSize:
+    ```liftF2 blurLuna #{kernelSize} #{self}```
 
 # def Image.laplacian kernelSize centerVal sideVal:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
@@ -613,14 +647,6 @@ def View.map f:
 def testCC a:
     ```liftF1 testColorCC #{a}```
 
-# CurveGUI
-
-def curve vertices:
-    vertices
-
-def handle kind weight angle:
-    (kind, weight, angle)
-
 #
 #                MAIN
 #
@@ -636,10 +662,10 @@ def main:
 
     p6 = point 1.0 2.0
 
-    h = handle 2 0.0 0.0
+    h = linearHandleGUI
 
-    c = curve [controlPoint p0 h h, controlPoint p1 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
-    c2 = curve [controlPoint p0 h h, controlPoint p6 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
+    c = curveGUI [controlPoint p0 h h, controlPoint p1 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
+    c2 = curveGUI [controlPoint p0 h h, controlPoint p6 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
 
     black = RGBA 0.0 0.0 0.0 1.0
     white = RGBA 1.0 1.0 1.0 1.0
@@ -649,8 +675,8 @@ def main:
 
     # lena = lena.hueCorrect c c c c c c2 c c
 
-    translated = lena.translate (-50) (100)
-    translated.save "./out.png"
+    out = lena.blur 20
+    out.save "./out.png"
 
     # grade: blackpoint whitepoint lift gain multiply offset gamma
     # lena = lena.grade test white black white white black white

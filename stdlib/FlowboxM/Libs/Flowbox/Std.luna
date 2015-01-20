@@ -173,6 +173,33 @@ def mask path feather:
 def rasterizeMask w h m:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
 
+#
+#                MATH and such
+#
+
+# alias Point2F = Point2 Float
+# alias CurveGUI = [ControlPointGUI]
+# alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
+# alias HandleGUI = (Int, Float, Float)
+
+def curveGUI vertices:
+    vertices
+
+def controlPointGUI point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def nonLinearHandleGUI weight angle:
+    (0, weight, angle)
+
+def verticalHandleGUI length:
+    (1, length, 0)
+
+def linearHandleGUI:
+    (3, 0, 0)
+
+def getValueAtCurve curve x:
+    ```liftF2 getValueAtCurveGUI #{curve} #{x}```
+
 
 
 #
@@ -371,8 +398,8 @@ def Image.posterize colors:
 
 #     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
-# def Image.blur kernelSize:
-#     ```liftF2 gaussianLuna #{kernelSize} #{self}```
+def Image.blur kernelSize:
+    ```liftF2 blurLuna #{kernelSize} #{self}```
 
 # def Image.laplacian kernelSize centerVal sideVal:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
