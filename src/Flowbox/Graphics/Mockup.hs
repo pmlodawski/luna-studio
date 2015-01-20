@@ -192,26 +192,25 @@ onEachChannel f = Image.map $ View.map f
 --                 $ rectangle (Grid (variable size) 1) 1 0
 --          process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
-<<<<<<< HEAD
+
 edgeBlur :: Channel.Name -> Int -> Double -> Image -> Image
 edgeBlur channelName kernelSize edgeMultiplier image =
-    let --(r, g, b, a) = unsafeGetChannels image
-        Right ch = getFromPrimary channelName image
-        Just (ChannelFloat _ (MatrixData channelMat)) = ch
-        maskEdges = EB.edges (variable edgeMultiplier) channelMat -- TODO: channel choice
-        blurFunc = EB.maskBlur EB.Gauss (variable kernelSize) maskEdges
-      in {-- onEachChannel blurFunc --} image
+    let Right (Just ch) = getFromPrimary channelName image
+        chMat           = asMatrix ch
+        ChannelFloat _ (MatrixData channelMat) = chMat
+        maskEdges       = EB.edges (variable edgeMultiplier) channelMat -- TODO: channel choice
+        blurFunc        = EB.maskBlur EB.Gauss (variable kernelSize) maskEdges
+    in {-- onEachChannel blurFunc --} image
 
 
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
 --rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
 
-||||||| merged common ancestors
+
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
 --rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
 
-=======
->>>>>>> develop
+
 --bilateral :: Double
 --          -> Double
 --          -> Int
