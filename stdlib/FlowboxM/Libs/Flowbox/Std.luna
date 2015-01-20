@@ -416,8 +416,8 @@ def Image.blur kernelSize:
 
 # def Image.translate boundary x y:
 #     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-def Image.translate x y:
-    ```liftF3 translateLuna #{x} #{y} #{self}```
+# def Image.translate x y:
+#     ```liftF3 translateLuna #{x} #{y} #{self}```
 
 # def Image.scaleTo boundary x y:
 #     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
@@ -432,8 +432,8 @@ def Image.translate x y:
 # def Image.scale x y:
 #     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
-def Image.transform trans:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform trans:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
