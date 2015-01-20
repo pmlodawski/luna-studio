@@ -56,6 +56,11 @@ def Double.acc:
 
 alias Path = String
 
+class Image
+
+def emptyImage self::Std -> Image:
+    ```liftF0 Image.empty```
+
 def load self::Std path::Path -> Image:
     ```autoLift1 realReadLuna #{path}```
 
@@ -367,20 +372,20 @@ alias CurveGUI = [ControlPointGUI]
 alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
 alias HandleGUI = (Int, Float, Float)
 
-def curveGUI self::Std vertices::CurveGUI:
+def curveGUI self::Std vertices::CurveGUI -> CurveGUI:
     vertices
 
-def controlPointGUI self::Std point::Point2F handleIn::HandleGUI handleOut::HandleGUI:
+def controlPointGUI self::Std point::Point2F handleIn::HandleGUI handleOut::HandleGUI -> ControlPointGUI:
     (point, handleIn, handleOut)
 
-def nonLinearHandleGUI self::Std weight::Float angle::Float:
+def nonLinearHandleGUI self::Std weight::Float angle::Float -> HandleGUI:
     (0, weight, angle)
 
-def verticalHandleGUI self::Std length::Float:
-    (1, length, 0)
+def verticalHandleGUI self::Std length::Float -> HandleGUI:
+    (1, length, 0.0)
 
-def linearHandleGUI self::Std:
-    (3, 0, 0)
+def linearHandleGUI self::Std -> HandleGUI:
+    (3, 0.0, 0.0)
 
-def getValueAtCurve self::Std curve::curveGUI x::Time:
+def getValueAtCurve self::Std curve::curveGUI x::Time -> Float:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```

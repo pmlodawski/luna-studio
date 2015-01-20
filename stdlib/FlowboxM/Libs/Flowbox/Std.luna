@@ -234,6 +234,11 @@ class ```Gamma```:
 #                IMAGE
 #
 
+# class ```Image```
+
+def emptyImage:
+    ```liftF0 Image.empty```
+
 def load path:
     ```autoLift1 realReadLuna #{path}```
 
