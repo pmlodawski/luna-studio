@@ -1,5 +1,7 @@
 @AllowOrphans
 
+# ```{-# OPTIONS_GHC -fcontext-stack25 #-}```
+
 import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
@@ -178,8 +180,6 @@ alias ImgMask = Maybe Image
 def noImgMask:
     ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
-
-
 #
 #                COLOR
 #
@@ -225,14 +225,14 @@ def Image.view name:
 # def Image.colorMatrix matrix:
 #     ```liftF2 colorMatrixLuna #{matrix} #{self}```
 
-def Image.removeChannel viewName channelName:
-    ```liftF3 removeChannelLuna #{viewName} #{channelName} #{self}```
+# def Image.removeChannel viewName channelName:
+#     ```liftF3 removeChannelLuna #{viewName} #{channelName} #{self}```
 
 def Image.getChannel viewName channelName:
     ```liftF3 getChannelLuna #{viewName} #{channelName} #{self}```
 
-def Image.insertChannel viewName channel:
-    ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
+# def Image.insertChannel viewName channel:
+#     ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
 
 def Image.deleteView name:
     ```liftF2 Image.delete #{name} #{self}```
@@ -240,8 +240,8 @@ def Image.deleteView name:
 def Image.map f:
     ```liftF2 Image.map #{f} #{self}```
 
-def Image.updateView f viewName:
-    ```liftF3 Image.update #{f} #{viewName} #{self}```
+# def Image.updateView f viewName:
+#     ```liftF3 Image.update #{f} #{viewName} #{self}```
 
 def Image.insertView view:
     ```liftF2 Image.insert #{view} #{self}```
@@ -331,8 +331,19 @@ def Image.gamma val:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-def Image.colorCorrect saturation contrast gamma gain offset:
-    ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
+def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
+    # ```liftF21 colorCorrectLuna' #{masterSaturation} #{masterContrast} #{masterGamma} #{masterGain} #{masterOffset}
+    #                              #{shadowsSaturation} #{shadowsContrast} #{shadowsGamma} #{shadowsGain} #{shadowsOffset}
+    #                              #{midtonesSaturation} #{midtonesContrast} #{midtonesGamma} #{midtonesGain} #{midtonesOffset}
+    #                              #{highlightsSaturation} #{highlightsContrast} #{highlightsGamma} #{highlightsGain} #{highlightsOffset}
+    #                              #{self}```
+
+def Image.hueCorrect sat lum r g b rSup gSup bSup:
+    ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -355,35 +366,35 @@ def Image.histEq bins:
 def Image.posterize colors:
     ```liftF2 posterizeLuna #{colors} #{self}```
 
-def Image.defocus radius:
-    ```liftF2 defocus #{radius} #{self}```
+# def Image.defocus radius:
+#     ```liftF2 defocus #{radius} #{self}```
 
-def Image.motionBlur size angle:
-    ```liftF3 motionBlur #{size} #{angle} #{self}```
+# def Image.motionBlur size angle:
+#     ```liftF3 motionBlur #{size} #{angle} #{self}```
 
-def Image.bilateral psigma csigma size:
-    ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
+# def Image.bilateral psigma csigma size:
+#     ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
 
-def Image.cornerPin p1 p2 p3 p4:
-    p1x = p1.x
-    p1y = p1.y
-    p2x = p2.x
-    p2y = p2.y
-    p3x = p3.x
-    p3y = p3.y
-    p4x = p4.x
-    p4y = p4.y
+# def Image.cornerPin p1 p2 p3 p4:
+#     p1x = p1.x
+#     p1y = p1.y
+#     p2x = p2.x
+#     p2y = p2.y
+#     p3x = p3.x
+#     p3y = p3.y
+#     p4x = p4.x
+#     p4y = p4.y
 
-    ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
+#     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
-def Image.blur kernelSize:
-    ```liftF2 gaussianLuna #{kernelSize} #{self}```
+# def Image.blur kernelSize:
+#     ```liftF2 gaussianLuna #{kernelSize} #{self}```
 
-def Image.laplacian kernelSize centerVal sideVal:
-    ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
+# def Image.laplacian kernelSize centerVal sideVal:
+#     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
-def Image.rotate phi:
-    ```liftF2 turnCenterLuna #{phi} #{self}```
+# def Image.rotate phi:
+#     ```liftF2 turnCenterLuna #{phi} #{self}```
 # def Image.rotate phi m:
 #     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
 
@@ -392,18 +403,18 @@ def Image.rotate phi:
 def Image.translate x y:
     ```liftF3 translateLuna #{x} #{y} #{self}```
 
-def Image.scaleTo boundary x y:
-    ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
+# def Image.scaleTo boundary x y:
+#     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
 # def Image.scaleTo x y m:
 #     ```liftF4 scaleToLuna #{x} #{y} #{m} #{self}```
 
 # def Image.scale boundary x y:
 #     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
-def Image.scaleCenter x y:
-    ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+# def Image.scaleCenter x y:
+#     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
 
-def Image.scale x y:
-    ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+# def Image.scale x y:
+#     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
 def Image.transform trans:
     ```liftF2 transformLuna #{trans} #{self}```
@@ -423,8 +434,8 @@ def Image.open size:
 def Image.close size:
     ```liftF2 closeLuna #{size} #{self}```
 
-def Image.radialBlur size angle:
-    ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
+# def Image.radialBlur size angle:
+#     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
 
 def Image.edgeDetect edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
@@ -546,10 +557,8 @@ def Image.dither bound diffusionMethod bits:
     # ```autoLift4 ditherLuna #{bound} #{bits} #{diffusionTable} #{self}```
     ```autoLift4 ditherLuna #{bound} #{bits} (val floydSteinberg) #{self}```
 
-def Image.bayer bits:
-    ```liftF2 orderedDitherLuna #{bits} #{self}```
-
-
+# def Image.bayer bits:
+#     ```liftF2 orderedDitherLuna #{bits} #{self}```
 
 #
 #                IMAGE - KEYING
@@ -604,26 +613,70 @@ def View.map f:
 def testCC a:
     ```liftF1 testColorCC #{a}```
 
+# CurveGUI
+
+def curve vertices:
+    vertices
+
+def handle kind weight angle:
+    (kind, weight, angle)
 
 #
 #                MAIN
 #
 
 def main:
-    # black = RGBA 0.0 0.0 0.0 1.0
+    print "test"
+    p0 = point 0.0 1.0
+    p1 = point 1.0 1.0
+    p2 = point 2.0 1.0
+    p3 = point 3.0 1.0
+    p4 = point 4.0 1.0
+    p5 = point 5.0 1.0
+
+    p6 = point 1.0 2.0
+
+    h = handle 2 0.0 0.0
+
+    c = curve [controlPoint p0 h h, controlPoint p1 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
+    c2 = curve [controlPoint p0 h h, controlPoint p6 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
+
+    black = RGBA 0.0 0.0 0.0 1.0
     white = RGBA 1.0 1.0 1.0 1.0
     # gray  = RGBA 0.5 0.5 0.5 1.0
-    test = RGBA 0.1 0.1 0.1 0.1
     # lena = constant 640 480 gray
-    # lena = load "./test.png"
+    lena = load "./lena.png"
+
+    # lena = lena.hueCorrect c c c c c c2 c c
+
+    translated = lena.translate (-50) (100)
+    translated.save "./out.png"
+
     # grade: blackpoint whitepoint lift gain multiply offset gamma
     # lena = lena.grade test white black white white black white
     # checker = load "./checker.png"
     # lena = lena.merge Plus Adobe checker
     # lena.save "./out.png"
 
-    test = testCC (white, white, white, white, test)
-    test.save "./test.png"
+    # jet = load "./jet.exr"
+    # test = constant 512 512 (RGBA 0.045 0.045 0.045 1.0)
+    # test.save "./input.png"
+    # test = load "./lena.png"
+    # testC1 = (RGBA 0.1 0.1 0.1 1.0)
+    # testC2 = (RGBA 2.0 2.0 2.0 1.0)
+    # testC3 = (RGBA 3.0 3.0 3.0 1.0)
+    # test = test.colorCorrect (white, white, white, white, testC1)
+    #                          (white, white, white, white, black)
+    #                          (white, white, white, white, black)
+    #                          (white, white, white, white, black)
+
+
+    # translated.save "./jet-translated.png"
+    # scaled = translated.scale 1.2 2.0 noImgMask
+    # scaled.save "./jet-scaled.png"
+
+    # test = testCC (white, white, white, white, test)
+    # test.save "./test.png"
 
     # jet = readEXR "./jet.exr"
     # jet.save "./jet.png"

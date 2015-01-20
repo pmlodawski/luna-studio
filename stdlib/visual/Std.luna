@@ -49,14 +49,14 @@ def load self::Std path::Path:
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
-def Image.defocus self::Image radius::Int:
-    ```liftF2 defocus #{radius} #{self}```
+# def Image.defocus self::Image radius::Int:
+#     ```liftF2 defocus #{radius} #{self}```
 
-def Image.motionBlur self::Image size::Int angle::Float:
-    ```liftF3 motionBlur #{size} #{angle} #{self}```
+# def Image.motionBlur self::Image size::Int angle::Float:
+#     ```liftF3 motionBlur #{size} #{angle} #{self}```
 
-def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
-    ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
+# def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
+#     ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
 
 def Image.offset self::Image value::Color:
     ```liftF2 offsetLuna #{value} #{self}```
@@ -121,35 +121,35 @@ def Image.open self::Image size::Int:
 def Image.close self::Image size::Int:
     ```liftF2 closeLuna #{size} #{self}```
 
-def Image.radialBlur self::Image size::Int angle::Float:
-    ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
+# def Image.radialBlur self::Image size::Int angle::Float:
+#     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
 
 def Image.edgeDetect self::Image edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
-def Image.bayer self::Image bits::Int:
-    ```liftF2 orderedDitherLuna #{bits} #{self}```
+# def Image.bayer self::Image bits::Int:
+#     ```liftF2 orderedDitherLuna #{bits} #{self}```
 
 class ```Point``` x y:
     Point: x,y :: Double
 
-def Image.cornerPin self::Image p1::Point p2::Point p3::Point p4::Point:
-    p1x = p1.x
-    p1y = p1.y
-    p2x = p2.x
-    p2y = p2.y
-    p3x = p3.x
-    p3y = p3.y
-    p4x = p4.x
-    p4y = p4.y
+# def Image.cornerPin self::Image p1::Point p2::Point p3::Point p4::Point:
+#     p1x = p1.x
+#     p1y = p1.y
+#     p2x = p2.x
+#     p2y = p2.y
+#     p3x = p3.x
+#     p3y = p3.y
+#     p4x = p4.x
+#     p4y = p4.y
 
-    ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
+#     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
-def Image.blur self::Image kernelSize::Int:
-    ```liftF2 gaussianLuna #{kernelSize} #{self}```
+# def Image.blur self::Image kernelSize::Int:
+#     ```liftF2 gaussianLuna #{kernelSize} #{self}```
 
-def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
-    ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
+# def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
+#     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
 class ```MergeMode```:
     Atop
@@ -199,17 +199,17 @@ alias ImgMask = Maybe Image
 def noImgMask self::Std:
     ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
-def Image.rotate self::Image phi::Float:
-    ```liftF2 turnCenterLuna #{phi} #{self}```
+# def Image.rotate self::Image phi::Float:
+#     ```liftF2 turnCenterLuna #{phi} #{self}```
 
 def Image.translate self::Image x::Int y::Int:
     ```liftF3 translateLuna #{x} #{y} #{self}```
 
-def Image.scaleCenter self::Image x::Float y::Float:
-    ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+# def Image.scaleCenter self::Image x::Float y::Float:
+#     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
 
-def Image.scale self::Image x::Float y::Float:
-    ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+# def Image.scale self::Image x::Float y::Float:
+#     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
 def Image.transform self::Image trans::TransformD:
     ```liftF2 transformLuna #{trans} #{self}```
@@ -336,3 +336,12 @@ def Image.gammaFromLinear self::Image gamma::Gamma:
 
 def testCC self::Std a::ColorCC:
     ```liftF1 testColorCC #{a}```
+
+def time self::Std:
+    0.0
+
+alias Time = Double
+    
+def foo self::Std a::Time:
+	a
+

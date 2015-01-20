@@ -49,6 +49,8 @@ import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Request     
 import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Update                   as SetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Request                as SetProjectID
 import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Update                 as SetProjectID
+import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Get.Request                as VarTimeGet
+import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Get.Status                 as VarTimeGet
 import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Set.Request                as VarTimeSet
 import qualified Generated.Proto.Interpreter.Interpreter.Var.Time.Set.Update                 as VarTimeSet
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Add.Request              as WatchPointAdd
@@ -66,14 +68,12 @@ import qualified Luna.Interpreter.RPC.Handler.Sync                              
 import           Luna.Interpreter.RPC.QueueInfo                                              (QueueInfo)
 import qualified Luna.Interpreter.RPC.QueueInfo                                              as QueueInfo
 import qualified Luna.Interpreter.Session.AST.Executor                                       as Executor
-import qualified Luna.Interpreter.Session.Cache.Invalidate                                   as Invalidate
 import qualified Luna.Interpreter.Session.Env                                                as Env
 import qualified Luna.Interpreter.Session.Error                                              as Error
 import qualified Luna.Interpreter.Session.Memory                                             as Memory
 import           Luna.Interpreter.Session.Memory.Manager                                     (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager                                     as Manager
 import           Luna.Interpreter.Session.Session                                            (SessionST)
-import qualified Luna.Interpreter.Session.Var                                                as Var
 
 
 
@@ -114,7 +114,8 @@ setMainPtr request@(SetMainPtr.Request tmainPtr) = do
 
 run :: MemoryManager mm
     => QueueInfo -> Message.CorrelationID -> Run.Request -> RPC Context (SessionST mm) Run.Update
-run queueInfo crl request = do
+run queueInfo crl request@(Run.Request mtime) = do
+    Maybe.maybe (return ()) Cache.setTimeVar mtime
     r <- lift $ bracket_ (liftIO $ QueueInfo.enterRun queueInfo crl)
             (liftIO $ QueueInfo.quitRun queueInfo) $
             liftSession' $ do Manager.cleanIfNeeded
@@ -160,9 +161,12 @@ abort = return . Abort.Status
 
 varTimeSet :: VarTimeSet.Request -> RPC Context (SessionST mm) VarTimeSet.Update
 varTimeSet request@(VarTimeSet.Request time) = do
-    liftSession $ do Var.timeSet time
-                     Invalidate.modifyAll --FIXME[PM]
+    Cache.setTimeVar time
     return $ VarTimeSet.Update request
+
+
+varTimeGet :: VarTimeGet.Request -> RPC Context (SessionST mm) VarTimeGet.Status
+varTimeGet request = VarTimeGet.Status request <$> liftSession Env.getTimeVar
 
 
 getSerializationMode :: GetSMode.Request -> RPC Context (SessionST mm) GetSMode.Status

@@ -100,7 +100,7 @@ deleteNode projectID libraryID nodeID =
         GPUMemory.performGC
 
 
---insertDependentNode :: Int32 -> Int32 -> Int32 -> Int32 -> RPC Context (SessionST mm) ()
---insertDependentNode projectID libraryID nodeID depID = do
---    let callPoint = CallPoint (decodeP libraryID) (decodeP nodeID)
---    interpreterDo projectID $ Env.insertDependentNode callPoint $ decodeP depID
+setTimeVar :: Double -> RPC Context (SessionST mm) ()
+setTimeVar time = liftSession $ do
+    Env.setTimeVar time
+    Invalidate.modifyTimeRefs

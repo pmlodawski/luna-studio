@@ -31,7 +31,7 @@ import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.Hash          (Hash)
-import           Luna.Interpreter.Session.Data.VarName       (VarName)
+import           Luna.Interpreter.Session.Data.VarName       (VarName (VarName))
 import qualified Luna.Interpreter.Session.Data.VarName       as VarName
 import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
@@ -47,11 +47,11 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-dump :: CallPointPath -> Maybe Hash -> Session mm ()
-dump callPointPath mhash = do
-    let varName = VarName.mk mhash callPointPath
-    logger debug $ "Dumping " ++ varName
-    Session.runStmt $ "print " ++ varName
+dump :: CallPointPath -> [Hash] -> Session mm ()
+dump callPointPath hash = do
+    let varName = VarName callPointPath hash
+    logger debug $ "Dumping " ++ VarName.toString varName
+    Session.runStmt $ "print " ++ VarName.toString varName
 
 
 dumpAll :: Session mm ()
@@ -74,7 +74,7 @@ status = onCacheInfo
 
 
 setStatus :: CacheStatus -> CallPointPath -> Session mm ()
-setStatus newStatus = modifyCacheInfo (CacheInfo.status .~ newStatus)
+setStatus newStatus = modifyCacheInfo $ CacheInfo.status .~ newStatus
 
 
 dependency :: [VarName] -> CallPointPath -> Session mm (Maybe VarName)
@@ -86,7 +86,7 @@ dependency predVarNames = onCacheInfo
 recentVarName :: CallPointPath -> Session mm VarName
 recentVarName = onCacheInfo
     (return . view CacheInfo.recentVarName)
-    (return "")
+    (return def)
 
 
 setRecentVarName :: VarName -> CallPointPath -> Session mm ()
@@ -114,11 +114,12 @@ put callDataPath predVarNames varName = do
     let updatedStatus = if oldStatus == CacheStatus.NonCacheable
                             then oldStatus
                             else CacheStatus.Ready
-        existingDeps = Maybe.maybe Map.empty (view CacheInfo.dependencies) mcacheInfo
+        existingDeps   = Maybe.maybe def (view CacheInfo.dependencies) mcacheInfo
+        existingValues = Maybe.maybe def (view CacheInfo.values      ) mcacheInfo
         dependencies = Map.insert predVarNames varName existingDeps
         cacheInfo    = CacheInfo (last callDataPath ^. CallData.parentDefID)
                                  (last callDataPath ^. CallData.parentBC)
-                                 updatedStatus varName dependencies
+                                 updatedStatus varName dependencies existingValues
 
     Env.cachedInsert callPointPath cacheInfo
 
@@ -146,13 +147,14 @@ delete' :: MemoryManager mm => (CallPointPath, CacheInfo) -> Session mm ()
 delete' (callPointPath, cacheInfo) = do
     Free.freeCacheInfo cacheInfo
     Env.cachedDelete callPointPath
-    Manager.reportDeleteMany $ zip (repeat callPointPath) $ Map.elems $ cacheInfo ^. CacheInfo.dependencies
+    Manager.reportDeleteMany $ Map.elems $ cacheInfo ^. CacheInfo.dependencies
 
 
-deleteVarName :: CallPointPath -> VarName -> Session mm ()
-deleteVarName callPointPath varName = do
-    print =<< Env.getCached
-    onCacheInfo del err callPointPath where
+deleteVarName :: VarName -> Session mm ()
+deleteVarName varName = do
+    onCacheInfo del err callPointPath
+    where
+        callPointPath = varName ^. VarName.callPointPath
         err = left $ Error.OtherError $(loc) $ "Cannot find callPointPath = " ++ show callPointPath
         del cacheInfo = do
             if cacheInfo ^. CacheInfo.recentVarName == varName
