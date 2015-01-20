@@ -232,7 +232,7 @@ def Image.translate self::Image x::Int y::Int -> Image:
 def Image.transform self::Image trans::TransformD -> Image:
     ```liftF2 transformLuna #{trans} #{self}```
 
-def Image.crop self::Image rect::RectangleD -> Image:
+def Image.crop self::Image rect::Rectangle Int -> Image:
     ```liftF2 cropLuna #{rect} #{self}```
 
 # VIEW
@@ -274,6 +274,7 @@ class ```Transform``` a:
 
 alias RectangleF = Rectangle Float
 alias RectangleD = Rectangle Double
+alias RectangleI = Rectangle Int
 
 alias TransformF = Transform Float
 alias TransformD = Transform Double
