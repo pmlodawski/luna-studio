@@ -37,7 +37,7 @@ mixImages edges first second = (+) <$>
                                ( (*) <$> second <*> (fmap ((-) 1) edges) )
 
 
-detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$> -- coeficients???
+detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$>
                        (fmap abs $ applyKernel (M.transpose (sobel :: Matrix2 Double)) img) 
                        <*> 
                        (fmap abs $ applyKernel (sobel :: Matrix2 Double) img)
