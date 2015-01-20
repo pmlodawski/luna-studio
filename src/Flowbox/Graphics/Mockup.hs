@@ -65,7 +65,7 @@ import           Flowbox.Graphics.Shader.Sampler      as Shader
 import           Flowbox.Graphics.Composition.Generator.Shape
 import           Flowbox.Graphics.Shader.Stencil      as Stencil
 import           Flowbox.Graphics.Shader.Shader       as Shader
-import           Flowbox.Graphics.Composition.Transform as Shader
+import           Flowbox.Graphics.Composition.Transform as Transform
 import           Flowbox.Graphics.Composition.Histogram
 import qualified Flowbox.Graphics.Composition.Generator.Raster                  as Raster
 import           Flowbox.Graphics.Image.Channel                       as Channel
@@ -192,6 +192,7 @@ onEachChannel f = Image.map $ View.map f
 --                 $ rectangle (Grid (variable size) 1) 1 0
 --          process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
+<<<<<<< HEAD
 edgeBlur :: Channel.Name -> Int -> Double -> Image -> Image
 edgeBlur channelName kernelSize edgeMultiplier image =
     let --(r, g, b, a) = unsafeGetChannels image
@@ -205,6 +206,12 @@ edgeBlur channelName kernelSize edgeMultiplier image =
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
 --rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
 
+||||||| merged common ancestors
+-- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
+--rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
+
+=======
+>>>>>>> develop
 --bilateral :: Double
 --          -> Double
 --          -> Int
@@ -355,13 +362,18 @@ differenceKeyerLuna (variable -> offset) (variable -> gain) background foregroun
 --          p3 = Point2 p3x p3y
 --          p4 = Point2 p4x p4y
 
---gaussianLuna :: Int -> Image -> Image
---gaussianLuna (variable -> kernelSize) img = img'
---    where img' = onEachChannel process img
---          hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
---          vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
---          p = pipe A.Clamp
---          process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
+blurLuna :: Int -> Image -> Image
+blurLuna (variable -> kernelSize) = onEachChannel blurChannel
+    where blurChannel = \case
+              (Channel.asDiscreteClamp -> ChannelFloat name zeData) -> ChannelFloat name $ (\(DiscreteData shader) -> DiscreteData $ processFloat shader) zeData
+              (Channel.asDiscreteClamp -> ChannelInt   name zeData) -> ChannelInt   name $ (\(DiscreteData shader) -> DiscreteData $ processInt   shader) zeData
+          processFloat x = id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ x
+          processInt   x = fmap floor $ (id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fmap A.fromIntegral x :: DiscreteShader (Exp Float))
+          p = pipe A.Clamp
+          hmat :: (Elt e, IsFloating e) => Matrix2 e
+          hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
+          vmat :: (Elt e, IsFloating e) => Matrix2 e
+          vmat = id M.>-> normalize $ toMatrix (Grid kernelSize 1) $ gauss 1.0
 
 --laplacianLuna :: Int -> Double -> Double -> Image -> Image
 --laplacianLuna (variable -> kernSize) (variable -> crossVal) (variable -> sideVal) img = img'
@@ -405,7 +417,7 @@ gradientLuna :: forall e.
 gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
     where grad = rasterizer $ monosampler $ gradientShader
 
-          gradientShader = scale (Grid width height) $ Shader.translate (V2 0.5 0.5) $ mapper gray gradient
+          gradientShader = scale (Grid width height) $ Transform.translate (V2 0.5 0.5) $ mapper gray gradient
           gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Double Double Double]
 
           weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
@@ -439,96 +451,103 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
 
           noiseShader = scale (Grid width height) noise
 
+--TODO[KM]: refactor this to use V2 as the translation input
 translateLuna :: Int -> Int -> Image -> Image
-translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) = onEachChannel f
+translateLuna (A.fromIntegral . variable -> x) (A.fromIntegral . variable -> y) = onEachChannel translateChannel
     where v = V2 x (-y)
-          f = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
-              (Channel.asContinuous -> ChannelBit   name zeData) -> ChannelBit name   $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform p shader) zeData
           mask = Nothing
-          p :: Point2 (Exp Double) -> Point2 (Exp Double)
-          p pt = Shader.translate (handle pt) pt
-          handle :: Point2 (Exp Double) -> V2 (Exp Double)
-          handle pt = case mask of
+          translateChannel = \case
+              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+          transformation pt = Transform.translate (strength pt) pt
+          strength :: Point2 (Exp Double) -> V2 (Exp Double)
+          strength pt = case mask of
               Nothing      -> v
               --TODO[KM]: handle the mask properly (aka. get rid of that ugly pattern match) and uncomment the other case option
               _ -> v
               --Just (VPS m) -> let
               --        Right rgba = Image.lookupPrimary m
-              --        unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c
+              --        unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c -- TODO[KM]: this ugly pattern match :D
               --        m' = unpackMat $ View.get rgba "rgba.r"
               --        Shader _ str = Shader.nearest $ Shader.fromMatrix (A.Constant (0 :: Exp Double)) $ m'
               --        mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
               --        mult pt x = str pt * x
               --    in (fmap (mult pt) v)
 
---translateLuna :: Int -> Int -> Image -> Image
---translateLuna (variable -> x) (variable -> y) = onEachMatrix process process process process
---    where v = V2 x (-y)
---          mask = Nothing
---          process :: Matrix2 Double -> Matrix2 Double
---          process = rasterizer . t . gen
---          gen = fromMatrix (A.Constant (0 :: Exp Double))
---          t :: DiscreteShader (Exp Double) -> DiscreteShader (Exp Double)
---          t = Shader.transform p
---          p :: Point2 (Exp Int) -> Point2 (Exp Int)
---          p pt = translate (handle pt) pt
---          handle pt = case mask of
---              Nothing      -> v
---              Just (VPS m) -> let
---                      Right rgba = Image.lookupPrimary m
---                      unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c
---                      m' = unpackMat $ View.get rgba "rgba.r"
---                      Shader _ str = gen m'
---                      mult pt x = A.round $ (str pt) * A.fromIntegral x
---                  in (fmap (mult pt) v)
+rotateLuna :: Double -> Image -> Image
+rotateLuna (variable -> phi) = onEachChannel rotateChannel
+    where mask = Nothing
+          rotateChannel = \case
+              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+          transformation pt = Transform.rotate (strength pt) pt
+          strength :: Point2 (Exp Double) -> Exp Double
+          strength pt = case mask of
+              Nothing -> phi
+              --TODO[KM]: handle the mask properly
+              _       -> phi
 
---turnCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
---turnCenter = onCenter . rotate
+rotateAtLuna :: Double -> Point2 Double -> Image -> Image
+rotateAtLuna (variable -> phi) (fmap variable -> (Point2 x y)) = onEachChannel rotateChannel
+    where vBefore = V2 (-x) y
+          vAfter  = V2 x (-y)
+          mask    = Nothing
+          rotateChannel = \case
+              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+          transformation pt = Transform.translate vAfter $ Transform.rotate (strength pt) $ Transform.translate vBefore pt
+          strength :: Point2 (Exp Double) -> Exp Double
+          strength pt = case mask of
+              Nothing -> phi
+              --TODO[KM]: handle the mask properly
+              _       -> phi
 
---turnCenterLuna :: Double -> Image -> Image
---turnCenterLuna (variable -> angle) = onEachChannel $ rasterizer . monosampler . turnCenter angle . nearest . fromMatrix (A.Constant 0)
+scaleLuna :: V2 Double -> Image -> Image
+scaleLuna (fmap variable -> v) = onEachChannel scaleChannel
+    where mask = Nothing
+          scaleChannel = \case
+              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+          transformation pt = Transform.scale (strength pt) pt
+          strength :: Point2 (Exp Double) -> V2 (Exp Double)
+          strength pt = case mask of
+              Nothing -> v
+              --TODO[KM]: handle the mask properly
+              _       -> v
+
+scaleAtLuna :: V2 Double -> Point2 Double -> Image -> Image
+scaleAtLuna (fmap variable -> v) (fmap variable -> (Point2 x y)) = onEachChannel scaleChannel
+    where vBefore = V2 (-x) y
+          vAfter  = V2 x (-y)
+          mask = Nothing
+          scaleChannel = \case
+              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+          transformation pt = Transform.translate vAfter $ Transform.scale (strength pt) $ Transform.translate vBefore pt
+          strength :: Point2 (Exp Double) -> V2 (Exp Double)
+          strength pt = case mask of
+              Nothing -> v
+              --TODO[KM]: handle the mask properly
+              _       -> v
 
 --scaleToLuna :: A.Boundary (A.Exp Double) -> Int -> Int -> Image -> Image
 --scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . foo
 --    where foo :: Matrix2 Double -> ContinuousShader (A.Exp Double)
 --          foo = scale (Grid x y) . nearest . fromMatrix boundary
 
---scaleLuna :: A.Boundary (A.Exp Double) -> Double -> Double -> Image -> Image
---scaleLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . canvasT f . scale (V2 x y) . interpolator (Conv.catmulRom) . fromMatrix boundary
---    where f = fmap A.truncate . scale (V2 x y) . asFloating
---scaleLuna :: Double -> Double -> Maybe (VPS Image) -> Image -> Image
---scaleLuna :: Bool -> Double -> Double -> Image -> Image
---scaleLuna centered (variable -> x) (variable -> y) = onEachMatrix process process process process
---    where v = V2 x y
---          mask = Nothing
---          process :: Matrix2 Double -> Matrix2 Double
---          process = rasterizer . monosampler . t . interpolator (Conv.catmulRom) . gen
---          --f = canvasT $ fmap A.truncate . scale (V2 x y) . asFloating
---          gen = fromMatrix (A.Constant (0 :: Exp Double))
---          t :: CartesianShader (Exp Double) (Exp Double) -> CartesianShader (Exp Double) (Exp Double)
---          t = bool tp (onCenter tp) centered
---          tp = Shader.transform p
---          p :: Point2 (Exp Double) -> Point2 (Exp Double)
---          p pt = scale (handle pt) pt
---          handle :: Point2 (Exp Double) -> V2 (Exp Double)
---          handle pt = case mask of
---              Nothing      -> v
---              Just (VPS m) -> let
---                      Right rgba = Image.lookupPrimary m
---                      unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c
---                      m' = unpackMat $ View.get rgba "rgba.r"
---                      Shader _ str = gen m'
---                      mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
---                      mult pt x = str (fmap A.floor pt) * x
---                  in (fmap (mult pt) v)
-
 transformLuna :: Transform Double -> Image -> Image
 transformLuna _ img = img
 
-cropLuna :: Rectangle Double -> Image -> Image
-cropLuna _ img = img
+cropLuna :: Rectangle Int -> Image -> Image
+cropLuna rect = onEachChannel cropChannel
+    where cropChannel = \case
+              ChannelFloat name zeData -> ChannelFloat name $ Transform.crop rect zeData
+              ChannelInt   name zeData -> ChannelInt   name $ Transform.crop rect zeData
 
 hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
             -> VPS Double -> VPS Double -> VPS Double -> VPS Double
@@ -794,36 +813,37 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
-type Handle = (VPS Int, VPS Double, VPS Double)
-type GUIControlPoint a = (VPS (Point2 a), VPS Handle, VPS Handle)
-type GUICurve a = [(VPS (GUIControlPoint a))]
+type HandleGUI = (VPS Int, VPS Double, VPS Double)
+type ControlPointGUI a = (VPS (Point2 a), VPS HandleGUI, VPS HandleGUI)
+type CurveGUI a = [VPS (ControlPointGUI a)]
 
-convertHandle :: Handle -> CurveGUI.Handle
-convertHandle (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
+convertHandleGUI :: HandleGUI -> CurveGUI.Handle
+convertHandleGUI (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
     case t of
         0 -> CurveGUI.NonLinear w a
-        1 -> case a > 0 of
-                True  -> CurveGUI.Vertical w CurveGUI.Up
-                False -> CurveGUI.Vertical w CurveGUI.Down
+        1 -> CurveGUI.Vertical w
         2 -> CurveGUI.Linear
 
-convertGUIControlPoint :: GUIControlPoint a -> CurveGUI.ControlPoint a
-convertGUIControlPoint (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
-    CurveGUI.ControlPoint p (convertHandle hIn) (convertHandle hOut)
+getValueAtCurveGUI :: CurveGUI Double -> Double -> Double
+getValueAtCurveGUI (convertCurveGUI -> curve) = CurveGUI.valueAtSpline curve
 
-convertGUICurve :: GUICurve a -> CurveGUI.Curve a
-convertGUICurve (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertGUIControlPoint c)
+convertControlPointGUI :: ControlPointGUI a -> CurveGUI.ControlPoint a
+convertControlPointGUI (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
+    CurveGUI.ControlPoint p (convertHandleGUI hIn) (convertHandleGUI hOut)
 
-hueCorrectLuna :: VPS (GUICurve Double) -> VPS (GUICurve Double) ->
-                  VPS (GUICurve Double) -> VPS (GUICurve Double) -> VPS (GUICurve Double) ->
-                  GUICurve Double -> GUICurve Double -> GUICurve Double ->
+convertCurveGUI :: CurveGUI a -> CurveGUI.Curve a
+convertCurveGUI (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertControlPointGUI c)
+
+hueCorrectLuna :: VPS (CurveGUI Double) -> VPS (CurveGUI Double) ->
+                  VPS (CurveGUI Double) -> VPS (CurveGUI Double) -> VPS (CurveGUI Double) ->
+                  CurveGUI Double -> CurveGUI Double -> CurveGUI Double ->
                   -- GUICurve Double -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
-hueCorrectLuna (VPS (convertGUICurve-> lum)) (VPS (convertGUICurve -> sat))
-               (VPS (convertGUICurve -> r)) (VPS (convertGUICurve-> g))
-               (VPS (convertGUICurve -> b)) (convertGUICurve -> rSup)
-               (convertGUICurve -> gSup) (convertGUICurve-> bSup) img
+hueCorrectLuna (VPS (convertCurveGUI-> lum)) (VPS (convertCurveGUI -> sat))
+               (VPS (convertCurveGUI -> r)) (VPS (convertCurveGUI-> g))
+               (VPS (convertCurveGUI -> b)) (convertCurveGUI -> rSup)
+               (convertCurveGUI -> gSup) (convertCurveGUI-> bSup) img
                     = onEachColorRGB (hueCorrect (CurveGUI.convertToBSpline lum)
                                                  (CurveGUI.convertToBSpline sat)
                                                  (CurveGUI.convertToBSpline r)
