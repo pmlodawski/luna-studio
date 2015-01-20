@@ -192,14 +192,14 @@ onEachChannel f = Image.map $ View.map f
 --                 $ rectangle (Grid (variable size) 1) 1 0
 --          process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
-edgeBlur :: View.Name -> Channel.Name -> Int -> Double -> Image -> Image
-edgeBlur viewName channelName kernelSize edgeMultiplier image =
+edgeBlur :: Channel.Name -> Int -> Double -> Image -> Image
+edgeBlur channelName kernelSize edgeMultiplier image =
     let --(r, g, b, a) = unsafeGetChannels image
-        Right ch = getChannelLuna viewName channelName image
+        Right ch = getFromPrimary channelName image
         Just (ChannelFloat _ (MatrixData channelMat)) = ch
         maskEdges = EB.edges (variable edgeMultiplier) channelMat -- TODO: channel choice
         blurFunc = EB.maskBlur EB.Gauss (variable kernelSize) maskEdges
-      in onEachChannel blurFunc image
+      in {-- onEachChannel blurFunc --} image
 
 
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
