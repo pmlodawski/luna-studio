@@ -520,32 +520,33 @@ scaleAtLuna (fmap variable -> v) (fmap variable -> (Point2 x y)) = onEachChannel
 --          foo = scale (Grid x y) . nearest . fromMatrix boundary
 
 transformLuna :: Transform Double -> Image -> Image
-transformLuna (Transform tr (variable -> phi) (fmap variable -> sc) _ ce) = onEachChannel transformChannel
-    where V2     translateX translateY = fmap variable tr
-          Point2 centerX    centerY    = fmap variable ce
-          vBefore = V2 (-centerX) centerY
-          vAfter  = V2 centerX (-centerY)
-          mask    = Nothing
-          tr      = V2 translateX (-translateY)
-          transformChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
-          transformation pt = Transform.translate (strengthTranslate pt) $ Transform.translate vAfter $ Transform.rotate (strengthRotate pt) $ Transform.scale (strengthScale pt) $ Transform.translate vBefore pt
-          strengthRotate    = strengthScalar phi
-          strengthScale     = strengthVector sc
-          strengthTranslate = strengthVector tr
-          -- TODO: extract those 2 functions as a top-level binding
-          strengthScalar :: Exp Double -> Point2 (Exp Double) -> Exp Double
-          strengthScalar val pt = case mask of
-              Nothing -> val
-              --TODO[KM]: handle the mask properly
-              _       -> val
-          strengthVector :: V2 (Exp Double) -> Point2 (Exp Double) -> V2 (Exp Double)
-          strengthVector v pt = case mask of
-              Nothing -> v
-              --TODO[KM]: handle the mask properly
-              _       -> v
+transformLuna _ img = img
+--transformLuna (Transform tr (variable -> phi) (fmap variable -> sc) _ ce) = onEachChannel transformChannel
+--    where V2     translateX translateY = fmap variable tr
+--          Point2 centerX    centerY    = fmap variable ce
+--          vBefore = V2 (-centerX) centerY
+--          vAfter  = V2 centerX (-centerY)
+--          mask    = Nothing
+--          tr      = V2 translateX (-translateY)
+--          transformChannel = \case
+--              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+--              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+--          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+--          transformation pt = Transform.translate (strengthTranslate pt) $ Transform.translate vAfter $ Transform.rotate (strengthRotate pt) $ Transform.scale (strengthScale pt) $ Transform.translate vBefore pt
+--          strengthRotate    = strengthScalar phi
+--          strengthScale     = strengthVector sc
+--          strengthTranslate = strengthVector tr
+--          -- TODO: extract those 2 functions as a top-level binding
+--          strengthScalar :: Exp Double -> Point2 (Exp Double) -> Exp Double
+--          strengthScalar val pt = case mask of
+--              Nothing -> val
+--              --TODO[KM]: handle the mask properly
+--              _       -> val
+--          strengthVector :: V2 (Exp Double) -> Point2 (Exp Double) -> V2 (Exp Double)
+--          strengthVector v pt = case mask of
+--              Nothing -> v
+--              --TODO[KM]: handle the mask properly
+--              _       -> v
 
 cropLuna :: Rectangle Int -> Image -> Image
 cropLuna rect = onEachChannel cropChannel
