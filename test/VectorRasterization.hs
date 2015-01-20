@@ -70,7 +70,7 @@ main = do
     let arrD = rasterizeMask w h $ (Mask pat (Just fea))
         imgD = matrixToImage arrD
 
-    saveImageLuna "fooD.png" imgD
+    saveImageLuna "fooD1.png" imgD
 
 
     return ()
