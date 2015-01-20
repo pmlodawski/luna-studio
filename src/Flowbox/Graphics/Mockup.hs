@@ -52,15 +52,11 @@ import qualified Flowbox.Geom2D.Shape                                 as GShape
 import qualified Flowbox.Geom2D.Mask as Mask
 import           Flowbox.Geom2D.Rasterizer
 import           Flowbox.Graphics.Composition.Filter
-import           Flowbox.Graphics.Composition.Filter       as Conv
+import           Flowbox.Graphics.Composition.Filter                  as Conv
 import           Flowbox.Graphics.Composition.Generator.Gradient
 import           Flowbox.Graphics.Composition.Keyer
-<<<<<<< HEAD
 import qualified Flowbox.Graphics.Composition.EdgeBlur                as EB
-import           Flowbox.Graphics.Shader.Matrix
-=======
-import           Flowbox.Graphics.Shader.Matrix       as Shader
->>>>>>> develop
+import           Flowbox.Graphics.Shader.Matrix                       as Shader
 import           Flowbox.Graphics.Composition.Generator.Noise.Billow
 import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
 import           Flowbox.Graphics.Shader.Pipe
