@@ -21,6 +21,7 @@ module Flowbox.Graphics.Mockup (
     , module Math.Space.Space
     , A.Boundary(..)
     , variable
+    , V2(..)
 ) where
 
 import qualified Codec.Picture.Png                 as Juicy
