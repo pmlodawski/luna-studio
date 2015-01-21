@@ -188,8 +188,8 @@ pushString s = str %= (s:)
 
 getTargetID :: (Enumerated lab, Monad m) => lab -> StageTypecheckerPass m String
 getTargetID lab =
-    sa . SI.alias . at labID & use >>= \case
-        Nothing     -> return $ "|" ++ show labID ++ "⊲"                
+    sa . SI.alias . ix labID . SI.target & preuse >>= \case
+        Nothing     -> return $ "|" ++ show labID ++ "⊲"
         Just labtID -> return $ "|" ++ show labID ++ "⊳" ++ show labtID ++ "⊲"
   where
     labID = Enum.id lab
