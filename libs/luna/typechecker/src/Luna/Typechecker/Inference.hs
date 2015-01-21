@@ -9,45 +9,40 @@
 {-# LANGUAGE LambdaCase #-}
 
 
-
 module Luna.Typechecker.Inference (
     tcpass
   ) where
 
+
+import qualified  Luna.Data.StructInfo                    as SI
+import            Luna.Data.StructInfo                    (StructInfo)
+
 import            Luna.Pass                               (Pass(..))
---import qualified  Luna.Syntax.Decl                        as Decl
+
 import            Luna.Syntax.Decl                        (LDecl)
 import qualified  Luna.Syntax.Enum                        as Enum
 import            Luna.Syntax.Enum                        (Enumerated)
 import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
-
 import            Luna.Syntax.Label                       (Label(Label))
---import qualified  Luna.Syntax.Module                      as Module
 import            Luna.Syntax.Module                      (LModule)
 import qualified  Luna.Syntax.Name.Pattern                as NamePat
 import qualified  Luna.Syntax.Pat                         as Pat
 import qualified  Luna.Syntax.Traversals                  as AST
-import qualified  Luna.Data.StructInfo                    as SI
-import            Luna.Data.StructInfo                    (StructInfo)
 
 import            Control.Applicative
 import            Control.Lens                            hiding (without)
 import            Control.Monad.State
---import            Data.List                               (intercalate)
+
 import            Data.Monoid
 import            Data.Text.Lazy                          (unpack)
 
-
-
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
-import            Luna.Typechecker.Data                   (
-                      true_cons, null_subst, init_typo
-                  )
+import            Luna.Typechecker.Data                   (true_cons, null_subst, init_typo)
 import            Luna.Typechecker.StageTypecheckerState  (
                       StageTypecheckerState(..), StageTypechecker(..),
                       StageTypecheckerPass, StageTypecheckerCtx,
-                      StageTypecheckerDefaultTraversal,
+                      StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
                       str, sa
                   )
 --import            Luna.Typechecker.Tools                  (without)
@@ -85,8 +80,8 @@ instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageT
 instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab a)    (LDecl lab a)   where traverseM _ = tcDecl
 instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr lab a)    (LExpr lab a)   where traverseM _ = tcExpr
 
---traverseM :: (StageTypecheckerTraversal m a) => a -> StageTypecheckerPass m a
---traverseM = AST.traverseM StageTypechecker
+traverseM :: (StageTypecheckerTraversal m a) => a -> StageTypecheckerPass m a
+traverseM = AST.traverseM StageTypechecker
 
 defaultTraverseM :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m a
 defaultTraverseM = AST.defaultTraverseM StageTypechecker
@@ -122,11 +117,11 @@ defaultTraverseM = AST.defaultTraverseM StageTypechecker
 
 
 tcMod :: (StageTypecheckerCtx lab m a) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
-tcMod lmodule =
+tcMod = defaultTraverseM
+
 --tcMod lmodule@(Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) =
-  do
-    --pushString ("Module      " ++ intercalate "." (fmap unpack (path ++ [name])))
-    defaultTraverseM lmodule
+--  do
+--    pushString ("Module      " ++ intercalate "." (fmap unpack (path ++ [name])))
 
 
 tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
@@ -193,7 +188,6 @@ pushString s = str %= (s:)
 
 getTargetID :: (Enumerated lab, Monad m) => lab -> StageTypecheckerPass m String
 getTargetID lab =
-  do
     sa . SI.alias . at labID & use >>= \case
         Nothing     -> return $ "|" ++ show labID ++ "⊲"                
         Just labtID -> return $ "|" ++ show labID ++ "⊳" ++ show labtID ++ "⊲"

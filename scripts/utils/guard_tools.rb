@@ -166,7 +166,7 @@ end
 # Can run commands if passed.
 # TODO (feature): could take a block and measure its execution time.
 
-def section(name, *cmds, condition: true, &block)
+def section(name, *cmds, condition: true, noexception: false, &block)
   if condition
     begin
       grace = Artii::Base.new :font => 'graceful'
@@ -181,8 +181,10 @@ def section(name, *cmds, condition: true, &block)
 
       block.call() unless block.nil?
     rescue SystemCallError => e
-      newe = $!.exception("Error in section '#{name}'\n#{$!}")
-      raise newe
+      unless noexception
+        newe = $!.exception("Error in section '#{name}'\n#{$!}")
+        raise newe
+      end
     end
   end
 end

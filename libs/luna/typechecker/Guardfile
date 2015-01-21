@@ -25,7 +25,7 @@ $output       = [
                   # " 2.   SA         : sa2",
                   # " 3.1. Stage2     : ast3",
                   # " 3.2. Stage2     : astinfo3",
-                  " 4.1. ImplSelf   : ast4",
+                  # " 4.1. ImplSelf   : ast4",
                   " 4.2. ImplSelf   : astinfo4",
                   " 5.   SA         : sa5",
                   " 6.   PTyChk     : constraints",
@@ -41,14 +41,13 @@ $output_dir   = "tmp/"
 
 #
 $hlint_ignore = [
-                  # "Use camelCase",
+                  "Use camelCase",
                   # "Use mappend",
                 ]
 $hlint_opts   = [
                   # "--hint=Generalise",
                   "--report"
                 ]
-$hlint_path   = "typechecker/src/*.hs"
 
 
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -108,13 +107,13 @@ def haskell_action trigger
       command_interactive "../../../scripts/compile -j9"
     end
 
-    section "linting",       :condition => $run_linting do
+    section "linting",       :condition => $run_linting, :noexception => true do
       opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
       opts = opts.join(" ")
-      command_withinput "pushd ..; hlint #{$hlint_path} #{opts}; popd"
+      command_withinput "hlint . #{opts}"
     end
 
-    section "documentation", :condition => $run_docgen do
+    section "documentation", :condition => $run_docgen, :noexception => true do
       command_interactive "cabal haddock --html"
     end
 
@@ -126,7 +125,7 @@ def haskell_action trigger
       command_interactive "../../../dist/bin/libs/luna-typechecker-tests test/resources/Maintest.luna"
     end
 
-    section "coverage", "rm -rf hpc_report", :condition => $run_coverage do
+    section "coverage", "rm -rf hpc_report", :condition => $run_coverage, :noexception => true do
       hpc_excluded_modules = ((Dir.glob("test/**/*Spec.hs")          # skip all test-spec files
                                   .map { |k| k.gsub("test/", "")     # ...converting path to namespace for HPC
                                               .gsub(".hs","")
