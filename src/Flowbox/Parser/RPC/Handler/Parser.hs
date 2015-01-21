@@ -69,7 +69,9 @@ parseNodeExpr request@(ParseNodeExpr.Request tstr) = do
 mkText :: MkText.Request -> RPC () IO MkText.Status
 mkText request@(MkText.Request texpr) = do
     expr <- decodeE texpr
-    return $ MkText.Status request $ encodeP $ lunaShow (expr :: Expr)
+    let text = lunaShow (expr :: Expr)
+    seq text $ return ()
+    return $ MkText.Status request $ encodeP text
 
 
 ping :: Ping.Request -> RPC () IO Ping.Status
