@@ -73,7 +73,7 @@ guard :shell, :version => 2, :cli => "--color" do
   watch(%r{^test/resources/Maintest.luna$}) do |m|
     lastbuildguard(m[0]) do
       section "Luna file change"
-      show_output if command "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna"
+      show_output if command_interactive "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna"
     end
   end
 
@@ -82,14 +82,14 @@ guard :shell, :version => 2, :cli => "--color" do
   watch(%r{^runtest.hs$}) do |m|
     lastbuildguard(m[0]) do
       section "live tests"
-      command "../../../scripts/runhaskell", File.read("runtest.hs")
+      command_withinput "../../../scripts/runhaskell", File.read("runtest.hs")
     end
   end
 
   watch(%r{^playground.hs$}) do |m|
     lastbuildguard(m[0]) do
       section "playground file change"
-      command "./playground" if command("ghc playground.hs")
+      command_interactive "./playground" if command_interactive "ghc playground.hs"
     end
   end
 end
@@ -101,18 +101,18 @@ end
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 def haskell_action trigger
-  puts "TRIGGER: #{trigger}".starsaround.yellow + "\n"
+  puts "#{trigger[0]}".center(String.linefill_length).cyan + "\n"
 
   section "building"
-  if command("../../../scripts/compile -j9")
+  if command_interactive "../../../scripts/compile -j9"
 
     section "documentation", "cabal haddock --html" if $run_docgen
     section "tests",         "rm -f luna-typechecker-tests.tix", "../../../dist/bin/libs/luna-typechecker-test" if $run_tests
 
-    command "rm -f #{$output_dir}*"
-    res = command "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna" if $run_main
+    command_interactive "rm -f #{$output_dir}*"
+    res = command_interactive "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna" if $run_main
 
-    if res and $run_tests and command "../../../dist/bin/libs/luna-typechecker-tests"
+    if res and $run_tests and command_interactive "../../../dist/bin/libs/luna-typechecker-tests"
 
       if $run_coverage
         section "coverage", "rm -rf hpc_report"
@@ -124,7 +124,7 @@ def haskell_action trigger
                                          }
                                 ) << "Main"                            # and skip "Main", the entrypoint for tests
                                ).map{|k| "--exclude=#{k}" }.join(" ")
-        command coverage_cmd
+        command_interactive coverage_cmd
         puts "Report written to 'hpc_report'"
       end
 
