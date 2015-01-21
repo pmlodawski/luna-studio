@@ -13,8 +13,8 @@ require '../../../scripts/utils/guard_tools.rb'
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $run_docgen   = false
-$run_main     = true
-$run_tests    = false
+$run_main     = false
+$run_tests    = true
 $run_linting  = true
 $run_coverage = false
 
@@ -73,7 +73,7 @@ guard :shell, :version => 2, :cli => "--color" do
   watch(%r{^test/resources/Maintest.luna$}) do |m|
     lastbuildguard(m[0]) do
       section "Luna file change"
-      show_output if command_interactive "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna"
+      show_output if command_interactive "../../../dist/bin/libs/luna-typechecker-tests test/resources/Maintest.luna"
     end
   end
 
@@ -103,39 +103,45 @@ end
 def haskell_action trigger
   puts "#{trigger[0]}".center(String.linefill_length).cyan + "\n"
 
-  section "building"
-  if command_interactive "../../../scripts/compile -j9"
-
-    section "documentation", "cabal haddock --html" if $run_docgen
-    section "tests",         "rm -f luna-typechecker-tests.tix", "../../../dist/bin/libs/luna-typechecker-test" if $run_tests
-
-    command_interactive "rm -f #{$output_dir}*"
-    res = command_interactive "../../../dist/bin/libs/luna-typechecker test/resources/Maintest.luna" if $run_main
-
-    if res and $run_tests and command_interactive "../../../dist/bin/libs/luna-typechecker-tests"
-
-      if $run_coverage
-        section "coverage", "rm -rf hpc_report"
-
-        hpc_excluded_modules = ((Dir.glob("test/**/*Spec.hs")          # skip all test-spec files
-                                    .map { |k| k.gsub("test/", "")     # ...converting path to namespace for HPC
-                                                .gsub(".hs","")
-                                                .gsub("/",".")
-                                         }
-                                ) << "Main"                            # and skip "Main", the entrypoint for tests
-                               ).map{|k| "--exclude=#{k}" }.join(" ")
-        command_interactive coverage_cmd
-        puts "Report written to 'hpc_report'"
-      end
-
+  begin
+    section "building" do
+      command_interactive "../../../scripts/compile -j9"
     end
 
-    if res and $run_linting
+    section "linting",       :condition => $run_linting do
       opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
       opts = opts.join(" ")
-      section "linting", "pushd ..; hlint #{$hlint_path} #{opts}; popd"
+      command_withinput "pushd ..; hlint #{$hlint_path} #{opts}; popd"
     end
+
+    section "documentation", :condition => $run_docgen do
+      command_interactive "cabal haddock --html"
+    end
+
+    section "main",          :condition => $run_main do
+      command_interactive "../../../dist/bin/libs/luna-typechecker"
+    end
+
+    section "tests", "rm -f luna-typechecker-tests.tix #{$output_dir}*", :condition => $run_tests do
+      command_interactive "../../../dist/bin/libs/luna-typechecker-tests test/resources/Maintest.luna"
+    end
+
+    section "coverage", "rm -rf hpc_report", :condition => $run_coverage do
+      hpc_excluded_modules = ((Dir.glob("test/**/*Spec.hs")          # skip all test-spec files
+                                  .map { |k| k.gsub("test/", "")     # ...converting path to namespace for HPC
+                                              .gsub(".hs","")
+                                              .gsub("/",".")
+                                       }
+                              ) << "Main"                            # and skip "Main", the entrypoint for tests
+                             ).map{|k| "--exclude=#{k}" }.join(" ")
+      command_interactive coverage_cmd
+      puts "Report written to 'hpc_report'"
+    end
+
+  rescue SystemCallError => e
+    return false
   end
+  return true
 end
 
 

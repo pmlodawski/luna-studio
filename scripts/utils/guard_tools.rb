@@ -80,7 +80,7 @@ end
 # Run command with all the fanciness of it. Measure execution time, print stdout+stderr, shows the return code.
 def command_interactive(cmd)
   puts String.starline.blue
-  puts ("$ #{cmd}".blue + "        2>&1".yellow)
+  puts ("$ #{cmd}".blue + " 2>&1".yellow)
 
   stdout_empty = true
   
@@ -112,6 +112,14 @@ def command_interactive(cmd)
 
   if $?.exitstatus === 0  then puts ("  * ".blue + "exit code: #{$?.exitstatus}".black)
                           else puts "  * exit code: #{$?.exitstatus}".starsaround.red
+  end
+
+  if $?.exitstatus != 0
+    unless $!.nil?
+      raise SystemCallError.new("Execution of `#{cmd}` failed with error code: #{$!.exitstatus}")
+    else
+      raise SystemCallError.new("Execution of `#{cmd}` failed")
+    end
   end
 end
 
@@ -147,7 +155,9 @@ def command_withinput(cmd, inp=nil)
     puts stderr.each_line.map {|l| "  * ".red + l}.join
   end
 
-  status.exitstatus === 0
+  if status.exitstatus != 0
+    raise SystemCallError.new("Execution of `#{cmd}` failed with error code: #{status.exitstatus}")
+  end
 end
 
 
@@ -156,14 +166,23 @@ end
 # Can run commands if passed.
 # TODO (feature): could take a block and measure its execution time.
 
-def section(name, *cmds)
-  grace = Artii::Base.new :font => 'graceful'
-  ascii_lines = grace.asciify(name).each_line
-  ascii = ascii_lines.map { |line| line.center_with_strlen( ascii_lines.map(&:length).max ) }.join.cyan
+def section(name, *cmds, condition: true, &block)
+  if condition
+    begin
+      grace = Artii::Base.new :font => 'graceful'
+      ascii_lines = grace.asciify(name).each_line
+      ascii = ascii_lines.map { |line| line.center_with_strlen( ascii_lines.map(&:length).max ) }.join.cyan
 
-  puts "".linefill.cyan
-  puts ascii.cyan
-  puts "".linefill.cyan
+      puts "".linefill.cyan
+      puts ascii.cyan
+      puts "".linefill.cyan
 
-  cmds.map do |c| command_interactive(c) end
+      cmds.map do |c| command_withinput(c) end
+
+      block.call() unless block.nil?
+    rescue SystemCallError => e
+      newe = $!.exception("Error in section '#{name}'\n#{$!}")
+      raise newe
+    end
+  end
 end
