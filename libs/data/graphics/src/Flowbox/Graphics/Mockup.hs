@@ -194,13 +194,35 @@ onEachChannel f = Image.map $ View.map f
 
 
 edgeBlur :: Channel.Name -> Int -> Double -> Image -> Image
-edgeBlur channelName kernelSize edgeMultiplier image =
-    let Right (Just ch) = getFromPrimary channelName image
-        chMat           = asMatrix ch
-        ChannelFloat _ (MatrixData channelMat) = chMat
-        maskEdges       = EB.edges (variable edgeMultiplier) channelMat -- TODO: channel choice
-        blurFunc        = EB.maskBlur EB.Gauss (variable kernelSize) maskEdges
-    in {-- onEachChannel blurFunc --} image
+edgeBlur channelName kernelSize edgeMultiplier image = 
+    case getFromPrimary channelName image of
+        Left err             -> error $ show err
+        Right (Nothing)      -> image
+        Right (Just channel) -> onEachChannel blurFunc image where
+            blurFunc = \case
+                (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> ChannelFloat name $ DiscreteData $ blurShader shader
+                --(Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> ChannelInt name $ DiscreteData $ blurShader shader
+            blurShader = EB.maskBlur EB.Gauss (variable kernelSize) maskEdges
+            maskEdges  = case channel of
+                (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) shader
+                --(Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> channelInt name $ DiscreteData $ blurShader shader
+
+            --ChannelFloat _ (MatrixData channelMat) = channel
+
+
+    --    Right (Just ch) = getFromPrimary channelName image
+    --    chS = case ch of
+    --        Right mCh -> mCh
+    --        Left  err -> err
+    --    result = case chS of
+    --        Nothing -> image
+    --        Just channel ->  $ funcP channel
+
+    --    chMat           = asMatrix ch
+    --    ChannelFloat _ (MatrixData channelMat) = chMat
+    --    maskEdges       = EB.edges (variable edgeMultiplier) channelMat -- TODO: channel choice
+    --    blurFunc        = EB.maskBlur EB.Gauss (variable kernelSize) maskEdges
+    --in {-- onEachChannel blurFunc --} image
 
 
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b

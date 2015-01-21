@@ -1,8 +1,9 @@
 
 module Flowbox.Graphics.Composition.EdgeBlur where
 
+-- import           Data.Array.Accelerate.CUDA          as A
 import           Flowbox.Graphics.Composition.Filter as F
-import           Data.Array.Accelerate.CUDA          as A
+
 import           Flowbox.Graphics.Shader.Sampler
 import           Flowbox.Graphics.Shader.Rasterizer
 
@@ -24,10 +25,18 @@ import Math.Coordinate.Cartesian (Point2(..))
 
 
 
-applyKernel :: (IsNum a, Elt a) => Matrix2 a -> CartesianShader (Exp Double) (Exp a) -> CartesianShader (Exp Double) (Exp a)
-applyKernel kernel = nearest P.. convolve mode kernel
-    where fi = fmap A.fromIntegral
-          mode point offset = fi point + fi offset
+applyKernel :: (IsNum a, Elt a) => Matrix2 a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
+applyKernel kernel img = 
+    let kernelN = id M.>-> id $ kernel
+        p = pipe A.Clamp
+        process x = id `p` F.filter 1 kernelN `p` id $ x
+    in process img
+
+
+
+  --convolve mode kernel
+  --  where fi = fmap A.fromIntegral
+  --        mode point offset = fi point + fi offset
 
 -- bluredImg = blur n sigma testShader
 
@@ -59,18 +68,20 @@ detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$>
 
 edgeBlur :: BlurType -> Exp Int -> Exp Double -> Matrix2 Double -> [Matrix2 Double] -> [Matrix2 Double]
 edgeBlur blurType size edgeMult matteCh chs =
-  let maskEdges = edges edgeMult matteCh
+  let maskEdges =  edges edgeMult  (fromMatrix Clamp matteCh)
       blurFunc  = maskBlur blurType size maskEdges --matteCh
-  in fmap blurFunc chs
+  in fmap ( rasterizer . blurFunc . (fromMatrix Clamp) ) chs
 
 
 --edges :: Exp Double -> Matrix2 Double -> CartesianShader (Exp Double) (Exp Double)
+
 edges edgeMult channel = 
-  let imgShader = nearest $ fromMatrix Clamp channel
-      edges     = monosampler $ detectEdges edgeMult imgShader
-      bigEdges  = nearest $ dilate (Grid 5 5) $ erode (Grid 3 3) edges
+  let imgShader = channel
+      edges     = detectEdges edgeMult imgShader
+      bigEdges  = dilate (Grid 5 5) $ erode (Grid 3 3) edges
       blurFunc  = blurChoice Gauss 15
   in blurFunc bigEdges
+
     --blurChoice Gauss 15 $ nearest $ dilate (Grid 5 5) $ erode (Grid 3 3) $ monosampler $ detectEdges edgeMult $ nearest $ fromMatrix Clamp channel
 
 --ebTop' :: String -> Exp Int -> Exp Double -> Matrix2 Double -> [Matrix2 Double] -> [Matrix2 Double]
@@ -91,16 +102,16 @@ edges edgeMult channel =
 --      blurF     = maskBlur sigma size maskEdges
 --    in fmap blurF chs
 
-maskBlur :: BlurType -> Exp Int -> CartesianShader (Exp Double) (Exp Double) -> Matrix2 Double -> Matrix2 Double
+maskBlur :: BlurType -> Exp Int -> DiscreteShader (Exp Double) -> DiscreteShader (Exp Double) -> DiscreteShader (Exp Double)
 maskBlur blurType size mask img = 
-  let imgShader = nearest $ fromMatrix Clamp img
+  let imgShader = img
       --maskEdges = mask --blur 15 5.0 $  nearest $  dilate (Grid 10 10) $ {-- erode (Grid 3 3) $ --} monosampler $  detectEdges $  nearest $ fromMatrix Clamp mask
       blurFunc  = blurChoice blurType
       blured    = blurFunc size imgShader
       result    = mixImages mask blured imgShader
-  in rasterizer $ monosampler $ result
+  in result
 
-blurChoice :: BlurType -> Exp Int -> CartesianShader (Exp Double) (Exp Double) -> CartesianShader (Exp Double) (Exp Double)
+blurChoice :: BlurType -> Exp Int -> DiscreteShader (Exp Double) -> DiscreteShader (Exp Double)
 blurChoice blurType = case blurType of
   Gauss     -> blur $ gauss 1.0
   Box       -> blur   box
@@ -135,13 +146,13 @@ data BlurType = Gauss | Box | Triangle | Quadratic
 --blur :: Exp Int -> Exp Double -> CartesianShader (Exp Double) (Exp Double) -> CartesianShader (Exp Double) (Exp Double)
 --blur size sigma img = nearest $ F.filter 1 (blurKernelV size sigma) $ F.filter 1 (blurKernelV size sigma) $ monosampler img
 
-blur :: Filter (Exp Double) -> Exp Int -> CartesianShader (Exp Double) (Exp Double) -> CartesianShader (Exp Double) (Exp Double)
+blur :: Filter (Exp Double) -> Exp Int -> CartesianShader (Exp Int) (Exp Double) -> CartesianShader (Exp Int) (Exp Double)
 blur kernel kernSize img = 
   let hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable kernSize)) $ kernel
       vmat = id M.>-> normalize $ toMatrix (Grid (variable kernSize) 1) $ kernel
       p = pipe A.Clamp
       process x = id `p` F.filter 1 vmat `p` F.filter 1 hmat `p` id $ x
-  in nearest $ process $ monosampler img
+  in process img
 
 --testMat :: Matrix2 Double
 --testMat = M.fromList (Z :. 4 :. 4) [  0, 0, 0, 0
