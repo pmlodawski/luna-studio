@@ -1,6 +1,7 @@
 require 'open3'
 require 'colorize'  # What a travesty, indeed. This shall be spelled 'colourise'. Bloody colonies!
 require 'artii'
+require 'pty'
 
 ## Prevent the script to run multiple times in a row for a file saved multiple times
 #
@@ -31,6 +32,10 @@ end
 class String
   @@linefill_length = 121
 
+  def self.linefill_length
+    @@linefill_length
+  end
+
   def starfill
     x = self
     if length % 2 != @@linefill_length % 2
@@ -41,6 +46,10 @@ class String
 
   def linefill
     ljust(@@linefill_length, '-')
+  end
+
+  def self.starline
+    "*".ljust(@@linefill_length, " *")
   end
 
   def starsaround
@@ -68,10 +77,49 @@ end
 
 ## Run a command
 #
+# Run command with all the fanciness of it. Measure execution time, print stdout+stderr, shows the return code.
+def command_interactive(cmd)
+  puts String.starline.blue
+  puts ("$ #{cmd}".blue + "        2>&1".yellow)
+
+  stdout_empty = true
+  
+  start = Time.now
+  begin
+    PTY.spawn( cmd ) do |stdin, stdout, pid|
+      begin
+        puts "* * STDOUT & STDERR".starfill.blue
+        stdin.each { |line| 
+          stdout_empty = false
+          puts "  * ".blue + line
+        }
+      rescue Errno::EIO
+      end
+      Process.wait(pid)
+    end
+  rescue PTY::ChildExited
+    puts "  * Strange, the child process exited...".starsaround.red
+  end
+  finish = Time.now
+
+  puts "  * ".blue + "STDOUT: none".black if stdout_empty
+
+  diff = finish - start
+  puts String.starline.blue
+  if diff > 5 then puts ("  * ".blue + ("exec time: %.2f sec" % diff))
+              else puts ("  * ".blue + ("exec time: %.2f sec" % diff).black)
+  end
+
+  if $?.exitstatus === 0  then puts ("  * ".blue + "exit code: #{$?.exitstatus}".black)
+                          else puts "  * exit code: #{$?.exitstatus}".starsaround.red
+  end
+end
+
+## Run a command
+#
 # Run command with all the fanciness of it. Measure execution time, print stdout and stderr in appropriate colours,
 # shows the return code. Also passes input (stdin) if provided.
-
-def command(cmd, inp=nil)
+def command_withinput(cmd, inp=nil)
   puts "$ #{cmd}".starsaround.blue
 
   start = Time.now
@@ -117,5 +165,5 @@ def section(name, *cmds)
   puts ascii.cyan
   puts "".linefill.cyan
 
-  cmds.map do |c| command(c) end
+  cmds.map do |c| command_interactive(c) end
 end
