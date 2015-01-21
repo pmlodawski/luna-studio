@@ -54,6 +54,9 @@ def Int.>= self::Int a::Int -> Bool:
 def Double.acc:
     ```liftF1 variable #{self}```
 
+def Float.floor self::Float -> Int:
+    ```liftF1 floor #{self}```
+
 alias Path = String
 
 class Image
@@ -386,7 +389,7 @@ def verticalHandleGUI self::Std length::Float -> HandleGUI:
     (1, length, 0.0)
 
 def linearHandleGUI self::Std -> HandleGUI:
-    (3, 0.0, 0.0)
+    (2, 0.0, 0.0)
 
 def getValueAtCurve self::Std curve::curveGUI x::Time -> Float:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```
