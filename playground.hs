@@ -18,6 +18,6 @@ tc init = return init
 
 
 main :: IO ()
-main = do print "DUPA"
+main = do print "main"
           res <- runEitherT $ runRWST (tc 0) 10 20
           print (show res)
