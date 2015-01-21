@@ -50,7 +50,7 @@ data Fun = FunFloat  (Exp Float -> Exp Float)
          | FunDouble (Exp Double -> Exp Double)
          | FunInt    (Exp Int -> Exp Int)
          | FunBit    (Exp Bool -> Exp Bool)
-
+         
 name :: Channel -> Name
 name (ChannelFloat     n _) = n
 name (ChannelInt       n _) = n
@@ -81,18 +81,23 @@ asDiscrete chan = case chan of
     (ChannelFloat name zeData) -> ChannelFloat name $ asDiscreteData (constant 0) zeData
     (ChannelInt   name zeData) -> ChannelInt   name $ asDiscreteData (constant 0) zeData
     (ChannelBit   name zeData) -> ChannelBit   name $ asDiscreteData (constant False) zeData
-    where asDiscreteData _ zeData@DiscreteData{}   = zeData
-          asDiscreteData v (MatrixData zeData)     = DiscreteData $ fromMatrix (Constant v) zeData
-          asDiscreteData _ (ContinuousData zeData) = DiscreteData $ monosampler zeData
 
 asContinuous :: Channel -> Channel
 asContinuous chan = case chan of
     (ChannelFloat name zeData) -> ChannelFloat name $ asContinuousData (constant 0) zeData
     (ChannelInt   name zeData) -> ChannelInt   name $ asContinuousData (constant 0) zeData
     (ChannelBit   name zeData) -> ChannelBit   name $ asContinuousData (constant False) zeData
-    where asContinuousData _ zeData@ContinuousData{} = zeData
-          asContinuousData v (MatrixData zeData)     = ContinuousData $ (nearest . fromMatrix (Constant v)) zeData
-          asContinuousData _ (DiscreteData zeData)   = ContinuousData $ nearest zeData
+
+asDiscreteData :: Elt e => Exp e -> ChannelData e -> ChannelData e
+asDiscreteData _ zeData@DiscreteData{}   = zeData
+asDiscreteData v (MatrixData zeData)     = DiscreteData $ fromMatrix (Constant v) zeData
+asDiscreteData _ (ContinuousData zeData) = DiscreteData $ monosampler zeData
+
+asContinuousData :: Elt e => Exp e -> ChannelData e -> ChannelData e
+asContinuousData _ zeData@ContinuousData{} = zeData
+asContinuousData v (MatrixData zeData)     = ContinuousData $ (nearest . fromMatrix (Constant v)) zeData
+asContinuousData _ (DiscreteData zeData)   = ContinuousData $ nearest zeData
+
 
 mapOverData :: Elt a => (Exp a -> Exp a) -> ChannelData a -> ChannelData a
 mapOverData f chanData = case chanData of

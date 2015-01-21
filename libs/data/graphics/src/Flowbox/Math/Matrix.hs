@@ -130,23 +130,6 @@ empty mat = A.null $ accMatrix mat
 shape :: (A.Shape ix, A.Elt e) => Matrix ix e -> A.Exp ix
 shape mat = A.shape $ accMatrix mat
 
--- confusing name by the similarity to the corresponding accelerate function
--- should be renamed
-arrayShape :: (A.Elt e) => Backend -> Matrix2 e -> A.DIM2
-arrayShape backend mat =
-    let
-        accMat = accMatrix mat
-        sh = A.shape $ accMatrix mat :: A.Exp A.DIM2
-        A.Z A.:. x A.:. y = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
-        pair = A.lift (x,y) :: A.Exp (Int,Int)
-        scalarPair = A.unit pair :: A.Acc (A.Scalar (Int,Int))
-        l = backend $ scalarPair :: A.Scalar (Int,Int)
-        sh' = A.toList l :: [(Int,Int)]
-        h = fst $ head sh'
-        w = snd $ head sh'
-    in
-        A.Z A.:. h A.:. w
-
 size :: (A.Shape ix, A.Elt e) => Matrix ix e -> A.Exp Int
 size mat = A.size $ accMatrix mat
 
