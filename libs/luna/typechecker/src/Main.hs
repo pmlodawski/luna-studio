@@ -32,14 +32,14 @@ import            Luna.Data.Source                          (Text (Text), Source
 -- >>>>>>> feature/ast2
 
 import qualified  Luna.Pass                                 as Pass
-import qualified  Luna.Pass.Analysis.Struct                 as P2SA
+--import qualified  Luna.Pass.Analysis.Struct                 as P2SA
 --import qualified  Luna.Pass2.Target.HS.HASTGen              as P2HASTGen
 --import qualified  Luna.Pass2.Target.HS.HSC                  as P2HSC
-import qualified  Luna.Pass.Transform.Desugar.ImplicitSelf  as P2ImplSelf
-import qualified  Luna.Pass.Transform.Hash                  as P2Hash
-import qualified  Luna.Pass.Transform.Parse.Stage1          as P2Stage1
-import qualified  Luna.Pass.Transform.Parse.Stage2          as P2Stage2
-import qualified  Luna.Pass.Transform.SSA                   as P2SSA
+--import qualified  Luna.Pass.Transform.Desugar.ImplicitSelf  as P2ImplSelf
+--import qualified  Luna.Pass.Transform.Hash                  as P2Hash
+--import qualified  Luna.Pass.Transform.Parse.Stage1          as P2Stage1
+--import qualified  Luna.Pass.Transform.Parse.Stage2          as P2Stage2
+--import qualified  Luna.Pass.Transform.SSA                   as P2SSA
 
 import            Control.Monad.Trans.Either
 import            Data.Text.Lazy                            (pack,unpack)
@@ -105,6 +105,8 @@ main = do
             sa5              <- Pass.run1_ SA.pass ast4
             writeFileM              " 5.   SA         : sa5"         $ ppShow sa5
 
+            -- TODO [kgdk] 20 sty 2015: przenieść do tests
+            -- TODO [kgdk] 19 sty 2015: dopisać typy
             constraints      <- Pass.run2_ PTyChk.tcpass ast4 sa5
             writeFileM              " 6.   PTyChk     : constraints" $ ppShow constraints
         

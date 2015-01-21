@@ -14,8 +14,8 @@ module Luna.Typechecker.Inference (
     tcpass
   ) where
 
-import            Luna.Pass                               (Pass(Pass))
-import qualified  Luna.Syntax.Decl                        as Decl
+import            Luna.Pass                               (Pass(..))
+--import qualified  Luna.Syntax.Decl                        as Decl
 import            Luna.Syntax.Decl                        (LDecl)
 import qualified  Luna.Syntax.Enum                        as Enum
 import            Luna.Syntax.Enum                        (Enumerated)
@@ -23,7 +23,7 @@ import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
 
 import            Luna.Syntax.Label                       (Label(Label))
-import qualified  Luna.Syntax.Module                      as Module
+--import qualified  Luna.Syntax.Module                      as Module
 import            Luna.Syntax.Module                      (LModule)
 import qualified  Luna.Syntax.Name.Pattern                as NamePat
 import qualified  Luna.Syntax.Pat                         as Pat
@@ -34,7 +34,7 @@ import            Luna.Data.StructInfo                    (StructInfo)
 import            Control.Applicative
 import            Control.Lens                            hiding (without)
 import            Control.Monad.State
-import            Data.List                               (intercalate)
+--import            Data.List                               (intercalate)
 import            Data.Monoid
 import            Data.Text.Lazy                          (unpack)
 
@@ -59,16 +59,17 @@ import            Luna.Typechecker.StageTypecheckerState  (
 
 
 tcpass :: (StageTypecheckerDefaultTraversal m a) => Pass StageTypecheckerState (a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState)
-tcpass = Pass "Typechecker"
-              "Infers the types and typechecks the program as a form of correctness-proving."
-              StageTypecheckerState { _str      = []
-                                    , _typo     = init_typo
-                                    , _nextTVar = 0
-                                    , _subst    = null_subst
-                                    , _constr   = true_cons
-                                    , _sa       = mempty
-                                    }
-              tcUnit
+tcpass = Pass { _name  = "Typechecker"
+              , _desc  = "Infers the types and typechecks the program as a form of correctness-proving."
+              , _state = StageTypecheckerState  { _str      = []
+                                                , _typo     = init_typo
+                                                , _nextTVar = 0
+                                                , _subst    = null_subst
+                                                , _constr   = true_cons
+                                                , _sa       = mempty
+                                                }
+              , _func  = tcUnit
+              }
 
 tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState
 tcUnit ast structAnalysis =
@@ -220,12 +221,7 @@ getTargetID lab =
 
 
 --newtvar :: (Monad m) => StageTypecheckerPass m TVar
---newtvar =
---  do
---    n <- use nextTVar
---    nextTVar += 1
---    return n
-
+--newtvar = use nextTVar <* nextTVar += 1
 
 --insert :: Typo -> (Var, TypeScheme) -> Typo
 --insert a (x,t) = (x,t):a
