@@ -235,7 +235,7 @@ def noImgMask self::Std:
 # def Image.transform self::Image trans::TransformD -> Image:
 #     ```liftF2 transformLuna #{trans} #{self}```
 
-def Image.crop self::Image rect::Rectangle Int -> Image:
+def Image.crop self::Image rect::(Rectangle Int) -> Image:
     ```liftF2 cropLuna #{rect} #{self}```
 
 # VIEW
