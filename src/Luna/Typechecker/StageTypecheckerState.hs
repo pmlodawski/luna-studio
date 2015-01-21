@@ -35,7 +35,7 @@ import            Luna.Typechecker.Debug.PrettyData (
 
 
 data StageTypecheckerState
-   = StageTypecheckerState  { _str      :: [String]
+   = StageTypecheckerState  { _str      :: [String] -- TODO [kgdk] 20 sty 2015: zmienić na _debug
                             , _typo     :: [Typo]
                             , _nextTVar :: TVar
                             , _subst    :: Subst
