@@ -22,6 +22,7 @@ Executable project-manager
 
     Build-Depends:  base,
                     batch-lib-project-manager,
+                    blaze-markup < 0.6.3,
                     flowbox-bus,
                     flowbox-config,
                     flowbox-utils,
