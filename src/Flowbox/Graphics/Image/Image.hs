@@ -15,7 +15,7 @@ module Flowbox.Graphics.Image.Image (
     singletonFromChans,
     views,
     insert,
-    insertDefault,
+    insertPrimary,
     delete,
     --update,
     lookup,
@@ -23,11 +23,16 @@ module Flowbox.Graphics.Image.Image (
     lookupDefault,
     map,
     get,
-    getFromDefault,
+    getFromPrimary,
     getChannels,
-    getChannelsFromDefault
+    getChannelsFromPrimary,
+    append,
+    appendMulti,
+    appendToPrimary,
+    appendMultiToPrimary
 ) where
 
+import           Control.Error.Util (hush)
 import           Data.Maybe
 import qualified Data.Set as Set
 import           Flowbox.Data.Set (Set)
@@ -66,8 +71,8 @@ views img = maybe views' views'' (img ^. primaryView)
 insert :: View -> Image -> Image
 insert view img = img & arbitraryViews %~ Set.insert view
 
-insertDefault :: View -> Image -> Image
-insertDefault view img = maybe (img & primaryView .~ Just view) newDefault (img ^. primaryView)
+insertPrimary :: View -> Image -> Image
+insertPrimary view img = maybe (img & primaryView .~ Just view) newDefault (img ^. primaryView)
     where newDefault oldView = insert oldView img & primaryView .~ Just view
 
 delete :: View.Name -> Image -> Image
@@ -97,9 +102,12 @@ lookupDefault = lookup View.defaultName
 --    Just newval -> insert newval img
 --    Nothing     -> delete name img
 
-map :: (View.View -> View.View) -> Image -> Image
+map :: (View -> View) -> Image -> Image
 map f img = img & arbitraryViews %~ Set.map f
                 & primaryView %~ fmap f
+
+--mapPrimaryChannels :: (Channel -> Channel) -> Image -> Image
+--mapPrimaryChannels f img = img
 
 get :: Channel.Name -> View.Name -> Image -> Result (Maybe Channel)
 get chanName viewName img = do
@@ -107,8 +115,8 @@ get chanName viewName img = do
     channel <- View.get view chanName
     return channel
 
-getFromDefault :: Channel.Name -> Image -> Result (Maybe Channel)
-getFromDefault chanName img = case img ^. primaryView of
+getFromPrimary :: Channel.Name -> Image -> Result (Maybe Channel)
+getFromPrimary chanName img = case img ^. primaryView of
     Nothing -> Left $ ViewLookupError primaryViewTag
     Just v  -> View.get v chanName
 
@@ -117,10 +125,28 @@ getChannels chans viewName img = do
     view     <- lookup viewName img
     sequence $ fmap (View.get view) $ Set.toList chans
 
-getChannelsFromDefault :: Channel.Select -> Image ->  Result ([Maybe Channel])
-getChannelsFromDefault chans img = case img ^. primaryView of
+getChannelsFromPrimary :: Channel.Select -> Image ->  Result ([Maybe Channel])
+getChannelsFromPrimary chans img = case img ^. primaryView of
     Nothing -> Left $ ViewLookupError primaryViewTag
     Just v  -> sequence $ fmap (View.get v) $ Set.toList chans
+
+append :: Channel -> View.Name -> Image -> Image
+append chan viewName img = insert (View.append chan view) img
+    where view = fromMaybe (View.empty viewName) $ hush $ lookup viewName img
+
+appendMulti :: [Channel] -> View.Name -> Image -> Image
+appendMulti chans viewName img = insert view' img
+    where view' = foldr View.append view chans
+          view  = fromMaybe (View.empty viewName) $ hush $ lookup viewName img
+
+appendToPrimary :: Channel -> Image -> Image
+appendToPrimary chan img = insertPrimary (View.append chan view) img
+    where view = fromMaybe View.emptyDefault (img ^. primaryView)
+
+appendMultiToPrimary :: [Channel] -> Image -> Image
+appendMultiToPrimary chans img = insertPrimary view' img
+    where view' = foldr View.append view chans
+          view = fromMaybe View.emptyDefault (img ^. primaryView)
 
 
 -- == HELPERS ==

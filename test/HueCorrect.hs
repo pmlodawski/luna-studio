@@ -40,29 +40,29 @@ import           Flowbox.Prelude as P hiding (lookup)
 import           Flowbox.Graphics.Image.Image
 import qualified Flowbox.Graphics.Mockup as Mockup
 import           Flowbox.Math.Function.Accelerate.BSpline as BSpline
-import           Flowbox.Math.Function.CurveGui as CurveGui
+import           Flowbox.Math.Function.CurveGUI as CurveGUI
 
 generateConstantCurve :: Double -> [Point2 Double]
 generateConstantCurve n = P.map (\x -> Point2 x n) (P.take 6 $ iterate (+1) 0.0)
 
 -- for the testing purpoese only
 hueCorrectLuna' :: BSpline.BSpline Double -> BSpline.BSpline Double ->
-                   BSpline.BSpline Double -> BSpline.BSpline Double -> BSpline.BSpline Double -> 
+                   BSpline.BSpline Double -> BSpline.BSpline Double -> BSpline.BSpline Double ->
                    BSpline.BSpline Double -> BSpline.BSpline Double-> BSpline.BSpline Double ->
                    Image -> Image
-hueCorrectLuna' lum sat r g b rSup gSup bSup img = Mockup.onEachRGB (Color.hueCorrect lum sat r g b rSup gSup bSup) img
+hueCorrectLuna' lum sat r g b rSup gSup bSup img = Mockup.onEachColorRGB (Color.hueCorrect lum sat r g b rSup gSup bSup) img
 
 conversionToBSplineTest1 :: IO ()
 conversionToBSplineTest1 = do
-    let h = CurveGui.Linear
-    let curve = BezierCurve [ CurveGui.ControlPoint (Point2 0.0 1.0) h h
-                            , CurveGui.ControlPoint (Point2 1.0 2.0) h h
-                            , CurveGui.ControlPoint (Point2 2.0 1.0) h h
-                            , CurveGui.ControlPoint (Point2 3.0 2.0) h h
-                            , CurveGui.ControlPoint (Point2 4.0 1.0) h h
-                            , CurveGui.ControlPoint (Point2 5.0 2.0) h h ]
+    let h = CurveGUI.Linear
+    let curve = BezierCurve [ CurveGUI.ControlPoint (Point2 0.0 1.0) h h
+                            , CurveGUI.ControlPoint (Point2 1.0 2.0) h h
+                            , CurveGUI.ControlPoint (Point2 2.0 1.0) h h
+                            , CurveGUI.ControlPoint (Point2 3.0 2.0) h h
+                            , CurveGUI.ControlPoint (Point2 4.0 1.0) h h
+                            , CurveGUI.ControlPoint (Point2 5.0 2.0) h h ]
 
-    let bSpline = CurveGui.convertToBSpline curve
+    let bSpline = CurveGUI.convertToBSpline curve
     print (A.toList bSpline)
 
     let v = [ valueAt (A.use bSpline) (A.constant 1.5)
@@ -75,20 +75,52 @@ conversionToBSplineTest1 = do
 
 conversionToBSplineTest2 :: IO ()
 conversionToBSplineTest2 = do
-    let h = CurveGui.NonLinear 0.5 0.0
-    let curve = BezierCurve [ CurveGui.ControlPoint (Point2 0.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 1.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 2.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 3.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 4.0 2.0) h h
-                             , CurveGui.ControlPoint (Point2 5.0 2.0) h h ]
-    let bSpline = CurveGui.convertToBSpline curve
+    let h = CurveGUI.NonLinear 0.5 0.0
+    let curve = BezierCurve [ CurveGUI.ControlPoint (Point2 0.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 1.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 2.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 3.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 4.0 2.0) h h
+                             , CurveGUI.ControlPoint (Point2 5.0 2.0) h h ]
+    let bSpline = CurveGUI.convertToBSpline curve
 
     print (A.toList bSpline)
 
     let v = [ valueAt (A.use bSpline) (A.constant 1.2)
               ,valueAt (A.use bSpline) (A.constant 3.0)
               ,valueAt (A.use bSpline) (A.constant 4.5) ]
+
+    let u = P.map (head . A.toList . CUDA.run . A.unit) v
+
+    print u
+
+conversionToBSplineTest3 :: IO ()
+conversionToBSplineTest3 = do
+    let h = CurveGUI.Linear
+    let h2 = CurveGUI.NonLinear 1.0 (pi/4)
+    let curve = BezierCurve [CurveGUI.ControlPoint (Point2 0.0 0.0) h2 h]
+    let bSpline = CurveGUI.convertToBSpline curve
+
+    let v = [ valueAt (A.use bSpline) (A.constant (-0.5))
+              ,valueAt (A.use bSpline) (A.constant 0.5)
+              ,valueAt (A.use bSpline) (A.constant 0.0) ]
+    print (A.toList bSpline)
+
+    let u = P.map (head . A.toList . CUDA.run . A.unit) v
+
+    print u
+
+conversionToBSplineTest4 :: IO ()
+conversionToBSplineTest4 = do
+    let h = CurveGUI.Linear
+    let curve = BezierCurve [CurveGUI.ControlPoint (Point2 0.0 0.0) h h]
+    let bSpline = CurveGUI.convertToBSpline curve
+
+    let v = [ valueAt (A.use bSpline) (A.constant (1.0))
+              ,valueAt (A.use bSpline) (A.constant 0.0)
+              ,valueAt (A.use bSpline) (A.constant 1.0) ]
+
+    print (A.toList bSpline)
 
     let u = P.map (head . A.toList . CUDA.run . A.unit) v
 
@@ -113,13 +145,13 @@ main = do
     let spline5 = A.fromList (A.Z A.:. 6) c5 :: A.Vector (BSplineNode Double)
 
     print "tranformed image"
-    let img2 = hueCorrectLuna' spline1 spline2 spline2 spline2 spline2 spline2 spline2 spline2 img 
-    let img3 = hueCorrectLuna' spline2 spline2 spline1 spline1 spline2 spline3 spline2 spline2 img 
-    let img4 = hueCorrectLuna' spline2 spline2 spline2 spline2 spline2 spline1 spline2 spline1 img 
-    let img5 = hueCorrectLuna' spline2 spline3 spline2 spline2 spline2 spline2 spline1 spline2 img 
-    let img6 = hueCorrectLuna' spline2 spline2 spline4 spline2 spline2 spline4 spline2 spline2 img 
+    let img2 = hueCorrectLuna' spline1 spline2 spline2 spline2 spline2 spline2 spline2 spline2 img
+    let img3 = hueCorrectLuna' spline2 spline2 spline1 spline1 spline2 spline3 spline2 spline2 img
+    let img4 = hueCorrectLuna' spline2 spline2 spline2 spline2 spline2 spline1 spline2 spline1 img
+    let img5 = hueCorrectLuna' spline2 spline3 spline2 spline2 spline2 spline2 spline1 spline2 img
+    let img6 = hueCorrectLuna' spline2 spline2 spline4 spline2 spline2 spline4 spline2 spline2 img
     let img7 = hueCorrectLuna' spline2 spline2 spline2 spline2 spline2 spline2 spline2 spline2 img
-    let img8 = hueCorrectLuna' spline2 spline1 spline3 spline3 spline3 spline1 spline1 spline1 img 
+    let img8 = hueCorrectLuna' spline2 spline1 spline3 spline3 spline3 spline1 spline1 spline1 img
 
     saveImageLuna "sat_applied2.png" img2
     saveImageLuna "r_g_applied2.png" img3
@@ -131,5 +163,7 @@ main = do
 
     conversionToBSplineTest1
     conversionToBSplineTest2
+    conversionToBSplineTest3
+    conversionToBSplineTest4
 
     print "done"
