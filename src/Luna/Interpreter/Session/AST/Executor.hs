@@ -69,6 +69,8 @@ processMain_ = do
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
     Debug.dumpBindings
+    --Cache.dumpAll
+    --Cache.performGC
 
 
 processNodeIfNeeded :: MemoryManager mm => CallDataPath -> Session mm ()

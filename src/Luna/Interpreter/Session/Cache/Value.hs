@@ -108,7 +108,9 @@ get varName callPointPath = do
             let distinctModes = MultiSet.distinctElems modes
                 valCache = cinfo ^. CacheInfo.values
             (modValues, valCache') <- foldM (computeLookupValue varName) ([], valCache) distinctModes
-            Env.cachedInsert callPointPath $ CacheInfo.values .~ valCache' $ cinfo
+            --FIXME [PM] : why clearing this map on gc does not free memory?
+            --             Temporary fix is add nothing to this map
+            --Env.cachedInsert callPointPath $ CacheInfo.values .~ valCache' $ cinfo
             return modValues
 
 
