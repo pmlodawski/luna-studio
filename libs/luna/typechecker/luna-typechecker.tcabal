@@ -8,7 +8,7 @@ Build-Type:     Simple
 
 
 Library
-  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  GHC-Options:        -Wall -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
   Hs-Source-Dirs:     src
   Exposed-modules:    `findmodules('src', '.*\.hs')`
   Build-Depends:      base
@@ -25,7 +25,7 @@ Library
 
 
 Executable luna-typechecker-tests
-  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  GHC-Options:        -Wall -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
   Hs-Source-Dirs:     test
   Main-Is:            Main.hs
   Build-Depends:      base
