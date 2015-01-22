@@ -59,12 +59,12 @@ approximateCubicWithQuadratic' :: Int -> Double -> CubicBezier Double -> [Quadra
 approximateCubicWithQuadratic' = approximateCubicWithQuadraticStep 1
     where approximateCubicWithQuadraticStep :: Int -> Int -> Double -> CubicBezier Double -> [QuadraticBezier Double]
           approximateCubicWithQuadraticStep step limit eps curve@(CubicBezier pA pB pC pD)
-              | {-err < eps ||-} step >= limit = [approxCurve]
+              | err < eps || step >= limit = [approxCurve]
               | otherwise                  = getSubresults subcurvesHalf
               where
                   (QuadraticBezier _ c0 _) = approx pA pB pC -- ok
                   (QuadraticBezier _ c1 _) = approx pD pC pB -- ok
-                  approxCurve = QuadraticBezier pA ((3 * c1 - pD + 3 * c0 - pA) / 4) pD -- ok
+                  approxCurve = fmap fromIntegral $ fmap round $ QuadraticBezier pA ((3 * c1 - pD + 3 * c0 - pA) / 4) pD -- ok
                   d   = vectorDistance (fp2gp c0) (fp2gp c1) -- distance between control points
                   err = (sqrt 3 / 18) * d -- this should be precision, but something is fucky (no t^3_max)
                   approx a b c = QuadraticBezier a (approxControl a b) (approxEnd a b c) -- ok
@@ -77,6 +77,7 @@ approximateCubicWithQuadratic' = approximateCubicWithQuadraticStep 1
                   getSubresults subcurves = foldr1 (++) $ fmap (approximateCubicWithQuadraticStep (step+1) limit eps) subcurves -- ok
                   curve' = fcb2gcb curve
                   splitN w      = fmap gcb2fcb $ Cubic.splitBezierN curve' w -- seems ok
+
 
 
 

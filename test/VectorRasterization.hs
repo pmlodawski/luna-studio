@@ -44,33 +44,68 @@ main = do
                    , ControlPoint (Point2 338 (210-40)) (Just $ Point2 (329-338) (109-210)) (Just $ Point2 (450-338) (211-210))
                    , ControlPoint (Point2 343 (330-40)) (Just $ Point2 (456-343) (331-330)) Nothing
                    ]
-        --points1  = [ ControlPoint (Point2 212 209) Nothing Nothing
-        --           , ControlPoint (Point2 338 210) Nothing Nothing
-        --           , ControlPoint (Point2 343 330) Nothing Nothing
-        --           ]
-        --feather1 = [ ControlPoint (Point2 212 (209-40)) Nothing Nothing
-        --           , ControlPoint (Point2 338 (210-40)) Nothing Nothing
-        --           , ControlPoint (Point2 343 (330-40)) Nothing Nothing
-        --           ]
+        points1  = [ ControlPoint (Point2 212 209) Nothing Nothing
+                   , ControlPoint (Point2 338 210) Nothing Nothing
+                   , ControlPoint (Point2 343 330) Nothing Nothing
+                   ]
+        feather1 = [ ControlPoint (Point2 212 (209-40)) Nothing Nothing
+                   , ControlPoint (Point2 338 (210-40)) Nothing Nothing
+                   , ControlPoint (Point2 343 (330-40)) Nothing Nothing
+                   ]
+        pointsd  = [ ControlPoint (Point2 10 10) Nothing Nothing
+                   , ControlPoint (Point2 630 10)  Nothing Nothing
+                   , ControlPoint (Point2 630 470) Nothing Nothing
+                   , ControlPoint (Point2 10  470) Nothing Nothing
+                   ]
+        featherd = [ ControlPoint (Point2 10 10) Nothing Nothing
+                   , ControlPoint (Point2 630 10)  Nothing Nothing
+                   , ControlPoint (Point2 630 470) Nothing Nothing
+                   , ControlPoint (Point2 10  470) Nothing Nothing
+                   ]
+
+    P.putStrLn "Test rasterizeMask one line, no handles --> foo.png"
+
+    let patd = Path True pointsd
+        fead = Path True featherd
+
+    let arrD = rasterizeMask w h $ (Mask patd (Just fead))
+        imgD = matrixToImage arrD
+
+    saveImageLuna "foo.png" imgD
+
+    P.putStrLn "Test rasterizeMask no fea, no handles --> foo1.png"
+
+    let pat1 = Path True points1
+        fea1 = Path True feather1
+
+    let arrD = rasterizeMask w h $ (Mask pat1 Nothing)
+        imgD = matrixToImage arrD
+
+    saveImageLuna "foo1.png" imgD
+
+    P.putStrLn "Test rasterizeMask no handles --> foo2.png"
+
+    let arrD = rasterizeMask w h $ (Mask pat1 (Just fea1))
+        imgD = matrixToImage arrD
+
+    saveImageLuna "foo2.png" imgD
+
+    P.putStrLn "Test rasterizeMask no fea --> fooD1.png"
 
     let pat = Path True points
         fea = Path True feather
-        --pat1 = Path True points1
-        --fea1 = Path True feather1
-
-    P.putStrLn "Test rasterizeMaskWithFeathers no fea"
 
     let arrD = rasterizeMask w h $ (Mask pat Nothing)
         imgD = matrixToImage arrD
 
-    saveImageLuna "fooD2.png" imgD
+    saveImageLuna "fooD1.png" imgD
 
-    P.putStrLn "Test rasterizeMaskWithFeathers"
+    P.putStrLn "Test rasterizeMask --> fooD2.png"
 
     let arrD = rasterizeMask w h $ (Mask pat (Just fea))
         imgD = matrixToImage arrD
 
-    saveImageLuna "fooD1.png" imgD
+    saveImageLuna "fooD2.png" imgD
 
 
     return ()
