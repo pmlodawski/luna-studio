@@ -55,7 +55,7 @@ type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal
 
 
 report_error :: (Monad m) =>  String -> a ->  StageTypecheckerPass m a
-report_error msg x = fail $ "LUNA ERROR: " ++ msg
+report_error msg x = fail $ "LUNA TC ERROR: " ++ msg
 
 
 

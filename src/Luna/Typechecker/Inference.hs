@@ -21,7 +21,7 @@ import            Luna.Pass                               (Pass(..))
 
 import            Luna.Syntax.Decl                        (LDecl)
 import qualified  Luna.Syntax.Enum                        as Enum
-import            Luna.Syntax.Enum                        (Enumerated)
+import            Luna.Syntax.Enum                        (Enumerated, ID)
 import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
 import            Luna.Syntax.Label                       (Label(Label))
@@ -38,16 +38,17 @@ import            Data.Monoid
 import            Data.Text.Lazy                          (unpack)
 
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
-import            Luna.Typechecker.Data                   (true_cons, null_subst, init_typo)
+import            Luna.Typechecker.Data
 import            Luna.Typechecker.StageTypecheckerState  (
-                      StageTypecheckerState(..), StageTypechecker(..),
+                      StageTypecheckerState(..), str, typo, nextTVar, subst, constr, sa,
+                      StageTypechecker(..),
                       StageTypecheckerPass, StageTypecheckerCtx,
                       StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
-                      str, sa
+                      report_error
                   )
---import            Luna.Typechecker.Tools                  (without)
---import            Luna.Typechecker.TypesAndConstraints
---import            Luna.Typechecker.Solver                 (cs)
+import            Luna.Typechecker.Tools                  (without)
+import            Luna.Typechecker.TypesAndConstraints
+import            Luna.Typechecker.Solver                 (cs)
 
 
 
@@ -76,7 +77,6 @@ tcUnit ast structAnalysis =
     get
 
 
-instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LModule lab a)  (LModule lab a) where traverseM _ = tcMod
 instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab a)    (LDecl lab a)   where traverseM _ = tcDecl
 instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr lab a)    (LExpr lab a)   where traverseM _ = tcExpr
 
@@ -87,26 +87,7 @@ defaultTraverseM :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypechec
 defaultTraverseM = AST.defaultTraverseM StageTypechecker
 
 
----- type inference
 
---tp :: (Monad m) =>  (Typo, Term) ->  StageTypecheckerPass m Type
---tp (env, Id x) =  do a <- inst env x
---                     normalize a
-----
---tp (env, Abs x e) = do a <- newtvar
---                       b <- tp (insert env (x, Mono (TV a)), e)
---                       normalize ((TV a) `Fun` b)
-
---tp (env, App e e') = do a <- newtvar
---                        t <- tp (env, e)
---                        t' <- tp (env, e')
---                        add_constraint (C [t `Subsume` (t' `Fun` TV a)])
---                        normalize (TV a)
-
-
---tp (env, Let x e e') = do a <- tp (env, e)
---                          b <- gen env a
---                          tp ((insert env (x, b)), e')
 
 ---- top-level program
 
@@ -115,9 +96,11 @@ defaultTraverseM = AST.defaultTraverseM StageTypechecker
 ----
 
 
-
-tcMod :: (StageTypecheckerCtx lab m a) => LModule lab a -> StageTypecheckerPass m (LModule lab a)
-tcMod = defaultTraverseM
+withTypo ::  (StageTypecheckerCtx lab m a) => Typo -> x lab a -> (x lab a -> StageTypecheckerPass m (x lab a)) -> StageTypecheckerPass m (x lab a)
+withTypo typeEnv astElem action = push *> action astElem <* pop
+  where
+    push = typo %= (typeEnv:)
+    pop  = typo %= tail
 
 --tcMod lmodule@(Label _ Module.Module {Module._path = path, Module._name = name, Module._body = body} ) =
 --  do
@@ -125,17 +108,20 @@ tcMod = defaultTraverseM
 
 
 tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
-tcDecl ldecl@(Label lab decl) =
-    defaultTraverseM ldecl
+tcDecl = defaultTraverseM
   --  case decl of
   --      fun@Decl.Func { Decl._sig  = sig@NamePat.NamePat{ NamePat._base = (NamePat.Segment name args) }
   --                    , Decl._body = body
   --                    } ->
   --        do  
-  --          name_ids <- getTargetID lab
+  --          --tp (env, Abs x e) = do a <- newtvar
+  --          --                       b <- tp (insert env (x, Mono (TV a)), e)
+  --          --                       normalize ((TV a) `Fun` b)
+  --          name_ids <- getTargetIDString lab
   --          args_ids <- unwords <$> mapM mapArg args
   --          pushString ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " START")
   --          x <- defaultTraverseM ldecl
+
   --          pushString ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " END") 
   --          return x
   --      _ ->
@@ -144,7 +130,7 @@ tcDecl ldecl@(Label lab decl) =
   --  mapArg :: (Enumerated lab, Monad m) => NamePat.Arg (Pat.LPat lab) a -> StageTypecheckerPass m String
   --  mapArg (NamePat.Arg (Label laba arg) _) =
   --    do
-  --      arg_id <- getTargetID laba
+  --      arg_id <- getTargetIDString laba
   --      return $ unpack (humanName arg) ++ arg_id
 
 
@@ -152,32 +138,48 @@ tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m
 tcExpr lexpr@(Label lab expr) =
   do
     case expr of 
+        --tp :: (Monad m) =>  (Typo, Term) ->  StageTypecheckerPass m Type
+        --tp (env, Id x) =  do a <- inst env x
+        --                     normalize a
         Expr.Var { Expr._ident = (Expr.Variable vname _) } ->
           do
             let hn = unpack . humanName $ vname
-            hn_id <- getTargetID lab
+            hn_id <- getTargetIDString lab
             pushString ("Var         " ++ hn ++ hn_id)
+            env <- getEnv lab
+            x <- getTargetID lab
+            a <- inst env x
+            _ <- normalize a
+            return ()
         Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) } ->
 
             case (dst, src) of
                 (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
                   do  
-                    t_id <- getTargetID labt
-                    s_id <- getTargetID labs
+                    --tp (env, Let x e e') = do a <- tp (env, e)
+                    --                          b <- gen env a
+                    --                          tp ((insert env (x, b)), e')
+                    t_id <- getTargetIDString labt
+                    s_id <- getTargetIDString labs
                     pushString ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ unpack (humanName src_vname) ++ s_id) 
                 _ -> pushString "Some assignment..."
         Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label labb (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)}) ->
           do
-            base_id <- getTargetID labb
+            --tp (env, App e e') = do a <- newtvar
+            --                        t <- tp (env, e)
+            --                        t' <- tp (env, e')
+            --                        add_constraint (C [t `Subsume` (t' `Fun` TV a)])
+            --                        normalize (TV a)
+            base_id <- getTargetIDString labb
             args_id <- unwords <$> mapM mapArg args
             pushString ("Application " ++ (unpack . humanName $ basename) ++ base_id ++ " ( " ++ args_id ++ " )")
         _ ->
             return ()
     defaultTraverseM lexpr
   where 
-    mapArg :: (Enumerated lab, Monad m) => Expr.AppArg (LExpr lab a) -> StageTypecheckerPass m String
+    mapArg :: (StageTypecheckerCtx lab m a) => Expr.AppArg (LExpr lab a) -> StageTypecheckerPass m String
     mapArg (Expr.AppArg _ (Label laba (Expr.Var { Expr._ident = (Expr.Variable vname _) } ))) = do
-        arg_id <- getTargetID laba
+        arg_id <- getTargetIDString laba
         return $ (unpack . humanName $ vname) ++ arg_id
     mapArg _ = fail "Luna.Typechecker.Inference:tcExpr:mapArg: usage unexpected"
 
@@ -186,8 +188,8 @@ tcExpr lexpr@(Label lab expr) =
 pushString :: (Monad m) => String -> StageTypecheckerPass m ()
 pushString s = str %= (s:)
 
-getTargetID :: (Enumerated lab, Monad m) => lab -> StageTypecheckerPass m String
-getTargetID lab =
+getTargetIDString :: (StageTypecheckerCtx lab m String) => lab -> StageTypecheckerPass m String
+getTargetIDString lab =
     sa . SI.alias . ix labID . SI.target & preuse >>= \case
         Nothing     -> return $ "|" ++ show labID ++ "⊲"
         Just labtID -> return $ "|" ++ show labID ++ "⊳" ++ show labtID ++ "⊲"
@@ -195,91 +197,105 @@ getTargetID lab =
     labID = Enum.id lab
 
 
+getTargetID :: (StageTypecheckerCtx lab m String) => lab -> StageTypecheckerPass m ID
+getTargetID lab =
+    sa . SI.alias . ix labID . SI.target & preuse >>= \case
+        Nothing     -> return labID
+        Just labtID -> return labtID
+  where
+    labID = Enum.id lab
 
---add_cons :: Constraint -> Constraint -> Constraint
---add_cons (C p1) (C p2)               = C (p1 ++ p2)
---add_cons (C p1) (Proj tvr p2)        = Proj tvr (p1 ++ p2)
---add_cons (Proj tvr p1) (C p2)        = Proj tvr (p1 ++ p2)
---add_cons (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)
-
-
---tv_typo :: Typo -> [TVar]
---tv_typo = foldl f []
---  where
---    f z (v,ts) = z ++ tv ts
-
-
---add_constraint :: (Monad m) => Constraint -> StageTypecheckerPass m ()
---add_constraint c1 =
---    constr %= flip add_cons c1
+getEnv :: (StageTypecheckerCtx lab m String) => lab -> StageTypecheckerPass m Typo
+getEnv _ =
+    typo & use >>= \case
+        []    -> return []
+        (x:_) -> return x
 
 
---newtvar :: (Monad m) => StageTypecheckerPass m TVar
---newtvar = use nextTVar <* nextTVar += 1
-
---insert :: Typo -> (Var, TypeScheme) -> Typo
---insert a (x,t) = (x,t):a
-
-
---rename :: (Monad m) => StageTypecheckerPass m Subst -> TVar ->  StageTypecheckerPass m Subst
---rename s x =
---  do
---    newtv <- newtvar
---    s' <- s
---    return ((x, TV newtv):s')
+add_cons :: Constraint -> Constraint -> Constraint
+add_cons (C p1) (C p2)               = C (p1 ++ p2)
+add_cons (C p1) (Proj tvr p2)        = Proj tvr (p1 ++ p2)
+add_cons (Proj tvr p1) (C p2)        = Proj tvr (p1 ++ p2)
+add_cons (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)
 
 
---inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
---inst env x =
---    case mylookup env x of
---        Just ts -> case ts of
---            Mono t        ->
---                return t
---            Poly tvl c t  ->
---              do
---                s' <- foldl rename (return null_subst) tvl
---                c' <- apply s' c
---                t' <- apply s' t
---                add_constraint c'
---                return t'
---        Nothing ->
---          do
---            ntv <- newtvar
---            report_error "undeclared variable" (TV ntv)
---  where
---    mylookup :: Typo -> Var -> Maybe TypeScheme
---    mylookup [] y = Nothing
---    mylookup ((xx,tt):xs) y =
---          if xx == y then return tt
---                    else mylookup xs y
+tv_typo :: Typo -> [TVar]
+tv_typo = foldl f []
+  where
+    f z (v,ts) = z ++ tv ts
 
 
---gen :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
---gen env t =
---  do
---    c      <- use constr
---    constr .= projection c (fv t c env)
---    return  $ Poly (fv t c env) c t
---  where
---    fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
+add_constraint :: (Monad m) => Constraint -> StageTypecheckerPass m ()
+add_constraint c1 =
+    constr %= flip add_cons c1
 
 
---normalize :: (Monad m) =>  Type ->  StageTypecheckerPass m Type
---normalize a = do s <- use subst
---                 c <- use constr
---                 (s',c') <- cs (s,c)
---                 t <- apply s' a
---                 return_result s' c' t
+newtvar :: (Monad m) => StageTypecheckerPass m TVar
+newtvar = use nextTVar <* (nextTVar += 1)
+
+insert :: Typo -> (Var, TypeScheme) -> Typo
+insert a (x,t) = (x,t):a
 
 
---return_result :: (Monad m) =>  Subst -> Constraint -> Type ->  StageTypecheckerPass m Type
---return_result s c t =
---  do
---    subst  .= s
---    constr .= c
---    return t
+rename :: (Monad m) => StageTypecheckerPass m Subst -> TVar ->  StageTypecheckerPass m Subst
+rename s x =
+  do
+    newtv <- newtvar
+    s' <- s
+    return ((x, TV newtv):s')
 
 
---projection :: Constraint -> [TVar] -> Constraint
---projection _ _ = true_cons
+inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
+inst env x =
+    case mylookup env x of
+        Just ts -> case ts of
+            Mono t        ->
+                return t
+            Poly tvl c t  ->
+              do
+                s' <- foldl rename (return null_subst) tvl
+                c' <- apply s' c
+                t' <- apply s' t
+                add_constraint c'
+                return t'
+        Nothing ->
+          do
+            ntv <- newtvar
+            report_error "undeclared variable" (TV ntv)
+  where
+    mylookup :: Typo -> Var -> Maybe TypeScheme
+    mylookup [] y = Nothing
+    mylookup ((xx,tt):xs) y =
+          if xx == y then return tt
+                    else mylookup xs y
+
+
+gen :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
+gen env t =
+  do
+    c      <- use constr
+    constr .= projection c (fv t c env)
+    return  $ Poly (fv t c env) c t
+  where
+    fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
+
+
+normalize :: (Monad m) =>  Type ->  StageTypecheckerPass m Type
+normalize a = do s <- use subst
+                 c <- use constr
+                 (s',c') <- cs (s,c)
+                 t <- apply s' a
+                 return_result s' c' t
+
+
+return_result :: (Monad m) =>  Subst -> Constraint -> Type ->  StageTypecheckerPass m Type
+return_result s c t =
+  do
+    subst  .= s
+    constr .= c
+    return t
+
+
+projection :: Constraint -> [TVar] -> Constraint
+projection _ _ = true_cons
 

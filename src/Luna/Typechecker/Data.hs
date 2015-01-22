@@ -45,4 +45,4 @@ null_subst :: Subst
 null_subst = []
 
 init_typo :: [Typo]
-init_typo = []
+init_typo = [[]]
