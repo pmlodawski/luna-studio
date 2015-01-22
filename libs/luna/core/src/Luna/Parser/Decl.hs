@@ -20,6 +20,8 @@ import           Luna.Syntax.Arg          (Arg(Arg))
 import           Luna.Parser.Builder      (qualifiedPath)
 import           Luna.Syntax.Name         (tvname)
 import           Luna.Parser.Pattern      (argPattern)
+import qualified Luna.Syntax.Pragma       as Pragma
+import qualified Luna.System.Pragma.Store as Pragma
 
 import Luna.Parser.Struct (blockBeginFields, blockBodyOpt, blockBody', blockEnd, blockStart, blockBegin)
 
@@ -39,6 +41,28 @@ importTarget =   body Decl.ImpVar Tok.varOp
              <|> body Decl.ImpType Tok.typeIdent
              where body c p = c <$> p <*> ((Just <$ Tok.kwAs <*> p) <|> pure Nothing)
 
+
+----- pragmas ------
+
+pragma = do
+    Tok.pragma
+    pType <- pragmaTypes
+    name  <- pragmaName
+    Pragma.parseByName name
+    pure $ Decl.Pragma (pType name)
+
+pragmaEnable  = Pragma.Enable  <$ Tok.pragmaEnable
+pragmaDisable = Pragma.Disable <$ Tok.pragmaDisable
+pragmaPush    = Pragma.Push    <$ Tok.pragmaPush
+pragmaPop     = Pragma.Pop     <$ Tok.pragmaPop
+
+pragmaTypes = choice [ pragmaEnable, pragmaDisable, pragmaPush, pragmaPop ]
+
+pragmaName = do
+    names <- Pragma.pragmaNames
+    foldl (<|>) (fail "Undefined pragma name") $ fmap Tok.symbol names
+
+--switchPragma 
 
 ----- type aliases ------
 
@@ -66,13 +90,15 @@ sigVarOp = Tok.explicitName Tok.varIdent <|> Tok.operator
 funcSig = try multiSig <|> singleSig
 
 singleSig = NamePat Nothing <$> singleSigSegment <*> pure []
-multiSig  = NamePat <$> maybe arg <*> multiSigSegment <*> many multiSigSegment
+multiSig  = NamePat <$> maybe argS1 <*> multiSigSegment <*> many multiSigSegment
 
-singleSigSegment = Segment <$> Tok.varIdent <*> many arg
-multiSigSegment  = Segment <$> sigVarOp <*> many arg
+singleSigSegment = Segment <$> Tok.varIdent <*> many argS1
+multiSigSegment  = Segment <$> sigVarOp <*> many argS1
 
-arg = Arg <$> argPattern
-          <*> ((Just <$ Tok.assignment <*> stage1DefArg) <|> pure Nothing)
+arg e = Arg <$> argPattern
+            <*> ((Just <$ Tok.assignment <*> e) <|> pure Nothing)
+
+argS1 = arg stage1DefArg
 
 foreign p = Foreign <$ Tok.kwForeign <*> foreignTarget <*> p 
 
@@ -83,10 +109,10 @@ func =   Decl.Foreign <$> foreign (Decl.FFunc <$> funcDecl (char ':' *> (fromStr
      <|> Decl.Func    <$> funcDecl (char ':' *> stage1Body2)
 
 funcDecl body = Decl.FuncDecl <$  Tok.kwDef
-                         <*> extPath
-                         <*> funcSig
-                         <*> outType
-                         <*> body
+                              <*> extPath
+                              <*> funcSig
+                              <*> outType
+                              <*> body
     where extPath = ((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure []
           outType = (Just <$> try (Tok.arrow *> typic)) <|> pure Nothing
 

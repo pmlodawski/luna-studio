@@ -31,7 +31,8 @@ Library
                   lens,
                   flowbox-utils,
                   tuple,
-                  text
+                  text,
+                  containers
 
 
 

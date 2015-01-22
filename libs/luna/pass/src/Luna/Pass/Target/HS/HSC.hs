@@ -40,6 +40,7 @@ data HASTGen = HASTGen
 
 type PassResult m   = PassMonad () m
 type HExpr          = HExpr.Expr
+type HPragma        = HExpr.Pragma
 type HComment       = HComment.Comment
 
 ------------------------------------------------------------------------
@@ -113,7 +114,8 @@ instance Generator HExpr where
         HExpr.Lambda   signature expr         -> simple  $ "(\\" <> spaceJoin ("" : sgenmap signature) <> " -> " <> sgenerate expr <> ")"
         HExpr.LetBlock exprs result           -> simple  $ "let { " <> mjoin "; " (genmap exprs) <> " } in " <> generate result
         HExpr.LetExpr  expr                   -> simple  $ "let " <> generate expr
-        HExpr.Infix    name src dst           -> complex $ sgenerate src  <> " " <> convert name <> " " <> sgenerate dst
+        HExpr.OperatorE name src dst          -> complex $ sgenerate src  <> " " <> convert name <> " " <> sgenerate dst
+        HExpr.Infix     name src dst          -> complex $ sgenerate src  <> " `" <> convert name <> "` " <> sgenerate dst
         HExpr.NOP                             -> simple  $ "nop"
         HExpr.Assignment src dst              -> simple  $ generate src <> " = " <> generate dst
         HExpr.Arrow      src dst              -> simple  $ generate src <> " <- " <> generate dst
@@ -145,11 +147,18 @@ instance Generator HExpr where
         HExpr.AppT     src dst                -> app (generate src) (generate dst) --"(" <> generate src <> " (" <> generate dst <> ")" <> ")" -- for literals, e.g. simple (1 :: Int)
         HExpr.AppE     src dst                -> app (generate src) (generate dst) --"(" <> generate src <> " " <> generate dst <> ")"
         HExpr.AppP     src dst                -> app (generate src) (generate dst)
+        HExpr.PragmaE  name items             -> simple $ appPragma (fromString name) where
+                                                     appPragma = if length items == 0 then id
+                                                                                      else (<> ("(" <> sepjoin (map generate items) <> ")"))
         HExpr.Tuple    items                  -> if length items == 1 then app (simple "OneTuple") (generate $ head items)
-                                                                      else simple $ "(" <> sepjoin (map sgenerate items) <> ")"
-
+                                                                      else simple $ "(" <> sepjoin (map generate items) <> ")"
+        HExpr.Pragma   p                      -> generate p
         where sepjoin     = mjoin ", "
 
+
+instance Generator HPragma where
+    generate p = simple $ case p of
+        HExpr.Include name -> "#include \"" <> fromString name <> "\""
 
 instance Generator HComment where
     generate comment = simple $ case comment of

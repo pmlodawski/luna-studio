@@ -16,7 +16,7 @@ import Luna.Syntax.Label (Label)
 
 
 
-data Arg  a v = Arg { _pat :: LPat a, _val :: Maybe v } deriving (Show, Eq, Generic, Read)
+data Arg  a v = Arg { _pat :: LPat a, _val :: Maybe v } deriving (Show, Generic)
 type LArg a v = Label a (Arg a v)
 
 

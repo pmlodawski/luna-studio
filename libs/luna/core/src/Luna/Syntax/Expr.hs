@@ -44,31 +44,31 @@ type SubDecl a v = Label a (Decl a (LExpr a v))
 type ArgName = Text 
 
 data Expr a v
-    = Lambda      { _inputs  :: [ExprArg a v] , _output    :: LType a        , _body   :: [LExpr a v] }
-    | RecUpd      { _vname   :: VNameP        , _fieldUpds :: [FieldUpd a v]                          }
-    | Case        { _expr    :: LExpr a v     , _match     :: [LMatch a v]                            }
-    | Typed       { _cls     :: LType a       , _expr      :: LExpr a v                               }
-    | Assignment  { _dst     :: LPat  a       , _src       :: LExpr a v                               }
-    | Accessor    { _acc     :: NameBaseP     , _src       :: LExpr a v                               }
-    | Ref         { _ref     :: LExpr a v                                                             }
-    | Tuple       { _items   :: [LExpr a v]                                                           }
-    | Grouped     { _expr    :: LExpr a v                                                             }
-    | Cons        { _cname   :: CNameP                                                                }
-    | Decl        { _decl    :: SubDecl a v                                                           }
-    | Lit         { _lit     :: LLit a                                                                }
-    | Native      { _native  :: Native (LExpr a v)                                                    }
-    | Var         { _ident   :: Variable v                                                            }
+    = Lambda      { _inputs  :: [ExprArg a v] , _output    :: Maybe (LType a) , _body   :: [LExpr a v] }
+    | RecUpd      { _vname   :: VNameP        , _fieldUpds :: [FieldUpd a v]                           }
+    | Case        { _expr    :: LExpr a v     , _match     :: [LMatch a v]                             }
+    | Typed       { _cls     :: LType a       , _expr      :: LExpr a v                                }
+    | Assignment  { _dst     :: LPat  a       , _src       :: LExpr a v                                }
+    | Accessor    { _acc     :: NameBaseP     , _src       :: LExpr a v                                }
+    | Ref         { _ref     :: LExpr a v                                                              }
+    | Tuple       { _items   :: [LExpr a v]                                                            }
+    | Grouped     { _expr    :: LExpr a v                                                              }
+    | Cons        { _cname   :: CNameP                                                                 }
+    | Decl        { _decl    :: SubDecl a v                                                            }
+    | Lit         { _lit     :: LLit a                                                                 }
+    | Native      { _native  :: Native (LExpr a v)                                                     }
+    | Var         { _ident   :: Variable v                                                             }
     | List        (List (LExpr a v))
     | App         (ExprApp a v)
     | Wildcard
-    deriving (Show, Eq, Generic, Read)
+    deriving (Show, Generic)
 
 
-data FieldUpd a v = FieldUpd { _selector :: Selector, _updExpr :: LExpr a v } deriving (Show, Eq, Generic, Read)
+data FieldUpd a v = FieldUpd { _selector :: Selector, _updExpr :: LExpr a v } deriving (Show, Generic)
 
-data AppArg e = AppArg (Maybe ArgName) e deriving (Show, Eq, Generic, Read)
+data AppArg e = AppArg (Maybe ArgName) e deriving (Show, Generic)
 
-data Variable v = Variable VNameP v deriving (Show, Eq, Generic, Read)
+data Variable v = Variable VNameP v deriving (Show, Generic)
 
 type ExprApp a v = NamePat (LExpr a v) (AppArg (LExpr a v))
 
@@ -79,17 +79,17 @@ unnamed = AppArg Nothing
 
 
 
-data Match  a v = Match { _matchPat :: LPat a, _matchBody :: [LExpr a v] } deriving (Show, Eq, Generic, Read)
+data Match  a v = Match { _matchPat :: LPat a, _matchBody :: [LExpr a v] } deriving (Show, Generic)
 type LMatch a v = Label a (Match a v)
 
 
 data List e = SeqList [e]
             | RangeList (Sequence e)
-            deriving (Show, Eq, Generic, Read)
+            deriving (Show, Generic)
 
 type LList a e = Label a (List e)
 
 data Sequence a = Linear    a   (Maybe a)
                 | Geometric a a (Maybe a)
-                deriving (Show, Eq, Generic, Read)
+                deriving (Show, Generic)
 

@@ -34,7 +34,6 @@ data ParserState= ParserState { _info          :: ASTInfo
                               , _sourceMap     :: SourceMap
                               , _namespace     :: Namespace
                               , _adhocReserved :: [Text]
-                              --, _comments      :: IDMap [Comment]
                               , _modPath       :: QualPath
                               } deriving (Show)
 

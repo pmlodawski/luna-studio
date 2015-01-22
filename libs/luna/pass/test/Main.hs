@@ -43,6 +43,7 @@ import Data.Text.Lazy (unpack)
 import           Flowbox.Text.Show.Hs                                          (hsShow)
 
 import Luna.System.Session as Session
+import qualified Luna.System.Pragma.Store as Pragma
 
 
 header txt = "\n-------- " <> txt <> " --------"
@@ -55,27 +56,29 @@ main = do
     let path = args !! 0
         src  = Source "Main" (File $ fromString path)
 
-    Session.defrunT $ do
+    Session.runT $ do
 
         Parser.init
 
         result <- runEitherT $ do
             printHeader "Stage1"
             (ast, astinfo) <- Pass.run1_ Stage1.pass src
+            ppPrint ast
 
             printHeader "SA"
-            sa              <- Pass.run1_ SA.pass ast
+            sa             <- Pass.run1_ SA.pass ast
             ppPrint sa
 
             printHeader "Stage2"
             (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
-            
+            ppPrint ast
+
             printHeader "ImplSelf"
             (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
             ppPrint ast
 
             printHeader "SA"
-            sa              <- Pass.run1_ SA.pass ast
+            sa             <- Pass.run1_ SA.pass ast
             ppPrint sa
 
             printHeader "ImplScopes"
@@ -90,16 +93,17 @@ main = do
             --ast             <- Pass.run1_ Hash.pass ast
 
             printHeader "SSA"
-            ast             <- Pass.run1_ SSA.pass ast
+            ast            <- Pass.run1_ SSA.pass ast
             ppPrint ast
 
             printHeader "HAST"
-            hast             <- Pass.run1_ HASTGen.pass ast
+            hast           <- Pass.run1_ HASTGen.pass ast
             ppPrint hast
 
             printHeader "HSC"
-            hsc              <- Pass.run1_ HSC.pass hast
+            hsc            <- Pass.run1_ HSC.pass hast
             putStrLn (hsShow $ unpack hsc)
+            return ()
 
 
         case result of

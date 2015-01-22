@@ -16,8 +16,18 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.Maybe (fromJust)
 import Control.Monad (liftM)
 
-data HideType where
-  HideType :: a -> HideType
+class HideType a c where
+    hideType   :: a -> c
+    revealType :: c -> a
 
-unsafeFromHideType :: HideType -> a
-unsafeFromHideType (HideType x) = unsafeCoerce x
+data Simple where
+    Simple :: a -> Simple
+
+instance Show Simple where
+    show _ = "Hidden"
+
+instance HideType a Simple where
+    hideType              = Simple
+    revealType (Simple x) = unsafeCoerce x
+
+

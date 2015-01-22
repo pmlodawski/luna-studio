@@ -68,55 +68,45 @@ getCtx = do
 withCtx :: GenStateM m => QualPath -> m a -> m a
 withCtx name m = pushCtx name *> m <* popCtx 
 
-
 setModule :: GenStateM m => HExpr -> m ()
 setModule m = modify (mod .~ m)
-
 
 getModule :: GenStateM m => m HExpr
 getModule = view mod <$> get
 
+withModule :: GenStateM m => (HExpr -> HExpr) -> m ()
+withModule f = do
+    m <- getModule
+    setModule $ f m
+
+appendModuleBody :: GenStateM m => HExpr -> m ()
+appendModuleBody a = withModule (\m -> m { Module._body = Module._body m ++ [a] } )
 
 addDataType :: GenStateM m => HExpr -> m ()
-addDataType dt = do
-    m <- getModule
-    setModule $ m { Module._body = Module._body m ++ [dt]}
-
+addDataType = appendModuleBody
 
 addInstance :: GenStateM m => HExpr -> m ()
-addInstance inst = do
-    m <- getModule
-    setModule $ m { Module._body = Module._body m ++ [inst]}
-
+addInstance = appendModuleBody
 
 addNewType :: GenStateM m => HExpr -> m ()
-addNewType dt = do
-    m <- getModule
-    setModule $ m { Module._body = Module._body m ++ [dt] }
-
+addNewType = appendModuleBody
 
 addTypeAlias :: GenStateM m => HExpr -> m ()
-addTypeAlias el = do
-    m <- getModule
-    setModule $ m { Module._body = Module._body m ++ [el] }
-
+addTypeAlias = appendModuleBody
 
 addTypeDef :: GenStateM m => HExpr -> m ()
-addTypeDef el = do
-    m <- getModule
-    setModule $ m { Module._body = Module._body m ++ [el] }
-
+addTypeDef = appendModuleBody
 
 addImport :: GenStateM m => HExpr -> m ()
 addImport imp = do
     m <- getModule
     setModule $ m { Module._imports = imp : Module._imports m }
 
-
 regFunc :: GenStateM m => HExpr -> m ()
-regFunc fun = do
-    m <- getModule
-    setModule $ m { Module._body = Module._body m ++ [fun] }
+regFunc = appendModuleBody
+
+regPragma :: GenStateM m => HExpr -> m ()
+regPragma = appendModuleBody
 
 addComment :: GenStateM m => Comment -> m ()
 addComment c = do
@@ -124,12 +114,8 @@ addComment c = do
     m <- getModule
     setModule $ m { Module._body = Module._body m ++ [expr] }
 
-
 regTHExpr :: GenStateM m => HExpr -> m ()
-regTHExpr e = do
-    m <- getModule
-    setModule $ m { Module._body = Module._body m ++ [e] }
-
+regTHExpr = appendModuleBody
 
 
 instance Default GenState where

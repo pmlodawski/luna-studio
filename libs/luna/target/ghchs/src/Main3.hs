@@ -26,9 +26,6 @@ import Control.PolyMonad
 import Data.TupleList
 
 
-ofType :: a -> a -> a
-ofType = const
-
 u = undefined
 
 p = Proxy
@@ -86,7 +83,7 @@ cons_ModuleVector = member (Proxy::Proxy "ModuleVector") (val Cls_ModuleVector)
 ---
 data Cls_Vector = Cls_Vector deriving (Show, Eq, Typeable)
 data Vector a = Vector a a a deriving (Show, Eq, Typeable)
-generateFieldAccessors 'Vector [Just "x", Just "y", Just "z"]
+generateFieldAccessors ''Vector [('Vector, [Just "x", Just "y", Just "z"])]
 
 memSig_Cls_Vector_Vector = (mkArg :: NParam "self") // (mkArg (val (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (val 0) :: NDParam "y" (Value Pure Safe Int)) // (mkArg (val 0) :: NDParam "z" (Value Pure Safe Int)) // ()
 memDef_Cls_Vector_Vector = liftCons3 Vector
@@ -102,13 +99,13 @@ cons_Vector = member (Proxy::Proxy "Vector") (val Cls_Vector)
 
 
 -----
-memSig_Vector_x = (mkArg :: NParam "self") // ()
-memDef_Vector_x (self,()) = liftF1 fieldGetter_Vector_Vector_x self
+--memSig_Vector_x = (mkArg :: NParam "self") // ()
+--memDef_Vector_x (self,()) = liftF1 fieldGetter_Vector_x self
 registerMethod ''Vector "x"
 
 -----
 memSig_Vector_x_setter = (mkArg :: NParam "self") // (mkArg :: NParam "x") // ()
-memDef_Vector_x_setter (self,(a,())) = liftF2 fieldSetter_Vector_Vector_x a self
+memDef_Vector_x_setter (self,(a,())) = liftF2 fieldSetter_Vector_x self a
 registerMethod ''Vector "x_setter"
 
 ---
@@ -245,7 +242,7 @@ mymain (self,()) = do
 
     let lam1 = mkLam (\x -> v2) ((mkArg :: NParam "self") // ())
 
-    print_DBG $ call $ appNext (val 1) lam1
+    print_DBG $ call $ appNext (val (1::Int)) lam1
 
     print_DBG v2
 

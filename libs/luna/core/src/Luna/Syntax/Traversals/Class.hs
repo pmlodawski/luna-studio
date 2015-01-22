@@ -40,6 +40,8 @@ import           Luna.Syntax.Name.Pattern (NamePat(NamePat), Segment(Segment), S
 import qualified Luna.Syntax.Name.Pattern as Pattern
 import           Luna.Syntax.Foreign      (Foreign(Foreign))
 import qualified Luna.Syntax.Foreign      as Foreign
+import           Luna.Syntax.Pragma       (Pragma)
+import qualified Luna.Syntax.Pragma       as Pragma
 
 import Data.Text.Lazy           (Text)
 
@@ -165,6 +167,7 @@ instance ( Traversal base m (LDecl a e)          (LDecl a' e')
          , Traversal base m (Decl.DataDecl a e) (Decl.DataDecl a' e')
          , Traversal base m (Decl.FuncDecl a e [e]) (Decl.FuncDecl a' e' [e'])
          , Traversal base m (Foreign (Decl.ForeignDecl a e)) (Foreign (Decl.ForeignDecl a' e'))
+         , Traversal base m Pragma Pragma
          ) => DefaultTraversal base m (Decl a e) (Decl a' e') where
     defaultTraverseM b = \case
         Decl.Data        ddecl                 -> Decl.Data        <$> traverseM b ddecl
@@ -173,6 +176,7 @@ instance ( Traversal base m (LDecl a e)          (LDecl a' e')
         Decl.TpAls       dst src               -> Decl.TpAls       <$> traverseM b dst  <*> traverseM b src
         Decl.TpWrp       dst src               -> Decl.TpWrp       <$> traverseM b dst  <*> traverseM b src
         Decl.Foreign     fdecl                 -> Decl.Foreign     <$> traverseM b fdecl
+        Decl.Pragma      pragma                -> Decl.Pragma      <$> traverseM b pragma
 
 
 instance Traversal base m (Decl.LField a e) (Decl.LField a' e') => DefaultTraversal base m (Decl.Cons a e) (Decl.Cons a' e') where
@@ -208,6 +212,10 @@ instance ( Traversal base m (Decl.DataDecl a e) (Decl.DataDecl a' e')
         Decl.FData ddecl -> Decl.FData <$> traverseM b ddecl
         Decl.FFunc fdecl -> Decl.FFunc <$> traverseM b fdecl
 
+-- ----- Pragma -----
+
+instance DefaultTraversal base m Pragma Pragma where
+    defaultTraverseM _ = pure
 
 -- ----- Foreign -----
 

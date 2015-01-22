@@ -23,7 +23,7 @@ data Type a
     | List     { _item     :: LType a                            }
     | Con      { _segments :: [TNameP]                           }
     | Wildcard 
-    deriving (Show, Eq, Ord, Generic, Read)
+    deriving (Show, Generic)
 
 
 type LType a = Label a (Type a)

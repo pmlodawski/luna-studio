@@ -12,11 +12,7 @@
 module Flowbox.Prelude(
     module Flowbox.Prelude,
     module Prelude,
-    module X,
-    void,
-    when,
-    unless,
-    lift
+    module X
 ) where
 
 import           Control.Applicative       as X
@@ -34,11 +30,9 @@ import           Data.Text.Class           as X (ToText(toText), FromText(fromTe
 import           Data.Text.Lazy            as X (Text)
 import           Data.Foldable             as X (Foldable, traverse_)
 import           Data.Typeable             as X (Typeable)
+import           Control.Monad             as X (MonadPlus, mplus, mzero, unless, void, when)
+import           Control.Monad.Trans       as X (MonadTrans, lift)
 import           Data.Convertible.Instances.Missing as X
-import           Data.Default.Instances.Missing     as X
-import           Control.Monad             (unless, void, when)
-import           Control.Monad.Trans       (lift)
-import           Control.Monad.Trans.Class (MonadTrans)
 import           Data.Foldable             (forM_)
 import qualified Data.Traversable          as Traversable
 import           Text.Show.Pretty          (ppShow)
