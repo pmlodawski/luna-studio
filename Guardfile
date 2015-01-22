@@ -26,8 +26,8 @@ $output       = [
                   # " 3.1. Stage2     : ast3",
                   # " 3.2. Stage2     : astinfo3",
                   # " 4.1. ImplSelf   : ast4",
-                  " 4.2. ImplSelf   : astinfo4",
-                  " 5.   SA         : sa5",
+                  # " 4.2. ImplSelf   : astinfo4",
+                  # " 5.   SA         : sa5",
                   " 6.   PTyChk     : constraints",
                   # " 7.1. ImplScopes : ast6",
                   # " 7.2. ImplScopes : astinfo6",
@@ -121,7 +121,7 @@ def haskell_action trigger
       command_interactive "../../../dist/bin/libs/luna-typechecker"
     end
 
-    section "tests", "rm -f luna-typechecker-tests.tix #{$output_dir}*", :condition => $run_tests do
+    section "tests", "rm -f luna-typechecker-tests.tix #{$output_dir}*", :condition => $run_tests, :noexception => true do
       command_interactive "../../../dist/bin/libs/luna-typechecker-tests test/resources/Maintest.luna"
     end
 
