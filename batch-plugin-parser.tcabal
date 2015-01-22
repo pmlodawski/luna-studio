@@ -22,6 +22,7 @@ Executable parser
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
+                    blaze-markup < 0.6.3,
                     bytestring,
                     containers,
                     either,
