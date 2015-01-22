@@ -266,6 +266,22 @@ onEachChannel f = Image.map $ View.map f
 --          domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
 --          process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
+type Matte2 a = ( VPS (Maybe (Mask2 a))
+                , VPS (Maybe Channel)
+                )
+vectorMatteLuna :: Mask2 Double -> Matte.Matte Double
+vectorMatteLuna mask = Matte.VectorMatte $ convertMask mask
+
+imageMatteLuna :: Channel -> Matte.Matte Double
+imageMatteLuna chan@(ChannelFloat _ _) = Matte.imageMatteDouble chan
+
+-- should be changed to more generic type just after we figure out how to deal with integer masks
+convertMatte :: Matte2 Double -> Matte.Matte Double
+convertMatte (unpackLunaVar -> a, unpackLunaVar -> b) =
+  case (a,b) of
+    (Just mask, Nothing) -> vectorMatteLuna mask
+    _ -> error "Not implemented"
+
 unpackAcc :: (A.Exp Int,A.Exp Int) -> (Int,Int)
 unpackAcc (x,y) = 
   let
@@ -325,7 +341,14 @@ offsetMatteLuna (fmap variable -> Color.RGBA r g b a) matte img =
                                  (applyMatteFloat (offset g) m)
                                  (applyMatteFloat (offset b) m)
                                  (applyMatteFloat (offset a) m) img
+-- playground
+offsetMatteLuna' :: Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
+offsetMatteLuna' color (Just matte) img =
+  offsetMatteLuna color (Just (convertMatte matte)) img
+offsetMatteLuna' color Nothing img = 
+  offsetLuna color img
 
+-- playground
 contrastMatteLuna :: Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
 contrastMatteLuna (fmap variable -> Color.RGBA r g b a) matte img = 
   case matte of

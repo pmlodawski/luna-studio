@@ -105,6 +105,9 @@ def Double.acc:
 def Double.floor:
     ```liftF1 floor #{self}```
 
+def Double.- a:
+    ```liftF2 (-) #{self} #{a}```
+
 # def Float.floor:
 #     ```liftF1 floor #{self}```
 
@@ -214,7 +217,6 @@ def getValueAtCurve curve x:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```
 
 
-
 #
 #                COLOR
 #
@@ -270,6 +272,9 @@ def Image.view name:
 
 def Image.getChannel viewName channelName:
     ```liftF3 getChannelLuna #{viewName} #{channelName} #{self}```
+
+# def Image.retrieveMask:
+
 
 # def Image.insertChannel viewName channel:
 #     ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
@@ -333,9 +338,6 @@ def Image.gammaFromLinear gamma:
 def Image.clamp thresholds clamps:
     ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
 
-def Image.offsetMatte value matte:
-    ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
-
 # def Image.contrastMatte value matte:
 #     ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
 
@@ -378,7 +380,7 @@ def Image.gamma val:
     ```liftF2 gammaLuna #{val} #{self}```
 
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
-    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{self}```
+    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
                        shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
@@ -633,6 +635,18 @@ def Image.differenceKey offset gain background:
     ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
 
 
+#
+#                MATTE
+#
+
+def imageMatte img:
+    (Nothing, Just img)
+
+def vectorMatte mask:
+    (Just mask, Nothing)
+
+def Image.offsetMatte value matte:
+    ```liftF3 offsetMatteLuna' #{value} #{matte} #{self}```
 
 #
 #                VIEW
@@ -668,6 +682,13 @@ def testCC a:
 #
 
 def main:
+
+    points = [ controlPoint (point 212.0 209.0) Nothing (Just $ point (211.0.-212.0) (114.0.-209.0))
+             , controlPoint (point 338.0 210.0) (Just $ point (329.0.-338.0) (109.0.-210.0)) (Just $ point (450.0.-338.0) (211.0.-210.0))
+             , controlPoint (point 343.0 330.0) (Just $ point (456.0.-343.0) (331.0.-330.0)) Nothing
+             ]
+    m = mask (path True points) Nothing # second list is empty if the paths are the same
+
     print "test"
     p0 = point 0.0 1.0
     p1 = point 1.0 1.0
@@ -680,14 +701,19 @@ def main:
 
     h = linearHandleGUI
 
-    c = curveGUI [controlPoint p0 h h, controlPoint p1 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
-    c2 = curveGUI [controlPoint p0 h h, controlPoint p6 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
+    c = curveGUI [controlPointGUI p0 h h, controlPointGUI p1 h h, controlPointGUI p2 h h, controlPointGUI p3 h h, controlPointGUI p4 h h, controlPointGUI p5 h h]
+    c2 = curveGUI [controlPointGUI p0 h h, controlPointGUI p6 h h, controlPointGUI p2 h h, controlPointGUI p3 h h, controlPointGUI p4 h h, controlPointGUI p5 h h]
 
     black = RGBA 0.0 0.0 0.0 1.0
     white = RGBA 1.0 1.0 1.0 1.0
+
     # gray  = RGBA 0.5 0.5 0.5 1.0
     # lena = constant 640 480 gray
     lena = load "./lena.png"
+    
+    randomColor = RGBA 0.2 0.5 0.1 0.7
+    offsetLena = lena.offsetMatte randomColor (Nothing)
+    offsetLena.save "./offsetLena.png"
 
     # lena = lena.hueCorrect c c c c c c2 c c
 
