@@ -4,19 +4,23 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE ViewPatterns #-}
+
 module Flowbox.Math.Function.CurveGUI where
 
-import           Flowbox.Prelude as P
+import qualified Data.Array.Accelerate     as A
+import qualified Data.Map                  as Map
+import           Math.Coordinate.Cartesian (Point2(..))
+
+import           Flowbox.Geom2D.CubicBezier               as CubicBezier
+import           Flowbox.Geom2D.CubicBezier.Solve         as CubicBezier
 import           Flowbox.Math.Function.Accelerate.BSpline
-import           Math.Coordinate.Cartesian                   (Point2(..))
-import qualified Data.Array.Accelerate as A
-import qualified Flowbox.Math.Function.Model as Model
-import qualified Data.Map as Map
+import qualified Flowbox.Math.Function.Model              as Model
+import           Flowbox.Prelude                          as P
 
 type Weight = Double
 type Length = Double
 type Angle  = Double
-data Direction = Up | Down deriving(Show, Eq)
 
 newtype CurvesCollection x = CurvesCollection { _curves :: [(x, Curve x)] } deriving (Show)
 
@@ -137,7 +141,25 @@ convertToNodeList l =
 
 
 valueAtSpline :: Curve Double -> Double -> Double
-valueAtSpline (BezierCurve vertices') x = x --foldr
---    where vertices = convertToNodeList vertices'
-          --foldr :: (a -> b -> b) -> b -> [a] -> b
-
+valueAtSpline (BezierCurve (convertToNodeList -> vertices')) x =
+    if vLength < 1
+        then 0
+        else if x < xL
+            then lineValue xL yL xHiL yHiL
+            else findValue vertices'
+    where vLength  = P.length vertices'
+          BSplineNode (Point2 xL yL) (Point2 xHiL yHiL) _ = P.head vertices'
+          lineValue xA yA xB yB = let
+                  a = (yB - yA) / (xB - xA)
+                  b = yA - a * xA
+              in if xA == xB
+                  then yA
+                  else a * x + b
+          findValue [BSplineNode (Point2 xR yR) _ (Point2 xHoR yHoR)] = lineValue xR yR xHoR yHoR
+          findValue (a:b:xs) = let
+                  BSplineNode pA _ hOutA = a
+                  BSplineNode pB@(Point2 xB _) hInB _ = b
+                  curve = CubicBezier pA hOutA hInB pB
+              in if x < xB
+                  then CubicBezier.valueAtX 10 0.0001 curve x
+                  else findValue $ b:xs

@@ -90,9 +90,6 @@ serializeChanFromView v x mode = case join . hush . V.get v $ x of
     where serializeChan chan m = case chan of
               Chan.ChannelFloat     _ (Chan.asMatrixData -> Chan.MatrixData mat) -> serialize mat m
               Chan.ChannelInt       _ (Chan.asMatrixData -> Chan.MatrixData mat) -> serialize mat m
-              Chan.ChannelBit       _ (Chan.asMatrixData -> Chan.MatrixData mat) -> serialize mat m
-              --gen@I.ChannelShader{}                               -> serializeChan (I.compute serializationBackend defaultSampler gen) mode
-              --INFO[KM]: the above line is probably obsolete since serialize mat will serialize the matrix, although it might be necessary to update some `compute` functions to handle the computation of the Shaders
 
 instance Serializable V.View ViewData.ViewData where
     serialize v mode = do
