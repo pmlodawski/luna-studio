@@ -140,11 +140,11 @@ appendMulti chans viewName img = insert view' img
           view  = fromMaybe (View.empty viewName) $ hush $ lookup viewName img
 
 appendToPrimary :: Channel -> Image -> Image
-appendToPrimary chan img = insert (View.append chan view) img
+appendToPrimary chan img = insertPrimary (View.append chan view) img
     where view = fromMaybe View.emptyDefault (img ^. primaryView)
 
 appendMultiToPrimary :: [Channel] -> Image -> Image
-appendMultiToPrimary chans img = insert view' img
+appendMultiToPrimary chans img = insertPrimary view' img
     where view' = foldr View.append view chans
           view = fromMaybe View.emptyDefault (img ^. primaryView)
 

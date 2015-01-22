@@ -102,6 +102,12 @@ def Int.dec:
 def Double.acc:
     ```liftF1 variable #{self}```
 
+def Double.floor:
+    ```liftF1 floor #{self}```
+
+# def Float.floor:
+#     ```liftF1 floor #{self}```
+
 
 
 #
@@ -184,6 +190,11 @@ def noImgMask:
 #                MATH and such
 #
 
+# alias Point2F = Point2 Float
+# alias CurveGUI = [ControlPointGUI]
+# alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
+# alias HandleGUI = (Int, Float, Float)
+
 def curveGUI vertices:
     vertices
 
@@ -194,10 +205,10 @@ def nonLinearHandleGUI weight angle:
     (0, weight, angle)
 
 def verticalHandleGUI length:
-    (1, length, 0)
+    (1, length, 0.0)
 
 def linearHandleGUI:
-    (3, 0, 0)
+    (2, 0.0, 0.0)
 
 def getValueAtCurve curve x:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```
@@ -235,6 +246,11 @@ class ```Gamma```:
 #
 #                IMAGE
 #
+
+# class ```Image```
+
+def emptyImage:
+    ```liftF0 Image.empty```
 
 def load path:
     ```autoLift1 realReadLuna #{path}```
@@ -421,7 +437,7 @@ def Image.posterize colors:
 #     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
 def Image.blur kernelSize:
-    ```liftF2 gaussianLuna #{kernelSize} #{self}```
+    ```liftF2 blurLuna #{kernelSize} #{self}```
 
 # def Image.laplacian kernelSize centerVal sideVal:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
@@ -433,8 +449,12 @@ def Image.blur kernelSize:
 
 # def Image.translate boundary x y:
 #     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-def Image.translate x y:
-    ```liftF3 translateLuna #{x} #{y} #{self}```
+
+class ```V2``` a:
+    x, y :: a
+
+def Image.translate vec:
+    ```liftF2 translateLuna #{vec} #{self}```
 
 # def Image.scaleTo boundary x y:
 #     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
@@ -449,8 +469,8 @@ def Image.translate x y:
 # def Image.scale x y:
 #     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
-def Image.transform trans:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform trans:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
@@ -658,10 +678,10 @@ def main:
 
     p6 = point 1.0 2.0
 
-    h = handle 2 0.0 0.0
+    h = linearHandleGUI
 
-    c = curve [controlPoint p0 h h, controlPoint p1 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
-    c2 = curve [controlPoint p0 h h, controlPoint p6 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
+    c = curveGUI [controlPoint p0 h h, controlPoint p1 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
+    c2 = curveGUI [controlPoint p0 h h, controlPoint p6 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
 
     black = RGBA 0.0 0.0 0.0 1.0
     white = RGBA 1.0 1.0 1.0 1.0
@@ -671,8 +691,11 @@ def main:
 
     # lena = lena.hueCorrect c c c c c c2 c c
 
-    translated = lena.translate (-50) (100)
-    translated.save "./out.png"
+    out = lena.blur 20
+    # out.save "./out.png"
+
+    f = 0.4
+    print f.floor
 
 
 
