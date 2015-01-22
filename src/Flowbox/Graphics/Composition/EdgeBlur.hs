@@ -26,13 +26,10 @@ import Math.Coordinate.Cartesian (Point2(..))
 
 
 applyKernel :: (IsNum a, Elt a) => Matrix2 a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
-applyKernel kernel img = 
-    let kernelN = id M.>-> id $ kernel
-        p = pipe A.Clamp
-        process x = id `p` F.filter 1 kernelN `p` id $ x
-    in process img
-
-
+applyKernel kernel img = process img where
+    kernelN = id M.>-> id $ kernel
+    p = pipe A.Clamp
+    process x = id `p` F.filter 1 kernelN `p` id $ x
 
   --convolve mode kernel
   --  where fi = fmap A.fromIntegral
@@ -47,9 +44,9 @@ mixImages edges first second = (+) <$>
 
 
 detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$>
-                       (fmap abs $ applyKernel (M.transpose (sobel :: Matrix2 Double)) img) 
+                       (fmap abs $ applyKernel (M.transpose (sobel {-- :: Matrix2 Double --} )) img) 
                        <*> 
-                       (fmap abs $ applyKernel (sobel :: Matrix2 Double) img)
+                       (fmap abs $ applyKernel (sobel {-- :: Matrix2 Double --} ) img)
 
 --processImage img = (blur n sigma) (detectEdges img)
 
@@ -67,20 +64,19 @@ detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$>
 
 
 edgeBlur :: BlurType -> Exp Int -> Exp Double -> Matrix2 Double -> [Matrix2 Double] -> [Matrix2 Double]
-edgeBlur blurType size edgeMult matteCh chs =
-  let maskEdges =  edges edgeMult  (fromMatrix Clamp matteCh)
-      blurFunc  = maskBlur blurType size maskEdges --matteCh
-  in fmap ( rasterizer . blurFunc . (fromMatrix Clamp) ) chs
+edgeBlur blurType size edgeMult matteCh chs = fmap ( rasterizer . blurFunc . (fromMatrix Clamp) ) chs where
+    maskEdges =  edges edgeMult  (fromMatrix Clamp matteCh)
+    blurFunc  = maskBlur blurType size maskEdges --matteCh 
 
 
 --edges :: Exp Double -> Matrix2 Double -> CartesianShader (Exp Double) (Exp Double)
 
-edges edgeMult channel = 
-  let imgShader = channel
-      edges     = detectEdges edgeMult imgShader
-      bigEdges  = dilate (Grid 5 5) $ erode (Grid 3 3) edges
-      blurFunc  = blurChoice Gauss 15
-  in blurFunc bigEdges
+edges edgeMult channel = blurFunc bigEdges where
+    imgShader = channel
+    edges     = detectEdges edgeMult imgShader
+    bigEdges  = dilate (Grid 5 5) $ erode (Grid 3 3) edges
+    blurFunc  = blurChoice Gauss 15
+
 
     --blurChoice Gauss 15 $ nearest $ dilate (Grid 5 5) $ erode (Grid 3 3) $ monosampler $ detectEdges edgeMult $ nearest $ fromMatrix Clamp channel
 
@@ -102,24 +98,22 @@ edges edgeMult channel =
 --      blurF     = maskBlur sigma size maskEdges
 --    in fmap blurF chs
 
-maskBlur :: BlurType -> Exp Int -> DiscreteShader (Exp Double) -> DiscreteShader (Exp Double) -> DiscreteShader (Exp Double)
-maskBlur blurType size mask img = 
-  let imgShader = img
+maskBlur :: (Elt a, IsFloating a) => BlurType -> Exp Int -> DiscreteShader (Exp a) -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
+maskBlur blurType size mask img = mixImages mask blured imgShader where
+    imgShader = img
       --maskEdges = mask --blur 15 5.0 $  nearest $  dilate (Grid 10 10) $ {-- erode (Grid 3 3) $ --} monosampler $  detectEdges $  nearest $ fromMatrix Clamp mask
-      blurFunc  = blurChoice blurType
-      blured    = blurFunc size imgShader
-      result    = mixImages mask blured imgShader
-  in result
-
-blurChoice :: BlurType -> Exp Int -> DiscreteShader (Exp Double) -> DiscreteShader (Exp Double)
+    blurFunc  = blurChoice blurType
+    blured    = blurFunc size imgShader
+    
+blurChoice :: (Elt a, IsFloating a) => BlurType -> Exp Int -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 blurChoice blurType = case blurType of
-  Gauss     -> blur $ gauss 1.0
+  Gauss     -> blur $ gauss 1
   Box       -> blur   box
   Triangle  -> blur   triangle
-  Quadratic -> undefined
+  -- Quadratic -> undefined
 
 
-data BlurType = Gauss | Box | Triangle | Quadratic
+data BlurType = Gauss | Box | Triangle -- | Quadratic
 
 --edgeBlur' :: Exp Double -> Exp Int -> CartesianShader (Exp Double) (Exp Double) -> Matrix2 Double -> Matrix2 Double
 --edgeBlur' sigma size mask img = 
@@ -146,13 +140,12 @@ data BlurType = Gauss | Box | Triangle | Quadratic
 --blur :: Exp Int -> Exp Double -> CartesianShader (Exp Double) (Exp Double) -> CartesianShader (Exp Double) (Exp Double)
 --blur size sigma img = nearest $ F.filter 1 (blurKernelV size sigma) $ F.filter 1 (blurKernelV size sigma) $ monosampler img
 
-blur :: Filter (Exp Double) -> Exp Int -> CartesianShader (Exp Int) (Exp Double) -> CartesianShader (Exp Int) (Exp Double)
-blur kernel kernSize img = 
-  let hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable kernSize)) $ kernel
-      vmat = id M.>-> normalize $ toMatrix (Grid (variable kernSize) 1) $ kernel
-      p = pipe A.Clamp
-      process x = id `p` F.filter 1 vmat `p` F.filter 1 hmat `p` id $ x
-  in process img
+blur :: (IsFloating a, Elt a) => Filter (Exp a) -> Exp Int -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
+blur kernel kernSize img = process img where
+    hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable kernSize)) $ kernel
+    vmat = id M.>-> normalize $ toMatrix (Grid (variable kernSize) 1) $ kernel
+    p = pipe A.Clamp
+    process x = id `p` F.filter 1 vmat `p` F.filter 1 hmat `p` id $ x
 
 --testMat :: Matrix2 Double
 --testMat = M.fromList (Z :. 4 :. 4) [  0, 0, 0, 0
