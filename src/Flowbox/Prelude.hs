@@ -33,11 +33,11 @@ import           Data.Typeable             as X (Typeable)
 import           Control.Monad             as X (MonadPlus, mplus, mzero, unless, void, when)
 import           Control.Monad.Trans       as X (MonadTrans, lift)
 import           Data.Convertible.Instances.Missing as X
+import           Data.Default.Instances.Missing ()
 import           Data.Foldable             (forM_)
 import qualified Data.Traversable          as Traversable
 import           Text.Show.Pretty          (ppShow)
 import           Data.List                 (intersperse)
-
 import           Prelude hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
 
