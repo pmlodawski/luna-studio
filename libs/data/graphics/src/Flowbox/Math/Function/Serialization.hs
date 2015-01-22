@@ -32,27 +32,27 @@ import qualified Generated.Proto.Data.VertexData  as VertexData
 
 
 
-instance (Real x, Real y) => Serializable (Point x y) PointData where
-    serialize (Point (realToFrac -> x :: Double) (realToFrac -> y :: Double)) _ =
+instance (Real x, Real y) => Serializable (FunctionPoint x y) PointData where
+    serialize (FunctionPoint (realToFrac -> x :: Double) (realToFrac -> y :: Double)) _ =
         return . Just $ PointData (Just x) (Just y)
     toValue a mode = liftM (mkValue PointData.data' Value.Point) $ serialize a mode
 
-instance Serializable (Maybe Handle) TangentData where
+instance Serializable (Maybe FunctionHandle) TangentData where
     serialize mh _ = return . Just $ TangentData w' a' b'
         where (w', a', b') = case mh of
                                  Nothing             -> (Just 0, Just 0, Just True)
-                                 (Just (Handle w a)) -> (Just w, Just a, Just False)
+                                 (Just (FunctionHandle w a)) -> (Just w, Just a, Just False)
     toValue a mode = liftM (mkValue TangentData.data' Value.Tangent) $ serialize a mode
 
-instance (Real x, Real y) => Serializable (x, ControlPoint y) VertexData where
-    serialize (realToFrac -> x :: Double, ControlPoint (realToFrac -> y :: Double) hIn hOut) mode = do
-        p     <- serialize (Point x y) mode
+instance (Real x, Real y) => Serializable (x, FunctionControlPoint y) VertexData where
+    serialize (realToFrac -> x :: Double, FunctionControlPoint (realToFrac -> y :: Double) hIn hOut) mode = do
+        p     <- serialize (FunctionPoint x y) mode
         hIn'  <- serialize hIn         mode
         hOut' <- serialize hOut        mode
         return . Just $ VertexData p hIn' hOut'
     toValue a mode = liftM (mkValue VertexData.data' Value.Vertex) $ serialize a mode
 
-instance (Real x, Real y) =>  Serializable (Segment x y) CurveData where
+instance (Real x, Real y) =>  Serializable (FunctionSegment x y) CurveData where
     serialize Lambda{}   _= error "Serializing the Lambda segment is not yet supported!"
     serialize Repeater{} _= error "Serializing the Repeater segment is not yet supported!"
     serialize (ContinuousHybrid nodes) mode = do

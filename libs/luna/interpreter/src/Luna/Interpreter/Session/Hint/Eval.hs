@@ -32,13 +32,16 @@ interpret expr = interpret' expr wit where
 
 -- | Evaluates an expression, given a witness for its monomorphic type.
 interpret' :: (GHC.GhcMonad m, Typeable a) => String -> a -> m a
-interpret' expr wit = do
-    let typeStr = show $ Typeable.typeOf wit
-        typedExpr = concat [parens expr, " :: ", typeStr]
+interpret' expr wit = interpret'' expr typeStr where
+    typeStr = show $ Typeable.typeOf wit
+
+
+interpret'' :: (GHC.GhcMonad m, Typeable a) => String -> String -> m a
+interpret'' expr typeStr = do
+    let typedExpr = concat [parens expr, " :: ", typeStr]
     logger trace typedExpr
     exprVal <- GHC.compileExpr typedExpr
     return (Exts.unsafeCoerce# exprVal :: a)
-
 
 -- | Conceptually, @parens s = \"(\" ++ s ++ \")\"@, where s is any valid haskell
 -- expression. In practice, it is harder than this.

@@ -100,6 +100,12 @@ def Int.dec:
 def Double.acc:
     ```liftF1 variable #{self}```
 
+def Double.floor:
+    ```liftF1 floor #{self}```
+
+# def Float.floor:
+#     ```liftF1 floor #{self}```
+
 
 
 #
@@ -173,6 +179,33 @@ def mask path feather:
 def rasterizeMask w h m:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
 
+#
+#                MATH and such
+#
+
+# alias Point2F = Point2 Float
+# alias CurveGUI = [ControlPointGUI]
+# alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
+# alias HandleGUI = (Int, Float, Float)
+
+def curveGUI vertices:
+    vertices
+
+def controlPointGUI point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def nonLinearHandleGUI weight angle:
+    (0, weight, angle)
+
+def verticalHandleGUI length:
+    (1, length, 0.0)
+
+def linearHandleGUI:
+    (2, 0.0, 0.0)
+
+def getValueAtCurve curve x:
+    ```liftF2 getValueAtCurveGUI #{curve} #{x}```
+
 
 
 #
@@ -206,6 +239,11 @@ class ```Gamma```:
 #
 #                IMAGE
 #
+
+# class ```Image```
+
+def emptyImage:
+    ```liftF0 Image.empty```
 
 def load path:
     ```autoLift1 realReadLuna #{path}```
@@ -350,32 +388,32 @@ def Image.histEq bins:
 def Image.posterize colors:
     ```liftF2 posterizeLuna #{colors} #{self}```
 
-def Image.defocus radius:
-    ```liftF2 defocus #{radius} #{self}```
+# def Image.defocus radius:
+#     ```liftF2 defocus #{radius} #{self}```
 
-def Image.motionBlur size angle:
-    ```liftF3 motionBlur #{size} #{angle} #{self}```
+# def Image.motionBlur size angle:
+#     ```liftF3 motionBlur #{size} #{angle} #{self}```
 
-def Image.bilateral psigma csigma size:
-    ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
+# def Image.bilateral psigma csigma size:
+#     ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
 
-def Image.cornerPin p1 p2 p3 p4:
-    p1x = p1.x
-    p1y = p1.y
-    p2x = p2.x
-    p2y = p2.y
-    p3x = p3.x
-    p3y = p3.y
-    p4x = p4.x
-    p4y = p4.y
+# def Image.cornerPin p1 p2 p3 p4:
+#     p1x = p1.x
+#     p1y = p1.y
+#     p2x = p2.x
+#     p2y = p2.y
+#     p3x = p3.x
+#     p3y = p3.y
+#     p4x = p4.x
+#     p4y = p4.y
 
-    ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
+#     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
 def Image.blur kernelSize:
-    ```liftF2 gaussianLuna #{kernelSize} #{self}```
+    ```liftF2 blurLuna #{kernelSize} #{self}```
 
-def Image.laplacian kernelSize centerVal sideVal:
-    ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
+# def Image.laplacian kernelSize centerVal sideVal:
+#     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
 # def Image.rotate phi:
 #     ```liftF2 turnCenterLuna #{phi} #{self}```
@@ -400,8 +438,8 @@ def Image.laplacian kernelSize centerVal sideVal:
 # def Image.scale x y:
 #     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
-def Image.transform trans:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform trans:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
@@ -418,8 +456,8 @@ def Image.open size:
 def Image.close size:
     ```liftF2 closeLuna #{size} #{self}```
 
-def Image.radialBlur size angle:
-    ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
+# def Image.radialBlur size angle:
+#     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
 
 def Image.edgeDetect edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
@@ -538,8 +576,8 @@ def Image.dither bound diffusionMethod bits:
     # ```autoLift4 ditherLuna #{bound} #{bits} #{diffusionTable} #{self}```
     ```autoLift4 ditherLuna #{bound} #{bits} (val floydSteinberg) #{self}```
 
-def Image.bayer bits:
-    ```liftF2 orderedDitherLuna #{bits} #{self}```
+# def Image.bayer bits:
+#     ```liftF2 orderedDitherLuna #{bits} #{self}```
 
 
 
@@ -600,3 +638,6 @@ alias Time=Double
 
 def time:
     0.0
+
+def foo a:
+	a

@@ -4,18 +4,23 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Math.Function.CurveGui where
+{-# LANGUAGE ViewPatterns #-}
 
-import           Flowbox.Prelude
+module Flowbox.Math.Function.CurveGUI where
+
+import qualified Data.Array.Accelerate     as A
+import qualified Data.Map                  as Map
+import           Math.Coordinate.Cartesian (Point2(..))
+
+import           Flowbox.Geom2D.CubicBezier               as CubicBezier
+import           Flowbox.Geom2D.CubicBezier.Solve         as CubicBezier
 import           Flowbox.Math.Function.Accelerate.BSpline
-import           Math.Coordinate.Cartesian                   (Point2(..))
-import qualified Data.Array.Accelerate as A
-import qualified Flowbox.Math.Function.Model as Model
-import qualified Data.Map as Map
+import qualified Flowbox.Math.Function.Model              as Model
+import           Flowbox.Prelude                          as P
 
 type Weight = Double
+type Length = Double
 type Angle  = Double
-data Direction = Up | Down deriving(Show, Eq)
 
 newtype CurvesCollection x = CurvesCollection { _curves :: [(x, Curve x)] } deriving (Show)
 
@@ -29,8 +34,7 @@ data ControlPoint x = ControlPoint { _point  :: Point2 x
 data Handle = NonLinear { _weight :: Weight
                         , _angle  :: Angle
                         }
-            | Vertical  { _weight :: Weight
-                        , _direction :: Direction
+            | Vertical  { _length :: Length
                         }
             | Linear deriving (Show, Eq)
 
@@ -40,37 +44,40 @@ makeLenses ''ControlPoint
 makeLenses ''Handle
 
 convertToBSpline :: Curve Double -> BSpline Double
-convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (length l)) l :: BSpline Double
+convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (P.length l)) l :: BSpline Double
     where
         l = convertToNodeList vertices
 
 convertToNodeList :: [ControlPoint Double] -> [BSplineNode Double]
-convertToNodeList l = 
+convertToNodeList l =
     let
         safeMap :: [ControlPoint Double] -> ControlPoint Double -> [BSplineNode Double] -> [BSplineNode Double]
         safeMap (s:r:seg) l acc = safeMap (r:seg) s ((convertToNode l s r):acc)
         safeMap (s:[]) l acc = reverse ((processRightmost l s):acc)
 
+        reflectPoint :: Point2 Double -> Point2 Double -> Point2 Double
+        reflectPoint (Point2 x y) (Point2 x2 y2) = Point2 (2*x - x2) (2*y - y2)
+
         convertSingleElem :: ControlPoint Double -> [BSplineNode Double]
         convertSingleElem (ControlPoint (Point2 x y) Linear Linear) = [BSplineNode (Point2 x y) (Point2 (x-1) y) (Point2 (x+1) y)]
 
-        convertSingleElem a@(ControlPoint (Point2 x y) _ Linear) = [BSplineNode (Point2 x y) l (-l)]
+        convertSingleElem a@(ControlPoint p@(Point2 x y) _ Linear) = [BSplineNode (Point2 x y) l (reflectPoint p l)]
             where
-                l = processLeft a a
+                BSplineNode _ (l@(Point2 lx ly)) _ = processLeftmost a a
 
-        convertSingleElem b@(ControlPoint (Point2 x y) Linear _) = [BSplineNode (Point2 x y) (-r) r]
+        convertSingleElem a@(ControlPoint p@(Point2 x y) Linear _) = [BSplineNode (Point2 x y) (reflectPoint p r) r]
             where
-                r = processRight b b
+                BSplineNode _ _ (r@(Point2 rx ry)) = processRightmost a a
 
         convertSingleElem a@(ControlPoint (Point2 x y) _ _) = [BSplineNode (Point2 x y) l r]
             where
-                l = processLeft a a
-                r = processRight a a
+                BSplineNode _ l _ = processLeftmost a a
+                BSplineNode _ _ r = processRightmost a a
 
         processLeftmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
-        processLeftmost a@(ControlPoint (Point2 x y) Linear _) b = BSplineNode (Point2 x y) (-r) r
+        processLeftmost a@(ControlPoint p@(Point2 x y) Linear _) b = BSplineNode (Point2 x y) (reflectPoint p r) r
             where
-                r = processRight a b
+                r@(Point2 rx ry) = processRight a b
 
         processLeftmost a@(ControlPoint (Point2 x y) (NonLinear w ang) _) b = BSplineNode (Point2 x y) (Point2 lx ly) r
             where
@@ -83,9 +90,9 @@ convertToNodeList l =
                 r = processRight a b
 
         processRightmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
-        processRightmost a b@(ControlPoint (Point2 x y) _ Linear) = BSplineNode (Point2 x y) l (-l)
+        processRightmost a b@(ControlPoint p@(Point2 x y) _ Linear) = BSplineNode (Point2 x y) l (reflectPoint p l)
             where
-                l = processLeft a b
+                l@(Point2 lx ly) = processLeft a b
 
         processRightmost a b@(ControlPoint (Point2 x y) _ (NonLinear w ang)) = BSplineNode (Point2 x y) l (Point2 rx ry)
             where
@@ -112,10 +119,7 @@ convertToNodeList l =
                 lx = x - (x - x2) * w
                 ly = y - (x - lx) * tan(ang)
 
-        processLeft _ (ControlPoint (Point2 x y) (Vertical w d) _) =
-            case d of
-                Up  -> Point2 x (y+w)
-                Down -> Point2 x (y-w)
+        processLeft _ (ControlPoint (Point2 x y) (Vertical w) _) = Point2 x (y+w)
 
         processRight :: ControlPoint Double -> ControlPoint Double -> Point2 Double
         processRight (ControlPoint (Point2 x y) _ Linear) (ControlPoint (Point2 x2 y2) _ _) = Point2 x' y'
@@ -128,11 +132,34 @@ convertToNodeList l =
                 rx = x + (x2 -x) * w
                 ry = y + (rx - x) * tan(ang)
 
-        processRight (ControlPoint (Point2 x y) _ (Vertical w d)) _ =
-            case d of
-                Up  -> Point2 x (y+w)
-                Down -> Point2 x (y-w)
+        processRight (ControlPoint (Point2 x y) _ (Vertical w)) _ = Point2 x (y+w)
     in
-        case l of 
+        case l of
             (a:b:seg) -> safeMap (b:seg) a [processLeftmost a b]
             (a:[]) -> convertSingleElem a
+
+
+
+valueAtSpline :: Curve Double -> Double -> Double
+valueAtSpline (BezierCurve (convertToNodeList -> vertices')) x =
+    if vLength < 1
+        then 0
+        else if x < xL
+            then lineValue xL yL xHiL yHiL
+            else findValue vertices'
+    where vLength  = P.length vertices'
+          BSplineNode (Point2 xL yL) (Point2 xHiL yHiL) _ = P.head vertices'
+          lineValue xA yA xB yB = let
+                  a = (yB - yA) / (xB - xA)
+                  b = yA - a * xA
+              in if xA == xB
+                  then yA
+                  else a * x + b
+          findValue [BSplineNode (Point2 xR yR) _ (Point2 xHoR yHoR)] = lineValue xR yR xHoR yHoR
+          findValue (a:b:xs) = let
+                  BSplineNode pA _ hOutA = a
+                  BSplineNode pB@(Point2 xB _) hInB _ = b
+                  curve = CubicBezier pA hOutA hInB pB
+              in if x < xB
+                  then CubicBezier.valueAtX 10 0.0001 curve x
+                  else findValue $ b:xs
