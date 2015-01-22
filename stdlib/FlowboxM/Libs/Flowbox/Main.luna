@@ -474,8 +474,8 @@ def Image.close size:
 def Image.edgeDetect edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
-def Image.edgeBlur viewName channelName kernelSize edgeMultiplier:
-    ```liftF5 edgeBlur #{viewName} #{channelName} #{kernelSize} #{edgeMultiplier} #{self}```
+def Image.edgeBlur channelName kernelSize edgeMultiplier:
+    ```liftF4 edgeBlur #{channelName} #{kernelSize} #{edgeMultiplier} #{self}```
 
 class ```InterpolationFilter```:
     NearestNeighbour
