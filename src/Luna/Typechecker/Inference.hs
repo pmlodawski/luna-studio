@@ -141,9 +141,14 @@ tcExpr lexpr@(Label lab expr) = do
             hn_id <- getTargetIDString lab
             debugPush ("Var         " ++ hn ++ hn_id)
             targetLabel <- getTargetID lab
-            a <- inst targetLabel
-            result <- normalize a
+
+            currentType <- currentType
+
+            env <- getEnv
+            vType <- inst env targetLabel
+            result <- normalize vType
             debugPush ("         :: " ++ show result)
+            currentType .= result
         Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) } ->
 
             case (dst, src) of
@@ -166,10 +171,14 @@ tcExpr lexpr@(Label lab expr) = do
             base_id <- getTargetIDString labb
             args_id <- unwords <$> mapM mapArg args
             debugPush ("Application " ++ (unpack . humanName $ basename) ++ base_id ++ " ( " ++ args_id ++ " )")
+            
+            j
         _ ->
             return ()
     defaultTraverseM lexpr
   where 
+    -- TODO wyciaga tylko nazwy zmiennych jako argumenty, przerobic na
+    -- akceptujace wyrazenia
     mapArg :: (StageTypecheckerCtx lab m a) => Expr.AppArg (LExpr lab a) -> StageTypecheckerPass m String
     mapArg (Expr.AppArg _ (Label laba (Expr.Var { Expr._ident = (Expr.Variable vname _) } ))) = do
         arg_id <- getTargetIDString laba
@@ -241,9 +250,8 @@ rename s x = do
 
 
 inst :: (Monad m) => Var -> StageTypecheckerPass m Type
-inst x = do
-    env <- getEnv
-    case mylookup env x of
+inst env x = do
+    case lookup x env -- mylookup env x of
         Just ts -> case ts of
             Mono t        ->
                 return t
