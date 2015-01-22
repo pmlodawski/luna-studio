@@ -32,5 +32,5 @@ data Pat a
     | Var         { _vname :: VName                         }
     | Wildcard 
     | RecWildcard
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq, Read)
 

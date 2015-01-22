@@ -18,6 +18,6 @@ data Pragma = Enable  Text
             | Disable Text
             | Push    Text
             | Pop     Text
-            deriving (Show, Generic)
+            deriving (Show, Generic, Eq, Read)
 
 

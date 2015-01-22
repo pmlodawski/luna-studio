@@ -46,16 +46,16 @@ data Decl a e
     | TpWrp     { _dstType :: LType a , _srcType  :: LType a                                                             }
     | Foreign   (Foreign (ForeignDecl a e))
     | Pragma    Pragma
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq, Read)
 
 
-data FuncDecl a e body = FuncDecl Path (FuncSig a e) (FuncOutput a) body      deriving (Show, Generic)
-data DataDecl a e      = DataDecl TNameP DataParams [LCons a e] [LDecl a e]   deriving (Show, Generic)
+data FuncDecl a e body = FuncDecl Path (FuncSig a e) (FuncOutput a) body      deriving (Show, Generic, Eq, Read)
+data DataDecl a e      = DataDecl TNameP DataParams [LCons a e] [LDecl a e]   deriving (Show, Generic, Eq, Read)
 
 data ForeignDecl a e
     = FData (DataDecl a e)
     | FFunc (FuncDecl a e ForeignCode)
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq, Read)
 
 
 
@@ -71,12 +71,12 @@ data ForeignDecl a e
 -- import Math: sin :: Double -> Double
 
 
-data Cons  a e = Cons   { _consName :: CNameP   , _fields :: [LField a e]                  } deriving (Show, Generic)
-data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VNameP, _fVal :: Maybe e } deriving (Show, Generic)
+data Cons  a e = Cons   { _consName :: CNameP   , _fields :: [LField a e]                  } deriving (Show, Generic, Eq, Read)
+data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VNameP, _fVal :: Maybe e } deriving (Show, Generic, Eq, Read)
 -- FIXME[wd]: przeniesc w inne miejsce
 data ImpTgt    = ImpVar  { _vName  :: VNameP   , _vRename :: Maybe VNameP }
                | ImpType { _tName  :: TNameP   , _tRename :: Maybe TNameP }
-               | Wildcard deriving (Show, Generic)
+               | Wildcard deriving (Show, Generic, Eq, Read)
 
 type Path       = [TNameP]
 type LCons  a e = Label a (Cons a e)
