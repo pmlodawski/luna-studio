@@ -86,6 +86,10 @@ cachedDelete = modify . over Env.cached . MapForest.delete
 cachedLookup :: CallPointPath -> Session mm (Maybe CacheInfo)
 cachedLookup callPointPath = MapForest.lookup callPointPath <$> getCached
 
+
+cachedClear :: Session mm ()
+cachedClear = modify (Env.cached .~ def)
+
 ---- Env.watchPoints ------------------------------------------------------
 
 addWatchPoint :: CallPointPath -> Session mm ()
@@ -273,7 +277,19 @@ getMemoryManager = gets $ view Env.memoryManager
 
 
 updateMemoryManager :: (mm -> mm) -> Session mm ()
-updateMemoryManager = modify . over Env.memoryManager
+updateMemoryManager updMethod = do
+    s <- get
+    put $ s { Env._memoryManager = updMethod $ Env._memoryManager s }
+-- FIXME[PM] : https://github.com/ekmett/lens/issues/515
+--updateMemoryManager updMethod = do
+--    s <- get
+--    put $ Env.memoryManager %~ updMethod $  s
+
+--updateMemoryManager = modify . over Env.memoryManager
+--updateMemoryManager updMethod = Env.memoryManager %= updMethod
+--updateMemoryManager updMethod = modify $ Env.memoryManager %~ (updMethod $)
+--updateMemoryManager u = modify $ over Env.memoryManager u
+--                      = modify $ over Env.memoryManager id
 
 
 setMemoryManager :: mm -> Session mm ()

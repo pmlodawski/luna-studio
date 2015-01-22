@@ -4,23 +4,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+module Flowbox.Data.Set (
+    module Flowbox.Data.Set,
+    module X
+) where
 
-module Flowbox.Bus.Logger.Env where
+import Data.Set as X
 
-import Data.Map.Strict (Map)
-import Data.Time.Clock (UTCTime)
-
-import qualified Flowbox.Bus.Data.Message as Message
-import           Flowbox.Prelude
-
-
-
-data Env = Env { _times :: Map Message.CorrelationID UTCTime }
-
-makeLenses ''Env
-
-
-instance Default Env where
-    def = Env def
-
+-- TODO[KM]: intending to add functionalities letting you search with a lambda returning Ord

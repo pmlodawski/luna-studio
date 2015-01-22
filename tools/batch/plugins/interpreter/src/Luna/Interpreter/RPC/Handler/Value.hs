@@ -60,4 +60,5 @@ reportOutputValue crlRef output projectID callPointPath values = do
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response
         packet   = (msg, crl, Flag.Disable)
+    logger debug $ "Reporting " ++ show (projectID, callPointPath)
     void $ Pipes.atomically $ Pipes.send output packet

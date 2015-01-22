@@ -30,11 +30,8 @@ Library
                   algebraic       > 0.1            ,
                   bmp                              ,
                   bytestring                       ,
-                  cairo                            ,
                   containers                       ,
                   cubicbezier                      ,
-                  diagrams-cairo                   ,
-                  diagrams-lib                     ,
                   distributive                     ,
                   either                           ,
                   errors                           ,
@@ -59,7 +56,8 @@ Library
                   transformers                     ,
                   vector                           ,
                   vector-space                     ,
-                  luna-target-ghchs
+                  luna-target-ghchs                ,
+                  Rasterific
 
 -- == test generator ==
 
@@ -274,6 +272,82 @@ Executable test_vector_rasterization
     buildable: False
 
   Main-Is:        VectorRasterization.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.16.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  bytestring               ,
+                  cairo                    ,
+                  vector-space             ,
+                  diagrams                 ,
+                  diagrams-lib             ,
+                  diagrams-cairo           ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  QuickCheck               ,
+                  split                    ,
+                  vector
+
+-- == test mockup ==
+
+Executable mockup
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        Mockup.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.16.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  bytestring               ,
+                  cairo                    ,
+                  vector-space             ,
+                  diagrams                 ,
+                  diagrams-lib             ,
+                  diagrams-cairo           ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  QuickCheck               ,
+                  split                    ,
+                  vector
+
+-- == test hueCorrect  ==
+
+Executable test_hue_correct
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        HueCorrect.hs
   Hs-Source-Dirs: test
 
   Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog

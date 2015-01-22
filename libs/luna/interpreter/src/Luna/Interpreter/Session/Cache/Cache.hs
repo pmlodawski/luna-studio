@@ -56,7 +56,8 @@ dump callPointPath hash = do
 
 dumpAll :: Session mm ()
 dumpAll = do
-    logger trace =<< MapForest.draw <$> Env.getCached
+    --logger trace =<< MapForest.draw <$> Env.getCached
+    logger trace =<< MapForest.drawKeys <$> Env.getCached
     logger trace "====================="
     logger trace =<< show <$> Env.getDependentNodes
 
@@ -74,7 +75,7 @@ status = onCacheInfo
 
 
 setStatus :: CacheStatus -> CallPointPath -> Session mm ()
-setStatus newStatus = modifyCacheInfo (CacheInfo.status .~ newStatus)
+setStatus newStatus = modifyCacheInfo $ CacheInfo.status .~ newStatus
 
 
 dependency :: [VarName] -> CallPointPath -> Session mm (Maybe VarName)
@@ -114,11 +115,12 @@ put callDataPath predVarNames varName = do
     let updatedStatus = if oldStatus == CacheStatus.NonCacheable
                             then oldStatus
                             else CacheStatus.Ready
-        existingDeps = Maybe.maybe Map.empty (view CacheInfo.dependencies) mcacheInfo
+        existingDeps   = Maybe.maybe def (view CacheInfo.dependencies) mcacheInfo
+        existingValues = Maybe.maybe def (view CacheInfo.values      ) mcacheInfo
         dependencies = Map.insert predVarNames varName existingDeps
         cacheInfo    = CacheInfo (last callDataPath ^. CallData.parentDefID)
                                  (last callDataPath ^. CallData.parentBC)
-                                 updatedStatus varName dependencies
+                                 updatedStatus varName dependencies existingValues
 
     Env.cachedInsert callPointPath cacheInfo
 
@@ -151,7 +153,6 @@ delete' (callPointPath, cacheInfo) = do
 
 deleteVarName :: VarName -> Session mm ()
 deleteVarName varName = do
-    print =<< Env.getCached
     onCacheInfo del err callPointPath
     where
         callPointPath = varName ^. VarName.callPointPath
@@ -160,8 +161,10 @@ deleteVarName varName = do
             if cacheInfo ^. CacheInfo.recentVarName == varName
                 then Env.cachedDelete callPointPath
                 else Env.cachedInsert callPointPath
-                   $ CacheInfo.dependencies %~ Map.filter (/= varName) $ cacheInfo
+                   $ clearDependencies $ clearValues cacheInfo
             Free.freeVarName varName
+        clearDependencies = CacheInfo.dependencies %~ Map.filter (/= varName)
+        clearValues       = CacheInfo.values       %~ Map.filterWithKey (\k _ -> varName /= fst k)
 
 
 deleteAll :: MemoryManager mm => Session mm ()

@@ -10,17 +10,14 @@ import           Flowbox.Prelude
 import           Luna.Graph.Node.Expr       (NodeExpr)
 import qualified Luna.Graph.Node.Expr       as NodeExpr
 import qualified Luna.Graph.Node.StringExpr as StringExpr
-
+import qualified Luna.AST.Expr as Expr
 
 
 timeRef :: String
 timeRef = "time"
 
 
-timeNodeExpr :: NodeExpr
-timeNodeExpr = NodeExpr.StringExpr
-             $ StringExpr.fromString timeRef
-
 
 isTimeRefNodeExpr :: NodeExpr -> Bool
-isTimeRefNodeExpr = (==) timeNodeExpr
+isTimeRefNodeExpr (NodeExpr.ASTExpr (Expr.App _ (Expr.Accessor _ (Expr.ConAccessor "time") (Expr.App _ (Expr.Con _ "Std") [])) [])) = True
+isTimeRefNodeExpr _ = False
