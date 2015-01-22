@@ -68,14 +68,10 @@ getDefaultsMap nodeID propertyMap = Maybe.fromMaybe def $
     view Properties.defaultsMap <$> IntMap.lookup nodeID propertyMap
 
 
-<<<<<<< HEAD:libs/luna/core/src/Luna/Syntax/Graph/PropertyMap.hs
-modifyDefaultsMap :: (DefaultsMap a v -> DefaultsMap a v) -> Node.ID -> PropertyMap a v -> PropertyMap a v
-=======
-getDefaultsMaps :: PropertyMap -> [(Node.ID, DefaultsMap)]
+getDefaultsMaps :: PropertyMap a v -> [(Node.ID, DefaultsMap a v)]
 getDefaultsMaps = P.map (_2 %~ view Properties.defaultsMap) . IntMap.toList
 
 
-modifyDefaultsMap :: (DefaultsMap -> DefaultsMap) -> Node.ID -> PropertyMap -> PropertyMap
->>>>>>> origin/develop:libs/luna/core/src/Luna/Graph/PropertyMap.hs
+modifyDefaultsMap :: (DefaultsMap a v -> DefaultsMap a v) -> Node.ID -> PropertyMap a v -> PropertyMap a v
 modifyDefaultsMap fun = IntMap.alter update' where
     update' = Just . (Properties.defaultsMap %~ fun) . Maybe.fromMaybe def

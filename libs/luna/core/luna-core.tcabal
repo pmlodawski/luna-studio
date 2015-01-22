@@ -40,6 +40,7 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  blaze-markup < 0.6.3,
                   containers,
                   data-default,
                   fgl,
@@ -65,3 +66,4 @@ Library
                   tuple,
                   optparse-applicative,
                   zippers
+    -- [PM] blaze-markup < 0.6.3 is a temporary fix until https://github.com/ekmett/trifecta/issues/41 is resolved

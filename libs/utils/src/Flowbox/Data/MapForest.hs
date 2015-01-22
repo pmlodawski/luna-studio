@@ -151,7 +151,7 @@ drawKeys :: Show k => MapForest k v -> String
 drawKeys = unlines . map (unlines . drawTree) . Map.toList where
     shift first other = zipWith (++) (first : repeat other)
 
-    drawTree (k, level) = show k : drawSubTrees (Map.toList $ level ^. subForest)
+    drawTree (k, level) = show k : drawSubTrees (Map.toList $ level ^. children)
 
     drawSubTrees [] = []
     drawSubTrees [t] =
