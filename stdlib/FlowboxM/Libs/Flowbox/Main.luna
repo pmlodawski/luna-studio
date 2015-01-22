@@ -102,6 +102,12 @@ def Int.dec:
 def Double.acc:
     ```liftF1 variable #{self}```
 
+def Double.floor:
+    ```liftF1 floor #{self}```
+
+# def Float.floor:
+#     ```liftF1 floor #{self}```
+
 
 
 #
@@ -199,10 +205,10 @@ def nonLinearHandleGUI weight angle:
     (0, weight, angle)
 
 def verticalHandleGUI length:
-    (1, length, 0)
+    (1, length, 0.0)
 
 def linearHandleGUI:
-    (2, 0, 0)
+    (2, 0.0, 0.0)
 
 def getValueAtCurve curve x:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```
@@ -434,8 +440,12 @@ def Image.blur kernelSize:
 
 # def Image.translate boundary x y:
 #     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-# def Image.translate x y:
-#     ```liftF3 translateLuna #{x} #{y} #{self}```
+
+class ```V2``` a:
+    x, y :: a
+
+def Image.translate vec:
+    ```liftF2 translateLuna #{vec} #{self}```
 
 # def Image.scaleTo boundary x y:
 #     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
@@ -673,7 +683,10 @@ def main:
     # lena = lena.hueCorrect c c c c c c2 c c
 
     out = lena.blur 20
-    out.save "./out.png"
+    # out.save "./out.png"
+
+    f = 0.4
+    print f.floor
 
     # grade: blackpoint whitepoint lift gain multiply offset gamma
     # lena = lena.grade test white black white white black white
