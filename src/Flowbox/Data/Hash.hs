@@ -61,10 +61,11 @@ instance TypeCast flag HFalse => HashPred a flag -- Used only if the other insta
 ---- instances for each Data.Hashable is defined --------------------------
 ---------------------------------------------------------------------------
 
-instance HashPred Bool  HTrue
-instance HashPred Char  HTrue
-instance HashPred Int   HTrue
-instance HashPred Float HTrue
+instance HashPred Bool   HTrue
+instance HashPred Char   HTrue
+instance HashPred Int    HTrue
+instance HashPred Float  HTrue
+instance HashPred Double HTrue
 instance HashPred String HTrue
 instance HashPred a flag => HashPred [a] flag
 instance HashPred a flag => HashPred (Data.Safe a) flag
