@@ -38,6 +38,9 @@ type Subst = [(TVar, Type)]
 type Typo = [(Var,TypeScheme)]
 
 
+empty_typo :: Typo
+empty_typo = []     -- TODO [kgdk] 22 sty 2015: make a monoid
+
 true_cons :: Constraint
 true_cons = C [TRUE]
 
@@ -45,4 +48,4 @@ null_subst :: Subst
 null_subst = []
 
 init_typo :: [Typo]
-init_typo = [[]]
+init_typo = [empty_typo]

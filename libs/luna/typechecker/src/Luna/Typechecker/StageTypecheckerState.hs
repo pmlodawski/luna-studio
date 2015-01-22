@@ -10,7 +10,7 @@ module Luna.Typechecker.StageTypecheckerState (
     StageTypecheckerCtx,
     StageTypecheckerTraversal,
     StageTypecheckerDefaultTraversal,
-    str, typo, nextTVar, subst, constr, sa,
+    debugLog, typo, nextTVar, subst, constr, sa,
     prettyState,
     report_error
   ) where
@@ -35,7 +35,7 @@ import            Luna.Typechecker.Debug.PrettyData (
 
 
 data StageTypecheckerState
-   = StageTypecheckerState  { _str      :: [String] -- TODO [kgdk] 20 sty 2015: zmienić na _debug
+   = StageTypecheckerState  { _debugLog      :: [String] -- TODO [kgdk] 20 sty 2015: zmienić na _debug
                             , _typo     :: [Typo]
                             , _nextTVar :: TVar
                             , _subst    :: Subst
@@ -69,7 +69,7 @@ prettyState StageTypecheckerState{..} = str_field
                                     $+$ subst_field
                                     $+$ nextTVar_field
   where
-    str_field      = text "Debug       :" <+> prettyNullable (map text _str)
+    str_field      = text "Debug       :" <+> prettyNullable (map text _debugLog)
     constr_field   = text "Constraints :" <+> prettyConstr   _constr
     nextTVar_field = text "TVars used  :" <+> int         _nextTVar
     typo_field     = text "Type env    :" <+> prettyNullable (map (parens . prettyTypo) _typo)
