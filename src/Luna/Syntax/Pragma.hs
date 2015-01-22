@@ -4,18 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE RankNTypes #-}
 
-module Luna.Syntax.Foreign where
+{-# LANGUAGE OverlappingInstances #-}
 
-import Flowbox.Prelude
+module Luna.Syntax.Pragma where
 
-import qualified Prelude
-
-
-data Foreign a = Foreign Target a
-               deriving (Show, Generic, Functor, Traversable, Foldable)
+import Flowbox.Prelude hiding (Cons, traverse)
 
 
-data Target = Haskell
-            | CPP
+data Pragma = Enable  Text
+            | Disable Text
+            | Push    Text
+            | Pop     Text
             deriving (Show, Generic)
+
+

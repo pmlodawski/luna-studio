@@ -21,4 +21,4 @@ type LLit a = Label a Lit
 data Lit = Char    { _char :: Prelude.Char   }
          | String  { _str  :: Prelude.String }
          | Number  { _num  :: Number         }
-         deriving (Show, Eq, Ord, Generic, Read)
+         deriving (Show, Generic)

@@ -19,7 +19,7 @@ import Luna.Syntax.Name.Path (QualPath)
 
 data Module a e = Module { _mpath :: QualPath
                          , _body  :: [LDecl a e]
-                         } deriving (Show, Eq, Generic, Read)
+                         } deriving (Show, Generic)
 
 
 makeLenses ''Module
