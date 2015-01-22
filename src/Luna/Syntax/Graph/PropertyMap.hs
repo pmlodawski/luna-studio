@@ -16,7 +16,7 @@ import           Data.IntMap
 import qualified Data.IntMap as IntMap
 import qualified Data.Maybe  as Maybe
 
-import           Flowbox.Prelude                            hiding (set)
+import           Flowbox.Prelude                     as P hiding (set)
 import qualified Luna.Syntax.Graph.Attributes               as Attributes
 import           Luna.Syntax.Graph.Flags                    (Flags)
 import qualified Luna.Syntax.Graph.Node                     as Node
@@ -68,6 +68,14 @@ getDefaultsMap nodeID propertyMap = Maybe.fromMaybe def $
     view Properties.defaultsMap <$> IntMap.lookup nodeID propertyMap
 
 
+<<<<<<< HEAD:libs/luna/core/src/Luna/Syntax/Graph/PropertyMap.hs
 modifyDefaultsMap :: (DefaultsMap a v -> DefaultsMap a v) -> Node.ID -> PropertyMap a v -> PropertyMap a v
+=======
+getDefaultsMaps :: PropertyMap -> [(Node.ID, DefaultsMap)]
+getDefaultsMaps = P.map (_2 %~ view Properties.defaultsMap) . IntMap.toList
+
+
+modifyDefaultsMap :: (DefaultsMap -> DefaultsMap) -> Node.ID -> PropertyMap -> PropertyMap
+>>>>>>> origin/develop:libs/luna/core/src/Luna/Graph/PropertyMap.hs
 modifyDefaultsMap fun = IntMap.alter update' where
     update' = Just . (Properties.defaultsMap %~ fun) . Maybe.fromMaybe def
