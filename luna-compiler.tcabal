@@ -24,7 +24,7 @@ Executable luna
   Extensions:     DoAndIfThenElse
                   NoImplicitPrelude
   Build-Depends:  base,
-                  blaze-markup < 0.6.3,
+                  blaze-markup < 0.6.3, -- temporary fix for trifecta
                   containers,
                   flowbox-config,
                   flowbox-utils,
