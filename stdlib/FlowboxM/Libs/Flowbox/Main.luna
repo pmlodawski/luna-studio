@@ -273,6 +273,7 @@ def Image.view name:
 def Image.getChannel viewName channelName:
     ```liftF3 getChannelLuna #{viewName} #{channelName} #{self}```
 
+
 # def Image.retrieveMask:
 
 
@@ -337,12 +338,6 @@ def Image.gammaFromLinear gamma:
 
 def Image.clamp thresholds clamps:
     ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
-
-# def Image.contrastMatte value matte:
-#     ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
-
-# def Image.exposureMatte value matte:
-#     ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
 
 def Image.offset value:
     ```liftF2 offsetLuna #{value} #{self}```
@@ -646,7 +641,10 @@ def vectorMatte mask:
     (Just mask, Nothing)
 
 def Image.offsetMatte value matte:
-    ```liftF3 offsetMatteLuna' #{value} #{matte} #{self}```
+    ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
+
+def Image.exposureMatte blackpoint ex matte:
+    ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
 
 #
 #                VIEW
@@ -712,8 +710,17 @@ def main:
     lena = load "./lena.png"
     
     randomColor = RGBA 0.2 0.5 0.1 0.7
+    anotherRandomColor = RGBA 0.4 0.2 0.12 0.34
+
     offsetLena = lena.offsetMatte randomColor (Nothing)
+    offsetLenaMasked = lena.offsetMatte randomColor (Just $ vectorMatte m)
     offsetLena.save "./offsetLena.png"
+    offsetLenaMasked.save "./offsetLenaMasked.png"
+
+    exposureLena = lena.exposureMatte randomColor anotherRandomColor (Nothing)
+    exposureLena.save "./exposureLena.png"
+    exposureLenaMasked = lena.exposureMatte randomColor anotherRandomColor (Just $ vectorMatte m)
+    exposureLenaMasked.save "./exposureLenaMasked.png"
 
     # lena = lena.hueCorrect c c c c c c2 c c
 
