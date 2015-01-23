@@ -74,33 +74,33 @@ main = do
 
     img <- loadImageLuna "lena.png"
 
-    let img1 = offsetMatteLuna v3 Nothing img
-    let img2 = contrastMatteLuna v1 Nothing img
-    let img3 = exposureMatteLuna v1 v5 Nothing img
-    --let img4 = gradeLuna' (VPS v1) (VPS v2) (VPS v2) v3 v5 v2 v2 matte img
+    --let img1 = offsetMatteLuna v3 Nothing img
+    --let img2 = contrastMatteLuna v1 Nothing img
+    --let img3 = exposureMatteLuna v1 v5 Nothing img
+    ----let img4 = gradeLuna' (VPS v1) (VPS v2) (VPS v2) v3 v5 v2 v2 matte img
 
-    let img1' = offsetMatteLuna v3 (Just matte) img
-    let img2' = contrastMatteLuna v1 (Just matte) img
-    let img3' = exposureMatteLuna v1 v5 (Just matte) img
+    --let img1' = offsetMatteLuna v3 (Just matte) img
+    --let img2' = contrastMatteLuna v1 (Just matte) img
+    --let img3' = exposureMatteLuna v1 v5 (Just matte) img
 
-    let img1'' = offsetMatteLuna v3 (Just matte2) img
-    let img3'' = exposureMatteLuna v1 v5 (Just matte2) img
+    --let img1'' = offsetMatteLuna v3 (Just matte2) img
+    --let img3'' = exposureMatteLuna v1 v5 (Just matte2) img
 
-    --let img4 = gradeLuna' (VPS v1) (VPS v2) (VPS v2) v3 v5 v2 v2 matte img
+    ----let img4 = gradeLuna' (VPS v1) (VPS v2) (VPS v2) v3 v5 v2 v2 matte img
 
-    saveImageLuna "shape.png" (matrixToImage $ rasterizeMask w h $ (Mask.Mask pat (Just fea)))
+    --saveImageLuna "shape.png" (matrixToImage $ rasterizeMask w h $ (Mask.Mask pat (Just fea)))
 
-    saveImageLuna "lenaWithOffsetApplied.png" img1
-    saveImageLuna "lenaWithContrastApplied.png" img2
-    saveImageLuna "lenaWithExposureApplied.png" img3
+    --saveImageLuna "lenaWithOffsetApplied.png" img1
+    --saveImageLuna "lenaWithContrastApplied.png" img2
+    --saveImageLuna "lenaWithExposureApplied.png" img3
 
-    saveImageLuna "lenaWithOffsetApplied-2.png" img1'
-    saveImageLuna "lenaWithContrastApplied-2.png" img2'
-    saveImageLuna "lenaWithExposureApplied-2.png" img3'  
+    --saveImageLuna "lenaWithOffsetApplied-2.png" img1'
+    --saveImageLuna "lenaWithContrastApplied-2.png" img2'
+    --saveImageLuna "lenaWithExposureApplied-2.png" img3'  
 
-    saveImageLuna "lenaWithOffsetApplied-3.png" img1''
-    saveImageLuna "lenaWithExposureApplied-3.png" img3''
+    --saveImageLuna "lenaWithOffsetApplied-3.png" img1''
+    --saveImageLuna "lenaWithExposureApplied-3.png" img3''
 
-    --saveImageLuna "lenaWithGradeApplied.png" img4
+    ----saveImageLuna "lenaWithGradeApplied.png" img4
 
     print "done"

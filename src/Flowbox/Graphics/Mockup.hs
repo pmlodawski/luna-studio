@@ -332,40 +332,32 @@ applyToShader f matte mat = combineWith (maskedApp f) matte mat
 applyToMatrix :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> Matrix2 a -> Matrix2 a -> Matrix2 a
 applyToMatrix f matte mat = (M.zipWith (\x -> \y -> (maskedApp f x y)) matte) mat
 
-
-offsetMatteLuna :: Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
-offsetMatteLuna (fmap variable -> Color.RGBA r g b a) matte img = 
-  case matte of
-    Nothing -> onEachRGBA (offset r) (offset g) (offset b) (offset a) img
-    Just m -> onEachRGBAChannels (applyMatteFloat (offset r) m)
-                                 (applyMatteFloat (offset g) m)
-                                 (applyMatteFloat (offset b) m)
-                                 (applyMatteFloat (offset a) m) img
 -- playground
-offsetMatteLuna' :: Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
-offsetMatteLuna' color (Just matte) img =
-  offsetMatteLuna color (Just (convertMatte matte)) img
-offsetMatteLuna' color Nothing img = 
-  offsetLuna color img
+offsetMatteLuna :: Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
+offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img = 
+  case matte of
+    Nothing -> offsetLuna x img --onEachRGBA (offset r) (offset g) (offset b) (offset a) img
+    Just m ->
+      let m' = convertMatte m
+      in
+        onEachRGBAChannels (applyMatteFloat (offset r) m')
+                           (applyMatteFloat (offset g) m')
+                           (applyMatteFloat (offset b) m')
+                           (applyMatteFloat (offset a) m') img
 
 -- playground
-contrastMatteLuna :: Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
-contrastMatteLuna (fmap variable -> Color.RGBA r g b a) matte img = 
-  case matte of
-    Nothing -> onEachRGBA (contrast r) (contrast g) (contrast b) (contrast a) img
-    Just m -> onEachRGBAChannels (applyMatteFloat (offset r) m)
-                                 (applyMatteFloat (offset g) m)
-                                 (applyMatteFloat (offset b) m)
-                                 (applyMatteFloat (offset a) m) img
-exposureMatteLuna :: Color.RGBA Double -> Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
-exposureMatteLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
-                  (fmap variable -> Color.RGBA exR exG exB exA) matte img =
+exposureMatteLuna :: Color.RGBA Double -> Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
+exposureMatteLuna x@(fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
+                  y@(fmap variable -> Color.RGBA exR exG exB exA) matte img =
                     case matte of
-                      Nothing -> onEachRGBA (exposure blackpointR exR) (exposure blackpointG exG) (exposure blackpointB exB) id img -- (exposure blackpointA exA)
-                      Just m -> onEachRGBAChannels (applyMatteFloat (exposure blackpointR exR) m)
-                                                   (applyMatteFloat (exposure blackpointG exG) m)
-                                                   (applyMatteFloat (exposure blackpointB exB) m)
-                                                   (applyMatteFloat (exposure blackpointA exA) m) img
+                      Nothing -> exposureLuna x y img --onEachRGBA (exposure blackpointR exR) (exposure blackpointG exG) (exposure blackpointB exB) id img -- (exposure blackpointA exA)
+                      Just m ->
+                        let m' = convertMatte m
+                        in
+                          onEachRGBAChannels (applyMatteFloat (exposure blackpointR exR) m')
+                                             (applyMatteFloat (exposure blackpointG exG) m')
+                                             (applyMatteFloat (exposure blackpointB exB) m')
+                                             (applyMatteFloat (exposure blackpointA exA) m') img
 
 offsetLuna :: Color.RGBA Double -> Image -> Image
 offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) (offset a)
