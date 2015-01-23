@@ -10,19 +10,26 @@
 module Main where
 
 import           Data.Array.Accelerate hiding (fromIntegral)
+import           Data.Array.Accelerate as A
 import           Data.Array.Accelerate.IO
 import           Data.ByteString hiding (head)
 import           Data.VectorSpace
---import           Graphics.Rendering.Cairo hiding (translate)
---import           Graphics.Rendering.Cairo
 
 import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.Mask
 import           Flowbox.Geom2D.Rasterizer hiding (makePoints, makeSegments)
+import           Flowbox.Geom2D.QuadraticBezier
+import           Flowbox.Geom2D.QuadraticBezier.Conversion
+import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
 import           Flowbox.Graphics.Image.IO.BMP
 import           Flowbox.Graphics.Mockup (saveImageLuna)
-import           Flowbox.Prelude hiding ((#))
+import           Flowbox.Prelude as P hiding ((#))
+import           Flowbox.Math.Matrix
+
+import           Math.Coordinate.Cartesian (Point2 (..))
+
+import           Data.Array.Accelerate.CUDA
 
 
 
@@ -45,19 +52,61 @@ main = do
                    , ControlPoint (Point2 338 (210-40)) Nothing Nothing
                    , ControlPoint (Point2 343 (330-40)) Nothing Nothing
                    ]
+        pointsd  = [ ControlPoint (Point2 10 10) Nothing Nothing
+                   , ControlPoint (Point2 630 10)  Nothing Nothing
+                   , ControlPoint (Point2 630 470) Nothing Nothing
+                   , ControlPoint (Point2 10  470) Nothing Nothing
+                   ]
+        featherd = [ ControlPoint (Point2 10 10) Nothing Nothing
+                   , ControlPoint (Point2 630 10)  Nothing Nothing
+                   , ControlPoint (Point2 630 470) Nothing Nothing
+                   , ControlPoint (Point2 10  470) Nothing Nothing
+                   ]
+
+    P.putStrLn "Test rasterizeMask one line, no handles --> foo.png"
+
+    let patd = Path True pointsd
+        fead = Path True featherd
+
+    let arrD = rasterizeMask w h $ (Mask patd (Just fead))
+        imgD = matrixToImage arrD
+
+    saveImageLuna "foo.png" imgD
+
+    P.putStrLn "Test rasterizeMask no fea, no handles --> foo1.png"
+
+    let pat1 = Path True points1
+        fea1 = Path True feather1
+
+    let arrD = rasterizeMask w h $ (Mask pat1 Nothing)
+        imgD = matrixToImage arrD
+
+    saveImageLuna "foo1.png" imgD
+
+    P.putStrLn "Test rasterizeMask no handles --> foo2.png"
+
+    let arrD = rasterizeMask w h $ (Mask pat1 (Just fea1))
+        imgD = matrixToImage arrD
+
+    saveImageLuna "foo2.png" imgD
+
+    P.putStrLn "Test rasterizeMask no fea --> fooD1.png"
 
     let pat = Path True points
         fea = Path True feather
-        pat1 = Path True points1
-        fea1 = Path True feather1
-        arr = rasterizeMask w h $ (Mask pat (Just fea))
-        img = matrixToImage arr
-        arr4 = rasterizeMask w h $ (Mask pat1 (Just fea1))
-        img4 = matrixToImage arr4
 
+    let arrD = rasterizeMask w h $ (Mask pat Nothing)
+        imgD = matrixToImage arrD
 
-    saveImageLuna "foo1.png" img4
-    saveImageLuna "foo2.png" img
+    saveImageLuna "fooD1.png" imgD
+
+    P.putStrLn "Test rasterizeMask --> fooD2.png"
+
+    let arrD = rasterizeMask w h $ (Mask pat (Just fea))
+        imgD = matrixToImage arrD
+
+    saveImageLuna "fooD2.png" imgD
+
 
     return ()
 

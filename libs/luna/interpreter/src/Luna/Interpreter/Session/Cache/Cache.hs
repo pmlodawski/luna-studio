@@ -56,7 +56,8 @@ dump callPointPath hash = do
 
 dumpAll :: Session mm ()
 dumpAll = do
-    logger trace =<< MapForest.draw <$> Env.getCached
+    --logger trace =<< MapForest.draw <$> Env.getCached
+    logger trace =<< MapForest.drawKeys <$> Env.getCached
     logger trace "====================="
     logger trace =<< show <$> Env.getDependentNodes
 
@@ -155,13 +156,15 @@ deleteVarName varName = do
     onCacheInfo del err callPointPath
     where
         callPointPath = varName ^. VarName.callPointPath
-        err = left $ Error.OtherError $(loc) $ "Cannot find callPointPath = " ++ show callPointPath
+        err = logger warning $ "Cannot find callPointPath = " ++ show callPointPath
         del cacheInfo = do
             if cacheInfo ^. CacheInfo.recentVarName == varName
                 then Env.cachedDelete callPointPath
                 else Env.cachedInsert callPointPath
-                   $ CacheInfo.dependencies %~ Map.filter (/= varName) $ cacheInfo
+                   $ clearDependencies $ clearValues cacheInfo
             Free.freeVarName varName
+        clearDependencies = CacheInfo.dependencies %~ Map.filter (/= varName)
+        clearValues       = CacheInfo.values       %~ Map.filterWithKey (\k _ -> varName /= fst k)
 
 
 deleteAll :: MemoryManager mm => Session mm ()
