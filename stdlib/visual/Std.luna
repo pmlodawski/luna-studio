@@ -1,5 +1,5 @@
 
-def null self::Std a:
+def null self::Std a::a -> a:
     a
 
 def print self msg::String:
