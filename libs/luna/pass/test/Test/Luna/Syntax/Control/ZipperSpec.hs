@@ -8,9 +8,9 @@
 
 module Test.Luna.Syntax.Control.ZipperSpec where
 
-import Control.Zipper
-import Test.Hspec
-import qualified Data.List as List
+import           Control.Zipper
+import qualified Data.List      as List
+import           Test.Hspec
 
 import           Flowbox.Prelude
 import qualified Luna.Syntax.Enum        as Enum
@@ -36,14 +36,14 @@ main = hspec spec
 
 
 getAST :: IO (LModule Enum.IDTag (LExpr Enum.IDTag ()))
-getAST = Common.getAST SampleCode.zipperTestModule
+getAST = fst <$> Common.getAST SampleCode.zipperTestModule
 
 
 zipTo :: (a -> Bool) -> Zipper h j [a] -> Maybe (Zipper h j [a] :>> a)
-zipTo predicate z = do 
+zipTo predicate z = do
     i <- List.findIndex predicate $ z ^. focus
     fromWithin traverse z & moveTo i
- 
+
 spec :: Spec
 spec = do
     describe "AST zippers" $ do
@@ -54,7 +54,7 @@ spec = do
                   & downward (Label.element . Module.body)
                 z' = fromWithin traverse z
                     & moveTo 1
-                   <&> view focus 
+                   <&> view focus
 
                 predicate = const True
 

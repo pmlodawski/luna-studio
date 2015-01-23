@@ -14,6 +14,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Luna.Data.Namespace                        (Namespace (Namespace))
 import           Luna.Data.Source                           (Source (Source), Text (Text))
+import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Analysis.Struct                  as SA
 import qualified Luna.Pass.Transform.Desugar.ImplicitCalls  as ImplCalls
@@ -25,32 +26,22 @@ import qualified Luna.Syntax.Enum                           as Enum
 import           Luna.Syntax.Expr                           (LExpr)
 import           Luna.Syntax.Module                         (LModule)
 import           Luna.Syntax.Unit                           (Unit (Unit))
+import           Luna.System.Pragma                         (PragmaMap)
+import           Luna.System.Session                        as Session
 
 
 
-getAST :: String -> IO (LModule Enum.IDTag (LExpr Enum.IDTag ()))
-getAST code = eitherStringToM' $ runEitherT $ do
-    --(ast, _, astInfo) <- EitherT $ TxtParser.run $ Source ["Main"] code
-    --(ast, astInfo)    <- EitherT $ Desugar.ImplicitSelf.run astInfo ast
-    --(ast, astInfo)    <- EitherT $ Desugar.TLRecUpdt.run astInfo ast
-    --aliasInfo         <- EitherT $ Analysis.Alias.run ast
-    --callGraph         <- EitherT $ Analysis.CallGraph.run aliasInfo ast
-    --ast               <- EitherT $ Transform.DepSort.run callGraph aliasInfo ast
-    --(ast, astInfo)    <- EitherT $ Desugar.ImplicitScopes.run astInfo aliasInfo ast
-    --(ast, _astInfo)   <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
-    --return ast
-
-    let src  = Source "Main" (Text $ fromString code)
-
-    (ast,  astinfo) <- Pass.run1_ Stage1.pass src
-    sa              <- Pass.run1_ SA.pass ast
-    (ast,  astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
-    (ast,  astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-    sa              <- Pass.run1_ SA.pass ast
-    (ast,  astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
-    (ast, _astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
-    let Unit retAST = ast
-    --ast            <- Pass.run1_ SSA.pass ast
-    --hast           <- Pass.run1_ HASTGen.pass ast
-    --hsc            <- Pass.run1_ HSC.pass hast
-    return retAST
+getAST :: String -> IO (LModule Enum.IDTag (LExpr Enum.IDTag ()), PragmaMap)
+getAST code =  Session.runT $ do
+    void Parser.init
+    eitherStringToM' $ runEitherT $ do
+        let src  = Source "Main" (Text $ fromString code)
+        (ast,  astinfo) <- Pass.run1_ Stage1.pass src
+        sa              <- Pass.run1_ SA.pass ast
+        (ast,  astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
+        (ast,  astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
+        sa              <- Pass.run1_ SA.pass ast
+        (ast,  astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
+        (ast, _astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+        let Unit retAST = ast
+        return retAST
