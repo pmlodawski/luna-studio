@@ -51,11 +51,48 @@ def Int.>= self::Int a::Int -> Bool:
 # def Int.dec:
 #     self.sub 1
 
-def Double.acc:
+def Float.acc:
     ```liftF1 variable #{self}```
 
-def Float.floor self::Float -> Int:
-    ```liftF1 floor #{self}```
+def Float.truncate:
+    ```liftF1 truncate #{self} :: Value Pure Safe Int```
+
+def Float.round:
+    ```liftF1 round #{self} :: Value Pure Safe Int```
+
+def Float.floor:
+    ```liftF1 floor #{self} :: Value Pure Safe Int```
+
+def Float.ceiling:
+    ```liftF1 ceiling #{self} :: Value Pure Safe Int```
+
+def Float.+ a:
+    ```liftF2 (+) #{self} #{a}```
+
+def Float.- a:
+    ```liftF2 (-) #{self} #{a}```
+
+def Float.* a:
+    ```liftF2 (*) #{self} #{a}```
+
+def Float./ a:
+    ```liftF2 (/) #{self} #{a}```
+
+def Float.> a:
+    ```liftF2 (>) #{self} #{a}```
+
+def Float.== a:
+    ```liftF2 (==) #{self} #{a}```
+
+def Float.< a:
+    ```liftF2 (<) #{self} #{a}```
+
+def Float.<= a:
+    ```liftF2 (<=) #{self} #{a}```
+
+def Float.>= a:
+    ```liftF2 (>=) #{self} #{a}```
+
 
 alias Path = String
 
