@@ -12,10 +12,14 @@ module Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve where
 import Data.Array.Accelerate     as A
 import Math.Coordinate.Cartesian (Point2 (..))
 
-import Flowbox.Geom2D.Accelerate.QuadraticBezier ()
-import Flowbox.Geom2D.QuadraticBezier
-import Flowbox.Graphics.Utils.Utils              hiding (sign)
-import Flowbox.Prelude
+import           Flowbox.Geom2D.Accelerate.QuadraticBezier ()
+import           Flowbox.Geom2D.QuadraticBezier
+import           Flowbox.Graphics.Utils.Utils              hiding (sign)
+import qualified Flowbox.Graphics.Utils.Accelerate as A
+import           Flowbox.Prelude
+import qualified Flowbox.Prelude                                as P
+
+import qualified Flowbox.Math.Matrix                            as M
 
 
 
@@ -73,4 +77,6 @@ distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A
 
 -- TODO: [KM] make a version of this working on CubicBezier (and doing the conversion to a list of Quadratics inside it)
 distanceFromQuadratics :: Exp (Point2 Double) -> Acc (Vector (QuadraticBezier Double)) -> Exp Double
-distanceFromQuadratics p a = A.sfoldl min 1e20 A.index0 $ A.use $ A.fromList (Z:.3) [0,0.6,0.7]-- A.smap (distanceFromQuadratic p) a -- FIXME[KM]: FIX THIS SHIET!
+distanceFromQuadratics p = A.sfoldl getMin 1e20 A.index0 -- FIXME[KM]: FIX THIS SHIET!
+    where getMin acc curve = min acc $ distanceFromQuadratic p curve
+

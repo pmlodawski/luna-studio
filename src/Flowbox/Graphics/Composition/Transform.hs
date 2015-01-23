@@ -146,5 +146,11 @@ cornerPin' (Grid width height) (Point2 x1 y1, Point2 x2 y2, Point2 x3 y3, Point2
 -- TODO[KM]: handle shaders by translating them and changing the canvas size
 crop :: Elt a => Rectangle Int -> ChannelData a -> ChannelData a
 crop (fmap variable . properRect -> Rect xA yA xB yB) (Channel.asMatrixData -> MatrixData matrix) = MatrixData matrix'
-    where matrix' = M.generate (A.index2 (yB - yA) (xB - xA)) gen
-          gen (A.unlift -> (Z :. y :. x)) = matrix M.! A.index2 (yA + y) (xA + x)
+    where matrix' = M.generate newShape gen
+          gen (A.unlift -> (Z :. y :. x)) = matrix M.! A.index2 (heightDifference - yA + y) (xA + x)
+          heightDifference = imageHeight - (yB - yA)
+
+          newShape       = A.intersect rectangleShape imageShape
+          rectangleShape = A.index2 (yB - yA) (xB - xA)
+          imageShape     = M.shape matrix
+          A.Z A.:. imageHeight A.:. _ = A.unlift imageShape :: M.EDIM2
