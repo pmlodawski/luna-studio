@@ -21,6 +21,7 @@ import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image as Image```
 import ```Flowbox.Graphics.Image.View as View```
+import ```Flowbox.Graphics.Composition.EdgeBlur```
 import ```Flowbox.Graphics.Composition.Merge (AlphaBlend(..))```
 import ```Flowbox.Graphics.Composition.Keyer```
 import ```Flowbox.Geom2D.Rasterizer```
@@ -474,8 +475,13 @@ def Image.close size:
 def Image.edgeDetect edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
-def Image.edgeBlur channelName kernelSize edgeMultiplier:
-    ```liftF4 edgeBlur #{channelName} #{kernelSize} #{edgeMultiplier} #{self}```
+class ```BlurType```:
+    GaussBlur
+    BoxBlur
+    TriangleBlur
+
+def Image.edgeBlur channelName blurType kernelSize edgeMultiplier:
+    ```liftF5 edgeBlur #{channelName} #{blurType} #{kernelSize} #{edgeMultiplier} #{self}```
 
 class ```InterpolationFilter```:
     NearestNeighbour

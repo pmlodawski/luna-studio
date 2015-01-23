@@ -193,8 +193,8 @@ onEachChannel f = Image.map $ View.map f
 --          process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
 
-edgeBlur :: Channel.Name -> Int -> Double -> Image -> Image
-edgeBlur channelName kernelSize edgeMultiplier image = 
+edgeBlur :: Channel.Name -> EB.BlurType -> Int -> Double -> Image -> Image
+edgeBlur channelName blurType kernelSize edgeMultiplier image = 
     case getFromPrimary channelName image of
         Left err             -> error $ show err
         Right (Nothing)      -> image
@@ -203,17 +203,16 @@ edgeBlur channelName kernelSize edgeMultiplier image =
                 (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> ChannelFloat name $ DiscreteData $ blurShader shader
                 (Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> ChannelInt name $ DiscreteData $ mapShaderInt blurShader shader
             mapShaderInt func x = fmap (floor . (*256)) $ (( func $ fmap ((/256) . A.fromIntegral) x ) :: DiscreteShader (Exp Double))
-            blurShader = EB.maskBlur EB.Gauss (variable kernelSize) maskEdges
+            blurShader = EB.maskBlur blurType (variable kernelSize) maskEdges
             maskEdges  = case channel of
                 (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) shader
                 (Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) $ fmap ((/256) . A.fromIntegral) shader
 
-            --ChannelFloat _ (MatrixData channelMat) = channel
 
-testEdgeBlur = do
-    img <- loadImageLuna "/home/chris/Lena.png"
+testEdgeBlur kernelSize edgeMultiplier channel = do
+    img <- loadImageLuna "/home/chris/globe.png"
 
-    let a = edgeBlur "rgba.r" 15 2 img
+    let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
 
     saveImageLuna "/home/chris/Luna_result.png" a
 
