@@ -38,7 +38,6 @@ insertTimeRef libraryID nodeID defID defExpr = do
     liftSession $ do
         Env.insertDependentNode (CallPoint libraryID nodeID) defID
         Env.insertDependentNodes (CallPoint libraryID defID) ids
-        print $ Var.timeRefIds defExpr
         forM_ (Var.timeRefIds defExpr) $ \ timeRefID ->
             Env.insertTimeRef (CallPoint libraryID timeRefID)
 
@@ -52,7 +51,6 @@ deleteTimeRef libraryID nodeID defID defExpr = do
         Cache.deleteNode libraryID defID
         mapM_ (Cache.deleteNode libraryID) $ IntSet.toList ids
         Env.deleteDependentNode (CallPoint libraryID nodeID) defID
-        print $ Var.timeRefIds defExpr
         forM_ (Var.timeRefIds defExpr) $ \ timeRefID ->
             Env.deleteTimeRef (CallPoint libraryID timeRefID)
 
