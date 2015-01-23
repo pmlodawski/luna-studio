@@ -20,6 +20,9 @@ import           Flowbox.Math.Matrix                             ((:.) (..), DIM
 import qualified Flowbox.Math.Matrix                             as M
 import           Flowbox.Graphics.Mockup (saveImageLuna)
 import           Flowbox.Prelude
+import qualified Flowbox.Prelude                                 as P
+
+import Data.Array.Accelerate.CUDA
 
 
 
@@ -43,8 +46,8 @@ main = do
     let quad  = QuadraticBezier (Point2 0 0) (Point2 500 0) (Point2 500 500) :: QuadraticBezier Double
         quad2 = QuadraticBezier (Point2 0 0) (Point2 0 500) (Point2 500 500) :: QuadraticBezier Double
         quadS  = QuadraticBezier (Point2 10.0 10.0) (Point2 216.6 10.0) (Point2 423.3 10.0) :: QuadraticBezier Double
-        quadS2 = QuadraticBezier (Point2 10.0 10.0) (Point2 216.66666666666666 10.0) (Point2 423.33333333333337 10.0) :: QuadraticBezier Double
-        quadS3 = QuadraticBezier (Point2 10.0 10.0) (Point2 216.6              10.0) (Point2 423.33333333333337 10.0) :: QuadraticBezier Double
+        quadS2 = fmap (/(10000)) . (fmap P.fromIntegral) . (fmap P.round) . (fmap (*(10000 :: Double))) $ QuadraticBezier (Point2 10.0 10.0) (Point2 216.66666666666666 10.0) (Point2 423.33333333333337 10.0) :: QuadraticBezier Double
+        quadS3 = QuadraticBezier (Point2 10.0 10.0) (Point2 320.0 10.0) (Point2 630.0 10.0) :: QuadraticBezier Double
         quadS4 = QuadraticBezier (Point2 10.0 10.0) (Point2 216.66666666666666 10.0) (Point2 423.3              10.0) :: QuadraticBezier Double
         quadS5 = QuadraticBezier (Point2 10.0 10.0) (Point2 217.0 10.0) (Point2 423.0 10.0) :: QuadraticBezier Double
         mat :: Matrix2 Double
@@ -56,6 +59,8 @@ main = do
         img2 = matrixToImage mat2
         mat3 = M.generate (A.index2 500 500) $ combine3 [quad, quad2]
         img3 = matrixToImage mat3
+
+    print quadS2
 
     putStrLn "testing distanceFromQuadratics 1"
     saveImageLuna "foo.png" img
@@ -83,6 +88,9 @@ main = do
         imgS = matrixToImage matS
 
     saveImageLuna "fooD3.png" imgS
+
+    let matS = M.generate (A.index2 30 30) $ combine2 $ A.lift quadS3
+    print $ M.compute run matS
 
     putStrLn "testing distanceFromQuadratics Straight Line 4 --> fooD4.png"
     let matS = M.generate (A.index2 500 500) $ combine2 $ A.lift quadS4
