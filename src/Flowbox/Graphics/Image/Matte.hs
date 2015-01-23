@@ -17,7 +17,7 @@ imageMatteDouble chan@(ChannelFloat _ _) = ImageMatte chan
 imageMatteDouble _ = error "Wrong arguemnt type - int given, float expected."
 
 imageMatteInt :: Channel -> Matte Int
-imageMatteInt chan@(ChannelFloat _ _) = ImageMatte chan
+imageMatteInt chan@(ChannelInt _ _) = ImageMatte chan
 imageMatteInt _ = error "Wrong argument type - float given, int expected."
 
 matteToMatrix :: Int -> Int -> Matte Double -> Matrix2 Double
