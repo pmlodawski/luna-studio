@@ -45,7 +45,7 @@ import Luna.Target.HS.Data.Func.Args
 ----------------------------------------------------------------------------------
 
 
-newtype AppH fptr args = AppH (fptr, args) deriving (Show, Eq, Typeable)
+newtype AppH fptr args = AppH (fptr, args) deriving (Show, Eq, Typeable, Functor)
 appH fptr args = AppH (fptr, args)
 
 fromAppH (AppH a) = a

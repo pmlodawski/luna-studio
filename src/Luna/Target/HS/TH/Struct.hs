@@ -201,6 +201,19 @@ registerMethodSignature typeName methodName (Naming.toName -> funcName) = do
 
     return [inst]
 
+
+registerMethodSignature2 typeName methodName (Naming.toName -> funcName) = do
+    funcT   <- getTypeQ funcName
+    dataDec <- getDec typeName
+    let
+        dataVars   = map VarT $ getDecVarNames dataDec
+        baseT      = ConT typeName
+        nt         = foldl AppT (ConT . mkName $ "HasMem2") [LitT (StrTyLit methodName), baseT, funcT]
+        funcs      = [FunD (mkName "memSig2") [Clause [WildP] (NormalB (VarE funcName)) []]]
+        inst       = InstanceD [] nt funcs
+
+    return [inst]
+
 registerMethod :: Name -> String -> Q [Dec]
 registerMethod typeName methodName = do
     let typeNameBase = nameBase typeName
@@ -208,6 +221,31 @@ registerMethod typeName methodName = do
         funcDef      = Naming.mkMemDef typeNameBase methodName
     (++) <$> registerMethodSignature  typeName methodName funcSig
          <*> registerMethodDefinition typeName methodName funcDef
+
+
+registerMethod2 :: Name -> String -> Q [Dec]
+registerMethod2 typeName methodName = do
+    let typeNameBase = nameBase typeName
+        funcSig      = Naming.mkMemSig typeNameBase methodName
+        funcDef      = Naming.mkMemDef typeNameBase methodName
+    (++) <$> registerMethodSignature2 typeName methodName funcSig
+         <*> registerMethodDefinition2 typeName methodName funcDef
+
+registerMethodDefinition2 typeName methodName (Naming.toName -> funcName) = do
+    funcT   <- getTypeQ funcName
+    dataDec <- getDec typeName
+    argsT      <- VarT <$> newName "func"
+    let
+        dataVars   = map VarT $ getDecVarNames dataDec
+        baseT      = ConT typeName
+        prectx     = getContext funcT
+        sig        = getSignature funcT
+        c1         = equalT argsT sig
+        nt         = foldl AppT (ConT $ mkName "FuncProvider") [baseT, LitT (StrTyLit methodName), argsT]
+        funcs      = [FunD (mkName "getFunc2") [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+        ctx        = fmap fixCtx_GHC_7_8 $ c1:prectx
+        inst       = InstanceD ctx nt funcs
+    return $ [inst]
 
 
 registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
