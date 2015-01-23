@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE BangPatterns #-}
 module Flowbox.Bus.Logger.Logger where
 
 import           Control.Monad                    (forever)
@@ -75,20 +76,8 @@ logMessage = do
 
 
 measureTime :: Message.CorrelationID -> StateT Env BusT (Maybe Clock.NominalDiffTime)
-measureTime crlID = do
+measureTime !crlID = do
     stop  <- liftIO Clock.getCurrentTime
-    seq crlID $ return ()
-    --print crlID
-    --times <- gets $ view Env.times
-    --modify $ Env.times %~ Map.insert crlID stop
-    --return $ case Map.lookup crlID times of
-    --    Nothing    -> Nothing
-    --    Just start -> Just $ Clock.diffUTCTime stop start
-
     times <- get
-    seq crlID $ return ()
-    put $ times { Env._times = Env._times times}
-    --put $ Env.times %~ Map.insert crlID stop $ times --FIXME[PM] why does it memory leak?
-    return $ case Map.lookup crlID $ Env._times times of
-        Nothing    -> Nothing
-        Just start -> Just $ Clock.diffUTCTime stop start
+    put $! Env.times %~ Map.insert crlID stop $! times
+    return $ fmap (Clock.diffUTCTime stop) $ Map.lookup crlID $ times ^. Env.times
