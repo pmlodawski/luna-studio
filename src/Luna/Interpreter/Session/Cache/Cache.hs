@@ -156,7 +156,7 @@ deleteVarName varName = do
     onCacheInfo del err callPointPath
     where
         callPointPath = varName ^. VarName.callPointPath
-        err = left $ Error.OtherError $(loc) $ "Cannot find callPointPath = " ++ show callPointPath
+        err = logger warning $ "Cannot find callPointPath = " ++ show callPointPath
         del cacheInfo = do
             if cacheInfo ^. CacheInfo.recentVarName == varName
                 then Env.cachedDelete callPointPath
