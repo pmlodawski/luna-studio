@@ -54,7 +54,15 @@ def Int.>= self::Int a::Int -> Bool:
 def Double.acc:
     ```liftF1 variable #{self}```
 
+def Float.floor self::Float -> Int:
+    ```liftF1 floor #{self}```
+
 alias Path = String
+
+class Image
+
+def emptyImage self::Std -> Image:
+    ```liftF0 Image.empty```
 
 def load self::Std path::Path -> Image:
     ```autoLift1 realReadLuna #{path}```
@@ -215,8 +223,8 @@ def noImgMask self::Std:
 # def Image.rotate self::Image phi::Float:
 #     ```liftF2 turnCenterLuna #{phi} #{self}```
 
-def Image.translate self::Image x::Int y::Int -> Image:
-    ```liftF3 translateLuna #{x} #{y} #{self}```
+# def Image.translate self::Image x::Int y::Int -> Image:
+#     ```liftF3 translateLuna #{x} #{y} #{self}```
 
 # def Image.scaleCenter self::Image x::Float y::Float:
 #     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
@@ -224,10 +232,10 @@ def Image.translate self::Image x::Int y::Int -> Image:
 # def Image.scale self::Image x::Float y::Float:
 #     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
-def Image.transform self::Image trans::TransformD -> Image:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform self::Image trans::TransformD -> Image:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
-def Image.crop self::Image rect::RectangleD -> Image:
+def Image.crop self::Image rect::(Rectangle Int) -> Image:
     ```liftF2 cropLuna #{rect} #{self}```
 
 # VIEW
@@ -269,6 +277,7 @@ class ```Transform``` a:
 
 alias RectangleF = Rectangle Float
 alias RectangleD = Rectangle Double
+alias RectangleI = Rectangle Int
 
 alias TransformF = Transform Float
 alias TransformD = Transform Double
@@ -367,20 +376,20 @@ alias CurveGUI = [ControlPointGUI]
 alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
 alias HandleGUI = (Int, Float, Float)
 
-def curveGUI self::Std vertices::CurveGUI:
+def curveGUI self::Std vertices::CurveGUI -> CurveGUI:
     vertices
 
-def controlPointGUI self::Std point::Point2F handleIn::HandleGUI handleOut::HandleGUI:
+def controlPointGUI self::Std point::Point2F handleIn::HandleGUI handleOut::HandleGUI -> ControlPointGUI:
     (point, handleIn, handleOut)
 
-def nonLinearHandleGUI self::Std weight::Float angle::Float:
+def nonLinearHandleGUI self::Std weight::Float angle::Float -> HandleGUI:
     (0, weight, angle)
 
-def verticalHandleGUI self::Std length::Float:
-    (1, length, 0)
+def verticalHandleGUI self::Std length::Float -> HandleGUI:
+    (1, length, 0.0)
 
-def linearHandleGUI self::Std:
-    (3, 0, 0)
+def linearHandleGUI self::Std -> HandleGUI:
+    (2, 0.0, 0.0)
 
-def getValueAtCurve self::Std curve::curveGUI x::Time:
+def getValueAtCurve self::Std curve::curveGUI x::Time -> Float:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```

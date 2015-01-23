@@ -100,6 +100,12 @@ def Int.dec:
 def Double.acc:
     ```liftF1 variable #{self}```
 
+def Double.floor:
+    ```liftF1 floor #{self}```
+
+# def Float.floor:
+#     ```liftF1 floor #{self}```
+
 
 
 #
@@ -192,10 +198,10 @@ def nonLinearHandleGUI weight angle:
     (0, weight, angle)
 
 def verticalHandleGUI length:
-    (1, length, 0)
+    (1, length, 0.0)
 
 def linearHandleGUI:
-    (3, 0, 0)
+    (2, 0.0, 0.0)
 
 def getValueAtCurve curve x:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```
@@ -233,6 +239,11 @@ class ```Gamma```:
 #
 #                IMAGE
 #
+
+# class ```Image```
+
+def emptyImage:
+    ```liftF0 Image.empty```
 
 def load path:
     ```autoLift1 realReadLuna #{path}```
@@ -411,8 +422,8 @@ def Image.blur kernelSize:
 
 # def Image.translate boundary x y:
 #     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-def Image.translate x y:
-    ```liftF3 translateLuna #{x} #{y} #{self}```
+# def Image.translate x y:
+#     ```liftF3 translateLuna #{x} #{y} #{self}```
 
 # def Image.scaleTo boundary x y:
 #     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
@@ -427,8 +438,8 @@ def Image.translate x y:
 # def Image.scale x y:
 #     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
 
-def Image.transform trans:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform trans:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
