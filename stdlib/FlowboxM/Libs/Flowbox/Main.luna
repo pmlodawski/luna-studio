@@ -21,6 +21,7 @@ import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image as Image```
 import ```Flowbox.Graphics.Image.View as View```
+import ```Flowbox.Graphics.Composition.EdgeBlur```
 import ```Flowbox.Graphics.Composition.Merge (AlphaBlend(..))```
 import ```Flowbox.Graphics.Composition.Keyer```
 import ```Flowbox.Geom2D.Rasterizer```
@@ -34,6 +35,9 @@ import ```Flowbox.Graphics.Image.Matte```
 class ```Bool```:
     True
     False
+
+def Bool.toString:
+    ```liftF1 show #{self}```
 
 class ```Maybe``` a:
     Just:
@@ -64,8 +68,18 @@ class ```Boundary```:
     Wrap
     Constant: a :: Double
 
+def null a:
+    a
+
 def print msg:
     ```autoLift1 print #{msg}```
+
+# CHAR
+
+def Char.toString:
+    ```liftF2 (:) #{self} (val ([] :: String))```
+
+# INT
 
 def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
@@ -100,6 +114,14 @@ def Int.inc:
 def Int.dec:
     self - 1
 
+def Int.fromIntegral:
+    ```liftF1 fromIntegral #{self} :: Value Pure Safe Double```
+
+def Int.toString:
+    ```liftF1 show #{self}```
+
+# DOUBLE
+
 def Double.acc:
     ```liftF1 variable #{self}```
 
@@ -108,6 +130,30 @@ def Double.floor:
 
 def Double.- a:
     ```liftF2 (-) #{self} #{a}```
+
+def Double.* a:
+    ```liftF2 (*) #{self} #{a}```
+
+def Double./ a:
+    ```liftF2 (/) #{self} #{a}```
+
+def Double.> a:
+    ```liftF2 (>) #{self} #{a}```
+
+def Double.== a:
+    ```liftF2 (==) #{self} #{a}```
+
+def Double.< a:
+    ```liftF2 (<) #{self} #{a}```
+
+def Double.<= a:
+    ```liftF2 (<=) #{self} #{a}```
+
+def Double.>= a:
+    ```liftF2 (>=) #{self} #{a}```
+
+def Double.toString:
+    ```liftF1 show #{self}```
 
 # def Float.floor:
 #     ```liftF1 floor #{self}```
@@ -493,6 +539,14 @@ def Image.close size:
 def Image.edgeDetect edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
+class ```BlurType```:
+    GaussBlur
+    BoxBlur
+    TriangleBlur
+
+def Image.edgeBlur channelName blurType kernelSize edgeMultiplier:
+    ```liftF5 edgeBlur #{channelName} #{blurType} #{kernelSize} #{edgeMultiplier} #{self}```
+
 class ```InterpolationFilter```:
     NearestNeighbour
     Box
@@ -741,7 +795,32 @@ def main:
 
     # lena = lena.hueCorrect c c c c c c2 c c
 
-    out = lena.blur 20
+    # out = lena.blur 20
+    # p1 = Point2 169.000000 1.7897727
+    # hIn = linearHandleGUI
+    # hOut = linearHandleGUI
+    # cp = controlPointGUI p1 hIn hOut
+    # curve = curveGUI [cp]
+    # val = getValueAtCurve curve 7.000000
+    valF = (-0.5)
+    print valF
+    print valF.truncate
+    print valF.round
+    print valF.floor
+    print valF.ceiling
+    print valF.toString
+    valB = False
+    print valB
+    print valB.toString
+    valI = 2
+    print valI
+    print valI.toString
+    valC = 'a'
+    print valC
+    print valC.toString
+    # print valC.toString.toChar
+    # out = lena.posterize val
+    # out = (load "./lena.png").posterize (getValueAtCurve (curveGUI [(controlPointGUI (Point2 169.000000 2.7897727) linearHandleGUI linearHandleGUI)]) 7.000000)
     # out.save "./out.png"
 
     f = 0.4

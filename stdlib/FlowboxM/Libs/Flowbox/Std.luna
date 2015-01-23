@@ -32,6 +32,9 @@ class ```Bool```:
     True
     False
 
+def Bool.toString:
+    ```liftF1 show #{self}```
+
 class ```Maybe``` a:
     Just:
         unwrap :: a
@@ -61,8 +64,18 @@ class ```Boundary```:
     Wrap
     Constant: a :: Double
 
+def null a:
+    a
+
 def print msg:
     ```autoLift1 print #{msg}```
+
+# CHAR
+
+def Char.toString:
+    ```liftF2 (:) #{self} (val ([] :: String))```
+
+# INT
 
 def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
@@ -96,6 +109,14 @@ def Int.inc:
 
 def Int.dec:
     self - 1
+
+def Int.fromIntegral:
+    ```liftF1 fromIntegral #{self} :: Value Pure Safe Double```
+
+def Int.toString:
+    ```liftF1 show #{self}```
+
+# DOUBLE
 
 def Double.acc:
     ```liftF1 variable #{self}```
@@ -138,6 +159,9 @@ def Double.<= a:
 
 def Double.>= a:
     ```liftF2 (>=) #{self} #{a}```
+
+def Double.toString:
+    ```liftF1 show #{self}```
 
 # def Float.floor:
 #     ```liftF1 floor #{self}```
