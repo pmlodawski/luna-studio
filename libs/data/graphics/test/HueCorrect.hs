@@ -14,12 +14,12 @@ import qualified Data.Array.Accelerate as A hiding (fromIntegral)
 import           Data.Array.Accelerate.IO
 import           Data.ByteString hiding (head)
 import           Data.VectorSpace
-import           Diagrams.Prelude hiding (Path)
-import           Diagrams.Backend.Cairo
-import           Diagrams.Backend.Cairo.Internal
-import           Diagrams.Segment
-import           Diagrams.Trail
-import           Diagrams.TrailLike
+--import           Diagrams.Prelude hiding (Path)
+--import           Diagrams.Backend.Cairo
+--import           Diagrams.Backend.Cairo.Internal
+--import           Diagrams.Segment
+--import           Diagrams.Trail
+--import           Diagrams.TrailLike
 import           Graphics.Rendering.Cairo hiding (translate)
 --import           Graphics.Rendering.Cairo
 
