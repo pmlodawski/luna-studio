@@ -1,5 +1,5 @@
 
-def null a:
+def null self::Std a:
     a
 
 def print self msg::String:
@@ -9,6 +9,9 @@ class ```Bool```:
     True
     False
 
+def Bool.toString self::Bool -> String:
+    ```liftF1 show #{self}```
+
 class ```Maybe``` a:
     Just:
         unwrap :: a
@@ -17,6 +20,13 @@ class ```Maybe``` a:
 class ```Either``` a b:
     Left: l :: a
     Right: r :: b
+
+# CHAR
+
+def Char.toString self::Char -> String:
+    ```liftF2 (:) #{self} (val ([] :: String))```
+
+# INT
 
 def Int.+ self::Int a::Int -> Int:
     ```liftF2 (+) #{self} #{a}```
@@ -51,48 +61,58 @@ def Int.>= self::Int a::Int -> Bool:
 # def Int.dec:
 #     self.sub 1
 
+def Int.fromIntegral self::Int -> Float:
+    ```liftF1 fromIntegral #{self} :: Value Pure Safe Double```
+
+def Int.toString self::Int -> String:
+    ```liftF1 show #{self}```
+
+# DOUBLE / FLOAT
+
 def Float.acc:
     ```liftF1 variable #{self}```
 
-def Float.truncate:
+def Float.truncate self::Float -> Int:
     ```liftF1 truncate #{self} :: Value Pure Safe Int```
 
-def Float.round:
+def Float.round self::Float -> Int:
     ```liftF1 round #{self} :: Value Pure Safe Int```
 
-def Float.floor:
+def Float.floor self::Float -> Int:
     ```liftF1 floor #{self} :: Value Pure Safe Int```
 
-def Float.ceiling:
+def Float.ceiling self::Float -> Int:
     ```liftF1 ceiling #{self} :: Value Pure Safe Int```
 
-def Float.+ a:
+def Float.+ self::Float a::Float -> Float:
     ```liftF2 (+) #{self} #{a}```
 
-def Float.- a:
+def Float.- self::Float a::Float -> Float:
     ```liftF2 (-) #{self} #{a}```
 
-def Float.* a:
+def Float.* self::Float a::Float -> Float:
     ```liftF2 (*) #{self} #{a}```
 
-def Float./ a:
+def Float./ self::Float a::Float -> Float:
     ```liftF2 (/) #{self} #{a}```
 
-def Float.> a:
+def Float.> self::Float a::Float -> Bool:
     ```liftF2 (>) #{self} #{a}```
 
-def Float.== a:
+def Float.== self::Float a::Float -> Bool:
     ```liftF2 (==) #{self} #{a}```
 
-def Float.< a:
+def Float.< self::Float a::Float -> Bool:
     ```liftF2 (<) #{self} #{a}```
 
-def Float.<= a:
+def Float.<= self::Float a::Float -> Bool:
     ```liftF2 (<=) #{self} #{a}```
 
-def Float.>= a:
+def Float.>= self::Float a::Float -> Bool:
     ```liftF2 (>=) #{self} #{a}```
 
+def Float.toString self::Float -> String:
+    ```liftF1 show #{self}```
 
 alias Path = String
 
