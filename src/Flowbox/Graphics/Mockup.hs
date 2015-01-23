@@ -209,28 +209,12 @@ edgeBlur channelName blurType kernelSize edgeMultiplier image =
                 (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) shader
                 (Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) $ fmap ((/256) . A.fromIntegral) shader
 
-
 testEdgeBlur kernelSize edgeMultiplier channel = do
     img <- loadImageLuna "/home/chris/globe.png"
 
     let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
 
     saveImageLuna "/home/chris/Luna_result.png" a
-
-    --    Right (Just ch) = getFromPrimary channelName image
-    --    chS = case ch of
-    --        Right mCh -> mCh
-    --        Left  err -> err
-    --    result = case chS of
-    --        Nothing -> image
-    --        Just channel ->  $ funcP channel
-
-    --    chMat           = asMatrix ch
-    --    ChannelFloat _ (MatrixData channelMat) = chMat
-    --    maskEdges       = EB.edges (variable edgeMultiplier) channelMat -- TODO: channel choice
-    --    blurFunc        = EB.maskBlur EB.Gauss (variable kernelSize) maskEdges
-    --in {-- onEachChannel blurFunc --} image
-
 
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
 --rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
@@ -396,7 +380,7 @@ blurLuna (variable -> kernelSize) = onEachChannel blurChannel
               (Channel.asDiscreteClamp -> ChannelFloat name zeData) -> ChannelFloat name $ (\(DiscreteData shader) -> DiscreteData $ processFloat shader) zeData
               (Channel.asDiscreteClamp -> ChannelInt   name zeData) -> ChannelInt   name $ (\(DiscreteData shader) -> DiscreteData $ processInt   shader) zeData
           processFloat x = id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ x
-          processInt   x = fmap floor $ (id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fmap A.fromIntegral x :: DiscreteShader (Exp Float))
+          processInt   x = fmap floor $ (processFloat $ fmap A.fromIntegral x :: DiscreteShader (Exp Float))
           p = pipe A.Clamp
           hmat :: (Elt e, IsFloating e) => Matrix2 e
           hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
