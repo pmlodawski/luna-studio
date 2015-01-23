@@ -1,27 +1,20 @@
 
-module Flowbox.Graphics.Composition.EdgeBlur where
+module Flowbox.Graphics.Composition.EdgeBlur (
+    BlurType(..) , edges, maskBlur
+) where
 
--- import           Data.Array.Accelerate.CUDA          as A
+
 import           Flowbox.Graphics.Composition.Filter as F
-
-import           Flowbox.Graphics.Shader.Sampler
-import           Flowbox.Graphics.Shader.Rasterizer
 
 import Flowbox.Graphics.Utils.Utils
 import Flowbox.Graphics.Shader.Pipe
-import Flowbox.Graphics.Composition.Generator.Shape
-import Flowbox.Graphics.Shader.Matrix
 import Flowbox.Graphics.Shader.Shader
-import Flowbox.Graphics.Shader.Stencil
+import Flowbox.Math.Matrix as M
 
 import           Flowbox.Graphics.Prelude            as P hiding (filter)
-import           Flowbox.Math.Matrix                 as M hiding (size, stencil)
-import qualified Flowbox.Math.Matrix                 as M (stencil)
-import           Flowbox.Math.BitonicSorterGenerator as B
 import           Data.Array.Accelerate               as A hiding (constant, filter, scatter, size, stencil)
 
 import Math.Space.Space
-import Math.Coordinate.Cartesian (Point2(..))
 
 
 
@@ -37,12 +30,13 @@ applyKernel kernel img = process img where
 
 -- bluredImg = blur n sigma testShader
 
-mixImages edges first second = (+) <$> 
-                               ( (*) <$> first <*> edges ) 
+mixImages :: (Applicative f, Num a) => f a -> f a -> f a -> f a
+mixImages edgesMask first second = (+) <$> 
+                               ( (*) <$> first <*> edgesMask ) 
                                <*> 
-                               ( (*) <$> second <*> (fmap ((-) 1) edges) )
+                               ( (*) <$> second <*> (fmap ((-) 1) edgesMask) )
 
-
+detectEdges :: (Elt a, IsFloating a) => Exp a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$>
                        (fmap abs $ applyKernel (M.transpose (sobel {-- :: Matrix2 Double --} )) img) 
                        <*> 
@@ -63,19 +57,21 @@ detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$>
 
 
 
-edgeBlur :: BlurType -> Exp Int -> Exp Double -> Matrix2 Double -> [Matrix2 Double] -> [Matrix2 Double]
-edgeBlur blurType size edgeMult matteCh chs = fmap ( rasterizer . blurFunc . (fromMatrix Clamp) ) chs where
-    maskEdges =  edges edgeMult  (fromMatrix Clamp matteCh)
-    blurFunc  = maskBlur blurType size maskEdges --matteCh 
+--edgeBlur :: BlurType -> Exp Int -> Exp Double -> Matrix2 Double -> [Matrix2 Double] -> [Matrix2 Double]
+--edgeBlur blurType kernelSize edgeMult matteCh chs = fmap ( rasterizer . blurFunc . (fromMatrix Clamp) ) chs where
+--    maskEdges =  edges edgeMult  (fromMatrix Clamp matteCh)
+--    blurFunc  = maskBlur blurType kernelSize maskEdges --matteCh 
 
 
 --edges :: Exp Double -> Matrix2 Double -> CartesianShader (Exp Double) (Exp Double)
 
+edges :: (Elt a, IsFloating a) => Exp a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 edges edgeMult channel = blurFunc bigEdges where
+    blurFunc  = blurChoice GaussBlur 15
+    bigEdges  = dilate (Grid 5 5) $ erode (Grid 3 3) thinEdges   
+    thinEdges = detectEdges edgeMult imgShader
     imgShader = channel
-    edges     = detectEdges edgeMult imgShader
-    bigEdges  = dilate (Grid 5 5) $ erode (Grid 3 3) edges
-    blurFunc  = blurChoice Gauss 15
+    
 
 
     --blurChoice Gauss 15 $ nearest $ dilate (Grid 5 5) $ erode (Grid 3 3) $ monosampler $ detectEdges edgeMult $ nearest $ fromMatrix Clamp channel
@@ -107,13 +103,13 @@ maskBlur blurType size mask img = mixImages mask blured imgShader where
     
 blurChoice :: (Elt a, IsFloating a) => BlurType -> Exp Int -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 blurChoice blurType = case blurType of
-  Gauss     -> blur $ gauss 1
-  Box       -> blur   box
-  Triangle  -> blur   triangle
+  GaussBlur     -> blur $ gauss 1
+  BoxBlur       -> blur   box
+  TriangleBlur  -> blur   triangle
   -- Quadratic -> undefined
 
 
-data BlurType = Gauss | Box | Triangle -- | Quadratic
+data BlurType = GaussBlur | BoxBlur | TriangleBlur -- | Quadratic
 
 --edgeBlur' :: Exp Double -> Exp Int -> CartesianShader (Exp Double) (Exp Double) -> Matrix2 Double -> Matrix2 Double
 --edgeBlur' sigma size mask img = 
