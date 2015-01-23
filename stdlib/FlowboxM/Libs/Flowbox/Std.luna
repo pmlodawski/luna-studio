@@ -100,8 +100,44 @@ def Int.dec:
 def Double.acc:
     ```liftF1 variable #{self}```
 
+def Double.truncate:
+    ```liftF1 truncate #{self} :: Value Pure Safe Int```
+
+def Double.round:
+    ```liftF1 round #{self} :: Value Pure Safe Int```
+
 def Double.floor:
-    ```liftF1 floor #{self}```
+    ```liftF1 floor #{self} :: Value Pure Safe Int```
+
+def Double.ceiling:
+    ```liftF1 ceiling #{self} :: Value Pure Safe Int```
+
+def Double.+ a:
+    ```liftF2 (+) #{self} #{a}```
+
+def Double.- a:
+    ```liftF2 (-) #{self} #{a}```
+
+def Double.* a:
+    ```liftF2 (*) #{self} #{a}```
+
+def Double./ a:
+    ```liftF2 (/) #{self} #{a}```
+
+def Double.> a:
+    ```liftF2 (>) #{self} #{a}```
+
+def Double.== a:
+    ```liftF2 (==) #{self} #{a}```
+
+def Double.< a:
+    ```liftF2 (<) #{self} #{a}```
+
+def Double.<= a:
+    ```liftF2 (<=) #{self} #{a}```
+
+def Double.>= a:
+    ```liftF2 (>=) #{self} #{a}```
 
 # def Float.floor:
 #     ```liftF1 floor #{self}```
