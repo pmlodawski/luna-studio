@@ -28,7 +28,7 @@ import qualified Luna.Interpreter.Session.Var            as Var
 import qualified Luna.Lib.Lib                            as Lib
 import qualified Luna.Lib.Manager                        as LibManager
 import qualified Luna.Pass.Analysis.ID.ExtractIDs        as ExtractIDs
-
+import Control.Monad (forM_)
 
 
 insertTimeRef :: Lib.ID -> Node.ID -> Node.ID
@@ -38,8 +38,8 @@ insertTimeRef libraryID nodeID defID defExpr = do
     liftSession $ do
         Env.insertDependentNode (CallPoint libraryID nodeID) defID
         Env.insertDependentNodes (CallPoint libraryID defID) ids
-        when (Var.isTimeRefNodeExpr defExpr) $
-            Env.insertTimeRef (CallPoint libraryID defID)
+        forM_ (Var.timeRefIds defExpr) $ \ timeRefID ->
+            Env.insertTimeRef (CallPoint libraryID timeRefID)
 
 
 deleteTimeRef :: MemoryManager mm
@@ -51,8 +51,8 @@ deleteTimeRef libraryID nodeID defID defExpr = do
         Cache.deleteNode libraryID defID
         mapM_ (Cache.deleteNode libraryID) $ IntSet.toList ids
         Env.deleteDependentNode (CallPoint libraryID nodeID) defID
-        when (Var.isTimeRefNodeExpr defExpr) $
-            Env.deleteTimeRef (CallPoint libraryID defID)
+        forM_ (Var.timeRefIds defExpr) $ \ timeRefID ->
+            Env.deleteTimeRef (CallPoint libraryID timeRefID)
 
 
 rebuildTimeRefs :: RPC Context (SessionST mm) ()

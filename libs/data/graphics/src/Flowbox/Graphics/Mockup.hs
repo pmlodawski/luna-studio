@@ -53,10 +53,11 @@ import qualified Flowbox.Geom2D.Shape                                 as GShape
 import qualified Flowbox.Geom2D.Mask as Mask
 import           Flowbox.Geom2D.Rasterizer
 import           Flowbox.Graphics.Composition.Filter
-import           Flowbox.Graphics.Composition.Filter       as Conv
+import           Flowbox.Graphics.Composition.Filter                  as Conv
 import           Flowbox.Graphics.Composition.Generator.Gradient
 import           Flowbox.Graphics.Composition.Keyer
-import           Flowbox.Graphics.Shader.Matrix       as Shader
+import qualified Flowbox.Graphics.Composition.EdgeBlur                as EB
+import           Flowbox.Graphics.Shader.Matrix                       as Shader
 import           Flowbox.Graphics.Composition.Generator.Noise.Billow
 import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
 import           Flowbox.Graphics.Shader.Pipe
@@ -191,6 +192,37 @@ onEachChannel f = Image.map $ View.map f
 --                 $ nearest
 --                 $ rectangle (Grid (variable size) 1) 1 0
 --          process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
+
+
+edgeBlur :: Channel.Name -> EB.BlurType -> Int -> Double -> Image -> Image
+edgeBlur channelName blurType kernelSize edgeMultiplier image = 
+    case getFromPrimary channelName image of
+        Left err             -> error $ show err
+        Right (Nothing)      -> image
+        Right (Just channel) -> onEachChannel blurFunc image where
+            blurFunc = \case
+                (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> ChannelFloat name $ DiscreteData $ blurShader shader
+                (Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> ChannelInt name $ DiscreteData $ mapShaderInt blurShader shader
+            mapShaderInt func x = fmap (floor . (*256)) $ (( func $ fmap ((/256) . A.fromIntegral) x ) :: DiscreteShader (Exp Double))
+            blurShader = EB.maskBlur blurType (variable kernelSize) maskEdges
+            maskEdges  = case channel of
+                (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) shader
+                (Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) $ fmap ((/256) . A.fromIntegral) shader
+
+testEdgeBlur kernelSize edgeMultiplier channel = do
+    img <- loadImageLuna "/home/chris/globe.png"
+
+    let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
+
+    saveImageLuna "/home/chris/Luna_result.png" a
+
+-- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
+--rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
+
+
+-- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
+--rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
+
 
 --bilateral :: Double
 --          -> Double
@@ -348,7 +380,7 @@ blurLuna (variable -> kernelSize) = onEachChannel blurChannel
               (Channel.asDiscreteClamp -> ChannelFloat name zeData) -> ChannelFloat name $ (\(DiscreteData shader) -> DiscreteData $ processFloat shader) zeData
               (Channel.asDiscreteClamp -> ChannelInt   name zeData) -> ChannelInt   name $ (\(DiscreteData shader) -> DiscreteData $ processInt   shader) zeData
           processFloat x = id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ x
-          processInt   x = fmap floor $ (id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fmap A.fromIntegral x :: DiscreteShader (Exp Float))
+          processInt   x = fmap floor $ (processFloat $ fmap A.fromIntegral x :: DiscreteShader (Exp Float))
           p = pipe A.Clamp
           hmat :: (Elt e, IsFloating e) => Matrix2 e
           hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
