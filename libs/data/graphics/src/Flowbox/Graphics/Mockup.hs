@@ -332,11 +332,10 @@ applyToShader f matte mat = combineWith (maskedApp f) matte mat
 applyToMatrix :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> Matrix2 a -> Matrix2 a -> Matrix2 a
 applyToMatrix f matte mat = (M.zipWith (\x -> \y -> (maskedApp f x y)) matte) mat
 
--- playground
 offsetMatteLuna :: Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
 offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img = 
   case matte of
-    Nothing -> offsetLuna x img --onEachRGBA (offset r) (offset g) (offset b) (offset a) img
+    Nothing -> onEachRGBA (offset r) (offset g) (offset b) (offset a) img
     Just m ->
       let m' = convertMatte m
       in
@@ -345,7 +344,18 @@ offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
                            (applyMatteFloat (offset b) m')
                            (applyMatteFloat (offset a) m') img
 
--- playground
+contrastMatteLuna :: Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
+contrastMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img = 
+  case matte of
+    Nothing -> onEachRGBA (contrast r) (contrast g) (contrast b) (contrast a) img
+    Just m ->
+      let m' = convertMatte m
+      in
+        onEachRGBAChannels (applyMatteFloat (contrast r) m')
+                           (applyMatteFloat (contrast g) m')
+                           (applyMatteFloat (contrast b) m')
+                           (applyMatteFloat (contrast a) m') img
+                           
 exposureMatteLuna :: Color.RGBA Double -> Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
 exposureMatteLuna x@(fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
                   y@(fmap variable -> Color.RGBA exR exG exB exA) matte img =
@@ -1352,7 +1362,13 @@ multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap vari
 getChannelLuna :: String -> String -> Image -> Image.Result (Maybe Channel)
 getChannelLuna viewName channelName img = case Image.lookup viewName img of
     Right view -> View.get view channelName
-    _         -> Left $ Image.ViewLookupError viewName
+    _          -> Left $ Image.ViewLookupError viewName
+
+getChannelFromPrimaryLuna :: String -> Image -> Image.Result (Maybe Channel)
+getChannelFromPrimaryLuna channelName img = case Image.lookupPrimary img of
+  Right view -> View.get view channelName
+  _          -> Left $ Image.ViewLookupError "primary view"
+
 
 -- FIXME[KM]: [iup]
 --insertChannelLuna :: String -> Channel -> Image -> Image
@@ -1428,7 +1444,14 @@ realReadLuna :: FilePath -> IO Image
 realReadLuna (ImageEXR path) = readFromEXRLuna path
 realReadLuna path            = loadImageLuna path
 
+loadMatteLuna :: FilePath -> String -> IO (Maybe Channel)
+loadMatteLuna path channelName = do
+  img <- realReadLuna path
+  let channel = getChannelFromPrimaryLuna channelName img
+  case channel of
+    Right channel -> return channel
+    Left _ -> error "Error while matte loading."
+
 testColorCC :: Color5 -> Image
 testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
     constantLuna 512 512 $ Color.RGBA (r*x) (g*x) (b*x) (a*x)
-
