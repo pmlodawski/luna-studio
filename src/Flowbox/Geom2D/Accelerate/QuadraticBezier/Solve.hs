@@ -45,9 +45,11 @@ solveCubic a b c = A.cond (d >=* 0) opt1 opt3
           v' = acos (-sqrt ((-27) / p3) * q / 2) / 3
 
 distanceFromQuadratic :: Exp (Point2 Double) -> Exp (QuadraticBezier Double) -> Exp Double
-distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond (n A.>* 1)
-    (min (getLength res0) $ min (getLength res1) (getLength res2))
-    (getLength res0)
+distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond ((dot sc sc) ==* 0) 
+    l
+    (A.cond (n A.>* 1)
+        (min (getLength res0) $ min (getLength res1) (getLength res2))
+        (getLength res0))
     where (n :: Exp Int, res :: Exp (Double, Double, Double)) = A.unlift res'
           (res0, res1, res2) = A.unlift res :: (Exp Double, Exp Double, Exp Double)
           res' = solveCubic (b*a) (c*a) (d*a)
@@ -74,6 +76,20 @@ distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A
           --
           dot (Point2 ox oy) (Point2 qx qy) = ox * qx + oy * qy
           mult x y = fmap (*y) x
+          --
+          Point2 x1 y1 = p0
+          Point2 x2 y2 = p2
+          Point2 x  y  = p
+          u   = ((x2 - x1) * (x - x1) + (y2 - y1) * (y - y1))/(um1*um1 + um2*um2)
+          um1 = x2 - x1
+          um2 = y2 - y1
+          p3  = Point2 (x1 + u * (x2 - x1)) (y1 + u * (y2 - y1))
+          pp3 = len2 p p3
+          pp2 = len2 p p2
+          pp1 = len2 p p0
+          l   = A.cond ((u >* 0) &&* (1 >* u)) pp3 (min pp1 pp2)
+          len2 (Point2 x1 y1) (Point2 x2 y2) = sqrt((x1-x2)^2 + (y1-y2)^2)
+
 
 -- TODO: [KM] make a version of this working on CubicBezier (and doing the conversion to a list of Quadratics inside it)
 distanceFromQuadratics :: Exp (Point2 Double) -> Acc (Vector (QuadraticBezier Double)) -> Exp Double
