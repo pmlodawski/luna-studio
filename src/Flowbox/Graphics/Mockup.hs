@@ -27,7 +27,7 @@ module Flowbox.Graphics.Mockup (
 import qualified Codec.Picture.Png                 as Juicy
 import qualified Codec.Picture.Types               as Juicy
 import qualified Data.Array.Accelerate             as A
-import qualified Data.Array.Accelerate.Array.Sugar as A
+import qualified Data.Array.Accelerate.Array.Sugar as As
 import           Data.Array.Accelerate.CUDA
 import qualified Data.Array.Accelerate.IO          as A
 import           Data.Bool
@@ -133,7 +133,7 @@ testSaveRGBA filename r g b a = saveImageJuicy filename $ compute' run $ M.map A
 
 saveImageJuicy :: forall e a.
                         (SV.Storable a, Elt e,
-                         A.Vectors (A.EltRepr e)
+                         A.Vectors (As.EltRepr e)
                          ~ ((), SV.Vector a)) =>
                         FilePath -> A.Array ((Z :. Int) :. Int) e -> IO ()
 saveImageJuicy file matrix = do
@@ -326,6 +326,18 @@ unpackAcc (x,y) =
   in
     (x',y')
 
+adjustMatte :: Matrix2 Double -> Matrix2 Double -> Matrix2 Double
+adjustMatte mat matte = matte'
+  where
+    sh = M.shape matte
+    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+
+    matte' = M.generate (M.shape mat) (\sh ->
+      let
+        A.Z A.:. x A.:. y = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+      in
+        (x A.<* h A.&&* y A.<* w) A.? (matte M.! sh, 0.0))
+
 applyMatteFloat :: (A.Exp Double -> A.Exp Double) -> Matte.Matte Double -> Channel -> Channel
 applyMatteFloat f m (ChannelFloat name (MatrixData mat)) = ChannelFloat name (MatrixData mat')
   where
@@ -333,7 +345,7 @@ applyMatteFloat f m (ChannelFloat name (MatrixData mat)) = ChannelFloat name (Ma
     A.Z A.:. x A.:. y = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
     (h,w) = unpackAcc (x,y)
     matte = Matte.matteToMatrix h w m
-    mat' = applyToMatrix f matte mat
+    mat' = applyToMatrix f (adjustMatte mat matte) mat
 
 applyMatteFloat f m (ChannelFloat name (DiscreteData shader)) = ChannelFloat name (DiscreteData shader')
   where
