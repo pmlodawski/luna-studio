@@ -63,4 +63,7 @@ Library
                   phonetic-code,
                   edit-distance,
                   tuple,
-                  optparse-applicative
+                  optparse-applicative,
+
+                  -- fixing trifecta for now
+                  blaze-markup < 0.6.3
