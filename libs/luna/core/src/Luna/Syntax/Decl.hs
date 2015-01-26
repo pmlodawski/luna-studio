@@ -39,8 +39,8 @@ noBody   = []
 noFields = []
 
 data Decl a e
-    = Data      (DataDecl a e)
-    | Func      (FuncDecl a e [e])
+    = Data      { _dataDecl :: DataDecl a e }
+    | Func      { _funcDecl :: FuncDecl a e [e] }
     | Imp       { _modPath :: Path    , _rename   :: Maybe TNameP , _targets :: [ImpTgt]                                 }
     | TpAls     { _dstType :: LType a , _srcType  :: LType a                                                             }
     | TpWrp     { _dstType :: LType a , _srcType  :: LType a                                                             }
@@ -49,8 +49,16 @@ data Decl a e
     deriving (Show, Generic, Eq, Read)
 
 
-data FuncDecl a e body = FuncDecl Path (FuncSig a e) (FuncOutput a) body      deriving (Show, Generic, Eq, Read)
-data DataDecl a e      = DataDecl TNameP DataParams [LCons a e] [LDecl a e]   deriving (Show, Generic, Eq, Read)
+data FuncDecl a e body = FuncDecl { _funcDeclPath   :: Path
+                                  , _funcDeclSig    :: FuncSig a e
+                                  , _funcDeclOutput :: FuncOutput a
+                                  , _funcDeclBody   :: body
+                                  } deriving (Show, Generic, Eq, Read)
+data DataDecl a e      = DataDecl { _dataDeclName   :: TNameP
+                                  , _dataDeclParams :: DataParams
+                                  , _dataDeclCons   :: [LCons a e]
+                                  , _dataDeclDecls  :: [LDecl a e]
+                                  } deriving (Show, Generic, Eq, Read)
 
 data ForeignDecl a e
     = FData (DataDecl a e)
@@ -85,6 +93,8 @@ type LField a e = Label a (Field a e)
 
 
 makeLenses ''Decl
+makeLenses ''DataDecl
+makeLenses ''FuncDecl
 
 
 
