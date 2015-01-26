@@ -37,6 +37,7 @@ import            Control.Applicative
 import            Control.Lens                            hiding (without)
 import            Control.Monad.State
 
+import            Data.List
 import            Data.Monoid
 import qualified  Data.Text.Lazy                          as LText
 import            Data.Text.Lazy                          (unpack)
@@ -110,38 +111,23 @@ tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m
 tcDecl ldecl@(Label lab decl) = do
     case decl of
       Decl.Func all@(Decl.FuncDecl path sig funcout body) -> do
-          let baseName = sig ^. NamePat.base . NamePat.segmentBase . unpacked
-              baseArgs = sig ^. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName . unpacked . to (++ ", ")
-              --baseArgs = mapMOf (Arg.pat . Label.element) show (NamePat.base . NamePat.segmentArgs)
-          debugPush $ "Function: " ++ baseName ++ " :: (" ++ baseArgs ++ ") → ???"
-          --let (NamePat.NamePat _ _ segs) = sig
-          --let segmentNames = map (\(NamePat.Segment sn _) -> sn) segs
-          --debugPush $ "function: path=" ++ show path ++ " funsig={" ++ unpack (LText.concat segmentNames) ++ "} funcOutput=?? body=??"
+          let baseName = sig ^.  NamePat.base . NamePat.segmentBase . unpacked
+              baseArgs = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName . unpacked
+              --   The       |   |              |                     |          |         |               |              |
+              --  lens       |   |              |                     |          |         |               |              +-- convert Lazy Text to String
+              --  magic      |   |              |                     |          |         |               +-- get human readable form
+              --   is        |   |              |                     |          |         +-- skip label, get the element
+              --  here.      |   |              |                     |          +-- read the pattern
+              -- Behold!     |   |              |                     +-- for each of them
+              --             |   |              +-- get the list of segments (ie. list of arguments)
+              --             |   +-- get the signature of the function
+              --             +-- return the list; if (^.) was here then this would be merged with mappend
+          debugPush $ "Function: " ++ baseName ++ " :: (" ++ intercalate ", " baseArgs ++ ") → ???"
+          --tp (env, Abs x e) = do a <- newtvar
+          --                       b <- tp (insert env (x, Mono (TV a)), e)
+          --                       normalize ((TV a) `Fun` b)
       _ -> return ()
     defaultTraverseM ldecl
-  --  case decl of
-  --      fun@Decl.Func { Decl._sig  = sig@NamePat.NamePat{ NamePat._base = (NamePat.Segment name args) }
-  --                    , Decl._body = body
-  --                    } ->
-  --        do  
-  --          --tp (env, Abs x e) = do a <- newtvar
-  --          --                       b <- tp (insert env (x, Mono (TV a)), e)
-  --          --                       normalize ((TV a) `Fun` b)
-  --          name_ids <- getTargetIDString lab
-  --          args_ids <- unwords <$> mapM mapArg args
-  --          debugPush ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " START")
-  --          x <- defaultTraverseM ldecl
-
-  --          debugPush ("Function    " ++ unpack name ++ name_ids ++ " " ++ args_ids ++ " END") 
-  --          return x
-  --      _ ->
-  --          defaultTraverseM ldecl
-  --where 
-  --  mapArg :: (Enumerated lab, Monad m) => NamePat.Arg (Pat.LPat lab) a -> StageTypecheckerPass m String
-  --  mapArg (NamePat.Arg (Label laba arg) _) =
-  --    do
-  --      arg_id <- getTargetIDString laba
-  --      return $ unpack (humanName arg) ++ arg_id
 
 
 tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
