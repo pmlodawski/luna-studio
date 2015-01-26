@@ -174,7 +174,7 @@ onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
           updateChan f = Channel.unsafeMap (Channel.FunFloat f) . getChan
           getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
 
-onEachColorRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image -> Image
+onEachColorRGB :: (A.Exp (Color.RGB Float) -> A.Exp (Color.RGB Float)) -> Image -> Image
 onEachColorRGB = undefined
 -- onEachColorRGB f img = img'
 --     where rgb = unsafeGetRGB img
@@ -575,11 +575,11 @@ cropLuna rect = onEachChannel cropChannel
               ChannelFloat name zeData -> ChannelFloat name $ Transform.crop rect zeData
               ChannelInt   name zeData -> ChannelInt   name $ Transform.crop rect zeData
 
-hsvToolLuna :: VPS Double -> VPS Double -> VPS Double -> VPS Double
-            -> VPS Double -> VPS Double -> VPS Double -> VPS Double
-            -> VPS Double -> VPS Double -> VPS Double -> VPS Double
-            -> A.Exp (Color.RGB Double)
-            -> A.Exp (Color.RGB Double)
+hsvToolLuna :: VPS Float -> VPS Float -> VPS Float -> VPS Float
+            -> VPS Float -> VPS Float -> VPS Float -> VPS Float
+            -> VPS Float -> VPS Float -> VPS Float -> VPS Float
+            -> A.Exp (Color.RGB Float)
+            -> A.Exp (Color.RGB Float)
 hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
             (VPS (variable -> hueRotation)) (VPS (variable -> hueRolloff))
             (VPS (variable -> saturationRangeStart)) (VPS (variable -> saturationRangeEnd))
@@ -588,11 +588,11 @@ hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
             (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff)) =
     A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
                      (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
-                     (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
+                     (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
 
-hsvToolLuna' :: Double -> Double -> Double -> Double
-             -> Double -> Double -> Double -> Double
-             -> Double -> Double -> Double -> Double
+hsvToolLuna' :: Float -> Float -> Float -> Float
+             -> Float -> Float -> Float -> Float
+             -> Float -> Float -> Float -> Float
              -> Image
              -> Image
 hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
@@ -603,7 +603,7 @@ hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
              (variable -> brightnessAdjustment) (variable -> brightnessRolloff) =
     onEachColorRGB $ A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
                      (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
-                     (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double))
+                     (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
 
 -- test :: VPS Double -> VPS Double -> VPS Double -> VPS Double
 --      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
@@ -744,8 +744,8 @@ withAlpha f img = img'
 invertLuna :: Image -> Image
 invertLuna = onEachRGBA invert invert invert id
 
-colorMatrixLuna :: ColorMatrix Color.RGB Double -> Image -> Image
-colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (colorMatrix :: ColorMatrix Color.RGB Double -> Color.RGB (A.Exp Double) -> Color.RGB (A.Exp Double)) matrix)
+colorMatrixLuna :: ColorMatrix Color.RGB Float -> Image -> Image
+colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (colorMatrix :: ColorMatrix Color.RGB Float -> Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float)) matrix)
 
 clampLuna :: (VPS Float, VPS Float) -> Maybe (VPS Float, VPS Float) -> Image -> Image
 clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =
@@ -839,7 +839,7 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
-type HandleGUI = (VPS Int, VPS Double, VPS Double)
+type HandleGUI = (VPS Int, VPS Float, VPS Float)
 type ControlPointGUI a = (VPS (Point2 a), VPS HandleGUI, VPS HandleGUI)
 type CurveGUI a = [VPS (ControlPointGUI a)]
 
@@ -850,7 +850,7 @@ convertHandleGUI (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
         1 -> CurveGUI.Vertical w
         2 -> CurveGUI.Linear
 
-getValueAtCurveGUI :: CurveGUI Double -> Double -> Double
+getValueAtCurveGUI :: CurveGUI Float -> Float -> Float
 getValueAtCurveGUI (convertCurveGUI -> curve) = CurveGUI.valueAtSpline curve
 
 convertControlPointGUI :: ControlPointGUI a -> CurveGUI.ControlPoint a
@@ -860,10 +860,10 @@ convertControlPointGUI (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar 
 convertCurveGUI :: CurveGUI a -> CurveGUI.Curve a
 convertCurveGUI (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertControlPointGUI c)
 
-hueCorrectLuna :: VPS (CurveGUI Double) -> VPS (CurveGUI Double) ->
-                  VPS (CurveGUI Double) -> VPS (CurveGUI Double) -> VPS (CurveGUI Double) ->
-                  CurveGUI Double -> CurveGUI Double -> CurveGUI Double ->
-                  -- GUICurve Double -> sat_thrsh will be added later
+hueCorrectLuna :: VPS (CurveGUI Float) -> VPS (CurveGUI Float) ->
+                  VPS (CurveGUI Float) -> VPS (CurveGUI Float) -> VPS (CurveGUI Float) ->
+                  CurveGUI Float -> CurveGUI Float -> CurveGUI Float ->
+                  -- GUICurve Float -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
 hueCorrectLuna (VPS (convertCurveGUI-> lum)) (VPS (convertCurveGUI -> sat))
