@@ -53,8 +53,8 @@ Library
                     time,
                     transformers >= 0.4
 
--- [PM] simple-config >= 1.2.2.1 is added to fix dependencies
 -- [PM] monad-control < 1.0.0.0 and aws == 0.11.1 is added until https://github.com/worksap-ate/aws-sdk/issues/183 is resolved
+
 Executable aws-test-dbpool
     Main-Is:        DBPool.hs
     Hs-Source-Dirs: test
