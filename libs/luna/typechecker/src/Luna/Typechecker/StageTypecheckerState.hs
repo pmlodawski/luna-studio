@@ -4,13 +4,13 @@
 
 
 module Luna.Typechecker.StageTypecheckerState (
-    StageTypecheckerState(..),
+    StageTypecheckerState(..), emptyStageTypecheckerState,
     StageTypechecker(..),
     StageTypecheckerPass,
     StageTypecheckerCtx,
     StageTypecheckerTraversal,
     StageTypecheckerDefaultTraversal,
-    debugLog, typo, nextTVar, subst, constr, sa,
+    debugLog, typo, nextTVar, subst, constr, sa, typeMap,
     prettyState,
     report_error
   ) where
@@ -18,6 +18,8 @@ module Luna.Typechecker.StageTypecheckerState (
 
 
 import            Control.Lens                      (makeLenses)
+import qualified  Data.Map.Strict                   as SM
+import            Data.Monoid                       (Monoid(..))
 import            Text.PrettyPrint
 
 import            Luna.Syntax.Enum                  (Enumerated)
@@ -26,23 +28,34 @@ import qualified  Luna.Syntax.Pat                   as Pat
 import            Luna.Data.StructInfo              (StructInfo)
 import            Luna.Pass                         (PassMonad, PassCtx)
 
-import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo)
+import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Type, Typo, TypeMap, init_typo, null_subst, true_cons)
 import            Luna.Typechecker.Debug.HumanName  (HumanName)
 import            Luna.Typechecker.Debug.PrettyData (
-                      prettyConstr, prettyNullable, prettySubst, prettyTypo
+                      prettyConstr, prettyNullable, prettySubst, prettyTypo, prettyTypeMap
                   )
 
 
 
 data StageTypecheckerState
-   = StageTypecheckerState  { _debugLog      :: [String] -- TODO [kgdk] 20 sty 2015: zmienić na _debug
+   = StageTypecheckerState  { _debugLog :: [String]
                             , _typo     :: [Typo]
                             , _nextTVar :: TVar
                             , _subst    :: Subst
                             , _constr   :: Constraint
                             , _sa       :: StructInfo
+                            , _typeMap  :: TypeMap
                             }
 makeLenses ''StageTypecheckerState
+
+emptyStageTypecheckerState :: StageTypecheckerState
+emptyStageTypecheckerState = StageTypecheckerState  { _debugLog = []
+                                                , _typo     = init_typo
+                                                , _nextTVar = 0
+                                                , _subst    = null_subst
+                                                , _constr   = true_cons
+                                                , _sa       = mempty
+                                                , _typeMap  = SM.empty
+                                                }
 
 
 data StageTypechecker = StageTypechecker
@@ -68,9 +81,11 @@ prettyState StageTypecheckerState{..} = str_field
                                     $+$ typo_field
                                     $+$ subst_field
                                     $+$ nextTVar_field
+                                    $+$ typeMap_field
   where
     str_field      = text "Debug       :" <+> prettyNullable (map text _debugLog)
     constr_field   = text "Constraints :" <+> prettyConstr   _constr
     nextTVar_field = text "TVars used  :" <+> int         _nextTVar
     typo_field     = text "Type env    :" <+> prettyNullable (map (parens . prettyTypo) _typo)
     subst_field    = text "Substs      :" <+> prettySubst    _subst
+    typeMap_field  = text "Type map    :" <+> prettyTypeMap _typeMap
