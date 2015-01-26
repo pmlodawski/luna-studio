@@ -5,6 +5,7 @@ module Data.PolyTypeable(PolyTypeable(..)) where
 import Data.Typeable
 import Data.Int
 import Data.Word
+import Prelude
 
 ----------------------------------
 -- Type analysis, classifies each type constructor and type variables.
