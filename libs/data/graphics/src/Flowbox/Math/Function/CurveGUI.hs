@@ -18,9 +18,11 @@ import           Flowbox.Math.Function.Accelerate.BSpline
 import qualified Flowbox.Math.Function.Model              as Model
 import           Flowbox.Prelude                          as P
 
-type Weight = Double
-type Length = Double
-type Angle  = Double
+
+
+type Weight = Float
+type Length = Float
+type Angle  = Float
 
 newtype CurvesCollection x = CurvesCollection { _curves :: [(x, Curve x)] } deriving (Show)
 
@@ -43,22 +45,22 @@ makeLenses ''Curve
 makeLenses ''ControlPoint
 makeLenses ''Handle
 
-convertToBSpline :: Curve Double -> BSpline Double
-convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (P.length l)) l :: BSpline Double
+convertToBSpline :: Curve Float -> BSpline Float
+convertToBSpline (BezierCurve vertices) = A.fromList (A.Z A.:. (P.length l)) l :: BSpline Float
     where
         l = convertToNodeList vertices
 
-convertToNodeList :: [ControlPoint Double] -> [BSplineNode Double]
+convertToNodeList :: [ControlPoint Float] -> [BSplineNode Float]
 convertToNodeList l =
     let
-        safeMap :: [ControlPoint Double] -> ControlPoint Double -> [BSplineNode Double] -> [BSplineNode Double]
+        safeMap :: [ControlPoint Float] -> ControlPoint Float -> [BSplineNode Float] -> [BSplineNode Float]
         safeMap (s:r:seg) l acc = safeMap (r:seg) s ((convertToNode l s r):acc)
         safeMap (s:[]) l acc = reverse ((processRightmost l s):acc)
 
-        reflectPoint :: Point2 Double -> Point2 Double -> Point2 Double
+        reflectPoint :: Point2 Float -> Point2 Float -> Point2 Float
         reflectPoint (Point2 x y) (Point2 x2 y2) = Point2 (2*x - x2) (2*y - y2)
 
-        convertSingleElem :: ControlPoint Double -> [BSplineNode Double]
+        convertSingleElem :: ControlPoint Float -> [BSplineNode Float]
         convertSingleElem (ControlPoint (Point2 x y) Linear Linear) = [BSplineNode (Point2 x y) (Point2 (x-1) y) (Point2 (x+1) y)]
 
         convertSingleElem a@(ControlPoint p@(Point2 x y) _ Linear) = [BSplineNode (Point2 x y) l (reflectPoint p l)]
@@ -74,7 +76,7 @@ convertToNodeList l =
                 BSplineNode _ l _ = processLeftmost a a
                 BSplineNode _ _ r = processRightmost a a
 
-        processLeftmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
+        processLeftmost :: ControlPoint Float -> ControlPoint Float -> BSplineNode Float
         processLeftmost a@(ControlPoint p@(Point2 x y) Linear _) b = BSplineNode (Point2 x y) (reflectPoint p r) r
             where
                 r@(Point2 rx ry) = processRight a b
@@ -83,13 +85,13 @@ convertToNodeList l =
             where
                 r = processRight a b
                 lx = x - 1
-                ly = y - tan(ang)
+                ly = y - tan ang
 
         processLeftmost a@(ControlPoint (Point2 x y) _ _) b = BSplineNode (Point2 x y) (processLeft a a) r
             where
                 r = processRight a b
 
-        processRightmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
+        processRightmost :: ControlPoint Float -> ControlPoint Float -> BSplineNode Float
         processRightmost a b@(ControlPoint p@(Point2 x y) _ Linear) = BSplineNode (Point2 x y) l (reflectPoint p l)
             where
                 l@(Point2 lx ly) = processLeft a b
@@ -98,17 +100,17 @@ convertToNodeList l =
             where
                 l = processLeft a b
                 rx = x + 1
-                ry = y + tan(ang)
+                ry = y + tan ang
 
         processRightmost a b@(ControlPoint (Point2 x y) _ _) = BSplineNode (Point2 x y) l (processRight b b)
             where
                 l = processLeft a b
 
-        convertToNode :: ControlPoint Double -> ControlPoint Double -> ControlPoint Double -> BSplineNode Double
+        convertToNode :: ControlPoint Float -> ControlPoint Float -> ControlPoint Float -> BSplineNode Float
         convertToNode l s@(ControlPoint (Point2 x y) _ _) r =
             BSplineNode (Point2 x y) (processLeft l s) (processRight s r)
 
-        processLeft :: ControlPoint Double -> ControlPoint Double -> Point2 Double
+        processLeft :: ControlPoint Float -> ControlPoint Float -> Point2 Float
         processLeft (ControlPoint (Point2 x2 y2) _ _) (ControlPoint (Point2 x y) Linear _) = Point2 x' y'
             where
                 x' = x - (x - x2) / 3
@@ -117,11 +119,11 @@ convertToNodeList l =
         processLeft (ControlPoint (Point2 x2 y2) _ _) (ControlPoint (Point2 x y) (NonLinear w ang) _) = Point2 lx ly
             where
                 lx = x - (x - x2) * w
-                ly = y - (x - lx) * tan(ang)
+                ly = y - (x - lx) * tan ang
 
         processLeft _ (ControlPoint (Point2 x y) (Vertical w) _) = Point2 x (y+w)
 
-        processRight :: ControlPoint Double -> ControlPoint Double -> Point2 Double
+        processRight :: ControlPoint Float -> ControlPoint Float -> Point2 Float
         processRight (ControlPoint (Point2 x y) _ Linear) (ControlPoint (Point2 x2 y2) _ _) = Point2 x' y'
             where
                 x' = x + (x2 - x) / 3
@@ -130,7 +132,7 @@ convertToNodeList l =
         processRight (ControlPoint (Point2 x y) _ (NonLinear w ang)) (ControlPoint (Point2 x2 y2) _ _) = Point2 rx ry
             where
                 rx = x + (x2 -x) * w
-                ry = y + (rx - x) * tan(ang)
+                ry = y + (rx - x) * tan ang
 
         processRight (ControlPoint (Point2 x y) _ (Vertical w)) _ = Point2 x (y+w)
     in
@@ -140,7 +142,7 @@ convertToNodeList l =
 
 
 
-valueAtSpline :: Curve Double -> Double -> Double
+valueAtSpline :: Curve Float -> Float -> Float
 valueAtSpline (BezierCurve (convertToNodeList -> vertices')) x =
     if vLength < 1
         then 0

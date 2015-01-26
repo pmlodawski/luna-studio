@@ -7,6 +7,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE ViewPatterns              #-}
 
 module Flowbox.Geom2D.Rasterizer (
@@ -66,10 +67,10 @@ f2f = fromRational . toRational
 --unpackP :: Fractional a => Point2 a -> Point2 a -> Maybe (Point2 a) -> Point2 a
 --unpackP a b = fromMaybe ((b - a)/3)
 
-unpackP :: Fractional a => Point2 a -> Point2 a -> Maybe(Point2 a) -> Point2 a
+unpackP :: Fractional a => Point2 a -> Point2 a -> Maybe (Point2 a) -> Point2 a
 unpackP a b c = fromMaybeNoDia ((b - a)/3 + a) a c
 
-fromMaybeNoDia :: Fractional a => Point2 a -> Point2 a -> Maybe(Point2 a) -> Point2 a
+fromMaybeNoDia :: Fractional a => Point2 a -> Point2 a -> Maybe (Point2 a) -> Point2 a
 fromMaybeNoDia def _ Nothing = def
 fromMaybeNoDia _ a (Just b)  = a + b
 
@@ -133,31 +134,31 @@ pathToRGBA32 w h (Path closed points) = imgToRGBA32 rasterize
           trans :: Rasta.Point -> Rasta.Point
           trans (Rasta.V2 x y) = Rasta.V2 x ((y-((fromIntegral h)/2))*(-1)+((fromIntegral h)/2))
 
-pathToMatrix :: (Real a, Fractional a) => Int -> Int -> Path a -> Matrix2 Double
+pathToMatrix :: (Real a, Fractional a) => Int -> Int -> Path a -> Matrix2 Float
 pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
-    where extractArr :: A.Acc (A.Array DIM2 RGBA32) -> Matrix2 Double
+    where extractArr :: A.Acc (A.Array DIM2 RGBA32) -> Matrix2 Float
           extractArr arr = Delayed $ A.map extractVal $ arr
-          extractVal :: M.Exp RGBA32 -> M.Exp Double
+          extractVal :: M.Exp RGBA32 -> M.Exp Float
           extractVal rgba = (A.fromIntegral $ (rgba `div` 0x1000000) .&. 0xFF) / 255
 
 
-rasterizeMask :: forall a. (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
+rasterizeMask :: forall a. (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask a -> Matrix2 Float
 rasterizeMask w h (Mask path' feather') = -- path
     case feather' of
         Nothing -> path
         Just feather' -> let
                 feather = ptm feather'
-                convert :: Path a -> A.Acc (A.Vector (QuadraticBezier Double))
+                convert :: Path a -> A.Acc (A.Vector (QuadraticBezier Float))
                 convert p = let
                         a = {-trace ("running makeCubics with p = " ++ show p) $-} makeCubics p
-                        quads = {-trace ("running convertCubicsToQuadratics with a = " ++ show ((fmap.fmap) f2d a)) $-} convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
+                        quads = {-trace ("running convertCubicsToQuadratics with a = " ++ show ((fmap.fmap) f2d a)) $-} convertCubicsToQuadratics 5 0.001 a
                     in {-trace ("running use with quads = " ++ show quads) $-} A.use $ A.fromList (Z :. length quads) quads
                 cA = convert path'
                 cB = convert feather'
             in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
     where ptm  = pathToMatrix w h
           path = ptm path'
-          combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
+          combine :: Matrix2 Float -> A.Acc (A.Vector (QuadraticBezier Float)) -> A.Acc (A.Vector (QuadraticBezier Float)) -> A.Exp A.DIM2 -> A.Exp Float
           combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) =
               let
                   p  = path M.! idx
