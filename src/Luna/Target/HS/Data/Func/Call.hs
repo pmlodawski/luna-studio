@@ -40,6 +40,9 @@ import Luna.Target.HS.Data.Func.Func
 import Luna.Target.HS.Data.Func.Lam
 
 import qualified Luna.Target.HS.Data.Func.Args2 as Args2
+import qualified Luna.Target.HS.Data.Func.Args7 as Args7
+
+import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 
 ----------------------------------------------------------------------------------
 -- Type classes
@@ -93,6 +96,12 @@ call2 :: (Call2 a1 (m2 a), PolyMonad m1 m2 m3, Functor m1) => m1 a1 -> m3 a
 call2 = polyJoin . fmap (call2')
 call3 = polyJoin . fmap (call3' . fmap Args2.runFuncTrans)
 call4 = polyJoin . fmap (call3H' . fmap Args2.runFuncTrans)
+
+call5H (AppH(fptr, args)) = Args7.appDefaults . Args7.appArgs args $ mkFunc2 fptr $ getMember fptr (monoType args)
+call5 = polyJoin . fmap call5H
+
+--class MemberProvider obj name argRep f | obj name argRep -> f where
+--    getMember :: Mem obj name -> argRep -> f
 
 ----------------------------------------------------------------------------------
 -- Instances

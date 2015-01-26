@@ -6,7 +6,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE RebindableSyntax #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -23,8 +23,11 @@ module Main where
 -- imports --
 import Luna.Target.HS
 import qualified Luna.Target.HS.Data.Func.Args2 as Args2
+import qualified Luna.Target.HS.Data.Func.Args3 as Args3
+import qualified Luna.Target.HS.Data.Func.Args7 as Args7
 import qualified Prelude as P
 import qualified Type.BaseType as BaseType
+import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 
 -- body --
 #include "pragmas.cpp"
@@ -48,38 +51,46 @@ memDef_Main_print rtup2(self, s) = do
 --memDef_Main_print2 self s = s
 memDef_Main_print2 self s = polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
+memDef_Main_print3 (Args7.noDefault -> self) (Args7.appDefault2 (val "") -> s) = polyJoin . liftF1 (Value . fmap Safe . print) $ s
+
 
 memSig_Main_print = rtup2(nparam("self"), param)
 memSig_Main_print2 = rtup2(Args2.arg (Proxy :: Proxy (Just "self")), Args2.uarg)
+
+type instance Args7.SigOf Main "print3" = '[Args7.Named "self", Args7.Named "y"]
+$(registerMethod3 ''Main "print3")
+
+
 $(registerMethod ''Main "print")
 $(registerMethod2 ''Main "print2")
 
-ftst a v = call3 $ appNextW (val v) $ member2 (Proxy::Proxy "print2") $ a
+--ftst a v = call3 $ appNextW (val v) $ member2 (Proxy::Proxy "print2") $ a
 
 --main = fromValue $ tst (call cons_Main)
 
 memSig_Main_tst = rtup2(Args2.arg (Proxy :: Proxy (Just "self")), Args2.uarg)
 
---memDef_Main_tst
---  :: (FuncProvider obj "print2" f, HasMem2 "print2" obj sig,
---      Env base, Args2.AppDefaults t1 f1 (m2 a),
---      Args2.AppNth
---        (Args2.NameIndex "self" (Args2.ExtractNames sig))
---        (m base s a1)
---        f
---        (Value Pure Safe [Char] -> f1),
---      Args2.DeleteNth
---        (Args2.NameIndex "self" (Args2.ExtractNames sig)) d1 (d, t1),
---      Args2.ExtractDefaults sig d1, Safety s,
---      PolyMonad (Value Pure Safe) m2 m3,
---      BaseType.BaseType (Proxy a1) (Proxy obj),
---      Args2.Delete ('Just "self") (Args2.ExtractNames sig) ~ (n : t)) =>
---     m base s a1 -> m3 a
-memDef_Main_tst self = do
-    call3 $ appNextW (val []) $ member2 (Proxy::Proxy "print2") $ self
-    call3 $ appNextW (val "a") $ member2 (Proxy::Proxy "print2") $ self
+--x = addArg (Args6.uArg "a") $ member3 (Proxy::Proxy "print2") $ call cons_Main;
+args v = Args7.addArg (Args7.uArg (val "self"))
+     $ Args7.addArg (Args7.nArg v (Proxy::Proxy "self"))
+     $ Args7.empty
 
-main = memDef_Main_tst
+memDef_Main_tst self = do
+    call3 $ appNextW (val 5) $ member2 (Proxy::Proxy "print2") $ (call cons_Main)
+    call3 $ appNextW (val "a") $ member2 (Proxy::Proxy "print2") $ (call cons_Main)
+
+    Args7.runFunc $ Args7.appArgs (args (val "aaa")) $ Args7.mkFunc Main (Proxy::Proxy "print3") memDef_Main_print3
+    --Args7.runFunc $ Args7.appArgs args $ Args7.mkFunc Main (Proxy::Proxy "print3") 
+    --              $ flip getMember (monoType args) 
+    --              $ (fst . fromAppH . fromSafe . fromPure . fromValue $ getMem4 (Proxy::Proxy "print3") (val Main))
+
+    call5 $ addArg (Args7.uArg $ val "!!!") $ member3 (Proxy::Proxy "print3") $ (call cons_Main)
+
+main = fromValue $ memDef_Main_tst (call cons_Main)
+
+
+
+
 -- $(registerMethod2 ''Main "tst")
 
 --(Call2
