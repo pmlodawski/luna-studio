@@ -20,6 +20,6 @@ class Func (base :: k) name args out | base name args -> out where
     getFunc :: Mem base name -> args -> (args -> out)
 
 
-class FuncProvider (base :: k) name func | base name -> func where
+class FuncProvider (base :: k) name func where
     getFunc2 :: Mem base name -> (func -> out) -> func
 

@@ -247,6 +247,39 @@ registerMethodDefinition2 typeName methodName (Naming.toName -> funcName) = do
         inst       = InstanceD ctx nt funcs
     return $ [inst]
 
+registerMethod3 :: Name -> String -> Q [Dec]
+registerMethod3 typeName methodName = do
+    let typeNameBase = nameBase typeName
+        funcSig      = Naming.mkMemSig typeNameBase methodName
+        funcDef      = Naming.mkMemDef typeNameBase methodName
+    registerMethodDefinition3 typeName methodName funcDef
+
+registerMethodSignature3 typeName methodName (Naming.toName -> funcName) = do
+    funcT   <- getTypeQ funcName
+    dataDec <- getDec typeName
+    let
+        dataVars   = map VarT $ getDecVarNames dataDec
+        baseT      = ConT typeName
+        nt         = foldl AppT (ConT . mkName $ "HasMem2") [LitT (StrTyLit methodName), baseT, funcT]
+        funcs      = [FunD (mkName "memSig2") [Clause [WildP] (NormalB (VarE funcName)) []]]
+        inst       = InstanceD [] nt funcs
+    return [inst]
+
+registerMethodDefinition3 typeName methodName (Naming.toName -> funcName) = do
+    funcT   <- getTypeQ funcName
+    dataDec <- getDec typeName
+    argsT      <- VarT <$> newName "args"
+    let
+        dataVars   = map VarT $ getDecVarNames dataDec
+        baseT      = ConT typeName
+        prectx     = getContext funcT
+        sig        = getSignature funcT
+        --c1         = equalT argsT sig
+        nt         = foldl AppT (ConT $ mkName "MemberProvider") [baseT, LitT (StrTyLit methodName), argsT, sig]
+        funcs      = [FunD (mkName "getMember") [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+        ctx        = fmap fixCtx_GHC_7_8 $ prectx
+        inst       = InstanceD ctx nt funcs
+    return $ [inst]
 
 registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
     funcT   <- getTypeQ funcName

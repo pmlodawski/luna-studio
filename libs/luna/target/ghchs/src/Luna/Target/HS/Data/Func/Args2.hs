@@ -19,6 +19,8 @@ import Unsafe.Coerce
 import GHC.TypeLits
 import Data.Typeable
 
+import Data.PolyTypeable
+
 
 
 
@@ -100,6 +102,15 @@ instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u)
       => AppNth' GT n a f g where
     appNth' _ _ a = (\f t -> appNth (Proxy :: Proxy (n-1)) a (f t))
 
+--class AppFoo a b | a -> b
+class AppNth2 (k::Nat) a f g | k a f -> g where
+    appNth2 :: Proxy k -> a -> f -> g
+
+instance (f~(a -> b)) => AppNth2 0 a f b where
+    appNth2 _ a = ($a)
+
+tstme a = appNth (Proxy :: Proxy 5) []
+
 ---
 
 class DeleteNth (num::Nat) t t' | num t -> t' where
@@ -113,6 +124,8 @@ instance (DeleteNth (num-1) t2 t1, a~(t,t2), b~(t,t1)) => DeleteNth num a b wher
 
 --appByName :: forall idx a f g n ns d. (AppNth idx a f g, idx~NameIndex n ns)
 --          => Proxy n -> a -> Func ns d f -> Func (Delete n ns) d g
+appByName :: (AppNth (NameIndex n ns) a f f1, DeleteNth (NameIndex n ns) d defs)
+          => Proxy n -> a -> Func ns d f -> Func names defs f1
 appByName (_::Proxy n) a (Func (f,d) :: Func ns d f) = Func $ ( appNth idx a f, deleteNth idx d) where
     idx = (Proxy :: Proxy (NameIndex n ns))
 
@@ -122,6 +135,8 @@ appByName (_::Proxy n) a (Func (f,d) :: Func ns d f) = Func $ ( appNth idx a f, 
 appByNameW :: (AppNth (NameIndex n ns) a f1 f2, DeleteNth (NameIndex n ns) d defs) 
            => Proxy n -> a -> FuncTrans ns d f f1 -> FuncTrans (Delete (Just n) ns) defs f f2
 appByNameW n a (FuncTrans f) = FuncTrans $ fmap (appByName n a) f
+
+--tstme2 v = appByName (Proxy::Proxy "x") [] v
 
 ----------------------------------------------------------------------
 -- Tests
@@ -191,6 +206,7 @@ tst a b c = (a,b,c)
 
 
 foox a = appArgW 5 $ appArgW [] $ appByNameW (Proxy :: Proxy "x") "a" $ a
+foox2 a = appByNameW (Proxy :: Proxy "x") "a" $ a
 
 
 main = do
@@ -215,6 +231,8 @@ main = do
     --print $ appRTuple (1,(2,())) test
     --print $ runArgs a2 test
     return ()
+
+    --print $ polyTypeOf 
 
 runFuncTrans t f = runFunc $ fromFuncTrans t f
 
