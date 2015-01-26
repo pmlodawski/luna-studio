@@ -110,7 +110,7 @@ def haskell_action trigger
     section "linting",       :condition => $run_linting, :noexception => true do
       opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
       opts = opts.join(" ")
-      command_withinput "hlint . #{opts}"
+      command_withinput "hlint src test #{opts}"
     end
 
     section "documentation", :condition => $run_docgen, :noexception => true do

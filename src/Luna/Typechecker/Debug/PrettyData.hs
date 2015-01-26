@@ -3,13 +3,14 @@ module Luna.Typechecker.Debug.PrettyData (
     prettyTVar, prettyVar,
     prettyFieldlabel, prettyField,
     prettySubst, prettyTypo,
-    prettyType, prettyPred, prettyConstr, prettyTypeScheme
+    prettyType, prettyPred, prettyConstr, prettyTypeScheme, prettyTypeMap
   ) where
 
 
-import Text.PrettyPrint       (Doc, ($+$),(<+>), (<>), braces, brackets, char, empty, hsep, int, parens, punctuate, text)
+import qualified  Data.Map.Strict         as SM
+import            Text.PrettyPrint        (Doc, ($+$),(<+>), (<>), braces, brackets, char, empty, hsep, int, parens, punctuate, text)
 
-import Luna.Typechecker.Data  (TVar, Var, Fieldlabel, Field, Subst, Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..))
+import            Luna.Typechecker.Data   (TVar, Var, Fieldlabel, Field, Subst, Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..), TypeMap)
 
 
 
@@ -74,8 +75,12 @@ prettySubst s | null substs = prettyNullable []
         substs                = map prettySubst1 s
 
 prettyTypo :: Typo -> Doc
-prettyTypo                  = prettyNullable . map prettyTypo1
+prettyTypo = prettyNullable . map prettyTypo1
   where prettyTypo1 (v,ts)  = prettyVar v
                             <+> text " :: "
                             <+> prettyTypeScheme ts
+
+prettyTypeMap :: TypeMap -> Doc
+prettyTypeMap = SM.foldrWithKey join empty
+  where join key ty rest = int key <+> text "=>" <+> prettyType ty <+> rest
 

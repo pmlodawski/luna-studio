@@ -46,7 +46,8 @@ import            Data.Text.Lens                          (packed, unpacked)
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Data
 import            Luna.Typechecker.StageTypecheckerState  (
-                      StageTypecheckerState(..), debugLog, typo, nextTVar, subst, constr, sa,
+                      StageTypecheckerState(..), emptyStageTypecheckerState,
+                      debugLog, typo, nextTVar, subst, constr, sa, typeMap,
                       StageTypechecker(..),
                       StageTypecheckerPass, StageTypecheckerCtx,
                       StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
@@ -63,13 +64,7 @@ import            Luna.Typechecker.Solver                 (cs)
 tcpass :: (StageTypecheckerDefaultTraversal m a) => Pass StageTypecheckerState (a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState)
 tcpass = Pass { _name  = "Typechecker"
               , _desc  = "Infers the types and typechecks the program as a form of correctness-proving."
-              , _state = StageTypecheckerState  { _debugLog = []
-                                                , _typo     = init_typo
-                                                , _nextTVar = 0
-                                                , _subst    = null_subst
-                                                , _constr   = true_cons
-                                                , _sa       = mempty
-                                                }
+              , _state = emptyStageTypecheckerState
               , _func  = tcUnit
               }
 
@@ -110,7 +105,7 @@ withTypo typeEnv astElem action = push *> action astElem <* pop
 tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
 tcDecl ldecl@(Label lab decl) = do
     case decl of
-      Decl.Func all@(Decl.FuncDecl path sig funcout body) -> do
+      Decl.Func (Decl.FuncDecl path sig funcout body) -> do
           let baseName = sig ^.  NamePat.base . NamePat.segmentBase . unpacked
               baseArgs = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName . unpacked
               --   The       |   |              |                     |          |         |               |              |

@@ -3,8 +3,14 @@ module Luna.Typechecker.Data (
     Fieldlabel, Field,
     Subst, Typo,
     Type(..), Predicate(..), Constraint(..), TypeScheme(..),
+    TypeMap,
     true_cons, null_subst, init_typo
   ) where
+
+
+import            Luna.Syntax.Enum                  (Enumerated, ID(..))
+
+import qualified  Data.Map.Strict                   as SM
 
 
 type TVar = Int
@@ -19,6 +25,10 @@ data Type = TV TVar
           | Type `Fun` Type
           | Record [Field]
           deriving (Show,Eq)
+
+
+type TypeMap = SM.Map ID Type
+
 
 data Predicate  = TRUE
                 | Type `Subsume` Type
