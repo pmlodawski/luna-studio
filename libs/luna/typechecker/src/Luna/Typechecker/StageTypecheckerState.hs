@@ -10,7 +10,8 @@ module Luna.Typechecker.StageTypecheckerState (
     StageTypecheckerCtx,
     StageTypecheckerTraversal,
     StageTypecheckerDefaultTraversal,
-    debugLog, typo, nextTVar, subst, constr, sa, typeMap,
+    debugLog, typo, nextTVar, subst, constr, sa, typeMap, currentType,
+    debugLog, typo, nextTVar, subst, constr, sa, 
     prettyState,
     report_error
   ) where
@@ -28,6 +29,7 @@ import qualified  Luna.Syntax.Pat                   as Pat
 import            Luna.Data.StructInfo              (StructInfo)
 import            Luna.Pass                         (PassMonad, PassCtx)
 
+
 import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Type, Typo, TypeMap, init_typo, null_subst, true_cons)
 import            Luna.Typechecker.Debug.HumanName  (HumanName)
 import            Luna.Typechecker.Debug.PrettyData (
@@ -37,25 +39,26 @@ import            Luna.Typechecker.Debug.PrettyData (
 
 
 data StageTypecheckerState
-   = StageTypecheckerState  { _debugLog :: [String]
-                            , _typo     :: [Typo]
-                            , _nextTVar :: TVar
-                            , _subst    :: Subst
-                            , _constr   :: Constraint
-                            , _sa       :: StructInfo
-                            , _typeMap  :: TypeMap
+   = StageTypecheckerState  { _debugLog    :: [String]
+                            , _typo        :: [Typo]
+                            , _nextTVar    :: TVar
+                            , _subst       :: Subst
+                            , _constr      :: Constraint
+                            , _sa          :: StructInfo
+                            , _currentType :: Type
+                            , _typeMap     :: TypeMap
                             }
 makeLenses ''StageTypecheckerState
 
 emptyStageTypecheckerState :: StageTypecheckerState
 emptyStageTypecheckerState = StageTypecheckerState  { _debugLog = []
-                                                , _typo     = init_typo
-                                                , _nextTVar = 0
-                                                , _subst    = null_subst
-                                                , _constr   = true_cons
-                                                , _sa       = mempty
-                                                , _typeMap  = SM.empty
-                                                }
+                                                    , _typo     = init_typo
+                                                    , _nextTVar = 0
+                                                    , _subst    = null_subst
+                                                    , _constr   = true_cons
+                                                    , _sa       = mempty
+                                                    , _typeMap  = SM.empty
+                                                    }
 
 
 data StageTypechecker = StageTypechecker
