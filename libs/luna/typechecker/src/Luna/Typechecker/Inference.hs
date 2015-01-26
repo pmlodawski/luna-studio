@@ -131,30 +131,29 @@ tcDecl = defaultTraverseM
 
 
 tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
-tcExpr lexpr@(Label lab expr) = do
+tcExpr lexpr@(Label lab expression) = do
     env <- getEnv
-    expr lab env lexpr
+    result <- expr env lexpr
+    currentType .= result
+    return lexpr
 
 
-expr lab env (Expr.Var { Expr._ident = (Expr.Variable vname _) }) =
+expr env (Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
   do
     let hn = unpack . humanName $ vname
     hn_id <- getTargetIDString lab
     debugPush ("Var         " ++ hn ++ hn_id)
+
     targetLabel <- getTargetID lab
 
-    currentType <- currentType & use
-
-    -- env <- getEnv
     vType <- inst env targetLabel
     result <- normalize vType
 
     debugPush ("         :: " ++ show result)
 
-    currentType .= result
     return result
 
-expr lab env (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) }) =
+expr env (Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) =
   case (dst, src) of
       (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
         do  
@@ -164,28 +163,34 @@ expr lab env (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label
           t_id <- getTargetIDString labt
           s_id <- getTargetIDString labs
           debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ unpack (humanName src_vname) ++ s_id) 
-      _ -> debugPush "Some assignment..."
+          -- TODO destType <- expr env dst
+          TV <$> newtvar 
+      _ -> do
+            debugPush "Some assignment..."
+            TV <$> newtvar
+       
 
-expr lab env ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Segment appExpr args ) } ) ) =
-    do
+expr env ( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Segment appExpr args ) } ) ) ) =
+  do
+    debugPush "Infering an application..."
+
     e1Type <- expr env appExpr
-    -- TODO e1Type <- currentType
     result <- Fold.foldlM tp e1Type args
-    -- TODO currentType .= result
+
+    debugPush $ "Result of infering an application: " ++ show result
+
     return result
+
   where
     tp result arg = do
-      -- env <- getEnv
-      -- expr arg
-      -- argType <- currentType
-      -- setEnv env
-      argType <- expr lab env arg
+      let Expr.AppArg _ argV = arg
+      argType <- expr env argV
       a <- newtvar
       add_constraint (C [result `Subsume` (argType `Fun` TV a)])
       normalize (TV a)
       -- TODO add mapping between labels -> type to pass's state
 
-expr lab env (Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label labb (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)})) =
+expr env (Label lab (Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label labb (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)}))) =
   do
     --tp (env, App e e') = do a <- newtvar
     --                        t <- tp (env, e)
@@ -195,6 +200,7 @@ expr lab env (Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Labe
     base_id <- getTargetIDString labb
     args_id <- unwords <$> mapM mapArg args
     debugPush ("Application " ++ (unpack . humanName $ basename) ++ base_id ++ " ( " ++ args_id ++ " )")  
+    TV <$> newtvar
   where
     mapArg :: (StageTypecheckerCtx lab m a) => Expr.AppArg (LExpr lab a) -> StageTypecheckerPass m String
     mapArg (Expr.AppArg _ (Label laba (Expr.Var { Expr._ident = (Expr.Variable vname _) } ))) = do
@@ -202,7 +208,7 @@ expr lab env (Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Labe
         return $ (unpack . humanName $ vname) ++ arg_id
     mapArg _ = fail "Luna.Typechecker.Inference:tcExpr:mapArg: usage unexpected"
 
-expr _ _ _ = return ()
+expr _ _ = error "No idea how to infere type at the moment."
 
 
 debugPush :: (Monad m) => String -> StageTypecheckerPass m ()
