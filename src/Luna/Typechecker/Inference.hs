@@ -134,7 +134,7 @@ tcExpr lexpr@(Label lab expression) = do
     currentType .= result
     return lexpr
 
-
+expr :: (StageTypecheckerCtx lab m a) => Typo -> LExpr lab a -> StageTypecheckerPass m Type
 expr env (Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
   do
     let hn = unpack . humanName $ vname
@@ -205,7 +205,7 @@ expr env (Label lab (Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segmen
         return $ (unpack . humanName $ vname) ++ arg_id
     mapArg _ = fail "Luna.Typechecker.Inference:tcExpr:mapArg: usage unexpected"
 
-expr _ _ = error "No idea how to infere type at the moment."
+expr _ _ = error "No idea how to infer type at the moment."
 
 
 debugPush :: (Monad m) => String -> StageTypecheckerPass m ()
