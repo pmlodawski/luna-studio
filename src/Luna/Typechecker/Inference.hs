@@ -37,7 +37,8 @@ import            Control.Applicative
 import            Control.Lens                            hiding (without)
 import            Control.Monad.State
 
-import            Data.List
+import            Data.List                               hiding (insert)
+import            Data.Maybe                              (fromMaybe)
 import            Data.Monoid
 import qualified  Data.Text.Lazy                          as LText
 import            Data.Text.Lazy                          (unpack)
@@ -98,11 +99,17 @@ defaultTraverseM = AST.defaultTraverseM StageTypechecker
 ----
 
 
-withTypo ::  (StageTypecheckerCtx lab m a) => Typo -> x lab a -> (x lab a -> StageTypecheckerPass m (x lab a)) -> StageTypecheckerPass m (x lab a)
+withTypo :: (Monad m) => Typo -> a -> (a -> StageTypecheckerPass m b) -> StageTypecheckerPass m b
 withTypo typeEnv astElem action = push *> action astElem <* pop
   where
-    push = typo %= (typeEnv:)
-    pop  = typo %= tail       -- TODO [kgdk] 22 sty 2015: probable cause of problems in the future
+    push        = typo %= (typeEnv:)
+    pop         = typo %= safeTail
+    safeTail xs = fromMaybe xs (xs ^? _tail)
+
+withClonedTypo :: (Monad m) => a -> (a -> StageTypecheckerPass m b) -> StageTypecheckerPass m b
+withClonedTypo x action = do
+  typo0 <- typo . _head & use
+  withTypo typo0 x action
 
 tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
 tcDecl ldecl@(Label lab decl) = do
@@ -119,12 +126,35 @@ tcDecl ldecl@(Label lab decl) = do
               --             |   |              +-- get the list of segments (ie. list of arguments)
               --             |   +-- get the signature of the function
               --             +-- return the list; if (^.) was here then this would be merged with mappend
-          debugPush $ "Function: " ++ baseName ++ " :: (" ++ intercalate ", " baseArgs ++ ") → ???"
+          debugPush "push"
+          (res, a) <- withClonedTypo () $ \_ -> do
+              debugPush $ "Function: " ++ baseName ++ " :: (" ++ intercalate ", " baseArgs ++ ") → ???"
+
+              a <- insertNewMonoTVar (Enum.id lab)
+
+              let argumentIDs = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.label . to Enum.id
+              forM_ argumentIDs insertNewMonoTVar
+
+              res <- defaultTraverseM ldecl
+              return (res, a)
+          case a of
+              Mono at -> add_constraint (C [at `Subsume` at]) -- TODO [kgdk] 26 sty 2015
+              _       -> return ()
+          --typ <- normalize a
+
+          debugPush "pop"
+          return res
+          
           --tp (env, Abs x e) = do a <- newtvar
           --                       b <- tp (insert env (x, Mono (TV a)), e)
           --                       normalize ((TV a) `Fun` b)
-      _ -> return ()
-    defaultTraverseM ldecl
+      _ -> defaultTraverseM ldecl
+  where
+    insertNewMonoTVar labID = do
+        tvarID <- newtvar
+        let typeEnvElem = (labID, Mono (TV tvarID))
+        typo . _head %= flip insert typeEnvElem
+        return $ Mono (TV tvarID)
 
 
 tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
@@ -286,7 +316,7 @@ inst env x =
         Nothing ->
           do
             ntv <- newtvar
-            report_error "undeclared variable" (TV ntv)
+            report_error ("undeclared variable " ++ show x) (TV ntv)
 
 
 gen :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme

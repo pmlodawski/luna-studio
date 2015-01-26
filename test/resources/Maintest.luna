@@ -1,6 +1,6 @@
-def + a b:
-  xyz = b
-  xyz
+# def + a b:
+#   xyz = b
+#   xyz
 
 def ble f a:
   f a
