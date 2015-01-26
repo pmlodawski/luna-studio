@@ -19,12 +19,15 @@ import            Luna.Data.StructInfo                    (StructInfo)
 
 import            Luna.Pass                               (Pass(..))
 
+import qualified  Luna.Syntax.Arg                         as Arg
+import qualified  Luna.Syntax.Decl                        as Decl
 import            Luna.Syntax.Decl                        (LDecl)
 import qualified  Luna.Syntax.Enum                        as Enum
 import            Luna.Syntax.Enum                        (Enumerated, ID)
 import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
-import            Luna.Syntax.Label                       (Label(Label))
+import qualified  Luna.Syntax.Label                       as Label
+import            Luna.Syntax.Label                       (Label(Label), label, element)
 import            Luna.Syntax.Module                      (LModule)
 import qualified  Luna.Syntax.Name.Pattern                as NamePat
 import qualified  Luna.Syntax.Pat                         as Pat
@@ -35,7 +38,9 @@ import            Control.Lens                            hiding (without)
 import            Control.Monad.State
 
 import            Data.Monoid
+import qualified  Data.Text.Lazy                          as LText
 import            Data.Text.Lazy                          (unpack)
+import            Data.Text.Lens                          (packed, unpacked)
 
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Data
@@ -101,9 +106,19 @@ withTypo typeEnv astElem action = push *> action astElem <* pop
     push = typo %= (typeEnv:)
     pop  = typo %= tail       -- TODO [kgdk] 22 sty 2015: probable cause of problems in the future
 
-
 tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
-tcDecl = defaultTraverseM
+tcDecl ldecl@(Label lab decl) = do
+    case decl of
+      Decl.Func all@(Decl.FuncDecl path sig funcout body) -> do
+          let baseName = sig ^. NamePat.base . NamePat.segmentBase . unpacked
+              baseArgs = sig ^. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName . unpacked . to (++ ", ")
+              --baseArgs = mapMOf (Arg.pat . Label.element) show (NamePat.base . NamePat.segmentArgs)
+          debugPush $ "Function: " ++ baseName ++ " :: (" ++ baseArgs ++ ") → ???"
+          --let (NamePat.NamePat _ _ segs) = sig
+          --let segmentNames = map (\(NamePat.Segment sn _) -> sn) segs
+          --debugPush $ "function: path=" ++ show path ++ " funsig={" ++ unpack (LText.concat segmentNames) ++ "} funcOutput=?? body=??"
+      _ -> return ()
+    defaultTraverseM ldecl
   --  case decl of
   --      fun@Decl.Func { Decl._sig  = sig@NamePat.NamePat{ NamePat._base = (NamePat.Segment name args) }
   --                    , Decl._body = body
@@ -179,7 +194,7 @@ tcExpr lexpr@(Label lab expr) = do
 
 
 debugPush :: (Monad m) => String -> StageTypecheckerPass m ()
-debugPush s = debugLog %= (s:)
+debugPush s = s `seq` debugLog %= (s:)
 
 
 getTargetIDString :: (StageTypecheckerCtx lab m String) => lab -> StageTypecheckerPass m String
