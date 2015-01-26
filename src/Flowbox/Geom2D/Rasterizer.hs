@@ -167,10 +167,10 @@ rasterizeMask w h (Mask path' feather') = -- path
                   dp = d pQ
                   df = d fQ
               --in (1 / (dp/5)) + (1 / (df/5))
-              in A.cond (p >* 0.99) 
+              in A.cond (p >* 0.99)
                       (
                         A.cond (0.01 >* f) (dp / (dp+df)) 1
-                      ) 
+                      )
                       (
                         A.cond (0.01 >* p)
                                 (
@@ -186,7 +186,7 @@ rasterizeMask w h (Mask path' feather') = -- path
                       )
               --in A.cond ((p >* 0.99 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p $ A.cond (p >* 0) (dp / (dp+df)) (df / (dp+df))
 
-matrixToImage :: Matrix2 Double -> Image
+matrixToImage :: Matrix2 Float -> Image
 matrixToImage a = Image.singleton view
     where view = View.append (Channel.ChannelFloat "rgba.r" $ Channel.MatrixData w)
                $ View.append (Channel.ChannelFloat "rgba.g" $ Channel.MatrixData w)

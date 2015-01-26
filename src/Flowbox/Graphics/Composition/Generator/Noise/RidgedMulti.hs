@@ -4,7 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE TypeFamilies        #-}
 
 module Flowbox.Graphics.Composition.Generator.Noise.RidgedMulti where
 
@@ -18,21 +20,22 @@ import Flowbox.Prelude
 
 
 
-ridgedMultiNoise :: A.Exp Double -> ContinuousShader (A.Exp Double)
+ridgedMultiNoise :: (A.Elt a, A.IsFloating a, a ~ Float) => A.Exp a -> ContinuousShader (A.Exp a)
 ridgedMultiNoise z = unitShader $ runShader $ ridgedMultiGen Standard 1.0 2.0 6 30 0 1.0 1.0 2.0 z
 
-ridgedMultiGen :: Quality -> A.Exp Double -> A.Exp Double ->
+ridgedMultiGen :: forall a. (A.Elt a, A.IsFloating a, a ~ Float) =>
+                  Quality -> A.Exp a -> A.Exp a ->
                   A.Exp Int -> A.Exp Int -> A.Exp Int ->
-                  A.Exp Double -> A.Exp Double -> A.Exp Double ->
-                  A.Exp Double ->
-                  ContinuousShader (A.Exp Double)
+                  A.Exp a -> A.Exp a -> A.Exp a ->
+                  A.Exp a ->
+                  ContinuousShader (A.Exp a)
 ridgedMultiGen quality freq lac octaveCount maxOctave seed exponent' offset gain z = unitShader $ \point ->
     let finalValue = value $
-              A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
+              A.iterate octaveCount octaveFunc (A.lift (0.0 :: a, 1.0 :: a, point * pure freq, z*freq, 0 :: Int))
 
         value args = val
             where (val, _, _, _, _) =
-                      A.unlift args :: (A.Exp Double, A.Exp Double, A.Exp (Cartesian.Point2 Double), A.Exp Double, A.Exp Int)
+                      A.unlift args :: (A.Exp a, A.Exp a, A.Exp (Cartesian.Point2 a), A.Exp a, A.Exp Int)
 
         signal (Cartesian.Point2 sx sy) sz octv = gradientCoherentNoise quality newSeed sx sy sz
             where newSeed = (seed + octv) .&. 0x7fffffff
@@ -45,7 +48,7 @@ ridgedMultiGen quality freq lac octaveCount maxOctave seed exponent' offset gain
               , oz * lac
               , curOctave + 1)
             where (val, curWeight, point', oz, curOctave) =
-                      A.unlift args :: (A.Exp Double, A.Exp Double, A.Exp (Cartesian.Point2 Double), A.Exp Double, A.Exp Int)
+                      A.unlift args :: (A.Exp a, A.Exp a, A.Exp (Cartesian.Point2 a), A.Exp a, A.Exp Int)
                   newWeight = signalValue * gain
                   signalValue = curWeight * ((offset - abs (signal unliftedPoint' oz curOctave)) ** 2)
                   unliftedPoint' = A.unlift point'
