@@ -9,11 +9,7 @@ module Flowbox.Graphics.Image.IO.OpenEXR (
     ) where
 
 import           Control.Monad            (forM)
-import qualified Data.Array.Accelerate    as A
-import qualified Data.Array.Accelerate.IO as A
 import           Data.Char                (toLower)
-import qualified Data.Vector.Storable     as SV
-import           GHC.Float                as GHC (float2Double)
 
 import           Flowbox.Codec.EXR              hiding (channels, name, x)
 import           Flowbox.Graphics.Image.Channel (Channel (..), ChannelData (..))
@@ -44,8 +40,7 @@ readEXRPart exr part = do
     channelsNames <- getChannels exr part
     channels <- forM channelsNames $ \name -> do
         floatArray <- readScanlineChannelA exr part name
-        let doubleArray = convertToDouble floatArray
-        return $ ChannelFloat (convertToLunaName name) (MatrixData $ Raw doubleArray)
+        return $ ChannelFloat (convertToLunaName name) (MatrixData $ Raw floatArray)
 
     let newChannels = addAlphaIfAbsent channels
 
@@ -71,12 +66,6 @@ makeView name channels = foldr View.append (View.empty name) channels
 makeImage :: [View] -> Maybe Image
 makeImage (x:xs) = Just $ foldr Image.insert (Image.singleton x) xs
 makeImage _      = Nothing
-
-convertToDouble :: A.Shape sh => A.Array sh Float -> A.Array sh Double
-convertToDouble matrix = doubleMatrix
-    where ((), floatVector) = A.toVectors matrix
-          doubleVector = SV.map GHC.float2Double floatVector
-          doubleMatrix = A.fromVectors (A.arrayShape matrix) ((), doubleVector)
 
 -- == HELPERS == for error reporting
 
