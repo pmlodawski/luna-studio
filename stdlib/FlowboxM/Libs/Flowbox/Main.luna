@@ -251,10 +251,10 @@ def noImgMask:
 #                MATH and such
 #
 
-# alias Point2F = Point2 Float
-# alias CurveGUI = [ControlPointGUI]
-# alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
-# alias HandleGUI = (Int, Float, Float)
+alias Point2D = Point2 Double
+alias HandleGUI = (Int, Double, Double)
+alias ControlPointGUI = (Point2D, HandleGUI, HandleGUI)
+alias CurveGUI = [ControlPointGUI]
 
 def curveGUI vertices:
     vertices
@@ -432,16 +432,21 @@ def Image.gamma val:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
+alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias Color5 = (Color, Color, Color, Color ,Color)
+
 def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
                        shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
                        midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
     ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
-    # ```liftF21 colorCorrectLuna' #{masterSaturation} #{masterContrast} #{masterGamma} #{masterGain} #{masterOffset}
-    #                              #{shadowsSaturation} #{shadowsContrast} #{shadowsGamma} #{shadowsGain} #{shadowsOffset}
-    #                              #{midtonesSaturation} #{midtonesContrast} #{midtonesGamma} #{midtonesGain} #{midtonesOffset}
-    #                              #{highlightsSaturation} #{highlightsContrast} #{highlightsGamma} #{highlightsGain} #{highlightsOffset}
-    #                              #{self}```
+
+def Image.colorCorrectCurves curves
+                       master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.hueCorrect sat lum r g b rSup gSup bSup:
     ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
