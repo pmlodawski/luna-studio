@@ -10,7 +10,7 @@ module Luna.Typechecker.StageTypecheckerState (
     StageTypecheckerCtx,
     StageTypecheckerTraversal,
     StageTypecheckerDefaultTraversal,
-    debugLog, typo, nextTVar, subst, constr, sa,
+    debugLog, typo, nextTVar, subst, constr, sa, currentType,
     prettyState,
     report_error
   ) where
@@ -26,7 +26,7 @@ import qualified  Luna.Syntax.Pat                   as Pat
 import            Luna.Data.StructInfo              (StructInfo)
 import            Luna.Pass                         (PassMonad, PassCtx)
 
-import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo)
+import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo, Type)
 import            Luna.Typechecker.Debug.HumanName  (HumanName)
 import            Luna.Typechecker.Debug.PrettyData (
                       prettyConstr, prettyNullable, prettySubst, prettyTypo
