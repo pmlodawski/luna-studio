@@ -28,7 +28,7 @@ import Data.Typeable
 import Data.PolyTypeable
 
 import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
-
+import Type.List (IndexOf, DeleteIdx)
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -87,8 +87,7 @@ class AppArg name a sig f sig' f' | name sig f -> a sig' f' where
 instance (f~(Provided a -> f'), sig~(s ': sig')) => AppArg Unnamed a sig f sig' f' where
     appArg (ArgVal a) = remapFunc . fmap ($ Provided a)
 
----- MatchDefArg a d => default arg has the same type as arg!
-instance (idx~NameIndex n sig, sig'~DeleteNth idx sig, AppNth idx (Provided a) f f')
+instance (idx~IndexOf (Named n) sig, sig'~DeleteIdx idx sig, AppNth idx (Provided a) f f')
       => AppArg (Named n) a sig f sig' f' where
     appArg (ArgVal a) = remapFunc . fmap (appNth idx (Provided a)) where
         idx = (Proxy::Proxy idx)
@@ -120,28 +119,18 @@ instance (f~(Unprovided -> f'), AppDefaults ss f' g)
     appDefaults = appDefaults . simpleApp Unprovided
 
 
-class AppDefault a arg where
-    appDefault :: a -> arg -> a
+class AppDef m a arg n | m arg -> n where
+    appDef :: m a -> arg -> n a
 
-instance (arg~a) => AppDefault a (Provided arg) where
-    appDefault _ = fromProvided
+instance (arg~a) => AppDef m a (Provided (n arg)) n where
+    appDef _ = fromProvided
 
-instance (arg~a) => AppDefault a Unprovided where
-    appDefault = const
-
-
-class AppDefault2 m a arg n | m arg -> n where
-    appDefault2 :: m a -> arg -> n a
-
-instance (arg~a) => AppDefault2 m a (Provided (n arg)) n where
-    appDefault2 _ = fromProvided
-
-instance (arg~a) => AppDefault2 m a Unprovided m where
-    appDefault2 = const
+instance (arg~a) => AppDef m a Unprovided m where
+    appDef = const
 
 
-noDefault :: Provided a -> a
-noDefault = fromProvided
+noDef :: Provided a -> a
+noDef = fromProvided
 
 ----------------------------------------------------------------------
 -- Utils
@@ -181,18 +170,10 @@ instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u)
     appNth' _ _ a = (\f t -> appNth (Proxy :: Proxy (n-1)) a (f t))
 
 
+-- === DeleteIdx ===
 
 
--- === DeleteNth ===
 
-
-type family NameIndex (a :: Symbol) (as :: [NameStatus Symbol]) :: Nat where
-    NameIndex n (Named n ': as) = 0
-    NameIndex n (a ': as)       = NameIndex n as + 1
-
-type family DeleteNth (num::Nat) (as :: [k]) :: [k] where
-    DeleteNth 0 (a ': as) = as
-    DeleteNth n (a ': as) = a ': DeleteNth (n-1) as
 
 
 -- === ExtractNth ===
@@ -221,23 +202,23 @@ tstArgs a = addArg (nArg 7 (Proxy::Proxy "x"))
 
 tstx2 v = appDefaults $ appArgs (tstArgs empty) v
 
-tstf1 (appDefault 0 -> a) (appDefault 0 -> b) = (a,b)
-tstFunc1 = func (Proxy::Proxy '[Named "x", Named "y"]) tstf1
+--tstf1 (appDefault 0 -> a) (appDefault 0 -> b) = (a,b)
+--tstFunc1 = func (Proxy::Proxy '[Named "x", Named "y"]) tstf1
 
 
-main = do
-    --print $ tstf1 (Provided []) (Provided "a")
-    --print $ appArgs (tstArgs empty) tstFunc1
-    print $ tstx2 tstFunc1
-    return ()
+--main = do
+--    --print $ tstf1 (Provided []) (Provided "a")
+--    --print $ appArgs (tstArgs empty) tstFunc1
+--    print $ tstx2 tstFunc1
+--    return ()
 
 
 ----------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 
-class MemberProvider cls (name :: Symbol) argRep f | cls name argRep -> f where
-    getMember :: cls -> Proxy name -> argRep -> f
+--class MemberProvider cls (name :: Symbol) argRep f | cls name argRep -> f where
+--    getMember :: cls -> Proxy name -> argRep -> f
 
 
 
@@ -251,7 +232,7 @@ type family SigOf cls (name :: Symbol) :: [NameStatus Symbol]
 --instance MemberProvider V "tst" args (a -> b -> (a,b)) where
 --    getMember _ _ _ = tstf1
 
-member cls name args = getMember cls name (monoType args)
+--member cls name args = getMember cls name (monoType args)
 
 mkFunc :: cls -> Proxy (name :: Symbol) -> f -> Func (SigOf cls name) f
 mkFunc _ _ = Func

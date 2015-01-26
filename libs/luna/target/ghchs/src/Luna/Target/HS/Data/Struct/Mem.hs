@@ -28,10 +28,9 @@ import GHC.TypeLits
 import Data.Typeable (Proxy(..))
 import Luna.Target.HS.Control
 import Luna.Target.HS.Data.Func.App
-import Luna.Target.HS.Data.Func.Args
 
-import qualified Luna.Target.HS.Data.Func.Args2 as Args2
 import qualified Luna.Target.HS.Data.Func.Args7 as Args7
+import Control.Category.Dot
 
 
 import Data.Typeable
@@ -50,11 +49,7 @@ instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
 -- HasMem
 ----------------------------------------------------------------------------------
 
-class HasMem (name :: Symbol) obj sig | name obj -> sig where
-    memSig :: Mem obj name -> sig
 
-class HasMem2 (name :: Symbol) obj sig | name obj -> sig where
-    memSig2 :: Mem obj name -> sig
 
 
 class MemberProvider obj name argRep f | obj name argRep -> f where
@@ -68,37 +63,17 @@ objPtr el = Proxy
 memPtr :: Proxy name -> m base s a -> Mem obj name <= (Env base, Safety s, BaseType (Proxy a) (Proxy obj))
 memPtr name obj = Mem (objPtr obj) name
 
-getMem :: Proxy name -> m base s a -> Value Pure Safe (AppH (Mem obj name) s1) <= (Env base, Safety s, HasMem name obj s1, BaseType (Proxy a) (Proxy obj))
-getMem name obj = val . appH ptr $ memSig ptr where
+getMem name obj = val . appH ptr $ Args7.empty where
     ptr = memPtr name obj
 
---getMem2 :: Proxy name -> m base s a -> Value Pure Safe (AppH (Mem obj name) s1) <= (Env base, Safety s, HasMem name obj s1, BaseType (Proxy a) (Proxy obj))
-getMem3 name obj = val . appH ptr $ Args2.mkFunc (memSig2 ptr) where
-    ptr = memPtr name obj
 
-getMem4 name obj = val . appH ptr $ Args7.empty where
-    ptr = memPtr name obj
-
-member :: Proxy (name :: Symbol) -> m base s a -> Value Pure Safe (AppH (Mem obj name) args) <= (Env base, Safety s, HasMem name obj args1, AppArgByName "self" (m base s a) args1 args, Type.BaseType.BaseType (Proxy a) (Proxy obj))
-member name obj = appByName (Proxy::Proxy "self") obj $ getMem name $ obj
+addArg  = (fmap.fmap) . Args7.addArg
+appNext = addArg . Args7.uArg
+appByName = addArg `dot2` Args7.nArg
 
 
-appByNameW n v = (fmap . fmap) (Args2.appByNameW n v)
-
-appNextW v = (fmap . fmap) $ (Args2.appArgW v)
-
-addArg = (fmap.fmap) . Args7.addArg
-
---member2 :: Proxy name 
---        -> m base s a 
---        -> Value Pure Safe (AppH (Mem obj name) (FuncTrans names defs f1 f2))
---member2 name obj = appByNameW (Proxy::Proxy "self") obj $ getMem3 name $ obj
+member name obj = appByName obj (Proxy::Proxy "self") $ getMem name obj
 
 
-member2 name obj = appByNameW (Proxy::Proxy "self") obj $ getMem3 name obj
-
-member3 name obj = addArg (Args7.nArg obj (Proxy::Proxy "self")) $ getMem4 name obj
-
-
-mkFunc2 :: Mem cls name -> f -> Args7.Func (Args7.SigOf cls name) f
-mkFunc2 _ = Args7.Func
+mkFunc :: Mem cls name -> f -> Args7.Func (Args7.SigOf cls name) f
+mkFunc _ = Args7.Func

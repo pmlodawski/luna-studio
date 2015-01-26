@@ -16,7 +16,7 @@
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
-module Luna.Target.HS.Data.Func.Args3 where
+module Luna.Target.HS.Data.Func.Args5 where
 
 
 import Prelude hiding (reverse)
