@@ -67,9 +67,9 @@ getMem name obj = val . appH ptr $ Args7.empty where
     ptr = memPtr name obj
 
 
-addArg  = (fmap.fmap) . Args7.addArg
-appNext = addArg . Args7.uArg
-appByName = addArg `dot2` Args7.nArg
+addArg'  = (fmap.fmap) . Args7.addArg
+appNext = addArg' . Args7.uArg
+appByName = addArg' `dot2` Args7.nArg
 
 
 member name obj = appByName obj (Proxy::Proxy "self") $ getMem name obj

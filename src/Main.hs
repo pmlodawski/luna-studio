@@ -22,11 +22,6 @@ module Main where
 
 -- imports --
 import Luna.Target.HS
-import           Luna.Target.HS.Data.Func.Args7 hiding (addArg, appArg)
-import qualified Prelude as P
-import qualified Type.BaseType as BaseType
-import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
-import Control.Category.Dot
 
 -- body --
 #include "pragmas.cpp"
@@ -37,10 +32,10 @@ data Cls_Main  = Cls_Main deriving (Show, Eq, Ord, Generic, Typeable)
 
 -- ------ Main.Main constructor ------ --
 cons_Main = member("Main") (val Cls_Main)
-memDef_Cls_Main_Main _ = val Main
+memDef_Cls_Main_Main = liftCons0 Main
 
 type instance SigOf Cls_Main "Main" = '[Named "self"]
-$(registerMethod3 ''Cls_Main "Main")
+$(registerMethod ''Cls_Main "Main")
 
 -- ------ Main methods ------ --
 
@@ -50,7 +45,7 @@ memDef_Main_print (noDef -> self) (appDef (val "") -> s) =
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
 type instance SigOf Main "print" = '[ Named "self", Named "y" ]
-$(registerMethod3 ''Main "print")
+$(registerMethod ''Main "print")
 
 
 memDef_Main_tst self = do

@@ -92,6 +92,10 @@ self = "self"
 mkCls :: (Monoid a, IsString a) => a -> a
 mkCls = ("Cls_" <>)
 
+-- hack fixing double underscore
+mkCls' :: (Monoid a, IsString a) => a -> a
+mkCls' = ("Cls#" <>)
+
 mkVar :: (Monoid a, IsString a) => a -> a
 mkVar = ("_" <>)
 
