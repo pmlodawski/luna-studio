@@ -111,39 +111,48 @@ withClonedTypo x action = do
   typo0 <- typo . _head & use
   withTypo typo0 x action
 
+withClonedTypo0 :: (Monad m) => StageTypecheckerPass m a -> StageTypecheckerPass m a
+withClonedTypo0 = withClonedTypo () . const
+
+
 tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
-tcDecl ldecl@(Label lab decl) = do
+tcDecl ldecl@(Label lab decl) =
     case decl of
       Decl.Func (Decl.FuncDecl path sig funcout body) -> do
-          let baseName = sig ^.  NamePat.base . NamePat.segmentBase . unpacked
-              baseArgs = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName . unpacked
-              --   The       |   |              |                     |          |         |               |              |
-              --  lens       |   |              |                     |          |         |               |              +-- convert Lazy Text to String
-              --  magic      |   |              |                     |          |         |               +-- get human readable form
-              --   is        |   |              |                     |          |         +-- skip label, get the element
-              --  here.      |   |              |                     |          +-- read the pattern
-              -- Behold!     |   |              |                     +-- for each of them
-              --             |   |              +-- get the list of segments (ie. list of arguments)
-              --             |   +-- get the signature of the function
-              --             +-- return the list; if (^.) was here then this would be merged with mappend
+          let labID       = Enum.id lab
+              baseName    = sig ^.  NamePat.base . NamePat.segmentBase . unpacked
+              argumentIDs = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.label   . to Enum.id
+              baseArgs    = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName . unpacked
+                 --   The       |   |              |                     |          |         |               |              |
+                 --  lens       |   |              |                     |          |         |               |              +-- convert Lazy Text to String
+                 --  magic      |   |              |                     |          |         |               +-- get human readable form
+                 --   is        |   |              |                     |          |         +-- skip label, get the element
+                 --  here.      |   |              |                     |          +-- read the pattern
+                 -- Behold!     |   |              |                     +-- for each of them
+                 --             |   |              +-- get the list of segments (ie. list of arguments)
+                 --             |   +-- get the signature of the function
+                 --             +-- return the list; if (^.) was here then this would be merged with mappend
           debugPush "push"
-          (res, a) <- withClonedTypo () $ \_ -> do
+          withClonedTypo0 $ do
               debugPush $ "Function: " ++ baseName ++ " :: (" ++ intercalate ", " baseArgs ++ ") → ???"
 
-              a <- insertNewMonoTVar (Enum.id lab)
+              a  <- insertNewMonoTVar (Enum.id lab)     -- type of the method
+              bs <- forM argumentIDs insertNewMonoTVar  -- types of the arguments
+              
+              travRes <- defaultTraverseM ldecl
+              
+              mResultType <- typeMap . at labID & use
 
-              let argumentIDs = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.label . to Enum.id
-              forM_ argumentIDs insertNewMonoTVar
+              case mResultType of
+                Just resultType -> do
+                    let bsres = foldr1 Fun (bs ++ [resultType])
 
-              res <- defaultTraverseM ldecl
-              return (res, a)
-          case a of
-              Mono at -> add_constraint (C [at `Subsume` at]) -- TODO [kgdk] 26 sty 2015
-              _       -> return ()
-          --typ <- normalize a
+                    add_constraint (C [a `Subsume` bsres])
+                    typ <- normalize a
+                    typeMap . at labID ?= typ
 
-          debugPush "pop"
-          return res
+                    return travRes
+                Nothing ->
           
           --tp (env, Abs x e) = do a <- newtvar
           --                       b <- tp (insert env (x, Mono (TV a)), e)
@@ -154,7 +163,7 @@ tcDecl ldecl@(Label lab decl) = do
         tvarID <- newtvar
         let typeEnvElem = (labID, Mono (TV tvarID))
         typo . _head %= flip insert typeEnvElem
-        return $ Mono (TV tvarID)
+        return $ TV tvarID
 
 
 tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
