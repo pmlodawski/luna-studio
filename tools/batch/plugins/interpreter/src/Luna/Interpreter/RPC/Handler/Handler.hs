@@ -12,7 +12,6 @@
 
 module Luna.Interpreter.RPC.Handler.Handler where
 
-import           Control.Monad             (forever)
 import           Control.Monad.Trans.State
 import           Data.IORef                (IORef)
 import qualified Data.IORef                as IORef
@@ -35,6 +34,7 @@ import           Flowbox.Bus.RPC.RPC                         (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor            as Processor
 import           Flowbox.Config.Config                       (Config)
 import qualified Flowbox.Control.Concurrent                  as Concurrent
+import           Flowbox.Control.Monad.Loops                 (untilTrue)
 import           Flowbox.Prelude                             hiding (Context, error)
 import           Flowbox.ProjectManager.Context              (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic            as Topic
@@ -55,6 +55,7 @@ import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
 import           Luna.Interpreter.Session.Memory.Manager.LRU (LRU)
 import           Luna.Interpreter.Session.Session            (SessionST)
 import qualified Luna.Interpreter.Session.Session            as Session
+
 
 
 logger :: LoggerIO
@@ -89,6 +90,7 @@ handlerMap prefix queueInfo crl callback = HandlerMap.fromList $ Prefix.prefixif
     , (Topic.interpreterSerializationModeDeleteAllRequest  , respond Topic.update   Interpreter.deleteAllSerializationMode )
     , (Topic.interpreterMemoryGetLimitsRequest             , respond Topic.status   Interpreter.getMemoryLimits)
     , (Topic.interpreterMemorySetLimitsRequest             , respond Topic.update   Interpreter.setMemoryLimits)
+    , (Topic.interpreterExitRequest                        , respond Topic.update   Interpreter.exit)
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
@@ -153,9 +155,10 @@ interpret :: MemoryManager MM
           -> Pipes.Pipe (Message, Message.CorrelationID)
                         (Message, Message.CorrelationID, Flag)
                         (Pipes.SafeT (StateT Context (SessionST MM))) ()
-interpret prefix queueInfo crlRef = forever $ do
+interpret prefix queueInfo crlRef = untilTrue $ do
     (message, crl) <- Pipes.await
-    logger trace $ "Received message " ++ (message ^. Message.topic)
+    let topic = message ^. Message.topic
+    logger trace $ "Received message " ++ topic
     liftIO $ IORef.writeIORef crlRef crl
     results <- lift2 $ Processor.process (handlerMap prefix queueInfo crl) message
     logger trace $ "Sending " ++ show (length results) ++ " result"
@@ -163,6 +166,7 @@ interpret prefix queueInfo crlRef = forever $ do
         send [r]   = Pipes.yield (r, crl, Flag.Enable)
         send (r:t) = Pipes.yield (r, crl, Flag.Disable) >> send t
     send results
+    return $ topic == Topic.interpreterExitRequest
 
 
 run :: Config -> Prefix -> Context
@@ -173,7 +177,7 @@ run cfg prefix ctx (input, output) = do
     crlRef              <- IORef.newIORef def
     interpreterThreadId <- Concurrent.myThreadId
     queueInfo           <- QueueInfo.mk
-    (output1, input1)   <- Pipes.spawn Pipes.Unbounded
+    (output1, input1)   <- Pipes.spawn Pipes.unbounded
     env <- (Env.resultCallBack .~ Value.reportOutputValue crlRef output) <$> Env.mkDef def
     Concurrent.forkIO_ $ Pipes.runEffect $
             Pipes.fromInput input
