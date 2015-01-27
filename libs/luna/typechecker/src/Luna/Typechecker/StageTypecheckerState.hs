@@ -16,10 +16,6 @@ module Luna.Typechecker.StageTypecheckerState (
   ) where
 
 
--- TODO [kgdk] 27 sty 2015: SHALL NOT BE COMMITED TO REPO!
-import            System.IO.Unsafe                  (unsafePerformIO)
-
-
 import            Control.Lens
 import            Control.Monad.State.Lazy          (get)
 import qualified  Data.Map.Strict                   as SM
