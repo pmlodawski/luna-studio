@@ -42,7 +42,7 @@ import qualified Luna.Syntax.Name             as Name
 import qualified Luna.Data.HAST.Expr                         as HE
 import qualified Luna.Data.HAST.Lit                          as HLit
 import qualified Luna.Data.HAST.Module                       as HModule
-import qualified Luna.Data.HAST.Extension                    as HExtension
+import qualified Luna.Data.HAST.Extension                    as HExt
 --import qualified Luna.Data.HAST.Comment                      as HComment
 import           Luna.Data.HAST.Comment (Comment(H1, H2, H3, H4, H5))
 
@@ -133,27 +133,25 @@ stdDerivings = [ Deriving.Show, Deriving.Eq, Deriving.Ord
 genModule :: Ctx m a v => LModule a (LExpr a v) -> PassResult m HE
 genModule (Label lab (Module path body)) = withCtx path $ do
     let mod     = HModule.addImport ["Luna", "Target", "HS"]
-                $ HModule.addExt HExtension.DataKinds
-                $ HModule.addExt HExtension.DeriveDataTypeable
-                $ HModule.addExt HExtension.DeriveGeneric
-                $ HModule.addExt HExtension.NoMonomorphismRestriction
-                $ HModule.addExt HExtension.FlexibleContexts
-                $ HModule.addExt HExtension.FlexibleInstances
-                $ HModule.addExt HExtension.TypeFamilies
-                $ HModule.addExt HExtension.RebindableSyntax
-                $ HModule.addExt HExtension.TemplateHaskell
-                $ HModule.addExt HExtension.UndecidableInstances
-                $ HModule.addExt HExtension.ViewPatterns
-                $ HModule.addExt HExtension.MultiParamTypeClasses
-                $ HModule.addExt HExtension.CPP
-                $ HModule.addExt HExtension.DysfunctionalDependencies
-                -- $ HModule.addExt HExtension.DysfunctionalDependencies
-                $ HModule.mk (toList path)
-        --params  = view LType.params cls
-        --modCon  = LExpr.ConD 0 name fields
+                $ foldr HModule.addExt (HModule.mk (toList path))
+                $ [ HExt.DataKinds
+                  , HExt.DeriveDataTypeable
+                  , HExt.DeriveGeneric
+                  , HExt.NoMonomorphismRestriction
+                  , HExt.FlexibleContexts
+                  , HExt.FlexibleInstances
+                  , HExt.TypeFamilies
+                  , HExt.RebindableSyntax
+                  , HExt.TemplateHaskell
+                  , HExt.UndecidableInstances
+                  , HExt.ViewPatterns
+                  , HExt.MultiParamTypeClasses
+                  , HExt.CPP
+                  , HExt.DysfunctionalDependencies
+                  , HExt.ExtendedDefaultRules
+                  ]
         modConName = Naming.mkModCons (hash path)
         modData = Label (0::Int) (Decl.singleData $ fromText $ hash path)
-    
 
     State.setModule mod
 

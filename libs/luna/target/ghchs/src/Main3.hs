@@ -12,9 +12,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 -- module --
-module Main where
+module Main3 where
 
 -- imports --
 import Luna.Target.HS
@@ -37,7 +38,7 @@ $(registerMethod ''Cls_Main "Main")
 -- ------ Main methods ------ --
 
 -- ====== Method: Main.print ====== --
-memDef_Main_print (noDef -> self) (appDef (val ("" :: String)) -> s) = do 
+memDef_Main_print (noDef -> self) (noDef -> s) = do 
      
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
      
@@ -47,7 +48,7 @@ $(registerMethod ''Main "print")
 
 -- ====== Method: Main.main ====== --
 memDef_Main_main (noDef -> _self) = do 
-     call (member("print") _self)
+     call (appNext (val []) (member("print") _self))
      
 
 type instance SigOf Main "main" = '[Named "self"]
