@@ -64,19 +64,18 @@ import            Luna.Typechecker.Solver                 (cs)
 
 
 
-tcpass :: (StageTypecheckerDefaultTraversal m a a) => Pass StageTypecheckerState (a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState)
+tcpass :: (StageTypecheckerDefaultTraversal m a b) => Pass StageTypecheckerState (a -> StructInfo -> StageTypecheckerPass m (b, StageTypecheckerState))
 tcpass = Pass { _name  = "Typechecker"
               , _desc  = "Infers the types and typechecks the program as a form of correctness-proving."
               , _state = def
               , _func  = tcUnit
               }
 
-tcUnit :: (StageTypecheckerDefaultTraversal m a a) => a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState
+tcUnit :: (StageTypecheckerDefaultTraversal m a b) => a -> StructInfo -> StageTypecheckerPass m (b, StageTypecheckerState)
 tcUnit ast structAnalysis = do
     sa .= structAnalysis
     debugPush "First!"
-    _ <- defaultTraverseM ast
-    get
+    liftM2 (,) (defaultTraverseM ast) get
 
 
 instance (StageTypecheckerCtx lab m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab InExpr) (LDecl lab OutExpr) where
@@ -84,10 +83,10 @@ instance (StageTypecheckerCtx lab m) => AST.Traversal StageTypechecker (StageTyp
 instance (StageTypecheckerCtx lab m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr lab InExpr) (LExpr lab OutExpr) where
   traverseM _ = tcExpr
 
-traverseM :: (StageTypecheckerTraversal m a a) => a -> StageTypecheckerPass m a
+traverseM :: (StageTypecheckerTraversal m a b) => a -> StageTypecheckerPass m b
 traverseM = AST.traverseM StageTypechecker
 
-defaultTraverseM :: (StageTypecheckerDefaultTraversal m a a) => a -> StageTypecheckerPass m a
+defaultTraverseM :: (StageTypecheckerDefaultTraversal m a b) => a -> StageTypecheckerPass m b
 defaultTraverseM = AST.defaultTraverseM StageTypechecker
 
 
