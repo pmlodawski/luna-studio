@@ -27,7 +27,7 @@ import Flowbox.Prelude                             hiding (lift, (!!), (?), (<*)
 
 
 
-data BSplineNode a = BSplineNode { node      :: Point2 a
+data BSplineNode a = BSplineNode { node      :: Point2 a -- all those coordinates are global
                                  , handleIn  :: Point2 a
                                  , handleOut :: Point2 a
                                  } deriving (Eq, Ord, Show,Typeable)

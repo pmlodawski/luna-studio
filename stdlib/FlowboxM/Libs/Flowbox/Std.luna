@@ -32,6 +32,9 @@ class ```Bool```:
     True
     False
 
+def Bool.toString:
+    ```liftF1 show #{self}```
+
 class ```Maybe``` a:
     Just:
         unwrap :: a
@@ -61,8 +64,18 @@ class ```Boundary```:
     Wrap
     Constant: a :: Double
 
+def null a:
+    a
+
 def print msg:
     ```autoLift1 print #{msg}```
+
+# CHAR
+
+def Char.toString:
+    ```liftF2 (:) #{self} (val ([] :: String))```
+
+# INT
 
 def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
@@ -96,6 +109,14 @@ def Int.inc:
 
 def Int.dec:
     self - 1
+
+def Int.fromIntegral:
+    ```liftF1 fromIntegral #{self} :: Value Pure Safe Double```
+
+def Int.toString:
+    ```liftF1 show #{self}```
+
+# DOUBLE
 
 def Double.acc:
     ```liftF1 variable #{self}```
@@ -138,6 +159,9 @@ def Double.<= a:
 
 def Double.>= a:
     ```liftF2 (>=) #{self} #{a}```
+
+def Double.toString:
+    ```liftF1 show #{self}```
 
 # def Float.floor:
 #     ```liftF1 floor #{self}```
@@ -219,10 +243,10 @@ def rasterizeMask w h m:
 #                MATH and such
 #
 
-# alias Point2F = Point2 Float
-# alias CurveGUI = [ControlPointGUI]
-# alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
-# alias HandleGUI = (Int, Float, Float)
+alias Point2D = Point2 Double
+alias HandleGUI = (Int, Double, Double)
+alias ControlPointGUI = (Point2D, HandleGUI, HandleGUI)
+alias CurveGUI = [ControlPointGUI]
 
 def curveGUI vertices:
     vertices
@@ -400,8 +424,21 @@ def Image.gamma val:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-# def Image.colorCorrect saturation contrast gamma gain offset:
-#     ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
+alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias Color5 = (Color, Color, Color, Color ,Color)
+
+def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
+
+def Image.colorCorrectCurves curves
+                       master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
