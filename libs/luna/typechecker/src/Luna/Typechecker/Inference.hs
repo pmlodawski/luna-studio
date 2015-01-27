@@ -196,20 +196,27 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
     defaultTraverseM var
 
 expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) = do
-  case (dst, src) of
-      (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
+  case dst of
+      Pat.Var { Pat._vname = dst_vname } ->
         do  
           --tp (env, Let x e e') = do a <- tp (env, e)
           --                          b <- gen env a
           --                          tp ((insert env (x, b)), e')
           t_id <- getTargetIDString labt
           s_id <- getTargetIDString labs
-          debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ unpack (humanName src_vname) ++ s_id) 
-          -- TODO destType <- expr env dst
+          debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ s_id) 
+
+          srcId <- getTargetID labs
+          dstId <- getTargetID labt
+          -- typecheck src
+          res <- defaultTraverseM ass
+          srcType <- getTypeById srcId
+
+          setTypeById dstId srcType
+          return res
       _ -> do
-            debugPush "Some assignment..."
-  
-  defaultTraverseM ass
+          debugPush "Some assignment..."
+          defaultTraverseM ass
 
 
 expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Segment appExpr args ) } ) ) ) =
