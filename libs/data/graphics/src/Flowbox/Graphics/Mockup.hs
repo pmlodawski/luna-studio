@@ -403,6 +403,13 @@ constantLuna (variable -> width) (variable -> height) (fmap variable -> Color.RG
                   , ("rgba.a", a)
                   ]
 
+--TODO[KM]: port checkerboard to luna
+--type CheckerboardColorsLuna = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
+--type CheckerboardLineLuna   = (VPS ColorD, VPS Double)
+-- ...
+--checkerboardLuna :: VPS Int -> VPS Int -> Double -> CheckerboardColorsLuna -> CheckerboardLineLuna -> CheckerboardLineLuna -> Image
+--checkerboardLuna w h
+
 circularLuna :: Int -> Int -> Image
 circularLuna = gradientLuna circularShape
 
@@ -501,8 +508,8 @@ rotateLuna (variable -> phi) = onEachChannel rotateChannel
               --TODO[KM]: handle the mask properly
               _       -> phi
 
-rotateAtLuna :: Double -> Point2 Double -> Image -> Image
-rotateAtLuna (variable -> phi) (fmap variable -> (Point2 x y)) = onEachChannel rotateChannel
+rotateAtLuna :: Point2 Double -> Double -> Image -> Image
+rotateAtLuna (fmap variable -> (Point2 x y)) (variable -> phi) = onEachChannel rotateChannel
     where vBefore = V2 (-x) y
           vAfter  = V2 x (-y)
           mask    = Nothing
@@ -531,8 +538,8 @@ scaleLuna (fmap variable -> v) = onEachChannel scaleChannel
               --TODO[KM]: handle the mask properly
               _       -> v
 
-scaleAtLuna :: V2 Double -> Point2 Double -> Image -> Image
-scaleAtLuna (fmap variable -> v) (fmap variable -> (Point2 x y)) = onEachChannel scaleChannel
+scaleAtLuna :: Point2 Double -> V2 Double -> Image -> Image
+scaleAtLuna (fmap variable -> (Point2 x y)) (fmap variable -> v) = onEachChannel scaleChannel
     where vBefore = V2 (-x) y
           vAfter  = V2 x (-y)
           mask    = Nothing
