@@ -13,11 +13,9 @@ module Flowbox.Control.Error (
 , liftIO
 ) where
 
-import           Control.Error             as X hiding (runScript)
-import qualified Control.Exception         as Exc
-import           Control.Monad.IO.Class    (MonadIO, liftIO)
-import           Control.Monad.Trans.Class (MonadTrans)
-import qualified Data.Maybe                as Maybe
+import           Control.Error     as X hiding (runScript)
+import qualified Control.Exception as Exc
+import qualified Data.Maybe        as Maybe
 
 import Flowbox.Prelude
 
