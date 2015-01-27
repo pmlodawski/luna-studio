@@ -171,8 +171,8 @@ insertNewMonoTypeVariable labID = do
 
 
 tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
-tcExpr lexpr@(Label lab expression) = do
-    expr lexpr
+tcExpr = expr
+
 
 expr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
 expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
@@ -182,7 +182,6 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
     debugPush ("Var         " ++ hn ++ hn_id)
 
     targetLabel <- getTargetID lab
-
     env <- getEnv
     vType <- inst env targetLabel
     result <- normalize vType
@@ -191,7 +190,7 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
 
     setTypeById targetLabel result
 
-    return var
+    defaultTraverseM var
 
 expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) = do
   case (dst, src) of
@@ -213,8 +212,8 @@ expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src =
 expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Segment appExpr args ) } ) ) ) =
   do
     debugPush "Infering an application..."
-    let Label appExprLab _ = appExpr
 
+    let Label appExprLab _ = appExpr
     appId <- getTargetID lab
     appExprId <- getTargetID appExprLab
 
@@ -231,12 +230,10 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
 
   where
     toType (Expr.AppArg _ (Label lab _)) = do
-      idV <- getTargetID lab
-      getTypeById idV
+      getTypeById =<< getTargetID lab
 
     tp result arg = do
       argType <- arg
-      -- argType <- expr env argV
       a <- newtvar
       add_constraint (C [result `Subsume` (argType `Fun` TV a)])
       normalize (TV a)
