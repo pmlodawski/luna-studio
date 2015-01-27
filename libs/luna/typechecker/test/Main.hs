@@ -89,47 +89,47 @@ main = do
             -- ast_     :: Luna.Syntax.Unit.Unit (Luna.Syntax.Module.LModule a0 (Luna.Syntax.Expr.LExpr a0 v0))
             -- astinfo_ :: Luna.Data.ASTInfo.ASTInfo
 
-            (ast1, astinfo1) <- Pass.run1_ Stage1.pass src
-            writeFileM              " 1.1. Stage1     : ast1"        $ ppShow ast1
-            writeFileM              " 1.2. Stage1     : astinfo1"    $ ppShow astinfo1
+            (ast1, astinfo1)     <- Pass.run1_ Stage1.pass src
+            writeFileM                  " 1.1. Stage1     : ast1"        $ ppShow ast1
+            writeFileM                  " 1.2. Stage1     : astinfo1"    $ ppShow astinfo1
 
             -- sa2 :: Luna.Data.StructInfo.StructInfo
-            sa2              <- Pass.run1_ SA.pass ast1
-            writeFileM              " 2.   SA         : sa2"         $ ppShow sa2
+            sa2                  <- Pass.run1_ SA.pass ast1
+            writeFileM                  " 2.   SA         : sa2"         $ ppShow sa2
 
-            (ast3, astinfo3) <- Pass.run3_ Stage2.pass (Namespace [] sa2) astinfo1 ast1
-            writeFileM              " 3.1. Stage2     : ast3"        $ ppShow ast3
-            writeFileM              " 3.2. Stage2     : astinfo3"    $ ppShow astinfo3
+            (ast3, astinfo3)     <- Pass.run3_ Stage2.pass (Namespace [] sa2) astinfo1 ast1
+            writeFileM                  " 3.1. Stage2     : ast3"        $ ppShow ast3
+            writeFileM                  " 3.2. Stage2     : astinfo3"    $ ppShow astinfo3
 
-            (ast4, astinfo4) <- Pass.run2_ ImplSelf.pass astinfo3 ast3
-            writeFileM              " 4.1. ImplSelf   : ast4"        $ ppShow ast4
-            writeFileM              " 4.2. ImplSelf   : astinfo4"    $ ppShow astinfo4
+            (ast4, astinfo4)     <- Pass.run2_ ImplSelf.pass astinfo3 ast3
+            writeFileM                  " 4.1. ImplSelf   : ast4"        $ ppShow ast4
+            writeFileM                  " 4.2. ImplSelf   : astinfo4"    $ ppShow astinfo4
 
-            sa5              <- Pass.run1_ SA.pass ast4
-            writeFileM              " 5.   SA         : sa5"         $ ppShow sa5
+            sa5                  <- Pass.run1_ SA.pass ast4
+            writeFileM                  " 5.   SA         : sa5"         $ ppShow sa5
 
             -- constraints :: Luna.Typechecker.StageTypecheckerState.StageTypecheckerState
-            constraints      <- Pass.run2_ PTyChk.tcpass ast4 sa5
-            writeFileM              " 6.   PTyChk     : constraints" $ ppShow constraints
+            (ast5, constraints)  <- Pass.run2_ PTyChk.tcpass ast4 sa5
+            writeFileM                  " 6.   PTyChk     : constraints" $ ppShow constraints
 
-            (ast6, astinfo6) <- Pass.run3_ ImplScopes.pass astinfo4 sa5 ast4
-            writeFileM              " 7.1. ImplScopes : ast6"        $ ppShow ast6
-            writeFileM              " 7.2. ImplScopes : astinfo6"    $ ppShow astinfo6
+            (ast6, astinfo6)     <- Pass.run3_ ImplScopes.pass astinfo4 sa5 ast5
+            writeFileM                  " 7.1. ImplScopes : ast6"        $ ppShow ast6
+            writeFileM                  " 7.2. ImplScopes : astinfo6"    $ ppShow astinfo6
 
-            (ast7, astinfo7) <- Pass.run2_ ImplCalls.pass astinfo6 ast6
-            writeFileM              " 8.1. ImplCalls  : ast7"        $ ppShow ast7
-            writeFileM              " 8.2. ImplCalls  : astinfo7"    $ ppShow astinfo7
+            (ast7, astinfo7)     <- Pass.run2_ ImplCalls.pass astinfo6 ast6
+            writeFileM                  " 8.1. ImplCalls  : ast7"        $ ppShow ast7
+            writeFileM                  " 8.2. ImplCalls  : astinfo7"    $ ppShow astinfo7
 
-            ast8             <- Pass.run1_ SSA.pass ast7
-            writeFileM              " 9.   SSA        : ast8"        $ ppShow ast8
+            ast8                 <- Pass.run1_ SSA.pass ast7
+            writeFileM                  " 9.   SSA        : ast8"        $ ppShow ast8
 
             -- hast9 :: HASTGen.HExpr
-            hast9            <- Pass.run1_ HASTGen.pass ast8
-            writeFileM              "10.   HAST       : hast9"       $ ppShow hast9
+            hast9                <- Pass.run1_ HASTGen.pass ast8
+            writeFileM                  "10.   HAST       : hast9"       $ ppShow hast9
 
             -- hsc10 :: Data.Text.Internal.Lazy.Text
-            hsc10            <- Pass.run1_ HSC.pass hast9
-            writeFileM              "11.   HSC        : hsc10"       $ hsShow $ unpack hsc10
+            hsc10                <- Pass.run1_ HSC.pass hast9
+            writeFileM                  "11.   HSC        : hsc10"       $ hsShow $ unpack hsc10
 
             return ()
 
