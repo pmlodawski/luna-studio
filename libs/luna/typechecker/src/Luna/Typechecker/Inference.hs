@@ -81,7 +81,8 @@ tcUnit ast structAnalysis = do
 
 instance (StageTypecheckerCtx lab m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab InExpr) (LDecl lab OutExpr) where
   traverseM _ = tcDecl
---instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr lab a)    (LExpr lab a)   where traverseM _ = tcExpr
+instance (StageTypecheckerCtx lab m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr lab InExpr) (LExpr lab OutExpr) where
+  traverseM _ = tcExpr
 
 traverseM :: (StageTypecheckerTraversal m a a) => a -> StageTypecheckerPass m a
 traverseM = AST.traverseM StageTypechecker
