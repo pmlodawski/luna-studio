@@ -46,6 +46,7 @@ Library
                   fgl,
                   flowbox-utils,
                   lens,
+                  ListZipper,
                   MissingH,
                   parsers,
                   transformers,
