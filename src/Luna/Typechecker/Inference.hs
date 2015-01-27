@@ -23,7 +23,7 @@ import qualified  Luna.Syntax.Arg                         as Arg
 import qualified  Luna.Syntax.Decl                        as Decl
 import            Luna.Syntax.Decl                        (LDecl)
 import qualified  Luna.Syntax.Enum                        as Enum
-import            Luna.Syntax.Enum                        (Enumerated, ID)
+import            Luna.Syntax.Enum                        (Enumerated, ID, IDTag(IDTag))
 import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
 import qualified  Luna.Syntax.Label                       as Label
@@ -37,6 +37,7 @@ import            Control.Applicative
 import            Control.Lens                            hiding (without)
 import            Control.Monad.State
 
+import            Data.Default                            (Default(def))
 import            Data.List                               hiding (insert)
 import            Data.Maybe                              (fromMaybe)
 import            Data.Monoid
@@ -48,12 +49,11 @@ import qualified  Data.Foldable                           as Fold
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Data
 import            Luna.Typechecker.StageTypecheckerState  (
-                      StageTypecheckerState(..), emptyStageTypecheckerState,
-                      debugLog, typo, nextTVar, subst, constr, sa, typeMap,
-                      StageTypecheckerState(..), debugLog, typo, nextTVar, subst, constr, sa, currentType,
+                      StageTypecheckerState(..),
+                      debugLog, typo, nextTVar, subst, constr, sa, currentType, typeMap,
                       StageTypechecker(..),
-                      StageTypecheckerPass, StageTypecheckerCtx,
-                      StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
+                      StageTypecheckerPass, StageTypecheckerCtx, StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
+                      InExpr, OutExpr,
                       report_error
                   )
 import            Luna.Typechecker.Tools                  (without)
@@ -64,14 +64,14 @@ import            Luna.Typechecker.Solver                 (cs)
 
 
 
-tcpass :: (StageTypecheckerDefaultTraversal m a) => Pass StageTypecheckerState (a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState)
+tcpass :: (StageTypecheckerDefaultTraversal m a a) => Pass StageTypecheckerState (a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState)
 tcpass = Pass { _name  = "Typechecker"
               , _desc  = "Infers the types and typechecks the program as a form of correctness-proving."
-              , _state = emptyStageTypecheckerState
+              , _state = def
               , _func  = tcUnit
               }
 
-tcUnit :: (StageTypecheckerDefaultTraversal m a) => a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState
+tcUnit :: (StageTypecheckerDefaultTraversal m a a) => a -> StructInfo -> StageTypecheckerPass m StageTypecheckerState
 tcUnit ast structAnalysis = do
     sa .= structAnalysis
     debugPush "First!"
@@ -79,13 +79,15 @@ tcUnit ast structAnalysis = do
     get
 
 
-instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab a)    (LDecl lab a)   where traverseM _ = tcDecl
-instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr lab a)    (LExpr lab a)   where traverseM _ = tcExpr
+instance (StageTypecheckerCtx lab m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab InExpr) (LDecl lab OutExpr) where
+  traverseM _ = tcDecl
+instance (StageTypecheckerCtx lab m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr lab InExpr) (LExpr lab OutExpr) where
+  traverseM _ = tcExpr
 
-traverseM :: (StageTypecheckerTraversal m a) => a -> StageTypecheckerPass m a
+traverseM :: (StageTypecheckerTraversal m a a) => a -> StageTypecheckerPass m a
 traverseM = AST.traverseM StageTypechecker
 
-defaultTraverseM :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m a
+defaultTraverseM :: (StageTypecheckerDefaultTraversal m a a) => a -> StageTypecheckerPass m a
 defaultTraverseM = AST.defaultTraverseM StageTypechecker
 
 
@@ -105,16 +107,18 @@ withTypo typeEnv astElem action = push *> action astElem <* pop
     pop         = typo %= safeTail
     safeTail xs = fromMaybe xs (xs ^? _tail)
 
+
 withClonedTypo :: (Monad m) => a -> (a -> StageTypecheckerPass m b) -> StageTypecheckerPass m b
 withClonedTypo x action = do
   typo0 <- typo . _head & use
   withTypo typo0 x action
 
+
 withClonedTypo0 :: (Monad m) => StageTypecheckerPass m a -> StageTypecheckerPass m a
 withClonedTypo0 = withClonedTypo () . const
 
 
-tcDecl :: (StageTypecheckerCtx lab m a) => LDecl lab a -> StageTypecheckerPass m (LDecl lab a)
+tcDecl :: (StageTypecheckerCtx lab m) => LDecl lab InExpr -> StageTypecheckerPass m (LDecl lab OutExpr)
 tcDecl ldecl@(Label lab decl) =
     case decl of
       Decl.Func (Decl.FuncDecl path sig funcout body) -> do
@@ -127,7 +131,7 @@ tcDecl ldecl@(Label lab decl) =
 
           labIDdisp <- getTargetIDString lab
           bsIDs <- forM argumentIDEs getTargetIDString
-          let argsDisp = zipWith (\name id -> name ++ id) baseArgs bsIDs
+          let argsDisp = zipWith (++) baseArgs bsIDs
 
 
           debugPush "push"
@@ -170,11 +174,11 @@ insertNewMonoTypeVariable labID = do
     return $ TV tvarID
 
 
-tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
+tcExpr :: (StageTypecheckerCtx lab m) => LExpr lab InExpr -> StageTypecheckerPass m (LExpr lab OutExpr)
 tcExpr = expr
 
 
-expr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
+expr :: (StageTypecheckerCtx lab m) => LExpr lab InExpr -> StageTypecheckerPass m (LExpr lab OutExpr)
 expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
   do
     let hn = unpack . humanName $ vname
@@ -183,7 +187,7 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
 
     targetLabel <- getTargetID lab
     env <- getEnv
-    vType <- inst env targetLabel
+    vType <- inst targetLabel
     result <- normalize vType
 
     debugPush ("         :: " ++ show result)
@@ -255,7 +259,7 @@ debugPush :: (Monad m) => String -> StageTypecheckerPass m ()
 debugPush s = s `seq` debugLog %= (s:)
 
 
-getTargetIDString :: (StageTypecheckerCtx lab m String) => lab -> StageTypecheckerPass m String
+getTargetIDString :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m String
 getTargetIDString lab = do
     labtID <- getTargetID lab
     return $ "|" ++ show labID ++ "⊳" ++ show labtID ++ "⊲"
@@ -263,7 +267,7 @@ getTargetIDString lab = do
     labID = Enum.id lab
 
 
-getTargetID :: (StageTypecheckerCtx lab m String) => lab -> StageTypecheckerPass m ID
+getTargetID :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m ID
 getTargetID lab =
     sa . SI.alias . ix labID . SI.target & preuse >>= \case
         Nothing     -> return labID
@@ -279,7 +283,7 @@ getEnv =
 
 
 
--- TODO [kgdk] 22 sty 2015: Constraint should be a monoid
+---- TODO [kgdk] 22 sty 2015: Constraint should be a monoid
 add_cons :: Constraint -> Constraint -> Constraint
 add_cons (C p1) (C p2)               = C (p1 ++ p2)
 add_cons (C p1) (Proj tvr p2)        = Proj tvr (p1 ++ p2)
@@ -287,10 +291,10 @@ add_cons (Proj tvr p1) (C p2)        = Proj tvr (p1 ++ p2)
 add_cons (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)
 
 
-tv_typo :: Typo -> [TVar]
-tv_typo = foldl f []
-  where
-    f z (v,ts) = z ++ tv ts
+--tv_typo :: Typo -> [TVar]
+--tv_typo = foldl f []
+--  where
+--    f z (v,ts) = z ++ tv ts
 
 
 add_constraint :: (Monad m) => Constraint -> StageTypecheckerPass m ()
@@ -313,8 +317,9 @@ rename s x = do
     return ((x, TV newtv):s')
 
 
-inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
-inst env x =
+inst :: (Monad m) => Var -> StageTypecheckerPass m Type
+inst x = do
+    env <- getEnv
     case lookup x env of 
         Just ts -> case ts of
             Mono t        ->
@@ -332,13 +337,13 @@ inst env x =
             report_error ("undeclared variable " ++ show x) (TV ntv)
 
 
-gen :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
-gen env t = do
-    c      <- use constr
-    constr .= projection c (fv t c env)
-    return  $ Poly (fv t c env) c t
-  where
-    fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
+--gen :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
+--gen env t = do
+--    c      <- use constr
+--    constr .= projection c (fv t c env)
+--    return  $ Poly (fv t c env) c t
+--  where
+--    fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
 
 
 normalize :: (Monad m) => Type ->  StageTypecheckerPass m Type
@@ -356,6 +361,6 @@ return_result s c t = do
     return t
 
 
-projection :: Constraint -> [TVar] -> Constraint
-projection _ _ = true_cons
+--projection :: Constraint -> [TVar] -> Constraint
+--projection _ _ = true_cons
 

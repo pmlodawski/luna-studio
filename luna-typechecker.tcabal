@@ -13,6 +13,7 @@ Library
   Exposed-modules:    `findmodules('src', '.*\.hs')`
   Build-Depends:      base
                     , containers
+                    , data-default
                     , lens
                     , luna-core
                     , luna-pass
@@ -29,6 +30,8 @@ Executable luna-typechecker-tests
   Hs-Source-Dirs:     test
   Main-Is:            Main.hs
   Build-Depends:      base
+                    , containers
+                    , data-default
                     , either
                     , lens
                     , luna-core
