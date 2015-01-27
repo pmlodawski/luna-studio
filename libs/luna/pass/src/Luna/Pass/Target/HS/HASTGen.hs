@@ -11,6 +11,7 @@
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Luna.Pass.Target.HS.HASTGen where
 
@@ -94,7 +95,7 @@ type PassCtx          lab m a = (Enumerated lab, Traversal m a)
 type Traversal            m a = (Pass.PassCtx m, AST.Traversal        HASTGen (PassResult m) a a)
 type DefaultTraversal     m a = (Pass.PassCtx m, AST.DefaultTraversal HASTGen (PassResult m) a a)
 
-type Ctx m a v = (Monad m, Monoid v, Num a, MonadIO m)
+type Ctx m a v = (Monad m, Monoid v, Num a, MonadIO m, v~())
 
 type HE = HE.Expr
 
@@ -151,7 +152,7 @@ genModule (Label lab (Module path body)) = withCtx path $ do
         --params  = view LType.params cls
         --modCon  = LExpr.ConD 0 name fields
         modConName = Naming.mkModCons (hash path)
-        modData = Label 0 (Decl.singleData $ fromText $ hash path) :: Num a => LDecl a (LExpr b ())
+        modData = Label (0::Int) (Decl.singleData $ fromText $ hash path)
     
 
     State.setModule mod
@@ -251,6 +252,8 @@ genDecl ast@(Label lab decl) = case decl of
 genStdFunc f = genFunc f (Just genFuncBody) True
 genFuncSig f = genFunc f Nothing True
 genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVarNames = do
+    when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
+
     ctx <- getCtx
     let tpName = if (null path)
         then case ctx of
@@ -265,14 +268,11 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
         memSigName = Naming.mkMemSig tpName name
         sigArgs    = NamePat.args sig
         sigPats    = fmap (view Arg.pat) sigArgs
+        sigVals    = fmap (view Arg.val) sigArgs
         sigNames   = fmap getSigName sigPats
         sigPatsUntyped = fmap splitPatTypes sigPats
     sigHPats   <- if mkVarNames then mapM genPat sigPatsUntyped
                                 else mapM genPatNoVarnames sigPatsUntyped
-
-
-    when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
-
 
     let pfx = case tpName of
                    "" -> ""
@@ -283,7 +283,7 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
         Nothing      -> return ()
         Just builder -> do
             fBody <- builder body output
-            let funcDef = HE.Function memDefName (fmap (HE.ViewP (HE.VarE "noDef")) sigHPats) (HE.DoBlock fBody)
+            funcDef <- genFuncDef memDefName fBody sigHPats sigVals
             regFunc funcDef
 
     let funcSig = HE.TypeInstance (HE.app (HE.VarE "SigOf") [HE.ConT tpName, HE.Lit (HLit.String name)]) $ HE.DataKindT $ HE.ListE $ fmap genSigHName sigNames
@@ -294,6 +294,15 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
 getSigName (unwrap -> p) = case p of
     Pat.Var name -> Just (toText . unwrap $ name)
     _            -> Nothing
+
+genFuncDef name body pats defs = do
+    hdefs <- mapM genHDef defs
+    let dsig = zip hdefs pats
+        fx (d,p) = HE.ViewP d p
+    return $ HE.Function name (fmap fx dsig) (HE.DoBlock body)
+    where genHDef = \case
+               Nothing -> return $ HE.VarE "noDef"
+               Just e  -> HE.AppE (HE.VarE "appDef") <$> genExpr e
 
 genSigHName = \case
     Nothing -> HE.ConT "Unnamed"
@@ -501,7 +510,7 @@ genExpr (Label lab expr) = case expr of
     Expr.RecUpd  name fieldUpdts           -> HE.Arrow (HE.Var $ Naming.mkVar $ hash name) <$> case fieldUpdts of
         (fieldUpdt:[]) -> genField fieldUpdt
         _              -> Pass.fail "Multi fields updates are not supported yet"
-        where src                  = Label 0 $ Expr.Var $ Expr.Variable name mempty
+        where src                  = Label 0 $ Expr.Var $ Expr.Variable name ()
               setter exp field val = Label 0 $ Expr.app (Label 0 $ Expr.Accessor (Name.VarName $ fromText . ("set#"<>) $ hash field) exp) [Expr.AppArg Nothing val]
               getter exp field     = Label 0 $ Expr.app (Label 0 $ Expr.Accessor (Name.VarName field) exp) []
               getSel sel           = foldl (flip($)) src (fmap (flip getter) (reverse sel))
