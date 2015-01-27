@@ -9,23 +9,25 @@
 module Luna.Syntax.Control.Crumb where
 
 import           Flowbox.Prelude
-import qualified Luna.Syntax.AST as AST
+import qualified Luna.Syntax.AST       as AST
+import qualified Luna.Syntax.Decl      as Decl
+import           Luna.Syntax.Name      (TNameP)
+import           Luna.Syntax.Name.Path (NamePath, QualPath)
 
 
 
 type Breadcrumbs = [Crumb]
 
 
-data Crumb = Module   { _name :: Text }
-           | Class    { _name :: Text }
-           | Function { _fname :: [Text]
-                      , _path  :: [Text]
-                      }
+data Crumb = Module   { _mpath :: QualPath }
+           | Class    { _className :: TNameP }
+           | Function { _functionPath :: Decl.Path
+                      , _functionName :: NamePath }
            | Lambda   { _id :: AST.ID }
            deriving (Show, Ord, Eq)
 
 
-makeLenses(''Crumb)
+makeLenses ''Crumb
 
 
 isModule :: Crumb -> Bool

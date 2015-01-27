@@ -10,8 +10,9 @@
 module Luna.Syntax.Control.Focus where
 
 import Flowbox.Prelude
-import Luna.Syntax.Expr   (Expr)
-import Luna.Syntax.Module (Module)
+import Luna.Syntax.Decl   (LDecl)
+import Luna.Syntax.Module (LModule)
+--import Luna.Syntax.Expr   (Expr)
 --import           Luna.Syntax.Arg    (Arg)
 --import qualified Luna.Syntax.Expr   as Expr
 --import           Luna.Syntax.Lit    (Lit)
@@ -20,11 +21,10 @@ import Luna.Syntax.Module (Module)
 --import           Luna.Syntax.Type   (Type)
 
 
-
-data Focus a v = Lambda   { _expr :: Expr   a v }
-               | Function { _expr :: Expr   a v }
-               | Class    { _expr :: Expr   a v }
-               | Module   { _module_ :: Module a v }
+data Focus a v = Lambda   { _decl :: LDecl   a v }
+               | Function { _decl :: LDecl   a v }
+               | Data     { _decl :: LDecl   a v }
+               | Module   { _module_ :: LModule a v }
                deriving (Show)
 
 makeLenses ''Focus
@@ -39,7 +39,7 @@ type FocusPath a v = [Focus a v]
 --traverseM fmod fexp focus = case focus of
 --    Lambda   l -> Lambda   <$> fexp l
 --    Function f -> Function <$> fexp f
---    Class    c -> Class    <$> fexp c
+--    Data     c -> Data     <$> fexp c
 --    Module   m -> Module   <$> fmod m
 
 
@@ -47,7 +47,7 @@ type FocusPath a v = [Focus a v]
 --traverseM_ fmod fexp focus = case focus of
 --    Lambda   l -> fexp l
 --    Function f -> fexp f
---    Class    c -> fexp c
+--    Data     c -> fexp c
 --    Module   m -> fmod m
 
 
@@ -57,26 +57,26 @@ type FocusPath a v = [Focus a v]
 --traverseMR fmod fexp ftype fpat flit farg focus = case focus of
 --    Lambda   expr  -> Lambda   <$> Expr.traverseMR fexp ftype fpat flit farg expr
 --    Function expr  -> Function <$> Expr.traverseMR fexp ftype fpat flit farg expr
---    Class    expr  -> Class    <$> Expr.traverseMR fexp ftype fpat flit farg expr
+--    Data     expr  -> Data     <$> Expr.traverseMR fexp ftype fpat flit farg expr
 --    Module module_ -> Module   <$> Module.traverseMR fmod fexp ftype fpat flit farg module_
 
 
-getLambda :: Focus a v -> Maybe (Expr a v)
+getLambda :: Focus a v -> Maybe (LDecl a v)
 getLambda (Lambda l) = Just l
 getLambda _          = Nothing
 
 
-getFunction :: Focus a v -> Maybe (Expr a v)
+getFunction :: Focus a v -> Maybe (LDecl a v)
 getFunction (Function e) = Just e
 getFunction _            = Nothing
 
 
-getClass :: Focus a v -> Maybe (Expr a v)
-getClass (Class e) = Just e
-getClass _         = Nothing
+getData :: Focus a v -> Maybe (LDecl a v)
+getData (Data e) = Just e
+getData _        = Nothing
 
 
-getModule :: Focus a v -> Maybe (Module a v)
+getModule :: Focus a v -> Maybe (LModule a v)
 getModule (Module m) = Just m
 getModule _          = Nothing
 
