@@ -102,12 +102,20 @@ liftFR4 = curryTuple4 . liftF4
 liftFR5 = curryTuple5 . liftF5
 
 
-liftCons0 f = liftFR0 f . snd -- :: a                     -> (_,())                           -> Value Pure Safe a
-liftCons1 f = liftFR1 f . snd -- :: (a1 -> c)             -> (_,(m1 a, ()))                   -> XOut m1 m2 c
-liftCons2 f = liftFR2 f . snd -- :: (a3 -> a2 -> c)       -> (_,(m1 a, (m2 a1, ())))          -> XOut m1 (XOut m2 m3) c
-liftCons3 f = liftFR3 f . snd -- :: (a5 -> a4 -> a3 -> c) -> (_,(m1 a, (m2 a1, (m3 a2, ())))) -> XOut m1 (XOut m2 (XOut m3 m4)) c
-liftCons4 f = liftFR4 f . snd
-liftCons5 f = liftFR5 f . snd
+--liftCons0 f = liftFR0 f . snd -- :: a                     -> (_,())                           -> Value Pure Safe a
+--liftCons1 f = liftFR1 f . snd -- :: (a1 -> c)             -> (_,(m1 a, ()))                   -> XOut m1 m2 c
+--liftCons2 f = liftFR2 f . snd -- :: (a3 -> a2 -> c)       -> (_,(m1 a, (m2 a1, ())))          -> XOut m1 (XOut m2 m3) c
+--liftCons3 f = liftFR3 f . snd -- :: (a5 -> a4 -> a3 -> c) -> (_,(m1 a, (m2 a1, (m3 a2, ())))) -> XOut m1 (XOut m2 (XOut m3 m4)) c
+--liftCons4 f = liftFR4 f . snd
+--liftCons5 f = liftFR5 f . snd
+
+liftCons0 v _ = val v
+liftCons1 v _ = liftCons0 v
+liftCons2 v _ = liftCons1 v
+liftCons3 v _ = liftCons2 v
+liftCons4 v _ = liftCons3 v
+liftCons5 v _ = liftCons4 v
+liftCons6 v _ = liftCons5 v
 
 
 --liftCons0 = curryTuple1 . const . liftF0

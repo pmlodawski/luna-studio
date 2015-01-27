@@ -35,13 +35,14 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | Lambda       { _paths     :: [Expr]   , _expr      :: Expr                                                            }
           | LetBlock     { _exprs     :: [Expr]   , _result    :: Expr                                                            }
           | InstanceD    { _tp        :: Expr     , _decs      :: [Expr]                                                          }
+          | TypeInstance { _tp        :: Expr     , _expr      :: Expr                                                            }
           | Con          { _name      :: Text     , _fields    :: [Expr]                                                          }
           | AppE         { _src       :: Expr     , _dst       :: Expr                                                            }
           | AppT         { _src       :: Expr     , _dst       :: Expr                                                            }
           | AppP         { _src       :: Expr     , _dst       :: Expr                                                            }
           | CaseE        { _expr      :: Expr     , _matches   :: [Expr]                                                          }
           | Match        { _pat       :: Expr     , _matchBody :: Expr                                                            }
-          | ViewP        { _name      :: Text     , _dst       :: Expr                                                            } 
+          | ViewP        { _expr      :: Expr     , _dst       :: Expr                                                            } 
           | Tuple        { _items     :: [Expr]                                                                                   }
           | TupleP       { _items     :: [Expr]                                                                                   }
           | ListE        { _items     :: [Expr]                                                                                   }
@@ -61,6 +62,7 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | THE          { _expr      :: Expr                                                                                     }
           | Lit          { _lval      :: Lit                                                                                      }
           | Comment      { _comment   :: Comment                                                                                  }
+          | DataKindT    { _expr      :: Expr }
           | PragmaE      String [Expr]
           | Pragma       Pragma
           | WildP

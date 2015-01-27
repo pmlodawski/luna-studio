@@ -29,3 +29,4 @@ interpreterWatchPointListRequest              = "interpreter.watchpoint.list.req
 interpreterValueRequest                       = "interpreter.value.request"
 interpreterMemoryGetLimitsRequest             = "interpreter.memory.getlimits.request"
 interpreterMemorySetLimitsRequest             = "interpreter.memory.setlimits.request"
+interpreterExitRequest                        = "interpreter.exit.request"

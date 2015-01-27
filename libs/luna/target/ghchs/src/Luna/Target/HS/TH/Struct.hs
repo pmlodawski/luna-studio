@@ -189,44 +189,68 @@ mkLiftFR pNum base = AppE (VarE fname) (VarE base) where
     fname = mkName $ "liftFR" ++ show pNum
 
 
-registerMethodSignature typeName methodName (Naming.toName -> funcName) = do
-    funcT   <- getTypeQ funcName
-    dataDec <- getDec typeName
-    let
-        dataVars   = map VarT $ getDecVarNames dataDec
-        baseT      = ConT typeName
-        nt         = foldl AppT (ConT . mkName $ Naming.classHasProp) [LitT (StrTyLit methodName), baseT, funcT]
-        funcs      = [FunD (mkName Naming.funcPropSig) [Clause [WildP] (NormalB (VarE funcName)) []]]
-        inst       = InstanceD [] nt funcs
+--registerMethodSignature typeName methodName (Naming.toName -> funcName) = do
+--    funcT   <- getTypeQ funcName
+--    dataDec <- getDec typeName
+--    let
+--        dataVars   = map VarT $ getDecVarNames dataDec
+--        baseT      = ConT typeName
+--        nt         = foldl AppT (ConT . mkName $ Naming.classHasProp) [LitT (StrTyLit methodName), baseT, funcT]
+--        funcs      = [FunD (mkName Naming.funcPropSig) [Clause [WildP] (NormalB (VarE funcName)) []]]
+--        inst       = InstanceD [] nt funcs
 
-    return [inst]
+--    return [inst]
+
+
+--registerMethod :: Name -> String -> Q [Dec]
+--registerMethod typeName methodName = do
+--    let typeNameBase = nameBase typeName
+--        funcSig      = Naming.mkMemSig typeNameBase methodName
+--        funcDef      = Naming.mkMemDef typeNameBase methodName
+--    (++) <$> registerMethodSignature  typeName methodName funcSig
+--         <*> registerMethodDefinition typeName methodName funcDef
+
 
 registerMethod :: Name -> String -> Q [Dec]
 registerMethod typeName methodName = do
     let typeNameBase = nameBase typeName
         funcSig      = Naming.mkMemSig typeNameBase methodName
         funcDef      = Naming.mkMemDef typeNameBase methodName
-    (++) <$> registerMethodSignature  typeName methodName funcSig
-         <*> registerMethodDefinition typeName methodName funcDef
-
+    registerMethodDefinition typeName methodName funcDef
 
 registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
     funcT   <- getTypeQ funcName
     dataDec <- getDec typeName
     argsT      <- VarT <$> newName "args"
-    outT       <- VarT <$> newName "out"
     let
         dataVars   = map VarT $ getDecVarNames dataDec
         baseT      = ConT typeName
         prectx     = getContext funcT
-        (src, ret) = splitSignature $ getSignature funcT
-        c1         = equalT argsT src
-        c2         = equalT outT ret
-        nt         = foldl AppT (ConT $ mkName Naming.classFunc) [baseT, LitT (StrTyLit methodName), argsT, outT]
-        funcs      = [FunD (mkName Naming.funcGetFunc) [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
-        ctx        = fmap fixCtx_GHC_7_8 $ c1:c2:prectx
+        sig        = getSignature funcT
+        --c1         = equalT argsT sig
+        nt         = foldl AppT (ConT $ mkName "MemberProvider") [baseT, LitT (StrTyLit methodName), argsT, sig]
+        funcs      = [FunD (mkName "getMember") [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+        ctx        = fmap fixCtx_GHC_7_8 $ prectx
         inst       = InstanceD ctx nt funcs
     return $ [inst]
+
+--registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
+--    funcT   <- getTypeQ funcName
+--    dataDec <- getDec typeName
+--    argsT      <- VarT <$> newName "args"
+--    outT       <- VarT <$> newName "out"
+--    let
+--        dataVars   = map VarT $ getDecVarNames dataDec
+--        baseT      = ConT typeName
+--        prectx     = getContext funcT
+--        (src, ret) = splitSignature $ getSignature funcT
+--        c1         = equalT argsT src
+--        c2         = equalT outT ret
+--        nt         = foldl AppT (ConT $ mkName Naming.classFunc) [baseT, LitT (StrTyLit methodName), argsT, outT]
+--        funcs      = [FunD (mkName Naming.funcGetFunc) [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+--        ctx        = fmap fixCtx_GHC_7_8 $ c1:c2:prectx
+--        inst       = InstanceD ctx nt funcs
+--    return $ [inst]
 
 -- GHC up to 7.9 has a bug when reifying contexts of classes compiled with -XPolyKinds
 -- it adds GHC.Prim.* as first argument to each such constraint

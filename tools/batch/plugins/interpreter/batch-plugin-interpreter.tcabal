@@ -47,7 +47,7 @@ Library
                     mtl,
                     optparse-applicative,
                     pipes,
-                    pipes-concurrency,
+                    pipes-concurrency >= 2.0.3,
                     pipes-safe,
                     protocol-buffers,
                     protocol-buffers-descriptor,

@@ -105,6 +105,9 @@ addImport imp = do
 regFunc :: GenStateM m => HExpr -> m ()
 regFunc = appendModuleBody
 
+regDecl :: GenStateM m => HExpr -> m ()
+regDecl = appendModuleBody
+
 regPragma :: GenStateM m => HExpr -> m ()
 regPragma = appendModuleBody
 

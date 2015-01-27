@@ -20,8 +20,6 @@ import           Data.VectorSpace
 --import           Diagrams.Segment
 --import           Diagrams.Trail
 --import           Diagrams.TrailLike
-import           Graphics.Rendering.Cairo hiding (translate)
---import           Graphics.Rendering.Cairo
 
 import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.Path

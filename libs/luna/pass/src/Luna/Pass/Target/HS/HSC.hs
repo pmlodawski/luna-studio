@@ -102,6 +102,7 @@ instance Generator HExpr where
         HExpr.VarT     name                   -> simple  $ convert name
         HExpr.ImportNative code               -> simple  $ "import " <> convert code
         HExpr.InstanceD tp decs               -> simple  $ "instance " <> generate tp <> " where { " <> mjoin "; " (genmap decs) <> " }"
+        HExpr.TypeInstance tp expr            -> simple  $ "type instance " <> generate tp <> " = " <> generate expr
         HExpr.NewTypeD name params con        -> simple  $ "newtype " <> convert name <> " " <> (spaceJoin . sgenmap) params <> " = " <> generate con
         HExpr.Con      name fields            -> simple  $ convert name <> spaceJoin ("" : sgenmap fields)
         HExpr.CondE    cond sucess failure    -> complex $ "ifThenElse' " <> sgenerate cond <> (simplify.buildDoBlock) sucess <> (simplify.buildDoBlock) failure
@@ -132,7 +133,7 @@ instance Generator HExpr where
         HExpr.THE      expr                   -> simple  $ "$(" <> generate expr <> ")"
         HExpr.CaseE    expr matches           -> complex $ "case " <> generate expr <> " of {" <> buildBody matches <> "}"
         HExpr.Match    pat matchBody          -> complex $ generate pat <> " -> " <> generate matchBody
-        HExpr.ViewP    name dst               -> simple  $ "(" <> convert name <> " -> " <> generate dst <> ")"
+        HExpr.ViewP    expr dst               -> simple  $ "(" <> generate expr <> " -> " <> generate dst <> ")"
         HExpr.Import   q segments rename      -> simple  $ "import "
                                                          <> if q then "qualified " else ""
                                                          <> mjoin "." (fmap convert segments)
@@ -153,6 +154,7 @@ instance Generator HExpr where
         HExpr.Tuple    items                  -> if length items == 1 then app (simple "OneTuple") (generate $ head items)
                                                                       else simple $ "(" <> sepjoin (map generate items) <> ")"
         HExpr.Pragma   p                      -> generate p
+        HExpr.DataKindT e                     -> simple $ "'" <> generate e
         where sepjoin     = mjoin ", "
 
 

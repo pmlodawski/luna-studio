@@ -12,7 +12,12 @@ Library
   GHC-Options:    -O2
                   -- -Wall
                   -- -F -pgmF ./util/preprocessors/imports.py
-  Extensions:     DoAndIfThenElse
+  Extensions:     DoAndIfThenElse,
+                  FlexibleInstances,
+                  FlexibleContexts,
+                  DeriveDataTypeable,
+                  GeneralizedNewtypeDeriving,
+                  EmptyDataDecls
 
   Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*old\.hs)')`
 
@@ -49,3 +54,5 @@ Test-Suite tests
                   mtl,
                   transformers,
                   lens
+                  
+
