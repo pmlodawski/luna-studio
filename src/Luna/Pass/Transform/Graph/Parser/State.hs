@@ -22,7 +22,8 @@ import           Flowbox.Prelude                       hiding (mapM)
 import           Flowbox.System.Log.Logger
 import           Luna.Pass.Pass                        (PassMonad)
 import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
-import           Luna.Syntax.Expr                      (Expr)
+import qualified Luna.Syntax.Enum                      as Enum
+import           Luna.Syntax.Expr                      (LExpr)
 import qualified Luna.Syntax.Expr                      as Expr
 import qualified Luna.Syntax.Graph.Edge                as Edge
 import           Luna.Syntax.Graph.Flags               (Flags)
@@ -36,6 +37,7 @@ import           Luna.Syntax.Graph.Port                (Port)
 import qualified Luna.Syntax.Graph.Port                as Port
 import           Luna.Syntax.Graph.PropertyMap         (PropertyMap)
 import qualified Luna.Syntax.Graph.PropertyMap         as PropertyMap
+import           Luna.Syntax.Label                     (Label (Label))
 
 
 
@@ -43,11 +45,11 @@ logger :: Logger
 logger = getLogger $(moduleName)
 
 
-type NodeMap a v = Map (Node.ID, Port) (Expr a v)
+type NodeMap a v = Map (Node.ID, Port) (LExpr a v)
 
 
-data GPState a v = GPState { _body        :: [Expr a v]
-                           , _output      :: Maybe (Expr a v)
+data GPState a v = GPState { _body        :: [LExpr a v]
+                           , _output      :: Maybe (LExpr a v)
                            , _nodeMap     :: NodeMap a v
                            , _graph       :: Graph a v
                            , _propertyMap :: PropertyMap a v
@@ -56,26 +58,27 @@ data GPState a v = GPState { _body        :: [Expr a v]
 makeLenses ''GPState
 
 
-type GPPass a v m result = Monad m => PassMonad (GPState a v) m result
+type GPPass a v m result = (Monad m, Enum.Enumerated a)
+                         => PassMonad (GPState a v) m result
 
 
 make :: Graph a v -> PropertyMap a v -> GPState a v
 make = GPState [] Nothing Map.empty
 
 
-getBody :: GPPass a v m [Expr a v]
+getBody :: GPPass a v m [LExpr a v]
 getBody = gets (view body)
 
 
-setBody :: [Expr a v] -> GPPass a v m ()
+setBody :: [LExpr a v] -> GPPass a v m ()
 setBody b = modify (set body b)
 
 
-getOutput :: GPPass a v m (Maybe (Expr a v))
+getOutput :: GPPass a v m (Maybe (LExpr a v))
 getOutput = gets (view output)
 
 
-setOutput :: Expr a v -> GPPass a v m ()
+setOutput :: LExpr a v -> GPPass a v m ()
 setOutput o = modify (set output $ Just o)
 
 
@@ -99,22 +102,22 @@ setPropertyMap :: PropertyMap a v -> GPPass a v m ()
 setPropertyMap pm =  modify (set propertyMap pm)
 
 
-addToBody :: Expr a v -> GPPass a v m ()
+addToBody :: LExpr a v -> GPPass a v m ()
 addToBody e = do b <- getBody
                  setBody $ e : b
 
 
-addToNodeMap :: (Node.ID, Port) -> Expr a v -> GPPass a v m ()
+addToNodeMap :: (Node.ID, Port) -> LExpr a v -> GPPass a v m ()
 addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
 
 
-nodeMapLookup :: (Node.ID, Port) -> GPPass a v m (Expr a v)
+nodeMapLookup :: (Node.ID, Port) -> GPPass a v m (LExpr a v)
 nodeMapLookup key = do
     nm <- getNodeMap
     lift $ Map.lookup key nm <??> "GraphParser: nodeMapLookup: Cannot find " ++ show key ++ " in nodeMap"
 
 
-getNodeSrcs :: Node.ID -> GPPass a v m [Expr a v]
+getNodeSrcs :: Node.ID -> GPPass a v m [LExpr a v]
 getNodeSrcs nodeID = do
     g <- getGraph
     let processEdge (pNID, _, Edge.Data s  Port.All   ) = Just (0, (pNID, s))
@@ -140,8 +143,8 @@ inboundPorts nodeID = do
            $ Graph.lpre g nodeID
 
 
-getNodeSrc :: Maybe (Node.ID, Port) -> GPPass a v m (Expr a v)
-getNodeSrc Nothing  = return $ Expr.Wildcard --IDFixer.unknownID
+getNodeSrc :: Maybe (Node.ID, Port) -> GPPass a v m (LExpr a v)
+getNodeSrc Nothing  = return $ Label (Enum.tag IDFixer.unknownID) Expr.Wildcard
 getNodeSrc (Just a) = nodeMapLookup a
 
 
@@ -182,6 +185,6 @@ doesLastStatementReturn :: GPPass a v m Bool
 doesLastStatementReturn = do
     body' <- getBody
     return $ case body' of
-        []                       -> False
-        (Expr.Assignment {} : _) -> False
-        _                        -> True
+        []                                 -> False
+        (Label _ (Expr.Assignment {}) : _) -> False
+        _                                  -> True
