@@ -123,15 +123,8 @@ tcDecl ldecl@(Label lab decl) =
               argumentIDEs= sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.label
               argumentIDs = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.label   . to Enum.id
               baseArgs    = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName . unpacked
-                 --   The       |   |              |                     |          |         |               |              |
-                 --  lens       |   |              |                     |          |         |               |              +-- convert Lazy Text to String
-                 --  magic      |   |              |                     |          |         |               +-- get human readable form
-                 --   is        |   |              |                     |          |         +-- skip label, get the element
-                 --  here.      |   |              |                     |          +-- read the pattern
-                 -- Behold!     |   |              |                     +-- for each of them
-                 --             |   |              +-- get the list of segments (ie. list of arguments)
-                 --             |   +-- get the signature of the function
-                 --             +-- return the list; if (^.) was here then this would be merged (Monoid's mconcat)
+              bodyIDs     = sig ^.. NamePat.base . NamePat.segmentBase
+
           labIDdisp <- getTargetIDString lab
           bsIDs <- forM argumentIDEs getTargetIDString
           let argsDisp = zipWith (\name id -> name ++ id) baseArgs bsIDs
@@ -140,10 +133,10 @@ tcDecl ldecl@(Label lab decl) =
           debugPush "push"
           withClonedTypo0 $ do
 
-              debugPush $ "Function: " ++ baseName ++ " :: (" ++ intercalate ", " argsDisp ++ ") → ???"
+              debugPush $ "Function: " ++ baseName ++ labIDdisp ++ " :: (" ++ intercalate ", " argsDisp ++ ") → ???"
 
-              a  <- insertNewMonoTVar (Enum.id lab)     -- type of the method
-              bs <- forM argumentIDs insertNewMonoTVar  -- types of the arguments
+              a  <- insertNewMonoTypeVariable (Enum.id lab)     -- type of the method
+              bs <- forM argumentIDs insertNewMonoTypeVariable  -- types of the arguments
               
               travRes <- defaultTraverseM ldecl
               
@@ -155,6 +148,7 @@ tcDecl ldecl@(Label lab decl) =
 
                     add_constraint (C [a `Subsume` bsres])
                     typ <- normalize a
+                    -- TODO [kgdk] 27 sty 2015: generalize
                     typeMap . at labID ?= typ
 
                     debugPush "pop"
@@ -166,12 +160,14 @@ tcDecl ldecl@(Label lab decl) =
           --                       b <- tp (insert env (x, Mono (TV a)), e)
           --                       normalize ((TV a) `Fun` b)
       _ -> defaultTraverseM ldecl
-  where
-    insertNewMonoTVar labID = do
-        tvarID <- newtvar
-        let typeEnvElem = (labID, Mono (TV tvarID))
-        typo . _head %= flip insert typeEnvElem
-        return $ TV tvarID
+
+
+insertNewMonoTypeVariable :: (Monad m) => ID -> StageTypecheckerPass m Type
+insertNewMonoTypeVariable labID = do
+    tvarID <- newtvar
+    let typeEnvElem = (labID, Mono (TV tvarID))
+    typo . _head %= flip insert typeEnvElem
+    return $ TV tvarID
 
 
 tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
@@ -223,6 +219,7 @@ expr env ( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
     result <- Fold.foldlM tp e1Type args
 
     debugPush $ "Result of infering an application: " ++ show result
+    typeMap . at (Enum.id lab) ?= result
 
     return result
 
@@ -235,23 +232,23 @@ expr env ( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
       normalize (TV a)
       -- TODO add mapping between labels -> type to pass's state
 
-expr env (Label lab (Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label labb (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)}))) =
-  do
-    --tp (env, App e e') = do a <- newtvar
-    --                        t <- tp (env, e)
-    --                        t' <- tp (env, e')
-    --                        add_constraint (C [t `Subsume` (t' `Fun` TV a)])
-    --                        normalize (TV a)
-    base_id <- getTargetIDString labb
-    args_id <- unwords <$> mapM mapArg args
-    debugPush ("Application " ++ (unpack . humanName $ basename) ++ base_id ++ " ( " ++ args_id ++ " )")  
-    TV <$> newtvar
-  where
-    mapArg :: (StageTypecheckerCtx lab m a) => Expr.AppArg (LExpr lab a) -> StageTypecheckerPass m String
-    mapArg (Expr.AppArg _ (Label laba (Expr.Var { Expr._ident = (Expr.Variable vname _) } ))) = do
-        arg_id <- getTargetIDString laba
-        return $ (unpack . humanName $ vname) ++ arg_id
-    mapArg _ = fail "Luna.Typechecker.Inference:tcExpr:mapArg: usage unexpected"
+--expr env (Label lab (Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label labb (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)}))) =
+--  do
+--    --tp (env, App e e') = do a <- newtvar
+--    --                        t <- tp (env, e)
+--    --                        t' <- tp (env, e')
+--    --                        add_constraint (C [t `Subsume` (t' `Fun` TV a)])
+--    --                        normalize (TV a)
+--    base_id <- getTargetIDString labb
+--    args_id <- unwords <$> mapM mapArg args
+--    debugPush ("Application " ++ (unpack . humanName $ basename) ++ base_id ++ " ( " ++ args_id ++ " )")  
+--    TV <$> newtvar
+--  where
+--    mapArg :: (StageTypecheckerCtx lab m a) => Expr.AppArg (LExpr lab a) -> StageTypecheckerPass m String
+--    mapArg (Expr.AppArg _ (Label laba (Expr.Var { Expr._ident = (Expr.Variable vname _) } ))) = do
+--        arg_id <- getTargetIDString laba
+--        return $ (unpack . humanName $ vname) ++ arg_id
+--    mapArg _ = fail "Luna.Typechecker.Inference:tcExpr:mapArg: usage unexpected"
 
 expr _ _ = error "No idea how to infer type at the moment."
 
