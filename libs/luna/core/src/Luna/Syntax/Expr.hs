@@ -93,3 +93,4 @@ data Sequence a = Linear    a   (Maybe a)
                 | Geometric a a (Maybe a)
                 deriving (Show, Generic, Read, Eq)
 
+makeLenses ''Expr
