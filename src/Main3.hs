@@ -14,7 +14,7 @@
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 -- module --
-module Main where
+module Main3 where
 
 -- imports --
 import Luna.Target.HS
