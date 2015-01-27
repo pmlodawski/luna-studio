@@ -45,7 +45,7 @@ solveCubic a b c = A.cond (d >=* 0) opt1 opt3
           v' = acos (-sqrt ((-27) / p3) * q / 2) / 3
 
 distanceFromQuadratic :: Exp (Point2 Double) -> Exp (QuadraticBezier Double) -> Exp Double
-distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond ((dot sc sc) ==* 0) 
+distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond ((dot sc sc) <=* 0.001) 
     l
     (A.cond (n A.>* 1)
         (min (getLength res0) $ min (getLength res1) (getLength res2))
