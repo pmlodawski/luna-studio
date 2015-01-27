@@ -82,5 +82,5 @@ prettyTypo = prettyNullable . map prettyTypo1
 
 prettyTypeMap :: TypeMap -> Doc
 prettyTypeMap = SM.foldrWithKey join empty
-  where join key ty rest = int key <+> text "=>" <+> prettyType ty <+> rest
+  where join key ty rest = int key <+> text "⇒" <+> prettyType ty <+> text "," <+> rest
 
