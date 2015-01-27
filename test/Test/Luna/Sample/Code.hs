@@ -251,7 +251,7 @@ class Vector a:
     x,y,z :: a
 
     def test a b:
-        (b, a)
+        (a, b, c : c, a, b)
 
     class Inner:
         def inner a b:
@@ -260,18 +260,4 @@ class Vector a:
 def main:
     v = Vector 1 2 3
     v.test
-|] -- FIXME[PM]: example below does not parse
---class Vector a:
---    x,y,z :: a
-
---    def test a b:
---        (a, b, c : c, a, b)
-
---    class Inner:
---        def inner a b:
---            a, b
-
---def main:
---    v = Vector 1 2 3
---    v.test
-
+|]
