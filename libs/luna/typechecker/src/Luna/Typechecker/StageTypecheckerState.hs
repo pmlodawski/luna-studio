@@ -60,7 +60,7 @@ instance Default StageTypecheckerState where
                               , _subst    = null_subst
                               , _constr   = true_cons
                               , _sa       = mempty
-                              , _typeMap  = SM.empty
+                              , _typeMap  = mempty
                               , _currentType = undefined
                               }
 
