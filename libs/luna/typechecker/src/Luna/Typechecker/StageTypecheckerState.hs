@@ -4,30 +4,34 @@
 
 
 module Luna.Typechecker.StageTypecheckerState (
-    StageTypecheckerState(..), emptyStageTypecheckerState,
+    StageTypecheckerState(..),
+    debugLog, typo, nextTVar, subst, constr, sa, currentType, typeMap,
     StageTypechecker(..),
-    StageTypecheckerPass,
-    StageTypecheckerCtx,
-    StageTypecheckerTraversal,
-    StageTypecheckerDefaultTraversal,
-    debugLog, typo, nextTVar, subst, constr, sa, typeMap, currentType,
+    StageTypecheckerPass, StageTypecheckerCtx, StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
+    InExpr, OutExpr,
     prettyState,
     report_error
   ) where
 
 
+
+import            Luna.Data.StructInfo              (StructInfo)
+import            Luna.Pass                         (PassMonad, PassCtx)
+import            Luna.Syntax.Enum                  (Enumerated, ID, IDTag(IDTag))
+import qualified  Luna.Syntax.Expr                  as Expr
+import qualified  Luna.Syntax.Pat                   as Pat
+import qualified  Luna.System.Session               as Session
+import qualified  Luna.Syntax.Traversals            as AST
+
+import            Control.Applicative
 import            Control.Lens
+import            Control.Monad.IO.Class            (MonadIO)
 import            Control.Monad.State.Lazy          (get)
 import qualified  Data.Map.Strict                   as SM
 import            Data.Monoid                       (Monoid(..))
 import            Text.PrettyPrint
 
-import            Luna.Syntax.Enum                  (Enumerated)
-import qualified  Luna.Syntax.Traversals            as AST
-import qualified  Luna.Syntax.Pat                   as Pat
-import            Luna.Data.StructInfo              (StructInfo)
-import            Luna.Pass                         (PassMonad, PassCtx)
-
+import            Data.Default                      (Default(def))
 
 import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Type, Typo, TypeMap, init_typo, null_subst, true_cons)
 import            Luna.Typechecker.Debug.HumanName  (HumanName)
@@ -49,31 +53,33 @@ data StageTypecheckerState
                             }
 makeLenses ''StageTypecheckerState
 
-emptyStageTypecheckerState :: StageTypecheckerState
-emptyStageTypecheckerState = StageTypecheckerState  { _debugLog = []
-                                                    , _typo     = init_typo
-                                                    , _nextTVar = 0
-                                                    , _subst    = null_subst
-                                                    , _constr   = true_cons
-                                                    , _sa       = mempty
-                                                    , _typeMap  = SM.empty
-                                                    }
+instance Default StageTypecheckerState where
+  def = StageTypecheckerState { _debugLog = []
+                              , _typo     = init_typo
+                              , _nextTVar = 0
+                              , _subst    = null_subst
+                              , _constr   = true_cons
+                              , _sa       = mempty
+                              , _typeMap  = SM.empty
+                              , _currentType = undefined
+                              }
 
 
 data StageTypechecker = StageTypechecker
 
-type StageTypecheckerPass             m       = PassMonad StageTypecheckerState m
-type StageTypecheckerCtx              lab m a = (HumanName (Pat.Pat lab), Enumerated lab, StageTypecheckerTraversal m a)
-type StageTypecheckerTraversal        m   a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
-type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
+type StageTypecheckerPass                 m     = PassMonad StageTypecheckerState m
+type StageTypecheckerCtx              lab m     = (HumanName (Pat.Pat lab), Enumerated lab, Monad m, Applicative m, MonadIO m, Session.SessionMonad m)
+type StageTypecheckerTraversal            m a b = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a b)
+type StageTypecheckerDefaultTraversal     m a b = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a b)
 
+type InExpr  = (Expr.LExpr IDTag ())
+type OutExpr = (Expr.LExpr IDTag ()) 
 
 
 report_error :: (Monad m) => String -> a ->  StageTypecheckerPass m a
 report_error msg x = do
   st <- get
   let msgRes = "LUNA TC ERROR: " ++ msg ++ "\nState:\n\n" ++ show st
-  --liftIO $ print "OHAI IMMA QUITTN YR report_error"
   fail msgRes
 
 
