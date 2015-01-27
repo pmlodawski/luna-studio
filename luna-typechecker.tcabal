@@ -30,16 +30,34 @@ Executable luna-typechecker-tests
   Hs-Source-Dirs:     test
   Main-Is:            Main.hs
   Build-Depends:      base
+                    , ansi-wl-pprint
+                    , bytestring
+                    , containers
                     , containers
                     , data-default
+                    , data-default
+                    , dlist
                     , either
+                    , either
+                    , errors
+                    , fgl
+                    , flowbox-utils
+                    , flowbox-utils
+                    , HList
                     , lens
                     , luna-core
+                    , luna-core
+                    , luna-pass
                     , luna-pass
                     , luna-typechecker
-                    , flowbox-utils
+                    , MissingH
+                    , mtl
                     , mtl
                     , pretty
                     , pretty-show
+                    , pretty-show
                     , text
+                    , text
+                    , timeit
+                    , transformers
                     , transformers
