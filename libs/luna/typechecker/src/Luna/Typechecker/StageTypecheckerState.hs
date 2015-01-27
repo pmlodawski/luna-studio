@@ -11,14 +11,17 @@ module Luna.Typechecker.StageTypecheckerState (
     StageTypecheckerTraversal,
     StageTypecheckerDefaultTraversal,
     debugLog, typo, nextTVar, subst, constr, sa, typeMap, currentType,
-    debugLog, typo, nextTVar, subst, constr, sa, 
     prettyState,
     report_error
   ) where
 
 
+-- TODO [kgdk] 27 sty 2015: SHALL NOT BE COMMITED TO REPO!
+import            System.IO.Unsafe                  (unsafePerformIO)
 
-import            Control.Lens                      (makeLenses)
+
+import            Control.Lens
+import            Control.Monad.State.Lazy          (get)
 import qualified  Data.Map.Strict                   as SM
 import            Data.Monoid                       (Monoid(..))
 import            Text.PrettyPrint
@@ -70,8 +73,12 @@ type StageTypecheckerDefaultTraversal m   a   = (PassCtx m, AST.DefaultTraversal
 
 
 
-report_error :: (Monad m) =>  String -> a ->  StageTypecheckerPass m a
-report_error msg x = fail $ "LUNA TC ERROR: " ++ msg
+report_error :: (Monad m) => String -> a ->  StageTypecheckerPass m a
+report_error msg x = do
+  st <- get
+  let msgRes = "LUNA TC ERROR: " ++ msg ++ "\nState:\n\n" ++ show st
+  --liftIO $ print "OHAI IMMA QUITTN YR report_error"
+  fail msgRes
 
 
 
@@ -86,7 +93,7 @@ prettyState StageTypecheckerState{..} = str_field
                                     $+$ nextTVar_field
                                     $+$ typeMap_field
   where
-    str_field      = text "Debug       :" <+> prettyNullable (map text _debugLog)
+    str_field      = text "Debug       :" <+> prettyNullable (map text $ reverse _debugLog)
     constr_field   = text "Constraints :" <+> prettyConstr   _constr
     nextTVar_field = text "TVars used  :" <+> int         _nextTVar
     typo_field     = text "Type env    :" <+> prettyNullable (map (parens . prettyTypo) _typo)

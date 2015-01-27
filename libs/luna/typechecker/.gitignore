@@ -5,3 +5,4 @@ py
 cpp
 playground
 tmp
+!tmp/.gitignore
