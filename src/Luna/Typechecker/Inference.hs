@@ -76,7 +76,6 @@ tcUnit ast structAnalysis = do
     sa .= structAnalysis
     debugPush "First!"
     _ <- defaultTraverseM ast
-    debugLog %= reverse
     get
 
 
@@ -121,6 +120,7 @@ tcDecl ldecl@(Label lab decl) =
       Decl.Func (Decl.FuncDecl path sig funcout body) -> do
           let labID       = Enum.id lab
               baseName    = sig ^.  NamePat.base . NamePat.segmentBase . unpacked
+              argumentIDEs= sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.label
               argumentIDs = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.label   . to Enum.id
               baseArgs    = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName . unpacked
                  --   The       |   |              |                     |          |         |               |              |
@@ -131,10 +131,16 @@ tcDecl ldecl@(Label lab decl) =
                  -- Behold!     |   |              |                     +-- for each of them
                  --             |   |              +-- get the list of segments (ie. list of arguments)
                  --             |   +-- get the signature of the function
-                 --             +-- return the list; if (^.) was here then this would be merged with mappend
+                 --             +-- return the list; if (^.) was here then this would be merged (Monoid's mconcat)
+          labIDdisp <- getTargetIDString lab
+          bsIDs <- forM argumentIDEs getTargetIDString
+          let argsDisp = zipWith (\name id -> name ++ id) baseArgs bsIDs
+
+
           debugPush "push"
           withClonedTypo0 $ do
-              debugPush $ "Function: " ++ baseName ++ " :: (" ++ intercalate ", " baseArgs ++ ") → ???"
+
+              debugPush $ "Function: " ++ baseName ++ " :: (" ++ intercalate ", " argsDisp ++ ") → ???"
 
               a  <- insertNewMonoTVar (Enum.id lab)     -- type of the method
               bs <- forM argumentIDs insertNewMonoTVar  -- types of the arguments
@@ -151,8 +157,10 @@ tcDecl ldecl@(Label lab decl) =
                     typ <- normalize a
                     typeMap . at labID ?= typ
 
+                    debugPush "pop"
                     return travRes
                 Nothing ->
+                    report_error ("no type returned for " ++ show labID) travRes
           
           --tp (env, Abs x e) = do a <- newtvar
           --                       b <- tp (insert env (x, Mono (TV a)), e)
@@ -186,6 +194,7 @@ expr env (Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
     result <- normalize vType
 
     debugPush ("         :: " ++ show result)
+    typeMap . at (Enum.id lab) ?= result
 
     return result
 
