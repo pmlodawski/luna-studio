@@ -64,7 +64,7 @@ import           Luna.Syntax.Name.Pattern     (NamePat(NamePat), Segment(Segment
 import qualified Luna.Syntax.Name.Pattern     as NamePat
 
 import qualified Luna.Pass.Target.HS.HASTGen.State as State
-import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx)
+import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx, regDecl)
 import           Luna.Syntax.Name.Hash              (Hashable, hash)
 --import qualified Luna.Target.HS.Host.NamingOld                          as Naming
 import qualified Luna.Target.HS.Host.Naming2 as Naming
@@ -94,7 +94,7 @@ type PassCtx          lab m a = (Enumerated lab, Traversal m a)
 type Traversal            m a = (Pass.PassCtx m, AST.Traversal        HASTGen (PassResult m) a a)
 type DefaultTraversal     m a = (Pass.PassCtx m, AST.DefaultTraversal HASTGen (PassResult m) a a)
 
-type Ctx m a v = (Monad m, Show a, Show v, Monoid v, Num a)
+type Ctx m a v = (Monad m, Monoid v, Num a, MonadIO m)
 
 type HE = HE.Expr
 
@@ -124,7 +124,9 @@ genUnit (Unit m) = genModule m
 
 
 stdDerivings :: [Deriving]
-stdDerivings = [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
+stdDerivings = [ Deriving.Show, Deriving.Eq, Deriving.Ord
+               , Deriving.Generic, Deriving.Typeable
+               ]
 
 
 genModule :: Ctx m a v => LModule a (LExpr a v) -> PassResult m HE
@@ -136,13 +138,14 @@ genModule (Label lab (Module path body)) = withCtx path $ do
                 $ HModule.addExt HExtension.NoMonomorphismRestriction
                 $ HModule.addExt HExtension.FlexibleContexts
                 $ HModule.addExt HExtension.FlexibleInstances
-                $ HModule.addExt HExtension.GADTs
+                $ HModule.addExt HExtension.TypeFamilies
                 $ HModule.addExt HExtension.RebindableSyntax
                 $ HModule.addExt HExtension.TemplateHaskell
                 $ HModule.addExt HExtension.UndecidableInstances
                 $ HModule.addExt HExtension.ViewPatterns
                 $ HModule.addExt HExtension.MultiParamTypeClasses
                 $ HModule.addExt HExtension.CPP
+                $ HModule.addExt HExtension.DysfunctionalDependencies
                 -- $ HModule.addExt HExtension.DysfunctionalDependencies
                 $ HModule.mk (toList path)
         --params  = view LType.params cls
@@ -164,11 +167,12 @@ genModule (Label lab (Module path body)) = withCtx path $ do
 
 mainf modname = HE.val "main" $ HE.AppE (HE.VarE "mainMaker") (HE.VarE modname)
 
-genCons :: (Monad m, Applicative m, MonadState State.GenState m)
-        => Text -> [Text] -> [Decl.LCons a e] -> [Deriving] -> Bool -> m ()
+--genCons :: (Monad m, Applicative m, MonadState State.GenState m)
+--        => Text -> [Text] -> [Decl.LCons a e] -> [Deriving] -> Bool -> m ()
 genCons name params cons derivings makeDataType = do
     let conDecls   = fmap (view Label.element) cons
         clsConName = Naming.mkCls name
+        clsConName' = Naming.mkCls' name
         genData (Decl.Cons conName fields) = HE.Con (fromString $ toString conName) 
                                            <$> mapM genField fields
     
@@ -176,20 +180,21 @@ genCons name params cons derivings makeDataType = do
 
         genConData (Decl.Cons (convVar -> conName) fields) = do
             let fieldNum   = length fields
-                conSigName = Naming.mkMemSig clsConName conName
                 conDefName = Naming.mkMemDef clsConName conName
                 cons       = HE.val (Naming.mkCons conName)
                            $ HE.app (mkMemberGetter conName) 
                                        [HE.AppE HUtils.val (HE.VarE clsConName)]
-                consSig    = HE.val conSigName
-                           $ HE.rtuple (selfSig : replicate fieldNum paramSig)
                 consDef    = HE.val conDefName
                            $ HE.AppE (HE.VarE $ liftCons fieldNum)
-                                        (HE.VarE conName)
-
+                                     (HE.VarE conName)
+                func       = Decl.FuncDecl [fromText clsConName'] 
+                            (NamePat Nothing (Segment conName [Arg (Label 0 $ Pat.Var "self") Nothing]) []) 
+                            Nothing []
+                            
             addComment . H3 $ dotname [name, conName] <> " constructor"
-            mapM regFunc [cons, consSig, consDef]
-            regTHExpr $ TH.mkMethod clsConName conName
+            mapM regFunc [cons, consDef]
+            genFuncSig func
+            --regTHExpr $ TH.mkMethod clsConName conName
 
         getConDesc (Decl.Cons (convVar -> conName) fields) = (conName, fmap getName fields)
         conDescs   = fmap getConDesc conDecls
@@ -220,7 +225,7 @@ liftCons num = "liftCons" <> fromString (show num)
 mkArg    = HE.Var "mkArg"
 --paramSig = HE.TypedE mkArg (HE.VarT "Param")
 paramSig    = HE.PragmaE "param" []
-nparamSig n = HE.PragmaE "nparam" [HE.Lit $ HLit.String n]
+nparamSig n = HE.AppT (HE.ConT "Named") (HE.Lit $ HLit.String n)
 selfSig     = nparamSig "self"
 
 --data Cons  a e = Cons   { _consName :: CNameP   , _fields :: [LField a e]                  } deriving (Show, Eq, Generic, Read)
@@ -239,10 +244,12 @@ genDecl ast@(Label lab decl) = case decl of
         addComment $ H3 $ name <> " methods"
         --mapM_ genExpr methods
     
-    Decl.Func funcDecl -> genFunc funcDecl genFuncBody True
+    Decl.Func funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl -> genForeign fdecl
     Decl.Pragma     {} -> return ()
 
+genStdFunc f = genFunc f (Just genFuncBody) True
+genFuncSig f = genFunc f Nothing True
 genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVarNames = do
     ctx <- getCtx
     let tpName = if (null path)
@@ -258,29 +265,44 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
         memSigName = Naming.mkMemSig tpName name
         sigArgs    = NamePat.args sig
         sigPats    = fmap (view Arg.pat) sigArgs
+        sigNames   = fmap getSigName sigPats
         sigPatsUntyped = fmap splitPatTypes sigPats
     sigHPats   <- if mkVarNames then mapM genPat sigPatsUntyped
                                 else mapM genPatNoVarnames sigPatsUntyped
 
+
     when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
-    fBody <- bodyBuilder body output
 
     let pfx = case tpName of
                    "" -> ""
                    s  -> s <> "."
     addComment $ H2 $ "Method: " <> pfx <> name
 
-    let func    = HE.Function memDefName [HE.rtuple sigHPats] (HE.DoBlock fBody)
-        funcSig = HE.val memSigName (HE.rtuple (selfSig : replicate (length sigArgs - 1) paramSig))
-        funcReg = TH.registerMethod tpName name
-    mapM_ regFunc [func, funcSig, funcReg]
+    case bodyBuilder of
+        Nothing      -> return ()
+        Just builder -> do
+            fBody <- builder body output
+            let funcDef = HE.Function memDefName (fmap (HE.ViewP (HE.VarE "noDef")) sigHPats) (HE.DoBlock fBody)
+            regFunc funcDef
 
+    let funcSig = HE.TypeInstance (HE.app (HE.VarE "SigOf") [HE.ConT tpName, HE.Lit (HLit.String name)]) $ HE.DataKindT $ HE.ListE $ fmap genSigHName sigNames
+        funcReg = TH.registerMethod tpName name
+    regDecl funcSig
+    regFunc funcReg
+
+getSigName (unwrap -> p) = case p of
+    Pat.Var name -> Just (toText . unwrap $ name)
+    _            -> Nothing
+
+genSigHName = \case
+    Nothing -> HE.ConT "Unnamed"
+    Just n  -> HE.AppT (HE.ConT "Named") (HE.Lit $ HLit.String n)
 
 genForeign (Foreign target a) = case target of
     Foreign.CPP     -> Pass.fail "C++ foreign interface is not supported yet."
     Foreign.Haskell -> case a of
-        Decl.FFunc funcDecl -> genFunc funcDecl genFFuncBody False
+        Decl.FFunc funcDecl -> genFunc funcDecl (Just genFFuncBody) False
 
 genFFuncBody txt _ = pure $ [HE.Native txt]
 
@@ -397,7 +419,7 @@ genPatGen genRec (Label lab pat) = case pat of
     Pat.App         src args -> HE.appP <$> genRec src <*> mapM genRec args
     Pat.Var         name     -> pure $ HE.Var (Naming.mkVar $ convVar name)
     Pat.Typed       pat cls  -> HE.Typed <$> genRec pat <*> genType cls
-    Pat.Tuple       items    -> (HE.ViewP $ "extractTuple" <> (fromString $ show (length items))) . HE.TupleP <$> mapM genRec items
+    Pat.Tuple       items    -> (HE.ViewP $ (HE.VarE $ "extractTuple" <> (fromString $ show (length items)))) . HE.TupleP <$> mapM genRec items
     Pat.Lit         value    -> genLit value
     Pat.Wildcard             -> pure $ HE.WildP
     Pat.RecWildcard          -> pure $ HE.RecWildP
@@ -451,28 +473,28 @@ genExpr (Label lab expr) = case expr of
                                                          body'   = (\a -> a ++ [HE.Match HE.WildP (HE.AppE (HE.VarE "error") (HE.Lit $ HLit.String "TODO (!!!) Main.luna: path/Main.luna:(...,...)-(...,...): Non-exhaustive patterns in case"))]) <$> body
                                                          genMatch (unwrap -> Expr.Match pat body) = HE.Match <$> genPat pat <*> (HE.DoBlock <$> mapM genExpr body)
 
-    Expr.Lambda inputs output body   -> do
-                                            let fname      = Naming.mkLamName $ fromString $ show id
-                                                hName      = Naming.mkHandlerFuncName fname
-                                                --cfName     = mkCFLName fname
-                                                argNum     = length inputs
+    --Expr.Lambda inputs output body   -> do
+    --                                        let fname      = Naming.mkLamName $ fromString $ show id
+    --                                            hName      = Naming.mkHandlerFuncName fname
+    --                                            --cfName     = mkCFLName fname
+    --                                            argNum     = length inputs
 
-                                            --State.addDataType $ HE.DataD cfName [] [HE.Con cfName []] [Deriving.Show]
+    --                                        --State.addDataType $ HE.DataD cfName [] [HE.Con cfName []] [Deriving.Show]
 
-                                            f  <-   HE.Assignment (HE.Var fname)
-                                                    <$> ( HE.Lambda <$> pure [] -- (mapM genExpr inputs)
-                                                                       <*> (HE.DoBlock <$> ((HE.NOP :) <$> genFuncBody body output))
-                                                        )
+    --                                        f  <-   HE.Assignment (HE.Var fname)
+    --                                                <$> ( HE.Lambda <$> pure [] -- (mapM genExpr inputs)
+    --                                                                   <*> (HE.DoBlock <$> ((HE.NOP :) <$> genFuncBody body output))
+    --                                                    )
 
 
-                                            -- using HE.NOP instead emptyHExpr (?) for now !
-                                            --regFunc f
+    --                                        -- using HE.NOP instead emptyHExpr (?) for now !
+    --                                        --regFunc f
 
-                                            --regTHExpr $ thRegisterFunction fname argNum []
-                                            --regTHExpr $ thClsCallInsts fname argNum (0::Int)
+    --                                        --regTHExpr $ thRegisterFunction fname argNum []
+    --                                        --regTHExpr $ thClsCallInsts fname argNum (0::Int)
 
-                                            --return $ HE.Var hName
-                                            return $ HE.LetExpr HE.NOP
+    --                                        --return $ HE.Var hName
+    --                                        return $ HE.LetExpr HE.NOP
 
     Expr.Grouped expr                      -> genExpr expr
     Expr.Assignment   dst src              -> HE.Arrow <$> genPat dst <*> genExpr src
@@ -504,7 +526,7 @@ genExpr (Label lab expr) = case expr of
     --Pass.fail "Typing expressions is not supported yet." -- Potrzeba uzywac hacku: matchTypes (undefined :: m1(s1(Int)))  (val (5 :: Int))
     Expr.Decl _                               -> Pass.fail "Nested declarations are not supported yet"
     Expr.Ref  _                               -> Pass.fail "References are not supported yet"
-    p -> Pass.fail $ "Cannot construct: " <> show p
+    --p -> Pass.fail $ "Cannot construct: " <> show p
 
     where id = 789 -- Enum.id lab
 
@@ -515,7 +537,7 @@ mkMemberGetter name = HE.PragmaE "member" [HE.Lit $ HLit.String name]
 
 
 -- FIXME[wd]: ugly code
-genLit :: (Show a, Monad m) => LLit a -> PassResult m HE
+genLit :: Monad m => LLit a -> PassResult m HE
 genLit (Label lab lit) = case lit of
     -- FIXME[wd]: fix the number handling.
     Lit.Number (Number.Number base repr exp sign) -> do

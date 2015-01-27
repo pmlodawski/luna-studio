@@ -10,7 +10,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE TupleSections #-}
-{-# LANGUAGE PolyKinds #-}
+--{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ViewPatterns #-}
 
 
@@ -63,7 +63,7 @@ data Unprovided = Unprovided
 -- Func
 ----------------------------------------------------------------------
 
-data Func sig f = Func { runFunc :: f } deriving (Show, Functor)
+data Func (sig :: [NameStatus Symbol]) f = Func { runFunc :: f } deriving (Show, Functor)
 
 remapFunc :: Func sig f -> Func sig' f
 remapFunc = Func . runFunc
@@ -234,8 +234,8 @@ type family SigOf cls (name :: Symbol) :: [NameStatus Symbol]
 
 --member cls name args = getMember cls name (monoType args)
 
-mkFunc :: cls -> Proxy (name :: Symbol) -> f -> Func (SigOf cls name) f
-mkFunc _ _ = Func
+--mkFunc :: cls -> Proxy (name :: Symbol) -> f -> Func (SigOf cls name) f
+--mkFunc _ _ = Func
 
 --tst v = do
 --    print $ member v (Proxy::Proxy "foo") ("a",()) "a"
