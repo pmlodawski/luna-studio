@@ -37,7 +37,7 @@ $(registerMethod ''Cls_Main "Main")
 -- ------ Main methods ------ --
 
 -- ====== Method: Main.print ====== --
-memDef_Main_print (noDef -> self) (noDef -> s) = do 
+memDef_Main_print (noDef -> self) (appDef (val ("" :: String)) -> s) = do 
      
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
      
@@ -47,7 +47,7 @@ $(registerMethod ''Main "print")
 
 -- ====== Method: Main.main ====== --
 memDef_Main_main (noDef -> _self) = do 
-     call (appNext (val ("!!!" :: String)) (member("print") _self))
+     call (member("print") _self)
      
 
 type instance SigOf Main "main" = '[Named "self"]
