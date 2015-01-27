@@ -6,22 +6,22 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Luna.Syntax.Control.ZipperSpec where
+module Test.Luna.Syntax.Control.BCZipperSpec where
 
 import Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import qualified Luna.Syntax.Control.Crumb  as Crumb
-import qualified Luna.Syntax.Control.Focus  as Focus
-import qualified Luna.Syntax.Control.Zipper as Zipper
-import qualified Luna.Syntax.Decl           as Decl
-import qualified Luna.Syntax.Enum           as Enum
-import           Luna.Syntax.Expr           (LExpr)
-import           Luna.Syntax.Label          (Label (Label))
-import           Luna.Syntax.Module         (LModule)
-import qualified Test.Luna.Sample.Code      as SampleCode
-import qualified Test.Luna.Syntax.Common    as Common
+import qualified Luna.Syntax.Control.BCZipper as BCZipper
+import qualified Luna.Syntax.Control.Crumb    as Crumb
+import qualified Luna.Syntax.Control.Focus    as Focus
+import qualified Luna.Syntax.Decl             as Decl
+import qualified Luna.Syntax.Enum             as Enum
+import           Luna.Syntax.Expr             (LExpr)
+import           Luna.Syntax.Label            (Label (Label))
+import           Luna.Syntax.Module           (LModule)
+import qualified Test.Luna.Sample.Code        as SampleCode
+import qualified Test.Luna.Syntax.Common      as Common
 
 
 main :: IO ()
@@ -32,7 +32,7 @@ getAST :: IO (LModule Enum.IDTag (LExpr Enum.IDTag ()))
 getAST = fst <$> Common.getAST SampleCode.zipperTestModule
 
 
---zipTo :: (a -> Bool) -> Zipper h j [a] -> Maybe (Zipper h j [a] :>> a)
+--zipTo :: (a -> Bool) -> BCZipper h j [a] -> Maybe (BCZipper h j [a] :>> a)
 --zipTo predicate z = do
 --    i <- List.findIndex predicate $ z ^. focus
 --    fromWithin traverse z & moveTo i
@@ -58,67 +58,67 @@ spec = do
             --prettyPrint $ f (zipTo predicate z <&> view focus)
 
             --pending
-            zipper <- eitherToM $ Zipper.focusBreadcrumbs'
+            zipper <- eitherToM $ BCZipper.focusBreadcrumbs'
                         [ Crumb.Module   "Main"
                         , Crumb.Function [] "main"
                         ] ast
-            let focus = Zipper.getFocus  zipper
+            let focus = BCZipper.getFocus  zipper
             (Label _ Decl.Func {}) <- Focus.getFunction focus <?.> "Not a function"
-            Zipper.close (Zipper.defocus zipper) `shouldBe` ast
+            BCZipper.close (BCZipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on class in module" $ do
             ast    <- getAST
-            zipper <- eitherToM $ Zipper.focusBreadcrumbs'
+            zipper <- eitherToM $ BCZipper.focusBreadcrumbs'
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
                         ] ast
-            let focus = Zipper.getFocus  zipper
+            let focus = BCZipper.getFocus  zipper
             (Label _ Decl.Data {}) <- Focus.getData focus <?.> "Not a class"
-            Zipper.close (Zipper.defocus zipper) `shouldBe` ast
+            BCZipper.close (BCZipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on class in class in module" $ do
             ast    <- getAST
-            zipper <- eitherToM $ Zipper.focusBreadcrumbs'
+            zipper <- eitherToM $ BCZipper.focusBreadcrumbs'
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
                         , Crumb.Class    "Inner"
                         ] ast
-            let focus = Zipper.getFocus  zipper
+            let focus = BCZipper.getFocus  zipper
             (Label _ Decl.Data {}) <- Focus.getData focus <?.> "Not a class"
-            Zipper.close (Zipper.defocus zipper) `shouldBe` ast
+            BCZipper.close (BCZipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on function in class in module" $ do
             ast    <- getAST
-            zipper <- eitherToM $ Zipper.focusBreadcrumbs'
+            zipper <- eitherToM $ BCZipper.focusBreadcrumbs'
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
                         , Crumb.Function [] "test"
                         ] ast
-            let focus = Zipper.getFocus  zipper
+            let focus = BCZipper.getFocus  zipper
             (Label _ Decl.Func {}) <- Focus.getFunction focus <?.> "Not a function"
-            Zipper.close (Zipper.defocus zipper) `shouldBe` ast
+            BCZipper.close (BCZipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on function in class in class in module" $ do
             ast    <- getAST
-            zipper <- eitherToM $ Zipper.focusBreadcrumbs'
+            zipper <- eitherToM $ BCZipper.focusBreadcrumbs'
                         [ Crumb.Module   "Main"
                         , Crumb.Class    "Vector"
                         , Crumb.Class    "Inner"
                         , Crumb.Function [] "inner"
                         ] ast
-            let focus = Zipper.getFocus  zipper
+            let focus = BCZipper.getFocus  zipper
             (Label _ Decl.Func {}) <- Focus.getFunction focus <?.> "Not a function"
-            Zipper.close (Zipper.defocus zipper) `shouldBe` ast
+            BCZipper.close (BCZipper.defocus zipper) `shouldBe` ast
 
         it "focus and defocus on lambda in function in class in module" $ do
             pendingWith "not implemented"
             --ast    <- getAST
-            --zipper <- eitherToM $ Zipper.focusBreadcrumbs'
+            --zipper <- eitherToM $ BCZipper.focusBreadcrumbs'
             --            [ Crumb.Module   "Main"
             --            , Crumb.Class    "Vector"
             --            , Crumb.Function [] "test"
             --            , Crumb.Lambda   19
             --            ] ast
-            --let focus = Zipper.getFocus  zipper
+            --let focus = BCZipper.getFocus  zipper
             --(Label _ Decl.Lambda {}) <- Focus.getLambda focus <?.> "Not a lambda"
-            --Zipper.close (Zipper.defocus zipper) `shouldBe` ast
+            --BCZipper.close (BCZipper.defocus zipper) `shouldBe` ast
