@@ -163,7 +163,7 @@ typed = Tok.typeDecl *> Type.term
 
 
 
-stage1DefArg = Tok.tokenBlock (many alphaNum)
+stage1DefArg = Tok.tokenBlock (many (noneOf " \t\r\n:"))
 
 stage1BodyInner = (many1 $ noneOf "\n\r")
 stage1Body = (:) <$> stage1BodyInner <*> (try (spaces *> Indent.checkIndented *> stage1Body) <|> pure [[]])

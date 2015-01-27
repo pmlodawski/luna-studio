@@ -28,7 +28,10 @@ import GHC.TypeLits
 import Data.Typeable (Proxy(..))
 import Luna.Target.HS.Control
 import Luna.Target.HS.Data.Func.App
-import Luna.Target.HS.Data.Func.Args
+
+import qualified Luna.Target.HS.Data.Func.Args7 as Args7
+import Control.Category.Dot
+
 
 import Data.Typeable
 import Type.BaseType
@@ -39,15 +42,19 @@ import Type.BaseType
 
 data Mem obj (name :: Symbol) = Mem (Proxy obj) (Proxy name) deriving (Typeable)
 
-instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name, Typeable name) where
-    show = show . typeOf
+instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
+    show (Mem obj name) = "Mem " ++ show (typeOf obj) ++ " " ++ show (symbolVal name)
 
 ----------------------------------------------------------------------------------
 -- HasMem
 ----------------------------------------------------------------------------------
 
-class HasMem (name :: Symbol) obj sig | name obj -> sig where
-    memSig :: Mem obj name -> sig
+
+
+
+class MemberProvider obj name argRep f | obj name argRep -> f where
+    getMember :: Mem obj name -> argRep -> f
+
 
 
 objPtr :: m base s a -> out <= (Env base, Safety s, BaseType (Proxy a) out, out~Proxy b)
@@ -56,10 +63,17 @@ objPtr el = Proxy
 memPtr :: Proxy name -> m base s a -> Mem obj name <= (Env base, Safety s, BaseType (Proxy a) (Proxy obj))
 memPtr name obj = Mem (objPtr obj) name
 
-getMem :: Proxy name -> m base s a -> Value Pure Safe (AppH (Mem obj name) s1) <= (Env base, Safety s, HasMem name obj s1, BaseType (Proxy a) (Proxy obj))
-getMem name obj = val . appH ptr $ memSig ptr where
+getMem name obj = val . appH ptr $ Args7.empty where
     ptr = memPtr name obj
 
-member :: Proxy (name :: Symbol) -> m base s a -> Value Pure Safe (AppH (Mem obj name) args) <= (Env base, Safety s, HasMem name obj args1, AppArgByName "self" (m base s a) args1 args, Type.BaseType.BaseType (Proxy a) (Proxy obj))
-member name obj = appByName (Proxy::Proxy "self") obj $ getMem name $ obj
 
+addArg'  = (fmap.fmap) . Args7.addArg
+appNext = addArg' . Args7.uArg
+appByName = addArg' `dot2` Args7.nArg
+
+
+member name obj = appByName obj (Proxy::Proxy "self") $ getMem name obj
+
+
+mkFunc :: Mem cls name -> f -> Args7.Func (Args7.SigOf cls name) f
+mkFunc _ = Args7.Func
