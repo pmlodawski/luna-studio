@@ -213,15 +213,15 @@ evalFunction stringExpr callDataPath varNames = do
 
         self      = head varNames
     operation <- case varType stringExpr of
-        List        -> return $ "toIOEnv $ fromValue $ val [" ++ List.intercalate "," args ++ "]"
-        Id          -> return $ "toIOEnv $ fromValue $ " ++ mkArg self
-        Native name -> return $ "toIOEnv $ fromValue $ " ++ genNative name
-        Con    _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs args ++ " $ cons_" ++ nameHash
-        Var    _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
-        Lit    name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ if Maybe.isJust (Read.readMaybe name :: Maybe Int)
+        List        -> return $ "toIOEnv $ fromValue $ val [" <> List.intercalate "," args <> "]"
+        Id          -> return $ "toIOEnv $ fromValue $ " <> mkArg self
+        Native name -> return $ "toIOEnv $ fromValue $ " <> genNative name
+        Con    _    -> return $ "toIOEnv $ fromValue $ call" <> appArgs args <> " $ cons_" <> nameHash
+        Var    _    -> return $ "toIOEnv $ fromValue $ call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show nameHash <> ") " <> mkArg self
+        Lit    name -> return $ "toIOEnv $ fromValue $ val (" <> name <> if Maybe.isJust (Read.readMaybe name :: Maybe Int)
                                                                                   then " :: Int)"
                                                                                   else ")"
-        Tuple       -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
+        Tuple       -> return $ "toIOEnv $ fromValue $ val (" <> List.intercalate "," args <> ")"
         TimeVar     -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment' tmpVarName operation
