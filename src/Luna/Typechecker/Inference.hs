@@ -80,7 +80,6 @@ tcUnit ast structAnalysis = do
 
 
 instance (StageTypecheckerCtx lab m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl lab InExpr) (LDecl lab OutExpr) where
-  --traverseM _ = undefined
   traverseM _ = tcDecl
 --instance (StageTypecheckerCtx lab m a) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr lab a)    (LExpr lab a)   where traverseM _ = tcExpr
 
@@ -172,87 +171,88 @@ insertNewMonoTypeVariable labID = do
     return $ TV tvarID
 
 
---tcExpr :: (StageTypecheckerCtx lab m a) => LExpr lab a -> StageTypecheckerPass m (LExpr lab a)
---tcExpr lexpr@(Label lab expression) = do
---    env <- getEnv
---    result <- expr env lexpr
---    currentType .= result
---    return lexpr
+tcExpr :: (StageTypecheckerCtx lab m) => LExpr lab InExpr -> StageTypecheckerPass m (LExpr lab OutExpr)
+tcExpr lexpr@(Label lab expression) = do
+    expr lexpr
 
---expr :: (StageTypecheckerCtx lab m a) => Typo -> LExpr lab a -> StageTypecheckerPass m Type
---expr env (Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
---  do
---    let hn = unpack . humanName $ vname
---    hn_id <- getTargetIDString lab
---    debugPush ("Var         " ++ hn ++ hn_id)
+expr :: (StageTypecheckerCtx lab m) => LExpr lab InExpr -> StageTypecheckerPass m (LExpr lab OutExpr)
+expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
+  do
+    let hn = unpack . humanName $ vname
+    hn_id <- getTargetIDString lab
+    debugPush ("Var         " ++ hn ++ hn_id)
 
---    targetLabel <- getTargetID lab
+    targetLabel <- getTargetID lab
 
---    vType <- inst env targetLabel
---    result <- normalize vType
+    env <- getEnv
+    vType <- inst env targetLabel
+    result <- normalize vType
 
---    debugPush ("         :: " ++ show result)
---    typeMap . at (Enum.id lab) ?= result
+    debugPush ("         :: " ++ show result)
 
---    return result
+    setTypeById targetLabel result
 
---expr env (Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) =
---  case (dst, src) of
---      (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
---        do  
---          --tp (env, Let x e e') = do a <- tp (env, e)
---          --                          b <- gen env a
---          --                          tp ((insert env (x, b)), e')
---          t_id <- getTargetIDString labt
---          s_id <- getTargetIDString labs
---          debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ unpack (humanName src_vname) ++ s_id) 
---          -- TODO destType <- expr env dst
---          TV <$> newtvar 
---      _ -> do
---            debugPush "Some assignment..."
---            TV <$> newtvar
-       
+    return var
 
---expr env ( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Segment appExpr args ) } ) ) ) =
---  do
---    debugPush "Infering an application..."
+expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) = do
+  case (dst, src) of
+      (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
+        do  
+          --tp (env, Let x e e') = do a <- tp (env, e)
+          --                          b <- gen env a
+          --                          tp ((insert env (x, b)), e')
+          t_id <- getTargetIDString labt
+          s_id <- getTargetIDString labs
+          debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ unpack (humanName src_vname) ++ s_id) 
+          -- TODO destType <- expr env dst
+      _ -> do
+            debugPush "Some assignment..."
+  
+  defaultTraverseM ass
 
---    e1Type <- expr env appExpr
---    result <- Fold.foldlM tp e1Type args
 
---    debugPush $ "Result of infering an application: " ++ show result
---    typeMap . at (Enum.id lab) ?= result
+expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Segment appExpr args ) } ) ) ) =
+  do
+    debugPush "Infering an application..."
+    let Label appExprLab _ = appExpr
 
---    return result
+    appId <- getTargetID lab
+    appExprId <- getTargetID appExprLab
 
---  where
---    tp result arg = do
---      let Expr.AppArg _ argV = arg
---      argType <- expr env argV
---      a <- newtvar
---      add_constraint (C [result `Subsume` (argType `Fun` TV a)])
---      normalize (TV a)
---      -- TODO add mapping between labels -> type to pass's state
+    -- typecheck all args
+    res <- defaultTraverseM app
 
-----expr env (Label lab (Expr.App (NamePat.NamePat { NamePat._base = (NamePat.Segment (Label labb (Expr.Var { Expr._ident = (Expr.Variable basename _)})) args)}))) =
-----  do
-----    --tp (env, App e e') = do a <- newtvar
-----    --                        t <- tp (env, e)
-----    --                        t' <- tp (env, e')
-----    --                        add_constraint (C [t `Subsume` (t' `Fun` TV a)])
-----    --                        normalize (TV a)
-----    base_id <- getTargetIDString labb
-----    args_id <- unwords <$> mapM mapArg args
-----    debugPush ("Application " ++ (unpack . humanName $ basename) ++ base_id ++ " ( " ++ args_id ++ " )")  
-----    TV <$> newtvar
-----  where
-----    mapArg :: (StageTypecheckerCtx lab m a) => Expr.AppArg (LExpr lab a) -> StageTypecheckerPass m String
-----    mapArg (Expr.AppArg _ (Label laba (Expr.Var { Expr._ident = (Expr.Variable vname _) } ))) = do
-----        arg_id <- getTargetIDString laba
-----        return $ (unpack . humanName $ vname) ++ arg_id
-----    mapArg _ = fail "Luna.Typechecker.Inference:tcExpr:mapArg: usage unexpected"
+    e1Type <- getTypeById appExprId
+    let argTypes = map toType args
+    result <- Fold.foldlM tp e1Type argTypes
+    setTypeById appId result
 
---expr _ _ = error "No idea how to infer type at the moment."
+    debugPush $ "Result of infering an application: " ++ show result
+    return res
+
+  where
+    toType (Expr.AppArg _ (Label lab _)) = do
+      idV <- getTargetID lab
+      getTypeById idV
+
+    tp result arg = do
+      argType <- arg
+      -- argType <- expr env argV
+      a <- newtvar
+      add_constraint (C [result `Subsume` (argType `Fun` TV a)])
+      normalize (TV a)
+
+expr _ = error "No idea how to infer type at the moment."
+
+
+getTypeById :: Monad m => ID -> StageTypecheckerPass m Type
+getTypeById idV = do
+    typeResult <- typeMap . at idV & use
+    maybe (error "Can't find type using id.") (return . id) typeResult
+
+
+setTypeById id typeV =
+    typeMap . at id ?= typeV
 
 
 debugPush :: (Monad m) => String -> StageTypecheckerPass m ()
@@ -275,11 +275,11 @@ getTargetID lab =
   where
     labID = Enum.id lab
 
---getEnv :: (Monad m) => StageTypecheckerPass m Typo
---getEnv =
---    typo & use >>= \case
---        []    -> return []
---        (x:_) -> return x
+getEnv :: (Monad m) => StageTypecheckerPass m Typo
+getEnv =
+    typo & use >>= \case
+        []    -> return []
+        (x:_) -> return x
 
 
 
@@ -310,30 +310,30 @@ insert :: Typo -> (Var, TypeScheme) -> Typo
 insert a (x,t) = (x,t):a
 
 
---rename :: (Monad m) => StageTypecheckerPass m Subst -> TVar ->  StageTypecheckerPass m Subst
---rename s x = do
---    newtv <- newtvar
---    s' <- s
---    return ((x, TV newtv):s')
+rename :: (Monad m) => StageTypecheckerPass m Subst -> TVar ->  StageTypecheckerPass m Subst
+rename s x = do
+    newtv <- newtvar
+    s' <- s
+    return ((x, TV newtv):s')
 
 
---inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
---inst env x =
---    case lookup x env of 
---        Just ts -> case ts of
---            Mono t        ->
---                return t
---            Poly tvl c t  ->
---              do
---                s' <- foldl rename (return null_subst) tvl
---                c' <- apply s' c
---                t' <- apply s' t
---                add_constraint c'
---                return t'
---        Nothing ->
---          do
---            ntv <- newtvar
---            report_error ("undeclared variable " ++ show x) (TV ntv)
+inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
+inst env x =
+    case lookup x env of 
+        Just ts -> case ts of
+            Mono t        ->
+                return t
+            Poly tvl c t  ->
+              do
+                s' <- foldl rename (return null_subst) tvl
+                c' <- apply s' c
+                t' <- apply s' t
+                add_constraint c'
+                return t'
+        Nothing ->
+          do
+            ntv <- newtvar
+            report_error ("undeclared variable " ++ show x) (TV ntv)
 
 
 --gen :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
