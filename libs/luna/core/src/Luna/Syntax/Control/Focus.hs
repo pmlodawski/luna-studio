@@ -6,8 +6,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators   #-}
 
 module Luna.Syntax.Control.Focus where
+
+import Control.Zipper ((:>>), Top)
 
 import Flowbox.Prelude
 import Luna.Syntax.Decl   (LDecl)
@@ -27,10 +30,15 @@ data Focus a v = Lambda   { _decl :: LDecl   a v }
                | Module   { _module_ :: LModule a v }
                deriving (Show)
 
+data FocusZ a v = ModuleZ { _modZipper :: Top :>> LModule a v :>> LDecl a v }
+                | DataZ   { _dclZipper :: Top :>> LDecl   a v :>> LDecl a v }
+
 makeLenses ''Focus
+makeLenses ''FocusZ
 
-
-type FocusPath a v = [Focus a v]
+type FocusPath a v = [ FocusZ a v]
+--type FocusPath a v = [Zipper (Zipper Top Int (LDecl a v)) Int (LDecl a v)]
+--type FocusPath a v = [Top :>> LDecl a v :>> LDecl a v]
 
 
 --type Traversal m = (Functor m, Applicative m, Monad m)

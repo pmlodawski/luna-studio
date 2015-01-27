@@ -6,11 +6,13 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TypeOperators             #-}
 
-module Luna.Syntax.Control.Zipper where
+module Luna.Syntax.Control.BCZipper where
 
-import qualified Data.List 
-import qualified Data.List.Zipper as LZ
+import           Control.Zipper ((:>>), Top)
+import qualified Control.Zipper as Zipper
+import qualified Data.List      as List
 
 import           Flowbox.Control.Error     (assert, (<?>))
 import           Flowbox.Prelude           hiding (drop, id, mod)
@@ -25,100 +27,93 @@ import           Luna.Syntax.Module        (LModule)
 import qualified Luna.Syntax.Module        as Module
 import           Luna.Syntax.Name          (TNameP)
 import           Luna.Syntax.Name.Path     (NamePath, QualPath)
-import qualified Luna.Syntax.Name.Pattern as Pattern
+import qualified Luna.Syntax.Name.Pattern  as Pattern
 
 
-
-type Zipper a v = (Focus a v, FocusPath a v)
+type BCZipper a v = (Focus a v, FocusPath a v)
 
 type Error = String
 
 
-mk :: LModule a v -> Zipper a v
+mk :: LModule a v -> BCZipper a v
 mk rootmod = (Focus.Module rootmod, [])
 
 
-defocus :: Zipper a v -> Zipper a v
+defocus :: BCZipper a v -> BCZipper a v
 defocus zipper@(_, [])     = zipper
 defocus (env, parent:path) = (newenv, path) where
     newenv = case parent of
-        Focus.Module   pmdl -> Focus.Module $ case env of
-            Focus.Data     dat -> moduleAddDecl dat pmdl
-            Focus.Function fun -> moduleAddDecl fun pmdl
+        Focus.ModuleZ   pmdl -> Focus.Module $ Zipper.rezip $ case env of
+            Focus.Data     dat -> pmdl & Zipper.focus .~ dat
+            Focus.Function fun -> pmdl & Zipper.focus .~ fun
             --Focus.Lambda   lam -> defocusModuleL pmdl lam
             --Focus.Module   mod -> Module.addModule mod pmdl
-            _                  -> error "Zipper.defocus"
-        Focus.Data     pdat -> Focus.Data  $ case env of
-            Focus.Function fun -> dataAddDecl fun pdat
-            Focus.Data     dat -> dataAddDecl dat pdat
-            _                  -> error "Zipper.defocus"
-        _                  -> error "Zipper.defocus"
+            _                  -> error "BCZipper.defocus"
+        Focus.DataZ     pdat -> Focus.Data $ Zipper.rezip $ case env of
+            Focus.Data     dat -> pdat & Zipper.focus .~ dat
+            Focus.Function fun -> pdat & Zipper.focus .~ fun
+            _                  -> error "BCZipper.defocus"
         --Focus.Function pfun -> Focus.Function $ case env of
         --    Focus.Lambda   lam -> defocusExprL pfun lam
-        --    _                  -> error "Zipper.defocus"
+        --    _                  -> error "BCZipper.defocus"
         --Focus.Lambda   plam -> Focus.Lambda $ case env of
         --    Focus.Lambda   lam -> defocusExprL plam lam
-        --    _                  -> error "Zipper.defocus"
-    moduleAddDecl :: LDecl a v -> LModule a v -> LModule a v
-    moduleAddDecl dcl = Label.element . Module.body %~ (dcl:)
-
-    dataAddDecl :: LDecl a v -> LDecl a v -> LDecl a v
-    dataAddDecl dcl = Label.element . Decl.dataDecl . Decl.dataDeclDecls %~ (dcl:)
+        --    _                  -> error "BCZipper.defocus"
 
     --funAddDecl :: LDecl a v -> LDecl a v -> LDecl a v
     --funAddDecl dcl = Label.element . Decl.funcDecl . Decl.?? %~ (dcl:)
 
     --defocusModuleL par lam = case replaceModuleByAstID par lam of
-    --    Nothing        -> error "Zipper.defocus"
+    --    Nothing        -> error "BCZipper.defocus"
     --    Just (par', _) -> par'
     --defocusExprL par lam   = case replaceExprByAstID par lam of
-    --    Nothing        -> error "Zipper.defocus"
+    --    Nothing        -> error "BCZipper.defocus"
     --    Just (par', _) -> par'
 
 
-defocusDrop :: Zipper a v -> Zipper a v
-defocusDrop zipper@(_, [])   = zipper
-defocusDrop (_, parent:path) = (parent, path)
+--defocusDrop :: BCZipper a v -> BCZipper a v
+--defocusDrop zipper@(_, [])   = zipper
+--defocusDrop (_, parent:path) = (parent, path)
 
 
-modify :: (Focus a v -> Focus a v) -> Zipper a v -> Zipper a v
+modify :: (Focus a v -> Focus a v) -> BCZipper a v -> BCZipper a v
 modify f (env, path) = (f env, path)
 
 
-close :: Zipper a v -> LModule a v
+close :: BCZipper a v -> LModule a v
 close (env, []) = mod where Focus.Module mod = env
 close zipper    = close $ defocus zipper
 
 
-focusModule :: QualPath -> Zipper a v -> Either Error (Zipper a v)
+focusModule :: QualPath -> BCZipper a v -> Either Error (BCZipper a v)
 focusModule mpath (env, _) = case env of
-    _                -> Left $ "Zipper.focusModule : Cannot focus on " ++ show mpath
+    _                -> Left $ "BCZipper.focusModule : Cannot focus on " ++ show mpath
 
 
-focusClass :: (Show v, Show a) => TNameP -> Zipper a v -> Either Error (Zipper a v)
+focusClass :: (Show v, Show a) => TNameP -> BCZipper a v -> Either Error (BCZipper a v)
 focusClass name zipper@(env, _) = case env of
     Focus.Module mod -> focusListElem (Label.element . Module.body) classComp
-                            Focus.Data  Focus.Module mod zipper
+                            Focus.Data  Focus.ModuleZ mod zipper
     Focus.Data   cls -> focusListElem (Label.element . Decl.dataDecl . Decl.dataDeclDecls) classComp
-                            Focus.Data  Focus.Data   cls zipper
-    _                -> Left $ "Zipper.focusClass : Cannot focus on " ++ show name
+                            Focus.Data  Focus.DataZ   cls zipper
+    _                -> Left $ "BCZipper.focusClass : Cannot focus on " ++ show name
     where
         classComp :: (Show e00, Show a00, Show l00) => Label.Label l00 (Decl.Decl a00 e00) -> Bool
         classComp f = f ^? (Label.element . Decl.dataDecl . Decl.dataDeclName) == Just name
 
 
-focusFunction :: (Show v, Show a) => Decl.Path -> NamePath -> Zipper a v -> Either Error (Zipper a v)
+focusFunction :: (Show v, Show a) => Decl.Path -> NamePath -> BCZipper a v -> Either Error (BCZipper a v)
 focusFunction path name zipper@(env, _) = case env of
     Focus.Module mod -> focusListElem (Label.element . Module.body) funComp
-                            Focus.Function Focus.Module mod zipper
+                            Focus.Function Focus.ModuleZ mod zipper
     Focus.Data   cls -> focusListElem (Label.element . Decl.dataDecl . Decl.dataDeclDecls) funComp
-                            Focus.Function Focus.Data  cls zipper
-    _                -> Left $ "Zipper.focusFunction : Cannot focus on " ++ show path
+                            Focus.Function Focus.DataZ  cls zipper
+    _                -> Left $ "BCZipper.focusFunction : Cannot focus on " ++ show path
     where funComp f = (f ^? (Label.element . Decl.funcDecl . Decl.funcDeclPath) == Just path)
                    && (f ^? (Label.element . Decl.funcDecl . Decl.funcDeclSig . to Pattern.toNamePath) == Just name)
 
 
---focusLambda :: AST.ID -> Zipper -> Either Error Zipper
+--focusLambda :: AST.ID -> BCZipper -> Either Error BCZipper
 --focusLambda astID (env, path) = case env of
 --    Focus.Module   mod -> focusModuleL mod Focus.Module
 --    Focus.Data     cls -> focusExprL   cls Focus.Data
@@ -126,65 +121,77 @@ focusFunction path name zipper@(env, _) = case env of
 --    Focus.Lambda   lam -> focusExprL   lam Focus.Lambda
 --    where
 --        focusModuleL ast mkFocus = do
---            (ast', lambda) <- replaceModuleByAstID ast (Expr.NOP astID) <?> "Zipper.focusLambda : Cannot find astID = " ++ show astID
+--            (ast', lambda) <- replaceModuleByAstID ast (Expr.NOP astID) <?> "BCZipper.focusLambda : Cannot find astID = " ++ show astID
 --            return (Focus.Lambda lambda, mkFocus ast' : path)
 
 --        focusExprL ast mkFocus = do
---            (ast', lambda) <- replaceExprByAstID ast (Expr.NOP astID) <?> "Zipper.focusLambda : Cannot find astID = " ++ show astID
+--            (ast', lambda) <- replaceExprByAstID ast (Expr.NOP astID) <?> "BCZipper.focusLambda : Cannot find astID = " ++ show astID
 --            return (Focus.Lambda lambda, mkFocus ast' : path)
 
 
 
-focusCrumb :: (Show a, Show v) => Crumb -> Zipper a v -> Either Error (Zipper a v)
+focusCrumb :: (Show a, Show v) => Crumb -> BCZipper a v -> Either Error (BCZipper a v)
 focusCrumb c = case c of
     Crumb.Module   mpath     -> focusModule   mpath
     Crumb.Class    className -> focusClass    className
     Crumb.Function path name -> focusFunction path name
-    _                        -> const $ Left "Zipper.focusCrumb : Cannot focus on lambda (not implemented)"
+    _                        -> const $ Left "BCZipper.focusCrumb : Cannot focus on lambda (not implemented)"
     --Crumb.Lambda   astID     -> focusLambda   astID
 
 
-focusBreadcrumbs :: (Show a, Show v) => Breadcrumbs -> Zipper a v -> Either Error (Zipper a v)
+focusBreadcrumbs :: (Show a, Show v) => Breadcrumbs -> BCZipper a v -> Either Error (BCZipper a v)
 focusBreadcrumbs bc zipper = case bc of
     []  -> return zipper
     h:t -> focusCrumb h zipper >>= focusBreadcrumbs t
 
 
-focusModule' :: QualPath -> LModule a v -> Either Error (Zipper a v)
+focusModule' :: QualPath -> LModule a v -> Either Error (BCZipper a v)
 focusModule' mpath m = do
-    assert (m ^. Label.element . Module.mpath == mpath) $ "Zipper.focusModule' : Cannot focus on " ++ show mpath
+    assert (m ^. Label.element . Module.mpath == mpath) $ "BCZipper.focusModule' : Cannot focus on " ++ show mpath
     return $ mk m
 
 
-focusCrumb' :: Crumb -> LModule a v -> Either Error (Zipper a v)
+focusCrumb' :: Crumb -> LModule a v -> Either Error (BCZipper a v)
 focusCrumb' c m = case c of
     Crumb.Module name -> focusModule' name m
-    _                 -> Left $ "Zipper.focusCrumb' : Cannot focus on " ++ show c
+    _                 -> Left $ "BCZipper.focusCrumb' : Cannot focus on " ++ show c
 
 
-focusBreadcrumbs' :: (Show a, Show v) => Breadcrumbs -> LModule a v -> Either Error (Zipper a v)
+focusBreadcrumbs' :: (Show a, Show v) => Breadcrumbs -> LModule a v -> Either Error (BCZipper a v)
 focusBreadcrumbs' bc m = case bc of
     h:t -> focusCrumb' h m >>= focusBreadcrumbs t
-    _   -> Left $ "Zipper.focusBreadcrumbs' : Cannot focus on " ++ show bc
+    _   -> Left $ "BCZipper.focusBreadcrumbs' : Cannot focus on " ++ show bc
 
 
-getFocus :: Zipper a v -> Focus a v
+getFocus :: BCZipper a v -> Focus a v
 getFocus = fst
 
 
-focusListElem :: Traversal' t [u] -> (u -> Bool) -> (u -> Focus a v) -> (t -> Focus a v) -> t -> Zipper a v -> Either Error (Zipper a v)
+--focusListElem :: Traversal' (LDecl a v) [LDecl a v] -> (LDecl a v -> Bool) -> (LDecl a v -> Focus a v) -> (t -> Focus.FocusZ a v) -> LDecl a v -> BCZipper a v -> Either Error (BCZipper a v)
+--focusListElem flens match elemFocus crumbFocus el (_, path) = do
+--    funcIx  <- List.findIndex match (el ^. flens) <?> "BCZipper.focusListElem : Cannot find element in AST."
+--    z       <- Zipper.within (flens . ix funcIx) (Zipper.zipper el) <?> "BCZipper.focusListElem : Cannot find element in AST."
+--    let func = z ^. Zipper.focus
+--    return (elemFocus func, Focus.DataZ z : path)
+
+
+--focusListElem' :: Traversal' (LModule a v) [LDecl a v] -> (LDecl a v -> Bool) -> (LDecl a v -> Focus a v) -> (t -> Focus.FocusZ a v) -> LModule a v -> BCZipper a v -> Either Error (BCZipper a v)
+--focusListElem' flens match elemFocus crumbFocus el (_, path) = do
+--    funcIx  <- List.findIndex match (el ^. flens) <?> "BCZipper.focusListElem : Cannot find element in AST."
+--    z       <- Zipper.within (flens . ix funcIx) (Zipper.zipper el) <?> "BCZipper.focusListElem : Cannot find element in AST."
+--    let func = z ^. Zipper.focus
+--    return (elemFocus func, Focus.ModuleZ z : path)
+
+focusListElem :: Traversal' u [LDecl a v]
+              -> (LDecl a v -> Bool)
+              -> (LDecl a v -> Focus a v)
+              -> (Top :>> u :>> LDecl a v -> Focus.FocusZ a v)
+              -> u -> BCZipper a v -> Either Error (BCZipper a v)
 focusListElem flens match elemFocus crumbFocus el (_, path) = do
-    let funcs    = el ^. flens
-        mfunc    = List.find match funcs
-        newfuncs = filter (not . match) funcs
-        newelem  = el & flens .~ newfuncs
-    func <- mfunc <?> "Zipper.focusListElem : Cannot find element in AST."
-    return (elemFocus func, crumbFocus newelem : path)
-
-
-findZ :: Eq a => a -> [a] -> LZ.Zipper a
-findZ = undefined
-
+    funcIx  <- List.findIndex match (el ^. flens) <?> "BCZipper.focusListElem : Cannot find element in AST."
+    z       <- Zipper.within (flens . ix funcIx) (Zipper.zipper el) <?> "BCZipper.focusListElem : Cannot find element in AST."
+    let func = z ^. Zipper.focus
+    return (elemFocus func, crumbFocus z : path)
 
 --replaceExprByAstID :: Expr -> Expr -> Maybe (Expr, Expr)
 --replaceExprByAstID ast part = do
