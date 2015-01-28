@@ -446,7 +446,7 @@ def Image.colorCorrectCurves curves
                        shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
                        midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
-    ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
+    ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.hueCorrect sat lum r g b rSup gSup bSup:
     ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
@@ -499,35 +499,26 @@ def Image.blur kernelSize:
 # def Image.laplacian kernelSize centerVal sideVal:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
-# def Image.rotate phi:
-#     ```liftF2 turnCenterLuna #{phi} #{self}```
-# def Image.rotate phi m:
-#     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
-
-# def Image.translate boundary x y:
-#     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-
 class ```V2``` a:
     x, y :: a
 
 def Image.translate vec:
     ```liftF2 translateLuna #{vec} #{self}```
 
-# def Image.scaleTo boundary x y:
-#     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
-# def Image.scaleTo x y m:
-#     ```liftF4 scaleToLuna #{x} #{y} #{m} #{self}```
+def Image.rotate phi:
+    ```liftF2 rotateLuna #{phi} #{self}```
 
-# def Image.scale boundary x y:
-#     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
-# def Image.scaleCenter x y:
-#     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+def Image.rotateAt point phi:
+    ```liftF3 rotateAtLuna #{point} #{phi} #{self}```
 
-# def Image.scale x y:
-#     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+def Image.scale vec:
+    ```liftF2 scaleLuna #{vec} #{self}```
 
-# def Image.transform trans:
-#     ```liftF2 transformLuna #{trans} #{self}```
+def Image.scaleAt point vec:
+    ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
+
+def Image.transform trans:
+    ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
@@ -753,6 +744,10 @@ def main:
     # gray  = RGBA 0.5 0.5 0.5 1.0
     # lena = constant 640 480 gray
     lena = load "./lena.png"
+    scaled = lena.scale (V2 0.5 2.0)
+    scaledAt = lena.scaleAt (Point2 256.0 256.0) (V2 0.5 2.0)
+    scaled.save "./out.png"
+    scaledAt.save "./out2.png"
 
     # lena = lena.hueCorrect c c c c c c2 c c
 
@@ -763,22 +758,7 @@ def main:
     # cp = controlPointGUI p1 hIn hOut
     # curve = curveGUI [cp]
     # val = getValueAtCurve curve 7.000000
-    valF = (-0.5)
-    print valF
-    print valF.truncate
-    print valF.round
-    print valF.floor
-    print valF.ceiling
-    print valF.toString
-    valB = False
-    print valB
-    print valB.toString
-    valI = 2
-    print valI
-    print valI.toString
-    valC = 'a'
-    print valC
-    print valC.toString
+
     # print valC.toString.toChar
     # out = lena.posterize val
     # out = (load "./lena.png").posterize (getValueAtCurve (curveGUI [(controlPointGUI (Point2 169.000000 2.7897727) linearHandleGUI linearHandleGUI)]) 7.000000)

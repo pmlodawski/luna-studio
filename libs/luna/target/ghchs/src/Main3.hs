@@ -12,6 +12,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 -- module --
 module Main3 where
@@ -27,30 +28,34 @@ data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)
 data Cls_Main  = Cls_Main deriving (Show, Eq, Ord, Generic, Typeable)
 
 -- ------ Main.Main constructor ------ --
-cons_Main = member("Main") (val Cls_Main)
+cons_Main = _member("Main") (val Cls_Main)
 memDef_Cls_Main_Main = liftCons0 Main
 
 -- ====== Method: Cls_Main.Main ====== --
-type instance SigOf Cls_Main "Main" = '[Named "self"]
+memSig_Cls_Main_Main = _rtup1(_nuSigArg("self"))
+memFnc_Cls_Main_Main = (memSig_Cls_Main_Main, memDef_Cls_Main_Main)
 $(registerMethod ''Cls_Main "Main")
 
 -- ------ Main methods ------ --
 
 -- ====== Method: Main.print ====== --
-memDef_Main_print (noDef -> self) (appDef (val ("" :: String)) -> s) = do 
+memSig_Main_print = _rtup2(_nuSigArg("self"), _npSigArg("s", val ("" :: String)))
+memDef_Main_print self s = do 
      
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
      
 
-type instance SigOf Main "print" = '[Named "self", Named "s"]
+memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
 $(registerMethod ''Main "print")
 
 -- ====== Method: Main.main ====== --
-memDef_Main_main (noDef -> _self) = do 
-     call (member("print") _self)
+memSig_Main_main = _rtup1(_nuSigArg("self"))
+memDef_Main_main _self = do 
+     call (appNext (val []) (_member("print") _self))
+     call (_member("print") _self)
      
 
-type instance SigOf Main "main" = '[Named "self"]
+memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")
 
 

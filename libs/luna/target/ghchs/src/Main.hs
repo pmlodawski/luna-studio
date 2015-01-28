@@ -21,37 +21,37 @@
 module Main where
 
 -- imports --
-import Luna.Target.HS
+--import Luna.Target.HS
 
--- body --
-#include "pragmas.cpp"
+---- body --
+-- #include "pragmas.cpp"
 
--- ====== Main type ====== --
-data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)
-data Cls_Main  = Cls_Main deriving (Show, Eq, Ord, Generic, Typeable)
+---- ====== Main type ====== --
+--data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)
+--data Cls_Main  = Cls_Main deriving (Show, Eq, Ord, Generic, Typeable)
 
--- ------ Main.Main constructor ------ --
-cons_Main = member("Main") (val Cls_Main)
-memDef_Cls_Main_Main = liftCons0 Main
+---- ------ Main.Main constructor ------ --
+--cons_Main = member("Main") (val Cls_Main)
+--memDef_Cls_Main_Main = liftCons0 Main
 
-type instance SigOf Cls_Main "Main" = '[Named "self"]
-$(registerMethod ''Cls_Main "Main")
+--type instance SigOf Cls_Main "Main" = '[Named "self"]
+-- $(registerMethod ''Cls_Main "Main")
 
--- ------ Main methods ------ --
+---- ------ Main methods ------ --
 
--- ====== Method: Main.print ====== --
+---- ====== Method: Main.print ====== --
 
-memDef_Main_print (noDef -> self) (appDef (val "") -> s) = 
-    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+--memDef_Main_print (noDef -> self) (appDef (val "") -> s) = 
+--    polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
-type instance SigOf Main "print" = '[ Named "self", Named "y" ]
-$(registerMethod ''Main "print")
+--type instance SigOf Main "print" = '[ Named "self", Named "y" ]
+-- $(registerMethod ''Main "print")
 
 
-memDef_Main_tst self = do
-    call $ appNext (val "!!!") $ member("print") $ (call cons_Main)
+--memDef_Main_tst self = do
+--    call $ appNext (val "!!!") $ member("print") $ (call cons_Main)
 
-main = fromValue $ memDef_Main_tst (call cons_Main)
+--main = fromValue $ memDef_Main_tst (call cons_Main)
 
 
 

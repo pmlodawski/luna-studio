@@ -488,31 +488,26 @@ def Image.blur kernelSize:
 # def Image.laplacian kernelSize centerVal sideVal:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
-# def Image.rotate phi:
-#     ```liftF2 turnCenterLuna #{phi} #{self}```
-# def Image.rotate phi m:
-#     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
+class ```V2``` a:
+    x, y :: a
 
-# def Image.translate boundary x y:
-#     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-# def Image.translate x y:
-#     ```liftF3 translateLuna #{x} #{y} #{self}```
+def Image.translate vec:
+    ```liftF2 translateLuna #{vec} #{self}```
 
-# def Image.scaleTo boundary x y:
-#     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
-# def Image.scaleTo x y m:
-#     ```liftF4 scaleToLuna #{x} #{y} #{m} #{self}```
+def Image.rotate phi:
+    ```liftF2 rotateLuna #{phi} #{self}```
 
-# def Image.scale boundary x y:
-#     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
-# def Image.scaleCenter x y:
-#     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+def Image.rotateAt point phi:
+    ```liftF3 rotateAtLuna #{point} #{phi} #{self}```
 
-# def Image.scale x y:
-#     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+def Image.scale vec:
+    ```liftF2 scaleLuna #{vec} #{self}```
 
-# def Image.transform trans:
-#     ```liftF2 transformLuna #{trans} #{self}```
+def Image.scaleAt point vec:
+    ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
+
+def Image.transform trans:
+    ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```

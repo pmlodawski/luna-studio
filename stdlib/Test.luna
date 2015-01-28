@@ -2,4 +2,7 @@ foreign haskell def print s="":
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
 def main:
+    print []
     print
+
+
