@@ -21,18 +21,19 @@ import qualified Luna.Syntax.Graph.Node            as Node
 import           Luna.Syntax.Graph.Node.Expr       (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr       as NodeExpr
 import qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
+import           Luna.Syntax.Name                  (VNameP)
 
 
 
-generate :: NodeExpr a e -> Int -> String
-generate nodeExpr num = mangle (exprStr ++ "Result") ++ show num where
+generate :: NodeExpr a e -> Int -> VNameP
+generate nodeExpr num = fromString $ mangle (exprStr ++ "Result") ++ show num where
     exprStr = case nodeExpr of
         NodeExpr.ASTExpr    {}      -> ""
         NodeExpr.StringExpr strExpr -> StringExpr.toString strExpr
 
 
 fixEmpty :: Node a e -> Node.ID -> Node a e
-fixEmpty node nodeID = case node ^. Node.outputName of
+fixEmpty node nodeID = case node ^. Node.outputName . to toString of
     "" -> provide node nodeID
     _  -> node
 
