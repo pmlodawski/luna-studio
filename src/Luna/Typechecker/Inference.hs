@@ -4,16 +4,25 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
 
 
 module Luna.Typechecker.Inference (
     tcpass
   ) where
+
+
+import            Control.Applicative
+import            Control.Lens                            hiding (without)
+import            Control.Monad.State
+
+import            Data.Default                            (Default(def))
+import qualified  Data.Foldable                           as Fold
+import            Data.List                               (intercalate)
+import            Data.Maybe                              (fromMaybe)
+import            Data.Text.Lazy                          (unpack)
+import            Data.Text.Lens                          (unpacked)
 
 
 import qualified  Luna.Data.StructInfo                    as SI
@@ -29,39 +38,24 @@ import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
 import qualified  Luna.Syntax.Label                       as Label
 import            Luna.Syntax.Label                       (Label(Label))
-
 import qualified  Luna.Syntax.Name.Pattern                as NamePat
 import qualified  Luna.Syntax.Pat                         as Pat
 import qualified  Luna.Syntax.Traversals                  as AST
 
-import            Control.Applicative
-import            Control.Lens                            hiding (without)
-import            Control.Monad.State
-
-import            Data.Default                            (Default(def))
-import            Data.List                               hiding (insert)
-import            Data.Maybe                              (fromMaybe)
-
-
-import            Data.Text.Lazy                          (unpack)
-import            Data.Text.Lens                          (unpacked)
-import qualified  Data.Foldable                           as Fold
-
-import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Data
+import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
+import            Luna.Typechecker.Inference.Class        (
+                      StageTypechecker(..),
+                      StageTypecheckerPass, StageTypecheckerCtx,
+                      StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
+                      InExpr, OutExpr, InDecl, OutDecl
+                  )
+import            Luna.Typechecker.Solver                 (cs)
 import            Luna.Typechecker.StageTypecheckerState  (
                       StageTypecheckerState(..),
-                      debugLog, typo, nextTVar, subst, constr, sa, typeMap,
-                      StageTypechecker(..),
-                      StageTypecheckerPass, StageTypecheckerCtx, StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
-                      InExpr, OutExpr, InDecl, OutDecl,
-                      report_error
+                      debugLog, typo, nextTVar, subst, constr, sa, typeMap
                   )
-
 import            Luna.Typechecker.TypesAndConstraints
-import            Luna.Typechecker.Solver                 (cs)
-
-
 
 
 
@@ -77,6 +71,16 @@ tcUnit ast structAnalysis = do
     sa .= structAnalysis
     debugPush "First!"
     liftM2 (,) (defaultTraverseM ast) get
+
+
+
+
+
+report_error :: (Monad m) => String -> a ->  StageTypecheckerPass m a
+report_error msg x = do
+  st <- get
+  let msgRes = "LUNA TC ERROR: " ++ msg ++ "\nState:\n\n" ++ show st
+  fail msgRes
 
 
 instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) InDecl OutDecl where
