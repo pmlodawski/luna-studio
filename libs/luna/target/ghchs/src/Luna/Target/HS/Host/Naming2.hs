@@ -74,6 +74,9 @@ mkMemSig = mkMemRef "Sig"
 mkMemDef :: (Monoid a, IsString a) => a -> a -> a
 mkMemDef = mkMemRef "Def"
 
+mkMemFnc :: (Monoid a, IsString a) => a -> a -> a
+mkMemFnc = mkMemRef "Fnc"
+
 mkModCons :: (Monoid a, IsString a) => a -> a
 mkModCons = mkCons
 

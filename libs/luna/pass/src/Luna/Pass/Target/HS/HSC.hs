@@ -148,7 +148,7 @@ instance Generator HExpr where
         HExpr.AppT     src dst                -> app (generate src) (generate dst) --"(" <> generate src <> " (" <> generate dst <> ")" <> ")" -- for literals, e.g. simple (1 :: Int)
         HExpr.AppE     src dst                -> app (generate src) (generate dst) --"(" <> generate src <> " " <> generate dst <> ")"
         HExpr.AppP     src dst                -> app (generate src) (generate dst)
-        HExpr.PragmaE  name items             -> simple $ appPragma (fromString name) where
+        HExpr.MacroE   name items             -> simple $ appPragma (fromString name) where
                                                      appPragma = if length items == 0 then id
                                                                                       else (<> ("(" <> sepjoin (map generate items) <> ")"))
         HExpr.Tuple    items                  -> if length items == 1 then app (simple "OneTuple") (generate $ head items)

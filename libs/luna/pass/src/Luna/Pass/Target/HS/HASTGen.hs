@@ -223,7 +223,7 @@ addClsDataType clsConName derivings = do
 liftCons num = "liftCons" <> fromString (show num)
 mkArg    = HE.Var "mkArg"
 --paramSig = HE.TypedE mkArg (HE.VarT "Param")
-paramSig    = HE.PragmaE "param" []
+paramSig    = HE.MacroE "param" []
 nparamSig n = HE.AppT (HE.ConT "Named") (HE.Lit $ HLit.String n)
 selfSig     = nparamSig "self"
 
@@ -264,11 +264,13 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
         name       = hash sig
         memDefName = Naming.mkMemDef tpName name
         memSigName = Naming.mkMemSig tpName name
+        memFncName = Naming.mkMemFnc tpName name
         sigArgs    = NamePat.args sig
         sigPats    = fmap (view Arg.pat) sigArgs
         sigVals    = fmap (view Arg.val) sigArgs
         sigNames   = fmap getSigName sigPats
         sigPatsUntyped = fmap splitPatTypes sigPats
+    hdefs      <- (mapM.mapM) genExpr sigVals
     sigHPats   <- if mkVarNames then mapM genPat sigPatsUntyped
                                 else mapM genPatNoVarnames sigPatsUntyped
 
@@ -276,35 +278,34 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
                    "" -> ""
                    s  -> s <> "."
     addComment $ H2 $ "Method: " <> pfx <> name
+    
+    let funcSig = HE.val memSigName (HE.rtuple $ fmap genSigArg (zip sigNames hdefs))
+        funcReg = TH.registerMethod tpName name
+        funcFck = HE.val memFncName $ HE.Tuple [HE.VarE memSigName, HE.VarE memDefName]
+
+    regDecl funcSig
 
     case bodyBuilder of
         Nothing      -> return ()
         Just builder -> do
-            fBody <- builder body output
-            funcDef <- genFuncDef memDefName fBody sigHPats sigVals
+            funcDef <- HE.Function memDefName sigHPats <$> (HE.DoBlock <$> builder body output)
             regFunc funcDef
 
-    let funcSig = HE.TypeInstance (HE.app (HE.VarE "SigOf") [HE.ConT tpName, HE.Lit (HLit.String name)]) $ HE.DataKindT $ HE.ListE $ fmap genSigHName sigNames
-        funcReg = TH.registerMethod tpName name
-    regDecl funcSig
+    regFunc funcFck
     regFunc funcReg
+
+genSigArg (name, val) = (HE.MacroE ('_' : npfx : vpfx : "SigArg") nargs) where
+    (vpfx, vargs) = case val of
+        Nothing -> ('u', [])
+        Just v  -> ('p', [v])
+    (npfx, nargs) = case name of
+        Nothing -> ('u', vargs)
+        Just n  -> ('n', (HE.Lit $ HLit.String n):vargs)
+
 
 getSigName (unwrap -> p) = case p of
     Pat.Var name -> Just (toText . unwrap $ name)
     _            -> Nothing
-
-genFuncDef name body pats defs = do
-    hdefs <- mapM genHDef defs
-    let dsig = zip hdefs pats
-        fx (d,p) = HE.ViewP d p
-    return $ HE.Function name (fmap fx dsig) (HE.DoBlock body)
-    where genHDef = \case
-               Nothing -> return $ HE.VarE "noDef"
-               Just e  -> HE.AppE (HE.VarE "appDef") <$> genExpr e
-
-genSigHName = \case
-    Nothing -> HE.ConT "Unnamed"
-    Just n  -> HE.AppT (HE.ConT "Named") (HE.Lit $ HLit.String n)
 
 genForeign (Foreign target a) = case target of
     Foreign.CPP     -> Pass.fail "C++ foreign interface is not supported yet."
@@ -528,9 +529,8 @@ genExpr (Label lab expr) = case expr of
     Expr.List         lst                 -> case lst of
                                                  Expr.SeqList items -> mkVal . HE.ListE <$> mapM genExpr items
                                                  Expr.RangeList {}  -> Pass.fail "Range lists are not supported yet"
-    Expr.Typed       cls expr             -> (\e t -> HE.PragmaE "typed" [e,t]) <$> genExpr expr
+    Expr.Typed       cls expr             -> (\e t -> HE.MacroE "typed" [e,t]) <$> genExpr expr
                                                                                 <*> genType cls
-    --Pass.fail "Typing expressions is not supported yet." -- Potrzeba uzywac hacku: matchTypes (undefined :: m1(s1(Int)))  (val (5 :: Int))
     Expr.Decl _                               -> Pass.fail "Nested declarations are not supported yet"
     Expr.Ref  _                               -> Pass.fail "References are not supported yet"
     --p -> Pass.fail $ "Cannot construct: " <> show p
@@ -538,7 +538,7 @@ genExpr (Label lab expr) = case expr of
     where id = 789 -- Enum.id lab
 
 
-mkMemberGetter name = HE.PragmaE "member" [HE.Lit $ HLit.String name]
+mkMemberGetter name = HE.MacroE "_member" [HE.Lit $ HLit.String name]
 
 
 

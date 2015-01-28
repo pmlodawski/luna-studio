@@ -40,6 +40,7 @@ import Luna.Target.HS.Data.Func.Lam
 
 import qualified Luna.Target.HS.Data.Func.Args2 as Args2
 import qualified Luna.Target.HS.Data.Func.Args7 as Args7
+import qualified Luna.Target.HS.Data.Func.Args9 as Args9
 
 import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 
@@ -54,5 +55,8 @@ import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 -- Utils
 ----------------------------------------------------------------------------------
 
-callH (AppH(fptr, args)) = Args7.appDefaults . Args7.appArgs args $ mkFunc fptr $ getMember fptr (monoType args)
+
+callH (AppH(fptr, args)) = Args9.appDefaults . Args9.appArgs args $ Args9.func sig f where
+    (sig,f) = getMember fptr (monoType args)
 call = polyJoin . fmap callH
+

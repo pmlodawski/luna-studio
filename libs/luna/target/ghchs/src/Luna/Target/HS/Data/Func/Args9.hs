@@ -18,7 +18,7 @@
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
-module Luna.Target.HS.Data.Func.Args7 where
+module Luna.Target.HS.Data.Func.Args9 where
 
 
 import Prelude hiding (reverse)
@@ -80,8 +80,8 @@ upSigArg = uArg . Provided
 nuSigArg :: Proxy n -> Arg (Named n) Unprovided
 nuSigArg = nArg Unprovided
 
-npSigArg :: a -> Proxy n -> Arg (Named n) (Provided a)
-npSigArg = nArg . Provided
+npSigArg :: Proxy n -> a -> Arg (Named n) (Provided a)
+npSigArg = flip (nArg . Provided)
 
 
 ----------------------------------------------------------------------
@@ -165,6 +165,8 @@ instance (a~(Arg n (pr v)), AppArg n pr v sig f sig0 f0, AppArgs as (k-1) sig0 f
       => AppArgs (a,as) k sig f k' sig' f' where
     appArgsProto (a,as) f = appArgsProto as (appArg a f)
 
+appArgs = appArgsProto . reverse
+
 
 -- === AppDefaults ===
 
@@ -222,15 +224,14 @@ instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u)
 
 
 
-------------------------------------------------------------------------
----- Tests
-------------------------------------------------------------------------
+----------------------------------------------------------------------
+-- Tests
+----------------------------------------------------------------------
 
 --foo_sa_1 = appArg (uArg (Provided []))
 --foo_sa_2 = appArg (nArg (Provided []) (Proxy::Proxy "x"))
 
 
---appArgs = appArgsProto . reverse
 
 --foo = appArgs (nArg (Provided []) (Proxy::Proxy "x"),())
 
@@ -277,40 +278,34 @@ instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u)
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-------class MemberProvider cls (name :: Symbol) argRep f | cls name argRep -> f where
-------    getMember :: cls -> Proxy name -> argRep -> f
+--class MemberProvider cls (name :: Symbol) argRep f | cls name argRep -> f where
+--    getMember :: cls -> Proxy name -> argRep -> f
 
 
 
-----data V = V deriving (Show, Typeable)
+--data V = V deriving (Show, Typeable)
 
-----type family SigOf cls (name :: Symbol) :: [NameStatus Symbol]
 
-------instance Analyze a b => MemberProvider V "foo" args (a -> b) where
-------    getMember _ _ _ = (\a -> monoType a)
+--instance Analyze a b => MemberProvider V "foo" args (a -> a) where
+--    getMember _ _ _ = (\a -> a)
 
-------instance MemberProvider V "tst" args (a -> b -> (a,b)) where
-------    getMember _ _ _ = tstf1
+--member cls name args = getMember cls name (monoType args)
 
-------member cls name args = getMember cls name (monoType args)
+--instance MemberProvider V "bar" args (a -> [bx]) where
+--    getMember _ _ _ = (\a -> [])
 
-------mkFunc :: cls -> Proxy (name :: Symbol) -> f -> Func (SigOf cls name) f
-------mkFunc _ _ = Func
+--tst v = do
+--    print $ member v (Proxy::Proxy "foo") ("a",()) "a"
+--    print $ member v (Proxy::Proxy "foo") (5::Int,()) (5::Int)
 
-------tst v = do
-------    print $ member v (Proxy::Proxy "foo") ("a",()) "a"
-------    print $ member v (Proxy::Proxy "foo") (5::Int,()) (5::Int)
+--tsig = (npArg 15 (Proxy::Proxy "x"), (npArg [] (Proxy::Proxy "y"),()))
 
-------call' v sig args = appArgs args f
-------    where rf = member v (Proxy::Proxy "tst") args
-------          f  = func sig rf
-------    --print 
-------tsig = (npArg 15 (Proxy::Proxy "x"), (npArg [] (Proxy::Proxy "y"),()))
-
-------main = do
-------    print $ call' V tsig (tstArgs empty)
-------    tst V
-------    return ()
+--main = do
+--    tst V
+--    print $ member V (Proxy::Proxy "bar") [] 4 ++ [5]
+--    print $ member V (Proxy::Proxy "bar") [] 4 ++ ["a"]
+--    --print $ monoType []
+--    return ()
 
 
 

@@ -211,28 +211,69 @@ mkLiftFR pNum base = AppE (VarE fname) (VarE base) where
 --         <*> registerMethodDefinition typeName methodName funcDef
 
 
+--registerMethod :: Name -> String -> Q [Dec]
+--registerMethod typeName methodName = do
+--    let typeNameBase = nameBase typeName
+--        funcSig      = Naming.mkMemSig typeNameBase methodName
+--        funcDef      = Naming.mkMemDef typeNameBase methodName
+--    registerMethodDefinition typeName methodName funcDef
+
+--registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
+--    funcT   <- getTypeQ funcName
+--    dataDec <- getDec typeName
+--    argsT      <- VarT <$> newName "args"
+--    let
+--        dataVars   = map VarT $ getDecVarNames dataDec
+--        baseT      = ConT typeName
+--        prectx     = getContext funcT
+--        sig        = getSignature funcT
+--        --c1         = equalT argsT sig
+--        nt         = foldl AppT (ConT $ mkName "MemberProvider") [baseT, LitT (StrTyLit methodName), argsT, sig]
+--        funcs      = [FunD (mkName "getMember") [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+--        ctx        = fmap fixCtx_GHC_7_8 $ prectx
+--        inst       = InstanceD ctx nt funcs
+--    return $ [inst]
+
 registerMethod :: Name -> String -> Q [Dec]
 registerMethod typeName methodName = do
     let typeNameBase = nameBase typeName
         funcSig      = Naming.mkMemSig typeNameBase methodName
         funcDef      = Naming.mkMemDef typeNameBase methodName
-    registerMethodDefinition typeName methodName funcDef
+        funcFnc      = Naming.mkMemFnc typeNameBase methodName
+    registerMethodDefinition typeName methodName funcFnc
 
 registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
     funcT   <- getTypeQ funcName
     dataDec <- getDec typeName
     argsT      <- VarT <$> newName "args"
+    resultT    <- VarT <$> newName "result"
     let
         dataVars   = map VarT $ getDecVarNames dataDec
         baseT      = ConT typeName
         prectx     = getContext funcT
         sig        = getSignature funcT
-        --c1         = equalT argsT sig
-        nt         = foldl AppT (ConT $ mkName "MemberProvider") [baseT, LitT (StrTyLit methodName), argsT, sig]
+        resultC    = equalT resultT sig
+        nt         = foldl AppT (ConT $ mkName "MemberProvider") [baseT, LitT (StrTyLit methodName), argsT, resultT]
         funcs      = [FunD (mkName "getMember") [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
         ctx        = fmap fixCtx_GHC_7_8 $ prectx
-        inst       = InstanceD ctx nt funcs
+        inst       = InstanceD (resultC:ctx) nt funcs
     return $ [inst]
+
+--registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
+--    funcT   <- getTypeQ funcName
+--    dataDec <- getDec typeName
+--    argsT      <- VarT <$> newName "args"
+--    let
+--        dataVars   = map VarT $ getDecVarNames dataDec
+--        baseT      = ConT typeName
+--        prectx     = getContext funcT
+--        sig        = getSignature funcT
+--        --c1         = equalT argsT sig
+--        nt         = foldl AppT (ConT $ mkName "MemberProvider") [baseT, LitT (StrTyLit methodName), argsT, sig]
+--        funcs      = [FunD (mkName "getMember") [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+--        ctx        = fmap fixCtx_GHC_7_8 $ prectx
+--        inst       = InstanceD ctx nt funcs
+--    return $ [inst]
 
 --registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
 --    funcT   <- getTypeQ funcName

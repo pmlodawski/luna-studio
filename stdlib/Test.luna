@@ -3,5 +3,6 @@ foreign haskell def print s="":
 
 def main:
     print []
+    print
 
 
