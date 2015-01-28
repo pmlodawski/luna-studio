@@ -719,12 +719,6 @@ def Image.exposureMatte blackpoint ex matte:
 def nomatte:
     ```val (Nothing :: Maybe (Matte Double))```
 
-def tester matte:
-    ```liftF1 convertMatte #{matte}```
-
-# def tester2 matte:
-#     ```liftF1 getChannelDoNothing #{matte}```
-
 #
 #                VIEW
 #

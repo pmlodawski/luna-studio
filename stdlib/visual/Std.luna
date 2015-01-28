@@ -124,6 +124,9 @@ def emptyImage self::Std -> Image:
 def load self::Std path::Path -> Image:
     ```autoLift1 realReadLuna #{path}```
 
+def loadMatte self::Std channelName::String path::Path -> Channel:
+    ```autoLift2 loadMatteLuna #{channelName} #{path}```
+
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
@@ -381,9 +384,31 @@ alias TransformD = Transform Double
 # alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
 # alias Path a         = (Bool, [ControlPoint a])
 # alias Shape a        = [Path a]
-alias Mask a         = (Path a, Maybe (Path a))
 
-alias MaskD = Mask Float
+
+alias MatteLuna = (Maybe (Mask Float), Maybe Channel)
+
+def imageMatte self::Std img::Channel -> MatteLunaD:
+    (Nothing, Just img)
+
+def vectorMatte self::Std mask::(Mask Float) -> MatteLunaD:
+    (Just mask, Nothing)
+
+def Image.offsetMatte self::Image value::Color matte::(Maybe MatteLunaD) -> Image:
+    ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
+
+def Image.contrastMatte self::Image value::Color matte::(Maybe MatteLunaD) -> Image:
+    ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
+
+
+def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe MatteLunaD) -> Image:
+    ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
+
+def nomatte self::Std:
+    ```val (Nothing :: Maybe (Matte Double))```
+
+
+alias Mask a         = (Path a, Maybe (Path a))
 
 def point self::Std x y:
     Point2 x y
@@ -403,7 +428,7 @@ def shape paths:
 def mask path feather:
     (path, feather)
 
-def rasterizeMask self::Std w::Int h::Int m::MaskD -> Image:
+def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
 
 # COLORS
