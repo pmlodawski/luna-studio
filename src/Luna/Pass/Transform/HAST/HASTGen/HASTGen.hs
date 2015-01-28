@@ -90,9 +90,9 @@ genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields meth
         params  = view LType.params cls
         modCon  = LExpr.ConD 0 name fields
         modConName = Naming.modCon name
-    
+
     GenState.setModule mod
-    
+
     GenState.addComment $ HExpr.Comment $ HComment.H1 $ "Data types"
     genCon' cls modCon stdDerivings
     GenState.addComment $ HExpr.Comment $ HComment.H5 $ "Other data types"
@@ -109,14 +109,14 @@ genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields meth
     --genCon' cls modCon stdDerivings
     -- DataType
     --consTH
-    
+
     --GenState.addTHExpression $ thGenerateAccessors name
     --GenState.addTHExpression $ thRegisterAccessors name
     --GenState.addTHExpression $ thInstsAccessors name
 
     GenState.addComment $ HExpr.Comment $ HComment.H1 $ "Module methods"
     mapM_ genExpr methods
-    
+
     mapM_ (genExpr >=> GenState.addImport) imports
     when (name == "Main") $ do
         GenState.addComment $ HExpr.Comment $ HComment.H1 $ "Main module wrappers"
@@ -166,7 +166,7 @@ genCon' cls (LExpr.ConD _ conName fields) derivings = do
     GenState.addDataType $ HExpr.DataD clsConName mempty [consClsHE] derivings
 
     GenState.addFunction $ HExpr.Function (Naming.con conName) [] (mkAppE [HExpr.VarE "member", mkProxyE conName, mkVal (HExpr.VarE clsConName)])
-    
+
     GenState.addFunction $ HExpr.Function conSigName [] (foldr biTuple (HExpr.Tuple []) (selfSig : replicate (length fields) paramSig))
     GenState.addFunction $ HExpr.Function conDefName [] (HExpr.AppE (HExpr.VarE $ "liftCons" ++ show (length fields)) (HExpr.VarE conName))
     GenState.addTHExpression $ thRegisterMethod clsConName conName
@@ -181,7 +181,7 @@ genCons cls cons derivings makeDataType= do
         clsConName = "Cls_" ++ tpName
         params     = view LType.params cls
         consClsHE  = HExpr.Con clsConName mempty
-        
+
         --FIXME[wd]: to powinno byc zrobione ladniej - z nowym AST!
         getName el = case el of
             LExpr.Field {} -> Just $ view LExpr.name el
@@ -199,7 +199,7 @@ genCons cls cons derivings makeDataType= do
             GenState.addTHExpression $ thRegisterMethod clsConName conName
             GenState.addTHExpression $ thGenerateFieldAccessors conName (fmap getName fields)
 
-    
+
     GenState.addComment $ HExpr.Comment $ HComment.H2 $ tpName ++ " type"
     consE  <- mapM genMyCon cons
     if makeDataType then GenState.addDataType $ HExpr.DataD tpName params consE derivings
@@ -208,7 +208,7 @@ genCons cls cons derivings makeDataType= do
     mapM_ genConData cons
 
 
-mkAppE = seqApp HExpr.AppE 
+mkAppE = seqApp HExpr.AppE
 
 seqApp :: (a -> a -> a) -> [a] -> a
 seqApp f (x:xs) = foldl f x xs
@@ -255,7 +255,7 @@ genExpr ast = case ast of
                                             -----------------------------------------
 
                                             let fBody = (((emptyHExpr : hTypeHints) ++ ) <$> genFuncBody body output)
-                                                
+
                                             -- hInputs
                                             f <- HExpr.Function memDefName [foldr biTuple (HExpr.Tuple []) hInputs] <$> (HExpr.DoBlock <$> fBody)
                                             GenState.addFunction f
@@ -326,7 +326,7 @@ genExpr ast = case ast of
 
                                            --let dt = HExpr.DataD name params consE stdDerivings
                                            --GenState.addDataType dt
-                                           
+
 
                                            --sequence_ consTH
                                            --mapM (flip (genCon' cls) stdDerivings) cons
@@ -378,8 +378,8 @@ genExpr ast = case ast of
     --                                           genTypedSafe HExpr.Typed fcls <*> pure (HExpr.Var $ Naming.mkPropertyName clsName name)
     --LExpr.App          _ src args             -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
     --LExpr.App          _ src args            -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (mkRTuple <$> mapM genCallExpr args)
-    --LExpr.App          _ src args            -> foldr (<*>) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) [return $ HExpr.VarE "xxx"]) 
-    LExpr.App          _ src args            -> HExpr.AppE (HExpr.VarE "call") <$> foldl (flip (<*>)) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) (map genCallExpr $ fmap (view Arg.arg) args)) 
+    --LExpr.App          _ src args            -> foldr (<*>) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) [return $ HExpr.VarE "xxx"])
+    LExpr.App          _ src args            -> HExpr.AppE (HExpr.VarE "call") <$> foldl (flip (<*>)) (genExpr src) ((fmap.fmap) (HExpr.AppE . (HExpr.AppE (HExpr.VarE "appNext"))) (map genCallExpr $ fmap (view Arg.arg) args))
     LExpr.Accessor     _ acc dst             -> HExpr.AppE <$> (pure $ mkMemberGetter $ view LExpr.accName acc) <*> genExpr dst --(get0 <$> genExpr dst))
     LExpr.TypeAlias    _ srcType dstType     -> case srcType of
                                                     LType.Con _ segments                    -> HExpr.TySynD (last segments) [] <$> genType' dstType
@@ -403,7 +403,7 @@ genExpr ast = case ast of
     --                                                      then (HExpr.AppE (HExpr.Var "concatPure"), liftEl)
     --                                                      else (Prelude.id, Prelude.id)
 
-                                                
+
 
     LExpr.RangeFromTo _ start end            -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start
@@ -542,8 +542,8 @@ genLit lit = case lit of
                         Number.Positive -> ""
                         Number.Negative -> "-"
         case repr of
-            Number.Float   int frac -> mkLit "Double" (HLit.Float   $ sign' ++ int ++ "." ++ frac)
-            Number.Decimal int      -> mkLit "Int"    (HLit.Integer $ sign' ++ int)
+            Number.Float   int frac -> mkLit "Float" (HLit.Float   $ sign' ++ int ++ "." ++ frac)
+            Number.Decimal int      -> mkLit "Int"   (HLit.Integer $ sign' ++ int)
 
     --LLit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
     --LLit.Float   _ str      -> mkLit "Double" (HLit.Float   str)
