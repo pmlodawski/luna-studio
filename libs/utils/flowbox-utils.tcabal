@@ -66,6 +66,7 @@ Library
                     unordered-containers,
                     convertible,
                     hashable
+
   if os(windows)
     Build-Depends:  Win32
 

@@ -19,23 +19,23 @@ import qualified Flowbox.Batch.Project.Project           as Project
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                         hiding (cons)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Control.Crumb                  (Breadcrumbs)
-import           Luna.AST.Control.Focus                  (Focus)
-import qualified Luna.AST.Control.Focus                  as Focus
-import qualified Luna.AST.Control.Zipper                 as Zipper
-import           Luna.AST.Expr                           (Expr)
-import qualified Luna.AST.Expr                           as Expr
 import           Luna.AST.Module                         (Module)
 import qualified Luna.AST.Module                         as Module
 import           Luna.AST.Name                           (Name)
 import           Luna.AST.Type                           (Type)
 import qualified Luna.AST.Type                           as Type
-import qualified Luna.Graph.PropertyMap                  as PropertyMap
 import qualified Luna.Lib.Lib                            as Library
 import qualified Luna.Pass.Analysis.ID.ExtractIDs        as ExtractIDs
 import qualified Luna.Pass.Analysis.NameResolver         as NameResolver
 import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer as IDFixer
 import qualified Luna.Pass.Transform.AST.Shrink          as Shrink
+import           Luna.Syntax.Control.Crumb               (Breadcrumbs)
+import           Luna.Syntax.Control.Focus               (Focus)
+import qualified Luna.Syntax.Control.Focus               as Focus
+import qualified Luna.Syntax.Control.Zipper              as Zipper
+import           Luna.Syntax.Expr                        (Expr)
+import qualified Luna.Syntax.Expr                        as Expr
+import qualified Luna.Syntax.Graph.PropertyMap           as PropertyMap
 
 
 

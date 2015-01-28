@@ -7,41 +7,40 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
-{-# LANGUAGE ViewPatterns        #-}
 {-# OPTIONS_GHC -fcontext-stack=200 #-}
 
 module Main where
 
-import Flowbox.Graphics.Prelude                           as P
-import Flowbox.Graphics.Composition.Generators.Filter
-import Flowbox.Graphics.Composition.Generators.Filter     as Conv
-import Flowbox.Graphics.Composition.Generators.Gradient
-import Flowbox.Graphics.Composition.Generators.Keyer
-import Flowbox.Graphics.Composition.Generators.Matrix
-import Flowbox.Graphics.Composition.Generators.Pipe
-import Flowbox.Graphics.Composition.Generators.Rasterizer
-import Flowbox.Graphics.Composition.Generators.Sampler
-import Flowbox.Graphics.Composition.Generators.Shape
-import Flowbox.Graphics.Composition.Generators.Stencil    as Stencil
-import Flowbox.Graphics.Composition.Generators.Structures as S
-import Flowbox.Graphics.Composition.Generators.Transform
-import Flowbox.Graphics.Composition.Dither
-import Flowbox.Graphics.Image.Color (LinearGenerator(..), crosstalk)
 import Flowbox.Geom2D.Accelerate.CubicBezier
 import Flowbox.Geom2D.Accelerate.CubicBezier.Solve
 import Flowbox.Geom2D.CubicBezier
+import Flowbox.Graphics.Composition.Color              (LinearShader (..), crosstalk)
+import Flowbox.Graphics.Composition.Dither
+import Flowbox.Graphics.Composition.Filter
+import Flowbox.Graphics.Composition.Filter             as Conv
+import Flowbox.Graphics.Composition.Generator.Gradient
+import Flowbox.Graphics.Composition.Generator.Shape
+import Flowbox.Graphics.Composition.Keyer
+import Flowbox.Graphics.Composition.Transform
+import Flowbox.Graphics.Prelude                        as P
+import Flowbox.Graphics.Shader.Matrix
+import Flowbox.Graphics.Shader.Pipe
+import Flowbox.Graphics.Shader.Rasterizer
+import Flowbox.Graphics.Shader.Sampler
+import Flowbox.Graphics.Shader.Shader                  as S
+import Flowbox.Graphics.Shader.Stencil                 as Stencil
 
-import Flowbox.Math.Matrix as M
+import Flowbox.Graphics.Utils.Utils
 import Flowbox.Math.BitonicSorterGenerator
-import Flowbox.Graphics.Utils
+import Flowbox.Math.Matrix                 as M
 
 import qualified Data.Array.Accelerate              as A
 import           Data.Array.Accelerate.Data.Complex ()
 
-import Linear hiding (angle, normalize, inv33, rotate, zero)
 import Flowbox.Graphics.Utils.Linear ()
+import Linear                        hiding (angle, inv33, normalize, rotate, zero)
 
-import Math.Coordinate.Cartesian as Cartesian hiding (x, y, z, w)
+import Math.Coordinate.Cartesian as Cartesian hiding (w, x, y, z)
 import Math.Metric
 import Math.Space.Space
 
@@ -156,24 +155,24 @@ laplacianTest kernSize crossVal sideVal = do
 -- Applies morphological operators to Lena image
 -- (Morphology test)
 --
-morphologyTest :: Exp Int -> IO ()
-morphologyTest size = do
-    let l c = fromMatrix A.Clamp c
-    let v = pure $ variable size
-    let morph1 c = nearest $ closing v $ l c -- Bottom left
-    let morph2 c = nearest $ opening v $ l c -- Bottom right
-    let morph3 c = nearest $ dilate  v $ l c -- Top left
-    let morph4 c = nearest $ erode   v $ l c -- Top right
+--morphologyTest :: Exp Int -> IO ()
+--morphologyTest size = do
+--    let l c = fromMatrix A.Clamp c
+--    let v = pure $ variable size
+--    let morph1 c = nearest $ closing v $ l c -- Bottom left
+--    let morph2 c = nearest $ opening v $ l c -- Bottom right
+--    let morph3 c = nearest $ dilate  v $ l c -- Top left
+--    let morph4 c = nearest $ erode   v $ l c -- Top right
 
-    let process chan = gridRasterizer 512 (Grid 2 2) monosampler [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
-    forAllChannels "lena.bmp" process
+--    let process chan = gridRasterizer 512 (Grid 2 2) (monosampler :: ContinuousShader (Exp Float) -> DiscreteShader (Exp Float)) [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
+--    forAllChannels "lena.bmp" process
 
 
 --
 -- Applies directional motion blur to Lena image
 -- (Simple rotational convolution)
 --
-rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianGenerator (Exp a) b -> CartesianGenerator (Exp a) b
+rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
 rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
 
 motionBlur :: Exp Int -> Exp Float -> IO ()
@@ -190,15 +189,15 @@ motionBlur size angle = do
 -- Radial blur test
 -- (Simple rotational convolution)
 --
-fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
-fromPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 x y) ->
+fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianShader (Exp a) (Exp e) -> CartesianShader (Exp a) (Exp e)
+fromPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 x y) ->
     let Grid cw ch = fmap A.fromIntegral cnv
         radius = (sqrt $ x * x + y * y) / (sqrt $ cw * cw + ch * ch)
         angle  = atan2 y x / (2 * pi)
     in gen (Point2 (angle * cw) (radius * ch))
 
-toPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianGenerator (Exp a) (Exp e) -> CartesianGenerator (Exp a) (Exp e)
-toPolarMapping (Generator cnv gen) = Generator cnv $ \(Point2 angle' radius') ->
+toPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianShader (Exp a) (Exp e) -> CartesianShader (Exp a) (Exp e)
+toPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 angle' radius') ->
     let Grid cw ch = fmap A.fromIntegral cnv
         angle = (angle' / cw) * 2 * pi
         radius = (radius' / ch) * (sqrt $ cw * cw + ch * ch)
@@ -211,12 +210,12 @@ radialBlur size angle = do
              $ nearest
              $ rectangle (Grid (variable size) 1) 1 0
     let process x = rasterizer
-                  $ monosampler
+                  $ (monosampler :: ContinuousShader (Exp Float) -> DiscreteShader (Exp Float))
                   $ translate (V2 (256) (256))
                   $ fromPolarMapping
                   $ nearest
                   $ normStencil (+) kern (+) 0
-                  $ monosampler
+                  $ (monosampler :: ContinuousShader (Exp Float) -> DiscreteShader (Exp Float))
                   $ toPolarMapping
                   $ translate (V2 (-256) (-256))
                   $ nearest
@@ -249,9 +248,9 @@ boundTest = do
 -- (Advanced rotational convolution, Edge detection test)
 --
 rotational :: Exp Float
-           -> DiscreteGenerator (Exp Float)
-           -> DiscreteGenerator (Exp Float)
-           -> DiscreteGenerator (Exp Float)
+           -> DiscreteShader (Exp Float)
+           -> DiscreteShader (Exp Float)
+           -> DiscreteShader (Exp Float)
 rotational phi mat chan = Stencil.stencil (+) edgeKern (+) 0 chan
     where edgeKern = monosampler $ rotateCenter (phi * pi / 180) $ nearest $ mat
 
@@ -304,7 +303,7 @@ differenceKeyerTest off gain = do
 ditherTest :: Int -> IO ()
 ditherTest a = do
     let mydither = dither A.Clamp floydSteinberg a
-    let grad = monosampler $ scale (512 :: Grid (Exp Int)) $ circularShape :: DiscreteGenerator (Exp Float)
+    let grad = monosampler $ scale (512 :: Grid (Exp Int)) $ circularShape :: DiscreteShader (Exp Float)
     result <- mutableProcess run mydither $ rasterizer grad
     testSaveChan' "out.png" result
 
@@ -326,9 +325,9 @@ crosstalkTest = do
     let r' = fromMatrix A.Clamp r
         g' = fromMatrix A.Clamp g
         b' = fromMatrix A.Clamp b
-        zero = LinearGenerator $ const 0
-        id' = LinearGenerator $ id
-        foo = LinearGenerator $ valueAtX 20 0.00001 (A.lift $ CubicBezier (Point2 0 (0::A.Exp Float)) (Point2 0.25 1.2) (Point2 0.75 1.2) (Point2 1 0))
+        zero = LinearShader $ const 0
+        id' = LinearShader $ id
+        foo = LinearShader $ valueAtX 20 0.00001 (A.lift $ CubicBezier (Point2 0 (0::A.Exp Float)) (Point2 0.25 1.2) (Point2 0.75 1.2) (Point2 1 0))
 
         (newR, newG, newB) = crosstalk foo id' id' zero zero zero zero zero zero r' g' b'
     print "foo"
@@ -351,7 +350,7 @@ cornerPinTest p1 p2 p3 p4 = do
 bilateralTest :: Exp Float -> Exp Float -> Exp Int -> IO ()
 bilateralTest psigma csigma size = do
     let p = pipe A.Clamp
-    let spatial = Generator (pure $ variable size) $ \(Point2 x y) ->
+    let spatial = Shader (pure $ variable size) $ \(Point2 x y) ->
             let dst = sqrt . A.fromIntegral $ (x - size `div` 2) * (x - size `div` 2) + (y - size `div` 2) * (y - size `div` 2)
             in apply (gauss psigma) dst
     let domain center neighbour = apply (gauss csigma) (abs $ neighbour - center)
@@ -373,13 +372,13 @@ maskedTransformationsTest = do
     (m, _, _, _) <- testLoadRGBA' "mask-gradient-cos.png"
     let v = V2 0 50 :: V2 (Exp Int)
         gen = fromMatrix (A.Constant (0 :: Exp Double))
-        t :: DiscreteGenerator (Exp Double) -> DiscreteGenerator (Exp Double)
+        t :: DiscreteShader (Exp Double) -> DiscreteShader (Exp Double)
         t = S.transform p
         p :: Point2 (Exp Int) -> Point2 (Exp Int)
         p pt = translate (fmap (mult pt) v) pt
         mult pt x = A.round $ (str pt) * A.fromIntegral x
-        Generator _ str = gen m
-        process :: Matrix2 Double -> Matrix2 Double -- DiscreteGenerator (Exp Double)
+        Shader _ str = gen m
+        process :: Matrix2 Double -> Matrix2 Double -- DiscreteShader (Exp Double)
         process = rasterizer . t . gen
         --genR = process r
         --genG = process g

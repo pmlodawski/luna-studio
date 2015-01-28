@@ -32,7 +32,6 @@ module Test.Luna.Comp.SamplesSpec where
 
 import Prelude
 import Flowbox.Test.QuickCheck
-import Flowbox.Utils
 
 
 ------------------------------------------------------------------------
@@ -40,10 +39,11 @@ import Flowbox.Utils
 ------------------------------------------------------------------------
 
 
-----------------------------------------------------------------------------
-
+main :: IO ()
 main = hspec spec
 
+
+spec :: Spec
 spec = do
     describe "Touching values" $ do
-        it "safe touch"             $ (1::Int)    `shouldBe` (1::Int)
+        it "safe touch" $ (1::Int) `shouldBe` (1::Int)

@@ -9,9 +9,9 @@
 module Flowbox.Batch.Project.Project where
 
 import Flowbox.Prelude
-import Flowbox.System.UniPath (UniPath)
-import Luna.Graph.Attributes  (Attributes)
-import Luna.Lib.Manager       (LibManager)
+import Flowbox.System.UniPath       (UniPath)
+import Luna.Lib.Manager             (LibManager)
+import Luna.Syntax.Graph.Attributes (Attributes)
 
 
 

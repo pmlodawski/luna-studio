@@ -11,6 +11,7 @@
 module Main where
 
 import qualified Control.Concurrent as Concurrent
+import           Control.Monad      (replicateM_)
 import           Data.List          (intercalate)
 import           Text.RawString.QQ
 import           Text.Show.Pretty
@@ -19,13 +20,11 @@ import qualified Flowbox.Batch.Project.Project                                 a
 import qualified Flowbox.Config.Config                                         as Config
 import           Flowbox.Control.Error
 import           Flowbox.Data.Version                                          ()
+import           Flowbox.Debug                                                 (timeit)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                        as UniPath
 import           Flowbox.Text.Show.Hs                                          (hsShow)
-import qualified Luna.AST.Control.Crumb                                        as Crumb
-import qualified Luna.AST.Control.Focus                                        as Focus
-import qualified Luna.AST.Control.Zipper                                       as Zipper
 import           Luna.AST.Module                                               (Module)
 import qualified Luna.AST.Module                                               as Module
 import           Luna.AST.Name                                                 (Name (Name))
@@ -33,7 +32,6 @@ import qualified Luna.AST.Name                                                 a
 import qualified Luna.AST.Type                                                 as Type
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Data.Source                                              as Source
-import qualified Luna.Graph.PropertyMap                                        as PropertyMap
 import qualified Luna.Interpreter.Session.AST.Executor                         as Executor
 import qualified Luna.Interpreter.Session.Cache.Cache                          as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate                     as Invalidate
@@ -62,6 +60,10 @@ import qualified Luna.Pass.Transform.AST.Hash.Hash                             a
 import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
 import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
+import qualified Luna.Syntax.Control.Crumb                                     as Crumb
+import qualified Luna.Syntax.Control.Focus                                     as Focus
+import qualified Luna.Syntax.Control.Zipper                                    as Zipper
+import qualified Luna.Syntax.Graph.PropertyMap                                 as PropertyMap
 
 
 
@@ -191,6 +193,10 @@ main1 = do
         Cache.dumpAll
         putStrLn "========= running ========3="
         Executor.processMain_
+        putStrLn "--------- 3"
+        Env.setLibManager libManager
+        Invalidate.modifyNode libID 92
+        Executor.processMain_
         putStrLn "========= finished =======4="
         Cache.dumpAll
 
@@ -249,6 +255,24 @@ main3 = do
     eitherStringToM $ fmapL Error.format result
 
 
+main4 :: IO ()
+main4 = do
+    rootLogger setIntLevel 0
+    cfg <- Config.load
+
+    (libManager , libID) <- readSource code
+
+    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
+                (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name "main" []) []])
+                (curry $ curry print)
+
+    result <- Session.run cfg env [] $ do
+        Session.setImports ["Prelude"]
+        timeit "run1" $ replicateM_ 1 $ Session.runStmt "a <- return 1"
+        timeit "run2" $ replicateM_ 1 $ Session.runStmt "b <- return a"
+        timeit "run3" $ replicateM_ 1 $ Session.runStmt "b <- return b"
+    eitherStringToM $ fmapL Error.format result
+
 printHsSrc :: Module -> IO ()
 printHsSrc ast = eitherStringToM' $ runEitherT $ do
     aliasInfo <- EitherT $ Analysis.Alias.run ast
@@ -264,6 +288,6 @@ showSrc src = ">>> file '" ++ intercalate "/" (src ^. Source.path) ++ "':\n\n"
              ++ hsShow (src ^. Source.code)
 
 main :: IO ()
-main = main3
+main = main1
 
 --serialize parameters type

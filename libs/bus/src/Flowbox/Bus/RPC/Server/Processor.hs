@@ -34,7 +34,7 @@ logger = getLoggerIO $(moduleName)
 
 
 singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
-singleResult f a = liftM mkList $ f a
+singleResult f a = liftM return $ f a
 
 
 noResult :: MonadIO m => (a -> m ()) -> a -> m [Response]

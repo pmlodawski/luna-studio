@@ -10,7 +10,7 @@ import qualified AWS.EC2.Types as Types
 import           Data.Text     (Text)
 import qualified Data.Text     as Text
 
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (Text)
 
 
 

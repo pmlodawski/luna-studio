@@ -13,14 +13,14 @@ module Utils (
   run
 ) where
 
-import           Flowbox.Prelude                                    as P hiding (pre)
-import           Flowbox.Math.Matrix                                as M
-import           Flowbox.Graphics.Color
-import           Flowbox.Graphics.Composition.Generators.Rasterizer
-import           Flowbox.Graphics.Composition.Generators.Sampler
-import           Flowbox.Graphics.Composition.Generators.Matrix
-import           Flowbox.Graphics.Image.IO.ImageMagick              (loadImage, saveImage)
-import           Flowbox.Graphics.Utils
+import Flowbox.Graphics.Color.Color
+import Flowbox.Graphics.Image.IO.ImageMagick (loadImage, saveImage)
+import Flowbox.Graphics.Shader.Matrix
+import Flowbox.Graphics.Shader.Rasterizer
+import Flowbox.Graphics.Shader.Sampler
+import Flowbox.Graphics.Utils.Utils
+import Flowbox.Math.Matrix                   as M
+import Flowbox.Prelude                       as P hiding (pre)
 
 import qualified Codec.Picture.Png        as Juicy
 import qualified Codec.Picture.Types      as Juicy
@@ -28,13 +28,13 @@ import qualified Data.Array.Accelerate    as A
 import           Data.Array.Accelerate.IO
 
 #ifdef ACCELERATE_CUDA_BACKEND
-import           Data.Array.Accelerate.CUDA        (run)
+import Data.Array.Accelerate.CUDA (run)
 #else
-import           Data.Array.Accelerate.Interpreter (run)
+import Data.Array.Accelerate.Interpreter (run)
 #endif
 
-import qualified Data.Vector.Storable       as SV
-import           Data.List.Split            (chunksOf)
+import           Data.List.Split      (chunksOf)
+import qualified Data.Vector.Storable as SV
 import           Text.Printf
 
 
@@ -108,7 +108,7 @@ saveImageJuicy :: IOSaveBackend
 saveImageJuicy file matrix = do
     let ((), vec) = toVectors matrix
         A.Z A.:. h A.:. w = A.arrayShape matrix
-    Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8) 
+    Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8)
 
 
 testSaveChan :: forall a . (Elt a, IsFloating a) => IOSaveBackend -> FilePath -> Matrix2 a -> IO ()

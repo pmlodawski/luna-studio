@@ -19,7 +19,6 @@ import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Graph.Node                             as Node
 import qualified Luna.Interpreter.Session.Cache.Free         as Free
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo (CacheInfo))
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
@@ -31,7 +30,7 @@ import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.Hash          (Hash)
-import           Luna.Interpreter.Session.Data.VarName       (VarName)
+import           Luna.Interpreter.Session.Data.VarName       (VarName (VarName))
 import qualified Luna.Interpreter.Session.Data.VarName       as VarName
 import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
@@ -40,6 +39,7 @@ import qualified Luna.Interpreter.Session.Memory.Manager     as Manager
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import qualified Luna.Lib.Lib                                as Library
+import qualified Luna.Syntax.Graph.Node                      as Node
 
 
 
@@ -47,16 +47,17 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-dump :: CallPointPath -> Maybe Hash -> Session mm ()
-dump callPointPath mhash = do
-    let varName = VarName.mk mhash callPointPath
-    logger debug $ "Dumping " ++ varName
-    Session.runStmt $ "print " ++ varName
+dump :: CallPointPath -> [Hash] -> Session mm ()
+dump callPointPath hash = do
+    let varName = VarName callPointPath hash
+    logger debug $ "Dumping " ++ VarName.toString varName
+    Session.runStmt $ "print " ++ VarName.toString varName
 
 
 dumpAll :: Session mm ()
 dumpAll = do
-    logger trace =<< MapForest.draw <$> Env.getCached
+    --logger trace =<< MapForest.draw <$> Env.getCached
+    logger trace =<< MapForest.drawKeys <$> Env.getCached
     logger trace "====================="
     logger trace =<< show <$> Env.getDependentNodes
 
@@ -74,7 +75,7 @@ status = onCacheInfo
 
 
 setStatus :: CacheStatus -> CallPointPath -> Session mm ()
-setStatus newStatus = modifyCacheInfo (CacheInfo.status .~ newStatus)
+setStatus newStatus = modifyCacheInfo $ CacheInfo.status .~ newStatus
 
 
 dependency :: [VarName] -> CallPointPath -> Session mm (Maybe VarName)
@@ -86,7 +87,7 @@ dependency predVarNames = onCacheInfo
 recentVarName :: CallPointPath -> Session mm VarName
 recentVarName = onCacheInfo
     (return . view CacheInfo.recentVarName)
-    (return "")
+    (return def)
 
 
 setRecentVarName :: VarName -> CallPointPath -> Session mm ()
@@ -114,11 +115,12 @@ put callDataPath predVarNames varName = do
     let updatedStatus = if oldStatus == CacheStatus.NonCacheable
                             then oldStatus
                             else CacheStatus.Ready
-        existingDeps = Maybe.maybe Map.empty (view CacheInfo.dependencies) mcacheInfo
+        existingDeps   = Maybe.maybe def (view CacheInfo.dependencies) mcacheInfo
+        existingValues = Maybe.maybe def (view CacheInfo.values      ) mcacheInfo
         dependencies = Map.insert predVarNames varName existingDeps
         cacheInfo    = CacheInfo (last callDataPath ^. CallData.parentDefID)
                                  (last callDataPath ^. CallData.parentBC)
-                                 updatedStatus varName dependencies
+                                 updatedStatus varName dependencies existingValues
 
     Env.cachedInsert callPointPath cacheInfo
 
@@ -146,20 +148,23 @@ delete' :: MemoryManager mm => (CallPointPath, CacheInfo) -> Session mm ()
 delete' (callPointPath, cacheInfo) = do
     Free.freeCacheInfo cacheInfo
     Env.cachedDelete callPointPath
-    Manager.reportDeleteMany $ zip (repeat callPointPath) $ Map.elems $ cacheInfo ^. CacheInfo.dependencies
+    Manager.reportDeleteMany $ Map.elems $ cacheInfo ^. CacheInfo.dependencies
 
 
-deleteVarName :: CallPointPath -> VarName -> Session mm ()
-deleteVarName callPointPath varName = do
-    print =<< Env.getCached
-    onCacheInfo del err callPointPath where
-        err = left $ Error.OtherError $(loc) $ "Cannot find callPointPath = " ++ show callPointPath
+deleteVarName :: VarName -> Session mm ()
+deleteVarName varName = do
+    onCacheInfo del err callPointPath
+    where
+        callPointPath = varName ^. VarName.callPointPath
+        err = logger warning $ "Cannot find callPointPath = " ++ show callPointPath
         del cacheInfo = do
             if cacheInfo ^. CacheInfo.recentVarName == varName
                 then Env.cachedDelete callPointPath
                 else Env.cachedInsert callPointPath
-                   $ CacheInfo.dependencies %~ Map.filter (/= varName) $ cacheInfo
+                   $ clearDependencies $ clearValues cacheInfo
             Free.freeVarName varName
+        clearDependencies = CacheInfo.dependencies %~ Map.filter (/= varName)
+        clearValues       = CacheInfo.values       %~ Map.filterWithKey (\k _ -> varName /= fst k)
 
 
 deleteAll :: MemoryManager mm => Session mm ()
