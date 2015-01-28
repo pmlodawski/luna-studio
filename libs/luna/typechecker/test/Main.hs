@@ -1,104 +1,143 @@
-
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE DoAndIfThenElse #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
-
-
-
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 
 module Main where
 
-import Prelude ()
-import System.Environment (getArgs)
-import Flowbox.Prelude
-import qualified Luna.Parser.Parser as Parser
-import           Text.PrettyPrint.ANSI.Leijen (displayIO, linebreak, renderPretty)
-import Data.Default
-import           System.IO                    (stdout)
-import           Text.Show.Pretty
-import qualified Luna.Parser.State as State
-import qualified Luna.Parser.State as ParserState
 
-import qualified Luna.Data.ASTInfo  as ASTInfo
-import qualified Luna.Parser.Pragma as Pragma
-import qualified Luna.Parser.Parser as Parser
-import           Luna.Syntax.Name   (TName(TName))
-import qualified Luna.Pass.Analysis.Struct as SA
+-- <<<<<<< HEAD
+import            Luna.Data.Namespace                       (Namespace (Namespace))
+import            Luna.Data.Source                          (Text (Text), Source (Source))
+-- =======
+-- import qualified Luna.Pass as Pass
+-- import qualified Luna.Pass.Transform.Parse.Stage2 as Stage2
+-- import qualified Luna.Pass.Transform.Parse.Stage1 as Stage1
+-- import           Luna.Data.Namespace (Namespace(Namespace))
+-- import Luna.Data.Source (Source(Source), Medium(String), Code(Code))
+-- import qualified Luna.Pass.Analysis.Alias as AA
+--
+--
+-- import Control.Monad.Trans.Either
+-- import Control.Applicative
+-- import Control.Monad
+--
+-- import Control.Lens hiding (without)
+-- import Data.List (intercalate)
+-- >>>>>>> feature/ast2
+
+import qualified  Luna.Pass                                 as Pass
+--import qualified  Luna.Pass.Analysis.Struct                 as P2SA
+--import qualified  Luna.Pass2.Target.HS.HASTGen              as P2HASTGen
+--import qualified  Luna.Pass2.Target.HS.HSC                  as P2HSC
+--import qualified  Luna.Pass.Transform.Desugar.ImplicitSelf  as P2ImplSelf
+--import qualified  Luna.Pass.Transform.Hash                  as P2Hash
+--import qualified  Luna.Pass.Transform.Parse.Stage1          as P2Stage1
+--import qualified  Luna.Pass.Transform.Parse.Stage2          as P2Stage2
+--import qualified  Luna.Pass.Transform.SSA                   as P2SSA
+
+import            Control.Monad.Trans.Either
+import            Data.Text.Lazy                            (pack,unpack)
+
+import            System.Environment                        (getArgs)
+import            Text.Show.Pretty                          (ppShow)
+
+import qualified  Luna.Typechecker.Inference                as PTyChk
+import            Luna.Typechecker.Debug.ConsoleColours     (PrintAttrs(..),colouredPrint,writeFileM)
+
+
+import qualified  Luna.System.Session as Session
+import qualified  Luna.Parser.Parser as Parser
+
 import qualified Luna.Pass.Transform.Parse.Stage2 as Stage2
 import qualified Luna.Pass.Transform.Parse.Stage1 as Stage1
 import qualified Luna.Pass.Transform.Desugar.ImplicitSelf as ImplSelf
-import qualified Luna.Pass.Transform.Hash                 as Hash
 import qualified Luna.Pass.Transform.SSA                  as SSA
-import qualified Luna.Pass.Target.HS.HASTGen              as HASTGen
-import qualified Luna.Pass.Target.HS.HSC                  as HSC
 import qualified Luna.Pass.Transform.Desugar.ImplicitScopes as ImplScopes
 import qualified Luna.Pass.Transform.Desugar.ImplicitCalls as ImplCalls
-import           Luna.Data.Namespace (Namespace(Namespace))
-import qualified Luna.Pass as Pass
-import Control.Monad.Trans.Either
-import Control.Monad.Trans.Class (lift)
-import qualified Data.ByteString as ByteStr
-import Luna.Data.Source (Source(Source), File(File), Code(Code))
-import qualified Luna.Data.Source as Source
-import Data.Text.Lazy (unpack)
-import           Flowbox.Text.Show.Hs                                          (hsShow)
+import qualified Luna.Pass.Analysis.Struct as SA
+import qualified Luna.Pass.Target.HS.HASTGen              as HASTGen
+import qualified Luna.Pass.Target.HS.HSC                  as HSC
+import Flowbox.Text.Show.Hs (hsShow)
 
-import Luna.System.Session as Session
-import qualified Luna.System.Pragma.Store as Pragma
-import qualified Luna.Typechecker.Inference as TyChkr
+import System.Exit
+import Control.Monad.IO.Class
 
-header txt = "\n-------- " <> txt <> " --------"
-printHeader = putStrLn . header
-
-ppPrint = putStrLn . ppShow
-
+main :: IO ()
 main = do
-    args <- getArgs
-    let path = args !! 0
-        src  = Source "Main" (File $ fromString path)
+  args <- getArgs
+  case args of
+      []      -> [Red, Bold] `colouredPrint` "no file given, sorry"
+      (x:y:_) -> [Red, Bold] `colouredPrint` "too many args given - requires one (path to *.luna file). Sorry"
+      [file]  -> do
+        [Bold,Green]  `colouredPrint` file
+        [Cyan]        `colouredPrint` "…reading `" ++ file ++ "`"
+        file_contents <- do tmp <- readFile file
+                            tmp `seq` return tmp
+        [Cyan] `colouredPrint` "…passes"
 
-    Session.runT $ do
+        let src = Source (pack file) (Text $ pack file_contents)
 
-        Parser.init
+        Session.runT $ do
+          Parser.init
+          result <- runEitherT $ do
+            -- ast_     :: Luna.Syntax.Unit.Unit (Luna.Syntax.Module.LModule a0 (Luna.Syntax.Expr.LExpr a0 v0))
+            -- astinfo_ :: Luna.Data.ASTInfo.ASTInfo
 
-        result <- runEitherT $ do
-            printHeader "Stage1"
-            (ast, astinfo) <- Pass.run1_ Stage1.pass src
-            --ppPrint ast
+            (ast1, astinfo1)     <- Pass.run1_ Stage1.pass src
+            writeFileM                  " 1.1. Stage1     : ast1"        $ ppShow ast1
+            writeFileM                  " 1.2. Stage1     : astinfo1"    $ ppShow astinfo1
 
-            printHeader "SA"
-            sa             <- Pass.run1_ SA.pass ast
-            --ppPrint sa
+            -- sa2 :: Luna.Data.StructInfo.StructInfo
+            sa2                  <- Pass.run1_ SA.pass ast1
+            writeFileM                  " 2.   SA         : sa2"         $ ppShow sa2
 
-            printHeader "Stage2"
-            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
-            --ppPrint ast
+            (ast3, astinfo3)     <- Pass.run3_ Stage2.pass (Namespace [] sa2) astinfo1 ast1
+            writeFileM                  " 3.1. Stage2     : ast3"        $ ppShow ast3
+            writeFileM                  " 3.2. Stage2     : astinfo3"    $ ppShow astinfo3
 
-            printHeader "ImplSelf"
-            (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-            --ppPrint ast
+            (ast4, astinfo4)     <- Pass.run2_ ImplSelf.pass astinfo3 ast3
+            writeFileM                  " 4.1. ImplSelf   : ast4"        $ ppShow ast4
+            writeFileM                  " 4.2. ImplSelf   : astinfo4"    $ ppShow astinfo4
 
-            printHeader "SA"
-            sa             <- Pass.run1_ SA.pass ast
-            --ppPrint sa
+            sa5                  <- Pass.run1_ SA.pass ast4
+            writeFileM                  " 5.   SA         : sa5"         $ ppShow sa5
 
-            asdf <- Pass.run2_ TyChkr.pass astinfo ast
-            ppPrint asdf
+            -- constraints :: Luna.Typechecker.StageTypecheckerState.StageTypecheckerState
+            (ast5, constraints)  <- Pass.run2_ PTyChk.tcpass ast4 sa5
+            writeFileM                  " 6.   PTyChk     : constraints" $ ppShow constraints
+
+            (ast6, astinfo6)     <- Pass.run3_ ImplScopes.pass astinfo4 sa5 ast5
+            writeFileM                  " 7.1. ImplScopes : ast6"        $ ppShow ast6
+            writeFileM                  " 7.2. ImplScopes : astinfo6"    $ ppShow astinfo6
+
+            (ast7, astinfo7)     <- Pass.run2_ ImplCalls.pass astinfo6 ast6
+            writeFileM                  " 8.1. ImplCalls  : ast7"        $ ppShow ast7
+            writeFileM                  " 8.2. ImplCalls  : astinfo7"    $ ppShow astinfo7
+
+            ast8                 <- Pass.run1_ SSA.pass ast7
+            writeFileM                  " 9.   SSA        : ast8"        $ ppShow ast8
+
+            -- hast9 :: HASTGen.HExpr
+            hast9                <- Pass.run1_ HASTGen.pass ast8
+            writeFileM                  "10.   HAST       : hast9"       $ ppShow hast9
+
+            -- hsc10 :: Data.Text.Internal.Lazy.Text
+            hsc10                <- Pass.run1_ HSC.pass hast9
+            writeFileM                  "11.   HSC        : hsc10"       $ hsShow $ unpack hsc10
 
             return ()
 
+          case result of
+            Left _   -> do
+                [Red, Bold] `colouredPrint` "some error, sorry"
+                liftIO $ exitWith (ExitFailure 1)
+            Right () -> return ()
 
-        case result of
-            Left  e -> putStrLn e
-            Right _ -> return ()
         return ()
 
