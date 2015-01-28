@@ -23,7 +23,6 @@ import            Luna.Pass                               (Pass(..))
 
 import qualified  Luna.Syntax.Arg                         as Arg
 import qualified  Luna.Syntax.Decl                        as Decl
-import            Luna.Syntax.Decl                        (LDecl)
 import qualified  Luna.Syntax.Enum                        as Enum
 import            Luna.Syntax.Enum                        (ID, IDTag)
 import qualified  Luna.Syntax.Expr                        as Expr
@@ -55,7 +54,7 @@ import            Luna.Typechecker.StageTypecheckerState  (
                       debugLog, typo, nextTVar, subst, constr, sa, typeMap,
                       StageTypechecker(..),
                       StageTypecheckerPass, StageTypecheckerCtx, StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
-                      InExpr,
+                      InExpr, OutExpr, InDecl, OutDecl,
                       report_error
                   )
 
@@ -80,9 +79,9 @@ tcUnit ast structAnalysis = do
     liftM2 (,) (defaultTraverseM ast) get
 
 
-instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl IDTag InExpr) (LDecl IDTag InExpr) where
+instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) InDecl OutDecl where
   traverseM _ = tcDecl
-instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr IDTag ()) (LExpr IDTag ()) where
+instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) InExpr OutExpr where
   traverseM _ = tcExpr
 
 traverseM :: (StageTypecheckerTraversal m a) => a -> StageTypecheckerPass m a
@@ -119,7 +118,7 @@ withClonedTypo0 :: (Monad m) => StageTypecheckerPass m a -> StageTypecheckerPass
 withClonedTypo0 = withClonedTypo () . const
 
 
-tcDecl :: (StageTypecheckerCtx IDTag m) => LDecl IDTag InExpr -> StageTypecheckerPass m (LDecl IDTag InExpr)
+tcDecl :: (StageTypecheckerCtx IDTag m) => InDecl -> StageTypecheckerPass m OutDecl
 tcDecl ldecl@(Label lab decl) =
     case decl of
       Decl.Func (Decl.FuncDecl path sig funcout body) -> do

@@ -8,7 +8,7 @@ module Luna.Typechecker.StageTypecheckerState (
     debugLog, typo, nextTVar, subst, constr, sa, typeMap,
     StageTypechecker(..),
     StageTypecheckerPass, StageTypecheckerCtx, StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
-    InExpr, OutExpr,
+    InExpr, OutExpr, InDecl, OutDecl,
     prettyState,
     report_error
   ) where
@@ -17,6 +17,7 @@ module Luna.Typechecker.StageTypecheckerState (
 
 import            Luna.Data.StructInfo              (StructInfo)
 import            Luna.Pass                         (PassMonad, PassCtx)
+import qualified  Luna.Syntax.Decl                  as Decl
 import            Luna.Syntax.Enum                  (Enumerated, IDTag)
 import qualified  Luna.Syntax.Expr                  as Expr
 import qualified  Luna.Syntax.Pat                   as Pat
@@ -64,13 +65,17 @@ instance Default StageTypecheckerState where
 
 data StageTypechecker = StageTypechecker
 
-type StageTypecheckerPass                 m     = PassMonad StageTypecheckerState m
-type StageTypecheckerCtx              lab m     = (HumanName (Pat.Pat lab), Enumerated lab, Monad m, Applicative m, MonadIO m, Session.SessionMonad m, PassCtx m)
-type StageTypecheckerTraversal            m a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
-type StageTypecheckerDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
+type StageTypecheckerPass                 m   = PassMonad StageTypecheckerState m
+type StageTypecheckerCtx              lab m   = (HumanName (Pat.Pat lab), Enumerated lab, Monad m, Applicative m, MonadIO m, Session.SessionMonad m, PassCtx m)
+type StageTypecheckerTraversal            m a = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
+type StageTypecheckerDefaultTraversal     m a = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
 
 type InExpr  = (Expr.LExpr IDTag ())
 type OutExpr = (Expr.LExpr IDTag ()) 
+
+type InDecl  = (Decl.LDecl IDTag InExpr)
+type OutDecl = (Decl.LDecl IDTag InExpr)
+
 
 
 report_error :: (Monad m) => String -> a ->  StageTypecheckerPass m a
