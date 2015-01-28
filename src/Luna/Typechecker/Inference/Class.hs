@@ -5,18 +5,18 @@ module Luna.Typechecker.Inference.Class where
 
 import Control.Applicative
 
-import Luna.Pass                              (PassCtx, PassMonad)
+import Luna.Pass                                    (PassCtx, PassMonad)
 
-import Luna.Syntax.Decl                       (LDecl)
-import Luna.Syntax.Enum                       (Enumerated, IDTag)
-import Luna.Syntax.Expr                       (LExpr)
-import Luna.Syntax.Pat                        (Pat(Pat))
-import Luna.Syntax.Traversals                 (DefaultTraversal, Traversal)
+import Luna.Syntax.Decl                             (LDecl)
+import Luna.Syntax.Enum                             (Enumerated, IDTag)
+import Luna.Syntax.Expr                             (LExpr)
+import Luna.Syntax.Pat                              (Pat(Pat))
+import Luna.Syntax.Traversals                       (DefaultTraversal, Traversal)
 
-import Luna.System.Session                    (SessionMonad)
+import Luna.System.Session                          (SessionMonad)
 
-import Luna.Typechecker.Debug.HumanName       (HumanName)
-import Luna.Typechecker.StageTypecheckerState (StageTypecheckerState)
+import Luna.Typechecker.Debug.HumanName             (HumanName)
+import Luna.Typechecker.StageTypecheckerState.Class (StageTypecheckerState)
 
 
 

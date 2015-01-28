@@ -8,27 +8,25 @@ module Luna.Typechecker.Data (
   ) where
 
 
-import            Luna.Syntax.Enum                  (ID)
+import Data.Map.Strict  (Map)
 
-import qualified  Data.Map.Strict                   as SM
+import Luna.Syntax.Enum (ID)
 
 
-type TVar = Int
 
-type Var = Int
-
+type TVar       = Int
+type Var        = Int
 type Fieldlabel = Var
+type Field      = (Fieldlabel, Type)
+type TypeMap    = Map ID Type
+type Subst      = [(TVar, Type)]
+type Typo       = [(Var,TypeScheme)]
 
-type Field = (Fieldlabel, Type)
 
 data Type = TV TVar
           | Type `Fun` Type
           | Record [Field]
           deriving (Show,Eq)
-
-
-type TypeMap = SM.Map ID Type
-
 
 data Predicate  = TRUE
                 | Type `Subsume` Type
@@ -43,19 +41,18 @@ data TypeScheme = Mono Type
                 | Poly [TVar] Constraint Type
                 deriving (Show)
 
-type Subst = [(TVar, Type)]
-
-type Typo = [(Var,TypeScheme)]
-
 
 empty_typo :: Typo
 empty_typo = []     -- TODO [kgdk] 22 sty 2015: make a monoid
 
+
 true_cons :: Constraint
 true_cons = C [TRUE]
 
+
 null_subst :: Subst
 null_subst = []
+
 
 init_typo :: [Typo]
 init_typo = [empty_typo]

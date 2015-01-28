@@ -42,7 +42,12 @@ import qualified  Luna.Syntax.Name.Pattern                as NamePat
 import qualified  Luna.Syntax.Pat                         as Pat
 import qualified  Luna.Syntax.Traversals                  as AST
 
-import            Luna.Typechecker.Data
+import            Luna.Typechecker.Data (
+                      TVar, Var,
+                      Subst, Typo,
+                      Type(..), Predicate(..), Constraint(..), TypeScheme(..),
+                      null_subst
+                  )
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Inference.Class        (
                       StageTypechecker(..),
@@ -53,9 +58,10 @@ import            Luna.Typechecker.Inference.Class        (
 import            Luna.Typechecker.Solver                 (cs)
 import            Luna.Typechecker.StageTypecheckerState  (
                       StageTypecheckerState(..),
-                      debugLog, typo, nextTVar, subst, constr, sa, typeMap
+                      debugLog, typo, nextTVar, subst, constr, sa, typeMap,
+                      report_error
                   )
-import            Luna.Typechecker.TypesAndConstraints
+import            Luna.Typechecker.TypesAndConstraints    (TypesAndConstraints(..))
 
 
 
@@ -73,16 +79,6 @@ tcUnit ast structAnalysis = do
     liftM2 (,) (defaultTraverseM ast) get
 
 
-
-
-
-report_error :: (Monad m) => String -> a ->  StageTypecheckerPass m a
-report_error msg x = do
-  st <- get
-  let msgRes = "LUNA TC ERROR: " ++ msg ++ "\nState:\n\n" ++ show st
-  fail msgRes
-
-
 instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) InDecl OutDecl where
   traverseM _ = tcDecl
 instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) InExpr OutExpr where
@@ -93,8 +89,6 @@ traverseM = AST.traverseM StageTypechecker
 
 defaultTraverseM :: (StageTypecheckerDefaultTraversal m a) => a -> StageTypecheckerPass m a
 defaultTraverseM = AST.defaultTraverseM StageTypechecker
-
-
 
 
 ---- top-level program
