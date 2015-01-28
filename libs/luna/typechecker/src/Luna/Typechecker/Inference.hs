@@ -103,6 +103,17 @@ isFuncDecl (Decl.FuncDecl path sig output body) = return undefined
 --    traverseM _ = isFuncDecl
 
 
+instance (ISCtx m lab, ISDefaultTraversal m (LDecl lab body)) => AST.Traversal ImplSelf (ISPass m) (LDecl lab body) (LDecl lab body) where
+  traverseM _ = tcDecl
+
 instance ISCtx m lab => AST.Traversal ImplSelf (ISPass m) (LExpr lab body) (LExpr lab body) where
-  traverseM _ = error "tcexpr"
+  traverseM _ = tcExpr
+
+
+--tcDecl :: ISCtx m lab => (LDecl lab e) -> ISPass m (LDecl lab e)
+tcDecl lab = do
+    defaultTraverseM lab
+
+tcExpr :: ISCtx m lab => (LExpr lab e) -> ISPass m (LExpr lab e)
+tcExpr = error "tcexpr"
 
