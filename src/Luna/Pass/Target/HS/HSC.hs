@@ -112,7 +112,7 @@ instance Generator HExpr where
         HExpr.TypedE   expr cls               -> complex $ generate expr <> " :: " <> generate cls
         HExpr.TySynD   name params dstType    -> complex $ "type " <> convert name <> " " <> spaceJoin (sgenmap params) <> " = " <> generate dstType
         HExpr.Function name signature expr    -> simple  $ convert name <> spaceJoin ("" : genmap signature) <> " = " <> generate expr
-        HExpr.Lambda   signature expr         -> simple  $ "(\\" <> spaceJoin ("" : sgenmap signature) <> " -> " <> sgenerate expr <> ")"
+        HExpr.Lambda   signature expr         -> simple  $ "(\\" <> spaceJoin (sgenmap signature) <> " -> " <> sgenerate expr <> ")"
         HExpr.LetBlock exprs result           -> simple  $ "let { " <> mjoin "; " (genmap exprs) <> " } in " <> generate result
         HExpr.LetExpr  expr                   -> simple  $ "let " <> generate expr
         HExpr.OperatorE name src dst          -> complex $ sgenerate src  <> " " <> convert name <> " " <> sgenerate dst

@@ -407,7 +407,12 @@ ofType :: a -> a -> a
 ofType = const 
 
 
-genExpr :: Ctx m a v => LExpr a v -> PassResult m HE
+
+genBody = \case
+    [b] -> b
+    b   -> HE.DoBlock b
+
+--genExpr :: Ctx m a v => LExpr a v -> PassResult m HE
 genExpr (Label lab expr) = case expr of
     Expr.Var (Expr.Variable name _)          -> pure . HE.Var $ Naming.mkVar $ hash name
     Expr.Cons  name                          -> pure $ HE.Var $ Naming.mkCons $ hash name
@@ -421,16 +426,15 @@ genExpr (Label lab expr) = case expr of
                                                          genMatch (unwrap -> Expr.Match pat body) = HE.Match <$> genPat pat <*> (HE.DoBlock <$> mapM genExpr body)
 
     Expr.Lambda inputs output body           -> do
-                                                let --foo  = inputs `ofType` (  undefined :: [Label a (Arg a (Expr a ()))]  )
-                                                    args = fmap unwrap inputs `ofType` (undefined :: [Arg a (LExpr a ())])
+                                                let args = fmap unwrap inputs
                                                 pats <- genFuncPats args True
                                                 --tu jest problem, bo
                                                 --Expr.Lambda ma Arg ktory zawiera Expr
                                                 --natomiast FunDecl ma Argi zawierajace LExpr!
                                                 --trzeba przejsc na LExpr chyba
-                                                --sig  <- genFuncSig args
+                                                sig   <- genFuncSig args
                                                 hbody <- mapM genExpr body
-                                                return $ HE.app (HE.VarE "mkLam") [HE.NOP, HE.Lambda pats $ HE.DoBlock hbody]
+                                                return $ HE.app (HE.VarE "mkLam") [sig, HE.Lambda pats $ genBody hbody]
 
     --                                        let fname      = Naming.mkLamName $ fromString $ show id
     --                                            hName      = Naming.mkHandlerFuncName fname
