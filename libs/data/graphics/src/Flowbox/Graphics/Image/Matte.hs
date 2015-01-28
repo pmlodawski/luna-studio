@@ -10,7 +10,7 @@ import Flowbox.Graphics.Image.Channel
 import Flowbox.Graphics.Shader.Shader
 
 data Matte a = ImageMatte Channel
-             | VectorMatte (Mask a)
+             | VectorMatte (Mask a) deriving(Show)
 
 imageMatteDouble :: Channel -> Matte Double
 imageMatteDouble chan@(ChannelFloat _ _) = ImageMatte chan

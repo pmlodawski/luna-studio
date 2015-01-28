@@ -125,8 +125,20 @@ def Int.toString:
 def Double.acc:
     ```liftF1 variable #{self}```
 
+def Double.truncate:
+    ```liftF1 truncate #{self} :: Value Pure Safe Int```
+
+def Double.round:
+    ```liftF1 round #{self} :: Value Pure Safe Int```
+
 def Double.floor:
-    ```liftF1 floor #{self}```
+    ```liftF1 floor #{self} :: Value Pure Safe Int```
+
+def Double.ceiling:
+    ```liftF1 ceiling #{self} :: Value Pure Safe Int```
+
+def Double.+ a:
+    ```liftF2 (+) #{self} #{a}```
 
 def Double.- a:
     ```liftF2 (-) #{self} #{a}```
@@ -156,8 +168,7 @@ def Double.toString:
     ```liftF1 show #{self}```
 
 # def Float.floor:
-#     ```liftF1 floor #{self}```
-
+#     ```liftF1 floor #{self} :: Value Pure Safe Int```
 
 
 #
@@ -305,7 +316,7 @@ def load path:
     ```autoLift1 realReadLuna #{path}```
 
 def loadMatte channelName path:
-    ```liftF2 loadMatteLuna #{channelName} #{path}```
+    ```autoLift2 loadMatteLuna #{channelName} #{path}```
 
 def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```
@@ -323,7 +334,7 @@ def Image.view name:
 def Image.getChannel viewName channelName:
     ```liftF3 getChannelLuna #{viewName} #{channelName} #{self}```
 
-def Image.getChannelFromPriamry channelName:
+def Image.getChannelFromPrimary channelName:
     ```liftF2 getChannelFromPrimaryLuna #{channelName} #{self}```
 
 # def Image.insertChannel viewName channel:
@@ -694,6 +705,9 @@ def Image.differenceKey offset gain background:
 def imageMatte img:
     (Nothing, Just img)
 
+def novector:
+    ```val (Nothing :: Maybe (Mask2 Double))```
+
 def vectorMatte mask:
     (Just mask, Nothing)
 
@@ -708,6 +722,12 @@ def Image.exposureMatte blackpoint ex matte:
 
 def nomatte:
     ```val (Nothing :: Maybe (Matte Double))```
+
+def tester matte:
+    ```liftF1 convertMatte #{matte}```
+
+# def tester2 matte:
+#     ```liftF1 getChannelDoNothing #{matte}```
 
 #
 #                VIEW
@@ -774,6 +794,8 @@ def main:
     randomColor = RGBA 0.2 0.5 0.1 1.0
     anotherRandomColor = RGBA 0.4 0.2 0.12 0.34
 
+  #  print (vectorMatte m)
+
     offsetLena = lena.offsetMatte randomColor (Nothing)
     offsetLena.save "./offsetLena.png"
 
@@ -792,6 +814,10 @@ def main:
     contrastLenaMasked = lena.contrastMatte randomColor (Just $ vectorMatte m)
     contrastLenaMasked.save "./contrastLenaMasked.png"
 
+    chan = loadMatte "./test.png" "rgba.a"
+
+    xxx = lena.offsetMatte randomColor (Just $ imageMatte chan)
+    xxx.save "./xxx.png"
 
     # lena = lena.hueCorrect c c c c c c2 c c
 
@@ -802,29 +828,13 @@ def main:
     # cp = controlPointGUI p1 hIn hOut
     # curve = curveGUI [cp]
     # val = getValueAtCurve curve 7.000000
-    valF = (-0.5)
-    print valF
-    print valF.truncate
-    print valF.round
-    print valF.floor
-    print valF.ceiling
-    print valF.toString
-    valB = False
-    print valB
-    print valB.toString
-    valI = 2
-    print valI
-    print valI.toString
-    valC = 'a'
-    print valC
-    print valC.toString
-    # print valC.toString.toChar
+
     # out = lena.posterize val
     # out = (load "./lena.png").posterize (getValueAtCurve (curveGUI [(controlPointGUI (Point2 169.000000 2.7897727) linearHandleGUI linearHandleGUI)]) 7.000000)
     # out.save "./out.png"
 
-    f = 0.4
-    print f.floor
+    # f = 0.4
+    # print f.floor
 
 
 
