@@ -25,12 +25,12 @@ import qualified  Luna.Syntax.Arg                         as Arg
 import qualified  Luna.Syntax.Decl                        as Decl
 import            Luna.Syntax.Decl                        (LDecl)
 import qualified  Luna.Syntax.Enum                        as Enum
-import            Luna.Syntax.Enum                        (Enumerated, ID, IDTag(IDTag))
+import            Luna.Syntax.Enum                        (ID, IDTag)
 import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
 import qualified  Luna.Syntax.Label                       as Label
-import            Luna.Syntax.Label                       (Label(Label), label, element)
-import            Luna.Syntax.Module                      (LModule)
+import            Luna.Syntax.Label                       (Label(Label))
+
 import qualified  Luna.Syntax.Name.Pattern                as NamePat
 import qualified  Luna.Syntax.Pat                         as Pat
 import qualified  Luna.Syntax.Traversals                  as AST
@@ -42,23 +42,23 @@ import            Control.Monad.State
 import            Data.Default                            (Default(def))
 import            Data.List                               hiding (insert)
 import            Data.Maybe                              (fromMaybe)
-import            Data.Monoid
-import qualified  Data.Text.Lazy                          as LText
+
+
 import            Data.Text.Lazy                          (unpack)
-import            Data.Text.Lens                          (packed, unpacked)
+import            Data.Text.Lens                          (unpacked)
 import qualified  Data.Foldable                           as Fold
 
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Data
 import            Luna.Typechecker.StageTypecheckerState  (
                       StageTypecheckerState(..),
-                      debugLog, typo, nextTVar, subst, constr, sa, currentType, typeMap,
+                      debugLog, typo, nextTVar, subst, constr, sa, typeMap,
                       StageTypechecker(..),
                       StageTypecheckerPass, StageTypecheckerCtx, StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
-                      InExpr, OutExpr,
+                      InExpr,
                       report_error
                   )
-import            Luna.Typechecker.Tools                  (without)
+
 import            Luna.Typechecker.TypesAndConstraints
 import            Luna.Typechecker.Solver                 (cs)
 
@@ -178,7 +178,7 @@ insertNewMonoTypeVariable labID = do
     return $ TV tvarID
 
 
---tcExpr :: (StageTypecheckerCtx IDTag m) => LExpr IDTag () -> StageTypecheckerPass m (LExpr IDTag ())
+tcExpr :: (StageTypecheckerCtx IDTag m) => LExpr IDTag () -> StageTypecheckerPass m (LExpr IDTag ())
 tcExpr lexpr@(Label lab _) = do
   labID <- getTargetIDString lab
   debugPush $ "tcExpr: " ++ labID
@@ -247,8 +247,8 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
     return res
 
   where
-    toType (Expr.AppArg _ (Label lab _)) = do
-      getTypeById =<< getTargetID lab
+    toType (Expr.AppArg _ (Label lab2 _)) = do
+      getTypeById =<< getTargetID lab2
 
     tp result arg = do
       argType <- arg
@@ -264,10 +264,10 @@ getTypeById idV = do
     typeResult <- typeMap . at idV & use
     maybe (error "Can't find type using id.") (return . id) typeResult
 
-
-setTypeById id typeV = do
-    debugPush $ "save " ++ show id ++ " ?= " ++ show typeV
-    typeMap . at id ?= typeV
+setTypeById :: (Monad m) => ID -> Type -> StageTypecheckerPass m ()
+setTypeById id2 typeV = do
+    debugPush $ "save " ++ show id2 ++ " ?= " ++ show typeV
+    typeMap . at id2 ?= typeV
     mm <- typeMap & use
     debugPush $ show mm
 
@@ -276,7 +276,7 @@ debugPush :: (Monad m) => String -> StageTypecheckerPass m ()
 debugPush s = s `seq` debugLog %= (s:)
 
 
---getTargetIDString :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m String
+getTargetIDString :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m String
 getTargetIDString lab = do
     labtID <- getTargetID lab
     return $ "|" ++ show labID ++ "⊳" ++ show labtID ++ "⊲"
@@ -284,7 +284,7 @@ getTargetIDString lab = do
     labID = Enum.id lab
 
 
---getTargetID :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m ID
+getTargetID :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m ID
 getTargetID lab =
     sa . SI.alias . ix labID . SI.target & preuse >>= \case
         Nothing     -> return labID

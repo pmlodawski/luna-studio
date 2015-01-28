@@ -8,7 +8,7 @@ module Luna.Typechecker.Data (
   ) where
 
 
-import            Luna.Syntax.Enum                  (Enumerated, ID(..))
+import            Luna.Syntax.Enum                  (ID)
 
 import qualified  Data.Map.Strict                   as SM
 

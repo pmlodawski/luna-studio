@@ -17,7 +17,7 @@ module Luna.Typechecker.StageTypecheckerState (
 
 import            Luna.Data.StructInfo              (StructInfo)
 import            Luna.Pass                         (PassMonad, PassCtx)
-import            Luna.Syntax.Enum                  (Enumerated, ID, IDTag(IDTag))
+import            Luna.Syntax.Enum                  (Enumerated, IDTag)
 import qualified  Luna.Syntax.Expr                  as Expr
 import qualified  Luna.Syntax.Pat                   as Pat
 import qualified  Luna.System.Session               as Session
@@ -27,7 +27,6 @@ import            Control.Applicative
 import            Control.Lens
 import            Control.Monad.IO.Class            (MonadIO)
 import            Control.Monad.State.Lazy          (get)
-import qualified  Data.Map.Strict                   as SM
 import            Data.Monoid                       (Monoid(..))
 import            Text.PrettyPrint
 
