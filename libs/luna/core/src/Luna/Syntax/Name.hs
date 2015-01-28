@@ -12,7 +12,9 @@ module Luna.Syntax.Name where
 import           Flowbox.Prelude
 
 import           GHC.Generics
+import qualified Data.Char               as Char
 import           Data.String             (IsString, fromString)
+import qualified Data.Text.Lazy          as Text
 
 import qualified Luna.Syntax.Name.Assert as Assert
 import qualified Luna.Syntax.Name.Path   as NamePath
@@ -25,6 +27,11 @@ import           Luna.Syntax.Name.Hash   (Hashable, hash)
 
 unsafeConvert :: (Wrapper m, Wrapper n) => m a -> n a
 unsafeConvert = rewrap
+
+mkNameBaseAccessor :: Text -> NameBaseP
+mkNameBaseAccessor s  = if Text.null s || Char.isLower (Text.head s)
+    then VarName  $ fromText s
+    else TypeName $ fromText s
 
 ----------------------------------------------------------------------
 -- Data types

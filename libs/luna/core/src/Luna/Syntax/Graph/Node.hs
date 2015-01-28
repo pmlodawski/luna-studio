@@ -13,10 +13,11 @@ import           Luna.Syntax.Graph.Node.Expr       (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr       as NodeExpr
 import           Luna.Syntax.Graph.Node.Position   (Position)
 import qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
+import           Luna.Syntax.Name                  (VNameP)
 
 
 
-data Node a e = Expr     { _expr :: NodeExpr a e, _outputName :: String, _pos :: Position }
+data Node a e = Expr     { _expr :: NodeExpr a e, _outputName :: VNameP, _pos :: Position }
               | Inputs   {                                               _pos :: Position }
               | Outputs  {                                               _pos :: Position }
               deriving (Show, Eq)
@@ -29,7 +30,7 @@ type ID = Int
 
 
 
-position' :: (ID, Node a e) -> (Float, Float)
+position' :: (ID, Node a e) -> Position
 position' = view pos . snd
 
 
