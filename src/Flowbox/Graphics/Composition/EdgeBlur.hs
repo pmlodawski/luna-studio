@@ -1,6 +1,6 @@
 
 module Flowbox.Graphics.Composition.EdgeBlur (
-    BlurType(..) , edges, maskBlur
+    BlurType(..) , edges, maskBlur, eee, mixImages
 ) where
 
 import Data.Array.Accelerate               as A hiding (constant, filter, scatter, size, stencil)
@@ -11,6 +11,9 @@ import Flowbox.Graphics.Shader.Shader
 import Flowbox.Graphics.Utils.Utils
 import Flowbox.Math.Matrix                 as M
 import Math.Space.Space
+
+
+eee x = x+1
 
 
 applyKernel :: (IsNum a, Elt a) => Matrix2 a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
