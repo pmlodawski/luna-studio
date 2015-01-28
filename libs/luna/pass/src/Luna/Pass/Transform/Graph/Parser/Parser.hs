@@ -27,10 +27,11 @@ import qualified Luna.Pass.Pass                         as Pass
 import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
+import           Luna.Syntax.Arg                        (Arg (Arg))
 import qualified Luna.Syntax.Arg                        as Arg
 import qualified Luna.Syntax.Decl                       as Decl
 import qualified Luna.Syntax.Enum                       as Enum
-import           Luna.Syntax.Expr                       (Expr)
+import           Luna.Syntax.Expr                       (Expr, LExpr)
 import qualified Luna.Syntax.Expr                       as Expr
 import qualified Luna.Syntax.Graph.Flags                as Flags
 import           Luna.Syntax.Graph.Graph                (Graph)
@@ -42,7 +43,10 @@ import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
 import qualified Luna.Syntax.Graph.Node.StringExpr      as StringExpr
 import qualified Luna.Syntax.Graph.Port                 as Port
 import           Luna.Syntax.Graph.PropertyMap          (PropertyMap)
-import           Luna.Syntax.Pat                        (Pat)
+import           Luna.Syntax.Label                      (Label (Label))
+import qualified           Luna.Syntax.Label                      as Label
+import qualified Luna.Syntax.Name.Pattern               as Pattern
+import           Luna.Syntax.Pat                        (LPat, Pat)
 import qualified Luna.Syntax.Pat                        as Pat
 import           Luna.System.Pragma.Store               (MonadPragmaStore)
 --FIXME[wd]: following imports should be removed after moving to plugin based structure
@@ -54,19 +58,21 @@ import           Luna.System.Pragma.Store               (MonadPragmaStore)
 
 
 type FuncDecl a e = Decl.FuncDecl a e [Expr.LExpr a e]
+type E = ()
+
 
 logger :: Logger
 logger = getLogger $(moduleName)
 
 
 --run :: Graph a e -> PropertyMap a e -> Expr a e -> Pass.Result m (FuncDecl a e, PropertyMap a e)
-run :: (Enum.Enumerated a, MonadPragmaStore m, Eq v, Eq a)
-    => Graph a v -> PropertyMap a v -> FuncDecl a v
-    -> EitherT Pass.PassError m (FuncDecl a v, PropertyMap a v)
+run :: (Eq a, Enum.Enumerated a, MonadPragmaStore m)
+    => Graph a E -> PropertyMap a E -> FuncDecl a E
+    -> EitherT Pass.PassError m (FuncDecl a E, PropertyMap a E)
 run gr pm = Pass.run_ (Pass.Info "GraphParser") (State.make gr pm) . graph2expr
 
 
-graph2expr :: (Eq a, Eq e) => FuncDecl a e -> GPPass a e m (FuncDecl a e, PropertyMap a e)
+graph2expr :: Eq a => FuncDecl a E -> GPPass a E m (FuncDecl a E, PropertyMap a E)
 graph2expr funcDecl = do
     let sig = funcDecl ^. Decl.funcDeclSig
     graph <- State.getGraph
@@ -79,54 +85,66 @@ graph2expr funcDecl = do
     pm <- State.getPropertyMap
     return (funcDecl & Decl.funcDeclBody .~ body, pm)
 
-parseNode :: Decl.FuncSig a e -> (Node.ID, Node a e) -> GPPass a e m ()
-parseNode inputs (nodeID, node) = do
+
+label :: Enum.Enumerated l => Enum.ID -> a -> Label l a
+label num = Label (Enum.tag num)
+
+
+labelUnknown :: Enum.Enumerated l => a -> Label l a
+labelUnknown = Label (Enum.tag IDFixer.unknownID)
+
+
+parseNode :: Decl.FuncSig a E -> (Node.ID, Node a E) -> GPPass a E m ()
+parseNode signature (nodeID, node) = do
     case node of
         Node.Expr    expr _ _ -> parseExprNode    nodeID expr
-        Node.Inputs  {}       -> parseInputsNode  nodeID inputs
+        Node.Inputs  {}       -> parseInputsNode  nodeID signature
         Node.Outputs {}       -> parseOutputsNode nodeID
     State.setPosition    nodeID $ node ^. Node.pos
 
---parseExprNode :: Node.ID -> NodeExpr -> GPPass ()
---parseExprNode nodeID nodeExpr = case nodeExpr of
---    NodeExpr.StringExpr strExpr -> case strExpr of
---        StringExpr.List           -> parseListNode    nodeID
---        StringExpr.Tuple          -> parseTupleNode   nodeID
---        StringExpr.Pattern pat    -> parsePatNode     nodeID pat
---        StringExpr.Native  native -> parseNativeNode  nodeID native
---        _                         -> parseAppNode     nodeID $ StringExpr.toString strExpr
---    NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
+
+--TODO[PM] : zrobić z tego typeclass
+parseExprNode :: Node.ID -> NodeExpr a E -> GPPass a E m ()
+parseExprNode nodeID nodeExpr = case nodeExpr of
+    NodeExpr.StringExpr strExpr -> case strExpr of
+        StringExpr.List           -> parseListNode    nodeID
+        StringExpr.Tuple          -> parseTupleNode   nodeID
+        StringExpr.Pattern pat    -> parsePatNode     nodeID pat
+        StringExpr.Native  native -> parseNativeNode  nodeID native
+        _                         -> parseAppNode     nodeID $ StringExpr.toString strExpr
+    NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
 
 
---parseInputsNode :: Node.ID -> [Expr] -> GPPass ()
---parseInputsNode nodeID = mapM_ (parseArg nodeID) . zip [0..]
+parseInputsNode :: Node.ID -> Decl.FuncSig a E -> GPPass a E m ()
+parseInputsNode nodeID = mapM_ (parseArg nodeID) . zip [0..] . Pattern.args
 
 
---parseArg :: Node.ID -> (Int, Expr) -> GPPass ()
---parseArg nodeID (num, input) = case input of
---    Expr.Arg _              (Pat.Var _ name)    _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
---    Expr.Arg _ (Pat.Typed _ (Pat.Var _ name) _) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
---    _                                             -> left "parseArg: Wrong Arg type"
+parseArg :: Node.ID -> (Int, Arg a E) -> GPPass a E m ()
+parseArg nodeID (num, input) = case input of
+    Arg (Label _                     (Pat.Var vname)    ) _ -> addVar vname
+    Arg (Label _ (Pat.Typed (Label _ (Pat.Var vname)) _)) _ -> addVar vname
+    _                                                       -> lift $ left "parseArg: Wrong Arg type"
+    where addVar vname = State.addToNodeMap (nodeID, Port.Num num) $ labelUnknown $ Expr.Var $ Expr.Variable vname ()
+
+parseOutputsNode :: Node.ID -> GPPass a E m ()
+parseOutputsNode nodeID = do
+    srcs    <- State.getNodeSrcs nodeID
+    inPorts <- State.inboundPorts nodeID
+    case (srcs, inPorts) of
+        ([], _)               -> whenM State.doesLastStatementReturn $
+                                   State.setOutput $ labelUnknown $ Expr.Grouped
+                                                   $ labelUnknown $ Expr.Tuple []
+        ([src], [Port.Num 0]) -> State.setOutput $ labelUnknown $ Expr.Grouped src
+        ([src], _           ) -> State.setOutput src
+        _                     -> State.setOutput $ labelUnknown $ Expr.Tuple srcs
 
 
---parseOutputsNode :: Node.ID -> GPPass ()
---parseOutputsNode nodeID = do
---    srcs    <- State.getNodeSrcs nodeID
---    inPorts <- State.inboundPorts nodeID
---    case (srcs, inPorts) of
---        ([], _)               -> whenM State.doesLastStatementReturn $
---                                   State.setOutput $ Expr.Grouped IDFixer.unknownID $ Expr.Tuple IDFixer.unknownID []
---        ([src], [Port.Num 0]) -> State.setOutput $ Expr.Grouped IDFixer.unknownID src
---        ([src], _           ) -> State.setOutput src
---        _                     -> State.setOutput $ Expr.Tuple IDFixer.unknownID srcs
-
-
---patVariables :: Pat -> [Expr]
---patVariables pat = case pat of
---    Pat.Var i name    -> [Expr.Var i name]
---    Pat.Tuple _ items -> concatMap patVariables items
---    Pat.App _ _ args  -> concatMap patVariables args
---    _                 -> []
+patVariables :: LPat a -> [LExpr a E]
+patVariables pat = case pat of
+    Label l (Pat.Var   name  ) -> [Label l $ Expr.Var $ Expr.Variable name ()]
+    Label l (Pat.Tuple items ) -> concatMap patVariables items
+    Label l (Pat.App   _ args) -> concatMap patVariables args
+    _                          -> []
 
 
 --patchedParserState :: ASTInfo
@@ -137,38 +155,49 @@ parseNode inputs (nodeID, node) = do
 --    where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
 
 
---parsePatNode :: Node.ID -> String -> GPPass ()
---parsePatNode nodeID pat = do
---    srcs <- State.getNodeSrcs nodeID
---    case srcs of
---        [s] -> do
---            p <- case Parser.parseString pat $ Parser.patternParser (patchedParserState $ ASTInfo.mk $ IDFixer.unknownID) of
---                    Left  er     -> left $ show er
---                    Right (p, _) -> return p
---            let e = Expr.Assignment nodeID p s
---            case patVariables p of
---                [var] -> State.addToNodeMap (nodeID, Port.All) var
---                vars  -> mapM_ (\(i, v) -> State.addToNodeMap (nodeID, Port.Num i) v) $ zip [0..] vars
---            State.addToBody e
---        _      -> left "parsePatNode: Wrong Pat arguments"
+parsePatNode :: Node.ID -> String -> GPPass a E m ()
+parsePatNode nodeID pat = do
+    srcs <- State.getNodeSrcs nodeID
+    case srcs of
+        [s] -> do
+            p <- case patternParser pat IDFixer.unknownID of
+                    Left  er     -> lift $ left $ show er
+                    Right (p, _) -> return p
+            let e = label nodeID $ Expr.Assignment p s
+            case patVariables p of
+                [var] -> State.addToNodeMap (nodeID, Port.All) var
+                vars  -> mapM_ (\(i, v) -> State.addToNodeMap (nodeID, Port.Num i) v) $ zip [0..] vars
+            State.addToBody e
+        _      -> lift $ left "parsePatNode: Wrong Pat arguments"
 
 
---parseNativeNode :: Node.ID -> String -> GPPass ()
---parseNativeNode nodeID native = do
---    srcs <- State.getNodeSrcs nodeID
---    expr <- case Parser.parseString native $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
---                    Left  er     -> left $ show er
---                    Right (e, _) -> return e
---    addExpr nodeID $ replaceNativeVars srcs expr
+parseNativeNode :: Node.ID -> String -> GPPass a e m ()
+parseNativeNode nodeID native = do
+    srcs <- State.getNodeSrcs nodeID
+    expr <- case exprParser native nodeID of
+                    Left  er     -> lift $ left $ show er
+                    Right (e, _) -> return e
+    addExpr nodeID $ replaceNativeVars srcs expr
 
 
---replaceNativeVars :: [Expr] -> Expr -> Expr
+--replaceNativeVars :: [LExpr a e] -> LExpr a e -> LExpr a e
 --replaceNativeVars srcs native = native & Expr.segments %~ replaceNativeVars' srcs where
 --    replaceNativeVars' []                      segments                   = segments
 --    replaceNativeVars' _                       []                         = []
 --    replaceNativeVars' vars                    (sh@Expr.NativeCode {}:st) = sh : replaceNativeVars' vars st
 --    replaceNativeVars' ((Expr.Var _ name ):vt) (sh@Expr.NativeVar  {}:st) = (sh & Expr.name .~ name) : replaceNativeVars' vt st
 
+
+--FIXME[PM]: remove
+parseAppNode     = undefined
+patternParser :: String -> Int -> Either String (LPat a, Int)
+patternParser = undefined
+exprParser :: String -> Int -> Either String (LExpr a e, Int)
+exprParser = undefined
+addExpr :: Node.ID -> LExpr a e  -> GPPass a e m ()
+addExpr = undefined
+replaceNativeVars = undefined
+-----------------
 
 --parseAppNode :: Node.ID -> String -> GPPass ()
 --parseAppNode nodeID app = do
@@ -193,22 +222,23 @@ parseNode inputs (nodeID, node) = do
 --                                where acc = Expr.Accessor nodeID (Expr.mkAccessor app) f
 
 
---exprToNodeID :: Expr -> Node.ID
---exprToNodeID expr = case expr of
---    Expr.App _ src _ -> exprToNodeID src
---    _                -> expr ^. Expr.id
+exprToNodeID :: Enum.Enumerated a => LExpr a e -> Node.ID
+exprToNodeID (Label _ (Expr.App exprApp)) = exprToNodeID $ exprApp ^. Pattern.namePatBase . Pattern.segmentBase 
+exprToNodeID lexpr                        = Enum.id $ lexpr ^. Label.label 
 
 
---setNodeID :: Node.ID -> Expr -> Expr
---setNodeID nodeID expr@(Expr.App _ src _) = expr & Expr.src .~ setNodeID nodeID src
---setNodeID nodeID expr                    = expr & Expr.id  .~ nodeID
+setNodeID :: Enum.Enumerated a => Node.ID -> LExpr a e -> LExpr a e
+setNodeID nodeID lexpr@(Label _ (Expr.App _)) = lexpr & Label.element . Expr.exprApp 
+                                                      . Pattern.namePatBase . Pattern.segmentBase 
+                                                      %~ setNodeID nodeID 
+setNodeID nodeID lexpr                        = lexpr & Label.label              .~ Enum.tag  nodeID
 
 
---parseTupleNode :: Node.ID -> GPPass ()
---parseTupleNode nodeID = do
---    srcs <- State.getNodeSrcs nodeID
---    let e = Expr.Tuple nodeID srcs
---    addExpr nodeID e
+parseTupleNode :: Node.ID -> GPPass a e m ()
+parseTupleNode nodeID = do
+    srcs <- State.getNodeSrcs nodeID
+    let e = label nodeID $ Expr.Tuple srcs
+    addExpr nodeID e
 
 
 --parseGroupedNode :: Node.ID -> GPPass ()
@@ -218,16 +248,16 @@ parseNode inputs (nodeID, node) = do
 --    addExpr nodeID e
 
 
---parseListNode :: Node.ID -> GPPass ()
---parseListNode nodeID = do
---    srcs <- State.getNodeSrcs nodeID
---    let e = Expr.List nodeID srcs
---    addExpr nodeID e
+parseListNode :: Node.ID -> GPPass a e m ()
+parseListNode nodeID = do
+    srcs <- State.getNodeSrcs nodeID
+    let e = label nodeID $ Expr.List $ Expr.SeqList srcs
+    addExpr nodeID e
 
 
---parseASTExprNode :: Node.ID -> Expr -> GPPass ()
---parseASTExprNode nodeID = addExpr nodeID
---                        . setNodeID nodeID
+parseASTExprNode :: Node.ID -> LExpr a e -> GPPass a e m ()
+parseASTExprNode nodeID = addExpr nodeID
+                        . setNodeID nodeID
 
 
 --addExpr :: Node.ID -> Expr -> GPPass ()

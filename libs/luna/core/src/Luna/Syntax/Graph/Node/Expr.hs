@@ -9,15 +9,14 @@
 module Luna.Syntax.Graph.Node.Expr where
 
 import Flowbox.Prelude
-import Luna.Syntax.Expr                  (Expr)
+import Luna.Syntax.Expr                  (LExpr)
 import Luna.Syntax.Graph.Node.StringExpr (StringExpr)
 
 
 
 data NodeExpr a v = StringExpr { _strExpr :: StringExpr }
-                  | ASTExpr    { _expr :: Expr a v      }
+                  | ASTExpr    { _expr :: LExpr a v }
                   deriving (Show, Eq, Read)
-
 
 
 makeLenses ''NodeExpr

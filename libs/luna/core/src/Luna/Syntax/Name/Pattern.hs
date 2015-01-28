@@ -42,17 +42,24 @@ class NamePatternClass p s | p -> s where
 -- Data types
 ----------------------------------------------------------------------
 
-data NamePat base arg = NamePat { _prefix   :: Maybe arg
-                                , _base     :: Segment base arg
-                                , _segments :: [Segment SegmentName arg]
+data NamePat base arg = NamePat { _namePatPrefix   :: Maybe arg
+                                , _namePatBase     :: Segment base arg
+                                , _namePatSegments :: [Segment SegmentName arg]
                                 } deriving (Show, Eq, Generic, Read, Ord, Functor, Traversable, Foldable)
 
-data Segment base arg = Segment     base [arg]                     deriving (Show, Eq, Generic, Read, Ord, Functor, Traversable, Foldable)
+data Segment base arg = Segment { _segmentBase :: base 
+                                , _segmentArgs :: [arg]
+                                } deriving (Show, Eq, Generic, Read, Ord, Functor, Traversable, Foldable)
+
 type ArgPat  a v      = NamePat     SegmentName (Arg a v)
 data NamePatDesc      = NamePatDesc  Bool SegmentDesc [SegmentDesc] deriving (Show, Eq, Generic, Read, Ord)
 data SegmentDesc      = SegmentDesc SegmentName [Bool]             deriving (Show, Eq, Generic, Read, Ord)
 
 type SegmentName      = Text
+
+
+makeLenses ''NamePat
+makeLenses ''Segment
 
 ----------------------------------------------------------------------
 -- Utils

@@ -59,7 +59,7 @@ data Expr a v
     | Native      { _native  :: Native (LExpr a v)                                                     }
     | Var         { _ident   :: Variable v                                                             }
     | List        (List (LExpr a v))
-    | App         (ExprApp a v)
+    | App         { _exprApp :: ExprApp a v }
     | Wildcard
     deriving (Show, Generic, Eq, Read)
 
