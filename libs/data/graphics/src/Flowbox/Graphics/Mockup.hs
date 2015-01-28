@@ -436,20 +436,20 @@ channelToImageRGBA m = image
           alpha :: Matrix2 Float
           alpha = M.generate (M.shape m) (const 1)
 
--- perlinLuna :: Double -> Int -> Int -> Image
--- perlinLuna (variable -> z) = noiseLuna (perlinNoise z)
+perlinLuna :: Float -> Int -> Int -> Image
+perlinLuna (variable -> z) = noiseLuna (perlinNoise z)
 
--- billowLuna :: Double -> Int -> Int -> Image
--- billowLuna (variable -> z) = noiseLuna (billowNoise z)
+billowLuna :: Float -> Int -> Int -> Image
+billowLuna (variable -> z) = noiseLuna (billowNoise z)
 
--- noiseLuna :: forall e a.
---                    (IsFloating a, Elt a, A.Lift Exp e,
---                     A.Plain e ~ Int) =>
---                    CartesianShader (Exp a) (Exp Float) -> e -> e -> Image
--- noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA noise'
---     where noise' = rasterizer $ monosampler $ noiseShader
+noiseLuna :: forall e a.
+                   (IsFloating a, Elt a, A.Lift Exp e,
+                    A.Plain e ~ Int) =>
+                   CartesianShader (Exp a) (Exp Float) -> e -> e -> Image
+noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA noise'
+    where noise' = rasterizer $ monosampler $ noiseShader
 
---           noiseShader = scale (Grid width height) noise
+          noiseShader = scale (Grid width height) noise
 
 translateLuna :: V2 Float -> Image -> Image
 translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
@@ -1243,20 +1243,20 @@ unpackLunaVar (Value (Pure (Safe a))) = a
 unpackLunaList :: [VPS a] -> [a]
 unpackLunaList = fmap unpackLunaVar
 
--- convertControlPoint :: ControlPoint2 a -> ControlPoint a
--- convertControlPoint (unpackLunaVar -> a, unpackLunaVar -> b, unpackLunaVar -> c) = ControlPoint a b c
+convertControlPoint :: ControlPoint2 a -> ControlPoint a
+convertControlPoint (unpackLunaVar -> a, unpackLunaVar -> b, unpackLunaVar -> c) = ControlPoint a b c
 
--- convertPath :: Path2 a -> Path a
--- convertPath (unpackLunaVar -> a, unpackLunaList.unpackLunaVar -> b) = Path a (fmap convertControlPoint b)
+convertPath :: Path2 a -> Path a
+convertPath (unpackLunaVar -> a, unpackLunaList.unpackLunaVar -> b) = Path a (fmap convertControlPoint b)
 
--- convertShape :: Shape2 a -> GShape.Shape a
--- convertShape (unpackLunaList -> a) = GShape.Shape (fmap convertPath a)
+convertShape :: Shape2 a -> GShape.Shape a
+convertShape (unpackLunaList -> a) = GShape.Shape (fmap convertPath a)
 
--- convertMask :: Mask2 a -> Mask.Mask a
--- convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a) (fmap convertPath b)
+convertMask :: Mask2 a -> Mask.Mask a
+convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a) (fmap convertPath b)
 
--- rasterizeMaskLuna :: (Real a, Fractional a) => Int -> Int -> Mask2 a -> Image
--- rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
+rasterizeMaskLuna :: (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask2 a -> Image
+rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
 
 gradeLunaColor :: VPS (Color.RGBA Float)
                -> VPS (Color.RGBA Float)
