@@ -63,7 +63,7 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | Lit          { _lval      :: Lit                                                                                      }
           | Comment      { _comment   :: Comment                                                                                  }
           | DataKindT    { _expr      :: Expr }
-          | PragmaE      String [Expr]
+          | MacroE       String [Expr]
           | Pragma       Pragma
           | WildP
           | RecWildP
@@ -78,7 +78,7 @@ proxy name = TypedE (ConE ["Proxy"]) (AppT (ConT "Proxy") (LitT $ Lit.String nam
 app        = foldl AppE 
 appP       = foldl AppP
 
-rtuple items = PragmaE ("rtup" <> show (length items)) items
+rtuple items = MacroE  ("_rtup" <> show (length items)) items
 
 
 val = flip Function mempty
