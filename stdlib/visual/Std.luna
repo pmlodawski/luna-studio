@@ -404,9 +404,6 @@ def Image.contrastMatte self::Image value::Color matte::(Maybe MatteLunaD) -> Im
 def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe MatteLunaD) -> Image:
     ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
 
-def nomatte self::Std:
-    ```val (Nothing :: Maybe (Matte Double))```
-
 
 alias Mask a         = (Path a, Maybe (Path a))
 

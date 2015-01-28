@@ -716,9 +716,6 @@ def Image.contrastMatte value matte:
 def Image.exposureMatte blackpoint ex matte:
     ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
 
-def nomatte:
-    ```val (Nothing :: Maybe (Matte Double))```
-
 #
 #                VIEW
 #
