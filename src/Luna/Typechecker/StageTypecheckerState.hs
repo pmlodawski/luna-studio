@@ -68,9 +68,9 @@ instance Default StageTypecheckerState where
 data StageTypechecker = StageTypechecker
 
 type StageTypecheckerPass                 m     = PassMonad StageTypecheckerState m
-type StageTypecheckerCtx              lab m     = (HumanName (Pat.Pat lab), Enumerated lab, Monad m, Applicative m, MonadIO m, Session.SessionMonad m)
-type StageTypecheckerTraversal            m a b = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a b)
-type StageTypecheckerDefaultTraversal     m a b = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a b)
+type StageTypecheckerCtx              lab m     = (HumanName (Pat.Pat lab), Enumerated lab, Monad m, Applicative m, MonadIO m, Session.SessionMonad m, PassCtx m)
+type StageTypecheckerTraversal            m a   = (PassCtx m, AST.Traversal        StageTypechecker (StageTypecheckerPass m) a a)
+type StageTypecheckerDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal StageTypechecker (StageTypecheckerPass m) a a)
 
 type InExpr  = (Expr.LExpr IDTag ())
 type OutExpr = (Expr.LExpr IDTag ()) 
