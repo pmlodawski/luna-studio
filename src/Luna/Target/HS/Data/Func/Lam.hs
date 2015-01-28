@@ -14,6 +14,8 @@ module Luna.Target.HS.Data.Func.Lam where
 import Luna.Target.HS.Data.Func.App
 import Data.Typeable
 import Luna.Target.HS.Control.Flow.Env
+import Luna.Target.HS.Data.Func.Args9 
+import qualified Luna.Target.HS.Data.Func.Args9 as Args
 
 ----------------------------------------------------------------------------------
 -- Data types
@@ -26,4 +28,7 @@ data Lam lam = Lam lam deriving (Typeable)
 -- Utils
 ----------------------------------------------------------------------------------
 
-mkLam lam args = val $ AppH (Lam lam, args)
+--mkLam lam args = val $ AppH (Lam lam, args)
+
+mkLam :: sig -> f -> Value Pure Safe (AppH (Lam (Func (ArgsKind sig) sig f)) ())
+mkLam sig f = val $ AppH (Lam $ Args.func sig f, ())

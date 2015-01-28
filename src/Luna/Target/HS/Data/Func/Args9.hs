@@ -13,6 +13,7 @@
 --{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 
 {-# LANGUAGE DysfunctionalDependencies #-}
@@ -36,7 +37,7 @@ import Unsafe.Coerce (unsafeCoerce)
 -- Arg
 ----------------------------------------------------------------------
 
-data Arg (name :: NameStatus Symbol) a = Arg a deriving (Show)
+newtype Arg (name :: NameStatus Symbol) a = Arg a deriving (Show)
 
 data NameStatus a = Named a
                   | Unnamed
@@ -88,7 +89,7 @@ npSigArg = flip (nArg . Provided)
 -- Func
 ----------------------------------------------------------------------
 
-data Func (kind :: Nat) sig f = Func { fromFunc :: (sig,f) } deriving (Show, Functor)
+newtype Func (kind :: Nat) sig f = Func { fromFunc :: (sig,f) } deriving (Show, Functor)
 
 func :: sig -> f -> Func (ArgsKind sig) sig f
 func sig f = Func (sig,f)
@@ -191,15 +192,18 @@ type family ArgsKind a :: Nat where
 
 -- === Reverse ===
 
-class Reverse t r t' | t r -> t' where
+class Reverse' t r t' | t r -> t' where
     rev :: t -> r -> t'
 
-instance Reverse () a a where
+instance Reverse' () a a where
     rev _ = id
 
-instance Reverse xs (x,a) b => Reverse (x,xs) a b where
+instance Reverse' xs (x,a) b => Reverse' (x,xs) a b where
     rev (x,xs) a = rev xs (x,a)
 
+type Reverse t t' = Reverse' t () t'
+
+reverse :: Reverse t t' => t -> t'
 reverse a = rev a ()
 
 
@@ -310,3 +314,12 @@ instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u)
 
 
 
+--newtype LamH f args = LamH (f,args)
+
+--class Call h f args a | h f args -> a where
+--    call :: h f args -> a
+
+--instance LamH f args a where
+--    call (LamH (f,args)) =
+
+--tst f = (f 5, f "a")
