@@ -38,6 +38,7 @@ import qualified Luna.Syntax.Graph.Port                as Port
 import           Luna.Syntax.Graph.PropertyMap         (PropertyMap)
 import qualified Luna.Syntax.Graph.PropertyMap         as PropertyMap
 import           Luna.Syntax.Label                     (Label (Label))
+import           Luna.Syntax.Name                      (VNameP)
 
 
 
@@ -154,8 +155,10 @@ getNode nodeID = do
     lift $ Graph.lab gr nodeID <??> "GraphParser: getNodeOutputName: Cannot find nodeID=" ++ show nodeID ++ " in graph"
 
 
-getNodeOutputName :: Node.ID -> GPPass a v m String
-getNodeOutputName nodeID = view Node.outputName <$> getNode nodeID
+getNodeOutputName :: Node.ID -> GPPass a v m VNameP
+getNodeOutputName nodeID = do
+    outputName <- preview Node.outputName <$> getNode nodeID
+    lift $ outputName <??> "GraphParser: getNodeOutputName"
 
 
 getFlags :: Node.ID -> GPPass a v m Flags
@@ -186,5 +189,5 @@ doesLastStatementReturn = do
     body' <- getBody
     return $ case body' of
         []                                 -> False
-        (Label _ (Expr.Assignment {}) : _) -> False
+        (Label _ (Expr.Assignment {}) : _) -> False --TODO[PM] : check it
         _                                  -> True

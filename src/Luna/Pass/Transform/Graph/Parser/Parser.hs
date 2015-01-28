@@ -15,13 +15,14 @@ import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import qualified Data.IntSet                as IntSet
 import qualified Data.List                  as List
+import qualified Data.Text.Lazy             as Text
 
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import           Luna.Data.ASTInfo                      (ASTInfo)
 import qualified Luna.Data.ASTInfo                      as ASTInfo
 import qualified Luna.Parser.Parser                     as Parser
-import qualified Luna.Parser.Token                      as Tok
+import qualified Luna.Parser.Token                      as Token
 import qualified Luna.Pass.Analysis.ID.ExtractIDs       as ExtractIDs
 import qualified Luna.Pass.Pass                         as Pass
 import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
@@ -44,7 +45,8 @@ import qualified Luna.Syntax.Graph.Node.StringExpr      as StringExpr
 import qualified Luna.Syntax.Graph.Port                 as Port
 import           Luna.Syntax.Graph.PropertyMap          (PropertyMap)
 import           Luna.Syntax.Label                      (Label (Label))
-import qualified           Luna.Syntax.Label                      as Label
+import qualified Luna.Syntax.Label                      as Label
+import qualified Luna.Syntax.Name                       as Name
 import qualified Luna.Syntax.Name.Pattern               as Pattern
 import           Luna.Syntax.Pat                        (LPat, Pat)
 import qualified Luna.Syntax.Pat                        as Pat
@@ -142,8 +144,8 @@ parseOutputsNode nodeID = do
 patVariables :: LPat a -> [LExpr a E]
 patVariables pat = case pat of
     Label l (Pat.Var   name  ) -> [Label l $ Expr.Var $ Expr.Variable name ()]
-    Label l (Pat.Tuple items ) -> concatMap patVariables items
-    Label l (Pat.App   _ args) -> concatMap patVariables args
+    Label _ (Pat.Tuple items ) -> concatMap patVariables items
+    Label _ (Pat.App   _ args) -> concatMap patVariables args
     _                          -> []
 
 
@@ -171,7 +173,7 @@ parsePatNode nodeID pat = do
         _      -> lift $ left "parsePatNode: Wrong Pat arguments"
 
 
-parseNativeNode :: Node.ID -> String -> GPPass a e m ()
+parseNativeNode :: Node.ID -> String -> GPPass a E m ()
 parseNativeNode nodeID native = do
     srcs <- State.getNodeSrcs nodeID
     expr <- case exprParser native nodeID of
@@ -189,52 +191,50 @@ parseNativeNode nodeID native = do
 
 
 --FIXME[PM]: remove
-parseAppNode     = undefined
 patternParser :: String -> Int -> Either String (LPat a, Int)
-patternParser = undefined
+patternParser     = undefined
 exprParser :: String -> Int -> Either String (LExpr a e, Int)
-exprParser = undefined
-addExpr :: Node.ID -> LExpr a e  -> GPPass a e m ()
-addExpr = undefined
+exprParser        = undefined
+parseAppNode      = undefined
 replaceNativeVars = undefined
 -----------------
 
---parseAppNode :: Node.ID -> String -> GPPass ()
+--parseAppNode :: Node.ID -> String -> GPPass a E m ()
 --parseAppNode nodeID app = do
 --    srcs <- State.getNodeSrcs nodeID
 --    expr <- if isOperator app
---                then return $ Expr.Var nodeID app
+--                then return $ label nodeID $ Expr.Var $ Expr.Variable (fromString app) ()
 --                else do
---                    case Parser.parseString app $ Parser.exprParser (patchedParserState $ ASTInfo.mk nodeID) of
---                        Left  er     -> left $ show er
+--                    case exprParser app nodeID of
+--                        Left  er     -> lift $ left $ show er
 --                        Right (e, _) -> return e
---    ids <- hoistEither =<< ExtractIDs.runExpr expr
+--    ids <- lift $ hoistEither =<< ExtractIDs.runExpr expr
 --    mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
 --    State.setGraphFoldTop nodeID $ exprToNodeID expr
---    let requiresApp (Expr.Con {}) = True
---        requiresApp _             = False
+--    let requiresApp (Expr.Cons {}) = True
+--        requiresApp _              = False
 --    case srcs of
---        []                   -> addExpr nodeID $ if requiresApp expr
---                                    then Expr.App IDFixer.unknownID expr []
---                                    else expr
---        (Expr.Wildcard {}):t -> addExpr nodeID $ Expr.App IDFixer.unknownID expr (fmap (Arg.Unnamed IDFixer.unknownID) t)
---        f:t                  -> addExpr nodeID $ Expr.App IDFixer.unknownID acc  (fmap (Arg.Unnamed IDFixer.unknownID) t)
---                                where acc = Expr.Accessor nodeID (Expr.mkAccessor app) f
+--        []                      -> addExpr nodeID $ if requiresApp $ unwrap expr
+--                                       then labelUnknown $ Expr.app expr []
+--                                       else expr
+--        Label _ Expr.Wildcard:t -> addExpr nodeID $ labelUnknown $ Expr.app expr $ map Expr.unnamed t
+--        f:t                     -> addExpr nodeID $ labelUnknown $ Expr.app acc  $ map Expr.unnamed t
+--                                        where acc = label nodeID $ Expr.Accessor (Name.mkNameBaseAccessor $ Text.pack app) f
 
 
 exprToNodeID :: Enum.Enumerated a => LExpr a e -> Node.ID
-exprToNodeID (Label _ (Expr.App exprApp)) = exprToNodeID $ exprApp ^. Pattern.namePatBase . Pattern.segmentBase 
-exprToNodeID lexpr                        = Enum.id $ lexpr ^. Label.label 
+exprToNodeID (Label _ (Expr.App exprApp)) = exprToNodeID $ exprApp ^. Pattern.namePatBase . Pattern.segmentBase
+exprToNodeID lexpr                        = Enum.id $ lexpr ^. Label.label
 
 
 setNodeID :: Enum.Enumerated a => Node.ID -> LExpr a e -> LExpr a e
-setNodeID nodeID lexpr@(Label _ (Expr.App _)) = lexpr & Label.element . Expr.exprApp 
-                                                      . Pattern.namePatBase . Pattern.segmentBase 
-                                                      %~ setNodeID nodeID 
+setNodeID nodeID lexpr@(Label _ (Expr.App _)) = lexpr & Label.element . Expr.exprApp
+                                                      . Pattern.namePatBase . Pattern.segmentBase
+                                                      %~ setNodeID nodeID
 setNodeID nodeID lexpr                        = lexpr & Label.label              .~ Enum.tag  nodeID
 
 
-parseTupleNode :: Node.ID -> GPPass a e m ()
+parseTupleNode :: Node.ID -> GPPass a E m ()
 parseTupleNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = label nodeID $ Expr.Tuple srcs
@@ -248,52 +248,52 @@ parseTupleNode nodeID = do
 --    addExpr nodeID e
 
 
-parseListNode :: Node.ID -> GPPass a e m ()
+parseListNode :: Node.ID -> GPPass a E m ()
 parseListNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = label nodeID $ Expr.List $ Expr.SeqList srcs
     addExpr nodeID e
 
 
-parseASTExprNode :: Node.ID -> LExpr a e -> GPPass a e m ()
+parseASTExprNode :: Node.ID -> LExpr a E -> GPPass a E m ()
 parseASTExprNode nodeID = addExpr nodeID
                         . setNodeID nodeID
 
 
---addExpr :: Node.ID -> Expr -> GPPass ()
---addExpr nodeID expr' = do
---    graph <- State.getGraph
+addExpr :: Node.ID -> LExpr a E  -> GPPass a E m ()
+addExpr nodeID expr' = do
+    graph <- State.getGraph
 
---    flags <- State.getFlags nodeID
---    let folded         = Flags.isSet' flags $ view Flags.astFolded
---        assignment     = Flags.isSet' flags $ view Flags.astAssignment
---        defaultNodeGen = Flags.isSet' flags $ view Flags.defaultNodeGenerated
---        grouped        = Flags.isSet' flags $ view Flags.grouped
+    flags <- State.getFlags nodeID
+    let folded         = Flags.isSet' flags $ view Flags.astFolded
+        assignment     = Flags.isSet' flags $ view Flags.astAssignment
+        defaultNodeGen = Flags.isSet' flags $ view Flags.defaultNodeGenerated
+        grouped        = Flags.isSet' flags $ view Flags.grouped
 
---    let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
---        assignmentCount = length $ List.filter assignmentEdge
---                                 $ Graph.lsuclData graph nodeID
+    let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
+        assignmentCount = length $ List.filter assignmentEdge
+                                 $ Graph.lsuclData graph nodeID
 
---        connectedToOutput = List.any (Node.isOutputs . view _2)
---                          $ Graph.lsuclData graph nodeID
+        connectedToOutput = List.any (Node.isOutputs . view _2)
+                          $ Graph.lsuclData graph nodeID
 
---        expr = if grouped
---            then Expr.Grouped IDFixer.unknownID expr'
---            else expr'
+        expr = if grouped
+            then labelUnknown $ Expr.Grouped expr'
+            else expr'
 
---    if (folded && assignmentCount == 1) || defaultNodeGen
---        then State.addToNodeMap (nodeID, Port.All) expr
---        else if assignment || assignmentCount > 1
---            then do outName <- State.getNodeOutputName nodeID
---                    let p = Pat.Var IDFixer.unknownID outName
---                        v = Expr.Var IDFixer.unknownID outName
---                        a = Expr.Assignment IDFixer.unknownID p expr
---                    State.addToNodeMap (nodeID, Port.All) v
---                    State.addToBody a
---            else do State.addToNodeMap (nodeID, Port.All) expr
---                    unless (connectedToOutput || assignmentCount == 1 ) $
---                        State.addToBody expr
+    if (folded && assignmentCount == 1) || defaultNodeGen
+        then State.addToNodeMap (nodeID, Port.All) expr
+        else if assignment || assignmentCount > 1
+            then do outName <- State.getNodeOutputName nodeID
+                    let p = labelUnknown $ Pat.Var  outName
+                        v = labelUnknown $ Expr.Var $ Expr.Variable outName ()
+                        a = labelUnknown $ Expr.Assignment p expr
+                    State.addToNodeMap (nodeID, Port.All) v
+                    State.addToBody a
+            else do State.addToNodeMap (nodeID, Port.All) expr
+                    unless (connectedToOutput || assignmentCount == 1) $
+                        State.addToBody expr
 
 
---isOperator :: String -> Bool
---isOperator expr = length expr == 1 && head expr `elem` Tok.opChars
+isOperator :: String -> Bool
+isOperator expr = length expr == 1 && head expr `elem` Token.opChars
