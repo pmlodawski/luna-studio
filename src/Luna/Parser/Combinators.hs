@@ -73,6 +73,7 @@ applyAll x (f : fs) = applyAll (f x) fs
 applyAll x [] = x
 
 
+--FIXME[PM->WD] : compare with Control.Monad.>=>
 infixl 3 <=<
 (<=<) s p = do
     ret <- p
