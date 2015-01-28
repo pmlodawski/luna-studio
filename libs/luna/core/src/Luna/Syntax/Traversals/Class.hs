@@ -286,7 +286,7 @@ instance ( Traversal base m v v'
          , Traversal base m (Expr.LMatch lab v) (Expr.LMatch lab' v')
          , Traversal base m (LExpr lab v) (LExpr lab' v')
          , Traversal base m (LType lab) (LType lab')
-         , Traversal base m (LArg lab (Expr lab v)) (LArg lab' (Expr lab' v'))
+         , Traversal base m (LArg lab (LExpr lab v)) (LArg lab' (LExpr lab' v'))
          , Traversal base m (NamePat (LExpr lab v) (Expr.AppArg (LExpr lab v))) (NamePat (LExpr lab' v') (Expr.AppArg (LExpr lab' v')))
          , Traversal base m (Expr.Variable v) (Expr.Variable v')
          , Traversal base m (Expr.FieldUpd lab v) (Expr.FieldUpd lab' v')

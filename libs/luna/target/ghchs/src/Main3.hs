@@ -51,8 +51,11 @@ $(registerMethod ''Main "print")
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 memDef_Main_main _self = do 
+     a <- mkLam (_rtup1(_nuSigArg("a"))) (\a -> a)
      call (appNext (val []) (_member("print") _self))
      call (_member("print") _self)
+     call (appNext (    call $ appNext (val "!!!") $ mkLam (_rtup1(_nuSigArg("a"))) (\a -> a)      ) (_member("print") _self))
+     
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
