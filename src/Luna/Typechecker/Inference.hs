@@ -83,7 +83,7 @@ tcUnit ast structAnalysis = do
 instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LDecl IDTag InExpr) (LDecl IDTag InExpr) where
   traverseM _ = tcDecl
 instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) (LExpr IDTag ()) (LExpr IDTag ()) where
-  traverseM _ = undefined -- tcExpr
+  traverseM _ = tcExpr
 
 traverseM :: (StageTypecheckerTraversal m a) => a -> StageTypecheckerPass m a
 traverseM = AST.traverseM StageTypechecker
@@ -158,7 +158,9 @@ tcDecl ldecl@(Label lab decl) =
 
                     debugPush "pop"
                     return travRes
-                Nothing ->
+                Nothing -> do
+                    mm <- typeMap & use
+                    debugPush $ "PRE ERR: " ++ show mm
                     report_error ("no type returned for " ++ show labID) travRes
           
           --tp (env, Abs x e) = do a <- newtvar
@@ -175,76 +177,79 @@ insertNewMonoTypeVariable labID = do
     return $ TV tvarID
 
 
---tcExpr :: (StageTypecheckerCtx lab m) => LExpr lab InExpr -> StageTypecheckerPass m (LExpr lab OutExpr)
---tcExpr = expr
+--tcExpr :: (StageTypecheckerCtx IDTag m) => LExpr IDTag () -> StageTypecheckerPass m (LExpr IDTag ())
+tcExpr lexpr@(Label lab _) = do
+  labID <- getTargetIDString lab
+  debugPush $ "tcExpr: " ++ labID
+  expr lexpr <* debugPush ("tcExpr: " ++ labID ++ " DONE")
 
 
-----expr :: (StageTypecheckerCtx lab m) => LExpr lab InExpr -> StageTypecheckerPass m (LExpr lab OutExpr)
---expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
---  do
---    let hn = unpack . humanName $ vname
---    hn_id <- getTargetIDString lab
---    debugPush ("Var         " ++ hn ++ hn_id)
+expr :: (StageTypecheckerCtx IDTag m) => LExpr IDTag () -> StageTypecheckerPass m (LExpr IDTag ())
+expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) = 
+  do
+    let hn = unpack . humanName $ vname
+    hn_id <- getTargetIDString lab
+    debugPush ("Var         " ++ hn ++ hn_id)
 
---    targetLabel <- getTargetID lab
---    env <- getEnv
---    vType <- inst targetLabel
---    result <- normalize vType
+    targetLabel <- getTargetID lab
+    env <- getEnv
+    vType <- inst targetLabel
+    result <- normalize vType
 
---    debugPush ("         :: " ++ show result)
+    debugPush ("         :: " ++ show result)
 
---    setTypeById targetLabel result
+    setTypeById targetLabel result
 
---    defaultTraverseM var
+    defaultTraverseM var
 
---expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) = do
---  case (dst, src) of
---      (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
---        do  
---          --tp (env, Let x e e') = do a <- tp (env, e)
---          --                          b <- gen env a
---          --                          tp ((insert env (x, b)), e')
---          t_id <- getTargetIDString labt
---          s_id <- getTargetIDString labs
---          debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ unpack (humanName src_vname) ++ s_id) 
---          -- TODO destType <- expr env dst
---      _ -> do
---            debugPush "Some assignment..."
+
+expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) = do
+  case (dst, src) of
+      (Pat.Var { Pat._vname = dst_vname }, Expr.Var { Expr._ident = (Expr.Variable src_vname _) }) ->
+        do  
+          --tp (env, Let x e e') = do a <- tp (env, e)
+          --                          b <- gen env a
+          --                          tp ((insert env (x, b)), e')
+          t_id <- getTargetIDString labt
+          s_id <- getTargetIDString labs
+          debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ unpack (humanName src_vname) ++ s_id) 
+          -- TODO destType <- expr env dst
+      _ -> do
+            debugPush "Some assignment..."
   
---  defaultTraverseM ass
+  defaultTraverseM ass
 
+expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Segment appExpr args ) } ) ) ) =
+  do
+    debugPush "Infering an application..."
 
---expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Segment appExpr args ) } ) ) ) =
---  do
---    debugPush "Infering an application..."
+    let Label appExprLab _ = appExpr
+    appId <- getTargetID lab
+    appExprId <- getTargetID appExprLab
 
---    let Label appExprLab _ = appExpr
---    appId <- getTargetID lab
---    appExprId <- getTargetID appExprLab
+    -- typecheck all args
+    res <- defaultTraverseM app
 
---    -- typecheck all args
---    res <- defaultTraverseM app
+    e1Type <- getTypeById appExprId
+    let argTypes = map toType args
+    result <- Fold.foldlM tp e1Type argTypes
+    setTypeById appId result
 
---    e1Type <- getTypeById appExprId
---    let argTypes = map toType args
---    result <- Fold.foldlM tp e1Type argTypes
---    setTypeById appId result
+    debugPush $ "Result of infering an application: " ++ show result
+    return res
 
---    debugPush $ "Result of infering an application: " ++ show result
---    return res
+  where
+    toType (Expr.AppArg _ (Label lab _)) = do
+      getTypeById =<< getTargetID lab
 
---  where
---    toType (Expr.AppArg _ (Label lab _)) = do
---      getTypeById =<< getTargetID lab
-
---    tp result arg = do
---      argType <- arg
---      a <- newtvar
---      add_constraint (C [result `Subsume` (argType `Fun` TV a)])
---      normalize (TV a)
+    tp result arg = do
+      argType <- arg
+      a <- newtvar
+      add_constraint (C [result `Subsume` (argType `Fun` TV a)])
+      normalize (TV a)
 
 --expr _ = error "No idea how to infer type at the moment."
-
+expr _ = error "inny error"
 
 getTypeById :: Monad m => ID -> StageTypecheckerPass m Type
 getTypeById idV = do
@@ -252,8 +257,11 @@ getTypeById idV = do
     maybe (error "Can't find type using id.") (return . id) typeResult
 
 
-setTypeById id typeV =
+setTypeById id typeV = do
+    debugPush $ "save " ++ show id ++ " ?= " ++ show typeV
     typeMap . at id ?= typeV
+    mm <- typeMap & use
+    debugPush $ show mm
 
 
 debugPush :: (Monad m) => String -> StageTypecheckerPass m ()
