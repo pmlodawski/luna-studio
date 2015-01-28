@@ -17,7 +17,7 @@
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
-module Luna.Target.HS.Data.Func.Args7 where
+module Luna.Target.HS.Data.Func.Args8 where
 
 
 import Prelude hiding (reverse)
@@ -213,31 +213,31 @@ instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u)
 -- Tests
 ----------------------------------------------------------------------
 
-appArgs = appArgsProto . reverse
+--appArgs = appArgsProto . reverse
 
-foo = appArgs (nArg [] (Proxy::Proxy "x"),())
+--foo = appArgs (nArg [] (Proxy::Proxy "x"),())
 
-foo2 f = func (npArg [] (Proxy::Proxy "x"),()) f
+--foo2 f = func (npArg [] (Proxy::Proxy "x"),()) f
 
-foo3 f = appArg (nArg [] (Proxy::Proxy "x")) $ foo2 f
+--foo3 f = appArg (nArg [] (Proxy::Proxy "x")) $ foo2 f
 
-bar2 f = appDefaults (func (npArg [] (Proxy::Proxy "x"),()) f)
+--bar2 f = appDefaults (func (npArg [] (Proxy::Proxy "x"),()) f)
 
-sig = addArg uuArg
-    $ addArg (npArg [] (Proxy::Proxy "x"))
-    $ empty
+--sig = addArg uuArg
+--    $ addArg (npArg [] (Proxy::Proxy "x"))
+--    $ empty
 
-args = addArg (uArg 5)
-     $ addArg (nArg [] (Proxy::Proxy "x"))
-     $ empty
+--args = addArg (uArg 5)
+--     $ addArg (nArg [] (Proxy::Proxy "x"))
+--     $ empty
 
-tst a b = (a,b)
+--tst a b = (a,b)
 
-ftst f = appDefaults $ appArgs args f
+--ftst f = appDefaults $ appArgs args f
 
-main = do
-    print $ ftst (func (npArg [] (Proxy::Proxy "x"),(npArg [] (Proxy::Proxy "y"),())) tst)
-    return ()
+--main = do
+--    print $ ftst (func (npArg [] (Proxy::Proxy "x"),(npArg [] (Proxy::Proxy "y"),())) tst)
+--    return ()
 
 
 ------------------------------------------------------------------------------------------------------------
