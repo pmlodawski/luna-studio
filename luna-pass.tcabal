@@ -92,6 +92,7 @@ Test-Suite tests
                   luna-pass,
                   flowbox-utils,
                   hspec,
+                  MissingH,
                   pretty-show,
                   raw-strings-qq,
-                  MissingH
+                  zippers
