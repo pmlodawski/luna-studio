@@ -301,6 +301,7 @@ testEdgeBlur kernelSize edgeMultiplier channel = do
 type Matte2 a = ( VPS (Maybe (Mask2 a))
                 , VPS (Maybe Channel)
                 )
+
 vectorMatteLuna :: Mask2 Double -> Matte.Matte Double
 vectorMatteLuna mask = Matte.VectorMatte $ convertMask mask
 
@@ -312,7 +313,8 @@ convertMatte :: Matte2 Double -> Matte.Matte Double
 convertMatte (unpackLunaVar -> a, unpackLunaVar -> b) =
   case (a,b) of
     (Just mask, Nothing) -> vectorMatteLuna mask
-    _ -> error "Not implemented"
+    (Nothing, Just chan) -> imageMatteLuna chan
+    _                    -> error "invalid mask"
 
 unpackAcc :: (A.Exp Int,A.Exp Int) -> (Int,Int)
 unpackAcc (x,y) = 
@@ -1067,31 +1069,6 @@ hueCorrectLuna (VPS (convertCurveGUI-> lum)) (VPS (convertCurveGUI -> sat))
                                                  (CurveGUI.convertToBSpline bSup)
                                      ) img
 
--- TODO
---gradeLuna' :: VPS (Color.RGBA Double)
---           -> VPS (Color.RGBA Double)
---           -> VPS (Color.RGBA Double)
---           -> Color.RGBA Double
---           -> Color.RGBA Double
---           -> Color.RGBA Double
---           -> Color.RGBA Double
---           -> Matte.Matte Double
---           -> Image
---           -> Image
---gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
---           (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
---           (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
---           (fmap variable -> Color.RGBA gainR gainG gainB gainA)
---           (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
---           (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
---           (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) matte =
---             onEachMatrix (gradeMat blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
---                          (gradeMat blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
---                          (gradeMat blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
---                          id --(gradeMat blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
---                where
---                    gradeMat x1 x2 x3 x4 x5 x6 x7 mat = applyToMatrix (grade x1 x2 x3 x4 x5 x6 x7) matte mat
-
 colorCorrectLuna' :: Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
@@ -1410,9 +1387,8 @@ getChannelLuna viewName channelName img = case Image.lookup viewName img of
 
 getChannelFromPrimaryLuna :: String -> Image -> Image.Result (Maybe Channel)
 getChannelFromPrimaryLuna channelName img = case Image.lookupPrimary img of
-  Right view -> View.get view channelName
-  _          -> Left $ Image.ViewLookupError "primary view"
-
+    Right view -> View.get view channelName
+    _          -> Left $ Image.ViewLookupError "primary view"
 
 -- FIXME[KM]: [iup]
 --insertChannelLuna :: String -> Channel -> Image -> Image
@@ -1488,13 +1464,13 @@ realReadLuna :: FilePath -> IO Image
 realReadLuna (ImageEXR path) = readFromEXRLuna path
 realReadLuna path            = loadImageLuna path
 
-loadMatteLuna :: FilePath -> String -> IO (Maybe Channel)
+loadMatteLuna :: FilePath -> String -> IO Channel
 loadMatteLuna path channelName = do
   img <- realReadLuna path
   let channel = getChannelFromPrimaryLuna channelName img
   case channel of
-    Right channel -> return channel
-    Left _ -> error "Error while matte loading."
+    Right (Just channel) -> return channel
+    _ -> error "cannot load mask from the given channel"
 
 testColorCC :: Color5 -> Image
 testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
