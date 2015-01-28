@@ -144,26 +144,21 @@ saveImageJuicy file matrix = do
 
 -- == HELPERS
 onEach :: (A.Exp Double -> A.Exp Double) -> Image -> Image
-onEach f = Image.map (View.map $ Channel.unsafeMap (Channel.FunDouble f))
+onEach f = Image.map (View.map $ Channel.unsafeMap (Channel.FunDouble f)) 
 
-onChannelList :: [(String, Channel -> Channel)] -> Image -> Image
-onChannelList chans img = Image.appendMultiToPrimary chans' img
-  where chans' = P.map (\x -> (snd x) (getChan (fst x))) chans
-        getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan        
-
---onEachRGBA :: (A.Exp Double -> A.Exp Double)
---           -> (A.Exp Double -> A.Exp Double)
---           -> (A.Exp Double -> A.Exp Double)
---           -> (A.Exp Double -> A.Exp Double)
---           -> Image
---           -> Image
---onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
---    where r = updateChan fr "rgba.r"
---          g = updateChan fg "rgba.g"
---          b = updateChan fb "rgba.b"
---          a = updateChan fa "rgba.a"
---          updateChan f = Channel.unsafeMap (Channel.FunDouble f) . getChan
---          getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
+onEachRGBA :: (A.Exp Double -> A.Exp Double)
+           -> (A.Exp Double -> A.Exp Double)
+           -> (A.Exp Double -> A.Exp Double)
+           -> (A.Exp Double -> A.Exp Double)
+           -> Image
+           -> Image
+onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
+    where r = updateChan fr "rgba.r"
+          g = updateChan fg "rgba.g"
+          b = updateChan fb "rgba.b"
+          a = updateChan fa "rgba.a"
+          updateChan f = Channel.unsafeMap (Channel.FunDouble f) . getChan
+          getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
 
 onEachRGBAChannels :: (Channel -> Channel)
                    -> (Channel -> Channel)
@@ -187,34 +182,7 @@ onEachRGBAChannels fr fg fb fa img = img'
                 ]
 
         img' = Image.insertPrimary view' img
-    --    updateChan f = Channel.unsafeMap (Channel.FunDouble f) . getChan
         getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
-
-
-onEachRGBA :: (A.Exp Double -> A.Exp Double)
-           -> (A.Exp Double -> A.Exp Double)
-           -> (A.Exp Double -> A.Exp Double)
-           -> (A.Exp Double -> A.Exp Double)
-           -> Image
-           -> Image
-onEachRGBA fr fg fb fa img = img' --Image.appendMultiToPrimary [r,g,b,a] img
-    where ChannelFloat _ (MatrixData r) = updateChan fr "rgba.r"
-          ChannelFloat _ (MatrixData g) = updateChan fg "rgba.g"
-          ChannelFloat _ (MatrixData b) = updateChan fb "rgba.b"
-          ChannelFloat _ (MatrixData a) = updateChan fa "rgba.a"
-
-          Right view = lookupPrimary img
-
-          view' = insertChannelFloats view [
-                      ("rgba.r", r)
-                    , ("rgba.g", g)
-                    , ("rgba.b", b)
-                    , ("rgba.a", a)
-                  ]
-
-          img' = Image.insertPrimary view' img
-          updateChan f = Channel.unsafeMap (Channel.FunDouble f) . getChan
-          getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
 
 onEachColorRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image -> Image
 onEachColorRGB f img = img'
@@ -416,7 +384,7 @@ exposureMatteLuna x@(fmap variable -> Color.RGBA blackpointR blackpointG blackpo
                                              (applyMatteFloat (exposure blackpointA exA) m') img
 
 offsetLuna :: Color.RGBA Double -> Image -> Image
-offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) (offset a)
+offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) id -- (offset a)
 
 contrastLuna :: Color.RGBA Double -> Image -> Image
 contrastLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (contrast r) (contrast g) (contrast b) id -- (contrast a)
