@@ -49,7 +49,7 @@ main = do
         quadS2 = fmap (/(10000)) . (fmap P.fromIntegral) . (fmap P.round) . (fmap (*(10000 :: Double))) $ QuadraticBezier (Point2 10.0 10.0) (Point2 216.66666666666666 10.0) (Point2 423.33333333333337 10.0) :: QuadraticBezier Double
         quadS3 = QuadraticBezier (Point2 10.0 10.0) (Point2 320.0 10.0) (Point2 630.0 10.0) :: QuadraticBezier Double
         quadS4 = QuadraticBezier (Point2 10.0 10.0) (Point2 216.66666666666666 10.0) (Point2 423.3              10.0) :: QuadraticBezier Double
-        quadS5 = QuadraticBezier (Point2 10.0 10.0) (Point2 217.0 10.0) (Point2 423.0 10.0) :: QuadraticBezier Double
+        quadS5 = QuadraticBezier (Point2 293.366284 293.596489) (Point2 363.9906950000002 169.23332700000003) (Point2 434.615106 44.870165) :: QuadraticBezier Double
         mat :: Matrix2 Double
         mat  = M.generate (A.index2 500 500) $ combine $ A.lift quad
         img  = matrixToImage mat
@@ -90,7 +90,7 @@ main = do
     saveImageLuna "fooD3.png" imgS
 
     let matS = M.generate (A.index2 30 30) $ combine2 $ A.lift quadS3
-    print $ M.compute run matS
+    --print $ M.compute run matS
 
     putStrLn "testing distanceFromQuadratics Straight Line 4 --> fooD4.png"
     let matS = M.generate (A.index2 500 500) $ combine2 $ A.lift quadS4
@@ -98,7 +98,7 @@ main = do
 
     saveImageLuna "fooD4.png" imgS
 
-    putStrLn "testing distanceFromQuadratics Straight Line 5 --> fooD5.png"
+    putStrLn "testing distanceFromQuadratics GUI example 5 --> fooD5.png"
     let matS = M.generate (A.index2 500 500) $ combine2 $ A.lift quadS5
         imgS = matrixToImage matS
 

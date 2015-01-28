@@ -255,7 +255,7 @@ onEachChannel f = Image.map $ View.map f
 
 
 edgeBlur :: Channel.Name -> EB.BlurType -> Int -> Double -> Image -> Image
-edgeBlur channelName blurType kernelSize edgeMultiplier image = 
+edgeBlur channelName blurType kernelSize edgeMultiplier image =
     case getFromPrimary channelName image of
         Left err             -> error $ show err
         Right (Nothing)      -> image
@@ -580,6 +580,13 @@ constantLuna (variable -> width) (variable -> height) (fmap variable -> Color.RG
                   , ("rgba.a", a)
                   ]
 
+--TODO[KM]: port checkerboard to luna
+--type CheckerboardColorsLuna = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
+--type CheckerboardLineLuna   = (VPS ColorD, VPS Double)
+-- ...
+--checkerboardLuna :: VPS Int -> VPS Int -> Double -> CheckerboardColorsLuna -> CheckerboardLineLuna -> CheckerboardLineLuna -> Image
+--checkerboardLuna w h
+
 circularLuna :: Int -> Int -> Image
 circularLuna = gradientLuna circularShape
 
@@ -678,8 +685,8 @@ rotateLuna (variable -> phi) = onEachChannel rotateChannel
               --TODO[KM]: handle the mask properly
               _       -> phi
 
-rotateAtLuna :: Double -> Point2 Double -> Image -> Image
-rotateAtLuna (variable -> phi) (fmap variable -> (Point2 x y)) = onEachChannel rotateChannel
+rotateAtLuna :: Point2 Double -> Double -> Image -> Image
+rotateAtLuna (fmap variable -> (Point2 x y)) (variable -> phi) = onEachChannel rotateChannel
     where vBefore = V2 (-x) y
           vAfter  = V2 x (-y)
           mask    = Nothing
@@ -708,8 +715,8 @@ scaleLuna (fmap variable -> v) = onEachChannel scaleChannel
               --TODO[KM]: handle the mask properly
               _       -> v
 
-scaleAtLuna :: V2 Double -> Point2 Double -> Image -> Image
-scaleAtLuna (fmap variable -> v) (fmap variable -> (Point2 x y)) = onEachChannel scaleChannel
+scaleAtLuna :: Point2 Double -> V2 Double -> Image -> Image
+scaleAtLuna (fmap variable -> (Point2 x y)) (fmap variable -> v) = onEachChannel scaleChannel
     where vBefore = V2 (-x) y
           vAfter  = V2 x (-y)
           mask    = Nothing
@@ -1028,30 +1035,30 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
-type HandleGUI = (VPS Int, VPS Double, VPS Double)
-type ControlPointGUI a = (VPS (Point2 a), VPS HandleGUI, VPS HandleGUI)
-type CurveGUI a = [VPS (ControlPointGUI a)]
+type LunaHandleGUI = (VPS Int, VPS Double, VPS Double)
+type LunaControlPointGUI a = (VPS (Point2 a), VPS LunaHandleGUI, VPS LunaHandleGUI)
+type LunaCurveGUI a = [VPS (LunaControlPointGUI a)]
 
-convertHandleGUI :: HandleGUI -> CurveGUI.Handle
+convertHandleGUI :: LunaHandleGUI -> CurveGUI.Handle
 convertHandleGUI (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
     case t of
         0 -> CurveGUI.NonLinear w a
         1 -> CurveGUI.Vertical w
         2 -> CurveGUI.Linear
 
-getValueAtCurveGUI :: CurveGUI Double -> Double -> Double
+getValueAtCurveGUI :: LunaCurveGUI Double -> Double -> Double
 getValueAtCurveGUI (convertCurveGUI -> curve) = CurveGUI.valueAtSpline curve
 
-convertControlPointGUI :: ControlPointGUI a -> CurveGUI.ControlPoint a
+convertControlPointGUI :: LunaControlPointGUI a -> CurveGUI.ControlPoint a
 convertControlPointGUI (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
     CurveGUI.ControlPoint p (convertHandleGUI hIn) (convertHandleGUI hOut)
 
-convertCurveGUI :: CurveGUI a -> CurveGUI.Curve a
+convertCurveGUI :: LunaCurveGUI a -> CurveGUI.Curve a
 convertCurveGUI (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertControlPointGUI c)
 
-hueCorrectLuna :: VPS (CurveGUI Double) -> VPS (CurveGUI Double) ->
-                  VPS (CurveGUI Double) -> VPS (CurveGUI Double) -> VPS (CurveGUI Double) ->
-                  CurveGUI Double -> CurveGUI Double -> CurveGUI Double ->
+hueCorrectLuna :: VPS (LunaCurveGUI Double) -> VPS (LunaCurveGUI Double) ->
+                  VPS (LunaCurveGUI Double) -> VPS (LunaCurveGUI Double) -> VPS (LunaCurveGUI Double) ->
+                  LunaCurveGUI Double -> LunaCurveGUI Double -> LunaCurveGUI Double ->
                   -- GUICurve Double -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
@@ -1069,14 +1076,60 @@ hueCorrectLuna (VPS (convertCurveGUI-> lum)) (VPS (convertCurveGUI -> sat))
                                                  (CurveGUI.convertToBSpline bSup)
                                      ) img
 
+gradeLuna' :: VPS (Color.RGBA Double)
+           -> VPS (Color.RGBA Double)
+           -> VPS (Color.RGBA Double)
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Color.RGBA Double
+           -> Image
+           -> Image
+gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
+           (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
+           (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
+           (fmap variable -> Color.RGBA gainR gainG gainB gainA)
+           (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
+           (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
+           (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) =
+             onEachRGBA (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
+                        (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
+                        (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
+                        id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+
+type ColorCorrect a = (VPS (LunaCurveGUI a), VPS (LunaCurveGUI a))
+pattern ColorCorrect a b = (VPS a, VPS b)
+
+colorCorrectLunaCurves :: VPS (ColorCorrect Double)
+                       -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                       -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                       -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                       -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                       -> Image
+                       -> Image
+colorCorrectLunaCurves (VPS (ColorCorrect curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
+    where prepare (convertCurveGUI -> CurveGUI.BezierCurve nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
+
 colorCorrectLuna' :: Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Image
                   -> Image
+colorCorrectLuna' = colorCorrectLunaBase (curveShadows, curveHighlights)
+    where curveShadows    = makeSpline [BSplineNode (Point2 0 1) (Point2 (-1) 1) (Point2 0.03 1), BSplineNode (Point2 0.09 0) (Point2 0.06 0) (Point2 1.09 0)]
+          curveHighlights = makeSpline [BSplineNode (Point2 0.5 0) (Point2 (-0.5) 0) (Point2 (2/3) 0), BSplineNode (Point2 1 1) (Point2 (5/6) 1) (Point2 2 1)]
+          makeSpline      = A.fromList (Z :. 2)
 
-colorCorrectLuna' ( VPS (fmap variable -> ColorD masterSaturationR masterSaturationG masterSaturationB masterSaturationA)
+colorCorrectLunaBase :: (BSpline Double, BSpline Double)
+                     -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                     -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                     -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                     -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                     -> Image
+                     -> Image
+colorCorrectLunaBase (curveShadows, curveHighlights)
+                  ( VPS (fmap variable -> ColorD masterSaturationR masterSaturationG masterSaturationB masterSaturationA)
                   , VPS (fmap variable -> ColorD masterContrastR masterContrastG masterContrastB masterContrastA)
                   , VPS (fmap variable -> ColorD masterGammaR masterGammaG masterGammaB masterGammaA)
                   , VPS (fmap variable -> ColorD masterGainR masterGainG masterGainB masterGainA)
@@ -1107,14 +1160,12 @@ colorCorrectLuna' ( VPS (fmap variable -> ColorD masterSaturationR masterSaturat
                                  id -- (colorCorrect contrastA gammaA gainA offsetA) saturated
                                  saturated
     where
-          curveShadows    = A.lift $ CubicBezier (Point2 (0::Double) 1) (Point2 0.03 1) (Point2 0.06 0) (Point2 0.09 0) :: Exp (CubicBezier Double)
-          curveHighlights = A.lift $ CubicBezier (Point2 0.5 (0::Double)) (Point2 (2/3) 0) (Point2 (5/6) 1) (Point2 1 1) :: Exp (CubicBezier Double)
           strShadows x    = A.cond (x A.<=* 0) 1
                           $ A.cond (x A.>=* 0.09) 0
-                          $ CubicSolveAcc.valueAtX 10 0.001 (curveShadows :: Exp (CubicBezier Double)) x
+                          $ BSpline.valueAt (A.use curveShadows :: A.Acc (BSpline Double)) x
           strHighlights x = A.cond (x A.<=* 0.5) 0
                           $ A.cond (x A.>=* 1) 1
-                          $ CubicSolveAcc.valueAtX 10 0.001 (curveHighlights :: Exp (CubicBezier Double)) x
+                          $ BSpline.valueAt (A.use curveHighlights :: A.Acc (BSpline Double)) x
 
           correctMasterR = colorCorrect masterContrastR masterGammaR masterGainR masterOffsetR
           correctMasterG = colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
