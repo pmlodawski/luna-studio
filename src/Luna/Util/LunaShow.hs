@@ -15,8 +15,8 @@ module Luna.Util.LunaShow where
 --import           Flowbox.Prelude hiding (simple)
 --import           Luna.AST.Arg        (Arg)
 --import qualified Luna.AST.Arg        as Arg
---import           Luna.AST.Expr       (Expr)
---import qualified Luna.AST.Expr       as Expr
+--import           Luna.Syntax.Expr       (Expr)
+--import qualified Luna.Syntax.Expr       as Expr
 --import           Luna.AST.Lit        (Lit)
 --import qualified Luna.AST.Lit        as Lit
 --import           Luna.AST.Lit.Number (Number (Number))
