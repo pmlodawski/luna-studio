@@ -25,7 +25,7 @@ $output       = [
                   # " 2.   SA         : sa2",
                   # " 3.1. Stage2     : ast3",
                   # " 3.2. Stage2     : astinfo3",
-                  # " 4.1. ImplSelf   : ast4",
+                  " 4.1. ImplSelf   : ast4",
                   # " 4.2. ImplSelf   : astinfo4",
                   # " 5.   SA         : sa5",
                   " 6.   PTyChk     : constraints",
