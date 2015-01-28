@@ -124,8 +124,8 @@ def emptyImage self::Std -> Image:
 def load self::Std path::Path -> Image:
     ```autoLift1 realReadLuna #{path}```
 
-def loadMatte self::Std channelName::String path::Path -> Channel:
-    ```autoLift2 loadMatteLuna #{channelName} #{path}```
+def loadMatte self::Std path::Path channelName :: String -> Channel:
+    ```autoLift2 loadMatteLuna #{path} #{channelName}```
 
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
@@ -402,7 +402,7 @@ def Image.contrastMatte self::Image value::Color matte::(Maybe MatteLunaD) -> Im
 
 
 def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe MatteLunaD) -> Image:
-    ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
+    ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```2
 
 
 alias Mask a         = (Path a, Maybe (Path a))

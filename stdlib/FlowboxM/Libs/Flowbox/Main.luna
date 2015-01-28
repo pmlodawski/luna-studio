@@ -315,8 +315,8 @@ def emptyImage:
 def load path:
     ```autoLift1 realReadLuna #{path}```
 
-def loadMatte channelName path:
-    ```autoLift2 loadMatteLuna #{channelName} #{path}```
+def loadMatte path channelName:
+    ```autoLift2 loadMatteLuna #{path} #{channelName}```
 
 def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```
