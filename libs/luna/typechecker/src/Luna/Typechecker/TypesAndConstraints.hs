@@ -4,8 +4,9 @@ module Luna.Typechecker.TypesAndConstraints (
 
 
 import Luna.Typechecker.Data
-import Luna.Typechecker.StageTypecheckerState (StageTypecheckerPass, report_error)
+import Luna.Typechecker.Inference.Class (StageTypecheckerPass)
 import Luna.Typechecker.Tools                 (without)
+
 
 
 class TypesAndConstraints c where
@@ -25,10 +26,12 @@ instance TypesAndConstraints Predicate where
   tv (t1 `Subsume` t2)      = tv t1 ++ tv t2
   tv (Reckind t l t')       = tv t ++ tv t'
 
+
 instance TypesAndConstraints c => TypesAndConstraints [c] where
   apply s  = mapM (apply s)
   tv       = foldl f [] where
                        f z x = z ++ tv x
+
 
 instance TypesAndConstraints Constraint where
      apply s (C p)            = do p' <- apply s p
@@ -51,7 +54,9 @@ instance TypesAndConstraints Type where
                                   case f' of
                                     Record f'' -> do t' <- apply s t
                                                      return (Record ((l,t'):f''))
-                                    _          -> report_error "apply:uncompatible types" (Record [])
+                                    _          -> fail "apply:uncompatible types" (Record [])
+                                    -- _          -> report_error "apply:uncompatible types" (Record [])
+                                    -- TODO [kgdk] 28 sty 2015: fix imports
   tv (TV tvl)                = [tvl]
   tv (t1 `Fun` t2)          = tv t1 ++ tv t2
   tv (Record [])            = []

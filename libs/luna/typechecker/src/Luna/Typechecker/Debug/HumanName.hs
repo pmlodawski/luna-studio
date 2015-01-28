@@ -8,8 +8,7 @@ import            Control.Lens
 import            Data.Text.Lazy            (Text, pack)
 
 class HumanName a where
-  -- | Retrieve the name.
-  humanName :: a -> Text
+  humanName :: a -> Text -- ^ Retrieve the name.
 
 
 instance HumanName (Pat.Pat lab) where
