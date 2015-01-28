@@ -119,7 +119,7 @@ withClonedTypo0 :: (Monad m) => StageTypecheckerPass m a -> StageTypecheckerPass
 withClonedTypo0 = withClonedTypo () . const
 
 
---tcDecl :: (StageTypecheckerCtx lab m) => LDecl lab InExpr -> StageTypecheckerPass m (LDecl lab OutExpr)
+tcDecl :: (StageTypecheckerCtx IDTag m) => LDecl IDTag InExpr -> StageTypecheckerPass m (LDecl IDTag InExpr)
 tcDecl ldecl@(Label lab decl) =
     case decl of
       Decl.Func (Decl.FuncDecl path sig funcout body) -> do
@@ -135,7 +135,8 @@ tcDecl ldecl@(Label lab decl) =
           let argsDisp = zipWith (++) baseArgs bsIDs
 
 
-          debugPush "push"
+          let Just lastBodyID = lastOf (traverse . Label.label . to Enum.id) body
+
           withClonedTypo0 $ do
 
               debugPush $ "Function: " ++ baseName ++ labIDdisp ++ " :: (" ++ intercalate ", " argsDisp ++ ") → ???"
@@ -145,7 +146,7 @@ tcDecl ldecl@(Label lab decl) =
               
               travRes <- defaultTraverseM ldecl
               
-              mResultType <- typeMap . at labID & use
+              mResultType <- typeMap . at lastBodyID & use
 
               case mResultType of
                 Just resultType -> do
