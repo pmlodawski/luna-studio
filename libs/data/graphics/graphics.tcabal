@@ -30,11 +30,8 @@ Library
                   algebraic       > 0.1            ,
                   bmp                              ,
                   bytestring                       ,
-                  cairo                            ,
                   containers                       ,
                   cubicbezier                      ,
-                  diagrams-cairo                   ,
-                  diagrams-lib                     ,
                   distributive                     ,
                   either                           ,
                   errors                           ,
@@ -303,13 +300,13 @@ Executable test_vector_rasterization
                   split                    ,
                   vector
 
--- == test mattes ==
+-- == test mockup ==
 
-Executable mattes
+Executable mockup
   if !flag(cuda)
     buildable: False
 
-  Main-Is:        Mattes.hs
+  Main-Is:        Mockup.hs
   Hs-Source-Dirs: test
 
   Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
@@ -336,7 +333,7 @@ Executable mattes
                   QuickCheck               ,
                   split                    ,
                   vector
-                  
+
 -- == test hueCorrect  ==
 
 Executable test_hue_correct
