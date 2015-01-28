@@ -148,8 +148,25 @@ def Image.exposure self::Image blackpoint::Color ex::Color -> Image:
 def Image.grade self::Image blackpoint::ColorBlack whitepoint::ColorWhite lift::ColorBlack gain::ColorWhite multiply::ColorWhite offset::ColorBlack gamma::ColorWhite -> Image:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-def Image.colorCorrect self::Image saturation::Color contrast::Color gamma::Color gain::Color offset::Color -> Image:
-    ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
+alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias Color5 = (Color, Color, Color, Color ,Color)
+
+def Image.colorCorrect self::Image
+                       master::Color5 #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows::Color5 #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones::Color5 #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights::Color5 #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+                       -> Image:
+    ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
+
+def Image.colorCorrectCurves self::Image
+                       curves::ColorCorrectGUI
+                       master::Color5 #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows::Color5 #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones::Color5 #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights::Color5 #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+                       -> Image:
+    ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.saturate self::Image saturation::Color -> Image:
     ```liftF2 saturateLuna #{saturation} #{self}```
@@ -209,7 +226,7 @@ def Image.edgeDetect self::Image edgeOperator -> Image:
 #     ```liftF2 orderedDitherLuna #{bits} #{self}```
 
 class ```Point``` x y:
-    Point: x,y :: Double
+    Point: x,y :: Float
 
 # def Image.cornerPin self::Image p1::Point p2::Point p3::Point p4::Point:
 #     p1x = p1.x
@@ -277,20 +294,26 @@ alias ImgMask = Maybe Image
 def noImgMask self::Std:
     ```val (Nothing :: Maybe (Value Pure Safe Image))```
 
-# def Image.rotate self::Image phi::Float:
-#     ```liftF2 turnCenterLuna #{phi} #{self}```
+class ```V2``` a:
+    x, y :: a
 
-# def Image.translate self::Image x::Int y::Int -> Image:
-#     ```liftF3 translateLuna #{x} #{y} #{self}```
+def Image.translate self::Image vec::(V2 Float) -> Image:
+    ```liftF2 translateLuna #{vec} #{self}```
 
-# def Image.scaleCenter self::Image x::Float y::Float:
-#     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+def Image.rotate self::Image phi::Float -> Image:
+    ```liftF2 rotateLuna #{phi} #{self}```
 
-# def Image.scale self::Image x::Float y::Float:
-#     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+def Image.rotateAt self::Image point::(Point2 Float) phi::Float -> Image:
+    ```liftF3 rotateAtLuna #{point} #{phi} #{self}```
 
-# def Image.transform self::Image trans::TransformD -> Image:
-#     ```liftF2 transformLuna #{trans} #{self}```
+def Image.scale self::Image vec::(V2 Float) -> Image:
+    ```liftF2 scaleLuna #{vec} #{self}```
+
+def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) -> Image:
+    ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
+
+def Image.transform self::Image trans::(Transform Float) -> Image:
+    ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop self::Image rect::(Rectangle Int) -> Image:
     ```liftF2 cropLuna #{rect} #{self}```

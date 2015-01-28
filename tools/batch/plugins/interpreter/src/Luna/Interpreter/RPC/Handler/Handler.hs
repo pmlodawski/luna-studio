@@ -35,7 +35,6 @@ import qualified Flowbox.Bus.RPC.Server.Processor            as Processor
 import           Flowbox.Config.Config                       (Config)
 import qualified Flowbox.Control.Concurrent                  as Concurrent
 import           Flowbox.Control.Monad.Loops                 (untilTrue)
-import           Flowbox.Debug
 import           Flowbox.Prelude                             hiding (Context, error)
 import           Flowbox.ProjectManager.Context              (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic            as Topic
@@ -156,7 +155,7 @@ interpret :: MemoryManager MM
           -> Pipes.Pipe (Message, Message.CorrelationID)
                         (Message, Message.CorrelationID, Flag)
                         (Pipes.SafeT (StateT Context (SessionST MM))) ()
-interpret prefix queueInfo crlRef = untilTrue $ timeit "interpret" $ do
+interpret prefix queueInfo crlRef = untilTrue $ do
     (message, crl) <- Pipes.await
     let topic = message ^. Message.topic
     logger trace $ "Received message " ++ topic
@@ -178,7 +177,7 @@ run cfg prefix ctx (input, output) = do
     crlRef              <- IORef.newIORef def
     interpreterThreadId <- Concurrent.myThreadId
     queueInfo           <- QueueInfo.mk
-    (output1, input1)   <- Pipes.spawn Pipes.Unbounded
+    (output1, input1)   <- Pipes.spawn Pipes.unbounded
     env <- (Env.resultCallBack .~ Value.reportOutputValue crlRef output) <$> Env.mkDef def
     Concurrent.forkIO_ $ Pipes.runEffect $
             Pipes.fromInput input

@@ -243,10 +243,10 @@ def rasterizeMask w h m:
 #                MATH and such
 #
 
-# alias Point2F = Point2 Float
-# alias CurveGUI = [ControlPointGUI]
-# alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
-# alias HandleGUI = (Int, Float, Float)
+alias Point2D = Point2 Double
+alias HandleGUI = (Int, Double, Double)
+alias ControlPointGUI = (Point2D, HandleGUI, HandleGUI)
+alias CurveGUI = [ControlPointGUI]
 
 def curveGUI vertices:
     vertices
@@ -424,8 +424,21 @@ def Image.gamma val:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
-# def Image.colorCorrect saturation contrast gamma gain offset:
-#     ```liftF6 colorCorrectLuna' #{saturation} #{contrast} #{gamma} #{gain} #{offset} #{self}```
+alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias Color5 = (Color, Color, Color, Color ,Color)
+
+def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
+
+def Image.colorCorrectCurves curves
+                       master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -475,31 +488,26 @@ def Image.blur kernelSize:
 # def Image.laplacian kernelSize centerVal sideVal:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
-# def Image.rotate phi:
-#     ```liftF2 turnCenterLuna #{phi} #{self}```
-# def Image.rotate phi m:
-#     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
+class ```V2``` a:
+    x, y :: a
 
-# def Image.translate boundary x y:
-#     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-# def Image.translate x y:
-#     ```liftF3 translateLuna #{x} #{y} #{self}```
+def Image.translate vec:
+    ```liftF2 translateLuna #{vec} #{self}```
 
-# def Image.scaleTo boundary x y:
-#     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
-# def Image.scaleTo x y m:
-#     ```liftF4 scaleToLuna #{x} #{y} #{m} #{self}```
+def Image.rotate phi:
+    ```liftF2 rotateLuna #{phi} #{self}```
 
-# def Image.scale boundary x y:
-#     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
-# def Image.scaleCenter x y:
-#     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+def Image.rotateAt point phi:
+    ```liftF3 rotateAtLuna #{point} #{phi} #{self}```
 
-# def Image.scale x y:
-#     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+def Image.scale vec:
+    ```liftF2 scaleLuna #{vec} #{self}```
 
-# def Image.transform trans:
-#     ```liftF2 transformLuna #{trans} #{self}```
+def Image.scaleAt point vec:
+    ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
+
+def Image.transform trans:
+    ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
