@@ -7,7 +7,8 @@
 
 
 {-# LANGUAGE DeriveDataTypeable #-}
-!{-# LANGUAGE RightSideContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE GADTs #-}
 
 module Luna.Target.HS.Data.Func.Lam where
 
@@ -16,6 +17,7 @@ import Data.Typeable
 import Luna.Target.HS.Control.Flow.Env
 import Luna.Target.HS.Data.Func.Args9 
 import qualified Luna.Target.HS.Data.Func.Args9 as Args
+import Data.PolyTypeable (PolyTypeable, polyTypeOf)
 
 ----------------------------------------------------------------------------------
 -- Data types
@@ -23,6 +25,8 @@ import qualified Luna.Target.HS.Data.Func.Args9 as Args
 
 data Lam lam = Lam lam deriving (Typeable)
 
+instance (l~Func n args f, PolyTypeable f) => Show (Lam l) where
+	show (Lam (Func (_,f))) = "Lam " ++ (show $ polyTypeOf f)
 
 ----------------------------------------------------------------------------------
 -- Utils
