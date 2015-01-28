@@ -14,6 +14,7 @@ module Luna.Typechecker.Solver (
 import Luna.Typechecker.Data
 import Luna.Typechecker.TypesAndConstraints
 import Luna.Typechecker.Inference.Class
+import Luna.Typechecker.StageTypecheckerState (report_error)
 
 
 
@@ -25,8 +26,7 @@ cs (s, C c) =
     if b then do c' <- apply s' (C c)
                  c'' <- simplify c'
                  return (s', c'')
-     -- else report_error "inconsistent constraint" (null_subst, C [TRUE]) -- TODO [kgdk] 28 sty 2015: fix imports
-     else fail "inconsistent constraint" (null_subst, C [TRUE])
+     else report_error "inconsistent constraint" (null_subst, C [TRUE]) -- TODO [kgdk] 28 sty 2015: fix imports
 cs _ = error "this case was not taken into account in original HM(Rec)"
 
 -- divide predicates into record predicates and equality predicates
@@ -53,8 +53,7 @@ closure (s, r, e) =
                     p2 <- simplify_predicate (e1 ++ e2)
                     if null p2 then return (s',p1)
                      else closure (s', p1, p2)
-        -- _    -> report_error "closure:uncompatible constraint" (null_subst, []) -- TODO [kgdk] 28 sty 2015: fix imports
-        _    -> fail "closure:uncompatible constraint" (null_subst, [])
+        _    -> report_error "closure:uncompatible constraint" (null_subst, []) -- TODO [kgdk] 28 sty 2015: fix imports
 
 
 -- create subsumptions based on a label type of a particular record
@@ -67,8 +66,7 @@ extract1 (Reckind (Record f) l t : p) =
        return (e:e')
 extract1 (_:p) = extract1 p
 get_extract1 :: (Monad m, Eq a) => [(a, Type)] -> a -> Type ->  StageTypecheckerPass m Predicate
--- get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" (TV 0 `Subsume` TV 0) -- TODO [kgdk] 28 sty 2015: fix imports
-get_extract1 [] _ _          = fail "extract1:field label not found -> inconsistent constraint" (TV 0 `Subsume` TV 0)
+get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" (TV 0 `Subsume` TV 0) -- TODO [kgdk] 28 sty 2015: fix imports
 get_extract1 ((l,t):f) l' t' = if l == l' then return (t `Subsume` t')
                                else get_extract1 f l' t'
 
@@ -128,8 +126,7 @@ do_unify (s, []) = return s
 do_unify (s, t `Subsume` t' : p) =
    do s' <- unify(s,t,t')
       do_unify (s',p)
--- do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal form" null_subst -- TODO [kgdk] 28 sty 2015: fix imports
-do_unify (s,  _ : p ) = fail "do_unify: predicate list not in normal form" null_subst
+do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal form" null_subst -- TODO [kgdk] 28 sty 2015: fix imports
 
 
 unify :: (Monad m) => (Subst, Type, Type) ->  StageTypecheckerPass m Subst
@@ -139,8 +136,7 @@ unify (s, TV x, TV y) =
            return ((y, t):s)
 unify (s, TV x, t) =
             do t'' <- apply s t
-               -- if x `elem` tv t'' then report_error "occurs check fails" null_subst -- TODO [kgdk] 28 sty 2015: fix imports
-               if x `elem` tv t'' then fail "occurs check fails" null_subst
+               if x `elem` tv t'' then report_error "occurs check fails" null_subst -- TODO [kgdk] 28 sty 2015: fix imports
                 else return ((x, t''):s)
 unify (s, t, TV x) = unify (s, TV x, t)
 unify (s, t1 `Fun` t1', t2 `Fun` t2') = do s' <- unify (s, t1, t2)
@@ -151,8 +147,6 @@ unify (s, Record f, Record f') = g (s,f,f') where
                         if l == l'
                         then do ss' <- unify(ss,t,t')
                                 g(ss',ff,ff')
-                        -- else report_error "not matching record" null_subst -- TODO [kgdk] 28 sty 2015: fix imports
-                        else fail "not matching record" null_subst
+                        else report_error "not matching record" null_subst -- TODO [kgdk] 28 sty 2015: fix imports
           g _ = error "this case was not taken into account in original HM(Rec)"
--- unify (s, _, _)  = report_error "unify:uncompatible type" null_subst -- TODO [kgdk] 28 sty 2015: fix imports
-unify (s, _, _)  = fail "unify:uncompatible type" null_subst
+unify (s, _, _)  = report_error "unify:uncompatible type" null_subst -- TODO [kgdk] 28 sty 2015: fix imports
