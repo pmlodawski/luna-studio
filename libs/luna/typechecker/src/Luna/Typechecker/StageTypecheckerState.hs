@@ -5,7 +5,7 @@
 
 module Luna.Typechecker.StageTypecheckerState (
     StageTypecheckerState(..),
-    debugLog, typo, nextTVar, subst, constr, sa, currentType, typeMap,
+    debugLog, typo, nextTVar, subst, constr, sa, typeMap,
     StageTypechecker(..),
     StageTypecheckerPass, StageTypecheckerCtx, StageTypecheckerTraversal, StageTypecheckerDefaultTraversal,
     InExpr, OutExpr,
@@ -32,7 +32,7 @@ import            Text.PrettyPrint
 
 import            Data.Default                      (Default(def))
 
-import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Type, Typo, TypeMap, init_typo, null_subst, true_cons)
+import            Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo, TypeMap, init_typo, null_subst, true_cons)
 import            Luna.Typechecker.Debug.HumanName  (HumanName)
 import            Luna.Typechecker.Debug.PrettyData (
                       prettyConstr, prettyNullable, prettySubst, prettyTypo, prettyTypeMap
@@ -47,7 +47,6 @@ data StageTypecheckerState
                             , _subst       :: Subst
                             , _constr      :: Constraint
                             , _sa          :: StructInfo
-                            , _currentType :: Type
                             , _typeMap     :: TypeMap
                             }
 makeLenses ''StageTypecheckerState
@@ -60,7 +59,6 @@ instance Default StageTypecheckerState where
                               , _constr   = true_cons
                               , _sa       = mempty
                               , _typeMap  = mempty
-                              , _currentType = undefined
                               }
 
 
