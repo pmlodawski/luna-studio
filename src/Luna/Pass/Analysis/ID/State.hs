@@ -35,8 +35,8 @@ makeLenses ''IDState
 type IDStateM m = (Functor m, MonadState IDState m)
 
 
-make :: IDState
-make = IDState Nothing IntSet.empty
+instance Default IDState where
+    def = IDState def def
 
 
 getFoundID :: IDStateM m => m AST.ID
