@@ -18,7 +18,7 @@ spec = do
     describe "eee func" $ do
         it "should increment arument" $
             property $ \x -> 
-                eee x `shouldBe` (x+1 ::Int)
+                eee x `shouldSatisfy` (==x+(1 ::Int))
 
     describe "magical function" $ do
         it "should do magic" $ do
@@ -32,10 +32,10 @@ spec = do
                     second = Just 2 
                 mixImages mask first second `shouldBe` second
             it "for ZipList" $ do
-                let mask   = ZipList [0,0]
+                let mask   = ZipList [0,0.1]
                     first  = ZipList [1,2]
                     second = ZipList [4,5]
-                mixImages mask first second `shouldBe` second
+                mixImages mask first second `shouldSatisfy` (==second)
         
         it "should for one mask return first" $ do
             let mask   = Just 1
@@ -54,13 +54,12 @@ spec = do
                 in mixImages mask first second `shouldBe` (Just avg)
 
         it "should be efficient" $ do
-            let big  = ZipList [0.5::Float | _<-[1..1000000]]
+            pending
+            --let big  = ZipList [0.5::Float | _<-[1..1000000]]
             --timeout 10 (evaluate $ mixImages big big big) `shouldReturn` Just big -- isNothing???
-            timeout 10000 (evaluate $ sum [1..10000] `mod` 10) `shouldReturn` Just 0
+            --timeout 10000 (evaluate $ sum [1..10000] `mod` 10) `shouldReturn` Just 0
 
 
 
 
 
-
-        
