@@ -12,28 +12,21 @@
 
 module Luna.Pass.Analysis.ID.ExtractIDs where
 
-import Data.IntSet (IntSet)
+import Control.Monad.State
+import Data.IntSet         (IntSet)
 
-import           Flowbox.Prelude                hiding (mapM, mapM_)
-import           Flowbox.System.Log.Logger
-import           Luna.Pass                      (Pass (Pass), PassCtx, PassMonad)
-import qualified Luna.Pass                      as Pass
-import           Luna.Pass.Analysis.ID.State    (IDState)
-import qualified Luna.Pass.Analysis.ID.State    as State
-import qualified Luna.Pass.Analysis.ID.Traverse as IDTraverse
-import           Luna.Pass.Pass                 (Pass)
-import qualified Luna.Pass.Pass                 as Pass
-import           Luna.Syntax.Control.Focus      (Focus)
-import           Luna.Syntax.Enum               (Enumerated)
-import qualified Luna.Syntax.Enum               as Enum
-import           Luna.Syntax.Expr               (Expr, LExpr)
-import           Luna.Syntax.Graph.Node.Expr    (NodeExpr)
-import qualified Luna.Syntax.Graph.Node.Expr    as NodeExpr
-import           Luna.Syntax.Label              (Label)
-import qualified Luna.Syntax.Label              as Label
-import           Luna.Syntax.Module             (Module)
-import           Luna.Syntax.Pat                (Pat)
-import qualified Luna.Syntax.Traversals         as AST
+import           Flowbox.Prelude             hiding (mapM, mapM_)
+import           Luna.Pass                   (Pass (Pass))
+import           Luna.Pass.Analysis.ID.State (IDState)
+import qualified Luna.Pass.Analysis.ID.State as State
+import           Luna.Syntax.Enum            (Enumerated)
+import qualified Luna.Syntax.Enum            as Enum
+import           Luna.Syntax.Expr            (LExpr)
+import           Luna.Syntax.Graph.Node.Expr (NodeExpr)
+import qualified Luna.Syntax.Graph.Node.Expr as NodeExpr
+import           Luna.Syntax.Label           (Label)
+import qualified Luna.Syntax.Label           as Label
+import qualified Luna.Syntax.Traversals      as AST
 
 
 
@@ -43,10 +36,10 @@ import qualified Luna.Syntax.Traversals         as AST
 
 data ExtractIDs = ExtractIDs
 
-type EIDPass                 m   = PassMonad IDState m
+type EIDPass                 m   = StateT IDState m
 type EIDCtx              lab m a = (Enumerated lab, EIDTraversal m a)
-type EIDTraversal            m a = (PassCtx m, AST.Traversal        ExtractIDs (EIDPass m) a a)
-type EIDDefaultTraversal     m a = (PassCtx m, AST.DefaultTraversal ExtractIDs (EIDPass m) a a)
+type EIDTraversal            m a = (Monad m, Functor m, AST.Traversal        ExtractIDs (EIDPass m) a a)
+type EIDDefaultTraversal     m a = (Monad m, Functor m, AST.DefaultTraversal ExtractIDs (EIDPass m) a a)
 
 ----------------------------------------------------------------------
 -- Utils functions
@@ -65,22 +58,42 @@ defaultTraverseM = AST.defaultTraverseM ExtractIDs
 pass :: EIDDefaultTraversal m a => Pass IDState (a -> EIDPass m IntSet)
 pass = Pass "Extract IDs"
             "Extract all IDs contained in labels"
-            def run
+            def extract
 
-run :: EIDDefaultTraversal m a => a -> EIDPass m IntSet
-run ast = defaultTraverseM ast >> State.getIDs
+extract :: EIDDefaultTraversal m a => a -> EIDPass m IntSet
+extract ast = defaultTraverseM ast >> State.getIDs
+
+
+extractNodeExpr :: (Enumerated a, EIDDefaultTraversal m (LExpr a v))
+            => NodeExpr a v -> EIDPass m IntSet
+extractNodeExpr (NodeExpr.ASTExpr lexpr) = extract lexpr
+extractNodeExpr _                        = return def
+
+
+extractNodeExprs :: (Enumerated a, EIDDefaultTraversal m (LExpr a v))
+             => [NodeExpr a v] -> EIDPass m IntSet
+extractNodeExprs []    = State.getIDs
+extractNodeExprs (h:t) = extractNodeExpr h >> extractNodeExprs t
+
+
+run :: EIDDefaultTraversal Identity a => a -> IntSet
+run a = evalState (extract a) def
+
+
+runNodeExpr :: (Enumerated a, EIDDefaultTraversal Identity (LExpr a v))
+            => NodeExpr a v -> IntSet
+runNodeExpr a = evalState (extractNodeExpr a) def
+
+
+runNodeExprs :: (Enumerated a, EIDDefaultTraversal Identity (LExpr a v))
+             => [NodeExpr a v] -> IntSet
+runNodeExprs a = evalState (extractNodeExprs a) def
 
 
 eidLabel :: EIDCtx lab m a => Label lab a -> EIDPass m (Label lab a)
-eidLabel label = do 
+eidLabel label = do
     State.appendID $ Enum.id $ label ^. Label.label
     defaultTraverseM label
-
-
-
-runNodeExpr :: (Enumerated a, EIDDefaultTraversal m (LExpr a v)) => NodeExpr a v -> EIDPass m IntSet
-runNodeExpr (NodeExpr.ASTExpr lexpr) = run lexpr
-runNodeExpr _                        = return def
 
 
 instance EIDCtx lab m a => AST.Traversal ExtractIDs (EIDPass m) (Label lab a) (Label lab a) where

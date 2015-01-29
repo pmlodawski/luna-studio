@@ -58,6 +58,7 @@ findMaxID ni = do
         Just i  -> when (ni > i) $ setFoundID ni
         Nothing -> setFoundID ni
 
+
 findMinID :: IDStateM m => AST.ID -> m ()
 findMinID ni = do
     mi <- getFoundIDMaybe

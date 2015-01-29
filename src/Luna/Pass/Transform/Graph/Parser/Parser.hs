@@ -67,7 +67,6 @@ logger :: Logger
 logger = getLogger $(moduleName)
 
 
---run :: Graph a e -> PropertyMap a e -> Expr a e -> Pass.Result m (FuncDecl a e, PropertyMap a e)
 run :: (Eq a, Enum.Enumerated a, MonadPragmaStore m)
     => Graph a E -> PropertyMap a E -> FuncDecl a E
     -> EitherT Pass.PassError m (FuncDecl a E, PropertyMap a E)
@@ -195,31 +194,30 @@ patternParser :: String -> Int -> Either String (LPat a, Int)
 patternParser     = undefined
 exprParser :: String -> Int -> Either String (LExpr a e, Int)
 exprParser        = undefined
-parseAppNode      = undefined
 replaceNativeVars = undefined
 -----------------
 
---parseAppNode :: Node.ID -> String -> GPPass a E m ()
---parseAppNode nodeID app = do
---    srcs <- State.getNodeSrcs nodeID
---    expr <- if isOperator app
---                then return $ label nodeID $ Expr.Var $ Expr.Variable (fromString app) ()
---                else do
---                    case exprParser app nodeID of
---                        Left  er     -> lift $ left $ show er
---                        Right (e, _) -> return e
---    ids <- lift $ hoistEither =<< ExtractIDs.runExpr expr
---    mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
---    State.setGraphFoldTop nodeID $ exprToNodeID expr
---    let requiresApp (Expr.Cons {}) = True
---        requiresApp _              = False
---    case srcs of
---        []                      -> addExpr nodeID $ if requiresApp $ unwrap expr
---                                       then labelUnknown $ Expr.app expr []
---                                       else expr
---        Label _ Expr.Wildcard:t -> addExpr nodeID $ labelUnknown $ Expr.app expr $ map Expr.unnamed t
---        f:t                     -> addExpr nodeID $ labelUnknown $ Expr.app acc  $ map Expr.unnamed t
---                                        where acc = label nodeID $ Expr.Accessor (Name.mkNameBaseAccessor $ Text.pack app) f
+parseAppNode :: Node.ID -> String -> GPPass a E m ()
+parseAppNode nodeID app = do
+    srcs <- State.getNodeSrcs nodeID
+    expr <- if isOperator app
+                then return $ label nodeID $ Expr.Var $ Expr.Variable (fromString app) ()
+                else do
+                    case exprParser app nodeID of
+                        Left  er     -> lift $ left $ show er
+                        Right (e, _) -> return e
+    let ids = ExtractIDs.run expr
+    mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
+    State.setGraphFoldTop nodeID $ exprToNodeID expr
+    let requiresApp (Expr.Cons {}) = True
+        requiresApp _              = False
+    case srcs of
+        []                      -> addExpr nodeID $ if requiresApp $ unwrap expr
+                                       then labelUnknown $ Expr.app expr []
+                                       else expr
+        Label _ Expr.Wildcard:t -> addExpr nodeID $ labelUnknown $ Expr.app expr $ map Expr.unnamed t
+        f:t                     -> addExpr nodeID $ labelUnknown $ Expr.app acc  $ map Expr.unnamed t
+                                        where acc = label nodeID $ Expr.Accessor (Name.mkNameBaseAccessor $ Text.pack app) f
 
 
 exprToNodeID :: Enum.Enumerated a => LExpr a e -> Node.ID
