@@ -65,19 +65,28 @@ import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 --callL (AppH (Lam f, args)) = appDefaults . appArgs args $ f
 
 
-class Call' h args r | h args -> r where
-    call' :: AppH h args -> r
+--class Call' h args r | h args -> r where
+--    call' :: AppH h args -> r
 
-instance (Reverse a b, AppArgs b k1 sig1 f1 k sig f, AppDefaults k f sig c, fc~Func k1 sig1 f1) 
-      => Call' (Lam fc) a c where
-    call' (AppH (Lam f, args)) = appDefaults . appArgs args $ f
+--instance (Reverse a b, AppArgs b k1 sig1 f1 k sig f, AppDefaults k f sig c, fc~Func k1 sig1 f1) 
+--      => Call' (Lam fc) a c where
+--    call' (AppH (Lam f, args)) = appDefaults . appArgs args $ f
 
-instance (Call' (Lam (Func (ArgsKind sig) sig f)) args r, MemberProvider obj name argRep (sig, f), Analyze args argRep)
-      => Call' (Mem obj name) args r where
-    call' (AppH (fptr, args)) = call' $ AppH (Lam (func sig f), args) where
-        (sig,f) = getMember fptr (monoType args)
+--instance (Call' (Lam (Func (ArgsKind sig) sig f)) args r, MemberProvider obj name argRep (sig, f), Analyze args argRep)
+--      => Call' (Mem obj name) args r where
+--    call' (AppH (fptr, args)) = call' $ AppH (Lam (func sig f), args) where
+--        (sig,f) = getMember fptr (monoType args)
 
 call = polyJoin . fmap call'
+call2 x = polyJoin . fmap (call2' x)
+
+
+call' (AppH (fptr, args)) = appDefaults . appArgs args $ func sig f where
+        (sig,f) = getMember fptr (monoType args)
+
+
+call2' x (AppH (fptr, args)) = appDefaults . appArgs args $ func sig f where
+        (sig,f) = getMember fptr x
 
 
 

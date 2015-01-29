@@ -85,6 +85,9 @@ npSigArg :: Proxy n -> a -> Arg (Named n) (Provided a)
 npSigArg = flip (nArg . Provided)
 
 
+simpleFSig0 = (nuSigArg (Proxy::Proxy "self"), ())
+simpleFSig1 = (nuSigArg (Proxy::Proxy "self"), (uuSigArg,()))
+
 ----------------------------------------------------------------------
 -- Func
 ----------------------------------------------------------------------
@@ -323,3 +326,12 @@ instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u)
 --    call (LamH (f,args)) =
 
 --tst f = (f 5, f "a")
+
+
+
+--newtype Lam f = Lam f
+
+--main = do
+--    let l = Lam (\x -> x)
+
+--    return ()
