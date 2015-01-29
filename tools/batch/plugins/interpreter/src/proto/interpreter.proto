@@ -205,4 +205,10 @@ message Interpreter {
             }
         }
     }
+    message Exit {
+        message Request { }
+        message Update {
+            required Request request = 1;
+        }
+    }
 }

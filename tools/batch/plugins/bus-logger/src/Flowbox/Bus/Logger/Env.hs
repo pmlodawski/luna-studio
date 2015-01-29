@@ -5,10 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Flowbox.Bus.Logger.Env where
 
-import Data.Map        (Map)
+import Data.Map.Strict (Map)
 import Data.Time.Clock (UTCTime)
 
 import qualified Flowbox.Bus.Data.Message as Message
@@ -16,7 +17,8 @@ import           Flowbox.Prelude
 
 
 
-data Env = Env { _times :: Map Message.CorrelationID UTCTime }
+data Env = Env { _times :: !(Map Message.CorrelationID UTCTime) }
+               deriving (Show)
 
 makeLenses ''Env
 
