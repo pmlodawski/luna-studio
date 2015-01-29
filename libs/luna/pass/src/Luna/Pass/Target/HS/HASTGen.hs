@@ -461,7 +461,7 @@ genExpr (Label lab expr) = case expr of
     Expr.Typed       cls expr             -> (\e t -> HE.MacroE "typed" [e,t]) <$> genExpr expr
                                                                                 <*> genType cls
     Expr.Decl _                               -> Pass.fail "Nested declarations are not supported yet"
-    Expr.Ref  _                               -> Pass.fail "References are not supported yet"
+    Expr.Curry _                              -> Pass.fail "References are not supported yet"
     --p -> Pass.fail $ "Cannot construct: " <> show p
 
     where id = Enum.id lab

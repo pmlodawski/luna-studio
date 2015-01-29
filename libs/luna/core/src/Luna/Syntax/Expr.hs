@@ -26,7 +26,7 @@ import Luna.Syntax.Name         (VNameP, TNameP, CNameP, TVNameP, NameBaseP)
 import Luna.Syntax.Decl         (Decl)
 import Luna.Syntax.Lit          (LLit)
 import Luna.Syntax.Pat          (Pat, LPat)
-import Luna.Syntax.Type         (Type, LType)
+import Luna.Syntax.Type         (Type, LType, LMeta)
 import Luna.Syntax.Native       (Native)
 import Luna.Syntax.Arg          (LArg)
 import Luna.Syntax.Label        (Label(Label))
@@ -50,7 +50,8 @@ data Expr a v
     | Typed       { _cls     :: LType a       , _expr      :: LExpr a v                                }
     | Assignment  { _dst     :: LPat  a       , _src       :: LExpr a v                                }
     | Accessor    { _acc     :: NameBaseP     , _src       :: LExpr a v                                }
-    | Ref         { _ref     :: LExpr a v                                                              }
+    | Curry       { _expr    :: LExpr a v                                                              }
+    | Meta        { _meta    :: LMeta a                                                                }
     | Tuple       { _items   :: [LExpr a v]                                                            }
     | Grouped     { _expr    :: LExpr a v                                                              }
     | Cons        { _cname   :: CNameP                                                                 }
