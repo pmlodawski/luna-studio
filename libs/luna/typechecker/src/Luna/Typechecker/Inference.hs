@@ -5,7 +5,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE LambdaCase #-}
 
 
 module Luna.Typechecker.Inference (
@@ -20,12 +19,9 @@ import            Control.Monad.State
 import            Data.Default                            (Default(def))
 import qualified  Data.Foldable                           as Fold
 import            Data.List                               (intercalate)
-import            Data.Maybe                              (fromMaybe)
 import            Data.Text.Lazy                          (unpack)
 import            Data.Text.Lens                          (unpacked)
 
-
-import qualified  Luna.Data.StructInfo                    as SI
 import            Luna.Data.StructInfo                    (StructInfo)
 
 import            Luna.Pass                               (Pass(..))
@@ -33,7 +29,7 @@ import            Luna.Pass                               (Pass(..))
 import qualified  Luna.Syntax.Arg                         as Arg
 import qualified  Luna.Syntax.Decl                        as Decl
 import qualified  Luna.Syntax.Enum                        as Enum
-import            Luna.Syntax.Enum                        (ID, IDTag)
+import            Luna.Syntax.Enum                        (IDTag)
 import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
 import qualified  Luna.Syntax.Label                       as Label
@@ -43,8 +39,7 @@ import qualified  Luna.Syntax.Pat                         as Pat
 import qualified  Luna.Syntax.Traversals                  as AST
 
 import            Luna.Typechecker.Data (
-                      TVar, Var,
-                      Subst, Typo,
+                      Var, Subst,
                       Type(..), Predicate(..), Constraint(..), TypeScheme(..),
                       null_subst
                   )
@@ -58,8 +53,14 @@ import            Luna.Typechecker.Inference.Class        (
 import            Luna.Typechecker.Solver                 (cs)
 import            Luna.Typechecker.StageTypecheckerState  (
                       StageTypecheckerState(..),
-                      debugLog, typo, nextTVar, subst, constr, sa, typeMap,
-                      report_error
+                      subst, constr, sa, typeMap,
+                      report_error,
+                      withClonedTypo0,
+                      insertNewMonoTypeVariable,
+                      getTypeById, setTypeById, getEnv,
+                      add_constraint, newtvar, rename,
+                      debugPush,
+                      getTargetIDString, getTargetID
                   )
 import            Luna.Typechecker.TypesAndConstraints    (TypesAndConstraints(..))
 
@@ -96,24 +97,6 @@ defaultTraverseM = AST.defaultTraverseM StageTypechecker
 --infer :: Term -> E (TVar, Subst, Constraint, Type)
 --infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
 ----
-
-
-withTypo :: (Monad m) => Typo -> a -> (a -> StageTypecheckerPass m b) -> StageTypecheckerPass m b
-withTypo typeEnv astElem action = push *> action astElem <* pop
-  where
-    push        = typo %= (typeEnv:)
-    pop         = typo %= safeTail
-    safeTail xs = fromMaybe xs (xs ^? _tail)
-
-
-withClonedTypo :: (Monad m) => a -> (a -> StageTypecheckerPass m b) -> StageTypecheckerPass m b
-withClonedTypo x action = do
-  typo0 <- typo . _head & use
-  withTypo typo0 x action
-
-
-withClonedTypo0 :: (Monad m) => StageTypecheckerPass m a -> StageTypecheckerPass m a
-withClonedTypo0 = withClonedTypo () . const
 
 
 tcDecl :: (StageTypecheckerCtx IDTag m) => InDecl -> StageTypecheckerPass m OutDecl
@@ -167,12 +150,7 @@ tcDecl ldecl@(Label lab decl) =
       _ -> defaultTraverseM ldecl
 
 
-insertNewMonoTypeVariable :: (Monad m) => ID -> StageTypecheckerPass m Type
-insertNewMonoTypeVariable labID = do
-    tvarID <- newtvar
-    let typeEnvElem = (labID, Mono (TV tvarID))
-    typo . _head %= flip insert typeEnvElem
-    return $ TV tvarID
+
 
 
 tcExpr :: (StageTypecheckerCtx IDTag m) => LExpr IDTag () -> StageTypecheckerPass m (LExpr IDTag ())
@@ -256,53 +234,10 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
 --expr _ = error "No idea how to infer type at the moment."
 expr _ = error "inny error"
 
-getTypeById :: Monad m => ID -> StageTypecheckerPass m Type
-getTypeById idV = do
-    typeResult <- typeMap . at idV & use
-    maybe (error "Can't find type using id.") (return . id) typeResult
-
-setTypeById :: (Monad m) => ID -> Type -> StageTypecheckerPass m ()
-setTypeById id2 typeV = do
-    debugPush $ "save " ++ show id2 ++ " ?= " ++ show typeV
-    typeMap . at id2 ?= typeV
-    mm <- typeMap & use
-    debugPush $ show mm
-
-
-debugPush :: (Monad m) => String -> StageTypecheckerPass m ()
-debugPush s = s `seq` debugLog %= (s:)
-
-
-getTargetIDString :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m String
-getTargetIDString lab = do
-    labtID <- getTargetID lab
-    return $ "|" ++ show labID ++ "⊳" ++ show labtID ++ "⊲"
-  where
-    labID = Enum.id lab
-
-
-getTargetID :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m ID
-getTargetID lab =
-    sa . SI.alias . ix labID . SI.target & preuse >>= \case
-        Nothing     -> return labID
-        Just labtID -> return labtID
-  where
-    labID = Enum.id lab
-
-getEnv :: (Monad m) => StageTypecheckerPass m Typo
-getEnv =
-    typo & use >>= \case
-        []    -> return []
-        (x:_) -> return x
 
 
 
----- TODO [kgdk] 22 sty 2015: Constraint should be a monoid
-add_cons :: Constraint -> Constraint -> Constraint
-add_cons (C p1) (C p2)               = C (p1 ++ p2)
-add_cons (C p1) (Proj tvr p2)        = Proj tvr (p1 ++ p2)
-add_cons (Proj tvr p1) (C p2)        = Proj tvr (p1 ++ p2)
-add_cons (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)
+
 
 
 --tv_typo :: Typo -> [TVar]
@@ -311,24 +246,10 @@ add_cons (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)
 --    f z (v,ts) = z ++ tv ts
 
 
-add_constraint :: (Monad m) => Constraint -> StageTypecheckerPass m ()
-add_constraint c1 =
-    constr %= (`add_cons` c1)
 
 
-newtvar :: (Monad m) => StageTypecheckerPass m TVar
-newtvar = use nextTVar <* (nextTVar += 1)
 
 
-insert :: Typo -> (Var, TypeScheme) -> Typo
-insert a (x,t) = (x,t):a
-
-
-rename :: (Monad m) => StageTypecheckerPass m Subst -> TVar ->  StageTypecheckerPass m Subst
-rename s x = do
-    newtv <- newtvar
-    s' <- s
-    return ((x, TV newtv):s')
 
 
 inst :: (Monad m) => Var -> StageTypecheckerPass m Type
