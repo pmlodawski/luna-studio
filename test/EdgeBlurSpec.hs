@@ -32,7 +32,7 @@ spec = do
                     second = Just 2 
                 mixImages mask first second `shouldBe` second
             it "for ZipList" $ do
-                let mask   = ZipList [0,0.1]
+                let mask   = ZipList [0,0]
                     first  = ZipList [1,2]
                     second = ZipList [4,5]
                 mixImages mask first second `shouldSatisfy` (==second)
@@ -58,8 +58,5 @@ spec = do
             --let big  = ZipList [0.5::Float | _<-[1..1000000]]
             --timeout 10 (evaluate $ mixImages big big big) `shouldReturn` Just big -- isNothing???
             --timeout 10000 (evaluate $ sum [1..10000] `mod` 10) `shouldReturn` Just 0
-
-
-
 
 
