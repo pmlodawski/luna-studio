@@ -26,6 +26,7 @@ import ```Flowbox.Graphics.Composition.Merge (AlphaBlend(..))```
 import ```Flowbox.Graphics.Composition.Keyer```
 import ```Flowbox.Geom2D.Rasterizer```
 import ```Flowbox.Geom2D.Rectangle```
+import ```Flowbox.Graphics.Image.Matte```
 
 #
 #                STD
@@ -170,7 +171,6 @@ def Double.toString:
 #     ```liftF1 floor #{self} :: Value Pure Safe Int```
 
 
-
 #
 #                GEOM
 #
@@ -275,7 +275,6 @@ def getValueAtCurve curve x:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```
 
 
-
 #
 #                COLOR
 #
@@ -331,6 +330,9 @@ def Image.view name:
 
 def Image.getChannel viewName channelName:
     ```liftF3 getChannelLuna #{viewName} #{channelName} #{self}```
+
+def Image.getChannelFromPrimary channelName:
+    ```liftF2 getChannelFromPrimaryLuna #{channelName} #{self}```
 
 # def Image.insertChannel viewName channel:
 #     ```liftF3 insertChannelLuna #{viewName} #{channel} #{self}```
@@ -405,7 +407,7 @@ def Image.exposure blackpoint ex:
 
 def Image.saturate saturation:
     ```liftF2 saturateLuna #{saturation} #{self}```
-
+    
 def Image.hsvTool hueRange hueRotation hueRolloff
             saturationRange saturationAdjustment saturationRolloff
             brightnessRange brightnessAdjustment brightnessRolloff:
@@ -689,6 +691,27 @@ def Image.differenceKey offset gain background:
     ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
 
 
+#
+#                MATTES
+#
+
+def imageMatte path channelName:
+     ```autoLift2 imageMatteLuna #{path} #{channelName}```
+
+def vectorMatte mask:
+    ```liftF1 vectorMatteLuna #{mask}```
+
+def Image.offsetMatte value matte:
+    ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
+
+def Image.contrastMatte value matte:
+    ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
+
+def Image.exposureMatte blackpoint ex matte:
+    ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
+
+def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
+    ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
 #
 #                VIEW
@@ -724,6 +747,13 @@ def testCC a:
 #
 
 def main:
+
+    points = [ controlPoint (point 212.0 209.0) Nothing (Just $ point (211.0.-212.0) (114.0.-209.0))
+             , controlPoint (point 338.0 210.0) (Just $ point (329.0.-338.0) (109.0.-210.0)) (Just $ point (450.0.-338.0) (211.0.-210.0))
+             , controlPoint (point 343.0 330.0) (Just $ point (456.0.-343.0) (331.0.-330.0)) Nothing
+             ]
+    m = mask (path True points) Nothing # second list is empty if the paths are the same
+
     print "test"
     p0 = point 0.0 1.0
     p1 = point 1.0 1.0
@@ -736,18 +766,46 @@ def main:
 
     h = linearHandleGUI
 
-    c = curveGUI [controlPoint p0 h h, controlPoint p1 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
-    c2 = curveGUI [controlPoint p0 h h, controlPoint p6 h h, controlPoint p2 h h, controlPoint p3 h h, controlPoint p4 h h, controlPoint p5 h h]
+    c = curveGUI [controlPointGUI p0 h h, controlPointGUI p1 h h, controlPointGUI p2 h h, controlPointGUI p3 h h, controlPointGUI p4 h h, controlPointGUI p5 h h]
+    c2 = curveGUI [controlPointGUI p0 h h, controlPointGUI p6 h h, controlPointGUI p2 h h, controlPointGUI p3 h h, controlPointGUI p4 h h, controlPointGUI p5 h h]
 
     black = RGBA 0.0 0.0 0.0 1.0
     white = RGBA 1.0 1.0 1.0 1.0
     # gray  = RGBA 0.5 0.5 0.5 1.0
     # lena = constant 640 480 gray
     lena = load "./lena.png"
-    scaled = lena.scale (V2 0.5 2.0)
-    scaledAt = lena.scaleAt (Point2 256.0 256.0) (V2 0.5 2.0)
-    scaled.save "./out.png"
-    scaledAt.save "./out2.png"
+    
+    randomColor = RGBA 0.2 0.5 0.1 0.0
+    anotherRandomColor = RGBA 0.4 0.2 0.12 0.34
+
+  #  print (vectorMatte m)
+
+    offsetLena = lena.offsetMatte randomColor (Nothing)
+    offsetLena.save "./offsetLena.png"
+
+    offsetLenaMasked = lena.offsetMatte randomColor (Just $ vectorMatte m)
+    offsetLenaMasked.save "./offsetLenaMasked.png"
+
+    exposureLena = lena.exposureMatte randomColor anotherRandomColor (Nothing)
+    exposureLena.save "./exposureLena.png"
+
+    exposureLenaMasked = lena.exposureMatte randomColor anotherRandomColor (Just $ vectorMatte m)
+    exposureLenaMasked.save "./exposureLenaMasked.png"
+
+    contrastLena = lena.contrastMatte randomColor (Nothing)
+    contrastLena.save "./contrastLena.png"
+
+    contrastLenaMasked = lena.contrastMatte randomColor (Just $ vectorMatte m)
+    contrastLenaMasked.save "./contrastLenaMasked.png"
+
+    matte = imageMatte "./test.png" "rgba.a"
+    xxx = lena.offsetMatte randomColor (Just $ matte)
+    xxx.save "./xxx.png"
+
+    # scaled = lena.scale (V2 0.5 2.0)
+    # scaledAt = lena.scaleAt (Point2 256.0 256.0) (V2 0.5 2.0)
+    # scaled.save "./out.png"
+    # scaledAt.save "./out2.png"
 
     # lena = lena.hueCorrect c c c c c c2 c c
 
@@ -763,6 +821,11 @@ def main:
     # out = lena.posterize val
     # out = (load "./lena.png").posterize (getValueAtCurve (curveGUI [(controlPointGUI (Point2 169.000000 2.7897727) linearHandleGUI linearHandleGUI)]) 7.000000)
     # out.save "./out.png"
+
+    # f = 0.4
+    # print f.floor
+
+
 
     # grade: blackpoint whitepoint lift gain multiply offset gamma
     # lena = lena.grade test white black white white black white

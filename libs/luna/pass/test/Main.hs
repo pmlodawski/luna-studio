@@ -44,7 +44,7 @@ import           Flowbox.Text.Show.Hs                                          (
 
 import Luna.System.Session as Session
 import qualified Luna.System.Pragma.Store as Pragma
-
+import Control.Monad (when)
 
 header txt = "\n-------- " <> txt <> " --------"
 printHeader = putStrLn . header
@@ -53,7 +53,9 @@ ppPrint = putStrLn . ppShow
 
 main = do
     args <- getArgs
+    when (length args < 2) $ fail "provide input and output path!"
     let path = args !! 0
+        out  = args !! 1
         src  = Source "Main" (File $ fromString path)
 
     Session.runT $ do
@@ -103,7 +105,8 @@ main = do
             printHeader "HSC"
             hsc            <- Pass.run1_ HSC.pass hast
             putStrLn (hsShow $ unpack hsc)
-            return ()
+            
+            liftIO $ writeFile out (hsShow $ unpack hsc)
 
 
         case result of
