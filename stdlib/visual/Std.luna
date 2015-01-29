@@ -124,9 +124,6 @@ def emptyImage self::Std -> Image:
 def load self::Std path::Path -> Image:
     ```autoLift1 realReadLuna #{path}```
 
-def loadMatte self::Std path::Path channelName :: String -> Channel:
-    ```autoLift2 loadMatteLuna #{path} #{channelName}```
-
 def Image.save self::Image path::String:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
@@ -385,25 +382,20 @@ alias TransformD = Transform Double
 # alias Path a         = (Bool, [ControlPoint a])
 # alias Shape a        = [Path a]
 
+def imageMatte self::Std path::Path channelName::String -> (Matte Double):
+     ```autoLift2 imageMatteLuna #{path} #{channelName}```
 
-alias MatteLuna = (Maybe (Mask Float), Maybe Channel)
+def vectorMatte self::Std mask::(Mask Float) -> (Matte Double):
+    ```liftF1 vectorMatteLuna #{mask}```
 
-def imageMatte self::Std img::Channel -> MatteLuna:
-    (Nothing, Just img)
-
-def vectorMatte self::Std mask::(Mask Float) -> MatteLuna:
-    (Just mask, Nothing)
-
-def Image.offsetMatte self::Image value::Color matte::(Maybe MatteLuna) -> Image:
+def Image.offsetMatte self::Image value::Color matte::(Matte Double) -> Image:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
 
-def Image.contrastMatte self::Image value::Color matte::(Maybe MatteLuna) -> Image:
+def Image.contrastMatte self::Image value::Color matte::(Matte Double) -> Image:
     ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
 
-
-def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe MatteLuna) -> Image:
+def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Matte Double) -> Image:
     ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
-
 
 alias Mask a         = (Path a, Maybe (Path a))
 

@@ -298,11 +298,11 @@ class ```Gamma```:
 #                MATTES
 #
 
-def imageMatte img:
-    (Nothing, Just img)
+def imageMatte path channelName:
+     ```autoLift2 imageMatteLuna #{path} #{channelName}```
 
 def vectorMatte mask:
-    (Just mask, Nothing)
+    ```liftF1 vectorMatteLuna #{mask}```
 
 def Image.offsetMatte value matte:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
@@ -312,7 +312,7 @@ def Image.contrastMatte value matte:
 
 def Image.exposureMatte blackpoint ex matte:
     ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
-
+    
 #
 #                IMAGE
 #
@@ -324,9 +324,6 @@ def emptyImage:
 
 def load path:
     ```autoLift1 realReadLuna #{path}```
-
-def loadMatte path channelName:
-    ```autoLift2 loadMatteLuna #{path} #{channelName}```
 
 def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```

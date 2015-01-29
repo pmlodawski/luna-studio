@@ -315,9 +315,6 @@ def emptyImage:
 def load path:
     ```autoLift1 realReadLuna #{path}```
 
-def loadMatte path channelName:
-    ```autoLift2 loadMatteLuna #{path} #{channelName}```
-
 def Image.save path:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
@@ -698,14 +695,11 @@ def Image.differenceKey offset gain background:
 #                MATTES
 #
 
-def imageMatte img:
-    (Nothing, Just img)
-
-def novector:
-    ```val (Nothing :: Maybe (Mask2 Double))```
+def imageMatte path channelName:
+     ```autoLift2 imageMatteLuna #{path} #{channelName}```
 
 def vectorMatte mask:
-    (Just mask, Nothing)
+    ```liftF1 vectorMatteLuna #{mask}```
 
 def Image.offsetMatte value matte:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
@@ -801,14 +795,14 @@ def main:
     contrastLenaMasked = lena.contrastMatte randomColor (Just $ vectorMatte m)
     contrastLenaMasked.save "./contrastLenaMasked.png"
 
-    chan = loadMatte "./test.png" "rgba.a"
-
-    xxx = lena.offsetMatte randomColor (Just $ imageMatte chan)
+    matte = imageMatte "./test.png" "rgba.a"
+    xxx = lena.offsetMatte randomColor (Just $ matte)
     xxx.save "./xxx.png"
-    scaled = lena.scale (V2 0.5 2.0)
-    scaledAt = lena.scaleAt (Point2 256.0 256.0) (V2 0.5 2.0)
-    scaled.save "./out.png"
-    scaledAt.save "./out2.png"
+
+    # scaled = lena.scale (V2 0.5 2.0)
+    # scaledAt = lena.scaleAt (Point2 256.0 256.0) (V2 0.5 2.0)
+    # scaled.save "./out.png"
+    # scaledAt.save "./out2.png"
 
     # lena = lena.hueCorrect c c c c c c2 c c
 

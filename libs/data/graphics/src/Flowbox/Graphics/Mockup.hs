@@ -266,23 +266,16 @@ testEdgeBlur kernelSize edgeMultiplier channel = do
 --          domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
 --          process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
-type Matte2 a = ( VPS (Maybe (Mask2 a))
-                , VPS (Maybe Channel)
-                )
+imageMatteLuna :: FilePath -> String -> IO (Matte.Matte Double)
+imageMatteLuna path channelName = do
+  img <- realReadLuna path
+  let channel = getChannelFromPrimaryLuna channelName img
+  case channel of
+    Right (Just channel) -> return $ Matte.imageMatteDouble channel
+    _ -> error "cannot load mask from the given channel"
 
 vectorMatteLuna :: Mask2 Double -> Matte.Matte Double
 vectorMatteLuna mask = Matte.VectorMatte $ convertMask mask
-
-imageMatteLuna :: Channel -> Matte.Matte Double
-imageMatteLuna chan@(ChannelFloat _ _) = Matte.imageMatteDouble chan
-
--- should be changed to more generic type just after we figure out how to deal with integer masks
-convertMatte :: Matte2 Double -> Matte.Matte Double
-convertMatte (unpackLunaVar -> a, unpackLunaVar -> b) =
-  case (a,b) of
-    (Just mask, Nothing) -> vectorMatteLuna mask
-    (Nothing, Just chan) -> imageMatteLuna chan
-    _                    -> error "invalid mask"
 
 unpackAcc :: (A.Exp Int,A.Exp Int) -> (Int,Int)
 unpackAcc (x,y) = 
@@ -346,42 +339,36 @@ applyToShader f matte mat = combineWith (maskedApp f) matte mat
 applyToMatrix :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> Matrix2 a -> Matrix2 a -> Matrix2 a
 applyToMatrix f matte mat = (M.zipWith (\x -> \y -> (maskedApp f x y)) matte) mat
 
-offsetMatteLuna :: Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
+offsetMatteLuna :: Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
 offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img = 
   case matte of
     Nothing -> onEachRGBA (offset r) (offset g) (offset b) (offset a) img
     Just m ->
-      let m' = convertMatte m
-      in
-        onEachRGBAChannels (applyMatteFloat (offset r) m')
-                           (applyMatteFloat (offset g) m')
-                           (applyMatteFloat (offset b) m')
-                           (applyMatteFloat (offset a) m') img
+        onEachRGBAChannels (applyMatteFloat (offset r) m)
+                           (applyMatteFloat (offset g) m)
+                           (applyMatteFloat (offset b) m)
+                           (applyMatteFloat (offset a) m) img
 
-contrastMatteLuna :: Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
+contrastMatteLuna :: Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
 contrastMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img = 
   case matte of
     Nothing -> onEachRGBA (contrast r) (contrast g) (contrast b) (contrast a) img
     Just m ->
-      let m' = convertMatte m
-      in
-        onEachRGBAChannels (applyMatteFloat (contrast r) m')
-                           (applyMatteFloat (contrast g) m')
-                           (applyMatteFloat (contrast b) m')
-                           (applyMatteFloat (contrast a) m') img
+        onEachRGBAChannels (applyMatteFloat (contrast r) m)
+                           (applyMatteFloat (contrast g) m)
+                           (applyMatteFloat (contrast b) m)
+                           (applyMatteFloat (contrast a) m) img
                            
-exposureMatteLuna :: Color.RGBA Double -> Color.RGBA Double -> Maybe (Matte2 Double) -> Image -> Image
+exposureMatteLuna :: Color.RGBA Double -> Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
 exposureMatteLuna x@(fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
                   y@(fmap variable -> Color.RGBA exR exG exB exA) matte img =
                     case matte of
                       Nothing -> exposureLuna x y img --onEachRGBA (exposure blackpointR exR) (exposure blackpointG exG) (exposure blackpointB exB) id img -- (exposure blackpointA exA)
                       Just m ->
-                        let m' = convertMatte m
-                        in
-                          onEachRGBAChannels (applyMatteFloat (exposure blackpointR exR) m')
-                                             (applyMatteFloat (exposure blackpointG exG) m')
-                                             (applyMatteFloat (exposure blackpointB exB) m')
-                                             (applyMatteFloat (exposure blackpointA exA) m') img
+                          onEachRGBAChannels (applyMatteFloat (exposure blackpointR exR) m)
+                                             (applyMatteFloat (exposure blackpointG exG) m)
+                                             (applyMatteFloat (exposure blackpointB exB) m)
+                                             (applyMatteFloat (exposure blackpointA exA) m) img
 
 offsetLuna :: Color.RGBA Double -> Image -> Image
 offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) id -- (offset a)
@@ -1482,14 +1469,6 @@ pattern ImageEXR path <- (extension -> (path, ".exr"))
 realReadLuna :: FilePath -> IO Image
 realReadLuna (ImageEXR path) = readFromEXRLuna path
 realReadLuna path            = loadImageLuna path
-
-loadMatteLuna :: FilePath -> String -> IO Channel
-loadMatteLuna path channelName = do
-  img <- realReadLuna path
-  let channel = getChannelFromPrimaryLuna channelName img
-  case channel of
-    Right (Just channel) -> return channel
-    _ -> error "cannot load mask from the given channel"
 
 testColorCC :: Color5 -> Image
 testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
