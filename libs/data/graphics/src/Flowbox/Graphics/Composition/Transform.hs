@@ -44,6 +44,9 @@ class Rotate t a | t -> a where
 class Scale s t where
     scale :: s -> t -> t
 
+class Skew s t where
+    skew :: s -> t -> t
+
 class CornerPin t a | t -> a where
     cornerPin :: (Point2 a, Point2 a, Point2 a, Point2 a) -> t -> t
 
@@ -57,9 +60,16 @@ instance Floating a => Rotate (Point2 a) a where
         where x' = cos phi * x - sin phi * y
               y' = sin phi * x + cos phi * y
 
-instance Fractional a => Scale (V2 a) (Point2 a) where
-     scale (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
+--instance  Rotate (Point2 (A.Exp Double)) (A.Exp Double) where
+--    rotate phi (Point2 x y) = Point2 x' y'
+--        where x' = cos phi * x - sin phi * y
+--              y' = sin phi * x + cos phi * y
 
+instance Fractional a => Scale (V2 a) (Point2 a) where
+    scale (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
+
+instance Fractional a => Skew a (Point2 a) where
+    skew k (Point2 x y) = Point2 (x+k*y) y
 
 -- == Instances for CartesianShader ==
 instance Num a => Translate (CartesianShader a b) a where

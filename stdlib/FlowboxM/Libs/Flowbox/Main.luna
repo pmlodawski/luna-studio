@@ -519,8 +519,8 @@ def Image.scale vec:
 def Image.scaleAt point vec:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-def Image.transform trans:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform trans:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```

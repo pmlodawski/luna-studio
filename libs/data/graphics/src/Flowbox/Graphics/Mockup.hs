@@ -66,7 +66,7 @@ import           Flowbox.Graphics.Shader.Sampler      as Shader
 import           Flowbox.Graphics.Composition.Generator.Shape
 import           Flowbox.Graphics.Shader.Stencil      as Stencil
 import           Flowbox.Graphics.Shader.Shader       as Shader
-import           Flowbox.Graphics.Composition.Transform as Transform
+import qualified Flowbox.Graphics.Composition.Transform as Transform
 import           Flowbox.Graphics.Composition.Histogram
 import qualified Flowbox.Graphics.Composition.Generator.Raster                  as Raster
 import           Flowbox.Graphics.Image.Channel                       as Channel
@@ -322,7 +322,7 @@ applyMatteFloat f m (ChannelFloat name (ContinuousData shader)) = ChannelFloat n
 maskedApp :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> A.Exp a -> A.Exp a -> A.Exp a
 maskedApp f a b = (a A.==* 0) A.? (b,b + a*(delta f b))
 -- won't work, no idea what is the reason of that
---aux a b f = b + a*(delta f b)
+--maskedApp f a b = b + a*(delta f b)
   where
     delta :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> (A.Exp a) -> (A.Exp a)
     delta f x = (f x) - x
@@ -589,7 +589,7 @@ gradientLuna :: forall e.
 gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
     where grad = rasterizer $ monosampler $ gradientShader
 
-          gradientShader = scale (Grid width height) $ Transform.translate (V2 0.5 0.5) $ mapper gray gradient
+          gradientShader = Transform.scale (Grid width height) $ Transform.translate (V2 0.5 0.5) $ mapper gray gradient
           gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Double Double Double]
 
           weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
@@ -621,7 +621,7 @@ noiseLuna :: forall e a.
 noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA noise'
     where noise' = rasterizer $ monosampler $ noiseShader
 
-          noiseShader = scale (Grid width height) noise
+          noiseShader = Transform.scale (Grid width height) noise
 
 translateLuna :: V2 Double -> Image -> Image
 translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
@@ -647,6 +647,114 @@ translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
               --        mult pt x = str pt * x
               --    in (fmap (mult pt) v)
 
+--adjustCoordinates :: Point2 (A.Exp Double) -> A.Exp Double -> Point2 (A.Exp Double)
+--adjustCoordinates (Point2 x y) = Point2 ((A.intToFloat h) - x) y 
+
+channelDim :: Channel -> (Int,Int)
+channelDim = unpackAcc . channelDimAcc
+
+channelDimAcc :: Channel -> (A.Exp Int, A.Exp Int)
+channelDimAcc (ChannelFloat _ (MatrixData mat)) = (h,w)
+  where
+    sh = M.shape mat
+    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)          
+
+channelDimAcc (ChannelFloat _ (ContinuousData shader)) = (h,w)
+  where
+    Shader (Grid h w) _ = shader
+
+channelDimAcc (ChannelFloat _ (DiscreteData shader)) = (h,w)
+  where
+    Shader (Grid h w) _ = shader
+
+
+changeCoordinateSystem :: Channel -> (A.Exp Double, A.Exp Double) -> (A.Exp Double, A.Exp Double)
+changeCoordinateSystem chan (x', y') = (h - y', x')
+  where
+    (h', _) = channelDimAcc chan
+    h = A.fromIntegral h' :: A.Exp Double
+
+strengthShader :: Maybe (Matte.Matte Double) -> Channel -> Point2 (Exp Double) -> Exp Double
+strengthShader matte chan = case matte of
+                              Nothing -> (\x -> 1)
+                              Just m -> let (h,w) = channelDim chan
+                                            Shader _ matteShader = Matte.matteToContinuous h w m
+                                        in (\x -> (matteShader x))
+
+-- temporary name
+rotateAtMatteLuna :: Point2 Double -> Double -> Maybe (Matte.Matte Double) -> Image -> Image
+rotateAtMatteLuna p ang matte = onEachChannel (rotateChannelAt p ang matte)
+    where 
+      rotateChannelAt :: Point2 Double -> Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
+      rotateChannelAt (fmap variable -> (Point2 x' y')) (variable -> phi) matte chan = (rotate chan)
+          where
+            (x, y) = changeCoordinateSystem chan (x', y')
+
+            vBefore = V2 x y
+            vAfter  = V2 (-x) (-y)
+
+            rotate = \case
+                (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+                (Channel.asContinuous -> ChannelInt name zeData) -> ChannelInt name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+            strength = strengthShader matte chan
+
+            transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+            transformation pt = Transform.translate vAfter $ Transform.rotate (phi*(strength pt)) $ Transform.translate vBefore pt
+
+-- temporary name
+scaleAtMatteLuna :: Point2 Double -> V2 Double -> Maybe (Matte.Matte Double) -> Image -> Image
+scaleAtMatteLuna p v matte = onEachChannel (scaleChannelAt p v matte)
+    where 
+      scaleChannelAt :: Point2 Double -> V2 Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
+      scaleChannelAt (fmap variable -> (Point2 x' y')) (fmap variable -> v) matte chan = (scale chan)
+          where
+            (x, y) = changeCoordinateSystem chan (x', y')
+
+            vBefore = V2 x y
+            vAfter  = V2 (-x) (-y)
+
+            scale = \case
+              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+      
+            strength = strengthShader matte chan
+
+            transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+            transformation pt = Transform.translate vAfter $ Transform.scale (fmap (* (strength pt)) v) $ Transform.translate vBefore pt
+            
+-- temporary name
+--rotateMatteLuna :: Double -> Maybe (Matte.Matte Double) -> Image -> Image
+--rotateMatteLuna v matte = onEachChannel (rotateChannel v matte)
+--    where 
+--      rotateChannel :: Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
+--      rotateChannel (variable -> phi) matte chan = (rotate chan)
+--        where
+--          rotate = \case
+--              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+--              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+--          strength = strengthShader matte chan
+
+--          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+--          transformation pt = Transform.rotate (phi*(strength pt)) pt
+
+-- temporary name
+--scaleMatteLuna :: V2 Double -> Maybe (Matte.Matte Double) -> Image -> Image
+--scaleMatteLuna v matte = onEachChannel (scaleChannel v matte)
+--    where 
+--      scaleChannel :: V2 Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
+--      scaleChannel (fmap variable -> v) matte chan = (scale chan)
+--          where
+--            scale = \case
+--                (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+--                (Channel.asContinuous -> ChannelInt name zeData) -> ChannelInt name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+--            strength = strengthShader matte chan
+
+--            transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+--            transformation pt = Transform.scale (fmap (* (strength pt)) v) pt
+
 rotateLuna :: Double -> Image -> Image
 rotateLuna (variable -> phi) = onEachChannel rotateChannel
     where mask = Nothing
@@ -661,10 +769,11 @@ rotateLuna (variable -> phi) = onEachChannel rotateChannel
               --TODO[KM]: handle the mask properly
               _       -> phi
 
+
 rotateAtLuna :: Point2 Double -> Double -> Image -> Image
 rotateAtLuna (fmap variable -> (Point2 x y)) (variable -> phi) = onEachChannel rotateChannel
-    where vBefore = V2 (-x) y
-          vAfter  = V2 x (-y)
+    where vBefore = V2 x y
+          vAfter  = V2 (-x) (-y)
           mask    = Nothing
           rotateChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
@@ -683,18 +792,22 @@ scaleLuna (fmap variable -> v) = onEachChannel scaleChannel
           scaleChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
               (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
           transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
           transformation pt = Transform.scale (strength pt) pt
+
           strength :: Point2 (Exp Double) -> V2 (Exp Double)
           strength pt = case mask of
               Nothing -> v
               --TODO[KM]: handle the mask properly
               _       -> v
 
+
+
 scaleAtLuna :: Point2 Double -> V2 Double -> Image -> Image
 scaleAtLuna (fmap variable -> (Point2 x y)) (fmap variable -> v) = onEachChannel scaleChannel
-    where vBefore = V2 (-x) y
-          vAfter  = V2 x (-y)
+    where vBefore = V2 x y
+          vAfter  = V2 (-x) (-y)
           mask    = Nothing
           scaleChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
@@ -712,34 +825,31 @@ scaleAtLuna (fmap variable -> (Point2 x y)) (fmap variable -> v) = onEachChannel
 --    where foo :: Matrix2 Double -> ContinuousShader (A.Exp Double)
 --          foo = scale (Grid x y) . nearest . fromMatrix boundary
 
-transformLuna :: Transform Double -> Image -> Image
-transformLuna _ img = img
---transformLuna (Transform tr (variable -> phi) (fmap variable -> sc) _ ce) = onEachChannel transformChannel
---    where V2     translateX translateY = fmap variable tr
---          Point2 centerX    centerY    = fmap variable ce
---          vBefore = V2 (-centerX) centerY
---          vAfter  = V2 centerX (-centerY)
---          mask    = Nothing
---          tr      = V2 translateX (-translateY)
---          transformChannel = \case
---              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
---              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
---          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
---          transformation pt = Transform.translate (strengthTranslate pt) $ Transform.translate vAfter $ Transform.rotate (strengthRotate pt) $ Transform.scale (strengthScale pt) $ Transform.translate vBefore pt
---          strengthRotate    = strengthScalar phi
---          strengthScale     = strengthVector sc
---          strengthTranslate = strengthVector tr
---          -- TODO: extract those 2 functions as a top-level binding
---          strengthScalar :: Exp Double -> Point2 (Exp Double) -> Exp Double
---          strengthScalar val pt = case mask of
---              Nothing -> val
---              --TODO[KM]: handle the mask properly
---              _       -> val
---          strengthVector :: V2 (Exp Double) -> Point2 (Exp Double) -> V2 (Exp Double)
---          strengthVector v pt = case mask of
---              Nothing -> v
---              --TODO[KM]: handle the mask properly
---              _       -> v
+transformLuna :: Transform Double -> Maybe (Matte.Matte Double) -> Image -> Image
+transformLuna tr matte = onEachChannel (transformChannel tr matte)
+    where 
+      transformChannel :: Transform Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
+      transformChannel (Transform tr (variable -> phi) (fmap variable -> sc) s ce) matte chan = (transform chan)
+        where
+          V2     translateX translateY = fmap variable tr
+          Point2 x y = (fmap variable) ce
+          (cX, cY) = changeCoordinateSystem chan (x,y)
+          center = V2 cX cY
+
+          vBefore = center
+          vAfter  = fmap ((-1)*) center
+
+          tr      = V2 (-translateY) translateX
+
+          transform = \case
+              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+          strength = strengthShader matte chan
+
+          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+          transformation pt = Transform.translate (fmap (* (strength pt)) tr) $ Transform.translate vAfter $ Transform.rotate (phi*(strength pt)) $ Transform.scale (fmap (* (strength pt)) sc) $ Transform.translate vBefore pt
+
 
 cropLuna :: Rectangle Int -> Image -> Image
 cropLuna rect = onEachChannel cropChannel
