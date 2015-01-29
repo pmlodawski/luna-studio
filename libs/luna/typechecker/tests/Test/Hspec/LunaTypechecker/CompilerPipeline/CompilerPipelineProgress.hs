@@ -1,6 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgress where
 

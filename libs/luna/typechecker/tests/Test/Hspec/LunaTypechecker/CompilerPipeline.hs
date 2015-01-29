@@ -1,12 +1,8 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
-
 module Test.Hspec.LunaTypechecker.CompilerPipeline (
     module CompilerPipelineResult,
     module CompilerPipelineProgress,
-    lunaCompilerStepsSuccess, lunaCompilerStepsFailure, lunaCompilerStepsFile, lunaCompilerSteps, shouldSatisfyLens
+    lunaCompilerStepsSuccess, lunaCompilerStepsFailure,
+    lunaCompilerStepsFile, lunaCompilerSteps
   ) where
 
 
@@ -60,26 +56,16 @@ import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineResult   as C
 import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgress as CompilerPipelineProgress
 
 
-
-
-
-
 lunaCompilerStepsSuccess :: CompilerPipelineResult -> Expectation
 lunaCompilerStepsSuccess res = res `shouldSatisfyLens` (pipelineRawResult . _1 . _1 . to isRight)
+
 
 lunaCompilerStepsFailure :: CompilerPipelineResult -> Expectation
 lunaCompilerStepsFailure res = res `shouldSatisfyLens` (pipelineRawResult . _1 . _1 . to isLeft)
 
 
-
-
-
-
-
 lunaCompilerStepsFile :: String -> IO CompilerPipelineResult
-lunaCompilerStepsFile fileName = do
-    res <- L.pack <$> strictReadFile fileName >>= lunaCompilerSteps (L.pack fileName)
-    return res
+lunaCompilerStepsFile fileName = L.pack <$> strictReadFile fileName >>= lunaCompilerSteps (L.pack fileName)
 
 
 lunaCompilerSteps :: L.Text -> L.Text -> IO CompilerPipelineResult
@@ -90,8 +76,6 @@ lunaCompilerSteps fileName fileContents = do
 
   where
     src = Source fileName (Text fileContents)
-    --procedure :: StateT CompilerPipelineProgress (EitherT Pass.PassError (Store.PragmaStoreT IO)) ()
-    procedure :: EitherT Pass.PassError (StateT CompilerPipelineProgress (Store.PragmaStoreT IO)) ()
     procedure = do
         (ast1, astinfo1)                <- Pass.run1_ Stage1.pass src
         a_parsestage1_ast               .= Just ast1
