@@ -4,11 +4,12 @@ module Luna.Typechecker.Data (
     Subst, Typo,
     Type(..), Predicate(..), Constraint(..), TypeScheme(..),
     TypeMap,
-    true_cons, null_subst, init_typo
+    null_subst, init_typo
   ) where
 
 
 import Data.Map.Strict  (Map)
+import Data.Monoid
 
 import Luna.Syntax.Enum (ID)
 
@@ -43,11 +44,8 @@ data TypeScheme = Mono Type
 
 
 empty_typo :: Typo
-empty_typo = []     -- TODO [kgdk] 22 sty 2015: make a monoid
+empty_typo = []
 
-
-true_cons :: Constraint
-true_cons = C [TRUE]
 
 
 null_subst :: Subst
@@ -56,3 +54,11 @@ null_subst = []
 
 init_typo :: [Typo]
 init_typo = [empty_typo]
+
+
+instance Monoid Constraint where
+  mempty = C [TRUE]
+  mappend (C p1) (C p2)               = C (p1 ++ p2)
+  mappend (C p1) (Proj tvr p2)        = Proj tvr (p1 ++ p2)
+  mappend (Proj tvr p1) (C p2)        = Proj tvr (p1 ++ p2)
+  mappend (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)

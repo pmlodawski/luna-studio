@@ -10,7 +10,7 @@ import Data.Monoid                       (Monoid(..))
 import Text.PrettyPrint
 
 import Luna.Data.StructInfo              (StructInfo)
-import Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo, TypeMap, init_typo, null_subst, true_cons)
+import Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo, TypeMap, init_typo, null_subst)
 import Luna.Typechecker.Debug.PrettyData (prettyConstr, prettyNullable, prettySubst, prettyTypo, prettyTypeMap)
 
 
@@ -32,7 +32,7 @@ instance Default StageTypecheckerState where
                                 , _typo     = init_typo
                                 , _nextTVar = 0
                                 , _subst    = null_subst
-                                , _constr   = true_cons
+                                , _constr   = mempty
                                 , _sa       = mempty
                                 , _typeMap  = mempty
                                 }
