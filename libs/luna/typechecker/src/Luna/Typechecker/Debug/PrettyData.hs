@@ -14,12 +14,19 @@ import            Luna.Typechecker.Data   (TVar, Var, Fieldlabel, Field, Subst, 
 
 
 
+vcatNoOverlap :: [Doc] -> Doc
+vcatNoOverlap = foldl ($+$) empty
+
 prettyComma :: [Doc] -> Doc
-prettyComma = hsep . punctuate (char ',')
+prettyComma = vcatNoOverlap . punctuate (char ',')
 
 prettyNullable :: [Doc] -> Doc
 prettyNullable [] = char '∅'
-prettyNullable xs = foldl ($+$) empty xs
+prettyNullable xs = vcatNoOverlap xs
+
+prettyNullableComma :: [Doc] -> Doc
+prettyNullableComma [] = char '∅'
+prettyNullableComma xs = prettyComma xs
 
 
 prettyTVar :: TVar -> Doc
@@ -46,13 +53,11 @@ prettyType (Record fs)  = braces
 
 prettyPred :: Predicate -> Doc
 prettyPred TRUE                 = char '⊤'
-prettyPred (ty1 `Subsume` ty2)  = prettyType ty1        <> char '≼' <> prettyType ty2
+prettyPred (ty1 `Subsume` ty2)  = prettyType  ty1       <> char '≼' <> prettyType ty2
 prettyPred (Reckind rty fl fty) = prettyField (fl, fty) <> char 'ϵ' <> prettyType rty
 
 prettyConstr :: Constraint -> Doc
-prettyConstr (C ps)         = hsep
-                            $ punctuate (char ',')
-                            $ map prettyPred ps
+prettyConstr (C ps)         = hsep $ punctuate (char ',') $ map prettyPred ps
 prettyConstr (Proj tvs ps)  =   char '∃'
                             <+> (prettyComma (map prettyTVar tvs) <> char '.')
                             <+> prettyComma (map prettyPred ps)
@@ -66,21 +71,18 @@ prettyTypeScheme (Poly tvs cs ty) = char '∀'
                                   <+> prettyType ty
 
 prettySubst :: Subst -> Doc
-prettySubst s | null substs = prettyNullable []
-              | otherwise   = prettyComma substs
-  where prettySubst1 (tv, ty) = parens
-                              $ prettyTVar tv
-                              <+> char '↣'
-                              <+> prettyType ty
-        substs                = map prettySubst1 s
+prettySubst = prettyNullableComma . substs
+  where prettySubst1 (tv, ty) = parens $  prettyTVar tv <+> char '↣'
+                                      $+$ prettyType ty
+        substs = map prettySubst1
 
 prettyTypo :: Typo -> Doc
 prettyTypo = prettyNullable . map prettyTypo1
   where prettyTypo1 (v,ts)  = prettyVar v
-                            <+> text " :: "
+                            <+> text "::"
                             <+> prettyTypeScheme ts
 
 prettyTypeMap :: TypeMap -> Doc
-prettyTypeMap = SM.foldrWithKey join empty
-  where join key ty rest = int key <+> text "⇒" <+> prettyType ty <+> text "," <+> rest
+prettyTypeMap tm = prettyNullableComma $ SM.elems $ SM.mapWithKey join tm
+  where join key ty = int key <+> text "⇒" <+> prettyType ty
 

@@ -3,8 +3,10 @@ module Luna.Typechecker.Debug.ConsoleColours (
     colouredPrint, writeFileM
   ) where
 
+
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.List              (intercalate)
+
 
 
 writeFileM :: (MonadIO m) => FilePath -> String -> m ()
