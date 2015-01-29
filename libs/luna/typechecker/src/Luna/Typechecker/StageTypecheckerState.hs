@@ -22,6 +22,8 @@ import            Data.Monoid
 
 import qualified  Luna.Data.StructInfo                          as SI
 
+import qualified  Luna.Pass                                     as Pass
+
 import            Luna.Syntax.Enum                              (ID)
 import qualified  Luna.Syntax.Enum                              as Enum
 
@@ -38,7 +40,7 @@ report_error :: (Monad m) => String -> a -> StageTypecheckerPass m a
 report_error msg x = do
     st <- get
     let msgRes = "LUNA TC ERROR: " ++ msg ++ "\nState:\n\n" ++ show st
-    fail msgRes
+    Pass.fail msgRes
 
 
 withTypo :: (Monad m) => Typo -> a -> (a -> StageTypecheckerPass m b) -> StageTypecheckerPass m b
