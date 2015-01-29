@@ -44,6 +44,7 @@ import qualified Luna.Parser.Pragma        as Pragma
 import qualified Luna.Parser.Decl          as Decl
 import qualified Luna.Syntax.Label         as Label
 
+
 import Text.Trifecta.Rendering (Caret(Caret))
 import Text.Trifecta.Combinators (careting)
 import Text.Trifecta.Delta (column)
