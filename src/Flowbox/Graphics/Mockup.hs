@@ -363,12 +363,39 @@ exposureMatteLuna :: Color.RGBA Double -> Color.RGBA Double -> Maybe (Matte.Matt
 exposureMatteLuna x@(fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
                   y@(fmap variable -> Color.RGBA exR exG exB exA) matte img =
                     case matte of
-                      Nothing -> exposureLuna x y img --onEachRGBA (exposure blackpointR exR) (exposure blackpointG exG) (exposure blackpointB exB) id img -- (exposure blackpointA exA)
+                      Nothing -> onEachRGBA (exposure blackpointR exR) (exposure blackpointG exG) (exposure blackpointB exB) id img -- (exposure blackpointA exA)
                       Just m ->
                           onEachRGBAChannels (applyMatteFloat (exposure blackpointR exR) m)
                                              (applyMatteFloat (exposure blackpointG exG) m)
                                              (applyMatteFloat (exposure blackpointB exB) m)
                                              (applyMatteFloat (exposure blackpointA exA) m) img
+
+gradeLunaColorMatte :: VPS (Color.RGBA Double)
+                    -> VPS (Color.RGBA Double)
+                    -> VPS (Color.RGBA Double)
+                    -> VPS (Color.RGBA Double)
+                    -> Color.RGBA Double
+                    -> Color.RGBA Double
+                    -> Color.RGBA Double
+                    -> Maybe (Matte.Matte Double)
+                    -> Image
+                    -> Image
+gradeLunaColorMatte (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
+                    (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
+                    (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
+                    (VPS (fmap variable -> Color.RGBA gainR gainG gainB gainA))
+                    (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
+                    (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
+                    (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) matte img =
+                      case matte of
+                        Nothing -> onEachRGBA (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
+                                              (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
+                                              (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
+                                              id img -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+                        Just m -> onEachRGBAChannels (applyMatteFloat (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR) m)
+                                                     (applyMatteFloat (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG) m)
+                                                     (applyMatteFloat (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB) m)
+                                                     (applyMatteFloat (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA) m) img
 
 offsetLuna :: Color.RGBA Double -> Image -> Image
 offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) id -- (offset a)
