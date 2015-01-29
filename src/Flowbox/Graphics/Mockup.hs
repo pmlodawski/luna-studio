@@ -663,8 +663,8 @@ rotateLuna (variable -> phi) = onEachChannel rotateChannel
 
 rotateAtLuna :: Point2 Double -> Double -> Image -> Image
 rotateAtLuna (fmap variable -> (Point2 x y)) (variable -> phi) = onEachChannel rotateChannel
-    where vBefore = V2 (-x) y
-          vAfter  = V2 x (-y)
+    where vBefore = V2 x y
+          vAfter  = V2 (-x) (-y)
           mask    = Nothing
           rotateChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
