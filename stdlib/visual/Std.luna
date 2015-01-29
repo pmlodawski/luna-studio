@@ -388,14 +388,17 @@ def imageMatte self::Std path::Path channelName::String -> (Matte Double):
 def vectorMatte self::Std mask::(Mask Float) -> (Matte Double):
     ```liftF1 vectorMatteLuna #{mask}```
 
-def Image.offsetMatte self::Image value::Color matte::(Matte Double) -> Image:
+def Image.offsetMatte self::Image value::Color matte::(Maybe (Matte Double)) -> Image:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
 
-def Image.contrastMatte self::Image value::Color matte::(Matte Double) -> Image:
+def Image.contrastMatte self::Image value::Color matte::(Maybe (Matte Double)) -> Image:
     ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
 
-def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Matte Double) -> Image:
+def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe (Matte Double)) -> Image:
     ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
+
+def Image.gradeMatte self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Double)) -> Image:
+    ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
 alias Mask a         = (Path a, Maybe (Path a))
 

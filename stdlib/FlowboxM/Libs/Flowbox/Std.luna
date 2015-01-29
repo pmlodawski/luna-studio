@@ -312,7 +312,10 @@ def Image.contrastMatte value matte:
 
 def Image.exposureMatte blackpoint ex matte:
     ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
-    
+
+def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
+    ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
+
 #
 #                IMAGE
 #

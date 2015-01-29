@@ -710,6 +710,9 @@ def Image.contrastMatte value matte:
 def Image.exposureMatte blackpoint ex matte:
     ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
 
+def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
+    ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
+
 #
 #                VIEW
 #
@@ -772,7 +775,7 @@ def main:
     # lena = constant 640 480 gray
     lena = load "./lena.png"
     
-    randomColor = RGBA 0.2 0.5 0.1 1.0
+    randomColor = RGBA 0.2 0.5 0.1 0.0
     anotherRandomColor = RGBA 0.4 0.2 0.12 0.34
 
   #  print (vectorMatte m)
