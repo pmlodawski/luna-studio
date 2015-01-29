@@ -20,11 +20,14 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Luna.Pass.Analysis.ID.ExtractIDs           as ExtractIDs
 import           Luna.Pass.Pass                             (Pass)
+import           Luna.Pass.Pass                             (PassMonad)
 import qualified Luna.Pass.Pass                             as Pass
+import qualified Luna.Syntax.Enum                           as Enum
 import           Luna.Syntax.Graph.PropertyMap              (PropertyMap)
 import qualified Luna.Syntax.Graph.PropertyMap              as PropertyMap
 import qualified Luna.Syntax.Graph.View.Default.DefaultsMap as DefaultsMap
-import           Luna.Syntax.Module                         (Module)
+import           Luna.Syntax.Module                         (LModule)
+import           Luna.System.Pragma.Store                   (MonadPragmaStore)
 
 
 
@@ -32,23 +35,26 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-type GCNodePropertiesPass result = Pass Pass.NoState result
+type GCNodePropertiesPass m result = (Monad m, MonadIO m)
+                                   => PassMonad Pass.NoState m result
 
 
-run :: Module -> PropertyMap -> Pass.Result PropertyMap
+run :: (Eq a, Enum.Enumerated a, MonadPragmaStore m, MonadIO m)
+    => LModule a e -> PropertyMap a e -> EitherT Pass.PassError m (PropertyMap a e)
 run = Pass.run_ (Pass.Info "GCNodeProperties") Pass.NoState .: gcIds
 
 
-gcIds :: Module -> PropertyMap -> GCNodePropertiesPass PropertyMap
+gcIds :: Enum.Enumerated a
+      => LModule a e -> PropertyMap a e -> GCNodePropertiesPass m (PropertyMap a e)
 gcIds module_ propertyMap = do
-    ids <- hoistEither =<< ExtractIDs.runModule module_
-    let existingIds      = IntSet.union ids $ IntSet.map (* (-1)) ids
-        defaultsMaps     = map (flip PropertyMap.getDefaultsMap propertyMap) $ IntSet.toList existingIds
-        defaults         = concatMap DefaultsMap.elems defaultsMaps
-        defaultsIds      = IntSet.fromList $ map fst defaults
-    defaultsContentIds <- hoistEither =<< ExtractIDs.runNodeExprs (map snd defaults)
-    let pmIds       = PropertyMap.keysSet propertyMap
-        orphans     = pmIds \\ IntSet.unions [existingIds, defaultsContentIds, defaultsIds]
+    let ids                = ExtractIDs.run module_
+        existingIds        = IntSet.union ids $ IntSet.map (* (-1)) ids
+        defaultsMaps       = map (flip PropertyMap.getDefaultsMap propertyMap) $ IntSet.toList existingIds
+        defaults           = concatMap DefaultsMap.elems defaultsMaps
+        defaultsIds        = IntSet.fromList $ map fst defaults
+        defaultsContentIds = ExtractIDs.runNodeExprs (map snd defaults)
+        pmIds              = PropertyMap.keysSet propertyMap
+        orphans            = pmIds \\ IntSet.unions [existingIds, defaultsContentIds, defaultsIds]
     when (not $ IntSet.null orphans) $
         logger warning $ concat ["GCNodePropertiesPass: found ", show $ IntSet.size orphans, " orphaned ids: ", show orphans]
     return $ foldr PropertyMap.delete propertyMap $ IntSet.toList orphans
