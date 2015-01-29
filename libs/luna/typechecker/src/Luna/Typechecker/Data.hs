@@ -4,7 +4,7 @@ module Luna.Typechecker.Data (
     Subst, Typo,
     Type(..), Predicate(..), Constraint(..), TypeScheme(..),
     TypeMap,
-    null_subst, init_typo
+    null_subst, init_typo, true_cons
   ) where
 
 
@@ -14,12 +14,11 @@ import Data.Monoid
 import Luna.Syntax.Enum (ID)
 
 
-
 type TVar       = Int
 type Var        = Int
 type Fieldlabel = Var
 type Field      = (Fieldlabel, Type)
-type TypeMap    = Map ID Type
+type TypeMap    = Map ID (Typo, Type, Constraint)
 type Subst      = [(TVar, Type)]
 type Typo       = [(Var,TypeScheme)]
 
@@ -29,14 +28,17 @@ data Type = TV TVar
           | Record [Field]
           deriving (Show,Eq)
 
+
 data Predicate  = TRUE
                 | Type `Subsume` Type
                 | Reckind Type Fieldlabel Type
                 deriving (Show,Eq)
 
+
 data Constraint = C [Predicate]
                 | Proj [TVar] [Predicate]
                 deriving (Show)
+
 
 data TypeScheme = Mono Type
                 | Poly [TVar] Constraint Type
@@ -47,13 +49,16 @@ empty_typo :: Typo
 empty_typo = []
 
 
-
 null_subst :: Subst
 null_subst = []
 
 
 init_typo :: [Typo]
 init_typo = [empty_typo]
+
+
+true_cons :: Constraint
+true_cons = C [TRUE]
 
 
 instance Monoid Constraint where

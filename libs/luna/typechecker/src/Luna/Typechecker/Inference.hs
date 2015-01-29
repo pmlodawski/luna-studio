@@ -39,9 +39,9 @@ import qualified  Luna.Syntax.Pat                         as Pat
 import qualified  Luna.Syntax.Traversals                  as AST
 
 import            Luna.Typechecker.Data (
-                      Var, Subst,
+                      TVar, Var, Subst,
                       Type(..), Predicate(..), Constraint(..), TypeScheme(..),
-                      null_subst
+                      null_subst, true_cons, Typo
                   )
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Inference.Class        (
@@ -63,6 +63,7 @@ import            Luna.Typechecker.StageTypecheckerState  (
                       getTargetIDString, getTargetID
                   )
 import            Luna.Typechecker.TypesAndConstraints    (TypesAndConstraints(..))
+-- import            Luna.Typechecker.Tools (without)
 
 
 
@@ -118,7 +119,7 @@ tcDecl ldecl@(Label lab decl) =
           let Just lastBodyID = lastOf (traverse . Label.label . to Enum.id) body
 
           withClonedTypo0 $ do
-
+              env <- getEnv
               debugPush $ "Function: " ++ baseName ++ labIDdisp ++ " :: (" ++ intercalate ", " argsDisp ++ ") → ???"
 
               a  <- insertNewMonoTypeVariable (Enum.id lab)     -- type of the method
@@ -129,13 +130,14 @@ tcDecl ldecl@(Label lab decl) =
               mResultType <- typeMap . at lastBodyID & use
 
               case mResultType of
-                Just resultType -> do
+                Just (_, resultType, _) -> do
                     let bsres = foldr1 Fun (bs ++ [resultType])
 
                     add_constraint (C [a `Subsume` bsres])
                     typ <- normalize a
-                    -- TODO [kgdk] 27 sty 2015: generalize
-                    typeMap . at labID ?= typ
+                    consV <- use constr
+                    -- TODO [llachowski] 29 sty 2015: rethink this
+                    setTypeById labID (env, typ, consV)
 
                     debugPush "pop"
                     return travRes
@@ -148,9 +150,6 @@ tcDecl ldecl@(Label lab decl) =
           --                       b <- tp (insert env (x, Mono (TV a)), e)
           --                       normalize ((TV a) `Fun` b)
       _ -> defaultTraverseM ldecl
-
-
-
 
 
 tcExpr :: (StageTypecheckerCtx IDTag m) => LExpr IDTag () -> StageTypecheckerPass m (LExpr IDTag ())
@@ -169,12 +168,13 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
 
     targetLabel <- getTargetID lab
     env <- getEnv
-    vType <- inst targetLabel
+    vType <- inst env targetLabel
     result <- normalize vType
+    consV <- use constr
 
     debugPush ("         :: " ++ show result)
 
-    setTypeById targetLabel result
+    setTypeById targetLabel (env, result, consV)
 
     defaultTraverseM var
 
@@ -186,6 +186,7 @@ expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src =
           --tp (env, Let x e e') = do a <- tp (env, e)
           --                          b <- gen env a
           --                          tp ((insert env (x, b)), e')
+          env <- getEnv
           t_id <- getTargetIDString labt
           s_id <- getTargetIDString labs
           debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ s_id) 
@@ -195,6 +196,7 @@ expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src =
           -- typecheck src
           res <- defaultTraverseM ass
           srcType <- getTypeById srcId
+          -- TODO srcType should be generalized
 
           setTypeById dstId srcType
           return res
@@ -213,48 +215,32 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
     -- typecheck all args
     res <- defaultTraverseM app
 
-    e1Type <- getTypeById appExprId
-    let argTypes = map toType args
+    (_, e1Type, _) <- getTypeById appExprId
+    argTypes <- mapM getType args
     result <- Fold.foldlM tp e1Type argTypes
-    setTypeById appId result
+
+    env <- getEnv
+    consV <- use constr
+    setTypeById appId (env, result, consV)
 
     debugPush $ "Result of infering an application: " ++ show result
     return res
 
   where
-    toType (Expr.AppArg _ (Label lab2 _)) = do
-      getTypeById =<< getTargetID lab2
+    getType (Expr.AppArg _ (Label argLab _)) = do
+      (_, typ, _) <- getTypeById =<< getTargetID argLab
+      return typ
 
-    tp result arg = do
-      argType <- arg
+    tp result argType = do
       a <- newtvar
       add_constraint (C [result `Subsume` (argType `Fun` TV a)])
       normalize (TV a)
 
---expr _ = error "No idea how to infer type at the moment."
-expr _ = error "inny error"
+expr _ = error "No idea how to infer type at the moment."
 
 
-
-
-
-
-
---tv_typo :: Typo -> [TVar]
---tv_typo = foldl f []
---  where
---    f z (v,ts) = z ++ tv ts
-
-
-
-
-
-
-
-
-inst :: (Monad m) => Var -> StageTypecheckerPass m Type
-inst x = do
-    env <- getEnv
+inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
+inst env x = do
     case lookup x env of 
         Just ts -> case ts of
             Mono t        ->
@@ -272,13 +258,13 @@ inst x = do
             report_error ("undeclared variable " ++ show x) (TV ntv)
 
 
---gen :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
---gen env t = do
---    c      <- use constr
---    constr .= projection c (fv t c env)
---    return  $ Poly (fv t c env) c t
---  where
---    fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
+-- generalize :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
+-- generalize env t = do
+--     c      <- use constr
+--     constr .= projection c (fv t c env)
+--     return $ Poly (fv t c env) c t
+--   where
+--     fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
 
 
 normalize :: (Monad m) => Type ->  StageTypecheckerPass m Type
@@ -296,6 +282,10 @@ return_result s c t = do
     return t
 
 
---projection :: Constraint -> [TVar] -> Constraint
---projection _ _ = true_cons
+projection :: Constraint -> [TVar] -> Constraint
+projection _ _ = true_cons
 
+
+tv_typo :: Typo -> [TVar]
+tv_typo env = foldr f [] env where
+         f (v,ts) result = (tv ts) ++ result
