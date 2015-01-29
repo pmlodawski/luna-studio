@@ -57,7 +57,7 @@ import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.ASTInfo            (ASTInfo, genID)
 
-import           Luna.Syntax.Arg              (Arg(Arg))
+import           Luna.Syntax.Arg              (Arg(Arg), LArg)
 import qualified Luna.Syntax.Arg              as Arg
 
 import qualified Luna.Parser.Parser           as Parser
@@ -187,7 +187,7 @@ genCons name params cons derivings makeDataType = do
                            $ HE.AppE (HE.VarE $ liftCons fieldNum)
                                      (HE.VarE conName)
                 func       = Decl.FuncDecl [fromText clsConName'] 
-                            (NamePat Nothing (Segment conName [Arg (Label 0 $ Pat.Var "self") Nothing]) []) 
+                            (NamePat Nothing (Segment conName [Arg (Label (0::Int) $ Pat.Var "self") Nothing]) []) 
                             Nothing []
                             
             addComment . H3 $ dotname [name, conName] <> " constructor"
@@ -425,38 +425,12 @@ genExpr (Label lab expr) = case expr of
                                                          body'   = (\a -> a ++ [HE.Match HE.WildP (HE.AppE (HE.VarE "error") (HE.Lit $ HLit.String "TODO (!!!) Main.luna: path/Main.luna:(...,...)-(...,...): Non-exhaustive patterns in case"))]) <$> body
                                                          genMatch (unwrap -> Expr.Match pat body) = HE.Match <$> genPat pat <*> (HE.DoBlock <$> mapM genExpr body)
 
-    Expr.Lambda inputs output body           -> do
-                                                let args = fmap unwrap inputs
-                                                pats <- genFuncPats args True
-                                                --tu jest problem, bo
-                                                --Expr.Lambda ma Arg ktory zawiera Expr
-                                                --natomiast FunDecl ma Argi zawierajace LExpr!
-                                                --trzeba przejsc na LExpr chyba
-                                                sig   <- genFuncSig args
-                                                hbody <- mapM genExpr body
-                                                return $ HE.app (HE.VarE "mkLam") [sig, HE.Lambda pats $ genBody hbody]
-
-    --                                        let fname      = Naming.mkLamName $ fromString $ show id
-    --                                            hName      = Naming.mkHandlerFuncName fname
-    --                                            --cfName     = mkCFLName fname
-    --                                            argNum     = length inputs
-
-    --                                        --State.addDataType $ HE.DataD cfName [] [HE.Con cfName []] [Deriving.Show]
-
-    --                                        f  <-   HE.Assignment (HE.Var fname)
-    --                                                <$> ( HE.Lambda <$> pure [] -- (mapM genExpr inputs)
-    --                                                                   <*> (HE.DoBlock <$> ((HE.NOP :) <$> genFuncBody body output))
-    --                                                    )
-
-
-    --                                        -- using HE.NOP instead emptyHExpr (?) for now !
-    --                                        --regFunc f
-
-    --                                        --regTHExpr $ thRegisterFunction fname argNum []
-    --                                        --regTHExpr $ thClsCallInsts fname argNum (0::Int)
-
-    --                                        --return $ HE.Var hName
-    --                                        return $ HE.LetExpr HE.NOP
+    Expr.Lambda inputs output body         -> do
+                                              let args = fmap unwrap inputs
+                                              pats   <- genFuncPats args True
+                                              sig    <- genFuncSig args
+                                              hbody  <- mapM genExpr body
+                                              return $ HE.app (HE.VarE "mkLam") [sig, HE.Lambda pats $ genBody hbody]
 
     Expr.Grouped expr                      -> genExpr expr
     Expr.Assignment   dst src              -> HE.Arrow <$> genPat dst <*> genExpr src
