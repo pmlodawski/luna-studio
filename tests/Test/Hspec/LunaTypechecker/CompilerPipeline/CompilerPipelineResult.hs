@@ -1,8 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineResult where
+
 
 import            Luna.Data.Namespace                         (Namespace(Namespace))
 import            Luna.Data.Source                            (Text(Text), Source(Source))
@@ -49,6 +48,8 @@ import qualified  Text.PrettyPrint                            as PP
 import            Text.PrettyPrint                            (($+$), text, empty)
 import            Text.Show.Pretty                            (ppShow)
 
+import Luna.Typechecker.Debug.ConsoleColours
+
 
 import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgress
 
@@ -59,82 +60,60 @@ pipelineRawResult :: Iso' CompilerPipelineResult ((Either Pass.PassError (), Com
 pipelineRawResult = iso fromResult CompilerPipelineResult
 
 instance Show CompilerPipelineResult where
-    show _ = "<Show CompilerPipelineResult> to be implemented"
-
---newtype CompilerStepsResWrapper = CompilerStepsResWrapper { unWrapCompilerStepsRes :: CompilerStepsRes }
-
---instance Show CompilerStepsResWrapper where
---    show (CompilerStepsResWrapper (Left  errorMsg,            pragma)) = "Compiler failed!\n" ++ errorMsg
---    show (CompilerStepsResWrapper (Right CompilerPipelineProgress{..}, pragma)) = "Compilation successful\n" ++ show passes
---      where
---        passes =  text "--------------------------------------------------------------------------------"
---              $+$ text "A: parsestage1"
---              $+$ text "--------------------------------------------------------------------------------" 
---              $+$ text (maybe "???" ppShow _a_parsestage1)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "B: analysisstruct"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _b_analysisstruct)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "C: parsestage2"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _c_parsestage2)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "D: desugarimplicitself"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _d_desugarimplicitself)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "E: analysisstruct"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _e_analysisstruct)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "F: typecheckerinference"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" (ppShow . snd)
---                       (_f_typecheckerinference :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())), Typechecker.StageTypecheckerState)))
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "G: desugarimplicitscopes"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _g_desugarimplicitscopes)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "H: desugarimplicitcalls"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _h_desugarimplicitcalls)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "I: ssa"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _i_ssa)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "J: hshastgen"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _j_hshastgen)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "K: hshsc"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (L.unpack $ fromMaybe "???" _k_hshsc)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "pragmas"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (ppShow pragma)
+    show (CompilerPipelineResult ((eith, CompilerPipelineProgress{..}), pragmaMap)) =
+        case eith of
+            Left errMsg -> "Compilation failed.\n"     ++ PP.render (errorResult errMsg)
+            Right ()    -> "Compilation successful.\n" ++ PP.render result
+      where
+        result  = PP.empty
+             -- $+$ stage1
+             -- $+$ stage2
+             -- $+$ stage3
+             -- $+$ stage4
+              $+$ stage4a
+              $+$ stage5
+             -- $+$ stage6
+             -- $+$ stage7
+             -- $+$ stage8
+             -- $+$ stage9
+             -- $+$ stage10
+             -- $+$ stage11
+             -- $+$ pragmas
+        errorResult errMsg =  splittr
+                          $+$ PP.text "Error message"
+                          $+$ splittr
+                          $+$ PP.text errMsg
+                          $+$ PP.text ""
+                          $+$ PP.text ""
+                          $+$ result
+        section x body =  splittr
+                      $+$ PP.text x
+                      $+$ splittr
+                      $+$ PP.text (maybe "╳" ppShow body)
+                      $+$ PP.text ""
+                      $+$ PP.text ""
+        splittr = PP.text $ [Yellow] `colouredFmt` "--------------------------------------------------------------------------------------------------------------"
+        stage1  = stage1a $+$ stage1i
+        stage3  = stage3a $+$ stage3i
+        stage4  = stage4a $+$ stage4i
+        stage6  = stage6a $+$ stage6i
+        stage7  = stage7a $+$ stage7i
+        stage8  = stage8a $+$ stage8i
+        stage1a = section " 1. Stage1 :: AST"         _a_parsestage1_ast
+        stage1i = section " 1. Stage1 :: ASTInfo"     _a_parsestage1_astinfo
+        stage2  = section " 2. SA"                    _b_analysisstruct
+        stage3a = section " 3. Stage2 :: AST"         _c_parsestage2_ast
+        stage3i = section " 3. Stage2 :: ASTInfo"     _c_parsestage2_astinfo
+        stage4a = section " 4. ImplSelf :: AST"       _d_desugarimplicitself_ast
+        stage4i = section " 4. ImplSelf :: ASTInfo"   _d_desugarimplicitself_astinfo
+        stage5  = section " 5. SA"                    _e_analysisstruct
+        stage6a = section " 6. PTyChk :: AST"         _f_typecheckerinference_ast
+        stage6i = section " 6. PTyChk :: ASTInfo"     _f_typecheckerinference_astinfo
+        stage7a = section " 7. ImplScopes :: AST"     _g_desugarimplicitscopes_ast
+        stage7i = section " 7. ImplScopes :: ASTInfo" _g_desugarimplicitscopes_astinfo
+        stage8a = section " 8. ImplCalls :: AST"      _h_desugarimplicitcalls_ast
+        stage8i = section " 8. ImplCalls :: ASTInfo"  _h_desugarimplicitcalls_astinfo
+        stage9  = section " 9. SSA"                   _i_ssa
+        stage10 = section "10. HASTGen"               _j_hshastgen
+        stage11 = section "11. HSC"                   _k_hshsc
+        pragmas = section "    PragmaMap"             (Just pragmaMap)

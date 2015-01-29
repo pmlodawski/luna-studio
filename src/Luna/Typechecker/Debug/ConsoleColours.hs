@@ -1,6 +1,6 @@
 module Luna.Typechecker.Debug.ConsoleColours (
     PrintAttrs(..),
-    colouredPrint, writeFileM
+    colouredPrint, colouredFmt, writeFileM
   ) where
 
 
@@ -18,9 +18,12 @@ writeFileM path str = liftIO $ do
 
 infix 4 `colouredPrint`
 colouredPrint :: (MonadIO m) => [PrintAttrs] -> String -> m ()
-colouredPrint fs x = liftIO $ putStrLn formatted_str
-  where fmt           = intercalate ";" $ fmap show fs
-        formatted_str = "\x1b[" ++ fmt ++ "m" ++ x ++ "\x1b[0m"
+colouredPrint fs = liftIO . putStrLn . colouredFmt fs
+
+infix 4 `colouredFmt`
+colouredFmt :: [PrintAttrs] -> String -> String
+colouredFmt fs x = "\x1b[" ++ fmt ++ "m" ++ x ++ "\x1b[0m"
+  where fmt = intercalate ";" $ fmap show fs
 
 
 data PrintAttrs = Black
