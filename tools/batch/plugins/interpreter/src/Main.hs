@@ -4,10 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE CPP               #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE CPP                      #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE OverloadedStrings        #-}
+{-# LANGUAGE TemplateHaskell          #-}
 
 module Main where
 
@@ -33,6 +33,10 @@ import System.Remote.Monitoring
 
 rootLogger :: Logger
 rootLogger = getLogger "Luna"
+
+
+mainLogger :: Logger
+mainLogger = getLogger $(moduleName)
 
 
 logger :: LoggerIO
@@ -70,6 +74,7 @@ run cmd = case cmd of
         when (monitor /= 0) $ void $ forkServer "localhost" monitor
 #endif
         rootLogger setIntLevel verbose
+        mainLogger setIntLevel verbose
         cfg       <- Config.load
         Initializer.initializeIfNeeded cfg
         let busConfig = EP.clientFromConfig cfg
@@ -78,4 +83,5 @@ run cmd = case cmd of
         Pipes.run busConfig (Handler.topics prefix)
             >>= Handler.run cfg prefix ctx
             >>= eitherToM
+        logger info "Quitting interpreter"
 

@@ -35,6 +35,9 @@ class ```Bool```:
     True
     False
 
+def Bool.toString:
+    ```liftF1 show #{self}```
+
 class ```Maybe``` a:
     Just:
         unwrap :: a
@@ -64,8 +67,18 @@ class ```Boundary```:
     Wrap
     Constant: a :: Double
 
+def null a:
+    a
+
 def print msg:
     ```autoLift1 print #{msg}```
+
+# CHAR
+
+def Char.toString:
+    ```liftF2 (:) #{self} (val ([] :: String))```
+
+# INT
 
 def Int.+ a:
     ```liftF2 (+) #{self} #{a}```
@@ -99,6 +112,14 @@ def Int.inc:
 
 def Int.dec:
     self - 1
+
+def Int.fromIntegral:
+    ```liftF1 fromIntegral #{self} :: Value Pure Safe Double```
+
+def Int.toString:
+    ```liftF1 show #{self}```
+
+# DOUBLE
 
 def Double.acc:
     ```liftF1 variable #{self}```
@@ -141,6 +162,9 @@ def Double.<= a:
 
 def Double.>= a:
     ```liftF2 (>=) #{self} #{a}```
+
+def Double.toString:
+    ```liftF1 show #{self}```
 
 # def Float.floor:
 #     ```liftF1 floor #{self} :: Value Pure Safe Int```
@@ -227,10 +251,10 @@ def noImgMask:
 #                MATH and such
 #
 
-# alias Point2F = Point2 Float
-# alias CurveGUI = [ControlPointGUI]
-# alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
-# alias HandleGUI = (Int, Float, Float)
+alias Point2D = Point2 Double
+alias HandleGUI = (Int, Double, Double)
+alias ControlPointGUI = (Point2D, HandleGUI, HandleGUI)
+alias CurveGUI = [ControlPointGUI]
 
 def curveGUI vertices:
     vertices
@@ -408,16 +432,21 @@ def Image.gamma val:
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
+alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias Color5 = (Color, Color, Color, Color ,Color)
+
 def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
                        shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
                        midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
     ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
-    # ```liftF21 colorCorrectLuna' #{masterSaturation} #{masterContrast} #{masterGamma} #{masterGain} #{masterOffset}
-    #                              #{shadowsSaturation} #{shadowsContrast} #{shadowsGamma} #{shadowsGain} #{shadowsOffset}
-    #                              #{midtonesSaturation} #{midtonesContrast} #{midtonesGamma} #{midtonesGain} #{midtonesOffset}
-    #                              #{highlightsSaturation} #{highlightsContrast} #{highlightsGamma} #{highlightsGain} #{highlightsOffset}
-    #                              #{self}```
+
+def Image.colorCorrectCurves curves
+                       master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.hueCorrect sat lum r g b rSup gSup bSup:
     ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
@@ -470,35 +499,26 @@ def Image.blur kernelSize:
 # def Image.laplacian kernelSize centerVal sideVal:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
-# def Image.rotate phi:
-#     ```liftF2 turnCenterLuna #{phi} #{self}```
-# def Image.rotate phi m:
-#     ```liftF2 rotateCenterLuna #{phi} #{m} #{self}```
-
-# def Image.translate boundary x y:
-#     ```liftF4 translateLuna #{boundary} #{x} #{y} #{self}```
-
 class ```V2``` a:
     x, y :: a
 
 def Image.translate vec:
     ```liftF2 translateLuna #{vec} #{self}```
 
-# def Image.scaleTo boundary x y:
-#     ```liftF4 scaleToLuna #{boundary} #{x} #{y} #{self}```
-# def Image.scaleTo x y m:
-#     ```liftF4 scaleToLuna #{x} #{y} #{m} #{self}```
+def Image.rotate phi:
+    ```liftF2 rotateLuna #{phi} #{self}```
 
-# def Image.scale boundary x y:
-#     ```liftF4 scaleLuna #{boundary} #{x} #{y} #{self}```
-# def Image.scaleCenter x y:
-#     ```liftF3 (scaleLuna True) #{x} #{y} #{self}```
+def Image.rotateAt point phi:
+    ```liftF3 rotateAtLuna #{point} #{phi} #{self}```
 
-# def Image.scale x y:
-#     ```liftF3 (scaleLuna False) #{x} #{y} #{self}```
+def Image.scale vec:
+    ```liftF2 scaleLuna #{vec} #{self}```
 
-# def Image.transform trans:
-#     ```liftF2 transformLuna #{trans} #{self}```
+def Image.scaleAt point vec:
+    ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
+
+def Image.transform trans:
+    ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
@@ -724,6 +744,10 @@ def main:
     # gray  = RGBA 0.5 0.5 0.5 1.0
     # lena = constant 640 480 gray
     lena = load "./lena.png"
+    scaled = lena.scale (V2 0.5 2.0)
+    scaledAt = lena.scaleAt (Point2 256.0 256.0) (V2 0.5 2.0)
+    scaled.save "./out.png"
+    scaledAt.save "./out2.png"
 
     # lena = lena.hueCorrect c c c c c c2 c c
 
@@ -734,11 +758,8 @@ def main:
     # cp = controlPointGUI p1 hIn hOut
     # curve = curveGUI [cp]
     # val = getValueAtCurve curve 7.000000
-    val = (-0.5)
-    print val.truncate
-    print val.round
-    print val.floor
-    print val.ceiling
+
+    # print valC.toString.toChar
     # out = lena.posterize val
     # out = (load "./lena.png").posterize (getValueAtCurve (curveGUI [(controlPointGUI (Point2 169.000000 2.7897727) linearHandleGUI linearHandleGUI)]) 7.000000)
     # out.save "./out.png"

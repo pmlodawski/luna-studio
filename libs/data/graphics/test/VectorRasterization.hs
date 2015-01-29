@@ -62,6 +62,14 @@ main = do
                    , ControlPoint (Point2 630 470) Nothing Nothing
                    , ControlPoint (Point2 10  470) Nothing Nothing
                    ]
+        pointsGUI  = [ ControlPoint (Point2 136.668065 58.260504)  Nothing Nothing
+                     , ControlPoint (Point2 286.668065 226.260504) Nothing Nothing
+                     , ControlPoint (Point2 374.668065 76.260504)  Nothing Nothing
+                     ]
+        featherGUI = [ ControlPoint (Point2 75.995120 28.297279)   Nothing Nothing
+                     , ControlPoint (Point2 293.366284 293.596489) Nothing Nothing
+                     , ControlPoint (Point2 434.615106 44.870165)  Nothing Nothing
+                     ]
 
     P.putStrLn "Test rasterizeMask one line, no handles --> foo.png"
 
@@ -106,6 +114,17 @@ main = do
         imgD = matrixToImage arrD
 
     saveImageLuna "fooD2.png" imgD
+
+    P.putStrLn "Test rasterizeMask GUI example --> fooD3.png"
+
+    let patGUI = Path True pointsGUI 
+        feaGUI = Path True featherGUI
+        arrGUI = rasterizeMask w h (Mask patGUI (Just feaGUI))
+        imgGUI = matrixToImage arrGUI
+
+    saveImageLuna "fooD3.png" imgGUI
+
+
 
 
     return ()

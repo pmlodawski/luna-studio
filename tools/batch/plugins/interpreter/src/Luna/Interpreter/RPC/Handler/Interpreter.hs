@@ -25,6 +25,8 @@ import           Flowbox.ProjectManager.Context                                 
 import           Flowbox.System.Log.Logger                                                   hiding (error)
 import qualified Generated.Proto.Interpreter.Interpreter.Abort.Request                       as Abort
 import qualified Generated.Proto.Interpreter.Interpreter.Abort.Status                        as Abort
+import qualified Generated.Proto.Interpreter.Interpreter.Exit.Request                        as Exit
+import qualified Generated.Proto.Interpreter.Interpreter.Exit.Update                         as Exit
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Request                  as GetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Status                   as GetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Request                as GetProjectID
@@ -126,6 +128,7 @@ run queueInfo crl request@(Run.Request mtime) = do
     return $ Run.Update request tprofileInfo
 
 
+
 watchPointAdd :: WatchPointAdd.Request -> RPC Context (SessionST mm) WatchPointAdd.Update
 watchPointAdd request@(WatchPointAdd.Request tcallPointPath) = do
     let (projectID, callPointPath) = decodeP tcallPointPath
@@ -212,3 +215,9 @@ setMemoryLimits :: MemorySetLimits.Request -> RPC Context (SessionST mm) MemoryS
 setMemoryLimits request@(MemorySetLimits.Request upper lower) = do
     liftSession $ Env.setMemoryConfig $ Memory.Config upper lower
     return $ MemorySetLimits.Update request
+
+
+exit :: Exit.Request -> RPC Context (SessionST mm) Exit.Update
+exit request = do
+    logger info "Exit requested"
+    return $ Exit.Update request
