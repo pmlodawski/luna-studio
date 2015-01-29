@@ -27,7 +27,7 @@ Library
 
 
 Executable luna-typechecker-tests
-  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  GHC-Options:        -Wall -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
   Hs-Source-Dirs:     tests
   Main-Is:            Main.hs
   Build-Depends:      base
@@ -35,6 +35,7 @@ Executable luna-typechecker-tests
                     , data-default
                     , either
                     , hspec
+                    , hspec-expectations
                     , lens
                     , luna-core
                     , luna-pass
