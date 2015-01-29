@@ -901,109 +901,109 @@ gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB
                         (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
                         id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
 
--- colorCorrectLuna' :: Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
---                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
---                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
---                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
---                   -> Image
---                   -> Image
+colorCorrectLuna' :: Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                  -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                  -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                  -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                  -> Image
+                  -> Image
 
--- colorCorrectLuna' ( VPS (fmap variable -> ColorD masterSaturationR masterSaturationG masterSaturationB masterSaturationA)
---                   , VPS (fmap variable -> ColorD masterContrastR masterContrastG masterContrastB masterContrastA)
---                   , VPS (fmap variable -> ColorD masterGammaR masterGammaG masterGammaB masterGammaA)
---                   , VPS (fmap variable -> ColorD masterGainR masterGainG masterGainB masterGainA)
---                   , VPS (fmap variable -> ColorD masterOffsetR masterOffsetG masterOffsetB masterOffsetA)
---                   )
---                   ( VPS (fmap variable -> ColorD shadowsSaturationR shadowsSaturationG shadowsSaturationB shadowsSaturationA)
---                   , VPS (fmap variable -> ColorD shadowsContrastR shadowsContrastG shadowsContrastB shadowsContrastA)
---                   , VPS (fmap variable -> ColorD shadowsGammaR shadowsGammaG shadowsGammaB shadowsGammaA)
---                   , VPS (fmap variable -> ColorD shadowsGainR shadowsGainG shadowsGainB shadowsGainA)
---                   , VPS (fmap variable -> ColorD shadowsOffsetR shadowsOffsetG shadowsOffsetB shadowsOffsetA)
---                   )
---                   ( VPS (fmap variable -> ColorD midtonesSaturationR midtonesSaturationG midtonesSaturationB midtonesSaturationA)
---                   , VPS (fmap variable -> ColorD midtonesContrastR midtonesContrastG midtonesContrastB midtonesContrastA)
---                   , VPS (fmap variable -> ColorD midtonesGammaR midtonesGammaG midtonesGammaB midtonesGammaA)
---                   , VPS (fmap variable -> ColorD midtonesGainR midtonesGainG midtonesGainB midtonesGainA)
---                   , VPS (fmap variable -> ColorD midtonesOffsetR midtonesOffsetG midtonesOffsetB midtonesOffsetA)
---                   )
---                   ( VPS (fmap variable -> ColorD highlightsSaturationR highlightsSaturationG highlightsSaturationB highlightsSaturationA)
---                   , VPS (fmap variable -> ColorD highlightsContrastR highlightsContrastG highlightsContrastB highlightsContrastA)
---                   , VPS (fmap variable -> ColorD highlightsGammaR highlightsGammaG highlightsGammaB highlightsGammaA)
---                   , VPS (fmap variable -> ColorD highlightsGainR highlightsGainG highlightsGainB highlightsGainA)
---                   , VPS (fmap variable -> ColorD highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA)
---                   )
---                   img =
---                       onEachRGBA (correct' correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
---                                  (correct' correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
---                                  (correct' correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
---                                  id -- (colorCorrect contrastA gammaA gainA offsetA) saturated
---                                  saturated
---     where
---           curveShadows    = A.lift $ CubicBezier (Point2 (0::Double) 1) (Point2 0.03 1) (Point2 0.06 0) (Point2 0.09 0) :: Exp (CubicBezier Double)
---           curveHighlights = A.lift $ CubicBezier (Point2 0.5 (0::Double)) (Point2 (2/3) 0) (Point2 (5/6) 1) (Point2 1 1) :: Exp (CubicBezier Double)
---           strShadows x    = A.cond (x A.<=* 0) 1
---                           $ A.cond (x A.>=* 0.09) 0
---                           $ CubicSolveAcc.valueAtX 10 0.001 (curveShadows :: Exp (CubicBezier Double)) x
---           strHighlights x = A.cond (x A.<=* 0.5) 0
---                           $ A.cond (x A.>=* 1) 1
---                           $ CubicSolveAcc.valueAtX 10 0.001 (curveHighlights :: Exp (CubicBezier Double)) x
+colorCorrectLuna' ( VPS (fmap variable -> ColorD masterSaturationR masterSaturationG masterSaturationB masterSaturationA)
+                  , VPS (fmap variable -> ColorD masterContrastR masterContrastG masterContrastB masterContrastA)
+                  , VPS (fmap variable -> ColorD masterGammaR masterGammaG masterGammaB masterGammaA)
+                  , VPS (fmap variable -> ColorD masterGainR masterGainG masterGainB masterGainA)
+                  , VPS (fmap variable -> ColorD masterOffsetR masterOffsetG masterOffsetB masterOffsetA)
+                  )
+                  ( VPS (fmap variable -> ColorD shadowsSaturationR shadowsSaturationG shadowsSaturationB shadowsSaturationA)
+                  , VPS (fmap variable -> ColorD shadowsContrastR shadowsContrastG shadowsContrastB shadowsContrastA)
+                  , VPS (fmap variable -> ColorD shadowsGammaR shadowsGammaG shadowsGammaB shadowsGammaA)
+                  , VPS (fmap variable -> ColorD shadowsGainR shadowsGainG shadowsGainB shadowsGainA)
+                  , VPS (fmap variable -> ColorD shadowsOffsetR shadowsOffsetG shadowsOffsetB shadowsOffsetA)
+                  )
+                  ( VPS (fmap variable -> ColorD midtonesSaturationR midtonesSaturationG midtonesSaturationB midtonesSaturationA)
+                  , VPS (fmap variable -> ColorD midtonesContrastR midtonesContrastG midtonesContrastB midtonesContrastA)
+                  , VPS (fmap variable -> ColorD midtonesGammaR midtonesGammaG midtonesGammaB midtonesGammaA)
+                  , VPS (fmap variable -> ColorD midtonesGainR midtonesGainG midtonesGainB midtonesGainA)
+                  , VPS (fmap variable -> ColorD midtonesOffsetR midtonesOffsetG midtonesOffsetB midtonesOffsetA)
+                  )
+                  ( VPS (fmap variable -> ColorD highlightsSaturationR highlightsSaturationG highlightsSaturationB highlightsSaturationA)
+                  , VPS (fmap variable -> ColorD highlightsContrastR highlightsContrastG highlightsContrastB highlightsContrastA)
+                  , VPS (fmap variable -> ColorD highlightsGammaR highlightsGammaG highlightsGammaB highlightsGammaA)
+                  , VPS (fmap variable -> ColorD highlightsGainR highlightsGainG highlightsGainB highlightsGainA)
+                  , VPS (fmap variable -> ColorD highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA)
+                  )
+                  img =
+                      onEachRGBA (correct' correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
+                                 (correct' correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
+                                 (correct' correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
+                                 id -- (colorCorrect contrastA gammaA gainA offsetA) saturated
+                                 saturated
+    where
+          curveShadows    = A.lift $ CubicBezier (Point2 (0::Float) 1) (Point2 0.03 1) (Point2 0.06 0) (Point2 0.09 0) :: Exp (CubicBezier Float)
+          curveHighlights = A.lift $ CubicBezier (Point2 0.5 (0::Float)) (Point2 (2/3) 0) (Point2 (5/6) 1) (Point2 1 1) :: Exp (CubicBezier Float)
+          strShadows x    = A.cond (x A.<=* 0) 1
+                          $ A.cond (x A.>=* 0.09) 0
+                          $ CubicSolveAcc.valueAtX 10 0.001 (curveShadows :: Exp (CubicBezier Float)) x
+          strHighlights x = A.cond (x A.<=* 0.5) 0
+                          $ A.cond (x A.>=* 1) 1
+                          $ CubicSolveAcc.valueAtX 10 0.001 (curveHighlights :: Exp (CubicBezier Float)) x
 
---           correctMasterR = colorCorrect masterContrastR masterGammaR masterGainR masterOffsetR
---           correctMasterG = colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
---           correctMasterB = colorCorrect masterContrastB masterGammaB masterGainB masterOffsetB
+          correctMasterR = colorCorrect masterContrastR masterGammaR masterGainR masterOffsetR
+          correctMasterG = colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
+          correctMasterB = colorCorrect masterContrastB masterGammaB masterGainB masterOffsetB
 
---           correctShadowsR = colorCorrect (shadowsContrastR-1) (shadowsGammaR-1) (shadowsGainR-1) shadowsOffsetR
---           correctShadowsG = colorCorrect (shadowsContrastG-1) (shadowsGammaG-1) (shadowsGainG-1) shadowsOffsetG
---           correctShadowsB = colorCorrect (shadowsContrastB-1) (shadowsGammaB-1) (shadowsGainB-1) shadowsOffsetB
+          correctShadowsR = colorCorrect (shadowsContrastR-1) (shadowsGammaR-1) (shadowsGainR-1) shadowsOffsetR
+          correctShadowsG = colorCorrect (shadowsContrastG-1) (shadowsGammaG-1) (shadowsGainG-1) shadowsOffsetG
+          correctShadowsB = colorCorrect (shadowsContrastB-1) (shadowsGammaB-1) (shadowsGainB-1) shadowsOffsetB
 
---           correctMidtonesR = colorCorrect (midtonesContrastR-1) (midtonesGammaR-1) (midtonesGainR-1) midtonesOffsetR
---           correctMidtonesG = colorCorrect (midtonesContrastG-1) (midtonesGammaG-1) (midtonesGainG-1) midtonesOffsetG
---           correctMidtonesB = colorCorrect (midtonesContrastB-1) (midtonesGammaB-1) (midtonesGainB-1) midtonesOffsetB
+          correctMidtonesR = colorCorrect (midtonesContrastR-1) (midtonesGammaR-1) (midtonesGainR-1) midtonesOffsetR
+          correctMidtonesG = colorCorrect (midtonesContrastG-1) (midtonesGammaG-1) (midtonesGainG-1) midtonesOffsetG
+          correctMidtonesB = colorCorrect (midtonesContrastB-1) (midtonesGammaB-1) (midtonesGainB-1) midtonesOffsetB
 
---           correctHighlightsR = colorCorrect (highlightsContrastR-1) (highlightsGammaR-1) (highlightsGainR-1) highlightsOffsetR
---           correctHighlightsG = colorCorrect (highlightsContrastG-1) (highlightsGammaG-1) (highlightsGainG-1) highlightsOffsetG
---           correctHighlightsB = colorCorrect (highlightsContrastB-1) (highlightsGammaB-1) (highlightsGainB-1) highlightsOffsetB
+          correctHighlightsR = colorCorrect (highlightsContrastR-1) (highlightsGammaR-1) (highlightsGainR-1) highlightsOffsetR
+          correctHighlightsG = colorCorrect (highlightsContrastG-1) (highlightsGammaG-1) (highlightsGainG-1) highlightsOffsetG
+          correctHighlightsB = colorCorrect (highlightsContrastB-1) (highlightsGammaB-1) (highlightsGainB-1) highlightsOffsetB
 
---           correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x)
+          correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x)
 
---           correct'' shadows midtones highlights x = let
---                   coeffShadows    = strShadows x
---                   coeffHighlights = strHighlights x
---                   coeffMidtones   = 1 - coeffShadows - coeffHighlights
---               in coeffShadows * shadows x + coeffMidtones * midtones x + coeffHighlights * highlights x
+          correct'' shadows midtones highlights x = let
+                  coeffShadows    = strShadows x
+                  coeffHighlights = strHighlights x
+                  coeffMidtones   = 1 - coeffShadows - coeffHighlights
+              in coeffShadows * shadows x + coeffMidtones * midtones x + coeffHighlights * highlights x
 
---           rgb = unsafeGetRGB img
+          rgb = unsafeGetRGB img
 
---           rgbRsaturated = M.map (A.lift1 (saturateOnHSV' masterSaturationR shadowsSaturationR midtonesSaturationR highlightsSaturationR)) rgb
---           rgbGsaturated = M.map (A.lift1 (saturateOnHSV' masterSaturationG shadowsSaturationG midtonesSaturationG highlightsSaturationG)) rgb
---           rgbBsaturated = M.map (A.lift1 (saturateOnHSV' masterSaturationB shadowsSaturationB midtonesSaturationB highlightsSaturationB)) rgb
+          rgbRsaturated = M.map (A.lift1 (saturateOnHSV' masterSaturationR shadowsSaturationR midtonesSaturationR highlightsSaturationR)) rgb
+          rgbGsaturated = M.map (A.lift1 (saturateOnHSV' masterSaturationG shadowsSaturationG midtonesSaturationG highlightsSaturationG)) rgb
+          rgbBsaturated = M.map (A.lift1 (saturateOnHSV' masterSaturationB shadowsSaturationB midtonesSaturationB highlightsSaturationB)) rgb
 
---           saturateOnHSV' :: A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float -> Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float)
---           saturateOnHSV' masterSat shadowsSat midtonesSat highlightsSat pix =
---               Color.toHSV pix & (\(Color.HSV h s v) ->
---                   saturateOnHSV'' shadowsSat midtonesSat highlightsSat $ Color.toRGB $ Color.HSV h (s * (masterSat)) v)
+          saturateOnHSV' :: A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float -> Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float)
+          saturateOnHSV' masterSat shadowsSat midtonesSat highlightsSat pix =
+              Color.toHSV pix & (\(Color.HSV h s v) ->
+                  saturateOnHSV'' shadowsSat midtonesSat highlightsSat $ Color.toRGB $ Color.HSV h (s * (masterSat)) v)
 
---           saturateOnHSV'' :: A.Exp Float -> A.Exp Float -> A.Exp Float -> Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float)
---           saturateOnHSV'' shadowsSat midtonesSat highlightsSat pix =
---               Color.toHSV pix & (\(Color.HSV h s v) -> let
---                       coeffShadows    = strShadows v
---                       coeffHighlights = strHighlights v
---                       coeffMidtones = 1 - coeffShadows - coeffHighlights
---                   in Color.HSV h (s * (coeffShadows * shadowsSat + coeffMidtones * midtonesSat + coeffHighlights * highlightsSat)) v) & Color.toRGB
+          saturateOnHSV'' :: A.Exp Float -> A.Exp Float -> A.Exp Float -> Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float)
+          saturateOnHSV'' shadowsSat midtonesSat highlightsSat pix =
+              Color.toHSV pix & (\(Color.HSV h s v) -> let
+                      coeffShadows    = strShadows v
+                      coeffHighlights = strHighlights v
+                      coeffMidtones = 1 - coeffShadows - coeffHighlights
+                  in Color.HSV h (s * (coeffShadows * shadowsSat + coeffMidtones * midtonesSat + coeffHighlights * highlightsSat)) v) & Color.toRGB
 
---           rSaturated = M.map (\(A.unlift -> Color.RGB r _ _) -> r) rgbRsaturated
---           gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
---           bSaturated = M.map (\(A.unlift -> Color.RGB _ _ b) -> b) rgbBsaturated
+          rSaturated = M.map (\(A.unlift -> Color.RGB r _ _) -> r) rgbRsaturated
+          gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
+          bSaturated = M.map (\(A.unlift -> Color.RGB _ _ b) -> b) rgbBsaturated
 
---           Right view = lookupPrimary img
+          Right view = lookupPrimary img
 
---           view' = insertChannelFloats view [
---                     ("rgba.r", rSaturated)
---                   , ("rgba.g", gSaturated)
---                   , ("rgba.b", bSaturated)
---                   ]
+          view' = insertChannelFloats view [
+                    ("rgba.r", rSaturated)
+                  , ("rgba.g", gSaturated)
+                  , ("rgba.b", bSaturated)
+                  ]
 
---           saturated = Image.singleton view' -- Image.update (const $ Just view') "rgba" img
+          saturated = Image.singleton view' -- Image.update (const $ Just view') "rgba" img
 
 onImageRGBA :: (A.Exp Float -> A.Exp Float)
             -> (A.Exp Float -> A.Exp Float)

@@ -47,21 +47,21 @@ def Either.unwrap:
     ```liftF1 (either (error "unwrap called on Left") id) #{self}```
 
 class Range:
-    lo, hi :: Double
+    lo, hi :: Float
 
 alias FilePath = String
 
 class ```Metric```:
     Chebyshev
     Euclidean
-    Minkowski: p :: Double
+    Minkowski: p :: Float
     Taxicab
 
 class ```Boundary```:
     Clamp
     # Mirror # WARN: does not work yet
     Wrap
-    Constant: a :: Double
+    Constant: a :: Float
 
 def print msg:
     ```autoLift1 print #{msg}```
@@ -99,10 +99,10 @@ def Int.inc:
 def Int.dec:
     self - 1
 
-def Double.acc:
+def Float.acc:
     ```liftF1 variable #{self}```
 
-def Double.floor:
+def Float.floor:
     ```liftF1 floor #{self}```
 
 # def Float.floor:
@@ -143,7 +143,7 @@ def point x y:
     Point2 x y
 
 def nopoint:
-    ```val (Nothing :: Maybe (Point2 Double))```
+    ```val (Nothing :: Maybe (Point2 Float))```
 
 # class ```ControlPoint``` a:
 # class ControlPoint a:
@@ -222,16 +222,16 @@ def getValueAtCurve curve x:
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
-alias Color = RGBA Double
-alias ColorBlack = RGBA Double
-alias ColorWhite = RGBA Double
+alias Color = RGBA Float
+alias ColorBlack = RGBA Float
+alias ColorWhite = RGBA Float
 
 alias ColorCC = (Color, Color, Color, Color, Color)
 
 class ```Gamma```:
     AlexaV3LogC
     Cineon
-    Gamma: a :: Double
+    Gamma: a :: Float
     LStar
     Panalog
     PLogLin
@@ -491,12 +491,12 @@ class ```InterpolationFilter```:
     Triangle
     Bell
     BSpline
-    Lanczos: a :: Double
-    Polynomial: a, b :: Double
+    Lanczos: a :: Float
+    Polynomial: a, b :: Float
     Mitchell
     CatmullRom
-    Gauss: a :: Double
-    Dirac: a :: Double
+    Gauss: a :: Float
+    Dirac: a :: Float
 
 # def Image.interpolate boundary filter:
 #     ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
