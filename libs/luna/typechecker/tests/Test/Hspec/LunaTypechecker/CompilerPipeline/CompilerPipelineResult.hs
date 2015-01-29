@@ -72,6 +72,7 @@ instance Show CompilerPipelineResult where
              -- $+$ stage4
               $+$ stage4a
               $+$ stage5
+              $+$ stage6a
              -- $+$ stage6
              -- $+$ stage7
              -- $+$ stage8
