@@ -14,6 +14,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
+--{-# LANGUAGE ImpredicativeTypes #-}
 
 
 {-# LANGUAGE DysfunctionalDependencies #-}
@@ -32,6 +33,7 @@ import Type.List (IndexOf, DeleteIdx)
 
 import Unsafe.Coerce (unsafeCoerce)
 
+--import Control.Monad.Identity
 
 ----------------------------------------------------------------------
 -- Arg
@@ -325,13 +327,44 @@ instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u)
 --instance LamH f args a where
 --    call (LamH (f,args)) =
 
---tst f = (f 5, f "a")
+----tst f = (f 5, f "a")
+
+--data Hidden = Hidden
 
 
 
---newtype Lam f = Lam f
+----newtype Lam def monoDef = Lam (def, monoDef)
+
+----bar :: Lam def monodef -> Proxy monodef
+----bar _ = Proxy
+
+----lam :: Analyze def monodef => def -> Lam def monodef
+----lam a = Lam (a, monoType a)
+
+
+----class Foo a where
+----    foo :: a -> Int
+
+----instance Foo Int where
+----    foo _ = 1
+
+----instance Foo String where
+----    foo _ = 2
+
+----appLam (Lam f, mf) 
+
+--newtype Lam f = Lam {runLam :: f}
+
+----data Lam1
+
+----foo lam = (runLam lam 1, runLam lam "a")
 
 --main = do
---    let l = Lam (\x -> x)
+--    let l = Lam id :: Lam (a -> a)
+--    print $ runLam l "a"
+--    print $ runLam l 5
 
+--    --let foo :: Identity (forall a. a -> a) -> (Integer, String); foo lam = (runIdentity lam 1, runIdentity lam "a") in foo
+--    --let l = Lam id :: Lam (forall a. a -> a)
+--    --print $ foo l
 --    return ()
