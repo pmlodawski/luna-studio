@@ -237,12 +237,6 @@ edgeBlur channelName blurType kernelSize edgeMultiplier image =
                 (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) shader
                 (Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) $ fmap ((/256) . A.fromIntegral) shader
 
-testEdgeBlur kernelSize edgeMultiplier channel = do
-    img <- loadImageLuna "/home/chris/globe.png"
-
-    let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
-
-    saveImageLuna "/home/chris/Luna_result.png" a
 
 -- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
 --rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
