@@ -138,6 +138,7 @@ instance Monad m => MonadIndentState s (IndentStateT s m) where
     get = IndentStateT $ State.get
     put = IndentStateT . State.put
 
+type MonadIndent m = MonadIndentState State m
 
 ----------------------------------------------------------------------
 -- Instances
