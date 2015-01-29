@@ -11,16 +11,10 @@ spec :: Spec
 spec = do
   describe "Basic specification" $ do
     it "does not yield any errors for `id`" $ do
-      tmp <- lunaCompilerStepsFile "tests/Specification/Stage1/Functions/IdentityFunction.luna"
-      print tmp
-      -- lunaCompilerStepsSuccess
+      lunaCompilerStepsSuccess =<< lunaCompilerStepsFile "tests/Specification/Stage1/Functions/IdentityFunction.luna"
 
     it "does not yield any errors for `const`" $ do
-      tmp <- lunaCompilerStepsFile "tests/Specification/Stage1/Functions/ConstFunction.luna"
-      print tmp
-      -- lunaCompilerStepsSuccess
+      lunaCompilerStepsSuccess =<< lunaCompilerStepsFile "tests/Specification/Stage1/Functions/ConstFunction.luna"
 
     it "does not yield any errors for `flip`" $ do
-      tmp <- lunaCompilerStepsFile "tests/Specification/Stage1/Functions/FlipFunction.luna"
-      print tmp
-      -- lunaCompilerStepsSuccess
+      lunaCompilerStepsSuccess =<< lunaCompilerStepsFile "tests/Specification/Stage1/Functions/FlipFunction.luna"
