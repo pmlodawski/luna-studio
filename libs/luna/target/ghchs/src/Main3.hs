@@ -54,7 +54,7 @@ memDef_Main_main _self = do
      a <- mkLam (_rtup1(_nuSigArg("a"))) (\a -> a)
      call (appNext (val []) (_member("print") _self))
      call (_member("print") _self)
-     call (appNext (    call $ appNext (val "!!!") $ mkLam (_rtup1(_nuSigArg("a"))) (\a -> a)      ) (_member("print") _self))
+     --call (appNext (    call $ appNext (val "!!!") $ mkLam (_rtup1(_nuSigArg("a"))) (\a -> a)      ) (_member("print") _self))
      
      
 
