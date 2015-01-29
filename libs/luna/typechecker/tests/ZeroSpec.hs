@@ -1,6 +1,6 @@
 module ZeroSpec (spec) where
 
-import Test.Hspec
+import Test.Hspec.LunaTypechecker
 
 
 

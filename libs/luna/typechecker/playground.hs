@@ -1,23 +1,33 @@
 {-# LANGUAGE PolyKinds #-}
 
+import Data.Functor.Identity
 import Control.Monad.RWS
 import Control.Monad.Fix
 import Control.Monad.Trans.Either
 
---tc :: (Monad m, Monoid w) => Int -> RWST r w s (EitherT e m) Int
-tc :: Int -> RWST Int [Int] Int (EitherT String IO) Int
-tc n | n < 100    = do
-  st <- get
-  re <- ask
-  liftIO $ print $  "a : " ++ show n
-  (a, w) <- listen (tc (n + st + re))
-  tell $ (st + re):w
-  return a
-tc init = return init
 
 
 
 main :: IO ()
 main = do print "main"
-          res <- runEitherT $ runRWST (tc 0) 10 20
-          print (show res)
+          let r1 = runIdentity $ runEitherT $ m1  0
+              r2 = runIdentity $ runEitherT $ either (EitherT . return . Left) m2 r1
+              r3 = runIdentity $ runEitherT $ either (EitherT . return . Left) m3 r2
+          print r1
+          print r2
+          print r3
+
+
+
+
+
+m1 :: Monad m => Int -> EitherT String m Int
+m1 x = return (123+x)
+
+
+m2 :: Monad m => Int -> EitherT String m Int
+m2 = EitherT . return . Left . const "dupa"
+
+
+m3 :: Monad m => Int -> EitherT String m Int
+m3 x = return (456+x)
