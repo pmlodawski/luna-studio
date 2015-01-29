@@ -23,3 +23,7 @@ class Enumerated a where
 instance Enumerated IDTag where
     id (IDTag i) = i
     tag          = IDTag
+
+instance Enumerated Int where
+    id  i = i
+    tag i = i
