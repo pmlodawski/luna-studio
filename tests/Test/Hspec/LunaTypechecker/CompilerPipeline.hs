@@ -1,8 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
-module Test.Hspec.LunaTypechecker.CompilerPipeline where
+module Test.Hspec.LunaTypechecker.CompilerPipeline (
+    module CompilerPipelineResult,
+    module CompilerPipelineProgress,
+    lunaCompilerStepsSuccess, lunaCompilerStepsFailure, lunaCompilerStepsFile, lunaCompilerSteps, shouldSatisfyLens
+  ) where
 
 
 import            Luna.Data.Namespace                         (Namespace(Namespace))
@@ -43,7 +48,7 @@ import            Data.Either
 import            Data.Maybe
 import qualified  Data.Text.Lazy                              as L
 
-import            Test.Hspec.Expectations
+import            Test.Hspec.Expectations.LunaTypechecker
 import            Test.Hspec.LunaTypechecker.FileSystem       (strictReadFile)
 
 import qualified  Text.PrettyPrint                            as PP
@@ -51,151 +56,42 @@ import            Text.PrettyPrint                            (($+$), text, empt
 import            Text.Show.Pretty                            (ppShow)
 
 
-type CompilerStepsRes = (Either Pass.PassError CompilePipelineProgress, Pragma.PragmaMap)
+import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineResult   as CompilerPipelineResult
+import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgress as CompilerPipelineProgress
 
 
-data CompilePipelineProgress 
-    = CompilePipelineProgress { _a_parsestage1_ast                :: Maybe (Unit.Unit (Module.LModule Enum.IDTag String))
-                              , _a_parsestage1_astinfo            :: Maybe ASTInfo.ASTInfo
-                              , _b_analysisstruct                 :: Maybe StructInfo.StructInfo
-                              , _c_parsestage2_ast                :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
-                              , _c_parsestage2_astinfo            :: Maybe ASTInfo.ASTInfo
-                              , _d_desugarimplicitself_ast        :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
-                              , _d_desugarimplicitself_astinfo    :: Maybe ASTInfo.ASTInfo
-                              , _e_analysisstruct                 :: Maybe StructInfo.StructInfo
-                              , _f_typecheckerinference_ast       :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
-                              , _f_typecheckerinference_astinfo   :: Maybe Typechecker.StageTypecheckerState
-                              , _g_desugarimplicitscopes_ast      :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
-                              , _g_desugarimplicitscopes_astinfo  :: Maybe ASTInfo.ASTInfo
-                              , _h_desugarimplicitcalls_ast       :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
-                              , _h_desugarimplicitcalls_astinfo   :: Maybe ASTInfo.ASTInfo
-                              , _i_ssa                            :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
-                              , _j_hshastgen                      :: Maybe HASTGen.HExpr
-                              , _k_hshsc                          :: Maybe L.Text
-                              }
-                              deriving (Show)
-
-makeLenses ''CompilePipelineProgress
 
 
-instance Default CompilePipelineProgress where
-    def = CompilePipelineProgress { _a_parsestage1_ast                = Nothing
-                                  , _a_parsestage1_astinfo            = Nothing
-                                  , _b_analysisstruct                 = Nothing
-                                  , _c_parsestage2_ast                = Nothing
-                                  , _c_parsestage2_astinfo            = Nothing
-                                  , _d_desugarimplicitself_ast        = Nothing
-                                  , _d_desugarimplicitself_astinfo    = Nothing
-                                  , _e_analysisstruct                 = Nothing
-                                  , _f_typecheckerinference_ast       = Nothing
-                                  , _f_typecheckerinference_astinfo   = Nothing
-                                  , _g_desugarimplicitscopes_ast      = Nothing
-                                  , _g_desugarimplicitscopes_astinfo  = Nothing
-                                  , _h_desugarimplicitcalls_ast       = Nothing
-                                  , _h_desugarimplicitcalls_astinfo   = Nothing
-                                  , _i_ssa                            = Nothing
-                                  , _j_hshastgen                      = Nothing
-                                  , _k_hshsc                          = Nothing
-                                  }
-
-newtype CompilerPipelineResult = CompilerPipelineResult { fromResult :: ((Either Pass.PassError (), CompilePipelineProgress),Pragma.PragmaMap) }
-
---newtype CompilerStepsResWrapper = CompilerStepsResWrapper { unWrapCompilerStepsRes :: CompilerStepsRes }
-
---instance Show CompilerStepsResWrapper where
---    show (CompilerStepsResWrapper (Left  errorMsg,            pragma)) = "Compiler failed!\n" ++ errorMsg
---    show (CompilerStepsResWrapper (Right CompilePipelineProgress{..}, pragma)) = "Compilation successful\n" ++ show passes
---      where
---        passes =  text "--------------------------------------------------------------------------------"
---              $+$ text "A: parsestage1"
---              $+$ text "--------------------------------------------------------------------------------" 
---              $+$ text (maybe "???" ppShow _a_parsestage1)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "B: analysisstruct"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _b_analysisstruct)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "C: parsestage2"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _c_parsestage2)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "D: desugarimplicitself"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _d_desugarimplicitself)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "E: analysisstruct"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _e_analysisstruct)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "F: typecheckerinference"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" (ppShow . snd)
---                       (_f_typecheckerinference :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())), Typechecker.StageTypecheckerState)))
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "G: desugarimplicitscopes"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _g_desugarimplicitscopes)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "H: desugarimplicitcalls"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _h_desugarimplicitcalls)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "I: ssa"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _i_ssa)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "J: hshastgen"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (maybe "???" ppShow _j_hshastgen)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "K: hshsc"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (L.unpack $ fromMaybe "???" _k_hshsc)
---              $+$ PP.text " "
-
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text "pragmas"
---              $+$ text "--------------------------------------------------------------------------------"
---              $+$ text (ppShow pragma)
 
 
-lunaCompilerStepsFile :: String -> IO ((Either Pass.PassError (), CompilePipelineProgress),Pragma.PragmaMap)
+lunaCompilerStepsSuccess :: CompilerPipelineResult -> Expectation
+lunaCompilerStepsSuccess res = res `shouldSatisfyLens` (pipelineRawResult . _1 . _1 . to isRight)
+
+lunaCompilerStepsFailure :: CompilerPipelineResult -> Expectation
+lunaCompilerStepsFailure res = res `shouldSatisfyLens` (pipelineRawResult . _1 . _1 . to isLeft)
+
+
+
+
+
+
+
+lunaCompilerStepsFile :: String -> IO CompilerPipelineResult
 lunaCompilerStepsFile fileName = do
     res <- L.pack <$> strictReadFile fileName >>= lunaCompilerSteps (L.pack fileName)
     return res
 
 
-lunaCompilerSteps :: L.Text -> L.Text -> IO ((Either Pass.PassError (), CompilePipelineProgress),Pragma.PragmaMap)
+lunaCompilerSteps :: L.Text -> L.Text -> IO CompilerPipelineResult
 lunaCompilerSteps fileName fileContents = do
-    res <- Session.runT $ do
-        Parser.init
-        runStateT (runEitherT procedure) (def :: CompilePipelineProgress)
-    return $  res
+    res <- Session.runT $ do  Parser.init
+                              runStateT (runEitherT procedure) (def :: CompilerPipelineProgress)
+    return $ CompilerPipelineResult res
 
   where
     src = Source fileName (Text fileContents)
-    --procedure :: StateT CompilePipelineProgress (EitherT Pass.PassError (Store.PragmaStoreT IO)) ()
-    procedure :: EitherT Pass.PassError (StateT CompilePipelineProgress (Store.PragmaStoreT IO)) ()
+    --procedure :: StateT CompilerPipelineProgress (EitherT Pass.PassError (Store.PragmaStoreT IO)) ()
+    procedure :: EitherT Pass.PassError (StateT CompilerPipelineProgress (Store.PragmaStoreT IO)) ()
     procedure = do
         (ast1, astinfo1)                <- Pass.run1_ Stage1.pass src
         a_parsestage1_ast               .= Just ast1
@@ -237,33 +133,4 @@ lunaCompilerSteps fileName fileContents = do
         k_hshsc                         .= Just hsc10 
 
         return ()
-
-
---lunaCompilerStepsSuccess :: CompilerStepsResWrapper -> Expectation
---lunaCompilerStepsSuccess all@(CompilerStepsResWrapper esuc) = do
---  all `shouldSatisfy` (isRight . fst . unWrapCompilerStepsRes)
-
-
---lunaCompilerStepsFailure :: CompilerStepsResWrapper -> Expectation
---lunaCompilerStepsFailure all@(CompilerStepsResWrapper esuc) = do
---  all `shouldSatisfy` (isLeft . fst . unWrapCompilerStepsRes)
-
---lunaCompilerStepsSuccess :: CompilerStepsRes -> Expectation
---lunaCompilerStepsSuccess all = do
---  all `shouldSatisfy` (isRight . fst)
-
-
---lunaCompilerStepsFailure :: CompilerStepsRes -> Expectation
---lunaCompilerStepsFailure all = do
---  all `shouldSatisfy` (isLeft . fst)
-
-
-
-lunaCompilerStepsSuccess :: (Either Pass.PassError (), CompilePipelineProgress) -> Expectation
-lunaCompilerStepsSuccess _ =
-  1 `shouldBe` (1 :: Int)
-
-lunaCompilerStepsFailure :: (Either Pass.PassError (), CompilePipelineProgress) -> Expectation
-lunaCompilerStepsFailure _ =
-  1 `shouldBe` (1 :: Int)
 
