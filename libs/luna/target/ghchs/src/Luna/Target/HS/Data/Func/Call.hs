@@ -19,7 +19,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
---{-# LANGUAGE DysfunctionalDependencies #-}
+{-# LANGUAGE DysfunctionalDependencies #-}
 
 !{-# LANGUAGE RightSideContexts #-}
 
@@ -38,9 +38,8 @@ import Control.Monad.Shuffle
 import Luna.Target.HS.Data.Func.Func
 import Luna.Target.HS.Data.Func.Lam
 
-import qualified Luna.Target.HS.Data.Func.Args2 as Args2
-import qualified Luna.Target.HS.Data.Func.Args7 as Args7
-import qualified Luna.Target.HS.Data.Func.Args9 as Args9
+import Luna.Target.HS.Data.Func.Args9 
+import qualified Luna.Target.HS.Data.Func.Args9 as Args
 
 import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 
@@ -55,8 +54,39 @@ import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 -- Utils
 ----------------------------------------------------------------------------------
 
+--callH :: ( MemberProvider obj name argRep (sig1, f1), AppArgs b (ArgsKind sig1) sig1 f1 k1 sig f, AppDefaults k1 f sig c
+--         , Reverse a b, Analyze a argRep) 
+--      => AppH (Mem obj name) a -> c
+--callH (AppH(fptr, args)) = appDefaults . appArgs args $ func sig f where
+--    (sig,f) = getMember fptr (monoType args)
 
-callH (AppH(fptr, args)) = Args9.appDefaults . Args9.appArgs args $ Args9.func sig f where
-    (sig,f) = getMember fptr (monoType args)
-call = polyJoin . fmap callH
+--callL :: (Reverse a b, AppArgs b k1 sig1 f1 k sig f, AppDefaults k f sig c) 
+--      => AppH (Lam (Func k1 sig1 f1)) a -> c
+--callL (AppH (Lam f, args)) = appDefaults . appArgs args $ f
+
+
+--class Call' h args r | h args -> r where
+--    call' :: AppH h args -> r
+
+--instance (Reverse a b, AppArgs b k1 sig1 f1 k sig f, AppDefaults k f sig c, fc~Func k1 sig1 f1) 
+--      => Call' (Lam fc) a c where
+--    call' (AppH (Lam f, args)) = appDefaults . appArgs args $ f
+
+--instance (Call' (Lam (Func (ArgsKind sig) sig f)) args r, MemberProvider obj name argRep (sig, f), Analyze args argRep)
+--      => Call' (Mem obj name) args r where
+--    call' (AppH (fptr, args)) = call' $ AppH (Lam (func sig f), args) where
+--        (sig,f) = getMember fptr (monoType args)
+
+call = polyJoin . fmap call'
+call2 x = polyJoin . fmap (call2' x)
+
+
+call' (AppH (fptr, args)) = appDefaults . appArgs args $ func sig f where
+        (sig,f) = getMember fptr (monoType args)
+
+
+call2' x (AppH (fptr, args)) = appDefaults . appArgs args $ func sig f where
+        (sig,f) = getMember fptr x
+
+
 

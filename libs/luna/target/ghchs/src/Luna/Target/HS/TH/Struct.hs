@@ -89,7 +89,11 @@ con2TypeName conName = do
 appEs :: Exp -> [Exp] -> Exp
 appEs = foldl AppE
 
-generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++ sigs ++ getterDefs ++ setterDefs where
+generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++ sigs 
+                                                                              ++ getterDefs 
+                                                                              ++ setterDefs 
+                                                                              -- ++ fncDefs 
+    where
     unit = mkName "x"
     obj  = mkName "obj"
 
@@ -132,6 +136,7 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     --defs
     getterDefs = fmap (mkGetterDef typeName) fieldNames
     setterDefs = fmap (mkSetterDef typeName) fieldNames
+    --fncDefs    = fmap (mkFncDef typeName) fieldNames
 
     mkGetterDef typeName fieldName = mkSimpleMemDef 1 typeName fieldName accName where
         accName    = mkName $ Naming.mkFieldGetter typeName fieldName
@@ -139,6 +144,11 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     mkSetterDef typeName fieldName = mkSimpleMemDef 2 typeName setterName accName where
         setterName = Naming.setter fieldName
         accName    = mkName $ Naming.mkFieldSetter typeName fieldName
+
+    --mkFncDef typeName fieldName = TupE (VarE ) where
+    --    getterName = mkName $ Naming.mkFieldGetter typeName fieldName
+    --    setterName = mkName $ Naming.mkFieldGetter typeName fieldName
+
 
 newtype PatCons = PatCons { runPatCons :: Name -> [Name] }
 instance Show PatCons where

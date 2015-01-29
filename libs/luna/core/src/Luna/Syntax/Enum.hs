@@ -23,4 +23,3 @@ class Enumerated a where
 instance Enumerated IDTag where
     id (IDTag i) = i
     tag          = IDTag
-

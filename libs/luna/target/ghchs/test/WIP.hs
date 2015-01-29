@@ -1,3 +1,4 @@
+-- extensions --
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -15,7 +16,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 
 -- module --
-module Main3 where
+module Main where
 
 -- imports --
 import Luna.Target.HS
@@ -48,14 +49,31 @@ memDef_Main_print self s = do
 memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
 $(registerMethod ''Main "print")
 
+-- ====== Method: Main.id ====== --
+memSig_Main_id = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
+memDef_Main_id _self _x = do 
+     _x
+     
+
+memFnc_Main_id = (memSig_Main_id, memDef_Main_id)
+$(registerMethod ''Main "id")
+
+-- ====== Method: Main.foo ====== --
+memSig_Main_foo = _rtup3(_nuSigArg("self"), _nuSigArg("a"), _nuSigArg("b"))
+memDef_Main_foo _self _a _b = do 
+     val (call (appNext _a (_member("id") _self)), call (appNext _b (_member("id") _self)))
+     
+
+memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
+$(registerMethod ''Main "foo")
+
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 memDef_Main_main _self = do 
-     a <- mkLam (_rtup1(_nuSigArg("a"))) (\a -> a)
-     call (appNext (val []) (_member("print") _self))
-     call (_member("print") _self)
-     --call (appNext (    call $ appNext (val "!!!") $ mkLam (_rtup1(_nuSigArg("a"))) (\a -> a)      ) (_member("print") _self))
-     
+     call (appNext (val (call (appNext (val (5 :: Int)) (_member("id") _self)), call (appNext (val ("ala" :: String)) (_member("id") _self)))) (_member("print") _self))
+     call (appNext (call (appNext (val ("a" :: String)) (appNext (val (1 :: Int)) (_member("foo") _self)))) (_member("print") _self))
+     _a <- mkLam _rtup1(_nuSigArg("x")) (\_x -> _x)
+     val ()
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
@@ -66,3 +84,4 @@ $(registerMethod ''Main "main")
 -- Main module wrappers
 -- ===================================================================
 main = mainMaker cons_Main
+
