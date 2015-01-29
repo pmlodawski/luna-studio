@@ -13,7 +13,6 @@ require '../../../scripts/utils/guard_tools.rb'
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $run_docgen   = false
-$run_main     = false
 $run_tests    = true
 $run_linting  = true
 $run_coverage = false
@@ -25,10 +24,10 @@ $output       = [
                   # " 2.   SA         : sa2",
                   # " 3.1. Stage2     : ast3",
                   # " 3.2. Stage2     : astinfo3",
-                  " 4.1. ImplSelf   : ast4",
+                  # " 4.1. ImplSelf   : ast4",
                   # " 4.2. ImplSelf   : astinfo4",
                   # " 5.   SA         : sa5",
-                  " 6.   PTyChk     : constraints",
+                  # " 6.   PTyChk     : constraints",
                   # " 7.1. ImplScopes : ast6",
                   # " 7.2. ImplScopes : astinfo6",
                   # " 8.1. ImplCalls  : ast7",
@@ -49,46 +48,63 @@ $hlint_opts   = [
                   "--report"
                 ]
 
+$hspec_opts   = [
+                  "--print-cpu-time",
+                  "--qc-max-success=10000",
+                  "--color"
+                ]
+
 
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # WATCHED FILES  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 guard :shell, :version => 2, :cli => "--color" do
-  watch(%r{^(test|src)/.+\.l?hs$}) do |m|
+  watch(%r{^(src|tests)/.+\.l?hs$}) do |m|
     lastbuildguard(m[0]) do
-      section "haskell file"
-      show_output if haskell_action m
+      section "haskell file" do
+        haskell_action m
+        show_output
+      end
+    end
+  end
+
+  watch(%r{^(tests)/.+\.luna$}) do |m|
+    lastbuildguard(m[0]) do
+      section "haskell file" do
+        tests
+      end
     end
   end
 
   watch(%r{^.*\.tcabal$}) do |m|
     lastbuildguard(m[0]) do
-      section "tcabal file"
-      show_output if haskell_action m
-    end
-  end
-
-  watch(%r{^test/resources/Maintest.luna$}) do |m|
-    lastbuildguard(m[0]) do
-      section "Luna file change"
-      show_output if command_interactive "../../../dist/bin/libs/luna-typechecker-tests test/resources/Maintest.luna"
+      section "tcabal file" do
+        haskell_action m
+      end
     end
   end
 
   # playgrounds
 
   watch(%r{^runtest.hs$}) do |m|
-    lastbuildguard(m[0]) do
-      section "live tests"
-      command_withinput "../../../scripts/runhaskell", File.read("runtest.hs")
+    begin
+      lastbuildguard(m[0]) do
+        section "live tests"
+        command_withinput "../../../scripts/runhaskell", File.read("runtest.hs")
+      end
+    rescue SystemCallError => e
     end
   end
 
   watch(%r{^playground.hs$}) do |m|
-    lastbuildguard(m[0]) do
-      section "playground file change"
-      command_interactive "./playground" if command_interactive "ghc playground.hs"
+    begin
+      lastbuildguard(m[0]) do
+        section "playground file change"
+        command_interactive "ghc playground.hs"
+        command_interactive "./playground"
+      end
+    rescue SystemCallError => e
     end
   end
 end
@@ -102,45 +118,56 @@ end
 def haskell_action trigger
   puts "#{trigger[0]}".center(String.linefill_length).cyan + "\n"
 
-  begin
-    section "building" do
-      command_interactive "../../../scripts/compile -j9"
-    end
+  compile
+  linting
+  documentation
+  tests
+  coverage
+end
 
-    section "linting",       :condition => $run_linting, :noexception => true do
-      opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
-      opts = opts.join(" ")
-      command_withinput "hlint src test #{opts}"
-    end
 
-    section "documentation", :condition => $run_docgen, :noexception => true do
-      command_interactive "cabal haddock --html"
-    end
-
-    section "main",          :condition => $run_main do
-      command_interactive "../../../dist/bin/libs/luna-typechecker"
-    end
-
-    section "tests", "rm -f luna-typechecker-tests.tix #{$output_dir}*", :condition => $run_tests, :noexception => true do
-      command_interactive "../../../dist/bin/libs/luna-typechecker-tests test/resources/Maintest.luna"
-    end
-
-    section "coverage", "rm -rf hpc_report", :condition => $run_coverage, :noexception => true do
-      hpc_excluded_modules = ((Dir.glob("test/**/*Spec.hs")          # skip all test-spec files
-                                  .map { |k| k.gsub("test/", "")     # ...converting path to namespace for HPC
-                                              .gsub(".hs","")
-                                              .gsub("/",".")
-                                       }
-                              ) << "Main"                            # and skip "Main", the entrypoint for tests
-                             ).map{|k| "--exclude=#{k}" }.join(" ")
-      command_interactive coverage_cmd
-      puts "Report written to 'hpc_report'"
-    end
-
-  rescue SystemCallError => e
-    return false
+def compile()
+  section "building" do
+    command_interactive "../../../scripts/compile -j9"
   end
-  return true
+end
+
+
+def linting()
+  section "linting",       :condition => $run_linting, :noexception => true do
+    opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
+    opts = opts.join(" ")
+    command_withinput "hlint src tests #{opts}"
+  end
+end
+
+
+def documentation()
+  section "documentation", :condition => $run_docgen, :noexception => true do
+    command_interactive "cabal haddock --html"
+  end
+end
+
+
+def tests()
+  section "tests", "rm -f luna-typechecker-tests.tix #{$output_dir}*", :condition => $run_tests, :noexception => true do
+    command_interactive "../../../dist/bin/libs/luna-typechecker-tests #{$hspec_opts.join(" ")}"
+  end
+end
+
+
+def coverage()
+  section "coverage", "rm -rf hpc_report", :condition => $run_coverage, :noexception => true do
+    hpc_excluded_modules = ((Dir.glob("tests/**/*Spec.hs")          # skip all test-spec files
+                                .map { |k| k.gsub("test/", "")     # ...converting path to namespace for HPC
+                                            .gsub(".hs","")
+                                            .gsub("/",".")
+                                     }
+                            ) << "Main"                            # and skip "Main", the entrypoint for tests
+                           ).map{|k| "--exclude=#{k}" }.join(" ")
+    command_interactive coverage_cmd
+    puts "Report written to 'hpc_report'"
+  end
 end
 
 
@@ -157,3 +184,4 @@ def show_output
     end
   end
 end
+
