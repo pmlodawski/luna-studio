@@ -224,7 +224,7 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
     res <- defaultTraverseM app
 
     e1Type <- getTypeById appExprId
-    let argTypes = map toType args
+    argTypes <- mapM getType args
     result <- Fold.foldlM tp e1Type argTypes
     setTypeById appId result
 
@@ -232,11 +232,10 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
     return res
 
   where
-    toType (Expr.AppArg _ (Label lab _)) = do
+    getType (Expr.AppArg _ (Label lab _)) = do
       getTypeById =<< getTargetID lab
 
-    tp result arg = do
-      argType <- arg
+    tp result argType = do
       a <- newtvar
       add_constraint (C [result `Subsume` (argType `Fun` TV a)])
       normalize (TV a)
