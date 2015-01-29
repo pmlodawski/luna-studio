@@ -95,7 +95,7 @@ type PassCtx          lab m a = (Enumerated lab, Traversal m a)
 type Traversal            m a = (Pass.PassCtx m, AST.Traversal        HASTGen (PassResult m) a a)
 type DefaultTraversal     m a = (Pass.PassCtx m, AST.DefaultTraversal HASTGen (PassResult m) a a)
 
-type Ctx m a v = (Monad m, Monoid v, Num a, MonadIO m, v~())
+type Ctx m a v = (Enumerated a, Monad m, Monoid v, Num a, MonadIO m, v~())
 
 type HE = HE.Expr
 
@@ -448,7 +448,8 @@ genExpr (Label lab expr) = case expr of
               genField (Expr.FieldUpd sels expr) = genExpr $ setSteps (reverse sels) expr
     Expr.Lit          value               -> mkVal <$> genLit value
     Expr.Tuple        items               -> mkVal . HE.Tuple <$> mapM genExpr items
-    Expr.App npat@(NamePat pfx base args)        -> HE.AppE (HE.VarE "call") <$> (foldl (flip (<*>)) (genExpr $ NamePat.segBase base) $ (fmap.fmap) (HE.AppE . (HE.AppE (HE.VarE "appNext"))) (fmap genArg $ NamePat.args npat))
+    --Expr.App npat@(NamePat pfx base args)        -> (\s -> HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show id, s]) <$> (foldl (flip (<*>)) (genExpr $ NamePat.segBase base) $ (fmap.fmap) (HE.AppE . (HE.AppE (HE.VarE "appNext"))) (fmap genArg $ NamePat.args npat))
+    Expr.App npat@(NamePat pfx base args)        -> HE.AppE (HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show id]) <$> (foldl (flip (<*>)) (genExpr $ NamePat.segBase base) $ (fmap.fmap) (HE.AppE . (HE.AppE (HE.VarE "appNext"))) (fmap genArg $ NamePat.args npat))
                                                     where genArg (Expr.AppArg mname expr) = (genExpr expr) -- nameMod mname <*> (genExpr expr)
                                                           nameMod mname = case mname of
                                                               Nothing -> return $ HE.AppE (HE.VarE "unnamed")
@@ -463,7 +464,7 @@ genExpr (Label lab expr) = case expr of
     Expr.Ref  _                               -> Pass.fail "References are not supported yet"
     --p -> Pass.fail $ "Cannot construct: " <> show p
 
-    where id = 789 -- Enum.id lab
+    where id = Enum.id lab
 
 
 mkMemberGetter name = HE.MacroE "_member" [HE.Lit $ HLit.String name]
