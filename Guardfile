@@ -151,7 +151,7 @@ end
 
 def tests()
   section "tests", "rm -f luna-typechecker-tests.tix #{$output_dir}*", :condition => $run_tests, :noexception => true do
-    command_interactive "../../../dist/bin/libs/luna-typechecker-tests #{$hspec_opts.join(" ")}"
+    command_withinput "../../../dist/bin/libs/luna-typechecker-tests #{$hspec_opts.join(" ")}"
   end
 end
 
