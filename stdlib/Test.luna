@@ -3,9 +3,9 @@ foreign haskell def print s="":
 
 def id x : x
 
-def foo a b: (id a, id b)
+def foo f: (f 1, f "w")
 
 def main:
-    print (id 5, id "ala")
-    print (foo 1 "a")
     a = x:x
+    print (id [])
+    print (foo @id)
