@@ -28,8 +28,8 @@ import Luna.Syntax.Lit          (LLit)
 import Luna.Syntax.Pat          (Pat, LPat)
 import Luna.Syntax.Type         (Type, LType)
 import Luna.Syntax.Native       (Native)
-import Luna.Syntax.Arg          (Arg)
-import Luna.Syntax.Label        (Label)
+import Luna.Syntax.Arg          (LArg)
+import Luna.Syntax.Label        (Label(Label))
 import Luna.Syntax.Name.Pattern (NamePat(NamePat), Segment(Segment))
 import Data.Text.Lazy           (Text)
 
@@ -37,7 +37,7 @@ import Data.Text.Lazy           (Text)
 type Selector = [VNameP]
 
 type LExpr   a v = Label a (Expr a v)
-type ExprArg a v = Label a (Arg a (Expr a v))
+type ExprArg a v = LArg  a (LExpr a v)
 type SubDecl a v = Label a (Decl a (LExpr a v))
 
 
@@ -94,3 +94,4 @@ data Sequence a = Linear    a   (Maybe a)
                 deriving (Show, Generic, Read, Eq)
 
 makeLenses ''Expr
+
