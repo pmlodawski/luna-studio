@@ -35,8 +35,10 @@ import           Luna.Syntax.Arg (Arg(Arg))
 
 class NamePatternClass p s | p -> s where
     segments     :: p -> [s]
-    segmentNames :: p -> [SegmentName]
     toNamePath   :: p -> NamePath
+
+class SegName s n | s -> n where
+    segName :: s ->  n
 
 ----------------------------------------------------------------------
 -- Data types
@@ -95,6 +97,7 @@ args (NamePat pfx base segs) = allArgs
               Just a  -> a : postArgs
               Nothing -> postArgs
 
+segmentNames = fmap segName . segments 
 
 
 ----------------------------------------------------------------------
@@ -103,15 +106,11 @@ args (NamePat pfx base segs) = allArgs
 
 instance NamePatternClass (NamePat SegmentName arg) (Segment SegmentName arg) where
     segments (NamePat _ base segs) = base : segs
-    segmentNames = fmap sgmtName . segments 
-        where sgmtName (Segment base _) = base
     toNamePath (NamePat _ base segs) = NamePath (sgmtName base) (fmap sgmtName segs)
         where sgmtName (Segment base _) = base
 
 instance NamePatternClass NamePatDesc SegmentDesc where
     segments (NamePatDesc _ base segs) = base : segs 
-    segmentNames = fmap sgmtName . segments 
-        where sgmtName (SegmentDesc base _) = base
     toNamePath (NamePatDesc _ base segs) = NamePath (sgmtName base) (fmap sgmtName segs)
         where sgmtName (SegmentDesc base _) = base
 
@@ -121,3 +120,9 @@ instance Hashable base Text => Hashable (NamePat base arg) Text where
               segNames = fSegment hash base : fmap (fSegment hash) segs
 
 
+
+instance SegName (Segment base arg) base where
+    segName (Segment base _) = base
+
+instance SegName SegmentDesc SegmentName where
+    segName (SegmentDesc base _) = base
