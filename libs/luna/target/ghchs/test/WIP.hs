@@ -49,40 +49,10 @@ memDef_Main_print self s = do
 memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
 $(registerMethod ''Main "print")
 
--- ====== Method: Main.id ====== --
-memSig_Main_id = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
-memDef_Main_id _self _x = do 
-     _x
-     
-
-memFnc_Main_id = (memSig_Main_id, memDef_Main_id)
-$(registerMethod ''Main "id")
-
--- ====== Method: Main.foo ====== --
-memSig_Main_foo = _rtup2(_nuSigArg("self"), _nuSigArg("f"))
-memDef_Main_foo _self _f = do 
-     val (_call(16) (appNext (val (5 :: Int)) _f), _call(21) (appNext (val ("ala" :: String)) _f))
-     
-
-memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
-$(registerMethod ''Main "foo")
-
--- ====== Method: Main.bar ====== --
-memSig_Main_bar = _rtup3(_nuSigArg("self"), _nuSigArg("a"), _nuSigArg("b"))
-memDef_Main_bar _self _a _b = do 
-     val (_a, _b)
-     
-
-memFnc_Main_bar = (memSig_Main_bar, memDef_Main_bar)
-$(registerMethod ''Main "bar")
-
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 memDef_Main_main _self = do 
-     _call(28) (appNext (_call(31) (appNext (_member("id") _self) (_member("foo") _self))) (_member("print") _self))
-     _g <- appNext (val (3 :: Int)) (_member("bar") _self)
-     _call(42) (appNext (_call(46) (appNext (val (6 :: Int)) _g)) (_member("print") _self))
-     _call(49) (appNext (_call(53) (appNext (val ("test" :: String)) _g)) (_member("print") _self))
+     _call(6) (appNext (_call(997) (_member("x") _self)) (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
