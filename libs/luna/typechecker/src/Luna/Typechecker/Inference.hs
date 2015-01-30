@@ -119,6 +119,7 @@ tcDecl ldecl@(Label lab decl) =
 
 
           let Just lastBodyID = lastOf (traverse . Label.label . to Enum.id) body
+          debugPush $ "Last body id in function declaration: " ++ show lastBodyID
 
           withClonedTypo0 $ do
               env <- getEnv
@@ -168,6 +169,7 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
     hn_id <- getTargetIDString lab
     debugPush ("Var         " ++ hn ++ hn_id)
 
+    let exprId = Enum.id lab
     targetLabel <- getTargetID lab
     env <- getEnv
     vType <- inst env targetLabel
@@ -175,31 +177,32 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
 
     debugPush ("         :: " ++ show result)
 
-    setTypeById targetLabel result
+    setTypeById exprId result
 
     defaultTraverseM var
 
 
-expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) = do
+expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) =
   case dst of
       Pat.Var { Pat._vname = dst_vname } ->
         do  
           --tp (env, Let x e e') = do a <- tp (env, e)
           --                          b <- gen env a
           --                          tp ((insert env (x, b)), e')
-          env <- getEnv
           t_id <- getTargetIDString labt
           s_id <- getTargetIDString labs
           debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ s_id) 
 
+          let exprId = Enum.id lab
           srcId <- getTargetID labs
           dstId <- getTargetID labt
           -- typecheck src
           res <- defaultTraverseM ass
           srcType <- getTypeById srcId
-          -- TODO srcType should be generalized
 
+          -- TODO [llachowski] is it necessary?
           setTypeById dstId srcType
+          setTypeById exprId srcType
           return res
       _ -> do
           debugPush "Some assignment..."
@@ -209,10 +212,10 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
   do
     debugPush "Infering an application..."
 
-    let Label appExprLab _ = appExpr
-    appId <- getTargetID lab
-    appExprId <- getTargetID appExprLab
+    let exprId = Enum.id lab
+        appExprId = appExpr ^. Label.label . to Enum.id
 
+    debugPush $ "Application id: " ++ show exprId
     -- typecheck all args
     res <- defaultTraverseM app
 
@@ -220,15 +223,14 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
     argTypes <- mapM getType args
     result <- Fold.foldlM tp e1Type argTypes
 
-    setTypeById appId result
+    setTypeById exprId result
 
     debugPush $ "Result of infering an application: " ++ show result
     return res
 
   where
-    getType (Expr.AppArg _ (Label argLab _)) = do
-      typ <- getTypeById =<< getTargetID argLab
-      return typ
+    getType (Expr.AppArg _ (Label argLab _)) =
+      (getTypeById . Enum.id) argLab
 
     tp result argType = do
       a <- newtvar
@@ -239,7 +241,7 @@ expr _ = error "No idea how to infer type at the moment."
 
 
 inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
-inst env x = do
+inst env x =
     case lookup x env of 
         Just ts -> case ts of
             Mono t        ->
@@ -286,5 +288,5 @@ projection _ _ = true_cons
 
 
 tv_typo :: Typo -> [TVar]
-tv_typo env = foldr f [] env where
-         f (v,ts) result = (tv ts) ++ result
+tv_typo = foldr f [] where
+  f (v,ts) result = tv ts ++ result

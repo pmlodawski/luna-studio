@@ -74,7 +74,7 @@ insert a (x,t) = (x,t):a
 getTypeById :: Monad m => ID -> StageTypecheckerPass m Type
 getTypeById idV = do
     typeResult <- typeMap . at idV & use
-    maybe (error "Can't find type using id.") return typeResult
+    maybe (report_error "Can't find type using id." . TV =<< newtvar) return typeResult
 
 
 setTypeById :: (Monad m) => ID -> Type -> StageTypecheckerPass m ()
@@ -88,11 +88,11 @@ setTypeById id2 typeV = do
 getTypeSchemeById :: Monad m => ID -> StageTypecheckerPass m TypeScheme
 getTypeSchemeById idV = do
     typeScheme <- typeSchemeMap . at idV & use
-    maybe (error "Can't find type scheme using an id.") return typeScheme
+    maybe (report_error "Can't find type scheme using an id." . Mono . TV =<< newtvar) return typeScheme
 
 
 setTypeSchemeById :: (Monad m) => ID -> TypeScheme -> StageTypecheckerPass m ()
-setTypeSchemeById idV typeScheme = do
+setTypeSchemeById idV typeScheme =
     typeSchemeMap . at idV ?= typeScheme
 
 
