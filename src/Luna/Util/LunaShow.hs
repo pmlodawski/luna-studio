@@ -12,7 +12,7 @@ module Luna.Util.LunaShow where
 --import qualified Data.List  as List
 --import qualified Data.Maybe as Maybe
 
---import           Flowbox.Prelude hiding (simple)
+import Flowbox.Prelude hiding (simple)
 --import           Luna.AST.Arg        (Arg)
 --import qualified Luna.AST.Arg        as Arg
 --import           Luna.Syntax.Expr       (Expr)
@@ -29,20 +29,20 @@ module Luna.Util.LunaShow where
 --import qualified Luna.AST.Type       as Type
 
 
---data ShowContext = ShowContext { _accessorContent :: Bool }
---                               deriving Show
+data ShowContext = ShowContext { _accessorContent :: Bool }
+                               deriving Show
 
---makeLenses ''ShowContext
-
-
---instance Default ShowContext where
---    def = ShowContext False
+makeLenses ''ShowContext
 
 
---class LunaShow ast where
---    lunaShow  ::                ast -> String
---    lunaShow  = code . lunaShowC def
---    lunaShowC :: ShowContext -> ast -> CodeBuilder String
+instance Default ShowContext where
+    def = ShowContext False
+
+
+class LunaShow ast where
+    lunaShow  ::                ast -> String
+    lunaShow  = code . lunaShowC def
+    lunaShowC :: ShowContext -> ast -> CodeBuilder String
 
 
 --instance LunaShow Expr where
@@ -146,34 +146,34 @@ module Luna.Util.LunaShow where
 --        _ -> error $ "lunaShow: Not implemented: " ++ show t
 
 
---data CodeBuilder a = Simple  { code :: a }
---                   | Complex { code :: a }
+data CodeBuilder a = Simple  { code :: a }
+                   | Complex { code :: a }
 
---instance Functor CodeBuilder where
---    fmap f builder = builder { code = f $ code builder }
+instance Functor CodeBuilder where
+    fmap f builder = builder { code = f $ code builder }
 
---instance Applicative CodeBuilder where
---    pure = Simple
---    l <*> r = case l of
---        Simple f -> case r of
---            Simple  v -> Simple  $ f v
---            Complex v -> Complex $ f v
---        Complex f -> Complex $ f (code r)
+instance Applicative CodeBuilder where
+    pure = Simple
+    l <*> r = case l of
+        Simple f -> case r of
+            Simple  v -> Simple  $ f v
+            Complex v -> Complex $ f v
+        Complex f -> Complex $ f (code r)
 
---simplify :: CodeBuilder String -> CodeBuilder String
---simplify c = case c of
---    Simple {} -> c
---    Complex v -> Simple $ "(" ++ v ++ ")"
+simplify :: CodeBuilder String -> CodeBuilder String
+simplify c = case c of
+    Simple {} -> c
+    Complex v -> Simple $ "(" ++ v ++ ")"
 
 
---cLunaShow :: LunaShow a => ShowContext -> a -> String
---cLunaShow = code .: lunaShowC
+cLunaShow :: LunaShow a => ShowContext -> a -> String
+cLunaShow = code .: lunaShowC
 
---csLunaShow :: LunaShow a => ShowContext -> a -> String
---csLunaShow = (code . simplify) .: lunaShowC
+csLunaShow :: LunaShow a => ShowContext -> a -> String
+csLunaShow = (code . simplify) .: lunaShowC
 
---simple :: [String] -> CodeBuilder String
---simple = pure . concat
+simple :: [String] -> CodeBuilder String
+simple = pure . concat
 
---complex :: [String] -> CodeBuilder String
---complex = Complex . concat
+complex :: [String] -> CodeBuilder String
+complex = Complex . concat
