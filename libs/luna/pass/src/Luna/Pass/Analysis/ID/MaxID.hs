@@ -50,8 +50,8 @@ defaultTraverseM = AST.defaultTraverseM MaxIDs
 ----------------------------------------------------------------------
 
 pass :: MaxIDDefaultTraversal m a => Pass IDState (a -> MaxIDPass m AST.ID)
-pass = Pass "Extract max ID"
-            "Extract max ID contained in labels"
+pass = Pass "Extract maximum ID"
+            "Extract maximum ID contained in labels"
             def extract
 
 extract :: MaxIDDefaultTraversal m a => a -> MaxIDPass m AST.ID

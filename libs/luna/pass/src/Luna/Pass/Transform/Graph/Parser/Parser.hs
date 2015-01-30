@@ -19,9 +19,6 @@ import qualified Data.Text.Lazy             as Text
 
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
-import           Luna.Data.ASTInfo                      (ASTInfo)
-import qualified Luna.Data.ASTInfo                      as ASTInfo
-import qualified Luna.Parser.Parser                     as Parser
 import qualified Luna.Parser.Token                      as Token
 import qualified Luna.Pass.Analysis.ID.ExtractIDs       as ExtractIDs
 import qualified Luna.Pass.Pass                         as Pass
@@ -29,10 +26,9 @@ import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
 import           Luna.Syntax.Arg                        (Arg (Arg))
-import qualified Luna.Syntax.Arg                        as Arg
 import qualified Luna.Syntax.Decl                       as Decl
 import qualified Luna.Syntax.Enum                       as Enum
-import           Luna.Syntax.Expr                       (Expr, LExpr)
+import           Luna.Syntax.Expr                       (LExpr)
 import qualified Luna.Syntax.Expr                       as Expr
 import qualified Luna.Syntax.Graph.Flags                as Flags
 import           Luna.Syntax.Graph.Graph                (Graph)
@@ -48,19 +44,22 @@ import           Luna.Syntax.Label                      (Label (Label))
 import qualified Luna.Syntax.Label                      as Label
 import qualified Luna.Syntax.Name                       as Name
 import qualified Luna.Syntax.Name.Pattern               as Pattern
-import           Luna.Syntax.Pat                        (LPat, Pat)
+import qualified Luna.Syntax.Native                     as Native
+import           Luna.Syntax.Pat                        (LPat)
 import qualified Luna.Syntax.Pat                        as Pat
 import           Luna.System.Pragma.Store               (MonadPragmaStore)
---FIXME[wd]: following imports should be removed after moving to plugin based structure
---           including all use cases. Nothing should modify Parser.State explicitly!
---import qualified Luna.Data.Config                       as Config
---import qualified Luna.Parser.Pragma as Pragma
---import qualified Luna.Parser.State  as ParserState
---import           Luna.Pragma.Pragma (Pragma)
 
 
-type FuncDecl a e = Decl.FuncDecl a e [Expr.LExpr a e]
-type E = ()
+--FIXME[PM]: remove
+patternParser :: String -> Int -> Either String (LPat a, Int)
+patternParser = undefined
+exprParser :: String -> Int -> Either String (LExpr a v, Int)
+exprParser = undefined
+-----------------
+
+
+type FuncDecl a e v = Decl.FuncDecl a e [Expr.LExpr a v]
+type V = ()
 
 
 logger :: Logger
@@ -68,12 +67,12 @@ logger = getLogger $(moduleName)
 
 
 run :: (Eq a, Enum.Enumerated a, MonadPragmaStore m)
-    => Graph a E -> PropertyMap a E -> FuncDecl a E
-    -> EitherT Pass.PassError m (FuncDecl a E, PropertyMap a E)
+    => Graph a V -> PropertyMap a V -> FuncDecl a e V
+    -> EitherT Pass.PassError m (FuncDecl a e V, PropertyMap a V)
 run gr pm = Pass.run_ (Pass.Info "GraphParser") (State.make gr pm) . graph2expr
 
 
-graph2expr :: Eq a => FuncDecl a E -> GPPass a E m (FuncDecl a E, PropertyMap a E)
+graph2expr :: Eq a => FuncDecl a e V -> GPPass a V m (FuncDecl a e V, PropertyMap a V)
 graph2expr funcDecl = do
     let sig = funcDecl ^. Decl.funcDeclSig
     graph <- State.getGraph
@@ -95,7 +94,7 @@ labelUnknown :: Enum.Enumerated l => a -> Label l a
 labelUnknown = Label (Enum.tag IDFixer.unknownID)
 
 
-parseNode :: Decl.FuncSig a E -> (Node.ID, Node a E) -> GPPass a E m ()
+parseNode :: Decl.FuncSig a e -> (Node.ID, Node a V) -> GPPass a V m ()
 parseNode signature (nodeID, node) = do
     case node of
         Node.Expr    expr _ _ -> parseExprNode    nodeID expr
@@ -105,7 +104,7 @@ parseNode signature (nodeID, node) = do
 
 
 --TODO[PM] : zrobić z tego typeclass
-parseExprNode :: Node.ID -> NodeExpr a E -> GPPass a E m ()
+parseExprNode :: Node.ID -> NodeExpr a V -> GPPass a V m ()
 parseExprNode nodeID nodeExpr = case nodeExpr of
     NodeExpr.StringExpr strExpr -> case strExpr of
         StringExpr.List           -> parseListNode    nodeID
@@ -116,18 +115,19 @@ parseExprNode nodeID nodeExpr = case nodeExpr of
     NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
 
 
-parseInputsNode :: Node.ID -> Decl.FuncSig a E -> GPPass a E m ()
+parseInputsNode :: Node.ID -> Decl.FuncSig a e -> GPPass a V m ()
 parseInputsNode nodeID = mapM_ (parseArg nodeID) . zip [0..] . Pattern.args
 
 
-parseArg :: Node.ID -> (Int, Arg a E) -> GPPass a E m ()
+parseArg :: Node.ID -> (Int, Arg a e) -> GPPass a V m ()
 parseArg nodeID (num, input) = case input of
     Arg (Label _                     (Pat.Var vname)    ) _ -> addVar vname
     Arg (Label _ (Pat.Typed (Label _ (Pat.Var vname)) _)) _ -> addVar vname
     _                                                       -> lift $ left "parseArg: Wrong Arg type"
     where addVar vname = State.addToNodeMap (nodeID, Port.Num num) $ labelUnknown $ Expr.Var $ Expr.Variable vname ()
 
-parseOutputsNode :: Node.ID -> GPPass a E m ()
+
+parseOutputsNode :: Node.ID -> GPPass a V m ()
 parseOutputsNode nodeID = do
     srcs    <- State.getNodeSrcs nodeID
     inPorts <- State.inboundPorts nodeID
@@ -140,7 +140,7 @@ parseOutputsNode nodeID = do
         _                     -> State.setOutput $ labelUnknown $ Expr.Tuple srcs
 
 
-patVariables :: LPat a -> [LExpr a E]
+patVariables :: LPat a -> [LExpr a V]
 patVariables pat = case pat of
     Label l (Pat.Var   name  ) -> [Label l $ Expr.Var $ Expr.Variable name ()]
     Label _ (Pat.Tuple items ) -> concatMap patVariables items
@@ -156,7 +156,7 @@ patVariables pat = case pat of
 --    where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
 
 
-parsePatNode :: Node.ID -> String -> GPPass a E m ()
+parsePatNode :: Node.ID -> String -> GPPass a V m ()
 parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
@@ -172,7 +172,7 @@ parsePatNode nodeID pat = do
         _      -> lift $ left "parsePatNode: Wrong Pat arguments"
 
 
-parseNativeNode :: Node.ID -> String -> GPPass a E m ()
+parseNativeNode :: Node.ID -> String -> GPPass a V m ()
 parseNativeNode nodeID native = do
     srcs <- State.getNodeSrcs nodeID
     expr <- case exprParser native nodeID of
@@ -181,23 +181,15 @@ parseNativeNode nodeID native = do
     addExpr nodeID $ replaceNativeVars srcs expr
 
 
---replaceNativeVars :: [LExpr a e] -> LExpr a e -> LExpr a e
---replaceNativeVars srcs native = native & Expr.segments %~ replaceNativeVars' srcs where
---    replaceNativeVars' []                      segments                   = segments
---    replaceNativeVars' _                       []                         = []
---    replaceNativeVars' vars                    (sh@Expr.NativeCode {}:st) = sh : replaceNativeVars' vars st
---    replaceNativeVars' ((Expr.Var _ name ):vt) (sh@Expr.NativeVar  {}:st) = (sh & Expr.name .~ name) : replaceNativeVars' vt st
+replaceNativeVars :: [LExpr a v] -> LExpr a v -> LExpr a v
+replaceNativeVars srcs native = native & Label.element . Expr.native . Native.segments %~ replaceNativeVars' srcs where
+    replaceNativeVars' []                                             segments              = segments
+    replaceNativeVars' _                                              []                    = []
+    replaceNativeVars' vars                                           (sh@Native.Str {}:st) =  sh                                 : replaceNativeVars' vars st
+    replaceNativeVars' (Label _ (Expr.Var (Expr.Variable name _)):vt) (sh@Native.Var {}:st) = (sh & Native.name .~ toString name) : replaceNativeVars' vt   st
 
 
---FIXME[PM]: remove
-patternParser :: String -> Int -> Either String (LPat a, Int)
-patternParser     = undefined
-exprParser :: String -> Int -> Either String (LExpr a e, Int)
-exprParser        = undefined
-replaceNativeVars = undefined
------------------
-
-parseAppNode :: Node.ID -> String -> GPPass a E m ()
+parseAppNode :: Node.ID -> String -> GPPass a V m ()
 parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     expr <- if isOperator app
@@ -220,19 +212,19 @@ parseAppNode nodeID app = do
                                         where acc = label nodeID $ Expr.Accessor (Name.mkNameBaseAccessor $ Text.pack app) f
 
 
-exprToNodeID :: Enum.Enumerated a => LExpr a e -> Node.ID
+exprToNodeID :: Enum.Enumerated a => LExpr a v -> Node.ID
 exprToNodeID (Label _ (Expr.App exprApp)) = exprToNodeID $ exprApp ^. Pattern.namePatBase . Pattern.segmentBase
 exprToNodeID lexpr                        = Enum.id $ lexpr ^. Label.label
 
 
-setNodeID :: Enum.Enumerated a => Node.ID -> LExpr a e -> LExpr a e
+setNodeID :: Enum.Enumerated a => Node.ID -> LExpr a v -> LExpr a v
 setNodeID nodeID lexpr@(Label _ (Expr.App _)) = lexpr & Label.element . Expr.exprApp
                                                       . Pattern.namePatBase . Pattern.segmentBase
                                                       %~ setNodeID nodeID
 setNodeID nodeID lexpr                        = lexpr & Label.label              .~ Enum.tag  nodeID
 
 
-parseTupleNode :: Node.ID -> GPPass a E m ()
+parseTupleNode :: Node.ID -> GPPass a V m ()
 parseTupleNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = label nodeID $ Expr.Tuple srcs
@@ -246,19 +238,19 @@ parseTupleNode nodeID = do
 --    addExpr nodeID e
 
 
-parseListNode :: Node.ID -> GPPass a E m ()
+parseListNode :: Node.ID -> GPPass a V m ()
 parseListNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = label nodeID $ Expr.List $ Expr.SeqList srcs
     addExpr nodeID e
 
 
-parseASTExprNode :: Node.ID -> LExpr a E -> GPPass a E m ()
+parseASTExprNode :: Node.ID -> LExpr a V -> GPPass a V m ()
 parseASTExprNode nodeID = addExpr nodeID
                         . setNodeID nodeID
 
 
-addExpr :: Node.ID -> LExpr a E  -> GPPass a E m ()
+addExpr :: Node.ID -> LExpr a V  -> GPPass a V m ()
 addExpr nodeID expr' = do
     graph <- State.getGraph
 
