@@ -38,7 +38,7 @@ instance Default StageTypecheckerState where
     def = StageTypecheckerState { _debugLog      = []
                                 , _typo          = init_typo
                                 , _nextTVar      = TVar 0
-                                , _subst         = mempty
+                                , _subst         = def
                                 , _constr        = mempty
                                 , _sa            = mempty
                                 , _typeMap       = mempty
