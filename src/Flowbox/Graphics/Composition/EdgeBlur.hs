@@ -32,7 +32,7 @@ mixImages :: (Applicative f, Floating a) => f a -> f a -> f a -> f a
 mixImages edgesMask first second = (+) <$> 
                                ( (*) <$> first <*> edgesMask ) 
                                <*> 
-                               ( (*) <$> second <*> (fmap ((-) 0.9) edgesMask) )
+                               ( (*) <$> second <*> (fmap ((-) 1) edgesMask) )
 
 detectEdges :: (Elt a, IsFloating a) => Exp a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$>
