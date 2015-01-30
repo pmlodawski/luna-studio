@@ -11,6 +11,8 @@ module Luna.Typechecker.Solver (
   ) where
 
 
+import Data.Monoid
+
 import Luna.Typechecker.Data
 import Luna.Typechecker.TypesAndConstraints
 import Luna.Typechecker.Inference.Class
@@ -26,7 +28,7 @@ cs (s, C c) =
     if b then do c' <- apply s' (C c)
                  c'' <- simplify c'
                  return (s', c'')
-     else report_error "inconsistent constraint" (null_subst, C [TRUE])
+     else report_error "inconsistent constraint" (mempty, C [TRUE])
 cs _ = error "this case was not taken into account in original HM(Rec)"
 
 -- divide predicates into record predicates and equality predicates
@@ -49,7 +51,7 @@ closure (s, r, e) =
                     p2 <- simplify_predicate (e1 ++ e2)
                     if null p2 then return (s',p1)
                      else closure (s', p1, p2)
-        _    -> report_error "closure:uncompatible constraint" (null_subst, [])
+        _    -> report_error "closure:uncompatible constraint" (mempty, [])
 
 
 -- create subsumptions based on a label type of a particular record
@@ -101,18 +103,18 @@ do_unify (s, []) = return s
 do_unify (s, t `Subsume` t' : p) =
    do s' <- unify(s,t,t')
       do_unify (s',p)
-do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal form" null_subst
+do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal form" mempty
 
 
 unify :: (Monad m) => (Subst, Type, Type) ->  StageTypecheckerPass m Subst
 unify (s, TV x, TV y) =
    if x == y then return s
    else do t <- apply s (TV x)
-           return ((y, t):s)
+           return $ Subst ((y, t):fromSubst s)
 unify (s, TV x, t) =
             do t'' <- apply s t
-               if x `elem` tv t'' then report_error "occurs check fails" null_subst
-                else return ((x, t''):s)
+               if x `elem` tv t'' then report_error "occurs check fails" mempty
+                else return $ Subst ((x, t''):fromSubst s)
 unify (s, t, TV x) = unify (s, TV x, t)
 unify (s, t1 `Fun` t1', t2 `Fun` t2') = do s' <- unify (s, t1, t2)
                                            unify (s', t1', t2')

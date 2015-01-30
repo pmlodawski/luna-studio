@@ -1,12 +1,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Luna.Typechecker.Data (
     TVar(..), tvarNum,
-    Subst, Typo,
+    Subst(..), substRaw,
+    Typo,
     Type(..), Predicate(..), Constraint(..), TypeScheme(..),
     TypeMap, TypeSchemeMap,
     MapID,
-    null_subst, init_typo, true_cons
+    init_typo, true_cons
   ) where
 
 
@@ -24,11 +26,14 @@ type MapID a        = IntMap a
 type TypeMap        = MapID Type
 type TypeSchemeMap  = MapID TypeScheme
 
-newtype TVar        = TVar { fromTVar :: Int }
-                    deriving (Eq)
 
-instance Unpack TVar Int  where unpack (TVar a) = a
-instance Pack   Int TVar  where pack a          = (TVar a)
+
+newtype TVar  = TVar { fromTVar :: Int }
+              deriving (Eq)
+
+instance Unpack TVar Int  where unpack = fromTVar
+instance Pack   Int TVar  where pack   = TVar
+
 instance Show   TVar      where show (TVar x) = show x
 
 tvarNum :: Iso' TVar Int
@@ -36,7 +41,19 @@ tvarNum = iso fromTVar TVar
 
 
 
-type Subst         = [(TVar, Type)]
+newtype Subst = Subst { fromSubst :: [(TVar, Type)] }
+
+instance Unpack Subst [(TVar, Type)] where unpack = fromSubst
+instance Pack   [(TVar, Type)] Subst where pack   = Subst
+
+substRaw :: Iso' Subst [(TVar, Type)]
+substRaw = iso fromSubst Subst
+
+instance Monoid Subst where
+  mempty = Subst []
+  mappend = error "what's the mappend for Subst?"
+
+
 type Typo          = [(ID,TypeScheme)]
 
 
@@ -62,10 +79,6 @@ data TypeScheme = Mono Type
 
 empty_typo :: Typo
 empty_typo = []
-
-
-null_subst :: Subst
-null_subst = []
 
 
 init_typo :: [Typo]
