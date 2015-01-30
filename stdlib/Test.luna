@@ -1,7 +1,15 @@
 foreign haskell def print s="":
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
-def id2: 5
+def id2: 4
+def id x: x
+
+def foo f: (f 5, f "a")
+
+def bar a b: (a,b)
 
 def main:
+    print (foo @id)
     print id2
+    g = @bar 1
+    print (g 3)
