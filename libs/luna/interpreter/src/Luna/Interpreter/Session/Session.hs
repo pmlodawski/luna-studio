@@ -21,6 +21,7 @@ import qualified Data.Either                as Either
 import           Data.Typeable              (Typeable)
 import qualified DynFlags                   as GHC
 import qualified GHC
+import qualified HscTypes
 
 import           Flowbox.Config.Config                      (Config)
 import qualified Flowbox.Config.Config                      as Config
@@ -54,6 +55,7 @@ initialize :: Config -> [Import] -> Session mm ()
 initialize config imports = do
     globalPkgDb <- liftIO $ expand' $ Config.pkgDb $ Config.global config
     localPkgDb  <- liftIO $ expand' $ Config.pkgDb $ Config.local config
+    setStrFlags ["-fno-ghci-sandbox"]
     let isNotUser GHC.UserPkgConf = False
         isNotUser _ = True
         extraPkgConfs p = [ GHC.PkgConfFile globalPkgDb
@@ -73,6 +75,17 @@ initialize config imports = do
                : "Luna.Target.HS"
                : "System.Mem"
                : imports
+
+
+setStrFlags :: [String] -> Session mm ()
+setStrFlags strFlags = do
+    flags <- lift2 GHC.getInteractiveDynFlags
+    (flags2, leftovers, warns) <- lift2 $ GHC.parseDynamicFlags flags $ map GHC.noLoc strFlags
+    liftIO $ HscTypes.handleFlagWarnings flags2 warns
+    let unrecognized = map (show . GHC.unLoc) leftovers
+    unless (null unrecognized) $
+        left $ Error.OtherError $(loc) $ "Unrecognized flags: " ++ unwords unrecognized
+    void $ lift2 $ GHC.setInteractiveDynFlags flags2
 
 
 setImports :: [Import] -> Session mm ()

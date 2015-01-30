@@ -294,7 +294,27 @@ class ```Gamma```:
     SRGBGamma
     ViperLog
 
+#
+#                MATTES
+#
 
+def imageMatte path channelName:
+     ```autoLift2 imageMatteLuna #{path} #{channelName}```
+
+def vectorMatte mask:
+    ```liftF1 vectorMatteLuna #{mask}```
+
+def Image.offsetMatte value matte:
+    ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
+
+def Image.contrastMatte value matte:
+    ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
+
+def Image.exposureMatte blackpoint ex matte:
+    ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
+
+def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
+    ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
 #
 #                IMAGE
