@@ -10,31 +10,39 @@ import Data.Monoid                       (Monoid(..))
 import Text.PrettyPrint
 
 import Luna.Data.StructInfo              (StructInfo)
-import Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo, TypeMap, init_typo, null_subst)
+import Luna.Typechecker.Data             (Constraint, Subst, TVar, Typo, TypeMap, TypeSchemeMap, init_typo, null_subst)
 import Luna.Typechecker.Debug.PrettyData (prettyConstr, prettyNullable, prettySubst, prettyTypo, prettyTypeMap)
 
 
 
-data StageTypecheckerState = StageTypecheckerState  { _debugLog    :: [String]
-                                                    , _typo        :: [Typo]
-                                                    , _nextTVar    :: TVar
-                                                    , _subst       :: Subst
-                                                    , _constr      :: Constraint
-                                                    , _sa          :: StructInfo
-                                                    , _typeMap     :: TypeMap
+data StageTypecheckerState = StageTypecheckerState  { _debugLog      :: [String]
+                                                    , _typo          :: [Typo]
+                                                    , _nextTVar      :: TVar
+                                                    , _subst         :: Subst
+                                                    , _constr        :: Constraint
+                                                    , _sa            :: StructInfo
+                                                    -- TODO [llachowski]
+                                                    -- 30.01 2015: typeMap
+                                                    -- and typeScheme
+                                                    -- should be local for
+                                                    -- each expression,
+                                                    -- similar to environment
+                                                    , _typeMap       :: TypeMap
+                                                    , _typeSchemeMap :: TypeSchemeMap
                                                     }
 
 makeLenses ''StageTypecheckerState
 
 
 instance Default StageTypecheckerState where
-    def = StageTypecheckerState { _debugLog = []
-                                , _typo     = init_typo
-                                , _nextTVar = 0
-                                , _subst    = null_subst
-                                , _constr   = mempty
-                                , _sa       = mempty
-                                , _typeMap  = mempty
+    def = StageTypecheckerState { _debugLog      = []
+                                , _typo          = init_typo
+                                , _nextTVar      = 0
+                                , _subst         = null_subst
+                                , _constr        = mempty
+                                , _sa            = mempty
+                                , _typeMap       = mempty
+                                , _typeSchemeMap = mempty
                                 }
 
 

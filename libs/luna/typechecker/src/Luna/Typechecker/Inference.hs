@@ -57,13 +57,15 @@ import            Luna.Typechecker.StageTypecheckerState  (
                       report_error,
                       withClonedTypo0,
                       insertNewMonoTypeVariable,
-                      getTypeById, setTypeById, getEnv,
+                      getTypeById, setTypeById,
+                      setTypeSchemeById,
+                      getEnv,
                       add_constraint, newtvar, rename,
                       debugPush,
                       getTargetIDString, getTargetID
                   )
 import            Luna.Typechecker.TypesAndConstraints    (TypesAndConstraints(..))
--- import            Luna.Typechecker.Tools (without)
+import            Luna.Typechecker.Tools (without)
 
 
 
@@ -130,14 +132,14 @@ tcDecl ldecl@(Label lab decl) =
               mResultType <- typeMap . at lastBodyID & use
 
               case mResultType of
-                Just (_, resultType, _) -> do
+                Just resultType -> do
                     let bsres = foldr1 Fun (bs ++ [resultType])
 
                     add_constraint (C [a `Subsume` bsres])
                     typ <- normalize a
-                    consV <- use constr
                     -- TODO [llachowski] 29 sty 2015: rethink this
-                    setTypeById labID (env, typ, consV)
+                    typeScheme <- generalize env typ
+                    setTypeSchemeById labID typeScheme
 
                     debugPush "pop"
                     return travRes
@@ -170,11 +172,10 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
     env <- getEnv
     vType <- inst env targetLabel
     result <- normalize vType
-    consV <- use constr
 
     debugPush ("         :: " ++ show result)
 
-    setTypeById targetLabel (env, result, consV)
+    setTypeById targetLabel result
 
     defaultTraverseM var
 
@@ -215,20 +216,18 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
     -- typecheck all args
     res <- defaultTraverseM app
 
-    (_, e1Type, _) <- getTypeById appExprId
+    e1Type <- getTypeById appExprId
     argTypes <- mapM getType args
     result <- Fold.foldlM tp e1Type argTypes
 
-    env <- getEnv
-    consV <- use constr
-    setTypeById appId (env, result, consV)
+    setTypeById appId result
 
     debugPush $ "Result of infering an application: " ++ show result
     return res
 
   where
     getType (Expr.AppArg _ (Label argLab _)) = do
-      (_, typ, _) <- getTypeById =<< getTargetID argLab
+      typ <- getTypeById =<< getTargetID argLab
       return typ
 
     tp result argType = do
@@ -258,13 +257,13 @@ inst env x = do
             report_error ("undeclared variable " ++ show x) (TV ntv)
 
 
--- generalize :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
--- generalize env t = do
---     c      <- use constr
---     constr .= projection c (fv t c env)
---     return $ Poly (fv t c env) c t
---   where
---     fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
+generalize :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
+generalize env t = do
+    c      <- use constr
+    constr .= projection c (fv t c env)
+    return $ Poly (fv t c env) c t
+  where
+    fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
 
 
 normalize :: (Monad m) => Type ->  StageTypecheckerPass m Type
