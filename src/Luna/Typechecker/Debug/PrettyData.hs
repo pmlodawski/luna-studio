@@ -14,7 +14,8 @@ import            Text.PrettyPrint        (
 import            Luna.Syntax.Enum        (ID)
 
 import            Luna.Typechecker.Data   (
-                      TVar, Subst, Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..),
+                      TVar(..),
+                      Subst, Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..),
                       TypeMap
                   )
 
@@ -36,7 +37,7 @@ prettyNullableComma xs = prettyComma xs
 
 
 prettyTVar :: TVar -> Doc
-prettyTVar tv = text "τ_" <> int tv
+prettyTVar tv = text "τ_" <> int (fromTVar tv)
 
 prettyType :: Type -> Doc
 prettyType (TV tv)       = prettyTVar tv

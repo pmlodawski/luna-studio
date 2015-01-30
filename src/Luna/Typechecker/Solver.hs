@@ -58,7 +58,7 @@ extract1 :: (Monad m) => [Predicate] ->  StageTypecheckerPass m [Predicate]
 extract1 [] = return []
 extract1 (_:p) = extract1 p
 get_extract1 :: (Monad m, Eq a) => [(a, Type)] -> a -> Type ->  StageTypecheckerPass m Predicate
-get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" (TV 0 `Subsume` TV 0)
+get_extract1 [] _ _          = report_error "extract1:field label not found -> inconsistent constraint" (TV (TVar 0) `Subsume` TV (TVar 0))
 get_extract1 ((l,t):f) l' t' = if l == l' then return (t `Subsume` t')
                                else get_extract1 f l' t'
 

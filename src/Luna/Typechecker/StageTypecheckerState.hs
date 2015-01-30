@@ -28,7 +28,8 @@ import            Luna.Syntax.Enum                              (ID)
 import qualified  Luna.Syntax.Enum                              as Enum
 
 import            Luna.Typechecker.Data                         (
-                      TVar, Subst, Typo,
+                      TVar, tvarNum,
+                      Subst, Typo,
                       Type(..), Constraint(..), TypeScheme(..)
                   )
 import            Luna.Typechecker.Inference.Class              (StageTypecheckerCtx, StageTypecheckerPass)
@@ -130,7 +131,7 @@ add_constraint c1 =
 
 
 newtvar :: (Monad m) => StageTypecheckerPass m TVar
-newtvar = use nextTVar <* (nextTVar += 1)
+newtvar = use nextTVar <* (nextTVar . tvarNum += 1)
 
 
 rename :: (Monad m) => StageTypecheckerPass m Subst -> TVar -> StageTypecheckerPass m Subst
