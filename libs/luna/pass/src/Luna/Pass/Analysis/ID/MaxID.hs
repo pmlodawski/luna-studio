@@ -4,46 +4,69 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE Rank2Types       #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE Rank2Types            #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Luna.Pass.Analysis.ID.MaxID where
 
-import           Flowbox.Prelude                hiding (mapM, mapM_)
-import           Flowbox.System.Log.Logger
-import           Luna.Pass.Analysis.ID.State    (IDState)
-import qualified Luna.Pass.Analysis.ID.State    as State
-import qualified Luna.Pass.Analysis.ID.Traverse as IDTraverse
-import           Luna.Pass.Pass                 (Pass)
-import qualified Luna.Pass.Pass                 as Pass
-import qualified Luna.Syntax.AST                as AST
-import           Luna.Syntax.Expr               (Expr)
-import           Luna.Syntax.Module             (Module)
+import Control.Monad.State
+
+import           Flowbox.Prelude             hiding (mapM, mapM_)
+import           Luna.Pass                   (Pass (Pass))
+import           Luna.Pass.Analysis.ID.State (IDState)
+import qualified Luna.Pass.Analysis.ID.State as State
+import qualified Luna.Syntax.AST             as AST
+import           Luna.Syntax.Enum            (Enumerated)
+import qualified Luna.Syntax.Enum            as Enum
+import           Luna.Syntax.Label           (Label)
+import qualified Luna.Syntax.Label           as Label
+import qualified Luna.Syntax.Traversals      as AST
 
 
 
-logger :: Logger
-logger = getLogger $(moduleName)
+data MaxIDs = MaxIDs
 
 
-type MaxIDPass result = Pass IDState result
+type MaxIDPass                 m   = StateT IDState m
+type MaxIDCtx              lab m a = (Enumerated lab, MaxIDTraversal m a)
+type MaxIDTraversal            m a = (Monad m, Functor m, AST.Traversal        MaxIDs (MaxIDPass m) a a)
+type MaxIDDefaultTraversal     m a = (Monad m, Functor m, AST.DefaultTraversal MaxIDs (MaxIDPass m) a a)
+
+----------------------------------------------------------------------
+-- Utils functions
+----------------------------------------------------------------------
+
+traverseM :: MaxIDTraversal m a => a -> MaxIDPass m a
+traverseM = AST.traverseM MaxIDs
+
+defaultTraverseM :: MaxIDDefaultTraversal m a => a -> MaxIDPass m a
+defaultTraverseM = AST.defaultTraverseM MaxIDs
+
+----------------------------------------------------------------------
+-- Pass functions
+----------------------------------------------------------------------
+
+pass :: MaxIDDefaultTraversal m a => Pass IDState (a -> MaxIDPass m AST.ID)
+pass = Pass "Extract max ID"
+            "Extract max ID contained in labels"
+            def extract
+
+extract :: MaxIDDefaultTraversal m a => a -> MaxIDPass m AST.ID
+extract ast = defaultTraverseM ast >> State.getFoundID
 
 
-run :: Module -> Pass.Result AST.ID
-run = Pass.run_ (Pass.Info "MaxID") State.make . analyseModule
+run :: MaxIDDefaultTraversal Identity a => a -> AST.ID
+run a = evalState (extract a) def
 
 
-runExpr :: Expr -> Pass.Result AST.ID
-runExpr = Pass.run_ (Pass.Info "MaxID") State.make . analyseExpr
+maxIDLabel :: MaxIDCtx lab m a => Label lab a -> MaxIDPass m (Label lab a)
+maxIDLabel label = do
+    State.findMaxID $ Enum.id $ label ^. Label.label
+    defaultTraverseM label
 
 
-analyseModule :: Module -> MaxIDPass AST.ID
-analyseModule m = do IDTraverse.traverseModule State.findMaxID m
-                     State.getFoundID
-
-
-analyseExpr :: Expr -> MaxIDPass AST.ID
-analyseExpr e = do IDTraverse.traverseExpr State.findMaxID e
-                   State.getFoundID
+instance MaxIDCtx lab m a => AST.Traversal MaxIDs (MaxIDPass m) (Label lab a) (Label lab a) where
+    traverseM _ = maxIDLabel

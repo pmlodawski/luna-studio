@@ -4,46 +4,70 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE Rank2Types       #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE Rank2Types            #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Luna.Pass.Analysis.ID.MinID where
 
-import           Flowbox.Prelude                hiding (mapM, mapM_)
-import           Flowbox.System.Log.Logger
-import           Luna.Pass.Analysis.ID.State    (IDState)
-import qualified Luna.Pass.Analysis.ID.State    as State
-import qualified Luna.Pass.Analysis.ID.Traverse as IDTraverse
-import           Luna.Pass.Pass                 (Pass)
-import qualified Luna.Pass.Pass                 as Pass
-import qualified Luna.Syntax.AST                as AST
-import           Luna.Syntax.Expr               (Expr)
-import           Luna.Syntax.Module             (Module)
+import Control.Monad.State
+
+import           Flowbox.Prelude             hiding (mapM, mapM_)
+import           Luna.Pass                   (Pass (Pass))
+import           Luna.Pass.Analysis.ID.State (IDState)
+import qualified Luna.Pass.Analysis.ID.State as State
+import qualified Luna.Syntax.AST             as AST
+import           Luna.Syntax.Enum            (Enumerated)
+import qualified Luna.Syntax.Enum            as Enum
+import           Luna.Syntax.Label           (Label)
+import qualified Luna.Syntax.Label           as Label
+import qualified Luna.Syntax.Traversals      as AST
 
 
 
-logger :: Logger
-logger = getLogger $(moduleName)
+data MinIDs = MinIDs
 
 
-type MinIDPass result = Pass IDState result
+type MinIDPass                 m   = StateT IDState m
+type MinIDCtx              lab m a = (Enumerated lab, MinIDTraversal m a)
+type MinIDTraversal            m a = (Monad m, Functor m, AST.Traversal        MinIDs (MinIDPass m) a a)
+type MinIDDefaultTraversal     m a = (Monad m, Functor m, AST.DefaultTraversal MinIDs (MinIDPass m) a a)
+
+----------------------------------------------------------------------
+-- Utils functions
+----------------------------------------------------------------------
+
+traverseM :: MinIDTraversal m a => a -> MinIDPass m a
+traverseM = AST.traverseM MinIDs
+
+defaultTraverseM :: MinIDDefaultTraversal m a => a -> MinIDPass m a
+defaultTraverseM = AST.defaultTraverseM MinIDs
+
+----------------------------------------------------------------------
+-- Pass functions
+----------------------------------------------------------------------
+
+pass :: MinIDDefaultTraversal m a => Pass IDState (a -> MinIDPass m AST.ID)
+pass = Pass "Extract minimum ID"
+            "Extract minimum ID contained in labels"
+            def extract
+
+extract :: MinIDDefaultTraversal m a => a -> MinIDPass m AST.ID
+extract ast = defaultTraverseM ast >> State.getFoundID
 
 
-run :: Module -> Pass.Result AST.ID
-run = Pass.run_ (Pass.Info "MinID") State.make . analyseModule
+run :: MinIDDefaultTraversal Identity a => a -> AST.ID
+run a = evalState (extract a) def
 
 
-runExpr :: Expr -> Pass.Result AST.ID
-runExpr = Pass.run_ (Pass.Info "MinID") State.make . analyseExpr
+minIDLabel :: MinIDCtx lab m a => Label lab a -> MinIDPass m (Label lab a)
+minIDLabel label = do
+    State.findMinID $ Enum.id $ label ^. Label.label
+    defaultTraverseM label
 
 
-analyseModule :: Module -> MinIDPass AST.ID
-analyseModule m = do IDTraverse.traverseModule State.findMinID m
-                     State.getFoundID
+instance MinIDCtx lab m a => AST.Traversal MinIDs (MinIDPass m) (Label lab a) (Label lab a) where
+    traverseM _ = minIDLabel
 
-
-analyseExpr :: Expr -> MinIDPass AST.ID
-analyseExpr e = do IDTraverse.traverseExpr State.findMinID e
-                   State.getFoundID
