@@ -29,6 +29,7 @@ import            Luna.Pass                               (Pass(..))
 import qualified  Luna.Syntax.Arg                         as Arg
 import qualified  Luna.Syntax.Decl                        as Decl
 import qualified  Luna.Syntax.Enum                        as Enum
+import            Luna.Syntax.Enum                        (ID)
 import            Luna.Syntax.Enum                        (IDTag)
 import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
@@ -39,7 +40,7 @@ import qualified  Luna.Syntax.Pat                         as Pat
 import qualified  Luna.Syntax.Traversals                  as AST
 
 import            Luna.Typechecker.Data (
-                      TVar, Var, Subst,
+                      TVar, Subst,
                       Type(..), Predicate(..), Constraint(..), TypeScheme(..),
                       null_subst, true_cons, Typo
                   )
@@ -238,7 +239,7 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
 expr _ = error "No idea how to infer type at the moment."
 
 
-inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
+inst :: (Monad m) => Typo -> ID -> StageTypecheckerPass m Type
 inst env x = do
     case lookup x env of 
         Just ts -> case ts of

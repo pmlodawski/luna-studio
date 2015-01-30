@@ -1,16 +1,22 @@
 module Luna.Typechecker.Debug.PrettyData (
     prettyComma, prettyNullable,
-    prettyTVar, prettyVar,
-    prettyFieldlabel, prettyField,
-    prettySubst, prettyTypo,
+    prettyTVar, prettyID, prettySubst, prettyTypo,
     prettyType, prettyPred, prettyConstr, prettyTypeScheme, prettyTypeMap
   ) where
 
 
 import qualified  Data.Map.Strict         as SM
-import            Text.PrettyPrint        (Doc, ($+$),(<+>), (<>), braces, brackets, char, empty, hsep, int, parens, punctuate, text)
+import            Text.PrettyPrint        (
+                      Doc, ($+$),(<+>), (<>),
+                      brackets, char, empty, hsep, int, parens, punctuate, text
+                  )
 
-import            Luna.Typechecker.Data   (TVar, Var, Fieldlabel, Field, Subst, Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..), TypeMap)
+import            Luna.Syntax.Enum (ID)
+
+import            Luna.Typechecker.Data   (
+                      TVar, Subst, Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..),
+                      TypeMap
+                  )
 
 
 
@@ -32,29 +38,18 @@ prettyNullableComma xs = prettyComma xs
 prettyTVar :: TVar -> Doc
 prettyTVar tv = text "τ_" <> int tv
 
-prettyVar :: Var -> Doc
-prettyVar = int
-
-prettyFieldlabel :: Fieldlabel -> Doc
-prettyFieldlabel = int
-
-prettyField :: Field -> Doc
-prettyField (fl, ty) = prettyFieldlabel fl <> char ':' <> prettyType ty
-
 prettyType :: Type -> Doc
 prettyType (TV tv)       = prettyTVar tv
 prettyType (t1 `Fun` t2) = parens $ prettyType t1
                                     <+> char '→'
                                     <+> prettyType t2
-prettyType (Record fs)  = braces
-                        $ hsep
-                        $ punctuate (char ',')
-                        $ map prettyField fs
+
+prettyID :: ID -> Doc
+prettyID = int
 
 prettyPred :: Predicate -> Doc
 prettyPred TRUE                 = char '⊤'
 prettyPred (ty1 `Subsume` ty2)  = prettyType  ty1       <> char '≼' <> prettyType ty2
-prettyPred (Reckind rty fl fty) = prettyField (fl, fty) <> char 'ϵ' <> prettyType rty
 
 prettyConstr :: Constraint -> Doc
 prettyConstr (C ps)         = hsep $ punctuate (char ',') $ map prettyPred ps
@@ -78,11 +73,11 @@ prettySubst = prettyNullableComma . substs
 
 prettyTypo :: Typo -> Doc
 prettyTypo = prettyNullable . map prettyTypo1
-  where prettyTypo1 (v,ts)  = prettyVar v
+  where prettyTypo1 (v,ts)  = prettyID v
                             <+> text "::"
                             <+> prettyTypeScheme ts
 
 prettyTypeMap :: TypeMap -> Doc
 prettyTypeMap tm = prettyNullableComma $ SM.elems $ SM.mapWithKey join tm
-  where join key ty = int key <+> text "⇒" <+> prettyType ty
+  where join key ty = prettyID key <+> text "⇒" <+> prettyType ty
 
