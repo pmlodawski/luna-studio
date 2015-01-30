@@ -19,7 +19,7 @@ eee x = x+1
 applyKernel :: (IsNum a, Elt a) => Matrix2 a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 applyKernel kernel img = process img where
     kernelN = id M.>-> id $ kernel
-    p = pipe A.Clamp
+    p = pipe (A.Constant 0)
     process x = id `p` F.filter 1 kernelN `p` id $ x
 
   --convolve mode kernel
@@ -28,11 +28,11 @@ applyKernel kernel img = process img where
 
 -- bluredImg = blur n sigma testShader
 
-mixImages :: (Applicative f, Num a) => f a -> f a -> f a -> f a
+mixImages :: (Applicative f, Floating a) => f a -> f a -> f a -> f a
 mixImages edgesMask first second = (+) <$> 
                                ( (*) <$> first <*> edgesMask ) 
                                <*> 
-                               ( (*) <$> second <*> (fmap ((-) 1) edgesMask) )
+                               ( (*) <$> second <*> (fmap ((-) 0.9) edgesMask) )
 
 detectEdges :: (Elt a, IsFloating a) => Exp a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$>
