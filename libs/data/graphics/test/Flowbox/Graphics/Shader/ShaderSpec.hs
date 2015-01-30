@@ -1,4 +1,4 @@
-module Shader.ShaderSpec where
+module Flowbox.Graphics.Shader.ShaderSpec where
 
 import Test.Hspec
 import Test.QuickCheck
