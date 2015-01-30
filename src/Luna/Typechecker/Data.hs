@@ -3,7 +3,7 @@ module Luna.Typechecker.Data (
     Fieldlabel, Field,
     Subst, Typo,
     Type(..), Predicate(..), Constraint(..), TypeScheme(..),
-    TypeMap,
+    TypeMap, TypeSchemeMap,
     null_subst, init_typo, true_cons
   ) where
 
@@ -14,13 +14,14 @@ import Data.Monoid
 import Luna.Syntax.Enum (ID)
 
 
-type TVar       = Int
-type Var        = Int
-type Fieldlabel = Var
-type Field      = (Fieldlabel, Type)
-type TypeMap    = Map ID (Typo, Type, Constraint)
-type Subst      = [(TVar, Type)]
-type Typo       = [(Var,TypeScheme)]
+type TVar          = Int
+type Var           = Int
+type Fieldlabel    = Var
+type Field         = (Fieldlabel, Type)
+type TypeMap       = Map ID Type
+type TypeSchemeMap = Map ID TypeScheme
+type Subst         = [(TVar, Type)]
+type Typo          = [(Var,TypeScheme)]
 
 
 data Type = TV TVar

@@ -7,8 +7,8 @@ module Luna.Typechecker.StageTypecheckerState (
     report_error,
     withTypo, withClonedTypo, withClonedTypo0,
     insertNewMonoTypeVariable,
-    getTypeById, setTypeById, getEnv,
-    add_constraint, newtvar, rename,
+    getTypeById, setTypeById, getTypeSchemeById, setTypeSchemeById,
+    getEnv, add_constraint, newtvar, rename,
     debugPush,
     getTargetIDString, getTargetID
   ) where
@@ -71,18 +71,29 @@ insertNewMonoTypeVariable labID = do
 insert :: Typo -> (Var, TypeScheme) -> Typo
 insert a (x,t) = (x,t):a
 
-getTypeById :: Monad m => ID -> StageTypecheckerPass m (Typo, Type, Constraint)
+getTypeById :: Monad m => ID -> StageTypecheckerPass m Type
 getTypeById idV = do
     typeResult <- typeMap . at idV & use
     maybe (error "Can't find type using id.") return typeResult
 
 
-setTypeById :: (Monad m) => ID -> (Typo, Type, Constraint) -> StageTypecheckerPass m ()
+setTypeById :: (Monad m) => ID -> Type -> StageTypecheckerPass m ()
 setTypeById id2 typeV = do
     debugPush $ "save " ++ show id2 ++ " ?= " ++ show typeV
     typeMap . at id2 ?= typeV
     mm <- typeMap & use
     debugPush $ show mm
+
+
+getTypeSchemeById :: Monad m => ID -> StageTypecheckerPass m TypeScheme
+getTypeSchemeById idV = do
+    typeScheme <- typeSchemeMap . at idV & use
+    maybe (error "Can't find type scheme using an id.") return typeScheme
+
+
+setTypeSchemeById :: (Monad m) => ID -> TypeScheme -> StageTypecheckerPass m ()
+setTypeSchemeById idV typeScheme = do
+    typeSchemeMap . at idV ?= typeScheme
 
 
 debugPush :: (Monad m) => String -> StageTypecheckerPass m ()

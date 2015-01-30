@@ -84,5 +84,5 @@ prettyTypo = prettyNullable . map prettyTypo1
 
 prettyTypeMap :: TypeMap -> Doc
 prettyTypeMap tm = prettyNullableComma $ SM.elems $ SM.mapWithKey join tm
-  where join key (_, ty, _) = int key <+> text "⇒" <+> prettyType ty
+  where join key ty = int key <+> text "⇒" <+> prettyType ty
 
