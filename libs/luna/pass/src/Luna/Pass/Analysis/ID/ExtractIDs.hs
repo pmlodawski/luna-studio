@@ -65,13 +65,13 @@ extract ast = defaultTraverseM ast >> State.getIDs
 
 
 extractNodeExpr :: (Enumerated a, EIDDefaultTraversal m (LExpr a v))
-            => NodeExpr a v -> EIDPass m IntSet
+                => NodeExpr a v -> EIDPass m IntSet
 extractNodeExpr (NodeExpr.ASTExpr lexpr) = extract lexpr
 extractNodeExpr _                        = return def
 
 
 extractNodeExprs :: (Enumerated a, EIDDefaultTraversal m (LExpr a v))
-             => [NodeExpr a v] -> EIDPass m IntSet
+                 => [NodeExpr a v] -> EIDPass m IntSet
 extractNodeExprs []    = State.getIDs
 extractNodeExprs (h:t) = extractNodeExpr h >> extractNodeExprs t
 
