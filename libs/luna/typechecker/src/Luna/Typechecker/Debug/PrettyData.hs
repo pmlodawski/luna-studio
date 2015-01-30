@@ -5,13 +5,13 @@ module Luna.Typechecker.Debug.PrettyData (
   ) where
 
 
-import qualified  Data.Map.Strict         as SM
+import qualified  Data.IntMap.Strict      as SM
 import            Text.PrettyPrint        (
                       Doc, ($+$),(<+>), (<>),
                       brackets, char, empty, hsep, int, parens, punctuate, text
                   )
 
-import            Luna.Syntax.Enum (ID)
+import            Luna.Syntax.Enum        (ID)
 
 import            Luna.Typechecker.Data   (
                       TVar, Subst, Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..),

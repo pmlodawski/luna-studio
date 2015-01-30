@@ -2,19 +2,23 @@ module Luna.Typechecker.Data (
     TVar, Subst, Typo,
     Type(..), Predicate(..), Constraint(..), TypeScheme(..),
     TypeMap, TypeSchemeMap,
+    MapID,
     null_subst, init_typo, true_cons
   ) where
 
 
-import Data.Map.Strict  (Map)
 import Data.Monoid
+import Data.IntMap.Strict  (IntMap)
 
-import Luna.Syntax.Enum (ID)
+import Luna.Syntax.Enum    (ID)
 
+
+
+type MapID a       = IntMap a
 
 type TVar          = Int
-type TypeMap       = Map ID Type
-type TypeSchemeMap = Map ID TypeScheme
+type TypeMap       = MapID Type
+type TypeSchemeMap = MapID TypeScheme
 type Subst         = [(TVar, Type)]
 type Typo          = [(ID,TypeScheme)]
 
