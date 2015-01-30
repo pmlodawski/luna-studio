@@ -27,7 +27,7 @@ module Flowbox.Graphics.Mockup (
 import qualified Codec.Picture.Png                 as Juicy
 import qualified Codec.Picture.Types               as Juicy
 import qualified Data.Array.Accelerate             as A
-import qualified Data.Array.Accelerate.Array.Sugar as A
+import qualified Data.Array.Accelerate.Array.Sugar as As
 import           Data.Array.Accelerate.CUDA
 import qualified Data.Array.Accelerate.IO          as A
 import           Data.Bool
@@ -72,6 +72,7 @@ import qualified Flowbox.Graphics.Composition.Generator.Raster                  
 import           Flowbox.Graphics.Image.Channel                       as Channel
 import           Flowbox.Graphics.Composition.Color
 import           Flowbox.Graphics.Image.Image                         as Image
+import qualified Flowbox.Graphics.Image.Matte                         as Matte
 import           Flowbox.Graphics.Image.Error                         as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
 import           Flowbox.Graphics.Image.IO.OpenEXR                    (readFromEXR)
@@ -81,12 +82,16 @@ import           Flowbox.Graphics.Image.View                          as View
 import           Flowbox.Graphics.Utils.Utils
 import           Flowbox.Math.Matrix                                  as M
 import           Flowbox.Prelude                                      as P hiding (lookup)
+import qualified Data.Array.Accelerate.CUDA                           as CUDA
 import           Flowbox.Math.Function.Accelerate.BSpline             as BSpline
 import qualified Flowbox.Math.Function.CurveGUI                       as CurveGUI
 
 import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 import Control.PolyApplicative ((<<*>>))
 
+-- something should be done with this
+temporaryBackend :: M.Backend
+temporaryBackend = CUDA.run
 
 data SkewOrder = SkewXY | SkewYX
 
@@ -128,7 +133,7 @@ testSaveRGBA filename r g b a = saveImageJuicy filename $ compute' run $ M.map A
 
 saveImageJuicy :: forall e a.
                         (SV.Storable a, Elt e,
-                         A.Vectors (A.EltRepr e)
+                         A.Vectors (As.EltRepr e)
                          ~ ((), SV.Vector a)) =>
                         FilePath -> A.Array ((Z :. Int) :. Int) e -> IO ()
 saveImageJuicy file matrix = do
@@ -138,9 +143,8 @@ saveImageJuicy file matrix = do
 
 
 -- == HELPERS
-
 onEach :: (A.Exp Double -> A.Exp Double) -> Image -> Image
-onEach f = Image.map (View.map $ Channel.unsafeMap (Channel.FunDouble f))
+onEach f = Image.map (View.map $ Channel.unsafeMap (Channel.FunDouble f)) 
 
 onEachRGBA :: (A.Exp Double -> A.Exp Double)
            -> (A.Exp Double -> A.Exp Double)
@@ -155,6 +159,30 @@ onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
           a = updateChan fa "rgba.a"
           updateChan f = Channel.unsafeMap (Channel.FunDouble f) . getChan
           getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
+
+onEachRGBAChannels :: (Channel -> Channel)
+                   -> (Channel -> Channel)
+                   -> (Channel -> Channel)
+                   -> (Channel -> Channel)
+                   -> Image
+                   -> Image
+onEachRGBAChannels fr fg fb fa img = img'
+  where ChannelFloat _ (MatrixData r) = fr (getChan "rgba.r")
+        ChannelFloat _ (MatrixData g) = fg (getChan "rgba.g")
+        ChannelFloat _ (MatrixData b) = fb (getChan "rgba.b")
+        ChannelFloat _ (MatrixData a) = fa (getChan "rgba.a")
+
+        Right view = lookupPrimary img
+
+        view' = insertChannelFloats view [
+                    ("rgba.r", r)
+                  , ("rgba.g", g)
+                  , ("rgba.b", b)
+                  , ("rgba.a", a)
+                ]
+
+        img' = Image.insertPrimary view' img
+        getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
 
 onEachColorRGB :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double)) -> Image -> Image
 onEachColorRGB f img = img'
@@ -231,6 +259,137 @@ edgeBlur channelName blurType kernelSize edgeMultiplier image =
 --              in apply (gauss $ variable psigma) dst
 --          domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
 --          process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
+
+imageMatteLuna :: FilePath -> String -> IO (Matte.Matte Double)
+imageMatteLuna path channelName = do
+  img <- realReadLuna path
+  let channel = getChannelFromPrimaryLuna channelName img
+  case channel of
+    Right (Just channel) -> return $ Matte.imageMatteDouble channel
+    _ -> error "cannot load mask from the given channel"
+
+vectorMatteLuna :: Mask2 Double -> Matte.Matte Double
+vectorMatteLuna mask = Matte.VectorMatte $ convertMask mask
+
+unpackAcc :: (A.Exp Int,A.Exp Int) -> (Int,Int)
+unpackAcc (x,y) = 
+  let
+    pair = A.lift (x,y) :: A.Exp (Int,Int)
+    scalarPair = A.unit pair :: A.Acc (A.Scalar (Int,Int))
+    l = temporaryBackend $ scalarPair :: A.Scalar (Int,Int)
+    sh' = A.toList l :: [(Int,Int)]
+    x' = fst $ head sh'
+    y' = snd $ head sh'   
+  in
+    (x',y')
+
+adjustMatte :: Matrix2 Double -> Matrix2 Double -> Matrix2 Double
+adjustMatte mat matte = matte'
+  where
+    sh = M.shape matte
+    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+
+    matte' = M.generate (M.shape mat) (\sh ->
+      let
+        A.Z A.:. x A.:. y = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+      in
+        (x A.<* h A.&&* y A.<* w) A.? (matte M.! sh, 0.0))
+
+applyMatteFloat :: (A.Exp Double -> A.Exp Double) -> Matte.Matte Double -> Channel -> Channel
+applyMatteFloat f m (ChannelFloat name (MatrixData mat)) = ChannelFloat name (MatrixData mat')
+  where
+    sh = M.shape mat
+    A.Z A.:. x A.:. y = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+    (h,w) = unpackAcc (x,y)
+    matte = Matte.matteToMatrix h w m
+    mat' = applyToMatrix f (adjustMatte mat matte) mat
+
+applyMatteFloat f m (ChannelFloat name (DiscreteData shader)) = ChannelFloat name (DiscreteData shader')
+  where
+    Shader (Grid h' w') _ = shader
+    (h,w) = unpackAcc (h',w')
+    matte = Matte.matteToDiscrete h w m
+    shader' = applyToShader f matte shader
+
+applyMatteFloat f m (ChannelFloat name (ContinuousData shader)) = ChannelFloat name (ContinuousData shader')
+  where
+    Shader (Grid h' w') _ = shader
+    (h,w) = unpackAcc (h',w')
+    matte = Matte.matteToContinuous h w m
+    shader' = applyToShader f matte shader
+
+-- looks strange, but is necessary because of the weird accelerate behaviour 
+maskedApp :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> A.Exp a -> A.Exp a -> A.Exp a
+maskedApp f a b = (a A.==* 0) A.? (b,b + a*(delta f b))
+-- won't work, no idea what is the reason of that
+--aux a b f = b + a*(delta f b)
+  where
+    delta :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> (A.Exp a) -> (A.Exp a)
+    delta f x = (f x) - x
+
+applyToShader :: (IsNum b, A.Elt a, A.Elt b) => (A.Exp b -> A.Exp b) -> CartesianShader (A.Exp a) (A.Exp b) -> CartesianShader (A.Exp a) (A.Exp b) -> CartesianShader (A.Exp a) (A.Exp b)
+applyToShader f matte mat = combineWith (maskedApp f) matte mat
+
+applyToMatrix :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> Matrix2 a -> Matrix2 a -> Matrix2 a
+applyToMatrix f matte mat = (M.zipWith (\x -> \y -> (maskedApp f x y)) matte) mat
+
+offsetMatteLuna :: Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
+offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img = 
+  case matte of
+    Nothing -> onEachRGBA (offset r) (offset g) (offset b) (offset a) img
+    Just m ->
+        onEachRGBAChannels (applyMatteFloat (offset r) m)
+                           (applyMatteFloat (offset g) m)
+                           (applyMatteFloat (offset b) m)
+                           (applyMatteFloat (offset a) m) img
+
+contrastMatteLuna :: Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
+contrastMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img = 
+  case matte of
+    Nothing -> onEachRGBA (contrast r) (contrast g) (contrast b) (contrast a) img
+    Just m ->
+        onEachRGBAChannels (applyMatteFloat (contrast r) m)
+                           (applyMatteFloat (contrast g) m)
+                           (applyMatteFloat (contrast b) m)
+                           (applyMatteFloat (contrast a) m) img
+                           
+exposureMatteLuna :: Color.RGBA Double -> Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
+exposureMatteLuna x@(fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
+                  y@(fmap variable -> Color.RGBA exR exG exB exA) matte img =
+                    case matte of
+                      Nothing -> onEachRGBA (exposure blackpointR exR) (exposure blackpointG exG) (exposure blackpointB exB) id img -- (exposure blackpointA exA)
+                      Just m ->
+                          onEachRGBAChannels (applyMatteFloat (exposure blackpointR exR) m)
+                                             (applyMatteFloat (exposure blackpointG exG) m)
+                                             (applyMatteFloat (exposure blackpointB exB) m)
+                                             (applyMatteFloat (exposure blackpointA exA) m) img
+
+gradeLunaColorMatte :: VPS (Color.RGBA Double)
+                    -> VPS (Color.RGBA Double)
+                    -> VPS (Color.RGBA Double)
+                    -> VPS (Color.RGBA Double)
+                    -> Color.RGBA Double
+                    -> Color.RGBA Double
+                    -> Color.RGBA Double
+                    -> Maybe (Matte.Matte Double)
+                    -> Image
+                    -> Image
+gradeLunaColorMatte (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
+                    (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
+                    (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
+                    (VPS (fmap variable -> Color.RGBA gainR gainG gainB gainA))
+                    (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
+                    (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
+                    (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) matte img =
+                      case matte of
+                        Nothing -> onEachRGBA (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
+                                              (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
+                                              (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
+                                              id img -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+                        Just m -> onEachRGBAChannels (applyMatteFloat (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR) m)
+                                                     (applyMatteFloat (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG) m)
+                                                     (applyMatteFloat (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB) m)
+                                                     (applyMatteFloat (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA) m) img
 
 offsetLuna :: Color.RGBA Double -> Image -> Image
 offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) id -- (offset a)
@@ -504,8 +663,8 @@ rotateLuna (variable -> phi) = onEachChannel rotateChannel
 
 rotateAtLuna :: Point2 Double -> Double -> Image -> Image
 rotateAtLuna (fmap variable -> (Point2 x y)) (variable -> phi) = onEachChannel rotateChannel
-    where vBefore = V2 (-x) y
-          vAfter  = V2 x (-y)
+    where vBefore = V2 x y
+          vAfter  = V2 (-x) (-y)
           mask    = Nothing
           rotateChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
@@ -1251,7 +1410,12 @@ multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap vari
 getChannelLuna :: String -> String -> Image -> Image.Result (Maybe Channel)
 getChannelLuna viewName channelName img = case Image.lookup viewName img of
     Right view -> View.get view channelName
-    _         -> Left $ Image.ViewLookupError viewName
+    _          -> Left $ Image.ViewLookupError viewName
+
+getChannelFromPrimaryLuna :: String -> Image -> Image.Result (Maybe Channel)
+getChannelFromPrimaryLuna channelName img = case Image.lookupPrimary img of
+    Right view -> View.get view channelName
+    _          -> Left $ Image.ViewLookupError "primary view"
 
 -- FIXME[KM]: [iup]
 --insertChannelLuna :: String -> Channel -> Image -> Image
@@ -1330,4 +1494,3 @@ realReadLuna path            = loadImageLuna path
 testColorCC :: Color5 -> Image
 testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
     constantLuna 512 512 $ Color.RGBA (r*x) (g*x) (b*x) (a*x)
-
