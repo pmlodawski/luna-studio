@@ -4,10 +4,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes       #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Luna.Pass.Transform.Graph.GCNodeProperties.GCNodeProperties where
 
@@ -15,19 +16,14 @@ import           Control.Monad.State
 import           Data.IntSet         ((\\))
 import qualified Data.IntSet         as IntSet
 
-import           Flowbox.Control.Error
-import           Flowbox.Prelude
+import           Flowbox.Prelude                            hiding (Traversal)
 import           Flowbox.System.Log.Logger
+import           Luna.Pass.Analysis.ID.ExtractIDs           (EIDDefaultTraversal, EIDTraversal)
 import qualified Luna.Pass.Analysis.ID.ExtractIDs           as ExtractIDs
-import           Luna.Pass.Pass                             (Pass)
-import           Luna.Pass.Pass                             (PassMonad)
-import qualified Luna.Pass.Pass                             as Pass
 import qualified Luna.Syntax.Enum                           as Enum
 import           Luna.Syntax.Graph.PropertyMap              (PropertyMap)
 import qualified Luna.Syntax.Graph.PropertyMap              as PropertyMap
 import qualified Luna.Syntax.Graph.View.Default.DefaultsMap as DefaultsMap
-import           Luna.Syntax.Module                         (LModule)
-import           Luna.System.Pragma.Store                   (MonadPragmaStore)
 
 
 
@@ -35,17 +31,9 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-type GCNodePropertiesPass m result = (Monad m, MonadIO m)
-                                   => PassMonad Pass.NoState m result
-
-
-run :: (Eq a, Enum.Enumerated a, MonadPragmaStore m, MonadIO m)
-    => LModule a e -> PropertyMap a e -> EitherT Pass.PassError m (PropertyMap a e)
-run = Pass.run_ (Pass.Info "GCNodeProperties") Pass.NoState .: gcIds
-
-
-gcIds :: Enum.Enumerated a
-      => LModule a e -> PropertyMap a e -> GCNodePropertiesPass m (PropertyMap a e)
+gcIds :: (Enum.Enumerated a, MonadIO m,
+          EIDDefaultTraversal Identity a1, EIDTraversal Identity v)
+      => a1 -> PropertyMap a v -> m (PropertyMap a v)
 gcIds module_ propertyMap = do
     let ids                = ExtractIDs.run module_
         existingIds        = IntSet.union ids $ IntSet.map (* (-1)) ids
@@ -56,5 +44,5 @@ gcIds module_ propertyMap = do
         pmIds              = PropertyMap.keysSet propertyMap
         orphans            = pmIds \\ IntSet.unions [existingIds, defaultsContentIds, defaultsIds]
     when (not $ IntSet.null orphans) $
-        logger warning $ concat ["GCNodePropertiesPass: found ", show $ IntSet.size orphans, " orphaned ids: ", show orphans]
+        logger warning $ concat ["GCNodeProperties: found ", show $ IntSet.size orphans, " orphaned ids: ", show orphans]
     return $ foldr PropertyMap.delete propertyMap $ IntSet.toList orphans
