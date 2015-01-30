@@ -89,6 +89,75 @@ con2TypeName conName = do
 appEs :: Exp -> [Exp] -> Exp
 appEs = foldl AppE
 
+--generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++ sigs 
+--                                                                              ++ getterDefs 
+--                                                                              ++ setterDefs 
+--                                                                              -- ++ fncDefs 
+--    where
+--    unit = mkName "x"
+--    obj  = mkName "obj"
+
+--    rezipPatGens conName (fieldName, listGen) = (fieldName, [(conName, listGen)])
+--    prepareGetters (conName, fieldNames) = fmap (rezipPatGens conName) $ mkArgPatGens fieldNames
+--    mkPatMap   = Map.fromList . prepareGetters
+
+--    consPatMap :: Map String [(Name, PatCons)] -- Map FieldName [(ConsName, PatCons)]
+--    consPatMap = Map.unionsWith (++)
+--               $ map mkPatMap fieldDescs
+--    fieldNames  = Map.keys consPatMap
+--    setterNames = fmap Naming.setter fieldNames
+
+--    --accessors
+--    mkGetter :: String -> [(Name, PatCons)] -> Dec
+--    mkGetter fieldName descs = FunD accName [Clause [VarP obj] (NormalB $ CaseE (VarE obj) cases) []] where
+--        accName  = mkName $ Naming.mkFieldGetter typeName fieldName
+--        cases    = fmap (uncurry $ mkCase fieldName) descs
+--        mkCase fieldName = mkAccCase (VarE unit) unit
+
+--    mkSetter :: String -> [(Name, PatCons)] -> Dec
+--    mkSetter fieldName descs = FunD accName [Clause [VarP obj, VarP unit] (NormalB $ CaseE (VarE obj) cases) []] where
+--        accName  = mkName $ Naming.mkFieldSetter typeName fieldName
+--        cases    = fmap (uncurry $ mkCase fieldName) descs
+--        mkCase fieldName conName fieldGen = mkAccCase cons (mkName "_") conName fieldGen where
+--            cons = appEs (ConE conName) (fmap VarE $ runPatCons fieldGen unit)
+
+--    mkAccessor fieldName descs = [mkGetter fieldName descs, mkSetter fieldName descs]
+
+--    mkAccCase result fieldName conName fieldGen = Match (ConP conName conPats) (NormalB result) [] where
+--        conPats = fmap VarP $ runPatCons fieldGen fieldName
+
+--    accessors = concat $ fmap (uncurry mkAccessor) $ Map.assocs consPatMap
+
+--    -- sigs
+--    getterSigs = fmap (mkSimpleMemSig0 typeName) fieldNames
+--    setterSigs = fmap (mkSimpleMemSig1 typeName) setterNames
+--    sigs       = getterSigs ++ setterSigs
+
+--    --defs
+--    getDefNames = fmap (mkGetterDef typeName) fieldNames
+--    setDefNames = fmap (mkSetterDef typeName) fieldNames
+
+--    getterDefs = fmap getGetter getDefNames
+--        where getGetter (fieldName, accName) = mkSimpleMemDef 1 typeName fieldName accName
+
+--    setterDefs = fmap getSetter setDefNames
+--        where getSetter (fieldName, accName) = mkSimpleMemDef 2 typeName fieldName accName
+--    --fncDefs    = fmap (mkFncDef typeName) fieldNames
+
+--    mkGetterDef typeName fieldName = (fieldName, accName) where
+--        accName    = mkName $ Naming.mkFieldGetter typeName fieldName
+
+--    mkSetterDef typeName fieldName = (setFieldName, accName) where
+--        setFieldName = Naming.setter fieldName
+--        accName      = mkName $ Naming.mkFieldSetter typeName fieldName
+
+
+    --dokonczyc!!!
+
+    --mkFncDef typeName fieldName = TupE (VarE ) where
+    --    getterName = mkName $ Naming.mkFieldGetter typeName fieldName
+    --    setterName = mkName $ Naming.mkFieldGetter typeName fieldName
+
 generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++ sigs 
                                                                               ++ getterDefs 
                                                                               ++ setterDefs 
@@ -144,10 +213,6 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     mkSetterDef typeName fieldName = mkSimpleMemDef 2 typeName setterName accName where
         setterName = Naming.setter fieldName
         accName    = mkName $ Naming.mkFieldSetter typeName fieldName
-
-    --mkFncDef typeName fieldName = TupE (VarE ) where
-    --    getterName = mkName $ Naming.mkFieldGetter typeName fieldName
-    --    setterName = mkName $ Naming.mkFieldGetter typeName fieldName
 
 
 newtype PatCons = PatCons { runPatCons :: Name -> [Name] }
