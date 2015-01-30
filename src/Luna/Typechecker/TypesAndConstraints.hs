@@ -5,7 +5,6 @@ module Luna.Typechecker.TypesAndConstraints (
 
 import Luna.Typechecker.Data
 import Luna.Typechecker.Inference.Class       (StageTypecheckerPass)
-import Luna.Typechecker.StageTypecheckerState (report_error)
 import Luna.Typechecker.Tools                 (without)
 
 
@@ -20,12 +19,8 @@ instance TypesAndConstraints Predicate where
     apply s (t1 `Subsume` t2) = do t1' <- apply s t1
                                    t2' <- apply s t2
                                    return (t1' `Subsume` t2')
-    apply s (Reckind t l t')  = do t1 <- apply s t
-                                   t1' <- apply s t'
-                                   return (Reckind t1 l t1')
     tv TRUE                   = []
     tv (t1 `Subsume` t2)      = tv t1 ++ tv t2
-    tv (Reckind t l t')       = tv t ++ tv t'
 
 
 instance TypesAndConstraints c => TypesAndConstraints [c] where
@@ -50,16 +45,8 @@ instance TypesAndConstraints Type where
     apply s (t1 `Fun` t2)     = do t1' <- apply s t1
                                    t2' <- apply s t2
                                    return (t1' `Fun` t2')
-    apply s (Record [])        = return (Record [])
-    apply s (Record ((l,t):f)) = do f' <- apply s (Record f)
-                                    case f' of
-                                      Record f'' -> do t' <- apply s t
-                                                       return (Record ((l,t'):f''))
-                                      _          -> report_error "apply:uncompatible types" (Record [])
     tv (TV tvl)                = [tvl]
     tv (t1 `Fun` t2)          = tv t1 ++ tv t2
-    tv (Record [])            = []
-    tv (Record ((l,t):f))     = tv t ++ tv (Record f)
 
 
 instance TypesAndConstraints TypeScheme where

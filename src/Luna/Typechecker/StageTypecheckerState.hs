@@ -28,8 +28,7 @@ import            Luna.Syntax.Enum                              (ID)
 import qualified  Luna.Syntax.Enum                              as Enum
 
 import            Luna.Typechecker.Data                         (
-                      TVar, Var,
-                      Subst, Typo,
+                      TVar, Subst, Typo,
                       Type(..), Constraint(..), TypeScheme(..)
                   )
 import            Luna.Typechecker.Inference.Class              (StageTypecheckerCtx, StageTypecheckerPass)
@@ -68,7 +67,7 @@ insertNewMonoTypeVariable labID = do
     typo . _head %= flip insert typeEnvElem
     return $ TV tvarID
 
-insert :: Typo -> (Var, TypeScheme) -> Typo
+insert :: Typo -> (ID, TypeScheme) -> Typo
 insert a (x,t) = (x,t):a
 
 getTypeById :: Monad m => ID -> StageTypecheckerPass m Type
