@@ -21,6 +21,7 @@ import qualified Luna.Parser.State as ParserState
 import qualified Luna.Data.ASTInfo  as ASTInfo
 import qualified Luna.Parser.Pragma as Pragma
 import qualified Luna.Parser.Parser as Parser
+import qualified Luna.Parser.Pragma as Pragma
 import           Luna.Syntax.Name   (TName(TName))
 import qualified Luna.Pass.Analysis.Struct as SA
 import qualified Luna.Pass.Transform.Parse.Stage2 as Stage2
@@ -61,6 +62,9 @@ main = do
     Session.runT $ do
 
         Parser.init
+
+        Pragma.enable (Pragma.orphanNames)
+        Pragma.pop    (Pragma.orphanNames)
 
         result <- runEitherT $ do
             printHeader "Stage1"
