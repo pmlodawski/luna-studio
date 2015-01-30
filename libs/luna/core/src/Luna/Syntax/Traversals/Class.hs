@@ -299,7 +299,7 @@ instance ( Traversal base m v v'
         Expr.Typed       cls     expr          -> Expr.Typed       <$> traverseM b cls    <*> traverseM b expr         
         Expr.Assignment  dst     src           -> Expr.Assignment  <$> traverseM b dst    <*> traverseM b src          
         Expr.Accessor    acc     src           -> Expr.Accessor    <$> traverseM b acc    <*> traverseM b src          
-        Expr.Ref         ref                   -> Expr.Ref         <$> traverseM b ref                  
+        Expr.Curry       ref                   -> Expr.Curry       <$> traverseM b ref                  
         Expr.List        elems                 -> Expr.List        <$> traverseM b elems                
         Expr.Tuple       items                 -> Expr.Tuple       <$> traverseM b items                
         Expr.Grouped     expr                  -> Expr.Grouped     <$> traverseM b expr                 

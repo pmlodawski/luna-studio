@@ -37,9 +37,17 @@ wild    = labeled (Type.Wildcard <$  Tok.wildcard)
 
 appBase = choice [ var, con ]
 
-entT    = choice [ var
+entT    = choice [ labeled meta
+                 , var
                  , con
                  , tuple
                  , list
                  , wild
                  ]
+
+meta = Type.Meta <$ Tok.tkwMeta <*> labeled metaBase
+
+metaBase = choice [ Type.MetaVar  <$> Tok.typeVarIdent
+                  , Type.MetaCons <$> Tok.typeIdent
+                  , Type.MetaRoot <$  Tok.metaRoot
+                  ]

@@ -10,6 +10,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE TypeOperators #-}
 
 
 module Luna.Pass.Transform.Desugar.ImplicitCalls where
@@ -52,20 +55,26 @@ import           Luna.Syntax.Name.Pattern     (NamePat(NamePat), Segment(Segment
 import           Luna.Data.StructInfo         (StructInfo)
 import qualified Luna.Data.StructInfo         as StructInfo
 import Control.Monad (join)
+import           GHC.TypeLits
+import           Data.Typeable
 
 ----------------------------------------------------------------------
 -- Base types
 ----------------------------------------------------------------------
 
 data ImplCalls = ImplCalls
-data ImplCallsOmit = ImplCallsOmit
+data ImplCallsOmit (n :: Nat) = ImplCallsOmit
+
+implCallsOmit :: Proxy n -> ImplCallsOmit n
+implCallsOmit _ = ImplCallsOmit
 
 type ISPass                 m     = PassMonad ASTInfo m
-type ISCtx              lab m a   = (Monad m, Enumerated lab, ISTraversal m a, ISTraversalOmit m a, Num lab)
+type ISCtx              lab m n a = (Monad m, Enumerated lab, ISTraversal m a, ISTraversalOmit m n a, Num lab)
+type ISCtx2             lab m a   = (Monad m, Enumerated lab, ISTraversal m a, Num lab)
 type ISTraversal            m a   = (PassCtx m, AST.Traversal        ImplCalls (ISPass m) a a)
-type ISTraversalOmit        m a   = (PassCtx m, AST.Traversal        ImplCallsOmit (ISPass m) a a)
+type ISTraversalOmit        m n a = (PassCtx m, AST.Traversal        (ImplCallsOmit n) (ISPass m) a a)
 type ISDefaultTraversal     m a   = (PassCtx m, AST.DefaultTraversal ImplCalls (ISPass m) a a)
-type ISDefaultTraversalOmit m a   = (PassCtx m, AST.DefaultTraversal ImplCallsOmit (ISPass m) a a)
+type ISDefaultTraversalOmit m n a = (PassCtx m, AST.DefaultTraversal (ImplCallsOmit n) (ISPass m) a a)
 
 
 ------------------------------------------------------------------------
@@ -78,8 +87,8 @@ traverseM = AST.traverseM ImplCalls
 defaultTraverseM :: (ISDefaultTraversal m a) => a -> ISPass m a
 defaultTraverseM = AST.defaultTraverseM ImplCalls
 
-defaultTraverseOmitM :: (ISDefaultTraversalOmit m a) => a -> ISPass m a
-defaultTraverseOmitM = AST.defaultTraverseM ImplCallsOmit
+defaultTraverseOmitM :: (ISDefaultTraversalOmit m n a) => Proxy n -> a -> ISPass m a
+defaultTraverseOmitM p = AST.defaultTraverseM (implCallsOmit p)
 
 
 ------------------------------------------------------------------------
@@ -93,27 +102,31 @@ passRunner ai ast = do
     put ai
     (,) <$> defaultTraverseM ast <*> get
 
-exprScopes :: ISCtx lab m a => LExpr lab a -> ISPass m (LExpr lab a)
+exprScopes :: (ISCtx lab m 1 a) => LExpr lab a -> ISPass m (LExpr lab a)
 exprScopes ast@(Label lab e) = case e of
-    Expr.Cons     {} -> Label 999 <$> (Expr.app <$> continue <*> pure [])
-    Expr.Accessor {} -> Label 999 <$> (Expr.app <$> continue <*> pure [])
-    Expr.App      {} -> defaultTraverseOmitM ast -- Label 999 <$> (Expr.app <$> defaultTraverseOmitM ast <*> pure [])
+    Expr.Cons     {} -> Label 998 <$> (Expr.app <$> continue <*> pure [])
+    Expr.Accessor {} -> Label 997 <$> (Expr.app <$> continue <*> pure [])
+    Expr.Curry (Label lab' acc@(Expr.Accessor {})) -> Label lab . Expr.Curry <$> (Label lab' <$> defaultTraverseOmitM (Proxy::Proxy 1) acc)
+    Expr.App (NamePat Nothing (Segment base args) []) -> 
+        (Label lab . Expr.App) <$> (NamePat Nothing <$> (Segment <$> defaultTraverseOmitM (Proxy::Proxy 1) base 
+                                                                 <*> defaultTraverseM args)
+                                                    <*> pure [])
     _                -> continue
     where continue = defaultTraverseM ast
           id       = Enum.id lab
-
-
-exprScopesOmit :: ISCtx lab m a => LExpr lab a -> ISPass m (LExpr lab a)
-exprScopesOmit = defaultTraverseM
 
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
 
-instance ISCtx lab m a => AST.Traversal ImplCalls (ISPass m) (LExpr lab a) (LExpr lab a) where
+instance (ISCtx lab m 1 a) => AST.Traversal ImplCalls (ISPass m) (LExpr lab a) (LExpr lab a) where
     traverseM _ = exprScopes
 
 
-instance ISCtx lab m a => AST.Traversal ImplCallsOmit (ISPass m) (LExpr lab a) (LExpr lab a) where
-    traverseM _ = exprScopesOmit
+instance (ISCtx lab m n a, ISTraversalOmit m (n-1) a, ISTraversalOmit m (n-1) (LExpr lab a)) => AST.Traversal (ImplCallsOmit n) (ISPass m) (LExpr lab a) (LExpr lab a) where
+    traverseM _ = defaultTraverseOmitM (Proxy :: Proxy (n-1))
+
+
+instance (ISCtx lab m 1 a) => AST.Traversal (ImplCallsOmit 1) (ISPass m) (LExpr lab a) (LExpr lab a) where
+    traverseM _ = defaultTraverseM
 

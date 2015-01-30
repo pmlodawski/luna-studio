@@ -96,20 +96,23 @@ passRunner ai si ast = do
 
 exprScopes :: ISCtx lab m a => LExpr lab a -> ISPass m (LExpr lab a)
 exprScopes ast@(Label lab e) = case e of
-	Expr.Var (Expr.Variable name v) -> do
-		si <- view structInfo <$> get
-		let parentMap = view StructInfo.parent si
-		    aliasMap  = view StructInfo.alias si
-		    pid       = view (at id) parentMap
-		    tgt       = fmap (view StructInfo.target) $ view (at id) aliasMap
-		    tgtPid    = join $ fmap (\tid -> view (at tid) parentMap) tgt
+    Expr.Var (Expr.Variable name v) -> fmake ast id
+    --Expr.Curry v@(Label lab' (Expr.Var {}) ->  fmake v
+    _                               -> continue
+    where continue = defaultTraverseM ast
 
-		if pid == tgtPid then return ast
-                         else return $ Label (-888) $ Expr.Accessor (convert name) (Label lab $ Expr.Var $ Expr.Variable "self" v)
-	_                               -> continue
-	where continue = defaultTraverseM ast
-	      id       = Enum.id lab
+fmake ast@(Label lab e) f = case e of
+    Expr.Var (Expr.Variable name v) -> do
+        si <- view structInfo <$> get
+        let parentMap = view StructInfo.parent si
+            aliasMap  = view StructInfo.alias si
+            pid       = view (at id) parentMap
+            tgt       = fmap (view StructInfo.target) $ view (at id) aliasMap
+            tgtPid    = join $ fmap (\tid -> view (at tid) parentMap) tgt
 
+        if pid == tgtPid then return ast
+                         else return $ Label (-888) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v)
+    where id = Enum.id lab
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
