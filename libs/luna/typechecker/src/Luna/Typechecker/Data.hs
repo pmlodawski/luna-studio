@@ -1,5 +1,8 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Luna.Typechecker.Data (
-    TVar, Subst, Typo,
+    TVar(..), tvarNum,
+    Subst, Typo,
     Type(..), Predicate(..), Constraint(..), TypeScheme(..),
     TypeMap, TypeSchemeMap,
     MapID,
@@ -7,18 +10,32 @@ module Luna.Typechecker.Data (
   ) where
 
 
+import Control.Lens
+
 import Data.Monoid
-import Data.IntMap.Strict  (IntMap)
+import Data.IntMap.Strict   (IntMap)
+import Data.Wrapper         (Pack(..), Unpack(..))
 
-import Luna.Syntax.Enum    (ID)
+import Luna.Syntax.Enum     (ID)
 
 
 
-type MapID a       = IntMap a
+type MapID a        = IntMap a
+type TypeMap        = MapID Type
+type TypeSchemeMap  = MapID TypeScheme
 
-type TVar          = Int
-type TypeMap       = MapID Type
-type TypeSchemeMap = MapID TypeScheme
+newtype TVar        = TVar { fromTVar :: Int }
+                    deriving (Eq)
+
+instance Unpack TVar Int  where unpack (TVar a) = a
+instance Pack   Int TVar  where pack a          = (TVar a)
+instance Show   TVar      where show (TVar x) = show x
+
+tvarNum :: Iso' TVar Int
+tvarNum = iso fromTVar TVar
+
+
+
 type Subst         = [(TVar, Type)]
 type Typo          = [(ID,TypeScheme)]
 
