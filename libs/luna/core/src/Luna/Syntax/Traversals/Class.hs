@@ -25,7 +25,7 @@ import qualified Luna.Syntax.Module       as Module
 import           Luna.Syntax.Unit         (Unit(Unit))
 import           Luna.Syntax.Arg          (LArg, Arg(Arg))
 import qualified Luna.Syntax.Type         as Type
-import           Luna.Syntax.Type         (LType, Type)
+import           Luna.Syntax.Type         (LType, Type, LMeta, Meta)
 import           Luna.Syntax.Name         (TName, VName, CName, TVName)
 import           Luna.Syntax.Name.Path    (NamePath, QualPath)
 import           Luna.Syntax.Native       (Native)
@@ -243,6 +243,9 @@ instance (Traversal base m (LType a) (LType a')) => DefaultTraversal base m (Typ
         Type.Wildcard               -> pure Type.Wildcard
 
 
+instance DefaultTraversal base m Meta Meta where
+    defaultTraverseM _ = pure
+
 -- ----- Arg -----
 
 instance ( Traversal base m (LPat a) (LPat a')
@@ -290,6 +293,7 @@ instance ( Traversal base m v v'
          , Traversal base m (NamePat (LExpr lab v) (Expr.AppArg (LExpr lab v))) (NamePat (LExpr lab' v') (Expr.AppArg (LExpr lab' v')))
          , Traversal base m (Expr.Variable v) (Expr.Variable v')
          , Traversal base m (Expr.FieldUpd lab v) (Expr.FieldUpd lab' v')
+         , Traversal base m (LMeta lab) (LMeta lab')
          ) => DefaultTraversal base m (Expr lab v) (Expr lab' v') where
     defaultTraverseM b = \case
         Expr.Lambda      inputs  output   body -> Expr.Lambda      <$> traverseM b inputs <*> traverseM b output   <*> traverseM b body
@@ -300,6 +304,7 @@ instance ( Traversal base m v v'
         Expr.Assignment  dst     src           -> Expr.Assignment  <$> traverseM b dst    <*> traverseM b src          
         Expr.Accessor    acc     src           -> Expr.Accessor    <$> traverseM b acc    <*> traverseM b src          
         Expr.Curry       ref                   -> Expr.Curry       <$> traverseM b ref                  
+        Expr.Meta        meta                  -> Expr.Meta        <$> traverseM b meta
         Expr.List        elems                 -> Expr.List        <$> traverseM b elems                
         Expr.Tuple       items                 -> Expr.Tuple       <$> traverseM b items                
         Expr.Grouped     expr                  -> Expr.Grouped     <$> traverseM b expr                 

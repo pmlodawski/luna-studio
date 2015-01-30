@@ -414,27 +414,32 @@ genBody = \case
 
 --genExpr :: Ctx m a v => LExpr a v -> PassResult m HE
 genExpr (Label lab expr) = case expr of
+    Expr.Curry e                             -> genExpr e
+    Expr.Grouped expr                        -> genExpr expr
+    Expr.Assignment   dst src                -> HE.Arrow <$> genPat dst <*> genExpr src
+    Expr.Lit          value                  -> mkVal <$> genLit value
+    Expr.Tuple        items                  -> mkVal . HE.Tuple <$> mapM genExpr items
     Expr.Var (Expr.Variable name _)          -> pure . HE.Var $ Naming.mkVar $ hash name
     Expr.Cons  name                          -> pure $ HE.Var $ Naming.mkCons $ hash name
-    Expr.Case  expr match                    -> mkFlattenCtx <$> (HE.AppE <$> lamFunc <*> genExpr expr)
-                                                   where passVar = HE.VarE "a"
-                                                         caseE   = HE.CaseE passVar <$> body'
-                                                         body    = mapM genMatch match
-                                                         lam     = HE.Lambda [passVar] <$> caseE
-                                                         lamFunc = mkLiftf1 <$> lam
-                                                         body'   = (\a -> a ++ [HE.Match HE.WildP (HE.AppE (HE.VarE "error") (HE.Lit $ HLit.String "TODO (!!!) Main.luna: path/Main.luna:(...,...)-(...,...): Non-exhaustive patterns in case"))]) <$> body
-                                                         genMatch (unwrap -> Expr.Match pat body) = HE.Match <$> genPat pat <*> (HE.DoBlock <$> mapM genExpr body)
+    Expr.Accessor     acc src                -> HE.AppE <$> (pure $ mkMemberGetter $ hash acc) <*> genExpr src --(get0 <$> genExpr src))
+    Expr.Typed       cls expr                -> (\e t -> HE.MacroE "typed" [e,t]) <$> genExpr expr <*> genType cls
+    Expr.Case  expr match -> mkFlattenCtx <$> (HE.AppE <$> lamFunc <*> genExpr expr)
+        where passVar = HE.VarE "a"
+              caseE   = HE.CaseE passVar <$> body'
+              body    = mapM genMatch match
+              lam     = HE.Lambda [passVar] <$> caseE
+              lamFunc = mkLiftf1 <$> lam
+              body'   = (\a -> a ++ [HE.Match HE.WildP (HE.AppE (HE.VarE "error") (HE.Lit $ HLit.String "TODO (!!!) Main.luna: path/Main.luna:(...,...)-(...,...): Non-exhaustive patterns in case"))]) <$> body
+              genMatch (unwrap -> Expr.Match pat body) = HE.Match <$> genPat pat <*> (HE.DoBlock <$> mapM genExpr body)
 
-    Expr.Lambda inputs output body         -> do
-                                              let args = fmap unwrap inputs
-                                              pats   <- genFuncPats args True
-                                              sig    <- genFuncSig args
-                                              hbody  <- mapM genExpr body
-                                              return $ HE.app (HE.VarE "mkLam") [sig, HE.Lambda pats $ genBody hbody]
+    Expr.Lambda inputs output body -> do
+        pats   <- genFuncPats args True
+        sig    <- genFuncSig args
+        hbody  <- mapM genExpr body
+        return $ HE.app (HE.VarE "mkLam") [sig, HE.Lambda pats $ genBody hbody]
+      where args = fmap unwrap inputs
 
-    Expr.Grouped expr                      -> genExpr expr
-    Expr.Assignment   dst src              -> HE.Arrow <$> genPat dst <*> genExpr src
-    Expr.RecUpd  name fieldUpdts           -> HE.Arrow (HE.Var $ Naming.mkVar $ hash name) <$> case fieldUpdts of
+    Expr.RecUpd  name fieldUpdts -> HE.Arrow (HE.Var $ Naming.mkVar $ hash name) <$> case fieldUpdts of
         (fieldUpdt:[]) -> genField fieldUpdt
         _              -> Pass.fail "Multi fields updates are not supported yet"
         where src                  = Label 0 $ Expr.Var $ Expr.Variable name ()
@@ -446,27 +451,26 @@ genExpr (Label lab expr) = case expr of
               setSteps args@(_:xs) = setSteps xs . setStep args
               setSteps          [] = undefined
               genField (Expr.FieldUpd sels expr) = genExpr $ setSteps (reverse sels) expr
-    Expr.Lit          value               -> mkVal <$> genLit value
-    Expr.Tuple        items               -> mkVal . HE.Tuple <$> mapM genExpr items
-    --Expr.App npat@(NamePat pfx base args)        -> (\s -> HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show id, s]) <$> (foldl (flip (<*>)) (genExpr $ NamePat.segBase base) $ (fmap.fmap) (HE.AppE . (HE.AppE (HE.VarE "appNext"))) (fmap genArg $ NamePat.args npat))
-    Expr.App npat@(NamePat pfx base args)        -> mod <$> (foldl (flip (<*>)) (genExpr $ segBase) $ (fmap.fmap) (HE.AppE . (HE.AppE (HE.VarE "appNext"))) (fmap genArg $ NamePat.args npat))
-                                                    where genArg (Expr.AppArg mname expr) = (genExpr expr) -- nameMod mname <*> (genExpr expr)
-                                                          nameMod mname = case mname of
-                                                              Nothing -> return $ HE.AppE (HE.VarE "unnamed")
-                                                              Just n  -> Pass.fail "No suppert for named args yet!" -- return $ HE.AppE (HE.VarE "named")
-                                                          segBase = NamePat.segBase base
-                                                          mod = case (unwrap segBase) of
-                                                              Expr.Curry {} -> id
-                                                              _             -> HE.AppE (HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show astID])
-    Expr.Accessor     acc src             -> HE.AppE <$> (pure $ mkMemberGetter $ hash acc) <*> genExpr src --(get0 <$> genExpr src))
-    Expr.List         lst                 -> case lst of
-                                                 Expr.SeqList items -> mkVal . HE.ListE <$> mapM genExpr items
-                                                 Expr.RangeList {}  -> Pass.fail "Range lists are not supported yet"
-    Expr.Typed       cls expr             -> (\e t -> HE.MacroE "typed" [e,t]) <$> genExpr expr
-                                                                                <*> genType cls
-    Expr.Decl _                               -> Pass.fail "Nested declarations are not supported yet"
-    Expr.Curry e                              -> genExpr e
-    --p -> Pass.fail $ "Cannot construct: " <> show p
+
+    Expr.App npat@(NamePat pfx base args) -> mod <$> (foldl (flip (<*>)) (genExpr $ segBase) $ (fmap.fmap) (HE.AppE . (HE.AppE (HE.VarE "appNext"))) (fmap genArg $ NamePat.args npat))
+      where genArg (Expr.AppArg mname expr) = (genExpr expr) -- nameMod mname <*> (genExpr expr)
+            nameMod mname = case mname of
+                Nothing -> return $ HE.AppE (HE.VarE "unnamed")
+                Just n  -> Pass.fail "No suppert for named args yet!" -- return $ HE.AppE (HE.VarE "named")
+            segBase = NamePat.segBase base
+            mod = case (unwrap segBase) of
+                Expr.Curry {} -> id
+                _             -> HE.AppE (HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show astID])
+
+    Expr.List lst -> case lst of
+        Expr.SeqList items -> mkVal . HE.ListE <$> mapM genExpr items
+        Expr.RangeList {}  -> Pass.fail "Range lists are not supported yet"
+
+    Expr.Meta meta -> case unwrap meta of
+        Type.MetaCons n -> return $ HE.NOP
+        _               -> Pass.fail "Only meta-constructors are supported now"
+    
+    Expr.Decl _ -> Pass.fail "Nested declarations are not supported yet"
 
     where astID = Enum.id lab
 
