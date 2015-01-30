@@ -66,26 +66,30 @@ instance Arbitrary ImageMetric where
 
 instance Comparable Image ImageMetric where
     closeEnough metric actualImage expectedImage = (case metric of
-        PixelWise -> maxDif < 0.03 --imgAsList actualImage == imgAsList expectedImage
+        PixelWise -> maxDiff < 0.93 --imgAsList actualImage == imgAsList expectedImage
         TileWise  -> True
-        ImageWise -> s < 50) where
-            s  = (sum dif)
-            dif= P.map abs $ zipWith (-) l1 l2
-            l1 = imgAsList actualImage 
-            l2 = imgAsList expectedImage
-            maxDif = maximum dif
+        ImageWise -> sbool <50) where
+            [maxDiff] = M.toList AC.run maxDif
+            [sbool] = M.toList AC.run s
+            s = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r) (M.sum g) (M.sum b) (M.sum a)
+
+            (r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
+            maxDif = M.zipWith4 (\r g b a -> r+g+b+a) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
             
 
 
     diffMsg metric actualImage expectedImage  = case metric of
-        PixelWise -> unsafePerformIO $ do
+        PixelWise -> (unsafePerformIO $ do
                         let diff =  mergeLuna Difference Adobe actualImage expectedImage
                         Mock.saveImageLuna "./samples/diff.png" diff        
-                        return "diff image saved to ./samples/diff.png"
+                        return "diff image saved to ./samples/diff.png")
                         --"pixel-wise difference" ++
                      --"actualImage sum: " ++ (show $ s1) ++
                      --"\nexpectedImage sum: " ++ (show $ s2) ++
-                     --"\nmax pixel-wise difference: " ++ (show $ maxDif) where
+                     ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff) where
+                    [maxDiff] = M.toList AC.run maxDif
+                    (r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
+                    maxDif = M.zipWith4 (\r g b a -> r+g+b+a) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
                      --   l1 = imgAsList actualImage 
                      --   l2 = imgAsList expectedImage
                      --   s1 = sum l1
@@ -93,15 +97,26 @@ instance Comparable Image ImageMetric where
                      --   dif= zipWith (-) l1 l2
                      --   maxDif = maximum $ P.map abs dif
         TileWise  -> "tile-wise difference"
-        ImageWise -> "actualImage sum: " ++ (show $ s1) ++
-                     "\nexpectedImage sum: " ++ (show $ s2) ++
-                     "\nimage-wise difference: " ++ (show $ s) where
-                        l1 = imgAsList actualImage 
-                        l2 = imgAsList expectedImage
-                        s1 = sum l1
-                        s2 = sum l2
-                        dif= zipWith (-) l1 l2
-                        s  = sum $ P.map abs dif
+        ImageWise -> "actualImage sum: " ++ (show $ s1out) ++
+                     "\nexpectedImage sum: " ++ (show $ s2out) ++
+                     "\nimage-wise difference: " ++ (show $ sdout) where
+
+                        [s1out] = M.toList AC.run s1
+                        [s2out] = M.toList AC.run s2
+                        [sdout] = M.toList AC.run sd
+                        s1 = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r1) (M.sum g1) (M.sum b1) (M.sum a1)
+                        s2 = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r2) (M.sum g2) (M.sum b2) (M.sum a2)
+                        sd = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum rd) (M.sum gd) (M.sum bd) (M.sum ad)
+                        (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
+                        (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
+                        (rd,gd,bd,ad) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
+
+                        --l1 = imgAsList actualImage 
+                        --l2 = imgAsList expectedImage
+                        --s1 = M.sum l1
+                        --s2 = sum l2
+                        --dif= zipWith (-) l1 l2
+                        --s  = sum $ P.map abs dif
 
 
 imgAsList img = 
