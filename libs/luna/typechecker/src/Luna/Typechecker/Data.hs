@@ -14,6 +14,7 @@ module Luna.Typechecker.Data (
 
 import Control.Lens
 
+import Data.Default
 import Data.Monoid
 import Data.IntMap.Strict   (IntMap)
 import Data.Wrapper         (Pack(..), Unpack(..))
@@ -49,9 +50,8 @@ instance Pack   [(TVar, Type)] Subst where pack   = Subst
 substRaw :: Iso' Subst [(TVar, Type)]
 substRaw = iso fromSubst Subst
 
-instance Monoid Subst where
-  mempty = Subst []
-  mappend = error "what's the mappend for Subst?"
+instance Default Subst where
+  def = Subst []
 
 
 type Typo          = [(ID,TypeScheme)]

@@ -19,7 +19,6 @@ import            Control.Monad.State
 import            Data.Default                            (Default(def))
 import qualified  Data.Foldable                           as Fold
 import            Data.List                               (intercalate)
-import            Data.Monoid
 import            Data.Text.Lazy                          (unpack)
 import            Data.Text.Lens                          (unpacked)
 
@@ -249,7 +248,7 @@ inst env x =
                 return t
             Poly tvl c t  ->
               do
-                s' <- foldl rename (return mempty) tvl
+                s' <- foldl rename (return def) tvl
                 c' <- apply s' c
                 t' <- apply s' t
                 add_constraint c'
