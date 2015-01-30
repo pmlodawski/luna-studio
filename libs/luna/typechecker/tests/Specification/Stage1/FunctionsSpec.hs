@@ -1,8 +1,5 @@
 module Specification.Stage1.FunctionsSpec (spec) where
 
-import Control.Applicative
-import Control.Lens
-import Data.Either
 import Test.Hspec.LunaTypechecker
 
 
