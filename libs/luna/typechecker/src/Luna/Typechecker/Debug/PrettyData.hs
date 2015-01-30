@@ -15,7 +15,7 @@ import            Luna.Syntax.Enum        (ID)
 
 import            Luna.Typechecker.Data   (
                       TVar(..), Subst(..),
-                      Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..),
+                      Typo(..), Type(..), Predicate(..), Constraint(..), TypeScheme(..),
                       TypeMap
                   )
 
@@ -73,7 +73,7 @@ prettySubst = prettyNullableComma . substs . fromSubst
         substs = map prettySubst1
 
 prettyTypo :: Typo -> Doc
-prettyTypo = prettyNullable . map prettyTypo1
+prettyTypo = prettyNullable . map prettyTypo1 . fromTypo
   where prettyTypo1 (v,ts)  = prettyID v
                             <+> text "::"
                             <+> prettyTypeScheme ts

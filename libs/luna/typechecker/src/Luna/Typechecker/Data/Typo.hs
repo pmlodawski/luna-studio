@@ -1,17 +1,26 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Luna.Typechecker.Data.Typo where
 
+
+import Control.Lens
+
+import Data.Default
 
 import Luna.Syntax.Enum     (ID)
 
 import Luna.Typechecker.Data.TypeScheme
 
 
-type Typo           = [(ID,TypeScheme)]
+
+newtype Typo = Typo { fromTypo :: [(ID,TypeScheme)] }
+
+makePrisms ''Typo
 
 
-empty_typo :: Typo
-empty_typo = []
+instance Default Typo where
+  def = Typo []
 
 
 init_typo :: [Typo]
-init_typo = [empty_typo]
+init_typo = [def]

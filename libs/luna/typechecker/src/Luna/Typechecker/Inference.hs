@@ -41,7 +41,7 @@ import qualified  Luna.Syntax.Traversals                  as AST
 import            Luna.Typechecker.Data (
                       TVar, Subst(..),
                       Type(..), Predicate(..), Constraint(..), TypeScheme(..),
-                      true_cons, Typo
+                      true_cons, Typo(..)
                   )
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Inference.Class        (
@@ -242,7 +242,7 @@ expr _ = error "No idea how to infer type at the moment."
 
 inst :: (Monad m) => Typo -> ID -> StageTypecheckerPass m Type
 inst env x =
-    case lookup x env of 
+    case lookup x (fromTypo env) of 
         Just ts -> case ts of
             Mono t        ->
                 return t
@@ -288,5 +288,5 @@ projection _ _ = true_cons
 
 
 tv_typo :: Typo -> [TVar]
-tv_typo = foldr f [] where
+tv_typo = foldr f [] . fromTypo where
   f (v,ts) result = tv ts ++ result
