@@ -11,10 +11,15 @@ Library
   GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
   Default-Language:   Haskell2010
   Hs-Source-Dirs:     src
+                    , tests-lib
   Exposed-modules:    `findmodules('src', '.*\.hs')`
+                    , `findmodules('tests-lib', '.*\.hs')`
   Build-Depends:      base
                     , containers
                     , data-default
+                    , either
+                    , hspec
+                    , hspec-expectations
                     , lens
                     , luna-core
                     , luna-pass
@@ -31,18 +36,15 @@ Executable luna-typechecker-tests
   Hs-Source-Dirs:     tests
   Main-Is:            Main.hs
   Build-Depends:      base
-                    , containers
-                    , data-default
-                    , either
                     , hspec
-                    , hspec-expectations
-                    , lens
-                    , luna-core
-                    , luna-pass
                     , luna-typechecker
-                    , flowbox-utils
-                    , mtl
+
+
+Executable luna-typechecker-pipeline
+  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  Hs-Source-Dirs:     tests-pipeline
+  Main-Is:            Main.hs
+  Build-Depends:      base
+                    , luna-typechecker
                     , pretty
-                    , pretty-show
-                    , text
-                    , transformers
+
