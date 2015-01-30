@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -43,6 +44,15 @@ class UnwrapT t where
 
 class (WrapT t, UnwrapT t) => WrapperT t
 
+
+class Unpack a b | a -> b where
+    unpack :: a -> b
+
+class Pack a b | b -> a where
+    pack :: a -> b
+
+
+class (Unpack a b, Pack b a) => Packable a b
 
 ----------------------------------------------------------------------------------
 -- Utils
