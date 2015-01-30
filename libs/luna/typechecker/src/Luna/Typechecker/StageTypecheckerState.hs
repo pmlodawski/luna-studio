@@ -29,7 +29,7 @@ import qualified  Luna.Syntax.Enum                              as Enum
 
 import            Luna.Typechecker.Data                         (
                       TVar, tvarNum,
-                      Subst, Typo,
+                      Subst(..), Typo,
                       Type(..), Constraint(..), TypeScheme(..)
                   )
 import            Luna.Typechecker.Inference.Class              (StageTypecheckerCtx, StageTypecheckerPass)
@@ -137,8 +137,8 @@ newtvar = use nextTVar <* (nextTVar . tvarNum += 1)
 rename :: (Monad m) => StageTypecheckerPass m Subst -> TVar -> StageTypecheckerPass m Subst
 rename s x = do
     newtv <- newtvar
-    s' <- s
-    return ((x, TV newtv):s')
+    Subst s' <- s
+    return $ Subst ((x, TV newtv):s')
 
 
 

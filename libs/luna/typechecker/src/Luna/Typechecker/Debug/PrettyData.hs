@@ -14,8 +14,8 @@ import            Text.PrettyPrint        (
 import            Luna.Syntax.Enum        (ID)
 
 import            Luna.Typechecker.Data   (
-                      TVar(..),
-                      Subst, Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..),
+                      TVar(..), Subst(..),
+                      Typo, Type(..), Predicate(..), Constraint(..), TypeScheme(..),
                       TypeMap
                   )
 
@@ -67,7 +67,7 @@ prettyTypeScheme (Poly tvs cs ty) = char '∀'
                                   <+> prettyType ty
 
 prettySubst :: Subst -> Doc
-prettySubst = prettyNullableComma . substs
+prettySubst = prettyNullableComma . substs . fromSubst
   where prettySubst1 (tv, ty) = parens $  prettyTVar tv <+> char '↣'
                                       $+$ prettyType ty
         substs = map prettySubst1

@@ -19,6 +19,7 @@ import            Control.Monad.State
 import            Data.Default                            (Default(def))
 import qualified  Data.Foldable                           as Fold
 import            Data.List                               (intercalate)
+import            Data.Monoid
 import            Data.Text.Lazy                          (unpack)
 import            Data.Text.Lens                          (unpacked)
 
@@ -29,8 +30,7 @@ import            Luna.Pass                               (Pass(..))
 import qualified  Luna.Syntax.Arg                         as Arg
 import qualified  Luna.Syntax.Decl                        as Decl
 import qualified  Luna.Syntax.Enum                        as Enum
-import            Luna.Syntax.Enum                        (ID)
-import            Luna.Syntax.Enum                        (IDTag)
+import            Luna.Syntax.Enum                        (ID, IDTag)
 import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
 import qualified  Luna.Syntax.Label                       as Label
@@ -40,9 +40,9 @@ import qualified  Luna.Syntax.Pat                         as Pat
 import qualified  Luna.Syntax.Traversals                  as AST
 
 import            Luna.Typechecker.Data (
-                      TVar, Subst,
+                      TVar, Subst(..),
                       Type(..), Predicate(..), Constraint(..), TypeScheme(..),
-                      null_subst, true_cons, Typo
+                      true_cons, Typo
                   )
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Inference.Class        (
@@ -99,7 +99,7 @@ defaultTraverseM = AST.defaultTraverseM StageTypechecker
 ---- top-level program
 
 --infer :: Term -> E (TVar, Subst, Constraint, Type)
---infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
+--infer e = unTP (tp (init_typo, e)) (init_tvar, mempty, true_cons)
 ----
 
 
@@ -249,7 +249,7 @@ inst env x =
                 return t
             Poly tvl c t  ->
               do
-                s' <- foldl rename (return null_subst) tvl
+                s' <- foldl rename (return mempty) tvl
                 c' <- apply s' c
                 t' <- apply s' t
                 add_constraint c'

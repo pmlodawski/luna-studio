@@ -39,7 +39,7 @@ instance TypesAndConstraints Constraint where
 
 
 instance TypesAndConstraints Type where
-    apply s (TV tvl)           = case lookup tvl s of
+    apply s (TV tvl)           = case lookup tvl (fromSubst s) of
                                     Just t  -> return t
                                     Nothing -> return (TV tvl)
     apply s (t1 `Fun` t2)     = do t1' <- apply s t1
