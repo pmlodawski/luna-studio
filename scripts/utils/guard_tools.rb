@@ -11,14 +11,18 @@ require 'pty'
 $lastbuild    = Time.now
 
 def lastbuildguard(trigger, &block)
-  sleep 1.0/10.0  # arbitrary small sleep to ensure the "save all" is done
-  if File.mtime(trigger) < $lastbuild
-    puts "File #{trigger} modified before last build, so rebuilding is unnecessary".starsaround.green
-  else
-    $lastbuild = Time.now
-    puts "\nBuilding at #{$lastbuild}\n"
-    block.call()
-    puts "\nBuild finished at #{Time.now}\n"
+  begin
+    sleep 1.0/10.0  # arbitrary small sleep to ensure the "save all" is done
+    if File.mtime(trigger) < $lastbuild
+      puts "File #{trigger} modified before last build, so rebuilding is unnecessary".starsaround.green
+    else
+      $lastbuild = Time.now
+      puts "\nBuilding at #{$lastbuild}\n"
+      block.call()
+      puts "\nBuild finished at #{Time.now}\n"
+    end
+  rescue SystemCallError => e
+    puts "The run triggered by #{trigger} caused an error"
   end
 end
 
