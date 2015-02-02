@@ -40,7 +40,7 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
-                  blaze-markup < 0.6.3,
+                  blaze-markup >= 0.6.3,
                   containers,
                   data-default,
                   fgl,
@@ -56,7 +56,7 @@ Library
                   bytestring,
                   utf8-string,
                   text,
-                  trifecta,
+                  trifecta >= 1.5.1.1,
                   charset,
                   unordered-containers,
                   ansi-wl-pprint,
@@ -66,4 +66,4 @@ Library
                   tuple,
                   optparse-applicative,
                   zippers
-    -- [PM] blaze-markup < 0.6.3 is a temporary fix until https://github.com/ekmett/trifecta/issues/41 is resolved
+--[PM] : blaze-markup is a temporary dependency until https://github.com/ekmett/trifecta/issues/42 is resolved
