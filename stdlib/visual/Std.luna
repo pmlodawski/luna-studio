@@ -447,10 +447,10 @@ class ```Gamma``` a:
 
 # alias GammaF = Gamma Double
 
-def Image.gammaToLinear self::Image gamma::Gamma -> Image:
+def Image.gammaToLinear self::Image gamma::(Gamma Float) -> Image:
     ```liftF2 gammaToLinearLuna #{gamma} #{self}```
 
-def Image.gammaFromLinear self::Image gamma::Gamma -> Image:
+def Image.gammaFromLinear self::Image gamma::(Gamma Float) -> Image:
     ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
 
 def testCC self::Std a::ColorCC:
