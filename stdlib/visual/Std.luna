@@ -114,14 +114,14 @@ def Float.>= self::Float a::Float -> Bool:
 def Float.toString self::Float -> String:
     ```liftF1 show #{self}```
 
-alias Path = String
+alias FilePath = String
 
 class Image
 
 def emptyImage self::Std -> Image:
     ```liftF0 Image.empty```
 
-def load self::Std path::Path -> Image:
+def load self::Std path::FilePath -> Image:
     ```autoLift1 realReadLuna #{path}```
 
 def Image.save self::Image path::String:
