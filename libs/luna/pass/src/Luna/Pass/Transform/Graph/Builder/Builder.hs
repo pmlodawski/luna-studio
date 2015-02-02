@@ -4,11 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase       #-}
-{-# LANGUAGE Rank2Types       #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE Rank2Types            #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
@@ -18,14 +19,16 @@ import           Control.Monad.Trans.Either
 import qualified Data.List                  as List
 import qualified Data.Maybe                 as Maybe
 
-import           Flowbox.Prelude                         hiding (error, mapM, mapM_, Traversal)
+import           Flowbox.Prelude                         hiding (Traversal, error, mapM, mapM_)
 import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Log.Logger
 import           Luna.Data.StructInfo                    (StructInfo)
 import qualified Luna.Pass.Analysis.ID.MinID             as MinID
+import           Luna.Pass.Analysis.ID.State             (IDState)
 import qualified Luna.Pass.Pass                          as Pass
 import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
+import           Luna.Syntax.Arg                         (Arg (Arg))
 import qualified Luna.Syntax.Arg                         as Arg
 import qualified Luna.Syntax.AST                         as AST
 import           Luna.Syntax.Decl                        (LDecl)
@@ -47,20 +50,23 @@ import qualified Luna.Syntax.Label                       as Label
 import           Luna.Syntax.Lit                         (LLit)
 import           Luna.Syntax.Name                        (VNameP)
 import qualified Luna.Syntax.Name.Pattern                as Pattern
-import           Luna.Syntax.Pat                         (Pat)
+import           Luna.Syntax.Pat                         (LPat)
 import qualified Luna.Syntax.Pat                         as Pat
+import           Luna.Syntax.Traversals.Class            (Traversal)
 import qualified Luna.Syntax.Type                        as Type
 import           Luna.System.Pragma.Store                (MonadPragmaStore)
 import           Luna.Util.LunaShow                      (lunaShow)
 import           Luna.Util.LunaShow                      (LunaShow)
-import Luna.Pass.Analysis.ID.State (IDState)
-import Luna.Syntax.Traversals.Class (Traversal)
+
+
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
+
 type LunaExpr a v = ( Enumerated a, LunaShow (LExpr a v), LunaShow (LLit a)
                     , Traversal MinID.MinIDs (StateT IDState Identity) v v)
+
 
 run :: (MonadPragmaStore m, LunaExpr a v)
     => StructInfo -> PropertyMap a v -> Bool -> (LDecl a (LExpr a v))
@@ -100,32 +106,16 @@ finalize = do g  <- State.getGraph
               return (g, pm)
 
 
-
---FIXME[PM]: remove
-processExpr     = undefined
-parseArgs       = undefined
-buildArg        = undefined
-showNative      = undefined
-isRealPat       = undefined
-buildPat        = undefined
-isNativeVar     = undefined
-buildApp        = undefined
-buildAssignment = undefined
-buildVar        = undefined
------------------
+parseArgs :: Enumerated a => Node.ID -> Decl.FuncSig a e -> GBPass a v m ()
+parseArgs inputsID inputs = do
+    let numberedInputs = zip [0..] $ Pattern.args inputs
+    mapM_ (parseArg inputsID) numberedInputs
 
 
---parseArgs :: Node.ID -> [Expr] -> GBPass ()
---parseArgs inputsID inputs = do
---    let numberedInputs = zip inputs [0..]
---    mapM_ (parseArg inputsID) numberedInputs
-
-
---parseArg :: Node.ID -> (Expr, Int) -> GBPass ()
---parseArg inputsID (input, no) = case input of
---    Expr.Arg _ pat _ -> do [p] <- buildPat pat
---                           State.addToNodeMap p (inputsID, Port.Num no)
---    _                -> left "parseArg: Wrong Expr type"
+parseArg :: Enumerated a => Node.ID -> (Int, Arg a e) -> GBPass a v m ()
+parseArg inputsID (no, Arg pat _) = do
+    [p] <- buildPat pat
+    State.addToNodeMap p (inputsID, Port.Num no)
 
 
 buildOutput :: LunaExpr a v
@@ -140,6 +130,17 @@ buildOutput outputID lexpr = do
         Expr.Var {}                               -> buildAndConnect     True  True Nothing outputID (lexpr, Port.All)
         _                                         -> buildAndConnect     False True Nothing outputID (lexpr, Port.All)
     State.connectMonadic outputID
+
+
+--FIXME[PM]: remove
+processExpr     = undefined
+buildArg        = undefined
+showNative      = undefined
+isRealPat       = undefined
+isNativeVar     = undefined
+buildApp        = undefined
+buildAssignment = undefined
+-----------------
 
 
 buildNode :: LunaExpr a v
@@ -187,11 +188,11 @@ buildNode astFolded monadicBind outName lexpr = case unwrap lexpr of
         buildGrouped grouped = addNodeHandleFlagsWith $
             State.setGrouped (grouped ^. Label.label . to Enum.id) >> buildNode astFolded monadicBind outName grouped
 
-        --buildVar name = do
-        --    isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp nodeID
-        --    if astFolded && isBound
-        --        then return nodeID
-        --        else addExprNode name []
+        buildVar (Expr.Variable name _) = do
+            isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp nodeID
+            if astFolded && isBound
+                then return nodeID
+                else addExprNode (toString name) []
 
         --buildApp src args = addNodeHandleFlagsWith $ do
         --    srcID <- buildNode astFolded False outName src
@@ -229,6 +230,7 @@ buildNode astFolded monadicBind outName lexpr = case unwrap lexpr of
         assignment         = Maybe.isJust outName
         genName nodeExpr i = Maybe.fromMaybe (OutputName.generate nodeExpr i) outName
 
+
 --isNativeVar (Expr.NativeVar {}) = True
 --isNativeVar _                   = False
 
@@ -261,17 +263,17 @@ buildAndConnect astFolded monadicBind outName dstID (lexpr, dstPort) = do
 --        _                               -> True
 
 
---buildPat :: Pat -> GBPass [AST.ID]
---buildPat p = case p of
---    Pat.Var      i _      -> return [i]
---    Pat.Lit      i _      -> return [i]
---    Pat.Tuple    _ items  -> List.concat <$> mapM buildPat items
---    Pat.Con      i _      -> return [i]
---    Pat.App      _ _ args -> List.concat <$> mapM buildPat args
---    Pat.Typed    _ pat _  -> buildPat pat
---    Pat.Wildcard i        -> return [i]
---    Pat.Grouped  _ pat    -> buildPat pat
-
+buildPat :: Enumerated a => LPat a -> GBPass a v m [AST.ID]
+buildPat p = case unwrap p of
+    Pat.Var      _      -> return [i]
+    Pat.Lit      _      -> return [i]
+    Pat.Tuple    items  -> List.concat <$> mapM buildPat items
+    Pat.Con      _      -> return [i]
+    Pat.App      _ args -> List.concat <$> mapM buildPat args
+    Pat.Typed    pat _  -> buildPat pat
+    Pat.Wildcard        -> return [i]
+    Pat.Grouped  pat    -> buildPat pat
+    where i = p ^. Label.label . to Enum.id
 
 --showNative :: Expr -> String
 --showNative native = case native of
