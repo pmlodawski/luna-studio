@@ -22,8 +22,6 @@ Executable parser
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
-                    -- constraint on blaze-markup is a temporary fix for trifectasdbnboflus
-                    blaze-markup < 0.6.3,
                     bytestring,
                     containers,
                     either,

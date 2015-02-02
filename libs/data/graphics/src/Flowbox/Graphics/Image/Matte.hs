@@ -32,7 +32,7 @@ matteToDiscrete :: Int -> Int -> Matte Double -> DiscreteShader (A.Exp Double)
 matteToDiscrete _ _ (ImageMatte d) = matte
   where (ChannelFloat _ (DiscreteData matte)) = asDiscrete d
 
-matteToDiscreteShader h w m@(VectorMatte d) = matte
+matteToDiscrete h w m@(VectorMatte d) = matte
   where DiscreteData matte = asDiscreteData (A.constant 0) (MatrixData (matteToMatrix h w m))
 
 matteToContinuous :: Int -> Int -> Matte Double -> ContinuousShader (A.Exp Double)

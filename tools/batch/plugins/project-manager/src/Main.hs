@@ -23,7 +23,7 @@ import           Flowbox.System.Log.Logger
 
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+rootLogger = getLogger ""
 
 
 parser :: Parser Cmd
