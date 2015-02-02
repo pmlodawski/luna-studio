@@ -6,24 +6,21 @@ module Test.Hspec.LunaTypechecker.CompilerPipeline (
   ) where
 
 
-import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineResult   as CompilerPipelineResult
-import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgress as CompilerPipelineProgress
+import            Flowbox.Prelude
 
-import            Control.Applicative
-import            Control.Lens
+import            Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineResult   as CompilerPipelineResult
+import            Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgress as CompilerPipelineProgress
+
 import            Control.Monad.Trans.Either
 import            Control.Monad.State.Strict
 
-import            Data.Default
-import            Data.Either
 import qualified  Data.Text.Lazy                              as L
 
 import            Test.Hspec.Expectations.LunaTypechecker
 import            Test.Hspec.LunaTypechecker.FileSystem       (strictReadFile)
 
-
 import            Luna.Data.Namespace                         (Namespace(Namespace))
-import            Luna.Data.Source                            (Text(Text), Source(Source))
+import qualified  Luna.Data.Source                            as Src
 
 import qualified  Luna.Parser.Parser                          as Parser
 
@@ -37,6 +34,7 @@ import qualified  Luna.Pass.Transform.Desugar.ImplicitSelf    as ImplSelf
 import qualified  Luna.Pass.Transform.Parse.Stage1            as Stage1
 import qualified  Luna.Pass.Transform.Parse.Stage2            as Stage2
 import qualified  Luna.Pass.Transform.SSA                     as SSA
+
 import qualified  Luna.Typechecker.Inference                  as PTyChk
 
 import qualified  Luna.System.Session                         as Session
@@ -54,14 +52,14 @@ lunaCompilerStepsFile :: String -> IO CompilerPipelineResult
 lunaCompilerStepsFile fileName = L.pack <$> strictReadFile fileName >>= lunaCompilerSteps (L.pack fileName)
 
 
-lunaCompilerSteps :: L.Text -> L.Text -> IO CompilerPipelineResult
+lunaCompilerSteps :: Text -> Text -> IO CompilerPipelineResult
 lunaCompilerSteps fileName fileContents = do
     res <- Session.runT $ do  Parser.init
                               runStateT (runEitherT procedure) (def :: CompilerPipelineProgress)
     return $ CompilerPipelineResult res
 
   where
-    src = Source fileName (Text fileContents)
+    src = Src.Source fileName (Src.Text fileContents)
     procedure = do
         (ast1, astinfo1)                <- Pass.run1_ Stage1.pass src
         a_parsestage1_ast               .= Just ast1

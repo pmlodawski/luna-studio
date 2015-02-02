@@ -1,26 +1,16 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-
 
 module Luna.Typechecker.Inference (
     tcpass
   ) where
 
 
-import            Control.Applicative
-import            Control.Lens                            hiding (without)
+import            Flowbox.Prelude                         hiding (without, mapM)
+
 import            Control.Monad.State
 
-import            Data.Default                            (Default(def))
 import qualified  Data.Foldable                           as Fold
-import            Data.List                               (intercalate)
-import            Data.Text.Lazy                          (unpack)
-import            Data.Text.Lens                          (unpacked)
 
 import            Luna.Data.StructInfo                    (StructInfo)
 
@@ -107,23 +97,22 @@ tcDecl ldecl@(Label lab decl) =
     case decl of
       Decl.Func (Decl.FuncDecl path sig funcout body) -> do
           let labID       = Enum.id lab
-              baseName    = sig ^.  NamePat.base . NamePat.segmentBase . unpacked
+              baseName    = sig ^.  NamePat.base . NamePat.segmentBase
               argumentIDEs= sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.label
               argumentIDs = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.label   . to Enum.id
-              baseArgs    = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName . unpacked
-              bodyIDs     = sig ^.. NamePat.base . NamePat.segmentBase
+              baseArgs    = sig ^.. NamePat.base . NamePat.segmentArgs . traverse . Arg.pat . Label.element . to humanName
 
           labIDdisp <- getTargetIDString lab
           bsIDs <- forM argumentIDEs getTargetIDString
-          let argsDisp = zipWith (++) baseArgs bsIDs
+          let argsDisp = zipWith (<>) baseArgs bsIDs
 
 
           let Just lastBodyID = lastOf (traverse . Label.label . to Enum.id) body
-          debugPush $ "Last body id in function declaration: " ++ show lastBodyID
+          debugPush $ "Last body id in function declaration: " <> show' lastBodyID
 
           withClonedTypo0 $ do
               env <- getEnv
-              debugPush $ "Function: " ++ baseName ++ labIDdisp ++ " :: (" ++ intercalate ", " argsDisp ++ ") → ???"
+              debugPush $ "Function: " <> baseName <> labIDdisp <> " :: (" <> mjoin ", " argsDisp <> ") → ???"
 
               a  <- insertNewMonoTypeVariable (Enum.id lab)     -- type of the method
               bs <- forM argumentIDs insertNewMonoTypeVariable  -- types of the arguments
@@ -134,22 +123,22 @@ tcDecl ldecl@(Label lab decl) =
 
               case mResultType of
                 Just resultType -> do
-                    let bsres = foldr1 Fun (bs ++ [resultType])
+                    let bsres = foldr1 Fun (bs <> [resultType])
 
                     add_constraint (C [a `Subsume` bsres])
                     typ <- normalize a
                     -- TODO [llachowski] 29 sty 2015: rethink this
-                    debugPush $ "Infered mono type for function declaration: " ++ show typ
+                    debugPush $ "Infered mono type for function declaration: " <> show' typ
                     typeScheme <- generalize env typ
 
                     setTypeSchemeById labID typeScheme
 
-                    debugPush $ "Result for function declaration: " ++ show typeScheme
+                    debugPush $ "Result for function declaration: " <> show' typeScheme
                     return travRes
                 Nothing -> do
                     mm <- typeMap & use
-                    debugPush $ "PRE ERR: " ++ show mm
-                    report_error ("no type returned for " ++ show labID) travRes
+                    debugPush $ "PRE ERR: " <> show' mm
+                    report_error ("no type returned for " <> show' labID) travRes
           
           --tp (env, Abs x e) = do a <- newtvar
           --                       b <- tp (insert env (x, Mono (TV a)), e)
@@ -160,16 +149,16 @@ tcDecl ldecl@(Label lab decl) =
 tcExpr :: (StageTypecheckerCtx IDTag m) => LExpr IDTag () -> StageTypecheckerPass m (LExpr IDTag ())
 tcExpr lexpr@(Label lab _) = do
   labID <- getTargetIDString lab
-  debugPush $ "tcExpr: " ++ labID
-  expr lexpr <* debugPush ("tcExpr: " ++ labID ++ " DONE")
+  debugPush $ "tcExpr: " <> labID
+  expr lexpr <* debugPush ("tcExpr: " <> labID <> " DONE")
 
 
 expr :: (StageTypecheckerCtx IDTag m) => LExpr IDTag () -> StageTypecheckerPass m (LExpr IDTag ())
 expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) = 
   do
-    let hn = unpack . humanName $ vname
+    let hn = humanName vname
     hn_id <- getTargetIDString lab
-    debugPush ("Var         " ++ hn ++ hn_id)
+    debugPush ("Var         " <> hn <> hn_id)
 
     let exprId = Enum.id lab
     targetLabel <- getTargetID lab
@@ -177,7 +166,7 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
     vType <- inst env targetLabel
     result <- normalize vType
 
-    debugPush ("         :: " ++ show result)
+    debugPush ("         :: " <> show' result)
 
     setTypeById exprId result
 
@@ -193,7 +182,7 @@ expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src =
           --                          tp ((insert env (x, b)), e')
           t_id <- getTargetIDString labt
           s_id <- getTargetIDString labs
-          debugPush ("Assignment  " ++ unpack (humanName dst_vname) ++ t_id ++ " ⬸ " ++ s_id) 
+          debugPush ("Assignment  " <> (humanName dst_vname) <> t_id <> " ⬸ " <> s_id) 
 
           let exprId = Enum.id lab
           srcId <- getTargetID labs
@@ -217,7 +206,7 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
     let exprId = Enum.id lab
         appExprId = appExpr ^. Label.label . to Enum.id
 
-    debugPush $ "Application id: " ++ show exprId
+    debugPush $ "Application id: " <> show' exprId
     -- typecheck all args
     res <- defaultTraverseM app
 
@@ -227,7 +216,7 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
 
     setTypeById exprId result
 
-    debugPush $ "Result of infering an application: " ++ show result
+    debugPush $ "Result of infering an application: " <> show' result
     return res
 
   where
@@ -258,7 +247,7 @@ inst env x =
         Nothing ->
           do
             ntv <- newtvar
-            report_error ("undeclared variable " ++ show x) (TV ntv)
+            report_error ("undeclared variable " <> show' x) (TV ntv)
 
 
 generalize :: (Monad m) =>  Typo -> Type -> StageTypecheckerPass m TypeScheme
@@ -267,7 +256,7 @@ generalize env t = do
     constr .= projection c (fv t c env)
     return $ Poly (fv t c env) c t
   where
-    fv t1 c1 env1 = without (tv t1 ++ tv c1) (tv_typo env1)
+    fv t1 c1 env1 = without (tv t1 <> tv c1) (tv_typo env1)
 
 
 normalize :: (Monad m) => Type ->  StageTypecheckerPass m Type
@@ -291,4 +280,4 @@ projection _ _ = true_cons
 
 tv_typo :: Typo -> [TVar]
 tv_typo = foldr f [] . fromTypo where
-  f (v,ts) result = tv ts ++ result
+  f (v,ts) result = tv ts <> result

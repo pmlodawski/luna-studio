@@ -1,14 +1,9 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE FlexibleInstances #-}
-
 module Luna.Typechecker.Data.Subst where
 
 
-import Control.Lens
+import Flowbox.Prelude
 
-import Data.Default
-import Data.Wrapper (Pack(..), Unpack(..))
+import Data.Wrapper               (Pack(pack), Unpack(unpack))
 
 import Luna.Typechecker.Data.TVar
 import Luna.Typechecker.Data.Type

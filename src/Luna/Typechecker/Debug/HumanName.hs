@@ -1,11 +1,13 @@
 module Luna.Typechecker.Debug.HumanName (HumanName(humanName)) where
 
+
+import            Flowbox.Prelude
+
 import qualified  Luna.Syntax.Name          as Name
 import            Luna.Syntax.Name.Path     (NamePath, base)
 import qualified  Luna.Syntax.Pat           as Pat
 
-import            Control.Lens
-import            Data.Text.Lazy            (Text, pack)
+
 
 class HumanName a where
   humanName :: a -> Text -- ^ Retrieve the name.
@@ -13,14 +15,14 @@ class HumanName a where
 
 instance HumanName (Pat.Pat lab) where
   humanName (Pat.Var {Pat._vname = vname}) = humanName vname
-  humanName (Pat.App      {})              = pack "<HumanName for (Pat.Pat lab):App>"
-  humanName (Pat.Typed    {})              = pack "<HumanName for (Pat.Pat lab):Typed>"
-  humanName (Pat.Grouped  {})              = pack "<HumanName for (Pat.Pat lab):Grouped>"
-  humanName (Pat.Lit      {})              = pack "<HumanName for (Pat.Pat lab):Lit>"
-  humanName (Pat.Tuple    {})              = pack "<HumanName for (Pat.Pat lab):Tuple>"
-  humanName (Pat.Con      {})              = pack "<HumanName for (Pat.Pat lab):Con>"
-  humanName (Pat.Wildcard {})              = pack "<HumanName for (Pat.Pat lab):Wildcard>"
-  humanName (Pat.RecWildcard)              = pack "<HumanName for (Pat.Pat lab):RecWildcard>"
+  humanName (Pat.App      {})              = "<HumanName for (Pat.Pat lab):App>"
+  humanName (Pat.Typed    {})              = "<HumanName for (Pat.Pat lab):Typed>"
+  humanName (Pat.Grouped  {})              = "<HumanName for (Pat.Pat lab):Grouped>"
+  humanName (Pat.Lit      {})              = "<HumanName for (Pat.Pat lab):Lit>"
+  humanName (Pat.Tuple    {})              = "<HumanName for (Pat.Pat lab):Tuple>"
+  humanName (Pat.Con      {})              = "<HumanName for (Pat.Pat lab):Con>"
+  humanName (Pat.Wildcard {})              = "<HumanName for (Pat.Pat lab):Wildcard>"
+  humanName (Pat.RecWildcard)              = "<HumanName for (Pat.Pat lab):RecWildcard>"
 
 
 instance (HumanName a) => HumanName (Name.VName  a) where humanName (Name.VName  np) = humanName np

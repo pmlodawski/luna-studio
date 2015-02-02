@@ -3,7 +3,7 @@
 module Luna.Typechecker.Inference.Class where
 
 
-import Control.Applicative
+import Flowbox.Prelude                              hiding (Traversal)
 
 import Luna.Pass                                    (PassCtx, PassMonad)
 

@@ -1,7 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase #-}
-
 module Luna.Typechecker.StageTypecheckerState (
     module StageTypecheckerStateClass,
     report_error,
@@ -14,13 +10,11 @@ module Luna.Typechecker.StageTypecheckerState (
   ) where
 
 
-import            Control.Applicative
-import            Control.Lens
+import            Flowbox.Prelude
+
 import            Control.Monad.State.Class                     (MonadState(..))
 
-import            Data.Default
 import            Data.Maybe
-import            Data.Monoid
 
 import qualified  Luna.Data.StructInfo                          as SI
 
@@ -39,11 +33,11 @@ import            Luna.Typechecker.Inference.Class              (StageTypechecke
 import            Luna.Typechecker.StageTypecheckerState.Class  as StageTypecheckerStateClass
 
 
-report_error :: (Monad m) => String -> a -> StageTypecheckerPass m a
+report_error :: (Monad m) => Text -> a -> StageTypecheckerPass m a
 report_error msg x = do
     st <- get
-    let msgRes = "LUNA TC ERROR: " ++ msg ++ "\nState:\n\n" ++ show st
-    Pass.fail msgRes
+    let msgRes = "LUNA TC ERROR: " <> msg <> "\nState:\n\n" <> show' st
+    Pass.fail (fromText msgRes)
 
 
 withTypo :: (Monad m) => Typo -> a -> (a -> StageTypecheckerPass m b) -> StageTypecheckerPass m b
@@ -84,10 +78,10 @@ getTypeById idV = do
 
 setTypeById :: (Monad m) => ID -> Type -> StageTypecheckerPass m ()
 setTypeById id2 typeV = do
-    debugPush $ "save " ++ show id2 ++ " ?= " ++ show typeV
+    debugPush $ "save " <> show' id2 <> " ?= " <> show' typeV
     typeMap . at id2 ?= typeV
     mm <- typeMap & use
-    debugPush $ show mm
+    debugPush $ show' mm
 
 
 getTypeSchemeById :: Monad m => ID -> StageTypecheckerPass m TypeScheme
@@ -101,15 +95,15 @@ setTypeSchemeById idV typeScheme =
     typeSchemeMap . at idV ?= typeScheme
 
 
-debugPush :: (Monad m) => String -> StageTypecheckerPass m ()
+debugPush :: (Monad m) => Text -> StageTypecheckerPass m ()
 debugPush s = s `seq` debugLog %= (s:)
 
 
 
-getTargetIDString :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m String
+getTargetIDString :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m Text
 getTargetIDString lab = do
     labtID <- getTargetID lab
-    return $ "|" ++ show labID ++ "⊳" ++ show labtID ++ "⊲"
+    return . toText $ "|" ++ show labID ++ "⊳" ++ show labtID ++ "⊲"
   where
     labID = Enum.id lab
 

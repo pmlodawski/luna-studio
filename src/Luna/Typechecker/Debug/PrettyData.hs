@@ -5,7 +5,10 @@ module Luna.Typechecker.Debug.PrettyData (
   ) where
 
 
+import            Flowbox.Prelude         hiding ((<>), empty)
+
 import qualified  Data.IntMap.Strict      as SM
+
 import            Text.PrettyPrint        (
                       Doc, ($+$),(<+>), (<>),
                       brackets, char, empty, hsep, int, parens, punctuate, text

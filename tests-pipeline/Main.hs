@@ -3,9 +3,11 @@
 module Main where
 
 
-import System.Environment (getArgs)
+import Flowbox.Prelude
 
-import Text.PrettyPrint (render)
+import System.Environment                                                       (getArgs)
+
+import Text.PrettyPrint                                                         (render)
 import Test.Hspec.LunaTypechecker
 import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgressStep (CompilerPipelineProgressStep(..))
 
@@ -18,7 +20,7 @@ main = do
             result <- lunaCompilerStepsFile filename
             let output = prettyCompilerPipelineResult displayResults result
             putStrLn (render output)
-        _ -> print "invalid number of arguments: pass (only) the filename"
+        _ -> print ( "invalid number of arguments: pass (only) the filename" :: String )
 
   where
     displayResults = [D_DesugarImplicitSelf_AST, F_TypecheckerInference_AST, F_TypecheckerInference_TCState]

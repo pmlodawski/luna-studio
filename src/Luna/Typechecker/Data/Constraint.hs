@@ -1,6 +1,7 @@
 module Luna.Typechecker.Data.Constraint where
 
-import Data.Monoid
+
+import Flowbox.Prelude
 
 import Luna.Typechecker.Data.TVar
 import Luna.Typechecker.Data.Predicate

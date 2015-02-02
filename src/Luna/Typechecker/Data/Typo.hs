@@ -3,11 +3,9 @@
 module Luna.Typechecker.Data.Typo where
 
 
-import Control.Lens
+import Flowbox.Prelude
 
-import Data.Default
-
-import Luna.Syntax.Enum     (ID)
+import Luna.Syntax.Enum                 (ID)
 
 import Luna.Typechecker.Data.TypeScheme
 

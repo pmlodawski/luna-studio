@@ -4,9 +4,8 @@
 module Luna.Typechecker.StageTypecheckerState.Class where
 
 
-import Control.Lens
-import Data.Default                      (Default(def))
-import Data.Monoid                       (Monoid(..))
+import Flowbox.Prelude
+
 import Text.PrettyPrint
 
 import Luna.Data.StructInfo              (StructInfo)
@@ -15,7 +14,7 @@ import Luna.Typechecker.Debug.PrettyData (prettyConstr, prettyNullable, prettySu
 
 
 
-data StageTypecheckerState = StageTypecheckerState  { _debugLog      :: [String]
+data StageTypecheckerState = StageTypecheckerState  { _debugLog      :: [Text]
                                                     , _typo          :: [Typo]
                                                     , _nextTVar      :: TVar
                                                     , _subst         :: Subst
@@ -54,7 +53,7 @@ instance Show StageTypecheckerState where
                                           $+$ nextTVar_field
                                           $+$ typeMap_field
       where
-        str_field      = text "Debug       :" <+> prettyNullable (map text $ reverse _debugLog)
+        str_field      = text "Debug       :" <+> prettyNullable (map show' $ reverse _debugLog)
         constr_field   = text "Constraints :" <+> prettyConstr   _constr
         nextTVar_field = text "TVars used  :" <+> prettyTVar     _nextTVar
         typo_field     = text "Type env    :" <+> prettyNullable (map (parens . prettyTypo) _typo)
