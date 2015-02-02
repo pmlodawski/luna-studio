@@ -134,6 +134,7 @@ tcDecl ldecl@(Label lab decl) =
                     setTypeSchemeById labID typeScheme
 
                     debugPush $ "Result for function declaration: " <> show' typeScheme
+                    -- report_error "sanity check" undefined
                     return travRes
                 Nothing -> do
                     mm <- typeMap & use

@@ -6,7 +6,7 @@ import Flowbox.Prelude
 import Data.Wrapper     (Pack(pack), Unpack(unpack))
 
 
-newtype TVar  = TVar { fromTVar :: Int } deriving Eq
+newtype TVar  = TVar { fromTVar :: Int } deriving (Eq, Ord)
 
 makePrisms ''TVar
 

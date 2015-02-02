@@ -8,7 +8,7 @@ module Luna.Typechecker.Debug.PrettyData (
 import            Flowbox.Prelude         hiding ((<>), empty)
 
 import qualified  Data.IntMap.Strict      as SM
-
+import qualified  Data.Map as Map
 import            Text.PrettyPrint        (
                       Doc, ($+$),(<+>), (<>),
                       brackets, char, empty, hsep, int, parens, punctuate, text
@@ -16,7 +16,7 @@ import            Text.PrettyPrint        (
 
 import            Luna.Syntax.Enum        (ID)
 
-import            Luna.Typechecker.Data   (
+import            Luna.Typechecker.Data (
                       TVar(..), Subst(..),
                       Typo(..), Type(..), Predicate(..), Constraint(..), TypeScheme(..),
                       TypeMap
@@ -73,7 +73,7 @@ prettySubst :: Subst -> Doc
 prettySubst = prettyNullableComma . substs . fromSubst
   where prettySubst1 (tv, ty) = parens $  prettyTVar tv <+> char '↣'
                                       $+$ prettyType ty
-        substs = map prettySubst1
+        substs = map prettySubst1 . Map.toList
 
 prettyTypo :: Typo -> Doc
 prettyTypo = prettyNullable . map prettyTypo1 . fromTypo
