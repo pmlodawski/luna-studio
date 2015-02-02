@@ -52,7 +52,7 @@ $(registerMethod ''Main "print")
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 memDef_Main_main _self = do 
-     _call(6) (appNext (_call(997) (_member("x") _self)) (_member("print") _self))
+     _call(6) (appNext (val (1 :: Int)) (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
