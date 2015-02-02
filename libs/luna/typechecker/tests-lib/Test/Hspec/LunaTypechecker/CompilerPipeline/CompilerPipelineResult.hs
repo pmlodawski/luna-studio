@@ -2,20 +2,21 @@
 
 module Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineResult where
 
+
+import            Flowbox.Prelude
+
 import qualified  Luna.System.Pragma                          as Pragma
 import qualified  Luna.Pass                                   as Pass
 
-import            Control.Applicative
-import            Control.Lens
-
 import qualified  Text.PrettyPrint                            as PP
 import            Text.PrettyPrint                            (($+$))
+
 import            Text.Show.Pretty                            (ppShow)
 
-import Luna.Typechecker.Debug.ConsoleColours
+import            Luna.Typechecker.Debug.ConsoleColours
 
-import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgress
-import Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgressStep (CompilerPipelineProgressStep(..))
+import            Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgress
+import            Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgressStep (CompilerPipelineProgressStep(..))
 
 
 

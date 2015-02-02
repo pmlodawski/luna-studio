@@ -4,6 +4,7 @@ module Luna.Typechecker.Tools (
 
 
 import Data.List
+import Flowbox.Prelude hiding (without)
 
 
 without :: (Eq a) => [a] -> [a] -> [a]

@@ -12,6 +12,7 @@ module Luna.Typechecker.Data (
     TypeMap, TypeSchemeMap
   ) where
 
+
 import Luna.Typechecker.Data.TVar       as TVarMod
 import Luna.Typechecker.Data.Subst      as SubstMod
 import Luna.Typechecker.Data.Typo       as TypoMod

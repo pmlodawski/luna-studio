@@ -1,12 +1,9 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 module Luna.Typechecker.Data.TVar where
 
 
-import Control.Lens
+import Flowbox.Prelude
 
-import Data.Wrapper         (Pack(..), Unpack(..))
+import Data.Wrapper     (Pack(pack), Unpack(unpack))
 
 
 newtype TVar  = TVar { fromTVar :: Int } deriving Eq

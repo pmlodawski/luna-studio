@@ -3,6 +3,8 @@ module Luna.Typechecker.TypesAndConstraints (
   ) where
 
 
+import Flowbox.Prelude                        hiding (without)
+
 import Luna.Typechecker.Data
 import Luna.Typechecker.Inference.Class       (StageTypecheckerPass)
 import Luna.Typechecker.Tools                 (without)

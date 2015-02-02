@@ -4,8 +4,10 @@ module Test.Hspec.Expectations.LunaTypechecker (
   ) where
 
 
+import Flowbox.Prelude
+
 import Test.Hspec.Expectations as OrigExpectation
-import Control.Lens
+
 
 
 shouldSatisfyLens :: (Show a) => a -> Getting Bool a Bool -> Expectation

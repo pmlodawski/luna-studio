@@ -4,8 +4,7 @@ module Luna.Typechecker.Debug.ConsoleColours (
   ) where
 
 
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.List              (intercalate)
+import Flowbox.Prelude
 
 
 
@@ -23,7 +22,7 @@ colouredPrint fs = liftIO . putStrLn . colouredFmt fs
 infix 4 `colouredFmt`
 colouredFmt :: [PrintAttrs] -> String -> String
 colouredFmt fs x = "\x1b[" ++ fmt ++ "m" ++ x ++ "\x1b[0m"
-  where fmt = intercalate ";" $ fmap show fs
+  where fmt = mjoin ";" $ fmap show fs
 
 
 data PrintAttrs = Black

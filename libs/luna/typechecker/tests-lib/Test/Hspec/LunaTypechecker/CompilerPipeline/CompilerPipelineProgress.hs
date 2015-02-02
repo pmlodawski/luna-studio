@@ -4,6 +4,8 @@
 module Test.Hspec.LunaTypechecker.CompilerPipeline.CompilerPipelineProgress where
 
 
+import            Flowbox.Prelude
+
 import qualified  Luna.Data.ASTInfo                           as ASTInfo
 import qualified  Luna.Data.StructInfo                        as StructInfo
 
@@ -15,12 +17,6 @@ import qualified  Luna.Syntax.Module                          as Module
 import qualified  Luna.Syntax.Unit                            as Unit
 
 import qualified  Luna.Typechecker.StageTypecheckerState      as Typechecker
-
-import            Control.Lens
-
-import            Data.Default
-
-import qualified  Data.Text.Lazy                              as L
 
 
 
@@ -41,7 +37,7 @@ data CompilerPipelineProgress
                                 , _h_desugarimplicitcalls_astinfo   :: Maybe ASTInfo.ASTInfo
                                 , _i_ssa                            :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
                                 , _j_hshastgen                      :: Maybe HASTGen.HE
-                                , _k_hshsc                          :: Maybe L.Text
+                                , _k_hshsc                          :: Maybe Text
                                 }
                                 deriving (Show)
 

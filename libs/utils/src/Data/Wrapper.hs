@@ -45,11 +45,11 @@ class UnwrapT t where
 class (WrapT t, UnwrapT t) => WrapperT t
 
 
-class Unpack a b | a -> b where
-    unpack :: a -> b
+class Unpack cntr b | cntr -> b where
+    unpack :: cntr -> b
 
-class Pack a b | b -> a where
-    pack :: a -> b
+class Pack a cntr | cntr -> a where
+    pack :: a -> cntr
 
 
 class (Unpack a b, Pack b a) => Packable a b
