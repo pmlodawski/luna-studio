@@ -69,6 +69,25 @@ message Interpreter {
             }
         }
     }
+    message Var {
+        message Time {
+            message Set {
+                message Request {
+                    required double value = 1;
+                }
+                message Update {
+                    required Request request = 1;
+                }
+            }
+            message Get {
+                message Request { }
+                message Status {
+                    required Request request = 1;
+                    required double  value   = 2;
+                }
+            }
+        }
+    }
     message SerializationMode {
         message Get {
             message Request {
@@ -137,7 +156,9 @@ message Interpreter {
         }
     }
     message Run {
-        message Request { }
+        message Request {
+            optional double timeValue = 1;
+        }
         message Update  { 
             required Request     request      = 1;
             repeated ProfileInfo profileInfos = 2;
@@ -182,6 +203,12 @@ message Interpreter {
                 required int64   upper   = 2;
                 required int64   lower   = 3;
             }
+        }
+    }
+    message Exit {
+        message Request { }
+        message Update {
+            required Request request = 1;
         }
     }
 }

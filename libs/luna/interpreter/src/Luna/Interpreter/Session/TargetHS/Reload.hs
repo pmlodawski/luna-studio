@@ -12,8 +12,8 @@ import           Data.Set (Set)
 import qualified Data.Set as Set
 
 import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb (Breadcrumbs)
-import qualified Luna.Lib.Lib           as Library
+import qualified Luna.Lib.Lib              as Library
+import           Luna.Syntax.Control.Crumb (Breadcrumbs)
 
 
 

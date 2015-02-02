@@ -15,14 +15,14 @@ import Flowbox.Graphics.Image.Channel hiding (compute)
 import Flowbox.Graphics.Image.View    as V
 import Flowbox.Graphics.Serialization ()
 
-import qualified Data.Array.Accelerate                              as A
-import           Flowbox.Data.Mode                                  ()
-import           Flowbox.Data.Serialization                         (compute, toValue)
-import           Flowbox.Graphics.Composition.Generators.Matrix
-import           Flowbox.Graphics.Composition.Generators.Rasterizer
-import           Flowbox.Graphics.Composition.Generators.Shape
-import           Flowbox.Graphics.Composition.Generators.Stencil    as Stencil
-import           Flowbox.Graphics.Utils
+import qualified Data.Array.Accelerate                        as A
+import           Flowbox.Data.Mode                            ()
+import           Flowbox.Data.Serialization                   (compute, toValue)
+import           Flowbox.Graphics.Composition.Generator.Shape
+import           Flowbox.Graphics.Shader.Matrix
+import           Flowbox.Graphics.Shader.Rasterizer
+import           Flowbox.Graphics.Shader.Stencil              as Stencil
+import           Flowbox.Graphics.Utils.Utils
 import           Text.ProtocolBuffers.WireMessage
 
 import Utils
@@ -40,10 +40,10 @@ defocusSerialize blurSize = do
     let kern = ellipse (pure $ variable blurSize) 1 0
     let process x = rasterizer $ normStencil (+) kern (+) 0 $ fromMatrix A.Clamp x
 
-    let red   = ChannelFloat "r" (FlatData $ process r) -- process introduces delayed computation
-    let green = ChannelFloat "g" (FlatData $ process g)
-    let blue  = ChannelFloat "b" (FlatData $ process b)
-    let alpha = ChannelFloat "a" (FlatData $ process a)
+    let red   = ChannelFloat "r" (MatrixData $ process r) -- process introduces delayed computation
+    let green = ChannelFloat "g" (MatrixData $ process g)
+    let blue  = ChannelFloat "b" (MatrixData $ process b)
+    let alpha = ChannelFloat "a" (MatrixData $ process a)
 
     -- Construct a view
     let view :: View
@@ -54,14 +54,15 @@ defocusSerialize blurSize = do
              $ V.empty "lena"
 
     -- Try to serialize the uncomputed array
-    try1 <- toValue view def
-    case try1 of
-        Just _ -> putStrLn "Magic happened! We have a value from an uncomputed array"
-        Nothing -> do
-            try2 <- toValue (compute view def) def -- Try to serialize the computed array
-            case try2 of
-                Just msg -> putStrLn $ messagePut msg
-                Nothing -> putStrLn "Something went wrong"
+    --try1 <- toValue view def
+    --case try1 of
+    --    Just _ -> putStrLn "Magic happened! We have a value from an uncomputed array"
+    --    Nothing -> do
+    --        try2 <- toValue (compute view def) def -- Try to serialize the computed array
+    --        case try2 of
+    --            Just msg -> putStrLn $ messagePut msg
+    --            Nothing -> putStrLn "Something went wrong"
+    return ()
 
 main :: IO ()
 main = defocusSerialize 10

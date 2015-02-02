@@ -25,17 +25,17 @@ import qualified Generated.Proto.Graph.Node.Cls            as GenNode
 import qualified Generated.Proto.Graph.NodeExpr            as Gen
 import qualified Generated.Proto.Graph.NodeExpr.Cls        as GenNodeExpr
 import           Luna.Data.Serialize.Proto.Conversion.Expr ()
-import           Luna.Graph.Edge                           (Edge)
-import qualified Luna.Graph.Edge                           as Edge
-import           Luna.Graph.Graph                          (Graph)
-import qualified Luna.Graph.Graph                          as Graph
-import           Luna.Graph.Node                           (Node)
-import qualified Luna.Graph.Node                           as Node
-import           Luna.Graph.Node.Expr                      (NodeExpr)
-import qualified Luna.Graph.Node.Expr                      as NodeExpr
-import qualified Luna.Graph.Node.StringExpr                as StringExpr
-import           Luna.Graph.Port                           (Port)
-import qualified Luna.Graph.Port                           as Port
+import           Luna.Syntax.Graph.Edge                    (Edge)
+import qualified Luna.Syntax.Graph.Edge                    as Edge
+import           Luna.Syntax.Graph.Graph                   (Graph)
+import qualified Luna.Syntax.Graph.Graph                   as Graph
+import           Luna.Syntax.Graph.Node                    (Node)
+import qualified Luna.Syntax.Graph.Node                    as Node
+import           Luna.Syntax.Graph.Node.Expr               (NodeExpr)
+import qualified Luna.Syntax.Graph.Node.Expr               as NodeExpr
+import qualified Luna.Syntax.Graph.Node.StringExpr         as StringExpr
+import           Luna.Syntax.Graph.Port                    (Port)
+import qualified Luna.Syntax.Graph.Port                    as Port
 
 
 

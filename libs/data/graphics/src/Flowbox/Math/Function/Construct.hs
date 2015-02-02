@@ -14,23 +14,23 @@ import Flowbox.Prelude             as P hiding (empty)
 
 
 
-empty :: Function x y
-empty = Function Map.empty
+empty :: FunctionModel x y
+empty = FunctionModel Map.empty
 
-fromSegment :: Ord x => x -> Segment x y -> Function x y
-fromSegment x seg = Function $ Map.fromList [(x, Just seg)]
+fromSegment :: Ord x => x -> FunctionSegment x y -> FunctionModel x y
+fromSegment x seg = FunctionModel $ Map.fromList [(x, Just seg)]
 
-hybridCubicFromPoints :: Ord x => [(Point x y, Maybe Handle, Maybe Handle)] -> Segment x y
+hybridCubicFromPoints :: Ord x => [(FunctionPoint x y, Maybe FunctionHandle, Maybe FunctionHandle)] -> FunctionSegment x y
 hybridCubicFromPoints points = ContinuousHybrid $ foldl' makeNode Map.empty points
-    where makeNode acc (Point x y, hIn, hOut) = Map.insert x (ControlPoint y hIn hOut) acc
+    where makeNode acc (FunctionPoint x y, hIn, hOut) = Map.insert x (FunctionControlPoint y hIn hOut) acc
 
-hybridLinearFromPoints :: Ord x => [Point x y] -> Segment x y
+hybridLinearFromPoints :: Ord x => [FunctionPoint x y] -> FunctionSegment x y
 hybridLinearFromPoints points = ContinuousHybrid $ foldl' appendPoint Map.empty points
-    where appendPoint acc (Point x y) = Map.insert x (hardJoint y) acc
+    where appendPoint acc (FunctionPoint x y) = Map.insert x (hardJoint y) acc
 
 -- TODO: move this to a seperate, appropriately named module
--- TODO: change the type signature to: Function -> Range -> Int -> ( [(CoordinateX, CoordinateY)] OR [Point] )
---linearInterpolation :: Function -> Range -> Int -> Function
+-- TODO: change the type signature to: FunctionModel -> Range -> Int -> ( [(CoordinateX, CoordinateY)] OR [Point] )
+--linearInterpolation :: FunctionModel -> Range -> Int -> FunctionModel
 --linearInterpolation fun (a, b) n
 --    | n < 1  = empty
 --    | a > b  = linearInterpolation fun (b, a) n

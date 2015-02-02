@@ -82,6 +82,8 @@ withReserved words p = do
     put (s & adhocReserved .~ reserved)
     return ret
 
+withCurrying p = p
+
 
 withNewScope id p = do
     pushNewScope id

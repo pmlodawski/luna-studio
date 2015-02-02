@@ -22,9 +22,16 @@ data Type a
     | Tuple    { _items    :: [LType a]                          }
     | List     { _item     :: LType a                            }
     | Con      { _segments :: [TNameP]                           }
+    | Meta     (LMeta a)
     | Wildcard 
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq, Read)
 
 
 type LType a = Label a (Type a)
 
+data Meta = MetaCons TNameP
+          | MetaVar  VNameP
+          | MetaRoot
+          deriving (Show, Generic, Eq, Read)
+
+type LMeta a = Label a Meta

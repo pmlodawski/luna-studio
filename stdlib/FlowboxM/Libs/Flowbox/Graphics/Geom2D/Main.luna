@@ -80,7 +80,11 @@ def main:
              , controlPoint (point 338.0 210.0) (Just $ point (329.0.-338.0) (109.0.-210.0)) (Just $ point (450.0.-338.0) (211.0.-210.0))
              , controlPoint (point 343.0 330.0) (Just $ point (456.0.-343.0) (331.0.-330.0)) Nothing
              ]
-    m = mask (path True points) Nothing # second list is empty if the paths are the same
+    feather =  [ controlPoint (point 212.0 (209.0.-40.0)) Nothing                        (Just $ point (211.0.-212.0) (114.0.-209.0))
+                   , controlPoint (point 338.0 (210.0.-40.0)) (Just $ point (329.0.-338.0) (109.0.-210.0)) (Just $ point (450.0.-338.0) (211.0.-210.0))
+                   , controlPoint (point 343.0 (330.0.-40.0)) (Just $ point (456.0.-343.0) (331.0.-330.0)) Nothing
+                   ]
+    m = mask (path True points) (Just (path True feather)) # second list is empty if the paths are the same
 
     img = rasterizeMask 640 480 m
 

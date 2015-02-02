@@ -53,7 +53,7 @@ isLowerLimitExceeded' = isLowerLimitExceeded <$> status
 
 currentBytesUsed :: IO Int64
 currentBytesUsed = do
-    Mem.performGC
+    --Mem.performGC
     Stats.currentBytesUsed <$> Stats.getGCStats
 
 

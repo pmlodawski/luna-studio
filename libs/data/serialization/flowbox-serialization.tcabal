@@ -25,6 +25,7 @@ Library
   Build-Depends:  base,
                   bytestring,
                   containers,
+                  data-hash,
                   errors,
                   flowbox-utils,
                   luna-target-ghchs,

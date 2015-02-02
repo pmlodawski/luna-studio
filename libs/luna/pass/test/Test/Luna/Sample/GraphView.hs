@@ -8,13 +8,13 @@
 module Test.Luna.Sample.GraphView where
 
 import           Flowbox.Prelude
-import qualified Luna.Graph.Node                       as Node
-import           Luna.Graph.Node.Expr                  (NodeExpr)
-import qualified Luna.Graph.Node.Expr                  as NodeExpr
-import qualified Luna.Graph.Node.StringExpr            as StringExpr
-import           Luna.Graph.View.EdgeView              (EdgeView (EdgeView))
-import           Luna.Graph.View.GraphView             (GraphView)
-import qualified Luna.Graph.View.GraphView             as GraphView
+import qualified Luna.Syntax.Graph.Node                as Node
+import           Luna.Syntax.Graph.Node.Expr           (NodeExpr)
+import qualified Luna.Syntax.Graph.Node.Expr           as NodeExpr
+import qualified Luna.Syntax.Graph.Node.StringExpr     as StringExpr
+import           Luna.Syntax.Graph.View.EdgeView       (EdgeView (EdgeView))
+import           Luna.Syntax.Graph.View.GraphView      (GraphView)
+import qualified Luna.Syntax.Graph.View.GraphView      as GraphView
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 
 

@@ -16,6 +16,10 @@ import Luna.Target.HS.Data.Struct
 -- Type classes
 ----------------------------------------------------------------------------------
 
-class Func (base :: k) name args out | base name args -> out where
-    getFunc :: Mem base name -> args -> (args -> out)
+--class Func (base :: k) name args out | base name args -> out where
+--    getFunc :: Mem base name -> args -> (args -> out)
+
+
+class FuncProvider (base :: k) name func where
+    getFunc2 :: Mem base name -> (func -> out) -> func
 
