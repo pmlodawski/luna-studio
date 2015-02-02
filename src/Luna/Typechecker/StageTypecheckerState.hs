@@ -27,10 +27,12 @@ import            Luna.Typechecker.Data                         (
                       TVar(..), _TVar,
                       Typo(..),
                       Subst(..),
-                      Type(..), Constraint(..), TypeScheme(..)
+                      Type(..), Constraint(..), TypeScheme(..),
+                      singleSubst
                   )
 import            Luna.Typechecker.Inference.Class              (StageTypecheckerCtx, StageTypecheckerPass)
 import            Luna.Typechecker.StageTypecheckerState.Class  as StageTypecheckerStateClass
+import            Luna.Typechecker.TypesAndConstraints
 
 
 report_error :: (Monad m) => Text -> a -> StageTypecheckerPass m a
@@ -136,8 +138,8 @@ newtvar = use nextTVar <* (nextTVar . _TVar += 1)
 rename :: (Monad m) => StageTypecheckerPass m Subst -> TVar -> StageTypecheckerPass m Subst
 rename s x = do
     newtv <- newtvar
-    Subst s' <- s
-    return $ Subst ((x, TV newtv):s')
+    s' <- s
+    return $ singleSubst x (TV newtv) `composeSubst` s'
 
 
 

@@ -1,14 +1,14 @@
 module Luna.Typechecker.TypesAndConstraints (
-    TypesAndConstraints(..)
+    TypesAndConstraints(..), composeSubst
   ) where
 
 
 import Flowbox.Prelude                        hiding (without)
+import qualified Data.Map as Map
 
 import Luna.Typechecker.Data
 import Luna.Typechecker.Inference.Class       (StageTypecheckerPass)
 import Luna.Typechecker.Tools                 (without)
-
 
 
 class TypesAndConstraints c where
@@ -41,14 +41,9 @@ instance TypesAndConstraints Constraint where
 
 
 instance TypesAndConstraints Type where
-    apply s (TV tvl)           = case lookup tvl (fromSubst s) of
-                                    Just t  -> return t
-                                    Nothing -> return (TV tvl)
-    apply s (t1 `Fun` t2)     = do t1' <- apply s t1
-                                   t2' <- apply s t2
-                                   return (t1' `Fun` t2')
-    tv (TV tvl)                = [tvl]
-    tv (t1 `Fun` t2)          = tv t1 ++ tv t2
+    apply s t                = return $ applySubst s t
+    tv (TV tvl)              = [tvl]
+    tv (t1 `Fun` t2)         = tv t1 ++ tv t2
 
 
 instance TypesAndConstraints TypeScheme where
@@ -59,3 +54,19 @@ instance TypesAndConstraints TypeScheme where
                                    return (Mono t')
     tv (Poly tvl c t)          = without (tv t ++ tv c) tvl
     tv (Mono t)               = tv t
+
+
+applySubst :: Subst -> Type -> Type
+applySubst s (TV tvl) = case Map.lookup tvl (fromSubst s) of
+                          Just t  -> t
+                          Nothing -> TV tvl
+
+applySubst s (t1 `Fun` t2) = let t1' = applySubst s t1
+                                 t2' = applySubst s t2
+                             in t1' `Fun` t2'
+
+
+composeSubst :: Subst -> Subst -> Subst
+composeSubst s2 s1 = let s2' = fromSubst s2
+                         s1' = fromSubst s1
+                     in Subst $ Map.map (applySubst s2) s1' `Map.union` s2'
