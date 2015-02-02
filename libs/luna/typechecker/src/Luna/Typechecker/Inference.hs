@@ -139,10 +139,12 @@ tcDecl ldecl@(Label lab decl) =
                     add_constraint (C [a `Subsume` bsres])
                     typ <- normalize a
                     -- TODO [llachowski] 29 sty 2015: rethink this
+                    debugPush $ "Infered mono type for function declaration: " ++ show typ
                     typeScheme <- generalize env typ
+
                     setTypeSchemeById labID typeScheme
 
-                    debugPush "pop"
+                    debugPush $ "Result for function declaration: " ++ show typeScheme
                     return travRes
                 Nothing -> do
                     mm <- typeMap & use
