@@ -382,25 +382,25 @@ alias TransformD = Transform Double
 # alias Path a         = (Bool, [ControlPoint a])
 # alias Shape a        = [Path a]
 
-def imageMatte self::Std path::Path channelName::String -> (Maybe (Matte Double)):
+def imageMatte self::Std path::Path channelName::String -> (Maybe (Matte Float)):
      ```autoLift2 imageMatteLuna #{path} #{channelName}```
 
-def vectorMatte self::Std mask::Mask -> (Maybe (Matte Double)):
+def vectorMatte self::Std mask::Mask -> (Maybe (Matte Float)):
     ```liftF1 vectorMatteLuna #{mask}```
 
 def noMatte self::Std:
     ```val (Nothing :: Maybe (Matte Double))```
 
-def Image.offsetMatte self::Image value::Color matte::(Maybe (Matte Double)) -> Image:
+def Image.offsetMatte self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
 
-def Image.contrastMatte self::Image value::Color matte::(Maybe (Matte Double)) -> Image:
+def Image.contrastMatte self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
 
-def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe (Matte Double)) -> Image:
+def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
 
-def Image.gradeMatte self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Double)) -> Image:
+def Image.gradeMatte self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
 alias Mask = (Path Float, Maybe (Path Float))
@@ -431,9 +431,9 @@ def rasterizeMask self::Std w::Int h::Int m::Mask -> Image:
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
-alias Color = RGBA Double
-alias ColorBlack = RGBA Double
-alias ColorWhite = RGBA Double
+alias Color = RGBA Float
+alias ColorBlack = RGBA Float
+alias ColorWhite = RGBA Float
 
 alias ColorCC = (Color, Color, Color, Color, Color)
 
@@ -441,14 +441,14 @@ def constant self::Std width::Int height::Int color::Color -> Image:
     ```liftF3 constantLuna #{width} #{height} #{color}```
 
 class ```Gamma``` a:
-    Gamma: a :: Double
+    Gamma: a :: Float
     Cineon
     LStar
     REDLog
     SLog
     SRGBGamma
 
-# alias GammaF = Gamma Double
+# alias GammaF = Gamma Float
 
 def Image.gammaToLinear self::Image gamma::(Gamma Float) -> Image:
     ```liftF2 gammaToLinearLuna #{gamma} #{self}```
@@ -462,7 +462,7 @@ def testCC self::Std a::ColorCC:
 def time self::Std:
     0.0
 
-alias Time = Double
+alias Time = Float
 
 def foo self::Std a::Time:
 	a
