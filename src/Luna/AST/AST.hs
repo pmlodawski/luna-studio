@@ -12,7 +12,7 @@ module Luna.AST.AST (
     module X
 ) where
 
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (Wrapper, wrap)
 import Luna.AST.Common as X
 import Luna.AST.Expr   (Expr)
 import Luna.AST.Lit    (Lit)
