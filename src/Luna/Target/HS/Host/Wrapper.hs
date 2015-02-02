@@ -23,7 +23,7 @@ import Flowbox.Utils
 
 checkVal = join . fmap printCheck . toIOEnv
 
-mainMaker modCons = checkVal $ fromValue $ call $ member (Proxy::Proxy "main") $ call modCons
+mainMaker modCons = checkVal . fromValue . call $ member (Proxy::Proxy "main") $ call modCons
 
 
 rangeFromTo' a b = if a <= b then [a..b]

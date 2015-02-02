@@ -74,6 +74,9 @@ mkMemSig = mkMemRef "Sig"
 mkMemDef :: (Monoid a, IsString a) => a -> a -> a
 mkMemDef = mkMemRef "Def"
 
+mkMemFnc :: (Monoid a, IsString a) => a -> a -> a
+mkMemFnc = mkMemRef "Fnc"
+
 mkModCons :: (Monoid a, IsString a) => a -> a
 mkModCons = mkCons
 
@@ -91,6 +94,10 @@ self = "self"
 
 mkCls :: (Monoid a, IsString a) => a -> a
 mkCls = ("Cls_" <>)
+
+-- hack fixing double underscore
+mkCls' :: (Monoid a, IsString a) => a -> a
+mkCls' = ("Cls#" <>)
 
 mkVar :: (Monoid a, IsString a) => a -> a
 mkVar = ("_" <>)
