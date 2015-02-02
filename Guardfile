@@ -17,15 +17,6 @@ $run_tests    = true
 $run_linting  = true
 $run_coverage = false
 
-$hlint_ignore = [
-                  "Use camelCase",
-                  # "Use mappend",
-                ]
-$hlint_opts   = [
-                  # "--hint=Generalise",
-                  "--report"
-                ]
-
 $hspec_opts   = [
                   "--print-cpu-time",
                   "--qc-max-success=10000",
@@ -106,10 +97,20 @@ end
 
 
 def linting()
-  section "linting",       :condition => $run_linting, :noexception => true do
-    opts = $hlint_opts + $hlint_ignore.map { |ign| "-i \"#{ign}\"" }
-    opts = opts.join(" ")
-    command_withinput "hlint src tests #{opts}"
+  section "linting", :condition => $run_linting, :noexception => true do
+    def mkopts(opts: [], ignore: [])
+      hlint_opts    = ["--hint=Generalise", "--report"]
+      hlint_ignore  = ["Use camelCase"]
+      (hlint_opts + opts + (hlint_ignore + ignore).map { |ign| "-i \"#{ign}\"" }).join(" ")
+    end
+    
+    noSystemCallError do
+      command_withinput "hlint src #{mkopts(:ignore => ["Use mappend", "Use fmap"])}"
+    end
+
+    noSystemCallError do
+      command_withinput "hlint tests #{mkopts(:ignore => ["Redundant do"])}"
+    end
   end
 end
 
