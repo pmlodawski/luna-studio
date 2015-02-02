@@ -5,9 +5,8 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 module Flowbox.Control.Monad.Loops (
+    module Flowbox.Control.Monad.Loops,
     module X,
-    repeatUntil,
-    untilRight,
 ) where
 
 import Control.Monad       (liftM)
@@ -32,3 +31,7 @@ untilRight action errorHandler = do
         Right ok -> return ok
         Left err -> do errorHandler err
                        untilRight action errorHandler
+
+
+untilTrue :: Monad m => m Bool -> m ()
+untilTrue = untilM_ (return ())
