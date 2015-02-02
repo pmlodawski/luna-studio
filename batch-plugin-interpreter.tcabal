@@ -23,8 +23,6 @@ Library
 
     Build-Depends:  base,
                     batch-lib-project-manager,
-                    -- constraint on blaze-markup is a temporary fix for trifectasdbnboflus
-                    blaze-markup < 0.6.3,
                     bytestring,
                     containers,
                     either,
