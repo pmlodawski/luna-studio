@@ -382,11 +382,14 @@ alias TransformD = Transform Double
 # alias Path a         = (Bool, [ControlPoint a])
 # alias Shape a        = [Path a]
 
-def imageMatte self::Std path::Path channelName::String -> (Matte Double):
+def imageMatte self::Std path::Path channelName::String -> (Maybe (Matte Double)):
      ```autoLift2 imageMatteLuna #{path} #{channelName}```
 
-def vectorMatte self::Std mask::Mask -> (Matte Double):
+def vectorMatte self::Std mask::Mask -> (Maybe (Matte Double)):
     ```liftF1 vectorMatteLuna #{mask}```
+
+def noMatte self::Std:
+    ```val (Nothing :: Maybe (Matte Double))```
 
 def Image.offsetMatte self::Image value::Color matte::(Maybe (Matte Double)) -> Image:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
