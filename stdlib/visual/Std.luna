@@ -385,7 +385,7 @@ alias TransformD = Transform Double
 def imageMatte self::Std path::Path channelName::String -> (Maybe (Matte Double)):
      ```autoLift2 imageMatteLuna #{path} #{channelName}```
 
-def vectorMatte self::Std mask::(Mask Float) -> (Maybe (Matte Double)):
+def vectorMatte self::Std mask::Mask -> (Maybe (Matte Double)):
     ```liftF1 vectorMatteLuna #{mask}```
 
 def noMatte self::Std:
@@ -403,7 +403,7 @@ def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe (M
 def Image.gradeMatte self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Double)) -> Image:
     ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
-alias Mask a         = (Path a, Maybe (Path a))
+alias Mask = (Path Float, Maybe (Path Float))
 
 def point self::Std x y:
     Point2 x y
@@ -423,7 +423,7 @@ def shape paths:
 def mask path feather:
     (path, feather)
 
-def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image:
+def rasterizeMask self::Std w::Int h::Int m::Mask -> Image:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
 
 # COLORS
