@@ -39,23 +39,31 @@ noBody   = []
 noFields = []
 
 data Decl a e
-    = Data      (DataDecl a e)
-    | Func      (FuncDecl a e [e])
+    = Data      { _dataDecl :: DataDecl a e }
+    | Func      { _funcDecl :: FuncDecl a e [e] }
     | Imp       { _modPath :: Path    , _rename   :: Maybe TNameP , _targets :: [ImpTgt]                                 }
     | TpAls     { _dstType :: LType a , _srcType  :: LType a                                                             }
     | TpWrp     { _dstType :: LType a , _srcType  :: LType a                                                             }
     | Foreign   (Foreign (ForeignDecl a e))
     | Pragma    Pragma
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq, Read)
 
 
-data FuncDecl a e body = FuncDecl Path (FuncSig a e) (FuncOutput a) body      deriving (Show, Generic)
-data DataDecl a e      = DataDecl TNameP DataParams [LCons a e] [LDecl a e]   deriving (Show, Generic)
+data FuncDecl a e body = FuncDecl { _funcDeclPath   :: Path
+                                  , _funcDeclSig    :: FuncSig a e
+                                  , _funcDeclOutput :: FuncOutput a
+                                  , _funcDeclBody   :: body
+                                  } deriving (Show, Generic, Eq, Read)
+data DataDecl a e      = DataDecl { _dataDeclName   :: TNameP
+                                  , _dataDeclParams :: DataParams
+                                  , _dataDeclCons   :: [LCons a e]
+                                  , _dataDeclDecls  :: [LDecl a e]
+                                  } deriving (Show, Generic, Eq, Read)
 
 data ForeignDecl a e
     = FData (DataDecl a e)
     | FFunc (FuncDecl a e ForeignCode)
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq, Read)
 
 
 
@@ -71,12 +79,12 @@ data ForeignDecl a e
 -- import Math: sin :: Double -> Double
 
 
-data Cons  a e = Cons   { _consName :: CNameP   , _fields :: [LField a e]                  } deriving (Show, Generic)
-data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VNameP, _fVal :: Maybe e } deriving (Show, Generic)
+data Cons  a e = Cons   { _consName :: CNameP   , _fields :: [LField a e]                  } deriving (Show, Generic, Eq, Read)
+data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VNameP, _fVal :: Maybe e } deriving (Show, Generic, Eq, Read)
 -- FIXME[wd]: przeniesc w inne miejsce
 data ImpTgt    = ImpVar  { _vName  :: VNameP   , _vRename :: Maybe VNameP }
                | ImpType { _tName  :: TNameP   , _tRename :: Maybe TNameP }
-               | Wildcard deriving (Show, Generic)
+               | Wildcard deriving (Show, Generic, Eq, Read)
 
 type Path       = [TNameP]
 type LCons  a e = Label a (Cons a e)
@@ -85,6 +93,8 @@ type LField a e = Label a (Field a e)
 
 
 makeLenses ''Decl
+makeLenses ''DataDecl
+makeLenses ''FuncDecl
 
 
 

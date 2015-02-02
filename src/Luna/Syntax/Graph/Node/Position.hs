@@ -4,20 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
 
-{-# LANGUAGE OverlappingInstances #-}
+module Luna.Syntax.Graph.Node.Position where
 
-module Luna.Syntax.Pragma where
-
-import Flowbox.Prelude hiding (Cons, traverse)
+import Flowbox.Prelude
 
 
-data Pragma = Enable  Text
-            | Disable Text
-            | Push    Text
-            | Pop     Text
-            deriving (Show, Generic, Eq, Read)
 
+type Position = (Float, Float)
 

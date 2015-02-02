@@ -4,18 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
-module Luna.Syntax.Foreign where
+module Luna.Syntax.Graph.Node.Expr where
 
 import Flowbox.Prelude
-
-import qualified Prelude
-
-
-data Foreign a = Foreign Target a
-               deriving (Show, Generic, Functor, Traversable, Foldable, Eq, Read)
+import Luna.Syntax.Expr                  (Expr)
+import Luna.Syntax.Graph.Node.StringExpr (StringExpr)
 
 
-data Target = Haskell
-            | CPP
-            deriving (Show, Generic, Eq, Read)
+
+data NodeExpr a v = StringExpr { _strExpr :: StringExpr }
+                  | ASTExpr    { _expr :: Expr a v      }
+                  deriving (Show, Eq, Read)
+
+
+
+makeLenses ''NodeExpr

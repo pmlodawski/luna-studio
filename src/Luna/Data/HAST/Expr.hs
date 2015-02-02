@@ -25,6 +25,7 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | CondE        { _cond      :: Expr     , _success   :: [Expr]      , _failure :: [Expr]                                }
           | RecUpdE      { _expr      :: Expr     , _name      :: Text        , _val     :: Expr                                  }
           | Import       { _qualified :: Bool     , _segments  :: [Text]      , _rename  :: Maybe Text                            }
+          | OperatorE    { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                  }
           | Infix        { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                  }
           | Assignment   { _src       :: Expr     , _dst       :: Expr                                                            }
           | Arrow        { _src       :: Expr     , _dst       :: Expr                                                            }
@@ -34,13 +35,14 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | Lambda       { _paths     :: [Expr]   , _expr      :: Expr                                                            }
           | LetBlock     { _exprs     :: [Expr]   , _result    :: Expr                                                            }
           | InstanceD    { _tp        :: Expr     , _decs      :: [Expr]                                                          }
+          | TypeInstance { _tp        :: Expr     , _expr      :: Expr                                                            }
           | Con          { _name      :: Text     , _fields    :: [Expr]                                                          }
           | AppE         { _src       :: Expr     , _dst       :: Expr                                                            }
           | AppT         { _src       :: Expr     , _dst       :: Expr                                                            }
           | AppP         { _src       :: Expr     , _dst       :: Expr                                                            }
           | CaseE        { _expr      :: Expr     , _matches   :: [Expr]                                                          }
           | Match        { _pat       :: Expr     , _matchBody :: Expr                                                            }
-          | ViewP        { _name      :: Text     , _dst       :: Expr                                                            } 
+          | ViewP        { _expr      :: Expr     , _dst       :: Expr                                                            } 
           | Tuple        { _items     :: [Expr]                                                                                   }
           | TupleP       { _items     :: [Expr]                                                                                   }
           | ListE        { _items     :: [Expr]                                                                                   }
@@ -60,6 +62,9 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | THE          { _expr      :: Expr                                                                                     }
           | Lit          { _lval      :: Lit                                                                                      }
           | Comment      { _comment   :: Comment                                                                                  }
+          | DataKindT    { _expr      :: Expr }
+          | MacroE       String [Expr]
+          | Pragma       Pragma
           | WildP
           | RecWildP
           | NOP
@@ -67,13 +72,13 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | Bang Expr
           deriving (Show)
 
+data Pragma = Include String deriving (Show)
 
 proxy name = TypedE (ConE ["Proxy"]) (AppT (ConT "Proxy") (LitT $ Lit.String name))
 app        = foldl AppE 
 appP       = foldl AppP
 
-rtuple = foldr cons (Tuple [])
-    where cons a b = Tuple [a,b]
+rtuple items = MacroE  ("_rtup" <> show (length items)) items
 
 
 val = flip Function mempty

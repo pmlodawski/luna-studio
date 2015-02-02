@@ -4,20 +4,18 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
 
-{-# LANGUAGE OverlappingInstances #-}
+module Luna.Syntax.Graph.Port where
 
-module Luna.Syntax.Pragma where
-
-import Flowbox.Prelude hiding (Cons, traverse)
+import Flowbox.Prelude
 
 
-data Pragma = Enable  Text
-            | Disable Text
-            | Push    Text
-            | Pop     Text
-            deriving (Show, Generic, Eq, Read)
+
+data Port = All
+          | Num Int
+          deriving (Eq, Show, Ord, Read)
 
 
+toList :: Port -> [Int]
+toList All     = []
+toList (Num a) = [a]

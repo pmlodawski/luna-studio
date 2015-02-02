@@ -7,6 +7,7 @@ import Flowbox.Prelude hiding (maybe)
 import           Text.Parser.Combinators 
 import qualified Luna.Parser.Token       as Tok
 import qualified Luna.Syntax.Expr as Expr
+import           Luna.Syntax.Expr (LExpr, Expr)
 import Luna.Parser.Builder (label, labeled, withLabeled, nextID)
 import Luna.Parser.Combinators (just, many1, (<??>), applyAll, maybe)
 import Luna.Parser.Struct (blockBegin)
@@ -21,9 +22,11 @@ import qualified Data.Maps                    as Map
 import           Data.List                    (sortBy)
 import qualified Luna.Data.StructInfo         as StructInfo
 import qualified Luna.Data.Namespace.State    as Namespace
+import           Luna.Data.Namespace          (NamespaceMonad)
 import qualified Luna.Parser.State            as ParserState
+import           Luna.Parser.State            (ParserState)
 import           Luna.Data.StructInfo         (OriginInfo(OriginInfo))
-import Control.Monad.State (get)
+import Control.Monad.State (MonadState, get)
 import           Data.Maybe                   (isJust, fromJust)
 import qualified Luna.Syntax.Name.Pattern     as NamePat
 import           Luna.Syntax.Label  (Label(Label))
@@ -31,13 +34,14 @@ import           Luna.Syntax.Name.Pattern     (NamePat(NamePat))
 
 import           Text.Parser.Expression (Assoc(AssocLeft), Operator(Infix, Prefix, Postfix), buildExpressionParser)
 import qualified Luna.Parser.Pattern as Pat
-import           Luna.Parser.Type    (typic)
+import           Luna.Parser.Type    (typic, metaBase)
 import           Luna.Parser.Literal (literal)
 import qualified Luna.Syntax.Name    as Name
 import qualified Data.ByteString.UTF8         as UTF8
 import           Data.Char                    (isSpace)
 import qualified Luna.System.Session as Session
 import qualified Luna.System.Pragma.Store  as Pragma
+import           Luna.System.Pragma.Store  (MonadPragmaStore)
 import qualified Luna.System.Pragma        as Pragma (isEnabled)
 import qualified Luna.Parser.Pragma        as Pragma
 
@@ -45,8 +49,13 @@ import qualified Luna.Parser.Decl          as Decl
 import qualified Luna.Syntax.Label         as Label
 
 import Text.Trifecta.Rendering (Caret(Caret))
-import Text.Trifecta.Combinators (careting)
+import Text.Trifecta.Combinators (DeltaParsing, careting)
 import Text.Trifecta.Delta (column)
+import Luna.Syntax.Enum (IDTag)
+
+import Luna.Parser.Indent (MonadIndent)
+
+type ParserMonad m = (MonadIndent m, MonadState ParserState m, DeltaParsing m, NamespaceMonad m, MonadPragmaStore m)
 
 prevParsedChar = do
     Caret delta bs <- careting
@@ -57,7 +66,6 @@ prevParsedChar = do
 lastLexemeEmpty = do
     prevChar <- prevParsedChar
     when (isSpace prevChar) $ fail "not empty"
-
 
 
 
@@ -133,20 +141,26 @@ accE      = try( (\id a b -> label id $ Expr.Accessor a b) <$> nextID <*> accBas
 
 
 
-parensE p = Tok.parens (p <|> (labeled (Expr.Tuple <$> pure []))) -- checks for empty tuple
+parensE p = Tok.parens $ choice [ Expr.Meta    <$  Tok.meta <*> labeled metaBase
+                                , Expr.Grouped <$> p 
+                                , Expr.Grouped <$> labeled (Expr.Tuple <$> pure [])
+                                ]
 
 callList     p = Tok.parens (sepBy p Tok.separator)
 callTermE p = (\id a b-> label id (Expr.app b a)) <$ lastLexemeEmpty <*> nextID <*> callList (appArg p)
 
-
+entBaseE :: ParserMonad m => m (LExpr IDTag ())
 entBaseE        = entConsE entComplexE
+
+pEntBaseSimpleE :: ParserMonad m => m (LExpr IDTag ())
 pEntBaseSimpleE = entConsE entSimpleE
 
-entConsE base = choice [ try $ labeled (Expr.Grouped <$> parensE (tlExpr base))
+
+entConsE base = choice [ try $ labeled (parensE (tlExpr base))
                        , base
                        ]
 
-arg = Decl.arg (view Label.element <$> pEntBaseSimpleE)
+arg = Decl.arg pEntBaseSimpleE
 
 lambda = Expr.Lambda <$> lambdaSingleArg <*> pure Nothing <*> exprBlock
 lambdaSingleArg = (:[]) <$> labeled arg
@@ -158,20 +172,19 @@ entComplexE = choice[ --labeled (Expr.Decl <$> labeled decl) -- FIXME: zrobic su
 
 entSimpleE = choice[ caseE -- CHECK [wd]: removed try
                    --, condE
-                   , labeled $ Expr.Grouped <$> parensE expr
+                   , labeled $ parensE expr
                    , labeled $ try lambda
                    , identE
                    --, try (labeled Expr.RefType <$  Tok.ref <*> Tok.conIdent) <* Tok.accessor <*> Tok.varOp
-                   , labeled $ Expr.Ref     <$  Tok.ref <*> entSimpleE
-                   , labeled $ Expr.Lit     <$> literal
+                   --, labeled $ Expr.Curry <$ Tok.curry <*> ParserState.withCurrying entSimpleE
+                   , labeled $ Expr.Curry <$ Tok.curry <*> labeled (Expr.Var <$> (Expr.Variable <$> Tok.varIdent <*> pure ()))
+                   , labeled $ Expr.Lit <$> literal
                    , labeled $ listE
                    --, labeled $ Expr.Native  <$> nativeE
                    ]
            <?> "expression term"
 
 optableE = [ 
-           --, [ prefixM   "@"  (appID Expr.Ref)                                  ]
-             --[ binaryM   ""   (callBuilder <$> genID <*> genID)    AssocLeft ]
              [ operator4 "^"                                  AssocLeft ]
            , [ operator4 "*"                                  AssocLeft ]
            , [ operator4 "/"                                  AssocLeft ]
@@ -226,7 +239,7 @@ appArg p = try (Expr.AppArg <$> just Tok.varIdent <* Tok.assignment <*> p) <|> (
 
 mkFuncParser baseVar (id, mpatt) = case mpatt of
     Nothing                                       -> baseVar
-    Just patt@(NamePat.NamePatDesc pfx base segs) -> ParserState.withReserved segNames 
+    Just patt@(NamePat.NamePatDesc pfx base segs) -> ParserState.withReserved (tail segNames) 
                                                    $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
               segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
