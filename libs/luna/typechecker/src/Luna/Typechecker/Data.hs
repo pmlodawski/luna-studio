@@ -1,70 +1,29 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module Luna.Typechecker.Data (
-    TVar, Var,
-    Fieldlabel, Field,
-    Subst, Typo,
-    Type(..), Predicate(..), Constraint(..), TypeScheme(..),
-    TypeMap, TypeSchemeMap,
-    null_subst, init_typo, true_cons
+    module TVarMod,
+    module SubstMod,
+    module TypoMod,
+    module TypeSchemeMod,
+    module PredicateMod,
+    module TypeMod,
+    module ConstraintMod,
+    TypeMap, TypeSchemeMap
   ) where
 
+import Luna.Typechecker.Data.TVar       as TVarMod
+import Luna.Typechecker.Data.Subst      as SubstMod
+import Luna.Typechecker.Data.Typo       as TypoMod
+import Luna.Typechecker.Data.TypeScheme as TypeSchemeMod
+import Luna.Typechecker.Data.Predicate  as PredicateMod
+import Luna.Typechecker.Data.Type       as TypeMod
+import Luna.Typechecker.Data.Constraint as ConstraintMod
 
-import Data.Map.Strict  (Map)
-import Data.Monoid
-
-import Luna.Syntax.Enum (ID)
-
-
-type TVar          = Int
-type Var           = Int
-type Fieldlabel    = Var
-type Field         = (Fieldlabel, Type)
-type TypeMap       = Map ID Type
-type TypeSchemeMap = Map ID TypeScheme
-type Subst         = [(TVar, Type)]
-type Typo          = [(Var,TypeScheme)]
+import Data.IntMap.Strict   (IntMap)
 
 
-data Type = TV TVar
-          | Type `Fun` Type
-          | Record [Field]
-          deriving (Show,Eq)
 
-
-data Predicate  = TRUE
-                | Type `Subsume` Type
-                | Reckind Type Fieldlabel Type
-                deriving (Show,Eq)
-
-
-data Constraint = C [Predicate]
-                | Proj [TVar] [Predicate]
-                deriving (Show)
-
-
-data TypeScheme = Mono Type
-                | Poly [TVar] Constraint Type
-                deriving (Show)
-
-
-empty_typo :: Typo
-empty_typo = []
-
-
-null_subst :: Subst
-null_subst = []
-
-
-init_typo :: [Typo]
-init_typo = [empty_typo]
-
-
-true_cons :: Constraint
-true_cons = C [TRUE]
-
-
-instance Monoid Constraint where
-  mempty = C [TRUE]
-  mappend (C p1) (C p2)               = C (p1 ++ p2)
-  mappend (C p1) (Proj tvr p2)        = Proj tvr (p1 ++ p2)
-  mappend (Proj tvr p1) (C p2)        = Proj tvr (p1 ++ p2)
-  mappend (Proj tv1 p1) (Proj tv2 p2) = Proj (tv1 ++ tv2) (p1 ++ p2)
+type MapID a        = IntMap a
+type TypeMap        = MapID Type
+type TypeSchemeMap  = MapID TypeScheme

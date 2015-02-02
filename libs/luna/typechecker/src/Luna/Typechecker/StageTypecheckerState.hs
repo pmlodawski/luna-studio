@@ -17,6 +17,8 @@ module Luna.Typechecker.StageTypecheckerState (
 import            Control.Applicative
 import            Control.Lens
 import            Control.Monad.State.Class                     (MonadState(..))
+
+import            Data.Default
 import            Data.Maybe
 import            Data.Monoid
 
@@ -28,8 +30,9 @@ import            Luna.Syntax.Enum                              (ID)
 import qualified  Luna.Syntax.Enum                              as Enum
 
 import            Luna.Typechecker.Data                         (
-                      TVar, Var,
-                      Subst, Typo,
+                      TVar(..), _TVar,
+                      Typo(..),
+                      Subst(..),
                       Type(..), Constraint(..), TypeScheme(..)
                   )
 import            Luna.Typechecker.Inference.Class              (StageTypecheckerCtx, StageTypecheckerPass)
@@ -53,8 +56,10 @@ withTypo typeEnv astElem action = push *> action astElem <* pop
 
 withClonedTypo :: (Monad m) => a -> (a -> StageTypecheckerPass m b) -> StageTypecheckerPass m b
 withClonedTypo x action = do
-  typo0 <- typo . _head & use
-  withTypo typo0 x action
+  mtypo0 <- typo . _head & preuse
+  case mtypo0 of
+    Nothing    -> withTypo def x action
+    Just typo0 -> withTypo typo0 x action
 
 
 withClonedTypo0 :: (Monad m) => StageTypecheckerPass m a -> StageTypecheckerPass m a
@@ -68,8 +73,8 @@ insertNewMonoTypeVariable labID = do
     typo . _head %= flip insert typeEnvElem
     return $ TV tvarID
 
-insert :: Typo -> (Var, TypeScheme) -> Typo
-insert a (x,t) = (x,t):a
+insert :: Typo -> (ID, TypeScheme) -> Typo
+insert a (x,t) = Typo $ (x,t):fromTypo a
 
 getTypeById :: Monad m => ID -> StageTypecheckerPass m Type
 getTypeById idV = do
@@ -120,7 +125,7 @@ getTargetID lab =
 getEnv :: (Monad m) => StageTypecheckerPass m Typo
 getEnv =
     typo & use >>= \case
-        []    -> return []
+        []    -> return def
         (x:_) -> return x
 
 
@@ -131,14 +136,14 @@ add_constraint c1 =
 
 
 newtvar :: (Monad m) => StageTypecheckerPass m TVar
-newtvar = use nextTVar <* (nextTVar += 1)
+newtvar = use nextTVar <* (nextTVar . _TVar += 1)
 
 
 rename :: (Monad m) => StageTypecheckerPass m Subst -> TVar -> StageTypecheckerPass m Subst
 rename s x = do
     newtv <- newtvar
-    s' <- s
-    return ((x, TV newtv):s')
+    Subst s' <- s
+    return $ Subst ((x, TV newtv):s')
 
 
 

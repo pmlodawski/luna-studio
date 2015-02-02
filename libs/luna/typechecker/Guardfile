@@ -17,28 +17,6 @@ $run_tests    = true
 $run_linting  = true
 $run_coverage = false
 
-# Those parts of output are printed after the typechecker has run
-$output       = [ 
-                  # " 1.1. Stage1     : ast1",
-                  # " 1.2. Stage1     : astinfo1",
-                  # " 2.   SA         : sa2",
-                  # " 3.1. Stage2     : ast3",
-                  # " 3.2. Stage2     : astinfo3",
-                  # " 4.1. ImplSelf   : ast4",
-                  # " 4.2. ImplSelf   : astinfo4",
-                  # " 5.   SA         : sa5",
-                  # " 6.   PTyChk     : constraints",
-                  # " 7.1. ImplScopes : ast6",
-                  # " 7.2. ImplScopes : astinfo6",
-                  # " 8.1. ImplCalls  : ast7",
-                  # " 8.2. ImplCalls  : astinfo7",
-                  # " 9.   SSA        : ast8",
-                  # "10.   HAST       : hast9",
-                  # "11.   HSC        : hsc10",
-                ]
-$output_dir   = "tmp/"
-
-#
 $hlint_ignore = [
                   "Use camelCase",
                   # "Use mappend",
@@ -60,19 +38,10 @@ $hspec_opts   = [
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 guard :shell, :version => 2, :cli => "--color" do
-  watch(%r{^(src|tests)/.+\.l?hs$}) do |m|
+  watch(%r{^(src|tests|tests-lib|tests-pipeline)/.+\.l?hs$}) do |m|
     lastbuildguard(m[0]) do
       section "haskell file" do
         haskell_action m
-        show_output
-      end
-    end
-  end
-
-  watch(%r{^(tests)/.+\.luna$}) do |m|
-    lastbuildguard(m[0]) do
-      section "haskell file" do
-        tests
       end
     end
   end
@@ -85,26 +54,29 @@ guard :shell, :version => 2, :cli => "--color" do
     end
   end
 
+  watch(%r{^(tests/Specification)/.+\.luna$}) do |m|
+    lastbuildguard(m[0]) do
+      section "haskell file"do
+       tests
+     end
+    end
+  end
+
   # playgrounds
 
   watch(%r{^runtest.hs$}) do |m|
-    begin
-      lastbuildguard(m[0]) do
-        section "live tests"
-        command_withinput "../../../scripts/runhaskell", File.read("runtest.hs")
-      end
-    rescue SystemCallError => e
+    lastbuildguard(m[0]) do
+      section "live tests"
+      command_withinput "../../../scripts/runhaskell", File.read("runtest.hs")
     end
   end
 
   watch(%r{^playground.hs$}) do |m|
-    begin
-      lastbuildguard(m[0]) do
-        section "playground file change"
+    lastbuildguard(m[0]) do
+      section "playground file change" do
         command_interactive "ghc playground.hs"
         command_interactive "./playground"
       end
-    rescue SystemCallError => e
     end
   end
 end
@@ -150,7 +122,7 @@ end
 
 
 def tests()
-  section "tests", "rm -f luna-typechecker-tests.tix #{$output_dir}*", :condition => $run_tests, :noexception => true do
+  section "tests", :condition => $run_tests, :noexception => true do
     command_withinput "../../../dist/bin/libs/luna-typechecker-tests #{$hspec_opts.join(" ")}"
   end
 end
@@ -172,16 +144,6 @@ end
 
 
 def show_output
-  $output.map do |file|
-    puts "*".starfill.yellow
-    puts ("* * ".yellow + file.white.bold)
-    puts "*".starfill.yellow
-    if File.exists?($output_dir + file)
-      file_cont = (File.read ($output_dir + file))
-      puts file_cont.each_line.map {|l| "  * ".yellow + l}.join
-    else
-      puts "* * FILE DOESN'T EXIST: ".red + file
-    end
-  end
+  puts "no output defined"
 end
 

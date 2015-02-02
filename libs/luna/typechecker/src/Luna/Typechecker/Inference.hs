@@ -29,7 +29,7 @@ import            Luna.Pass                               (Pass(..))
 import qualified  Luna.Syntax.Arg                         as Arg
 import qualified  Luna.Syntax.Decl                        as Decl
 import qualified  Luna.Syntax.Enum                        as Enum
-import            Luna.Syntax.Enum                        (IDTag)
+import            Luna.Syntax.Enum                        (ID, IDTag)
 import qualified  Luna.Syntax.Expr                        as Expr
 import            Luna.Syntax.Expr                        (LExpr)
 import qualified  Luna.Syntax.Label                       as Label
@@ -39,9 +39,9 @@ import qualified  Luna.Syntax.Pat                         as Pat
 import qualified  Luna.Syntax.Traversals                  as AST
 
 import            Luna.Typechecker.Data (
-                      TVar, Var, Subst,
+                      TVar, Subst(..),
                       Type(..), Predicate(..), Constraint(..), TypeScheme(..),
-                      null_subst, true_cons, Typo
+                      true_cons, Typo(..)
                   )
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Inference.Class        (
@@ -98,7 +98,7 @@ defaultTraverseM = AST.defaultTraverseM StageTypechecker
 ---- top-level program
 
 --infer :: Term -> E (TVar, Subst, Constraint, Type)
---infer e = unTP (tp (init_typo, e)) (init_tvar, null_subst, true_cons)
+--infer e = unTP (tp (init_typo, e)) (init_tvar, mempty, true_cons)
 ----
 
 
@@ -242,15 +242,15 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
 expr _ = error "No idea how to infer type at the moment."
 
 
-inst :: (Monad m) => Typo -> Var -> StageTypecheckerPass m Type
+inst :: (Monad m) => Typo -> ID -> StageTypecheckerPass m Type
 inst env x =
-    case lookup x env of 
+    case lookup x (fromTypo env) of 
         Just ts -> case ts of
             Mono t        ->
                 return t
             Poly tvl c t  ->
               do
-                s' <- foldl rename (return null_subst) tvl
+                s' <- foldl rename (return def) tvl
                 c' <- apply s' c
                 t' <- apply s' t
                 add_constraint c'
@@ -290,5 +290,5 @@ projection _ _ = true_cons
 
 
 tv_typo :: Typo -> [TVar]
-tv_typo = foldr f [] where
+tv_typo = foldr f [] . fromTypo where
   f (v,ts) result = tv ts ++ result
