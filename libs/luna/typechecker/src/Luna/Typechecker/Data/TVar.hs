@@ -9,7 +9,7 @@ import Control.Lens
 import Data.Wrapper         (Pack(..), Unpack(..))
 
 
-newtype TVar  = TVar { fromTVar :: Int } deriving Eq
+newtype TVar  = TVar { fromTVar :: Int } deriving (Eq, Ord)
 
 makePrisms ''TVar
 

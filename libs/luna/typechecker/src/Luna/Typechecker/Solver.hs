@@ -19,7 +19,6 @@ import Luna.Typechecker.Inference.Class
 import Luna.Typechecker.StageTypecheckerState (report_error)
 
 
-
 cs :: (Monad m) => (Subst, Constraint) -> StageTypecheckerPass m (Subst, Constraint)
 cs (s, C c) =
  do (r,e) <- extract_predicates c
@@ -97,24 +96,38 @@ simplify_predicate (x:p) =
           return (if x `elem` p' then p' else x : p')
 
 
-
 do_unify :: (Monad m) => (Subst, [Predicate]) ->  StageTypecheckerPass m Subst
 do_unify (s, []) = return s
-do_unify (s, t `Subsume` t' : p) =
-   do s' <- unify(s,t,t')
-      do_unify (s',p)
+do_unify (s, t `Subsume` t' : p) = do
+    t1 <- apply s t
+    t1' <- apply s t'
+    s' <- unify (t1, t1')
+    do_unify (s' `composeSubst` s, p)
 do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal form" def
 
 
-unify :: (Monad m) => (Subst, Type, Type) ->  StageTypecheckerPass m Subst
-unify (s, TV x, TV y) =
-   if x == y then return s
-   else do t <- apply s (TV x)
-           return $ Subst ((y, t):fromSubst s)
-unify (s, TV x, t) =
-            do t'' <- apply s t
-               if x `elem` tv t'' then report_error "occurs check fails" def
-                else return $ Subst ((x, t''):fromSubst s)
-unify (s, t, TV x) = unify (s, TV x, t)
-unify (s, t1 `Fun` t1', t2 `Fun` t2') = do s' <- unify (s, t1, t2)
-                                           unify (s', t1', t2')
+unify :: (Monad m) => (Type, Type) ->  StageTypecheckerPass m Subst
+unify (t1 `Fun` t2, t1' `Fun` t2') = do
+    s1 <- unify (t1, t1')
+    t3 <- apply s1 t2
+    t3' <- apply s1 t2'
+    s2 <- unify (t3, t3')
+    return $ s2 `composeSubst` s1
+
+unify (TV x, t) = varBind x t
+
+unify (t, TV x) = unify (TV x, t)
+
+-- unify (s, Record f, Record f') = g (s,f,f') where
+--   g (s, [], []) = return s
+--   g (s, (l,t):f, (l',t'):f') =
+--     if l == l' then
+--                do s' <- unify(s,t,t')
+--                   g(s',f,f')
+--     else report_error "not matching record" null_subst
+
+
+varBind :: (Monad m) => TVar -> Type -> StageTypecheckerPass m Subst
+varBind var typeV | typeV == TV var = return identitySubst
+                  | var `elem` tv typeV = report_error "occurs check fails" identitySubst
+                  | otherwise = return $ singleSubst var typeV
