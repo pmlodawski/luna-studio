@@ -14,7 +14,7 @@ import qualified Data.Char                  as Char
 import qualified Data.Maybe                 as Maybe
 import qualified Text.Read                  as Read
 
-import           Flowbox.Control.Error                      (catchEither)
+import           Flowbox.Control.Error                      (catchEither, hoistEitherWith)
 import qualified Flowbox.Data.List                          as List
 import           Flowbox.Data.MapForest                     (MapForest)
 import           Flowbox.Prelude                            as Prelude hiding (children, inside)
@@ -48,7 +48,10 @@ import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
+import qualified Luna.Pass.CodeGen.HSC.HSC                  as HSC
 import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
+import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen   as HASTGen
+import qualified Luna.Data.Source as Source
 
 
 
@@ -117,8 +120,9 @@ executeNode callDataPath varNames = do
     stringExpr <- case node of
         Node.Expr (NodeExpr.StringExpr stringExpr) _ _ ->
             return stringExpr
-        _                                              ->
-            left $ Error.GraphError $(loc) "Wrong node type"
+        Node.Expr (NodeExpr.ASTExpr expr) _ _ -> do
+            hast <- hoistEitherWith (Error.OtherError $(loc)) =<< HASTGen.runExpr expr
+            StringExpr.Expr . view Source.code . head <$> (hoistEitherWith (Error.OtherError $(loc)) =<< HSC.run hast)
     execute callDataPath stringExpr varNames
 
 
