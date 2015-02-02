@@ -192,3 +192,11 @@ def section(name, *cmds, condition: true, noexception: false, &block)
     end
   end
 end
+
+
+def noSystemCallError(&block)
+  begin
+    block.call()
+  rescue SystemCallError => e
+  end
+end
