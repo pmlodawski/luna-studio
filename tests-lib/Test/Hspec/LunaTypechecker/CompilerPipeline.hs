@@ -83,7 +83,7 @@ lunaCompilerSteps fileName fileContents = do
 
         (ast5, constraints)             <- Pass.run2_ PTyChk.tcpass ast4 sa5
         f_typecheckerinference_ast      .= Just ast5
-        f_typecheckerinference_astinfo  .= Just constraints
+        f_typecheckerinference_tcstate  .= Just constraints
 
         (ast6, astinfo6)                <- Pass.run3_ ImplScopes.pass astinfo4 sa5 ast5
         g_desugarimplicitscopes_ast     .= Just ast6

@@ -34,7 +34,7 @@ data CompilerPipelineProgress
                                 , _d_desugarimplicitself_astinfo    :: Maybe ASTInfo.ASTInfo
                                 , _e_analysisstruct                 :: Maybe StructInfo.StructInfo
                                 , _f_typecheckerinference_ast       :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
-                                , _f_typecheckerinference_astinfo   :: Maybe Typechecker.StageTypecheckerState
+                                , _f_typecheckerinference_tcstate   :: Maybe Typechecker.StageTypecheckerState
                                 , _g_desugarimplicitscopes_ast      :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
                                 , _g_desugarimplicitscopes_astinfo  :: Maybe ASTInfo.ASTInfo
                                 , _h_desugarimplicitcalls_ast       :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
@@ -58,7 +58,7 @@ instance Default CompilerPipelineProgress where
                                     , _d_desugarimplicitself_astinfo    = Nothing
                                     , _e_analysisstruct                 = Nothing
                                     , _f_typecheckerinference_ast       = Nothing
-                                    , _f_typecheckerinference_astinfo   = Nothing
+                                    , _f_typecheckerinference_tcstate   = Nothing
                                     , _g_desugarimplicitscopes_ast      = Nothing
                                     , _g_desugarimplicitscopes_astinfo  = Nothing
                                     , _h_desugarimplicitcalls_ast       = Nothing
