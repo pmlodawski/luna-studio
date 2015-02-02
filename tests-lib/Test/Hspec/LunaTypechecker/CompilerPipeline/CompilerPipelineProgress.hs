@@ -40,7 +40,7 @@ data CompilerPipelineProgress
                                 , _h_desugarimplicitcalls_ast       :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
                                 , _h_desugarimplicitcalls_astinfo   :: Maybe ASTInfo.ASTInfo
                                 , _i_ssa                            :: Maybe (Unit.Unit (Module.LModule Enum.IDTag (Expr.LExpr Enum.IDTag ())))
-                                , _j_hshastgen                      :: Maybe HASTGen.HExpr
+                                , _j_hshastgen                      :: Maybe HASTGen.HE
                                 , _k_hshsc                          :: Maybe L.Text
                                 }
                                 deriving (Show)
