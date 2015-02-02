@@ -4,31 +4,31 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE OverloadedLists       #-}
-{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedLists       #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE ViewPatterns          #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
 
 module Flowbox.Graphics.Composition.Dither where
 
-import qualified Data.Array.Accelerate              as A
-import qualified Data.Array.Accelerate.Array.Sugar  as Sugar
+import qualified Data.Array.Accelerate             as A
+import qualified Data.Array.Accelerate.Array.Sugar as Sugar
 
 import Data.Vector.Unboxed as VU hiding (update)
 import Foreign.Storable
 
-import Flowbox.Prelude     as P hiding (ix)
-import Flowbox.Math.Matrix as M hiding (size)
 import Flowbox.Math.Index
+import Flowbox.Math.Matrix as M hiding (size)
+import Flowbox.Prelude     as P hiding (ix)
 
 import Math.Coordinate.Cartesian hiding (x, y)
 import Math.Space.Space          hiding (height, width)
 
-import Data.List
 import Data.Function
+import Data.List
 
 
 
@@ -119,7 +119,7 @@ atkinson = BMatrix [ 0  , 0  , 1/8, 1/8
 shiauFan4 :: (Unbox a, Fractional a) => DiffusionTable a
 shiauFan4 = BMatrix [ 0  , 0  , 0  , 4/8, 0
                     , 1/8, 1/8, 2/8, 0  , 0
-                    ] (Z :. 2 :. 5) 
+                    ] (Z :. 2 :. 5)
 
 shiauFan5 :: (Unbox a, Fractional a) => DiffusionTable a
 shiauFan5 = BMatrix [ 0   , 0   , 0   , 0   , 8/16, 0   , 0
@@ -130,8 +130,8 @@ bayerTable :: (Elt a, IsFloating a) => Int -> Matrix2 a
 bayerTable n = M.map (\x -> A.fromIntegral x / A.fromIntegral (A.lift maxVal + 1)) $ M.fromList arraySize array
     where array = snd <$> sortBy (compare `on` fst) table :: [Int]
           arraySize = Z :. tableSize :. tableSize :: DIM2
-          table = [1 .. maxVal] <&> \i -> (Z :. yIndex i tableSize 0 :. xIndex i tableSize 0, i) 
-          maxVal = tableSize ^ 2
+          table = [1 .. maxVal] <&> \i -> (Z :. yIndex i tableSize 0 :. xIndex i tableSize 0, i)
+          maxVal = tableSize ^ (2 :: Int)
           tableSize = 2 ^ n
           xIndex i size shift = if size == 2 then shift + i2 else xIndex newi s2 (shift + i2 * s2)
               where s2 = size `div` 2
@@ -143,7 +143,7 @@ bayerTable n = M.map (\x -> A.fromIntegral x / A.fromIntegral (A.lift maxVal + 1
                     newi = ((i - 1) `div` 4) + 1
 
 bayer :: (Elt a, IsFloating a) => Int -> Matrix2 a -> Matrix2 a
-bayer n mat = M.generate (shape mat) $ \ix@(A.unlift -> Z :. y :. x :: EDIM2) -> 
+bayer n mat = M.generate (shape mat) $ \ix@(A.unlift -> Z :. y :. x :: EDIM2) ->
         let bayerVal = boundedIndex2D A.Wrap mosaic $ Point2 x y
             oldpixel = mat M.! ix
         in A.fromIntegral (A.floor (oldpixel * bits + bayerVal) :: Exp Int) / bits

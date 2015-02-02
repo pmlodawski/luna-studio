@@ -21,19 +21,17 @@ data Deriving = Eq
               | Read
               | Show
               | Generic
+              | Typeable
+              | GenNewtype String
               deriving (Show)
 
 
 genCode :: [Deriving] -> Text
 genCode d = case d of
         [] -> ""
-        _  -> " deriving (" <> mjoin ", " (map (fromString . show) d) <> ")"
+        _  -> " deriving (" <> mjoin ", " (map (fromString . showDeriving) d) <> ")"
 
-
-
-
-
-
-
-
-
+showDeriving :: Deriving -> String
+showDeriving = \case
+    GenNewtype s -> s
+    a            -> show a

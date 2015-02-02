@@ -18,7 +18,7 @@ import           GHC.Generics (Generic)
 -- Data types
 ----------------------------------------------------------------------
 
-data Label l a = Label { _label :: l, _element :: a } deriving (Generic, Functor)
+data Label l a = Label { _label :: l, _element :: a } deriving (Generic, Functor, Eq, Read)
 
 makeLenses ''Label
 

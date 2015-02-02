@@ -66,11 +66,11 @@ import qualified Generated.Proto.Expr.Var                  as GenVar
 import qualified Generated.Proto.Expr.Wildcard             as GenWildcard
 import           Luna.AST.Arg                              (Arg)
 import qualified Luna.AST.Arg                              as Arg
-import qualified Luna.AST.Common                           as AST
-import           Luna.AST.Expr                             (Expr)
-import qualified Luna.AST.Expr                             as Expr
 import           Luna.Data.Serialize.Proto.Conversion.Name ()
 import           Luna.Data.Serialize.Proto.Conversion.Pat  ()
+import qualified Luna.Syntax.AST                           as AST
+import           Luna.Syntax.Expr                          (Expr)
+import qualified Luna.Syntax.Expr                          as Expr
 import qualified Text.ProtocolBuffers.Extensions           as Extensions
 
 

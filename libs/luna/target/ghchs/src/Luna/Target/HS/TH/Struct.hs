@@ -89,7 +89,80 @@ con2TypeName conName = do
 appEs :: Exp -> [Exp] -> Exp
 appEs = foldl AppE
 
-generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++ sigs ++ getterDefs ++ setterDefs where
+--generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++ sigs 
+--                                                                              ++ getterDefs 
+--                                                                              ++ setterDefs 
+--                                                                              -- ++ fncDefs 
+--    where
+--    unit = mkName "x"
+--    obj  = mkName "obj"
+
+--    rezipPatGens conName (fieldName, listGen) = (fieldName, [(conName, listGen)])
+--    prepareGetters (conName, fieldNames) = fmap (rezipPatGens conName) $ mkArgPatGens fieldNames
+--    mkPatMap   = Map.fromList . prepareGetters
+
+--    consPatMap :: Map String [(Name, PatCons)] -- Map FieldName [(ConsName, PatCons)]
+--    consPatMap = Map.unionsWith (++)
+--               $ map mkPatMap fieldDescs
+--    fieldNames  = Map.keys consPatMap
+--    setterNames = fmap Naming.setter fieldNames
+
+--    --accessors
+--    mkGetter :: String -> [(Name, PatCons)] -> Dec
+--    mkGetter fieldName descs = FunD accName [Clause [VarP obj] (NormalB $ CaseE (VarE obj) cases) []] where
+--        accName  = mkName $ Naming.mkFieldGetter typeName fieldName
+--        cases    = fmap (uncurry $ mkCase fieldName) descs
+--        mkCase fieldName = mkAccCase (VarE unit) unit
+
+--    mkSetter :: String -> [(Name, PatCons)] -> Dec
+--    mkSetter fieldName descs = FunD accName [Clause [VarP obj, VarP unit] (NormalB $ CaseE (VarE obj) cases) []] where
+--        accName  = mkName $ Naming.mkFieldSetter typeName fieldName
+--        cases    = fmap (uncurry $ mkCase fieldName) descs
+--        mkCase fieldName conName fieldGen = mkAccCase cons (mkName "_") conName fieldGen where
+--            cons = appEs (ConE conName) (fmap VarE $ runPatCons fieldGen unit)
+
+--    mkAccessor fieldName descs = [mkGetter fieldName descs, mkSetter fieldName descs]
+
+--    mkAccCase result fieldName conName fieldGen = Match (ConP conName conPats) (NormalB result) [] where
+--        conPats = fmap VarP $ runPatCons fieldGen fieldName
+
+--    accessors = concat $ fmap (uncurry mkAccessor) $ Map.assocs consPatMap
+
+--    -- sigs
+--    getterSigs = fmap (mkSimpleMemSig0 typeName) fieldNames
+--    setterSigs = fmap (mkSimpleMemSig1 typeName) setterNames
+--    sigs       = getterSigs ++ setterSigs
+
+--    --defs
+--    getDefNames = fmap (mkGetterDef typeName) fieldNames
+--    setDefNames = fmap (mkSetterDef typeName) fieldNames
+
+--    getterDefs = fmap getGetter getDefNames
+--        where getGetter (fieldName, accName) = mkSimpleMemDef 1 typeName fieldName accName
+
+--    setterDefs = fmap getSetter setDefNames
+--        where getSetter (fieldName, accName) = mkSimpleMemDef 2 typeName fieldName accName
+--    --fncDefs    = fmap (mkFncDef typeName) fieldNames
+
+--    mkGetterDef typeName fieldName = (fieldName, accName) where
+--        accName    = mkName $ Naming.mkFieldGetter typeName fieldName
+
+--    mkSetterDef typeName fieldName = (setFieldName, accName) where
+--        setFieldName = Naming.setter fieldName
+--        accName      = mkName $ Naming.mkFieldSetter typeName fieldName
+
+
+    --dokonczyc!!!
+
+    --mkFncDef typeName fieldName = TupE (VarE ) where
+    --    getterName = mkName $ Naming.mkFieldGetter typeName fieldName
+    --    setterName = mkName $ Naming.mkFieldGetter typeName fieldName
+
+generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++ sigs 
+                                                                              ++ getterDefs 
+                                                                              ++ setterDefs 
+                                                                              -- ++ fncDefs 
+    where
     unit = mkName "x"
     obj  = mkName "obj"
 
@@ -132,6 +205,7 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     --defs
     getterDefs = fmap (mkGetterDef typeName) fieldNames
     setterDefs = fmap (mkSetterDef typeName) fieldNames
+    --fncDefs    = fmap (mkFncDef typeName) fieldNames
 
     mkGetterDef typeName fieldName = mkSimpleMemDef 1 typeName fieldName accName where
         accName    = mkName $ Naming.mkFieldGetter typeName fieldName
@@ -139,6 +213,7 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     mkSetterDef typeName fieldName = mkSimpleMemDef 2 typeName setterName accName where
         setterName = Naming.setter fieldName
         accName    = mkName $ Naming.mkFieldSetter typeName fieldName
+
 
 newtype PatCons = PatCons { runPatCons :: Name -> [Name] }
 instance Show PatCons where
@@ -189,44 +264,109 @@ mkLiftFR pNum base = AppE (VarE fname) (VarE base) where
     fname = mkName $ "liftFR" ++ show pNum
 
 
-registerMethodSignature typeName methodName (Naming.toName -> funcName) = do
-    funcT   <- getTypeQ funcName
-    dataDec <- getDec typeName
-    let
-        dataVars   = map VarT $ getDecVarNames dataDec
-        baseT      = ConT typeName
-        nt         = foldl AppT (ConT . mkName $ Naming.classHasProp) [LitT (StrTyLit methodName), baseT, funcT]
-        funcs      = [FunD (mkName Naming.funcPropSig) [Clause [WildP] (NormalB (VarE funcName)) []]]
-        inst       = InstanceD [] nt funcs
+--registerMethodSignature typeName methodName (Naming.toName -> funcName) = do
+--    funcT   <- getTypeQ funcName
+--    dataDec <- getDec typeName
+--    let
+--        dataVars   = map VarT $ getDecVarNames dataDec
+--        baseT      = ConT typeName
+--        nt         = foldl AppT (ConT . mkName $ Naming.classHasProp) [LitT (StrTyLit methodName), baseT, funcT]
+--        funcs      = [FunD (mkName Naming.funcPropSig) [Clause [WildP] (NormalB (VarE funcName)) []]]
+--        inst       = InstanceD [] nt funcs
 
-    return [inst]
+--    return [inst]
+
+
+--registerMethod :: Name -> String -> Q [Dec]
+--registerMethod typeName methodName = do
+--    let typeNameBase = nameBase typeName
+--        funcSig      = Naming.mkMemSig typeNameBase methodName
+--        funcDef      = Naming.mkMemDef typeNameBase methodName
+--    (++) <$> registerMethodSignature  typeName methodName funcSig
+--         <*> registerMethodDefinition typeName methodName funcDef
+
+
+--registerMethod :: Name -> String -> Q [Dec]
+--registerMethod typeName methodName = do
+--    let typeNameBase = nameBase typeName
+--        funcSig      = Naming.mkMemSig typeNameBase methodName
+--        funcDef      = Naming.mkMemDef typeNameBase methodName
+--    registerMethodDefinition typeName methodName funcDef
+
+--registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
+--    funcT   <- getTypeQ funcName
+--    dataDec <- getDec typeName
+--    argsT      <- VarT <$> newName "args"
+--    let
+--        dataVars   = map VarT $ getDecVarNames dataDec
+--        baseT      = ConT typeName
+--        prectx     = getContext funcT
+--        sig        = getSignature funcT
+--        --c1         = equalT argsT sig
+--        nt         = foldl AppT (ConT $ mkName "MemberProvider") [baseT, LitT (StrTyLit methodName), argsT, sig]
+--        funcs      = [FunD (mkName "getMember") [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+--        ctx        = fmap fixCtx_GHC_7_8 $ prectx
+--        inst       = InstanceD ctx nt funcs
+--    return $ [inst]
 
 registerMethod :: Name -> String -> Q [Dec]
 registerMethod typeName methodName = do
     let typeNameBase = nameBase typeName
         funcSig      = Naming.mkMemSig typeNameBase methodName
         funcDef      = Naming.mkMemDef typeNameBase methodName
-    (++) <$> registerMethodSignature  typeName methodName funcSig
-         <*> registerMethodDefinition typeName methodName funcDef
-
+        funcFnc      = Naming.mkMemFnc typeNameBase methodName
+    registerMethodDefinition typeName methodName funcFnc
 
 registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
     funcT   <- getTypeQ funcName
     dataDec <- getDec typeName
     argsT      <- VarT <$> newName "args"
-    outT       <- VarT <$> newName "out"
+    resultT    <- VarT <$> newName "result"
     let
         dataVars   = map VarT $ getDecVarNames dataDec
         baseT      = ConT typeName
         prectx     = getContext funcT
-        (src, ret) = splitSignature $ getSignature funcT
-        c1         = equalT argsT src
-        c2         = equalT outT ret
-        nt         = foldl AppT (ConT $ mkName Naming.classFunc) [baseT, LitT (StrTyLit methodName), argsT, outT]
-        funcs      = [FunD (mkName Naming.funcGetFunc) [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
-        ctx        = fmap fixCtx_GHC_7_8 $ c1:c2:prectx
-        inst       = InstanceD ctx nt funcs
+        sig        = getSignature funcT
+        resultC    = equalT resultT sig
+        nt         = foldl AppT (ConT $ mkName "MemberProvider") [baseT, LitT (StrTyLit methodName), argsT, resultT]
+        funcs      = [FunD (mkName "getMember") [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+        ctx        = fmap fixCtx_GHC_7_8 $ prectx
+        inst       = InstanceD (resultC:ctx) nt funcs
     return $ [inst]
+
+--registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
+--    funcT   <- getTypeQ funcName
+--    dataDec <- getDec typeName
+--    argsT      <- VarT <$> newName "args"
+--    let
+--        dataVars   = map VarT $ getDecVarNames dataDec
+--        baseT      = ConT typeName
+--        prectx     = getContext funcT
+--        sig        = getSignature funcT
+--        --c1         = equalT argsT sig
+--        nt         = foldl AppT (ConT $ mkName "MemberProvider") [baseT, LitT (StrTyLit methodName), argsT, sig]
+--        funcs      = [FunD (mkName "getMember") [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+--        ctx        = fmap fixCtx_GHC_7_8 $ prectx
+--        inst       = InstanceD ctx nt funcs
+--    return $ [inst]
+
+--registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
+--    funcT   <- getTypeQ funcName
+--    dataDec <- getDec typeName
+--    argsT      <- VarT <$> newName "args"
+--    outT       <- VarT <$> newName "out"
+--    let
+--        dataVars   = map VarT $ getDecVarNames dataDec
+--        baseT      = ConT typeName
+--        prectx     = getContext funcT
+--        (src, ret) = splitSignature $ getSignature funcT
+--        c1         = equalT argsT src
+--        c2         = equalT outT ret
+--        nt         = foldl AppT (ConT $ mkName Naming.classFunc) [baseT, LitT (StrTyLit methodName), argsT, outT]
+--        funcs      = [FunD (mkName Naming.funcGetFunc) [Clause [WildP, WildP] (NormalB (VarE funcName)) []]] 
+--        ctx        = fmap fixCtx_GHC_7_8 $ c1:c2:prectx
+--        inst       = InstanceD ctx nt funcs
+--    return $ [inst]
 
 -- GHC up to 7.9 has a bug when reifying contexts of classes compiled with -XPolyKinds
 -- it adds GHC.Prim.* as first argument to each such constraint

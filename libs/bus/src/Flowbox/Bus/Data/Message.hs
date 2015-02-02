@@ -50,4 +50,4 @@ mk topic' data_ = Message topic' $ Proto.messagePut' data_ where
 
 
 mkError :: Topic -> String -> [Message]
-mkError topic' = mkList . mk (topic' /+ Topic.error) . (encodeP . Exception . Just :: String -> Gen.Exception)
+mkError topic' = return . mk (topic' /+ Topic.error) . (encodeP . Exception . Just :: String -> Gen.Exception)

@@ -13,7 +13,6 @@ import           Control.Monad.State
 import           Control.Monad.Trans.Either
 
 import Flowbox.Prelude
-import Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import Luna.Interpreter.Session.Data.VarName       (VarName)
 import Luna.Interpreter.Session.Env.Env            (Env)
 import Luna.Interpreter.Session.Error              (Error)
@@ -26,15 +25,15 @@ type Session   m a = EitherT Error (SessionST m) a
 
 
 class Default mm => MemoryManager mm where
-    reportUse        :: CallPointPath -> VarName -> Session mm ()
-    reportUseMany    :: [(CallPointPath, VarName)] -> Session mm ()
-    reportDelete     :: CallPointPath -> VarName   -> Session mm ()
-    reportDeleteMany :: [(CallPointPath, VarName)] -> Session mm ()
-    clean            :: Status        -> Session mm ()
+    reportUse        :: VarName   -> Session mm ()
+    reportUseMany    :: [VarName] -> Session mm ()
+    reportDelete     :: VarName   -> Session mm ()
+    reportDeleteMany :: [VarName] -> Session mm ()
+    clean            :: Status    -> Session mm ()
     cleanIfNeeded    :: Session mm ()
 
     reportUseMany []    = return ()
-    reportUseMany (h:t) = uncurry reportUse h >> reportUseMany t
+    reportUseMany (h:t) = reportUse h >> reportUseMany t
 
     reportDeleteMany []    = return ()
-    reportDeleteMany (h:t) = uncurry reportDelete h >> reportDeleteMany t
+    reportDeleteMany (h:t) = reportDelete h >> reportDeleteMany t

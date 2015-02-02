@@ -41,6 +41,8 @@ makeLenses ''NamePath
 instance QShow (NamePath)
 
 
+instance Default QualPath where
+    def = QualPath def def
 
 toList :: NamePath -> [Text]
 toList (NamePath b s) = b:s

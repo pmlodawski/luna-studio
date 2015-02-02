@@ -19,6 +19,8 @@ import qualified Data.Maybe                 as Maybe
 import           Data.Monoid                ((<>))
 import           Data.MultiSet              (MultiSet)
 import qualified Data.MultiSet              as MultiSet
+import           Data.Set                   (Set)
+import qualified Data.Set                   as Set
 
 import           Control.Monad.Catch                         (bracket_)
 import qualified Flowbox.Batch.Project.Project               as Project
@@ -30,19 +32,8 @@ import           Flowbox.Data.SetForest                      (SetForest)
 import qualified Flowbox.Data.SetForest                      as SetForest
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
-import qualified Luna.AST.Common                             as AST
-import           Luna.AST.Control.Focus                      (Focus)
-import qualified Luna.AST.Control.Focus                      as Focus
-import qualified Luna.AST.Control.Zipper                     as Zipper
-import           Luna.AST.Expr                               (Expr)
-import qualified Luna.AST.Expr                               as Expr
 import           Luna.AST.Module                             (Module)
-import           Luna.Graph.Flags                            (Flags)
-import           Luna.Graph.Graph                            (Graph)
-import qualified Luna.Graph.Node                             as Node
-import           Luna.Graph.PropertyMap                      (PropertyMap)
-import qualified Luna.Graph.PropertyMap                      as PropertyMap
-import           Luna.Graph.View.Default.DefaultsMap         (DefaultsMap)
+import qualified Luna.Syntax.Graph.Flags                            as Flags
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
@@ -63,6 +54,18 @@ import           Luna.Lib.Manager                            (LibManager)
 import qualified Luna.Lib.Manager                            as LibManager
 import qualified Luna.Pass.Analysis.Alias.Alias              as Alias
 import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
+import qualified Luna.Syntax.AST                             as AST
+import           Luna.Syntax.Control.Focus                   (Focus)
+import qualified Luna.Syntax.Control.Focus                   as Focus
+import qualified Luna.Syntax.Control.Zipper                  as Zipper
+import           Luna.Syntax.Expr                            (Expr)
+import qualified Luna.Syntax.Expr                            as Expr
+import           Luna.Syntax.Graph.Flags                     (Flags)
+import           Luna.Syntax.Graph.Graph                     (Graph)
+import qualified Luna.Syntax.Graph.Node                      as Node
+import           Luna.Syntax.Graph.PropertyMap               (PropertyMap)
+import qualified Luna.Syntax.Graph.PropertyMap               as PropertyMap
+import           Luna.Syntax.Graph.View.Default.DefaultsMap  (DefaultsMap)
 
 
 
@@ -82,6 +85,10 @@ cachedDelete = modify . over Env.cached . MapForest.delete
 
 cachedLookup :: CallPointPath -> Session mm (Maybe CacheInfo)
 cachedLookup callPointPath = MapForest.lookup callPointPath <$> getCached
+
+
+cachedClear :: Session mm ()
+cachedClear = modify (Env.cached .~ def)
 
 ---- Env.watchPoints ------------------------------------------------------
 
@@ -169,6 +176,7 @@ deleteDependentNode callPoint nodeID =
 
 cleanDependentNodes :: Session mm ()
 cleanDependentNodes = modify (Env.dependentNodes .~ def)
+
 ---- Env.profileInfos -----------------------------------------------------
 
 cleanProfileInfos :: Session mm ()
@@ -187,8 +195,34 @@ insertProfileInfo callPointPath info =
 profile :: CallPointPath -> Session mm a -> Session mm a
 profile callPointPath action = do
     (r, info) <- ProfileInfo.profile action
-    insertProfileInfo callPointPath info
+    whenVisible callPointPath $ insertProfileInfo callPointPath info
     return r
+
+---- Env.timeVar ----------------------------------------------------------
+
+getTimeVar :: Session mm Double
+getTimeVar = gets $ view Env.timeVar
+
+
+setTimeVar :: Double -> Session mm ()
+setTimeVar = modify . set Env.timeVar
+
+---- Env.timeRefs ---------------------------------------------------------
+
+insertTimeRef :: CallPoint -> Session mm ()
+insertTimeRef callPoint = modify (Env.timeRefs %~ Set.insert callPoint)
+
+
+deleteTimeRef :: CallPoint -> Session mm ()
+deleteTimeRef callPoint = modify (Env.timeRefs %~ Set.delete callPoint)
+
+
+getTimeRefs :: Session mm (Set CallPoint)
+getTimeRefs = gets $ view Env.timeRefs
+
+
+cleanTimeRefs :: Session mm ()
+cleanTimeRefs = modify $ Env.timeRefs .~ def
 
 ---- Env.serializationModes -----------------------------------------------
 
@@ -243,7 +277,19 @@ getMemoryManager = gets $ view Env.memoryManager
 
 
 updateMemoryManager :: (mm -> mm) -> Session mm ()
-updateMemoryManager = modify . over Env.memoryManager
+updateMemoryManager updMethod = do
+    s <- get
+    put $ s { Env._memoryManager = updMethod $ Env._memoryManager s }
+-- FIXME[PM] : https://github.com/ekmett/lens/issues/515
+--updateMemoryManager updMethod = do
+--    s <- get
+--    put $ Env.memoryManager %~ updMethod $  s
+
+--updateMemoryManager = modify . over Env.memoryManager
+--updateMemoryManager updMethod = Env.memoryManager %= updMethod
+--updateMemoryManager updMethod = modify $ Env.memoryManager %~ (updMethod $)
+--updateMemoryManager u = modify $ over Env.memoryManager u
+--                      = modify $ over Env.memoryManager id
 
 
 setMemoryManager :: mm -> Session mm ()
@@ -363,8 +409,19 @@ getResultCallBack = gets $ view Env.resultCallBack
 
 ---------------------------------------------------------------------------
 
+whenVisible :: CallPointPath -> Session mm () -> Session mm ()
+whenVisible callPointPath action = do
+    flags <- getFlags $ last callPointPath
+    unless (Flags.isSet' flags (view Flags.defaultNodeGenerated)
+         || Flags.isSet' flags (view Flags.graphViewGenerated  )
+         || Flags.isFolded flags                               )
+        action
+
+---------------------------------------------------------------------------
+
 cleanEnv :: Session mm ()
 cleanEnv = cleanWatchPoints
+        >> cleanTimeRefs
         >> cleanDependentNodes
         >> cleanProfileInfos
         >> cleanSerializationModes

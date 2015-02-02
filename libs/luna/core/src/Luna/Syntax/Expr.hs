@@ -26,10 +26,10 @@ import Luna.Syntax.Name         (VNameP, TNameP, CNameP, TVNameP, NameBaseP)
 import Luna.Syntax.Decl         (Decl)
 import Luna.Syntax.Lit          (LLit)
 import Luna.Syntax.Pat          (Pat, LPat)
-import Luna.Syntax.Type         (Type, LType)
+import Luna.Syntax.Type         (Type, LType, LMeta)
 import Luna.Syntax.Native       (Native)
-import Luna.Syntax.Arg          (Arg)
-import Luna.Syntax.Label        (Label)
+import Luna.Syntax.Arg          (LArg)
+import Luna.Syntax.Label        (Label(Label))
 import Luna.Syntax.Name.Pattern (NamePat(NamePat), Segment(Segment))
 import Data.Text.Lazy           (Text)
 
@@ -37,7 +37,7 @@ import Data.Text.Lazy           (Text)
 type Selector = [VNameP]
 
 type LExpr   a v = Label a (Expr a v)
-type ExprArg a v = Label a (Arg a (Expr a v))
+type ExprArg a v = LArg  a (LExpr a v)
 type SubDecl a v = Label a (Decl a (LExpr a v))
 
 
@@ -50,7 +50,8 @@ data Expr a v
     | Typed       { _cls     :: LType a       , _expr      :: LExpr a v                                }
     | Assignment  { _dst     :: LPat  a       , _src       :: LExpr a v                                }
     | Accessor    { _acc     :: NameBaseP     , _src       :: LExpr a v                                }
-    | Ref         { _ref     :: LExpr a v                                                              }
+    | Curry       { _expr    :: LExpr a v                                                              }
+    | Meta        { _meta    :: LMeta a                                                                }
     | Tuple       { _items   :: [LExpr a v]                                                            }
     | Grouped     { _expr    :: LExpr a v                                                              }
     | Cons        { _cname   :: CNameP                                                                 }
@@ -61,14 +62,14 @@ data Expr a v
     | List        (List (LExpr a v))
     | App         (ExprApp a v)
     | Wildcard
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq, Read)
 
 
-data FieldUpd a v = FieldUpd { _selector :: Selector, _updExpr :: LExpr a v } deriving (Show, Generic)
+data FieldUpd a v = FieldUpd { _selector :: Selector, _updExpr :: LExpr a v } deriving (Show, Generic, Eq, Read)
 
-data AppArg e = AppArg (Maybe ArgName) e deriving (Show, Generic)
+data AppArg e = AppArg (Maybe ArgName) e deriving (Show, Generic, Eq, Read)
 
-data Variable v = Variable VNameP v deriving (Show, Generic)
+data Variable v = Variable VNameP v deriving (Show, Generic, Eq, Read)
 
 type ExprApp a v = NamePat (LExpr a v) (AppArg (LExpr a v))
 
@@ -79,17 +80,18 @@ unnamed = AppArg Nothing
 
 
 
-data Match  a v = Match { _matchPat :: LPat a, _matchBody :: [LExpr a v] } deriving (Show, Generic)
+data Match  a v = Match { _matchPat :: LPat a, _matchBody :: [LExpr a v] } deriving (Show, Generic, Eq, Read)
 type LMatch a v = Label a (Match a v)
 
 
 data List e = SeqList [e]
             | RangeList (Sequence e)
-            deriving (Show, Generic)
+            deriving (Show, Generic, Eq, Read)
 
 type LList a e = Label a (List e)
 
 data Sequence a = Linear    a   (Maybe a)
                 | Geometric a a (Maybe a)
-                deriving (Show, Generic)
+                deriving (Show, Generic, Read, Eq)
+
 

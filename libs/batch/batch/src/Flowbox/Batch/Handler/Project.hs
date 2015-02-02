@@ -17,7 +17,7 @@ import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerializa
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath                      (UniPath)
 import qualified Flowbox.System.UniPath                      as UniPath
-import           Luna.Graph.Attributes                       (Attributes)
+import           Luna.Syntax.Graph.Attributes                (Attributes)
 
 
 

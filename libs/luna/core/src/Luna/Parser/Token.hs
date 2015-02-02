@@ -189,13 +189,15 @@ pipe          = symbol '|'
 accessor      = symbol '.' <?> "accessor (.)"
 arrow         = symbol "->"
 typeDecl      = symbol "::"
+meta          = symbol "::"
+metaRoot      = symbol '*'
 importAll     = symbol '*'
 assignment    = symbol '='
 nativeSym     = symbol "```"
 nameStart     = symbol '`'
 nameEnd       = symbol '`'
 range         = symbol ".."
-ref           = symbol '@'
+curry         = symbol '@'
 terminator    = symbol ';' <?> "terminator"
 
 pragma        = symbol '%'
@@ -224,8 +226,12 @@ kwImport    = reservedIdent "import"
 kwType      = reservedIdent "type"
 kwForeign   = reservedIdent "foreign"
 
-kwFHaskell = reservedIdent "haskell"
-kwFCPP     = reservedIdent "c++"
+-- context kewyords
+kwFHaskell  = reservedIdent "haskell"
+kwFCPP      = reservedIdent "c++"
+
+-- type kewyords
+tkwMeta      = reservedIdent "Meta"
 
 ----------------------------------------------------------------------
 -- Numbers

@@ -60,15 +60,6 @@ shouldMatchList' = liftIO .: shouldMatchList
 spec :: Spec
 spec = do
     let mm = NoManager
-    describe "interpreter" $ do
-        mapM_ (\(name, code) -> it ("executes example - " ++ name) $ do
-            --rootLogger setIntLevel 5
-            Common.runSession mm code Executor.processMain) SampleCodes.sampleCodes
-
-        mapM_ (\(name, code) -> it ("executes example 5 times - " ++ name) $ do
-            --rootLogger setIntLevel 5
-            Common.runSession mm code $ replicateM_ 5 Executor.processMain) $ SampleCodes.sampleCodes
-
     describe "AST traverse" $ do
         it "finds function arguments" $ do
             --rootLogger setIntLevel 5
@@ -131,3 +122,12 @@ spec = do
                 getSuccessors fooCall   >>= shouldMatchList' [conMain2]
                 getSuccessors conMain2  >>= shouldMatchList' [printCall]
                 getSuccessors printCall >>= shouldMatchList' [[]]
+
+    describe "interpreter" $ do
+        mapM_ (\(name, code) -> it ("executes example - " ++ name) $ do
+            --rootLogger setIntLevel 5
+            Common.runSession mm code Executor.processMain_) SampleCodes.sampleCodes
+
+        mapM_ (\(name, code) -> it ("executes example 5 times - " ++ name) $ do
+            --rootLogger setIntLevel 5
+            Common.runSession mm code $ replicateM_ 5 Executor.processMain_) $ SampleCodes.sampleCodes
