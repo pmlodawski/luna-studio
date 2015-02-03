@@ -5,7 +5,7 @@
 // Flowbox Team <contact@flowbox.io>, 2014
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto.dep.parser;
+package generated.proto.parser;
 
 import "dep/expr.proto";
 import "dep/pat.proto";
