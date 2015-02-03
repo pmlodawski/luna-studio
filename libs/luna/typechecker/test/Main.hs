@@ -5,13 +5,13 @@ module Main where
 
 import qualified Luna.Parser.Parser     as Parser
 
-import qualified Luna.ASTNew.Name       as Name
-import qualified Luna.ASTNew.Label      as Label
-import qualified Luna.ASTNew.Enum       as Enum
-import qualified Luna.ASTNew.Module     as Module
-import qualified Luna.ASTNew.Unit       as Unit
-import qualified Luna.ASTNew.Decl       as Decl
-import qualified Luna.ASTNew.Name.Multi as Multi
+import qualified Luna.DEP.ASTNew.Name       as Name
+import qualified Luna.DEP.ASTNew.Label      as Label
+import qualified Luna.DEP.ASTNew.Enum       as Enum
+import qualified Luna.DEP.ASTNew.Module     as Module
+import qualified Luna.DEP.ASTNew.Unit       as Unit
+import qualified Luna.DEP.ASTNew.Decl       as Decl
+import qualified Luna.DEP.ASTNew.Name.Multi as Multi
 
 
 -- Wojtkizmy

@@ -13,7 +13,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Luna.Pass.Transform.SimpleText.Builder.Builder as Builder
 import qualified Luna.Pass.Transform.SimpleText.Parser.Parser   as Parser
-import qualified Test.Luna.AST.Common                           as Common
+import qualified Test.Luna.DEP.AST.Common                           as Common
 import qualified Test.Luna.Pass.Transform.Graph.Common          as Common
 import qualified Test.Luna.Sample.Code                          as SampleCode
 

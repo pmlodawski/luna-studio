@@ -11,13 +11,13 @@ module Test.Luna.Pass.Transform.Graph.Common where
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb                    (Breadcrumbs)
-import qualified Luna.AST.Control.Crumb                    as Crumb
-import qualified Luna.AST.Control.Focus                    as Focus
-import qualified Luna.AST.Control.Zipper                   as Zipper
-import           Luna.AST.Expr                             (Expr)
-import           Luna.AST.Module                           (Module)
-import qualified Luna.AST.Name                             as Name
+import           Luna.DEP.AST.Control.Crumb                    (Breadcrumbs)
+import qualified Luna.DEP.AST.Control.Crumb                    as Crumb
+import qualified Luna.DEP.AST.Control.Focus                    as Focus
+import qualified Luna.DEP.AST.Control.Zipper                   as Zipper
+import           Luna.DEP.AST.Expr                             (Expr)
+import           Luna.DEP.AST.Module                           (Module)
+import qualified Luna.DEP.AST.Name                             as Name
 import           Luna.Graph.Graph                          (Graph)
 import           Luna.Graph.PropertyMap                    (PropertyMap)
 import qualified Luna.Pass.Analysis.Alias.Alias            as Analysis.Alias

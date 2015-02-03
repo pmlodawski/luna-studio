@@ -10,7 +10,7 @@
 module Luna.Parser.State where
 
 import           Flowbox.Prelude     hiding (id)
-import           Luna.AST.Common     (ID)
+import           Luna.DEP.AST.Common     (ID)
 import           Luna.Data.ASTInfo   (ASTInfo)
 import           Luna.Data.SourceMap (SourceMap)
 import qualified Luna.Data.SourceMap as SourceMap

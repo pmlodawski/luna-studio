@@ -17,13 +17,13 @@ import qualified Text.Parsec.Expr    as PExpr
 
 import           Flowbox.Prelude     hiding (id, mod, noneOf, op)
 import qualified Flowbox.Prelude     as Prelude
-import qualified Luna.AST.Data       as Data
-import qualified Luna.AST.Expr       as Expr
-import qualified Luna.AST.Lit        as Lit
-import           Luna.AST.Module     (Module)
-import qualified Luna.AST.Module     as Module
-import qualified Luna.AST.Pat        as Pat
-import qualified Luna.AST.Type       as Type
+import qualified Luna.DEP.AST.Data       as Data
+import qualified Luna.DEP.AST.Expr       as Expr
+import qualified Luna.DEP.AST.Lit        as Lit
+import           Luna.DEP.AST.Module     (Module)
+import qualified Luna.DEP.AST.Module     as Module
+import qualified Luna.DEP.AST.Pat        as Pat
+import qualified Luna.DEP.AST.Type       as Type
 import           Luna.Data.ASTInfo   (ASTInfo)
 import qualified Luna.Data.ASTInfo   as ASTInfo
 import           Luna.Data.Source    (Source (Source))

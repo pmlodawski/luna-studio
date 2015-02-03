@@ -5,19 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Test.Luna.AST.Control.ZipperSpec where
+module Test.Luna.DEP.AST.Control.ZipperSpec where
 
 import Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import qualified Luna.AST.Control.Crumb  as Crumb
-import qualified Luna.AST.Control.Focus  as Focus
-import qualified Luna.AST.Control.Zipper as Zipper
-import qualified Luna.AST.Expr           as Expr
-import           Luna.AST.Module         (Module)
-import qualified Luna.AST.Name           as Name
-import qualified Test.Luna.AST.Common    as Common
+import qualified Luna.DEP.AST.Control.Crumb  as Crumb
+import qualified Luna.DEP.AST.Control.Focus  as Focus
+import qualified Luna.DEP.AST.Control.Zipper as Zipper
+import qualified Luna.DEP.AST.Expr           as Expr
+import           Luna.DEP.AST.Module         (Module)
+import qualified Luna.DEP.AST.Name           as Name
+import qualified Test.Luna.DEP.AST.Common    as Common
 import qualified Test.Luna.Sample.Code   as SampleCode
 
 

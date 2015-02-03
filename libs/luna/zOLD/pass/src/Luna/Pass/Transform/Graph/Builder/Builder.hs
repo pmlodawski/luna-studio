@@ -21,13 +21,13 @@ import qualified Data.Maybe                 as Maybe
 import           Flowbox.Prelude                         hiding (error, mapM, mapM_)
 import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Arg                            as Arg
-import qualified Luna.AST.Common                         as AST
-import           Luna.AST.Expr                           (Expr)
-import qualified Luna.AST.Expr                           as Expr
-import           Luna.AST.Pat                            (Pat)
-import qualified Luna.AST.Pat                            as Pat
-import qualified Luna.AST.Type                           as Type
+import qualified Luna.DEP.AST.Arg                            as Arg
+import qualified Luna.DEP.AST.Common                         as AST
+import           Luna.DEP.AST.Expr                           (Expr)
+import qualified Luna.DEP.AST.Expr                           as Expr
+import           Luna.DEP.AST.Pat                            (Pat)
+import qualified Luna.DEP.AST.Pat                            as Pat
+import qualified Luna.DEP.AST.Type                           as Type
 import           Luna.Data.AliasInfo                     (AliasInfo)
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Node                         as Node

@@ -22,7 +22,7 @@ import qualified Flowbox.Batch.Project.ProjectManager                        as 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                                             hiding (error)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Module                                             (Module)
+import           Luna.DEP.AST.Module                                             (Module)
 import           Luna.Lib.Lib                                                (Library)
 import qualified Luna.Lib.Lib                                                as Library
 import           Luna.Lib.Manager                                            (LibManager)

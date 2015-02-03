@@ -11,9 +11,9 @@ module Test.Luna.Sample.Code where
 import Text.RawString.QQ
 
 import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb                (Breadcrumbs)
-import qualified Luna.AST.Control.Crumb                as Crumb
-import qualified Luna.AST.Name                         as Name
+import           Luna.DEP.AST.Control.Crumb                (Breadcrumbs)
+import qualified Luna.DEP.AST.Control.Crumb                as Crumb
+import qualified Luna.DEP.AST.Name                         as Name
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 
 

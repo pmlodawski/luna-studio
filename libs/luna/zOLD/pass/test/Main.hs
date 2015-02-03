@@ -30,11 +30,11 @@ import qualified Flowbox.System.Log.Logger                                     a
 import qualified Flowbox.System.UniPath                                        as UniPath
 import           Flowbox.Text.Show.Hs                                          (hsShow)
 import qualified Flowbox.Text.Show.Pretty                                      as PP
-import qualified Luna.AST.Control.Crumb                                        as ASTCrumb
-import qualified Luna.AST.Control.Focus                                        as Focus
-import qualified Luna.AST.Control.Zipper                                       as Zipper
-import qualified Luna.AST.Expr                                                 as LExpr
-import qualified Luna.AST.Module                                               as FModule
+import qualified Luna.DEP.AST.Control.Crumb                                        as ASTCrumb
+import qualified Luna.DEP.AST.Control.Focus                                        as Focus
+import qualified Luna.DEP.AST.Control.Zipper                                       as Zipper
+import qualified Luna.DEP.AST.Expr                                                 as LExpr
+import qualified Luna.DEP.AST.Module                                               as FModule
 import qualified Luna.Data.AliasInfo                                           as AliasInfo
 import qualified Luna.Data.HAST.Expr                                           as HExpr
 import qualified Luna.Data.HAST.Module                                         as Module

@@ -12,11 +12,11 @@ import Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb                (Breadcrumbs)
+import           Luna.DEP.AST.Control.Crumb                (Breadcrumbs)
 import           Luna.Graph.PropertyMap                (PropertyMap)
 import           Luna.Graph.View.GraphView             (GraphView)
 import qualified Luna.Graph.View.GraphView             as GraphView
-import qualified Test.Luna.AST.Common                  as Common
+import qualified Test.Luna.DEP.AST.Common                  as Common
 import qualified Test.Luna.Pass.Transform.Graph.Common as Common
 import           Test.Luna.Sample.Code                 (sampleCodes)
 import           Test.Luna.Sample.GraphView            (sampleGraphs)

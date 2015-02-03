@@ -25,14 +25,14 @@ import Text.Parser.Combinators
 import Text.Parser.Token.Highlight hiding (Comment)
 import Text.Parser.Token hiding (symbol, symbolic, ident)
 import Flowbox.Prelude as Prelude hiding (op, noneOf, lex, use)
-import qualified Luna.AST.Lit.Number as Number
+import qualified Luna.DEP.AST.Lit.Number as Number
 
 import qualified Text.Parsers.Indent as Indent
 import           Luna.Parser.Combinators 
-import qualified Luna.AST.Lit as Lit
+import qualified Luna.DEP.AST.Lit as Lit
 import           Luna.Parser.Char
 import qualified Luna.Parser.State as State
-import           Luna.AST.Comment (Comment(..))
+import           Luna.DEP.AST.Comment (Comment(..))
 
 isSpaceLine c = isSpace c && c /= '\n' && c /= '\r'
 
