@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 
 module Luna.Typechecker.Inference (
     tcpass
@@ -31,7 +30,7 @@ import qualified  Luna.Syntax.Traversals                  as AST
 import            Luna.Typechecker.Data (
                       TVar, Subst(..),
                       Type(..), Predicate(..), Constraint(..), TypeScheme(..),
-                      true_cons, Typo(..)
+                      Typo(..)
                   )
 import            Luna.Typechecker.Debug.HumanName        (HumanName(humanName))
 import            Luna.Typechecker.Inference.Class        (
@@ -47,8 +46,8 @@ import            Luna.Typechecker.StageTypecheckerState  (
                       report_error,
                       withClonedTypo0,
                       insertNewMonoTypeVariable,
+                      insertTypeScheme,
                       getTypeById, setTypeById,
-                      setTypeSchemeById,
                       getEnv,
                       add_constraint, newtvar, rename,
                       debugPush,
@@ -77,6 +76,7 @@ instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageT
   traverseM _ = tcDecl
 instance (StageTypecheckerCtx IDTag m) => AST.Traversal StageTypechecker (StageTypecheckerPass m) InExpr OutExpr where
   traverseM _ = tcExpr
+
 
 traverseM :: (StageTypecheckerTraversal m a) => a -> StageTypecheckerPass m a
 traverseM = AST.traverseM StageTypechecker
@@ -126,15 +126,14 @@ tcDecl ldecl@(Label lab decl) =
                     let bsres = foldr1 Fun (bs <> [resultType])
 
                     add_constraint (C [a `Subsume` bsres])
-                    typ <- normalize a
                     -- TODO [llachowski] 29 sty 2015: rethink this
-                    debugPush $ "Infered mono type for function declaration: " <> show' typ
-                    typeScheme <- generalize env typ
+                    debugPush $ "Infered mono type for function declaration: " <> show' a -- typ
+                    -- TODO [llachowski] decl should be generalized later
+                    -- (Module/Data level in AST)
 
-                    setTypeSchemeById labID typeScheme
+                    setTypeById labID a
 
-                    debugPush $ "Result for function declaration: " <> show' typeScheme
-                    -- report_error "sanity check" undefined
+                    debugPush $ "Result for function declaration: " <> show' a -- typeScheme
                     return travRes
                 Nothing -> do
                     mm <- typeMap & use
@@ -165,14 +164,11 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
     targetLabel <- getTargetID lab
     env <- getEnv
     vType <- inst env targetLabel
-    result <- normalize vType
 
-    debugPush ("         :: " <> show' result)
+    debugPush ("         :: " <> show' vType)
 
-    setTypeById exprId result
-
+    setTypeById exprId vType
     defaultTraverseM var
-
 
 expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src = (Label labs src) })) =
   case dst of
@@ -181,6 +177,7 @@ expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src =
           --tp (env, Let x e e') = do a <- tp (env, e)
           --                          b <- gen env a
           --                          tp ((insert env (x, b)), e')
+          env <- getEnv
           t_id <- getTargetIDString labt
           s_id <- getTargetIDString labs
           debugPush ("Assignment  " <> (humanName dst_vname) <> t_id <> " ⬸ " <> s_id) 
@@ -191,10 +188,15 @@ expr ass@(Label lab (Expr.Assignment { Expr._dst = (Label labt dst), Expr._src =
           -- typecheck src
           res <- defaultTraverseM ass
           srcType <- getTypeById srcId
+          -- TODO assigments are treated similarly to let expressions
+          srcTypeNorm <- normalize srcType
+          srcScheme <- generalize env srcTypeNorm
 
           -- TODO [llachowski] is it necessary?
-          setTypeById dstId srcType
-          setTypeById exprId srcType
+          -- setTypeSchemeById dstId srcScheme
+          -- setTypeSchemeById exprId srcScheme
+
+          insertTypeScheme dstId srcScheme
           return res
       _ -> do
           debugPush "Some assignment..."
@@ -227,7 +229,7 @@ expr app@( Label lab ( Expr.App ( NamePat.NamePat { NamePat._base = ( NamePat.Se
     tp result argType = do
       a <- newtvar
       add_constraint (C [result `Subsume` (argType `Fun` TV a)])
-      normalize (TV a)
+      return (TV a)
 
 expr _ = error "No idea how to infer type at the moment."
 
@@ -276,7 +278,7 @@ return_result s c t = do
 
 
 projection :: Constraint -> [TVar] -> Constraint
-projection _ _ = true_cons
+projection c _ = c
 
 
 tv_typo :: Typo -> [TVar]
