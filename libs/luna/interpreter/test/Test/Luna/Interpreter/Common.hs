@@ -13,7 +13,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Data.Version                                          ()
 import           Flowbox.Prelude
 import qualified Flowbox.System.UniPath                                        as UniPath
-import qualified Luna.AST.Name                                                 as Name
+import qualified Luna.DEP.AST.Name                                                 as Name
 import           Luna.Data.Source                                              (Source (Source))
 import           Luna.Interpreter.Session.Data.DefPoint                        (DefPoint (DefPoint))
 import           Luna.Interpreter.Session.Env                                  (Env)

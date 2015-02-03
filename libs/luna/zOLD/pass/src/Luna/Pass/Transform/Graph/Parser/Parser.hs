@@ -18,11 +18,11 @@ import qualified Data.List                  as List
 
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Arg                           as Arg
-import           Luna.AST.Expr                          (Expr)
-import qualified Luna.AST.Expr                          as Expr
-import           Luna.AST.Pat                           (Pat)
-import qualified Luna.AST.Pat                           as Pat
+import qualified Luna.DEP.AST.Arg                           as Arg
+import           Luna.DEP.AST.Expr                          (Expr)
+import qualified Luna.DEP.AST.Expr                          as Expr
+import           Luna.DEP.AST.Pat                           (Pat)
+import qualified Luna.DEP.AST.Pat                           as Pat
 import           Luna.Data.ASTInfo                      (ASTInfo)
 import qualified Luna.Data.ASTInfo                      as ASTInfo
 import qualified Luna.Data.Config                       as Config

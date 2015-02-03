@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
-module Test.Luna.AST.Common where
+module Test.Luna.DEP.AST.Common where
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import           Luna.AST.Module                                               (Module)
+import           Luna.DEP.AST.Module                                               (Module)
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
 import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph

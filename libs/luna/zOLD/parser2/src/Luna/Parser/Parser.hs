@@ -23,12 +23,12 @@ import           Data.Default
 import           Flowbox.Prelude              hiding (noneOf, maybe, element)
 import qualified Flowbox.Prelude              as Prelude
 import qualified Luna.Data.ASTInfo            as ASTInfo
-import qualified Luna.AST.Module     as Module
-import qualified Luna.AST.Pat        as Pat
-import qualified Luna.AST.Type       as Type
-import qualified Luna.AST.Lit.Number as Number
-import qualified Luna.AST.Lit        as Lit
-import qualified Luna.AST.Data       as Data
+import qualified Luna.DEP.AST.Module     as Module
+import qualified Luna.DEP.AST.Pat        as Pat
+import qualified Luna.DEP.AST.Type       as Type
+import qualified Luna.DEP.AST.Lit.Number as Number
+import qualified Luna.DEP.AST.Lit        as Lit
+import qualified Luna.DEP.AST.Data       as Data
 import qualified Luna.Parser.Token            as Tok
 import qualified Luna.Parser.State            as State
 import           System.Environment           (getArgs)
@@ -51,14 +51,14 @@ import           Text.Parser.Expression
 import           Text.Parser.LookAhead
 import           Data.Char                    (isSpace)
 import qualified Data.ByteString as ByteStr
-import           Luna.AST.Name                (Name(Name))
-import qualified Luna.AST.Name                as Name
+import           Luna.DEP.AST.Name                (Name(Name))
+import qualified Luna.DEP.AST.Name                as Name
 import qualified Luna.Data.Namespace          as Namespace
 import qualified Luna.Data.AliasInfo          as Alias
-import qualified Luna.AST.AST                 as AST
+import qualified Luna.DEP.AST.AST                 as AST
 import qualified Data.Maps                    as Map
 import           Data.Maybe                   (fromJust)
-import qualified Luna.AST.Arg                 as Arg
+import qualified Luna.DEP.AST.Arg                 as Arg
 import qualified Data.List                    as List
 import qualified Luna.Parser.Pragma           as Pragma
 import           Luna.Parser.Unit             (Unit(Unit))
@@ -77,7 +77,7 @@ import qualified Text.Parsers.Indent as Indent
 
 import Control.Lens hiding (noneOf, element)
 
-import qualified Luna.AST.Expr as Expr
+import qualified Luna.DEP.AST.Expr as Expr
 
 infixl 4 <$!>
 

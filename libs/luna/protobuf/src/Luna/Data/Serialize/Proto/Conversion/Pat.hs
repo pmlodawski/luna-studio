@@ -30,8 +30,8 @@ import qualified Generated.Proto.Pat.Tuple                 as GenTuple
 import qualified Generated.Proto.Pat.Typed                 as GenTyped
 import qualified Generated.Proto.Pat.Var                   as GenVar
 import qualified Generated.Proto.Pat.Wildcard              as GenWildcard
-import           Luna.AST.Pat                              (Pat)
-import qualified Luna.AST.Pat                              as Pat
+import           Luna.DEP.AST.Pat                              (Pat)
+import qualified Luna.DEP.AST.Pat                              as Pat
 import           Luna.Data.Serialize.Proto.Conversion.Lit  ()
 import           Luna.Data.Serialize.Proto.Conversion.Type ()
 import qualified Luna.Syntax.AST                           as AST

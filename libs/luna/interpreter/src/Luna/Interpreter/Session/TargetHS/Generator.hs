@@ -13,9 +13,9 @@ import qualified Data.List as List
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                  (loc)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Module                          (Module)
-import qualified Luna.AST.Module                          as Module
-import qualified Luna.AST.Type                            as Type
+import           Luna.DEP.AST.Module                          (Module)
+import qualified Luna.DEP.AST.Module                          as Module
+import qualified Luna.DEP.AST.Type                            as Type
 import qualified Luna.Data.Source                         as Source
 import           Luna.Interpreter.Session.Data.DefPoint   (DefPoint)
 import qualified Luna.Interpreter.Session.Data.DefPoint   as DefPoint

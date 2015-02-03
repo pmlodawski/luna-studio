@@ -13,9 +13,9 @@ module Luna.Pass.Analysis.ID.MinID where
 
 import           Flowbox.Prelude                hiding (mapM, mapM_)
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Common                as AST
-import           Luna.AST.Expr                  (Expr)
-import           Luna.AST.Module                (Module)
+import qualified Luna.DEP.AST.Common                as AST
+import           Luna.DEP.AST.Expr                  (Expr)
+import           Luna.DEP.AST.Module                (Module)
 import           Luna.Pass.Analysis.ID.State    (IDState)
 import qualified Luna.Pass.Analysis.ID.State    as State
 import qualified Luna.Pass.Analysis.ID.Traverse as IDTraverse

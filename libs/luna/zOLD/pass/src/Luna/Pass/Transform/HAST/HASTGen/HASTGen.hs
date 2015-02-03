@@ -16,11 +16,11 @@ module Luna.Pass.Transform.HAST.HASTGen.HASTGen where
 
 import qualified Flowbox.Prelude                                     as Prelude
 import           Flowbox.Prelude                                     hiding (error, id, mod, simple, cons, exp)
-import qualified Luna.AST.Expr                          as LExpr
-import qualified Luna.AST.Type                          as LType
-import qualified Luna.AST.Pat                           as LPat
-import qualified Luna.AST.Lit                           as LLit
-import qualified Luna.AST.Module                        as LModule
+import qualified Luna.DEP.AST.Expr                          as LExpr
+import qualified Luna.DEP.AST.Type                          as LType
+import qualified Luna.DEP.AST.Pat                           as LPat
+import qualified Luna.DEP.AST.Lit                           as LLit
+import qualified Luna.DEP.AST.Module                        as LModule
 import qualified Luna.Data.HAST.Expr                         as HExpr
 import qualified Luna.Data.HAST.Lit                          as HLit
 import qualified Luna.Data.HAST.Module                       as HModule
@@ -37,9 +37,9 @@ import qualified Luna.Target.HS.Host.Naming                             as Namin
 import           Data.String.Utils                                     (join)
 import qualified Luna.Data.HAST.Deriving                     as Deriving
 import           Luna.Data.HAST.Deriving                     (Deriving)
-import qualified Luna.AST.Name                               as Name
-import qualified Luna.AST.Arg                                as Arg
-import qualified Luna.AST.Lit.Number                         as Number
+import qualified Luna.DEP.AST.Name                               as Name
+import qualified Luna.DEP.AST.Arg                                as Arg
+import qualified Luna.DEP.AST.Lit.Number                         as Number
 import           Data.Maybe                                  (isNothing)
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)

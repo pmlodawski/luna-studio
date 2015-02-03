@@ -8,8 +8,8 @@
 module Test.Luna.Sample.NodeDefault where
 
 import           Flowbox.Prelude
-import qualified Luna.AST.Arg                          as Arg
-import qualified Luna.AST.Expr                         as Expr
+import qualified Luna.DEP.AST.Arg                          as Arg
+import qualified Luna.DEP.AST.Expr                         as Expr
 import qualified Luna.Graph.Node                       as Node
 import           Luna.Graph.Node.Expr                  (NodeExpr)
 import qualified Luna.Graph.Node.Expr                  as NodeExpr

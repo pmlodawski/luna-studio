@@ -18,10 +18,10 @@ import Control.Monad.State (get)
 
 import           Flowbox.Prelude                    hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.AST                       as AST
-import qualified Luna.AST.Expr                      as Expr
-import           Luna.AST.Module                    (Module)
-import qualified Luna.AST.Module                    as Module
+import qualified Luna.DEP.AST.AST                       as AST
+import qualified Luna.DEP.AST.Expr                      as Expr
+import           Luna.DEP.AST.Module                    (Module)
+import qualified Luna.DEP.AST.Module                    as Module
 import           Luna.Data.AliasInfo                (AliasInfo)
 import qualified Luna.Data.AliasInfo                as AliasInfo
 import           Luna.Data.CallGraph                (CallGraph)

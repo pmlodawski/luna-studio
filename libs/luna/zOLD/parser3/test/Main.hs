@@ -13,7 +13,7 @@ import qualified Luna.Parser.State as ParserState
 import qualified Luna.Data.ASTInfo  as ASTInfo
 import qualified Luna.Parser.Pragma as Pragma
 import qualified Luna.Data.Config   as Config
-import           Luna.ASTNew.Name   (TName(TName))
+import           Luna.DEP.ASTNew.Name   (TName(TName))
 import           Data.String             (IsString, fromString)
 
 

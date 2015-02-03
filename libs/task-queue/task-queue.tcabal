@@ -1,4 +1,4 @@
-Name:           flowbox-rqueue
+Name:           task-queue
 Version:        0.1
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
@@ -13,7 +13,7 @@ Flag Debug
 
 Library
   Hs-Source-Dirs: src
-  Other-Modules:  Paths_flowbox_rqueue
+  Other-Modules:  Paths_task_queue
   if flag(debug)
     GHC-Options:  -csacc
   GHC-Options:    -Wall -O2 -threaded
@@ -37,14 +37,21 @@ Library
                   DeriveDataTypeable,
                   EmptyDataDecls
 
-  Exposed-modules: `findmodules('src', '.*\.hs')`
+  Exposed-modules: `findmodules('src/Flowbox', '.*\.hs')`
 
-  Build-Depends:  base
+  Build-Depends:  base,
+                  binary,
+                  flowbox-utils,
+                  zeromq4-haskell,
+                  psqueues,
+                  bytestring
 
 
-Executable rqueue
-  Main-Is:        RQueue.hs
-  Hs-Source-Dirs: src
+
+
+Executable tqueue
+  Main-Is:        TQueue.hs
+  Hs-Source-Dirs: exe
 
   if flag(debug)
     GHC-Options:  -csacc
@@ -69,4 +76,44 @@ Executable rqueue
                   DeriveDataTypeable,
                   EmptyDataDecls
 
-  Build-Depends:  base
+  Build-Depends:  base,
+                  binary,
+                  flowbox-utils,
+                  zeromq4-haskell,
+                  psqueues,
+                  bytestring
+
+
+Executable tqueue-slave
+  Main-Is:        Slave.hs
+  Hs-Source-Dirs: exe
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2
+
+  Extensions:     DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings,
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  DeriveFoldable,
+                  FlexibleInstances,
+                  LambdaCase,
+                  ConstraintKinds,
+                  GeneralizedNewtypeDeriving,
+                  DeriveDataTypeable,
+                  EmptyDataDecls
+
+  Build-Depends:  base,
+                  binary,
+                  flowbox-utils,
+                  zeromq4-haskell,
+                  psqueues,
+                  bytestring

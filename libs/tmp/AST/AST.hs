@@ -7,19 +7,19 @@
 
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Luna.AST.AST (
-    module Luna.AST.AST,
+module Luna.DEP.AST.AST (
+    module Luna.DEP.AST.AST,
     module X
 ) where
 
 import Flowbox.Prelude
-import Luna.AST.Common as X
-import Luna.AST.Expr   (Expr)
-import Luna.AST.Lit    (Lit)
-import Luna.AST.Module (Module)
-import Luna.AST.Pat    (Pat)
-import Luna.AST.Prop   as X
-import Luna.AST.Type   (Type)
+import Luna.DEP.AST.Common as X
+import Luna.DEP.AST.Expr   (Expr)
+import Luna.DEP.AST.Lit    (Lit)
+import Luna.DEP.AST.Module (Module)
+import Luna.DEP.AST.Pat    (Pat)
+import Luna.DEP.AST.Prop   as X
+import Luna.DEP.AST.Type   (Type)
 
 
 

@@ -20,14 +20,14 @@ import Data.Char           (ord)
 
 import           Flowbox.Prelude           hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Expr             (Expr)
-import qualified Luna.AST.Expr             as Expr
-import           Luna.AST.Module           (Module)
-import qualified Luna.AST.Module           as Module
-import           Luna.AST.Pat              (Pat)
-import qualified Luna.AST.Pat              as Pat
-import           Luna.AST.Name             (Name(Name))
-import qualified Luna.AST.Name             as Name
+import           Luna.DEP.AST.Expr             (Expr)
+import qualified Luna.DEP.AST.Expr             as Expr
+import           Luna.DEP.AST.Module           (Module)
+import qualified Luna.DEP.AST.Module           as Module
+import           Luna.DEP.AST.Pat              (Pat)
+import qualified Luna.DEP.AST.Pat              as Pat
+import           Luna.DEP.AST.Name             (Name(Name))
+import qualified Luna.DEP.AST.Name             as Name
 import           Luna.Pass.Pass            (Pass)
 import qualified Luna.Pass.Pass            as Pass
 
