@@ -17,10 +17,10 @@ main :: IO ()
 main = do
     getArgs >>= \case
         [filename] -> do
-            result <- lunaCompilerStepsFile filename
+            result <- lunacStepsFile filename
             let output = prettyCompilerPipelineResult displayResults result
             putStrLn (render output)
-        _ -> print ( "invalid number of arguments: pass (only) the filename" :: String )
+        _ -> putStrLn ( "invalid number of arguments: pass (only) the filename" :: String )
 
   where
     displayResults = [D_DesugarImplicitSelf_AST, F_TypecheckerInference_AST, F_TypecheckerInference_TCState]

@@ -1,8 +1,9 @@
 module Test.Hspec.LunaTypechecker.CompilerPipeline (
     module CompilerPipelineResult,
     module CompilerPipelineProgress,
-    lunaCompilerStepsSuccess, lunaCompilerStepsFailure,
-    lunaCompilerStepsFile, lunaCompilerSteps
+    lunacStepsSuccess, lunacStepsFailure,
+    lunacStepsSuccessFile, lunacStepsFailureFile,
+    lunacStepsFile, lunacSteps
   ) where
 
 
@@ -40,20 +41,27 @@ import qualified  Luna.Typechecker.Inference                  as PTyChk
 import qualified  Luna.System.Session                         as Session
 
 
-lunaCompilerStepsSuccess :: CompilerPipelineResult -> Expectation
-lunaCompilerStepsSuccess res = res `shouldSatisfyLens` (pipelineRawResult . _1 . _1 . to isRight)
+lunacStepsSuccessFile :: String -> Expectation
+lunacStepsSuccessFile fileName = lunacStepsSuccess =<< lunacStepsFile fileName
+
+lunacStepsFailureFile :: String -> Expectation
+lunacStepsFailureFile fileName = lunacStepsFailure =<< lunacStepsFile fileName
 
 
-lunaCompilerStepsFailure :: CompilerPipelineResult -> Expectation
-lunaCompilerStepsFailure res = res `shouldSatisfyLens` (pipelineRawResult . _1 . _1 . to isLeft)
+lunacStepsSuccess :: CompilerPipelineResult -> Expectation
+lunacStepsSuccess res = res `shouldSatisfyLens` (pipelineRawResult . _1 . _1 . to isRight)
 
 
-lunaCompilerStepsFile :: String -> IO CompilerPipelineResult
-lunaCompilerStepsFile fileName = L.pack <$> strictReadFile fileName >>= lunaCompilerSteps (L.pack fileName)
+lunacStepsFailure :: CompilerPipelineResult -> Expectation
+lunacStepsFailure res = res `shouldSatisfyLens` (pipelineRawResult . _1 . _1 . to isLeft)
 
 
-lunaCompilerSteps :: Text -> Text -> IO CompilerPipelineResult
-lunaCompilerSteps fileName fileContents = do
+lunacStepsFile :: String -> IO CompilerPipelineResult
+lunacStepsFile fileName = L.pack <$> strictReadFile fileName >>= lunacSteps (L.pack fileName)
+
+
+lunacSteps :: Text -> Text -> IO CompilerPipelineResult
+lunacSteps fileName fileContents = do
     res <- Session.runT $ do  Parser.init
                               runStateT (runEitherT procedure) (def :: CompilerPipelineProgress)
     return $ CompilerPipelineResult res
