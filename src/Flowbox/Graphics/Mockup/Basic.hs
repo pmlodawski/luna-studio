@@ -26,6 +26,7 @@ import qualified System.FilePath                   as FilePath
 import qualified Flowbox.Graphics.Color.Color          as Color
 import           Flowbox.Graphics.Image.Channel        (Channel (..), ChannelData (..))
 import qualified Flowbox.Graphics.Image.Channel        as Channel
+import           Flowbox.Graphics.Image.Error          as Image
 import           Flowbox.Graphics.Image.Image          (Image)
 import qualified Flowbox.Graphics.Image.Image          as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage)
@@ -55,6 +56,18 @@ unpackLunaVar (Value (Pure (Safe a))) = a
 
 unpackLunaList :: [VPS a] -> [a]
 unpackLunaList = fmap unpackLunaVar
+
+unpackAccDims :: (A.Exp Int,A.Exp Int) -> (Int,Int)
+unpackAccDims (x,y) =
+  let
+    pair = A.lift (x,y) :: A.Exp (Int,Int)
+    scalarPair = A.unit pair :: A.Acc (A.Scalar (Int,Int))
+    l = temporaryBackend $ scalarPair :: A.Scalar (Int,Int)
+    sh' = A.toList l :: [(Int,Int)]
+    x' = fst $ head sh'
+    y' = snd $ head sh'
+  in
+    (x',y')
 
 
 -- == LOAD / SAVE
@@ -247,6 +260,16 @@ channelToImageRGBA m = image
 
           alpha :: Matrix2 Float
           alpha = M.generate (M.shape m) (const 1)
+
+getChannelLuna :: String -> String -> Image -> Image.Result (Maybe Channel)
+getChannelLuna viewName channelName img = case Image.lookup viewName img of
+    Right view -> View.get view channelName
+    _          -> Left $ Image.ViewLookupError viewName
+
+getChannelFromPrimaryLuna :: String -> Image -> Image.Result (Maybe Channel)
+getChannelFromPrimaryLuna channelName img = case Image.lookupPrimary img of
+    Right view -> View.get view channelName
+    _          -> Left $ Image.ViewLookupError "primary view"
 
 
 -- == OTHER SHIT

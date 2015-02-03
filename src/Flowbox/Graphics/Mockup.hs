@@ -25,6 +25,7 @@ module Flowbox.Graphics.Mockup (
 ) where
 
 import Flowbox.Graphics.Mockup.Basic
+import Flowbox.Graphics.Mockup.Matte
 
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Type        as A
@@ -40,13 +41,8 @@ import qualified Flowbox.Graphics.Color.Companding                    as Gamma
 import           Flowbox.Graphics.Composition.Dither
 import           Flowbox.Geom2D.Accelerate.CubicBezier
 import           Flowbox.Geom2D.Accelerate.CubicBezier.Solve          as CubicSolveAcc
-import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.CubicBezier
-import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.Rectangle
-import qualified Flowbox.Geom2D.Shape                                 as GShape
-import qualified Flowbox.Geom2D.Mask as Mask
-import           Flowbox.Geom2D.Rasterizer
 import           Flowbox.Graphics.Composition.Filter
 import           Flowbox.Graphics.Composition.Filter                  as Conv
 import           Flowbox.Graphics.Composition.Generator.Gradient
@@ -142,79 +138,6 @@ edgeBlur channelName blurType kernelSize edgeMultiplier image =
 --              in apply (gauss $ variable psigma) dst
 --          domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
 --          process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
-
-imageMatteLuna :: FilePath -> String -> IO (Maybe (Matte.Matte Float))
-imageMatteLuna path channelName = do
-  img <- realReadLuna path
-  let channel = getChannelFromPrimaryLuna channelName img
-  case channel of
-    Right (Just channel) -> return $ Just $ Matte.imageMatteFloat channel
-    _ -> return Nothing
-
-vectorMatteLuna :: Mask2 Float -> Maybe (Matte.Matte Float)
-vectorMatteLuna mask = Just $ Matte.VectorMatte $ convertMask mask
-
-unpackAcc :: (A.Exp Int,A.Exp Int) -> (Int,Int)
-unpackAcc (x,y) =
-  let
-    pair = A.lift (x,y) :: A.Exp (Int,Int)
-    scalarPair = A.unit pair :: A.Acc (A.Scalar (Int,Int))
-    l = temporaryBackend $ scalarPair :: A.Scalar (Int,Int)
-    sh' = A.toList l :: [(Int,Int)]
-    x' = fst $ head sh'
-    y' = snd $ head sh'
-  in
-    (x',y')
-
-adjustMatte :: Matrix2 Float -> Matrix2 Float -> Matrix2 Float
-adjustMatte mat matte = matte'
-  where
-    sh = M.shape matte
-    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
-
-    matte' = M.generate (M.shape mat) (\sh ->
-      let
-        A.Z A.:. x A.:. y = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
-      in
-        (x A.<* h A.&&* y A.<* w) A.? (matte M.! sh, 0.0))
-
-applyMatteFloat :: (A.Exp Float -> A.Exp Float) -> Matte.Matte Float -> Channel -> Channel
-applyMatteFloat f m (ChannelFloat name (MatrixData mat)) = ChannelFloat name (MatrixData mat')
-  where
-    sh = M.shape mat
-    A.Z A.:. x A.:. y = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
-    (h,w) = unpackAcc (x,y)
-    matte = Matte.matteToMatrix h w m
-    mat' = applyToMatrix f (adjustMatte mat matte) mat
-
-applyMatteFloat f m (ChannelFloat name (DiscreteData shader)) = ChannelFloat name (DiscreteData shader')
-  where
-    Shader (Grid h' w') _ = shader
-    (h,w) = unpackAcc (h',w')
-    matte = Matte.matteToDiscrete h w m
-    shader' = applyToShader f matte shader
-
-applyMatteFloat f m (ChannelFloat name (ContinuousData shader)) = ChannelFloat name (ContinuousData shader')
-  where
-    Shader (Grid h' w') _ = shader
-    (h,w) = unpackAcc (h',w')
-    matte = Matte.matteToContinuous h w m
-    shader' = applyToShader f matte shader
-
--- looks strange, but is necessary because of the weird accelerate behaviour
-maskedApp :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> A.Exp a -> A.Exp a -> A.Exp a
-maskedApp f a b = (a A.==* 0) A.? (b,b + a*(delta f b))
--- won't work, no idea what is the reason of that
---aux a b f = b + a*(delta f b)
-  where
-    delta :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> (A.Exp a) -> (A.Exp a)
-    delta f x = (f x) - x
-
-applyToShader :: (IsNum b, A.Elt a, A.Elt b) => (A.Exp b -> A.Exp b) -> CartesianShader (A.Exp a) (A.Exp b) -> CartesianShader (A.Exp a) (A.Exp b) -> CartesianShader (A.Exp a) (A.Exp b)
-applyToShader f matte mat = combineWith (maskedApp f) matte mat
-
-applyToMatrix :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> Matrix2 a -> Matrix2 a -> Matrix2 a
-applyToMatrix f matte mat = (M.zipWith (\x -> \y -> (maskedApp f x y)) matte) mat
 
 offsetMatteLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
 offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
@@ -1003,50 +926,10 @@ multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap vari
 --                  Left _ -> Nothing
 --                  Right v -> Just v
 
-getChannelLuna :: String -> String -> Image -> Image.Result (Maybe Channel)
-getChannelLuna viewName channelName img = case Image.lookup viewName img of
-    Right view -> View.get view channelName
-    _          -> Left $ Image.ViewLookupError viewName
-
-getChannelFromPrimaryLuna :: String -> Image -> Image.Result (Maybe Channel)
-getChannelFromPrimaryLuna channelName img = case Image.lookupPrimary img of
-    Right view -> View.get view channelName
-    _          -> Left $ Image.ViewLookupError "primary view"
-
 -- FIXME[KM]: [iup]
 --insertChannelLuna :: String -> Channel -> Image -> Image
 --insertChannelLuna viewName chan = Image.update f viewName
 --    where f = Just . View.append chan
-
-type ControlPoint2 a = ( VPS (Point2 a)
-                       , VPS (Maybe (Point2 a))
-                       , VPS (Maybe (Point2 a))
-                       )
-
-type Path2 a = ( VPS Bool
-               , VPS [VPS (ControlPoint2 a)]
-               )
-
-type Shape2 a = [VPS (Path2 a)]
-
-type Mask2 a = ( VPS (Path2 a)
-               , VPS (Maybe (Path2 a))
-               )
-
-convertControlPoint :: ControlPoint2 a -> ControlPoint a
-convertControlPoint (unpackLunaVar -> a, unpackLunaVar -> b, unpackLunaVar -> c) = ControlPoint a b c
-
-convertPath :: Path2 a -> Path a
-convertPath (unpackLunaVar -> a, unpackLunaList.unpackLunaVar -> b) = Path a (fmap convertControlPoint b)
-
-convertShape :: Shape2 a -> GShape.Shape a
-convertShape (unpackLunaList -> a) = GShape.Shape (fmap convertPath a)
-
-convertMask :: Mask2 a -> Mask.Mask a
-convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a) (fmap convertPath b)
-
-rasterizeMaskLuna :: (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask2 a -> Image
-rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
 
 gradeLunaColor :: VPS (Color.RGBA Float)
                -> VPS (Color.RGBA Float)
