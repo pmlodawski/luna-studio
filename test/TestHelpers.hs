@@ -66,30 +66,52 @@ instance Arbitrary ImageMetric where
 
 instance Comparable Image ImageMetric where
     closeEnough metric actualImage expectedImage = (case metric of
-        PixelWise -> maxDiff < 0.93 --imgAsList actualImage == imgAsList expectedImage
+        PixelWise -> maxDiff < 0.01 --imgAsList actualImage == imgAsList expectedImage
         TileWise  -> True
-        ImageWise -> sbool <50) where
+        ImageWise -> sC/sRefC < 0.01) where
             [maxDiff] = M.toList AC.run maxDif
-            [sbool] = M.toList AC.run s
+            [sC] = M.toList AC.run s
+            [sRefC] = M.toList AC.run sRef
             s = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r) (M.sum g) (M.sum b) (M.sum a)
+            sRef = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r2) (M.sum g2) (M.sum b2) (M.sum a2)
 
-            (r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
-            maxDif = M.zipWith4 (\r g b a -> r+g+b+a) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
+            --(r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
+            maxDif = M.zipWith4 (\r g b a -> maximum [r,g,b,a]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
+            r = M.map abs $ M.zipWith (-) r1 r2
+            g = M.map abs $ M.zipWith (-) g1 g2
+            b = M.map abs $ M.zipWith (-) b1 b2
+            a = M.map abs $ M.zipWith (-) a1 a2
+
+            (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
+            (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
             
 
 
     diffMsg metric actualImage expectedImage  = case metric of
         PixelWise -> (unsafePerformIO $ do
-                        let diff =  mergeLuna Difference Adobe actualImage expectedImage
-                        Mock.saveImageLuna "./samples/diff.png" diff        
-                        return "diff image saved to ./samples/diff.png")
+                        Mock.saveImageLuna resultPath actualImage       
+                        --return "diff image saved to ./samples/diff.png"
+                        Mock.saveImageLuna diffPath diff        
+                        return $ "wrong result saved to"++resultPath++"\ndiff image saved to "++diffPath)
                         --"pixel-wise difference" ++
                      --"actualImage sum: " ++ (show $ s1) ++
                      --"\nexpectedImage sum: " ++ (show $ s2) ++
                      ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff) where
-                    [maxDiff] = M.toList AC.run maxDif
-                    (r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
-                    maxDif = M.zipWith4 (\r g b a -> r+g+b+a) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
+                      resultPath = "./samples/result.png"
+                      diffPath = "./samples/diff.png"
+                      [maxDiff] = M.toList AC.run maxDif
+                      --(r,g,b,a) = Mock.unsafeGetChannels $ diff
+                      maxDif = M.zipWith4 (\r g b a -> maximum [r,g,b,a]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
+
+                      r = M.map abs $ M.zipWith (-) r1 r2
+                      g = M.map abs $ M.zipWith (-) g1 g2
+                      b = M.map abs $ M.zipWith (-) b1 b2
+                      a = M.map abs $ M.zipWith (-) a1 a2
+
+                      (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
+                      (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
+
+                      diff = mergeLuna Difference Adobe actualImage expectedImage
                      --   l1 = imgAsList actualImage 
                      --   l2 = imgAsList expectedImage
                      --   s1 = sum l1
@@ -107,9 +129,14 @@ instance Comparable Image ImageMetric where
                         s1 = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r1) (M.sum g1) (M.sum b1) (M.sum a1)
                         s2 = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r2) (M.sum g2) (M.sum b2) (M.sum a2)
                         sd = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum rd) (M.sum gd) (M.sum bd) (M.sum ad)
+
+                        rd = M.map abs $ M.zipWith (-) r1 r2
+                        gd = M.map abs $ M.zipWith (-) g1 g2
+                        bd = M.map abs $ M.zipWith (-) b1 b2
+                        ad = M.map abs $ M.zipWith (-) a1 a2
                         (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
                         (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
-                        (rd,gd,bd,ad) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
+                        --(rd,gd,bd,ad) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
 
                         --l1 = imgAsList actualImage 
                         --l2 = imgAsList expectedImage
