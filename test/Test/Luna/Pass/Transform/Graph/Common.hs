@@ -15,8 +15,8 @@ module Test.Luna.Pass.Transform.Graph.Common where
 --import qualified Luna.Syntax.Control.Crumb                    as Crumb
 --import qualified Luna.Syntax.Control.Focus                    as Focus
 --import qualified Luna.Syntax.Control.Zipper                   as Zipper
---import           Luna.AST.Module                           (Module)
---import qualified Luna.AST.Name                             as Name
+--import           Luna.DEP.AST.Module                           (Module)
+--import qualified Luna.DEP.AST.Name                             as Name
 --import qualified Luna.Pass.Analysis.Alias.Alias            as Analysis.Alias
 --import qualified Luna.Pass.Analysis.ID.MaxID               as MaxID
 --import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer   as IDFixer
