@@ -53,7 +53,7 @@ instance Show StageTypecheckerState where
                                           $+$ nextTVar_field
                                           $+$ typeMap_field
       where
-        str_field      = text "Debug       :" <+> prettyNullable (map show' $ reverse _debugLog)
+        str_field      = text "Debug       :" <+> prettyNullable (map (text.fromText) $ reverse _debugLog)
         constr_field   = text "Constraints :" <+> prettyConstr   _constr
         nextTVar_field = text "TVars used  :" <+> prettyTVar     _nextTVar
         typo_field     = text "Type env    :" <+> prettyNullable (map (parens . prettyTypo) _typo)
