@@ -6,18 +6,25 @@
 ---------------------------------------------------------------------------
 module Luna.Interpreter.Session.Var where
 
+import Control.Monad.State
+
 import           Flowbox.Prelude
-import           Luna.Graph.Node.Expr       (NodeExpr)
-import qualified Luna.Graph.Node.Expr       as NodeExpr
-import qualified Luna.Graph.Node.StringExpr as StringExpr
-import qualified Luna.AST.Expr as Expr
+import qualified Luna.AST.Common      as AST
+import qualified Luna.AST.Expr        as Expr
+import           Luna.Graph.Node.Expr (NodeExpr)
+import qualified Luna.Graph.Node.Expr as NodeExpr
+
 
 
 timeRef :: String
 timeRef = "time"
 
 
+timeRefIds :: NodeExpr -> [AST.ID]
+timeRefIds (NodeExpr.ASTExpr expr) = execState (traverseExpr expr) [] where
+    traverseExpr = Expr.traverseMR matchTimeRef return return return return
+    matchTimeRef e@(Expr.App _ (Expr.Accessor i (Expr.ConAccessor "time") (Expr.App _ (Expr.Con _ "Std") [])) [])
+                   = modify (i:) >> return e
+    matchTimeRef e = return e
+timeRefIds  _                      = []
 
-isTimeRefNodeExpr :: NodeExpr -> Bool
-isTimeRefNodeExpr (NodeExpr.ASTExpr (Expr.App _ (Expr.Accessor _ (Expr.ConAccessor "time") (Expr.App _ (Expr.Con _ "Std") [])) [])) = True
-isTimeRefNodeExpr _ = False

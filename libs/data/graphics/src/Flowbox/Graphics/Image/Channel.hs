@@ -74,9 +74,6 @@ asDiscrete :: Channel -> Channel
 asDiscrete chan = case chan of
     (ChannelFloat name zeData) -> ChannelFloat name $ asDiscreteData (constant 0) zeData
     (ChannelInt   name zeData) -> ChannelInt   name $ asDiscreteData (constant 0) zeData
-    where asDiscreteData _ zeData@DiscreteData{}   = zeData
-          asDiscreteData v (MatrixData zeData)     = DiscreteData $ fromMatrix (Constant v) zeData
-          asDiscreteData _ (ContinuousData zeData) = DiscreteData $ monosampler zeData
 
 asDiscreteClamp :: Channel -> Channel
 asDiscreteClamp chan = case chan of
@@ -90,9 +87,16 @@ asContinuous :: Channel -> Channel
 asContinuous chan = case chan of
     (ChannelFloat name zeData) -> ChannelFloat name $ asContinuousData (constant 0) zeData
     (ChannelInt   name zeData) -> ChannelInt   name $ asContinuousData (constant 0) zeData
-    where asContinuousData _ zeData@ContinuousData{} = zeData
-          asContinuousData v (MatrixData zeData)     = ContinuousData $ (nearest . fromMatrix (Constant v)) zeData
-          asContinuousData _ (DiscreteData zeData)   = ContinuousData $ nearest zeData
+
+asDiscreteData :: Elt e => Exp e -> ChannelData e -> ChannelData e
+asDiscreteData _ zeData@DiscreteData{}   = zeData
+asDiscreteData v (MatrixData zeData)     = DiscreteData $ fromMatrix (Constant v) zeData
+asDiscreteData _ (ContinuousData zeData) = DiscreteData $ monosampler zeData
+
+asContinuousData :: Elt e => Exp e -> ChannelData e -> ChannelData e
+asContinuousData _ zeData@ContinuousData{} = zeData
+asContinuousData v (MatrixData zeData)     = ContinuousData $ (nearest . fromMatrix (Constant v)) zeData
+asContinuousData _ (DiscreteData zeData)   = ContinuousData $ nearest zeData
 
 mapOverData :: Elt a => (Exp a -> Exp a) -> ChannelData a -> ChannelData a
 mapOverData f chanData = case chanData of

@@ -28,7 +28,7 @@ newtype CurvesCollection x = CurvesCollection { _curves :: [(x, Curve x)] } deri
 
 data Curve x = BezierCurve { _vertices :: [ControlPoint x] } deriving (Show)
 
-data ControlPoint x = ControlPoint { _point  :: Point2 x
+data ControlPoint x = ControlPoint { _point     :: Point2 x
                                    , _handleIn  :: Handle
                                    , _handleOut :: Handle
                                    } deriving (Show, Eq)

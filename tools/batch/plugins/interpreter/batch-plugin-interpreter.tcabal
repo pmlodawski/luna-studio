@@ -23,8 +23,6 @@ Library
 
     Build-Depends:  base,
                     batch-lib-project-manager,
-                    -- constraint on blaze-markup is a temporary fix for trifectasdbnboflus
-                    blaze-markup < 0.6.3,
                     bytestring,
                     containers,
                     either,
@@ -47,7 +45,7 @@ Library
                     mtl,
                     optparse-applicative,
                     pipes,
-                    pipes-concurrency,
+                    pipes-concurrency >= 2.0.3,
                     pipes-safe,
                     protocol-buffers,
                     protocol-buffers-descriptor,

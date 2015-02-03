@@ -60,7 +60,6 @@ import Flowbox.Math.Index
 import Flowbox.Prelude    as P hiding (ix, map, pred, set, use, zipWith, (++), (<*), (?))
 
 
-
 data Matrix ix a = Raw (A.Array ix a)
                  | Delayed (A.Acc (A.Array ix a))
                  deriving (Show)
