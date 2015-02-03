@@ -7,17 +7,21 @@
 
 module Luna.Interpreter.RPC.Handler.Var where
 
-import Data.IntSet as IntSet
+import Control.Monad (forM_)
+import Data.IntSet   as IntSet
 
 import qualified Flowbox.Batch.Handler.Common            as Batch
 import           Flowbox.Bus.RPC.RPC                     (RPC)
 import           Flowbox.Control.Error                   hiding (err)
 import           Flowbox.Prelude                         hiding (Context)
 import           Flowbox.ProjectManager.Context          (Context)
-import qualified Luna.Graph.Node                         as Node
-import           Luna.Graph.Node.Expr                    (NodeExpr)
-import qualified Luna.Graph.PropertyMap                  as PropertyMap
-import qualified Luna.Graph.View.Default.DefaultsMap     as DefaultsMap
+import qualified Luna.DEP.Graph.Node                     as Node
+import           Luna.DEP.Graph.Node.Expr                (NodeExpr)
+import qualified Luna.DEP.Graph.PropertyMap              as PropertyMap
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap as DefaultsMap
+import qualified Luna.DEP.Lib.Lib                        as Lib
+import qualified Luna.DEP.Lib.Manager                    as LibManager
+import qualified Luna.DEP.Pass.Analysis.ID.ExtractIDs    as ExtractIDs
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache    as Cache
 import           Luna.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
@@ -25,10 +29,7 @@ import qualified Luna.Interpreter.Session.Env            as Env
 import           Luna.Interpreter.Session.Memory.Manager (MemoryManager)
 import           Luna.Interpreter.Session.Session        (SessionST)
 import qualified Luna.Interpreter.Session.Var            as Var
-import qualified Luna.Lib.Lib                            as Lib
-import qualified Luna.Lib.Manager                        as LibManager
-import qualified Luna.Pass.Analysis.ID.ExtractIDs        as ExtractIDs
-import Control.Monad (forM_)
+
 
 
 insertTimeRef :: Lib.ID -> Node.ID -> Node.ID

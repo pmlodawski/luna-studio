@@ -170,7 +170,7 @@ deleteVarName varName = do
 deleteAll :: MemoryManager mm => Session mm ()
 deleteAll = do
     logger info "Cleaning all cached values"
-    mapM_ delete' =<< MapForest.elems <$> Env.getCached
+    mapM_ delete' =<< MapForest.toList <$> Env.getCached
 
 
 getCacheInfo :: CallPointPath -> Session mm CacheInfo

@@ -23,8 +23,8 @@ import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault                 
 import qualified Flowbox.ProjectManager.RPC.Handler.Project                                                    as ProjectHandler
 import qualified Flowbox.ProjectManager.RPC.Handler.Properties                                                 as PropertiesHandler
 import           Flowbox.System.Log.Logger
-import qualified Generated.Proto.Graph.Node                                                                    as Gen.Node
-import qualified Generated.Proto.Library.Library                                                               as Gen.Library
+import qualified Generated.Proto.Dep.Graph.Node                                                                as Gen.Node
+import qualified Generated.Proto.Dep.Library.Library                                                           as Gen.Library
 import qualified Generated.Proto.Project.Project                                                               as Gen.Project
 import qualified Generated.Proto.ProjectManager.Project.Close.Request                                          as ProjectClose
 import qualified Generated.Proto.ProjectManager.Project.Close.Update                                           as ProjectClose
