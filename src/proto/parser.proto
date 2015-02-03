@@ -5,11 +5,11 @@
 // Flowbox Team <contact@flowbox.io>, 2014
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto.parser;
+package generated.proto.dep.parser;
 
-import "expr.proto";
-import "pat.proto";
-import "type.proto";
+import "dep/expr.proto";
+import "dep/pat.proto";
+import "dep/type.proto";
 
 
 
@@ -20,7 +20,7 @@ message Parse {
         }
         message Status {
             required Request request = 1;
-            required generated.proto.expr.Expr expr = 2;
+            required generated.proto.dep.expr.Expr expr = 2;
         }   
     }
     message Pat {
@@ -29,7 +29,7 @@ message Parse {
         }
         message Status {
             required Request request = 1;
-            required generated.proto.pat.Pat pat = 2;
+            required generated.proto.dep.pat.Pat pat = 2;
         }   
     }
     message Type {
@@ -38,7 +38,7 @@ message Parse {
         }
         message Status {
             required Request request = 1;
-            required generated.proto.type.Type type = 2;
+            required generated.proto.dep.type.Type type = 2;
         }   
     }
     message NodeExpr {
@@ -47,14 +47,14 @@ message Parse {
         }
         message Status {
             required Request request = 1;
-            required generated.proto.expr.Expr expr = 2;
+            required generated.proto.dep.expr.Expr expr = 2;
         }   
     }
 }
 
 message MkText {
     message Request {
-        required generated.proto.expr.Expr expr = 1;
+        required generated.proto.dep.expr.Expr expr = 1;
     }
     message Status {
         required Request request = 1;
