@@ -25,7 +25,7 @@ cpp_gen_dirs = [os.path.join(rootPath, 'tools/batch/client/cpp/generated')]
 importPaths = [ '/usr/include'
               , '/usr/local/include'
               , os.path.join(rootPath, 'dist', 'proto')
-              , os.path.join(rootPath, 'libs/luna/protobuf/src/proto')
+              , os.path.join(rootPath, 'libs/luna/protobuf-old/src/proto')
               , os.path.join(rootPath, 'libs/batch/batch/src/proto')
               , os.path.join(rootPath, 'libs/rpc/src/proto')
               , os.path.join(rootPath, 'libs/aws/src/proto')
@@ -82,7 +82,7 @@ def timestamp_path(path):
 
 def run_hprotoc(proto_path):
     proto_dir  = os.path.dirname(proto_path)
-    hs_gen_dir = os.path.join(proto_dir, '../../dist/gen')
+    hs_gen_dir = os.path.join(proto_dir, gen_dir(proto_dir))
     proto_name = os.path.basename(proto_path)
     args = ' ' + imports + ' -I ' + proto_dir + ' ' + proto_path
     try_call('hprotoc -d ' + hs_gen_dir + args)
@@ -90,16 +90,22 @@ def run_hprotoc(proto_path):
 
 def run_protoc(proto_path):
     proto_dir  = os.path.dirname(proto_path)
-    hs_gen_dir = os.path.join(proto_dir, '../../dist/gen')
+    hs_gen_dir = os.path.join(proto_dir, gen_dir(proto_dir))
     proto_name = os.path.basename(proto_path)
     args = ' ' + imports + ' -I ' + proto_dir + ' ' + proto_path
     for cpp_gen_dir in cpp_gen_dirs:
         try_call('protoc --cpp_out=' + cpp_gen_dir + args)
 
+def gen_dir(proto_dir):
+    if os.path.dirname(proto_dir) != 'proto':
+        return '../../../dist/gen'
+    else: 
+        return '../../dist/gen'
+
 
 def prepare_hs_dir(proto_path):
     proto_dir  = os.path.dirname(proto_path)
-    hs_gen_dir = '../../dist/gen'
+    hs_gen_dir = gen_dir(proto_dir)
     shutil.rmtree(os.path.join(proto_dir, hs_gen_dir), True)
 
 

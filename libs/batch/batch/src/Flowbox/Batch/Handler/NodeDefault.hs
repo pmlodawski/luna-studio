@@ -8,21 +8,21 @@
 
 module Flowbox.Batch.Handler.NodeDefault where
 
-import           Flowbox.Batch.Batch                        (Batch)
-import qualified Flowbox.Batch.Handler.Common               as Batch
-import qualified Flowbox.Batch.Project.Project              as Project
+import           Flowbox.Batch.Batch                         (Batch)
+import qualified Flowbox.Batch.Handler.Common                as Batch
+import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import qualified Luna.Lib.Lib                               as Library
-import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer    as IDFixer
-import           Luna.Syntax.Control.Crumb                  (Breadcrumbs)
-import qualified Luna.Syntax.Graph.Flags                    as Flags
-import qualified Luna.Syntax.Graph.Node                     as Node
-import           Luna.Syntax.Graph.Node.Expr                (NodeExpr)
-import qualified Luna.Syntax.Graph.PropertyMap              as PropertyMap
-import           Luna.Syntax.Graph.View.Default.DefaultsMap (DefaultsMap)
-import qualified Luna.Syntax.Graph.View.Default.DefaultsMap as DefaultsMap
-import           Luna.Syntax.Graph.View.PortDescriptor      (PortDescriptor)
+import           Luna.DEP.AST.Control.Crumb                  (Breadcrumbs)
+import qualified Luna.DEP.Graph.Flags                        as Flags
+import qualified Luna.DEP.Graph.Node                         as Node
+import           Luna.DEP.Graph.Node.Expr                    (NodeExpr)
+import qualified Luna.DEP.Graph.PropertyMap                  as PropertyMap
+import           Luna.DEP.Graph.View.Default.DefaultsMap     (DefaultsMap)
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap     as DefaultsMap
+import           Luna.DEP.Graph.View.PortDescriptor          (PortDescriptor)
+import qualified Luna.DEP.Lib.Lib                            as Library
+import qualified Luna.DEP.Pass.Transform.AST.IDFixer.IDFixer as IDFixer
 
 
 

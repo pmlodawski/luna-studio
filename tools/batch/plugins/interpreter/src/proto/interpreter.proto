@@ -7,7 +7,7 @@
 
 package generated.proto.interpreter;
 
-import "crumb.proto";
+import "dep/crumb.proto";
 import "data.proto";
 import "mode.proto";
 
@@ -26,7 +26,7 @@ message CallPointPath {
 message DefPoint {
     required int32 projectID = 1;
     required int32 libraryID = 2;
-    required generated.proto.crumb.Breadcrumbs breadcrumbs = 3;
+    required generated.proto.dep.crumb.Breadcrumbs breadcrumbs = 3;
 }
 
 message ProfileInfo {
