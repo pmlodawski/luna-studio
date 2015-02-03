@@ -97,7 +97,7 @@ def run_protoc(proto_path):
         try_call('protoc --cpp_out=' + cpp_gen_dir + args)
 
 def gen_dir(proto_dir):
-    if os.path.dirname(proto_dir) != 'proto':
+    if os.path.basename(proto_dir) != 'proto':
         return '../../../dist/gen'
     else: 
         return '../../dist/gen'
