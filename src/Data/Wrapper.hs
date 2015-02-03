@@ -45,15 +45,6 @@ class UnwrapT t where
 class (WrapT t, UnwrapT t) => WrapperT t
 
 
-class Unpack cntr b | cntr -> b where
-    unpack :: cntr -> b
-
-class Pack a cntr | cntr -> a where
-    pack :: a -> cntr
-
-
-class (Unpack a b, Pack b a) => Packable a b
-
 ----------------------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------------------
