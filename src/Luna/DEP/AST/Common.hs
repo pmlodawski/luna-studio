@@ -5,13 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE MultiParamTypeClasses #-}
-
-
-module Luna.AST.Prop where
+module Luna.DEP.AST.Common where
 
 import Flowbox.Prelude
 
 
-class HasName a where
-    name :: a -> String
+type ID = Int

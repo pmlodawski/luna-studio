@@ -9,19 +9,19 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Luna.AST.Pat where
+module Luna.DEP.AST.Pat where
 
 import Control.Applicative
 import GHC.Generics
 
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, drop, id)
-import           Luna.AST.Common                 (ID)
-import qualified Luna.AST.Lit                    as Lit
-import           Luna.AST.Prop                   (HasName)
-import qualified Luna.AST.Prop                   as Prop
-import           Luna.AST.Type                   (Type)
-import qualified Luna.AST.Type                   as Type
+import           Luna.DEP.AST.Common                 (ID)
+import qualified Luna.DEP.AST.Lit                    as Lit
+import           Luna.DEP.AST.Prop                   (HasName)
+import qualified Luna.DEP.AST.Prop                   as Prop
+import           Luna.DEP.AST.Type                   (Type)
+import qualified Luna.DEP.AST.Type                   as Type
 
 
 type Lit = Lit.Lit

@@ -8,7 +8,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Luna.AST.Comment where
+module Luna.DEP.AST.Comment where
 
 import           Control.Lens
 import           Flowbox.Generics.Deriving.QShow

@@ -8,15 +8,15 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Luna.AST.Lit where
+module Luna.DEP.AST.Lit where
 
 import           Control.Lens
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 (Eq, Read, Show)
 import qualified Flowbox.Prelude                 as Prelude
 import           GHC.Generics
-import           Luna.AST.Common                 (ID)
-import           Luna.AST.Lit.Number             (Number)
+import           Luna.DEP.AST.Common                 (ID)
+import           Luna.DEP.AST.Lit.Number             (Number)
 
 
 

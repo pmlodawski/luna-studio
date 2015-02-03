@@ -8,7 +8,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Luna.AST.Lit.Number where
+module Luna.DEP.AST.Lit.Number where
 
 import           Control.Lens
 import           Flowbox.Generics.Deriving.QShow

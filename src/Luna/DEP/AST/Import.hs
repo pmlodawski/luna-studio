@@ -5,9 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.AST.Common where
+module Luna.DEP.AST.Import(
+    Import(..),
+) where
 
+import Flowbox.Data.Path
 import Flowbox.Prelude
 
 
-type ID = Int
+
+data Import = Import {path :: Path, name :: String} deriving (Show)
+
