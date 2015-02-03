@@ -5,31 +5,31 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 module Main where
 
-import           Data.Array.Accelerate hiding (fromIntegral)
-import           Data.Array.Accelerate as A
-import           Data.Array.Accelerate.IO
-import           Data.ByteString hiding (head)
-import           Data.VectorSpace
+import Data.Array.Accelerate    hiding (fromIntegral)
+import Data.Array.Accelerate    as A
+import Data.Array.Accelerate.IO
+import Data.ByteString          hiding (head)
+import Data.VectorSpace
 
-import           Flowbox.Geom2D.ControlPoint
-import           Flowbox.Geom2D.Path
-import           Flowbox.Geom2D.Mask
-import           Flowbox.Geom2D.Rasterizer hiding (makePoints, makeSegments)
-import           Flowbox.Geom2D.QuadraticBezier
-import           Flowbox.Geom2D.QuadraticBezier.Conversion
-import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
-import           Flowbox.Graphics.Image.IO.BMP
-import           Flowbox.Graphics.Mockup (saveImageLuna)
-import           Flowbox.Prelude as P hiding ((#))
-import           Flowbox.Math.Matrix
+import Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
+import Flowbox.Geom2D.ControlPoint
+import Flowbox.Geom2D.Mask
+import Flowbox.Geom2D.Path
+import Flowbox.Geom2D.QuadraticBezier
+import Flowbox.Geom2D.QuadraticBezier.Conversion
+import Flowbox.Geom2D.Rasterizer                       hiding (makePoints, makeSegments)
+import Flowbox.Graphics.Image.IO.BMP
+import Flowbox.Graphics.Mockup.Basic                   (saveImageLuna)
+import Flowbox.Math.Matrix
+import Flowbox.Prelude                                 as P hiding (( # ))
 
-import           Math.Coordinate.Cartesian (Point2 (..))
+import Math.Coordinate.Cartesian (Point2 (..))
 
-import           Data.Array.Accelerate.CUDA
+import Data.Array.Accelerate.CUDA
 
 
 
@@ -117,7 +117,7 @@ main = do
 
     P.putStrLn "Test rasterizeMask GUI example --> fooD3.png"
 
-    let patGUI = Path True pointsGUI 
+    let patGUI = Path True pointsGUI
         feaGUI = Path True featherGUI
         arrGUI = rasterizeMask w h (Mask patGUI (Just feaGUI))
         imgGUI = matrixToImage arrGUI

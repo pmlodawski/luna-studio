@@ -24,17 +24,14 @@ module Flowbox.Graphics.Mockup (
     , V2(..)
 ) where
 
-import qualified Codec.Picture.Png                 as Juicy
-import qualified Codec.Picture.Types               as Juicy
+import Flowbox.Graphics.Mockup.Basic
+
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Type        as A
-import qualified Data.Array.Accelerate.Array.Sugar as A
 import           Data.Array.Accelerate.CUDA
-import qualified Data.Array.Accelerate.IO          as A
 import           Data.Bool
 import           Data.Char                         (toLower)
 import           Data.Maybe
-import qualified Data.Vector.Storable              as SV
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
 import           Math.Metric
@@ -75,7 +72,6 @@ import           Flowbox.Graphics.Composition.Color
 import           Flowbox.Graphics.Image.Image                         as Image
 import qualified Flowbox.Graphics.Image.Matte                         as Matte
 import           Flowbox.Graphics.Image.Error                         as Image
-import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
 import           Flowbox.Graphics.Image.IO.OpenEXR                    (readFromEXR)
 import           Flowbox.Graphics.Composition.Merge                   (AlphaBlend(..))
 import qualified Flowbox.Graphics.Composition.Merge                   as Merge
@@ -90,9 +86,7 @@ import qualified Flowbox.Math.Function.CurveGUI                       as CurveGU
 import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 import Control.PolyApplicative ((<<*>>))
 
--- something should be done with this
-temporaryBackend :: M.Backend
-temporaryBackend = CUDA.run
+
 
 data SkewOrder = SkewXY | SkewYX
 
@@ -107,124 +101,9 @@ data Transform a = Transform { _translate :: V2 a
                              , _center    :: Point2 a
                              }
 
-pattern VPS x = Value (Pure (Safe x))
-type VPS x = Value Pure Safe x
-
 type ColorD = Color.RGBA Float
 pattern ColorD r g b a = Color.RGBA r g b a
 type Color5 = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
-
--- == LOAD / SAVE
-
-testLoadRGBA' :: Value Pure Safe String -> Value IO Safe (Value Pure Safe (Matrix2 Float), Value Pure Safe (Matrix2 Float), Value Pure Safe (Matrix2 Float), Value Pure Safe (Matrix2 Float))
-testLoadRGBA' path = autoLift1 ((fmap.fmap) (over each val) $ testLoadRGBA) path
-
-testLoadRGBA :: FilePath -> IO (Matrix2 Float, Matrix2 Float, Matrix2 Float, Matrix2 Float)
-testLoadRGBA filename = do
-    file <- loadImage filename
-    case file of
-        Right mat -> return $ M.unzip4 $ M.map (convert . A.unpackRGBA32) (Raw mat)
-        Left e -> error $ "Unable to load file: " P.++ show e
-    where convert t = let (r, g, b, a) = A.unlift t :: (A.Exp A.Word8, A.Exp A.Word8, A.Exp A.Word8, A.Exp A.Word8)
-                      in A.lift (A.fromIntegral r / 255, A.fromIntegral g / 255, A.fromIntegral b / 255, A.fromIntegral a / 255)
-
-testSaveRGBA :: FilePath -> Matrix2 Float -> Matrix2 Float -> Matrix2 Float -> Matrix2 Float -> IO ()
-testSaveRGBA filename r g b a = saveImageJuicy filename $ compute' run $ M.map A.packRGBA32 $ M.zip4 (conv r) (conv g) (conv b) (conv a)
-    where conv = M.map (A.truncate . (* 255.0) . clamp' 0 1)
-
-saveImageJuicy :: forall e a.
-                        (SV.Storable a, Elt e,
-                         A.Vectors (A.EltRepr e)
-                         ~ ((), SV.Vector a)) =>
-                        FilePath -> A.Array ((Z :. Int) :. Int) e -> IO ()
-saveImageJuicy file matrix = do
-    let ((), vec) = A.toVectors matrix
-        A.Z A.:. h A.:. w = A.arrayShape matrix
-    Juicy.writePng file $ (Juicy.Image w h (SV.unsafeCast vec) :: Juicy.Image Juicy.PixelRGBA8)
-
-
--- == HELPERS
-
-onEach :: (A.Exp Float -> A.Exp Float) -> Image -> Image
-onEach f = Image.map (View.map $ Channel.unsafeMap (Channel.FunFloat f))
-
--- onEachRGBA :: forall a. (A.Elt a, A.IsFloating a)
---            => (A.Exp a -> A.Exp a)
---            -> (A.Exp a -> A.Exp a)
---            -> (A.Exp a -> A.Exp a)
---            -> (A.Exp a -> A.Exp a)
---            -> Image
---            -> Image
--- onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
---     where r = updateChan fr "rgba.r"
---           g = updateChan fg "rgba.g"
---           b = updateChan fb "rgba.b"
---           a = updateChan fa "rgba.a"
---           updateChan f = case (A.floatingType :: A.FloatingType a) of
---                              A.TypeFloat{}  -> Channel.unsafeMap (Channel.FunFloat f) . getChan
---                              A.TypeDouble{} -> Channel.unsafeMap (Channel.FunDouble f) . getChan
---                              _              -> error "onEachRGBA: invalid type of floating point value"
---           getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
-
-onEachRGBA :: (A.Exp Float -> A.Exp Float)
-           -> (A.Exp Float -> A.Exp Float)
-           -> (A.Exp Float -> A.Exp Float)
-           -> (A.Exp Float -> A.Exp Float)
-           -> Image
-           -> Image
-onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
-    where r = updateChan fr "rgba.r"
-          g = updateChan fg "rgba.g"
-          b = updateChan fb "rgba.b"
-          a = updateChan fa "rgba.a"
-          updateChan f = Channel.unsafeMap (Channel.FunFloat f) . getChan
-          getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
-
-onEachColorRGB :: (A.Exp (Color.RGB Float) -> A.Exp (Color.RGB Float)) -> Image -> Image
-onEachColorRGB f img = img'
-    where rgb = unsafeGetRGB img
-          Right view = lookupPrimary img
-          rgb' = M.map f rgb
-          unzipRGB = M.unzip3 . M.map (\(A.unlift -> Color.RGB x y z) -> A.lift (x, y, z))
-
-          (r', g', b') = unzipRGB rgb'
-
-          view' = insertChannelFloats view [
-                      ("rgba.r", r')
-                    , ("rgba.g", g')
-                    , ("rgba.b", b')
-                  ]
-
-          img' = Image.insertPrimary view' img
-
-onEachRGBAChannels :: (Channel -> Channel)
-                   -> (Channel -> Channel)
-                   -> (Channel -> Channel)
-                   -> (Channel -> Channel)
-                   -> Image
-                   -> Image
-onEachRGBAChannels fr fg fb fa img = img'
-  where ChannelFloat _ (MatrixData r) = fr (getChan "rgba.r")
-        ChannelFloat _ (MatrixData g) = fg (getChan "rgba.g")
-        ChannelFloat _ (MatrixData b) = fb (getChan "rgba.b")
-        ChannelFloat _ (MatrixData a) = fa (getChan "rgba.a")
-
-        Right view = lookupPrimary img
-
-        view' = insertChannelFloats view [
-                    ("rgba.r", r)
-                  , ("rgba.g", g)
-                  , ("rgba.b", b)
-                  , ("rgba.a", a)
-                ]
-
-        img' = Image.insertPrimary view' img
-        getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
-
-
-onEachChannel :: (Channel -> Channel) -> Image -> Image
-onEachChannel f = Image.map $ View.map f
-
 
 -- == COMPO
 
@@ -463,28 +342,6 @@ saturateLuna (fmap variable -> Color.RGBA saturationR saturationG saturationB sa
 posterizeLuna :: Float -> Image -> Image
 posterizeLuna (variable -> colors) = onEach $ posterize colors
 
-loadImageLuna :: FilePath -> IO Image
-loadImageLuna path = do
-    (r, g, b, a) <- testLoadRGBA path
-    let view = insertChannelFloats (View.emptyDefault) [
-                   ("rgba.r", r)
-                 , ("rgba.g", g)
-                 , ("rgba.b", b)
-                 , ("rgba.a", a)
-               ]
-        image = singleton view
-    return image
-
-insertChannelFloats :: View -> [(String, Matrix2 Float)] -> View
-insertChannelFloats view chans = foldr f view chans
-    where f (name, chan) acc = View.append (ChannelFloat name . MatrixData $ chan) acc
-
-saveImageLuna :: FilePath -> Image -> IO Image
-saveImageLuna path img = do
-    let (r, g, b, a) = unsafeGetChannels img
-    testSaveRGBA path r g b a
-    return img
-
 keyer' :: (A.Exp (Color.RGB Float) -> A.Exp Float) -> Image -> Image
 keyer' f img = img'
     where rgb = unsafeGetRGB img
@@ -494,20 +351,6 @@ keyer' f img = img'
           view' = insertChannelFloats view [("rgba.a", alpha)]
 
           img' = Image.insertPrimary view' img
-
-unsafeGetRGB :: Image -> M.Matrix2 (Color.RGB Float)
-unsafeGetRGB img = rgb
-    where (r, g, b, _) = unsafeGetChannels img
-
-          rgb = M.zipWith3 (\x y z -> A.lift $ Color.RGB x y z) r g b
-
-unsafeGetChannels :: Image -> (M.Matrix2 Float, M.Matrix2 Float, M.Matrix2 Float, M.Matrix2 Float)
-unsafeGetChannels img = (r, g, b, a)
-    where Right view = lookupPrimary img
-          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData r))) = View.get view "rgba.r"
-          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData g))) = View.get view "rgba.g"
-          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData b))) = View.get view "rgba.b"
-          Right (Just (ChannelFloat _ (asMatrixData -> MatrixData a))) = View.get view "rgba.a"
 
 keyerLuna :: KeyerMode -> Float -> Float -> Float -> Float -> Image -> Image
 keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
@@ -797,11 +640,11 @@ hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
                      (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
                      (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
 
--- test :: VPS Double -> VPS Double -> VPS Double -> VPS Double
+-- hsvToolLuna'' :: VPS Double -> VPS Double -> VPS Double -> VPS Double
 --      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
 --      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
 --      -> VPS (Image) -> VPS (Image)
-test = liftF13 hsvToolLuna'
+hsvToolLuna'' = liftF13 hsvToolLuna'
 
 data MergeMode = Atop
            | Average
@@ -1219,126 +1062,6 @@ colorCorrectLunaBase (curveShadows, curveHighlights)
                   ]
 
           saturated = Image.singleton view' -- Image.update (const $ Just view') "rgba" img
-
-onImageRGBA :: (A.Exp Float -> A.Exp Float)
-            -> (A.Exp Float -> A.Exp Float)
-            -> (A.Exp Float -> A.Exp Float)
-            -> (A.Exp Float -> A.Exp Float)
-            -> Image
-            -> Image
-onImageRGBA fr fg fb fa img = img'
-    where (r, g, b, a) = unsafeGetChannels img
-          r' = M.map fr r
-          g' = M.map fg g
-          b' = M.map fb b
-          a' = M.map fa a
-
-          Right view = lookupPrimary img
-          view' = insertChannelFloats view [
-                      ("rgba.r", r')
-                    , ("rgba.g", g')
-                    , ("rgba.b", b')
-                    , ("rgba.a", a')
-                    ]
-          img' = Image.insertPrimary view' img
-
-liftF6 f t1 t2 t3 t4 t5 t6 = do
-    t1' <- t1
-    t2' <- t2
-    t3' <- t3
-    t4' <- t4
-    t5' <- t5
-    t6' <- t6
-    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6'
-
-liftF21  f t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 t12 t13 t14 t15 t16 t17 t18 t19 t20 t21 = do
-    t1'  <- t1
-    t2'  <- t2
-    t3'  <- t3
-    t4'  <- t4
-    t5'  <- t5
-    t6'  <- t6
-    t7'  <- t7
-    t8'  <- t8
-    t9'  <- t9
-    t10' <- t10
-    t11' <- t11
-    t12' <- t12
-    t13' <- t13
-    t14' <- t14
-    t15' <- t15
-    t16' <- t16
-    t17' <- t17
-    t18' <- t18
-    t19' <- t19
-    t20' <- t20
-    t21' <- t21
-    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6' <<*>> t7' <<*>> t8' <<*>> t9' <<*>> t10' <<*>> t11' <<*>> t12' <<*>> t13' <<*>> t14' <<*>> t15' <<*>> t16' <<*>> t17' <<*>> t18' <<*>> t19' <<*>> t20' <<*>> t21'
-
---liftF6 a b c d e f g = do
---    b' <- b
---    c' <- c
---    d' <- d
---    e' <- e
---    f' <- f
---    g' <- g
---    val a <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g'
-
-liftF8 a b c d e f g h i = do
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    h' <- h
-    i' <- i
-    val a <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g' <<*>> h' <<*>> i'
-
-liftF9 a b c d e f g h i j = do
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    h' <- h
-    i' <- i
-    j' <- j
-    val a <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g' <<*>> h' <<*>> i' <<*>> j'
-
-liftF12 fun a b c d e f g h i j k l = do
-    a' <- a
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    h' <- h
-    i' <- i
-    j' <- j
-    k' <- k
-    l' <- l
-    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
-            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l'
-
-liftF13 fun a b c d e f g h i j k l m = do
-    a' <- a
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    h' <- h
-    i' <- i
-    j' <- j
-    k' <- k
-    l' <- l
-    m' <- m
-    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
-            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
 
 edgeDetectLuna :: Matrix2 Float -> Image -> Image
 edgeDetectLuna edgeOperator img = img'

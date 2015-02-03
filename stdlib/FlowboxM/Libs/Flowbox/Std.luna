@@ -435,7 +435,7 @@ def Image.hsvTool hueRange hueRotation hueRolloff
     # ```liftF1 (onEachRGB $ hsvToolLuna #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
     #                        #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
     #                        #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff}) #{self}```
-    ```test #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+    ```hsvToolLuna'' #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
               #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
               #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff} #{self}```
 
