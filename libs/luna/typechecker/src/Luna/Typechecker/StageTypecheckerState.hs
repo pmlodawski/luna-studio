@@ -2,7 +2,7 @@ module Luna.Typechecker.StageTypecheckerState (
     module StageTypecheckerStateClass,
     report_error,
     withTypo, withClonedTypo, withClonedTypo0,
-    insertNewMonoTypeVariable,
+    insertNewMonoTypeVariable, insertTypeScheme,
     getTypeById, setTypeById, getTypeSchemeById, setTypeSchemeById,
     getEnv, add_constraint, newtvar, rename,
     debugPush,
@@ -68,6 +68,10 @@ insertNewMonoTypeVariable labID = do
     let typeEnvElem = (labID, Mono (TV tvarID))
     typo . _head %= flip insert typeEnvElem
     return $ TV tvarID
+
+insertTypeScheme :: (Monad m) => ID -> TypeScheme -> StageTypecheckerPass m ()
+insertTypeScheme labID scheme = typo . _head %= flip insert (labID, scheme)
+
 
 insert :: Typo -> (ID, TypeScheme) -> Typo
 insert a (x,t) = Typo $ (x,t):fromTypo a
