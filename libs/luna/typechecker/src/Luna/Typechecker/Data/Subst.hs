@@ -1,32 +1,33 @@
 module Luna.Typechecker.Data.Subst where
 
 
-import Flowbox.Prelude
+import            Flowbox.Prelude
 
-import qualified Data.Map as Map
-import Data.Wrapper               (Pack(pack), Unpack(unpack))
+import            Data.Map.IntConvertibleMap (IntConvertibleMap)
+import qualified  Data.Map.IntConvertibleMap as ICMap
+import            Data.Packable              (Pack(pack), Unpack(unpack), Packable)
 
-import Luna.Typechecker.Data.TVar
-import Luna.Typechecker.Data.Type
+import            Luna.Typechecker.Data.TVar
+import            Luna.Typechecker.Data.Type
 
 
-newtype Subst = Subst { fromSubst :: Map.Map TVar Type }
-
+newtype Subst = Subst { fromSubst :: IntConvertibleMap TVar Type }
 
 makePrisms ''Subst
 
 
-instance Unpack Subst [(TVar, Type)] where unpack = Map.toList . fromSubst
-instance Pack [(TVar, Type)] Subst where pack = Subst . Map.fromList
+instance Unpack Subst [(TVar, Type)]    where unpack = ICMap.toList . fromSubst
+instance Pack [(TVar, Type)] Subst      where pack   = Subst . ICMap.fromList
+instance Packable Subst [(TVar, Type)]
 
 
 instance Default Subst where
-  def = Subst Map.empty
+  def = Subst $ ICMap.empty
 
 
 singleSubst :: TVar -> Type -> Subst
-singleSubst x t = Subst $ Map.singleton x t
+singleSubst x t = Subst $ ICMap.singleton x t
 
 
 identitySubst :: Subst
-identitySubst = Subst Map.empty
+identitySubst = def

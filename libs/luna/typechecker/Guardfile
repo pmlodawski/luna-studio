@@ -65,7 +65,7 @@ guard :shell, :version => 2, :cli => "--color" do
   watch(%r{^playground.hs$}) do |m|
     lastbuildguard(m[0]) do
       section "playground file change" do
-        command_interactive "ghc playground.hs"
+        command_interactive "cabal --sandbox=/Users/konrad/flowbox.io/flowbox/dist/libs/luna/typechecker/cabal.sandbox.config exec -- ghc playground.hs"
         command_interactive "./playground"
       end
     end

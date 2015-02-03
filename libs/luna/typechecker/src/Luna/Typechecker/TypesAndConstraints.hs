@@ -3,12 +3,12 @@ module Luna.Typechecker.TypesAndConstraints (
   ) where
 
 
-import Flowbox.Prelude                        hiding (without)
-import qualified Data.Map as Map
+import            Flowbox.Prelude                   hiding (without)
+import qualified  Data.Map.IntConvertibleMap        as ICMap
 
-import Luna.Typechecker.Data
-import Luna.Typechecker.Inference.Class       (StageTypecheckerPass)
-import Luna.Typechecker.Tools                 (without)
+import            Luna.Typechecker.Data
+import            Luna.Typechecker.Inference.Class  (StageTypecheckerPass)
+import            Luna.Typechecker.Tools            (without)
 
 
 class TypesAndConstraints c where
@@ -57,7 +57,7 @@ instance TypesAndConstraints TypeScheme where
 
 
 applySubst :: Subst -> Type -> Type
-applySubst s (TV tvl) = case Map.lookup tvl (fromSubst s) of
+applySubst s (TV tvl) = case ICMap.lookup tvl (fromSubst s) of
                           Just t  -> t
                           Nothing -> TV tvl
 
@@ -69,4 +69,4 @@ applySubst s (t1 `Fun` t2) = let t1' = applySubst s t1
 composeSubst :: Subst -> Subst -> Subst
 composeSubst s2 s1 = let s2' = fromSubst s2
                          s1' = fromSubst s1
-                     in Subst $ Map.map (applySubst s2) s1' `Map.union` s2'
+                     in Subst $ ICMap.map (applySubst s2) s1' `ICMap.union` s2'
