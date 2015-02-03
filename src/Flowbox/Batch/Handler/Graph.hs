@@ -10,22 +10,22 @@ module Flowbox.Batch.Handler.Graph where
 
 import Control.Monad (forM_)
 
-import           Flowbox.Batch.Batch                   (Batch)
-import qualified Flowbox.Batch.Handler.Common          as Batch
-import qualified Flowbox.Batch.Project.Project         as Project
-import           Flowbox.Control.Error                 (assertE)
-import           Flowbox.Prelude                       hiding (error)
+import           Flowbox.Batch.Batch                (Batch)
+import qualified Flowbox.Batch.Handler.Common       as Batch
+import qualified Flowbox.Batch.Project.Project      as Project
+import           Flowbox.Control.Error              (assertE)
+import           Flowbox.Prelude                    hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Lib.Lib                          as Library
-import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
-import           Luna.Syntax.Graph.Node                (Node)
-import qualified Luna.Syntax.Graph.Node                as Node
-import qualified Luna.Syntax.Graph.Node.OutputName     as OutputName
-import qualified Luna.Syntax.Graph.PropertyMap         as PropertyMap
-import           Luna.Syntax.Graph.View.EdgeView       (EdgeView (EdgeView))
-import           Luna.Syntax.Graph.View.GraphView      (GraphView)
-import qualified Luna.Syntax.Graph.View.GraphView      as GraphView
-import           Luna.Syntax.Graph.View.PortDescriptor (PortDescriptor)
+import           Luna.DEP.AST.Control.Crumb         (Breadcrumbs)
+import           Luna.DEP.Graph.Node                (Node)
+import qualified Luna.DEP.Graph.Node                as Node
+import qualified Luna.DEP.Graph.Node.OutputName     as OutputName
+import qualified Luna.DEP.Graph.PropertyMap         as PropertyMap
+import           Luna.DEP.Graph.View.EdgeView       (EdgeView (EdgeView))
+import           Luna.DEP.Graph.View.GraphView      (GraphView)
+import qualified Luna.DEP.Graph.View.GraphView      as GraphView
+import           Luna.DEP.Graph.View.PortDescriptor (PortDescriptor)
+import qualified Luna.DEP.Lib.Lib                   as Library
 
 
 

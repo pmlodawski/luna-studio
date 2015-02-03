@@ -26,7 +26,7 @@ import           Flowbox.System.IO.Serializer                           (Deseria
 import qualified Flowbox.System.IO.Serializer                           as Serializer
 import           Flowbox.System.UniPath                                 (UniPath)
 import qualified Generated.Proto.Project.Project                        as Gen
-import           Luna.Lib.Manager                                       (LibManager)
+import           Luna.DEP.Lib.Manager                                   (LibManager)
 
 
 
