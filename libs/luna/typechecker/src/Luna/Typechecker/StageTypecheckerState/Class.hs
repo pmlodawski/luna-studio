@@ -46,12 +46,16 @@ instance Default StageTypecheckerState where
 
 
 instance Show StageTypecheckerState where
-    show StageTypecheckerState{..} = render $ str_field
-                                          $+$ constr_field
-                                          $+$ typo_field
-                                          $+$ subst_field
-                                          $+$ nextTVar_field
-                                          $+$ typeMap_field
+    show = render . prettyState
+
+
+prettyState :: StageTypecheckerState -> Doc
+prettyState StageTypecheckerState{..} = str_field
+                                    $+$ constr_field
+                                    $+$ typo_field
+                                    $+$ subst_field
+                                    $+$ nextTVar_field
+                                    $+$ typeMap_field
       where
         str_field      = text "Debug       :" <+> prettyNullable (map (text.fromText) $ reverse _debugLog)
         constr_field   = text "Constraints :" <+> prettyConstr   _constr
