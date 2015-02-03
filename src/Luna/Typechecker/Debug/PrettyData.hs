@@ -47,6 +47,7 @@ prettyType (TV tv)       = prettyTVar tv
 prettyType (t1 `Fun` t2) = parens $ prettyType t1
                                     <+> char '→'
                                     <+> prettyType t2
+prettyType _ = text "not so pretty"
 
 prettyID :: ID -> Doc
 prettyID = int

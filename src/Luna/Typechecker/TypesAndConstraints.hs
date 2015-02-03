@@ -44,6 +44,8 @@ instance TypesAndConstraints Type where
     apply s t                = return $ applySubst s t
     tv (TV tvl)              = [tvl]
     tv (t1 `Fun` t2)         = tv t1 ++ tv t2
+    tv (Record fields)       = foldr vars [] fields where
+      vars (f,t) result = tv t ++ result
 
 
 instance TypesAndConstraints TypeScheme where
@@ -64,6 +66,8 @@ applySubst s (TV tvl) = case ICMap.lookup tvl (fromSubst s) of
 applySubst s (t1 `Fun` t2) = let t1' = applySubst s t1
                                  t2' = applySubst s t2
                              in t1' `Fun` t2'
+
+applySubst s (Record fields) = Record $ map (\(f, t) -> (f, applySubst s t)) fields
 
 
 composeSubst :: Subst -> Subst -> Subst
