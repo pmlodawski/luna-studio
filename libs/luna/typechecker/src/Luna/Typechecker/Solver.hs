@@ -91,9 +91,8 @@ simplify_predicate (x:p) =
 do_unify :: (Monad m) => (Subst, [Predicate]) ->  StageTypecheckerPass m Subst
 do_unify (s, []) = return s
 do_unify (s, t `Subsume` t' : p) = do
-    t1 <- apply s t
-    t1' <- apply s t'
-    s' <- unify (t1, t1')
+    args <- (,) <$> apply s t <*> apply s t'
+    s' <- unify args
     do_unify (s' `composeSubst` s, p)
 do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal form" def
 
@@ -101,25 +100,29 @@ do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal for
 unify :: (Monad m) => (Type, Type) ->  StageTypecheckerPass m Subst
 unify (t1 `Fun` t2, t1' `Fun` t2') = do
     s1 <- unify (t1, t1')
-    t3 <- apply s1 t2
-    t3' <- apply s1 t2'
-    s2 <- unify (t3, t3')
+    rightBranch <- (,) <$> apply s1 t2 <*> apply s1 t2'
+    s2 <- unify rightBranch
     return $ s2 `composeSubst` s1
+
+unify (Record f, Record f') = g (identitySubst, f,f') where
+  g (s, [], []) = return s
+  g (s, (l,t):rf, (l',t'):rf') =
+    if l == l' then
+               do args <- (,) <$> apply s t <*> apply s t'
+                  s' <- unify args
+                  let result = s' `composeSubst` s
+                  g (result, rf , rf')
+    else report_error "not matching record" identitySubst
+  g _ = report_error "non exhaustive pattern for Record" identitySubst
 
 unify (TV x, t) = varBind x t
 
 unify (t, TV x) = unify (TV x, t)
 
--- unify (s, Record f, Record f') = g (s,f,f') where
---   g (s, [], []) = return s
---   g (s, (l,t):f, (l',t'):f') =
---     if l == l' then
---                do s' <- unify(s,t,t')
---                   g(s',f,f')
---     else report_error "not matching record" null_subst
+unify _ = report_error "non exhaustive pattern in unify" identitySubst
 
 
 varBind :: (Monad m) => TVar -> Type -> StageTypecheckerPass m Subst
-varBind var typeV | typeV == TV var = return identitySubst
+varBind var typeV | TV var == typeV = return identitySubst
                   | var `elem` tv typeV = report_error "occurs check fails" identitySubst
                   | otherwise = return $ singleSubst var typeV
