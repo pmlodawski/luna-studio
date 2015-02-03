@@ -25,11 +25,11 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                        as UniPath
 import           Flowbox.Text.Show.Hs                                          (hsShow)
-import           Luna.AST.Module                                               (Module)
-import qualified Luna.AST.Module                                               as Module
-import           Luna.AST.Name                                                 (Name (Name))
-import qualified Luna.AST.Name                                                 as Name
-import qualified Luna.AST.Type                                                 as Type
+import           Luna.DEP.AST.Module                                               (Module)
+import qualified Luna.DEP.AST.Module                                               as Module
+import           Luna.DEP.AST.Name                                                 (Name (Name))
+import qualified Luna.DEP.AST.Name                                                 as Name
+import qualified Luna.DEP.AST.Type                                                 as Type
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Data.Source                                              as Source
 import qualified Luna.Interpreter.Session.AST.Executor                         as Executor

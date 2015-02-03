@@ -17,7 +17,7 @@ import qualified Data.Maybe as Maybe
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Common           as AST
+import qualified Luna.DEP.AST.Common           as AST
 
 
 

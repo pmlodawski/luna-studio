@@ -64,8 +64,8 @@ import qualified Generated.Proto.Expr.TypeDef              as GenTypeDef
 import qualified Generated.Proto.Expr.Unnamed              as GenUnnamed
 import qualified Generated.Proto.Expr.Var                  as GenVar
 import qualified Generated.Proto.Expr.Wildcard             as GenWildcard
-import           Luna.AST.Arg                              (Arg)
-import qualified Luna.AST.Arg                              as Arg
+import           Luna.DEP.AST.Arg                              (Arg)
+import qualified Luna.DEP.AST.Arg                              as Arg
 import           Luna.Data.Serialize.Proto.Conversion.Name ()
 import           Luna.Data.Serialize.Proto.Conversion.Pat  ()
 import qualified Luna.Syntax.AST                           as AST

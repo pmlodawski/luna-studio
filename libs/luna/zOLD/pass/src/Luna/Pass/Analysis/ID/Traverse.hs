@@ -10,23 +10,23 @@
 module Luna.Pass.Analysis.ID.Traverse where
 
 import           Flowbox.Prelude        hiding (mapM, mapM_, op)
-import           Luna.AST.Arg           (Arg)
-import           Luna.AST.Arg           (Arg)
-import qualified Luna.AST.Arg           as Arg
-import qualified Luna.AST.Arg           as Arg
-import qualified Luna.AST.Common        as AST
-import           Luna.AST.Control.Focus (Focus)
-import qualified Luna.AST.Control.Focus as Focus
-import           Luna.AST.Expr          (Expr)
-import qualified Luna.AST.Expr          as Expr
-import           Luna.AST.Lit           (Lit)
-import qualified Luna.AST.Lit           as Lit
-import           Luna.AST.Module        (Module)
-import qualified Luna.AST.Module        as Module
-import           Luna.AST.Pat           (Pat)
-import qualified Luna.AST.Pat           as Pat
-import           Luna.AST.Type          (Type)
-import qualified Luna.AST.Type          as Type
+import           Luna.DEP.AST.Arg           (Arg)
+import           Luna.DEP.AST.Arg           (Arg)
+import qualified Luna.DEP.AST.Arg           as Arg
+import qualified Luna.DEP.AST.Arg           as Arg
+import qualified Luna.DEP.AST.Common        as AST
+import           Luna.DEP.AST.Control.Focus (Focus)
+import qualified Luna.DEP.AST.Control.Focus as Focus
+import           Luna.DEP.AST.Expr          (Expr)
+import qualified Luna.DEP.AST.Expr          as Expr
+import           Luna.DEP.AST.Lit           (Lit)
+import qualified Luna.DEP.AST.Lit           as Lit
+import           Luna.DEP.AST.Module        (Module)
+import qualified Luna.DEP.AST.Module        as Module
+import           Luna.DEP.AST.Pat           (Pat)
+import qualified Luna.DEP.AST.Pat           as Pat
+import           Luna.DEP.AST.Type          (Type)
+import qualified Luna.DEP.AST.Type          as Type
 
 
 

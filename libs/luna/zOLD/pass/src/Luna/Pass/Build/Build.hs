@@ -23,7 +23,7 @@ import qualified Flowbox.System.Platform                                       a
 import           Flowbox.System.UniPath                                        (UniPath)
 import qualified Flowbox.System.UniPath                                        as UniPath
 import           Flowbox.Text.Show.Hs                                          (hsShow)
-import qualified Luna.AST.Module                                               as ASTModule
+import qualified Luna.DEP.AST.Module                                               as ASTModule
 import           Luna.Data.ASTInfo                                             (ASTInfo)
 import           Luna.Data.Source                                              (Source)
 import qualified Luna.Data.Source                                              as Source

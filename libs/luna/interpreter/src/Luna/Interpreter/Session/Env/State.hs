@@ -32,7 +32,7 @@ import           Flowbox.Data.SetForest                      (SetForest)
 import qualified Flowbox.Data.SetForest                      as SetForest
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (Location, loc)
-import           Luna.AST.Module                             (Module)
+import           Luna.DEP.AST.Module                             (Module)
 import qualified Luna.Syntax.Graph.Flags                            as Flags
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)

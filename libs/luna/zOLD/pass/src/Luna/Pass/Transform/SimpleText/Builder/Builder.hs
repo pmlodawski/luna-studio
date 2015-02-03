@@ -12,7 +12,7 @@ module Luna.Pass.Transform.SimpleText.Builder.Builder where
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Expr                                     (Expr)
+import           Luna.DEP.AST.Expr                                     (Expr)
 import           Luna.Data.ASTInfo                                 (ASTInfo)
 import           Luna.Pass.Pass                                    (Pass)
 import qualified Luna.Pass.Pass                                    as Pass

@@ -25,14 +25,14 @@ import Text.Parser.Combinators
 import Text.Parser.Token.Highlight hiding (Comment)
 import Text.Parser.Token hiding (symbol, symbolic, ident)
 import Flowbox.Prelude as Prelude hiding (op, noneOf, lex, use)
-import qualified Luna.ASTNew.Lit.Number as Number
+import qualified Luna.DEP.ASTNew.Lit.Number as Number
 
 import qualified Text.Parsers.Indent as Indent
 import           Luna.Parser.Combinators 
-import qualified Luna.ASTNew.Lit as Lit
+import qualified Luna.DEP.ASTNew.Lit as Lit
 import           Luna.Parser.Char
 import qualified Luna.Parser.State as State
-import           Luna.AST.Comment (Comment(..))
+import           Luna.DEP.AST.Comment (Comment(..))
 
 import qualified Text.Trifecta.Combinators as Trifecta
 import           Control.Monad.State.Class (MonadState)

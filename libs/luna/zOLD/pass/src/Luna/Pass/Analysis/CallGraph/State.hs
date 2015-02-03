@@ -17,7 +17,7 @@ import Control.Monad.State (MonadState, get, modify)
 
 import           Flowbox.Prelude           hiding (error, id, mod)
 import           Flowbox.System.Log.Logger hiding (info)
-import           Luna.AST.AST              (ID)
+import           Luna.DEP.AST.AST              (ID)
 import           Luna.Data.AliasInfo       (AliasInfo)
 import           Luna.Data.CallGraph       (CallGraph)
 import qualified Luna.Data.CallGraph       as CallGraph

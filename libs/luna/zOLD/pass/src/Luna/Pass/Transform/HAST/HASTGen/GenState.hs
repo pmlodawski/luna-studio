@@ -14,8 +14,8 @@ module Luna.Pass.Transform.HAST.HASTGen.GenState where
 import Control.Monad.State
 
 import           Flowbox.Prelude       hiding (mod)
-import qualified Luna.AST.Expr         as LExpr
-import qualified Luna.AST.Type         as LType
+import qualified Luna.DEP.AST.Expr         as LExpr
+import qualified Luna.DEP.AST.Type         as LType
 import qualified Luna.Data.HAST.Expr   as HExpr
 import qualified Luna.Data.HAST.Module as Module
 

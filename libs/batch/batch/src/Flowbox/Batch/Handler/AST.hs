@@ -19,11 +19,11 @@ import qualified Flowbox.Batch.Project.Project           as Project
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                         hiding (cons)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Module                         (Module)
-import qualified Luna.AST.Module                         as Module
-import           Luna.AST.Name                           (Name)
-import           Luna.AST.Type                           (Type)
-import qualified Luna.AST.Type                           as Type
+import           Luna.DEP.AST.Module                         (Module)
+import qualified Luna.DEP.AST.Module                         as Module
+import           Luna.DEP.AST.Name                           (Name)
+import           Luna.DEP.AST.Type                           (Type)
+import qualified Luna.DEP.AST.Type                           as Type
 import qualified Luna.Lib.Lib                            as Library
 import qualified Luna.Pass.Analysis.ID.ExtractIDs        as ExtractIDs
 import qualified Luna.Pass.Analysis.NameResolver         as NameResolver

@@ -16,15 +16,15 @@ import Control.Applicative
 
 import           Flowbox.Prelude                hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Expr                  as Expr
-import           Luna.AST.Lit                   (Lit)
-import           Luna.AST.Module                (Module)
-import qualified Luna.AST.Module                as Module
-import qualified Luna.AST.Name                  as Name
-import           Luna.AST.Pat                   (Pat)
-import qualified Luna.AST.Pat                   as Pat
-import           Luna.AST.Type                  (Type)
-import qualified Luna.AST.Type                  as Type
+import qualified Luna.DEP.AST.Expr                  as Expr
+import           Luna.DEP.AST.Lit                   (Lit)
+import           Luna.DEP.AST.Module                (Module)
+import qualified Luna.DEP.AST.Module                as Module
+import qualified Luna.DEP.AST.Name                  as Name
+import           Luna.DEP.AST.Pat                   (Pat)
+import qualified Luna.DEP.AST.Pat                   as Pat
+import           Luna.DEP.AST.Type                  (Type)
+import qualified Luna.DEP.AST.Type                  as Type
 import           Luna.Data.AliasInfo            (AliasInfo)
 import           Luna.Data.Namespace.State      (regModule, withScope, getAliasInfo, regExpr, regPat, regType, regLit, regVarName, tryBindVar, regTypeName)
 import           Luna.Pass.Pass                 (Pass)

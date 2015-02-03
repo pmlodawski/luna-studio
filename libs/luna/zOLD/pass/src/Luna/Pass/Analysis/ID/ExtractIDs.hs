@@ -15,10 +15,10 @@ import Data.IntSet (IntSet)
 
 import           Flowbox.Prelude                hiding (mapM, mapM_)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Control.Focus         (Focus)
-import           Luna.AST.Expr                  (Expr)
-import           Luna.AST.Module                (Module)
-import           Luna.AST.Pat                   (Pat)
+import           Luna.DEP.AST.Control.Focus         (Focus)
+import           Luna.DEP.AST.Expr                  (Expr)
+import           Luna.DEP.AST.Module                (Module)
+import           Luna.DEP.AST.Pat                   (Pat)
 import           Luna.Graph.Node.Expr           (NodeExpr)
 import qualified Luna.Graph.Node.Expr           as NodeExpr
 import           Luna.Pass.Analysis.ID.State    (IDState)

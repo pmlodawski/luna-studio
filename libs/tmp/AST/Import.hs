@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.AST.Import(
+module Luna.DEP.AST.Import(
     Import(..),
 ) where
 
