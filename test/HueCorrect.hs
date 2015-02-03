@@ -8,12 +8,12 @@
 
 module Main where
 
-import           Flowbox.Graphics.Mockup as Mockup
-import qualified Flowbox.Math.Matrix as M
-import qualified Data.Array.Accelerate as A hiding (fromIntegral)
+import qualified Data.Array.Accelerate    as A hiding (fromIntegral)
 import           Data.Array.Accelerate.IO
-import           Data.ByteString hiding (head)
+import           Data.ByteString          hiding (head)
 import           Data.VectorSpace
+import           Flowbox.Graphics.Mockup  as Mockup
+import qualified Flowbox.Math.Matrix      as M
 --import           Diagrams.Prelude hiding (Path)
 --import           Diagrams.Backend.Cairo
 --import           Diagrams.Backend.Cairo.Internal
@@ -21,24 +21,24 @@ import           Data.VectorSpace
 --import           Diagrams.Trail
 --import           Diagrams.TrailLike
 
-import           Flowbox.Geom2D.ControlPoint
-import           Flowbox.Geom2D.Path
-import           Flowbox.Geom2D.Mask as Mask
-import           Flowbox.Geom2D.Rasterizer hiding (makePoints, makeSegments)
-import           Flowbox.Graphics.Image.IO.BMP
-import           Flowbox.Graphics.Color.RGBA as Color
-import qualified Data.Array.Accelerate.CUDA as CUDA
-import           Flowbox.Math.Function.Accelerate.BSpline
-import qualified Flowbox.Graphics.Composition.Color as Color
-import           Flowbox.Graphics.Color.Color as Color
-import           Flowbox.Graphics.Image.View as View
+import qualified Data.Array.Accelerate.CUDA               as CUDA
 import           Data.Maybe
+import           Flowbox.Geom2D.ControlPoint
+import           Flowbox.Geom2D.Mask                      as Mask
+import           Flowbox.Geom2D.Path
+import           Flowbox.Geom2D.Rasterizer                hiding (makePoints, makeSegments)
+import           Flowbox.Graphics.Color.Color             as Color
+import           Flowbox.Graphics.Color.RGBA              as Color
+import qualified Flowbox.Graphics.Composition.Color       as Color
 import           Flowbox.Graphics.Image.Channel
-import           Flowbox.Prelude as P hiding (lookup)
 import           Flowbox.Graphics.Image.Image
-import qualified Flowbox.Graphics.Mockup as Mockup
+import           Flowbox.Graphics.Image.IO.BMP
+import           Flowbox.Graphics.Image.View              as View
+import qualified Flowbox.Graphics.Mockup.Basic            as Mockup
+import           Flowbox.Math.Function.Accelerate.BSpline
 import           Flowbox.Math.Function.Accelerate.BSpline as BSpline
-import           Flowbox.Math.Function.CurveGUI as CurveGUI
+import           Flowbox.Math.Function.CurveGUI           as CurveGUI
+import           Flowbox.Prelude                          as P hiding (lookup)
 
 generateConstantCurve :: Float -> [Point2 Float]
 generateConstantCurve n = P.map (\x -> Point2 x n) (P.take 6 $ iterate (+1) 0.0)
@@ -128,7 +128,7 @@ main :: IO ()
 main = do
     print "- - - = = =   HueCorrect Test  = = = - - -"
 
-    img <- loadImageLuna "lena.png"
+    img <- Mockup.loadImageLuna "lena.png"
 
     let c1 = P.map (\x -> BSplineNode x x x) $ generateConstantCurve 1.5
     let c2 = P.map (\x -> BSplineNode x x x) $ generateConstantCurve 1.0
@@ -151,13 +151,13 @@ main = do
     let img7 = hueCorrectLuna' spline2 spline2 spline2 spline2 spline2 spline2 spline2 spline2 img
     let img8 = hueCorrectLuna' spline2 spline1 spline3 spline3 spline3 spline1 spline1 spline1 img
 
-    saveImageLuna "sat_applied2.png" img2
-    saveImageLuna "r_g_applied2.png" img3
-    saveImageLuna "rsup_bsup_applied2.png" img4
-    saveImageLuna "lum_applied2.png" img5
-    saveImageLuna "r_rsup_applied2.png" img6
-    saveImageLuna "id2.png" img7
-    saveImageLuna "all_applied2.png" img8
+    Mockup.saveImageLuna "sat_applied2.png" img2
+    Mockup.saveImageLuna "r_g_applied2.png" img3
+    Mockup.saveImageLuna "rsup_bsup_applied2.png" img4
+    Mockup.saveImageLuna "lum_applied2.png" img5
+    Mockup.saveImageLuna "r_rsup_applied2.png" img6
+    Mockup.saveImageLuna "id2.png" img7
+    Mockup.saveImageLuna "all_applied2.png" img8
 
     conversionToBSplineTest1
     conversionToBSplineTest2
