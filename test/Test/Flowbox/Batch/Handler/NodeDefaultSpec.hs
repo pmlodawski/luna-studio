@@ -25,10 +25,10 @@ import           Flowbox.Data.Version                      ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                    as UniPath
-import qualified Luna.AST.Arg                              as Arg
-import qualified Luna.AST.Lit                              as Lit
-import qualified Luna.AST.Name                             as Name
-import qualified Luna.AST.Type                             as Type
+import qualified Luna.DEP.AST.Arg                              as Arg
+import qualified Luna.DEP.AST.Lit                              as Lit
+import qualified Luna.DEP.AST.Name                             as Name
+import qualified Luna.DEP.AST.Type                             as Type
 import qualified Luna.Pass.Analysis.Alias.Alias            as Alias
 import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Luna.Syntax.Control.Crumb                 as Crumb
