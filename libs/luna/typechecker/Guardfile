@@ -47,7 +47,7 @@ guard :shell, :version => 2, :cli => "--color" do
 
   watch(%r{^(tests/Specification)/.+\.luna$}) do |m|
     lastbuildguard(m[0]) do
-      section "haskell file"do
+      section "haskell file" do
        tests
      end
     end
@@ -57,8 +57,9 @@ guard :shell, :version => 2, :cli => "--color" do
 
   watch(%r{^runtest.hs$}) do |m|
     lastbuildguard(m[0]) do
-      section "live tests"
-      command_withinput "../../../scripts/runhaskell", File.read("runtest.hs")
+      section "live tests" do
+        command_withinput "../../../scripts/runhaskell", File.read("runtest.hs")
+      end
     end
   end
 
