@@ -12,14 +12,10 @@ module Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve where
 import Data.Array.Accelerate     as A
 import Math.Coordinate.Cartesian (Point2 (..))
 
-import           Flowbox.Geom2D.Accelerate.QuadraticBezier ()
-import           Flowbox.Geom2D.QuadraticBezier
-import           Flowbox.Graphics.Utils.Utils              hiding (sign)
-import qualified Flowbox.Graphics.Utils.Accelerate as A
-import           Flowbox.Prelude
-import qualified Flowbox.Prelude                                as P
-
-import qualified Flowbox.Math.Matrix                            as M
+import Flowbox.Geom2D.Accelerate.QuadraticBezier ()
+import Flowbox.Geom2D.QuadraticBezier
+import Flowbox.Graphics.Utils.Utils              hiding (sign)
+import Flowbox.Prelude
 
 
 
@@ -44,7 +40,7 @@ solveCubic a b c = A.cond (d >=* 0) opt1 opt3
           n = sin v' * 1.732050808
           v' = acos (-sqrt ((-27) / p3) * q / 2) / 3
 
-distanceFromQuadratic :: Exp (Point2 Float) -> Exp (QuadraticBezier Float) -> Exp Float
+distanceFromQuadratic :: forall b. Integral b => Exp (Point2 Float) -> Exp (QuadraticBezier Float) -> Exp Float
 distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond ((dot sc sc) <=* 0.001)
     l
     (A.cond (n A.>* 1)
@@ -75,7 +71,7 @@ distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A
           len o = sqrt $ dot o o
           --
           dot (Point2 ox oy) (Point2 qx qy) = ox * qx + oy * qy
-          mult x y = fmap (*y) x
+          mult u v = fmap (*v) u
           --
           Point2 x1 y1 = p0
           Point2 x2 y2 = p2
@@ -88,7 +84,7 @@ distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A
           pp2 = len2 p p2
           pp1 = len2 p p0
           l   = A.cond ((u >* 0) &&* (1 >* u)) pp3 (min pp1 pp2)
-          len2 (Point2 x1 y1) (Point2 x2 y2) = sqrt((x1-x2)^2 + (y1-y2)^2)
+          len2 (Point2 xA yA) (Point2 xB yB) = sqrt((xA-xB)^(2::b) + (yA-yB)^(2::b))
 
 
 -- TODO: [KM] make a version of this working on CubicBezier (and doing the conversion to a list of Quadratics inside it)

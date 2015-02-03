@@ -9,14 +9,12 @@
 module Flowbox.Math.Function.CurveGUI where
 
 import qualified Data.Array.Accelerate     as A
-import qualified Data.Map                  as Map
-import           Math.Coordinate.Cartesian (Point2(..))
+import           Math.Coordinate.Cartesian (Point2 (..))
 
-import           Flowbox.Geom2D.CubicBezier               as CubicBezier
-import           Flowbox.Geom2D.CubicBezier.Solve         as CubicBezier
-import           Flowbox.Math.Function.Accelerate.BSpline
-import qualified Flowbox.Math.Function.Model              as Model
-import           Flowbox.Prelude                          as P
+import Flowbox.Geom2D.CubicBezier               as CubicBezier
+import Flowbox.Geom2D.CubicBezier.Solve         as CubicBezier
+import Flowbox.Math.Function.Accelerate.BSpline
+import Flowbox.Prelude                          as P
 
 
 

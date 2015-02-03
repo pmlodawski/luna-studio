@@ -17,24 +17,31 @@ import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Array.Sugar as A
 import qualified Data.Array.Accelerate.CUDA        as CUDA (run)
 import qualified Data.Array.Accelerate.IO          as A
+import           Data.Char                         (toLower)
+import           Data.Maybe                        (fromJust)
 import qualified Data.Vector.Storable              as SV
+import qualified System.FilePath                   as FilePath
 
 
 import qualified Flowbox.Graphics.Color.Color          as Color
-import           Flowbox.Graphics.Image.Channel        (Channel(..), ChannelData(..))
+import           Flowbox.Graphics.Image.Channel        (Channel (..), ChannelData (..))
 import qualified Flowbox.Graphics.Image.Channel        as Channel
-import           Flowbox.Graphics.Image.Image          as Image
-import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage, saveImage)
-import           Flowbox.Graphics.Image.View           (View(..))
+import           Flowbox.Graphics.Image.Image          (Image)
+import qualified Flowbox.Graphics.Image.Image          as Image
+import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage)
+import           Flowbox.Graphics.Image.IO.OpenEXR     (readFromEXR)
+import           Flowbox.Graphics.Image.View           (View (..))
 import qualified Flowbox.Graphics.Image.View           as View
 import qualified Flowbox.Graphics.Utils.Utils          as U
 import           Flowbox.Math.Matrix                   as M
-import           Flowbox.Prelude                       as P hiding (lookup)
+import           Flowbox.Prelude                       as P hiding (lookup, view)
 
-import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 import Control.PolyApplicative ((<<*>>))
+import Luna.Target.HS          (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 
 
+
+-- == MOST BASIC
 
 -- FIXME[MD,KM]: something should be done with this
 temporaryBackend :: M.Backend
@@ -42,6 +49,12 @@ temporaryBackend = CUDA.run
 
 pattern VPS x = Value (Pure (Safe x))
 type VPS x = Value Pure Safe x
+
+unpackLunaVar :: VPS a -> a
+unpackLunaVar (Value (Pure (Safe a))) = a
+
+unpackLunaList :: [VPS a] -> [a]
+unpackLunaList = fmap unpackLunaVar
 
 
 -- == LOAD / SAVE
@@ -78,7 +91,7 @@ loadImageLuna path = do
                  , ("rgba.b", b)
                  , ("rgba.a", a)
                ]
-        image = singleton view
+        image = Image.singleton view
     return image
 
 saveImageLuna :: FilePath -> Image -> IO Image
@@ -86,6 +99,18 @@ saveImageLuna path img = do
     let (r, g, b, a) = unsafeGetChannels img
     testSaveRGBA path r g b a
     return img
+
+readFromEXRLuna :: FilePath -> IO Image
+readFromEXRLuna path = fmap fromJust $ readFromEXR path
+
+extension :: FilePath -> (FilePath, String)
+extension path = (path, P.map toLower $ FilePath.takeExtension path)
+
+pattern ImageEXR path <- (extension -> (path, ".exr"))
+
+realReadLuna :: FilePath -> IO Image
+realReadLuna (ImageEXR path) = readFromEXRLuna path
+realReadLuna path            = loadImageLuna path
 
 
 -- == HELPERS
@@ -128,7 +153,7 @@ onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
 onEachColorRGB :: (A.Exp (Color.RGB Float) -> A.Exp (Color.RGB Float)) -> Image -> Image
 onEachColorRGB f img = img'
     where rgb = unsafeGetRGB img
-          Right view = lookupPrimary img
+          Right view = Image.lookupPrimary img
           rgb' = M.map f rgb
           unzipRGB = M.unzip3 . M.map (\(A.unlift -> Color.RGB x y z) -> A.lift (x, y, z))
 
@@ -154,7 +179,7 @@ onEachRGBAChannels fr fg fb fa img = img'
         ChannelFloat _ (MatrixData b) = fb (getChan "rgba.b")
         ChannelFloat _ (MatrixData a) = fa (getChan "rgba.a")
 
-        Right view = lookupPrimary img
+        Right view = Image.lookupPrimary img
 
         view' = insertChannelFloats view [
                     ("rgba.r", r)
@@ -178,7 +203,7 @@ unsafeGetRGB img = rgb
 
 unsafeGetChannels :: Image -> (M.Matrix2 Float, M.Matrix2 Float, M.Matrix2 Float, M.Matrix2 Float)
 unsafeGetChannels img = (r, g, b, a)
-    where Right view = lookupPrimary img
+    where Right view = Image.lookupPrimary img
           Right (Just (ChannelFloat _ (Channel.asMatrixData -> MatrixData r))) = View.get view "rgba.r"
           Right (Just (ChannelFloat _ (Channel.asMatrixData -> MatrixData g))) = View.get view "rgba.g"
           Right (Just (ChannelFloat _ (Channel.asMatrixData -> MatrixData b))) = View.get view "rgba.b"
@@ -201,7 +226,7 @@ onImageRGBA fr fg fb fa img = img'
           b' = M.map fb b
           a' = M.map fa a
 
-          Right view = lookupPrimary img
+          Right view = Image.lookupPrimary img
           view' = insertChannelFloats view [
                       ("rgba.r", r')
                     , ("rgba.g", g')
@@ -209,6 +234,19 @@ onImageRGBA fr fg fb fa img = img'
                     , ("rgba.a", a')
                     ]
           img' = Image.insertPrimary view' img
+
+channelToImageRGBA :: Matrix2 Float -> Image
+channelToImageRGBA m = image
+    where image = Image.singleton view
+          view = insertChannelFloats (View.emptyDefault) [
+                     ("rgba.r", m)
+                   , ("rgba.g", m)
+                   , ("rgba.b", m)
+                   , ("rgba.a", alpha)
+                 ]
+
+          alpha :: Matrix2 Float
+          alpha = M.generate (M.shape m) (const 1)
 
 
 -- == OTHER SHIT
