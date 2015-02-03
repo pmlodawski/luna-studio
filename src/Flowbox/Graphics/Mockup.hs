@@ -54,39 +54,45 @@ import qualified Flowbox.Geom2D.Shape                                 as GShape
 import qualified Flowbox.Geom2D.Mask as Mask
 import           Flowbox.Geom2D.Rasterizer
 import           Flowbox.Graphics.Composition.Filter
-import           Flowbox.Graphics.Composition.Filter       as Conv
+import           Flowbox.Graphics.Composition.Filter                  as Conv
 import           Flowbox.Graphics.Composition.Generator.Gradient
 import           Flowbox.Graphics.Composition.Keyer
-import           Flowbox.Graphics.Shader.Matrix       as Shader
+import qualified Flowbox.Graphics.Composition.EdgeBlur                as EB
+import           Flowbox.Graphics.Shader.Matrix                       as Shader
 import           Flowbox.Graphics.Composition.Generator.Noise.Billow
 import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
 import           Flowbox.Graphics.Shader.Pipe
 import           Flowbox.Graphics.Shader.Rasterizer
-import           Flowbox.Graphics.Shader.Sampler      as Shader
+import           Flowbox.Graphics.Shader.Sampler                      as Shader
 import           Flowbox.Graphics.Composition.Generator.Shape
-import           Flowbox.Graphics.Shader.Stencil      as Stencil
-import           Flowbox.Graphics.Shader.Shader       as Shader
-import           Flowbox.Graphics.Composition.Transform as Transform
+import           Flowbox.Graphics.Shader.Stencil                      as Stencil
+import           Flowbox.Graphics.Shader.Shader                       as Shader
+import           Flowbox.Graphics.Composition.Transform               as Transform
 import           Flowbox.Graphics.Composition.Histogram
-import qualified Flowbox.Graphics.Composition.Generator.Raster                  as Raster
+import qualified Flowbox.Graphics.Composition.Generator.Raster        as Raster
 import           Flowbox.Graphics.Image.Channel                       as Channel
 import           Flowbox.Graphics.Composition.Color
 import           Flowbox.Graphics.Image.Image                         as Image
+import qualified Flowbox.Graphics.Image.Matte                         as Matte
 import           Flowbox.Graphics.Image.Error                         as Image
 import           Flowbox.Graphics.Image.IO.ImageMagick                (loadImage, saveImage)
 import           Flowbox.Graphics.Image.IO.OpenEXR                    (readFromEXR)
-import           Flowbox.Graphics.Composition.Merge                         (AlphaBlend(..))
+import           Flowbox.Graphics.Composition.Merge                   (AlphaBlend(..))
 import qualified Flowbox.Graphics.Composition.Merge                   as Merge
 import           Flowbox.Graphics.Image.View                          as View
 import           Flowbox.Graphics.Utils.Utils
 import           Flowbox.Math.Matrix                                  as M
 import           Flowbox.Prelude                                      as P hiding (lookup)
+import qualified Data.Array.Accelerate.CUDA                           as CUDA
 import           Flowbox.Math.Function.Accelerate.BSpline             as BSpline
 import qualified Flowbox.Math.Function.CurveGUI                       as CurveGUI
 
 import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 import Control.PolyApplicative ((<<*>>))
 
+-- something should be done with this
+temporaryBackend :: M.Backend
+temporaryBackend = CUDA.run
 
 data SkewOrder = SkewXY | SkewYX
 
@@ -175,23 +181,46 @@ onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
           getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
 
 onEachColorRGB :: (A.Exp (Color.RGB Float) -> A.Exp (Color.RGB Float)) -> Image -> Image
-onEachColorRGB = undefined
--- onEachColorRGB f img = img'
---     where rgb = unsafeGetRGB img
---           Right view = lookupPrimary img
---           rgb' = M.map f rgb
+onEachColorRGB f img = img'
+    where rgb = unsafeGetRGB img
+          Right view = lookupPrimary img
+          rgb' = M.map f rgb
+          unzipRGB = M.unzip3 . M.map (\(A.unlift -> Color.RGB x y z) -> A.lift (x, y, z))
 
---           unzipRGB = M.unzip3 . M.map (\(A.unlift -> Color.RGB x y z) -> A.lift (x, y, z))
+          (r', g', b') = unzipRGB rgb'
 
---           (r', g', b') = unzipRGB rgb'
+          view' = insertChannelFloats view [
+                      ("rgba.r", r')
+                    , ("rgba.g", g')
+                    , ("rgba.b", b')
+                  ]
 
---           view' = insertChannelFloats view [
---                       ("rgba.r", r')
---                     , ("rgba.g", g')
---                     , ("rgba.b", b')
---                   ]
+          img' = Image.insertPrimary view' img
 
---           img' = Image.insertPrimary view' img
+onEachRGBAChannels :: (Channel -> Channel)
+                   -> (Channel -> Channel)
+                   -> (Channel -> Channel)
+                   -> (Channel -> Channel)
+                   -> Image
+                   -> Image
+onEachRGBAChannels fr fg fb fa img = img'
+  where ChannelFloat _ (MatrixData r) = fr (getChan "rgba.r")
+        ChannelFloat _ (MatrixData g) = fg (getChan "rgba.g")
+        ChannelFloat _ (MatrixData b) = fb (getChan "rgba.b")
+        ChannelFloat _ (MatrixData a) = fa (getChan "rgba.a")
+
+        Right view = lookupPrimary img
+
+        view' = insertChannelFloats view [
+                    ("rgba.r", r)
+                  , ("rgba.g", g)
+                  , ("rgba.b", b)
+                  , ("rgba.a", a)
+                ]
+
+        img' = Image.insertPrimary view' img
+        getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
+
 
 onEachChannel :: (Channel -> Channel) -> Image -> Image
 onEachChannel f = Image.map $ View.map f
@@ -212,6 +241,31 @@ onEachChannel f = Image.map $ View.map f
 --                 $ rectangle (Grid (variable size) 1) 1 0
 --          process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
+
+edgeBlur :: Channel.Name -> EB.BlurType -> Int -> Float -> Image -> Image
+edgeBlur channelName blurType kernelSize edgeMultiplier image =
+    case getFromPrimary channelName image of
+        Left err             -> error $ show err
+        Right (Nothing)      -> image
+        Right (Just channel) -> onEachChannel blurFunc image where
+            blurFunc = \case
+                (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> ChannelFloat name $ DiscreteData $ blurShader shader
+                (Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> ChannelInt name $ DiscreteData $ mapShaderInt blurShader shader
+            mapShaderInt func x = fmap (floor . (*256)) $ (( func $ fmap ((/256) . A.fromIntegral) x ) :: DiscreteShader (Exp Float))
+            blurShader = EB.maskBlur blurType (variable kernelSize) maskEdges
+            maskEdges  = case channel of
+                (Channel.asDiscreteClamp -> ChannelFloat name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) shader
+                (Channel.asDiscreteClamp -> ChannelInt name (DiscreteData shader)) -> EB.edges (variable edgeMultiplier) $ fmap ((/256) . A.fromIntegral) shader
+
+
+-- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
+--rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
+
+
+-- rotateCenter :: (Elt a, IsFloating a) => Exp a -> CartesianShader (Exp a) b -> CartesianShader (Exp a) b
+--rotateCenter phi = canvasT (fmap A.ceiling . rotate phi . asFloating) . onCenter (rotate phi)
+
+
 --bilateral :: Double
 --          -> Double
 --          -> Int
@@ -225,6 +279,137 @@ onEachChannel f = Image.map $ View.map f
 --              in apply (gauss $ variable psigma) dst
 --          domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
 --          process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
+
+imageMatteLuna :: FilePath -> String -> IO (Maybe (Matte.Matte Float))
+imageMatteLuna path channelName = do
+  img <- realReadLuna path
+  let channel = getChannelFromPrimaryLuna channelName img
+  case channel of
+    Right (Just channel) -> return $ Just $ Matte.imageMatteFloat channel
+    _ -> return Nothing
+
+vectorMatteLuna :: Mask2 Float -> Maybe (Matte.Matte Float)
+vectorMatteLuna mask = Just $ Matte.VectorMatte $ convertMask mask
+
+unpackAcc :: (A.Exp Int,A.Exp Int) -> (Int,Int)
+unpackAcc (x,y) =
+  let
+    pair = A.lift (x,y) :: A.Exp (Int,Int)
+    scalarPair = A.unit pair :: A.Acc (A.Scalar (Int,Int))
+    l = temporaryBackend $ scalarPair :: A.Scalar (Int,Int)
+    sh' = A.toList l :: [(Int,Int)]
+    x' = fst $ head sh'
+    y' = snd $ head sh'
+  in
+    (x',y')
+
+adjustMatte :: Matrix2 Float -> Matrix2 Float -> Matrix2 Float
+adjustMatte mat matte = matte'
+  where
+    sh = M.shape matte
+    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+
+    matte' = M.generate (M.shape mat) (\sh ->
+      let
+        A.Z A.:. x A.:. y = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+      in
+        (x A.<* h A.&&* y A.<* w) A.? (matte M.! sh, 0.0))
+
+applyMatteFloat :: (A.Exp Float -> A.Exp Float) -> Matte.Matte Float -> Channel -> Channel
+applyMatteFloat f m (ChannelFloat name (MatrixData mat)) = ChannelFloat name (MatrixData mat')
+  where
+    sh = M.shape mat
+    A.Z A.:. x A.:. y = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+    (h,w) = unpackAcc (x,y)
+    matte = Matte.matteToMatrix h w m
+    mat' = applyToMatrix f (adjustMatte mat matte) mat
+
+applyMatteFloat f m (ChannelFloat name (DiscreteData shader)) = ChannelFloat name (DiscreteData shader')
+  where
+    Shader (Grid h' w') _ = shader
+    (h,w) = unpackAcc (h',w')
+    matte = Matte.matteToDiscrete h w m
+    shader' = applyToShader f matte shader
+
+applyMatteFloat f m (ChannelFloat name (ContinuousData shader)) = ChannelFloat name (ContinuousData shader')
+  where
+    Shader (Grid h' w') _ = shader
+    (h,w) = unpackAcc (h',w')
+    matte = Matte.matteToContinuous h w m
+    shader' = applyToShader f matte shader
+
+-- looks strange, but is necessary because of the weird accelerate behaviour
+maskedApp :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> A.Exp a -> A.Exp a -> A.Exp a
+maskedApp f a b = (a A.==* 0) A.? (b,b + a*(delta f b))
+-- won't work, no idea what is the reason of that
+--aux a b f = b + a*(delta f b)
+  where
+    delta :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> (A.Exp a) -> (A.Exp a)
+    delta f x = (f x) - x
+
+applyToShader :: (IsNum b, A.Elt a, A.Elt b) => (A.Exp b -> A.Exp b) -> CartesianShader (A.Exp a) (A.Exp b) -> CartesianShader (A.Exp a) (A.Exp b) -> CartesianShader (A.Exp a) (A.Exp b)
+applyToShader f matte mat = combineWith (maskedApp f) matte mat
+
+applyToMatrix :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> Matrix2 a -> Matrix2 a -> Matrix2 a
+applyToMatrix f matte mat = (M.zipWith (\x -> \y -> (maskedApp f x y)) matte) mat
+
+offsetMatteLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
+offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
+  case matte of
+    Nothing -> onEachRGBA (offset r) (offset g) (offset b) (offset a) img
+    Just m ->
+        onEachRGBAChannels (applyMatteFloat (offset r) m)
+                           (applyMatteFloat (offset g) m)
+                           (applyMatteFloat (offset b) m)
+                           (applyMatteFloat (offset a) m) img
+
+contrastMatteLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
+contrastMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
+  case matte of
+    Nothing -> onEachRGBA (contrast r) (contrast g) (contrast b) (contrast a) img
+    Just m ->
+        onEachRGBAChannels (applyMatteFloat (contrast r) m)
+                           (applyMatteFloat (contrast g) m)
+                           (applyMatteFloat (contrast b) m)
+                           (applyMatteFloat (contrast a) m) img
+
+exposureMatteLuna :: Color.RGBA Float -> Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
+exposureMatteLuna x@(fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
+                  y@(fmap variable -> Color.RGBA exR exG exB exA) matte img =
+                    case matte of
+                      Nothing -> onEachRGBA (exposure blackpointR exR) (exposure blackpointG exG) (exposure blackpointB exB) id img -- (exposure blackpointA exA)
+                      Just m ->
+                          onEachRGBAChannels (applyMatteFloat (exposure blackpointR exR) m)
+                                             (applyMatteFloat (exposure blackpointG exG) m)
+                                             (applyMatteFloat (exposure blackpointB exB) m)
+                                             (applyMatteFloat (exposure blackpointA exA) m) img
+
+gradeLunaColorMatte :: VPS (Color.RGBA Float)
+                    -> VPS (Color.RGBA Float)
+                    -> VPS (Color.RGBA Float)
+                    -> VPS (Color.RGBA Float)
+                    -> Color.RGBA Float
+                    -> Color.RGBA Float
+                    -> Color.RGBA Float
+                    -> Maybe (Matte.Matte Float)
+                    -> Image
+                    -> Image
+gradeLunaColorMatte (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
+                    (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
+                    (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
+                    (VPS (fmap variable -> Color.RGBA gainR gainG gainB gainA))
+                    (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
+                    (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
+                    (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) matte img =
+                      case matte of
+                        Nothing -> onEachRGBA (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
+                                              (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
+                                              (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
+                                              id img -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+                        Just m -> onEachRGBAChannels (applyMatteFloat (grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR) m)
+                                                     (applyMatteFloat (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG) m)
+                                                     (applyMatteFloat (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB) m)
+                                                     (applyMatteFloat (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA) m) img
 
 offsetLuna :: Color.RGBA Float -> Image -> Image
 offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) id -- (offset a)
@@ -368,7 +553,7 @@ blurLuna (variable -> kernelSize) = onEachChannel blurChannel
               (Channel.asDiscreteClamp -> ChannelFloat name zeData) -> ChannelFloat name $ (\(DiscreteData shader) -> DiscreteData $ processFloat shader) zeData
               (Channel.asDiscreteClamp -> ChannelInt   name zeData) -> ChannelInt   name $ (\(DiscreteData shader) -> DiscreteData $ processInt   shader) zeData
           processFloat x = id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ x
-          processInt   x = fmap floor $ (id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fmap A.fromIntegral x :: DiscreteShader (Exp Float))
+          processInt   x = fmap floor $ (processFloat $ fmap A.fromIntegral x :: DiscreteShader (Exp Float))
           p = pipe A.Clamp
           hmat :: (Elt e, IsFloating e) => Matrix2 e
           hmat = id M.>-> normalize $ toMatrix (Grid 1 kernelSize) $ gauss 1.0
@@ -390,6 +575,13 @@ constantLuna (variable -> width) (variable -> height) (fmap variable -> Color.RG
                   , ("rgba.b", b)
                   , ("rgba.a", a)
                   ]
+
+--TODO[KM]: port checkerboard to luna
+--type CheckerboardColorsLuna = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
+--type CheckerboardLineLuna   = (VPS ColorD, VPS Double)
+-- ...
+--checkerboardLuna :: VPS Int -> VPS Int -> Double -> CheckerboardColorsLuna -> CheckerboardLineLuna -> CheckerboardLineLuna -> Image
+--checkerboardLuna w h
 
 circularLuna :: Int -> Int -> Image
 circularLuna = gradientLuna circularShape
@@ -489,10 +681,10 @@ rotateLuna (variable -> phi) = onEachChannel rotateChannel
               --TODO[KM]: handle the mask properly
               _       -> phi
 
-rotateAtLuna :: Float -> Point2 Float -> Image -> Image
-rotateAtLuna (variable -> phi) (fmap variable -> (Point2 x y)) = onEachChannel rotateChannel
-    where vBefore = V2 (-x) y
-          vAfter  = V2 x (-y)
+rotateAtLuna :: Point2 Float -> Float -> Image -> Image
+rotateAtLuna (fmap variable -> (Point2 x y)) (variable -> phi) = onEachChannel rotateChannel
+    where vBefore = V2 x y
+          vAfter  = V2 (-x) (-y)
           mask    = Nothing
           rotateChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
@@ -519,8 +711,8 @@ scaleLuna (fmap variable -> v) = onEachChannel scaleChannel
               --TODO[KM]: handle the mask properly
               _       -> v
 
-scaleAtLuna :: V2 Float -> Point2 Float -> Image -> Image
-scaleAtLuna (fmap variable -> v) (fmap variable -> (Point2 x y)) = onEachChannel scaleChannel
+scaleAtLuna :: Point2 Float -> V2 Float -> Image -> Image
+scaleAtLuna (fmap variable -> (Point2 x y)) (fmap variable -> v) = onEachChannel scaleChannel
     where vBefore = V2 (-x) y
           vAfter  = V2 x (-y)
           mask    = Nothing
@@ -839,30 +1031,30 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
-type HandleGUI = (VPS Int, VPS Float, VPS Float)
-type ControlPointGUI a = (VPS (Point2 a), VPS HandleGUI, VPS HandleGUI)
-type CurveGUI a = [VPS (ControlPointGUI a)]
+type LunaHandleGUI = (VPS Int, VPS Float, VPS Float)
+type LunaControlPointGUI a = (VPS (Point2 a), VPS LunaHandleGUI, VPS LunaHandleGUI)
+type LunaCurveGUI a = [VPS (LunaControlPointGUI a)]
 
-convertHandleGUI :: HandleGUI -> CurveGUI.Handle
+convertHandleGUI :: LunaHandleGUI -> CurveGUI.Handle
 convertHandleGUI (unpackLunaVar -> t, unpackLunaVar -> w, unpackLunaVar -> a) =
     case t of
         0 -> CurveGUI.NonLinear w a
         1 -> CurveGUI.Vertical w
         2 -> CurveGUI.Linear
 
-getValueAtCurveGUI :: CurveGUI Float -> Float -> Float
+getValueAtCurveGUI :: LunaCurveGUI Float -> Float -> Float
 getValueAtCurveGUI (convertCurveGUI -> curve) = CurveGUI.valueAtSpline curve
 
-convertControlPointGUI :: ControlPointGUI a -> CurveGUI.ControlPoint a
+convertControlPointGUI :: LunaControlPointGUI a -> CurveGUI.ControlPoint a
 convertControlPointGUI (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar -> hOut) =
     CurveGUI.ControlPoint p (convertHandleGUI hIn) (convertHandleGUI hOut)
 
-convertCurveGUI :: CurveGUI a -> CurveGUI.Curve a
+convertCurveGUI :: LunaCurveGUI a -> CurveGUI.Curve a
 convertCurveGUI (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertControlPointGUI c)
 
-hueCorrectLuna :: VPS (CurveGUI Float) -> VPS (CurveGUI Float) ->
-                  VPS (CurveGUI Float) -> VPS (CurveGUI Float) -> VPS (CurveGUI Float) ->
-                  CurveGUI Float -> CurveGUI Float -> CurveGUI Float ->
+hueCorrectLuna :: VPS (LunaCurveGUI Float) -> VPS (LunaCurveGUI Float) ->
+                  VPS (LunaCurveGUI Float) -> VPS (LunaCurveGUI Float) -> VPS (LunaCurveGUI Float) ->
+                  LunaCurveGUI Float -> LunaCurveGUI Float -> LunaCurveGUI Float ->
                   -- GUICurve Float -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
@@ -901,14 +1093,39 @@ gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB
                         (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
                         id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
 
+type ColorCorrect a = (VPS (LunaCurveGUI a), VPS (LunaCurveGUI a))
+pattern ColorCorrect a b = (VPS a, VPS b)
+
+colorCorrectLunaCurves :: VPS (ColorCorrect Float)
+                       -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                       -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                       -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                       -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                       -> Image
+                       -> Image
+colorCorrectLunaCurves (VPS (ColorCorrect curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
+    where prepare (convertCurveGUI -> CurveGUI.BezierCurve nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
+
 colorCorrectLuna' :: Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
                   -> Image
                   -> Image
+colorCorrectLuna' = colorCorrectLunaBase (curveShadows, curveHighlights)
+    where curveShadows    = makeSpline [BSplineNode (Point2 0 1) (Point2 (-1) 1) (Point2 0.03 1), BSplineNode (Point2 0.09 0) (Point2 0.06 0) (Point2 1.09 0)]
+          curveHighlights = makeSpline [BSplineNode (Point2 0.5 0) (Point2 (-0.5) 0) (Point2 (2/3) 0), BSplineNode (Point2 1 1) (Point2 (5/6) 1) (Point2 2 1)]
+          makeSpline      = A.fromList (Z :. 2)
 
-colorCorrectLuna' ( VPS (fmap variable -> ColorD masterSaturationR masterSaturationG masterSaturationB masterSaturationA)
+colorCorrectLunaBase :: (BSpline Float, BSpline Float)
+                     -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                     -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                     -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                     -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                     -> Image
+                     -> Image
+colorCorrectLunaBase (curveShadows, curveHighlights)
+                  ( VPS (fmap variable -> ColorD masterSaturationR masterSaturationG masterSaturationB masterSaturationA)
                   , VPS (fmap variable -> ColorD masterContrastR masterContrastG masterContrastB masterContrastA)
                   , VPS (fmap variable -> ColorD masterGammaR masterGammaG masterGammaB masterGammaA)
                   , VPS (fmap variable -> ColorD masterGainR masterGainG masterGainB masterGainA)
@@ -939,14 +1156,12 @@ colorCorrectLuna' ( VPS (fmap variable -> ColorD masterSaturationR masterSaturat
                                  id -- (colorCorrect contrastA gammaA gainA offsetA) saturated
                                  saturated
     where
-          curveShadows    = A.lift $ CubicBezier (Point2 (0::Float) 1) (Point2 0.03 1) (Point2 0.06 0) (Point2 0.09 0) :: Exp (CubicBezier Float)
-          curveHighlights = A.lift $ CubicBezier (Point2 0.5 (0::Float)) (Point2 (2/3) 0) (Point2 (5/6) 1) (Point2 1 1) :: Exp (CubicBezier Float)
           strShadows x    = A.cond (x A.<=* 0) 1
                           $ A.cond (x A.>=* 0.09) 0
-                          $ CubicSolveAcc.valueAtX 10 0.001 (curveShadows :: Exp (CubicBezier Float)) x
+                          $ BSpline.valueAt (A.use curveShadows :: A.Acc (BSpline Float)) x
           strHighlights x = A.cond (x A.<=* 0.5) 0
                           $ A.cond (x A.>=* 1) 1
-                          $ CubicSolveAcc.valueAtX 10 0.001 (curveHighlights :: Exp (CubicBezier Float)) x
+                          $ BSpline.valueAt (A.use curveHighlights :: A.Acc (BSpline Float)) x
 
           correctMasterR = colorCorrect masterContrastR masterGammaR masterGainR masterOffsetR
           correctMasterG = colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
@@ -1215,7 +1430,12 @@ multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap vari
 getChannelLuna :: String -> String -> Image -> Image.Result (Maybe Channel)
 getChannelLuna viewName channelName img = case Image.lookup viewName img of
     Right view -> View.get view channelName
-    _         -> Left $ Image.ViewLookupError viewName
+    _          -> Left $ Image.ViewLookupError viewName
+
+getChannelFromPrimaryLuna :: String -> Image -> Image.Result (Maybe Channel)
+getChannelFromPrimaryLuna channelName img = case Image.lookupPrimary img of
+    Right view -> View.get view channelName
+    _          -> Left $ Image.ViewLookupError "primary view"
 
 -- FIXME[KM]: [iup]
 --insertChannelLuna :: String -> Channel -> Image -> Image
@@ -1294,4 +1514,3 @@ realReadLuna path            = loadImageLuna path
 testColorCC :: Color5 -> Image
 testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
     constantLuna 512 512 $ Color.RGBA (r*x) (g*x) (b*x) (a*x)
-

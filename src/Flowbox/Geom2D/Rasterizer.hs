@@ -181,7 +181,7 @@ rasterizeMask w h (Mask path' feather') = -- path
                                   A.cond (0.01 >* f)
                                           0
                                           (
-                                            A.cond (f >* 0.99) 1 p
+                                            A.cond (f >* 0.99) 1 $ ((df / (dp+df)) + (dp / (dp+df)))/2
                                           )
                                 )
                       )

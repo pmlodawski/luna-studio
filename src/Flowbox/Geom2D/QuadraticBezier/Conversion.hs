@@ -65,7 +65,7 @@ approximateCubicWithQuadratic' = approximateCubicWithQuadraticStep 1
               where
                   (QuadraticBezier _ c0 _) = approx pA pB pC -- ok
                   (QuadraticBezier _ c1 _) = approx pD pC pB -- ok
-                  approxCurve = fmap (fromIntegral . round) $ QuadraticBezier pA ((3 * c1 - pD + 3 * c0 - pA) / 4) pD -- ok
+                  approxCurve = QuadraticBezier pA ((3 * c1 - pD + 3 * c0 - pA) / 4) pD -- ok
                   d   = realToFrac $ vectorDistance (fp2gp c0) (fp2gp c1) -- distance between control points
                   err = (sqrt 3 / 18) * d -- this should be precision, but something is fucky (no t^3_max)
                   approx a b c = QuadraticBezier a (approxControl a b) (approxEnd a b c) -- ok

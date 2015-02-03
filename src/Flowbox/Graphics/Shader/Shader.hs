@@ -55,6 +55,10 @@ resize cnv (Shader _ gen) = Shader cnv gen
 canvasT :: (Grid (Exp Int) -> Grid (Exp Int)) -> Shader a b -> Shader a b
 canvasT f (Shader cnv gen) = Shader (f cnv) gen
 
+combineWith :: (Elt b) => (Exp b -> Exp b -> Exp b) -> Shader a (Exp b) -> Shader a (Exp b) -> Shader a (Exp b)
+combineWith f (Shader (Grid h1 w1) g) (Shader (Grid h2 w2) h) =
+	Shader (Grid (h1 `max` h2) (w1 `max` w2)) (\p -> f (g p) (h p))
+
 instance I.Boundable (DiscreteShader b) (Exp Int) b where
     unsafeIndex2D = runShader
     boundary      = canvas
