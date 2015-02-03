@@ -19,7 +19,7 @@ import qualified Luna.Graph.View.Default.DefaultsMap as DefaultsMap
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Module                  (Module)
+import           Luna.DEP.AST.Module                  (Module)
 import           Luna.Graph.PropertyMap           (PropertyMap)
 import qualified Luna.Graph.PropertyMap           as PropertyMap
 import qualified Luna.Pass.Analysis.ID.ExtractIDs as ExtractIDs

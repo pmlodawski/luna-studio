@@ -20,8 +20,8 @@ import qualified Data.Maybe          as Maybe
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                       hiding (mapM)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Expr                         (Expr)
-import qualified Luna.AST.Expr                         as Expr
+import           Luna.DEP.AST.Expr                         (Expr)
+import qualified Luna.DEP.AST.Expr                         as Expr
 import qualified Luna.Graph.Edge                       as Edge
 import           Luna.Graph.Flags                      (Flags)
 import qualified Luna.Graph.Flags                      as Flags

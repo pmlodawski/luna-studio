@@ -15,7 +15,7 @@
 module Luna.Pass.Transform.AST.TxtParser.TxtParser where
 
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Module           (Module)
+import           Luna.DEP.AST.Module           (Module)
 import           Luna.Data.ASTInfo         (ASTInfo)
 import           Luna.Data.Source          (Source(..))
 import           Luna.Data.SourceMap       (SourceMap)

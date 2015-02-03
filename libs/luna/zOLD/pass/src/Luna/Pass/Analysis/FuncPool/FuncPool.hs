@@ -18,13 +18,13 @@ import Control.Monad.State hiding (mapM, mapM_)
 
 import           Flowbox.Prelude                  hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Expr                    as Expr
-import           Luna.AST.Module                  (Module)
-import qualified Luna.AST.Module                  as Module
-import           Luna.AST.Pat                     (Pat)
-import qualified Luna.AST.Pat                     as Pat
-import           Luna.AST.Type                    (Type)
-import qualified Luna.AST.Type                    as Type
+import qualified Luna.DEP.AST.Expr                    as Expr
+import           Luna.DEP.AST.Module                  (Module)
+import qualified Luna.DEP.AST.Module                  as Module
+import           Luna.DEP.AST.Pat                     (Pat)
+import qualified Luna.DEP.AST.Pat                     as Pat
+import           Luna.DEP.AST.Type                    (Type)
+import qualified Luna.DEP.AST.Type                    as Type
 import           Luna.Pass.Analysis.FuncPool.Pool (Pool)
 import qualified Luna.Pass.Analysis.FuncPool.Pool as Pool
 import           Luna.Pass.Pass                   (Pass)

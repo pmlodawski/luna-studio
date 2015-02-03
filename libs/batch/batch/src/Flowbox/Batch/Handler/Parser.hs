@@ -11,8 +11,8 @@ module Flowbox.Batch.Handler.Parser where
 import           Flowbox.Batch.Batch   (Error)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import           Luna.AST.Pat          (Pat)
-import           Luna.AST.Type         (Type)
+import           Luna.DEP.AST.Pat          (Pat)
+import           Luna.DEP.AST.Type         (Type)
 import qualified Luna.Data.ASTInfo     as ASTInfo
 import qualified Luna.Data.Config      as Config
 import qualified Luna.Parser.Parser    as Parser

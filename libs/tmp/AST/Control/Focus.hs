@@ -7,17 +7,17 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Luna.AST.Control.Focus where
+module Luna.DEP.AST.Control.Focus where
 
 import           Flowbox.Prelude hiding (Traversal)
-import           Luna.AST.Arg    (Arg)
-import           Luna.AST.Expr   (Expr)
-import qualified Luna.AST.Expr   as Expr
-import           Luna.AST.Lit    (Lit)
-import           Luna.AST.Module (Module)
-import qualified Luna.AST.Module as Module
-import           Luna.AST.Pat    (Pat)
-import           Luna.AST.Type   (Type)
+import           Luna.DEP.AST.Arg    (Arg)
+import           Luna.DEP.AST.Expr   (Expr)
+import qualified Luna.DEP.AST.Expr   as Expr
+import           Luna.DEP.AST.Lit    (Lit)
+import           Luna.DEP.AST.Module (Module)
+import qualified Luna.DEP.AST.Module as Module
+import           Luna.DEP.AST.Pat    (Pat)
+import           Luna.DEP.AST.Type   (Type)
 
 
 

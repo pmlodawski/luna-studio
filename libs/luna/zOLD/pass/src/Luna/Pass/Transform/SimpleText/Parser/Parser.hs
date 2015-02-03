@@ -15,11 +15,11 @@ import Control.Monad.Trans.Either
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Luna.AST.Control.Crumb                                        as Crumb
-import qualified Luna.AST.Control.Focus                                        as Focus
-import qualified Luna.AST.Control.Zipper                                       as Zipper
-import           Luna.AST.Expr                                                 (Expr)
-import qualified Luna.AST.Expr                                                 as Expr
+import qualified Luna.DEP.AST.Control.Crumb                                        as Crumb
+import qualified Luna.DEP.AST.Control.Focus                                        as Focus
+import qualified Luna.DEP.AST.Control.Zipper                                       as Zipper
+import           Luna.DEP.AST.Expr                                                 (Expr)
+import qualified Luna.DEP.AST.Expr                                                 as Expr
 import           Luna.Data.Source                                              (Source (Source))
 import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
 import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph

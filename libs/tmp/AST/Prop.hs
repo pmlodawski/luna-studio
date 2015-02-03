@@ -8,7 +8,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 
-module Luna.AST.Prop where
+module Luna.DEP.AST.Prop where
 
 import Flowbox.Prelude
 

@@ -54,19 +54,19 @@ import           Text.Parser.Expression
 import           Text.Parser.LookAhead
 import           Data.Char                    (isSpace)
 import qualified Data.ByteString as ByteStr
-import           Luna.ASTNew.Name.Path        (NamePath(NamePath))
-import qualified Luna.ASTNew.Name.Path        as NamePath
-import qualified Luna.ASTNew.Name.Pattern     as NamePat
-import           Luna.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment))
-import qualified Luna.ASTNew.Name             as Name
-import           Luna.ASTNew.Name             (VName, vname, TName, tname, TVName, tvname)
+import           Luna.DEP.ASTNew.Name.Path        (NamePath(NamePath))
+import qualified Luna.DEP.ASTNew.Name.Path        as NamePath
+import qualified Luna.DEP.ASTNew.Name.Pattern     as NamePat
+import           Luna.DEP.ASTNew.Name.Pattern     (NamePat(NamePat), Segment(Segment))
+import qualified Luna.DEP.ASTNew.Name             as Name
+import           Luna.DEP.ASTNew.Name             (VName, vname, TName, tname, TVName, tvname)
 
 --import qualified Luna.Data.Namespace          as Namespace
 import qualified Luna.Data.Namespace.State    as Namespace
 import qualified Luna.Data.StructInfo          as StructInfo
 import           Luna.Data.StructInfo         (OriginInfo(OriginInfo))
-import qualified Luna.ASTNew.AST              as AST
-import qualified Luna.ASTNew.Traversals       as AST
+import qualified Luna.DEP.ASTNew.AST              as AST
+import qualified Luna.DEP.ASTNew.Traversals       as AST
 import qualified Data.Maps                    as Map
 import           Data.Maybe                   (isJust, fromJust)
 import qualified Flowbox.Data.MapForest       as MapForest
@@ -77,7 +77,7 @@ import           Text.EditDistance            --(defaultEditCosts, levenshteinDi
 import           Text.PhoneticCode.Phonix     (phonix)
 import           Data.Function                (on)
 import           Data.List                    (sort, sortBy)
-import           Luna.ASTNew.Name.Path (QualPath(QualPath))
+import           Luna.DEP.ASTNew.Name.Path (QualPath(QualPath))
 
 import qualified Data.IntMap  as IntMap
 
@@ -87,28 +87,28 @@ import qualified Data.HashSet as HashSet
 import qualified Text.Parsers.Indent as Indent
 
 
-import qualified Luna.ASTNew.Expr as Expr
-import           Luna.ASTNew.Expr (LExpr, Expr(Expr))
+import qualified Luna.DEP.ASTNew.Expr as Expr
+import           Luna.DEP.ASTNew.Expr (LExpr, Expr(Expr))
 
 
-import qualified Luna.ASTNew.Decl   as Decl
-import           Luna.ASTNew.Decl   (LDecl, Field(Field))
-import qualified Luna.ASTNew.Module as Module
-import           Luna.ASTNew.Module (Module(Module), LModule)
-import           Luna.ASTNew.Unit   (Unit(Unit))
-import qualified Luna.ASTNew.Label  as Label
-import           Luna.ASTNew.Label  (Label(Label))
-import qualified Luna.ASTNew.Type   as Type
-import           Luna.ASTNew.Type   (Type)
-import qualified Luna.ASTNew.Pat    as Pat
-import           Luna.ASTNew.Pat    (LPat, Pat)
-import qualified Luna.ASTNew.Lit    as Lit
-import           Luna.ASTNew.Arg    (Arg(Arg))
-import qualified Luna.ASTNew.Native as Native
+import qualified Luna.DEP.ASTNew.Decl   as Decl
+import           Luna.DEP.ASTNew.Decl   (LDecl, Field(Field))
+import qualified Luna.DEP.ASTNew.Module as Module
+import           Luna.DEP.ASTNew.Module (Module(Module), LModule)
+import           Luna.DEP.ASTNew.Unit   (Unit(Unit))
+import qualified Luna.DEP.ASTNew.Label  as Label
+import           Luna.DEP.ASTNew.Label  (Label(Label))
+import qualified Luna.DEP.ASTNew.Type   as Type
+import           Luna.DEP.ASTNew.Type   (Type)
+import qualified Luna.DEP.ASTNew.Pat    as Pat
+import           Luna.DEP.ASTNew.Pat    (LPat, Pat)
+import qualified Luna.DEP.ASTNew.Lit    as Lit
+import           Luna.DEP.ASTNew.Arg    (Arg(Arg))
+import qualified Luna.DEP.ASTNew.Native as Native
 
-import qualified Luna.ASTNew.Enum       as Enum
-import           Luna.ASTNew.Enum       (Enumerated, IDTag(IDTag))
-import qualified Luna.ASTNew.Unit       as Unit
+import qualified Luna.DEP.ASTNew.Enum       as Enum
+import           Luna.DEP.ASTNew.Enum       (Enumerated, IDTag(IDTag))
+import qualified Luna.DEP.ASTNew.Unit       as Unit
 
 
 import qualified Data.TypeLevel.Set as TLSet
@@ -116,8 +116,8 @@ import           Data.Tuple.Select
 
 import qualified Data.Text.Lazy.Encoding as Text
 
-import           Luna.ASTNew.Foreign (Foreign(Foreign))
-import qualified Luna.ASTNew.Foreign as Foreign
+import           Luna.DEP.ASTNew.Foreign (Foreign(Foreign))
+import qualified Luna.DEP.ASTNew.Foreign as Foreign
 
 infixl 4 <$!>
 

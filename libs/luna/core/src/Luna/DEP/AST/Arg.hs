@@ -11,13 +11,13 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
 
-module Luna.AST.Arg where
+module Luna.DEP.AST.Arg where
 
 import GHC.Generics (Generic)
 
 import Flowbox.Generics.Deriving.QShow
 import Flowbox.Prelude                 hiding (Traversal, cons, drop, id)
-import Luna.AST.Common                 (ID)
+import Luna.DEP.AST.Common                 (ID)
 
 
 

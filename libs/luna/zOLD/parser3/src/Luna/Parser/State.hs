@@ -24,16 +24,16 @@ import           Luna.Parser.Operator (OperatorMap)
 import qualified Luna.Data.Namespace  as Namespace
 import           Luna.Data.Namespace  (Namespace, NamespaceMonad)
 import qualified Data.List            as List
-import qualified Luna.AST.Common      as AST
-import           Luna.AST.IDMap       (IDMap)
-import qualified Luna.AST.IDMap       as IDMap
+import qualified Luna.DEP.AST.Common      as AST
+import           Luna.DEP.AST.IDMap       (IDMap)
+import qualified Luna.DEP.AST.IDMap       as IDMap
 import qualified Data.Maps            as Map
-import           Luna.AST.Comment     (Comment(..))
+import           Luna.DEP.AST.Comment     (Comment(..))
 import           Flowbox.Control.Monad.State (mapStateVal, get, put, StateT)
 import qualified Flowbox.Control.Monad.State as State
 import qualified Luna.Data.StructInfo        as StructInfo
-import qualified Luna.AST.AST                as AST
-import           Luna.ASTNew.Name.Path       (QualPath)
+import qualified Luna.DEP.AST.AST                as AST
+import           Luna.DEP.ASTNew.Name.Path       (QualPath)
 
 data ParserState conf 
    = ParserState { _conf          :: Config conf

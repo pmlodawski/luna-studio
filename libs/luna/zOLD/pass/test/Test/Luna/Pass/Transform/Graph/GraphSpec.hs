@@ -10,7 +10,7 @@ module Test.Luna.Pass.Transform.Graph.GraphSpec where
 import Test.Hspec
 
 import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb                  (Breadcrumbs)
+import           Luna.DEP.AST.Control.Crumb                  (Breadcrumbs)
 import qualified Luna.Graph.Edge                         as Edge
 import           Luna.Graph.Graph                        (Graph)
 import qualified Luna.Graph.Graph                        as Graph
@@ -21,7 +21,7 @@ import qualified Luna.Graph.Node.StringExpr              as StringExpr
 import qualified Luna.Graph.Port                         as Port
 import           Luna.Graph.PropertyMap                  (PropertyMap)
 import           Luna.Pass.Transform.AST.IDFixer.IDFixer (clearIDs)
-import qualified Test.Luna.AST.Common                    as Common
+import qualified Test.Luna.DEP.AST.Common                    as Common
 import qualified Test.Luna.Pass.Transform.Graph.Common   as Common
 import           Test.Luna.Sample.Code                   (sampleCodes)
 import qualified Test.Luna.Sample.Code                   as SampleCode

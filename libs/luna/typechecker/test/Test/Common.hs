@@ -12,16 +12,16 @@ import Luna.Typechecker.Type
 --import Luna.Typechecker.TypecheckClass
 
 -- luna-core
-import Luna.ASTNew.Expr       as NExpr
-import Luna.ASTNew.Label      as Label
-import Luna.ASTNew.Lit        as Lit
-import Luna.ASTNew.Pat        as NPat
-import Luna.ASTNew.Lit.Number as Num
-import Luna.ASTNew.Name       as NName
-import Luna.ASTNew.Type       as NType
-import Luna.ASTNew.Arg        as NArg
-import Luna.ASTNew.Decl       as NDecl
-import Luna.ASTNew.Native     as NNative
+import Luna.DEP.ASTNew.Expr       as NExpr
+import Luna.DEP.ASTNew.Label      as Label
+import Luna.DEP.ASTNew.Lit        as Lit
+import Luna.DEP.ASTNew.Pat        as NPat
+import Luna.DEP.ASTNew.Lit.Number as Num
+import Luna.DEP.ASTNew.Name       as NName
+import Luna.DEP.ASTNew.Type       as NType
+import Luna.DEP.ASTNew.Arg        as NArg
+import Luna.DEP.ASTNew.Decl       as NDecl
+import Luna.DEP.ASTNew.Native     as NNative
 
 -- luna-logger
 import Logger

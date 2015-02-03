@@ -8,7 +8,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
 
-module Luna.AST.Name where
+module Luna.DEP.AST.Name where
 
 
 import GHC.Generics (Generic)

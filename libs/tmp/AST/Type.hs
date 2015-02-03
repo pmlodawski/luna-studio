@@ -9,13 +9,13 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Luna.AST.Type where
+module Luna.DEP.AST.Type where
 
 import GHC.Generics
 
 import Flowbox.Generics.Deriving.QShow
 import Flowbox.Prelude                 hiding (Traversal, drop, id)
-import Luna.AST.Common                 (ID)
+import Luna.DEP.AST.Common                 (ID)
 
 data Type = Unknown  { _id :: ID                                               }
           | Var      { _id :: ID, _name     :: String                          }

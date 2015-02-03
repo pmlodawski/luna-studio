@@ -5,14 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.AST.Import(
-    Import(..),
-) where
+{-# LANGUAGE MultiParamTypeClasses #-}
 
-import Flowbox.Data.Path
+
+module Luna.DEP.AST.Prop where
+
 import Flowbox.Prelude
 
 
-
-data Import = Import {path :: Path, name :: String} deriving (Show)
-
+class HasName a where
+    name :: a -> String

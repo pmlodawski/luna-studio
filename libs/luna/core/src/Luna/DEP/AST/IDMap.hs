@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances #-}
 
-module Luna.AST.IDMap (
-    module Luna.AST.IDMap,
+module Luna.DEP.AST.IDMap (
+    module Luna.DEP.AST.IDMap,
     module X
 ) where
 

@@ -13,9 +13,9 @@ module Luna.Lib.Lib where
 
 --import           Flowbox.Prelude
 --import           Flowbox.System.UniPath (UniPath)
---import           Luna.AST.Module        (Module)
---import qualified Luna.AST.Module        as Module
---import qualified Luna.AST.Type          as Type
+--import           Luna.DEP.AST.Module        (Module)
+--import qualified Luna.DEP.AST.Module        as Module
+--import qualified Luna.DEP.AST.Type          as Type
 --import           Luna.Syntax.Graph.PropertyMap (PropertyMap)
 --import qualified Luna.Syntax.Graph.PropertyMap as PropertyMap
 

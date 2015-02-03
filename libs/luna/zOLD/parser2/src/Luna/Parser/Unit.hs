@@ -12,7 +12,7 @@
 module Luna.Parser.Unit where
 
 import           Flowbox.Prelude
-import           Luna.AST.Common                 (ID)
+import           Luna.DEP.AST.Common                 (ID)
 
 
 

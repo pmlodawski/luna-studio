@@ -11,7 +11,7 @@
 
 module Luna.Pass.Transform.AST.Desugar.ImplicitScopes.State where
 
-import Luna.AST.AST        (ID)
+import Luna.DEP.AST.AST        (ID)
 import Luna.Data.AliasInfo (AliasInfo)
 
 import           Luna.Data.ASTInfo (ASTInfo)

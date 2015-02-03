@@ -7,14 +7,14 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Luna.AST.Data where
+module Luna.DEP.AST.Data where
 
 import           Flowbox.Prelude   hiding (cons)
-import           Luna.AST.Common   (ID)
-import           Luna.AST.Expr     
-import qualified Luna.AST.Expr     as Expr
-import qualified Luna.AST.Type     as Type
-import           Luna.AST.Type     (Type)
+import           Luna.DEP.AST.Common   (ID)
+import           Luna.DEP.AST.Expr     
+import qualified Luna.DEP.AST.Expr     as Expr
+import qualified Luna.DEP.AST.Type     as Type
+import           Luna.DEP.AST.Type     (Type)
 
 
 --mk :: ID -> Type -> Expr -> Expr

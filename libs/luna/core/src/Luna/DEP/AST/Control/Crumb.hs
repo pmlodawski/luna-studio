@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Luna.AST.Control.Crumb where
+module Luna.DEP.AST.Control.Crumb where
 
 import           Flowbox.Prelude
-import qualified Luna.AST.Common as AST
-import           Luna.AST.Name   (Name)
+import qualified Luna.DEP.AST.Common as AST
+import           Luna.DEP.AST.Name   (Name)
 
 
 

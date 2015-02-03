@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DeriveGeneric #-}
 
@@ -15,6 +16,7 @@ import           GHC.Generics
 import           Data.String             (IsString, fromString)
 
 import qualified Luna.Syntax.Name.Assert as Assert
+import           Data.Char.Class          (LetterCase, isLower, isUpper)
 import qualified Luna.Syntax.Name.Path   as NamePath
 import           Luna.Syntax.Name.Path   (NamePath(NamePath))
 import           Luna.Syntax.Name.Hash   (Hashable, hash)
@@ -121,3 +123,8 @@ instance Hashable a b => Hashable (TName    a) b where hash = hash . unwrap
 instance Hashable a b => Hashable (CName    a) b where hash = hash . unwrap
 instance Hashable a b => Hashable (TVName   a) b where hash = hash . unwrap
 instance Hashable a b => Hashable (NameBase a) b where hash = hash . unwrap
+
+
+instance (IsString a) => IsString (NameBase a) where
+	fromString s = if isLower s then VarName  (VName $ fromString s)
+		                        else TypeName (TName $ fromString s)

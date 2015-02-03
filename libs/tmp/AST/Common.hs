@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.AST.Common where
+module Luna.DEP.AST.Common where
 
 import Flowbox.Prelude
 
