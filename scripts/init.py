@@ -223,6 +223,7 @@ def main():
     try_call ('python2.7 %s' % path)
 
     checkPythonPkg("psutil")
+    checkPythonPkg("docopt")
 
 
     print_info ("Success")
