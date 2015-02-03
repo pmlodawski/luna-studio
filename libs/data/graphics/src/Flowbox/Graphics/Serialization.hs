@@ -11,11 +11,11 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-# LANGUAGE ViewPatterns          #-}
 
 module Flowbox.Graphics.Serialization where
 
-import Flowbox.Graphics.Prelude hiding (views)
 
 import           Control.Error.Util
 import           Control.Monad
@@ -25,15 +25,22 @@ import           Data.Array.Accelerate.IO
 import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
 import           Data.Maybe                        (fromMaybe)
-import           Data.Set
+-- import           Data.Set
+import           Data.Sequence                     (ViewL(..))
+import qualified Data.Sequence                     as Seq
+import           Text.ProtocolBuffers.Basic        (uToString)
 
-import           Flowbox.Data.Mode                    (Mode)
+import qualified Flowbox.Data.Mode                    as Mode (Mode(..))
 import           Flowbox.Data.Serialization           (Serializable (..), mkValue)
 import qualified Flowbox.Graphics.Image.Channel       as Chan
 import qualified Flowbox.Graphics.Image.Image         as Img
 import qualified Flowbox.Graphics.Image.View          as V
+import           Flowbox.Graphics.Prelude             hiding (mapM, views)
 import           Flowbox.Graphics.Shader.Sampler      (Sampler, monosampler)
+import           Flowbox.Graphics.Utils.Utils         (fstQuad)
 import qualified Flowbox.Math.Matrix                  as M
+import qualified Generated.Proto.Data.ChannelDescription as ChanDesc
+import qualified Generated.Proto.Data.ChannelDescription.ChannelID as ChID
 import qualified Generated.Proto.Data.MatrixData      as MatrixData
 import qualified Generated.Proto.Data.MatrixData.Type as MatrixData
 import qualified Generated.Proto.Data.Value.Type      as Value
@@ -83,7 +90,7 @@ instance ( ByteStrings (A.EltRepr a) ~ ((), ByteString)
 
     compute a _ = M.compute serializationBackend a
 
-serializeChanFromView :: V.View -> String -> Mode -> IO (Maybe MatrixData.MatrixData)
+serializeChanFromView :: V.View -> String -> Mode.Mode -> IO (Maybe MatrixData.MatrixData)
 serializeChanFromView v x mode = case join . hush . V.get v $ x of
     Just c -> serializeChan c mode
     Nothing -> return Nothing
@@ -91,18 +98,67 @@ serializeChanFromView v x mode = case join . hush . V.get v $ x of
               Chan.ChannelFloat     _ (Chan.asMatrixData -> Chan.MatrixData mat) -> serialize mat m
               Chan.ChannelInt       _ (Chan.asMatrixData -> Chan.MatrixData mat) -> serialize mat m
 
+pattern Mode a as <- Mode.Mode (Seq.viewl -> a :< as)
+pattern EmptyMode <- Mode.Mode (Seq.viewl -> EmptyL)
+
+batchCompute' :: [Chan.Channel] -> Maybe (M.Matrix2 (Double, Double, Double, Double))
+batchCompute' [ChanF nr r, ChanF ng g, ChanF nb b, ChanF na a] = Just $ M.compute serializationBackend $ M.zip4 r g b a
+batchCompute' _ = Nothing
+
+serialize' :: forall a. (A.Elt (a, a, a, a)
+           , ByteStrings (A.EltRepr (a, a, a, a)) ~ (((((), ByteString), ByteString), ByteString), ByteString)
+           , MatType a)
+           => M.Matrix2 (a, a, a, a) -> Mode.Mode -> IO (Maybe ViewData.ViewData)
+serialize' (M.Raw arr) _ = do
+    (((((), r), g), b), a) <- toByteString arr
+    let M.Z M.:. h M.:. w = A.arrayShape arr
+        toData x = MatrixData.MatrixData (fromStrict x) (fromIntegral w) (fromIntegral h) (getMatType (undefined :: a))
+
+    return . Just $ ViewData.ViewData (toData r) (toData g) (toData b) (Just $ toData a)
+
 instance Serializable V.View ViewData.ViewData where
     serialize v mode = do
-        red   <- serializeChanFromView v "rgba.r" mode
-        green <- serializeChanFromView v "rgba.g" mode
-        blue  <- serializeChanFromView v "rgba.b" mode
-        alpha <- serializeChanFromView v "rgba.a" mode
-        return $ liftM4 ViewData.ViewData red green blue (Just alpha)
+        let channels = get ["rgba.r", "rgba.g", "rgba.b", "rgba.a"] v
+        case channels of
+            Just cs -> case batchCompute' cs of
+                Just mat -> serialize' mat mode
+                _        -> do
+                    red   <- serializeChanFromView v "rgba.r" mode
+                    green <- serializeChanFromView v "rgba.g" mode
+                    blue  <- serializeChanFromView v "rgba.b" mode
+                    alpha <- serializeChanFromView v "rgba.a" mode
+                    return $ liftM4 ViewData.ViewData red green blue (Just alpha)
+            _       -> return Nothing
 
     toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
-    compute a _    = V.map (Chan.compute serializationBackend defaultSampler) a
+
+    compute a EmptyMode  = a
+    compute a (Mode m ms) = compute (compute' m a) $ Mode.Mode ms
+
+get :: [String] -> V.View -> Maybe [Chan.Channel]
+get names view = mapM (join . hush . V.get view) names
+
+compute' :: ChanDesc.ChannelDescription -> V.View -> V.View
+compute' (ChanDesc.ChannelDescription _type chanID name) v = case channels of
+    Just cs -> foldr V.append v $ batchCompute cs
+    _       -> V.map (Chan.compute serializationBackend) v
+    where channels = case chanID of
+              ChID.RGBA  -> get ["rgba.r", "rgba.g", "rgba.b", "rgba.a"] v
+              ChID.Other -> case name of
+                  Just n -> get [uToString n] v
+                  _      -> Nothing
+              ChID.Red   -> get ["rgba.r"] v
+              ChID.Green -> get ["rgba.g"] v
+              ChID.Blue  -> get ["rgba.b"] v
+              ChID.Alpha -> get ["rgba.a"] v
+
+pattern ChanF n mat <- Chan.ChannelFloat n (Chan.asMatrixData -> Chan.MatrixData mat)
+pattern ChanI n mat <- Chan.ChannelInt   n (Chan.asMatrixData -> Chan.MatrixData mat)
+
+batchCompute :: [Chan.Channel] -> [Chan.Channel]
+batchCompute = id
 
 instance Serializable Img.Image ViewData.ViewData where
     serialize (Img.DefaultView view) = serialize $ fromMaybe (error "Can not serialize an empty view!") view
     toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
-    compute a _    = Img.map (V.map $ Chan.compute serializationBackend defaultSampler) a
+    compute a _    = Img.map (V.map $ Chan.compute serializationBackend) a
