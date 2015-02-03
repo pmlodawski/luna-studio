@@ -10,7 +10,6 @@
 module Luna.Interpreter.Session.Error where
 
 import           Control.Exception.Base (SomeException)
-import           Control.Monad.IO.Class (MonadIO)
 import qualified HscTypes
 
 import           Flowbox.Prelude                             hiding (error)

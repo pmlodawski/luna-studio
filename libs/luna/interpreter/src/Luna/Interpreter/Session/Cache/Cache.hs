@@ -19,6 +19,8 @@ import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.Source.Location                     (loc)
 import           Flowbox.System.Log.Logger
+import qualified Luna.DEP.Graph.Node                         as Node
+import qualified Luna.DEP.Lib.Lib                            as Library
 import qualified Luna.Interpreter.Session.Cache.Free         as Free
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo (CacheInfo))
 import qualified Luna.Interpreter.Session.Cache.Info         as CacheInfo
@@ -38,8 +40,6 @@ import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager     as Manager
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
-import qualified Luna.Lib.Lib                                as Library
-import qualified Luna.Syntax.Graph.Node                      as Node
 
 
 
@@ -170,7 +170,7 @@ deleteVarName varName = do
 deleteAll :: MemoryManager mm => Session mm ()
 deleteAll = do
     logger info "Cleaning all cached values"
-    mapM_ delete' =<< MapForest.toList <$> Env.getCached
+    mapM_ delete' =<< MapForest.elems <$> Env.getCached
 
 
 getCacheInfo :: CallPointPath -> Session mm CacheInfo

@@ -7,35 +7,35 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module Test.Luna.Interpreter.Common where
 
-import qualified Flowbox.Batch.Project.Project                                 as Project
-import qualified Flowbox.Config.Config                                         as Config
+import qualified Flowbox.Batch.Project.Project                                     as Project
+import qualified Flowbox.Config.Config                                             as Config
 import           Flowbox.Control.Error
-import           Flowbox.Data.Version                                          ()
+import           Flowbox.Data.Version                                              ()
 import           Flowbox.Prelude
-import qualified Flowbox.System.UniPath                                        as UniPath
+import qualified Flowbox.System.UniPath                                            as UniPath
+import qualified Luna.DEP.AST.Control.Crumb                                        as Crumb
 import qualified Luna.DEP.AST.Name                                                 as Name
-import           Luna.Data.Source                                              (Source (Source))
-import           Luna.Interpreter.Session.Data.DefPoint                        (DefPoint (DefPoint))
-import           Luna.Interpreter.Session.Env                                  (Env)
-import qualified Luna.Interpreter.Session.Env                                  as Env
-import qualified Luna.Interpreter.Session.Error                                as Error
-import           Luna.Interpreter.Session.Session                              (Session)
-import qualified Luna.Interpreter.Session.Session                              as Session
-import qualified Luna.Interpreter.Session.TargetHS.Reload                      as Reload
-import           Luna.Lib.Lib                                                  (Library (Library))
-import qualified Luna.Lib.Lib                                                  as Library
-import           Luna.Lib.Manager                                              (LibManager)
-import qualified Luna.Lib.Manager                                              as LibManager
-import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
-import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
-import qualified Luna.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
-import qualified Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
-import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
-import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
-import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
-import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
-import qualified Luna.Syntax.Control.Crumb                                     as Crumb
-import qualified Luna.Syntax.Graph.PropertyMap                                 as PropertyMap
+import           Luna.DEP.Data.Source                                              (Source (Source))
+import qualified Luna.DEP.Graph.PropertyMap                                        as PropertyMap
+import           Luna.DEP.Lib.Lib                                                  (Library (Library))
+import qualified Luna.DEP.Lib.Lib                                                  as Library
+import           Luna.DEP.Lib.Manager                                              (LibManager)
+import qualified Luna.DEP.Lib.Manager                                              as LibManager
+import qualified Luna.DEP.Pass.Analysis.Alias.Alias                                as Analysis.Alias
+import qualified Luna.DEP.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
+import qualified Luna.DEP.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
+import qualified Luna.DEP.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
+import qualified Luna.DEP.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
+import qualified Luna.DEP.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
+import qualified Luna.DEP.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
+import qualified Luna.DEP.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
+import           Luna.Interpreter.Session.Data.DefPoint                            (DefPoint (DefPoint))
+import           Luna.Interpreter.Session.Env                                      (Env)
+import qualified Luna.Interpreter.Session.Env                                      as Env
+import qualified Luna.Interpreter.Session.Error                                    as Error
+import           Luna.Interpreter.Session.Session                                  (Session)
+import qualified Luna.Interpreter.Session.Session                                  as Session
+import qualified Luna.Interpreter.Session.TargetHS.Reload                          as Reload
 
 
 

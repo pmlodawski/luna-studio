@@ -13,6 +13,11 @@ import qualified Data.Maybe as Maybe
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                     (loc)
+import qualified Luna.DEP.AST.AST                            as AST
+import           Luna.DEP.Graph.Graph                        (Graph)
+import qualified Luna.DEP.Graph.Graph                        as Graph
+import           Luna.DEP.Graph.Node                         (Node)
+import qualified Luna.DEP.Graph.Node                         as Node
 import qualified Luna.Interpreter.Session.AST.Inspect        as Inspect
 import           Luna.Interpreter.Session.Data.CallData      (CallData (CallData))
 import qualified Luna.Interpreter.Session.Data.CallData      as CallData
@@ -23,11 +28,6 @@ import qualified Luna.Interpreter.Session.Data.DefPoint      as DefPoint
 import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
 import           Luna.Interpreter.Session.Session            (Session)
-import qualified Luna.Syntax.AST                             as AST
-import           Luna.Syntax.Graph.Graph                     (Graph)
-import qualified Luna.Syntax.Graph.Graph                     as Graph
-import           Luna.Syntax.Graph.Node                      (Node)
-import qualified Luna.Syntax.Graph.Node                      as Node
 
 
 
