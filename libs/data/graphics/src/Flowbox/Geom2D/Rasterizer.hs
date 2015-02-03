@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE ViewPatterns              #-}
 
 module Flowbox.Geom2D.Rasterizer (
@@ -15,42 +15,35 @@ module Flowbox.Geom2D.Rasterizer (
     Point2(..)
 ) where
 
-import           Codec.Picture                                  ( PixelRGBA8( .. ))
-import qualified Codec.Picture                                  as Juicy
-import qualified Codec.Picture.Types                            as JuicyTypes
-import           Control.Parallel.Strategies
-import           Data.Array.Accelerate                          ((&&*), (==*), (>*), (||*))
-import qualified Data.Array.Accelerate                          as A
+import           Codec.Picture       (PixelRGBA8 (..))
+import qualified Codec.Picture       as Juicy
+import qualified Codec.Picture.Types as JuicyTypes
+--import           Control.Parallel.Strategies
+import           Data.Array.Accelerate    ((>*))
+import qualified Data.Array.Accelerate    as A
 import           Data.Array.Accelerate.IO
-import           Data.Bits                                      ((.&.))
+import           Data.Bits                ((.&.))
 import           Data.Maybe
-import           Data.VectorSpace
-import           Data.Vector.Storable                           ( unsafeCast )
-import qualified Data.Vector.Storable                           as S
-import           Debug.Trace
+import           Data.Vector.Storable     (unsafeCast)
 
-
-import qualified Graphics.Rasterific                            as Rasta
-import qualified Graphics.Rasterific.Texture                    as RastaTex
-import           System.IO.Unsafe
+import qualified Graphics.Rasterific         as Rasta
+import qualified Graphics.Rasterific.Texture as RastaTex
 
 import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
 import           Flowbox.Geom2D.ControlPoint
 import           Flowbox.Geom2D.CubicBezier
-import           Flowbox.Geom2D.Mask
+import           Flowbox.Geom2D.Mask                             hiding (feather, path)
 import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.QuadraticBezier
 import           Flowbox.Geom2D.QuadraticBezier.Conversion
 import qualified Flowbox.Graphics.Image.Channel                  as Channel
 import           Flowbox.Graphics.Image.Image                    (Image)
 import qualified Flowbox.Graphics.Image.Image                    as Image
-import           Flowbox.Graphics.Image.IO.BMP
 import qualified Flowbox.Graphics.Image.View                     as View
-import qualified Flowbox.Graphics.Utils.Utils                    as U
+import           Flowbox.Graphics.Utils.Accelerate               (variable)
 import           Flowbox.Math.Matrix                             ((:.) (..), DIM2, Matrix (..), Matrix2, Z (..))
 import qualified Flowbox.Math.Matrix                             as M
-import           Flowbox.Prelude                                 hiding (use, ( # ))
-import qualified Flowbox.Prelude                                 as P
+import           Flowbox.Prelude                                 hiding (def, use, view, ( # ))
 import           Math.Coordinate.Cartesian                       (Point2 (..))
 
 
@@ -130,7 +123,7 @@ pathToRGBA32 w h (Path closed points) = imgToRGBA32 rasterize
                                   True  -> Rasta.fill $
                                               fmap (Rasta.transform trans) $ fmap Rasta.CubicBezierPrim cubics
           imgToRGBA32 :: JuicyTypes.Image PixelRGBA8 -> A.Acc (A.Array DIM2 RGBA32)
-          imgToRGBA32 (Juicy.Image width height vec) = A.use $ fromVectors (Z:.h:.w) ((), (unsafeCast vec))
+          imgToRGBA32 (Juicy.Image _ _ vec) = A.use $ fromVectors (Z:.h:.w) ((), (unsafeCast vec))
           trans :: Rasta.Point -> Rasta.Point
           trans (Rasta.V2 x y) = Rasta.V2 x ((y-((fromIntegral h)/2))*(-1)+((fromIntegral h)/2))
 
@@ -143,19 +136,19 @@ pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
 
 
 rasterizeMask :: forall a. (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask a -> Matrix2 Float
-rasterizeMask w h (Mask path' feather') = -- path
-    case feather' of
+rasterizeMask w h (Mask path' mFeather) = -- path
+    case mFeather of
         Nothing -> path
-        Just feather' -> let
-                feather = ptm feather'
+        Just jFeather -> let
+                feather = ptm jFeather
                 convert :: Path a -> A.Acc (A.Vector (QuadraticBezier Float))
                 convert p = let
                         a = {-trace ("running makeCubics with p = " ++ show p) $-} makeCubics p
                         quads = {-trace ("running convertCubicsToQuadratics with a = " ++ show ((fmap.fmap) f2d a)) $-} convertCubicsToQuadratics 5 0.001 a
                     in {-trace ("running use with quads = " ++ show quads) $-} A.use $ A.fromList (Z :. length quads) quads
                 cA = convert path'
-                cB = convert feather'
-            in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
+                cB = convert jFeather
+            in M.generate (A.index2 (variable h) (variable w)) $ combine feather cA cB
     where ptm  = pathToMatrix w h
           path = ptm path'
           combine :: Matrix2 Float -> A.Acc (A.Vector (QuadraticBezier Float)) -> A.Acc (A.Vector (QuadraticBezier Float)) -> A.Exp A.DIM2 -> A.Exp Float

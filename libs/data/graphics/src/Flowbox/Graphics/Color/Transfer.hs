@@ -25,7 +25,6 @@ import Data.Array.Accelerate.Interpreter (run)
 
 import           Flowbox.Graphics.Composition.Histogram
 import           Flowbox.Graphics.Utils.Accelerate
-import qualified Flowbox.Graphics.Utils.Utils           as U
 import qualified Flowbox.Math.Numeric                   as Num
 import           Flowbox.Prelude
 
@@ -90,7 +89,7 @@ normalizeHistogram hist = A.map (\x -> A.fromIntegral x / sum') hist
 histogramWithBins' :: (A.Elt e, A.IsFloating e) => A.Exp e -> A.Exp e -> A.Exp Int -> A.Acc (A.Vector e) -> A.Acc (A.Vector Int)
 histogramWithBins' mini maxi bins vec = A.permute (+) zeros hist ones
   where
-    bins' = U.variable bins
+    bins' = variable bins
     step  = (maxi - mini) / (A.fromIntegral bins' - 1)
 
     zeros = A.fill (A.index1 bins') (A.constant 0 :: A.Exp Int)

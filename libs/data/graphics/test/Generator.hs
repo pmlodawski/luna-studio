@@ -30,7 +30,8 @@ import Flowbox.Graphics.Shader.Sampler
 import Flowbox.Graphics.Shader.Shader                  as S
 import Flowbox.Graphics.Shader.Stencil                 as Stencil
 
-import Flowbox.Graphics.Utils.Utils
+import Flowbox.Graphics.Utils.Accelerate   (asFloating, variable)
+import Flowbox.Graphics.Utils.Utils        (mix)
 import Flowbox.Math.BitonicSorterGenerator
 import Flowbox.Math.Matrix                 as M
 

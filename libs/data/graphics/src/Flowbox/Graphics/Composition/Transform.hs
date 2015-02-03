@@ -19,13 +19,13 @@
 module Flowbox.Graphics.Composition.Transform where
 
 import           Flowbox.Geom2D.Rectangle
-import           Flowbox.Graphics.Image.Channel (ChannelData(..))
-import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Graphics.Prelude       as P hiding (lifted, transform)
+import           Flowbox.Graphics.Image.Channel    (ChannelData (..))
+import qualified Flowbox.Graphics.Image.Channel    as Channel
+import           Flowbox.Graphics.Prelude          as P hiding (lifted, transform)
 import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Graphics.Utils.Accelerate
 import           Flowbox.Graphics.Utils.Linear
-import           Flowbox.Graphics.Utils.Utils
-import           Flowbox.Math.Matrix            as M
+import           Flowbox.Math.Matrix               as M
 
 import qualified Data.Array.Accelerate     as A
 import           Linear                    hiding (inv33, normalize, rotate)

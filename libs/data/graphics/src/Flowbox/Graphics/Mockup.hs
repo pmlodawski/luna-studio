@@ -30,13 +30,10 @@ import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Type        as A
 import           Data.Array.Accelerate.CUDA
 import           Data.Bool
-import           Data.Char                         (toLower)
-import           Data.Maybe
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
 import           Math.Metric
 import           Linear                            (V2(..))
-import           System.FilePath                   as FilePath
 
 import qualified Flowbox.Graphics.Color.Color                         as Color
 import qualified Flowbox.Graphics.Color.Companding                    as Gamma
@@ -72,10 +69,10 @@ import           Flowbox.Graphics.Composition.Color
 import           Flowbox.Graphics.Image.Image                         as Image
 import qualified Flowbox.Graphics.Image.Matte                         as Matte
 import           Flowbox.Graphics.Image.Error                         as Image
-import           Flowbox.Graphics.Image.IO.OpenEXR                    (readFromEXR)
 import           Flowbox.Graphics.Composition.Merge                   (AlphaBlend(..))
 import qualified Flowbox.Graphics.Composition.Merge                   as Merge
 import           Flowbox.Graphics.Image.View                          as View
+import           Flowbox.Graphics.Utils.Accelerate                    (variable)
 import           Flowbox.Graphics.Utils.Utils
 import           Flowbox.Math.Matrix                                  as M
 import           Flowbox.Prelude                                      as P hiding (lookup)
@@ -87,19 +84,6 @@ import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fr
 import Control.PolyApplicative ((<<*>>))
 
 
-
-data SkewOrder = SkewXY | SkewYX
-
-data Skew a = Skew { _skewPoint :: V2 a
-                   , _skewOrder :: SkewOrder
-                   }
-
-data Transform a = Transform { _translate :: V2 a
-                             , _rotate    :: a
-                             , _scale     :: V2 a
-                             , _skew      :: Skew a
-                             , _center    :: Point2 a
-                             }
 
 type ColorD = Color.RGBA Float
 pattern ColorD r g b a = Color.RGBA r g b a
@@ -458,19 +442,6 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
           weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
           mapper = flip colorMapper weightFun
 
-channelToImageRGBA :: Matrix2 Float -> Image
-channelToImageRGBA m = image
-    where image = singleton view
-          view = insertChannelFloats (View.emptyDefault) [
-                     ("rgba.r", m)
-                   , ("rgba.g", m)
-                   , ("rgba.b", m)
-                   , ("rgba.a", alpha)
-                 ]
-
-          alpha :: Matrix2 Float
-          alpha = M.generate (M.shape m) (const 1)
-
 perlinLuna :: Float -> Int -> Int -> Image
 perlinLuna (variable -> z) = noiseLuna (perlinNoise z)
 
@@ -485,124 +456,6 @@ noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA no
     where noise' = rasterizer $ monosampler $ noiseShader
 
           noiseShader = scale (Grid width height) noise
-
-translateLuna :: V2 Float -> Image -> Image
-translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
-    where v    = V2 x (-y)
-          mask = Nothing
-          translateChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.translate (strength pt) pt
-          strength :: Point2 (Exp Float) -> V2 (Exp Float)
-          strength pt = case mask of
-              Nothing      -> v
-              --TODO[KM]: handle the mask properly (aka. get rid of that ugly pattern match) and uncomment the other case option
-              --          and keep in mind that applying mask for functions using a center point might cause the shader to extract the strength value from wrong mask's coordinates
-              _ -> v
-              --Just (VPS m) -> let
-              --        Right rgba = Image.lookupPrimary m
-              --        unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c -- TODO[KM]: this ugly pattern match :D
-              --        m' = unpackMat $ View.get rgba "rgba.r"
-              --        Shader _ str = Shader.nearest $ Shader.fromMatrix (A.Constant (0 :: Exp Double)) $ m'
-              --        mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
-              --        mult pt x = str pt * x
-              --    in (fmap (mult pt) v)
-
-rotateLuna :: Float -> Image -> Image
-rotateLuna (variable -> phi) = onEachChannel rotateChannel
-    where mask = Nothing
-          rotateChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.rotate (strength pt) pt
-          strength :: Point2 (Exp Float) -> Exp Float
-          strength pt = case mask of
-              Nothing -> phi
-              --TODO[KM]: handle the mask properly
-              _       -> phi
-
-rotateAtLuna :: Point2 Float -> Float -> Image -> Image
-rotateAtLuna (fmap variable -> (Point2 x y)) (variable -> phi) = onEachChannel rotateChannel
-    where vBefore = V2 x y
-          vAfter  = V2 (-x) (-y)
-          mask    = Nothing
-          rotateChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.translate vAfter $ Transform.rotate (strength pt) $ Transform.translate vBefore pt
-          strength :: Point2 (Exp Float) -> Exp Float
-          strength pt = case mask of
-              Nothing -> phi
-              --TODO[KM]: handle the mask properly
-              _       -> phi
-
-scaleLuna :: V2 Float -> Image -> Image
-scaleLuna (fmap variable -> v) = onEachChannel scaleChannel
-    where mask = Nothing
-          scaleChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.scale (strength pt) pt
-          strength :: Point2 (Exp Float) -> V2 (Exp Float)
-          strength pt = case mask of
-              Nothing -> v
-              --TODO[KM]: handle the mask properly
-              _       -> v
-
-scaleAtLuna :: Point2 Float -> V2 Float -> Image -> Image
-scaleAtLuna (fmap variable -> (Point2 x y)) (fmap variable -> v) = onEachChannel scaleChannel
-    where vBefore = V2 (-x) y
-          vAfter  = V2 x (-y)
-          mask    = Nothing
-          scaleChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.translate vAfter $ Transform.scale (strength pt) $ Transform.translate vBefore pt
-          strength :: Point2 (Exp Float) -> V2 (Exp Float)
-          strength pt = case mask of
-              Nothing -> v
-              --TODO[KM]: handle the mask properly
-              _       -> v
-
---scaleToLuna :: A.Boundary (A.Exp Double) -> Int -> Int -> Image -> Image
---scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . foo
---    where foo :: Matrix2 Double -> ContinuousShader (A.Exp Double)
---          foo = scale (Grid x y) . nearest . fromMatrix boundary
-
-transformLuna :: Transform Float -> Image -> Image
-transformLuna _ img = img
---transformLuna (Transform tr (variable -> phi) (fmap variable -> sc) _ ce) = onEachChannel transformChannel
---    where V2     translateX translateY = fmap variable tr
---          Point2 centerX    centerY    = fmap variable ce
---          vBefore = V2 (-centerX) centerY
---          vAfter  = V2 centerX (-centerY)
---          mask    = Nothing
---          tr      = V2 translateX (-translateY)
---          transformChannel = \case
---              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
---              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
---          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
---          transformation pt = Transform.translate (strengthTranslate pt) $ Transform.translate vAfter $ Transform.rotate (strengthRotate pt) $ Transform.scale (strengthScale pt) $ Transform.translate vBefore pt
---          strengthRotate    = strengthScalar phi
---          strengthScale     = strengthVector sc
---          strengthTranslate = strengthVector tr
---          -- TODO: extract those 2 functions as a top-level binding
---          strengthScalar :: Exp Double -> Point2 (Exp Double) -> Exp Double
---          strengthScalar val pt = case mask of
---              Nothing -> val
---              --TODO[KM]: handle the mask properly
---              _       -> val
---          strengthVector :: V2 (Exp Double) -> Point2 (Exp Double) -> V2 (Exp Double)
---          strengthVector v pt = case mask of
---              Nothing -> v
---              --TODO[KM]: handle the mask properly
---              _       -> v
 
 cropLuna :: Rectangle Int -> Image -> Image
 cropLuna rect = onEachChannel cropChannel
@@ -1180,12 +1033,6 @@ type Mask2 a = ( VPS (Path2 a)
                , VPS (Maybe (Path2 a))
                )
 
-unpackLunaVar :: VPS a -> a
-unpackLunaVar (Value (Pure (Safe a))) = a
-
-unpackLunaList :: [VPS a] -> [a]
-unpackLunaList = fmap unpackLunaVar
-
 convertControlPoint :: ControlPoint2 a -> ControlPoint a
 convertControlPoint (unpackLunaVar -> a, unpackLunaVar -> b, unpackLunaVar -> c) = ControlPoint a b c
 
@@ -1221,18 +1068,6 @@ gradeLunaColor (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpo
                             (grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
                             (grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
                             id -- (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
-
-readFromEXRLuna :: FilePath -> IO Image
-readFromEXRLuna path = fmap fromJust $ readFromEXR path
-
-extension :: FilePath -> (FilePath, String)
-extension path = (path, P.map toLower $ FilePath.takeExtension path)
-
-pattern ImageEXR path <- (extension -> (path, ".exr"))
-
-realReadLuna :: FilePath -> IO Image
-realReadLuna (ImageEXR path) = readFromEXRLuna path
-realReadLuna path            = loadImageLuna path
 
 testColorCC :: Color5 -> Image
 testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =

@@ -4,30 +4,35 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE ViewPatterns        #-}
 
--- | Send functions from this module as pull request to Accelerate?
+-- TODO: Send functions from this module as pull request to Accelerate?
 module Flowbox.Graphics.Utils.Accelerate where
 
-import qualified Data.Array.Accelerate as A
-import Data.Array.Accelerate.Smart
-import Data.Array.Accelerate.Tuple
-import Data.Array.Accelerate.Array.Sugar
-
-import Language.Haskell.TH
-import Control.Monad
+import           Control.Monad
+import qualified Data.Array.Accelerate             as A
+import           Data.Array.Accelerate.Smart
+import           Data.Array.Accelerate.Tuple
+import           Data.Array.Accelerate.Array.Sugar
+import           Language.Haskell.TH
 
 import Flowbox.Prelude hiding (head, last)
 
 
 
+variable :: (A.Lift A.Exp e, A.Elt (A.Plain e)) => e -> A.Exp (A.Plain e)
+variable a = A.the $ A.unit $ A.lift a
+
+asFloating :: (A.Elt a, A.Elt b, Functor f, A.IsIntegral a, A.IsNum b) => f (A.Exp a) -> f (A.Exp b)
+asFloating = fmap A.fromIntegral
 
 index3 :: A.Exp Int -> A.Exp Int -> A.Exp Int -> A.Exp A.DIM3
 index3 x y z = A.lift $ A.Z A.:. x A.:. y A.:. z
 
--- | Sequential map function
+-- | Sequential map function -- FIXME[KM]: this does not work, NEVER EVER dare to use it, it causes nested parallelism and other pure evil shit; however, nice try MM :D
 smap :: forall a e sh. (A.Elt a, A.Elt e, A.Shape sh) => (A.Exp a -> A.Exp e) -> A.Acc (A.Array sh a) -> A.Acc (A.Array sh e)
 smap f arr = A.reshape inputSize $ A.asnd $ A.awhile condition step initialState
   where inputSize    = A.shape arr
