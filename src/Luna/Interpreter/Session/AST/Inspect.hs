@@ -13,14 +13,14 @@ import Control.Monad.State hiding (mapM, mapM_)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                        hiding (inside)
 import           Flowbox.Source.Location                (loc)
+import           Luna.DEP.AST.Control.Crumb             (Breadcrumbs)
+import qualified Luna.DEP.AST.Control.Crumb             as Crumb
+import qualified Luna.DEP.Lib.Lib                       as Library
+import qualified Luna.DEP.Pass.Analysis.NameResolver    as NameResolver
 import           Luna.Interpreter.Session.Data.DefPoint (DefPoint (DefPoint))
 import qualified Luna.Interpreter.Session.Env           as Env
 import qualified Luna.Interpreter.Session.Error         as Error
 import           Luna.Interpreter.Session.Session       (Session)
-import qualified Luna.Lib.Lib                           as Library
-import qualified Luna.Pass.Analysis.NameResolver        as NameResolver
-import           Luna.Syntax.Control.Crumb              (Breadcrumbs)
-import qualified Luna.Syntax.Control.Crumb              as Crumb
 
 
 

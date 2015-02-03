@@ -20,10 +20,11 @@ import           Flowbox.Data.MapForest                     (MapForest)
 import           Flowbox.Prelude                            as Prelude hiding (children, inside)
 import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Graph.Node                            as Node
-import qualified Luna.Graph.Node.Expr                       as NodeExpr
-import           Luna.Graph.Node.StringExpr                 (StringExpr)
-import qualified Luna.Graph.Node.StringExpr                 as StringExpr
+import qualified Luna.DEP.Graph.Node                        as Node
+import qualified Luna.DEP.Graph.Node.Expr                   as NodeExpr
+import           Luna.DEP.Graph.Node.StringExpr             (StringExpr)
+import qualified Luna.DEP.Graph.Node.StringExpr             as StringExpr
+import qualified Luna.DEP.Pass.Transform.AST.Hash.Hash      as Hash
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
 import qualified Luna.Interpreter.Session.Cache.Free        as Free
@@ -48,7 +49,6 @@ import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
-import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
 
 
 
