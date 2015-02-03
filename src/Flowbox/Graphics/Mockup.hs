@@ -260,16 +260,16 @@ edgeBlur channelName blurType kernelSize edgeMultiplier image =
 --          domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
 --          process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
-imageMatteLuna :: FilePath -> String -> IO (Matte.Matte Double)
+imageMatteLuna :: FilePath -> String -> IO (Maybe (Matte.Matte Double))
 imageMatteLuna path channelName = do
   img <- realReadLuna path
   let channel = getChannelFromPrimaryLuna channelName img
   case channel of
-    Right (Just channel) -> return $ Matte.imageMatteDouble channel
-    _ -> error "cannot load mask from the given channel"
+    Right (Just channel) -> return $ Just $ Matte.imageMatteDouble channel
+    _ -> return Nothing
 
-vectorMatteLuna :: Mask2 Double -> Matte.Matte Double
-vectorMatteLuna mask = Matte.VectorMatte $ convertMask mask
+vectorMatteLuna :: Mask2 Double -> Maybe (Matte.Matte Double)
+vectorMatteLuna mask = Just $ Matte.VectorMatte $ convertMask mask
 
 unpackAcc :: (A.Exp Int,A.Exp Int) -> (Int,Int)
 unpackAcc (x,y) = 
