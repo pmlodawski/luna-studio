@@ -46,7 +46,7 @@ Library
                   protocol-buffers-descriptor,
                   text,
                   timeit,
-                  transformers >= 0.4
+                  transformers
 
 
 Executable lib-importer
