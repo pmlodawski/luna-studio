@@ -803,10 +803,9 @@ translateMatteLuna :: V2 Double -> Maybe (Matte.Matte Double) -> Image -> Image
 translateMatteLuna tr matte = onEachChannel (translateChannel tr matte)
     where
       translateChannel :: V2 Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
-      translateChannel (fmap variable -> V2 x' y') matte chan = (translate chan)
+      translateChannel (fmap variable -> V2 x y) matte chan = (translate chan)
         where
-          (x, y) = changeCoordinateSystem chan (x', y')
-          t = V2 x y
+          t = V2 y (-x)
 
           translate = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
