@@ -13,6 +13,7 @@ import Data.Array.Accelerate     (Exp)
 import Linear                    (V2 (..))
 import Math.Coordinate.Cartesian (Point2 (..))
 
+import           Flowbox.Geom2D.Rectangle               (Rectangle)
 import qualified Flowbox.Graphics.Composition.Transform as Transform
 import           Flowbox.Graphics.Image.Channel         (Channel (..), ChannelData (..))
 import qualified Flowbox.Graphics.Image.Channel         as Channel
@@ -54,6 +55,12 @@ data Transform a = Transform { _translate :: V2 a
 --          p2 = Point2 p2x p2y
 --          p3 = Point2 p3x p3y
 --          p4 = Point2 p4x p4y
+
+cropLuna :: Rectangle Int -> Image -> Image
+cropLuna rect = onEachChannel cropChannel
+    where cropChannel = \case
+              ChannelFloat name zeData -> ChannelFloat name $ Transform.crop rect zeData
+              ChannelInt   name zeData -> ChannelInt   name $ Transform.crop rect zeData
 
 translateLuna :: V2 Float -> Image -> Image
 translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel

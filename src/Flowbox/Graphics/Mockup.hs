@@ -41,8 +41,6 @@ import           Flowbox.Geom2D.CubicBezier
 import           Flowbox.Geom2D.Rectangle
 import           Flowbox.Graphics.Composition.Generator.Gradient
 import           Flowbox.Graphics.Shader.Matrix                       as Shader
-import           Flowbox.Graphics.Composition.Generator.Noise.Billow
-import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
 import           Flowbox.Graphics.Shader.Pipe
 import           Flowbox.Graphics.Shader.Rasterizer
 import           Flowbox.Graphics.Composition.Generator.Shape
@@ -84,10 +82,6 @@ constantLuna (variable -> width) (variable -> height) (fmap variable -> Color.RG
                   , ("rgba.a", a)
                   ]
 
-testColorCC :: Color5 -> Image
-testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
-    constantLuna 512 512 $ Color.RGBA (r*x) (g*x) (b*x) (a*x)
-
 --TODO[KM]: port checkerboard to luna
 --type CheckerboardColorsLuna = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
 --type CheckerboardLineLuna   = (VPS ColorD, VPS Double)
@@ -126,24 +120,3 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
 
           weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
           mapper = flip colorMapper weightFun
-
-perlinLuna :: Float -> Int -> Int -> Image
-perlinLuna (variable -> z) = noiseLuna (perlinNoise z)
-
-billowLuna :: Float -> Int -> Int -> Image
-billowLuna (variable -> z) = noiseLuna (billowNoise z)
-
-noiseLuna :: forall e a.
-                   (IsFloating a, Elt a, A.Lift Exp e,
-                    A.Plain e ~ Int) =>
-                   CartesianShader (Exp a) (Exp Float) -> e -> e -> Image
-noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA noise'
-    where noise' = rasterizer $ monosampler $ noiseShader
-
-          noiseShader = scale (Grid width height) noise
-
-cropLuna :: Rectangle Int -> Image -> Image
-cropLuna rect = onEachChannel cropChannel
-    where cropChannel = \case
-              ChannelFloat name zeData -> ChannelFloat name $ Transform.crop rect zeData
-              ChannelInt   name zeData -> ChannelInt   name $ Transform.crop rect zeData
