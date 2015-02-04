@@ -20,6 +20,8 @@ import qualified Data.Array.Accelerate.IO          as A
 import           Data.Char                         (toLower)
 import           Data.Maybe                        (fromJust)
 import qualified Data.Vector.Storable              as SV
+import           Math.Coordinate.Cartesian         (Point2 (..))
+import           Math.Space.Space                  (Grid (..))
 import qualified System.FilePath                   as FilePath
 
 
@@ -33,6 +35,7 @@ import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage)
 import           Flowbox.Graphics.Image.IO.OpenEXR     (readFromEXR)
 import           Flowbox.Graphics.Image.View           (View (..))
 import qualified Flowbox.Graphics.Image.View           as View
+import           Flowbox.Graphics.Shader.Shader        (CartesianShader, Shader (..))
 import qualified Flowbox.Graphics.Utils.Utils          as U
 import           Flowbox.Math.Matrix                   as M
 import           Flowbox.Prelude                       as P hiding (lookup, view)
@@ -248,6 +251,22 @@ onImageRGBA fr fg fb fa img = img'
                     ]
           img' = Image.insertPrimary view' img
 
+withAlpha :: (A.Exp Float -> A.Exp Float -> A.Exp Float) -> Image -> Image
+withAlpha f img = img'
+    where (r, g, b, a) = unsafeGetChannels img
+          r' = M.zipWith f r a
+          g' = M.zipWith f g a
+          b' = M.zipWith f b a
+
+          Right view = Image.lookupPrimary img
+          view' = insertChannelFloats view [
+                      ("rgba.r", r')
+                    , ("rgba.g", g')
+                    , ("rgba.b", b')
+                    , ("rgba.a", a)
+                  ]
+          img' = Image.insertPrimary view' img
+
 channelToImageRGBA :: Matrix2 Float -> Image
 channelToImageRGBA m = image
     where image = Image.singleton view
@@ -299,3 +318,20 @@ liftF13 fun a b c d e f g h i j k l m = do
     m' <- m
     val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
             <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
+
+fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianShader (Exp a) (Exp e) -> CartesianShader (Exp a) (Exp e)
+fromPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 x y) ->
+    let Grid cw ch = fmap A.fromIntegral cnv
+        radius = (sqrt $ x * x + y * y) / (sqrt $ cw * cw + ch * ch)
+        angle  = atan2 y x / (2 * pi)
+    in gen (Point2 (angle * cw) (radius * ch))
+
+toPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianShader (Exp a) (Exp e) -> CartesianShader (Exp a) (Exp e)
+toPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 angle' radius') ->
+    let Grid cw ch = fmap A.fromIntegral cnv
+        angle = (angle' / cw) * 2 * pi
+        radius = (radius' / ch) * (sqrt $ cw * cw + ch * ch)
+    in gen (Point2 (radius * cos angle) (radius * sin angle))
+
+constantBoundaryWrapper :: a -> MValue a
+constantBoundaryWrapper v = MValue (return v) (const $ return ())

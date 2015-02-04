@@ -422,22 +422,22 @@ def Image.exposure blackpoint ex:
 def Image.saturate saturation:
     ```liftF2 saturateLuna #{saturation} #{self}```
 
-def Image.hsvTool hueRange hueRotation hueRolloff
-            saturationRange saturationAdjustment saturationRolloff
-            brightnessRange brightnessAdjustment brightnessRolloff:
-    hueRangeStart = hueRange.lo
-    hueRangeEnd   = hueRange.hi
-    saturationRangeStart = saturationRange.lo
-    saturationRangeEnd   = saturationRange.hi
-    brightnessRangeStart = brightnessRange.lo
-    brightnessRangeEnd   = brightnessRange.hi
+# def Image.hsvTool hueRange hueRotation hueRolloff
+#             saturationRange saturationAdjustment saturationRolloff
+#             brightnessRange brightnessAdjustment brightnessRolloff:
+#     hueRangeStart = hueRange.lo
+#     hueRangeEnd   = hueRange.hi
+#     saturationRangeStart = saturationRange.lo
+#     saturationRangeEnd   = saturationRange.hi
+#     brightnessRangeStart = brightnessRange.lo
+#     brightnessRangeEnd   = brightnessRange.hi
 
-    # ```liftF1 (onEachRGB $ hsvToolLuna #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
-    #                        #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
-    #                        #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff}) #{self}```
-    ```hsvToolLuna'' #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
-              #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
-              #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff} #{self}```
+#     # ```liftF1 (onEachRGB $ hsvToolLuna #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+#     #                        #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
+#     #                        #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff}) #{self}```
+#     ```hsvToolLuna'' #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+#               #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
+#               #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff} #{self}```
 
 def Image.multiply val:
     ```liftF2 multiplyLuna #{val} #{self}```
