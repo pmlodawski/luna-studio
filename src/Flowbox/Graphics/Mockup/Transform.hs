@@ -38,6 +38,23 @@ data Transform a = Transform { _translate :: V2 a
                              , _center    :: Point2 a
                              }
 
+--cornerPinLuna :: Double -> Double
+--              -> Double -> Double
+--              -> Double -> Double
+--              -> Double -> Double
+--              -> Image
+--              -> Image
+--cornerPinLuna (variable -> p1x) (variable -> p1y)
+--              (variable -> p2x) (variable -> p2y)
+--              (variable -> p3x) (variable -> p3y)
+--              (variable -> p4x) (variable -> p4y) img = img'
+--    where img' = onEachChannel process img
+--          process = rasterizer . monosampler . cornerPin (p1, p2, p3, p4) . nearest . fromMatrix (A.Constant 0)
+--          p1 = Point2 p1x p1y
+--          p2 = Point2 p2x p2y
+--          p3 = Point2 p3x p3y
+--          p4 = Point2 p4x p4y
+
 translateLuna :: V2 Float -> Image -> Image
 translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
     where v    = V2 x (-y)
