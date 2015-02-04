@@ -63,6 +63,58 @@ main = do
     saveImageLuna "./output2.png" result2
     saveImageLuna "./output3.png" result3
 
+--data SkewOrder = SkewXY | SkewYX
+
+--data Skew a = Skew { _skewValue :: V2 a
+--                   , _skewOrder :: SkewOrder
+--                   }
+
+--data Transform a = Transform { _translate :: V2 a
+--                             , _rotate    :: a
+--                             , _scale     :: V2 a
+--                             , _skew      :: Skew a
+--                             , _center    :: Point2 a
+--                             }
+
+    let s1 = Skew (V2 1.0 1.0) SkewXY
+    let s2 = Skew (V2 1.0 1.0) SkewYX
+    let s3 = Skew (V2 1.0 0.0) SkewXY
+    let s4 = Skew (V2 0.0 1.0) SkewXY
+
+    let tr1 = Transform (V2 0.0 0.0) 0.0 (V2 1.0 1.0) s1 (Point2 256.0 256.0)
+    let tr2 = Transform (V2 0.0 0.0) 0.0 (V2 1.0 1.0) s2 (Point2 256.0 256.0)
+    let tr3 = Transform (V2 0.0 0.0) 0.0 (V2 1.0 1.0) s3 (Point2 256.0 256.0)
+    let tr4 = Transform (V2 0.0 0.0) 0.0 (V2 1.0 1.0) s4 (Point2 256.0 256.0)
+
+    let skew1 = transformLuna tr1 (Nothing) img
+    let skew2 = transformLuna tr2 (Nothing) img
+    let skew3 = transformLuna tr3 (Nothing) img
+    let skew4 = transformLuna tr4 (Nothing) img
+
+    saveImageLuna "./skew1.png" skew1
+    saveImageLuna "./skew2.png" skew2
+    saveImageLuna "./skew3.png" skew3
+    saveImageLuna "./skew4.png" skew4
+
+
+    let tr5 = Transform (V2 100.0 100.0) (pi/2) (V2 2.0 2.0) (Skew (V2 1.0 1.0) SkewYX) (Point2 256.0 256.0)
+    let img5 = transformLuna tr5 (Nothing) img
+    saveImageLuna "./img5.png" img5
+
+    let tr6 = Transform (V2 100.0 100.0) (0.0) (V2 1.0 1.0) (Skew (V2 0.0 0.0) SkewXY) (Point2 256.0 256.0)
+    let img6 = transformLuna tr6 (Nothing) img5
+    saveImageLuna "./img6.png" img6
+
+    let tr7 = Transform (V2 100.0 100.0) (pi/4) (V2 2.0 2.0) (Skew (V2 1.0 1.0) SkewXY) (Point2 256.0 256.0)
+    let img7 = transformLuna tr7 (Nothing) img
+    saveImageLuna "./img7.png" img7
+
+    let tr8 = Transform (V2 100.0 100.0) (pi/4) (V2 1.0 1.0) (Skew (V2 0.0 0.0) SkewXY) (Point2 256.0 256.0)
+    let img8 = transformLuna tr8 (Nothing) img
+    saveImageLuna "./img8.png" img8
+  --  saveImageLuna "./output4.png" result4
+
+
     --let f = (\x -> (1.0 - (1.0 / (1.0 + (dist x)))))
 
     --let shader = Shader (Grid 512 512) f
