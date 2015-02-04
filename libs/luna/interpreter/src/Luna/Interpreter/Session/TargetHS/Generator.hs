@@ -11,21 +11,21 @@ module Luna.Interpreter.Session.TargetHS.Generator where
 import qualified Data.List as List
 
 import           Flowbox.Prelude
-import           Flowbox.Source.Location                  (loc)
+import           Flowbox.Source.Location                      (loc)
 import           Flowbox.System.Log.Logger
 import           Luna.DEP.AST.Module                          (Module)
 import qualified Luna.DEP.AST.Module                          as Module
 import qualified Luna.DEP.AST.Type                            as Type
-import qualified Luna.Data.Source                         as Source
-import           Luna.Interpreter.Session.Data.DefPoint   (DefPoint)
-import qualified Luna.Interpreter.Session.Data.DefPoint   as DefPoint
-import qualified Luna.Interpreter.Session.Env             as Env
-import           Luna.Interpreter.Session.Session         (Session)
-import qualified Luna.Pass.Analysis.Alias.Alias           as Analysis.Alias
-import qualified Luna.Pass.CodeGen.HSC.HSC                as HSC
-import qualified Luna.Pass.Transform.AST.Hash.Hash        as Hash
-import qualified Luna.Pass.Transform.AST.SSA.SSA          as SSA
-import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen as HASTGen
+import qualified Luna.DEP.Data.Source                         as Source
+import qualified Luna.DEP.Pass.Analysis.Alias.Alias           as Analysis.Alias
+import qualified Luna.DEP.Pass.CodeGen.HSC.HSC                as HSC
+import qualified Luna.DEP.Pass.Transform.AST.Hash.Hash        as Hash
+import qualified Luna.DEP.Pass.Transform.AST.SSA.SSA          as SSA
+import qualified Luna.DEP.Pass.Transform.HAST.HASTGen.HASTGen as HASTGen
+import           Luna.Interpreter.Session.Data.DefPoint       (DefPoint)
+import qualified Luna.Interpreter.Session.Data.DefPoint       as DefPoint
+import qualified Luna.Interpreter.Session.Env                 as Env
+import           Luna.Interpreter.Session.Session             (Session)
 
 
 

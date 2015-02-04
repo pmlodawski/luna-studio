@@ -23,6 +23,7 @@ import ```Flowbox.Graphics.Composition.Merge (AlphaBlend(..))```
 import ```Flowbox.Graphics.Composition.Keyer```
 import ```Flowbox.Geom2D.Rasterizer```
 import ```Flowbox.Geom2D.Rectangle```
+import ```Flowbox.Graphics.Image.Matte```
 
 #
 #                STD
@@ -304,6 +305,9 @@ def imageMatte path channelName:
 def vectorMatte mask:
     ```liftF1 vectorMatteLuna #{mask}```
 
+def noMatte:
+    ```val (Nothing :: Maybe (Matte Double))```
+    
 def Image.offsetMatte value matte:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
 

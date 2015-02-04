@@ -25,7 +25,8 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
-                  trifecta,
+                  blaze-markup >= 0.6.3,
+                  trifecta >= 1.5.1.1,
                   data-default,
                   concatenative,
                   flowbox-utils,
@@ -44,7 +45,7 @@ Library
                   containers,
                   phonetic-code,
                   edit-distance
-
+--[PM] : blaze-markup is a temporary dependency until https://github.com/ekmett/trifecta/issues/42 is resolved
 
 
 Executable luna-parser-test

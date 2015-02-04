@@ -11,8 +11,8 @@ import Control.Monad.State
 import           Flowbox.Prelude
 import qualified Luna.DEP.AST.Common      as AST
 import qualified Luna.DEP.AST.Expr        as Expr
-import           Luna.Graph.Node.Expr (NodeExpr)
-import qualified Luna.Graph.Node.Expr as NodeExpr
+import           Luna.DEP.Graph.Node.Expr (NodeExpr)
+import qualified Luna.DEP.Graph.Node.Expr as NodeExpr
 
 
 

@@ -21,6 +21,7 @@ import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Data.SetForest                      (SetForest)
 import           Flowbox.Prelude
 import           Generated.Proto.Mode.ModeValue              (ModeValue)
+import           Luna.DEP.Lib.Manager                        (LibManager)
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
@@ -28,7 +29,6 @@ import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
 import qualified Luna.Interpreter.Session.Memory.Config      as Memory
 import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
 import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
-import           Luna.Lib.Manager                            (LibManager)
 
 
 

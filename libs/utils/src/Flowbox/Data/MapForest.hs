@@ -12,7 +12,7 @@ import           Data.Map   (Map)
 import qualified Data.Map   as Map
 import qualified Data.Maybe as Maybe
 
-import Flowbox.Prelude hiding (lookup, children)
+import Flowbox.Prelude hiding (lookup, children, toList)
 
 
 
@@ -32,16 +32,16 @@ empty :: MapForest k v
 empty = Map.empty
 
 -- FIXME [pm]: wd: this implementation looks like an inefficient one
-elems :: MapForest k v -> [(Path k, v)]
-elems = find (const . const True)
+toList :: MapForest k v -> [(Path k, v)]
+toList = find (const . const True)
 
 
 keys :: MapForest k v -> [Path k]
-keys = map fst . elems
+keys = map fst . toList
 
 
-vals :: MapForest k v -> [v]
-vals = map snd . elems
+elems :: MapForest k v -> [v]
+elems = map snd . toList
 
 
 member :: Ord k => [k] -> MapForest k v -> Bool
@@ -52,12 +52,12 @@ lookup :: Ord k => [k] -> MapForest k v -> Maybe v
 lookup k forest = subPathNode k forest >>= view value
 
 subVals :: Ord k => k -> MapForest k v -> [v]
-subVals k forest = case fmap vals (focus k forest) of
+subVals k forest = case fmap elems (focus k forest) of
     Just els -> els
     Nothing  -> []
 
 subElems :: Ord k => k -> MapForest k v -> [(Path k,v)]
-subElems k forest = case fmap elems (focus k forest) of
+subElems k forest = case fmap toList (focus k forest) of
     Just els -> els
     Nothing  -> []
 

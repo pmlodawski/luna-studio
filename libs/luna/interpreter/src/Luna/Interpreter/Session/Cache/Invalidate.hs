@@ -14,6 +14,12 @@ import qualified Data.Set            as Set
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Prelude                             hiding (matching)
 import           Flowbox.System.Log.Logger
+import           Luna.DEP.AST.Control.Crumb                  (Breadcrumbs)
+import qualified Luna.DEP.AST.Control.Crumb                  as Crumb
+import qualified Luna.DEP.Graph.Graph                        as Graph
+import qualified Luna.DEP.Graph.Node                         as Node
+import qualified Luna.DEP.Lib.Lib                            as Library
+import qualified Luna.DEP.Lib.Manager                        as LibManager
 import qualified Luna.Interpreter.Session.AST.Traverse       as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache        as Cache
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
@@ -29,12 +35,6 @@ import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint
 import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
-import qualified Luna.Lib.Lib                                as Library
-import qualified Luna.Lib.Manager                            as LibManager
-import           Luna.Syntax.Control.Crumb                   (Breadcrumbs)
-import qualified Luna.Syntax.Control.Crumb                   as Crumb
-import qualified Luna.Syntax.Graph.Graph                     as Graph
-import qualified Luna.Syntax.Graph.Node                      as Node
 
 
 
