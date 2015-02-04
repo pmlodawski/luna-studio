@@ -4,10 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE TypeFamilies    #-}
-{-# LANGUAGE TypeOperators   #-}
-{-# LANGUAGE ViewPatterns    #-}
+{-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE PatternSynonyms     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Flowbox.Graphics.Mockup.Basic where
 
@@ -26,6 +29,7 @@ import qualified System.FilePath                   as FilePath
 
 
 import qualified Flowbox.Graphics.Color.Color          as Color
+import qualified Flowbox.Graphics.Composition.Filter   as Filter
 import           Flowbox.Graphics.Image.Channel        (Channel (..), ChannelData (..))
 import qualified Flowbox.Graphics.Image.Channel        as Channel
 import           Flowbox.Graphics.Image.Error          as Image
@@ -35,7 +39,12 @@ import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage)
 import           Flowbox.Graphics.Image.IO.OpenEXR     (readFromEXR)
 import           Flowbox.Graphics.Image.View           (View (..))
 import qualified Flowbox.Graphics.Image.View           as View
-import           Flowbox.Graphics.Shader.Shader        (CartesianShader, Shader (..))
+import qualified Flowbox.Graphics.Shader.Matrix        as Shader
+import           Flowbox.Graphics.Shader.Sampler       (Sampler)
+import qualified Flowbox.Graphics.Shader.Sampler       as Sampler
+import           Flowbox.Graphics.Shader.Shader        (CartesianShader, DiscreteShader, Shader (..))
+import qualified Flowbox.Graphics.Shader.Rasterizer    as Shader
+import           Flowbox.Graphics.Utils.Accelerate     (variable)
 import qualified Flowbox.Graphics.Utils.Utils          as U
 import           Flowbox.Math.Matrix                   as M
 import           Flowbox.Prelude                       as P hiding (lookup, view)
@@ -251,6 +260,17 @@ onImageRGBA fr fg fb fa img = img'
                     ]
           img' = Image.insertPrimary view' img
 
+onShader f img = img'
+    where (r, g, b, a) = unsafeGetChannels img & over each (Shader.rasterizer . f . Shader.fromMatrix (A.Constant 0))
+          Right view = Image.lookupPrimary img
+          view' = insertChannelFloats view [
+                      ("rgba.r", r)
+                    , ("rgba.g", g)
+                    , ("rgba.b", b)
+                    , ("rgba.a", a)
+                  ]
+          img' = Image.insertPrimary view' img
+
 withAlpha :: (A.Exp Float -> A.Exp Float -> A.Exp Float) -> Image -> Image
 withAlpha f img = img'
     where (r, g, b, a) = unsafeGetChannels img
@@ -335,3 +355,78 @@ toPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 angle' radius') ->
 
 constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
+
+data InterpolationFilter a = NearestNeighbour
+                           | Box
+                           | Basic
+                           | Triangle
+                           | Bell
+                           | BSpline
+                           | Lanczos a
+                           | Polynomial a a
+                           | Mitchell
+                           | CatmullRom
+                           | Gauss a
+                           | Dirac a
+                           deriving (Show, Functor)
+
+toInterpolator :: (Elt e, IsFloating e) => InterpolationFilter (Exp e) -> DiscreteShader (Exp e) -> CartesianShader (Exp e) (Exp e)
+toInterpolator = \case
+    NearestNeighbour -> Sampler.nearest
+    Box              -> Sampler.interpolator Filter.box
+    Basic            -> Sampler.interpolator Filter.basic
+    Triangle         -> Sampler.interpolator Filter.triangle
+    Bell             -> Sampler.interpolator Filter.bell
+    BSpline          -> Sampler.interpolator Filter.bspline
+    Lanczos a        -> Sampler.interpolator $ Filter.lanczos a
+    Polynomial a b   -> Sampler.interpolator $ Filter.polynomial a b
+    Mitchell         -> Sampler.interpolator Filter.mitchell
+    CatmullRom       -> Sampler.interpolator Filter.catmulRom
+    Gauss a          -> Sampler.interpolator $ Filter.gauss a
+    Dirac a          -> Sampler.interpolator $ Filter.dirac a
+
+-- TODO[KM]: ask someone what is this function supposed to do? now it might be obsolete to pattern match on MatrixData and perform M.map, doing this through Shaders would probably be a better idea
+-- TODO^:    commented out for now(the boundary can't be explicitly typed here, we can have different data – why even try to interpolate all channels at the same time?)
+--interpolateChannelsLuna :: A.Boundary Double -> InterpolationFilter Double -> Image -> Image
+--interpolateChannelsLuna (fmap variable -> boundary) (toInterpolator . fmap variable -> interpol) = Image.map (View.map interpolate)
+--    where interpolate (ChannelFloat name (asMatrixData -> MatrixData mat)) = ChannelFloat name $ ContinuousData $ toGen $ mat
+--          interpolate (ChannelInt   name (asMatrixData -> MatrixData mat)) = ChannelInt   name $ ContinuousData $ toGen . M.map A.fromIntegral $ mat
+--          interpolate (ChannelBit   name (asMatrixData -> MatrixData mat)) = ChannelBit   name $ ContinuousData $ toGen . M.map (A.fromIntegral . A.boolToInt) $ mat
+
+--          toGen = interpol . fromMatrix boundary
+
+toMultisampler :: Grid (Exp Int) -> InterpolationFilter (Exp Float) -> Sampler Float
+toMultisampler grid = \case
+    NearestNeighbour -> Sampler.monosampler
+    Box              -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid Filter.box
+    Basic            -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid Filter.basic
+    Triangle         -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid Filter.triangle
+    Bell             -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid Filter.bell
+    BSpline          -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid Filter.bspline
+    Lanczos a        -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid $ Filter.lanczos a
+    Polynomial a b   -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid $ Filter.polynomial a b
+    Mitchell         -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid Filter.mitchell
+    CatmullRom       -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid Filter.catmulRom
+    Gauss a          -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid $ Filter.gauss a
+    Dirac a          -> Sampler.multisampler $ Filter.normalize $ Filter.toMatrix grid $ Filter.dirac a
+
+multisampleChannelsLuna :: Grid Int -> InterpolationFilter Float -> Image -> Image
+multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap variable -> sampler :: Sampler Float) = Image.map (View.map multisample)
+    where multisample (Channel.asContinuous -> ChannelFloat name (ContinuousData gen)) = ChannelFloat name $ MatrixData . Shader.rasterizer . sampler $ gen
+          --                                                            FIXME[MM]: ^ we don't want this here,
+          --                                                                         but ChannelShader requires ContinuousShader :/
+          --                                                            FIXME[KM]: ^ I've changed the structure of Channels so we might have to talk about this
+          multisample channel                     = channel
+
+-- FIXME[MM]: will remove the whole view if removing fails - it should somehow propagate the error
+-- FIXME[KM][iup]: when fixing, we also have take into consideration the change to the Image.update function
+--removeChannelLuna :: String -> String -> Image -> Image
+--removeChannelLuna viewName channelName = Image.update f viewName
+--    where f view = case View.remove channelName view of
+--                  Left _ -> Nothing
+--                  Right v -> Just v
+
+-- FIXME[KM]: [iup]
+--insertChannelLuna :: String -> Channel -> Image -> Image
+--insertChannelLuna viewName chan = Image.update f viewName
+--    where f = Just . View.append chan
