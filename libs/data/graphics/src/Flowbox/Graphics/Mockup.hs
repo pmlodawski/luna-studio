@@ -40,7 +40,6 @@ import           Flowbox.Geom2D.Accelerate.CubicBezier.Solve          as CubicSo
 import           Flowbox.Geom2D.CubicBezier
 import           Flowbox.Geom2D.Rectangle
 import           Flowbox.Graphics.Composition.Generator.Gradient
-import           Flowbox.Graphics.Composition.Keyer
 import           Flowbox.Graphics.Shader.Matrix                       as Shader
 import           Flowbox.Graphics.Composition.Generator.Noise.Billow
 import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
@@ -75,54 +74,6 @@ import Flowbox.Graphics.Mockup.Matte
 -- == COMPO
 
 
-
-keyer' :: (A.Exp (Color.RGB Float) -> A.Exp Float) -> Image -> Image
-keyer' f img = img'
-    where rgb = unsafeGetRGB img
-          Right view = lookupPrimary img
-          alpha = M.map f rgb
-
-          view' = insertChannelFloats view [("rgba.a", alpha)]
-
-          img' = Image.insertPrimary view' img
-
-keyerLuna :: KeyerMode -> Float -> Float -> Float -> Float -> Image -> Image
-keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
-    keyer' (keyer mode (A.lift (a, b, c, d))) img
-
-differenceKeyer' :: (A.Exp (Color.RGB Float) -> A.Exp (Color.RGB Float) -> A.Exp Float) -> Image -> Image -> Image
-differenceKeyer' f background foreground = img'
-    where backgroundRGB = unsafeGetRGB background
-          foregroundRGB = unsafeGetRGB foreground
-
-          alpha = M.map (A.uncurry f) $ M.zip backgroundRGB foregroundRGB
-
-          Right view = lookupPrimary foreground
-          view' = insertChannelFloats view [("rgba.a", alpha)]
-
-          img' = Image.insertPrimary view' foreground
-
-differenceKeyerLuna :: Float -> Float -> Image -> Image -> Image
-differenceKeyerLuna (variable -> offset) (variable -> gain) background foreground = img'
-    where diff = differenceKeyer offset gain
-          img' = differenceKeyer' diff background foreground
-
---cornerPinLuna :: Double -> Double
---              -> Double -> Double
---              -> Double -> Double
---              -> Double -> Double
---              -> Image
---              -> Image
---cornerPinLuna (variable -> p1x) (variable -> p1y)
---              (variable -> p2x) (variable -> p2y)
---              (variable -> p3x) (variable -> p3y)
---              (variable -> p4x) (variable -> p4y) img = img'
---    where img' = onEachChannel process img
---          process = rasterizer . monosampler . cornerPin (p1, p2, p3, p4) . nearest . fromMatrix (A.Constant 0)
---          p1 = Point2 p1x p1y
---          p2 = Point2 p2x p2y
---          p3 = Point2 p3x p3y
---          p4 = Point2 p4x p4y
 
 constantLuna :: Int -> Int -> Color.RGBA Float -> Image
 constantLuna (variable -> width) (variable -> height) (fmap variable -> Color.RGBA r g b a) =

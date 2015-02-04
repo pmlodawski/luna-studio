@@ -20,7 +20,7 @@ import Flowbox.Graphics.Composition.Filter
 import Flowbox.Graphics.Composition.Filter             as Conv
 import Flowbox.Graphics.Composition.Generator.Gradient
 import Flowbox.Graphics.Composition.Generator.Shape
-import Flowbox.Graphics.Composition.Keyer
+import Flowbox.Graphics.Composition.Keying
 import Flowbox.Graphics.Composition.Transform
 import Flowbox.Graphics.Prelude                        as P
 import Flowbox.Graphics.Shader.Matrix

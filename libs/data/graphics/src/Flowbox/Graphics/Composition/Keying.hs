@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Graphics.Composition.Keyer where
+module Flowbox.Graphics.Composition.Keying where
 
 import qualified Data.Array.Accelerate as A
 
