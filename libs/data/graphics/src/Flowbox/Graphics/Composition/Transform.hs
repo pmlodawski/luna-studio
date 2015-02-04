@@ -44,12 +44,14 @@ class Rotate t a | t -> a where
 class Scale s t where
     scale :: s -> t -> t
 
-class Skew s t where
-    skew :: s -> t -> t
+class HorizontalSkew s t where
+    horizontalSkew :: s -> t -> t
+
+class VerticalSkew s t where
+    verticalSkew :: s -> t -> t
 
 class CornerPin t a | t -> a where
     cornerPin :: (Point2 a, Point2 a, Point2 a, Point2 a) -> t -> t
-
 
 -- == Instances for Point2 ==
 instance Num a => Translate (Point2 a) a where
@@ -68,8 +70,11 @@ instance Floating a => Rotate (Point2 a) a where
 instance Fractional a => Scale (V2 a) (Point2 a) where
     scale (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
 
-instance Fractional a => Skew a (Point2 a) where
-    skew k (Point2 x y) = Point2 (x+k*y) y
+instance Fractional a => HorizontalSkew a (Point2 a) where
+    horizontalSkew k (Point2 x y) = Point2 (x+k*y) y
+
+instance Fractional a => VerticalSkew a (Point2 a) where
+    verticalSkew k (Point2 x y) = Point2 x (y+x*k)
 
 -- == Instances for CartesianShader ==
 instance Num a => Translate (CartesianShader a b) a where
