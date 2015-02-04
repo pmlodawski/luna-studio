@@ -742,9 +742,6 @@ def View.map f:
 #                OTHER
 #
 
-def testCC a:
-    ```liftF1 testColorCC #{a}```
-
 #
 #                MAIN
 #

@@ -454,9 +454,6 @@ def Image.gammaToLinear self::Image gamma::(Gamma Float) -> Image:
 def Image.gammaFromLinear self::Image gamma::(Gamma Float) -> Image:
     ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
 
-def testCC self::Std a::ColorCC:
-    ```liftF1 testColorCC #{a}```
-
 def time self::Std:
     0.0
 
