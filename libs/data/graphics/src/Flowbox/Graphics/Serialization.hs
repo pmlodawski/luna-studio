@@ -132,8 +132,7 @@ instance Serializable V.View ViewData.ViewData where
 
     toValue a mode = liftM (mkValue ViewData.data' Value.View) $ serialize a mode
 
-    compute a EmptyMode  = a
-    compute a (Mode m ms) = compute (compute' m a) $ Mode.Mode ms
+    compute = const -- now serialize computes the matrices
 
 get :: [String] -> V.View -> Maybe [Chan.Channel]
 get names view = mapM (join . hush . V.get view) names
