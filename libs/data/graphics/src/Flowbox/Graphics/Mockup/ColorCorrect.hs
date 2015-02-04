@@ -15,7 +15,8 @@ import           Math.Coordinate.Cartesian (Point2 (..))
 
 import qualified Flowbox.Graphics.Color.Color             as Color
 import qualified Flowbox.Graphics.Color.Companding        as Gamma
-import           Flowbox.Graphics.Composition.Color       as CC
+import           Flowbox.Graphics.Composition.Color       (ColorMatrix)
+import qualified Flowbox.Graphics.Composition.Color       as CC
 import           Flowbox.Graphics.Image.Image             (Image)
 import qualified Flowbox.Graphics.Image.Image             as Image
 import qualified Flowbox.Graphics.Image.Matte             as Matte
@@ -153,9 +154,9 @@ hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
             (VPS (variable -> saturationAdjustment)) (VPS (variable -> saturationRolloff))
             (VPS (variable -> brightnessRangeStart)) (VPS (variable -> brightnessRangeEnd))
             (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff)) =
-    A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
-                     (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
-                     (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
+    A.lift1 (CC.hsvTool (A.lift $ CC.Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
+                     (A.lift $ CC.Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
+                     (A.lift $ CC.Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
 
 hsvToolLuna' :: Float -> Float -> Float -> Float
              -> Float -> Float -> Float -> Float
@@ -168,9 +169,9 @@ hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
              (variable -> saturationAdjustment) (variable -> saturationRolloff)
              (variable -> brightnessRangeStart) (variable -> brightnessRangeEnd)
              (variable -> brightnessAdjustment) (variable -> brightnessRolloff) =
-    onEachColorRGB $ A.lift1 (hsvTool (A.lift $ Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
-                     (A.lift $ Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
-                     (A.lift $ Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
+    onEachColorRGB $ A.lift1 (CC.hsvTool (A.lift $ CC.Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
+                     (A.lift $ CC.Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
+                     (A.lift $ CC.Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
 
 -- hsvToolLuna'' :: VPS Double -> VPS Double -> VPS Double -> VPS Double
 --      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
@@ -181,8 +182,8 @@ hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
 clampLuna :: (VPS Float, VPS Float) -> Maybe (VPS Float, VPS Float) -> Image -> Image
 clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =
     case clamps of
-        Just (VPS clampLo, VPS clampHi) -> onEach $ clamp (Range thLo thHi) $ Just $ Range (variable clampLo) (variable clampHi)
-        _                               -> onEach $ clamp (Range thLo thHi) Nothing
+        Just (VPS clampLo, VPS clampHi) -> onEach $ CC.clamp (CC.Range thLo thHi) $ Just $ CC.Range (variable clampLo) (variable clampHi)
+        _                               -> onEach $ CC.clamp (CC.Range thLo thHi) Nothing
 
 premultiplyLuna :: Image -> Image
 premultiplyLuna img = (*) `withAlpha` img
@@ -191,16 +192,16 @@ unpremultiplyLuna :: Image -> Image
 unpremultiplyLuna img = (/) `withAlpha` img
 
 invertLuna :: Image -> Image
-invertLuna = onEachRGBA invert invert invert id
+invertLuna = onEachRGBA CC.invert CC.invert CC.invert id
 
 colorMatrixLuna :: ColorMatrix Color.RGB Float -> Image -> Image
-colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (colorMatrix :: ColorMatrix Color.RGB Float -> Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float)) matrix)
+colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (CC.colorMatrix :: ColorMatrix Color.RGB Float -> Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float)) matrix)
 
 multiplyLuna :: Color.RGBA Float -> Image -> Image
 multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (*r) (*g) (*b) id -- (*a)
 
 gammaLuna :: Color.RGBA Float -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (gamma r) (gamma g) (gamma b) id -- (gamma a)
+gammaLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) id -- (CC.gamma a)
 
 hueCorrectLuna :: VPS (LunaCurveGUI Float) -> VPS (LunaCurveGUI Float) ->
                   VPS (LunaCurveGUI Float) -> VPS (LunaCurveGUI Float) -> VPS (LunaCurveGUI Float) ->
@@ -212,14 +213,14 @@ hueCorrectLuna (VPS (convertCurveGUI-> lum)) (VPS (convertCurveGUI -> sat))
                (VPS (convertCurveGUI -> r)) (VPS (convertCurveGUI-> g))
                (VPS (convertCurveGUI -> b)) (convertCurveGUI -> rSup)
                (convertCurveGUI -> gSup) (convertCurveGUI-> bSup) img
-                    = onEachColorRGB (hueCorrect (CurveGUI.convertToBSpline lum)
-                                                 (CurveGUI.convertToBSpline sat)
-                                                 (CurveGUI.convertToBSpline r)
-                                                 (CurveGUI.convertToBSpline g)
-                                                 (CurveGUI.convertToBSpline b)
-                                                 (CurveGUI.convertToBSpline rSup)
-                                                 (CurveGUI.convertToBSpline gSup)
-                                                 (CurveGUI.convertToBSpline bSup)
+                    = onEachColorRGB (CC.hueCorrect (CurveGUI.convertToBSpline lum)
+                                                    (CurveGUI.convertToBSpline sat)
+                                                    (CurveGUI.convertToBSpline r)
+                                                    (CurveGUI.convertToBSpline g)
+                                                    (CurveGUI.convertToBSpline b)
+                                                    (CurveGUI.convertToBSpline rSup)
+                                                    (CurveGUI.convertToBSpline gSup)
+                                                    (CurveGUI.convertToBSpline bSup)
                                      ) img
 
 gradeLuna' :: VPS (Color.RGBA Float)
@@ -303,7 +304,7 @@ colorCorrectLunaBase (curveShadows, curveHighlights)
                       onEachRGBA (correct' correctMasterR correctShadowsR correctMidtonesR correctHighlightsR)
                                  (correct' correctMasterG correctShadowsG correctMidtonesG correctHighlightsG)
                                  (correct' correctMasterB correctShadowsB correctMidtonesB correctHighlightsB)
-                                 id -- (colorCorrect contrastA gammaA gainA offsetA) saturated
+                                 id -- (CC.colorCorrect contrastA gammaA gainA offsetA) saturated
                                  saturated
     where
           strShadows x    = A.cond (x A.<=* 0) 1
@@ -313,21 +314,21 @@ colorCorrectLunaBase (curveShadows, curveHighlights)
                           $ A.cond (x A.>=* 1) 1
                           $ BSpline.valueAt (A.use curveHighlights :: A.Acc (BSpline Float)) x
 
-          correctMasterR = colorCorrect masterContrastR masterGammaR masterGainR masterOffsetR
-          correctMasterG = colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
-          correctMasterB = colorCorrect masterContrastB masterGammaB masterGainB masterOffsetB
+          correctMasterR = CC.colorCorrect masterContrastR masterGammaR masterGainR masterOffsetR
+          correctMasterG = CC.colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
+          correctMasterB = CC.colorCorrect masterContrastB masterGammaB masterGainB masterOffsetB
 
-          correctShadowsR = colorCorrect (shadowsContrastR-1) (shadowsGammaR-1) (shadowsGainR-1) shadowsOffsetR
-          correctShadowsG = colorCorrect (shadowsContrastG-1) (shadowsGammaG-1) (shadowsGainG-1) shadowsOffsetG
-          correctShadowsB = colorCorrect (shadowsContrastB-1) (shadowsGammaB-1) (shadowsGainB-1) shadowsOffsetB
+          correctShadowsR = CC.colorCorrect (shadowsContrastR-1) (shadowsGammaR-1) (shadowsGainR-1) shadowsOffsetR
+          correctShadowsG = CC.colorCorrect (shadowsContrastG-1) (shadowsGammaG-1) (shadowsGainG-1) shadowsOffsetG
+          correctShadowsB = CC.colorCorrect (shadowsContrastB-1) (shadowsGammaB-1) (shadowsGainB-1) shadowsOffsetB
 
-          correctMidtonesR = colorCorrect (midtonesContrastR-1) (midtonesGammaR-1) (midtonesGainR-1) midtonesOffsetR
-          correctMidtonesG = colorCorrect (midtonesContrastG-1) (midtonesGammaG-1) (midtonesGainG-1) midtonesOffsetG
-          correctMidtonesB = colorCorrect (midtonesContrastB-1) (midtonesGammaB-1) (midtonesGainB-1) midtonesOffsetB
+          correctMidtonesR = CC.colorCorrect (midtonesContrastR-1) (midtonesGammaR-1) (midtonesGainR-1) midtonesOffsetR
+          correctMidtonesG = CC.colorCorrect (midtonesContrastG-1) (midtonesGammaG-1) (midtonesGainG-1) midtonesOffsetG
+          correctMidtonesB = CC.colorCorrect (midtonesContrastB-1) (midtonesGammaB-1) (midtonesGainB-1) midtonesOffsetB
 
-          correctHighlightsR = colorCorrect (highlightsContrastR-1) (highlightsGammaR-1) (highlightsGainR-1) highlightsOffsetR
-          correctHighlightsG = colorCorrect (highlightsContrastG-1) (highlightsGammaG-1) (highlightsGainG-1) highlightsOffsetG
-          correctHighlightsB = colorCorrect (highlightsContrastB-1) (highlightsGammaB-1) (highlightsGainB-1) highlightsOffsetB
+          correctHighlightsR = CC.colorCorrect (highlightsContrastR-1) (highlightsGammaR-1) (highlightsGainR-1) highlightsOffsetR
+          correctHighlightsG = CC.colorCorrect (highlightsContrastG-1) (highlightsGammaG-1) (highlightsGainG-1) highlightsOffsetG
+          correctHighlightsB = CC.colorCorrect (highlightsContrastB-1) (highlightsGammaB-1) (highlightsGainB-1) highlightsOffsetB
 
           correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x)
 
