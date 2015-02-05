@@ -112,7 +112,7 @@ tcDecl ldecl@(Label lab decl) =
 
           withClonedTypo0 $ do
               env <- getEnv
-              debugPush $ "Function: " <> baseName <> labIDdisp <> " :: (" <> mjoin ", " argsDisp <> ") → ???"
+              debugPush $ "Function: " <> baseName <> labIDdisp <> " ∷ (" <> mjoin ", " argsDisp <> ") → ???"
 
               a  <- insertNewMonoTypeVariable (Enum.id lab)     -- type of the method
               bs <- forM argumentIDs insertNewMonoTypeVariable  -- types of the arguments
@@ -158,14 +158,14 @@ expr var@(Label lab (Expr.Var { Expr._ident = (Expr.Variable vname _) })) =
   do
     let hn = humanName vname
     hn_id <- getTargetIDString lab
-    debugPush ("Var         " <> hn <> hn_id)
+    debugPush ("Var  " <> hn <> hn_id)
 
     let exprId = Enum.id lab
     targetLabel <- getTargetID lab
     env <- getEnv
     vType <- inst env targetLabel
 
-    debugPush ("         :: " <> show' vType)
+    debugPush ("     ∷ " <> show' vType)
 
     setTypeById exprId vType
     defaultTraverseM var
