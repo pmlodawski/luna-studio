@@ -92,37 +92,37 @@ do_unify :: (Monad m) => (Subst, [Predicate]) ->  StageTypecheckerPass m Subst
 do_unify (s, []) = return s
 do_unify (s, t `Subsume` t' : p) = do
     args <- (,) <$> apply s t <*> apply s t'
-    s' <- unify args
-    do_unify (s' `composeSubst` s, p)
+    s' <- unify s args
+    do_unify (s', p)
 do_unify (s,  _ : p ) = report_error "do_unify: predicate list not in normal form" def
 
 
-unify :: (Monad m) => (Type, Type) ->  StageTypecheckerPass m Subst
-unify (t1 `Fun` t2, t1' `Fun` t2') = do
-    s1 <- unify (t1, t1')
+unify :: (Monad m) => Subst -> (Type, Type) ->  StageTypecheckerPass m Subst
+unify s (t1 `Fun` t2, t1' `Fun` t2') = do
+    s1 <- unify s (t1, t1')
     rightBranch <- (,) <$> apply s1 t2 <*> apply s1 t2'
-    s2 <- unify rightBranch
-    return $ s2 `composeSubst` s1
+    unify s1 rightBranch
 
-unify (Record f, Record f') = g (identitySubst, f,f') where
+unify s (Record f, Record f') = g (s, f,f') where
   g (s, [], []) = return s
   g (s, (l,t):rf, (l',t'):rf') =
     if l == l' then
                do args <- (,) <$> apply s t <*> apply s t'
-                  s' <- unify args
-                  let result = s' `composeSubst` s
-                  g (result, rf , rf')
+                  s' <- unify s args
+                  g (s', rf , rf')
     else report_error "not matching record" identitySubst
   g _ = report_error "non exhaustive pattern for Record" identitySubst
 
-unify (TV x, t) = varBind x t
+unify s (TV x, t) = do
+    result <- varBind x t
+    return $ maybe s (addSubst s) result
 
-unify (t, TV x) = unify (TV x, t)
+unify s (t, TV x) = unify s (TV x, t)
 
-unify _ = report_error "non exhaustive pattern in unify" identitySubst
+unify _ _ = report_error "non exhaustive pattern in unify" identitySubst
 
 
-varBind :: (Monad m) => TVar -> Type -> StageTypecheckerPass m Subst
-varBind var typeV | TV var == typeV = return identitySubst
-                  | var `elem` tv typeV = report_error "occurs check fails" identitySubst
-                  | otherwise = return $ singleSubst var typeV
+varBind :: (Monad m) => TVar -> Type -> StageTypecheckerPass m (Maybe (TVar, Type))
+varBind var typeV | TV var == typeV = return Nothing
+                  | var `elem` tv typeV = report_error "occurs check fails" Nothing
+                  | otherwise = return $ Just (var, typeV)

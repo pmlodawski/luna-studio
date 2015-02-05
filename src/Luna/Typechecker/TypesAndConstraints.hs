@@ -1,9 +1,10 @@
 module Luna.Typechecker.TypesAndConstraints (
-    TypesAndConstraints(..), composeSubst
+    TypesAndConstraints(..), composeSubst, addSubst
   ) where
 
 
 import            Flowbox.Prelude                   hiding (without)
+import            Data.Sequence                     as Seq
 import qualified  Data.Map.IntConvertibleMap        as ICMap
 
 import            Luna.Typechecker.Data
@@ -41,7 +42,7 @@ instance TypesAndConstraints Constraint where
 
 
 instance TypesAndConstraints Type where
-    apply s t                = return $ applySubst s t
+    apply s t                = return $ applySubst (Seq.viewl $ fromSubst s) t
     tv (TV tvl)              = [tvl]
     tv (t1 `Fun` t2)         = tv t1 ++ tv t2
     tv (Record fields)       = foldr vars [] fields where
@@ -58,10 +59,11 @@ instance TypesAndConstraints TypeScheme where
     tv (Mono t)               = tv t
 
 
-applySubst :: Subst -> Type -> Type
-applySubst s (TV tvl) = case ICMap.lookup tvl (fromSubst s) of
-                          Just t  -> t
-                          Nothing -> TV tvl
+applySubst :: ViewL (TVar, Type) -> Type -> Type
+applySubst EmptyL typeV = typeV
+applySubst ((var, typeV) Seq.:< rest) t@(TV tvl) | var == tvl = applySubst restView typeV
+                                                 | otherwise = applySubst restView t
+                                                 where restView = Seq.viewl rest
 
 applySubst s (t1 `Fun` t2) = let t1' = applySubst s t1
                                  t2' = applySubst s t2
@@ -71,6 +73,8 @@ applySubst s (Record fields) = Record $ map (\(f, t) -> (f, applySubst s t)) fie
 
 
 composeSubst :: Subst -> Subst -> Subst
-composeSubst s2 s1 = let s2' = fromSubst s2
-                         s1' = fromSubst s1
-                     in Subst $ ICMap.map (applySubst s2) s1' `ICMap.union` s2'
+composeSubst (Subst s2) (Subst s1) = Subst $ s1 Seq.>< s2
+
+
+addSubst :: Subst -> (TVar, Type) -> Subst
+addSubst (Subst s) val = Subst $ s Seq.|> val
