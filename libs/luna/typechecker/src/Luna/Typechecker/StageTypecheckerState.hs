@@ -30,6 +30,7 @@ import            Luna.Typechecker.Data                         (
                       Type(..), Constraint(..), TypeScheme(..),
                       singleSubst
                   )
+import            Luna.Typechecker.Debug.PrettyData             (toSubscript)
 import            Luna.Typechecker.Inference.Class              (StageTypecheckerCtx, StageTypecheckerPass)
 import            Luna.Typechecker.StageTypecheckerState.Class  as StageTypecheckerStateClass
 import            Luna.Typechecker.TypesAndConstraints
@@ -85,7 +86,7 @@ getTypeById idV = do
 
 setTypeById :: (Monad m) => ID -> Type -> StageTypecheckerPass m ()
 setTypeById id2 typeV = do
-    debugPush $ "save " <> show' id2 <> " ?= " <> show' typeV
+    debugPush $ "save " <> show' id2 <> " ⇒ " <> show' typeV
     typeMap . at id2 ?= typeV
     mm <- typeMap & use
     debugPush $ show' mm
@@ -110,7 +111,7 @@ debugPush s = s `seq` debugLog %= (s:)
 getTargetIDString :: (StageTypecheckerCtx lab m) => lab -> StageTypecheckerPass m Text
 getTargetIDString lab = do
     labtID <- getTargetID lab
-    return . toText $ "|" ++ show labID ++ "⊳" ++ show labtID ++ "⊲"
+    return . toText $ "|" ++ toSubscript labID ++ show labtID
   where
     labID = Enum.id lab
 
