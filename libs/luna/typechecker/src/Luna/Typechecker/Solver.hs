@@ -103,7 +103,7 @@ unify s (t1 `Fun` t2, t1' `Fun` t2') = do
     rightBranch <- (,) <$> apply s1 t2 <*> apply s1 t2'
     unify s1 rightBranch
 
-unify s (Record f, Record f') = g (s, f,f') where
+unify sub (Record f, Record f') = g (sub, f,f') where
   g (s, [], []) = return s
   g (s, (l,t):rf, (l',t'):rf') =
     if l == l' then

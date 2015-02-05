@@ -8,7 +8,6 @@ module Luna.Typechecker.Debug.PrettyData (
 import            Flowbox.Prelude             hiding ((<>), empty)
 
 import qualified  Data.IntMap.Strict          as SM
-import qualified  Data.Map.IntConvertibleMap  as ICMap
 import qualified  Data.Foldable               as Fold
 import            Text.PrettyPrint            (
                       Doc, ($+$),(<+>), (<>),
