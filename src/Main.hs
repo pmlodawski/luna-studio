@@ -1,19 +1,18 @@
 -------- HSC --------
 -- extensions --
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE ExtendedDefaultRules      #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE RebindableSyntax #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE RebindableSyntax          #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
@@ -24,7 +23,7 @@ module Main where
 --import Luna.Target.HS
 
 ---- body --
--- #include "pragmas.cpp"
+-- #include "pragmas.h"
 
 ---- ====== Main type ====== --
 --data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)
@@ -41,7 +40,7 @@ module Main where
 
 ---- ====== Method: Main.print ====== --
 
---memDef_Main_print (noDef -> self) (appDef (val "") -> s) = 
+--memDef_Main_print (noDef -> self) (appDef (val "") -> s) =
 --    polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
 --type instance SigOf Main "print" = '[ Named "self", Named "y" ]
@@ -71,36 +70,36 @@ module Main where
 --class FuncProvider (base :: k) name func where
 --    getFunc2 :: Mem base name -> (func -> out) -> func
 
--- 
+--
 -- instance HasMem2 "print" Main (Args2.Arg ('Just "self") Args2.Unprovided,(Args2.Arg 'Nothing Args2.Unprovided, ())) where
 --     memSig2 _ = memSig_Main_print2
--- 
+--
 -- -- ====== Method: Int._plus ====== --
--- memDef_Int__plus rtup2(self, a) = do 
+-- memDef_Int__plus rtup2(self, a) = do
 --     liftF2 (+) self a
---      
--- 
+--
+--
 -- memSig_Int__plus = rtup2(nparam("self"), param)
 -- $(registerMethod ''Int "_plus")
--- 
+--
 -- -- ====== Method: Main.foo ====== --
--- memDef_Main_foo rtup2(_self, (extractTuple2 -> (_a, _b))) = do 
+-- memDef_Main_foo rtup2(_self, (extractTuple2 -> (_a, _b))) = do
 --      call (appNext (val (1 :: Int)) (appNext _a (member("_plus") _self)))
---      
--- 
+--
+--
 -- memSig_Main_foo = rtup2(nparam("self"), param)
 -- $(registerMethod ''Main "foo")
--- 
+--
 -- -- ====== Method: Main._plus ====== --
--- memDef_Main__plus rtup3(_self, _a, _b) = do 
+-- memDef_Main__plus rtup3(_self, _a, _b) = do
 --      call (appNext _b (member("_plus") _a))
---      
--- 
+--
+--
 -- memSig_Main__plus = rtup3(nparam("self"), param, param)
 -- $(registerMethod ''Main "_plus")
--- 
+--
 -- -- ====== Method: Main.main ====== --
--- memDef_Main_main rtup1(_self) = do 
+-- memDef_Main_main rtup1(_self) = do
 --     --Args2.runFunc $ Args2.runFuncTrans (Args2.appArgW [] $ Args2.mkFunc memSig_Main_print2) memDef_Main_print2
 --      --x <- appNextW [] $ member2 (Proxy::Proxy "print") _self;
 --      --Args2.runFunc $ Args2.runFuncTrans (Args2.appArgW (val []) $ Args2.appArgW (val "self") $ Args2.mkFunc memSig_Main_print2) memDef_Main_print2
@@ -108,12 +107,12 @@ module Main where
 --      --Args2.runFuncTrans (Args2.appArgW (val []) $ Args2.appArgW (val "self") $ Args2.mkFunc memSig_Main_print2) memDef_Main_print2
 --      call (appNext typed(val [], [Int]) (member("print") _self))
 --      call (appNext (call (appNext (val (val (5 :: Int), val ("b" :: String))) (member("foo") _self))) (member("print") _self))
---      
--- 
+--
+--
 -- memSig_Main_main = rtup1(nparam("self"))
 -- $(registerMethod ''Main "main")
--- 
--- 
+--
+--
 -- -- ===================================================================
 -- -- Main module wrappers
 -- -- ===================================================================
