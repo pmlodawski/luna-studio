@@ -1,18 +1,17 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE RebindableSyntax #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules      #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE RebindableSyntax          #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 -- module --
 module Main3 where
@@ -21,7 +20,7 @@ module Main3 where
 import Luna.Target.HS
 
 -- body --
-#include "pragmas.cpp"
+#include "pragmas.h"
 
 -- ====== Main type ====== --
 data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)
@@ -40,23 +39,23 @@ $(registerMethod ''Cls_Main "Main")
 
 -- ====== Method: Main.print ====== --
 memSig_Main_print = _rtup2(_nuSigArg("self"), _npSigArg("s", val ("" :: String)))
-memDef_Main_print self s = do 
-     
+memDef_Main_print self s = do
+
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
-     
+
 
 memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
 $(registerMethod ''Main "print")
 
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
-memDef_Main_main _self = do 
+memDef_Main_main _self = do
      a <- mkLam (_rtup1(_nuSigArg("a"))) (\a -> a)
      call (appNext (val []) (_member("print") _self))
      call (_member("print") _self)
      --call (appNext (    call $ appNext (val "!!!") $ mkLam (_rtup1(_nuSigArg("a"))) (\a -> a)      ) (_member("print") _self))
-     
-     
+
+
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")

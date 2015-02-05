@@ -155,7 +155,7 @@ genModule (Label lab (Module path body)) = withCtx path $ do
 
     State.setModule mod
 
-    State.regPragma (HE.Pragma $ HE.Include "pragmas.cpp")
+    State.regPragma (HE.Pragma $ HE.Include "pragmas.h")
     genDecl modData
     mapM_ genDecl body
 
