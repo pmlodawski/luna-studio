@@ -170,10 +170,12 @@ execute callDataPath stringExpr varNames = do
         CacheStatus.Ready        -> left $ Error.OtherError $(loc) "something went wrong : status = Ready"
 
 
-data VarType = Lit    String
-             | Con    String
-             | Var    String
-             | Native String
+data VarType = Lit      String
+             | LitInt   String
+             | LitFloat String
+             | Con      String
+             | Var      String
+             | Native   String
              | Tuple
              | List
              | TimeVar
@@ -188,10 +190,10 @@ varType  StringExpr.List               = List
 varType (StringExpr.Native name      ) = Native name
 varType (StringExpr.Expr   []        ) = Prelude.error "varType : empty expression"
 varType (StringExpr.Expr   name@(h:_))
-    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Char  ) = Lit      name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Int   ) = LitInt   name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Float ) = LitFloat name
+    | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit      name
     | name == Var.timeRef                                = TimeVar
     | Char.isUpper h                                     = Con name
     | otherwise                                          = Var name
@@ -213,16 +215,16 @@ evalFunction stringExpr callDataPath varNames = do
 
         self      = head varNames
     operation <- case varType stringExpr of
-        List        -> return $ "toIOEnv $ fromValue $ val [" ++ List.intercalate "," args ++ "]"
-        Id          -> return $ "toIOEnv $ fromValue $ " ++ mkArg self
-        Native name -> return $ "toIOEnv $ fromValue $ " ++ genNative name
-        Con    _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs args ++ " $ cons_" ++ nameHash
-        Var    _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
-        Lit    name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ if Maybe.isJust (Read.readMaybe name :: Maybe Int)
-                                                                                  then " :: Int)"
-                                                                                  else ")"
-        Tuple       -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
-        TimeVar     -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
+        List          -> return $ "toIOEnv $ fromValue $ val [" ++ List.intercalate "," args ++ "]"
+        Id            -> return $ "toIOEnv $ fromValue $ " ++ mkArg self
+        Native   name -> return $ "toIOEnv $ fromValue $ " ++ genNative name
+        Con      _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs args ++ " $ cons_" ++ nameHash
+        Var      _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
+        LitInt   name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ " :: Int)"
+        LitFloat name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ " :: Float)"
+        Lit      name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ ")"
+        Tuple         -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
+        TimeVar       -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment' tmpVarName operation
         hash <- Hash.computeInherit tmpVarName varNames
