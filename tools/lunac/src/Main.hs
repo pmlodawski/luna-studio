@@ -6,29 +6,27 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import           Data.Version        (Version (Version))
-import           Options.Applicative (argument, command, command, fullDesc, help, hidden, long, metavar, option, prefs, progDesc, short, str, strOption, subparser, switch, value, (<>))
 import qualified Options.Applicative as Opt
 
-import qualified Flowbox.Config.Config       as Config
-import           Flowbox.Control.Applicative
+import qualified Flowbox.Config.Config     as Config
+import           Flowbox.Prelude           hiding (argument, op)
+import           Flowbox.System.Log.Logger
+import qualified Luna.Compiler.Build       as Build
+import qualified Luna.Compiler.Version     as Version
+import qualified Luna.Console.Options      as Opt
 --FIXME[pm]: re-enable Flowbox.Distribution
 --import qualified Flowbox.Distribution.Client.List as DistList
-import           Flowbox.Options.Applicative (optIntFlag)
-import           Flowbox.Prelude             hiding (argument, op)
-import           Flowbox.System.Log.Logger
---import qualified Luna.Build.Build            as Build
---import qualified Luna.Build.Cmd              as Cmd
---import qualified Luna.Build.Version          as Version
 
-import qualified Luna.Console.Options as Opt
 
+
+rootLogger :: Logger
+rootLogger = getLogger ""
 
 
 main :: IO ()
 main = run =<< Opt.customExecParser
-              (prefs Opt.showHelpOnError)
-              opts
+              (Opt.prefs Opt.showHelpOnError)
+               Opt.opts
 
 
 run :: Opt.Prog -> IO ()

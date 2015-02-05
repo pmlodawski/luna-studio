@@ -17,6 +17,7 @@ import Data.String.Utils (join)
 data Section = Library    { exposedModules :: [String]
                           , ghcOptions     :: [String]
                           , ccOptions      :: [String]
+                          , includeDirs    :: [String]
                           , buildDepends   :: [String]
                           , extensions     :: [Extension]
                           , hsSourceDirs   :: [String]
@@ -25,6 +26,7 @@ data Section = Library    { exposedModules :: [String]
                           , mainIs       :: String
                           , ghcOptions   :: [String]
                           , ccOptions    :: [String]
+                          , includeDirs  :: [String]
                           , buildDepends :: [String]
                           , extensions   :: [Extension]
                           , hsSourceDirs :: [String]
@@ -40,8 +42,8 @@ mkLibrary :: Section
 mkLibrary = mkCommon $ Library []
 
 
-mkCommon :: ([String] -> [String] -> [String] -> [Extension] -> [String] -> Section) -> Section
-mkCommon s = s [] [] [] [] ["src"]
+mkCommon :: ([String] -> [String] -> [String] -> [String] -> [Extension] -> [String] -> Section) -> Section
+mkCommon s = s [] [] [] [] [] ["src"]
 
 
 defaultIndent :: String
@@ -75,6 +77,7 @@ genCode s = genCodeSpecific s
                ++ genFields "Hs-Source-Dirs"  (hsSourceDirs s)
                ++ genArgs   "GHC-Options"     (ghcOptions s)
                ++ genArgs   "CC-Options"      (ccOptions s)
+               ++ genArgs   "Include-Dirs"    (includeDirs s)
                ++ genFields "Extensions"      (map show $ extensions s)
                ++ genFields "Build-Depends"   (buildDepends s)
 
