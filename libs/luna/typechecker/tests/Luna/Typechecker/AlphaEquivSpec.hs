@@ -1,7 +1,7 @@
 module Luna.Typechecker.AlphaEquivSpec (spec) where
 
 
-import Luna.Typechecker.AlphaEquiv  (AlphaEquiv(..), runEquiv)
+import Luna.Typechecker.AlphaEquiv  (AlphaEquiv(..), evalAlphaEquiv)
 import Luna.Typechecker.Data.TVar   (TVar(..))
 import Luna.Typechecker.Data.Type   (Type(..))
 
@@ -9,8 +9,8 @@ import Test.Hspec.LunaTypechecker
 
 
 isEquivOf, isNotEquivOf :: (AlphaEquiv a) => a -> a -> Expectation
-isEquivOf    x y = runEquiv x y `shouldBe` True
-isNotEquivOf x y = runEquiv x y `shouldBe` False
+isEquivOf    x y = evalAlphaEquiv x y `shouldBe` True
+isNotEquivOf x y = evalAlphaEquiv x y `shouldBe` False
 
 
 spec :: Spec
