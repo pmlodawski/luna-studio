@@ -11,7 +11,7 @@
 
 module Flowbox.Math.Function.Serialization where
 
-import Flowbox.Graphics.Prelude
+import Flowbox.Graphics.Prelude hiding (fromList)
 
 import Control.Monad
 import Data.Map      hiding (fromList)
