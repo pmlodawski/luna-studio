@@ -4,7 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Mockup.Merge where
+module Flowbox.Graphics.Mockup.Merge (
+  MergeMode(..),
+  mergeLuna,
+) where
 
 import qualified Data.Array.Accelerate as A
 

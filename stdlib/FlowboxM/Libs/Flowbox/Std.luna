@@ -1,6 +1,7 @@
 @AllowOrphans
 
 import ```Data.Maybe (fromJust)```
+import ```Data.Array.Accelerate (Boundary(..))```
 import ```qualified Data.Array.Accelerate as A```
 
 import ```Flowbox.Graphics.Color.Color as Color```
@@ -16,14 +17,26 @@ import ```Flowbox.Graphics.Color.Companding.SLog```
 import ```Flowbox.Graphics.Color.Companding.SRGB```
 import ```Flowbox.Graphics.Color.Companding.ViperLog```
 import ```Flowbox.Graphics.Composition.Dither```
-import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image as Image```
 import ```Flowbox.Graphics.Image.View as View```
 import ```Flowbox.Graphics.Composition.Merge (AlphaBlend(..))```
-import ```Flowbox.Graphics.Composition.Keyer```
+import ```Flowbox.Graphics.Composition.Keying```
 import ```Flowbox.Geom2D.Rasterizer```
 import ```Flowbox.Geom2D.Rectangle```
+import ```Flowbox.Graphics.Utils.Accelerate (variable)```
 import ```Flowbox.Graphics.Image.Matte```
+
+import ```Flowbox.Graphics.Mockup```
+import ```Flowbox.Graphics.Mockup.Basic```
+import ```Flowbox.Graphics.Mockup.ColorCorrect```
+import ```Flowbox.Graphics.Mockup.Curves```
+import ```Flowbox.Graphics.Mockup.Filter```
+import ```Flowbox.Graphics.Mockup.Generator```
+import ```Flowbox.Graphics.Mockup.Keying```
+import ```Flowbox.Graphics.Mockup.Matte```
+import ```Flowbox.Graphics.Mockup.Merge```
+import ```Flowbox.Graphics.Mockup.Noise```
+import ```Flowbox.Graphics.Mockup.Transform```
 
 #
 #                STD

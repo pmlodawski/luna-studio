@@ -9,7 +9,17 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ViewPatterns       #-}
 
-module Flowbox.Graphics.Mockup.Filter where
+module Flowbox.Graphics.Mockup.Filter (
+    blurLuna,
+    closeLuna,
+    dilateLuna,
+    ditherLuna,
+    edgeDetectLuna,
+    erodeLuna,
+    histEqLuna,
+    openLuna,
+    posterizeLuna,
+) where
 
 import qualified Data.Array.Accelerate as A
 import           Math.Space.Space      (Grid (..))

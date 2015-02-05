@@ -8,7 +8,11 @@
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE ViewPatterns     #-}
 
-module Flowbox.Graphics.Mockup.Noise where
+module Flowbox.Graphics.Mockup.Noise (
+	billowLuna,
+	noiseLuna,
+	perlinLuna,
+) where
 
 import qualified Data.Array.Accelerate as A
 import           Math.Space.Space      (Grid (..))

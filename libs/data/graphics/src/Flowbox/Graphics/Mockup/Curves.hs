@@ -6,7 +6,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ViewPatterns #-}
 
-module Flowbox.Graphics.Mockup.Curves where
+module Flowbox.Graphics.Mockup.Curves (
+	LunaCurveGUI,
+	convertCurveGUI,
+	getValueAtCurveGUI,
+) where
 
 import Math.Coordinate.Cartesian (Point2 (..))
 

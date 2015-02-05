@@ -8,7 +8,12 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ViewPatterns  #-}
 
-module Flowbox.Graphics.Mockup.Matte where
+module Flowbox.Graphics.Mockup.Matte (
+    applyMatteFloat,
+    imageMatteLuna,
+    rasterizeMaskLuna,
+    vectorMatteLuna,
+) where
 
 import qualified Data.Array.Accelerate     as A
 import           Math.Coordinate.Cartesian (Point2 (..))

@@ -6,7 +6,10 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ViewPatterns #-}
 
-module Flowbox.Graphics.Mockup.Keying where
+module Flowbox.Graphics.Mockup.Keying (
+    differenceKeyerLuna,
+    keyerLuna,
+) where
 
 import qualified Data.Array.Accelerate as A
 
