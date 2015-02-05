@@ -16,6 +16,8 @@ type FieldsTranslate = Map String String
 runEquiv :: (AlphaEquiv a) => a -> a -> Bool
 runEquiv a b = (\(x,fmab,fmba,ttab,ttba) -> x) $ equiv M.empty M.empty M.empty M.empty a b
 
+
+-- TODO [kgdk] 5 lut 2015: najbrzydszy kod EVER. Powinna być monada State, etc. Przepraszam za to :<
 class AlphaEquiv a where
     equiv :: FieldsTranslate -> FieldsTranslate -> TypesTranslate -> TypesTranslate -> a -> a -> (Bool, FieldsTranslate, FieldsTranslate, TypesTranslate, TypesTranslate)
 
