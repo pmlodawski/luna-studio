@@ -11,7 +11,7 @@ import qualified  Data.IntMap.Strict          as SM
 import qualified  Data.Foldable               as Fold
 import            Text.PrettyPrint            (
                       Doc, ($+$),(<+>), (<>),
-                      brackets, char, empty, hsep, int, parens, punctuate, text
+                      brackets, braces, char, empty, hsep, int, parens, punctuate, text
                   )
 
 import            Luna.Syntax.Enum            (ID)
@@ -21,6 +21,7 @@ import            Luna.Typechecker.Data       (
                       Typo(..), Type(..), Predicate(..), Constraint(..), TypeScheme(..),
                       TypeMap
                   )
+import            Luna.Typechecker.Data.Type  (Field)
 
 
 
@@ -43,11 +44,14 @@ prettyTVar :: TVar -> Doc
 prettyTVar tv = text "τ_" <> int (fromTVar tv)
 
 prettyType :: Type -> Doc
-prettyType (TV tv)       = prettyTVar tv
-prettyType (t1 `Fun` t2) = parens $ prettyType t1
-                                    <+> char '→'
-                                    <+> prettyType t2
-prettyType _ = text "not so pretty"
+prettyType (TV tv)          = prettyTVar tv
+prettyType (t1 `Fun` t2)    = parens $ prettyType t1
+                                       <+> char '→'
+                                       <+> prettyType t2
+prettyType (Record fields)  = (braces . prettyNullableComma . map prettyField) fields
+
+prettyField :: Field -> Doc
+prettyField (label, ty) = text label <> char '∷' <> prettyType ty
 
 prettyID :: ID -> Doc
 prettyID = int
