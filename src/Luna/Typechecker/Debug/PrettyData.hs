@@ -65,7 +65,7 @@ prettyConstr (Proj tvs ps)  =   char '∃'
 prettyTypeScheme :: TypeScheme -> Doc
 prettyTypeScheme (Mono ty)        = prettyType ty
 prettyTypeScheme (Poly tvs cs ty) = char '∀'
-                                  <+> (brackets (prettyComma (map prettyTVar tvs)) <> char '.')
+                                  <+> ((brackets . prettyComma . map prettyTVar) tvs <> char '.')
                                   <+> prettyConstr cs
                                   <+> char '⇒'
                                   <+> prettyType ty
