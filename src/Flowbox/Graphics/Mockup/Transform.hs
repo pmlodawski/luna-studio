@@ -7,7 +7,18 @@
 {-# LANGUAGE LambdaCase   #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Flowbox.Graphics.Mockup.Transform where
+module Flowbox.Graphics.Mockup.Transform (
+    Skew(..),
+    SkewOrder(..),
+    Transform(..),
+    cropLuna,
+    rotateAtLuna,
+    rotateLuna,
+    scaleAtLuna,
+    scaleLuna,
+    transformLuna,
+    translateLuna,
+) where
 
 import Data.Array.Accelerate     (Exp)
 import Linear                    (V2 (..))

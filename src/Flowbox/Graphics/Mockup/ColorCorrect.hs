@@ -8,7 +8,27 @@
 {-# LANGUAGE PatternSynonyms  #-}
 {-# LANGUAGE ViewPatterns     #-}
 
-module Flowbox.Graphics.Mockup.ColorCorrect where
+module Flowbox.Graphics.Mockup.ColorCorrect (
+    clampLuna,
+    colorCorrectLuna',
+    colorCorrectLunaCurves,
+    contrastLuna,
+    contrastMatteLuna,
+    exposureLuna,
+    exposureMatteLuna,
+    gammaFromLinearLuna,
+    gammaLuna,
+    gammaToLinearLuna,
+    gradeLunaColor,
+    gradeLunaColorMatte,
+    invertLuna,
+    multiplyLuna,
+    offsetLuna,
+    offsetMatteLuna,
+    premultiplyLuna,
+    saturateLuna,
+    unpremultiplyLuna,
+) where
 
 import qualified Data.Array.Accelerate     as A
 import           Math.Coordinate.Cartesian (Point2 (..))

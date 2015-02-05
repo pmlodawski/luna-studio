@@ -12,7 +12,34 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ViewPatterns        #-}
 
-module Flowbox.Graphics.Mockup.Basic where
+module Flowbox.Graphics.Mockup.Basic (
+    InterpolationFilter(..),
+    VPS,
+    pattern VPS,
+    channelToImageRGBA,
+    constantBoundaryWrapper,
+    getChannelFromPrimaryLuna,
+    getChannelLuna,
+    insertChannelFloats,
+    liftF6,
+    loadImageLuna,
+    multisampleChannelsLuna,
+    onEach,
+    onEachChannel,
+    onEachColorRGB,
+    onEachRGBA,
+    onEachRGBAChannels,
+    onShader,
+    realReadLuna,
+    saveImageLuna,
+    temporaryBackend,
+    unpackAccDims,
+    unpackLunaList,
+    unpackLunaVar,
+    unsafeGetChannels,
+    unsafeGetRGB,
+    withAlpha,
+) where
 
 import qualified Codec.Picture.Png                 as Juicy
 import qualified Codec.Picture.Types               as Juicy

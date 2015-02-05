@@ -8,7 +8,16 @@
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE ViewPatterns     #-}
 
-module Flowbox.Graphics.Mockup.Generator where
+module Flowbox.Graphics.Mockup.Generator (
+    circularLuna,
+    conicalLuna,
+    constantLuna,
+    diamondLuna,
+    gradientLuna,
+    linearShapeLuna,
+    radialShapeLuna,
+    squareLuna,
+) where
 
 import qualified Data.Array.Accelerate as A
 
@@ -76,5 +85,5 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
           gradientShader = Transform.scale (Grid width height) $ Transform.translate (V2 0.5 0.5) $ mapper gray gradient
           gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
 
-          weightFun tickPos val1 weight1 val2 weight2 = U.mix tickPos val1 val2
+          weightFun tickPos val1 _ val2 _ = U.mix tickPos val1 val2
           mapper = flip Gradient.colorMapper weightFun
