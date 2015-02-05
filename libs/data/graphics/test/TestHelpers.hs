@@ -14,25 +14,26 @@ import Data.Array.Accelerate.CUDA as AC
 import System.IO.Unsafe
 import Flowbox.Graphics.Composition.Merge
 
-shouldBeCloseTo :: (Show a, Comparable a b) => b -> a -> a -> Expectation
-shouldBeCloseTo metric a b = assertAlmostEqual "" metric b a
+shouldBeCloseTo :: (Show a, Comparable a b) => String -> b -> a -> a -> Expectation
+shouldBeCloseTo name metric a b = assertAlmostEqual name "" metric b a
 
 
 assertAlmostEqual :: (Comparable a b, Show a) => String -- ^ The message prefix 
+                              -> String --test name
                               -> b
                               -> a      -- ^ The expected value 
                               -> a      -- ^ The actual value
                               -> Assertion
-assertAlmostEqual preface metric expected actual =
+assertAlmostEqual name preface metric expected actual =
   unless (closeEnough metric actual expected) (assertFailure msg)
- where msg = (if null preface then "" else preface ++ "\n") ++ (diffMsg metric actual expected)
+ where msg = (if null preface then "" else preface ++ "\n") ++ (diffMsg name metric actual expected)
              --"expected close to: " ++ show expected ++ "\nbut got: " ++ show actual ++
              --"\ndifference: " 
 
 
 class Comparable thing metric where 
     closeEnough :: metric -> thing -> thing -> Bool
-    diffMsg     :: metric -> thing -> thing -> String
+    diffMsg     :: String -> metric -> thing -> thing -> String
 
 --instance (Eq a) => Comparable (Maybe a) where
 --    Nothing `close` Nothing = True
@@ -49,14 +50,14 @@ instance (Show a, Ord a, Floating a) => Comparable (Maybe a) (FloatMetric a) whe
     closeEnough (Close a) (Just x) (Just y) = (x+a >= y) && (x-a <= y)
     closeEnough _ _ _ = False
 
-    diffMsg _ Nothing Nothing = "Nothings"
-    diffMsg Exact (Just x) (Just y)     = "expected: " ++ show (Just y) ++ 
+    diffMsg _ _ Nothing Nothing = "Nothings"
+    diffMsg _ Exact (Just x) (Just y)     = "expected: " ++ show (Just y) ++ 
                                           "\nbut got: " ++ show (Just x) ++
                                           "\ndifference: " ++ show (x-y)
-    diffMsg (Close a) (Just x) (Just y) = "expected max difference " ++ (show a) ++ " to: " ++ show (Just y) ++ 
+    diffMsg _ (Close a) (Just x) (Just y) = "expected max difference " ++ (show a) ++ " to: " ++ show (Just y) ++ 
                                           "\nbut got: " ++ show (Just x) ++
                                           "\ndifference: " ++ show (x-y)
-    diffMsg _ _ _ = "Nothing with Just"
+    diffMsg _ _ _ _ = "Nothing with Just"
 
 
 data ImageMetric = PixelWise | TileWise | ImageWise deriving (Bounded, Enum)
@@ -87,7 +88,7 @@ instance Comparable Image ImageMetric where
             
 
 
-    diffMsg metric actualImage expectedImage  = case metric of
+    diffMsg name metric actualImage expectedImage  = case metric of
         PixelWise -> (unsafePerformIO $ do
                         Mock.saveImageLuna resultPath actualImage       
                         --return "diff image saved to ./samples/diff.png"
@@ -97,8 +98,8 @@ instance Comparable Image ImageMetric where
                      --"actualImage sum: " ++ (show $ s1) ++
                      --"\nexpectedImage sum: " ++ (show $ s2) ++
                      ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff) where
-                      resultPath = "./samples/result.png"
-                      diffPath = "./samples/diff.png"
+                      resultPath = name++"/test_result.png"
+                      diffPath = name++"/test_diff.png"
                       [maxDiff] = M.toList AC.run maxDif
                       --(r,g,b,a) = Mock.unsafeGetChannels $ diff
                       maxDif = M.zipWith4 (\r g b a -> maximum [r,g,b,a]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif

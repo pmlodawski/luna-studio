@@ -61,7 +61,7 @@ spec = do
                     avg       = (firstNum + secondNum)/2
                     first     = Just firstNum
                     second    = Just secondNum
-                in shouldBeCloseTo (Close (0.5::Float)) (mixImages mask first second) (Just avg)
+                in shouldBeCloseTo "mixImages" (Close (0.5::Float)) (mixImages mask first second) (Just avg)
 
         it "should be efficient" $ do
             pending
