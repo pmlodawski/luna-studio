@@ -15,7 +15,7 @@ Library
     Hs-Source-Dirs: dist/gen
                     src  
     Other-Modules:  Paths_batch_plugin_interpreter
-    GHC-Options:    -Wall -O2 -threaded -dynamic -shared -fPIC
+    GHC-Options:    -Wall -O2 -threaded -fPIC
     Extensions:     NoImplicitPrelude
 
     Exposed-modules: `findmodules('src', '.*\.hs')`
