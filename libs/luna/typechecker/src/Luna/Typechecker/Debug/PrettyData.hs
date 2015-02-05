@@ -1,7 +1,8 @@
 module Luna.Typechecker.Debug.PrettyData (
     prettyComma, prettyNullable,
     prettyTVar, prettyID, prettySubst, prettyTypo,
-    prettyType, prettyPred, prettyConstr, prettyTypeScheme, prettyTypeMap
+    prettyType, prettyPred, prettyConstr, prettyTypeScheme, prettyTypeMap,
+    toSubscript, toSuperscript
   ) where
 
 
@@ -24,6 +25,33 @@ import            Luna.Typechecker.Data       (
 import            Luna.Typechecker.Data.Type  (Field)
 
 
+toSubscript :: Show a => a -> String
+toSubscript = map aux . show
+  where aux '0' = '₀'
+        aux '1' = '₁'
+        aux '2' = '₂'
+        aux '3' = '₃'
+        aux '4' = '₄'
+        aux '5' = '₅'
+        aux '6' = '₆'
+        aux '7' = '₇'
+        aux '8' = '₈'
+        aux '9' = '₉' 
+        aux  x  =  x
+
+toSuperscript :: Show a => a -> String
+toSuperscript = map aux . show
+  where aux '0' = '⁰'
+        aux '1' = '¹'
+        aux '2' = '²'
+        aux '3' = '³'
+        aux '4' = '⁴'
+        aux '5' = '⁵'
+        aux '6' = '⁶'
+        aux '7' = '⁷'
+        aux '8' = '⁸'
+        aux '9' = '⁹' 
+        aux  x  =  x
 
 vcatNoOverlap :: [Doc] -> Doc
 vcatNoOverlap = foldl ($+$) empty
