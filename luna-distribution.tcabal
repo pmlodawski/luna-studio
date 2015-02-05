@@ -26,7 +26,10 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  flowbox-config,
                   flowbox-utils,
                   luna-core,
-                  MissingH
+                  MissingH,
+                  mtl,
+                  text
 
