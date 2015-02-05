@@ -78,6 +78,7 @@ insert a (x,t) = Typo $ (x,t):fromTypo a
 
 getTypeById :: Monad m => ID -> StageTypecheckerPass m Type
 getTypeById idV = do
+    debugPush $ "Looking for a type of an expression: " <> show' idV
     typeResult <- typeMap . at idV & use
     maybe (report_error "Can't find type using id." . TV =<< newtvar) return typeResult
 
