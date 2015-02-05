@@ -11,7 +11,8 @@ import qualified  Data.IntMap.Strict          as SM
 import qualified  Data.Foldable               as Fold
 import            Text.PrettyPrint            (
                       Doc, ($+$),(<+>), (<>),
-                      brackets, char, empty, hsep, int, parens, punctuate, text
+                      brackets, char, empty, hsep, int, parens, punctuate, text,
+                      render
                   )
 
 import            Luna.Syntax.Enum            (ID)
@@ -40,7 +41,19 @@ prettyNullableComma xs = prettyComma xs
 
 
 prettyTVar :: TVar -> Doc
-prettyTVar tv = text "τ_" <> int (fromTVar tv)
+prettyTVar tv = text "τ" <> text res
+  where res = (map toLower . render . int . fromTVar) tv
+        toLower '0' = '₀'
+        toLower '1' = '₁'
+        toLower '2' = '₂'
+        toLower '3' = '₃'
+        toLower '4' = '₄'
+        toLower '5' = '₅'
+        toLower '6' = '₆'
+        toLower '7' = '₇'
+        toLower '8' = '₈'
+        toLower '9' = '₉' 
+        toLower  x  =  x
 
 prettyType :: Type -> Doc
 prettyType (TV tv)       = prettyTVar tv
