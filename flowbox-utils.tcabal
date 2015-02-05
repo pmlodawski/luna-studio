@@ -58,7 +58,7 @@ Library
                     protocol-buffers,
                     split,
                     template-haskell,
-                    text,
+                    text >= 1.2,
                     time,
                     transformers,
                     template-haskell,
