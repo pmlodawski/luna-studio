@@ -83,7 +83,7 @@ prettySubst = prettyNullableComma . substs . fromSubst
 prettyTypo :: Typo -> Doc
 prettyTypo = prettyNullable . map prettyTypo1 . fromTypo
   where prettyTypo1 (v,ts)  = prettyID v
-                            <+> text "::"
+                            <+> text "∷"
                             <+> prettyTypeScheme ts
 
 prettyTypeMap :: TypeMap -> Doc
