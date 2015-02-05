@@ -5,7 +5,6 @@ module Luna.Typechecker.TypesAndConstraints (
 
 import            Flowbox.Prelude                   hiding (without)
 import            Data.Sequence                     as Seq
-import qualified  Data.Map.IntConvertibleMap        as ICMap
 
 import            Luna.Typechecker.Data
 import            Luna.Typechecker.Inference.Class  (StageTypecheckerPass)
