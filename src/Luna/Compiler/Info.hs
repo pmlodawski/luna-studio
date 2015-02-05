@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Build.Info (
+module Luna.Compiler.Info (
     module Paths_luna_compiler
 ) where
 

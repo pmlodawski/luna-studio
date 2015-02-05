@@ -5,13 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Build.Version  where
+module Luna.Compiler.Version  where
 
 import qualified Data.Version as Version
 
 import           Flowbox.Prelude
-import qualified Luna.Build.Info as CompilerInfo
-import qualified Luna.Info       as LunaInfo
+import qualified Luna.Compiler.Info as CompilerInfo
+import qualified Luna.Info          as LunaInfo
 
 
 
