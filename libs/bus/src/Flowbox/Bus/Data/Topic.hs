@@ -49,7 +49,7 @@ request = "request"
 base :: Topic -> Topic
 base = List.intercalate separator . init . Utils.split separator
 
-
+-- FIXME[WD->PM]: MONOIDS!!!
 (/+) :: Topic -> Topic -> Topic
 topic /+ type_ = respond topic type_
 
