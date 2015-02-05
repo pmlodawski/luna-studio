@@ -37,5 +37,5 @@ Executable s3-file-manager
                     optparse-applicative,
                     protocol-buffers,
                     text,
-                    transformers >= 0.4,
+                    transformers,
                     zeromq4-haskell >= 0.4
