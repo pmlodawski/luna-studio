@@ -9,6 +9,7 @@ import            Flowbox.Prelude             hiding ((<>), empty)
 
 import qualified  Data.IntMap.Strict          as SM
 import qualified  Data.Map.IntConvertibleMap  as ICMap
+import qualified  Data.Foldable               as Fold
 import            Text.PrettyPrint            (
                       Doc, ($+$),(<+>), (<>),
                       brackets, char, empty, hsep, int, parens, punctuate, text
@@ -74,7 +75,7 @@ prettySubst :: Subst -> Doc
 prettySubst = prettyNullableComma . substs . fromSubst
   where prettySubst1 (tv, ty) = parens $  prettyTVar tv <+> char '↣'
                                       $+$ prettyType ty
-        substs = map prettySubst1 . ICMap.toList
+        substs = map prettySubst1 . Fold.toList
 
 prettyTypo :: Typo -> Doc
 prettyTypo = prettyNullable . map prettyTypo1 . fromTypo
