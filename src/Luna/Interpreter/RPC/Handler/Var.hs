@@ -34,10 +34,10 @@ import Control.Monad (forM_)
 insertTimeRef :: Lib.ID -> Node.ID -> Node.ID
               -> NodeExpr -> RPC Context (SessionST mm) ()
 insertTimeRef libraryID nodeID defID defExpr = do
-    ids <- hoistEither =<< ExtractIDs.runNodeExpr defExpr
+    --ids <- hoistEither =<< ExtractIDs.runNodeExpr defExpr
     liftSession $ do
         Env.insertDependentNode (CallPoint libraryID nodeID) defID
-        Env.insertDependentNodes (CallPoint libraryID defID) ids
+        --Env.insertDependentNodes (CallPoint libraryID defID) ids
         forM_ (defID:Var.timeRefIds defExpr) $ \ timeRefID ->
             Env.insertTimeRef (CallPoint libraryID timeRefID)
 
@@ -46,10 +46,10 @@ deleteTimeRef :: MemoryManager mm
               => Lib.ID -> Node.ID -> Node.ID
               -> NodeExpr -> RPC Context (SessionST mm) ()
 deleteTimeRef libraryID nodeID defID defExpr = do
-    ids <- hoistEither =<< ExtractIDs.runNodeExpr defExpr
+    --ids <- hoistEither =<< ExtractIDs.runNodeExpr defExpr
     liftSession $ do
         Cache.deleteNode libraryID defID
-        mapM_ (Cache.deleteNode libraryID) $ IntSet.toList ids
+        --mapM_ (Cache.deleteNode libraryID) $ IntSet.toList ids
         Env.deleteDependentNode (CallPoint libraryID nodeID) defID
         forM_ (defID:Var.timeRefIds defExpr) $ \ timeRefID ->
             Env.deleteTimeRef (CallPoint libraryID timeRefID)
