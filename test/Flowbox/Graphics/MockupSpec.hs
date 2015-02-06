@@ -28,12 +28,12 @@ spec = do
               testPath = specPath++testName
                 in describe testName $ do 
                     describe "should match previously computed picture on rgba.r channel with edge multiplier 5 and kernel size 5" $ do
-                        let actualImage = unsafePerformIO $ testEdgeBlur 5 5 "rgba.r"
+                        let actualImage = testEdgeBlur 5 5 "rgba.r"
                             expectedImage = getDefaultTestPic specPath testName
                         it "in pixel-wise metric" $ do
-                            shouldBeCloseTo testPath PixelWise actualImage expectedImage 
+                            returnShouldBeCloseTo testPath PixelWise actualImage expectedImage 
                         it "in image-wise metric" $ do
-                            shouldBeCloseTo testPath ImageWise actualImage expectedImage
+                            returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
                     --it "should match previously computed picture on rgba.r channel with dge multiplier 5 and kernel size 5 in every metric" $
                     --    property $ \x -> shouldBeCloseTo x (unsafePerformIO $ testEdgeBlur 5 5 "rgba.r") (unsafePerformIO $ loadImageLuna "./samples/eb_result.png")
                     it "should throw exception on non existing channel" $ do
