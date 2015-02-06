@@ -1,47 +1,41 @@
+{-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FunctionalDependencies #-}
 
 module Luna.DEP.AST.ASTConvertion where
 
-import Flowbox.Prelude
+import qualified Data.Text.Lazy as Text
 
-import qualified Luna.DEP.AST.Expr as DExpr
-import qualified Luna.Syntax.Expr as Expr
-import Luna.Syntax.Label        (Label(Label))
-import qualified Luna.Syntax.Arg as Arg
-import           Luna.Syntax.Arg (Arg(Arg))
+import           Control.Monad.Trans.Either
+import           Flowbox.Prelude
+import           Luna.DEP.AST.Arg           as DArg
+import qualified Luna.DEP.AST.Expr          as DExpr
+import qualified Luna.DEP.AST.Lit           as DLit
+import qualified Luna.DEP.AST.Module        as DModule
+import qualified Luna.DEP.AST.Name          as DName
+import qualified Luna.DEP.AST.Pat           as DPat
+import qualified Luna.DEP.AST.Type          as DType
+import           Luna.Syntax.Arg            (Arg (Arg))
+import qualified Luna.Syntax.Arg            as Arg
+import           Luna.Syntax.Decl           (LDecl)
+import qualified Luna.Syntax.Decl           as Decl
+import           Luna.Syntax.Enum           (IDTag (IDTag))
+import           Luna.Syntax.Expr           (LExpr)
+import qualified Luna.Syntax.Expr           as Expr
+import           Luna.Syntax.Foreign        (Foreign (Foreign))
+import qualified Luna.Syntax.Foreign        as Foreign
+import           Luna.Syntax.Label          (Label (Label))
+import           Luna.Syntax.Lit            (LLit)
+import qualified Luna.Syntax.Lit            as Lit
+import           Luna.Syntax.Module         (LModule)
+import qualified Luna.Syntax.Module         as Module
+import           Luna.Syntax.Name.Path      (QualPath (QualPath))
+import           Luna.Syntax.Name.Pattern   (NamePat (NamePat), Segment (Segment))
+import           Luna.Syntax.Pat            (LPat)
+import qualified Luna.Syntax.Pat            as Pat
+import           Luna.Syntax.Type           (LType)
+import qualified Luna.Syntax.Type           as Type
 
-import Luna.Syntax.Enum (IDTag(IDTag))
 
-import Luna.Syntax.Expr (LExpr)
-import Control.Monad.Trans.Either
-import Luna.Syntax.Name.Pattern (NamePat(NamePat), Segment(Segment))
-import Luna.DEP.AST.Arg as DArg
-
-import qualified Luna.DEP.AST.Lit as DLit
-import qualified Luna.Syntax.Lit as Lit
-import           Luna.Syntax.Lit (LLit)
-
-import qualified Luna.DEP.AST.Type as DType
-import qualified Luna.Syntax.Type as Type
-import           Luna.Syntax.Type (LType)
-
-import qualified Luna.DEP.AST.Pat as DPat
-import qualified Luna.Syntax.Pat as Pat
-import           Luna.Syntax.Pat (LPat)
-
-import qualified Luna.DEP.AST.Module as DModule
-import qualified Luna.Syntax.Module as Module
-import           Luna.Syntax.Module (LModule)
-
-import qualified Luna.Syntax.Decl as Decl
-import           Luna.Syntax.Decl (LDecl)
-
-import qualified Luna.DEP.AST.Name as DName
-import qualified Luna.Syntax.Foreign as Foreign
-import           Luna.Syntax.Foreign (Foreign(Foreign))
-
-import           Luna.Syntax.Name.Path (QualPath(QualPath))
 
 class ASTConvertion a m b where
     convertAST :: a -> EitherT Error m b
@@ -79,7 +73,7 @@ instance (Monad m, Applicative m) => ASTConvertion DExpr.Expr m (LExpr IDTag ())
                 [DExpr.RangeFrom   id s  ] -> Expr.RangeList <$> (Expr.Linear <$> convertAST s <*> pure Nothing)
                 xs                         -> Expr.SeqList <$> mapM convertAST xs
         DExpr.RecordUpdate id src sel expr -> case src of
-            DExpr.Var _ n ->  l id . Expr.RecUpd (fromString n) . pure 
+            DExpr.Var _ n ->  l id . Expr.RecUpd (fromString n) . pure
                           <$> (Expr.FieldUpd (fmap fromString sel) <$> convertAST expr)
             _             -> left $ IllegalConversion "Record update with non-variable base"
         DExpr.Case id expr match -> l id <$> (Expr.Case <$> convertAST expr <*> mapM convertMatch match) where
@@ -154,18 +148,29 @@ convertExpr2Decl = \case
         DExpr.DataNative id t cons cls methods -> do
             (Label lab (Decl.Data decl)) <- convertExpr2Decl $ DExpr.Data id t cons cls methods
             return $ l id $ Decl.Foreign $ Foreign Foreign.Haskell $ Decl.FData $ decl
+        DExpr.Function id path n ins ot [DExpr.Native _ segments] -> l id . Decl.Foreign . Foreign Foreign.Haskell . Decl.FFunc <$> decl where
+            decl = Decl.FuncDecl (fmap fromString path)
+                                 <$> (NamePat Nothing <$> (Segment (fromString $ DName._base n) <$> mapM convertArg ins) <*> pure [])
+                                 <*> pure Nothing
+                                 <*> convertSegments segments
+            convertSegments seg = Text.intercalate " " <$> mapM convertSegment seg
+            convertSegment seq = case seq of
+                DExpr.NativeCode _ code -> return $ Text.pack code
+                DExpr.NativeVar  _ var  -> return $ Text.pack var
         DExpr.Function id path n ins ot body -> l id . Decl.Func <$> decl where
-            decl = Decl.FuncDecl (fmap fromString path) 
-                                 <$> (NamePat Nothing <$> (Segment (fromString $ DName._base n) <$> mapM convertArg ins) <*> pure []) 
-                                 <*> pure Nothing 
+            decl = Decl.FuncDecl (fmap fromString path)
+                                 <$> (NamePat Nothing <$> (Segment (fromString $ DName._base n) <$> mapM convertArg ins) <*> pure [])
+                                 <*> pure Nothing
                                  <*> mapM convertAST body
+        where
+            l id = Label (IDTag id)
             convertArg (DExpr.Arg _ p mv) = Arg <$> convertAST p <*> mapM convertAST mv
-        where l id = Label (IDTag id)
+            convertArg (DExpr.Arg _ p mv) = Arg <$> convertAST p <*> mapM convertAST mv
 
 
 instance (Monad m, Applicative m) => ASTConvertion DModule.Module m (LModule IDTag (LExpr IDTag ())) where
     convertAST (DModule.Module id (DType.Module tid n path) imps cls tals tdefs fields methods mods) =
-        l id . Module.Module (QualPath (fmap fromString $ init path) (fromString $ head path))
+        l id . Module.Module (QualPath (fmap fromString path) (fromString n))
                       <$> mapM convertAST (imps ++ cls ++ tals ++ tdefs ++ fields ++ methods)
         where l id = Label (IDTag id)
 
