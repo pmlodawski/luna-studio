@@ -77,6 +77,7 @@ import           Data.Maybe (isNothing)
 import qualified Luna.Syntax.Foreign         as Foreign
 import           Luna.Syntax.Foreign         (Foreign(Foreign))
 import qualified Luna.Syntax.Enum            as Enum
+import qualified Luna.Syntax.Name.Path       as Path
 
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -131,9 +132,9 @@ stdDerivings = [ Deriving.Show, Deriving.Eq, Deriving.Ord
 
 
 genModule :: Ctx m a v => LModule a (LExpr a v) -> PassResult m HE
-genModule (Label lab (Module path body)) = withCtx path $ do
+genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name path) $ do
     let mod     = HModule.addImport ["Luna", "Target", "HS"]
-                $ foldr HModule.addExt (HModule.mk (toList path))
+                $ foldr HModule.addExt (HModule.mk modBaseName modPath)
                 $ [ HExt.DataKinds
                   , HExt.DeriveDataTypeable
                   , HExt.DeriveGeneric
@@ -150,8 +151,10 @@ genModule (Label lab (Module path body)) = withCtx path $ do
                   , HExt.DysfunctionalDependencies
                   , HExt.ExtendedDefaultRules
                   ]
-        modConName = Naming.mkModCons (hash path)
-        modData = Label (0::Int) (Decl.singleData $ fromText $ hash path)
+        modBaseName = view Path.name path
+        modPath     = view Path.path path
+        modConName = Naming.mkModCons (hash modBaseName)
+        modData = Label (0::Int) (Decl.singleData $ fromText $ hash modBaseName)
 
     State.setModule mod
 
