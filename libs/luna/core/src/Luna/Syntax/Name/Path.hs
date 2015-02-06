@@ -40,6 +40,7 @@ data QualPath = QualPath { _path :: [Text], _name :: Text }
 makeLenses ''NamePath
 instance QShow (NamePath)
 
+makeLenses ''QualPath
 
 instance Default QualPath where
     def = QualPath def def
