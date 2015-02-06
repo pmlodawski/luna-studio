@@ -27,4 +27,3 @@ timeRefIds (NodeExpr.ASTExpr expr) = execState (traverseExpr expr) [] where
                    = modify (i:) >> return e
     matchTimeRef e = return e
 timeRefIds  _                      = []
-
