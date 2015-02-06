@@ -51,12 +51,12 @@ pass :: Monad m => Pass () (HExpr -> PassResult m Text)
 pass = Pass "HASTGen" "Haskell AST generator" () (return . genModule)
 
 genModule :: HExpr -> Text
-genModule (HExpr.Module path ext imports body) = toLazyText modcode where
+genModule (HExpr.Module name path ext imports body) = toLazyText modcode where
     modcode =  genSection    "extensions"     genExt  ext
             <> sectionHeader "module"         <> header
             <> genSection    "imports"        generate imports
             <> genSection    "body"           generate body
-    header = "module " <> mjoin "." (fmap fromLazyText path) <> " where" <> eol <> eol
+    header = "module " <> fromLazyText name <> mjoin "." (mempty : fmap fromLazyText path) <> " where" <> eol <> eol
 
 genExt :: Extension -> Text.Builder
 genExt ext = "{-# LANGUAGE " <> show' ext <> " #-}"
