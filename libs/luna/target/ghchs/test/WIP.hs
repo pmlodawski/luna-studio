@@ -16,7 +16,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 
 -- module --
-module Main where
+module Main.Std where
 
 -- imports --
 import Luna.Target.HS
@@ -52,24 +52,9 @@ $(registerMethod ''Main "print")
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 memDef_Main_main _self = do 
-     _call(8) (appNext (val (1 :: Int)) (_member("print") _self))
+     _call(6) (appNext (val (1 :: Int)) (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")
-
--- ====== Method: Main.test ====== --
-memSig_Main_test = _rtup2(_nuSigArg("self"), _nuSigArg("v"))
-memDef_Main_test _self _v = do 
-     _v <- _call(0) (appNext (val (10 :: Int)) (_member("set_x") _v))
-     
-
-memFnc_Main_test = (memSig_Main_test, memDef_Main_test)
-$(registerMethod ''Main "test")
-
-
--- ===================================================================
--- Main module wrappers
--- ===================================================================
-main = mainMaker cons_Main
 

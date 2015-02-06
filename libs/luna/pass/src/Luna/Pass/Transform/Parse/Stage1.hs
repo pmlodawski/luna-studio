@@ -75,7 +75,7 @@ pass = Pass "Parser stage-1" "Parses declarations without parsing expressions" (
 
 passRunner src = do
     (Source name (Code code)) <- Source.read src
-    ps <- tmpFixErrorParse code (Parser.moduleParser [name] Parser.defState)
+    ps <- tmpFixErrorParse code (Parser.moduleParser name Parser.defState)
     result <- lift . hoistEither $ ps
     let astinfo = view ParserState.info $ snd result
     return $ (fst result, astinfo)

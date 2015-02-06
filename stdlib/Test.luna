@@ -4,5 +4,3 @@ foreign haskell def print s="":
 def main:
     print 1
 
-def test v:
-	v.x = 10

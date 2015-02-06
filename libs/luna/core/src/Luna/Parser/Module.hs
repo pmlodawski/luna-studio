@@ -14,8 +14,7 @@ import           Luna.Syntax.Unit   (Unit(Unit))
 import           Luna.Parser.Struct (moduleBlock)
 import qualified Luna.Parser.Indent as Indent
 
-pModule name path = do
-    let qpath = (QualPath path name)
+pModule qpath = do
     ParserState.setModPath qpath
     Module qpath <$> Indent.withPos (moduleBlock $ labeled moduleBody)
     where moduleBody = decl <?> "module body"
