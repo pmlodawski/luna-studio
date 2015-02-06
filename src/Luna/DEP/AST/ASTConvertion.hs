@@ -131,6 +131,7 @@ convertExpr2Decl = \case
         DExpr.Import id path tgt rename -> l id . Decl.Imp (fmap fromString path) Nothing . pure <$> convertTgt tgt rename where
             convertTgt tgt rename = case tgt of
                 DExpr.Var _ n -> right $ Decl.ImpVar (fromString n) (fmap fromString rename)
+                DExpr.Con _ n -> right $ Decl.ImpVar (fromString n) (fmap fromString rename)
                 _             -> left $ IllegalConversion "Import with non-variable base"
         DExpr.ImportNative {} -> left $ UnsupportedConversion "Expr.ImportNative"
         DExpr.TypeAlias id src dst -> l id <$> (Decl.TpAls <$> convertAST src <*> convertAST dst)
