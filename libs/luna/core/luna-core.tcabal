@@ -64,6 +64,6 @@ Library
                   phonetic-code,
                   edit-distance,
                   tuple,
-                  optparse-applicative,
+                  optparse-applicative >= 0.11,
                   zippers
 --[PM] : blaze-markup is a temporary dependency until https://github.com/ekmett/trifecta/issues/42 is resolved
