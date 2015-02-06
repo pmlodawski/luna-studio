@@ -182,6 +182,7 @@ genCons name params cons derivings makeDataType = do
 
         genConData (Decl.Cons (convVar -> conName) fields) = do
             let fieldNum   = length fields
+                fieldNames = fmap getName fields
                 conDefName = Naming.mkMemDef clsConName conName
                 cons       = HE.val (Naming.mkCons conName)
                            $ HE.app (mkMemberGetter conName) 
@@ -189,9 +190,13 @@ genCons name params cons derivings makeDataType = do
                 consDef    = HE.val conDefName
                            $ HE.AppE (HE.VarE $ liftCons fieldNum)
                                      (HE.VarE conName)
+                args       = fmap mkArgFromName fieldNames
                 func       = Decl.FuncDecl [fromText clsConName'] 
-                            (NamePat Nothing (Segment conName [Arg (Label (0::Int) $ Pat.Var "self") Nothing]) []) 
+                            (NamePat Nothing (Segment conName (Arg (Label (0::Int) $ Pat.Var "self") Nothing : args)) []) 
                             Nothing []
+                mkArgFromName name = case name of
+                    Just n -> Arg (Label (0::Int) $ Pat.Var $ fromText n) Nothing
+                    Nothing -> error "TODO!"
                             
             addComment . H3 $ dotname [name, conName] <> " constructor"
             mapM regFunc [cons, consDef]

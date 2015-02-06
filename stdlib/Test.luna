@@ -1,6 +1,11 @@
 foreign haskell def print s="":
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
+class Vector a:
+    x,y,z :: a
+
 def main:
-    print 1
+    v = Vector 1 2 3
+    v.x = 5
+    print (v.x)
 
