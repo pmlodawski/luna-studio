@@ -8,6 +8,7 @@
 module Test.Luna.Interpreter.Common where
 
 import qualified Flowbox.Batch.Project.Project                                     as Project
+import           Flowbox.Config.Config                                             (Config)
 import qualified Flowbox.Config.Config                                             as Config
 import           Flowbox.Control.Error
 import           Flowbox.Data.Version                                              ()
@@ -54,19 +55,19 @@ readCode code = eitherStringToM' $ runEitherT $ do
     return $ LibManager.insNewNode (Library "Main" def path ast PropertyMap.empty) def
 
 
-mkEnv :: mm -> String -> IO (Env mm, Library.ID)
-mkEnv mm code = do
+mkEnv :: Config -> mm -> String -> IO (Env mm, Library.ID)
+mkEnv config mm code = do
     (libManager, libID) <- readCode code
     --putStrLn $ ppShow libManager
     let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
-    env <- Env.mk mm libManager (Just $ Project.ID 0) (Just defPoint) $ const $ const (void . return)-- curry print
+    env <- Env.mk config mm libManager (Just $ Project.ID 0) (Just defPoint) $ const $ const (void . return)-- curry print
     return (env, libID)
 
 
 runSession :: mm -> String -> Session mm () -> IO ()
 runSession mm code session = do
     cfg <- Config.load
-    (env, libID) <- mkEnv mm code
+    (env, libID) <- mkEnv cfg mm code
 
     result <- Session.run cfg env [] (Env.addReload libID Reload.ReloadLibrary >> session)
     eitherStringToM $ fmapL Error.format result

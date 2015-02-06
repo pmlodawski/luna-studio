@@ -8,18 +8,19 @@
 
 module Luna.Interpreter.Session.Env.State where
 
-import qualified Control.Concurrent.MVar    as MVar
+import qualified Control.Concurrent.MVar     as MVar
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import           Data.IntSet                (IntSet)
-import qualified Data.IntSet                as IntSet
-import           Data.Map                   (Map)
-import qualified Data.Map                   as Map
-import qualified Data.Maybe                 as Maybe
-import           Data.MultiSet              (MultiSet)
-import qualified Data.MultiSet              as MultiSet
-import           Data.Set                   (Set)
-import qualified Data.Set                   as Set
+import           Data.IntSet                 (IntSet)
+import qualified Data.IntSet                 as IntSet
+import           Data.Map                    (Map)
+import qualified Data.Map                    as Map
+import qualified Data.Maybe                  as Maybe
+import           Data.MultiSet               (MultiSet)
+import qualified Data.MultiSet               as MultiSet
+import           Data.Set                    (Set)
+import qualified Data.Set                    as Set
+import qualified Language.Preprocessor.Cpphs as Cpphs
 
 import           Control.Monad.Catch                           (bracket_)
 import qualified Flowbox.Batch.Project.Project                 as Project
@@ -196,6 +197,11 @@ profile callPointPath action = do
     (r, info) <- ProfileInfo.profile action
     whenVisible callPointPath $ insertProfileInfo callPointPath info
     return r
+
+---- Env.cpphsOptions -----------------------------------------------------
+
+getCpphsOptions :: Session mm Cpphs.CpphsOptions
+getCpphsOptions = gets $ view Env.cpphsOptions
 
 ---- Env.timeVar ----------------------------------------------------------
 

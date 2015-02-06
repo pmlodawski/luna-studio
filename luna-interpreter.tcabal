@@ -22,6 +22,7 @@ Library
     Build-Depends:  base,
                     bytestring,
                     containers,
+                    cpphs,
                     data-default,
                     data-hash,
                     either,
@@ -35,10 +36,12 @@ Library
                     luna-core,
                     luna-distribution-old,
                     luna-pass-old,
+                    luna-pass,
                     mtl,
                     multiset,
                     pretty-show,
                     raw-strings-qq,
+                    text,
                     time,
                     transformers
 
