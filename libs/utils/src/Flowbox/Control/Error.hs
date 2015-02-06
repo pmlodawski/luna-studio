@@ -13,9 +13,9 @@ module Flowbox.Control.Error (
 , liftIO
 ) where
 
-import           Control.Error             as X hiding (runScript)
-import qualified Control.Exception         as Exc
-import qualified Data.Maybe                as Maybe
+import           Control.Error     as X hiding (runScript)
+import qualified Control.Exception as Exc
+import qualified Data.Maybe        as Maybe
 
 import Flowbox.Prelude
 
@@ -103,3 +103,11 @@ catchEither handler fun = do
     case result of
         Left  e -> handler e
         Right r -> return r
+
+
+hoistEitherWith :: Monad m => (e1 -> e) -> Either e1 a -> EitherT e m a
+hoistEitherWith conv = hoistEither . fmapL conv
+
+
+lmapEitherT :: Functor m => (e -> a) -> EitherT e m b -> EitherT a m b
+lmapEitherT conf = bimapEitherT conf id

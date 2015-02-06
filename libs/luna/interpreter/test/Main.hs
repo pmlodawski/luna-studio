@@ -107,6 +107,7 @@ def main:
     print $ v
 |]
 
+
 code2 :: Source
 code2 = Source ["Main"] $ [r|
 class Vector a:
@@ -164,7 +165,7 @@ main1 = do
     (libManager , libID) <- readSource code
     (libManager2, _    ) <- readSource code2
 
-    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
+    env <- Env.mk cfg NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
                 (curry $ curry print)
 
@@ -239,7 +240,7 @@ main3 = do
 
     (libManager , libID) <- readSource code
 
-    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
+    env <- Env.mk cfg NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name "main" []) []])
                 (curry $ curry print)
 
@@ -262,7 +263,7 @@ main4 = do
 
     (libManager , libID) <- readSource code
 
-    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
+    env <- Env.mk cfg NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name "main" []) []])
                 (curry $ curry print)
 

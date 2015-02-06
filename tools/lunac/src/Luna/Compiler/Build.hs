@@ -63,7 +63,7 @@ build cfg op diag filePath = do
                     2 -> pure ["-O2"]
                     _ -> fail "Unsupported optimisation level"
     let ccOptions  = ["\"-DDEBUG\"" | Options.ddebug op]
-        includeDirs = [Config.path $ Config.templates $ cfg]
+        includeDirs = [Config.path $ Config.templates cfg]
         -- FIXME[pm]: Why it BLOWS UP when we enable -Wall?
         ghcOptions = ["-threaded", "-Odph", "-optlo-O3"] ++ ["-DDEBUG" | Options.ddebug op] ++ ghcOptions'
 

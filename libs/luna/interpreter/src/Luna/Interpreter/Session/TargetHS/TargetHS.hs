@@ -48,8 +48,8 @@ disabledFlags :: [GHC.ExtensionFlag]
 disabledFlags = [GHC.Opt_MonomorphismRestriction]
 
 
-runDecls :: [String] -> Session mm ()
-runDecls = Session.withExtensionFlags enabledFlags disabledFlags . mapM_ Session.runDecls
+runDecls :: String -> Session mm ()
+runDecls = Session.withExtensionFlags enabledFlags disabledFlags . Session.runDecls
 
 
 reloadAll :: Session mm ()

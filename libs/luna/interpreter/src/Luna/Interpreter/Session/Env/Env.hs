@@ -8,14 +8,17 @@
 
 module Luna.Interpreter.Session.Env.Env where
 
-import           Control.Concurrent.MVar (MVar)
-import qualified Control.Concurrent.MVar as MVar
-import           Data.IntSet             (IntSet)
-import           Data.Map                (Map)
-import           Data.MultiSet           (MultiSet)
-import           Data.Set                (Set)
+import           Control.Concurrent.MVar     (MVar)
+import qualified Control.Concurrent.MVar     as MVar
+import           Data.IntSet                 (IntSet)
+import           Data.Map                    (Map)
+import           Data.MultiSet               (MultiSet)
+import           Data.Set                    (Set)
+import qualified Language.Preprocessor.Cpphs as Cpphs
 
 import qualified Flowbox.Batch.Project.Project               as Project
+import           Flowbox.Config.Config                       (Config)
+import qualified Flowbox.Config.Config                       as Config
 import           Flowbox.Data.MapForest                      (MapForest)
 import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Data.SetForest                      (SetForest)
@@ -42,6 +45,7 @@ data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheI
                              , _fragileOperation   :: FragileMVar
                              , _dependentNodes     :: Map CallPoint IntSet
                              , _profileInfos       :: MapForest CallPoint ProfileInfo
+                             , _cpphsOptions       :: Cpphs.CpphsOptions
 
                              , _timeVar            :: Double
                              , _timeRefs           :: Set CallPoint
@@ -60,15 +64,21 @@ data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheI
 makeLenses ''Env
 
 
-mk :: memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoint
+mkCpphsOptions :: Config -> Cpphs.CpphsOptions
+mkCpphsOptions config = Cpphs.CpphsOptions [] [] [] []
+                            [Config.path (Config.templates config) ++ "/pragmas.h"]
+                            Cpphs.defaultBoolOptions { Cpphs.locations = False }
+
+
+mk :: Config -> memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoint
    -> ResultCallBack -> IO (Env memoryManager)
-mk memoryManager'  libManager' projectID' mainPtr' resultCallBack' = do
+mk config memoryManager'  libManager' projectID' mainPtr' resultCallBack' = do
     fo <- MVar.newMVar ()
-    return $ Env def def def False fo def def
+    return $ Env def def def False fo def def (mkCpphsOptions config)
                  def def
                  def def memoryManager'
                  libManager' projectID' mainPtr' resultCallBack'
 
 
-mkDef :: memoryManager -> IO (Env memoryManager)
-mkDef memoryManager' = mk memoryManager' def def def (const (const (void . return)))
+mkDef :: Config -> memoryManager -> IO (Env memoryManager)
+mkDef config memoryManager' = mk config memoryManager' def def def (const (const (void . return)))

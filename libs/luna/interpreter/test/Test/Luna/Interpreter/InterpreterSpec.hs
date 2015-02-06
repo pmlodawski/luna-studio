@@ -62,7 +62,7 @@ spec = do
     let mm = NoManager
     describe "AST traverse" $ do
         it "finds function arguments" $ do
-            --rootLogger setIntLevel 5
+            rootLogger setIntLevel 5
             Common.runSession mm SampleCodes.traverseExample $ do
                 let lib1      = Library.ID 1
                     var_a     = [CallPoint lib1 22]
