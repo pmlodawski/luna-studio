@@ -17,11 +17,12 @@ import           Luna.Distribution.Cabal.Config  (Config)
 import qualified Luna.Distribution.Cabal.Config  as Config
 import           Luna.Distribution.Cabal.Section (Section)
 import qualified Luna.Distribution.Cabal.Section as Section
+import qualified Luna.Syntax.Name.Path           as Name
 
 
 
 getModuleName :: Source a -> String
-getModuleName = Text.unpack . view Source.modName
+getModuleName = Text.unpack . Text.intercalate "." . toList . view Source.modName
 
 
 genLibrary ::  String -> Version -> [String] -> [String] -> [String] -> [String] -> [Source a] -> Config
