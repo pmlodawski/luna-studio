@@ -17,10 +17,10 @@ import           Data.Text.Lazy (Text)
 
 
 empty :: Expr
-empty = Module [] [] [] []
+empty = Module "Unnamed" [] [] [] []
 
-mk :: [Text] -> Expr
-mk path' = Module path' [] [] []
+mk :: Text -> [Text] -> Expr
+mk name path' = Module name path' [] [] []
 
 addImport :: [Text] -> Expr -> Expr
 addImport path' mod' = mod' { _imports = Import False path' Nothing : _imports mod' }

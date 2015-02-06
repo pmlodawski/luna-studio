@@ -107,7 +107,7 @@ parseGen p st = run (bundleResult (Module.unit p)) st
 parseGen2 p st = run (bundleResult p) st
 
 --moduleParser modPath = parseGen (upToEnd $ func)
-moduleParser modPath = parseGen (upToEnd $ Module.pUnit $ Module.pModule (List.last modPath) (List.init modPath))
+moduleParser qPath = parseGen (upToEnd $ Module.pUnit $ Module.pModule qPath)
 --exprParser           = parseGen (upToEnd expr)
 exprBlockParser      = parseGen (upToEnd $ Struct.indBlock Term.expr)
 exprBlockParser2     = parseGen2 (upToEnd $ Struct.indBlock Term.expr)
