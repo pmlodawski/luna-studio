@@ -26,10 +26,13 @@ import           Flowbox.System.Log.Logger
 import           Flowbox.System.UniPath             (UniPath)
 import qualified Flowbox.System.UniPath             as UniPath
 import           Luna.Data.Source                   (Code (Code), File (File), Source (Source))
+import Luna.Syntax.Name.Path (QualPath(QualPath))
 
 
-path2module :: UniPath -> Text
-path2module path = Text.pack $ List.intercalate "." $ UniPath.toList $ UniPath.dropExtension path
+
+path2module :: UniPath -> QualPath
+path2module path = QualPath t h where
+    h:t = map Text.pack $ UniPath.toList $ UniPath.dropExtension path
 
 
 getSource :: MonadIO m => UniPath -> UniPath -> m (Source File)
@@ -53,8 +56,8 @@ tabs2spaces :: String -> String
 tabs2spaces = replace "\t" "    "
 
 
-module2path :: Text -> String -> UniPath
-module2path m ext = UniPath.addExtension ext $ UniPath.fromList $ StringUtils.split "." $ Text.unpack m
+module2path :: QualPath -> String -> UniPath
+module2path m ext = UniPath.addExtension ext $ UniPath.fromList $ map Text.unpack $ toList m
 
 
 writeSource :: MonadIO m => UniPath -> String -> Source Code -> m ()
