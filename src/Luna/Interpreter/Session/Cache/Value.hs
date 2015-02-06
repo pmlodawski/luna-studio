@@ -118,7 +118,10 @@ computeLookupValue varName (modValues, compValMap) mode = do
     case Map.lookup (varName, mode) compValMap of
         Nothing -> do logger debug "Computing value"
                       val <- computeValue varName mode
-                      return (ModeValue mode (Just val):modValues, Map.insert (varName, mode) val compValMap)
+                      let newMap = if null $ varName ^. VarName.hash
+                            then compValMap
+                            else Map.insert (varName, mode) val compValMap
+                      return (ModeValue mode (Just val):modValues, newMap)
         justVal -> do logger debug "Cached value"
                       return (ModeValue mode justVal:modValues, compValMap)
 
