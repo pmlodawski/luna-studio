@@ -21,5 +21,5 @@ import           Generated.Proto.Mode.Mode      (Mode)
 
 type SValue = Value
 
-computeValue :: Serialization.Serializable a b => a -> Mode -> IO (Maybe SValue)
-computeValue var mode = Serialization.toValue (Serialization.compute var mode) mode
+computeValue :: Serialization.Serializable a b => a -> Mode -> IO SValue
+computeValue var mode = Serialization.toValue var mode
