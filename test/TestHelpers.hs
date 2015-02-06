@@ -98,8 +98,8 @@ instance Comparable Image ImageMetric where
                      --"actualImage sum: " ++ (show $ s1) ++
                      --"\nexpectedImage sum: " ++ (show $ s2) ++
                      ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff) where
-                      resultPath = name++"/test_result.png"
-                      diffPath = name++"/test_diff.png"
+                      resultPath = name++"Test/test_result.png"
+                      diffPath = name++"Test/test_diff.png"
                       [maxDiff] = M.toList AC.run maxDif
                       --(r,g,b,a) = Mock.unsafeGetChannels $ diff
                       maxDif = M.zipWith4 (\r g b a -> maximum [r,g,b,a]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
@@ -150,3 +150,6 @@ instance Comparable Image ImageMetric where
 imgAsList img = 
     let (r,g,b,a) = Mock.unsafeGetChannels img
     in  (M.toList AC.run r) ++ (M.toList AC.run g) ++ (M.toList AC.run b) ++(M.toList AC.run a)
+
+getDefaultTestPic specPath testName = 
+    unsafePerformIO $ loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
