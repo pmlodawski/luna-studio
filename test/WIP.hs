@@ -16,7 +16,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 
 -- module --
-module Main.Std where
+module Main where
 
 -- imports --
 import Luna.Target.HS
@@ -49,12 +49,39 @@ memDef_Main_print self s = do
 memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
 $(registerMethod ''Main "print")
 
+-- ====== Vector type ====== --
+data Vector a = Vector a a a deriving (Show, Eq, Ord, Generic, Typeable)
+data Cls_Vector  = Cls_Vector deriving (Show, Eq, Ord, Generic, Typeable)
+
+-- ------ Vector.Vector constructor ------ --
+cons_Vector = _member("Vector") (val Cls_Vector)
+memDef_Cls_Vector_Vector = liftCons3 Vector
+
+-- ====== Method: Cls_Vector.Vector ====== --
+memSig_Cls_Vector_Vector = _rtup4(_nuSigArg("self"), _nuSigArg("x"), _nuSigArg("y"), _nuSigArg("z"))
+memFnc_Cls_Vector_Vector = (memSig_Cls_Vector_Vector, memDef_Cls_Vector_Vector)
+$(registerMethod ''Cls_Vector "Vector")
+
+-- ------ Vector accessors ------ --
+$(generateFieldAccessors ''Vector [('Vector, [Just "x", Just "y", Just "z"])])
+$(registerFieldAccessors ''Vector ["x", "y", "z"])
+
+-- ------ Vector methods ------ --
+
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 memDef_Main_main _self = do 
-     _call(6) (appNext (val (1 :: Int)) (_member("print") _self))
+     _v <- _call(15) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) cons_Vector)))
+     _v <- _call(0) (appNext (val (5 :: Int)) (_member("set_x") _v))
+     _call(25) (appNext (_call(997) (_member("y") _v)) (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")
+
+
+-- ===================================================================
+-- Main module wrappers
+-- ===================================================================
+main = mainMaker cons_Main
 
