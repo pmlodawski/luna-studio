@@ -249,6 +249,7 @@ genDecl ast@(Label lab decl) = case decl of
     Decl.Func funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl -> genForeign fdecl
     Decl.Pragma     {} -> return ()
+    Decl.Imp        {} -> return () --FIXME[pm->wd] 
 
 genStdFunc f = genFunc f (Just genFuncBody) True
 genFuncNoBody f = genFunc f Nothing True
