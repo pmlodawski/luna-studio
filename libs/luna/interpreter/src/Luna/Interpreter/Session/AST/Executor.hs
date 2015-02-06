@@ -21,8 +21,8 @@ import           Flowbox.Prelude                            as Prelude hiding (c
 import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
 import qualified Luna.Graph.Node                            as Node
+import           Luna.Graph.Node.Expr                       (NodeExpr)
 import qualified Luna.Graph.Node.Expr                       as NodeExpr
-import           Luna.Graph.Node.StringExpr                 (StringExpr)
 import qualified Luna.Graph.Node.StringExpr                 as StringExpr
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
@@ -49,9 +49,8 @@ import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
 import qualified Luna.Pass.CodeGen.HSC.HSC                  as HSC
-import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
 import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen   as HASTGen
-import qualified Luna.Data.Source as Source
+import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
 
 
 
@@ -107,39 +106,33 @@ executeOutputs :: MemoryManager mm
                => CallDataPath -> [VarName] -> Session mm ()
 executeOutputs callDataPath varNames = do
     let argsCount  = length $ Traverse.inDataConnections callDataPath
-        stringExpr = if argsCount == 1 then StringExpr.Id else StringExpr.Tuple
+        nodeExpr = NodeExpr.StringExpr $ if argsCount == 1 then StringExpr.Id else StringExpr.Tuple
     when (length callDataPath > 1) $
-        execute (init callDataPath) stringExpr varNames
+        execute (init callDataPath) nodeExpr varNames
 
 
 executeNode :: MemoryManager mm
             => CallDataPath -> [VarName] -> Session mm ()
 executeNode callDataPath varNames = do
     let node       = last callDataPath ^. CallData.node
-
-    stringExpr <- case node of
-        Node.Expr (NodeExpr.StringExpr stringExpr) _ _ ->
-            return stringExpr
-        Node.Expr (NodeExpr.ASTExpr expr) _ _ -> do
-            hast <- hoistEitherWith (Error.OtherError $(loc)) =<< HASTGen.runExpr expr
-            StringExpr.Expr . view Source.code . head <$> (hoistEitherWith (Error.OtherError $(loc)) =<< HSC.run hast)
-    execute callDataPath stringExpr varNames
+    case node of
+        Node.Expr nodeExpr _ _ -> execute callDataPath nodeExpr varNames
 
 
 executeAssignment :: MemoryManager mm
                   => CallDataPath -> [VarName] -> Session mm ()
 executeAssignment callDataPath [varName] =
-    execute callDataPath StringExpr.Id [varName] -- TODO [PM] : handle Luna's pattern matching
+    execute callDataPath (NodeExpr.StringExpr StringExpr.Id) [varName] -- TODO [PM] : handle Luna's pattern matching
 
 
 execute :: MemoryManager mm
-        => CallDataPath -> StringExpr -> [VarName] -> Session mm ()
-execute callDataPath stringExpr varNames = do
+        => CallDataPath -> NodeExpr -> [VarName] -> Session mm ()
+execute callDataPath nodeExpr varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
     prevVarName  <- Cache.recentVarName callPointPath
     boundVarName <- Cache.dependency varNames callPointPath
-    let execFunction = evalFunction stringExpr callDataPath varNames
+    let execFunction = evalFunction nodeExpr callDataPath varNames
 
         executeModified = do
             varName <- execFunction
@@ -182,51 +175,58 @@ data VarType = Lit    String
              | List
              | TimeVar
              | Id
+             | Expression String
              deriving Show
 
 
-varType :: StringExpr -> VarType
-varType  StringExpr.Id                 = Id
-varType  StringExpr.Tuple              = Tuple
-varType  StringExpr.List               = List
-varType (StringExpr.Native name      ) = Native name
-varType (StringExpr.Expr   []        ) = Prelude.error "varType : empty expression"
-varType (StringExpr.Expr   name@(h:_))
-    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit name
-    | name == Var.timeRef                                = TimeVar
-    | Char.isUpper h                                     = Con name
-    | otherwise                                          = Var name
-varType other = Prelude.error $ show other
+varType :: NodeExpr -> Session mm VarType
+varType (NodeExpr.StringExpr  StringExpr.Id                ) = return   Id
+varType (NodeExpr.StringExpr  StringExpr.Tuple             ) = return   Tuple
+varType (NodeExpr.StringExpr  StringExpr.List              ) = return   List
+varType (NodeExpr.StringExpr (StringExpr.Native name      )) = return $ Native name
+varType (NodeExpr.StringExpr (StringExpr.Expr   []        )) = return $ Prelude.error "varType : empty expression"
+varType (NodeExpr.StringExpr (StringExpr.Expr   name@(h:_)))
+    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = return $ Lit name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = return $ Lit name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Double) = return $ Lit name
+    | Maybe.isJust (Read.readMaybe name :: Maybe String) = return $ Lit name
+    | name == Var.timeRef                                = return   TimeVar
+    | Char.isUpper h                                     = return $ Con name
+    | otherwise                                          = return $ Var name
+varType (NodeExpr.ASTExpr expr) = do
+    -- TODO[PM] : replaceTimeVars
+    hast <- hoistEitherWith (Error.OtherError $(loc)) =<< HASTGen.runExpr expr
+    return $ Expression $ HSC.genExpr hast
+
+
+nameHash :: String -> String
+nameHash name = if name == "Point2" then "Point2" else Hash.hashStr name
 
 
 evalFunction :: MemoryManager mm
-             => StringExpr -> CallDataPath -> [VarName] -> Session mm VarName
-evalFunction stringExpr callDataPath varNames = do
+             => NodeExpr -> CallDataPath -> [VarName] -> Session mm VarName
+evalFunction nodeExpr callDataPath varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        nameStr       = StringExpr.toString stringExpr
-        nameHash      = if nameStr == "Point2" then "Point2" else Hash.hashStr $ StringExpr.toString stringExpr
-
         mkArg arg = "(Value (Pure "  ++ VarName.toString arg ++ "))"
         args      = map mkArg varNames
         appArgs a = if null a then "" else " $ appNext " ++ List.intercalate " $ appNext " (reverse a)
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
 
         self      = head varNames
-    operation <- case varType stringExpr of
+    vt <- varType nodeExpr
+    operation <- case vt of
         List        -> return $ "toIOEnv $ fromValue $ val [" ++ List.intercalate "," args ++ "]"
         Id          -> return $ "toIOEnv $ fromValue $ " ++ mkArg self
         Native name -> return $ "toIOEnv $ fromValue $ " ++ genNative name
-        Con    _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs args ++ " $ cons_" ++ nameHash
-        Var    _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
+        Con    name -> return $ "toIOEnv $ fromValue $ call" ++ appArgs args ++ " $ cons_" ++ nameHash name
+        Var    name -> return $ "toIOEnv $ fromValue $ call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show (nameHash name) ++ ") " ++ mkArg self
         Lit    name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ if Maybe.isJust (Read.readMaybe name :: Maybe Int)
                                                                                   then " :: Int)"
                                                                                   else ")"
         Tuple       -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
         TimeVar     -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
+        Expression  name -> return $ "toIOEnv $ fromValue $ " ++ name
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment' tmpVarName operation
         hash <- Hash.computeInherit tmpVarName varNames
