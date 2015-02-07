@@ -71,8 +71,8 @@ $(registerFieldAccessors ''Vector ["x", "y", "z"])
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 memDef_Main_main _self = do 
-     _v <- _call(15) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) cons_Vector)))
-     _v <- _call(0) (appNext (val (5 :: Int)) (_member("set_x") _v))
+     _v <- _call(15) (appNext (val (3 :: Int)) (appByName _name("z") (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
+     _call(22) (appNext _v (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)

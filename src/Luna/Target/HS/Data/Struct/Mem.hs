@@ -70,13 +70,13 @@ getMem name obj = val . appH ptr $ Args9.empty where
 
 addArg' = (fmap.fmap) . Args9.addArg
 appNext = addArg' . Args9.upArg
-appByName = addArg' `dot2` Args9.npArg
+appByName pname a = addArg' $ Args9.npArg a pname
 
 
 
 --member name obj = appByName obj (Proxy::Proxy "self") $ getMem name obj
 
-member name obj = appByName obj (Proxy::Proxy "self") $ getMem name obj
+member name obj = appByName (Proxy::Proxy "self") obj $ getMem name obj
 
 
 --mkFunc :: Mem cls name -> f -> Args7.Func (Args7.SigOf cls name) f
