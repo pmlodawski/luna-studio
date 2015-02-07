@@ -460,11 +460,12 @@ genExpr (Label lab expr) = case expr of
               setSteps          [] = undefined
               genField (Expr.FieldUpd sels expr) = genExpr $ setSteps (reverse sels) expr
 
-    Expr.App npat@(NamePat pfx base args) -> mod <$> (foldl (flip (<*>)) (genExpr $ segBase) $ (fmap.fmap) (HE.AppE . (HE.AppE (HE.VarE "appNext"))) (fmap genArg $ NamePat.args npat))
-      where genArg (Expr.AppArg mname expr) = (genExpr expr) -- nameMod mname <*> (genExpr expr)
+    Expr.App npat@(NamePat pfx base args) -> mod <$> (foldl (flip (<*>)) (genExpr $ segBase) $ (fmap.fmap) HE.AppE argGens)
+      where argGens = fmap genArg $ NamePat.args npat
+            genArg (Expr.AppArg mname expr) = nameMod mname <$> genExpr expr -- nameMod mname <*> (genExpr expr)
             nameMod mname = case mname of
-                Nothing -> return $ HE.AppE (HE.VarE "unnamed")
-                Just n  -> Pass.fail "No suppert for named args yet!" -- return $ HE.AppE (HE.VarE "named")
+                Nothing -> HE.AppE (HE.VarE "appNext")
+                Just n  -> HE.AppE $ HE.AppE (HE.VarE "appByName") (HE.MacroE "_name" [HE.Lit $ HLit.String n])
             segBase = NamePat.segBase base
             mod = case (unwrap segBase) of
                 Expr.Curry {} -> id

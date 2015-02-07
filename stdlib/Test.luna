@@ -5,6 +5,6 @@ class Vector a:
     x,y,z :: a
 
 def main:
-    v = Vector x=1 2 3
-    v.x = 5
+    v = Vector y=1 z=2 3
+    print v
 
