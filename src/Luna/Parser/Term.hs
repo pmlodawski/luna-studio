@@ -94,7 +94,7 @@ tlExprPatVar = assignSeg $ Expr.Assignment <$> Pat.var
 assignSeg p = p <* Tok.assignment
 
 tlExprExtHead =   try tlExprPat
-              <|> tlExprBasicHead
+              <|> try tlRecUpd
 
 tlExprBasicHead =  try tlExprPatVar
                <|> try tlRecUpd
@@ -243,7 +243,7 @@ mkFuncParser baseVar (id, mpatt) = case mpatt of
                                                    $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
               segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
-              argExpr         = appArg pEntBaseSimpleE
+              argExpr         = appArg (opTE pEntBaseSimpleE)
               segNames        = NamePat.segmentNames patt
               pattParser      = NamePat Nothing <$> baseParser   <*> mapM segParser segs
               baseParser      = NamePat.Segment <$> baseMultiVar <*> defsParser baseDefs
