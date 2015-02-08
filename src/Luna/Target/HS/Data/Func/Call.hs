@@ -84,8 +84,13 @@ call2 x = polyJoin . fmap (call2' x)
 call' (AppH (fptr, args)) = appDefaults . appArgs args $ func sig f where
         (sig,f) = getMember fptr (monoType args)
 
-
+call2' :: (MemberProvider obj name argRep (sig1, f1), AppArgs b (ArgsKind sig1) sig1 f1 k1 sig f, AppDefaults k1 f sig c, Reverse' a () b)
+       => argRep -> AppH (Mem obj name) a -> c
 call2' x (AppH (fptr, args)) = appDefaults . appArgs args $ func sig f where
+        (sig,f) = getMember fptr x
+
+
+call3' x (AppH (fptr, args)) = func sig f where
         (sig,f) = getMember fptr x
 
 

@@ -41,7 +41,7 @@ import Type.BaseType
 -- Mem (proxy datatype)
 ----------------------------------------------------------------------------------
 
-data Mem obj (name :: Symbol) = Mem (Proxy obj) (Proxy name) deriving (Typeable)
+data Mem (obj :: k) (name :: Symbol) = Mem (Proxy obj) (Proxy name) deriving (Typeable)
 
 instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
     show (Mem obj name) = "Mem " ++ show (typeOf obj) ++ " " ++ show (symbolVal name)
@@ -53,7 +53,7 @@ instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
 
 
 
-class MemberProvider obj name argRep f | obj name argRep -> f where
+class MemberProvider (obj :: k) name argRep f | obj name argRep -> f where
     getMember :: Mem obj name -> argRep -> f
 
 
