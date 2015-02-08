@@ -77,23 +77,50 @@ memDef_Main_test _self _x = do
 memFnc_Main_test = (memSig_Main_test, memDef_Main_test)
 $(registerMethod ''Main "test")
 
+-- ====== Method: Main.foo ====== --
+memSig_Main_foo = _rtup2(_nuSigArg("self"), _nuSigArg("f"))
+memDef_Main_foo _self _f = do 
+     _call(0) (appNext (val (5 :: Int)) _f)
+     
+
+memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
+$(registerMethod ''Main "foo")
+
+-- ====== Method: Main.bar ====== --
+memSig_Main_bar = _rtup1(_nuSigArg("self"))
+memDef_Main_bar _self = do 
+     val ()
+     
+
+memFnc_Main_bar = (memSig_Main_bar, memDef_Main_bar)
+$(registerMethod ''Main "bar")
+
+-- ====== Method: Main.baz ====== --
+memSig_Main_baz = _rtup3(_nuSigArg("self"), _npSigArg("x", val (0 :: Int)), _npSigArg("y", val (0 :: Int)))
+memDef_Main_baz _self _x _y = do 
+     val (_x, _y)
+     
+
+memFnc_Main_baz = (memSig_Main_baz, memDef_Main_baz)
+$(registerMethod ''Main "baz")
+
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 
--- ====== Method: Main.lambda__49 ====== --
-memSig_Main_lambda__49 = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
-memDef_Main_lambda__49 _self _x = do 
+-- ====== Method: Main.lambda__50 ====== --
+memSig_Main_lambda__50 = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
+memDef_Main_lambda__50 _self _x = do 
      val (_x, _x)
      
 
-memFnc_Main_lambda__49 = (memSig_Main_lambda__49, memDef_Main_lambda__49)
-$(registerMethod ''Main "lambda__49")
+memFnc_Main_lambda__50 = (memSig_Main_lambda__50, memDef_Main_lambda__50)
+$(registerMethod ''Main "lambda__50")
 memDef_Main_main _self = do 
-     _v <- _call(0) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
-     _foo <- _member("lambda__49") (_call(2) cons_Main)
-     _bar <- _member("test") _self
-     _call(3) (appNext (_call(4) (appNext (val (1 :: Int)) _foo)) (_member("print") _self))
-     _call(5) (appNext _v (_member("print") _self))
+     _v <- _call(1) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
+     _f <- _member("lambda__50") (_call(3) cons_Main)
+     _call(4) (appNext (_call(5) (appNext _f (_member("foo") _self))) (_member("print") _self))
+     _call(6) (appNext _v (_member("print") _self))
+     _call(7) (appNext (_call(8) (appByName _name("y") (val (7 :: Int)) (_member("baz") _self))) (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)

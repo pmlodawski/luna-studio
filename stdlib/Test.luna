@@ -6,10 +6,15 @@ class Vector a:
 
 def test x: x
 
+def foo f: f 5
+
+def bar
+
+def baz x=0 y=0: (x,y)
+
 def main:
     v = Vector y=1 2 3
-    foo = x:(x,x)
-    bar = @test
-    print (foo 1)
+    f = x:(x,x)
+    print $ foo f
     print v
-
+    print $ baz y=7
