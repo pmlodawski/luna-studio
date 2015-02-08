@@ -12,7 +12,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverlappingInstances #-}
@@ -37,11 +36,14 @@ import Control.Category.Dot
 import Data.Typeable
 import Type.BaseType
 
+class ProxyType a b | a -> b where
+	proxyType :: a -> b
+
 ----------------------------------------------------------------------------------
 -- Mem (proxy datatype)
 ----------------------------------------------------------------------------------
 
-data Mem (obj :: k) (name :: Symbol) = Mem (Proxy obj) (Proxy name) deriving (Typeable)
+data Mem obj (name :: Symbol) = Mem obj (Proxy name) deriving (Typeable)
 
 instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
     show (Mem obj name) = "Mem " ++ show (typeOf obj) ++ " " ++ show (symbolVal name)
@@ -53,15 +55,18 @@ instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
 
 
 
-class MemberProvider (obj :: k) name argRep f | obj name argRep -> f where
+class MemberProvider obj name argRep f | obj name argRep -> f where
     getMember :: Mem obj name -> argRep -> f
 
 
 
-objPtr :: m base s a -> out <= (Env base, Safety s, BaseType (Proxy a) out, out~Proxy b)
-objPtr el = Proxy
+--objPtr :: m base s a -> out <= (Env base, Safety s, BaseType (Proxy a) out, out~Proxy b)
+--objPtr el = Proxy
 
-memPtr :: Proxy name -> m base s a -> Mem obj name <= (Env base, Safety s, BaseType (Proxy a) (Proxy obj))
+objPtr :: forall m base s a out. (Env base, Safety s, ProxyType a out) => m base s a -> out
+objPtr _ = proxyType (undefined :: a)
+
+--memPtr :: ProxyType a obj => Proxy name -> m base s a -> Mem obj name
 memPtr name obj = Mem (objPtr obj) name
 
 getMem name obj = val . appH ptr $ Args9.empty where
