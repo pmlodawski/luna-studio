@@ -60,6 +60,8 @@ type SegmentName      = Text
 -- Utils
 ----------------------------------------------------------------------
 
+single base args = NamePat Nothing (Segment base args) []
+
 appendArg  arg  = appendArgs [arg]
 appendArgs nargs (Segment base args) = Segment base (args ++ nargs)
 
