@@ -248,7 +248,8 @@ genDecl :: (Monad m, Enumerated lab, Num lab) => LDecl lab (LExpr lab ())-> Pass
 genDecl ast@(Label lab decl) = case decl of
     Decl.Data (Decl.DataDecl (convVar -> name) params cons defs) -> withCtx (fromText name) $ do
         genCons name (fmap convVar params) cons stdDerivings True
-        addComment $ H3 $ name <> " methods"
+        addComment $ H3 $ name <> " members"
+        mapM_ genDecl defs
     
     Decl.Func funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl -> genForeign fdecl
