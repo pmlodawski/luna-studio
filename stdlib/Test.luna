@@ -4,8 +4,12 @@ foreign haskell def print s="":
 class Vector a:
     x,y,z :: a
 
+def test x: x
+
 def main:
     v = Vector y=1 2 3
-    # v.x = 5
+    foo = x:(x,x)
+    bar = @test
+    print (foo 1)
     print v
 

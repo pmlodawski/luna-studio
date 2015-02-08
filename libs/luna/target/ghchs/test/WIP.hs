@@ -68,11 +68,32 @@ $(registerFieldAccessors ''Vector ["x", "y", "z"])
 
 -- ------ Vector methods ------ --
 
+-- ====== Method: Main.test ====== --
+memSig_Main_test = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
+memDef_Main_test _self _x = do 
+     _x
+     
+
+memFnc_Main_test = (memSig_Main_test, memDef_Main_test)
+$(registerMethod ''Main "test")
+
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
+
+-- ====== Method: Main.lambda__50_55 ====== --
+memSig_Main_lambda__50_55 = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
+memDef_Main_lambda__50_55 _self _x = do 
+     val (_x, _x)
+     
+
+memFnc_Main_lambda__50_55 = (memSig_Main_lambda__50_55, memDef_Main_lambda__50_55)
+$(registerMethod ''Main "lambda__50_55")
 memDef_Main_main _self = do 
-     _v <- _call(15) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
-     val ()
+     _v <- _call(18) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
+     _foo <- _member("lambda__50_55") (_call(0) cons_Main)
+     _bar <- _member("test") _self
+     _call(38) (appNext (_call(42) (appNext (val (1 :: Int)) _foo)) (_member("print") _self))
+     _call(45) (appNext _v (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
