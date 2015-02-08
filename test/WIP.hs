@@ -80,20 +80,20 @@ $(registerMethod ''Main "test")
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 
--- ====== Method: Main.lambda__50_55 ====== --
-memSig_Main_lambda__50_55 = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
-memDef_Main_lambda__50_55 _self _x = do 
+-- ====== Method: Main.lambda__49 ====== --
+memSig_Main_lambda__49 = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
+memDef_Main_lambda__49 _self _x = do 
      val (_x, _x)
      
 
-memFnc_Main_lambda__50_55 = (memSig_Main_lambda__50_55, memDef_Main_lambda__50_55)
-$(registerMethod ''Main "lambda__50_55")
+memFnc_Main_lambda__49 = (memSig_Main_lambda__49, memDef_Main_lambda__49)
+$(registerMethod ''Main "lambda__49")
 memDef_Main_main _self = do 
-     _v <- _call(18) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
-     _foo <- _member("lambda__50_55") (_call(0) cons_Main)
+     _v <- _call(0) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
+     _foo <- _member("lambda__49") (_call(2) cons_Main)
      _bar <- _member("test") _self
-     _call(38) (appNext (_call(42) (appNext (val (1 :: Int)) _foo)) (_member("print") _self))
-     _call(45) (appNext _v (_member("print") _self))
+     _call(3) (appNext (_call(4) (appNext (val (1 :: Int)) _foo)) (_member("print") _self))
+     _call(5) (appNext _v (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
