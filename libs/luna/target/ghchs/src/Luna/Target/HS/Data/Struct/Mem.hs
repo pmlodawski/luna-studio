@@ -17,6 +17,7 @@
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TypeFamilies #-}
 
 
 !{-# LANGUAGE RightSideContexts #-}
@@ -36,8 +37,13 @@ import Control.Category.Dot
 import Data.Typeable
 import Type.BaseType
 
-class ProxyType a b | a -> b where
-	proxyType :: a -> b
+--class ProxyType a b | a -> b where
+--	proxyType :: a -> b
+
+type family ProxyType a
+
+proxyType :: a -> Proxy (ProxyType a)
+proxyType _ = Proxy
 
 ----------------------------------------------------------------------------------
 -- Mem (proxy datatype)
@@ -56,15 +62,15 @@ instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
 
 
 class MemberProvider obj name argRep f | obj name argRep -> f where
-    getMember :: Mem obj name -> argRep -> f
+    getMember :: Mem (Proxy obj) name -> argRep -> f
 
 
 
 --objPtr :: m base s a -> out <= (Env base, Safety s, BaseType (Proxy a) out, out~Proxy b)
 --objPtr el = Proxy
 
-objPtr :: forall m base s a out. (Env base, Safety s, ProxyType a out) => m base s a -> out
-objPtr _ = proxyType (undefined :: a)
+objPtr :: forall m base s a out. (Env base, Safety s) => m base s a -> (Proxy (ProxyType a))
+objPtr _ = Proxy
 
 --memPtr :: ProxyType a obj => Proxy name -> m base s a -> Mem obj name
 memPtr name obj = Mem (objPtr obj) name

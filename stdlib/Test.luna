@@ -4,9 +4,21 @@ foreign haskell def print s="":
 class Vector a:
     x,y,z :: a
 
-    def asTuple: (self.x, self.y, self.z)
+    def asTuple:
+        (self.x, self.y, self.z)
+
+def test x: x
+
+def foo f: f 5
+
+def bar
+
+def baz x=0 y=0: (x,y)
 
 def main:
     v = Vector y=1 2 3
-    a = v.asTuple
-    print a
+    f = x:(x,x)
+    print $ foo f
+    print v
+    print $ baz y=7
+    print $ v.asTuple

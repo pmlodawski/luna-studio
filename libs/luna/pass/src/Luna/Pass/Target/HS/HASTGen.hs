@@ -212,6 +212,8 @@ genCons name params cons derivings makeDataType = do
     if makeDataType then State.addDataType $ HE.DataD name params consE derivings
                     else State.addComment  $ H5 "datatype provided externally"
     addClsDataType clsConName derivings
+    regTHExpr $ TH.mkRegType clsConName
+    regTHExpr $ TH.mkRegType name
     mapM_ genConData conDecls
 
     when (not $ null fieldNames) $ do
@@ -224,7 +226,6 @@ genCons name params cons derivings makeDataType = do
 addClsDataType clsConName derivings = do
     let consClsHE  = HE.Con clsConName mempty
     State.addDataType $ HE.DataD clsConName mempty [consClsHE] derivings
-
 
 
 liftCons num = "liftCons" <> fromString (show num)
