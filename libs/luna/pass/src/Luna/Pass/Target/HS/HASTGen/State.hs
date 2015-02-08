@@ -29,8 +29,9 @@ logger = getLogger $(moduleName)
 
 type HExpr = HExpr.Expr
 
-data GenState = GenState { _mod :: HExpr
-                         , _ctx :: [QualPath]
+data GenState = GenState { _mod    :: HExpr
+                         , _ctx    :: [QualPath]
+                         , _callID :: Int
                          }
 
 makeLenses ''GenState
@@ -43,6 +44,12 @@ type GenStateM m = (Applicative m, MonadState GenState m, Functor m)
 
 popList []     = Nothing
 poplist (x:xs) = Just (x,xs)
+
+genCallID = do
+    s <- get
+    let cid = view callID s
+    put $ s & callID .~ cid + 1
+    return cid
 
 pushCtx :: GenStateM m => QualPath -> m()
 pushCtx c = modify (ctx %~ (c:))
@@ -122,4 +129,4 @@ regTHExpr = appendModuleBody
 
 
 instance Default GenState where
-    def = GenState HExpr.Undefined def
+    def = GenState HExpr.Undefined def 0
