@@ -1,10 +1,10 @@
 foreign haskell def print s="":
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
-class Vector:
-    x,y,z :: Int
+class Vector a:
+    x,y,z :: a
 
-    def asTuple: self.x
+    def asTuple: (self.x, self.y, self.z)
 
 def main:
     v = Vector y=1 2 3

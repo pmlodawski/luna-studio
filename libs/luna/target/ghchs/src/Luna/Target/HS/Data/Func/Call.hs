@@ -78,14 +78,18 @@ import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 --        (sig,f) = getMember fptr (monoType args)
 
 call = polyJoin . fmap call'
+
+
+--call2 :: (MemberProvider obj name argRep (sig1, f1), PolyMonad m1 m2 m3, AppArgs b (ArgsKind sig1) sig1 f1 k1 sig f, AppDefaults k1 f sig (m2 a), Reverse' a1 () b, Functor m1)
+--      => (argRep :: *) -> m1 (AppH (Mem (obj :: k) (name::Symbol)) a1) -> m3 (a :: *)
 call2 x = polyJoin . fmap (call2' x)
 
 
 call' (AppH (fptr, args)) = appDefaults . appArgs args $ func sig f where
         (sig,f) = getMember fptr (monoType args)
 
-call2' :: (MemberProvider obj name argRep (sig1, f1), AppArgs b (ArgsKind sig1) sig1 f1 k1 sig f, AppDefaults k1 f sig c, Reverse' a () b)
-       => argRep -> AppH (Mem obj name) a -> c
+--call2' :: (MemberProvider obj name argRep (sig1, f1), AppArgs b (ArgsKind sig1) sig1 f1 k1 sig f, AppDefaults k1 f sig c, Reverse' a () b)
+--       => (argRep :: *) -> AppH (Mem (obj :: k) (name::Symbol)) a -> (c :: *)
 call2' x (AppH (fptr, args)) = appDefaults . appArgs args $ func sig f where
         (sig,f) = getMember fptr x
 
