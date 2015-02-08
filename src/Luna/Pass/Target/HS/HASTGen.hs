@@ -345,10 +345,11 @@ genFFuncBody txt _ = pure $ [HE.Native txt]
 
 genFuncBody :: Ctx m a v => [LExpr a v] -> Maybe (LType a) -> PassResult m [HE]
 genFuncBody exprs output = case exprs of
-    []   -> pure []
+    []   -> (:[]) <$> pure (mkVal $ HE.Tuple [])
     x:[] -> (:) <$> genExpr x
                 <*> case unwrap x of
                       Expr.Assignment {} -> (:[]) <$> pure (mkVal $ HE.Tuple [])
+                      Expr.RecUpd     {} -> (:[]) <$> pure (mkVal $ HE.Tuple [])
                       _                  -> pure []
     x:xs -> (:) <$> genExpr x <*> genFuncBody xs output
 
@@ -459,17 +460,10 @@ genExpr (Label lab expr) = case expr of
 
         let inputs' = fmap unwrap inputs
             fname   = "lambda#" <> fromString (show lid)
-            func    = Decl.Func $ Decl.FuncDecl [] (NamePat.single fname (selfArg : inputs')) Nothing body -- :: Decl Int (LExpr Int ())
-            acc     = Expr.Accessor (Name.TypeName $ fromText fname) $ Label 0 $ Expr.app (Label 0 $ Expr.Cons $ fromText tpName) []
-        --genDecl f
+            func    = Decl.Func $ Decl.FuncDecl [] (NamePat.single fname (selfArg : inputs')) Nothing body
+            lamRef  = Expr.Accessor (Name.TypeName $ fromText fname) $ Label 0 $ Expr.app (Label 0 $ Expr.Cons $ fromText tpName) []
         genDecl (Label lab func)
-
-        --pats   <- genFuncPats args True
-        --sig    <- genFuncSig args
-        --hbody  <- mapM genExpr body
-        --return $ HE.app (HE.VarE "mkLam") [sig, HE.Lambda pats $ genBody hbody]
-        --return $ HE.ConE [tpName]
-        genExpr (Label (0::Int) acc)
+        genExpr (Label (0::Int) lamRef)
       where args = fmap unwrap inputs
 
     Expr.RecUpd  name fieldUpdts -> HE.Arrow (HE.Var $ Naming.mkVar $ hash name) <$> case fieldUpdts of
@@ -487,7 +481,7 @@ genExpr (Label lab expr) = case expr of
 
     Expr.App npat@(NamePat pfx base args) -> mod <*> (foldl (flip (<*>)) (genExpr $ segBase) $ (fmap.fmap) HE.AppE argGens)
       where argGens = fmap genArg $ NamePat.args npat
-            genArg (Expr.AppArg mname expr) = nameMod mname <$> genExpr expr -- nameMod mname <*> (genExpr expr)
+            genArg (Expr.AppArg mname expr) = nameMod mname <$> genExpr expr
             nameMod mname = case mname of
                 Nothing -> HE.AppE (HE.VarE "appNext")
                 Just n  -> HE.AppE $ HE.AppE (HE.VarE "appByName") (HE.MacroE "_name" [HE.Lit $ HLit.String n])
@@ -505,8 +499,6 @@ genExpr (Label lab expr) = case expr of
         _               -> Pass.fail "Only meta-constructors are supported now"
     
     Expr.Decl _ -> Pass.fail "Nested declarations are not supported yet"
-
-    where astID = Enum.id lab
 
 
 mkMemberGetter name = HE.MacroE "_member" [HE.Lit $ HLit.String name]
