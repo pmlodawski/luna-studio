@@ -64,7 +64,7 @@ import           Luna.Syntax.Name.Pattern     (NamePat(NamePat), Segment(Segment
 import qualified Luna.Syntax.Name.Pattern     as NamePat
 
 import qualified Luna.Pass.Target.HS.HASTGen.State as State
-import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx, regDecl)
+import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx, regDecl, genCallID)
 import           Luna.Syntax.Name.Hash              (Hashable, hash)
 --import qualified Luna.Target.HS.Host.NamingOld                          as Naming
 import qualified Luna.Target.HS.Host.Naming2 as Naming
@@ -451,13 +451,14 @@ genExpr (Label lab expr) = case expr of
               genMatch (unwrap -> Expr.Match pat body) = HE.Match <$> genPat pat <*> (HE.DoBlock <$> mapM genExpr body)
 
     Expr.Lambda inputs output body -> do
+        lid <- genCallID
         ctx <- getCtx
         tpName <- case ctx of
             Nothing -> Pass.fail "Running lambda generation without context!"
             Just n  -> return $ hash n
 
         let inputs' = fmap unwrap inputs
-            fname   = "lambda#" <> fromString (show astID)
+            fname   = "lambda#" <> fromString (show lid)
             func    = Decl.Func $ Decl.FuncDecl [] (NamePat.single fname (selfArg : inputs')) Nothing body -- :: Decl Int (LExpr Int ())
             acc     = Expr.Accessor (Name.TypeName $ fromText fname) $ Label 0 $ Expr.app (Label 0 $ Expr.Cons $ fromText tpName) []
         --genDecl f
@@ -484,7 +485,7 @@ genExpr (Label lab expr) = case expr of
               setSteps          [] = undefined
               genField (Expr.FieldUpd sels expr) = genExpr $ setSteps (reverse sels) expr
 
-    Expr.App npat@(NamePat pfx base args) -> mod <$> (foldl (flip (<*>)) (genExpr $ segBase) $ (fmap.fmap) HE.AppE argGens)
+    Expr.App npat@(NamePat pfx base args) -> mod <*> (foldl (flip (<*>)) (genExpr $ segBase) $ (fmap.fmap) HE.AppE argGens)
       where argGens = fmap genArg $ NamePat.args npat
             genArg (Expr.AppArg mname expr) = nameMod mname <$> genExpr expr -- nameMod mname <*> (genExpr expr)
             nameMod mname = case mname of
@@ -492,8 +493,8 @@ genExpr (Label lab expr) = case expr of
                 Just n  -> HE.AppE $ HE.AppE (HE.VarE "appByName") (HE.MacroE "_name" [HE.Lit $ HLit.String n])
             segBase = NamePat.segBase base
             mod = case (unwrap segBase) of
-                Expr.Curry {} -> id
-                _             -> HE.AppE (HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show astID])
+                Expr.Curry {} -> pure $ id
+                _             -> (\cid -> HE.AppE (HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show cid])) <$> genCallID
 
     Expr.List lst -> case lst of
         Expr.SeqList items -> mkVal . HE.ListE <$> mapM genExpr items
