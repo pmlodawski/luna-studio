@@ -317,6 +317,15 @@ mkLiftF pNum base = AppE (VarE fname) (VarE base) where
 --        inst       = InstanceD ctx nt funcs
 --    return $ [inst]
 
+registerType :: Name -> Q [Dec]
+registerType tpName = do
+    TyConI (DataD _ _ bndrs _ _) <- reify tpName
+    let params     = fmap getTyVarBndrName bndrs
+        normalName = mkName $ Naming.mkTypePtr (nameBase tpName)
+        decl = DataD [] normalName [] [NormalC normalName []] []
+        tfam = TySynInstD (mkName "ProxyType") (TySynEqn [foldl AppT (ConT tpName) (fmap VarT params)] (ConT normalName))
+    return [decl, tfam]
+
 registerMethod :: Name -> String -> Q [Dec]
 registerMethod typeName methodName = do
     let typeNameBase = nameBase typeName
@@ -332,7 +341,9 @@ registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
     resultT    <- VarT <$> newName "result"
     let
         dataVars   = map VarT $ getDecVarNames dataDec
-        baseT      = ConT typeName
+        baseT      = ConT (mkName $ Naming.mkTypePtr $ nameBase typeName)
+        --baseT      = ConT (mkName $ nameBase typeName ++ "_T")
+
         prectx     = getContext funcT
         sig        = getSignature funcT
         resultC    = equalT resultT sig

@@ -27,12 +27,8 @@ import Luna.Target.HS
 -- ====== Main type ====== --
 data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)
 data Cls_Main  = Cls_Main deriving (Show, Eq, Ord, Generic, Typeable)
-
-instance ProxyType Cls_Main Cls_Main where
-	proxyType = id
-
-instance ProxyType Main Main where
-	proxyType = id
+$(registerType ''Cls_Main)
+$(registerType ''Main)
 
 -- ------ Main.Main constructor ------ --
 cons_Main = _member("Main") (val Cls_Main)
@@ -57,14 +53,9 @@ $(registerMethod ''Main "print")
 
 -- ====== Vector type ====== --
 data Vector a = Vector a a a deriving (Show, Eq, Ord, Generic, Typeable)
-data Vector_Ptr = Vector_Ptr
 data Cls_Vector  = Cls_Vector deriving (Show, Eq, Ord, Generic, Typeable)
-
-instance ProxyType Cls_Vector Cls_Vector where
-	proxyType = id
-
-instance ProxyType (Vector a) Vector_Ptr where
-	proxyType _ = Vector_Ptr
+$(registerType ''Cls_Vector)
+$(registerType ''Vector)
 
 -- ------ Vector.Vector constructor ------ --
 cons_Vector = _member("Vector") (val Cls_Vector)
@@ -76,27 +67,74 @@ memFnc_Cls_Vector_Vector = (memSig_Cls_Vector_Vector, memDef_Cls_Vector_Vector)
 $(registerMethod ''Cls_Vector "Vector")
 
 -- ------ Vector accessors ------ --
-$(generateFieldAccessors ''Vector_Ptr [('Vector, [Just "x", Just "y", Just "z"])])
-$(registerFieldAccessors ''Vector_Ptr ["x", "y", "z"])
+$(generateFieldAccessors ''Vector [('Vector, [Just "x", Just "y", Just "z"])])
+$(registerFieldAccessors ''Vector ["x", "y", "z"])
 
 -- ------ Vector members ------ --
 
 -- ====== Method: Vector.asTuple ====== --
-memSig_Vector_Ptr_asTuple = _rtup1(_nuSigArg("self"))
-memDef_Vector_Ptr_asTuple _self = do 
+memSig_Vector_asTuple = _rtup1(_nuSigArg("self"))
+memDef_Vector_asTuple _self = do 
      val (_call(0) (_member("x") _self), _call(1) (_member("y") _self), _call(2) (_member("z") _self))
      
 
-memFnc_Vector_Ptr_asTuple = (memSig_Vector_Ptr_asTuple, memDef_Vector_Ptr_asTuple)
-$(registerMethod ''Vector_Ptr "asTuple")
+memFnc_Vector_asTuple = (memSig_Vector_asTuple, memDef_Vector_asTuple)
+$(registerMethod ''Vector "asTuple")
+
+-- ====== Method: Main.test ====== --
+memSig_Main_test = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
+memDef_Main_test _self _x = do 
+     _x
+     
+
+memFnc_Main_test = (memSig_Main_test, memDef_Main_test)
+$(registerMethod ''Main "test")
+
+-- ====== Method: Main.foo ====== --
+memSig_Main_foo = _rtup2(_nuSigArg("self"), _nuSigArg("f"))
+memDef_Main_foo _self _f = do 
+     _call(3) (appNext (val (5 :: Int)) _f)
+     
+
+memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
+$(registerMethod ''Main "foo")
+
+-- ====== Method: Main.bar ====== --
+memSig_Main_bar = _rtup1(_nuSigArg("self"))
+memDef_Main_bar _self = do 
+     val ()
+     
+
+memFnc_Main_bar = (memSig_Main_bar, memDef_Main_bar)
+$(registerMethod ''Main "bar")
+
+-- ====== Method: Main.baz ====== --
+memSig_Main_baz = _rtup3(_nuSigArg("self"), _npSigArg("x", val (0 :: Int)), _npSigArg("y", val (0 :: Int)))
+memDef_Main_baz _self _x _y = do 
+     val (_x, _y)
+     
+
+memFnc_Main_baz = (memSig_Main_baz, memDef_Main_baz)
+$(registerMethod ''Main "baz")
 
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
+
+-- ====== Method: Main.lambda__53 ====== --
+memSig_Main_lambda__53 = _rtup2(_nuSigArg("self"), _nuSigArg("x"))
+memDef_Main_lambda__53 _self _x = do 
+     val (_x, _x)
+     
+
+memFnc_Main_lambda__53 = (memSig_Main_lambda__53, memDef_Main_lambda__53)
+$(registerMethod ''Main "lambda__53")
 memDef_Main_main _self = do 
-     _v <- _call(3) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
-     _a <- _call(4) (_member("asTuple") _v)
-     _call(5) (appNext _a (_member("print") _self))
-     val ()
+     _v <- _call(4) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
+     _f <- _member("lambda__53") (_call(6) cons_Main)
+     _call(7) (appNext (_call(8) (appNext _f (_member("foo") _self))) (_member("print") _self))
+     _call(9) (appNext _v (_member("print") _self))
+     _call(10) (appNext (_call(11) (appByName _name("y") (val (7 :: Int)) (_member("baz") _self))) (_member("print") _self))
+     _call(12) (appNext (_call(13) (_member("asTuple") _v)) (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)

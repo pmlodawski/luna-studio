@@ -95,6 +95,9 @@ self = "self"
 mkCls :: (Monoid a, IsString a) => a -> a
 mkCls = ("Cls_" <>)
 
+mkTypePtr :: (Monoid a, IsString a) => a -> a
+mkTypePtr = (<> "_T")
+
 -- hack fixing double underscore
 mkCls' :: (Monoid a, IsString a) => a -> a
 mkCls' = ("Cls#" <>)
