@@ -55,6 +55,8 @@ lastID            = view (info . ASTInfo.lastID)
 
 --registerComment = mapStateVal . addComment . Comment
 
+
+
 regParent id pid = mapStateVal $ namespace %~ Namespace.regParent id pid
 
 pushNewScope id = mapStateVal $ namespace %~ Namespace.pushNewScope id
