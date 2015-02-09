@@ -145,18 +145,22 @@ rasterizeMask :: forall a. (Real a, Fractional a) => Int -> Int -> Mask a -> Mat
 rasterizeMask w h (Mask path' feather') = -- path
     case feather' of
         Nothing -> path
-        Just feather' -> let
-                feather = ptm feather'
-                convert :: Path a -> A.Acc (A.Vector (QuadraticBezier Double))
-                convert p = let
-                        a = {-trace ("running makeCubics with p = " ++ show p) $-} makeCubics p
-                        quads = {-trace ("running convertCubicsToQuadratics with a = " ++ show ((fmap.fmap) f2d a)) $-} convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
-                    in {-trace ("running use with quads = " ++ show quads) $-} A.use $ A.fromList (Z :. length quads) quads
-                cA = convert path'
-                cB = convert feather'
-            in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
+        Just feather'' -> checkEqual feather'' path'
+
     where ptm  = pathToMatrix w h
           path = ptm path'
+          checkEqual fea pat 
+              | fea == pat = path
+              | otherwise  = let
+                    feather = ptm fea
+                    convert :: Path a -> A.Acc (A.Vector (QuadraticBezier Double))
+                    convert p = let
+                            a = makeCubics p
+                            quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
+                        in A.use $ A.fromList (Z :. length quads) quads
+                    cA = convert path'
+                    cB = convert fea
+                in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
           combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
           combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) =
               let
