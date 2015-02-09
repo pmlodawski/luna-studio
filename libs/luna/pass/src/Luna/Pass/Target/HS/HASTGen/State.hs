@@ -30,7 +30,6 @@ logger = getLogger $(moduleName)
 type HExpr = HExpr.Expr
 
 data GenState = GenState { _mod    :: HExpr
-                         , _ths    :: [HExpr]
                          , _ctx    :: [QualPath]
                          , _callID :: Int
                          }
@@ -130,11 +129,8 @@ addComment c = do
     setModule $ m { Module._body = Module._body m ++ [expr] }
 
 regTHExpr :: GenStateM m => HExpr -> m ()
-regTHExpr = appendModuleBody -- expr = withState (ths %~ (++[expr]))
-
-close :: GenStateM m => m ()
-close = withState $ \s -> s & (mod . Module.body) %~ (++(s^.ths))
+regTHExpr = appendModuleBody
 
 
 instance Default GenState where
-    def = GenState HExpr.Undefined def def 0
+    def = GenState HExpr.Undefined def 0

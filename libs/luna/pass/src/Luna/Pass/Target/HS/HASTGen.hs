@@ -177,8 +177,6 @@ genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name pa
         regFunc $ mainf modConName
 
     State.addComment $ H1 "Templates"
-    State.close
-
 
     State.getModule
 
