@@ -124,7 +124,7 @@ prepareSource diag src = do
             printHSC diag hsc
 
             return hsc
-    code <- eitherToM $ fst result
+    code <- eitherStringToM $ fst result
     return $ Source (src ^. Source.modName) $ Code code
 
 
