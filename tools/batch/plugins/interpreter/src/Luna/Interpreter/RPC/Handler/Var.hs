@@ -7,12 +7,8 @@
 
 module Luna.Interpreter.RPC.Handler.Var where
 
-import Control.Monad (forM_)
-import Data.IntSet   as IntSet
-
 import qualified Flowbox.Batch.Handler.Common            as Batch
 import           Flowbox.Bus.RPC.RPC                     (RPC)
-import           Flowbox.Control.Error                   hiding (err)
 import           Flowbox.Prelude                         hiding (Context)
 import           Flowbox.ProjectManager.Context          (Context)
 import qualified Luna.DEP.Graph.Node                     as Node
@@ -34,26 +30,20 @@ import qualified Luna.Interpreter.Session.Var            as Var
 
 insertTimeRef :: Lib.ID -> Node.ID -> Node.ID
               -> NodeExpr -> RPC Context (SessionST mm) ()
-insertTimeRef libraryID nodeID defID defExpr = do
-    ids <- hoistEither =<< ExtractIDs.runNodeExpr defExpr
-    liftSession $ do
-        Env.insertDependentNode (CallPoint libraryID nodeID) defID
-        Env.insertDependentNodes (CallPoint libraryID defID) ids
-        forM_ (defID:Var.timeRefIds defExpr) $ \ timeRefID ->
-            Env.insertTimeRef (CallPoint libraryID timeRefID)
+insertTimeRef libraryID nodeID defID defExpr = liftSession $ do
+    Env.insertDependentNode (CallPoint libraryID nodeID) defID
+    when (Var.containsTimeRefs defExpr) $
+        Env.insertTimeRef (CallPoint libraryID defID)
 
 
 deleteTimeRef :: MemoryManager mm
               => Lib.ID -> Node.ID -> Node.ID
               -> NodeExpr -> RPC Context (SessionST mm) ()
-deleteTimeRef libraryID nodeID defID defExpr = do
-    ids <- hoistEither =<< ExtractIDs.runNodeExpr defExpr
-    liftSession $ do
-        Cache.deleteNode libraryID defID
-        mapM_ (Cache.deleteNode libraryID) $ IntSet.toList ids
-        Env.deleteDependentNode (CallPoint libraryID nodeID) defID
-        forM_ (defID:Var.timeRefIds defExpr) $ \ timeRefID ->
-            Env.deleteTimeRef (CallPoint libraryID timeRefID)
+deleteTimeRef libraryID nodeID defID defExpr = liftSession $ do
+    Cache.deleteNode libraryID defID
+    Env.deleteDependentNode (CallPoint libraryID nodeID) defID
+    when (Var.containsTimeRefs defExpr) $
+        Env.deleteTimeRef (CallPoint libraryID defID)
 
 
 rebuildTimeRefs :: RPC Context (SessionST mm) ()

@@ -65,6 +65,9 @@ paramSig = HExpr.TypedE (HExpr.VarT "Param") (HExpr.Var "mkArg")
 run :: LModule -> Pass.Result HExpr
 run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
 
+runExpr :: LExpr -> Pass.Result HExpr
+runExpr = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genExpr
+
 
 stdDerivings :: [Deriving]
 stdDerivings = [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]

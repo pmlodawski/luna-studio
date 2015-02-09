@@ -124,7 +124,7 @@ def emptyImage self::Std -> Image:
 def load self::Std path::FilePath -> Image:
     ```autoLift1 realReadLuna #{path}```
 
-def Image.save self::Image path::String:
+def Image.save self::Image path::FilePath -> Image:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
 # def Image.defocus self::Image radius::Int:
@@ -180,7 +180,19 @@ def Image.multiply self::Image val::Color -> Image:
 def Image.gamma self::Image val::Color -> Image:
     ```liftF2 gammaLuna #{val} #{self}```
 
-def Image.key self::Image mode a::Float b::Float c::Float d::Float -> Image:
+class ```KeyerMode```:
+    Red
+    Green
+    Blue
+    Redscreen
+    Greenscreen
+    Bluescreen
+    Saturation
+    Luminance
+    Max
+    Min
+
+def Image.key self::Image mode::KeyerMode a::Float b::Float c::Float d::Float -> Image:
     ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
 
 def Image.differenceKey self::Image offset::Float gain::Float background::Image -> Image:
