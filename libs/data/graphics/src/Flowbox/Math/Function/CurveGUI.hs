@@ -61,11 +61,11 @@ convertToNodeList l =
         convertSingleElem :: ControlPoint Double -> [BSplineNode Double]
         convertSingleElem (ControlPoint (Point2 x y) Linear Linear) = [BSplineNode (Point2 x y) (Point2 (x-1) y) (Point2 (x+1) y)]
 
-        convertSingleElem a@(ControlPoint p@(Point2 x y) _ Linear) = [BSplineNode (Point2 x y) l (reflectPoint p l)]
+        convertSingleElem a@(ControlPoint p@(Point2 x y) _ Linear) = [BSplineNode (Point2 x y) l (Point2 (lx+1) ly)]
             where
                 BSplineNode _ (l@(Point2 lx ly)) _ = processLeftmost a a
 
-        convertSingleElem a@(ControlPoint p@(Point2 x y) Linear _) = [BSplineNode (Point2 x y) (reflectPoint p r) r]
+        convertSingleElem a@(ControlPoint p@(Point2 x y) Linear _) = [BSplineNode (Point2 x y) (Point2 (rx-1) ry) r]
             where
                 BSplineNode _ _ (r@(Point2 rx ry)) = processRightmost a a
 
@@ -75,7 +75,7 @@ convertToNodeList l =
                 BSplineNode _ _ r = processRightmost a a
 
         processLeftmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
-        processLeftmost a@(ControlPoint p@(Point2 x y) Linear _) b = BSplineNode (Point2 x y) (reflectPoint p r) r
+        processLeftmost a@(ControlPoint p@(Point2 x y) Linear _) b = BSplineNode (Point2 x y) (Point2 (rx-1) ry) r
             where
                 r@(Point2 rx ry) = processRight a b
 
@@ -90,7 +90,7 @@ convertToNodeList l =
                 r = processRight a b
 
         processRightmost :: ControlPoint Double -> ControlPoint Double -> BSplineNode Double
-        processRightmost a b@(ControlPoint p@(Point2 x y) _ Linear) = BSplineNode (Point2 x y) l (reflectPoint p l)
+        processRightmost a b@(ControlPoint p@(Point2 x y) _ Linear) = BSplineNode (Point2 x y) l (Point2 (lx+1) ly)
             where
                 l@(Point2 lx ly) = processLeft a b
 
