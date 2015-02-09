@@ -46,7 +46,7 @@ instance Default QualPath where
     def = QualPath def def
 
 toList :: NamePath -> [Text]
-toList (NamePath b s) = b:s
+toList (NamePath b s) = s ++ [b]
 
 single :: Text -> NamePath
 single = flip NamePath []
