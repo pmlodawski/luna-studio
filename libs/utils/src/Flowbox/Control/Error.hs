@@ -105,3 +105,6 @@ catchEither handler fun = do
     case result of
         Left  e -> handler e
         Right r -> return r
+
+hoistEitherWith :: Monad m => (e1 -> e) -> Either e1 a -> EitherT e m a
+hoistEitherWith conv = hoistEither . fmapL conv
