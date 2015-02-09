@@ -100,6 +100,12 @@ $(registerMethod ''Cls_Vector "Vector")
 
 
 -- ===================================================================
+-- Type Aliases
+-- ===================================================================
+type V a = Vector a
+
+
+-- ===================================================================
 -- Data declarations
 -- ===================================================================
 
@@ -117,28 +123,15 @@ $(registerMethod ''Vector "asTuple")
 -- Module declarations
 -- ===================================================================
 
--- ====== Method: Main.main ====== --
-memSig_Main_main = _rtup1(_nuSigArg("self"))
-memDef_Main_main _self = do 
-     _v <- _call(3) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector)))
-     _call(4) (appNext (_call(5) (_member("asTuple") _v)) (_member("print") _self))
-     _f <- appNext (val (1 :: Int)) (_member("foo") _self)
-     _call(6) (appNext (_call(7) (appNext (val (2 :: Int)) _f)) (_member("print") _self))
-     _call(8) (appNext (val (_call(9) cons_True, _call(10) cons_True)) (_member("print") _self))
-     _call(11) (appNext (_call(12) (appNext (val (4 :: Int)) (_member("_plus") (val (2 :: Int))))) (_member("print") _self))
+-- ====== Method: Main.print ====== --
+memSig_Main_print = _rtup2(_nuSigArg("self"), _npSigArg("s", val ("" :: String)))
+memDef_Main_print self s = do 
+     
+    polyJoin . liftF1 (Value . fmap Safe . print) $ s
      
 
-memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
-$(registerMethod ''Main "main")
-
--- ====== Method: Main.foo ====== --
-memSig_Main_foo = _rtup3(_nuSigArg("self"), _nuSigArg("a"), _nuSigArg("b"))
-memDef_Main_foo _self _a _b = do 
-     val (_a, _b)
-     
-
-memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
-$(registerMethod ''Main "foo")
+memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
+$(registerMethod ''Main "print")
 
 -- ====== Method: Int._plus ====== --
 memSig_Int__plus = _rtup2(_nuSigArg("self"), _nuSigArg("a"))
@@ -150,15 +143,28 @@ memDef_Int__plus self a = do
 memFnc_Int__plus = (memSig_Int__plus, memDef_Int__plus)
 $(registerMethod ''Int "_plus")
 
--- ====== Method: Main.print ====== --
-memSig_Main_print = _rtup2(_nuSigArg("self"), _npSigArg("s", val ("" :: String)))
-memDef_Main_print self s = do 
-     
-    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+-- ====== Method: Main.foo ====== --
+memSig_Main_foo = _rtup3(_nuSigArg("self"), _nuSigArg("a"), _nuSigArg("b"))
+memDef_Main_foo _self _a _b = do 
+     val (_a, _b)
      
 
-memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
-$(registerMethod ''Main "print")
+memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
+$(registerMethod ''Main "foo")
+
+-- ====== Method: Main.main ====== --
+memSig_Main_main = _rtup1(_nuSigArg("self"))
+memDef_Main_main _self = do 
+     _v <- _typed(_call(3) (appNext (val (3 :: Int)) (appNext (val (2 :: Int)) (appByName _name("y") (val (1 :: Int)) cons_Vector))), V Int)
+     _call(4) (appNext (_call(5) (_member("asTuple") _v)) (_member("print") _self))
+     _f <- appNext (val (1 :: Int)) (_member("foo") _self)
+     _call(6) (appNext (_call(7) (appNext (val (2 :: Int)) _f)) (_member("print") _self))
+     _call(8) (appNext (val (_call(9) cons_True, _call(10) cons_True)) (_member("print") _self))
+     _call(11) (appNext (_call(12) (appNext (val (4 :: Int)) (_member("_plus") (val (2 :: Int))))) (_member("print") _self))
+     
+
+memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
+$(registerMethod ''Main "main")
 
 
 -- ===================================================================
