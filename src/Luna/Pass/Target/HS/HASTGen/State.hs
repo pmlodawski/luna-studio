@@ -11,7 +11,7 @@
 
 module Luna.Pass.Target.HS.HASTGen.State where
 
-import Control.Monad.State
+import Control.Monad.State hiding (withState)
 
 import           Flowbox.Prelude       hiding (mod)
 import qualified Luna.Data.HAST.Expr   as HExpr
@@ -30,6 +30,7 @@ logger = getLogger $(moduleName)
 type HExpr = HExpr.Expr
 
 data GenState = GenState { _mod    :: HExpr
+                         , _ths    :: [HExpr]
                          , _ctx    :: [QualPath]
                          , _callID :: Int
                          }
@@ -50,6 +51,10 @@ genCallID = do
     let cid = view callID s
     put $ s & callID .~ cid + 1
     return cid
+
+withState f = do
+    s <- get
+    put $ f s
 
 pushCtx :: GenStateM m => QualPath -> m()
 pushCtx c = modify (ctx %~ (c:))
@@ -125,8 +130,11 @@ addComment c = do
     setModule $ m { Module._body = Module._body m ++ [expr] }
 
 regTHExpr :: GenStateM m => HExpr -> m ()
-regTHExpr = appendModuleBody
+regTHExpr = appendModuleBody -- expr = withState (ths %~ (++[expr]))
+
+close :: GenStateM m => m ()
+close = withState $ \s -> s & (mod . Module.body) %~ (++(s^.ths))
 
 
 instance Default GenState where
-    def = GenState HExpr.Undefined def 0
+    def = GenState HExpr.Undefined def def 0
