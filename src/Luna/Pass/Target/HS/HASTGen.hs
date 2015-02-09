@@ -124,10 +124,7 @@ genUnit (Unit m) = genModule m
 
 
 
-stdDerivings :: [Deriving]
-stdDerivings = [ Deriving.Show, Deriving.Eq, Deriving.Ord
-               , Deriving.Generic, Deriving.Typeable
-               ]
+
 
 
 genModule :: Ctx m a v => LModule a (LExpr a v) -> PassResult m HE
@@ -176,8 +173,6 @@ genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name pa
         State.addComment $ H1 "Main module wrappers"
         regFunc $ mainf modConName
 
-    State.addComment $ H1 "Templates"
-
     State.getModule
 
 extractDataDecls = foldl go ([],[]) where
@@ -194,19 +189,16 @@ genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) =
     consE <- mapM genData conDecls
     if not isNative then State.addDataType $ HE.DataD name paramsTxt consE derivings
                     else State.addComment  $ H5 "datatype provided externally"
-    addClsDataType clsConName derivings
-    regTHExpr $ TH.mkRegType clsConName
     regTHExpr $ TH.mkRegType name
     when (not $ null fieldNames) $ do
         State.addComment . H3 $ name <> " accessors"
         regTHExpr $ TH.mkFieldAccessors2 name conDescs
         regTHExpr $ TH.mkRegFieldAccessors name fieldNames
-    mapM_ (genCon name paramsTxt stdDerivings isNative) cons
+    mapM_ (genCon name paramsTxt derivings isNative) cons
 
-    where derivings  = stdDerivings
+    where derivings  = Deriving.stdDerivings
           paramsTxt  = fmap convVar params
           conDecls   = fmap (view Label.element) cons
-          clsConName = Naming.mkCls name
           getConDesc (Decl.Cons (convVar -> conName) fields) = (conName, fmap getLFieldName fields)
           genField (Label _ (Decl.Field tp name val)) = genType tp
           genData (Decl.Cons conName fields) =   HE.Con (fromString $ toString conName) 
