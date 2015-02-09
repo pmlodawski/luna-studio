@@ -9,7 +9,7 @@ import Network.Transport     (EndPointAddress(EndPointAddress))
 import Control.Distributed.Process hiding (call)
 import Control.Distributed.Process.Platform hiding (__remoteTable)
 import Control.Distributed.Process.Platform.Async
-import Control.Distributed.Process.Platform.ManagedProcess
+import Control.Distributed.Process.Platform.ManagedProcess hiding(runProcess)
 import Control.Distributed.Process.Platform.Time
 import Control.Distributed.Process.Platform.Timer (sleep)
 import Control.Distributed.Process.Closure (mkClosure, remotable)
@@ -53,12 +53,13 @@ main = do
   let addr = EndPointAddress (pack serverAddr)
       srvID = NodeId addr
 
-  _ <- forkProcess node $ do
+  _ <- runProcess node $ do
     sid <- discoverServer srvID
     liftIO $ putStrLn "x"
     liftIO $ print sid
     r <- callTimeout sid (Server.Add 5 6) 100 :: Process (Maybe Double)
     liftIO $ putStrLn "x"
+    liftIO $ print r
     liftIO $ threadDelay (10 * 1000 * 1000)
 
 
