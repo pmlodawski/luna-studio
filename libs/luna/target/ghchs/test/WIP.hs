@@ -26,8 +26,6 @@ import Luna.Target.HS
 
 -- ====== Main type ====== --
 data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)
-data Cls_Main  = Cls_Main deriving (Show, Eq, Ord, Generic, Typeable)
-$(registerType ''Cls_Main)
 $(registerType ''Main)
 
 -- ------ Main.Main constructor ------ --
@@ -46,14 +44,10 @@ $(registerMethod ''Cls_Main "Main")
 
 -- ====== Int type ====== --
 -- datatype provided externally
-data Cls_Int  = Cls_Int deriving (Show, Eq, Ord, Generic, Typeable)
-$(registerType ''Cls_Int)
 $(registerType ''Int)
 
 -- ====== Foo type ====== --
 data Foo  = Foo deriving (Show, Eq, Ord, Generic, Typeable)
-data Cls_Foo  = Cls_Foo deriving (Show, Eq, Ord, Generic, Typeable)
-$(registerType ''Cls_Foo)
 $(registerType ''Foo)
 
 -- ------ Foo.Foo constructor ------ --
@@ -67,8 +61,6 @@ $(registerMethod ''Cls_Foo "Foo")
 
 -- ====== Bool type ====== --
 -- datatype provided externally
-data Cls_Bool  = Cls_Bool deriving (Show, Eq, Ord, Generic, Typeable)
-$(registerType ''Cls_Bool)
 $(registerType ''Bool)
 
 -- ------ Bool.True constructor ------ --
@@ -91,8 +83,6 @@ $(registerMethod ''Cls_Bool "False")
 
 -- ====== Vector type ====== --
 data Vector a = Vector a a a deriving (Show, Eq, Ord, Generic, Typeable)
-data Cls_Vector  = Cls_Vector deriving (Show, Eq, Ord, Generic, Typeable)
-$(registerType ''Cls_Vector)
 $(registerType ''Vector)
 
 -- ------ Vector accessors ------ --
@@ -175,9 +165,4 @@ $(registerMethod ''Main "print")
 -- Main module wrappers
 -- ===================================================================
 main = mainMaker cons_Main
-
-
--- ===================================================================
--- Templates
--- ===================================================================
 
