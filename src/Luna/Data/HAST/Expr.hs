@@ -77,6 +77,7 @@ data Pragma = Include String deriving (Show)
 proxy name = TypedE (ConE ["Proxy"]) (AppT (ConT "Proxy") (LitT $ Lit.String name))
 app        = foldl AppE 
 appP       = foldl AppP
+appT       = foldl AppT
 
 rtuple items = MacroE  ("_rtup" <> show (length items)) items
 
