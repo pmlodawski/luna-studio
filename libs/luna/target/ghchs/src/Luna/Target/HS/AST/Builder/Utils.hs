@@ -4,11 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings #-}
 
-module Luna.Data.HAST.Builder.Utils where
+module Luna.Target.HS.AST.Builder.Utils where
 
 import Flowbox.Prelude
-import Luna.Data.HAST.Expr as Expr
-import Luna.Data.HAST.Lit  as Lit
+import Luna.Target.HS.AST.Expr as Expr
+import Luna.Target.HS.AST.Lit  as Lit
 
 val = Expr.VarE "val"

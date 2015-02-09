@@ -4,13 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings #-}
 
-module Luna.Data.HAST.DataType (
-        module Luna.Data.HAST.DataType,
-        module Luna.Data.HAST.Expr
+module Luna.Target.HS.AST.DataType (
+        module Luna.Target.HS.AST.DataType,
+        module Luna.Target.HS.AST.Expr
 )where
 
-import Luna.Data.HAST.Expr
+import Luna.Target.HS.AST.Expr
 
 empty :: Expr
 empty = DataD "" [] [] []

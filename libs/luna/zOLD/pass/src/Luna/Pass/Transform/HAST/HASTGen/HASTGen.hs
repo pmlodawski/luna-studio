@@ -21,11 +21,11 @@ import qualified Luna.DEP.AST.Type                          as LType
 import qualified Luna.DEP.AST.Pat                           as LPat
 import qualified Luna.DEP.AST.Lit                           as LLit
 import qualified Luna.DEP.AST.Module                        as LModule
-import qualified Luna.Data.HAST.Expr                         as HExpr
-import qualified Luna.Data.HAST.Lit                          as HLit
-import qualified Luna.Data.HAST.Module                       as HModule
-import qualified Luna.Data.HAST.Extension                    as HExtension
-import qualified Luna.Data.HAST.Comment                      as HComment
+import qualified Luna.Target.HS.AST.Expr                         as HExpr
+import qualified Luna.Target.HS.AST.Lit                          as HLit
+import qualified Luna.Target.HS.AST.Module                       as HModule
+import qualified Luna.Target.HS.AST.Extension                    as HExtension
+import qualified Luna.Target.HS.AST.Comment                      as HComment
 import qualified Luna.Pass.Transform.HAST.HASTGen.GenState as GenState
 import           Luna.Pass.Transform.HAST.HASTGen.GenState   (GenState)
 import qualified Luna.Pass.Pass                            as Pass
@@ -35,8 +35,8 @@ import           Luna.Pass.Transform.HAST.HASTGen.Utils
 import qualified Luna.Target.HS.Host.NamingOld                          as Naming
 import qualified Luna.Target.HS.Host.Naming                             as Naming
 import           Data.String.Utils                                     (join)
-import qualified Luna.Data.HAST.Deriving                     as Deriving
-import           Luna.Data.HAST.Deriving                     (Deriving)
+import qualified Luna.Target.HS.AST.Deriving                     as Deriving
+import           Luna.Target.HS.AST.Deriving                     (Deriving)
 import qualified Luna.DEP.AST.Name                               as Name
 import qualified Luna.DEP.AST.Arg                                as Arg
 import qualified Luna.DEP.AST.Lit.Number                         as Number

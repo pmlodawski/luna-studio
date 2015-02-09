@@ -38,15 +38,15 @@ import           Luna.Syntax.Lit              (Lit, LLit)
 --import qualified Luna.Syntax.Native           as Native
 import qualified Luna.Syntax.Name             as Name
 --import           Luna.Syntax.Name             (TName(TName), TVName(TVName))
-import qualified Luna.Data.HAST.Expr                         as HE
-import qualified Luna.Data.HAST.Lit                          as HLit
-import qualified Luna.Data.HAST.Module                       as HModule
-import qualified Luna.Data.HAST.Extension                    as HExt
---import qualified Luna.Data.HAST.Comment                      as HComment
-import           Luna.Data.HAST.Comment (Comment(H1, H2, H3, H4, H5))
+import qualified Luna.Target.HS.AST.Expr                         as HE
+import qualified Luna.Target.HS.AST.Lit                          as HLit
+import qualified Luna.Target.HS.AST.Module                       as HModule
+import qualified Luna.Target.HS.AST.Extension                    as HExt
+--import qualified Luna.Target.HS.AST.Comment                      as HComment
+import           Luna.Target.HS.AST.Comment (Comment(H1, H2, H3, H4, H5))
 
-import qualified Luna.Data.HAST.Deriving                     as Deriving
-import           Luna.Data.HAST.Deriving                     (Deriving)
+import qualified Luna.Target.HS.AST.Deriving                     as Deriving
+import           Luna.Target.HS.AST.Deriving                     (Deriving)
 
 import           Luna.Pass                    (Pass(Pass), PassMonad)
 import qualified Luna.Pass                    as Pass
@@ -68,8 +68,8 @@ import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getMo
 import           Luna.Syntax.Name.Hash              (Hashable, hash)
 --import qualified Luna.Target.HS.Host.NamingOld                          as Naming
 import qualified Luna.Target.HS.Host.Naming2 as Naming
-import qualified Luna.Data.HAST.Builder.TH    as TH
-import qualified Luna.Data.HAST.Builder.Utils as HUtils
+import qualified Luna.Target.HS.AST.Builder.TH    as TH
+import qualified Luna.Target.HS.AST.Builder.Utils as HUtils
 import qualified Luna.Syntax.Name.Pattern as NamePat
 import           Luna.Syntax.Name.Pattern (NamePat)
 import           Data.Maybe (isNothing)

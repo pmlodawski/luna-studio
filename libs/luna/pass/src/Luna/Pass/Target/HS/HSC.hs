@@ -16,10 +16,10 @@
 module Luna.Pass.Target.HS.HSC where
 
 import           Flowbox.Prelude          hiding (cons, simple)
-import qualified Luna.Data.HAST.Comment   as HComment
-import qualified Luna.Data.HAST.Expr      as HExpr
-import           Luna.Data.HAST.Extension (Extension)
-import qualified Luna.Data.HAST.Lit       as HLit
+import qualified Luna.Target.HS.AST.Comment   as HComment
+import qualified Luna.Target.HS.AST.Expr      as HExpr
+import           Luna.Target.HS.AST.Extension (Extension)
+import qualified Luna.Target.HS.AST.Lit       as HLit
 import           Luna.Data.Source         (Source (Source))
 import           Luna.Pass.Pass           (Pass)
 import qualified Luna.Pass.Pass           as Pass
