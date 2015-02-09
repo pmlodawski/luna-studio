@@ -81,6 +81,32 @@ memDef_Vector_asTuple _self = do
 memFnc_Vector_asTuple = (memSig_Vector_asTuple, memDef_Vector_asTuple)
 $(registerMethod ''Vector "asTuple")
 
+-- ====== Bool type ====== --
+-- datatype provided externally
+data Cls_Bool  = Cls_Bool deriving (Show, Eq, Ord, Generic, Typeable)
+$(registerType ''Cls_Bool)
+$(registerType ''Bool)
+
+-- ------ Bool.True constructor ------ --
+cons_True = _member("True") (val Cls_Bool)
+memDef_Cls_Bool_True = liftCons0 True
+
+-- ====== Method: Cls_Bool.True ====== --
+memSig_Cls_Bool_True = _rtup1(_nuSigArg("self"))
+memFnc_Cls_Bool_True = (memSig_Cls_Bool_True, memDef_Cls_Bool_True)
+$(registerMethod ''Cls_Bool "True")
+
+-- ------ Bool.False constructor ------ --
+cons_False = _member("False") (val Cls_Bool)
+memDef_Cls_Bool_False = liftCons0 False
+
+-- ====== Method: Cls_Bool.False ====== --
+memSig_Cls_Bool_False = _rtup1(_nuSigArg("self"))
+memFnc_Cls_Bool_False = (memSig_Cls_Bool_False, memDef_Cls_Bool_False)
+$(registerMethod ''Cls_Bool "False")
+
+-- ------ Bool members ------ --
+
 -- ====== Method: Main.foo ====== --
 memSig_Main_foo = _rtup3(_nuSigArg("self"), _nuSigArg("a"), _nuSigArg("b"))
 memDef_Main_foo _self _a _b = do 
@@ -97,6 +123,7 @@ memDef_Main_main _self = do
      _call(4) (appNext (_call(5) (_member("asTuple") _v)) (_member("print") _self))
      _f <- appNext (val (1 :: Int)) (_member("foo") _self)
      _call(6) (appNext (_call(7) (appNext (val (2 :: Int)) _f)) (_member("print") _self))
+     _call(8) (appNext (val (_call(9) cons_True, _call(10) cons_True)) (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
