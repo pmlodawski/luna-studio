@@ -60,6 +60,45 @@ Library
                   luna-target-ghchs                ,
                   Rasterific
 
+-- == HSpec tests ==
+
+Test-suite hspec_tests
+  type: exitcode-stdio-1.0
+  
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        tests.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -fno-full-laziness
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          TemplateHaskell
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.16.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  accelerate-fft           ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  split                    ,
+                  vector                   ,
+                  hspec                    ,
+                  HUnit                    ,
+                  QuickCheck
+
 -- == test generator ==
 
 Executable test_generator
