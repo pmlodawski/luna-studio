@@ -7,8 +7,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Luna.Interpreter.Session.Var where
 
-import Control.Monad.State
-
+import           Control.Monad.State
+import qualified Data.Maybe                       as Maybe
 import           Flowbox.Prelude
 import qualified Luna.AST.Common                  as AST
 import           Luna.AST.Expr                    (Expr)
@@ -33,6 +33,15 @@ timeRefIds (NodeExpr.ASTExpr expr) = execState (traverseExpr expr) [] where
         Just i  -> modify (i:) >> return e
         Nothing -> return e
 timeRefIds  _                      = []
+
+
+containsTimeRefs :: NodeExpr -> Bool
+containsTimeRefs (NodeExpr.ASTExpr expr) = Maybe.maybe True (const False) $ traverseExpr expr where
+    traverseExpr = Expr.traverseMR matchTimeRef return return return return
+    matchTimeRef e = if Maybe.isJust $ matchesTimeRef e
+        then Nothing
+        else Just e
+containsTimeRefs  _                      = False
 
 
 replaceTimeRefs :: Expr -> Session mm Expr
