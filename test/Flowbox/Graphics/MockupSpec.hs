@@ -4,16 +4,9 @@ import Test.Hspec
 import Test.QuickCheck
 import Flowbox.Graphics.Mockup as M
 import Flowbox.Graphics.Composition.EdgeBlur as EB
-import Flowbox.Graphics.Composition.Dither   as D
-import Flowbox.Graphics.Composition.Generator.Gradient
-import Flowbox.Graphics.Shader.Sampler
-import Flowbox.Graphics.Shader.Rasterizer
-import Flowbox.Graphics.Shader.Shader                  as S
-import Flowbox.Graphics.Composition.Transform
 import qualified Flowbox.Math.Matrix as M
-import Data.Array.Accelerate.CUDA as A
-import qualified Data.Array.Accelerate              as A
-import System.IO.Unsafe
+
+
 
 import Flowbox.Prelude as P
 
@@ -22,7 +15,7 @@ import TestHelpers
 
 spec :: Spec
 spec = do
-    let specPath = "./Flowbox/Graphics/"
+    let specPath = "./test/Flowbox/Graphics/"
         in do 
           let testName = "edgeBlur"
               testPath = specPath++testName
@@ -53,12 +46,12 @@ spec = do
 
 
 testSaveEdgeBlur kernelSize edgeMultiplier channel = do
-    img <- loadImageLuna "./samples/lena.png"
+    img <- loadImageLuna "./libs/data/graphics/test/samples/lena.png"
     let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
-    saveImageLuna "./samples/x_result.png" a
+    saveImageLuna "./libs/data/graphics/test/samples/x_result.png" a
 
 testEdgeBlur kernelSize edgeMultiplier channel = do
-    img <- loadImageLuna "./samples/lena.png"
+    img <- loadImageLuna "/home/chris/flowbox/flowbox/libs/data/graphics/test/samples/lena.png"
     let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
     return a
 

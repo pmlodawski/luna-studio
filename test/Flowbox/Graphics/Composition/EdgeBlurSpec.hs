@@ -10,7 +10,7 @@ import Flowbox.Graphics.Composition.EdgeBlur
 
 import Debug.Trace
 import System.IO.Unsafe
-import System.Console.ANSI
+ -- import System.Console.ANSI
 
 
 import Flowbox.Prelude as P
@@ -42,10 +42,11 @@ spec = do
                         second = Just 2 
                     mixImages mask first second `shouldBe` second
                 it "for ZipList" $ do
-                    let mask   = ZipList [0,0]
-                        first  = ZipList [1,2]
-                        second = ZipList [4,5]
-                    mixImages mask first second `shouldSatisfy` (closeTo second)
+                    pending
+                    --let mask   = ZipList [0,0]
+                    --    first  = ZipList [1,2]
+                    --    second = ZipList [4,5]
+                    --mixImages mask first second `shouldSatisfy` (closeTo second)
         
         it "should for one mask return first" $ do
             let mask   = Just 1
@@ -71,16 +72,16 @@ spec = do
 
 
 
-closeTo :: (Eq a, Show a) => a -> a -> Bool
-closeTo a b = 
-    if a==b
-        then True
-        else unsafePerformIO $ do
-            setSGR [SetColor Background Dull Red]
-            print a
-            print b
-            setSGR []
-            return False
+--closeTo :: (Eq a, Show a) => a -> a -> Bool
+--closeTo a b = 
+--    if a==b
+--        then True
+--        else unsafePerformIO $ do
+--            setSGR [SetColor Background Dull Red]
+--            print a
+--            print b
+--            setSGR []
+--            return False
 
         --trace ("expected " ++ show a ++ "\ngot " ++ show b) False
 
