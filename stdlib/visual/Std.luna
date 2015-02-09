@@ -124,7 +124,7 @@ def emptyImage self::Std -> Image:
 def load self::Std path::FilePath -> Image:
     ```autoLift1 realReadLuna #{path}```
 
-def Image.save self::Image path::String:
+def Image.save self::Image path::FilePath -> Image:
     ```autoLift2 saveImageLuna #{path} #{self}```
 
 # def Image.defocus self::Image radius::Int:
